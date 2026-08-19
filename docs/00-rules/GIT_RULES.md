@@ -1,0 +1,152 @@
+# قواعد Git — GIT RULES
+
+> **Scope:** قواعد Git وGitLab الإلزامية لكل من يعمل في المستودع.
+>
+> **المرجع الأم:** أقسام 104 (GitLab Rules) و105 (MR DoD) من الدليل التنفيذي.
+>
+> **Last Updated:** 2026-08-19 · **Status:** Active · **Related Team:** جميع الفرق
+
+---
+
+## 1. حماية الفرع الرئيسي (Main branch)
+
+```text
+Protected.
+لا Push مباشر.
+```
+
+- فرع `main` محمي (Protected) ولا يقبل Push مباشر.
+- كل التغييرات تمر عبر **Merge Request**.
+- لا يجوز تعطيل الحماية إلا عبر قرار موثّق (ADR) مع مبرر تشغيلي.
+
+---
+
+## 2. قواعد الفروع (Branch rules)
+
+- يتم إنشاء فرع فرعي لكل مهمة من `main`.
+- اسم الفرع يوضح النوع والنطاق، مثال: `feat/identity-recovery`، `fix/dispatch-duplicate`، `docs/security-rules`.
+- لا يُدمج فرع في `main` إلا بعد اجتياز CI ومراجعة المالك (CODEOWNERS).
+- بعد الدمج، يُحذف الفرع الفرعي.
+
+### تسمية الفروع (مقترحة)
+
+```text
+feat/<scope>-<short-desc>
+fix/<scope>-<short-desc>
+chore/<scope>-<short-desc>
+docs/<scope>-<short-desc>
+refactor/<scope>-<short-desc>
+```
+
+---
+
+## 3. Merge Request
+
+يجب أن يحتوي كل MR على:
+
+```text
+What
+Why
+Scope
+Tests
+Migration
+Docs
+Security Impact
+Rollback Plan
+```
+
+### MR Definition of Done (Checklist)
+
+```text
+[ ] Code complete
+[ ] Tests complete
+[ ] API contract updated
+[ ] Event contract updated
+[ ] DB migration added if needed
+[ ] Docs updated
+[ ] Audit impact checked
+[ ] Security impact checked
+[ ] Observability added
+[ ] Rollback understood
+[ ] Reviewer comments resolved
+```
+
+---
+
+## 4. رسائل Commit (Commit message)
+
+رسالة واضحة بصيغة `type(scope): subject`.
+
+أمثلة:
+
+```text
+feat(order): add multi-stop delivery state
+fix(dispatch): prevent duplicate assignment
+chore(ci): add dependency scanning
+docs(rules): update security rules
+refactor(identity): extract phone normalization
+```
+
+### أنواع Commit المعتمدة
+
+| النوع | الاستخدام |
+|---|---|
+| `feat` | ميزة جديدة |
+| `fix` | إصلاح خلل |
+| `chore` | مهام صيانة/CI/تبعيات |
+| `docs` | وثائق |
+| `refactor` | إعادة هيكلة دون تغيير سلوك |
+| `test` | إضافة/تحسين اختبارات |
+| `perf` | تحسين أداء |
+| `ci` | تغييرات pipeline |
+| `build` | نظام البناء/التبعيات |
+
+### قواعد إضافية
+
+- الـsubject بأمر حاضر، حرف صغير، بدون نقطة في النهاية، أقل من 72 حرفًا.
+- الجسم (body) يشرح **لماذا** وليس فقط **ماذا** (وفق مبدأ «Document the Why»).
+- إذا كان التغيير مرتبطًا بـIssue أو ADR، أشر إليه.
+
+---
+
+## 5. المراجعة والموافقة (Review & Approval)
+
+- **CODEOWNERS** يحدد مالك كل مسار إلزاميًا — لا دمج بدون موافقة المالك.
+- للأصول المشتركة (packages/, services/ مشتركة) تستلزم موافقة المالك المرتبط + مراجعة عبر الفرق.
+- كل MR يجب أن يحل ملاحظات المراجعين قبل الدمج.
+
+---
+
+## 6. ما الذي لا يجوز فعله (متعلق بـGit)
+
+- إدخال Secret في Git.
+- تغيير API بلا تحديث Contract.
+- تغيير Event schema بلا Versioning.
+- الوصول المباشر لجدول خدمة أخرى بعد استخراجها.
+- إضافة Microservice بلا ADR.
+- حذف Audit trail لإخفاء أثر.
+- اعتبار «الكود يعمل عندي» نجاحًا.
+
+---
+
+## 7. سير العمل (Workflow)
+
+```text
+1. إنشاء Issue + تعيين Owner team
+2. إنشاء فرع فرعي من main
+3. التطبيق + الاختبار + التوثيق (14 سؤالًا)
+4. فتح MR مع تعبئة القالب (What/Why/Scope/Tests/.../Rollback)
+5. CI يعمل + مراجعة CODEOWNERS
+6. حل الملاحظات
+7. الدمج (Merge) + حذف الفرع الفرعي
+8. تحديث Progress Ledger للمرحلة
+```
+
+---
+
+## 8. العلاقة مع باقي القوانين
+
+- قانون التوثيق: [ENGINEERING_DOCUMENTATION_LAW.md](ENGINEERING_DOCUMENTATION_LAW.md)
+- DoR / DoD: [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md)
+- الأمان: [SECURITY_RULES.md](SECURITY_RULES.md)
+- سير العمل الكامل: [/CONTRIBUTING.md](../../CONTRIBUTING.md)

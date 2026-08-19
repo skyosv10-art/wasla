@@ -1,0 +1,107 @@
+# WASLA .gitignore
+
+# ─── Node ────────────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+package-lock.json.bak
+
+# ─── Python ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ─── Env / Secrets ──────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.*
+secrets/
+*.secret
+credentials.json
+service-account*.json
+
+# ─── Logs ───────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+log/
+
+# ─── Build / Artifacts ─────────────────────────────────
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.turbo/
+coverage/
+*.lcov
+
+# ─── IDE ────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── OS ─────────────────────────────────────────────────
+.DS_Store
+ehthumbs.db
+Desktop.ini
+
+# ─── Databases ──────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+db/*.sqlite*
+postgres-data/
+redis-data/
+
+# ─── Testing / Coverage ─────────────────────────────────
+coverage/
+.nyc_output/
+test-results/
+junit.xml
+playwright-report/
+test-results.xml
+
+# ─── Infra / Local ──────────────────────────────────────
+infra/docker/data/
+infra/environments/*.local
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# ─── Misc ───────────────────────────────────────────────
+*.bak
+*.tmp
+tmp/
+.tmp/

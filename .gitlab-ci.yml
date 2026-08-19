@@ -1,0 +1,82 @@
+# .gitlab-ci.yml — WASLA validation pipeline
+# Stage واحد: validate. لا بناء كامل وهمي في هذه المرحلة (Phase 00).
+# الهدف: التحقق من بنية المستودع ووجود الملفات الإلزامية وقواعد Markdown.
+
+stages:
+  - validate
+
+variables:
+  GIT_DEPTH: "1"
+
+# التحقق من وجود الملفات الإلزامية لكل مستودع وقواعد المستودع.
+repo-structure:
+  stage: validate
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache bash
+  script:
+    - |
+      set -e
+      echo "==> فحص وجود الملفات الإلزامية في جذر المستودع"
+      for f in README.md CONTRIBUTING.md SECURITY.md CODEOWNERS .gitignore; do
+        if [ ! -f "$f" ]; then
+          echo "ERROR: ملف إلزامي مفقود: $f"
+          exit 1
+        fi
+        echo "OK: $f"
+      done
+
+      echo "==> فحص وجود أدلة المستودع الأساسية"
+      for d in apps bots services packages infra scripts docs; do
+        if [ ! -d "$d" ]; then
+          echo "ERROR: دليل إلزامي مفقود: $d"
+          exit 1
+        fi
+        echo "OK: $d/"
+      done
+
+      echo "==> فحص وجود قوانين docs/00-rules"
+      for f in docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md \
+               docs/00-rules/DEFINITION_OF_DONE.md \
+               docs/00-rules/GIT_RULES.md \
+               docs/00-rules/SECURITY_RULES.md; do
+        if [ ! -f "$f" ]; then
+          echo "ERROR: قانون إلزامي مفقود: $f"
+          exit 1
+        fi
+        echo "OK: $f"
+      done
+
+      echo "==> فحص وجود لوحة التقدم و ADR"
+      test -f docs/16-progress/MASTER_PROGRESS.md || { echo "ERROR: MASTER_PROGRESS.md مفقود"; exit 1; }
+      test -f docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md || { echo "ERROR: ADR-001 مفقود"; exit 1; }
+      echo "OK: docs/16-progress/MASTER_PROGRESS.md"
+      echo "OK: docs/15-decisions/ADR-001"
+
+      echo "==> فحص عدم وجود أسرار في المستودع"
+      if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        if grep -rE "(sk-|AKIA|ghp_|glpat-|BEGIN (RSA |EC )?PRIVATE KEY)" --include='*' . >/dev/null 2>&1; then
+          echo "ERROR: عُثر على نمط سر محتمل في الملفات"
+          grep -rEn "(sk-|AKIA|ghp_|glpat-|BEGIN (RSA |EC )?PRIVATE KEY)" --include='*' . || true
+          exit 1
+        fi
+      fi
+      echo "OK: لا أنماط أسرار واضحة"
+
+      echo "==> جميع فحوصات بنية المستودع نجحت"
+
+# فحص قواعد Markdown (اختياري — يتجاهل إذا لم تتوفر الأداة).
+markdown-lint:
+  stage: validate
+  image: alpine:3.20
+  allow_failure: true
+  before_script:
+    - apk add --no-cache nodejs npm
+    - npm install -g markdownlint-cli2 || true
+  script:
+    - |
+      if command -v markdownlint-cli2 >/dev/null 2>&1; then
+        markdownlint-cli2 "README.md" "CONTRIBUTING.md" "SECURITY.md" "docs/**/*.md" || true
+      else
+        echo "markdownlint-cli2 غير متوفر، تخطي الفحص (allow_failure)"
+      fi

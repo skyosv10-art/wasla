@@ -6,6 +6,18 @@
 
 ---
 
+## 0. قاعدة الدفع بلا توثيق = مرفوض (ملزمة آلياً)
+
+> **كل من عدّل في المشروع وأراد دفع شيء إلى المستودع، عليه أن يوثّق عمله، ثم يدفع التوثيق مع الدفع إلى شجرة المستودع في نفس العملية.**
+
+- التفاصيل والإلزام الميكانيكي: [`docs/00-rules/PUSH_DOCUMENTATION_RULE.md`](docs/00-rules/PUSH_DOCUMENTATION_RULE.md)
+- التسلسل الزمني الرسمي للمراحل: [`docs/16-progress/ROADMAP.md`](docs/16-progress/ROADMAP.md)
+- سجل المهام بكل دفع: [`docs/16-progress/TASK_LOG.md`](docs/16-progress/TASK_LOG.md)
+
+**التطبيق:** job الـ `doc-coverage` في `.gitlab-ci.yml` يفشل أي MR يمس الكود (`apps/ bots/ services/ packages/ infra/ scripts/`) دون تحديث في `docs/`. الـ hook المحلي (`scripts/hooks/pre-push`) تنبيه مبكر فقط؛ الإلزام الفعلي خادمي.
+
+---
+
 ## 1. قاعدة التوثيق غير القابلة للتجاوز
 
 **أي شخص يقوم بأي عمل في المشروع يجب أن يوثق ما فعله في المستودع.** لا يكفي أن يكون الكود موجودًا.

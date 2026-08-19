@@ -177,6 +177,10 @@ wasla/
 
 الجدول الكامل بحالة كل مرحلة في [`docs/16-progress/MASTER_PROGRESS.md`](docs/16-progress/MASTER_PROGRESS.md).
 
+> **خارطة الطريق الرسمية (الزمن والترتيب):** [`docs/16-progress/ROADMAP.md`](docs/16-progress/ROADMAP.md) — هي المسار الملزم للتنفيذ. W0 = اجتياز Phase 00 Exit Gate. الانتقال يتم بالـ Exit Gate لا بالوقت.
+>
+> **قاعدة الدفع:** كل دفع يمس الكود يجب أن يرافقه توثيق في `docs/` (الإلزام خادمياً عبر CI job `doc-coverage`). راجع [`docs/00-rules/PUSH_DOCUMENTATION_RULE.md`](docs/00-rules/PUSH_DOCUMENTATION_RULE.md).
+
 ---
 
 ## 7. كيف يعمل الفريق

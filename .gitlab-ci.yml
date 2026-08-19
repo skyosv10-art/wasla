@@ -80,3 +80,22 @@ markdown-lint:
       else
         echo "markdownlint-cli2 غير متوفر، تخطي الفحص (allow_failure)"
       fi
+
+# ─────────────────────────────────────────────────────────────────────
+# قاعدة التوثيق مع كل دفع (PUSH_DOCUMENTATION_RULE).
+# إلزام خادمي: أي MR يمس الكود يجب أن يلمس docs/ أيضاً. وإلا FAIL.
+# ─────────────────────────────────────────────────────────────────────
+doc-coverage:
+  stage: validate
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache bash git
+    - |
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+      git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
+  script:
+    - |
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+      bash scripts/checks/require-doc-update.sh "origin/$TARGET" HEAD
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"

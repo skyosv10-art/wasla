@@ -33,6 +33,8 @@ import {
 import {
   GROUP_CHAT_TYPES,
   GROUP_EVENT_FIELDS,
+  MEMBER_STATUSES,
+  MEMBERSHIP_FIELDS,
   isObject,
   readArray,
   readIdentifier,
@@ -55,6 +57,13 @@ const MESSAGE_FIELDS: readonly string[] = [
   "channel_post",
   "edited_channel_post",
 ] as const;
+
+/** Compact, already-sanitised summary of a membership/service event. */
+function describeMembership(container: RawObject, selfUpdate: boolean): string | undefined {
+  const status = readString(readObject(container, "new_chat_member") ?? {}, "status");
+  const normalised = status !== undefined && MEMBER_STATUSES.includes(status) ? status : "unknown";
+  return `${selfUpdate ? "bot" : "member"}_status:${normalised}`;
+}
 
 function invalidUpdate(reason: string, details?: Record<string, string | number>): never {
   throw channelError("CHANNEL_INVALID_UPDATE", `تحديث غير صالح: ${reason}`, { details });
@@ -108,6 +117,22 @@ function readChat(container: RawObject): { chatRef: string; isGroup: boolean } {
   return { chatRef, isGroup: GROUP_CHAT_TYPES.includes(type) };
 }
 
+/**
+ * Compact marker of *which* service event this is.
+ *
+ * The neutral update has no typed slot for membership details, so the marker is
+ * the whole payload a consumer gets: it must say join from leave from creation
+ * from migration, because a bot that cannot tell «added to the group» from
+ * «removed from the group» cannot maintain group state at all.
+ */
+function describeServiceEvent(message: RawObject): string {
+  const joined = readArray(message, "new_chat_members")?.length;
+  if (joined !== undefined) return `joined:${joined}`;
+  if (readObject(message, "left_chat_member")) return "left:1";
+  if (message["migrate_to_chat_id"] !== undefined) return "migrated";
+  return "created";
+}
+
 /** Does this message carry a membership/service event rather than content? */
 function isGroupEvent(message: RawObject): boolean {
   return GROUP_EVENT_FIELDS.some((field) => message[field] !== undefined);
@@ -150,6 +175,26 @@ interface Resolved {
   readonly callbackData?: string;
 }
 
+/**
+ * Resolves a membership update (`my_chat_member` / `chat_member`).
+ *
+ * Before MR 6 these fell through to `kind: "unsupported"`, which the core rejects
+ * — so being added to a group produced a 422 and Telegram re-sent the update on a
+ * schedule. Recognising them is what makes the group lifecycle observable at all.
+ *
+ * Only group conversations are promoted to `group_event`: a membership change in a
+ * private chat means the user blocked or unblocked the bot, which this phase does
+ * not act on and must not misfile as a group signal.
+ */
+function resolveMembership(container: RawObject, selfUpdate: boolean): Resolved {
+  const { chatRef, isGroup } = readChat(container);
+  const actor = readActor(container);
+  const base = { chatRef, isGroup, ...(actor ? { actor } : {}) };
+  if (!isGroup) return { ...base, kind: "unsupported" };
+  const text = describeMembership(container, selfUpdate);
+  return { ...base, kind: "group_event", ...(text ? { text } : {}) };
+}
+
 function resolveCallback(callback: RawObject): Resolved {
   const message = readObject(callback, "message");
   if (!message) invalidUpdate("استجابة زر بلا رسالة أصل");
@@ -171,12 +216,7 @@ function resolveMessage(message: RawObject): Resolved {
   const base = { chatRef, isGroup, ...(actor ? { actor } : {}) };
 
   if (isGroupEvent(message)) {
-    const joined = readArray(message, "new_chat_members")?.length;
-    return {
-      ...base,
-      kind: "group_event",
-      ...(joined !== undefined ? { text: `joined:${joined}` } : {}),
-    };
+    return { ...base, kind: "group_event", text: describeServiceEvent(message) };
   }
 
   const contact = readObject(message, "contact");
@@ -225,11 +265,17 @@ export class TelegramUpdateParser {
     if (!channelUpdateId) invalidUpdate("معرّف التحديث مفقود");
 
     const callback = readObject(raw, "callback_query");
+    const membershipField = MEMBERSHIP_FIELDS.find((field) => isObject(raw[field]));
     const messageField = MESSAGE_FIELDS.find((field) => isObject(raw[field]));
 
     let resolved: Resolved;
     if (callback) {
       resolved = resolveCallback(callback);
+    } else if (membershipField) {
+      resolved = resolveMembership(
+        raw[membershipField] as RawObject,
+        membershipField === "my_chat_member",
+      );
     } else if (messageField) {
       resolved = resolveMessage(raw[messageField] as RawObject);
     } else {

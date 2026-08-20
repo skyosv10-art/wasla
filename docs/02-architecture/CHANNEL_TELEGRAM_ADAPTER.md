@@ -1,8 +1,8 @@
 # مُهيّئ قناة Telegram — `@wasla/telegram-adapter`
 
 > **النوع:** وثيقة معمارية تنفيذية · **المرحلة:** Phase 03 — Telegram Channel Foundation · **الدفعة:** MR 3/7
-> **Last Updated:** 2026-08-20 · **Status:** مُنفَّذ (86 اختبار وحدة تنجح)
-> **Related:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) (القرار الحاكم) · [CHANNEL_LAYER_CORE.md](CHANNEL_LAYER_CORE.md) (النواة والمنافذ) · [CONTAINERS.md §5.1](CONTAINERS.md) · [عقد القناة](../../packages/channel-core/contracts/README.md) · [كتالوج الأخطاء](../../packages/channel-core/contracts/errors.md) · [SECURITY_RULES](../00-rules/SECURITY_RULES.md)
+> **Last Updated:** 2026-08-21 · **Status:** مُنفَّذ (99 اختبار وحدة تنجح · +13 لأحداث المجموعات في MR 6)
+> **Related:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) (القرار الحاكم) · [CHANNEL_LAYER_CORE.md](CHANNEL_LAYER_CORE.md) (النواة والمنافذ) · [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) (المجموعات · MR 6) · [CONTAINERS.md §5.1](CONTAINERS.md) · [عقد القناة](../../packages/channel-core/contracts/README.md) · [كتالوج الأخطاء](../../packages/channel-core/contracts/errors.md) · [SECURITY_RULES](../00-rules/SECURITY_RULES.md)
 
 ---
 
@@ -174,7 +174,8 @@ Telegram يسمح بنحو 30 رسالة/ثانية للبوت وواحدة/ثا
 | تسجيل الـwebhook (`setWebhook`) وسحب الرمز من البيئة | فعل تشغيلي لجذر التركيب لا للمكتبة | **MR 4** |
 | `answerCallbackQuery` (إسكات دوّارة الزر) | يحتاج حالة استخدام «ردّ على استجابة زر» غير معرّفة في العقد بعد | **MR 4/6** |
 | مُهيّئات Postgres للمخازن الثلاثة | عقد البيانات لم يُطبَّق على قاعدة بعد | **MR 5** |
-| مُهيّئ المجموعات (تصعيد الدعم · روابط المجموعات) | يتطلّب `channel_group_bindings` المؤجّل | **MR 6** |
+| ~~مُهيّئ المجموعات (تصعيد الدعم · روابط المجموعات)~~ | **أُنجز في MR 6**: أحداث العضوية (`my_chat_member`/`chat_member`) تُحلَّل إلى `group_event`، و`buildInlineKeyboard` يرفض زر `web_app` نحو غرفة. الربط بجدول المجموعات وحده باقٍ مؤجّلاً | ✅ [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) |
+| تغيير العضوية في محادثة **خاصة** (حجب البوت) لا يزال `unsupported` | 422 وإعادة إرسال من Telegram — قيد قائم قبل MR 6 | مرحلة القناة الثانية |
 | حقول `contact`/`location` مُبنّية في `InboundUpdate` | لا مستهلك لها اليوم؛ إضافتها الآن تعديل عقد بلا حاجة | مرحلة الطلبات |
 | ميزانية معدّل مشتركة بين النسخ | تحتاج `channel_rate_budgets` | ما بعد المرحلة 03 |
 | مُهيّئات قنوات أخرى (Web · Mobile · WhatsApp) | خارج نطاق المرحلة؛ النواة جاهزة لها بلا تعديل | مراحل لاحقة |

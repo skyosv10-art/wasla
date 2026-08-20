@@ -62,6 +62,26 @@ export const GROUP_EVENT_FIELDS: readonly string[] = [
   "migrate_to_chat_id",
 ] as const;
 
+/**
+ * Update fields that carry a membership change instead of a message.
+ *
+ * `my_chat_member` is how Telegram reports that the bot itself was added to or
+ * removed from a group — the only signal that a group conversation began, and one
+ * that arrives with no message at all. `chat_member` reports the same for other
+ * members (it only arrives when the bot asked for it).
+ */
+export const MEMBERSHIP_FIELDS: readonly string[] = ["my_chat_member", "chat_member"] as const;
+
+/** Membership statuses WASLA recognises; anything else is reported as `unknown`. */
+export const MEMBER_STATUSES: readonly string[] = [
+  "creator",
+  "administrator",
+  "member",
+  "restricted",
+  "left",
+  "kicked",
+] as const;
+
 /** Envelope every Bot API method answers with. */
 export interface BotApiEnvelope {
   readonly ok: boolean;

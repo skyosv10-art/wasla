@@ -52,6 +52,9 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
       launch: runtime.launch,
     },
     webhookSecret: config.webhookSecret,
+    // Group replies carry a deep link; a bot without a link template answers in
+    // text instead of failing every group reply on a missing template.
+    groupLinkAvailable: config.presence.deepLinkTemplate !== undefined,
     health: () => (runtime.identityDegraded ? "degraded" : "ok"),
     logger: options.logger ?? true,
   });

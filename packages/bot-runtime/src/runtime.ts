@@ -15,6 +15,10 @@
  * updates were processed, so de-duplication and the retry queue do not survive it
  * — which is why production always sets `DATABASE_URL`. Nothing above this file
  * knows which of the two it got.
+ *
+ * Groups are composed here too (MR 6): the declared rooms become a
+ * `GroupRegistryPort`, shared by the inbound and the outbound bundle so both
+ * answer «is this room ours» identically.
  */
 
 import {
@@ -22,9 +26,11 @@ import {
   InMemoryDeliveryStore,
   InMemoryOutbox,
   InMemoryProcessedUpdateStore,
+  StaticGroupRegistry,
   exponentialBackoffPolicy,
   type ChannelPort,
   type DeliveryStorePort,
+  type GroupRegistryPort,
   type IdentityBootstrapPort,
   type InboundDeps,
   type LaunchDeps,
@@ -50,6 +56,8 @@ export interface BotRuntime {
   readonly identityDegraded: boolean;
   /** Which store set was wired — visible so an operator can verify it. */
   readonly persistence: "postgres" | "memory";
+  /** The groups this process operates — the same instance both bundles hold. */
+  readonly groups: GroupRegistryPort;
   /** Release owned resources (the connection pool). Safe to call twice. */
   close(): Promise<void>;
 }
@@ -67,6 +75,8 @@ export interface BuildBotRuntimeOptions {
   readonly channel?: ChannelPort;
   /** Overrides identity bootstrap (tests inject a fake). */
   readonly identity?: IdentityBootstrapPort;
+  /** Overrides the group registry (tests declare rooms without the environment). */
+  readonly groups?: GroupRegistryPort;
   /** Commands this bot answers; `start` is always included. */
   readonly supportedCommands?: readonly string[];
   /**
@@ -127,6 +137,11 @@ export function buildBotRuntime(
 
   const stores = options.stores ?? buildStoreSet(config);
 
+  // One registry instance for both directions: the inbound side decides whether a
+  // room may be answered and the outbound side decides what may be sent to it, and
+  // two registries could disagree.
+  const groups: GroupRegistryPort = options.groups ?? new StaticGroupRegistry(config.groups);
+
   const inbound: InboundDeps = {
     parser: new TelegramUpdateParser(),
     processedUpdates: stores.processedUpdates,
@@ -134,6 +149,7 @@ export function buildBotRuntime(
     identity,
     clock,
     ids,
+    groups,
     ...(options.supportedCommands === undefined
       ? {}
       : { supportedCommands: options.supportedCommands }),
@@ -146,6 +162,7 @@ export function buildBotRuntime(
     retry: exponentialBackoffPolicy(),
     clock,
     ids,
+    groups,
   };
 
   return {
@@ -153,6 +170,7 @@ export function buildBotRuntime(
     inbound,
     outbound,
     launch: { registry },
+    groups,
     identityDegraded: !identityConfigured,
     persistence: config.databaseUrl === undefined ? "memory" : "postgres",
     close: stores.close,

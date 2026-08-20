@@ -4,9 +4,9 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1 · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · MR !2
+> **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1/!2/!3/!4 · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md)
 >
-> **تحديث 2026-08-20:** بدأت عقود Identity (Contract First) كأول خطوة نحو Phase 01 Exit Gate — موثّق في ADR-002 وMR !2. **لا يُلغي هذا بدء Phase 01 حقيقة أن Phase 00 = Exit Gate Pending** (لأن CI لم يجتز فعلياً على GitLab بعد).
+> **تحديث 2026-08-20:** MR !1/!2/!3/!4 مدمجة إلى main. جميع المعايير الهندسية لـ Phase 00 مكتملة (بما فيها أساس البناء). المعيار الوحيد المتبقّي للـ Exit Gate هو «CI passes» — محجوب خارجياً بـ shared runners. مسارا الحلّ في [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md).
 
 ---
 
@@ -24,10 +24,12 @@
 - [MR !2](https://gitlab.com/uxxxu/wasla/-/merge_requests/2) (commit `a15985d`) — عقود Identity بمنهج Contract First (API/Event/Data/Error).
 - [MR !3](https://gitlab.com/uxxxu/wasla/-/merge_requests/3) (commit `0576365`) — تحديث خارطة الطريق بعد الدمج.
 
-**أساس البناء (قيد الدفع عبر MR !4):**
+**أساس البناء (مدمج عبر MR !4، commit `052d3ff`):**
 - pnpm 9 workspaces + tsconfig strict + Vitest + حزمة `@wasla/errors` (اختبار دخان: 3 اختبارات تجتاز).
 - job `build-test` في CI (typecheck + test) — جاهزة للعمل عند تفعيل shared runners.
 - توثيق الاختيار في [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) + تعليمات الإعداد في [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
+**محاولة runner خاص من بيئة التنفيذ (غير مجدية):** Docker يُثبَّت والـ daemon يبدأ بـ`--bridge=none`، لكن بيئة التنفيذ تُنهي العمليات الخلفية بين الأوامر، وbridge/iptables غير مدعوم. **لا يمكن استضافة runner دائم من هذه البيئة** — يتطلب جهازاً مستمراً. مسارا الحلّ الدائمان موثّقان في [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md): (1) التحقق من namespace، (2) runner خاص على جهاز مستمر.
 
 العمل المنجز (كلّه موثّق في [TASK_LOG](TASK_LOG.md)):
 

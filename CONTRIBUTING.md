@@ -4,6 +4,22 @@
 >
 > **المرجع الأم:** أقسام 0, 104, 105, 107, 108, 109, 111, 160, 161 من الدليل التنفيذي.
 
+## المتطلبات المسبقة (Prerequisites)
+
+المستودع Monorepo من نوع Node.js / TypeScript ([ADR-003](docs/15-decisions/ADR-003-monorepo-tooling.md)). الإعداد:
+
+```bash
+node --version    # >= 20.0.0
+corepack enable
+corepack prepare pnpm@9 --activate   # pnpm 9 (متوافق مع Node 20)
+pnpm install                          # تثبيت الحزم (workspaces)
+pnpm build                           # بناء كل الحزم
+pnpm test                            # اختبار كل الحزم
+pnpm typecheck                      # فحص الأنواع
+```
+
+> ملاحظة: job الـ `build-test` في `.gitlab-ci.yml` تنفّذ typecheck و test تلقائياً على CI — لكنها تتطلب تفعيل shared runners على GitLab (انظر [HANDOFF_NEXT_STEPS.md](docs/16-progress/HANDOFF_NEXT_STEPS.md)).
+
 ---
 
 ## 0. قاعدة الدفع بلا توثيق = مرفوض (ملزمة آلياً)

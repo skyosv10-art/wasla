@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · MR 4 — CI DB integration (خدمة postgres في CI)
+
+**Task:** ربط اختبارات تكامل Postgres بـCI وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — إضافة job `db-integration` بخدمة `postgres:15` (GitLab service) يُشغّل اختبارات التكامل ضد Postgres حقيقي في كل MR و على main، مع تصحيح مسار `schema.sql` في الاختبار. **Status:** Completed (مُتحقَّق محلياً ضد Postgres 18 + E2E؛ [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14) مفتوح للمراجعة/الدمج) · **MR:** [!14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** أُضيف job `db-integration` إلى `.gitlab-ci.yml` (مرحلة build، صورة `node:20-alpine`، خدمة `postgres:15` عبر alias `postgres`، متغيرات `POSTGRES_DB=wasla_test`/`POSTGRES_USER`/`POSTGRES_PASSWORD`، و `DATABASE_URL=postgres://postgres:postgres@postgres:5432/wasla_test`) ينفّذ `pnpm --filter @wasla/identity-service test:integration`. كذلك صُحّح مسار `schema.sql` في اختبار التكامل لاستخدام `process.cwd()` بدل `__dirname` (مستقل عن نظام الوحدات).
+2. **لماذا؟** MR 4 في خطّة تنفيذ Phase 01 — التحقّق من الـExit Gate ضد Postgres في CI. اختبارات التكامل (MR 2) كانت مكتوبة ومُدقّقة أنواعياً لكنها معزولة عن التشغيل الافتراضي؛ الآن تُشغّل تلقائياً في CI ضد قاعدة حقيقية، فتتحقّق من سلوك Drizzle/Postgres runtime (وليس فقط typecheck).
+3. **أين؟** `.gitlab-ci.yml`، `services/identity/src/__tests__/postgres-repository.integration.test.ts`، `docs/16-progress/`.
+4. **كيف تم اختباره؟** محلياً: شغّلتُ postgres 18، وأنشأتُ قاعدة `wasla_test`، ونفّذتُ `DATABASE_URL=... pnpm test:integration` → ✅ 3 اختبارات تجتاز (إنشاء/idempotent، استقرار الهوية عبر تغيير Username، رفض التعارض). E2E: أقلعتُ الخادم بـ`DATABASE_URL` → ✅ تدفّق HTTP→Postgres كامل (resolve 201→200 idempotent→200 username-change بنفس Public ID/internal_uuid، history يُظهر sami_v1→sami_v2). CI: التحقّق عبر pipeline الـMR.
+5. **ما الخطوة التالية؟** MR 5 — Exit Gate E2E رسمي (سيناريو كامل: مستخدم Telegram يُنشأ، يتغيّر Username، تبقى الهوية/Public ID مستقرة) كاختبار E2E مُفصل + توثيق اجتياز Exit Gate.
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث `MASTER_PROGRESS.md` + `HANDOFF_NEXT_STEPS.md` (قائمة [4]).
+7. **هل مراجَع؟** مُراجعة ذاتياً + [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14) مفتوح للمراجعة.
+8. **هل ADR مطلوب؟** لا — لا انحراف. استخدام خدمة postgres في CI هو النمط القياسي لـGitLab.
+9. **هل يكسر backward compatibility؟** لا — إضافة job CI جديد؛ الـ build-test الافتراضي دون تغيير (لا يحتاج DB).
+10. **هل migration؟** لا — الاختبار يُطبّق schema.sql (الـDDL التعاقدي) على قاعدة فارغة في كل تشغيل.
+11. **هل توجد مخاطر؟** نعم: (أ) اعتماد job على خدمة postgres في CI (يتطلب runner يدعم services) — shared runners توفّرها. (ب) التحقّق التكاملي عبر HTTP مؤجّل كاختبار E2E رسمي إلى MR 5 (لكن E2E محلي اجتاز). (ج) Testcontainers مؤجّل تماماً (لا حاجة — خدمة postgres كافية وأبسط).
+12. **هل security؟** لا أسرار؛ بيانات اعتماد postgres في CI مؤقتة (job-scoped، قاعدة اختبار فارغة)؛ لا بيانات إنتاج.
+13. **هل performance؟** job منفصل يُشغّل بالتوازي مع build-test؛ pnpm install مكرّر (مقبول لآن CI يُخزّن cache مستقبلاً).
+14. **هل monitoring؟** لا في هذا الـMR؛ نتيجة job تظهر في GitLab pipeline.
+
+**Related:** [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14)، [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)، MR 2 ([!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12))، MR 3 ([!13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13))
+
+---
+
 ## 2026-08-20 · MR 3 — Fastify HTTP layer (طبقة HTTP)
 
 **Task:** إضافة طبقة HTTP لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — مصنع تطبيق Fastify (`createIdentityApp`) يربط مسارات العقد الخمسة (resolve/getUser/addLink/recovery/history) بحالات الاستخدام، تعيين الأخطاء إلى رموز HTTP وأجسام الأخطاء التعاقدية، نقطة إقلاع (composition root)، واختبارات عبر `app.inject`. **Status:** Completed (مُتحقَّق محلياً + smoke test ناجح؛ [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) مفتوح للمراجعة/الدمج) · **MR:** [!13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13)

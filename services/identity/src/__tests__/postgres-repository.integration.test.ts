@@ -30,10 +30,9 @@ import {
 } from "../index.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-const SCHEMA_SQL_PATH = resolve(
-  __dirname,
-  "../../../../contracts/schema.sql",
-);
+// The test runs from the package root (pnpm --filter ... test:integration),
+// so resolve the canonical DDL relative to the working directory.
+const SCHEMA_SQL_PATH = resolve(process.cwd(), "contracts/schema.sql");
 
 const ENABLED = Boolean(DATABASE_URL);
 

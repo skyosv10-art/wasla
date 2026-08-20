@@ -1,0 +1,26 @@
+{
+  "name": "@wasla/geography-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Geography & Localization service — pure domain core, ports & use cases (Phase 02).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@wasla/contracts-geography": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

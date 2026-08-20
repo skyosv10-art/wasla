@@ -27,6 +27,12 @@ export {
 } from "./infrastructure/drizzle/repository.js";
 export { PostgresPublicIdSequence } from "./infrastructure/drizzle/public-id-sequence.js";
 
+// HTTP layer (MR 3). Fastify app factory + error mapping.
+export { createIdentityApp } from "./http/app.js";
+export type { CreateIdentityAppOptions } from "./http/app.js";
+export { sendIdentityError } from "./http/errors.js";
+export type { IdentityErrorBody } from "./http/errors.js";
+
 export { resolveTelegramIdentity } from "./use-cases/resolve-telegram-identity.js";
 export type { UseCaseDeps } from "./use-cases/resolve-telegram-identity.js";
 export { getUser } from "./use-cases/get-user.js";

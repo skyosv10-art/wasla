@@ -1,0 +1,70 @@
+/**
+ * Identity service bootstrap (composition root).
+ *
+ * Wires concrete adapters and starts the Fastify server:
+ *  - Postgres adapters when DATABASE_URL is set (production/staging);
+ *  - in-memory adapters otherwise (local dev / smoke runs).
+ *
+ * Not exercised by the unit test suite (which uses createIdentityApp +
+ * app.inject with in-memory deps). Run with: `node --import tsx ...` or after
+ * `pnpm --filter @wasla/identity-service build`. Port via PORT (default 8080).
+ */
+
+import { createIdentityApp } from "./app.js";
+import {
+  SystemClock,
+  CryptoIdGenerator,
+  InMemoryIdentityRepository,
+  InMemoryOutbox,
+  InMemoryPublicIdSequence,
+  PostgresIdentityRepository,
+  PostgresOutbox,
+  PostgresPublicIdSequence,
+  createDb,
+  ensurePublicIdSequence,
+} from "../index.js";
+import type { UseCaseDeps } from "../use-cases/resolve-telegram-identity.js";
+
+async function buildDeps(): Promise<UseCaseDeps> {
+  const clock = new SystemClock();
+  const idGen = new CryptoIdGenerator();
+
+  if (process.env.DATABASE_URL) {
+    const { db } = createDb({
+      connectionString: process.env.DATABASE_URL,
+    });
+    await ensurePublicIdSequence(db);
+    return {
+      repo: new PostgresIdentityRepository(db),
+      outbox: new PostgresOutbox(db),
+      publicIdSeq: new PostgresPublicIdSequence(db),
+      clock,
+      idGen,
+    };
+  }
+
+  // In-memory dev mode.
+  const repo = new InMemoryIdentityRepository();
+  return {
+    repo,
+    outbox: new InMemoryOutbox(),
+    publicIdSeq: new InMemoryPublicIdSequence(),
+    clock,
+    idGen,
+  };
+}
+
+async function main(): Promise<void> {
+  const deps = await buildDeps();
+  const app = createIdentityApp({ deps, logger: true });
+  const port = Number(process.env.PORT ?? 8080);
+
+  try {
+    await app.listen({ port, host: "0.0.0.0" });
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
+
+await main();

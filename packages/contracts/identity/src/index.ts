@@ -43,6 +43,10 @@ export type AddIdentityLinkRequest =
 /** Response returned when recovery is started. */
 export type RecoveryStarted = components["schemas"]["RecoveryStarted"];
 
+/** Request body for starting account recovery. */
+export type StartRecoveryRequest =
+  components["schemas"]["StartRecoveryRequest"];
+
 /** A single identity change history entry. */
 export type IdentityHistoryEntry =
   components["schemas"]["IdentityHistoryEntry"];

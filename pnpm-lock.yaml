@@ -68,6 +68,9 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      '@wasla/identity-service':
+        specifier: workspace:*
+        version: link:../identity
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

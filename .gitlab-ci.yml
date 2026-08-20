@@ -1,7 +1,6 @@
 # .gitlab-ci.yml — WASLA validation pipeline
 # Stages: validate (بنية المستودع/الأسرار/الوثائق) + build (typecheck/test).
-# ملاحظة: jobs الـ build لا تنفّذ حالياً لأن shared runners غير متاحة للـ namespace
-# المجاني غير المُتحقَّق منه. هي جاهزة للعمل فور تفعيل الـ runners (انظر HANDOFF).
+# shared runners مُفعّلة (2026-08-20) وكل الوظائف تنفّذ فعلياً على main وعلى MRs.
 
 stages:
   - validate
@@ -103,7 +102,6 @@ doc-coverage:
 # ─────────────────────────────────────────────────────────────────────
 # بناء واختبار (Phase 00 build/test foundation — ADR-003).
 # يتطلب Node 20 + pnpm 9 (عبر corepack). ينفّذ typecheck و test لكل الحزم.
-# ملاحظة: لا ينفّذ حالياً بسبب عدم توفّر shared runners (عائق خارجي).
 # ─────────────────────────────────────────────────────────────────────
 build-test:
   stage: build
@@ -120,15 +118,26 @@ build-test:
     - if: $CI_COMMIT_BRANCH == "main"
 
 # ─────────────────────────────────────────────────────────────────────
-# اختبارات تكامل Postgres (MR 4 — Phase 01 Exit Gate persistence verification).
-# يشغّل خدمة postgres:15 كـ GitLab service، ثم ينفّذ اختبارات التكامل
-# (services/identity/src/__tests__/postgres-repository.integration.test.ts)
-# التي تُطبّق schema.sql + التسلسل وتتحقّق من سلوك الـExit Gate ضد Postgres حقيقي.
-# منفصل عن build-test (الذي لا يحتاج DB) حتى يبقى الافتراضي أخضر دون DB.
+# اختبارات تكامل Postgres (Phase 01 MR 4 + Phase 02 MR 6).
+# قاعدة مشتركة: node:20-alpine + pnpm 9 + تثبيت مُجمّد. كل خدمة تملك وظيفتها
+# وقاعدة بياناتها المستقلّة حتى يكون الفشل مُنسَباً لخدمة واحدة ولا تتداخل
+# جداول خدمة مع أخرى. الاختبارات نفسها تُطبّق `contracts/schema.sql` الكنسي.
+# منفصلة عن build-test (الذي لا يحتاج DB) حتى يبقى الافتراضي أخضر دون قاعدة.
 # ─────────────────────────────────────────────────────────────────────
-db-integration:
+.db-integration-base:
   stage: build
   image: node:20-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# Identity (Phase 01 Exit Gate persistence verification):
+# services/identity/src/__tests__/postgres-repository.integration.test.ts
+db-integration:
+  extends: .db-integration-base
   services:
     - name: postgres:15
       alias: postgres
@@ -138,12 +147,24 @@ db-integration:
         POSTGRES_PASSWORD: postgres
   variables:
     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_test"
-  before_script:
-    - corepack enable
-    - corepack prepare pnpm@9 --activate
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/identity-service test:integration
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
+
+# Geography (Phase 02): يُطبّق schema.sql + بيانات السعودية الأولية ويتحقّق من
+# التسلسل الهرمي المُترجم و fallback إلى ar وتعيين/تغيير الموقع + history + outbox:
+# services/geography/src/__tests__/postgres-repository.integration.test.ts
+geography-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_geo_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_geo_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/geography-service test:integration

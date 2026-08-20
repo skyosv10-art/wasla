@@ -92,6 +92,9 @@ importers:
       '@wasla/channel-core':
         specifier: workspace:*
         version: link:../channel-core
+      '@wasla/channel-postgres':
+        specifier: workspace:*
+        version: link:../channel-postgres
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../contracts/channel
@@ -124,6 +127,34 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
+  packages/channel-postgres:
+    dependencies:
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../channel-core
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../contracts/channel
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)

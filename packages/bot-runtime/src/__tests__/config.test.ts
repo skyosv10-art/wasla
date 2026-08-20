@@ -145,6 +145,32 @@ describe("loadBotConfig", () => {
     expect(config.identityServiceUrl).toBe("http://identity:8080");
     expect(config.identityTimeoutMs).toBe(1500);
   });
+
+  it("carries a Postgres DATABASE_URL through (MR 5 persistence)", () => {
+    const config = loadBotConfig(
+      "customer",
+      envFor("customer", { DATABASE_URL: "postgres://wasla:secret@db:5432/wasla" }),
+    );
+
+    expect(config.databaseUrl).toBe("postgres://wasla:secret@db:5432/wasla");
+  });
+
+  it("treats an absent or blank DATABASE_URL as «in-memory»", () => {
+    expect(loadBotConfig("customer", envFor("customer")).databaseUrl).toBeUndefined();
+    expect(
+      loadBotConfig("customer", envFor("customer", { DATABASE_URL: "   " })).databaseUrl,
+    ).toBeUndefined();
+  });
+
+  it.each(["mysql://db:3306/wasla", "db:5432/wasla", "http://db:5432"])(
+    "refuses a DATABASE_URL that is not Postgres (%s)",
+    (value) => {
+      // A typo would otherwise fail on the first webhook, not at startup.
+      expect(() => loadBotConfig("customer", envFor("customer", { DATABASE_URL: value }))).toThrow(
+        /DATABASE_URL/,
+      );
+    },
+  );
 });
 
 describe("SingleBotRegistry", () => {

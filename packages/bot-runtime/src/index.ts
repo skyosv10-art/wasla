@@ -44,6 +44,7 @@ export {
   buildBotRuntime,
   type BotRuntime,
   type BuildBotRuntimeOptions,
+  type ChannelStoreSet,
 } from "./runtime.js";
 
 export {

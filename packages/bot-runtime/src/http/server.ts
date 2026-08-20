@@ -56,6 +56,14 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
     logger: options.logger ?? true,
   });
 
+  // Fastify owns the shutdown sequence, so the connection pool is released from
+  // its `onClose` hook rather than from a signal handler here: `app.close()`
+  // during a test, a rolling deploy, or `SIGTERM` then all end the same way, and
+  // a bot cannot leak a pool by forgetting to unwind it.
+  app.addHook("onClose", async () => {
+    await runtime.close();
+  });
+
   return { app, config, runtime };
 }
 

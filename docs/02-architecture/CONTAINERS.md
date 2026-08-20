@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 37 (Data Architecture) و38 (قاعدة البيانات) و41 (Event Bus) و142 (Queue Strategy) و143 (Object Storage) من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-20 · **Status:** Baseline v1.0 (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter مُنفَّذان) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
+> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
 
 ---
 
@@ -26,13 +26,15 @@ WASLA Monorepo يحتوي على خمس فئات من الحاويات/المك�
 
 | الحاوية | المسار | المسؤولية |
 |---|---|---|
-| Customer Bot | `bots/customer-bot/` | Start، Identity bootstrap، فتح Customer Mini App، Notifications، Links، Deep Links، حالات قصيرة سريعة |
-| Driver Bot | `bots/driver-bot/` | التسجيل، رفع المستندات، الاشتراك، فتح Driver Mini App، الطلبات العاجلة، حالة العمل، Community Group، إشعارات الطلبات |
-| Partner Bot | `bots/partner-bot/` | تسجيل الشريك، فتح Partner Mini App، إدارة الطلبات، الإشعارات المهمة، Store/Business entry |
+| Customer Bot | `bots/customer-bot/` | Start، Identity bootstrap، فتح Customer Mini App، Notifications، Links، Deep Links، حالات قصيرة سريعة — **مُنفَّذ أساسه (MR 4)** |
+| Driver Bot | `bots/driver-bot/` | التسجيل، رفع المستندات، الاشتراك، فتح Driver Mini App، الطلبات العاجلة، حالة العمل، Community Group، إشعارات الطلبات — **مُنفَّذ أساسه (MR 4)** |
+| Partner Bot | `bots/partner-bot/` | تسجيل الشريك، فتح Partner Mini App، إدارة الطلبات، الإشعارات المهمة، Store/Business entry — **مُنفَّذ أساسه (MR 4)** |
 
 > لا يوجد Admin Bot كقناة أساسية — الإدارة عبر Web Admin Portal.
 
 كل البوتات تمر عبر **Telegram Adapter** الذي يملك: Update Intake، Identity Linking، Message Delivery، Mini App Launch، Deep Links، Group Adapter، Bot Rate/Retry Control، Telegram Error Mapping.
+
+**ما هو مُنفَّذ فعلاً بعد MR 4 (Phase 03):** كل بوت **تطبيق قابل للنشر مستقل** (رمز Telegram ورمز webhook خاصان به، ومنفذ خاص: 8083 / 8084 / 8085)، لكن الكود داخله يقتصر على **تسمية بوته**: كل السلوك في الحزمة المشتركة `@wasla/bot-runtime` (§5.1). المسارات العاملة اليوم: `POST /channel/{bot}/webhook` (بالتحقّق من الرمز أولاً) · `POST /channel/messages` · `GET /channel/{bot}/mini-app` · `POST /channel/{bot}/deep-links` · `GET /health`. الأمر المدعوم الوحيد `/start`، وردّه زر Mini App الخاص بالبوت. المسؤوليات الأخرى في الجدول أعلاه (المستندات، الاشتراك، إدارة الطلبات…) تنتظر مراحل مجالها. **التخزين في الذاكرة حتى MR 5** — التفصيل والمؤجّلات في [CHANNEL_BOTS.md](CHANNEL_BOTS.md).
 
 ---
 
@@ -86,9 +88,10 @@ chat · translation · notifications · support · partners · billing · compli
 |---|---|---|
 | channel-core | `packages/channel-core/` | نموذج مجال محايد للقناة + المنافذ التسعة (Ports) + حالات الاستخدام (استقبال · منع تكرار · تسليم · إعادة محاولة · Deep Link · Mini App) + مُهيّئات in-memory/Mock. **صفر معرفة بـTelegram** — **مُنفَّذة (MR 2 · [تفصيل](CHANNEL_LAYER_CORE.md))** |
 | telegram-adapter | `packages/telegram-adapter/` | **المكان الوحيد** الذي يعرف Telegram Bot API: تفسير Update · إرسال · أزرار `web_app` · تخطيط الأخطاء · ميزانية المعدّل · التحقّق من رمز الـwebhook. يُنفّذ `ChannelPort` + `UpdateParserPort` فقط — **مُنفَّذ (MR 3 · [تفصيل](CHANNEL_TELEGRAM_ADAPTER.md))** |
+| bot-runtime | `packages/bot-runtime/` | ما تتشاركه البوتات الثلاثة: سطح HTTP لعقد القناة على Fastify · قراءة التهيئة من البيئة والفشل السريع · `SingleBotRegistry` (بوت واحد ⇄ Mini App واحدة) · مُهيّئ الهوية عبر HTTP · ساعة ومعرّفات الإنتاج · **التركيب** (المكان الوحيد الذي يسمّي مُهيّئاً ملموساً). **لا حالة استخدام فيها** — **مُنفَّذة (MR 4 · [تفصيل](CHANNEL_BOTS.md))** |
 | contracts-channel | `packages/contracts/channel/` | الأنواع المُكتبة المُولّدة من عقد القناة (`packages/channel-core/contracts/`) — **مُنفَّذة (MR 1)** |
 
-اتجاه الاعتماد أحادي وملزم: `bots/*` → `telegram-adapter` → `channel-core`. سلسلة الإرسال: `NotificationService → Channel Router → ChannelPort → TelegramChannelAdapter` — **يُمنع** على أي خدمة Core نداء واجهة Telegram مباشرة.
+اتجاه الاعتماد أحادي وملزم: `bots/*` → `bot-runtime` → `telegram-adapter` → `channel-core`. سلسلة الإرسال: `NotificationService → Channel Router → ChannelPort → TelegramChannelAdapter` — **يُمنع** على أي خدمة Core نداء واجهة Telegram مباشرة.
 
 ---
 

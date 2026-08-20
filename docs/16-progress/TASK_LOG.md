@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · MR 5 — Phase 01 Exit Gate E2E + إغلاق Phase 01
+
+**Task:** اختبار E2E رسمي للـExit Gate وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — سيناريو متكامل (إنشاء مستخدم Telegram → idempotent → تغيير Username → ثبات الهوية/Public ID) عبر كامل المكدّ (HTTP→use cases→Drizzle/Postgres) باستخدام `app.inject` ضد Postgres حقيقي، مع تأكيدات outbox/history. **Status:** Completed (مُتحقَّق محلياً + CI؛ [MR !15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15) مفتوح للمراجعة/الدمج) · **MR:** [!15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** أُضيف اختبار E2E `exit-gate.e2e.test.ts` يُشغّل كامل التدفّق عبر `createIdentityApp` + محوّلات Postgres (بدون منفذ — `app.inject`) ضد Postgres حقيقي: (1) إنشاء مستخدم من Telegram (201) والتقاط Public ID/internal_uuid؛ (2) حلّ idempotent بنفس telegram_user_id + username (200، created=false، نفس Public ID + internal_uuid)؛ (3) تغيير Username (200، نفس Public ID + internal_uuid — هوية مستقرة)؛ (4) history يُظهر usernameEntries `[v1, v2]` مع old_value؛ (5) outbox يحوي `identity.created` + `identity.link.added` + `identity.telegram_username.changed`؛ (6) رفض ربط telegram_id مملوك لمستخدم آخر (409 `IDENTITY_LINK_ALREADY_LINKED`) مع عدم إفساد هوية المالك. كذلك تحديث إعدادات vitest لتشمل نمط `*.e2e.test.ts` (مستثنى من التشغيل الافتراضي، مُشغّل في `test:integration` الذي ينفّذه job `db-integration` في CI).
+2. **لماذا؟** هذا هو تحقّق الـExit Gate لـPhase 01: «إنشاء مستخدم من Telegram وبقاء هويته مستقرة عبر تغيير Username». الاختبارات السابقة غطّت الطبقات منفصلة (وحدة، تكامل مستودع، HTTP)؛ هذا الاختبار يتحقّق من السلوك المتكامل عبر كل الطبقات في سيناريو واحد شامل.
+3. **أين؟** `services/identity/src/__tests__/exit-gate.e2e.test.ts`، `services/identity/vitest.config.ts` و`vitest.integration.config.ts`، `docs/16-progress/{TASK_LOG,MASTER_PROGRESS,HANDOFF_NEXT_STEPS}.md`.
+4. **كيف تم اختباره؟** محلياً: ✅ `DATABASE_URL=... pnpm test:integration` → 5 اختبارات تجتاز (2 E2E + 3 تكامل). `pnpm -r typecheck` ✅ (3 حزم)، `pnpm -r test` ✅ (24 افتراضياً، E2E مستثنى)، `scan-secrets` ✅. CI: job `db-integration` يشغّل اختبار E2E ضد خدمة postgres:15 — اجتيازه = اجتياز Exit Gate.
+5. **ما الخطوة التالية؟** إغلاق Phase 01 = Completed (بعد اجتياز CI لـMR 5) ثم بدء Phase 02 (Geography & Localization).
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث `MASTER_PROGRESS.md` (Phase 01 → Completed) + `HANDOFF_NEXT_STEPS.md` (قائمة [5] + تسليم Phase 01).
+7. **هل مراجَع؟** مُراجعة ذاتياً + [MR !15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15) مفتوح للمراجعة.
+8. **هل ADR مطلوب؟** لا — لا انحراف. استخدام `app.inject` (بدون منفذ) للاختبار E2E هو ممارسة قياسية في Fastify.
+9. **هل يكسر backward compatibility؟** لا — إضافة اختبار + تحديث إعدادات vitest فقط.
+10. **هل migration؟** لا.
+11. **هل توجد مخاطر؟** نعم: (أ) اختبار E2E يعتمد على job `db-integration` (postgres service) في CI — مُفعّل في MR 4. (ب) حالات حافة إضافية (مثل recovery كامل، username→null) مغطّاة جزئياً في اختبارات الطبقات الأدنى؛ يمكن تعزيزها لاحقاً.
+12. **هل security؟** لا أسرار؛ قاعدة اختبار فارغة في كل تشغيل.
+13. **هل performance؟** اختبار E2E سريع (<200ms)؛ يُشغّل بالتوازي مع build-test في CI.
+14. **هل monitoring؟** لا؛ نتيجة job تظهر في pipeline.
+
+**Related:** [MR !15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15)، [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)، MR 1-4 ([!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11)→[!14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14))
+
+---
+
 ## 2026-08-20 · MR 4 — CI DB integration (خدمة postgres في CI)
 
 **Task:** ربط اختبارات تكامل Postgres بـCI وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — إضافة job `db-integration` بخدمة `postgres:15` (GitLab service) يُشغّل اختبارات التكامل ضد Postgres حقيقي في كل MR و على main، مع تصحيح مسار `schema.sql` في الاختبار. **Status:** Completed (مُتحقَّق محلياً ضد Postgres 18 + E2E؛ [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14) مفتوح للمراجعة/الدمج) · **MR:** [!14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14)

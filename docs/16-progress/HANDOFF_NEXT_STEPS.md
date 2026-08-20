@@ -167,9 +167,11 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
     - events: geo.user_location.set.v1, geo.user_location.changed.v1
     - ADR-006-geography-localization-stack-and-model.md
 [3] feat(geography): pure core (domain + ports + in-memory + use-cases + locale fallback)   ← ✅ Done [MR !18]
-[4] feat(geography): Drizzle/Postgres persistence + Saudi seed loader
-    - contracts/seeds/saudi-arabia.sql (بلد + Madinah + منطقة + مدينتان/منطقتان على الأقل)
-[5] feat(geography): Fastify HTTP layer + error mapping + app.inject tests
+[4] feat(geography): Drizzle/Postgres persistence + Saudi seed loader   ← ✅ Done [MR !19]
+    - contracts/seeds/saudi-arabia.sql (بلد SA + Madinah + 2 districts + 2 zones + أسماء ar/en/ur، idempotent ON CONFLICT DO NOTHING)
+    - src/infrastructure/drizzle/{schema,db,repository}.ts (13 جدول Drizzle + PostgresGeographyRepository + PostgresOutbox)
+    - 4 اختبارات تكامل Postgres (seed+hierarchy/localized/fallback/set+change+idempotent+outbox)
+[5] feat(geography): Fastify HTTP layer + error mapping + app.inject tests   ← التالي
 [6] ci(geography): DB integration (geography-db-integration job أو توسيع db-integration)
 [7] test(geography): Phase 02 Exit Gate E2E + close Phase 02
     - تطبّق schema(identity) + schema(geography) + seed في قاعدة اختبار واحدة

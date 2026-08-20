@@ -4,7 +4,7 @@
 >
 > **Last Updated:** 2026-08-20 · **Status:** v1 + typed package · **Related Team:** Team 01 (producer) · جميع الفرق المستهلكة
 >
-> **التحديث (2026-08-20):** أنواع TypeScript مولّدة الآن من OpenAPI — راجع [§الأنواع المولّدة](#الأنواع-المولّدة-typescript) أدناه.
+> **التحديث (2026-08-20):** أنواع TypeScript متوفرة الآن لكلٍّ من **عقد API** (مولّدة من OpenAPI) و**عقد الأحداث** (مشتقّة من events.json) — راجع [§الأنواع المولّدة](#الأنواع-المولّدة-typescript) أدناه.
 
 ---
 
@@ -38,9 +38,11 @@ services/identity/contracts/
 
 ## الأنواع المولّدة (TypeScript)
 
-أُضيف حزمة `@wasla/contracts-identity` التي تولّد أنواع TS من `api.openapi.yml` عبر `openapi-typescript` (وفق [ADR-004](../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)).
+أُضيف حزمة `@wasla/contracts-identity` التي توفّر أنواع TS لكلٍّ من عقد API وعقد الأحداث (وفق [ADR-004](../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)).
 
-**الاستخدام:**
+### أنواع API (مولّدة آلياً)
+
+مولّدة من `api.openapi.yml` عبر `openapi-typescript`.
 
 ```ts
 import type {
@@ -51,7 +53,6 @@ import type {
   paths,
 } from "@wasla/contracts-identity";
 
-// البطاقة التي يُرسلها Telegram Adapter لإنشاء/حل مستخدم:
 const req: ResolveIdentityRequest = {
   telegram_user_id: 987654321,
   telegram_username: "wasla_user",
@@ -65,4 +66,29 @@ const req: ResolveIdentityRequest = {
 pnpm --filter @wasla/contracts-identity generate
 ```
 
-> **القاعدة:** الأنواع مولّدة (لا تُعدَّل يدوياً) — المصدر الكنسي هو `api.openapi.yml`. أي تغيير في العقد يتطلب إعادة التوليد + تحديث docs/.
+### أنواع الأحداث (مشتقّة يدوياً + اختبار حماية انحراف)
+
+مشتقّة من `events.json` يدوياً (لأن `json-schema-to-typescript` يُنتج نوعاً عاماً غير صالح للجذر ذي `$defs` فقط)، مع اختبار `events.test.ts` يقرأ `events.json` ويتحقق من توافق أنواع `event_type` + بنى الـ payload.
+
+```ts
+import type {
+  IdentityEvent,
+  IdentityCreatedV1,
+  IdentityLinkAddedV1,
+  TelegramUsernameChangedV1,
+  RecoveryStartedV1,
+  IdentityEventType,
+} from "@wasla/contracts-identity";
+
+const ev: IdentityEvent = {
+  event_id: "550e8400-e29b-41d4-a716-446655440000",
+  event_type: "identity.created",
+  event_version: "v1",
+  occurred_at: "2026-08-20T11:00:00Z",
+  producer: "identity-service",
+  aggregate: { type: "user", id: "550e8400-e29b-41d4-a716-446655440000" },
+  payload: { wasla_public_id: "WS-0000010427", source: "customer_bot" },
+};
+```
+
+> **القاعدة:** أنواع API مولّدة (لا تُعدَّل يدوياً)؛ أنواع الأحداث مشتقّة يدوياً مع اختبار حماية انحراف. المصدر الكنسي هو `api.openapi.yml` و`events.json`. أي تغيير يتطلب إعادة التوليد/التحديث + إعادة الاختبار + تحديث docs/.

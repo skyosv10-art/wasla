@@ -24,9 +24,34 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 1 — مصالحة الوثائق بعد إغلاق Phase 01 (توثيقي)
+
+**Task:** تصحيح الحالات القديمة في وثائق التقدم لتعكس الواقع بعد دمج Phase 01 (MR !11–!15) وإغلاق Phase 00/01، كي يعرف أي جهة تلي العمل الوضع الحالي بدقة. **Status:** Completed (توثيقي) · **MR:** [!16](https://gitlab.com/uxxxu/wasla/-/merge_requests/16)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** (أ) `ROADMAP.md`: ملاحظة «W0 لم يبدأ بعد» (عائق shared runners قديم) → «W0 = 2026-08-20، Phase 00/01 = Completed، Phase 02 قيد البدء». (ب) `TASK_LOG.md`: إدخالات MR !8–!15 كانت تقول «مفتوح للمراجعة/الدمج» → «مُدمج، CI أخضر»؛ وإدخال MR !8 صُحّح إلى «أُغلق/استُبدل، ADR-005 دخل عبر !10». (ج) `HANDOFF_NEXT_STEPS.md`: حالة MR !11–!15 → «مُدمج، CI أخضر»؛ ملاحظة Wasla Public ID القديمة («10 محارف كبيرة») → الواقع المنفّذ (`^WS-[0-9]{10}$` من تسلسل Postgres)؛ عنوان القسم 4 → «Checklist Phase 01 (مكتملة)»؛ أُضيف القسم 6 بخطة Phase 02 (7 MRs).
+2. **لماذا؟** القاعدة الحاكمة: أي عمل يُدفع يجب توثيقه مع إبقاء خارطة الطريق واضحة لأي جهة تلي العمل — تعرف ماذا تمّ وماذا بقي. العبارات القديمة («مفتوح للمراجعة»، «W0 لم يبدأ») كانت تتناقض مع الواقع (الـMRs مدمجة، CI أخضر، Phase 00/01 مكتملة).
+3. **أين؟** `docs/16-progress/{ROADMAP,TASK_LOG,HANDOFF_NEXT_STEPS}.md`.
+4. **كيف تم اختباره؟** تحقّق من حالة الـMRs الفعلية على GitLab (!8=closed، !9–!15=merged). تحقق محلياً: grep للعبارات القديمة → 0 بعد التصحيح.
+5. **ما الخطوة التالية؟** Phase 02 MR 2 — عقود geography (schema.sql + events + OpenAPI + errors) + ADR-006.
+6. **هل مستند؟** نعم — هذا الإدخال.
+7. **هل مراجَع؟** مُراجعة ذاتياً + المستشار.
+8. **هل ADR مطلوب؟** لا — توثيقي فقط، لا انحراف.
+9. **هل يكسر backward compatibility؟** لا.
+10. **هل migration؟** لا.
+11. **هل توجد مخاطر؟** لا — توثيقي بحت.
+12. **هل security؟** لا.
+13. **هل performance؟** لا.
+14. **هل monitoring؟** لا.
+
+**Related:** [MR !16](https://gitlab.com/uxxxu/wasla/-/merge_requests/16)، [HANDOFF القسم 6](HANDOFF_NEXT_STEPS.md#6-phase-02-geography--localization---العمل-الحالي)
+
+---
+
 ## 2026-08-20 · MR 5 — Phase 01 Exit Gate E2E + إغلاق Phase 01
 
-**Task:** اختبار E2E رسمي للـExit Gate وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — سيناريو متكامل (إنشاء مستخدم Telegram → idempotent → تغيير Username → ثبات الهوية/Public ID) عبر كامل المكدّ (HTTP→use cases→Drizzle/Postgres) باستخدام `app.inject` ضد Postgres حقيقي، مع تأكيدات outbox/history. **Status:** Completed (مُتحقَّق محلياً + CI؛ [MR !15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15) مفتوح للمراجعة/الدمج) · **MR:** [!15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15)
+**Task:** اختبار E2E رسمي للـExit Gate وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — سيناريو متكامل (إنشاء مستخدم Telegram → idempotent → تغيير Username → ثبات الهوية/Public ID) عبر كامل المكدّ (HTTP→use cases→Drizzle/Postgres) باستخدام `app.inject` ضد Postgres حقيقي، مع تأكيدات outbox/history. **Status:** Completed (مُتحقَّق محلياً + CI؛ [MR !15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15) مُدمج، CI أخضر) · **MR:** [!15](https://gitlab.com/uxxxu/wasla/-/merge_requests/15)
 
 ### الأسئلة الـ14 (Documentation Law)
 
@@ -51,7 +76,7 @@
 
 ## 2026-08-20 · MR 4 — CI DB integration (خدمة postgres في CI)
 
-**Task:** ربط اختبارات تكامل Postgres بـCI وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — إضافة job `db-integration` بخدمة `postgres:15` (GitLab service) يُشغّل اختبارات التكامل ضد Postgres حقيقي في كل MR و على main، مع تصحيح مسار `schema.sql` في الاختبار. **Status:** Completed (مُتحقَّق محلياً ضد Postgres 18 + E2E؛ [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14) مفتوح للمراجعة/الدمج) · **MR:** [!14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14)
+**Task:** ربط اختبارات تكامل Postgres بـCI وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — إضافة job `db-integration` بخدمة `postgres:15` (GitLab service) يُشغّل اختبارات التكامل ضد Postgres حقيقي في كل MR و على main، مع تصحيح مسار `schema.sql` في الاختبار. **Status:** Completed (مُتحقَّق محلياً ضد Postgres 18 + E2E؛ [MR !14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14) مُدمج، CI أخضر) · **MR:** [!14](https://gitlab.com/uxxxu/wasla/-/merge_requests/14)
 
 ### الأسئلة الـ14 (Documentation Law)
 
@@ -76,7 +101,7 @@
 
 ## 2026-08-20 · MR 3 — Fastify HTTP layer (طبقة HTTP)
 
-**Task:** إضافة طبقة HTTP لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — مصنع تطبيق Fastify (`createIdentityApp`) يربط مسارات العقد الخمسة (resolve/getUser/addLink/recovery/history) بحالات الاستخدام، تعيين الأخطاء إلى رموز HTTP وأجسام الأخطاء التعاقدية، نقطة إقلاع (composition root)، واختبارات عبر `app.inject`. **Status:** Completed (مُتحقَّق محلياً + smoke test ناجح؛ [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) مفتوح للمراجعة/الدمج) · **MR:** [!13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13)
+**Task:** إضافة طبقة HTTP لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — مصنع تطبيق Fastify (`createIdentityApp`) يربط مسارات العقد الخمسة (resolve/getUser/addLink/recovery/history) بحالات الاستخدام، تعيين الأخطاء إلى رموز HTTP وأجسام الأخطاء التعاقدية، نقطة إقلاع (composition root)، واختبارات عبر `app.inject`. **Status:** Completed (مُتحقَّق محلياً + smoke test ناجح؛ [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) مُدمج، CI أخضر) · **MR:** [!13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13)
 
 ### الأسئلة الـ14 (Documentation Law)
 
@@ -101,7 +126,7 @@
 
 ## 2026-08-20 · MR 2 — Drizzle/Postgres persistence layer (محوّلات Postgres)
 
-**Task:** إضافة طبقة استمرارية Postgres لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — Drizzle schema مطابق للـDDL التعاقدي (schema.sql)، مستودع Postgres، تسلسل Public ID، إعداد اتصال، واختبارات تكامل منفصلة. **Status:** Completed (مُتحقَّق محلياً؛ [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) مفتوح للمراجعة/الدمج) · **MR:** [!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12)
+**Task:** إضافة طبقة استمرارية Postgres لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — Drizzle schema مطابق للـDDL التعاقدي (schema.sql)، مستودع Postgres، تسلسل Public ID، إعداد اتصال، واختبارات تكامل منفصلة. **Status:** Completed (مُتحقَّق محلياً؛ [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) مُدمج، CI أخضر) · **MR:** [!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12)
 
 ### الأسئلة الـ14 (Documentation Law)
 
@@ -126,7 +151,7 @@
 
 ## 2026-08-20 · MR 1 — Identity scaffold + pure core (النطاق والمنافذ وحالات الاستخدام)
 
-**Task:** تنفيذ النواة المجردة لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — نماذج النطاق، المنافذ (ports)، محوّلات في الذاكرة، حالات الاستخدام، والاختبارات. **Status:** Completed (مُتحقَّق محلياً؛ [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) مفتوح للمراجعة/الدمج) · **MR:** [!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11)
+**Task:** تنفيذ النواة المجردة لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — نماذج النطاق، المنافذ (ports)، محوّلات في الذاكرة، حالات الاستخدام، والاختبارات. **Status:** Completed (مُتحقَّق محلياً؛ [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) مُدمج، CI أخضر) · **MR:** [!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11)
 
 **ماذا تم إنجازه (1):** إنشاء حزمة `@wasla/identity-service` (services/identity) بنماذج النطاق (User/IdentityLink/HistoryEntry/RecoveryRequest مطابقة لـschema.sql)، أخطاء ثابتة (errors.ts مطابق لكتالوج errors.md)، مولّد/متحقّق Wasla Public ID (`WS-[0-9]{10}`)، مصانع أحداث المجال (identity.created / link.added / telegram_username.changed / recovery.started) وفق events.json، المنافذ (Clock/IdGenerator/PublicIdSequence/IdentityRepository/Outbox)، محوّلات في الذاكرة للاختبارات، وحالات الاستخدام: `resolveTelegramIdentity` (idempotent حسب telegram_user_id + تسجيل تغيير Username في History دون إنشاء مستخدم جديد) و`getUser` و`addIdentityLink` و`startRecovery` و`getIdentityHistory`. 15 اختباراً تجتاز.
 
@@ -160,7 +185,7 @@
 
 ## 2026-08-20 · إصلاح فشل job `build-test` في CI: إضافة @types/node لعقد Identity
 
-**Task:** إصلاح فشل job `build-test` (typecheck) على GitLab CI بعد تفعيل shared runners — أخطاء `Cannot find module 'node:fs'` / `node:path` / `Cannot find name '__dirname'` في `packages/contracts/identity/src/__tests__/events.test.ts`. **Status:** Completed (الإصلاح مُتحقَّق محلياً بتثبيت مُجمّد نظيف مُطابق لـCI؛ [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) مفتوح للمراجعة/الدمج) · **MR:** [!9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9)
+**Task:** إصلاح فشل job `build-test` (typecheck) على GitLab CI بعد تفعيل shared runners — أخطاء `Cannot find module 'node:fs'` / `node:path` / `Cannot find name '__dirname'` في `packages/contracts/identity/src/__tests__/events.test.ts`. **Status:** Completed (الإصلاح مُتحقَّق محلياً بتثبيت مُجمّد نظيف مُطابق لـCI؛ [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) مُدمج، CI أخضر) · **MR:** [!9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9)
 
 **ماذا تم إنجازه (1):** إضافة `@types/node@^20.0.0` كاعتماد تطوير صريح في `packages/contracts/identity/package.json`، وإعادة توليد `pnpm-lock.yaml`. هذا يجعل `node:fs` / `node:path` / `__dirname` (المستعملة في اختبار حماية انحراف الأحداث `events.test.ts`) قابلة للتحليل بواسطة `tsc` دون الاعتماد على `@types/node` عام خارج المستودع.
 
@@ -194,7 +219,7 @@
 
 ## 2026-08-20 · اختيار مكدّس تنفيذ خدمة Identity (ADR-005)
 
-**Task:** توثيق قرار اختيار المكدّس التقني لتنفيذ خدمة Identity — الخطوة الموثّقة التالية نحو Phase 01 Exit Gate. **Status:** Completed (قرار توثيقي مكتوب ومحقّق محلياً؛ [MR !8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) مفتوح للمراجعة/الدمج) · **MR:** [!8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) · **ADR:** [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)
+**Task:** توثيق قرار اختيار المكدّس التقني لتنفيذ خدمة Identity — الخطوة الموثّقة التالية نحو Phase 01 Exit Gate. **Status:** Completed (قرار توثيقي مكتوب ومُدمج؛ [MR !8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) أُغلق/استُبدل، ودخل ADR-005 إلى main عبر [MR !10](https://gitlab.com/uxxxu/wasla/-/merge_requests/10) المُدمج، CI أخضر) · **MR:** [!8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) (مُغلق) → [!10](https://gitlab.com/uxxxu/wasla/-/merge_requests/10) (مُدمج) · **ADR:** [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)
 
 **ماذا تم إنجازه (1):** إنشاء [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) الذي يُحدّد مكدّس تنفيذ خدمة Identity: Node.js 20 (LTS) + TypeScript 5 (strict) + Fastify (HTTP runtime + ajv للتحقق من مخططات OpenAPI) + PostgreSQL 15+ (وفق عقد البيانات) + Drizzle ORM (schema-first، ترحيلات عكوسة) + Drizzle Kit + Vitest + Testcontainers + pino. لا يُضيف اعتماديات أو كوداً تنفيذياً في هذا الـ MR — قرار توثيقي فقط.
 

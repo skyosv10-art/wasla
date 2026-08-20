@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/channel-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 03 Exit Gate — the only suite allowed to wire the three bots, the identity service and the channel stores together (ADR-007). Tests only: no runtime code and no exports.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/bot-runtime": "workspace:*",
+    "@wasla/channel-core": "workspace:*",
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/customer-bot": "workspace:*",
+    "@wasla/driver-bot": "workspace:*",
+    "@wasla/identity-service": "workspace:*",
+    "@wasla/partner-bot": "workspace:*",
+    "@wasla/telegram-adapter": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

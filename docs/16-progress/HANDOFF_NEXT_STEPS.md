@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (Phase 03 · MR 6/7 — مُهيّئ المجموعات وتحديثاتها — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,19 +15,25 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 6/7)
-المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
-                 (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
-المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       438 اختبار وحدة (96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
-                 + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة)
-                 + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E في CI.
+المرحلة الحالية: Phase 04 — Customer Core (لم تبدأ بعد · §3 للمسار الكامل)
+المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ (أُغلقت 2026-08-21 بسبع مراجعات) —
+                 كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
+                 لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03).
+المتبقّي:         Phase 04 → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03 إلى Phase 04).
+الاختبارات:       445 اختبار وحدة (96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
+                 + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة
+                 + 7 من بوابة المرحلة 03 التي تعمل بمخازن الذاكرة أيضاً)
+                 + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E سابقة في CI
+                 + 8 في بوابة خروج المرحلة 03 (446 مجموعاً عند وجود DATABASE_URL — الثامن يفحص الصفوف).
 البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
                  @wasla/bot-runtime — التخزين **دائم على Postgres** متى وُجِد DATABASE_URL
                  (منع التكرار وطابور المحاولات يعبران إعادة التشغيل)، وفي الذاكرة بغيابه للتشغيل المحلي.
 المجموعات:       البوت يردّ في غرف **مُعلَنة في البيئة** فقط (دعم/تصعيد/مجتمع) برابط عميق لا بزر
                  Mini App، ولا يُهيّئ هوية من غرفة، ويصمت تماماً في غرفة غير مُعلَنة (تُسجَّل وتُدقَّق).
-آخر تحديث:      2026-08-21 (MR 6/7 — سجل المجموعات منفذاً عاشراً + ADR-008 — §7)
+بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
+                 هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
+                 = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
+آخر تحديث:      2026-08-21 (MR 7/7 — بوابة خروج المرحلة 03 وإغلاقها — §7)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -77,8 +83,8 @@
 Phase 00 Repository Foundation ............ ✅ Completed (W0: 2026-08-20) — CI green على main
 Phase 01 Identity Foundation .............. ✅ Completed (2026-08-20) — Exit Gate E2E في CI
 Phase 02 Geography & Localization ......... ✅ Completed (2026-08-20) — Exit Gate E2E في CI
-Phase 03 Telegram Channel Foundation ...... ⏳ قيد التنفيذ (انطلقت بـADR-007 + عقود القناة — انظر §7)
-Phase 04 Customer Core ................... إنشاء Order صالح
+Phase 03 Telegram Channel Foundation ...... ✅ Completed (2026-08-21) — Exit Gate E2E في CI (§7)
+Phase 04 Customer Core ................... ⏳ التالية — إنشاء Order صالح (تحمل معها ما في §7 «ما تُسلّمه Phase 03»)
 Phase 05 Driver Core ...................... Driver profile → Candidate pool
 Phase 06 Order Engine ..................... State machine + Outbox + Audit
 Phase 07 Dispatch & Matching MVP .......... Customer → Driver assignment
@@ -219,9 +225,9 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 7. Phase 03 (Telegram Channel Foundation) — قيد التنفيذ ⏳
+## 7. Phase 03 (Telegram Channel Foundation) — مكتملة ✅ (2026-08-21)
 
-**بوابة الخروج (Exit Gate) الملزمة:** «كل Bot يفتح Mini App المناسبة، ويمكن استبدال Telegram adapter في الاختبارات بـMock Adapter».
+**بوابة الخروج (Exit Gate) الملزمة:** «كل Bot يفتح Mini App المناسبة، ويمكن استبدال Telegram adapter في الاختبارات بـMock Adapter» — **اجتازت في MR 7/7 بثمانية اختبارات تُشغّل البوتات الثلاثة وخدمة الهوية معاً**: [PHASE03_EXIT_GATE_E2E.md](../12-testing/PHASE03_EXIT_GATE_E2E.md).
 
 **القرار المعماري الحاكم:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) — القناة **طبقة توصيل لا خدمة**: `packages/channel-core` (محايد، صفر معرفة بـTelegram) + `packages/telegram-adapter` (المكان الوحيد الذي يعرف Bot API) + `bots/*` جذور تركيب رقيقة. اتجاه الاعتماد: `bots/*` → `telegram-adapter` → `channel-core`.
 
@@ -327,7 +333,41 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
       ظاهر) · groupsFor(role) بلا مستهلك إنتاجي (مِشبك موجِّه التصعيد في Phase 16) · تغيير العضوية
       في محادثة **خاصة** لا يزال unsupported/422 · ربط مجموعة↔طلب وإعلان الطلبات وقفل الاستلام
       وأوامر الإشراف كلّها Phase 08/16 (منطق أعمال لا يخصّ طبقة القنوات).
-[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة   ← التالي
+[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة   ← ✅ Done [MR !30]
+    - packages/channel-e2e: حزمة **اختبارية بحتة** (بلا src/index.ts وبلا تصدير، وكل اعتمادياتها
+      devDependencies) — الموضع الوحيد المسموح فيه استيراد جذور التركيب الثلاثة معاً؛ وضعها في
+      bot-runtime أو channel-postgres كان يخلق دورة اعتماد (bots → bot-runtime → channel-postgres)
+    - harness.ts: خدمة الهوية تستمع على منفذ حقيقي (127.0.0.1:0) ويُنادى محوّل الإنتاج عبرها بـHTTP —
+      «هوية واحدة» حكمٌ تصدره الخدمة لا افتراض يصنعه الاختبار؛ والبوتات الثلاثة عبر app.inject
+      بمخازن قناة **مشتركة** (وإلّا لا يظهر تصادم منع التكرار أصلاً)
+    - 8 اختبارات: mini-app الخاصة بكل بوت (و404 CHANNEL_UNKNOWN_BOT للبوتين الآخرين) · /start يُنتج
+      رسالة واحدة بزرّ mini_app الصحيح + حدث channel.mini_app.launched · شخص واحد عبر الثلاثة = هوية
+      واحدة (created:false · identity.created مرّة واحدة · لا wasla_public_id في أحداث القناة) ·
+      الإعادة = 202 duplicate برسالة واحدة · نفس update_id من بوتين = كلاهما accepted (التفرّد يشمل
+      البوت) · التهيئة وحدها ⇒ TelegramChannelAdapter وتجاوز مقبس واحد ⇒ MockChannelAdapter ·
+      /health يُعلن runtime.persistence · وعلى Postgres: صفوف channel_updates/deliveries/outbox
+    - غير قابلة للتخطّي: تعمل بمخازن الذاكرة في كل `pnpm -r test`، وبـPostgres في وظيفة CI جديدة
+      channel-exit-gate-e2e (قاعدة مستقلّة wasla_channel_e2e)
+    - فحص طفرة: كسر اشتقاق Mini App في bot-runtime/src/config.ts أسقط **4 من 8** ثم أُعيد — البوابة
+      حسّاسة للخطأ الذي وُضعت له
+    - وثيقة: docs/12-testing/PHASE03_EXIT_GATE_E2E.md + تحديث DB_INTEGRATION_CI.md و CONTAINERS.md
+      و CHANNEL_BOTS.md و CHANNEL_LAYER_CORE.md — **صفر تغيير في كود الإنتاج والعقود** (دليل لا ميزة)
+    - ⚠️ حدّ معلَن: تغيير قيمة <BOT>_MINI_APP_URL لا يُسقط اختباراً (الاختبار يقارن الردّ بنفس المتغيّر
+      المُركَّب) — صحّة العنوان الفعلي مسألة تهيئة بيئة، جدولها في CHANNEL_BOTS.md.
+```
+
+### ما تُسلّمه Phase 03 إلى Phase 04 (لم يُنجَز بقصد — لا تُعاد كتابته من الصفر)
+
+```text
+[أ] مُشغّل دوري لـretryDueDeliveries — الطابور دائم على Postgres ومنطق الإعادة مُختبَر، لكن لا شيء
+    يستدعيه دوريّاً في الإنتاج: رسالة فشلت بخطأ retryable تبقى queued حتى يستدعيه أحد.
+[ب] ناشر لصندوق الصادر (channel_outbox) — الأحداث تُكتب ولا يقرأها مستهلك بعد (لا مستهلك قائم أصلاً).
+[ج] سياسة استبقاء/تقليم لـchannel_updates — يكبر بلا حدّ اليوم.
+[د] إرسال telegram_username في تهيئة الهوية (متاح في التحديث، لا يُمرَّر حالياً).
+[هـ] الغرف تُعلَن يدوياً في البيئة: نسيان غرفة = بوت صامت في غرفة عاملة بلا عطل ظاهر.
+[و] groupsFor(role) بلا مستهلك إنتاجي (مِشبك موجِّه التصعيد → Phase 16) · تغيير العضوية في محادثة
+    خاصة لا يزال unsupported/422 · ربط مجموعة↔طلب وإعلان الطلبات وقفل الاستلام وأوامر الإشراف
+    → Phase 08/16 (منطق أعمال لا يخصّ طبقة القنوات).
 ```
 
 **قيود ملزمة لمن يكمل المرحلة** (مفصّلة في [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) §4):
@@ -358,3 +398,4 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - [CHANNEL_LAYER_CORE.md — نواة طبقة القنوات (Phase 03 · MR 2)](../02-architecture/CHANNEL_LAYER_CORE.md)
 - [CHANNEL_TELEGRAM_ADAPTER.md — مُهيّئ قناة Telegram (Phase 03 · MR 3)](../02-architecture/CHANNEL_TELEGRAM_ADAPTER.md)
 - [CHANNEL_BOTS.md — البوتات وطبقة تشغيلها (Phase 03 · MR 4)](../02-architecture/CHANNEL_BOTS.md)
+- [PHASE03_EXIT_GATE_E2E.md — بوابة خروج المرحلة 03 (Phase 03 · MR 7)](../12-testing/PHASE03_EXIT_GATE_E2E.md)

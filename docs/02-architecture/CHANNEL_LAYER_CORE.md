@@ -124,7 +124,8 @@ packages/channel-core/
 |---|---|
 | تفسير حِمل القناة الحقيقي + أزرار القناة + تخطيط أخطائها | MR 3 `telegram-adapter` |
 | مسارات HTTP (webhook/messages/mini-app/deep-links) + جذور التركيب + مُهيّئ هوية HTTP | MR 4 `bots/*` |
-| مُهيّئات Postgres + ناشر صندوق الصادر + مجدول إعادة المحاولة + وظيفة CI | MR 5 |
+| مُهيّئات Postgres + وظيفة CI | ✅ MR 5 — [CHANNEL_PERSISTENCE.md](CHANNEL_PERSISTENCE.md) |
+| ناشر صندوق الصادر + مُشغّل دوري لإعادة المحاولة | **لم يُنجَز بعد** — لا في MR 5 ولا في MR 7؛ أول عمل تشغيلي في Phase 04 ([HANDOFF](../16-progress/HANDOFF_NEXT_STEPS.md)) |
 | ~~منطق المجموعات (دعم/تصعيد)~~ | ✅ MR 6 — [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) |
 | ربط مجموعة↔طلب/مدينة (`channel_group_bindings`) + إعلان الطلبات وقفل الاستلام | Phase 08/16 (خدمة الدعم) |
-| E2E لبوابة الخروج (كل بوت ⇄ Mini App الصحيحة + استبدال المُهيّئ) | MR 7 |
+| ~~E2E لبوابة الخروج (كل بوت ⇄ Mini App الصحيحة + استبدال المُهيّئ)~~ | ✅ MR 7 — [PHASE03_EXIT_GATE_E2E.md](../12-testing/PHASE03_EXIT_GATE_E2E.md) |

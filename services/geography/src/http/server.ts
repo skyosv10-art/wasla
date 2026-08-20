@@ -1,0 +1,78 @@
+/**
+ * Geography service bootstrap (composition root) — MR 5.
+ *
+ * Wires concrete adapters and starts the Fastify server:
+ *  - Postgres adapters when DATABASE_URL is set (production/staging);
+ *  - in-memory adapters (Saudi fixture) otherwise, for local dev / smoke runs;
+ *  - HttpIdentityLookupPort when IDENTITY_SERVICE_URL is set, otherwise the
+ *    permissive in-process lookup (dev only — never in production).
+ *
+ * Not exercised by the unit test suite (which uses createGeographyApp +
+ * app.inject with in-memory deps). Run with: `node --import tsx ...`.
+ * Port via PORT (default 8081 — identity uses 8080; see api.openapi.yml).
+ */
+
+import { createGeographyApp } from "./app.js";
+import {
+  SystemClock,
+  CryptoIdGenerator,
+  InMemoryGeographyRepository,
+  InMemoryOutbox,
+  InMemoryIdentityLookupPort,
+  HttpIdentityLookupPort,
+  PostgresGeographyRepository,
+  PostgresOutbox,
+  createDb,
+} from "../index.js";
+import type { IdentityLookupPort } from "../ports.js";
+import type { UseCaseDeps } from "../use-cases/deps.js";
+
+function buildIdentityLookup(): IdentityLookupPort {
+  const baseUrl = process.env.IDENTITY_SERVICE_URL;
+  if (baseUrl) {
+    return new HttpIdentityLookupPort({ baseUrl });
+  }
+  // Dev fallback: assumes every format-valid public id exists.
+  return new InMemoryIdentityLookupPort();
+}
+
+async function buildDeps(): Promise<UseCaseDeps> {
+  const clock = new SystemClock();
+  const idGen = new CryptoIdGenerator();
+  const identityLookup = buildIdentityLookup();
+
+  if (process.env.DATABASE_URL) {
+    const { db } = createDb({ connectionString: process.env.DATABASE_URL });
+    return {
+      repo: new PostgresGeographyRepository(db),
+      outbox: new PostgresOutbox(db),
+      clock,
+      idGen,
+      identityLookup,
+    };
+  }
+
+  // In-memory dev mode (Saudi fixture seeded by the repository constructor).
+  return {
+    repo: new InMemoryGeographyRepository(),
+    outbox: new InMemoryOutbox(),
+    clock,
+    idGen,
+    identityLookup,
+  };
+}
+
+async function main(): Promise<void> {
+  const deps = await buildDeps();
+  const app = createGeographyApp({ deps, logger: true });
+  const port = Number(process.env.PORT ?? 8081);
+
+  try {
+    await app.listen({ port, host: "0.0.0.0" });
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
+
+await main();

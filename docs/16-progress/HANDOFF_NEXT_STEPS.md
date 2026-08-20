@@ -171,8 +171,13 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
     - contracts/seeds/saudi-arabia.sql (بلد SA + Madinah + 2 districts + 2 zones + أسماء ar/en/ur، idempotent ON CONFLICT DO NOTHING)
     - src/infrastructure/drizzle/{schema,db,repository}.ts (13 جدول Drizzle + PostgresGeographyRepository + PostgresOutbox)
     - 4 اختبارات تكامل Postgres (seed+hierarchy/localized/fallback/set+change+idempotent+outbox)
-[5] feat(geography): Fastify HTTP layer + error mapping + app.inject tests   ← التالي
-[6] ci(geography): DB integration (geography-db-integration job أو توسيع db-integration)
+[5] feat(geography): Fastify HTTP layer + error mapping + app.inject tests   ← ✅ Done [MR !20]
+    - src/http/{app,errors,server}.ts + src/infrastructure/http-identity-lookup.ts
+    - 9 مسارات العقد + /health؛ PUT = 201 لأول تعيين ، 200 للتغيير/idempotent
+    - كود خطأ جديد (إضافة فقط): GEO_INVALID_REQUEST_BODY (400)
+    - 16 اختبار app.inject (إجمالي geography = 41)؛ توثيق: docs/04-api/GEOGRAPHY_HTTP.md
+    - منافذ: identity 8080 ، geography 8081؛ IDENTITY_SERVICE_URL يُفعّل HttpIdentityLookupPort
+[6] ci(geography): DB integration (geography-db-integration job أو توسيع db-integration)   ← التالي
 [7] test(geography): Phase 02 Exit Gate E2E + close Phase 02
     - تطبّق schema(identity) + schema(geography) + seed في قاعدة اختبار واحدة
     - تنشئ مستخدم عبر identity app → تحدّد موقعاً → تغيّره → تتحقق من ثبات wasla_public_id/internal_uuid

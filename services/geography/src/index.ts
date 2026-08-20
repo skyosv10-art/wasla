@@ -1,11 +1,11 @@
 /**
  * @wasla/geography-service — WASLA Geography & Localization domain core (Phase 02).
  *
- * Pure domain model, ports, in-memory adapters and use cases. Contract-First:
- * the API DTO and event types come from @wasla/contracts-geography (the
- * OpenAPI + JSON Schema source of truth). No HTTP or persistence runtime is
- * included here — Fastify (MR 5) and Drizzle/Postgres (MR 4) adapters arrive
- * in later MRs.
+ * Domain model, ports, in-memory adapters, use cases, persistence and the HTTP
+ * layer. Contract-First: the API DTO and event types come from
+ * @wasla/contracts-geography (the OpenAPI + JSON Schema source of truth).
+ * Adapters: Drizzle/Postgres persistence (MR 4) and the Fastify HTTP layer
+ * (MR 5) are wired through the same ports.
  *
  * Phase 02 Exit Gate: "a user changes their location without creating a new
  * account, and every module uses Geo IDs + i18n (AR/EN/UR)" — covered by
@@ -18,6 +18,7 @@ export * from "./domain/locale.js";
 export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+export * from "./infrastructure/http-identity-lookup.js";
 
 // Postgres adapters (MR 4). Imported lazily by the composition root; unit
 // tests use the in-memory adapters and never touch pg/drizzle at runtime.
@@ -46,3 +47,11 @@ export type {
 } from "./use-cases/set-user-location.js";
 export { getUserLocationHistory } from "./use-cases/get-user-location-history.js";
 export type { GetUserLocationHistoryInput } from "./use-cases/get-user-location-history.js";
+
+// HTTP layer (MR 5). The Fastify app factory + contract error mapping. The
+// bootstrap (src/http/server.ts) is intentionally not exported — it is an
+// executable entrypoint, not a library surface.
+export { createGeographyApp } from "./http/app.js";
+export type { CreateGeographyAppOptions } from "./http/app.js";
+export { sendGeographyError } from "./http/errors.js";
+export type { GeographyErrorBody } from "./http/errors.js";

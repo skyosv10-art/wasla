@@ -43,6 +43,7 @@
 | 6 | أساس البناء (pnpm+TS+Vitest) + @wasla/errors | ✅ مدمج (MR !4) |
 | 7 | أنواع TS مولّدة من OpenAPI + @wasla/contracts-identity | ✅ مدمج (MR !6) |
 | 8 | توفيق وثائق التقدم بعد MR !4 + Runbook فكّ عائق CI | ✅ مدمج (MR !5) |
+| 9 | أنواع أحداث Identity مشتقّة من events.json + اختبار حماية انحراف | ✅ مدمج (MR !7) |
 
 > تفاصيل الخطوات التفصيلية لـ Phase 00 (تشخيص فحص الأسرار، ربط pre-push، التحقق من حماية main، CI lint) موثّقة في [TASK_LOG.md](TASK_LOG.md). **الخطوة الوحيدة غير المكتملة: اجتياز pipeline فعلياً على GitLab — محجوبة خارجياً (انظر §2).**
 

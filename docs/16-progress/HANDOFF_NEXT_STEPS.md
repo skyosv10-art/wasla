@@ -20,7 +20,7 @@
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
 الاختبارات:       300 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram) + 4 تكامل + 5 E2E في CI.
-آخر تحديث:      2026-08-20 (بعد دمج MR !25 — @wasla/telegram-adapter: تفسير Update + إرسال + web_app + تخطيط الأخطاء + ميزانية المعدّل)
+آخر تحديث:      2026-08-21 (بعد دمج MR !25 — @wasla/telegram-adapter + تشديد حماية main إلى «No one» للدفع المباشر — §5)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -143,7 +143,9 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 
 ## 5. ملاحظات سياسية وأمنية
 
-- **حماية main:** محمية (Maintainers فقط، لا force push)، لكن تسمح لـMaintainers بالدفع المباشر لـ`main`. يُنصح بتشديد `push_access_levels` إلى «No one» لمواءمتها مع قاعدة \"لا Push مباشر\" في [GIT_RULES.md](../00-rules/GIT_RULES.md).
+- **حماية main (مُشدَّدة 2026-08-21):** `push_access_levels = No one` · `merge_access_levels = Maintainers` · `allow_force_push = false`. أي دفع مباشر إلى `main` مرفوض من **الجميع بما فيهم المالك**، فالطريق الوحيد إليه هو Merge Request يجتاز الأنبوب — أي أن قاعدة \"لا Push مباشر\" في [GIT_RULES.md](../00-rules/GIT_RULES.md) صارت **إلزاماً خادمياً** لا عُرفاً يُراجَع بشرياً. الدمج لا يتأثّر (صلاحية منفصلة).
+  - **أثرها على من يعمل بعدك:** لا تحاول `git push origin main` ولا `commit` مباشر على `main` عبر الـAPI — سيعود 403. اعمل دائماً: فرع → دفع → MR → أنبوب أخضر → دمج (وفق [GIT_RULES.md](../00-rules/GIT_RULES.md)).
+  - **كيف تُراجَع أو تُعكَس:** `GET/POST/DELETE /projects/85566384/protected_branches` (`PATCH` **لا يستبدل** مستوى الدفع بل يُضيف مستوى ثانياً، فالتعديل الصحيح حذف الحماية ثم إعادة إنشائها بـ`push_access_level=0`). العكس عند الحاجة (مثلاً إصلاح عاجل لا يمكن أن يمرّ بأنبوب) يُعاد بـ`push_access_level=40`، **ويجب أن يُعاد التشديد فوراً بعده ويُسجَّل في [TASK_LOG](TASK_LOG.md)**.
 - **رمز الوصول (glpat):** استُخدم للاستنساخ والدفع وفتح/دمج MRs. **يجب إبطاله/تدويره** من [Personal Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens) لأنه ظهر في المحادثة.
 - **قاعدة التوثيق مع الدفع:** كل دفع يمس `apps/bots/services/packages/infra/scripts/` يجب أن يرافقه تحديث في `docs/` (إلزام خادمي عبر CI job `doc-coverage`). الحد الأدنى: إدخال في `docs/16-progress/TASK_LOG.md`.
 

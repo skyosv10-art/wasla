@@ -158,7 +158,7 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 
 ```text
 [1] docs(progress): reconcile roadmap after Phase 01   ← هذا الـMR (توثيقي)
-[2] contracts(geography): Phase 02 contracts + ADR-006
+[2] contracts(geography): Phase 02 contracts + ADR-006   ← ✅ Done [MR !17]
     - packages/contracts/geography: schema.sql + events.json + api.openapi.yml + errors.md
     - جداول: geo_countries/regions/cities/districts/zones + *_names (ترجمة) + geo_user_locations
       (keyed by wasla_public_id كمرجع opaque، CHECK ^WS-[0-9]{10}$، بدون FK إلى identity) +

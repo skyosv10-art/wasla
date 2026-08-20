@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/geography/events/v1",
+  "title": "WASLA Geography Domain Events — v1",
+  "description": "عقد أحداث نطاق Geography (Event Contract). كل حدث مُصدّر versioned. أي تغيير غير متوافق للخلف يتطلب إصدار v2 + ADR. يُنشر عبر Outbox. الكيان المعني بالحدث هو المستخدم (wasla_public_id) — تغيير الموقع لا يُنشئ هوية جديدة (Identity مستقر).",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "type": "string", "const": "geography-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "const": "user" },
+            "id": { "type": "string", "pattern": "^WS-[0-9]{10}$", "description": "wasla_public_id (مرجع opaque للهوية)" }
+          }
+        },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "UserLocationSetV1": {
+      "type": "object",
+      "description": "عُيّن موقع أول لمستخدم (أول تعيين موقع)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "geo.user_location.set" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "zone_id", "source"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "zone_id": { "type": "string", "format": "uuid" },
+                "source": { "type": "string", "enum": ["customer_bot", "driver_bot", "partner_bot", "admin", "system"] }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "UserLocationChangedV1": {
+      "type": "object",
+      "description": "تغيّر موقع مستخدم إلى منطقة جديدة — لا يُنشئ هوية جديدة",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "geo.user_location.changed" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "old_zone_id", "new_zone_id", "source"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "old_zone_id": { "type": ["string", "null"], "format": "uuid" },
+                "new_zone_id": { "type": "string", "format": "uuid" },
+                "source": { "type": "string", "enum": ["customer_bot", "driver_bot", "partner_bot", "admin", "system"] }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@
 >
 > **الحالة:** Baseline v1.0 · **آخر تحديث:** 2026-08-20 (بعد دمج [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1) و[MR !2](https://gitlab.com/uxxxu/wasla/-/merge_requests/2))
 >
-> **ملاحظة الحالة (2026-08-20):** كود Phase 00 وعقود Phase 01 (Contract First) مدمجة إلى `main`، **لكن W0 لم يبدأ بعد** — لأن Phase 00 Exit Gate يتطلب اجتياز CI فعلياً على GitLab، وهذا ما زال محجوباً بعائق shared runners الخارجي. Timeline أدناه نسبية إلى W0 ولم تُقفل بعد.
+> **ملاحظة الحالة (2026-08-20):** كود Phase 00 (بما في ذلك أساس البناء pnpm+TS+Vitest) وعقود Phase 01 (Contract First) مدمجة إلى `main`، **لكن W0 لم يبدأ بعد** — لأن Phase 00 Exit Gate يتطلب اجتياز CI فعلياً على GitLab، وهذا محجوب بعائق shared runners الخارجي. جميع المعايير الهندسية لـ Phase 00 مكتملة؛ المعيار الوحيد المتبقّي هو «CI passes». مسارا الحلّ موثّقان في [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md). Timeline أدناه نسبية إلى W0 ولم تُقفل بعد.
 
 ---
 

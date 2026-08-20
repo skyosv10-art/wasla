@@ -105,9 +105,7 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 [0] ✅ MR تنظيف الحوكمة: أُضيف ADR-005 إلى main + توفيق HANDOFF/التقدم + إغلاق MR !8 (مُلغى) → [MR !10](https://gitlab.com/uxxxu/wasla/-/merge_requests/10) مدمج، CI green
 [1] ✅ MR 1 — Identity scaffold + pure core: حزمة `@wasla/identity-service` (domain/ports/in-memory/use-cases) + Wasla Public ID (`WS-[0-9]{10}`) + 15 اختباراً للـExit Gate (إنشاء، idempotent، استقرار الهوية عبر تغيير Username، outbox) → [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) (مفتوح للمراجعة/الدمج)
 [2] ✅ MR 2 — Drizzle/Postgres persistence: Drizzle schema مطابق لـschema.sql (5 جداول) + `PostgresIdentityRepository`/`PostgresOutbox`/`PostgresPublicIdSequence` + `createDb`/`ensurePublicIdSequence` + `drizzle.config.ts` + إعدادات vitest (التكامل مستثنى) + اختبار تكامل مُسيّج عبر `DATABASE_URL` → [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) (مفتوح للمراجعة/الدمج)
-[3] MR 3 — Fastify HTTP layer:
-    - app factory + مسارات resolve/getUser/addLink/recovery/history ضد المنافذ (ports)
-    - اختبارات عبر app.inject + in-memory repo؛ التحقق من استجابات العقود/الأنواع
+[3] ✅ MR 3 — Fastify HTTP layer: `createIdentityApp` (5 مسارات: resolve/getUser/addLink/recovery/history + `/health`) + `sendIdentityError` (تعيين إلى `{code, message, trace_id}` + HTTP status وفق `errors.md`) + `server.ts` (composition root: Postgres إن وُجد `DATABASE_URL` وإلا في الذاكرة) + 9 اختبارات `app.inject` + smoke test ناجح → [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) (مفتوح للمراجعة/الدمج)
 [4] MR 4 — CI-backed DB integration:
     - GitLab service postgres:15 أولاً (أبسط)؛ Testcontainers فقط بعد التحقق من دعم runner (Docker daemon)
 [5] MR 5 — Phase 01 Exit Gate:

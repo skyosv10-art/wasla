@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-20 (Phase 03 · MR 2/7 مدمجة — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (Phase 03 · MR 4/7 مدمجة — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,15 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 3/7 مدمجة)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 4/7 مدمجة)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       300 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram) + 4 تكامل + 5 E2E في CI.
-آخر تحديث:      2026-08-21 (بعد دمج MR !25 — @wasla/telegram-adapter + تشديد حماية main إلى «No one» للدفع المباشر — §5)
+الاختبارات:       376 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram
+                 + 58 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة) + 4 تكامل + 5 E2E في CI.
+البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
+                 @wasla/bot-runtime — التخزين **في الذاكرة** حتى MR 5 (منع التكرار لا يعبر إعادة التشغيل).
+آخر تحديث:      2026-08-21 (بعد دمج MR !27 — @wasla/bot-runtime + البوتات الثلاثة — §7)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -257,14 +260,28 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
     - 86 اختباراً منها 8 اختبارات مطابقة منافذ تُشغّل المُهيّئ الحقيقي داخل حالات استخدام النواة
       (إثبات الاستبدال بـMock على مستوى الحزمة قبل E2E في MR 7)
     - وثيقة: docs/02-architecture/CHANNEL_TELEGRAM_ADAPTER.md
-[4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links   ← التالي
+[4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links   ← ✅ Done [MR !27]
+    - packages/bot-runtime (@wasla/bot-runtime): كل ما تتشاركه البوتات — سطح HTTP لعقد القناة على Fastify
+      + قراءة التهيئة من البيئة بفشل سريع + SingleBotRegistry + مُهيّئ الهوية عبر HTTP + التركيب
+      (مبرّر الحزمة في CHANNEL_BOTS.md §1 حسب ENGINEERING_DOCUMENTATION_LAW §7)
+    - bots/{customer,driver,partner}-bot: كل جذر يسمّي بوته فقط (buildApp + main) — لا معالج ولا قاعدة عمل
+    - POST /channel/{bot}/webhook: assertWebhookSecret قبل أي معالجة → 401 CHANNEL_UNAUTHORIZED_WEBHOOK ·
+      ثم receiveUpdate · 202 دائماً (بما فيه duplicate) · /start يُجاب بزر Mini App الخاص بالبوت
+    - POST /channel/messages + GET /channel/{bot}/mini-app + POST /channel/{bot}/deep-links + GET /health
+      (`degraded` إن لم تُوصَل خدمة الهوية؛ و/start يعود 503 قابلاً للإعادة بدل اختلاق هوية)
+    - 76 اختباراً جديداً (58 للحزمة + 6 لكل بوت) بـapp.inject بلا منفذ — إجمالي المستودع 376
+    - وثيقة: docs/02-architecture/CHANNEL_BOTS.md
+    - ⚠️ يبقى للتالي: التخزين في الذاكرة (منع التكرار لا يعبر إعادة التشغيل) → MR 5 يستبدل ثلاثة
+      أسطر في runtime.ts بمُهيّئات Postgres؛ ولا مُشغّل دوري لـretryDueDeliveries بعد.
+    - ⚠️ فجوة عقد: /identity/resolve مصوغ بشكل Telegram (telegram_user_id/telegram_username) بينما
+      InboundActor محايد ولا يحمل username — لا يُرسَل username، والإصلاح محلّه مرحلة القناة الثانية.
     - POST /channel/{bot}/webhook: assertWebhookSecret (من @wasla/telegram-adapter) قبل أي معالجة → 401
       CHANNEL_UNAUTHORIZED_WEBHOOK · ثم receiveUpdate · ردّ 202 دائماً (بما فيه duplicate) كما في OpenAPI
     - سجلّ بوتات مقود بالبيئة: رمز كل بوت + BotPresence (عنوان Mini App + قالب الرابط العميق) — لا سرّ في المصدر
     - مُهيّئ HTTP لمنفذ IdentityBootstrapPort مقابل خدمة identity (نمط HttpIdentityLookupPort في geography)
     - GET /channel/{bot}/mini-app + POST /channel/{bot}/deep-links + GET /health
     - اختبارات app.inject لكل بوت (رمز خاطئ · تحديث مكرر · /start يفتح Mini App الصحيحة)
-[5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI
+[5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI   ← التالي
 [6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات
 [7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة
 ```
@@ -296,3 +313,4 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - [ADR-007 — عزل قناة Telegram (Phase 03)](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)
 - [CHANNEL_LAYER_CORE.md — نواة طبقة القنوات (Phase 03 · MR 2)](../02-architecture/CHANNEL_LAYER_CORE.md)
 - [CHANNEL_TELEGRAM_ADAPTER.md — مُهيّئ قناة Telegram (Phase 03 · MR 3)](../02-architecture/CHANNEL_TELEGRAM_ADAPTER.md)
+- [CHANNEL_BOTS.md — البوتات وطبقة تشغيلها (Phase 03 · MR 4)](../02-architecture/CHANNEL_BOTS.md)

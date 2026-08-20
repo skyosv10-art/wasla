@@ -1,0 +1,29 @@
+{
+  "name": "@wasla/bot-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA bot runtime — the shared HTTP surface and composition helpers every bot root reuses (Fastify routes of packages/channel-core/contracts/api.openapi.yml, env-driven bot registry, HTTP identity bootstrap).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/channel-core": "workspace:*",
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/telegram-adapter": "workspace:*",
+    "fastify": "^5.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.23.12",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@wasla/customer-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA customer bot — thin composition root over @wasla/bot-runtime. Opens the customer Mini App (Phase 03).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "tsx watch src/main.ts",
+    "start": "node --import tsx src/main.ts"
+  },
+  "dependencies": {
+    "@wasla/bot-runtime": "workspace:*",
+    "@wasla/contracts-channel": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@wasla/channel-core": "workspace:*",
+    "tsx": "^4.23.12",
+    "vitest": "^2.1.0"
+  }
+}

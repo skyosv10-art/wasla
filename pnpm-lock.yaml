@@ -21,6 +21,97 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  bots/customer-bot:
+    dependencies:
+      '@wasla/bot-runtime':
+        specifier: workspace:*
+        version: link:../../packages/bot-runtime
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../../packages/contracts/channel
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../../packages/channel-core
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
+  bots/driver-bot:
+    dependencies:
+      '@wasla/bot-runtime':
+        specifier: workspace:*
+        version: link:../../packages/bot-runtime
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../../packages/contracts/channel
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../../packages/channel-core
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
+  bots/partner-bot:
+    dependencies:
+      '@wasla/bot-runtime':
+        specifier: workspace:*
+        version: link:../../packages/bot-runtime
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../../packages/contracts/channel
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../../packages/channel-core
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
+  packages/bot-runtime:
+    dependencies:
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../channel-core
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../contracts/channel
+      '@wasla/telegram-adapter':
+        specifier: workspace:*
+        version: link:../telegram-adapter
+      fastify:
+        specifier: ^5.12.1
+        version: 5.12.1
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/channel-core:
     dependencies:
       '@wasla/contracts-channel':

@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !MR7 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -333,7 +333,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
       ظاهر) · groupsFor(role) بلا مستهلك إنتاجي (مِشبك موجِّه التصعيد في Phase 16) · تغيير العضوية
       في محادثة **خاصة** لا يزال unsupported/422 · ربط مجموعة↔طلب وإعلان الطلبات وقفل الاستلام
       وأوامر الإشراف كلّها Phase 08/16 (منطق أعمال لا يخصّ طبقة القنوات).
-[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة   ← ✅ Done [MR !MR7]
+[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة   ← ✅ Done [MR !30]
     - packages/channel-e2e: حزمة **اختبارية بحتة** (بلا src/index.ts وبلا تصدير، وكل اعتمادياتها
       devDependencies) — الموضع الوحيد المسموح فيه استيراد جذور التركيب الثلاثة معاً؛ وضعها في
       bot-runtime أو channel-postgres كان يخلق دورة اعتماد (bots → bot-runtime → channel-postgres)

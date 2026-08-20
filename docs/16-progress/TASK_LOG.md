@@ -26,7 +26,7 @@
 
 ## 2026-08-21 · Phase 03 MR 5 — تخزين دائم لطبقة القنوات `@wasla/channel-postgres`
 
-**Task:** سداد الدَّين المُعلن في MR 4: نقل المنافذ الثلاثة (`ProcessedUpdateStorePort` · `DeliveryStorePort` · `OutboxPort`) من الذاكرة إلى Postgres مقابل `channel_updates` / `channel_deliveries` / `channel_outbox`، بحيث يعبر منع التكرار وطابور إعادة المحاولة إعادة تشغيل العملية، مع اختبارات تكامل على قاعدة حقيقية ووظيفة CI مستقلّة. **Status:** Completed (393 اختبار وحدة + 25 اختبار تكامل تنجح محلياً؛ الجديد: 30) · **MR:** MR 5/7
+**Task:** سداد الدَّين المُعلن في MR 4: نقل المنافذ الثلاثة (`ProcessedUpdateStorePort` · `DeliveryStorePort` · `OutboxPort`) من الذاكرة إلى Postgres مقابل `channel_updates` / `channel_deliveries` / `channel_outbox`، بحيث يعبر منع التكرار وطابور إعادة المحاولة إعادة تشغيل العملية، مع اختبارات تكامل على قاعدة حقيقية ووظيفة CI مستقلّة. **Status:** Completed (393 اختبار وحدة + 25 اختبار تكامل تنجح محلياً؛ الجديد: 30) · **MR:** [!28](https://gitlab.com/uxxxu/wasla/-/merge_requests/28)
 
 ### الأسئلة الـ14 (Documentation Law)
 
@@ -45,7 +45,7 @@
 13. **هل performance؟** مسار الـwebhook يكسب إدخالاً واحداً بدل عمل في الذاكرة، وهو الثمن الحقيقي للضمان. `dueForRetry` يُرتّب ويقصر **داخل** SQL على الفهرس المعرَّف في العقد فلا تُجلب صفوف لتُرمى، و`remember` إدخال واحد لا قراءة ثم كتابة (نداء واحد بدل اثنين ونافذة تعارض معدومة)، و`applyProgress` يزيد النسخة داخل العبارة فلا دورة قراءة-تعديل-كتابة. البركة تُحرَّر عند إغلاق التطبيق فلا اتصالات معلّقة بين النشرات.
 14. **هل monitoring؟** `runtime.persistence` يُخبر المشغّل بأيّ مجموعة يعمل، و`unpublished()` يجعل عمق صندوق الصادر قابلاً للقياس، وطابور الاستحقاق صار قابلاً للاستعلام من خارج العملية (`status = 'queued'` + `next_attempt_at`) — أي أن المراقبة الأعمق التي أُجّلت في MR 4 صارت ممكنة فعلاً. ربطها بلوحة أو تنبيه يحتاج مُشغّلاً دوريّاً وناشراً، وهما مؤجّلان مُعلَنان.
 
-**Related:** MR 5/7 (`feat/channel-postgres-stores`)، [CHANNEL_PERSISTENCE.md](../02-architecture/CHANNEL_PERSISTENCE.md)، [CHANNEL_BOTS.md](../02-architecture/CHANNEL_BOTS.md)، [DB_INTEGRATION_CI](../12-testing/DB_INTEGRATION_CI.md)، [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)، [HANDOFF §7](HANDOFF_NEXT_STEPS.md)، [PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md)
+**Related:** MR [!28](https://gitlab.com/uxxxu/wasla/-/merge_requests/28) (`feat/channel-postgres-stores`)، [CHANNEL_PERSISTENCE.md](../02-architecture/CHANNEL_PERSISTENCE.md)، [CHANNEL_BOTS.md](../02-architecture/CHANNEL_BOTS.md)، [DB_INTEGRATION_CI](../12-testing/DB_INTEGRATION_CI.md)، [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)، [HANDOFF §7](HANDOFF_NEXT_STEPS.md)، [PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md)
 
 ---
 

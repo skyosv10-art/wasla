@@ -1,9 +1,11 @@
 # .gitlab-ci.yml — WASLA validation pipeline
-# Stage واحد: validate. لا بناء كامل وهمي في هذه المرحلة (Phase 00).
-# الهدف: التحقق من بنية المستودع ووجود الملفات الإلزامية وقواعد Markdown.
+# Stages: validate (بنية المستودع/الأسرار/الوثائق) + build (typecheck/test).
+# ملاحظة: jobs الـ build لا تنفّذ حالياً لأن shared runners غير متاحة للـ namespace
+# المجاني غير المُتحقَّق منه. هي جاهزة للعمل فور تفعيل الـ runners (انظر HANDOFF).
 
 stages:
   - validate
+  - build
 
 variables:
   GIT_DEPTH: "1"
@@ -97,3 +99,22 @@ doc-coverage:
       bash scripts/checks/require-doc-update.sh "origin/$TARGET" HEAD
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ─────────────────────────────────────────────────────────────────────
+# بناء واختبار (Phase 00 build/test foundation — ADR-003).
+# يتطلب Node 20 + pnpm 9 (عبر corepack). ينفّذ typecheck و test لكل الحزم.
+# ملاحظة: لا ينفّذ حالياً بسبب عدم توفّر shared runners (عائق خارجي).
+# ─────────────────────────────────────────────────────────────────────
+build-test:
+  stage: build
+  image: node:20-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm -r run typecheck
+    - pnpm -r run test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"

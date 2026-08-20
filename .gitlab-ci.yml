@@ -168,3 +168,23 @@ geography-db-integration:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/geography-service test:integration
+
+# طبقة القنوات (Phase 03 MR 5): تُطبّق packages/channel-core/contracts/schema.sql
+# وتتحقّق من مُهيّئات Postgres للمنافذ الثلاثة (channel_updates / channel_deliveries /
+# channel_outbox) + مطابقة سلوكها لمُهيّئات in-memory عبر حالات الاستخدام نفسها:
+#   packages/channel-postgres/src/__tests__/stores.integration.test.ts
+#   packages/channel-postgres/src/__tests__/port-conformance.integration.test.ts
+channel-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_channel_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_channel_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/channel-postgres test:integration

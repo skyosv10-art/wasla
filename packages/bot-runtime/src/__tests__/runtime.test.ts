@@ -11,13 +11,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   FakeIdentityBootstrap,
+  InMemoryDeliveryStore,
+  InMemoryOutbox,
+  InMemoryProcessedUpdateStore,
   MockChannelAdapter,
   type ChannelDispatch,
 } from "@wasla/channel-core";
 
 import { envNames, loadBotConfig, type EnvBag } from "../config.js";
 import { createBotApp } from "../http/app.js";
-import { buildBotRuntime } from "../runtime.js";
+import { buildBotApp } from "../http/server.js";
+import { buildBotRuntime, type ChannelStoreSet } from "../runtime.js";
 
 import { authHeaders, startUpdate } from "./harness.js";
 
@@ -111,5 +115,66 @@ describe("buildBotRuntime", () => {
 
     expect(runtime.outbound.channel.channel).toBe("telegram");
     expect(runtime.identityDegraded).toBe(false);
+  });
+});
+
+/**
+ * Persistence selection (MR 5). `buildBotRuntime` is the one place that decides
+ * whether the three channel stores are durable, so the decision is asserted here
+ * rather than trusted. No database is contacted: `pg` opens sockets lazily, so
+ * building the runtime and closing it again touches nothing.
+ */
+describe("buildBotRuntime persistence", () => {
+  it("stays in memory when no DATABASE_URL is configured", async () => {
+    const { runtime } = appFor("customer", envFor("customer"), {
+      channel: new MockChannelAdapter(),
+    });
+
+    expect(runtime.persistence).toBe("memory");
+    // The same outbox must serve both paths, or the event log loses its order.
+    expect(runtime.inbound.outbox).toBe(runtime.outbound.outbox);
+    await expect(runtime.close()).resolves.toBeUndefined();
+  });
+
+  it("wires the Postgres stores when DATABASE_URL is configured", async () => {
+    const { runtime } = appFor(
+      "driver",
+      envFor("driver", { DATABASE_URL: "postgres://wasla:secret@db:5432/wasla" }),
+      { channel: new MockChannelAdapter() },
+    );
+
+    expect(runtime.persistence).toBe("postgres");
+    expect(runtime.inbound.outbox).toBe(runtime.outbound.outbox);
+    expect(runtime.inbound.processedUpdates).not.toBeInstanceOf(InMemoryProcessedUpdateStore);
+    expect(runtime.outbound.deliveries).not.toBeInstanceOf(InMemoryDeliveryStore);
+
+    await runtime.close();
+  });
+
+  it("accepts an injected store set and releases it when the app closes", async () => {
+    let closed = 0;
+    const outbox = new InMemoryOutbox();
+    const stores: ChannelStoreSet = {
+      processedUpdates: new InMemoryProcessedUpdateStore(),
+      deliveries: new InMemoryDeliveryStore(),
+      outbox,
+      close: async () => {
+        closed += 1;
+      },
+    };
+
+    const { app, runtime } = buildBotApp("partner", {
+      env: envFor("partner", { DATABASE_URL: "postgres://wasla:secret@db:5432/wasla" }),
+      logger: false,
+      channel: new MockChannelAdapter(),
+      stores,
+    });
+
+    expect(runtime.inbound.outbox).toBe(outbox);
+    expect(closed).toBe(0);
+
+    // Shutting the HTTP surface down must release the persistence layer with it.
+    await app.close();
+    expect(closed).toBe(1);
   });
 });

@@ -7,12 +7,14 @@
  * axiom testable: swap `TelegramChannelAdapter` for `MockChannelAdapter` here and
  * every use case above keeps working untouched.
  *
- * Phase 03 state, stated plainly rather than hidden: persistence is **in-memory**
- * (processed updates, deliveries, outbox). That is honest for a single-process
- * local run and wrong for production — a restart forgets which updates were
- * processed, so de-duplication would not survive it. MR 5 replaces these three
- * stores with Postgres adapters against `channel_updates` / `channel_deliveries`
- * / `channel_outbox`; nothing outside this file changes when it does.
+ * Persistence is chosen here and nowhere else (MR 5): with `DATABASE_URL` set,
+ * the three channel stores are the Postgres adapters of
+ * `@wasla/channel-postgres` writing to `channel_updates` / `channel_deliveries` /
+ * `channel_outbox`; without it, they are the in-memory adapters. The in-memory
+ * path is honest only for a single-process local run: a restart forgets which
+ * updates were processed, so de-duplication and the retry queue do not survive it
+ * — which is why production always sets `DATABASE_URL`. Nothing above this file
+ * knows which of the two it got.
  */
 
 import {
@@ -22,11 +24,15 @@ import {
   InMemoryProcessedUpdateStore,
   exponentialBackoffPolicy,
   type ChannelPort,
+  type DeliveryStorePort,
   type IdentityBootstrapPort,
   type InboundDeps,
   type LaunchDeps,
   type OutboundDeps,
+  type OutboxPort,
+  type ProcessedUpdateStorePort,
 } from "@wasla/channel-core";
+import { createChannelStores } from "@wasla/channel-postgres";
 import { TelegramChannelAdapter, TelegramUpdateParser } from "@wasla/telegram-adapter";
 
 import type { BotConfig } from "./config.js";
@@ -42,6 +48,18 @@ export interface BotRuntime {
   readonly launch: LaunchDeps;
   /** True when no identity service is wired (health reports `degraded`). */
   readonly identityDegraded: boolean;
+  /** Which store set was wired — visible so an operator can verify it. */
+  readonly persistence: "postgres" | "memory";
+  /** Release owned resources (the connection pool). Safe to call twice. */
+  close(): Promise<void>;
+}
+
+/** The three ports whose adapter choice *is* persistence. */
+export interface ChannelStoreSet {
+  readonly processedUpdates: ProcessedUpdateStorePort;
+  readonly deliveries: DeliveryStorePort;
+  readonly outbox: OutboxPort;
+  close(): Promise<void>;
 }
 
 export interface BuildBotRuntimeOptions {
@@ -51,6 +69,14 @@ export interface BuildBotRuntimeOptions {
   readonly identity?: IdentityBootstrapPort;
   /** Commands this bot answers; `start` is always included. */
   readonly supportedCommands?: readonly string[];
+  /**
+   * Overrides the persistence set.
+   *
+   * Tests use it to keep everything in memory while still exercising this exact
+   * composition; the seam exists so no test has to invent a database URL, and so
+   * an E2E can inspect the store it handed in.
+   */
+  readonly stores?: ChannelStoreSet;
 }
 
 /**
@@ -99,14 +125,12 @@ export function buildBotRuntime(
         })
       : new UnconfiguredIdentityBootstrap());
 
-  // One outbox instance shared by both paths: inbound and outbound events must
-  // land in the same log, in the order they happened.
-  const outbox = new InMemoryOutbox();
+  const stores = options.stores ?? buildStoreSet(config);
 
   const inbound: InboundDeps = {
     parser: new TelegramUpdateParser(),
-    processedUpdates: new InMemoryProcessedUpdateStore(),
-    outbox,
+    processedUpdates: stores.processedUpdates,
+    outbox: stores.outbox,
     identity,
     clock,
     ids,
@@ -117,8 +141,8 @@ export function buildBotRuntime(
 
   const outbound: OutboundDeps = {
     channel,
-    deliveries: new InMemoryDeliveryStore(),
-    outbox,
+    deliveries: stores.deliveries,
+    outbox: stores.outbox,
     retry: exponentialBackoffPolicy(),
     clock,
     ids,
@@ -130,5 +154,33 @@ export function buildBotRuntime(
     outbound,
     launch: { registry },
     identityDegraded: !identityConfigured,
+    persistence: config.databaseUrl === undefined ? "memory" : "postgres",
+    close: stores.close,
+  };
+}
+
+/**
+ * Choose the store set for this process.
+ *
+ * The three stores travel together deliberately: a durable delivery queue behind
+ * an in-memory de-duplication set would still lose exactly-once on restart, so
+ * mixing them would buy nothing while hiding the loss.
+ *
+ * One outbox instance is shared by the inbound and the outbound path — both must
+ * append to the same log, in the order things happened.
+ */
+function buildStoreSet(config: BotConfig): ChannelStoreSet {
+  if (config.databaseUrl !== undefined) {
+    return createChannelStores({ connectionString: config.databaseUrl });
+  }
+
+  const outbox = new InMemoryOutbox();
+  return {
+    processedUpdates: new InMemoryProcessedUpdateStore(),
+    deliveries: new InMemoryDeliveryStore(),
+    outbox,
+    close: async () => {
+      /* nothing to release: the in-memory set dies with the process */
+    },
   };
 }

@@ -13,15 +13,21 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 00 (مدمج) → Phase 01 — Identity Foundation (عقود مدمجة)
-الحالة:          MR !1 وMR !2 مدمجان إلى main؛ Phase 00 Exit Gate لا يزال معلّقاً
-                 على التحقق من CI (عائق shared runners خارجي). W0 لم يبدأ بعد.
-آخر تحديث:      2026-08-20 (بعد الدمج)
+المرحلة الحالية: Phase 00 (مدمج + أساس بناء مُضاف) → Phase 01 — Identity Foundation (عقود مدمجة)
+الحالة:          MR !1/!2/!3 مدمجة إلى main؛ أساس بناء (pnpm+TS+Vitest) مُضاف؛
+                 Phase 00 Exit Gate لا يزال معلّقاً على التحقق من CI (shared runners). W0 لم يبدأ بعد.
+آخر تحديث:      2026-08-20 (بعد إضافة أساس البناء)
 ```
 
 **ما تم دمجه إلى main:**
 - [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1) (commit `cba9a75`) — إصلاح فحص الأسرار في CI + أساس Phase 00.
 - [MR !2](https://gitlab.com/uxxxu/wasla/-/merge_requests/2) (commit `a15985d`) — عقود Identity بمنهج Contract First (API/Event/Data/Error).
+- [MR !3](https://gitlab.com/uxxxu/wasla/-/merge_requests/3) (commit `0576365`) — تحديث خارطة الطريق بعد الدمج.
+
+**أساس البناء (قيد الدفع عبر MR !4):**
+- pnpm 9 workspaces + tsconfig strict + Vitest + حزمة `@wasla/errors` (اختبار دخان: 3 اختبارات تجتاز).
+- job `build-test` في CI (typecheck + test) — جاهزة للعمل عند تفعيل shared runners.
+- توثيق الاختيار في [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) + تعليمات الإعداد في [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 العمل المنجز (كلّه موثّق في [TASK_LOG](TASK_LOG.md)):
 

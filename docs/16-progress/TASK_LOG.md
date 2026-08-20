@@ -26,7 +26,7 @@
 
 ## 2026-08-20 · اختيار مكدّس تنفيذ خدمة Identity (ADR-005)
 
-**Task:** توثيق قرار اختيار المكدّس التقني لتنفيذ خدمة Identity — الخطوة الموثّقة التالية نحو Phase 01 Exit Gate. **Status:** Completed (قرار توثيقي فقط) · **MR:** [!8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) · **ADR:** [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)
+**Task:** توثيق قرار اختيار المكدّس التقني لتنفيذ خدمة Identity — الخطوة الموثّقة التالية نحو Phase 01 Exit Gate. **Status:** Completed (قرار توثيقي مكتوب ومحقّق محلياً؛ [MR !8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) مفتوح للمراجعة/الدمج) · **MR:** [!8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) · **ADR:** [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)
 
 **ماذا تم إنجازه (1):** إنشاء [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) الذي يُحدّد مكدّس تنفيذ خدمة Identity: Node.js 20 (LTS) + TypeScript 5 (strict) + Fastify (HTTP runtime + ajv للتحقق من مخططات OpenAPI) + PostgreSQL 15+ (وفق عقد البيانات) + Drizzle ORM (schema-first، ترحيلات عكوسة) + Drizzle Kit + Vitest + Testcontainers + pino. لا يُضيف اعتماديات أو كوداً تنفيذياً في هذا الـ MR — قرار توثيقي فقط.
 

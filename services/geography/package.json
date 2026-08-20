@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.23.1",
+    "@wasla/identity-service": "workspace:*",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",
     "vitest": "^2.1.0"

@@ -1,10 +1,10 @@
 # طبقة القنوات — النواة المحايدة `@wasla/channel-core`
 
-> **النوع:** وثيقة معمارية تنفيذية (Component-level) · **القرار الحاكم:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)
+> **النوع:** وثيقة معمارية تنفيذية (Component-level) · **القرار الحاكم:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) · **مُعدَّل بـ**[ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) (المنفذ العاشر: سجل المجموعات)
 >
-> **الحزمة:** `packages/channel-core` · **الحالة:** مُنفَّذة (Phase 03 · MR 2) · **Last Updated:** 2026-08-20
+> **الحزمة:** `packages/channel-core` · **الحالة:** مُنفَّذة (Phase 03 · MR 2، ومُوسَّعة بالمجموعات في MR 6) · **Last Updated:** 2026-08-21
 >
-> **Related:** [CONTAINERS.md §5.1](CONTAINERS.md) · [عقود القناة](../../packages/channel-core/contracts/README.md) · [MASTER_PROGRESS](../16-progress/MASTER_PROGRESS.md) · [HANDOFF §7](../16-progress/HANDOFF_NEXT_STEPS.md)
+> **Related:** [CONTAINERS.md §5.1](CONTAINERS.md) · [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) · [عقود القناة](../../packages/channel-core/contracts/README.md) · [MASTER_PROGRESS](../16-progress/MASTER_PROGRESS.md) · [HANDOFF §7](../16-progress/HANDOFF_NEXT_STEPS.md)
 
 ---
 
@@ -30,20 +30,21 @@ packages/channel-core/
 └── src/
     ├── domain/                 مفردات محيّدة + أحداث + مُرمِّز روابط + سياسة إعادة المحاولة
     │   ├── model.ts            ChatRef · InboundUpdate · ButtonIntent · DeliveryRecord · BotPresence · LIMITS
+    │   │                       ConversationScope · GroupRole · GroupPresence (MR 6)
     │   ├── errors.ts           ChannelError (يشتق الصنف/الحالة/retryable من كتالوج العقود)
     │   ├── events.ts           بناة الأحداث الأربعة بمغلّف واحد
     │   ├── deep-link.ts        encode/decodeDeepLinkPayload (base64url ≤ 64 حرفاً)
     │   └── retry.ts            exponentialBackoffPolicy + الجدول المنشور
-    ├── ports.ts                المنافذ التسعة (الحدود الوحيدة مع الخارج)
+    ├── ports.ts                المنافذ العشرة (الحدود الوحيدة مع الخارج)
     ├── use-cases/              السلوك: receiveUpdate · sendMessage · retryDueDeliveries · سطوح التشغيل
     ├── infrastructure/
     │   └── in-memory.ts        مُهيّئات in-memory + MockChannelAdapter (أداة إثبات بوابة الخروج)
-    └── __tests__/              84 اختباراً منها اختبار حراسة معماري
+    └── __tests__/              102 اختباراً منها اختبار حراسة معماري
 ```
 
 ---
 
-## 3. المنافذ التسعة
+## 3. المنافذ العشرة
 
 | المنفذ | المسؤولية | مُهيّئ MR 2 (اختبار) | مُهيّئ الإنتاج |
 |---|---|---|---|
@@ -54,6 +55,7 @@ packages/channel-core/
 | `OutboxPort` | إلحاق حدث مجال بصندوق الصادر | `InMemoryOutbox` | MR 5 |
 | `IdentityBootstrapPort` | ضمان وجود هوية عند بدء المحادثة (بدون تخزين ربط) | `FakeIdentityBootstrap` | MR 4 (HTTP) |
 | `MiniAppRegistryPort` | حضور البوت: أي Mini App وأي قالب رابط | `StaticMiniAppRegistry` | MR 4 (من الإعداد) |
+| `GroupRegistryPort` | أي المجموعات نُشغّلها وبأي دور (دعم/تصعيد/مجتمع) | `StaticGroupRegistry` | MR 6 (من الإعداد) |
 | `ClockPort` | الزمن كقيمة قابلة للحقن | `FixedClock` | ساعة النظام (MR 4) |
 | `IdGeneratorPort` | معرّفات الأحداث والتسليمات | `SequentialIdGenerator` | `crypto.randomUUID` (MR 4) |
 
@@ -123,5 +125,6 @@ packages/channel-core/
 | تفسير حِمل القناة الحقيقي + أزرار القناة + تخطيط أخطائها | MR 3 `telegram-adapter` |
 | مسارات HTTP (webhook/messages/mini-app/deep-links) + جذور التركيب + مُهيّئ هوية HTTP | MR 4 `bots/*` |
 | مُهيّئات Postgres + ناشر صندوق الصادر + مجدول إعادة المحاولة + وظيفة CI | MR 5 |
-| منطق المجموعات (دعم/تصعيد) | MR 6 |
+| ~~منطق المجموعات (دعم/تصعيد)~~ | ✅ MR 6 — [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) |
+| ربط مجموعة↔طلب/مدينة (`channel_group_bindings`) + إعلان الطلبات وقفل الاستلام | Phase 08/16 (خدمة الدعم) |
 | E2E لبوابة الخروج (كل بوت ⇄ Mini App الصحيحة + استبدال المُهيّئ) | MR 7 |

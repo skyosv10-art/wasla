@@ -25,6 +25,7 @@ export {
 export { mapTelegramFailure, type FailureInput, type MappedFailure } from "./error-mapping.js";
 export {
   buildInlineKeyboard,
+  isGroupChatRef,
   type InlineButton,
   type InlineKeyboardMarkup,
 } from "./keyboard.js";

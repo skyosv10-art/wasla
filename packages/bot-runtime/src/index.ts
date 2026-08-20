@@ -21,11 +21,14 @@
 export {
   DEFAULT_BOT_PORTS,
   DEFAULT_MINI_APP_LABELS,
+  GROUP_ENV_NAMES,
+  GROUP_ROLES,
   SingleBotRegistry,
   envNames,
   envPrefix,
   loadBotConfig,
   loadBotPresence,
+  loadGroupPresences,
   type BotConfig,
   type EnvBag,
 } from "./config.js";
@@ -38,7 +41,15 @@ export {
   type HttpIdentityBootstrapOptions,
 } from "./identity-bootstrap.js";
 
-export { DEFAULT_WELCOME_TEXT, buildStartReply, type StartReplyInput } from "./welcome.js";
+export {
+  DEFAULT_GROUP_LINK_LABEL,
+  DEFAULT_GROUP_START_TEXT,
+  DEFAULT_WELCOME_TEXT,
+  buildGroupStartReply,
+  buildStartReply,
+  type GroupStartReplyInput,
+  type StartReplyInput,
+} from "./welcome.js";
 
 export {
   buildBotRuntime,

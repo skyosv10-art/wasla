@@ -33,6 +33,7 @@ import {
   receiveUpdate,
   sendMessage,
   type ButtonIntent,
+  type GroupRole,
   type InboundDeps,
   type LaunchDeps,
   type OutboundDeps,
@@ -51,7 +52,7 @@ import {
 } from "@wasla/contracts-channel";
 import { assertWebhookSecret } from "@wasla/telegram-adapter";
 
-import { buildStartReply } from "../welcome.js";
+import { buildGroupStartReply, buildStartReply } from "../welcome.js";
 
 import { sendChannelError } from "./errors.js";
 
@@ -74,6 +75,14 @@ export interface CreateBotAppOptions {
   readonly webhookSecret: string | undefined;
   /** Overrides the default Arabic `/start` copy. */
   readonly welcomeText?: string;
+  /** Overrides the default Arabic group `/start` copy (all roles). */
+  readonly groupWelcomeText?: string;
+  /**
+   * False when this bot has no deep-link template, so the group reply is text
+   * only. The root knows this from configuration; the app never reads the
+   * environment itself.
+   */
+  readonly groupLinkAvailable?: boolean;
   /** Reported by `GET /health`; a root may degrade itself (e.g. no identity). */
   readonly health?: () => "ok" | "degraded";
   /** Fastify's pino logger. Off by default so tests stay quiet. */
@@ -272,8 +281,23 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
       traceId: request.id,
     });
 
-    if (result.status === "accepted" && result.command === START_COMMAND) {
-      await answerStart(app, options, result.chatRef, result.channelUpdateId, request.id);
+    // Who gets answered, and with what, is decided by the core's reply policy —
+    // this root only obeys it. A group we do not operate is recorded and left in
+    // silence: the response is still 202, because the update *was* received and a
+    // non-2xx would only make Telegram send it again.
+    if (result.status === "accepted" && result.command === START_COMMAND && result.replyAllowed) {
+      if (result.scope === "group") {
+        await answerGroupStart(
+          app,
+          options,
+          result.chatRef,
+          result.channelUpdateId,
+          result.groupRole ?? "support",
+          request.id,
+        );
+      } else {
+        await answerStart(app, options, result.chatRef, result.channelUpdateId, request.id);
+      }
     }
 
     return reply.status(202).send({
@@ -387,6 +411,50 @@ async function answerStart(
         code: isChannelError(error) ? error.code : "CHANNEL_INTERNAL_ERROR",
       },
       "start reply could not be sent",
+    );
+  }
+}
+
+/**
+ * Answer a fresh `/start` **inside a group** we operate.
+ *
+ * Same failure discipline as the private answer, and the same idempotency key, so
+ * a replay cannot double-post into a room. The button is a deep link into the
+ * private conversation; when this bot has no link template configured the reply
+ * degrades to text rather than disappearing.
+ */
+async function answerGroupStart(
+  app: FastifyInstance,
+  options: CreateBotAppOptions,
+  chatRef: string,
+  channelUpdateId: string,
+  role: GroupRole,
+  traceId: string,
+): Promise<void> {
+  const { deps } = options;
+  try {
+    await sendMessage(deps.outbound, {
+      bot: deps.bot,
+      message: buildGroupStartReply({
+        bot: deps.bot,
+        channel: deps.outbound.channel.channel,
+        chatRef,
+        channelUpdateId,
+        role,
+        withLink: options.groupLinkAvailable ?? true,
+        ...(options.groupWelcomeText === undefined ? {} : { text: options.groupWelcomeText }),
+        traceId,
+      }),
+    });
+  } catch (error) {
+    app.log.error(
+      {
+        bot: deps.bot,
+        trace_id: traceId,
+        role,
+        code: isChannelError(error) ? error.code : "CHANNEL_INTERNAL_ERROR",
+      },
+      "group start reply could not be sent",
     );
   }
 }

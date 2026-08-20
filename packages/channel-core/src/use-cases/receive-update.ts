@@ -7,11 +7,18 @@
  *      corrected retry of the same update id is still possible
  *   3. de-duplicate atomically — a duplicate returns `duplicate` (202, not an
  *      error) and emits nothing (ADR-007 rule 3)
- *   4. bootstrap identity for the start command only (ADR-007 rule 4)
+ *   4. bootstrap identity for the start command only, and only in a private
+ *      conversation (ADR-007 rule 4, ADR-008)
  *   5. append `channel.update.received.v1` to the outbox
  *
  * Identity bootstrap runs *after* de-duplication on purpose: a replayed update
  * must not hit the Identity service again.
+ *
+ * Group conversations travel this same path — no branch duplicates it. What the
+ * scope decides is answered here once, in two lines: identity is personal (a
+ * group reference is shared by everyone in the room, so bootstrapping from it
+ * would attach one person's identity to a room), and only a group this
+ * deployment declared may be answered at all.
  */
 
 import type { BotKind } from "@wasla/contracts-channel";
@@ -19,7 +26,12 @@ import type { BotKind } from "@wasla/contracts-channel";
 import { channelError, isChannelError } from "../domain/errors.js";
 import { updateReceivedEvent } from "../domain/events.js";
 import { decodeDeepLinkPayload } from "../domain/deep-link.js";
-import type { DecodedDeepLink, InboundUpdate } from "../domain/model.js";
+import type {
+  ConversationScope,
+  DecodedDeepLink,
+  GroupRole,
+  InboundUpdate,
+} from "../domain/model.js";
 import type { IdentityBootstrapResult } from "../ports.js";
 import type { InboundDeps } from "./deps.js";
 
@@ -48,6 +60,18 @@ export interface ReceiveUpdateInput {
 
 export interface ReceiveUpdateResult {
   readonly status: "accepted" | "duplicate";
+  /** Private chat or group — the value the reply policy is derived from. */
+  readonly scope: ConversationScope;
+  /** Role of the group, when the conversation is a group we operate. */
+  readonly groupRole?: GroupRole;
+  /**
+   * Whether the composition root may answer *in this conversation*.
+   *
+   * `true` for private chats and for configured groups; `false` for a group this
+   * deployment does not know. Computed here so all three bots share one answer
+   * instead of re-deriving it (and disagreeing).
+   */
+  readonly replyAllowed: boolean;
   readonly channel: InboundUpdate["channel"];
   readonly bot: BotKind;
   readonly channelUpdateId: string;
@@ -94,6 +118,13 @@ export async function receiveUpdate(
   const traceId = input.traceId ?? update.traceId;
   const receivedAt = deps.clock.now();
 
+  const scope: ConversationScope = update.isGroup === true ? "group" : "private";
+  const groupRole = scope === "group" ? (deps.groups?.roleFor(update.chatRef) ?? null) : null;
+  // An unknown group is recorded but never answered: the bot may have been added
+  // by anyone, and a bot that greets an unconfigured room leaks its existence and
+  // its Mini App link to it.
+  const replyAllowed = scope === "private" || groupRole !== null;
+
   const isNew = await deps.processedUpdates.remember({
     channel: update.channel,
     bot: update.bot,
@@ -108,6 +139,9 @@ export async function receiveUpdate(
   if (!isNew) {
     return {
       status: "duplicate",
+      scope,
+      ...(groupRole === null ? {} : { groupRole }),
+      replyAllowed,
       channel: update.channel,
       bot: update.bot,
       channelUpdateId: update.channelUpdateId,
@@ -118,7 +152,12 @@ export async function receiveUpdate(
   }
 
   let identity: IdentityBootstrapResult | undefined;
-  if (update.kind === "command" && update.command === START_COMMAND && update.actor) {
+  if (
+    update.kind === "command" &&
+    update.command === START_COMMAND &&
+    update.actor &&
+    scope === "private"
+  ) {
     try {
       identity = await deps.identity.ensureIdentity({
         channel: update.channel,
@@ -162,6 +201,9 @@ export async function receiveUpdate(
 
   return {
     status: "accepted",
+    scope,
+    ...(groupRole === null ? {} : { groupRole }),
+    replyAllowed,
     channel: update.channel,
     bot: update.bot,
     channelUpdateId: update.channelUpdateId,

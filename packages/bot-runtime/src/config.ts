@@ -22,7 +22,10 @@
 
 import {
   DEEP_LINK_PAYLOAD_PLACEHOLDER,
+  LIMITS,
   type BotPresence,
+  type GroupPresence,
+  type GroupRole,
   type MiniAppRegistryPort,
 } from "@wasla/channel-core";
 import { BOT_MINI_APP, type BotKind } from "@wasla/contracts-channel";
@@ -45,6 +48,23 @@ export const DEFAULT_MINI_APP_LABELS: Readonly<Record<BotKind, string>> = {
   partner: "افتح تطبيق الشريك",
 };
 
+/**
+ * Environment variable that declares the groups of each role (ADR-008).
+ *
+ * Group references are configuration, not state: the binding table that would
+ * hold them belongs to the support service and is deferred, so a deployment
+ * declares its rooms the same way it declares its Mini App address. Values are
+ * comma-separated conversation references.
+ */
+export const GROUP_ENV_NAMES: Readonly<Record<GroupRole, string>> = {
+  support: "SUPPORT_GROUP_CHAT_IDS",
+  escalation: "ESCALATION_GROUP_CHAT_IDS",
+  community: "COMMUNITY_GROUP_CHAT_IDS",
+};
+
+/** Roles in declaration order — also the order conflicts are detected in. */
+export const GROUP_ROLES: readonly GroupRole[] = ["support", "escalation", "community"];
+
 /** Everything one bot process needs to run. */
 export interface BotConfig {
   readonly bot: BotKind;
@@ -62,6 +82,8 @@ export interface BotConfig {
    * retry queue are then lost on restart).
    */
   readonly databaseUrl?: string;
+  /** Groups this deployment operates; empty means «private chats only». */
+  readonly groups: readonly GroupPresence[];
   readonly port: number;
 }
 
@@ -80,6 +102,9 @@ export function envNames(bot: BotKind): Readonly<Record<string, string>> {
     miniAppLabel: `${p}_MINI_APP_LABEL`,
     deepLinkTemplate: `${p}_DEEP_LINK_TEMPLATE`,
     port: `${p}_PORT`,
+    supportGroups: GROUP_ENV_NAMES.support,
+    escalationGroups: GROUP_ENV_NAMES.escalation,
+    communityGroups: GROUP_ENV_NAMES.community,
   };
 }
 
@@ -148,6 +173,45 @@ function readTimeout(env: EnvBag): number | undefined {
 }
 
 /**
+ * Read the declared groups of every role.
+ *
+ * Validation is strict on purpose. A reference that is empty, over-long or
+ * declared under two roles is a deployment fault, and the failure it would cause
+ * later is the worst kind: the bot would answer — or stay silent — in the wrong
+ * room, in front of customers. So it refuses to boot instead.
+ */
+export function loadGroupPresences(env: EnvBag): readonly GroupPresence[] {
+  const groups: GroupPresence[] = [];
+  const seen = new Map<string, GroupRole>();
+
+  for (const role of GROUP_ROLES) {
+    const name = GROUP_ENV_NAMES[role];
+    const raw = env[name]?.trim();
+    if (raw === undefined || raw === "") continue;
+
+    for (const part of raw.split(",")) {
+      const chatRef = part.trim();
+      if (chatRef === "") {
+        throw new Error(`${name} contains an empty conversation reference`);
+      }
+      if (chatRef.length > LIMITS.chatRefMax) {
+        throw new Error(`${name} contains a reference longer than ${LIMITS.chatRefMax} characters`);
+      }
+      const previous = seen.get(chatRef);
+      if (previous !== undefined) {
+        throw new Error(
+          `a group is declared under two roles (${previous} and ${role}); each group has one role`,
+        );
+      }
+      seen.set(chatRef, role);
+      groups.push({ chatRef, role, label: `${role}:${groups.length + 1}` });
+    }
+  }
+
+  return groups;
+}
+
+/**
  * Build the presence of one bot from the environment.
  *
  * The Mini App kind mirrors the bot kind by construction (customer bot → customer
@@ -202,6 +266,7 @@ export function loadBotConfig(bot: BotKind, env: EnvBag): BotConfig {
     ...(identityServiceUrl ? { identityServiceUrl } : {}),
     ...(identityTimeoutMs === undefined ? {} : { identityTimeoutMs }),
     ...(databaseUrl === undefined ? {} : { databaseUrl }),
+    groups: loadGroupPresences(env),
     port: readPort(env, bot),
   };
 }

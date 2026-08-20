@@ -8,7 +8,7 @@
  *
  * Public surface, in dependency order:
  *   domain  → vocabulary, events, deep-link codec, retry policy
- *   ports   → the nine seams to the outside world
+ *   ports   → the ten seams to the outside world
  *   use cases → the behaviour
  *   infrastructure → in-memory/mock implementations for tests and local runs
  */

@@ -93,6 +93,34 @@ export interface InboundUpdate {
   readonly traceId?: string;
 }
 
+/**
+ * Where a conversation happens, from the layer's point of view.
+ *
+ * A group is *not* a second kind of conversation with its own code path
+ * (ADR-007 rule 9, ADR-008): it is a value on the same update, so the same
+ * de-duplication, the same delivery accounting and the same retry queue serve
+ * both. What the scope changes is *policy*, and policy lives in the use cases.
+ */
+export type ConversationScope = "private" | "group";
+
+/**
+ * The capacity in which WASLA operates a group.
+ *
+ * Roles are deliberately coarse. Binding a group to an *order* (which ticket,
+ * which city) needs the support service and its own table; that binding is
+ * deferred (ADR-008), and pretending otherwise here would invent a mapping this
+ * layer is not allowed to own.
+ */
+export type GroupRole = "support" | "escalation" | "community";
+
+/** A group this deployment operates, as declared by configuration. */
+export interface GroupPresence {
+  readonly chatRef: ChatRef;
+  readonly role: GroupRole;
+  /** Operator-facing label; never sent to the channel. */
+  readonly label?: string;
+}
+
 /** A processed inbound update, as persisted for de-duplication. */
 export interface ProcessedUpdateRecord {
   readonly channel: ChannelName;

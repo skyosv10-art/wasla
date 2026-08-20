@@ -239,6 +239,19 @@ export async function sendMessage(
     });
   }
 
+  // A group renders no launch surface (ADR-008): the launch surface is bound to
+  // one person's session, and a shared room has none. Refused before the delivery
+  // row exists, so the caller gets a contract error instead of a failed delivery
+  // that would then be retried five times to no effect.
+  const groupRole = deps.groups?.roleFor(message.chatRef) ?? null;
+  if (groupRole !== null && firstMiniAppButton(message.buttons) !== undefined) {
+    throw channelError(
+      "CHANNEL_INVALID_MESSAGE",
+      "لا يمكن إرفاق زر تطبيق مصغّر برسالة إلى مجموعة — استخدم زر رابط عميق",
+      { details: { role: groupRole } },
+    );
+  }
+
   const now = deps.clock.now();
   const priority = message.priority ?? DEFAULT_PRIORITY;
 

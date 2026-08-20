@@ -6,6 +6,8 @@
 >
 > **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1/!2/!3/!4 · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md)
 >
+> **تحديث 2026-08-20 (b):** أُنشئ [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — اختيار مكدّس تنفيذ خدمة Identity (Node 20 + TS + Fastify + PostgreSQL + Drizzle). هذا قرار توثيقي فقط يزيل Open Blocker 1 لـ Phase 01؛ **لا يبدأ التنفيذ** ولا يجتاز Exit Gate. التنفيذ لا يزال معلّقاً على اجتياز Phase 00 Exit Gate (CI passes — محجوب خارجياً بـ shared runners).
+>
 > **تحديث 2026-08-20:** MR !1/!2/!3/!4 مدمجة إلى main. جميع المعايير الهندسية لـ Phase 00 مكتملة (بما فيها أساس البناء). المعيار الوحيد المتبقّي للـ Exit Gate هو «CI passes» — محجوب خارجياً بـ shared runners. مسارا الحلّ في [Runbook فكّ عائق CI](../14-runbooks/CI_RUNNER_UNBLOCK.md).
 
 ---
@@ -13,10 +15,12 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 00 (مدمج + أساس بناء مُضاف) → Phase 01 — Identity Foundation (عقود مدمجة)
-الحالة:          MR !1/!2/!3 مدمجة إلى main؛ أساس بناء (pnpm+TS+Vitest) مُضاف؛
+المرحلة الحالية: Phase 00 (مدمج + أساس بناء مُضاف) → Phase 01 — Identity Foundation (عقود + أنواع + اختيار مكدّ مُوثّق)
+الحالة:          MR !1..!7 مدمجة إلى main؛ أساس بناء (pnpm+TS+Vitest) مُضاف؛
+                 [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) يُحدّد مكدّس التنفيذ (Node+TS+Fastify+Postgres+Drizzle)؛
                  Phase 00 Exit Gate لا يزال معلّقاً على التحقق من CI (shared runners). W0 لم يبدأ بعد.
-آخر تحديث:      2026-08-20 (بعد إضافة أساس البناء)
+                 تنفيذ خدمة Identity معلّق على اجتياز Phase 00 Exit Gate أو تفويض صريح بتنفيذ قبل البوابة.
+آخر تحديث:      2026-08-20 (بعد اختيار المكدّس عبر ADR-005)
 ```
 
 **ما تم دمجه إلى main:**
@@ -44,6 +48,7 @@
 | 7 | أنواع TS مولّدة من OpenAPI + @wasla/contracts-identity | ✅ مدمج (MR !6) |
 | 8 | توفيق وثائق التقدم بعد MR !4 + Runbook فكّ عائق CI | ✅ مدمج (MR !5) |
 | 9 | أنواع أحداث Identity مشتقّة من events.json + اختبار حماية انحراف | ✅ مدمج (MR !7) |
+| 10 | اختيار مكدّس تنفيذ Identity (ADR-005) | ✅ جاهز للمراجعة عبر [MR !8](https://gitlab.com/uxxxu/wasla/-/merge_requests/8) (مفتوح/قابل للدمج) — قرار توثيقي، لا كود تنفيذي |
 
 > تفاصيل الخطوات التفصيلية لـ Phase 00 (تشخيص فحص الأسرار، ربط pre-push، التحقق من حماية main، CI lint) موثّقة في [TASK_LOG.md](TASK_LOG.md). **الخطوة الوحيدة غير المكتملة: اجتياز pipeline فعلياً على GitLab — محجوبة خارجياً (انظر §2).**
 
@@ -122,7 +127,7 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 [4] فعّل hooks محلياً:  git config core.hooksPath scripts/hooks
                        chmod +x scripts/hooks/pre-push scripts/checks/*.sh
 [5] حدّث MASTER_PROGRESS.md: Phase 00 → Completed (مع Evidence = رابط pipeline ناجح)
-[6] ابدأ Phase 01 — Identity Foundation (التالية حسب ROADMAP)
+[6] ابدأ Phase 01 — Identity Foundation: المكدّس مُختار في [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) (Node+TS+Fastify+Postgres+Drizzle)؛ أضِف الاعتماديات عبر MR مستقل → نفّذ ضد العقود/الأنواع → Contract tests → Exit Gate
 ```
 
 ---

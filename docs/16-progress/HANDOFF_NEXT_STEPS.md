@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (Phase 03 · MR 5/7 — مُهيّئات Postgres لطبقة القنوات — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (Phase 03 · MR 6/7 — مُهيّئ المجموعات وتحديثاتها — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !MR6 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,17 +15,19 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 5/7)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 6/7)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       393 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram
-                 + 66 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة)
+الاختبارات:       438 اختبار وحدة (96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
+                 + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة)
                  + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E في CI.
 البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
                  @wasla/bot-runtime — التخزين **دائم على Postgres** متى وُجِد DATABASE_URL
                  (منع التكرار وطابور المحاولات يعبران إعادة التشغيل)، وفي الذاكرة بغيابه للتشغيل المحلي.
-آخر تحديث:      2026-08-21 (MR 5/7 — @wasla/channel-postgres + وظيفة channel-db-integration — §7)
+المجموعات:       البوت يردّ في غرف **مُعلَنة في البيئة** فقط (دعم/تصعيد/مجتمع) برابط عميق لا بزر
+                 Mini App، ولا يُهيّئ هوية من غرفة، ويصمت تماماً في غرفة غير مُعلَنة (تُسجَّل وتُدقَّق).
+آخر تحديث:      2026-08-21 (MR 6/7 — سجل المجموعات منفذاً عاشراً + ADR-008 — §7)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -300,8 +302,32 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
     - وثيقة: docs/02-architecture/CHANNEL_PERSISTENCE.md + تحديث DB_INTEGRATION_CI.md
     - ⚠️ يبقى للتالي: لا ناشر لصندوق الصادر (لا مستهلك بعد) ولا مُشغّل دوري لـretryDueDeliveries
       — الطابور صار دائماً لكن لا شيء يستدعيه دوريّاً؛ ولا سياسة احتفاظ/تقليم لـchannel_updates.
-[6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات   ← التالي
-[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة
+[6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات   ← ✅ Done
+    - ADR-008 (يُعدّل ADR-007 §2): سجل المجموعات منفذاً **عاشراً** يقرأ **الإعداد** لا جدولاً، لأن
+      channel_group_bindings مؤجَّل إلى Phase 08 (يحتاج خدمة الدعم لتقول أي غرفة لأي طلب/مدينة)
+    - channel-core: ConversationScope (private/group) · GroupRole (support/escalation/community) ·
+      GroupPresence · GroupRegistryPort (roleFor/groupsFor) **اختياري** في InboundDeps/OutboundDeps ·
+      StaticGroupRegistry + testGroupRegistry
+    - receiveUpdate يُرجع scope + groupRole + replyAllowed (في فرع التكرار أيضاً)، ولا يُهيّئ الهوية
+      إلا في المحادثات الخاصة — تصحيح: مرجع المجموعة مشترك فربطه بشخص واحد ربط خاطئ لا يُنقَض
+    - sendMessage يرفض نيّة mini_app نحو مجموعة مُعلَنة بـCHANNEL_INVALID_MESSAGE **قبل** إنشاء صفّ
+      التسليم (فلا تُستهلك خمس محاولات على ما ترفضه Telegram أصلاً خارج المحادثات الخاصة)
+    - telegram-adapter: my_chat_member/chat_member داخل المجموعات → group_event بعلامة
+      bot_status:<s>/member_status:<s> (غير المعروف unknown) · علامات أحداث الخدمة joined:N/left:1/
+      migrated/created · isGroupChatRef + رفض زر web_app نحو غرفة (طبقة ثانية تحمي POST /channel/messages)
+    - bot-runtime: SUPPORT_GROUP_CHAT_IDS · ESCALATION_GROUP_CHAT_IDS · COMMUNITY_GROUP_CHAT_IDS
+      (قراءة صارمة تفشل عند الإقلاع: مرجع فارغ · أطول من الحدّ · غرفة واحدة تحت دورين) → سجلّ **واحد**
+      يتشارك الاتجاهان ويُعلَن في runtime.groups
+    - /start في غرفة مُعلَنة يُجاب داخلها برسالة بحسب الدور وزرّ deep_link (open_app) يفتح المحادثة
+      الخاصة، ويتدهور إلى نصّ فقط بلا قالب رابط عميق؛ والغرفة **غير المُعلَنة**: تُسجَّل ويُنشر حدثها
+      ويُجاب 202 و**صفر رسائل** (لم تُضَف حالة ignored إلى العقد تحديداً)
+    - 45 اختباراً جديداً (16 نواة + 13 مُهيّئ + 14 طبقة تشغيل) — إجمالي المستودع 438 وحدة
+    - وثيقة: docs/02-architecture/CHANNEL_GROUPS.md + ADR-008 + تحديث الوثائق الثلاث القائمة
+    - ⚠️ يبقى للتالي: الغرف تُعلَن **يدوياً** في البيئة (نسيانها = بوت صامت في غرفة عاملة، لا عطل
+      ظاهر) · groupsFor(role) بلا مستهلك إنتاجي (مِشبك موجِّه التصعيد في Phase 16) · تغيير العضوية
+      في محادثة **خاصة** لا يزال unsupported/422 · ربط مجموعة↔طلب وإعلان الطلبات وقفل الاستلام
+      وأوامر الإشراف كلّها Phase 08/16 (منطق أعمال لا يخصّ طبقة القنوات).
+[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة   ← التالي
 ```
 
 **قيود ملزمة لمن يكمل المرحلة** (مفصّلة في [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) §4):

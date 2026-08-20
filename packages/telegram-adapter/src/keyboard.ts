@@ -87,18 +87,38 @@ function deepLinkUrl(
 }
 
 /**
+ * Is this conversation reference a Telegram group?
+ *
+ * Telegram encodes group and supergroup chats as negative ids, so the outbound
+ * side can tell a room from a person without asking the API — and without the
+ * adapter needing the group registry, which is the core's concern.
+ */
+export function isGroupChatRef(chatRef: string): boolean {
+  return /^-\d+$/.test(chatRef.trim());
+}
+
+/**
  * Translates button intents into `reply_markup`.
  *
  * One button per row: labels are Arabic and long, and Telegram truncates
  * side-by-side buttons on narrow screens, which would hide the action.
  *
+ * A `web_app` button is refused when the target is a group: Telegram only opens
+ * a Mini App from a private chat, and sending one to a group returns an opaque
+ * 400 (`BUTTON_TYPE_INVALID`) that would then be retried. Refusing here turns
+ * that into a precise WASLA error at the first attempt — the transport-side
+ * counterpart of the core's own group rule (ADR-008).
+ *
  * @throws ChannelError with a `CHANNEL_*` code when an intent cannot be
  *         rendered (misconfigured Mini App, missing link template, oversized
- *         label). The caller turns it into a `ChannelSendFailure`.
+ *         label, Mini App button aimed at a group). The caller turns it into a
+ *         `ChannelSendFailure`.
  */
 export function buildInlineKeyboard(
   intents: readonly ButtonIntent[],
   presence: BotPresence,
+  /** Target conversation, when known — enables the group rule. */
+  chatRef?: string,
 ): InlineKeyboardMarkup {
   if (intents.length === 0) {
     throw channelError("CHANNEL_INVALID_MESSAGE", "رسالة بأزرار بلا أي زر");
@@ -117,6 +137,13 @@ export function buildInlineKeyboard(
       });
     }
     if (intent.type === "mini_app") {
+      if (chatRef !== undefined && isGroupChatRef(chatRef)) {
+        throw channelError(
+          "CHANNEL_INVALID_MESSAGE",
+          "لا يمكن فتح Mini App من زر داخل مجموعة — استخدم زر رابط عميق",
+          { details: { bot: presence.bot } },
+        );
+      }
       if (intent.miniApp !== presence.miniApp) {
         throw channelError(
           "CHANNEL_MINI_APP_NOT_CONFIGURED",

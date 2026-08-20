@@ -10,6 +10,7 @@ import type {
   ChannelPort,
   ClockPort,
   DeliveryStorePort,
+  GroupRegistryPort,
   IdGeneratorPort,
   IdentityBootstrapPort,
   MiniAppRegistryPort,
@@ -29,6 +30,13 @@ export interface InboundDeps {
   readonly ids: IdGeneratorPort;
   /** Commands this bot answers. `start` is mandatory for identity bootstrap. */
   readonly supportedCommands?: readonly string[];
+  /**
+   * Groups this deployment operates (ADR-008).
+   *
+   * Optional because a bot may legitimately serve private chats only. Absent, no
+   * group is known, so no group is answered.
+   */
+  readonly groups?: GroupRegistryPort;
 }
 
 /** Dependencies for the outbound path (`sendMessage`, `retryDueDeliveries`). */
@@ -41,6 +49,13 @@ export interface OutboundDeps {
   readonly ids: IdGeneratorPort;
   /** Attempt ceiling written on new deliveries (defaults to the contract's). */
   readonly maxAttempts?: number;
+  /**
+   * Groups this deployment operates (ADR-008).
+   *
+   * Present, it lets the outbound path refuse a button a group conversation
+   * cannot render *before* the message is stored and attempted.
+   */
+  readonly groups?: GroupRegistryPort;
 }
 
 /** Dependencies for the launch surfaces (Mini App descriptor, deep links). */

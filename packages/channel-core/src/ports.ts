@@ -1,6 +1,6 @@
 /**
  * Ports of the channel layer (hexagonal boundaries) — the internal contract
- * fixed by ADR-007 §2.
+ * fixed by ADR-007 §2 and extended once, by ADR-008, with the group registry.
  *
  * Use cases depend on these interfaces only. Every port has a production
  * adapter (added in later MRs of the phase plan) and a test adapter shipped in
@@ -17,6 +17,8 @@ import type { BotKind, ChannelErrorCode, ChannelName } from "@wasla/contracts-ch
 import type {
   ButtonIntent,
   ChatRef,
+  GroupPresence,
+  GroupRole,
   DeliveryRecord,
   DeliveryStatus,
   InboundActor,
@@ -222,7 +224,30 @@ export interface MiniAppRegistryPort {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// 8) ClockPort · IdGeneratorPort — deterministic injectables
+// 8) GroupRegistryPort — which groups this deployment operates
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Answers «is this conversation a group we operate, and in what capacity».
+ *
+ * Configuration, not state (ADR-008): the group ↔ order binding that would need
+ * a table belongs to the support service and is deferred, so this port resolves
+ * a conversation reference against what the composition root was told at boot.
+ *
+ * A deployment with no groups configured returns `null` for everything, and the
+ * use cases then treat every group as unknown — which is the safe default: a bot
+ * that was added to a group nobody configured stays silent instead of speaking
+ * to strangers.
+ */
+export interface GroupRegistryPort {
+  /** The role of a group conversation, or `null` when it is not ours. */
+  roleFor(chatRef: ChatRef): GroupRole | null;
+  /** Every group configured for a role — the seam a router will consume. */
+  groupsFor(role: GroupRole): readonly GroupPresence[];
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 9) ClockPort · IdGeneratorPort — deterministic injectables
 // ─────────────────────────────────────────────────────────────────────
 
 /** Wall-clock time as an ISO-8601 string. */

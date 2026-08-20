@@ -20,6 +20,8 @@ import type { ChannelDomainEvent } from "../domain/events.js";
 import type {
   BotPresence,
   DeliveryRecord,
+  GroupPresence,
+  GroupRole,
   InboundUpdate,
   ProcessedUpdateRecord,
 } from "../domain/model.js";
@@ -30,6 +32,7 @@ import type {
   ClockPort,
   DeliveryProgress,
   DeliveryStorePort,
+  GroupRegistryPort,
   IdGeneratorPort,
   IdentityBootstrapInput,
   IdentityBootstrapPort,
@@ -382,4 +385,58 @@ export function testRegistry(baseUrl = "https://example.test"): StaticMiniAppReg
     };
   }
   return new StaticMiniAppRegistry(presences);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// GroupRegistryPort
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Group registry backed by the declared list — the shape a composition root
+ * builds from the environment (ADR-008).
+ *
+ * A conversation may hold exactly one role: two roles for one room would make
+ * every routing decision ambiguous, so a duplicate reference is rejected at
+ * construction. That is a deployment fault, not a channel error, hence a plain
+ * `Error`.
+ */
+export class StaticGroupRegistry implements GroupRegistryPort {
+  private readonly byRef = new Map<string, GroupPresence>();
+
+  constructor(groups: readonly GroupPresence[] = []) {
+    for (const group of groups) {
+      if (group.chatRef.length === 0) {
+        throw new Error("group presence with an empty conversation reference");
+      }
+      const existing = this.byRef.get(group.chatRef);
+      if (existing !== undefined && existing.role !== group.role) {
+        throw new Error(`group is declared twice with different roles: ${existing.role} and ${group.role}`);
+      }
+      this.byRef.set(group.chatRef, group);
+    }
+  }
+
+  roleFor(chatRef: string): GroupRole | null {
+    return this.byRef.get(chatRef)?.role ?? null;
+  }
+
+  groupsFor(role: GroupRole): readonly GroupPresence[] {
+    return [...this.byRef.values()].filter((group) => group.role === role);
+  }
+
+  /** Every configured group, in declaration order — for operator-facing output. */
+  all(): readonly GroupPresence[] {
+    return [...this.byRef.values()];
+  }
+}
+
+/** A registry with one support group and one escalation group. */
+export function testGroupRegistry(
+  support = "-100100",
+  escalation = "-100200",
+): StaticGroupRegistry {
+  return new StaticGroupRegistry([
+    { chatRef: support, role: "support", label: "support" },
+    { chatRef: escalation, role: "escalation", label: "escalation" },
+  ]);
 }

@@ -19,9 +19,11 @@ import {
   MockChannelAdapter,
   NO_JITTER,
   SequentialIdGenerator,
+  StaticGroupRegistry,
   StaticMiniAppRegistry,
   exponentialBackoffPolicy,
   type BotPresence,
+  type GroupPresence,
   type MockSendOutcome,
 } from "@wasla/channel-core";
 import { BOT_MINI_APP, WEBHOOK_SECRET_HEADER, type BotKind } from "@wasla/contracts-channel";
@@ -61,6 +63,10 @@ export interface HarnessOptions {
   readonly welcomeText?: string;
   /** Omit the configured secret, i.e. simulate a forgotten variable. */
   readonly withoutSecret?: boolean;
+  /** Groups this deployment operates; absent means «private chats only». */
+  readonly groups?: readonly GroupPresence[];
+  /** Simulate a bot with no deep-link template configured. */
+  readonly withoutGroupLink?: boolean;
 }
 
 /** Build a bot app serving exactly one bot. */
@@ -72,6 +78,7 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
   const identity = new FakeIdentityBootstrap();
   const outbox = new InMemoryOutbox();
   const deliveries = new InMemoryDeliveryStore();
+  const groups = new StaticGroupRegistry(options.groups ?? []);
 
   const app = createBotApp({
     deps: {
@@ -83,6 +90,7 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
         identity,
         clock,
         ids,
+        groups,
       },
       outbound: {
         channel,
@@ -91,10 +99,12 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
         retry: exponentialBackoffPolicy({ jitter: NO_JITTER }),
         clock,
         ids,
+        groups,
       },
       launch: { registry: new StaticMiniAppRegistry({ [bot]: presence }) },
     },
     webhookSecret: options.withoutSecret ? undefined : SECRET,
+    ...(options.withoutGroupLink ? { groupLinkAvailable: false } : {}),
     ...(options.welcomeText === undefined ? {} : { welcomeText: options.welcomeText }),
   });
 
@@ -136,6 +146,41 @@ export function textUpdate(updateId: number, text = "مرحباً"): Record<stri
       chat: { id: 4001, type: "private" },
       from: { id: 900123, first_name: "مستخدم" },
       text,
+    },
+  };
+}
+
+/** A Telegram `/start` update issued inside a group (with the `@bot` suffix). */
+export function groupStartUpdate(
+  updateId: number,
+  options: { chatId?: number; userId?: number } = {},
+): Record<string, unknown> {
+  const chatId = options.chatId ?? -1001;
+  return {
+    update_id: updateId,
+    message: {
+      message_id: updateId,
+      date: 1_770_000_000,
+      chat: { id: chatId, type: "supergroup", title: "دعم المدينة" },
+      from: { id: options.userId ?? 900123, first_name: "مستخدم", language_code: "ar" },
+      text: "/start@wasla_customer_bot",
+    },
+  };
+}
+
+/** A Telegram update announcing that the bot was added to a group. */
+export function botAddedUpdate(
+  updateId: number,
+  options: { chatId?: number } = {},
+): Record<string, unknown> {
+  return {
+    update_id: updateId,
+    my_chat_member: {
+      chat: { id: options.chatId ?? -1001, type: "supergroup", title: "دعم المدينة" },
+      from: { id: 900123, first_name: "مشرف" },
+      date: 1_770_000_000,
+      old_chat_member: { status: "left" },
+      new_chat_member: { status: "member" },
     },
   };
 }

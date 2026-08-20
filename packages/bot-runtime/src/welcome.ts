@@ -13,7 +13,11 @@
  * privileged side-channel.
  */
 
-import type { MiniAppLaunchDescriptor, OutboundMessageCommand } from "@wasla/channel-core";
+import type {
+  GroupRole,
+  MiniAppLaunchDescriptor,
+  OutboundMessageCommand,
+} from "@wasla/channel-core";
 import type { BotKind, ChannelName } from "@wasla/contracts-channel";
 
 /** Default Arabic welcome copy per bot (product language is Arabic-first). */
@@ -58,5 +62,75 @@ export function buildStartReply(input: StartReplyInput): OutboundMessageCommand 
     priority: "high",
     idempotencyKey: `start:${input.bot}:${input.channelUpdateId}`,
     ...(input.traceId ? { traceId: input.traceId } : {}),
+  };
+}
+
+/**
+ * What a bot says when `/start` is issued **inside a group** we operate.
+ *
+ * A group is a dispatch channel, not a workspace (`docs/01-product/USER_FLOWS.md`):
+ * the answer therefore points the person to the private conversation instead of
+ * trying to serve them in front of everyone. The copy differs per role because a
+ * driver community room and an escalation room are answered by different people.
+ */
+export const DEFAULT_GROUP_START_TEXT: Readonly<Record<GroupRole, string>> = {
+  support: "هذه مجموعة دعم. لمتابعة طلبك الخاص، افتح المحادثة الخاصة مع البوت من الرابط أدناه.",
+  escalation: "هذه مجموعة تصعيد للحالات العاجلة. للطلبات الفردية، افتح المحادثة الخاصة أدناه.",
+  community: "أهلاً بكم. هذه مجموعة عامة للكباتن — لإدارة رحلاتك افتح المحادثة الخاصة أدناه.",
+};
+
+/** Default label of the link button sent to a group. */
+export const DEFAULT_GROUP_LINK_LABEL = "افتح المحادثة الخاصة";
+
+export interface GroupStartReplyInput {
+  readonly bot: BotKind;
+  readonly channel: ChannelName;
+  readonly chatRef: string;
+  readonly channelUpdateId: string;
+  readonly role: GroupRole;
+  readonly text?: string;
+  readonly label?: string;
+  /**
+   * False when the bot has no deep-link template configured, in which case the
+   * reply is text only — an answer without a button is still an answer, and a
+   * missing template must not silence the bot in a room it operates.
+   */
+  readonly withLink?: boolean;
+  readonly traceId?: string;
+}
+
+/**
+ * Build the group `/start` reply.
+ *
+ * It carries a **deep link**, never a Mini App button: a launch surface belongs
+ * to one person's session and a room has none, so the core refuses that
+ * combination outright (ADR-008). The link opens the private conversation, where
+ * the Mini App button is legitimate.
+ */
+export function buildGroupStartReply(input: GroupStartReplyInput): OutboundMessageCommand {
+  const text = input.text ?? DEFAULT_GROUP_START_TEXT[input.role];
+  const base = {
+    channel: input.channel,
+    chatRef: input.chatRef,
+    text,
+    priority: "high" as const,
+    idempotencyKey: `start:${input.bot}:${input.channelUpdateId}`,
+    ...(input.traceId ? { traceId: input.traceId } : {}),
+  };
+
+  if (input.withLink === false) {
+    return { ...base, kind: "text" };
+  }
+
+  return {
+    ...base,
+    kind: "text_with_buttons",
+    buttons: [
+      {
+        type: "deep_link",
+        label: input.label ?? DEFAULT_GROUP_LINK_LABEL,
+        action: "open_app",
+      },
+    ],
   };
 }

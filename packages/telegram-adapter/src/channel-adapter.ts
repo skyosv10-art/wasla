@@ -85,7 +85,7 @@ export class TelegramChannelAdapter {
   private buildPayload(dispatch: ChannelDispatch): SendPayload {
     const markup =
       dispatch.kind === "text_with_buttons"
-        ? buildInlineKeyboard(dispatch.buttons ?? [], this.presence)
+        ? buildInlineKeyboard(dispatch.buttons ?? [], this.presence, dispatch.chatRef)
         : undefined;
     return {
       chat_id: dispatch.chatRef,

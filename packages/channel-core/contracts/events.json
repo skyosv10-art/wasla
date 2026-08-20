@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/channel/events/v1",
+  "title": "WASLA Channel Domain Events — v1",
+  "description": "عقد أحداث طبقة القنوات (Event Contract). كل حدث versioned؛ أي تغيير غير متوافق للخلف يتطلب v2 + ADR. يُنشر عبر Outbox. الأحداث محايدة للقناة (channel-agnostic): الحقل channel يُفرّق بين القنوات، ولا يظهر أي تفصيل خاص بـTelegram في الحمولة. مرجع المحادثة (chat_ref) مرجع opaque — ربطه بالهوية ملك خدمة Identity وليس طبقة القنوات (ADR-001، ADR-007).",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "type": "string", "const": "channel-adapter" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "const": "channel_chat" },
+            "id": { "type": "string", "description": "chat_ref — مرجع المحادثة في القناة (opaque)" }
+          }
+        },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "ChannelName": {
+      "type": "string",
+      "enum": ["telegram", "web", "mobile", "whatsapp"]
+    },
+    "BotKind": {
+      "type": "string",
+      "enum": ["customer", "driver", "partner"]
+    },
+    "UpdateReceivedV1": {
+      "type": "object",
+      "description": "وصل تحديث من القناة وعُولج لأول مرة (التحديث المكرر لا يُصدر حدثاً)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "channel.update.received" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["channel", "bot", "channel_update_id", "kind"],
+              "properties": {
+                "channel": { "$ref": "#/$defs/ChannelName" },
+                "bot": { "$ref": "#/$defs/BotKind" },
+                "channel_update_id": { "type": "string" },
+                "kind": {
+                  "type": "string",
+                  "enum": ["command", "text_message", "callback", "contact", "location", "group_event", "unsupported"]
+                },
+                "command": { "type": "string", "description": "اسم الأمر بدون '/' إن كان kind=command" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MessageDeliveredV1": {
+      "type": "object",
+      "description": "سُلّمت رسالة صادرة إلى القناة بنجاح",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "channel.message.delivered" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["channel", "delivery_id", "idempotency_key", "attempts"],
+              "properties": {
+                "channel": { "$ref": "#/$defs/ChannelName" },
+                "delivery_id": { "type": "string", "format": "uuid" },
+                "idempotency_key": { "type": "string" },
+                "attempts": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MessageFailedV1": {
+      "type": "object",
+      "description": "فشل تسليم رسالة صادرة نهائياً (بعد استنفاد المحاولات أو خطأ غير قابل لإعادة المحاولة)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "channel.message.failed" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["channel", "delivery_id", "idempotency_key", "attempts", "error_code", "retryable"],
+              "properties": {
+                "channel": { "$ref": "#/$defs/ChannelName" },
+                "delivery_id": { "type": "string", "format": "uuid" },
+                "idempotency_key": { "type": "string" },
+                "attempts": { "type": "integer", "minimum": 1 },
+                "error_code": { "type": "string", "description": "كود من كتالوج errors.md (خطأ القناة مُخطَّط إلى كود وصلة)" },
+                "retryable": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MiniAppLaunchedV1": {
+      "type": "object",
+      "description": "أُرسل زر تشغيل Mini App للمستخدم (إثبات Exit Gate: كل بوت يفتح تطبيقه)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "channel.mini_app.launched" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["channel", "bot", "mini_app"],
+              "properties": {
+                "channel": { "$ref": "#/$defs/ChannelName" },
+                "bot": { "$ref": "#/$defs/BotKind" },
+                "mini_app": { "type": "string", "enum": ["customer", "driver", "partner"] },
+                "path": { "type": "string" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-20 (Phase 03 بدأت — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-20 (Phase 03 · MR 2/7 مدمجة — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,12 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 2/7 مدمجة)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       130 اختبار وحدة (96 + 34 لعقود القناة) + 4 تكامل + 5 E2E في CI.
-آخر تحديث:      2026-08-20 (بعد دمج MR !22 وإغلاق Phase 02، وبدء Phase 03 بـADR-007 + عقود القناة)
+الاختبارات:       214 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة) + 4 تكامل + 5 E2E في CI.
+آخر تحديث:      2026-08-20 (بعد دمج MR !24 — نواة @wasla/channel-core المحايدة: المنافذ التسعة + MockChannelAdapter)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -232,12 +232,21 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
     - packages/contracts/channel: 34 اختباراً (أنواع مُولّدة + حراسة انحراف للأحداث
       ولكتالوج الأخطاء + حراسة حدود ADR-007 على ملف OpenAPI)
     - docs/02-architecture/CONTAINERS.md §5.1 (موقع طبقة القنوات)
-[2] feat(channel-core): نموذج المجال + المنافذ + حالات الاستخدام + مُهيّئات in-memory/Mock   ← التالي
-    - ChannelPort · UpdateParserPort · ProcessedUpdateStorePort · DeliveryStorePort · OutboxPort ·
-      IdentityBootstrapPort · MiniAppRegistryPort · ClockPort · RetryPolicy
-    - حالات الاستخدام: intake+dedup · deliver+retry · launchMiniApp · encode/decodeDeepLink
-    - اختبار حراسة: لا استيرادات/نصوص Telegram داخل channel-core
-[3] feat(telegram-adapter): تفسير Update + إرسال + أزرار web_app + تخطيط الأخطاء + حدود المعدّل
+[2] feat(channel-core): نموذج المجال + المنافذ + حالات الاستخدام + مُهيّئات in-memory/Mock   ← ✅ Done [MR !24]
+    - المنافذ التسعة: ChannelPort · UpdateParserPort · ProcessedUpdateStorePort · DeliveryStorePort ·
+      OutboxPort · IdentityBootstrapPort · MiniAppRegistryPort · ClockPort · IdGeneratorPort (+ RetryPolicy)
+    - حالات الاستخدام: receiveUpdate (تفسير→رفض غير المدعوم→منع تكرار ذرّي→تهيئة هوية→فك رابط عميق→حدث)
+      · sendMessage (تحقّق→إنشاء idempotent→محاولة→sent/queued/failed + أحداث) · retryDueDeliveries
+      · getMiniAppLaunch + createDeepLink
+    - مُهيّئات: InMemory{ProcessedUpdateStore,DeliveryStore,Outbox} · FixedClock · SequentialIdGenerator ·
+      FakeIdentityBootstrap · StaticMiniAppRegistry · FakeUpdateParser · **MockChannelAdapter**
+    - اختبار حراسة معماري (38 اختباراً): لا مفردات/استيرادات قناة داخل channel-core + قفل الاعتماديات
+    - تعديل عقد البيانات: عمودا channel_deliveries.body + .bot (إعادة المحاولة تُرسل نفس الرسالة)
+    - وثيقة: docs/02-architecture/CHANNEL_LAYER_CORE.md
+[3] feat(telegram-adapter): تفسير Update + إرسال + أزرار web_app + تخطيط الأخطاء + حدود المعدّل   ← التالي
+    - يُنفّذ ChannelPort + UpdateParserPort فقط، ولا يعرف أي حالة استخدام
+    - كل نص/حقل خاص بـTelegram يبقى هنا (اختبار الحراسة في channel-core يفشل إن تسرّب)
+    - تخطيط أخطاء Bot API → أكواد CHANNEL_* مع retryable + احترام retry_after
 [4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links
 [5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI
 [6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات
@@ -269,3 +278,4 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - [CONTRIBUTING.md — سير العمل](../../CONTRIBUTING.md)
 - [GIT_RULES.md — قواعد Git/MR](../00-rules/GIT_RULES.md)
 - [ADR-007 — عزل قناة Telegram (Phase 03)](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)
+- [CHANNEL_LAYER_CORE.md — نواة طبقة القنوات (Phase 03 · MR 2)](../02-architecture/CHANNEL_LAYER_CORE.md)

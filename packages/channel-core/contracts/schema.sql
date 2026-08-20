@@ -57,6 +57,13 @@ CREATE TABLE IF NOT EXISTS channel_deliveries (
     idempotency_key    TEXT         NOT NULL,
     kind               TEXT         NOT NULL
                        CHECK (kind IN ('text','text_with_buttons')),
+    -- جسم الرسالة كما قُبل (نص + نوايا أزرار محيّدة). أُضيف في MR 2 بعد أن
+    -- أثبتت النواة أن إعادة المحاولة تُرسل *نفس* الرسالة، فلا يمكن إعادة بنائها
+    -- من المُنادي لاحقاً. لا يحتوي أي حقل خاص بقناة.
+    body               JSONB        NOT NULL,
+    -- البوت المالك — يُستخدم فقط لعزو حدث channel.mini_app.launched عند النجاح.
+    bot                TEXT
+                       CHECK (bot IS NULL OR bot IN ('customer','driver','partner')),
     priority           TEXT         NOT NULL DEFAULT 'normal'
                        CHECK (priority IN ('critical','high','normal','low')),
     status             TEXT         NOT NULL DEFAULT 'queued'

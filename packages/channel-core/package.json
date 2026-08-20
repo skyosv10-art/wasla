@@ -1,0 +1,26 @@
+{
+  "name": "@wasla/channel-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA channel layer core — neutral domain model, ports, use cases and test adapters. Zero knowledge of any concrete channel (ADR-007).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/errors": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

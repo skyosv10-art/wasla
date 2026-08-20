@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/identity/events/v1",
+  "title": "WASLA Identity Domain Events — v1",
+  "description": "عقد أحداث نطاق Identity (Event Contract). كل حدث مُصدّر versioned. أي تغيير غير متوافق للخلف يتطلب إصدار v2 + ADR. يُنشر عبر Outbox (Domain Events من البداية بحيث يمكن إدخال Kafka لاحقاً دون إعادة تصميم المجال).",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "type": "string", "const": "identity-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "const": "user" },
+            "id": { "type": "string", "format": "uuid", "description": "internal_uuid" }
+          }
+        },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "IdentityCreated_v1": {
+      "type": "object",
+      "description": "أُنشئ مستخدم Wasla جديد (من حلّ هوية Telegram أو رابط آخر)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "identity.created" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "source"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "source": { "type": "string", "enum": ["customer_bot", "driver_bot", "partner_bot"] }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "IdentityLinkAdded_v1": {
+      "type": "object",
+      "description": "أُضيف رابط هوية خارجي (phone/email/telegram جديد) لمستخدم موجود",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "identity.link.added" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["provider", "external_id", "verified"],
+              "properties": {
+                "provider": { "type": "string", "enum": ["telegram", "phone", "email", "web", "mobile"] },
+                "external_id": { "type": "string" },
+                "verified": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TelegramUsernameChanged_v1": {
+      "type": "object",
+      "description": "تغيّر Telegram Username لمستخدم — لا يُنشئ مستخدمًا جديدًا، يُسجَّل في History",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "identity.telegram_username.changed" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["old_username", "new_username", "effective_at", "source"],
+              "properties": {
+                "old_username": { "type": ["string", "null"] },
+                "new_username": { "type": "string" },
+                "effective_at": { "type": "string", "format": "date-time" },
+                "source": { "type": "string", "enum": ["customer_bot", "driver_bot", "partner_bot", "system"] }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RecoveryStarted_v1": {
+      "type": "object",
+      "description": "بدأ استرجاع الحساب عبر Wasla Public ID — يمرّ بخطوات تحقق وفق مستوى الحساب والمخاطر",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "identity.recovery.started" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["recovery_id", "verification_method"],
+              "properties": {
+                "recovery_id": { "type": "string", "format": "uuid" },
+                "verification_method": { "type": "string", "enum": ["phone_otp", "email_otp", "admin_assisted"] }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

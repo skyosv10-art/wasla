@@ -19,6 +19,15 @@ export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
 
+// Postgres adapters (MR 4). Imported lazily by the composition root; unit
+// tests use the in-memory adapters and never touch pg/drizzle at runtime.
+export * from "./infrastructure/drizzle/db.js";
+export * from "./infrastructure/drizzle/schema.js";
+export {
+  PostgresGeographyRepository,
+  PostgresOutbox,
+} from "./infrastructure/drizzle/repository.js";
+
 export type { UseCaseDeps, UseCaseLocale } from "./use-cases/deps.js";
 export {
   listCountries,

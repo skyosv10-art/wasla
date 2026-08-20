@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 4 — Drizzle/Postgres persistence + Saudi seed (geography)
+
+**Task:** تنفيذ طبقة Postgres لخدمة Geography & Localization عبر Drizzle (schema + db + repository) + بيانات أولية idempotent للمملكة العربية السعودية، مع اختبار تكامل حقيقي ضد Postgres. **Status:** Completed (مُتحقَّق محلياً: typecheck 5 حزم؛ 25 اختبار وحدة + 4 اختبارات تكامل Postgres؛ scan-secrets نظيف) · **MR:** [!19](https://gitlab.com/uxxxu/wasla/-/merge_requests/19)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** `services/geography/`: (أ) `package.json` — أُضيفت `drizzle-orm`/`pg`/`drizzle-kit` كتبعيات (مثل Identity) + سكربتات `db:generate`/`db:push`/`db:studio`/`test:integration`. (ب) `drizzle.config.ts`. (ج) `src/infrastructure/drizzle/schema.ts` — 13 جدول Drizzle تطابق `contracts/schema.sql` (geo_countries/regions/cities/districts/zones + 5 جداول names + geo_user_locations + geo_user_location_history + geo_outbox) مع قيود CHECK على wasla_public_id و status. (د) `db.ts` — `createDb` (pg.Pool + drizzle)؛ Geography لا يولّد Wasla Public IDs (مرجع opaque) فلا تسلسل public-id هنا (خلافاً Identity). (هـ) `repository.ts` — `PostgresGeographyRepository` (ينفّذ كل منافذ الـports: list/find لكل مستوى + getZoneDetail مع اجتياز المسار + find/set/recordHistory/list للموقع) + `PostgresOutbox` (append/unread). الـrepository يُرجع كل كيان مع LocalizedName الكاملة (كل اللغات)؛ طبقة use-case تطبّق fallback إلى ar — فسلوك in-memory وDrizzle متطابق. (و) `contracts/seeds/saudi-arabia.sql` — INSERT ... ON CONFLICT DO NOTHING (idempotent) للبلد SA ← منطقة المدينة ← مدينة المدينة ← حيّان (الحرة/قباء) ← منطقتان (الحرة الشرقية/قباء الشمالية) + أسماء ar/en/ur؛ المعرّفات UUID ثابتة تطابق الـin-memory fixture. حيّ الحرة ومنطقة الحرة الشرقية تنقصهما ترجمات en/ur لاختبار fallback. (ز) `src/__tests__/postgres-repository.integration.test.ts` — 4 اختبارات تكامل (مُفعّلة بـDATABASE_URL عبر describe.skipIf): تحميل الـseed + التسلسل الهرمي المُترجم؛ fallback إلى ar؛ إنشاء موقع أول (version 1 + set event)؛ تغيير مع history + changed event + idempotent-same-zone no-op. (ح) `src/index.ts` — تصدير طبقة Drizzle.
+2. **لماذا؟** Phase 02 Exit Gate يتطلب تغيير الموقع دون حساب جديد + i18n ضد Postgres حقيقي. طبقة Drizzle تُحيّد النواة المجردة (MR 3) عن التخزين الفعلي وفق ADR-006 (نفس المكدّس كـIdentity). الـseed السعودي idempotent يضمن إعادة التشغيل الآمن في CI والإنتاج.
+3. **أين؟** `services/geography/`.
+4. **كيف تم اختباره؟** ✅ typecheck -r (5 حزم). ✅ 25 اختبار وحدة (نواة، من MR 3، لم تتأثر). ✅ 4 اختبارات تكامل Postgres ضد `geo_test` (Postgres 18): seed+hierarchy مُترجم؛ fallback ar للمناطق الناقصة en/ur؛ set (version 1 + geo.user_location.set)؛ change (history مع old_zone=null للأول + old_zone للسابق + geo.user_location.changed)؛ idempotent-same-zone (لا history/event/version جديد). ✅ scan-secrets نظيف.
+5. **ما الخطوة التالية؟** Phase 02 MR 5 — Fastify HTTP layer (9 مسارات) + error mapping لأكواد Geography الـ12 إلى HTTP.
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث MASTER_PROGRESS + HANDOFF [4].
+7. **هل مراجَع؟** مُراجعة ذاتياً + المستشار (تصحيحات: جداول names تُحمّل دفعياً لتفادي N+1؛ الـrepository يُرجع LocalizedName الكاملة والـuse-case يطبّق fallback؛ اختبار التكامل يستخدم delta للـoutbox لأن unread() يُرجع كل الأحداث غير المنشورة عبر المستخدمين).
+8. **هل ADR مطلوب؟** لا — ADR-006 يغطي المكدّس ونموذج البيانات (من MR 2). هذا تنفيذ ضد العقود.
+9. **هل يكسر backward compatibility؟** لا — إضافة طبقة persistence لخدمة قائمة؛ النواة المجردة (MR 3) لم تتأثر.
+10. **هل migration؟** نعم — `contracts/schema.sql` هو عقد DDL (يُطبّق على قاعدة فارغة)؛ `contracts/seeds/saudi-arabia.sql` بيانات أولية. Drizzle schema (`src/infrastructure/drizzle/schema.ts`) يطابق الـDDL اليدوي (ADR-004/006: الـDDL اليدوي هو المصدر). لا توجد هجرة drizzle-kit مُولّدة في CI (db:generate محلي فقط).
+11. **هل توجد مخاطر؟** نعم: (أ) الـin-memory seed (TS) و SQL seed يكرّران البيانات — يجب إبقاؤهما متزامنين (المعرّفات UUID ثابتة في كلاهما تخفف ذلك). (ب) اختبار التكامل لا يُشغّل في CI بعد (job db-integration يشغّل Identity فقط) — يُحلّ في MR 6. (ج) تريغر `updated_at` من schema.sql غير مُمثّل في Drizzle schema — يُطبّق عبر DDL عند إنشاء الجداول في الاختبار.
+12. **هل security؟** لا أسرار؛ wasla_public_id مرجع opaque مع CHECK نمط؛ الاتصال بـPostgres عبر DATABASE_URL من env.
+13. **هل performance؟** جداول names تُحمّل دفعياً (inArray) لتفادي N+1؛ فهارس على (entity_id, locale) و (wasla_public_id) في schema.sql.
+14. **هل monitoring؟** لا في هذا الـMR؛ السجلّ المهيكلي (pino) يُضاف في طبقة Fastify (MR 5).
+
+**Related:** [MR !19](https://gitlab.com/uxxxu/wasla/-/merge_requests/19)، [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md)، [عقود geography](../../services/geography/contracts/README.md)، [النواة المجردة MR !18](https://gitlab.com/uxxxu/wasla/-/merge_requests/18)
+
+---
+
 ## 2026-08-20 · Phase 02 MR 3 — geography pure core (domain/ports/in-memory/use-cases/locale fallback)
 
 **Task:** تنفيذ النواة المجردة لخدمة Geography & Localization (domain + ports + in-memory adapters + use-cases + locale fallback) وفق Contract First، دون HTTP أو Drizzle (تأتي في MR 4/5). **Status:** Completed (مُتحقَّق محلياً: typecheck 5 حزم؛ 25 اختباراً + 80 إجمالياً؛ scan-secrets نظيف) · **MR:** [!18](https://gitlab.com/uxxxu/wasla/-/merge_requests/18)

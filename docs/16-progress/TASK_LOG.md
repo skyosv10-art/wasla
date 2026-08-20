@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 2 — عقود Geography & Localization + ADR-006
+
+**Task:** إنشاء العقود التعاقدية لخدمة Geography & Localization وفق Contract First ([ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md)) + توثيق المكدّس ونموذج البيانات في [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md). **Status:** Completed (مُتحقَّق محلياً: DDL يُطبَّق على Postgres 18؛ typecheck 4 حزم؛ 15 اختباراً + ADR) · **MR:** [!17](https://gitlab.com/uxxxu/wasla/-/merge_requests/17)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** (أ) `services/geography/contracts/`: `schema.sql` (13 جدولاً: 5 هرمي geo_countries/regions/cities/districts/zones + 5 ترجمة *_names + geo_user_locations + geo_user_location_history + geo_outbox + triggers)؛ `events.json` (حدثان: `geo.user_location.set.v1`، `geo.user_location.changed.v1`)؛ `api.openapi.yml` (9 مسارات: استعلام الهرم + موقع المستخدم GET/PUT + history)؛ `errors.md` (12 كود خطأ)؛ `README.md`. (ب) `packages/contracts/geography/` (`@wasla/contracts-geography`): package.json + tsconfig + `src/api-types.ts` (مولّد من OpenAPI عبر openapi-typescript) + `src/events-types.ts` (مشتق يدوياً) + `src/index.ts` (تصدير الأنواع + primitives: `SupportedLocale`/`LOCALE_DIRECTION`/`DEFAULT_LOCALE`) + 15 اختباراً (drift guard + contract smoke). (ج) `docs/15-decisions/ADR-006-...md`.
+2. **لماذا؟** Phase 02 Exit Gate يتطلب تغيير الموقع دون حساب جديد + i18n. Contract First يوجب العقود أولاً (DDL + events + OpenAPI + errors)، ثم الأنواع المُكتبة، ثم التنفيذ. ADR-006 يوثّق قرارات التغليف (مرجع opaque لـwasla_public_id، لا FK إلى identity) + الترجمة (جداول منفصلة لا JSONB) + PostGIS/Testcontainers/i18n مستقل مؤجلة.
+3. **أين؟** `services/geography/contracts/`، `packages/contracts/geography/`، `docs/15-decisions/`، `docs/16-progress/`.
+4. **كيف تم اختباره؟** ✅ DDL يُطبَّق على Postgres 18 (13 جدولاً + triggers). ✅ typecheck -r (4 حزم). ✅ 15 اختباراً (5 drift guard للأحداث + 10 contract smoke). ✅ openapi-typescript يولّد api-types.ts (578 سطراً). ✅ scan-secrets نظيف.
+5. **ما الخطوة التالية؟** Phase 02 MR 3 — النواة المجردة (domain + ports + in-memory + use-cases + locale fallback).
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + ADR-006 + تحديث MASTER_PROGRESS (Phase 02 → In Progress) + HANDOFF [2].
+7. **هل مراجَع؟** مُراجعة ذاتياً + المستشار (خطة الـ7 MRs + قرارات التغليف/i18n).
+8. **هل ADR مطلوب؟** نعم — [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) (هذا الـ MR نفسه).
+9. **هل يكسر backward compatibility؟** لا — حزمة جديدة + عقود جديدة، لا تمس Identity.
+10. **هل migration؟** نعم — `schema.sql` هو عقد DDL (يُطبّق على قاعدة فارغة). الترحيل الفعلي عبر Drizzle في MR 4.
+11. **هل توجد مخاطر؟** نعم: (أ) التحقق من وجود الهوية عبر `IdentityLookupPort` (HTTP في الإنتاج) يضيف قفزة شبكية — يُخفّف بـfake في الاختبارات. (ب) تغطية Saudi الأولية محدودة (تكفي لـExit Gate) — تُوسَّع لاحقاً.
+12. **هل security؟** لا أسرار؛ `wasla_public_id` مرجع opaque مع CHECK نمط — لا تسريب internals.
+13. **هل performance؟** جداول الترجمة مفهرسة (PK مركّب)؛ fallback إلى ar سريع.
+14. **هل monitoring؟** لا في هذا الـMR؛ يُضاف في Phase 18 (Observability).
+
+**Related:** [MR !17](https://gitlab.com/uxxxu/wasla/-/merge_requests/17)، [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md)، [ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md)، [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)
+
+---
+
 ## 2026-08-20 · Phase 02 MR 1 — مصالحة الوثائق بعد إغلاق Phase 01 (توثيقي)
 
 **Task:** تصحيح الحالات القديمة في وثائق التقدم لتعكس الواقع بعد دمج Phase 01 (MR !11–!15) وإغلاق Phase 00/01، كي يعرف أي جهة تلي العمل الوضع الحالي بدقة. **Status:** Completed (توثيقي) · **MR:** [!16](https://gitlab.com/uxxxu/wasla/-/merge_requests/16)

@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: WASLA Identity Service API
+  description: |
+    عقد API لخدمة Identity — المرحلة Phase 01 (Identity Foundation).
+
+    المبدأ الجوهري (وفق [ADR-001](../../../docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md)):
+    **Wasla User ID هو الهوية الداخلية الأساسية**. معرّفات Telegram وأرقام الهواتف
+    هي روابط Identity (Identity Links) وليست مفتاح النظام النهائي.
+
+    Exit Gate لـ Phase 01: إنشاء مستخدم من Telegram وبقاء هويته مستقرة عبر تغيير Username.
+  version: 1.0.0
+  contact:
+    name: Team 01 — Identity & Auth
+servers:
+  - url: https://api.wasla.local/v1
+    description: Environment-agnostic contract (host is configuration per environment)
+
+# ─────────────────────────────────────────────────────────────────────
+# إصدار العقد: v1. أي تغيير غير متوافق للخلف يتطلب إصدار v2 + ADR.
+# ─────────────────────────────────────────────────────────────────────
+tags:
+  - name: Resolve
+    description: حلّ/إنشاء هوية Wasla من معرّف خارجي (Telegram)
+  - name: Users
+    description: عمليات قراءة/تحديث مستخدم Wasla
+  - name: IdentityLinks
+    description: إدارة روابط الهوية الخارجية (Telegram/Phone/...)
+  - name: Recovery
+    description: استرجاع الحساب عبر Wasla Public ID
+  - name: History
+    description: سجل تغييرات الهوية (Username/روابط)
+
+paths:
+  /identity/resolve:
+    post:
+      tags: [Resolve]
+      summary: حلّ أو إنشاء مستخدم Wasla من هوية Telegram
+      description: |
+        Idempotent حسب `telegram_user_id`. إذا كان المعرّف مرتبطاً بمستخدم موجود،
+        يُرجَع ذلك المستخدم دون إنشاء جديد. تغيير `telegram_username` لا يُنشئ مستخدمًا جديدًا —
+        يُسجَّل في Identity History بدل ذلك.
+      operationId: resolveIdentity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveIdentityRequest'
+      responses:
+        '200':
+          description: مستخدم موجود تم حلّه
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveIdentityResponse'
+        '201':
+          description: مستخدم جديد أُنشئ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveIdentityResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /identity/users/{waslaPublicId}:
+    get:
+      tags: [Users]
+      summary: قراءة مستخدم Wasla عبر Wasla Public ID
+      operationId: getUser
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      responses:
+        '200':
+          description: المستخدم
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /identity/users/{waslaPublicId}/links:
+    post:
+      tags: [IdentityLinks]
+      summary: إضافة رابط هوية خارجي للمستخدم (Phone/Telegram جديد/...)
+      operationId: addIdentityLink
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddIdentityLinkRequest' }
+      responses:
+        '200':
+          description: الرابط أُضيف
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentityLink' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /identity/users/{waslaPublicId}/recovery:
+    post:
+      tags: [Recovery]
+      summary: بدء استرجاع الحساب عبر Wasla Public ID
+      description: |
+        Recovery لا يتجاوز الهوية — يبدأ خطوات تحقق وفق مستوى الحساب والمخاطر.
+        يجب أن تكون وسيلة التحقق مناسبة (لا تعتمد على Telegram كمصدر وحيد).
+      operationId: startRecovery
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartRecoveryRequest' }
+      responses:
+        '202':
+          description: بدأت خطوات التحقق
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecoveryStarted' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /identity/users/{waslaPublicId}/history:
+    get:
+      tags: [History]
+      summary: سجل تغييرات الهوية (Username/روابط)
+      operationId: getIdentityHistory
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - in: query
+          name: field
+          schema: { type: string, enum: [telegram_username, phone, link] }
+      responses:
+        '200':
+          description: السجل
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IdentityHistoryEntry' }
+
+components:
+  parameters:
+    WaslaPublicId:
+      name: waslaPublicId
+      in: path
+      required: true
+      description: رقم الهوية المرئي والدائم (مثال WS-0000010427)
+      schema:
+        type: string
+        pattern: '^WS-[0-9]{10}$'
+
+  responses:
+    BadRequest:
+      description: طلب غير صالح
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: "تعارض (مثلاً: الرابط مرتبط بمستخدم آخر)"
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unprocessable:
+      description: المدخلات صالحة شكلياً لكن غير مقبولة منطقياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnavailable:
+      description: الخدمة غير متاحة (degraded mode)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    ResolveIdentityRequest:
+      type: object
+      required: [telegram_user_id]
+      properties:
+        telegram_user_id:
+          type: integer
+          format: int64
+          description: معرّف Telegram الرقمي (ليس Username) — المفتاح Idempotent
+        telegram_username:
+          type: string
+          description: Username الحالي (يُسجَّل في History عند التغيير)
+        telegram_language_code:
+          type: string
+        source:
+          type: string
+          enum: [customer_bot, driver_bot, partner_bot]
+          description: مصدر الدخول (لأغراض Audit)
+
+    ResolveIdentityResponse:
+      type: object
+      required: [wasla_public_id, internal_uuid, created]
+      properties:
+        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        internal_uuid:
+          type: string
+          format: uuid
+          description: داخلي فقط — لا يُعرض للمستخدم النهائي
+        created: { type: boolean, description: true إذا أُنشئ مستخدم جديد في هذه العملية }
+        links:
+          type: array
+          items: { $ref: '#/components/schemas/IdentityLink' }
+
+    User:
+      type: object
+      required: [wasla_public_id, status, created_at]
+      properties:
+        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        status:
+          type: string
+          enum: [active, suspended, deleted, recovery_in_progress]
+        created_at: { type: string, format: date-time }
+        links:
+          type: array
+          items: { $ref: '#/components/schemas/IdentityLink' }
+
+    IdentityLink:
+      type: object
+      required: [provider, external_id]
+      properties:
+        provider:
+          type: string
+          enum: [telegram, phone, email, web, mobile]
+        external_id:
+          type: string
+          description: المعرّف الخارجي (telegram_user_id / رقم هاتف normalyzed / ...)
+        verified: { type: boolean }
+        linked_at: { type: string, format: date-time }
+
+    AddIdentityLinkRequest:
+      type: object
+      required: [provider, external_id]
+      properties:
+        provider: { type: string, enum: [telegram, phone, email, web, mobile] }
+        external_id: { type: string }
+        verified: { type: boolean }
+
+    StartRecoveryRequest:
+      type: object
+      required: [verification_method]
+      properties:
+        verification_method:
+          type: string
+          enum: [phone_otp, email_otp, admin_assisted]
+          description: يجب ألا تعتمد على Telegram كمصدر وحيد
+
+    RecoveryStarted:
+      type: object
+      required: [recovery_id, status]
+      properties:
+        recovery_id: { type: string, format: uuid }
+        status: { type: string, enum: [verification_pending, completed, rejected] }
+
+    IdentityHistoryEntry:
+      type: object
+      required: [field, old_value, new_value, effective_at, source]
+      properties:
+        field:
+          type: string
+          enum: [telegram_username, phone, link]
+        old_value: { type: string, nullable: true }
+        new_value: { type: string }
+        effective_at: { type: string, format: date-time }
+        source:
+          type: string
+          enum: [customer_bot, driver_bot, partner_bot, recovery, admin, system]
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: كود خطأ ثابت (راجع errors.md)
+        message:
+          type: string
+        trace_id: { type: string }

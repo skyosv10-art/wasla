@@ -4,7 +4,9 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1
+> **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1 · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · MR !2
+>
+> **تحديث 2026-08-20:** بدأت عقود Identity (Contract First) كأول خطوة نحو Phase 01 Exit Gate — موثّق في ADR-002 وMR !2. **لا يُلغي هذا بدء Phase 01 حقيقة أن Phase 00 = Exit Gate Pending** (لأن CI لم يجتز فعلياً على GitLab بعد).
 
 ---
 

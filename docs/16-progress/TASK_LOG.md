@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 3 — geography pure core (domain/ports/in-memory/use-cases/locale fallback)
+
+**Task:** تنفيذ النواة المجردة لخدمة Geography & Localization (domain + ports + in-memory adapters + use-cases + locale fallback) وفق Contract First، دون HTTP أو Drizzle (تأتي في MR 4/5). **Status:** Completed (مُتحقَّق محلياً: typecheck 5 حزم؛ 25 اختباراً + 80 إجمالياً؛ scan-secrets نظيف) · **MR:** [!18](https://gitlab.com/uxxxu/wasla/-/merge_requests/18)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** `services/geography/` (`@wasla/geography-service`): package.json + tsconfig + vitest.config + vitest.integration.config. `src/domain/`: model.ts (كيانات camelCase منفصلة عن DTOs: Country/Region/City/District/Zone/LocalizedName/UserLocationAssignment/UserLocationHistoryEntry + أنواع GeoStatus/Locale/LocationSource)؛ errors.ts (GeographyError + 12 كوداً مع class→HTTP)؛ locale.ts (resolveLocalizedName مع fallback إلى ar)؛ events.ts (مصانع userLocationSet/userLocationChanged). `src/ports.ts` (Clock/IdGenerator/Outbox/IdentityLookupPort.identityExists/GareographyRepository مع find+list لكل مستوى + getZoneDetail + find/set/recordHistory للموقع). `src/infrastructure/in-memory.ts` (InMemoryGeographyRepository مزروع ببيانات Saudi الثابتة + InMemoryIdentityLookupPort + SystemClock/CryptoIdGenerator/InMemoryOutbox). `src/use-cases/`: deps.ts (UseCaseDeps)؛ mappers.ts (entity+names→DTO مع locale fallback)؛ list-hierarchy.ts (6 دوال)؛ set-user-location.ts (النواة)؛ get-user-location.ts؛ get-user-location-history.ts. `src/index.ts`. 25 اختباراً (locale 4 + hierarchy 10 + user-location 11).
+2. **لماذا؟** Phase 02 Exit Gate يتطلب تغيير الموقع دون حساب جديد + i18n. النواة المجردة تبني المنطق ضد العقود/الأنواع قبل HTTP/Postgres. فصل domain عن DTOs (camelCase) يجعل النواة مستقلة عن شكل API. locale fallback في طبقة use-case (لا مخفية في repo) يضمن تطابق in-memory وDrizzle لاحقاً.
+3. **أين؟** `services/geography/`.
+4. **كيف تم اختباره؟** ✅ typecheck -r (5 حزم). ✅ 25 اختباراً: create (set event+201)؛ change (changed event+history+version)؛ idempotent (نفس المنطقة: لا event/history/version)؛ invalid public id (400)؛ identity not found (404)؛ zone not found (404)؛ locale fallback (en مفقود→ar)؛ parent-not-found (country/region/city/district)؛ getUserLocation not found. ✅ scan-secrets نظيف.
+5. **ما الخطوة التالية؟** Phase 02 MR 4 — Drizzle/Postgres persistence + Saudi seed (contracts/seeds/saudi-arabia.sql).
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث MASTER_PROGRESS + HANDOFF [3].
+7. **هل مراجَع؟** مُراجعة ذاتياً + المستشار (تصحيحات: فصل domain عن DTOs، إضافة recordUserLocationHistory للـports، locale fallback في use-case لا في repo، تأكيد سلوك setUserLocation idempotent).
+8. **هل ADR مطلوب؟** لا — ADR-006 يغطي المكدّس ونموذج البيانات (من MR 2). هذا تنفيذ ضد العقود.
+9. **هل يكسر backward compatibility؟** لا — خدمة جديدة مستقلة، لا تمس Identity أو العقود.
+10. **هل migration؟** لا — لا DB في هذا الـMR (Drizzle في MR 4).
+11. **هل توجد مخاطر؟** نعم: الـin-memory seed (TS) يكرّر منطقياً SQL seed القادم في MR 4 — يجب إبقاؤهما متزامنين. التخفيف: توثيق التزامن في README.
+12. **هل security؟** لا أسرار؛ wasla_public_id مرجع opaque مع CHECK نمط.
+13. **هل performance؟** الـin-memory repository يستخدم Map (O(1) للبحث). بالنسبة لـPostgres (MR 4) ستُضاف فهارس.
+14. **هل monitoring؟** لا في هذا الـMR؛ يُضاف في Phase 18.
+
+**Related:** [MR !18](https://gitlab.com/uxxxu/wasla/-/merge_requests/18)، [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md)، [عقود geography](../../services/geography/contracts/README.md)
+
+---
+
 ## 2026-08-20 · Phase 02 MR 2 — عقود Geography & Localization + ADR-006
 
 **Task:** إنشاء العقود التعاقدية لخدمة Geography & Localization وفق Contract First ([ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md)) + توثيق المكدّس ونموذج البيانات في [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md). **Status:** Completed (مُتحقَّق محلياً: DDL يُطبَّق على Postgres 18؛ typecheck 4 حزم؛ 15 اختباراً + ADR) · **MR:** [!17](https://gitlab.com/uxxxu/wasla/-/merge_requests/17)

@@ -177,8 +177,11 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
     - كود خطأ جديد (إضافة فقط): GEO_INVALID_REQUEST_BODY (400)
     - 16 اختبار app.inject (إجمالي geography = 41)؛ توثيق: docs/04-api/GEOGRAPHY_HTTP.md
     - منافذ: identity 8080 ، geography 8081؛ IDENTITY_SERVICE_URL يُفعّل HttpIdentityLookupPort
-[6] ci(geography): DB integration (geography-db-integration job أو توسيع db-integration)   ← التالي
-[7] test(geography): Phase 02 Exit Gate E2E + close Phase 02
+[6] ci(geography): DB integration (geography-db-integration job)   ← ✅ Done [MR !21]
+    - .gitlab-ci.yml: قاعدة مشتركة .db-integration-base + وظيفة geography-db-integration
+    - قاعدة بيانات مستقلّة wasla_geo_test (postgres:15) لعزل الفشل عن identity
+    - التوثيق: docs/12-testing/DB_INTEGRATION_CI.md
+[7] test(geography): Phase 02 Exit Gate E2E + close Phase 02   ← التالي
     - تطبّق schema(identity) + schema(geography) + seed في قاعدة اختبار واحدة
     - تنشئ مستخدم عبر identity app → تحدّد موقعاً → تغيّره → تتحقق من ثبات wasla_public_id/internal_uuid
     + history (old/new zone) + outbox (set/changed) + استجابات مترجمة (ar/en/ur)

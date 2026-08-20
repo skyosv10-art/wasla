@@ -3,23 +3,36 @@
 #
 # التفعيل (مرة واحدة لكل نسخة محلية):
 #   git config core.hooksPath scripts/hooks
-#   chmod +x scripts/hooks/pre-push scripts/checks/require-doc-update.sh
+#   chmod +x scripts/hooks/pre-push scripts/checks/require-doc-update.sh scripts/checks/scan-secrets.sh
 #
 # ملاحظة: الإلزام الفعلي يحدث خادمياً عبر job الـ doc-coverage في .gitlab-ci.yml،
 # لأن المطور قد يستخدم --no-verify لتجاوز هذا الـ hook. الهدف هنا التنبيه المبكر.
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-SCRIPT="$REPO_ROOT/scripts/checks/require-doc-update.sh"
+DOC_CHECK="$REPO_ROOT/scripts/checks/require-doc-update.sh"
+SECRET_CHECK="$REPO_ROOT/scripts/checks/scan-secrets.sh"
 
-if [ -z "$REPO_ROOT" ] || [ ! -x "$SCRIPT" ]; then
-  echo "تحذير: سكربت فحص التوثيق غير موجود أو غير قابل للتنفيذ في $SCRIPT — تخطّي الفحص المحلي." >&2
-  echo "        (تذكير: الإلزام الفعلي يتم خادمياً عبر CI job: doc-coverage)" >&2
+if [ -z "$REPO_ROOT" ]; then
+  echo "تحذير: تعذّر تحديد جذر المستودع — تخطّي الفحص المحلي." >&2
+  echo "        (تذكير: الإلزام الفعلي يتم خادمياً عبر CI job: doc-coverage + repo-structure)" >&2
   exit 0
 fi
 
 ZERO="0000000000000000000000000000000000000000"
 STATUS=0
+
+# فحص الأسرار أولاً (تنبيه مبكر — الإلزام الفعلي في CI job repo-structure).
+if [ -x "$SECRET_CHECK" ]; then
+  "$SECRET_CHECK" || STATUS=1
+else
+  echo "تحذير: سكربت فحص الأسرار غير موجود أو غير قابل للتنفيذ في $SECRET_CHECK — تخطّي الفحص المحلي." >&2
+fi
+
+if [ ! -x "$DOC_CHECK" ]; then
+  echo "تحذير: سكربت فحص التوثيق غير موجود أو غير قابل للتنفيذ في $DOC_CHECK — تخطّي فحص التوثيق المحلي." >&2
+  echo "        (تذكير: الإلزام الفعلي يتم خادمياً عبر CI job: doc-coverage)" >&2
+fi
 
 while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
   if [ "$LOCAL_SHA" = "$ZERO" ]; then
@@ -28,9 +41,9 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
   fi
   if [ "$REMOTE_SHA" = "$ZERO" ]; then
     # فرع جديد على المستودع البعيد: قارن ضد main.
-    "$SCRIPT" "origin/main" "$LOCAL_SHA" || STATUS=1
+    "$DOC_CHECK" "origin/main" "$LOCAL_SHA" || STATUS=1
   else
-    "$SCRIPT" "$REMOTE_SHA" "$LOCAL_SHA" || STATUS=1
+    "$DOC_CHECK" "$REMOTE_SHA" "$LOCAL_SHA" || STATUS=1
   fi
 done
 

@@ -54,13 +54,11 @@ repo-structure:
       echo "OK: docs/15-decisions/ADR-001"
 
       echo "==> فحص عدم وجود أسرار في المستودع"
-      if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        if grep -rE "(sk-|AKIA|ghp_|glpat-|BEGIN (RSA |EC )?PRIVATE KEY)" --include='*' . >/dev/null 2>&1; then
-          echo "ERROR: عُثر على نمط سر محتمل في الملفات"
-          grep -rEn "(sk-|AKIA|ghp_|glpat-|BEGIN (RSA |EC )?PRIVATE KEY)" --include='*' . || true
-          exit 1
-        fi
+      if [ ! -x scripts/checks/scan-secrets.sh ]; then
+        echo "ERROR: scripts/checks/scan-secrets.sh غير قابل للتنفيذ" >&2
+        exit 1
       fi
+      bash scripts/checks/scan-secrets.sh
       echo "OK: لا أنماط أسرار واضحة"
 
       echo "==> جميع فحوصات بنية المستودع نجحت"

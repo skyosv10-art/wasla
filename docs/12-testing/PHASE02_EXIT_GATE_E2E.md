@@ -52,7 +52,8 @@ geography (Fastify) → Postgres (geo_*)          يُستدعى عبر app.inje
 - `countries` بلا `locale` → العربية (الافتراضي)، و`locale=en` → `Saudi Arabia`.
 - `regions?locale=ur` → `مدینہ علاقہ`.
 - `cities?locale=en` تُرجع المدينة بمعرّفها (Geo ID) لا باسم نصّي.
-- `districts?locale=en` لحي الحرة (لا ترجمة إنجليزية في البيانات الأولية) → **يرجع إلى العربية**: `حي الحرة`.
+- `districts?locale=en` لحي الحرة → ترجمته الحقيقية `Al-Hara District`، و`locale=ur` (لا ترجمة أردية في البيانات الأولية) → **يرجع إلى العربية**: `حي الحرة`.
+- `zones?locale=en` لنطاق الحرة الشرقية (بالعربية فقط) → **يرجع إلى العربية**: `الحرة الشرقية`.
 - `GET /geo/zones/{id}` يُرجع المسار الكامل (`path.district/city/region/country`) بمعرّفات UUID مع الأسماء المترجمة.
 
 **3) لا مواقع معلّقة بلا هوية**

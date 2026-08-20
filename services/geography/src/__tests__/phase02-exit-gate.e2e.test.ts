@@ -291,14 +291,35 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
       citiesEn.json<Array<{ id: string }>>().map((c) => c.id),
     ).toContain(MADINAH_CITY);
 
-    // Al Hara has no en/ur translation in the seed → falls back to ar.
+    // Al-Hara is translated to en but NOT to ur (see the seed) → ur falls back
+    // to the ar name, while en returns the real translation.
     const districtsEn = await geoApp.inject({
       url: `/geo/cities/${MADINAH_CITY}/districts?locale=en`,
     });
-    const alHara = districtsEn
-      .json<Array<{ id: string; name: string }>>()
-      .find((d) => d.id === AL_HARA);
-    expect(alHara?.name).toBe("حي الحرة");
+    expect(
+      districtsEn
+        .json<Array<{ id: string; name: string }>>()
+        .find((d) => d.id === AL_HARA)?.name,
+    ).toBe("Al-Hara District");
+
+    const districtsUr = await geoApp.inject({
+      url: `/geo/cities/${MADINAH_CITY}/districts?locale=ur`,
+    });
+    expect(
+      districtsUr
+        .json<Array<{ id: string; name: string }>>()
+        .find((d) => d.id === AL_HARA)?.name,
+    ).toBe("حي الحرة");
+
+    // Hara East zone has an ar name only → both en and ur fall back to ar.
+    const zonesEn = await geoApp.inject({
+      url: `/geo/districts/${AL_HARA}/zones?locale=en`,
+    });
+    expect(
+      zonesEn
+        .json<Array<{ id: string; name: string }>>()
+        .find((z) => z.id === HARA_EAST)?.name,
+    ).toBe("الحرة الشرقية");
 
     // Zone detail exposes the full hierarchy path by Geo IDs.
     const zone = await geoApp.inject({ url: `/geo/zones/${QUBA_NORTH}?locale=en` });

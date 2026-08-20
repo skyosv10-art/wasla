@@ -17,6 +17,16 @@ export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
 
+// Postgres adapters (MR 2). Imported lazily by the composition root; unit
+// tests use the in-memory adapters and never touch pg/drizzle at runtime.
+export * from "./infrastructure/drizzle/db.js";
+export * from "./infrastructure/drizzle/schema.js";
+export {
+  PostgresIdentityRepository,
+  PostgresOutbox,
+} from "./infrastructure/drizzle/repository.js";
+export { PostgresPublicIdSequence } from "./infrastructure/drizzle/public-id-sequence.js";
+
 export { resolveTelegramIdentity } from "./use-cases/resolve-telegram-identity.js";
 export type { UseCaseDeps } from "./use-cases/resolve-telegram-identity.js";
 export { getUser } from "./use-cases/get-user.js";

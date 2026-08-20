@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · MR 2 — Drizzle/Postgres persistence layer (محوّلات Postgres)
+
+**Task:** إضافة طبقة استمرارية Postgres لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — Drizzle schema مطابق للـDDL التعاقدي (schema.sql)، مستودع Postgres، تسلسل Public ID، إعداد اتصال، واختبارات تكامل منفصلة. **Status:** Completed (مُتحقَّق محلياً؛ [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) مفتوح للمراجعة/الدمج) · **MR:** [!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** أُضيفت محوّلات Postgres لحزمة `@wasla/identity-service`: Drizzle schema (`schema.ts`) مطابق لـ`schema.sql` (5 جداول: identity_users/links/history/recovery_requests/outbox مع CHECK وUNIQUE وFK ON DELETE RESTRICT والفهارس)، مستودع `PostgresIdentityRepository`، `PostgresOutbox`، `PostgresPublicIdSequence` (يسلسل `wasla_public_id_seq`)، إعداد اتصال `createDb` + `ensurePublicIdSequence`، إعداد `drizzle.config.ts`، إعدادات vitest (افتراضي يستثني `*.integration.test.ts`؛ `vitest.integration.config.ts` للاختبارات التكاملية)، واختبار تكامل `postgres-repository.integration.test.ts` (مُسيّج عبر `DATABASE_URL`، يُطبّق schema.sql + التسلسل). أُضيفت اعتماديات: drizzle-orm، pg، drizzle-kit، @types/pg.
+2. **لماذا؟** MR 2 في خطّة تنفيذ Phase 01 — طبقة الاستمرارية. النواة المجردة (MR 1) تعمل على الذاكرة؛ هذه الطبقة تربطها بـPostgres الحقيقي. اختيار Drizzle (بدل Prisma) موثّق في [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md): ترابط أنواع TS مع النموذج، SQL صريح، أداء عالٍ، ودعم صريح لـJSONB (حمولات الأحداث).
+3. **أين؟** `services/identity/src/infrastructure/drizzle/{schema,db,repository,public-id-sequence}.ts`، `services/identity/{drizzle.config,vitest.config,vitest.integration.config}.ts`، `services/identity/src/__tests__/postgres-repository.integration.test.ts`، `services/identity/package.json` (deps + scripts)، `services/identity/src/index.ts` (تصدير المحوّلات)، `.gitignore` (تجاهل نتاج drizzle-kit)، `pnpm-lock.yaml`.
+4. **كيف تم اختباره؟** `pnpm -r typecheck` ✅ (3 حزم)، `pnpm -r test` ✅ (31 اختباراً: 13+3+15؛ التكامل مستثنى من التشغيل الافتراضي)، `drizzle-kit generate` ✅ (ولّد هجرة صالحة لـ5 جداول مطابقة لـschema.sql)، `scan-secrets` ✅ نظيف. اختبار التكامل مكتوب ومُدقّق أنواعياً لكن لا يُشغّل دون Postgres (مؤجّل إلى MR 4 مع خدمة postgres في CI).
+5. **ما الخطوة التالية؟** MR 3 — طبقة Fastify HTTP (مسارات resolve/getUser/addLink/recovery/history) مع تحويل الأخطاء إلى رموز HTTP وفق `errors.md`.
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث `MASTER_PROGRESS.md` (Phase 01 blockers/evidence) + تحديث `HANDOFF_NEXT_STEPS.md` (قائمة [2]).
+7. **هل مراجَع؟** مُراجعة ذاتياً + [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) مفتوح للمراجعة.
+8. **هل ADR مطلوب؟** لا — لا انحراف عن القرارات القائمة. اختيار Drizzle موثّق مسبقاً في ADR-005. schema.sql يبقى مصدر DDL الحقيقي (ADR-004)؛ Drizzle schema طبقة استعلام آمنة أنواعياً مطابقة له.
+9. **هل يكسر backward compatibility؟** لا — إضافة طبقة جديدة فقط؛ المنافذ (ports) والنواة المجردة وحالات الاستخدام دون تغيير. المحوّلات الجديدة تُختار عند تكوين الجذر (composition root).
+10. **هل migration؟** لا migration ملتزم. DDL التعاقدي = `schema.sql` (يُطبّق مباشرة، يشمل تريغر `updated_at`). هجر drizzle-kit نتاج عند الطلب (`db:generate`)؛ تُتجاهل في git لأنها تختلف عن schema.sql في تريغر `updated_at` (المستودع يضبط `updatedAt` صراحةً في `updateUserStatus`).
+11. **هل توجد مخاطر؟** نعم: (أ) اختبار التكامل لا يُشغّل في CI بعد (لا Postgres في node:20-alpine) — يُحلّ في MR 4 عبر خدمة postgres. (ب) تريغر `updated_at` من schema.sql غير مُمثّل في Drizzle schema — معالج بضبط `updatedAt` صراحةً في المستودع (defense-in-depth). (ج) `onConflictDoNothing` يعتمد على قيد UNIQUE على (provider, external_id) — موجود في schema.sql.
+12. **هل security؟** لا أسرار؛ DATABASE_URL يُحقن عبر البيئة فقط؛ لا embedding لـTelegram IDs في Public ID (ADR-001).
+13. **هل performance؟** تجمع اتصالات pg (افتراضي 10)؛ فهارس على (user_internal_uuid, provider) و(user_internal_uuid, field) وoccurred_at للـoutbox.
+14. **هل monitoring؟** لا في هذا الـMR؛ السجلّ المهيكلي (pino) يُضاف في طبقة Fastify (MR 3).
+
+**Related:** [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12)، [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)، [ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md)، MR 1 ([!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11))
+
+---
+
 ## 2026-08-20 · MR 1 — Identity scaffold + pure core (النطاق والمنافذ وحالات الاستخدام)
 
 **Task:** تنفيذ النواة المجردة لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — نماذج النطاق، المنافذ (ports)، محوّلات في الذاكرة، حالات الاستخدام، والاختبارات. **Status:** Completed (مُتحقَّق محلياً؛ [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) مفتوح للمراجعة/الدمج) · **MR:** [!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11)

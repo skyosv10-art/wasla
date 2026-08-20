@@ -24,6 +24,40 @@
 
 ## السجل
 
+## 2026-08-20 · MR 1 — Identity scaffold + pure core (النطاق والمنافذ وحالات الاستخدام)
+
+**Task:** تنفيذ النواة المجردة لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — نماذج النطاق، المنافذ (ports)، محوّلات في الذاكرة، حالات الاستخدام، والاختبارات. **Status:** Completed (مُتحقَّق محلياً؛ [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) مفتوح للمراجعة/الدمج) · **MR:** [!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11)
+
+**ماذا تم إنجازه (1):** إنشاء حزمة `@wasla/identity-service` (services/identity) بنماذج النطاق (User/IdentityLink/HistoryEntry/RecoveryRequest مطابقة لـschema.sql)، أخطاء ثابتة (errors.ts مطابق لكتالوج errors.md)، مولّد/متحقّق Wasla Public ID (`WS-[0-9]{10}`)، مصانع أحداث المجال (identity.created / link.added / telegram_username.changed / recovery.started) وفق events.json، المنافذ (Clock/IdGenerator/PublicIdSequence/IdentityRepository/Outbox)، محوّلات في الذاكرة للاختبارات، وحالات الاستخدام: `resolveTelegramIdentity` (idempotent حسب telegram_user_id + تسجيل تغيير Username في History دون إنشاء مستخدم جديد) و`getUser` و`addIdentityLink` و`startRecovery` و`getIdentityHistory`. 15 اختباراً تجتاز.
+
+**لماذا تم اختياره (2):** وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) وخطّة المستشار (MR 1 = scaffold + pure core). البدء بالنواة المجردة (hexagonal) قبل HTTP/Postgres يسمح باختبار سلوكيات الـExit Gate (استقرار الهوية عبر تغيير Username) دون اعتماد على Docker/Postgres (Testcontainers مؤجّل — لا Docker في بيئة CI الحالية node:20-alpine). Contract-First: أنواع API/الأحداث مستوردة من `@wasla/contracts-identity`.
+
+**أين تم التغيير (3):** `services/identity/` (package.json، tsconfig.json، src/domain/{model,errors,public-id,events}.ts، src/ports.ts، src/infrastructure/in-memory.ts، src/use-cases/*.ts، src/index.ts، src/__tests__/*.test.ts)، `packages/contracts/identity/src/index.ts` (إضافة تصديرات `RecoveryStarted`/`IdentityHistoryEntry`/`AddIdentityLinkRequest`)، `packages/contracts/identity/package.json` (exports → src/index.ts للاستهلاك دون build)، `pnpm-lock.yaml`، `docs/16-progress/{TASK_LOG,MASTER_PROGRESS,HANDOFF_NEXT_STEPS}.md`.
+
+**الملفات/الخدمات المتأثرة (4):** حزمة جديدة `@wasla/identity-service` (النواة المجردة)؛ حزمة `@wasla/contracts-identity` (تصديرات أنواع إضافية + exports source).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا تغيير في العقود (OpenAPI/events.json/schema.sql/errors.md). أُضيفت تصديرات أنواع من العقد الموجودة فقط (RecoveryStarted، IdentityHistoryEntry) — لا تغيير دلالي.
+
+**كيف تم الاختبار (6):** `pnpm -r typecheck` ✅ (3 حزم: contracts/identity، errors، services/identity)، `pnpm -r test` ✅ (31 اختباراً: 13 + 3 + 15)، `bash scripts/checks/scan-secrets.sh` ✅ نظيف. اختبارات الـExit Gate: إنشاء مستخدم من Telegram (created:true، WS-XXX صالح، حدثان identity.created + link.added)؛ idempotent (نفس telegram_user_id → created:false، لا أحداث جديدة)؛ استقرار الهوية عبر تغيير Username (نفس public_id/internal_uuid، تسجيل history بقيم old/new، حدث telegram_username.changed)؛ استقرار عبر تغييرات متعددة (سجل كامل u1→u2→u3→u4)؛ رفض resolve بلا telegram_user_id (IDENTITY_MISSING_TELEGRAM_ID)؛ تعارض رابط (IDENTITY_LINK_ALREADY_LINKED)؛ مزوّد غير صالح (IDENTITY_LINK_INVALID_PROVIDER)؛ recovery (recovery.started)؛ history مُرشّح بحقل.
+
+**ما المشاكل التي ظهرت (7):** (1) مسارات استيراد نسبية خاطئة في حالات الاستخدام (`../../domain/` بدل `../domain/`) — صُلحت. (2) حزمة contracts كانت تُصدِّر `dist/` غير المبنيّ → tsc لا يجد الأنواع؛ صُلح بجعل exports تشير إلى `src/index.ts` (استهلاك دون build). (3) نوع `IdentityHistoryEntry.field` في OpenAPI يقيّد على telegram_username/phone/link (بدون status) بينما DDL يشمل status؛ عُولج بترشيح إدخالات status من استجابة history endpoint. (4) `res.links` اختياري في نوع العقد؛ عُولج في الاختبار.
+
+**ما الذي لم يكتمل (8):** طبقة HTTP (Fastify) — MR 3. طبقة Postgres/Drizzle — MR 2. اختبارات تكامل مع Postgres حقيقي — MR 4. هذه النواة تستعمل in-memory repository فقط (كافٍ لمنطق الـExit Gate).
+
+**الخطوة التالية (9):** دمج MR !11 → اجتياز CI → MR 2 (Drizzle/Postgres persistence) ثم MR 3 (Fastify HTTP) ثم MR 4 (CI DB integration) ثم MR 5 (Exit Gate E2E).
+
+**ما الذي يعتمد عليه العمل التالي (10):** اجتياز CI على MR !11 (shared runners مُفعّلة). لا يعتمد على Docker (النواة مجردة).
+
+**Migration/Deployment/Config (11):** لا — نواة مجردة بلا runtime/DB. لا deployment.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** (1) جعل contracts exports تشير إلى src/index.ts بدل dist — قرار تطويري (استهلاك دون build في monorepo خاص)؛ يُراجع عند الحاجة لتغليف/dist منشور. (2) استراتيجية Wasla Public ID موثّقة في public-id.ts (WS- + 10 أرقام صفرية من سلسلة تسلسلية) — مطابقة لـschema.sql (Postgres sequence)؛ التوليد الفعلي بالـsequence في MR 2. (3) Testcontainers مؤجّل (لا Docker في CI) — مُوثّق في ADR-005. (4) لا embedding لـTelegram IDs في Public ID (ADR-001).
+
+**الروابط (13):** MR [!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · العقود `services/identity/contracts/` · حزمة `@wasla/contracts-identity` · [MASTER_PROGRESS](MASTER_PROGRESS.md) Phase 01
+
+**الشخص/الفريق الذي يتابع (14):** مالك المشروع (دمج MR !11 + مراجعة CODEOWNERS) · Team 01 — Identity & Auth (متابعة التنفيذ MR 2/3/4/5)
+
+---
+
 ## 2026-08-20 · إصلاح فشل job `build-test` في CI: إضافة @types/node لعقد Identity
 
 **Task:** إصلاح فشل job `build-test` (typecheck) على GitLab CI بعد تفعيل shared runners — أخطاء `Cannot find module 'node:fs'` / `node:path` / `Cannot find name '__dirname'` في `packages/contracts/identity/src/__tests__/events.test.ts`. **Status:** Completed (الإصلاح مُتحقَّق محلياً بتثبيت مُجمّد نظيف مُطابق لـCI؛ [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) مفتوح للمراجعة/الدمج) · **MR:** [!9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9)

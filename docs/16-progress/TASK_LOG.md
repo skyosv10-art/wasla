@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 6 — تكامل قاعدة البيانات في CI لخدمة geography
+
+**Task:** تشغيل اختبارات تكامل Postgres لخدمة Geography داخل GitLab CI (خدمة `postgres:15`) بعد أن كانت موجودة منذ MR !19 لكن غير مُشغَّلة آلياً. **Status:** Completed (مُتحقَّق: `POST /ci/lint` صالح بدون أخطاء أو تحذيرات، وخط أنابيب الـMR ينفّذ الوظيفة فعلياً) · **MR:** [!21](https://gitlab.com/uxxxu/wasla/-/merge_requests/21)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** (أ) `.gitlab-ci.yml` — استُخرجت قاعدة مشتركة مخفية `.db-integration-base` (صورة `node:20-alpine` + corepack/pnpm 9 + قواعد التشغيل على أحداث MR وعلى `main`)، وأُعيد تعريف `db-integration` (identity) عبر `extends` دون تغيير سلوكها، وأُضيفت وظيفة جديدة `geography-db-integration` تشغّل `pnpm --filter @wasla/geography-service test:integration` مقابل خدمة `postgres:15` بقاعدة مستقلّة `wasla_geo_test`. (ب) حُذفت تعليقات قديمة صارت غير صحيحة («jobs الـ build لا تنفّذ حالياً لأن shared runners غير متاحة») لأن الـrunners مُفعّلة منذ 2026-08-20 وكل الوظائف تعمل. (ج) `docs/12-testing/DB_INTEGRATION_CI.md` (جديد) — استراتيجية طبقتي الاختبار، جدول الوظائف، التشغيل المحلي، خطوات إضافة خدمة جديدة، والحدود الحالية.
+2. **لماذا؟** الاختبارات الأربعة للتكامل كُتبت في MR !19 لكنها كانت تُتخطّى في CI (`describe.skipIf(!DATABASE_URL)`) لأن الوظيفة الوحيدة القائمة تشغّل identity فقط — أي أن طبقة Postgres لـgeography لم تكن محميّة من الانحدار إلا بالتشغيل اليدوي. وبوابة خروج Phase 02 (MR 7) تحتاج أساساً موثوقاً يعمل ضد قاعدة حقيقية في كل MR. اختيار **قاعدة بيانات مستقلّة لكل خدمة** (لا توسيع وظيفة identity) يجعل الفشل مُنسَباً لخدمة واحدة، ويمنع أي تداخل جداول أو ترتيب ضمني بين الخدمتين، ويحترم ملكية كل خدمة لجداولها (ADR-006: لا FK من geography إلى identity).
+3. **أين؟** `.gitlab-ci.yml` + `docs/12-testing/` + `docs/16-progress/`.
+4. **كيف تم اختباره؟** ✅ تحقّق خادمي عبر `POST /api/v4/projects/:id/ci/lint`: `valid: true`، `errors: []`، `warnings: []`، والوظائف المُحلَّلة هي repo-structure / markdown-lint / doc-coverage / build-test / db-integration / geography-db-integration. ✅ تحقّق YAML محلي (تحليل الملف وتأكيد المفاتيح). ✅ التحقّق النهائي هو خط أنابيب هذا الـMR نفسه: الوظيفتان `db-integration` و`geography-db-integration` تعملان ضد `postgres:15` (لا يمكن تشغيل Postgres في بيئة العمل المحلية الحالية، فالتحقّق الفعلي في CI هو المصدر — والاختبارات نفسها سبق أن نجحت ضد Postgres حقيقي في MR !19).
+5. **ما الخطوة التالية؟** Phase 02 MR 7 — اختبار Exit Gate E2E: تطبيق مخططي identity و geography + البيانات الأولية، إنشاء مستخدم عبر Identity، تعيين موقعه ثم تغييره، والتحقّق من ثبات `wasla_public_id`/`internal_uuid` + `history` + `outbox` + الاستجابات المترجمة (ar/en/ur)، ثم إغلاق Phase 02.
+6. **هل مستند؟** نعم — هذا الإدخال + `docs/12-testing/DB_INTEGRATION_CI.md` (جديد) + `MASTER_PROGRESS.md` (صف Phase 02) + `HANDOFF_NEXT_STEPS.md` §6 (MR [6] ✅ Done، MR [7] = التالي).
+7. **هل مراجَع؟** مُراجعة ذاتياً مقابل الوظيفة القائمة لـidentity (تكافؤ السلوك بعد `extends`) + تحقّق خادمي من الـlint. يحتاج مراجعة المالك في الـMR.
+8. **هل ADR مطلوب؟** لا — ADR-005/ADR-006 يوثّقان تأجيل Testcontainers والاعتماد على خدمة postgres في CI؛ هذا تنفيذ لذلك القرار.
+9. **هل يكسر backward compatibility؟** لا — لا تغيير في الكود أو العقود. `db-integration` تحفظ سلوكها بالكامل (نفس الصورة والخدمة والقاعدة والأمر)، والجديد وظيفة إضافية.
+10. **هل migration؟** لا — لا تغيير في `contracts/schema.sql` أو البيانات الأولية. تغيير CI فقط. القاعدة الجديدة `wasla_geo_test` تُنشأ داخل خدمة الوظيفة وتُهدم بانتهائها.
+11. **هل توجد مخاطر؟** (أ) وظيفة إضافية تعني تثبيت اعتماديات مرة أخرى وزمن خط أنابيب أطول — مقبول مقابل عزل الفشل، ويُحسَّن لاحقاً بذاكرة تخزين مؤقت لـpnpm إن لزم. (ب) `extends` يعيد هيكلة وظيفة identity الناجحة — مُخفَّف بتحقّق الـlint وبتشغيل الوظيفتين في خط أنابيب هذا الـMR قبل الدمج. (ج) لا تزال اختبارات التكامل تُتخطّى صامتة عند غياب `DATABASE_URL` محلياً — مقبول ومقصود، والمتغيّر مضبوط دائماً في CI.
+12. **هل security؟** لا أسرار: بيانات اعتماد Postgres خاصة بخدمة مؤقتة داخل الوظيفة (`postgres/postgres` على شبكة الوظيفة فقط) ولا تُستخدم في أي بيئة حقيقية؛ لا متغيّرات CI محميّة أُضيفت.
+13. **هل performance؟** زمن خط الأنابيب يزيد بمقدار وظيفة واحدة، وتعمل بالتوازي مع `build-test` و`db-integration` في نفس المرحلة.
+14. **هل monitoring؟** لا مراقبة تشغيلية؛ إشارة CI (حالة الوظيفة) هي آلية الكشف عن انحدار طبقة Postgres لـgeography.
+
+**Related:** [MR !21](https://gitlab.com/uxxxu/wasla/-/merge_requests/21)، [توثيق تكامل قاعدة البيانات في CI](../12-testing/DB_INTEGRATION_CI.md)، [MR !19 (طبقة Postgres)](https://gitlab.com/uxxxu/wasla/-/merge_requests/19)، [MR !20 (طبقة HTTP)](https://gitlab.com/uxxxu/wasla/-/merge_requests/20)، [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md)
+
+---
+
 ## 2026-08-20 · Phase 02 MR 5 — Fastify HTTP layer + error mapping + app.inject tests (geography)
 
 **Task:** إضافة طبقة HTTP لخدمة Geography & Localization (Fastify) تربط المسارات التسعة في العقد بحالات الاستخدام، مع تعيين أخطاء النطاق إلى استجابات تعاقدية، ومحوّل HTTP للتحقق من الهوية، واختبارات `app.inject`. **Status:** Completed (مُتحقَّق محلياً: تثبيت مُجمّد نظيف + typecheck 5 حزم + 96 اختبار وحدة منها 41 geography + تجربة تشغيل فعلية للخدمة) · **MR:** [!20](https://gitlab.com/uxxxu/wasla/-/merge_requests/20)

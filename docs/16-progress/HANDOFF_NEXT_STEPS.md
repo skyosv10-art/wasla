@@ -102,15 +102,8 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 ## 4. ما يجب فعله الآن (Checklist) — بدء Phase 01 (التنفيذ الفعلي لخدمة Identity)
 
 ```text
-[0] MR تنظيف الحوكمة (أولاً): إضافة ملف ADR-005 إلى main + توفيق HANDOFF/التقدم + إغلاق MR !8 (مُلغى) → CI green
-[1] MR 1 — Identity scaffold + pure core:
-    - إنشاء حزمة services/identity (إضافة إلى workspace)
-    - مولّد + مُتحقّق Wasla Public ID (WS-XXXXXXXXXX، 10 محارف كبيرة)
-    - نماذج النطاق (identity domain) + واجهات repository/outbox
-    - repository في الذاكرة (in-memory) للاختبارات
-    - حالة استخدام resolveTelegramIdentity + سلوك username-change history
-    - اختبارات: إنشاء هوية من Telegram، idempotent، استقرار الهوية/Public ID عبر تغيير Username، تسجيل history، إصدار أحداث outbox بالأنواع المعروفة
-    - تحديث docs/ (TASK_LOG, MASTER_PROGRESS, HANDOFF)
+[0] ✅ MR تنظيف الحوكمة: أُضيف ADR-005 إلى main + توفيق HANDOFF/التقدم + إغلاق MR !8 (مُلغى) → [MR !10](https://gitlab.com/uxxxu/wasla/-/merge_requests/10) مدمج، CI green
+[1] ✅ MR 1 — Identity scaffold + pure core: حزمة `@wasla/identity-service` (domain/ports/in-memory/use-cases) + Wasla Public ID (`WS-[0-9]{10}`) + 15 اختباراً للـExit Gate (إنشاء، idempotent، استقرار الهوية عبر تغيير Username، outbox) → [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) (مفتوح للمراجعة/الدمج)
 [2] MR 2 — Drizzle/Postgres persistence:
     - إضافة drizzle-orm, pg, drizzle-kit, @types/pg (في الحزمة التي تستعملها فقط)
     - Drizzle schema مطابق لـ DDL الموجود (services/identity/contracts/)

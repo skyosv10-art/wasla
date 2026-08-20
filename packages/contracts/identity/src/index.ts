@@ -36,6 +36,17 @@ export type IdentityUser = components["schemas"]["User"];
 /** A linked external identity (telegram/phone/email/...). */
 export type IdentityLink = components["schemas"]["IdentityLink"];
 
+/** Request body for adding an external identity link. */
+export type AddIdentityLinkRequest =
+  components["schemas"]["AddIdentityLinkRequest"];
+
+/** Response returned when recovery is started. */
+export type RecoveryStarted = components["schemas"]["RecoveryStarted"];
+
+/** A single identity change history entry. */
+export type IdentityHistoryEntry =
+  components["schemas"]["IdentityHistoryEntry"];
+
 // --- Event contract types (from events.json) --------------------------
 import type {
   EventEnvelope,

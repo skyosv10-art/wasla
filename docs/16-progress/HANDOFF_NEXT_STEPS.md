@@ -104,10 +104,7 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 ```text
 [0] ✅ MR تنظيف الحوكمة: أُضيف ADR-005 إلى main + توفيق HANDOFF/التقدم + إغلاق MR !8 (مُلغى) → [MR !10](https://gitlab.com/uxxxu/wasla/-/merge_requests/10) مدمج، CI green
 [1] ✅ MR 1 — Identity scaffold + pure core: حزمة `@wasla/identity-service` (domain/ports/in-memory/use-cases) + Wasla Public ID (`WS-[0-9]{10}`) + 15 اختباراً للـExit Gate (إنشاء، idempotent، استقرار الهوية عبر تغيير Username، outbox) → [MR !11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11) (مفتوح للمراجعة/الدمج)
-[2] MR 2 — Drizzle/Postgres persistence:
-    - إضافة drizzle-orm, pg, drizzle-kit, @types/pg (في الحزمة التي تستعملها فقط)
-    - Drizzle schema مطابق لـ DDL الموجود (services/identity/contracts/)
-    - تطبيق repository؛ اختبارات DB منفصلة عن pnpm -r test الافتراضي حتى يدعم CI قاعدة بيانات
+[2] ✅ MR 2 — Drizzle/Postgres persistence: Drizzle schema مطابق لـschema.sql (5 جداول) + `PostgresIdentityRepository`/`PostgresOutbox`/`PostgresPublicIdSequence` + `createDb`/`ensurePublicIdSequence` + `drizzle.config.ts` + إعدادات vitest (التكامل مستثنى) + اختبار تكامل مُسيّج عبر `DATABASE_URL` → [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) (مفتوح للمراجعة/الدمج)
 [3] MR 3 — Fastify HTTP layer:
     - app factory + مسارات resolve/getUser/addLink/recovery/history ضد المنافذ (ports)
     - اختبارات عبر app.inject + in-memory repo؛ التحقق من استجابات العقود/الأنواع

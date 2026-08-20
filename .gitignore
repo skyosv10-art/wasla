@@ -105,3 +105,6 @@ infra/environments/*.local
 *.tmp
 tmp/
 .tmp/
+
+# ─── Drizzle (generated on demand; schema.sql is the canonical DDL) ──
+services/identity/drizzle/

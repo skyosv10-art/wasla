@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · Phase 02 MR 7 — بوابة خروج Phase 02 (E2E) وإغلاق المرحلة
+
+**Task:** إثبات بوابة خروج Phase 02 باختبار E2E يُشغّل خدمتي Identity و Geography معاً كما في الإنتاج، ثم إغلاق المرحلة في وثائق التقدّم. **Status:** Completed (3 اختبارات E2E تنجح في CI ضد postgres:15) · **MR:** [!22](https://gitlab.com/uxxxu/wasla/-/merge_requests/22)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** (أ) `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` (جديد، 3 اختبارات): تطبيق مخطط identity + مخطط geography + البيانات الأولية السعودية في قاعدة اختبار واحدة، تشغيل تطبيق identity على **منفذ حقيقي** (`listen({port:0})`) وتطبيق geography عبر `app.inject` موصولاً به بمحوّل الإنتاج `HttpIdentityLookupPort`. (ب) `vitest.integration.config.ts`: `fileParallelism: false`. (ج) `package.json` للجغرافيا: `@wasla/identity-service` في `devDependencies` (+ تحديث `pnpm-lock.yaml`). (د) توثيق جديد `docs/12-testing/PHASE02_EXIT_GATE_E2E.md` + إغلاق المرحلة في `MASTER_PROGRESS.md` و`ROADMAP.md` و`HANDOFF_NEXT_STEPS.md` §6.
+2. **لماذا؟** كل اختبار سابق يتحقّق من خدمة واحدة معزولة: اختبارات الوحدة بمحوّلات في الذاكرة، واختبارات التكامل (MR !19) بـPostgres حقيقي لكن مع **بديل مزيّف** لمنفذ الهوية (`identityExists → true` دائماً). أي أن جوهر البوابة — «يغيّر موقعه دون إنشاء حساب جديد» — لم يُختبَر قطعاً عبر حدود الخدمتين، ولم يُختبَر محوّل `HttpIdentityLookupPort` نفسه ضد خدمة هوية حقيقية. وقانون المراحل يمنع إغلاق مرحلة ببوابة موصوفة نصّاً فقط. لذلك تستمع الهوية على منفذ حقيقي: لو استُعمل بديل في العملية نفسها، لبقي العقد بين الخدمتين غير مُثبَت.
+3. **أين؟** `services/geography/` (اختبار + إعداد vitest + package.json) + `pnpm-lock.yaml` + `docs/12-testing/` + `docs/16-progress/`. لا سطر واحد من كود الإنتاج تغيّر.
+4. **كيف تم اختباره؟** الاختبار نفسه هو التحقّق: (1) «تغيير الموقع دون حساب جديد» — إنشاء المستخدم في الهوية (201) → تعيين موقع (201، `version=1`) → نطاق آخر (200، `version=2`، نفس المعرّف) → `resolve` مرة أخرى (200، `created:false`، ثبات `wasla_public_id` و`internal_uuid`) → تغيير اسم المستخدم لا يمسّ الموقع → `history` بمدخلين (`old_zone` = null ثم النطاق السابق) → `outbox` يحمل `geo.user_location.set` ثم `geo.user_location.changed` بمُعرِّف aggregate = `wasla_public_id`. (2) «Geo IDs + i18n» — ar افتراضي، `Saudi Arabia` بالإنجليزية، `مدینہ علاقہ` بالأردية، الرجوع إلى ar لحي بلا ترجمة (`حي الحرة`)، ومسار النطاق الكامل بمعرّفات UUID. (3) 404 `GEO_IDENTITY_NOT_FOUND` لهوية غير موجودة (خدمة الهوية الحقيقية أجابت 404 عبر HTTP) و404 `GEO_USER_LOCATION_NOT_FOUND` لموقع غير مسجَّل. محلياً: `typecheck` لخمس حزم ✅ و96 اختبار وحدة ✅ (الـE2E مستثنى من `pnpm -r test`)؛ لا Postgres في بيئة العمل الحالية، فتنفيذ الـE2E يتم في وظيفة `geography-db-integration` في CI.
+5. **ما الخطوة التالية؟** **Phase 03 — Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App وAdapter قابل للاستبدال بـMock)، وتبدأ بـADR لمكدّس القناة + عقودها قبل أي كود، كما بدأت 01 و02.
+6. **هل مستند؟** نعم — `docs/12-testing/PHASE02_EXIT_GATE_E2E.md` (نص البوابة، مخطط الوصل، جدول القرارات، ما يتحقّق منه، التشغيل المحلي، القيود) + هذا الإدخال + `MASTER_PROGRESS.md` (Phase 02 = Completed) + `ROADMAP.md` (ملاحظة الحالة) + `HANDOFF_NEXT_STEPS.md` §6.
+7. **هل مراجَع؟** مُراجَع ذاتياً مقابل نمط بوابة Phase 01 (`services/identity/src/__tests__/exit-gate.e2e.test.ts`) ومقابل البيانات الأولية الفعلية (صُحّحت توقعات الأسماء: `مدینہ علاقہ` و`حي الحرة`، وشكل `path.*` للنطاق). يحتاج مراجعة المالك في الـMR.
+8. **هل ADR مطلوب؟** لا — ADR-006 يحكم النموذج والترجمة وغياب الـFK؛ هذا إثبات تنفيذي له. لكن قرار «مخططا الخدمتين في قاعدة اختبار واحدة» موثَّق صراحةً في وثيقة الاختبار مع سببه (لا FK بين المخططين، والبوابة سلوكية لا طوبولوجية).
+9. **هل يكسر backward compatibility؟** لا — إضافة اختبار وتوثيق فقط؛ لا تغيير في عقد أو كود أو مخطط.
+10. **هل migration؟** لا. يُطبَّق `contracts/schema.sql` للخدمتين داخل الاختبار على قاعدة مؤقّتة تُهدم بانتهاء الوظيفة.
+11. **هل توجد مخاطر؟** (أ) تسابق على الجداول: ملفّان يملكان مخطط **نفس** القاعدة → عُولج بـ`fileParallelism: false` (إلزامي لا تفضيل، وموثَّق في تعليق الإعداد). (ب) اعتماد الجغرافيا على حزمة الهوية قد يُقرأ خطأً كارتباط معماري → مقصور على `devDependencies` ومُوثَّق أن الإنتاج يبقى عبر HTTP. (ج) الاختبار يعتمد على أسماء البيانات الأولية → تغييرها يُفشله بوضوح (فشل مقصود ومفيد). (د) لا Postgres محلياً → التحقّق يعتمد على CI.
+12. **هل security؟** لا أسرار ولا صلاحيات جديدة. المنفذ العشوائي محدود بـ`127.0.0.1` داخل الوظيفة، وبيانات Postgres مؤقّتة خاصة بالوظيفة.
+13. **هل performance؟** الاختبار يستغرق ثوانٍ، ويضيف تشغيلاً متسلسلاً لملفَّي التكامل بدل التوازي — أثر مقبول وضروري للصحة.
+14. **هل monitoring؟** إشارة CI (حالة وظيفة `geography-db-integration`) هي جرس الإنذار لأي انحدار يكسر بوابة المرحلة.
+
+**Related:** [MR !22](https://gitlab.com/uxxxu/wasla/-/merge_requests/22)، [توثيق بوابة الخروج E2E](../12-testing/PHASE02_EXIT_GATE_E2E.md)، [تكامل قاعدة البيانات في CI](../12-testing/DB_INTEGRATION_CI.md)، [بوابة Phase 01](https://gitlab.com/uxxxu/wasla/-/merge_requests/15)، [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md)، [ROADMAP](ROADMAP.md)
+
+---
+
 ## 2026-08-20 · Phase 02 MR 6 — تكامل قاعدة البيانات في CI لخدمة geography
 
 **Task:** تشغيل اختبارات تكامل Postgres لخدمة Geography داخل GitLab CI (خدمة `postgres:15`) بعد أن كانت موجودة منذ MR !19 لكن غير مُشغَّلة آلياً. **Status:** Completed (مُتحقَّق: `POST /ci/lint` صالح بدون أخطاء أو تحذيرات، وخط أنابيب الـMR ينفّذ الوظيفة فعلياً) · **MR:** [!21](https://gitlab.com/uxxxu/wasla/-/merge_requests/21)

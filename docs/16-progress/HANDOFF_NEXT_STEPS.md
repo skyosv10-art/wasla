@@ -148,7 +148,7 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
 
 ---
 
-## 6. Phase 02 (Geography & Localization) — العمل الحالي
+## 6. Phase 02 (Geography & Localization) — مكتملة ✅
 
 > **Exit Gate:** المستخدم يغيّر موقعه دون إنشاء حساب جديد، وكل Module يستعمل Geo IDs + i18n (AR/EN/UR).
 > **التسلسل الهرمي:** Country/Region/City/District/Zone + أسماء مترجمة (جداول ترجمة منفصلة، لا JSONB).
@@ -181,11 +181,25 @@ Phase 24 Service Extraction .............. فصل Microservices + ADR
     - .gitlab-ci.yml: قاعدة مشتركة .db-integration-base + وظيفة geography-db-integration
     - قاعدة بيانات مستقلّة wasla_geo_test (postgres:15) لعزل الفشل عن identity
     - التوثيق: docs/12-testing/DB_INTEGRATION_CI.md
-[7] test(geography): Phase 02 Exit Gate E2E + close Phase 02   ← التالي
-    - تطبّق schema(identity) + schema(geography) + seed في قاعدة اختبار واحدة
-    - تنشئ مستخدم عبر identity app → تحدّد موقعاً → تغيّره → تتحقق من ثبات wasla_public_id/internal_uuid
-    + history (old/new zone) + outbox (set/changed) + استجابات مترجمة (ar/en/ur)
+[7] test(geography): Phase 02 Exit Gate E2E + close Phase 02   ← ✅ Done [MR !22] — Phase 02 مُغلقة
+    - services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts (3 اختبارات)
+    - تُشغّل الخدمتين كما في الإنتاج: identity يستمع على منفذ حقيقي (port 0) و
+      geography يسأله عبر HttpIdentityLookupPort عبر HTTP فعلي (لا fake)
+    - تطبّق schema(identity) + schema(geography) + Saudi seed في قاعدة اختبار واحدة
+    - تعيين موقع (201) → تغييره (200) → ثبات wasla_public_id/internal_uuid و created:false
+      + تغيير username لا يمسّ الموقع + history (old/new zone) + outbox (set ثم changed)
+    - i18n: ar افتراضي، en، ur، والرجوع إلى ar لصف بلا ترجمة + Geo IDs في كل مستوى
+    - 404 GEO_IDENTITY_NOT_FOUND لهوية غير موجودة (الهوية الحقيقية أجابت 404)
+    - fileParallelism: false في vitest.integration.config.ts (ملفّان يملكان مخطط نفس القاعدة)
+    - @wasla/identity-service في devDependencies للجغرافيا — لأجل هذا الاختبار وحده
+    - التوثيق: docs/12-testing/PHASE02_EXIT_GATE_E2E.md
 ```
+
+**حالة Phase 02: مكتملة (2026-08-20).** بوابة الخروج مُتحقَّقة آلياً في CI عبر وظيفة
+`geography-db-integration` (4 اختبارات تكامل + 3 اختبارات E2E). الخطوة التالية: **Phase 03 —
+Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter قابل للاستبدال بـMock؛
+يعتمد على 12,01,02,03,07 — انظر [ROADMAP.md](ROADMAP.md) و[MASTER_PROGRESS.md](MASTER_PROGRESS.md)).
+تبدأ Phase 03 بـADR لمكدّس قناة تلغرام + عقود القناة قبل أي كود، تماماً كما بدأت 01 و02.
 
 **ملاحظات معمارية:**
 - Geography تملك `geo_user_locations` وتخزّن `wasla_public_id` كمرجع opaque — **لا FK إلى identity_users**.

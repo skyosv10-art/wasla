@@ -24,6 +24,31 @@
 
 ## السجل
 
+## 2026-08-20 · MR 3 — Fastify HTTP layer (طبقة HTTP)
+
+**Task:** إضافة طبقة HTTP لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — مصنع تطبيق Fastify (`createIdentityApp`) يربط مسارات العقد الخمسة (resolve/getUser/addLink/recovery/history) بحالات الاستخدام، تعيين الأخطاء إلى رموز HTTP وأجسام الأخطاء التعاقدية، نقطة إقلاع (composition root)، واختبارات عبر `app.inject`. **Status:** Completed (مُتحقَّق محلياً + smoke test ناجح؛ [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) مفتوح للمراجعة/الدمج) · **MR:** [!13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13)
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** أُضيفت طبقة HTTP لحزمة `@wasla/identity-service`: `src/http/app.ts` (مصنع `createIdentityApp(deps)` يعرّف المسارات الخمسة + `/health` + `setErrorHandler`)، `src/http/errors.ts` (`sendIdentityError` يرمي إلى جسم الخطأ التعاقدي `{code, message, trace_id}` مع الحالة الصحيحة)، `src/http/server.ts` (نقطة الإقلاع: تكوّن المحوّلات — Postgres إن وُجد `DATABASE_URL` وإلا في الذاكرة — + الاستماع على `PORT`). أُضيف تصدير `StartRecoveryRequest` من contracts (النوع موجود في OpenAPI لكن لم يُصدّر). اعتماديات: fastify، tsx (dev).
+2. **لماذا؟** MR 3 في خطّة تنفيذ Phase 01 — طبقة HTTP. النواة المجردة (MR 1) وطبقة Postgres (MR 2) لا تُستهلك عبر HTTP بعد؛ هذه الطبقة تُعرّض العقد (5 مسارات) للعملاء وتحوّل أخطاء النطاق إلى استجابات HTTP متوافقة مع `errors.md`.
+3. **أين؟** `services/identity/src/http/{app,errors,server}.ts`، `services/identity/src/__tests__/http/app.test.ts`، `services/identity/src/index.ts` (تصدير HTTP)، `services/identity/package.json` (dev/start scripts)، `packages/contracts/identity/src/index.ts` (`StartRecoveryRequest`)، `pnpm-lock.yaml`.
+4. **كيف تم اختباره؟** `pnpm -r typecheck` ✅ (3 حزم)، `pnpm -r test` ✅ (24 اختباراً: 15 نواة + 9 HTTP)، `scan-secrets` ✅ نظيف، **smoke test** ✅ (إقلاع الخادم في وضع الذاكرة: `/health`→200، `POST /identity/resolve`→201 بجسم مطابق، `GET` لمستخدم غير موجود→404 `{code, message, trace_id}`).
+5. **ما الخطوة التالية؟** MR 4 — خدمة postgres في CI + تشغيل اختبارات التكامل، ثم MR 5 (Exit Gate E2E).
+6. **هل مستند؟** نعم — هذا الإدخال (14 سؤالاً) + تحديث `MASTER_PROGRESS.md` + `HANDOFF_NEXT_STEPS.md` (قائمة [3]).
+7. **هل مراجَع؟** مُراجعة ذاتياً + [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13) مفتوح للمراجعة.
+8. **هل ADR مطلوب؟** لا — لا انحراف. استخدام Fastify موثّق في ADR-005. مسار `/health` ليس جزءاً من سطح عقد API المُصدَر (probe تشغيلي فقط) — موثّق في الكود.
+9. **هل يكسر backward compatibility؟** لا — إضافة طبقة جديدة فقط؛ حالات الاستخدام والمنافذ دون تغيير.
+10. **هل migration؟** لا.
+11. **هل توجد مخاطر؟** نعم: (أ) التحقق من صيغة المدخلات مُفوّض إلى حالات الاستخدام (ترمي الأكواد المستقرة) بدل schema validation في Fastify — مقصود للحفاظ على أكواد الأخطاء المستقرة. (ب) JSON مشوّه / أخطاء غير مُصنّفة تُرجَع 503 `IDENTITY_INTERNAL_ERROR` (catch-all التعاقدي). (ج) التحقق التكاملي الكامل ضد Postgres عبر HTTP مؤجّل إلى MR 4.
+12. **هل security؟** لا أسرار؛ `DATABASE_URL` عبر البيئة فقط؛ `trace_id` = معرّف طلب Fastify (لا بيانات حساسة).
+13. **هل performance؟** مصنع تطبيق واحد لكل عملية؛ تجمّع اتصالات pg في طبقة Postgres (MR 2)؛ سجلّ pino مهيكلي (يُفعّل عند الإقلاع الفعلي).
+14. **هل monitoring؟** سجلّ pino المهيكلي فعّال عند الإقلاع (`logger:true`)؛ `/health` كـliveness probe؛ metrics/tracing مؤجّلة.
+
+**Related:** [MR !13](https://gitlab.com/uxxxu/wasla/-/merge_requests/13)، [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md)، MR 1 ([!11](https://gitlab.com/uxxxu/wasla/-/merge_requests/11))، MR 2 ([!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12))
+
+---
+
 ## 2026-08-20 · MR 2 — Drizzle/Postgres persistence layer (محوّلات Postgres)
 
 **Task:** إضافة طبقة استمرارية Postgres لخدمة Identity وفق [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) — Drizzle schema مطابق للـDDL التعاقدي (schema.sql)، مستودع Postgres، تسلسل Public ID، إعداد اتصال، واختبارات تكامل منفصلة. **Status:** Completed (مُتحقَّق محلياً؛ [MR !12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12) مفتوح للمراجعة/الدمج) · **MR:** [!12](https://gitlab.com/uxxxu/wasla/-/merge_requests/12)

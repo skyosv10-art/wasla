@@ -75,6 +75,25 @@ importers:
 
   packages/errors: {}
 
+  packages/telegram-adapter:
+    dependencies:
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../channel-core
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../contracts/channel
+      '@wasla/errors':
+        specifier: workspace:*
+        version: link:../errors
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   services/geography:
     dependencies:
       '@wasla/contracts-geography':

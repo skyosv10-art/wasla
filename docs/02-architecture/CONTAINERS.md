@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 37 (Data Architecture) و38 (قاعدة البيانات) و41 (Event Bus) و142 (Queue Strategy) و143 (Object Storage) من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-20 · **Status:** Baseline v1.0 (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
+> **Last Updated:** 2026-08-20 · **Status:** Baseline v1.0 (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter مُنفَّذان) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
 
 ---
 
@@ -85,7 +85,7 @@ chat · translation · notifications · support · partners · billing · compli
 | الحزمة | المسار | الغرض |
 |---|---|---|
 | channel-core | `packages/channel-core/` | نموذج مجال محايد للقناة + المنافذ التسعة (Ports) + حالات الاستخدام (استقبال · منع تكرار · تسليم · إعادة محاولة · Deep Link · Mini App) + مُهيّئات in-memory/Mock. **صفر معرفة بـTelegram** — **مُنفَّذة (MR 2 · [تفصيل](CHANNEL_LAYER_CORE.md))** |
-| telegram-adapter | `packages/telegram-adapter/` (مخطّطة — MR 3) | **المكان الوحيد** الذي يعرف Telegram Bot API: تفسير Update · أزرار `web_app` · تخطيط الأخطاء · حدود المعدّل |
+| telegram-adapter | `packages/telegram-adapter/` | **المكان الوحيد** الذي يعرف Telegram Bot API: تفسير Update · إرسال · أزرار `web_app` · تخطيط الأخطاء · ميزانية المعدّل · التحقّق من رمز الـwebhook. يُنفّذ `ChannelPort` + `UpdateParserPort` فقط — **مُنفَّذ (MR 3 · [تفصيل](CHANNEL_TELEGRAM_ADAPTER.md))** |
 | contracts-channel | `packages/contracts/channel/` | الأنواع المُكتبة المُولّدة من عقد القناة (`packages/channel-core/contracts/`) — **مُنفَّذة (MR 1)** |
 
 اتجاه الاعتماد أحادي وملزم: `bots/*` → `telegram-adapter` → `channel-core`. سلسلة الإرسال: `NotificationService → Channel Router → ChannelPort → TelegramChannelAdapter` — **يُمنع** على أي خدمة Core نداء واجهة Telegram مباشرة.

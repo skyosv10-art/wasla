@@ -15,12 +15,12 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 2/7 مدمجة)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 3/7 مدمجة)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       214 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة) + 4 تكامل + 5 E2E في CI.
-آخر تحديث:      2026-08-20 (بعد دمج MR !24 — نواة @wasla/channel-core المحايدة: المنافذ التسعة + MockChannelAdapter)
+الاختبارات:       300 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram) + 4 تكامل + 5 E2E في CI.
+آخر تحديث:      2026-08-20 (بعد دمج MR !25 — @wasla/telegram-adapter: تفسير Update + إرسال + web_app + تخطيط الأخطاء + ميزانية المعدّل)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -243,11 +243,25 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
     - اختبار حراسة معماري (38 اختباراً): لا مفردات/استيرادات قناة داخل channel-core + قفل الاعتماديات
     - تعديل عقد البيانات: عمودا channel_deliveries.body + .bot (إعادة المحاولة تُرسل نفس الرسالة)
     - وثيقة: docs/02-architecture/CHANNEL_LAYER_CORE.md
-[3] feat(telegram-adapter): تفسير Update + إرسال + أزرار web_app + تخطيط الأخطاء + حدود المعدّل   ← التالي
-    - يُنفّذ ChannelPort + UpdateParserPort فقط، ولا يعرف أي حالة استخدام
-    - كل نص/حقل خاص بـTelegram يبقى هنا (اختبار الحراسة في channel-core يفشل إن تسرّب)
-    - تخطيط أخطاء Bot API → أكواد CHANNEL_* مع retryable + احترام retry_after
-[4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links
+[3] feat(telegram-adapter): تفسير Update + إرسال + أزرار web_app + تخطيط الأخطاء + حدود المعدّل   ← ✅ Done [MR !25]
+    - packages/telegram-adapter: يُنفّذ ChannelPort (TelegramChannelAdapter) + UpdateParserPort
+      (TelegramUpdateParser) فقط — لا حالة استخدام واحدة هنا
+    - api-shapes (قرّاء آمنون، كل المعرّفات كسلاسل) · sanitize (محارف تحكّم/اتجاه) · keyboard
+      (web_app بـHTTPS إلزامي + url من قالب الرابط العميق) · bot-api-client (fetch محقون + مهلة، بلا رمز في أي مسار خطأ)
+    - error-mapping: فشل Bot API → أكواد CHANNEL_* مع retryable + احترام parameters.retry_after
+    - rate-limit: token bucket (25/ث للبوت · 1/ث للمحادثة · LRU) **لا ينام أبداً** — يُرجع
+      CHANNEL_RATE_LIMITED فتُعيد النواة الجدولة؛ penalise يجعل تهدئة Telegram هي المرجع
+    - webhook-auth: assertWebhookSecret بمقارنة ثابتة الزمن + حد أدنى 16 محرفاً (الاستخدام في MR 4)
+    - 86 اختباراً منها 8 اختبارات مطابقة منافذ تُشغّل المُهيّئ الحقيقي داخل حالات استخدام النواة
+      (إثبات الاستبدال بـMock على مستوى الحزمة قبل E2E في MR 7)
+    - وثيقة: docs/02-architecture/CHANNEL_TELEGRAM_ADAPTER.md
+[4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links   ← التالي
+    - POST /channel/{bot}/webhook: assertWebhookSecret (من @wasla/telegram-adapter) قبل أي معالجة → 401
+      CHANNEL_UNAUTHORIZED_WEBHOOK · ثم receiveUpdate · ردّ 202 دائماً (بما فيه duplicate) كما في OpenAPI
+    - سجلّ بوتات مقود بالبيئة: رمز كل بوت + BotPresence (عنوان Mini App + قالب الرابط العميق) — لا سرّ في المصدر
+    - مُهيّئ HTTP لمنفذ IdentityBootstrapPort مقابل خدمة identity (نمط HttpIdentityLookupPort في geography)
+    - GET /channel/{bot}/mini-app + POST /channel/{bot}/deep-links + GET /health
+    - اختبارات app.inject لكل بوت (رمز خاطئ · تحديث مكرر · /start يفتح Mini App الصحيحة)
 [5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI
 [6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات
 [7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة
@@ -279,3 +293,4 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - [GIT_RULES.md — قواعد Git/MR](../00-rules/GIT_RULES.md)
 - [ADR-007 — عزل قناة Telegram (Phase 03)](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)
 - [CHANNEL_LAYER_CORE.md — نواة طبقة القنوات (Phase 03 · MR 2)](../02-architecture/CHANNEL_LAYER_CORE.md)
+- [CHANNEL_TELEGRAM_ADAPTER.md — مُهيّئ قناة Telegram (Phase 03 · MR 3)](../02-architecture/CHANNEL_TELEGRAM_ADAPTER.md)

@@ -13,12 +13,17 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 00 — Repository Foundation
-الحالة:          Exit Gate Pending (مُنجز 95% — يتبقّى خطوة واحدة خارجية)
-الجرعة الحالية:  الفرع fix/phase00-ci-secret-scan + MR !1 (مفتوح، غير مدمج بعد)
+المرحلة الحالية: Phase 00 (مدمج) → Phase 01 — Identity Foundation (عقود مدمجة)
+الحالة:          MR !1 وMR !2 مدمجان إلى main؛ Phase 00 Exit Gate لا يزال معلّقاً
+                 على التحقق من CI (عائق shared runners خارجي). W0 لم يبدأ بعد.
+آخر تحديث:      2026-08-20 (بعد الدمج)
 ```
 
-العمل المنجز هذه الجلسة (كلّه موثّق في [TASK_LOG](TASK_LOG.md) ومُضمَّن في [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1)):
+**ما تم دمجه إلى main:**
+- [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1) (commit `cba9a75`) — إصلاح فحص الأسرار في CI + أساس Phase 00.
+- [MR !2](https://gitlab.com/uxxxu/wasla/-/merge_requests/2) (commit `a15985d`) — عقود Identity بمنهج Contract First (API/Event/Data/Error).
+
+العمل المنجز (كلّه موثّق في [TASK_LOG](TASK_LOG.md)):
 
 | # | العنصر | الحالة |
 |---|---|---|

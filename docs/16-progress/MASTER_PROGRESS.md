@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 71-103 من الدليل التنفيذي + القسم 106 (Progress Ledger).
 >
-> **Last Updated:** 2026-08-19 · **Status:** Active · **Related Team:** جميع الفرق (كل فريق يحدّث حالة مرحلته)
+> **Last Updated:** 2026-08-20 · **Status:** Active · **Related Team:** جميع الفرق (كل فريق يحدّث حالة مرحلته)
 >
 > **القاعدة:** لا يسمح بعبارة «Done» بدون **Evidence** (رابط MR، نتائج اختبار، لقطة).
 >
@@ -45,7 +45,7 @@ Completed
 
 | Phase | العنوان | Status | Exit Gate | Owner Teams | Open Blockers | Last Update | Evidence | Next Step |
 |---|---|---|---|---|---|---|---|---|
-| 00 | Repository Foundation | **In Progress** | CI passes، لا أسرار، جميع الفرق clone/build/test، Docs structure، Main branch protected، MR template active | جميع الفرق (Team 10 CI، Team 11 gates، Team 12 Telegram skeleton، Team 09 DB conventions) | تحديد أسماء CODEOWNERS النهائية | 2026-08-19 | (هيكل المستودع + القوانين + CI) | إثبات CI يعمل + main محمي |
+| 00 | Repository Foundation | **Exit Gate Pending** | CI passes، لا أسرار، جميع الفرق clone/build/test، Docs structure، Main branch protected، MR template active | جميع الفرق (Team 10 CI، Team 11 gates، Team 12 Telegram skeleton، Team 09 DB conventions) | (1) **GitLab shared runners غير متاحة للـ namespace المجاني** — تتطلب التحقق من namespace (User Settings → Billing) أو تشغيل runner خاص؛ بدونها لا تنفّذ أي وظيفة CI (مؤكد: pipelines على main فشلت فوراً بـ0 وظائف منذ 2026-08-19). (2) بعد توفّر الـ runners: اجتياز pipeline فعلياً على GitLab عبر [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1). (3) تفعيل `core.hooksPath` على نسخ المطورين. (4) [سياسة] حماية main تسمح لـMaintainers بالدفع المباشر — يُنصح بتشديدها إلى «No one». | 2026-08-20 | بنية المستودع + القوانين + قالب MR + حماية main (متحقق منها) + سكربت فحص أسرار يعمل + doc-coverage تم اختباره E2E + CI config صالح (server-side lint valid) | تفعيل shared runners على GitLab، اجتياز pipeline على MR !1، ثم اعتماد Phase 00 = Completed وبدء Phase 01 (Identity Foundation) |
 | 01 | Identity Foundation | Not Started | إنشاء مستخدم من Telegram وبقاء هويته مستقرة عبر تغيير Username | 01, 09, 10, 11, 12 | — | — | — | بدء بعد اجتياز Phase 00 Exit Gate |
 | 02 | Geography & Localization Foundation | Not Started | المستخدم يغيّر موقعه دون حساب جديد، وكل Module يستعمل Geo IDs | 01, 02, 03, 06, 07, 08, 09 | — | — | — | Country/Region/City/District/Zone + i18n (AR/EN/UR) |
 | 03 | Telegram Channel Foundation | Not Started | كل Bot يفتح Mini App، وAdapter قابل للاستبدال بـMock | 12, 01, 02, 03, 07 | — | — | — | Three bots + Deep links + Group adapter |

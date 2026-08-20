@@ -26,6 +26,7 @@
 |---|---|---|---|
 | `GEO_INVALID_PUBLIC_ID` | `validation_error` | صيغة Wasla Public ID غير صالحة | لا تطابق `^WS-[0-9]{10}$` |
 | `GEO_UNSUPPORTED_LOCALE` | `validation_error` | locale غير مدعوم | locale ليس ضمن `ar`/`en`/`ur` |
+| `GEO_INVALID_REQUEST_BODY` | `validation_error` | جسم الطلب غير صالح شكلياً | PUT /geo/users/{id}/location بـ `zone_id` مفقود/غير نصي أو `source` خارج القيم المسموحة (أُضيف في MR 5 — طبقة HTTP) |
 | `GEO_COUNTRY_NOT_FOUND` | `not_found` | لا بلد بهذا المعرّف | GET /geo/countries/{id}/regions لبلد غير موجود |
 | `GEO_REGION_NOT_FOUND` | `not_found` | لا منطقة بهذا المعرّف | GET /geo/regions/{id}/cities لمنطقة غير موجودة |
 | `GEO_CITY_NOT_FOUND` | `not_found` | لا مدينة بهذا المعرّف | GET /geo/cities/{id}/districts لمدينة غير موجودة |
@@ -60,4 +61,5 @@
 | تغيير الموقع لنفس المنطقة | idempotent: يُرجَع الموقع الحالي دون إنشاء حدث تغيير (200) |
 | مهلة (timeout) أثناء كتابة الموقع | المعاملة تُتراجع (rollback)؛ لا موقع جزئي ولا حدث في outbox |
 | locale غير مدعوم (مثال: `fr`) | `GEO_UNSUPPORTED_LOCALE` (400) |
+| جسم PUT بلا `zone_id` أو بـ `source` غير معروف | `GEO_INVALID_REQUEST_BODY` (400) — يُرفض قبل الوصول للـuse case |
 | طلب أبناء مستوى لوالد غير موجود | `*_NOT_FOUND` (404) للجد الأصلي |

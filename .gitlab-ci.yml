@@ -188,3 +188,31 @@ channel-db-integration:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/channel-postgres test:integration
+
+# ──────────────────────────────────────────────────────────────
+# بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
+# حقيقي + مخازن Postgres في عملية واحدة:
+#   packages/channel-e2e/src/__tests__/phase03-exit-gate.e2e.test.ts
+#
+# الاختبار نفسه يعمل أيضاً داخل build-test بمخازن in-memory (فالبوابة يجب أن
+# تُثبَت على كل MR دون قاعدة بيانات)؛ هذه الوظيفة تضيف ما لا يُثبته إلّا
+# محرّك حقيقي: أن فهرس عدم التكرار يشمل البوت فعلاً، وأن صفّ التسليم
+# المحفوظ يحمل زر Mini App الخاص بكل بوت. قاعدة مستقلة (wasla_channel_e2e)
+# حتّى لا تتداخل مع channel-db-integration وليبقى الفشل منسوباً لوظيفة واحدة.
+# خدمة الهوية تعمل داخل الاختبار بمحوّلات in-memory وتستمع على منفذ عشوائي،
+# فلا تحتاج مخطّط identity_* هنا (محلّ الفحص هو العقد بين الخدمتين).
+# ──────────────────────────────────────────────────────────────
+channel-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_channel_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_channel_e2e"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/channel-e2e test

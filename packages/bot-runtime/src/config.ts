@@ -56,6 +56,12 @@ export interface BotConfig {
   /** Identity service base URL; absent means «no identity bootstrap wired». */
   readonly identityServiceUrl?: string;
   readonly identityTimeoutMs?: number;
+  /**
+   * Postgres connection string for the channel tables; absent means «run with
+   * in-memory stores» (local development and tests only — de-duplication and the
+   * retry queue are then lost on restart).
+   */
+  readonly databaseUrl?: string;
   readonly port: number;
 }
 
@@ -106,6 +112,29 @@ function readPort(env: EnvBag, bot: BotKind): number {
     throw new Error(`${envNames(bot).port} must be an integer between 1 and 65535`);
   }
   return port;
+}
+
+/**
+ * Read `DATABASE_URL`, refusing anything that is not a Postgres URL.
+ *
+ * A typo here would otherwise surface much later as a connection error on the
+ * first webhook, so it is validated at startup like every other variable. The
+ * value is never logged: a connection string carries a password.
+ */
+function readDatabaseUrl(env: EnvBag): string | undefined {
+  const raw = env.DATABASE_URL?.trim();
+  if (raw === undefined || raw === "") return undefined;
+
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("DATABASE_URL is not a valid URL");
+  }
+  if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
+    throw new Error("DATABASE_URL must use the postgres:// (or postgresql://) scheme");
+  }
+  return raw;
 }
 
 function readTimeout(env: EnvBag): number | undefined {
@@ -163,6 +192,7 @@ export function loadBotConfig(bot: BotKind, env: EnvBag): BotConfig {
 
   const identityServiceUrl = env.IDENTITY_SERVICE_URL?.trim();
   const identityTimeoutMs = readTimeout(env);
+  const databaseUrl = readDatabaseUrl(env);
 
   return {
     bot,
@@ -171,6 +201,7 @@ export function loadBotConfig(bot: BotKind, env: EnvBag): BotConfig {
     presence: loadBotPresence(bot, env),
     ...(identityServiceUrl ? { identityServiceUrl } : {}),
     ...(identityTimeoutMs === undefined ? {} : { identityTimeoutMs }),
+    ...(databaseUrl === undefined ? {} : { databaseUrl }),
     port: readPort(env, bot),
   };
 }

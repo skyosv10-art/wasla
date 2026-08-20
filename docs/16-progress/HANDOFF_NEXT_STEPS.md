@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (Phase 03 · MR 4/7 مدمجة — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (Phase 03 · MR 5/7 — مُهيّئات Postgres لطبقة القنوات — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,15 +15,17 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 4/7 مدمجة)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20 · MR 5/7)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
                  (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
 المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
-الاختبارات:       376 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram
-                 + 58 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة) + 4 تكامل + 5 E2E في CI.
+الاختبارات:       393 اختبار وحدة (96 + 34 لعقود القناة + 84 لنواة القناة + 86 لمُهيّئ Telegram
+                 + 66 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة)
+                 + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E في CI.
 البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
-                 @wasla/bot-runtime — التخزين **في الذاكرة** حتى MR 5 (منع التكرار لا يعبر إعادة التشغيل).
-آخر تحديث:      2026-08-21 (بعد دمج MR !27 — @wasla/bot-runtime + البوتات الثلاثة — §7)
+                 @wasla/bot-runtime — التخزين **دائم على Postgres** متى وُجِد DATABASE_URL
+                 (منع التكرار وطابور المحاولات يعبران إعادة التشغيل)، وفي الذاكرة بغيابه للتشغيل المحلي.
+آخر تحديث:      2026-08-21 (MR 5/7 — @wasla/channel-postgres + وظيفة channel-db-integration — §7)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -271,8 +273,8 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
       (`degraded` إن لم تُوصَل خدمة الهوية؛ و/start يعود 503 قابلاً للإعادة بدل اختلاق هوية)
     - 76 اختباراً جديداً (58 للحزمة + 6 لكل بوت) بـapp.inject بلا منفذ — إجمالي المستودع 376
     - وثيقة: docs/02-architecture/CHANNEL_BOTS.md
-    - ⚠️ يبقى للتالي: التخزين في الذاكرة (منع التكرار لا يعبر إعادة التشغيل) → MR 5 يستبدل ثلاثة
-      أسطر في runtime.ts بمُهيّئات Postgres؛ ولا مُشغّل دوري لـretryDueDeliveries بعد.
+    - ✅ أُغلق في MR 5: التخزين في الذاكرة صار اختياراً لا قدراً — مُهيّئات Postgres تُركّب عند
+      وجود DATABASE_URL. (مُشغّل retryDueDeliveries الدوري لا يزال مفقوداً.)
     - ⚠️ فجوة عقد: /identity/resolve مصوغ بشكل Telegram (telegram_user_id/telegram_username) بينما
       InboundActor محايد ولا يحمل username — لا يُرسَل username، والإصلاح محلّه مرحلة القناة الثانية.
     - POST /channel/{bot}/webhook: assertWebhookSecret (من @wasla/telegram-adapter) قبل أي معالجة → 401
@@ -281,8 +283,24 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
     - مُهيّئ HTTP لمنفذ IdentityBootstrapPort مقابل خدمة identity (نمط HttpIdentityLookupPort في geography)
     - GET /channel/{bot}/mini-app + POST /channel/{bot}/deep-links + GET /health
     - اختبارات app.inject لكل بوت (رمز خاطئ · تحديث مكرر · /start يفتح Mini App الصحيحة)
-[5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI   ← التالي
-[6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات
+[5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI   ← ✅ Done
+    - packages/channel-postgres (@wasla/channel-postgres): حزمة مستقلّة لأن اختبار الحراسة في channel-core
+      يقفل اعتمادياتها عند contracts-channel + errors (مبرّر الحزمة في CHANNEL_PERSISTENCE.md §1)
+    - schema.ts مرآة Drizzle لـchannel-core/contracts/schema.sql + اختبار حراسة انحراف (9) يقرأ العقد فعلياً
+    - PostgresProcessedUpdateStore: remember ذرّي بـINSERT … ON CONFLICT DO NOTHING … RETURNING
+      (لا SELECT-ثم-INSERT) · processed_at = received_at بقرار موثّق (المنفذ بلا إشارة إكمال)
+    - PostgresDeliveryStore: create idempotent · applyProgress يزيد version داخل UPDATE · dueForRetry
+      يُرتّب بـCASE على الأولوية ثم next_attempt_at داخل SQL قبل LIMIT
+    - PostgresChannelOutbox: id = event_id فإعادة الإلحاق لا تُنتج صفّاً ثانياً + unpublished() للقراءة
+    - createChannelStores هو الحدّ الوحيد؛ bot-runtime يختاره عند DATABASE_URL وإلا مجموعة الذاكرة
+      (runtime.persistence يُعلن أيّهما · close() مربوط بخطّاف onClose في Fastify · خيار stores للاختبار)
+    - 30 اختباراً جديداً: 9 وحدة + 21 تكامل (منها 6 مطابقة منافذ تُشغّل حالات الاستخدام نفسها
+      على المجموعتين وتؤكّد تطابق المُشاهدات) + 8 في bot-runtime — إجمالي المستودع 393 وحدة + 25 تكامل
+    - وظيفة CI: channel-db-integration (postgres:15 · wasla_channel_test)
+    - وثيقة: docs/02-architecture/CHANNEL_PERSISTENCE.md + تحديث DB_INTEGRATION_CI.md
+    - ⚠️ يبقى للتالي: لا ناشر لصندوق الصادر (لا مستهلك بعد) ولا مُشغّل دوري لـretryDueDeliveries
+      — الطابور صار دائماً لكن لا شيء يستدعيه دوريّاً؛ ولا سياسة احتفاظ/تقليم لـchannel_updates.
+[6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات   ← التالي
 [7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة
 ```
 

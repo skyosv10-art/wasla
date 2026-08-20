@@ -10,7 +10,7 @@
 >
 > **الحالة:** Baseline v1.0 · **آخر تحديث:** 2026-08-20 (بعد دمج [MR !1](https://gitlab.com/uxxxu/wasla/-/merge_requests/1) و[MR !2](https://gitlab.com/uxxxu/wasla/-/merge_requests/2))
 >
-> **ملاحظة الحالة (2026-08-20، محدّث):** **W0 = 2026-08-20** (اجتازت Phase 00 Exit Gate — CI أخضر على main). **Phase 00 = Completed**، **Phase 01 = Completed** (خدمة Identity: Fastify + Drizzle/Postgres + Exit Gate E2E في CI)، و**Phase 02 = Completed** (خدمة Geography: عقود + ADR-006 + نواة مجردة + Drizzle/Postgres + Saudi seed + Fastify HTTP + وظيفة `geography-db-integration` + [بوابة خروج E2E](../12-testing/PHASE02_EXIT_GATE_E2E.md) تُشغّل identity و geography معاً في CI). **المرحلة الحالية: Phase 03 (Telegram Channel Foundation) — قيد البدء.** Timeline أدناه نسبية إلى W0 (المُعتمد).
+> **ملاحظة الحالة (2026-08-20، محدّث):** **W0 = 2026-08-20** (اجتازت Phase 00 Exit Gate — CI أخضر على main). **Phase 00 = Completed**، **Phase 01 = Completed** (خدمة Identity: Fastify + Drizzle/Postgres + Exit Gate E2E في CI)، و**Phase 02 = Completed** (خدمة Geography: عقود + ADR-006 + نواة مجردة + Drizzle/Postgres + Saudi seed + Fastify HTTP + وظيفة `geography-db-integration` + [بوابة خروج E2E](../12-testing/PHASE02_EXIT_GATE_E2E.md) تُشغّل identity و geography معاً في CI). **المرحلة الحالية: Phase 03 (Telegram Channel Foundation) — قيد التنفيذ** (انطلقت بـ[ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md): القناة طبقة توصيل لا خدمة — `packages/channel-core` محايد + `packages/telegram-adapter` وحده يعرف Bot API + `bots/*` جذور تركيب؛ عقود القناة + `@wasla/contracts-channel` مدمجة. خطة السبع مراجعات في [HANDOFF §7](HANDOFF_NEXT_STEPS.md)).** Timeline أدناه نسبية إلى W0 (المُعتمد).
 
 ---
 

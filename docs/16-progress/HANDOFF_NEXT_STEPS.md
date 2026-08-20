@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-20 · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-20 (Phase 03 بدأت — انظر §7) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,13 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 00 = Completed (W0: 2026-08-20) → بدء Phase 01 — Identity Foundation (التنفيذ الفعلي)
-الحالة:          Phase 00 Exit Gate اجتاز بالكامل (CI green على main).
-                 [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) يُحدّد مكدّس التنفيذ
-                 (Node 20 + TS strict + Fastify + PostgreSQL 15+ + Drizzle + Vitest + pino).
-                 التنفيذ الفعلي لخدمة Identity مُلغى التعلّق الآن — يبدأ عبر MRs مستقلة وفق §4.
-آخر تحديث:      2026-08-20 (بعد دمج MR !9 + اجتياز CI على main)
+المرحلة الحالية: Phase 03 — Telegram Channel Foundation (قيد التنفيذ — انطلقت 2026-08-20)
+المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ — كل بوابات الخروج مُتحقّقة آلياً في CI
+                 (job db-integration لـidentity · job geography-db-integration لـgeography + E2E يجمعهما).
+المتبقّي:         Phase 03 → Phase 24 (انظر §3 للمسار الكامل و§7 لخطة المرحلة 03 بالتفصيل).
+الاختبارات:       130 اختبار وحدة (96 + 34 لعقود القناة) + 4 تكامل + 5 E2E في CI.
+آخر تحديث:      2026-08-20 (بعد دمج MR !22 وإغلاق Phase 02، وبدء Phase 03 بـADR-007 + عقود القناة)
+ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
 **ما تم دمجه إلى main:**
@@ -67,9 +68,9 @@
 
 ```text
 Phase 00 Repository Foundation ............ ✅ Completed (W0: 2026-08-20) — CI green على main
-Phase 01 Identity Foundation .............. قيد البدء (التنفيذ الفعلي وفق ADR-005 — Telegram → هوية مستقرة)
-Phase 02 Geography & Localization ......... Geo IDs + i18n AR/EN/UR
-Phase 03 Telegram Channel Foundation ...... 3 بوتات + Mini Apps + Adapter قابل للاستبدال
+Phase 01 Identity Foundation .............. ✅ Completed (2026-08-20) — Exit Gate E2E في CI
+Phase 02 Geography & Localization ......... ✅ Completed (2026-08-20) — Exit Gate E2E في CI
+Phase 03 Telegram Channel Foundation ...... ⏳ قيد التنفيذ (انطلقت بـADR-007 + عقود القناة — انظر §7)
 Phase 04 Customer Core ................... إنشاء Order صالح
 Phase 05 Driver Core ...................... Driver profile → Candidate pool
 Phase 06 Order Engine ..................... State machine + Outbox + Audit
@@ -209,7 +210,55 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 7. روابط سريعة
+## 7. Phase 03 (Telegram Channel Foundation) — قيد التنفيذ ⏳
+
+**بوابة الخروج (Exit Gate) الملزمة:** «كل Bot يفتح Mini App المناسبة، ويمكن استبدال Telegram adapter في الاختبارات بـMock Adapter».
+
+**القرار المعماري الحاكم:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) — القناة **طبقة توصيل لا خدمة**: `packages/channel-core` (محايد، صفر معرفة بـTelegram) + `packages/telegram-adapter` (المكان الوحيد الذي يعرف Bot API) + `bots/*` جذور تركيب رقيقة. اتجاه الاعتماد: `bots/*` → `telegram-adapter` → `channel-core`.
+
+### خطة المراجعات (MRs) — ملزمة ومرتّبة
+
+```text
+[1] docs+contracts(channel): ADR-007 + عقود القناة + @wasla/contracts-channel   ← ✅ Done [MR !23]
+    - docs/15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md
+    - packages/channel-core/contracts/: api.openapi.yml + events.json + schema.sql + errors.md + README.md
+    - OpenAPI: POST /channel/{bot}/webhook (مدخل وحيد + secret token) · POST /channel/messages
+      (مخرج وحيد) · GET /channel/{bot}/mini-app · POST /channel/{bot}/deep-links · GET /health
+    - events: channel.update.received.v1 · channel.message.delivered.v1 ·
+      channel.message.failed.v1 · channel.mini_app.launched.v1 (producer: channel-adapter)
+    - schema.sql: channel_updates (فريد channel+bot+channel_update_id) + channel_deliveries
+      (فريد channel+idempotency_key + محاولات/backoff) + channel_outbox — لا FK إلى identity
+    - errors.md: 14 كود CHANNEL_* + خطة إعادة المحاولة (5 محاولات، تباطؤ أسّي مع jitter)
+    - packages/contracts/channel: 34 اختباراً (أنواع مُولّدة + حراسة انحراف للأحداث
+      ولكتالوج الأخطاء + حراسة حدود ADR-007 على ملف OpenAPI)
+    - docs/02-architecture/CONTAINERS.md §5.1 (موقع طبقة القنوات)
+[2] feat(channel-core): نموذج المجال + المنافذ + حالات الاستخدام + مُهيّئات in-memory/Mock   ← التالي
+    - ChannelPort · UpdateParserPort · ProcessedUpdateStorePort · DeliveryStorePort · OutboxPort ·
+      IdentityBootstrapPort · MiniAppRegistryPort · ClockPort · RetryPolicy
+    - حالات الاستخدام: intake+dedup · deliver+retry · launchMiniApp · encode/decodeDeepLink
+    - اختبار حراسة: لا استيرادات/نصوص Telegram داخل channel-core
+[3] feat(telegram-adapter): تفسير Update + إرسال + أزرار web_app + تخطيط الأخطاء + حدود المعدّل
+[4] feat(bots): ثلاثة جذور تركيب Fastify + /start + Identity bootstrap + أزرار Mini App + Deep Links
+[5] feat(channel): مُهيّئات Postgres (channel_updates/deliveries/outbox) + اختبارات تكامل + وظيفة CI
+[6] feat(channel): مُهيّئ المجموعات (دعم/تصعيد) + تحديثات المجموعات
+[7] test(channel): Exit Gate E2E (كل بوت يفتح Mini App الصحيحة + استبدال المُهيّئ بـMock) + إغلاق المرحلة
+```
+
+**قيود ملزمة لمن يكمل المرحلة** (مفصّلة في [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) §4):
+
+1. مدخل واحد (`webhook` مع التحقّق من secret token قبل أي معالجة) ومخرج واحد (`POST /channel/messages`).
+2. منع التكرار في الاتجاهين — المكرر يُرجَع `duplicate` بـ202 ولا يُصدر حدثاً.
+3. لا تخزين لربط `chat_ref` ↔ `wasla_public_id` في طبقة القنوات (ملك Identity — [ADR-001](../15-decisions/ADR-001-identity-decoupled-from-telegram.md)).
+4. الـCore يصرّح بالنية فقط (`{type: mini_app, mini_app: driver}`) والمُهيّئ يبني زر `web_app`.
+5. أخطاء Telegram تُترجم داخل المُهيّئ إلى أكواد `CHANNEL_*` مع علم `retryable`.
+6. Deep Links بلا حالة (base64url ≤ 64 حرفاً) — التجاوز 422 `CHANNEL_DEEP_LINK_TOO_LONG`.
+7. كل منفذ له مُهيّئ Mock في الاختبارات — وإلا فبوابة الخروج غير مُحقّقة.
+
+**مؤجّل صراحة (خارج نطاق المرحلة 03):** بناء واجهات Mini App نفسها (`apps/*-mini-app`) · مُهيّئات Web/Mobile/WhatsApp · `channel_deep_link_tokens` · `channel_group_bindings` · `channel_rate_budgets` · Channel Router داخل خدمة `notifications`.
+
+---
+
+## 8. روابط سريعة
 
 - [MR !9 — إصلاح job build-test (CI green)](https://gitlab.com/uxxxu/wasla/-/merge_requests/9)
 - [ADR-005 — مكدّس تنفيذ خدمة Identity](../15-decisions/ADR-005-identity-service-implementation-stack.md)
@@ -219,3 +268,4 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - [README.md — نظرة عامة](../../README.md)
 - [CONTRIBUTING.md — سير العمل](../../CONTRIBUTING.md)
 - [GIT_RULES.md — قواعد Git/MR](../00-rules/GIT_RULES.md)
+- [ADR-007 — عزل قناة Telegram (Phase 03)](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md)

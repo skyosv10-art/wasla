@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: WASLA Channel Adapter API
+  version: 1.0.0
+  description: |
+    عقد واجهة طبقة القنوات (Channel Layer) — Phase 03.
+
+    - القناة الأولى المُنفّذة: Telegram. العقد **channel-agnostic**: أي قناة لاحقة
+      (Web / Mobile / WhatsApp) تُنفّذ نفس المنافذ دون تغيير هذا العقد (ADR-007).
+    - `POST /channel/{bot}/webhook` هو **المدخل الوحيد** للتحديثات القادمة من القناة.
+      يجب التحقّق من secret token في الترويسة قبل أي معالجة (SECURITY_RULES).
+    - كل تحديث يُعالَج **مرة واحدة فقط** (idempotency عبر `channel_update_id`) —
+      التحديث المكرر يُرجَع بـ `status: duplicate` وليس خطأ.
+    - `POST /channel/messages` هو المخرج الوحيد للرسائل الصادرة — يستهلكه
+      Notification Service عبر Channel Router. **لا يُسمح للـCore بنداء Telegram مباشرة.**
+    - Mini App تُفتح عبر زر `web_app` تبنيه طبقة المُهيّئ (Adapter) — الـCore يعرف
+      «أي تطبيق» فقط، لا يعرف كيف يُبنى الزر.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8083
+    description: Local development
+
+tags:
+  - name: intake
+    description: استقبال التحديثات من القناة (Update Intake)
+  - name: delivery
+    description: إرسال الرسائل الصادرة (Message Delivery)
+  - name: launch
+    description: Mini App Launch و Deep Links
+  - name: ops
+    description: تشغيل ومراقبة
+
+paths:
+  /channel/{bot}/webhook:
+    post:
+      tags: [intake]
+      summary: استقبال تحديث من القناة
+      description: |
+        يستقبل تحديثاً خاماً من القناة (Telegram Update). لا يُفسَّر جسم الطلب في
+        العقد لأن شكله ملك القناة — المُهيّئ (Adapter) هو الجهة الوحيدة التي تُفسّره
+        وتُحوّله إلى `InboundUpdate` محايد. الاستجابة سريعة (202) والمعالجة الثقيلة
+        لا تحجب القناة.
+      operationId: receiveUpdate
+      parameters:
+        - $ref: '#/components/parameters/Bot'
+        - $ref: '#/components/parameters/SecretToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: تحديث خام كما تُرسله القناة (شكله ملك القناة)
+              additionalProperties: true
+      responses:
+        '202':
+          description: تم قبول التحديث (أو تجاهله كمكرر)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UpdateAccepted' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /channel/messages:
+    post:
+      tags: [delivery]
+      summary: إرسال رسالة صادرة عبر القناة
+      description: |
+        نقطة الخروج الوحيدة للرسائل. الطلب يحمل `idempotency_key` إلزامياً:
+        تكرار نفس المفتاح لا يُرسل الرسالة مرتين ويُرجَع `status: duplicate`.
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OutboundMessage' }
+      responses:
+        '202':
+          description: تم قبول الرسالة للإرسال (أو رُصدت كمكررة)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeliveryAccepted' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /channel/{bot}/mini-app:
+    get:
+      tags: [launch]
+      summary: واصف تشغيل Mini App الخاصة بالبوت
+      description: |
+        يُرجع أي Mini App يفتحها هذا البوت. هذا هو العقد الذي يتحقّق منه
+        Exit Gate للمرحلة 03: كل بوت يفتح تطبيقه الصحيح.
+      operationId: getMiniAppLaunch
+      parameters:
+        - $ref: '#/components/parameters/Bot'
+      responses:
+        '200':
+          description: واصف التشغيل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MiniAppLaunch' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /channel/{bot}/deep-links:
+    post:
+      tags: [launch]
+      summary: توليد Deep Link للبوت
+      operationId: createDeepLink
+      parameters:
+        - $ref: '#/components/parameters/Bot'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeepLinkRequest' }
+      responses:
+        '200':
+          description: الرابط المُولّد
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeepLinkResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص صحة طبقة القنوات
+      operationId: getChannelHealth
+      responses:
+        '200':
+          description: الحالة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, channel]
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  channel: { $ref: '#/components/schemas/ChannelName' }
+
+components:
+  parameters:
+    Bot:
+      name: bot
+      in: path
+      required: true
+      description: البوت المستهدف
+      schema: { $ref: '#/components/schemas/BotKind' }
+    SecretToken:
+      name: X-Telegram-Bot-Api-Secret-Token
+      in: header
+      required: true
+      description: |
+        الرمز السري المتفق عليه عند تسجيل الـwebhook. أي طلب بدون تطابق تام
+        يُرفض بـ 401 `CHANNEL_UNAUTHORIZED_WEBHOOK` قبل أي معالجة.
+      schema: { type: string, minLength: 16, maxLength: 256 }
+
+  schemas:
+    ChannelName:
+      type: string
+      description: اسم القناة. Phase 03 يُنفّذ telegram فقط؛ البقية محجوزة في العقد.
+      enum: [telegram, web, mobile, whatsapp]
+
+    BotKind:
+      type: string
+      description: بوتات وصلة الثلاثة
+      enum: [customer, driver, partner]
+
+    MiniAppKind:
+      type: string
+      description: تطبيقات Mini App الثلاثة (مقابل كل بوت)
+      enum: [customer, driver, partner]
+
+    UpdateAccepted:
+      type: object
+      required: [status, channel, bot]
+      properties:
+        status:
+          type: string
+          enum: [accepted, duplicate]
+          description: accepted = عُولج الآن · duplicate = سبق معالجته (idempotent)
+        channel: { $ref: '#/components/schemas/ChannelName' }
+        bot: { $ref: '#/components/schemas/BotKind' }
+        channel_update_id:
+          type: string
+          description: معرّف التحديث كما وردت من القناة (نصّي — لا يُفترض أنه رقم)
+        kind:
+          $ref: '#/components/schemas/InboundUpdateKind'
+
+    InboundUpdateKind:
+      type: string
+      description: نوع التحديث بعد التحويل إلى الشكل المحايد
+      enum: [command, text_message, callback, contact, location, group_event, unsupported]
+
+    OutboundMessage:
+      type: object
+      required: [channel, chat_ref, kind, idempotency_key]
+      properties:
+        channel: { $ref: '#/components/schemas/ChannelName' }
+        chat_ref:
+          type: string
+          description: |
+            معرّف المحادثة في القناة كمرجع opaque (نصّي). طبقة القنوات لا تُخزّن
+            ربط `chat_ref` ↔ الهوية — الربط ملك خدمة Identity (تغليف الخدمات).
+          minLength: 1
+          maxLength: 128
+        kind:
+          type: string
+          enum: [text, text_with_buttons]
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        buttons:
+          type: array
+          maxItems: 8
+          items: { $ref: '#/components/schemas/MessageButton' }
+        priority:
+          type: string
+          enum: [critical, high, normal, low]
+          description: غيابه يعني `normal` (اختياري في الطلب — لا قيمة افتراضية مفروضة على العميل)
+        idempotency_key:
+          type: string
+          description: مفتاح فريد للرسالة (يمنع الإرسال المزدوج عند إعادة المحاولة)
+          minLength: 8
+          maxLength: 128
+        trace_id: { type: string }
+
+    MessageButton:
+      oneOf:
+        - $ref: '#/components/schemas/MiniAppButton'
+        - $ref: '#/components/schemas/DeepLinkButton'
+      description: |
+        زر واحد فقط من نوعين. بناء الزر الفعلي (مثل `web_app` في Telegram) مسؤولية
+        المُهيّئ — الـCore يصرّح بالنية فقط.
+
+    MiniAppButton:
+      type: object
+      required: [type, label, mini_app]
+      properties:
+        type: { type: string, const: mini_app }
+        label: { type: string, minLength: 1, maxLength: 64 }
+        mini_app: { $ref: '#/components/schemas/MiniAppKind' }
+        path:
+          type: string
+          description: مسار داخلي داخل Mini App (يُلحق بعنوانها الأساسي)
+          maxLength: 256
+
+    DeepLinkButton:
+      type: object
+      required: [type, label, action]
+      properties:
+        type: { type: string, const: deep_link }
+        label: { type: string, minLength: 1, maxLength: 64 }
+        action: { $ref: '#/components/schemas/DeepLinkAction' }
+        params:
+          type: object
+          additionalProperties: { type: string }
+          maxProperties: 4
+
+    DeepLinkAction:
+      type: string
+      description: أفعال Deep Link المدعومة في Phase 03 (تُوسّع بإضافة فقط)
+      enum: [open_app, track_order, join_support, verify_partner]
+
+    DeepLinkRequest:
+      type: object
+      required: [action]
+      properties:
+        action: { $ref: '#/components/schemas/DeepLinkAction' }
+        params:
+          type: object
+          additionalProperties: { type: string }
+          maxProperties: 4
+
+    DeepLinkResponse:
+      type: object
+      required: [url, payload, bot, action]
+      properties:
+        url:
+          type: string
+          description: الرابط الكامل القابل للمشاركة
+        payload:
+          type: string
+          description: |
+            الحمولة المُرمّزة (base64url) الموضوعة في الرابط. الحد الأقصى 64 حرفاً
+            (قيد القناة) — تجاوزه يُرجع 422 `CHANNEL_DEEP_LINK_TOO_LONG`.
+          maxLength: 64
+        bot: { $ref: '#/components/schemas/BotKind' }
+        action: { $ref: '#/components/schemas/DeepLinkAction' }
+
+    MiniAppLaunch:
+      type: object
+      required: [bot, mini_app, url, label]
+      properties:
+        bot: { $ref: '#/components/schemas/BotKind' }
+        mini_app: { $ref: '#/components/schemas/MiniAppKind' }
+        url:
+          type: string
+          description: عنوان Mini App الأساسي (HTTPS إلزامي في الإنتاج)
+        label: { type: string, maxLength: 64 }
+
+    DeliveryAccepted:
+      type: object
+      required: [delivery_id, status, channel, chat_ref]
+      properties:
+        delivery_id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [queued, sent, duplicate]
+        channel: { $ref: '#/components/schemas/ChannelName' }
+        chat_ref: { type: string }
+        attempts:
+          type: integer
+          minimum: 0
+          description: عدد محاولات الإرسال المسجّلة حتى الآن
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: كود ثابت من كتالوج errors.md
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: secret token غير مطابق
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: البوت أو المورد غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unprocessable:
+      description: مدخلات صالحة شكلياً وغير مقبولة منطقياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: تجاوز حدود القناة — يُعاد المحاولة لاحقاً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnavailable:
+      description: القناة في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

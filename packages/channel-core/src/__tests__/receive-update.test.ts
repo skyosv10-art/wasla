@@ -57,6 +57,31 @@ describe("receiveUpdate", () => {
     expect(deps.identity.calls).toHaveLength(1);
   });
 
+  it("hands the neutral actor to the caller, on a first update and on a replay", async () => {
+    const deps = makeDeps();
+
+    const first = await receiveUpdate(deps, { bot: BOT, raw: startUpdate() });
+    const replay = await receiveUpdate(deps, { bot: BOT, raw: startUpdate() });
+
+    // The composition root needs it to resolve «who is this» for a command other
+    // than start; it is the parser's neutral shape, so no channel-native
+    // identifier travels with it (ADR-007 rule 2).
+    expect(first.actor).toEqual({ channelUserRef: "user-1", locale: "ar" });
+    expect(replay.actor).toEqual(first.actor);
+    expect(deps.identity.calls).toHaveLength(1);
+  });
+
+  it("omits the actor when the update carried none", async () => {
+    const deps = makeDeps();
+
+    const result = await receiveUpdate(deps, {
+      bot: BOT,
+      raw: { channelUpdateId: "u-9", chatRef: "chat-1", kind: "text_message" },
+    });
+
+    expect(result.actor).toBeUndefined();
+  });
+
   it("treats a replayed update id as a duplicate: no event, no second identity call", async () => {
     const deps = makeDeps();
     await receiveUpdate(deps, { bot: BOT, raw: startUpdate() });

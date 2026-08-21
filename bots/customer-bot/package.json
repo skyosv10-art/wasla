@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA customer bot — thin composition root over @wasla/bot-runtime. Opens the customer Mini App (Phase 03).",
+  "description": "WASLA customer bot — composition root over @wasla/bot-runtime: opens the customer Mini App (Phase 03) and binds the Customer Core flows /places, /orders (Phase 04).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -19,10 +19,13 @@
   },
   "dependencies": {
     "@wasla/bot-runtime": "workspace:*",
-    "@wasla/contracts-channel": "workspace:*"
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/customers-service": "workspace:*",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
     "@wasla/channel-core": "workspace:*",
     "tsx": "^4.23.12",
     "vitest": "^2.1.0"

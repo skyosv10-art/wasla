@@ -52,6 +52,12 @@ import {
 } from "@wasla/contracts-channel";
 import { assertWebhookSecret } from "@wasla/telegram-adapter";
 
+import {
+  buildConversationReply,
+  type ConversationEvent,
+  type ConversationHandler,
+  type ConversationIdentity,
+} from "../conversation.js";
 import { buildGroupStartReply, buildStartReply } from "../welcome.js";
 
 import { sendChannelError } from "./errors.js";
@@ -83,6 +89,15 @@ export interface CreateBotAppOptions {
    * environment itself.
    */
   readonly groupLinkAvailable?: boolean;
+  /**
+   * A domain flow for this bot, attached by the composition root.
+   *
+   * Absent for a bot that only launches its Mini App (Phase 03 behaviour). When
+   * present it is called for every accepted update of a conversation this
+   * deployment may answer, *after* the built-in `/start` reply — see
+   * `runConversation` for why its failures are logged rather than propagated.
+   */
+  readonly onConversation?: ConversationHandler;
   /** Reported by `GET /health`; a root may degrade itself (e.g. no identity). */
   readonly health?: () => "ok" | "degraded";
   /** Fastify's pino logger. Off by default so tests stay quiet. */
@@ -300,6 +315,13 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
       }
     }
 
+    // The domain flow, when the root attached one. It runs for accepted updates
+    // only (a duplicate must not act twice) and only where a reply is allowed —
+    // a room we do not operate gets no domain behaviour either.
+    if (options.onConversation && result.status === "accepted" && result.replyAllowed) {
+      await runConversation(app, options, result, request.id);
+    }
+
     return reply.status(202).send({
       status: result.status,
       channel: result.channel,
@@ -455,6 +477,103 @@ async function answerGroupStart(
         code: isChannelError(error) ? error.code : "CHANNEL_INTERNAL_ERROR",
       },
       "group start reply could not be sent",
+    );
+  }
+}
+
+/**
+ * Run the root's domain flow for one update and deliver what it answered.
+ *
+ * Failures are logged, not propagated, for the same reason `answerStart` swallows
+ * them: the update is already recorded as processed, so a non-2xx would make
+ * Telegram replay an update we would then reject as a duplicate — losing the
+ * reply *and* spending the retry budget. The webhook's contract is «received»,
+ * not «acted upon»; what a flow could not do is an operational fact, and it
+ * belongs in the log with its trace id.
+ *
+ * Identity is resolved lazily and at most once per update: `resolveIdentity`
+ * caches the promise, so two flow branches asking for it cost one round-trip,
+ * and a flow that never asks costs none.
+ */
+async function runConversation(
+  app: FastifyInstance,
+  options: CreateBotAppOptions,
+  result: Awaited<ReturnType<typeof receiveUpdate>>,
+  traceId: string,
+): Promise<void> {
+  const { deps } = options;
+  const handler = options.onConversation;
+  if (!handler) return;
+
+  let identityPromise: Promise<ConversationIdentity> | undefined;
+  const resolveIdentity = (): Promise<ConversationIdentity> => {
+    if (result.identity) return Promise.resolve(result.identity);
+    identityPromise ??= (async () => {
+      const actor = result.actor;
+      if (!actor) {
+        throw channelError(
+          "CHANNEL_IDENTITY_BOOTSTRAP_FAILED",
+          "لا يمكن تحديد هوية المُرسل من هذا التحديث",
+        );
+      }
+      return deps.inbound.identity.ensureIdentity({
+        channel: result.channel,
+        bot: deps.bot,
+        actor,
+        traceId,
+      });
+    })();
+    return identityPromise;
+  };
+
+  const event: ConversationEvent = {
+    bot: deps.bot,
+    channel: result.channel,
+    chatRef: result.chatRef,
+    channelUpdateId: result.channelUpdateId,
+    kind: result.kind,
+    ...(result.command === undefined ? {} : { command: result.command }),
+    scope: result.scope,
+    ...(result.actor?.displayName === undefined
+      ? {}
+      : { displayName: result.actor.displayName }),
+    ...(result.actor?.languageCode === undefined
+      ? {}
+      : { languageCode: result.actor.languageCode }),
+    traceId,
+    ...(result.identity === undefined ? {} : { identity: result.identity }),
+    resolveIdentity,
+  };
+
+  try {
+    const reply = await handler(event);
+    if (!reply) return;
+
+    const launch =
+      reply.withMiniApp === true ? getMiniAppLaunch(deps.launch, deps.bot) : undefined;
+
+    await sendMessage(deps.outbound, {
+      bot: deps.bot,
+      message: buildConversationReply({
+        bot: deps.bot,
+        channel: deps.outbound.channel.channel,
+        chatRef: result.chatRef,
+        channelUpdateId: result.channelUpdateId,
+        reply,
+        ...(launch === undefined ? {} : { launch }),
+        traceId,
+      }),
+    });
+  } catch (error) {
+    app.log.error(
+      {
+        bot: deps.bot,
+        trace_id: traceId,
+        kind: result.kind,
+        ...(result.command === undefined ? {} : { command: result.command }),
+        code: isChannelError(error) ? error.code : "CHANNEL_INTERNAL_ERROR",
+      },
+      "conversation flow could not be completed",
     );
   }
 }

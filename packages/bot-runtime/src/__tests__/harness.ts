@@ -30,6 +30,7 @@ import { BOT_MINI_APP, WEBHOOK_SECRET_HEADER, type BotKind } from "@wasla/contra
 import { TelegramUpdateParser } from "@wasla/telegram-adapter";
 import type { FastifyInstance } from "fastify";
 
+import type { ConversationHandler } from "../conversation.js";
 import { createBotApp } from "../http/app.js";
 
 /** A valid secret (≥ 16 characters, per MIN_WEBHOOK_SECRET_LENGTH). */
@@ -67,6 +68,10 @@ export interface HarnessOptions {
   readonly groups?: readonly GroupPresence[];
   /** Simulate a bot with no deep-link template configured. */
   readonly withoutGroupLink?: boolean;
+  /** A domain flow, as a composition root would attach one. */
+  readonly onConversation?: ConversationHandler;
+  /** Commands this bot answers; `start` only when omitted. */
+  readonly supportedCommands?: readonly string[];
 }
 
 /** Build a bot app serving exactly one bot. */
@@ -91,6 +96,9 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
         clock,
         ids,
         groups,
+        ...(options.supportedCommands === undefined
+          ? {}
+          : { supportedCommands: options.supportedCommands }),
       },
       outbound: {
         channel,
@@ -106,6 +114,9 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
     webhookSecret: options.withoutSecret ? undefined : SECRET,
     ...(options.withoutGroupLink ? { groupLinkAvailable: false } : {}),
     ...(options.welcomeText === undefined ? {} : { welcomeText: options.welcomeText }),
+    ...(options.onConversation === undefined
+      ? {}
+      : { onConversation: options.onConversation }),
   });
 
   return { app, channel, identity, outbox, deliveries, presence };

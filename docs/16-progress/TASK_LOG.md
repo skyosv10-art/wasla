@@ -24,6 +24,40 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 04 MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة
+
+**Task:** ربط `bots/customer-bot` بحالات استخدام نواة العميل بلا أن تتعلّم طبقة القناة وجود مجال، وربط ثلاثة تدفقات (`/start`، `/places`، `/orders`) بمفاتيح idempotency مشتقّة من تحديث القناة. **Status:** Completed · **MR:** [!36](https://gitlab.com/uxxxu/wasla/-/merge_requests/36) · **ADR:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة:** [CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)
+
+**ماذا تم إنجازه (1):** أضفت **بذرة محادثة محيّدة** في `packages/bot-runtime/src/conversation.ts` (`ConversationEvent` محايد + `ConversationReply` + `buildConversationReply`) وخيار `onConversation` في `createBotApp`/`startBot`، فصار الجذر يُسلّم إلى طبقة القناة **دالّة واحدة** بدل أن تعرف الطبقة مجالاً. وأتحت الفاعل المحيّد من `receiveUpdate` (`ReceiveUpdateResult.actor`) لتحليل الهوية المتأخّر. وفي البوت: `flows.ts` (سلوك ونصّ عربي وراء `CustomerFlowsPort`، بلا أي تحقّق وبلا مُهيّئ) و`customer-core.ts` (**الملف الوحيد** الذي يستورد `@wasla/customers-service` من بوت) و`server.ts` (يُركّب التدفقات ويُسجّل الأمرين عند وجود `CUSTOMER_DATABASE_URL` وحده، ويُغلق التجمّع في `onClose`). **صفر تغيير في `services/customers`.**
+
+**لماذا تم اختياره (2):** MR 5/6 هي الدفعة المُلزَمة التالية في [HANDOFF §9](HANDOFF_NEXT_STEPS.md)، وبلا مستهلك حقيقي تبقى النواة الجاهزة (MR 1/6 → 4/6) كوداً لا يناديه أحد. والشكل اختير على البديل الأرخص (`if (bot === "customer")` داخل مسار الويب هوك) لأن ذاك يهدم ADR-007 rule 2 ويُدخل فروع مجالات في المسار الأمني الوحيد غير المُصادَق في وصلة.
+
+**أين تم التغيير (3):** جديد: `packages/bot-runtime/src/conversation.ts` · `packages/bot-runtime/src/__tests__/conversation.test.ts` · `bots/customer-bot/src/{flows.ts,customer-core.ts}` · `bots/customer-bot/src/__tests__/customer-flows.test.ts` · `docs/02-architecture/CUSTOMER_BOT_FLOWS.md`. مُعدَّل: `packages/bot-runtime/src/{http/app.ts,http/server.ts,index.ts,__tests__/harness.ts}` · `packages/channel-core/src/use-cases/receive-update.ts` + اختباره · `bots/customer-bot/src/{server.ts,index.ts}` · `bots/customer-bot/package.json` · `pnpm-lock.yaml` · `docs/02-architecture/CHANNEL_BOTS.md` · `docs/16-progress/{MASTER_PROGRESS,HANDOFF_NEXT_STEPS,TASK_LOG}.md`.
+
+**الملفات/الخدمات المتأثرة (4):** `@wasla/customer-bot` (سلوك جديد) · `@wasla/bot-runtime` و`@wasla/channel-core` (إضافة اختيارية بحتة) · بوتا السائق والشريك: **لا فرق في مسارهما** — لا يُسلّمان `onConversation` فلا يُنادى شيء (مُثبَت باختباراتهما الستّة لكل واحد بلا تعديل). `@wasla/customers-service`: مستهلَكة، غير مُعدَّلة.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** **لا تغيير في أي عقد** — لا `api.openapi.yml` (القناة أو العميل) ولا `errors.md` ولا `events.json` ولا `schema.sql`، ولا كود خطأ جديد. الأكواد المُستخدَمة كلها قائمة: `CHANNEL_UNSUPPORTED_COMMAND` · `CHANNEL_IDENTITY_BOOTSTRAP_FAILED` · أكواد `CUSTOMER_*` تُترجَم إلى نصّ ولا تُعاد كما هي إلى المستخدم.
+
+**كيف تم الاختبار (6):** `pnpm -r run typecheck` نظيف على 17 مشروعاً · `pnpm -r test` = **616 اختبار وحدة** (كانت 587؛ +29: `bot-runtime` 93، `customer-bot` 20، `channel-core` 104) · اختبارات التكامل الـ43 لم تُمسّ · لا اختبار يفتح منفذاً ولا يحتاج قاعدة بيانات ولا رمز تيليجرام (`app.inject` + نواة في الذاكرة). أهمّ ما يُثبَت: مفاتيح `flow:customer:<updateId>[:step]` وتكرارٌ لا يُنتج رسالة ثانية · **الحدث محايد بمفاتيح مُثبَّتة بالاسم** فلا يتسلّل حقل قناة · هوية واحدة لسؤالين وصفر عند `/start` · لا نداء تدفّق على مكرَّر ولا في غرفة مجهولة · فشل التدفّق ⇒ 202 وصمت · بلا `CUSTOMER_DATABASE_URL` ⇒ 422 و`/start` سليم.
+
+**ما المشاكل التي ظهرت (7):** (1) **`/start` كان سيُرسل رسالتين** (ترحيب النواة + ردّ التدفّق) → التدفّق يُعيد `null` عند `start` ويكتفي بضمان الملف صامتاً. (2) **`upsert` أعمى في `ensureProfile` كان سيستبدل الاسم** الذي ضبطه المستخدم في التطبيق المصغّر عند كل `/start` → قراءة ثمّ إنشاء عند الغياب فقط، مع اختبار يحرس ذلك. (3) **تحليل الهوية لكل تحديث** كان سيُضيف رحلة شبكة إلى كل رسالة نصّية عابرة → `resolveIdentity()` متأخّر ومُخزَّن. (4) رفع الخطأ من التدفّق كان سيُرجع 5xx فيُعيد تيليجرام تحديثاً مُسجَّلاً كمُعالَج → يُسجَّل بـ`trace_id` ويبقى 202. (5) `GroupPresence` لا يملك `title` بل `label` — أوقفه `tsc`.
+
+**ما الذي لم يكتمل (8):** **إنشاء الطلب من البوت لم يُنفَّذ، خلافاً لِما وعدت به دفعة MR 4/6 نصّاً** («تدفّق حفظ مكان وتدفّق تقديم طلب»). السبب: الطلب الصالح يحتاج محطّتين بمنطقة ومصدر لكل واحدة وصنف مركبة ونمط سعر (ADR-009 §4)، وجمع ذلك عبر رسائل يعني اختراع تدفّق منتج داخل دفعة هندسية، بينما [USER_FLOWS §1 و§6](../01-product/USER_FLOWS.md) يضع «الأعمال الثقيلة» في التطبيق المصغّر ويُبقي البوت «للإطلاق والتنبيه والتوجيه والإجراءات الصغيرة». فأُسنِد إنشاء الطلب — وحفظ مكان جديد معه — إلى **Phase 11**. · مسار المنطقة البشري لا يُحلّ في قوائم الأماكن (نداء جغرافيا لكل مكان). · `/health` للبوت لا يُعلن غياب نواة العميل. · **دَين الذرّية باقٍ في Phase 09** كما أُعيد إسناده. · لا ناشر لـ`customer_outbox` بعد. · `retryDueDeliveries` ما زال بلا مُشغّل دوري (دَين المرحلة 03).
+
+**الخطوة التالية (9):** MR 6/6 — **بوابة خروج المرحلة 04 من طرف إلى طرف**: محرّك طلبات بديل يحترم `OrderIntakeRequest`، ومسار حقيقي (تحديث قناة → تدفّق → حالة استخدام → Postgres → صندوق صادر) في وظيفة CI مستقلّة، ووثيقة بوابة خروج تُغلق المرحلة.
+
+**ما الذي يعتمد عليه العمل التالي (10):** لا شيء خارجي. المحرّك البديل داخل نطاق MR 6/6. وإنشاء الطلب من واجهة صار يعتمد على **Phase 11** لا على هذه الطبقة.
+
+**Migration/Deployment/Config (11):** لا هجرة. اعتماديتان في `bots/customer-bot`: `@wasla/customers-service: workspace:*` و`pg@^8.23.0` (+ `@types/pg` تطويراً) — **لا حزمة خارجية جديدة على المستودع** (كلتاهما مُستعمَلة أصلاً في `services/customers`)، فشرط [ENGINEERING_DOCUMENTATION_LAW §7](../00-rules/ENGINEERING_DOCUMENTATION_LAW.md) لا يُفتَح. متغيّرات بيئة جديدة للبوت: `CUSTOMER_DATABASE_URL` (بوّابة التدفقات) · `GEOGRAPHY_SERVICE_URL` (اختياري). `pnpm-lock.yaml` مُحدَّث (CI بـ`--frozen-lockfile`). لا أسرار في الكود.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** (أ) **تضييق نطاق مُعلَن**: إنشاء الطلب انتقل إلى Phase 11 — قرار منتجي يستحق مراجعة مالك المشروع (الحجّة في [CUSTOMER_BOT_FLOWS §3](../02-architecture/CUSTOMER_BOT_FLOWS.md)). (ب) **البوت ينادي حالات الاستخدام داخل العملية**، فهو يحمل بيانات عملاء في ذاكرته ويحتاج بيانات اعتماد قاعدة العميل: مقبول اليوم (نشر واحد، شبكة داخلية) ويحتاج مراجعة عند أول فصل نشر — والمنفذ `CustomerFlowsPort` يجعله استبدالاً. (ج) **`/health` لا يرى غياب النواة**؛ المؤشّر الحالي رفض الأمرين بـ422. (د) نافذة اللاذرّية خطر تشغيلي قائم لم يتغيّر.
+
+**الروابط (13):** MR [!36](https://gitlab.com/uxxxu/wasla/-/merge_requests/36) · [CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md) · [CHANNEL_BOTS.md](../02-architecture/CHANNEL_BOTS.md) · [CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md) · [USER_FLOWS.md](../01-product/USER_FLOWS.md) · [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [HANDOFF §9](HANDOFF_NEXT_STEPS.md)
+
+**الشخص/الفريق الذي يتابع (14):** Team 04 — Customer Core (MR 6/6 وبوابة الخروج) · Team 03 — Channel Layer (البذرة صارت سطحاً عامّاً في `bot-runtime`) · Team 11 — Customer Mini App (إنشاء الطلب وحفظ مكان) · Team 09 — Notifications/Events (الذرّية + ناشر الصادر).
+
+---
+
 ## 2026-08-21 · Phase 04 MR 4/6 — طبقة HTTP لخدمة العملاء (المنفذ 8086)
 
 **Task:** تعريض حالات استخدام Customer Core عبر HTTP مطابقةً لـ`contracts/api.openapi.yml` (عشرة مسارات + `/health`)، وتخطيط كتالوج الأخطاء الثمانية عشر إلى حالات HTTP، ومحوّلات HTTP لمنفذَي الهوية والجغرافيا، وتركيب نهائي يُغلق تجمّع الاتصالات. **Status:** Completed · **MR:** [!35](https://gitlab.com/uxxxu/wasla/-/merge_requests/35) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة:** [CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)

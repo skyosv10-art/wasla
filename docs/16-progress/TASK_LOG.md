@@ -26,7 +26,7 @@
 
 ## 2026-08-21 · Phase 04 MR 1/6 — عقود Customer Core وحدّ تسليم الطلب (ADR-009)
 
-**Task:** فتح Phase 04 من طرفها الصحيح: تعريف **ما يملكه العميل** (ملفه · أماكنه · نيّة طلبه) وتثبيت **الحدّ** بينه وبين محرّك الطلبات غير الموجود بعد، عقوداً أولاً (ADR-004) قبل أي سطر تنفيذ. **Status:** Completed (42 اختباراً جديداً · إجمالي 487 وحدة) · **MR:** [!MRX](https://gitlab.com/uxxxu/wasla/-/merge_requests/MRX) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)
+**Task:** فتح Phase 04 من طرفها الصحيح: تعريف **ما يملكه العميل** (ملفه · أماكنه · نيّة طلبه) وتثبيت **الحدّ** بينه وبين محرّك الطلبات غير الموجود بعد، عقوداً أولاً (ADR-004) قبل أي سطر تنفيذ. **Status:** Completed (42 اختباراً جديداً · إجمالي 487 وحدة) · **MR:** [!31](https://gitlab.com/uxxxu/wasla/-/merge_requests/31) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)
 
 ### الأسئلة الـ14 (Documentation Law)
 

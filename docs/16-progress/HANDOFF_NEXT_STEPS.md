@@ -397,7 +397,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 | # | النطاق | المخرَج | الحالة |
 |---|---|---|---|
-| 1 | docs + contracts | ADR-009 + `services/customers/contracts/*` + `@wasla/contracts-customer` + [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) + CONTAINERS §4.1 | ✅ **مدمجة ([!MRX](https://gitlab.com/uxxxu/wasla/-/merge_requests/MRX))** — 42 اختباراً |
+| 1 | docs + contracts | ADR-009 + `services/customers/contracts/*` + `@wasla/contracts-customer` + [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) + CONTAINERS §4.1 | ✅ **مدمجة ([!31](https://gitlab.com/uxxxu/wasla/-/merge_requests/31))** — 42 اختباراً |
 | 2 | النطاق النقي | `services/customers/src/{domain,ports,use-cases,infrastructure}`: كيانات + المنافذ (`IdentityLookupPort` · `GeographyPort` · `OrderIntakePort` + مستودعات) + حالات الاستخدام (ملف · أماكن · معاينة · تسليم) + مُهيّئات in-memory/Fake — **بلا قاعدة وبلا HTTP** | ⬜ التالية |
 | 3 | الاستمرارية | مستودعات Drizzle/Postgres مرآةً لـ`schema.sql` + اختبار حراسة انحراف + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) | ⬜ |
 | 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء إلى حالات HTTP + `/health` + اختبارات `app.inject` | ⬜ |

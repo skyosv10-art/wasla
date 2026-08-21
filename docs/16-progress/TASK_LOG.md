@@ -48,19 +48,27 @@
 - **`bindAcceptedAssignment` جُعل خامل التكرار (idempotent)** بمعالجة `ORDER_ASSIGNMENT_FORBIDDEN` كـ«مُسنَد بالفعل»، لأن المشية التي تُوصل الطلب إلى حالته قد تكون أسندت سائقاً — والرفض نفسه مُوكَّد في اختبار مستقلّ فلا يُخفى شيء.
 - **التوكيدات على رموز الأخطاء لا على النصّ العربي:** الرسالة قابلة للتحسين والرمز عقد.
 
-### 3. الديون المُعلَنة (لا مكتشفة)
+### 3. ما أثمرته البوابة في يومها الأول — عيبٌ إنتاجي أُوقف قبل الدمج
+
+أوّل تشغيل على **Postgres** في CI أسقط أربعة اختبارات بـ`503 ORDER_ENGINE_UNAVAILABLE` وهي خضراء على الذاكرة:
+
+- **السبب:** `resolveAssignment(accepted)` كان يُنادي `setActiveAssignment` فوراً، فيكتب صفّ طلبٍ حالته `offered` **بإسناد نشط** — وهو ما يمنعه القيد `ck_orders_assignment_matches_status`، وهو حرفياً **الصورة الرابعة للحالة المستحيلة** في ADR-010 §7. أي أن **قبول أي سائق كان يفشل في الإنتاج**، ولم يظهر لأن مُهيّئ الذاكرة كان يقبل ما ترفضه القاعدة فمرّت 621 اختباراً على حالة مستحيلة. الوثيقة كانت صحيحة والكود مخالفاً.
+- **الإصلاح (لا تجاوز):** الربط انتقل إلى `transitionOrder` — يقرأ الإسناد المقبول من سجلّ الإسنادات ويكتبه في **نفس عبارة `UPDATE`** التي تُحرّك الحالة، فلا يظهر الصفّ لحظةً في وضعٍ يرفضه القيد؛ والقبول يبقى تسجيلاً لا قراراً (السائق يُقرأ من المقبول لا من الطلب الشبكي).
+- **وسدّ الحُفرة لا الأعراض:** `InMemoryOrderRepository.setActiveAssignment` صار يفرض القيد نفسه (`ORDER_ASSIGNMENT_FORBIDDEN` / `ORDER_ASSIGNMENT_REQUIRED`)، وثلاثة اختبارات وحدة جديدة تُثبت: القبول لا يربط · الانتقال يربط بكتابة واحدة · المخزن يرفض ربطاً في حالة تمنعه. الاختبار الذي كان يُثبت السلوك الخاطئ أُعيد كتابته لا حُذف.
+
+### 4. الديون المُعلَنة (لا مكتشفة)
 
 - **مخزن العميل في الذاكرة داخل هذه البوابة** — سؤال ذرّية صفّ الطلب ونقاطه تملكه بوابة المرحلة 04 (`customer-exit-gate-e2e`)؛ تكراره هنا يضاعف سطح الفشل بلا معلومة.
 - **لا Matching** — الإسنادات تُسجَّل من الاختبار بالشكل نفسه الذي ستُسجّله المرحلة 07 (المحرّك يسجّل ولا يقرّر — ADR-010).
 - **لا تفويض ولا صلاحيات** (Phase 09) — ما يُثبَت هنا نطاق الملكية في القراءة (404 لا 403) وشكل الفاعل، لا الإذن.
 - **لا مُرحِّل لصندوق الصادر** — الأحداث تُقرأ من الصندوق مباشرةً؛ نشرها خارج الخدمة محلّه Phase 09.
 
-### 4. التفاصيل
+### 5. التفاصيل
 
-- **Files:** `packages/order-e2e/{package.json,tsconfig.json,vitest.config.ts}` · `packages/order-e2e/src/harness.ts` · `packages/order-e2e/src/__tests__/phase06-exit-gate.e2e.test.ts` · `services/orders/src/index.ts` · `.gitlab-ci.yml` · `docs/12-testing/PHASE06_EXIT_GATE_E2E.md` · `docs/04-api/{ORDER_HTTP.md,ORDER_INTAKE_HANDOVER.md}` · `docs/16-progress/{MASTER_PROGRESS.md,ROADMAP.md,HANDOFF_NEXT_STEPS.md,TASK_LOG.md}` · `pnpm-lock.yaml`
+- **Files:** `packages/order-e2e/{package.json,tsconfig.json,vitest.config.ts}` · `packages/order-e2e/src/harness.ts` · `packages/order-e2e/src/__tests__/phase06-exit-gate.e2e.test.ts` · `services/orders/src/{index.ts,use-cases/transition-order.ts,use-cases/manage-assignments.ts,infrastructure/in-memory.ts,__tests__/assignments.test.ts}` · `.gitlab-ci.yml` · `docs/12-testing/PHASE06_EXIT_GATE_E2E.md` · `docs/04-api/{ORDER_HTTP.md,ORDER_INTAKE_HANDOVER.md}` · `docs/16-progress/{MASTER_PROGRESS.md,ROADMAP.md,HANDOFF_NEXT_STEPS.md,TASK_LOG.md}` · `pnpm-lock.yaml`
 - **Services:** `orders` (تصديران) · `customers` (بلا تغيير — تُستهلك كما هي) · `identity` و`geography` (تُستهلكان كما هما)
 - **Why:** بوابة الخروج هي الصيغة التنفيذية لجملة المرحلة، لا وصفٌ لها: ما لم تنجح لا تُغلق المرحلة 06.
-- **Tests:** `pnpm --filter @wasla/order-e2e test` ⇒ **16/16** (المسح كاملاً في ~1.7s، مخزن ذاكرة) · `pnpm -r test` ⇒ **1400 اختباراً ناجحاً + 1 متجاوَز** بلا قاعدة بيانات · `pnpm -r typecheck` نظيف · وظيفة `order-exit-gate-e2e` ترفع الملف نفسه على Postgres 15.
+- **Tests:** `pnpm --filter @wasla/order-e2e test` ⇒ **16/16** (المسح كاملاً في ~1.7s، مخزن ذاكرة) · `pnpm -r test` ⇒ **1402 اختباراً ناجحاً + 1 متجاوَز** بلا قاعدة بيانات · `pnpm -r typecheck` نظيف · وظيفة `order-exit-gate-e2e` ترفع الملف نفسه على Postgres 15.
 - **Next:** **Phase 07 — Dispatch & Matching MVP**: قرار مكان المطابقة (خدمة مستقلّة لا داخل المحرّك) ومصدر قائمة المرشّحين والأمواج والمهل — يستحقّ ADR-011 قبل أول سطر. التفصيل في [HANDOFF §11](HANDOFF_NEXT_STEPS.md).
 - **Related:** [MR !43](https://gitlab.com/uxxxu/wasla/-/merge_requests/43) · [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_HTTP.md](../04-api/ORDER_HTTP.md) · [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)
 

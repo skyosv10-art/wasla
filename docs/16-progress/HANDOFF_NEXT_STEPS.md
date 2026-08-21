@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 1/6 — عقود Customer Core + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 2/6 — نطاق Customer Core ومنافذه وحالات استخدامه بمُهيّئات ذاكرة ([CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) بعد MR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,15 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 04 — Customer Core (**قيد التنفيذ**: MR 1/6 مدمجة — العقود وADR-009 · §9 للخطة)
+المرحلة الحالية: Phase 04 — Customer Core (**قيد التنفيذ**: MR 1/6 و2/6 مدمجتان — العقود وADR-009 ثم
+                 طبقة المجال النقيّة بمُهيّئات ذاكرة · §9 للخطة)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ (أُغلقت 2026-08-21 بسبع مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03).
-المتبقّي:         Phase 04 (MR 2..6/6 · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
-الاختبارات:       487 اختبار وحدة (42 لعقود Customer Core منها حرّاس حدود ADR-009 وقاعدة خصوصية الأحداث
+المتبقّي:         Phase 04 (MR 3..6/6: الاستمرارية · HTTP على 8086 · ربط البوت · بوابة الخروج · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
+الاختبارات:       535 اختبار وحدة (48 لطبقة مجال العميل: idempotency وإعادة المحاولة على الصفّ نفسه
+                 وfail-closed وبحث سلبي عن أي نصّ مستخدم أو إحداثية في الأحداث
+                 + 42 لعقود Customer Core منها حرّاس حدود ADR-009 وقاعدة خصوصية الأحداث
                  + 96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
                  + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة
                  + 7 من بوابة المرحلة 03 التي تعمل بمخازن الذاكرة أيضاً)
@@ -34,7 +37,7 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-21 (Phase 04 · MR 1/6 — عقود Customer Core وADR-009 — §9)
+آخر تحديث:      2026-08-21 (Phase 04 · MR 2/6 — طبقة مجال العميل ومنافذها ومُهيّئات الذاكرة — §9)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -398,11 +401,13 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 | # | النطاق | المخرَج | الحالة |
 |---|---|---|---|
 | 1 | docs + contracts | ADR-009 + `services/customers/contracts/*` + `@wasla/contracts-customer` + [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) + CONTAINERS §4.1 | ✅ **مدمجة ([!31](https://gitlab.com/uxxxu/wasla/-/merge_requests/31))** — 42 اختباراً |
-| 2 | النطاق النقي | `services/customers/src/{domain,ports,use-cases,infrastructure}`: كيانات + المنافذ (`IdentityLookupPort` · `GeographyPort` · `OrderIntakePort` + مستودعات) + حالات الاستخدام (ملف · أماكن · معاينة · تسليم) + مُهيّئات in-memory/Fake — **بلا قاعدة وبلا HTTP** | ⬜ التالية |
-| 3 | الاستمرارية | مستودعات Drizzle/Postgres مرآةً لـ`schema.sql` + اختبار حراسة انحراف + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) | ⬜ |
+| 2 | النطاق النقي | `services/customers/src/{domain,ports,use-cases,infrastructure}`: كيانات + المنافذ (`IdentityLookupPort` · `GeographyPort` · `OrderIntakePort` + مستودعات) + حالات الاستخدام (ملف · أماكن · معاينة · تسليم) + مُهيّئات in-memory/Fake — **بلا قاعدة وبلا HTTP** | ✅ **مدمجة ([!MRX](https://gitlab.com/uxxxu/wasla/-/merge_requests/MRX))** — 48 اختباراً · [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) |
+| 3 | الاستمرارية | مستودعات Drizzle/Postgres مرآةً لـ`schema.sql` + اختبار حراسة انحراف + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) + **اختبارات مطابقة منافذ** تُشغّل مجموعة الذاكرة ومجموعة Postgres داخل حالات الاستخدام نفسها + حسم `shipment_description` (عمود بلا مقابل في المجال) | ⬜ **التالية** |
 | 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء إلى حالات HTTP + `/health` + اختبارات `app.inject` | ⬜ |
 | 5 | البوت | ربط `bots/customer-bot` بالخدمة (ملف · مكان محفوظ · إنشاء طلب) مع **الحفاظ على حياد القناة** (ADR-007): البوت لا يعرف مجال العميل، والمجال لا يعرف Telegram | ⬜ |
 | 6 | بوابة الخروج | E2E: عميل ينشئ طلباً صالحاً يصل إلى **محرّك طلبات بديل (stub)** يحترم `OrderIntakeRequest` + وثيقة البوابة + إغلاق المرحلة | ⬜ |
+
+**ما صار قائماً بعد MR 2/6 (لمن يبدأ MR 3/6):** مشروع العمل `services/customers` قائم بطبقة مجال كاملة ومُختبَرة (48 اختباراً) وسبعة منافذ في `src/ports.ts` لكلٍّ منها مُهيّئ ذاكرة في `src/infrastructure/in-memory.ts`. **مهمّة MR 3/6 استبدال مُهيّئ واحد فقط** — `CustomerRepository` — بمرآة Drizzle لـ`schema.sql`، بلا لمس حالة استخدام واحدة: أي اضطرار لتغيير سلوك في `use-cases/` علامةٌ على أن المخطّط يفرض نفسه على المجال، وهو ما تمنعه الـ48. وقرارات السلوك ومبرّراتها وما لم تفعله الدفعة **بقصد** في [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md).
 
 ### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-009)
 

@@ -66,7 +66,7 @@ services/customers/src/infrastructure/http-geography.ts       ← GeographyPort 
 |---|---|---|---|---|
 | `IdentityLookupPort` | `HttpIdentityLookupPort` → `GET {IDENTITY_SERVICE_URL}/identity/users/{id}` | موجودة | غير موجودة → `CUSTOMER_IDENTITY_NOT_FOUND` (404) | `CUSTOMER_INTERNAL_ERROR` (503) — **لا تُعتبر «غير موجودة»** |
 | `GeographyPort` | `HttpGeographyPort` → `GET {GEOGRAPHY_SERVICE_URL}/geo/zones/{id}?locale=ar` | `{ zoneId, status, path }` | `null` → `CUSTOMER_ZONE_NOT_FOUND` (404) | `CUSTOMER_INTERNAL_ERROR` (503) |
-| `OrderIntakePort` | — (لا مُهيّئ في Phase 04) | — | — | `UnavailableOrderIntake` → 503 fail-closed |
+| `OrderIntakePort` | **Phase 06 · MR 5/6:** `HttpOrderIntakePort` → `POST {ORDER_SERVICE_URL}/orders/intake` (بلا المتغيّر: `UnavailableOrderIntake`) | 201 أُنشئ · **200 إعادة نفس المفتاح = نجاح** | 404 من المحرّك = مسار لا يُنشره ⇒ خطؤنا: `UNAVAILABLE` | 422/409 ⇒ `REJECTED` نهائي · 400/415 ⇒ `UNAVAILABLE` (لم يفهمنا) · 5xx/انقطاع ⇒ `UNAVAILABLE` قابل لإعادة المحاولة بنفس المفتاح · مهلة ⇒ `TIMEOUT` — الجدول الكامل في [ORDER_INTAKE_HANDOVER.md](ORDER_INTAKE_HANDOVER.md) |
 
 **التسليم fail-closed:** فشل محرّك الطلبات لا يُسقط نيّة العميل. يُكتب صفّ بحالة `submission_failed`، ويُنشر حدث فشل، ويعود 503 `CUSTOMER_ORDER_INTAKE_UNAVAILABLE`. الطلب يظهر في `GET /order-requests` — مثبَّتٌ باختبار.
 
@@ -81,9 +81,9 @@ services/customers/src/infrastructure/http-geography.ts       ← GeographyPort 
 | الحالة | الشرط |
 |---|---|
 | `ok` | استمرارية مضبوطة **و** `order_intake: configured` |
-| `degraded` | `order_intake: unconfigured` (افتراضي Phase 04) |
+| `degraded` | `order_intake: unconfigured` (بلا `ORDER_SERVICE_URL`) |
 
-بناءٌ لا يستطيع إتمام تسليم طلب واحد لا يحقّ له أن يقول `ok`. الحقلان `persistence` و`order_intake` معلنان في العقد، فالمراقبة تعرف **لماذا** تدهورت الخدمة لا أنها تدهورت فقط.
+بناءٌ لا يستطيع إتمام تسليم طلب واحد لا يحقّ له أن يقول `ok`. ومنذ Phase 06 · MR 5/6 صار `ok` ممكناً فعلاً: `ORDER_SERVICE_URL` مضبوطاً ⇒ `configured` ⇒ `ok` — وهو أول وضع في تاريخ المشروع تستطيع فيه هذه الخدمة أن تُعلن سلامتها بصدق. الحقلان `persistence` و`order_intake` معلنان في العقد، فالمراقبة تعرف **لماذا** تدهورت الخدمة لا أنها تدهورت فقط.
 
 ---
 

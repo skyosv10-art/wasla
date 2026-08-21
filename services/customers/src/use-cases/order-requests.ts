@@ -291,7 +291,11 @@ async function attemptHandover(
   payload: OrderIntakeRequestInput,
 ): Promise<HandoverAttempt> {
   try {
-    const result = await deps.orderIntake.submitOrderRequest(payload);
+    // The trace id travels beside the payload, not inside it: the payload is a
+    // published contract, and the correlation id is transport.
+    const result = await deps.orderIntake.submitOrderRequest(payload, {
+      ...(deps.traceId === undefined ? {} : { traceId: deps.traceId }),
+    });
     return {
       status: "submitted",
       orderPublicId: result.orderPublicId,

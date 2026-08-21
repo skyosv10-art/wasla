@@ -10,7 +10,7 @@
 >
 > **Related Team:** Team 06 — Order Engine
 >
-> **Related Docs:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md) · [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md) · [CUSTOMER_HTTP.md](CUSTOMER_HTTP.md) · [HANDOFF_NEXT_STEPS](../16-progress/HANDOFF_NEXT_STEPS.md) · [MASTER_PROGRESS](../16-progress/MASTER_PROGRESS.md)
+> **Related Docs:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md) · [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md) · [CUSTOMER_HTTP.md](CUSTOMER_HTTP.md) · [ORDER_INTAKE_HANDOVER.md](ORDER_INTAKE_HANDOVER.md) · [HANDOFF_NEXT_STEPS](../16-progress/HANDOFF_NEXT_STEPS.md) · [MASTER_PROGRESS](../16-progress/MASTER_PROGRESS.md)
 
 ---
 
@@ -162,5 +162,5 @@ services/orders/src/http/server.ts                 ← composition root (Postgre
 
 ## 10. ماذا بعد
 
-- **MR 5/6** — استبدال `UnavailableOrderIntake` في `services/customers` بمحوّل `HttpOrderIntakePort` حقيقي يُنادي `POST /orders/intake` هنا، فيصبح `/health` في خدمة العملاء `ok` لأول مرة.
+- **~~MR 5/6~~ — منجَزة:** خدمة العملاء صارت تُنادي `POST /orders/intake` هنا عبر `HttpOrderIntakePort` الإنتاجي، و`/health` عندها صار `ok` لأول مرة. خريطة الحالات (200 نجاح · 409 و422 رفض نهائي · 400 خطؤنا · 503 قابل لإعادة المحاولة · مهلة = غموض مُسجَّل) موثّقة في [ORDER_INTAKE_HANDOVER.md](ORDER_INTAKE_HANDOVER.md).
 - **MR 6/6** — حزمة `packages/order-e2e`: بوّابة خروج Phase 06 (مسح الأزواج 441 عبر HTTP + وظيفة CI + وثيقة البوّابة) وإغلاق الطور.

@@ -1,8 +1,15 @@
 /**
  * A gate-owned HTTP adapter for `OrderIntakePort`.
  *
- * **This is not the production adapter, and it must not become one.** The
- * `OrderIntakeRequest` schema in `services/customers/contracts/api.openapi.yml`
+ * **This is not the production adapter, and it must not become one.** Since
+ * Phase 06 · MR 5/6 the production one exists — `HttpOrderIntakePort` in
+ * `services/customers/src/infrastructure/http-order-intake.ts` — and it is what
+ * the Phase 06 exit gate drives against the real engine. This adapter stays here
+ * unchanged because the Phase 04 gate is a *frozen* proof about Phase 04: if it
+ * started importing the production adapter, a later change to the engine's status
+ * map would silently rewrite what Phase 04 was signed off on.
+ *
+ * The `OrderIntakeRequest` schema in `services/customers/contracts/api.openapi.yml`
  * assigns that work to Phase 06, which owns the engine and therefore owns its
  * URL, its auth and its retry policy. What Phase 04 owes is narrower: proof that
  * a validated intent leaves this service **as the published payload** and that

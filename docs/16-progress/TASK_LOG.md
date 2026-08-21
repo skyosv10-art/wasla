@@ -24,6 +24,45 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 06 MR 5/6 — محوّل التسليم الإنتاجي: خدمة العميل تُنادي المحرّك فعلاً
+
+**Task:** استبدال `UnavailableOrderIntake` في `services/customers` بمحوّل إنتاجي `HttpOrderIntakePort` ينادي `POST /orders/intake` على 8087، بخريطة حالات مُصرَّحة تُترجم كل إجابة إلى الصفّ والحدث الصحيحين — فيصبح `/health` في خدمة العميل `ok` لأول مرة في تاريخ المشروع. **Status:** Completed · **MR:** [!42](https://gitlab.com/uxxxu/wasla/-/merge_requests/42) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة:** [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)
+
+### 1. ماذا تم إنجازه
+
+- **`services/customers/src/infrastructure/http-order-intake.ts`** — `HttpOrderIntakePort`: يُرسل `toOrderIntakeRequestDto(request)` (محوّل الخدمة نفسه، لا خريطة ثانية) إلى `POST {ORDER_SERVICE_URL}/orders/intake` بمفتاح تكرار العميل كما هو، ويتحقّق من شكل المرجع العائد (`ORD-##########` + `accepted_at`) قبل أن يُسمّيه قبولاً.
+- **خريطة الحالات** كما يُصرّح بها عقد المحرّك: **201/200** نجاح (200 = إعادة نفس المفتاح) · **409 و422** ⇒ `REJECTED` نهائي · **400/415/404 وأي 4xx** ⇒ `UNAVAILABLE` (المحرّك لم يفهمنا: خطؤنا) · **5xx وانقطاع** ⇒ `UNAVAILABLE` قابل لإعادة المحاولة بنفس المفتاح · **لا إجابة** ⇒ `TIMEOUT`.
+- **`src/ports.ts`** — `OrderIntakeCallContext { traceId? }` معاملاً ثانياً **اختيارياً** في `submitOrderRequest`، فلا مُهيّئ قائم يتغيّر.
+- **`src/use-cases/order-requests.ts`** — سطر واحد: تمرير `deps.traceId` بجانب الحمولة لا داخلها.
+- **`src/http/server.ts`** — `buildOrderIntake()`: `ORDER_SERVICE_URL` ⇒ المحوّل و`order_intake: configured`، وغيابه ⇒ `UnavailableOrderIntake` و`unconfigured`؛ المُهيّئ وملصق الصحّة يُبنيان معاً فلا يختلفان. و`ORDER_SERVICE_TIMEOUT_MS` (افتراضي 2000).
+- **`src/__tests__/http-order-intake.test.ts`** — **17 اختباراً** على مُنصت حقيقي على منفذ محلي (لا `fetch` مُزيَّف).
+- **`packages/customer-e2e/src/order-intake-http.ts`** — توثيق فقط: يُشير إلى محوّل الإنتاج ويُعلن **لماذا لا يستورده** (بوابة Phase 04 إثبات مُجمَّد).
+
+### 2. لماذا تم اختياره
+
+- **200 نجاحٌ لا تعارض** — البديل الأرخص (كل ما ليس 201 فشل) يقلب صفّاً `submitted` إلى `submission_failed` عند إعادة محاولة بريئة، فيُخبر العميل أن طلبه لم يصل وهو واصل.
+- **409 رفض نهائي لا انقطاع** — لو صُنّف انقطاعاً لدخلنا حلقة إعادة محاولة أبدية لطلب سيُرفض بنفس الجواب أبداً؛ وأنه خطؤنا يُقال في الرسالة والسجلّ لا في كود يراه العميل.
+- **400 انقطاع لا رفض** — نصّ عقد المحرّك: «`400` يعامله المُسلِّم كخطئه». تصنيفه رفضاً يُخبر العميل أن طلبه مرفوض والحقيقة أنه لم يُفهَم، ويضيع التنبيه الذي كان يجب أن يصلنا.
+- **`TIMEOUT` منفصلاً** — «لم يصل» و«لا نعرف» حقيقتان تشغيليتان مختلفتان، ومن يُشغّل النظام يحتاج التمييز عند التسوية.
+- **السياق معاملاً لا حقلاً في الحمولة** — الحمولة عقد منشور ومعرّف الارتباط نقل؛ خلطهما يُنتج `trace_id` في مخطّط طلب.
+- **لا مُهيّئ تطوير متسامح للمحرّك** — مُهيّئ «يقبل» بلا محرّك يكتب صفوفاً تقول إن طلب عميل وصل إلى محرّك غير موجود، وهو ما يمنعه §53.
+
+### 3. الديون والحدود المُعلَنة
+
+- لا حلقة إعادة محاولة داخل المحوّل (متى نُعيد قرارٌ يخصّ تجربة العميل والطوابير؛ إعادة مخفيّة تضرب مهلة العميل في عددها).
+- لا مصادقة بين الخدمتين (Phase 06) · لا قراءة للطلبات (المقبس بدالة واحدة) · غموض المهلة بلا تسوية آلية حتى ناشر الصادر (Phase 09).
+
+### 4. الملفات/الخدمات المتأثرة
+
+- **Files:** `services/customers/src/infrastructure/http-order-intake.ts` · `services/customers/src/{ports.ts,index.ts,http/server.ts,use-cases/order-requests.ts}` · `services/customers/src/__tests__/http-order-intake.test.ts` · `packages/customer-e2e/src/order-intake-http.ts` · `docs/04-api/{ORDER_INTAKE_HANDOVER.md,CUSTOMER_HTTP.md,ORDER_HTTP.md}` · `docs/16-progress/*`
+- **Services:** `@wasla/customers-service` (المحرّك لم يتغيّر بحرف)
+- **Why:** الوعد المكتوب في Phase 04 كان «استبدال مُهيّئ واحد ولا شيء آخر»؛ MR 4/6 جعلت المحرّك قابلاً للتشغيل، وهذه الدفعة تُثبت أن الحدّ كان مرسوماً صحيحاً — المجال وحالات الاستخدام لم تتغيّر (إلا سطر السياق).
+- **Tests:** `pnpm -r typecheck` ✅ · `pnpm -r test` ✅ (`@wasla/customers-service` **117 اختباراً** في 9 ملفات، منها 17 للمحوّل) · **تسليم حقيقي بين خدمتين تعملان:** 201 ⇒ `ORD-0000000001`، إعادة نفس المفتاح ⇒ نفس المرجع بلا طلب ثانٍ، قراءة الطلب = `published`، قراءته بعميل آخر = **404**، ملاحظة 400 محرف ⇒ `UNAVAILABLE` لا `REJECTED`، و`x-request-id` ظهر في سجلّ المحرّك خيطَ ارتباط واحد · `/health` للعميل = `{"status":"ok","order_intake":"configured"}`.
+- **Next:** MR 6/6 — `packages/order-e2e`: بوابة خروج Phase 06 تسوق **هذا المحوّل** إلى `createOrderApp` الحقيقي فوق HTTP، ثم إغلاق الطور.
+- **Related:** [MR !42](https://gitlab.com/uxxxu/wasla/-/merge_requests/42) · [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md) · [ORDER_HTTP.md](../04-api/ORDER_HTTP.md) · [HANDOFF §10](HANDOFF_NEXT_STEPS.md)
+
+---
+
 ## 2026-08-21 · Phase 06 MR 4/6 — طبقة HTTP لمحرّك الطلبات على المنفذ 8087 (الخدمة صارت قابلة للتشغيل)
 
 **Task:** ربط المسارات السبعة المنشورة في `services/orders/contracts/api.openapi.yml` بحالات الاستخدام عبر Fastify، بمقبس معاملة صريح (`OrderRunner`) يجعل كل كتابة داخل وحدة عمل واحدة، وبنطاق مالك يجيب **404 لا 403** على قراءة طلب عميل آخر — **بلا تغيير في `src/use-cases/`**. **Status:** Completed · **MR:** [!41](https://gitlab.com/uxxxu/wasla/-/merge_requests/41) · **ADR:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_HTTP.md](../04-api/ORDER_HTTP.md)

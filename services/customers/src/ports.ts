@@ -190,10 +190,22 @@ export interface OrderIntakeResultOutput {
  * service does not own the order lifecycle. Adapters must throw
  * `OrderIntakeFailure` (with a reason code) rather than returning a partial
  * result, so the fail-closed path stays explicit.
+ *
+ * `context` was added in Phase 06 (MR 5/6) and is **optional**, so the in-memory
+ * adapters and the exit-gate double keep working unchanged. It exists because a
+ * handover that cannot be correlated is a handover nobody can investigate: the
+ * trace id lives in `UseCaseDeps`, not in the payload, and the payload is a
+ * published contract that must not grow a transport field.
  */
+export interface OrderIntakeCallContext {
+  /** Correlation id of the customer's request; becomes the engine's `trace_id`. */
+  readonly traceId?: string;
+}
+
 export interface OrderIntakePort {
   submitOrderRequest(
     request: OrderIntakeRequestInput,
+    context?: OrderIntakeCallContext,
   ): Promise<OrderIntakeResultOutput>;
 }
 

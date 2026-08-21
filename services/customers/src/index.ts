@@ -31,6 +31,14 @@ export { HttpIdentityLookupPort } from "./infrastructure/http-identity-lookup.js
 export type { HttpIdentityLookupOptions } from "./infrastructure/http-identity-lookup.js";
 export { HttpGeographyPort } from "./infrastructure/http-geography.js";
 export type { HttpGeographyOptions } from "./infrastructure/http-geography.js";
+// The production order-engine adapter (Phase 06 · MR 5/6). Exported because the
+// Phase 06 exit gate must test *this* adapter, not a copy of it living in a test.
+export {
+  HttpOrderIntakePort,
+  ORDER_INTAKE_PATH,
+  HTTP_ORDER_INTAKE_REASONS,
+} from "./infrastructure/http-order-intake.js";
+export type { HttpOrderIntakeOptions } from "./infrastructure/http-order-intake.js";
 
 export * as customerSchema from "./infrastructure/drizzle/schema.js";
 export { createCustomerDb } from "./infrastructure/drizzle/db.js";

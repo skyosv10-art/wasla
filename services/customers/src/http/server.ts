@@ -10,10 +10,18 @@
  *    a permissive fake (dev only — it answers «exists» for any format-valid id);
  *  - geography: HttpGeographyPort when GEOGRAPHY_SERVICE_URL is set, otherwise a
  *    fake with no zones, which rejects every stop rather than inventing one;
- *  - order intake: `UnavailableOrderIntake` — Phase 04 has no engine adapter, and
- *    the fail-closed default is chosen **explicitly** here so that «no engine» is
- *    a visible decision (reported by /health as `degraded`) instead of an
- *    accident of omission. Phase 06 replaces this line, nothing else.
+ *  - order intake (Phase 06 · MR 5/6): `HttpOrderIntakePort` when
+ *    ORDER_SERVICE_URL is set, otherwise the fail-closed `UnavailableOrderIntake`
+ *    — chosen **explicitly** so that «no engine» stays a visible decision
+ *    (reported by /health as `degraded`) instead of an accident of omission. With
+ *    the engine wired **and** Postgres wired, /health answers `ok` for the first
+ *    time in the project's history: the service can now actually complete the
+ *    thing it exists to do.
+ *
+ * ORDER_SERVICE_URL has no dev fallback that pretends to accept orders. A
+ * permissive order fake would create rows claiming a customer's order reached an
+ * engine that does not exist, which §53 forbids outright — so «no URL» means
+ * «every handover fails loudly», exactly as in Phase 04.
  *
  * The dev fallbacks are asymmetric on purpose: a missing identity service is
  * permissive (it only gates profile creation) while a missing geography service
@@ -39,6 +47,7 @@ import {
   SystemClock,
   UnavailableOrderIntake,
 } from "../infrastructure/in-memory.js";
+import { HttpOrderIntakePort } from "../infrastructure/http-order-intake.js";
 import { HttpGeographyPort } from "../infrastructure/http-geography.js";
 import { HttpIdentityLookupPort } from "../infrastructure/http-identity-lookup.js";
 import { createCustomerDb } from "../infrastructure/drizzle/db.js";
@@ -46,7 +55,7 @@ import {
   PostgresCustomerOutbox,
   PostgresCustomerRepository,
 } from "../infrastructure/drizzle/repository.js";
-import type { GeographyPort, IdentityLookupPort } from "../ports.js";
+import type { GeographyPort, IdentityLookupPort, OrderIntakePort } from "../ports.js";
 import type { UseCaseDeps } from "../use-cases/deps.js";
 
 import { createCustomerApp, type CustomerHealthDescriptor } from "./app.js";
@@ -69,6 +78,33 @@ function buildIdentityLookup(): IdentityLookupPort {
     : new PermissiveIdentityLookup();
 }
 
+/**
+ * The engine adapter, or the loud absence of one.
+ *
+ * Returned together with the health label so the two can never disagree: a
+ * process reporting `configured` while holding `UnavailableOrderIntake` would be
+ * a service that lies about being able to take orders.
+ */
+function buildOrderIntake(): {
+  orderIntake: OrderIntakePort;
+  label: "configured" | "unconfigured";
+} {
+  const baseUrl = process.env.ORDER_SERVICE_URL;
+  if (!baseUrl) {
+    // Explicit fail-closed default (ADR-009 §3): no silent success, no silent drop.
+    return { orderIntake: new UnavailableOrderIntake(), label: "unconfigured" };
+  }
+  const timeoutRaw = Number(process.env.ORDER_SERVICE_TIMEOUT_MS);
+  const timeoutMs = Number.isFinite(timeoutRaw) && timeoutRaw > 0 ? timeoutRaw : undefined;
+  return {
+    orderIntake: new HttpOrderIntakePort({
+      baseUrl,
+      ...(timeoutMs === undefined ? {} : { timeoutMs }),
+    }),
+    label: "configured",
+  };
+}
+
 function buildGeography(): GeographyPort {
   const baseUrl = process.env.GEOGRAPHY_SERVICE_URL;
   // No URL → no zones: every stop is rejected with CUSTOMER_ZONE_NOT_FOUND,
@@ -87,8 +123,7 @@ function buildWiring(): Wiring {
   const idGen = new CryptoIdGenerator();
   const identityLookup = buildIdentityLookup();
   const geography = buildGeography();
-  // Explicit fail-closed default (ADR-009 §3): no silent success, no silent drop.
-  const orderIntake = new UnavailableOrderIntake();
+  const { orderIntake, label: orderIntakeLabel } = buildOrderIntake();
 
   if (process.env.DATABASE_URL) {
     const { pool, db } = createCustomerDb({
@@ -104,7 +139,7 @@ function buildWiring(): Wiring {
         geography,
         orderIntake,
       },
-      health: { persistence: "postgres", orderIntake: "unconfigured" },
+      health: { persistence: "postgres", orderIntake: orderIntakeLabel },
       pool,
     };
   }
@@ -119,7 +154,7 @@ function buildWiring(): Wiring {
       geography,
       orderIntake,
     },
-    health: { persistence: "memory", orderIntake: "unconfigured" },
+    health: { persistence: "memory", orderIntake: orderIntakeLabel },
     pool: null,
   };
 }

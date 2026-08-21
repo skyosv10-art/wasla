@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 5/6 — **محوّل التسليم الإنتاجي**: خدمة العميل تُنادي `POST /orders/intake` على 8087 بخريطة حالات مُصرَّحة و`/health` عندها صار `ok` لأول مرة ([ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)) بعد MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -45,7 +45,7 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-21 (Phase 06 · MR 4/6 — طبقة HTTP لمحرّك الطلبات على 8087 + مقبس معاملة + نطاق مالك 404 — §10)
+آخر تحديث:      2026-08-21 (Phase 06 · MR 5/6 — محوّل التسليم الإنتاجي + خريطة الحالات + /health = ok — §10)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -440,7 +440,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 7. **تشغيل التكامل محلياً:** `createdb wasla_customer_test` ثم `DATABASE_URL=… pnpm --filter @wasla/customers-service test:integration`؛ وبلا `DATABASE_URL` تُتخطّى المجموعتان ويبقى `pnpm -r test` أخضر.
 8. **حدّ التحقّق مضبوط ولا يُنقَل:** طبقة HTTP تتحقّق من **الشكل فقط**، وكل قاعدة ذات معنى في `domain/validation.ts`. سبب ذلك هو أنت: البوت ينادي حالات الاستخدام مباشرة، فأي قاعدة تُكتب في HTTP تصبح قاعدة لا تراها القناة، فيُقبل عبر تلغرام ما يُرفض عبر HTTP. **لا تكتب تحقّقاً في `bots/customer-bot` أيضاً** — اشتقّ رسالة المستخدم من كود الخطأ المرفوع.
 9. **مفتاح الـidempotency للبوت يجب أن يكون مشتقّاً من رسالة القناة** (لا مولَّداً عند كل نقرة)، وإلا فإعادة إرسال تلغرام للتحديث نفسه تُنتج طلبين. طبقة القناة تملك منع تكرار التحديثات على مستوى البوت، لكن الطلب يحتاج مفتاحه الخاص بطول 8..128.
-10. **`/health` يبقى `degraded`** حتى يوجد مُهيّئ حقيقي لـ`OrderIntakePort` (Phase 07). لا «تُصلح» هذا في MR 5/6 بجعل الافتراضي متسامحاً: كل تسليم يجب أن يفشل مغلقاً حتى يوجد محرّك — وبوابة الخروج 6/6 هي من تُدخل **محرّكاً بديلاً (stub)** يحترم `OrderIntakeRequest`، لا مُهيّئاً متسامحاً.
+10. **~~`/health` يبقى `degraded`~~ — حُسم في Phase 06 · MR 5/6:** المُهيّئ الحقيقي (`HttpOrderIntakePort`) موجود، و`ORDER_SERVICE_URL` مضبوطاً يجعل `/health` = `ok`؛ وبغيره يبقى `degraded` وكل تسليم يفشل مغلقاً كما كان. لا «تُصلح» هذا في MR 5/6 بجعل الافتراضي متسامحاً: كل تسليم يجب أن يفشل مغلقاً حتى يوجد محرّك — وبوابة الخروج 6/6 هي من تُدخل **محرّكاً بديلاً (stub)** يحترم `OrderIntakeRequest`، لا مُهيّئاً متسامحاً.
 11. **إنشاء الطلب ليس في البوت ولن يكون في MR 6/6.** MR 5/6 أسنَدته إلى **Phase 11** (التطبيق المصغّر) لأن الطلب الصالح يحتاج محطّتين بمنطقة ومصدر وصنف مركبة ونمط سعر، و[USER_FLOWS §1 و§6](../01-product/USER_FLOWS.md) يضع الأعمال الثقيلة في التطبيق. فبوابة الخروج تُشغّل المسار **من حالة الاستخدام** (`submitOrderRequest`) لا من رسالة تلغرام: هي تُثبت أن السلسلة تعمل، لا أنها تُدار من محادثة.
 12. **بذرة المحادثة سطح عامّ الآن.** أي تدفّق لبوت السائق (Phase 06) أو الشريك (Phase 08) يجب أن يُبنى عليها لا بفرع في طبقة القناة، والحدث المحايد **مفاتيحه مُثبَّتة باختبار**: إضافة حقل قناة إليه تُفشِل `conversation.test.ts` بقصد.
 13. **لا تُصلح صمت الفشل غير المجاليّ.** فشل غير متوقّع في تدفّق يُسجَّل بـ`trace_id` ويبقى الويب هوك 202: إرجاع 5xx يجعل تيليجرام يُعيد تحديثاً مُسجَّلاً كمُعالَج فيُرفَض كتكرار — تُفقَد الرسالة **و**يُستهلك بدل المحاولات.
@@ -461,7 +461,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 و2/6 و3/6 و4/6 مدمجة · 2026-08-21)
+## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 → 5/6 مدمجة · بقي MR 6/6 · 2026-08-21)
 
 **الأساس:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) · [عقود الخدمة](../../services/orders/contracts/README.md) · [CONTAINERS §4.2](../02-architecture/CONTAINERS.md)
 
@@ -487,9 +487,9 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 | 1 | docs + contracts | ADR-010 + `services/orders/contracts/*` (schema.sql · api.openapi.yml · events.json · errors.md) + `@wasla/contracts-order` + [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) + CONTAINERS §4.2 | ✅ **منجَزة** — **108 اختباراً** (38 عقود · 31 حدود · 21 جدول انتقالات · 18 أحداث) |
 | 2 | المجال النقي | `services/orders/src/{domain,ports,use-cases,infrastructure}`: `domain/state-machine.ts` بجدول **صريح** + الكيانات + التحقّق + مصانع الأحداث + المنافذ ومُهيّئات الذاكرة — **بلا قاعدة وبلا HTTP** | ✅ **منجَزة** — **558 اختباراً** ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md) · [MR !39](https://gitlab.com/uxxxu/wasla/-/merge_requests/39)) |
 | 3 | الاستمرارية | مرآة Drizzle لـ`schema.sql` + `PostgresOrderRepository` + سجل التدقيق و`order_outbox` في **معاملة واحدة** مع تغيير الحالة + حراسة انحراف + وظيفة CI `order-db-integration` + مطابقة منافذ | ✅ **منجَزة** — **30 اختبار تكامل** (19 مستودع + 4 ذرّية + 7 مطابقة منافذ) ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md) · [MR !40](https://gitlab.com/uxxxu/wasla/-/merge_requests/40)) |
-| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8087** + المسارات السبعة + `POST /orders/intake` + مسار الانتقالات + تخطيط الأكواد الثمانية عشر + `/health` | ⬜ **التالية** |
-| 5 | سدّ دَين Phase 04 | `HttpOrderIntakePort` **إنتاجي** داخل `services/customers` بدلاً من `UnavailableOrderIntake` — فيصبح تسليم الطلب حقيقياً بين خدمتين | ⬜ |
-| 6 | بوابة الخروج | `packages/order-e2e`: رحلة طلب كاملة + **محاولة الـ441 زوجاً** + وظيفة CI + وثيقة البوابة + إغلاق المرحلة | ⬜ |
+| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8087** + المسارات السبعة + `POST /orders/intake` + مسار الانتقالات + تخطيط الأكواد الثمانية عشر + `/health` | ✅ **منجَزة** — **46 اختبار `app.inject`** (621 للخدمة) + مقبس معاملة `OrderRunner` + نطاق مالك 404 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md) · [MR !41](https://gitlab.com/uxxxu/wasla/-/merge_requests/41)) |
+| 5 | سدّ دَين Phase 04 | `HttpOrderIntakePort` **إنتاجي** داخل `services/customers` بدلاً من `UnavailableOrderIntake` — فيصبح تسليم الطلب حقيقياً بين خدمتين | ✅ **منجَزة** — **17 اختباراً على مُنصت حقيقي** (117 للحزمة) + خريطة حالات مُصرَّحة + `/health` = `ok` + تسليم فعلي بين خدمتين تعملان ([ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md) · [MR !42](https://gitlab.com/uxxxu/wasla/-/merge_requests/42)) |
+| 6 | بوابة الخروج | `packages/order-e2e`: رحلة طلب كاملة + **محاولة الـ441 زوجاً** + وظيفة CI + وثيقة البوابة + إغلاق المرحلة | ⬜ **التالية — الأخيرة في الطور** |
 
 ### ما أنجزته MR 1/6 بالضبط
 
@@ -538,12 +538,26 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - **غلاف الخطأ `{code, message, trace_id}` فقط** مطابقةً لـ`ErrorResponse`؛ اسم الحقل المخالف في الرسالة والسجلّ لا في حقل بنيوي. و**404 لمسار غير موجود لا يُترجَم إلى `ORDER_NOT_FOUND`** (اختبار صريح).
 - **الأدلّة:** `@wasla/orders-service` **621 اختباراً** (منها 46 عبر `app.inject`) · `@wasla/contracts-order` **119** · `pnpm -r typecheck` و`pnpm -r test` ✅ · تشغيل فعلي على منفذ حقيقي: `/health` = `degraded/memory` واستلام = 201.
 
-### ما تفعله MR 5/6 بالضبط (الخطوة التالية)
+### ما أنجزته MR 5/6 بالضبط ([!42](https://gitlab.com/uxxxu/wasla/-/merge_requests/42))
 
-1. استبدال `UnavailableOrderIntake` في `services/customers/src/infrastructure/in-memory.ts` بمحوّل إنتاج `HttpOrderIntakePort` ينادي `POST /orders/intake` على 8087 (المثال المكتوب أصلاً: `infrastructure/http-geography.ts`).
-2. **خرائط الحالات ليست اختيارية:** 201/200 ⇒ نجاح (الأخير إعادة تشغيل) · 409 ⇒ رفض نهائي لا يُعاد · 4xx أخرى ⇒ خطؤنا نحن (fail-closed بصفّ `submission_failed`) · 503/انعدام إجابة ⇒ قابل لإعادة المحاولة **بالمفتاح نفسه**.
-3. تمرير `Idempotency-Key` الذي ولّدته خدمة العملاء و`x-request-id` نفسه، فيصل خيط الارتباط الواحد إلى صفّ تدقيق المحرّك.
-4. `/health` في خدمة العملاء يصبح `ok` لأول مرة عند تركيب المحوّل + Postgres. و`packages/customer-e2e/src/stub-order-engine.ts` هو **مواصفة السلوك المتوقَّع**: قارِن به ولا تُعِد اختراعه.
+`UnavailableOrderIntake` لم يعد المُهيّئ الوحيد: `services/customers/src/infrastructure/http-order-intake.ts` هو محوّل التسليم الإنتاجي. التفصيل في [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)، وما يجب أن يعرفه من يكمل:
+
+- **خريطة الحالات هي المُنتَج، لا نداء الشبكة.** `201/200` نجاح (و**200 إعادة نفس المفتاح لا تعارض** — تصنيفها فشلاً يقلب صفّاً `submitted` إلى `submission_failed` عند إعادة محاولة بريئة) · `409/422` ⇒ `REJECTED` **نهائي** لأن إعادة المحاولة بنفس المفتاح لا تُغيّر الجواب أبداً · `400/415/404` وأي 4xx ⇒ `UNAVAILABLE` لأن المحرّك **لم يفهم حمولتنا** فهو خطؤنا لا رفض تجاري (نصّ عقد المحرّك يقول هذا حرفياً) · `5xx`/انقطاع ⇒ `UNAVAILABLE` قابل لإعادة المحاولة **بنفس المفتاح** · لا إجابة ⇒ `TIMEOUT`. **لا تُدمج `TIMEOUT` في `UNAVAILABLE`:** «لم يصل» و«لا نعرف» حقيقتان تشغيليتان مختلفتان عند التسوية.
+- **قبولٌ لا يُقرأ ليس قبولاً.** الرد الناجح يُتحقَّق شكلاً (`ORD-##########` + `accepted_at` غير فارغ) قبل تسميته قبولاً؛ صفّ `submitted` بلا مرجع صالح يترك طلباً لا يستطيع العميل ولا الدعم ولا السائق الرجوع إليه.
+- **العميل يرى رمزاً واحداً** (`CUSTOMER_ORDER_INTAKE_UNAVAILABLE`, 503) والتمييز الثلاثي يُسجَّل في `failure_reason_code` وحدث الفشل — للتشغيل لا للعميل (ADR-009 §3). **لا تُسرّب أسباب رفض المحرّك إلى ردّ العميل.**
+- **`OrderIntakeCallContext { traceId? }` معامل ثانٍ اختياري** في `OrderIntakePort`. اختياريّته مقصودة: `UnavailableOrderIntake` و`RecordingOrderIntake` ومحوّل بوابة Phase 04 لم تتغيّر بحرف. **لا تُضِف `traceId` إلى `OrderIntakeRequestInput`**: الحمولة عقد منشور والارتباط نقل.
+- **`ORDER_SERVICE_URL` بلا مُهيّئ تطوير متسامح** — غيابه = فشل صريح لكل تسليم. مُهيّئ «يقبل» بلا محرّك يكتب صفوفاً تقول إن طلب عميل وصل إلى محرّك غير موجود (§53). والمُهيّئ وملصق `/health` يُبنيان في دالة واحدة حتى لا تُعلن عملية `configured` وهي تحمل المُهيّئ الفاشل. `ORDER_SERVICE_TIMEOUT_MS` افتراضه 2000 لأن التسليم داخل طلب العميل: المهلة وعدٌ للعميل لا إعداد شبكة.
+- **`/health` عند خدمة العميل صار `ok`** لأول مرة في تاريخ المشروع.
+- **بوابة Phase 04 لم تُلمَس.** `packages/customer-e2e/src/order-intake-http.ts` ما زال يستخدم محوّله الخاص، وأُضيف إليه تعليق يشرح **لماذا**: البوابة إثبات مُجمَّد عن Phase 04، ولو استوردت محوّل الإنتاج لأصبح أي تغيير لاحق في خريطة الحالات إعادةَ كتابة صامتة لما تمّ التوقيع عليه.
+- **الأدلّة:** 17 اختباراً للمحوّل على **مُنصت حقيقي على منفذ محلي** (لا `fetch` مُزيَّف — كل الخطر على السلك) · `@wasla/customers-service` **117 اختباراً** · `pnpm -r typecheck` و`pnpm -r test` ✅ · تسليم حقيقي بين خدمتين تعملان: 201 ⇒ `ORD-0000000001` · إعادة نفس المفتاح ⇒ نفس المرجع بلا طلب ثانٍ · قراءة الطلب = `published` · بعميل آخر = **404** · ملاحظة 400 محرف ⇒ `UNAVAILABLE` لا `REJECTED` · `x-request-id` ظهر في سجلّ المحرّك.
+
+### ما تفعله MR 6/6 بالضبط (الخطوة التالية — وهي آخر ما يفصل Phase 06 عن الإغلاق)
+
+1. **حزمة جديدة `packages/order-e2e`** (بلا deployable، على مثال `packages/customer-e2e`): بوابة خروج Phase 06 فوق HTTP الحقيقي — `createOrderApp` مع `PostgresOrderRunner` أو `createDirectRunner`، ومعها **محوّل الإنتاج** `HttpOrderIntakePort` من خدمة العميل لا نسخة منه. البوابة التي تختبر نسخة لا تُثبت شيئاً عن الإنتاج.
+2. **المسح الكامل لجدول الانتقالات:** الأزواج الـ441 (21×21) عبر HTTP: 72 حافة شرعية تنجح والبقية تُرفض بالكود الصحيح — الجدول في `services/orders/src/domain/state-machine.ts` هو المرجع، و`shortestPath` في `src/__tests__/harness.ts` يوصلك إلى أي حالة بأقلّ الخطوات.
+3. **مسار الرحلة الكامل:** نيّة عميل ⇒ تسليم ⇒ `published` ⇒ إسناد مُسجَّل ⇒ حسم ⇒ حالة نهائية، مع تأكيد أن كل انتقال أورث صفّاً في التاريخ وأن مغلّفات الأحداث تحمل `trace_id` واحداً.
+4. **عدم تباعد الحدّين:** `OrderIntakeRequest` في عقد خدمة العميل و`intakeOrder` في عقد المحرّك يجب أن يبقيا حرفياً متطابقين — اختبار انحراف صريح، لأن التباعد هنا يكسر الطرفين بصمت.
+5. **وظيفة CI** (`order-exit-gate-e2e` على غرار `customer-exit-gate-e2e`) + **وثيقة بوابة** `docs/12-testing/PHASE06_EXIT_GATE_E2E.md` على مثال `PHASE04_EXIT_GATE_E2E.md`، ثم **إغلاق Phase 06** في `ROADMAP.md` و`MASTER_PROGRESS.md` وفتح Phase 07 بحسب المسار الحرج `00 → 01 → 02 → 04 → 06 → 07 → 09 → 20`.
 
 ### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-010)
 
@@ -560,7 +574,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - **لا ناشر لصندوق الصادر** — `PostgresOrderOutbox` يكتب الصفوف لكن لا يُرسلها لـKafka؛ محله Phase 09. والذرّية التي سُدّت هنا تضمن أن الحدث إن وُجد فهو ملتزم مع الطلب، لكنه قد يبقى غير منشور حتى ظهور الناشر.
 - **لا إلزام لهوية الفاعل** — الشكل فقط. الإلزام يدخل مع طبقة المصادقة (Phase 09+)، ولا يُغيّر جدول الانتقالات.
 - **`ORDER_TRANSITION_SPACE` ثابت مُصدَّر (441)** — لا تُعِد حسابه في MR 6/6؛ استورده كي يبقى للفضاء معنًى واحد في المستودع.
-- **`UnavailableOrderIntake` باقٍ في `services/customers`** — يُستبدل في MR 5/6 لا قبلها، فتسليم الطلب بين الخدمتين لا يزال fail-closed.
+- **~~`UnavailableOrderIntake` باقٍ في `services/customers`~~ — استُبدل في MR 5/6:** المُهيّئ الإنتاجي `HttpOrderIntakePort` هو ما يُركَّب عند وجود `ORDER_SERVICE_URL`، ويبقى `UnavailableOrderIntake` هو الافتراضي fail-closed بغيره.
 - **`maxItems: 2` على `stops`** هو الانحراف الوحيد المقصود عن عقد العميل، موثّق في مكانه: Multi-stop يوسّع الحدّ بلا هجرة.
 
 ---

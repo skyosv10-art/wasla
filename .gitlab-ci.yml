@@ -240,3 +240,40 @@ channel-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/channel-e2e test
+
+# ──────────────────────────────────────────────────────────────
+# بوابة خروج المرحلة 04 (MR 6/6) — سؤال واحد: «عميل ينشئ Order صالحاً
+# ويصل إلى محرّك الطلبات دون Matching فعلي»:
+#   packages/customer-e2e/src/__tests__/phase04-exit-gate.e2e.test.ts
+#
+# الملف نفسه يعمل داخل build-test بمخازن in-memory — فالبوابة يجب أن تُثبَت
+# على كل MR دون قاعدة بيانات — وهذه الوظيفة ترفعه على Postgres حقيقي عبر
+# المتغيّر CUSTOMER_DATABASE_URL، فيصبح ما تضيفه هو ما لا تُثبته الذاكرة:
+# أنّ صفّ الطلب ونقاطه يُكتبان فعلاً في معاملة واحدة، وأنّ فهرس
+# Idempotency-Key يمنع طلباً ثانياً على مستوى المحرّك لا على مستوى الكائن.
+#
+# المتغيّر هو CUSTOMER_DATABASE_URL وليس DATABASE_URL بقصد: الثاني هو مخزن
+# طبقة القناة (المرحلة 03)، ولو ضُبط هنا لحاول البوت استخدام جداول channel_*
+# التي لا تملكها هذه البوابة، فيصبح الفشل منسوباً إلى غير سببه. مخازن
+# القناة تبقى in-memory هنا، ولها بوابتها الخاصة (channel-exit-gate-e2e).
+#
+# قاعدة مستقلة (wasla_customer_e2e) حتى لا تتداخل مع customer-db-integration
+# وليبقى الفشل منسوباً لوظيفة واحدة. خدمتا الهوية والجغرافيا تعملان داخل
+# الاختبار بمحوّلات in-memory وتستمعان على منافذ عشوائية، فلا حاجة إلى
+# مخطّطَيهما هنا (محلّ الفحص هو العقد بين الخدمات). محرّك الطلبات بديل
+# (stub) يستمع على منفذ حقيقي ويرفض أي جسم لا يطابق OrderIntakeRequest.
+# ──────────────────────────────────────────────────────────────
+customer-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_customer_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    CUSTOMER_DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_customer_e2e"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/customer-e2e test

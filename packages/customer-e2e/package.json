@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/customer-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 04 Exit Gate — the only suite allowed to wire the customer bot, the Customer Core, identity, geography and a stub order engine together (ADR-009). Tests only: no runtime code and no exports.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/bot-runtime": "workspace:*",
+    "@wasla/channel-core": "workspace:*",
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/contracts-customer": "workspace:*",
+    "@wasla/customer-bot": "workspace:*",
+    "@wasla/customers-service": "workspace:*",
+    "@wasla/geography-service": "workspace:*",
+    "@wasla/identity-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

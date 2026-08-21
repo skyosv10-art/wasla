@@ -24,6 +24,40 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 04 MR 4/6 — طبقة HTTP لخدمة العملاء (المنفذ 8086)
+
+**Task:** تعريض حالات استخدام Customer Core عبر HTTP مطابقةً لـ`contracts/api.openapi.yml` (عشرة مسارات + `/health`)، وتخطيط كتالوج الأخطاء الثمانية عشر إلى حالات HTTP، ومحوّلات HTTP لمنفذَي الهوية والجغرافيا، وتركيب نهائي يُغلق تجمّع الاتصالات. **Status:** Completed · **MR:** [!MR_IID](https://gitlab.com/uxxxu/wasla/-/merge_requests/MR_IID) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة:** [CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)
+
+**ماذا تم إنجازه (1):** أنشأت `src/http/requests.ts` (ترجمة snake_case→camelCase بتحقّق شكلي فقط) و`errors.ts` (`CustomerError` → `{code,message,trace_id}` بحالة الكتالوج نفسها) و`app.ts` (`createCustomerApp` — عشرة مسارات، 201 مقابل 200، 204 بلا جسم للحذف، `SAVED_PLACES_LIMIT` في استجابة القائمة، `zone_path` أفضل-جهد) و`server.ts` (تركيب نهائي على 8086، Postgres عند وجود `DATABASE_URL` وإلا ذاكرة، إغلاق التجمّع في `onClose`، SIGTERM/SIGINT). وأضفت `infrastructure/http-identity-lookup.ts` و`http-geography.ts`. و`__tests__/http/app.test.ts` = **34 اختبار `app.inject`**. وفعّلت `requestIdHeader: "x-request-id"` ليعبر معرّف الارتباط من المنادي إلى `trace_id` وإلى مغلّفات الأحداث. **صفر تغيير في `src/domain/` و`src/use-cases/`.**
+
+**لماذا تم اختياره (2):** MR 4/6 هي الدفعة المُلزَمة التالية في [HANDOFF §9](HANDOFF_NEXT_STEPS.md). وبلا طبقة HTTP لا يمكن لأي مستهلك خارج العملية أن يستعمل الخدمة، ولا يمكن لبوابة خروج المرحلة (6/6) أن تشغّل مساراً حقيقياً من طرف إلى طرف.
+
+**أين تم التغيير (3):** `services/customers/src/http/{requests,errors,app,server}.ts` (جديدة) · `services/customers/src/infrastructure/{http-identity-lookup,http-geography}.ts` (جديدة) · `services/customers/src/__tests__/http/app.test.ts` (جديد) · `services/customers/src/index.ts` (تصديرات) · `services/customers/package.json` (`fastify`، `tsx`، سكربتا `dev`/`start`) · `pnpm-lock.yaml` · `docs/04-api/CUSTOMER_HTTP.md` (جديدة) · `docs/02-architecture/CUSTOMER_PERSISTENCE.md` (§7 و§8) · `docs/16-progress/{MASTER_PROGRESS,HANDOFF_NEXT_STEPS,TASK_LOG}.md`.
+
+**الملفات/الخدمات المتأثرة (4):** `@wasla/customers-service` وحدها. لا بوت مربوط بعد (MR 5/6) ولا بوابة (Phase 06)، فسطح التأثير الخارجي ما زال صفراً؛ لكن الخدمة صارت **قابلة للتشغيل** لأول مرة.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** **لا تغيير في أي عقد** — لا `api.openapi.yml` ولا `errors.md` ولا `events.json` ولا `schema.sql`، ولا كود خطأ جديد. هذه الدفعة **تنفيذٌ للعقد القائم** لا تعديل له.
+
+**كيف تم الاختبار (6):** `pnpm -r run typecheck` نظيف على 17 مشروعاً · `pnpm -r test` = **587 اختبار وحدة** ناجحة (خدمة العملاء **100**، كانت 66) · اختبارات التكامل (43) لم تُمسّ · **تشغيل حقيقي** `PORT=8099 pnpm --filter @wasla/customers-service start`: `/health` = `degraded/memory/unconfigured` · `PUT profile` = 201 ثم `GET` يعيد الاسم العربي سليماً · `POST places` بلا ترويسة = `CUSTOMER_MISSING_IDEMPOTENCY_KEY` · تسليم بمنطقة غير مسجّلة = `CUSTOMER_ZONE_NOT_FOUND` مع `trace_id: smoke-1` (انتشار `x-request-id` مُثبت) · مسار مجهول = 404 نقل.
+
+**ما المشاكل التي ظهرت (7):** (1) **`requestIdHeader` معطّل افتراضياً في Fastify 5** فكان `trace_id` محلياً للعملية ولا يعبر حدود الخدمات → فُعِّل `x-request-id` صراحةً (والأمر نفسه ما زال ناقصاً في Geography — دين مُعلن). (2) **جسم ليس JSON كان سيصير 503** لأن الملتقط الشامل يصنّف كل ما ليس `CustomerError` خطأً داخلياً، وهذا يأمر البوت بإعادة محاولة طلبٍ لن ينجح أبداً → خطأ نقل بحالة 400/415 يُخطَّط إلى `CUSTOMER_INVALID_REQUEST_BODY`. (3) `as OrderRequestDraft` من `Record<string, unknown>` رفضه `tsc` → صُرِّح المرور عبر `unknown` بتعليق يقول إن هذه الطبقة لا تدّعي صلاحية القيم. (4) استيراد `FakeIdentityLookup` غير مستعمل في `server.ts` → أُزيل.
+
+**ما الذي لم يكتمل (8):** **دَين الذرّية لم يُسدّ هنا خلافاً لما وعدت به دفعة MR 3/6.** منفذ وحدة-عمل يمسّ أربع حالات استخدام ومُهيّئين وطاقم مطابقة المنافذ، فهو دفعة كاملة لا إضافة على طبقة توصيل؛ وأُعيد إسناده إلى **Phase 09 (ناشر صندوق الصادر)** حيث يظهر أول مستهلك يتضرّر من حدثٍ ناقص. مذكور صريحاً في [CUSTOMER_PERSISTENCE.md §7](../02-architecture/CUSTOMER_PERSISTENCE.md) و[CUSTOMER_HTTP.md §8](../04-api/CUSTOMER_HTTP.md). · **لا مصادقة على المسارات** (قرار البوابة — Phase 06). · **استدعاء جغرافيا لكل منطقة مميّزة** بلا دالة دفعة. · **لا مُهيّئ حقيقي لـ`OrderIntakePort`** فـ`/health` يبقى `degraded` وكل تسليم يفشل مغلقاً — بقصد حتى Phase 07.
+
+**الخطوة التالية (9):** MR 5/6 — ربط `bots/customer-bot` بحالات الاستخدام **مباشرة** (لا HTTP) حفاظاً على حياد القناة ([ADR-007](../15-decisions/ADR-007-channel-layer-neutrality.md)): تدفّق حفظ مكان وتدفّق تقديم طلب مع مفاتيح idempotency مشتقّة من رسالة القناة.
+
+**ما الذي يعتمد عليه العمل التالي (10):** لا شيء خارجي. MR 5/6 تستهلك حالات الاستخدام القائمة، وMR 6/6 تحتاج **محرّك طلبات بديلاً** يحترم `OrderIntakeRequest` وهو داخل نطاق تلك الدفعة.
+
+**Migration/Deployment/Config (11):** لا هجرة. اعتماديتان في `services/customers`: `fastify@^5.12.1` (تشغيل) و`tsx@^4.23.12` (تطوير) + `pnpm-lock.yaml` مُحدَّث (CI بـ`--frozen-lockfile`). سكربتان جديدان: `dev` و`start`. متغيّرات بيئة: `PORT` (8086) · `HOST` · `DATABASE_URL` · `IDENTITY_SERVICE_URL` · `GEOGRAPHY_SERVICE_URL` · `IDENTITY_TIMEOUT_MS` · `GEOGRAPHY_TIMEOUT_MS` (2000). لا أسرار في الكود.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** (أ) **نقض وعد سابق**: دَين الذرّية كان مُسنَداً إلى هذه الدفعة وأُعيد إسناده إلى Phase 09 — قرار يستحق مراجعة مالك المشروع. (ب) **الخدمة بلا مصادقة** وتثق بشبكتها الداخلية؛ أي تعريض قبل Phase 06 خطر أمني مباشر. (ج) **الافتراضي المحلي للهوية متسامح** (يقبل أي `WS-`) — للتطوير فقط، وضبط `IDENTITY_SERVICE_URL` إلزامي في الإنتاج. (د) نافذة اللاذرّية ما زالت خطراً تشغيلياً قائماً.
+
+**الروابط (13):** MR [!MR_IID](https://gitlab.com/uxxxu/wasla/-/merge_requests/MR_IID) · [CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md) · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) · [GEOGRAPHY_HTTP.md](../04-api/GEOGRAPHY_HTTP.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [HANDOFF §9](HANDOFF_NEXT_STEPS.md)
+
+**الشخص/الفريق الذي يتابع (14):** Team 04 — Customer Core (MR 5/6 ثم بوابة الخروج) · Team 06 — Gateway (المصادقة) · Team 09 — Notifications/Events (الذرّية + ناشر الصادر) · Team 02 — Geography (تفعيل `requestIdHeader`).
+
+---
+
 ## 2026-08-21 · Phase 04 MR 3/6 — استمرارية Drizzle/Postgres لخدمة العملاء
 
 **Task:** استبدال مُهيّئ التخزين في الذاكرة لخدمة العملاء بمرآة Drizzle لـ`contracts/schema.sql` مع حراسة انحراف واختبارات مطابقة منافذ ووظيفة CI مستقلّة، وحسم دَين `shipment_description`. **Status:** Completed · **MR:** [!34](https://gitlab.com/uxxxu/wasla/-/merge_requests/34) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة المعمارية:** [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)

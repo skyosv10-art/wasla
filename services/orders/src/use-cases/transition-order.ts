@@ -69,6 +69,20 @@ export async function transitionOrder(
   const requirement = assignmentRequirement(command.toStatus);
   let activeAssignmentId: string | null = order.activeAssignmentId;
   if (requirement === "required" && activeAssignmentId == null) {
+    // The order row is not yet bound, so the accepted offer is read from the
+    // assignment log and bound BY THIS transition — the same UPDATE that moves
+    // the status. Binding earlier (at acceptance time) would leave an `offered`
+    // order carrying an active assignment, which `ck_orders_assignment_matches_status`
+    // rejects; binding here keeps the row legal at every instant.
+    //
+    // Still not a decision: the driver is read from what was already accepted,
+    // never from the request, so the engine records and does not choose (ADR-010 §4).
+    const accepted = (await deps.repository.listAssignments(order.id)).filter(
+      (candidate) => candidate.state === "accepted",
+    );
+    activeAssignmentId = accepted[accepted.length - 1]?.id ?? null;
+  }
+  if (requirement === "required" && activeAssignmentId == null) {
     throw new OrderError(
       "ORDER_ASSIGNMENT_REQUIRED",
       `الحالة ${command.toStatus} تستلزم إسناداً مقبولاً مُسجَّلاً`,

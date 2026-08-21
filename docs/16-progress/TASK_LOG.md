@@ -24,6 +24,56 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 06 MR 6/6 — بوابة خروج الطور فوق HTTP: 441 زوجاً على خدمتين تعملان · **Phase 06 مُغلقة**
+
+**Task:** إثبات بوابة خروج المرحلة 06 («طلب يعيش دورة حياته كاملة، ولا يصل طلب إلى حالة غير مسموح بها») على التركيب الكامل لا على وحدة، ثمّ إغلاق الطور وفتح Phase 07.
+
+### 1. ماذا تم إنجازه
+
+حزمة اختبار بحتة جديدة **`packages/order-e2e`** (`private: true`، بلا كود تشغيلي وبلا تصديرات، بلا اعتمادية جديدة على المستودع):
+
+- **`src/harness.ts`** — يُشغّل **أربعة مُنصتات حقيقية** على منافذ عشوائية: `services/identity` · `services/geography` (بذرة السعودية) · `services/customers` · `services/orders`. التسليم بين النواة والمحرّك يمرّ بـ**`HttpOrderIntakePort` الإنتاجي** من MR 5/6 لا بنسخة منه، فالطلبات موجودة في المحرّك لأنّ الكود الذي يعمل في الإنتاج وضعها هناك. مخزن المحرّك Postgres عند وجود `ORDER_DATABASE_URL` (`PostgresOrderRunner` + الـDDL مُعاد تشغيلها من `contracts/schema.sql`) وإلّا ذاكرة، والمخزن المُختار **يُطبَع في أول السجل** لأن نتيجة خضراء لا تعني شيئاً قبل معرفة ما عملت عليه.
+- **`src/__tests__/phase06-exit-gate.e2e.test.ts`** — 16 اختباراً في ستّ مجموعات: التسليم حقيقي · الرحلة الكاملة والسجلّ · **الجدول كاملاً (441 زوجاً)** · حارس انزلاق الحدّ · وعود السلسلة · صدق `/health` على الطرفين.
+- **`vitest.config.ts`** — يُضمّن `*.e2e.test.ts` صراحةً (الاستثناء الثالث المُعلَن بعد `channel-e2e` و`customer-e2e`) مع `fileParallelism: false` ومهلة 120s.
+- **`.gitlab-ci.yml`** — وظيفة **`order-exit-gate-e2e`** على `postgres:15` بقاعدة مستقلّة `wasla_order_e2e` ومتغيّر **`ORDER_DATABASE_URL`**.
+- **`services/orders/src/index.ts`** — تصديران فقط: `createOrderDb` و`PostgresOrderOutbox` (بتعليق يبرّرهما).
+- **وثيقة البوابة** `docs/12-testing/PHASE06_EXIT_GATE_E2E.md` (127 سطراً) بحدودها المُعلَنة.
+
+### 2. لماذا هكذا لا بالنسخة الأرخص
+
+- **حزمة مستقلّة لا اختبار داخل إحدى الخدمتين.** البوابة تحتاج الطرفين معاً؛ وضعها في `services/orders` يُلزم المحرّك بالاعتماد على `services/customers` — عكسٌ لاتجاه الاعتماد، ووضعها في النواة يُلزمها بمخطّط قاعدة المحرّك. ووضعها في `packages/customer-e2e` يُفسد سؤال المرحلة 04: **محرّكها البديل مُجمَّد بقصد**، ولو استُبدل بالمحرّك الحقيقي لتغيّر ما تمّ التوقيع عليه.
+- **المسار إلى كل حالة يُحسَب من الجدول لا يُكتَب بيد.** `shortestPath` في المِعْوان بحثٌ بالعرض على `allowedTargets` — قائمةُ مشيات مكتوبة يدوياً كانت ستَرِث الجدول القديم بصمت وتصير البوابة تُثبت نفسها.
+- **الرفض يُقاس بأثره لا بردّه.** بعد كل واحد من الـ369 رفضاً تُقرأ حالة الطلب من المحرّك: **رفضٌ يُغيّر الحالة أسوأ من قبول**، وهذا ما لا يظهر في اختبار يفحص رمز الاستجابة فقط.
+- **حارس الانزلاق يقرأ العقد وقت التشغيل.** قائمة `required` تُحلَّل من `api.openapi.yml` نصّياً (لا اعتمادية yaml في المستودع، ومطابقة الوثيقتين محروسة أصلاً داخل `@wasla/contracts-order`) وتُقارَن بمفاتيح ما يُنتجه `toOrderIntakeRequestDto` **فعلاً**. لا يمكن لنوعٍ أن يرى هذا الانحراف: الطرفان يستوردان النوع من الحزمة نفسها.
+- **`bindAcceptedAssignment` جُعل خامل التكرار (idempotent)** بمعالجة `ORDER_ASSIGNMENT_FORBIDDEN` كـ«مُسنَد بالفعل»، لأن المشية التي تُوصل الطلب إلى حالته قد تكون أسندت سائقاً — والرفض نفسه مُوكَّد في اختبار مستقلّ فلا يُخفى شيء.
+- **التوكيدات على رموز الأخطاء لا على النصّ العربي:** الرسالة قابلة للتحسين والرمز عقد.
+
+### 3. ما أثمرته البوابة في يومها الأول — عيبٌ إنتاجي أُوقف قبل الدمج
+
+أوّل تشغيل على **Postgres** في CI أسقط أربعة اختبارات بـ`503 ORDER_ENGINE_UNAVAILABLE` وهي خضراء على الذاكرة:
+
+- **السبب:** `resolveAssignment(accepted)` كان يُنادي `setActiveAssignment` فوراً، فيكتب صفّ طلبٍ حالته `offered` **بإسناد نشط** — وهو ما يمنعه القيد `ck_orders_assignment_matches_status`، وهو حرفياً **الصورة الرابعة للحالة المستحيلة** في ADR-010 §7. أي أن **قبول أي سائق كان يفشل في الإنتاج**، ولم يظهر لأن مُهيّئ الذاكرة كان يقبل ما ترفضه القاعدة فمرّت 621 اختباراً على حالة مستحيلة. الوثيقة كانت صحيحة والكود مخالفاً.
+- **الإصلاح (لا تجاوز):** الربط انتقل إلى `transitionOrder` — يقرأ الإسناد المقبول من سجلّ الإسنادات ويكتبه في **نفس عبارة `UPDATE`** التي تُحرّك الحالة، فلا يظهر الصفّ لحظةً في وضعٍ يرفضه القيد؛ والقبول يبقى تسجيلاً لا قراراً (السائق يُقرأ من المقبول لا من الطلب الشبكي).
+- **وسدّ الحُفرة لا الأعراض:** `InMemoryOrderRepository.setActiveAssignment` صار يفرض القيد نفسه (`ORDER_ASSIGNMENT_FORBIDDEN` / `ORDER_ASSIGNMENT_REQUIRED`)، وثلاثة اختبارات وحدة جديدة تُثبت: القبول لا يربط · الانتقال يربط بكتابة واحدة · المخزن يرفض ربطاً في حالة تمنعه. الاختبار الذي كان يُثبت السلوك الخاطئ أُعيد كتابته لا حُذف.
+
+### 4. الديون المُعلَنة (لا مكتشفة)
+
+- **مخزن العميل في الذاكرة داخل هذه البوابة** — سؤال ذرّية صفّ الطلب ونقاطه تملكه بوابة المرحلة 04 (`customer-exit-gate-e2e`)؛ تكراره هنا يضاعف سطح الفشل بلا معلومة.
+- **لا Matching** — الإسنادات تُسجَّل من الاختبار بالشكل نفسه الذي ستُسجّله المرحلة 07 (المحرّك يسجّل ولا يقرّر — ADR-010).
+- **لا تفويض ولا صلاحيات** (Phase 09) — ما يُثبَت هنا نطاق الملكية في القراءة (404 لا 403) وشكل الفاعل، لا الإذن.
+- **لا مُرحِّل لصندوق الصادر** — الأحداث تُقرأ من الصندوق مباشرةً؛ نشرها خارج الخدمة محلّه Phase 09.
+
+### 5. التفاصيل
+
+- **Files:** `packages/order-e2e/{package.json,tsconfig.json,vitest.config.ts}` · `packages/order-e2e/src/harness.ts` · `packages/order-e2e/src/__tests__/phase06-exit-gate.e2e.test.ts` · `services/orders/src/{index.ts,use-cases/transition-order.ts,use-cases/manage-assignments.ts,infrastructure/in-memory.ts,__tests__/assignments.test.ts}` · `.gitlab-ci.yml` · `docs/12-testing/PHASE06_EXIT_GATE_E2E.md` · `docs/04-api/{ORDER_HTTP.md,ORDER_INTAKE_HANDOVER.md}` · `docs/16-progress/{MASTER_PROGRESS.md,ROADMAP.md,HANDOFF_NEXT_STEPS.md,TASK_LOG.md}` · `pnpm-lock.yaml`
+- **Services:** `orders` (تصديران) · `customers` (بلا تغيير — تُستهلك كما هي) · `identity` و`geography` (تُستهلكان كما هما)
+- **Why:** بوابة الخروج هي الصيغة التنفيذية لجملة المرحلة، لا وصفٌ لها: ما لم تنجح لا تُغلق المرحلة 06.
+- **Tests:** `pnpm --filter @wasla/order-e2e test` ⇒ **16/16** (المسح كاملاً في ~1.7s، مخزن ذاكرة) · `pnpm -r test` ⇒ **1402 اختباراً ناجحاً + 1 متجاوَز** بلا قاعدة بيانات · `pnpm -r typecheck` نظيف · وظيفة `order-exit-gate-e2e` ترفع الملف نفسه على Postgres 15.
+- **Next:** **Phase 07 — Dispatch & Matching MVP**: قرار مكان المطابقة (خدمة مستقلّة لا داخل المحرّك) ومصدر قائمة المرشّحين والأمواج والمهل — يستحقّ ADR-011 قبل أول سطر. التفصيل في [HANDOFF §11](HANDOFF_NEXT_STEPS.md).
+- **Related:** [MR !43](https://gitlab.com/uxxxu/wasla/-/merge_requests/43) · [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_HTTP.md](../04-api/ORDER_HTTP.md) · [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)
+
+---
+
 ## 2026-08-21 · Phase 06 MR 5/6 — محوّل التسليم الإنتاجي: خدمة العميل تُنادي المحرّك فعلاً
 
 **Task:** استبدال `UnavailableOrderIntake` في `services/customers` بمحوّل إنتاجي `HttpOrderIntakePort` ينادي `POST /orders/intake` على 8087، بخريطة حالات مُصرَّحة تُترجم كل إجابة إلى الصفّ والحدث الصحيحين — فيصبح `/health` في خدمة العميل `ok` لأول مرة في تاريخ المشروع. **Status:** Completed · **MR:** [!42](https://gitlab.com/uxxxu/wasla/-/merge_requests/42) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة:** [ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)

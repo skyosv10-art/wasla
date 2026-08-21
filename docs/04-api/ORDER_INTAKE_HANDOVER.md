@@ -125,4 +125,6 @@
 
 ## 9. ما التالي
 
-**MR 6/6 — بوابة خروج Phase 06** (`packages/order-e2e`): تسوق **هذا المحوّل** إلى `createOrderApp` الحقيقي فوق HTTP، وتمشي مسار الطلب من الاستلام إلى حالة نهائية عبر الجدول الكامل، وتُثبت أن الحدّين (خدمة العميل ↔ المحرّك) لا يتباعدان — ثم تُغلق Phase 06.
+**~~MR 6/6~~ — منجَزة، وPhase 06 مُغلقة:** بوابة الخروج `packages/order-e2e` تسوق **هذا المحوّل بعينه** إلى `createOrderApp` الحقيقي فوق HTTP (لا نسخةً منه)، فتمشي رحلة الطلب من الاستلام إلى `completed` عبر الجدول الكامل، وتُثبت أن الحدّين لا يتباعدان بحارس يقرأ قائمة `required` من `services/orders/contracts/api.openapi.yml` **وقت التشغيل** ويقارنها بمفاتيح ما يُنتجه `toOrderIntakeRequestDto` فعلاً — 16/16 بمخزن ذاكرة وعلى Postgres. التفصيل في [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md) ([MR !43](https://gitlab.com/uxxxu/wasla/-/merge_requests/43)).
+
+**Phase 07 (Dispatch & Matching MVP) — التالية:** لا تلمس خريطة الحالات هنا؛ ما يُضاف هو مستهلك ثانٍ للمحرّك (المطابقة) عبر مسارَي الإسناد لا عبر هذا الحدّ — [HANDOFF §11](../16-progress/HANDOFF_NEXT_STEPS.md).

@@ -350,6 +350,25 @@ export class InMemoryOrderRepository implements OrderRepository {
         `الإسناد ${assignmentId} لا ينتمي إلى الطلب ${orderId}`,
       );
     }
+    // ck_orders_assignment_matches_status — enforced here too, because an
+    // adapter that accepts what the database refuses turns every in-memory test
+    // into a false negative. This exact hole let acceptance bind a driver onto an
+    // `offered` order and pass 621 tests while failing on Postgres (Phase 06 gate).
+    const requirement = assignmentRequirement(stored.order.status);
+    if (requirement === "forbidden" && assignmentId != null) {
+      throw new OrderError(
+        "ORDER_ASSIGNMENT_FORBIDDEN",
+        `الحالة ${stored.order.status} لا تجوز أن تحمل إسناداً نشطاً`,
+        { details: { from: stored.order.status } },
+      );
+    }
+    if (requirement === "required" && assignmentId == null) {
+      throw new OrderError(
+        "ORDER_ASSIGNMENT_REQUIRED",
+        `الحالة ${stored.order.status} تستلزم إسناداً نشطاً`,
+        { details: { from: stored.order.status } },
+      );
+    }
     stored.order = { ...stored.order, activeAssignmentId: assignmentId, updatedAt };
     return stored.order;
   }

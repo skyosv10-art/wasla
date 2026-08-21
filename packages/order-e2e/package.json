@@ -1,0 +1,22 @@
+{
+  "name": "@wasla/order-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 06 Exit Gate — the only suite allowed to wire the Customer Core, its production order-intake adapter and the Order Engine together over real HTTP (ADR-010). Tests only: no runtime code and no exports.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/contracts-order": "workspace:*",
+    "@wasla/customers-service": "workspace:*",
+    "@wasla/geography-service": "workspace:*",
+    "@wasla/identity-service": "workspace:*",
+    "@wasla/orders-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

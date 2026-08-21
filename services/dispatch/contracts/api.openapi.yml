@@ -1,0 +1,483 @@
+openapi: 3.0.3
+info:
+  title: WASLA Dispatch Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة التوزيع (Phase 07) وفق [ADR-011](../../../docs/15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md).
+
+    **الحدود الملزمة:**
+    - التوزيع منسّق لا حاكم: يطلب المرشحين المرتبين من `matching`، ويسجل العرض وحسمه وحالة
+      الطلب في `orders` عبر HTTP فقط. لا يقرأ جدولاً عابراً للخدمات ولا يعيد تنفيذ الترتيب.
+    - الزمن **نبضة لا مؤقت**: لا حلقة خلفية ولا `setTimeout`. المسار `POST /dispatch/tick` هو
+      الموضع المعلن الوحيد لتقديم كل ما استحق، ولذلك كل مهمة وعرض يحملان موعداً محفوظاً.
+    - كل كتابة تحمل `Idempotency-Key`، بما فيها النبضة الخالية من الجسم: إعادة النداء لا تكرر
+      قراراً سبق أن حسمته الحالة في القاعدة.
+    - هذه واجهة خدمة داخلية؛ لا تحمل اسماً أو قناة أو إحداثيات. المعرّفات العامة opaque.
+  contact:
+    name: Team 05 — Dispatch
+servers:
+  - url: http://localhost:8089
+    description: التشغيل المحلي
+
+tags:
+  - name: jobs
+    description: مهام التوزيع الصريحة لطلبات قائمة
+  - name: offers
+    description: قبول العرض أو رفضه؛ لا تُنشأ عروض من هذا الحد
+  - name: tick
+    description: نبضة تشغيلية صريحة لتقديم الاستحقاقات
+  - name: ops
+    description: التشغيل
+
+paths:
+  /health:
+    get:
+      tags: [ops]
+      operationId: getHealth
+      summary: حالة الخدمة وآخر نبضة
+      description: |
+        `last_tick_at` معلومة تشغيلية لا وعد منتجي: غيابها أو قدمها يعني أن الاستحقاقات المكتوبة
+        في القاعدة لن يتقدمها أحد. إعلان ذلك أفضل من مؤقت مخفي يعمل في نسخة ويصمت في أخرى
+        (ADR-011 القرار 3). لا يستنتج منها المستهلك أهلية سائق أو حالة طلب.
+      responses:
+        '200':
+          description: الخدمة أجابت بحالتها التشغيلية؛ قد تكون `degraded` كي يظهر العطل بدلاً من إخفائه.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+
+  /dispatch/jobs:
+    post:
+      tags: [jobs]
+      operationId: createDispatchJob
+      summary: إنشاء مهمة توزيع صريحة لطلب
+      description: |
+        ينشئ مهمة في `pending` ثم تفتحها نبضة لاحقة؛ لا يستقصي التوزيع جدول الطلبات ولا ينشئ
+        المهمة من حدث غير مستهلك بعد. عند الإنشاء يثبت نسخة القواعد وأحجام الأمواج ومهلها على
+        المهمة، فلا يغير تعديل إعداد لاحق عرضاً جارياً (ADR-011 القرار 4).
+
+        - `201` مهمة جديدة.
+        - `200` إعادة المفتاح نفسه والحمولة نفسها: المهمة واللقطة نفسيهما بلا حدث ثانٍ.
+        - `400` جسم أو رأس لا يطابق العقد.
+        - `409` المفتاح استعمل مع حمولة مختلفة، أو للطلب مهمة قائمة لا يجوز تكرارها.
+        - `422` حمولة مفهومة لكن لا يمكن بدء توزيعها منطقياً.
+        - `503` التوزيع أو منفذه الإلزامي غير متاح؛ لا يخمّن التوزيع بدلاً عن `orders` أو `matching`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDispatchJobRequest' }
+      responses:
+        '201':
+          description: أُنشئت مهمة جديدة تنتظر نبضة.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchJob' }
+        '200':
+          description: إعادة idempotency بالمفتاح والحمولة نفسيهما — النتيجة الأصلية نفسها.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchJob' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /dispatch/jobs/{job_id}:
+    get:
+      tags: [jobs]
+      operationId: getDispatchJob
+      summary: قراءة مهمة توزيع
+      description: |
+        يعيد حالة التنسيق ولقطة الإعداد ومواعيدها؛ لا يعيد قرار المطابقة أو ملف السائق، لأنهما
+        حدّان يملكان بياناتهما. `expires_at` يشرح متى تنتهي النافذة الآلية، و`escalation_expires_at`
+        يشرح متى ينتهي المسار البشري إن صُعّد.
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المهمة الموجودة.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchJob' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /dispatch/jobs/{job_id}/offers:
+    get:
+      tags: [offers]
+      operationId: listDispatchOffers
+      summary: قراءة عروض مهمة توزيع مرتبة بالموجة ثم وقت العرض
+      description: |
+        يعيد سجل العروض لتدقيق قرار التوزيع، لا قائمة المرشحين ودرجاتهم: قرار المطابقة الحساس
+        يبقى في `matching_decisions` ولا يدخل هذا الحد (ADR-011 القرار 8).
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: العروض المعروفة للمهمة؛ القائمة الفارغة تعني أن النبضة لم تفتح موجة بعد أو لم تجد مرشحاً.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchOfferList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /dispatch/tick:
+    post:
+      tags: [tick]
+      operationId: tickDispatch
+      summary: تقديم كل عرض وموجة وتصعيد استحق حتى الآن
+      description: |
+        بلا جسم عمداً: «الآن» يأتي من ساعة الخدمة المحقونة، لا من عميل يستطيع تزوير الزمن.
+        تنهي النبضة العروض المنتهية، وتفتح الموجة التالية، ثم تسجل التصعيد أو الاستنفاد حيث يلزم.
+        وهي idempotent: تكرارها لا يعيد إنهاء عرض أو فتح موجة لأن الانتقال الأول غيّر حالته.
+
+        - `200` نُفذت النبضة ويصف الملخص ما تحرك في هذا النداء، ولو كانت الأعداد صفراً.
+        - `400` رأس idempotency أو رأس طلب غير صالح.
+        - `503` منفذ `orders` أو `matching` أو التخزين غير متاح؛ يبقى الاستحقاق مكتوباً ليُعاد بنفس
+          المفتاح بدلاً من أن يتحول إلى مؤقت ضائع.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: اكتملت النبضة بلا أثر مضاعف، والملخص يبيّن القرارات التي حُسمت الآن.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TickResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /dispatch/offers/{offer_id}/accept:
+    post:
+      tags: [offers]
+      operationId: acceptDispatchOffer
+      summary: قبول عرض توزيع
+      description: |
+        القبول الأول فقط يفوز. يسجل التوزيع الحسم في `orders` عبر مفتاح حتمي مشتق من
+        `(offer_id, action)`، ثم يلغي بقية عروض الموجة بسبب `OFFER_SUPERSEDED`. لا يستبدل التوزيع
+        حكم محرك الطلبات: رفضه النهائي `409` أو `422` يبقى رفضاً مسجلاً.
+
+        - `200` قُبل العرض، أو أُعيدت نتيجة القبول نفسها بالمفتاح نفسه.
+        - `400` رأس غير صالح.
+        - `404` لا عرض بهذا المعرّف.
+        - `409` العرض حُسم سابقاً أو فاز عرض آخر أو استعمل المفتاح مع حمولة مختلفة.
+        - `422` الحسم مفهوم لكنه مرفوض نهائياً من محرّك الطلبات.
+        - `503` الحسم غير مكتمل بسبب عطل قابل للإعادة؛ لا يتحول إلى رفض سائق.
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: العرض المقبول وحالته النهائية.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchOffer' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /dispatch/offers/{offer_id}/reject:
+    post:
+      tags: [offers]
+      operationId: rejectDispatchOffer
+      summary: رفض عرض توزيع بسبب من الكتالوج
+      description: |
+        لا يقبل نصاً حراً لأن سبب الرفض حدث وتحليل وتدقيق. يسجل التوزيع الرفض في `orders` ثم تفتح
+        النبضة التالية المسار اللاحق إن استحق؛ الرفض ليس نهاية للطلب (ADR-010).
+
+        - `200` سجل الرفض بالكود المعلن، أو أعاد النتيجة نفسها بالمفتاح نفسه.
+        - `400` الجسم أو الرأس لا يطابق العقد.
+        - `404` لا عرض بهذا المعرّف.
+        - `409` العرض حُسم سابقاً أو المفتاح استعمل بحمولة أخرى.
+        - `422` الرفض مفهوم لكن محرك الطلبات رفض حسمه نهائياً.
+        - `503` عطل قابل للإعادة؛ السبب لا يبدل إلى «غير متاح».
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RejectOfferRequest' }
+      responses:
+        '200':
+          description: العرض المرفوض وحالة الرفض النهائية.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchOffer' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /dispatch/jobs/{job_id}/cancel:
+    post:
+      tags: [jobs]
+      operationId: cancelDispatchJob
+      summary: إلغاء مهمة توزيع بسبب من الكتالوج
+      description: |
+        يوقف التنسيق فقط ولا يخترع انتقالاً للطلب: من يملك إلغاء الطلب يستدعي محرّكه وفق حدّه.
+        تُلغى العروض المفتوحة بسبب `JOB_CANCELLED`، ويظل سبب المهمة المعلن قابلاً للتدقيق.
+
+        - `200` ألغيت المهمة، أو أُعيدت النتيجة نفسها بالمفتاح نفسه.
+        - `400` الجسم أو الرأس لا يطابق العقد.
+        - `404` لا مهمة بهذا المعرّف.
+        - `409` المهمة نهائية أو المفتاح استعمل بحمولة أخرى.
+        - `422` سبب الإلغاء ليس من الكتالوج أو لا يقبل من الحالة الحالية.
+        - `503` التخزين أو منفذ الحسم الإلزامي غير متاح.
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelDispatchJobRequest' }
+      responses:
+        '200':
+          description: المهمة الملغاة وحالتها النهائية.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchJob' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+components:
+  parameters:
+    JobId:
+      name: job_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    OfferId:
+      name: offer_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على كل كتابة (§43). إعادة المحاولة حقيقة شبكية لا خطأ استثنائي.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في مغلف الحدث وسجل التشغيل، لا معرّف قناة.
+      schema: { type: string, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque. لا يُحلّل ولا يثبت وجود ملف سائق.
+    OrderPublicId:
+      type: string
+      pattern: '^ORD-[0-9]{10}$'
+      description: مُعرّف طلب عام opaque تملكه خدمة orders.
+    ReasonCode:
+      type: string
+      minLength: 3
+      maxLength: 64
+      description: كود من [errors.md](errors.md)، لا نص حر ولا رسالة واجهة.
+    DispatchJobStatus:
+      type: string
+      enum: [pending, dispatching, escalated_community, assigned, exhausted, cancelled]
+    DispatchWaveStatus:
+      type: string
+      enum: [open, completed, cancelled]
+    DispatchOfferStatus:
+      type: string
+      enum: [offered, accepted, rejected, timed_out, superseded, cancelled]
+    OrderType:
+      type: string
+      enum: [ride, delivery]
+    VehicleClass:
+      type: string
+      enum: [sedan, suv, van, pickup, motorcycle, truck_small]
+
+    CreateDispatchJobRequest:
+      type: object
+      additionalProperties: false
+      required: [order_id, order_public_id, zone_id, order_type, vehicle_class]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          description: مرجع UUID opaque لطلب تملكه خدمة أخرى؛ لا FK عبر حدود الخدمات.
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        zone_id:
+          type: string
+          format: uuid
+          description: مستوى المنطقة للمطابقة؛ لا إحداثيات أو عنوان حر.
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+
+    DispatchRulesSnapshot:
+      type: object
+      required: [ruleset_version, wave_size, offer_timeout_seconds, max_waves, escalation_timeout_seconds]
+      properties:
+        ruleset_version:
+          type: integer
+          minimum: 1
+        wave_size:
+          type: integer
+          minimum: 1
+        offer_timeout_seconds:
+          type: integer
+          minimum: 1
+        max_waves:
+          type: integer
+          minimum: 1
+        escalation_timeout_seconds:
+          type: integer
+          minimum: 1
+      description: لقطة مثبتة عند الإنشاء؛ ليست معرف إعداد يُعاد حله لاحقاً.
+
+    DispatchJob:
+      type: object
+      required:
+        [id, order_id, order_public_id, zone_id, order_type, vehicle_class, status, rules,
+         expires_at, escalation_expires_at, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        order_id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        zone_id: { type: string, format: uuid }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        status: { $ref: '#/components/schemas/DispatchJobStatus' }
+        status_reason_code:
+          oneOf: [{ $ref: '#/components/schemas/ReasonCode' }, { type: 'null' }]
+        rules: { $ref: '#/components/schemas/DispatchRulesSnapshot' }
+        expires_at:
+          type: string
+          format: date-time
+          description: نهاية النافذة الآلية المحفوظة؛ النبضة فقط تقدمها.
+        escalation_expires_at:
+          type: string
+          format: date-time
+          description: نهاية التصعيد المحفوظة، حتى لا تبقى مهمة بشرية بلا نهاية.
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    DispatchOffer:
+      type: object
+      required: [id, job_id, wave_id, driver_public_id, status, offered_at, expires_at, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        wave_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        status: { $ref: '#/components/schemas/DispatchOfferStatus' }
+        reason_code:
+          oneOf: [{ $ref: '#/components/schemas/ReasonCode' }, { type: 'null' }]
+        offered_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        responded_at:
+          oneOf: [{ type: string, format: date-time }, { type: 'null' }]
+        resolved_at:
+          oneOf: [{ type: string, format: date-time }, { type: 'null' }]
+        created_at: { type: string, format: date-time }
+
+    DispatchOfferList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/DispatchOffer' }
+
+    RejectOfferRequest:
+      type: object
+      additionalProperties: false
+      required: [reason_code]
+      properties:
+        reason_code:
+          type: string
+          enum: [DRIVER_DECLINED, DRIVER_UNAVAILABLE, DRIVER_VEHICLE_ISSUE]
+          description: كود رفض مُغلق؛ لا نمرر سبباً كتبه السائق إلى الحدث أو التحليل.
+
+    CancelDispatchJobRequest:
+      type: object
+      additionalProperties: false
+      required: [reason_code]
+      properties:
+        reason_code:
+          type: string
+          enum: [ORDER_CANCELLED, DISPATCH_CANCELLED_BY_REQUESTER, ORDER_ENGINE_REJECTED]
+
+    TickResult:
+      type: object
+      required: [tick_at, timed_out_offers, opened_waves, escalated_jobs, exhausted_jobs]
+      properties:
+        tick_at:
+          type: string
+          format: date-time
+          description: الساعة المحقونة التي قورنت بها الاستحقاقات، لا وقتاً أرسله العميل.
+        timed_out_offers: { type: integer, minimum: 0 }
+        opened_waves: { type: integer, minimum: 0 }
+        escalated_jobs: { type: integer, minimum: 0 }
+        exhausted_jobs: { type: integer, minimum: 0 }
+
+    Health:
+      type: object
+      required: [status, service, persistence, last_tick_at]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        service: { type: string, const: dispatch-service }
+        persistence: { type: string, enum: [postgres, memory] }
+        last_tick_at:
+          oneOf: [{ type: string, format: date-time }, { type: 'null' }]
+          description: آخر نبضة مكتملة؛ null يعني أن لا نبضة نجحت منذ بدء القياس.
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: 'كود ثابت؛ الاختبارات والبرامج تتحقق منه لا من النص.' }
+        message: { type: string }
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: المهمة أو العرض غير موجود.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض حالة أو إعادة مفتاح بحمولة مختلفة أو تكرار قرار حُسم.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: حمولة صحيحة شكلياً لكنها غير مقبولة منطقياً أو رُفضت نهائياً من محرك الطلبات.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: تخزين أو منفذ إلزامي غير متاح؛ إعادة المحاولة بالمفتاح نفسه آمنة.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

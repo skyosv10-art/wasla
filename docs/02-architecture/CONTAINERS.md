@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 37 (Data Architecture) و38 (قاعدة البيانات) و41 (Event Bus) و142 (Queue Strategy) و143 (Object Storage) من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ خدمة Customer Core §4.1 — Phase 04: العقود والأنواع المُكتبة مُنفَّذة) (+ خدمة Order Engine §4.2 — Phase 06: العقود والأنواع المُكتبة وجدول الانتقالات موثّقة) (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
+> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ خدمة Customer Core §4.1 — Phase 04: العقود والأنواع المُكتبة مُنفَّذة) (+ خدمة Order Engine §4.2 — Phase 06: العقود والأنواع المُكتبة وجدول الانتقالات موثّقة) (+ خدمتا Matching وDispatch §4.3 — Phase 07: العقود والأنواع المُكتبة موثّقة) (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
 
 ---
 
@@ -105,6 +105,37 @@ orders               → notifications (Phase 09)   (عبر Outbox فقط — ل
 - **القناة**: لا `chat_id` ولا Telegram في أي عمود أو حمولة حدث (ADR-007).
 
 الأنواع المُكتبة في `packages/contracts/order/` (`@wasla/contracts-order`).
+
+### 4.3 خدمتا Matching وDispatch — Phase 07
+
+خدمتان **موجودتان في الشجرة الأصلية** أعلاه (`matching` · `dispatch`)، فلا انحراف في الموضع: [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) يُثبّت **حدودهما** وسببَ بقائهما خدمتين لا واحدة. القاعدة في §16: **لا نخلط بين Matching وDispatch** — سؤال «من يصلح؟» جواب دالّة على بيانات، وسؤال «من يأخذه الآن؟» جواب مهمّة لها حالة وزمن؛ وخلطهما يُنتج نظاماً لا يمكن أن تُجيب فيه عن «لماذا هذا السائق؟» بمعزل عن «لماذا الآن؟».
+
+| الخدمة | المسار | الغرض | الحالة |
+|---|---|---|---|
+| matching | `services/matching/` | إسقاط الترشيح · الفلاتر الصلبة · الترتيب الموزون بنسخة قواعد مُقفَلة · سجل قرارات المطابقة | **العقود مُنفَّذة (MR 1/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/matching/contracts/README.md) |
+| dispatch | `services/dispatch/` | مهمّة التوزيع · الأمواج · العروض ومهلها · النبضة · التصعيد إلى المجتمع | **العقود مُنفَّذة (MR 1/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/dispatch/contracts/README.md) |
+
+المنافذ: **matching = 8088** · **dispatch = 8089** (بعد `orders` = 8087 و`customers` = 8086).
+
+اتجاه الاعتماد أحادي وملزم، ولا يُعكَس:
+
+```text
+dispatch  → matching   (طلب مرشّحين مرتّبين — عبر منفذ HTTP)
+dispatch  → orders     (تسجيل عرض · حسم عرض · تحريك الحالة — عبر منفذ HTTP لا جدول)
+matching  → geography  (تحقّق المنطقة وهرمها — عبر منفذ)
+orders    ↛ dispatch   (المحرّك لا يعرف أنّ التوزيع موجود)
+matching  ↛ dispatch   (المطابقة لا تعرف أنّ عرضاً أُرسل)
+```
+
+**ما لا تعرفه المطابقة:** العرض والموجة والمهلة، ولا تكتب في محرّك الطلبات شيئاً أبداً. **وما لا تعرفه التوزيع:** الترتيب والأوزان والأهلية — يطلب المرشّحين ولا يُعيد حسابهم.
+
+**ثلاثة حدود يفرضها حارس اختبار لا مراجعة بشرية:**
+
+- **مرجع السائق opaque بلا FK** (`^WS-[0-9]{10}$`): Phase 05 (Driver Core) لم تبدأ وهي خارج المسار الحرج، فالأهلية **مُدّعاة** ومصدر الادّعاء مخزّن مع الصفّ (`eligibility_source`)، والمجهول ليس مرشّحاً (fail-closed).
+- **الزمن نبضة لا مؤقّت**: لا حلقة خلفية ولا `setTimeout`؛ كل استحقاق مكتوب في القاعدة و`POST /dispatch/tick` هو الموضع المُعلَن الوحيد لتقديمه. لذلك `/health` عند التوزيع يُعلن `last_tick_at`.
+- **الخصوصية**: `zone_id` لا إحداثيات (ADR-006) · أكواد لا نصّاً حرّاً · لا `chat_id` (ADR-007) · **ولا مُعرّفات مرشّحين ولا درجاتهم في أي حدث** (ADR-011 القرار 8) — تُقرأ من سجل التدقيق فقط.
+
+الأنواع المُكتبة في `packages/contracts/matching/` (`@wasla/contracts-matching`) و`packages/contracts/dispatch/` (`@wasla/contracts-dispatch`).
 
 ---
 

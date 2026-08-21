@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/dispatch/events/v1",
+  "title": "WASLA Dispatch Domain Events v1",
+  "description": "أحداث خدمة التوزيع (Phase 07). الخصوصية حَدّ عقدي وفق ADR-011 القرار 8: المنطقة zone_id لا إحداثيات، وأكواد أسباب لا نص حر، ولا معرّف قناة ولا اسم سائق. قرار التوزيع وحدثه يكتبان في dispatch_outbox في المعاملة نفسها؛ التوصيل إلى القنوات مؤجل ولا يغير حمولة الحدث.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلف موحد لكل أحداث وصلة. لا حدث بلا مغلف، وproducer ثابت كي لا يخلط المستهلك قرار التوزيع بقرار المطابقة أو حالة الطلب.",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string", "minLength": 3 },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "const": "dispatch-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "enum": ["dispatch_job", "dispatch_offer"] },
+            "id": { "type": "string" }
+          }
+        },
+        "trace_id": { "type": ["string", "null"], "maxLength": 128 }
+      }
+    },
+    "OrderPublicId": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$",
+      "description": "مرجع طلب عام opaque تملكه orders؛ لا يستنتج منه ترتيب أو وجود سجل محلي."
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$",
+      "description": "مرجع سائق عام opaque؛ لا اسم ولا ملف سائق في الحدث."
+    },
+    "ReasonCode": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "كود من كتالوج errors.md، لا نص حر حتى تبقى التحليلات مجمعة والحمولة آمنة."
+    },
+    "DispatchJobCreatedV1": {
+      "type": "object",
+      "description": "أُنشئت مهمة صريحة في pending. لا تبدأ الأمواج هنا: النبضة هي التي تقدم الزمن وتفتحها.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.job_created" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "order_id", "order_public_id", "zone_id", "ruleset_version", "status", "expires_at", "escalation_expires_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "order_id": { "type": "string", "format": "uuid" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "zone_id": { "type": "string", "format": "uuid", "description": "مستوى المنطقة فقط؛ لا إحداثيات." },
+            "ruleset_version": { "type": "integer", "minimum": 1 },
+            "status": { "const": "pending" },
+            "expires_at": { "type": "string", "format": "date-time" },
+            "escalation_expires_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchWaveOpenedV1": {
+      "type": "object",
+      "description": "فتحت النبضة موجة متزامنة. العدد يشرح حجم الدفعة ولا يكشف قائمة المرشحين أو درجاتهم.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.wave_opened" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "wave_id", "wave_number", "offer_count", "expires_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "wave_id": { "type": "string", "format": "uuid" },
+            "wave_number": { "type": "integer", "minimum": 1 },
+            "offer_count": { "type": "integer", "minimum": 0 },
+            "expires_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchOfferSentV1": {
+      "type": "object",
+      "description": "أُرسل عرض موجّه. هو أثر قرار التوزيع لا دليل أهلية السائق ولا قناة التوصيل.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.offer_sent" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "offer_id", "wave_id", "driver_public_id", "expires_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "offer_id": { "type": "string", "format": "uuid" },
+            "wave_id": { "type": "string", "format": "uuid" },
+            "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "expires_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchOfferAcceptedV1": {
+      "type": "object",
+      "description": "قُبل العرض الفائز. قبول واحد للمهمة تقيده القاعدة، ثم تُلغى العروض الأخرى بسبب OFFER_SUPERSEDED.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.offer_accepted" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "offer_id", "driver_public_id", "reason_code", "accepted_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "offer_id": { "type": "string", "format": "uuid" },
+            "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "reason_code": { "const": "OFFER_ACCEPTED" },
+            "accepted_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchOfferRejectedV1": {
+      "type": "object",
+      "description": "رفض السائق العرض بكود مغلق. الرفض لا ينهي الطلب؛ النبضة تقرر الموجة التالية أو التصعيد.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.offer_rejected" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "offer_id", "driver_public_id", "reason_code", "rejected_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "offer_id": { "type": "string", "format": "uuid" },
+            "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "reason_code": { "$ref": "#/$defs/ReasonCode" },
+            "rejected_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchOfferTimedOutV1": {
+      "type": "object",
+      "description": "انتهت مهلة عرض في نبضة صريحة. ليس هذا دليلاً على رفض ولا يحول الغموض الشبكي إلى عدم توفر.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.offer_timed_out" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "offer_id", "driver_public_id", "reason_code", "timed_out_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "offer_id": { "type": "string", "format": "uuid" },
+            "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "reason_code": { "const": "OFFER_TIMED_OUT" },
+            "timed_out_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchEscalatedV1": {
+      "type": "object",
+      "description": "استنفدت الأمواج الآلية وسُجل قرار التصعيد. الحدث قرار للقناة لا تعليمات نشر ولا معرّف مجموعة.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.escalated" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "order_public_id", "zone_id", "reason_code", "escalation_expires_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "zone_id": { "type": "string", "format": "uuid" },
+            "reason_code": { "const": "ALL_WAVES_EXHAUSTED" },
+            "escalation_expires_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchJobExhaustedV1": {
+      "type": "object",
+      "description": "انتهى التصعيد بلا قبول. على منفذ orders نقل الطلب إلى no_driver_found بسبب NO_DRIVER_AVAILABLE؛ التوزيع لا ينسخ آلة حالته.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.job_exhausted" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "order_public_id", "reason_code", "exhausted_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "reason_code": { "const": "NO_DRIVER_AVAILABLE" },
+            "exhausted_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "DispatchJobCancelledV1": {
+      "type": "object",
+      "description": "أُوقفت مهمة التوزيع بسبب معلن. لا يعني الحدث أن التوزيع يملك إلغاء الطلب أو سجله.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "dispatch.job_cancelled" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["job_id", "order_public_id", "reason_code", "cancelled_at"],
+          "additionalProperties": false,
+          "properties": {
+            "job_id": { "type": "string", "format": "uuid" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "reason_code": { "$ref": "#/$defs/ReasonCode" },
+            "cancelled_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/orders/events/v1",
+  "title": "WASLA Order Engine Domain Events v1",
+  "description": "أحداث محرّك الطلبات (Phase 06). القاعدة الحاكمة للخصوصية (ADR-010 القرار 7): الحدث يحمل مُعرّفات opaque وأكواد أسباب من كتالوج ومستوى منطقة فقط — لا إحداثيات خام، ولا نصّاً كتبه مستخدم (label · notes · shipment.description)، ولا مُعرّف قناة (chat_id · telegram). حارس تنقيب في @wasla/contracts-order يبحث في كل حمولة عن هذه الحقول ويُفشل البناء عند وجودها. كل انتقال حالة يُنتج حدثاً في المعاملة نفسها، فلا حالة بلا حدثها.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "orders-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "order",
+                "order_assignment"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        }
+      }
+    },
+    "OrderPublicId": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$",
+      "description": "نصّ opaque للمستهلك: لا يُحلَّل ولا يُشتَقّ منه ترتيب."
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$"
+    },
+    "ReasonCode": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "من كتالوج errors.md فقط — لا نصّ حرّ."
+    },
+    "OrderStatus": {
+      "type": "string",
+      "enum": [
+        "published",
+        "searching",
+        "offered",
+        "negotiating",
+        "accepted",
+        "assigned",
+        "driver_en_route",
+        "arrived",
+        "in_progress",
+        "completed",
+        "driver_rejected",
+        "driver_timeout",
+        "expired",
+        "no_driver_found",
+        "customer_cancelled",
+        "driver_cancelled",
+        "partner_cancelled",
+        "blocked",
+        "failed",
+        "payment_disputed",
+        "under_review"
+      ]
+    },
+    "ZoneRef": {
+      "type": "object",
+      "description": "مستوى المنطقة فقط: كافٍ للمطابقة والتحليل، وغير كافٍ لتحديد شخص.",
+      "required": [
+        "zone_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ActorType": {
+      "type": "string",
+      "enum": [
+        "system",
+        "customer",
+        "driver",
+        "partner",
+        "admin"
+      ]
+    },
+    "OrderCreatedV1": {
+      "type": "object",
+      "description": "أُنشئ طلب بحالة `published`. لا حدث «مسوّدة» لأن لا حالة مسوّدة (ADR-010 القرار 2). Phase 07 تستهلكه لبدء البحث.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "order.created"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "order_public_id",
+            "customer_public_id",
+            "order_type",
+            "vehicle_class",
+            "price_mode",
+            "status",
+            "stops",
+            "requested_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "customer_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "order_type": {
+              "type": "string",
+              "enum": [
+                "ride",
+                "delivery"
+              ]
+            },
+            "vehicle_class": {
+              "type": "string",
+              "enum": [
+                "sedan",
+                "suv",
+                "van",
+                "pickup",
+                "motorcycle",
+                "truck_small"
+              ]
+            },
+            "price_mode": {
+              "type": "string",
+              "enum": [
+                "customer_offer",
+                "negotiable"
+              ]
+            },
+            "offered_amount_minor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "بالوحدة الصغرى. المبلغ الذي عرضه العميل ليس بياناً شخصياً، وPhase 07 تحتاجه للترتيب."
+            },
+            "currency": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Z]{3}$"
+            },
+            "status": {
+              "const": "published"
+            },
+            "stops": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "بترتيبها، بمستوى المنطقة فقط: لا إحداثيات ولا تسميات كتبها المستخدم.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "zone_id"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "pickup",
+                      "dropoff"
+                    ]
+                  },
+                  "zone_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            },
+            "requested_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "OrderStatusChangedV1": {
+      "type": "object",
+      "description": "انتقلت حالة الطلب. يُنتَج لكل انتقال بلا استثناء — بما فيه الإنشاء (from = null) والانتقالات النهائية. هو الحدث الذي تبني عليه Phase 07 (الإرسال) وPhase 09 (الإشعار) وPhase 19 (التحليلات).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "order.status_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "order_public_id",
+            "customer_public_id",
+            "to_status",
+            "sequence",
+            "actor_type",
+            "is_terminal"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "customer_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "from_status": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/OrderStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "null مرّة واحدة فقط: الإنشاء."
+            },
+            "to_status": {
+              "$ref": "#/$defs/OrderStatus"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "ترتيب الانتقال على الطلب. المستهلك يستخدمه لكشف الأحداث المتأخّرة أو المُعاد تسليمها (at-least-once)."
+            },
+            "reason_code": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReasonCode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "actor_type": {
+              "$ref": "#/$defs/ActorType"
+            },
+            "actor_ref": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "مُعرّف عام opaque — لا مُعرّف قناة."
+            },
+            "driver_public_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "سائق الإسناد النشط إن وُجد. مرجع opaque لا ملفّ سائق."
+            },
+            "is_terminal": {
+              "type": "boolean",
+              "description": "هل الحالة نهائية (لا انتقال بعدها)؟ يُحسَب من جدول الانتقالات لا يُكتَب يدوياً، فلا يفترق التصنيف عن القاعدة."
+            }
+          }
+        }
+      }
+    },
+    "OrderAssignmentOfferedV1": {
+      "type": "object",
+      "description": "سُجّل عرض إسناد على سائق (§16). المحرّك يسجّل ما قرّرته Phase 07 — لا يُقرّره.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "order.assignment_offered"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "order_public_id",
+            "driver_public_id",
+            "sequence",
+            "offered_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "offered_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "OrderAssignmentResolvedV1": {
+      "type": "object",
+      "description": "انتهى عرض الإسناد: قُبل أو رُفض أو انتهت مهلته أو أُلغي. الرفض والانتهاء لا يُنهيان الطلب (ADR-010 القرار 3.5) — من يستهلك هذا الحدث لا يفترض إنهاءً.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "order.assignment_resolved"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "order_public_id",
+            "driver_public_id",
+            "sequence",
+            "assignment_state",
+            "resolved_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "assignment_state": {
+              "type": "string",
+              "enum": [
+                "accepted",
+                "rejected",
+                "expired",
+                "cancelled"
+              ]
+            },
+            "reason_code": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReasonCode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resolved_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}

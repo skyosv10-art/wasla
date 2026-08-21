@@ -2,6 +2,8 @@
 
 > **النوع:** وثيقة معمارية تنفيذية · **المرحلة:** Phase 03 — Telegram Channel Foundation · **الدفعة:** MR 4/7
 > **Last Updated:** 2026-08-21 · **Status:** مُنفَّذ (90 اختبار وحدة في الطبقة · 438 في المستودع بعد MR 6)
+> **مُحدَّث لاحقاً:** Phase 04 · MR 5/6 أضاف بذرة المحادثة (`onConversation`) وربط تدفقات بوت العميل — التفصيل في [CUSTOMER_BOT_FLOWS.md](CUSTOMER_BOT_FLOWS.md)، وهذه الوثيقة تبقى مرجع الطبقة المحيّدة.
+>
 > **Related:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) (القرار الحاكم) · [CHANNEL_LAYER_CORE.md](CHANNEL_LAYER_CORE.md) (النواة والمنافذ) · [CHANNEL_TELEGRAM_ADAPTER.md](CHANNEL_TELEGRAM_ADAPTER.md) (المُهيّئ) · [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) (المجموعات · MR 6) · [CONTAINERS.md §2 و§5.1](CONTAINERS.md) · [عقد القناة](../../packages/channel-core/contracts/README.md) · [كتالوج الأخطاء](../../packages/channel-core/contracts/errors.md) · [SECURITY_RULES](../00-rules/SECURITY_RULES.md)
 
 ---
@@ -103,6 +105,10 @@ bots/<customer|driver|partner>-bot/src/
 | `SUPPORT_GROUP_CHAT_IDS` | لا | — | مجموعات الدعم، مفصولة بفواصل ([CHANNEL_GROUPS.md](CHANNEL_GROUPS.md)) — مرجع فارغ أو مكرَّر بدورين يمنع الإقلاع |
 | `ESCALATION_GROUP_CHAT_IDS` | لا | — | مجموعات التصعيد؛ الغرفة غير المُعلَنة تُسجَّل بلا أي ردّ |
 | `COMMUNITY_GROUP_CHAT_IDS` | لا | — | مجموعات مجتمع الكباتن |
+| `CUSTOMER_DATABASE_URL` | لا | — | **بوت العميل وحده** (Phase 04): بوّابة تدفقات المجال؛ بغيابه لا يُسجَّل `/places` ولا `/orders` ([CUSTOMER_BOT_FLOWS §8](CUSTOMER_BOT_FLOWS.md)) |
+| `GEOGRAPHY_SERVICE_URL` | لا | — | **بوت العميل وحده**: مراجع المناطق داخل نواة العميل؛ لا تحتاجه القراءات الثلاث |
+
+> `DATABASE_URL` (مخازن القناة) و`CUSTOMER_DATABASE_URL` (نواة العميل) **متغيّران منفصلان** بقصد: قاعدة القناة تحتفظ بمنع التكرار وطابور التسليم، وقاعدة العميل ببيانات شخصية. مرجع واحد لهما جائز في التطوير، لكن الكود لا يفترضه أبداً.
 
 **فشل الإقلاع صريح:** `loadBotConfig` يرمي خطأً **يسمّي المتغيّر الناقص ولا يطبع قيمته أبداً** (SECURITY_RULES). لا قيم افتراضية للأسرار ولا وضع «تطوير» يتجاوز الفحص، لأن قيمة افتراضية لرمز webhook تعني بوتاً بلا مصادقة في أول نشر يُنسى فيه المتغيّر.
 
@@ -172,6 +178,8 @@ POST {IDENTITY_SERVICE_URL}/identity/resolve
 | واجهات `apps/*-mini-app` | الرابط يفتح عنواناً من البيئة، والواجهة نفسها ليست في هذه المرحلة | مرحلة الواجهات |
 | `telegram_username` في تهيئة الهوية | لا يُرسَل (فجوة §6) | مرحلة القناة الثانية |
 | موجّه القناة داخل `notifications` | `POST /channel/messages` يُنادى مباشرة | مرحلة الإشعارات |
+| ~~سلوك مجال داخل بوت~~ | **أُنجز في Phase 04 · MR 5/6**: بذرة `onConversation` تسمح للجذر بتسليم دالّة واحدة تأخذ حدثاً محايداً وتُعيد نصاً أو صمتاً؛ فطبقة القناة بقيت بلا أي فرع مجال، وبوت العميل ربط `/start` و`/places` و`/orders` | ✅ [CUSTOMER_BOT_FLOWS.md](CUSTOMER_BOT_FLOWS.md) |
+| تدفقات مجال لبوتَي السائق والشريك | البذرة متاحة لهما ولا تدفّق مربوطاً؛ مسارهما كما كان | Phase 06 (السائق) · Phase 08 (الشريك) |
 
 ---
 

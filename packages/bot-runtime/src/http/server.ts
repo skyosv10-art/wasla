@@ -14,6 +14,7 @@ import type { FastifyInstance } from "fastify";
 import type { BotKind } from "@wasla/contracts-channel";
 
 import { loadBotConfig, type BotConfig, type EnvBag } from "../config.js";
+import type { ConversationHandler } from "../conversation.js";
 import { buildBotRuntime, type BotRuntime, type BuildBotRuntimeOptions } from "../runtime.js";
 
 import { createBotApp } from "./app.js";
@@ -21,6 +22,14 @@ import { createBotApp } from "./app.js";
 export interface StartBotOptions extends BuildBotRuntimeOptions {
   readonly env?: EnvBag;
   readonly logger?: boolean;
+  /**
+   * The bot's domain flow, if it has one.
+   *
+   * Passed through untouched: this launcher assembles *channel* dependencies, and
+   * a domain flow is assembled by the root that owns the domain (ADR-007 §1). A
+   * bot without one behaves exactly as it did in Phase 03.
+   */
+  readonly onConversation?: ConversationHandler;
 }
 
 /** Alias used by the composition roots, whose vocabulary is "overrides". */
@@ -52,6 +61,9 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
       launch: runtime.launch,
     },
     webhookSecret: config.webhookSecret,
+    ...(options.onConversation === undefined
+      ? {}
+      : { onConversation: options.onConversation }),
     // Group replies carry a deep link; a bot without a link template answers in
     // text instead of failing every group reply on a missing template.
     groupLinkAvailable: config.presence.deepLinkTemplate !== undefined,

@@ -1,0 +1,590 @@
+openapi: 3.1.0
+info:
+  title: WASLA Customer Core API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة Customer Core (Phase 04) وفق ADR-009.
+
+    - ملف العميل **ملفُّ دور** مفتاحه `wasla_public_id` (مرجع opaque) — لا FK إلى Identity، ووجوده لا يمنع ملف سائق للشخص نفسه.
+    - كل نقطة في الطلب تُعرَّف بـ`zone_id` من هرم الجغرافيا؛ الإحداثية اختيارية **للعرض والتسليم** ولا تُقرّر تغطية ولا مطابقة.
+    - السعر وضعان صريحان: `customer_offer` بمبلغ إلزامي (وحدة صغرى، عدد صحيح) أو `negotiable` بلا مبلغ. لا سعر استرشادي في هذه المرحلة.
+    - الخدمة **لا تُنشئ Order ولا تكتب في محرّك الطلبات**: تُسلّم نيّة مُتحقَّقة عبر منفذ واحد، والمعرّف العام للطلب يملكه المحرّك (Phase 06).
+    - `Idempotency-Key` إلزامي على إنشاء طلب وعلى إضافة مكان محفوظ (§43) — تكرار المفتاح يُعيد نفس الكيان بـ200.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8086
+    description: Local development
+
+tags:
+  - name: profile
+    description: ملف العميل
+  - name: saved-places
+    description: الأماكن المحفوظة
+  - name: order-requests
+    description: طلبات العميل (معاينة + إنشاء + استعلام)
+  - name: ops
+    description: تشغيل
+
+paths:
+  /customers/{waslaPublicId}/profile:
+    get:
+      tags: [profile]
+      summary: ملف العميل
+      operationId: getCustomerProfile
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      responses:
+        '200':
+          description: ملف العميل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    put:
+      tags: [profile]
+      summary: إنشاء/تحديث ملف العميل (idempotent بطبيعته)
+      operationId: upsertCustomerProfile
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpsertCustomerProfileRequest' }
+      responses:
+        '200':
+          description: حُدّث ملف قائم
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerProfile' }
+        '201':
+          description: أُنشئ ملف جديد
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{waslaPublicId}/places:
+    get:
+      tags: [saved-places]
+      summary: قائمة الأماكن المحفوظة
+      operationId: listSavedPlaces
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      responses:
+        '200':
+          description: الأماكن المحفوظة مرتّبة بالأحدث استعمالاً ثم بالإنشاء
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, limit]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SavedPlace' }
+                  limit:
+                    type: integer
+                    description: الحد الأقصى المسموح لهذا العميل
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [saved-places]
+      summary: إضافة مكان محفوظ
+      operationId: createSavedPlace
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSavedPlaceRequest' }
+      responses:
+        '200':
+          description: نفس Idempotency-Key سُجّل سابقاً — يُعاد المكان نفسه بلا إنشاء ثانٍ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedPlace' }
+        '201':
+          description: أُضيف المكان
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedPlace' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{waslaPublicId}/places/{placeId}:
+    delete:
+      tags: [saved-places]
+      summary: حذف مكان محفوظ
+      operationId: deleteSavedPlace
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/PlaceId'
+      responses:
+        '204': { description: حُذف المكان (أو كان محذوفاً — العملية idempotent) }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{waslaPublicId}/order-requests/preview:
+    post:
+      tags: [order-requests]
+      summary: معاينة الطلب — تحقّق كامل بلا أي كتابة وبلا تسليم
+      operationId: previewOrderRequest
+      description: |
+        نفس تحقّق الإنشاء بالضبط (نفس الأكواد)، لكن بلا صفّ في قاعدة البيانات وبلا نداء للمحرّك.
+        المعاينة **لا تُقدّر سعراً ولا مسافة** (ADR-009 §6): تُعيد ما أدخله العميل مُطبَّعاً ومُسمّى.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderRequestInput' }
+      responses:
+        '200':
+          description: الطلب صالح — هذه صورته قبل الإنشاء
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderRequestPreview' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{waslaPublicId}/order-requests:
+    get:
+      tags: [order-requests]
+      summary: طلبات العميل التي أنشأها من هذه الخدمة
+      operationId: listOrderRequests
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: الطلبات مرتّبة بالأحدث
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/OrderRequest' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [order-requests]
+      summary: إنشاء طلب وتسليمه إلى محرّك الطلبات
+      operationId: createOrderRequest
+      description: |
+        يُتحقّق من الطلب، يُسجَّل محلياً، ثم يُسلَّم إلى محرّك الطلبات عبر `OrderIntakePort`.
+        إن تعذّر التسليم يبقى الطلب بحالة `submission_failed` ويُرجَع 503 — لا طلب صامت بلا مالك.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderRequestInput' }
+      responses:
+        '200':
+          description: نفس Idempotency-Key سُجّل سابقاً — يُعاد الطلب نفسه بلا تسليم ثانٍ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderRequest' }
+        '201':
+          description: أُنشئ الطلب وسُلّم إلى المحرّك
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderRequest' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{waslaPublicId}/order-requests/{orderRequestId}:
+    get:
+      tags: [order-requests]
+      summary: طلب واحد
+      operationId: getOrderRequest
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/OrderRequestId'
+      responses:
+        '200':
+          description: الطلب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderRequest' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص الجاهزية
+      operationId: health
+      responses:
+        '200':
+          description: الخدمة تعمل
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  service: { type: string, const: customers-service }
+                  persistence: { type: string, enum: [postgres, memory] }
+                  order_intake: { type: string, enum: [configured, unconfigured] }
+
+components:
+  parameters:
+    WaslaPublicId:
+      name: waslaPublicId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^WS-[0-9]{10}$' }
+    PlaceId:
+      name: placeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    OrderRequestId:
+      name: orderRequestId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: مفتاح تفرّد من العميل (§43). تكراره يُعيد نفس الكيان بـ200 ولا يُنشئ ثانياً.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+
+  schemas:
+    Locale:
+      type: string
+      enum: [ar, en, ur]
+      description: لغة العميل المفضّلة. ar = الافتراضية.
+
+    OrderType:
+      type: string
+      enum: [ride, delivery]
+      description: نوع الطلب الذي يملكه العميل في هذه المرحلة. باقي الأنواع (Store/Partner) لمراحلها.
+
+    VehicleClass:
+      type: string
+      enum: [sedan, suv, van, pickup, motorcycle, truck_small]
+      description: |
+        قائمة مُقفلة (ADR-009 §7). Phase 05 تُعلن قدرات السائق بنفس المفردات،
+        فالقيمة الحرّة تُنتج طلباً لا يطابقه أحد. إضافة نوع = تغيير عقد.
+
+    PriceMode:
+      type: string
+      enum: [customer_offer, negotiable]
+
+    StopKind:
+      type: string
+      enum: [pickup, dropoff]
+
+    StopSource:
+      type: string
+      enum: [map, telegram_location, link, text_search, saved_place, manual_zone]
+      description: من أين جاءت النقطة (§13). يُخزَّن كدليل تشغيلي ومدخل مستقبلي لعكس الترميز الجغرافي.
+
+    OrderRequestStatus:
+      type: string
+      enum: [submitted, submission_failed]
+      description: |
+        حالات خدمة العميل فقط — **ليست حالات الطلب**. آلة حالة الطلب تملكها Phase 06 (§15).
+        `submitted` = قبِله المحرّك · `submission_failed` = تعذّر التسليم ولم يُقبَل.
+
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor:
+          type: integer
+          minimum: 1
+          description: المبلغ بالوحدة الصغرى (هللات لـSAR) — لا عدد عشري في المال.
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217 (SAR في الإطلاق السعودي).
+
+    Coordinates:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+
+    StopInput:
+      type: object
+      required: [kind, zone_id, source]
+      properties:
+        kind: { $ref: '#/components/schemas/StopKind' }
+        zone_id:
+          type: string
+          format: uuid
+          description: مُعرّف منطقة فرعية من هرم الجغرافيا — يُتحقّق من وجوده ونشاطه.
+        label: { type: string, maxLength: 160, nullable: true }
+        coordinates:
+          allOf: [{ $ref: '#/components/schemas/Coordinates' }]
+          nullable: true
+        source: { $ref: '#/components/schemas/StopSource' }
+        saved_place_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: إن كان المصدر `saved_place` فهذا المكان الذي اشتُقّت منه النقطة.
+
+    Stop:
+      type: object
+      required: [kind, sequence, zone_id, source]
+      properties:
+        kind: { $ref: '#/components/schemas/StopKind' }
+        sequence: { type: integer, minimum: 1 }
+        zone_id: { type: string, format: uuid }
+        zone_path:
+          type: string
+          nullable: true
+          description: مسار المنطقة المقروء (مدينة/حي/منطقة فرعية) بلغة العميل — للعرض فقط.
+        label: { type: string, nullable: true }
+        coordinates:
+          allOf: [{ $ref: '#/components/schemas/Coordinates' }]
+          nullable: true
+        source: { $ref: '#/components/schemas/StopSource' }
+        saved_place_id: { type: string, format: uuid, nullable: true }
+
+    CustomerProfile:
+      type: object
+      required: [wasla_public_id, status, preferred_locale, created_at, updated_at]
+      properties:
+        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        display_name: { type: string, nullable: true, maxLength: 80 }
+        preferred_locale: { $ref: '#/components/schemas/Locale' }
+        default_zone_id: { type: string, format: uuid, nullable: true }
+        status: { type: string, enum: [active, suspended] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    UpsertCustomerProfileRequest:
+      type: object
+      properties:
+        display_name: { type: string, maxLength: 80, nullable: true }
+        preferred_locale: { $ref: '#/components/schemas/Locale' }
+        default_zone_id: { type: string, format: uuid, nullable: true }
+      description: |
+        الحقول غير المُرسلة تبقى كما هي. `display_name` نصّ يكتبه المستخدم — لا يُشتَقّ من Telegram
+        ولا يحمل رقم هاتف (§12.3: لا كشف بيانات حسّاسة).
+
+    SavedPlace:
+      type: object
+      required: [id, label, zone_id, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        label: { type: string, maxLength: 60 }
+        zone_id: { type: string, format: uuid }
+        zone_path: { type: string, nullable: true }
+        address_text: { type: string, maxLength: 160, nullable: true }
+        coordinates:
+          allOf: [{ $ref: '#/components/schemas/Coordinates' }]
+          nullable: true
+        last_used_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CreateSavedPlaceRequest:
+      type: object
+      required: [label, zone_id]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 60 }
+        zone_id: { type: string, format: uuid }
+        address_text: { type: string, maxLength: 160, nullable: true }
+        coordinates:
+          allOf: [{ $ref: '#/components/schemas/Coordinates' }]
+          nullable: true
+
+    OrderRequestInput:
+      type: object
+      required: [order_type, vehicle_class, price_mode, stops]
+      properties:
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+          description: إلزامي مع `customer_offer`، ووجوده مع `negotiable` خطأ تحقّق.
+        stops:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items: { $ref: '#/components/schemas/StopInput' }
+          description: نقطة انطلاق واحدة ونقطة وصول واحدة بالضبط في هذه المرحلة (ADR-009 §5).
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+          description: للتوصيل فقط — وجوده مع `ride` خطأ تحقّق.
+        notes: { type: string, maxLength: 500, nullable: true }
+
+    ShipmentDetails:
+      type: object
+      properties:
+        shipment_type:
+          type: string
+          enum: [parcel, documents, food, goods, other]
+          nullable: true
+        description: { type: string, maxLength: 300, nullable: true }
+        weight_kg: { type: number, minimum: 0, maximum: 3000, nullable: true }
+
+    OrderRequestPreview:
+      type: object
+      required: [order_type, vehicle_class, price_mode, stops, valid]
+      properties:
+        valid: { type: boolean, const: true }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        stops:
+          type: array
+          items: { $ref: '#/components/schemas/Stop' }
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+        notes: { type: string, nullable: true }
+        warnings:
+          type: array
+          items:
+            type: string
+            enum: [same_zone_pickup_and_dropoff, no_price_offered]
+          description: |
+            تنبيهات لا تمنع الإنشاء: انطلاق ووصول في نفس المنطقة الفرعية · طلب بلا سعر مقترح
+            (مسار أساسي يفتح التفاوض — §12.1، وليس خطأ).
+
+    OrderRequest:
+      type: object
+      required: [id, wasla_public_id, status, order_type, vehicle_class, price_mode, stops, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: مُعرّف الطلب داخل خدمة العميل — **ليس** المعرّف العام للطلب.
+        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        order_public_id:
+          type: string
+          nullable: true
+          description: يملكه محرّك الطلبات (Phase 06)؛ NULL حتى يُقبَل التسليم (ADR-009 §3).
+        status: { $ref: '#/components/schemas/OrderRequestStatus' }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        stops:
+          type: array
+          items: { $ref: '#/components/schemas/Stop' }
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+        notes: { type: string, nullable: true }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    OrderIntakeRequest:
+      type: object
+      description: |
+        الحمولة التي تُسلَّم إلى محرّك الطلبات عبر `OrderIntakePort` (ADR-009 §3).
+        هذا **عقد التسليم**: بوابة خروج Phase 04 تتحقّق أن ما يستقبله المحرّك يطابقه،
+        و Phase 06 تُنفّذ مُهيّئ HTTP يقرأه كما هو.
+      required: [order_request_id, customer_public_id, order_type, vehicle_class, price_mode, stops, requested_at]
+      properties:
+        order_request_id: { type: string, format: uuid }
+        customer_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        stops:
+          type: array
+          minItems: 2
+          items: { $ref: '#/components/schemas/Stop' }
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+        notes: { type: string, nullable: true }
+        requested_at: { type: string, format: date-time }
+        idempotency_key: { type: string, minLength: 8, maxLength: 128 }
+
+    OrderIntakeResult:
+      type: object
+      required: [order_public_id, accepted_at]
+      properties:
+        order_public_id:
+          type: string
+          description: يملكه المحرّك — خدمة العميل تُخزّنه ولا تُولّده.
+        accepted_at: { type: string, format: date-time }
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: 'كود ثابت (stable)' }
+        message: { type: string }
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: الكيان غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض حالة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخلات صالحة شكلياً لكن غير مقبولة منطقياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة أو تابعٌ لها في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

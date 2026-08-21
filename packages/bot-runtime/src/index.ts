@@ -59,6 +59,15 @@ export {
 } from "./runtime.js";
 
 export {
+  buildConversationReply,
+  type ConversationEvent,
+  type ConversationHandler,
+  type ConversationIdentity,
+  type ConversationReply,
+  type ConversationReplyInput,
+} from "./conversation.js";
+
+export {
   createBotApp,
   readOutboundMessage,
   type BotAppDeps,

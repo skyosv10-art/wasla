@@ -30,6 +30,7 @@ import type {
   ConversationScope,
   DecodedDeepLink,
   GroupRole,
+  InboundActor,
   InboundUpdate,
 } from "../domain/model.js";
 import type { IdentityBootstrapResult } from "../ports.js";
@@ -78,6 +79,18 @@ export interface ReceiveUpdateResult {
   readonly kind: InboundUpdate["kind"];
   readonly command?: string;
   readonly chatRef: string;
+  /**
+   * The neutral actor of the update, when the channel reported one.
+   *
+   * Exposed for the composition root, which is the only layer allowed to attach
+   * a *domain* flow to a conversation (ADR-007 §1): resolving «who is this» for
+   * a command other than `start` needs the actor, and re-parsing the raw payload
+   * to recover it would put channel syntax back in the root. It is the same
+   * neutral shape the parser produced — no channel-native identifier leaks with
+   * it, and this use case still does not bootstrap identity for anything but
+   * `start`.
+   */
+  readonly actor?: InboundActor;
   /** Present when a start command carried a deep-link payload. */
   readonly deepLink?: DecodedDeepLink;
   /** Present when this update triggered identity bootstrap. */
@@ -148,6 +161,7 @@ export async function receiveUpdate(
       kind: update.kind,
       ...(update.command === undefined ? {} : { command: update.command }),
       chatRef: update.chatRef,
+      ...(update.actor === undefined ? {} : { actor: update.actor }),
     };
   }
 
@@ -210,6 +224,7 @@ export async function receiveUpdate(
     kind: update.kind,
     ...(update.command === undefined ? {} : { command: update.command }),
     chatRef: update.chatRef,
+    ...(update.actor === undefined ? {} : { actor: update.actor }),
     ...(deepLink === undefined ? {} : { deepLink }),
     ...(identity === undefined ? {} : { identity }),
   };

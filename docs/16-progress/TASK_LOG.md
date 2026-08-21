@@ -24,6 +24,132 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 06 MR 2/6 — طبقة مجال محرّك الطلبات: الجدول كوداً يُنفَّذ، ومسح الـ441 زوجاً
+
+**Task:** تنفيذ السلوك الذي نشرته MR 1/6 كعقد: جدول الانتقالات الاثنان والسبعون داخل الكود بحارس مطابقة مزدوج مع الوثيقة، وحالات الاستخدام الأربع (استلام · انتقال · إسناد · قراءة)، ومُهيّئات ذاكرة تُطبّق قيود `schema.sql` بأسمائها — **بلا قاعدة وبلا HTTP**. **Status:** Completed · **MR:** [!39](https://gitlab.com/uxxxu/wasla/-/merge_requests/39) · **ADR:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)
+
+### 1. ماذا تم إنجازه
+
+مشروع العمل العشرون `@wasla/orders-service` — طبقة مجال كاملة في `services/orders/src/`:
+
+- **`domain/state-machine.ts`** — جدول `ORDER_TRANSITIONS` بـ**72 صفّاً صريحاً**، كل صفّ `{from, to, expectedActor, typicalReason}`. والاشتقاقات محسوبة من الجدول لا مُعلَنة: `DERIVED_TERMINAL_STATUSES` · `reachableStatuses`/`unreachableStatuses` · `requiresReasonCode` · `allowedTargets` · `assignmentRequirement` بثلاث درجات (`required` 6 · `forbidden` 4 · `optional` 11) · وثابتان مُصدَّران `ORDER_TRANSITION_COUNT` (72) و`ORDER_TRANSITION_SPACE` (441).
+- **`domain/{model,errors,validation,events}.ts`** — الكيانات والأوامر بـcamelCase · `OrderError` من كتالوج العقود بحالة HTTP مُشتقّة · تحقّق نقيّ (وضع السعر · النقاط · الشحنة · شكل الفاعل · المعرّفات · اللحظات) · أربعة مصانع أحداث تبني المغلّف نفسه.
+- **`ports.ts`** — خمسة منافذ في `OrderDependencies`: `OrderRepository` · `Outbox` · `Clock` · `IdGenerator` · `OrderPublicIdGenerator`.
+- **`use-cases/`** — `ingest-order.ts` (بصمة + ثلاث نتائج idempotency + رابعة للطلب المُسلَّم سابقاً) · `transition-order.ts` (ترتيب فحص ثابت) · `manage-assignments.ts` (تسجيل وحلّ) · `read-order.ts` (بالمعرّفين).
+- **`mappers.ts`** — الترجمة المجال ⇄ العقد في موضع واحد.
+- **`infrastructure/in-memory.ts`** — مستودع يُطبّق القيود المسمّاة بنفسه + `FixedClock` + `SequentialIdGenerator` + `InMemoryOutbox`.
+- **`__tests__/`** — ستّة ملفات، **558 اختباراً**، منها مسح 441 زوجاً وحارس مطابقة مزدوج مع الوثيقة.
+- **الوثيقة** `docs/02-architecture/ORDER_CORE_DOMAIN.md` + تحديث لوحة المراحل وخارطة الطريق ووثيقة التسليم §10.
+
+### 2. لماذا تم اختياره
+
+**لماذا الجدول صريح داخل الكود ولماذا الوثيقة هي المصدر:** قيمة المحرّك في ما يمنعه، وقواعد المنع إن كُتبت في مُعالِج HTTP أو في `CHECK` صارت غير قابلة للقراءة كوحدة. والجدول الصريح يجعل ثلاثة أسئلة قابلة للحساب: كم انتقالاً مسموحاً · أي حالة لا تُبلَغ · أي نهائية لها مخرج. و**حارس المطابقة المزدوج** يمنع ما يحدث دائماً بمرور الوقت: أن يتقدّم الكود وتبقى الوثيقة. صفٌّ في الكود غير موثّق يُسقط المجموعة، وصفٌّ موثّق غير مُنفَّذ كذلك.
+
+**لماذا أُنجز مسح الـ441 زوجاً الآن لا في MR 6/6:** بوابة الخروج ستُعيده على التركيب الكامل، لكن تأجيله كان سيعني بناء ثلاث دفعات (استمرارية · HTTP · تسليم بين خدمتين) فوق آلة حالة لم يُتحقَّق منها إلا بالعيّنة. المسح في طبقة المجال يعمل في 137 مللي ثانية بلا قاعدة، فلا سبب لتأجيله.
+
+**لماذا الاشتقاق لا الإعلان:** `is_terminal` مكتوبةٌ يدوياً تُنسى عند إضافة حالة؛ محسوبةٌ من الجدول تستحيل أن تكذب. وكذلك النهائيات: تُشتقّ ثم تُقارن بالعقد، فسهمٌ يُضاف خارج `expired` غداً يُسقط الاختبار بدل أن تبقى ثابتة العقد تكذب على الجدول.
+
+**قرارات لكلٍّ منها نسخة أرخص وخاطئة:**
+
+| القرار | النسخة الأرخص وسبب رفضها |
+|---|---|
+| ترتيب الفحص: 404 → 409 (الجدول) → 422 (السبب) → 422 (الفاعل) → 422 (الإسناد) | فحص السبب أولاً: يخرج للمنادي «سبب مفقود» على انتقالٍ ما كان ليُقبَل بأي سبب |
+| الفاعل: **الشكل** مُلزَم والهوية لا، ومكتوب صراحةً | إلزام العمود بلا مصادقة: يُقرَأ العمود كضمان أمني غير موجود |
+| القبول لا يُحرّك حالة الطلب | تحريكها في `resolveAssignment`: تغييرُ حالةٍ واحد لم يمرّ بالجدول ⇒ ثغرة في الضمان كلّه |
+| لا فرع «تحرير» في حلّ العرض | فرع يفكّ إسناداً نشطاً: كود غير قابل للوصول يتنكّر في هيئة حارس، ويُوهم أن لفكّ الإسناد مالكين |
+| البصمة تتجاهل `traceId` والمفتاح | حساب البصمة من الحمولة كاملة: إعادة محاولة بتتبّع جديد تُقرأ طلباً مختلفاً ⇒ 409 على تكرار مشروع |
+| رابعة للاستلام: `ORDER_REQUEST_ALREADY_INGESTED` | الاعتماد على المفتاح وحده: المفتاح يحمي من تكرار **النداء**، لا من تسليم **الطلب** عبر نداءين مختلفين |
+
+### 3. أين تم التغيير
+
+- **جديد:** `services/orders/{package.json,tsconfig.json,vitest.config.ts}` · `services/orders/src/index.ts` · `src/domain/{state-machine,model,errors,validation,events}.ts` · `src/ports.ts` · `src/mappers.ts` · `src/infrastructure/in-memory.ts` · `src/use-cases/{ingest-order,transition-order,manage-assignments,read-order}.ts` · `src/__tests__/{harness,state-machine,transition-order,ingest-order,assignments,read-order,mappers}.ts`
+- **جديد:** `docs/02-architecture/ORDER_CORE_DOMAIN.md`
+- **مُحدَّث:** `docs/16-progress/{MASTER_PROGRESS,ROADMAP,HANDOFF_NEXT_STEPS,TASK_LOG}.md` · `pnpm-lock.yaml`
+
+### 4. الملفات/الخدمات المتأثرة
+
+`services/orders` **وحدها** (جديدة). لا تغيير في `services/customers` ولا `services/identity` ولا `services/geography` ولا في أي حزمة قائمة ولا في `.gitlab-ci.yml`. الاعتماد الوحيد للحزمة الجديدة: `@wasla/contracts-order` (workspace) + `vitest` و`@types/node` تطويراً — **لا حزمة خارجية جديدة** (§7 من قانون التوثيق: لا مبرّر مطلوب لأنه لم يُضَف شيء).
+
+### 5. ما الـAPI/Event/Schema الذي تغير
+
+**لا شيء.** الدفعة تُنفّذ العقود المنشورة في MR 1/6 ولا تُعدّلها: لا مسار OpenAPI جديد · لا حدث جديد · لا تعديل على `schema.sql` · لا كود خطأ جديد (الثمانية عشر كما هي) · لا سبب جديد (الأربعة والعشرون كما هي). و`ORDER_TRANSITIONS` في الكود يُطابق [ORDER_ENGINE §4](../03-domain/ORDER_ENGINE.md) صفّاً بصفّ في الاتجاهين — وهذا **مُختبَر لا موصوف**.
+
+### 6. كيف تم الاختبار
+
+**558 اختباراً** لمحرّك الطلبات (`pnpm --filter @wasla/orders-service test`، ~1.4 ثانية، بلا قاعدة ولا شبكة):
+
+| الملف | العدد | ما يُثبته |
+|---|---|---|
+| `transition-order.test.ts` | 459 | **مسح 441 زوجاً** (طلب يُساق بأقصر مسار BFS إلى كل حالة ثمّ يُجرَّب الانتقال إلى كل حالة) + التدقيق + الأحداث + الأسباب + شكل الفاعل + حرّاس الإسناد + 404 |
+| `state-machine.test.ts` | 28 | حارس المطابقة المزدوج مع الوثيقة + شكل الرسم + النهائيات المشتقّة + الوصول + قرارات ADR-010 + اقتران الإسناد |
+| `ingest-order.test.ts` | 27 | ثلاث نتائج idempotency + رابعة · البصمة تتجاهل التتبّع · اللحظتان · الحدثان · التحقّق · لا كتابة عند الفشل |
+| `assignments.test.ts` | 19 | العرض سجل لا محرّك · التكرار 409 · الحلّ مرّة واحدة · التراجع انتقالٌ لا تحريرٌ · الرفض لا يُنهي الطلب |
+| `mappers.test.ts` | 14 | رحلة ذهاب وعودة · إحداثيتان كاملتان أو `null` · لا تسريب للمفتاح ولا للبصمة |
+| `read-order.test.ts` | 11 | القراءة بالمعرّفين · **حدث لكل صفّ تاريخ عبر رحلة كاملة** · العنونة · عزل الطلبات |
+
+**خصائص [ORDER_ENGINE §5](../03-domain/ORDER_ENGINE.md): 1–11 كلّها مُثبَتة** (12 = تطابق المخزنين، محلّها MR 3/6).
+
+**التحقّق على المستودع كاملاً:** `pnpm -r run typecheck` نظيف على **20 مشروع عمل**، و`pnpm -r run test` = **1293 اختباراً على 19 مشروع اختبار** (+1 متروك بقصد) — كان 735 على 18 قبل الدفعة. وخطّ التكامل أخضر بثماني وظائف.
+
+### 7. ما المشاكل التي ظهرت
+
+1. **`TransitionRequest.reason_code` مُكتَّب `string` في الأنواع المُولَّدة من OpenAPI** لا كاتحاد محصور، فـ`transitionCommandFromWire` كان سيُسرّب نصّاً حرّاً إلى المجال. **الحلّ:** المُخطِّط ينادي `assertReasonCodeKnown` ثمّ يُضيّق النوع — فالحدّ يرفض ما لا يعرفه بدلاً من تصديقه، ويُختبَر بسبب مُختلَق (`MADE_UP`).
+2. **`shortestPath` في مُهيّئ الاختبار كان يُعيد `OrderStatus[]`** بينما المستهلك يستحيل أن يستقبل `published` (فهي نقطة البداية) — أنتج خطأ نوع صامتاً في `strict`. **الحلّ:** ضُيِّق النوع إلى `Exclude<OrderStatus, "published">` بتعليق يشرح لماذا، بدل تخفيف `strict` أو حَشْو `any`.
+3. **فرع «تحرير» في `resolveAssignment` كان كوداً غير قابل للوصول:** كُتب ليفكّ إسناداً نشطاً عند الإلغاء، لكن الحلّ لا ينطبق إلا على عرضٍ `offered` والعرض النشط `accepted` بالضرورة. **الحلّ:** حُذف الفرع وكُتب في مكانه تعليق يشرح أن لفكّ الإسناد **مالكاً واحداً** هو `transitionOrder`، وأُبدل الاختبار ليُثبت القاعدة الصحيحة: التراجع بعد القبول انتقالٌ إلى `driver_cancelled` والقبول يبقى في التاريخ.
+4. **متغيّران غير مستعملين** بعد إعادة صياغة اختبارين (`noUnusedLocals`)، و`.catch()` أضاع تضييق النوع فصار `OrderError | TransitionOutcome`. **الحلّ:** استُعمل `.then(onOk, onErr)` بدل `.catch`.
+
+**لا مشكلة في المطابقة مع الوثيقة:** الجدولان تطابقا من أول تشغيل (72/72، فرقا المجموعتين خاليان).
+
+### 8. ما الذي لم يكتمل
+
+- **لا استمرارية ولا HTTP** — الخدمة **غير قابلة للتشغيل**: المُهيّئ الوحيد للمستودع في الذاكرة، ولا تطبيق على المنفذ 8087.
+- **لا ذرّية بين المستودع والصادر** — `InMemoryOrderRepository` و`InMemoryOutbox` منفذان بلا حدّ معاملة. الكتابة الثلاثية (حالة · تدقيق · صادر) في معاملة واحدة هي عمل MR 3/6 صراحةً (§7 من ORDER_ENGINE).
+- **الخاصية 12 (تطابق المخزنين)** غير مُثبَتة لعدم وجود مخزن ثانٍ — والمجموعة مكتوبة أصلاً لتُشغَّل عليه بلا تعديل.
+- **لا إلزام لهوية الفاعل** — الشكل فقط، لعدم وجود مصادقة في المرحلة.
+- **`UnavailableOrderIntake` باقٍ في `services/customers`** — يُستبدل في MR 5/6 لا قبلها.
+
+### 9. الخطوة التالية
+
+**MR 3/6 — الاستمرارية:** مرآة Drizzle لـ`schema.sql` · `PostgresOrderRepository` و`PostgresOrderOutbox` · **الكتابة الثلاثية في معاملة واحدة** · اختبارات حراسة انحراف تقرأ `schema.sql` فعلياً · **اختبارات مطابقة منافذ تُكتَب مرّة وتُنفَّذ مرّتين** (ذاكرة/Postgres) لإثبات الخاصية 12 · وظيفة CI `order-db-integration` (مُشار إليها أصلاً في `vitest.config.ts` الذي يستثني `*.integration.test.ts`).
+
+**المعيار الملزم:** تُنفَّذ **بلا تغيير في `src/use-cases/`** — أي اضطرار لتغيير سلوك هناك دليلٌ على أن المخطّط بدأ يقود المجال (نفس المعيار المكتوب في Phase 04 MR 3/6).
+
+### 10. ما الذي يعتمد عليه العمل التالي
+
+- **`OrderDependencies` هو نقطة الحقن الوحيدة** — أي مُهيّئ جديد يدخل من خلاله فلا يمسّ حالات الاستخدام.
+- **`InMemoryOrderRepository` هو المواصفة التنفيذية لمُهيّئ Postgres:** القيود التي يُطبّقها بأسمائها (`ux_order_status_history_order_sequence` · `ux_order_assignments_order_driver` · `ck_orders_assignment_matches_status` …) هي ما يجب أن يُطابقه المُهيّئ الحقيقي، وأخطاؤه هي الرسائل التي على مُهيّئ Postgres أن يُترجم إليها (نفس درس Phase 04 MR 3/6: الترجمة بمشي سلسلة `cause`).
+- **ترتيب الفحص في `transitionOrder` عقدٌ لطبقة HTTP** (MR 4/6): تخطيط الأكواد إلى حالات HTTP يعتمد عليه.
+- **`ORDER_TRANSITION_SPACE` (441) ثابت مُصدَّر** — على MR 6/6 استيراده لا إعادة حسابه.
+- **مُهيّئ الاختبار `__tests__/harness.ts`** (`shortestPath`/`driveTo`/`orderInStatus`) هو ما تبني عليه بوابة الخروج مسحها، فتوسيعه أرخص من كتابة سَوق حالة جديد.
+
+### 11. Migration/Deployment/Config
+
+**لا شيء.** لا هجرة (لا مساس بالمخطّط) · لا متغيّر بيئة جديد · لا خدمة تُنشَر (الحزمة `private` بلا `main` ولا تُبنى إلى `dist` في CI) · لا تعديل على `.gitlab-ci.yml` — الحزمة تدخل تلقائياً في `pnpm -r run typecheck` و`pnpm -r run test` داخل وظيفة `build-test`. **مُلاحظة للدفعات القادمة:** `pnpm-lock.yaml` مُحدَّث ومدفوع مع الدفعة (وظيفة `build-test` تعمل بـ`--frozen-lockfile`).
+
+### 12. مخاطر/قرارات تحتاج مراجعة
+
+| البند | التقييم |
+|---|---|
+| **حارس المطابقة يعتمد على تنسيق جداول Markdown في الوثيقة** | مقبول ومقصود: إعادة تنسيق §4 ستُسقط الاختبار — وهذا هو الغرض (الوثيقة عقد لا تعليق). لكن **مَن يُعدّل §4 يجب أن يُعدّل الجدول في الكود في الدفعة نفسها**. |
+| **عدم إلزام هوية الفاعل** | دَين **مُعلَن** لا مُكتشَف: مكتوب في الكود وفي §4.4 من الوثيقة المعمارية وفي §10 من وثيقة التسليم. محلّه Phase 09+. |
+| **لا ذرّية بين المستودع والصادر** | نفس دَين Phase 04، وهنا **محدَّد الموضع والدفعة**: MR 3/6 وليس أبعد، لأن الكتابة الثلاثية جزء من بوابة خروج المرحلة (§7). |
+| **`FixedClock` يبدأ من 2026-01-01Z** | اختباري فقط. لا يُستعمل في تركيب إنتاجي (لا تركيب إنتاجي بعد). |
+| **حالة `under_review` من الدرجة `optional`** | مقصود: المراجعة قد تحدث على طلب بسائق مربوط أو بلا سائق. مُختبَر ومطابق للقيد في `schema.sql`. |
+
+### 13. الروابط
+
+- **MR:** [!39](https://gitlab.com/uxxxu/wasla/-/merge_requests/39) · السابقة: [!38](https://gitlab.com/uxxxu/wasla/-/merge_requests/38) (MR 1/6)
+- **ADR:** [ADR-010 — موضع محرّك الطلبات وآلة الحالة وحدّ الإسناد](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)
+- **الوثائق:** [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md) · [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) · [عقود الخدمة](../../services/orders/contracts/README.md)
+- **التقدّم:** [MASTER_PROGRESS](MASTER_PROGRESS.md) · [ROADMAP](ROADMAP.md) · [HANDOFF §10](HANDOFF_NEXT_STEPS.md)
+- **النمط المُتّبع:** [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) (Phase 04 MR 2/6)
+
+### 14. الشخص/الفريق الذي يتابع
+
+**@uxxxu** — مالك `/services/orders/` في `CODEOWNERS` (السطر 60). المتابعة المباشرة: **MR 3/6 (الاستمرارية)** حسب §9 أعلاه.
+
+---
+
 ## 2026-08-21 · Phase 06 MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات (72 من 441)
 
 **Task:** بدء Phase 06 (Order Engine) من **حدّها** لا من كودها: تثبيت قرارات المرحلة في ADR، ونشر عقود `services/orders`، وكتابة جدول الانتقالات الكامل، وجعل الوثيقة **مُختبَرة** لا مقروءة. **Status:** Completed · **MR:** [!38](https://gitlab.com/uxxxu/wasla/-/merge_requests/38) · **ADR:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) · [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) · **الوثيقة:** [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)

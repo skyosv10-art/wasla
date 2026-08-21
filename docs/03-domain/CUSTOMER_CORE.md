@@ -66,16 +66,18 @@ Phase 04 تملك ما يفعله العميل: ملفه، أماكنه، وطل
 
 ## 3. حالات الاستعمال
 
-| الاستعمال | المخرَج | الفشل الأساسي |
-|---|---|---|
-| `GetCustomerProfile` | الملف | `CUSTOMER_PROFILE_NOT_FOUND` (404) |
-| `UpsertCustomerProfile` | الملف + حدث created/updated | `CUSTOMER_IDENTITY_NOT_FOUND` (404) |
-| `ListSavedPlaces` | قائمة مرتّبة بالأحدث استعمالاً | — |
-| `SavePlace` | المكان + حدث saved | `CUSTOMER_PLACE_LABEL_TAKEN` (409) · `CUSTOMER_PLACE_LIMIT_REACHED` (422) |
-| `RemoveSavedPlace` | 204 + حدث removed | `CUSTOMER_PLACE_NOT_FOUND` (404) |
-| `PreviewOrderRequest` | نتيجة تحقّق + تحذيرات، **بلا كتابة** | أخطاء التحقّق نفسها بلا صف محفوظ |
-| `SubmitOrderRequest` | الطلب + حدث submitted/failed | `CUSTOMER_ORDER_INTAKE_UNAVAILABLE` (503) |
-| `ListOrderRequests` / `GetOrderRequest` | طلبات هذا العميل | `CUSTOMER_ORDER_REQUEST_NOT_FOUND` (404) |
+| الاستعمال | المخرَج | الفشل الأساسي | مُنفَّذ في |
+|---|---|---|---|
+| `GetCustomerProfile` | الملف | `CUSTOMER_PROFILE_NOT_FOUND` (404) | `use-cases/customer-profile.ts` |
+| `UpsertCustomerProfile` | الملف + حدث created/updated | `CUSTOMER_IDENTITY_NOT_FOUND` (404) | `use-cases/customer-profile.ts` |
+| `ListSavedPlaces` | قائمة مرتّبة بالأحدث استعمالاً | — | `use-cases/saved-places.ts` |
+| `SavePlace` | المكان + حدث saved | `CUSTOMER_PLACE_LABEL_TAKEN` (409) · `CUSTOMER_PLACE_LIMIT_REACHED` (422) | `use-cases/saved-places.ts` |
+| `RemoveSavedPlace` | 204 + حدث removed | `CUSTOMER_PLACE_NOT_FOUND` (404) | `use-cases/saved-places.ts` |
+| `PreviewOrderRequest` | نتيجة تحقّق + تحذيرات، **بلا كتابة** | أخطاء التحقّق نفسها بلا صف محفوظ | `use-cases/order-requests.ts` |
+| `SubmitOrderRequest` | الطلب + حدث submitted/failed | `CUSTOMER_ORDER_INTAKE_UNAVAILABLE` (503) | `use-cases/order-requests.ts` |
+| `ListOrderRequests` / `GetOrderRequest` | طلبات هذا العميل | `CUSTOMER_ORDER_REQUEST_NOT_FOUND` (404) | `use-cases/order-requests.ts` |
+
+> **حالة التنفيذ (MR 2/6):** الثمانية كلّها مُنفَّذة في `services/customers/src` بمُهيّئات ذاكرة و48 اختباراً — التفصيل وقرارات السلوك في [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md). الاستمرارية في MR 3/6 وسطح HTTP في MR 4/6.
 
 **المعاينة تقرأ ولا تكتب.** قيمتها أن العميل يرى ما سيُرسل قبل إرساله: التحذيرات (`same_zone_pickup_and_dropoff`, `no_price_offered`) **لا تمنع** الإرسال — تصف حالة قد تُبطئ القبول لا خطأ.
 
@@ -89,6 +91,8 @@ Phase 04 تملك ما يفعله العميل: ملفه، أماكنه، وطل
 | `GeographyPort` | customers → geography (قراءة) | HTTP/fake | كما هو |
 | `OrderIntakePort` | customers → order engine (كتابة عبر عقد) | test double + fail-closed | محوّل HTTP في Phase 06 |
 | `CustomerRepositoryPort` وأخواتها | customers → قاعدتها | in-memory ثم Postgres | كما هو |
+
+> **حالة التنفيذ (MR 2/6):** المنافذ مُعرَّفة في `services/customers/src/ports.ts` (سبعة، منها `Clock` و`IdGenerator` و`Outbox`)، ولكلٍّ منها مُهيّئ ذاكرة أو بديل اختبار في `src/infrastructure/in-memory.ts` — الافتراضي لمحوّل الطلبات `UnavailableOrderIntake` (fail-closed) حتى يوجد محرّك. [تفصيل](../02-architecture/CUSTOMER_CORE_DOMAIN.md)
 
 لا خدمة تعتمد على `customers` في هذه المرحلة. البوت (`bots/customer-bot`) مستهلك للواجهة لا شريك في المجال، ويبقى **محايد القناة** (ADR-007).
 
@@ -133,5 +137,6 @@ Phase 04 تملك ما يفعله العميل: ملفه، أماكنه، وطل
 
 - [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)
 - [عقود Customer Core](../../services/customers/contracts/README.md) · [errors.md](../../services/customers/contracts/errors.md)
+- [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) — الطبقة المُنفَّذة (MR 2/6)
 - [MASTER_PROGRESS](../16-progress/MASTER_PROGRESS.md) — Phase 04
 - [HANDOFF_NEXT_STEPS](../16-progress/HANDOFF_NEXT_STEPS.md) — §9

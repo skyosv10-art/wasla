@@ -24,6 +24,40 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 04 MR 3/6 — استمرارية Drizzle/Postgres لخدمة العملاء
+
+**Task:** استبدال مُهيّئ التخزين في الذاكرة لخدمة العملاء بمرآة Drizzle لـ`contracts/schema.sql` مع حراسة انحراف واختبارات مطابقة منافذ ووظيفة CI مستقلّة، وحسم دَين `shipment_description`. **Status:** Completed · **MR:** [!33](https://gitlab.com/uxxxu/wasla/-/merge_requests/33) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة المعمارية:** [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)
+
+**ماذا تم إنجازه (1):** أنشأت `src/infrastructure/drizzle/schema.ts` (مرآة الجداول الخمسة) و`db.ts` (`createCustomerDb` = تجمّع `pg` + `drizzle`) و`repository.ts` (`PostgresCustomerRepository` ينفّذ `CustomerRepository` و`PostgresCustomerOutbox` ينفّذ `Outbox` + `markPublished` جاهزاً للناشر). أضفت `schema-drift.test.ts` (17 اختباراً بلا قاعدة) و`postgres-repository.integration.test.ts` (27) و`port-conformance.integration.test.ts` (16 سيناريو تُنفَّذ مرّتين: ذاكرة وPostgres) و`vitest.integration.config.ts` + سكربت `test:integration` + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`). وحسمت دَين `shipment_description` **بالتبنّي** مع حارس خصوصية في `events-privacy.test.ts`. **صفر تغيير في `src/use-cases/`** عدا نشر الحقل المتبنّى في `mappers.ts`.
+
+**لماذا تم اختياره (2):** MR 3/6 هي الدفعة التالية المُلزَمة في خطة [HANDOFF §9](HANDOFF_NEXT_STEPS.md)؛ وبلا استمرارية تبقى الخدمة صحيحة سلوكياً ولا تعيش عبر إعادة تشغيل واحدة، فلا يمكن أن تُبنى فوقها طبقة HTTP (MR 4/6) ولا بوابة خروج المرحلة.
+
+**أين تم التغيير (3):** `services/customers/src/infrastructure/drizzle/{schema,db,repository}.ts` · `services/customers/src/__tests__/{schema-drift,postgres-repository.integration,port-conformance.integration,pg-harness,events-privacy}.ts` · `services/customers/src/{domain/model.ts,domain/validation.ts,use-cases/mappers.ts,index.ts}` · `services/customers/{package.json,drizzle.config.ts,vitest.integration.config.ts}` · `pnpm-lock.yaml` · `.gitlab-ci.yml` · `docs/02-architecture/{CUSTOMER_PERSISTENCE.md (جديدة),CUSTOMER_CORE_DOMAIN.md}` · `docs/12-testing/DB_INTEGRATION_CI.md` · `docs/16-progress/{MASTER_PROGRESS,HANDOFF_NEXT_STEPS,TASK_LOG}.md`.
+
+**الملفات/الخدمات المتأثرة (4):** `@wasla/customers-service` وحدها. لا خدمة أخرى ولا حزمة تعتمد عليها بعد (لا HTTP ولا بوت مربوط حتى MR 4/6 و5/6)، فسطح التأثير الخارجي صفر.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** **لا تغيير في أي عقد** — لا `api.openapi.yml` ولا `events.json` ولا `schema.sql` ولا `errors.md`. التغيير الوحيد ذو الأثر العقدي هو أن المجال صار **يحترم** حقلاً كان العقد ينشره ويُسقطه المجال بصمت (`ShipmentDetails.description`، حدّ 300 محرفاً)؛ فهو **لحاقٌ بالعقد لا تعديلٌ له**. ولم يُضَف أي عمود إلى المخطّط.
+
+**كيف تم الاختبار (6):** `pnpm -r run typecheck` نظيف على 17 مشروعاً · `pnpm -r run test` = **553 اختبار وحدة** ناجحة (خدمة العملاء 66: 48 سابقة + 17 حراسة انحراف + 1 حارس خصوصية) · `DATABASE_URL=… pnpm --filter @wasla/customers-service test:integration` = **43 اختبار تكامل** ناجحة على Postgres حقيقي. اختبار المطابقة هو الحارس الأساسي: 16 سيناريو تُكتَب مرّة وتُنفَّذ عبر حالات الاستخدام نفسها بمُهيّئي ذاكرة وPostgres بساعة ومعرّفات ثابتة، والنتيجة **والأحداث** تُقارَن حرفياً.
+
+**ما المشاكل التي ظهرت (7):** (1) **العقد كان يخالف التوثيق:** `CUSTOMER_CORE_DOMAIN.md` كان يقول إن OpenAPI لا تنشر `description`، والعقد ينشره واختبار العقود يُمرّره → عُكس القرار من الإسقاط إلى التبنّي وصُحّح التوثيق صراحةً. (2) **Drizzle يلفّ خطأ المُشغّل:** SQLSTATE `23505` واسم القيد يسكنان `error.cause` لا الخطأ المرفوع → مشي سلسلة `cause` بعمق ≤5 في `translateUniqueViolation`. (3) **`updated_at` يملكه مُشغّل قاعدة البيانات** فالساعة المُحقونة لا تُطبَّق على Postgres → أُسقط من المقارنة مع التحقّق من الاتّجاه، ورُفض تعديل المُشغّل لإرضاء اختبار. (4) لا `draft` في قيد حالة الطلب (`submitted`/`submission_failed` فقط) → صُحّحت مبانٍ اختبارية كانت تفترضه. (5) قيد طول مفتاح الـidempotency (8..128) والفريدة الجزئية على `order_public_id` → ضُبطت المبانٍ. (6) لا Postgres ولا صلاحية جذر في بيئة التطوير → قاعدة اختبار محلية عبر `embedded-postgres` (18.4) والتحقّق النهائي مرجعه CI (`postgres:15`).
+
+**ما الذي لم يكتمل (8):** **لا ذرّية بين كتابة الصف وإلحاق الحدث** — منفذان مستقلّان بلا حدّ معاملة؛ سدُّه يعني تغيير `use-cases/` وهو ما تمنعه هذه الدفعة، فمحلّه MR 4/6. · **`customer_outbox` بلا عمود `trace_id`** فيفقد الحدث المُعاد بناؤه معرّف ارتباطه (لم يُخترع عمود خارج العقد). · **لا ناشر لصندوق الصادر** (`markPublished` جاهز وغير مستعمل). · لا هجرات مولّدة في CI. كلّها مكتوبة في [CUSTOMER_PERSISTENCE.md §7](../02-architecture/CUSTOMER_PERSISTENCE.md).
+
+**الخطوة التالية (9):** MR 4/6 — تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء (18 كوداً) إلى حالات HTTP + `/health` + اختبارات `app.inject` + ربط `createCustomerDb` بدورة حياة تُغلق التجمّع في `onClose` — وهي الموضع المُحدَّد لسدّ دَين الذرّية أعلاه.
+
+**ما الذي يعتمد عليه العمل التالي (10):** لا شيء خارجي. الاستمرارية والمنافذ ومُهيّئاتها قائمة ومُختبَرة؛ MR 4/6 طبقة توصيل فوق ما صار جاهزاً. (بوابة الخروج 6/6 تحتاج **محرّك طلبات بديلاً** يحترم `OrderIntakeRequest`، وهو داخل نطاق تلك الدفعة.)
+
+**Migration/Deployment/Config (11):** لا هجرة ولا تغيير في `schema.sql` — الجداول الخمسة قائمة منذ MR 1/6. اعتماديات جديدة في `services/customers`: `drizzle-orm@^0.45.2` و`pg@^8.23.0` (تشغيل) و`@types/pg` و`drizzle-kit` (تطوير) + `pnpm-lock.yaml` مُحدَّث (CI يعمل بـ`--frozen-lockfile`). متغيّر بيئة واحد: `DATABASE_URL` — بغيابه تُتخطّى اختبارات التكامل ولا يُفتح أي اتصال. وظيفة CI جديدة `customer-db-integration` بقاعدة مستقلّة `wasla_customer_test`.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** (أ) **تبنّي `shipment_description`** يعكس قراراً موثّقاً سابقاً — المبرّر أن السابق قام على قراءة خاطئة للعقد، ويستحق تأكيد مالك المجال. (ب) **مُهيّئ صندوق صادر أُضيف مع المستودع** بينما نصّ HANDOFF قال «مُهيّئ واحد فقط»؛ المبرّر أن ترك الحدث في الذاكرة مع صفٍّ دائم يُنتج تناقضاً صامتاً (§2 من الوثيقة المعمارية). (ج) **نافذة اللاذرّية** خطر تشغيلي حقيقي حتى MR 4/6. (د) التحقّق المحلي جرى على Postgres 18.4 لا 15.
+
+**الروابط (13):** MR [!33](https://gitlab.com/uxxxu/wasla/-/merge_requests/33) · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) · [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) · [DB_INTEGRATION_CI.md](../12-testing/DB_INTEGRATION_CI.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [HANDOFF §9](HANDOFF_NEXT_STEPS.md)
+
+**الشخص/الفريق الذي يتابع (14):** Team 04 — Customer Core (MR 4/6: طبقة HTTP وسدّ دَين الذرّية) · مالك المجال (تأكيد قرار تبنّي `description`) · Team 09 — Notifications/Events (ناشر صندوق الصادر وعمود `trace_id`).
+
+---
+
 ## 2026-08-21 · Phase 04 MR 2/6 — نطاق Customer Core ومنافذه وحالات استخدامه
 
 **Task:** تنفيذ ما وعدت به عقود MR 1/6: سلوك مجال العميل **كاملاً وبلا بنية تحتية** — كيانات وتحقّق وأحداث ومنافذ وحالات استخدام ومُهيّئات ذاكرة — لتكون القرارات الصعبة (من يملك الطلب · ما يُثبِّت النقطة · ماذا يحدث حين لا يستجيب المحرّك) محكومةً باختبارات تُقرأ كنصّ سياسة لا بطبقة SQL أو HTTP. **Status:** Completed (48 اختباراً جديداً · إجمالي **535** وحدة على **17** مشروعاً) · **MR:** [!32](https://gitlab.com/uxxxu/wasla/-/merge_requests/32) · **ADR:** لا حاجة (انطباق تنفيذي لـ[ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) — انظر السؤال 8)

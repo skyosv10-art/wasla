@@ -16,6 +16,7 @@ import {
   CUSTOMER,
   ZONE_A,
   ZONE_B,
+  deliveryDraft,
   makeContext,
   rideDraft,
 } from "./helpers.js";
@@ -93,6 +94,41 @@ describe("event privacy", () => {
     expect(submitted.payload.pickup_zone_id).toBe(ZONE_A);
     expect(submitted.payload.dropoff_zone_id).toBe(ZONE_B);
     expect(submitted.trace_id).toBe("trace-0001");
+  });
+
+  it("never publishes the shipment description the customer wrote", async () => {
+    // MR 3/6 adopted `shipment.description`: the OpenAPI contract publishes it
+    // and the schema has a column for it, but the domain used to drop it. It is
+    // now stored and handed to the order engine — which makes it exactly the
+    // kind of field that could leak into an event by accident, since
+    // `shipment_type` already travels there. This test is the guard that came
+    // with the adoption.
+    const description = "أوراق ثبوتية باسم أبو محمد";
+    const ctx = makeContext();
+
+    await upsertCustomerProfile(ctx, {
+      waslaPublicId: CUSTOMER,
+      patch: { displayName: DISPLAY_NAME },
+    });
+    const { orderRequest } = await submitOrderRequest(ctx, {
+      waslaPublicId: CUSTOMER,
+      idempotencyKey: "order-key-0002",
+      draft: deliveryDraft({
+        shipment: { shipmentType: "documents", description, weightKg: 2 },
+      }),
+    });
+
+    // Stored and handed over…
+    expect(orderRequest.shipment?.description).toBe(description);
+    expect(ctx.intake.lastRequest?.shipment?.description).toBe(description);
+
+    // …but absent from every event, in whole and in part.
+    const serialized = JSON.stringify(ctx.outbox.all());
+    expect(serialized).not.toContain(description);
+    expect(serialized).not.toContain("ثبوتية");
+    expect(serialized).not.toContain("description");
+    // The classification still travels: it is a category, not the text.
+    expect(serialized).toContain("documents");
   });
 
   it("stamps every event with the same producer and version", async () => {

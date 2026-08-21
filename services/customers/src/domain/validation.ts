@@ -80,6 +80,8 @@ const MAX_ADDRESS_TEXT = 160;
 const MAX_STOP_LABEL = 160;
 const MAX_NOTES = 500;
 const MAX_WEIGHT_KG = 3000;
+/** Same bound as `ShipmentDetails.description` (OpenAPI) and the column CHECK. */
+const MAX_SHIPMENT_DESCRIPTION = 300;
 
 function invalidBody(message: string): CustomerError {
   return new CustomerError("CUSTOMER_INVALID_REQUEST_BODY", message);
@@ -284,7 +286,11 @@ function normalizeShipment(value: unknown): ShipmentDetails | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== "object") throw invalidBody("تفاصيل الشحنة غير صالحة");
   const raw = value as Record<string, unknown>;
-  const shipment: { shipmentType?: ShipmentType; weightKg?: number | null } = {};
+  const shipment: {
+    shipmentType?: ShipmentType;
+    description?: string | null;
+    weightKg?: number | null;
+  } = {};
 
   if (raw.shipmentType !== undefined && raw.shipmentType !== null) {
     shipment.shipmentType = assertEnum(
@@ -292,6 +298,16 @@ function normalizeShipment(value: unknown): ShipmentDetails | null {
       SHIPMENT_TYPES,
       "shipment.shipment_type",
     );
+  }
+  // Free text the customer writes. `assertText` trims and rejects over-length
+  // input, so a blank description is stored as absence rather than as "".
+  if (raw.description !== undefined && raw.description !== null) {
+    const description = assertText(
+      raw.description,
+      "shipment.description",
+      MAX_SHIPMENT_DESCRIPTION,
+    );
+    if (description !== null) shipment.description = description;
   }
   if (raw.weightKg !== undefined && raw.weightKg !== null) {
     const weight = raw.weightKg;
@@ -440,7 +456,11 @@ export function orderRequestFingerprint(request: {
       stop.savedPlaceId,
     ]),
     request.shipment
-      ? [request.shipment.shipmentType ?? null, request.shipment.weightKg ?? null]
+      ? [
+          request.shipment.shipmentType ?? null,
+          request.shipment.description ?? null,
+          request.shipment.weightKg ?? null,
+        ]
       : null,
     request.notes,
   ]);

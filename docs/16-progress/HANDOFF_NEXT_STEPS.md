@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 2/6 — نطاق Customer Core ومنافذه وحالات استخدامه بمُهيّئات ذاكرة ([CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) بعد MR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 3/6 — استمرارية Drizzle/Postgres لخدمة العملاء ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -20,14 +20,17 @@
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ (أُغلقت 2026-08-21 بسبع مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03).
-المتبقّي:         Phase 04 (MR 3..6/6: الاستمرارية · HTTP على 8086 · ربط البوت · بوابة الخروج · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
-الاختبارات:       535 اختبار وحدة (48 لطبقة مجال العميل: idempotency وإعادة المحاولة على الصفّ نفسه
+المتبقّي:         Phase 04 (MR 4..6/6: HTTP على 8086 · ربط البوت · بوابة الخروج · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
+الاختبارات:       553 اختبار وحدة (66 لخدمة العملاء: 48 لطبقة المجال + 17 حراسة انحراف مخطّط
+                 (تقرأ schema.sql فعلياً بلا قاعدة) + 1 حارس خصوصية لوصف الشحنة — idempotency وإعادة المحاولة على الصفّ نفسه
                  وfail-closed وبحث سلبي عن أي نصّ مستخدم أو إحداثية في الأحداث
                  + 42 لعقود Customer Core منها حرّاس حدود ADR-009 وقاعدة خصوصية الأحداث
                  + 96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
                  + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة
                  + 7 من بوابة المرحلة 03 التي تعمل بمخازن الذاكرة أيضاً)
-                 + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E سابقة في CI
+                 + 68 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة + 43 لخدمة العملاء:
+                 27 للمُهيّئ أمام قاعدة حقيقية + 16 مطابقة منافذ تُنفَّذ مرّتين ذاكرة/Postgres)
+                 + 5 E2E سابقة في CI
                  + 8 في بوابة خروج المرحلة 03 (446 مجموعاً عند وجود DATABASE_URL — الثامن يفحص الصفوف).
 البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
                  @wasla/bot-runtime — التخزين **دائم على Postgres** متى وُجِد DATABASE_URL
@@ -37,7 +40,7 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-21 (Phase 04 · MR 2/6 — طبقة مجال العميل ومنافذها ومُهيّئات الذاكرة — §9)
+آخر تحديث:      2026-08-21 (Phase 04 · MR 3/6 — استمرارية Postgres لخدمة العملاء + customer-db-integration — §9)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -402,12 +405,22 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 |---|---|---|---|
 | 1 | docs + contracts | ADR-009 + `services/customers/contracts/*` + `@wasla/contracts-customer` + [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) + CONTAINERS §4.1 | ✅ **مدمجة ([!31](https://gitlab.com/uxxxu/wasla/-/merge_requests/31))** — 42 اختباراً |
 | 2 | النطاق النقي | `services/customers/src/{domain,ports,use-cases,infrastructure}`: كيانات + المنافذ (`IdentityLookupPort` · `GeographyPort` · `OrderIntakePort` + مستودعات) + حالات الاستخدام (ملف · أماكن · معاينة · تسليم) + مُهيّئات in-memory/Fake — **بلا قاعدة وبلا HTTP** | ✅ **مدمجة ([!32](https://gitlab.com/uxxxu/wasla/-/merge_requests/32))** — 48 اختباراً · [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) |
-| 3 | الاستمرارية | مستودعات Drizzle/Postgres مرآةً لـ`schema.sql` + اختبار حراسة انحراف + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) + **اختبارات مطابقة منافذ** تُشغّل مجموعة الذاكرة ومجموعة Postgres داخل حالات الاستخدام نفسها + حسم `shipment_description` (عمود بلا مقابل في المجال) | ⬜ **التالية** |
-| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء إلى حالات HTTP + `/health` + اختبارات `app.inject` | ⬜ |
+| 3 | الاستمرارية | `src/infrastructure/drizzle/{schema,db,repository}.ts` — مرآة Drizzle لـ`schema.sql` + `PostgresCustomerRepository` + `PostgresCustomerOutbox` + حراسة انحراف (17) + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) + **مطابقة منافذ** (16 سيناريو × مُهيّئين) + حسم `shipment_description` **بالتبنّي** | ✅ **مدمجة ([!33](https://gitlab.com/uxxxu/wasla/-/merge_requests/33))** — 66 وحدة + 43 تكامل · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) |
+| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء إلى حالات HTTP + `/health` + اختبارات `app.inject` | ⬜ **التالية** |
 | 5 | البوت | ربط `bots/customer-bot` بالخدمة (ملف · مكان محفوظ · إنشاء طلب) مع **الحفاظ على حياد القناة** (ADR-007): البوت لا يعرف مجال العميل، والمجال لا يعرف Telegram | ⬜ |
 | 6 | بوابة الخروج | E2E: عميل ينشئ طلباً صالحاً يصل إلى **محرّك طلبات بديل (stub)** يحترم `OrderIntakeRequest` + وثيقة البوابة + إغلاق المرحلة | ⬜ |
 
-**ما صار قائماً بعد MR 2/6 (لمن يبدأ MR 3/6):** مشروع العمل `services/customers` قائم بطبقة مجال كاملة ومُختبَرة (48 اختباراً) وسبعة منافذ في `src/ports.ts` لكلٍّ منها مُهيّئ ذاكرة في `src/infrastructure/in-memory.ts`. **مهمّة MR 3/6 استبدال مُهيّئ واحد فقط** — `CustomerRepository` — بمرآة Drizzle لـ`schema.sql`، بلا لمس حالة استخدام واحدة: أي اضطرار لتغيير سلوك في `use-cases/` علامةٌ على أن المخطّط يفرض نفسه على المجال، وهو ما تمنعه الـ48. وقرارات السلوك ومبرّراتها وما لم تفعله الدفعة **بقصد** في [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md).
+**ما صار قائماً بعد MR 3/6 (لمن يبدأ MR 4/6):** خدمة `services/customers` صارت تملك **مسار تخزين دائماً** وراء منافذها نفسها: `createCustomerDb({connectionString})` يُنشئ تجمّع `pg` + `drizzle`، و`PostgresCustomerRepository` و`PostgresCustomerOutbox` ينفّذان `CustomerRepository` و`Outbox` بلا توسيع للمنافذ، وكلّها مُصدَّرة من `src/index.ts`. و**لم يتغيّر ملف واحد في `src/use-cases/`** — وهذا هو المعيار: أي اضطرار لتغيير سلوك هناك دليلٌ على أن المخطّط بدأ يقود المجال. مصدر الـDDL يبقى `contracts/schema.sql` اليدوي؛ مرآة Drizzle مستهلِك له، و`schema-drift.test.ts` يقرأ العقد فعلياً فيكسر البناء عند أي انحراف، و`drizzle.config.ts` أداة محلية لا تُشغَّل في CI.
+
+**ما يجب أن يعرفه من يبدأ MR 4/6 قبل أن يكتب سطراً:**
+
+1. **لا شيء يفتح اتصالاً اليوم.** لا مسار تشغيل ينادي `createCustomerDb`؛ استيراد الحزمة لا يلمس الشبكة. MR 4/6 هي أوّل من يربطه بدورة حياة (ويجب أن تُغلق التجمّع في `onClose` كما تفعل `buildBotRuntime`).
+2. **دَين الذرّية بانتظارك.** كتابة الصف وإلحاق الحدث **ليسا في معاملة واحدة** (منفذان مستقلّان بلا حدّ Unit of Work)، فثمّة نافذة فشل تترك طلباً مسجّلاً بلا حدثه. لم يُسدّ هنا لأن سدّه يعني تغيير `use-cases/` — وهو ما تمنعه هذه الدفعة. MR 4/6 هي أوّل دفعة تملك دورة الطلب فهي موضع الحسم ([CUSTOMER_PERSISTENCE.md §4 و§7.1](../02-architecture/CUSTOMER_PERSISTENCE.md)).
+3. **`customer_outbox` بلا `trace_id`.** الحدث المُعاد بناؤه من القاعدة يفقد معرّف ارتباطه. لم يُخترع عمود خارج العقد؛ من يحتاجه هو الناشر (Phase 09) وهو من يجب أن يُضيفه بهجرة موثّقة.
+4. **`updated_at` تملكه القاعدة** عبر المُشغّل `customer_set_updated_at`، فالساعة المُحقونة لا تُطبَّق على Postgres عند التحديث. لا حالة استخدام تقرأه لاتّخاذ قرار، واختبار المطابقة يُسقطه ويتحقّق من الاتّجاه فقط. **لا تُعدّل المُشغّل لإرضاء اختبار.**
+5. **`shipment.description` صار جزءاً من المجال** (حدّ 300 محرفاً، وداخل بصمة idempotency، ويُسلَّم للمحرّك) و**ممنوع أن يظهر في حدث** — حارسه في `events-privacy.test.ts`. أي DTO جديد في طبقة HTTP يجب أن يحترم هذا.
+6. **لا `draft` في حالة الطلب:** القيد في `schema.sql` يسمح بـ`submitted` و`submission_failed` فقط، لأن التسليم يُحاوَل **قبل** كتابة الصف. لا تُخطّط لمسار «مسوّدة محفوظة».
+7. **تشغيل التكامل محلياً:** `createdb wasla_customer_test` ثم `DATABASE_URL=… pnpm --filter @wasla/customers-service test:integration`؛ وبلا `DATABASE_URL` تُتخطّى المجموعتان ويبقى `pnpm -r test` أخضر.
 
 ### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-009)
 

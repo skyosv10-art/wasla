@@ -154,9 +154,20 @@ export interface Stop {
   readonly savedPlaceId: string | null;
 }
 
-/** Delivery-only shipment details, as exposed by the API contract. */
+/**
+ * Delivery-only shipment details, as exposed by the API contract.
+ *
+ * `description` is free text the customer writes (≤300 chars — the same bound as
+ * `ShipmentDetails.description` in api.openapi.yml and `shipment_description` in
+ * schema.sql). It was missing here until MR 3/6: the contract published it, the
+ * schema had a column for it, and the domain silently dropped it — a published
+ * field the service accepted and threw away. It is carried to the order engine
+ * with the rest of the request and is deliberately **absent from every event**
+ * (events carry no user-written text — test-enforced in events-privacy).
+ */
 export interface ShipmentDetails {
   readonly shipmentType?: ShipmentType;
+  readonly description?: string | null;
   readonly weightKg?: number | null;
 }
 

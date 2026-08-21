@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 37 (Data Architecture) و38 (قاعدة البيانات) و41 (Event Bus) و142 (Queue Strategy) و143 (Object Storage) من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ خدمة Customer Core §4.1 — Phase 04: العقود والأنواع المُكتبة مُنفَّذة) (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
+> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ خدمة Customer Core §4.1 — Phase 04: العقود والأنواع المُكتبة مُنفَّذة) (+ خدمة Order Engine §4.2 — Phase 06: العقود والأنواع المُكتبة وجدول الانتقالات موثّقة) (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
 
 ---
 
@@ -81,13 +81,38 @@ customers → order engine (كتابة عبر OrderIntakePort فقط — لا و
 
 لا خدمة تعتمد على `customers` في هذه المرحلة، و`bots/customer-bot` مستهلك لواجهتها لا شريك في مجالها (يبقى محايد القناة — ADR-007). الأنواع المُكتبة في `packages/contracts/customer/` (`@wasla/contracts-customer`).
 
+### 4.2 خدمة Order Engine — Phase 06
+
+خدمة **`services/orders`** (`@wasla/orders-service`، المنفذ **8087**) موجودة في الشجرة الأصلية أعلاه، فلا انحراف هنا: [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) يُثبّت **حدودها** لا موضعها. تملك الطلب: هويته العامة (`ORD-` + عشرة أرقام من متتالية في القاعدة) · حالاته الواحد والعشرين وانتقالاتها الاثنين والسبعين · سجل التدقيق · **مراجع** الإسناد · صندوق الصادر.
+
+| الخدمة | المسار | الغرض | الحالة |
+|---|---|---|---|
+| orders | `services/orders/` | آلة حالة الطلب · المعرّف العام · سجل التدقيق · مراجع الإسناد · Outbox | **العقود مُنفَّذة (MR 1 · Phase 06)** — [نموذج المجال وجدول الانتقالات](../03-domain/ORDER_ENGINE.md) · [العقود](../../services/orders/contracts/README.md) |
+
+اتجاه الاعتماد أحادي وملزم:
+
+```text
+customers            → orders   (كتابة عبر OrderIntakePort فقط — لا وصول إلى جداول الطلب)
+dispatch (Phase 07)  → orders   (تغيير الحالة عبر مسار الانتقالات وتسجيل الإسناد)
+orders               → identity · geography   (قراءة عبر منافذ، غير حرجة في مسار الكتابة)
+orders               → notifications (Phase 09)   (عبر Outbox فقط — لا نداء مباشر)
+```
+
+**ما لا تعرفه الخدمة** (حدٌّ يفرضه حارس اختبار لا مراجعة بشرية):
+
+- **من هو السائق**: `driver_public_id` مرجع opaque بـCHECK **بلا FK**، فلا انتظار لـPhase 05 (Driver Core لم تبدأ) ولا حكم على الأهلية.
+- **من يستحقّ العرض**: لا مرشّحين ولا أمواج ولا مهل — تلك مِلْك Phase 07. المحرّك **يسجّل** الإسناد ولا يُقرّره (§16).
+- **القناة**: لا `chat_id` ولا Telegram في أي عمود أو حمولة حدث (ADR-007).
+
+الأنواع المُكتبة في `packages/contracts/order/` (`@wasla/contracts-order`).
+
 ---
 
 ## 5. Packages (المكتبات المشتركة)
 
 | الحزمة | المسار | الغرض |
 |---|---|---|
-| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) |
+| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) · `order` (§4.2) |
 | events | `packages/events/` | Event schema registry، Outbox helpers |
 | ui | `packages/ui/` | مكتبة واجهات مشتركة (Mini Apps) |
 | i18n | `packages/i18n/` | العربية/الإنجليزية/الأردية + مستقبلًا التركية/الفارسية |

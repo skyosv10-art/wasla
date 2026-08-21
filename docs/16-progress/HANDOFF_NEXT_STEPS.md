@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,16 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 06 — Order Engine (Phase 04 **أُغلقت** 2026-08-21 بستّ مراجعات وبوابة خروج اجتازت · §9)
+المرحلة الحالية: Phase 06 — Order Engine · MR 2/6 من ستّ مدمجة (المجال النقي مُنفَّذ ومُختبَر · §10)
+                 (Phase 04 **أُغلقت** 2026-08-21 بستّ مراجعات وبوابة خروج اجتازت · §9)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ · Phase 04 ✅ (أُغلقت 2026-08-21 بستّ مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03 · customer-db-integration و**customer-exit-gate-e2e** لبوابة المرحلة 04).
 المتبقّي:         Phase 06 → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03، و§9 لما تُسلّمه Phase 04).
-الاختبارات:       627 اختباراً على 18 مشروعاً (منها 11 اختبار بوابة خروج المرحلة 04 تعمل بمخازن الذاكرة
+الاختبارات:       1293 اختباراً على 19 مشروعاً (+1 متروك بقصد) — منها **558 لمحرّك الطلبات** (MR 2/6:
+                 441 مسح أزواج + 28 حارس مطابقة مزدوج مع ORDER_ENGINE §4 + الاستلام والإسناد والقراءة والتخطيط)
+                 و108 لعقوده (MR 1/6)
+                 (ومنها 11 اختبار بوابة خروج المرحلة 04 تعمل بمخازن الذاكرة
                  في كل `pnpm -r test` وعلى Postgres في وظيفة `customer-exit-gate-e2e`) (100 لخدمة العملاء: 48 لطبقة المجال + 34 لطبقة HTTP (`app.inject`) + 17 حراسة انحراف مخطّط
                  (تقرأ schema.sql فعلياً بلا قاعدة) + 1 حارس خصوصية لوصف الشحنة — idempotency وإعادة المحاولة على الصفّ نفسه
                  وfail-closed وبحث سلبي عن أي نصّ مستخدم أو إحداثية في الأحداث
@@ -31,7 +35,8 @@
                  + 68 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة + 43 لخدمة العملاء:
                  27 للمُهيّئ أمام قاعدة حقيقية + 16 مطابقة منافذ تُنفَّذ مرّتين ذاكرة/Postgres)
                  + 5 E2E سابقة في CI
-                 + 8 في بوابة خروج المرحلة 03 (446 مجموعاً عند وجود DATABASE_URL — الثامن يفحص الصفوف).
+                 + 8 في بوابة خروج المرحلة 03 (الثامن يفحص الصفوف).
+                 التحقّق الكامل: `pnpm -r run typecheck` + `pnpm -r run test` — كلاهما نظيف على 20 مشروع عمل.
 البوتات:         customer/driver/partner تطبيقات قابلة للنشر (8083/8084/8085) تخدم عقد القناة عبر
                  @wasla/bot-runtime — التخزين **دائم على Postgres** متى وُجِد DATABASE_URL
                  (منع التكرار وطابور المحاولات يعبران إعادة التشغيل)، وفي الذاكرة بغيابه للتشغيل المحلي.
@@ -456,7 +461,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 مدمجة · 2026-08-21)
+## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 و2/6 مدمجتان · 2026-08-21)
 
 **الأساس:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) · [عقود الخدمة](../../services/orders/contracts/README.md) · [CONTAINERS §4.2](../02-architecture/CONTAINERS.md)
 
@@ -473,15 +478,15 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 3. **حالة لا يمكن الوصول إليها من `published`** — حالةٌ لا يصلها أحد هي حالة ميتة في الكود وكذبة في الوثيقة.
 4. **صفٌّ في القاعدة يخالف قيداً مُسمّى** — مثل حالة `assigned` بلا إسناد نشيط، أو حالة نهائية بلا سبب.
 
-الصور الأربع تُختبَر على **ثلاث طبقات**: العقد (منجَز) · المجال (MR 2/6) · القاعدة (MR 3/6). وبوابة الخروج (MR 6/6) تُجرّب **كل الـ441 زوجاً** لا عيّنة منها.
+الصور الأربع تُختبَر على **ثلاث طبقات**: العقد (منجَز · MR 1/6) · المجال (منجَز · MR 2/6 — **مسح 441 زوجاً فعلي** في `transition-order.test.ts`) · القاعدة (MR 3/6). وبوابة الخروج (MR 6/6) تُعيد المسح على التركيب الكامل.
 
 ### خطة المراجعات (MRs) — ملزمة ومرتّبة
 
 | # | النطاق | المخرَج | الحالة |
 |---|---|---|---|
 | 1 | docs + contracts | ADR-010 + `services/orders/contracts/*` (schema.sql · api.openapi.yml · events.json · errors.md) + `@wasla/contracts-order` + [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) + CONTAINERS §4.2 | ✅ **منجَزة** — **108 اختباراً** (38 عقود · 31 حدود · 21 جدول انتقالات · 18 أحداث) |
-| 2 | المجال النقي | `services/orders/src/{domain,ports,use-cases,infrastructure}`: `domain/state-machine.ts` بجدول **صريح** + الكيانات + التحقّق + مصانع الأحداث + المنافذ ومُهيّئات الذاكرة — **بلا قاعدة وبلا HTTP** | ⬜ التالية |
-| 3 | الاستمرارية | مرآة Drizzle لـ`schema.sql` + `PostgresOrderRepository` + سجل التدقيق و`order_outbox` في **معاملة واحدة** مع تغيير الحالة + حراسة انحراف + وظيفة CI `order-db-integration` + مطابقة منافذ | ⬜ |
+| 2 | المجال النقي | `services/orders/src/{domain,ports,use-cases,infrastructure}`: `domain/state-machine.ts` بجدول **صريح** + الكيانات + التحقّق + مصانع الأحداث + المنافذ ومُهيّئات الذاكرة — **بلا قاعدة وبلا HTTP** | ✅ **منجَزة** — **558 اختباراً** ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md) · [MR !39](https://gitlab.com/uxxxu/wasla/-/merge_requests/39)) |
+| 3 | الاستمرارية | مرآة Drizzle لـ`schema.sql` + `PostgresOrderRepository` + سجل التدقيق و`order_outbox` في **معاملة واحدة** مع تغيير الحالة + حراسة انحراف + وظيفة CI `order-db-integration` + مطابقة منافذ | ⬜ **التالية** |
 | 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8087** + المسارات السبعة + `POST /orders/intake` + مسار الانتقالات + تخطيط الأكواد الثمانية عشر + `/health` | ⬜ |
 | 5 | سدّ دَين Phase 04 | `HttpOrderIntakePort` **إنتاجي** داخل `services/customers` بدلاً من `UnavailableOrderIntake` — فيصبح تسليم الطلب حقيقياً بين خدمتين | ⬜ |
 | 6 | بوابة الخروج | `packages/order-e2e`: رحلة طلب كاملة + **محاولة الـ441 زوجاً** + وظيفة CI + وثيقة البوابة + إغلاق المرحلة | ⬜ |
@@ -494,6 +499,20 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - **`errors.md`** — **18 كود خطأ و24 سبباً** في كتالوج **مُغلَق**: كودٌ غير مذكور فيه يُسقط اختبار حراسة.
 - **`@wasla/contracts-order`** — الأنواع المُكتبة (مُولَّدة من OpenAPI) + **108 اختباراً**، منها **21 اختباراً تقرأ جدول الانتقالات من الوثيقة نفسها** (`docs/03-domain/ORDER_ENGINE.md`) فتفشل إن اختلف العدد المعلن عن عدد الصفوف، أو ظهر انتقال ذاتي، أو خرج سهم من حالة نهائية، أو صارت حالة غير قابلة للوصول. **الوثيقة صارت مُختبَرة، لا مقروءة.**
 
+### ما أنجزته MR 2/6 بالضبط
+
+مشروع العمل العشرون `@wasla/orders-service` — طبقة مجال كاملة **بلا بنية تحتية**: تعمل في ~1.4 ثانية بلا قاعدة ولا شبكة. التفصيل المعماري في [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)، وما يجب معرفته قبل MR 3/6:
+
+- **`domain/state-machine.ts` هو الجدول نفسه** — 72 صفّاً صريحاً، كل صفّ يُسمّي المصدر والهدف والفاعل المتوقَّع والسبب النمطي. والاشتقاقات تُحسَب منه لا تُعلَن: `DERIVED_TERMINAL_STATUSES` (وتُختبَر مطابقتها لـ`ORDER_TERMINAL_STATUSES`) · `reachableStatuses` · `requiresReasonCode` · `assignmentRequirement` بثلاث درجات `{required: 6, forbidden: 4, optional: 11}` مرآةً لقيد `ck_orders_assignment_matches_status`.
+- **حارس المطابقة المزدوج يعمل** — `state-machine.test.ts` تقرأ [ORDER_ENGINE §4](../03-domain/ORDER_ENGINE.md) وتُقارنها بالكود **في الاتجاهين** صفّاً بصفّ (المصدر · الهدف · الفاعل · السبب)، وتتحقّق أن العدد المعلن في كل عنوان حالة يطابق صفوفه. صفٌّ في الكود غير موثّق يُسقط المجموعة، وصفٌّ موثّق غير مُنفَّذ كذلك. **الوثيقة هي المصدر، لا التعليق.**
+- **المسح الحقيقي منجَز الآن لا في MR 6/6** — `transition-order.test.ts` تُنشئ طلباً وتسوقه إلى كل حالة من الـ21 بأقصر مسار ثمّ تُجرّب الانتقال إلى كل حالة من الـ21: المسموح ينجح والباقي `ORDER_ILLEGAL_TRANSITION` (409). 441 حالة اختبار فعلية.
+- **خصائص [ORDER_ENGINE §5](../03-domain/ORDER_ENGINE.md): 1–11 مُثبَتة**، والخاصية 12 (تطابق المخزنين) محلّها MR 3/6 — والمجموعة مكتوبة أصلاً لتُشغَّل على مخزن ثانٍ بلا تعديل (المُهيّئات كلّها وراء `OrderDependencies`).
+- **ترتيب الفحص عقدٌ مُختبَر** لا تفصيل تنفيذ: 404 → 409 (الجدول) → 422 (السبب) → 422 (شكل الفاعل) → 422 (حرّاس الإسناد). من يبني طبقة HTTP في MR 4/6 يعتمد عليه.
+- **الفاعل: الشكل مُلزِم والهوية لا** — عمود «الفاعل المتوقَّع» في الجدول **ليس** مُلزَماً في Phase 06 لعدم وجود مصادقة؛ المُلزَم هو `system` بلا مرجع، والبشري بمرجع يطابق `WS-##########`. مكتوب صراحةً في الكود كي لا يُقرَأ العمود كضمانٍ غير موجود.
+- **الإسناد سجلٌّ لا محرّك — والقبول لا يُحرّك الحالة** — `resolveAssignment(accepted)` يربط الإسناد النشط ولا يُغيّر الحالة، لأن تحريكها هناك كان سيُنتج تغييرَ حالةٍ واحداً لم يمرّ بالجدول. وفكّ الإسناد له **مالك واحد**: `transitionOrder` حين يعود الطلب إلى ما قبل القبول. ولا فرع «تحرير» في الحلّ: العرض يُحلّ مرّة واحدة، وسائقٌ يتراجع بعد القبول هو انتقالٌ إلى `driver_cancelled` لا صفٌّ يُعاد كتابته.
+- **الاستلام: ثلاث نتائج + رابعة** — مفتاح جديد ⇒ إنشاء بحدثين · مفتاح مُعاد بحمولة مطابقة ⇒ نفس الطلب بلا حدث ثانٍ · بحمولة مختلفة ⇒ `ORDER_IDEMPOTENCY_KEY_REUSED` · و`order_request_id` مُسلَّم سابقاً بمفتاح آخر ⇒ `ORDER_REQUEST_ALREADY_INGESTED`. والبصمة تتجاهل `traceId` والمفتاح، فإعادة المحاولة بتتبّع جديد تبقى إعادة محاولة.
+- **التدقيق والنشر متلازمان بالعدد** — صفوف التاريخ = الانتقالات + 1، وأحداث `status_changed` = صفوف التاريخ، والصفوف متلاصقة، و`from_status = null` مرّة واحدة في عمر الطلب. مقيسة لا موصوفة.
+
 ### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-010)
 
 1. **لا حالة `draft`** — الطلب يبدأ `published`. Phase 04 تُسلّم نيّة **مُتحقَّقة**، فمسوّدةٌ تكرّر تحقّقاً وتُنتج طلبات معلّقة بلا مالك. حارس يفشل إن ظهر `draft` في أي enum.
@@ -505,8 +524,10 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ### ما لم يُنجَز بقصد (لا تُعِد بناءه من الصفر)
 
-- **لا منطق ولا قاعدة ولا HTTP بعد** — MR 1/6 عقود ووثائق فقط، وهذا هو النمط المتّبع في المراحل 02 و04.
-- **`state-machine.ts` غير موجود** — وعلى MR 2/6 أن تُنتج **الأزواج الاثنين والسبعين نفسها** التي تنشرها الوثيقة، وأن تُشتَقّ الحالات النهائية من الجدول وتُطابَق مع `ORDER_TERMINAL_STATUSES`. الحارس مزدوج: الوثيقة ↔ الكود.
+- **لا قاعدة ولا HTTP بعد** — المجال كامل ومُختبَر، لكن `services/orders` **غير قابلة للتشغيل**: لا `PostgresOrderRepository` (MR 3/6) ولا تطبيق Fastify على 8087 (MR 4/6). المُهيّئ الوحيد للمستودع في الذاكرة.
+- **لا ذرّية بين المستودع والصادر** — `InMemoryOrderRepository` و`InMemoryOutbox` منفذان بلا حدّ معاملة. **الكتابة الثلاثية في معاملة واحدة هي عمل MR 3/6** (§7 من ORDER_ENGINE)، ومَن ينفّذها يجب أن يفعلها **بلا تغيير في `use-cases/`** — أي اضطرار لتغيير سلوك هناك دليلٌ على أن المخطّط بدأ يقود المجال (نفس المعيار المكتوب في Phase 04 · §9).
+- **لا إلزام لهوية الفاعل** — الشكل فقط. الإلزام يدخل مع طبقة المصادقة (Phase 09+)، ولا يُغيّر جدول الانتقالات.
+- **`ORDER_TRANSITION_SPACE` ثابت مُصدَّر (441)** — لا تُعِد حسابه في MR 6/6؛ استورده كي يبقى للفضاء معنًى واحد في المستودع.
 - **`UnavailableOrderIntake` باقٍ في `services/customers`** — يُستبدل في MR 5/6 لا قبلها، فتسليم الطلب بين الخدمتين لا يزال fail-closed.
 - **`maxItems: 2` على `stops`** هو الانحراف الوحيد المقصود عن عقد العميل، موثّق في مكانه: Multi-stop يوسّع الحدّ بلا هجرة.
 

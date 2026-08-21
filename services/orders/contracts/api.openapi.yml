@@ -1,0 +1,538 @@
+openapi: 3.0.3
+info:
+  title: WASLA Order Engine Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة محرّك الطلبات (Phase 06) وفق [ADR-010](../../../docs/15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md).
+
+    **الحدود الملزمة:**
+    - هذه الخدمة **وحدها** تملك الطلب وحالته ومعرّفه العام. لا خدمة أخرى تكتب في جداولها (§37).
+    - `POST /orders/intake` هو **الطرف الآخر** لـ`OrderIntakePort` في خدمة العميل (ADR-009):
+      حمولته هي `OrderIntakeRequest` المنشورة في عقد خدمة العميل **حرفياً**، وأي انحراف بينهما
+      يكسر بوابة خروج Phase 04. من يُعدّل الشكل يبدأ من العقدين معاً.
+    - **لا مسار لإنشاء مسوّدة ولا لتعديل طلب**: الطلب يُخلَق `published` مُتحقَّقاً (ADR-010 القرار 2).
+    - انتقالات الحالة تمرّ بمسار واحد `POST /orders/{id}/transitions` — لا مسار لكل حالة، لأن
+      عشرين حالة تعني عشرين مساراً وقاعدة انتقال مُبعثرة عليها.
+    - **اختيار المرشّحين وأمواج العرض والمهل ليست هنا** (Phase 07): المحرّك يسجّل الإسناد لا يُقرّره.
+    - القراءة مُقيَّدة بالمالك: طلب عميل آخر يُجيب **404** لا 403 (لا نُثبت وجود ما لا يُقرأ).
+  contact:
+    name: Team 06 — Order Engine
+
+servers:
+  - url: http://localhost:8087
+    description: التشغيل المحلي
+
+tags:
+  - name: intake
+    description: استقبال نيّة طلب مُتحقَّقة من خدمة العميل
+  - name: orders
+    description: قراءة الطلب وتاريخه
+  - name: transitions
+    description: تغيير حالة الطلب (المسار الوحيد)
+  - name: assignments
+    description: تسجيل مراجع الإسناد (Phase 07 هي من تُقرّرها)
+  - name: ops
+    description: التشغيل
+
+paths:
+  /health:
+    get:
+      tags: [ops]
+      summary: حالة الخدمة
+      description: |
+        `ok` فقط عندما تكون الخدمة قادرة على إتمام عملها (تخزين دائم مضبوط)؛
+        وإلّا `degraded`. خدمة تقول «سليمة» وهي لا تستطيع كتابة طلب تُخفي عطلاً.
+      responses:
+        '200':
+          description: الحالة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service, persistence]
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  service: { type: string, const: orders-service }
+                  persistence: { type: string, enum: [postgres, memory] }
+
+  /orders/intake:
+    post:
+      tags: [intake]
+      operationId: intakeOrder
+      summary: استقبال نيّة طلب مُتحقَّقة وإنشاء طلب
+      description: |
+        الطرف الآخر لـ`OrderIntakePort`. يُنشئ طلباً بحالة `published` ويُصدر `order_public_id`.
+
+        **الدلالة مُثبَّتة باختبار من الطرف المُسلِّم** ([بوابة Phase 04](../../../docs/12-testing/PHASE04_EXIT_GATE_E2E.md)):
+        - `201` أُنشئ · `200` إعادة نفس المفتاح بنفس الحمولة (بلا صفّ ثانٍ وبلا حدث ثانٍ)
+        - `400` الجسم لا يطابق العقد — يعامله المُسلِّم **كخطئه** (`UNAVAILABLE`) لا كرفض تجاري
+        - `409` نفس المفتاح بحمولة مختلفة
+        - `422` صالح شكلياً ومرفوض منطقياً (منطقة غير مقبولة · تناقض سعر)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderIntakeRequest' }
+      responses:
+        '201':
+          description: أُنشئ الطلب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderIntakeResult' }
+        '200':
+          description: إعادة مفتاح idempotency بنفس الحمولة — نفس النتيجة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderIntakeResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /orders/{orderId}:
+    get:
+      tags: [orders]
+      operationId: getOrder
+      summary: قراءة طلب (مُقيَّدة بالمالك)
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/CustomerScope'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الطلب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /orders/{orderId}/history:
+    get:
+      tags: [orders]
+      operationId: getOrderHistory
+      summary: سجل تدقيق الانتقالات (مُرتَّب تصاعدياً)
+      description: كل انتقال حدث للطلب، بلا استثناء — هو الدليل على أنّ الحالة لم تتغيّر صامتة.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/CustomerScope'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: التاريخ
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/StatusHistoryEntry' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /orders/{orderId}/transitions:
+    post:
+      tags: [transitions]
+      operationId: transitionOrder
+      summary: تغيير حالة الطلب — المسار الوحيد
+      description: |
+        ينجح فقط إذا كان الزوج (الحالة الحالية، `to_status`) **مذكوراً في جدول الانتقالات**
+        (ADR-010 القرار 3). وإلّا **409** `ORDER_ILLEGAL_TRANSITION` مع `from` و`to` في التفاصيل.
+
+        يكتب صفّ تدقيق ويُنتج حدثاً **في المعاملة نفسها**. `reason_code` إلزامي لكل حالة نهائية.
+        والحالات التي تُسمّي سائقاً تستلزم إسناداً نشطاً مُسجَّلاً مسبقاً وإلّا **422**.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransitionRequest' }
+      responses:
+        '200':
+          description: تمّ الانتقال (أو إعادة نفس المفتاح بنفس الحمولة)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /orders/{orderId}/assignments:
+    post:
+      tags: [assignments]
+      operationId: recordAssignment
+      summary: تسجيل عرض إسناد لسائق (سجل لا قرار)
+      description: |
+        Phase 07 تُقرّر **من** يُعرض عليه ومتى؛ هذا المسار يسجّل ما قرّرته (§16).
+        `driver_public_id` مرجع opaque — لا يتحقّق المحرّك من أهلية السائق (ADR-010 القرار 4).
+        عرض الطلب نفسه على السائق نفسه مرّتين ⇒ **409**.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [driver_public_id]
+              properties:
+                driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '201':
+          description: سُجّل العرض
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assignment' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /orders/{orderId}/assignments/{assignmentId}:
+    patch:
+      tags: [assignments]
+      operationId: updateAssignmentState
+      summary: تحديث حالة عرض الإسناد (قبول · رفض · انتهاء · إلغاء)
+      description: |
+        القبول هو ما يجعل الإسناد **نشطاً** على الطلب، فيصبح الانتقال إلى الحالات التي
+        تُسمّي سائقاً ممكناً. الرفض والانتهاء لا يُنهيان الطلب (ADR-010 القرار 3.5).
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - name: assignmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assignment_state]
+              properties:
+                assignment_state: { type: string, enum: [accepted, rejected, expired, cancelled] }
+                reason_code: { $ref: '#/components/schemas/ReasonCode' }
+      responses:
+        '200':
+          description: حُدِّثت الحالة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assignment' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+components:
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CustomerScope:
+      name: X-Customer-Public-Id
+      in: header
+      required: true
+      description: نطاق القراءة. طلب عميل آخر يُجيب 404 (لا نُثبت وجود ما لا يُقرأ).
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على كل كتابة (§43). مدخل النظام بوت، وضغط الزر مرّتين حالة عادية.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الرد وفي مغلّف الحدث وفي صفّ التدقيق.
+      schema: { type: string, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque. لا يُحلَّل ولا تُقرأ أجزاؤه.
+
+    OrderPublicId:
+      type: string
+      pattern: '^ORD-[0-9]{10}$'
+      description: |
+        يملكه المحرّك ويُولَّد من متتالية في القاعدة (ADR-010 القرار 5).
+        **نصّ opaque للمستهلكين**: لا يُحلَّل ولا يُشتَقّ منه ترتيب ولا عدد.
+
+    ReasonCode:
+      type: string
+      minLength: 3
+      maxLength: 64
+      description: كود من كتالوج [errors.md](errors.md) — **لا نصّ حرّ** ولا نصّ كتبه مستخدم.
+
+    OrderStatus:
+      type: string
+      description: |
+        دورة الحياة كما قيّدها ADR-010 عن §15.1: **لا `draft`**،
+        و`driver_rejected`/`driver_timeout` **عابرتان** لا نهايتان.
+      enum:
+        - published
+        - searching
+        - offered
+        - negotiating
+        - accepted
+        - assigned
+        - driver_en_route
+        - arrived
+        - in_progress
+        - completed
+        - driver_rejected
+        - driver_timeout
+        - expired
+        - no_driver_found
+        - customer_cancelled
+        - driver_cancelled
+        - partner_cancelled
+        - blocked
+        - failed
+        - payment_disputed
+        - under_review
+
+    OrderType:
+      type: string
+      enum: [ride, delivery]
+
+    VehicleClass:
+      type: string
+      enum: [sedan, suv, van, pickup, motorcycle, truck_small]
+      description: مطابقة حرفياً لعقد خدمة العميل. أي نقص يجعل المحرّك يرفض طلباً صالحاً.
+
+    PriceMode:
+      type: string
+      enum: [customer_offer, negotiable]
+
+    StopKind:
+      type: string
+      enum: [pickup, dropoff]
+
+    StopSource:
+      type: string
+      enum: [map, telegram_location, link, text_search, saved_place, manual_zone]
+
+    ActorType:
+      type: string
+      enum: [system, customer, driver, partner, admin]
+
+    AssignmentState:
+      type: string
+      enum: [offered, accepted, rejected, expired, cancelled]
+
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor:
+          type: integer
+          format: int64
+          minimum: 1
+          description: بالوحدة الصغرى (هللة) — **عدد صحيح**. لا عدد عشري في المال أبداً.
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+
+    Stop:
+      type: object
+      required: [kind, zone_id, source]
+      properties:
+        kind: { $ref: '#/components/schemas/StopKind' }
+        zone_id:
+          type: string
+          format: uuid
+          description: إلزامي — نقطة بلا منطقة غير قابلة للمطابقة (ADR-009 القرار 2).
+        label: { type: string, maxLength: 60, nullable: true }
+        source: { $ref: '#/components/schemas/StopSource' }
+        saved_place_id: { type: string, format: uuid, nullable: true }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+
+    ShipmentDetails:
+      type: object
+      properties:
+        shipment_type:
+          type: string
+          enum: [parcel, documents, food, goods, other]
+          nullable: true
+        description: { type: string, maxLength: 300, nullable: true }
+        weight_kg: { type: number, minimum: 0, maximum: 3000, nullable: true }
+
+    OrderIntakeRequest:
+      type: object
+      description: |
+        **مرآة** لـ`OrderIntakeRequest` في
+        [عقد خدمة العميل](../../customers/contracts/api.openapi.yml): الحقول المطلوبة وأسماؤها
+        وقوائمها المُقفلة متطابقة، وحارس عقد في `@wasla/contracts-order` يُفشل البناء عند أي انحراف
+        فيها — لأن الانحراف يكسر بوابة خروج Phase 04.
+
+        **فرق واحد مقصود:** هنا `maxItems: 2` على `stops`. المُسلِّم يتحقّق من «نقطتان بالضبط»
+        في مجاله (ADR-009 القرار 3) ولم يُثبّت الحدّ الأعلى في مخطّطه؛ والمحرّك يُثبّته لأنّه
+        الطرف الذي يستقبل من الشبكة: قبول ثلاث نقاط هنا يعني تخزين طلب لا يستطيع أحد مطابقته.
+      required: [order_request_id, customer_public_id, order_type, vehicle_class, price_mode, stops, requested_at]
+      properties:
+        order_request_id: { type: string, format: uuid }
+        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        stops:
+          type: array
+          minItems: 2
+          maxItems: 2
+          description: نقطتان بالضبط في هذه المرحلة (ADR-009 القرار 3).
+          items: { $ref: '#/components/schemas/Stop' }
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+        notes: { type: string, maxLength: 300, nullable: true }
+        requested_at: { type: string, format: date-time }
+        idempotency_key: { type: string, minLength: 8, maxLength: 128 }
+
+    OrderIntakeResult:
+      type: object
+      required: [order_public_id, accepted_at]
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        accepted_at: { type: string, format: date-time }
+
+    TransitionRequest:
+      type: object
+      required: [to_status, actor_type]
+      properties:
+        to_status: { $ref: '#/components/schemas/OrderStatus' }
+        reason_code: { $ref: '#/components/schemas/ReasonCode' }
+        actor_type: { $ref: '#/components/schemas/ActorType' }
+        actor_ref:
+          allOf: [{ $ref: '#/components/schemas/WaslaPublicId' }]
+          nullable: true
+          description: مُعرّف عام للفاعل البشري. إلزامي لكل `actor_type` غير `system`، وممنوع مع `system`.
+
+    Assignment:
+      type: object
+      required: [id, order_id, driver_public_id, sequence, assignment_state, offered_at]
+      properties:
+        id: { type: string, format: uuid }
+        order_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        sequence: { type: integer, minimum: 1 }
+        assignment_state: { $ref: '#/components/schemas/AssignmentState' }
+        reason_code:
+          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          nullable: true
+        offered_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+        rejected_at: { type: string, format: date-time, nullable: true }
+        expired_at: { type: string, format: date-time, nullable: true }
+        cancelled_at: { type: string, format: date-time, nullable: true }
+
+    StatusHistoryEntry:
+      type: object
+      required: [sequence, to_status, actor_type, occurred_at]
+      properties:
+        sequence: { type: integer, minimum: 1 }
+        from_status:
+          allOf: [{ $ref: '#/components/schemas/OrderStatus' }]
+          nullable: true
+          description: '`null` مرّة واحدة فقط: عند الإنشاء.'
+        to_status: { $ref: '#/components/schemas/OrderStatus' }
+        reason_code:
+          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          nullable: true
+        actor_type: { $ref: '#/components/schemas/ActorType' }
+        actor_ref:
+          allOf: [{ $ref: '#/components/schemas/WaslaPublicId' }]
+          nullable: true
+        occurred_at: { type: string, format: date-time }
+        trace_id: { type: string, nullable: true }
+
+    Order:
+      type: object
+      required:
+        [id, order_public_id, order_request_id, customer_public_id, order_type, vehicle_class,
+         status, price_mode, stops, requested_at, accepted_at, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        order_request_id: { type: string, format: uuid }
+        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        status_reason_code:
+          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          nullable: true
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        offered_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        stops:
+          type: array
+          items: { $ref: '#/components/schemas/Stop' }
+        shipment:
+          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          nullable: true
+        notes: { type: string, nullable: true }
+        active_assignment:
+          allOf: [{ $ref: '#/components/schemas/Assignment' }]
+          nullable: true
+        requested_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: 'كود ثابت (stable) — الاختبارات تتحقّق منه لا من النص' }
+        message: { type: string }
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: الكيان غير موجود (أو ليس مملوكاً للقارئ)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض حالة (انتقال غير مسموح · إعادة مفتاح بحمولة مختلفة · إسناد مكرَّر)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: صالح شكلياً وغير مقبول منطقياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

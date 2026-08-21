@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -453,6 +453,62 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 **مؤجّل صراحة (خارج نطاق المرحلة 04):** الطلبات المجدولة · Multi-stop · التسعير الذكي والسعر الاسترشادي · تفاوض العميل و`agreed_price` (Phase 08) · تاريخ الرحلات وسمعة السائق · `apps/customer-mini-app` (Phase 11) · تقارير الحوادث (Phase 12) · Reverse Geocoding وحساب المسافة (§28).
 
 **العملان المنقولان من Phase 03 (لا يزالان قائمين):** مُشغّل دوري لـ`retryDueDeliveries` وناشر صندوق الصادر — انظر §7 وتفصيلهما في [CHANNEL_PERSISTENCE.md §7](../02-architecture/CHANNEL_PERSISTENCE.md). لم تلمسهما دفعة MR 1 لأنها عقود بلا تشغيل.
+
+---
+
+## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 مدمجة · 2026-08-21)
+
+**الأساس:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) · [عقود الخدمة](../../services/orders/contracts/README.md) · [CONTAINERS §4.2](../02-architecture/CONTAINERS.md)
+
+**بوابة الخروج (من الوثيقة الأم §77):** «يمكن إنشاء Order وتغييره عبر الحالة **دون حالات مستحيلة**».
+
+**لماذا تُنفَّذ 06 قبل 05 (Driver Core):** لأن المحرّك يخزّن **مرجع** سائق (`driver_public_id` نصّ بقيد CHECK على الشكل، **بلا FK**) ولا يحكم على أهليّته. المسار الحرج في [ROADMAP §3](ROADMAP.md) هو `00 → 01 → 02 → 04 → 06 → 07 → 09 → 20` — و05 خارجه أصلاً، فلا انحراف عن الترتيب ولا ADR ترتيب مطلوب. من يبني Phase 05 لاحقاً **لا يحتاج هجرة**: يضيف خدمته ويظلّ المرجع كما هو.
+
+### تعريف «الحالة المستحيلة» — قابل للقياس لا بلاغي
+
+عبارةُ بوابة الخروج غامضة كما كُتبت، فعُرِّفت في ADR-010 §7 في **أربع صور** يفشل البناء إن ظهرت أيٌّ منها:
+
+1. **انتقال خارج الجدول المنشور** — الجدول 72 زوجاً من 441، وما ليس فيه مرفوض بـ`ORDER_ILLEGAL_TRANSITION`.
+2. **سهم يخرج من حالة نهائية** — الحالات النهائية السبع مُغلَقة، فلا «إحياء» طلب مُلغى.
+3. **حالة لا يمكن الوصول إليها من `published`** — حالةٌ لا يصلها أحد هي حالة ميتة في الكود وكذبة في الوثيقة.
+4. **صفٌّ في القاعدة يخالف قيداً مُسمّى** — مثل حالة `assigned` بلا إسناد نشيط، أو حالة نهائية بلا سبب.
+
+الصور الأربع تُختبَر على **ثلاث طبقات**: العقد (منجَز) · المجال (MR 2/6) · القاعدة (MR 3/6). وبوابة الخروج (MR 6/6) تُجرّب **كل الـ441 زوجاً** لا عيّنة منها.
+
+### خطة المراجعات (MRs) — ملزمة ومرتّبة
+
+| # | النطاق | المخرَج | الحالة |
+|---|---|---|---|
+| 1 | docs + contracts | ADR-010 + `services/orders/contracts/*` (schema.sql · api.openapi.yml · events.json · errors.md) + `@wasla/contracts-order` + [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) + CONTAINERS §4.2 | ✅ **منجَزة** — **108 اختباراً** (38 عقود · 31 حدود · 21 جدول انتقالات · 18 أحداث) |
+| 2 | المجال النقي | `services/orders/src/{domain,ports,use-cases,infrastructure}`: `domain/state-machine.ts` بجدول **صريح** + الكيانات + التحقّق + مصانع الأحداث + المنافذ ومُهيّئات الذاكرة — **بلا قاعدة وبلا HTTP** | ⬜ التالية |
+| 3 | الاستمرارية | مرآة Drizzle لـ`schema.sql` + `PostgresOrderRepository` + سجل التدقيق و`order_outbox` في **معاملة واحدة** مع تغيير الحالة + حراسة انحراف + وظيفة CI `order-db-integration` + مطابقة منافذ | ⬜ |
+| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8087** + المسارات السبعة + `POST /orders/intake` + مسار الانتقالات + تخطيط الأكواد الثمانية عشر + `/health` | ⬜ |
+| 5 | سدّ دَين Phase 04 | `HttpOrderIntakePort` **إنتاجي** داخل `services/customers` بدلاً من `UnavailableOrderIntake` — فيصبح تسليم الطلب حقيقياً بين خدمتين | ⬜ |
+| 6 | بوابة الخروج | `packages/order-e2e`: رحلة طلب كاملة + **محاولة الـ441 زوجاً** + وظيفة CI + وثيقة البوابة + إغلاق المرحلة | ⬜ |
+
+### ما أنجزته MR 1/6 بالضبط
+
+- **`services/orders/contracts/schema.sql`** — خمسة جداول (`orders` · `order_stops` · `order_status_history` · `order_assignments` · `order_outbox`) + متتالية `order_public_id_seq` + دالّة trigger للتحديث. القيود **مُسمّاة** لتمنع بالبناء ما كان سيُترك للمراجعة البشرية: `ck_orders_assignment_matches_status` (لا إسناد نشيط في حالة بحث، ولا حالة مُسنَدة بلا إسناد) · `ck_orders_terminal_needs_reason` · `ck_orders_price_mode_amount` و`ck_orders_money_complete` (مبلغ **عدد صحيح** بالوحدة الصغرى) · `ck_orders_shipment_only_delivery` · `ck_order_status_history_progresses` · وفرائد التسلسل. **والـDDL مُتحقَّقة على Postgres 18.4 فعلياً** لا مقروءة: الجداول أُنشئت، والقيود رفضت الستّ حالات المخالفة، وأول إدخال صالح أنتج `ORD-0000000001`.
+- **`api.openapi.yml`** — المنفذ 8087 وسبعة مسارات: `/health` · `POST /orders/intake` · `GET /orders/{id}` · `GET /orders/{id}/history` · `POST /orders/{id}/transitions` · `POST /orders/{id}/assignments` · `PATCH …/assignments/{assignmentId}`.
+- **`events.json`** — أربعة أحداث (`OrderCreatedV1` · `OrderStatusChangedV1` · `OrderAssignmentOfferedV1` · `OrderAssignmentResolvedV1`) في مغلّف واحد، **بالمنطقة لا بالإحداثية** وبلا نصّ كتبه المستخدم.
+- **`errors.md`** — **18 كود خطأ و24 سبباً** في كتالوج **مُغلَق**: كودٌ غير مذكور فيه يُسقط اختبار حراسة.
+- **`@wasla/contracts-order`** — الأنواع المُكتبة (مُولَّدة من OpenAPI) + **108 اختباراً**، منها **21 اختباراً تقرأ جدول الانتقالات من الوثيقة نفسها** (`docs/03-domain/ORDER_ENGINE.md`) فتفشل إن اختلف العدد المعلن عن عدد الصفوف، أو ظهر انتقال ذاتي، أو خرج سهم من حالة نهائية، أو صارت حالة غير قابلة للوصول. **الوثيقة صارت مُختبَرة، لا مقروءة.**
+
+### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-010)
+
+1. **لا حالة `draft`** — الطلب يبدأ `published`. Phase 04 تُسلّم نيّة **مُتحقَّقة**، فمسوّدةٌ تكرّر تحقّقاً وتُنتج طلبات معلّقة بلا مالك. حارس يفشل إن ظهر `draft` في أي enum.
+2. **جدول انتقالات صريح** — لا قاعدة عامة مُشتَقّة: قاعدةٌ عامة تفشل بصمت في الشاذّ، والحالة المستحيلة هي بالضبط الاستثناء الذي تنسى.
+3. **`driver_public_id` opaque بلا FK** — يفصل المحرّك عن Phase 05.
+4. **`ORD-` + عشرة أرقام من متتالية القاعدة** — لا UUID ظاهر (العميل يقرأه في محادثة دعم) ولا عدّاد تطبيقي (يتصادم عند أول نسختين).
+5. **`Idempotency-Key` إلزامي على كل كتابة** (§43) — مفتاح بجسم مختلف ⇒ 409.
+6. **المحرّك يُسجّل الإسناد ولا يُقرّره** — لا مرشّحين ولا أمواج ولا مهل: تلك Phase 07 (§16).
+
+### ما لم يُنجَز بقصد (لا تُعِد بناءه من الصفر)
+
+- **لا منطق ولا قاعدة ولا HTTP بعد** — MR 1/6 عقود ووثائق فقط، وهذا هو النمط المتّبع في المراحل 02 و04.
+- **`state-machine.ts` غير موجود** — وعلى MR 2/6 أن تُنتج **الأزواج الاثنين والسبعين نفسها** التي تنشرها الوثيقة، وأن تُشتَقّ الحالات النهائية من الجدول وتُطابَق مع `ORDER_TERMINAL_STATUSES`. الحارس مزدوج: الوثيقة ↔ الكود.
+- **`UnavailableOrderIntake` باقٍ في `services/customers`** — يُستبدل في MR 5/6 لا قبلها، فتسليم الطلب بين الخدمتين لا يزال fail-closed.
+- **`maxItems: 2` على `stops`** هو الانحراف الوحيد المقصود عن عقد العميل، موثّق في مكانه: Multi-stop يوسّع الحدّ بلا هجرة.
 
 ---
 

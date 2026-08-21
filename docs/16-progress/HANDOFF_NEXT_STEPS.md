@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,13 +15,13 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 04 — Customer Core (**قيد التنفيذ**: MR 1/6 و2/6 و3/6 و4/6 مدمجة — العقود وADR-009 ثم
-                 طبقة المجال النقيّة ثم استمرارية Postgres ثم طبقة HTTP على 8086 · §9 للخطة)
-المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ (أُغلقت 2026-08-21 بسبع مراجعات) —
+المرحلة الحالية: Phase 06 — Order Engine (Phase 04 **أُغلقت** 2026-08-21 بستّ مراجعات وبوابة خروج اجتازت · §9)
+المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ · Phase 04 ✅ (أُغلقت 2026-08-21 بستّ مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
-                 لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03).
-المتبقّي:         Phase 04 (MR 6/6: بوابة الخروج E2E · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
-الاختبارات:       587 اختبار وحدة (100 لخدمة العملاء: 48 لطبقة المجال + 34 لطبقة HTTP (`app.inject`) + 17 حراسة انحراف مخطّط
+                 لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03 · customer-db-integration و**customer-exit-gate-e2e** لبوابة المرحلة 04).
+المتبقّي:         Phase 06 → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03، و§9 لما تُسلّمه Phase 04).
+الاختبارات:       627 اختباراً على 18 مشروعاً (منها 11 اختبار بوابة خروج المرحلة 04 تعمل بمخازن الذاكرة
+                 في كل `pnpm -r test` وعلى Postgres في وظيفة `customer-exit-gate-e2e`) (100 لخدمة العملاء: 48 لطبقة المجال + 34 لطبقة HTTP (`app.inject`) + 17 حراسة انحراف مخطّط
                  (تقرأ schema.sql فعلياً بلا قاعدة) + 1 حارس خصوصية لوصف الشحنة — idempotency وإعادة المحاولة على الصفّ نفسه
                  وfail-closed وبحث سلبي عن أي نصّ مستخدم أو إحداثية في الأحداث
                  + 42 لعقود Customer Core منها حرّاس حدود ADR-009 وقاعدة خصوصية الأحداث
@@ -391,7 +391,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 9. Phase 04 (Customer Core) — قيد التنفيذ (بدأت 2026-08-21)
+## 9. Phase 04 (Customer Core) — مكتملة ✅ (2026-08-21) · بوابة الخروج اجتازت
 
 **الأساس:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) · [عقود الخدمة](../../services/customers/contracts/README.md) · [CONTAINERS §4.1](../02-architecture/CONTAINERS.md)
 
@@ -408,13 +408,23 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 | 3 | الاستمرارية | `src/infrastructure/drizzle/{schema,db,repository}.ts` — مرآة Drizzle لـ`schema.sql` + `PostgresCustomerRepository` + `PostgresCustomerOutbox` + حراسة انحراف (17) + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) + **مطابقة منافذ** (16 سيناريو × مُهيّئين) + حسم `shipment_description` **بالتبنّي** | ✅ **مدمجة ([!34](https://gitlab.com/uxxxu/wasla/-/merge_requests/34))** — 66 وحدة + 43 تكامل · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) |
 | 4 | طبقة HTTP | `src/http/{requests,errors,app,server}.ts` — تطبيق Fastify على المنفذ **8086** + عشرة مسارات + تخطيط الأكواد الثمانية عشر إلى حالات HTTP (بلا كود جديد) + `/health` بحالتيه + محوّلا HTTP للهوية والجغرافيا + `x-request-id` → `trace_id` | ✅ **مدمجة ([!35](https://gitlab.com/uxxxu/wasla/-/merge_requests/35))** — 34 اختبار `app.inject` · [CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md) |
 | 5 | البوت | ربط `bots/customer-bot` بالخدمة مع **الحفاظ على حياد القناة** (ADR-007) عبر **بذرة محادثة محيّدة** في `@wasla/bot-runtime`: `/start` (ضمان الملف صامتاً) · `/places` · `/orders`. **إنشاء الطلب أُسنِد إلى Phase 11** بحجّة منتجية مكتوبة لا بحجّة تقنية | ✅ **مدمجة ([!36](https://gitlab.com/uxxxu/wasla/-/merge_requests/36))** — 29 اختباراً · [CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md) |
-| 6 | بوابة الخروج | E2E: عميل ينشئ طلباً صالحاً يصل إلى **محرّك طلبات بديل (stub)** يحترم `OrderIntakeRequest` + وثيقة البوابة + إغلاق المرحلة | ⬜ **التالية** |
+| 6 | بوابة الخروج | E2E: عميل ينشئ طلباً صالحاً يصل إلى **محرّك طلبات بديل (stub)** يحترم `OrderIntakeRequest` + وظيفة CI `customer-exit-gate-e2e` + وثيقة البوابة + إغلاق المرحلة | ✅ **مدمجة ([!MR_IID](https://gitlab.com/uxxxu/wasla/-/merge_requests/MR_IID))** — 11 اختباراً (ذاكرة + Postgres) · [PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md) |
 
 **ما صار قائماً بعد MR 3/6:** خدمة `services/customers` صارت تملك **مسار تخزين دائماً** وراء منافذها نفسها: `createCustomerDb({connectionString})` يُنشئ تجمّع `pg` + `drizzle`، و`PostgresCustomerRepository` و`PostgresCustomerOutbox` ينفّذان `CustomerRepository` و`Outbox` بلا توسيع للمنافذ، وكلّها مُصدَّرة من `src/index.ts`. و**لم يتغيّر ملف واحد في `src/use-cases/`** — وهذا هو المعيار: أي اضطرار لتغيير سلوك هناك دليلٌ على أن المخطّط بدأ يقود المجال. مصدر الـDDL يبقى `contracts/schema.sql` اليدوي؛ مرآة Drizzle مستهلِك له، و`schema-drift.test.ts` يقرأ العقد فعلياً فيكسر البناء عند أي انحراف، و`drizzle.config.ts` أداة محلية لا تُشغَّل في CI.
 
 **ما صار قائماً بعد MR 5/6:** للنواة **مستهلك حقيقي**. `@wasla/bot-runtime` يقبل الآن `onConversation`: دالّة واحدة يُسلّمها الجذر، تأخذ `ConversationEvent` محايداً وتُعيد نصاً أو `null`. طبقة القناة **لم تتعلّم** وجود مجال (لا فرع `bot === "customer"`)، و`receiveUpdate` صار يُتيح `actor` المحيّد ليُحلّ الهوية عند أمر غير `start`. وبوت العميل يربط ثلاثة تدفقات في `flows.ts` وراء `CustomerFlowsPort`، والاعتماد على `@wasla/customers-service` يعيش في **ملف واحد** (`customer-core.ts`). و`CUSTOMER_DATABASE_URL` هو **بوّابة** التدفقات: بغيابه لا يُسجَّل `/places` ولا `/orders` (422) ولا يوجد بديل في الذاكرة — عن قصد ([CUSTOMER_BOT_FLOWS §8](../02-architecture/CUSTOMER_BOT_FLOWS.md)).
 
-**ما يجب أن يعرفه من يبدأ MR 6/6 قبل أن يكتب سطراً** (النقاط 3..7 قيود دائمة لا تنتهي بدفعة، والنقطتان 1 و2 حُسمتا في MR 4/6):
+**ما صار قائماً بعد MR 6/6 (إغلاق المرحلة):** بوابة الخروج **مُثبَتة لا موصوفة**. `packages/customer-e2e` (خاصة، اختبارات فقط، بلا كود تشغيلي) تبني في عملية واحدة: خدمة هوية حقيقية على HTTP، خدمة جغرافيا حقيقية ببذرة السعودية، نواة العميل عبر `createCustomerApp` على منفذ حقيقي، بوت العميل بـ`MockChannelAdapter` وبـ**نفس `UseCaseDeps`** التي يستعملها مسار HTTP، ومحرّك طلبات بديل على `node:http` **يقرأ عقد `OrderIntakeRequest` ويرفض بـ400 أي جسم لا يطابقه** (بما فيه أي مفتاح camelCase). المحوّل الذي يُسلّم إليه **مملوك للبوابة لا للإنتاج** ويُسَلسِل عبر مخطّط الخدمة نفسه `toOrderIntakeRequestDto`. النتيجة: 11/11 بمخازن الذاكرة **و**على Postgres حقيقي، و`pnpm -r test` = 627 اختباراً على 18 مشروعاً.
+
+**ما يجب أن يعرفه من يبدأ Phase 06 (Order Engine) قبل أن يكتب سطراً:**
+
+1. **المحرّك البديل هو مواصفتك التنفيذية.** `packages/customer-e2e/src/stub-order-engine.ts` يقول بالضبط ما نرسله: `order_request_id` · `customer_public_id` · `order_type` · `vehicle_class` · `price_mode` · `offered_price {amount_minor عدد صحيح, currency}` · `stops` **نقطتان** بـ`zone_id` و`source` و`kind` · `shipment` · `notes` · `requested_at` · `idempotency_key`، وترويسة `Idempotency-Key` بمفتاح **العميل** لا بمفتاح ثانٍ.
+2. **دلالة الحالات مُثبَّتة باختبار:** `201`/`200` مع `{order_public_id, accepted_at}` ⇒ نجاح · `422` ⇒ «فهمتُ ورفضت» ⇒ `CUSTOMER_ORDER_INTAKE_REJECTED` · أي حالة أخرى (بما فيها `400`) ⇒ `CUSTOMER_ORDER_INTAKE_UNAVAILABLE` لأنها خطؤنا لا رفضك · انعدام الإجابة ⇒ `CUSTOMER_ORDER_INTAKE_TIMEOUT`. **والحالة الأخيرة تُلزمك بمعاملة المفتاح كأنّه قد رُئي** — البوابة تُثبت أن الطلب وصلك قبل أن تنقطع الإجابة.
+3. **أنت من يُنفّذ `HttpOrderIntakePort` الإنتاجي** (عنوان المحرّك ومصادقته وسياسة إعادة محاولته)، كما ينصّ `OrderIntakeRequest` في `services/customers/contracts/api.openapi.yml`. لا تُعِد استخدام محوّل البوابة: هو أداة اختبار في حزمة خاصة بقصد.
+4. **`order_public_id` تملكه أنت.** خدمة العملاء تخزّن ما أعطيتها ولا تولّده، ولا تملك آلة حالة الطلب. أي تغيير يجعل الخدمة تُولّده يكسر حرّاس حدود `@wasla/contracts-customer`.
+5. **بوابة المرحلة 04 يجب أن تبقى خضراء بعد عملك.** إن غيّرت شكل الحمولة، فالمكان الذي يجب أن يُعدَّل هو **العقد ثمّ `toOrderIntakeRequestDto`**، والمحرّك البديل يُحدَّث معهما — لا العكس.
+
+**ما يجب أن يعرفه من يبدأ MR 6/6 قبل أن يكتب سطراً** (بقي هنا كسجلٍّ لِما كان ملزماً، والنقاط 3..7 قيود دائمة لا تنتهي بدفعة) (النقطتان 1 و2 حُسمتا في MR 4/6):
 
 1. **حُسمت في MR 4/6:** `src/http/server.ts` صار التركيب النهائي والمنادي الوحيد لـ`createCustomerDb`، ويُغلق التجمّع في `onClose`. استيراد الحزمة ما زال لا يلمس الشبكة. **ولا تربط البوت بـHTTP:** البوت ينادي حالات الاستخدام **مباشرة** في العملية نفسها (ADR-007)، فطبقة HTTP للمستهلكين خارج العملية لا للقناة.
 2. **دَين الذرّية ما زال قائماً وأُعيد إسناده — بصراحة.** كتابة الصف وإلحاق الحدث **ليسا في معاملة واحدة**، فثمّة نافذة فشل تترك طلباً مسجّلاً بلا حدثه. **MR 4/6 لم تسدّه خلافاً لما وعدت به هذه الفقرة سابقاً:** منفذ وحدة-عمل يمسّ أربع حالات استخدام ومُهيّئين وطاقم مطابقة المنافذ، فهو دفعةٌ كاملة لا إضافة على طبقة توصيل، وسدُّه داخل MR 4/6 كان سيخلط تغييراً معمارياً بطبقة نقل في مراجعة واحدة. أُعيد إسناده إلى **Phase 09 (ناشر صندوق الصادر)** حيث يظهر أول مستهلك يتضرّر من حدثٍ ناقص ([CUSTOMER_PERSISTENCE.md §7](../02-architecture/CUSTOMER_PERSISTENCE.md) · [CUSTOMER_HTTP.md §8](../04-api/CUSTOMER_HTTP.md)). **لا تُسدّه في MR 5/6 ولا 6/6** — بوابة الخروج ليست موضع تغيير معماري.

@@ -26,7 +26,7 @@
 
 ## 2026-08-21 · Phase 04 MR 3/6 — استمرارية Drizzle/Postgres لخدمة العملاء
 
-**Task:** استبدال مُهيّئ التخزين في الذاكرة لخدمة العملاء بمرآة Drizzle لـ`contracts/schema.sql` مع حراسة انحراف واختبارات مطابقة منافذ ووظيفة CI مستقلّة، وحسم دَين `shipment_description`. **Status:** Completed · **MR:** [!33](https://gitlab.com/uxxxu/wasla/-/merge_requests/33) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة المعمارية:** [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)
+**Task:** استبدال مُهيّئ التخزين في الذاكرة لخدمة العملاء بمرآة Drizzle لـ`contracts/schema.sql` مع حراسة انحراف واختبارات مطابقة منافذ ووظيفة CI مستقلّة، وحسم دَين `shipment_description`. **Status:** Completed · **MR:** [!34](https://gitlab.com/uxxxu/wasla/-/merge_requests/34) · **ADR:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · **الوثيقة المعمارية:** [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)
 
 **ماذا تم إنجازه (1):** أنشأت `src/infrastructure/drizzle/schema.ts` (مرآة الجداول الخمسة) و`db.ts` (`createCustomerDb` = تجمّع `pg` + `drizzle`) و`repository.ts` (`PostgresCustomerRepository` ينفّذ `CustomerRepository` و`PostgresCustomerOutbox` ينفّذ `Outbox` + `markPublished` جاهزاً للناشر). أضفت `schema-drift.test.ts` (17 اختباراً بلا قاعدة) و`postgres-repository.integration.test.ts` (27) و`port-conformance.integration.test.ts` (16 سيناريو تُنفَّذ مرّتين: ذاكرة وPostgres) و`vitest.integration.config.ts` + سكربت `test:integration` + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`). وحسمت دَين `shipment_description` **بالتبنّي** مع حارس خصوصية في `events-privacy.test.ts`. **صفر تغيير في `src/use-cases/`** عدا نشر الحقل المتبنّى في `mappers.ts`.
 
@@ -52,7 +52,7 @@
 
 **مخاطر/قرارات تحتاج مراجعة (12):** (أ) **تبنّي `shipment_description`** يعكس قراراً موثّقاً سابقاً — المبرّر أن السابق قام على قراءة خاطئة للعقد، ويستحق تأكيد مالك المجال. (ب) **مُهيّئ صندوق صادر أُضيف مع المستودع** بينما نصّ HANDOFF قال «مُهيّئ واحد فقط»؛ المبرّر أن ترك الحدث في الذاكرة مع صفٍّ دائم يُنتج تناقضاً صامتاً (§2 من الوثيقة المعمارية). (ج) **نافذة اللاذرّية** خطر تشغيلي حقيقي حتى MR 4/6. (د) التحقّق المحلي جرى على Postgres 18.4 لا 15.
 
-**الروابط (13):** MR [!33](https://gitlab.com/uxxxu/wasla/-/merge_requests/33) · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) · [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) · [DB_INTEGRATION_CI.md](../12-testing/DB_INTEGRATION_CI.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [HANDOFF §9](HANDOFF_NEXT_STEPS.md)
+**الروابط (13):** MR [!34](https://gitlab.com/uxxxu/wasla/-/merge_requests/34) · [CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md) · [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md) · [DB_INTEGRATION_CI.md](../12-testing/DB_INTEGRATION_CI.md) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [HANDOFF §9](HANDOFF_NEXT_STEPS.md)
 
 **الشخص/الفريق الذي يتابع (14):** Team 04 — Customer Core (MR 4/6: طبقة HTTP وسدّ دَين الذرّية) · مالك المجال (تأكيد قرار تبنّي `description`) · Team 09 — Notifications/Events (ناشر صندوق الصادر وعمود `trace_id`).
 

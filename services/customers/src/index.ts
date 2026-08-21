@@ -1,10 +1,13 @@
 /**
  * @wasla/customers-service — WASLA Customer Core domain (Phase 04).
  *
- * MR 2/6 delivers the pure core: the domain model, the ports, the use cases and
- * the in-memory adapters. No database and no HTTP yet — the Drizzle repositories
- * arrive in MR 3/6 and the Fastify layer in MR 4/6, both through these same
- * ports, so neither can change use-case behavior.
+ * MR 2/6 delivered the pure core: the domain model, the ports, the use cases and
+ * the in-memory adapters. MR 3/6 adds the Postgres adapters behind the very same
+ * ports — proven by `src/__tests__/port-conformance.integration.test.ts`, which
+ * runs one set of scenarios through both adapters. HTTP arrives in MR 4/6.
+ *
+ * The Postgres exports are types and classes only; importing this package never
+ * opens a connection. `createCustomerDb` does, and only when called.
  *
  * Contract First (ADR-004): the API DTOs, event types and the error catalog come
  * from @wasla/contracts-customer, which is drift-guarded against the contract
@@ -21,6 +24,14 @@ export * from "./domain/validation.js";
 export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+
+export * as customerSchema from "./infrastructure/drizzle/schema.js";
+export { createCustomerDb } from "./infrastructure/drizzle/db.js";
+export type { Db, DbConfig } from "./infrastructure/drizzle/db.js";
+export {
+  PostgresCustomerOutbox,
+  PostgresCustomerRepository,
+} from "./infrastructure/drizzle/repository.js";
 
 export type { UseCaseDeps } from "./use-cases/deps.js";
 export { eventContext } from "./use-cases/deps.js";

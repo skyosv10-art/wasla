@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 04 = In Progress** · MR 1/6 — عقود Customer Core + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,12 +15,13 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 04 — Customer Core (لم تبدأ بعد · §3 للمسار الكامل)
+المرحلة الحالية: Phase 04 — Customer Core (**قيد التنفيذ**: MR 1/6 مدمجة — العقود وADR-009 · §9 للخطة)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ (أُغلقت 2026-08-21 بسبع مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03).
-المتبقّي:         Phase 04 → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03 إلى Phase 04).
-الاختبارات:       445 اختبار وحدة (96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
+المتبقّي:         Phase 04 (MR 2..6/6 · §9) → Phase 24 (انظر §3 للمسار الكامل، و§7 لما تُسلّمه Phase 03).
+الاختبارات:       487 اختبار وحدة (42 لعقود Customer Core منها حرّاس حدود ADR-009 وقاعدة خصوصية الأحداث
+                 + 96 + 34 لعقود القناة + 102 لنواة القناة + 99 لمُهيّئ Telegram
                  + 80 لطبقة تشغيل البوتات + 18 لجذور البوتات الثلاثة + 9 لحراسة مخطط القناة
                  + 7 من بوابة المرحلة 03 التي تعمل بمخازن الذاكرة أيضاً)
                  + 25 تكامل (4 سابقة + 21 لمُهيّئات Postgres للقناة) + 5 E2E سابقة في CI
@@ -33,7 +34,7 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-21 (MR 7/7 — بوابة خروج المرحلة 03 وإغلاقها — §7)
+آخر تحديث:      2026-08-21 (Phase 04 · MR 1/6 — عقود Customer Core وADR-009 — §9)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -381,6 +382,41 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 7. كل منفذ له مُهيّئ Mock في الاختبارات — وإلا فبوابة الخروج غير مُحقّقة.
 
 **مؤجّل صراحة (خارج نطاق المرحلة 03):** بناء واجهات Mini App نفسها (`apps/*-mini-app`) · مُهيّئات Web/Mobile/WhatsApp · `channel_deep_link_tokens` · `channel_group_bindings` · `channel_rate_budgets` · Channel Router داخل خدمة `notifications`.
+
+---
+
+## 9. Phase 04 (Customer Core) — قيد التنفيذ (بدأت 2026-08-21)
+
+**الأساس:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) · [عقود الخدمة](../../services/customers/contracts/README.md) · [CONTAINERS §4.1](../02-architecture/CONTAINERS.md)
+
+**بوابة الخروج (من الوثيقة الأم §75):** «عميل ينشئ Order صالحًا ويصل إلى Order Engine دون أي Matching فعلي بعد».
+
+**الحدّ الحاكم للمرحلة:** خدمة `services/customers` تُنتج **نيّة طلب مُتحقَّقة** وتُسلّمها عبر `OrderIntakePort`. **لا تكتب جدول `orders` ولا تُولّد `order_public_id` ولا تملك آلة حالة الطلب** (§15 · Phase 06). من يخالف هذا الحدّ تُسقطه اختبارات الحدود في `@wasla/contracts-customer`.
+
+### خطة المراجعات (MRs) — ملزمة ومرتّبة
+
+| # | النطاق | المخرَج | الحالة |
+|---|---|---|---|
+| 1 | docs + contracts | ADR-009 + `services/customers/contracts/*` + `@wasla/contracts-customer` + [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) + CONTAINERS §4.1 | ✅ **مدمجة ([!31](https://gitlab.com/uxxxu/wasla/-/merge_requests/31))** — 42 اختباراً |
+| 2 | النطاق النقي | `services/customers/src/{domain,ports,use-cases,infrastructure}`: كيانات + المنافذ (`IdentityLookupPort` · `GeographyPort` · `OrderIntakePort` + مستودعات) + حالات الاستخدام (ملف · أماكن · معاينة · تسليم) + مُهيّئات in-memory/Fake — **بلا قاعدة وبلا HTTP** | ⬜ التالية |
+| 3 | الاستمرارية | مستودعات Drizzle/Postgres مرآةً لـ`schema.sql` + اختبار حراسة انحراف + وظيفة CI `customer-db-integration` (قاعدة `wasla_customer_test`) | ⬜ |
+| 4 | طبقة HTTP | تطبيق Fastify على المنفذ **8086** + تخطيط كتالوج الأخطاء إلى حالات HTTP + `/health` + اختبارات `app.inject` | ⬜ |
+| 5 | البوت | ربط `bots/customer-bot` بالخدمة (ملف · مكان محفوظ · إنشاء طلب) مع **الحفاظ على حياد القناة** (ADR-007): البوت لا يعرف مجال العميل، والمجال لا يعرف Telegram | ⬜ |
+| 6 | بوابة الخروج | E2E: عميل ينشئ طلباً صالحاً يصل إلى **محرّك طلبات بديل (stub)** يحترم `OrderIntakeRequest` + وثيقة البوابة + إغلاق المرحلة | ⬜ |
+
+### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-009)
+
+1. **ملفُّ دور لا هوية:** `wasla_public_id` مرجع opaque بـCHECK بلا FK؛ الوجود يُتحقَّق عبر `IdentityLookupPort`؛ الأدوار غير متعارضة (§7).
+2. **النقطة = `zone_id` إلزامي** + `source` إلزامي؛ الإحداثية اختيارية **لا تُقرّر** تغطية ولا مطابقة ولا سعراً (لا Reverse Geocoding في النظام — §28).
+3. **نقطتان بالضبط** الآن، مخزّنتان كقائمة مرتّبة، فـMulti-stop (§3.2) بلا هجرة.
+4. **السعر وضعان:** `customer_offer` بمبلغ **عدد صحيح بالوحدة الصغرى** + ISO، أو `negotiable` بلا مبلغ. لا سعر استرشادي ولا `agreed_price` (Phase 08).
+5. **`Idempotency-Key` إلزامي** على إنشاء طلب ومكان؛ التكرار الحقيقي يُعيد الكيان نفسه بـ200، والمفتاح نفسه بحمولة مختلفة 409.
+6. **fail-closed:** تعذّر التسليم ⇒ صف `submission_failed` + حدث فشل + 503 `CUSTOMER_ORDER_INTAKE_UNAVAILABLE`. لا حفظ صامت.
+7. **خصوصية الأحداث:** حمولة على مستوى المنطقة الفرعية، بلا إحداثيات خام وبلا نصوص كتبها المستخدم — قاعدة **مُختبَرة** لا موصوفة.
+
+**مؤجّل صراحة (خارج نطاق المرحلة 04):** الطلبات المجدولة · Multi-stop · التسعير الذكي والسعر الاسترشادي · تفاوض العميل و`agreed_price` (Phase 08) · تاريخ الرحلات وسمعة السائق · `apps/customer-mini-app` (Phase 11) · تقارير الحوادث (Phase 12) · Reverse Geocoding وحساب المسافة (§28).
+
+**العملان المنقولان من Phase 03 (لا يزالان قائمين):** مُشغّل دوري لـ`retryDueDeliveries` وناشر صندوق الصادر — انظر §7 وتفصيلهما في [CHANNEL_PERSISTENCE.md §7](../02-architecture/CHANNEL_PERSISTENCE.md). لم تلمسهما دفعة MR 1 لأنها عقود بلا تشغيل.
 
 ---
 

@@ -28,6 +28,15 @@ import {
   WASLA_PUBLIC_ID_PATTERN,
   STOPS_PER_ORDER,
   ORDER_SERVICE_PORT,
+  ORDER_TYPES,
+  ORDER_VEHICLE_CLASSES,
+  ORDER_PRICE_MODES,
+  ORDER_STOP_KINDS,
+  ORDER_STOP_SOURCES,
+  ORDER_ACTOR_TYPES,
+  ORDER_ASSIGNMENT_STATES,
+  ORDER_ASSIGNMENT_RESOLUTIONS,
+  ORDER_SHIPMENT_TYPES,
   httpStatusForOrderError,
 } from "../index.js";
 
@@ -322,5 +331,66 @@ describe("write-path invariants declared in the contract", () => {
   it("serves the port declared for the service", () => {
     expect(ORDER_SERVICE_PORT).toBe(8087);
     expect(openApiYml).toContain("http://localhost:8087");
+  });
+});
+
+/**
+ * The enum catalogs exported as values (MR 4/6) must equal the enums written in
+ * api.openapi.yml. `satisfies` already prevents a member that is not in the
+ * generated union; it cannot prevent a MISSING member — and a short catalog at
+ * the HTTP edge rejects, with a 400, a payload the published contract accepts.
+ * That failure mode is invisible in types and visible only here.
+ */
+describe("enum catalogs ↔ api.openapi.yml", () => {
+  /** Members of a named schema's `enum`, inline (`[a, b]`) or block (`- a`). */
+  function ymlEnum(schemaName: string): string[] {
+    const start = openApiYml.indexOf(`    ${schemaName}:`);
+    expect(start, `${schemaName} must exist in api.openapi.yml`).toBeGreaterThan(-1);
+    const section = openApiYml.slice(start, openApiYml.indexOf("\n\n    ", start + 1));
+    const inline = /enum:\s*\[([^\]]+)\]/.exec(section);
+    if (inline) {
+      return inline[1]!
+        .split(",")
+        .map((member) => member.trim())
+        .filter(Boolean);
+    }
+    const blockStart = section.indexOf("enum:");
+    expect(blockStart, `${schemaName} must declare an enum`).toBeGreaterThan(-1);
+    return [...section.slice(blockStart).matchAll(/^\s+-\s+([a-z_]+)\s*$/gm)].map(
+      (match) => match[1]!,
+    );
+  }
+
+  const cases: Array<[string, readonly string[]]> = [
+    ["OrderType", ORDER_TYPES],
+    ["VehicleClass", ORDER_VEHICLE_CLASSES],
+    ["PriceMode", ORDER_PRICE_MODES],
+    ["StopKind", ORDER_STOP_KINDS],
+    ["StopSource", ORDER_STOP_SOURCES],
+    ["ActorType", ORDER_ACTOR_TYPES],
+    ["AssignmentState", ORDER_ASSIGNMENT_STATES],
+    ["ShipmentDetails", ORDER_SHIPMENT_TYPES],
+  ];
+
+  for (const [schemaName, catalog] of cases) {
+    it(`lists exactly the members of ${schemaName}`, () => {
+      expect([...catalog].sort()).toEqual(ymlEnum(schemaName).sort());
+    });
+  }
+
+  it("keeps the order of stop kinds meaningful (pickup then dropoff)", () => {
+    expect(ORDER_STOP_KINDS).toEqual(["pickup", "dropoff"]);
+  });
+
+  it("treats `offered` as a starting state and never as a resolution", () => {
+    expect(ORDER_ASSIGNMENT_RESOLUTIONS as readonly string[]).not.toContain("offered");
+    expect([...ORDER_ASSIGNMENT_RESOLUTIONS, "offered"].sort()).toEqual(
+      [...ORDER_ASSIGNMENT_STATES].sort(),
+    );
+  });
+
+  it("names `system` as the only actor without a personal reference", () => {
+    expect(ORDER_ACTOR_TYPES).toContain("system");
+    expect(openApiYml).toContain("إلزامي لكل `actor_type` غير `system`");
   });
 });

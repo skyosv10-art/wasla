@@ -40,6 +40,8 @@ const STOP_LABEL_MAX = 60;
 const SHIPMENT_DESCRIPTION_MAX = 300;
 /** Max shipment weight in kg, matching the contract and the NUMERIC(7,2) column. */
 const SHIPMENT_WEIGHT_MAX = 3000;
+/** Max length of the customer's own notes, matching the contract and `ck` on notes. */
+const NOTES_MAX = 300;
 
 /** Raise a coded domain error. Never returns, so callers read as guards. */
 function fail(
@@ -312,6 +314,27 @@ export function assertShipment(
   }
 }
 
+/**
+ * Free-text notes are bounded (MR 4/6).
+ *
+ * `notes` had a CHECK in schema.sql (`char_length(notes) <= 300`) and no domain
+ * counterpart, which made the two adapters disagree: the in-memory store
+ * accepted a 400-character note and Postgres rejected it with a constraint
+ * violation, i.e. a 503 for what is a plain 400. Every other rule in this file
+ * mirrors a named constraint; this one was the exception, and the HTTP layer
+ * would have been the wrong place to fix it (Phase 07 calls the use cases
+ * directly and must be refused identically).
+ */
+export function assertNotes(notes: string | null, traceId?: string): void {
+  if (notes != null && notes.length > NOTES_MAX) {
+    fail("ORDER_VALIDATION_FAILED", `الملاحظات أطول من ${NOTES_MAX} حرفاً`, traceId, {
+      field: "notes",
+      expected: String(NOTES_MAX),
+      actual: String(notes.length),
+    });
+  }
+}
+
 /** An ISO-8601 instant. Stored as `timestamptz`; parsed here so a bad one never lands. */
 export function assertInstant(field: string, value: string, traceId?: string): void {
   if (Number.isNaN(Date.parse(value))) {
@@ -330,6 +353,7 @@ export function assertIntakeCommand(command: OrderIntakeCommand): void {
   assertPriceMode(command.priceMode, command.offeredPrice, traceId);
   assertStops(command.stops, traceId);
   assertShipment(command.orderType, command.shipment, traceId);
+  assertNotes(command.notes, traceId);
   if (!command.idempotencyKey) {
     fail("ORDER_VALIDATION_FAILED", "مفتاح التكرار إلزامي", traceId, {
       field: "idempotency_key",

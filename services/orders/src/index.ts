@@ -33,3 +33,32 @@ export * from "./use-cases/ingest-order.js";
 export * from "./use-cases/transition-order.js";
 export * from "./use-cases/manage-assignments.js";
 export * from "./use-cases/read-order.js";
+
+// --- Composition seam and HTTP layer (MR 4/6) --------------------------
+//
+// `runner.ts` is exported because it is the seam a caller must satisfy to build
+// the app; the Drizzle runner because it is the production implementation of it.
+// The Fastify pieces are exported for the same reason the customers service
+// exports its own: the exit-gate package (MR 6/6) builds the app in-process and
+// drives it with `app.inject`, without a port and without a container.
+export { createDirectRunner } from "./runner.js";
+export type { OrderRunner, OrderWork } from "./runner.js";
+export { PostgresOrderRunner } from "./infrastructure/drizzle/runner.js";
+export { PostgresOrderUnitOfWork } from "./infrastructure/drizzle/transaction.js";
+export { createOrderApp } from "./http/app.js";
+export type { CreateOrderAppOptions, OrderHealthDescriptor } from "./http/app.js";
+export { sendOrderError } from "./http/errors.js";
+export type { OrderErrorBody } from "./http/errors.js";
+export {
+  assertIdempotencyKeyAgreement,
+  assertRequestIdLength,
+  requireCustomerScope,
+  requireIdempotencyKey,
+  toAssignmentDriver,
+  toAssignmentId,
+  toAssignmentResolution,
+  toIntakeRequest,
+  toOrderRef,
+  toTransitionRequest,
+} from "./http/requests.js";
+export type { AssignmentResolutionBody, OrderRef, RequestHeaders } from "./http/requests.js";

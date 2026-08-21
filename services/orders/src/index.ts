@@ -44,6 +44,14 @@ export * from "./use-cases/read-order.js";
 export { createDirectRunner } from "./runner.js";
 export type { OrderRunner, OrderWork } from "./runner.js";
 export { PostgresOrderRunner } from "./infrastructure/drizzle/runner.js";
+// The exit gate (MR 6/6) lifts the engine onto Postgres the same way the
+// bootstrap does, and reads the outbox to prove an event was really appended.
+// Both are therefore part of the surface a composition root needs; the
+// repository and the public-id generator are not, because nothing outside this
+// service may build them without going through the runner.
+export { createOrderDb } from "./infrastructure/drizzle/db.js";
+export type { Db, DbConfig } from "./infrastructure/drizzle/db.js";
+export { PostgresOrderOutbox } from "./infrastructure/drizzle/repository.js";
 export { PostgresOrderUnitOfWork } from "./infrastructure/drizzle/transaction.js";
 export { createOrderApp } from "./http/app.js";
 export type { CreateOrderAppOptions, OrderHealthDescriptor } from "./http/app.js";

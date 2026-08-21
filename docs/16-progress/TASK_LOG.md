@@ -24,6 +24,45 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 06 MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + وحدة عمل تُسدّ دَين الذرّية
+
+**Task:** تنفيذ التخزين الدائم والكتابة الثلاثية الذرّية لمحرّك الطلبات: مرآة Drizzle لـ`schema.sql`، ومُهيّئات Postgres وراء المنافذ نفسها، و**`PostgresOrderUnitOfWork`** يفتح معاملة واحدة ويسلّم نفس المقبض للمستودع والصادر، فلا تُكتب حالة دون تدقيقها وصادرها — **بلا تغيير في `src/use-cases/`**. **Status:** Completed · **MR:** [!40](https://gitlab.com/uxxxu/wasla/-/merge_requests/40) · **ADR:** [ADR-010 §127](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)
+
+### 1. ماذا تم إنجازه
+
+خدمة الطلبات صارت تملك مسار تخزين دائماً وذرّياً في `services/orders/src/infrastructure/drizzle/`:
+
+- **`schema.ts`** — مرآة Drizzle للجداول الخمسة + متتالية `order_public_id_seq`. الفروقات المعروفة مُوثَّقة: `event_id` في `order_outbox` مفتاح أساسي (لا `bigserial`)، و`sequence` للأوقفات/الإسناد `smallint`، وFK `fk_orders_active_assignment` يُضاف بـ`ALTER TABLE` لاعتماد متبادل.
+- **`db.ts`** — `createOrderDb(config)` و`Db`/`DbOrTx` (يقبل الجذر أو مقبض معاملة).
+- **`repository.ts`** — `PostgresOrderRepository` (القراءات الكاملة + الكتابات الذرّية داخل المعاملة) · `PostgresOrderOutbox` (إلحاق ونشر بأسماء الأعمدة) · `PostgresOrderPublicIdGenerator` (`nextval` للمتتالية) — كلّها تقبل `DbOrTx`. `translateWriteError` يُحوّل SQLSTATE 23505/23503/23514 إلى كوديات المجال بأسماء القيود.
+- **`transaction.ts`** — `PostgresOrderUnitOfWork.run(shared, callback)` يفتح `db.transaction` ويُنشئ المُهيّئات الثلاثة على نفس `tx` ويسلّمها للاستخدام.
+- **`__tests__/`** — `schema-drift.test.ts` (17 حراسة انحراف بلا قاعدة) · `postgres-repository.integration.test.ts` (19 اختبار مستودع) · `atomicity.integration.test.ts` (4 اختبارات ذرّية، أحدها يفشل بعد عودة حالة الاستخدام فيُثبت أنّ صفّ الصادر الحقيقي غائب) · `port-conformance.integration.test.ts` (7 سيناريوهات تُكتب مرّة وتُنفَّذ على الذاكرة وPostgres بصادر حقيقي) · **30 اختبار تكامل**. إجمالي المستودع **1323 اختباراً**.
+- **`.gitlab-ci.yml`** — وظيفة `order-db-integration` (postgres:15 + `wasla_orders_test` + `fileParallelism: false`).
+- **الوثيقة** `docs/02-architecture/ORDER_PERSISTENCE.md` + تحديث لوحة المراحل وخارطة الطريق ووثيقة التسليم §10.
+
+### 2. لماذا تم اختياره
+
+- **وحدة العمل لا نشر الحدث في حالة الاستخدام** — سدّ الذرّية بتغيير `use-cases/` كان سيكسر المعيار الذي تقوم عليه المرحلة كلّها («أي اضطرار لتغيير سلوك هناك دليلٌ على أن المخطّط بدأ يقود المجال»). وحدة العمل تُسدّها **خارج** المجال: الاستخدامات تعمل كما هي، والمعاملة تُغلّفها.
+- **`DbOrTx` لا `Db` فقط** — المُهيّئ نفسه يعمل على الجذر (للقراءات خارج المعاملة) وداخل المعاملة (للكتابات الذرّية)، فلا نُكرّر مُهيّئاً ثانياً.
+- **`nextval` للمعرّف العام لا عدّاد تطبيقي** — القاعدة هي مصدر الحقيقة للمعرّف، فلا تصادم بين نسختين، ولا يحتاج التطبيق لحفظ آخر قيمة.
+
+### 3. الديون المُعلَنة
+
+- `nextval()` ليس ذرّياً في PostgreSQL — قد تظهر فجوات في الترقيم بعد التراجع/إعادة المحاولة، والمُلزَم هو التفرّد والرتابة لا التسلسل بلا فجوات.
+- لا ناشر لصندوق الصادر بعد — محله Phase 09. الذرّية تضمن أنّ الحدث إن وُجد فهو ملتزم مع الطلب، لكنه قد يبقى غير منشور.
+- لا HTTP بعد — الخدمة غير قابلة للتشغيل حتى MR 4/6.
+
+### 4. الملفات/الخدمات المتأثرة
+
+- **Files:** `services/orders/src/infrastructure/drizzle/{schema,db,repository,transaction}.ts` · `services/orders/src/__tests__/{schema-drift,postgres-repository.integration,atomicity.integration,port-conformance.integration,pg-harness}.{test,ts}` · `services/orders/{drizzle.config,vitest.integration.config}.ts` · `services/orders/package.json` · `.gitlab-ci.yml` · `docs/02-architecture/ORDER_PERSISTENCE.md` · `docs/16-progress/{MASTER_PROGRESS,ROADMAP,HANDOFF_NEXT_STEPS,TASK_LOG}.md`
+- **Services:** `@wasla/orders-service`
+- **Why:** سدّ دَين الذرّية ([ADR-010 §127](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)) بلا تغيير في حالات الاستخدام، وإثبات أنّ المخزنَين (ذاكرة/Postgres) يُنتجان نفس النتيجة والأحداث.
+- **Tests:** `pnpm -r run typecheck` ✅ · `pnpm -r run test` (افتراضي 575) ✅ · `pnpm -F @wasla/orders-service run test:integration` (تكامل 30) ✅ على Postgres 18.6 حقيقي.
+- **Next:** MR 4/6 — طبقة HTTP على المنفذ 8087 + مسارات سبعة + `/health`.
+- **Related:** [MR !40](https://gitlab.com/uxxxu/wasla/-/merge_requests/40) · [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)
+
+---
+
 ## 2026-08-21 · Phase 06 MR 2/6 — طبقة مجال محرّك الطلبات: الجدول كوداً يُنفَّذ، ومسح الـ441 زوجاً
 
 **Task:** تنفيذ السلوك الذي نشرته MR 1/6 كعقد: جدول الانتقالات الاثنان والسبعون داخل الكود بحارس مطابقة مزدوج مع الوثيقة، وحالات الاستخدام الأربع (استلام · انتقال · إسناد · قراءة)، ومُهيّئات ذاكرة تُطبّق قيود `schema.sql` بأسمائها — **بلا قاعدة وبلا HTTP**. **Status:** Completed · **MR:** [!39](https://gitlab.com/uxxxu/wasla/-/merge_requests/39) · **ADR:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)

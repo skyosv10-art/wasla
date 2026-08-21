@@ -213,6 +213,39 @@ customer-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/customers-service test:integration
 
+# الطلبات (المرحلة 06 · MR 3/6): يُطبّق services/orders/contracts/schema.sql
+# (5 جداول + متتالية order_public_id_seq + قيد ربط الحالة بالإسناد
+# ck_orders_assignment_matches_status) ثم يُشغّل أربعة ملفّات:
+#   - schema-drift.test.ts: حرّاس انحراف يقرأون schema.sql فعلياً ويتحققون أنّ
+#     إسقاط Drizzle يتطابق مع العقود (لا فهارس إضافية، لا أعمدة إضافية، لا
+#     روابط خارجية إلى الهوية/الجغرافيا/السائقين).
+#   - postgres-repository.integration.test.ts: المحوّل نفسه أمام قاعدة حقيقية
+#     (NUMERIC كأرقام، الحقول الغائبة تبقى غائبة، قيود CHECK و FK، أخطاء
+#     التكرار بالرسائل نفسها، متتالية المعرّف العلني).
+#   - atomicity.integration.test.ts: يُثبت أنّ الكتابة الثلاثية (الحالة +
+#     التدقيق + الحدث) ترتكز أو تتراجع كوحدة واحدة — دَينٍ كان مفتوحاً في
+#     خدمة العملاء، يُسدّه هنا PostgresOrderUnitOfWork. الاختبار الحاسم:
+#     فشل بعد رجوع use case → order + audit + outbox الحقيقي كلها غائبة.
+#   - port-conformance.integration.test.ts: السيناريو نفسه يُنفَّذ مرّتين، مرّة
+#     بمحوّلات in-memory ومرّة بـ Postgres داخل Unit of Work باستخدام outbox
+#     حقيقي، والنتيجة والأحداث يجب أن تتطابق. هذه هي الوظيفة التي تُثبت أنّ
+#     إضافة قاعدة البيانات وطبقة الذرّية لم تُغيّر أي سلوك.
+# قاعدة منفصلة (wasla_orders_test) ليبقى الفشل منسوباً لوظيفة واحدة.
+order-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_orders_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_orders_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/orders-service test:integration
+
 # ──────────────────────────────────────────────────────────────
 # بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
 # حقيقي + مخازن Postgres في عملية واحدة:

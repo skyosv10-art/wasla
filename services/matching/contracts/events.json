@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/matching/events/v1",
+  "title": "WASLA Matching Domain Events v1",
+  "description": "أحداث خدمة المطابقة (Phase 07). القاعدة الحاكمة للخصوصية (ADR-011 القرار 8 · ADR-010 القرار 7): الحدث يحمل مُعرّفات opaque ومستوى منطقة وأكواداً من كتالوج فقط — لا إحداثيات خام، ولا نصّاً كتبه مستخدم، ولا مُعرّف قناة (chat_id · telegram)، ولا اسم سائق ولا هاتفه. وقاعدة خاصّة بهذه الخدمة: **درجات المرشّحين ومُعرّفاتهم لا تعبر حدّ الخدمة في أي حدث** — هي بيانات حسّاسة تنافسياً تُقرأ من سجل التدقيق لا من ناقل أحداث، فحدث التقييم يحمل أعداداً لا قائمة. حارس تنقيب في @wasla/contracts-matching يبحث في كل حمولة عن الحقول الممنوعة ويُفشل البناء عند وجودها. كل تغيير على إسقاط الترشيح يُنتج حدثه في المعاملة نفسها، فلا تغيير صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "matching-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "driver_candidacy",
+                "matching_decision"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        }
+      }
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$",
+      "description": "مُعرّف عام opaque. لا يُحلَّل ولا تُقرأ أجزاؤه."
+    },
+    "OrderPublicId": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$",
+      "description": "مُعرّف الطلب العام. نصّ opaque لا رقم (ADR-010 القرار 5)."
+    },
+    "ZoneRef": {
+      "type": "string",
+      "format": "uuid",
+      "description": "مُعرّف منطقة من هرم الجغرافيا (ADR-006). أدقّ مستوى موقع يجوز أن يعبر في حدث — لا إحداثيات."
+    },
+    "ReasonCode": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "من كتالوج errors.md فقط — لا نصّ حرّ."
+    },
+    "ActorType": {
+      "type": "string",
+      "enum": [
+        "driver_bot",
+        "admin",
+        "driver_core",
+        "dispatch",
+        "test"
+      ],
+      "description": "كود جهة لا مُعرّف مستخدم ولا مُعرّف قناة (ADR-007)."
+    },
+    "AvailabilityState": {
+      "type": "string",
+      "enum": [
+        "available",
+        "busy",
+        "offline"
+      ]
+    },
+    "EligibilityState": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "ineligible",
+        "suspended",
+        "unknown"
+      ]
+    },
+    "DriverCandidacyUpdatedV1": {
+      "type": "object",
+      "description": "استُبدل صفّ ترشيح سائق (توافر · أهليّة مُدّعاة · خدمات · مناطق). المُنتِج اليوم بوت السائق أو الإدارة، ويصير Driver Core (Phase 05) — والحدث لا يتغيّر بتغيّر المُنادي.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "matching.candidacy_updated"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "availability_state",
+            "eligibility_state",
+            "eligibility_source",
+            "service_kinds",
+            "zone_ids",
+            "updated_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "availability_state": {
+              "$ref": "#/$defs/AvailabilityState"
+            },
+            "eligibility_state": {
+              "$ref": "#/$defs/EligibilityState"
+            },
+            "eligibility_source": {
+              "type": "string",
+              "enum": [
+                "claimed",
+                "driver_core"
+              ],
+              "description": "من قال إنّه مؤهَّل. يعبر في الحدث لأن المُستهلِك (تحليلات · امتثال) يجب أن يعرف أنّ الأهلية ادّعاء لا تحقّق."
+            },
+            "service_kinds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ride",
+                  "delivery"
+                ]
+              }
+            },
+            "vehicle_class": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "zone_ids": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/ZoneRef"
+              }
+            },
+            "updated_by": {
+              "$ref": "#/$defs/ActorType"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverAvailabilityChangedV1": {
+      "type": "object",
+      "description": "تغيّر توافر سائق (§78 «Busy/free transitions»). حدث منفصل عن استبدال الصفّ لأنّه أكثر ما يتكرّر في النظام، ودمجه في حدث الاستبدال يجعل كل مُستهلِك يقارن حقلين ليعرف ما تغيّر.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "matching.availability_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "from_state",
+            "to_state",
+            "changed_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "from_state": {
+              "$ref": "#/$defs/AvailabilityState"
+            },
+            "to_state": {
+              "$ref": "#/$defs/AvailabilityState"
+            },
+            "actor_type": {
+              "$ref": "#/$defs/ActorType"
+            },
+            "reason_code": {
+              "$ref": "#/$defs/ReasonCode"
+            },
+            "changed_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "MatchingEvaluatedV1": {
+      "type": "object",
+      "description": "أُنتجت مجموعة مرشّحين لطلب. **الحمولة أعداد لا مُعرّفات ولا درجات** (ADR-011 القرار 8): من يريد معرفة «لماذا هذا السائق؟» يقرأ سجل القرار عبر مسار التدقيق، ولا يستقبله من ناقل أحداث يمرّ بتحليلات وسجلّات. ما يحتاجه المُستهلِك من هذا الحدث هو **صحّة النظام** لا هوية المرشّحين: كم مرّة خرجت المطابقة فارغة، ولماذا.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "matching.evaluated"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "decision_id",
+            "order_public_id",
+            "ruleset_version",
+            "counts",
+            "evaluated_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "decision_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "pickup_zone_id": {
+              "$ref": "#/$defs/ZoneRef"
+            },
+            "ruleset_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "considered",
+                "eligible",
+                "returned"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "considered": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "eligible": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "returned": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "excluded": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "empty_reason_code": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReasonCode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "إلزامي عند `returned = 0`: «صفر مرشّح» بلا سبب لا يقول للمشغّل أين يبحث."
+            },
+            "evaluated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}

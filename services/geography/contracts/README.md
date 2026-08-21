@@ -29,4 +29,4 @@ pnpm --filter @wasla/contracts-geography generate   # openapi-typescript
 ## Related
 
 - [ADR-006](../../../docs/15-decisions/ADR-006-geography-localization-stack-and-model.md)
-- [MASTER_PROGRESS](../../docs/16-progress/MASTER_PROGRESS.md) — Phase 02
+- [MASTER_PROGRESS](../../../docs/16-progress/MASTER_PROGRESS.md) — Phase 02

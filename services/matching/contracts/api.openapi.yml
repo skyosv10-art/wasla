@@ -1,0 +1,537 @@
+openapi: 3.0.3
+info:
+  title: WASLA Matching Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة المطابقة (Phase 07) وفق [ADR-011](../../../docs/15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md).
+
+    **الحدود الملزمة:**
+    - هذه الخدمة تجيب سؤالاً واحداً: **من المرشّحون، وبأي ترتيب؟** لا تعرف عرضاً ولا مهلة ولا موجة،
+      ولا تكتب في محرّك الطلبات شيئاً أبداً. التنسيق كلّه عند `services/dispatch` (§16: لا نخلط
+      بين Matching وDispatch).
+    - `POST /matching/candidates` **دالّة قرار لا فعل**: تُقيّم وتُعيد ترتيباً وتكتب صفّ تدقيق.
+      لا تُرسل عرضاً ولا تُغيّر حالة طلب ولا تُعلّم سائقاً مشغولاً.
+    - **الأهلية مُدّعاة لا مُتحقَّقة** حتى Phase 05 (ADR-011 القرار 2): `PUT /candidacy/{driverPublicId}`
+      يُصرّح ولا يُثبت، والصفّ يحمل مصدر الادّعاء.
+    - **المجهول ليس مرشّحاً**: لا صفّ · أهليّة غير `eligible` · صفّ أقدم من نافذة الحداثة ⇒ خارج
+      المرشّحين، بلا استثناء.
+    - **الأوزان بيانات لا كود** (§30.2): نسخة قواعد مُرقّمة مُقفَلة، وتغيير الترتيب نسخة جديدة.
+      أوزان النسخة 1 تُعلن انحرافها: لا ETA ولا مسافة ولا تقييم — لأن مُدخَلاتها غير موجودة.
+    - **درجات المرشّحين حسّاسة تنافسياً**: لا مسار عام يُعيدها؛ `GET /matching/decisions/{id}`
+      مسار تشغيل وتدقيق (ADR-011 القرار 8).
+  contact:
+    name: Team 04 — Matching
+
+servers:
+  - url: http://localhost:8088
+    description: التشغيل المحلي
+
+tags:
+  - name: matching
+    description: تقييم المرشّحين وترتيبهم
+  - name: candidacy
+    description: إسقاط الترشيح (توافر · أهليّة مُدّعاة · مناطق)
+  - name: rulesets
+    description: نسخ قواعد الترتيب
+  - name: audit
+    description: سجل قرارات المطابقة (تشغيل وتدقيق)
+  - name: ops
+    description: التشغيل
+
+paths:
+  /health:
+    get:
+      tags: [ops]
+      summary: حالة الخدمة
+      description: |
+        `ok` فقط عندما تكون الخدمة قادرة على إتمام عملها (تخزين دائم مضبوط ونسخة قواعد
+        مُقفَلة موجودة)؛ وإلّا `degraded`. خدمة مطابقة بلا نسخة قواعد لا تستطيع أن تُرتّب،
+        وقولها «سليمة» يُخفي عطلاً يظهر عند أول طلب حقيقي.
+      responses:
+        '200':
+          description: الحالة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service, persistence, active_ruleset_version]
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  service: { type: string, const: matching-service }
+                  persistence: { type: string, enum: [postgres, memory] }
+                  active_ruleset_version: { type: integer, nullable: true }
+
+  /matching/candidates:
+    post:
+      tags: [matching]
+      summary: قائمة مرشّحين مرتّبة لطلب
+      description: |
+        فلاتر صلبة أولاً (§30.1) ثمّ درجة موزونة (§30.2 بأوزان النسخة). العملية **قراءة
+        وتقييم وكتابة صفّ تدقيق** — لا أثر تشغيلي آخر.
+
+        `evaluated_at` **مُدخَل اختياري صريح** لا `now()` مخفيّ: مُدخَلات العدالة فوارق زمنية،
+        وترتيبٌ لا يمكن إعادة إنتاجه بحرفه ترتيبٌ لا يمكن الدفاع عنه أمام شكوى سائق.
+        إن غاب تُستعمَل ساعة الخدمة، ويُسجَّل ما استُعمِل في صفّ التدقيق على الحالين.
+
+        `excluded_driver_ids` من واجب المُنادي (§17): من رفض أو انتهت مهلته في المهمّة نفسها
+        لا يُعاد عليه العرض. المطابقة تُطيع ولا تسأل عن السبب — هي لا تعرف المهمّة.
+
+        قائمة فارغة **ليست خطأً**: `200` بمصفوفة فارغة و`empty_reason_code` من الكتالوج.
+        رمز خطأ هنا يجعل «لا سائق متاح الآن» يبدو عطلاً في النظام فيُوقظ من لا شأن له.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CandidateQuery' }
+      responses:
+        '200':
+          description: التقييم تمّ (وقد يكون بلا مرشّحين)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CandidateResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: |
+            صالح شكلياً ومرفوض منطقياً: منطقة غير موجودة في هرم الجغرافيا، أو نسخة قواعد
+            مطلوبة غير مُقفَلة. لا نُرتّب بقواعد قابلة للتحرير.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /candidacy/{driverPublicId}:
+    put:
+      tags: [candidacy]
+      summary: استبدال صفّ الترشيح لسائق
+      description: |
+        **استبدال كامل لا دمج جزئي**: دمجٌ جزئي على إسقاط يُنتج خلائط لا يقصدها أحد
+        (توافر جديد مع مناطق قديمة). المُنادي اليوم بوت السائق والإدارة، ويصير Driver Core
+        (Phase 05) صاحب الحقّ فيه بلا هجرة ولا تغيير في الجدول.
+
+        `updated_at` تكتبه الخدمة لا المُنادي: عمود الحداثة هو عمود القرار في fail-closed،
+        وتركه للمُنادي يجعل «حديث» ادّعاءً آخر.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CandidacyUpsert' }
+      responses:
+        '200':
+          description: الصفّ بعد الاستبدال
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Candidacy' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409':
+          description: نفس `Idempotency-Key` بحمولة مختلفة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '422':
+          description: منطقة غير موجودة، أو صنف مركبة خارج القائمة المُقفلة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [candidacy]
+      summary: قراءة صفّ الترشيح
+      description: |
+        للتشغيل والتدقيق ولبوت السائق ليعرض على صاحبه ما يراه النظام عنه.
+        لا يُعاد فيه شيء لم يكتبه المُنادي أصلاً.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+      responses:
+        '200':
+          description: الصفّ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Candidacy' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /candidacy/{driverPublicId}/availability:
+    post:
+      tags: [candidacy]
+      summary: تغيير التوافر وحده (متاح · مشغول · غير متصل)
+      description: |
+        مسار ضيّق لأكثر عملية تكراراً في النظام (§78 «Busy/free transitions»): يُنادى عند
+        قبول السائق طلباً (`busy`) وعند وصول الطلب إلى حالة نهائية (`available`) وعند إعلان
+        السائق انسحابه (`offline`).
+
+        مفصول عن `PUT /candidacy/{id}` لأن الاستبدال الكامل يحتاج كل الحقول، ومن يريد تغيير
+        التوافر وحده كان سيُضطرّ إلى قراءةٍ قبل كل كتابة — أو إلى مسح مناطقه بالخطأ.
+
+        سائق **بلا صفّ** يُجيب `404`: التوافر صفة على ترشيح قائم لا إنشاء ضمنيّ له، وإنشاء
+        صفّ من نداء توافر يُنتج مرشّحاً بلا أهليّة ولا مناطق.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [availability_state]
+              additionalProperties: false
+              properties:
+                availability_state: { type: string, enum: [available, busy, offline] }
+                actor_type: { $ref: '#/components/schemas/ActorType' }
+      responses:
+        '200':
+          description: الصفّ بعد التغيير
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Candidacy' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: نفس `Idempotency-Key` بحمولة مختلفة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /matching/rulesets:
+    get:
+      tags: [rulesets]
+      summary: نسخ قواعد الترتيب
+      description: |
+        الأوزان **معلومة عامّة للتشغيل**: من يسأل «لماذا رُتِّب السائقون هكذا؟» يقرأ النسخة
+        لا الكود. والنسخة المُقفَلة لا تُحرَّر أبداً — تحريرها يُعيد كتابة تاريخ قرارات
+        لا يمكن تفسيرها بعده.
+      responses:
+        '200':
+          description: النسخ
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rulesets]
+                properties:
+                  rulesets:
+                    type: array
+                    items: { $ref: '#/components/schemas/Ruleset' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /matching/decisions/{decisionId}:
+    get:
+      tags: [audit]
+      summary: قرار مطابقة واحد بدرجاته
+      description: |
+        يجيب عن «لماذا هذا السائق ولم يكن ذاك؟» بعد شهر. **مسار تشغيل وتدقيق لا مسار عام**:
+        محتواه مُعرّفات مرشّحين ودرجاتهم، وهي بيانات حسّاسة تنافسياً عن السائقين
+        (ADR-011 القرار 8) لا تُعاد لعميل ولا لسائق ولا تدخل حمولة حدث.
+      parameters:
+        - name: decisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: القرار
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Decision' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+components:
+  parameters:
+    DriverPublicId:
+      name: driverPublicId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على كل كتابة (§43). مدخل النظام بوت، وضغط الزر مرّتين حالة عادية.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الرد وفي صفّ التدقيق.
+      schema: { type: string, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque. لا يُحلَّل ولا تُقرأ أجزاؤه.
+
+    ZoneRef:
+      type: string
+      format: uuid
+      description: |
+        مُعرّف منطقة من هرم الجغرافيا (ADR-006). النوع UUID كما في كل خدمة أخرى، والقرب
+        يُحسَب بالهرم لا بالمساواة: المنطقة نفسها أو ما يشمله أصل مخدوم.
+
+    OrderPublicId:
+      type: string
+      pattern: '^ORD-[0-9]{10}$'
+      description: مُعرّف الطلب العام. نصّ opaque لا رقم (ADR-010 القرار 5).
+
+    ActorType:
+      type: string
+      enum: [driver_bot, admin, driver_core, dispatch, test]
+      description: من نفّذ العملية — كود جهة لا مُعرّف مستخدم ولا مُعرّف قناة (ADR-007).
+
+    CandidateQuery:
+      type: object
+      required: [order_id, order_public_id, order_type, vehicle_class, pickup_zone_id]
+      additionalProperties: false
+      description: |
+        حقائق الطلب التي تدخل الفلاتر الصلبة فقط. **لا نصّ كتبه مستخدم** (وصف شحنة · ملاحظات ·
+        تسمية مكان) ولا إحداثيات: الجغرافيا هرم مُعرّفات (ADR-006)، والخصوصية حدّ لا تجميل
+        (ADR-010 القرار 7).
+      properties:
+        order_id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        order_type: { type: string, enum: [ride, delivery] }
+        vehicle_class:
+          type: string
+          enum: [sedan, suv, van, pickup, motorcycle, truck_small]
+          description: القائمة مُقفلة ومطابقة حرفياً لعقد الطلب — نقص عنصر يُخفي مرشّحاً صالحاً.
+        pickup_zone_id:
+          $ref: '#/components/schemas/ZoneRef'
+        excluded_driver_ids:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/WaslaPublicId' }
+          description: من لا يُعاد عليه العرض في هذه المهمّة (§17). واجب المُنادي لأنه مالك المهمّة.
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+          description: سقف المُعاد. الافتراضي `max_candidates` من نسخة القواعد.
+        ruleset_version:
+          type: integer
+          minimum: 1
+          description: للاختبار وإعادة إنتاج قرار قديم. الافتراضي أحدث نسخة مُقفَلة.
+        dispatch_job_id:
+          type: string
+          format: uuid
+          description: يُحفَظ في صفّ التدقيق للربط في التحقيق **ولا يدخل المنطق** (وإلّا انعكس الاعتماد).
+        evaluated_at:
+          type: string
+          format: date-time
+          description: ساعة التقييم. مُدخَل صريح ليكون الترتيب قابلاً لإعادة الإنتاج حرفياً.
+
+    RankedCandidate:
+      type: object
+      required: [rank, driver_public_id, score_bp]
+      additionalProperties: false
+      properties:
+        rank: { type: integer, minimum: 1 }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        score_bp:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          description: |
+            الدرجة بأعداد صحيحة من عشرة آلاف لا بعشريات: المقارنة تامّة والترتيب قابل
+            لإعادة الإنتاج. المقارنة العشرية تجعل تعادلاً حقيقياً يبدو فرقاً.
+        components:
+          type: object
+          additionalProperties: false
+          description: مكوّنات الدرجة — للتفسير والتدقيق لا للمنطق عند المُستهلِك.
+          properties:
+            zone_proximity_bp: { type: integer, minimum: 0, maximum: 10000 }
+            completion_bp:     { type: integer, minimum: 0, maximum: 10000 }
+            acceptance_bp:     { type: integer, minimum: 0, maximum: 10000 }
+            fairness_bp:       { type: integer, minimum: 0, maximum: 10000 }
+        tiebreak_by:
+          type: string
+          enum: [score, last_offered_at, driver_public_id]
+          description: كيف حُسم موضعه — مُعلَن لا عشوائي (ADR-011 القرار 6).
+
+    CandidateResult:
+      type: object
+      required: [decision_id, ruleset_version, evaluated_at, candidates, counts]
+      additionalProperties: false
+      properties:
+        decision_id:
+          type: string
+          format: uuid
+          description: مرجع صفّ التدقيق. يُحفظ عند المُنادي ليُسأل عنه لاحقاً.
+        ruleset_version: { type: integer, minimum: 1 }
+        evaluated_at: { type: string, format: date-time }
+        candidates:
+          type: array
+          items: { $ref: '#/components/schemas/RankedCandidate' }
+        counts:
+          type: object
+          required: [considered, eligible, returned]
+          additionalProperties: false
+          description: |
+            ثلاثة أعداد تُفسّر النتيجة الفارغة بلا تخمين: كم صفّاً نُظر فيه، كم عبر الفلاتر
+            الصلبة، وكم أُعيد بعد السقف.
+          properties:
+            considered: { type: integer, minimum: 0 }
+            eligible:   { type: integer, minimum: 0 }
+            returned:   { type: integer, minimum: 0 }
+        empty_reason_code:
+          type: string
+          description: |
+            إلزامي عند القائمة الفارغة: كود من كتالوج [errors.md](errors.md) — «صفر مرشّح»
+            بلا سبب أسوأ من خطأ، لأنه لا يقول للمشغّل أين يبحث.
+
+    CandidacyUpsert:
+      type: object
+      required: [availability_state, eligibility_state, service_kinds, zone_ids]
+      additionalProperties: false
+      properties:
+        availability_state: { type: string, enum: [available, busy, offline] }
+        eligibility_state:
+          type: string
+          enum: [eligible, ineligible, suspended, unknown]
+          description: |
+            **مُدّعاة لا مُتحقَّقة** حتى Phase 05. الافتراضي الصادق `unknown` لا `eligible`:
+            الافتراضي المتساهل يُنتج عروضاً لسائقين لا نعرف عنهم شيئاً.
+        eligibility_source:
+          type: string
+          enum: [claimed, driver_core]
+          description: من قال هذا. يُخزَّن مع الصفّ فلا يُقرأ الادّعاء تحقّقاً بعد شهر.
+        service_kinds:
+          type: array
+          minItems: 1
+          items: { type: string, enum: [ride, delivery] }
+        vehicle_class:
+          type: string
+          enum: [sedan, suv, van, pickup, motorcycle, truck_small]
+          nullable: true
+        zone_ids:
+          type: array
+          minItems: 1
+          maxItems: 64
+          items: { $ref: '#/components/schemas/ZoneRef' }
+          description: |
+            المناطق المخدومة. التطابق بالهرم لا بالمساواة: المنطقة نفسها أو ما يشمله أصل مخدوم.
+        actor_type: { $ref: '#/components/schemas/ActorType' }
+
+    Candidacy:
+      type: object
+      required:
+        [driver_public_id, availability_state, eligibility_state, eligibility_source,
+         service_kinds, zone_ids, updated_at]
+      additionalProperties: false
+      properties:
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        availability_state: { type: string, enum: [available, busy, offline] }
+        eligibility_state: { type: string, enum: [eligible, ineligible, suspended, unknown] }
+        eligibility_source: { type: string, enum: [claimed, driver_core] }
+        service_kinds:
+          type: array
+          items: { type: string, enum: [ride, delivery] }
+        vehicle_class: { type: string, nullable: true }
+        zone_ids:
+          type: array
+          items: { $ref: '#/components/schemas/ZoneRef' }
+        last_offered_at: { type: string, format: date-time, nullable: true }
+        last_assigned_at: { type: string, format: date-time, nullable: true }
+        offers_received: { type: integer, minimum: 0 }
+        offers_accepted: { type: integer, minimum: 0 }
+        orders_completed: { type: integer, minimum: 0 }
+        is_fresh:
+          type: boolean
+          description: |
+            هل الصفّ داخل نافذة الحداثة **الآن**؟ محسوب لا مخزَّن: من يقرأ يحتاج الجواب،
+            ومن يكتبه في القاعدة يُنتج عموداً يكذب بمرور الوقت وحده.
+        updated_at: { type: string, format: date-time }
+        updated_by: { type: string }
+
+    Ruleset:
+      type: object
+      required: [version, label, weights, is_frozen]
+      additionalProperties: false
+      properties:
+        version: { type: integer, minimum: 1 }
+        label: { type: string }
+        weights:
+          type: object
+          description: |
+            نقاط مئوية صحيحة مجموعها 100 بالضبط (قيد في القاعدة). أوزان الصفر مذكورة
+            صراحةً ولا تُحذف: الصفر المُعلَن يقول «المُدخَل غير موجود اليوم»، والحذف يقول
+            «لم يفكّر أحد فيه».
+          additionalProperties: false
+          properties:
+            eta:             { type: integer, minimum: 0, maximum: 100 }
+            distance:        { type: integer, minimum: 0, maximum: 100 }
+            zone_proximity:  { type: integer, minimum: 0, maximum: 100 }
+            completion:      { type: integer, minimum: 0, maximum: 100 }
+            rating:          { type: integer, minimum: 0, maximum: 100 }
+            acceptance:      { type: integer, minimum: 0, maximum: 100 }
+            fairness:        { type: integer, minimum: 0, maximum: 100 }
+        candidacy_freshness_seconds: { type: integer, minimum: 15 }
+        max_candidates: { type: integer, minimum: 1 }
+        fairness_horizon_seconds: { type: integer, minimum: 60 }
+        is_frozen:
+          type: boolean
+          description: النسخة المُستعمَلة مُقفَلة لا تُحرَّر. التعديل نسخة جديدة.
+        created_at: { type: string, format: date-time }
+
+    Decision:
+      type: object
+      required: [decision_id, order_id, ruleset_version, evaluated_at, counts, candidates]
+      additionalProperties: false
+      properties:
+        decision_id: { type: string, format: uuid }
+        order_id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        dispatch_job_id: { type: string, format: uuid, nullable: true }
+        ruleset_version: { type: integer, minimum: 1 }
+        requested_at: { type: string, format: date-time }
+        evaluated_at: { type: string, format: date-time }
+        counts:
+          type: object
+          additionalProperties: false
+          properties:
+            considered: { type: integer, minimum: 0 }
+            eligible:   { type: integer, minimum: 0 }
+            returned:   { type: integer, minimum: 0 }
+            excluded:   { type: integer, minimum: 0 }
+        empty_reason_code: { type: string, nullable: true }
+        candidates:
+          type: array
+          items: { $ref: '#/components/schemas/RankedCandidate' }
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: 'كود ثابت (stable) — الاختبارات تتحقّق منه لا من النص' }
+        message: { type: string }
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: الكيان غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: صالح شكلياً وغير مقبول منطقياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

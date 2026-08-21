@@ -4,7 +4,7 @@
 >
 > **النطاق:** كل من يعمل على المستودع — مطور، مساهم، أو وكيل آلي (Bot/CI).
 >
-> **المرتبطة:** [ENGINEERING_DOCUMENTATION_LAW.md](ENGINEERING_DOCUMENTATION_LAW.md) · [CONTRIBUTING.md](../../../CONTRIBUTING.md) · [GIT_RULES.md](GIT_RULES.md)
+> **المرتبطة:** [ENGINEERING_DOCUMENTATION_LAW.md](ENGINEERING_DOCUMENTATION_LAW.md) · [CONTRIBUTING.md](../../CONTRIBUTING.md) · [GIT_RULES.md](GIT_RULES.md)
 
 ---
 

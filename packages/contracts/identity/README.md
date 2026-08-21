@@ -32,13 +32,13 @@ services/identity/contracts/
 3. **Contract tests:** اكتب اختبارات ضد العقد (وليس ضد التنفيذ) لضمان التوافق.
 4. **الأحداث:** اشترك في أحداث `events.json` عبر Outbox/Kafka (لا تصل مباشرة لجدول الخدمة بعد فصلها).
 
-راجع: [ADR-001](../../docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md) · [ADR-002](../../docs/15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · [ADR-004](../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)
+راجع: [ADR-001](../../../docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md) · [ADR-002](../../../docs/15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md) · [ADR-004](../../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)
 
 ---
 
 ## الأنواع المولّدة (TypeScript)
 
-أُضيف حزمة `@wasla/contracts-identity` التي توفّر أنواع TS لكلٍّ من عقد API وعقد الأحداث (وفق [ADR-004](../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)).
+أُضيف حزمة `@wasla/contracts-identity` التي توفّر أنواع TS لكلٍّ من عقد API وعقد الأحداث (وفق [ADR-004](../../../docs/15-decisions/ADR-004-typed-contracts-from-openapi.md)).
 
 ### أنواع API (مولّدة آلياً)
 

@@ -13,6 +13,8 @@
  * TRANSACTION BOUNDARY is part of the port contract, not of the adapter.
  */
 
+import { randomUUID } from "node:crypto";
+
 import { ORDER_INITIAL_STATUS, type OrderDomainEvent } from "@wasla/contracts-order";
 
 import { OrderError } from "../domain/errors.js";
@@ -50,6 +52,35 @@ export class FixedClock implements Clock {
   /** Advance by whole seconds so ordering in the audit trail stays readable. */
   advance(seconds = 1): void {
     this.current += seconds * 1000;
+  }
+}
+
+/**
+ * The real wall clock (MR 4/6).
+ *
+ * The service process needs one: `FixedClock` exists so tests can make time an
+ * input, and a running engine must not inherit a frozen clock by accident. Kept
+ * beside it — rather than in `http/` — because the clock is an adapter for the
+ * `Clock` port, and a use case called from anywhere else (Phase 07) needs the
+ * same one. ISO-8601 in UTC, matching every `timestamptz` the contract stores.
+ */
+export class SystemClock implements Clock {
+  now(): string {
+    return new Date().toISOString();
+  }
+}
+
+/**
+ * UUID v4 ids from the platform crypto (MR 4/6).
+ *
+ * `randomUUID` is a CSPRNG: order and assignment ids appear in URLs and in
+ * events, so a guessable id would let a caller enumerate other customers' orders
+ * by counting. `SequentialIdGenerator` — which is guessable on purpose — stays
+ * for tests only.
+ */
+export class CryptoIdGenerator implements IdGenerator {
+  uuid(): string {
+    return randomUUID();
   }
 }
 

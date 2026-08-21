@@ -24,6 +24,46 @@
 
 ## السجل
 
+## 2026-08-21 · Phase 06 MR 4/6 — طبقة HTTP لمحرّك الطلبات على المنفذ 8087 (الخدمة صارت قابلة للتشغيل)
+
+**Task:** ربط المسارات السبعة المنشورة في `services/orders/contracts/api.openapi.yml` بحالات الاستخدام عبر Fastify، بمقبس معاملة صريح (`OrderRunner`) يجعل كل كتابة داخل وحدة عمل واحدة، وبنطاق مالك يجيب **404 لا 403** على قراءة طلب عميل آخر — **بلا تغيير في `src/use-cases/`**. **Status:** Completed · **MR:** [!41](https://gitlab.com/uxxxu/wasla/-/merge_requests/41) · **ADR:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_HTTP.md](../04-api/ORDER_HTTP.md)
+
+### 1. ماذا تم إنجازه
+
+- **`src/runner.ts`** — `OrderRunner {write, read}` و`createDirectRunner(deps)`: مقبس واحد يحمل قرار المعاملة. المصنع لا يستقبل `deps` أبداً، فلا يمكن لمعالج مسار أن ينسى فتح معاملة.
+- **`src/infrastructure/drizzle/runner.ts`** — `PostgresOrderRunner(db, {clock, ids})`: `write` عبر `PostgresOrderUnitOfWork.run` (الكتابة الثلاثية ذرّية) و`read` على الاتصال الجذري بلا معاملة.
+- **`src/http/requests.ts`** — ترجمة السلك → المجال، وقراءة الترويسات بحدودها (`Idempotency-Key` 8–128 · `X-Customer-Public-Id` بشكل `WS-` · `x-request-id` ≤128)، و**ترويسة مكرّرة تُرفض** بدل تخمين أيّ قيمة تُحتسب، و`toOrderRef` يقبل UUID أو `ORD-##########`.
+- **`src/http/errors.ts`** — `OrderError` → `{code, message, trace_id}` بالحالة التي قرّرها الكتالوج؛ أخطاء Fastify للجسم (400/415) ⇒ `ORDER_VALIDATION_FAILED`، وما تبقّى ⇒ `ORDER_ENGINE_UNAVAILABLE` (503). **404 لمسار غير موجود لا يُترجَم إلى `ORDER_NOT_FOUND`.**
+- **`src/http/app.ts`** — `createOrderApp({runner, health?, logger?})`: سبعة مسارات + `/health`. الاستلام **201** جديد و**200** إعادة تشغيل مفتاح؛ تسجيل عرض **201** وحسمه **200**.
+- **`src/http/server.ts`** — التركيب النهائي: `DATABASE_URL` ⇒ Postgres، وإلا مُهيّئات الذاكرة و`/health` = `degraded`؛ `SystemClock` و`CryptoIdGenerator` (لا مُعرّفات قابلة للعدّ في الإنتاج)؛ إغلاق التجمّع في `onClose` واستجابة لـSIGTERM/SIGINT.
+- **`packages/contracts/order`** — كتالوجات القيم المغلقة وقت التشغيل (`ORDER_TYPES` … `ORDER_SHIPMENT_TYPES`) لأن الأنواع تتبخّر عند التشغيل والحدّ يجب أن يرفض عضواً مجهولاً بـ400 لا أن يحمله إلى الداخل؛ **+11 اختباراً** تقارن كل كتالوج بتعداد OpenAPI (119 إجمالاً).
+- **`src/domain/validation.ts`** — `assertNotes` (≤300): كان القيد في `schema.sql` بلا مقابل في المجال، فمخزن الذاكرة يقبل ملاحظة بـ400 محرف وPostgres يرفضها بـ503. صار الرفض **400 من المجال** في المحوّلين معاً.
+- **`src/__tests__/http/app.test.ts`** — **46 اختباراً** عبر `app.inject`.
+
+### 2. لماذا تم اختياره
+
+- **`OrderRunner` لا `deps` في المصنع** — الكتابة ثلاثية وذرّيتها سُدّت في MR 3/6؛ لو استقبل المصنع التبعيات لكان على كل مسار أن يتذكّر المعاملة، ونسيانٌ واحد يكسر الذرّية بصمت.
+- **404 لا 403 لطلب عميل آخر** — `order_public_id` تسلسلي، فـ403 يحوّل المسار إلى **عرّاف وجود** يُعدّ به طلبات المنصّة. القاعدة مُثبَّتة باختبار لا بذاكرة مُراجع.
+- **`assertNotes` في المجال لا في HTTP** — Phase 07 سيُنادي حالات الاستخدام مباشرة، فقاعدةٌ تُكتب في الواجهة قاعدةٌ لا يراها المستهلك الداخلي.
+- **`{orderId}` يقبل المُعرّف العام أيضاً** (انحراف مُعلَن رقم 2) — استجابة الاستلام تُعيد `order_public_id` فقط، ولا يجب أن نكشف مُعرّفاً داخلياً ثانياً كي تصبح القراءة ممكنة.
+
+### 3. الديون والحدود المُعلَنة
+
+- مفتاح التكرار في `PATCH …/assignments/{id}` مطلوب ومُسجَّل بلا إلغاء تكرار حقيقي (الحسم المزدوج يُرفض بـ409 أصلاً).
+- **لا مصادقة**: الشكل فقط (`actor_ref` مع البشري وممنوع مع `system`).
+- لا ناشر لصندوق الصادر (Phase 09) · غلاف الخطأ بلا `details` مطابقةً للعقد.
+
+### 4. الملفات/الخدمات المتأثرة
+
+- **Files:** `services/orders/src/http/{app,errors,requests,server}.ts` · `services/orders/src/runner.ts` · `services/orders/src/infrastructure/drizzle/runner.ts` · `services/orders/src/infrastructure/in-memory.ts` · `services/orders/src/domain/validation.ts` · `services/orders/src/index.ts` · `services/orders/package.json` · `services/orders/src/__tests__/http/app.test.ts` · `packages/contracts/order/src/{index.ts,__tests__/contracts.test.ts}` · `docs/04-api/ORDER_HTTP.md` · `docs/16-progress/{MASTER_PROGRESS,ROADMAP,HANDOFF_NEXT_STEPS,TASK_LOG}.md`
+- **Services:** `@wasla/orders-service` · `@wasla/contracts-order`
+- **Why:** الخدمة كانت مكتملة المجال والاستمرارية و**غير قابلة للتشغيل**؛ ولا يمكن أن تبدأ MR 5/6 (استبدال `UnavailableOrderIntake`) بلا مسار HTTP حقيقي تُنادى عليه.
+- **Tests:** `pnpm -r typecheck` ✅ · `pnpm -r test` ✅ (`@wasla/orders-service` **621** في 8 ملفات · `@wasla/contracts-order` **119**) · تشغيل فعلي: `PORT=8099 node --import tsx src/http/server.ts` ⇒ `/health` = `{"status":"degraded","persistence":"memory"}` واستلام طلب = **201**.
+- **Next:** MR 5/6 — `HttpOrderIntakePort` في `services/customers` بدل `UnavailableOrderIntake`، ثمّ MR 6/6 — `packages/order-e2e` وبوابة خروج Phase 06.
+- **Related:** [MR !41](https://gitlab.com/uxxxu/wasla/-/merge_requests/41) · [ORDER_HTTP.md](../04-api/ORDER_HTTP.md) · [HANDOFF §10](HANDOFF_NEXT_STEPS.md)
+
+---
+
 ## 2026-08-21 · Phase 06 MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + وحدة عمل تُسدّ دَين الذرّية
 
 **Task:** تنفيذ التخزين الدائم والكتابة الثلاثية الذرّية لمحرّك الطلبات: مرآة Drizzle لـ`schema.sql`، ومُهيّئات Postgres وراء المنافذ نفسها، و**`PostgresOrderUnitOfWork`** يفتح معاملة واحدة ويسلّم نفس المقبض للمستودع والصادر، فلا تُكتب حالة دون تدقيقها وصادرها — **بلا تغيير في `src/use-cases/`**. **Status:** Completed · **MR:** [!40](https://gitlab.com/uxxxu/wasla/-/merge_requests/40) · **ADR:** [ADR-010 §127](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · **الوثيقة:** [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)

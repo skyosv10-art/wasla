@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-21 (**Phase 06 = In Progress** · MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -45,7 +45,7 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-21 (Phase 06 · MR 3/6 — استمرارية Postgres لمحرّك الطلبات + وحدة عمل تُسدّ دَين الذرّية — §10)
+آخر تحديث:      2026-08-21 (Phase 06 · MR 4/6 — طبقة HTTP لمحرّك الطلبات على 8087 + مقبس معاملة + نطاق مالك 404 — §10)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -461,7 +461,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 و2/6 و3/6 مدمجة · 2026-08-21)
+## 10. Phase 06 (Order Engine) — قيد التنفيذ 🔄 (MR 1/6 و2/6 و3/6 و4/6 مدمجة · 2026-08-21)
 
 **الأساس:** [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md) · [عقود الخدمة](../../services/orders/contracts/README.md) · [CONTAINERS §4.2](../02-architecture/CONTAINERS.md)
 
@@ -524,6 +524,27 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 - **أربعة اختبارات ذرّية** تُثبت التراجع: (1) صادر يفشل بعد كتابة المستودع ⇒ كل الصفوف غائبة · (2) فشلٌ بعد عودة حالة الاستخدام ⇒ صفّ الصادر الحقيقي غائب · (3) فشلٌ أثناء الانتقال ⇒ الحالة لم تتغيّر · (4) نجاح ⇒ الكتابة الثلاثية كلّها ملتزمة.
 - **محدودية مُعلَنة:** `nextval()` ليس ذرّياً في PostgreSQL — قد تظهر فجوات في الترقيم بعد التراجع/إعادة المحاولة، والمُلزَم هو التفرّد والرتابة لا التسلسل بلا فجوات ([ORDER_PERSISTENCE.md §7](../02-architecture/ORDER_PERSISTENCE.md)).
 
+### ما أنجزته MR 4/6 بالضبط ([!41](https://gitlab.com/uxxxu/wasla/-/merge_requests/41))
+
+خدمة الطلبات صارت **قابلة للتشغيل**: `src/http/{requests,errors,app,server}.ts` + `src/runner.ts` + `infrastructure/drizzle/runner.ts`. التفصيل في [ORDER_HTTP.md](../04-api/ORDER_HTTP.md)، وما يجب معرفته قبل MR 5/6:
+
+- **`OrderRunner` هو مقبس المعاملة، والمصنع لا يستقبل تبعيات.** `createOrderApp({runner, health?, logger?})`: `runner.write(work)` يشغّل العمل داخل `PostgresOrderUnitOfWork` (فالكتابة الثلاثية تبقى ذرّية) و`runner.read(work)` على الاتصال الجذري. **لا تُمرّر `deps` إلى التطبيق** ولا تفتح معاملة داخل معالج مسار: قرار المعاملة يقع في موضع واحد قابل للمراجعة، ولذلك لم يتغيّر ملف واحد في `src/use-cases/` في هذه الدفعة أيضاً.
+- **القراءة مقصورة على المالك بـ404 لا 403.** `X-Customer-Public-Id` إلزامية في القراءتين، وطلب عميل آخر يُجاب بـ`ORDER_NOT_FOUND` بالشكل نفسه **وفي السجلّ أيضاً**، لأن `order_public_id` تسلسلي فـ403 يحوّل المسار إلى عرّاف وجود يُعدّ به من يشاء طلبات المنصّة. **لا تُحوّلها إلى 403 «لأنها أوضح».**
+- **`{orderId}` يقبل UUID أو `ORD-##########`** (انحراف مُعلَن رقم 2 في [ORDER_HTTP.md §8](../04-api/ORDER_HTTP.md)) لأن استجابة الاستلام تُعيد المُعرّف العام فقط. **لا تُضِف المُعرّف الداخلي إلى استجابة الاستلام** كي «يُبسّط» المسار: مقبضان لشيء واحد وأحدهما لا يجب أن يخرج.
+- **الاستلام 201 جديد · 200 إعادة تشغيل مفتاح** — MR 5/6 يعتمد على هذا التمييز بلا مقارنة أجسام. وتسجيل العرض 201 وحسمه 200.
+- **`Idempotency-Key` إلزامية في الكتابات الأربع كلّها** (8–128)، تُقرأ **قبل** تحليل الجسم، وترويسة مكرّرة تُرفض بدل تخمين القيمة، و`idempotency_key` في الجسم إن خالف الترويسة ⇒ 400.
+- **كتالوجات التعدادات صارت قيماً وقت التشغيل** في `@wasla/contracts-order` (`ORDER_TYPES` … `ORDER_SHIPMENT_TYPES`) وكلٌّ منها مُقارَن باختبار بتعداد `api.openapi.yml`. الأنواع تتبخّر عند التشغيل، فالحدّ يرفض عضواً مجهولاً بـ400 ولا يحمله إلى الداخل. **أضِف أي تعداد جديد هنا لا في مصفوفة داخل معالج مسار.**
+- **`assertNotes` أُضيف إلى المجال** لأن قيد `notes ≤ 300` في `schema.sql` كان بلا مقابل مُرمَّز: مخزن الذاكرة يقبل 400 محرف وPostgres يرفضها بـ503 لما هو 400. الإصلاح في `domain/validation.ts` **لا في HTTP** لأن Phase 07 ينادي حالات الاستخدام مباشرة.
+- **غلاف الخطأ `{code, message, trace_id}` فقط** مطابقةً لـ`ErrorResponse`؛ اسم الحقل المخالف في الرسالة والسجلّ لا في حقل بنيوي. و**404 لمسار غير موجود لا يُترجَم إلى `ORDER_NOT_FOUND`** (اختبار صريح).
+- **الأدلّة:** `@wasla/orders-service` **621 اختباراً** (منها 46 عبر `app.inject`) · `@wasla/contracts-order` **119** · `pnpm -r typecheck` و`pnpm -r test` ✅ · تشغيل فعلي على منفذ حقيقي: `/health` = `degraded/memory` واستلام = 201.
+
+### ما تفعله MR 5/6 بالضبط (الخطوة التالية)
+
+1. استبدال `UnavailableOrderIntake` في `services/customers/src/infrastructure/in-memory.ts` بمحوّل إنتاج `HttpOrderIntakePort` ينادي `POST /orders/intake` على 8087 (المثال المكتوب أصلاً: `infrastructure/http-geography.ts`).
+2. **خرائط الحالات ليست اختيارية:** 201/200 ⇒ نجاح (الأخير إعادة تشغيل) · 409 ⇒ رفض نهائي لا يُعاد · 4xx أخرى ⇒ خطؤنا نحن (fail-closed بصفّ `submission_failed`) · 503/انعدام إجابة ⇒ قابل لإعادة المحاولة **بالمفتاح نفسه**.
+3. تمرير `Idempotency-Key` الذي ولّدته خدمة العملاء و`x-request-id` نفسه، فيصل خيط الارتباط الواحد إلى صفّ تدقيق المحرّك.
+4. `/health` في خدمة العملاء يصبح `ok` لأول مرة عند تركيب المحوّل + Postgres. و`packages/customer-e2e/src/stub-order-engine.ts` هو **مواصفة السلوك المتوقَّع**: قارِن به ولا تُعِد اختراعه.
+
 ### قرارات مثبَّتة لا تُعاد مناقشتها (ADR-010)
 
 1. **لا حالة `draft`** — الطلب يبدأ `published`. Phase 04 تُسلّم نيّة **مُتحقَّقة**، فمسوّدةٌ تكرّر تحقّقاً وتُنتج طلبات معلّقة بلا مالك. حارس يفشل إن ظهر `draft` في أي enum.
@@ -535,7 +556,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ### ما لم يُنجَز بقصد (لا تُعِد بناءه من الصفر)
 
-- **لا HTTP بعد** — الاستمرارية مكتملة ومُختبَرة، لكن `services/orders` **غير قابلة للتشغيل**: لا تطبيق Fastify على 8087 (MR 4/6). المُهيّئ الوحيد للتشغيل في الذاكرة، والتركيب النهائي لـPostgres محلّه MR 4/6 (مثل `createCustomerDb` في Phase 04).
+- **~~لا HTTP بعد~~ — حُسم في MR 4/6:** `services/orders` صارت قابلة للتشغيل على **8087** بتركيب نهائي واحد في `src/http/server.ts` (Postgres عند وجود `DATABASE_URL`، وإلا ذاكرة و`/health` = `degraded`). استيراد الحزمة ما زال لا يلمس الشبكة ولا القاعدة.
 - **لا ناشر لصندوق الصادر** — `PostgresOrderOutbox` يكتب الصفوف لكن لا يُرسلها لـKafka؛ محله Phase 09. والذرّية التي سُدّت هنا تضمن أن الحدث إن وُجد فهو ملتزم مع الطلب، لكنه قد يبقى غير منشور حتى ظهور الناشر.
 - **لا إلزام لهوية الفاعل** — الشكل فقط. الإلزام يدخل مع طبقة المصادقة (Phase 09+)، ولا يُغيّر جدول الانتقالات.
 - **`ORDER_TRANSITION_SPACE` ثابت مُصدَّر (441)** — لا تُعِد حسابه في MR 6/6؛ استورده كي يبقى للفضاء معنًى واحد في المستودع.

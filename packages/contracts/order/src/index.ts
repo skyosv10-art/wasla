@@ -331,3 +331,99 @@ export const STOPS_PER_ORDER = 2;
 
 /** The service's HTTP port (CONTAINERS §4.2). */
 export const ORDER_SERVICE_PORT = 8087;
+
+// --- Closed enum catalogs, as values (MR 4/6) --------------------------
+
+/**
+ * The contract enums as runtime arrays.
+ *
+ * The generated types (`api-types.ts`) express these as unions, which vanish at
+ * compile time — a union cannot reject `"limousine"` arriving in a JSON body.
+ * The HTTP edge (MR 4/6) has to answer that question at runtime and answer it
+ * with the documented `ORDER_VALIDATION_FAILED` (400) rather than letting an
+ * unknown member travel inward disguised as a valid one, so the catalog needs a
+ * value form. It lives in the contract package — not in the service — because a
+ * second consumer (the Phase 07 matching engine, the bot) must reject exactly
+ * the same set; a copy in `services/orders/src/http` would be a private truth.
+ *
+ * `satisfies readonly X[]` ties each array to its generated union: adding a
+ * member to the OpenAPI enum without adding it here (or vice versa) fails
+ * compilation, and `__tests__/contracts.test.ts` additionally asserts each array
+ * equals the enum written in api.openapi.yml. Two guards because a silently
+ * short catalog rejects orders that the published contract accepts.
+ */
+export const ORDER_TYPES = ["ride", "delivery"] as const satisfies readonly OrderType[];
+
+/** Vehicle classes — mirrors the customer contract literally (see intake). */
+export const ORDER_VEHICLE_CLASSES = [
+  "sedan",
+  "suv",
+  "van",
+  "pickup",
+  "motorcycle",
+  "truck_small",
+] as const satisfies readonly VehicleClass[];
+
+/**
+ * What a delivery carries. Meaningful only for `order_type = delivery`, which is
+ * why the value is nullable in the schema and the placement rule (a ride may not
+ * carry shipment details) lives in the domain.
+ */
+export type OrderShipmentType = NonNullable<ShipmentDetails["shipment_type"]>;
+
+export const ORDER_SHIPMENT_TYPES = [
+  "parcel",
+  "documents",
+  "food",
+  "goods",
+  "other",
+] as const satisfies readonly OrderShipmentType[];
+
+/** Pricing modes. `customer_offer` carries money, `negotiable` must not. */
+export const ORDER_PRICE_MODES = [
+  "customer_offer",
+  "negotiable",
+] as const satisfies readonly PriceMode[];
+
+/** Stop kinds, in the order the pair must appear. */
+export const ORDER_STOP_KINDS = ["pickup", "dropoff"] as const satisfies readonly StopKind[];
+
+/** How the customer produced the stop (kept for analytics, never for matching). */
+export const ORDER_STOP_SOURCES = [
+  "map",
+  "telegram_location",
+  "link",
+  "text_search",
+  "saved_place",
+  "manual_zone",
+] as const satisfies readonly StopSource[];
+
+/** Who caused a transition. Only `system` carries no actor reference. */
+export const ORDER_ACTOR_TYPES = [
+  "system",
+  "customer",
+  "driver",
+  "partner",
+  "admin",
+] as const satisfies readonly OrderActorType[];
+
+/** Every assignment state, including the initial `offered`. */
+export const ORDER_ASSIGNMENT_STATES = [
+  "offered",
+  "accepted",
+  "rejected",
+  "expired",
+  "cancelled",
+] as const satisfies readonly OrderAssignmentState[];
+
+/**
+ * The states an offer may be resolved INTO — every assignment state except
+ * `offered`, which is where an offer starts and therefore not a resolution.
+ * `PATCH /orders/{orderId}/assignments/{assignmentId}` accepts exactly these.
+ */
+export const ORDER_ASSIGNMENT_RESOLUTIONS = [
+  "accepted",
+  "rejected",
+  "expired",
+  "cancelled",
+] as const satisfies readonly Exclude<OrderAssignmentState, "offered">[];

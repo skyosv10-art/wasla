@@ -115,9 +115,22 @@ export async function resolveAssignment(
     resolvedAt,
   });
 
-  if (command.state === "accepted") {
-    await deps.repository.setActiveAssignment(order.id, assignment.id, resolvedAt);
-  }
+  // Acceptance deliberately does NOT write the order row here.
+  //
+  // `ck_orders_assignment_matches_status` says an order in a pre-assignment
+  // status (`published` · `searching` · `offered` · `negotiating`) carries NO
+  // active assignment, and acceptance does not move the status (that is a
+  // transition like any other). So binding the driver at this line would write
+  // exactly the row the constraint forbids: `offered` + an active assignment.
+  // On PostgreSQL that write fails; in memory it used to succeed — which is the
+  // impossible state ADR-010 §7 image 4 names, hidden by an adapter that did
+  // not enforce the constraint. Phase 06's exit gate caught it on Postgres.
+  //
+  // The binding therefore happens inside `transitionOrder`, in the SAME UPDATE
+  // that moves the status to a driver-bound state — one statement, so the row is
+  // never visible in a state the constraint rejects. `transitionOrder` reads the
+  // accepted record from the assignment log; the caller still cannot name a
+  // driver.
   // No release branch here on purpose. An offer is resolved once (§6), so a
   // BOUND assignment can never arrive at this line — it is already `accepted`.
   // Releasing the driver is the order's business, not the record's: it happens

@@ -310,3 +310,52 @@ customer-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/customer-e2e test
+
+# ──────────────────────────────────────────────────────────────
+# بوابة خروج المرحلة 06 (MR 6/6) — سؤال واحد: «الطلب يعيش دورة حياته كاملة
+# في المحرّك، ولا يصل طلب أبداً إلى حالة يمنعها الجدول المنشور»:
+#   packages/order-e2e/src/__tests__/phase06-exit-gate.e2e.test.ts
+#
+# ما تُثبته هذه البوابة أنّ خدمتين منفصلتين تعملان معاً: نواة العميل تُسلّم
+# النيّة إلى المحرّك عبر المحوّل الإنتاجي نفسه (HttpOrderIntakePort من MR 5/6)
+# لا عبر نسخة منه، ثم يُقاد الطلب عبر HTTP من published إلى completed، ثم
+# يُمسح فضاء الانتقالات كاملاً: 21×21 = 441 زوجاً، تنجح منها 72 حافة منشورة
+# وتُرفض 369 بالرمز ORDER_ILLEGAL_TRANSITION مع بقاء الطلب في مكانه.
+#
+# الملف نفسه يعمل داخل build-test بمخزن ذاكرة للمحرّك — فالبوابة يجب أن
+# تُثبَت على كل MR دون قاعدة بيانات — وهذه الوظيفة ترفعه على Postgres حقيقي،
+# فيصبح ما تضيفه هو ما لا تُثبته الذاكرة: أنّ كل انتقال يكتب صفّ الحالة وصفّ
+# السجل والحدث في معاملة واحدة عبر PostgresOrderUnitOfWork، وأنّ المُعرّف
+# العام ORD-########## يأتي من التسلسل order_public_id_seq في القاعدة نفسها،
+# وأنّ /health يقول ok بدل degraded لأنّ التخزين صار دائماً.
+#
+# المتغيّر هو ORDER_DATABASE_URL وليس DATABASE_URL بقصد: الثاني هو مخزن طبقة
+# القناة (المرحلة 03) ومخزن وظائف تكامل المحرّك نفسها، ولو ضُبط هنا لتداخلت
+# البوابة مع جداول لا تملكها فيصبح الفشل منسوباً إلى غير سببه. مخزن العميل
+# يبقى in-memory هنا بإعلان صريح: سؤال «هل يُكتب صفّ الطلب ونقاطه في معاملة
+# واحدة؟» تملكه بوابة المرحلة 04 (customer-exit-gate-e2e)، وتكراره هنا يضاعف
+# سطح الفشل دون أن يضيف معلومة.
+#
+# قاعدة مستقلة (wasla_order_e2e) حتى لا تتداخل مع order-db-integration وليبقى
+# الفشل منسوباً لوظيفة واحدة. خدمتا الهوية والجغرافيا تعملان داخل الاختبار
+# بمحوّلات in-memory وتستمعان على منافذ عشوائية (محلّ الفحص هو العقد بين
+# الخدمات لا مخطّطاتها). لا قناة ولا بوت هنا، ولا Matching: الإسنادات تُسجَّل
+# من الاختبار كما ستُسجّلها المرحلة 07، لأنّ المحرّك يسجّل الإسناد ولا يقرّره
+# (ADR-010).
+#
+# التفصيل: docs/12-testing/PHASE06_EXIT_GATE_E2E.md
+# ──────────────────────────────────────────────────────────────
+order-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_order_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    ORDER_DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_order_e2e"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/order-e2e test

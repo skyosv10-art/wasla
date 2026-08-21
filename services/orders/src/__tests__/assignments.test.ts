@@ -115,12 +115,45 @@ describe("recording an offer", () => {
 });
 
 describe("resolving an offer", () => {
-  it("binds an accepted offer to the order without moving its status", async () => {
+  it("records the acceptance without binding it or moving the status", async () => {
+    // Acceptance writes the assignment log only. Binding it here would produce an
+    // `offered` order carrying an active assignment — the row
+    // `ck_orders_assignment_matches_status` rejects on PostgreSQL, and the
+    // impossible state ADR-010 §7 image 4 names. The binding belongs to the
+    // transition that moves the order into a driver-bound status.
     const orderId = await orderInStatus(harness, "offered");
     const assignmentId = await bindAcceptedAssignment(harness, orderId);
     const order = await harness.repository.findOrderById(orderId);
-    expect(order!.activeAssignmentId).toBe(assignmentId);
     expect(order!.status).toBe("offered");
+    expect(order!.activeAssignmentId).toBeNull();
+    const assignment = await harness.repository.findAssignment(orderId, assignmentId);
+    expect(assignment!.state).toBe("accepted");
+    expect(assignment!.acceptedAt).not.toBeNull();
+  });
+
+  it("binds the accepted offer on the transition that needs it, in one write", async () => {
+    const orderId = await orderInStatus(harness, "offered");
+    const assignmentId = await bindAcceptedAssignment(harness, orderId);
+    harness.clock.advance();
+    const outcome = await transitionOrder(harness, orderId, {
+      toStatus: "accepted",
+      reasonCode: null,
+      actorType: "driver",
+      actorRef: publicId(11),
+    });
+    // The driver is read from the accepted record, never from the request.
+    expect(outcome.order.activeAssignmentId).toBe(assignmentId);
+    expect(outcome.order.status).toBe("accepted");
+  });
+
+  it("refuses to bind an active assignment onto a status that forbids one", async () => {
+    // Adapter-level parity with the database CHECK: an in-memory store that
+    // accepts what PostgreSQL refuses makes every unit test a false negative.
+    const orderId = await orderInStatus(harness, "searching");
+    const offer = await recordAssignment(harness, orderId, { driverPublicId: publicId(31) });
+    await expect(
+      harness.repository.setActiveAssignment(orderId, offer.id, harness.clock.now()),
+    ).rejects.toMatchObject({ code: "ORDER_ASSIGNMENT_FORBIDDEN" });
   });
 
   it("stamps only the timestamp its state names", async () => {

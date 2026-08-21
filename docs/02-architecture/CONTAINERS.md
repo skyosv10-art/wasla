@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** أقسام 37 (Data Architecture) و38 (قاعدة البيانات) و41 (Event Bus) و142 (Queue Strategy) و143 (Object Storage) من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
+> **Last Updated:** 2026-08-21 · **Status:** Baseline v1.0 (+ خدمة Customer Core §4.1 — Phase 04: العقود والأنواع المُكتبة مُنفَّذة) (+ طبقة القنوات §5.1 — Phase 03: نواة channel-core ومُهيّئ telegram-adapter وطبقة تشغيل البوتات `bot-runtime` مع البوتات الثلاثة ومُهيّئات `channel-postgres` ودعم المجموعات مُنفَّذة) · **Related Team:** Team 09 (Data) · Team 10 (DevOps) · Team 12 (Integration)
 
 ---
 
@@ -63,13 +63,31 @@ chat · translation · notifications · support · partners · billing · compli
 
 > في Modular Monolith: PostgreSQL واحد مع Logical Schemas/Bounded Contexts لكل خدمة. بعد استخراج الخدمات، لا تسمح خدمة أن تقرأ جداول خدمة أخرى مباشرة.
 
+### 4.1 خدمة Customer Core — Phase 04 (انحراف موثّق)
+
+أُضيفت خدمة **`services/customers`** (`@wasla/customers-service`، المنفذ 8086) بقرار [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md). القائمة أعلاه لا تحوي خدمة عميل، لأن الشجرة الأصلية أسندت العميل ضمناً إلى `orders`؛ وهذا انحراف **معلَن ومُبرَّر**: مسؤوليات Phase 04 (ملف العميل · الأماكن المحفوظة · نيّة الطلب) لها بياناتها ودورة حياتها، ومالكها Team 02، ولا يجوز أن تنتظر محرّك الطلبات (Phase 06) ولا أن تسكن في Identity فتخلط «من المستخدم» بـ«ماذا يريد».
+
+| الخدمة | المسار | الغرض | الحالة |
+|---|---|---|---|
+| customers | `services/customers/` | ملف العميل (ملفُّ دور) · الأماكن المحفوظة · معاينة نيّة الطلب وتسليمها عبر `OrderIntakePort` | **العقود مُنفَّذة (MR 1 · Phase 04)** — [نموذج المجال](../03-domain/CUSTOMER_CORE.md) · [العقود](../../services/customers/contracts/README.md) |
+
+اتجاه الاعتماد أحادي وملزم:
+
+```text
+customers → identity   (قراءة عبر IdentityLookupPort)
+customers → geography  (قراءة عبر GeographyPort)
+customers → order engine (كتابة عبر OrderIntakePort فقط — لا وصول إلى جدول orders)
+```
+
+لا خدمة تعتمد على `customers` في هذه المرحلة، و`bots/customer-bot` مستهلك لواجهتها لا شريك في مجالها (يبقى محايد القناة — ADR-007). الأنواع المُكتبة في `packages/contracts/customer/` (`@wasla/contracts-customer`).
+
 ---
 
 ## 5. Packages (المكتبات المشتركة)
 
 | الحزمة | المسار | الغرض |
 |---|---|---|
-| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) |
+| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) |
 | events | `packages/events/` | Event schema registry، Outbox helpers |
 | ui | `packages/ui/` | مكتبة واجهات مشتركة (Mini Apps) |
 | i18n | `packages/i18n/` | العربية/الإنجليزية/الأردية + مستقبلًا التركية/الفارسية |

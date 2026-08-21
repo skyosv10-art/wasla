@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/customers/events/v1",
+  "title": "WASLA Customer Core Domain Events — v1",
+  "description": "عقد أحداث نطاق Customer Core (Phase 04) وفق ADR-009. كل حدث versioned ويُنشر عبر Outbox. قاعدة خصوصية ملزمة في هذا العقد: الأحداث تحمل الموقع على مستوى **المنطقة الفرعية (zone_id)** ولا تحمل إحداثيات خام ولا نصوصاً كتبها المستخدم (تسمية مكان · وصف شحنة · ملاحظات · اسم العرض)، لأن المستهلكين (تحليلات · مطابقة · سمعة) يحتاجون التصنيف لا المحتوى (§12.3 · §48). والمعرّف العام للطلب يملكه محرّك الطلبات، فيظهر هنا كمرجع لا كمُنتَج لهذه الخدمة.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "type": "string", "const": "customers-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "enum": ["customer", "customer_order_request"] },
+            "id": {
+              "type": "string",
+              "description": "wasla_public_id (^WS-[0-9]{10}$) للكيان customer، أو UUID طلب العميل للكيان customer_order_request"
+            }
+          }
+        },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "CustomerProfileCreatedV1": {
+      "type": "object",
+      "description": "أُنشئ ملف عميل لمستخدم قائم — ملفُّ دور لا هوية جديدة (§7 · ADR-001)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.profile.created" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "preferred_locale"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "preferred_locale": { "type": "string", "enum": ["ar", "en", "ur"] },
+                "default_zone_id": { "type": ["string", "null"], "format": "uuid" },
+                "has_display_name": {
+                  "type": "boolean",
+                  "description": "هل كتب المستخدم اسم عرض — القيمة نفسها لا تُنشر (نصّ مستخدم)"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CustomerProfileUpdatedV1": {
+      "type": "object",
+      "description": "حُدّث ملف عميل قائم. الحمولة تُعلن **أي حقول** تغيّرت لا قيمها.",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.profile.updated" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "changed_fields"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "changed_fields": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "enum": ["display_name", "preferred_locale", "default_zone_id"] }
+                },
+                "preferred_locale": { "type": "string", "enum": ["ar", "en", "ur"] },
+                "default_zone_id": { "type": ["string", "null"], "format": "uuid" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CustomerPlaceSavedV1": {
+      "type": "object",
+      "description": "أضاف العميل مكاناً محفوظاً. لا تسمية ولا عنوان ولا إحداثية في الحمولة — المنطقة الفرعية كافية للمستهلكين.",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.place.saved" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "place_id", "zone_id"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "place_id": { "type": "string", "format": "uuid" },
+                "zone_id": { "type": "string", "format": "uuid" },
+                "has_coordinates": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CustomerPlaceRemovedV1": {
+      "type": "object",
+      "description": "حذف العميل مكاناً محفوظاً",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.place.removed" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["wasla_public_id", "place_id"],
+              "properties": {
+                "wasla_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "place_id": { "type": "string", "format": "uuid" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CustomerOrderRequestSubmittedV1": {
+      "type": "object",
+      "description": "سُلّم طلب العميل إلى محرّك الطلبات وقبِله. الحدث **لا يُعلن حالة طلب** — آلة الحالة تملكها Phase 06 (§15).",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.order_request.submitted" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_request_id",
+                "customer_public_id",
+                "order_type",
+                "vehicle_class",
+                "price_mode",
+                "pickup_zone_id",
+                "dropoff_zone_id"
+              ],
+              "properties": {
+                "order_request_id": { "type": "string", "format": "uuid" },
+                "customer_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "order_public_id": {
+                  "type": ["string", "null"],
+                  "description": "مرجع من محرّك الطلبات (مالكه) — لا تُولّده هذه الخدمة"
+                },
+                "order_type": { "type": "string", "enum": ["ride", "delivery"] },
+                "vehicle_class": {
+                  "type": "string",
+                  "enum": ["sedan", "suv", "van", "pickup", "motorcycle", "truck_small"]
+                },
+                "price_mode": { "type": "string", "enum": ["customer_offer", "negotiable"] },
+                "offered_amount_minor": {
+                  "type": ["integer", "null"],
+                  "description": "بالوحدة الصغرى؛ NULL في الوضع التفاوضي"
+                },
+                "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+                "pickup_zone_id": { "type": "string", "format": "uuid" },
+                "dropoff_zone_id": { "type": "string", "format": "uuid" },
+                "shipment_type": {
+                  "type": ["string", "null"],
+                  "enum": ["parcel", "documents", "food", "goods", "other", null]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CustomerOrderRequestSubmissionFailedV1": {
+      "type": "object",
+      "description": "تعذّر تسليم الطلب إلى المحرّك. يُنشر ليكون الفشل مرئياً بدل طلب صامت بلا مالك (§53).",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "customer.order_request.submission_failed" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["order_request_id", "customer_public_id", "reason_code"],
+              "properties": {
+                "order_request_id": { "type": "string", "format": "uuid" },
+                "customer_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+                "reason_code": {
+                  "type": "string",
+                  "enum": [
+                    "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
+                    "CUSTOMER_ORDER_INTAKE_REJECTED",
+                    "CUSTOMER_ORDER_INTAKE_TIMEOUT"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

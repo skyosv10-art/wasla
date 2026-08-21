@@ -2,9 +2,12 @@
  * @wasla/customers-service — WASLA Customer Core domain (Phase 04).
  *
  * MR 2/6 delivered the pure core: the domain model, the ports, the use cases and
- * the in-memory adapters. MR 3/6 adds the Postgres adapters behind the very same
+ * the in-memory adapters. MR 3/6 added the Postgres adapters behind the very same
  * ports — proven by `src/__tests__/port-conformance.integration.test.ts`, which
- * runs one set of scenarios through both adapters. HTTP arrives in MR 4/6.
+ * runs one set of scenarios through both adapters. MR 4/6 adds the HTTP layer
+ * (`createCustomerApp`, port 8086) plus the HTTP adapters for the identity and
+ * geography read ports; `src/http/server.ts` is the composition root and is the
+ * only module that opens a connection.
  *
  * The Postgres exports are types and classes only; importing this package never
  * opens a connection. `createCustomerDb` does, and only when called.
@@ -24,6 +27,10 @@ export * from "./domain/validation.js";
 export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+export { HttpIdentityLookupPort } from "./infrastructure/http-identity-lookup.js";
+export type { HttpIdentityLookupOptions } from "./infrastructure/http-identity-lookup.js";
+export { HttpGeographyPort } from "./infrastructure/http-geography.js";
+export type { HttpGeographyOptions } from "./infrastructure/http-geography.js";
 
 export * as customerSchema from "./infrastructure/drizzle/schema.js";
 export { createCustomerDb } from "./infrastructure/drizzle/db.js";
@@ -64,6 +71,21 @@ export type {
   SubmitOrderRequestInput,
   SubmitOrderRequestResult,
 } from "./use-cases/order-requests.js";
+
+export { createCustomerApp } from "./http/app.js";
+export type {
+  CreateCustomerAppOptions,
+  CustomerHealthDescriptor,
+} from "./http/app.js";
+export { sendCustomerError } from "./http/errors.js";
+export type { CustomerErrorBody } from "./http/errors.js";
+export {
+  requireIdempotencyKey,
+  toListLimit,
+  toOrderRequestDraft,
+  toProfilePatch,
+  toSavedPlaceDraft,
+} from "./http/requests.js";
 
 export {
   toCustomerProfileDto,

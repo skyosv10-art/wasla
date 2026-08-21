@@ -135,13 +135,13 @@ services/customers/src/
 
 | البند | موضعه |
 |---|---|
-| مستودعات Drizzle/Postgres + وظيفة `customer-db-integration` | MR 3/6 |
+| مستودعات Drizzle/Postgres + وظيفة `customer-db-integration` | ✅ MR 3/6 — [CUSTOMER_PERSISTENCE.md](CUSTOMER_PERSISTENCE.md) |
 | تطبيق Fastify على المنفذ 8086 + تخطيط الأخطاء إلى HTTP + `/health` | MR 4/6 |
 | ربط `bots/customer-bot` | MR 5/6 |
 | بوابة الخروج E2E مع محرّك طلبات بديل | MR 6/6 |
 | ناشر صندوق الصادر (يُقرأ من `Outbox`) | عمل منقول من Phase 03 — [HANDOFF §7](../16-progress/HANDOFF_NEXT_STEPS.md) |
 
-**ملاحظة صادقة عن العقد:** العمود `shipment_description` في `schema.sql` يبقى **غير مستعمل** في هذه الطبقة، لأن `ShipmentDetails` في OpenAPI تنشر `shipment_type` و`weight_kg` فقط. الوصف الحرّ لم يُدخَل إلى المجال حتى لا يوجد حقل نصّي بلا مسار عرض ولا سياسة خصوصية؛ حسمُ أمره (استعماله أو إسقاطه من المخطّط) في MR 3/6 حين تُبنى المرآة.
+**~~ملاحظة صادقة عن العقد~~ — تصحيح (2026-08-21 · MR 3/6):** كانت هذه الوثيقة تقول إن العمود `shipment_description` يبقى غير مستعمل لأن `ShipmentDetails` في OpenAPI «تنشر `shipment_type` و`weight_kg` فقط». **العبارة كانت غير صحيحة:** العقد `contracts/api.openapi.yml` ينشر `description` بحدّ 300 محرفاً، واختبار العقود في `@wasla/contracts-customer` يُمرّره أصلاً. فالمجال كان يُسقط حقلاً منشوراً بصمت. حُسم الدَين في MR 3/6 **بالتبنّي**: الحقل صار جزءاً من `ShipmentDetails` في المجال، يُتحقَّق منه (≤300)، ويدخل بصمة الـidempotency، ويُسلَّم لمحرّك الطلبات — **ولا يُنشَر في أي حدث**، وهذا محروس باختبار في `events-privacy.test.ts`. التفصيل في [CUSTOMER_PERSISTENCE.md §6](CUSTOMER_PERSISTENCE.md).
 
 ---
 

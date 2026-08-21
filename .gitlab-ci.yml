@@ -189,6 +189,30 @@ channel-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/channel-postgres test:integration
 
+# العملاء (المرحلة 04 · MR 3/6): يُطبّق services/customers/contracts/schema.sql
+# ثم يُشغّل ملفَّين:
+#   - postgres-repository.integration.test.ts: المحوّل نفسه أمام قاعدة حقيقية
+#     (NUMERIC كأرقام، الحقول الغائبة تبقى غائبة، قيود CHECK، معاملة واحدة
+#     للطلب ونقاطه، أخطاء التكرار بالرسائل نفسها).
+#   - port-conformance.integration.test.ts: السيناريو نفسه يُنفَّذ مرّتين، مرّة
+#     بمحوّلات in-memory ومرّة بـ Postgres، والنتيجة والأحداث يجب أن تتطابق.
+#     هذه هي الوظيفة التي تُثبت أنّ إضافة قاعدة البيانات لم تُغيّر أي سلوك.
+# قاعدة منفصلة (wasla_customer_test) ليبقى الفشل منسوباً لوظيفة واحدة.
+customer-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_customer_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_customer_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/customers-service test:integration
+
 # ──────────────────────────────────────────────────────────────
 # بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
 # حقيقي + مخازن Postgres في عملية واحدة:

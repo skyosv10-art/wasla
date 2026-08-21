@@ -59,6 +59,9 @@ function toShipmentDto(
     ...(shipment.shipmentType === undefined
       ? {}
       : { shipment_type: shipment.shipmentType }),
+    ...(shipment.description === undefined
+      ? {}
+      : { description: shipment.description }),
     ...(shipment.weightKg === undefined ? {} : { weight_kg: shipment.weightKg }),
   };
 }

@@ -2,7 +2,7 @@
 
 > **النوع:** وثيقة معمارية تنفيذية (Component-level) · **القرار الحاكم:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) (حياد القناة) · [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) (حدود نواة العميل)
 >
-> **المرحلة:** Phase 04 — Customer Core · **الدفعة:** MR 5/6 · **الحالة:** مُنفَّذة · **Last Updated:** 2026-08-21
+> **المرحلة:** Phase 04 — Customer Core · **الدفعة:** MR 5/6 (مُحدَّثة في MR 6/6) · **الحالة:** مُنفَّذة · **Last Updated:** 2026-08-21
 >
 > **Related Code:** `bots/customer-bot/src/{flows.ts,customer-core.ts,server.ts,index.ts}` · `packages/bot-runtime/src/{conversation.ts,http/app.ts,http/server.ts}` · `packages/channel-core/src/use-cases/receive-update.ts` · `bots/customer-bot/src/__tests__/customer-flows.test.ts` · `packages/bot-runtime/src/__tests__/conversation.test.ts`
 >
@@ -161,6 +161,8 @@ corepack pnpm --filter @wasla/customer-bot run dev
 **بعد هذه الدفعة:** `pnpm -r test` = **616 اختبار وحدة** (كانت 587 بعد MR 4/6؛ +29) في 17 مشروعاً، و`pnpm -r run typecheck` نظيف. لا اختبار يفتح منفذاً (`app.inject` وحده)، ولا اختبار يحتاج قاعدة بيانات ولا رمز تيليجرام. اختبارات التكامل الـ43 لنواة العميل لم تُلمَس.
 
 الاختبارات تتحقّق من **الأكواد** لا من النصوص العربية حيث كان ذلك ممكناً؛ وحيث تُختبَر الصياغة فهي ثوابت مُصدَّرة (`NO_PLACES_TEXT`، `FLOW_ERROR_TEXT`) لا نصوص مكرّرة في الاختبار.
+
+**تحديث MR 6/6 — تصديران للعرض فقط:** بوابة خروج المرحلة ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) تحتاج أن تتحقّق من أنّ البوت يعرض للمستخدم «لم يصل للمحرّك» عند فشل التسليم. فأُضيف إلى `bots/customer-bot/src/index.ts` تصدير `ORDER_STATUS_TEXT` و`ORDER_TYPE_TEXT` — **لا منطق جديد ولا سلوك جديد**، مجرّد رفع ثابتين قائمين إلى السطح العامّ لِيُطبَّق المبدأ نفسه الموصوف أعلاه: الاختبار يقارن بثابت البوت لا بنصّ عربي مكرَّر في ملف الاختبار. لولا ذلك لَنجحت البوابة بينما البوت يعرض نصّاً آخر.
 
 ---
 

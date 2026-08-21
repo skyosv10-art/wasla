@@ -255,6 +255,45 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/customer-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/bot-runtime':
+        specifier: workspace:*
+        version: link:../bot-runtime
+      '@wasla/channel-core':
+        specifier: workspace:*
+        version: link:../channel-core
+      '@wasla/contracts-channel':
+        specifier: workspace:*
+        version: link:../contracts/channel
+      '@wasla/contracts-customer':
+        specifier: workspace:*
+        version: link:../contracts/customer
+      '@wasla/customer-bot':
+        specifier: workspace:*
+        version: link:../../bots/customer-bot
+      '@wasla/customers-service':
+        specifier: workspace:*
+        version: link:../../services/customers
+      '@wasla/geography-service':
+        specifier: workspace:*
+        version: link:../../services/geography
+      '@wasla/identity-service':
+        specifier: workspace:*
+        version: link:../../services/identity
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/errors: {}
 
   packages/telegram-adapter:

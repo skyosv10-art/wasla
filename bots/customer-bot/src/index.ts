@@ -30,6 +30,8 @@ export {
   FLOW_FALLBACK_ERROR_TEXT,
   NO_ORDERS_TEXT,
   NO_PLACES_TEXT,
+  ORDER_STATUS_TEXT,
+  ORDER_TYPE_TEXT,
   ORDERS_REPLY_LIMIT,
   createCustomerConversationHandler,
   renderOrders,

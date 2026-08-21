@@ -6,7 +6,7 @@
 >
 > **المصدر الحاكم:** [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md) · [CUSTOMER_CORE.md](../03-domain/CUSTOMER_CORE.md) · [عقود الخدمة](../../services/customers/contracts/README.md)
 >
-> **Related:** [CONTAINERS §4.1](CONTAINERS.md) · [HANDOFF §9](../16-progress/HANDOFF_NEXT_STEPS.md) · [MR !MRX](https://gitlab.com/uxxxu/wasla/-/merge_requests/MRX)
+> **Related:** [CONTAINERS §4.1](CONTAINERS.md) · [HANDOFF §9](../16-progress/HANDOFF_NEXT_STEPS.md) · [MR !32](https://gitlab.com/uxxxu/wasla/-/merge_requests/32)
 
 ---
 

@@ -547,3 +547,47 @@ dispatch-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/dispatch-e2e test
+
+# ──────────────────────────────────────────────────────────────
+# بوابة خروج المرحلة 05 — نواة السائق على Postgres حقيقي
+#
+# السؤال الذي تملكه هذه الوظيفة وحدها: «سائق يُسجَّل ويُراجَع فيصير مؤهَّلاً
+# بأهليّة **محسوبة**، فيصله عرض حقيقي من التوزيع، ثم تنتهي وثيقته بنبضة
+# واحدة فيخرج من التجمّع». وهو سؤال لا تجيب عنه أي وظيفة أخرى: اختبارات
+# خدمة السائقين تُثبت الحساب داخل الخدمة، لكنها لا تُثبت أنّ ما يخرج منها
+# يصل المطابقة بشكل يفهمه التوزيع فيبني عليه عرضاً.
+#
+# الملف نفسه يعمل داخل build-test بمخازن in-memory — فالبوابة تُثبَت على كل
+# MR دون قاعدة بيانات — وهذه الوظيفة ترفع نواة السائق وحدها على Postgres.
+# ما تضيفه القاعدة هنا محدَّد: أنّ eligibility_recheck_at يُقرأ من فهرس
+# حقيقي في listDueForRecheck لا من مسح ذاكرة، فتصدق دعوى «نبضة واحدة»؛ وأنّ
+# صفوف driver_candidacy_publications تُكتب فعلاً فيبقى للتدقيق أثرٌ بعد
+# انتهاء العملية؛ وأنّ /health يقول ok بدل degraded لأنّ التخزين صار دائماً.
+#
+# المتغيّر هو DRIVER_DATABASE_URL وليس DATABASE_URL بقصد، للسبب نفسه المشروح
+# في بوابة المرحلة 07: الثاني هو مخزن طبقة القناة (المرحلة 03).
+#
+# ما يبقى in-memory هنا بإعلان صريح: المطابقة والتوزيع والطلبات والعملاء
+# والهوية والجغرافيا. أسئلة متانتها تملكها بواباتها (04 و06 و07)، وتكرارها
+# هنا يضاعف سطح الفشل دون أن يضيف معلومة. الخدمات كلّها هي الإنتاجية نفسها
+# عبر HTTP على منافذ عشوائية، وما يتغيّر هو مخزن نواة السائق فقط.
+#
+# قاعدة مستقلة (wasla_driver_e2e) حتى لا تتداخل مع drivers-db-integration
+# وليبقى الفشل منسوباً لوظيفة واحدة.
+#
+# التفصيل: docs/12-testing/PHASE05_EXIT_GATE_E2E.md
+# ──────────────────────────────────────────────────────────────
+driver-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_driver_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DRIVER_DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_driver_e2e"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/driver-e2e test

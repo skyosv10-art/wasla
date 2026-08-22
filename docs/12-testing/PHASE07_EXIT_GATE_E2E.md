@@ -162,6 +162,7 @@ DISPATCH_DATABASE_URL=postgres://wasla:wasla@127.0.0.1:5432/wasla_dispatch_e2e \
 - [DISPATCH_HTTP.md](../04-api/DISPATCH_HTTP.md) · [MATCHING_HTTP.md](../04-api/MATCHING_HTTP.md) — الواجهتان التي تقودهما البوابة
 - [ORDER_HTTP.md](../04-api/ORDER_HTTP.md) — واجهة المحرّك التي يخاطبها التوزيع
 - [PHASE06_EXIT_GATE_E2E.md](PHASE06_EXIT_GATE_E2E.md) · [PHASE04_EXIT_GATE_E2E.md](PHASE04_EXIT_GATE_E2E.md) · [PHASE03_EXIT_GATE_E2E.md](PHASE03_EXIT_GATE_E2E.md) — البوابات السابقة
+- **[PHASE05_EXIT_GATE_E2E.md](PHASE05_EXIT_GATE_E2E.md) — الوعد المؤجَّل في هذه الوثيقة، أُوفي به هناك:** بذْر الترشيح هنا يبقى `eligibility_source: "claimed"` **بقصد** بعد إغلاق الطور 05، لأنّ ربط هذه البوابة بنواة السائق يجعلها تفشل حين تعطب نواة السائق فتخسر قدرتها على الفشل وحدها — وهي القدرة التي تجعل الفشل منسوباً إلى مرحلة. و`claimed` ليس مساراً ميتاً بل عقد المطابقة المُعلَن لكلّ متصل ليس نواة سائق (ADR-011). أمّا إثبات `driver_core` فتقوده بوابة الطور 05 بسبع خدمات مُنصتة.
 - [DB_INTEGRATION_CI.md](DB_INTEGRATION_CI.md) — وظائف القاعدة الحقيقية ولماذا لكلٍّ متغيّره وقاعدته
 - [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) — حدّ الإسناد و«يسجّل ولا يقرّر» (سبب عيب §5.1)
 - [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) — فصل المطابقة عن التوزيع واتجاه المعرفة

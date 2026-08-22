@@ -10,7 +10,7 @@
  * and the single function that turns them into a verdict — plus the log that says
  * when the verdict changed and what caused it.
  *
- * ## What is IN this package as of MR 5/6, and what is not
+ * ## What is IN this package as of MR 6/6 — Phase 05 is closed
  *
  * The pure layer (MR 2/6) — model, calculator, state machines, ports and in-memory
  * adapters that simulate the database constraints by name; the Drizzle/Postgres
@@ -20,15 +20,47 @@
  * `HttpZoneCatalogPort` to geography (8081) — plus the driver bot's chat surface,
  * which lives in `bots/driver-bot` and reaches these use cases in process.
  *
- * What remains is one MR, and it is named rather than implied:
+ * MR 6/6 closed the phase, and it closed the exact gap this header used to declare.
+ * That gap read: "nothing here has been proven against a live matching service; the
+ * outbound adapters are proven against injected answers, which settles the decisions
+ * but not the wire." The wire is now settled. `packages/driver-e2e` stands **seven**
+ * real Fastify listeners up in one process behind one injected clock, wires this
+ * service to them through its **production** outbound adapters, and drives the whole
+ * path over public HTTP: a driver registers, is reviewed, becomes eligible with a
+ * `driver_core` verdict matching itself reports back, receives a real dispatch offer,
+ * then leaves the pool on a **single** eligibility tick when a document expires.
+ * See docs/12-testing/PHASE05_EXIT_GATE_E2E.md.
  *
- *   - MR 6/6 — the Phase 05 exit gate: HTTP over real Postgres, and the end-to-end
- *     path proving a registered driver becomes a candidate matching can see.
+ * The injected-answer tests did not become redundant — they cover statuses and
+ * silences a live service will not produce on demand. What they could not do was
+ * prove the wire, and that is the division of labour, not duplication.
  *
- * So the boundary that still holds today: nothing here has been proven against a
- * live matching service. The outbound adapters are proven against injected answers
- * (`src/__tests__/outbound-ports.test.ts`) — every status, every silence — which
- * settles the *decisions* but not the wire.
+ * ## The one thing the gate found — read this before touching http-candidacy.ts
+ *
+ * The gate failed on first run, and it was right. The outbound idempotency key was
+ * `drv-{driverId}-{attemptMillis}-{contentHash}`, so its whole defence was one
+ * millisecond deep. A driver publishing `offline → available → offline` inside a
+ * single clock tick produced two publications with identical content AND identical
+ * millis — hence an identical key — so matching correctly replayed its stored answer
+ * instead of applying the write. Matching's row stayed stale while
+ * `driver_candidacy_publications` recorded `published`. A silent drift with a clean
+ * audit trail: exactly what that file's own comment was written to prevent, let back
+ * in through clock resolution. The key now carries a per-instance attempt sequence.
+ *
+ * The lesson generalises beyond this file: **clock resolution is not a uniqueness
+ * guarantee.** Any replay key derived from time needs a tiebreaker, and any test
+ * asserting such a key must freeze the clock — advancing it between attempts proves
+ * only that timestamps move.
+ *
+ * ## What is still owed, named rather than implied
+ *
+ *   - Phase 09 — a periodic caller for `POST /drivers/eligibility/tick`, the outbox
+ *     relay, and `driver_idempotency` pruning. The tick is a route that works and
+ *     nothing calls it on a schedule yet.
+ *   - Phase 12 — real document upload behind `storage_ref`.
+ *   - Phase 10 — `reviewed_by` as an admin identity rather than a validated string.
+ *   - ADR-012 decision 4 — the read/write race on matching's candidacy row needs
+ *     `If-Match`/ETag in **another** service; out of Phase 05 scope by decision.
  *
  * The order was deliberate: the decision rules are the part that has to be right, and
  * they are cheapest to argue about while no transport or table has been committed to.
@@ -66,7 +98,8 @@ export * from "./infrastructure/in-memory.js";
 // Outbound HTTP adapters (MR 5/6): the driver's verdict leaving the service, and
 // the zone catalog it is checked against. Exported because the composition roots
 // that assemble a deployment — `http/server.ts` here, and any future host — must
-// be able to name them; and because MR 6/6 asserts on them from outside.
+// be able to name them; and because the Phase 05 exit gate asserts on them from
+// outside, through a matching service that is actually listening.
 // ---------------------------------------------------------------------------
 export * from "./infrastructure/http-candidacy.js";
 export * from "./infrastructure/http-zone-catalog.js";
@@ -100,7 +133,7 @@ export * from "./use-cases/read-driver.js";
 
 // ---------------------------------------------------------------------------
 // HTTP layer (MR 4/6). `createDriverApp` is exported and `server.js` is NOT: the
-// app is a value a test or the exit-gate harness of MR 6/6 builds and injects into,
+// app is a value a test or the Phase 05 exit-gate harness builds and injects into,
 // while the server is a process that binds a port and reads the environment. Exporting
 // the module that ends in `await main()` would start a listener on import.
 // ---------------------------------------------------------------------------

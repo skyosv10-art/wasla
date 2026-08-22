@@ -198,6 +198,35 @@ describe("منفذ الترشيح عبر HTTP", () => {
     expect(calls[0]?.headers["idempotency-key"]).not.toBe(calls[1]?.headers["idempotency-key"]);
   });
 
+  /**
+   * الحالة العدائية التي فاتت الاختبار أعلاه: هو يقدّم الساعة ثانيةً بين المحاولتين، فكان
+   * يبرهن أن الطابع الزمني يتغيّر — لا أن المفتاح فريد. بوابة خروج الطور 05 أوقعت الفرق:
+   * ساعة مجمَّدة، محتوىً متكرر، ومفتاحان متطابقان، فأعادت المطابقة جوابها المخزَّن بلا
+   * تطبيق وبقي صفّها على القيمة القديمة بينما سجلّنا يقول `published`.
+   *
+   * الساعة هنا **لا تتحرك** عمداً. أي حلٍّ يعتمد على دقّة الساعة وحدها يسقط في هذا السطر.
+   */
+  it("المفتاح فريد حتى تحت ساعة مجمَّدة ومحتوى متطابق (بوابة الطور 05)", async () => {
+    const { fetchImpl, calls } = stubFetch([json(200, {})]);
+    const port = new HttpCandidacyPort({
+      baseUrl: "http://matching:8088",
+      fetchImpl,
+      clock: { now: () => "2026-08-22T09:00:00.000Z" },
+    });
+
+    await port.publish(PROJECTION);
+    await port.publish(PROJECTION);
+    await port.publish(PROJECTION);
+
+    const keys = calls.map((call) => call.headers["idempotency-key"] ?? "");
+    expect(new Set(keys).size).toBe(3);
+    // ويبقى كل مفتاح داخل حدّ العقد ومقروءاً لمن يفتّش سجلّ المطابقة بمعرّف سائق.
+    for (const key of keys) {
+      expect(key).toContain(DRIVER);
+      expect(key.length).toBeLessThanOrEqual(128);
+    }
+  });
+
   it("يمرّر معرّف التتبّع ليصير trace_id في المطابقة، ويحذف الرأس إذا لم يوجد", async () => {
     const withTrace = candidacy([json(200, {})]);
     await withTrace.port.publish(PROJECTION, { traceId: "req-77" });

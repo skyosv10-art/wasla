@@ -136,16 +136,79 @@ describe("حارس التباعد: أكواد الأسباب", () => {
     expect([...described].sort()).toEqual([...exported].sort());
   });
 
-  it("كلّ كود خطأ مُصدَّر موثّق في errors.md والعكس", () => {
+  /**
+   * الحارس يمشي في الاتجاهين، ويعرف الرموز المتقاعدة (MR 5/6).
+   *
+   * قسم «الرمز المتقاعد» في `errors.md` يشرح رمزاً حُذف بقرار، وهذا مطلوب: من يقرأ
+   * العقد بعد سنة ويرى رمزاً مفقوداً في التاريخ يحتاج أن يعرف لماذا رحل لا أن يعيده.
+   * لكن ذكره لا يجوز أن يقرأ إعلاناً، فالحارس يطلب العكس صراحةً: المتقاعد **لا يُصدَّر**.
+   */
+  it("كلّ كود خطأ مُصدَّر موثّق في errors.md والعكس، والمتقاعد موثّق وغير مُصدَّر", () => {
     const catalogue = contracts("errors.md");
     for (const code of DRIVER_ERROR_CODES) {
       expect(catalogue, `errors.md لا يذكر ${code}`).toContain(code);
     }
+
+    const retiredStart = catalogue.indexOf("## الرمز المتقاعد");
+    expect(retiredStart, "errors.md يجب أن يحتفظ بقسم الرموز المتقاعدة").toBeGreaterThan(-1);
+    const retiredEnd = catalogue.indexOf("\n## ", retiredStart + 1);
+    const retiredSection = catalogue.slice(retiredStart, retiredEnd === -1 ? undefined : retiredEnd);
+    // Only the HEADINGS name a retired code. The body cites live codes too (the 503 that
+    // replaced it, the 422 it must not be confused with), and harvesting the whole
+    // section would retire them by accident — a guard that disables itself.
+    const retired = new Set(
+      [...retiredSection.matchAll(/^##+ [^\n]*`(DRIVER_[A-Z_]+)`/gm)].map((match) => match[1] as string),
+    );
+    expect(retired.size, "قسم المتقاعد يجب أن يسمي رمزاً واحداً على الأقل").toBeGreaterThan(0);
+    for (const token of retired) {
+      expect([...DRIVER_ERROR_CODES], `${token} متقاعد وما يزال مُصدَّراً`).not.toContain(token);
+    }
+
     const documented = new Set(
       [...catalogue.matchAll(/\bDRIVER_[A-Z_]+\b/g)].map((match) => match[0]),
     );
     for (const token of documented) {
+      if (retired.has(token)) continue;
       expect([...DRIVER_ERROR_CODES], `${token} موثّق وغير مُصدَّر`).toContain(token);
+    }
+  });
+
+  /**
+   * حارس الرموز غير المُنتَجة (MR 5/6) — الحارس الذي كان سيكشف 502 من أوله.
+   *
+   * كل مصنع خطأ مُصدَّر في `domain/errors.ts` يجب أن يستدعيه ملف إنتاج واحد على الأقل.
+   * مصنع لا يناديه أحد يعني رمزاً معلناً في العقد لا يصل مُنادياً أبداً: وعدٌ مكتوب بلا
+   * مسار ينفّذه، وهو بالضبط ما ظلّ `DRIVER_CANDIDACY_PUBLISH_FAILED` عليه طورًا كاملاً.
+   */
+  it("كل مصنع خطأ مُصدَّر مستخدَم في مسار إنتاج واحد على الأقل", async () => {
+    const { readFile, readdir } = await import("node:fs/promises");
+    const { dirname, join, resolve } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const srcDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+    const errorsSource = await readFile(join(srcDir, "domain/errors.ts"), "utf8");
+    const factories = [...errorsSource.matchAll(/^export function ([a-z][A-Za-z0-9]*)\(/gm)]
+      .map((match) => match[1] as string)
+      .filter((name) => name !== "isDriverError");
+    expect(factories.length).toBeGreaterThan(5);
+
+    async function sources(dir: string): Promise<string[]> {
+      const entries = await readdir(dir, { withFileTypes: true });
+      const found: string[] = [];
+      for (const entry of entries) {
+        const full = join(dir, entry.name);
+        // `__tests__` is excluded on purpose: a factory called only by a test that
+        // asserts its own mapping is precisely the unreachable code this guard hunts.
+        if (entry.isDirectory() && entry.name !== "__tests__") found.push(...(await sources(full)));
+        else if (entry.isFile() && entry.name.endsWith(".ts")) found.push(full);
+      }
+      return found;
+    }
+
+    const files = (await sources(srcDir)).filter((file) => !file.endsWith("domain/errors.ts"));
+    const corpus = (await Promise.all(files.map((file) => readFile(file, "utf8")))).join("\n");
+    for (const factory of factories) {
+      expect(corpus.includes(`${factory}(`), `${factory} مُصدَّر ولا يناديه أي مسار إنتاج`).toBe(true);
     }
   });
 });

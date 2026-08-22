@@ -17,19 +17,24 @@
  * thrown `DriverError` whose class lives in `@wasla/contracts-driver`
  * (see `http/errors.ts`). That is why no handler contains a `try`/`catch`.
  *
- * ## The `502` that is deliberately not raised yet
+ * ## The `502` that was DECIDED against, and removed (MR 5/6)
  *
- * `DRIVER_CANDIDACY_PUBLISH_FAILED` is declared on eight operations in the contract and
- * is **unreachable in this MR** — and that is the domain's decision, not an oversight
- * here: `publishCandidacy` (use-cases/recompute-eligibility.ts) RECORDS a failed
- * publication and does not throw, because refusing our own write when a service behind
- * us is down would make our correctness depend on their uptime. Nothing between a use
- * case's return value and this file therefore carries the publication outcome. The
- * mapping is wired and tested (`http-errors.test.ts` asserts the `502`), so MR 5/6 —
- * which introduces the real `HttpCandidacyPort`, the first port that can fail — only
- * has to decide WHICH operations surface it. Until then a failed publication is visible
- * in `driver_candidacy_publications` and as `last_published_state` lag, never as a lie
- * about the local write.
+ * MR 4/6 left one question open: which operations surface a failed publication to
+ * matching as `502 DRIVER_CANDIDACY_PUBLISH_FAILED`? The answer is **none**, and the
+ * code plus the ten declarations in the contract are gone with it.
+ *
+ * A publication that fails never invalidates the local write (ADR-012 decision 3), so a
+ * write that succeeded must answer with its resource — a `502` would throw away the
+ * body of a change that really happened and invite the caller to repeat it. And a
+ * refusal by matching is not a gateway failure at all: matching ANSWERED, so retrying
+ * our request cannot change its mind. The failure is reported where it can be acted on
+ * instead: `last_published_state`/`last_published_at` on the profile, `publish_failures`
+ * on the tick result (a count, which is more than a status code), and the full
+ * `driver_candidacy_publications` row with matching's own code.
+ *
+ * Full reasoning, kept where the next reader will look: `contracts/errors.md`
+ * §«الرمز المتقاعد». What DOES fail a write is a mandatory port that cannot answer
+ * BEFORE the write — the zone catalogue — and that is `503`, because retrying works.
  *
  * ## Reads that 404 and a read that writes
  *

@@ -40,9 +40,17 @@ describe("driver error catalog ↔ errors.md", () => {
     for (const code of DRIVER_ERROR_CODES) expect(Object.keys(DRIVER_ERROR_CLASS_STATUS)).toContain(DRIVER_ERROR_CODE_CLASS[code]);
   });
   it("keeps codes unique", () => expect(new Set(DRIVER_ERROR_CODES).size).toBe(DRIVER_ERROR_CODES.length));
-  it("classes publish failure as bad_gateway, not a caller error", () => {
-    expect(DRIVER_ERROR_CODE_CLASS.DRIVER_CANDIDACY_PUBLISH_FAILED).toBe("bad_gateway");
-    expect(httpStatusForDriverError("DRIVER_CANDIDACY_PUBLISH_FAILED")).toBe(502);
+  /**
+   * حارس الرمز المتقاعد (Phase 05 · MR 5/6). لا يمنع رمزاً جديداً بقدر ما يمنع
+   * إعادة إدراجه بلا قرار: من يريد 502 مرةً أخرى سيكسر هذا الاختبار فيقرأ السبب
+   * في `errors.md` §«الرمز المتقاعد» قبل أن يعيد إعلان حالة لا ينتجها مسار.
+   */
+  it("declares no 502: a failed publication never invalidates a local write", () => {
+    expect([...DRIVER_ERROR_CODES]).not.toContain("DRIVER_CANDIDACY_PUBLISH_FAILED" as never);
+    expect(Object.values(DRIVER_ERROR_CLASS_STATUS)).not.toContain(502 as never);
+    expect(Object.keys(DRIVER_ERROR_CLASS_STATUS)).not.toContain("bad_gateway");
+    for (const code of DRIVER_ERROR_CODES) expect(httpStatusForDriverError(code), code).not.toBe(502);
+    expect(errorsMd).toContain("## الرمز المتقاعد");
   });
 });
 

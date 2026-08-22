@@ -29,6 +29,8 @@
  * make an old change look new.
  */
 
+import { randomUUID } from "node:crypto";
+
 import type { DriverDomainEvent } from "@wasla/contracts-driver";
 
 import type {
@@ -475,8 +477,15 @@ export class InMemoryCandidacyProjectionPort implements CandidacyProjectionPort 
   /** Test lever: make the next publications fail like an unreachable service. */
   failureCode: string | null = null;
   transportBroken = false;
+  /**
+   * Test lever for the OTHER failure, which is a different rule (MR 5/6): the read that
+   * precedes a publication can fail on its own, and when it does the publication must be
+   * abandoned rather than sent without knowing whether matching holds a `busy` row.
+   */
+  readBroken = false;
 
   async read(waslaPublicId: string): Promise<{ availabilityState: ProjectedAvailability } | null> {
+    if (this.readBroken) throw new Error("candidacy read unavailable");
     const row = this.rows.get(waslaPublicId);
     return row === undefined ? null : { availabilityState: row.availabilityState };
   }
@@ -534,6 +543,33 @@ export class InMemoryIdempotencyStore implements IdempotencyStore {
 
   async remember(key: string, payloadFingerprint: string): Promise<void> {
     this.keys.set(key, payloadFingerprint);
+  }
+}
+
+/**
+ * The production clock and id generator (Phase 05 · MR 5/6).
+ *
+ * They live here — beside the fakes, in the file every composition root already
+ * imports — rather than privately inside `http/server.ts`, because as of MR 5/6 the
+ * service has TWO roots: its own HTTP process, and the driver bot, which reaches these
+ * use cases in process (`bots/driver-bot/src/driver-core.ts`). Two private copies of
+ * «now is an ISO-8601 instant in UTC» would be two answers to the question every event
+ * envelope, expiry comparison and audit row is ordered by; the same precedent already
+ * exists in the customers and geography services.
+ *
+ * They are the only implementations here that read the real world, and nothing in the
+ * domain may construct them: a use case that could reach the wall clock would behave
+ * differently in a test than in production.
+ */
+export class SystemClock implements Clock {
+  now(): string {
+    return new Date().toISOString();
+  }
+}
+
+export class CryptoIdGenerator implements IdGenerator {
+  uuid(): string {
+    return randomUUID();
   }
 }
 

@@ -79,6 +79,7 @@ export { sendChannelError } from "./http/errors.js";
 export {
   buildBotApp,
   runBot,
+  runBotApp,
   startBot,
   type BotApp,
   type BotRuntimeOverrides,

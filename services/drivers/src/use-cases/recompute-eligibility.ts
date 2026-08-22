@@ -162,7 +162,7 @@ export async function recomputeEligibility(
     PROJECTION_AFFECTING_TRIGGERS.includes(options.trigger);
 
   const publication = shouldPublish
-    ? await publishCandidacy(deps, waslaPublicId, decision, now)
+    ? await publishCandidacy(deps, waslaPublicId, decision, now, options.traceId ?? null)
     : null;
 
   return { decision, previousState, changed, publication };
@@ -180,25 +180,37 @@ export async function recomputeEligibility(
  * service behind us is down would make our correctness depend on their uptime. The
  * drift is instead made visible: `last_published_state` stays behind, and the
  * failed attempt is on the record with its code.
+ *
+ * ## The read is inside the guard, and that is a fix, not a style choice (MR 5/6)
+ *
+ * `candidacy.read` used to run before the `try`. With the unconfigured port — which
+ * cannot fail — that was invisible; with the real HTTP port it meant an outage in
+ * matching would throw out of here, out of `recomputeEligibility`, and out of every
+ * write use case, so a verified document would be refused with 503 because a service
+ * BEHIND us was down. That is precisely the coupling ADR-012 decision 3 forbids.
+ *
+ * A failed read therefore aborts the publication instead of proceeding without it:
+ * without the current value we cannot honour «never upgrade a `busy` row», and
+ * publishing `available` over a live commitment would offer a second order to a
+ * driver already carrying one. The recorded row keeps the DECLARED availability,
+ * because that is what we would have sent — an honest description of an attempt that
+ * never left the process.
  */
 async function publishCandidacy(
   deps: DriverDependencies,
   waslaPublicId: string,
   decision: EligibilityDecision,
   now: string,
+  traceId: string | null = null,
 ): Promise<CandidacyPublication> {
   const snapshot = await loadSnapshot(deps, waslaPublicId);
   if (snapshot === null) throw new Error("publishCandidacy requires an existing profile");
 
-  const current = await deps.candidacy.read(waslaPublicId);
   const primary = findPrimaryVehicle(snapshot.vehicles);
-  const projection = {
+  const declared = snapshot.profile.declaredAvailability;
+  const base = {
     waslaPublicId,
     eligibilityState: decision.state,
-    availabilityState: projectedAvailability(
-      snapshot.profile.declaredAvailability,
-      current?.availabilityState ?? null,
-    ),
     serviceKinds: [...snapshot.profile.serviceKinds] as readonly ServiceKind[],
     zoneIds: snapshot.zones.map((zone) => zone.zoneId),
     vehicleClass: (primary?.vehicleClass ?? null) as VehicleClass | null,
@@ -206,8 +218,11 @@ async function publishCandidacy(
 
   let outcome: CandidacyPublication["outcome"] = "published";
   let failureCode: string | null = null;
+  let availabilityState = declared as CandidacyPublication["availabilityState"];
   try {
-    const result = await deps.candidacy.publish(projection);
+    const current = await deps.candidacy.read(waslaPublicId);
+    availabilityState = projectedAvailability(declared, current?.availabilityState ?? null);
+    const result = await deps.candidacy.publish({ ...base, availabilityState }, { traceId });
     if (!result.accepted) {
       // Matching answered and refused: that is a `rejected` attempt with the code
       // it gave us, which is a different fact from "we could not reach it".
@@ -215,19 +230,15 @@ async function publishCandidacy(
       failureCode = result.failureCode ?? "MATCHING_REJECTED";
     }
   } catch {
-    // Transport failure. `unavailable`, and the reason is ours to name — we did not
-    // get an answer, so we must not invent one on matching's behalf.
+    // Transport failure on either call. `unavailable`, and the reason is ours to
+    // name — we did not get an answer, so we must not invent one on matching's behalf.
     outcome = "unavailable";
     failureCode = "MATCHING_UNREACHABLE";
   }
 
   const publication = await deps.publications.append({
-    waslaPublicId,
-    eligibilityState: projection.eligibilityState,
-    availabilityState: projection.availabilityState,
-    serviceKinds: projection.serviceKinds,
-    zoneIds: projection.zoneIds,
-    vehicleClass: projection.vehicleClass,
+    ...base,
+    availabilityState,
     outcome,
     failureCode,
     attemptedAt: now,

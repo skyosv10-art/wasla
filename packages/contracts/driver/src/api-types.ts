@@ -534,15 +534,6 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description تعذّر نشر الإسقاط إلى خدمة المطابقة بعد تسجيل التغيير محلياً */
-        CandidacyPublishFailed: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["ErrorResponse"];
-            };
-        };
         /** @description الخدمة أو الاستمرارية في وضع متدهور */
         ServiceUnavailable: {
             headers: {
@@ -635,7 +626,6 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             409: components["responses"]["Conflict"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -697,7 +687,6 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -765,7 +754,6 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -841,7 +829,6 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -876,7 +863,6 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -952,7 +938,6 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -988,7 +973,6 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -1021,7 +1005,6 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -1055,7 +1038,6 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -1085,7 +1067,6 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
-            502: components["responses"]["CandidacyPublishFailed"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA driver bot — thin composition root over @wasla/bot-runtime. Opens the driver Mini App (Phase 03).",
+  "description": "WASLA driver bot — composition root over @wasla/bot-runtime: opens the driver Mini App (Phase 03) and binds the Driver Core flows /available, /offline, /status, /docs (Phase 05 · MR 5/6).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -19,11 +19,15 @@
   },
   "dependencies": {
     "@wasla/bot-runtime": "workspace:*",
-    "@wasla/contracts-channel": "workspace:*"
+    "@wasla/contracts-channel": "workspace:*",
+    "@wasla/drivers-service": "workspace:*",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
     "@wasla/channel-core": "workspace:*",
+    "@wasla/contracts-driver": "workspace:*",
     "tsx": "^4.23.12",
     "vitest": "^2.1.0"
   }

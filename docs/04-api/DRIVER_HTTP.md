@@ -4,7 +4,7 @@
 >
 > **المصدر الكنسي للعقد:** [`services/drivers/contracts/api.openapi.yml`](../../services/drivers/contracts/api.openapi.yml) · [`@wasla/contracts-driver`](../../packages/contracts/driver)
 >
-> **الخدمة:** `services/drivers` (منفذ **8090**) · **Status:** Active · **Last Updated:** 2026-08-22
+> **الخدمة:** `services/drivers` (منفذ **8090**) · **Status:** Active · **Last Updated:** 2026-08-22 (مُحدَّثة في MR 5/6: تقاعُد 502 · إغلاق الانحرافين 6 و7)
 >
 > **Related Code:** `services/drivers/src/http/{app.ts,errors.ts,requests.ts,idempotency.ts,server.ts}` · `services/drivers/src/use-cases/read-driver.ts` · `services/drivers/src/{runner.ts,mappers.ts}` · `services/drivers/src/__tests__/{http-harness.ts,http-*.test.ts,contract-drift.test.ts}`
 >
@@ -131,7 +131,7 @@ services/drivers/src/http/server.ts          ← composition root (Postgres أو
 
 ---
 
-## 8. خريطة الأخطاء (21 رمزاً)
+## 8. خريطة الأخطاء (20 رمزاً)
 
 الغلاف **متداخل**: `{ "error": { "code", "message", "details"? }, "trace_id" }` — وهو شكل عقد السائقين، بخلاف الغلاف المسطَّح في التوزيع. الحالة تأتي من صنف الرمز في `@wasla/contracts-driver` (`DRIVER_ERROR_CODE_CLASS`)، فلا رقم HTTP مكتوب بيد في معالج.
 
@@ -141,13 +141,12 @@ services/drivers/src/http/server.ts          ← composition root (Postgres أو
 | `not_found`           |  404 | `NOT_FOUND` · `VEHICLE_NOT_FOUND` · `DOCUMENT_NOT_FOUND`                                                                 |
 | `conflict`            |  409 | `IDEMPOTENCY_KEY_REUSED` · `ALREADY_EXISTS` · `DOCUMENT_ALREADY_REVIEWED` · `SUSPENDED` · `NOT_SUSPENDED`                |
 | `unprocessable`       |  422 | `ZONE_UNKNOWN` · `PRIMARY_VEHICLE_REQUIRED` · `VEHICLE_RETIRED` · `DOCUMENT_EXPIRY_INVALID` · `POLICY_NOT_FOUND` · `POLICY_NOT_FROZEN` |
-| `bad_gateway`         |  502 | `CANDIDACY_PUBLISH_FAILED`                                                                                              |
 | `service_unavailable` |  503 | `UNAVAILABLE`                                                                                                           |
 
 - خطأ Fastify بحالة 400 أو 415 (جسم مشوَّه أو نوع محتوى خاطئ) → `400 DRIVER_VALIDATION_FAILED`.
 - كلّ ما عدا ذلك غير مصنَّف → **`503 DRIVER_UNAVAILABLE` لا 500**: ما يعطب هنا تخزين أو دليل مناطق أو صندوق صادر، و`503` تخبر المتصل بأنّ الإعادة قد تنجح. ورسالة الخطأ الداخلية لا تُسرَّب إلى الجسم.
 - مسار Fastify المجهول يبقى 404 بشكله الافتراضي؛ إجابته بـ`DRIVER_NOT_FOUND` تخبر متصلاً أخطأ في كتابة المسار بأنّ **السائق** مفقود.
-- `DRIVER_CANDIDACY_PUBLISH_FAILED` (502) **غير قابل للحدوث في MR 4/6**: `publishCandidacy` يسجّل الفشل ويترك الكتابة المحلية قائمة ولا يرفع. الربط منفَّذ ومُبرهَن باختبار يحقن Runner يرفعه، فيبقى على MR 5/6 قرار موضع الرفع وحده.
+- **`DRIVER_CANDIDACY_PUBLISH_FAILED` (502) تقاعَد في MR 5/6، ولم يبقَ في العقد ولا في الكود.** MR 4/6 وثّقته على عشرة مواضع وأخّرت الحسم إلى الدفعة التي يصير فيها «قابلاً للحدوث»، وهذه هي، والجواب أنّه **لا يجب أن يحدث**: (1) الكتابة المحلية نجحت، ومَن نجح يُعيد مورده لا رمزاً يأمر بإعادة عملية تمّت · (2) مطابقةٌ ترفض بـ409 أعطت جواباً صالحاً، فليست «بوّابة أعطت جواباً غير صالح» · (3) الانقطاع له رمزه الصحيح `DRIVER_UNAVAILABLE` (503) وهو ما تُنتجه المنافذ الصادرة · (4) الفشل يبقى مرئياً في `last_published_state` و`publish_failures` و`driver_candidacy_publications` — عند المشغّل لا في وجه سائق. والتقاعُد **محروس لا موصوف**: `contract-drift.test.ts` يقرأ قسم الأكواد المتقاعدة في `contracts/errors.md` ويفشل إن عاد أحدها إلى العقد أو إلى الكود وبالعكس، وحارسٌ ثانٍ يفشل إن وُجِد مصنع خطأ مُصدَّر لا يستعمله مسار إنتاج. التفصيل في [DRIVER_BOT_FLOWS §7](../02-architecture/DRIVER_BOT_FLOWS.md).
 
 ---
 
@@ -160,8 +159,8 @@ services/drivers/src/http/server.ts          ← composition root (Postgres أو
 | 3   | `ErrorResponse.error.details` صار ذا خصائص معدودة                                   | `details` بلا شكل يمنع أيّ مستهلك من قراءتها بأمان                                                                                                            | `additionalProperties: true` — مرفوض: عقد لا يُلزم شيئاً                                                     |
 | 4   | حُذف `wasla_public_id` من `VehicleWire` و`DriverDocumentWire` في `mappers.ts`        | لم يكن مُعلَناً في مخطّطي العقد؛ المخرَج كان يحمل حقلاً زائداً                                                                                                  | إعلانه في العقد — مرفوض: المعرّف في المسار، وتكراره في العنصر يضاعف مصدر الحقيقة                             |
 | 5   | حقل المراجعة السلكي `decision` يُترجم إلى `status` في حالة الاستخدام                 | العقد يسمّيه `decision` والمجال يسمّيه `status`؛ الترجمة موضعها طبقة المطابقة                                                                                   | إعادة تسمية أحدهما — مرفوض: تغيير عقد منشور أو توقيع مجال لأجل تسمية                                        |
-| 6   | `configuredZoneCatalog()` من `DRIVER_DEV_ZONE_IDS` يُستعمل على مسار Postgres أيضاً    | لا يوجد `PostgresZoneCatalogPort`، ودليل المناطق الحقيقي عبر HTTP إلى matching هو نطاق MR 5/6 (السابقة: `services/matching/src/infrastructure/http-geography.ts`) | ادّعاء أنّ المسار جاهز للإنتاج — مرفوض: دَين مُعلَن أصدق من جاهزية موهومة                                     |
-| 7   | `UnconfiguredCandidacyPort` يعيد `{accepted:false, failureCode:"matching_not_configured"}` | النشر إلى المطابقة منفذ HTTP لم يُبنَ بعد؛ الفشل المُسجَّل يطابق سلوك المجال ولا يعطّل الكتابة المحلية                                                             | منفذ صامت يدّعي النجاح — مرفوض: يخفي أنّ لا شيء نُشر                                                          |
+| 6   | ~~`configuredZoneCatalog()` من `DRIVER_DEV_ZONE_IDS` على مسار Postgres~~ **أُغلِق في MR 5/6** | صار الدليل `HttpZoneCatalogPort` إلى الجغرافيا (8081)، و`DRIVER_DEV_ZONE_IDS` بديلاً تطويرياً **بتحذير في السجل** عند غياب `GEOGRAPHY_SERVICE_URL` | إبقاؤه افتراضياً — مرفوض: قائمة محلية تعني نظامين يختلفان على وجود منطقة        |
+| 7   | ~~`UnconfiguredCandidacyPort` هو المنفذ الوحيد~~ **أُغلِق في MR 5/6** | صار `HttpCandidacyPort` إلى المطابقة (8088)؛ ويبقى `UnconfiguredCandidacyPort` **رفضاً مُسجَّلاً** عند غياب `MATCHING_SERVICE_URL` وحده | منفذ صامت يدّعي النجاح — مرفوض: يخفي أنّ لا شيء نُشر                                                          |
 | 8   | `server.js` غير مُصدَّر من `src/index.ts`                                            | الملف ينتهي بـ`await main()`؛ تصديره يجعل كلّ من يستورد الحزمة يحجز منفذاً                                                                                     | تصديره للاكتمال — مرفوض: استيراد لا ينبغي أن يستمع على 8090                                                  |
 | 9   | تعليقات `read-eligibility.ts` تنسب مسار النبضة إلى MR 5/6                            | جدول MR في HANDOFF §13 المُلزِم يضع المسارات الثلاثة عشر كلّها في 4/6؛ حُسم لصالح الجدول                                                                        | تأجيل المسار — مرفوض: يخلّ بعدد المسارات المتعهَّد به وبحرّاس الانحراف                                        |
 
@@ -187,9 +186,11 @@ services/drivers/src/http/server.ts          ← composition root (Postgres أو
 | `/health` بثلاثة مفاتيح و`degraded` على الذاكرة              | `src/__tests__/http-eligibility.test.ts` — `degraded على الذاكرة، ومفاتيح العقد فقط`                                          |
 | غلاف الخطأ ومعرّف التتبّع وعدم الصدى                          | `src/__tests__/http-errors.test.ts` — `يعيد الغلاف المتداخل …` · `يعيد معرّف التتبّع الذي أرسله المتصل نفسه` · `لا يعيد صدى المعرّف المرفوض …` |
 | 415 والجسم المشوّه → رمز تحقق واحد، وغير المصنَّف → 503        | `src/__tests__/http-errors.test.ts` — `يترجم الجسم غير الصالح ونوع المحتوى الخاطئ …` · `يحوّل الخطأ غير المصنَّف إلى 503 …`      |
-| ربط 502 مُنفَّذ قبل وجود منفذ يرفعه                            | `src/__tests__/http-errors.test.ts` — `يوصل DRIVER_CANDIDACY_PUBLISH_FAILED إلى 502 عندما يُرفع`                              |
-| اختبارات الخدمة                                              | `pnpm --filter @wasla/drivers-service test` ⇒ **12 ملفاً · 164 اختباراً ناجحاً** (لقطة 2026-08-22)                             |
-| المستودع كلّه                                                | `pnpm -r run typecheck` و`pnpm -r run test` نظيفان (لقطة 2026-08-22)                                                          |
+| الرمز المتقاعد لا يعود لا إلى العقد ولا إلى الكود              | `src/__tests__/contract-drift.test.ts` — حارس الأكواد المتقاعدة في الاتجاهين · وحارس «كل مصنع خطأ مُصدَّر يستعمله مسار إنتاج»    |
+| المنافذ الصادرة: التحويل والفشل ومفتاح منع التكرار             | `src/__tests__/outbound-ports.test.ts` ⇒ **28 اختباراً** بحقن `fetch` لا بشبكة ([DRIVER_BOT_FLOWS §11](../02-architecture/DRIVER_BOT_FLOWS.md)) |
+| مطابقة معطّلة لا تُسقِط الكتابة المحلية الناجحة                 | `src/__tests__/outbound-ports.test.ts` — ثلاثة اختبارات أثر: قراءة معطوبة لا تُفشِل الكتابة ولا تستبدل صفّ `busy` مبذوراً        |
+| اختبارات الخدمة                                              | `pnpm --filter @wasla/drivers-service test` ⇒ **13 ملفاً · 194 اختباراً ناجحاً** (لقطة 2026-08-22 بعد MR 5/6؛ كانت 164 في 12)   |
+| المستودع كلّه                                                | `pnpm -r run typecheck` نظيف على 28 مشروعاً · `pnpm -r run test` ⇒ **2112 اختباراً في 128 ملفاً** (لقطة 2026-08-22)            |
 
 **غير مُغطّى هنا:** `server.ts` تركيب — اختبارات HTTP تحقن Runner ولا تبدأ خادماً مستمعاً؛ ولا اختبار تكامل مع Postgres في هذا الـMR.
 
@@ -197,6 +198,6 @@ services/drivers/src/http/server.ts          ← composition root (Postgres أو
 
 ## 11. ماذا بعد
 
-- **MR 5/6:** `HttpCandidacyPort` إلى المطابقة (8088)، ودليل مناطق عبر HTTP يُلغي الانحرافين 6 و7، وواجهة `driver-bot`. وهو الموضع الذي يصير فيه 502 قابلاً للحدوث فعلاً.
-- **MR 6/6:** بوابة خروج Phase 05 — E2E من التسجيل إلى النشر.
+- ~~**MR 5/6**~~ **مُنجَز:** `HttpCandidacyPort` إلى المطابقة (8088) و`HttpZoneCatalogPort` إلى الجغرافيا (8081) أغلقا الانحرافين 6 و7، وواجهة `driver-bot` رُبِطت، و**502 تقاعَد** بدل أن يصير قابلاً للحدوث (§8) — [DRIVER_BOT_FLOWS.md](../02-architecture/DRIVER_BOT_FLOWS.md).
+- **MR 6/6:** بوابة خروج Phase 05 — E2E من التسجيل إلى النشر، **وهي موضع اختبار التكامل الغائب**: منافذ صادرة على HTTP يستمع فعلاً + Postgres.
 - تبقى قرارات [ADR-012](../15-decisions/ADR-012-driver-core-eligibility-derivation-and-candidacy-publication.md) غير قابلة للتفاوض: الأهليّة مشتقّة، ولا كتابة في قاعدة المطابقة، والسائق يعلن `available|offline` وحدهما، والزمن نبضة.

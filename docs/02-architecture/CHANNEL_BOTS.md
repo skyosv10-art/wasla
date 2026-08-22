@@ -3,6 +3,7 @@
 > **النوع:** وثيقة معمارية تنفيذية · **المرحلة:** Phase 03 — Telegram Channel Foundation · **الدفعة:** MR 4/7
 > **Last Updated:** 2026-08-21 · **Status:** مُنفَّذ (90 اختبار وحدة في الطبقة · 438 في المستودع بعد MR 6)
 > **مُحدَّث لاحقاً:** Phase 04 · MR 5/6 أضاف بذرة المحادثة (`onConversation`) وربط تدفقات بوت العميل — التفصيل في [CUSTOMER_BOT_FLOWS.md](CUSTOMER_BOT_FLOWS.md)، وهذه الوثيقة تبقى مرجع الطبقة المحيّدة.
+> **ومُحدَّث في Phase 05 · MR 5/6:** ربط تدفقات بوت السائق ([DRIVER_BOT_FLOWS.md](DRIVER_BOT_FLOWS.md)) · و**إصلاح عيب في مُشغِّل العملية كان يتخطّى جذر تركيب كل بوت** فيُلغي تدفقات بوت العميل في النشر وحده — §7.1، وهو أهمّ سطر في هذا التحديث لمن يقرأ الوثيقة لأول مرة.
 >
 > **Related:** [ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md) (القرار الحاكم) · [CHANNEL_LAYER_CORE.md](CHANNEL_LAYER_CORE.md) (النواة والمنافذ) · [CHANNEL_TELEGRAM_ADAPTER.md](CHANNEL_TELEGRAM_ADAPTER.md) (المُهيّئ) · [CHANNEL_GROUPS.md](CHANNEL_GROUPS.md) (المجموعات · MR 6) · [CONTAINERS.md §2 و§5.1](CONTAINERS.md) · [عقد القناة](../../packages/channel-core/contracts/README.md) · [كتالوج الأخطاء](../../packages/channel-core/contracts/errors.md) · [SECURITY_RULES](../00-rules/SECURITY_RULES.md)
 
@@ -35,15 +36,15 @@ packages/bot-runtime/src/
 ├── runtime.ts              التركيب: المكان الوحيد الذي يسمّي مُهيّئاً ملموساً
 ├── http/app.ts             سطح عقد القناة على Fastify (webhook · messages · mini-app · deep-links)
 ├── http/errors.ts          ChannelError → جسم Error الموحّد بالكود والحالة
-├── http/server.ts          buildBotApp / startBot / runBot (شؤون العملية: بيئة · منفذ · خروج)
+├── http/server.ts          buildBotApp / startBot / runBotApp / runBot (شؤون العملية: بيئة · منفذ · خروج)
 ├── index.ts                السطح العام + مبرّر الحزمة
 └── __tests__/              80 اختباراً في سبعة ملفات
 
 bots/<customer|driver|partner>-bot/src/
-├── server.ts               `buildApp()` = buildBotApp("<bot>") — بلا أثر جانبي
-├── main.ts                 الملف الوحيد الذي يربط منفذاً
-├── index.ts                السطح العام (BOT + buildApp)
-└── __tests__/              6 اختبارات: هل يخدم بوته ويرفض الآخرين؟
+├── server.ts               `buildApp()` — جذر التركيب: buildBotApp("<bot>") + تدفقات المجال إن وُجدت
+├── main.ts                 الملف الوحيد الذي يربط منفذاً — `runBotApp(BOT, buildApp)` لا `runBot(BOT)` (§7.1)
+├── index.ts                السطح العام (BOT + buildApp + تدفقات البوت إن وُجدت)
+└── __tests__/              6 اختبارات هوية لكل بوت (+ اختبارات التدفقات حيث رُبِطت)
 ```
 
 كل ملف يبدأ بتعليق يشرح **لماذا** يوجد لا ماذا يفعل، كما تفرض [ENGINEERING_DOCUMENTATION_LAW](../00-rules/ENGINEERING_DOCUMENTATION_LAW.md).
@@ -106,9 +107,11 @@ bots/<customer|driver|partner>-bot/src/
 | `ESCALATION_GROUP_CHAT_IDS` | لا | — | مجموعات التصعيد؛ الغرفة غير المُعلَنة تُسجَّل بلا أي ردّ |
 | `COMMUNITY_GROUP_CHAT_IDS` | لا | — | مجموعات مجتمع الكباتن |
 | `CUSTOMER_DATABASE_URL` | لا | — | **بوت العميل وحده** (Phase 04): بوّابة تدفقات المجال؛ بغيابه لا يُسجَّل `/places` ولا `/orders` ([CUSTOMER_BOT_FLOWS §8](CUSTOMER_BOT_FLOWS.md)) |
-| `GEOGRAPHY_SERVICE_URL` | لا | — | **بوت العميل وحده**: مراجع المناطق داخل نواة العميل؛ لا تحتاجه القراءات الثلاث |
+| `DRIVER_DATABASE_URL` | لا | — | **بوت السائق وحده** (Phase 05): بوّابة تدفقات المجال؛ بغيابه لا يُسجَّل `/status` ولا `/available` ولا `/offline` ولا `/docs` ([DRIVER_BOT_FLOWS §10](DRIVER_BOT_FLOWS.md)) |
+| `MATCHING_SERVICE_URL` | لا | — | **بوت السائق وحده**: نشر الترشيح إلى المطابقة؛ بغيابه يُرفَض كل نشر بـ`MATCHING_NOT_CONFIGURED` **مُسجَّلاً** لا صامتاً |
+| `GEOGRAPHY_SERVICE_URL` | لا | — | **بوتا العميل والسائق**: مراجع المناطق داخل النواة؛ في بوت السائق بغيابه يهبط دليل المناطق إلى `DRIVER_DEV_ZONE_IDS` بتحذير |
 
-> `DATABASE_URL` (مخازن القناة) و`CUSTOMER_DATABASE_URL` (نواة العميل) **متغيّران منفصلان** بقصد: قاعدة القناة تحتفظ بمنع التكرار وطابور التسليم، وقاعدة العميل ببيانات شخصية. مرجع واحد لهما جائز في التطوير، لكن الكود لا يفترضه أبداً.
+> `DATABASE_URL` (مخازن القناة) و`CUSTOMER_DATABASE_URL` و`DRIVER_DATABASE_URL` (نوى المجال) **متغيّرات منفصلة** بقصد: قاعدة القناة تحتفظ بمنع التكرار وطابور التسليم، وقواعد المجال ببيانات شخصية. ولكلٍّ اسمه لأنّ اسماً مشتركاً واحداً يجعل بوتاً منشوراً بجانب خدمة أخرى يفتح **القاعدة الخطأ** بصمت. مرجع واحد لها جائز في التطوير، لكن الكود لا يفترضه أبداً.
 
 **فشل الإقلاع صريح:** `loadBotConfig` يرمي خطأً **يسمّي المتغيّر الناقص ولا يطبع قيمته أبداً** (SECURITY_RULES). لا قيم افتراضية للأسرار ولا وضع «تطوير» يتجاوز الفحص، لأن قيمة افتراضية لرمز webhook تعني بوتاً بلا مصادقة في أول نشر يُنسى فيه المتغيّر.
 
@@ -147,6 +150,18 @@ POST {IDENTITY_SERVICE_URL}/identity/resolve
 | `MiniAppRegistryPort` | `SingleBotRegistry` (من البيئة) | `StaticMiniAppRegistry` |
 | التخزين الثلاثي | **في الذاكرة (مؤقّت)** | في الذاكرة |
 
+### 7.1 مُشغِّل العملية يجب أن يمرّ بجذر التركيب — عيبٌ مُصلَح في Phase 05 · MR 5/6
+
+كان `main.ts` في كل بوت ينادي `runBot(BOT)`، و`runBot` يبني التطبيق من `buildBotApp` **مباشرةً** — فيتخطّى `buildApp()` الخاصّ بالبوت، أي جذر تركيبه، أي تدفقاته المجالية.
+
+وما دام كل بوت مجرّد `buildBotApp(BOT)` كان الفرق صفراً، ولذلك لم يظهر في المرحلة 03. لكن بعد أن صار لبوت العميل تدفقات (Phase 04 · MR 5/6) صار الفرق هو **كل الميزة**: البوت المنشور يخدم `/start` وحده، و`/places` و`/orders` غير مُسجَّلين — بينما طاقم اختباره كامل الخُضرة، لأنّ الاختبارات تنادي `buildApp()` وهو المسار الصحيح الذي لا يسلكه الإنتاج. أسوأ شكل للعيب: **الدليل يُثبت شيئاً لا يُشغَّل**.
+
+والإصلاح `runBotApp(bot, build)`: يأخذ **بانياً** ويشغّل ما يبنيه، و`runBot` صار يفوّض إليه فلم تتغيّر واجهته. والقاعدة الآن:
+
+> **`main.ts` ينادي `runBotApp(BOT, buildApp)` دائماً — حتى لو لم يكن للبوت تدفّق بعد.**
+
+وبوت الشريك يمرّ ببانيه لهذا السبب بالضبط وإن لم يكن له تدفّق: يوم يحصل على أوّله تكون العملية المستمعة هي الجذر الذي اختُبِر، لا نسخةً منه.
+
 ---
 
 ## 8. حالة التحقّق
@@ -179,7 +194,8 @@ POST {IDENTITY_SERVICE_URL}/identity/resolve
 | `telegram_username` في تهيئة الهوية | لا يُرسَل (فجوة §6) | مرحلة القناة الثانية |
 | موجّه القناة داخل `notifications` | `POST /channel/messages` يُنادى مباشرة | مرحلة الإشعارات |
 | ~~سلوك مجال داخل بوت~~ | **أُنجز في Phase 04 · MR 5/6**: بذرة `onConversation` تسمح للجذر بتسليم دالّة واحدة تأخذ حدثاً محايداً وتُعيد نصاً أو صمتاً؛ فطبقة القناة بقيت بلا أي فرع مجال، وبوت العميل ربط `/start` و`/places` و`/orders` | ✅ [CUSTOMER_BOT_FLOWS.md](CUSTOMER_BOT_FLOWS.md) |
-| تدفقات مجال لبوتَي السائق والشريك | البذرة متاحة لهما ولا تدفّق مربوطاً؛ مسارهما كما كان | Phase 06 (السائق) · Phase 08 (الشريك) |
+| ~~تدفقات مجال لبوت السائق~~ | **أُنجز في Phase 05 · MR 5/6**: `/status` و`/available` و`/offline` و`/docs` وراء `DriverFlowsPort`، ببوّابة `DRIVER_DATABASE_URL` والامتناع نفسه | ✅ [DRIVER_BOT_FLOWS.md](DRIVER_BOT_FLOWS.md) |
+| تدفقات مجال لبوت الشريك | البذرة متاحة له ولا تدفّق مربوطاً؛ مساره كما كان (لكن `main.ts` يمرّ بجذره أصلاً — §7.1) | Phase 08 (الشريك) |
 
 ---
 

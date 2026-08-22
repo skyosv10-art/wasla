@@ -46,20 +46,24 @@ export const DRIVER_ERROR_CODES = [
   "DRIVER_DOCUMENT_NOT_FOUND", "DRIVER_DOCUMENT_ALREADY_REVIEWED",
   "DRIVER_DOCUMENT_TYPE_UNKNOWN", "DRIVER_DOCUMENT_EXPIRY_INVALID",
   "DRIVER_SUSPENDED", "DRIVER_NOT_SUSPENDED", "DRIVER_POLICY_NOT_FOUND",
-  "DRIVER_POLICY_NOT_FROZEN", "DRIVER_CANDIDACY_PUBLISH_FAILED", "DRIVER_UNAVAILABLE",
+  "DRIVER_POLICY_NOT_FROZEN", "DRIVER_UNAVAILABLE",
 ] as const;
 export type DriverErrorCode = (typeof DRIVER_ERROR_CODES)[number];
 
 /**
- * `bad_gateway` صنف قائم بذاته لأنّ فشل النشر إلى المطابقة **خطأ تكاملنا لا خطأ المُنادي**:
- * الحالة المحلية تغيّرت بنجاح، والذي فشل هو إسقاطها إلى تابع خلفنا (ADR-012 القرار 3).
+ * لا `bad_gateway` ولا `502` في هذا الكتالوج (قرار Phase 05 · MR 5/6).
+ *
+ * كان `DRIVER_CANDIDACY_PUBLISH_FAILED` معلناً لعشر عمليات ولم يكن أي مسار في الخدمة
+ * ينتجه: فشل النشر إلى المطابقة **لا يُبطل الكتابة المحلية** (ADR-012 القرار 3)، فالكتابة
+ * تُعيد موردها بـ2xx ويُسجَّل الفشل في `driver_candidacy_publications`. صنفٌ لا عضو له
+ * يدعو أول من يقرأه أن يجد له استعمالاً، فحُذف مع رمزه. التفصيل في
+ * `services/drivers/contracts/errors.md` §«الرمز المتقاعد».
  */
 export const DRIVER_ERROR_CLASS_STATUS = {
   validation_error: 400,
   not_found: 404,
   conflict: 409,
   unprocessable: 422,
-  bad_gateway: 502,
   service_unavailable: 503,
 } as const;
 export type DriverErrorClass = keyof typeof DRIVER_ERROR_CLASS_STATUS;
@@ -84,7 +88,6 @@ export const DRIVER_ERROR_CODE_CLASS: Record<DriverErrorCode, DriverErrorClass> 
   DRIVER_DOCUMENT_EXPIRY_INVALID: "unprocessable",
   DRIVER_POLICY_NOT_FOUND: "unprocessable",
   DRIVER_POLICY_NOT_FROZEN: "unprocessable",
-  DRIVER_CANDIDACY_PUBLISH_FAILED: "bad_gateway",
   DRIVER_UNAVAILABLE: "service_unavailable",
 };
 
@@ -126,7 +129,8 @@ export const DRIVER_API_PATHS = [
   "/drivers/{waslaPublicId}/eligibility",
 ] as const;
 
-export const DRIVER_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 502, 503] as const;
+/** لا `502`: انظر §«الرمز المتقاعد» في `services/drivers/contracts/errors.md`. */
+export const DRIVER_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
 
 /**
  * القيَم التي تنشرها نواة السائق في إسقاط ترشيح المطابقة (ADR-012 القرار 3).

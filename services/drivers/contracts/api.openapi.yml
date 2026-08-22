@@ -11,6 +11,13 @@ info:
     - خدمة السائق تنشر إسقاط الترشيح عبر حدّ المطابقة ولا تكتب في قاعدة المطابقة؛ بقاء الحدّ يحفظ صاحب كل قرار واضحاً.
     - التوافر المعلن `available` أو `offline` فقط. `busy` التزام تشغيلي يملكه التوزيع، وتركه خارج كلام السائق يمنع أن تناقضه واجهتان.
     - الوثائق مراجع تخزين لا محتوى. لا رقم هوية ولا رقم رخصة ولا إحداثيات ولا مُعرّف قناة في هذا العقد، لأن حاجتها للتشغيل لا تبرر توسيع سطح البيانات.
+
+    **لا يوجد `502` في هذا العقد** (قرار Phase 05 · MR 5/6، وتفصيله في `contracts/errors.md`):
+    فشل نشر الإسقاط إلى المطابقة **لا يُبطل الكتابة المحلية** (ADR-012 القرار 3)، فالكتابة
+    الناجحة يجب أن تُعيد موردها لا رمز فشل؛ ورمز حالة لا يستطيع أي مسار في الخدمة إنتاجه
+    كذبةُ عقدٍ من نفس عائلة `VehiclePatch.status` التي حُذفت في MR 4/6. الفشل يُقرأ من
+    `last_published_state` و`last_published_at` في الملف، ومن `publish_failures` في نتيجة
+    النبضة، ومن صفوف `driver_candidacy_publications`.
   contact:
     name: WASLA
 servers:
@@ -84,7 +91,6 @@ paths:
               schema: { $ref: '#/components/schemas/EligibilityTickResult' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}:
@@ -128,7 +134,6 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/zones:
@@ -171,7 +176,6 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
     get:
       tags: [zones]
@@ -219,7 +223,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
     get:
       tags: [vehicles]
@@ -271,7 +274,6 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/documents:
@@ -306,7 +308,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
     get:
       tags: [documents]
@@ -359,7 +360,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/availability:
@@ -386,7 +386,6 @@ paths:
               schema: { $ref: '#/components/schemas/DriverProfile' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/suspend:
@@ -414,7 +413,6 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/reinstate:
@@ -437,7 +435,6 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /drivers/{waslaPublicId}/eligibility:
@@ -801,11 +798,6 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     Unprocessable:
       description: مدخل صالح شكلياً ومرفوض بقاعدة أعمال أو مرجع خارجي
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-    CandidacyPublishFailed:
-      description: تعذّر نشر الإسقاط إلى خدمة المطابقة بعد تسجيل التغيير محلياً
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }

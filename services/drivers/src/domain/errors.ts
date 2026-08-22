@@ -5,7 +5,7 @@
  * the HTTP status derived from each class live in @wasla/contracts-driver, which
  * is drift-guarded against services/drivers/contracts/errors.md. This file only
  * wraps them in a throwable typed error, so a use case raises a contract code and
- * the HTTP layer (MR 5/6) maps it without re-classifying.
+ * the HTTP layer (MR 4/6) maps it without re-classifying.
  *
  * Tests assert `code` — never the Arabic message copy.
  *
@@ -224,16 +224,22 @@ export function policyNotFrozen(version: number): DriverError {
 }
 
 /**
- * The projection write into matching failed.
+ * A mandatory port answered with nothing we can act on — the zone catalogue, the
+ * pool, the outbox.
  *
- * A 502 and not a 500: the local state change SUCCEEDED and was persisted, and
- * what failed is our push to a service behind us (ADR-012 decision 3). Reporting
- * it as our own failure would invite the caller to retry a write that already
- * happened.
+ * `503` and not `502`: the caller's request never took effect, so retrying is the
+ * correct instruction, and retrying is exactly what `503` says. This factory exists
+ * so the failure is raised BY NAME at the point that discovered it, instead of
+ * arriving at the HTTP layer as an unrecognised throw that the catch-all classifies
+ * by guessing.
+ *
+ * Note what is deliberately NOT here: a code for a failed publication to matching.
+ * Phase 05 · MR 5/6 retired `DRIVER_CANDIDACY_PUBLISH_FAILED` — see
+ * `contracts/errors.md` §«الرمز المتقاعد» for the reasoning. A publication that
+ * fails never invalidates the local write (ADR-012 decision 3), so the write must
+ * answer with its resource, and the failure is reported through the recorded
+ * publication rather than through a status code.
  */
-export function candidacyPublishFailed(): DriverError {
-  return new DriverError(
-    "DRIVER_CANDIDACY_PUBLISH_FAILED",
-    "تعذّر نشر إسقاط الترشيح إلى خدمة المطابقة",
-  );
+export function driverUnavailable(message: string): DriverError {
+  return new DriverError("DRIVER_UNAVAILABLE", message);
 }

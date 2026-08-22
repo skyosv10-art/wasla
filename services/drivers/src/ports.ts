@@ -213,10 +213,23 @@ export interface CandidacyProjection {
  * `publish` returns an outcome instead of throwing on refusal, because a refusal
  * by matching is a fact to record, not our failure. It throws only when the
  * transport itself failed.
+ *
+ * **Both methods may throw, and the caller treats either throw identically** (MR
+ * 5/6): a failed `read` means the current projected availability is unknown, and
+ * publishing anyway would risk upgrading a `busy` row to `available` — the one
+ * outcome this port exists to prevent. So a `read` failure aborts the publication
+ * and is recorded as an `unavailable` attempt, exactly like a failed `publish`.
+ *
+ * `traceId` is optional and forwarded as matching's `x-request-id`, which becomes
+ * its `trace_id` in both the response and its audit row. Optional because the
+ * in-memory implementations have no transport to carry it.
  */
 export interface CandidacyProjectionPort {
   read(waslaPublicId: string): Promise<{ availabilityState: ProjectedAvailability } | null>;
-  publish(projection: CandidacyProjection): Promise<{ accepted: boolean; failureCode: string | null }>;
+  publish(
+    projection: CandidacyProjection,
+    options?: { readonly traceId?: string | null },
+  ): Promise<{ accepted: boolean; failureCode: string | null }>;
 }
 
 /**
@@ -226,6 +239,16 @@ export interface CandidacyProjectionPort {
  * unlike matching, which tolerates a retired zone on an existing row, this service
  * is where the zone list is authored, and accepting an unknown id here is how it
  * gets into every downstream row.
+ *
+ * `existing` means «exists AND may be used», not «a row is present» (MR 5/6): the
+ * HTTP implementation counts only geography's `active` zones, because a zone that
+ * has been deactivated produces a driver who is offerable where nobody dispatches.
+ * The full reasoning, and the declared limit that already-stored zones are not
+ * re-validated on deactivation, are in `infrastructure/http-zone-catalog.ts`.
+ *
+ * An implementation MAY throw when it cannot answer; the caller must let that
+ * surface as 503 rather than convert it into an absent zone, because 422 tells the
+ * caller his input is wrong and he will stop retrying a write that was valid.
  */
 export interface ZoneCatalogPort {
   existing(zoneIds: readonly string[]): Promise<Set<string>>;

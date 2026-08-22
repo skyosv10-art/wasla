@@ -206,7 +206,7 @@ export const NEGOTIATION_LAUNCH_POLICY_VERSION = 1;
 export const NEGOTIATION_LAUNCH_POLICY_LABEL = "saudi-launch-v1";
 
 /**
- * منفذ خدمة التفاوض والمحادثة (CONTAINERS §4.9).
+ * منفذ خدمة التفاوض والمحادثة (CONTAINERS §4.5).
  *
  * يقيم الثابت في حزمة العقد لا في الخدمة لأن المستهلك (بوت العميل · بوت السائق · الإدارة)
  * يحتاج المنفذ ليبني عنوان العميل، ولو نسخه لصار لدينا حقيقتان تتباعدان بصمت.

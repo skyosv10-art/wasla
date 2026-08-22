@@ -675,6 +675,19 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  services/negotiations:
+    dependencies:
+      '@wasla/contracts-negotiation':
+        specifier: workspace:*
+        version: link:../../packages/contracts/negotiation
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   services/orders:
     dependencies:
       '@wasla/contracts-order':

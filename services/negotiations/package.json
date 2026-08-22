@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/negotiations-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Negotiation & Chat service — تفاوض ثنائي على سعر عرض إرسال واحد، والاتفاق حدثٌ صريح على جولة مرقّمة (Phase 08 · MR 2/6: مجال نقي بلا قاعدة ولا HTTP).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-negotiation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -304,11 +304,15 @@ async function openNextWave(
   const result = await deps.matching.candidates(request);
   assertCandidateResult(result, request, traceId);
 
+  // Computed before the wave is written, because the row stores it: the deadline is
+  // one instant shared by the round and by every offer inside it.
+  const expiresAt = computeOfferDeadline(now, job.rules);
   const wave = await deps.waves.insert({
     id: deps.ids.uuid(),
     jobId: job.id,
     waveNumber,
     openedAt: now,
+    expiresAt,
   });
   counters.openedWaves += 1;
   // Written before the offers, not after: a job left in `pending` while offers are out
@@ -317,7 +321,6 @@ async function openNextWave(
     await deps.jobs.updateStatus(job.id, "dispatching", null, now);
   }
 
-  const expiresAt = computeOfferDeadline(now, job.rules);
   const sent: DispatchOffer[] = [];
   for (const candidate of result.candidates) {
     const offerId = deps.ids.uuid();
@@ -366,7 +369,9 @@ async function openNextWave(
         wave_id: wave.id,
         wave_number: wave.waveNumber,
         offer_count: sent.length,
-        expires_at: expiresAt,
+        // Read back from the stored row, so the instant a consumer receives is the
+        // instant the database holds rather than a second copy of the same sum.
+        expires_at: wave.expiresAt,
       },
       { eventId: deps.ids.uuid(), occurredAt: now, traceId },
     ),

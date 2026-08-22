@@ -135,7 +135,13 @@ export class FakeOrderEngine implements OrderEnginePort {
       return { outcome: "rejected", rejectionCode: "ORDER_ASSIGNMENT_DUPLICATE" };
     }
     this.assignmentCounter += 1;
-    const id = `assignment-${this.assignmentCounter}`;
+    // UUID-shaped, because the real engine's `order_assignments.id` is a UUID and
+    // `dispatch_offers.order_assignment_id` is therefore a UUID column too. The fake
+    // used to return `assignment-1`, which every in-memory test accepted happily and
+    // Postgres refuses with 22P02 — found by running the same scenarios against the
+    // real adapter in MR 5a/6. A fake whose ids are the wrong SHAPE is a fake that
+    // hides a whole class of bug until the first integration test.
+    const id = `70000000-0000-4000-8000-${String(this.assignmentCounter).padStart(12, "0")}`;
     this.assignments.set(id, {
       id,
       orderId: input.orderId,

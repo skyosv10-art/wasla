@@ -591,3 +591,20 @@ driver-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/driver-e2e test
+
+# التفاوض والمحادثة (المرحلة 08 · MR 3/6): يطبّق العقد الكنسي ويشغّل مرآة
+# Drizzle، المستودعات والقيود المسماة، الذرّية، ومطابقة منافذ الذاكرة وPostgres.
+negotiations-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_negotiations_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_negotiations_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/negotiations-service test:integration

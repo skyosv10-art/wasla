@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Dispatch service — من يُعرَض عليه ومتى ينتهي وقته: آلة المهمّة/الموجة/العرض، والزمن من نبضة واحدة بساعة مُحقونة، ومحرّك الطلبات والمطابقة عبر منافذ (Phase 07 · MR 4/6: مجال نقي بلا قاعدة بيانات وبلا HTTP).",
+  "description": "WASLA Dispatch service — من يُعرَض عليه ومتى ينتهي وقته: آلة المهمّة/الموجة/العرض، والزمن من نبضة واحدة بساعة مُحقونة، ومحرّك الطلبات والمطابقة عبر منافذ (Phase 07 · MR 5a/6: مجال نقي + استمرارية Postgres بوحدة عمل، بلا HTTP).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -13,13 +13,17 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@wasla/contracts-dispatch": "workspace:*"
+    "@wasla/contracts-dispatch": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
     "@wasla/orders-service": "workspace:*",
     "vitest": "^2.1.0"
   }

@@ -2,7 +2,7 @@
 
 > **Scope:** كيف تُشغَّل اختبارات التكامل ضد Postgres حقيقي في GitLab CI، ولماذا هي منفصلة عن `pnpm -r test`، وكيف تُضاف خدمة جديدة.
 >
-> **Last Updated:** 2026-08-21 · **Status:** Active · **Related:** [.gitlab-ci.yml](../../.gitlab-ci.yml) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) · [DEFINITION_OF_DONE](../00-rules/DEFINITION_OF_DONE.md)
+> **Last Updated:** 2026-08-22 · **Status:** Active · **Related:** [.gitlab-ci.yml](../../.gitlab-ci.yml) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) · [DEFINITION_OF_DONE](../00-rules/DEFINITION_OF_DONE.md)
 
 ---
 
@@ -30,6 +30,9 @@
 | `channel-exit-gate-e2e` | `@wasla/channel-e2e` | `wasla_channel_e2e` | Phase 03 · MR 7 (**بوابة خروج المرحلة**): البوتات الثلاثة معاً أمام خدمة هوية واحدة تستمع فعلياً على HTTP ومخازن مشتركة — كل بوت يفتح Mini App الخاصة به، هوية واحدة لشخص واحد عبر البوتات الثلاثة، منع التكرار مقيَّد بالبوت، واستبدال `TelegramChannelAdapter` بـ`MockChannelAdapter` تجاوزاً لمقبس واحد ([تفصيل](PHASE03_EXIT_GATE_E2E.md)) |
 | `channel-db-integration` | `@wasla/channel-postgres` | `wasla_channel_test` | Phase 03 · MR 5: مُهيّئات Postgres للمنافذ الثلاثة — منع التكرار الذرّي وبقاؤه بعد إعادة الإقلاع، idempotency التسليم وتقدّم المحاولات وترتيب طابور الاستحقاق (أولوية ثم زمن)، إلحاق صندوق الصادر مرّة واحدة، و**مطابقة المنافذ**: حالات استخدام النواة نفسها تُشاهَد متطابقة على مُهيّئات الذاكرة وعلى Postgres |
 | `customer-db-integration` | `@wasla/customers-service` | `wasla_customer_test` | Phase 04 · MR 3/6: مستودع العملاء وصندوق صادره أمام قاعدة حقيقية — `NUMERIC` أرقاماً، الحقل الغائب يبقى غائباً (فبصمة idempotency لا تتغيّر بمصدر القراءة)، ترتيب الأماكن، التقييد بالمالك، معاملة واحدة للطلب ونقاطه وتراجعها، رسائل التكرار نفسها التي يرفعها مُهيّئ الذاكرة، قيود CHECK؛ و**مطابقة المنافذ**: 16 سيناريو تُكتَب مرّة وتُنفَّذ مرّتين (ذاكرة/Postgres) عبر حالات الاستخدام نفسها ([تفصيل](../02-architecture/CUSTOMER_PERSISTENCE.md)) |
+| `order-db-integration` | `@wasla/orders-service` | `wasla_orders_test` | Phase 06 · MR 5/7: محرّك الطلبات أمام قاعدة حقيقية — انتقالات الحالة، الأحداث في معاملة التغيير، وقيود العقد ([تفصيل](../02-architecture/ORDER_PERSISTENCE.md)) |
+| `matching-db-integration` | `@wasla/matching-service` | `wasla_matching_test` | Phase 07 · MR 3/6: قيود CHECK مُطبَّقة فعلاً (نسبة قبول > 1، عدّادات غير متصاعدة، أوزان لا تجمع 100)، الفهارس الجزئية، `TEXT[]`/`UUID[]`/`TIMESTAMPTZ` تعود كما دخلت، نسخة قواعد غير مُقفَلة لا تُعاد كالنشطة؛ والكتابة الثلاثية ترتكز أو تتراجع كوحدة؛ و**مطابقة المنافذ** ([تفصيل](../02-architecture/MATCHING_PERSISTENCE.md)) |
+| `dispatch-db-integration` | `@wasla/dispatch-service` | `wasla_dispatch_test` | Phase 07 · MR 5a/6: الفهرسان الجزئيان اللذان يمنعان سائقين من قبول رحلة واحدة (`ux_dispatch_waves_one_open_job` · `ux_dispatch_offers_one_accepted_job`)، وعدم عرض السائق نفسه مرّتين في مهمة واحدة، وترتيب المُهَل، وتشلشل الحذف؛ و**الذرّية**: نبضة واحدة كاملة تتراجع بأسرها فلا تبقى موجة «مفتوحة» فارغة تُعطّل المهمة إلى الأبد؛ و**مطابقة المنافذ**: 12 سيناريو تُنفَّذ مرّتين (ذاكرة/Postgres) والأثران يُقارَنان أحدهما بالآخر ([تفصيل](../02-architecture/DISPATCH_PERSISTENCE.md)) |
 
 **استثناء مقصود في `channel-exit-gate-e2e`:** هو الوظيفة الوحيدة التي تُشغّل ملفاً **يعمل أيضاً** داخل `build-test`. السبب: بوابة يمكن تخطيّها ليست بوابة، فمجموعة `@wasla/channel-e2e` غير ملفّفة بـ`describe.skipIf` وتعمل بمخازن الذاكرة على كل MR دون قاعدة بيانات؛ ووجود `DATABASE_URL` يُبدّل المخازن إلى Postgres ويُفعّل **اختبار الصفوف** وحده (`it.skipIf`). ولا تحتاج الوظيفة مخطّط `identity_*` لأن خدمة الهوية تعمل داخل الاختبار بمحوّلات in-memory — محلّ الفحص العقد بين الطبقتين، واستمرارية الهوية مغطّاة في `db-integration`.
 
@@ -56,6 +59,13 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_channel_test \
 createdb wasla_customer_test
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_customer_test \
   pnpm --filter @wasla/customers-service test:integration
+
+# المطابقة والتوزيع (المرحلة 07)
+createdb wasla_matching_test && createdb wasla_dispatch_test
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_matching_test \
+  pnpm --filter @wasla/matching-service test:integration
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_dispatch_test \
+  pnpm --filter @wasla/dispatch-service test:integration
 ```
 
 الاختبار يُطبّق الـDDL والبيانات الأولية بنفسه، فلا حاجة لتهيئة يدوية. بيانات السعودية الأولية idempotent (`ON CONFLICT DO NOTHING`) فإعادة التشغيل آمنة.

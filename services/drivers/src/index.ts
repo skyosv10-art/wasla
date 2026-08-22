@@ -77,3 +77,14 @@ export * from "./use-cases/read-eligibility.js";
 // Wire mapping — the single camelCase ⇄ snake_case boundary.
 // ---------------------------------------------------------------------------
 export * from "./mappers.js";
+export * from "./use-cases/read-driver.js";
+
+// ---------------------------------------------------------------------------
+// HTTP layer (MR 4/6). `createDriverApp` is exported and `server.js` is NOT: the
+// app is a value a test or the exit-gate harness of MR 6/6 builds and injects into,
+// while the server is a process that binds a port and reads the environment. Exporting
+// the module that ends in `await main()` would start a listener on import.
+// ---------------------------------------------------------------------------
+export * from "./http/app.js";
+export { sendDriverError } from "./http/errors.js";
+export type { DriverErrorBody } from "./http/errors.js";

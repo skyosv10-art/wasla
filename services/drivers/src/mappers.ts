@@ -79,9 +79,24 @@ export function serviceZoneToWire(zone: ServiceZone): ServiceZoneWire {
   };
 }
 
+/**
+ * The vehicle as published, WITHOUT `wasla_public_id`.
+ *
+ * The owner is not on the wire because the vehicle is never published alone: it is
+ * read at `/drivers/{waslaPublicId}/vehicles` and written under the same prefix, so
+ * the owner is in the URL the caller just typed. Repeating it in the body would be a
+ * second copy of one fact, and the day the two disagree the reader has no rule for
+ * which one to trust.
+ *
+ * It is removed rather than added to the contract because `Vehicle` in
+ * `api.openapi.yml` declares `additionalProperties: false`: the key made every
+ * vehicle response fail a strict client's own validation, which is a defect on the
+ * side that emits it. Found in Phase 05 · MR 4/6 when the drift guard was extended
+ * from "every required key is produced" to "every produced key is declared" — the
+ * one-directional guard could not see an extra key by construction.
+ */
 export interface VehicleWire {
   readonly id: string;
-  readonly wasla_public_id: string;
   readonly vehicle_class: string;
   readonly status: string;
   readonly is_primary: boolean;
@@ -97,7 +112,6 @@ export interface VehicleWire {
 export function vehicleToWire(vehicle: Vehicle): VehicleWire {
   return {
     id: vehicle.id,
-    wasla_public_id: vehicle.waslaPublicId,
     vehicle_class: vehicle.vehicleClass,
     status: vehicle.status,
     is_primary: vehicle.isPrimary,
@@ -111,9 +125,9 @@ export function vehicleToWire(vehicle: Vehicle): VehicleWire {
   };
 }
 
+/** The document as published, without `wasla_public_id` — same reason as `VehicleWire`. */
 export interface DriverDocumentWire {
   readonly id: string;
-  readonly wasla_public_id: string;
   readonly document_type: string;
   readonly status: string;
   readonly vehicle_id: string | null;
@@ -130,7 +144,6 @@ export interface DriverDocumentWire {
 export function driverDocumentToWire(document: DriverDocument): DriverDocumentWire {
   return {
     id: document.id,
-    wasla_public_id: document.waslaPublicId,
     document_type: document.documentType,
     status: document.status,
     vehicle_id: document.vehicleId,
@@ -177,6 +190,64 @@ export function eligibilityToWire(
     reason_codes: [...decision.reasonCodes],
     policy_version: decision.policyVersion,
     evaluated_at: decision.evaluatedAt,
+  };
+}
+
+export interface HealthStatusWire {
+  readonly status: "ok" | "degraded";
+  readonly persistence: "postgres" | "memory";
+  readonly last_tick_at: string | null;
+}
+
+/**
+ * The health body, built HERE and not in the route, because it is a wire shape and
+ * this file is where wire shapes are answerable to the contract — the drift guard in
+ * `__tests__/contract-drift.test.ts` reads the mappers, so a `/health` body assembled
+ * inline in `http/app.ts` would be the one response nothing checks.
+ *
+ * `last_tick_at` is `null` until the first tick runs in THIS process (ADR-012 · 5:
+ * the tick has a caller or it does not, and a service nobody is calling looks healthy
+ * from every other angle).
+ */
+export function healthToWire(input: {
+  readonly status: "ok" | "degraded";
+  readonly persistence: "postgres" | "memory";
+  readonly lastTickAt: string | null;
+}): HealthStatusWire {
+  return {
+    status: input.status,
+    persistence: input.persistence,
+    last_tick_at: input.lastTickAt,
+  };
+}
+
+export interface EligibilityTickResultWire {
+  readonly rechecked_drivers: number;
+  readonly changed_drivers: number;
+  readonly published: number;
+  readonly publish_failures: number;
+}
+
+/**
+ * The tick's counters, which are the whole answer of `POST /drivers/eligibility/tick`.
+ *
+ * `publish_failures` is reported on a `200` and not turned into a `502`: the recheck
+ * itself succeeded and the local states are true. A tick that failed to publish two
+ * of forty drivers did forty units of correct work, and answering "bad gateway" would
+ * hide the thirty-eight. The failures are on the record in
+ * `driver_candidacy_publications` and visible as `last_published_state` lag.
+ */
+export function eligibilityTickToWire(result: {
+  readonly recheckedDrivers: number;
+  readonly changedDrivers: number;
+  readonly published: number;
+  readonly publishFailures: number;
+}): EligibilityTickResultWire {
+  return {
+    rechecked_drivers: result.recheckedDrivers,
+    changed_drivers: result.changedDrivers,
+    published: result.published,
+    publish_failures: result.publishFailures,
   };
 }
 

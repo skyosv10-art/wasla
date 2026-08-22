@@ -32,7 +32,9 @@ import {
   candidacyPublicationToWire,
   driverDocumentToWire,
   driverProfileToWire,
+  eligibilityTickToWire,
   eligibilityToWire,
+  healthToWire,
   serviceZoneToWire,
   vehicleToWire,
 } from "../mappers.js";
@@ -162,6 +164,29 @@ describe("حارس التباعد: المُطابِقات مقابل OpenAPI", (
     return [...block.matchAll(/[-[,]\s*([a-z_]+)/g)].map((match) => match[1] as string);
   }
 
+  /**
+   * The DECLARED property names of one schema — the other direction of the same guard.
+   *
+   * Read at a fixed indent (schemas at 4, their properties at 8) instead of with a
+   * YAML parser, for the same reason `requiredKeys` does: adding a parser dependency
+   * to a guard makes the guard something to keep working, and the file's shape is
+   * enforced by `repo-structure` anyway. A nested `description: |` block cannot be
+   * mistaken for a property because its continuation lines are indented deeper and
+   * carry no `key:` at column 8.
+   */
+  function propertyKeys(schemaName: string): string[] {
+    const start = spec.indexOf(`    ${schemaName}:`);
+    expect(start, `المخطّط ${schemaName} غير موجود`).toBeGreaterThan(-1);
+    const rest = spec.slice(start + 1);
+    const nextSchema = rest.search(/\n {4}[A-Za-z]/);
+    const block = nextSchema === -1 ? rest : rest.slice(0, nextSchema);
+    const propertiesAt = block.indexOf("      properties:");
+    expect(propertiesAt, `${schemaName} بلا properties`).toBeGreaterThan(-1);
+    return [...block.slice(propertiesAt).matchAll(/\n {8}([a-z_]+):/g)].map(
+      (match) => match[1] as string,
+    );
+  }
+
   // `object` rather than `Record<string, unknown>`: the wire types are closed
   // interfaces on purpose, and widening them here just to satisfy the table would
   // hand every one of them an index signature it must not have.
@@ -225,6 +250,16 @@ describe("حارس التباعد: المُطابِقات مقابل OpenAPI", (
       }),
     ],
     [
+      "EligibilityTickResult",
+      eligibilityTickToWire({
+        recheckedDrivers: 0,
+        changedDrivers: 0,
+        published: 0,
+        publishFailures: 0,
+      }),
+    ],
+    ["HealthStatus", healthToWire({ status: "ok", persistence: "memory", lastTickAt: null })],
+    [
       "EligibilityView",
       eligibilityToWire("WS-1000000001", {
         state: "eligible",
@@ -244,6 +279,18 @@ describe("حارس التباعد: المُطابِقات مقابل OpenAPI", (
         // A required field the mapper never emits is a 200 response that fails the
         // client's own validation — the worst kind, because our logs show success.
         expect(produced, `${schemaName}.${key} مطلوب ولا يُنتجه المُطابِق`).toContain(key);
+      }
+    });
+
+    it(`${schemaName}: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد`, () => {
+      // The direction that was missing until Phase 05 · MR 4/6, and it was missing
+      // where it mattered: every schema here declares `additionalProperties: false`,
+      // so ONE extra key makes a correct `200` fail a strict client's validation —
+      // and our own logs record a success. `vehicleToWire` and `driverDocumentToWire`
+      // were both emitting `wasla_public_id`, undeclared, for three MRs.
+      const declared = propertyKeys(schemaName);
+      for (const key of Object.keys(wire)) {
+        expect(declared, `${schemaName}.${key} يُنتَج وغير مُعلَن في العقد`).toContain(key);
       }
     });
   }

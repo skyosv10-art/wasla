@@ -1,0 +1,24 @@
+{
+  "name": "@wasla/dispatch-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 07 Exit Gate — the only suite allowed to wire the Customer Core, the Order Engine, Matching and Dispatch together over real HTTP through their production adapters (ADR-010 · ADR-011). Tests only: no runtime code and no exports.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/contracts-order": "workspace:*",
+    "@wasla/customers-service": "workspace:*",
+    "@wasla/dispatch-service": "workspace:*",
+    "@wasla/geography-service": "workspace:*",
+    "@wasla/identity-service": "workspace:*",
+    "@wasla/matching-service": "workspace:*",
+    "@wasla/orders-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

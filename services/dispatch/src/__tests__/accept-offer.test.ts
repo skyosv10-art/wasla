@@ -102,10 +102,14 @@ describe("acceptOffer — the winner", () => {
 
     expect(harness.orders.statusOf(orderId)).toBe("accepted");
     const kinds = harness.orders.calls.map((call) => `${call.kind}:${call.detail}`);
-    // The order's status first (idempotent), then the assignment (the race decision).
+    // The assignment first (the race decision), then the order's status — the only
+    // sequence the engine accepts: `accepted` is driver-bound, so the engine reads the
+    // winner from the assignment log and binds it in the same UPDATE (ADR-010 §4). The
+    // reverse order returns 422 ORDER_ASSIGNMENT_REQUIRED, which is what the Phase 07
+    // exit gate proved against the real engine.
     expect(kinds).toContain("transition:accepted");
     expect(kinds).toContain("resolve:accepted");
-    expect(kinds.indexOf("transition:accepted")).toBeLessThan(kinds.indexOf("resolve:accepted"));
+    expect(kinds.indexOf("resolve:accepted")).toBeLessThan(kinds.indexOf("transition:accepted"));
   });
 
   it("cancels the siblings' assignments in the engine too", async () => {

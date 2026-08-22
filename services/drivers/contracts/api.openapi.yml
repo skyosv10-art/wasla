@@ -1,0 +1,780 @@
+openapi: 3.1.0
+info:
+  title: WASLA Driver Core Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة نواة السائق وفق ADR-012.
+
+    **الحدود الملزمة:**
+    - ملف السائق **ملف دور** مفتاحه `wasla_public_id`؛ لا مفتاح أجنبي إلى الهوية، لأن الشخص الواحد قد يملك دور العميل ودور السائق معاً.
+    - الأهليّة **حالة مشتقّة** من الملف والمراجعة والمركبة والوثائق والمناطق والسياسة المُقفلة؛ لا يكتبها أي مُنادي حتى لا تتحول إلى ادّعاء قديم.
+    - خدمة السائق تنشر إسقاط الترشيح عبر حدّ المطابقة ولا تكتب في قاعدة المطابقة؛ بقاء الحدّ يحفظ صاحب كل قرار واضحاً.
+    - التوافر المعلن `available` أو `offline` فقط. `busy` التزام تشغيلي يملكه التوزيع، وتركه خارج كلام السائق يمنع أن تناقضه واجهتان.
+    - الوثائق مراجع تخزين لا محتوى. لا رقم هوية ولا رقم رخصة ولا إحداثيات ولا مُعرّف قناة في هذا العقد، لأن حاجتها للتشغيل لا تبرر توسيع سطح البيانات.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8090
+    description: التشغيل المحلي
+
+tags:
+  - name: drivers
+    description: ملف الدور وإعداداته
+  - name: zones
+    description: مناطق الخدمة المفضّلة
+  - name: vehicles
+    description: مركبات السائق
+  - name: documents
+    description: مراجع الوثائق ومراجعتها
+  - name: eligibility
+    description: الأهليّة المشتقّة ونبضات الانتهاء
+  - name: ops
+    description: التشغيل
+
+paths:
+  /drivers:
+    post:
+      tags: [drivers]
+      summary: تسجيل ملف دور سائق
+      operationId: registerDriver
+      description: |
+        إنشاء ملف دور لا إنشاء هوية. تكرار `Idempotency-Key` بالحمولة نفسها يعيد الملف نفسه بـ`200`؛
+        لأن إعادة إرسال طلب التسجيل بعد انقطاع الشبكة حالة عادية لا سبب لإنشاء دورين.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriverRegistration' }
+      responses:
+        '201':
+          description: أُنشئ ملف الدور
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — يُعاد الملف نفسه بلا إنشاء ثانٍ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/eligibility/tick:
+    post:
+      tags: [eligibility]
+      summary: نبضة إعادة فحص انتهاء الوثائق
+      operationId: tickDriverEligibility
+      description: |
+        تقرأ النبضة الاستحقاقات المخزّنة وتعيد حساب الأهليّة ثم تحاول نشر ما تغيّر إلى المطابقة.
+        لا `requestBody` هنا عمداً: النبضة فعل على الساعة والحالة المخزنة، وإعلان جسم فارغ يجعل Fastify
+        يرفض طلباً صحيحاً بـ`400`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: اكتملت النبضة، وقد تكون العدّادات صفراً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EligibilityTickResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}:
+    get:
+      tags: [drivers]
+      summary: ملف سائق واحد
+      operationId: getDriver
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: ملف الدور
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    patch:
+      tags: [drivers]
+      summary: تعديل حقول الملف القابلة للتغيير
+      operationId: patchDriver
+      description: |
+        هذا تعديل ضيّق للحقول التي يملكها الملف. لا يحمل حالة الإيقاف أو التحقق أو الأهليّة، لأن إدخالها
+        في نفس الجسم يسمح لعميل عادي أن يكتب نتيجة قرار إداري أو قرار مشتق.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriverProfilePatch' }
+      responses:
+        '200':
+          description: الملف بعد التعديل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/zones:
+    put:
+      tags: [zones]
+      summary: استبدال مناطق الخدمة مرتّبة بالتفضيل
+      operationId: replaceDriverZones
+      description: |
+        استبدال كامل لا دمج جزئي: ترتيب قديم مع قائمة جديدة خليط لا يقصده أحد. الرتب تبدأ من `1` وتبقى
+        متتابعة وفريدة؛ لذلك يحمل الجسم القائمة المقصودة كلها بدلاً من أمر نقل مبهم.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zones]
+              additionalProperties: false
+              properties:
+                zones:
+                  type: array
+                  maxItems: 50
+                  description: قائمة كاملة مرتّبة تصاعدياً حسب `preference_rank`؛ تتحقق الخدمة من التتابع والفرادة.
+                  items:
+                    type: object
+                    required: [zone_id, preference_rank]
+                    additionalProperties: false
+                    properties:
+                      zone_id: { $ref: '#/components/schemas/ZoneRef' }
+                      preference_rank: { type: integer, minimum: 1, maximum: 50 }
+      responses:
+        '200':
+          description: المناطق بعد الاستبدال
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceZoneList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [zones]
+      summary: مناطق الخدمة مرتّبة بالتفضيل
+      operationId: listDriverZones
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المناطق، مرتّبة من الرتبة الأولى إلى الأخيرة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceZoneList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/vehicles:
+    post:
+      tags: [vehicles]
+      summary: إضافة مركبة
+      operationId: registerDriverVehicle
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleRegistration' }
+      responses:
+        '201':
+          description: أُضيفت المركبة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — تُعاد المركبة نفسها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [vehicles]
+      summary: مركبات السائق
+      operationId: listDriverVehicles
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المركبات مرتّبة بالأقدم إضافةً أولاً
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [vehicles]
+                additionalProperties: false
+                properties:
+                  vehicles:
+                    type: array
+                    items: { $ref: '#/components/schemas/Vehicle' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/vehicles/{vehicleId}:
+    patch:
+      tags: [vehicles]
+      summary: تعديل حالة المركبة أو أولويتها
+      operationId: patchDriverVehicle
+      description: |
+        التقاعد وإسناد الرئيسية يمران من عملية واحدة لأن القاعدة تمنع مركبة متقاعدة رئيسية. الفصل بينهما
+        يجبر العميل على اختيار ترتيب وسيط قد يخرق القيد بلا أن يكون قصده تغييراً تشغيلياً.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehiclePatch' }
+      responses:
+        '200':
+          description: المركبة بعد التعديل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/documents:
+    post:
+      tags: [documents]
+      summary: تقديم مرجع وثيقة
+      operationId: submitDriverDocument
+      description: |
+        يقدم المُنادي مرجع التخزين لا الملف ولا بياناته الحساسة. استبدال وثيقة قائمة يبقي السابقة
+        للتدقيق بدلاً من حذف تاريخ القرار.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentSubmission' }
+      responses:
+        '201':
+          description: سُجلت الوثيقة بانتظار المراجعة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverDocument' }
+        '200':
+          description: نفس مفتاح التفرّد سُجل سابقاً — تُعاد الوثيقة نفسها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverDocument' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [documents]
+      summary: وثائق السائق
+      operationId: listDriverDocuments
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الوثائق بما فيها المستبدلة حتى يبقى التدقيق قابلاً للقراءة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [documents]
+                additionalProperties: false
+                properties:
+                  documents:
+                    type: array
+                    items: { $ref: '#/components/schemas/DriverDocument' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/documents/{documentId}/review:
+    post:
+      tags: [documents]
+      summary: البت في وثيقة مقدّمة
+      operationId: reviewDriverDocument
+      description: |
+        قرار المراجعة نهائي للوثيقة نفسها؛ الطلب الثاني لا يغيّر تاريخ القرار. الرفض يحتاج كود سبب كي
+        يستطيع السائق أن يصلح النقص، أما نص حر فيصير سياسة مختلفة في كل مراجعة.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/DocumentId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentReview' }
+      responses:
+        '200':
+          description: الوثيقة بعد القرار
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverDocument' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/availability:
+    put:
+      tags: [drivers]
+      summary: إعلان التوافر
+      operationId: updateDriverAvailability
+      description: |
+        `busy` غير مقبول هنا لأنه أثر التزام جارٍ يملكه التوزيع. قبول السائق لكلمة `busy` يجعل
+        الإعلان يتنافس مع الحقيقة التشغيلية ويخفي من صاحب القرار عند الاختلاف.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AvailabilityUpdate' }
+      responses:
+        '200':
+          description: الملف بعد تسجيل الإعلان
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/suspend:
+    post:
+      tags: [drivers]
+      summary: إيقاف السائق
+      operationId: suspendDriver
+      description: |
+        الإيقاف قرار إداري صريح له سبب؛ لا يُستبدل بتغيير حالة التحقق حتى لا يضيع الفرق بين «وثائقه
+        ناقصة» و«موقوف». إيقاف موقوف أصلاً تعارض حالة لا عملية ناجحة صامتة.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SuspensionRequest' }
+      responses:
+        '200':
+          description: الملف بعد الإيقاف
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/reinstate:
+    post:
+      tags: [drivers]
+      summary: إعادة سائق موقوف
+      operationId: reinstateDriver
+      description: |
+        لا يحمل الطلب جسماً لأن إعادة الإيقاف تزيل قراراً قائماً ولا تقبل سبباً بديلاً. السائق النشط
+        ليس حالة يمكن «إعادتها»، لذلك يجيب تعارضاً بدلاً من إخفاء خطأ المشغّل.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الملف بعد إعادة التفعيل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '502': { $ref: '#/components/responses/CandidacyPublishFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /drivers/{waslaPublicId}/eligibility:
+    get:
+      tags: [eligibility]
+      summary: الأهليّة الحالية وسببها
+      operationId: getDriverEligibility
+      description: |
+        يعيد النتيجة المشتقة مع أكواد أسبابها ونسخة السياسة ووقت التقييم؛ الحالة وحدها لا تفسر
+        القرار، ولا تكفي لتدقيقه بعد أن تتغير السياسة.
+      parameters:
+        - $ref: '#/components/parameters/WaslaPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: نتيجة آخر حساب للأهلية
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EligibilityView' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص جاهزية الخدمة
+      operationId: health
+      description: |
+        `memory` يجعل النتيجة `degraded` في التشغيل الحقيقي لأن إعادة التشغيل تفقد الدليل الذي يفسر
+        قرار الأهلية والنشر؛ إظهار الطبقة يميّز المشكلة قبل أن تصبح فقداناً صامتاً للسجل.
+      responses:
+        '200':
+          description: حالة الخدمة وطبقة الاستمرارية
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+
+components:
+  parameters:
+    WaslaPublicId:
+      name: waslaPublicId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DocumentId:
+      name: documentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على الإنشاء والنبضة لأن إعادة المحاولة بعد انقطاع الشبكة لا يجوز أن تكرر أثرها.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الخطأ؛ فصل التتبع عن حمولة العمل يمنع أن يصير المعرف دليلاً تجارياً.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque؛ لا يُحلّل ولا يربط مباشرة بقاعدة هوية أخرى.
+
+    ZoneRef:
+      type: string
+      format: uuid
+      description: مرجع opaque إلى هرم الجغرافيا؛ وجوده ونشاطه يقرره منفذ الجغرافيا لا FK عابر للخدمات.
+
+    DriverProfile:
+      type: object
+      required: [wasla_public_id, preferred_locale, service_kinds, declared_availability, verification_status, status, eligibility_policy_version, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        wasla_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        display_name: { type: [string, 'null'], minLength: 1, maxLength: 80 }
+        preferred_locale: { type: string, enum: [ar, en, ur] }
+        work_city_zone_id: { anyOf: [{ $ref: '#/components/schemas/ZoneRef' }, { type: 'null' }] }
+        service_kinds:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [ride, delivery] }
+          description: القائمة مقفلة ومشتركة مع الطلب والمطابقة؛ قيمة حرة تصنع خدمة لا يطابقها أحد.
+        declared_availability: { type: string, enum: [available, offline] }
+        verification_status: { type: string, enum: [unverified, pending_review, verified, rejected] }
+        status: { type: string, enum: [active, suspended] }
+        suspension_reason_code: { type: [string, 'null'], minLength: 3, maxLength: 64 }
+        eligibility_policy_version: { type: integer, minimum: 1 }
+        eligibility_recheck_at: { type: [string, 'null'], format: date-time }
+        last_published_state: { type: [string, 'null'], enum: [eligible, ineligible, suspended, unknown, null] }
+        last_published_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    DriverRegistration:
+      type: object
+      required: [wasla_public_id]
+      additionalProperties: false
+      properties:
+        wasla_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        display_name: { type: [string, 'null'], minLength: 1, maxLength: 80 }
+        preferred_locale: { type: string, enum: [ar, en, ur], default: ar }
+        work_city_zone_id: { anyOf: [{ $ref: '#/components/schemas/ZoneRef' }, { type: 'null' }] }
+        service_kinds:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [ride, delivery] }
+          default: []
+
+    DriverProfilePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        display_name: { type: [string, 'null'], minLength: 1, maxLength: 80 }
+        preferred_locale: { type: string, enum: [ar, en, ur] }
+        work_city_zone_id: { anyOf: [{ $ref: '#/components/schemas/ZoneRef' }, { type: 'null' }] }
+        service_kinds:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [ride, delivery] }
+
+    ServiceZone:
+      type: object
+      required: [zone_id, preference_rank, created_at]
+      additionalProperties: false
+      properties:
+        zone_id: { $ref: '#/components/schemas/ZoneRef' }
+        preference_rank: { type: integer, minimum: 1, maximum: 50 }
+        created_at: { type: string, format: date-time }
+
+    ServiceZoneList:
+      type: object
+      required: [zones]
+      additionalProperties: false
+      properties:
+        zones:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/ServiceZone' }
+          description: مرتبة من الرتبة الأولى إلى الأخيرة؛ تتابع الرتب قيد تجاري تتحقق منه الخدمة.
+
+    Vehicle:
+      type: object
+      required: [id, vehicle_class, is_primary, status, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        vehicle_class: { type: string, enum: [sedan, suv, van, pickup, motorcycle, truck_small] }
+        make: { type: [string, 'null'], minLength: 1, maxLength: 40 }
+        model: { type: [string, 'null'], minLength: 1, maxLength: 40 }
+        model_year: { type: [integer, 'null'], minimum: 1970, maximum: 2100 }
+        color: { type: [string, 'null'], minLength: 1, maxLength: 24 }
+        plate_number: { type: [string, 'null'], minLength: 3, maxLength: 16 }
+        is_primary: { type: boolean }
+        status: { type: string, enum: [active, retired] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    VehicleRegistration:
+      type: object
+      required: [vehicle_class]
+      additionalProperties: false
+      properties:
+        vehicle_class: { type: string, enum: [sedan, suv, van, pickup, motorcycle, truck_small] }
+        make: { type: [string, 'null'], minLength: 1, maxLength: 40 }
+        model: { type: [string, 'null'], minLength: 1, maxLength: 40 }
+        model_year: { type: [integer, 'null'], minimum: 1970, maximum: 2100 }
+        color: { type: [string, 'null'], minLength: 1, maxLength: 24 }
+        plate_number: { type: [string, 'null'], minLength: 3, maxLength: 16 }
+        is_primary: { type: boolean, default: false }
+
+    VehiclePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [active, retired] }
+        is_primary: { type: boolean }
+
+    DriverDocument:
+      type: object
+      required: [id, document_type, storage_ref, status, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        document_type: { type: string, enum: [national_id, driving_license, vehicle_registration, vehicle_insurance, vehicle_photo] }
+        storage_ref: { type: string, minLength: 8, maxLength: 200 }
+        vehicle_id: { type: [string, 'null'], format: uuid }
+        status: { type: string, enum: [pending, verified, rejected, superseded] }
+        issued_at: { type: [string, 'null'], format: date }
+        expires_at: { type: [string, 'null'], format: date }
+        reviewed_at: { type: [string, 'null'], format: date-time }
+        reviewed_by: { type: [string, 'null'], minLength: 2, maxLength: 64 }
+        rejection_reason_code: { type: [string, 'null'], minLength: 3, maxLength: 64 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    DocumentSubmission:
+      type: object
+      required: [document_type, storage_ref]
+      additionalProperties: false
+      properties:
+        document_type: { type: string, enum: [national_id, driving_license, vehicle_registration, vehicle_insurance, vehicle_photo] }
+        storage_ref:
+          type: string
+          minLength: 8
+          maxLength: 200
+          description: مرجع المخزن فقط؛ إبقاء المحتوى خارج الخدمة يحد من نسخ البيانات الحساسة وتسرّبها إلى السجلات.
+        vehicle_id: { type: [string, 'null'], format: uuid }
+        issued_at: { type: [string, 'null'], format: date }
+        expires_at: { type: [string, 'null'], format: date }
+
+    DocumentReview:
+      type: object
+      required: [decision, reviewed_by]
+      additionalProperties: false
+      properties:
+        decision: { type: string, enum: [verified, rejected] }
+        reviewed_by: { type: string, minLength: 2, maxLength: 64 }
+        rejection_reason_code: { type: string, minLength: 3, maxLength: 64 }
+      allOf:
+        - if:
+            properties: { decision: { const: rejected } }
+            required: [decision]
+          then:
+            required: [rejection_reason_code]
+        - if:
+            properties: { decision: { const: verified } }
+            required: [decision]
+          then:
+            not: { required: [rejection_reason_code] }
+
+    AvailabilityUpdate:
+      type: object
+      required: [declared_availability]
+      additionalProperties: false
+      properties:
+        declared_availability: { type: string, enum: [available, offline] }
+
+    SuspensionRequest:
+      type: object
+      required: [reason_code]
+      additionalProperties: false
+      properties:
+        reason_code: { type: string, minLength: 3, maxLength: 64 }
+
+    EligibilityView:
+      type: object
+      required: [wasla_public_id, eligibility_state, reason_codes, policy_version, evaluated_at]
+      additionalProperties: false
+      properties:
+        wasla_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        eligibility_state: { type: string, enum: [eligible, ineligible, suspended, unknown] }
+        reason_codes:
+          type: array
+          uniqueItems: true
+          items: { type: string, minLength: 3, maxLength: 64 }
+          description: أكواد ثابتة لا نصوص؛ الكود يُحصى ويُقارن بعد تغيّر لغة الرسائل.
+        policy_version: { type: integer, minimum: 1 }
+        evaluated_at: { type: string, format: date-time }
+
+    EligibilityTickResult:
+      type: object
+      required: [rechecked_drivers, changed_drivers, published, publish_failures]
+      additionalProperties: false
+      properties:
+        rechecked_drivers: { type: integer, minimum: 0 }
+        changed_drivers: { type: integer, minimum: 0 }
+        published: { type: integer, minimum: 0 }
+        publish_failures: { type: integer, minimum: 0 }
+
+    HealthStatus:
+      type: object
+      required: [status, persistence]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        persistence: { type: string, enum: [postgres, memory] }
+
+    ErrorResponse:
+      type: object
+      required: [error, trace_id]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code: { type: string, description: كود ثابت؛ يتعاقد المستهلك على الكود لا على ترجمة الرسالة. }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: false
+              description: تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع صلاحية.
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً أو `Idempotency-Key` مفقود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: ملف الدور أو المورد التابع غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض في الحالة أو في إعادة استعمال مفتاح التفرّد
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخل صالح شكلياً ومرفوض بقاعدة أعمال أو مرجع خارجي
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    CandidacyPublishFailed:
+      description: تعذّر نشر الإسقاط إلى خدمة المطابقة بعد تسجيل التغيير محلياً
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة أو الاستمرارية في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

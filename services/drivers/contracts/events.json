@@ -1,0 +1,815 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/drivers/events/v1",
+  "title": "WASLA Driver Core Domain Events v1",
+  "description": "أحداث خدمة نواة السائق (Phase 05). القاعدة الحاكمة للخصوصية (ADR-012 القرار 8 · سابقة ADR-010 القرار 7 وADR-011 القرار 8): الحدث يقول **ماذا تغيّر** لا **من هو**. فلا اسم ولا هاتف ولا رقم هوية ولا لوحة مركبة ولا مرجع تخزين وثيقة ولا إحداثية ولا مُعرّف قناة (chat_id · telegram) في أي حمولة. وأدقّ مستوى موقع يجوز أن يعبر هو مُعرّف منطقة من هرم الجغرافيا. حارس تنقيب في @wasla/contracts-driver يبحث في كل حمولة عن الحقول الممنوعة ويُفشل البناء عند وجودها — الحارس آليّ لأنّ الانضباط اليدويّ ينهار عند أول تعديل مستعجل. وكل تغيّر في الأهليّة يُنتج حدثه في المعاملة نفسها، فلا تغيير صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "drivers-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "driver",
+                "driver_document",
+                "driver_vehicle"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        }
+      }
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$",
+      "description": "مُعرّف عام opaque. لا يُحلَّل ولا تُقرأ أجزاؤه."
+    },
+    "ZoneRef": {
+      "type": "string",
+      "format": "uuid",
+      "description": "مُعرّف منطقة من هرم الجغرافيا (ADR-006). أدقّ مستوى موقع يجوز أن يعبر في حدث — لا إحداثيات."
+    },
+    "EligibilityState": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "ineligible",
+        "suspended",
+        "unknown"
+      ],
+      "description": "حالة مُشتقّة لا مخزّنة (ADR-012 القرار 2). `unknown` تعني «لا ملفّ» لا «لم نتحقّق بعد»."
+    },
+    "DeclaredAvailability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "offline"
+      ],
+      "description": "ما يُعلنه السائق. `busy` ليست من كلماته: تُشتقّ من التزام جارٍ يملكه التوزيع (ADR-012 القرار 4)."
+    },
+    "VehicleClass": {
+      "type": "string",
+      "enum": [
+        "sedan",
+        "suv",
+        "van",
+        "pickup",
+        "motorcycle",
+        "truck_small"
+      ]
+    },
+    "DocumentType": {
+      "type": "string",
+      "enum": [
+        "national_id",
+        "driving_license",
+        "vehicle_registration",
+        "vehicle_insurance",
+        "vehicle_photo"
+      ],
+      "description": "نوع الوثيقة. النوع يعبر في الحدث، ومحتواها ومرجع تخزينها لا يعبران أبداً."
+    },
+    "EligibilityReasonCode": {
+      "type": "string",
+      "enum": [
+        "PROFILE_SUSPENDED",
+        "PROFILE_NOT_VERIFIED",
+        "NO_PRIMARY_VEHICLE",
+        "NO_SERVICE_ZONE",
+        "NO_SERVICE_KIND",
+        "DOCUMENT_MISSING",
+        "DOCUMENT_PENDING",
+        "DOCUMENT_REJECTED",
+        "DOCUMENT_EXPIRED"
+      ],
+      "description": "كود لا نصّ: النص يُترجَم ويتغيّر، والكود يُقارَن ويُحصى. قائمة مُقفلة لأنّ سبباً مجهولاً لا يمكن معالجته."
+    },
+    "DriverRegisteredV1": {
+      "type": "object",
+      "description": "أُنشئ ملفّ دور سائق لمستخدم قائم في الهوية. الملفّ يُولَد **غير مؤهَّل** دائماً: لا وثيقة ولا مركبة بعد، والمجهول ليس مرشّحاً.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.registered"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "preferred_locale",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "preferred_locale": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "en",
+                "ur"
+              ]
+            },
+            "work_city_zone_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ZoneRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverProfileUpdatedV1": {
+      "type": "object",
+      "description": "تغيّر في الملفّ يمسّ الترشيح (مدينة العمل · أنواع الخدمة · اللغة). الحدث يحمل **ما صار** لا ما كان: المُستهلك يحتاج الحالة الجديدة، والتاريخ يعيش في سجلّ التدقيق.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.profile_updated"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "service_kinds",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "service_kinds": {
+              "type": "array",
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ride",
+                  "delivery"
+                ]
+              }
+            },
+            "work_city_zone_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ZoneRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "preferred_locale": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "en",
+                "ur"
+              ]
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverServiceZonesChangedV1": {
+      "type": "object",
+      "description": "استُبدلت مناطق خدمة السائق بالكامل. استبدالٌ لا دمج: دمج جزئي يُنتج خلائط لا يقصدها أحد (مناطق أمس مع تفضيل اليوم).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.service_zones_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "zone_ids",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "zone_ids": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "$ref": "#/$defs/ZoneRef"
+              }
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverVehicleRegisteredV1": {
+      "type": "object",
+      "description": "سُجّلت مركبة. الفئة تعبر لأنّها مُدخَل مطابقة، و**اللوحة والصانع والطراز لا تعبر**: ليست من شأن أي مُستهلك حدث.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.vehicle_registered"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "vehicle_id",
+            "vehicle_class",
+            "is_primary",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "vehicle_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "vehicle_class": {
+              "$ref": "#/$defs/VehicleClass"
+            },
+            "is_primary": {
+              "type": "boolean"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverVehicleStatusChangedV1": {
+      "type": "object",
+      "description": "تقاعدت مركبة أو تغيّرت المركبة الرئيسية. يُنشَر لأنّ تقاعد المركبة الرئيسية **يُسقط الأهليّة فوراً** وليس تفصيلاً إدارياً.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.vehicle_status_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "vehicle_id",
+            "status",
+            "is_primary",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "vehicle_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "retired"
+              ]
+            },
+            "is_primary": {
+              "type": "boolean"
+            },
+            "vehicle_class": {
+              "$ref": "#/$defs/VehicleClass"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverDocumentSubmittedV1": {
+      "type": "object",
+      "description": "قدّم السائق وثيقة. النوع وتاريخ الانتهاء يعبران؛ **مرجع التخزين لا يعبر** — من يحتاج الملفّ يطلبه بصلاحية، ولا يلتقطه من ناقل أحداث.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.document_submitted"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "document_id",
+            "document_type",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "document_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "document_type": {
+              "$ref": "#/$defs/DocumentType"
+            },
+            "vehicle_id": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expires_at": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverDocumentReviewedV1": {
+      "type": "object",
+      "description": "بُتّ في وثيقة. الرفض يحمل كود سببه لا نصّه، و`reviewed_by` كود جهة لا اسم موظّف.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.document_reviewed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "document_id",
+            "document_type",
+            "status",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "document_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "document_type": {
+              "$ref": "#/$defs/DocumentType"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "verified",
+                "rejected"
+              ]
+            },
+            "rejection_reason_code": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64
+            },
+            "expires_at": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverAvailabilityDeclaredV1": {
+      "type": "object",
+      "description": "أعلن السائق توافره أو انصرافه. `busy` غائبة من التعداد عمداً (ADR-012 القرار 4).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.availability_declared"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "declared_availability",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "declared_availability": {
+              "$ref": "#/$defs/DeclaredAvailability"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverEligibilityChangedV1": {
+      "type": "object",
+      "description": "تغيّرت الأهليّة المُشتقّة. **الحدث المركزي في هذه الخدمة**: يحمل الحالة السابقة والجديدة وأكواد الأسباب وما حرّك الحساب ونسخة السياسة — فيُجاب بعد شهر عن «لماذا لم يصله عرض؟» بلا فتح قاعدة.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.eligibility_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "to_state",
+            "reasons",
+            "policy_version",
+            "trigger",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "from_state": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/EligibilityState"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "to_state": {
+              "$ref": "#/$defs/EligibilityState"
+            },
+            "reasons": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/EligibilityReasonCode"
+              }
+            },
+            "policy_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "trigger": {
+              "type": "string",
+              "enum": [
+                "profile_changed",
+                "document_reviewed",
+                "document_submitted",
+                "vehicle_changed",
+                "zones_changed",
+                "availability_declared",
+                "suspended",
+                "reinstated",
+                "expiry_tick",
+                "recompute"
+              ]
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverSuspendedV1": {
+      "type": "object",
+      "description": "أُوقف السائق بقرار إداري. الإيقاف يعلو على كل شيء ولا يُشتقّ من غيره، ويحمل كود سببه: منعٌ بلا سبب لا يمكن رفعه ولا مراجعته.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.suspended"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "reason_code",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "reason_code": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 64
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "DriverReinstatedV1": {
+      "type": "object",
+      "description": "رُفع الإيقاف. الأهليّة **لا تعود تلقائياً**: تُعاد حسابتها من مصادرها، فقد تكون وثيقة انتهت أثناء الإيقاف.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "drivers.reinstated"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "driver_public_id",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}

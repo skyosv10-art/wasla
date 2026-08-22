@@ -137,13 +137,47 @@ matching  ↛ dispatch   (المطابقة لا تعرف أنّ عرضاً أُ�
 
 الأنواع المُكتبة في `packages/contracts/matching/` (`@wasla/contracts-matching`) و`packages/contracts/dispatch/` (`@wasla/contracts-dispatch`).
 
+### 4.4 خدمة Driver Core — Phase 05
+
+خدمة **موجودة في الشجرة الأصلية** أعلاه (`drivers`)، فلا انحراف في الموضع: [ADR-012](../15-decisions/ADR-012-driver-core-eligibility-derivation-and-candidacy-publication.md) يُثبّت **حدودها** وسببَ كونها مصدر الأهليّة لا مالكها المخزَّن. القاعدة الحاكمة: **الأهليّة دالّة مُشتقّة لا عمود** — لا يوجد في مخطّط هذه الخدمة عمود `eligibility_state`، وحارس اختبار يمنع عودته.
+
+| الخدمة | المسار | الغرض | الحالة |
+|---|---|---|---|
+| drivers | `services/drivers/` | ملفّ دور السائق · المركبات · الوثائق ومراجعتها · مناطق الخدمة · التوافر المُعلَن · **الأهليّة المُشتقّة** ونشرها إلى إسقاط الترشيح · الإيقاف والإرجاع | **عقود كنسية فقط (MR 1/6 · Phase 05)** — [نموذج المجال](../03-domain/DRIVER_CORE.md) · [العقود](../../services/drivers/contracts/README.md) |
+
+المنفذ: **drivers = 8090** (بعد `dispatch` = 8089). والرقم لا يبقى في الوثيقة وحدها: هو ثابت مُصدَّر من حزمة العقد (`DRIVER_SERVICE_PORT`)، فيقرأه المستهلك من العقد لا من رقم منسوخ باليد — درس MR 5b/6 من الطور 07.
+
+اتجاه الاعتماد أحادي وملزم، ولا يُعكَس:
+
+```text
+drivers   → matching    (نشر إسقاط الترشيح — عبر منفذ HTTP لا جدول)
+drivers   → geography    (تحقّق المنطقة وهرمها — عبر منفذ)
+drivers   → identity     (وجود المستخدم — مرجع opaque بلا FK)
+matching  ↛ drivers      (المطابقة لا تنادي نواة السائق ولا تعرف أنّها موجودة)
+dispatch  ↛ drivers      (التوزيع يكتب `busy` في الترشيح لا في ملفّ السائق)
+```
+
+**ما لا تعرفه نواة السائق:** من يُختار لطلب وبأي ترتيب، وحالة الطلب، والعرض والموجة والمهلة. **وما لا تملكه:** `busy` — توافرٌ يُشتقّ من التزام جارٍ يملكه التوزيع؛ السائق يُعلن `available` أو `offline` فقط.
+
+**خمسة حدود يفرضها حارس اختبار لا مراجعة بشرية:**
+
+- **لا عمود أهليّة**: `eligibility_state` و`is_eligible` ممنوعان في `driver_profiles`؛ والحالة تُحسب من الملفّ والمركبة والوثائق والمناطق مقابل **نسخة سياسة مُقفَلة** (سابقة `matching_rulesets`).
+- **لا حالة غير مؤهَّلة بلا سبب**: `ck_eligibility_log_reasons` في القاعدة، وكتالوج أسباب مُقفَل مُطابَق حرفياً بين `errors.md` و`events.json` وحزمة العقد.
+- **لا كتابة في قاعدة المطابقة**: النشر عبر `PUT /candidacy/{driverPublicId}` بقيمتَي `driver_core` التي انتظرها عقد المطابقة منذ الطور 07، فيُغلق الحدّ **بلا هجرة في الخدمة المجاورة**؛ وكل محاولة تُسجَّل في `driver_candidacy_publications` لأنّ فشل النشر الصامت يعني سائقاً مؤهَّلاً لا يراه أحد ولا يشتكي منه أحد.
+- **الزمن نبضة لا مؤقّت**: لا حالة `expired` على وثيقة؛ الانتهاء بيانٌ يُقارَن بساعة مُحقونة، و`eligibility_recheck_at` هو فهرس `POST /drivers/eligibility/tick`. لذلك `/health` يُعلن `last_tick_at`.
+- **الخصوصية**: `zone_id` لا إحداثيات (ADR-006) · أكواد لا نصّاً حرّاً · لا `chat_id` (ADR-007) · **ولا لوحة مركبة ولا `storage_ref` ولا رقم هوية في أي حدث** (ADR-012 القرار 8) — اللوحة تُخزَّن للمراجعة الإدارية ولا تعبر حدّ الخدمة أبداً.
+
+**وما لا يوجد في هذه الخدمة بقرار** (ADR-012 القرار 7): لا `subscription_status` ولا تقييم ولا سمعة ولا حساب بنكي — لا عموداً ولا مساراً ولو معطّلاً، لأنّ عموداً يُضاف قبل مالكه يُملأ بقيَم يخترعها من لا يملك القرار. مالكوها: Phase 10 (الاشتراك) · Phase 09 (السمعة).
+
+الأنواع المُكتبة في `packages/contracts/driver/` (`@wasla/contracts-driver`).
+
 ---
 
 ## 5. Packages (المكتبات المشتركة)
 
 | الحزمة | المسار | الغرض |
 |---|---|---|
-| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) · `order` (§4.2) |
+| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) · `order` (§4.2) · `matching` و`dispatch` (§4.3) · `driver` (§4.4) |
 | events | `packages/events/` | Event schema registry، Outbox helpers |
 | ui | `packages/ui/` | مكتبة واجهات مشتركة (Mini Apps) |
 | i18n | `packages/i18n/` | العربية/الإنجليزية/الأردية + مستقبلًا التركية/الفارسية |

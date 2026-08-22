@@ -626,7 +626,14 @@ components:
       minProperties: 1
       additionalProperties: false
       properties:
-        status: { type: string, enum: [active, retired] }
+        status:
+          type: string
+          enum: [retired]
+          description: |
+            `retired` وحدها. حُذفت `active` في Phase 05 · MR 4/6 لأنها كانت **وعداً لا يُنجزه أحد**:
+            `patchVehicle` ترفضها بـ400 منذ MR 2/6 لأن إعادة التفعيل تسجيل جديد لا تعديل — مركبة
+            خرجت من الخدمة تحتاج أن تُنطر أوراقها من جديد لا أن تُحيا بحرف واحد. إبقاء القيمة
+            في العقد يدفع المستهلك لكتابة فرع لا ينجح أبداً، وهو أغلى من تضييق قيمة لم تعمل يوماً.
         is_primary: { type: boolean }
 
     DriverDocument:
@@ -723,11 +730,23 @@ components:
 
     HealthStatus:
       type: object
-      required: [status, persistence]
+      required: [status, persistence, last_tick_at]
       additionalProperties: false
       properties:
         status: { type: string, enum: [ok, degraded] }
         persistence: { type: string, enum: [postgres, memory] }
+        last_tick_at:
+          type: [string, 'null']
+          format: date-time
+          description: |
+            آخر نبضة أهليّة نُفّذت في هذه العمليّة، و`null` قبل أولى النبضات. أُضيف في Phase 05 ·
+            MR 4/6 لا تحسيناً بل **مطابقةً لـADR-012 القرار 5**: الزمن نبضة لا مؤقّت، وغياب
+            المُنادي الدوريّ (Phase 09) **فشل صامت**: وثيقة تنتهي ولا يُكتشف انتهاؤها ولا يشتكي
+            أحد. الحقل مؤشّر ذلك الغياب، وإغفاله في MR 1/6 كان عيباً في العقد لا قراراً: القرار
+            سمّى الحقل بالحرف، والطور 07 سبق أن نشر سابقته في `/health` للإرسال.
+            وهو **مؤشّر عمليّة لا حالة مخزّنة**: إعادة التشغيل تُعيده إلى `null` لأن المقيس هنا
+            «أيجري النقر على هذه العمليّة؟» لا «متى نُقر آخر مرّة في التاريخ» — والأخير محلّه
+            `eligibility_recheck_at` في القاعدة.
 
     ErrorResponse:
       type: object
@@ -744,7 +763,24 @@ components:
             details:
               type: object
               additionalProperties: false
-              description: تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع صلاحية.
+              description: |
+                تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع صلاحية.
+                الحقول **معدودة** لا حقيبة حرّة، وذاك بعينه ما يمنع «ضع القيمة في التفاصيل»:
+                `field` يسمّي الحقل ولا يردّ ما كُتب فيه. أُعلنت الحقول في Phase 05 · MR 4/6 لأن
+                `additionalProperties: false` بلا `properties` في MR 1/6 يعني **لا مفتاح مسموح**،
+                فكل تفصيل يرسله الخطأ كان سيُفشل تحقّق مستهلك صارم على استجابةٍ صحيحة.
+              properties:
+                field: { type: string, description: اسم الحقل المرفوض لا قيمته. }
+                expected: { type: string, description: وصف الشكل المتوقّع أو الانتقال المرفوض. }
+                document_type:
+                  type: string
+                  enum: [national_id, driving_license, vehicle_registration, vehicle_insurance, vehicle_photo]
+                policy_version: { type: integer, minimum: 1 }
+                constraint:
+                  type: string
+                  description: |
+                    اسم قيد القاعدة الذي كان سيرفض الكتابة نفسها؛ يجعل خطّ الدفاع الثاني قابلاً
+                    للعثور بدلاً من افتراض أن القاعدة تعيش في TypeScript وحدها.
         trace_id: { type: string }
 
   responses:

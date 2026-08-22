@@ -1,0 +1,787 @@
+openapi: 3.1.0
+info:
+  title: WASLA Negotiation & Chat Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة التفاوض والمحادثة وفق ADR-013.
+
+    **الحدود الملزمة:**
+    - **الخيط ثنائيّ**: طلبٌ واحد وسائقٌ واحد وعرض توزيعٍ واحد. لا مزاد جماعياً في هذه المرحلة، لأنّ «السعر المتفَق عليه» يحتاج طرفين معلومين لا جمهوراً.
+    - **التفاوض لا يكتب في الطلب**: المبلغ المتَّفق عليه يُسلَّم إلى محرّك الطلب عبر `AgreedPricePort`، والمحرّك وحده يسجّله. بقاء الحدّ يحفظ صاحب كل قرار واضحاً (سابقة `OrderIntakePort` في ADR-009 §3 و`CandidacyPort` في ADR-012 القرار 3).
+    - **الاتفاق قبولٌ صريح لدورٍ برقمه**: `expected_round_no` يمنع قبول مبلغٍ قديم بعد أن جاء مقابله، ومن اقترح لا يَقبل.
+    - **المال أعداد صحيحة بوحدة صغرى** مع عملة صريحة؛ لا كسور عائمة، لأن التفاوض يقارن المبالغ ويُساويها.
+    - **الزمن نبضة لا مؤقّت**: انتهاء الدور أو الخيط استحقاقٌ مخزّن تقرؤه `POST /negotiations/tick`، فلا وظيفة خلفية خفيّة ولا انتظار في الاختبار.
+    - **المحادثة محتوى، والحدث ليس محتوى**: `body` يُخزَّن ويُسلَّم هنا، ولا يظهر في أي حمولة حدث. ولا هاتف ولا إحداثية ولا مُعرّف قناة (`chat_id`) في هذا العقد (ADR-007).
+    - **الترجمة عَرضٌ لا تخزين**: يُعاد `source_locale` ويترجم العارض عند التسليم؛ لا نصّ مترجم مخزّن يتخلّف عن أصله.
+
+    **لا يوجد `502` في هذا العقد** (نفس قرار Phase 05 · MR 5/6): فشلُ تسليم السعر إلى محرّك الطلب
+    **لا يُبطل الاتفاق** (ADR-013 القرار 2)، فالقبول الناجح يُعيد اتفاقه بـ`200`/`201` لا رمز فشل.
+    حالةُ التسليم تُقرأ من `Agreement.handoff_state` و`handoff_attempts` و`last_error_code`، ومن
+    عدّادات نتيجة النبضة، وتفصيل كل محاولة في `negotiation_price_handoffs`.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8091
+    description: التشغيل المحلي
+
+tags:
+  - name: threads
+    description: خيوط التفاوض وفتحها وإغلاقها
+  - name: rounds
+    description: الأدوار — عرضٌ ومقابله وقبولٌ ورفض
+  - name: messages
+    description: رسائل المحادثة
+  - name: agreements
+    description: الاتفاق وتسليم السعر إلى محرّك الطلب
+  - name: ops
+    description: التشغيل والنبضة
+
+paths:
+  /negotiations:
+    post:
+      tags: [threads]
+      summary: فتح خيط تفاوض على عرض توزيع قائم
+      operationId: openNegotiationThread
+      description: |
+        يُفتح الخيط بمبلغٍ ابتدائي هو **الدور رقم 1** بالضرورة: خيطٌ يُفتح فارغاً ثم يُنتظر فيه عرضٌ
+        أوّل يجعل حالةً وسطى («مفتوح ولا شيء فيه») يجب أن يُفكّر فيها كل قارئ لاحقاً بلا مقابل.
+        تكرار `Idempotency-Key` بالحمولة نفسها يعيد الخيط نفسه بـ`200`؛ إعادة الإرسال بعد انقطاع
+        الشبكة حالة عادية لا سبب لخيطين.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ThreadOpenRequest' }
+      responses:
+        '201':
+          description: فُتح الخيط ومعه الدور رقم 1
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThread' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — يُعاد الخيط نفسه بلا فتح ثانٍ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThread' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [threads]
+      summary: قائمة خيوط التفاوض بمُرشِّح
+      operationId: listNegotiationThreads
+      description: |
+        مُرشِّح واحد على الأقل مطلوب (`orderPublicId` أو `driverPublicId`): قائمةٌ بلا مُرشِّح تعني
+        قراءة محادثات كل الناس، وهي عمليّة لا يحتاجها أي مستهلك معلوم في هذه المرحلة.
+      parameters:
+        - name: orderPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OrderPublicId' }
+        - name: driverPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: state
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/ThreadState' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الخيوط المطابقة، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThreadList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}:
+    get:
+      tags: [threads]
+      summary: قراءة خيط
+      operationId: getNegotiationThread
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الخيط
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThread' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/cancel:
+    post:
+      tags: [threads]
+      summary: إغلاق الخيط من الخارج (سحب الطلب أو إلغاء العرض)
+      operationId: cancelNegotiationThread
+      description: |
+        فعلٌ للتوزيع أو محرّك الطلب لا للطرفين: انسحابُ العميل من التفاوض **رفضٌ** له سببه
+        (`declined_by_customer`) ويُعبَّر عنه بـ`reject`، أمّا `cancel` فيقول «زال سبب التفاوض
+        أصلاً». خلطُ الاثنين يُخفي من أنهى الحديث.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ThreadCancelRequest' }
+      responses:
+        '200':
+          description: أُغلق الخيط، أو كان مُغلقاً بالسبب نفسه
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThread' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/rounds:
+    get:
+      tags: [rounds]
+      summary: أدوار الخيط بالترتيب
+      operationId: listNegotiationRounds
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الأدوار من الأول إلى الأخير
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationRoundList' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [rounds]
+      summary: عرضٌ مضادّ — دورٌ جديد يُبطل ما قبله
+      operationId: proposeNegotiationRound
+      description: |
+        العرض المضادّ يُنشئ الدور التالي ويجعل السابق `superseded` في المعاملة نفسها: تركُ
+        دورَين معلّقَين يسمح بقبولَين لمبلغَين. و`expected_round_no` إلزامي لأن الطرف الذي
+        يُرسل مقابلاً بناءً على شاشة قديمة يجب أن يُرفَض لا أن يُقحم مبلغه في سياقٍ تغيّر.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoundProposal' }
+      responses:
+        '201':
+          description: أُنشئ الدور
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationRound' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — يُعاد الدور نفسه
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationRound' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/rounds/{roundNo}/accept:
+    post:
+      tags: [rounds]
+      summary: قبول دور — هنا يقع الاتفاق
+      operationId: acceptNegotiationRound
+      description: |
+        القبول ينشئ `Agreement` ويُغلق الخيط بـ`agreed` في معاملة واحدة، ثمّ يحاول تسليم السعر إلى
+        محرّك الطلب. **فشل التسليم لا يُبطل الاتفاق** ولا يُغيّر رمز هذه الاستجابة (القرار 2):
+        تُقرأ حالته من `handoff_state`، فيرى المستهلك «اتُّفق ولم يُسجَّل بعد» بدل أن يظنّ أنّ
+        القبول لم يقع.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RoundNo'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoundDecision' }
+      responses:
+        '201':
+          description: وقع الاتفاق
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationAgreement' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — يُعاد الاتفاق نفسه
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationAgreement' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/rounds/{roundNo}/reject:
+    post:
+      tags: [rounds]
+      summary: رفض دور — إمّا انتهاءُ الحديث وإمّا انتظارُ مقابل
+      operationId: rejectNegotiationRound
+      description: |
+        `close_thread: true` يُنهي التفاوض بسبب الرافض؛ و`false` يُبقيه مفتوحاً بلا دورٍ معلّق حتى
+        يأتي مقابل. الفرق مُعلَن في الحمولة لا مُستنتَج من الحالة، لأن «رفضتُ وسأقترح غيره» و
+        «رفضتُ وانتهى» نيّتان لا يجوز أن يُخمّنهما الخادم.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RoundNo'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoundRejection' }
+      responses:
+        '200':
+          description: سُجّل الرفض
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationThread' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/messages:
+    get:
+      tags: [messages]
+      summary: رسائل الخيط بالتسلسل
+      operationId: listNegotiationMessages
+      description: |
+        الرسالة المحجوبة تُعاد بلا نصّ ومعها `redacted_at` وسببها: حذفُها من القائمة يجعل ثغرةً
+        في التسلسل تُفسَّر خطأً بأنّها خطأ نظام.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الرسائل بترتيب التسلسل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationMessageList' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [messages]
+      summary: إرسال رسالة في الخيط
+      operationId: postNegotiationMessage
+      description: |
+        الرسالة لا تُغيّر مبلغاً ولا حالة: سعرٌ مكتوب في نصّ ليس عرضاً، والعرض `POST /rounds`.
+        وذلك مقصود — لو قرأ الخادم الأرقام من النصّ لصار الاتفاق تخميناً لُغوياً.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MessageSubmission' }
+      responses:
+        '201':
+          description: أُرسلت الرسالة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationMessage' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — تُعاد الرسالة نفسها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationMessage' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/{threadId}/agreement:
+    get:
+      tags: [agreements]
+      summary: قراءة اتفاق الخيط وحالة تسليمه
+      operationId: getNegotiationAgreement
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الاتفاق
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NegotiationAgreement' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /negotiations/tick:
+    post:
+      tags: [ops]
+      summary: نبضة الزمن — انتهاء الأدوار والخيوط وإعادة تسليم السعر
+      operationId: tickNegotiations
+      description: |
+        تقرأ النبضة الاستحقاقات المخزّنة (`next_tick_at` للخيوط و`next_handoff_at` للاتفاقات)
+        وتُنهي ما استحقّ وتعيد محاولة ما لم يُسلَّم. لا `requestBody` هنا عمداً: النبضة فعلٌ على
+        الساعة والحالة المخزّنة، وإعلان جسمٍ فارغ يجعل Fastify يرفض طلباً صحيحاً بـ`400`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: اكتملت النبضة، وقد تكون العدّادات صفراً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TickResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص جاهزية الخدمة
+      operationId: health
+      description: |
+        `memory` يجعل النتيجة `degraded` في التشغيل الحقيقي لأن إعادة التشغيل تُفقد المحادثة
+        والاتفاق، وهما دليلٌ يُسأل عنه لاحقاً. و`last_tick_at` مؤشّر غياب المُنادي الدوريّ
+        (Phase 09): بلا نبضة تبقى الأدوار معلّقة إلى الأبد ولا يشتكي أحد.
+      responses:
+        '200':
+          description: حالة الخدمة وطبقة الاستمرارية
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+
+components:
+  parameters:
+    ThreadId:
+      name: threadId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    RoundNo:
+      name: roundNo
+      in: path
+      required: true
+      description: رقم الدور داخل الخيط لا مُعرّفه العام؛ الترقيم المحليّ يجعل «الدور الثالث» عبارةً مفهومة للطرفين.
+      schema: { type: integer, minimum: 1 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على كل فعل يُغيّر حالة، لأن إعادة المحاولة بعد انقطاع الشبكة لا يجوز أن تُنتج دوراً ثانياً ولا رسالةً مضاعفة.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الخطأ؛ فصل التتبّع عن حمولة العمل يمنع أن يصير المُعرّف دليلاً تجارياً.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque؛ لا يُحلّل ولا يربط مباشرة بقاعدة هوية أخرى.
+
+    OrderPublicId:
+      type: string
+      pattern: '^ORD-[0-9]{10}$'
+      description: مُعرّف الطلب كما يملكه محرّك الطلب؛ مرجع opaque بلا FK عابر للخدمات.
+
+    Party:
+      type: string
+      enum: [customer, driver]
+      description: طرفا التفاوض. لا `system` هنا — النظام لا يعرض سعراً ولا يقبله.
+
+    AmountMinor:
+      type: integer
+      format: int64
+      minimum: 1
+      description: مبلغ بالوحدة الصغرى للعملة (هللة للريال). عددٌ صحيح لا كسر عائم، لأن التفاوض يُساوي المبالغ.
+
+    Currency:
+      type: string
+      pattern: '^[A-Z]{3}$'
+      description: رمز العملة بثلاثة أحرف. صريحٌ في كل مبلغ كي لا يُفترَض من مكان التشغيل.
+
+    ThreadState:
+      type: string
+      enum: [open, agreed, declined, expired, cancelled]
+
+    ThreadCloseReasonCode:
+      type: string
+      enum:
+        - agreed
+        - declined_by_customer
+        - declined_by_driver
+        - max_rounds_reached
+        - thread_expired
+        - cancelled_by_dispatch
+        - order_withdrawn
+      description: لا إغلاق بلا سبب مُعدَّد. الأكواد تُقارَن وتُحصى؛ الرسائل تُترجَم وتتغيّر.
+
+    RoundState:
+      type: string
+      enum: [pending, accepted, rejected, superseded, expired]
+
+    HandoffState:
+      type: string
+      enum: [pending, handed_off, rejected, abandoned]
+      description: |
+        حالة تسليم السعر إلى محرّك الطلب. `rejected` نهائية لا تُعاد: المحرّك قال «لا يقبل هذا
+        الطلب سعراً الآن»، وإعادة السؤال إزعاجٌ لا إصلاح. و`abandoned` نفاد المحاولات.
+
+    Locale:
+      type: string
+      enum: [ar, en, ur]
+
+    NegotiationThread:
+      type: object
+      required:
+        [id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+         service_kind, state, policy_version, currency, opening_amount_minor, opened_by,
+         round_count, current_round_no, expires_at, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        dispatch_offer_id:
+          type: string
+          format: uuid
+          description: مرجع opaque إلى عرض التوزيع الذي شرّع هذا التفاوض؛ وجوده يقرّره منفذ التوزيع لا FK.
+        service_kind: { type: string, enum: [ride, delivery] }
+        state: { $ref: '#/components/schemas/ThreadState' }
+        close_reason_code:
+          anyOf:
+            - $ref: '#/components/schemas/ThreadCloseReasonCode'
+            - type: 'null'
+        policy_version: { type: integer, minimum: 1 }
+        currency: { $ref: '#/components/schemas/Currency' }
+        opening_amount_minor: { $ref: '#/components/schemas/AmountMinor' }
+        opened_by: { $ref: '#/components/schemas/Party' }
+        round_count: { type: integer, minimum: 0 }
+        current_round_no: { type: integer, minimum: 0 }
+        agreed_round_no: { type: [integer, 'null'], minimum: 1 }
+        expires_at: { type: string, format: date-time }
+        next_tick_at:
+          type: [string, 'null']
+          format: date-time
+          description: أقرب استحقاق يعني هذا الخيط. `null` بعد الإغلاق — لا شيء ينتظر خيطاً منتهياً.
+        closed_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version:
+          type: integer
+          minimum: 1
+          description: تفاؤل الكتابة. يُعاد كي يستطيع المستهلك أن يكشف تغيّراً بين قراءته وفعله.
+
+    NegotiationThreadList:
+      type: object
+      required: [threads]
+      additionalProperties: false
+      properties:
+        threads:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/NegotiationThread' }
+
+    ThreadOpenRequest:
+      type: object
+      required:
+        [order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+         service_kind, opening_amount_minor, currency, opened_by]
+      additionalProperties: false
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        dispatch_offer_id: { type: string, format: uuid }
+        service_kind: { type: string, enum: [ride, delivery] }
+        opening_amount_minor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        opened_by: { $ref: '#/components/schemas/Party' }
+        opening_note:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1000
+          description: رسالة تصاحب العرض الأول. تُخزَّن كرسالةٍ عادية ولا تدخل أي حدث.
+        source_locale: { $ref: '#/components/schemas/Locale' }
+
+    ThreadCancelRequest:
+      type: object
+      required: [reason_code]
+      additionalProperties: false
+      properties:
+        reason_code:
+          type: string
+          enum: [cancelled_by_dispatch, order_withdrawn]
+          description: سببان فقط؛ انسحاب طرفٍ ليس إلغاءً بل رفض، ولذلك مسارٌ آخر.
+
+    NegotiationRound:
+      type: object
+      required: [id, thread_id, round_no, proposed_by, amount_minor, currency, state, expires_at, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        thread_id: { type: string, format: uuid }
+        round_no: { type: integer, minimum: 1 }
+        proposed_by: { $ref: '#/components/schemas/Party' }
+        amount_minor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        state: { $ref: '#/components/schemas/RoundState' }
+        resolved_by:
+          anyOf:
+            - $ref: '#/components/schemas/Party'
+            - type: 'null'
+        expires_at: { type: string, format: date-time }
+        responded_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    NegotiationRoundList:
+      type: object
+      required: [rounds]
+      additionalProperties: false
+      properties:
+        rounds:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/NegotiationRound' }
+
+    RoundProposal:
+      type: object
+      required: [proposed_by, amount_minor, currency, expected_round_no]
+      additionalProperties: false
+      properties:
+        proposed_by: { $ref: '#/components/schemas/Party' }
+        amount_minor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        expected_round_no:
+          type: integer
+          minimum: 0
+          description: |
+            رقم آخر دور رآه المُرسل. عدم مطابقته للحالة الحقيقية يُرفض بـ`NEGOTIATION_ROUND_STALE`:
+            مقابلٌ يُبنى على شاشة قديمة يجب أن يُرفض لا أن يُقحم في سياقٍ تغيّر.
+        note:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1000
+          description: رسالة تصاحب العرض المضادّ؛ تُخزَّن رسالةً ولا تدخل أي حدث.
+        source_locale: { $ref: '#/components/schemas/Locale' }
+
+    RoundDecision:
+      type: object
+      required: [acting_party]
+      additionalProperties: false
+      properties:
+        acting_party:
+          $ref: '#/components/schemas/Party'
+        note:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1000
+        source_locale: { $ref: '#/components/schemas/Locale' }
+
+    RoundRejection:
+      type: object
+      required: [acting_party, close_thread]
+      additionalProperties: false
+      properties:
+        acting_party: { $ref: '#/components/schemas/Party' }
+        close_thread:
+          type: boolean
+          description: نيّةٌ مُعلَنة لا مُستنتَجة؛ «رفضتُ وسأقترح غيره» و«رفضتُ وانتهى» لا يخمّنهما الخادم.
+        note:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1000
+        source_locale: { $ref: '#/components/schemas/Locale' }
+
+    NegotiationMessage:
+      type: object
+      required: [id, thread_id, sequence_no, author_role, source_locale, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        thread_id: { type: string, format: uuid }
+        sequence_no: { type: integer, minimum: 1 }
+        author_role: { type: string, enum: [customer, driver, system] }
+        body:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1000
+          description: نصّ كتبه المستخدم. `null` على رسالة النظام وعلى المحجوب.
+        system_code:
+          type: [string, 'null']
+          minLength: 3
+          maxLength: 64
+          description: رمز رسالة النظام بدل نصٍّ مترجم مخزّن؛ الرمز يُعرَض بأي لغة.
+        round_no: { type: [integer, 'null'], minimum: 1 }
+        source_locale: { $ref: '#/components/schemas/Locale' }
+        redacted_at: { type: [string, 'null'], format: date-time }
+        redaction_reason_code: { type: [string, 'null'], minLength: 3, maxLength: 64 }
+        created_at: { type: string, format: date-time }
+
+    NegotiationMessageList:
+      type: object
+      required: [messages]
+      additionalProperties: false
+      properties:
+        messages:
+          type: array
+          maxItems: 500
+          items: { $ref: '#/components/schemas/NegotiationMessage' }
+
+    MessageSubmission:
+      type: object
+      required: [author_role, body]
+      additionalProperties: false
+      properties:
+        author_role: { $ref: '#/components/schemas/Party' }
+        body: { type: string, minLength: 1, maxLength: 1000 }
+        round_no: { type: [integer, 'null'], minimum: 1 }
+        source_locale: { $ref: '#/components/schemas/Locale' }
+
+    NegotiationAgreement:
+      type: object
+      required:
+        [thread_id, order_public_id, driver_public_id, round_no, amount_minor, currency,
+         accepted_by, policy_version, agreed_at, handoff_state, handoff_attempts, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        thread_id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        round_no: { type: integer, minimum: 1 }
+        amount_minor: { $ref: '#/components/schemas/AmountMinor' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        accepted_by: { $ref: '#/components/schemas/Party' }
+        policy_version: { type: integer, minimum: 1 }
+        agreed_at: { type: string, format: date-time }
+        handoff_state: { $ref: '#/components/schemas/HandoffState' }
+        handoff_attempts: { type: integer, minimum: 0 }
+        handed_off_at: { type: [string, 'null'], format: date-time }
+        next_handoff_at: { type: [string, 'null'], format: date-time }
+        last_error_code: { type: [string, 'null'], minLength: 3, maxLength: 64 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TickResult:
+      type: object
+      required:
+        [ticked_at, rounds_expired, threads_expired, threads_closed_max_rounds,
+         handoffs_attempted, handoffs_succeeded, handoff_failures]
+      additionalProperties: false
+      properties:
+        ticked_at: { type: string, format: date-time }
+        rounds_expired: { type: integer, minimum: 0 }
+        threads_expired: { type: integer, minimum: 0 }
+        threads_closed_max_rounds:
+          type: integer
+          minimum: 0
+          description: خيوط أُغلقت لأن آخر دورٍ فيها انتهى وقد استُنفد سقف الأدوار — لا مجال لمقابلٍ آخر.
+        handoffs_attempted: { type: integer, minimum: 0 }
+        handoffs_succeeded: { type: integer, minimum: 0 }
+        handoff_failures:
+          type: integer
+          minimum: 0
+          description: |
+            فشل التسليم يُعدّ ولا يُرمى: النبضة عمليّة جماعية، ورفعُ خطأٍ لأجل اتفاق واحد
+            يُوقف بقيّة العمل ويُخفي الفشل عن العدّاد الذي يُراقَب.
+
+    HealthStatus:
+      type: object
+      required: [status, persistence, last_tick_at]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        persistence: { type: string, enum: [postgres, memory] }
+        last_tick_at:
+          type: [string, 'null']
+          format: date-time
+          description: آخر نبضة نُفّذت في هذه العمليّة، و`null` قبل أولاها.
+
+    ErrorResponse:
+      type: object
+      required: [error, trace_id]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code: { type: string, description: كود ثابت؛ يتعاقد المستهلك على الكود لا على ترجمة الرسالة. }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: false
+              description: |
+                تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع
+                صلاحية. الحقول **معدودة** لا حقيبة حرّة، وذاك بعينه ما يمنع «ضع القيمة في
+                التفاصيل». وهي مُعلَنة من MR 1/6 لأن `additionalProperties: false` بلا
+                `properties` تعني **لا مفتاح مسموح**، فكل تفصيل كان سيُفشل تحقّق مستهلكٍ صارم
+                على استجابةٍ صحيحة (درس Phase 05 · MR 4/6).
+              properties:
+                field: { type: string, description: اسم الحقل المرفوض لا قيمته. }
+                expected: { type: string, description: وصف الشكل المتوقّع أو الانتقال المرفوض. }
+                thread_state: { $ref: '#/components/schemas/ThreadState' }
+                round_state: { $ref: '#/components/schemas/RoundState' }
+                current_round_no: { type: integer, minimum: 0 }
+                max_rounds: { type: integer, minimum: 1 }
+                min_amount_minor: { type: integer, format: int64, minimum: 1 }
+                max_amount_minor: { type: integer, format: int64, minimum: 1 }
+                policy_version: { type: integer, minimum: 1 }
+                constraint:
+                  type: string
+                  description: |
+                    اسم قيد القاعدة الذي كان سيرفض الكتابة نفسها؛ يجعل خطّ الدفاع الثاني قابلاً
+                    للعثور بدلاً من افتراض أن القاعدة تعيش في TypeScript وحدها.
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً أو `Idempotency-Key` مفقود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: الخيط أو الدور أو الاتفاق غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض في الحالة أو في إعادة استعمال مفتاح التفرّد أو دورٌ قديم
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخل صالح شكلياً ومرفوض بقاعدة أعمال أو سياسة أو مرجع خارجي
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة أو الاستمرارية في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

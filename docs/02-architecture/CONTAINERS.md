@@ -171,13 +171,50 @@ dispatch  ↛ drivers      (التوزيع يكتب `busy` في الترشيح �
 
 الأنواع المُكتبة في `packages/contracts/driver/` (`@wasla/contracts-driver`).
 
+### 4.5 خدمة Negotiation & Chat — Phase 08
+
+خدمة **موجودة في الشجرة الأصلية** أعلاه (`chat`)، وتُسمّى هنا `negotiations` لأنّ المحادثة وسيلةٌ فيها والتفاوض غرضُها — فلا انحراف في الموضع: [ADR-013](../15-decisions/ADR-013-negotiation-chat-agreement-boundary-and-tick-driven-expiry.md) يُثبّت **حدودها**. القاعدة الحاكمة: **يملك التفاوض «بكم اتّفقنا» ولا يكتب السعر في `orders`**.
+
+| الخدمة | المسار | الغرض | الحالة |
+|---|---|---|---|
+| negotiations | `services/negotiations/` | خيط تفاوض ثنائي · الأدوار المُرقّمة ومهلها · الرسائل وتنقيحها · **الاتفاق وتسليم سعره** إلى محرّك الطلب · السياسة المُرقّمة المجمّدة · النبضة | **عقود كنسية فقط (MR 1/6 · Phase 08)** — [نموذج المجال](../03-domain/NEGOTIATION_CHAT.md) · [العقود](../../services/negotiations/contracts/README.md) |
+
+المنفذ: **negotiations = 8091** (بعد `drivers` = 8090)، وهو ثابت مُصدّر من حزمة العقد (`NEGOTIATION_SERVICE_PORT`) لا رقماً منسوخاً باليد — درس MR 5b/6 من الطور 07، وحارسُ اختبار يمنع انتزاع منفذٍ خصّصه طورٌ سابق.
+
+اتجاه الاعتماد أحادي وملزم، ولا يُعكس:
+
+```text
+negotiations → orders     (AgreedPricePort — نداءٌ صادر واحد، ولا قراءة لقاعدته ولا FK)
+negotiations → dispatch   (DispatchOfferPort — هل العرض قائم؟ مرجع opaque)
+orders       ↛ negotiations  (محرّك الطلب لا ينادي التفاوض ولا يعرف أنّه موجود)
+dispatch     ↛ negotiations  (التوزيع يعرض، ولا يعرف أنّ حواراً جرى)
+drivers      ↛ negotiations  (نواة السائق لا تُقرأ هنا: العرض القائم هو الدليل أنّ السائق كان مؤهّلاً حين عُرض)
+```
+
+**ما لا يعرفه التفاوض:** حالة الطلب وآلته، وأهليّة السائق، وهويّة الشخص واسمه، وقناة التوصيل. **وما لا يملكه:** عمود السعر في `orders` — المبلغ يُسلّم عبر `AgreedPricePort` ومحرّك الطلب وحده يسجّله.
+
+**ستة حدود يفرضها حارس اختبار لا مراجعة بشرية** (70 اختباراً تقرأ العقود **من القرص** لا نسخةً منها في الكود):
+
+- **لا كتابة في `orders`**: لا `REFERENCES orders`، ولا عمود يعكس حالة الطلب، ولا مسارٌ يكتبه. وفشلُ التسليم **لا يُبطل الاتفاق**: لا `502` ولا صنف `bad_gateway` في كتالوج الأخطاء أصلاً (سابقة حذف `DRIVER_CANDIDACY_PUBLISH_FAILED` في الطور 05).
+- **الاتفاق قبولٌ لدورٍ مُرقّم**: `expected_round_no` حارسٌ تفاؤلي، ومن اقترح لا يقبل (`ck_negotiation_rounds_no_self_resolution` في القاعدة لا في الكود وحده)، ودورٌ معلّق واحد ومقبولٌ واحد لكل خيط.
+- **خيطٌ ثنائي لا مزاد**: خيطٌ واحد لكل (طلب × سائق) ولكل عرض توزيع، **ولا قائمة أطراف في المخطّط** — وذاك ما يمنع المزاد لا حسنُ النيّة.
+- **المال أعداد صحيحة بوحدة صغرى**: لا `NUMERIC` ولا عائم، وكل عمود مبلغ ينتهي بـ`_minor`، وعملةٌ صريحة بجانب كل مبلغ، والحدود من **سياسة مُرقّمة مجمّدة** لا من أرقام في الكود.
+- **الزمن نبضة لا مؤقّت**: لا `is_expired` مخزّن؛ `expires_at` بيانٌ و`next_tick_at` فهرس `POST /negotiations/tick`. **والانتهاء يُقاس أيضاً عند كل فعل**: من اعتمد على النبضة وحدها فتح نافذةً يُشترى فيها سعرٌ انتهى.
+- **الخصوصية**: `body` في `negotiation_messages` وحدها، **ولا تعبر حدّ الخدمة ولا حدثاً** — `body_length` عددٌ لا نصّ (سابقة `shipment_description` في ADR-009 §7)، ولا ترجمة مخزّنة (`source_locale` وحده)، ولا `chat_id` (ADR-007).
+
+**وما لا يوجد في هذه الخدمة بقرار** (ADR-013 القرار 8): لا دفع ولا تسوية ولا عمولة · ولا سمعة ولا عدّاد سلوك · ولا محرّك تسعير يقترح مبلغاً · ولا مرفقات — لا عموداً ولا مساراً ولو معطّلاً. مالكوها: Phase 19 (الدفع) · Phase 09 (السمعة والاحتيال) · ومحرّك التسعير **بلا مالك بعد**.
+
+**الدَين المُعلَن:** `orders` لا يملك عمود سعرٍ متّفق عليه بعد، فشقّ «وتسجيله في Order» من بوابة الخروج يقتضي ترحيلاً يكسب **محرّك الطلب** أربعة أعمدة في MR لاحق من هذا الطور ([التفصيل](../03-domain/NEGOTIATION_CHAT.md#8-الدَّين-المُعلَن-بوابة-الخروج)).
+
+الأنواع المُكتبة في `packages/contracts/negotiation/` (`@wasla/contracts-negotiation`).
+
 ---
 
 ## 5. Packages (المكتبات المشتركة)
 
 | الحزمة | المسار | الغرض |
 |---|---|---|
-| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) · `order` (§4.2) · `matching` و`dispatch` (§4.3) · `driver` (§4.4) |
+| contracts | `packages/contracts/` | API/Event/Data/Error contracts (Contract First) — حزمة لكل مجال: `identity` · `geography` · `channel` (§5.1) · `customer` (§4.1) · `order` (§4.2) · `matching` و`dispatch` (§4.3) · `driver` (§4.4) · `negotiation` (§4.5) |
 | events | `packages/events/` | Event schema registry، Outbox helpers |
 | ui | `packages/ui/` | مكتبة واجهات مشتركة (Mini Apps) |
 | i18n | `packages/i18n/` | العربية/الإنجليزية/الأردية + مستقبلًا التركية/الفارسية |

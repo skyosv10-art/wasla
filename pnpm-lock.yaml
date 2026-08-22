@@ -477,6 +477,19 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  services/matching:
+    dependencies:
+      '@wasla/contracts-matching':
+        specifier: workspace:*
+        version: link:../../packages/contracts/matching
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   services/orders:
     dependencies:
       '@wasla/contracts-order':

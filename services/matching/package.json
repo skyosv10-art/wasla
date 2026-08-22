@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/matching-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Matching service — من المرشّحون وبأي ترتيب: الفلاتر الصلبة الثمانية بترتيبها، والترتيب بنسخة قواعد مُقفَلة بحساب صحيح، وحسم تعادل مُعلَن (Phase 07 · MR 2/6: مجال نقي بلا قاعدة وبلا HTTP).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-matching": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

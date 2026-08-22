@@ -10,20 +10,27 @@
  * and the single function that turns them into a verdict — plus the log that says
  * when the verdict changed and what caused it.
  *
- * ## What is IN this MR (3/6) and what is not
+ * ## What is IN this package as of MR 5/6, and what is not
  *
- * The pure layer from MR 2/6 — the model, the calculator, the state machines, the
- * ports, and in-memory adapters that simulate the database constraints by name —
- * plus, as of MR 3/6, the Drizzle/Postgres adapters, the transaction boundary and
- * the `DriverRunner` composition seam. There is still no `fastify` dependency, so
- * **this service cannot serve HTTP yet**, and that is the declared boundary rather
- * than an omission:
+ * The pure layer (MR 2/6) — model, calculator, state machines, ports and in-memory
+ * adapters that simulate the database constraints by name; the Drizzle/Postgres
+ * adapters, the transaction boundary and the `DriverRunner` seam (MR 3/6); the HTTP
+ * layer on port 8090 (MR 4/6); and, as of MR 5/6, the two **outbound** adapters that
+ * end this service's isolation — `HttpCandidacyPort` to matching (8088) and
+ * `HttpZoneCatalogPort` to geography (8081) — plus the driver bot's chat surface,
+ * which lives in `bots/driver-bot` and reaches these use cases in process.
  *
- *   - MR 4/6 — the HTTP layer over these use cases, on port 8090,
- *   - MR 5/6 — the operations endpoints and the tick route,
- *   - MR 6/6 — the matching integration and the end-to-end path.
+ * What remains is one MR, and it is named rather than implied:
  *
- * The order is deliberate: the decision rules are the part that has to be right, and
+ *   - MR 6/6 — the Phase 05 exit gate: HTTP over real Postgres, and the end-to-end
+ *     path proving a registered driver becomes a candidate matching can see.
+ *
+ * So the boundary that still holds today: nothing here has been proven against a
+ * live matching service. The outbound adapters are proven against injected answers
+ * (`src/__tests__/outbound-ports.test.ts`) — every status, every silence — which
+ * settles the *decisions* but not the wire.
+ *
+ * The order was deliberate: the decision rules are the part that has to be right, and
  * they are cheapest to argue about while no transport or table has been committed to.
  *
  * ## The invariant everything else rests on
@@ -48,10 +55,22 @@ export * from "./domain/validation.js";
 export * from "./domain/events.js";
 
 // ---------------------------------------------------------------------------
-// Ports and the in-memory adapters that stand behind them until MR 3/6.
+// Ports and the in-memory adapters. The in-memory ones are not "until MR 3/6":
+// they are the fixtures the whole truth table is proven on, and the fallback the
+// HTTP server uses when a dependency URL is unset (visibly, with a warning).
 // ---------------------------------------------------------------------------
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+
+// ---------------------------------------------------------------------------
+// Outbound HTTP adapters (MR 5/6): the driver's verdict leaving the service, and
+// the zone catalog it is checked against. Exported because the composition roots
+// that assemble a deployment — `http/server.ts` here, and any future host — must
+// be able to name them; and because MR 6/6 asserts on them from outside.
+// ---------------------------------------------------------------------------
+export * from "./infrastructure/http-candidacy.js";
+export * from "./infrastructure/http-zone-catalog.js";
+export * from "./infrastructure/outbound-wiring.js";
 
 // ---------------------------------------------------------------------------
 // Postgres adapters (MR 3/6). `schema.js` is NOT re-exported: its table objects

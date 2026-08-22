@@ -1,5 +1,5 @@
 /**
- * The process: wiring, and nothing else (Phase 05 · MR 4/6).
+ * The process: wiring, and nothing else (Phase 05 · MR 5/6).
  *
  * Every decision about a status code, a body or a rule lives in `app.ts` and the use
  * cases. What is left here is the choice of adapters, and it is deliberately the ONLY
@@ -10,9 +10,14 @@
  * `DATABASE_URL` present → Postgres, one transaction per write, `/health` reports `ok`.
  * Absent → in-memory stores and `degraded`, so a developer can run the service with no
  * database and an operator can never mistake that process for a real one.
+ *
+ * The same shape governs the two outbound ports, and independently of storage:
+ * `MATCHING_SERVICE_URL` → real publications to matching 8088, absent → a port that
+ * REFUSES with a readable code; `GEOGRAPHY_SERVICE_URL` → the real zone catalogue on
+ * 8081, absent → `DRIVER_DEV_ZONE_IDS` with a warning. Nothing defaults to a URL:
+ * guessing `localhost` would turn a missing variable into someone else's outage.
  */
 
-import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 
 import { DRIVER_SERVICE_PORT } from "@wasla/contracts-driver";
@@ -21,68 +26,19 @@ import { createDriverDb } from "../infrastructure/drizzle/db.js";
 import type { DriverSharedDeps } from "../infrastructure/drizzle/transaction.js";
 import {
   createInMemoryEnvironment,
+  CryptoIdGenerator,
   InMemoryCandidacyProjectionPort,
-  InMemoryZoneCatalogPort,
+  SystemClock,
 } from "../infrastructure/in-memory.js";
-import type { CandidacyProjectionPort, Clock, IdGenerator, ZoneCatalogPort } from "../ports.js";
+import {
+  configuredCandidacy,
+  configuredZoneCatalog,
+  matchingConfigured,
+  type DriverOutboundEnv,
+} from "../infrastructure/outbound-wiring.js";
 import { createDirectRunner, PostgresDriverRunner, type DriverRunner } from "../runner.js";
 
 import { createDriverApp, type DriverHealthDescriptor } from "./app.js";
-
-class SystemClock implements Clock {
-  now(): string {
-    return new Date().toISOString();
-  }
-}
-
-class CryptoIdGenerator implements IdGenerator {
-  uuid(): string {
-    return randomUUID();
-  }
-}
-
-/**
- * The candidacy port until MR 5/6 gives it a real HTTP implementation.
- *
- * It refuses instead of pretending to succeed. `publishCandidacy` records a refusal as
- * a failed publication and lets the local write stand (ADR-012 decision 3), so an
- * unconfigured matching service costs visible publication lag — never a silently
- * dropped projection that leaves matching believing a suspended driver is available.
- */
-class UnconfiguredCandidacyPort implements CandidacyProjectionPort {
-  async read(): Promise<null> {
-    return null;
-  }
-  async publish(): Promise<{ accepted: boolean; failureCode: string | null }> {
-    return { accepted: false, failureCode: "matching_not_configured" };
-  }
-}
-
-/**
- * Zones known to this process, from `DRIVER_DEV_ZONE_IDS`.
- *
- * There is no `PostgresZoneCatalogPort` and there should not be: the zone hierarchy
- * belongs to matching (ADR-006), and `schema.ts` says in its own header that
- * `work_city_zone_id` deliberately carries no foreign key to geography — reading
- * another service's table would be exactly the cross-database coupling ADR-012 forbids.
- * The real adapter is an HTTP port to matching, and it lands in MR 5/6 beside
- * `HttpCandidacyPort` (matching's own `HttpGeographyPort` is the precedent to copy).
- *
- * So this stands on BOTH paths for now, Postgres included, and is env-driven rather
- * than empty because the port is fail-closed: with no seeded id, every `PUT /zones`
- * answers `422 DRIVER_ZONE_UNKNOWN` and looks like a bug in the route rather than a
- * missing adapter. Being explicit here is what keeps the gap visible in wiring instead
- * of hidden behind a class that pretends to know the hierarchy.
- */
-function configuredZoneCatalog(): ZoneCatalogPort {
-  const catalog = new InMemoryZoneCatalogPort();
-  const configured = (process.env.DRIVER_DEV_ZONE_IDS ?? "")
-    .split(",")
-    .map((zoneId) => zoneId.trim())
-    .filter((zoneId) => zoneId.length > 0);
-  catalog.seed(...configured);
-  return catalog;
-}
 
 interface Wiring {
   runner: DriverRunner;
@@ -90,17 +46,18 @@ interface Wiring {
   pool: Pool | null;
 }
 
-function buildWiring(): Wiring {
+function buildWiring(log: (message: string) => void): Wiring {
   const clock = new SystemClock();
   const ids = new CryptoIdGenerator();
+  // One view of the environment for the whole wiring: reading `process.env` twice in
+  // one boot could give the storage path and the outbound path two different answers.
+  const env = process.env as DriverOutboundEnv;
 
   if (process.env.DATABASE_URL) {
     const { pool, db } = createDriverDb({ connectionString: process.env.DATABASE_URL });
     const shared: DriverSharedDeps = {
-      // Still the unconfigured port on Postgres: storage and the outbound call are
-      // independent choices, and MR 5/6 replaces exactly this line.
-      candidacy: new UnconfiguredCandidacyPort(),
-      zoneCatalog: configuredZoneCatalog(),
+      candidacy: configuredCandidacy(env),
+      zoneCatalog: configuredZoneCatalog(env, log),
       clock,
       ids,
     };
@@ -115,8 +72,12 @@ function buildWiring(): Wiring {
   return {
     runner: createDirectRunner({
       ...environment,
-      candidacy: new InMemoryCandidacyProjectionPort(),
-      zoneCatalog: configuredZoneCatalog(),
+      // The in-memory projection store is the honest fallback ONLY when no matching URL
+      // is configured: it keeps `busy` preservation testable without a second service.
+      candidacy: matchingConfigured(env)
+        ? configuredCandidacy(env)
+        : new InMemoryCandidacyProjectionPort(),
+      zoneCatalog: configuredZoneCatalog(env, log),
       clock,
       ids,
     }),
@@ -126,7 +87,9 @@ function buildWiring(): Wiring {
 }
 
 async function main(): Promise<void> {
-  const { runner, health, pool } = buildWiring();
+  // Wiring warnings are printed before the app exists, because the choice of adapters is
+  // made before there is a logger to attach them to.
+  const { runner, health, pool } = buildWiring((message) => console.warn(message));
   const app = createDriverApp({ runner, health, logger: true });
   if (pool) {
     app.addHook("onClose", async () => {

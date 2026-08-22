@@ -60,13 +60,25 @@ importers:
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../../packages/contracts/channel
+      '@wasla/drivers-service':
+        specifier: workspace:*
+        version: link:../../services/drivers
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       '@wasla/channel-core':
         specifier: workspace:*
         version: link:../../packages/channel-core
+      '@wasla/contracts-driver':
+        specifier: workspace:*
+        version: link:../../packages/contracts/driver
       tsx:
         specifier: ^4.23.12
         version: 4.23.12

@@ -1,11 +1,12 @@
 /**
- * The error boundary: shape, trace id, echo safety, and the two codes no route can
- * currently produce on its own.
+ * The error boundary: shape, trace id, echo safety, and the status codes the service
+ * refuses to produce — including `502`, retired in MR 5/6 (`contracts/errors.md`
+ * §«الرمز المتقاعد»).
  */
 
 import { describe, expect, it } from "vitest";
 
-import { candidacyPublishFailed } from "../domain/errors.js";
+import { driverUnavailable } from "../domain/errors.js";
 import { createDriverApp } from "../http/app.js";
 import type { DriverRunner } from "../runner.js";
 import { DRIVER, httpHarness, key, registration } from "./http-harness.js";
@@ -120,15 +121,33 @@ describe("شكل الخطأ", () => {
     await app.close();
   });
 
-  it("يوصل DRIVER_CANDIDACY_PUBLISH_FAILED إلى 502 عندما يُرفع", async () => {
-    // Nothing raises it in MR 4/6 — `publishCandidacy` records a failed publication and
-    // lets the local write stand. This test proves the MAPPING is in place, so MR 5/6,
-    // which introduces the first port that can fail, only has to decide where to throw.
-    const app = createDriverApp({ runner: failingRunner(candidacyPublishFailed()) });
+  it("يوصل منفذاً إلزامياً معطّلاً إلى 503 باسمه لا بالتخمين", async () => {
+    // `driverUnavailable` is what the HTTP zone catalogue raises when geography cannot
+    // answer (MR 5/6). It is asserted here, at the boundary, because the alternative —
+    // an unnamed throw classified by the catch-all — gives the same status for a
+    // reason nobody can read afterwards.
+    const app = createDriverApp({ runner: failingRunner(driverUnavailable("دليل المناطق لا يجيب")) });
     const response = await app.inject({ method: "GET", url: `/drivers/${DRIVER}` });
 
-    expect(response.statusCode).toBe(502);
-    expect(response.json().error.code).toBe("DRIVER_CANDIDACY_PUBLISH_FAILED");
+    expect(response.statusCode).toBe(503);
+    expect(response.json().error.code).toBe("DRIVER_UNAVAILABLE");
+    await app.close();
+  });
+
+  /**
+   * حارس القرار: لا مسار في الخدمة يُنتج 502 بعد تقاعد رمز فشل النشر (MR 5/6).
+   * الاختبار يمرّ على كل طريق كتابة معلن ويتأكد أن أي حالة خطأ ليست 502.
+   */
+  it("لا يُنتج 502 من أي مسار بعد تقاعد رمز فشل النشر", async () => {
+    const { app } = httpHarness();
+    const attempts = [
+      app.inject({ method: "POST", url: "/drivers", headers: { "Idempotency-Key": key("x") }, payload: registration(DRIVER) }),
+      app.inject({ method: "GET", url: `/drivers/${DRIVER}` }),
+      app.inject({ method: "POST", url: "/eligibility/tick", headers: { "Idempotency-Key": key("t") }, payload: {} }),
+    ];
+    for (const response of await Promise.all(attempts)) {
+      expect(response.statusCode, response.body).not.toBe(502);
+    }
     await app.close();
   });
 

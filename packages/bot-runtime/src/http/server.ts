@@ -103,8 +103,34 @@ export async function startBot(
  * healthy process with a rejected promise.
  */
 export async function runBot(bot: BotKind): Promise<void> {
+  return runBotApp(bot, () => buildBotApp(bot));
+}
+
+/**
+ * `runBot` for a bot whose composition root adds something to the wiring.
+ *
+ * ## The defect this exists to close (Phase 05 · MR 5/6)
+ *
+ * A bot with domain flows assembles them in its own `server.ts` — `buildApp()` —
+ * because the composition root is the only layer allowed to know both a channel and a
+ * domain (ADR-007 §1). But its entry point called `runBot(BOT)`, which builds the app
+ * from `buildBotApp` **directly**, skipping that root entirely. The consequence was
+ * invisible in every test, because the tests call `buildApp` — and total in production:
+ * the deployed process registered no domain command at all, so every `/places` and
+ * `/orders` was answered `CHANNEL_UNSUPPORTED_COMMAND` (422) by a bot whose suite was
+ * green. It was found while building the driver bot's mirror of the same shape.
+ *
+ * The fix is to make the launcher take the root instead of re-deriving it. A bot's
+ * `main.ts` now reads `void runBotApp(BOT, buildApp)`, so the thing that listens is by
+ * construction the thing that was built and tested.
+ *
+ * Not covered by the unit suite for the same reason `startBot` is not: its job is
+ * process concerns — listen, log, exit code.
+ */
+export async function runBotApp(bot: BotKind, build: () => BotApp): Promise<void> {
   try {
-    await startBot(bot);
+    const { app, config } = build();
+    await app.listen({ port: config.port, host: "0.0.0.0" });
   } catch (error) {
     console.error(`[${bot}-bot] failed to start:`, error instanceof Error ? error.message : error);
     process.exit(1);

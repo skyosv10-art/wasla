@@ -24,6 +24,69 @@
 
 ## السجل
 
+## 2026-08-22 · Phase 07 MR 6/6 — بوابة الخروج: ستّ خدمات وساعة واحدة، وعيبٌ كان يُسقط كل قبول سائق
+
+**Task:** تنفيذ بوابة خروج الطور 07 بصيغة قابلة للتشغيل لا موصوفة: حزمة `@wasla/dispatch-e2e` تُقلع هوية وجغرافيا ومحرّك طلبات ونواة عميل ومطابقة وتوزيع كستّة مُنصتات حقيقية على `127.0.0.1:0`، وتقود طلباً حقيقياً إلى سائق حقيقي عبر HTTP العام وحده، ثمّ وظيفة CI تُعيد الملف نفسه على Postgres، ثمّ إغلاق الطور بالدليل.
+**Status:** ✅ مكتملة — **الطور 07 مُغلق**
+**MR:** [!50](https://gitlab.com/uxxxu/wasla/-/merge_requests/50)
+**ADR:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) (فصل الخدمتين واتجاه المعرفة) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) (حدّ الإسناد — سبب العيب أدناه)
+**الوثيقة:** [PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md) (جديدة)
+
+### 1. ما سُلِّم
+
+- `packages/dispatch-e2e/` — `package.json` · `tsconfig.json` · `vitest.config.ts` (يُضمّن `*.e2e.test.ts` صراحةً: **الاستثناء المُعلَن الرابع** بعد `channel-e2e` و`customer-e2e` و`order-e2e`، لأنّ بوابةً يمكن تجاوزها ليست بوابة) · `src/harness.ts` (المِعْوان: ستّة مُنصتات · ساعة واحدة · تحضير مخطّطَي المطابقة والتوزيع على القاعدة عند رفعها) · `src/__tests__/phase07-exit-gate.e2e.test.ts` (**خمسة اختبارات**).
+- `.gitlab-ci.yml` — وظيفة `dispatch-exit-gate-e2e` على `wasla_dispatch_e2e` عبر **`DISPATCH_DATABASE_URL`** (لا `DATABASE_URL`: الثاني مخزن طبقة القناة، ولو ضُبط هنا لصار الفشل منسوباً إلى غير سببه). صار عدد وظائف CI **15**.
+- إصلاحان في `services/dispatch` — انظر §3 و§4.
+
+**ما تُثبته البوابة:** سائق يُوجد (رفض ← موجة تستثني الرافض ← قبول ⇒ المهمّة `assigned` والطلب `accepted` مربوطاً بالسائق وإسقاط الجهوزية `busy`) · سائق يصمت (المهلة تنقضي بساعة مُحقونة، **بلا `sleep` في الملف كلّه**) · لا أحد متاح (نبضة واحدة تُنفق الموجات الثلاث وتُصعِّد والطلب لا يزال `searching`، ثمّ `no_driver_found` عند نهاية نافذة التصعيد بالضبط) · سائقان لطلب واحد (الخاسر `superseded` **لا** `rejected`) · والصحّة صادقة (`postgres`/`ok` أو `memory`/`degraded`).
+
+**قرار مُعلَن:** كل توكيد يمرّ بـ**HTTP العام** — لا قراءة مباشرة من مخزن. بوابةٌ تقرأ القاعدة التي تفحصها قد تنجح بينما الواجهة التي يستعملها الجميع مكسورة.
+
+### 2. لماذا ساعة واحدة لا ساعتان
+
+`GateClock` واحد يُحقَن في المطابقة والتوزيع معاً. لو كان لكلٍّ ساعته لكان مُرشِّح «طزاجة الترشيح» (`candidacyFreshnessSeconds = 120`) يقيس **فرق ساعتين** لا مرور الوقت، فتصير نتيجة خضراء تعني أنّ الساعتين متقاربتان لا أنّ المنطق صحيح.
+
+### 3. العيب الأول: **لا قبول سائق واحد كان ممكناً في النظام**
+
+`POST /dispatch/offers/{id}/accept` كان يُرجع دائماً **422 `DISPATCH_ORDER_ENGINE_REJECTED`**، و**225 اختبار وحدة في التوزيع خضراء**.
+
+- **السبب:** `accept-offer.ts` كان ينادي `transitionOrder(→accepted)` **قبل** `resolveAssignment(→accepted)`. لكنّ المحرّك يعامل `accepted` كحالة مربوطة بسائق (`assignmentRequirement === "required"`) ويقرأ السائق من **سجلّ الإسنادات** ويكتبه **في نفس عبارة `UPDATE`** التي تُحرّك الحالة — إجباراً لا اختياراً: `ck_orders_assignment_matches_status` يمنع طلباً `offered` من حمل إسناد نشط ([ADR-010 §4/§7](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)). فحين طُلب الانتقال أوّلاً لم يكن هناك إسناد مقبول ليُقرأ، فرفض المحرّك بـ`ORDER_ASSIGNMENT_REQUIRED`.
+- **لماذا لم يُكشَف:** `FakeOrderEngine` في مِعْوان التوزيع كان يُحاكي **جدول الانتقالات** ولا يُحاكي **اقتران الإسناد بالحالة**، فقَبِل ما ترفضه الخدمة الحقيقية. البديل الذي لا يعرف قاعدةً يُخفيها.
+- **الإصلاح (ثلاث خطوات، في هذه الدفعة نفسها):** (أ) عكس الترتيب في `accept-offer.ts` إلى ما يفرضه عقد المحرّك · (ب) `services/dispatch/src/__tests__/harness.ts` يستورد `assignmentRequirement` من `@wasla/orders-service` ويرفض بـ`ORDER_ASSIGNMENT_REQUIRED` أيّ انتقال إلى حالة تطلب إسناداً مقبولاً بلا إسناد — **البديل عُلِّم القاعدة لئلّا يعود الاختفاء** · (ج) `accept-offer.test.ts` يُوكِّد صراحةً أنّ `resolve:accepted` **يسبق** `transition:accepted`، فصار الترتيب عقداً مُختبَراً لا تفصيلاً عابراً.
+- **القياس لا الوصف:** أُعيد الترتيب القديم مؤقتاً وأُعيد تشغيل البوابة فأسقطت **اختبارين** بـ422 مقابل 200 المتوقّع، ثمّ أُرجع الإصلاح. البوابة تكشف العيب فعلاً.
+- **الدَين المُعلَن مقابل الإصلاح:** نافذة انعكاس — لو سُجّل الإسناد `accepted` ثمّ فشل تحريك الحالة، يبقى سجلّ إسناد مقبول بلا حالة تطابقه؛ العرض يبقى `offered` والنبضة تظلّ مالكة المهمّة **فلا يضيع الطلب**. البديل (الترتيب المعاكس) لا يعمل أصلاً. مُدوَّن في [MATCHING_DISPATCH §9](../03-domain/MATCHING_DISPATCH.md) ووثيقة البوابة §8.
+
+### 4. العيب الثاني: خطأ أنواع كان مخفياً عن `pnpm -r test`
+
+`services/dispatch/src/__tests__/tick.test.ts:477` كان يبني `CandidateRequest` بلا `orderId`/`orderPublicId` بعد إضافتهما إلى العقد في MR 5b/6. `vitest` لا يفحص الأنواع، فبقي الخطأ يمرّ في المسح كاملاً ويظهر في `pnpm -r typecheck` وحده. أُصلح مع تعليق يشرح **لماذا** المُعرّفان جزء من العقد: المطابقة تَسِم كل قرار تُسجّله بالطلب الذي قرّرت فيه، وطلبٌ بلا مُعرّفين لا يمكن تدقيقه لاحقاً.
+
+### 5. ثلاثة فروق بين ما تصوّرته البوابة وما فعله النظام — صُحّح التوقّع لا الكود
+
+1. **`POST /dispatch/tick` لا يقبل جسماً.** مساعد النداء كان يُرسل `content-type: application/json` دائماً، وFastify يرفض جسم JSON فارغاً معلَناً بـ400 قبل أي مسار. صار الترويسة تُرسَل **مع الجسم فقط**: مساعدٌ يُفشل البوابة لأجل راحته ليس مساعداً.
+2. **`offer_sent` يُنشَر قبل `wave_opened`.** لأنّ حدث الموجة يحمل `offer_count`، فلا يصدق قبل أن توجد عروضها. مُوثَّق في البوابة كسلوك مقصود لا كترتيب عارض.
+3. **قبولٌ على عرضٍ مُنتهٍ يُرفض 409 `DISPATCH_OFFER_ALREADY_RESOLVED`** لا 422. رمز الحالة نفسه عقد، فوُكِّد كما هو.
+
+### 6. الاختبار والتحقق
+
+| التشغيل | النتيجة |
+| --- | --- |
+| `pnpm --filter @wasla/dispatch-e2e test` | **5/5** — ‎~1.5s |
+| `pnpm --filter @wasla/dispatch-service test` | **225/225** (19 ملفاً) |
+| `pnpm -r run test` | **1838 ناجحاً + 1 متجاوَز** في 110 ملفات |
+| `pnpm -r run typecheck` | **نظيف** (بعد إصلاح §4) |
+| `dispatch-exit-gate-e2e` (Postgres 15) | نفس الملف على `wasla_dispatch_e2e` |
+
+**حدود التشغيل المحلّي، مُعلَنة:** لا Postgres ولا Docker في بيئة هذه الدفعة، فمسار القاعدة **لم يُشغَّل محلياً** وإثباته على وظيفة CI في هذه الـMR. من يراجع: النتيجة الخضراء المطلوبة هي وظيفة `dispatch-exit-gate-e2e` لا التشغيل المحلّي.
+
+- **Files:** `packages/dispatch-e2e/**` (جديد) · `services/dispatch/src/use-cases/accept-offer.ts` · `services/dispatch/src/__tests__/{harness,accept-offer.test,tick.test}.ts` · `.gitlab-ci.yml` · `pnpm-lock.yaml` · `docs/12-testing/PHASE07_EXIT_GATE_E2E.md` (جديد) · `docs/03-domain/MATCHING_DISPATCH.md` · `docs/16-progress/{ROADMAP,MASTER_PROGRESS,TASK_LOG,HANDOFF_NEXT_STEPS}.md`
+- **Services:** `dispatch` (إصلاح ترتيب القبول) · والبوابة تُقلع `identity`/`geography`/`orders`/`customers`/`matching`/`dispatch` بلا تعديل فيها
+- **Why:** بوابة الخروج هي الشرط الوحيد لإغلاق الطور 07، و«مُنجَز» بلا دليل ممنوع في [DEFINITION_OF_DONE](../00-rules/DEFINITION_OF_DONE.md). والبوابة أدّت وظيفتها: أظهرت عيباً كان يُعطّل كل قبول سائق في الإنتاج بعد أن مرّ من 225 اختبار وحدة.
+- **Tests:** الجدول في §6 أعلاه
+- **Next:** **Phase 05 (Driver Core)** — تحويل الأهليّة من `claimed` إلى `driver_core` وإلباس البوابة واجهةً؛ أو **Phase 08 (Negotiation & Chat)** لأنّ اعتمادها الوحيد 07 وقد أُغلقت. معايير الاختيار في [HANDOFF_NEXT_STEPS.md](HANDOFF_NEXT_STEPS.md)
+- **Related:** MR [!50](https://gitlab.com/uxxxu/wasla/-/merge_requests/50) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md)
+
+---
+
 ## 2026-08-22 · Phase 07 MR 5b/6 — طبقة HTTP للخدمتين: النبضة تُنادى من الخارج والمعاملة تُفتح بعد الشبكة لا حولها
 
 **Task:** إقلاع خدمة المطابقة على المنفذ **8088** وخدمة التوزيع على **8089** بالعقود المنشورة، واستبدال المُهيّئات المحلّية بمحوّلات HTTP إنتاجية (محرّك الطلبات · المطابقة · الجغرافيا)، وسدّ دَين «نداءات الشبكة داخل المعاملة» الذي أعلنته MR 5a/6 (§7.2) — **بلا بوابة خروج E2E** (وهي MR 6/6).

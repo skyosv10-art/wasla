@@ -475,6 +475,11 @@ describe("tick — failure containment", () => {
     harness.matching.failWith("timeout");
     await expect(
       harness.deps.matching.candidates({
+        // The order identifiers are part of `CandidateRequest`: matching stamps every
+        // decision it records with the order it was deciding about, so a request that
+        // omitted them could not be audited afterwards.
+        orderId: orderRef(1).orderId,
+        orderPublicId: orderRef(1).orderPublicId,
         zoneId: ZONE_ID,
         serviceKind: "ride",
         vehicleClass: "sedan",

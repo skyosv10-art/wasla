@@ -14,11 +14,28 @@
  *    `ORDER_ASSIGNMENT_FORBIDDEN`, and that refusal is how the loser learns they lost
  *    — closed as `superseded`, never as "rejected", because they never said no.
  *
- * Engine call order: the order's own status first, then the assignment. The status move
- * is idempotent (the winner's `accepted` is a repeat, not a conflict), while the
- * assignment resolution is the authoritative race decision. Doing it the other way
- * round would leave an accepted assignment attached to an order the engine then refuses
- * to move — a row set only a human could untangle.
+ * Engine call order: the assignment first, then the order's own status. This is the
+ * order the engine's own contract dictates, and it is the opposite of what this file
+ * did until the Phase 07 exit gate ran it against the real engine (MR 6/6).
+ *
+ * `offered → accepted` is a driver-bound status, so `transitionOrder` refuses it with
+ * `ORDER_ASSIGNMENT_REQUIRED` unless an **accepted** record already exists in the
+ * order's assignment log: the engine reads the winning driver from that log and binds
+ * it in the SAME UPDATE that moves the status, because `ck_orders_assignment_matches_status`
+ * forbids an `offered` order that already carries an active assignment (ADR-010 §4 and
+ * §7). Resolving the assignment first is therefore not an optimisation — it is the only
+ * sequence the engine accepts. Asking for the status first made every acceptance fail
+ * with `DISPATCH_ORDER_ENGINE_REJECTED`; the in-memory fake accepted it because it
+ * modelled the transition table but not the assignment coupling, so the fake was taught
+ * the rule in the same MR.
+ *
+ * Resolving the assignment first also puts the authoritative race decision before any
+ * write of ours: the loser is refused with `ORDER_ASSIGNMENT_FORBIDDEN` while nothing
+ * local has moved. The declared cost is the reverse window — an accepted record whose
+ * status move then fails (engine down, or the order left `offered` meanwhile). The offer
+ * stays `offered` and the tick keeps owning the job, so no driver is told they won; the
+ * stale accepted record is written down as a debt in
+ * docs/12-testing/PHASE07_EXIT_GATE_E2E.md rather than hidden here.
  *
  * An offer whose stored deadline has passed is refused even if no tick has marked it
  * `timed_out` yet. The alternative — honouring it — would make the answer depend on
@@ -103,17 +120,7 @@ export async function acceptOffer(
   const now = deps.clock.now();
   if (isDue(offer.expiresAt, now)) throw offerAlreadyResolved("timed_out", traceId);
 
-  const transition = await deps.orders.transitionOrder({
-    orderId: job.orderId,
-    to: ORDER_STATUS_ACCEPTED,
-    reasonCode: null,
-    idempotencyKey: orderTransitionKey(job.id, ORDER_STATUS_ACCEPTED, 0),
-    traceId,
-  });
-  // Nothing has been mutated yet, so a refusal here costs nothing: the offer stays
-  // `offered` and the tick keeps owning the job's progress.
-  assertEngineApplied(transition, traceId);
-
+  // The race is decided here, before anything of ours has moved.
   if (offer.orderAssignmentId !== null) {
     const resolved = await deps.orders.resolveAssignment({
       orderId: job.orderId,
@@ -137,6 +144,18 @@ export async function acceptOffer(
     }
     assertEngineApplied(resolved, traceId);
   }
+
+  // Now the status can move: the engine has an accepted record to bind.
+  const transition = await deps.orders.transitionOrder({
+    orderId: job.orderId,
+    to: ORDER_STATUS_ACCEPTED,
+    reasonCode: null,
+    idempotencyKey: orderTransitionKey(job.id, ORDER_STATUS_ACCEPTED, 0),
+    traceId,
+  });
+  // Still nothing of ours has been mutated, so a refusal here leaves the offer `offered`
+  // and the tick owning the job's progress.
+  assertEngineApplied(transition, traceId);
 
   // The unique-accepted-per-job index is the real guard; this call raises
   // DISPATCH_OFFER_SUPERSEDED when it fires, so a race lost inside our own store reads

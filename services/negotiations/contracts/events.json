@@ -1,0 +1,788 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/negotiations/events/v1",
+  "title": "WASLA Negotiation & Chat Domain Events v1",
+  "description": "أحداث خدمة التفاوض والمحادثة (Phase 08). القاعدة الحاكمة للخصوصية (ADR-013 القرار 6 · سابقة ADR-009 §7 وADR-010 القرار 7 وADR-011 القرار 8 وADR-012 القرار 8): الحدث يقول **ماذا تغيّر** لا **ماذا قيل**. فلا نصّ رسالة (`body`) ولا ملاحظة مصاحبة لعرض (`note`) ولا اسم ولا هاتف ولا إحداثية ولا مُعرّف قناة (`chat_id` · `telegram`) في أي حمولة. المبلغ يعبر لأنّه **هو** التغيّر ولا معنى لحدث تفاوضٍ بلا مبلغه؛ والنصّ لا يعبر لأنّه لا يُغيّر شيئاً ويُوسّع دائرة من يقرأ كلام الناس. حارس تنقيب في `@wasla/contracts-negotiation` يبحث في كل حمولة عن الحقول الممنوعة ويُفشل البناء عند وجودها — الحارس آليّ لأنّ الانضباط اليدويّ ينهار عند أول تعديل مستعجل. وكل تغيّر في حالة خيط يُنتج حدثه في المعاملة نفسها عبر `negotiation_outbox`، فلا تغيير صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "negotiations-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "negotiation_thread",
+                "negotiation_round",
+                "negotiation_message"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$",
+      "description": "مُعرّف دورٍ عام opaque؛ لا يُحلّل ولا يُربط بقاعدة هوية أخرى."
+    },
+    "OrderPublicId": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$",
+      "description": "مُعرّف الطلب كما يملكه محرّك الطلب؛ مرجع opaque."
+    },
+    "Party": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "driver"
+      ],
+      "description": "طرفا التفاوض. النظام ليس طرفاً: لا يعرض سعراً ولا يقبله."
+    },
+    "AmountMinor": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "مبلغ بالوحدة الصغرى للعملة. عددٌ صحيح لا كسر عائم: التفاوض يُساوي المبالغ ومساواةُ العواشر الثنائية كذبة تظهر بعد النشر."
+    },
+    "Currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "ServiceKind": {
+      "type": "string",
+      "enum": [
+        "ride",
+        "delivery"
+      ]
+    },
+    "Locale": {
+      "type": "string",
+      "enum": [
+        "ar",
+        "en",
+        "ur"
+      ]
+    },
+    "ThreadCloseReasonCode": {
+      "type": "string",
+      "enum": [
+        "agreed",
+        "declined_by_customer",
+        "declined_by_driver",
+        "max_rounds_reached",
+        "thread_expired",
+        "cancelled_by_dispatch",
+        "order_withdrawn"
+      ],
+      "description": "لا إغلاق بلا سبب مُعدَّد. الأكواد تُقارَن وتُحصى؛ الرسائل تُترجَم وتتغيّر."
+    },
+    "HandoffOutcome": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "unavailable"
+      ],
+      "description": "نتيجة محاولة تسليم السعر إلى محرّك الطلب. `rejected` قرارُ المحرّك، و`unavailable` عجزُ الشبكة — والفرق بينهما هو الفرق بين «لا» و«لم يُسمع»."
+    },
+    "NegotiationThreadOpenedV1": {
+      "type": "object",
+      "description": "فُتح خيط تفاوض ثنائيّ على عرض توزيع قائم، ومعه الدور رقم 1. الخيط لا يُفتح فارغاً: خيطٌ بلا عرضٍ أوّل يخلق حالةً وسطى يجب أن يفكّر فيها كل قارئ لاحقاً بلا مقابل.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.thread_opened"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "order_public_id",
+            "customer_public_id",
+            "driver_public_id",
+            "service_kind",
+            "opened_by",
+            "opening_amount_minor",
+            "currency",
+            "policy_version",
+            "expires_at",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "customer_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "dispatch_offer_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "service_kind": {
+              "$ref": "#/$defs/ServiceKind"
+            },
+            "opened_by": {
+              "$ref": "#/$defs/Party"
+            },
+            "opening_amount_minor": {
+              "$ref": "#/$defs/AmountMinor"
+            },
+            "currency": {
+              "$ref": "#/$defs/Currency"
+            },
+            "policy_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationRoundProposedV1": {
+      "type": "object",
+      "description": "اقترح طرفٌ مبلغاً في دورٍ جديد، والدور السابق صار `superseded` في المعاملة نفسها. الحدث يحمل المبلغ لأنّ المبلغ **هو** التغيّر، ولا يحمل الرسالة المصاحبة له: نصُّ المستخدم لا يعبر أي حدث (القرار 6).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.round_proposed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "round_no",
+            "proposed_by",
+            "amount_minor",
+            "currency",
+            "expires_at",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "round_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "round_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "proposed_by": {
+              "$ref": "#/$defs/Party"
+            },
+            "amount_minor": {
+              "$ref": "#/$defs/AmountMinor"
+            },
+            "currency": {
+              "$ref": "#/$defs/Currency"
+            },
+            "supersedes_round_no": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationRoundRejectedV1": {
+      "type": "object",
+      "description": "رفض الطرف الآخر مبلغ الدور. `thread_remains_open` يفصل «رفضتُ وسأقترح غيره» عن «رفضتُ وانتهى»، وهما نيّتان لا يجوز أن يُخمّنهما مستهلك من الحالة وحدها.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.round_rejected"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "round_no",
+            "rejected_by",
+            "thread_remains_open",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "round_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rejected_by": {
+              "$ref": "#/$defs/Party"
+            },
+            "thread_remains_open": {
+              "type": "boolean"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationRoundExpiredV1": {
+      "type": "object",
+      "description": "انتهت مهلة دورٍ معلّق. الحدث ينتجه **نبضة** لا مؤقّت (القرار 5)، ولذلك `occurred_for` هو استحقاق الانتهاء لا لحظة النبضة: إعادة تشغيل الخدمة تُؤجّل الاكتشاف ولا تُغيّر متى انتهى الدور.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.round_expired"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "round_no",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "round_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "proposed_by": {
+              "$ref": "#/$defs/Party"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationMessagePostedV1": {
+      "type": "object",
+      "description": "أُرسلت رسالة في الخيط. **لا `body` في هذه الحمولة ولا في غيرها**: نصّ المستخدم يُخزَّن ويُسلَّم عبر الواجهة، ولا يعبر ناقلَ أحداثٍ يقرؤه من لا يحقّ له (القرار 6 · سابقة `shipment_description` في ADR-009 §7). و`body_length` عددٌ لا نصّ: يكفي عدّادات الإساءة في Phase 09 بلا قراءة كلمةٍ واحدة.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.message_posted"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "message_id",
+            "sequence_no",
+            "author_role",
+            "body_length",
+            "source_locale",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "message_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "sequence_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "author_role": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "driver",
+                "system"
+              ]
+            },
+            "body_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "system_code": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "round_no": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "source_locale": {
+              "$ref": "#/$defs/Locale"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationAgreedV1": {
+      "type": "object",
+      "description": "قَبِل طرفٌ دورَ الطرف الآخر فوقع الاتفاق وأُغلق الخيط. هذا الحدث **لا يعني أنّ الطلب سجّل السعر**: التسجيل فعلُ محرّك الطلب ويُعلنه `negotiations.agreed_price_handed_off`. فصلُهما مقصود لأنّ الاتفاق واقعٌ بين طرفين ووصولُ الخبر أمرٌ آخر (القرار 2).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.agreed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "order_public_id",
+            "customer_public_id",
+            "driver_public_id",
+            "round_no",
+            "amount_minor",
+            "currency",
+            "accepted_by",
+            "policy_version",
+            "round_count",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "customer_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "round_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "amount_minor": {
+              "$ref": "#/$defs/AmountMinor"
+            },
+            "currency": {
+              "$ref": "#/$defs/Currency"
+            },
+            "accepted_by": {
+              "$ref": "#/$defs/Party"
+            },
+            "policy_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "round_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationAgreedPriceHandedOffV1": {
+      "type": "object",
+      "description": "قَبِل محرّك الطلب السعر المتَّفق عليه وسجّله في الطلب. `attempt_no` معلَن لأنّ النجاح من المحاولة الرابعة معلومةٌ تشغيلية لا تفصيل: تكرارُه يقول إنّ الحدّ بين الخدمتين متعب.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.agreed_price_handed_off"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "order_public_id",
+            "attempt_no",
+            "amount_minor",
+            "currency",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "attempt_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "amount_minor": {
+              "$ref": "#/$defs/AmountMinor"
+            },
+            "currency": {
+              "$ref": "#/$defs/Currency"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationPriceHandoffFailedV1": {
+      "type": "object",
+      "description": "فشلت محاولة تسليم السعر. الحدث يُنشَر ولا يُلغى الاتفاق: **الفشل معلومة لا تراجع** (القرار 2). و`retry_scheduled` يقول للمُراقب إن كانت النبضة ستعيد المحاولة أم أنّ الأمر انتهى إلى قرار.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.price_handoff_failed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "order_public_id",
+            "attempt_no",
+            "outcome",
+            "error_code",
+            "retry_scheduled",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "attempt_no": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "outcome": {
+              "$ref": "#/$defs/HandoffOutcome"
+            },
+            "error_code": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 64
+            },
+            "retry_scheduled": {
+              "type": "boolean"
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "NegotiationThreadClosedV1": {
+      "type": "object",
+      "description": "أُغلق الخيط بلا اتفاق: رفضاً نهائياً من طرف، أو استنفاداً لسقف الأدوار، أو انتهاءً للمهلة، أو إلغاءً من التوزيع أو سحباً للطلب. حدثٌ واحد بسببٍ مُعدَّد لا أربعة أحداث متشابهة: المستهلك يسأل «هل انتهى الخيط ولماذا؟» سؤالاً واحداً، وتفريقُ الأحداث يُجبره على الاشتراك في أربعة كي لا يفوته واحد.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_type": {
+          "const": "negotiations.thread_closed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "thread_id",
+            "order_public_id",
+            "customer_public_id",
+            "driver_public_id",
+            "state",
+            "close_reason_code",
+            "round_count",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "thread_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "order_public_id": {
+              "$ref": "#/$defs/OrderPublicId"
+            },
+            "customer_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "driver_public_id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "declined",
+                "expired",
+                "cancelled"
+              ]
+            },
+            "close_reason_code": {
+              "$ref": "#/$defs/ThreadCloseReasonCode"
+            },
+            "round_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "occurred_for": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}

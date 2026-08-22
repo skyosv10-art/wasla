@@ -1,8 +1,8 @@
 # المطابقة والتوزيع — نموذج المجال ودورة حياة مهمّة التوزيع
 
 - **Scope:** من المرشّحون وبأي ترتيب (`matching`) · من يستلم العرض ومتى وماذا عند الرفض أو المهلة (`dispatch`) · الأمواج والمهل والتصعيد · إسقاط الترشيح. **لا** يشمل حالة الطلب وانتقالاته (Phase 06 — [ORDER_ENGINE.md](ORDER_ENGINE.md)) ولا ملفّ السائق وأهليّته (Phase 05) ولا التفاوض والسعر (Phase 08) ولا السمعة (Phase 09) ولا مجموعات المجتمع وتوصيل الرسائل (طبقة القناة).
-- **Last Updated:** 2026-08-21
-- **Status:** Active — Phase 07 · MR 1/6 (العقود والنموذج موثّقان؛ التنفيذ في MR 2/6–5/6 والبوابة في MR 6/6)
+- **Last Updated:** 2026-08-22
+- **Status:** Active — Phase 07 · MR 2/6 (**مجال المطابقة مُنفَّذ ومُختبَر** بلا قاعدة وبلا HTTP — انظر [MATCHING_CORE_DOMAIN.md](../02-architecture/MATCHING_CORE_DOMAIN.md)؛ استمرارية المطابقة في MR 3/6 · مجال التوزيع في MR 4/6 · HTTP في MR 5/6 · البوابة في MR 6/6)
 - **Related Code:** [`services/matching/contracts/`](../../services/matching/contracts/README.md) · [`services/dispatch/contracts/`](../../services/dispatch/contracts/README.md) · [`packages/contracts/matching`](../../packages/contracts/matching) · [`packages/contracts/dispatch`](../../packages/contracts/dispatch)
 - **Related Team:** Team 04 — Matching · Team 05 — Dispatch
 - **Related:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) · [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md)

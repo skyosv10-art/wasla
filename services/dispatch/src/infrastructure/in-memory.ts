@@ -178,7 +178,7 @@ export class InMemoryJobRepository implements JobRepository {
 
   async insert(input: InsertJobInput): Promise<DispatchJob> {
     if (input.payloadFingerprint.length !== PAYLOAD_FINGERPRINT_LENGTH) {
-      // ck_dispatch_jobs_fingerprint_length
+      // CHECK (char_length(payload_fingerprint) = 64) — inline and unnamed in the DDL.
       throw validationFailed("payload_fingerprint", `${PAYLOAD_FINGERPRINT_LENGTH} characters`);
     }
     if (Date.parse(input.escalationExpiresAt) < Date.parse(input.expiresAt)) {
@@ -291,6 +291,7 @@ export class InMemoryWaveRepository implements WaveRepository {
       status: "open",
       reasonCode: null,
       openedAt: input.openedAt,
+      expiresAt: input.expiresAt,
       completedAt: null,
       createdAt: input.openedAt,
       updatedAt: input.openedAt,
@@ -310,7 +311,7 @@ export class InMemoryWaveRepository implements WaveRepository {
     if (!isWaveTransitionAllowed(current.status, status)) {
       throw validationFailed("status", `a legal move from ${current.status}`);
     }
-    // ck_dispatch_waves_reason_required
+    // ck_dispatch_waves_terminal_needs_reason
     if (waveStatusRequiresReasonCode(status) && reasonCode === null) {
       throw reasonCodeRequired(status);
     }
@@ -321,7 +322,7 @@ export class InMemoryWaveRepository implements WaveRepository {
       ...current,
       status,
       reasonCode,
-      // ck_dispatch_waves_completed_at — null exactly while open.
+      // ck_dispatch_waves_state_timestamp — null exactly while open.
       completedAt: status === "open" ? null : changedAt,
       updatedAt: changedAt,
     };
@@ -383,7 +384,7 @@ export class InMemoryOfferRepository implements OfferRepository {
     if (!isOfferTransitionAllowed(current.status, input.status)) {
       throw validationFailed("status", `a legal move from ${current.status}`);
     }
-    // ck_dispatch_offers_reason_required is satisfied by the type of `ResolveOfferInput`
+    // ck_dispatch_offers_terminal_needs_reason is satisfied by the type of `ResolveOfferInput`
     // (a resolution always carries a reason); what still needs checking is that the code
     // is one the catalog allows for THIS outcome.
     if (!allowedOfferReasonCodes(input.status).includes(input.reasonCode)) {
@@ -422,7 +423,7 @@ export class InMemoryOfferRepository implements OfferRepository {
 }
 
 /**
- * The offer timestamp matrix from `schema.sql`.
+ * The offer timestamp matrix from `schema.sql` (ck_dispatch_offers_state_timestamp).
  *
  * `accepted` and `rejected` are answers a person gave, so both `responded_at` and
  * `resolved_at` are set. `timed_out`, `superseded` and `cancelled` are things that

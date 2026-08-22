@@ -174,7 +174,44 @@ CREATE INDEX IF NOT EXISTS ix_dispatch_outbox_aggregate
     ON dispatch_outbox (aggregate_type, aggregate_id, occurred_at);
 
 -- ─────────────────────────────────────────────────────────────────────
--- 5) updated_at تملكه القاعدة، كي لا يختلف أثر تحديث HTTP عن أثر نبضة التشغيل.
+-- 5) dispatch_idempotency — ذاكرة مفاتيح منع التكرار
+--    ترحيل إضافي عكوس أُضيف في Phase 07 · MR 5a/6 (التراجع: DROP TABLE dispatch_idempotency).
+--
+--    منفذ `IdempotencyStore` (§43) موجود منذ MR 4/6 بلا مكان يخزّن فيه. الجدول
+--    ليس تكراراً لـ`dispatch_jobs.created_idempotency_key`: ذلك العمود يحمي
+--    «طلب واحد = مهمة واحدة» على صفّ المهمة، أمّا هذا الجدول فيخدم الكتابات التي
+--    لا تُنشئ صفّاً جديداً — قبول عرض، رفض عرض، إلغاء مهمة — ولا يوجد لها صفّ
+--    يُعلَّق المفتاح عليه. بلا هذا الجدول تكون إعادة محاولة «قبول العرض» بعد مهلة
+--    شبكية إمّا خطأً 409 لا يستطيع السائق فعل شيء حياله، وإمّا قبولاً ثانياً.
+--
+--    البصمة هي جوهر القيمة: نفس المفتاح ونفس الحمولة = إعادة محاولة تنجح وتعيد
+--    النتيجة المحفوظة بلا حدث ثانٍ، أمّا نفس المفتاح بحمولة مختلفة فخطأ مُنادٍ
+--    يُرفَض بـ409 ولا يكتب فوق أثر غيره صامتاً. بلا تخزين البصمة تبدو الحالتان نجاحاً.
+--
+--    الطول 8..128 مطابق حرفياً لـ`assertIdempotencyKey` في المجال ولعمود
+--    `created_idempotency_key` أعلاه ولعقود الطلبات والعملاء والمطابقة: مفتاح
+--    يقبله التطبيق وترفضه القاعدة يُنتج 500 بلا سبب مفهوم.
+--    لا سياسة تقليم في هذه المرحلة (دَين تشغيلي مُعلَن — Phase 09، كما في dispatch_outbox).
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dispatch_idempotency (
+    idempotency_key     TEXT        PRIMARY KEY
+                        CHECK (char_length(idempotency_key) BETWEEN 8 AND 128),
+    -- بصمة الحمولة المُعيَّرة (stable stringify) لا الحمولة نفسها: لا نصّ مستخدم
+    -- ولا مُعرّف سائق في جدول تدقيق تقني.
+    payload_fingerprint TEXT        NOT NULL
+                        CHECK (char_length(payload_fingerprint) BETWEEN 1 AND 4096),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 6) updated_at تملكه القاعدة، كي لا يختلف أثر تحديث HTTP عن أثر نبضة التشغيل.
+--
+--    نتيجة مقصودة تُقرأ مع MR 5a/6: المُنادي يمرّر `changedAt` من الساعة المحقونة،
+--    والقاعدة تكتب `now()` فوقه. أي أن `updated_at` هو زمن الكتابة الفعلي لا زمن
+--    القرار المنطقي، وزمن القرار محفوظ في الأعمدة التي يملكها المجال
+--    (`completed_at` · `responded_at` · `resolved_at`). لذلك يستثني اختبار مطابقة
+--    المنافذ `updatedAt` من المقارنة صراحةً بدل أن يزيّف الساعة، وهذا مُوثَّق في
+--    DISPATCH_PERSISTENCE.md §4.
 -- ─────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION dispatch_set_updated_at() RETURNS TRIGGER AS $$
 BEGIN
@@ -200,6 +237,7 @@ COMMIT;
 -- ─────────────────────────────────────────────────────────────────────
 -- التراجع (rollback) — يُحذف بترتيب عكسي للتبعيات.
 -- ─────────────────────────────────────────────────────────────────────
+-- DROP TABLE IF EXISTS dispatch_idempotency;
 -- DROP TABLE IF EXISTS dispatch_outbox;
 -- DROP TABLE IF EXISTS dispatch_offers;
 -- DROP TABLE IF EXISTS dispatch_waves;

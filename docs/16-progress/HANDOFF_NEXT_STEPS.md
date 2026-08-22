@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-21 (**Phase 06 = Completed · بوابة الخروج اجتازت** · MR 6/6 — **بوابة خروج المرحلة E2E**: `@wasla/order-e2e` تُشغّل نواة العميل ومحرّك الطلبات كخدمتين منفصلتين والتسليم بينهما بالمحوّل الإنتاجي نفسه، فيُقاد الطلب عبر HTTP من `published` إلى `completed` ثمّ يُمسح فضاء الانتقالات كاملاً — 441 زوجاً: 72 تنجح و369 تُرفض والحالة لا تتغيّر ([PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md)) بعد MR 5/6 — **محوّل التسليم الإنتاجي**: خدمة العميل تُنادي `POST /orders/intake` على 8087 بخريطة حالات مُصرَّحة و`/health` عندها صار `ok` لأول مرة ([ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)) بعد MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **المرحلة الحالية صارت Phase 07 — انظر §11**؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-22 (**Phase 07 · MR 5a/6 مدمجة — استمرارية التوزيع على Postgres بوحدة عمل، والمتبقّي في المرحلة MR 5b/6 (HTTP 8088/8089 والمحوّلات الإنتاجية) ثمّ 6/6 بوابة الخروج — انظر §11**؛ **Phase 06 = Completed · بوابة الخروج اجتازت** · MR 6/6 — **بوابة خروج المرحلة E2E**: `@wasla/order-e2e` تُشغّل نواة العميل ومحرّك الطلبات كخدمتين منفصلتين والتسليم بينهما بالمحوّل الإنتاجي نفسه، فيُقاد الطلب عبر HTTP من `published` إلى `completed` ثمّ يُمسح فضاء الانتقالات كاملاً — 441 زوجاً: 72 تنجح و369 تُرفض والحالة لا تتغيّر ([PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md)) بعد MR 5/6 — **محوّل التسليم الإنتاجي**: خدمة العميل تُنادي `POST /orders/intake` على 8087 بخريطة حالات مُصرَّحة و`/health` عندها صار `ok` لأول مرة ([ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)) بعد MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **المرحلة الحالية صارت Phase 07 — انظر §11**؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,17 +15,23 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 07 — Dispatch & Matching MVP · MR 4/6 من ستّ مدمجة
-                 (مجال المطابقة النقي + استمرارية Postgres بوحدة عمل + **مجال التوزيع النقي**
-                  بالنبضة مُقدِّماً وحيداً للزمن · بلا HTTP بعد ولا استمرارية للتوزيع · §11)
+المرحلة الحالية: Phase 07 — Dispatch & Matching MVP · MR 5a/6 مدمجة (MR 5/6 قُسِمت إلى 5a و5b — §11)
+                 (مجال المطابقة النقي + استمرارية المطابقة + مجال التوزيع النقي بالنبضة مُقدِّماً
+                  وحيداً للزمن + **استمرارية التوزيع بوحدة عمل: النبضة كلّها ترتكز أو تتراجع**
+                  · بلا HTTP بعد ولا محوّلات إنتاجية — محلّهما MR 5b/6 · §11)
                  (Phase 06 **أُغلقت** 2026-08-21 بستّ مراجعات وبوابة خروج اجتازت · §10)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ · Phase 04 ✅ (أُغلقت 2026-08-21 بستّ مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03 · customer-db-integration و**customer-exit-gate-e2e** لبوابة المرحلة 04).
-المتبقّي:         Phase 07 (MR 5/6 → 6/6) ثمّ Phase 08 → Phase 24 (انظر §3 للمسار الكامل، و§10 لما تُسلّمه Phase 06، و§11 لحالة المرحلة الحالية).
-الاختبارات:       **1726 اختباراً على 25 مشروع عمل** (+1 متروك بقصد) + **33 اختبار تكامل على Postgres حقيقي**
+المتبقّي:         Phase 07 (MR 5b/6 → 6/6) ثمّ Phase 08 → Phase 24 (انظر §3 للمسار الكامل، و§10 لما تُسلّمه Phase 06، و§11 لحالة المرحلة الحالية).
+الاختبارات:       **1744 اختباراً على 25 مشروع عمل** (+1 متروك بقصد) + **33 اختبار تكامل على Postgres حقيقي**
                  في وظيفة `matching-db-integration` (Phase 07 · MR 3/6: 17 مُهيّئ + 11 مطابقة منافذ + 5 ذرّية —
-                 تتخطّى نفسها بلا `DATABASE_URL`) — منها **142 لمجال التوزيع** (Phase 07 · MR 4/6:
+                 تتخطّى نفسها بلا `DATABASE_URL`) + **47 اختبار تكامل في وظيفة `dispatch-db-integration`**
+                 (Phase 07 · MR 5a/6: 29 مُهيّئ أمام قاعدة حقيقية + 12 مطابقة منافذ تُنفَّذ مرّتين
+                 ذاكرة/Postgres والأثران يُقارَنان أحدهما بالآخر + 6 ذرّية تُثبت أنّ نبضةً كاملة
+                 تتراجع بأسرها — تتخطّى نفسها بلا `DATABASE_URL`) — منها **160 لمجال التوزيع**
+                 (142 من MR 4/6 + **18 حارس انحراف مرآة Drizzle↔DDL من MR 5a/6 يعمل بلا قاعدة**)
+                 (Phase 07 · MR 4/6:
                  26 للنبضة + 17 للقبول + 14 للإلغاء + 14 حارس انحراف عقد يقرأ schema.sql وOpenAPI
                  وevents.json وerrors.md من القرص + 19 لآلات الحالات الثلاث + 13 للإنشاء + 12 للرفض
                  + 10 للمواعيد + 9 للخرائط + 8 لعقد الأحداث) و**136 لمجال المطابقة** (Phase 07 · MR 2/6 و3/6:
@@ -56,7 +62,8 @@
 بوابة المرحلة:   مُثبَتة لا موصوفة — @wasla/channel-e2e يبني البوتات الثلاثة في عملية واحدة أمام خدمة
                  هوية واحدة تستمع على HTTP: كل بوت يفتح Mini App الخاصة به، وشخص واحد عبر الثلاثة
                  = هوية واحدة، والمُعاد لا يُعالَج مرّتين، والمُهيّئ قابل للاستبدال بـMockChannelAdapter.
-آخر تحديث:      2026-08-22 (Phase 07 · MR 4/6 — مجال التوزيع النقي مُنفَّذ ومُختبَر · التالية MR 5/6 استمرارية التوزيع وسطح HTTP — §11)
+آخر تحديث:      2026-08-22 (Phase 07 · MR 5a/6 — استمرارية التوزيع مُنفَّذة ومُختبَرة أمام Postgres حقيقي ·
+                 التالية **MR 5b/6**: طبقة HTTP 8088/8089 والمحوّلات الإنتاجية — §11)
 ملاحظة:         ما تحت هذا القسم من تفاصيل MR !1..!9 مرجع تاريخي لـPhase 00.
 ```
 
@@ -597,7 +604,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 11. Phase 07 (Dispatch & Matching MVP) — المرحلة الحالية 🔄 (قيد التنفيذ · MR 1/6 و2/6 و3/6 و4/6 مدمجة · 2026-08-22)
+## 11. Phase 07 (Dispatch & Matching MVP) — المرحلة الحالية 🔄 (قيد التنفيذ · MR 1/6 و2/6 و3/6 و4/6 و**5a/6** مدمجة · 2026-08-22)
 
 **بوابة الخروج (من الوثيقة الأم §78 و[ROADMAP](ROADMAP.md)):** «Request كامل من Customer إلى Driver assignment في بيئة اختبار حقيقية.»
 
@@ -632,7 +639,9 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 | 2/6 | طبقة مجال المطابقة النقيّة: الفلاتر الصلبة الثمانية بترتيبها وأكواد عجزها · الترتيب بنسخة القواعد 1 بحساب صحيح · حسم التعادل — بلا قاعدة وبلا HTTP | **مدمجة** ([!45](https://gitlab.com/uxxxu/wasla/-/merge_requests/45)) |
 | 3/6 | استمرارية المطابقة (Drizzle/Postgres مرآةً لـ`schema.sql`) + وحدة عمل + وظيفة CI `matching-db-integration` | **مدمجة** ([!46](https://gitlab.com/uxxxu/wasla/-/merge_requests/46)) |
 | 4/6 | طبقة مجال التوزيع النقيّة: آلة المهمّة/الموجة/العرض + دلالة النبضة بساعة مُحقونة + منفذ محرّك الطلبات مُزيَّفاً | **مدمجة** ([!47](https://gitlab.com/uxxxu/wasla/-/merge_requests/47)) |
-| 5/6 | استمرارية التوزيع + طبقة HTTP (8088 و8089) + `HttpOrderEnginePort` الإنتاجي + وظيفة CI `dispatch-db-integration` | متبقّية |
+| ~~5/6~~ | **قُسِمت** إلى 5a/6 و5b/6 — لأنّها كانت تخلط سؤالين يفشل أحدهما فلا يُعرَف أيّهما: «هل الحالة تعيش؟» و«هل العقد الشبكي مُطبَّق؟» | — |
+| 5a/6 | استمرارية التوزيع: مرآة Drizzle لـ`schema.sql` + `PostgresDispatchUnitOfWork` + وظيفة CI `dispatch-db-integration` | **مدمجة** ([!48](https://gitlab.com/uxxxu/wasla/-/merge_requests/48)) |
+| 5b/6 | طبقة HTTP (8089 للتوزيع و**8088 للمطابقة — لا `src/http` فيها بعد**) + `HttpOrderEnginePort` الإنتاجي + عميل HTTP للمطابقة + محوّل الجغرافيا | متبقّية |
 | 6/6 | **بوابة الخروج** `packages/dispatch-e2e`: خمس خدمات تعمل، المسار الكامل في [نموذج المجال §8](../03-domain/MATCHING_DISPATCH.md)، ووثيقة `docs/12-testing/PHASE07_EXIT_GATE_E2E.md`، ثمّ إغلاق الطور | متبقّية |
 
 ### ما أنجزته MR 1/6 بالضبط ([!44](https://gitlab.com/uxxxu/wasla/-/merge_requests/44))
@@ -726,6 +735,28 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **صفّ العرض المُنتهي يقرأ `offered` حتى النبضة التالية**: القبول محميّ منه، لكن **أي عارض (بوت أو Mini App) يجب أن يحسب الانتهاء من `expires_at` لا من `status`**.
 - **تأخيرٌ في منتصف الموجة يُنتج موجة أصغر من `waveSize`**، وفي أسوأ حال موجة مفتوحة بصفر عرض تُكمِلها النبضة التالية بـ`NO_DRIVER_AVAILABLE` فتُستهلك موجة بلا عرض — البديل معاملة موزّعة على خدمتين لا نملكها.
 - **موجة رُفضت كلّها تنتظر النبضة**، و**موجة أولى متأخّرة جداً قد تتجاوز السقف المحفوظ بمهلة عرض واحدة** (نُفضّل ذلك على تصعيد مهمّة لم تُعرَض على أحدٍ قط).
+
+### ما أنجزته MR 5a/6 بالضبط ([!48](https://gitlab.com/uxxxu/wasla/-/merge_requests/48))
+
+طبقة استمرارية Postgres وراء منافذ التوزيع نفسها. التفصيل المعماري كاملاً في [DISPATCH_PERSISTENCE.md](../02-architecture/DISPATCH_PERSISTENCE.md)، وما **يجب** معرفته قبل MR 5b/6:
+
+- **المعيار المُعلَن تحقّق، بانحرافٍ واحدٍ مُعلَن.** مُهيّئات Postgres تُنجح اختبارات حالات الاستخدام نفسها، و`port-conformance.integration.test.ts` (12 سيناريو) يُنفّذ كل سيناريو **مرّتين** — ذاكرة وPostgres — ويقارن الأثرين **أحدهما بالآخر** لا بتوقّعٍ مكتوبٍ بيد. الانحراف: **ثلاثة أسطر في `src/use-cases/tick.ts`** لأنّ `dispatch_waves.expires_at` كان `NOT NULL` في العقد بلا حقلٍ مقابل في المجال؛ التفصيل والبديلان المرفوضان في [DISPATCH_PERSISTENCE §2.2](../02-architecture/DISPATCH_PERSISTENCE.md).
+- **حدود المعاملة تملكها وحدة العمل وحدها.** المُهيّئات الخمسة تقبل `DbOrTx` و**لا تفتح معاملة بنفسها**. `PostgresDispatchUnitOfWork.run()` تفتح معاملة واحدة وتُسلّم **نفس المقبض** للخمسة، و`read()` تعمل على المقبض الجذري بلا معاملة — فـGET لا يحتجز اتصالاً مقابل ضمان اتساقٍ لا تستطيع استجابة JSON واحدة أن تُظهره. **في MR 5b/6: لا تفتح معاملة داخل مُعالِج HTTP؛ استعمل `run`/`read`.**
+- **الذرّية هي كل قيمة هذه الدفعة، وسببها محدَّد:** موجة `open` ارتكزت بلا عروضها تعني أنّ `ux_dispatch_waves_one_open_job` يرفض كل موجة تالية لتلك المهمة **إلى الأبد** — العميل ينتظر بلا نهاية ولا يُصلحه إلّا حذفٌ بشري لصفّ. `atomicity.integration.test.ts` (6) يكسر الإلحاق الأخير ثمّ الأول ويتحقّق أنّ كل شيء غاب وأنّ **إعادة المحاولة تنجح**.
+- **`updated_at` يملكه المُشغّل لا المُنادي.** `EXCLUDED_KEYS` في اختبار المطابقة تحوي مفتاحاً واحداً فقط (`updatedAt`)، ومُعامل `_changedAt` في `PostgresJobRepository.updateStatus` **لا يُكتَب بقصد**. مفتاحٌ ثانٍ في تلك المجموعة يعني سلوكاً اختلف؛ `schema.sql` §6 و[DISPATCH_PERSISTENCE §4](../02-architecture/DISPATCH_PERSISTENCE.md) يشرحان لماذا.
+- **فجوتان في العقد سُدَّتا:** `dispatch_idempotency` أُضيف كـ§5 (منفذ `IdempotencyStore` كان بلا جدول — **نفس فجوة المطابقة حرفياً، فهو نمط لا حادثة**)، و`expiresAt` أُضيف للموجة في المجال. وأربعة أسماء قيود في تعليقات `in-memory.ts` **لا وجود لها في الـDDL** صُحّحت، وصار `schema-drift.test.ts` (18 فحصاً، بلا قاعدة) يُفشِل البناء على أيّ اسم قيد يذكره تعليقٌ ولا يوجد في العقد.
+- **`SELECT … FOR UPDATE` ثمّ نفس دوالّ آلة الحالات** في المجال — القاعدة تقفل صفّاً واحداً والقرار يبقى في موضع واحد. ومُهيّئ الأخطاء يترجم `23505`/`23514` إلى **نفس** رموز `errors.md` التي يرفعها مُهيّئ الذاكرة، بالمشي على سلسلة `.cause` لأنّ Drizzle تُغلّف خطأ المُشغّل.
+- **خطأ كشفته القاعدة الحقيقية وحدها:** `FakeOrderEngine` كان يولّد `assignment-N` و`dispatch_offers.order_assignment_id` نوعه **UUID** — الذاكرة تقبل والقاعدة ترفض بـ`22P02`. المُهيّئ الوهمي الآن يولّد UUID صحيح الشكل.
+- **`pnpm -r typecheck` نظيف على 25 مشروعاً · 1744 اختباراً ناجحاً** (كان 1726؛ الزيادة كلّها حارس الانحراف، فاختبارات التكامل الـ47 لا تعمل في `pnpm -r test` بقصد) · **47 اختبار تكامل** أمام Postgres حقيقي في `dispatch-db-integration` على قاعدة مستقلّة `wasla_dispatch_test`.
+
+### ما لم يُنجَز في MR 5a/6 بقصد (محلّه MR 5b/6 وما بعدها)
+
+- **لا طبقة HTTP ولا المنفذان 8088/8089** ولا `HttpOrderEnginePort` إنتاجي ولا عميل مطابقة حقيقي ولا محوّل جغرافيا — كلّها MR 5b/6. و`last_tick_at` في `/health` ينتظرها.
+- **⚠️ منافذ الشبكة تُنادى داخل المعاملة — أوّل ما يجب حسمه في MR 5b/6.** `tick.ts` ينادي `matching.getCandidates` و`orders.registerAssignment` بينما معاملة Postgres مفتوحة. مقبولٌ اليوم لأنّ المُهيّئات محلّية وسريعة، و**غير مقبول** حين تصبح نداءات HTTP: نداءٌ بطيء يحتجز اتصالاً من التجمّع ويطيل عمر المعاملة، ومهلةٌ منقضية تُراجِع عملاً صحيحاً. المعالجة (تجميع نداءات الشبكة قبل فتح المعاملة، أو saga) **لم تُقرَّر هنا بقصد** لأنّها تحتاج المُهيّئ الحقيقي أمامها لتُقاس.
+- **لا مُرحِّل لصندوق الصادر** (Phase 09): الصفوف تُكتَب و`markPublished` موجودة **ولا أحد يناديها**، و`ix_dispatch_outbox_unpublished` جاهز له.
+- **لا مُنادٍ للنبضة** (Phase 09) — النبضة اليوم دالّة تُنادى من اختبار.
+- **`resetData` تُفرغ ولا تبذر** — صحيحٌ لأنّ عقد التوزيع بلا بذور تعاقدية (القواعد تصل عبر `RulesProvider`)؛ من يُضيف بذرةً لاحقاً عليه تعديل `pg-harness.ts`.
+- **دَين MR 4/6 السلوكي باقٍ كما أُعلن أعلاه بحرفه** — العروض المنتهية تُقرَأ `offered` حتى النبضة التالية (فأي عارض يحسب الانتهاء من `expires_at` لا من `status`)، والتأجيل وسط الموجة قد يعطي موجةً أصغر من `waveSize`، وموجةٌ مرفوضة بالكامل تنتظر النبضة التالية.
 
 ## 8. روابط سريعة
 

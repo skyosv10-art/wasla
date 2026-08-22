@@ -89,6 +89,17 @@ export interface InsertWaveInput {
   readonly jobId: string;
   readonly waveNumber: number;
   readonly openedAt: string;
+  /**
+   * The round's deadline, computed once by the caller from the job's frozen
+   * snapshot.
+   *
+   * Added in MR 5a/6 because `dispatch_waves.expires_at` is `NOT NULL`: the value
+   * was being computed in the tick, published in `dispatch.wave_opened`, and then
+   * dropped on the floor. Passed in rather than derived inside the adapters — two
+   * adapters deriving the same deadline is two implementations of
+   * `computeOfferDeadline`, and the second one is the one that silently disagrees.
+   */
+  readonly expiresAt: string;
 }
 
 /**

@@ -109,6 +109,18 @@ export interface DispatchWave {
   readonly status: DispatchWaveStatus;
   readonly reasonCode: DispatchReasonCode | null;
   readonly openedAt: string;
+  /**
+   * When this round's offers stop being answerable.
+   *
+   * Added in MR 5a/6, and not a convenience: `dispatch_waves.expires_at` is
+   * `NOT NULL` in the contract and `ix_dispatch_waves_open_due` indexes it, so a
+   * wave could not be persisted at all while the value existed only inside the
+   * `dispatch.wave_opened` payload. It equals `computeOfferDeadline(openedAt,
+   * job.rules)` — the same instant every offer of the wave carries — and it is
+   * stored rather than derived so a reader of the row does not have to join the
+   * job and repeat the arithmetic to learn whether the round is still live.
+   */
+  readonly expiresAt: string;
   readonly completedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;

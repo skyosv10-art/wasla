@@ -2,8 +2,9 @@
  * Public surface of the dispatch service.
  *
  * MR 4/6 is the pure domain: state machines, the tick, the write paths and in-memory
- * adapters. No Postgres and no HTTP — those arrive in MR 5/6 together with the
- * `dispatch-db-integration` CI job, and the exit-gate package follows in MR 6/6.
+ * adapters. MR 5a/6 adds the Postgres adapters and the unit of work below, with the
+ * `dispatch-db-integration` CI job. HTTP (port 8089) and the real matching/order
+ * clients are MR 5b/6; the exit-gate package follows in MR 6/6.
  *
  * The fake order engine and fake matching port are NOT exported here. They live in
  * `src/__tests__/harness.ts` because the fake engine validates transitions against the
@@ -28,3 +29,22 @@ export * from "./use-cases/accept-offer.js";
 export * from "./use-cases/reject-offer.js";
 export * from "./use-cases/cancel-job.js";
 export * from "./use-cases/read-job.js";
+
+// Postgres adapters (Phase 07 · MR 5a/6). Exported so the HTTP layer of MR 5b/6 —
+// and the exit-gate harness of MR 6/6 — can bind real storage without knowing how
+// the tables are shaped. The repositories themselves are deliberately NOT exported:
+// callers get them from `bindDispatchAdapters`, which is the only way to obtain a
+// set that shares one transaction, and sharing one transaction is what keeps a wave
+// from being committed without its offers.
+export { createDispatchDb } from "./infrastructure/drizzle/db.js";
+export type { Db, DbConfig, DbOrTx } from "./infrastructure/drizzle/db.js";
+export { PostgresDispatchOutbox } from "./infrastructure/drizzle/repository.js";
+export {
+  bindDispatchAdapters,
+  PostgresDispatchUnitOfWork,
+} from "./infrastructure/drizzle/transaction.js";
+export type {
+  DispatchSharedDeps,
+  DispatchUnitOfWorkContext,
+  DispatchUnitOfWorkDeps,
+} from "./infrastructure/drizzle/transaction.js";

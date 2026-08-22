@@ -282,6 +282,46 @@ matching-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/matching-service test:integration
 
+# التوزيع (المرحلة 07 · MR 5a/6): يُطبّق services/dispatch/contracts/schema.sql
+# (5 جداول — بعد أن أضاف هذا الـ MR جدول dispatch_idempotency لأنّ منفذ
+# IdempotencyStore لم يكن له مخزن في العقد؛ ولا بذور تعاقدية في هذه الخدمة،
+# فالقواعد تصل عبر منفذ RulesProvider لا عبر جدول) ثم يُشغّل ثلاثة ملفّات:
+#   - repository.integration.test.ts: ما لا يُثبته إلّا محرّك حقيقي — أنّ
+#     الفهرسين الجزئيين مُطبَّقان فعلاً (موجة واحدة مفتوحة للمهمة، وقبول واحد
+#     للمهمة)، وأنّ نفس السائق لا يُعرَض عليه مرّتين في مهمة واحدة عبر الموجات،
+#     وأنّ مصفوفة الطوابع الزمنية وترتيب المُهَل مُلزِمة، وأنّ الحذف يتشلشل
+#     من المهمة إلى موجاتها وعروضها، وأنّ TIMESTAMPTZ يعود نصّاً ISO كما دخل.
+#   - atomicity.integration.test.ts: يُثبت أنّ نبضة واحدة (صفّ الموجة + صفوف
+#     العروض + حالة المهمة + الأحداث) ترتكز أو تتراجع كوحدة واحدة. الاختبار
+#     الحاسم: نُفشِل outbox.append بعد نجاح waves.insert وoffers.insert ثم
+#     نتحقّق أنّ الموجة والعروض والأحداث كلها غائبة — فموجة «مفتوحة» بلا عروض
+#     تجعل ux_dispatch_waves_one_open_job يرفض كل موجة تالية لتلك المهمة، وهو
+#     تعطّل دائم لا تُصلحه إعادة المحاولة بل حذف بشري لصفّ.
+#   - port-conformance.integration.test.ts: السيناريو نفسه يُنفَّذ مرّتين، مرّة
+#     بمحوّلات in-memory ومرّة بـ Postgres، والنتيجتان تُقارَنان إحداهما
+#     بالأخرى لا بتوقّع مكتوب بيد. هذه هي الوظيفة التي تُثبت المعيار المُعلَن
+#     مسبقاً: إضافة قاعدة البيانات لم تُغيّر أي سلوك، والاستثناء الوحيد
+#     (updated_at، يملكه المُشغّل trg_*_updated_at) موثّق في
+#     docs/02-architecture/DISPATCH_PERSISTENCE.md §4.
+# حارس انحراف المرآة (schema-drift.test.ts) يعمل في build-test بلا قاعدة، لأنّه
+# يقرأ schema.sql من القرص ويقارنه بإسقاط Drizzle في الاتجاهين، ويتحقّق أيضاً
+# أنّ كل اسم قيد يذكره تعليق في محوّلي التخزين موجود فعلاً في العقد.
+# قاعدة منفصلة (wasla_dispatch_test) ليبقى الفشل منسوباً لوظيفة واحدة.
+dispatch-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_dispatch_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_dispatch_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/dispatch-service test:integration
+
 # ──────────────────────────────────────────────────────────────
 # بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
 # حقيقي + مخازن Postgres في عملية واحدة:

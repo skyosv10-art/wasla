@@ -10,15 +10,16 @@
  * and the single function that turns them into a verdict — plus the log that says
  * when the verdict changed and what caused it.
  *
- * ## What is IN this MR (2/6) and what is not
+ * ## What is IN this MR (3/6) and what is not
  *
- * This is the PURE layer: the model, the calculator, the state machines, the ports,
- * and in-memory adapters that simulate the database constraints by name. There is no
- * `pg`, no `drizzle` and no `fastify` dependency, so **this service cannot boot yet**,
- * and that is the declared boundary rather than an omission:
+ * The pure layer from MR 2/6 — the model, the calculator, the state machines, the
+ * ports, and in-memory adapters that simulate the database constraints by name —
+ * plus, as of MR 3/6, the Drizzle/Postgres adapters, the transaction boundary and
+ * the `DriverRunner` composition seam. There is still no `fastify` dependency, so
+ * **this service cannot serve HTTP yet**, and that is the declared boundary rather
+ * than an omission:
  *
- *   - MR 3/6 — the Postgres adapters and the migration,
- *   - MR 4/6 — the HTTP layer over these use cases,
+ *   - MR 4/6 — the HTTP layer over these use cases, on port 8090,
  *   - MR 5/6 — the operations endpoints and the tick route,
  *   - MR 6/6 — the matching integration and the end-to-end path.
  *
@@ -51,6 +52,16 @@ export * from "./domain/events.js";
 // ---------------------------------------------------------------------------
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+
+// ---------------------------------------------------------------------------
+// Postgres adapters (MR 3/6). `schema.js` is NOT re-exported: its table objects
+// are an implementation detail of these adapters, and a caller holding them could
+// write a driver row without passing through a use case.
+// ---------------------------------------------------------------------------
+export * from "./infrastructure/drizzle/db.js";
+export * from "./infrastructure/drizzle/repository.js";
+export * from "./infrastructure/drizzle/transaction.js";
+export * from "./runner.js";
 
 // ---------------------------------------------------------------------------
 // Use cases — the whole write surface of the service.

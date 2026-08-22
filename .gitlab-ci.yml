@@ -323,6 +323,60 @@ dispatch-db-integration:
     - pnpm --filter @wasla/dispatch-service test:integration
 
 # ──────────────────────────────────────────────────────────────
+# السائقون (المرحلة 05 · MR 3/6): يُطبّق services/drivers/contracts/schema.sql
+# (9 جداول — بعد أن أضاف هذا الـ MR جدول driver_idempotency لأنّ منفذ
+# IdempotencyStore لم يكن له مخزن في العقد، بعرض 8..192 لا 8..128 لأنّ المفتاح
+# المخزون فيه مُنطَّق: vehicle:WS-XXXXXXXXXX:<key>، والحسبة في §9 من العقد).
+# على خلاف التوزيع، هذه الخدمة تحمل بذرة تعاقدية: سياسة الأهليّة الإصدار 1
+# (saudi-launch-v1، مُجمَّدة) تُزرع في الـ DDL نفسه ويقرأها الحاسب كلّه عبر
+# EligibilityPolicyRepository.findActive()، فـ resetData يُفرغ الجداول الثمانية
+# الأخرى ويستثني driver_eligibility_policies — تفريغه يجعل كل تسجيل تالٍ
+# يفشل بـ policyNotFound، وهو فشل أخضر يُثبت أنّ التسجيل لا يعمل لا أنّه يعمل.
+# ثلاثة ملفّات تعمل هنا:
+#   - repository.integration.test.ts: ما لا يُثبته إلّا محرّك حقيقي — أنّ
+#     الفهرسين الجزئيين مُطبَّقان فعلاً (مركبة أساسيّة واحدة، ووثيقة حيّة واحدة
+#     لكل نوع)، وأنّ COALESCE إلى الـ UUID الصفري في
+#     ux_driver_documents_one_live_per_type هو ما يمنع وثيقتَي هويّة حيّتين
+#     (فـ NULL يختلف عن NULL في فهرس فريد)، وأنّ أعمدة DATE تعود يوماً
+#     تقويميّاً "YYYY-MM-DD" لا طابعاً زمنيّاً — وإلّا انسحب توقيت الخادم إلى
+#     انتهاء رخصة، وخسر سائق في المدينة أهليّته بثلاث ساعات مبكّراً — وأنّ
+#     ترتيب listDueForRecheck (فهرس نبضة الانتهاء) مُلزِم، وأنّ 23505 يُترجَم
+#     إلى خطأ مجال مُسمّى لا إلى 500 يحمل نصّ Postgres.
+#   - atomicity.integration.test.ts: يُثبت أنّ عمليّة واحدة (تجاوز الوثيقة
+#     الحيّة + صفّ الوثيقة الجديد + سجلّ الأهليّة + صفّ النشر + الأحداث)
+#     ترتكز أو تتراجع كوحدة واحدة. الأخطر بين البادئات المُحتملة هو صفّ
+#     driver_idempotency بلا صفوف خلفه: إعادة المحاولة تُجاب «تمّ من قبل» من
+#     صفّ لا وجود له، فيضيع العمل ضياعاً دائماً لا يُصلحه طلب لاحق.
+#   - port-conformance.integration.test.ts: السيناريو نفسه يُنفَّذ مرّتين، مرّة
+#     بمحوّلات in-memory ومرّة بـ Postgres، والنتيجتان تُقارَنان إحداهما
+#     بالأخرى لا بتوقّع مكتوب بيد. هذه هي الوظيفة التي تُثبت المعيار المُعلَن
+#     مسبقاً: إضافة قاعدة البيانات لم تُغيّر أي سلوك، ولم يتغيّر أي ملفّ في
+#     src/use-cases/. والاستثناء الوحيد (updated_at، يملكه المُشغّل
+#     trg_driver_*_updated_at) موثّق في
+#     docs/02-architecture/DRIVER_PERSISTENCE.md §5.
+# حارس انحراف المرآة (schema-drift.test.ts) يعمل في build-test بلا قاعدة، لأنّه
+# يقرأ schema.sql من القرص ويقارنه بإسقاط Drizzle في الاتجاهين، ويتحقّق أيضاً
+# أنّ كل اسم قيد يذكره تعليق أو فرع في محوّلي التخزين موجود فعلاً في العقد —
+# والاسم المُخطئ في repository.ts فرعُ switch لا يعمل أبداً، فيجيب واجهة 500
+# حيث وعدت بـ 409.
+# قاعدة منفصلة (wasla_drivers_test) ليبقى الفشل منسوباً لوظيفة واحدة.
+# ──────────────────────────────────────────────────────────────
+drivers-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_drivers_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_drivers_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/drivers-service test:integration
+
+# ──────────────────────────────────────────────────────────────
 # بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
 # حقيقي + مخازن Postgres في عملية واحدة:
 #   packages/channel-e2e/src/__tests__/phase03-exit-gate.e2e.test.ts

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Driver Core service — ملفّ دور السائق ومركباته ووثائقه، والأهليّة دالّةً مُشتقّة لا عموداً (Phase 05).",
+  "description": "WASLA Driver Core service — ملفّ دور السائق ومركباته ووثائقه، والأهليّة دالّةً مُشتقّة لا عموداً (Phase 05 · MR 3/6: مجال نقي + استمرارية Postgres بوحدة عمل، بلا HTTP).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -13,13 +13,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@wasla/contracts-driver": "workspace:*"
+    "@wasla/contracts-driver": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "vitest": "^2.1.0"
+    "@types/pg": "^8.23.1",
+    "vitest": "^2.1.0",
+    "tsx": "^4.23.12"
   }
 }

@@ -112,10 +112,10 @@ orders               → notifications (Phase 09)   (عبر Outbox فقط — ل
 
 | الخدمة | المسار | الغرض | الحالة |
 |---|---|---|---|
-| matching | `services/matching/` | إسقاط الترشيح · الفلاتر الصلبة · الترتيب الموزون بنسخة قواعد مُقفَلة · سجل قرارات المطابقة | **العقود مُنفَّذة (MR 1/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/matching/contracts/README.md) |
-| dispatch | `services/dispatch/` | مهمّة التوزيع · الأمواج · العروض ومهلها · النبضة · التصعيد إلى المجتمع | **العقود مُنفَّذة (MR 1/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/dispatch/contracts/README.md) |
+| matching | `services/matching/` | إسقاط الترشيح · الفلاتر الصلبة · الترتيب الموزون بنسخة قواعد مُقفَلة · سجل قرارات المطابقة | **مجال + استمرارية + HTTP على 8088 (MR 5b/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/matching/contracts/README.md) · [الاستمرارية](MATCHING_PERSISTENCE.md) · [طبقة HTTP](../04-api/MATCHING_HTTP.md) |
+| dispatch | `services/dispatch/` | مهمّة التوزيع · الأمواج · العروض ومهلها · النبضة · التصعيد إلى المجتمع | **مجال + استمرارية + HTTP على 8089 (MR 5b/6 · Phase 07)** — [نموذج المجال](../03-domain/MATCHING_DISPATCH.md) · [العقود](../../services/dispatch/contracts/README.md) · [الاستمرارية](DISPATCH_PERSISTENCE.md) · [طبقة HTTP](../04-api/DISPATCH_HTTP.md) |
 
-المنافذ: **matching = 8088** · **dispatch = 8089** (بعد `orders` = 8087 و`customers` = 8086).
+المنافذ: **matching = 8088** · **dispatch = 8089** (بعد `orders` = 8087 و`customers` = 8086). الرقمان لم يبقيا في الوثيقة وحدها: منذ MR 5b/6 هما ثابتان مُصدَّران من حزمتي العقود (`MATCHING_SERVICE_PORT` و`DISPATCH_SERVICE_PORT`)، فيقرأهما المستهلك من العقد لا من رقم منسوخ باليد.
 
 اتجاه الاعتماد أحادي وملزم، ولا يُعكَس:
 

@@ -74,3 +74,11 @@ export const DISPATCH_API_PATHS = [
   "/dispatch/jobs/{job_id}/cancel",
 ] as const;
 export const DISPATCH_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+
+/**
+ * منفذ خدمة التوزيع (CONTAINERS §4.3).
+ *
+ * يقيم الثابت في حزمة العقد لا في الخدمة لأن بوابة الخروج (dispatch-e2e) وأي
+ * مستهلك لاحق يحتاجان المنفذ نفسه، ونسخه في مكانين يعني انحرافه في مكانين.
+ */
+export const DISPATCH_SERVICE_PORT = 8089;

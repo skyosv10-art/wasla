@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Matching service — من المرشّحون وبأي ترتيب: الفلاتر الصلبة الثمانية بترتيبها، والترتيب بنسخة قواعد مُقفَلة بحساب صحيح، وحسم تعادل مُعلَن (Phase 07 · MR 3/6: مجال نقي + استمرارية Postgres بوحدة عمل، بلا HTTP).",
+  "description": "WASLA Matching service — من المرشّحون وبأي ترتيب، مع طبقة HTTP على المنفذ 8088 (Phase 07).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -14,16 +14,20 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "dev": "tsx watch src/http/server.ts",
+    "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
     "@wasla/contracts-matching": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "fastify": "^5.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.23.1",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "tsx": "^4.23.12"
   }
 }

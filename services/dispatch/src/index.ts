@@ -29,6 +29,11 @@ export * from "./use-cases/accept-offer.js";
 export * from "./use-cases/reject-offer.js";
 export * from "./use-cases/cancel-job.js";
 export * from "./use-cases/read-job.js";
+export * from "./runner.js";
+export * from "./run-tick.js";
+export * from "./infrastructure/http-order-engine.js";
+export * from "./infrastructure/http-matching.js";
+export * from "./http/app.js";
 
 // Postgres adapters (Phase 07 · MR 5a/6). Exported so the HTTP layer of MR 5b/6 —
 // and the exit-gate harness of MR 6/6 — can bind real storage without knowing how

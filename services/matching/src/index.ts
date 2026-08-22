@@ -35,3 +35,20 @@ export type {
   UpsertCandidacyRequest,
 } from "./use-cases/manage-candidacy.js";
 export { listRulesets, readDecision } from "./use-cases/read-audit.js";
+
+// Postgres adapters (Phase 07 · MR 3/6). Exported so the HTTP layer of MR 5/6 —
+// and the exit-gate harness of MR 6/6 — can bind the real engine without knowing
+// how the tables are shaped. The repositories themselves are deliberately NOT
+// exported: callers get them from `bindMatchingAdapters`, which is the only way
+// to obtain a set that shares one transaction.
+export { createMatchingDb } from "./infrastructure/drizzle/db.js";
+export type { Db, DbConfig, DbOrTx } from "./infrastructure/drizzle/db.js";
+export { PostgresMatchingOutbox } from "./infrastructure/drizzle/repository.js";
+export {
+  bindMatchingAdapters,
+  PostgresMatchingUnitOfWork,
+} from "./infrastructure/drizzle/transaction.js";
+export type {
+  MatchingSharedDeps,
+  MatchingUnitOfWorkDeps,
+} from "./infrastructure/drizzle/transaction.js";

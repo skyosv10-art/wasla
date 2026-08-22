@@ -292,6 +292,11 @@ async function openNextWave(
 ): Promise<StepResult> {
   const excludedDriverPublicIds = await deps.offers.listOfferedDriverIds(job.id);
   const request: CandidateRequest = {
+    // مرجع الطلب يسافر مع الاستعلام لأن قرار المطابقة يُخزَّن مدقَّقاً: قرار بلا مرجع
+    // طلب لا يُجيب لاحقاً عن «لماذا هذا السائق لهذا الطلب؟» (عقد المطابقة يفرضه).
+    orderId: job.orderId,
+    orderPublicId: job.orderPublicId,
+    dispatchJobId: job.id,
     zoneId: job.zoneId,
     serviceKind: job.orderType,
     vehicleClass: job.vehicleClass,

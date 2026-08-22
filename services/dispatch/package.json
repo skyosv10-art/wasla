@@ -14,17 +14,22 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "dev": "tsx watch src/http/server.ts",
+    "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
     "@wasla/contracts-dispatch": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "@wasla/contracts-matching": "workspace:*",
+    "fastify": "^5.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.23.1",
     "@wasla/orders-service": "workspace:*",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "tsx": "^4.23.12"
   }
 }

@@ -71,3 +71,11 @@ export const MATCHING_API_PATHS = [
   "/candidacy/{driverPublicId}/availability", "/matching/rulesets", "/matching/decisions/{decisionId}",
 ] as const;
 export const MATCHING_HTTP_STATUS_CODES = [200, 400, 404, 409, 422, 503] as const;
+
+/**
+ * منفذ خدمة المطابقة (CONTAINERS §4.3).
+ *
+ * يقيم الثابت في حزمة العقد لا في الخدمة لأن المستهلك (التوزيع) يحتاج المنفذ
+ * ليبني عنوان العميل، ولو نسخه لصار لدينا حقيقتان تتباعدان بصمت.
+ */
+export const MATCHING_SERVICE_PORT = 8088;

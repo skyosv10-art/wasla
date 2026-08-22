@@ -188,8 +188,19 @@ export interface IdempotencyStore {
   remember(key: string, payloadFingerprint: string): Promise<void>;
 }
 
-/** What dispatch asks matching for. No coordinates: the zone is the location. */
+/**
+ * What dispatch asks matching for. No coordinates: the zone is the location.
+ *
+ * `orderId` و`orderPublicId` و`dispatchJobId` أُضيفت في MR 5b/6 لأن عقد المطابقة
+ * المنشور (`CandidateQuery`) يفرض مرجع الطلب على كل استعلام مرشحين: قرار المطابقة
+ * يُخزَّن في سجل تدقيق، وقرارٌ لا يُعرف لأي طلب صدر لا يُجيب لاحقاً عن «لماذا هذا
+ * السائق لهذا الطلب؟». المهمّة تحمل الحقلين أصلاً (`DispatchJob`)، فالبديل الوحيد
+ * كان اختراع حمولة تخالف العقد أو حجب المرجع — وكلاهما مرفوض. الحقول مراجع معرّفات
+ * فقط: لا سعر، لا محطّات، لا `chat_id`، فلا يتعلّم المطابق شيئاً عن العرض أو الموجة.
+ */
 export interface CandidateRequest {
+  readonly orderId: string;
+  readonly orderPublicId: string;
   readonly zoneId: string;
   readonly serviceKind: OrderType;
   readonly vehicleClass: VehicleClass;
@@ -197,6 +208,13 @@ export interface CandidateRequest {
   readonly limit: number;
   /** Drivers already offered this job. Belt; `ux_dispatch_offers_job_driver` is braces. */
   readonly excludedDriverPublicIds: readonly string[];
+  /**
+   * مُعرّف مهمّة التوزيع، اختياري في العقد ويُرسَل هنا للتدقيق فقط.
+   *
+   * لا يجعل المطابقة تعلم بوجود عرض أو موجة: هو وسم ارتباط يسمح لمشغّل بربط قرار
+   * مطابقة بمهمّة، وهو عكس اتجاه المعرفة المحظور (المطابقة لا تقرأ حالة المهمّة).
+   */
+  readonly dispatchJobId?: string;
 }
 
 /** One ranked candidate. Rank only — dispatch has no business reading a score. */

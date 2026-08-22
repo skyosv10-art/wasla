@@ -39,6 +39,16 @@
  *      exactly this window (ADR-011): matching stores what it was told and never asks
  *      a driver service. When Phase 05 ships, the seeding helper here is the one place
  *      that changes, and `eligibility_source` becomes `driver_core`.
+ *
+ *      **Phase 05 shipped, and the seeding stays `claimed` — deliberately.** The promise
+ *      above was kept somewhere better: `packages/driver-e2e` drives the real drivers
+ *      service, whose production `HttpCandidacyPort` writes `driver_core` into matching,
+ *      and asserts it from matching's own read. Rewiring THIS gate to depend on the
+ *      drivers service would make dispatch's gate fail whenever driver core breaks —
+ *      and a gate that cannot fail alone can no longer say which phase regressed. The
+ *      `claimed` path is also not dead code: it is matching's declared contract for any
+ *      caller that is not driver core (ADR-011), so it deserves a gate of its own.
+ *      See docs/12-testing/PHASE05_EXIT_GATE_E2E.md §5.2.
  *   2. **No driver bot and no channel.** A driver accepts by calling
  *      `POST /dispatch/offers/{id}/accept` — the same route the bot will call.
  *   3. **The customer store and the engine store are in-memory, always.** Phase 04's

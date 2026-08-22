@@ -1,0 +1,24 @@
+{
+  "name": "@wasla/driver-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 05 Exit Gate — the only suite allowed to wire the Driver Core, Geography, Matching, the Order Engine, the Customer Core and Dispatch together over real HTTP through their production adapters (ADR-011 · ADR-012). Tests only: no runtime code and no exports.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/customers-service": "workspace:*",
+    "@wasla/dispatch-service": "workspace:*",
+    "@wasla/drivers-service": "workspace:*",
+    "@wasla/geography-service": "workspace:*",
+    "@wasla/identity-service": "workspace:*",
+    "@wasla/matching-service": "workspace:*",
+    "@wasla/orders-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

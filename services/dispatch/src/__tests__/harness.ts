@@ -8,13 +8,22 @@
  * persistence and HTTP layers were built on top of the mistake. This way the fake cannot
  * lie about what the engine would accept.
  *
+ * It also imports the real `assignmentRequirement`, because the transition table alone is
+ * not the whole contract: a driver-bound status additionally needs an **accepted** record
+ * in the order's assignment log, and the engine binds it inside the same UPDATE. The fake
+ * used to check the table only, so `accept-offer.ts` could ask for `offered → accepted`
+ * before resolving the assignment and every in-memory test agreed — while the real engine
+ * answered 422 `ORDER_ASSIGNMENT_REQUIRED` and no acceptance in the system could ever
+ * succeed. The Phase 07 exit gate found it; the rule was taught here in the same MR so
+ * the fake can never hide that class of bug again.
+ *
  * The fakes also model the two conflict codes that matter to dispatch:
  * `ORDER_ASSIGNMENT_FORBIDDEN` (someone already holds this order) and
  * `ORDER_ASSIGNMENT_DUPLICATE` (this driver already has a live assignment on it). Those
  * two are how a race gets decided, so a fake that could not produce them would leave the
  * most important branch in `accept-offer.ts` untested.
  */
-import { isTransitionAllowed } from "@wasla/orders-service";
+import { assignmentRequirement, isTransitionAllowed } from "@wasla/orders-service";
 
 import { engineUnavailable, orderEngineTimeout } from "../domain/errors.js";
 import type { DispatchRules } from "../domain/model.js";
@@ -207,6 +216,14 @@ export class FakeOrderEngine implements OrderEnginePort {
     // is where the test fails — not in the exit gate three MRs later.
     if (!isTransitionAllowed(current, input.to as OrderStatus)) {
       return { outcome: "rejected", rejectionCode: "ORDER_ILLEGAL_TRANSITION" };
+    }
+    // The REAL coupling decides too: a driver-bound status needs an accepted record
+    // already in the log, because the engine binds it in the same UPDATE (ADR-010 §4).
+    if (assignmentRequirement(input.to as OrderStatus) === "required") {
+      const bound = [...this.assignments.values()].some(
+        (candidate) => candidate.orderId === input.orderId && candidate.state === "accepted",
+      );
+      if (!bound) return { outcome: "rejected", rejectionCode: "ORDER_ASSIGNMENT_REQUIRED" };
     }
     this.orders.set(input.orderId, input.to as OrderStatus);
     const result: OrderEngineResult = { outcome: "applied" };

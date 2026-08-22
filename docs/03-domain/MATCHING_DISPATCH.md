@@ -2,7 +2,7 @@
 
 - **Scope:** من المرشّحون وبأي ترتيب (`matching`) · من يستلم العرض ومتى وماذا عند الرفض أو المهلة (`dispatch`) · الأمواج والمهل والتصعيد · إسقاط الترشيح. **لا** يشمل حالة الطلب وانتقالاته (Phase 06 — [ORDER_ENGINE.md](ORDER_ENGINE.md)) ولا ملفّ السائق وأهليّته (Phase 05) ولا التفاوض والسعر (Phase 08) ولا السمعة (Phase 09) ولا مجموعات المجتمع وتوصيل الرسائل (طبقة القناة).
 - **Last Updated:** 2026-08-22
-- **Status:** Active — Phase 07 · MR 4/6 (**مجال المطابقة مُنفَّذ ومُختبَر** — انظر [MATCHING_CORE_DOMAIN.md](../02-architecture/MATCHING_CORE_DOMAIN.md)؛ و**استمرارية المطابقة على Postgres بوحدة عمل** مع جدول `matching_idempotency` الذي أُضيف للعقد — انظر [MATCHING_PERSISTENCE.md](../02-architecture/MATCHING_PERSISTENCE.md)؛ و**مجال التوزيع مُنفَّذ ومُختبَر** بـ142 اختباراً بلا قاعدة ولا شبكة — انظر [DISPATCH_CORE_DOMAIN.md](../02-architecture/DISPATCH_CORE_DOMAIN.md)؛ استمرارية التوزيع وHTTP في MR 5/6 · البوابة في MR 6/6)
+- **Status:** Active — Phase 07 · **مُغلقة (2026-08-22)**: المراجعات الستّ مدمجة، و**بوابة الخروج تُثبت §8 كاملاً لا توصفه** — [PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md) (`packages/dispatch-e2e`، خمسة اختبارات، ستّ خدمات مُنصتة، ساعة واحدة مُحقونة، ووظيفة `dispatch-exit-gate-e2e` تُعيدها على Postgres). التفاصيل التنفيذية للطبقات: [MATCHING_CORE_DOMAIN.md](../02-architecture/MATCHING_CORE_DOMAIN.md) · [MATCHING_PERSISTENCE.md](../02-architecture/MATCHING_PERSISTENCE.md) · [DISPATCH_CORE_DOMAIN.md](../02-architecture/DISPATCH_CORE_DOMAIN.md) · [DISPATCH_PERSISTENCE.md](../02-architecture/DISPATCH_PERSISTENCE.md) · [MATCHING_HTTP.md](../04-api/MATCHING_HTTP.md) · [DISPATCH_HTTP.md](../04-api/DISPATCH_HTTP.md)
 - **Related Code:** [`services/matching/contracts/`](../../services/matching/contracts/README.md) · [`services/dispatch/contracts/`](../../services/dispatch/contracts/README.md) · [`packages/contracts/matching`](../../packages/contracts/matching) · [`packages/contracts/dispatch`](../../packages/contracts/dispatch)
 - **Related Team:** Team 04 — Matching · Team 05 — Dispatch
 - **Related:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) · [ADR-006](../15-decisions/ADR-006-geography-localization-stack-and-model.md) · [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md)
@@ -231,6 +231,18 @@ Phase 05 (Driver Core) لم تبدأ، وهي **خارج المسار الحرج
 كل سهم في هذا الرسم نداء HTTP حقيقي على خدمة تعمل في بوابة MR 6/6 — لا mock ولا stub ولا
 `sleep`. والساعة مُحقونة، والنبضة صريحة، فالبوابة تُثبت **دلالة** المسار لا مجرّد اتصاله.
 
+**والبوابة مُنفَّذة الآن، وهذا الرسم مُوكَّد سطراً سطراً** في
+[PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md) — ومعه ثلاث نهايات أخرى لا
+يظهرها الرسم لأنّها ليست المسار السعيد: **انقضاء المهلة** (`driver_timeout` ← `searching`،
+و`responded_at` يبقى `null` فالصمت ليس جواباً)، و**التصعيد ثمّ النفاد** (بلا مرشّحين تُنفَق
+الموجات الثلاث في نبضة واحدة ويُصعَّد والطلب لا يزال `searching`، ثمّ `no_driver_found` بعد
+نافذة التصعيد)، و**السبق** (موجة بعرضين: الخاسر `superseded` لا `rejected`).
+
+> **وسطرٌ في الرسم كان مرتّباً خطأً في الكود لا في الوثيقة.** الرسم يقول
+> `PATCH assignment = accepted` **قبل** `/transitions → accepted`، والكود كان يعكسهما،
+> فكان **كل** قبول سائق يُرفض 422 — انظر §5.1 في وثيقة البوابة. الوثيقة كانت صحيحة
+> والكود مخالفاً، والبوابة هي التي أظهرت الفرق.
+
 ---
 
 ## 9. الديون المُعلَنة في هذا المجال
@@ -244,3 +256,4 @@ Phase 05 (Driver Core) لم تبدأ، وهي **خارج المسار الحرج
 | ناشر الأحداث غائب | صناديق الصادر تُكتب ولا تُنشر | Phase 09 |
 | لا أولوية للمشتركين | المجتمع والمشترك سواء في التصعيد | مرحلة الاشتراكات |
 | `matching_decisions` بلا تقليم | نموّ سريع في التخزين | Phase 09 |
+| نافذة انعكاس في القبول | إسناد مقبول قد يبقى بلا حالة تطابقه إن فشل تحريك الحالة بعده — العرض يبقى `offered` والنبضة تظلّ مالكة المهمّة فلا يضيع الطلب | مرحلة المتانة (معاملة موزّعة أو مسح مُصالحة) |

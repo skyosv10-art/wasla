@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-22 (**Phase 07 · MR 5a/6 مدمجة — استمرارية التوزيع على Postgres بوحدة عمل، والمتبقّي في المرحلة MR 5b/6 (HTTP 8088/8089 والمحوّلات الإنتاجية) ثمّ 6/6 بوابة الخروج — انظر §11**؛ **Phase 06 = Completed · بوابة الخروج اجتازت** · MR 6/6 — **بوابة خروج المرحلة E2E**: `@wasla/order-e2e` تُشغّل نواة العميل ومحرّك الطلبات كخدمتين منفصلتين والتسليم بينهما بالمحوّل الإنتاجي نفسه، فيُقاد الطلب عبر HTTP من `published` إلى `completed` ثمّ يُمسح فضاء الانتقالات كاملاً — 441 زوجاً: 72 تنجح و369 تُرفض والحالة لا تتغيّر ([PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md)) بعد MR 5/6 — **محوّل التسليم الإنتاجي**: خدمة العميل تُنادي `POST /orders/intake` على 8087 بخريطة حالات مُصرَّحة و`/health` عندها صار `ok` لأول مرة ([ORDER_INTAKE_HANDOVER.md](../04-api/ORDER_INTAKE_HANDOVER.md)) بعد MR 4/6 — **طبقة HTTP لمحرّك الطلبات على المنفذ 8087** فصارت الخدمة قابلة للتشغيل: سبعة مسارات + مقبس معاملة `OrderRunner` + نطاق مالك يجيب 404 لا 403 ([ORDER_HTTP.md](../04-api/ORDER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres لمحرّك الطلبات + **`PostgresOrderUnitOfWork` يُسدّ دَين الذرّية** ([ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)) بعد MR 2/6 — طبقة مجال محرّك الطلبات: جدول 72 انتقالاً بحارس مطابقة مزدوج مع الوثيقة ومسح 441 زوجاً ([ORDER_CORE_DOMAIN.md](../02-architecture/ORDER_CORE_DOMAIN.md)) بعد MR 1/6 — ADR-010 وعقود محرّك الطلبات وجدول الانتقالات ([ORDER_ENGINE.md](../03-domain/ORDER_ENGINE.md)) — انظر §10؛ **المرحلة الحالية صارت Phase 07 — انظر §11**؛ **Phase 04 = Completed** · MR 6/6 — بوابة خروج المرحلة E2E ([PHASE04_EXIT_GATE_E2E.md](../12-testing/PHASE04_EXIT_GATE_E2E.md)) بعد MR 5/6 — ربط بوت العميل بالنواة عبر بذرة محادثة محيّدة ([CUSTOMER_BOT_FLOWS.md](../02-architecture/CUSTOMER_BOT_FLOWS.md)) بعد MR 4/6 — طبقة HTTP لخدمة العملاء على المنفذ 8086 ([CUSTOMER_HTTP.md](../04-api/CUSTOMER_HTTP.md)) بعد MR 3/6 — استمرارية Drizzle/Postgres ووظيفة `customer-db-integration` ([CUSTOMER_PERSISTENCE.md](../02-architecture/CUSTOMER_PERSISTENCE.md)) بعد MR 2/6 (طبقة المجال — [CUSTOMER_CORE_DOMAIN.md](../02-architecture/CUSTOMER_CORE_DOMAIN.md)) وMR 1/6 (العقود + [ADR-009](../15-decisions/ADR-009-customer-core-placement-and-order-intake-boundary.md)) — انظر §9؛ **Phase 03 = Completed** · MR 7/7 — بوابة خروج المرحلة E2E وإغلاقها — انظر §7؛ المرحلة الحالية صارت Phase 04) · **Related:** [MASTER_PROGRESS.md](MASTER_PROGRESS.md) · [ROADMAP.md](ROADMAP.md) · [TASK_LOG.md](TASK_LOG.md) · MR !1..!4/!9 مدمجة · MR 5 = !28 · MR 6 = !29 · MR 7 = !30 · [ADR-008](../15-decisions/ADR-008-channel-groups-registry-and-reply-policy.md) · [ADR-005](../15-decisions/ADR-005-identity-service-implementation-stack.md) · [ADR-003](../15-decisions/ADR-003-monorepo-tooling.md) · [ADR-002](../15-decisions/ADR-002-begin-phase01-contracts-despite-shared-runners-blocker.md)
+> **Last Updated:** 2026-08-22 (**Phase 07 = Completed** — MR 6/6 بوابة الخروج مدمجة وبها أُغلق الطور: `packages/dispatch-e2e` تُقلع ستّ خدمات بساعة واحدة مُحقونة وتُثبت المسار الكامل وثلاث نهايات غير سعيدة، ووظيفة `dispatch-exit-gate-e2e` تُعيدها على Postgres — والبوابة أسقطت عيباً كان يجعل **كل** قبول سائق يُرفض 422. التفصيل §11 و[PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md). **التالي: Phase 05 (Driver Core) أو Phase 08 (Negotiation & Chat) — §12**)
 >
 > **تحديث 2026-08-20 (c):** **Phase 00 = Completed (W0)**. تحقّق المالك من namespace → تفعّل shared runners. ظهر فشل في job `build-test` (typecheck) بسبب استخدام `node:fs`/`node:path`/`__dirname` دون `@types/node` مُعلَن — صُلح عبر [MR !9](https://gitlab.com/uxxxu/wasla/-/merge_requests/9) (إضافة `@types/node`) الذي اجتاز CI بالكامل ودُمج. pipeline على `main` نجاح كامل (build-test + markdown-lint + repo-structure ✅). **Phase 00 Exit Gate اجتاز.**
 >
@@ -15,16 +15,18 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: Phase 07 — Dispatch & Matching MVP · MR 5a/6 مدمجة (MR 5/6 قُسِمت إلى 5a و5b — §11)
-                 (مجال المطابقة النقي + استمرارية المطابقة + مجال التوزيع النقي بالنبضة مُقدِّماً
-                  وحيداً للزمن + **استمرارية التوزيع بوحدة عمل: النبضة كلّها ترتكز أو تتراجع**
-                  · بلا HTTP بعد ولا محوّلات إنتاجية — محلّهما MR 5b/6 · §11)
+المرحلة الحالية: لا شيء قيد التنفيذ — Phase 07 أُغلقت 2026-08-22 بستّ مراجعات وبوابة خروج اجتازت (§11)
+                 التالي: Phase 05 (Driver Core) أو Phase 08 (Negotiation & Chat) — معيار الاختيار في §12
+                 (المراجعات الستّ: العقود + ADR-011 · مجال المطابقة النقي · استمرارية المطابقة ·
+                  مجال التوزيع النقي بالنبضة مُقدِّماً وحيداً للزمن · استمرارية التوزيع بوحدة عمل ·
+                  طبقة HTTP على 8088/8089 والمحوّلات الإنتاجية · و**بوابة الخروج**: ستّ خدمات
+                  مُنصتة بساعة واحدة مُحقونة، وقد أسقطت عيباً كان يُرفض به **كل** قبول سائق · §11)
                  (Phase 06 **أُغلقت** 2026-08-21 بستّ مراجعات وبوابة خروج اجتازت · §10)
 المكتمل:         Phase 00 ✅ · Phase 01 ✅ · Phase 02 ✅ · Phase 03 ✅ · Phase 04 ✅ (أُغلقت 2026-08-21 بستّ مراجعات) —
                  كل بوابات الخروج مُتحقّقة آلياً في CI (db-integration لـidentity · geography-db-integration
                  لـgeography · channel-db-integration لمُهيّئات القناة · channel-exit-gate-e2e لبوابة المرحلة 03 · customer-db-integration و**customer-exit-gate-e2e** لبوابة المرحلة 04).
-المتبقّي:         Phase 07 (MR 5b/6 → 6/6) ثمّ Phase 08 → Phase 24 (انظر §3 للمسار الكامل، و§10 لما تُسلّمه Phase 06، و§11 لحالة المرحلة الحالية).
-الاختبارات:       **1744 اختباراً على 25 مشروع عمل** (+1 متروك بقصد) + **33 اختبار تكامل على Postgres حقيقي**
+المتبقّي:         Phase 05 و Phase 08 → Phase 24 (انظر §3 للمسار الكامل، و§10 لما تُسلّمه Phase 06، و§11 لحالة المرحلة الحالية).
+الاختبارات:       **1838 اختباراً على 26 مشروع عمل** (+1 متروك بقصد) في 110 ملفات — منها **5 لبوابة خروج الطور 07** + **33 اختبار تكامل على Postgres حقيقي**
                  في وظيفة `matching-db-integration` (Phase 07 · MR 3/6: 17 مُهيّئ + 11 مطابقة منافذ + 5 ذرّية —
                  تتخطّى نفسها بلا `DATABASE_URL`) + **47 اختبار تكامل في وظيفة `dispatch-db-integration`**
                  (Phase 07 · MR 5a/6: 29 مُهيّئ أمام قاعدة حقيقية + 12 مطابقة منافذ تُنفَّذ مرّتين
@@ -114,11 +116,11 @@ Phase 00 Repository Foundation ............ ✅ Completed (W0: 2026-08-20) — C
 Phase 01 Identity Foundation .............. ✅ Completed (2026-08-20) — Exit Gate E2E في CI
 Phase 02 Geography & Localization ......... ✅ Completed (2026-08-20) — Exit Gate E2E في CI
 Phase 03 Telegram Channel Foundation ...... ✅ Completed (2026-08-21) — Exit Gate E2E في CI (§7)
-Phase 04 Customer Core ................... ⏳ التالية — إنشاء Order صالح (تحمل معها ما في §7 «ما تُسلّمه Phase 03»)
-Phase 05 Driver Core ...................... Driver profile → Candidate pool
-Phase 06 Order Engine ..................... State machine + Outbox + Audit
-Phase 07 Dispatch & Matching MVP .......... Customer → Driver assignment
-Phase 08 Negotiation & Chat ............... تفاوض + توافق سعر
+Phase 04 Customer Core ................... ✅ Completed (2026-08-21) — Exit Gate E2E في CI (§9)
+Phase 05 Driver Core ...................... ⏳ مفتوحة — Driver profile → Candidate pool (تسدّ دَيْن الأهليّة `claimed` → `driver_core` · §12)
+Phase 06 Order Engine ..................... ✅ Completed (2026-08-21) — Exit Gate E2E في CI (§10)
+Phase 07 Dispatch & Matching MVP .......... ✅ Completed (2026-08-22) — Exit Gate E2E في CI (§11)
+Phase 08 Negotiation & Chat ............... ⏳ مفتوحة — تفاوض + توافق سعر (اعتمادها 07 وقد أُغلقت · على المسار الحرج · §12)
 Phase 09 Reputation + Fraud Foundation ..... Reputation events لكل Completed Order
 Phase 10 Driver Subscription & Referral ... Trial → Active → Expired → Community
 Phase 11 Marketplace Foundation ........... Store + Catalog + Moderation
@@ -604,7 +606,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 
 ---
 
-## 11. Phase 07 (Dispatch & Matching MVP) — المرحلة الحالية 🔄 (قيد التنفيذ · MR 1/6 و2/6 و3/6 و4/6 و5a/6 و**5b/6** مدمجة · المتبقّي **6/6** وحدها · 2026-08-22)
+## 11. Phase 07 (Dispatch & Matching MVP) — مكتملة ✅ (2026-08-22) · بوابة الخروج اجتازت (MR 1/6 → 6/6 مدمجة)
 
 **بوابة الخروج (من الوثيقة الأم §78 و[ROADMAP](ROADMAP.md)):** «Request كامل من Customer إلى Driver assignment في بيئة اختبار حقيقية.»
 
@@ -642,7 +644,7 @@ Telegram Channel Foundation** (Exit Gate: كل Bot يفتح Mini App، وAdapter
 | ~~5/6~~ | **قُسِمت** إلى 5a/6 و5b/6 — لأنّها كانت تخلط سؤالين يفشل أحدهما فلا يُعرَف أيّهما: «هل الحالة تعيش؟» و«هل العقد الشبكي مُطبَّق؟» | — |
 | 5a/6 | استمرارية التوزيع: مرآة Drizzle لـ`schema.sql` + `PostgresDispatchUnitOfWork` + وظيفة CI `dispatch-db-integration` | **مدمجة** ([!48](https://gitlab.com/uxxxu/wasla/-/merge_requests/48)) |
 | 5b/6 | طبقة HTTP (8089 للتوزيع و8088 للمطابقة) + `HttpOrderEnginePort` الإنتاجي + عميل HTTP للمطابقة + محوّل الجغرافيا + حسم دَيْن «نداءات الشبكة داخل المعاملة» | **مدمجة** ([!49](https://gitlab.com/uxxxu/wasla/-/merge_requests/49)) |
-| 6/6 | **بوابة الخروج** `packages/dispatch-e2e`: خمس خدمات تعمل، المسار الكامل في [نموذج المجال §8](../03-domain/MATCHING_DISPATCH.md)، ووثيقة `docs/12-testing/PHASE07_EXIT_GATE_E2E.md`، ثمّ إغلاق الطور | متبقّية |
+| 6/6 | **بوابة الخروج** `packages/dispatch-e2e`: ستّ خدمات تعمل، المسار الكامل في [نموذج المجال §8](../03-domain/MATCHING_DISPATCH.md) + ثلاث نهايات غير سعيدة، ووثيقة [PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md) ووظيفة `dispatch-exit-gate-e2e` | **مدمجة** ([!50](https://gitlab.com/uxxxu/wasla/-/merge_requests/50)) |
 
 ### ما أنجزته MR 1/6 بالضبط ([!44](https://gitlab.com/uxxxu/wasla/-/merge_requests/44))
 
@@ -777,6 +779,43 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **`POST /dispatch/tick` يشترط `Idempotency-Key` ولا يستخدمه لمنع التكرار** — مقبول لأنّ النبضة عديمة الأثر بالبناء، وتخزين مدخلة لكل نبضة ينمو بلا حدّ.
 - **لا مُرحِّل لصندوق الصادر ولا مُنادٍ للنبضة** — المرحلة 09، كما أُعلن من MR 4/6.
 - **دَيْن MR 4/6 السلوكي باقٍ بحرفه** — العروض المنتهية تُقرَأ `offered` حتّى النبضة التالية، والتأجيل وسط الموجة قد يعطي موجةً أصغر من `waveSize`.
+
+### ما أنجزته MR 6/6 بالضبط ([!50](https://gitlab.com/uxxxu/wasla/-/merge_requests/50))
+
+**الطور مُغلق بالدليل لا بالوصف.** التفصيل الكامل في [PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md)، وهذا ما يحتاجه من يأتي بعدي:
+
+- **`packages/dispatch-e2e` — ستّ خدمات مُنصتة، ساعة واحدة، وHTTP عام وحده.** هوية · جغرافيا (بذرة السعودية) · محرّك طلبات · نواة عميل · مطابقة · توزيع، كلّها على `127.0.0.1:0`؛ والتوزيع يسأل المطابقة بـ`HttpMatchingPort` ويخاطب المحرّك بـ`HttpOrderEnginePort` — **المحوّلان الإنتاجيان نفساهما**. `GateClock` واحد يُحقَن في المطابقة والتوزيع معاً، وإلّا صار مُرشِّح الطزاجة يقيس فرق ساعتين لا مرور الوقت. **لا قراءة مباشرة من مخزن في أي توكيد**: بوابةٌ تقرأ القاعدة التي تفحصها قد تنجح بينما الواجهة مكسورة.
+- **خمسة اختبارات، أربع نهايات + الصحّة:** المسار السعيد (رفض ← موجة تستثني الرافض ← قبول ⇒ `assigned`/`accepted` + `busy`) · انقضاء المهلة (`responded_at` يبقى `null`) · التصعيد ثمّ النفاد (نبضة واحدة تُنفق الموجات الثلاث، والطلب يبقى `searching`، ثمّ `no_driver_found` عند `escalation_expires_at` بالضبط) · السبق (`superseded` لا `rejected`) · و`/health` يُصرِّح بمخزنه.
+- **وظيفة `dispatch-exit-gate-e2e`** على `wasla_dispatch_e2e` عبر **`DISPATCH_DATABASE_URL`** — متغيّر بغرضٍ مُسمّى لا `DATABASE_URL`، ومتغيّر واحد يرفع الخدمتين لأنّ سؤال البوابة هو العقد بينهما ولأنّ لكلٍّ بادئة جداولها (`matching_*` مقابل `dispatch_*`).
+- **⚠️ العيب الذي أسقطته البوابة، وهو أهمّ ما في هذه الدفعة: لا قبول سائق واحد كان ممكناً في النظام.** `accept-offer.ts` كان ينادي `transitionOrder(accepted)` **قبل** `resolveAssignment(accepted)`، والمحرّك يقرأ السائق من سجلّ الإسنادات ويكتبه **في نفس `UPDATE`** التي تُحرّك الحالة (إجباراً: `ck_orders_assignment_matches_status` يمنع طلباً `offered` من حمل إسناد نشط — [ADR-010 §4/§7](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)). فكان كل قبول يُرفض 422، و**225 اختبار وحدة خضراء** لأنّ `FakeOrderEngine` يُحاكي جدول الانتقالات ولا يُحاكي اقتران الإسناد بالحالة. أُصلح الترتيب، و**عُلِّم البديل القاعدة نفسها** في الدفعة ذاتها، وصار ترتيب النداءين توكيداً صريحاً في `accept-offer.test.ts`. **الدرس القابل للنقل: أيّ بديل (fake/stub) لا يعرف قيداً في القاعدة سيُخفي مخالفته — فكل قيدٍ يُعلّم للبديل يوم يُكتشف، لا يوم يُكسر.**
+- **⚠️ ودَيْن مُعلَن جديد مقابل الإصلاح — نافذة انعكاس في القبول:** لو سُجّل الإسناد `accepted` ثمّ فشل تحريك الحالة، يبقى سجلّ إسناد مقبول بلا حالة تطابقه. العرض يبقى `offered` والنبضة تظلّ مالكة المهمّة **فلا يضيع الطلب**، والبديل (الترتيب المعاكس) لا يعمل أصلاً. الإغلاق بمعاملة موزّعة أو مسح مُصالحة في مرحلة المتانة — مُدوَّن في [MATCHING_DISPATCH §9](../03-domain/MATCHING_DISPATCH.md).
+- **عيب أنواع كان مخفياً عن `pnpm -r test`:** `tick.test.ts` كان يبني `CandidateRequest` بلا `orderId`/`orderPublicId`. `vitest` لا يفحص الأنواع، فالخطأ يظهر في `pnpm -r typecheck` وحده. **من يأتي بعدي: `pnpm -r run typecheck` ليس اختياراً بعد `pnpm -r run test`.**
+- **ثلاثة توقّعات خاطئة صُحّحت في الاختبار لا في الكود:** `POST /dispatch/tick` لا يقبل جسماً (فترويسة `content-type` تُرسَل مع الجسم فقط) · `offer_sent` يُنشَر **قبل** `wave_opened` لأنّ حدث الموجة يحمل `offer_count` فلا يصدق قبل وجود عروضها · وقبولٌ على عرضٍ مُنتهٍ يُرفض **409** `DISPATCH_OFFER_ALREADY_RESOLVED` لا 422.
+- **الأدلّة:** البوابة **5/5** · التوزيع **225/225** · المطابقة **160/160** · المستودع **1838 ناجحاً + 1 متجاوَز** في 110 ملفات · `pnpm -r run typecheck` نظيف · وظائف CI صارت **15**.
+- **⚠️ حدّ التشغيل المحلّي، مُعلَناً:** بيئة هذه الدفعة بلا Postgres وبلا Docker، فمسار القاعدة **لم يُشغَّل محلياً** وإثباته على وظيفة CI في هذه الـMR. **من يراجع: النتيجة المطلوبة هي خُضرة `dispatch-exit-gate-e2e` لا التشغيل المحلّي.**
+
+### ما لم يُنجَز في الطور 07 بقصد (لا تُعِد بناءه من الصفر)
+
+- **لا مُرحِّل لصندوق الصادر ولا مُنادٍ دوريّ للنبضة** — المرحلة 09، كما أُعلن من MR 4/6. وغياب الثاني يعني مهامّ لا تُخدَم أبداً وهي **حالة صامتة**، فـ`last_tick_at` في `/health` هو مؤشّرها (صار مُوكَّداً في البوابة).
+- **الأهليّة مُدّعاة ومصدر الادّعاء مخزّن** (`eligibility_source = claimed`) — المرحلة 05 هي التي تجعله `driver_core`. المجهول ليس مرشّحاً (fail-closed) فلا شيء يتعطّل انتظاراً لها.
+- **لا واجهة سائق.** البوابة تنادي `POST /dispatch/offers/{id}/accept` مباشرةً كما سيناديه تطبيق السائق؛ «السائق يرى العرض ويضغط قبول» تملكه المرحلة 05.
+- **لا سباق حقيقي متزامن.** السيناريو الرابع يُثبت **النتيجة** لا **التزامن**؛ منع القبول الثاني تحت تزامن حقيقي يملكه فهرس القاعدة، ووظيفة CI هي التي ترفعه.
+- **الفجوة نفسها (دمج الترويسة المكرّرة) باقية في `services/orders/src/http/requests.ts`** ولم تُلمس — انضباط نطاق من MR 5b/6، ودَيْنٌ مفتوح على مالك محرّك الطلبات.
+- **دَيْن MR 4/6 السلوكي باقٍ بحرفه:** العروض المنتهية تُقرَأ `offered` حتّى النبضة التالية.
+- **لا أسعار ولا محاسبة ولا إنصاف مُقاس** — أوزان `RULESET_V1` مُجمَّدة؛ البوابة تُثبت أنّ الترتيب **يُحترم** لا أنّه **عادل**.
+
+## 12. الخطوة التالية — Phase 05 أو Phase 08، ومعيار الاختيار
+
+الطور 07 مُغلق، والمسار الحرج في [ROADMAP §3](ROADMAP.md) هو `00 → 01 → 02 → 04 → 06 → 07 → 09 → 20`. فالتالي على المسار الحرج هو **Phase 09**، لكنّها تعتمد على 07 **و08** معاً، فأمام من يأتي بعدي بابان مفتوحان لا واحد:
+
+| الخيار | لماذا يُختار | ما يفتحه | ما يُبقيه مغلقاً |
+|---|---|---|---|
+| **Phase 05 — Driver Core** | يسدّ أهمّ دَيْن مُعلَن في 07: الأهليّة تصير `driver_core` بدل `claimed`، فيصير «من يصلح؟» جواباً مُتحقَّقاً لا مُدّعى. ويُلبس البوابة واجهةً: السائق يقبل من تطبيقه | التسجيل · ملفّ السائق · المستندات · كتابة `driver_candidacy` من مصدر موثوق | 09 (تحتاج 08 أيضاً) |
+| **Phase 08 — Negotiation & Chat** | اعتمادها الوحيد 07 وقد أُغلقت، وهي **على المسار الحرج** فتُقرّب 09 و20 | التفاوض والتوافق على السعر وتسجيله في الطلب | دَيْن الأهليّة يبقى مفتوحاً حتى 05 |
+
+**التوصية المكتوبة (وهي توصية لا قرار — القرار لمالك المنتج):** ابدأ بـ**Phase 05**. السبب: البوابة الحالية تُثبت أنّ التوزيع يعمل على أهليّة **يدّعيها الاختبار**؛ وكل مرحلة تُبنى فوق 07 قبل 05 تُراكم منطقاً يفترض مرشّحين موثوقين وهم ليسوا كذلك بعد. و08 لا تفقد شيئاً بالتأخير لأنّ اعتمادها لا يتغيّر.
+
+**وفي كل الأحوال، ما يجب أن يُقرأ أولاً:** §11 أعلاه (خصوصاً درس البديل الذي لا يعرف القيد) · [PHASE07_EXIT_GATE_E2E.md](../12-testing/PHASE07_EXIT_GATE_E2E.md) §5 و§8 · [MATCHING_DISPATCH §9](../03-domain/MATCHING_DISPATCH.md) للديون المفتوحة · و[PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md): لا دفعة بلا وثيقة في **نفس** الالتزام.
 
 ## 8. روابط سريعة
 

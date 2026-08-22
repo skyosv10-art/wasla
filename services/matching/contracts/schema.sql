@@ -244,4 +244,33 @@ CREATE INDEX IF NOT EXISTS ix_matching_outbox_unpublished
     ON matching_outbox (occurred_at)
     WHERE published_at IS NULL;
 
+-- ─────────────────────────────────────────────────────────────────────
+-- 6) matching_idempotency — ذاكرة مفاتيح منع التكرار
+--    ترحيل إضافي عكوس أُضيف في Phase 07 · MR 3/6 (التراجع: DROP TABLE matching_idempotency).
+--
+--    منفذ `IdempotencyStore` (§43) موجود منذ MR 2/6 بلا مكان يخزّن فيه: خلافاً
+--    لخدمة الطلبات والعملاء، لا يملك `driver_candidacy` عمود مفتاح — لأن الصفّ
+--    **يُستبدَل** ولا يُنشأ، فمفتاح على الصفّ كان سيُبطِل الاستبدال الثاني المشروع.
+--    فالمفتاح يعيش في جدوله: مفتاحٌ واحد لكل كتابة، وبصمة الحمولة معه.
+--
+--    البصمة هي جوهر القيمة: إعادة المحاولة (نفس المفتاح ونفس الحمولة) تنجح وتعيد
+--    الصفّ المحفوظ بلا حدث ثانٍ، أمّا خطأ المُنادي (نفس المفتاح وحمولة مختلفة)
+--    فيُرفَض بـ409 `MATCHING_IDEMPOTENCY_KEY_REUSED` ولا يكتب فوق صفّ غيره صامتاً.
+--    بلا تخزين البصمة يستحيل التمييز بين الحالتين، والاثنتان تبدوان نجاحاً.
+--
+--    الطول 8..128 مطابق حرفياً لـ`assertIdempotencyKey` في المجال، وللقيد نفسه في
+--    عقود الطلبات والعملاء: مفتاح يقبله التطبيق وترفضه القاعدة يُنتج 500 بلا سبب مفهوم.
+--    لا سياسة تقليم في هذه المرحلة (دَين تشغيلي مُعلَن — Phase 09، كما في
+--    matching_decisions).
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS matching_idempotency (
+    idempotency_key     TEXT        PRIMARY KEY
+                        CHECK (char_length(idempotency_key) BETWEEN 8 AND 128),
+    -- بصمة الحمولة المُعيَّرة (stable stringify) لا الحمولة نفسها: لا نصّ مستخدم
+    -- ولا مُعرّف قناة في جدول تدقيق تقني.
+    payload_fingerprint TEXT        NOT NULL
+                        CHECK (char_length(payload_fingerprint) BETWEEN 1 AND 4096),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 COMMIT;

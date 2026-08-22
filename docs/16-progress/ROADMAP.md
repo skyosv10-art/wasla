@@ -59,7 +59,7 @@ W0 = اليوم الذي تجتاز فيه Phase 00 Exit Gate — وليس يو�
 | 04 | Customer Core | W6 | ~2 أسبوعين | 01,02,03 | 02,01,11,12 | عميل ينشئ Order صالحاً يصل لـ Order Engine |
 | 05 | Driver Core | W6 | ~2 أسبوعين (توازٍ مع 04) | 01,02,03 | 03,01,11,12,09 | Driver profile قابل للإدخال في Candidate pool |
 | 06 | Order Engine | W8 | ~3 أسابيع | 04,05 | 02,03,04,05,09,11 | Order + State machine بلا حالات مستحيلة + Outbox + Audit |
-| 07 | Dispatch & Matching MVP | W11 | ~3 أسابيع | 06 | 04,05,03,02,09,11 | Customer → Driver assignment في بيئة اختبار — **قيد التنفيذ (MR 1/6 و2/6 مدمجتان: العقود ثمّ مجال المطابقة النقي · المتبقّي 3/6 استمرارية المطابقة · 4/6 مجال التوزيع · 5/6 HTTP · 6/6 البوابة)** |
+| 07 | Dispatch & Matching MVP | W11 | ~3 أسابيع | 06 | 04,05,03,02,09,11 | Customer → Driver assignment في بيئة اختبار — **قيد التنفيذ (MR 1/6 و2/6 و3/6 مدمجة: العقود ثمّ مجال المطابقة النقي ثمّ استمرارية المطابقة على Postgres بوحدة عمل ووظيفة CI `matching-db-integration` · المتبقّي 4/6 مجال التوزيع · 5/6 استمرارية التوزيع وHTTP · 6/6 البوابة)** |
 | 08 | Negotiation & Chat | W13 | ~2 أسبوعين | 07 | 02,03,12,09,11 | تفاوض + توافق على السعر + تسجيله في Order |
 | 09 | Reputation + Fraud | W14 | ~2 أسبوعين | 07,08 | 01,04,05,08,09,11 | كل Completed Order ينتج Reputation events |
 | 10 | Driver Subscription & Referral | W15 | ~2 أسبوعين | 05,09 | 03,01,09,12,08,11 | Trial→Active→Expired→Community + إحالات بلا نشاط وهمي |

@@ -24,6 +24,49 @@
 
 ## السجل
 
+## 2026-08-22 · Phase 07 MR 3/6 — استمرارية المطابقة: مرآة Drizzle ووحدة عمل، وجدولٌ ناقص في العقد اكتُشف وسُدّ
+
+**Task:** وضع Postgres وراء منافذ المطابقة الثمانية دون تغيير سلوك واحد ودون لمس ملف في `src/use-cases/`
+**Status:** ✅ مكتملة ومدموجة
+**MR:** [!46](https://gitlab.com/uxxxu/wasla/-/merge_requests/46)
+**ADR:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) (تنفيذ، بلا انحراف)
+**الوثيقة:** [MATCHING_PERSISTENCE.md](../02-architecture/MATCHING_PERSISTENCE.md) (جديدة)
+
+### 1. ما سُلِّم
+
+خمسة مُهيّئات Postgres (`Candidacy` · `Ruleset` · `Decision` · `Outbox` · `Idempotency`) + مرآة Drizzle للجداول الستّة + `PostgresMatchingUnitOfWork`، وأربعة ملفات اختبار: حارس انحراف يقرأ العقد من القرص (19 فحصاً، بلا قاعدة)، ومُهيّئ أمام محرّك حقيقي (17)، ومطابقة منافذ (11)، وذرّية (5).
+
+### 2. الفجوة التي كشفتها الدفعة: منفذٌ بلا مخزن
+
+`MatchingDependencies` يضمّ `IdempotencyStore` وكلّ حالة كتابة تناديه، ولم يكن في `contracts/schema.sql` جدولٌ يخزّنه. `Map` في المُهيّئ الذاكري أخفت النقص تماماً، فمرّت MR 2/6 و117 اختباراً دون أن يظهر. الأثر لو لم يُكتشف: مفاتيح عدم التكرار تعيش في ذاكرة العملية، فإعادة تشغيل واحدة (أو عمليتان وراء موازن حِمل) تجعل إعادة المحاولة **كتابة ثانية** — حدثان لنفس التغيير، وسائق يُعاد ترتيبه على تاريخ عرضٍ مضاعف. سُدَّت بهجرة إضافية عكوسة (القسم 6 في العقد)، بحدَّي طول `8..128` **مطابقين حرفياً** لِـ`assertIdempotencyKey`، والتطابق نفسه مُثبَّت باختبار.
+
+### 3. لماذا وحدة عمل لا مستودع يفتح معاملته
+
+كلّ حالة كتابة تُنفّذ ثلاث كتابات في ثلاثة `await`: `replace` → `remember` → `outbox.append`. مُهيّئٌ يرتكز معاملته في كلّ نداء لا يغطّي أبداً النداءين التاليين، والانهيار بين الثاني والثالث يُنتج أسوأ حالة: صفٌّ تغيّر، ومفتاحٌ يقول «تمّت المعالجة»، وحدثٌ غائب — فإعادة محاولة العميل تُرفض كتكرار والتغيير لا يُنشر أبداً. `zones` و`clock` و`ids` تبقى **خارج** المعاملة بقصد؛ أهمّها `zones` فهو منفذ على خدمة أخرى (ADR-006)، وإدخاله يعني حجز اتصال Postgres عبر نداء شبكي — بها يُستنزف التجمّع بسبب تابعٍ متدهور لا معطّل. و`read()` بلا معاملة أصلاً، مُثبَتاً بغياب أي اتصال `idle in transaction` في `pg_stat_activity`.
+
+### 4. خطأ حقيقي كشفته القاعدة الحقيقية
+
+`sqlState` قرأت `error.code` مباشرةً، وهي لا تعمل: Drizzle يغلّف خطأ المُشغّل في `DrizzleQueryError` رسالتُه نصّ SQL، ويعلّق `pg.DatabaseError` الحقيقي على `cause`. فكانت كلّ مخالفة قيد تُفلت بلا ترجمة. **خمسة من 33 اختبار تكامل فشلت على Postgres حقيقي بسبب هذا بالضبط**، ولم يكن أيٌّ منها قابلاً للكشف بمُهيّئ ذاكري. الحلّ يسير على سلسلة `cause` بعمق محدود ويشترط كوداً من خمسة أحرف (حتى لا يُخطئ `ECONNREFUSED` بـSQLSTATE)، و`rethrowNamed` يُقدّم اسم القيد المخالف في رسالة أي خطأ لا يُترجَم.
+
+### 5. الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** أُضيفت طبقة استمرارية لخدمة المطابقة: أربعة ملفات في `src/infrastructure/drizzle/` (`schema.ts` مرآة الجداول الستّة · `db.ts` تجمّع + `DbOrTx` · `repository.ts` خمسة مُهيّئات · `transaction.ts` وحدة العمل + `bindMatchingAdapters`)، وخمسة ملفات اختبار (`schema-drift` · `pg-harness` · `postgres-repository.integration` · `port-conformance.integration` · `atomicity.integration`)، و`vitest.integration.config.ts`، ووظيفة CI `matching-db-integration`. وفي العقد: **جدول `matching_idempotency` الجديد**. **ولم يتغيّر ملف واحد في `src/use-cases/`.**
+2. **لماذا؟** MR 3/6 من خطة Phase 07 الملزمة في [HANDOFF §11](HANDOFF_NEXT_STEPS.md). ومجالٌ نقيّ لا يعيش عبر إعادة تشغيل واحدة: صحيحٌ سلوكياً وعديم القيمة تشغيلياً. والمعيار مكتوب سلفاً في إدخال MR 2/6: نفس الاختبارات تنجح على Postgres بلا تعديل حالة استخدام — وهو ما يُبرهنه `port-conformance` لا ما يُدّعيه هذا السطر.
+3. **أين؟** `services/matching/contracts/schema.sql` (قسم 6 جديد) · `services/matching/src/infrastructure/drizzle/*` · `services/matching/src/__tests__/{schema-drift,pg-harness,postgres-repository.integration,port-conformance.integration,atomicity.integration}.*` · `services/matching/{package.json,vitest.integration.config.ts}` · `services/matching/src/index.ts` (تصديرات) · `pnpm-lock.yaml` · `.gitlab-ci.yml` · `docs/02-architecture/MATCHING_PERSISTENCE.md` (جديدة) · `docs/03-domain/MATCHING_DISPATCH.md` (سطر الحالة) · `docs/16-progress/{ROADMAP,MASTER_PROGRESS,HANDOFF_NEXT_STEPS,TASK_LOG}.md`.
+4. **كيف تم اختباره؟** `pnpm -r run typecheck` ✅ نظيف على 24 مشروعاً · `pnpm -r run test` ✅ **1584 اختباراً ناجحاً** (كان 1565، أي +19 حارس انحراف) · `pnpm --filter @wasla/matching-service test:integration` ✅ **33 اختباراً على Postgres حقيقي** (17 مُهيّئ + 11 مطابقة منافذ + 5 ذرّية) · نفس الأمر **بلا** `DATABASE_URL` ✅ 33 تتخطّى نفسها · `scripts/checks/scan-secrets.sh` ✅. والفشل الخمسة المذكورة في القسم 4 حدثت فعلاً وأُصلحت، ولم تكن مرئية لأي اختبار وحدة.
+5. **ما الخطوة التالية؟** MR 4/6 — مجال Dispatch النقي: موجة العروض والمُهَل و`POST /dispatch/tick` كالمصدر الوحيد لتقدّم الزمن. بلا قاعدة وبلا HTTP.
+6. **هل موثّق؟** نعم — [MATCHING_PERSISTENCE.md](../02-architecture/MATCHING_PERSISTENCE.md) الجديدة تحمل الهجرة وخطة تراجعها، وحدّ الذرّية، والقرارات الأربعة ببديلها المرفوض، والخطأ الذي كشفته القاعدة، وجدول «ما لا يُثبته إلّا محرّك حقيقي»، وجدول الحدود والدَين المعلن + هذا الإدخال + [HANDOFF §11](HANDOFF_NEXT_STEPS.md) + [MASTER_PROGRESS](MASTER_PROGRESS.md) + [ROADMAP](ROADMAP.md).
+7. **هل مراجَع؟** مراجعة ذاتية + [MR !46](https://gitlab.com/uxxxu/wasla/-/merge_requests/46) بقالب المراجعة كاملاً، ودُمج بعد خطّ أنابيب أخضر يشمل `matching-db-integration`.
+8. **هل ADR مطلوب؟** لا. جدول `matching_idempotency` **تنفيذٌ** لمنفذ قرّره ADR-011 لا انحرافٌ عنه، وسائر القرارات تنفيذية موثّقة في وثيقة الطبقة حسب [قانون التوثيق §7](../00-rules/ENGINEERING_DOCUMENTATION_LAW.md). ولا قرار من قرارات ADR-011 الثمانية أُعيد فتحه.
+9. **هل يكسر توافقاً خلفياً؟** لا. لا عقد منشور تغيّر، ولا مستهلك لهذه الحزمة بعد. الإضافة إلى `schema.sql` **إضافية بحتة**: جدول جديد، ولا عمود قائم تغيّر ولا قيد قائم شُدِّد.
+10. **هل migration؟** نعم، واحدة وعكوسة: `CREATE TABLE IF NOT EXISTS matching_idempotency` (+ قيدا طول). **خطة التراجع:** `DROP TABLE matching_idempotency;` بلا فقدان بيانات قائمة، فالجدول جديد ولا يُشير إليه شيء. لا تهيئة بيئة جديدة ولا منفذ يُفتح؛ وبند نشر واحد: `pnpm-lock.yaml` تغيّر بإضافة `drizzle-orm` و`pg` و`@types/pg`، وCI يستعمل `--frozen-lockfile` ففرعٌ بلا قفل محدَّث يفشل عند التثبيت.
+11. **هل توجد مخاطر؟** (أ) **لا فلترة في SQL** — كلّ صفوف الترشيح تُقرأ في الذاكرة للتقييم؛ مقصود لأن الدفع إلى SQL يُغيّر معنى `counts.considered` وينقل ترتيب الفلاتر و`empty_reason_code` من كود مُختبَر إلى خطّة استعلام. دَينٌ معلن للمرحلة 09 حين يبرّره عدد الصفوف. (ب) **لا تقليم** للقرارات ولا للصادر ولا لمفاتيح عدم التكرار — الصفوف تتراكم بقصد: حدثٌ لم يُخزَّن أسوأ من حدثٍ لم يُنشر؛ سياسة الاحتفاظ للمرحلة 09. (ج) **CI يشغّل postgres:15 والتحقّق المحلّي جرى على 18** — الـDDL قياسي بلا ميزة خاصة بإصدار (فهارس جزئية و GIN على `TEXT[]` مدعومة في 15)، والوظيفة نفسها هي البرهان النهائي. (د) **لا مُهيّئ للجغرافيا بعد**، فالتوافق مُثبَت بمناطق في الذاكرة في التنفيذين — ينتهي في MR 5/6.
+12. **هل security؟** لا أسرار ولا سطح شبكي جديد (فحص الأسرار نظيف)، ولا سلسلة اتصال في الكود: `DATABASE_URL` من البيئة وحدها. وحدّ الخصوصية مُشدَّد لا مُخفَّف: اختبارٌ يمرّ على **أعمدة** جدول الصادر ويرفض أي عمود يطابق `driver|score|candidate|notes|label|phone|latitude|longitude` — فحمولة الحدث أعدادٌ فقط (ADR-011 قرار 8) وصار للحدّ حارسان: نصّ الحمولة في حزمة العقود، والأعمدة هنا.
+13. **هل performance؟** الفهارس التي يعتمد عليها المسار موجودة ومُتحقَّق منها بالاسم في القاعدة: `ix_candidacy_ready` الجزئي (يجعل المسح متناسباً مع المتاحين الآن لا مع كلّ من سُجّل يوماً) و`ix_candidacy_zones`/`ix_candidacy_services` (GIN) و`ix_decisions_order` و`ix_matching_outbox_unpublished`. ومجموعة التكامل تعمل في ~1.5 ثانية. والحدّ الأدائي المعروف هو دَين الفلترة في البند 11(أ).
+14. **هل monitoring؟** ليس في هذه الطبقة (لا خادم يُقلِع بعد)، لكنّ مادّته صارت **دائمة** لا متبخّرة: كلّ تقييم — بما فيه الفارغ — يُخزَّن كصفّ قرار بكود سبب وأعداد مراحل، وصفوف الصادر تحمل `published_at IS NULL` فطول صفّ غير المنشور صار قابلاً للقياس. و`/health` في MR 5/6.
+
+**Related:** [MR !46](https://gitlab.com/uxxxu/wasla/-/merge_requests/46)، MR 2/6 ([!45](https://gitlab.com/uxxxu/wasla/-/merge_requests/45))، MR 1/6 ([!44](https://gitlab.com/uxxxu/wasla/-/merge_requests/44))، [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md)، [MATCHING_PERSISTENCE.md](../02-architecture/MATCHING_PERSISTENCE.md)، [MATCHING_CORE_DOMAIN.md](../02-architecture/MATCHING_CORE_DOMAIN.md)، [ORDER_PERSISTENCE.md](../02-architecture/ORDER_PERSISTENCE.md)
+
 ## 2026-08-22 · Phase 07 MR 2/6 — مجال المطابقة النقي: ثمانية فلاتر مرتّبة، ودرجة صحيحة، وتعادلٌ محسوم — بلا قاعدة وبلا HTTP
 
 **Task:** تنفيذ طبقة مجال `services/matching` كاملةً فوق عقود MR 1/6: الفلاتر الصلبة الثمانية بترتيبها وأكواد عجزها · الدرجة بنسخة القواعد 1 بحساب صحيح بالنقاط الأساسية · حسم التعادل المُعلَن · المنافذ وحالات الاستخدام ومُهيّئات الذاكرة — **بلا قاعدة بيانات وبلا HTTP**. **Status:** Completed · **MR:** [!45](https://gitlab.com/uxxxu/wasla/-/merge_requests/45) · **ADR:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) · **الوثيقة:** [MATCHING_CORE_DOMAIN.md](../02-architecture/MATCHING_CORE_DOMAIN.md)

@@ -246,6 +246,42 @@ order-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/orders-service test:integration
 
+# المطابقة (المرحلة 07 · MR 3/6): يُطبّق services/matching/contracts/schema.sql
+# (6 جداول — بعد أن أضاف هذا الـ MR جدول matching_idempotency لأنّ منفذ
+# IdempotencyStore لم يكن له مخزن في العقد — ومعها بذرة نسخة القواعد 1
+# المُقفَلة) ثم يُشغّل ثلاثة ملفّات:
+#   - postgres-repository.integration.test.ts: ما لا يُثبته إلّا محرّك حقيقي —
+#     أنّ قيود CHECK مُطبَّقة فعلاً (نسبة قبول أعلى من واحد، عدّادات غير
+#     متصاعدة، نتيجة فارغة بلا سبب، رتبة مكرّرة داخل قرار واحد، أوزان لا
+#     تجمع 100)، وأنّ الفهارس الجزئية موجودة، وأنّ TEXT[]/UUID[]/TIMESTAMPTZ
+#     تعود كما دخلت، وأنّ نسخة قواعد غير مُقفَلة لا تُعاد كالنشطة أبداً.
+#   - atomicity.integration.test.ts: يُثبت أنّ الكتابة الثلاثية (الصف + مفتاح
+#     عدم التكرار + الحدث) ترتكز أو تتراجع كوحدة واحدة. الاختبار الحاسم:
+#     نُفشِل outbox.append بعد نجاح candidacy.replace ثم نتحقق بـ SQL مباشر
+#     أنّ الصف والمفتاح والحدث كلها غائبة — فمفتاحٌ باقٍ بلا حدث يجعل إعادة
+#     محاولة العميل تُرفض كتكرار والتغيير لا يُنشر أبداً.
+#   - port-conformance.integration.test.ts: السيناريو نفسه يُنفَّذ مرّتين، مرّة
+#     بمحوّلات in-memory ومرّة بـ Postgres، والنتيجتان تُقارَنان إحداهما
+#     بالأخرى لا بتوقّع مكتوب بيد. هذه هي الوظيفة التي تُثبت أنّ إضافة قاعدة
+#     البيانات لم تُغيّر أي سلوك ولم تُعدّل ملفاً واحداً في src/use-cases/.
+# حارس انحراف المرآة (schema-drift.test.ts) يعمل في build-test بلا قاعدة، لأنّه
+# يقرأ schema.sql من القرص ويقارنه بإسقاط Drizzle.
+# قاعدة منفصلة (wasla_matching_test) ليبقى الفشل منسوباً لوظيفة واحدة.
+matching-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_matching_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_matching_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/matching-service test:integration
+
 # ──────────────────────────────────────────────────────────────
 # بوابة خروج المرحلة 03 (MR 7) — البوتات الثلاثة + خدمة الهوية عبر HTTP
 # حقيقي + مخازن Postgres في عملية واحدة:

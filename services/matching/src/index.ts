@@ -1,0 +1,37 @@
+/**
+ * @wasla/matching-service — public surface of the matching service.
+ *
+ * Phase 07 · MR 2/6 delivers the PURE domain: the eight hard filters in their
+ * documented order with their deficit codes, ranking by frozen ruleset version 1
+ * with integer arithmetic, and a declared tie-break. There is deliberately no
+ * database and no HTTP here — persistence arrives in MR 3/6 and the Fastify app
+ * on port 8088 in MR 5/6, behind these same ports.
+ *
+ * What this service will never export, by design (ADR-011): anything about an
+ * offer, a wave, a deadline, or an order transition. That vocabulary belongs to
+ * `services/dispatch`, and a drift guard in @wasla/contracts-matching fails the
+ * build if it appears on the matching surface.
+ */
+
+export * from "./domain/model.js";
+export * from "./domain/errors.js";
+export * from "./domain/ruleset.js";
+export * from "./domain/filters.js";
+export * from "./domain/scoring.js";
+export * from "./domain/events.js";
+export * from "./domain/validation.js";
+export * from "./ports.js";
+export * from "./infrastructure/in-memory.js";
+export * from "./mappers.js";
+
+export { evaluateCandidates } from "./use-cases/evaluate-candidates.js";
+export type {
+  EvaluateCandidatesInput,
+  EvaluateCandidatesResult,
+} from "./use-cases/evaluate-candidates.js";
+export { changeAvailability, readCandidacy, upsertCandidacy } from "./use-cases/manage-candidacy.js";
+export type {
+  ChangeAvailabilityRequest,
+  UpsertCandidacyRequest,
+} from "./use-cases/manage-candidacy.js";
+export { listRulesets, readDecision } from "./use-cases/read-audit.js";

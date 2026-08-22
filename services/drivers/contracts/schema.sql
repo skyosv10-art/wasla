@@ -357,6 +357,37 @@ CREATE INDEX IF NOT EXISTS ix_driver_outbox_unpublished
     ON driver_outbox (occurred_at) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 9) driver_idempotency — ذاكرة مفاتيح منع التكرار
+--    ترحيل إضافي عكوس أُضيف في Phase 05 · MR 3/6 (التراجع: DROP TABLE driver_idempotency).
+--    سابقة حرفيّة: `dispatch_idempotency` في Phase 07 · MR 5a/6، ولنفس السبب.
+--
+--    منفذ `IdempotencyStore` (ports.ts) موجود منذ MR 2/6 بلا مكان يخزّن فيه، وحالتا
+--    استعماله في `manage-vehicles.ts` و`manage-documents.ts` تخزّنان **بصمة الحمولة**
+--    لا المفتاح وحده. الجدول ليس تكراراً لـ`ux_driver_vehicles_idempotency` ولا
+--    لـ`ux_driver_documents_idempotency`: ذانك الفهرسان يمنعان صفّاً ثانياً بنفس
+--    المفتاح، وهذا الجدول يجيب عن السؤال الذي لا يجيبه أي منهما — «هل هذه إعادة
+--    محاولة لنفس الطلب، أم مفتاحٌ أُعيد استعماله بحمولة أخرى؟». بلا البصمة تبدو
+--    الحالتان نجاحاً واحداً، فتُقبل ورقة سائق تحت مفتاح سيّارة سائق آخر بصمت.
+--
+--    المفتاح المخزَّن **مُنَطَّق** (namespaced): `vehicle:<wasla_public_id>:<key>` أو
+--    `document:<wasla_public_id>:<key>` كما يبنيه الاستعمال. لذلك الحدّ 8..192 لا
+--    8..128: الحدّ الأخير هو حدّ `assertIdempotencyKey` للمفتاح الخام وحده
+--    (وهو حدّ عمودَي `idempotency_key` أعلاه)، وإضافة البادئة تبلغ 151 محرفاً.
+--    حدٌّ تقبله الدالّة وترفضه القاعدة يُنتج 500 بلا سبب مفهوم — وهذا بالضبط ما
+--    وجدته MR 3/6 قبل أن يقع.
+--    لا سياسة تقليم في هذه المرحلة (دَين تشغيلي مُعلَن — Phase 09، كما في driver_outbox).
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS driver_idempotency (
+    idempotency_key     TEXT        PRIMARY KEY
+                        CHECK (char_length(idempotency_key) BETWEEN 8 AND 192),
+    -- بصمة الحمولة المُعيَّرة لا الحمولة نفسها: لا `storage_ref` ولا لوحة مركبة
+    -- ولا نصّ يكتبه سائق في جدول تدقيق تقني (§9.2 + سياسة الخصوصية).
+    payload_fingerprint TEXT        NOT NULL
+                        CHECK (char_length(payload_fingerprint) BETWEEN 1 AND 4096),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────────────────────────────
 -- updated_at triggers
 -- ─────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION driver_set_updated_at() RETURNS TRIGGER AS $$
@@ -383,6 +414,7 @@ COMMIT;
 -- ─────────────────────────────────────────────────────────────────────
 -- التراجع (rollback) — يُحذف بترتيب عكسي للتبعيات.
 -- ─────────────────────────────────────────────────────────────────────
+-- DROP TABLE IF EXISTS driver_idempotency;
 -- DROP TABLE IF EXISTS driver_outbox;
 -- DROP TABLE IF EXISTS driver_candidacy_publications;
 -- DROP TABLE IF EXISTS driver_eligibility_log;

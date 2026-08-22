@@ -52,3 +52,11 @@ export type {
   MatchingSharedDeps,
   MatchingUnitOfWorkDeps,
 } from "./infrastructure/drizzle/transaction.js";
+
+// طبقة النقل وحد التركيب (Phase 07 · MR 5/6). تصديرها يبقي الاختبارات
+// والمستهلك التشغيلي على المصنع والمحوّل نفسيهما من دون كشف تفاصيل المسارات.
+export * from "./runner.js";
+export * from "./http/app.js";
+export * from "./http/errors.js";
+export * from "./http/requests.js";
+export * from "./infrastructure/http-geography.js";

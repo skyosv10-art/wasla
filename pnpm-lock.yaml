@@ -417,9 +417,15 @@ importers:
       '@wasla/contracts-dispatch':
         specifier: workspace:*
         version: link:../../packages/contracts/dispatch
+      '@wasla/contracts-matching':
+        specifier: workspace:*
+        version: link:../../packages/contracts/matching
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
+      fastify:
+        specifier: ^5.12.1
+        version: 5.12.1
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -433,6 +439,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../orders
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
@@ -510,6 +519,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
+      fastify:
+        specifier: ^5.12.1
+        version: 5.12.1
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -520,6 +532,9 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)

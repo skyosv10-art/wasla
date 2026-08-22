@@ -24,6 +24,85 @@
 
 ## السجل
 
+## 2026-08-22 · Phase 07 MR 5b/6 — طبقة HTTP للخدمتين: النبضة تُنادى من الخارج والمعاملة تُفتح بعد الشبكة لا حولها
+
+**Task:** إقلاع خدمة المطابقة على المنفذ **8088** وخدمة التوزيع على **8089** بالعقود المنشورة، واستبدال المُهيّئات المحلّية بمحوّلات HTTP إنتاجية (محرّك الطلبات · المطابقة · الجغرافيا)، وسدّ دَين «نداءات الشبكة داخل المعاملة» الذي أعلنته MR 5a/6 (§7.2) — **بلا بوابة خروج E2E** (وهي MR 6/6).
+**Status:** ✅ مكتملة
+**MR:** [!49](https://gitlab.com/uxxxu/wasla/-/merge_requests/49)
+**ADR:** [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md) (تنفيذ) · [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) (حدّ الإسناد) · [ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md) (العقد مصدر الحقيقة)
+**الوثيقة:** [MATCHING_HTTP.md](../04-api/MATCHING_HTTP.md) و[DISPATCH_HTTP.md](../04-api/DISPATCH_HTTP.md) (جديدتان)
+
+### 1. ما سُلِّم
+
+**المطابقة (8088):** `src/runner.ts` (60) — مقبس المعاملة `MatchingRunner {write, read}` · `src/http/{requests,errors,app,server}.ts` (185 · 54 · 147 · 90) بسبعة مسارات · `src/infrastructure/http-geography.ts` (96) — `HttpZoneHierarchy`. وستّة ملفات اختبار (`http-candidates` · `http-candidacy` · `http-health` · `http-errors` · `http-geography` + مُسخّر `http-support.ts`).
+
+**التوزيع (8089):** `src/runner.ts` (39) · `src/run-tick.ts` (68) · `src/http/{requests,errors,app,server}.ts` (70 · 38 · 143 · 112) بثمانية مسارات · `src/infrastructure/http-matching.ts` (125) · `src/infrastructure/http-order-engine.ts` (143). وثمانية ملفات اختبار (`http-errors` · `http-health` · `http-jobs` · `http-matching` · `http-offers` · `http-order-engine` · `http-tick` · `run-tick`).
+
+المنفذان صارا **ثابتين مُصدَّرين من حزم العقود** لا رقمين مكتوبين في ملفَي خادم: `MATCHING_SERVICE_PORT = 8088` في `@wasla/contracts-matching` و`DISPATCH_SERVICE_PORT = 8089` في `@wasla/contracts-dispatch`. رقمٌ يُكتب في موضعين ينحرف في أحدهما، والمنادي هو من يدفع الثمن.
+
+`createMatchingApp` و`createDispatchApp` يستقبلان **Runner لا تبعيات**؛ فلا يملك معالج مسارٍ القدرة على فتح معاملة أصلاً. هذا ليس أسلوباً بل منعٌ بالنوع.
+
+### 2. الدَين الذي جاءت هذه الدفعة لتسدّه: النبضة
+
+MR 5a/6 §7.2 أعلنت أنّ نداء المنافذ داخل المعاملة «مقبولٌ الآن وغير مقبول بعد MR 5b/6». والسبب صار ملموساً هنا: نبضة واحدة تُنادي محرّك الطلبات لكل إسناد وخدمة المطابقة لجمع المرشّحين — كلّها الآن **نداءات HTTP**. لو بقيت داخل معاملة واحدة، فمطابقةٌ بطيئة تحتجز اتصال Postgres طوال انتظارها، ومهلةٌ منقضية في منتصف الموجة تُراجِع عملاً صحيحاً ارتكز قبلها.
+
+الحلّ في `src/run-tick.ts`: **قراءة واحدة** قبل أي معاملة تجمع المهام النشطة و`tickAt`، ثمّ **معاملة واحدة لكل مهمة** بساعةٍ مُجمّدة على `tickAt` نفسها (فلا تختلف قراءتان في النبضة الواحدة على «الآن»). و`scopeToJob()` تبني **كائناً حرفياً مُفوِّضاً صريحاً** يقصر التبعيات على مهمّة واحدة — ولم تُنسخ بـspread على نسخة صنف، لأنّ نشر نسخة صنفٍ يفقد سلسلة النموذج الأولي فتصير التبعيات كائناً يشبه التبعيات ولا يعمل عملها.
+
+`use-cases/tick.ts` **لم يتغيّر منطقه**. تغيّر من يفتح المعاملة ومتى، لا ما يجري داخلها.
+
+**والدَين لم يُمحَ بل قُلِّص وقيسَ:** عمر المعاملة الواحدة صار ≈ (2 + `waveSize`) × مهلة العميل، وهذا حدٌّ أعلى معروف لا مفتوح. المتبقّي مُخفَّف بمهلٍ صارمة عبر `AbortController` في المحوّلين، لا مُزال. البديل الكامل (saga أو تجميع كل النداءات قبل فتح أي معاملة) يعني نقل قرار «من يستحق العرض» خارج حماية الصفّ المقفول، وهو تغييرٌ معماري يحتاج ADR لا دفعةً.
+
+### 3. ثلاثة أخطاء حقيقية كشفها الحدّ الشبكي
+
+**(أ) Node يدمج الترويسة المكرّرة بفاصلة، فحارس المصفوفة كان حارساً في الورق.** كان الفحص `Array.isArray(raw)`؛ وNode لا يعطي مصفوفة للترويسات المكرّرة (إلّا `set-cookie`) بل **نصاً واحداً مفصولاً بفاصلة**. فمُنادٍ يرسل `Idempotency-Key` مرّتين كان يصل بقيمة `"a, b"` — مفتاحٌ لم يرسله أحد، ويُقبل. أُضيف فحص الفاصلة في المطابقة والتوزيع كلتيهما، والرفض `400` بلا صدى للقيمة.
+
+> **الفجوة نفسها باقية في `services/orders/src/http/requests.ts:95-107`** ولم تُصلَح هنا بقصد (انضباط النطاق: محرّك الطلبات ليس في هذه الدفعة). مُعلَنة كدَين في [ORDER_HTTP §الانحرافات](../04-api/ORDER_HTTP.md) و§10 من [MATCHING_HTTP](../04-api/MATCHING_HTTP.md)، وهي عملٌ مستقلّ صغير لا يجوز أن يُنسى.
+
+**(ب) `CandidateRequest` كان بلا مرجع للطلب.** طلبُ مرشّحين لا يقول لأيّ طلبٍ هو: المُهيّئ المحلّي لم يكن يحتاج ذلك، والعقد الشبكي يحتاجه. أُضيف `orderId` و`orderPublicId` و`dispatchJobId?` إلى `ports.ts`، و`openWave` في `use-cases/tick.ts` يملؤها. والمحوّل **لا يرسل `evaluated_at`** — وقت التقييم تملكه المطابقة، ومُنادٍ يُملي على خدمةٍ متى قيّمت يُتيح تسميم سجلّ التدقيق.
+
+**(ج) استجابةٌ 2xx بجسم فاسد كانت تُحسَب نجاحاً.** في `http-order-engine.ts` صار المسار: `jsonObjectFrom` تعيد `null` لجسم لا يُفكّ أو ليس كائناً ⇒ النتيجة `unavailable` لا نجاح. وأُحكِمت خريطة الحالات: `200` ⇒ `already_applied` · `201` ⇒ `applied` · `409`/`422` ⇒ `rejected` · ما عداها ⇒ `unavailable` · `AbortError` ⇒ `timeout`. ومعرّفات المسار غير الـUUID تُرفض `400` قبل أي نداء (`toPathId` بتعبير UUID)، بدل أن تُسلَّم إلى Postgres ليردّها `22P02`.
+
+### 4. رفض المفتاح غير المُعلَن في العقد
+
+مخططات `api.openapi.yml` تعلن `additionalProperties: false`، ومحوّلات المطابقة كانت **تنتقي الحقول المعروفة وتتجاهل الزائد بصمت**. الأثر ليس شكلياً: مُنادٍ كتب `pickup_zone` بدل `pickup_zone_id` كان يتلقّى خطأ «حقل مفقود» غامضاً لا يشير إلى خطئه، ومُنادٍ يرسل حقلاً أُزيل من العقد كان يظنّ أنّه ما زال يعمل. أُضيفت `onlyKeys()` إلى `services/matching/src/http/requests.ts` بقوائم مُقارَنة حرفياً بالعقد على الحمولات الثلاث، مع أربعة اختبارات على مستوى HTTP منها اختبارٌ يتحقّق أنّ **قيمة** المفتاح المرفوض لا تظهر في الرد. التوزيع كان يفعل ذلك أصلاً، فصارت الخدمتان على قاعدة واحدة.
+
+### 5. تغطية التوزيع: 13 اختباراً رُفضت، و65 كشفت خطأين
+
+المحاولة الأولى للحدّ الشبكي للتوزيع جاءت بـ13 حالة — تكفي لتقول «المسارات موجودة» ولا تقول شيئاً عن الحدود. رُفضت وطُلب ≥55؛ وسُلّمت 65، وهي التي كشفت الخطأين (ب) و(ج) في §3 أعلاه. الرقم ليس هدفاً بذاته: القيمة أنّ التغطية التي تفحص كل فرعٍ في خريطة الحالات هي التي تُخرج الأخطاء، والتي تفحص «المسار يرد 200» لا تُخرج شيئاً.
+
+### 6. لماذا لا وظيفة CI جديدة
+
+`build-test` في `.gitlab-ci.yml` (على `node:20-alpine` مع corepack pnpm@9) تُشغّل `pnpm install --frozen-lockfile` ثمّ `pnpm -r run typecheck` ثمّ `pnpm -r run test` — والاختبارات الجديدة كلّها تبني التطبيق بـ`app.inject` بلا منفذ ولا قاعدة، فتُغطّى تلقائياً. و`matching-db-integration` و`dispatch-db-integration` موجودتان من MR 3/6 و5a/6. **وظيفة الخدمات المُقلِعة تنتمي إلى MR 6/6** حيث تُشغَّل خمس خدمات فعلاً؛ إضافتها الآن تعني وظيفةً لا شيء لها لتشغّله.
+
+### 7. ما لم يُنجَز بقصد
+
+1. **لا بوابة خروج E2E** — `packages/dispatch-e2e` والمسار الكامل عبر خمس خدمات مُقلِعة في MR 6/6، ومعها `docs/12-testing/PHASE07_EXIT_GATE_E2E.md`.
+2. **فجوة الفاصلة في `services/orders`** — §3(أ) أعلاه؛ عملٌ مستقلّ.
+3. **لا مُرحِّل لصندوق الصادر** — `markPublished` موجودة ولا أحد يناديها (المرحلة 09).
+4. **لا نادٍ دوريّ للنبضة** — `POST /dispatch/tick` ينتظر مُنادياً خارجياً؛ ولا `setTimeout` ولا حلقة خلفية في الخدمة بقصد (المرحلة 09).
+5. **دَين MR 4/6 السلوكي باقٍ كما أُعلن** — العروض المنتهية تُقرَأ `offered` حتى النبضة التالية، والتأجيل وسط الموجة قد يعطي موجةً أصغر من `waveSize`.
+
+### الأسئلة الـ14 (Documentation Law)
+
+1. **ماذا تغيّر؟** صارت الخدمتان قابلتين للإقلاع والنداء: سبعة مسارات على 8088 وثمانية على 8089 بالعقود المنشورة، ومعها `MatchingRunner`/`DispatchRunner` كحدٍّ وحيد للمعاملة، وثلاثة محوّلات HTTP إنتاجية (`HttpZoneHierarchy` · `HttpMatchingPort` · `HttpOrderEnginePort`)، و`run-tick.ts` يعيد ترتيب حدود المعاملة في النبضة. والمنفذان صارا ثابتين مُصدَّرين من حزمتي العقود. وسُدّ دَين نداء الشبكة داخل المعاملة (تقليصاً مقيساً لا محواً).
+2. **لماذا؟** لأنّ MR 5a/6 سلّمت خدمةً تحفظ حالتها ولا يستطيع أحدٌ مخاطبتها: مجالٌ صحيح واستمراريةٌ ذرّية بلا سطحٍ شبكي = كودٌ لا يعمل في أي بيئة. ولأنّ الدَين المُعلَن في 5a/6 §7.2 كان مشروطاً بوصول HTTP، ووصل.
+3. **أين؟** `services/matching/src/{runner.ts, http/{requests,errors,app,server}.ts, infrastructure/http-geography.ts}` (جديدة) · `services/matching/src/__tests__/http-{candidates,candidacy,health,errors,geography}.test.ts` + `http-support.ts` (جديدة) · `services/dispatch/src/{runner.ts, run-tick.ts, http/{requests,errors,app,server}.ts, infrastructure/{http-matching,http-order-engine}.ts}` (جديدة) · `services/dispatch/src/__tests__/http-{errors,health,jobs,matching,offers,order-engine,tick}.test.ts` + `run-tick.test.ts` (جديدة) · `services/dispatch/src/{ports.ts, use-cases/tick.ts}` (مرجع الطلب في `CandidateRequest`) · `packages/contracts/matching/src/index.ts` و`packages/contracts/dispatch/src/index.ts` (ثابتا المنفذ) · `services/{matching,dispatch}/package.json` + `pnpm-lock.yaml` (fastify · tsx) · `docs/04-api/{MATCHING_HTTP,DISPATCH_HTTP}.md` (جديدتان) · `docs/04-api/ORDER_HTTP.md` · `docs/02-architecture/{DISPATCH_PERSISTENCE,MATCHING_PERSISTENCE,CONTAINERS}.md` · `docs/16-progress/{MASTER_PROGRESS,HANDOFF_NEXT_STEPS,TASK_LOG}.md`.
+4. **كيف تم اختباره؟** `pnpm -r typecheck` ✅ نظيف · `pnpm -r test` ✅ **1833 اختباراً ناجحاً + 1 متخطّى** (كان 1829 + 1) — المطابقة **160** (كانت 136، أي +24) والتوزيع **225** (كان 160، أي +65). كل اختبارات الحدّ الشبكي تعمل بـ`app.inject` بلا منفذ مفتوح ولا قاعدة، ومحوّلات HTTP تُختبر بـ`fetch` محقون. `scripts/checks/scan-secrets.sh` ✅.
+5. **ما الخطوة التالية؟** MR 6/6 — بوابة خروج Phase 07: `packages/dispatch-e2e` تُقلع خمس خدمات وتمشي المسار الكامل في [MATCHING_DISPATCH §8](../03-domain/MATCHING_DISPATCH.md)، ووظيفة CI لها، و`docs/12-testing/PHASE07_EXIT_GATE_E2E.md`، ثمّ إغلاق الطور.
+6. **هل موثّق؟** نعم — [MATCHING_HTTP.md](../04-api/MATCHING_HTTP.md) و[DISPATCH_HTTP.md](../04-api/DISPATCH_HTTP.md) (جديدتان، كلٌّ بقسم انحرافات مُعلَنة وقسم أدلّة) + [DISPATCH_PERSISTENCE §7.1](../02-architecture/DISPATCH_PERSISTENCE.md) (الدَين مشطوبٌ مع مقياس قبل/بعد وبديلين مرفوضين) + [MATCHING_PERSISTENCE §7](../02-architecture/MATCHING_PERSISTENCE.md) + [CONTAINERS §4.3](../02-architecture/CONTAINERS.md) + [ORDER_HTTP](../04-api/ORDER_HTTP.md) (صفّ دَين الفاصلة) + هذا الإدخال + [HANDOFF §11](HANDOFF_NEXT_STEPS.md) + [MASTER_PROGRESS](MASTER_PROGRESS.md).
+7. **هل مراجَع؟** مراجعة ذاتية + [MR !49](https://gitlab.com/uxxxu/wasla/-/merge_requests/49) بقالب المراجعة كاملاً. وأثرُ المراجعة الأهمّ مسجَّل في §5: دفعةٌ بـ13 اختباراً رُفضت وأُعيدت بـ65، فكشفت خطأين.
+8. **هل ADR مطلوب؟** لا. القرارات المعمارية كلّها منصوصة سابقاً في ADR-010 وADR-011 (فصل المطابقة عن التوزيع · النبضة مُقدِّم الزمن الوحيد · محرّك الطلبات لا يعرف التوزيع · لا `rules` في جسم إنشاء المهمّة)، وهذه الدفعة تُنفّذها ولا تُعدّلها. **البديل الكامل لدَين المعاملة (saga) يحتاج ADR** — ولذلك لم يُنفَّذ هنا.
+9. **هل يكسر توافقاً خلفياً؟** لا مستهلك خارجياً قبل هذه الدفعة (لم يكن هناك HTTP لتكسره). داخلياً: `CandidateRequest` صار يطلب `orderId` و`orderPublicId` — كاسرٌ لمنفذٍ لا يُنفّذه إلّا مُهيّئان كلاهما في المستودع، ويكشفه `tsc` لا التشغيل. والعقود المنشورة لم تُغيَّر إلّا بإضافة ثابتَي المنفذ.
+10. **هل migration؟** لا ترحيل قاعدة بيانات. تغييرات نشر: `fastify ^5.12.1` و`tsx ^4.23.12` أُضيفتا للخدمتين و`pnpm-lock.yaml` تغيّر — وCI يستعمل `--frozen-lockfile`، ففرعٌ بلا قفل محدَّث يفشل عند التثبيت. وتهيئة: `DATABASE_URL` (وإلّا ذاكرة مُعلَنة) · `GEOGRAPHY_BASE_URL` (افتراضي `http://localhost:8081`) · عنوانا المطابقة ومحرّك الطلبات للتوزيع · المنفذان من ثابتي العقود.
+11. **هل توجد مخاطر؟** أربع مُعلَنة: (أ) **بقيّة دَين المعاملة** — عمرها الأعلى ≈ (2 + `waveSize`) × مهلة العميل، مُخفَّف بمهلٍ صارمة لا مُزال (§2). (ب) **`onlyKeys` بقوائم مكتوبة بيد** لا مُولَّدة من المخطط؛ الاتساق محميّ باختبارات حارس انحراف حزم العقود ومراجعةٍ بشرية، والتوليد مقترحٌ في §10 من [MATCHING_HTTP](../04-api/MATCHING_HTTP.md). (ج) **فجوة الفاصلة في `services/orders`** باقية ومُعلَنة — من ينساها يترك ثغرة قبولٍ لمفتاح عدم تكرار مدموج في خدمةٍ تعمل. (د) **لا مُنادي للنبضة بعد**، فالخدمة لا تُقدّم الزمن بنفسها؛ نشرٌ بلا مُنادٍ = مهامٌ لا تُخدَم أبداً وهي حالة صامتة لا تُنبّه.
+12. **هل security؟** فحص الأسرار نظيف، ولا سرّ في كود أو ملف. حدّ الخصوصية محفوظ: لا `chat_id` ولا إحداثية ولا معرّف مرشّح ولا درجة في أي **حمولة حدث**، ورسائل الخطأ لا تردّ صدى القيمة المرفوضة (اختبارٌ صريح لهذا في §4). معرّفات المرشّحين و`score_bp` **موجودة بحقّ** في استجابة `CandidateResult` لأنّ المخطط المنشور يعرّفها والتوزيع يحتاجها ليبني العروض — وهذا انحرافٌ مُعلَن لا سهو، مشروحٌ في [MATCHING_HTTP §8](../04-api/MATCHING_HTTP.md). `x-request-id` مقصورٌ على 128 محرفاً قبل أن يصل أيّ سجلّ. وسطح شبكي جديد: منفذان داخليان بلا مصادقة في هذا الطور — والملكية تُردّ `404` لا `403` فلا يُستدلّ على وجود كيان.
+13. **هل performance؟** `HttpZoneHierarchy` يحلّ المعرّفات الفريدة **بالتوازي** بمهلة 2000ms لكل طلب وبلا حلقة إعادة محاولة (إعادة المحاولة داخل معاملة تضاعف عمرها). القراءات لا تفتح معاملة أصلاً. والنبضة صارت قراءةً واحدة ثمّ معاملةً لكل مهمّة بدل معاملة واحدة تغطّي كل النداءات (§2). ولا فهرس أُضيف ولا استعلام تغيّر.
+14. **هل monitoring؟** `/health` صار قائماً على الخدمتين: `ok` فقط مع `persistence: "postgres"` — والمطابقة تشترط زيادةً نسخة قواعد نشطة **مجمّدة**، والتوزيع يعلن `last_tick_at` (يبدأ `null` ولا يتحدّث إلّا بعد نبضة ناجحة، فهو المؤشّر الذي يكشف الخطر (د) في السؤال 11). و`x-request-id` يصير `trace_id` في كل حدث وكل رد خطأ. والمُرحِّل والمقاييس المُصدَّرة تبقى للمرحلة 09.
+
+**Related:** [MR !49](https://gitlab.com/uxxxu/wasla/-/merge_requests/49) · MR 5a/6 ([!48](https://gitlab.com/uxxxu/wasla/-/merge_requests/48)) · MR 4/6 ([!47](https://gitlab.com/uxxxu/wasla/-/merge_requests/47)) · [MATCHING_HTTP.md](../04-api/MATCHING_HTTP.md) · [DISPATCH_HTTP.md](../04-api/DISPATCH_HTTP.md) · [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md)
+
+---
+
 ## 2026-08-22 · Phase 07 MR 5a/6 — استمرارية التوزيع: النبضة كلّها ترتكز أو تتراجع، وموجةٌ مفتوحة فارغة تعطّل المهمة إلى الأبد
 
 **Task:** وضع Postgres وراء منافذ التوزيع نفسها بوحدة عمل واحدة، وإثبات أنّ إضافة القاعدة لم تُغيّر سلوكاً — **بلا HTTP وبلا عميل مطابقة حقيقي** (كلاهما MR 5b/6).

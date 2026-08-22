@@ -33,6 +33,7 @@
 | `order-db-integration` | `@wasla/orders-service` | `wasla_orders_test` | Phase 06 · MR 5/7: محرّك الطلبات أمام قاعدة حقيقية — انتقالات الحالة، الأحداث في معاملة التغيير، وقيود العقد ([تفصيل](../02-architecture/ORDER_PERSISTENCE.md)) |
 | `matching-db-integration` | `@wasla/matching-service` | `wasla_matching_test` | Phase 07 · MR 3/6: قيود CHECK مُطبَّقة فعلاً (نسبة قبول > 1، عدّادات غير متصاعدة، أوزان لا تجمع 100)، الفهارس الجزئية، `TEXT[]`/`UUID[]`/`TIMESTAMPTZ` تعود كما دخلت، نسخة قواعد غير مُقفَلة لا تُعاد كالنشطة؛ والكتابة الثلاثية ترتكز أو تتراجع كوحدة؛ و**مطابقة المنافذ** ([تفصيل](../02-architecture/MATCHING_PERSISTENCE.md)) |
 | `dispatch-db-integration` | `@wasla/dispatch-service` | `wasla_dispatch_test` | Phase 07 · MR 5a/6: الفهرسان الجزئيان اللذان يمنعان سائقين من قبول رحلة واحدة (`ux_dispatch_waves_one_open_job` · `ux_dispatch_offers_one_accepted_job`)، وعدم عرض السائق نفسه مرّتين في مهمة واحدة، وترتيب المُهَل، وتشلشل الحذف؛ و**الذرّية**: نبضة واحدة كاملة تتراجع بأسرها فلا تبقى موجة «مفتوحة» فارغة تُعطّل المهمة إلى الأبد؛ و**مطابقة المنافذ**: 12 سيناريو تُنفَّذ مرّتين (ذاكرة/Postgres) والأثران يُقارَنان أحدهما بالآخر ([تفصيل](../02-architecture/DISPATCH_PERSISTENCE.md)) |
+| `drivers-db-integration` | `@wasla/drivers-service` | `wasla_drivers_test` | Phase 05 · MR 3/6: الفهرسان الجزئيان (`ux_driver_vehicles_one_primary` · `ux_driver_documents_one_live_per_type`) و`COALESCE` إلى الـUUID الصفري الذي وحده يمنع وثيقتَي هويّة حيّتين (فـNULL يختلف عن NULL في فهرس فريد)، وأعمدة `DATE` تعود يوماً تقويميّاً لا طابعاً زمنيّاً (وإلّا انتهت رخصة سائقٍ في المدينة بثلاث ساعات مبكّراً)، وترتيب `listDueForRecheck` وترتيب السجلّ بـ`BIGSERIAL` (فالإلحاقات الثلاث في عمليّة واحدة تحمل اللحظة نفسها)، وقيود التماسك في المراجعة؛ و**الذرّية**: مراجعة وثيقة واحدة = تسع كتابات في ستّة جداول ترتكز أو تتراجع معاً، وأخطرُ بادئةٍ صفُّ `driver_idempotency` بلا صفوف خلفه فتُجاب إعادة المحاولة «تمّ من قبل» من صفٍّ لا وجود له؛ و**مطابقة المنافذ**: 23 سيناريو تُنفَّذ مرّتين (ذاكرة/Postgres) والأثران يُقارَنان أحدهما بالآخر ([تفصيل](../02-architecture/DRIVER_PERSISTENCE.md)) |
 
 **استثناء مقصود في `channel-exit-gate-e2e`:** هو الوظيفة الوحيدة التي تُشغّل ملفاً **يعمل أيضاً** داخل `build-test`. السبب: بوابة يمكن تخطيّها ليست بوابة، فمجموعة `@wasla/channel-e2e` غير ملفّفة بـ`describe.skipIf` وتعمل بمخازن الذاكرة على كل MR دون قاعدة بيانات؛ ووجود `DATABASE_URL` يُبدّل المخازن إلى Postgres ويُفعّل **اختبار الصفوف** وحده (`it.skipIf`). ولا تحتاج الوظيفة مخطّط `identity_*` لأن خدمة الهوية تعمل داخل الاختبار بمحوّلات in-memory — محلّ الفحص العقد بين الطبقتين، واستمرارية الهوية مغطّاة في `db-integration`.
 
@@ -66,6 +67,11 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_matching_test \
   pnpm --filter @wasla/matching-service test:integration
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_dispatch_test \
   pnpm --filter @wasla/dispatch-service test:integration
+
+# السائقون (المرحلة 05)
+createdb wasla_drivers_test
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_drivers_test \
+  pnpm --filter @wasla/drivers-service test:integration
 ```
 
 الاختبار يُطبّق الـDDL والبيانات الأولية بنفسه، فلا حاجة لتهيئة يدوية. بيانات السعودية الأولية idempotent (`ON CONFLICT DO NOTHING`) فإعادة التشغيل آمنة.

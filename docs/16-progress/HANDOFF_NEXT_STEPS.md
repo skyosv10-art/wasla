@@ -4,7 +4,7 @@
 >
 > **القاعدة الحاكمة:** كل عمل يُدفع إلى المستودع يجب توثيقه، ويجب أن يعرف من يأتي بعدي «ماذا تمّ وماذا بقي» بدقّة، حتى إكمال المشروع 100%.
 >
-> **Last Updated:** 2026-08-23 (**Phase 08 (Negotiation & Chat) بدأت 🔄 — MR 1/6 مدفوعة**: [ADR-013](../15-decisions/ADR-013-negotiation-chat-agreement-boundary-and-tick-driven-expiry.md) + العقود الكنسية لخدمة `services/negotiations` على **8091** + `@wasla/contracts-negotiation` بـ**70 حارس انحراف** + [NEGOTIATION_CHAT.md](../03-domain/NEGOTIATION_CHAT.md) + [CONTAINERS §4.5](../02-architecture/CONTAINERS.md). القاعدة الحاكمة: **التفاوض يملك «بكم اتّفقنا» ولا يكتب السعر في `orders`** — والتفصيل الكامل لما تمّ وما بقي في **§14**. إجمالي المستودع **2197 اختباراً + 1 متروك بقصد في 133 ملفاً**. و**العائق التشغيلي قائم**: حصّة دقائق CI منتهية (§2-أ) فلا يُدمج MR بأنبوب أحمر)
+> **Last Updated:** 2026-08-23 (**Phase 08 (Negotiation & Chat) بدأت 🔄 — MR 1/6 مدفوعة ([!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))**: [ADR-013](../15-decisions/ADR-013-negotiation-chat-agreement-boundary-and-tick-driven-expiry.md) + العقود الكنسية لخدمة `services/negotiations` على **8091** + `@wasla/contracts-negotiation` بـ**70 حارس انحراف** + [NEGOTIATION_CHAT.md](../03-domain/NEGOTIATION_CHAT.md) + [CONTAINERS §4.5](../02-architecture/CONTAINERS.md). القاعدة الحاكمة: **التفاوض يملك «بكم اتّفقنا» ولا يكتب السعر في `orders`** — والتفصيل الكامل لما تمّ وما بقي في **§14**. إجمالي المستودع **2197 اختباراً + 1 متروك بقصد في 133 ملفاً**. و**العائق التشغيلي قائم**: حصّة دقائق CI منتهية (§2-أ) فلا يُدمج MR بأنبوب أحمر)
 >
 > **Last Updated:** 2026-08-22 (**Phase 05 مكتملة ✅ — MR 6/6 مدفوعة وبوابة الخروج اجتازت**: حزمة `@wasla/driver-e2e` ترفع **سبع خدمات مُنصتة** بساعة واحدة مُحقونة، وتُثبت أن سائقاً يُسجَّل ويُراجَع فيصله عرضٌ حقيقي من التوزيع بأهليّة `driver_core` محسوبة، ثمّ **بنبضة واحدة** يخرج من التجمّع — 14 اختباراً. وقد أسقطت البوابة **عيباً حقيقياً**: تصادُم مفتاح منع التكرار تحت نبضة ساعة واحدة كان يجعل نشراً «ناجحاً» لا يُحرّك صفّ المطابقة، فأُصلح وحُرِس بحارس وحدوي بساعة مجمَّدة، والفائدة قِيست بفحص طفرة. §13)
 >
@@ -17,7 +17,7 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 1/6 من ستّ مدفوعة** (§14)
+المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 1/6 من ستّ مدفوعة** ([!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57) · §14)
                  (المُنجَز: ADR-013 + العقود الكنسية (8 جداول · 10 مسارات · 9 أحداث · 29 كود خطأ)
                   + `@wasla/contracts-negotiation` بـ**70 حارس انحراف** + نموذج المجال + CONTAINERS §4.5.
                   المتبقّي في المرحلة: 2/6 مجال نقيّ · 3/6 Drizzle/Postgres · 4/6 HTTP على **8091**
@@ -1023,14 +1023,14 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 
 | MR | النطاق | الحالة |
 |---|---|---|
-| **1/6** | ADR-013 + `services/negotiations/contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` + `@wasla/contracts-negotiation` + NEGOTIATION_CHAT.md + CONTAINERS §4.5 | ✅ **مدفوعة (2026-08-23)** |
+| **1/6** | ADR-013 + `services/negotiations/contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` + `@wasla/contracts-negotiation` + NEGOTIATION_CHAT.md + CONTAINERS §4.5 | ✅ **مدفوعة (2026-08-23 · [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))** |
 | **2/6** | طبقة مجال نقيّة `@wasla/negotiations-service` — آلة حالة الخيط والدور، و**حاسب الحدود من السياسة المُرقّمة** لا من أرقام في الكود، وقاعدة التبادل، ومنع القبول الذاتي، و`expected_round_no`. بلا قاعدة ولا HTTP، ومُهيّئ الذاكرة **يُطبّق القيود الاثنين والعشرين بأسمائها** كما فعل الطوران 06 و05 | ⏳ **التالية** |
 | **3/6** | استمرارية Drizzle/Postgres + **وحدة عمل واحدة** تجعل الخيط والدور والرسالة والصادر في معاملة واحدة **بلا تغيير في `src/use-cases/`** + وظيفة CI `negotiations-db-integration` + حارس انحراف مرآة↔DDL | ⏳ |
 | **4/6** | طبقة HTTP على **8091**: المسارات العشرة + `/health` بحالتيه و`last_tick_at` + مقبس معاملة (`NegotiationRunner`) فلا يملك معالج مسار فتح معاملة + `onlyKeys()` على كل حمولة + كتالوجات تعدادات وقت التشغيل ترفض العضو المجهول **على الحدّ** | ⏳ |
 | **5/6** | المنافذ الصادرة الحقيقية: `AgreedPricePort` → محرّك الطلب **8087** و`DispatchOfferPort` → التوزيع **8089** + تدفّقات بوتَي العميل والسائق. **وفيها ترحيل أعمدة الاتفاق في `orders`** (أدناه) | ⏳ |
 | **6/6** | **بوابة خروج المرحلة E2E** `packages/negotiation-e2e`: خدمات مُنصتة حقيقية بساعة واحدة مُحقونة — طلب `negotiable` يصل سائقاً فيتفاوضان أدواراً فيتّفقان، **والسعر يظهر في محرّك الطلب فعلاً**؛ ونبضة واحدة تُنهي خيطاً مهجوراً؛ وقبولٌ متأخّر يُرفض بالاسم | ⏳ |
 
-### ما أنجزته MR 1/6 بالضبط
+### ما أنجزته MR 1/6 بالضبط ([!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))
 
 - `services/negotiations/contracts/schema.sql` — **ثمانية جداول** (`negotiation_policies` · `negotiation_threads` · `negotiation_rounds` · `negotiation_messages` · `negotiation_agreements` · `negotiation_price_handoffs` · `negotiation_idempotency` · `negotiation_outbox`) بـ**22 قيداً مُسمّى** يمنع بالبناء ما كان سيُترك للمراجعة: خيطٌ مفتوح يحمل نتيجة · خيطٌ مُغلَق بلا سبب · خيطٌ `agreed` لا يسمّي دوره أو يسمّي دوراً غير موجود · دورٌ يحلّه مقترحُه · دورانِ معلّقان أو مقبولان · خيطانِ لطلبٍ وسائق · خيطانِ لعرض توزيع · اتفاقانِ لطلبٍ وسائق · رسالةٌ بلا نصٍّ ولا رمز · تنقيحٌ بلا سبب · تسليمٌ فاشل بلا سبب مُسمّى · مبلغٌ خارج حدود السياسة. وسياسة الانطلاق مبذورة صفّاً واحداً (`saudi-launch-v1`).
 - `services/negotiations/contracts/api.openapi.yml` — 3.1 على **8091**، **عشرة مسارات** بـ`additionalProperties: false` على كل مخطّط. و`POST /negotiations/tick` بجسمٍ اختياري صريح — درسٌ مُقاس من الطورين 07 و05.

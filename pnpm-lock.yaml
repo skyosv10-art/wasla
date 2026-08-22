@@ -390,6 +390,42 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/driver-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/customers-service':
+        specifier: workspace:*
+        version: link:../../services/customers
+      '@wasla/dispatch-service':
+        specifier: workspace:*
+        version: link:../../services/dispatch
+      '@wasla/drivers-service':
+        specifier: workspace:*
+        version: link:../../services/drivers
+      '@wasla/geography-service':
+        specifier: workspace:*
+        version: link:../../services/geography
+      '@wasla/identity-service':
+        specifier: workspace:*
+        version: link:../../services/identity
+      '@wasla/matching-service':
+        specifier: workspace:*
+        version: link:../../services/matching
+      '@wasla/orders-service':
+        specifier: workspace:*
+        version: link:../../services/orders
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/errors: {}
 
   packages/order-e2e:

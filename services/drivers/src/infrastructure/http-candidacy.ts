@@ -34,11 +34,27 @@
  * re-applying the write. The row would stay `offline` while our record says
  * `published`, which is the worst of both — silent drift with a clean audit.
  *
- * So the key is per-attempt: `drv-{driverId}-{attemptMillis}-{contentHash}`. The
+ * So the key is per-attempt: `drv-{driverId}-{attemptMillis}-{seq}-{contentHash}`. The
  * operation is already idempotent by construction (full replace of the same content is
  * the same row), so the key's job is to be unique per intent, not to deduplicate for
  * us. It stays readable on purpose: an operator holding a driver id can find the
  * matching-side audit rows without a translation table.
+ *
+ * ## Why a sequence number and not the timestamp alone (Phase 05 exit gate)
+ *
+ * The timestamp was the whole defence, and it was one millisecond deep. The exit gate
+ * caught it: a driver goes `offline → available → offline` inside one clock tick, the
+ * first and third publications carry the same content AND the same `attemptMillis`, so
+ * they carry the same key — and matching replays the first answer instead of applying
+ * the third. The row stays `available` while our `driver_candidacy_publications` row
+ * says `published`. That is the exact drift the paragraph above set out to prevent,
+ * reintroduced through the back door of clock resolution.
+ *
+ * Under a frozen test clock this is certain; under a real clock it is merely rare, and
+ * «rare» is the wrong safety margin for «a busy driver silently keeps receiving offers».
+ * A per-instance counter costs one integer and removes the dependence on how finely the
+ * clock happens to tick. The counter is deliberately NOT persisted: it only has to break
+ * ties within a process, and after a restart the timestamp has moved on anyway.
  */
 
 import { createHash } from "node:crypto";
@@ -85,6 +101,8 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly clock: { now(): string };
+  /** Breaks key ties between same-content publications inside one clock tick. */
+  private attemptSequence = 0;
 
   constructor(options: HttpCandidacyOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
@@ -162,11 +180,12 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     throw driverUnavailable("خدمة المطابقة غير متاحة لنشر إسقاط الترشيح");
   }
 
-  /** `drv-{driverId}-{attemptMillis}-{contentHash}`; 8..128 chars per matching's contract. */
+  /** `drv-{driverId}-{attemptMillis}-{seq}-{contentHash}`; 8..128 chars per matching's contract. */
   private idempotencyKey(projection: CandidacyProjection, attemptedAt: string): string {
     const millis = Date.parse(attemptedAt);
     const stamp = Number.isNaN(millis) ? "0" : String(millis);
-    return `drv-${projection.waslaPublicId}-${stamp}-${contentHash(projection)}`;
+    this.attemptSequence += 1;
+    return `drv-${projection.waslaPublicId}-${stamp}-${this.attemptSequence}-${contentHash(projection)}`;
   }
 
   private async call(url: string, init: RequestInit): Promise<Response> {

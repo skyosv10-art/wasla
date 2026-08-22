@@ -375,8 +375,14 @@ export interface components {
             is_primary: boolean;
         };
         VehiclePatch: {
-            /** @enum {string} */
-            status?: "active" | "retired";
+            /**
+             * @description `retired` وحدها. حُذفت `active` في Phase 05 · MR 4/6 لأنها كانت **وعداً لا يُنجزه أحد**:
+             *     `patchVehicle` ترفضها بـ400 منذ MR 2/6 لأن إعادة التفعيل تسجيل جديد لا تعديل — مركبة
+             *     خرجت من الخدمة تحتاج أن تُنطر أوراقها من جديد لا أن تُحيا بحرف واحد. إبقاء القيمة
+             *     في العقد يدفع المستهلك لكتابة فرع لا ينجح أبداً، وهو أغلى من تضييق قيمة لم تعمل يوماً.
+             * @enum {string}
+             */
+            status?: "retired";
             is_primary?: boolean;
         };
         DriverDocument: {
@@ -448,14 +454,45 @@ export interface components {
             status: "ok" | "degraded";
             /** @enum {string} */
             persistence: "postgres" | "memory";
+            /**
+             * Format: date-time
+             * @description آخر نبضة أهليّة نُفّذت في هذه العمليّة، و`null` قبل أولى النبضات. أُضيف في Phase 05 ·
+             *     MR 4/6 لا تحسيناً بل **مطابقةً لـADR-012 القرار 5**: الزمن نبضة لا مؤقّت، وغياب
+             *     المُنادي الدوريّ (Phase 09) **فشل صامت**: وثيقة تنتهي ولا يُكتشف انتهاؤها ولا يشتكي
+             *     أحد. الحقل مؤشّر ذلك الغياب، وإغفاله في MR 1/6 كان عيباً في العقد لا قراراً: القرار
+             *     سمّى الحقل بالحرف، والطور 07 سبق أن نشر سابقته في `/health` للإرسال.
+             *     وهو **مؤشّر عمليّة لا حالة مخزّنة**: إعادة التشغيل تُعيده إلى `null` لأن المقيس هنا
+             *     «أيجري النقر على هذه العمليّة؟» لا «متى نُقر آخر مرّة في التاريخ» — والأخير محلّه
+             *     `eligibility_recheck_at` في القاعدة.
+             */
+            last_tick_at: string | null;
         };
         ErrorResponse: {
             error: {
                 /** @description كود ثابت؛ يتعاقد المستهلك على الكود لا على ترجمة الرسالة. */
                 code: string;
                 message: string;
-                /** @description تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع صلاحية. */
-                details?: Record<string, never>;
+                /**
+                 * @description تفاصيل بنيوية بلا إعادة قيمة المدخل؛ القيمة في رسالة خطأ تعيش في سجلات أوسع صلاحية.
+                 *     الحقول **معدودة** لا حقيبة حرّة، وذاك بعينه ما يمنع «ضع القيمة في التفاصيل»:
+                 *     `field` يسمّي الحقل ولا يردّ ما كُتب فيه. أُعلنت الحقول في Phase 05 · MR 4/6 لأن
+                 *     `additionalProperties: false` بلا `properties` في MR 1/6 يعني **لا مفتاح مسموح**،
+                 *     فكل تفصيل يرسله الخطأ كان سيُفشل تحقّق مستهلك صارم على استجابةٍ صحيحة.
+                 */
+                details?: {
+                    /** @description اسم الحقل المرفوض لا قيمته. */
+                    field?: string;
+                    /** @description وصف الشكل المتوقّع أو الانتقال المرفوض. */
+                    expected?: string;
+                    /** @enum {string} */
+                    document_type?: "national_id" | "driving_license" | "vehicle_registration" | "vehicle_insurance" | "vehicle_photo";
+                    policy_version?: number;
+                    /**
+                     * @description اسم قيد القاعدة الذي كان سيرفض الكتابة نفسها؛ يجعل خطّ الدفاع الثاني قابلاً
+                     *     للعثور بدلاً من افتراض أن القاعدة تعيش في TypeScript وحدها.
+                     */
+                    constraint?: string;
+                };
             };
             trace_id: string;
         };

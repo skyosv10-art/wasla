@@ -17,7 +17,7 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 2/6 من ستّ مدفوعة** ([!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57) ثمّ (رابط المراجعة يُضاف عند فتحها) · §14)
+المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 2/6 من ستّ مدفوعة** ([!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57) ثمّ ([!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58)) · §14)
                  (المُنجَز: ADR-013 + العقود الكنسية (8 جداول · 10 مسارات · 9 أحداث · 29 كود خطأ)
                   + `@wasla/contracts-negotiation` بـ**70 حارس انحراف** + نموذج المجال + CONTAINERS §4.5.
                   المتبقّي في المرحلة: 3/6 Drizzle/Postgres · 4/6 HTTP على **8091**
@@ -1024,7 +1024,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 | MR | النطاق | الحالة |
 |---|---|---|
 | **1/6** | ADR-013 + `services/negotiations/contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` + `@wasla/contracts-negotiation` + NEGOTIATION_CHAT.md + CONTAINERS §4.5 | ✅ **مدمجة في `main` (2026-08-22 · [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))** — دُمجت بقرار مالك المستودع وأنبوبها أحمر لسببٍ تشغيليّ (§2-أ) |
-| **2/6** | طبقة مجال نقيّة `@wasla/negotiations-service` — آلة حالة الخيط والدور، و**حاسب الحدود من السياسة المُرقّمة** لا من أرقام في الكود، وقاعدة التبادل، ومنع القبول الذاتي، و`expected_round_no`. بلا قاعدة ولا HTTP، ومُهيّئ الذاكرة **يُطبّق 24 قاعدة مُسمّاة (قيوداً وفهارس فريدة) بأسمائها الحرفيّة** كما فعل الطوران 06 و05 · **131 اختباراً** + [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) | ✅ **مدفوعة (2026-08-23 · (رابط المراجعة يُضاف عند فتحها))** |
+| **2/6** | طبقة مجال نقيّة `@wasla/negotiations-service` — آلة حالة الخيط والدور، و**حاسب الحدود من السياسة المُرقّمة** لا من أرقام في الكود، وقاعدة التبادل، ومنع القبول الذاتي، و`expected_round_no`. بلا قاعدة ولا HTTP، ومُهيّئ الذاكرة **يُطبّق 24 قاعدة مُسمّاة (قيوداً وفهارس فريدة) بأسمائها الحرفيّة** كما فعل الطوران 06 و05 · **131 اختباراً** + [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) | ✅ **مدفوعة (2026-08-23 · ([!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58)))** |
 | **3/6** | استمرارية Drizzle/Postgres + **وحدة عمل واحدة** تجعل الخيط والدور والرسالة والصادر في معاملة واحدة **بلا تغيير في `src/use-cases/`** + وظيفة CI `negotiations-db-integration` + حارس انحراف مرآة↔DDL | ⏳ |
 | **4/6** | طبقة HTTP على **8091**: المسارات العشرة + `/health` بحالتيه و`last_tick_at` + مقبس معاملة (`NegotiationRunner`) فلا يملك معالج مسار فتح معاملة + `onlyKeys()` على كل حمولة + كتالوجات تعدادات وقت التشغيل ترفض العضو المجهول **على الحدّ** | ⏳ |
 | **5/6** | المنافذ الصادرة الحقيقية: `AgreedPricePort` → محرّك الطلب **8087** و`DispatchOfferPort` → التوزيع **8089** + تدفّقات بوتَي العميل والسائق. **وفيها ترحيل أعمدة الاتفاق في `orders`** (أدناه) | ⏳ |
@@ -1044,7 +1044,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **لا مُهيّئ ذاكرة ولا Drizzle**: محلّهما 2/6 و3/6.
 - **لا تدفّق بوت**: العقد يُنادى كما ينادِيه البوت، والواجهة محلّها 5/6.
 
-### ما أنجزته MR 2/6 بالضبط ((رابط المراجعة يُضاف عند فتحها))
+### ما أنجزته MR 2/6 بالضبط ([!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58))
 
 الحزمة `services/negotiations/` (`@wasla/negotiations-service`) — تابعيّتها الوحيدة `@wasla/contracts-negotiation`، **بلا `pg` ولا `drizzle` ولا `fastify`**، والخدمة **غير قابلة للإقلاع** بقصد. والتفصيل التعليليّ الكامل في [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md)، وهذه رؤوسه:
 

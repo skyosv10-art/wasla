@@ -24,6 +24,17 @@
 
 ## السجل
 
+### [2026-08-23] حوكمة · قرار مالك المستودع: الدمج بأنبوب أحمر مأذونٌ فيه بشروطٍ ثلاثة، والبوابة تُنقَل لا تُلغى
+
+- **Files:** `docs/16-progress/{HANDOFF_NEXT_STEPS.md,MASTER_PROGRESS.md,ROADMAP.md,TASK_LOG.md}`
+- **Services:** — (تغيير حوكمة وتوثيق فقط · لا كود ولا عقد ولا مخطّط)
+- **Why:** كانت القاعدة المكتوبة في §2-أ: «لا تُدمَج مراجعة بأنبوب أحمر · يلزم تدخّل مالك الحساب أوّلاً». وقد **تعذّر التدخّل**: لا رصيد لشراء دقائق CI ولا لترقية الخطة، فحصّة `ci_quota_exceeded` **لن تُجدَّد**. وقاعدةٌ لا يمكن استيفاؤها تُوقف المشروع لا تحميه، فقرّر مالك المستودع **تعديلها لا إلغاءها**: تُدمَج المراجعة بأنبوب أحمر **ما دام سبب الحُمرة `ci_quota_exceeded` وحده**، بثلاثة شروط — **(1)** كلّ رقم يُدَّعى مُقاسٌ محلّيّاً ومُسجَّل هنا باسم الأمر الذي أنتجه، ولا يُكتب رقمٌ لم يُشغَّل؛ **(2)** ما يحتاج محرّكاً (`test:integration` وبوابات الخروج) يُشغَّل على **Postgres حقيقي محلّيّاً** قبل الدمج ويُعلَن صراحةً ما لم يُشغَّل ولماذا؛ **(3)** لا يُدمَج ما لم يُشغَّل أصلاً. فـ**البوابة تُنقَل إلى الجهاز المحلّي لا تُلغى** — والبوابة التي تُتجاوَز مرّة تُتجاوَز دائماً. والأمتن للمدى الطويل يبقى **runner ذاتي الاستضافة** على جهاز المالك ([CI_RUNNER_UNBLOCK.md](../14-runbooks/CI_RUNNER_UNBLOCK.md)) فيعود الإثبات آليّاً؛ ومتى عاد CI تُعاد الخطوط على `main` وتُصحَّح أيّ فجوة يكشفها.
+- **Tests:** لا كود تغيّر فلا اختبار يُشغَّل. و**تحقّقٌ من الحالة الفعليّة على المنصّة**: [!59](https://gitlab.com/uxxxu/wasla/-/merge_requests/59) و[!60](https://gitlab.com/uxxxu/wasla/-/merge_requests/60) كلتاهما `state: merged` في `main` (رأس `main` = دمج `feat/negotiations-http`)، فصُحّحت الوثائق من «مدفوعة» إلى **«مدمجة في `main`»** في المواضع الأربعة كي لا يقرأ من يأتي بعدنا حالةً أقدم من الواقع.
+- **Next:** **MR 5/6** — المنافذ الصادرة الحقيقيّة (`AgreedPricePort` → محرّك الطلب **8087** · `DispatchOfferPort` → التوزيع **8089**) وتدفّقات بوتَي العميل والسائق، **ومعها ترحيل أعمدة الاتفاق في `orders`** (مالكه محرّك الطلب). و**أثر هذا القرار على 5/6 و6/6**: بوابة خروج المرحلة (6/6) تبقى **شرطاً لإغلاق المرحلة**، وتُشغَّل محلّيّاً على Postgres حقيقي ويُسجَّل ناتجها هنا — لا تُعلَن مرحلةٌ مُغلَقة ببوابةٍ موصوفة.
+- **Related:** [HANDOFF §2-أ](HANDOFF_NEXT_STEPS.md) (نصّ القاعدة المُعدَّلة) · [CI_RUNNER_UNBLOCK.md](../14-runbooks/CI_RUNNER_UNBLOCK.md) · [GIT_RULES](../00-rules/GIT_RULES.md) · [PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md) · Phase 08 · MR 4/6 ([!60](https://gitlab.com/uxxxu/wasla/-/merge_requests/60))
+
+---
+
 ### [2026-08-23] Phase 08 · MR 4/6 — خدمة التفاوض تُخدَم على 8091: حدٌّ يترجم ولا يقرّر
 
 - **Files:** `services/negotiations/src/{runner,mappers}.ts` (جديدة) · `services/negotiations/src/http/{app,errors,requests,server}.ts` (جديدة) · `services/negotiations/src/infrastructure/runtime.ts` (جديد) · `services/negotiations/src/__tests__/{http-harness.ts,http.test.ts,http-drift.test.ts}` (جديدة) · `services/negotiations/{package.json,src/index.ts}` · `pnpm-lock.yaml` · `docs/04-api/NEGOTIATION_HTTP.md` (جديدة) · `docs/16-progress/{ROADMAP.md,MASTER_PROGRESS.md,HANDOFF_NEXT_STEPS.md,TASK_LOG.md}`

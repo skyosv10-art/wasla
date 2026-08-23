@@ -10,6 +10,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const schemaSql = readFileSync(resolve(__dirname, "../../../../../services/subscriptions/contracts/schema.sql"), "utf8");
+const openapi = readFileSync(resolve(__dirname, "../../../../../services/subscriptions/contracts/api.openapi.yml"), "utf8");
 /** يقتص تعريف جدول واحد كي لا يمر تعداد لعمود من جدول آخر. */
 function table(name: string): string {
   const start = schemaSql.indexOf(`CREATE TABLE IF NOT EXISTS ${name}`);
@@ -68,6 +69,26 @@ describe("دفتر الانتقالات المعلن", () => {
     for (const [from, to] of SUBSCRIPTION_ALLOWED_TRANSITIONS) {
       if (from !== null) expect([...SUBSCRIPTION_STATES], String(from)).toContain(from);
       expect([...SUBSCRIPTION_STATES], String(to)).toContain(to);
+    }
+  });
+});
+
+describe("أرضيّةُ المجتمع: رقمٌ في نسخة الخطّة (ملحق ADR-015 · المراجعة 2/6)", () => {
+  /**
+   * لماذا هذا الحارس: أرضيّةُ `community` سقفٌ يوميّ، والسقفُ رقمٌ لا بدّ أن يسكن في
+   * نسخةِ الخطّة كي يُحفَظ ما كانت الأرضيّةُ أمس.
+   * النسخة الخاطئة الأرخص: ثابتٌ في كود الخدمة يُغيَّر بنشرة، فلا يبقى أثرٌ تدقيقيّ لأرضيّةٍ سابقة.
+   */
+  it("يمنع إسقاط عمود سقف الأرضيّة من جدول الخطط", () => {
+    expect(table("subscription_plans")).toContain("community_daily_order_cap");
+  });
+  it("يمنع تعارض حدود المخطط مع حدود العقد لأيّام التجربة والمهلة", () => {
+    // صفرٌ قرارٌ مشروع في DDL؛ فلو أعلن OpenAPI حدّاً أدنى 1 لكذّب أحدُ العقدَين الآخر.
+    for (const column of ["trial_days", "community_grace_days", "community_daily_order_cap"]) {
+      expect(table("subscription_plans"), column).toContain(`CHECK (${column} BETWEEN 0`);
+      // نقتص مخطط SubscriptionPlan وحده كي لا يقرأ الحارس مثالاً في متن مسار آخر.
+      const planSchema = openapi.slice(openapi.indexOf("    SubscriptionPlan:"), openapi.indexOf("    SubscriptionPlanList:"));
+      expect(planSchema.slice(planSchema.indexOf(`        ${column}:`)).slice(0, 220), column).toContain("minimum: 0");
     }
   });
 });

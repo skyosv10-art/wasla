@@ -6,6 +6,9 @@ import {
   SUBSCRIPTION_API_OPERATION_COUNT, SUBSCRIPTION_API_PATHS, SUBSCRIPTION_ERROR_CLASS_STATUS,
   SUBSCRIPTION_ERROR_CODE_CLASS, SUBSCRIPTION_ERROR_CODES, SUBSCRIPTION_HTTP_STATUS_CODES,
   SUBSCRIPTION_SERVICE_PORT, httpStatusForSubscriptionError,
+  SUBSCRIPTION_COMMUNITY_FLOOR_ENTITLEMENTS, SUBSCRIPTION_ENTITLEMENTS,
+  SUBSCRIPTION_LAUNCH_COMMUNITY_DAILY_ORDER_CAP, SUBSCRIPTION_LAUNCH_COMMUNITY_GRACE_DAYS,
+  SUBSCRIPTION_PAID_ONLY_ENTITLEMENTS,
 } from "../index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -75,5 +78,28 @@ describe("تمثيل OpenAPI للاشتراك", () => {
     expect(SUBSCRIPTION_SERVICE_PORT).toBe(8093);
     const firstServer = /^servers:\n\s*- url: ([^\n]+)/m.exec(openApiYml);
     expect(firstServer?.[1]).toContain(`:${SUBSCRIPTION_SERVICE_PORT}`);
+  });
+});
+
+describe("تصنيفُ الاستحقاقات: أرضيّة مقابل مدفوع", () => {
+  /**
+   * لماذا هذا الحارس: طبقةُ المجال تحسب استحقاقات `expired` و`community` من هذَين
+   * الثابتَين، فلو بقي رمزٌ غيرَ مُصنَّف قرّر أوّلُ فرعٍ في الكود مصيرَه صمتاً.
+   * النسخة الخاطئة الأرخص: قائمةٌ ثالثةٌ تُكتب داخل الخدمة فتتباعد عن العقد بصمت.
+   */
+  it("يمنع رمز استحقاق غير مُصنَّف أو مُصنَّفاً مرّتَين", () => {
+    const union = [...SUBSCRIPTION_COMMUNITY_FLOOR_ENTITLEMENTS, ...SUBSCRIPTION_PAID_ONLY_ENTITLEMENTS];
+    expect([...union].sort()).toEqual([...SUBSCRIPTION_ENTITLEMENTS].sort());
+    expect(new Set(union).size).toBe(union.length);
+  });
+  it("يمنع بقاء امتياز مدفوع على الأرضيّة", () => {
+    for (const code of SUBSCRIPTION_PAID_ONLY_ENTITLEMENTS) {
+      expect([...SUBSCRIPTION_COMMUNITY_FLOOR_ENTITLEMENTS], code).not.toContain(code as never);
+    }
+    expect([...SUBSCRIPTION_COMMUNITY_FLOOR_ENTITLEMENTS]).toContain("accept_orders");
+  });
+  it("يثبت سقفَ الأرضيّة المعلن في نسخة خطّة الإطلاق", () => {
+    expect(SUBSCRIPTION_LAUNCH_COMMUNITY_DAILY_ORDER_CAP).toBe(3);
+    expect(SUBSCRIPTION_LAUNCH_COMMUNITY_DAILY_ORDER_CAP).toBeLessThan(SUBSCRIPTION_LAUNCH_COMMUNITY_GRACE_DAYS + 1000);
   });
 });

@@ -5,7 +5,8 @@
  *
  * Everything here is pure: entities, the two state machines, the frozen policy, the
  * event factories, the ports, in-memory adapters that enforce every named database
- * constraint, and the nine use cases. There is **no Postgres, no Fastify, no fetch**.
+ * constraint, and the nine use cases; MR 3/6 added the Drizzle/Postgres adapters beside
+ * them, behind the very same ports. There is still **no Fastify and no fetch** here.
  * You can run the whole suite on a laptop with nothing installed and get the same
  * answers CI gets.
  *
@@ -18,10 +19,11 @@
  *
  * Landing later, per HANDOFF §14:
  *
- *   - **MR 3/6** — Drizzle/Postgres repositories against `schema.sql`, plus the
+ *   - **MR 3/6 (landed)** — Drizzle/Postgres repositories against `schema.sql`, the
+ *     `PostgresNegotiationUnitOfWork` transaction boundary, and the
  *     `negotiations-db-integration` CI job. The parity suite runs these same use cases
- *     against both adapters, which is what turns «the in-memory store simulates the
- *     constraints» from a claim into a check.
+ *     against both adapters, which is what turned «the in-memory store simulates the
+ *     constraints» from a claim into a check: see `docs/02-architecture/NEGOTIATION_PERSISTENCE.md`.
  *   - **MR 4/6** — the Fastify server on port 8091, `/health`, and `onlyKeys()` on every
  *     response.
  *   - **MR 5/6** — the real `AgreedPricePort` over HTTP, the bot flows, and the declared
@@ -50,6 +52,9 @@ export type { EventMeta } from "./domain/events.js";
 
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
+export * from "./infrastructure/drizzle/db.js";
+export * from "./infrastructure/drizzle/repository.js";
+export * from "./infrastructure/drizzle/transaction.js";
 
 export * from "./use-cases/shared.js";
 export * from "./use-cases/expiry-core.js";

@@ -15,12 +15,18 @@
 import type {
   DispatchJob as ApiDispatchJob,
   DispatchOffer as ApiDispatchOffer,
+  DispatchOfferDetail as ApiDispatchOfferDetail,
   DispatchOfferList as ApiDispatchOfferList,
   DispatchRulesSnapshot as ApiDispatchRules,
   TickResult as ApiTickResult,
 } from "@wasla/contracts-dispatch";
 
-import type { DispatchJob, DispatchOffer, DispatchRules } from "./domain/model.js";
+import type {
+  DispatchJob,
+  DispatchOffer,
+  DispatchOfferDetail,
+  DispatchRules,
+} from "./domain/model.js";
 import type { TickOutcome } from "./use-cases/tick.js";
 
 export function toApiRules(rules: DispatchRules): ApiDispatchRules {
@@ -64,6 +70,19 @@ export function toApiOffer(offer: DispatchOffer): ApiDispatchOffer {
     responded_at: offer.respondedAt,
     resolved_at: offer.resolvedAt,
     created_at: offer.createdAt,
+  };
+}
+
+/** Field translation only; `standing` is decided by the read use case's domain rule. */
+export function offerDetailToWire(offer: DispatchOfferDetail): ApiDispatchOfferDetail {
+  return {
+    ...toApiOffer(offer),
+    order_public_id: offer.orderPublicId,
+    order_id: offer.orderId,
+    order_type: offer.orderType,
+    vehicle_class: offer.vehicleClass,
+    job_status: offer.jobStatus,
+    standing: offer.standing,
   };
 }
 

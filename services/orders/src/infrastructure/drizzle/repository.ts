@@ -37,7 +37,7 @@
  *     would make `shipmentWeightKg` sometimes `3.5` and sometimes `"3.50"`.
  */
 
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { OrderDomainEvent } from "@wasla/contracts-order";
 
@@ -59,6 +59,7 @@ import type {
   OrderRepository,
   Outbox,
   ResolveAssignmentInput,
+  RecordAgreedPriceInput,
 } from "../../ports.js";
 import type { DbOrTx } from "./db.js";
 import {
@@ -148,6 +149,9 @@ function toOrder(row: typeof orders.$inferSelect, stops: Stop[]): Order {
     statusReasonCode: row.statusReasonCode as Order["statusReasonCode"],
     priceMode: row.priceMode as Order["priceMode"],
     offeredPrice: toMoney(row.offeredAmountMinor, row.offeredCurrency),
+    agreedPrice: toMoney(row.agreedAmountMinor, row.agreedCurrency),
+    agreedAt: row.agreedAt?.toISOString() ?? null,
+    agreedNegotiationId: row.agreedNegotiationId,
     stops,
     shipment: toShipment({
       shipmentType: row.shipmentType,
@@ -271,6 +275,12 @@ function translateWriteError(
         throw new OrderError(
           "ORDER_ASSIGNMENT_DUPLICATE",
           `السائق ${context.driverPublicId ?? "?"} عُرض عليه هذا الطلب مسبقاً`,
+          { traceId },
+        );
+      case "ux_orders_agreed_negotiation":
+        throw new OrderError(
+          "ORDER_AGREED_PRICE_ALREADY_SET",
+          "خيط التفاوض سجّل سعراً على طلب آخر",
           { traceId },
         );
       case "ux_order_status_history_order_sequence":
@@ -677,6 +687,28 @@ export class PostgresOrderRepository implements OrderRepository {
       .returning();
 
     return toAssignment(updated!);
+  }
+
+  async recordAgreedPrice(input: RecordAgreedPriceInput): Promise<Order | null> {
+    try {
+      // The NULL predicate is the concurrency guard: a second writer cannot
+      // overwrite the price after its stale read of the same order.
+      const [updatedRow] = await this.db
+        .update(orders)
+        .set({
+          agreedAmountMinor: input.amountMinor,
+          agreedCurrency: input.currency,
+          agreedAt: new Date(input.agreedAt),
+          agreedNegotiationId: input.negotiationId,
+          updatedAt: new Date(input.recordedAt),
+        })
+        .where(and(eq(orders.id, input.orderId), isNull(orders.agreedAmountMinor)))
+        .returning();
+      if (updatedRow === undefined) return null;
+      return toOrder(updatedRow, await this.loadStops(updatedRow.id));
+    } catch (error) {
+      return translateWriteError(error, { orderId: input.orderId });
+    }
   }
 
   async setActiveAssignment(

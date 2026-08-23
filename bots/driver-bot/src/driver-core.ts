@@ -44,6 +44,12 @@ import {
 import type { Pool } from "pg";
 
 import {
+  HttpDriverNegotiations,
+  UnconfiguredDriverNegotiations,
+} from "./infrastructure/http-negotiations.js";
+import type { DriverNegotiationsPort } from "./negotiation-flows.js";
+
+import {
   DriverFlowError,
   type DeclaredAvailabilityView,
   type DriverDocumentView,
@@ -254,6 +260,7 @@ export interface DriverFlowsWiring {
  */
 export interface DriverFlowsEnv extends DriverOutboundEnv {
   readonly DRIVER_DATABASE_URL?: string | undefined;
+  readonly NEGOTIATIONS_SERVICE_URL?: string | undefined;
 }
 
 /**
@@ -306,4 +313,11 @@ export function buildDriverFlows(
  */
 export function buildDriverFlowsOver(runner: DriverRunner): DriverFlowsPort {
   return new UseCaseDriverFlows(runner);
+}
+
+
+/** A missing URL means this bot cannot know the negotiation state; it must say so. */
+export function buildDriverNegotiations(env: DriverFlowsEnv): DriverNegotiationsPort {
+  const baseUrl = env.NEGOTIATIONS_SERVICE_URL?.trim();
+  return baseUrl ? new HttpDriverNegotiations({ baseUrl }) : new UnconfiguredDriverNegotiations();
 }

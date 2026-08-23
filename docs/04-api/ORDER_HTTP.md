@@ -4,9 +4,9 @@
 >
 > **المصدر الكنسي للعقد:** [`services/orders/contracts/api.openapi.yml`](../../services/orders/contracts/api.openapi.yml) · [`errors.md`](../../services/orders/contracts/errors.md)
 >
-> **الخدمة:** `services/orders` (منفذ **8087**) · **Status:** Active · **Last Updated:** 2026-08-21
+> **الخدمة:** `services/orders` (منفذ **8087**) · **Status:** Active · **Last Updated:** 2026-08-23
 >
-> **Related Code:** `services/orders/src/http/{app.ts,errors.ts,requests.ts,server.ts}` · `services/orders/src/runner.ts` · `services/orders/src/infrastructure/drizzle/runner.ts` · `services/orders/src/__tests__/http/app.test.ts`
+> **Related Code:** `services/orders/src/http/{app.ts,errors.ts,requests.ts,server.ts}` · `services/orders/src/use-cases/{read-order.ts,record-agreed-price.ts}` · `services/orders/src/{mappers.ts,runner.ts}` · `services/orders/src/infrastructure/drizzle/{runner.ts,repository.ts}` · `services/orders/src/__tests__/{http/app.test.ts,schema-drift.test.ts,postgres-repository.integration.test.ts}`
 >
 > **Related Team:** Team 06 — Order Engine
 >
@@ -135,7 +135,98 @@ services/orders/src/http/server.ts                 ← composition root (Postgre
 
 ---
 
-## 8. الانحرافات والحدود المُعلَنة
+## 8. اتفاق السعر بين التفاوض والطلب
+
+المساران التاليان حدٌّ خدميّ لا واجهة عميل؛ التفاوض لا يعرف UUID الداخلي، لذا يحمل
+الجسم أو الاستعلام `order_public_id`، وهو المعرّف الذي تتداوله الخدمات. لا تُقبل
+`X-Customer-Public-Id` هنا: لا توجد قراءة لمحتوى عميل ولا قاعدة ملكية لنثبتها،
+وإضافة الترويسة كانت ستخترع أسلوب هوية ثانياً لا يملكه المُنادي.
+
+| Method | Path | النتيجة | لماذا الحد بهذا الشكل |
+|---|---|---|---|
+| POST | `/orders/agreed-prices` | **201** تسجيل أول · **200** إعادة مطابقة | السعر مورد مسجل للطلب لا مسار UUID لا يملكه التفاوض |
+| GET | `/orders/lookup?order_public_id=…` | **200** ملخص | المطابقة تحتاج قرار الطلب لا تفاصيل العميل |
+
+### 8.1 تسجيل السعر
+
+`AgreedPriceRecord` جسم مغلق (`additionalProperties: false`) لأن تجاهل حقل مالي
+مكتوب خطأً أخطر من رفضه: `order_public_id`, `negotiation_id`,
+`driver_public_id`, `amount_minor`, `currency`, `agreed_at`. ترويسة
+`Idempotency-Key` إلزامية و`x-request-id` اختيارية، تماماً كأي كتابة؛ إعادة نفس
+الخيط والمبلغ والعملة آمنة وتجيب **200**، ولا تحتاج الخدمة ترويسة عميل.
+
+| القاعدة | HTTP | الكود | لماذا |
+|---|---:|---|---|
+| لا طلب بهذا `order_public_id` | 404 | `ORDER_NOT_FOUND` | لا يوجد صف يعلّق عليه أثر الاتفاق |
+| `price_mode` ليس `negotiable` | 422 | `ORDER_PRICE_NOT_NEGOTIABLE` | عرض العميل وسعر تفاوضي مصدران متناقضان للسعر |
+| الحالة خارج `published/searching/offered/negotiating/accepted` | 422 | `ORDER_NOT_OPEN_FOR_AGREED_PRICE` | لا يعاد تفسير تنفيذ بدأ أو انتهى كسعر جديد |
+| السعر من خيط آخر، أو الخيط مربوط بطلب آخر | 409 | `ORDER_AGREED_PRICE_ALREADY_SET` | خيط تفاوض واحد يثبت اتفاقاً واحداً |
+| الخيط نفسه بمبلغ أو عملة مختلفين | 409 | `ORDER_AGREED_PRICE_MISMATCH` | إعادة المحاولة لا تعيد كتابة الدليل |
+| الخيط نفسه بالمبلغ والعملة نفسيهما | 200 | — | التكرار لا ينبغي أن يحوّل إعادة الإرسال إلى نزاع |
+
+التسجيل **لا يغيّر الحالة** ولا يكتب `order_status_history` ولا ينشئ إسناداً:
+`transitionOrder` وحده حاكم دورة الحياة، وإدخال حاكم ثانٍ يجعل صف الحالة قابلاً
+للتغيير من مسارين. وبالمثل لا يوجد حدث جديد في `events.json`: حقيقة الاتفاق
+ملك `negotiations.agreed`، بينما الطلب يحفظ حقلاً؛ حدثان للواقعة نفسها يصنعان
+مصدرَي حقيقة لا أثر تدقيق إضافياً.
+
+### 8.2 قراءة `lookup` مصغّرة عمداً
+
+`OrderSummary` يعيد فقط `order_public_id`, `order_id`, `status`, `price_mode`,
+`order_type`, `vehicle_class`, `agreed_price`, `agreed_at`,
+`agreed_negotiation_id`. لا يعيد العميل أو المحطات أو الوصف أو الملاحظات؛ تلك
+نصوص كتبها مستخدم ولا تحتاجها خدمة تفاوض لتقرير قابلية التسجيل. إبقاؤها خارج
+الرد يطبّق حد الخصوصية في ADR-009 §7 وADR-010 القرار 7 بدلاً من الاعتماد على
+حسن نية كل مستهلك لاحق.
+
+### 8.3 ترحيل الأعمدة ونقضه
+
+`contracts/schema.sql` هو مصدر الحقيقة ولا يولّد Drizzle مخططاً. الأعمدة قابلة
+لـNULL بلا default، لذلك إضافة الميزة عكسية ولا تعطل الصفوف الموجودة:
+
+```sql
+ALTER TABLE orders ADD COLUMN agreed_amount_minor BIGINT
+  CHECK (agreed_amount_minor IS NULL OR agreed_amount_minor > 0);
+ALTER TABLE orders ADD COLUMN agreed_currency TEXT
+  CHECK (agreed_currency IS NULL OR agreed_currency ~ '^[A-Z]{3}$');
+ALTER TABLE orders ADD COLUMN agreed_at TIMESTAMPTZ;
+ALTER TABLE orders ADD COLUMN agreed_negotiation_id UUID;
+ALTER TABLE orders ADD CONSTRAINT ck_orders_agreed_price_complete CHECK (
+  (agreed_amount_minor IS NULL) = (agreed_currency IS NULL)
+  AND (agreed_amount_minor IS NULL) = (agreed_at IS NULL)
+  AND (agreed_amount_minor IS NULL) = (agreed_negotiation_id IS NULL)
+);
+ALTER TABLE orders ADD CONSTRAINT ck_orders_agreed_price_only_negotiable CHECK (
+  agreed_amount_minor IS NULL OR price_mode = 'negotiable'
+);
+CREATE UNIQUE INDEX ux_orders_agreed_negotiation
+  ON orders (agreed_negotiation_id) WHERE agreed_negotiation_id IS NOT NULL;
+```
+
+والنقض الصريح، بعد التأكد تشغيلياً من عدم احتياج الأثر:
+
+```sql
+DROP INDEX IF EXISTS ux_orders_agreed_negotiation;
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS ck_orders_agreed_price_only_negotiable;
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS ck_orders_agreed_price_complete;
+ALTER TABLE orders DROP COLUMN IF EXISTS agreed_negotiation_id;
+ALTER TABLE orders DROP COLUMN IF EXISTS agreed_at;
+ALTER TABLE orders DROP COLUMN IF EXISTS agreed_currency;
+ALTER TABLE orders DROP COLUMN IF EXISTS agreed_amount_minor;
+```
+
+### 8.4 أدلة التنفيذ
+
+| الدعوى | الاختبار الذي يثبتها |
+|---|---|
+| 201 ثم 200، وإعادة المبلغ المختلفة ترفض بالكود | `POST /orders/agreed-prices › records once with 201 then returns 200…` و`… › refuses a different amount on a repeated negotiation` |
+| كل قاعدة قبول ورفض لها كود ثابت | `POST /orders/agreed-prices › answers the not-found code…` و`… › refuses a customer-offer…` و`… › refuses an order whose lifecycle…` و`… › refuses a different negotiation…` |
+| `lookup` يعيد `price_mode` ولا يسرّب النصوص | `GET /orders/lookup › returns matching facts including price mode and no customer-authored fields` |
+| المساران مسجلان فعلاً | `published route registration › registers both agreed-price service routes in Fastify` |
+| مرآة Drizzle وDDL وكتالوج الأخطاء متوافقة | `Drizzle projection ↔ canonical DDL › keeps the agreed-price columns, checks and unique negotiation index in both mirrors` و`… › documents exactly the agreed-price error codes…` |
+| PostgreSQL نفسه يفرض الاكتمال ووضع التفاوض وتفرّد الخيط | `Order Postgres adapter › the canonical database rejects incomplete, non-negotiable and reused agreement evidence` |
+
+## 9. الانحرافات والحدود المُعلَنة
 
 | # | الانحراف / الحد | لماذا | البديل ولماذا رُفض |
 |---|---|---|---|
@@ -147,21 +238,21 @@ services/orders/src/http/server.ts                 ← composition root (Postgre
 
 ---
 
-## 9. الأدلّة (لا «Done» بلا دليل)
+## 10. الأدلّة (لا «Done» بلا دليل)
 
 | البند | الدليل |
 |---|---|
-| اختبارات الخدمة | `pnpm --filter @wasla/orders-service test` ⇒ **8 ملفات · 621 اختباراً ناجحاً** (منها 46 اختباراً جديداً لطبقة HTTP) |
+| اختبارات الخدمة | `pnpm --filter @wasla/orders-service test` ⇒ **8 ملفات · 635 اختباراً ناجحاً** |
 | عقد الطلبات | `pnpm --filter @wasla/contracts-order test` ⇒ **119 ناجحاً** (كتالوجات التعدادات + `ORDER_SHIPMENT_TYPES` مقابل OpenAPI) |
 | المستودع كاملاً | `pnpm -r typecheck` ⇒ نجاح · `pnpm -r test` ⇒ نجاح كل الحزم |
 | تشغيل فعلي | `PORT=8099 node --import tsx src/http/server.ts` ⇒ `/health` = `degraded/memory`، واستلام طلب = `201` |
-| التكامل مع Postgres | لم يتغيّر: `order-db-integration` في CI (30 اختباراً، MR 3/6) |
+| التكامل مع Postgres | `order-db-integration` في CI (**32 اختباراً**؛ منها قيود اتفاق السعر). محلياً تتخطّى نفسها عند غياب `DATABASE_URL`. |
 
 **غير مُغطّى:** `server.ts` نفسه (تركيب لا منطق — يُغطّيه التشغيل الفعلي أعلاه وبوّابة MR 6/6).
 
 ---
 
-## 10. ماذا بعد
+## 11. ماذا بعد
 
 - **~~MR 5/6~~ — منجَزة:** خدمة العملاء صارت تُنادي `POST /orders/intake` هنا عبر `HttpOrderIntakePort` الإنتاجي، و`/health` عندها صار `ok` لأول مرة. خريطة الحالات (200 نجاح · 409 و422 رفض نهائي · 400 خطؤنا · 503 قابل لإعادة المحاولة · مهلة = غموض مُسجَّل) موثّقة في [ORDER_INTAKE_HANDOVER.md](ORDER_INTAKE_HANDOVER.md).
 - **~~MR 6/6~~ — منجَزة، وPhase 06 مُغلقة:** حزمة `packages/order-e2e` تقود هذه المسارات فوق HTTP على خدمتين تعملان — رحلة كاملة من `published` إلى `completed`، ثمّ **مسح الأزواج الـ441**: 72 حافة تجيب 200 و369 تجيب 409 `ORDER_ILLEGAL_TRANSITION` **والحالة لا تتغيّر** — ووظيفة CI `order-exit-gate-e2e` ترفع الملف نفسه على Postgres. التفصيل في [PHASE06_EXIT_GATE_E2E.md](../12-testing/PHASE06_EXIT_GATE_E2E.md) ([MR !43](https://gitlab.com/uxxxu/wasla/-/merge_requests/43)).

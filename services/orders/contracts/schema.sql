@@ -68,6 +68,10 @@ CREATE TABLE IF NOT EXISTS orders (
                           CHECK (price_mode IN ('customer_offer','negotiable')),
     offered_amount_minor  BIGINT      CHECK (offered_amount_minor IS NULL OR offered_amount_minor > 0),
     offered_currency      TEXT        CHECK (offered_currency IS NULL OR offered_currency ~ '^[A-Z]{3}$'),
+    agreed_amount_minor   BIGINT      CHECK (agreed_amount_minor IS NULL OR agreed_amount_minor > 0),
+    agreed_currency       TEXT        CHECK (agreed_currency IS NULL OR agreed_currency ~ '^[A-Z]{3}$'),
+    agreed_at             TIMESTAMPTZ,
+    agreed_negotiation_id UUID,
     -- وصف الشحنة نصّ كتبه المستخدم: يُخزَّن ويُسلَّم، و**ممنوع** أن يظهر في أي حدث (ADR-009 §7).
     shipment_description  TEXT        CHECK (shipment_description IS NULL OR char_length(shipment_description) <= 300),
     shipment_type         TEXT        CHECK (shipment_type IS NULL OR shipment_type IN ('parcel','documents','food','goods','other')),
@@ -94,6 +98,16 @@ CREATE TABLE IF NOT EXISTS orders (
     ),
     -- المبلغ والعملة يأتيان معاً أو لا يأتيان.
     CONSTRAINT ck_orders_money_complete CHECK ((offered_amount_minor IS NULL) = (offered_currency IS NULL)),
+    -- الاتفاق أثر تفاوض واحد كامل؛ نصف سعر أو خيط بلا لحظة ليس سجلاً قابلاً للتدقيق.
+    CONSTRAINT ck_orders_agreed_price_complete CHECK (
+        (agreed_amount_minor IS NULL) = (agreed_currency IS NULL)
+        AND (agreed_amount_minor IS NULL) = (agreed_at IS NULL)
+        AND (agreed_amount_minor IS NULL) = (agreed_negotiation_id IS NULL)
+    ),
+    -- لا يجتمع عرض العميل وسعر تفاوضي على الصف نفسه؛ لكل نموذج سعر مصدر واحد.
+    CONSTRAINT ck_orders_agreed_price_only_negotiable CHECK (
+        agreed_amount_minor IS NULL OR price_mode = 'negotiable'
+    ),
     -- وصف الشحنة وحجمها لطلب توصيل فقط: مشوارٌ له شحنة نموذجٌ مشوّش.
     CONSTRAINT ck_orders_shipment_only_delivery CHECK (
         order_type = 'delivery'
@@ -124,6 +138,8 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS ix_orders_customer     ON orders (customer_public_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS ix_orders_status       ON orders (status, created_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_idempotency_key ON orders (idempotency_key);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_agreed_negotiation
+    ON orders (agreed_negotiation_id) WHERE agreed_negotiation_id IS NOT NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 2) order_stops — نقاط الطلب (نقطتان بالضبط في هذه المرحلة)

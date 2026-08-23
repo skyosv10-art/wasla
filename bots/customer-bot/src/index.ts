@@ -25,6 +25,9 @@ export {
   CUSTOMER_ORDERS_COMMAND,
   CUSTOMER_PLACES_COMMAND,
   CUSTOMER_SUPPORTED_COMMANDS,
+  CUSTOMER_NEGOTIATIONS_COMMAND,
+  CUSTOMER_ACCEPT_COMMAND,
+  CUSTOMER_REJECT_COMMAND,
   CustomerFlowError,
   FLOW_ERROR_TEXT,
   FLOW_FALLBACK_ERROR_TEXT,
@@ -44,8 +47,28 @@ export {
 export {
   UseCaseCustomerFlows,
   buildCustomerFlows,
+  buildCustomerNegotiations,
   buildInMemoryCustomerFlows,
   toLocale,
   type CustomerFlowsEnv,
   type CustomerFlowsWiring,
 } from "./customer-core.js";
+
+export {
+  CUSTOMER_NEGOTIATION_ORDER_LIMIT,
+  CUSTOMER_NEGOTIATION_REPLY_LIMIT,
+  CUSTOMER_NEGOTIATION_TEXT,
+  createCustomerNegotiationConversationHandler,
+  selectOnlyPendingOtherPartyRound,
+  type CustomerNegotiationsPort,
+  type NegotiationParty,
+  type NegotiationRoundState,
+  type NegotiationRoundView,
+  type NegotiationThreadState,
+  type NegotiationThreadView,
+} from "./negotiation-flows.js";
+export {
+  HttpCustomerNegotiations,
+  UnconfiguredCustomerNegotiations,
+  type HttpCustomerNegotiationsOptions,
+} from "./infrastructure/http-negotiations.js";

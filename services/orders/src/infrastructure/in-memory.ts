@@ -34,6 +34,7 @@ import type {
   OrderPublicIdGenerator,
   OrderRepository,
   Outbox,
+  RecordAgreedPriceInput,
   ResolveAssignmentInput,
 } from "../ports.js";
 
@@ -202,6 +203,9 @@ export class InMemoryOrderRepository implements OrderRepository {
       statusReasonCode: null,
       priceMode: input.priceMode,
       offeredPrice: input.offeredPrice,
+      agreedPrice: null,
+      agreedAt: null,
+      agreedNegotiationId: null,
       stops,
       shipment: input.shipment,
       notes: input.notes,
@@ -334,6 +338,34 @@ export class InMemoryOrderRepository implements OrderRepository {
       "ORDER_ASSIGNMENT_NOT_FOUND",
       `الإسناد ${input.assignmentId} غير موجود`,
     );
+  }
+
+  async recordAgreedPrice(input: RecordAgreedPriceInput): Promise<Order | null> {
+    const stored = this.stored(input.orderId);
+    if (stored.order.agreedPrice !== null) return null;
+
+    // ux_orders_agreed_negotiation: one negotiation is evidence for one order.
+    if (
+      this.all().some(
+        (candidate) =>
+          candidate.order.id !== input.orderId &&
+          candidate.order.agreedNegotiationId === input.negotiationId,
+      )
+    ) {
+      throw new OrderError(
+        "ORDER_AGREED_PRICE_ALREADY_SET",
+        "خيط التفاوض سجّل سعراً على طلب آخر",
+      );
+    }
+
+    stored.order = {
+      ...stored.order,
+      agreedPrice: { amountMinor: input.amountMinor, currency: input.currency },
+      agreedAt: input.agreedAt,
+      agreedNegotiationId: input.negotiationId,
+      updatedAt: input.recordedAt,
+    };
+    return stored.order;
   }
 
   async setActiveAssignment(

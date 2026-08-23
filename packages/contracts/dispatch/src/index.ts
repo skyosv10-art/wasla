@@ -27,6 +27,7 @@ export type CreateDispatchJobRequest = components["schemas"]["CreateDispatchJobR
 export type DispatchRulesSnapshot = components["schemas"]["DispatchRulesSnapshot"];
 export type DispatchJob = components["schemas"]["DispatchJob"];
 export type DispatchOffer = components["schemas"]["DispatchOffer"];
+export type DispatchOfferDetail = components["schemas"]["DispatchOfferDetail"];
 export type DispatchOfferList = components["schemas"]["DispatchOfferList"];
 export type RejectOfferRequest = components["schemas"]["RejectOfferRequest"];
 export type CancelDispatchJobRequest = components["schemas"]["CancelDispatchJobRequest"];
@@ -70,7 +71,7 @@ export type DispatchReasonCode = (typeof DISPATCH_REASON_CODES)[number];
 
 export const DISPATCH_API_PATHS = [
   "/health", "/dispatch/jobs", "/dispatch/jobs/{job_id}", "/dispatch/jobs/{job_id}/offers",
-  "/dispatch/tick", "/dispatch/offers/{offer_id}/accept", "/dispatch/offers/{offer_id}/reject",
+  "/dispatch/tick", "/dispatch/offers/{offer_id}", "/dispatch/offers/{offer_id}/accept", "/dispatch/offers/{offer_id}/reject",
   "/dispatch/jobs/{job_id}/cancel",
 ] as const;
 export const DISPATCH_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;

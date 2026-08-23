@@ -69,6 +69,10 @@ export const orders = pgTable(
     priceMode: text("price_mode").notNull(),
     offeredAmountMinor: bigint("offered_amount_minor", { mode: "number" }),
     offeredCurrency: text("offered_currency"),
+    agreedAmountMinor: bigint("agreed_amount_minor", { mode: "number" }),
+    agreedCurrency: text("agreed_currency"),
+    agreedAt: timestamp("agreed_at", { withTimezone: true }),
+    agreedNegotiationId: uuid("agreed_negotiation_id"),
     shipmentDescription: text("shipment_description"),
     shipmentType: text("shipment_type"),
     shipmentWeightKg: numeric("shipment_weight_kg", { precision: 7, scale: 2 }),
@@ -121,6 +125,14 @@ export const orders = pgTable(
       sql`(${table.offeredAmountMinor} IS NULL) = (${table.offeredCurrency} IS NULL)`,
     ),
     check(
+      "ck_orders_agreed_price_complete",
+      sql`(${table.agreedAmountMinor} IS NULL) = (${table.agreedCurrency} IS NULL) AND (${table.agreedAmountMinor} IS NULL) = (${table.agreedAt} IS NULL) AND (${table.agreedAmountMinor} IS NULL) = (${table.agreedNegotiationId} IS NULL)`,
+    ),
+    check(
+      "ck_orders_agreed_price_only_negotiable",
+      sql`${table.agreedAmountMinor} IS NULL OR ${table.priceMode} = 'negotiable'`,
+    ),
+    check(
       "ck_orders_shipment_only_delivery",
       sql`${table.orderType} = 'delivery' OR (${table.shipmentDescription} IS NULL AND ${table.shipmentType} IS NULL AND ${table.shipmentWeightKg} IS NULL)`,
     ),
@@ -131,6 +143,9 @@ export const orders = pgTable(
     uniqueIndex("ux_orders_public_id").on(table.orderPublicId),
     uniqueIndex("ux_orders_idempotency_key").on(table.idempotencyKey),
     uniqueIndex("ux_orders_request_id").on(table.orderRequestId),
+    uniqueIndex("ux_orders_agreed_negotiation")
+      .on(table.agreedNegotiationId)
+      .where(sql`${table.agreedNegotiationId} IS NOT NULL`),
     index("ix_orders_customer").on(table.customerPublicId, table.createdAt),
     index("ix_orders_status").on(table.status, table.createdAt),
     // fk_orders_active_assignment is added by the canonical DDL via ALTER TABLE

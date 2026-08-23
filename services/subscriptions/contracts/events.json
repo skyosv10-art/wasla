@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/subscriptions/events/v1",
+  "title": "WASLA Driver Subscription & Referral Domain Events v1",
+  "description": "أحداث خدمة اشتراك السائق والإحالة (Phase 10). القاعدة الحاكمة (ADR-015 القرار 2): الحدث **أثرُ مُدّةٍ دخلت الدفتر أو انتقالٍ سُجّل**، لا إعلانَ نيّةٍ ولا نتيجةَ مؤقّت. ولذلك كل حمولةٍ تحمل ما يجعلها قابلة للتفسير وإعادة الإنتاج: الانتقالُ يحمل حالتَه السابقة واللاحقة وسببَه وتسلسلَه، والمُدّةُ تحمل مصدرَها ونسخةَ خطّتها، والمكافأةُ تحمل المُدّةَ التي طبّقتها فعلاً. وقاعدةُ الطور الخاصّة (القرار 6): **لا مبلغَ في أيّ حمولة** — لا `amount` ولا `currency` ولا `price` ولا `invoice_id`؛ التفعيلُ يحمل `payment_reference` مُعتِماً وحده، والمالُ ملكُ Phase 17 (Billing). وقاعدةٌ ثانية (القرار 4 · وسابقتُها ADR-014 القرار 7): **لا حدث يعاقب**. ليس في هذا الكتالوج `subscription.driver_suspended` ولا `referral.fraud_detected`: النزولُ إلى `community` نزولُ استحقاقٍ لا حجبٌ، والإيقافُ يملكه `services/drivers`، والقرارُ الإداريُّ Phase 15. و**الرفضُ ليس حدثاً** (القرار 8): إحالةٌ مرفوضةٌ تُقرأ بـ`GET /referrals?state=rejected` بسببها المُسمّى — لأنّ نشرَ رفضٍ يجعل مستهلكاً يبني عليه عقوبةً لا مالكَ لها. وقاعدةُ الخصوصية كما في كل الأطوار السابقة (ADR-007 · ADR-013 القرار 6): لا اسمَ ولا هاتفَ ولا إحداثيةَ ولا مُعرّفَ قناة ولا نصّاً حرّاً في أيّ حمولة. وكلُّ حدثٍ يُكتب في المعاملة نفسها عبر `subscription_outbox`، فلا تغييرَ صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string", "minLength": 3 },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "const": "subscriptions-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "enum": ["subscription", "referral"] },
+            "id": { "type": "string" }
+          }
+        },
+        "trace_id": { "type": ["string", "null"] }
+      }
+    },
+    "WaslaPublicId": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+    "ReferralCode": { "type": "string", "pattern": "^WR-[0-9A-Z]{8}$" },
+    "SubscriptionState": { "type": "string", "enum": ["trial", "active", "expired", "community"] },
+    "TransitionReasonCode": {
+      "type": "string",
+      "enum": ["trial_granted", "payment_activated", "referral_reward_applied", "period_ended", "community_grace_ended"],
+      "description": "قائمةٌ مغلقة. سببٌ حرٌّ كان سيجعل «لماذا انتقل هذا السائق؟» سؤالاً يُجاب بالقراءة لا بالعدّ."
+    },
+    "PeriodSource": { "type": "string", "enum": ["trial", "payment", "referral_reward"] },
+    "SubscriptionTransitionData": {
+      "type": "object",
+      "description": "الحقولُ المشتركةُ لكلّ حدثِ انتقال. لا حدثَ انتقالٍ بلا `from_state` و`to_state` و`sequence`: مستهلكٌ يرى «صار active» بلا ما قبلَها لا يعرف إن كان تفعيلاً أوّلَ أم رجوعاً من انقضاء، والفرقُ يغيّر كلَّ رسالةٍ يُرسلها للسائق.",
+      "required": ["driver_public_id", "subscription_id", "from_state", "to_state", "reason_code", "state_sequence", "plan_code", "plan_version", "occurred_for"],
+      "additionalProperties": false,
+      "properties": {
+        "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+        "subscription_id": { "type": "string", "format": "uuid" },
+        "from_state": {
+          "oneOf": [{ "$ref": "#/$defs/SubscriptionState" }, { "type": "null" }],
+          "description": "`null` تعني الإنشاء (∅ → trial) لا «حالةً مجهولة»."
+        },
+        "to_state": { "$ref": "#/$defs/SubscriptionState" },
+        "reason_code": { "$ref": "#/$defs/TransitionReasonCode" },
+        "state_sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "تسلسلُ الانتقال على السائق. مفتاحُ الترتيب وعدمِ التكرار لا معلومةً زائدة: التسليمُ at-least-once، ومستهلكٌ يرى تسلسلاً أقدمَ ممّا عنده يُهمِل بلا سؤال."
+        },
+        "plan_code": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,47}$" },
+        "plan_version": { "type": "integer", "minimum": 1 },
+        "period_id": { "type": ["string", "null"], "format": "uuid" },
+        "expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "occurred_for": { "type": "string", "format": "date-time" }
+      }
+    },
+    "SubscriptionTrialStartedV1": {
+      "type": "object",
+      "description": "بدأت تجربةٌ: أوّلُ مُدّةٍ في دفترِ سائقٍ لم يكن له اشتراك. يُنشَر مرّةً واحدةً لكلّ سائقٍ لأنّ `ux_subscriptions_driver` يمنع الثانية — فطلبان متوازيان لبدء التجربة يُنتجان اشتراكاً واحداً وحدثاً واحداً.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "subscription.trial_started" },
+        "event_version": { "const": "v1" },
+        "data": { "$ref": "#/$defs/SubscriptionTransitionData" }
+      }
+    },
+    "SubscriptionActivatedV1": {
+      "type": "object",
+      "description": "صار الاشتراكُ `active`: مُدّةٌ مدفوعةٌ أو مكافأةُ إحالةٍ دخلت الدفتر. و`reason_code` يفرّق بينهما (`payment_activated` · `referral_reward_applied`) فلا يحتاج مستهلكٌ أن يخمّن مصدرَ الأيّام. **ولا مبلغَ في الحمولة** (القرار 6): `payment_reference` مُعتِمٌ وحده، ومن أراد المالَ سأل Billing. والتجديدُ ليس هذا الحدث: مُدّةٌ تُضاف على `active` لا تُنتج انتقالاً (القرار 3).",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "subscription.activated" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["driver_public_id", "subscription_id", "from_state", "to_state", "reason_code", "state_sequence", "plan_code", "plan_version", "period_source", "granted_days", "expires_at", "occurred_for"],
+          "additionalProperties": false,
+          "properties": {
+            "driver_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "subscription_id": { "type": "string", "format": "uuid" },
+            "from_state": { "oneOf": [{ "$ref": "#/$defs/SubscriptionState" }, { "type": "null" }] },
+            "to_state": { "const": "active" },
+            "reason_code": { "$ref": "#/$defs/TransitionReasonCode" },
+            "state_sequence": { "type": "integer", "minimum": 1 },
+            "plan_code": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,47}$" },
+            "plan_version": { "type": "integer", "minimum": 1 },
+            "period_id": { "type": ["string", "null"], "format": "uuid" },
+            "period_source": { "$ref": "#/$defs/PeriodSource" },
+            "granted_days": { "type": "integer", "minimum": 1 },
+            "payment_reference": {
+              "type": ["string", "null"],
+              "maxLength": 64,
+              "description": "مرجعٌ **مُعتِمٌ** يُنقَل ولا يُفسَّر. `null` حين يكون المصدرُ مكافأةَ إحالة."
+            },
+            "expires_at": { "type": "string", "format": "date-time" },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "SubscriptionExpiredV1": {
+      "type": "object",
+      "description": "انقضت المُدّةُ فصار الاشتراكُ `expired`. الحدثُ **أثرُ نبضةٍ** لا أثرُ مؤقّت (القرار 5): الانقضاءُ مُشتَقٌّ من `ends_at ≤ now` وتُحقِّقه `POST /subscriptions/tick`، فإعادةُ تشغيلِ الخدمة لا تُفقِد انقضاءً ولا تُنتج اثنين. و`expired` **ليست عقوبةً**: السائقُ يفقد الامتيازاتَ المدفوعةَ ويبقى في المنصّة (القرار 4).",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "subscription.expired" },
+        "event_version": { "const": "v1" },
+        "data": { "$ref": "#/$defs/SubscriptionTransitionData" }
+      }
+    },
+    "SubscriptionMovedToCommunityV1": {
+      "type": "object",
+      "description": "انتهت مهلةُ ما بعد الانقضاء فنزل السائقُ إلى `community`: أرضيّةُ الاستحقاقِ لا نهايتُه (`accept_orders` باقٍ بسقفٍ يوميّ). و`community_grace_days` رقمٌ في نسخةِ الخطّةِ لا ثابتٌ في الكود (القرار 7)، فالحمولةُ تحمل `plan_version` كي يُفسَّر التوقيتُ بعد سنة.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "subscription.moved_to_community" },
+        "event_version": { "const": "v1" },
+        "data": { "$ref": "#/$defs/SubscriptionTransitionData" }
+      }
+    },
+    "ReferralQualifiedV1": {
+      "type": "object",
+      "description": "تأهّلت إحالة: بلغ المُحالُ عتبةَ الوقائعِ المُسجَّلةِ في السمعة داخل نافذتِه. والحمولةُ تحمل **العدَّ والعتبةَ معاً** لأنّ «تأهّل» بلا رقمين لا يُدافَع عنه ولا يُراجَع. والتأهيلُ **ليس منحاً**: المكافأةُ حدثٌ ثانٍ بقيدٍ يمنع تكرارَه (القرار 9).",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "referral.qualified" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["referral_id", "referral_code", "referrer_public_id", "referee_public_id", "qualifying_fact_count", "required_fact_count", "plan_code", "plan_version", "occurred_for"],
+          "additionalProperties": false,
+          "properties": {
+            "referral_id": { "type": "string", "format": "uuid" },
+            "referral_code": { "$ref": "#/$defs/ReferralCode" },
+            "referrer_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "referee_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "qualifying_fact_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "وقائعُ المُحال المُسجَّلة في السمعة كما وصلت إلى هذه الخدمة. **لا مفتاحَ أجنبيّاً إلى دفترِ الوقائع** — الرقمُ يُنقَل ولا يُستعلَم عبر الحدّ."
+            },
+            "required_fact_count": { "type": "integer", "minimum": 1 },
+            "plan_code": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,47}$" },
+            "plan_version": { "type": "integer", "minimum": 1 },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "ReferralRewardedV1": {
+      "type": "object",
+      "description": "مُنحت مكافأةُ إحالةٍ **بمُدّةٍ في دفترِ المُدد** (`granted_period_id`) لا بعدّادٍ زِيد (القرار 9). ويُنشَر مرّةً واحدةً لكلّ إحالةٍ لأنّ `ux_referral_rewards_referral` يمنع الثانية — فإعادةُ تسليمِ حدثِ التأهيل لا تُنتج أيّاماً مضاعفة. والمستفيدُ **مُسمّىً صراحةً** (`beneficiary_public_id`) ولا يُستنتَج من الدور: من قرأ «مكافأةٌ لإحالة» بلا مستفيدٍ صريحٍ خمّن، ومن خمّن أخطأ يوماً.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "referral.rewarded" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["referral_id", "reward_id", "beneficiary_public_id", "granted_period_id", "reward_days", "plan_code", "plan_version", "occurred_for"],
+          "additionalProperties": false,
+          "properties": {
+            "referral_id": { "type": "string", "format": "uuid" },
+            "reward_id": { "type": "string", "format": "uuid" },
+            "beneficiary_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "granted_period_id": { "type": "string", "format": "uuid" },
+            "reward_days": { "type": "integer", "minimum": 1 },
+            "plan_code": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,47}$" },
+            "plan_version": { "type": "integer", "minimum": 1 },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}

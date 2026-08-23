@@ -1,0 +1,964 @@
+openapi: 3.1.0
+info:
+  title: WASLA Driver Subscription & Referral Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة اشتراك السائق والإحالة وفق ADR-015.
+
+    **الحدود الملزمة:**
+    - **دفترُ المُدد يُخزَّن والحالة تُشتقّ**: كل منحة مدة هي صفّ إضافي، و`SubscriptionState` صفٌ متحقق يمكن أن يعيد
+      `POST /subscriptions/{driverPublicId}/recompute` بناءه من الدفتر. النسخة الخاطئة الأرخص هي تحديث حالةٍ وحيدة بلا
+      تاريخ؛ عندها لا يوجد جوابٌ قابلٌ للتدقيق عن سبب كون السائق نشطاً.
+    - **الحالات أربع فقط والانتقال معلن**: `trial` و`active` و`expired` و`community`. التجديد مدة جديدة لا انتقال
+      `active → active`، و`community` أرضية يمكن الخروج منها إلى `active`. إضافة حالة سهلة الاسم تخفي جدول انتقالات لا
+      يملكه هذا الطور.
+    - **المجتمع ليس عقوبة**: يبقى `accept_orders` في `community` بسقف يومي؛ لا حجب ولا إيقاف في هذا العقد. النسخة
+      الأرخص التي تمنع العمل عند الانقضاء تحوّل انتهاء الاستحقاق إلى عقوبة وتضعف العرض حيث يحتاجه النظام.
+    - **الزمن نبضة لا مؤقت**: الانقضاء ونهاية مهلة المجتمع يتحققان حصراً في `POST /subscriptions/tick`. القراءة قد تعلن
+      `is_stale` لأن `ends_at` حقيقة زمنية حتى قبل النبضة؛ مؤقت داخل العملية ينسى موعده عند إعادة التشغيل.
+    - **الخطط نسخ مجمدة**: المفتاح المنطقي `(plan_code, plan_version)`، وكل مدة وحالة ومكافأة تحمل النسخة. تعديل المدة
+      في موضعها أرخص اليوم لكنه يغيّر منحة الأمس بأثر رجعي.
+    - **الإحالة مكافأة مدة واحدة**: التأهيل يعتمد وقائع السمعة المسجلة، والرفض سبب من قائمة مغلقة، والمكافأة منحة في
+      دفتر المدد نفسه. عداد أيام منفصل يبدو بسيطاً لكنه يصنع رصيدين لا يتفقان.
+    - **لا بيانات تعريف شخصية ولا معرّف خدمة خارجية**: المعرف العام opaque فقط. لا مفتاح أجنبي يعبر حد الخدمة، لأن
+      الإحالة والتأهيل يتبادلان حقائق منشورة أو قراءات معلنة لا جداولاً مشتركة.
+
+    **لا يوجد رمز خطأ وسيط عابر في هذا العقد**: لا تابع متزامناً يُنتظر جوابه هنا. تعطل الاستمرارية أو وضع التشغيل
+    المتدهور يعلن برمز عدم الإتاحة وبـ`GET /health`، لا بإخفاء السبب خلف وسيط شبكة.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8093
+    description: التشغيل المحلي
+
+tags:
+  - name: subscriptions
+    description: الخطط ودفتر المُدد والحالة المشتقة
+  - name: referrals
+    description: رمز الإحالة والمطالبة والقراءة
+  - name: ops
+    description: التشغيل ونبضة الزمن
+
+paths:
+  /subscriptions/plans:
+    get:
+      tags: [subscriptions]
+      summary: قائمة نسخ الخطط
+      operationId: listSubscriptionPlans
+      description: |
+        تُعاد النسخ كما خُزّنت، ولا يوجد مسار لتعديلها: خطة قابلة للتحرير تغيّر مدة مُنحت سابقاً بلا سجل.
+        `frozen_only` يجعل المستهلك يطلب ما يصلح للاستعمال فعلاً بدلاً من تخمين معنى نسخة غير مجمدة.
+      parameters:
+        - name: frozen_only
+          in: query
+          required: false
+          description: عند `true` لا تظهر إلا النسخ المسموح أن تمنح مُدداً.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: نسخ الخطط المطابقة مع امتيازاتها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionPlanList' }
+              examples:
+                launchPlan:
+                  summary: الخطة المجمدة عند الإطلاق
+                  value:
+                    plans:
+                      - plan_code: saudi-driver-monthly
+                        plan_version: 1
+                        label: اشتراك السائق الشهري
+                        trial_days: 14
+                        duration_days: 30
+                        community_grace_days: 7
+                        is_frozen: true
+                        entitlements:
+                          - entitlement_code: accept_orders
+                            limit_value: -1
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/plans/{planCode}/{planVersion}:
+    get:
+      tags: [subscriptions]
+      summary: قراءة نسخة خطة مع امتيازاتها
+      operationId: getSubscriptionPlan
+      description: |
+        النسخة جزء من عنوان المورد لا معلومة اختيارية في الاستجابة فقط: من دونها قد يطلب القارئ اسماً ثابتاً
+        ويأخذ مدة تغيرت سراً. الامتيازات هنا كتالوج قراءة، لا سلطة لتفعيل أو منع سائق.
+      parameters:
+        - $ref: '#/components/parameters/PlanCode'
+        - $ref: '#/components/parameters/PlanVersion'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الخطة المجمدة أو غير المجمدة بنسختها الصريحة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionPlan' }
+              examples:
+                launchPlan:
+                  value:
+                    plan_code: saudi-driver-monthly
+                    plan_version: 1
+                    label: اشتراك السائق الشهري
+                    trial_days: 14
+                    duration_days: 30
+                    community_grace_days: 7
+                    is_frozen: true
+                    entitlements:
+                      - entitlement_code: accept_orders
+                        limit_value: -1
+                      - entitlement_code: daily_order_cap
+                        limit_value: 12
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions:
+    post:
+      tags: [subscriptions]
+      summary: بدء تجربة سائق بخطة مجمدة
+      operationId: startSubscriptionTrial
+      description: |
+        البداية تنشئ منحة تجربة في الدفتر ثم تبني الحالة منها، لا صف حالة يدوي يتيم. مفتاح التفرّد إلزامي
+        لأن إعادة محاولة المرسل بعد انقطاع الشبكة يجب أن تعيد المنحة نفسها لا أن تضيف تجربة ثانية.
+
+        الخطة غير المجمدة مرفوضة: استعمال نسخة قيد التحرير هو النسخة الأرخص من الحفظ التاريخي، ثم يصبح
+        تفسير مدة لاحقة مستحيلاً بعد تغيير الكتالوج.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscriptionStartRequest' }
+            examples:
+              launchTrial:
+                value:
+                  driver_public_id: WS-0123456789
+                  plan_code: saudi-driver-monthly
+                  plan_version: 1
+                  requested_at: '2026-08-23T20:58:00Z'
+      responses:
+        '201':
+          description: بدأت التجربة وسجلت مدتها في الدفتر
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionStartResult' }
+              examples:
+                created:
+                  value:
+                    subscription:
+                      driver_public_id: WS-0123456789
+                      subscription_id: 2e5c016f-fd5e-4d47-9273-32e5555e1262
+                      state: trial
+                      plan_code: saudi-driver-monthly
+                      plan_version: 1
+                      started_at: '2026-08-23T20:58:00Z'
+                      expires_at: '2026-09-06T20:58:00Z'
+                      state_sequence: 1
+                      is_stale: false
+                      entitlements:
+                        - entitlement_code: accept_orders
+                          limit_value: -1
+                      computed_at: '2026-08-23T20:58:00Z'
+                    period:
+                      period_id: 6372cfd7-1f06-4ca5-9b4a-6aeec5363a00
+                      driver_public_id: WS-0123456789
+                      plan_code: saudi-driver-monthly
+                      plan_version: 1
+                      source: trial
+                      payment_reference: null
+                      granted_days: 14
+                      starts_at: '2026-08-23T20:58:00Z'
+                      ends_at: '2026-09-06T20:58:00Z'
+                      created_at: '2026-08-23T20:58:00Z'
+                    duplicate: false
+        '200':
+          description: مفتاح التفرّد نفسه عولج سابقاً؛ تعاد النتيجة المحفوظة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionStartResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/{driverPublicId}:
+    get:
+      tags: [subscriptions]
+      summary: قراءة حالة اشتراك سائق المشتقة
+      operationId: getSubscriptionState
+      description: |
+        `is_stale` مقصود لا عيب في الاستجابة: نهاية المدة تقارن بالوقت حتى قبل أن تعالجها النبضة،
+        فيعرف القارئ أن الصف المتحقق يحتاج إعادة بناء. إخفاء ذلك خلف حالة تبدو حديثة أرخص لكنه قراءة كاذبة.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الحالة ونسخة الخطة والامتيازات المشتقة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionState' }
+              examples:
+                active:
+                  value:
+                    driver_public_id: WS-0123456789
+                    subscription_id: 2e5c016f-fd5e-4d47-9273-32e5555e1262
+                    state: active
+                    plan_code: saudi-driver-monthly
+                    plan_version: 1
+                    started_at: '2026-08-23T20:58:00Z'
+                    expires_at: '2026-10-06T20:58:00Z'
+                    state_sequence: 2
+                    is_stale: false
+                    entitlements:
+                      - entitlement_code: accept_orders
+                        limit_value: -1
+                    computed_at: '2026-09-06T20:58:00Z'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/{driverPublicId}/activate:
+    post:
+      tags: [subscriptions]
+      summary: تفعيل اشتراك بإضافة مدة مدفوعة
+      operationId: activateSubscription
+      description: |
+        المرجع المدفوع opaque ولا يفسر هنا؛ وظيفته وصل تسليم موثوق بمنحة مدة واحدة لا امتلاك قرار خارجي.
+        تُضاف المدة إلى الدفتر ثم تشتق الحالة، فلا يعدل هذا الفعل تاريخاً سابقاً ولا يكتب رصيداً جانبياً.
+
+        مفتاح التفرّد إلزامي لأن المرسل قد يسلّم الإشارة نفسها أكثر من مرة. الاعتماد على فحص سابق غير ذري
+        هو النسخة الأرخص التي تمنح مدة مضاعفة عند توازي الطلبات.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscriptionActivateRequest' }
+            examples:
+              activation:
+                value:
+                  payment_reference: payref-8QK7F2V9
+                  plan_code: saudi-driver-monthly
+                  plan_version: 1
+                  activated_at: '2026-09-06T20:58:00Z'
+      responses:
+        '200':
+          description: أضيفت المدة وأعيد اشتقاق الحالة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionActivateResult' }
+              examples:
+                activated:
+                  value:
+                    subscription:
+                      driver_public_id: WS-0123456789
+                      subscription_id: 2e5c016f-fd5e-4d47-9273-32e5555e1262
+                      state: active
+                      plan_code: saudi-driver-monthly
+                      plan_version: 1
+                      started_at: '2026-08-23T20:58:00Z'
+                      expires_at: '2026-10-06T20:58:00Z'
+                      state_sequence: 2
+                      is_stale: false
+                      entitlements: []
+                      computed_at: '2026-09-06T20:58:00Z'
+                    period:
+                      period_id: ee3bd007-ef11-4011-b5bb-1bb40e17a5c2
+                      driver_public_id: WS-0123456789
+                      plan_code: saudi-driver-monthly
+                      plan_version: 1
+                      source: payment
+                      payment_reference: payref-8QK7F2V9
+                      granted_days: 30
+                      starts_at: '2026-09-06T20:58:00Z'
+                      ends_at: '2026-10-06T20:58:00Z'
+                      created_at: '2026-09-06T20:58:00Z'
+                    duplicate: false
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/{driverPublicId}/recompute:
+    post:
+      tags: [subscriptions]
+      summary: إعادة بناء الحالة من دفتر المُدد
+      operationId: recomputeSubscription
+      description: |
+        هذا الطريق يثبت أن الحالة مشتقة لا أصل: حذف الصف المتحقق أو تصحيحه لا يخسر المنح، لأن الدفتر
+        وحده يعيد بناءه. لا `requestBody` عمداً؛ الفعل على الحالة المخزنة، وإعلان جسم فارغ يجبر المرسل
+        على اختراع معلومة لا يحتاجها الخادم.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: أعيدت الحالة من الدفتر، سواء اختلفت أم بقيت كما كانت
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionRecomputeResult' }
+              examples:
+                rebuilt:
+                  value:
+                    subscription:
+                      driver_public_id: WS-0123456789
+                      subscription_id: 2e5c016f-fd5e-4d47-9273-32e5555e1262
+                      state: expired
+                      plan_code: saudi-driver-monthly
+                      plan_version: 1
+                      started_at: '2026-08-23T20:58:00Z'
+                      expires_at: '2026-09-06T20:58:00Z'
+                      state_sequence: 3
+                      is_stale: false
+                      entitlements: []
+                      computed_at: '2026-09-06T20:58:01Z'
+                    rebuilt: true
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/{driverPublicId}/periods:
+    get:
+      tags: [subscriptions]
+      summary: قراءة دفتر مُدد سائق
+      operationId: listSubscriptionPeriods
+      description: |
+        الدفتر يعرض المنح كما أضيفت ولا يحسب رصيداً موازياً. هذا أغنى من إرجاع نهاية واحدة لأن السؤال
+        التشغيلي هو «أي منحة صنعت هذه النهاية؟»، والنسخة الأرخص تضيع جواب السؤال عند أول تجديد.
+      parameters:
+        - $ref: '#/components/parameters/DriverPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: مدد السائق بترتيب الإنشاء
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionPeriodList' }
+              examples:
+                ledger:
+                  value:
+                    periods:
+                      - period_id: 6372cfd7-1f06-4ca5-9b4a-6aeec5363a00
+                        driver_public_id: WS-0123456789
+                        plan_code: saudi-driver-monthly
+                        plan_version: 1
+                        source: trial
+                        payment_reference: null
+                        granted_days: 14
+                        starts_at: '2026-08-23T20:58:00Z'
+                        ends_at: '2026-09-06T20:58:00Z'
+                        created_at: '2026-08-23T20:58:00Z'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /referrals:
+    post:
+      tags: [referrals]
+      summary: المطالبة بإحالة برمز موجود
+      operationId: claimReferral
+      description: |
+        المطالبة تسجل إحالة `pending` لا مكافأة فورية: التأهيل يبنى من وقائع المُحال، لا من التسجيل.
+        مكافأة التسجيل تبدو أرخص لكنها تجعل إنشاء هويات خاملة طريقاً للحصول على منحة.
+
+        مفتاح التفرّد إلزامي لأن للمُحال إحالة واحدة فقط؛ القيد الذري يملك الحقيقة عند تزامن مطالبتين،
+        وليس فحصاً مسبقاً يمر في العمليتين.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReferralClaimRequest' }
+            examples:
+              claim:
+                value:
+                  referral_code: WR-8KQ2Z9XM
+                  referee_public_id: WS-9876543210
+                  claimed_at: '2026-08-23T20:58:00Z'
+      responses:
+        '201':
+          description: سُجلت الإحالة بانتظار التأهيل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralClaimResult' }
+              examples:
+                pending:
+                  value:
+                    referral:
+                      referral_id: b410bf2c-69d6-447b-9e27-d72a0e663826
+                      referral_code: WR-8KQ2Z9XM
+                      referrer_public_id: WS-0123456789
+                      referee_public_id: WS-9876543210
+                      state: pending
+                      reason_code: null
+                      qualifying_fact_count: 0
+                      window_ends_at: '2026-09-22T20:58:00Z'
+                      created_at: '2026-08-23T20:58:00Z'
+                      state_changed_at: '2026-08-23T20:58:00Z'
+                      reward: null
+                    duplicate: false
+        '200':
+          description: مفتاح التفرّد نفسه عولج سابقاً؛ تعاد النتيجة المحفوظة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralClaimResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [referrals]
+      summary: قراءة الإحالات بمُرشح إلزامي
+      operationId: listReferrals
+      description: |
+        واحد على الأقل من `referrer_public_id` أو `referee_public_id` أو `state` إلزامي. القراءة بلا مرشح
+        تعني عرض شبكة الإحالات كلها بطلب واحد، وهو اختصار رخيص يتوسع بلا حد ويكشف أكثر مما يحتاجه المستهلك.
+        الرفض يقرأ هنا بسبب مسمى؛ لا يحتاج إلى مسار كتابة يخلط الملاحظة بالحكم.
+      parameters:
+        - name: referrer_public_id
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: referee_public_id
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, qualified, rewarded, rejected]
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الإحالات المطابقة، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralList' }
+              examples:
+                rejected:
+                  value:
+                    referrals:
+                      - referral_id: b410bf2c-69d6-447b-9e27-d72a0e663826
+                        referral_code: WR-8KQ2Z9XM
+                        referrer_public_id: WS-0123456789
+                        referee_public_id: WS-9876543210
+                        state: rejected
+                        reason_code: referee_no_qualifying_facts
+                        qualifying_fact_count: 2
+                        window_ends_at: '2026-09-22T20:58:00Z'
+                        created_at: '2026-08-23T20:58:00Z'
+                        state_changed_at: '2026-09-22T20:58:00Z'
+                        reward: null
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /referrals/codes/{ownerPublicId}:
+    get:
+      tags: [referrals]
+      summary: قراءة رمز إحالة مالك
+      operationId: getReferralCode
+      description: |
+        للمالك رمز واحد ظاهر صراحة بدلاً من توليد رمز جديد عند كل قراءة؛ التوليد المتكرر يخلق هويات
+        تسويق متنافسة لمالك واحد ويصير تتبع الإحالة غير حاسم.
+      parameters:
+        - $ref: '#/components/parameters/OwnerPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: رمز الإحالة وحالة صلاحيته
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralCode' }
+              examples:
+                code:
+                  value:
+                    referral_code: WR-8KQ2Z9XM
+                    owner_public_id: WS-0123456789
+                    is_active: true
+                    created_at: '2026-08-01T00:00:00Z'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /subscriptions/tick:
+    post:
+      tags: [ops]
+      summary: نبضة الزمن للتحقق من الانقضاء ومهلة المجتمع
+      operationId: tickSubscriptions
+      description: |
+        النبضة هي المكان الوحيد الذي يثبت انتقالات الانقضاء ونهاية مهلة المجتمع. لا `requestBody` عمداً:
+        العمل على الساعة وعلى الدفتر المخزن، وإضافة وقت من العميل تفتح باباً لساعة ثانية تختلف عن الحقيقة.
+
+        النبضة عملية جماعية؛ فشل سجل منفرد يعد في `failures` ولا يوقف بقية الاستحقاقات. رمي العملية كلها
+        عند أول سجل هو النسخة الأرخص التي تخفي تراكم العمل المتأخر وراء إعادة محاولات لا تنتهي.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: اكتملت النبضة، وقد تكون جميع العدادات صفراً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TickResult' }
+              examples:
+                idle:
+                  value:
+                    ran_at: '2026-08-23T20:58:00Z'
+                    periods_ended: 0
+                    subscriptions_expired: 0
+                    subscriptions_moved_to_community: 0
+                    referrals_qualified: 0
+                    rewards_applied: 0
+                    failures: 0
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص جاهزية الخدمة
+      operationId: health
+      description: |
+        وضع `memory` متدهور في التشغيل الحقيقي لأن الدفتر أصل لا يعاد بناؤه من صف الحالة. و`last_tick_at`
+        يكشف غياب المنادي الدوري؛ إخفاء هذا الحقل أرخص لكنه يجعل زمن تقادم الحالة غير مرئي.
+      responses:
+        '200':
+          description: حالة الخدمة وطبقة الاستمرارية وآخر نبضة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+              examples:
+                ready:
+                  value:
+                    status: ok
+                    mode: postgres
+                    last_tick_at: '2026-08-23T20:58:00Z'
+
+components:
+  parameters:
+    DriverPublicId:
+      name: driverPublicId
+      in: path
+      required: true
+      description: مُعرّف السائق العام opaque؛ لا يربط هذا العقد مباشرة بقاعدة هوية أخرى.
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    OwnerPublicId:
+      name: ownerPublicId
+      in: path
+      required: true
+      description: المالك سائق أيضاً، ويستعمل النمط العام نفسه كي لا يقدم المسار نوع معرف ثانياً.
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    PlanCode:
+      name: planCode
+      in: path
+      required: true
+      schema: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+    PlanVersion:
+      name: planVersion
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي لكل فعل يغير الدفتر أو الحالة؛ إعادة المحاولة تعيد جواباً محفوظاً ولا تنشئ منحة أو مطالبة ثانية.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الخطأ؛ فصل التتبع عن حمولة العمل يمنع خلط المعرّف التشغيلي ببيانات المجال.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque للسائق أو المالك؛ لا يحلل ولا يعبر حد الخدمة كعلاقة قاعدة بيانات.
+
+    ReferralCode:
+      type: object
+      required: [referral_code, owner_public_id, is_active, created_at]
+      additionalProperties: false
+      properties:
+        referral_code:
+          type: string
+          pattern: '^WR-[0-9A-Z]{8}$'
+        owner_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        is_active:
+          type: boolean
+          description: الرمز معلن للقراءة، وتعطيله لا يستبدله برمز جديد للمالك نفسه.
+        created_at: { type: string, format: date-time }
+
+    SubscriptionPlan:
+      type: object
+      required: [plan_code, plan_version, label, trial_days, duration_days, community_grace_days, is_frozen, entitlements]
+      additionalProperties: false
+      properties:
+        plan_code:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        plan_version:
+          type: integer
+          minimum: 1
+          description: نسخة ثابتة من الكتالوج؛ الاسم وحده ليس مرجعاً تاريخياً كافياً.
+        label: { type: string, minLength: 3, maxLength: 96 }
+        trial_days: { type: integer, minimum: 1 }
+        duration_days: { type: integer, minimum: 1 }
+        community_grace_days: { type: integer, minimum: 1 }
+        is_frozen:
+          type: boolean
+          description: لا تمنح مدة من نسخة غير مجمدة؛ التعديل في المكان يبدل الماضي بلا أثر تدقيقي.
+        entitlements:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/SubscriptionPlanEntitlement' }
+
+    SubscriptionPlanList:
+      type: object
+      required: [plans]
+      additionalProperties: false
+      properties:
+        plans:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/SubscriptionPlan' }
+
+    SubscriptionPlanEntitlement:
+      type: object
+      required: [entitlement_code, limit_value]
+      additionalProperties: false
+      properties:
+        entitlement_code:
+          type: string
+          enum: [accept_orders, daily_order_cap, priority_dispatch, zone_multi_select]
+          description: قائمة مغلقة؛ امتياز جديد يحتاج قراراً معلناً لا نصاً يفسره كل مستهلك بطريقته.
+        limit_value:
+          type: integer
+          minimum: -1
+          description: قيمة سالب واحد تعني بلا سقف، وعدد صحيح يبقى قابلاً للمقارنة بلا تقريب.
+
+    SubscriptionState:
+      type: object
+      required:
+        [driver_public_id, subscription_id, state, plan_code, plan_version, started_at, expires_at,
+         state_sequence, is_stale, entitlements, computed_at]
+      additionalProperties: false
+      properties:
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        subscription_id: { type: string, format: uuid }
+        state:
+          type: string
+          enum: [trial, active, expired, community]
+          description: حالة مشتقة من الدفتر وجدول الانتقالات المعلن، لا قيمة يكتبها مسار إدارة حر.
+        plan_code: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        plan_version: { type: integer, minimum: 1 }
+        started_at: { type: string, format: date-time }
+        expires_at:
+          type: [string, 'null']
+          format: date-time
+        state_sequence:
+          type: integer
+          minimum: 1
+          description: ترتيب انتقال الحالة للسائق؛ يبقى سبب الترتيب قابلاً للاستعادة من الدفتر.
+        is_stale:
+          type: boolean
+          description: يعلن أن الزمن تجاوز نهاية مخزنة قبل النبضة، بدلاً من إظهار حالة قديمة كأنها حديثة.
+        entitlements:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/SubscriptionPlanEntitlement' }
+        computed_at: { type: string, format: date-time }
+
+    SubscriptionStartRequest:
+      type: object
+      required: [driver_public_id, plan_code, plan_version, requested_at]
+      additionalProperties: false
+      properties:
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        plan_code: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        plan_version: { type: integer, minimum: 1 }
+        requested_at:
+          type: string
+          format: date-time
+          description: زمن طلب البداية؛ تسجل الخدمة زمن المنحة الناتجة صراحة في الدفتر.
+
+    SubscriptionStartResult:
+      type: object
+      required: [subscription, period, duplicate]
+      additionalProperties: false
+      properties:
+        subscription: { $ref: '#/components/schemas/SubscriptionState' }
+        period: { $ref: '#/components/schemas/SubscriptionPeriod' }
+        duplicate:
+          type: boolean
+          description: يفرق صراحة بين كتابة جديدة وجواب محفوظ من إعادة محاولة، بدلاً من جعل `200` تخميناً.
+
+    SubscriptionActivateRequest:
+      type: object
+      required: [payment_reference, plan_code, plan_version, activated_at]
+      additionalProperties: false
+      properties:
+        payment_reference:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: مرجع opaque للتحصيل؛ لا يفسر ولا يبحث عنه هذا العقد.
+        plan_code: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        plan_version: { type: integer, minimum: 1 }
+        activated_at: { type: string, format: date-time }
+
+    SubscriptionActivateResult:
+      type: object
+      required: [subscription, period, duplicate]
+      additionalProperties: false
+      properties:
+        subscription: { $ref: '#/components/schemas/SubscriptionState' }
+        period: { $ref: '#/components/schemas/SubscriptionPeriod' }
+        duplicate: { type: boolean }
+
+    SubscriptionRecomputeResult:
+      type: object
+      required: [subscription, rebuilt]
+      additionalProperties: false
+      properties:
+        subscription: { $ref: '#/components/schemas/SubscriptionState' }
+        rebuilt:
+          type: boolean
+          description: يعلن أن الصف المتحقق أعيد من الدفتر، حتى إن ساوت النتيجة الحالة السابقة.
+
+    SubscriptionPeriod:
+      type: object
+      required:
+        [period_id, driver_public_id, plan_code, plan_version, source, payment_reference, granted_days,
+         starts_at, ends_at, created_at]
+      additionalProperties: false
+      properties:
+        period_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        plan_code: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        plan_version: { type: integer, minimum: 1 }
+        source:
+          type: string
+          enum: [trial, payment, referral_reward]
+        payment_reference:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 64
+          description: موجود فقط لمنحة مصدرها `payment`؛ لا يوجد حقل بديل لمنح الإحالة أو التجربة.
+        granted_days: { type: integer, minimum: 1 }
+        starts_at: { type: string, format: date-time }
+        ends_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+
+    SubscriptionPeriodList:
+      type: object
+      required: [periods]
+      additionalProperties: false
+      properties:
+        periods:
+          type: array
+          maxItems: 500
+          items: { $ref: '#/components/schemas/SubscriptionPeriod' }
+
+    Referral:
+      type: object
+      required:
+        [referral_id, referral_code, referrer_public_id, referee_public_id, state, reason_code,
+         qualifying_fact_count, window_ends_at, created_at, state_changed_at, reward]
+      additionalProperties: false
+      properties:
+        referral_id: { type: string, format: uuid }
+        referral_code:
+          type: string
+          pattern: '^WR-[0-9A-Z]{8}$'
+        referrer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        referee_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        state:
+          type: string
+          enum: [pending, qualified, rewarded, rejected]
+        reason_code:
+          type: [string, 'null']
+          enum: [self_referral, referrer_not_active, referee_already_referred, referee_no_qualifying_facts, referral_window_expired, referee_subscription_never_activated, null]
+          description: سبب مغلق للرفض فقط؛ الصمت لا يفرق بين قاعدة مرفوضة وتأخر في المعالجة.
+        qualifying_fact_count: { type: integer, minimum: 0 }
+        window_ends_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        state_changed_at: { type: string, format: date-time }
+        reward:
+          oneOf:
+            - { $ref: '#/components/schemas/ReferralReward' }
+            - { type: 'null' }
+
+    ReferralList:
+      type: object
+      required: [referrals]
+      additionalProperties: false
+      properties:
+        referrals:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/Referral' }
+
+    ReferralClaimRequest:
+      type: object
+      required: [referral_code, referee_public_id, claimed_at]
+      additionalProperties: false
+      properties:
+        referral_code:
+          type: string
+          pattern: '^WR-[0-9A-Z]{8}$'
+        referee_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        claimed_at: { type: string, format: date-time }
+
+    ReferralClaimResult:
+      type: object
+      required: [referral, duplicate]
+      additionalProperties: false
+      properties:
+        referral: { $ref: '#/components/schemas/Referral' }
+        duplicate:
+          type: boolean
+          description: يعلن جواب المطالبة المحفوظ صراحة كي لا يعده العميل مطالبة جديدة.
+
+    ReferralReward:
+      type: object
+      required: [reward_id, referral_id, granted_period_id, reward_days, plan_code, plan_version, created_at]
+      additionalProperties: false
+      properties:
+        reward_id: { type: string, format: uuid }
+        referral_id: { type: string, format: uuid }
+        granted_period_id: { type: string, format: uuid }
+        reward_days: { type: integer, minimum: 1 }
+        plan_code: { type: string, minLength: 3, maxLength: 64, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        plan_version: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+
+    TickResult:
+      type: object
+      required:
+        [ran_at, periods_ended, subscriptions_expired, subscriptions_moved_to_community,
+         referrals_qualified, rewards_applied, failures]
+      additionalProperties: false
+      properties:
+        ran_at: { type: string, format: date-time }
+        periods_ended: { type: integer, minimum: 0 }
+        subscriptions_expired: { type: integer, minimum: 0 }
+        subscriptions_moved_to_community: { type: integer, minimum: 0 }
+        referrals_qualified: { type: integer, minimum: 0 }
+        rewards_applied: { type: integer, minimum: 0 }
+        failures:
+          type: integer
+          minimum: 0
+          description: تعد الحالات الفردية الفاشلة ولا توقف معالجة بقية السجلات المستحقة.
+
+    HealthStatus:
+      type: object
+      required: [status, mode, last_tick_at]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded, unavailable] }
+        mode: { type: string, enum: [postgres, memory] }
+        last_tick_at:
+          type: [string, 'null']
+          format: date-time
+          description: آخر نبضة نفذت في هذه العملية، و`null` قبل أول نبضة.
+
+    ErrorResponse:
+      type: object
+      required: [error, trace_id]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              enum:
+                - SUBSCRIPTION_VALIDATION_FAILED
+                - SUBSCRIPTION_IDEMPOTENCY_KEY_REQUIRED
+                - SUBSCRIPTION_FILTER_REQUIRED
+                - SUBSCRIPTION_NOT_FOUND
+                - SUBSCRIPTION_PLAN_NOT_FOUND
+                - REFERRAL_CODE_NOT_FOUND
+                - SUBSCRIPTION_IDEMPOTENCY_KEY_REUSED
+                - SUBSCRIPTION_PLAN_NOT_FROZEN
+                - SUBSCRIPTION_PAYMENT_REFERENCE_REQUIRED
+                - REFERRAL_SELF_FORBIDDEN
+                - REFERRAL_WINDOW_CLOSED
+                - REFERRAL_REFEREE_NOT_QUALIFIED
+                - SUBSCRIPTION_UNAVAILABLE
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: false
+              description: |
+                تفاصيل بنيوية بلا إعادة قيمة المدخل. الحقول معدودة لا حقيبة حرة؛ فتحها بلا عقد يجعل
+                المستهلك الصارم يفشل عند أول مفتاح جديد في استجابة صحيحة.
+              properties:
+                field: { type: string, description: اسم الحقل المرفوض لا قيمته. }
+                expected: { type: string, description: شكل متوقع أو قاعدة معلنة. }
+                driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+                plan_code: { type: string }
+                plan_version: { type: integer, minimum: 1 }
+                referral_code: { type: string, pattern: '^WR-[0-9A-Z]{8}$' }
+                state:
+                  type: string
+                  enum: [trial, active, expired, community, pending, qualified, rewarded, rejected]
+                constraint:
+                  type: string
+                  description: اسم القيد الذي يحمي الحقيقة نفسها عند تزامن الكتابة.
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً أو مفتاح تفرّد مفقود أو مرشح قراءة ناقص
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: اشتراك أو خطة أو رمز إحالة غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: مفتاح تفرّد أعيد مع طلب مختلف
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخل صالح شكلياً ومرفوض بقاعدة حالة أو تأهيل أو خطة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة أو طبقة الاستمرارية غير متاحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

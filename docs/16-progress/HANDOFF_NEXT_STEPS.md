@@ -1516,7 +1516,7 @@ PostgreSQL 18.4 · المستودع `pnpm -r test` **2787 ناجحاً + 1 مت�
 
 > **مَن يعمل:** Team 03 — Driver (مالك `services/subscriptions/` و`services/referrals/` في [CODEOWNERS](../../CODEOWNERS)) · Team 01 — Identity (مُشارِك في `services/referrals/`) · Team 09 — Data (وقائعُ السمعةِ مصدرُ التأهيل) · Team 10 — DevOps (المُهجِّرُ والبيئةُ في MR 3/6).
 >
-> **المراجعاتُ المدمجة:** MR 1/6 — [!70](https://gitlab.com/uxxxu/wasla/-/merge_requests/70) (commit `7dd64147` · merge `e069d90b`) وتثبيتُ الدليل [!71](https://gitlab.com/uxxxu/wasla/-/merge_requests/71) · **MR 2/6 — [!72](https://gitlab.com/uxxxu/wasla/-/merge_requests/72)** (2026-08-24).
+> **المراجعاتُ المدمجة:** MR 1/6 — [!70](https://gitlab.com/uxxxu/wasla/-/merge_requests/70) (commit `7dd64147` · merge `e069d90b`) وتثبيتُ الدليل [!71](https://gitlab.com/uxxxu/wasla/-/merge_requests/71) · **MR 2/6 — [!72](https://gitlab.com/uxxxu/wasla/-/merge_requests/72)** (commit `56d1a6c7` · merge `0f0d0ccc` · 2026-08-24) وتثبيتُ الدليل [!73](https://gitlab.com/uxxxu/wasla/-/merge_requests/73).
 >
 > **الحالة عند هذا التسليم:** العقودُ مجمَّدةٌ (ومُصحَّحةٌ بملحقٍ، انظر 18.3-د) و**طبقةُ المجالِ كاملةٌ ونقيّةٌ** ومئةُ اختبارٍ خضراء. **ولا استمراريّةَ ولا شبكةَ**: لا `pg` ولا مُهجِّرَ ولا صفَّ قاعدةٍ واحداً ولا منفذَ 8093 مفتوحاً. من يقرأ هذا القسمَ ليعمل: مدخلُك **18.5**.
 

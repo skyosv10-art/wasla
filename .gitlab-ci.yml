@@ -669,3 +669,40 @@ negotiations-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/negotiation-e2e test
+
+# السمعة والاحتيال (المرحلة 09 · MR 3/6): يطبّق العقد الكنسي
+# services/reputation/contracts/schema.sql على قاعدة نظيفة، ثمّ يشغّل ثلاث حزم
+# تكامل لا تُغني الذاكرة عن أيٍّ منها:
+#   • repository.integration.test.ts — كل منفذ على صفوف حقيقية، ونسخة القواعد 1
+#     مقروءةً من **بذرة الترحيل** لا من ثابتٍ في الشيفرة، واثنا عشر تأكيداً
+#     لاسم القيد المكسور كما يُسمّيه المحرّك.
+#   • atomicity.integration.test.ts — الوقائع والدرجات وصندوق الصادر في معاملة
+#     واحدة: فشلٌ بعد الكتابة يترك الجداول الثلاثة كما كانت، لا سطراً واحداً.
+#   • port-conformance.integration.test.ts — نفس الاختبارات على المُهيئين معاً:
+#     خمسة عشر قيداً يُرفض كلٌّ منها **بنفس الاسم** في الذاكرة وفي Postgres،
+#     وسيناريو كامل يُشغَّل مرّتين وتُقارَن صفوفه حرفياً.
+#
+# وهذه الوظيفة هي ما يمنع الانحراف الصامت: مرآة Drizzle تُقارَن بالعقد في الحزمة
+# السريعة (schema-drift.test.ts بلا قاعدة)، أمّا أنّ المحرّك نفسه يقبل ما تقبله
+# المرآة ويرفض بالأسماء المُعلَنة فلا يُثبته إلا Postgres حقيقي. وبلا القاعدة
+# تبقى الذاكرة كذبةً مفيدة: مئة اختبارٍ أخضر لا يقول أيٌّ منها إنّ الإنتاج
+# سيقبل الصف.
+#
+# قاعدة مستقلّة (wasla_reputation_test) حتى لا تتداخل جداولها مع خدمة أخرى
+# وليبقى الفشل منسوباً لوظيفة واحدة. والمتغيّر DATABASE_URL هو ما تقرأه
+# vitest.integration.config.ts؛ وبغيابه تُتخطّى الحزم الثلاث بكاملها (skipIf)
+# بلا تأكيداتٍ زائفة تُخفي أنّ القاعدة لم تُرفَع.
+reputation-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_reputation_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_reputation_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/reputation-service test:integration

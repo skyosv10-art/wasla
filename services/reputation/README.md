@@ -4,9 +4,16 @@
 >
 > — عبارة Phase 09 الحاكمة · [ADR-014](../../docs/15-decisions/ADR-014-reputation-derived-scores-and-fact-sourced-fraud-signals.md) · [REPUTATION_FRAUD](../../docs/03-domain/REPUTATION_FRAUD.md) · [REPUTATION_CORE_DOMAIN](../../docs/02-architecture/REPUTATION_CORE_DOMAIN.md)
 
-هذه الحزمة **طبقةُ المجال وحدها**: حسابٌ نقيٌّ وحالاتُ استخدامٍ ومنافذُ (ports) ومُهيئٌ في
-الذاكرة. لا Postgres، ولا HTTP، ولا مُشغّل. الطبقاتُ الباقية في المراجعات التالية من الطور
-(انظر [خارطة المراجعات](#خارطة-مراجعات-الطور)).
+هذه الحزمة **المجالُ والاستمراريّة**: حسابٌ نقيٌّ وحالاتُ استخدامٍ ومنافذُ (ports)
+و**مُهيئان** لها — الذاكرةُ وPostgres — ووحدةُ عملٍ تجعل كلَّ كتابةٍ معاملةً واحدة. **ولا
+HTTP بعد**: الخادمُ على المنفذ 8092 في المراجعة 4/6 فوق **نفس** هذه الحالات بلا تعديلٍ
+فيها (انظر [خارطة المراجعات](#خارطة-مراجعات-الطور)).
+
+> **الاستمراريّةُ لا تُستورَد من سطح الحزمة بقصد:** `import { … } from "@wasla/reputation-service"`
+> يُعطيك المجالَ ومُهيئَ الذاكرة ولا يُحمّل سائقَ قاعدةٍ معك. مقبضُ Postgres والمُشغّل
+> يُستورَدان بمسارهما الصريح (`.../src/infrastructure/drizzle/db.js` · `.../src/runner.js`)،
+> فيكون الاعتمادُ على القاعدة **خياراً مكتوباً في سطر الاستيراد**. التفصيل الكامل في
+> [REPUTATION_PERSISTENCE.md](../../docs/02-architecture/REPUTATION_PERSISTENCE.md).
 
 ---
 
@@ -64,13 +71,21 @@ src/
 ├── use-cases/         ← ترتيبُ الحرّاس والكتابةُ والأحداث
 │   ├── record-fact.ts · submit-rating.ts · recompute-score.ts
 │   ├── run-tick.ts · reads.ts · shared.ts
+├── runner.ts          ← `ReputationRunner {write, read}`: يُخفي «معاملةٌ أو لا معاملة»
 └── infrastructure/
     ├── constraints.ts     15 قيداً مفروضاً **بأسمائها** كما في الـDDL
-    └── in-memory.ts       مخازنُ للاختبار: ساعةٌ يدويّة ومُعرّفاتٌ متتالية
+    ├── in-memory.ts       مخازنُ للاختبار: ساعةٌ يدويّة ومُعرّفاتٌ متتالية
+    └── drizzle/           ← **الموضعُ الوحيد الذي يعرف SQL في الحزمة**
+        ├── schema.ts          مرآةُ `contracts/schema.sql` (تسعةُ جداول) بحارس انحراف
+        ├── db.ts              المسبحُ والمقبض — ولا استعلامَ فيه
+        ├── repository.ts      سبعةُ مستودعاتٍ + مترجمُ أخطاءٍ يحمل **اسمَ القيد**
+        └── transaction.ts     **حدُّ المعاملة**: لا شيءَ غيره ينادي `db.transaction`
 ```
 
 **اتجاه التبعيّة واحد:** `domain → ports → use-cases → infrastructure`. لا شيءَ في
-`domain/` يعرف أنّ هناك مخزناً.
+`domain/` ولا في `use-cases/` يعرف أنّ هناك مخزناً — **ولا أنّ هناك معاملة**. ولذلك سكن
+`runner.ts` خارج `use-cases/`: مُساعدٌ يُركّب المعاملات شأنٌ بنيويّ، ولو جاورها لصار المجالُ
+على بعد `import` واحدٍ من معرفة القاعدة.
 
 ---
 
@@ -145,8 +160,29 @@ deps.clock.advanceHours(24);       // ساعةٌ تُدفَع بيد، لا ان
 const tick = await runTick(deps);  // { scoresRecomputed, tiersChanged, fraudSignalsRaised, failures }
 ```
 
-`InMemoryOutbox` يُراكم الأحداثَ في `deps.outbox.appended` — والناشرُ الحقيقيّ من جدول
-`reputation_outbox` يأتي في المراجعة 3/6.
+`InMemoryOutbox` يُراكم الأحداثَ في `deps.outbox.appended`. وعلى Postgres تُكتب الأحداثُ في
+جدول `reputation_outbox` **في نفس معاملة** الواقعةِ والنتيجة — أمّا **الناشرُ** الذي يقرأ
+الجدولَ ويُرسل فدَينٌ مُعلَنٌ في 5/6 (كما في الأطوار 06 · 07 · 08).
+
+ونفسُ النداء يعمل على المخزنَين إذا كُتب على `ReputationRunner`. وسطحُ الحزمة يُصدّر `"."`
+وحده، فالمُشغّلُ ومقبضُ القاعدة يُستورَدان **بمسارٍ نسبيّ من داخل الخدمة** — وهو ما تفعله
+حزمةُ التكامل فعلاً وما ستفعله طبقةُ HTTP في 4/6:
+
+```ts
+import { recordFact } from "./index.js";
+import { createDirectReputationRunner, PostgresReputationRunner } from "./runner.js";
+import { createReputationDb } from "./infrastructure/drizzle/db.js";
+
+// ذاكرة: لا معاملةَ تُفتَح، والصدقُ في ذلك مقصودٌ لا تهاون
+const memory = createDirectReputationRunner(deps);
+
+// Postgres: معاملةٌ واحدة لكل كتابة، والساعةُ والمُعرّفات تُحقَنان مرّةً واحدة
+const { pool, db } = createReputationDb({ connectionString: process.env.DATABASE_URL! });
+const postgres = new PostgresReputationRunner(db, { clock, ids });
+
+// نفسُ السطر على المُشغّلَين — وهو بعينه ما تقيسه حزمةُ المطابقة
+const out = await postgres.write((deps) => recordFact(deps, { draft }));
+```
 
 ---
 
@@ -157,9 +193,20 @@ pnpm --filter @wasla/reputation-service typecheck
 pnpm --filter @wasla/reputation-service test
 ```
 
-**133 اختباراً في 8 ملفات**، كلُّها بساعةٍ مدفوعةٍ بيدٍ ومُعرّفاتٍ متتالية: لا `sleep` ولا
-`new Date()` ولا `Math.random()` في أي اختبار، فتُعطي الحزمةُ نفسَ النتيجة اليوم وبعد سنة
-وعند منتصف الليل أيضاً.
+**166 اختباراً في 9 ملفات بلا قاعدةٍ أصلاً**، كلُّها بساعةٍ مدفوعةٍ بيدٍ ومُعرّفاتٍ متتالية: لا
+`sleep` ولا `new Date()` ولا `Math.random()` في أي اختبار، فتُعطي الحزمةُ نفسَ النتيجة اليوم
+وبعد سنة وعند منتصف الليل أيضاً.
+
+ومعها **52 اختبارَ تكاملٍ على محرّكٍ حقيقيّ** (قيست محلّيّاً على PostgreSQL 18.4):
+
+```bash
+export DATABASE_URL="postgres://…"   # وصفةٌ بلا root في docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md
+pnpm --filter @wasla/reputation-service test:integration
+```
+
+**وبلا `DATABASE_URL` تتخطّى الحزمةُ الثلاثةَ ملفّاتٍ بكاملها** (`skipIf`) ولا تُخضِّر شيئاً
+بـ`expect(true)` — تفادياً للعيب الذي ظهر في الطور 08 حيث كانت مئةٌ وأربعون اختباراً تتخطّى
+نفسها بصمتٍ وهي تبدو ناجحة.
 
 | الملف | ما يحرسه |
 | --- | --- |
@@ -170,7 +217,11 @@ pnpm --filter @wasla/reputation-service test
 | `run-tick.test.ts` | النبضةُ قابلةٌ للتكرار، وفشلُ صفٍّ يُعَدّ ولا يُرمى |
 | `reads.test.ts` | المُرشِّحُ إلزاميّ، وحرسُ التزامن المتفائل |
 | `constraints.test.ts` | **حارسٌ سلبيّ**: كلُّ `CONSTRAINT` في الـDDL مفروضٌ بنفس الاسم |
-| `purity.test.ts` | **حارسٌ سلبيّ**: لا ساعةَ ولا شبكةَ ولا قاعدةَ ولا حقلَ عقوبةٍ في الكود |
+| `purity.test.ts` | **حارسٌ سلبيّ**: لا ساعةَ ولا شبكةَ ولا قاعدةَ ولا حقلَ عقوبةٍ في الكود — والسائقُ محصورٌ في `infrastructure/drizzle/` بطبقتَي سماحٍ صريحتَين |
+| `schema-drift.test.ts` | **حارسٌ سلبيّ**: مرآةُ Drizzle ↔ `schema.sql` في **الاتجاهين** (أعمدةٌ وأنواعٌ وقيودٌ وفهارس) |
+| `repository.integration.test.ts` | كلُّ منفذٍ على صفوفٍ حقيقيّة · نسخةُ القواعد **من البذرة** · أسماءُ القيود · الترتيبُ والمُرشِّحات |
+| `port-conformance.integration.test.ts` | **مطابقةُ المُهيئَين**: 15 قيداً باسمٍ واحدٍ في المخزنَين + سيناريوٌ كاملٌ يُنفَّذ مرّتين فتُقارَن الصفوفُ حرفياً |
+| `atomicity.integration.test.ts` | الجداولُ الثلاثة معاملةً واحدة: فشلٌ بعد الكتابة يُرجِع كلَّ شيء |
 
 الحارسان السلبيّان يقرآن **سطحاً آليّاً** (الـDDL بعد حذف التعليقات، والكودُ بعد حذفها) لا
 نثراً: حارسٌ يقرأ شرحاً يجعل أرخصَ طريقةٍ لتخضيره حذفَ الشرح.
@@ -182,9 +233,9 @@ pnpm --filter @wasla/reputation-service test
 | # | المحتوى | الحالة |
 | --- | --- | --- |
 | 1/6 | العقود المجمّدة + ADR-014 + `@wasla/contracts-reputation` | ✅ مدموجة |
-| **2/6** | **طبقة المجال (هذه الحزمة)** | ✅ **هذه المراجعة** |
-| 3/6 | مستودعات Drizzle/Postgres + ترحيلٌ عكوس + **مطابقةُ المُهيئين** على نفس الحزمة | ⬜ التالي |
-| 4/6 | خادم HTTP على المنفذ 8092 وفق `contracts/api.openapi.yml` | ⬜ |
+| 2/6 | طبقة المجال النقيّة | ✅ مدموجة |
+| **3/6** | **مستودعات Drizzle/Postgres + وحدةُ عمل + ترحيلٌ عكوس + مطابقةُ المُهيئَين** | ✅ **هذه المراجعة** |
+| 4/6 | خادم HTTP على المنفذ 8092 وفق `contracts/api.openapi.yml` | ⬜ التالي |
 | 5/6 | مستهلكُ أحداثِ الطلبات + ناشرُ `reputation_outbox` | ⬜ |
 | 6/6 | بوّابةُ خروج الطور: `packages/reputation-e2e` — طلبٌ مكتملٌ واحدٌ عبر HTTP ⇒ **حدثٌ واحدٌ بالضبط**، وإعادةُ التسليم لا تُضاعف | ⬜ |
 
@@ -193,7 +244,10 @@ pnpm --filter @wasla/reputation-service test
 
 ## الدَّين المعروف
 
-- **لا ناشرَ للـoutbox بعد.** `OutboxPort` يُلحِق الأحداثَ فقط؛ الجدولُ والناشرُ في 3/6 و5/6.
+- **لا ناشرَ للـoutbox بعد.** الجدولُ موجودٌ ويُكتب فيه في نفس المعاملة، والناشرُ في 5/6.
 - **لا مستهلكَ لأحداث الطلبات.** الوقائعُ تُقيَّد بنداءٍ مباشرٍ الآن؛ الاشتراكُ في 5/6.
-- **لا مُهيئَ Postgres.** فحصُ المطابقة الحقيقيّ (نفسُ الاختبارات على المُهيئين) في 3/6،
-  وهو ما يُحوّل «مُهيئُ الذاكرة يُحاكي القيود» من دعوى إلى فحص.
+- **`response_status = 200` و`response_body = {}`** في صفّ منع التكرار قيمتان محفوظتان
+  مؤقّتاً (العمودان `NOT NULL` ولا طبقةَ HTTP بعد) ⇒ تصيران الجوابَ المحفوظَ فعلاً في 4/6.
+- **`source_event_id` من نوع `UUID`** في العقد، فمُعرّفٌ مُركّبٌ مثل `c-ORD-1` يمرّ في الذاكرة
+  ويُرفَض من Postgres بـ`22P02` **بلا اسمِ قيد** — انحرافٌ موثَّقٌ باختبارٍ لا مكتوم
+  ([REPUTATION_PERSISTENCE §8](../../docs/02-architecture/REPUTATION_PERSISTENCE.md)).

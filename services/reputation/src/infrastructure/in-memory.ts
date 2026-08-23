@@ -375,7 +375,16 @@ export class InMemoryIdempotencyRepository implements IdempotencyRepository {
     return this.rows.get(idempotencyKey) ?? null;
   }
 
+  /**
+   * أوّلُ إدراجٍ يفوز — نفسُ `ON CONFLICT DO NOTHING` في مُهيئ Postgres.
+   *
+   * والكتابةُ فوقَ الموجود (`Map.set` بلا فحص) كانت تبدو أبسطَ وهي تُخفي فرقاً:
+   * في Postgres المفتاحُ أساسٌ والإدراجُ الثاني لا يُغير المحفوظ، فمُهيئٌ يكتب فوقه كان
+   * سيُنجح في تسابق طلبين ما يفشل في الإنتاج — وهو أسوأُ أنواع الفروق: يمرّ في الذاكرة.
+   */
   async insert(row: ReputationIdempotencyRow): Promise<ReputationIdempotencyRow> {
+    const existing = this.rows.get(row.idempotencyKey);
+    if (existing !== undefined) return existing;
     const frozen = Object.freeze({ ...row });
     this.rows.set(row.idempotencyKey, frozen);
     return frozen;

@@ -144,6 +144,15 @@ export async function submitRating(
     reasonCode: draft.reasonCode,
     rulesetVersion: ruleset.rulesetVersion,
     submittedAt: draft.submittedAt,
+    /**
+     * `null` صريحٌ لا حقلٌ غائب.
+     *
+     * الحقلُ اختياريٌّ في النوع، وحذفُه عند غياب المُعرّف كان يبدو أنظف. وأظهرت حزمةُ
+     * مطابقة المُهيئين (المراجعة 3/6) أنّه فرقٌ حقيقيّ: مخزنُ الذاكرة يُعيد الصفَّ كما
+     * أُعطي (`traceId` غائب) وPostgres يقرأ العمودَ فيُعيد `null` — فيصير الصفُّ الواحد
+     * كائنين غيرِ متساويين في البيئتين، ويُسلّم HTTP جسمين مختلفين لنفس الطلب.
+     */
+    traceId,
   });
 
   /**
@@ -202,7 +211,6 @@ export async function submitRating(
     idempotencyKey,
     operation: "submit_rating",
     fingerprint,
-    subjectType,
     subjectPublicId: draft.subjectPublicId,
     at: deps.clock.now(),
   });

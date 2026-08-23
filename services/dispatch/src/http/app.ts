@@ -1,13 +1,13 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
-import { validationFailed } from "../domain/errors.js";
-import { toApiJob, toApiOffer, toApiOfferList, toApiTickResult } from "../mappers.js";
+import { offerNotFound, validationFailed } from "../domain/errors.js";
+import { offerDetailToWire, toApiJob, toApiOffer, toApiOfferList, toApiTickResult } from "../mappers.js";
 import { runTick } from "../run-tick.js";
 import type { DispatchRunner } from "../runner.js";
 import { acceptOffer } from "../use-cases/accept-offer.js";
 import { cancelDispatchJob } from "../use-cases/cancel-job.js";
 import { createDispatchJob } from "../use-cases/create-job.js";
-import { listDispatchOffers, readDispatchJob } from "../use-cases/read-job.js";
+import { listDispatchOffers, readDispatchJob, readDispatchOffer } from "../use-cases/read-job.js";
 import { rejectOffer } from "../use-cases/reject-offer.js";
 
 import { sendDispatchError } from "./errors.js";
@@ -86,6 +86,15 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     const jobId = toPathId((request.params as { job_id?: unknown }).job_id, "job_id", traceId);
     const offers = await options.runner.read((deps) => listDispatchOffers(deps, { jobId, traceId }));
     return reply.status(200).send(toApiOfferList(offers));
+  });
+
+  app.get("/dispatch/offers/:offer_id", async (request, reply) => {
+    const traceId = request.id;
+    assertRequestIdLength(request.headers, traceId);
+    const offerId = toPathId((request.params as { offer_id?: unknown }).offer_id, "offer_id", traceId);
+    const offer = await options.runner.read((deps) => readDispatchOffer(deps, { offerId, traceId }));
+    if (offer === null) throw offerNotFound(traceId);
+    return reply.status(200).send(offerDetailToWire(offer));
   });
 
   app.post("/dispatch/tick", async (request, reply) => {

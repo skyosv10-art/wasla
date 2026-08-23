@@ -129,6 +129,9 @@ export interface Order {
   readonly statusReasonCode: OrderReasonCode | null;
   readonly priceMode: PriceMode;
   readonly offeredPrice: Money | null;
+  readonly agreedPrice: Money | null;
+  readonly agreedAt: string | null;
+  readonly agreedNegotiationId: string | null;
   readonly stops: readonly Stop[];
   readonly shipment: ShipmentDetails | null;
   readonly notes: string | null;
@@ -187,6 +190,24 @@ export interface ResolveAssignmentCommand {
   readonly state: Exclude<OrderAssignmentState, "offered">;
   readonly reasonCode: OrderReasonCode | null;
   readonly traceId?: string;
+}
+
+/** A negotiation service records the price it agreed for an already-existing order. */
+export interface RecordAgreedPriceCommand {
+  readonly orderPublicId: string;
+  readonly negotiationId: string;
+  readonly driverPublicId: string;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly agreedAt: string;
+  readonly idempotencyKey: string;
+  readonly traceId?: string;
+}
+
+/** Fresh recording versus a safe repeat of the same negotiated price. */
+export interface RecordAgreedPriceOutcome {
+  readonly order: Order;
+  readonly replayed: boolean;
 }
 
 /** An order together with its audit trail and assignment records. */

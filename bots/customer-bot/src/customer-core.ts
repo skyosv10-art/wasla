@@ -42,6 +42,12 @@ import {
 import type { Pool } from "pg";
 
 import {
+  HttpCustomerNegotiations,
+  UnconfiguredCustomerNegotiations,
+} from "./infrastructure/http-negotiations.js";
+import type { CustomerNegotiationsPort } from "./negotiation-flows.js";
+
+import {
   CustomerFlowError,
   type CustomerFlowsPort,
   type OrderRequestView,
@@ -185,6 +191,7 @@ export interface CustomerFlowsEnv {
   readonly CUSTOMER_DATABASE_URL?: string | undefined;
   readonly IDENTITY_SERVICE_URL?: string | undefined;
   readonly GEOGRAPHY_SERVICE_URL?: string | undefined;
+  readonly NEGOTIATIONS_SERVICE_URL?: string | undefined;
 }
 
 /**
@@ -255,4 +262,11 @@ export function buildInMemoryCustomerFlows(): CustomerFlowsPort {
     geography: new FakeGeography([]),
     orderIntake: new UnavailableOrderIntake(),
   });
+}
+
+
+/** The missing negotiation URL remains an explicit dependency failure, never an empty list. */
+export function buildCustomerNegotiations(env: CustomerFlowsEnv): CustomerNegotiationsPort {
+  const baseUrl = env.NEGOTIATIONS_SERVICE_URL?.trim();
+  return baseUrl ? new HttpCustomerNegotiations({ baseUrl }) : new UnconfiguredCustomerNegotiations();
 }

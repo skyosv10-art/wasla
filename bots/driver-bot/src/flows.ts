@@ -57,6 +57,9 @@ export const DRIVER_AVAILABLE_COMMAND = "available";
 export const DRIVER_OFFLINE_COMMAND = "offline";
 export const DRIVER_STATUS_COMMAND = "status";
 export const DRIVER_DOCS_COMMAND = "docs";
+export const DRIVER_NEGOTIATIONS_COMMAND = "negotiations";
+export const DRIVER_ACCEPT_COMMAND = "accept";
+export const DRIVER_REJECT_COMMAND = "reject";
 
 /** Everything the bot registers with the channel core when flows are wired. */
 export const DRIVER_SUPPORTED_COMMANDS: readonly string[] = [
@@ -65,6 +68,9 @@ export const DRIVER_SUPPORTED_COMMANDS: readonly string[] = [
   DRIVER_OFFLINE_COMMAND,
   DRIVER_STATUS_COMMAND,
   DRIVER_DOCS_COMMAND,
+  DRIVER_NEGOTIATIONS_COMMAND,
+  DRIVER_ACCEPT_COMMAND,
+  DRIVER_REJECT_COMMAND,
 ] as const;
 
 /** The two values a driver may declare. `busy` is not among them, by contract. */
@@ -150,6 +156,10 @@ export const DRIVER_FLOW_ERROR_TEXT: Readonly<Record<string, string>> = {
   DRIVER_ZONE_UNKNOWN: "المنطقة المرتبطة بملفك غير متاحة حالياً.",
   DRIVER_VALIDATION_FAILED: "البيانات غير مكتملة. أكمل ملفك من التطبيق ثم أعد المحاولة.",
   DRIVER_UNAVAILABLE: "الخدمة غير متاحة مؤقتاً. أعد المحاولة بعد قليل.",
+  DRIVER_DEPENDENCY_UNAVAILABLE: "الخدمة غير متاحة مؤقتاً. أعد المحاولة بعد قليل.",
+  DRIVER_NEGOTIATION_NOT_FOUND: "لم نعد نجد هذا التفاوض. افتح التطبيق لتحديث القائمة.",
+  DRIVER_NEGOTIATION_ROUND_STALE: "تغيّر العرض قبل تنفيذ الإجراء. راجع التطبيق ثم أعد المحاولة.",
+  DRIVER_NEGOTIATION_NOT_ACTIONABLE: "لم يعد العرض قابلاً للتنفيذ. راجع التطبيق لمعرفة حالته.",
 };
 
 /** What a driver reads when the core failed with a code we have no copy for. */

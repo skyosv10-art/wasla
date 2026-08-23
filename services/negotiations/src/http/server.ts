@@ -10,10 +10,16 @@
  * غائب → مخازن ذاكرية و`degraded`، فيستطيع مُطوّرٌ أن يُشغّل الخدمة بلا قاعدة ولا يستطيع
  * مُشغّلٌ أن يظنّ تلك العمليّة حقيقية.
  *
- * والمنفذان الصادران غيرُ موصَّلين في هذه الدفعة على المسارين معاً، ويرفضان بالاسم لا
- * يتظاهران بالنجاح (`infrastructure/runtime.ts` يشرح الفرق بين الرفض والرمي). فالبيئة
- * الذاكرية هنا صالحةٌ لتصفّح المسارات وقراءة `/health`، ولا تفتح خيطاً حتى يُوصَّل كتالوج
- * عروض الإرسال في MR 5/6 — وهو أصدق من كتالوجٍ مُختلَق يفتح خيوطاً على عروضٍ لا وجود لها.
+ * والمنفذان الصادران يُختاران من البيئة في `infrastructure/outbound-wiring.ts` لا هنا
+ * (MR 5/6): `DISPATCH_SERVICE_URL` و`ORDERS_SERVICE_URL` موجودان → نداءان حقيقيان على
+ * 8089 و8087؛ وأحدهما غائب → منفذٌ يرفض بالاسم ولا يتظاهر بالنجاح
+ * (`infrastructure/runtime.ts` يشرح الفرق بين الرفض والرمي)، وملاحظةٌ تُسمّي المتغيّر
+ * الناقص. فالبيئة الذاكرية بلا عناوين صالحةٌ لتصفّح المسارات وقراءة `/health`، ولا تفتح
+ * خيطاً — وهو أصدق من كتالوجٍ مُختلَق يفتح خيوطاً على عروضٍ لا وجود لها.
+ *
+ * ولاحظ أنّ اختيار التخزين واختيار المنافذ الصادرة **قرارانِ مستقلّان**: مُطوّرٌ يُشغّل
+ * مخازن ذاكرية أمام توزيعٍ ومحرّكِ طلبٍ حقيقيّين حالةٌ عادية، ورَبطُهما كان سيُجبره على
+ * قاعدةٍ لا يحتاجها أو على منافذَ لا تنادي أحداً.
  *
  * لا `await main()` مُصدَّر ولا مُستورَد: هذا الملف **ليس** في `src/index.ts`، لأنّ استيراد
  * الحزمة لقراءة نوعٍ منها كان سيرفع خادماً.
@@ -27,11 +33,10 @@ import { createNegotiationDb } from "../infrastructure/drizzle/db.js";
 import type { NegotiationSharedDeps } from "../infrastructure/drizzle/transaction.js";
 import { createInMemoryNegotiationDependencies } from "../infrastructure/in-memory.js";
 import {
-  CryptoIdGenerator,
-  SystemClock,
-  UnconfiguredAgreedPricePort,
-  UnconfiguredDispatchOfferPort,
-} from "../infrastructure/runtime.js";
+  configuredAgreedPrice,
+  configuredDispatchOffers,
+} from "../infrastructure/outbound-wiring.js";
+import { CryptoIdGenerator, SystemClock } from "../infrastructure/runtime.js";
 import {
   createDirectNegotiationRunner,
   PostgresNegotiationRunner,
@@ -49,8 +54,11 @@ interface Wiring {
 function buildWiring(): Wiring {
   const clock = new SystemClock();
   const ids = new CryptoIdGenerator();
-  const offers = new UnconfiguredDispatchOfferPort();
-  const agreedPrice = new UnconfiguredAgreedPricePort();
+  // `console.warn` وليس `app.log`: هذا الاختيار يقع قبل أن يوجد تطبيقٌ بسجلٍّ، وتأخيرُ
+  // الملاحظة إلى ما بعد الرفع كان سيجعل أوّل سببٍ لعطلٍ يظهر بعد أوّل طلبٍ يفشل.
+  const outbound = { log: (message: string) => console.warn(message) };
+  const offers = configuredDispatchOffers(process.env, outbound.log);
+  const agreedPrice = configuredAgreedPrice(process.env, outbound.log);
 
   if (process.env.DATABASE_URL) {
     const { pool, db } = createNegotiationDb({ connectionString: process.env.DATABASE_URL });

@@ -34,6 +34,9 @@ export {
   DRIVER_OFFLINE_COMMAND,
   DRIVER_STATUS_COMMAND,
   DRIVER_SUPPORTED_COMMANDS,
+  DRIVER_NEGOTIATIONS_COMMAND,
+  DRIVER_ACCEPT_COMMAND,
+  DRIVER_REJECT_COMMAND,
   DriverFlowError,
   ELIGIBILITY_REASON_TEXT,
   ELIGIBILITY_STATE_TEXT,
@@ -51,8 +54,27 @@ export {
 export {
   UseCaseDriverFlows,
   buildDriverFlows,
+  buildDriverNegotiations,
   buildDriverFlowsOver,
   toDriverLocale,
   type DriverFlowsEnv,
   type DriverFlowsWiring,
 } from "./driver-core.js";
+
+export {
+  DRIVER_NEGOTIATION_REPLY_LIMIT,
+  DRIVER_NEGOTIATION_TEXT,
+  createDriverNegotiationConversationHandler,
+  selectOnlyPendingOtherPartyRound,
+  type DriverNegotiationsPort,
+  type NegotiationParty,
+  type NegotiationRoundState,
+  type NegotiationRoundView,
+  type NegotiationThreadState,
+  type NegotiationThreadView,
+} from "./negotiation-flows.js";
+export {
+  HttpDriverNegotiations,
+  UnconfiguredDriverNegotiations,
+  type HttpDriverNegotiationsOptions,
+} from "./infrastructure/http-negotiations.js";

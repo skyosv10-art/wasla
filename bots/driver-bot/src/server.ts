@@ -15,13 +15,22 @@
 
 import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 
-import { buildDriverFlows, type DriverFlowsEnv, type DriverFlowsWiring } from "./driver-core.js";
+import {
+  buildDriverFlows,
+  buildDriverNegotiations,
+  type DriverFlowsEnv,
+  type DriverFlowsWiring,
+} from "./driver-core.js";
 
 import {
   DRIVER_SUPPORTED_COMMANDS,
   createDriverConversationHandler,
   type DriverFlowsPort,
 } from "./flows.js";
+import {
+  createDriverNegotiationConversationHandler,
+  type DriverNegotiationsPort,
+} from "./negotiation-flows.js";
 
 /** The bot this deployable serves. Nothing else in this package may vary. */
 export const BOT = "driver" as const;
@@ -35,6 +44,8 @@ export interface DriverBotOverrides extends BotRuntimeOverrides {
    * so no test needs a database to prove the wiring.
    */
   readonly driverFlows?: DriverFlowsPort;
+  /** Injected in tests; production reads NEGOTIATIONS_SERVICE_URL through the core. */
+  readonly driverNegotiations?: DriverNegotiationsPort;
 }
 
 /**
@@ -52,6 +63,10 @@ export function buildApp(overrides?: DriverBotOverrides): BotApp {
   const flows =
     overrides?.driverFlows ?? ((wiring = buildDriverFlows(env)) ? wiring.flows : undefined);
 
+  const negotiations = overrides?.driverNegotiations ?? buildDriverNegotiations(env);
+  const driverHandler = flows === undefined ? undefined : createDriverConversationHandler(flows);
+  const negotiationHandler = flows === undefined ? undefined : createDriverNegotiationConversationHandler(flows, negotiations);
+
   const app = buildBotApp(BOT, {
     ...overrides,
     // Commands are registered only when a flow can actually answer them: an
@@ -62,7 +77,7 @@ export function buildApp(overrides?: DriverBotOverrides): BotApp {
       ? {}
       : {
           supportedCommands: overrides?.supportedCommands ?? DRIVER_SUPPORTED_COMMANDS,
-          onConversation: createDriverConversationHandler(flows),
+          onConversation: async (event) => (await driverHandler!(event)) ?? negotiationHandler!(event),
         }),
   });
 

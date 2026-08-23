@@ -22,6 +22,7 @@
  */
 
 export * from "./domain/state-machine.js";
+export * from "./domain/agreed-price.js";
 export * from "./domain/model.js";
 export * from "./domain/errors.js";
 export * from "./domain/validation.js";
@@ -33,6 +34,7 @@ export * from "./use-cases/ingest-order.js";
 export * from "./use-cases/transition-order.js";
 export * from "./use-cases/manage-assignments.js";
 export * from "./use-cases/read-order.js";
+export * from "./use-cases/record-agreed-price.js";
 
 // --- Composition seam and HTTP layer (MR 4/6) --------------------------
 //
@@ -62,6 +64,7 @@ export {
   assertRequestIdLength,
   requireCustomerScope,
   requireIdempotencyKey,
+  toAgreedPriceRecord,
   toAssignmentDriver,
   toAssignmentId,
   toAssignmentResolution,

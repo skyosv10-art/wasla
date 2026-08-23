@@ -4,7 +4,7 @@
 >
 > **المصدر الكنسي للعقد:** [`services/dispatch/contracts/api.openapi.yml`](../../services/dispatch/contracts/api.openapi.yml) · [`errors.md`](../../services/dispatch/contracts/errors.md) · [`@wasla/contracts-dispatch`](../../packages/contracts/dispatch)
 >
-> **الخدمة:** `services/dispatch` (منفذ **8089**) · **Status:** Active · **Last Updated:** 2026-08-22
+> **الخدمة:** `services/dispatch` (منفذ **8089**) · **Status:** Active · **Last Updated:** 2026-08-23
 >
 > **Related Code:** `services/dispatch/src/http/{app.ts,errors.ts,requests.ts,server.ts}` · `services/dispatch/src/{runner.ts,run-tick.ts,ports.ts,mappers.ts}` · `services/dispatch/src/infrastructure/{http-matching.ts,http-order-engine.ts}` · `services/dispatch/src/__tests__/{http-*.test.ts,run-tick.test.ts}`
 >
@@ -29,7 +29,7 @@ services/dispatch/src/infrastructure/http-order-engine.ts ← تسجيل الع�
 services/dispatch/src/http/server.ts               ← composition root (Postgres أو memory)
 ```
 
-**لم نعدّل أي ملف في `src/use-cases/` ضمن هذه المهمة التوثيقية.** `run-tick.ts` لا يعيد تنفيذ منطق `src/use-cases/tick.ts`: يقرأ المهام النشطة والساعة، ثم يستدعي `tick` لكل مهمة مع نطاقها وساعة النبضة المجمدة.
+أضيفت حالة استخدام القراءة `readDispatchOffer` إلى `src/use-cases/read-job.ts`: تقرأ العرض ثم مهمته بلا كتابة، وتعيد `null` للعرض الغائب كي يترجمه حد HTTP إلى `404`. لا يعيد `run-tick.ts` تنفيذ منطق `src/use-cases/tick.ts`: يقرأ المهام النشطة والساعة، ثم يستدعي `tick` لكل مهمة مع نطاقها وساعة النبضة المجمدة.
 
 ### 1.1 لماذا `DispatchRunner` ولماذا لا يستقبل التطبيق التبعيات مباشرة
 
@@ -47,6 +47,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 | POST   | `/dispatch/jobs`                     | **201** جديد · **200** إعادة مفتاح | `Idempotency-Key` | الإنشاء لا يفتح موجة                             |
 | GET    | `/dispatch/jobs/{job_id}`            | 200                                | —                 | `job_id` UUID فقط                                |
 | GET    | `/dispatch/jobs/{job_id}/offers`     | 200                                | —                 | `{items:[…]}` من المستودع                        |
+| GET    | `/dispatch/offers/{offer_id}`        | 200                                | —                 | عرض واحد مع سياق مهمته و`standing`              |
 | POST   | `/dispatch/tick`                     | 200                                | `Idempotency-Key` | جسم غائب فقط؛ هو الموضع HTTP الوحيد لتحريك الزمن |
 | POST   | `/dispatch/offers/{offer_id}/accept` | 200                                | `Idempotency-Key` | يقبل عرضاً موجوداً                               |
 | POST   | `/dispatch/offers/{offer_id}/reject` | 200                                | `Idempotency-Key` | الجسم يحوي `reason_code`                         |
@@ -54,9 +55,36 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 `POST /dispatch/jobs` يميز 201 عن 200 باستخدام `result.replayed`. لا يفتح إنشاء المهمة موجة؛ الاختبار يثبت أن الموجة تفتح عبر `POST /dispatch/tick` فقط. لا حلقة خلفية ولا `setTimeout` في معالج HTTP.
 
+
 ---
 
-## 3. قواعد الترويسات
+## 3. قراءة عرض واحد للتفاوض
+
+`GET /dispatch/offers/{offer_id}` يعيد حقول `DispatchOffer` نفسها، ومعها `order_public_id` و`order_id`
+و`order_type` و`vehicle_class` و`job_status` و`standing`. المستهلك المقصود هو خدمة التفاوض على
+المنفذ **8091** قبل أن تفتح خيطاً: وجود معرّف العرض وحده لا يكفي لفتح خيط على عرضٍ انتهت صلاحيته
+تشغيلياً أو على مهمة وصلت إلى نهاية نهائية.
+
+| الحقل | لماذا يُعاد |
+| ----- | ----------- |
+| `order_public_id` و`order_id` | مرجعان opaque للطلب الذي سيُربط به خيط التفاوض؛ لا يعيدان حالة orders ولا سجله. |
+| `order_type` و`vehicle_class` | سياق العرض المثبت في المهمة، لا قرار أهلية أو ترتيب بديل. |
+| `job_id` و`job_status` | يبيّنان المهمة التي تملك العرض وما إذا كانت ما زالت قابلة للمسار. |
+| `standing` | قرار مجال محسوب: `status = offered` والمهمة ليست نهائية. |
+
+لا يحسب `standing` من مقارنة `expires_at` بساعة الحائط. في التوزيع الزمن **نبضة لا مؤقت**: النبضة
+وحدها تسجل انتقال العرض من `offered` إلى `timed_out`. لذلك إذا مضى الموعد المحفوظ وتأخرت النبضة،
+يبقى `standing: true` عمداً حتى تسجل النبضة القرار؛ جعل القراءة تقلبه محلياً ينتج حقيقتين لنفس
+العرض، ويجعل زيارة صفحة أو نداء تفاوض يبدو كأنه تقدم دورة حياته بلا حدث أو سجل.
+
+هذه قراءة فقط، لذلك لا تطلب `Idempotency-Key` ولا تدخل `runner.write`: لا تكتب قراراً ولا تعيد
+محاولة أثر شبكي. تستخدم `runner.read` كي لا تحتجز معاملة كتابة من أجل استجابة JSON واحدة؛ أما
+`404` فيصدر عندما تعيد حالة الاستخدام `null` للعرض الغائب، فيظل غياب المورد نتيجة HTTP لا استثناء
+مجالياً.
+
+---
+
+## 4. قواعد الترويسات
 
 | الترويسة          | الحال                                             | الحدود                             | عند الخطأ                        |
 | ----------------- | ------------------------------------------------- | ---------------------------------- | -------------------------------- |
@@ -70,7 +98,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 4. حصر الملكية والردّ 404 لا 403
+## 5. حصر الملكية والردّ 404 لا 403
 
 لا توجد مصادقة أو ترويسة مالك في طبقة HTTP هذه، ولذلك لا يوجد قرار ملكية من نوع 404 بدلاً من 403. `404` ينشأ فقط من مهمة أو عرض لا تجدهما خدمة التوزيع (`DISPATCH_JOB_NOT_FOUND` و`DISPATCH_OFFER_NOT_FOUND`).
 
@@ -78,7 +106,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 5. `/health`
+## 6. `/health`
 
 ```json
 {
@@ -93,7 +121,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 6. خريطة الأخطاء الكاملة (16 رمزاً)
+## 7. خريطة الأخطاء الكاملة (16 رمزاً)
 
 طبقة HTTP تمرر `DispatchError` بحالته ورمزه من حزمة العقد. خطأ Fastify ذي الحالة 400 أو 415 يصبح `400 DISPATCH_VALIDATION_FAILED`، وما عداه يصبح `503 DISPATCH_ENGINE_UNAVAILABLE`.
 
@@ -116,7 +144,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 | `DISPATCH_ENGINE_UNAVAILABLE`      |  503 | التخزين أو matching أو orders غير متاح  |
 | `DISPATCH_ORDER_ENGINE_TIMEOUT`    |  503 | لم يجب محرك الطلبات قبل المهلة          |
 
-### 6.1 الحدود
+### 7.1 الحدود
 
 - `400` للهيئة، و`422` لطلب مفهوم مرفوض من منطق التوزيع أو من محرك الطلبات؛ `409` لتعارض الحالة أو التكرار.
 - محول matching يعامل `503` أو انقطاع الشبكة أو المهلة كـ`DISPATCH_ENGINE_UNAVAILABLE`، ويعامل كل استجابة غير `200` أو جسماً لا يملك الشكل المطلوب كـ`DISPATCH_MATCHING_RESULT_INVALID`.
@@ -125,7 +153,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 7. تغييرات المجال
+## 8. تغييرات المجال
 
 التغيير عند الحد هو توسيع `CandidateRequest` في `services/dispatch/src/ports.ts` بـ`orderId` و`orderPublicId` و`dispatchJobId?`. يرسل `HttpMatchingPort` المرجعين إلى `CandidateQuery` ويرسل `dispatch_job_id` عند وجوده؛ هذه مراجع تدقيق فقط، لا سعر ولا محطات ولا قناة ولا معرفة بعرض أو موجة.
 
@@ -133,7 +161,7 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 8. الانحرافات والحدود المُعلَنة
+## 9. الانحرافات والحدود المُعلَنة
 
 | #   | الانحراف / الحد                                                                                                        | لماذا                                                                                                                                                                                                | البديل ولماذا رُفض                                                                                          |
 | --- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -146,24 +174,28 @@ services/dispatch/src/http/server.ts               ← composition root (Postgre
 
 ---
 
-## 9. الأدلّة (لا «Done» بلا دليل)
+## 10. الأدلّة (لا «Done» بلا دليل)
 
 | الادّعاء                                           | الدليل                                                                                                                                                                                 |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | المسارات وحالات نجاحها                             | `services/dispatch/src/http/app.ts:49-140`                                                                                                                                             |
+| قراءة عرض واحد وحقول المهمة كاملة                     | `src/__tests__/http-offer-detail.test.ts` — `يعيد 200 بكل حقول العرض وسياق الوظيفة عبر مقبس القراءة فقط`                                                                              |
+| الزمن نبضة لا مؤقت في `standing`                       | `src/__tests__/http-offer-detail.test.ts` — `يبقي standing: true بعد الموعد ما لم تمر نبضة` و`يعيد standing: false بعد أن تسجل النبضة انتهاء العرض`                                  |
+| إغلاق العرض أو المهمة يلغي `standing`                  | `src/__tests__/http-offer-detail.test.ts` — `يعيد standing: false بعد رفض العرض` و`يعيد standing: false إذا كانت الوظيفة نهائية ولو بقي العرض offered`                                |
+| المسار والعقد ومُخرِج التفصيل متطابقون                 | `src/__tests__/contract-drift.test.ts` — `registers the offer-detail GET route that the contract declares` · `src/__tests__/mappers.test.ts` — `keeps DispatchOfferDetail keys aligned with the contract in both directions` |
 | إنشاء 201 ثم إعادة 200 وعدم فتح موجة               | `src/__tests__/http-jobs.test.ts` — `تنشئ 201 ثم تعيد 200 للمفتاح والحمولة نفسيهما` و`لا يفتح موجة عند إنشاء مهمة جديدة`                                                               |
 | النبضة بلا جسم ولا تحرك الزمن إلا عبرها            | `src/__tests__/http-tick.test.ts` — `لا تقبل جسماً وتفتح الموجة عبر النبضة فقط`                                                                                                        |
 | تحديث `last_tick_at` بعد النجاح فقط                | `src/__tests__/http-tick.test.ts` — `يحدّث آخر نبضة فقط بعد نبضة ناجحة` و`لا يحدّث آخر نبضة عندما تفشل النبضة`                                                                         |
 | معاملة لكل مهمة وساعة موحدة                        | `services/dispatch/src/run-tick.ts:42-67` · `src/__tests__/run-tick.test.ts` — `يفتح معاملة كتابة واحدة لكل واحدة من ثلاث مهام نشطة` و`يثبّت ساعة واحدة لكل المهام ويعيد اللحظة نفسها` |
 | حمولة matching بلا `evaluated_at` وبلا مفتاح تكرار | `services/dispatch/src/infrastructure/http-matching.ts:30-43` · `src/__tests__/http-matching.test.ts` — `يرسل استعلام المرشحين كاملاً بلا مفتاح تكرار ويقبل القائمة الفارغة`           |
 | تصنيف أخطاء HTTP وغلافها                           | `services/dispatch/src/http/errors.ts:16-38` · `src/__tests__/http-errors.test.ts` — `لا يعيد صدى المعرّف غير المقبول`                                                                 |
-| اختبارات الخدمة                                    | `pnpm --filter @wasla/dispatch-service test` ⇒ **19 ملفاً · 225 اختباراً ناجحاً** (لقطة 2026-08-22)                                                                                    |
+| اختبارات الخدمة                                    | `pnpm --filter @wasla/dispatch-service test` ⇒ **20 ملفاً · 236 اختباراً ناجحاً** (لقطة 2026-08-23)                                                                                    |
 
 **غير مُغطّى هنا:** `server.ts` تركيب؛ اختبارات HTTP تحقن Runner ولا تبدأ خادماً مستمعاً.
 
 ---
 
-## 10. ماذا بعد
+## 11. ماذا بعد
 
 - قرار لاحق يفصل نداءات matching وorders عن عمر معاملة المهمة أو ينفذ saga؛ المهل الصارمة الحالية تخفيف لا إزالة للخطر.
 - يبقى محرك الطلبات مالك حالة الطلب وفق [ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md)، وتبقى المطابقة مالكة التقييم وفق [ADR-011](../15-decisions/ADR-011-matching-dispatch-separation-candidate-source-and-tick-driven-time.md).

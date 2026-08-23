@@ -153,6 +153,38 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
+  /dispatch/offers/{offer_id}:
+    get:
+      tags: [offers]
+      operationId: getDispatchOffer
+      summary: قراءة عرض توزيع واحد مع سياق وظيفته
+      description: |
+        يمكّن خدمة التفاوض من التحقق من العرض قبل فتح خيط. `standing` حقيقة مجال
+        محسوبة من حالة العرض وحالة المهمة فقط: يكون صحيحاً عندما يظل العرض `offered`
+        ولا تكون المهمة نهائية. لا نقارن `expires_at` بساعة الحائط هنا؛ الزمن في
+        التوزيع نبضة لا مؤقت، ولذلك العرض الذي تجاوز موعده ولم تمر عليه نبضة يبقى
+        قائماً إلى أن تسجل النبضة حسمه.
+
+        القراءة لا تحمل `Idempotency-Key` ولا تفتح معاملة كتابة: لا تغيّر حالة عرض
+        ولا تقدّم مهلة، بل تقرأ القرار المسجل فقط.
+
+        - `200` العرض مع مراجع الطلب وحالة المهمة و`standing`.
+        - `400` معامل أو رأس طلب لا يطابق العقد.
+        - `404` لا عرض بهذا المعرّف.
+        - `503` التخزين غير متاح.
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: العرض الموجود وسياق مهمته الذي يحتاجه مستهلك التفاوض.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DispatchOfferDetail' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
   /dispatch/offers/{offer_id}/accept:
     post:
       tags: [offers]
@@ -395,6 +427,37 @@ components:
         resolved_at:
           oneOf: [{ type: string, format: date-time }, { type: 'null' }]
         created_at: { type: string, format: date-time }
+
+    DispatchOfferDetail:
+      type: object
+      required:
+        [id, job_id, wave_id, driver_public_id, status, offered_at, expires_at, created_at,
+         order_public_id, order_id, order_type, vehicle_class, job_status, standing]
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        wave_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        status: { $ref: '#/components/schemas/DispatchOfferStatus' }
+        reason_code:
+          oneOf: [{ $ref: '#/components/schemas/ReasonCode' }, { type: 'null' }]
+        offered_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        responded_at:
+          oneOf: [{ type: string, format: date-time }, { type: 'null' }]
+        resolved_at:
+          oneOf: [{ type: string, format: date-time }, { type: 'null' }]
+        created_at: { type: string, format: date-time }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        order_id: { type: string, format: uuid }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        job_status: { $ref: '#/components/schemas/DispatchJobStatus' }
+        standing:
+          type: boolean
+          description: >-
+            صحيح ما دام العرض offered والمهمة غير نهائية؛ لا يقارن expires_at بساعة
+            الحائط، لأن النبضة وحدها تقدّم المهل.
 
     DispatchOfferList:
       type: object

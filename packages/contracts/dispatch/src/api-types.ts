@@ -125,6 +125,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dispatch/offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * قراءة عرض توزيع واحد مع سياق وظيفته
+         * @description يمكّن خدمة التفاوض من التحقق من العرض قبل فتح خيط. `standing` حقيقة مجال
+         *     محسوبة من حالة العرض وحالة المهمة فقط: يكون صحيحاً عندما يظل العرض `offered`
+         *     ولا تكون المهمة نهائية. لا نقارن `expires_at` بساعة الحائط هنا؛ الزمن في
+         *     التوزيع نبضة لا مؤقت، ولذلك العرض الذي تجاوز موعده ولم تمر عليه نبضة يبقى
+         *     قائماً إلى أن تسجل النبضة حسمه.
+         *
+         *     القراءة لا تحمل `Idempotency-Key` ولا تفتح معاملة كتابة: لا تغيّر حالة عرض
+         *     ولا تقدّم مهلة، بل تقرأ القرار المسجل فقط.
+         *
+         *     - `200` العرض مع مراجع الطلب وحالة المهمة و`standing`.
+         *     - `400` معامل أو رأس طلب لا يطابق العقد.
+         *     - `404` لا عرض بهذا المعرّف.
+         *     - `503` التخزين غير متاح.
+         */
+        get: operations["getDispatchOffer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dispatch/offers/{offer_id}/accept": {
         parameters: {
             query?: never;
@@ -299,6 +331,33 @@ export interface components {
             resolved_at?: string | null;
             /** Format: date-time */
             created_at: string;
+        };
+        DispatchOfferDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            job_id: string;
+            /** Format: uuid */
+            wave_id: string;
+            driver_public_id: components["schemas"]["WaslaPublicId"];
+            status: components["schemas"]["DispatchOfferStatus"];
+            reason_code?: components["schemas"]["ReasonCode"] | null;
+            /** Format: date-time */
+            offered_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            responded_at?: string | null;
+            resolved_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            order_public_id: components["schemas"]["OrderPublicId"];
+            /** Format: uuid */
+            order_id: string;
+            order_type: components["schemas"]["OrderType"];
+            vehicle_class: components["schemas"]["VehicleClass"];
+            job_status: components["schemas"]["DispatchJobStatus"];
+            /** @description صحيح ما دام العرض offered والمهمة غير نهائية؛ لا يقارن expires_at بساعة الحائط، لأن النبضة وحدها تقدّم المهل. */
+            standing: boolean;
         };
         DispatchOfferList: {
             items: components["schemas"]["DispatchOffer"][];
@@ -543,6 +602,34 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getDispatchOffer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description يصبح `trace_id` في مغلف الحدث وسجل التشغيل، لا معرّف قناة. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                offer_id: components["parameters"]["OfferId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description العرض الموجود وسياق مهمته الذي يحتاجه مستهلك التفاوض. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchOfferDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

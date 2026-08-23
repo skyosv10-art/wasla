@@ -48,6 +48,9 @@ import {
   WAVE_TRANSITIONS,
 } from "../domain/state-machine.js";
 import { DISPATCH_INDEX_NAMES } from "../infrastructure/in-memory.js";
+import { createDispatchApp } from "../http/app.js";
+import { createDirectRunner } from "../runner.js";
+import { createHarness } from "./harness.js";
 
 const serviceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (file: string): string =>
@@ -224,5 +227,17 @@ describe("drift — API and events", () => {
       // to read it and one of them to get wrong.
       expect(type).not.toMatch(/\.v[0-9]+$/u);
     }
+  });
+
+  it("registers the offer-detail GET route that the contract declares", async () => {
+    const contractPath = "/dispatch/offers/{offer_id}";
+    // The path first has to be part of the generated contract surface, then the
+    // running Fastify application must recognise its colon-parametric equivalent.
+    expect(DISPATCH_API_PATHS).toContain(contractPath);
+    expect(OPENAPI).toContain(`  ${contractPath}:`);
+
+    const app = createDispatchApp({ runner: createDirectRunner(createHarness().deps) });
+    expect(app.hasRoute({ method: "GET", url: "/dispatch/offers/:offer_id" })).toBe(true);
+    await app.close();
   });
 });

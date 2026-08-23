@@ -65,8 +65,17 @@ export type OrderIntakeRequest = components["schemas"]["OrderIntakeRequest"];
 /** Acceptance result: the engine's public id + acceptance timestamp. */
 export type OrderIntakeResult = components["schemas"]["OrderIntakeResult"];
 
+/** The service-to-service agreement record received from negotiation. */
+export type AgreedPriceRecord = components["schemas"]["AgreedPriceRecord"];
+
+/** The response confirming a recorded negotiated price. */
+export type AgreedPrice = components["schemas"]["AgreedPrice"];
+
 /** A persisted order. */
 export type Order = components["schemas"]["Order"];
+
+/** Privacy-minimized matching facts for service-to-service reads. */
+export type OrderSummary = components["schemas"]["OrderSummary"];
 
 /** A recorded assignment offer (§16). */
 export type Assignment = components["schemas"]["Assignment"];
@@ -139,6 +148,10 @@ export const ORDER_ERROR_CODES = [
   "ORDER_ACTOR_REF_REQUIRED",
   "ORDER_ACTOR_REF_FORBIDDEN",
   "ORDER_PRICE_MODE_MISMATCH",
+  "ORDER_PRICE_NOT_NEGOTIABLE",
+  "ORDER_NOT_OPEN_FOR_AGREED_PRICE",
+  "ORDER_AGREED_PRICE_ALREADY_SET",
+  "ORDER_AGREED_PRICE_MISMATCH",
   "ORDER_SHIPMENT_NOT_ALLOWED",
   "ORDER_STOPS_INVALID",
   "ORDER_ENGINE_UNAVAILABLE",
@@ -179,6 +192,10 @@ export const ORDER_ERROR_CODE_CLASS: Record<OrderErrorCode, OrderErrorClass> = {
   ORDER_ACTOR_REF_REQUIRED: "unprocessable",
   ORDER_ACTOR_REF_FORBIDDEN: "unprocessable",
   ORDER_PRICE_MODE_MISMATCH: "unprocessable",
+  ORDER_PRICE_NOT_NEGOTIABLE: "unprocessable",
+  ORDER_NOT_OPEN_FOR_AGREED_PRICE: "unprocessable",
+  ORDER_AGREED_PRICE_ALREADY_SET: "conflict",
+  ORDER_AGREED_PRICE_MISMATCH: "conflict",
   ORDER_SHIPMENT_NOT_ALLOWED: "unprocessable",
   ORDER_STOPS_INVALID: "unprocessable",
   ORDER_ENGINE_UNAVAILABLE: "service_unavailable",

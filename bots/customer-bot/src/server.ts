@@ -17,6 +17,7 @@ import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-r
 
 import {
   buildCustomerFlows,
+  buildCustomerNegotiations,
   type CustomerFlowsEnv,
   type CustomerFlowsWiring,
 } from "./customer-core.js";
@@ -26,6 +27,10 @@ import {
   createCustomerConversationHandler,
   type CustomerFlowsPort,
 } from "./flows.js";
+import {
+  createCustomerNegotiationConversationHandler,
+  type CustomerNegotiationsPort,
+} from "./negotiation-flows.js";
 
 /** The bot this deployable serves. Nothing else in this package may vary. */
 export const BOT = "customer" as const;
@@ -39,6 +44,8 @@ export interface CustomerBotOverrides extends BotRuntimeOverrides {
    * Core, so no test needs a database to prove the wiring.
    */
   readonly customerFlows?: CustomerFlowsPort;
+  /** Injected in tests; production reads NEGOTIATIONS_SERVICE_URL through the core. */
+  readonly customerNegotiations?: CustomerNegotiationsPort;
 }
 
 /**
@@ -56,6 +63,10 @@ export function buildApp(overrides?: CustomerBotOverrides): BotApp {
   const flows =
     overrides?.customerFlows ?? ((wiring = buildCustomerFlows(env)) ? wiring.flows : undefined);
 
+  const negotiations = overrides?.customerNegotiations ?? buildCustomerNegotiations(env);
+  const customerHandler = flows === undefined ? undefined : createCustomerConversationHandler(flows);
+  const negotiationHandler = flows === undefined ? undefined : createCustomerNegotiationConversationHandler(flows, negotiations);
+
   const app = buildBotApp(BOT, {
     ...overrides,
     // Commands are registered only when a flow can actually answer them: an
@@ -65,7 +76,7 @@ export function buildApp(overrides?: CustomerBotOverrides): BotApp {
       ? {}
       : {
           supportedCommands: overrides?.supportedCommands ?? CUSTOMER_SUPPORTED_COMMANDS,
-          onConversation: createCustomerConversationHandler(flows),
+          onConversation: async (event) => (await customerHandler!(event)) ?? negotiationHandler!(event),
         }),
   });
 

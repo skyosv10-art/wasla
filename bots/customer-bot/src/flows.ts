@@ -39,12 +39,18 @@ import type {
 /** Commands this bot answers, beyond `start`. */
 export const CUSTOMER_PLACES_COMMAND = "places";
 export const CUSTOMER_ORDERS_COMMAND = "orders";
+export const CUSTOMER_NEGOTIATIONS_COMMAND = "negotiations";
+export const CUSTOMER_ACCEPT_COMMAND = "accept";
+export const CUSTOMER_REJECT_COMMAND = "reject";
 
 /** Everything the bot registers with the channel core when flows are wired. */
 export const CUSTOMER_SUPPORTED_COMMANDS: readonly string[] = [
   "start",
   CUSTOMER_PLACES_COMMAND,
   CUSTOMER_ORDERS_COMMAND,
+  CUSTOMER_NEGOTIATIONS_COMMAND,
+  CUSTOMER_ACCEPT_COMMAND,
+  CUSTOMER_REJECT_COMMAND,
 ] as const;
 
 /** How many order requests one reply shows. Small on purpose: this is a chat. */
@@ -123,6 +129,9 @@ export const FLOW_ERROR_TEXT: Readonly<Record<string, string>> = {
   CUSTOMER_ZONE_NOT_FOUND: "المنطقة المرتبطة ببياناتك غير متاحة حالياً.",
   CUSTOMER_DEPENDENCY_UNAVAILABLE:
     "الخدمة غير متاحة مؤقتاً. أعد المحاولة بعد قليل.",
+  CUSTOMER_NEGOTIATION_NOT_FOUND: "لم نعد نجد هذا التفاوض. افتح التطبيق لتحديث القائمة.",
+  CUSTOMER_NEGOTIATION_ROUND_STALE: "تغيّر العرض قبل تنفيذ الإجراء. راجع التطبيق ثم أعد المحاولة.",
+  CUSTOMER_NEGOTIATION_NOT_ACTIONABLE: "لم يعد العرض قابلاً للتنفيذ. راجع التطبيق لمعرفة حالته.",
 };
 
 /** What a user reads when the core failed with a code we have no copy for. */

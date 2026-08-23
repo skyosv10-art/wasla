@@ -31,6 +31,8 @@ tags:
     description: تغيير حالة الطلب (المسار الوحيد)
   - name: assignments
     description: تسجيل مراجع الإسناد (Phase 07 هي من تُقرّرها)
+  - name: negotiations
+    description: تسجيل وقراءة حقائق التفاوض اللازمة بين الخدمات
   - name: ops
     description: التشغيل
 
@@ -91,6 +93,66 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /orders/agreed-prices:
+    post:
+      tags: [negotiations]
+      operationId: recordAgreedPrice
+      summary: تسجيل سعر تفاوضي متفق عليه
+      description: |
+        هذا نداء خدمة-لخدمة من التفاوض، لذلك لا يحمل `X-Customer-Public-Id`: لا يقرأ
+        بيانات العميل ولا يثبت ملكيته، بل يسجل حقيقة مرتبطة بـ`order_public_id` الذي
+        تتداوله الخدمات. لا يغيّر حالة الطلب ولا يكتب تدقيق حالة؛ `transitions` هو
+        الحاكم الوحيد لدورة الحياة، وواقعة الاتفاق يملك حدثها `negotiations.agreed`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgreedPriceRecord' }
+      responses:
+        '201':
+          description: سُجل السعر للمرة الأولى
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgreedPrice' }
+        '200':
+          description: إعادة التسجيل المطابقة أعادت الأثر السابق
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgreedPrice' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /orders/lookup:
+    get:
+      tags: [negotiations]
+      operationId: lookupOrderByPublicId
+      summary: ملخص طلب لخدمة أخرى
+      description: |
+        القارئ الخدمي يحتاج قرار المطابقة لا النص الذي كتبه مستخدم. لذلك يبقى الرد
+        مصغّراً: لا نقاط ولا وصف شحنة ولا ملاحظات ولا عميل؛ توسيعه يفتح حد خصوصية
+        بلا حاجة تشغيلية (ADR-009 §7 · ADR-010 القرار 7). ولا توجد
+        `X-Customer-Public-Id` لأن هذا ليس مسار قراءة عميل.
+      parameters:
+        - name: order_public_id
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OrderPublicId' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: ملخص المطابقة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderSummary' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /orders/{orderId}:
     get:
@@ -351,6 +413,30 @@ components:
           type: string
           pattern: '^[A-Z]{3}$'
 
+    AgreedPriceRecord:
+      type: object
+      additionalProperties: false
+      required: [order_public_id, negotiation_id, driver_public_id, amount_minor, currency, agreed_at]
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        negotiation_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        agreed_at: { type: string, format: date-time }
+
+    AgreedPrice:
+      type: object
+      required: [order_public_id, negotiation_id, driver_public_id, amount_minor, currency, agreed_at, recorded_at]
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        negotiation_id: { type: string, format: uuid }
+        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        agreed_at: { type: string, format: date-time }
+        recorded_at: { type: string, format: date-time }
+
     Stop:
       type: object
       required: [kind, zone_id, source]
@@ -487,6 +573,11 @@ components:
         offered_price:
           allOf: [{ $ref: '#/components/schemas/Money' }]
           nullable: true
+        agreed_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        agreed_at: { type: string, format: date-time, nullable: true }
+        agreed_negotiation_id: { type: string, format: uuid, nullable: true }
         stops:
           type: array
           items: { $ref: '#/components/schemas/Stop' }
@@ -501,6 +592,22 @@ components:
         accepted_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+
+    OrderSummary:
+      type: object
+      required: [order_public_id, order_id, status, price_mode, order_type, vehicle_class, agreed_price, agreed_at, agreed_negotiation_id]
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        order_id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        order_type: { $ref: '#/components/schemas/OrderType' }
+        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        agreed_price:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+        agreed_at: { type: string, format: date-time, nullable: true }
+        agreed_negotiation_id: { type: string, format: uuid, nullable: true }
 
     ErrorResponse:
       type: object

@@ -48,6 +48,7 @@
   5. **لا مستهلكَ لوقائعِ السمعةِ ولا ناشرَ صادرٍ** — جدولا `subscription_outbox` و`subscription_idempotency` معلَنان في المخطَّطِ وبلا كود؛ MR 5/6.
 - **Migration:** لا شيء يُشغَّل في هذه المراجعة. `schema.sql` **عقدٌ مجمَّدٌ للقراءة**، ولا `CREATE` يُنفَّذ ولا مُهجِّرَ يُضاف، ولا مخطَّطَ خدمةٍ أخرى يُلمَس، ولا حزمةَ عقودٍ قائمةٍ تُعدَّل. الحزمةُ الجديدةُ `private` ولا تُنشَر.
 - **Next:** **MR 2/6 — طبقةُ مجالٍ نقيّةٌ بلا إدخال/إخراج**: اشتقاقُ الحالةِ من الدفتر · تطبيقُ جدولِ الانتقالاتِ السبعِ حرفيّاً · بذرةُ خطّةِ الإطلاقِ v1 · تأهيلُ الإحالةِ من عددِ الوقائعِ داخل النافذةِ برموزِ رفضٍ مُغلَقة · مكافأةٌ واحدةٌ لكلِّ إحالةٍ تُطبَّق كمُدّةٍ بـ`source='referral_reward'`. التفاصيلُ الكاملةُ في HANDOFF **§18**.
+- **MR:** [MR !70](https://gitlab.com/uxxxu/wasla/-/merge_requests/70) مدمجة في `main` (commit `7dd64147` · merge commit `e069d90b`)
 - **Related:** [ADR-015](../15-decisions/ADR-015-driver-subscription-entitlement-ledger-and-derived-referral-rewards.md) · [وثيقةُ المجال](../03-domain/DRIVER_SUBSCRIPTION_REFERRAL.md) · [عقودُ الخدمة](../../services/subscriptions/contracts/README.md) · [CONTAINERS §4.7](../02-architecture/CONTAINERS.md) · [HANDOFF §18](HANDOFF_NEXT_STEPS.md)
 
 ---

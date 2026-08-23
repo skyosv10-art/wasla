@@ -1516,6 +1516,8 @@ PostgreSQL 18.4 · المستودع `pnpm -r test` **2787 ناجحاً + 1 مت�
 
 > **مَن يعمل:** Team 03 — Driver (مالك `services/subscriptions/` و`services/referrals/` في [CODEOWNERS](../../CODEOWNERS)) · Team 01 — Identity (مُشارِك في `services/referrals/`) · Team 09 — Data (وقائعُ السمعةِ مصدرُ التأهيل).
 >
+> **المراجعةُ المدمجة:** [MR !70](https://gitlab.com/uxxxu/wasla/-/merge_requests/70) — commit `7dd64147` · merge commit `e069d90b` (2026-08-23).
+>
 > **الحالة عند هذا التسليم:** العقودُ مجمَّدةٌ وحزمةُ الأنواعِ مولَّدةٌ منها وحرّاسُ الانحرافِ خضراء. **لا كودَ خدمةٍ إطلاقاً**: لا `services/subscriptions/src/` ولا `package.json` للخدمة ولا منفذَ مفتوحاً على 8093.
 
 ### 18.1 ما تمّ في MR 1/6 (وأين يُقرأ)

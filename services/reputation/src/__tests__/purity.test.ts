@@ -95,6 +95,10 @@ function scan(
  * §الانحرافات.
  */
 const DB_DRIVER_FILES: readonly string[] = [
+  // المراجعة 4/6: `http/server.ts` يستورد نوعَ `Pool` وحدَه ليُغلقه عند الإطفاء — لا استعلامَ
+  // فيه ولا جدول. وأُدرج هنا لا في القائمة الأوسع لأنّ الاختبارَ الموجَبَ أدناه يُحسب من
+  // المصدر: مَن يذكر `pg` يظهر فيه سواءٌ استورد نوعاً أو قيمةً، وإخفاؤه كان سيلزم تعمية الحارس.
+  "http/server.ts",
   "infrastructure/drizzle/db.ts",
   "infrastructure/drizzle/repository.ts",
   "infrastructure/drizzle/schema.ts",
@@ -113,6 +117,35 @@ const DB_PATH_AWARE_FILES: readonly string[] = [
   "infrastructure/drizzle/transaction.ts",
   "runner.ts",
 ];
+
+/**
+ * ومنذ المراجعة 4/6 استثناءان مُسمّيان آخران، وكلٌّ منهما محروسٌ باختبارٍ موجَبٍ مثلَ الأوّل.
+ *
+ * ### الساعةُ والمُعرّفاتُ الحقيقيّة
+ *
+ * الخدمةُ كلُّها تأخذ اللحظةَ من الحاقن، لكنّ **أحداً** في مكانٍ ما يجب أن يقرأ ساعةَ
+ * النظام فعلاً وإلّا وقف الخادمُ عند لحظةٍ ثابتة. والمنعُ الشامل كان معناه أن يُهيَّأ
+ * ذلك في ملفٍّ لا يُمسَح أصلاً (`server.ts` مثلاً مع بقيّة تركيبه) فيضيع بين أسطرِ
+ * الإقلاع؛ وهذا يُخرجه إلى ملفٍّ واحدٍ اسمُه يقول ما فيه، ويُثبت أنّه وحده.
+ */
+const REAL_CLOCK_FILES: readonly string[] = ["infrastructure/runtime.ts"];
+
+/**
+ * ### قراءةُ بيئة النظام
+ *
+ * `http/server.ts` هو الموضعُ الوحيد الذي يقرأ `process.env`، وهذا حدُّ التهيئة: ما
+ * دخل منه يصير وسائطَ صريحةً لدوالٍّ نقيّة. وقراءةُ البيئة في `app.ts` أو في المحوّلات
+ * كانت ستجعل اختباراً واحداً يتصرّف تصرّفين حسب صدفةِ متغيّرٍ في الطرفيّة.
+ */
+const ENV_READING_FILES: readonly string[] = ["http/server.ts"];
+
+/** يُحسب الواقعُ من المصدر لا من القائمة — هذا ما يجعل الاستثناءَ شدّاً لا تخفيفاً. */
+function filesMatching(pattern: RegExp): readonly string[] {
+  return sourceFiles()
+    .filter((path) => pattern.test(codeOnly(path)))
+    .map((path) => relative(SRC, path).split(sep).join("/"))
+    .sort();
+}
 
 describe("مسحُ المصدر", () => {
   it("يجد ملفاتٍ فعلاً — فلا يمرّ الحارسُ على قائمةٍ فارغة", () => {
@@ -138,10 +171,23 @@ describe("لا ساعةَ مخفيّة", () => {
         ["setTimeout", /\bsetTimeout\s*\(/],
         ["setInterval", /\bsetInterval\s*\(/],
         ["sleep", /\bsleep\s*\(/],
+      ], new Set(REAL_CLOCK_FILES)),
+    ).toEqual([]);
+
+    // العشوائيّةُ لا استثناءَ لها في أيِّ ملفٍّ: مُولّدُ المُعرّفات يستعمل `crypto.randomUUID`،
+    // و`Math.random` في مُعرّفٍ يعني تكراراً محتملاً في مفتاحٍ يُفترض تفرّدُه.
+    expect(
+      scan([
         ["Math.random", /\bMath\s*\.\s*random\s*\(/],
         ["performance.now", /\bperformance\s*\.\s*now\s*\(/],
       ]),
     ).toEqual([]);
+  });
+
+  it("ومن يقرأ ساعةَ النظام هذا الملفُّ بالضبط — لا أقلَّ ولا أكثر", () => {
+    expect(filesMatching(/\bDate\s*\.\s*now\s*\(|new\s+Date\s*\(\s*\)/)).toEqual([
+      ...REAL_CLOCK_FILES,
+    ]);
   });
 
   it("`new Date(x)` بوسيطٍ مسموحٌ — تحويلُ صيغةٍ لا قراءةُ ساعة", () => {
@@ -166,8 +212,12 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
         ["node:fs", /from\s+["']node:fs["']/],
         ["node:child_process", /from\s+["']node:child_process["']/],
         ["process.env", /\bprocess\s*\.\s*env\b/],
-      ]),
+      ], new Set(ENV_READING_FILES)),
     ).toEqual([]);
+  });
+
+  it("ومن يقرأ بيئةَ النظام هذا الملفُّ بالضبط — لا أقلَّ ولا أكثر", () => {
+    expect(filesMatching(/\bprocess\s*\.\s*env\b/)).toEqual([...ENV_READING_FILES]);
   });
 
   it("لا استيرادَ مُشغّلِ قاعدةٍ ولا دلالةَ على مُهيئه خارج القائمة", () => {
@@ -231,9 +281,13 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     );
     const dependencies = (manifest as { readonly dependencies?: Record<string, string> })
       .dependencies;
+    // المراجعة 4/6 تُدخل `fastify` وحدَها: لا مُصادقةً ولا ORM ثانياً ولا مكتبةَ تحقّقٍ —
+    // التحقّقُ في `http/requests.ts` بكتالوجاتِ العقد، والقائمةُ مكتوبةٌ صريحةً حتى تسقط
+    // أوّلُ تبعيّةٍ تُضاف بلا قرارٍ موثَّق.
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
       "@wasla/contracts-reputation",
       "drizzle-orm",
+      "fastify",
       "pg",
     ]);
   });

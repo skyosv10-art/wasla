@@ -22,6 +22,7 @@ import {
 } from "../domain/events.js";
 import type {
   ReputationIdempotencyRow,
+  ReputationRecordedResponse,
   ReputationRulesetRow,
   ReputationScoreRow,
 } from "../domain/model.js";
@@ -122,6 +123,26 @@ export async function checkIdempotency(
   return { kind: "replay", row: existing };
 }
 
+/**
+ * دالّةُ مُنادٍ تُري المجالَ ماذا يجب أن يُعاد حرفياً لو وصل المفتاحُ نفسُه ثانيةً.
+ *
+ * دالّةٌ لا قيمةٌ جاهزة لأنّ الجواب يعتمد على النتيجة التي لم تُحسَب بعد حين يُنادَى:
+ * المُنادي يقول **كيف** يُترجم النتيجة، والمجال يُناديها مرّةً واحدةً بعد أن تكتمل الكتابة.
+ */
+export type RecordedResponseOf<T> = (result: T) => ReputationRecordedResponse;
+
+/**
+ * جوابُ مُنادٍ لا شكلَ سلكٍ له — النتيجةُ نفسُها كما يراها المجال.
+ *
+ * مستهلكُ الأحداث والنبضةُ والاختبار ينادون حالاتَ الاستخدام من داخل العمليّة، ولا رموزَ
+ * حالةٍ عندهم ولا `snake_case`. ومع ذلك لا يُترك العمودان فارغين: حفطُ النتيجة نفسها
+ * يجعل إعادةَ مفتاحٍ داخليّ تُعيد ما أعادته المرّةُ الأولى، وهو المعنى نفسُه بلا مفردات
+ * شبكة. و`200` هنا تعني «تمّ» لا أكثر، والعمود `CHECK BETWEEN 100 AND 599` يُلزم رقماً.
+ */
+export function domainRecordedResponse(result: unknown): ReputationRecordedResponse {
+  return { status: 200, payload: result };
+}
+
 export async function rememberIdempotency(
   deps: ReputationDependencies,
   input: {
@@ -129,6 +150,7 @@ export async function rememberIdempotency(
     readonly operation: string;
     readonly fingerprint: string;
     readonly subjectPublicId: string | null;
+    readonly recordedResponse: ReputationRecordedResponse;
     readonly at: string;
   },
 ): Promise<void> {
@@ -137,6 +159,7 @@ export async function rememberIdempotency(
     operation: input.operation,
     requestFingerprint: input.fingerprint,
     subjectPublicId: input.subjectPublicId,
+    recordedResponse: input.recordedResponse,
     createdAt: input.at,
   });
 }

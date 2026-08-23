@@ -26,7 +26,12 @@
 
 import { factAlreadyRecordedWithDifferentPayload, sourceEventStale } from "../domain/errors.js";
 import { factRecorded, type ReputationDomainEvent } from "../domain/events.js";
-import type { ReputationFactDraft, ReputationFactRow, ReputationScoreRow } from "../domain/model.js";
+import type {
+  ReputationFactDraft,
+  ReputationFactRow,
+  ReputationRecordedResponse,
+  ReputationScoreRow,
+} from "../domain/model.js";
 import { weightFor } from "../domain/ruleset.js";
 import { assertTimestamp } from "../domain/time.js";
 import {
@@ -41,13 +46,28 @@ import {
   assertWaslaPublicId,
 } from "../domain/validation.js";
 import type { FactSourceKey, ReputationDependencies } from "../ports.js";
-import { recomputeSubjectScore, requireActiveRuleset } from "./shared.js";
+import {
+  checkIdempotency,
+  domainRecordedResponse,
+  fingerprintOf,
+  type RecordedResponseOf,
+  recomputeSubjectScore,
+  rememberIdempotency,
+  requireActiveRuleset,
+} from "./shared.js";
 
 export interface FactRecordResult {
   readonly fact: ReputationFactRow;
   readonly score: ReputationScoreRow;
   /** `true` يعني: هذه الواقعةُ كانت مسجَّلةً، ولم تُضَف نقطةٌ ثانية. */
   readonly duplicate: boolean;
+  /**
+   * جوابُ المرّة الأولى كما حَفِظَه من نادى — يوجد حين يُمرَّر مفتاحٌ ويكون معروفاً فقط.
+   *
+   * ويُلاحظ أنّ `duplicate: true` لا يلزم منه وجودُه: إعادةُ تسليمٍ من الناقل تُكتشف
+   * بمفتاح المصدر ولو لم يكن للمُرسِل مفتاحُ معالجةٍ واحدة أصلاً.
+   */
+  readonly replayedResponse?: ReputationRecordedResponse;
 }
 
 /** الحمولةُ بعد التحقُّق — أنواعٌ مُضيَّقة، فلا `unknown` يعبُر إلى ما بعد هذا الحدّ. */
@@ -97,7 +117,21 @@ function isSamePayload(existing: ReputationFactRow, draft: ReputationFactDraft):
 
 export async function recordFact(
   deps: ReputationDependencies,
-  input: { readonly draft: ReputationFactDraft; readonly traceId?: string | null },
+  input: {
+    readonly draft: ReputationFactDraft;
+    readonly traceId?: string | null;
+    /**
+     * مفتاحُ معالجةٍ واحدة من مُرسِل يملك واحداً — **اختياريّ وليس بديلاً عن مفتاح المصدر**.
+     *
+     * الدفترُ محميٌّ أصلاً بـ`ux_reputation_facts_source`، فإعادةُ التسليم تُكتشف بلا مفتاح.
+     * والمفتاحُ يزيد شيئين لا يقدر عليهما مفتاحُ المصدر: مفتاحٌ واحد بحمولتين مختلفتين يُردَّ
+     * `409 REPUTATION_IDEMPOTENCY_KEY_REUSED` بدل أن يُكتب واقعتين؛ وجوابُ التكرار يُعاد
+     * محفوظاً لا مُعادَ التركيب.
+     */
+    readonly idempotencyKey?: string | null;
+    /** كيف يُترجم من نادى النتيجةَ إلى جوابٍ يُعاد حرفياً عند التكرار. */
+    readonly recordedResponse?: RecordedResponseOf<FactRecordResult>;
+  },
 ): Promise<FactRecordResult> {
   const draft = validateDraft(input.draft);
   const traceId = input.traceId ?? draft.traceId ?? null;
@@ -106,6 +140,19 @@ export async function recordFact(
   // وزنٌ غيرُ مُعلَن ⇒ رفضٌ مُسمّى قبل أي كتابة. لا `?? 0` (انظر `weightFor`).
   weightFor(ruleset, draft.subjectType, draft.factKind);
 
+  /**
+   * حرسُ المفتاح قبل قراءة المصدر وقبل أي كتابة.
+   *
+   * والبصمةُ من الحمولة المتحقَّق منها لا من الخام: فراغٌ زائد أو ترتيبٌ مختلف للمفاتيح
+   * ليس حمولةً مختلفة، ومُرسِلٌ يُعيد نفسَ الطلب لا يُردَّ عليه بـ409 من أجل فراغ.
+   */
+  const fingerprint = fingerprintOf(draft);
+  let replayedResponse: ReputationRecordedResponse | undefined;
+  if (input.idempotencyKey !== undefined && input.idempotencyKey !== null) {
+    const decision = await checkIdempotency(deps, input.idempotencyKey, fingerprint);
+    if (decision.kind === "replay") replayedResponse = decision.row.recordedResponse;
+  }
+
   const existing = await deps.facts.findBySource(sourceKeyOf(draft));
   if (existing !== null) {
     if (!isSamePayload(existing, draft)) throw factAlreadyRecordedWithDifferentPayload();
@@ -113,6 +160,7 @@ export async function recordFact(
       fact: existing,
       score: await currentOrRecomputedScore(deps, existing, traceId),
       duplicate: true,
+      replayedResponse,
     };
   }
 
@@ -174,7 +222,20 @@ export async function recordFact(
   ];
   await deps.outbox.append(events, recordedAt);
 
-  return { fact, score: outcome.score, duplicate: false };
+  const result: FactRecordResult = { fact, score: outcome.score, duplicate: false };
+
+  if (input.idempotencyKey !== undefined && input.idempotencyKey !== null) {
+    await rememberIdempotency(deps, {
+      idempotencyKey: input.idempotencyKey,
+      operation: "record_fact",
+      fingerprint,
+      subjectPublicId: draft.subjectPublicId,
+      recordedResponse: (input.recordedResponse ?? domainRecordedResponse)(result),
+      at: recordedAt,
+    });
+  }
+
+  return result;
 }
 
 /**

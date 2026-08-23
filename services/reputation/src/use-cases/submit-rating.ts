@@ -34,6 +34,7 @@ import type {
   ReputationFactRow,
   ReputationRatingDraft,
   ReputationRatingRow,
+  ReputationRecordedResponse,
   ReputationScoreRow,
 } from "../domain/model.js";
 import { addHours, assertTimestamp, toEpochMillis } from "../domain/time.js";
@@ -48,7 +49,9 @@ import type { ReputationDependencies } from "../ports.js";
 import { recordFact } from "./record-fact.js";
 import {
   checkIdempotency,
+  domainRecordedResponse,
   fingerprintOf,
+  type RecordedResponseOf,
   rememberIdempotency,
   requireActiveRuleset,
   requireIdempotencyKey,
@@ -58,6 +61,13 @@ export interface RatingSubmitResult {
   readonly rating: ReputationRatingRow;
   readonly fact: ReputationFactRow;
   readonly score: ReputationScoreRow;
+  /**
+   * جوابُ المرّة الأولى كما حَفِظَه من نادى — موجودٌ **في الإعادة وحدها**.
+   *
+   * اختياريّ لأنّ المرّة الأولى لا جوابَ محفوظاً لها بعدُ (هي التي تُنشِئه)، ومن لا يعنيه
+   * الفرقُ يتجاهلُه ويقرأ الصفوف كما كان.
+   */
+  readonly replayedResponse?: ReputationRecordedResponse;
 }
 
 /** نوعُ الواقعة المُشتقّة من تقييم، ومصدرُها المُعلَن في الدفتر. */
@@ -70,6 +80,12 @@ export async function submitRating(
     readonly draft: ReputationRatingDraft;
     readonly idempotencyKey?: string | null;
     readonly traceId?: string | null;
+    /**
+     * كيف يُترجم من نادى النتيجةَ إلى جوابٍ يُعاد حرفياً عند التكرار.
+     *
+     * غيابُه يعني «احفظ النتيجة كما يراها المجال» لا «احفظ فارغاً».
+     */
+    readonly recordedResponse?: RecordedResponseOf<RatingSubmitResult>;
   },
 ): Promise<RatingSubmitResult> {
   const idempotencyKey = requireIdempotencyKey(input.idempotencyKey);
@@ -90,7 +106,9 @@ export async function submitRating(
 
   const fingerprint = fingerprintOf(draft);
   const decision = await checkIdempotency(deps, idempotencyKey, fingerprint);
-  if (decision.kind === "replay") return await replayResult(deps, draft);
+  if (decision.kind === "replay") {
+    return { ...(await replayResult(deps, draft)), replayedResponse: decision.row.recordedResponse };
+  }
 
   /**
    * التقييمُ الذاتيّ يُرفَض **قبل** أي قراءةٍ أخرى.
@@ -207,15 +225,18 @@ export async function submitRating(
     rating.submittedAt,
   );
 
+  const result: RatingSubmitResult = { rating, fact: recorded.fact, score: recorded.score };
+
   await rememberIdempotency(deps, {
     idempotencyKey,
     operation: "submit_rating",
     fingerprint,
     subjectPublicId: draft.subjectPublicId,
+    recordedResponse: (input.recordedResponse ?? domainRecordedResponse)(result),
     at: deps.clock.now(),
   });
 
-  return { rating, fact: recorded.fact, score: recorded.score };
+  return result;
 }
 
 /**

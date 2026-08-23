@@ -17,7 +17,7 @@
 ## 1. أين نقف الآن (Snapshot)
 
 ```text
-المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 3/6 من ستّ مدفوعة** (1/6 و2/6 **مدمجتان في `main`**: [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57) · [!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58) · و3/6 (رابط المراجعة يُضاف عند فتحها) · §14)
+المرحلة الحالية: **Phase 08 (Negotiation & Chat) — قيد التنفيذ** 🔄 · **MR 3/6 من ستّ مدفوعة** (1/6 و2/6 **مدمجتان في `main`**: [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57) · [!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58) · و3/6 [!59](https://gitlab.com/uxxxu/wasla/-/merge_requests/59) · §14)
                  (المُنجَز: ADR-013 + العقود الكنسية (8 جداول · 10 مسارات · 9 أحداث · 29 كود خطأ)
                   + `@wasla/contracts-negotiation` بـ**70 حارس انحراف** + نموذج المجال + CONTAINERS §4.5.
                   المتبقّي في المرحلة: 3/6 Drizzle/Postgres · 4/6 HTTP على **8091**
@@ -1027,7 +1027,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 |---|---|---|
 | **1/6** | ADR-013 + `services/negotiations/contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` + `@wasla/contracts-negotiation` + NEGOTIATION_CHAT.md + CONTAINERS §4.5 | ✅ **مدمجة في `main` (2026-08-22 · [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))** — دُمجت بقرار مالك المستودع وأنبوبها أحمر لسببٍ تشغيليّ (§2-أ) |
 | **2/6** | طبقة مجال نقيّة `@wasla/negotiations-service` — آلة حالة الخيط والدور، و**حاسب الحدود من السياسة المُرقّمة** لا من أرقام في الكود، وقاعدة التبادل، ومنع القبول الذاتي، و`expected_round_no`. بلا قاعدة ولا HTTP، ومُهيّئ الذاكرة **يُطبّق 24 قاعدة مُسمّاة (قيوداً وفهارس فريدة) بأسمائها الحرفيّة** كما فعل الطوران 06 و05 · **131 اختباراً** + [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) | ✅ **مدمجة في `main` (2026-08-22 · [!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58))** |
-| **3/6** | استمرارية Drizzle/Postgres + **وحدة عمل واحدة** تجعل الخيط والدور والرسالة والصادر في معاملة واحدة **بلا تغيير في `src/use-cases/`** + وظيفة CI `negotiations-db-integration` + حارس انحراف مرآة↔DDL | ✅ **مدفوعة (2026-08-23 · (رابط المراجعة يُضاف عند فتحها))** — 62 اختبار تكامل على محرّك حقيقي + 27 حارس انحراف · [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md) |
+| **3/6** | استمرارية Drizzle/Postgres + **وحدة عمل واحدة** تجعل الخيط والدور والرسالة والصادر في معاملة واحدة **بلا تغيير في `src/use-cases/`** + وظيفة CI `negotiations-db-integration` + حارس انحراف مرآة↔DDL | ✅ **مدفوعة (2026-08-23 · [!59](https://gitlab.com/uxxxu/wasla/-/merge_requests/59))** — 62 اختبار تكامل على محرّك حقيقي + 27 حارس انحراف · [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md) |
 | **4/6** | طبقة HTTP على **8091**: المسارات العشرة + `/health` بحالتيه و`last_tick_at` + مقبس معاملة (`NegotiationRunner`) فلا يملك معالج مسار فتح معاملة + `onlyKeys()` على كل حمولة + كتالوجات تعدادات وقت التشغيل ترفض العضو المجهول **على الحدّ** | ⏳ |
 | **5/6** | المنافذ الصادرة الحقيقية: `AgreedPricePort` → محرّك الطلب **8087** و`DispatchOfferPort` → التوزيع **8089** + تدفّقات بوتَي العميل والسائق. **وفيها ترحيل أعمدة الاتفاق في `orders`** (أدناه) | ⏳ |
 | **6/6** | **بوابة خروج المرحلة E2E** `packages/negotiation-e2e`: خدمات مُنصتة حقيقية بساعة واحدة مُحقونة — طلب `negotiable` يصل سائقاً فيتفاوضان أدواراً فيتّفقان، **والسعر يظهر في محرّك الطلب فعلاً**؛ ونبضة واحدة تُنهي خيطاً مهجوراً؛ وقبولٌ متأخّر يُرفض بالاسم | ⏳ |
@@ -1070,7 +1070,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **لا مُرحِّل صندوق صادر ولا مُنادي نبضة دوريّ**: `runTick` دالّة تُنادى، ومن يُناديها كلّ دقيقة محلّه 4/6 و5/6 (والدَّين العامّ للنبضة الدوريّة في الطور 09).
 - **لا ترجمة ولا عرض**: `source_locale` يُخزَّن، والترجمة عَرضٌ محلّه واجهة البوت في 5/6.
 
-### ما أنجزته MR 3/6 بالضبط ((رابط المراجعة يُضاف عند فتحها))
+### ما أنجزته MR 3/6 بالضبط ([!59](https://gitlab.com/uxxxu/wasla/-/merge_requests/59))
 
 طبقة استمرارية كاملة **وراء المنافذ نفسها بلا تعديل سطرٍ واحد فوقها**، والتفصيل التعليليّ في [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md):
 

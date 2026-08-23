@@ -707,13 +707,14 @@ export class PostgresFraudSignalRepository implements FraudSignalRepository {
  *
  *   1. **`operation` ↔ `scope`**: نفسُ المعنى باسمين. تُترجَم في هذا الموضع وحده،
  *      ونفسُ الترجمة قائمةٌ في خدمة التفاوض.
- *   2. **`response_status` و`response_body`**: عمودان `NOT NULL` في العقد لا حقلَ لهما
- *      في المجال، لأنّ إعادةَ ردٍّ محفوظٍ حرفياً سلوكُ طبقةِ HTTP وهي المراجعة 4/6. تُكتب
- *      `200` و`{}` كما تفعل خدمةُ التفاوض حرفياً، والدَّينُ مُعلَنٌ لا مُخفى: من يُنجز
- *      4/6 يكتب الردَّ الحقيقيّ في نفس الأعمدة بلا ترحيل.
+ *   2. **`response_status` و`response_body`** — انحرافٌ **مقفولٌ في المراجعة 4/6**. كانا
+ *      يُكتبان `200` و`{}` حين لم يكن للخدمة مدخلٌ يُنتج جواباً، وصارا يُكتبان من
+ *      `recordedResponse` ويُقرأان في `find()` — فالانحرافُ اليوم **ترجمةٌ مُسمّاة** لا
+ *      دَيناً: عمودان في القاعدة يقابلان حقلاً واحداً مركّباً في المجال، لأنّهما لا يُقرأان
+ *      إلّا معاً ولا معنى لأحدهما دون الآخر.
  *
- * ولا تُقرأ هذه الأعمدةُ هنا بحال: قراءتُها وحقنُها في صفِّ المجال كانت ستجعل صفَّ
- * Postgres غيرَ مساوٍ لصفِّ الذاكرة، فتُكشف المطابقةُ على فرقٍ لا معنى له.
+ * والقراءةُ لا تُخلّ بمطابقة المُهيئين: مُهيئُ الذاكرة يحفظ نفسَ الحقل ويُعيده، فـ`find()`
+ * في الموضعين تُعيد الشيءَ نفسَه حرفياً، والحرّاسُ تقيس تساوياً حقيقيّاً لا مُتغاضى عنه.
  *
  * و`ON CONFLICT DO NOTHING`: أوّلُ إدراجٍ يفوز. نفسُ سلوك مُهيئ الذاكرة بعد مواءمة
  * المراجعة 3/6 — والبديلُ (خطأُ مفتاحٍ مكرّر) كان سيرمي `reputation_idempotency_pkey`،
@@ -730,6 +731,8 @@ export class PostgresIdempotencyRepository implements IdempotencyRepository {
         scope: reputationIdempotency.scope,
         payloadFingerprint: reputationIdempotency.payloadFingerprint,
         subjectPublicId: reputationIdempotency.subjectPublicId,
+        responseStatus: reputationIdempotency.responseStatus,
+        responseBody: reputationIdempotency.responseBody,
         createdAt: reputationIdempotency.createdAt,
       })
       .from(reputationIdempotency)
@@ -742,6 +745,7 @@ export class PostgresIdempotencyRepository implements IdempotencyRepository {
       operation: row.scope,
       requestFingerprint: row.payloadFingerprint,
       subjectPublicId: row.subjectPublicId,
+      recordedResponse: { status: row.responseStatus, payload: row.responseBody },
       createdAt: need(row.createdAt),
     };
   }
@@ -755,8 +759,14 @@ export class PostgresIdempotencyRepository implements IdempotencyRepository {
           scope: row.operation,
           subjectPublicId: row.subjectPublicId,
           payloadFingerprint: row.requestFingerprint,
-          responseStatus: 200,
-          responseBody: {},
+          responseStatus: row.recordedResponse.status,
+          /**
+           * جسمٌ يُحفظ كما ورد — و`JSONB` يقبل `null` والرقمَ والنصَ لا الكائناتِ فقط.
+           *
+           * ولا فحصَ شكلٍ هنا: المُهيئ لا يعرف ماذا أراد من نادى، وفحصٌ من جنس
+           * «لابدّ أن يكون كائناً» كان سيرفض جواباً سليماً لمدخلٍ لم يُولَد بعد.
+           */
+          responseBody: row.recordedResponse.payload as never,
           createdAt: at(row.createdAt),
         })
         .onConflictDoNothing();

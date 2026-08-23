@@ -9,11 +9,13 @@
 
 import type { ReputationSubjectType } from "../domain/contract-sets.js";
 import { scoreNotFound, scoreStale } from "../domain/errors.js";
-import type { ReputationScoreRow } from "../domain/model.js";
+import type { ReputationRecordedResponse, ReputationScoreRow } from "../domain/model.js";
 import type { ReputationDependencies } from "../ports.js";
 import {
   checkIdempotency,
+  domainRecordedResponse,
   fingerprintOf,
+  type RecordedResponseOf,
   recomputeSubjectScore,
   rememberIdempotency,
   requireActiveRuleset,
@@ -24,6 +26,8 @@ export interface RecomputeScoreResult {
   readonly score: ReputationScoreRow;
   readonly previous: ReputationScoreRow | null;
   readonly tierDidChange: boolean;
+  /** جوابُ المرّة الأولى كما حَفِظَه من نادى — في الإعادة وحدها. */
+  readonly replayedResponse?: ReputationRecordedResponse;
 }
 
 export async function recomputeScore(
@@ -42,6 +46,8 @@ export async function recomputeScore(
     readonly ifComputedThroughFactId?: string | null;
     readonly idempotencyKey?: string | null;
     readonly traceId?: string | null;
+    /** كيف يُترجم من نادى النتيجةَ إلى جوابٍ يُعاد حرفياً عند التكرار. */
+    readonly recordedResponse?: RecordedResponseOf<RecomputeScoreResult>;
   },
 ): Promise<RecomputeScoreResult> {
   const subjectType = assertSubjectType(input.subjectType);
@@ -71,7 +77,12 @@ export async function recomputeScore(
   if (input.idempotencyKey !== undefined && input.idempotencyKey !== null) {
     const decision = await checkIdempotency(deps, input.idempotencyKey, fingerprint);
     if (decision.kind === "replay" && stored !== null) {
-      return { score: stored, previous: stored, tierDidChange: false };
+      return {
+        score: stored,
+        previous: stored,
+        tierDidChange: false,
+        replayedResponse: decision.row.recordedResponse,
+      };
     }
   }
 
@@ -88,15 +99,22 @@ export async function recomputeScore(
 
   await deps.outbox.append(outcome.events, at);
 
+  const result: RecomputeScoreResult = {
+    score: outcome.score,
+    previous: outcome.previous,
+    tierDidChange: outcome.tierDidChange,
+  };
+
   if (input.idempotencyKey !== undefined && input.idempotencyKey !== null) {
     await rememberIdempotency(deps, {
       idempotencyKey: input.idempotencyKey,
       operation: "recompute_score",
       fingerprint,
       subjectPublicId,
+      recordedResponse: (input.recordedResponse ?? domainRecordedResponse)(result),
       at,
     });
   }
 
-  return { score: outcome.score, previous: outcome.previous, tierDidChange: outcome.tierDidChange };
+  return result;
 }

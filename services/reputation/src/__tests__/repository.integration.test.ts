@@ -115,6 +115,7 @@ function idempotencyRow(
     operation: "submit_rating",
     requestFingerprint: "a".repeat(64),
     subjectPublicId: DRIVER,
+    recordedResponse: { status: 201, payload: { duplicate: false } },
     createdAt: T0,
     ...overrides,
   };

@@ -216,11 +216,11 @@ drivers      ↛ negotiations  (نواة السائق لا تُقرأ هنا: ا
 
 | الخدمة | المسار | الغرض | الحالة |
 |---|---|---|---|
-| reputation | `services/reputation/` | دفترُ الوقائع append-only · النتيجةُ والرتبةُ المُشتقّتان · التقييمُ المقيَّد بواقعة · **قواعدُ الاحتيال وإشاراتها** · نسخةُ القواعد المجمّدة · النبضة | **عقود كنسية (MR 1/6) + طبقة مجالٍ نقيّة (MR 2/6) + استمراريّة Postgres ووحدةُ عملٍ ومطابقةُ مُهيئَين (MR 3/6) · Phase 09** — [REPUTATION_PERSISTENCE.md](REPUTATION_PERSISTENCE.md) — **لا HTTP بعد (4/6)** — [نموذج المجال](../03-domain/REPUTATION_FRAUD.md) · [العقود](../../services/reputation/contracts/README.md) · [نواة المجال](REPUTATION_CORE_DOMAIN.md) |
+| reputation | `services/reputation/` | دفترُ الوقائع append-only · النتيجةُ والرتبةُ المُشتقّتان · التقييمُ المقيَّد بواقعة · **قواعدُ الاحتيال وإشاراتها** · نسخةُ القواعد المجمّدة · النبضة | **عقود كنسية (1/6) + طبقة مجالٍ نقيّة (2/6) + استمراريّة Postgres ووحدةُ عملٍ ومطابقةُ مُهيئَين (3/6) + طبقة HTTP على 8092 بتسعة مسارات و`/health` بحالتيه (4/6) · Phase 09** — [REPUTATION_PERSISTENCE.md](REPUTATION_PERSISTENCE.md) · [REPUTATION_HTTP.md](../04-api/REPUTATION_HTTP.md) — **والباقي: مستهلكُ الأحداث وناشرُ الصادر (5/6) · بوابةُ الخروج (6/6)** — [نموذج المجال](../03-domain/REPUTATION_FRAUD.md) · [العقود](../../services/reputation/contracts/README.md) · [نواة المجال](REPUTATION_CORE_DOMAIN.md) |
 
 **انحرافٌ موثّق في العدد لا في الموضع:** `services/fraud/` تبقى **فارغة بقرار** ([ADR-014](../15-decisions/ADR-014-reputation-derived-scores-and-fact-sourced-fraud-signals.md) القرار 1) — قواعدُ الاحتيال تقرأ **نفس دفتر الوقائع**، وخدمةٌ ثانية تعني نسخةً ثانية من الوقائع تتباعد بصمت. والانحراف مُعلَنٌ في `README` العقود وفي حارس اختبار، لا مكتوماً في الكود.
 
-المنفذ: **reputation = 8092** (بعد `negotiations` = 8091)، وهو ثابت مُصدّر من حزمة العقد (`REPUTATION_SERVICE_PORT`) لا رقماً منسوخاً باليد، وحارسُ اختبار يمنع انتزاع منفذٍ خصّصه طورٌ سابق.
+المنفذ: **reputation = 8092** (بعد `negotiations` = 8091)، وهو ثابت مُصدّر من حزمة العقد (`REPUTATION_SERVICE_PORT`) لا رقماً منسوخاً باليد، و**مُستمَعٌ عليه فعلاً منذ MR 4/6** (`services/reputation/src/http/server.ts` يقرأ `PORT` وإلّا فالثابت)، وحارسُ اختبار يمنع انتزاع منفذٍ خصّصه طورٌ سابق.
 
 اتجاه الاعتماد أحادي وملزم، ولا يُعكس:
 

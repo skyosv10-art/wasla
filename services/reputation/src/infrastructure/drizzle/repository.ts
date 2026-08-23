@@ -60,6 +60,8 @@ import type {
   RulesetRepository,
   ScoreRepository,
 } from "../../ports.js";
+import type { OutboxDrainStore } from "../../outbound/drain-outbox.js";
+import type { OutboxRecord } from "../../outbound/event-sink.js";
 import { ENFORCED_CONSTRAINTS } from "../constraints.js";
 import type { DbOrTx } from "./db.js";
 import {
@@ -846,4 +848,120 @@ export async function countOutbox(db: DbOrTx): Promise<number> {
     .select({ total: sql<number>`count(*)::int` })
     .from(reputationOutbox);
   return rows[0]?.total ?? 0;
+}
+
+// ---------------------------------------------------------------------------
+// تصريفُ الصندوق (المراجعة 5/6)
+// ---------------------------------------------------------------------------
+
+/**
+ * مخزنُ التصريف على PostgreSQL — وهو الموضعُ الذي تُنفَّذ فيه ضمانةُ «نشرةٌ واحدة».
+ *
+ * ## `FOR UPDATE SKIP LOCKED` ولا شيء أقلّ
+ *
+ * السؤالُ الذي يحكم هذا الصنف: مُصرّفان يعملان في اللحظة نفسِها — أيّهما يأخذ الصفّ؟
+ * والجوابُ لا يجوز أن يكون «كلاهما»، لأنّ ذاك نشرتان لحدثٍ واحد ومستهلكٌ يُضاعف رقماً.
+ *
+ * و`SKIP LOCKED` تُعطي الجوابَ الصحيح بلا انتظار: صفوفُ الدفعة تُقفَل حتى نهاية معاملة
+ * المُصرّف الأوّل، والثاني **يتخطّاها** فيأخذ ما بعدها ويعمل بالتوازي. وثلاثةُ بدائلَ
+ * أرخص، وكلُّها خاطئة:
+ *
+ *   - `SELECT` بلا قفلٍ: الاثنان يقرآن الصفَّ نفسَه ويُسلّمانه مرّتين. وهذا يمرّ في كل
+ *     اختبارٍ ذي مُصرّفٍ واحد، ويظهر أوّلَ مرّةٍ في الإنتاج حين يُشغّل أحدٌ نسختين.
+ *   - `FOR UPDATE` بلا `SKIP LOCKED`: الثاني **ينتظر** الأوّل، فيصير التصريفُ متسلسلاً
+ *     ولا تنفع زيادةُ النسخ شيئاً — ثمّ يُقرأ الطابورُ المتراكم عطلَ قاعدةٍ لا عطلَ تصميم.
+ *   - علمٌ في الكود (`Set` من المُعرّفات المحتجَزة): يُنسى عند إعادة التشغيل، ولا يعبُر
+ *     بين نسختين من العملية أصلاً.
+ *
+ * ولا يُقرأ `attempts` شرطاً هنا ولا يُستثنى صفٌّ لكثرة محاولاته: التراجعُ الأُسّيّ قرارُ
+ * من يُشغّل التصريف، وإسقاطُ صفٍّ بعد عشر محاولاتٍ كان سيُفقد حدثاً بلا أن يطلبه أحد.
+ */
+export class PostgresOutboxDrainStore implements OutboxDrainStore {
+  constructor(private readonly tx: DbOrTx) {}
+
+  async claimUnpublished(limit: number): Promise<readonly OutboxRecord[]> {
+    /**
+     * SQL خامٌّ لا مُنشئُ استعلامات: `for update skip locked` ليست في واجهة drizzle
+     * لهذا الشكل من الاستعلام، ومحاكاتُها بقراءةٍ ثمّ تحديثٍ هي بعينها النسخةُ الخاطئة
+     * أعلاه. والأعمدةُ مكتوبةٌ صريحةً لا `*`: عمودٌ يُضاف إلى الجدول لا يجوز أن يتسرّب
+     * إلى `OutboxRecord` بلا قرار.
+     */
+    const claimed = await this.tx.execute(sql`
+      SELECT id,
+             aggregate_type,
+             aggregate_id,
+             event_type,
+             event_version,
+             payload,
+             occurred_at,
+             attempts,
+             trace_id
+        FROM reputation_outbox
+       WHERE published_at IS NULL
+       ORDER BY occurred_at ASC, id ASC
+       LIMIT ${limit}
+         FOR UPDATE SKIP LOCKED
+    `);
+    return rowsOf(claimed).map((row) => ({
+      id: String(row["id"]),
+      aggregateType: String(row["aggregate_type"]),
+      aggregateId: String(row["aggregate_id"]),
+      eventType: String(row["event_type"]),
+      eventVersion: String(row["event_version"]),
+      payload: row["payload"],
+      occurredAt: instantOf(row["occurred_at"]),
+      attempts: Number(row["attempts"]),
+      traceId: row["trace_id"] === null || row["trace_id"] === undefined ? null : String(row["trace_id"]),
+    }));
+  }
+
+  async markPublished(id: string, publishedAt: string): Promise<boolean> {
+    /**
+     * `WHERE published_at IS NULL` هو الحرس، و`RETURNING id` هو ما يجعله مقروءاً: بلا
+     * الإرجاع لا يفرّق النداءُ بين «عُلّم الآن» و«كان معلَّماً»، فيبتلع التقريرُ نشرةً
+     * ثانيةً بدل أن يُظهرها في `alreadyPublished`.
+     */
+    const updated = await this.tx.execute(sql`
+      UPDATE reputation_outbox
+         SET published_at = ${at(publishedAt)}
+       WHERE id = ${id}
+         AND published_at IS NULL
+      RETURNING id
+    `);
+    return rowsOf(updated).length === 1;
+  }
+
+  async recordDeliveryFailure(id: string, reason: string): Promise<void> {
+    /**
+     * `attempts + 1` في القاعدة لا في الكود: قراءةٌ ثمّ كتابةٌ من مُصرّفين كانت ستفقد
+     * محاولةً. و`published_at` لا يُلمَس هنا بحال — وهو الشطرُ الأوّل من ضمانة «فشلُ
+     * التسليم لا يُبطل الكتابة».
+     */
+    await this.tx.execute(sql`
+      UPDATE reputation_outbox
+         SET attempts = attempts + 1,
+             last_error = ${reason}
+       WHERE id = ${id}
+    `);
+  }
+}
+
+/**
+ * صفوفُ نتيجةٍ من `execute` — الشكلُ يختلف بين مُشغّلٍ ومُشغّل، والقراءةُ تُوحّده هنا.
+ *
+ * `pg` يُرجع `{ rows: [...] }`، وبعضُ مُشغّلات drizzle تُرجع المصفوفةَ مباشرة. وقراءةُ
+ * الشكلِ الأوّل وحده كانت ستُنتج صفراً صامتاً على المُشغّل الآخر — أي تصريفاً «ناجحاً»
+ * لا يُسلّم شيئاً ولا يشتكي.
+ */
+function rowsOf(result: unknown): readonly Record<string, unknown>[] {
+  if (Array.isArray(result)) return result as readonly Record<string, unknown>[];
+  const rows = (result as { rows?: unknown }).rows;
+  if (Array.isArray(rows)) return rows as readonly Record<string, unknown>[];
+  return [];
+}
+
+/** لحظةٌ من عمود `TIMESTAMPTZ` كما يقرؤها المُشغّل: `Date` أو نصّ. */
+function instantOf(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  return new Date(String(value)).toISOString();
 }

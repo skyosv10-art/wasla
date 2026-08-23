@@ -1,0 +1,205 @@
+/**
+ * تسجيلُ واقعةٍ في الدفتر ثم إعادةُ حسابِ النتيجة.
+ *
+ * هذه الحالةُ هي **المدخلُ الوحيد** إلى الدفتر: لا كتابةَ واقعةٍ في أي موضعٍ آخر، ولا
+ * تعديلَ نتيجةٍ إلّا من الدفتر. ومَن يستدعيها إمّا مستهلكُ أحداث محرّك الطلب (المراجعة
+ * 5/6) أو `POST /reputation/facts` (المراجعة 4/6) أو `submitRating` داخلياً — والثلاثةُ
+ * تمرّ على نفس الحرّاس بنفس الترتيب.
+ *
+ * ## الترتيبُ مقصود
+ *
+ *   1. تحقُّقُ الشكل (400).
+ *   2. النسخةُ النشطة، ووجودُ وزنٍ مُعلَن لهذا (الجانب × نوع الواقعة) (422).
+ *   3. **التكرار قبل التأخّر**: إعادةُ تسليمٍ بنفس الحمولة تُعاد كـ`duplicate` قبل أن
+ *      يفحصها حرسُ التسلسل. ولو انعكس الترتيب لصارت كلُّ إعادةِ تسليمٍ من الناقل —
+ *      وهي أمرٌ يقع كل يوم — خطأً 422، فيُقرأ نظامٌ سليم كنظامٍ يفشل ألفَ مرّة.
+ *   4. التأخّرُ في الوصول (422).
+ *   5. الكتابة، ثم إعادةُ الحساب، ثم الأحداث في **نفس** المعاملة عبر صندوق الصادر.
+ *
+ * ## `at-least-once` ليس خطأً (`errors.md` القاعدة 4)
+ *
+ * نفسُ مفتاح المصدر بنفس الحمولة ⇒ `200` و`duplicate: true` والنتيجةُ الحالية، ولا نقطةَ
+ * تُضاف. ونفسُ المفتاح بحمولةٍ **مختلفة** ⇒ `409 REPUTATION_FACT_ALREADY_RECORDED`،
+ * لأنّ ذاك ليس إعادةَ تسليمٍ بل مصدرَين يقولان شيئين عن نفس الواقعة، ولا يجوز أن نختار
+ * أحدهما بصمت.
+ */
+
+import { factAlreadyRecordedWithDifferentPayload, sourceEventStale } from "../domain/errors.js";
+import { factRecorded, type ReputationDomainEvent } from "../domain/events.js";
+import type { ReputationFactDraft, ReputationFactRow, ReputationScoreRow } from "../domain/model.js";
+import { weightFor } from "../domain/ruleset.js";
+import { assertTimestamp } from "../domain/time.js";
+import {
+  assertActorType,
+  assertFactKind,
+  assertFactReasonCode,
+  assertOrderPublicId,
+  assertSourceEventId,
+  assertSourceEventType,
+  assertSourceSequence,
+  assertSubjectType,
+  assertWaslaPublicId,
+} from "../domain/validation.js";
+import type { FactSourceKey, ReputationDependencies } from "../ports.js";
+import { recomputeSubjectScore, requireActiveRuleset } from "./shared.js";
+
+export interface FactRecordResult {
+  readonly fact: ReputationFactRow;
+  readonly score: ReputationScoreRow;
+  /** `true` يعني: هذه الواقعةُ كانت مسجَّلةً، ولم تُضَف نقطةٌ ثانية. */
+  readonly duplicate: boolean;
+}
+
+/** الحمولةُ بعد التحقُّق — أنواعٌ مُضيَّقة، فلا `unknown` يعبُر إلى ما بعد هذا الحدّ. */
+function validateDraft(draft: ReputationFactDraft): ReputationFactDraft {
+  return {
+    subjectType: assertSubjectType(draft.subjectType),
+    subjectPublicId: assertWaslaPublicId(draft.subjectPublicId),
+    factKind: assertFactKind(draft.factKind),
+    orderPublicId: assertOrderPublicId(draft.orderPublicId),
+    sourceEventType: assertSourceEventType(draft.sourceEventType),
+    sourceEventId: assertSourceEventId(draft.sourceEventId),
+    sourceSequence: assertSourceSequence(draft.sourceSequence),
+    actorType: assertActorType(draft.actorType),
+    reasonCode: assertFactReasonCode(draft.reasonCode),
+    occurredAt: assertTimestamp(draft.occurredAt, "occurredAt"),
+    traceId: draft.traceId ?? null,
+  };
+}
+
+function sourceKeyOf(draft: ReputationFactDraft): FactSourceKey {
+  return {
+    subjectType: draft.subjectType,
+    subjectPublicId: draft.subjectPublicId,
+    factKind: draft.factKind,
+    orderPublicId: draft.orderPublicId,
+    sourceSequence: draft.sourceSequence,
+  };
+}
+
+/**
+ * هل الصفُّ المسجَّل **نفسُ** الواقعة؟
+ *
+ * تُقارَن الحقولُ التي تصف الواقعة في العالم: مُعرّفُ حدث المصدر ونوعُه ومَن فعله وسببُه
+ * ولحظةُ وقوعه. ولا يُقارَن `recordedAt` ولا `id` ولا `traceId`: الثلاثةُ من **عندنا**
+ * لا من الواقعة، ومقارنتُها كانت ستجعل كلَّ إعادةِ تسليمٍ «حمولةً مختلفة» فيُردّ 409 على
+ * الحالة الطبيعية بعينها.
+ */
+function isSamePayload(existing: ReputationFactRow, draft: ReputationFactDraft): boolean {
+  return (
+    existing.sourceEventId === draft.sourceEventId &&
+    existing.sourceEventType === draft.sourceEventType &&
+    existing.actorType === draft.actorType &&
+    existing.reasonCode === draft.reasonCode &&
+    existing.occurredAt === draft.occurredAt
+  );
+}
+
+export async function recordFact(
+  deps: ReputationDependencies,
+  input: { readonly draft: ReputationFactDraft; readonly traceId?: string | null },
+): Promise<FactRecordResult> {
+  const draft = validateDraft(input.draft);
+  const traceId = input.traceId ?? draft.traceId ?? null;
+  const ruleset = await requireActiveRuleset(deps);
+
+  // وزنٌ غيرُ مُعلَن ⇒ رفضٌ مُسمّى قبل أي كتابة. لا `?? 0` (انظر `weightFor`).
+  weightFor(ruleset, draft.subjectType, draft.factKind);
+
+  const existing = await deps.facts.findBySource(sourceKeyOf(draft));
+  if (existing !== null) {
+    if (!isSamePayload(existing, draft)) throw factAlreadyRecordedWithDifferentPayload();
+    return {
+      fact: existing,
+      score: await currentOrRecomputedScore(deps, existing, traceId),
+      duplicate: true,
+    };
+  }
+
+  /**
+   * التأخّرُ في الوصول: تسلسلٌ لا يزيد على أحدث ما سُجّل لهذا (الشخص × الطلب).
+   *
+   * المقارنةُ `<=` لا `<`: تسلسلٌ مساوٍ بنوعِ واقعةٍ مختلف يعني حدثاً واحداً في المصدر
+   * فُسِّر مرّتين، وقبولُه كان سيُسجّل واقعتين لانتقالٍ واحد.
+   */
+  const latest = await deps.facts.latestSourceSequence(
+    draft.subjectType,
+    draft.subjectPublicId,
+    draft.orderPublicId,
+  );
+  if (latest !== null && draft.sourceSequence <= latest) throw sourceEventStale(latest);
+
+  const recordedAt = deps.clock.now();
+  const fact = await deps.facts.insert({
+    id: deps.ids.uuid(),
+    subjectType: draft.subjectType,
+    subjectPublicId: draft.subjectPublicId,
+    factKind: draft.factKind,
+    orderPublicId: draft.orderPublicId,
+    sourceEventType: draft.sourceEventType,
+    sourceEventId: draft.sourceEventId,
+    sourceSequence: draft.sourceSequence,
+    actorType: draft.actorType,
+    reasonCode: draft.reasonCode,
+    occurredAt: draft.occurredAt,
+    recordedAt,
+    traceId,
+  });
+
+  const outcome = await recomputeSubjectScore(deps, {
+    subjectType: fact.subjectType,
+    subjectPublicId: fact.subjectPublicId,
+    ruleset,
+    trigger: "fact_recorded",
+    at: recordedAt,
+    traceId,
+  });
+
+  const events: ReputationDomainEvent[] = [
+    factRecorded({
+      meta: { eventId: deps.ids.uuid(), occurredAt: recordedAt, traceId },
+      factId: fact.id,
+      subjectType: fact.subjectType,
+      subjectPublicId: fact.subjectPublicId,
+      factKind: fact.factKind,
+      orderPublicId: fact.orderPublicId,
+      sourceEventType: fact.sourceEventType,
+      sourceEventId: fact.sourceEventId,
+      sourceSequence: fact.sourceSequence,
+      actorType: fact.actorType,
+      reasonCode: fact.reasonCode,
+      factOccurredAt: fact.occurredAt,
+    }),
+    ...outcome.events,
+  ];
+  await deps.outbox.append(events, recordedAt);
+
+  return { fact, score: outcome.score, duplicate: false };
+}
+
+/**
+ * نتيجةُ صاحبِ واقعةٍ مكرّرة.
+ *
+ * تُقرأ المُخزَّنة إن وُجدت. وغيابُها مع وجودِ واقعةٍ في الدفتر يعني صفّاً ضائعاً (استعادةٌ
+ * جزئية، أو كتابةٌ فُقدت)، فتُحسب وتُكتب هنا: ردُّ `404` على شخصٍ له دفترٌ كان سيجعل
+ * إعادةَ تسليمٍ عاديّة تُخفي علّةً بدل أن تُصلحها. ولا تُصدَر أحداثٌ في هذا المسار: لا
+ * واقعةَ جديدةَ وقعت، والحسابُ هنا إصلاحٌ لا قرار.
+ */
+async function currentOrRecomputedScore(
+  deps: ReputationDependencies,
+  fact: ReputationFactRow,
+  traceId: string | null,
+): Promise<ReputationScoreRow> {
+  const stored = await deps.scores.find(fact.subjectType, fact.subjectPublicId);
+  if (stored !== null) return stored;
+  const ruleset = await requireActiveRuleset(deps);
+  const outcome = await recomputeSubjectScore(deps, {
+    subjectType: fact.subjectType,
+    subjectPublicId: fact.subjectPublicId,
+    ruleset,
+    trigger: "manual_recompute",
+    at: deps.clock.now(),
+    traceId,
+  });
+  return outcome.score;
+}

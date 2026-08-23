@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/reputation-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Reputation & Fraud service — السمعة نتيجةٌ مُشتقّة من دفتر وقائع، والاحتيال إشاراتٌ مُسمّاة لا حُكم، والخدمة لا تعاقب أحداً (Phase 09 · MR 2/6: مجالٌ نقيّ ومنافذ ومُهيئ ذاكرة يفرض قيود schema.sql بأسمائها).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-reputation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

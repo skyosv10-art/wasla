@@ -20,6 +20,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { getTableColumns, getTableName } from "drizzle-orm";
+import { ORDER_ERROR_CODES } from "@wasla/contracts-order";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -35,6 +36,11 @@ const SCHEMA_SQL = readFileSync(
   resolve(process.cwd(), "contracts/schema.sql"),
   "utf8",
 );
+const DRIZZLE_SCHEMA = readFileSync(
+  resolve(process.cwd(), "src/infrastructure/drizzle/schema.ts"),
+  "utf8",
+);
+const ERRORS_MD = readFileSync(resolve(process.cwd(), "contracts/errors.md"), "utf8");
 
 /** Column names declared for one table in the DDL, in declaration order. */
 function ddlColumns(table: string): string[] {
@@ -101,6 +107,38 @@ describe("Drizzle projection ↔ canonical DDL", () => {
     // order_request_id is declared UNIQUE inline on the column (not as a named
     // index), so we assert the column-level UNIQUE constraint instead.
     expect(SCHEMA_SQL).toMatch(/order_request_id\s+UUID\s+NOT NULL\s+UNIQUE/u);
+  });
+
+  it("keeps the agreed-price columns, checks and unique negotiation index in both mirrors", () => {
+    for (const column of [
+      "agreed_amount_minor",
+      "agreed_currency",
+      "agreed_at",
+      "agreed_negotiation_id",
+    ]) {
+      expect(ddlColumns("orders")).toContain(column);
+      expect(drizzleColumns(orders)).toContain(column);
+    }
+    for (const invariant of [
+      "ck_orders_agreed_price_complete",
+      "ck_orders_agreed_price_only_negotiable",
+      "ux_orders_agreed_negotiation",
+    ]) {
+      expect(SCHEMA_SQL).toContain(invariant);
+      expect(DRIZZLE_SCHEMA).toContain(invariant);
+    }
+  });
+
+  it("documents exactly the agreed-price error codes the runtime catalog exports", () => {
+    for (const code of [
+      "ORDER_PRICE_NOT_NEGOTIABLE",
+      "ORDER_NOT_OPEN_FOR_AGREED_PRICE",
+      "ORDER_AGREED_PRICE_ALREADY_SET",
+      "ORDER_AGREED_PRICE_MISMATCH",
+    ]) {
+      expect(ERRORS_MD).toContain(`\`${code}\``);
+      expect(ORDER_ERROR_CODES).toContain(code);
+    }
   });
 
   it("declares no foreign key to identity, geography or drivers (ADR-010: opaque refs)", () => {

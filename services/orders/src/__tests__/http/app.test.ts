@@ -79,6 +79,30 @@ function post(app: Fixture["app"], url: string, body: unknown, key: string | nul
   });
 }
 
+function agreedPriceBody(
+  orderPublicId: string,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    order_public_id: orderPublicId,
+    negotiation_id: "44444444-4444-4444-8444-444444444444",
+    driver_public_id: DRIVER,
+    amount_minor: 2200,
+    currency: "SAR",
+    agreed_at: "2026-02-01T10:00:00.000Z",
+    ...overrides,
+  };
+}
+
+async function negotiableOrder(fixture: Fixture): Promise<{ id: string; publicId: string }> {
+  const id = await createOrder(fixture.harness, {
+    priceMode: "negotiable",
+    offeredPrice: null,
+  });
+  const order = await fixture.harness.repository.findOrderById(id);
+  return { id, publicId: order!.orderPublicId };
+}
+
 describe("GET /health", () => {
   it("reports degraded while only the in-memory adapters are wired", async () => {
     const { app } = fixture();
@@ -97,6 +121,183 @@ describe("GET /health", () => {
     const response = await app.inject({ method: "GET", url: "/health" });
 
     expect(response.json()).toMatchObject({ status: "ok", persistence: "postgres" });
+  });
+});
+
+describe("published route registration", () => {
+  it("registers both agreed-price service routes in Fastify", () => {
+    const { app } = fixture();
+    const routes = app.printRoutes();
+    expect(routes).toContain("agreed-prices");
+    expect(routes).toContain("lookup");
+  });
+});
+
+describe("POST /orders/agreed-prices", () => {
+  it("records once with 201 then returns 200 for the same agreement", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    const body = agreedPriceBody(order.publicId);
+
+    const created = await post(local.app, "/orders/agreed-prices", body, "agreed-key-0001");
+    const replayed = await post(local.app, "/orders/agreed-prices", body, "agreed-key-0001");
+
+    expect(created.statusCode).toBe(201);
+    expect(replayed.statusCode).toBe(200);
+    expect(replayed.json()).toEqual(created.json());
+    expect(created.json()).toMatchObject({
+      order_public_id: order.publicId,
+      negotiation_id: body.negotiation_id,
+      amount_minor: 2200,
+      currency: "SAR",
+    });
+  });
+
+  it("answers the not-found code for an unknown public order id", async () => {
+    const { app } = fixture();
+    const response = await post(
+      app,
+      "/orders/agreed-prices",
+      agreedPriceBody("ORD-9999999999"),
+      "agreed-key-0002",
+    );
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().code).toBe("ORDER_NOT_FOUND");
+  });
+
+  it("refuses a customer-offer order with the negotiated-price code", async () => {
+    const local = fixture();
+    const id = await createOrder(local.harness);
+    const order = await local.harness.repository.findOrderById(id);
+    const response = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order!.orderPublicId),
+      "agreed-key-0003",
+    );
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json().code).toBe("ORDER_PRICE_NOT_NEGOTIABLE");
+  });
+
+  it("refuses an order whose lifecycle is no longer open for agreement", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    await driveTo(local.harness, order.id, "completed");
+    const response = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId),
+      "agreed-key-0004",
+    );
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json().code).toBe("ORDER_NOT_OPEN_FOR_AGREED_PRICE");
+  });
+
+  it("refuses a different negotiation after a price is recorded", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    await post(local.app, "/orders/agreed-prices", agreedPriceBody(order.publicId), "agreed-key-0005");
+    const response = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId, {
+        negotiation_id: "55555555-5555-4555-8555-555555555555",
+      }),
+      "agreed-key-0006",
+    );
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().code).toBe("ORDER_AGREED_PRICE_ALREADY_SET");
+  });
+
+  it("refuses a different amount on a repeated negotiation", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    await post(local.app, "/orders/agreed-prices", agreedPriceBody(order.publicId), "agreed-key-0007");
+    const response = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId, { amount_minor: 2201 }),
+      "agreed-key-0008",
+    );
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().code).toBe("ORDER_AGREED_PRICE_MISMATCH");
+  });
+
+  it("requires the idempotency header and rejects extra record fields", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    const missingKey = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId),
+      null,
+    );
+    const extraField = await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId, { customer_public_id: CUSTOMER }),
+      "agreed-key-0009",
+    );
+
+    expect(missingKey.statusCode).toBe(400);
+    expect(missingKey.json().code).toBe("ORDER_VALIDATION_FAILED");
+    expect(extraField.statusCode).toBe(400);
+    expect(extraField.json().code).toBe("ORDER_VALIDATION_FAILED");
+  });
+});
+
+describe("GET /orders/lookup", () => {
+  it("returns matching facts including price mode and no customer-authored fields", async () => {
+    const local = fixture();
+    const order = await negotiableOrder(local);
+    await post(
+      local.app,
+      "/orders/agreed-prices",
+      agreedPriceBody(order.publicId),
+      "agreed-key-0010",
+    );
+
+    const response = await local.app.inject({
+      method: "GET",
+      url: `/orders/lookup?order_public_id=${order.publicId}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body).toMatchObject({
+      order_public_id: order.publicId,
+      order_id: order.id,
+      price_mode: "negotiable",
+      agreed_price: { amount_minor: 2200, currency: "SAR" },
+    });
+    for (const forbidden of [
+      "customer_public_id",
+      "order_request_id",
+      "stops",
+      "shipment",
+      "notes",
+    ]) {
+      expect(Object.keys(body)).not.toContain(forbidden);
+    }
+  });
+
+  it("uses validation and not-found codes for lookup failures", async () => {
+    const { app } = fixture();
+    const malformed = await app.inject({ method: "GET", url: "/orders/lookup" });
+    const missing = await app.inject({
+      method: "GET",
+      url: "/orders/lookup?order_public_id=ORD-9999999999",
+    });
+
+    expect(malformed.statusCode).toBe(400);
+    expect(malformed.json().code).toBe("ORDER_VALIDATION_FAILED");
+    expect(missing.statusCode).toBe(404);
+    expect(missing.json().code).toBe("ORDER_NOT_FOUND");
   });
 });
 

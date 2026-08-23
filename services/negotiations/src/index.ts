@@ -32,10 +32,13 @@
  *     `/health`, `src/runner.ts` as the only transaction seam, `onlyKeys()` on every
  *     request body, and one error handler that is the sole author of a status code. See
  *     `docs/04-api/NEGOTIATION_HTTP.md`.
- *   - **MR 5/6** — the real `DispatchOfferPort` (dispatch 8089) and `AgreedPricePort`
- *     (orders 8087) over HTTP, the bot flows, and the declared `orders` migration
- *     (`agreed_amount_minor` and friends). Until then `infrastructure/runtime.ts` wires
- *     two ports that REFUSE by name rather than pretend to succeed.
+ *   - **MR 5/6 (landed)** — the real `DispatchOfferPort` (dispatch 8089 + orders 8087,
+ *     because the snapshot spans two ownerships) and `AgreedPricePort` (orders 8087) over
+ *     HTTP, chosen from the environment in `infrastructure/outbound-wiring.ts`; the bot
+ *     flows; and the declared `orders` migration (`agreed_amount_minor` and friends).
+ *     With no URLs configured, `infrastructure/runtime.ts` still wires two ports that
+ *     REFUSE by name rather than pretend to succeed. See `docs/04-api/NEGOTIATION_HTTP.md`.
+ *     There is now a `fetch` in this package — in those two adapters and nowhere else.
  *   - **MR 6/6** — the exit-gate E2E package and its CI job.
  *
  * ## The one rule a reader must not miss
@@ -64,6 +67,9 @@ export * from "./infrastructure/drizzle/db.js";
 export * from "./infrastructure/drizzle/repository.js";
 export * from "./infrastructure/drizzle/transaction.js";
 export * from "./infrastructure/runtime.js";
+export * from "./infrastructure/http-dispatch-offer.js";
+export * from "./infrastructure/http-agreed-price.js";
+export * from "./infrastructure/outbound-wiring.js";
 
 export * from "./use-cases/shared.js";
 export * from "./use-cases/expiry-core.js";

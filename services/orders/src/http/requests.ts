@@ -54,6 +54,7 @@ import {
   ORDER_TYPES,
   ORDER_VEHICLE_CLASSES,
   ORDER_PUBLIC_ID_PATTERN,
+  type AgreedPriceRecord,
   type OrderIntakeRequest,
   type TransitionRequest,
 } from "@wasla/contracts-order";
@@ -318,6 +319,70 @@ function optionalNumber(
     throw invalid(`${field} يجب أن يكون عدداً`, field, traceId);
   }
   return value;
+}
+
+/** The record endpoint closes its body so a misspelled financial field is never ignored. */
+function assertOnlyFields(
+  body: Record<string, unknown>,
+  allowed: readonly string[],
+  traceId?: string,
+): void {
+  for (const field of Object.keys(body)) {
+    if (!allowed.includes(field)) {
+      throw invalid(`${field} ليس حقلاً منشوراً في هذا الجسم`, field, traceId);
+    }
+  }
+}
+
+/** `POST /orders/agreed-prices` body → a complete negotiation record. */
+export function toAgreedPriceRecord(raw: unknown, traceId?: string): AgreedPriceRecord {
+  const body = asObject(raw, "جسم السعر المتفق عليه", traceId);
+  assertOnlyFields(
+    body,
+    [
+      "order_public_id",
+      "negotiation_id",
+      "driver_public_id",
+      "amount_minor",
+      "currency",
+      "agreed_at",
+    ],
+    traceId,
+  );
+  const orderPublicId = requireString(body, "order_public_id", traceId);
+  if (!ORDER_PUBLIC_ID_PATTERN.test(orderPublicId)) {
+    throw invalid("order_public_id يجب أن يكون ORD-##########", "order_public_id", traceId);
+  }
+  const negotiationId = requireString(body, "negotiation_id", traceId);
+  if (!UUID_PATTERN.test(negotiationId)) {
+    throw invalid("negotiation_id يجب أن يكون UUID", "negotiation_id", traceId);
+  }
+  const amountMinor = body.amount_minor;
+  if (
+    typeof amountMinor !== "number" ||
+    !Number.isSafeInteger(amountMinor) ||
+    amountMinor < 1
+  ) {
+    throw invalid("amount_minor يجب أن يكون عدداً صحيحاً موجباً", "amount_minor", traceId);
+  }
+  const currency = requireString(body, "currency", traceId);
+  if (!/^[A-Z]{3}$/u.test(currency)) {
+    throw invalid("currency يجب أن تكون رمز ISO من ثلاثة أحرف كبيرة", "currency", traceId);
+  }
+  const agreedAt = requireString(body, "agreed_at", traceId);
+  if (Number.isNaN(Date.parse(agreedAt))) {
+    throw invalid("agreed_at يجب أن يكون تاريخاً ووقتاً صالحين", "agreed_at", traceId);
+  }
+  const driverPublicId = requireString(body, "driver_public_id", traceId);
+  assertPublicIdShape("driver_public_id", driverPublicId, traceId);
+  return {
+    order_public_id: orderPublicId,
+    negotiation_id: negotiationId,
+    driver_public_id: driverPublicId,
+    amount_minor: amountMinor,
+    currency,
+    agreed_at: agreedAt,
+  };
 }
 
 /**

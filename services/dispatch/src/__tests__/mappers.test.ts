@@ -16,8 +16,16 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { toApiJob, toApiOffer, toApiOfferList, toApiRules, toApiTickResult } from "../mappers.js";
+import {
+  offerDetailToWire,
+  toApiJob,
+  toApiOffer,
+  toApiOfferList,
+  toApiRules,
+  toApiTickResult,
+} from "../mappers.js";
 import { createDispatchJob } from "../use-cases/create-job.js";
+import { readDispatchOffer } from "../use-cases/read-job.js";
 import { tick } from "../use-cases/tick.js";
 import { TEST_RULES, ZONE_ID, createHarness, driverId, orderRef, type Harness } from "./harness.js";
 
@@ -126,6 +134,22 @@ describe("toApiOffer", () => {
     // without a breaking change.
     expect(Object.keys(api)).toEqual(["items"]);
     expect(api.items).toHaveLength(2);
+  });
+});
+
+describe("offerDetailToWire", () => {
+  it("keeps DispatchOfferDetail keys aligned with the contract in both directions", async () => {
+    const harness = await jobWithOffers();
+    const offer = (await harness.offers.listForJob(harness.jobId))[0]!;
+    const detail = await readDispatchOffer(harness.deps, { offerId: offer.id });
+    const wire = offerDetailToWire(detail!);
+    const contractKeys = schemaProperties("DispatchOfferDetail");
+    const outputKeys = Object.keys(wire);
+
+    // One direction catches a field the mapper forgot; the other catches an internal
+    // field it accidentally exposed. Both read the canonical OpenAPI file above.
+    expect(outputKeys).toEqual(expect.arrayContaining(contractKeys));
+    expect(contractKeys).toEqual(expect.arrayContaining(outputKeys));
   });
 });
 

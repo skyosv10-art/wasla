@@ -77,6 +77,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/agreed-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * تسجيل سعر تفاوضي متفق عليه
+         * @description هذا نداء خدمة-لخدمة من التفاوض، لذلك لا يحمل `X-Customer-Public-Id`: لا يقرأ
+         *     بيانات العميل ولا يثبت ملكيته، بل يسجل حقيقة مرتبطة بـ`order_public_id` الذي
+         *     تتداوله الخدمات. لا يغيّر حالة الطلب ولا يكتب تدقيق حالة؛ `transitions` هو
+         *     الحاكم الوحيد لدورة الحياة، وواقعة الاتفاق يملك حدثها `negotiations.agreed`.
+         */
+        post: operations["recordAgreedPrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * ملخص طلب لخدمة أخرى
+         * @description القارئ الخدمي يحتاج قرار المطابقة لا النص الذي كتبه مستخدم. لذلك يبقى الرد
+         *     مصغّراً: لا نقاط ولا وصف شحنة ولا ملاحظات ولا عميل؛ توسيعه يفتح حد خصوصية
+         *     بلا حاجة تشغيلية (ADR-009 §7 · ADR-010 القرار 7). ولا توجد
+         *     `X-Customer-Public-Id` لأن هذا ليس مسار قراءة عميل.
+         */
+        get: operations["lookupOrderByPublicId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -225,6 +271,30 @@ export interface components {
             amount_minor: number;
             currency: string;
         };
+        AgreedPriceRecord: {
+            order_public_id: components["schemas"]["OrderPublicId"];
+            /** Format: uuid */
+            negotiation_id: string;
+            driver_public_id: components["schemas"]["WaslaPublicId"];
+            /** Format: int64 */
+            amount_minor: number;
+            currency: string;
+            /** Format: date-time */
+            agreed_at: string;
+        };
+        AgreedPrice: {
+            order_public_id: components["schemas"]["OrderPublicId"];
+            /** Format: uuid */
+            negotiation_id: string;
+            driver_public_id: components["schemas"]["WaslaPublicId"];
+            /** Format: int64 */
+            amount_minor: number;
+            currency: string;
+            /** Format: date-time */
+            agreed_at: string;
+            /** Format: date-time */
+            recorded_at: string;
+        };
         Stop: {
             kind: components["schemas"]["StopKind"];
             /**
@@ -328,6 +398,11 @@ export interface components {
             status_reason_code?: components["schemas"]["ReasonCode"] | null;
             price_mode: components["schemas"]["PriceMode"];
             offered_price?: components["schemas"]["Money"] | null;
+            agreed_price?: components["schemas"]["Money"] | null;
+            /** Format: date-time */
+            agreed_at?: string | null;
+            /** Format: uuid */
+            agreed_negotiation_id?: string | null;
             stops: components["schemas"]["Stop"][];
             shipment?: components["schemas"]["ShipmentDetails"] | null;
             notes?: string | null;
@@ -340,6 +415,20 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at?: string;
+        };
+        OrderSummary: {
+            order_public_id: components["schemas"]["OrderPublicId"];
+            /** Format: uuid */
+            order_id: string;
+            status: components["schemas"]["OrderStatus"];
+            price_mode: components["schemas"]["PriceMode"];
+            order_type: components["schemas"]["OrderType"];
+            vehicle_class: components["schemas"]["VehicleClass"];
+            agreed_price: components["schemas"]["Money"] | null;
+            /** Format: date-time */
+            agreed_at: string | null;
+            /** Format: uuid */
+            agreed_negotiation_id: string | null;
         };
         ErrorResponse: {
             /** @description كود ثابت (stable) — الاختبارات تتحقّق منه لا من النص */
@@ -450,6 +539,76 @@ export interface operations {
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    recordAgreedPrice: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description إلزامي على كل كتابة (§43). مدخل النظام بوت، وضغط الزر مرّتين حالة عادية. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description يصبح `trace_id` في الرد وفي مغلّف الحدث وفي صفّ التدقيق. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreedPriceRecord"];
+            };
+        };
+        responses: {
+            /** @description إعادة التسجيل المطابقة أعادت الأثر السابق */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgreedPrice"];
+                };
+            };
+            /** @description سُجل السعر للمرة الأولى */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgreedPrice"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    lookupOrderByPublicId: {
+        parameters: {
+            query: {
+                order_public_id: components["schemas"]["OrderPublicId"];
+            };
+            header?: {
+                /** @description يصبح `trace_id` في الرد وفي مغلّف الحدث وفي صفّ التدقيق. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ملخص المطابقة */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderSummary"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
         };
     };
     getOrder: {

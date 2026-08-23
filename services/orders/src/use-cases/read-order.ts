@@ -55,3 +55,23 @@ export async function getOrderDetailByPublicId(
   }
   return getOrderDetail(deps, order.id, options);
 }
+
+/**
+ * Read only the order row for service-to-service matching decisions.
+ *
+ * Loading customer text, stops and history here would widen a cross-service
+ * privacy boundary without helping negotiation decide whether it may record.
+ */
+export async function getOrderByPublicId(
+  deps: Pick<OrderDependencies, "repository">,
+  orderPublicId: string,
+  options: { readonly traceId?: string } = {},
+) {
+  const order = await deps.repository.findOrderByPublicId(orderPublicId);
+  if (!order) {
+    throw new OrderError("ORDER_NOT_FOUND", `الطلب ${orderPublicId} غير موجود`, {
+      traceId: options.traceId,
+    });
+  }
+  return order;
+}

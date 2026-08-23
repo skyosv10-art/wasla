@@ -1,7 +1,7 @@
 /**
  * Fastify HTTP app factory for the Order Engine service (MR 4/6).
  *
- * Wires the seven published paths of services/orders/contracts/api.openapi.yml to
+ * Wires the nine published paths of services/orders/contracts/api.openapi.yml to
  * the use cases of MR 2/6, over the ports whose Postgres adapters and Unit of
  * Work arrived in MR 3/6. The factory takes an `OrderRunner` (../runner.ts), not
  * dependencies: the runner decides the transaction boundary, so tests inject the
@@ -12,6 +12,8 @@
  * Routes — exactly the published contract, nothing more:
  *   GET   /health                                             (ops)
  *   POST  /orders/intake                                      (Idempotency-Key)
+ *   POST  /orders/agreed-prices                               (Idempotency-Key)
+ *   GET   /orders/lookup?order_public_id=ORD-...              (service-to-service)
  *   GET   /orders/:orderId                                    (X-Customer-Public-Id)
  *   GET   /orders/:orderId/history                            (X-Customer-Public-Id)
  *   POST  /orders/:orderId/transitions                        (Idempotency-Key)
@@ -59,8 +61,10 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { OrderError } from "../domain/errors.js";
 import type { OrderDetail } from "../domain/model.js";
 import {
+  agreedPriceToWire,
   assignmentToWire,
   intakeCommandFromWire,
+  orderSummaryToWire,
   orderToWire,
   statusHistoryEntryToWire,
   transitionCommandFromWire,
@@ -73,10 +77,12 @@ import {
   resolveAssignment,
 } from "../use-cases/manage-assignments.js";
 import {
+  getOrderByPublicId,
   getOrderDetail,
   getOrderDetailByPublicId,
 } from "../use-cases/read-order.js";
 import { transitionOrder } from "../use-cases/transition-order.js";
+import { recordAgreedPrice } from "../use-cases/record-agreed-price.js";
 
 import { sendOrderError } from "./errors.js";
 import {
@@ -84,6 +90,7 @@ import {
   assertRequestIdLength,
   requireCustomerScope,
   requireIdempotencyKey,
+  toAgreedPriceRecord,
   toAssignmentDriver,
   toAssignmentId,
   toAssignmentResolution,
@@ -216,7 +223,52 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     });
   });
 
+  // Negotiation is a service caller, not a customer read. Requiring customer
+  // scope here would invent authorization semantics for a boundary that carries
+  // no customer identity and would make the public order id unusable across
+  // services.
+  app.post("/orders/agreed-prices", async (request, reply) => {
+    const traceId = request.id;
+    assertRequestIdLength(request.headers, traceId);
+    const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
+    const body = toAgreedPriceRecord(request.body, traceId);
+    const outcome = await runner.write((deps) =>
+      recordAgreedPrice(deps, {
+        orderPublicId: body.order_public_id,
+        negotiationId: body.negotiation_id,
+        driverPublicId: body.driver_public_id,
+        amountMinor: body.amount_minor,
+        currency: body.currency,
+        agreedAt: body.agreed_at,
+        idempotencyKey,
+        traceId,
+      }),
+    );
+    return reply
+      .status(outcome.replayed ? 200 : 201)
+      .send(agreedPriceToWire(outcome.order, body.driver_public_id));
+  });
+
   // --- reads ---------------------------------------------------------------
+
+  // This summary is intentionally registered before `/:orderId`: it is a
+  // service resource, not an order whose literal id happens to be "lookup".
+  app.get("/orders/lookup", async (request, reply) => {
+    const traceId = request.id;
+    assertRequestIdLength(request.headers, traceId);
+    const orderPublicId = (request.query as { order_public_id?: unknown }).order_public_id;
+    if (typeof orderPublicId !== "string" || !/^ORD-\d{10}$/u.test(orderPublicId)) {
+      throw new OrderError(
+        "ORDER_VALIDATION_FAILED",
+        "order_public_id إلزامي ويجب أن يكون ORD-##########",
+        { traceId, details: { field: "order_public_id" } },
+      );
+    }
+    const order = await runner.read((deps) =>
+      getOrderByPublicId(deps, orderPublicId, { traceId }),
+    );
+    return reply.status(200).send(orderSummaryToWire(order));
+  });
 
   app.get("/orders/:orderId", async (request, reply) => {
     const traceId = request.id;

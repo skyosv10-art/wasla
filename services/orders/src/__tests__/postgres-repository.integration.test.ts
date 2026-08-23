@@ -291,6 +291,91 @@ describe.skipIf(!PG_ENABLED)("Order Postgres adapter", () => {
   });
 
   // -------------------------------------------------------------------------
+  // agreed price
+  // -------------------------------------------------------------------------
+
+  it("records the complete agreed-price quartet and reads it back", async () => {
+    await repo.insertOrder(
+      orderInput({ priceMode: "negotiable", offeredPrice: null }),
+    );
+    const recorded = await repo.recordAgreedPrice({
+      orderId: id(1),
+      negotiationId: id(700),
+      amountMinor: 2200,
+      currency: "SAR",
+      agreedAt: T1,
+      recordedAt: T2,
+    });
+
+    expect(recorded).toMatchObject({
+      agreedPrice: { amountMinor: 2200, currency: "SAR" },
+      agreedAt: T1,
+      agreedNegotiationId: id(700),
+    });
+    expect(await repo.recordAgreedPrice({
+      orderId: id(1),
+      negotiationId: id(701),
+      amountMinor: 2300,
+      currency: "SAR",
+      agreedAt: T2,
+      recordedAt: T2,
+    })).toBeNull();
+  });
+
+  it("the canonical database rejects incomplete, non-negotiable and reused agreement evidence", async () => {
+    await repo.insertOrder(orderInput());
+    await expect(
+      pool.query(`UPDATE orders SET agreed_amount_minor = 2200 WHERE id = $1`, [id(1)]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        `UPDATE orders
+         SET agreed_amount_minor = 2200, agreed_currency = 'SAR',
+             agreed_at = $2, agreed_negotiation_id = $3
+         WHERE id = $1`,
+        [id(1), T1, id(700)],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    await repo.insertOrder(
+      orderInput({
+        id: id(2),
+        orderPublicId: "ORD-0000000002",
+        orderRequestId: id(101),
+        idempotencyKey: "key-00000002",
+        priceMode: "negotiable",
+        offeredPrice: null,
+      }),
+    );
+    await pool.query(
+      `UPDATE orders
+       SET agreed_amount_minor = 2200, agreed_currency = 'SAR',
+           agreed_at = $2, agreed_negotiation_id = $3
+       WHERE id = $1`,
+      [id(2), T1, id(700)],
+    );
+    await repo.insertOrder(
+      orderInput({
+        id: id(3),
+        orderPublicId: "ORD-0000000003",
+        orderRequestId: id(102),
+        idempotencyKey: "key-00000003",
+        priceMode: "negotiable",
+        offeredPrice: null,
+      }),
+    );
+    await expect(
+      pool.query(
+        `UPDATE orders
+         SET agreed_amount_minor = 2200, agreed_currency = 'SAR',
+             agreed_at = $2, agreed_negotiation_id = $3
+         WHERE id = $1`,
+        [id(3), T1, id(700)],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+  });
+
+  // -------------------------------------------------------------------------
   // assignments
   // -------------------------------------------------------------------------
 

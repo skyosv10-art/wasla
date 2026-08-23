@@ -293,6 +293,18 @@ describe.skipIf(!PG_ENABLED)("Postgres dispatch repositories", () => {
   });
 
   describe("dispatch_offers", () => {
+    it("finds one offer by id and returns null for an unknown id", async () => {
+      // The offer-detail read joins this lookup to its job. Keeping it a direct
+      // repository proof ensures Postgres returns the same absence shape as memory.
+      const job = await pg.jobs.insert(jobInput(29));
+      const wave = await pg.waves.insert(waveInput(29, job.id, 1));
+      const input = offerInput(29, job.id, wave.id, 1);
+      const inserted = await pg.offers.insert(input);
+
+      expect(await pg.offers.find(input.id)).toEqual(inserted);
+      expect(await pg.offers.find("50000000-0000-4000-8000-000000000999")).toBeNull();
+    });
+
     it("refuses the same driver twice in one job, across waves", async () => {
       // ux_dispatch_offers_job_driver — the guard that stops wave 3 re-asking the
       // driver who declined in wave 1, and it holds even if the exclusion list we

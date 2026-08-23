@@ -104,6 +104,16 @@ export interface ResolveAssignmentInput {
   readonly resolvedAt: string;
 }
 
+/** Set the agreed-price quartet once, without exposing a partial row write. */
+export interface RecordAgreedPriceInput {
+  readonly orderId: string;
+  readonly negotiationId: string;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly agreedAt: string;
+  readonly recordedAt: string;
+}
+
 /**
  * The order repository. One port for orders, stops, history and assignments
  * because they share one transaction boundary: an order whose status moved
@@ -155,6 +165,12 @@ export interface OrderRepository {
   }>;
   insertAssignment(input: InsertAssignmentInput): Promise<Assignment>;
   resolveAssignment(input: ResolveAssignmentInput): Promise<Assignment>;
+  /**
+   * Writes the complete agreed-price quartet only while it is absent.
+   * `null` means another writer got there first, so the use case can classify
+   * the stored value rather than overwriting a negotiation's evidence.
+   */
+  recordAgreedPrice(input: RecordAgreedPriceInput): Promise<Order | null>;
   /** Bind or unbind the accepted assignment carried on the order row. */
   setActiveAssignment(orderId: string, assignmentId: string | null, updatedAt: string): Promise<Order>;
 }

@@ -14,9 +14,11 @@
  */
 
 import type {
+  AgreedPrice as AgreedPriceDto,
   Assignment as AssignmentDto,
   Order as OrderDto,
   OrderIntakeRequest,
+  OrderSummary as OrderSummaryDto,
   StatusHistoryEntry as StatusHistoryEntryDto,
   TransitionRequest,
 } from "@wasla/contracts-order";
@@ -176,6 +178,50 @@ export function statusHistoryEntryToWire(
   };
 }
 
+/** The negotiation response is deliberately narrower than an order representation. */
+export function agreedPriceToWire(
+  order: Order,
+  driverPublicId: string,
+): AgreedPriceDto {
+  if (
+    order.agreedPrice === null ||
+    order.agreedAt === null ||
+    order.agreedNegotiationId === null
+  ) {
+    throw new Error("لا يمكن تمثيل اتفاق سعر غير مكتمل");
+  }
+  return {
+    order_public_id: order.orderPublicId,
+    negotiation_id: order.agreedNegotiationId,
+    driver_public_id: driverPublicId,
+    amount_minor: order.agreedPrice.amountMinor,
+    currency: order.agreedPrice.currency,
+    agreed_at: order.agreedAt,
+    recorded_at: order.updatedAt,
+  };
+}
+
+/** A service reader sees only matching facts, never customer-authored text. */
+export function orderSummaryToWire(order: Order): OrderSummaryDto {
+  return {
+    order_public_id: order.orderPublicId,
+    order_id: order.id,
+    status: order.status,
+    price_mode: order.priceMode,
+    order_type: order.orderType,
+    vehicle_class: order.vehicleClass,
+    agreed_price:
+      order.agreedPrice === null
+        ? null
+        : {
+            amount_minor: order.agreedPrice.amountMinor,
+            currency: order.agreedPrice.currency,
+          },
+    agreed_at: order.agreedAt,
+    agreed_negotiation_id: order.agreedNegotiationId,
+  };
+}
+
 /**
  * A domain order becomes the published `Order`.
  *
@@ -204,6 +250,15 @@ export function orderToWire(
             amount_minor: order.offeredPrice.amountMinor,
             currency: order.offeredPrice.currency,
           },
+    agreed_price:
+      order.agreedPrice == null
+        ? null
+        : {
+            amount_minor: order.agreedPrice.amountMinor,
+            currency: order.agreedPrice.currency,
+          },
+    agreed_at: order.agreedAt,
+    agreed_negotiation_id: order.agreedNegotiationId,
     stops: order.stops.map(stopToWire),
     shipment:
       order.shipment == null

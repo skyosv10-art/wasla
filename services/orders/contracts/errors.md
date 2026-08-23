@@ -45,6 +45,10 @@
 | `ORDER_ACTOR_REF_REQUIRED` | 422 | `actor_type` بشري بلا `actor_ref` | لا فعل بشري بلا فاعل معروف |
 | `ORDER_ACTOR_REF_FORBIDDEN` | 422 | `actor_type = system` مع `actor_ref` | النظام ليس شخصاً |
 | `ORDER_PRICE_MODE_MISMATCH` | 422 | `customer_offer` بلا مبلغ، أو `negotiable` بمبلغ | عرض بلا مبلغ ليس عرضاً |
+| `ORDER_PRICE_NOT_NEGOTIABLE` | 422 | محاولة تسجيل سعر متفق عليه على طلب بعرض عميل | لا يحمل الصف مصدرَي سعر متناقضين |
+| `ORDER_NOT_OPEN_FOR_AGREED_PRICE` | 422 | محاولة تسجيل سعر بعد خروج الطلب من نافذة التفاوض | لا يُعاد تفسير تنفيذٍ جارٍ أو منتهٍ كسعر جديد |
+| `ORDER_AGREED_PRICE_ALREADY_SET` | 409 | للطلب سعر من خيط تفاوض آخر، أو الخيط نفسه مربوط بطلب آخر | خيط واحد = أثر واحد |
+| `ORDER_AGREED_PRICE_MISMATCH` | 409 | إعادة الخيط نفسه بمبلغ أو عملة مختلفين | إعادة المحاولة لا تعيد كتابة الدليل |
 | `ORDER_SHIPMENT_NOT_ALLOWED` | 422 | تفاصيل شحنة على طلب `ride` | |
 | `ORDER_STOPS_INVALID` | 422 | ليست نقطتين، أو ليست (pickup ثمّ dropoff) | |
 | `ORDER_REQUEST_ALREADY_INGESTED` | 409 | `order_request_id` نفسه وصل بمفتاح idempotency مختلف | نيّة واحدة = طلب واحد |

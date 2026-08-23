@@ -146,6 +146,24 @@ export interface DispatchOffer {
 }
 
 /**
+ * One offer joined to the job facts a negotiation consumer needs before opening a
+ * thread.
+ *
+ * `standing` deliberately does not inspect `expiresAt` or a clock. A deadline is
+ * advanced only by a tick; letting a read reinterpret wall-clock time would make two
+ * consumers disagree about the same stored offer and would make opening this endpoint
+ * change the apparent lifecycle without recording the transition.
+ */
+export interface DispatchOfferDetail extends DispatchOffer {
+  readonly orderId: string;
+  readonly orderPublicId: string;
+  readonly orderType: OrderType;
+  readonly vehicleClass: VehicleClass;
+  readonly jobStatus: DispatchJobStatus;
+  readonly standing: boolean;
+}
+
+/**
  * Which reason code closes which outcome.
  *
  * A closed table rather than a free choice at each call site: the reason code is

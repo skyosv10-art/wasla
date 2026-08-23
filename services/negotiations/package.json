@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Negotiation & Chat service — تفاوض ثنائي على سعر عرض إرسال واحد، والاتفاق حدثٌ صريح على جولة مرقّمة (Phase 08 · MR 3/6: مجال نقي + استمرارية Drizzle/Postgres، بلا HTTP بعد).",
+  "description": "WASLA Negotiation & Chat service — تفاوض ثنائي على سعر عرض إرسال واحد، والاتفاق حدثٌ صريح على جولة مرقّمة (Phase 08 · MR 4/6: طبقة HTTP على 8091 فوق مجال نقي واستمرارية Postgres بوحدة عمل).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -14,16 +14,20 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "dev": "tsx watch src/http/server.ts",
+    "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
     "@wasla/contracts-negotiation": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "fastify": "^5.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "vitest": "^2.1.0",
-    "@types/pg": "^8.23.1"
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.12"
   }
 }

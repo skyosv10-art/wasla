@@ -1,0 +1,21 @@
+{
+  "name": "@wasla/reputation-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 09 exit gate — محرّك الطلب الحقيقي يُنتج أحداثه، والسمعة تستهلكها فتصير نتيجةً ثم صفَّ صادرٍ مُسلَّماً (Phase 09 · MR 6/6).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/contracts-order": "workspace:*",
+    "@wasla/contracts-reputation": "workspace:*",
+    "@wasla/orders-service": "workspace:*",
+    "@wasla/reputation-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

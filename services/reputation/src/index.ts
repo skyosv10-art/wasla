@@ -42,6 +42,22 @@ export * from "./use-cases/recompute-score.js";
 export * from "./use-cases/reads.js";
 export * from "./use-cases/run-tick.js";
 
+/**
+ * الحدُّ الداخل والحدُّ الخارج (المراجعة 5/6).
+ *
+ * الداخلُ يقرأ أحداثَ محرّك الطلب ويُترجمها إلى مسوّداتِ وقائع، والخارجُ يُصرّف صندوقَ
+ * الصادر عبر منفذ تسليم. وكلاهما هنا لأنّ حزمةَ بوّابةِ الخروج (المراجعة 6/6) تستوردهما
+ * من سطح الحزمة كما تستورد أيَّ مُهيئٍ إنتاجيّ — لا تُعيد بناءَ نسخةٍ منهما.
+ *
+ * ولا يُصدَّر `PostgresOutboxDrainRunner` من هنا: يسكن `infrastructure/drizzle/` ويُجرّ
+ * سائقَ القاعدة، فيُستورَد بمسارٍ صريحٍ كما يُستورَد `runner.js`.
+ */
+export * from "./inbound/source-events.js";
+export * from "./inbound/translate.js";
+export * from "./inbound/consume-source-event.js";
+export * from "./outbound/event-sink.js";
+export * from "./outbound/drain-outbox.js";
+
 // المُهيئات — الذاكرةُ وحدها هنا، وقيودُها بأسماء قيود القاعدة نفسِها.
 export * from "./infrastructure/constraints.js";
 export * from "./infrastructure/in-memory.js";

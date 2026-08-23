@@ -10,10 +10,14 @@
  * ولِمَ حارسٌ نصّيٌّ ولم يكفِ الاختبارُ السلوكيّ؟ لأنّ `Date.now()` واحداً يُدسّ في
  * دالّةٍ مساعدةٍ يمرّ من كل اختبارٍ سلوكيّ (الساعةُ الحقيقية ساعةٌ صحيحةٌ اليوم) ثم يظهر
  * أوّلَ مرّةٍ كاختبارٍ مُتقلّبٍ عند منتصف الليل، أو كنتيجةٍ لا تُشرح بعد شهر.
+ *
+ * ومنذ المراجعة 3/6 صار للمسح استثناءٌ واحدٌ مُسمّى: ملفّاتُ مُهيئ Drizzle وحدها
+ * تعرف أنّ PostgreSQL موجود، ويحرسها اختبارٌ موجَبٌ يُثبت أنّ المجموعةَ هي هي بالضبط.
+ * الشرحُ الكامل عند `DB_AWARE_FILES` أدناه.
  */
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -48,18 +52,67 @@ interface Offence {
   readonly pattern: string;
 }
 
-function scan(patterns: ReadonlyArray<readonly [string, RegExp]>): readonly Offence[] {
+function scan(
+  patterns: ReadonlyArray<readonly [string, RegExp]>,
+  exempt: ReadonlySet<string> = new Set(),
+): readonly Offence[] {
   const offences: Offence[] = [];
   for (const path of sourceFiles()) {
+    const file = relative(SRC, path).split(sep).join("/");
+    if (exempt.has(file)) continue;
     const code = codeOnly(path);
     for (const [label, pattern] of patterns) {
       if (pattern.test(code)) {
-        offences.push({ file: relative(SRC, path), pattern: label });
+        offences.push({ file, pattern: label });
       }
     }
   }
   return offences;
 }
+
+/**
+ * الملفّاتُ المسموحُ لها وحدها أن تستورد `pg` و`drizzle-orm` — أي أن تعرف أنّ PostgreSQL موجود.
+ *
+ * ## لماذا قائمةُ استثناءٍ ولم يبقَ المنعُ شاملاً كما في المراجعة 2/6
+ *
+ * حتى المراجعة 2/6 كانت الخدمةُ بلا استمرارية، فمنعُ `pg` و`drizzle` في كلِّ `src/` كان
+ * منعاً بلا استثناءٍ لأنّه لم يُحتَجْ إلى واحد. والمراجعةُ 3/6 تُدخل المُهيئ، فإمّا أن
+ * يُصرَّح بمكانه أو يُحذف الحارسُ — والثاني هو التخفيف الحقيقيّ.
+ *
+ * وهذا ليس تضييقاً للحارس بل شدٌّ له، ودليلُه ثلاثةُ أمور:
+ *
+ *   1. كلُّ ملفٍّ خارج هذه القائمة يبقى ممسوحاً بـ**كلِّ** الأنماط كما كان — لا مجلّدَ
+ *      أُخرج من المسح، بما فيه `infrastructure/in-memory.ts`.
+ *   2. الأنماطُ الأخرى (`fetch`، `node:fs`، `process.env`، `Date.now`، العقوبة، النصّ
+ *      الحرّ) تُطبَّق على الأربعةِ أيضاً بلا استثناء: مُهيئُ القاعدة يقرأ ساعةَ الحاقن
+ *      ويستقبل نصَّ الاتصال وسيطاً، ولا يقرأ بيئةً ولا ملفاً.
+ *   3. اختبارٌ **موجَبٌ** يُثبت أنّ مجموعةَ الملفات التي تستورد `pg`/`drizzle-orm` تساوي
+ *      هذه القائمةَ تماماً — فالقائمةُ لا تتّسع بالإهمال ولا تبقى بعد حذف مُهيئها.
+ *
+ * الأمرُ الثالث هو الفرقُ الجوهريّ: المنعُ الشامل كان يقول «لا أحد»، وهذا يقول «هؤلاء
+ * وحدهم ولا غيرُهم» — وهو قولٌ أقوى، لأنّه يُفشِل نفسَه على استيرادٍ زائدٍ **وعلى**
+ * استيرادٍ ناقص. والمُوثَّقُ في `docs/02-architecture/REPUTATION_PERSISTENCE.md`
+ * §الانحرافات.
+ */
+const DB_DRIVER_FILES: readonly string[] = [
+  "infrastructure/drizzle/db.ts",
+  "infrastructure/drizzle/repository.ts",
+  "infrastructure/drizzle/schema.ts",
+];
+
+/**
+ * ومن يجوز له أن **يذكر** مُهيئَ Drizzle بمساره: الثلاثةُ أعلاه، ووحدةُ العمل
+ * التي تربطها، والمُشغّلُ الذي يركّبها.
+ *
+ * والفرقُ بين القائمتين مقصودٌ: `transaction.ts` و`runner.ts` لا يعرفان `pg` ولا
+ * `drizzle-orm` — لا استعلامَ فيهما ولا جدولَ، بل تركيبٌ لمنافذٍ حول مقبضٍ. والحارسُ
+ * يُميّز المرتبتين بدل أن يخلطهما تحت «ملفاتُ قاعدة».
+ */
+const DB_PATH_AWARE_FILES: readonly string[] = [
+  ...DB_DRIVER_FILES,
+  "infrastructure/drizzle/transaction.ts",
+  "runner.ts",
+];
 
 describe("مسحُ المصدر", () => {
   it("يجد ملفاتٍ فعلاً — فلا يمرّ الحارسُ على قائمةٍ فارغة", () => {
@@ -104,19 +157,59 @@ describe("لا ساعةَ مخفيّة", () => {
 });
 
 describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ ملفات", () => {
-  it("لا استدعاءَ شبكةٍ ولا استيرادَ مُشغّلٍ ولا قراءةَ ملفٍّ في طبقة المجال", () => {
+  it("لا استدعاءَ شبكةٍ ولا قراءةَ ملفٍّ ولا بيئةَ نظامٍ — في أيِّ ملفٍّ بلا استثناء", () => {
     expect(
       scan([
         ["fetch", /\bfetch\s*\(/],
         ["axios", /from\s+["']axios["']/],
         ["http", /from\s+["']node:https?["']/],
-        ["drizzle", /from\s+["'][^"']*drizzle[^"']*["']/],
-        ["pg", /from\s+["']pg["']/],
         ["node:fs", /from\s+["']node:fs["']/],
         ["node:child_process", /from\s+["']node:child_process["']/],
         ["process.env", /\bprocess\s*\.\s*env\b/],
       ]),
     ).toEqual([]);
+  });
+
+  it("لا استيرادَ مُشغّلِ قاعدةٍ ولا دلالةَ على مُهيئه خارج القائمة", () => {
+    expect(
+      scan(
+        [
+          ["drizzle", /from\s+["'][^"']*drizzle[^"']*["']/],
+          ["pg", /from\s+["']pg["']/],
+        ],
+        new Set(DB_PATH_AWARE_FILES),
+      ),
+    ).toEqual([]);
+  });
+
+  it("ومن يعرف `pg`/`drizzle-orm` هذه الملفاتُ بالضبط — لا أقلَّ ولا أكثر", () => {
+    /**
+     * الاختبارُ الموجَبُ الذي يمنع قائمةَ الاستثناء من أن تتحوّل إلى بابٍ مفتوح: يُحسب
+     * الواقعُ من المصدر (من يستورد فعلاً `pg` أو `drizzle-orm`) ويُقارَن بالقائمة. فإن
+     * ظهر مستوردٌ زائدٌ فشل الاختبار، وإن حُذف أحدُ المذكورين من المُهيئ فشل أيضاً — وهو
+     * ما لا يستطيع منعٌ شاملٌ أن يفعله.
+     */
+    const importers = sourceFiles()
+      .filter((path) => {
+        const code = codeOnly(path);
+        return (
+          /from\s+["']pg["']/.test(code) || /from\s+["'][^"']*drizzle-orm[^"']*["']/.test(code)
+        );
+      })
+      .map((path) => relative(SRC, path).split(sep).join("/"))
+      .sort();
+    expect(importers).toEqual([...DB_DRIVER_FILES]);
+  });
+
+  it("ولا ملفَّ من المُهيئ مُصدَّرٌ من نقطة الدخول", () => {
+    /**
+     * `index.ts` سطحُ الحزمة العامّ: تصديرُ `runner.ts` أو أيِّ ملفٍّ من `drizzle/` منه
+     * كان سيجرّ `pg` إلى كلِّ من يستورد الخدمةَ — ومنهم حزمُ اختبارٍ لا قاعدةَ لها.
+     * المراجعةُ 4/6 تستورد المُهيئَ بمسارِه الصريح.
+     */
+    const entry = codeOnly(join(SRC, "index.ts"));
+    expect(entry).not.toContain("drizzle");
+    expect(entry).not.toContain("runner");
   });
 
   it("لا استيرادَ يعبر حدَّ الحزمة إلى خدمةٍ أخرى", () => {
@@ -132,13 +225,17 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     ).toEqual([]);
   });
 
-  it("التبعيّةُ الوحيدةُ المُعلَنة هي حزمةُ العقود", () => {
+  it("التبعيّاتُ المُعلَنةُ هي العقودُ ومُشغّلُ القاعدةِ وحدها — لا HTTP ولا سواه", () => {
     const manifest: unknown = JSON.parse(
       readFileSync(join(SRC, "..", "package.json"), "utf8"),
     );
     const dependencies = (manifest as { readonly dependencies?: Record<string, string> })
       .dependencies;
-    expect(Object.keys(dependencies ?? {})).toEqual(["@wasla/contracts-reputation"]);
+    expect(Object.keys(dependencies ?? {}).sort()).toEqual([
+      "@wasla/contracts-reputation",
+      "drizzle-orm",
+      "pg",
+    ]);
   });
 });
 

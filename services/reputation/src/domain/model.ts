@@ -282,11 +282,22 @@ export interface FraudSignalDraft {
 // سجلّ المعالجة الواحدة
 // ---------------------------------------------------------------------------
 
+/**
+ * صفُّ المعالجة الواحدة — أعمدةُ العقد وحدها.
+ *
+ * `operation` هو `scope` في `contracts/schema.sql` (اسمان لمعنى واحد، تُترجَم في
+ * المستودع)، و`requestFingerprint` هو `payload_fingerprint`.
+ *
+ * ولا حقلَ `subjectType` هنا: لا عمودَ له في العقد المُجمَّد، ولا شيءَ يقرؤه. وإضافةُ
+ * حقلٍ يعيش في الذاكرة ويختفي في Postgres كانت ستجعل `find()` في المُهيئين تُعيد صفّين
+ * غيرَ متساويين — فتُصلَح المطابقةُ بمُحوّلٍ يتغاضى عن الحقل، وذاك تغاضٍ يُخفي أوّلَ فرقٍ
+ * حقيقيّ. والانحرافُ مُعلَنٌ في `docs/02-architecture/REPUTATION_PERSISTENCE.md`
+ * §الانحرافات.
+ */
 export interface ReputationIdempotencyRow {
   readonly idempotencyKey: string;
   readonly operation: string;
   readonly requestFingerprint: string;
-  readonly subjectType: ReputationSubjectType | null;
   readonly subjectPublicId: string | null;
   readonly createdAt: string;
 }

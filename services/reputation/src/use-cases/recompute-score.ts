@@ -93,7 +93,6 @@ export async function recomputeScore(
       idempotencyKey: input.idempotencyKey,
       operation: "recompute_score",
       fingerprint,
-      subjectType,
       subjectPublicId,
       at,
     });

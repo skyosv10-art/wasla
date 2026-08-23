@@ -7,6 +7,8 @@
  * الصيغة يُغيّر `domain/score.ts` ويواجه اختباراتَه.
  */
 
+import { createHash } from "node:crypto";
+
 import type {
   ReputationRecomputeTrigger,
   ReputationSubjectType,
@@ -69,9 +71,21 @@ export function stableStringify(value: unknown): string {
   return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`).join(",")}}`;
 }
 
-/** بصمةُ حمولةٍ = تسلسلُها الحتميّ. تُخزَّن نصّاً كي يُقرأ الفرقُ عند التشخيص. */
+/**
+ * بصمةُ حمولةٍ = SHA-256 لتسلسلها الحتميّ، ستّونَ وأربعةُ محرفاً من الست عشري.
+ *
+ * والطولُ ليس تفصيلاً جمالياً: العقدُ يُلزم
+ * `CHECK (char_length(payload_fingerprint) = 64)` على `reputation_idempotency`، فبصمةٌ
+ * هي التسلسلُ الخام كانت ستُقبَل في الذاكرة وتُرفَض في Postgres — وذاك بعينه الانحرافُ
+ * الذي وُجدت حزمةُ المطابقة لكشفه (اكتُشف في المراجعة 3/6 وأُصلح عند مصدره لا
+ * بترحيلٍ يُخفّف القيد).
+ *
+ * والتلبيدُ لا يُفقد شيئاً هنا: البصمةُ تُقارَن ولا تُقرأ، والفرقُ عند التشخيص يظهر من
+ * `scope` و`subject_public_id` المُخزَّنين بجانبها. أمّا حفظُ حمولةِ الطلب نصّاً في
+ * القاعدة فكان سيُخزّن مُعرّفاتٍ وأرقاماً بلا حاجةٍ (`docs/00-rules` §الخصوصية).
+ */
 export function fingerprintOf(payload: unknown): string {
-  return stableStringify(payload);
+  return createHash("sha256").update(stableStringify(payload)).digest("hex");
 }
 
 // ---------------------------------------------------------------------------
@@ -114,7 +128,6 @@ export async function rememberIdempotency(
     readonly idempotencyKey: string;
     readonly operation: string;
     readonly fingerprint: string;
-    readonly subjectType: ReputationSubjectType | null;
     readonly subjectPublicId: string | null;
     readonly at: string;
   },
@@ -123,7 +136,6 @@ export async function rememberIdempotency(
     idempotencyKey: input.idempotencyKey,
     operation: input.operation,
     requestFingerprint: input.fingerprint,
-    subjectType: input.subjectType,
     subjectPublicId: input.subjectPublicId,
     createdAt: input.at,
   });

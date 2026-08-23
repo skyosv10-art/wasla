@@ -1,0 +1,778 @@
+openapi: 3.1.0
+info:
+  title: WASLA Reputation & Fraud Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة السمعة وإشارات الاحتيال وفق ADR-014.
+
+    **الحدود الملزمة:**
+    - **الواقعة تُخزَّن والنقطة تُشتقّ**: `POST /reputation/facts` يسجّل واقعةً بمصدرها، والنتيجة تُحسب منها ولا تُكتب مباشرة. لا مسار في هذا العقد يضبط نقاطاً يدوياً: رقمٌ يكتبه إنسان رقمٌ لا يمكن تفسيره ولا إعادة إنتاجه.
+    - **إعادة الحساب حقٌّ لا استثناء**: `POST /reputation/scores/{subjectType}/{subjectPublicId}/recompute` يُعيد بناء النتيجة من الدفتر وحده. خطأٌ في المعادلة يُصلَح بإعادة حساب لا بترحيلٍ يدويّ.
+    - **التسليم at-least-once**: `Idempotency-Key` إلزامي على كل فعل، وواقعةٌ سُجّلت من نفس المصدر تُعاد بـ`200` ولا تُسجَّل ثانية. تضاعفُ نقطةٍ بسبب إعادة تسليمٍ عادية عيبٌ صامت لا يُكتشف إلّا بعد شهور.
+    - **الخدمة لا تعاقب** (القرار 7): لا مسار يُوقف سائقاً ولا يحجب عميلاً ولا يخفض سعراً. الإيقاف يملكه `services/drivers` (ADR-012 القرار 3)، والقرار الإداريّ يملكه Phase 15. ومخرَجُ هذه الخدمة حقائق يبني عليها غيرُها.
+    - **إشارة الاحتيال تُقرأ ولا تُبَتّ**: `GET /reputation/fraud-signals` فقط. لا `PATCH` ولا `dismiss`: البتّ في الإشارة مراجعةٌ بشرية لا يملكها هذا الطور، ومسارٌ لا مالك له يُستعمل بلا سياسة.
+    - **التقييم درجةٌ ورمزُ سبب بلا نصّ** (القرار 5): لا حقل `comment` في أي حمولة. النصّ الحرّ يحتاج تنقيحاً وحجباً ومالكاً، وذاك Phase 16.
+    - **الأرقام نسخةُ قواعد مجمّدة**: `GET /reputation/rulesets` يُعيد الأوزان والعتبات والنوافذ. كل نتيجةٍ وإشارةٍ تحمل `ruleset_version`، فيبقى «لماذا كانت نقاطي 62؟» سؤالاً له جواب.
+    - **الزمن نبضة لا مؤقّت**: النوافذ المتحرّكة وتلاشي القديم وإعادة الحساب المستحقّة تجري في `POST /reputation/tick`، فلا وظيفة خلفية خفيّة ولا انتظار في الاختبار.
+    - **لا بيانات شخصية ولا مُعرّف قناة** (ADR-007): لا اسم ولا هاتف ولا إحداثية ولا `chat_id` في هذا العقد.
+
+    **لا يوجد `502` في هذا العقد** (نفس قرار Phase 05 · MR 5/6 وPhase 08): لا تابعَ متزامناً
+    يُنتظر جوابه هنا. والخدمة **مستهلكٌ** لأحداث محرّك الطلب، وتعثّرُ الناقل يظهر في `GET /health`
+    و`last_tick_at` لا في رمز خطأ على استجابةٍ ناجحة.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8092
+    description: التشغيل المحلي
+
+tags:
+  - name: facts
+    description: دفتر الوقائع — تسجيلٌ وقراءة
+  - name: scores
+    description: النتيجة والرتبة وإعادة الحساب
+  - name: ratings
+    description: التقييم البشريّ المقيَّد بواقعة
+  - name: fraud
+    description: إشارات الاحتيال — قراءةٌ فقط
+  - name: rulesets
+    description: نسخ القواعد المجمّدة
+  - name: ops
+    description: التشغيل والنبضة
+
+paths:
+  /reputation/facts:
+    post:
+      tags: [facts]
+      summary: تسجيل واقعةٍ مُشتقّة من حدثٍ منشور
+      operationId: recordReputationFact
+      description: |
+        المدخل الوحيد إلى الدفتر، ويستدعيه مستهلكُ أحداث محرّك الطلب (المراجعة 5/6). الحمولة
+        **تحمل مصدرها**: نوع الحدث ومُعرّفه وترتيبه على الطلب (`source_sequence`). وإعادةُ نفس
+        المصدر تُعيد الواقعة نفسها بـ`200` بلا صفٍّ ثانٍ ولا نقطةٍ مضاعفة — القيد
+        `ux_reputation_facts_source` في القاعدة هو الحارس، لا فحصٌ في الكود يسقط بأوّل تشغيلٍ متوازٍ.
+
+        وتسجيلُ الواقعة يجرّ إعادة حساب النتيجة في **نفس المعاملة**: نقطةٌ تتخلّف عن واقعتها
+        تجعل القراءة تكذب بين لحظتين.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FactRecordRequest' }
+      responses:
+        '201':
+          description: سُجّلت الواقعة ومعها النتيجة بعد الحساب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FactRecordResult' }
+        '200':
+          description: نفس المصدر أو نفس مفتاح التفرّد سُجّل سابقاً — تُعاد الواقعة نفسها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FactRecordResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [facts]
+      summary: قراءة الدفتر بمُرشِّح إلزامي
+      operationId: listReputationFacts
+      description: |
+        مُرشِّح واحد على الأقل مطلوب (`subjectPublicId` أو `orderPublicId`): دفترٌ يُقرأ بلا
+        مُرشِّح يعني تصديرَ سلوك كل الناس بطلبٍ واحد. والقراءة أحدثُ الوقائع أولاً لأن السؤال
+        المعتاد «ماذا جرى أخيراً؟».
+      parameters:
+        - name: subjectPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: subjectType
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SubjectType' }
+        - name: orderPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OrderPublicId' }
+        - name: factKind
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/FactKind' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الوقائع المطابقة، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationFactList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/scores/{subjectType}/{subjectPublicId}:
+    get:
+      tags: [scores]
+      summary: قراءة نتيجة شخصٍ ورتبته
+      operationId: getReputationScore
+      description: |
+        `404` لمن لا وقائع له، لا نتيجةٌ افتراضية: **نقاطٌ مُختلَقة لغريبٍ أسوأ من غيابها** —
+        مستهلكٌ يرى 60 لا يعرف أهي حصيلةُ عملٍ أم قيمةُ بدايةٍ لمن لم يعمل. والحمولة تحمل
+        `ruleset_version` و`fact_count` و`computed_at` كي يكشف القارئ حساباً قديماً بلا سؤال.
+      parameters:
+        - $ref: '#/components/parameters/SubjectType'
+        - $ref: '#/components/parameters/SubjectPublicId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: النتيجة والرتبة ومصدر الحساب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationScore' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/scores/{subjectType}/{subjectPublicId}/recompute:
+    post:
+      tags: [scores]
+      summary: إعادة بناء النتيجة من الدفتر وحده
+      operationId: recomputeReputationScore
+      description: |
+        الطريق الذي يجعل القرار 3 قابلاً للتنفيذ لا شعاراً: النتيجة **مُشتقّة**، وحذفُها بالكامل
+        عملٌ بلا خسارة لأن هذا المسار يُعيدها كما كانت من الوقائع ونسخة القواعد. لا `requestBody`
+        عمداً: الفعل على الحالة المخزّنة، وإعلان جسمٍ فارغ يجعل الخادم يرفض طلباً صحيحاً بـ`400`.
+
+        و`404` لمن لا وقائع له: لا يُختلق دفترٌ لمن لم يُعامل النظام.
+      parameters:
+        - $ref: '#/components/parameters/SubjectType'
+        - $ref: '#/components/parameters/SubjectPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: أُعيد الحساب — وقد تكون النتيجة نفسها بلا تغيير
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationScore' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/ratings:
+    post:
+      tags: [ratings]
+      summary: تسجيل تقييمٍ على طلبٍ اكتمل
+      operationId: submitReputationRating
+      description: |
+        التقييم **حقٌّ يُشتقّ من واقعة** لا مدخلٌ حرّ: يُرفض إن لم تكن للطلب واقعةُ اكتمالٍ في
+        الدفتر (`REPUTATION_ORDER_NOT_COMPLETED`)، أو مضت نافذة `rating_window_hours`
+        (`REPUTATION_RATING_WINDOW_CLOSED`)، أو كان المُقيِّم هو المُقيَّم
+        (`REPUTATION_RATING_SELF_FORBIDDEN`).
+
+        ودرجةٌ ورمزُ سبب فقط: **لا حقل تعليق في هذا العقد** (القرار 5). والتقييم لا يكتب نقاطاً
+        بنفسه بل يُنتج واقعةً من نوع `rating_received`، فيبقى للنقطة مصدرٌ واحد الشكل.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RatingSubmitRequest' }
+      responses:
+        '201':
+          description: سُجّل التقييم ومعه الواقعة التي أنتجها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RatingSubmitResult' }
+        '200':
+          description: نفس مفتاح التفرّد سُجّل سابقاً — يُعاد التقييم نفسه
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RatingSubmitResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [ratings]
+      summary: قراءة التقييمات بمُرشِّح إلزامي
+      operationId: listReputationRatings
+      description: |
+        مُرشِّح واحد على الأقل مطلوب (`subjectPublicId` أو `orderPublicId`). والدرجات تُعاد كما
+        سُجّلت بلا متوسّطٍ محسوب هنا: المتوسّط يعيش في النتيجة بقواعدها، وحسابُه في مسارٍ ثانٍ
+        يُنشئ رقمين يختلفان.
+      parameters:
+        - name: subjectPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: orderPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OrderPublicId' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: التقييمات المطابقة، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationRatingList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/fraud-signals:
+    get:
+      tags: [fraud]
+      summary: قراءة إشارات الاحتيال
+      operationId: listFraudSignals
+      description: |
+        قراءةٌ فقط: لا مسار يُنشئ إشارةً يدوياً (تُنشَأ من الوقائع في النبضة)، ولا مسار يبتّ فيها
+        (مراجعةٌ بشرية لا يملكها هذا الطور — القرار 6). وكل إشارةٍ تُعيد قاعدتها ونافذتها وعددها
+        وعتبتها ونسخةَ قواعدها: إشارةٌ لا تشرح نفسها لا يمكن الردّ عليها.
+      parameters:
+        - name: subjectPublicId
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: subjectType
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SubjectType' }
+        - name: ruleCode
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/FraudRuleCode' }
+        - name: severity
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Severity' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الإشارات المطابقة، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FraudSignalList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/rulesets:
+    get:
+      tags: [rulesets]
+      summary: قائمة نسخ القواعد
+      operationId: listReputationRulesets
+      responses:
+        '200':
+          description: النسخ، أحدثها أولاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationRulesetList' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/rulesets/{rulesetVersion}:
+    get:
+      tags: [rulesets]
+      summary: قراءة نسخة قواعد بأوزانها وعتباتها
+      operationId: getReputationRuleset
+      description: |
+        الأوزان والعتبات **مُعلَنة للقراءة** لا مخفيّة في الكود: من يريد أن يشرح لسائقٍ لماذا نقصت
+        نقاطه يحتاج القاعدة نفسها، وليس وصفاً لها في وثيقة قد تتخلّف.
+      parameters:
+        - $ref: '#/components/parameters/RulesetVersion'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: النسخة وأوزانها وعتبات قواعد الاحتيال فيها
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReputationRuleset' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /reputation/tick:
+    post:
+      tags: [ops]
+      summary: نبضة الزمن — النوافذ وتلاشي القديم وإعادة الحساب المستحقّة
+      operationId: tickReputation
+      description: |
+        تقرأ النبضة الاستحقاقات المخزّنة (`next_recompute_at`) والنوافذ المتحرّكة، فتُعيد حساب ما
+        استحقّ وترفع إشارات القواعد التي تجاوزت عتباتها. لا `requestBody` هنا عمداً: النبضة فعلٌ
+        على الساعة والحالة المخزّنة.
+
+        والفشل في شخصٍ واحد **يُعدّ ولا يُرمى**: النبضة عمليّة جماعية، ورفعُ خطأٍ لأجل صفٍّ واحد
+        يُوقف بقيّة العمل ويُخفي الفشل عن العدّاد الذي يُراقَب.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: اكتملت النبضة، وقد تكون العدّادات صفراً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TickResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /health:
+    get:
+      tags: [ops]
+      summary: فحص جاهزية الخدمة
+      operationId: health
+      description: |
+        `memory` يجعل النتيجة `degraded` في التشغيل الحقيقي لأن إعادة التشغيل تُفقد الدفتر، وهو
+        الأصل الذي لا يُعاد بناؤه من شيء. و`last_tick_at` مؤشّر غياب المُنادي الدوريّ: بلا نبضة
+        تتقادم النتائج ولا تُرفَع إشارة ولا يشتكي أحد.
+      responses:
+        '200':
+          description: حالة الخدمة وطبقة الاستمرارية
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+
+components:
+  parameters:
+    SubjectType:
+      name: subjectType
+      in: path
+      required: true
+      description: العميل والسائق كلاهما تُقاس سمعته؛ المسار يُصرّح بالجانب كي لا يُخمَّن من شكل المُعرّف.
+      schema: { $ref: '#/components/schemas/SubjectType' }
+    SubjectPublicId:
+      name: subjectPublicId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    RulesetVersion:
+      name: rulesetVersion
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي على كل فعل يُغيّر حالة، لأن إعادة المحاولة بعد انقطاع الشبكة لا يجوز أن تُنتج واقعةً ثانية ولا نقطةً مضاعفة.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الخطأ؛ فصل التتبّع عن حمولة العمل يمنع أن يصير المُعرّف دليلاً تجارياً.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque؛ لا يُحلّل ولا يربط مباشرة بقاعدة هوية أخرى.
+
+    OrderPublicId:
+      type: string
+      pattern: '^ORD-[0-9]{10}$'
+      description: مُعرّف الطلب كما يملكه محرّك الطلب؛ مرجع opaque بلا FK عابر للخدمات.
+
+    SubjectType:
+      type: string
+      enum: [customer, driver]
+      description: من تُقاس سمعته. الطرفان لا طرفٌ واحد.
+
+    FactKind:
+      type: string
+      enum:
+        - order_completed
+        - order_cancelled_by_customer
+        - order_cancelled_by_driver
+        - assignment_accepted
+        - assignment_rejected
+        - assignment_timed_out
+        - rating_received
+      description: قائمة مُقفلة، كل نوعٍ فيها له حدثٌ منشور يُنتجه اليوم. نوعٌ لا مصدر له لا يُضاف.
+
+    ActorType:
+      type: string
+      enum: [system, customer, driver, partner, admin]
+      description: بمفردات محرّك الطلب كما وصلت في الحدث. مرجعٌ لا حُكم.
+
+    Tier:
+      type: string
+      enum: [new, standard, trusted, under_watch]
+      description: رتبةٌ مُشتقّة من النتيجة وعتبات النسخة. تسميةٌ تُقرأ ولا تُنفَّذ (القرار 7).
+
+    RecomputeTrigger:
+      type: string
+      enum: [fact_recorded, tick, manual_recompute]
+
+    RatingReasonCode:
+      type: string
+      enum:
+        - on_time
+        - late_arrival
+        - courteous
+        - poor_conduct
+        - unsafe_driving
+        - vehicle_condition
+        - route_deviation
+        - no_show
+      description: قائمة مُقفلة تُحصى وتُقارَن، بخلاف نصٍّ حرّ يُقرأ ولا يُقاس.
+
+    FraudRuleCode:
+      type: string
+      enum:
+        - repeated_customer_cancellation
+        - repeated_driver_cancellation
+        - accept_then_abandon
+        - offer_timeout_streak
+        - rating_extremity_burst
+
+    Severity:
+      type: string
+      enum: [low, medium, high]
+
+    ReputationFact:
+      type: object
+      required:
+        [id, subject_type, subject_public_id, fact_kind, order_public_id,
+         source_event_type, source_event_id, source_sequence, actor_type,
+         occurred_at, recorded_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        subject_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        fact_kind: { $ref: '#/components/schemas/FactKind' }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        source_event_type: { type: string, minLength: 3 }
+        source_event_id: { type: string, format: uuid }
+        source_sequence:
+          type: integer
+          minimum: 1
+          description: ترتيب الانتقال على الطلب كما جاء في الحدث؛ مفتاحُ عدم التكرار لا معلومةً زائدة.
+        actor_type: { $ref: '#/components/schemas/ActorType' }
+        reason_code: { type: ['string', 'null'] }
+        occurred_at:
+          type: string
+          format: date-time
+          description: زمن الواقعة في العالم.
+        recorded_at:
+          type: string
+          format: date-time
+          description: زمن تسجيلها عندنا. الفرقُ بينهما تأخّرُ الناقل، وخلطُهما يجعل النافذة المتحرّكة تكذب.
+
+    ReputationFactList:
+      type: object
+      required: [facts]
+      additionalProperties: false
+      properties:
+        facts:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/ReputationFact' }
+
+    FactRecordRequest:
+      type: object
+      required:
+        [subject_type, subject_public_id, fact_kind, order_public_id,
+         source_event_type, source_event_id, source_sequence, actor_type, occurred_at]
+      additionalProperties: false
+      properties:
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        subject_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        fact_kind: { $ref: '#/components/schemas/FactKind' }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        source_event_type: { type: string, minLength: 3 }
+        source_event_id: { type: string, format: uuid }
+        source_sequence: { type: integer, minimum: 1 }
+        actor_type: { $ref: '#/components/schemas/ActorType' }
+        reason_code: { type: ['string', 'null'], maxLength: 64 }
+        occurred_at: { type: string, format: date-time }
+
+    FactRecordResult:
+      type: object
+      required: [fact, score, duplicate]
+      additionalProperties: false
+      properties:
+        fact: { $ref: '#/components/schemas/ReputationFact' }
+        score: { $ref: '#/components/schemas/ReputationScore' }
+        duplicate:
+          type: boolean
+          description: |
+            هل كانت الواقعة مسجّلةً من نفس المصدر؟ يُعاد صريحاً لأن المستهلك يحتاج أن يفرّق بين
+            «سجّلتُ الآن» و«كانت مسجّلة» ليعدّ ما فعله، وبلا هذا الحقل يُفسَّر `200` تخميناً.
+
+    ReputationScore:
+      type: object
+      required:
+        [subject_type, subject_public_id, ruleset_version, score_points, tier,
+         fact_count, computed_at, next_recompute_at]
+      additionalProperties: false
+      properties:
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        subject_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        ruleset_version:
+          type: integer
+          minimum: 1
+          description: نسخةُ القواعد التي أنتجت هذا الرقم؛ بلا هذا الحقل لا يُفسَّر رقمُ الأمس بعد تعديل الأوزان.
+        score_points: { type: integer, minimum: 0 }
+        tier: { $ref: '#/components/schemas/Tier' }
+        fact_count: { type: integer, minimum: 0 }
+        computed_through_fact_id: { type: ['string', 'null'], format: uuid }
+        computed_at: { type: string, format: date-time }
+        next_recompute_at:
+          type: string
+          format: date-time
+          description: استحقاقُ إعادة الحساب — فهرسُ النبضة، لا مؤقّتٌ في الذاكرة يُنسى بإعادة التشغيل.
+
+    ReputationRating:
+      type: object
+      required:
+        [id, order_public_id, rater_type, rater_public_id, subject_type,
+         subject_public_id, stars, ruleset_version, submitted_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        rater_type: { $ref: '#/components/schemas/SubjectType' }
+        rater_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        subject_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/RatingReasonCode' }
+            - { type: 'null' }
+        ruleset_version: { type: integer, minimum: 1 }
+        submitted_at: { type: string, format: date-time }
+
+    ReputationRatingList:
+      type: object
+      required: [ratings]
+      additionalProperties: false
+      properties:
+        ratings:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/ReputationRating' }
+
+    RatingSubmitRequest:
+      type: object
+      required: [order_public_id, rater_type, rater_public_id, subject_public_id, stars]
+      additionalProperties: false
+      properties:
+        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
+        rater_type: { $ref: '#/components/schemas/SubjectType' }
+        rater_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        subject_public_id:
+          $ref: '#/components/schemas/WaslaPublicId'
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/RatingReasonCode' }
+            - { type: 'null' }
+        submitted_at:
+          type: string
+          format: date-time
+          description: زمن التقييم في العالم؛ يُقارَن بنافذة `rating_window_hours` من واقعة الاكتمال.
+
+    RatingSubmitResult:
+      type: object
+      required: [rating, fact, score]
+      additionalProperties: false
+      properties:
+        rating: { $ref: '#/components/schemas/ReputationRating' }
+        fact:
+          $ref: '#/components/schemas/ReputationFact'
+        score: { $ref: '#/components/schemas/ReputationScore' }
+
+    FraudSignal:
+      type: object
+      required:
+        [id, subject_type, subject_public_id, rule_code, severity, observed_count,
+         threshold_count, window_started_at, window_ended_at, ruleset_version, raised_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        subject_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        rule_code: { $ref: '#/components/schemas/FraudRuleCode' }
+        severity: { $ref: '#/components/schemas/Severity' }
+        observed_count: { type: integer, minimum: 0 }
+        threshold_count: { type: integer, minimum: 2 }
+        window_started_at: { type: string, format: date-time }
+        window_ended_at: { type: string, format: date-time }
+        ruleset_version: { type: integer, minimum: 1 }
+        raised_at: { type: string, format: date-time }
+
+    FraudSignalList:
+      type: object
+      required: [signals]
+      additionalProperties: false
+      properties:
+        signals:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/FraudSignal' }
+
+    ReputationRuleWeight:
+      type: object
+      required: [subject_type, fact_kind, weight_points]
+      additionalProperties: false
+      properties:
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        fact_kind: { $ref: '#/components/schemas/FactKind' }
+        weight_points:
+          type: integer
+          minimum: -50
+          maximum: 50
+          description: قد يكون سالباً — الإلغاء يخصم. عددٌ صحيح لا عاشر، لأن النقاط تُجمَع وتُقارَن.
+
+    ReputationFraudThreshold:
+      type: object
+      required: [rule_code, subject_type, threshold_count, severity]
+      additionalProperties: false
+      properties:
+        rule_code: { $ref: '#/components/schemas/FraudRuleCode' }
+        subject_type: { $ref: '#/components/schemas/SubjectType' }
+        threshold_count: { type: integer, minimum: 2 }
+        severity: { $ref: '#/components/schemas/Severity' }
+
+    ReputationRuleset:
+      type: object
+      required:
+        [ruleset_version, label, score_floor, score_ceiling, starting_score,
+         min_facts_for_score, decay_half_life_days, tier_standard_at, tier_trusted_at,
+         tier_under_watch_below, rating_window_hours, fraud_window_days,
+         recompute_interval_hours, is_frozen, weights, fraud_thresholds]
+      additionalProperties: false
+      properties:
+        ruleset_version: { type: integer, minimum: 1 }
+        label: { type: string, minLength: 3, maxLength: 64 }
+        score_floor: { type: integer, minimum: 0 }
+        score_ceiling: { type: integer, minimum: 1 }
+        starting_score: { type: integer, minimum: 0 }
+        min_facts_for_score: { type: integer, minimum: 1 }
+        decay_half_life_days: { type: integer, minimum: 7 }
+        tier_standard_at: { type: integer, minimum: 0 }
+        tier_trusted_at: { type: integer, minimum: 0 }
+        tier_under_watch_below: { type: integer, minimum: 0 }
+        rating_window_hours: { type: integer, minimum: 1 }
+        fraud_window_days: { type: integer, minimum: 1 }
+        recompute_interval_hours: { type: integer, minimum: 1 }
+        is_frozen:
+          type: boolean
+          description: نسخةٌ غير مجمّدة لا تُستعمل في حساب (`REPUTATION_RULESET_NOT_FROZEN`)؛ أحكامٌ قابلة للتحرير تجعل تفسير نتيجة الأمس مستحيلاً.
+        weights:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ReputationRuleWeight' }
+        fraud_thresholds:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/ReputationFraudThreshold' }
+
+    ReputationRulesetList:
+      type: object
+      required: [rulesets]
+      additionalProperties: false
+      properties:
+        rulesets:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ReputationRuleset' }
+
+    TickResult:
+      type: object
+      required:
+        [ran_at, scores_recomputed, tiers_changed, fraud_signals_raised, failures]
+      additionalProperties: false
+      properties:
+        ran_at: { type: string, format: date-time }
+        scores_recomputed: { type: integer, minimum: 0 }
+        tiers_changed: { type: integer, minimum: 0 }
+        fraud_signals_raised: { type: integer, minimum: 0 }
+        failures:
+          type: integer
+          minimum: 0
+          description: |
+            يُعدّ ولا يُرمى: النبضة عمليّة جماعية، ورفعُ خطأٍ لأجل شخصٍ واحد يُوقف بقيّة العمل
+            ويُخفي الفشل عن العدّاد الذي يُراقَب.
+
+    HealthStatus:
+      type: object
+      required: [status, persistence, last_tick_at]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        persistence: { type: string, enum: [postgres, memory] }
+        last_tick_at:
+          type: ['string', 'null']
+          format: date-time
+          description: آخر نبضة نُفّذت في هذه العمليّة، و`null` قبل أولاها.
+
+    ErrorResponse:
+      type: object
+      required: [error, trace_id]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code: { type: string, description: كود ثابت؛ يتعاقد المستهلك على الكود لا على ترجمة الرسالة. }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: false
+              description: |
+                تفاصيل بنيوية بلا إعادة قيمة المدخل. الحقول **معدودة** لا حقيبة حرّة، وهي مُعلَنة
+                من المراجعة 1/6 لأن `additionalProperties: false` بلا `properties` تعني **لا مفتاح
+                مسموح**، فكل تفصيل كان سيُفشل تحقّق مستهلكٍ صارم على استجابةٍ صحيحة (درس Phase 05 · MR 4/6).
+              properties:
+                field: { type: string, description: اسم الحقل المرفوض لا قيمته. }
+                expected: { type: string, description: وصف الشكل المتوقّع أو القاعدة المرفوضة. }
+                subject_type: { $ref: '#/components/schemas/SubjectType' }
+                fact_kind: { $ref: '#/components/schemas/FactKind' }
+                ruleset_version: { type: integer, minimum: 1 }
+                recorded_sequence:
+                  type: integer
+                  minimum: 1
+                  description: أحدثُ ترتيبٍ مسجَّل لهذا الطلب؛ يُعاد كي يعرف المُرسل أن حدثه متأخّر لا مرفوض.
+                rating_window_hours: { type: integer, minimum: 1 }
+                constraint:
+                  type: string
+                  description: |
+                    اسم قيد القاعدة الذي كان سيرفض الكتابة نفسها؛ يجعل خطّ الدفاع الثاني قابلاً
+                    للعثور بدلاً من افتراض أن القاعدة تعيش في TypeScript وحدها.
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة شكلياً أو `Idempotency-Key` مفقود أو مُرشِّح ناقص
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: النتيجة أو الواقعة أو نسخة القواعد غير موجودة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: تعارض في إعادة استعمال مفتاح التفرّد أو في تقييمٍ مسجَّل أو نتيجةٍ تغيّرت أثناء الحساب
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخل صالح شكلياً ومرفوض بقاعدة أعمال أو نسخةِ قواعد أو حالةِ الطلب
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة أو الاستمرارية في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

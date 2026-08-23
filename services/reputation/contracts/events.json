@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/reputation/events/v1",
+  "title": "WASLA Reputation & Fraud Domain Events v1",
+  "description": "أحداث خدمة السمعة وإشارات الاحتيال (Phase 09). القاعدة الحاكمة (ADR-014 القرار 3): الحدث **نتيجةُ حسابٍ على واقعةٍ مسجّلة**، لا رأيَ إنسانٍ ولا تقديرَ نموذج. ولذلك كل حمولةٍ تحمل ما يجعلها قابلة للتفسير وإعادة الإنتاج: الواقعةُ تحمل مصدرها (`source_event_id` · `source_sequence`)، والنتيجةُ تحمل نسخةَ قواعدها (`ruleset_version`) وعددَ وقائعها، والإشارةُ تحمل قاعدتها ونافذتها وعتبتها. وقاعدة الخصوصية كما في كل الأطوار السابقة (ADR-007 · ADR-009 §7 · ADR-013 القرار 6): لا اسم ولا هاتف ولا إحداثية ولا مُعرّف قناة (`chat_id` · `telegram`) ولا نصٌّ حرّ كتبه مستخدم في أي حمولة — التقييم درجةٌ ورمزُ سبب لا تعليق. وقاعدةٌ خاصّة بهذا الطور (القرار 7): **لا حدث يعاقب**. ليس في هذا الكتالوج `reputation.subject_suspended` ولا ما يشبهه: الإيقاف يملكه `services/drivers` والقرار الإداريّ يملكه Phase 15، وهذه الخدمة تُعلن حقائق يبني عليها غيرُها. وكل حدثٍ يُكتب في المعاملة نفسها عبر `reputation_outbox`، فلا تغيير صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string", "minLength": 3 },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "const": "reputation-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["reputation_fact", "reputation_score", "reputation_rating", "fraud_signal"]
+            },
+            "id": { "type": "string" }
+          }
+        },
+        "trace_id": { "type": ["string", "null"] }
+      }
+    },
+
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$",
+      "description": "مُعرّف عام opaque لعميل أو سائق. لا مفتاح أجنبي ولا مُعرّف قناة."
+    },
+    "OrderPublicId": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$"
+    },
+    "SubjectType": {
+      "type": "string",
+      "enum": ["customer", "driver"],
+      "description": "من تُقاس سمعته. الطرفان لا طرفٌ واحد: نظامٌ يقيس السائق ولا يقيس العميل يُحمّل جانباً واحداً كلفةَ سوء السلوك."
+    },
+    "FactKind": {
+      "type": "string",
+      "enum": [
+        "order_completed",
+        "order_cancelled_by_customer",
+        "order_cancelled_by_driver",
+        "assignment_accepted",
+        "assignment_rejected",
+        "assignment_timed_out",
+        "rating_received"
+      ],
+      "description": "قائمة مُقفلة. كل نوعٍ منها يُشتقّ من حدثٍ منشور موجود اليوم (`order.status_changed` · `order.assignment_resolved`) أو من تقييمٍ مسجَّل. نوعٌ لا مصدر له لا يُضاف."
+    },
+    "Tier": {
+      "type": "string",
+      "enum": ["new", "standard", "trusted", "under_watch"],
+      "description": "رتبةٌ مُشتقّة من النتيجة وعتبات نسخة القواعد. **تسميةٌ تُقرأ ولا تُنفَّذ** (القرار 7): من يبني عليها قراراً يبنيه في خدمته ويملك أثره."
+    },
+    "ActorType": {
+      "type": "string",
+      "enum": ["system", "customer", "driver", "partner", "admin"],
+      "description": "بمفردات محرّك الطلب كما وصلت في الحدث. مرجعٌ لا حُكم."
+    },
+    "RecomputeTrigger": {
+      "type": "string",
+      "enum": ["fact_recorded", "tick", "manual_recompute"],
+      "description": "لماذا أُعيد الحساب. من يقرأ سلسلة النتائج يحتاج أن يفرّق بين حسابٍ سبّبته واقعة وحسابٍ سبّبته نبضة وحسابٍ طلبه إنسان."
+    },
+    "RatingReasonCode": {
+      "type": "string",
+      "enum": [
+        "on_time",
+        "late_arrival",
+        "courteous",
+        "poor_conduct",
+        "unsafe_driving",
+        "vehicle_condition",
+        "route_deviation",
+        "no_show"
+      ],
+      "description": "قائمة مُقفلة تُحصى وتُقارَن، بخلاف نصٍّ حرّ يُقرأ ولا يُقاس ويحتاج مالكاً للتنقيح (Phase 16)."
+    },
+    "FraudRuleCode": {
+      "type": "string",
+      "enum": [
+        "repeated_customer_cancellation",
+        "repeated_driver_cancellation",
+        "accept_then_abandon",
+        "offer_timeout_streak",
+        "rating_extremity_burst"
+      ],
+      "description": "قواعد مُسمّاة على وقائع نملكها فعلاً (القرار 6). لا احتمالٌ إحصائيّ: إشارةٌ لا تُشرَح لا يمكن الردّ عليها."
+    },
+    "Severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+
+    "ReputationFactRecordedV1": {
+      "type": "object",
+      "description": "دخلت واقعةٌ الدفتر. هذا هو الحدث الذي تُثبت بوابة خروج الطور 09 وجوده لكل طلبٍ مكتمل: أثرٌ محسوبٌ من واقعةٍ مسجّلة لا تقييمٌ ينتظر إنساناً. ويُنشَر مرّةً واحدة لكل (شخص × نوع × طلب × ترتيب) لأنّ قيد التفرّد في القاعدة يمنع الثانية — فإعادةُ تسليم الحدث الأصلي لا تُنتج واقعةً ثانية ولا نقطةً مضاعفة.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "reputation.fact_recorded" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": [
+            "fact_id",
+            "subject_type",
+            "subject_public_id",
+            "fact_kind",
+            "order_public_id",
+            "source_event_type",
+            "source_event_id",
+            "source_sequence",
+            "actor_type",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fact_id": { "type": "string", "format": "uuid" },
+            "subject_type": { "$ref": "#/$defs/SubjectType" },
+            "subject_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "fact_kind": { "$ref": "#/$defs/FactKind" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "source_event_type": {
+              "type": "string",
+              "minLength": 3,
+              "description": "الحدث الذي أنتج الواقعة بعينه. من يشكّ في نقطةٍ يعود إلى مصدرها بلا تحقيق."
+            },
+            "source_event_id": { "type": "string", "format": "uuid" },
+            "source_sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "ترتيب الانتقال على الطلب كما جاء في الحدث الأصلي. مفتاحُ عدم التكرار لا معلومةً زائدة."
+            },
+            "actor_type": { "$ref": "#/$defs/ActorType" },
+            "reason_code": { "type": ["string", "null"] },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "ReputationScoreRecomputedV1": {
+      "type": "object",
+      "description": "أُعيد حساب نتيجةٍ من الدفتر. الحمولة تحمل **من أيّ قواعد ومن أيّ وقائع** جاء الرقم، ولذلك يمكن للمستهلك أن يكشف حساباً قديماً بلا سؤالٍ عن الخدمة. والنتيجة السابقة معها لأنّ «تغيّر إلى 62» بلا «من 71» يُجبر كل مستهلك على أن يحفظ نسخته.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "reputation.score_recomputed" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": [
+            "subject_type",
+            "subject_public_id",
+            "ruleset_version",
+            "score_points",
+            "tier",
+            "fact_count",
+            "trigger",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "subject_type": { "$ref": "#/$defs/SubjectType" },
+            "subject_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "ruleset_version": { "type": "integer", "minimum": 1 },
+            "score_points": { "type": "integer", "minimum": 0 },
+            "previous_score_points": { "type": ["integer", "null"], "minimum": 0 },
+            "tier": { "$ref": "#/$defs/Tier" },
+            "fact_count": { "type": "integer", "minimum": 0 },
+            "computed_through_fact_id": { "type": ["string", "null"], "format": "uuid" },
+            "trigger": { "$ref": "#/$defs/RecomputeTrigger" },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "ReputationTierChangedV1": {
+      "type": "object",
+      "description": "عبرت النتيجة عتبةً فتغيّرت الرتبة. مفصولٌ عن `score_recomputed` عمداً: النتيجة تتغيّر كل يوم والرتبة تتغيّر نادراً، ومستهلكٌ يهمّه الحدّ (الاشتراكات · ترتيب المرشّحين) لا يجب أن يفلتر ألف حدثٍ ليجد عشرة.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "reputation.tier_changed" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": ["subject_type", "subject_public_id", "to_tier", "score_points", "ruleset_version", "occurred_for"],
+          "additionalProperties": false,
+          "properties": {
+            "subject_type": { "$ref": "#/$defs/SubjectType" },
+            "subject_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "from_tier": {
+              "oneOf": [{ "$ref": "#/$defs/Tier" }, { "type": "null" }],
+              "description": "null مرّة واحدة فقط: أوّل نتيجةٍ تُحسب لهذا الشخص."
+            },
+            "to_tier": { "$ref": "#/$defs/Tier" },
+            "score_points": { "type": "integer", "minimum": 0 },
+            "ruleset_version": { "type": "integer", "minimum": 1 },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "ReputationRatingSubmittedV1": {
+      "type": "object",
+      "description": "سجّل طرفٌ تقييماً لطرفٍ آخر على طلبٍ اكتمل. الدرجة ورمزُ السبب يعبران لأنّهما **هما** ما تغيّر؛ ولا تعليق نصّي في العقد أصلاً (القرار 5). والتقييم لا يكتب نقاطاً بنفسه: يُنتج واقعةً من نوع `rating_received` فيبقى للنقطة مصدرٌ واحد الشكل.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "reputation.rating_submitted" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": [
+            "rating_id",
+            "order_public_id",
+            "rater_type",
+            "rater_public_id",
+            "subject_type",
+            "subject_public_id",
+            "stars",
+            "ruleset_version",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "rating_id": { "type": "string", "format": "uuid" },
+            "order_public_id": { "$ref": "#/$defs/OrderPublicId" },
+            "rater_type": { "$ref": "#/$defs/SubjectType" },
+            "rater_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "subject_type": { "$ref": "#/$defs/SubjectType" },
+            "subject_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "stars": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "reason_code": { "oneOf": [{ "$ref": "#/$defs/RatingReasonCode" }, { "type": "null" }] },
+            "ruleset_version": { "type": "integer", "minimum": 1 },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "FraudSignalRaisedV1": {
+      "type": "object",
+      "description": "رصدت قاعدةٌ مُسمّاة نمطاً تجاوز عتبته في نافذةٍ محدّدة. **ملاحظةٌ لا حُكم** (القرار 6 · 7): الحمولة تحمل القاعدة والنافذة والعدد والعتبة كي تكون قابلة للمراجعة، ولا تحمل قراراً ولا توصيةً بعقوبة. ومن يقرّر — نواةُ السائق أو الإدارة — يملك دفتره وأثره.",
+      "allOf": [{ "$ref": "#/$defs/EventEnvelope" }],
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate", "data"],
+      "properties": {
+        "event_type": { "const": "reputation.fraud_signal_raised" },
+        "event_version": { "const": "v1" },
+        "data": {
+          "type": "object",
+          "required": [
+            "signal_id",
+            "subject_type",
+            "subject_public_id",
+            "rule_code",
+            "severity",
+            "observed_count",
+            "threshold_count",
+            "window_started_at",
+            "window_ended_at",
+            "ruleset_version",
+            "occurred_for"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "signal_id": { "type": "string", "format": "uuid" },
+            "subject_type": { "$ref": "#/$defs/SubjectType" },
+            "subject_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "rule_code": { "$ref": "#/$defs/FraudRuleCode" },
+            "severity": { "$ref": "#/$defs/Severity" },
+            "observed_count": { "type": "integer", "minimum": 0 },
+            "threshold_count": { "type": "integer", "minimum": 2 },
+            "window_started_at": { "type": "string", "format": "date-time" },
+            "window_ended_at": { "type": "string", "format": "date-time" },
+            "ruleset_version": { "type": "integer", "minimum": 1 },
+            "occurred_for": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}

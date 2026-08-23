@@ -216,6 +216,31 @@ export const SUBSCRIPTION_LAUNCH_DURATION_DAYS = 30;
 export const SUBSCRIPTION_LAUNCH_COMMUNITY_GRACE_DAYS = 7;
 
 /**
+ * سقفُ الطلبات اليوميُّ على أرضيّة المجتمع في نسخةِ خطّةِ الإطلاق (ملحقُ ADR-015 · المراجعة 2/6).
+ *
+ * لماذا رقمٌ مُعلَن هنا: القرارُ 4 يقول إنّ `community` **أرضيّةُ استحقاقٍ لا عقوبة**، وأرضيّةٌ
+ * بلا رقمٍ ليست أرضيّة. والبوتُ يقول للسائق «ثلاثةُ طلبات يومياً بعد انقضاء اشتراكك»، فلو
+ * سكن الرقمُ في الخدمة لقال البوتُ رقماً وقالت الخدمةُ آخر.
+ *
+ * النسخةُ الخاطئةُ الأرخص: أن يورّث `community` سقفَ الخطّةِ المدفوعة (`daily_order_cap`)،
+ * فيصير «بلا سقف» (‎-1) أرضيّةً مجانيّةً دائمة، ويسقط سببُ الدفع من أصله.
+ */
+export const SUBSCRIPTION_LAUNCH_COMMUNITY_DAILY_ORDER_CAP = 3;
+
+/** عنوانُ نسخةِ خطّةِ الإطلاق كما يظهر للسائق؛ نصٌّ واحدٌ لا يُترجم مرّتَين. */
+export const SUBSCRIPTION_LAUNCH_PLAN_LABEL = "اشتراك السائق الشهري";
+
+/**
+ * رموزُ الاستحقاق التي تبقى على الأرضيّة، ورموزُ ما يُفقَد بانقضاء المدة المدفوعة.
+ *
+ * القائمتان **متكاملتان لا متقاطعتان** ومجموعُهما `SUBSCRIPTION_ENTITLEMENTS` بحرفه،
+ * و`contracts.test.ts` يحرس ذلك: رمزٌ جديدٌ لا يُصنَّف يبقى معلَّقاً بلا قرار، فيقرّر
+ * أوّلُ فرعٍ في الكود مصيرَه صمتاً.
+ */
+export const SUBSCRIPTION_COMMUNITY_FLOOR_ENTITLEMENTS = ["accept_orders", "daily_order_cap"] as const;
+export const SUBSCRIPTION_PAID_ONLY_ENTITLEMENTS = ["priority_dispatch", "zone_multi_select"] as const;
+
+/**
  * أرقامُ الإحالة في نسخةِ خطّةِ الإطلاق. العتبةُ **وقائعُ مُسجَّلة** لا تسجيلٌ مجرّد
  * (القرار 8): مكافأةٌ على حسابٍ فُتِح ثمّ نام هي بابُ الحسابات الوهمية بعينه.
  */

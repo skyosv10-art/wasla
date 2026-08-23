@@ -70,6 +70,14 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
     -- مهلةُ ما بعد الانقضاء قبل النزول إلى `community`. صفرٌ يعني النزولَ فوراً.
     community_grace_days    INTEGER     NOT NULL CHECK (community_grace_days BETWEEN 0 AND 90),
 
+    -- سقفُ الطلباتِ اليوميُّ على **أرضيّةِ المجتمع** (ملحقُ ADR-015 · المراجعة 2/6).
+    -- القرارُ 4 يقول إنّ السائقَ في `community` يُبقي `accept_orders` **بسقفٍ يوميّ**، وذاك
+    -- السقفُ رقمٌ لا مكانَ له إلّا هنا: لو عاش في كودِ المجال لصار تغييرُ أرضيّةِ
+    -- كلِّ السائقين نشرةً لا نسخةَ خطّة، ولما بقي في النّظام ما يُبين ما كانت الأرضيّة
+    -- أمس. ولمَ لا صفٌّ في `subscription_plan_entitlements` برمزِ `daily_order_cap`؟ لأنّ ذاك
+    -- الصفَّ هو سقفُ الخطّةِ **المدفوعة**، ورمزٌ واحدٌ لا يحمل رقمَين لحالتَين.
+    community_daily_order_cap INTEGER   NOT NULL CHECK (community_daily_order_cap BETWEEN 0 AND 1000),
+
     -- أيّامُ مكافأةِ الإحالةِ وعتبةُ تأهيلِها ونافذتُها: **أرقامٌ بياناتٌ لا كود** (القرار 7).
     -- فتغييرُ العتبةِ نسخةُ خطّةٍ جديدةٌ يُدافَع عنها، لا سطرٌ يُعدَّل في مُهيّئٍ.
     referral_reward_days    INTEGER     NOT NULL CHECK (referral_reward_days BETWEEN 0 AND 365),

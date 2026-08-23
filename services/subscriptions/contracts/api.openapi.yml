@@ -72,6 +72,7 @@ paths:
                         trial_days: 14
                         duration_days: 30
                         community_grace_days: 7
+                        community_daily_order_cap: 3
                         is_frozen: true
                         entitlements:
                           - entitlement_code: accept_orders
@@ -106,6 +107,7 @@ paths:
                     trial_days: 14
                     duration_days: 30
                     community_grace_days: 7
+                    community_daily_order_cap: 3
                     is_frozen: true
                     entitlements:
                       - entitlement_code: accept_orders
@@ -614,7 +616,9 @@ components:
 
     SubscriptionPlan:
       type: object
-      required: [plan_code, plan_version, label, trial_days, duration_days, community_grace_days, is_frozen, entitlements]
+      required:
+        [plan_code, plan_version, label, trial_days, duration_days, community_grace_days,
+         community_daily_order_cap, is_frozen, entitlements]
       additionalProperties: false
       properties:
         plan_code:
@@ -627,9 +631,21 @@ components:
           minimum: 1
           description: نسخة ثابتة من الكتالوج؛ الاسم وحده ليس مرجعاً تاريخياً كافياً.
         label: { type: string, minLength: 3, maxLength: 96 }
-        trial_days: { type: integer, minimum: 1 }
+        trial_days:
+          type: integer
+          minimum: 0
+          description: صفرٌ قرارٌ مشروع يعني «لا تجربة في هذه النسخة»؛ حدٌّ أدنى 1 كان يكذّب المخطط.
         duration_days: { type: integer, minimum: 1 }
-        community_grace_days: { type: integer, minimum: 1 }
+        community_grace_days:
+          type: integer
+          minimum: 0
+          description: صفرٌ يعني النزولَ إلى الأرضيّة فوراً بلا مهلة تذكير.
+        community_daily_order_cap:
+          type: integer
+          minimum: 0
+          description: |
+            سقفُ الطلبات اليوميّ على أرضيّة المجتمع (الحالتان `expired` و`community`). رقمٌ في نسخة
+            الخطّة لا في الكود: أرضيّةٌ تُغيَّر بنشرةٍ لا تُبقي أثراً يقول ما كانت أمس.
         is_frozen:
           type: boolean
           description: لا تمنح مدة من نسخة غير مجمدة؛ التعديل في المكان يبدل الماضي بلا أثر تدقيقي.

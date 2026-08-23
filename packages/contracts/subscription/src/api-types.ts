@@ -273,9 +273,16 @@ export interface components {
             /** @description نسخة ثابتة من الكتالوج؛ الاسم وحده ليس مرجعاً تاريخياً كافياً. */
             plan_version: number;
             label: string;
+            /** @description صفرٌ قرارٌ مشروع يعني «لا تجربة في هذه النسخة»؛ حدٌّ أدنى 1 كان يكذّب المخطط. */
             trial_days: number;
             duration_days: number;
+            /** @description صفرٌ يعني النزولَ إلى الأرضيّة فوراً بلا مهلة تذكير. */
             community_grace_days: number;
+            /**
+             * @description سقفُ الطلبات اليوميّ على أرضيّة المجتمع (الحالتان `expired` و`community`). رقمٌ في نسخة
+             *     الخطّة لا في الكود: أرضيّةٌ تُغيَّر بنشرةٍ لا تُبقي أثراً يقول ما كانت أمس.
+             */
+            community_daily_order_cap: number;
             /** @description لا تمنح مدة من نسخة غير مجمدة؛ التعديل في المكان يبدل الماضي بلا أثر تدقيقي. */
             is_frozen: boolean;
             entitlements: components["schemas"]["SubscriptionPlanEntitlement"][];

@@ -852,6 +852,19 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  services/subscriptions:
+    dependencies:
+      '@wasla/contracts-subscription':
+        specifier: workspace:*
+        version: link:../../packages/contracts/subscription
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
 packages:
 
   '@apidevtools/json-schema-ref-parser@11.9.3':

@@ -216,7 +216,7 @@ drivers      ↛ negotiations  (نواة السائق لا تُقرأ هنا: ا
 
 | الخدمة | المسار | الغرض | الحالة |
 |---|---|---|---|
-| reputation | `services/reputation/` | دفترُ الوقائع append-only · النتيجةُ والرتبةُ المُشتقّتان · التقييمُ المقيَّد بواقعة · **قواعدُ الاحتيال وإشاراتها** · نسخةُ القواعد المجمّدة · النبضة | **عقود كنسية فقط (MR 1/6 · Phase 09)** — [نموذج المجال](../03-domain/REPUTATION_FRAUD.md) · [العقود](../../services/reputation/contracts/README.md) |
+| reputation | `services/reputation/` | دفترُ الوقائع append-only · النتيجةُ والرتبةُ المُشتقّتان · التقييمُ المقيَّد بواقعة · **قواعدُ الاحتيال وإشاراتها** · نسخةُ القواعد المجمّدة · النبضة | **عقود كنسية (MR 1/6) + طبقة مجالٍ نقيّة (MR 2/6) · Phase 09** — لا استمراريّة ولا HTTP بعد (3/6 → 4/6) — [نموذج المجال](../03-domain/REPUTATION_FRAUD.md) · [العقود](../../services/reputation/contracts/README.md) · [نواة المجال](REPUTATION_CORE_DOMAIN.md) |
 
 **انحرافٌ موثّق في العدد لا في الموضع:** `services/fraud/` تبقى **فارغة بقرار** ([ADR-014](../15-decisions/ADR-014-reputation-derived-scores-and-fact-sourced-fraud-signals.md) القرار 1) — قواعدُ الاحتيال تقرأ **نفس دفتر الوقائع**، وخدمةٌ ثانية تعني نسخةً ثانية من الوقائع تتباعد بصمت. والانحراف مُعلَنٌ في `README` العقود وفي حارس اختبار، لا مكتوماً في الكود.
 

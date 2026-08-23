@@ -1004,7 +1004,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **لا مُرحِّل صندوق صادر ولا مُنادي نبضة دوريّ** — منقولان إلى Phase 09 مع نظيريهما من الطور 07، والمؤشّر عليهما `last_tick_at`.
 - **الأرقام المُتحقَّقة محلياً لا في CI**: `@wasla/contracts-driver` **59/59**، وإجمالي المستودع **1994 اختباراً ناجحاً** (+1 متروك بقصد) في **120 ملفاً** على 27 مشروع عمل (+69 من طبقة مجال السائق، +28 من حارس انحراف مرآة الاستمرارية)، و`pnpm -r typecheck` نظيف. وخطّ الأنابيب سيظهر **أحمر** لسبب لا علاقة له بالكود: **حصّة دقائق CI منتهية** (§2-أ) — لا تُطارِده ولا تُصلحه بتعديل كود.
 
-## 14. Phase 08 (Negotiation & Chat) — قيد التنفيذ 🔄 (بدأت 2026-08-23) · MR 3/6 مدفوعة من ستّ
+## 14. Phase 08 (Negotiation & Chat) — قيد التنفيذ 🔄 (بدأت 2026-08-23) · MR 4/6 مدفوعة من ستّ
 
 **نقطة البداية ليست كوداً.** المرحلة بدأت من حدّها: [ADR-013](../15-decisions/ADR-013-negotiation-chat-agreement-boundary-and-tick-driven-expiry.md) + عقود `services/negotiations/contracts/*` + `@wasla/contracts-negotiation` + [NEGOTIATION_CHAT.md](../03-domain/NEGOTIATION_CHAT.md) + [CONTAINERS §4.5](../02-architecture/CONTAINERS.md) — النمط نفسه الذي أنجح الأطوار 04 و06 و07 و05.
 
@@ -1028,7 +1028,7 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 | **1/6** | ADR-013 + `services/negotiations/contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` + `@wasla/contracts-negotiation` + NEGOTIATION_CHAT.md + CONTAINERS §4.5 | ✅ **مدمجة في `main` (2026-08-22 · [!57](https://gitlab.com/uxxxu/wasla/-/merge_requests/57))** — دُمجت بقرار مالك المستودع وأنبوبها أحمر لسببٍ تشغيليّ (§2-أ) |
 | **2/6** | طبقة مجال نقيّة `@wasla/negotiations-service` — آلة حالة الخيط والدور، و**حاسب الحدود من السياسة المُرقّمة** لا من أرقام في الكود، وقاعدة التبادل، ومنع القبول الذاتي، و`expected_round_no`. بلا قاعدة ولا HTTP، ومُهيّئ الذاكرة **يُطبّق 24 قاعدة مُسمّاة (قيوداً وفهارس فريدة) بأسمائها الحرفيّة** كما فعل الطوران 06 و05 · **131 اختباراً** + [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) | ✅ **مدمجة في `main` (2026-08-22 · [!58](https://gitlab.com/uxxxu/wasla/-/merge_requests/58))** |
 | **3/6** | استمرارية Drizzle/Postgres + **وحدة عمل واحدة** تجعل الخيط والدور والرسالة والصادر في معاملة واحدة **بلا تغيير في `src/use-cases/`** + وظيفة CI `negotiations-db-integration` + حارس انحراف مرآة↔DDL | ✅ **مدفوعة (2026-08-23 · [!59](https://gitlab.com/uxxxu/wasla/-/merge_requests/59))** — 62 اختبار تكامل على محرّك حقيقي + 27 حارس انحراف · [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md) |
-| **4/6** | طبقة HTTP على **8091**: المسارات العشرة + `/health` بحالتيه و`last_tick_at` + مقبس معاملة (`NegotiationRunner`) فلا يملك معالج مسار فتح معاملة + `onlyKeys()` على كل حمولة + كتالوجات تعدادات وقت التشغيل ترفض العضو المجهول **على الحدّ** | ⏳ |
+| **4/6** | طبقة HTTP على **8091**: المسارات العشرة (ثلاث عشرة عمليّة) + `/health` بحالتيه و`last_tick_at` + مقبس معاملة (`NegotiationRunner`) فلا يملك معالج مسار فتح معاملة + `onlyKeys()` على كل حمولة | ✅ **مدفوعة (2026-08-23)** — 36 اختبار `app.inject` + 14 حارس انحراف · [NEGOTIATION_HTTP.md](../04-api/NEGOTIATION_HTTP.md) |
 | **5/6** | المنافذ الصادرة الحقيقية: `AgreedPricePort` → محرّك الطلب **8087** و`DispatchOfferPort` → التوزيع **8089** + تدفّقات بوتَي العميل والسائق. **وفيها ترحيل أعمدة الاتفاق في `orders`** (أدناه) | ⏳ |
 | **6/6** | **بوابة خروج المرحلة E2E** `packages/negotiation-e2e`: خدمات مُنصتة حقيقية بساعة واحدة مُحقونة — طلب `negotiable` يصل سائقاً فيتفاوضان أدواراً فيتّفقان، **والسعر يظهر في محرّك الطلب فعلاً**؛ ونبضة واحدة تُنهي خيطاً مهجوراً؛ وقبولٌ متأخّر يُرفض بالاسم | ⏳ |
 
@@ -1093,6 +1093,33 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 - **لا `mappers.ts` مستقلّ** بقصد: حدّ التحويل واحدٌ داخل `repository.ts`، فملفٌّ ثالث يُنشئ موضعين يجب أن يتّفقا.
 - **مفتاح منع التكرار عالميّ في العقد** (`idempotency_key` مفتاحٌ أساسيّ وحده، والمنفذ لا يأخذ نطاقاً): دعمُ نفس المفتاح في نطاقين يقتضي تغيير الـDDL أو `ports.ts` — وكلاهما خارج نطاق هذه المراجعة، فهو **بندُ عقدٍ لا بندُ مُهيّئ**.
 
+### ما أنجزته MR 4/6 بالضبط (طبقة HTTP على 8091)
+
+طبقة حدٍّ **تترجم ولا تقرّر**، والتفصيل التعليليّ الكامل في [NEGOTIATION_HTTP.md](../04-api/NEGOTIATION_HTTP.md):
+
+- `src/runner.ts` — `NegotiationRunner {write, read}` هو **مقبس المعاملة**: يُمرَّر إلى التطبيق مقبساً واحداً لا خريطة مستودعات، فلا يملك معالج مسار فتح معاملة **بالبناء لا بالمراجعة**. و`createDirectNegotiationRunner` للذاكرة و`PostgresNegotiationRunner` يفوّض إلى `PostgresNegotiationUnitOfWork` (§2 من [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md)) — نفس نمط `OrderRunner`/`DriverRunner`.
+- `src/mappers.ts` — camelCase (المجال) → snake_case (السلك) وحده، ولا منطق: `threadToWire` · `roundToWire` · `messageToWire` · `agreementToWire` · `tickResultToWire` · `healthToWire`. و`messageToWire` **تُمرّر `body`** بقصد: القراءة هي المحادثة، والحدُّ الخصوصيّ على **الأحداث** لا على قراءة الطرف لخيطه.
+- `src/http/errors.ts` — معالج خطأ **واحد** بأربعة فروع مرتّبة: `NegotiationError` ⇒ حالته المنشورة · قيدُ تماسكٍ في سلسلة `cause` (عمقٌ 8 وآمنٌ من الحلقات) ⇒ **500 `NEGOTIATION_INTERNAL_ERROR`** مع `details.constraint` · خطأ تحليل Fastify (400/415) ⇒ 400 `VALIDATION_FAILED` على الحقل `body` · وما بقي ⇒ **503 `NEGOTIATION_UNAVAILABLE`**. ولا `try/catch` في أيّ معالج مسار: ثلاثة عشر موضعاً تعني ثلاثة عشر رأياً في معنى الخطأ، ويكفي أن يُنسى واحد ليُسرَّب أثر كومة.
+- `src/http/requests.ts` — حرّاس **الشكل لا القيم**: `Idempotency-Key` (8..128، يرفض المصفوفة والفاصلة) · `x-request-id` (≤128) · `toPathUuid` · `toPathRoundNo` (`/^[1-9][0-9]*$/` فلا `01` ولا `+1`) · `assertNoBody` · وقوائم مفاتيح مُصدَّرة (`THREAD_OPEN_KEYS` … `THREAD_LIST_QUERY_KEYS`) يقابلها حارس الانحراف بالعقد. **ولا فحص تعدادات هنا** — المجال يملك الرموز، وانحراف القوائم محروسٌ في حزمة العقد.
+- `src/http/app.ts` (279 سطراً) — `createNegotiationApp({runner, health?, tickState?, logger?})` يُنشئ التطبيق **ولا يستمع**، فيُختبَر بـ`app.inject` بلا مقبس. ثلاث عشرة عمليّة على عشرة مسارات، و`requestIdHeader: "x-request-id"` فيصير `trace_id` في المغلّف هو نفس المعرّف الذي يراه المتّصل.
+- `src/infrastructure/runtime.ts` — `SystemClock` · `CryptoIdGenerator` · `UnconfiguredDispatchOfferPort` (يرمي 503 **قبل** أيّ كتابة) · `UnconfiguredAgreedPricePort` (يرمي خطأً عاديّاً فيُسجَّل `unavailable` ويبقى الاتفاق قائماً — القرار 2).
+- `src/http/server.ts` — **الموضع الوحيد** الذي يقرأ `process.env`: مع `DATABASE_URL` ⇒ Postgres وصحّة `ok`، وبدونه ⇒ ذاكرة وصحّة `degraded`؛ وإطفاءٌ نظيف على `SIGTERM`/`SIGINT`. و**`http/server.js` غير مُصدَّر** من `index.ts` بقصد: استيراد نقطة الإقلاع من مكتبة يُقلع خادماً كأثرٍ جانبيّ.
+
+**Evidence (محليّاً · 2026-08-23):**
+
+- `src/__tests__/http.test.ts` — **36 اختباراً** على `app.inject`: 201 ثمّ **200 على الإعادة** بنفس المفتاح · القبول يعيد **الاتفاق** والرفض يعيد **الخيط** · فشل تسليم السعر يبقى **201 ومعه اتفاق** بـ`handoff_state: pending` و`next_handoff_at` · القائمة بلا مرشّح ⇒ `NEGOTIATION_FILTER_REQUIRED` · `/health` بحالتيه · النبضة بلا جسم وبجسمٍ فارغ.
+- `src/__tests__/http-drift.test.ts` — **14 حارس انحراف** يقرأ `api.openapi.yml` **من القرص** ويقابله بما سجّله Fastify فعلاً (`app.printRoutes`) **في الاتجاهين**، وبقوائم مفاتيح الطلب الستّ، وبمُعامِلات الاستعلام، ويؤكّد **غياب 500 و502** عن `NEGOTIATION_HTTP_STATUS_CODES` و**غياب `NEGOTIATION_INTERNAL_ERROR`** عن `NEGOTIATION_ERROR_CODES`.
+- مجموعة الخدمة **208 في 12 ملفاً** (كانت 158 في 10) · المستودع **2405 + 1 متروك بقصد في 145 ملفاً** (كان 2355 في 143) · `pnpm -r typecheck` نظيف على **31 مشروعاً**.
+
+### ما لم يُنجَز في MR 4/6 بقصد (لا تُعِد بناءه من الصفر)
+
+- **`NEGOTIATION_INTERNAL_ERROR` و`500` غير منشورين في العقد ولن يُنشرا**: قيدُ تماسكٍ يُخالَف بعد إجازة المجال **خللٌ فينا** لا حالةٌ يتعاقد عليها مستهلك. من «أكمل» الكتالوج بهما فقد أعطى المتّصلين حقّاً في التعامل مع عطبنا.
+- **لا فحص تعدادات على الحدّ ولا `onlyKeys` على القيم**: `requests.ts` يفحص الشكل، والمجال يرفع الرمز الصحيح — فمُحقِّقٌ ثانٍ يعني موضعين يجب أن يتّفقا.
+- **لا مُنادي نبضة دوريّ ولا مُرحِّل صندوق صادر**: `POST /negotiations/tick` مسارٌ يُنادى، ومن يُناديه كلّ دقيقة محلّه 5/6 (والدَّين العامّ في الطور 09).
+- **`AgreedPricePort` و`DispatchOfferPort` غير مُهيّئين في `server.ts`** بل مُهيّئا «غير مُكوَّن»: العرض يُرفض بـ503 **قبل الكتابة**، والسعر يُسجَّل `unavailable` **بعد** الاتفاق. المحوّلان الحقيقيّان (8087 · 8089) في 5/6.
+- **لا وظيفة CI جديدة**: اختبارات HTTP بلا قاعدة فتعمل في `test` القائمة، و`negotiations-db-integration` موجودة من 3/6.
+- **لا `Dockerfile` ولا manifest نشر**: نمط المستودع أنّ النشر طورٌ لاحق (`infra/`).
+
 ### 🔎 بندٌ مفتوح مكتشَف خارج النطاق: مجموعة تكامل `services/drivers` حمراء على محرّك حقيقي
 
 عند تجهيز محرّك Postgres محليّ شُغّلت مجموعة تكامل السائقين (Phase 05) فسقط **27 اختباراً من 79**، لسببين لا يمسّان خدمة التفاوض:
@@ -1115,11 +1142,12 @@ Postgres وراء منافذ المطابقة نفسها، **بلا تغيير �
 
 ونقطةَ نهايةٍ في محرّك الطلب يناديها `AgreedPricePort`. **ومالك التغيير محرّك الطلب** — لا يُفتَح فرعٌ يكتب فيه التفاوض جدولاً لا يملكه. وحتى ذلك الترحيل يبقى `handoff_state` في `negotiation_agreements` **مصدر الحقيقة الوحيد** عن هل عرف الطلبُ سعره.
 
-### ما يجب أن يُقرأ أولاً قبل MR 4/6
+### ما يجب أن يُقرأ أولاً قبل MR 5/6
 
-1. [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md) كاملاً — §2 فيها هو عقد الطبقة التي ستبني فوقها: **حدّ المعاملة يملكه `PostgresNegotiationUnitOfWork` وحده**، فمقبس المعاملة في 4/6 (`NegotiationRunner`) يُغلّف كلّ معالج مسار كتابيّ بـ`run()` ولا يفتح أيّ معالج معاملةً بنفسه — وهو نفس نمط `OrderRunner` (§6/7 في [ORDER_HTTP.md](../04-api/ORDER_HTTP.md)).
-2. [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) كاملاً — عقد الطبقة التي يُنادِيها الـHTTP؛ والمعيار المُثبَت في 3/6 يبقى قائماً في 4/6: **لا تعديل في `src/use-cases/` لأجل الحدّ**، فالمسار يترجم ولا يقرّر.
-3. `services/negotiations/contracts/api.openapi.yml` + `errors.md` — **عشرة مسارات** و**29 كوداً** هي سطح 4/6 كاملاً؛ و`NegotiationConstraintViolation` **بلا كود منشور** فلا يجوز أن يصير 4xx يُطلب من المتّصل إعادة المحاولة عليه (يصير 500 عن عطبٍ عندنا).
+1. [NEGOTIATION_HTTP.md](../04-api/NEGOTIATION_HTTP.md) كاملاً — سطح الخدمة الذي ستنادِيه البوتات، و§8 فيها خريطة الأخطاء، و§12 يسمّي بالضبط ما تفعله 5/6 و6/6.
+2. [NEGOTIATION_CORE_DOMAIN.md](../03-domain/NEGOTIATION_CORE_DOMAIN.md) §تسليم السعر — `attemptPriceHandoff` **لا ترفع استثناءً أبداً** وتُصنّف ثلاث نتائج، والمحوّل الحقيقي في 5/6 يجب أن يحفظ هذا التصنيف: قَبِل ⇒ `handed_off` · رفض صريح ⇒ **نهائيّ بلا إعادة محاولة** · تعذّر وصول ⇒ `pending` بخمس محاولات وتراجع `30s × 2ⁿ`. **ولا يجوز أن يُبطل فشلُ التسليم اتفاقاً** (ADR-013 · القرار 2)، فلا 502 ولا `bad_gateway`.
+3. [NEGOTIATION_PERSISTENCE.md](../02-architecture/NEGOTIATION_PERSISTENCE.md) §2 — **حدّ المعاملة يملكه `PostgresNegotiationUnitOfWork` وحده**، والمنافذ الصادرة في 5/6 تُنادى **من داخل** حالة الاستخدام لا من داخل معاملة قاعدة: نداء شبكةٍ داخل معاملة يقفل صفوفاً بطول مهلة خدمةٍ أخرى.
+4. **الدَّين المُعلَن أدناه ملزم لـ5/6**: أعمدة الاتفاق في `orders` ونقطة النهاية التي يناديها `AgreedPricePort` — **مالكها محرّك الطلب**، وترحيلٌ عكسيّ.
 4. [ADR-013](../15-decisions/ADR-013-negotiation-chat-agreement-boundary-and-tick-driven-expiry.md) كاملاً — خصوصاً «البدائل المرفوضة» و«مؤجَّل صراحةً» · و[NEGOTIATION_CHAT.md](../03-domain/NEGOTIATION_CHAT.md) §3 و§4.
 5. [PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md) و[GIT_RULES](../00-rules/GIT_RULES.md) — لا دفع كودٍ بلا وثيقة في **نفس** الالتزام.
 6. **وقبل كل شيء: §2-أ** — حصّة دقائق CI منتهية، فأنبوب أي مراجعة أحمر لأسباب تشغيلية. **لا تُدمَج مراجعة بأنبوب أحمر**؛ يلزم تدخّل مالك الحساب أوّلاً.

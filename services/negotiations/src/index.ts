@@ -3,12 +3,16 @@
  *
  * ## What this package is, and what MR 2/6 deliberately leaves out
  *
- * Everything here is pure: entities, the two state machines, the frozen policy, the
- * event factories, the ports, in-memory adapters that enforce every named database
- * constraint, and the nine use cases; MR 3/6 added the Drizzle/Postgres adapters beside
- * them, behind the very same ports. There is still **no Fastify and no fetch** here.
- * You can run the whole suite on a laptop with nothing installed and get the same
- * answers CI gets.
+ * The domain is pure: entities, the two state machines, the frozen policy, the event
+ * factories, the ports, in-memory adapters that enforce every named database constraint,
+ * and the nine use cases; MR 3/6 added the Drizzle/Postgres adapters beside them, behind
+ * the very same ports, and MR 4/6 added the Fastify layer ON TOP of both — never inside
+ * either. There is still **no fetch** here.
+ *
+ * You can still run the whole suite on a laptop with nothing installed and get the same
+ * answers CI gets: `createNegotiationApp` takes a `NegotiationRunner`, and
+ * `createDirectNegotiationRunner` builds one over the in-memory dependencies, so the
+ * HTTP tests use `app.inject` with no port, no database and no sleep.
  *
  * That split is the same one every service in this repo has followed since Phase 03,
  * and the reason is not tidiness. A domain that can only be exercised through HTTP and
@@ -24,10 +28,14 @@
  *     `negotiations-db-integration` CI job. The parity suite runs these same use cases
  *     against both adapters, which is what turned «the in-memory store simulates the
  *     constraints» from a claim into a check: see `docs/02-architecture/NEGOTIATION_PERSISTENCE.md`.
- *   - **MR 4/6** — the Fastify server on port 8091, `/health`, and `onlyKeys()` on every
- *     response.
- *   - **MR 5/6** — the real `AgreedPricePort` over HTTP, the bot flows, and the declared
- *     `orders` migration (`agreed_amount_minor` and friends).
+ *   - **MR 4/6 (landed)** — the Fastify layer on port 8091: the ten contract paths plus
+ *     `/health`, `src/runner.ts` as the only transaction seam, `onlyKeys()` on every
+ *     request body, and one error handler that is the sole author of a status code. See
+ *     `docs/04-api/NEGOTIATION_HTTP.md`.
+ *   - **MR 5/6** — the real `DispatchOfferPort` (dispatch 8089) and `AgreedPricePort`
+ *     (orders 8087) over HTTP, the bot flows, and the declared `orders` migration
+ *     (`agreed_amount_minor` and friends). Until then `infrastructure/runtime.ts` wires
+ *     two ports that REFUSE by name rather than pretend to succeed.
  *   - **MR 6/6** — the exit-gate E2E package and its CI job.
  *
  * ## The one rule a reader must not miss
@@ -55,6 +63,7 @@ export * from "./infrastructure/in-memory.js";
 export * from "./infrastructure/drizzle/db.js";
 export * from "./infrastructure/drizzle/repository.js";
 export * from "./infrastructure/drizzle/transaction.js";
+export * from "./infrastructure/runtime.js";
 
 export * from "./use-cases/shared.js";
 export * from "./use-cases/expiry-core.js";
@@ -67,3 +76,18 @@ export * from "./use-cases/post-message.js";
 export * from "./use-cases/cancel-thread.js";
 export * from "./use-cases/read-negotiation.js";
 export * from "./use-cases/run-tick.js";
+
+export * from "./runner.js";
+export * from "./mappers.js";
+export * from "./http/app.js";
+export {
+  sendNegotiationError,
+  toWireDetails,
+  NEGOTIATION_INTERNAL_ERROR_CODE,
+  type NegotiationErrorBody,
+  type NegotiationErrorWireDetails,
+} from "./http/errors.js";
+export * from "./http/requests.js";
+// `http/server.js` غائبٌ عن هذه القائمة عن قصد: آخر سطر فيه `await main()`، فاستيرادُ
+// الحزمة لقراءة نوعٍ منها كان سيرفع خادماً على المنفذ 8091.
+

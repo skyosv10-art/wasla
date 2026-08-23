@@ -58,6 +58,14 @@ import type {
   RulesetRepository,
   ScoreRepository,
 } from "../ports.js";
+/**
+ * منافذُ التصريف (المراجعة 5/6) تسكن `outbound/` لا `ports.ts`.
+ *
+ * والفرقُ مقصود: `ports.ts` حدودُ ما تراه حالاتُ الاستخدام داخل معاملة القرار،
+ * وحالاتُ الاستخدام لا تقرأ الصندوقَ أبداً ولا تعرف أنّ له مُصرّفاً.
+ */
+import type { EventSinkPort, OutboxRecord } from "../outbound/event-sink.js";
+import type { OutboxDrainStore } from "../outbound/drain-outbox.js";
 
 // ---------------------------------------------------------------------------
 // الساعة والمُعرّفات — حتميّتان بالكامل
@@ -396,25 +404,175 @@ export class InMemoryIdempotencyRepository implements IdempotencyRepository {
 // ---------------------------------------------------------------------------
 
 /**
- * صندوقٌ في الذاكرة يُراكم ما كان سيُكتب في `reputation_outbox`.
+ * صفُّ صندوقٍ في الذاكرة — بنفس أعمدة `reputation_outbox` القابلةِ للتغيّر.
  *
- * لا نشرَ ولا `fetch`: `appended` قائمةٌ تُفحَص. وهذا وحده ما يجعل الاختبار قادراً على
- * تأكيد «حدثٌ **واحد** لطلبٍ مكتمل، لا صفرٌ ولا اثنان» — وهي عبارةُ بوّابة خروج الطور
- * (المراجعة 6/6) بعينها.
+ * `publishedAt` و`attempts` و`lastError` و`locked` موجودةٌ هنا لأنّ المراجعةَ 5/6 تُدخل
+ * مُصرّفاً، ومُصرّفٌ يُختبَر على مخزنٍ بلا هذه الأعمدة يُثبت منطقاً لا وجودَ له على
+ * القاعدة. و`locked` تُحاكي `FOR UPDATE SKIP LOCKED` لا أكثر: مخزنُ الذاكرة لا معاملةَ
+ * له، والتظاهرُ بأنّ الاحتجازَ مجّانيٌّ كان سيُخفي بعينه ما وُجدت حزمةُ المطابقة لقياسه.
  */
-export class InMemoryOutbox implements OutboxPort {
-  readonly appended: { readonly event: ReputationDomainEvent; readonly at: string }[] = [];
+interface InMemoryOutboxRow {
+  readonly event: ReputationDomainEvent;
+  readonly appendedAt: string;
+  publishedAt: string | null;
+  attempts: number;
+  lastError: string | null;
+  locked: boolean;
+}
+
+/**
+ * صندوقُ الصادر في الذاكرة: يكتب كما يكتب المُهيئ، ويُصرَّف كما يُصرَّف.
+ *
+ * ويُنفّذ منفذين: `OutboxPort` (الكتابةُ داخل معاملة القرار) و`OutboxDrainStore`
+ * (الاحتجازُ والتعليمُ). ودمجُهما في صنفٍ واحدٍ هنا صدقٌ لا تهاون: الجدولُ واحدٌ على
+ * القاعدة أيضاً، وصنفان على مصفوفتين كانا سيُنتجان اختباراً يُصرّف صندوقاً لم يُكتب فيه.
+ */
+export class InMemoryOutbox implements OutboxPort, OutboxDrainStore {
+  private readonly rows: InMemoryOutboxRow[] = [];
+
+  /**
+   * القراءةُ التاريخيّةُ التي تعتمدها اختباراتُ المراجعات 1/6..4/6 — تبقى كما كانت.
+   *
+   * وتُبنى الآن من `rows` لا من مصفوفةٍ ثانية: مصدرٌ واحدٌ للحقيقة، فلا يُصرَّف صفٌّ لا
+   * تراه `appended` ولا العكس.
+   */
+  get appended(): readonly { readonly event: ReputationDomainEvent; readonly at: string }[] {
+    return this.rows.map((row) => ({ event: row.event, at: row.appendedAt }));
+  }
 
   async append(events: readonly ReputationDomainEvent[], at: string): Promise<void> {
-    for (const event of events) this.appended.push({ event, at });
+    for (const event of events) {
+      /**
+       * `onConflictDoNothing` على المفتاح الأساسيّ، ومفتاحُه `event_id` (انظر
+       * `PostgresReputationOutbox`). فإعادةُ إدراج نفس الحدث لا تُنتج صفّاً ثانياً هنا
+       * كما لا تُنتجه هناك — ومخزنٌ يقبلها كان سيجعل اختبارَ «حدثٌ واحد لا اثنان» يمرّ
+       * في الذاكرة ويسقط على القاعدة.
+       */
+      if (this.rows.some((row) => row.event.event_id === event.event_id)) continue;
+      this.rows.push({
+        event,
+        appendedAt: at,
+        publishedAt: null,
+        attempts: 0,
+        lastError: null,
+        locked: false,
+      });
+    }
   }
 
   eventsOfType(eventType: string): readonly ReputationDomainEvent[] {
-    return this.appended.filter((entry) => entry.event.event_type === eventType).map((e) => e.event);
+    return this.rows.filter((row) => row.event.event_type === eventType).map((row) => row.event);
   }
 
   clear(): void {
-    this.appended.length = 0;
+    this.rows.length = 0;
+  }
+
+  // -- OutboxDrainStore -----------------------------------------------------
+
+  async claimUnpublished(limit: number): Promise<readonly OutboxRecord[]> {
+    const claimed = this.rows
+      .filter((row) => row.publishedAt === null && !row.locked)
+      .sort((left, right) => {
+        const byInstant =
+          toEpochMillis(left.event.occurred_at, "occurredAt") -
+          toEpochMillis(right.event.occurred_at, "occurredAt");
+        return byInstant !== 0 ? byInstant : left.event.event_id.localeCompare(right.event.event_id);
+      })
+      .slice(0, limit);
+    for (const row of claimed) row.locked = true;
+    return claimed.map((row) => ({
+      id: row.event.event_id,
+      aggregateType: row.event.aggregate.type,
+      aggregateId: row.event.aggregate.id,
+      eventType: row.event.event_type,
+      eventVersion: row.event.event_version,
+      payload: row.event,
+      occurredAt: row.event.occurred_at,
+      attempts: row.attempts,
+      traceId: row.event.trace_id,
+    }));
+  }
+
+  async markPublished(id: string, publishedAt: string): Promise<boolean> {
+    const row = this.rows.find((candidate) => candidate.event.event_id === id);
+    if (row === undefined) return false;
+    row.locked = false;
+    /** الشرطيّةُ نفسُها: صفٌّ منشورٌ لا يُنشَر ثانيةً، ويُقال ذلك بـ`false` لا بصمت. */
+    if (row.publishedAt !== null) return false;
+    row.publishedAt = publishedAt;
+    return true;
+  }
+
+  async recordDeliveryFailure(id: string, reason: string): Promise<void> {
+    const row = this.rows.find((candidate) => candidate.event.event_id === id);
+    if (row === undefined) return;
+    row.locked = false;
+    row.attempts += 1;
+    row.lastError = reason;
+  }
+
+  /** للتشخيص والاختبار: كم صفّاً بقي غيرَ منشور، وما آخرُ سببِ فشلٍ لصفّ. */
+  unpublishedCount(): number {
+    return this.rows.filter((row) => row.publishedAt === null).length;
+  }
+
+  publishedCount(): number {
+    return this.rows.filter((row) => row.publishedAt !== null).length;
+  }
+
+  attemptsOf(eventId: string): number {
+    return this.rows.find((row) => row.event.event_id === eventId)?.attempts ?? 0;
+  }
+
+  lastErrorOf(eventId: string): string | null {
+    return this.rows.find((row) => row.event.event_id === eventId)?.lastError ?? null;
+  }
+}
+
+/**
+ * منفذُ تسليمٍ يُسجّل ما وصله — بديلُ الناقلِ في كل اختبار.
+ *
+ * وهو ما يجعل سؤالَ البوابة قابلاً للقياس: «حدثٌ واحدٌ بالضبط، لا صفرٌ ولا اثنان» سؤالٌ
+ * عن **عددِ ما وصل المستهلكَ**، لا عن رمزِ حالةٍ ولا عن عددِ صفوفٍ في جدول.
+ */
+export class RecordingEventSink implements EventSinkPort {
+  readonly delivered: OutboxRecord[] = [];
+
+  async deliver(record: OutboxRecord): Promise<void> {
+    this.delivered.push(record);
+  }
+
+  countOfType(eventType: string): number {
+    return this.delivered.filter((record) => record.eventType === eventType).length;
+  }
+
+  clear(): void {
+    this.delivered.length = 0;
+  }
+}
+
+/**
+ * منفذٌ يفشل عدداً مُعلَناً من المرّات ثمّ ينجح.
+ *
+ * وُجد ليُقاس البندُ الثالثُ في HANDOFF §16-ي: «إعادةُ المحاولة لا تُنتج نشرتين لنفس
+ * الصفّ». ومنفذٌ يفشل دائماً كان يُثبت نصفَ الجواب: أنّ الفشلَ لا يُعلّم الصفّ. والنصفُ
+ * الآخر — أنّ النجاحَ بعد الفشل يُنتج نشرةً **واحدة** — يحتاج منفذاً يتحوّل.
+ */
+export class FlakyEventSink implements EventSinkPort {
+  readonly delivered: OutboxRecord[] = [];
+  private remainingFailures: number;
+
+  constructor(failures: number, private readonly reason = "sink unavailable") {
+    this.remainingFailures = failures;
+  }
+
+  async deliver(record: OutboxRecord): Promise<void> {
+    if (this.remainingFailures > 0) {
+      this.remainingFailures -= 1;
+      throw new Error(this.reason);
+    }
+    this.delivered.push(record);
   }
 }
 

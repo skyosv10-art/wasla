@@ -21,11 +21,13 @@
  */
 
 import type { Clock, IdGenerator, ReputationDependencies } from "../../ports.js";
+import type { OutboxDrainRunner, OutboxDrainStore } from "../../outbound/drain-outbox.js";
 import type { Db, DbOrTx } from "./db.js";
 import {
   PostgresFactRepository,
   PostgresFraudSignalRepository,
   PostgresIdempotencyRepository,
+  PostgresOutboxDrainStore,
   PostgresRatingRepository,
   PostgresReputationOutbox,
   PostgresRulesetRepository,
@@ -108,5 +110,32 @@ export class PostgresReputationUnitOfWork {
     operation: (context: ReputationUnitOfWorkContext) => Promise<T>,
   ): Promise<T> {
     return operation({ db: this.db, deps: bindReputationAdapters(this.db, shared) });
+  }
+}
+
+/**
+ * مُشغّلُ تصريفِ الصندوق على PostgreSQL (المراجعة 5/6).
+ *
+ * ## لِمَ مُشغّلٌ منفصلٌ عن `PostgresReputationUnitOfWork`
+ *
+ * الفرقُ ليس تنظيماً بل عقدَ معاملة. معاملةُ القرار تكتب واقعةً ونتيجةً وحدثاً ثمّ تلتزم
+ * فوراً، ولا تنتظر شيئاً خارج القاعدة. ومعاملةُ التصريف **تنتظر شبكةً** بين الاحتجاز
+ * والالتزام، وذاك ثمنٌ لا يجوز أن يُدفع في مسار الطلب.
+ *
+ * ودمجُهما في مُشغّلٍ واحدٍ كان سيُغري بأسوأِ نسخةٍ ممكنة: أن يُصرَّف الصندوقُ في نفس
+ * معاملة تسجيل الواقعة. وحينئذٍ يصير عطلُ الناقل تراجعاً يمحو سمعةً صحيحة — وهو بعينه
+ * ما وُجد صندوقُ الصادر ليمنعه.
+ *
+ * ولذلك لا يظهر هذا المُشغّلُ في `ReputationDependencies` ولا في `ReputationSharedDeps`:
+ * حالاتُ الاستخدام لا تعرف أنّ للصندوق مُصرّفاً، ولا يمكنها استدعاؤه ولو أرادت.
+ *
+ * ولا يزيد هذا الملفُّ عن استدعاءٍ واحدٍ لـ`db.transaction` كما في `run()` أعلاه: القاعدةُ
+ * أنّ هذا الملفَّ وحده يفتح المعاملات، وهي تبقى صحيحةً حرفيّاً بعد هذه الإضافة.
+ */
+export class PostgresOutboxDrainRunner implements OutboxDrainRunner {
+  constructor(private readonly db: Db) {}
+
+  async drain<T>(work: (store: OutboxDrainStore) => Promise<T>): Promise<T> {
+    return this.db.transaction(async (tx) => work(new PostgresOutboxDrainStore(tx)));
   }
 }

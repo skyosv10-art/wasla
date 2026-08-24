@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Subscriptions & Referrals service — الحالةُ مُشتقّةٌ من دفتر مُدَدٍ لا حقلٌ يُكتب، والمكافأةُ مدةٌ لا رصيد، ولا عمودَ مالٍ واحدٍ هنا (Phase 10 · MR 3/6: استمراريّةٌ على Postgres — مُهاجرةٌ تُطبّق العقد، وبذرةُ خطّةٍ من `plans.ts` نفسِها، ودفترُ إضافةٍ فقط بلا `UPDATE` على حالة).",
+  "description": "WASLA Subscriptions & Referrals service — الحالةُ مُشتقّةٌ من دفتر مُدَدٍ لا حقلٌ يُكتب، والمكافأةُ مدةٌ لا رصيد، ولا عمودَ مالٍ واحدٍ هنا (Phase 10 · MR 4/6: معاملةٌ واحدةٌ تكتب المدّةَ والانتقالَ والصفَّ المُتحقِّق، وطبقةُ HTTP باثنتَي عشرةَ عمليّةً على المنفذ 8093).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -12,6 +12,14 @@
     "./db": {
       "types": "./src/db/index.ts",
       "import": "./src/db/index.ts"
+    },
+    "./app": {
+      "types": "./src/app/index.ts",
+      "import": "./src/app/index.ts"
+    },
+    "./http": {
+      "types": "./src/http/app.ts",
+      "import": "./src/http/app.ts"
     }
   },
   "scripts": {
@@ -19,11 +27,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:migrate": "node --import tsx src/db/migrate-cli.ts"
+    "db:migrate": "node --import tsx src/db/migrate-cli.ts",
+    "dev": "tsx watch src/http/server.ts",
+    "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
     "@wasla/contracts-subscription": "workspace:*",
     "drizzle-orm": "^0.45.2",
+    "fastify": "^5.12.1",
     "pg": "^8.23.0"
   },
   "devDependencies": {

@@ -12,8 +12,12 @@
  * والقيودُ المُسمّاةُ تُقارن كذلك: هي التي يقرأ `repository.ts` أسماءَها ليُترجم الرفضَ إلى
  * رمزِ مجالٍ، فاسمٌ يتغيّر في العقد بلا مرآةٍ يُنتج خطأً خاماً بدل رمزٍ مُعلَن.
  *
- * أمّا الجداولُ الستةُ التي لا مرآةَ لها في هذه المراجعة فتُقارن بقائمةٍ **مُعلَنةٍ بالاسم**
+ * أمّا الجداولُ الثلاثةُ التي لا مرآةَ لها بعد المراجعة 4/6 فتُقارن بقائمةٍ **مُعلَنةٍ بالاسم**
  * (`NOT_MIRRORED_TABLES`)، فيومَ تُنعكس واحدةٌ منها يفشل هذا الاختبارُ حتى تُحدَّث القائمة.
+ *
+ * وأضافت المراجعة 4/6 ثلاثةَ مرايا (`subscriptions` · `referral_codes` · `referrals`)، فصار
+ * المفحوصُ سبعةَ جداول. والقيودُ غيرُ المُسمّاة في العقد (تعدادُ `state` · صيغةُ المُعرّف) لا
+ * مرآةَ لها بقصد: هذا الحارسُ يقارن الأسماءَ بحرفها، واسمٌ نخترعه هنا لا وجودَ له في القاعدة.
  */
 
 import { readFileSync } from "node:fs";
@@ -23,9 +27,12 @@ import { getTableConfig } from "drizzle-orm/pg-core";
 import { SCHEMA_CONTRACT_PATH } from "../db/migrate.js";
 import {
   NOT_MIRRORED_TABLES,
+  referralCodes,
+  referrals,
   subscriptionPeriods,
   subscriptionPlanEntitlements,
   subscriptionPlans,
+  subscriptions,
   subscriptionTransitions,
 } from "../db/schema.js";
 
@@ -34,8 +41,11 @@ const DDL = readFileSync(SCHEMA_CONTRACT_PATH, "utf8");
 const MIRRORED = [
   subscriptionPlans,
   subscriptionPlanEntitlements,
+  subscriptions,
   subscriptionPeriods,
   subscriptionTransitions,
+  referralCodes,
+  referrals,
 ];
 
 interface DdlColumn {
@@ -114,12 +124,15 @@ describe("حارسُ الانحراف يقرأ العقدَ فعلاً", () => {
     expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(10);
   });
 
-  it("والمرآةُ أربعةُ جداولٍ لا أقلّ", () => {
+  it("والمرآةُ سبعةُ جداولٍ لا أقلّ", () => {
     expect(MIRRORED.map((table) => getTableConfig(table).name).sort()).toEqual([
+      "referral_codes",
+      "referrals",
       "subscription_periods",
       "subscription_plan_entitlements",
       "subscription_plans",
       "subscription_transitions",
+      "subscriptions",
     ]);
   });
 });

@@ -61,7 +61,15 @@ describe.skipIf(!PG_ENABLED)("دفترُ الاشتراك على Postgres", () =
     const stored = await pg.ledger.insertPeriod(draft);
 
     expect(stored.periodId).toMatch(UUID);
-    expect(stored).toEqual({ ...draft, periodId: stored.periodId });
+    // ولحظةُ الإنشاء من المحرّك كذلك: العقدُ يُلزم `created_at`، وهي **لحظةُ كتابةٍ** لا
+    // لحظةُ تغطية. ولذلك تُقارن بالصيغة لا بقيمةٍ متوقَّعة: قيمةٌ متوقَّعةٌ كانت ستُلزمنا
+    // بتمرير ساعةٍ إلى القاعدة، وهو نقضُ «`now()` من المحرّك» في العقد.
+    expect(stored.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/u);
+    expect(stored).toEqual({
+      ...draft,
+      periodId: stored.periodId,
+      createdAt: stored.createdAt,
+    });
   });
 
   it("ومُعرّفان لا يتساويان — فالمحرّكُ يُولّد ولا يُعيد ثابتاً", async () => {

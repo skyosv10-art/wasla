@@ -53,6 +53,16 @@ export {
   type FactOutcome,
   type ReputationFactEvent,
 } from "./facts.js";
-export { fingerprint } from "./idempotency.js";
+export {
+  ReplayedResponse,
+  fingerprint,
+  isReplayedResponse,
+  rememberOutcome,
+  replayGuard,
+  type IdempotencyEnvelope,
+  type IdempotencyReadPort,
+  type IdempotencyRememberPort,
+  type StoredIdempotentResponse,
+} from "./idempotency.js";
 export { systemClock, uuidIdGenerator } from "./runtime.js";
 export { syncFromLedger, type SyncInput, type SyncOutcome } from "./sync.js";

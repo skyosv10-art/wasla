@@ -63,6 +63,11 @@ import { assertTimestamp, isAtOrAfter, type Clock } from "../domain/time.js";
 import type { ProjectionRecord } from "../db/projection.js";
 import type { LedgerTrace, PeriodRecord, PostgresSubscriptionLedger } from "../db/repository.js";
 import type { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
+import {
+  rememberOutcome,
+  replayGuard,
+  type IdempotencyEnvelope,
+} from "./idempotency.js";
 import { referralCodeFor } from "./referral-code.js";
 import type { IdGenerator } from "./events.js";
 import { syncFromLedger } from "./sync.js";
@@ -89,6 +94,13 @@ export interface StartTrialInput {
   readonly planVersion: number;
   readonly requestedAt: string;
   readonly trace?: LedgerTrace;
+  /**
+   * مِغلافُ منعِ التكرار — اختياريٌّ لأنّ النبضةَ ومستهلكَ الوقائعِ يُنادَيان بلا مفتاح.
+   *
+   * وحقلٌ في المُدخل بدلَ وسيطٍ ثانٍ كي يبقى النداءُ نداءً واحداً موصوفَ الحقول، ولئلّا
+   * يصير ترتيبُ الوسائطِ هو ما يحمل المعنى في عمليّةٍ لها ستّةُ حقول.
+   */
+  readonly idempotency?: IdempotencyEnvelope<GrantOutcome>;
 }
 
 export interface ActivateInput {
@@ -98,6 +110,7 @@ export interface ActivateInput {
   readonly planVersion: number;
   readonly activatedAt: string;
   readonly trace?: LedgerTrace;
+  readonly idempotency?: IdempotencyEnvelope<GrantOutcome>;
 }
 
 export interface GrantOutcome {
@@ -242,6 +255,9 @@ export class SubscriptionService {
     const planVersion = assertPlanVersion(input.planVersion);
     const now = this.declaredInstant(input.requestedAt, "requested_at");
     const { value } = await this.uow.write(async ({ stores, probe }) => {
+      // الحراسةُ أوّلُ ما يقع في المعاملة: إعادةُ إرسالٍ لا تقرأ خطّةً ولا تفحص وجوداً،
+      // فتُجيب `409` عن «اشتراكٌ قائم» بدلَ الجوابِ المحفوظِ الذي تستحقّه.
+      if (input.idempotency) await replayGuard(stores.idempotency, input.idempotency);
       const plan = await requirePlan(stores.ledger, planCode, planVersion, true);
 
       const existing = await stores.projection.read(driverPublicId);
@@ -265,12 +281,17 @@ export class SubscriptionService {
       // ثابتة، وبذرُه أثرٌ من آثارِ الاشتراكِ لا فعلٌ مستقلٌّ له مسار.
       await stores.referrals.ensureCode(referralCodeFor(input.driverPublicId), input.driverPublicId);
 
-      return {
+      const granted = {
         state: this.viewOf(outcome.projection, plan),
         period: outcome.period!,
         duplicate: false,
         eventIds: outcome.eventIds,
       } satisfies GrantOutcome;
+      // والتثبيتُ آخرُ ما يقع فيها: الجوابُ المحفوظُ يُلزَم مع المُدّةِ والحدثِ في معاملةٍ
+      // واحدة، فإمّا وُجد الثلاثةُ أو لم يوجد شيءٌ منها.
+      return input.idempotency
+        ? await rememberOutcome(stores.idempotency, input.idempotency, granted)
+        : granted;
     });
     return value;
   }
@@ -281,6 +302,7 @@ export class SubscriptionService {
     assertPlanVersion(input.planVersion);
     const now = this.declaredInstant(input.activatedAt, "activated_at");
     const { value } = await this.uow.write(async ({ stores, probe }) => {
+      if (input.idempotency) await replayGuard(stores.idempotency, input.idempotency);
       const plan = await requirePlan(stores.ledger, input.planCode, input.planVersion, true);
 
       const stored = await stores.projection.read(input.driverPublicId);
@@ -293,7 +315,7 @@ export class SubscriptionService {
       );
       if (replayed) {
         // إعادةُ تسليمٍ لنفسِ المرجع: تُعاد الحالةُ المحفوظةُ بلا منحةٍ ثانية.
-        return {
+        const duplicated = {
           state: this.viewOf(stored, await this.planOfProjection(stores.ledger, stored)),
           period: replayed,
           duplicate: true,
@@ -301,6 +323,11 @@ export class SubscriptionService {
           // كلَّ أثرٍ عند كلِّ مستهلك، وهو أسوأُ ما تُنتجه إعادةُ محاولةٍ سليمة.
           eventIds: [],
         } satisfies GrantOutcome;
+        // ويُثبَّت هذا الجوابُ أيضاً: مرجعُ الدفعِ يحرس المُدّةَ، والمفتاحُ يحرس **البايتات**.
+        // فمفتاحان مختلفان لنفسِ المرجع لكلٍّ منهما جوابُه المحفوظُ، وهما متساويان.
+        return input.idempotency
+          ? await rememberOutcome(stores.idempotency, input.idempotency, duplicated)
+          : duplicated;
       }
 
       const outcome = await syncFromLedger({
@@ -322,12 +349,15 @@ export class SubscriptionService {
         ids: this.ids,
       });
 
-      return {
+      const granted = {
         state: this.viewOf(outcome.projection, plan),
         period: outcome.period!,
         duplicate: false,
         eventIds: outcome.eventIds,
       } satisfies GrantOutcome;
+      return input.idempotency
+        ? await rememberOutcome(stores.idempotency, input.idempotency, granted)
+        : granted;
     });
     return value;
   }
@@ -338,10 +368,15 @@ export class SubscriptionService {
    * لا `grant` هنا: لا مُدّةَ تُضاف، فلا يجوز أن يُغيّر هذا الطريقُ تغطيةَ سائقٍ بحرفٍ واحد.
    * ولحظةُ الحساب من الساعةِ لأنّ الطلبَ لا يحمل وقتاً (نصُّ العقد: لا جسمَ للطلب).
    */
-  async recompute(driver: string, trace?: LedgerTrace): Promise<RecomputeOutcome> {
+  async recompute(
+    driver: string,
+    trace?: LedgerTrace,
+    idempotency?: IdempotencyEnvelope<RecomputeOutcome>,
+  ): Promise<RecomputeOutcome> {
     const driverPublicId = assertWaslaPublicId(driver);
     const now = this.clock.now();
     const { value } = await this.uow.write(async ({ stores, probe }) => {
+      if (idempotency) await replayGuard(stores.idempotency, idempotency);
       const periods = await stores.ledger.listPeriods(driverPublicId);
       // الدفترُ هو الأصل: صفٌّ مُتحقِّقٌ غائبٌ يُعاد بناؤه، أمّا دفترٌ فارغٌ فلا شيءَ يُبنى منه.
       if (periods.length === 0) throw subscriptionNotFound();
@@ -356,11 +391,16 @@ export class SubscriptionService {
         before.expiresAt !== outcome.projection.expiresAt ||
         before.stateSequence !== outcome.projection.stateSequence;
 
-      return {
+      const recomputed = {
         state: this.viewOf(outcome.projection, plan),
         rebuilt,
         eventIds: outcome.eventIds,
       } satisfies RecomputeOutcome;
+      // وإعادةُ بناءٍ ثانيةٌ بنفسِ المفتاحِ تُعيد `rebuilt` الأوّلَ لا `false`: الأوّلُ هو ما
+      // جرى فعلاً، و`false` كان سيقول للمُتَّصلِ إنّ لا شيءَ تغيّر وقد تغيّر.
+      return idempotency
+        ? await rememberOutcome(stores.idempotency, idempotency, recomputed)
+        : recomputed;
     });
     return value;
   }

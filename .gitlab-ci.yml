@@ -706,3 +706,39 @@ reputation-db-integration:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/reputation-service test:integration
+
+# الاشتراك والإحالة (المرحلة 10 · MR 3/6): يطبّق العقد الكنسي
+# services/subscriptions/contracts/schema.sql على قاعدة نظيفة عبر المُهاجرة نفسِها
+# (applySubscriptionSchema)، لا عبر ملفٍّ ثانٍ يُعاد كتابته باليد، ثمّ يشغّل حزمتَي
+# تكامل لا تُغني الذاكرة عن أيٍّ منهما:
+#   • migrate.integration.test.ts — الجداولُ العشرةُ موجودةٌ فعلاً بأسماء قيودها كما
+#     يُسمّيها المحرّك، وبذرةُ الكتالوج تُقارَن حقلاً حقلاً بـ LAUNCH_PLAN مقروءةً من
+#     القاعدة (لا رقمَ واحداً يُعاد كتابته في INSERT)، وإعادةُ الترحيل لا تُضاعف صفّاً.
+#   • ledger.integration.test.ts — مطابقةُ الاشتقاق: deriveState على صفوفٍ قُرئت من
+#     Postgres يساوي deriveState على مسوّداتٍ في الذاكرة، والتجديدُ يُضيف مدةً ولا
+#     يُضيف انتقالاً (القرار 3)، و`active → active` والإنشاءُ إلى غير trial ومرجعُ
+#     الدفعِ في غير موضعه تُرفض **في القاعدة** بنفس رموز المجال.
+#
+# ولمَ وظيفةٌ بقاعدةٍ حقيقية والحزمةُ السريعةُ فيها حارسُ انحرافٍ بلا قاعدة؟ لأنّ
+# schema-drift.test.ts يقارن المرآةَ بنصِّ العقد، وهذا يُثبت تطابقَ نصَّين لا أنّ
+# المحرّكَ يقبل ما تقبله المرآة: قيدٌ مكتوبٌ في العقد بصيغةٍ يرفضها Postgres، أو اسمُ
+# قيدٍ يُترجمه repository.ts ولا يُصدره المحرّك، لا يظهر إلّا هنا. وبلا هذه الوظيفة
+# يبقى «الدفترُ يعمل» وعداً لا خبراً.
+#
+# قاعدة مستقلّة (wasla_subscriptions_test) حتى لا تتداخل جداولها مع خدمةٍ أخرى وليبقى
+# الفشلُ منسوباً لوظيفةٍ واحدة. والمتغيّر DATABASE_URL هو ما يقرأه pg-harness؛ وبغيابه
+# تُتخطّى الحزمتان بكاملهما (skipIf) بلا تأكيداتٍ زائفةٍ تُخفي أنّ القاعدةَ لم تُرفَع.
+subscriptions-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_subscriptions_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_subscriptions_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/subscriptions-service test:integration

@@ -64,6 +64,7 @@ import type { ProjectionRecord } from "../db/projection.js";
 import type { LedgerTrace, PeriodRecord, PostgresSubscriptionLedger } from "../db/repository.js";
 import type { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
 import { referralCodeFor } from "./referral-code.js";
+import type { IdGenerator } from "./events.js";
 import { syncFromLedger } from "./sync.js";
 
 /**
@@ -103,10 +104,21 @@ export interface GrantOutcome {
   readonly state: StateView;
   readonly period: PeriodRecord;
   readonly duplicate: boolean;
+  /**
+   * مُعرِّفاتُ ما كُتب في صندوقِ الصادرِ في **نفسِ** معاملةِ هذا النداء — فارغةٌ عند الإعادة.
+   *
+   * ولمَ تُعاد إلى الأعلى وهي لا تخرج على السلك (الغلافُ `additionalProperties: false`)؟
+   * لأنّها الطريقُ الوحيدُ لاختبارٍ يُثبت «حدثٌ لكلّ انتقالٍ لا حدثٌ لكلّ نداء» دون أن يقرأ
+   * الجدولَ بنفسِه. وقراءةٌ من الجدولِ كانت ستُثبت أنّ صفوفاً هناك، لا أنّ **هذا** النداءَ
+   * كتبها — وهو الفرقُ بين اختبارِ ذرّيةٍ واختبارِ وجود.
+   */
+  readonly eventIds: readonly string[];
 }
 
 export interface RecomputeOutcome {
   readonly state: StateView;
+  /** مُعرِّفاتُ أحداثِ هذه المعاملة — انظر `GrantOutcome.eventIds`. */
+  readonly eventIds: readonly string[];
   /** هل اختلف ما بناه الدفترُ عمّا كان مخزوناً (أو كان الصفُّ غائباً أصلاً). */
   readonly rebuilt: boolean;
 }
@@ -144,9 +156,17 @@ export class SubscriptionService {
   /** آخرُ نبضةٍ نفّذتها **هذه العملية** — يُعلَن في `GET /health` كما يقول العقد. */
   private lastTick: string | null = null;
 
+  /**
+   * `ids` وسيطٌ ثالثٌ **إلزاميّ**: لا نشرَ بلا مُعرِّفٍ، ولا مُعرِّفَ بلا منفذٍ يُمرَّر.
+   *
+   * ولمَ لا يُستورَد `uuidIdGenerator` داخلَ الخدمةِ مباشرةً؟ لأنّ الاختبارَ حينئذٍ لا يستطيع
+   * أن يُقارن حمولةً بمساواةٍ تامّة، فيصير يُقارن «حقلٌ موجودٌ وشكلُه uuid» — وهو تحقّقٌ يمرّ
+   * على مُعرِّفٍ مختلفٍ في الحمولةِ عن مفتاحِ الصفّ، أي على العطبِ بعينه الذي يحرسه.
+   */
   constructor(
     private readonly uow: SubscriptionUnitOfWork,
     private readonly clock: Clock,
+    private readonly ids: IdGenerator,
   ) {}
 
   get lastTickAt(): string | null {
@@ -236,6 +256,7 @@ export class SubscriptionService {
         grant: draftTrialPeriod({ driverPublicId: input.driverPublicId, plan, now }),
         trace: input.trace,
         probe,
+        ids: this.ids,
       });
 
       // رمزُ الإحالةِ يُبذَر هنا **داخل نفسِ المعاملة**، لا عند أوّلِ قراءةٍ للرمز:
@@ -248,6 +269,7 @@ export class SubscriptionService {
         state: this.viewOf(outcome.projection, plan),
         period: outcome.period!,
         duplicate: false,
+        eventIds: outcome.eventIds,
       } satisfies GrantOutcome;
     });
     return value;
@@ -275,6 +297,9 @@ export class SubscriptionService {
           state: this.viewOf(stored, await this.planOfProjection(stores.ledger, stored)),
           period: replayed,
           duplicate: true,
+          // إعادةٌ لا تكتب حقيقةً فلا تُنشر حدثاً: حدثٌ ثانٍ لنفسِ التفعيلِ كان سيُضاعف
+          // كلَّ أثرٍ عند كلِّ مستهلك، وهو أسوأُ ما تُنتجه إعادةُ محاولةٍ سليمة.
+          eventIds: [],
         } satisfies GrantOutcome;
       }
 
@@ -294,12 +319,14 @@ export class SubscriptionService {
         }),
         trace: input.trace,
         probe,
+        ids: this.ids,
       });
 
       return {
         state: this.viewOf(outcome.projection, plan),
         period: outcome.period!,
         duplicate: false,
+        eventIds: outcome.eventIds,
       } satisfies GrantOutcome;
     });
     return value;
@@ -321,7 +348,7 @@ export class SubscriptionService {
 
       const before = await stores.projection.read(driverPublicId);
       const plan = await this.planOfPeriods(stores.ledger, periods);
-      const outcome = await syncFromLedger({ stores, driverPublicId, plan, now, trace, probe });
+      const outcome = await syncFromLedger({ stores, driverPublicId, plan, now, trace, probe, ids: this.ids });
 
       const rebuilt =
         before === null ||
@@ -329,7 +356,11 @@ export class SubscriptionService {
         before.expiresAt !== outcome.projection.expiresAt ||
         before.stateSequence !== outcome.projection.stateSequence;
 
-      return { state: this.viewOf(outcome.projection, plan), rebuilt } satisfies RecomputeOutcome;
+      return {
+        state: this.viewOf(outcome.projection, plan),
+        rebuilt,
+        eventIds: outcome.eventIds,
+      } satisfies RecomputeOutcome;
     });
     return value;
   }
@@ -388,6 +419,7 @@ export class SubscriptionService {
             plan,
             now: ranAt,
             probe,
+            ids: this.ids,
           });
         });
         if (!value?.transition) continue;

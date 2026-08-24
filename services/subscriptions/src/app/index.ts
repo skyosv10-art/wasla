@@ -27,5 +27,32 @@ export {
   type TickOutcome,
 } from "./subscriptions.js";
 export { REFERRAL_CODE_ALPHABET, referralCodeFor } from "./referral-code.js";
-export { systemClock } from "./runtime.js";
+export {
+  DRAIN_BATCH_LIMIT,
+  EventPayloadIncompleteError,
+  EventSinkUnconfiguredError,
+  drainSubscriptionOutbox,
+  sequentialIdGenerator,
+  sequentialUuidGenerator,
+  toOutboxDraft,
+  transitionEvent,
+  unconfiguredEventSink,
+  type DrainFailure,
+  type DrainReport,
+  type EventSinkPort,
+  type IdGenerator,
+} from "./events.js";
+export {
+  CONSUMED_EVENT_TYPE,
+  FACT_IGNORE_REASONS,
+  FACT_ROUTE_KEY,
+  QUALIFYING_FACT_KIND,
+  ReputationFactConsumer,
+  parseReputationFact,
+  type FactIgnoreReason,
+  type FactOutcome,
+  type ReputationFactEvent,
+} from "./facts.js";
+export { fingerprint } from "./idempotency.js";
+export { systemClock, uuidIdGenerator } from "./runtime.js";
 export { syncFromLedger, type SyncInput, type SyncOutcome } from "./sync.js";

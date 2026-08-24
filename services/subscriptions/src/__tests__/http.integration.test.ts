@@ -25,6 +25,7 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { ReferralService } from "../app/referrals.js";
+import { sequentialUuidGenerator } from "../app/events.js";
 import { SubscriptionService } from "../app/subscriptions.js";
 import { referralCodeFor } from "../app/referral-code.js";
 import { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
@@ -32,7 +33,16 @@ import { LAUNCH_PLAN } from "../domain/plans.js";
 import { addDays } from "../domain/time.js";
 import type { Clock } from "../domain/time.js";
 import { createSubscriptionApp } from "../http/app.js";
-import type { PeriodWire, PlanWire, ReferralWire, StateWire, TickWire } from "../http/mappers.js";
+import type {
+  GrantResultWire,
+  PeriodWire,
+  PlanWire,
+  RecomputeResultWire,
+  ReferralClaimResultWire,
+  ReferralWire,
+  StateWire,
+  TickWire,
+} from "../http/mappers.js";
 import {
   DRIVER,
   OTHER_DRIVER,
@@ -72,7 +82,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     app = createSubscriptionApp({
       mode: "postgres",
       services: {
-        subscriptions: new SubscriptionService(uow, fixedClock),
+        subscriptions: new SubscriptionService(uow, fixedClock, sequentialUuidGenerator(1)),
         referrals: new ReferralService(uow, fixedClock),
       },
     });
@@ -96,7 +106,14 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
       payload: startBody(driver, requestedAt),
     });
     expect(response.statusCode).toBe(201);
-    return response.json() as StateWire;
+    // الجوابُ **غلافٌ** لا حالةً عارية: العقدُ يُعلن `SubscriptionStartResult` منذ 4/6، والحدُّ
+    // صار يُرسله في 5/6. والغلافُ يُفحَص هنا مرّةً واحدةً لكلّ من يستعمل هذه اللبنة: مُدّةٌ
+    // مُعلَنةٌ في الجوابِ الأوّل و`duplicate: false` — فمن قرأ 201 وحدَه لم يقرأ العقد.
+    const result = response.json() as GrantResultWire;
+    expect(result.duplicate).toBe(false);
+    expect(result.period.driver_public_id).toBe(driver);
+    expect(result.period.source).toBe("trial");
+    return result.subscription;
   }
 
   // -------------------------------------------------------------------------
@@ -254,7 +271,14 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     });
 
     expect(response.statusCode).toBe(200);
-    const state = response.json() as StateWire;
+    const activation = response.json() as GrantResultWire;
+    const state = activation.subscription;
+    // المُدّةُ المدفوعةُ تُعاد في الغلاف: مرجعُ الدفعِ ومصدرُها كما كُتبا في الدفتر، فلا
+    // يحتاج المُتَّصلُ نداءً ثانياً على `/periods` ليعرف ما اشتراه دفعُه.
+    expect(activation.duplicate).toBe(false);
+    expect(activation.period.source).toBe("payment");
+    expect(activation.period.payment_reference).toBe("PAY-0000000001");
+    expect(activation.period.granted_days).toBe(LAUNCH_PLAN.durationDays);
     // `trial` لا `active`: المُدّةُ المدفوعةُ تبدأ عند نهايةِ التجربة (`laterOf`) فلا تُغطّي
     // اليومَ، والحالةُ دالّةٌ من المُدّةِ الحاكمةِ الآن لا من آخرِ ما كُتب. ومن كتب `active`
     // هنا كان سيقول للسائق «انتهت تجربتُك» يومَ دفع، ويُسقط بقيّةَ أيّامِه المجّانيّة.
@@ -315,7 +339,12 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     });
 
     expect(response.statusCode).toBe(200);
-    const state = response.json() as StateWire;
+    const recomputed = response.json() as RecomputeResultWire;
+    const state = recomputed.subscription;
+    // `rebuilt` تُعلن أنّ الصفَّ أُعيد من الدفترِ فعلاً — وهذه هي الحالةُ التي تُثبتها:
+    // ثلاثةُ انتقالاتٍ كُتبت، فلو خرجت `false` لكان الغلافُ يكذب على مُتَّصلٍ يعتمد عليها
+    // ليعرف أنّ إعادةَ الحسابِ عملت.
+    expect(recomputed.rebuilt).toBe(true);
     // التجربةُ انتهت قبل `NOW` بشهور، فالإسقاطُ بعد الإعادةِ ليس `trial` ولا `is_stale`.
     expect(state.state).toBe("community");
     expect(state.is_stale).toBe(false);
@@ -432,7 +461,9 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     });
 
     expect(first.statusCode).toBe(201);
-    const referral = first.json() as ReferralWire;
+    const claim = first.json() as ReferralClaimResultWire;
+    const referral = claim.referral;
+    expect(claim.duplicate).toBe(false);
     expect(referral.state).toBe("pending");
     expect(referral.referrer_public_id).toBe(DRIVER);
     expect(referral.referee_public_id).toBe(OTHER_DRIVER);
@@ -441,7 +472,11 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     expect(referral.qualifying_fact_count).toBe(0);
 
     expect(second.statusCode).toBe(200);
-    expect((second.json() as ReferralWire).referral_id).toBe(referral.referral_id);
+    // والإعادةُ تُعلن نفسَها في الجسم: `duplicate: true` هي العلامةُ الوحيدةُ في العقد،
+    // ورمزُ الحالةِ 200 وحدَه كان يُقرأ «مطالبةٌ جديدةٌ نجحت» على مسارٍ يُعيد صفّاً قديماً.
+    const replay = second.json() as ReferralClaimResultWire;
+    expect(replay.duplicate).toBe(true);
+    expect(replay.referral.referral_id).toBe(referral.referral_id);
     expect(await countRows(pg.pool, "referrals")).toBe(1);
     expect(await countRows(pg.pool, "referral_rewards")).toBe(0);
   });

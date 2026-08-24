@@ -12,12 +12,13 @@
  * والقيودُ المُسمّاةُ تُقارن كذلك: هي التي يقرأ `repository.ts` أسماءَها ليُترجم الرفضَ إلى
  * رمزِ مجالٍ، فاسمٌ يتغيّر في العقد بلا مرآةٍ يُنتج خطأً خاماً بدل رمزٍ مُعلَن.
  *
- * أمّا الجداولُ الثلاثةُ التي لا مرآةَ لها بعد المراجعة 4/6 فتُقارن بقائمةٍ **مُعلَنةٍ بالاسم**
- * (`NOT_MIRRORED_TABLES`)، فيومَ تُنعكس واحدةٌ منها يفشل هذا الاختبارُ حتى تُحدَّث القائمة.
+ * وصار المفحوصُ في المراجعة 5/6 **عشرةَ جداولٍ من عشرة**: انعكست `referral_rewards` و
+ * `subscription_idempotency` و`subscription_outbox` مع مخازنِها، فصارت `NOT_MIRRORED_TABLES`
+ * فارغةً. والمقارنةُ بها تبقى قائمةً: جدولٌ يُضاف إلى العقد غداً بلا مرآةٍ يُفشل هذا الاختبار.
  *
- * وأضافت المراجعة 4/6 ثلاثةَ مرايا (`subscriptions` · `referral_codes` · `referrals`)، فصار
- * المفحوصُ سبعةَ جداول. والقيودُ غيرُ المُسمّاة في العقد (تعدادُ `state` · صيغةُ المُعرّف) لا
- * مرآةَ لها بقصد: هذا الحارسُ يقارن الأسماءَ بحرفها، واسمٌ نخترعه هنا لا وجودَ له في القاعدة.
+ * والقيودُ غيرُ المُسمّاة في العقد (تعدادُ `state` · صيغةُ المُعرّف · طولُ مفتاحِ منعِ التكرار)
+ * لا مرآةَ لها بقصد: هذا الحارسُ يقارن الأسماءَ بحرفها، واسمٌ نخترعه هنا لا وجودَ له في
+ * القاعدة — فيصير الحارسُ يُثبت اتفاقَ مرآةٍ مع نفسِها.
  */
 
 import { readFileSync } from "node:fs";
@@ -28,7 +29,10 @@ import { SCHEMA_CONTRACT_PATH } from "../db/migrate.js";
 import {
   NOT_MIRRORED_TABLES,
   referralCodes,
+  referralRewards,
   referrals,
+  subscriptionIdempotency,
+  subscriptionOutbox,
   subscriptionPeriods,
   subscriptionPlanEntitlements,
   subscriptionPlans,
@@ -46,6 +50,9 @@ const MIRRORED = [
   subscriptionTransitions,
   referralCodes,
   referrals,
+  referralRewards,
+  subscriptionIdempotency,
+  subscriptionOutbox,
 ];
 
 interface DdlColumn {
@@ -124,10 +131,13 @@ describe("حارسُ الانحراف يقرأ العقدَ فعلاً", () => {
     expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(10);
   });
 
-  it("والمرآةُ سبعةُ جداولٍ لا أقلّ", () => {
+  it("والمرآةُ عشرةُ جداولٍ لا أقلّ", () => {
     expect(MIRRORED.map((table) => getTableConfig(table).name).sort()).toEqual([
       "referral_codes",
+      "referral_rewards",
       "referrals",
+      "subscription_idempotency",
+      "subscription_outbox",
       "subscription_periods",
       "subscription_plan_entitlements",
       "subscription_plans",

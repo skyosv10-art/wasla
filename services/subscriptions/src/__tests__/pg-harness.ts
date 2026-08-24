@@ -99,6 +99,45 @@ export async function countRows(pool: Pool, table: (typeof TABLES)[number]): Pro
   return Number(result.rows[0]?.count ?? "0");
 }
 
+/**
+ * صفوفُ صندوقِ الصادرِ كلُّها بترتيبِ الوقوع — للاختبارِ وحدَه.
+ *
+ * ولمَ استعلامٌ نصّيٌّ هنا ولا في `db/`؟ لأنّ المخزنَ لا يُعلن «اقرأ كلَّ شيء»: منتَجاً،
+ * القراءةُ إمّا مطالبةٌ بحدٍّ (`claimUnpublished`) أو صفٌّ بمُعرِّفه — وقائمةٌ بلا حدٍّ على
+ * جدولٍ ينمو أبداً هي أوّلُ استعلامٍ يُسقط قاعدةً في الإنتاج. والاختبارُ يحتاج أن يرى
+ * **ما نُشر أيضاً**، فيقرأ هنا بمسؤوليّتِه ولا يُوسّع سطحَ المخزن لأجلِه.
+ */
+export async function outboxSnapshot(pool: Pool): Promise<
+  ReadonlyArray<{
+    readonly eventId: string;
+    readonly eventType: string;
+    readonly aggregateType: string;
+    readonly payload: unknown;
+    readonly publishedAt: string | null;
+    readonly attempts: number;
+    readonly lastError: string | null;
+    readonly traceId: string | null;
+  }>
+> {
+  const result = await pool.query(
+    `SELECT event_id, event_type, aggregate_type, payload,
+            to_char(published_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS published_at,
+            attempts, last_error, trace_id
+       FROM subscription_outbox
+      ORDER BY occurred_at, event_id`,
+  );
+  return result.rows.map((row) => ({
+    eventId: row.event_id as string,
+    eventType: row.event_type as string,
+    aggregateType: row.aggregate_type as string,
+    payload: row.payload as unknown,
+    publishedAt: (row.published_at as string | null) ?? null,
+    attempts: Number(row.attempts),
+    lastError: (row.last_error as string | null) ?? null,
+    traceId: (row.trace_id as string | null) ?? null,
+  }));
+}
+
 /** أسماءُ قيودٍ مُسمّاةٍ موجودةٍ فعلاً في القاعدة — لإثبات أنّ العقد طُبّق لا وُصف. */
 export async function constraintNames(pool: Pool): Promise<ReadonlyArray<string>> {
   const result = await pool.query<{ readonly conname: string }>(

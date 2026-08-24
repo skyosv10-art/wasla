@@ -40,6 +40,7 @@
 - **ما الذي لم يكتمل (دَينٌ مُعلَن):** **إعادةُ تشغيلِ مسارِ HTTP مؤجَّلةٌ إلى 6/6 بقصد** — المخزنُ يعمل ومُختبَرٌ ويستعمله **مستهلكُ الوقائعِ وحدَه**، وأجسامُ الكتابةِ تُجيب `duplicate: true` من **قيدِ القاعدة** لا من صفٍّ محفوظ · **لا ناقلَ أحداثٍ ولا مُنادٍ دوريّاً** لـ`drainSubscriptionOutbox` (المرحلة 09 · `EventSinkPort` موضعُ الوصل) · `TickOutcome.referralsQualified`/`rewardsApplied` **صفرانِ ثابتان** لأنّ التأهّلَ في المستهلكِ لا في النبضة · **لا اختبارَ تزامنٍ** يُشبع `MAX_TRANSITION_ATTEMPTS` ولا `projection.integration.test.ts` مستقلّاً · و**فجواتُ العقدِ الأربعُ باقيةٌ ومُحرَّسةٌ** لأنّ الحزمةَ مُجمَّدةٌ ([SUBSCRIPTION_EVENTS §8](../02-architecture/SUBSCRIPTION_EVENTS.md)).
 - **Migration:** **لا مُهاجرةَ جديدةَ ولا تغييرَ مخطَّطٍ** — الجداولُ العشرةُ كلُّها من عقدِ 3/6، والجديدُ **مرآةٌ ومخازنُ** عليها.
 - **Next:** **MR 6/6** — بوابةُ الخروج: حزمةُ e2e ترفع الخدمةَ **وخدمةَ السمعةِ الحقيقيّةَ** بساعةٍ محقونة، **وإعادةُ تشغيلِ مسارِ HTTP** بوصلِ `PostgresIdempotencyStore` بمعالجاتِ الكتابةِ الثلاثة.
+- **MR:** [!76](https://gitlab.com/uxxxu/wasla/-/merge_requests/76) — commit `314cd30c` (مفتوحةٌ للمراجعة · خطُّ CI أحمرُ بـ`ci_quota_exceeded` وحدَه وفق §2-أ)
 - **Related:** [SUBSCRIPTION_EVENTS.md](../02-architecture/SUBSCRIPTION_EVENTS.md) (جديدة) · [SUBSCRIPTION_HTTP.md](../04-api/SUBSCRIPTION_HTTP.md) · [HANDOFF §18.10](HANDOFF_NEXT_STEPS.md) · [ADR-015](../15-decisions/ADR-015-driver-subscription-entitlement-ledger-and-derived-referral-rewards.md)
 
 ---

@@ -17,6 +17,7 @@ import {
   draftTransition,
   isAllowedTransition,
   reasonForTransition,
+  transitionPath,
 } from "../domain/transitions.js";
 
 const T0 = "2026-03-01T00:00:00.000Z";
@@ -140,5 +141,68 @@ describe("مسوّدةُ الانتقال", () => {
     expect(() => draftTransition("trial", "active", "payment", "الآن")).toThrowError(
       /حقل غير صالح/,
     );
+  });
+});
+
+describe("طريقُ الانتقالِ حين يقفز الاشتقاقُ حالاتٍ وسطى", () => {
+  it("وثبةٌ واحدةٌ حين يكون الزوجُ مُعلَناً", () => {
+    expect(transitionPath(null, "trial")).toEqual([[null, "trial"]]);
+    expect(transitionPath("trial", "active")).toEqual([["trial", "active"]]);
+    expect(transitionPath("expired", "community")).toEqual([["expired", "community"]]);
+  });
+
+  it("و`trial → community` طريقان لا زوجٌ مُخترَع — وهذا هو الخللُ الذي أُصلح", () => {
+    // صفٌّ يقول `trial` ودفترٌ يقول `community` بعد غيابِ نبضةٍ شهراً: قبل هذه الدالّة
+    // كانت إعادةُ الحسابِ ترفع 409 وتُبقي السائقَ معلَّقاً إلى الأبد.
+    expect(transitionPath("trial", "community")).toEqual([
+      ["trial", "expired"],
+      ["expired", "community"],
+    ]);
+    expect(transitionPath("active", "community")).toEqual([
+      ["active", "expired"],
+      ["expired", "community"],
+    ]);
+  });
+
+  it("ولا طريقَ حين تتساوى الحالتان — لا وثبةٌ فارغةٌ تُكتب في الدفتر", () => {
+    expect(transitionPath("active", "active")).toEqual([]);
+    expect(transitionPath("community", "community")).toEqual([]);
+  });
+
+  it("وكلُّ وثبةٍ في كلّ طريقٍ زوجٌ مُعلَنٌ في العقد", () => {
+    for (const from of [null, ...SUBSCRIPTION_STATES] as ReadonlyArray<SubscriptionState | null>) {
+      for (const to of SUBSCRIPTION_STATES) {
+        let hops: ReadonlyArray<readonly [SubscriptionState | null, SubscriptionState]>;
+        try {
+          hops = transitionPath(from, to);
+        } catch (error) {
+          // لا طريقَ أصلاً: يُرفض برمزِ العقدِ نفسِه لا بخطأٍ داخليّ.
+          expect(isSubscriptionError(error)).toBe(true);
+          continue;
+        }
+        for (const [hopFrom, hopTo] of hops) {
+          expect(
+            SUBSCRIPTION_ALLOWED_TRANSITIONS.some(([a, b]) => a === hopFrom && b === hopTo),
+          ).toBe(true);
+        }
+        // والطريقُ يصل فعلاً: آخرُ وثبةٍ تنتهي عند الهدف، وأوّلُها تبدأ من المصدر.
+        if (hops.length > 0) {
+          expect(hops[0]![0]).toBe(from);
+          expect(hops[hops.length - 1]![1]).toBe(to);
+        }
+      }
+    }
+  });
+
+  it("ولا عودةَ إلى `trial` بأيّ طريق — التجربةُ مرّةٌ واحدةٌ في العمر", () => {
+    for (const from of SUBSCRIPTION_STATES) {
+      // و`trial → trial` ليس عودةً بل «لا تغيّر»: طريقٌ فارغٌ لا خطأ، فلا يُكتب في الدفتر
+      // انتقالٌ لحالةٍ لم تتغيّر.
+      if (from === "trial") {
+        expect(transitionPath(from, "trial")).toEqual([]);
+        continue;
+      }
+      expect(() => transitionPath(from, "trial")).toThrow();
+    }
   });
 });

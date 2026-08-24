@@ -1,0 +1,130 @@
+/**
+ * المسارُ الواحدُ للكتابة: **مُدّةٌ ← اشتقاقٌ ← انتقالٌ عند التغيّر ← صفٌّ مُتحقِّق**.
+ *
+ * ## لماذا دالّةٌ واحدةٌ لكلّ الكتابات
+ *
+ * منحُ التجربة، والتفعيلُ بدفع، وإعادةُ الحساب، والنبضةُ — أربعةُ مسالكَ تنتهي كلُّها إلى
+ * نفسِ السؤال: «ما الحالةُ التي يقولها الدفترُ الآن؟». ونسخةٌ لكلّ مسلكٍ كانت ستُنتج أربعةَ
+ * أماكنَ تُقرّر متى يُكتب انتقالٌ ومتى لا — ويكفي أن يختلف واحدٌ منها ليصير للسائق تاريخٌ
+ * لا يُقرأ (تفعيلٌ بلا انتقالٍ، أو انتقالٌ بلا تغيّرِ حالة).
+ *
+ * فهنا القرارُ مكتوبٌ مرّةً: **الاشتقاقُ يُقرَّر من الدفتر بعد الكتابة**، لا من المُدّةِ التي
+ * كُتبت. والفرقُ حقيقيّ: مُدّةٌ مدفوعةٌ تبدأ **بعد** نهايةِ التجربة (`laterOf`) لا تُغيّر حالةَ
+ * اليوم — فالسائقُ يبقى `trial` ولا يُكتب انتقالٌ، ويُقرأ في `expires_at` مدىً أطول. وحسابُ
+ * الحالة من المُدّة الجديدة وحدَها كان سيقول `active` قبل أن يبدأ الدفعُ فعلاً.
+ *
+ * ## ومتى يُكتب انتقال؟ عند تغيّرِ الحالة وحدَه
+ *
+ * التجديدُ (دفعٌ يمتدّ فوق تغطيةٍ سارية) **لا يكتب انتقالاً**: `active → active` غيرُ مُعلَنٍ
+ * في `SUBSCRIPTION_ALLOWED_TRANSITIONS`، والقاعدةُ تحرسه بـ`ck_subscription_transitions_state_changes`.
+ * فالحارسُ هنا ليس `if` مُخترعاً بل قراءةُ نفسِ الجدول: نُقارن الحالةَ المُشتقّة بحالةِ الصفّ،
+ * فإن تساوَيا فلا انتقال — والمُدّةُ وحدَها هي الأثرُ، وهو أثرٌ كافٍ لأنّ الدفترَ يحملها.
+ *
+ * ## وترتيبُ الكتابات مقصود
+ *
+ * المُدّةُ أوّلاً لأنّ الاشتقاقَ يقرؤها؛ ثمّ الانتقالُ لأنّ `state_sequence` في الصفّ المُتحقِّق
+ * يجب أن يُطابق `sequence` آخرِ انتقالٍ (نصُّ العقد)؛ ثمّ الصفُّ. وكلُّها في معاملةٍ واحدة
+ * (`db/unit-of-work.ts`)، فالفشلُ الجزئيُّ غيرُ ممكن.
+ */
+
+import { validationFailed } from "../domain/errors.js";
+import type { DerivedSubscription, PeriodDraft, PlanVersion } from "../domain/model.js";
+import { deriveState, firstCoverageStart, governingPeriod } from "../domain/state.js";
+import { draftTransition, transitionPath } from "../domain/transitions.js";
+import type { LedgerTrace, PeriodRecord, TransitionRecord } from "../db/repository.js";
+import type { ProjectionRecord } from "../db/projection.js";
+import type { SubscriptionStores, TransactionProbe } from "../db/unit-of-work.js";
+
+export interface SyncInput {
+  readonly stores: SubscriptionStores;
+  readonly driverPublicId: string;
+  readonly plan: PlanVersion;
+  readonly now: string;
+  /** مُدّةٌ تُضاف قبل الاشتقاق — غائبةٌ في إعادةِ الحساب وفي النبضة. */
+  readonly grant?: PeriodDraft;
+  readonly trace?: LedgerTrace;
+  readonly probe?: TransactionProbe;
+}
+
+export interface SyncOutcome {
+  readonly projection: ProjectionRecord;
+  readonly derived: DerivedSubscription;
+  /** الانتقالُ إن وقع تغيّرٌ، و`null` في التجديدِ وفي إعادةِ حسابٍ لا تُغيّر شيئاً. */
+  readonly transition: TransitionRecord | null;
+  readonly period: PeriodRecord | null;
+  readonly changed: boolean;
+}
+
+/**
+ * يُنفّذ المسارَ كلَّه على مخازنِ معاملةٍ واحدة، ويُعيد ما استقرّ فعلاً لا ما نوى.
+ *
+ * `probe` خطّافُ اختبارِ الذرّيّة وحدَه (انظر `db/unit-of-work.ts`): لا مسارَ حقيقيَّ يُمرّره.
+ */
+export async function syncFromLedger(input: SyncInput): Promise<SyncOutcome> {
+  const { stores, driverPublicId, plan, now, grant, trace, probe } = input;
+
+  const period = grant ? await stores.ledger.insertPeriod(grant, trace ?? {}) : null;
+  if (probe) await probe("after-period");
+
+  const periods = await stores.ledger.listPeriods(driverPublicId);
+  const derived = deriveState(periods, plan, now);
+  if (!derived) {
+    // دفترٌ فارغٌ بعد منحةٍ مستحيلٌ (المنحةُ نفسُها مدّة)، وبلا منحةٍ يجب أن يُنادى هذا
+    // المسارُ أصلاً. فالرفضُ صريحٌ بدل صفٍّ مُتحقِّقٍ لا حالةَ له.
+    throw validationFailed("driver_public_id", "driver with at least one period");
+  }
+
+  const stored = await stores.projection.read(driverPublicId);
+  const fromState = stored?.state ?? null;
+  const governing = governingPeriod(periods, now);
+  const startedAt = firstCoverageStart(periods)!;
+
+  // ## الطريقُ كاملاً لا وثبةٌ واحدة
+  //
+  // الاشتقاقُ يقفز حالاتٍ حين يطول غيابُ النبضة: صفٌّ يقول `trial` ودفترٌ يقول
+  // `community`. وزوجٌ واحدٌ من `trial` إلى `community` غيرُ مُعلَنٍ — فكانت العمليّةُ
+  // تُرفض 409 وتُعدّ فشلاً دائماً في النبضة (خللٌ وُجد في تكامل 4/6). فالأزواجُ تُكتب
+  // متسلسلةً في **نفسِ المعاملة**، فيبقى الدفترُ قارئاً: انقضى ثمّ نزل إلى الأرضيّة.
+  //
+  // والمصدرُ يُمرّر للوثبةِ الأخيرةِ وحدَها: المُدّةُ الحاكمةُ تفسّر الحالةَ التي
+  // استقرّ عليها لا الحالاتِ التي عبرَها، وإسنادُ مُدّةٍ مدفوعةٍ إلى «انقضى» يقلب معنى السبب.
+  let transition: TransitionRecord | null = null;
+  const hops = transitionPath(fromState, derived.state);
+  for (const [index, [hopFrom, hopTo]] of hops.entries()) {
+    const isLast = index === hops.length - 1;
+    transition = await stores.ledger.insertTransition(
+      {
+        driverPublicId,
+        // مصدرُ المُدّةِ الحاكمةِ هو سببُ الانتقال، ولا مصدرَ لانقضاءٍ أو نزولٍ إلى الأرضيّة.
+        draft: draftTransition(hopFrom, hopTo, isLast ? (governing?.source ?? null) : null, now),
+        periodId: isLast ? (governing?.periodId ?? null) : null,
+      },
+      trace ?? {},
+    );
+  }
+  if (probe) await probe("after-transition");
+
+  // تسلسلُ الحالة: تسلسلُ الانتقالِ الجديد إن وقع، وإلّا تسلسلُ الصفِّ كما هو — فالتجديدُ
+  // لا يُقدّم التسلسلَ لأنّه لم يُكتب انتقالٌ يُقدّمه، والعقدُ يقول «يُطابق آخرَ انتقال».
+  const stateSequence = transition?.sequence ?? stored?.stateSequence;
+  if (stateSequence === undefined) {
+    throw validationFailed("state_sequence", "sequence from a stored or new transition");
+  }
+
+  const projection = await stores.projection.write({
+    driverPublicId,
+    state: derived.state,
+    planCode: derived.planCode,
+    planVersion: derived.planVersion,
+    // الاقترانُ الملزم في `ck_subscriptions_period_state` مُشتَقٌّ هنا من نفسِ المصدر:
+    // الحالتان المُغطّاتان لهما مُدّةٌ حاكمةٌ وانقضاءٌ، والحالتان الأخريان لا.
+    currentPeriodId: derived.expiresAt === null ? null : (governing?.periodId ?? null),
+    startedAt,
+    expiresAt: derived.expiresAt,
+    stateSequence,
+    stateChangedAt: transition ? transition.occurredAt : (stored?.stateChangedAt ?? now),
+    computedAt: derived.computedAt,
+  });
+
+  return { projection, derived, transition, period, changed: transition !== null };
+}

@@ -10,11 +10,19 @@
  * ما يأتي بعد هذه المراجعة، بالترتيب المُعلَن في `docs/16-progress/HANDOFF_NEXT_STEPS.md`:
  * الاستمراريةُ على Postgres ومُهاجرةٌ تُطبّق `schema.sql` (3/6) · طبقةُ HTTP باثنتَي عشرةَ
  * عمليّة (4/6) · مستهلكُ وقائعِ السمعة وناشرُ الصندوقِ الصادر (5/6) · بوّابةُ الخروج (6/6).
+ *
+ * ## تحديثُ المراجعة 4/6
+ *
+ * الجذرُ ما زال **سطحَ المجال**: تُضاف إليه حرّاسُ المُعرّفات (`domain/identifiers.ts`) لأنّها
+ * قواعدُ شكلٍ نقيّةٌ لا تعرف مخزناً. وطبقةُ التطبيقِ (`app/`) وطبقةُ HTTP (`http/`) تُصدَّران
+ * في مسارَي `./app` و`./http` لا من هنا: من استورد الخدمةَ ليحسب حالةً لا يجب أن يجرّ معه
+ * `fastify` ولا `pg`، وهذا الفصلُ محروسٌ في `purity.test.ts` بأسماءِ الملفات.
  */
 
 export * from "./domain/contract-sets.js";
 export * from "./domain/entitlements.js";
 export * from "./domain/errors.js";
+export * from "./domain/identifiers.js";
 export * from "./domain/model.js";
 export * from "./domain/periods.js";
 export * from "./domain/plans.js";

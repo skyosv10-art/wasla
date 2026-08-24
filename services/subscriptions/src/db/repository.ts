@@ -48,6 +48,7 @@ import type {
   SubscriptionTransitionReason,
 } from "../domain/contract-sets.js";
 import type { DbOrTx } from "./client.js";
+import { constraintOf } from "./constraints.js";
 import {
   subscriptionPeriods,
   subscriptionPlanEntitlements,
@@ -73,24 +74,6 @@ export const TRANSLATED_CONSTRAINTS: ReadonlyArray<string> = Object.freeze([
   "fk_subscription_periods_plan",
   "ux_subscription_transitions_sequence",
 ]);
-
-/**
- * يقرأ اسمَ القيد من خطأ Postgres عبر سلسلةِ `cause`.
- *
- * Drizzle يُغلّف خطأَ العميل، فقراءةُ `error.constraint` على السطح وحدها كانت ستُخطئ الاسمَ
- * وتُصعّد خطأً خاماً بلا معنى للمُنادي.
- */
-function constraintOf(error: unknown): string | undefined {
-  let current: unknown = error;
-  for (let depth = 0; depth < 8 && current !== null && typeof current === "object"; depth += 1) {
-    const named = current as { readonly constraint?: unknown; readonly cause?: unknown };
-    if (typeof named.constraint === "string" && named.constraint.length > 0) {
-      return named.constraint;
-    }
-    current = named.cause;
-  }
-  return undefined;
-}
 
 /**
  * يُحوّل قيداً مُسمّىً إلى خطأِ مجالٍ **بنفس الرمز** الذي يرميه المجال، وما لا يعرفه يُعيده.
@@ -124,6 +107,20 @@ interface TransitionContext {
 // صفوفٌ ونماذج — الترجمةُ في موضعٍ واحد
 // ---------------------------------------------------------------------------
 
+/**
+ * المُدّةُ كما استقرّت في الدفتر: نموذجُ المجال **زائدَ** لحظةِ الإنشاء التي يملكها المحرّك.
+ *
+ * ولمَ لا تدخل `createdAt` في `Period` نفسِها؟ لأنّ المجالَ لا يستعملها في اشتقاقٍ ولا في
+ * حساب: الحالةُ دالّةٌ من `startsAt`/`endsAt`/`source` وحدَها، وحقلٌ في النموذج لا يقرؤه
+ * الاشتقاقُ يُغري بقراءته يوماً فتُدخل «لحظةُ الكتابة» في «مدّةُ التغطية» وهما شيئان.
+ *
+ * ووُجِدت هنا لأنّ العقد يُلزم `created_at` في `SubscriptionPeriod` — وهو سؤالُ تدقيقٍ حقيقيّ:
+ * «متى **كُتبت** هذه المنحةُ؟» يختلف عن «متى بدأت تُغطّي؟» في كلّ تجديدٍ يبدأ لاحقاً.
+ */
+export interface PeriodRecord extends Period {
+  readonly createdAt: string;
+}
+
 interface PeriodRow {
   readonly periodId: string;
   readonly driverPublicId: string;
@@ -134,10 +131,11 @@ interface PeriodRow {
   readonly grantedDays: number;
   readonly startsAt: Date;
   readonly endsAt: Date;
+  readonly createdAt: Date;
 }
 
-/** صفٌّ إلى `Period` — حقلاً حقلاً بالاسم، ولحظاتٌ نصّاً ISO. */
-export function toPeriod(row: PeriodRow): Period {
+/** صفٌّ إلى `PeriodRecord` — حقلاً حقلاً بالاسم، ولحظاتٌ نصّاً ISO. */
+export function toPeriod(row: PeriodRow): PeriodRecord {
   return {
     periodId: row.periodId,
     driverPublicId: row.driverPublicId,
@@ -148,6 +146,7 @@ export function toPeriod(row: PeriodRow): Period {
     grantedDays: row.grantedDays,
     startsAt: iso(row.startsAt),
     endsAt: iso(row.endsAt),
+    createdAt: iso(row.createdAt),
   };
 }
 
@@ -207,7 +206,7 @@ export class PostgresSubscriptionLedger {
    * `domain/periods.ts` (بـ`laterOf` كي لا تُضيَّع بقيّةُ مُدّةٍ سارية)، والمخزنُ يكتب ما
    * أُعطي. مخزنٌ يحسب `endsAt` بنفسه كان سيصير مصدرَ حقيقةٍ ثانياً لمدّةِ الدورة.
    */
-  async insertPeriod(draft: PeriodDraft, trace: LedgerTrace = {}): Promise<Period> {
+  async insertPeriod(draft: PeriodDraft, trace: LedgerTrace = {}): Promise<PeriodRecord> {
     try {
       const rows = await this.db
         .insert(subscriptionPeriods)
@@ -240,7 +239,7 @@ export class PostgresSubscriptionLedger {
    * يعود بترتيبٍ غيرِ محدَّدٍ كان سينتج حالةً تختلف بين استدعاءين على نفس البيانات —
    * وأسوأُ من الخطأ خطأٌ لا يتكرّر. و`created_at` فاصلٌ ثانٍ لمدّتَين تبدآن في نفس اللحظة.
    */
-  async listPeriods(driverPublicId: string): Promise<ReadonlyArray<Period>> {
+  async listPeriods(driverPublicId: string): Promise<ReadonlyArray<PeriodRecord>> {
     const rows = await this.db
       .select()
       .from(subscriptionPeriods)
@@ -360,6 +359,31 @@ export class PostgresSubscriptionLedger {
         limitValue: row.limitValue,
       })),
     };
+  }
+
+  /**
+   * كلُّ نسخِ الكتالوج، أو المُجمّدةَ وحدَها — **من القاعدة لا من `PLAN_CATALOG`**.
+   *
+   * ولمَ لا تُقرأ من الكتالوج في المجال مباشرةً؟ لأنّ الكتالوج في `domain/plans.ts` هو
+   * **ما ينبغي أن يكون في القاعدة**، والقاعدةُ هي **ما مُنحت منه المُدَد فعلاً** (ولذلك
+   * `fk_subscription_periods_plan` يشير إليها لا إليه). فخدمةٌ تردّ الكتالوجَ من الكود تقول
+   * للمستهلك «هذه خطّةٌ متاحة» وهي غيرُ مبذورةٍ في قاعدتِها — فيطلبها ويُرفض بـ`404`
+   * بعد أن قيل له `200`. وحارسُ البذرة (`migrate.integration.test.ts`) يقارن الطرفين.
+   */
+  async listPlanVersions(frozenOnly: boolean): Promise<ReadonlyArray<PlanVersion>> {
+    const rows = await this.db
+      .select({ planCode: subscriptionPlans.planCode, planVersion: subscriptionPlans.planVersion })
+      .from(subscriptionPlans)
+      .where(frozenOnly ? eq(subscriptionPlans.isFrozen, true) : undefined)
+      .orderBy(asc(subscriptionPlans.planCode), asc(subscriptionPlans.planVersion));
+
+    const plans: PlanVersion[] = [];
+    for (const row of rows) {
+      const plan = await this.readPlanVersion(row.planCode, row.planVersion);
+      // صفٌّ قُرِئ ثمّ اختفى داخل نفس القراءة لا يُخترع له بديلٌ من الكود.
+      if (plan) plans.push(plan);
+    }
+    return plans;
   }
 
   /** لحظةُ تجميدِ نسخةٍ كما استقرّت في القاعدة — واقعةُ تشغيلٍ لا حقلٌ في الوعد. */

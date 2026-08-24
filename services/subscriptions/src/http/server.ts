@@ -23,7 +23,7 @@ import { createSubscriptionDb } from "../db/client.js";
 import { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
 import { ReferralService } from "../app/referrals.js";
 import { SubscriptionService } from "../app/subscriptions.js";
-import { systemClock } from "../app/runtime.js";
+import { systemClock, uuidIdGenerator } from "../app/runtime.js";
 import { createSubscriptionApp, type SubscriptionAppServices } from "./app.js";
 
 /** المنفذُ من حزمةِ العقد لا من رقمٍ مكتوبٍ هنا (`SUBSCRIPTION_SERVICE_PORT` = 8093). */
@@ -55,7 +55,9 @@ export async function startSubscriptionServer(): Promise<void> {
   const services: SubscriptionAppServices = {
     // ساعةٌ واحدةٌ تُحقن في الخدمتين: مؤشّرُ آخرِ نبضةٍ ونوافذُ الإحالةِ تُقاس بنفسِ الزمن،
     // وساعتان مستقلّتان كانتا ستُنتجان فرقاً لا يُفسَّر في سجلّ.
-    subscriptions: new SubscriptionService(uow, systemClock),
+    // ومُولّدُ مُعرّفاتٍ محقونٌ لا `randomUUID` داخلَ الطبقة: مُعرّفُ الحدثِ قيمةٌ تُراقَب
+    // في اختبار، ومصدرٌ مخفيٌّ للعشوائيّةِ يجعل إعادةَ إنتاجِ حالةٍ مستحيلة.
+    subscriptions: new SubscriptionService(uow, systemClock, uuidIdGenerator),
     referrals: new ReferralService(uow, systemClock),
   };
   const app = createSubscriptionApp({ services, mode: "postgres", logger: true });

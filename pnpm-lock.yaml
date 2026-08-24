@@ -560,6 +560,30 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/subscription-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/contracts-subscription':
+        specifier: workspace:*
+        version: link:../contracts/subscription
+      '@wasla/reputation-service':
+        specifier: workspace:*
+        version: link:../../services/reputation
+      '@wasla/subscriptions-service':
+        specifier: workspace:*
+        version: link:../../services/subscriptions
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/telegram-adapter:
     dependencies:
       '@wasla/channel-core':

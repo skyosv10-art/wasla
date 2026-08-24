@@ -39,6 +39,7 @@ import { subscriptionUnavailable } from "../domain/errors.js";
 import type { ReferralFilter } from "../db/referrals.js";
 import type { ReferralService } from "../app/referrals.js";
 import type { SubscriptionService } from "../app/subscriptions.js";
+import { fingerprint, type IdempotencyEnvelope } from "../app/idempotency.js";
 import { sendSubscriptionError } from "./errors.js";
 import {
   toGrantResultWire,
@@ -86,6 +87,37 @@ export interface CreateSubscriptionAppOptions {
 }
 
 const UNAVAILABLE_REASON = "الاستمرارية غير مهيّأة";
+
+/**
+ * مساراتُ منعِ التكرار — عمودُ `route_key` في الجدول، لا جزءٌ من البصمة.
+ *
+ * أسماءٌ ثابتةٌ مكتوبةٌ هنا لا مبنيّةٌ من `request.url`: المسارُ يحمل مُعرّفَ سائقٍ، ولو دخل
+ * في المفتاح لصار لكلّ سائقٍ «طريقٌ» جديد فانتفت فائدةُ العمود. والمُعرّفُ داخلٌ في البصمة
+ * حيث يجب أن يكون: طلبٌ بنفسِ المفتاحِ لسائقٍ آخرَ اختلافُ **مُدخلٍ** لا اختلافُ طريق.
+ */
+const START_TRIAL_ROUTE_KEY = "subscriptions:start_trial";
+const ACTIVATE_ROUTE_KEY = "subscriptions:activate";
+const RECOMPUTE_ROUTE_KEY = "subscriptions:recompute";
+const REFERRAL_CLAIM_ROUTE_KEY = "referrals:claim";
+
+/**
+ * بناءُ مِغلافِ الإعادةِ من مُدخلٍ **مُتحقَّقٍ منه** — لا من الجسمِ الخام.
+ *
+ * البصمةُ تُحسب على المُدخلِ الفعليِّ بعد التحقّق (حقولُ الجسمِ + مُعرّفُ السائقِ من المسار)
+ * كي يكون «نفسُ الطلب» معناه نفسَ المعنى لا نفسَ البايتات: ترتيبُ مفاتيحِ JSON ومسافاتُه
+ * تختلف بين مُتَّصلَين لنفسِ الطلب، وبصمةُ الخامِ كانت ستقول «طلبٌ مختلفٌ» فتُجيب `409`
+ * على إعادةِ محاولةٍ سليمة. ولا ترويسةَ ولا لحظةَ وصولٍ في البصمة: إعادةُ الإرسالِ تحمل
+ * `x-request-id` جديداً ولحظةً جديدةً وهي **نفسُ** الطلب.
+ */
+function replayEnvelope<T>(
+  key: string,
+  routeKey: string,
+  traceId: string,
+  input: unknown,
+  present: (outcome: T) => { readonly responseStatus: number; readonly responseBody: unknown },
+): IdempotencyEnvelope<T> {
+  return { key, routeKey, requestHash: fingerprint(input), traceId, present };
+}
 
 export function createSubscriptionApp(
   options: CreateSubscriptionAppOptions = {},
@@ -173,14 +205,24 @@ export function createSubscriptionApp(
   app.post("/subscriptions", async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    requireIdempotencyKey(request.headers);
+    const idempotencyKey = requireIdempotencyKey(request.headers);
     const wire = toStartTrialInput(request.body);
-    const outcome = await deps().subscriptions.startTrial({
+    const input = {
       driverPublicId: assertWaslaPublicId(wire.driverPublicId),
       planCode: assertPlanCode(wire.planCode),
       planVersion: assertPlanVersion(wire.planVersion),
       requestedAt: assertTimestamp(wire.requestedAt, "requested_at"),
+    };
+    const outcome = await deps().subscriptions.startTrial({
+      ...input,
       trace: { traceId },
+      // نفسُ الحالةِ ونفسُ الجسمِ اللذَين يُرسَلان أدناه — مكتوبةً مرّتَين بقصد: صيغةُ
+      // الإرسالِ في المعالجِ هي ما يحرسه `__tests__/http-drift.test.ts` بالنصّ، ودالّةٌ
+      // مشتركةٌ كانت ستُخفي أخصَّ سطرٍ في المسار عن حارسه.
+      idempotency: replayEnvelope(idempotencyKey, START_TRIAL_ROUTE_KEY, traceId, input, (result) => ({
+        responseStatus: result.duplicate ? 200 : 201,
+        responseBody: toGrantResultWire(result),
+      })),
     });
     // `201` للإنشاء و`200` للإعادة — كما يُعلن العقد. وبدءٌ ثانٍ لسائقٍ له اشتراكٌ ليس
     // إعادةً بل `409 SUBSCRIPTION_ALREADY_EXISTS` من `app/`، فلا يمرّ من هنا.
@@ -202,16 +244,23 @@ export function createSubscriptionApp(
   app.post("/subscriptions/:driverPublicId/activate", async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    requireIdempotencyKey(request.headers);
+    const idempotencyKey = requireIdempotencyKey(request.headers);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     const wire = toActivateInput(request.body);
-    const outcome = await deps().subscriptions.activate({
+    const input = {
       driverPublicId: driver,
       paymentReference: wire.paymentReference,
       planCode: assertPlanCode(wire.planCode),
       planVersion: assertPlanVersion(wire.planVersion),
       activatedAt: assertTimestamp(wire.activatedAt, "activated_at"),
+    };
+    const outcome = await deps().subscriptions.activate({
+      ...input,
       trace: { traceId },
+      idempotency: replayEnvelope(idempotencyKey, ACTIVATE_ROUTE_KEY, traceId, input, (result) => ({
+        responseStatus: 200,
+        responseBody: toGrantResultWire(result),
+      })),
     });
     // `200` دائماً — العقدُ لا يُعلن `201` لهذا المسار: المُنشأُ مدّةٌ داخليّةٌ لا موردٌ
     // بعنوان، والحالةُ المُعادةُ هي المورد وقد كان موجوداً قبل النداء.
@@ -222,10 +271,18 @@ export function createSubscriptionApp(
   app.post("/subscriptions/:driverPublicId/recompute", async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    requireIdempotencyKey(request.headers);
+    const idempotencyKey = requireIdempotencyKey(request.headers);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     assertEmptyPayload(request.body);
-    const outcome = await deps().subscriptions.recompute(driver, { traceId });
+    // لا جسمَ لهذا الطلب، فالمُدخلُ الفعليُّ هو مُعرّفُ السائقِ وحدَه.
+    const outcome = await deps().subscriptions.recompute(
+      driver,
+      { traceId },
+      replayEnvelope(idempotencyKey, RECOMPUTE_ROUTE_KEY, traceId, { driverPublicId: driver }, (result) => ({
+        responseStatus: 200,
+        responseBody: toRecomputeResultWire(result),
+      })),
+    );
     return reply.status(200).send(toRecomputeResultWire(outcome));
   });
 
@@ -252,13 +309,20 @@ export function createSubscriptionApp(
   app.post("/referrals", async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    requireIdempotencyKey(request.headers);
+    const idempotencyKey = requireIdempotencyKey(request.headers);
     const wire = toReferralClaimInput(request.body);
-    const outcome = await deps().referrals.claim({
+    const input = {
       referralCode: assertReferralCode(wire.referralCode),
       refereePublicId: assertWaslaPublicId(wire.refereePublicId, "referee_public_id"),
       claimedAt: assertTimestamp(wire.claimedAt, "claimed_at"),
+    };
+    const outcome = await deps().referrals.claim({
+      ...input,
       traceId,
+      idempotency: replayEnvelope(idempotencyKey, REFERRAL_CLAIM_ROUTE_KEY, traceId, input, (result) => ({
+        responseStatus: result.duplicate ? 200 : 201,
+        responseBody: toReferralClaimResultWire(result),
+      })),
     });
     return reply.status(outcome.duplicate ? 200 : 201).send(toReferralClaimResultWire(outcome));
   });

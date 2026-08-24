@@ -58,7 +58,19 @@ import {
 const NOW = "2026-06-01T00:00:00.000Z";
 const fixedClock: Clock = { now: () => NOW };
 
-const KEY = { "idempotency-key": "idem-0000000001", "content-type": "application/json" };
+/**
+ * ترويساتُ طلبٍ بمفتاحٍ **جديدٍ في كلّ نداء**.
+ *
+ * ومفتاحٌ ثابتٌ كان يكفي حين كان الحدُّ يفحص شكلَ المفتاحِ ولا يقرؤه؛ ومنذ 6/6 صار المفتاحُ
+ * يحرس فعلاً: نداءان بمفتاحٍ واحدٍ ومُدخلَين مختلفَين يعنيان `409` مقصوداً — وهو ما يُثبته
+ * `idempotency-replay.integration.test.ts` صراحةً. فكلُّ نداءٍ هنا مُتَّصلٌ مختلفٌ ينوي عملاً
+ * مختلفاً، ومفتاحُه يجب أن يعلن ذلك.
+ */
+let keySeed = 0;
+const KEY = () => ({
+  "idempotency-key": `idem-${String(++keySeed).padStart(10, "0")}`,
+  "content-type": "application/json",
+});
 
 /** جسمٌ مُعلَنٌ لا مُخمَّن: الحقولُ هي `required` في `SubscriptionStartRequest`. */
 const startBody = (driver: string, requestedAt = T0) => ({
@@ -102,7 +114,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const response = await app.inject({
       method: "POST",
       url: "/subscriptions",
-      headers: KEY,
+      headers: KEY(),
       payload: startBody(driver, requestedAt),
     });
     expect(response.statusCode).toBe(201);
@@ -195,7 +207,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const again = await app.inject({
       method: "POST",
       url: "/subscriptions",
-      headers: KEY,
+      headers: KEY(),
       payload: startBody(DRIVER),
     });
 
@@ -211,7 +223,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const response = await app.inject({
       method: "POST",
       url: "/subscriptions",
-      headers: KEY,
+      headers: KEY(),
       payload: startBody(DRIVER, addDays(NOW, 1)),
     });
 
@@ -261,7 +273,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const response = await app.inject({
       method: "POST",
       url: `/subscriptions/${DRIVER}/activate`,
-      headers: KEY,
+      headers: KEY(),
       payload: {
         payment_reference: "PAY-0000000001",
         plan_code: LAUNCH_PLAN.planCode,
@@ -296,7 +308,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const noReference = await app.inject({
       method: "POST",
       url: `/subscriptions/${DRIVER}/activate`,
-      headers: KEY,
+      headers: KEY(),
       payload: {
         plan_code: LAUNCH_PLAN.planCode,
         plan_version: LAUNCH_PLAN.planVersion,
@@ -306,7 +318,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const noSubscription = await app.inject({
       method: "POST",
       url: `/subscriptions/${OTHER_DRIVER}/activate`,
-      headers: KEY,
+      headers: KEY(),
       payload: {
         payment_reference: "PAY-0000000002",
         plan_code: LAUNCH_PLAN.planCode,
@@ -335,7 +347,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const response = await app.inject({
       method: "POST",
       url: `/subscriptions/${DRIVER}/recompute`,
-      headers: KEY,
+      headers: KEY(),
     });
 
     expect(response.statusCode).toBe(200);
@@ -361,7 +373,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     await app.inject({
       method: "POST",
       url: `/subscriptions/${DRIVER}/activate`,
-      headers: KEY,
+      headers: KEY(),
       payload: {
         payment_reference: "PAY-0000000003",
         plan_code: LAUNCH_PLAN.planCode,
@@ -392,7 +404,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
   it("النبضةُ تُعيد حسابَ من انتهت تغطيتُه، وتُعلن لحظتَها في الصحّة", async () => {
     await startTrial();
 
-    const tick = await app.inject({ method: "POST", url: "/subscriptions/tick", headers: KEY });
+    const tick = await app.inject({ method: "POST", url: "/subscriptions/tick", headers: KEY() });
 
     expect(tick.statusCode).toBe(200);
     const outcome = tick.json() as TickWire;
@@ -408,7 +420,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
   });
 
   it("ونبضةٌ على قاعدةٍ بلا اشتراكاتٍ تنجح بأصفار", async () => {
-    const tick = await app.inject({ method: "POST", url: "/subscriptions/tick", headers: KEY });
+    const tick = await app.inject({ method: "POST", url: "/subscriptions/tick", headers: KEY() });
 
     expect(tick.statusCode).toBe(200);
     const outcome = tick.json() as TickWire;
@@ -450,13 +462,13 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const first = await app.inject({
       method: "POST",
       url: "/referrals",
-      headers: KEY,
+      headers: KEY(),
       payload,
     });
     const second = await app.inject({
       method: "POST",
       url: "/referrals",
-      headers: KEY,
+      headers: KEY(),
       payload,
     });
 
@@ -487,7 +499,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const self = await app.inject({
       method: "POST",
       url: "/referrals",
-      headers: KEY,
+      headers: KEY(),
       payload: {
         referral_code: referralCodeFor(DRIVER),
         referee_public_id: DRIVER,
@@ -497,7 +509,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     const unknown = await app.inject({
       method: "POST",
       url: "/referrals",
-      headers: KEY,
+      headers: KEY(),
       payload: {
         referral_code: referralCodeFor("WS-1000009999"),
         referee_public_id: OTHER_DRIVER,
@@ -517,7 +529,7 @@ describe.skipIf(!PG_ENABLED)("الاثنتا عشرةَ عمليّةً فوق Po
     await app.inject({
       method: "POST",
       url: "/referrals",
-      headers: KEY,
+      headers: KEY(),
       payload: {
         referral_code: referralCodeFor(DRIVER),
         referee_public_id: OTHER_DRIVER,

@@ -47,6 +47,11 @@ import { referralWindowEnd } from "../domain/referral.js";
 import { assertTimestamp, isAtOrAfter, type Clock } from "../domain/time.js";
 import type { ReferralCodeRecord, ReferralFilter, ReferralRecord } from "../db/referrals.js";
 import type { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
+import {
+  rememberOutcome,
+  replayGuard,
+  type IdempotencyEnvelope,
+} from "./idempotency.js";
 
 /** سقفُ `ReferralList` في العقد. يُقرأ هنا ولا يُخترع رقمٌ ثانٍ في الاستعلام. */
 export const REFERRAL_LIST_LIMIT = 200;
@@ -56,6 +61,8 @@ export interface ClaimInput {
   readonly refereePublicId: string;
   readonly claimedAt: string;
   readonly traceId?: string | null;
+  /** مِغلافُ منعِ التكرار — اختياريٌّ لأنّ المطالبةَ تُنادى في اختباراتٍ بلا حدٍّ ولا مفتاح. */
+  readonly idempotency?: IdempotencyEnvelope<ClaimOutcome>;
 }
 
 export interface ClaimOutcome {
@@ -119,6 +126,9 @@ export class ReferralService {
     assertWaslaPublicId(input.refereePublicId, "referee_public_id");
     const claimedAt = this.declaredInstant(input.claimedAt, "claimed_at");
     const { value } = await this.uow.write(async ({ stores }) => {
+      // الحراسةُ قبل قراءةِ الرمز: إعادةُ إرسالٍ لمُحالٍ سُجّلت إحالتُه تستحقّ بايتاتِ الأوّلِ،
+      // لا `409` عن «مُحالٌ له إحالةٌ قائمة» — وهو أوّلُ ما كان سيُنتجه المسارُ الطبيعيّ.
+      if (input.idempotency) await replayGuard(stores.idempotency, input.idempotency);
       const code = await stores.referrals.readCode(input.referralCode);
       // رمزٌ لا مالكَ له موردٌ غائب؛ ولا يُختلَق مالكٌ من الرمزِ نفسِه.
       if (!code) throw referralCodeNotFound();
@@ -130,7 +140,10 @@ export class ReferralService {
       if (existing) {
         // نفسُ الرمزِ ونفسُ المُحال ⇒ إعادةُ تسليمٍ، تُعاد المطالبةُ المحفوظةُ بلا صفٍّ ثانٍ.
         if (existing.referralCode === input.referralCode) {
-          return { referral: existing, duplicate: true } satisfies ClaimOutcome;
+          const duplicated = { referral: existing, duplicate: true } satisfies ClaimOutcome;
+          return input.idempotency
+            ? await rememberOutcome(stores.idempotency, input.idempotency, duplicated)
+            : duplicated;
         }
         // رمزٌ آخرُ لمُحالٍ له إحالةٌ قائمةٌ ⇒ تعارضٌ: إحالتان لسائقٍ واحدٍ تعنيان مكافأتين
         // على وصولٍ واحد. و`rejected` تُحسب أيضاً، وإلّا صارت إعادةُ المحاولةِ تُلغي الرفض.
@@ -165,7 +178,10 @@ export class ReferralService {
         traceId: input.traceId ?? null,
       });
 
-      return { referral, duplicate: false } satisfies ClaimOutcome;
+      const claimed = { referral, duplicate: false } satisfies ClaimOutcome;
+      return input.idempotency
+        ? await rememberOutcome(stores.idempotency, input.idempotency, claimed)
+        : claimed;
     });
     return value;
   }

@@ -41,8 +41,11 @@ import type { ReferralService } from "../app/referrals.js";
 import type { SubscriptionService } from "../app/subscriptions.js";
 import { sendSubscriptionError } from "./errors.js";
 import {
+  toGrantResultWire,
   toPeriodWire,
   toPlanWire,
+  toRecomputeResultWire,
+  toReferralClaimResultWire,
   toReferralCodeWire,
   toReferralWire,
   toStateWire,
@@ -181,7 +184,7 @@ export function createSubscriptionApp(
     });
     // `201` للإنشاء و`200` للإعادة — كما يُعلن العقد. وبدءٌ ثانٍ لسائقٍ له اشتراكٌ ليس
     // إعادةً بل `409 SUBSCRIPTION_ALREADY_EXISTS` من `app/`، فلا يمرّ من هنا.
-    return reply.status(outcome.duplicate ? 200 : 201).send(toStateWire(outcome.state));
+    return reply.status(outcome.duplicate ? 200 : 201).send(toGrantResultWire(outcome));
   });
 
   // 5 — GET /subscriptions/{driverPublicId}
@@ -212,7 +215,7 @@ export function createSubscriptionApp(
     });
     // `200` دائماً — العقدُ لا يُعلن `201` لهذا المسار: المُنشأُ مدّةٌ داخليّةٌ لا موردٌ
     // بعنوان، والحالةُ المُعادةُ هي المورد وقد كان موجوداً قبل النداء.
-    return reply.status(200).send(toStateWire(outcome.state));
+    return reply.status(200).send(toGrantResultWire(outcome));
   });
 
   // 7 — POST /subscriptions/{driverPublicId}/recompute
@@ -223,7 +226,7 @@ export function createSubscriptionApp(
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     assertEmptyPayload(request.body);
     const outcome = await deps().subscriptions.recompute(driver, { traceId });
-    return reply.status(200).send(toStateWire(outcome.state));
+    return reply.status(200).send(toRecomputeResultWire(outcome));
   });
 
   // 8 — GET /subscriptions/{driverPublicId}/periods
@@ -257,7 +260,7 @@ export function createSubscriptionApp(
       claimedAt: assertTimestamp(wire.claimedAt, "claimed_at"),
       traceId,
     });
-    return reply.status(outcome.duplicate ? 200 : 201).send(toReferralWire(outcome.referral));
+    return reply.status(outcome.duplicate ? 200 : 201).send(toReferralClaimResultWire(outcome));
   });
 
   // 11 — GET /referrals

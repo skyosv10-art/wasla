@@ -31,15 +31,35 @@
 
 import { isTransitionSequenceRace } from "./constraints.js";
 import type { Db, DbOrTx } from "./client.js";
+import { PostgresIdempotencyStore } from "./idempotency.js";
+import { PostgresOutboxStore } from "./outbox.js";
 import { PostgresSubscriptionProjection } from "./projection.js";
 import { PostgresReferralStore } from "./referrals.js";
 import { PostgresSubscriptionLedger } from "./repository.js";
 
-/** المخازنُ الثلاثةُ مربوطةً بنفسِ الاتصال — فلا يقع نصفُها خارجَ المعاملة. */
+/**
+ * المخازنُ الخمسةُ مربوطةً بنفسِ الاتصال — فلا يقع نصفُها خارجَ المعاملة.
+ *
+ * ## ولمَ صار الصندوقُ ومنعُ التكرارِ من المجموعة (المراجعة 5/6)
+ *
+ * لأنّهما **يجب** أن يُكتبا في معاملةِ القرارِ نفسِها، ولا معنى لهما خارجَها:
+ *
+ *   - صفُّ الصادرِ يلتزم مع الانتقالِ الذي يُعلنه. ولو كُتب في معاملةٍ ثانيةٍ لَظهرت الحالةُ
+ *     التي وُجد صندوقُ الصادرِ ليمنعها: انتقالٌ ثابتٌ في الدفتر وحدثٌ لم يُكتب — فمستهلكٌ لا
+ *     يعرف أبداً أنّ الاشتراكَ انقضى، ولا شيءَ في نظامنا يقول إنّ حدثاً ضاع.
+ *   - وصفُّ منعِ التكرارِ يلتزم مع الأثرِ الذي يحرسه. فلو كُتب أوّلاً في معاملةٍ منفصلةٍ ثمّ
+ *     فشل القرار، لَصار مفتاحُ الطلبِ محجوزاً لأثرٍ لا وجودَ له: إعادةُ الإرسالِ تُرجع نسخةً
+ *     من فشلٍ بدل أن تُنفّذ. ولو كُتب أخيراً، لَنفّذ طلبانِ متسابقان القرارَ مرّتين.
+ *
+ * والحقلُ الرابعُ والخامسُ يبقيان مخزنَين لا «ناقلاً»: لا `bus` في هذه المجموعة، وإضافةُ
+ * حقلٍ كهذا تغييرُ عمارةٍ يحتاج ADR.
+ */
 export interface SubscriptionStores {
   readonly ledger: PostgresSubscriptionLedger;
   readonly projection: PostgresSubscriptionProjection;
   readonly referrals: PostgresReferralStore;
+  readonly outbox: PostgresOutboxStore;
+  readonly idempotency: PostgresIdempotencyStore;
 }
 
 export function bindStores(db: DbOrTx): SubscriptionStores {
@@ -47,6 +67,8 @@ export function bindStores(db: DbOrTx): SubscriptionStores {
     ledger: new PostgresSubscriptionLedger(db),
     projection: new PostgresSubscriptionProjection(db),
     referrals: new PostgresReferralStore(db),
+    outbox: new PostgresOutboxStore(db),
+    idempotency: new PostgresIdempotencyStore(db),
   };
 }
 

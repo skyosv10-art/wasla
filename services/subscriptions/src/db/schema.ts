@@ -1,5 +1,5 @@
 /**
- * مرآةُ Drizzle لعقد PostgreSQL — **أربعةُ جداولَ من عشرة**، بأسمائها وأنواعها وقيودها المُسمّاة.
+ * مرآةُ Drizzle لعقد PostgreSQL — **الجداولُ العشرةُ كلُّها**، بأسمائها وأنواعها وقيودها المُسمّاة.
  *
  * ## هذا الملفُّ مرآةٌ لا مصدر
  *
@@ -8,19 +8,25 @@
  * هذا الملفُّ DDL ولا يُنشئ جدولاً؛ `migrate.ts` يُطبّق نصَّ العقد كما هو. ولو صار توليدُ
  * Drizzle هو ما يُطبَّق لصار للمخطّط مصدران، ولاختلفا أوّلَ مرّةٍ يُضاف قيدٌ في أحدهما.
  *
- * ## لماذا أربعةٌ فقط، ومن يحرس ذلك
+ * ## ولماذا صارت عشرةً في المراجعة 5/6
  *
- * المراجعة 3/6 تملك **الدفترَ** وكتالوجَه: `subscription_plans` و
- * `subscription_plan_entitlements` تُبذَران من `domain/plans.ts`، و`subscription_periods`
- * و`subscription_transitions` هما مصدرا الحقيقة اللذان تُشتقّ منهما الحالة. أمّا
- * `subscriptions` (الصفُّ المُتحقِّق) و`referral_codes` و`referrals` و`referral_rewards` و
- * `subscription_idempotency` و`subscription_outbox` فتملكها المراجعاتُ 4/6 و5/6، ومرآةٌ
- * لجدولٍ لا مخزنَ له كانت ستكون وعداً بلا مُنفِّذٍ ولا اختبار.
+ * كانت المرآةُ سبعةً بعد 4/6، وبقيت ثلاثةٌ بلا مرآةٍ **بقرارٍ مكتوب**: مرآةٌ لجدولٍ لا مخزنَ
+ * له وعدٌ بلا مُنفِّذٍ ولا اختبار. وهذه المراجعةُ تكتب المخازنَ الثلاثةَ فعلاً —
+ * `referral_rewards` (مكافأةُ الإحالةِ مرّةً واحدة) و`subscription_idempotency` (الجوابُ
+ * المحفوظُ بنفسِ بايتاتِه) و`subscription_outbox` (الحدثُ مع الحقيقةِ في معاملةٍ واحدة) —
+ * فانعكست الثلاثةُ وصارت `NOT_MIRRORED_TABLES` **فارغةً**.
  *
- * والقائمةُ ليست نيّةً: `schema-drift.test.ts` يقرأ الـDDL وقت التشغيل ويقارن **الاتجاهين**
- * للجداول الأربعة (عمودٌ في العقد بلا مرآة أو في المرآة بلا عقد يُفشل البناء)، ويؤكّد
- * أنّ الجداولَ غيرَ المُنعكسةِ **هي هذه الستةُ بالضبط** — فيومَ تُنعكس واحدةٌ منها يفشل
- * الاختبارُ حتى تُحدَّث القائمةُ بقرارٍ مكتوب.
+ * وفراغُ القائمةِ ليس سطراً مُهمَلاً: `schema-drift.test.ts` يُطابقها مع فرق (جداولُ العقد −
+ * جداولُ المرآة)، فجدولٌ يُضاف إلى العقد غداً بلا مرآةٍ يُفشل البناءَ حتى يُعلَن بالاسم.
+ *
+ * ## وثلاثةُ قيودٍ بلا مرآةٍ بقصد
+ *
+ * `subscription_idempotency` و`subscription_outbox` تحملان في العقد فحوصاً **بلا أسماء**
+ * (`char_length(...) BETWEEN 8 AND 128` · `event_type ~ '^(subscription|referral)\\.[a-z_]+$'`
+ * ...)، فلا تُنعكس هنا: حارسُ الانحرافِ يقارن القيودَ **المُسمّاةَ** بحرفها، واسمٌ نخترعه في
+ * المرآةِ لا وجودَ له في القاعدة — فيصير الحارسُ يُثبت اتفاقَ اسمٍ لا يحرسه أحد. أمّا الفحصُ
+ * نفسُه فيبقى خطَّ الدفاع الثاني في القاعدة، ويُقابله في الكود فحصٌ مُسمّىً قبل الكتابة
+ * (`assertIdempotencyKey` في `db/idempotency.ts`).
  *
  * وأنواعُ `TIMESTAMPTZ` تبقى على تمثيل Drizzle الافتراضيّ (`Date`) ويُحوّلها المخزنُ إلى
  * نصّ ISO في موضعٍ واحد (`iso()` في `repository.ts`)، كما في خدمتَي التفاوض والسمعة.
@@ -37,6 +43,7 @@ import {
   foreignKey,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -284,19 +291,129 @@ export const referrals = pgTable(
   ],
 );
 
+// ---------------------------------------------------------------------------
+// 8) مكافآتُ الإحالة — صفٌّ واحدٌ لكلّ إحالةٍ ولكلّ مُدّةٍ ممنوحة (ADR-015 القرار 9)
+// ---------------------------------------------------------------------------
+
 /**
- * الجداولُ التي لا مرآةَ لها في هذه المراجعة — **مُعلَنةً بأسمائها**.
+ * المكافأةُ **حقيقةٌ مُنجَزةٌ** لا نيّة: صفٌّ هنا يعني أنّ مُدّةً دخلت الدفترَ فعلاً.
+ *
+ * ولذلك `granted_period_id` إلزاميٌّ ومفتاحٌ أجنبيٌّ ومُتفرِّد: مكافأةٌ بلا مُدّةٍ كانت ستجعل
+ * «مُنِحت 30 يوماً» صفّاً يقوله جدولُ المكافآتِ وينكره الدفتر، ومُدّةٌ واحدةٌ تُعلَّق عليها
+ * مكافأتان كانت ستجعل الأيّامَ تُحسب مرّتين في التقرير بلا أن يُخلق يومٌ واحد.
+ *
+ * و`ux_referral_rewards_referral` هو الحارسُ الحقيقيُّ لـ«مرّةً واحدة»: التسليمُ at-least-once،
+ * فإعادةُ تسليمِ `reputation.fact_recorded` تصل ثانيةً بالضرورة — ورفضُ القاعدةِ بقيدٍ
+ * مُسمّىً يُترجَم إلى `REFERRAL_REWARD_ALREADY_GRANTED` خيرٌ من `if` يسبقه سباقٌ.
+ */
+export const referralRewards = pgTable(
+  "referral_rewards",
+  {
+    rewardId: uuid("reward_id").primaryKey(),
+    referralId: uuid("referral_id").notNull(),
+    grantedPeriodId: uuid("granted_period_id").notNull(),
+    beneficiaryPublicId: text("beneficiary_public_id").notNull(),
+    rewardDays: integer("reward_days").notNull(),
+    planCode: text("plan_code").notNull(),
+    planVersion: integer("plan_version").notNull(),
+    grantedAt: instant("granted_at").notNull(),
+    traceId: text("trace_id"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      name: "fk_referral_rewards_referral",
+      columns: [table.referralId],
+      foreignColumns: [referrals.referralId],
+    }),
+    foreignKey({
+      name: "fk_referral_rewards_period",
+      columns: [table.grantedPeriodId],
+      foreignColumns: [subscriptionPeriods.periodId],
+    }),
+    foreignKey({
+      name: "fk_referral_rewards_plan",
+      columns: [table.planCode, table.planVersion],
+      foreignColumns: [subscriptionPlans.planCode, subscriptionPlans.planVersion],
+    }),
+    unique("ux_referral_rewards_referral").on(table.referralId),
+    unique("ux_referral_rewards_period").on(table.grantedPeriodId),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// 9) سجلُّ منعِ التكرار — الجوابُ المحفوظُ بنفسِ بايتاتِه لا «رأيتُ هذا المفتاح»
+// ---------------------------------------------------------------------------
+
+/**
+ * `response_status` و`response_body` عمودان في هذا الجدول لسببٍ واحد: إعادةُ المفتاحِ يجب أن
+ * تُعيد **نفسَ الجواب** لا 409.
+ *
+ * النسخةُ الخاطئةُ الأرخصُ هنا جدولٌ بعمودٍ واحدٍ (`idempotency_key`) يقول «مرّ من قبل» ثم
+ * يُجيب 409: عميلُ الجوّال الذي انقطع اتصالُه بعد الكتابةِ وقبل قراءةِ الجواب يُعيد الطلبَ —
+ * وهو محقٌّ — فيرى رفضاً لعمليةٍ **نجحت**، فيُظهر للسائق «فشل الدفع» بعد أن خُصم منه.
+ *
+ * و`request_hash` يفصل «نفسَ الطلب» عن «مفتاحٍ أُعيد استعمالُه لطلبٍ آخر»: الأولُ يستحقّ
+ * الجوابَ المحفوظ، والثاني خطأُ عميلٍ يستحقّ `SUBSCRIPTION_IDEMPOTENCY_KEY_REUSED`. ومفتاحٌ
+ * بلا بصمةِ طلبٍ كان سيجعل «ابدأ تجربةً لسائقٍ» و«فعّل اشتراكَ سائقٍ آخر» بنفسِ المفتاحِ
+ * يُعيدان جوابَ الأوّلِ للثاني.
+ *
+ * ولا قيدَ مُسمّىً في المرآة: فحوصُ العقد هنا (`char_length ... BETWEEN 8 AND 128` ...) بلا
+ * أسماء، ويُقابلها في الكود `assertIdempotencyKey` قبل الكتابة.
+ */
+export const subscriptionIdempotency = pgTable("subscription_idempotency", {
+  idempotencyKey: text("idempotency_key").primaryKey(),
+  routeKey: text("route_key").notNull(),
+  requestHash: text("request_hash").notNull(),
+  responseStatus: integer("response_status").notNull(),
+  responseBody: jsonb("response_body").notNull(),
+  traceId: text("trace_id"),
+  createdAt: instant("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// 10) صندوقُ الصادر — الحدثُ يُكتب مع الحقيقةِ في معاملةٍ واحدة
+// ---------------------------------------------------------------------------
+
+/**
+ * الحدثُ هنا لا في ناقلٍ خارجيّ، لأنّ الكتابةَ في القاعدةِ والنشرَ على الناقلِ لا يجتمعان
+ * في معاملةٍ واحدة.
+ *
+ * النسخةُ الخاطئةُ الأرخص: `await bus.publish(event)` بعد `COMMIT`. تُصيب في التجربة وتُخطئ
+ * في الإنتاج بأحد وجهَين — إمّا نُشر حدثٌ لمعاملةٍ انسحبت (مستهلكٌ يُصدّق تفعيلاً لم يحدث)،
+ * أو نجحت المعاملةُ وسقطت العمليةُ قبل النشرِ (تفعيلٌ حقيقيٌّ لا يعرفه أحد). والثاني أسوأ:
+ * لا أثرَ له في سجلٍّ ولا مقياسٍ، ويظهر بعد أسابيعَ كسائقٍ «فعّل ولم تُفتح له الأوامر».
+ *
+ * و`published_at` هو كلُّ الحالة: `NULL` تعني «لم يُنشَر بعد»، والفهرسُ الجزئيُّ في العقد
+ * (`ix_subscription_outbox_unpublished`) يجعل المسحَ يقرأ غيرَ المنشورِ وحده — فلا يصير
+ * الناشرُ أبطأَ كلَّ يومٍ لأنّ الجدولَ ينمو.
+ *
+ * و`attempts` و`last_error` ليسا ترفاً: تسليمٌ يفشل صامتاً يجعل «الصندوقُ فارغٌ» و«الناقلُ
+ * مكسورٌ منذ ساعة» متشابهَين من الخارج.
+ */
+export const subscriptionOutbox = pgTable("subscription_outbox", {
+  eventId: uuid("event_id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  aggregateType: text("aggregate_type").notNull(),
+  aggregateId: text("aggregate_id").notNull(),
+  payload: jsonb("payload").notNull(),
+  occurredAt: instant("occurred_at").notNull(),
+  publishedAt: instant("published_at"),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: text("last_error"),
+  traceId: text("trace_id"),
+  createdAt: instant("created_at").notNull().defaultNow(),
+});
+
+/**
+ * الجداولُ التي لا مرآةَ لها — **فارغةٌ بعد المراجعة 5/6**، وليست سطراً مُهمَلاً.
  *
  * قائمةٌ مقروءةٌ من اختبارٍ خيرٌ من فقرةٍ في شرحٍ لا يقرؤها البناء: `schema-drift.test.ts`
  * يُطابقها مع فرق (جداولُ العقد − جداولُ المرآة) فلا يمرّ جدولٌ يُنسى في أحد الجانبين.
  *
- * وانعكس في المراجعة 4/6 ثلاثةُ جداولٍ (`subscriptions` · `referral_codes` · `referrals`)
- * لأنّ طبقةَ HTTP تقرؤها وتكتبها. وبقيت ثلاثةٌ بقصد: `subscription_idempotency` و
- * `subscription_outbox` و`referral_rewards` عملُ المراجعة 5/6 — ومرآةٌ بلا مُنادٍ تُعطي
- * انطباعَ جهوزيّةٍ لا يقابلها سلوك.
+ * وانعكس في 4/6 ثلاثةٌ (`subscriptions` · `referral_codes` · `referrals`)، وفي 5/6 الثلاثةُ
+ * الباقيةُ (`referral_rewards` · `subscription_idempotency` · `subscription_outbox`) مع
+ * مخازنِها ومُناديها. والقائمةُ تبقى مُصدَّرةً فارغةً لا تُحذَف: جدولٌ يُضاف إلى العقد غداً
+ * بلا مرآةٍ يجب أن يُفشل البناءَ حتى يُعلَن هنا بالاسم — وحذفُ القائمةِ كان سيحذف الحارس.
  */
-export const NOT_MIRRORED_TABLES: ReadonlyArray<string> = Object.freeze([
-  "referral_rewards",
-  "subscription_idempotency",
-  "subscription_outbox",
-]);
+export const NOT_MIRRORED_TABLES: ReadonlyArray<string> = Object.freeze([]);

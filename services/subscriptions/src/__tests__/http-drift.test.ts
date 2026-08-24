@@ -367,3 +367,81 @@ describe("حارسُ التباعد: ما لا يجوز أن يسكن في طب�
     expect(handlers).toHaveLength(SUBSCRIPTION_API_OPERATION_COUNT);
   });
 });
+
+/**
+ * حرسُ **أغلفةِ الأجوبة** — الفراغُ الذي كشفته المراجعة 5/6.
+ *
+ * حرّاسُ 4/6 قرأوا الطلبات: `SUBSCRIPTION_START_KEYS` وما بعدها. ولم يقرأ أحدٌ ما **يُرسَل**،
+ * فبقيت أربعُ عمليّاتِ كتابةٍ تُعلن في العقدِ غلافاً (`subscription`/`period`/`duplicate`) وتُرسل
+ * الحالةَ عاريةً — أربعةَ أشهرِ عقدٍ لا يصفُ ما يخرج. وكلُّها `additionalProperties: false`،
+ * فمُتَّصلٌ يُحقّق جوابَه كان سيرفضه، ومَن لا يُحقّق كان سيقرأ `duplicate` من رمزِ الحالة —
+ * وهو تخمينٌ مستحيلٌ في `activate` لأنّ عقدَه لا يُعلن `201` أصلاً.
+ *
+ * ولذلك يُقرأ هنا `required:` من الوثيقةِ **من القرص** ويقابله ما تُنتجه دالّةُ التحويل: لا
+ * قائمةٌ مكتوبةٌ بيدٍ في الاختبار — قائمةٌ كهذه تُنسَخ خطأً مرّةً واحدةً فتصير الحرسُ صدىً
+ * للخلل لا كاشفاً له.
+ */
+describe("حارسُ التباعد: أغلفةُ أجوبةِ الكتابة", () => {
+  const mappers = codeOnly(resolve(HTTP_DIR, "mappers.ts"));
+  const app = codeOnly(resolve(HTTP_DIR, "app.ts"));
+
+  /** حقولُ `required` لمخطَّطٍ في `components.schemas` — الإزاحةُ 4 للاسمِ و6 للمفاتيح. */
+  function requiredKeys(schema: string): string[] {
+    const start = contract.indexOf(`\n    ${schema}:\n`);
+    if (start < 0) return [];
+    const block = contract.slice(start + 1);
+    const end = block.search(/\n {4}\S/);
+    const body = end < 0 ? block : block.slice(0, end);
+    const match = /required:\s*\[([^\]]*)\]/.exec(body);
+    return match?.[1] ? match[1].split(",").map((key) => key.trim()).filter(Boolean) : [];
+  }
+
+  const WRAPPERS = [
+    ["SubscriptionStartResult", "toGrantResultWire"],
+    ["SubscriptionActivateResult", "toGrantResultWire"],
+    ["SubscriptionRecomputeResult", "toRecomputeResultWire"],
+    ["ReferralClaimResult", "toReferralClaimResultWire"],
+  ] as const;
+
+  it("الأغلفةُ الأربعةُ مُعلَنةٌ في الوثيقةِ بحقولٍ مطلوبةٍ غيرِ فارغة", () => {
+    for (const [schema] of WRAPPERS) {
+      expect(requiredKeys(schema).length, schema).toBeGreaterThan(0);
+    }
+    expect(requiredKeys("SubscriptionStartResult")).toEqual(["subscription", "period", "duplicate"]);
+    expect(requiredKeys("SubscriptionRecomputeResult")).toEqual(["subscription", "rebuilt"]);
+    expect(requiredKeys("ReferralClaimResult")).toEqual(["referral", "duplicate"]);
+  });
+
+  it("كلُّ حقلٍ مطلوبٍ يُكتَب فعلاً في دالّةِ التحويلِ التي تُقابله", () => {
+    for (const [schema, mapper] of WRAPPERS) {
+      const start = mappers.indexOf(`export function ${mapper}(`);
+      expect(start, mapper).toBeGreaterThan(-1);
+      // النهايةُ هي بدايةُ الدالّةِ التالية لا أوّلُ `}` في العمودِ صفر: نوعُ الوسيطِ
+      // مكتوبٌ سطوراً وينتهي بقوسٍ في العمودِ نفسِه، فقياسٌ ساذجٌ كان يقرأ الترويسةَ وحدَها
+      // ويمرّ وهو لم ينظر في جسمِ التحويلِ أصلاً.
+      const rest = mappers.slice(start + 1);
+      const next = rest.indexOf("\nexport function ");
+      const body = next < 0 ? rest : rest.slice(0, next);
+      for (const key of requiredKeys(schema)) {
+        expect(body, `${mapper} ← ${key}`).toContain(`${key}:`);
+      }
+    }
+  });
+
+  it("مساراتُ الكتابةِ الأربعةُ تُرسل الغلافَ لا الحالةَ عاريةً", () => {
+    // `toStateWire` تبقى مسموحةً في القراءةِ وحدَها (عمليّةُ `GET /subscriptions/{id}`)،
+    // فالمقياسُ عددُ نداءاتِها لا وجودُها: ثلاثةٌ كانت وواحدٌ يبقى.
+    expect((app.match(/send\(toStateWire\(/g) ?? []).length).toBe(1);
+    expect((app.match(/send\(toGrantResultWire\(/g) ?? []).length).toBe(2);
+    expect((app.match(/send\(toRecomputeResultWire\(/g) ?? []).length).toBe(1);
+    expect((app.match(/send\(toReferralClaimResultWire\(/g) ?? []).length).toBe(1);
+    expect(app).not.toContain("send(toReferralWire(");
+  });
+
+  it("و`duplicate` تُقرأ من الحصيلةِ لا من رمزِ الحالة — العلامةُ في الجسمِ هي العقد", () => {
+    const startRoute = app.slice(app.indexOf('app.post("/subscriptions"'));
+    const handler = startRoute.slice(0, startRoute.indexOf('app.get("/subscriptions/:driverPublicId"'));
+    expect(handler).toContain("outcome.duplicate ? 200 : 201");
+    expect(handler).toContain("toGrantResultWire(outcome)");
+  });
+});

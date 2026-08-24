@@ -9,11 +9,32 @@
  * قابلاً للقراءة في سطرٍ واحد: إن كان هذا الملفُّ سليماً فلا ساعةَ مخفيّةً في الخدمة كلِّها.
  */
 
+import { randomUUID } from "node:crypto";
+
 import type { Clock } from "../domain/time.js";
+import type { IdGenerator } from "./events.js";
 
 /** ساعةُ النظام: `now()` نصُّ ISO لأنّ المجالَ لا يعرف `Date` (HANDOFF §16-ب). */
 export const systemClock: Clock = Object.freeze({
   now(): string {
     return new Date().toISOString();
+  },
+});
+
+/**
+ * مُوَلِّدُ مُعرِّفاتِ الأحداث الحقيقيُّ — **الاستثناءُ الثاني والأخيرُ** في هذا الملفّ.
+ *
+ * ولمَ يسكن مع الساعة؟ لأنّ الاثنين نفسُ الشيء: مصدرُ لاحَتميّةٍ يجب أن يبقى **معدوداً**.
+ * فحارسُ النقاء يمنع `randomUUID(` و`new Date()` في كلّ ملفٍّ تحت `src/` إلّا ملفَّين
+ * مُسمَّيَين، وهذا أحدُهما. فإن كان هذا الملفُّ سليماً فلا عشوائيةَ ولا ساعةَ مخفيّةً في
+ * الخدمة كلِّها — وتلك جملةٌ تُقرأ في سطرٍ واحد لا في مراجعةِ ثمانين ملفّاً.
+ *
+ * ولمَ لا `gen_random_uuid()` في القاعدة كما في `subscription_periods`؟ لأنّ مُعرِّفَ الحدث
+ * يدخل **الحمولةَ** والمفتاحَ معاً، فتوليدُه في القاعدةِ كان سيُلزمنا بتحديثِ الحمولةِ بعد
+ * الإدراج لتُطابقه — و`UPDATE` على صفِّ صادرٍ ممنوعٌ بعينه لهذا (انظر `app/events.ts`).
+ */
+export const uuidIdGenerator: IdGenerator = Object.freeze({
+  next(): string {
+    return randomUUID();
   },
 });

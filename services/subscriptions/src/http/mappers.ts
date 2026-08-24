@@ -105,6 +105,34 @@ export interface TickWire {
   readonly failures: number;
 }
 
+/**
+ * أغلفةُ أجوبةِ الكتابةِ الأربعة — **مُعلَنةٌ في `api.openapi.yml` منذ 4/6 ولم تكن تُرسَل**.
+ *
+ * الخللُ وُجد في المراجعة 5/6 وهو انحرافُ عقدٍ صريح: الأربعةُ `additionalProperties: false`
+ * وتُلزم `duplicate`/`rebuilt`، والحدُّ كان يُرسل الحالةَ **عارية**. فأيُّ مُتَّصلٍ يُحقّق
+ * جوابَه بالمخطَّط كان سيرفضه، وأخطرُ منه: `duplicate` هي العلامةُ التي يُفرّق بها العميلُ
+ * بين كتابةٍ جديدةٍ وإعادةِ تسليمٍ — وبلا الغلاف كان يخمّنها من رمزِ الحالة (200 مقابل 201)،
+ * وهو تخمينٌ يفشل تماماً في `activate` لأنّ عقدَه لا يُعلن `201` أصلاً.
+ *
+ * ولمَ لم يظهر في 4/6؟ لأنّ حرسَ الانحرافِ كان يقرأ **الطلباتَ** ولا يقرأ الأجوبة. وهذا
+ * الفراغُ سُدَّ في نفسِ هذه المراجعة (`http-drift.test.ts`)، فلا يبقى الحرسُ يحمي نصفَ الحدّ.
+ */
+export interface GrantResultWire {
+  readonly subscription: StateWire;
+  readonly period: PeriodWire;
+  readonly duplicate: boolean;
+}
+
+export interface RecomputeResultWire {
+  readonly subscription: StateWire;
+  readonly rebuilt: boolean;
+}
+
+export interface ReferralClaimResultWire {
+  readonly referral: ReferralWire;
+  readonly duplicate: boolean;
+}
+
 export interface HealthWire {
   readonly status: "ok" | "degraded" | "unavailable";
   readonly mode: "postgres" | "memory";
@@ -153,6 +181,35 @@ export function toStateWire(view: StateView): StateWire {
     entitlements: toEntitlements(view.entitlements),
     computed_at: view.projection.computedAt,
   };
+}
+
+/** غلافُ البدءِ والتفعيل: الحالةُ والمُدّةُ التي أُنشئت (أو المحفوظةُ عند الإعادة) وعلمُ الإعادة. */
+export function toGrantResultWire(outcome: {
+  readonly state: StateView;
+  readonly period: PeriodRecord;
+  readonly duplicate: boolean;
+}): GrantResultWire {
+  return {
+    subscription: toStateWire(outcome.state),
+    period: toPeriodWire(outcome.period),
+    duplicate: outcome.duplicate,
+  };
+}
+
+/** غلافُ إعادةِ الحساب: `rebuilt` تُعلن أنّ الصفَّ أُعيد من الدفترِ حتى إن ساوت النتيجةُ السابقة. */
+export function toRecomputeResultWire(outcome: {
+  readonly state: StateView;
+  readonly rebuilt: boolean;
+}): RecomputeResultWire {
+  return { subscription: toStateWire(outcome.state), rebuilt: outcome.rebuilt };
+}
+
+/** غلافُ المطالبة: المطالبةُ وعلمُ الإعادة — و`duplicate` هي علامةُ الإعادةِ الوحيدةُ في العقد. */
+export function toReferralClaimResultWire(outcome: {
+  readonly referral: ReferralRecord;
+  readonly duplicate: boolean;
+}): ReferralClaimResultWire {
+  return { referral: toReferralWire(outcome.referral), duplicate: outcome.duplicate };
 }
 
 export function toPeriodWire(period: PeriodRecord): PeriodWire {

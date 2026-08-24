@@ -97,7 +97,9 @@ const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts", "http/server.
 const FS_READING_FILES: readonly string[] = ["db/migrate.ts"];
 const DB_AWARE_FILES: readonly string[] = [
   "db/client.ts",
+  "db/idempotency.ts",
   "db/migrate.ts",
+  "db/outbox.ts",
   "db/projection.ts",
   "db/referrals.ts",
   "db/repository.ts",
@@ -112,19 +114,33 @@ const DB_AWARE_FILES: readonly string[] = [
 const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts"];
 
 /**
- * الاستثناءُ الجديدُ في المراجعة 4/6 — **ملفٌّ واحدٌ يُعدّل صفّاً، وليس صفّاً في الدفتر.**
+ * ثلاثةُ ملفاتٍ تُعدّل صفّاً — **بالأسماء، ولكلٍّ منها قرارٌ مكتوبٌ يقول لماذا.**
  *
  * قال شرحُ المراجعة 3/6 بالحرف: «يومَ تحتاج تعديلاً سيُضاف الاستثناءُ باسم ملفِّه وقرارٍ
- * مكتوبٍ يشرح لماذا — لا بتوسيعِ نمطٍ يُبيح التعديلَ على الدفتر نفسِه». وهذا ما يحدث الآن
- * بالحرف: `db/projection.ts` وحدَه يكتب صفَّ `subscriptions` بـ`onConflictDoUpdate` على
- * `driver_public_id`، لأنّ الصفَّ **مُشتقٌّ** — إعادةُ بنائه من الدفتر ليست تعديلاً على
- * تاريخٍ بل إعادةُ حسابِ نتيجةٍ. و`subscription_periods` و`subscription_transitions` تبقى
- * بلا استثناءٍ واحد: لا `UPDATE` ولا `DELETE` عليهما في أيّ ملفٍّ من `src/`.
+ * مكتوبٍ يشرح لماذا — لا بتوسيعِ نمطٍ يُبيح التعديلَ على الدفتر نفسِه». وهذا ما يحدث هنا
+ * ثلاثَ مرّاتٍ بلا توسيعِ نمطٍ واحد:
  *
- * والحارسُ الثاني أدناه يُثبت أنّ هذا الملفَّ لا يذكر الجدولَين أصلاً — فلا يستطيع أن
- * يُعدّل دفتراً حتى لو أُضيف سطرٌ بحسنِ نيّة.
+ * 1. `db/projection.ts` (4/6): يكتب صفَّ `subscriptions` بـ`onConflictDoUpdate` لأنّ الصفَّ
+ *    **مُشتقٌّ** — إعادةُ حسابِ نتيجةٍ لا تعديلُ تاريخ.
+ * 2. `db/outbox.ts` (5/6): يكتب `published_at` و`attempts` و`last_error` — بياناتُ **تسليمٍ**
+ *    لا حقيقةُ حدث. و`payload` و`event_id` و`occurred_at` لا تُلمَس بعد الإضافة، والوسمُ
+ *    مشروطٌ بـ`published_at IS NULL` فلا يُدهَس نشرٌ سابق. والبديلُ (صفٌّ ثانٍ لكلّ نشرٍ)
+ *    كان سيجعل «هل نُشر؟» سؤالاً يحتاج تجميعاً في كلّ نبضة.
+ * 3. `db/referrals.ts` (5/6): يُقدّم حالةَ الإحالةِ `pending → qualified → rewarded` بشرطِ
+ *    الحالةِ السابقةِ في `WHERE`. والإحالةُ **مطالبةٌ حالتُها تتقدّم**، لا صفٌّ في دفتر؛
+ *    وقد قال شرحُ `db/referrals.ts` نفسُه في 4/6 إنّ هذا التحويلَ عملُ 5/6. والبديلُ
+ *    الوحيدُ (جدولُ انتقالاتٍ ثانٍ للإحالة) كان سيُنشئ تاريخاً موازياً لا يقرؤه عقدٌ ولا
+ *    مستهلكٌ ولا واجهة، مقابلَ ثلاثِ حالاتٍ لا أكثر.
+ *
+ * و`subscription_periods` و`subscription_transitions` تبقى بلا استثناءٍ واحد: لا `UPDATE`
+ * ولا `DELETE` عليهما في أيّ ملفٍّ من `src/` — والحارسُ الثالثُ أدناه يُثبت أنّ كاتبَ الصفِّ
+ * المُشتقِّ لا يذكر الجدولَين أصلاً.
  */
-const PROJECTION_WRITING_FILES: readonly string[] = ["db/projection.ts"];
+const PROJECTION_WRITING_FILES: readonly string[] = [
+  "db/outbox.ts",
+  "db/projection.ts",
+  "db/referrals.ts",
+];
 
 /**
  * النمطُ مُقيَّدٌ بمِقبضِ القاعدة (`db.` أو `tx.`) لا بكلِّ `.update(` في المستودع، لأنّ

@@ -34,6 +34,7 @@ import { draftTransition, transitionPath } from "../domain/transitions.js";
 import type { LedgerTrace, PeriodRecord, TransitionRecord } from "../db/repository.js";
 import type { ProjectionRecord } from "../db/projection.js";
 import type { SubscriptionStores, TransactionProbe } from "../db/unit-of-work.js";
+import { toOutboxDraft, transitionEvent, type IdGenerator } from "./events.js";
 
 export interface SyncInput {
   readonly stores: SubscriptionStores;
@@ -44,6 +45,15 @@ export interface SyncInput {
   readonly grant?: PeriodDraft;
   readonly trace?: LedgerTrace;
   readonly probe?: TransactionProbe;
+  /**
+   * مُوَلِّدُ مُعرِّفاتِ الأحداث — **إلزاميّ**، ولا افتراضَ له.
+   *
+   * ولمَ لا وسيطٌ اختياريٌّ يُطفئ النشرَ حين يُهمَل؟ لأنّ ذاك بعينه ما يُنتج خدمةً تكتب
+   * انتقالاتِها ولا تُعلنها: مسارٌ واحدٌ نُسي فيه الوسيطُ يصمت بلا أن يفشل شيء، ويُكتشف
+   * بعد شهرٍ في لوحةِ مستهلكٍ ناقصة. فالإلزامُ هنا هو ما يجعل «كلُّ انتقالٍ يُنشَر» حكماً
+   * يفحصه `tsc` لا اتفاقاً شفهيّاً.
+   */
+  readonly ids: IdGenerator;
 }
 
 export interface SyncOutcome {
@@ -53,6 +63,13 @@ export interface SyncOutcome {
   readonly transition: TransitionRecord | null;
   readonly period: PeriodRecord | null;
   readonly changed: boolean;
+  /**
+   * مُعرِّفاتُ الأحداثِ التي كُتبت في صندوق الصادرِ لهذه العملية — واحدٌ لكلّ وثبة.
+   *
+   * تُعاد لتُقرأ في الاختبارِ وفي التقارير: عمليّةٌ تقول `changed: true` وتُعيد قائمةً فارغةً
+   * عطبٌ يجب أن يُرى، ولا سبيلَ لرؤيته من خارج المعاملةِ إلّا بقراءةِ الجدول.
+   */
+  readonly eventIds: readonly string[];
 }
 
 /**
@@ -61,7 +78,7 @@ export interface SyncOutcome {
  * `probe` خطّافُ اختبارِ الذرّيّة وحدَه (انظر `db/unit-of-work.ts`): لا مسارَ حقيقيَّ يُمرّره.
  */
 export async function syncFromLedger(input: SyncInput): Promise<SyncOutcome> {
-  const { stores, driverPublicId, plan, now, grant, trace, probe } = input;
+  const { stores, driverPublicId, plan, now, grant, trace, probe, ids } = input;
 
   const period = grant ? await stores.ledger.insertPeriod(grant, trace ?? {}) : null;
   if (probe) await probe("after-period");
@@ -89,6 +106,7 @@ export async function syncFromLedger(input: SyncInput): Promise<SyncOutcome> {
   // والمصدرُ يُمرّر للوثبةِ الأخيرةِ وحدَها: المُدّةُ الحاكمةُ تفسّر الحالةَ التي
   // استقرّ عليها لا الحالاتِ التي عبرَها، وإسنادُ مُدّةٍ مدفوعةٍ إلى «انقضى» يقلب معنى السبب.
   let transition: TransitionRecord | null = null;
+  const written: TransitionRecord[] = [];
   const hops = transitionPath(fromState, derived.state);
   for (const [index, [hopFrom, hopTo]] of hops.entries()) {
     const isLast = index === hops.length - 1;
@@ -101,6 +119,7 @@ export async function syncFromLedger(input: SyncInput): Promise<SyncOutcome> {
       },
       trace ?? {},
     );
+    written.push(transition);
   }
   if (probe) await probe("after-transition");
 
@@ -126,5 +145,28 @@ export async function syncFromLedger(input: SyncInput): Promise<SyncOutcome> {
     computedAt: derived.computedAt,
   });
 
-  return { projection, derived, transition, period, changed: transition !== null };
+  // ## النشرُ **بعد** الصفِّ المُتحقِّق، وفي نفسِ المعاملة
+  //
+  // بعدَه لأنّ حمولةَ الحدثِ تُلزم `subscription_id`، والمُعرِّفُ تُنشئه القاعدةُ عند أوّلِ
+  // كتابةٍ للصفّ — فمنحُ تجربةٍ لا يعرف المُعرِّفَ قبل `projection.write`. وفي نفسِ المعاملة
+  // لأنّ حدثاً يُكتب في معاملةٍ ثانيةٍ قد لا يُكتب أبداً، فيبقى الانتقالُ ثابتاً بلا إعلان.
+  //
+  // وحدثٌ لكلِّ وثبةٍ لا حدثٌ للطريق: طريقٌ من `trial` إلى `community` يعبر `expired`، وطيُّ
+  // الوثبتين في حدثٍ واحدٍ كان سيُخفي **أنّ الاشتراكَ انقضى** — وهي الواقعةُ التي تُبنى
+  // عليها المحاسبةُ اللاحقة.
+  const eventIds: string[] = [];
+  for (const hop of written) {
+    const event = transitionEvent(hop, {
+      meta: { eventId: ids.next(), occurredAt: now, traceId: trace?.traceId ?? null },
+      subscriptionId: projection.subscriptionId,
+      planCode: projection.planCode,
+      planVersion: projection.planVersion,
+      expiresAt: projection.expiresAt,
+      governing: governing ?? null,
+    });
+    await stores.outbox.append(toOutboxDraft(event));
+    eventIds.push(event.event_id);
+  }
+
+  return { projection, derived, transition, period, changed: transition !== null, eventIds };
 }

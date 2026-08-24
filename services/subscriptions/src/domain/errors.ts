@@ -222,6 +222,24 @@ export function idempotencyKeyRequired(): SubscriptionError {
   );
 }
 
+/**
+ * نفسُ `Idempotency-Key` لطلبٍ **مختلفِ البصمة**.
+ *
+ * `conflict` لا `validation_error`: شكلُ الطلبِ سليمٌ، والمانعُ مفتاحٌ استقرّ لطلبٍ آخر.
+ * وإعادةُ الجوابِ المحفوظِ هنا كانت ستكون أسوأَ عيبٍ ممكن: عميلٌ يطلب «فعّل اشتراكَ سائقٍ»
+ * بمفتاحٍ استعمله قبلَها لسائقٍ غيرِه فيتلقّى نجاحاً عن عملٍ **لم يُنفَّذ له**.
+ *
+ * ولا يردُّ الخطأُ البصمةَ ولا الجوابَ المحفوظ: مقارنةٌ يُعطاها المُهاجمُ طرفاها تصير أداةَ
+ * استكشافٍ لطلباتِ غيره.
+ */
+export function idempotencyKeyReused(routeKey: string): SubscriptionError {
+  return new SubscriptionError(
+    "SUBSCRIPTION_IDEMPOTENCY_KEY_REUSED",
+    "المفتاح مستعمل لطلب مختلف",
+    { details: { field: "Idempotency-Key", expected: `same request for ${routeKey}` } },
+  );
+}
+
 /** `GET /referrals` بلا مُرشِّح: قراءةٌ بلا مُرشِّحٍ تُصدّر شبكةَ إحالاتِ كلِّ السائقين بطلبٍ واحد. */
 export function referralFilterRequired(): SubscriptionError {
   return new SubscriptionError("SUBSCRIPTION_FILTER_REQUIRED", "القراءة تحتاج مُرشحاً واحداً على الأقل", {

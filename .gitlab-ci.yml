@@ -742,3 +742,41 @@ subscriptions-db-integration:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/subscriptions-service test:integration
+
+# بوابةُ خروج المرحلة 10 (MR 6/6):
+#   packages/subscription-e2e/src/__tests__/phase10-exit-gate.e2e.test.ts
+#
+# ترفع خدمةَ الاشتراكِ على Postgres بتركيبِها الإنتاجيّ (createSubscriptionApp في نمط
+# postgres) وخدمةَ السمعةِ على مُهيئي الذاكرة، كلتاهما على مُستمعٍ حقيقيٍّ بمنفذٍ يمنحه
+# النظام، وتُثبت ثلاثةَ أشياءَ لا يُثبتها اختبارُ خدمةٍ واحدة:
+#   • الحالاتُ الأربعُ (trial · expired · community · active) تُبلَغ بمضيِّ الزمنِ ونبضةٍ
+#     حقيقيّةٍ على قاعدةٍ حقيقيّة، والدفترُ يحمل مُدّتَين فقط لأنّ expired و community
+#     تُشتقّان من فراغِ التغطيةِ ولا مُدّةَ لهما (ADR-015 القرار 2).
+#   • ما يعبر الحدَّ من السمعةِ إلى الاشتراكِ هو ما أصدره محرّكُ السمعةِ **فعلاً**: الحمولةُ
+#     تُقرأ من صندوقِ صادرِه لا تُكتب في الاختبار، فاسمُ حقلٍ يختلف بين الخدمتَين يسقط هنا
+#     لا في مُتكامِل. وإحالةٌ بوقائعَ دون النصابِ تبقى pending ولا صفَّ مكافأةٍ لها.
+#   • مفتاحٌ مُعادٌ على مُستمعٍ حقيقيٍّ يُعيد الحالةَ والجسمَ المحفوظَين حرفاً بحرف، ونفسُ
+#     المفتاحِ لجسمٍ آخرَ تعارضٌ مُسمّىً لا كتابةٌ صامتة.
+#
+# ولمَ وظيفةٌ بقاعدةٍ لا نمطُ ذاكرةٍ كأخواتِها؟ لأنّ createSubscriptionApp في نمطِ الذاكرة
+# يردّ 503 على كلِّ عمليّةٍ **عن قصد** (http-degraded يُثبته): الحالةُ تُشتقّ من دفترٍ لا
+# يُعدَّل، ومُهيئُ ذاكرةٍ لدفترٍ كهذا كان سيصير نسخةً ثانيةً من القاعدةِ تُثبت ما لا يجري
+# في الإنتاج. وبغياب DATABASE_URL يتخطّى الملفُّ نفسَه (skipIf) فيبقى pnpm -r test أخضرَ
+# على جهازٍ بلا قاعدة — ولذلك وجودُ هذه الوظيفةِ هو ما يجعل البوابةَ بوابةً.
+#
+# قاعدة مستقلّة (wasla_subscription_e2e) حتى لا تتداخل صفوفُها مع
+# subscriptions-db-integration وليبقى الفشلُ منسوباً لوظيفةٍ واحدة.
+subscription-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_subscription_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_subscription_e2e"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/subscription-e2e test

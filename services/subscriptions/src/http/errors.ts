@@ -47,6 +47,7 @@
 
 import type { FastifyReply } from "fastify";
 
+import { isReplayedResponse } from "../app/idempotency.js";
 import { constraintOf } from "../db/constraints.js";
 import { isSubscriptionError, type SubscriptionErrorDetails } from "../domain/errors.js";
 
@@ -147,6 +148,15 @@ export function sendSubscriptionError(
   error: unknown,
   traceId: string,
 ): void {
+  // الفرعُ الأوّلُ ليس خطأً أصلاً: `ReplayedResponse` إشارةُ تحكّمٍ تعني «لهذا المفتاحِ جوابٌ
+  // محفوظٌ». وتُترجَم هنا لأنّ هذا هو الموضعُ الواحدُ الذي يصير فيه مرفوعٌ جواباً، فلا يحتاج
+  // معالجٌ أن يلتقط شيئاً (`__tests__/http-drift.test.ts` يحرس: لا `try` في معالج). والحالةُ
+  // والجسمُ يُعادان **كما حُفظا**: لا إعادةَ تحويلٍ ولا إعادةَ حساب — وهذا هو معنى الإعادة.
+  if (isReplayedResponse(error)) {
+    reply.status(error.stored.responseStatus).send(error.stored.responseBody);
+    return;
+  }
+
   if (isSubscriptionError(error)) {
     const details = toWireDetails(error.details);
     reply.status(error.httpStatus).send({

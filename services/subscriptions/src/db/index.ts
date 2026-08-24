@@ -22,5 +22,13 @@ export {
   type LedgerTrace,
   type TransitionRecord,
 } from "./repository.js";
+export {
+  MAX_TRANSITION_ATTEMPTS,
+  SubscriptionUnitOfWork,
+  bindStores,
+  type SubscriptionStores,
+  type TransactionProbe,
+  type UnitOfWorkContext,
+} from "./unit-of-work.js";
 export { NOT_MIRRORED_TABLES } from "./schema.js";
 export * as subscriptionSchema from "./schema.js";

@@ -73,10 +73,18 @@ export function isMarketplaceError(error: unknown): error is MarketplaceError {
 //
 // الرموزُ التي لا تُنتَج هنا (`STORE_NOT_FOUND` · `PRODUCT_NOT_FOUND` ·
 // `STORE_CATEGORY_NOT_FOUND` · `STORE_STAFF_NOT_FOUND` · `MARKETPLACE_IDEMPOTENCY_*` ·
-// `STORE_SLUG_TAKEN` · `PRODUCT_SKU_TAKEN` · `STORE_STAFF_ALREADY_MEMBER` ·
 // `STORE_REVIEW_ALREADY_PENDING` · `MARKETPLACE_FILTER_REQUIRED` · `MARKETPLACE_UNAVAILABLE`)
-// تحتاج مخزناً ليعرف أنّ الصفَّ غائبٌ أو الفهرسَ مأخوذ، فمكانُها المراجعتان 3/6 و4/6. وهي
-// موجودةٌ في الكتالوجِ من المراجعة 1/6، والمجالُ لا يخترع رمزاً ليس فيه ولا يُسقط رمزاً منه.
+// تحتاج مخزناً ليعرف أنّ الصفَّ غائبٌ أو مسارَ طلبٍ ليعرف أنّ مفتاحاً أُعيد، فمكانُها المراجعة
+// 4/6. وهي موجودةٌ في الكتالوجِ من المراجعة 1/6، والمجالُ لا يخترع رمزاً ليس فيه ولا يُسقط
+// رمزاً منه.
+//
+// أمّا الثلاثةُ أدناه (`STORE_SLUG_TAKEN` · `PRODUCT_SKU_TAKEN` ·
+// `STORE_STAFF_ALREADY_MEMBER`) فنزلت في المراجعة 3/6 لأنّ التفرّدَ حقيقةٌ **لا تُعرَف قبل
+// الكتابة**: فحصُ «هل اللاحقةُ مأخوذة؟» بقراءةٍ ثمّ كتابةٍ يمرّ في الاختبارِ ويسقط عند
+// طلبَين متزامنَين — والحقيقةُ يحرسها فهرسٌ فريدٌ في القاعدة، وترجمةُ اسمِه إلى رمزِ العقدِ
+// هي وظيفةُ `db/constraints.ts`. ولا تُعاد قيمةُ المدخلِ في `details` (اللاحقةُ استثناءٌ
+// مُعلَنٌ في العقدِ لأنّها مُعرِّفٌ علنيٌّ يقرؤه صاحبُ المتجرِ في الرابط)، ويُسمّى القيدُ
+// دائماً كي يُقرأ سببُ التعارضِ من السجلِّ بلا تخمين.
 
 export function validationFailed(field: string, expected: string): MarketplaceError {
   return new MarketplaceError(
@@ -171,6 +179,38 @@ export function inventoryInsufficientQuantity(quantityOnHand: number): Marketpla
     "الكميّةُ في اليدِ لا تكفي هذا السحب.",
     { quantity_on_hand: quantityOnHand, field: "quantity_delta", expected: "quantity_after >= 0" },
   );
+}
+
+/**
+ * لاحقةُ متجرٍ مأخوذةٌ — يُترجَم إليها انتهاكُ `ux_stores_slug_lower` لا انتهاكُ `slug` وحدَه:
+ * الفهرسُ على `LOWER(slug)` بقصد، فـ`Wasla-Store` و`wasla-store` تعارضٌ واحدٌ لا اثنان.
+ */
+export function storeSlugTaken(storeSlug: string): MarketplaceError {
+  return new MarketplaceError("STORE_SLUG_TAKEN", "هذه اللاحقةُ مأخوذةٌ لمتجرٍ آخر.", {
+    store_slug: storeSlug,
+    field: "slug",
+    constraint: "ux_stores_slug_lower",
+  });
+}
+
+/**
+ * رمزُ صنفٍ مأخوذٌ **داخلَ المتجرِ** لا في السوقِ كلِّه — ولذلك لا يُعاد الرمزُ في `details`:
+ * حقولُ `details` معدودةٌ في العقدِ ولا حقلَ فيها لـ`sku`، ويُسمّى الحقلُ والقيدُ فيكفي.
+ */
+export function productSkuTaken(): MarketplaceError {
+  return new MarketplaceError("PRODUCT_SKU_TAKEN", "رمزُ الصنفِ مُستعملٌ في هذا المتجر.", {
+    field: "sku",
+    expected: "unique per store",
+    constraint: "ux_products_store_sku",
+  });
+}
+
+/** عضويّةٌ نشطةٌ قائمةٌ — والفهرسُ جزئيٌّ، فعودةُ مَن أُزيل ليست تعارضاً (القرار 8). */
+export function storeStaffAlreadyMember(memberPublicId: string): MarketplaceError {
+  return new MarketplaceError("STORE_STAFF_ALREADY_MEMBER", "هذا العضوُ في طاقمِ المتجرِ فعلاً.", {
+    member_public_id: memberPublicId,
+    constraint: "ux_store_staff_active_member",
+  });
 }
 
 /** حدٌّ مُعلَنٌ لا صامت: `STORE_ACTIVE_LIMIT_PER_OWNER` يُذكَر نصّاً في `expected`. */

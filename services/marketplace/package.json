@@ -3,23 +3,33 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "WASLA Marketplace service — حالةُ المتجرِ والمنتجِ مُشتقّةٌ من دفترَي مراجعةٍ لا حقلٌ يُكتب، والظهورُ اقترانُ أربعةِ شروطٍ يُشتَقُّ عند القراءةِ لا عمودٌ يُخزَّن، والمخزونُ دفترُ فروقٍ موقَّعةٍ لا رقمٌ يُدهَس (Phase 11 · MR 2/6: طبقةُ مجالٍ نقيّةٌ بلا قاعدةٍ ولا HTTP).",
+  "description": "WASLA Marketplace service — حالةُ المتجرِ والمنتجِ مُشتقّةٌ من دفترَي مراجعةٍ لا حقلٌ يُكتب، والظهورُ اقترانُ أربعةِ شروطٍ يُشتَقُّ عند القراءةِ لا عمودٌ يُخزَّن، والمخزونُ دفترُ فروقٍ موقَّعةٍ لا رقمٌ يُدهَس (Phase 11 · MR 3/6: طبقةُ استمراريّةٍ تُطبّق contracts/schema.sql حرفاً، ومرآةُ Drizzle مرآةٌ لا مصدر، ومعاملةٌ واحدةٌ تضمّ الدفترَ وإسقاطَه). التبعيّتان drizzle-orm و pg مُبرَّرتان: الأولى مرآةُ نوعٍ ومُنشئُ استعلامٍ يمنع SQL نصّاً في المخازن، والثانية مُشغّلُ Postgres الذي يُنفّذ نصَّ العقدِ كما هو ويُعيد اسمَ القيدِ المُنتهَكِ فتُترجَم أخطاءُ التزامنِ إلى رموزِ عقدٍ لا إلى 500.",
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./db": {
+      "types": "./src/db/index.ts",
+      "import": "./src/db/index.ts"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:migrate": "tsx src/db/migrate-cli.ts"
   },
   "dependencies": {
-    "@wasla/contracts-marketplace": "workspace:*"
+    "@wasla/contracts-marketplace": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.12",
     "vitest": "^2.1.0"
   }
 }

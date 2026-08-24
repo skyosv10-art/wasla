@@ -773,6 +773,19 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)
 
+  services/marketplace:
+    dependencies:
+      '@wasla/contracts-marketplace':
+        specifier: workspace:*
+        version: link:../../packages/contracts/marketplace
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.43)
+
   services/matching:
     dependencies:
       '@wasla/contracts-matching':

@@ -162,3 +162,88 @@ export function referralNotQualified(referralState: ReferralState): Subscription
     details: { referralState },
   });
 }
+
+/**
+ * سائقٌ لا اشتراكَ له. **يُختلَق اشتراكٌ لغريبٍ؟ لا** (errors.md §`SUBSCRIPTION_NOT_FOUND`).
+ *
+ * النسخةُ الخاطئةُ الأرخص هنا إعادةُ `community` لمن لم يشترك يوماً: تجعل «الأرضيّة» تعني
+ * شيئين في استجابةٍ واحدة — من انقضت مُدّتُه، ومن لا وجودَ له — فيبني البوتُ رسالةً واحدةً
+ * لحالتين مختلفتين تماماً.
+ */
+export function subscriptionNotFound(): SubscriptionError {
+  return new SubscriptionError("SUBSCRIPTION_NOT_FOUND", "لا اشتراك لهذا السائق", {
+    details: { field: "driver_public_id" },
+  });
+}
+
+/**
+ * اشتراكٌ ثانٍ لسائقٍ له اشتراكٌ قائم بأيِّ حالة.
+ *
+ * والتجديدُ ليس إنشاءً: من انقضت مُدّتُه يُفعَّل بـ`activate` فتُضاف مُدّةٌ إلى دفترِه
+ * القائم. وحارسُه الثاني في القاعدة `ux_subscriptions_driver`؛ فلو مرّ فحصٌ هنا في سباقٍ،
+ * القيدُ يمنع الصفَّ الثاني ولا يبقى للسائقِ دفترانِ وحالتان.
+ */
+export function subscriptionAlreadyExists(state: SubscriptionState): SubscriptionError {
+  return new SubscriptionError("SUBSCRIPTION_ALREADY_EXISTS", "للسائق اشتراك قائم", {
+    details: { fromState: state, constraint: "ux_subscriptions_driver" },
+  });
+}
+
+/** رمزُ إحالةٍ لا مالكَ له، أو مالكٌ لا رمزَ له. ولا يُنشأ رمزٌ في `GET` (errors.md §`REFERRAL_CODE_NOT_FOUND`). */
+export function referralCodeNotFound(): SubscriptionError {
+  return new SubscriptionError("REFERRAL_CODE_NOT_FOUND", "رمز الإحالة غير موجود", {
+    details: { field: "referral_code" },
+  });
+}
+
+/**
+ * مُحالٌ له إحالةٌ مسجَّلةٌ من قبل — **بأيّ حالة، بما فيها `rejected`**.
+ *
+ * ولمَ تُحسب `rejected`؟ لأنّ إعادةَ المحاولةِ بعد رفضٍ تُلغي معنى الرفض: يُطالب برمزٍ آخرَ
+ * حتى يمرّ أحدُها. وحارسُه الثاني `ux_referrals_referee`.
+ */
+export function refereeAlreadyReferred(state: ReferralState): SubscriptionError {
+  return new SubscriptionError("REFERRAL_REFEREE_ALREADY_REFERRED", "للمُحال إحالة مسجلة", {
+    details: { referralState: state, constraint: "ux_referrals_referee" },
+  });
+}
+
+/**
+ * فعلٌ يُغيّر حالةً بلا رأس `Idempotency-Key`.
+ *
+ * `validation_error` لا `conflict`: الخدمةُ لم تُقارن مفتاحاً قائماً بعد. ومنحُ أيّامٍ بلا
+ * مفتاحٍ يجعل إعادةَ محاولةٍ واحدةً عند انقطاعِ شبكةٍ تُضاعف شهراً مجّاناً.
+ */
+export function idempotencyKeyRequired(): SubscriptionError {
+  return new SubscriptionError(
+    "SUBSCRIPTION_IDEMPOTENCY_KEY_REQUIRED",
+    "الفعل يحتاج رأس Idempotency-Key",
+    { details: { field: "Idempotency-Key", expected: "8..128 chars" } },
+  );
+}
+
+/** `GET /referrals` بلا مُرشِّح: قراءةٌ بلا مُرشِّحٍ تُصدّر شبكةَ إحالاتِ كلِّ السائقين بطلبٍ واحد. */
+export function referralFilterRequired(): SubscriptionError {
+  return new SubscriptionError("SUBSCRIPTION_FILTER_REQUIRED", "القراءة تحتاج مُرشحاً واحداً على الأقل", {
+    details: { expected: "referrer_public_id | referee_public_id | state" },
+  });
+}
+
+/** مضت `referral_window_days` من نسخةِ الخطّة، فلا مطالبةَ بعدها. */
+export function referralWindowClosed(planCode: string, planVersion: number): SubscriptionError {
+  return new SubscriptionError("REFERRAL_WINDOW_CLOSED", "نافذة الإحالة مغلقة", {
+    details: { planCode, planVersion, rejectionReason: "referral_window_expired" },
+  });
+}
+
+/**
+ * الاستمراريةُ غيرُ متاحة، فلا حالةَ تُعطى.
+ *
+ * **حالةٌ مُشتقّةٌ من دفترٍ لا يُقرأ ليست حالة**: إعادةُ `community` عند تعذّرِ القراءة تُوقف
+ * سائقاً مشتركاً عن العمل. و`503` تقول للمستهلك «أعِد المحاولةَ»، لا «أمرُك مرفوض».
+ */
+export function subscriptionUnavailable(reason: string): SubscriptionError {
+  return new SubscriptionError("SUBSCRIPTION_UNAVAILABLE", "الخدمة لا تعطي حالة موثوقة الآن", {
+    details: { expected: reason },
+  });
+}

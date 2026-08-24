@@ -95,6 +95,40 @@ function coveringPeriods(run: CoverageRun, now: string): ReadonlyArray<Period> {
   );
 }
 
+/**
+ * المدةُ الحاكمة بين مُدَدٍ تُغطّي اللحظةَ نفسها: المدفوعةُ أو المكافأةُ تسبق التجربة.
+ *
+ * ولمَ الأقوى يفوز؟ لأنّ سائقاً دفع وهو في تجربتِه لا يجوز أن يُقال له «أنت في تجربة»،
+ * ولأنّ الحالةَ يجب أن تكون دالّةً من المجموعة لا من ترتيبِ الفرز.
+ */
+function strongestCovering(covering: ReadonlyArray<Period>): Period | undefined {
+  return covering.find((period) => period.source !== "trial") ?? covering[0];
+}
+
+/**
+ * المدةُ الحاكمةُ عند `now` إن وُجدت — **نفسُ قاعدةِ `deriveState`** لا قاعدةٌ ثانية.
+ *
+ * ولمَ تُصدَّر أصلاً؟ لأنّ الصفَّ المُتحقِّق يحمل `current_period_id`، و`DerivedSubscription`
+ * لا تحمل مُعرّفاتٍ (ولا ينبغي: المجالُ يحسب على مُدَدٍ لا يملك هويّاتِها). فلو اختارت
+ * طبقةُ التطبيق المُدّةَ بمنطقِها لصارت قاعدةُ «الأقوى يفوز» مكتوبةً مرتين، ويومَ تختلفان
+ * يقول الصفُّ `active` ويُشير إلى مدّةِ تجربةٍ — ولا أحدَ يلاحِق أيّهما الصحيح.
+ */
+export function governingPeriod(periods: ReadonlyArray<Period>, now: string): Period | null {
+  assertTimestamp(now, "now");
+  const runs = coverageRuns(periods);
+  const activeRun = runs.find(
+    (run) => isAtOrAfter(now, run.startsAt) && isBefore(now, run.endsAt),
+  );
+  if (!activeRun) return null;
+  return strongestCovering(coveringPeriods(activeRun, now)) ?? null;
+}
+
+/** بدايةُ أوّلِ تغطيةٍ في الدفتر — `started_at` للاشتراك لا للحالةِ الراهنة. */
+export function firstCoverageStart(periods: ReadonlyArray<Period>): string | null {
+  const runs = coverageRuns(periods);
+  return runs[0]?.startsAt ?? null;
+}
+
 function assertGoverningPlan(period: Period, plan: PlanVersion): void {
   if (period.planCode !== plan.planCode || period.planVersion !== plan.planVersion) {
     // نسخةُ الخطّةِ الحاكمةُ هي نسخةُ **المدة** لا نسخةٌ يختارها المُنادي: لو قبلنا نسخةً
@@ -132,13 +166,9 @@ export function deriveState(
 
   if (activeRun) {
     const covering = coveringPeriods(activeRun, now);
-    // مدةٌ مدفوعةٌ أو مكافأةٌ تُغطّي الآن ⇒ `active`، ولو غطّت التجربةُ في نفس اللحظة.
-    // ولمَ الأقوى يفوز؟ لأنّ سائقاً دفع وهو في تجربتِه لا يجوز أن يُقال له «أنت في تجربة»،
-    // ولأنّ الحالةَ يجب أن تكون دالّةً من المجموعة لا من ترتيبِ الفرز.
-    const paid = covering.find((period) => period.source !== "trial");
-    const governing = paid ?? covering[0]!;
+    const governing = strongestCovering(covering)!;
     assertGoverningPlan(governing, plan);
-    const state = paid ? "active" : "trial";
+    const state = governing.source === "trial" ? "trial" : "active";
     return Object.freeze({
       state,
       planCode: governing.planCode,

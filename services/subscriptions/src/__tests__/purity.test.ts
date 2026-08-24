@@ -92,16 +92,48 @@ function filesMatching(pattern: RegExp): readonly string[] {
 }
 
 /** قوائمُ الاستثناءِ المُعلَنة لهذه المراجعة — بالأسماء، ومحروسةٌ موجَباً. */
-const REAL_CLOCK_FILES: readonly string[] = ["db/migrate-cli.ts"];
-const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts"];
+const REAL_CLOCK_FILES: readonly string[] = ["app/runtime.ts", "db/migrate-cli.ts"];
+const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts", "http/server.ts"];
 const FS_READING_FILES: readonly string[] = ["db/migrate.ts"];
 const DB_AWARE_FILES: readonly string[] = [
   "db/client.ts",
   "db/migrate.ts",
+  "db/projection.ts",
+  "db/referrals.ts",
   "db/repository.ts",
   "db/schema.ts",
 ];
-const HTTP_AWARE_FILES: readonly string[] = [];
+/**
+ * ولمَ `http/errors.ts` مع `http/app.ts`؟ لأنّه يستورد **نوعَ** `FastifyReply` ليكتب الجوابَ
+ * بيدٍ واحدة: مترجمُ الأخطاءِ إلى أسلاكٍ هو المكانُ الذي يجب أن يعرف شكلَ الجواب، وتمريرُ
+ * «شيءٍ يشبه الجواب» كان سيجعل خطأً في الترميز يظهر في التشغيل لا في `tsc`. و`http/server.ts`
+ * لا يستورد الإطارَ أصلاً — يبني التطبيقَ ويستمع، فلا يدخل القائمة.
+ */
+const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts"];
+
+/**
+ * الاستثناءُ الجديدُ في المراجعة 4/6 — **ملفٌّ واحدٌ يُعدّل صفّاً، وليس صفّاً في الدفتر.**
+ *
+ * قال شرحُ المراجعة 3/6 بالحرف: «يومَ تحتاج تعديلاً سيُضاف الاستثناءُ باسم ملفِّه وقرارٍ
+ * مكتوبٍ يشرح لماذا — لا بتوسيعِ نمطٍ يُبيح التعديلَ على الدفتر نفسِه». وهذا ما يحدث الآن
+ * بالحرف: `db/projection.ts` وحدَه يكتب صفَّ `subscriptions` بـ`onConflictDoUpdate` على
+ * `driver_public_id`، لأنّ الصفَّ **مُشتقٌّ** — إعادةُ بنائه من الدفتر ليست تعديلاً على
+ * تاريخٍ بل إعادةُ حسابِ نتيجةٍ. و`subscription_periods` و`subscription_transitions` تبقى
+ * بلا استثناءٍ واحد: لا `UPDATE` ولا `DELETE` عليهما في أيّ ملفٍّ من `src/`.
+ *
+ * والحارسُ الثاني أدناه يُثبت أنّ هذا الملفَّ لا يذكر الجدولَين أصلاً — فلا يستطيع أن
+ * يُعدّل دفتراً حتى لو أُضيف سطرٌ بحسنِ نيّة.
+ */
+const PROJECTION_WRITING_FILES: readonly string[] = ["db/projection.ts"];
+
+/**
+ * النمطُ مُقيَّدٌ بمِقبضِ القاعدة (`db.` أو `tx.`) لا بكلِّ `.update(` في المستودع، لأنّ
+ * `createHash("sha256").update(...)` في `app/referral-code.ts` تعديلُ **مُلخَّصٍ** لا صفٍّ —
+ * وحارسٌ يسقط على مطابقةٍ نصّيّةٍ لا علاقةَ لها بالقاعدة يُدرَّب المُراجعُ على تجاهله، وذلك
+ * أسوأُ من غيابه. ومُنشئُ استعلامِ drizzle في هذا المستودع يمرّ دائماً عبر أحدِ المِقبضَين،
+ * وحارسُ «من يعرف المُشغّل» أعلاه يُثبت أنّ ملفاتِ `db/` هي وحدَها التي تحمله.
+ */
+const DB_UPDATE_PATTERN = /\b(?:db|tx)\s*\.\s*update\s*\(/;
 
 describe("مسحُ المصدر", () => {
   it("يجد ملفاتٍ فعلاً — فلا يمرّ الحارسُ على قائمةٍ فارغة", () => {
@@ -217,10 +249,14 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
      * يقارنه حارسٌ — يمرّ في البناء ويُرفض في القاعدة.
      */
     expect(
-      scan([
-        ["fastify", /from\s+["']fastify["']/],
-        ["SQL نصّاً", /\b(?:SELECT|INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM)\b/],
-      ]),
+      scan(
+        [["fastify", /from\s+["']fastify["']/]],
+        // الإطارُ مسموحٌ لملفٍّ واحدٍ بالاسم؛ ومنعُ SQL النصّيّ يبقى **بلا استثناء** أدناه.
+        new Set(HTTP_AWARE_FILES),
+      ),
+    ).toEqual([]);
+    expect(
+      scan([["SQL نصّاً", /\b(?:SELECT|INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM)\b/]]),
     ).toEqual([]);
   });
 
@@ -241,6 +277,8 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
       ...DB_AWARE_FILES,
     ]);
     expect(filesMatching(/from\s+["']fastify["']/)).toEqual([...HTTP_AWARE_FILES]);
+    // والاتجاهُ الثاني: من يعرف الإطارَ يقيم في `http/` — ولا يعرفه مجالٌ ولا تطبيقٌ ولا مخزن.
+    for (const file of HTTP_AWARE_FILES) expect(file.startsWith("http/")).toBe(true);
   });
 
   it("ولا ملفَّ مجالٍ واحدٍ يعرف القاعدة — الحدُّ في `db/` وحدَه", () => {
@@ -255,7 +293,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     )).toBe(true);
   });
 
-  it("التبعيّاتُ المُعلَنةُ ثلاثٌ: العقدُ والمُشغّلُ وORM", () => {
+  it("التبعيّاتُ المُعلَنةُ أربعٌ: العقدُ والمُشغّلُ وORM وإطارُ HTTP", () => {
     /**
      * القائمةُ مكتوبةٌ صريحةً حتى تسقط أوّلُ تبعيّةٍ تُضاف بلا قرارٍ موثَّق: مكتبةُ تحقّقٍ
      * أو عميلُ HTTP أو مُجدولٌ هنا يعني أنّ الخدمةَ صارت تفعل ما لم تُعلنه هذه المراجعة.
@@ -267,6 +305,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
       "@wasla/contracts-subscription",
       "drizzle-orm",
+      "fastify",
       "pg",
     ]);
   });
@@ -294,13 +333,34 @@ describe("لا تعديلَ على دفتر (القرار 2)", () => {
      * بتوسيعِ نمطٍ يُبيح التعديلَ على الدفتر نفسِه.
      */
     expect(
-      scan([
-        ["db.update(", /\.\s*update\s*\(/],
-        ["db.delete(", /\.\s*delete\s*\(/],
-        ["onConflictDoUpdate", /\bonConflictDoUpdate\b/],
-        ["TRUNCATE", /\bTRUNCATE\b/],
-      ]),
+      scan(
+        [
+          ["db.update(", DB_UPDATE_PATTERN],
+          ["db.delete(", /\b(?:db|tx)\s*\.\s*delete\s*\(/],
+          ["onConflictDoUpdate", /\bonConflictDoUpdate\b/],
+          ["TRUNCATE", /\bTRUNCATE\b/],
+        ],
+        new Set(PROJECTION_WRITING_FILES),
+      ),
     ).toEqual([]);
+  });
+
+  it("ومن يُعدّل صفّاً: ملفُّ الصفِّ المُشتقِّ وحدَه — بالضبط", () => {
+    expect(filesMatching(new RegExp(`\\bonConflictDoUpdate\\b|${DB_UPDATE_PATTERN.source}`))).toEqual([
+      ...PROJECTION_WRITING_FILES,
+    ]);
+  });
+
+  it("وكاتبُ الصفِّ المُشتقِّ لا يعرف جدولَي الدفتر أصلاً", () => {
+    /**
+     * الاتجاهُ الثاني: الاستثناءُ مُقيَّدٌ بما يستطيع الملفُّ لمسَه، لا بحسنِ نيّةِ كاتبِه.
+     * `db/projection.ts` لا يذكر `subscriptionPeriods` ولا `subscriptionTransitions`، فلو
+     * أُضيف فيه `update` على أحدهما غداً لسقط هذا الاختبارُ قبل أن يُراجعه أحد.
+     */
+    const projection = codeOnly(join(SRC, "db", "projection.ts"));
+    expect(projection).toContain("onConflictDoUpdate");
+    expect(projection).not.toContain("subscriptionPeriods");
+    expect(projection).not.toContain("subscriptionTransitions");
   });
 
   it("والمخزنُ يُضيف ويقرأ فعلاً — فالغيابُ ليس غيابَ مخزن", () => {

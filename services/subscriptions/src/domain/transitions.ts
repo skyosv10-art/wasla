@@ -104,3 +104,58 @@ export function draftTransition(
     occurredAt: assertTimestamp(occurredAt, "occurred_at"),
   } satisfies TransitionDraft);
 }
+
+/**
+ * أقصرُ طريقٍ **مُعلَنٍ** من حالةٍ إلى حالة — لا وثبةٌ واحدةٌ تتجاوز حالاتٍ وسطى.
+ *
+ * ## الخللُ الذي أوجد هذه الدالّة
+ *
+ * الاشتقاقُ يقرأ الدفترَ عند لحظةٍ واحدةٍ فيقول «هذا السائقُ في `community` الآن»، والصفُّ
+ * المُتحقِّقُ ما زال يقول `trial` لأنّ نبضةً لم تمرّ عليه شهراً. و`[trial, community]` ليس
+ * زوجاً مُعلَناً في `SUBSCRIPTION_ALLOWED_TRANSITIONS`، فكانت إعادةُ الحسابِ ترفع
+ * `SUBSCRIPTION_TRANSITION_NOT_ALLOWED` (409) وتعدُّ النبضةُ العمليّةَ فشلاً — **إلى الأبد**:
+ * كلُّ نبضةٍ تالية تجد نفسَ الصفّ وتفشل نفسَ الفشل، فيبقى سائقٌ انقضت مهلتُه معلَّقاً في
+ * `trial` ولا مسارَ في النظام يُخرجه. اكتُشف في تكامل 4/6 (نبضةٌ بـ`failures: 1`).
+ *
+ * ## ولماذا طريقٌ لا زوجٌ إضافيّ
+ *
+ * النسخةُ الخاطئةُ الأرخص إضافةُ `[trial, community]` و`[active, community]` إلى العقد:
+ * تُسكِت الخطأَ وتمحو من دفترِ الانتقالات أنّ السائقَ **انقضى** ثمّ نزل إلى الأرضيّة — وهما
+ * حادثتان لكلِّ واحدةٍ منهما رسالةٌ للسائق وأثرٌ في تقريرِ الطور. فالطريقُ يُكتب كاملاً:
+ * انتقالان بسببَيهما (`period_ended` ثمّ `community_grace_ended`) في نفس المعاملة.
+ *
+ * البحثُ بالعرضِ على الأزواجِ المُعلَنةِ نفسِها لا على جدولٍ ثانٍ مكتوبٍ بيدنا: جدولٌ ثانٍ
+ * يجعل يومَ تُضاف حالةٌ خامسةٌ للعقدِ رأيَين على الرسمِ نفسِه. وأقصرُ طريقٍ لأنّ طريقاً أطولَ
+ * يكتب في التاريخِ حادثةً لم تقع.
+ */
+export function transitionPath(
+  fromState: SubscriptionState | null,
+  toState: SubscriptionState,
+): ReadonlyArray<readonly [SubscriptionState | null, SubscriptionState]> {
+  if (fromState === toState) return Object.freeze([]);
+
+  type Hop = readonly [SubscriptionState | null, SubscriptionState];
+  const queue: Array<{ readonly state: SubscriptionState | null; readonly path: Hop[] }> = [
+    { state: fromState, path: [] },
+  ];
+  // `null` حالةُ البداية ولها مفتاحُها: من دونه يصير «لا اشتراك» و«اشتراكٌ اسمُه null»
+  // شيئاً واحداً في البحث.
+  const seen = new Set<string>([String(fromState)]);
+
+  while (queue.length > 0) {
+    const { state, path } = queue.shift()!;
+    for (const [from, to] of SUBSCRIPTION_ALLOWED_TRANSITIONS) {
+      if (from !== state) continue;
+      const extended: Hop[] = [...path, [state, to] as const];
+      // فحصُ الهدفِ قبل `seen`: الهدفُ قد يكون حالةً زُرناها كجارٍ في مستوىً سابق.
+      if (to === toState) return Object.freeze(extended);
+      if (seen.has(to)) continue;
+      seen.add(to);
+      queue.push({ state: to, path: extended });
+    }
+  }
+
+  // لا طريقَ في الرسمِ المُعلَن — والرفضُ بنفسِ رمزِ الزوجِ الواحد: من ينظر في السجلّ يسأل
+  // «كيف يصل من هذه إلى هذه؟» لا «أيَّ خوارزميّةٍ استعملنا».
+  throw transitionNotAllowed(fromState, toState);
+}

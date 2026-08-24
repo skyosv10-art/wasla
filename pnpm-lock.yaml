@@ -778,10 +778,22 @@ importers:
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.43)

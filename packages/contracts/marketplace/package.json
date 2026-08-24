@@ -1,0 +1,24 @@
+{
+  "name": "@wasla/contracts-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "تبرير الحزمة (§7): سطح TypeScript موحّد لعقود أساس السوق الكنسية — المتجر وطاقمه، والكتالوج وتصنيفاته، والاعتدال، ودفتر المخزون — كي يستهلكها بوتُ المتجر ولوحةُ الاعتدال (Phase 15) وطورُ البحث (Phase 12) وطورُ الشراء (Phase 13) بلا نسخ أسماء الحالات ولا حدودِ السعر ولا قالبِ الرابط العميق، وبلا تنفيذٍ داخل الحزمة.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../../services/marketplace/contracts/api.openapi.yml -o src/api-types.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "openapi-typescript": "^7.13.0",
+    "vitest": "^2.1.0"
+  }
+}

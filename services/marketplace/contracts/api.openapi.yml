@@ -1,0 +1,1167 @@
+openapi: 3.1.0
+info:
+  title: WASLA Marketplace Foundation Service API
+  version: 1.0.0
+  description: |
+    عقد واجهة أساس السوق: المتجر وطاقمه، والكتالوج وتصنيفاته، والاعتدال، والمخزون — وفق ADR-016.
+
+    **الحدود الملزمة:**
+    - **القرار يُخزَّن والحالة تُشتقّ**: كل اعتماد أو رفض أو إيقاف أو إعادة صفٌّ إضافي في دفتر
+      `store_reviews`/`product_reviews`، و`state` صفٌ متحقق يمكن إسقاطه وإعادة بناؤه من الدفتر بلا فقد.
+      النسخة الخاطئة الأرخص هي تحديث حالةٍ وحيدةٍ في موضعها؛ عندها لا يوجد جوابٌ قابلٌ للتدقيق عن **من**
+      اعتمد هذا المتجر و**لماذا** أُوقف، وأوّلُ نزاعٍ مع صاحبِ متجرٍ يُحسم بذاكرةِ موظّف.
+    - **الاعتماد قرارُ إنسانٍ لا نتيجةُ زمن**: لا `POST /tick` في هذا العقد ولا حقلَ `next_review_at`. مرورُ
+      يومٍ لا يعتمد متجراً ولا يرفعه من `pending_review`، ولذلك لا يوجد هنا ما يوجد في الطور 10: لا نبضة،
+      ولا `is_stale`. مؤقّتٌ يعتمد المتاجرَ تلقائيّاً عند الازدحام هو أرخصُ حلٍّ لطابورِ الاعتدال وأسرعُ
+      طريقٍ إلى محتوىً لم يره أحد.
+    - **الظهور مُشتَقٌّ لا مُخزَّن**: `is_visible` **لا وجود له في أيّ جدول**. الظهورُ اقترانُ أربعةٍ: المتجرُ
+      `approved` ∧ المنتجُ `published` ∧ اعتدالُه `approved` ∧ `quantity_on_hand > 0`. صفةٌ محفوظةٌ للظهور
+      تحتاج تحديثاً عند كلِّ إيقافِ متجرٍ وكلِّ فرقِ مخزون، وأوّلُ تحديثٍ يُنسى يعرض على المشتري منتجاً من
+      متجرٍ مُوقَف.
+    - **السعر بيانُ كتالوجٍ لا حركةَ مال**: `price_minor_units` عددٌ صحيحٌ بالهللات و`currency_code` قيمتُه
+      `SAR` وحدَها. **لا ضريبةَ ولا خصمَ ولا رسمَ ولا عمولةَ ولا فاتورةَ ولا إجمالَ ولا تحويل** في هذا
+      العقد، ولا `NUMERIC` ولا `FLOAT` في أيِّ حقلٍ نقدي. حسابُ المال طورٌ له مالكُه، وحقلٌ واحدٌ اسمُه
+      `total` يُضاف هنا اليومَ يصبح غداً مصدرَ حقيقةٍ ثانياً لا يطابق دفترَ أحد.
+    - **المخزون دفترُ فروقٍ والرصيد إسقاط**: كلُّ تغييرٍ فرقٌ صحيحٌ غيرُ صفريٍّ يحمل `quantity_after`
+      وتسلسلَه، و`product_inventory.quantity_on_hand` إسقاطٌ يجب أن يطابق مجموعَ دفترِه. **ولا
+      `quantity_reserved` ولا `quantity_available`**: الحجزُ ملكُ الطور 13، وعمودُ حجزٍ بلا مالكِ إطلاقٍ
+      وإفراجٍ يتسرّب أوّلَ مرّةٍ تفشل عمليّةُ شراء.
+    - **الحدود لا تُعبَر بمفاتيح أجنبية**: المالكُ والعضوُ والفاعلُ مراجعُ opaque بصيغة `WS-##########`؛ لا
+      مفتاحَ أجنبيّاً إلى الهويّةِ أو السائقين أو العملاء، ولا اسمَ ولا هاتفَ ولا بريدَ ولا إحداثيةً ولا
+      مُعرِّفَ قناة.
+    - **لا حذفَ صلبٌ ولا بحثٌ هنا**: النهايةُ `archived` في المتجرِ والمنتجِ، والعضويّةُ تُزال بـ`removed_at`.
+      والبحثُ والفرزُ بالصلةِ ملكُ الطور 12: لا `tsvector` ولا `?q=` في هذا العقد، والقراءةُ ترشيحٌ وترقيمٌ
+      بمفتاحٍ ثابتٍ لا مطابقةُ نصٍّ حرّ.
+    - **`slug` يُقفَل بعد أوّل اعتماد**: بعد `first_approved_at` لا يُغيَّر، ولا تُحرّره الأرشفةُ لمتجرٍ آخر.
+      رابطٌ نُشِر ثمّ أعطي لمتجرٍ مختلفٍ يجعل كلَّ إحالةٍ قديمةٍ كذبةً صامتة. والرابطُ العميقُ **يُبنى من
+      قالبٍ في حزمة العقد ولا يُخزَّن** (كما في الأطوار السابقة).
+
+    **لا يوجد رمز خطأ وسيط عابر في هذا العقد** (لا `502`): لا تابعَ متزامناً يُنتظر جوابُه هنا. تعطُّلُ
+    الاستمرارية يُعلَن بـ`MARKETPLACE_UNAVAILABLE` وبـ`GET /health`، لا بإخفاء السبب خلف وسيط شبكة.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8094
+    description: التشغيل المحلي
+
+tags:
+  - name: stores
+    description: تسجيل المتاجر وقراءتها ودفتر قراراتها
+  - name: staff
+    description: طاقم المتجر بأدوار من قائمة مغلقة
+  - name: catalog
+    description: التصنيفات والمنتجات ونشرها وأرشفتها
+  - name: moderation
+    description: قرارات الاعتدال على المتاجر والمنتجات
+  - name: inventory
+    description: دفتر فروق المخزون وإسقاط الرصيد
+  - name: ops
+    description: التشغيل والصحة
+
+paths:
+  /health:
+    get:
+      tags: [ops]
+      summary: صحة الخدمة ووضع تشغيلها
+      operationId: getMarketplaceHealth
+      description: |
+        يُعلن الوضع (`postgres` أو `memory`) صراحةً كي لا يُقرأ اجتيازُ الفحص في وضع الذاكرة دليلاً على
+        استمراريّةٍ لا وجود لها. ولا `last_tick_at` هنا: لا نبضة في هذه الخدمة (القرار 2).
+      responses:
+        '200':
+          description: الخدمة تستجيب
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /categories:
+    get:
+      tags: [catalog]
+      summary: شجرة التصنيفات
+      operationId: listStoreCategories
+      description: |
+        شجرةٌ بمستويَين: جذورٌ بلا أبٍ وأوراقٌ بأب. والمنتجُ **لا يُصنَّف إلّا على ورقة**
+        (`PRODUCT_CATEGORY_NOT_LEAF`): تصنيفٌ على جذرٍ يجعل «إلكترونيات» سلّةَ كلِّ ما لم يُصنَّف، ثمّ لا
+        يعرف أحدٌ ما فيها.
+      parameters:
+        - name: active_only
+          in: query
+          required: false
+          description: عند `true` لا تظهر التصنيفاتُ المُعطَّلةُ التي لا تصلح لتسجيلٍ جديد.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: التصنيفات المطابقة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [categories]
+                additionalProperties: false
+                properties:
+                  categories:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreCategory' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores:
+    post:
+      tags: [stores]
+      summary: تسجيل متجر
+      operationId: registerStore
+      description: |
+        يُنشئ متجراً بحالةِ `draft` لا `pending_review`: التسجيلُ ليس طلبَ مراجعة، وصاحبُ المتجرِ يحتاج
+        وقتاً ليُكمل بياناته ومنتجاتِه قبل أن يُقرأ نقصُه رفضاً. و`ux_stores_owner_active` يمنع متجراً
+        نشطاً ثانياً لنفسِ المالك (`STORE_OWNER_LIMIT_REACHED`)، و`ux_stores_slug_lower` يجعل التفرّدَ
+        غيرَ حسّاسٍ لحالةِ الأحرف — `Wasla` و`wasla` رابطان يقرؤهما الإنسانُ واحداً.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterStoreRequest' }
+      responses:
+        '201':
+          description: أُنشئ المتجر
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ ولا يُنشأ متجرٌ ثانٍ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    get:
+      tags: [stores]
+      summary: قراءة المتاجر بترشيح معلن
+      operationId: listStores
+      description: |
+        **مُرشِّحٌ واحدٌ على الأقلّ إلزامي** (`MARKETPLACE_FILTER_REQUIRED`): قراءةٌ بلا مُرشِّحٍ تصبح
+        مسحاً كاملاً للجدولِ في أوّلِ لوحةٍ تُبنى عليه. والترقيمُ بمفتاحٍ ثابتٍ (`created_at`,`id`) لا
+        بإزاحةٍ: الإزاحةُ تُكرِّر صفّاً وتُسقط آخرَ حين يُسجَّل متجرٌ بين صفحتَين.
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/StoreState' }
+        - name: owner_public_id
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/WaslaPublicId' }
+        - name: category_slug
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/CategorySlug' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المتاجر المطابقة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [stores, next_cursor]
+                additionalProperties: false
+                properties:
+                  stores:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreResource' }
+                  next_cursor:
+                    type: [string, 'null']
+                    description: '`null` تعني نهايةَ النتيجةِ لا خطأً.'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}:
+    get:
+      tags: [stores]
+      summary: قراءة متجر واحد
+      operationId: getStore
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المتجر
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/review-requests:
+    post:
+      tags: [stores]
+      summary: طلب مراجعة المتجر
+      operationId: requestStoreReview
+      description: |
+        `draft → pending_review`، أو `rejected → pending_review` بعد إصلاحِ سببِ الرفض. وطلبٌ ثانٍ وطلبةٌ
+        قائمةٌ لم تُحسَم يُرفض بـ`STORE_REVIEW_ALREADY_PENDING`: السماحُ به يُنتج طابوراً فيه صفوفٌ لنفسِ
+        المتجرِ يتنازعها مُراجعان.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requested_by_public_id]
+              additionalProperties: false
+              properties:
+                requested_by_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '201':
+          description: سُجّل طلبُ المراجعة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreReviewResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreReviewResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/decisions:
+    post:
+      tags: [moderation]
+      summary: قرار اعتدال على متجر
+      operationId: decideStore
+      description: |
+        مسارٌ واحدٌ لكلِّ القرارات (`approved`,`rejected`,`suspended`,`reinstated`,`archived`) لا مسارٌ
+        لكلِّ فعل: القرارُ صفٌّ في دفترٍ واحدٍ بجدولِ انتقالاتٍ واحد، ومسارٌ منفصلٌ لكلِّ فعلٍ يُنتج خمسَ
+        نسخٍ من التحقّقِ نفسِه تنحرف واحدةً واحدة. والانتقالُ غيرُ المسموحِ يُرفض بـ
+        `STORE_DECISION_NOT_ALLOWED`، والرفضُ والإيقافُ بلا سببٍ من القائمةِ المغلقةِ بـ
+        `STORE_REJECTION_REASON_REQUIRED`.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreDecisionRequest' }
+      responses:
+        '201':
+          description: دخل القرارُ الدفترَ وتحدّثت الحالةُ المتحقّقة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreReviewResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ ولا يُسجَّل قرارٌ ثانٍ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreReviewResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/reviews:
+    get:
+      tags: [moderation]
+      summary: دفتر قرارات المتجر
+      operationId: listStoreReviews
+      description: |
+        الدفترُ كما كُتب بترتيبِ `state_sequence`. وهذا هو المسارُ الذي يجعل إسقاطَ `stores.state`
+        وإعادةَ بنائه ممكناً، وهو الدليلُ على أنّ الحالةَ إسقاطٌ لا مصدرُ حقيقة.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: القرارات المسجّلة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reviews, next_cursor]
+                additionalProperties: false
+                properties:
+                  reviews:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreReviewResource' }
+                  next_cursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/staff:
+    get:
+      tags: [staff]
+      summary: طاقم المتجر
+      operationId: listStoreStaff
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - name: active_only
+          in: query
+          required: false
+          description: عند `true` لا تظهر العضويّاتُ التي كُتب لها `removed_at`.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: أعضاء الطاقم
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [staff]
+                additionalProperties: false
+                properties:
+                  staff:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreStaffResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [staff]
+      summary: إضافة عضو إلى الطاقم
+      operationId: addStoreStaff
+      description: |
+        الأدوارُ قائمةٌ مغلقة `owner|manager|staff`، و`ux_store_staff_single_owner` يجعل المالكَ واحداً في
+        القاعدةِ لا في الكود. وعضويّةٌ نشطةٌ قائمةٌ لنفسِ الشخصِ تُرفض بـ`STORE_STAFF_ALREADY_MEMBER` لا
+        تُحدَّث بدورٍ جديد: تغييرُ الدورِ في موضعِه يمحو أنّه كان `staff` يومَ وقع ما وقع.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [member_public_id, role, added_by_public_id]
+              additionalProperties: false
+              properties:
+                member_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+                role: { type: string, enum: [manager, staff] }
+                added_by_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '201':
+          description: أُضيف العضو
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreStaffResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreStaffResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/staff/{memberPublicId}:
+    delete:
+      tags: [staff]
+      summary: إزالة عضو من الطاقم
+      operationId: removeStoreStaff
+      description: |
+        تُكتب `removed_at` ولا يُحذف صفّ (القرار 9). ودورُ المالكِ لا يُزال
+        (`STORE_OWNER_ROLE_IMMUTABLE`): متجرٌ بلا مالكٍ متجرٌ لا يُسأل أحدٌ عن محتواه. والجوابُ `200` لا
+        `204` لأنّ المستهلكَ يحتاج `removed_at` كما سُجِّل لا فراغاً يستنتج منه النجاح.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/MemberPublicId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [removed_by_public_id]
+              additionalProperties: false
+              properties:
+                removed_by_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '200':
+          description: أُزيلت العضويّة، ويُعاد الصفُّ بـ`removed_at`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreStaffResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/products:
+    get:
+      tags: [catalog]
+      summary: منتجات المتجر
+      operationId: listStoreProducts
+      description: |
+        **لا `?q=` هنا**: البحثُ ملكُ الطور 12 (القرار 9)، والترشيحُ بمفاتيحَ معلنةٍ لا بمطابقةِ نصٍّ حرّ.
+        و`visible_only` يُحسَب عند القراءةِ من الشروطِ الأربعةِ ولا يُقرأ من عمود (القرار 3).
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - name: state
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/ProductState' }
+        - name: moderation_state
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/ProductModerationState' }
+        - name: visible_only
+          in: query
+          required: false
+          description: عند `true` تُعاد المنتجاتُ التي تحقّق فيها الاقترانُ الرباعيُّ لحظةَ القراءة.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المنتجات المطابقة
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products, next_cursor]
+                additionalProperties: false
+                properties:
+                  products:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProductResource' }
+                  next_cursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [catalog]
+      summary: إنشاء منتج
+      operationId: createProduct
+      description: |
+        يُنشأ المنتجُ `draft` واعتدالُه `pending`، ويُقبَل الإنشاءُ **في متجرٍ مُعتمَدٍ فقط**
+        (`STORE_NOT_APPROVED`): كتالوجٌ يُبنى في متجرٍ لم يُعتمَد يُنتج طابورَ اعتدالٍ لمنتجاتٍ قد لا يُعتمَد
+        متجرُها أبداً. و`ux_products_store_sku` يجعل `sku` فريداً داخلَ المتجرِ لا عبرَ المنصّة: رقمُ
+        الصنفِ مفتاحُ صاحبِ المتجرِ في نظامِه هو، وحجزُه عالميّاً يمنع متجرَين مستقلَّين من استعمال `A-1`.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProductRequest' }
+      responses:
+        '201':
+          description: أُنشئ المنتج
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /products/{productId}:
+    get:
+      tags: [catalog]
+      summary: قراءة منتج
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: المنتج
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /products/{productId}/publish:
+    post:
+      tags: [catalog]
+      summary: نشر منتج
+      operationId: publishProduct
+      description: |
+        `draft → published` بقرارِ المتجرِ لا بقرارِ الاعتدال. ولا يقع إلّا إذا كان الاعتدالُ `approved`
+        (`PRODUCT_NOT_MODERATED`)، والقيدُ `ck_products_published_moderated` يجعل غيرَه مستحيلاً في
+        القاعدةِ لا مرجوّاً في الكود. والنشرُ **ليس ظهوراً**: قد يُنشَر المنتجُ ولا يَظهر لأنّ كميّتَه صفرٌ
+        أو متجرَه مُوقَف، ولذلك يُعاد `is_visible` المُشتَقُّ في الجوابِ كي لا يُبلَّغ صاحبُ المتجرِ بما ليس
+        حقّاً.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actor_public_id]
+              additionalProperties: false
+              properties:
+                actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '200':
+          description: نُشِر المنتج، أو أُعيد الجوابُ المحفوظ لنفسِ مفتاحِ التفرّد
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /products/{productId}/archive:
+    post:
+      tags: [catalog]
+      summary: أرشفة منتج
+      operationId: archiveProduct
+      description: |
+        نهايةٌ لا رجوعَ منها (`PRODUCT_TRANSITION_NOT_ALLOWED` لأيِّ انتقالٍ بعدها). والأرشفةُ **تُصفّر
+        المخزونَ بفرقٍ مُسمّىً** `archive_zeroed` في المعاملةِ نفسِها لا بكتابةِ صفرٍ في الرصيد: لو كُتب
+        الصفرُ مباشرةً لانحرف الرصيدُ عن دفترِه، ولصار حارسُ الانحرافِ يشتكي من عمليّةٍ صحيحةٍ فيُعلَّم
+        أحدُهم أن يتجاهله.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actor_public_id]
+              additionalProperties: false
+              properties:
+                actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+      responses:
+        '200':
+          description: أُرشِف المنتجُ وصُفِّر مخزونُه بفرقٍ مُسجَّل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /products/{productId}/decisions:
+    post:
+      tags: [moderation]
+      summary: قرار اعتدال على منتج
+      operationId: decideProduct
+      description: |
+        `approved` أو `rejected` بسببٍ من قائمةٍ مغلقة. والاعتمادُ **إذنٌ لا فِعل**: لا يَنشُر المنتجَ،
+        والنشرُ قرارُ المتجرِ في مسارٍ آخر. ودمجُهما كان سيجعل مُراجعاً ينشر باسمِ متجرٍ لم يقرّر أنّ
+        منتجَه صار جاهزاً للعرض.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductDecisionRequest' }
+      responses:
+        '201':
+          description: دخل القرارُ الدفترَ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductReviewResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductReviewResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /products/{productId}/inventory:
+    get:
+      tags: [inventory]
+      summary: رصيد المخزون ودفتره
+      operationId: getProductInventory
+      description: |
+        يُعاد الإسقاطُ (`quantity_on_hand`) ودفترُ فروقِه معاً كي يكون الانحرافُ مرئيّاً للقارئِ لا
+        مكتشَفاً في حادثة. ولا `quantity_reserved` ولا `quantity_available`: الحجزُ ملكُ الطور 13
+        (القرار 5).
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - name: include_ledger
+          in: query
+          required: false
+          description: عند `true` يُعاد دفترُ الفروقِ إلى حدِّ `limit`.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: الرصيد ودفترُه
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InventoryReadResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [inventory]
+      summary: تسجيل فرق مخزون
+      operationId: adjustProductInventory
+      description: |
+        الطلبُ **فرقٌ لا رصيدٌ جديد**: `quantity_delta` صحيحٌ غيرُ صفريٍّ بسببٍ من قائمةٍ مغلقة. وضبطُ
+        الرصيدِ مباشرةً (`PUT quantity = 7`) كان أبسطَ نداءً وأسوأَ عقداً: طلبان متوازيان من موظّفَين
+        يُنتجان رصيداً يعتمد على من وصل ثانياً بلا أثرٍ لما فُقد، أمّا الفروقُ فتتراكم كلُّها ويحكيها
+        دفترُها. وفرقٌ يُنزل الرصيدَ تحت الصفرِ يُرفض بـ`INVENTORY_INSUFFICIENT_QUANTITY`.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdjustInventoryRequest' }
+      responses:
+        '201':
+          description: دخل الفرقُ الدفترَ وتحدّث الإسقاط
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InventoryAdjustmentResource' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ ولا يُخصَم فرقٌ ثانٍ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InventoryAdjustmentResource' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+components:
+  parameters:
+    StoreSlug:
+      name: storeSlug
+      in: path
+      required: true
+      description: مُعرّف المتجر في الرابط؛ فريدٌ بلا حساسيةٍ لحالةِ الأحرفِ ومُقفَلٌ بعد أوّلِ اعتماد.
+      schema: { $ref: '#/components/schemas/StoreSlug' }
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MemberPublicId:
+      name: memberPublicId
+      in: path
+      required: true
+      description: مُعرّف العضو العام opaque؛ لا يربط هذا العقد مباشرة بقاعدة هوية أخرى.
+      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: إلزامي لكل فعل يغير دفتراً أو إسقاطاً؛ إعادةُ المحاولةِ تعيد جواباً محفوظاً ولا تُنشئ قراراً أو فرقاً ثانياً.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: مؤشّرُ ترقيمٍ مُعادٌ من صفحةٍ سابقة؛ لا يُبنى في المستهلك ولا يُفكَّك.
+      schema: { type: string, minLength: 1, maxLength: 256 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: سقفُ الصفحة؛ الافتراضُ 50 والأقصى 200 كي لا تصبح قراءةٌ واحدةٌ مسحاً للجدول.
+      schema: { type: integer, minimum: 1, maximum: 200 }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: يصبح `trace_id` في الخطأ؛ فصلُ التتبّعِ عن حمولةِ العملِ يمنع خلطَ المُعرّفِ التشغيليِّ ببياناتِ المجال.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: '^WS-[0-9]{10}$'
+      description: مُعرّف عام opaque للمالك أو العضو أو الفاعل؛ لا يُحلَّل ولا يعبر حدَّ الخدمةِ كعلاقةِ قاعدةِ بيانات.
+
+    StoreSlug:
+      type: string
+      minLength: 3
+      maxLength: 48
+      pattern: '^[a-z][a-z0-9-]{2,47}$'
+
+    CategorySlug:
+      type: string
+      minLength: 2
+      maxLength: 48
+      pattern: '^[a-z][a-z0-9-]{1,47}$'
+
+    StoreState:
+      type: string
+      enum: [draft, pending_review, approved, rejected, suspended, archived]
+      description: |
+        صفٌ متحقّقٌ مُشتَقٌّ من `store_reviews`، وإسقاطُه لا يفقد شيئاً. `archived` نهايةٌ لا رجوعَ منها.
+
+    StoreDecision:
+      type: string
+      enum: [review_requested, approved, rejected, suspended, reinstated, archived]
+
+    StoreReasonCode:
+      type: string
+      enum:
+        - incomplete_profile
+        - prohibited_category
+        - duplicate_store
+        - misleading_title
+        - unverified_owner
+        - policy_violation
+        - owner_request
+
+    ProductState:
+      type: string
+      enum: [draft, published, archived]
+
+    ProductModerationState:
+      type: string
+      enum: [pending, approved, rejected]
+
+    ProductDecision:
+      type: string
+      enum: [approved, rejected]
+
+    ProductReasonCode:
+      type: string
+      enum:
+        - prohibited_item
+        - misleading_title
+        - wrong_category
+        - price_implausible
+        - duplicate_listing
+        - policy_violation
+
+    InventoryReasonCode:
+      type: string
+      enum: [initial_stock, restock, correction, shrinkage, archive_zeroed]
+
+    StoreCategory:
+      type: object
+      required: [category_slug, label_ar, depth, parent_slug, sort_order, is_active]
+      additionalProperties: false
+      properties:
+        category_slug: { $ref: '#/components/schemas/CategorySlug' }
+        label_ar: { type: string, minLength: 2, maxLength: 64 }
+        label_en: { type: [string, 'null'], minLength: 2, maxLength: 64 }
+        label_ur: { type: [string, 'null'], minLength: 2, maxLength: 64 }
+        depth:
+          type: integer
+          enum: [1, 2]
+          description: |
+            مستويان لا شجرةٌ مفتوحة: `1` جذرٌ للتصفّحِ و`2` ورقةٌ للتصنيف. والمنتجُ يُصنَّف على
+            ورقةٍ فقط (`PRODUCT_CATEGORY_NOT_LEAF`)، فلا حاجةَ إلى `is_leaf` عموداً ثانياً لحقيقةٍ
+            يقولها `depth` — عمودان لمعنىً واحدٍ ينحرفان.
+        parent_slug:
+          oneOf:
+            - { $ref: '#/components/schemas/CategorySlug' }
+            - { type: 'null' }
+          description: '`null` تعني جذراً لا تصنيفاً بلا أب مجهولاً؛ والقيدُ `ck_store_categories_depth_parent` يربطها بـ`depth`.'
+        sort_order: { type: integer, minimum: 0, maximum: 999 }
+        is_active: { type: boolean }
+
+    RegisterStoreRequest:
+      type: object
+      required: [owner_public_id, store_slug, title_ar, category_slug]
+      additionalProperties: false
+      properties:
+        owner_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        store_slug: { $ref: '#/components/schemas/StoreSlug' }
+        title_ar: { type: string, minLength: 2, maxLength: 80 }
+        title_en: { type: [string, 'null'], minLength: 2, maxLength: 80 }
+        title_ur: { type: [string, 'null'], minLength: 2, maxLength: 80 }
+        description_ar: { type: [string, 'null'], maxLength: 2000 }
+        category_slug: { $ref: '#/components/schemas/CategorySlug' }
+
+    StoreResource:
+      type: object
+      required:
+        [store_id, store_slug, owner_public_id, title_ar, category_slug, state, state_sequence,
+         is_slug_locked, first_approved_at, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        store_id: { type: string, format: uuid }
+        store_slug: { $ref: '#/components/schemas/StoreSlug' }
+        owner_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        title_ar: { type: string, minLength: 2, maxLength: 80 }
+        title_en: { type: [string, 'null'], minLength: 2, maxLength: 80 }
+        title_ur: { type: [string, 'null'], minLength: 2, maxLength: 80 }
+        description_ar: { type: [string, 'null'], maxLength: 2000 }
+        category_slug: { $ref: '#/components/schemas/CategorySlug' }
+        state: { $ref: '#/components/schemas/StoreState' }
+        state_sequence:
+          type: integer
+          minimum: 1
+          description: تسلسلُ آخرِ قرارٍ دخل الدفتر؛ يبدأ من 1 عند الإنشاء لا من صفر — تسلسلٌ صفريٌّ كان سيجعل «لا قرارَ بعد» و«القرارُ الأوّل» قيمتين متجاورتين يُخطئ بينهما كلُّ مقارَنة.
+        is_slug_locked:
+          type: boolean
+          description: مُشتَقٌّ من `first_approved_at` لا عمودٌ مستقل؛ عمودان لحقيقةٍ واحدةٍ ينحرفان.
+        first_approved_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    StoreDecisionRequest:
+      type: object
+      required: [decision, actor_type]
+      additionalProperties: false
+      properties:
+        decision: { $ref: '#/components/schemas/StoreDecision' }
+        actor_type:
+          type: string
+          enum: [owner, moderator, system]
+          description: '`system` وحدَه يُسمَح له بغيابِ `actor_public_id`؛ قرارٌ بلا فاعلٍ مُسمّىً قرارٌ لا يُسأل عنه أحد.'
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: 'null' }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/StoreReasonCode' }
+            - { type: 'null' }
+
+    StoreReviewResource:
+      type: object
+      required: [review_id, store_id, store_slug, decision, from_state, to_state, state_sequence, actor_type, decided_at]
+      additionalProperties: false
+      properties:
+        review_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        store_slug: { $ref: '#/components/schemas/StoreSlug' }
+        decision: { $ref: '#/components/schemas/StoreDecision' }
+        from_state:
+          oneOf:
+            - { $ref: '#/components/schemas/StoreState' }
+            - { type: 'null' }
+        to_state: { $ref: '#/components/schemas/StoreState' }
+        state_sequence: { type: integer, minimum: 1 }
+        actor_type: { type: string, enum: [owner, moderator, system] }
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: 'null' }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/StoreReasonCode' }
+            - { type: 'null' }
+        decided_at: { type: string, format: date-time }
+
+    StoreStaffResource:
+      type: object
+      required: [staff_id, store_id, member_public_id, role, added_by_public_id, added_at, removed_at]
+      additionalProperties: false
+      properties:
+        staff_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        member_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        role: { type: string, enum: [owner, manager, staff] }
+        added_by_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        added_at: { type: string, format: date-time }
+        removed_at:
+          type: [string, 'null']
+          format: date-time
+          description: '`null` تعني عضويّةً نشطة؛ الإزالةُ كتابةُ زمنٍ لا حذفُ صفّ.'
+        removed_by_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: 'null' }
+
+    CreateProductRequest:
+      type: object
+      required: [sku, title_ar, category_slug, price_minor_units, currency_code, created_by_public_id]
+      additionalProperties: false
+      properties:
+        sku:
+          type: string
+          minLength: 2
+          maxLength: 40
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{1,39}$'
+        title_ar: { type: string, minLength: 2, maxLength: 120 }
+        title_en: { type: [string, 'null'], minLength: 2, maxLength: 120 }
+        title_ur: { type: [string, 'null'], minLength: 2, maxLength: 120 }
+        description_ar: { type: [string, 'null'], maxLength: 4000 }
+        category_slug: { $ref: '#/components/schemas/CategorySlug' }
+        price_minor_units:
+          type: integer
+          minimum: 1
+          maximum: 100000000
+          description: |
+            بالهللات وعددٌ صحيحٌ حصراً. لا `NUMERIC` ولا `FLOAT`: كسرٌ عائمٌ في سعرٍ يُجمَع مرّتَين يُنتج
+            فرقاً لا يُفسَّر لأحد. وهذا **بيانُ كتالوجٍ لا حركةُ مال** (القرار 4).
+        currency_code:
+          type: string
+          const: SAR
+          description: قيمةٌ واحدةٌ اليوم؛ عمودٌ بلا قيدٍ كان سيوهم بدعمِ عملاتٍ لا يملك الطورُ تحويلَها.
+        initial_quantity:
+          type: integer
+          minimum: 0
+          description: عند تجاوزِه الصفرَ يُسجَّل فرقٌ بسببِ `initial_stock` في المعاملةِ نفسِها؛ لا كتابةَ رصيدٍ بلا دفتر.
+        created_by_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+
+    ProductResource:
+      type: object
+      required:
+        [product_id, store_id, store_slug, sku, title_ar, category_slug, price_minor_units, currency_code,
+         state, moderation_state, moderation_sequence, quantity_on_hand, is_visible, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        product_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        store_slug: { $ref: '#/components/schemas/StoreSlug' }
+        sku: { type: string, minLength: 2, maxLength: 40 }
+        title_ar: { type: string, minLength: 2, maxLength: 120 }
+        title_en: { type: [string, 'null'], minLength: 2, maxLength: 120 }
+        title_ur: { type: [string, 'null'], minLength: 2, maxLength: 120 }
+        description_ar: { type: [string, 'null'], maxLength: 4000 }
+        category_slug: { $ref: '#/components/schemas/CategorySlug' }
+        price_minor_units: { type: integer, minimum: 1, maximum: 100000000 }
+        currency_code: { type: string, const: SAR }
+        state: { $ref: '#/components/schemas/ProductState' }
+        moderation_state: { $ref: '#/components/schemas/ProductModerationState' }
+        moderation_sequence: { type: integer, minimum: 1 }
+        quantity_on_hand:
+          type: integer
+          minimum: 0
+          description: إسقاطُ دفترِ الفروق؛ يجب أن يطابق مجموعَه.
+        is_visible:
+          type: boolean
+          description: |
+            **مُحسوبٌ عند القراءةِ لا مُخزَّنٌ في عمود** (القرار 3): المتجرُ `approved` ∧ المنتجُ
+            `published` ∧ الاعتدالُ `approved` ∧ `quantity_on_hand > 0`.
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProductDecisionRequest:
+      type: object
+      required: [decision, actor_type]
+      additionalProperties: false
+      properties:
+        decision: { $ref: '#/components/schemas/ProductDecision' }
+        actor_type: { type: string, enum: [moderator, system] }
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: 'null' }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/ProductReasonCode' }
+            - { type: 'null' }
+
+    ProductReviewResource:
+      type: object
+      required: [review_id, product_id, store_id, decision, from_state, to_state, moderation_sequence, actor_type, decided_at]
+      additionalProperties: false
+      properties:
+        review_id: { type: string, format: uuid }
+        product_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        decision: { $ref: '#/components/schemas/ProductDecision' }
+        from_state:
+          oneOf:
+            - { $ref: '#/components/schemas/ProductModerationState' }
+            - { type: 'null' }
+        to_state: { $ref: '#/components/schemas/ProductModerationState' }
+        moderation_sequence: { type: integer, minimum: 1 }
+        actor_type: { type: string, enum: [moderator, system] }
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: 'null' }
+        reason_code:
+          oneOf:
+            - { $ref: '#/components/schemas/ProductReasonCode' }
+            - { type: 'null' }
+        decided_at: { type: string, format: date-time }
+
+    AdjustInventoryRequest:
+      type: object
+      required: [quantity_delta, reason_code, actor_public_id]
+      additionalProperties: false
+      properties:
+        quantity_delta:
+          type: integer
+          not: { const: 0 }
+          minimum: -1000000
+          maximum: 1000000
+          description: فرقٌ موقّعٌ غيرُ صفريّ. فرقٌ صفريٌّ ليس حدثاً؛ قبولُه يُنتج دفتراً فيه صفوفٌ لا تعني شيئاً.
+        reason_code: { $ref: '#/components/schemas/InventoryReasonCode' }
+        actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+
+    InventoryAdjustmentResource:
+      type: object
+      required: [adjustment_id, product_id, store_id, quantity_delta, quantity_after, reason_code, adjustment_sequence, actor_public_id, occurred_at]
+      additionalProperties: false
+      properties:
+        adjustment_id: { type: string, format: uuid }
+        product_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        quantity_delta: { type: integer, not: { const: 0 } }
+        quantity_after: { type: integer, minimum: 0 }
+        reason_code: { $ref: '#/components/schemas/InventoryReasonCode' }
+        adjustment_sequence: { type: integer, minimum: 1 }
+        actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        occurred_at: { type: string, format: date-time }
+
+    InventoryReadResponse:
+      type: object
+      required: [product_id, store_id, quantity_on_hand, last_adjustment_sequence, adjustments, next_cursor]
+      additionalProperties: false
+      properties:
+        product_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        quantity_on_hand: { type: integer, minimum: 0 }
+        last_adjustment_sequence: { type: integer, minimum: 0 }
+        adjustments:
+          type: array
+          description: فارغةٌ حين لا يُطلب الدفتر؛ الفراغُ ليس غياباً للدفترِ بل عدمَ طلبٍ له.
+          items: { $ref: '#/components/schemas/InventoryAdjustmentResource' }
+        next_cursor: { type: [string, 'null'] }
+
+    HealthResponse:
+      type: object
+      required: [status, mode]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [ok, degraded, unavailable] }
+        mode: { type: string, enum: [postgres, memory] }
+
+    ErrorResponse:
+      type: object
+      required: [error, trace_id]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              enum:
+                - MARKETPLACE_VALIDATION_FAILED
+                - MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED
+                - MARKETPLACE_FILTER_REQUIRED
+                - STORE_NOT_FOUND
+                - PRODUCT_NOT_FOUND
+                - STORE_CATEGORY_NOT_FOUND
+                - STORE_STAFF_NOT_FOUND
+                - MARKETPLACE_IDEMPOTENCY_KEY_REUSED
+                - STORE_SLUG_TAKEN
+                - STORE_OWNER_LIMIT_REACHED
+                - PRODUCT_SKU_TAKEN
+                - STORE_STAFF_ALREADY_MEMBER
+                - STORE_REVIEW_ALREADY_PENDING
+                - STORE_DECISION_NOT_ALLOWED
+                - PRODUCT_TRANSITION_NOT_ALLOWED
+                - STORE_SLUG_RESERVED
+                - STORE_NOT_APPROVED
+                - PRODUCT_NOT_MODERATED
+                - STORE_CATEGORY_INACTIVE
+                - PRODUCT_CATEGORY_NOT_LEAF
+                - STORE_OWNER_ROLE_IMMUTABLE
+                - INVENTORY_INSUFFICIENT_QUANTITY
+                - STORE_REJECTION_REASON_REQUIRED
+                - MARKETPLACE_UNAVAILABLE
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: false
+              description: |
+                تفاصيلُ بنيويّةٌ بلا إعادةِ قيمةِ المدخل. الحقولُ معدودةٌ لا حقيبةٌ حرّة؛ فتحُها بلا عقدٍ
+                يجعل المستهلكَ الصارمَ يفشل عند أوّلِ مفتاحٍ جديدٍ في استجابةٍ صحيحة.
+              properties:
+                field: { type: string, description: اسم الحقل المرفوض لا قيمته. }
+                expected: { type: string, description: شكلٌ متوقّعٌ أو قاعدةٌ معلنة. }
+                store_slug: { $ref: '#/components/schemas/StoreSlug' }
+                product_id: { type: string, format: uuid }
+                category_slug: { $ref: '#/components/schemas/CategorySlug' }
+                member_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+                from_state: { type: string }
+                to_state: { type: string }
+                quantity_on_hand: { type: integer, minimum: 0 }
+                constraint:
+                  type: string
+                  description: اسم القيد الذي يحمي الحقيقة نفسها عند تزامن الكتابة.
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلاتٌ غيرُ صالحةٍ شكليّاً أو مفتاحُ تفرّدٍ مفقودٌ أو مُرشِّحُ قراءةٍ ناقص
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: متجرٌ أو منتجٌ أو تصنيفٌ أو عضوُ طاقمٍ غيرُ موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: مفتاحُ تفرّدٍ أُعيد مع طلبٍ مختلف، أو تنازعٌ على تفرّدٍ معلن، أو انتقالٌ غيرُ مسموح
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unprocessable:
+      description: مدخلٌ صالحٌ شكليّاً ومرفوضٌ بقاعدةِ حالةٍ أو اعتدالٍ أو تصنيفٍ أو مخزون
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمةُ أو طبقةُ الاستمراريةِ غيرُ متاحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

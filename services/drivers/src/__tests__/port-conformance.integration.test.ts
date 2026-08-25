@@ -516,6 +516,25 @@ const SCENARIOS: ReadonlyArray<{ name: string; run: Scenario }> = [
   },
 ];
 
+/**
+ * The in-memory side of a scenario run.
+ *
+ * `createInMemoryEnvironment` ships an EMPTY `InMemoryZoneCatalogPort`, while
+ * `createPgHarness` seeds `ZONE_A`/`ZONE_B` into its own catalog (`pg-harness.ts`).
+ * The zone catalog is an OUTBOUND geography port, not one of the two STORAGE sets
+ * this file compares, so that asymmetry was never a difference the file is meant to
+ * measure — it just made the memory run of every zone-touching scenario fail with
+ * `نطاق غير معروف في شجرة الجغرافيا` while the Postgres run succeeded.
+ *
+ * Seeding it here leaves storage as the single remaining difference between the two
+ * runs, and keeps rule 2 intact: no storage ROW is seeded outside the use cases.
+ */
+function memoryEnvironment(): ReturnType<typeof createInMemoryEnvironment> {
+  const environment = createInMemoryEnvironment(NOW);
+  environment.zoneCatalog.seed(ZONE_A, ZONE_B);
+  return environment;
+}
+
 describe.skipIf(!PG_ENABLED)("port conformance: in-memory ↔ Postgres", () => {
   let pg: PgFixture;
 
@@ -532,7 +551,7 @@ describe.skipIf(!PG_ENABLED)("port conformance: in-memory ↔ Postgres", () => {
   });
 
   it.each(SCENARIOS)("$name", async ({ run }) => {
-    const memory = await run(createInMemoryEnvironment(NOW));
+    const memory = await run(memoryEnvironment());
     const postgres = await run(createPgHarness(pg, NOW).deps);
 
     // Guard against the failure mode that makes this whole file worthless: if the

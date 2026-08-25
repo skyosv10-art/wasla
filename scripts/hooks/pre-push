@@ -12,6 +12,7 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 DOC_CHECK="$REPO_ROOT/scripts/checks/require-doc-update.sh"
 SECRET_CHECK="$REPO_ROOT/scripts/checks/scan-secrets.sh"
+CLAIM_CHECK="$REPO_ROOT/scripts/checks/validate-work-claims.sh"
 
 if [ -z "$REPO_ROOT" ]; then
   echo "تحذير: تعذّر تحديد جذر المستودع — تخطّي الفحص المحلي." >&2
@@ -34,6 +35,12 @@ if [ ! -x "$DOC_CHECK" ]; then
   echo "        (تذكير: الإلزام الفعلي يتم خادمياً عبر CI job: doc-coverage)" >&2
 fi
 
+# فحص حجز النطاق: منع تكرار العمل بين جهتين (docs/00-rules/WORK_CLAIM_RULE.md).
+if [ ! -x "$CLAIM_CHECK" ]; then
+  echo "تحذير: سكربت فحص الحجوزات غير موجود في $CLAIM_CHECK — تخطّي." >&2
+  echo "        (تذكير: الإلزام الفعلي خادمياً عبر CI job: governance-guard)" >&2
+fi
+
 while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
   if [ "$LOCAL_SHA" = "$ZERO" ]; then
     # حذف فرع — لا فحص.
@@ -41,10 +48,18 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
   fi
   if [ "$REMOTE_SHA" = "$ZERO" ]; then
     # فرع جديد على المستودع البعيد: قارن ضد main.
-    "$DOC_CHECK" "origin/main" "$LOCAL_SHA" || STATUS=1
+    BASE="origin/main"
   else
-    "$DOC_CHECK" "$REMOTE_SHA" "$LOCAL_SHA" || STATUS=1
+    BASE="$REMOTE_SHA"
   fi
+  [ -x "$CLAIM_CHECK" ] && { "$CLAIM_CHECK" "$BASE" "$LOCAL_SHA" || STATUS=1; }
+  [ -x "$DOC_CHECK" ]   && { "$DOC_CHECK"   "$BASE" "$LOCAL_SHA" || STATUS=1; }
 done
+
+if [ "$STATUS" -ne 0 ]; then
+  echo "" >&2
+  echo "الدفع مرفوض محلياً. للتشخيص الكامل: bash scripts/checks/verify-governance.sh" >&2
+  echo "المرجع: docs/16-progress/README.md" >&2
+fi
 
 exit $STATUS

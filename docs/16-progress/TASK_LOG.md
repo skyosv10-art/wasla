@@ -1,5 +1,9 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+> **⚠ ترتيب المرجعية (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** نقطة الدخول الإلزامية للمستودع هي [`docs/16-progress/README.md`](README.md)، ومصدر الحقيقة لبوابات الإطلاق هو [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) و[`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md). **هذه الوثيقة السجل الزمني المُلزِم** ولا تُستبدل ولا تُختصر. وكل إدخال يجب أن يحوي سطر `**Work Item(s):** Mx-yy` — يتحقق منه `require-doc-update.sh` آلياً.
+>
+> **ولا يبدأ أحد عملاً** قبل `bash scripts/checks/find-existing-work.sh "<المجال>"` وسطر حجز في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) — [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md).
+
 > **النوع:** سجل إلزامي. كل دفع يمس الكود يجب أن يرافقه إدخال هنا (الحد الأدنى لقاعدة [PUSH_DOCUMENTATION_RULE](../00-rules/PUSH_DOCUMENTATION_RULE.md)).
 >
 > **القاعدة:** الإدخال يُكتب **قبل أو مع** الدفع، ويصف ماذا ولماذا وأين وكيف تم الاختبار وما الخطوة التالية.
@@ -23,6 +27,22 @@
 ---
 
 ## السجل
+
+### [2026-08-25] M0-05 — خارطة طريق موحّدة مُلزِمة ونظام حجز العمل: منع التكرار بفحصٍ آليّ لا بحسن نيّة
+
+- **Work Item(s):** M0-05
+- **Claim ID:** CLM-0001 · الفرع `chore/unified-roadmap-governance`
+- **Files:**
+  - **جديد:** `docs/16-progress/{README,WORK_CLAIMS,WORK_INDEX}.md` · `docs/00-rules/WORK_CLAIM_RULE.md` · `docs/15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md` · `scripts/checks/{validate-work-claims,find-existing-work,verify-governance,validate-launch-board,test-governance}.sh`
+  - **مُعدَّل:** `docs/16-progress/{LAUNCH_TO_100_ROADMAP,LAUNCH_EXECUTION_BOARD,ROADMAP_OPERATING_PROTOCOL}.md` · `scripts/checks/require-doc-update.sh` · `scripts/hooks/pre-push` · `.gitlab-ci.yml` · `CONTRIBUTING.md` §0.1 · `package.json` · `.gitlab/merge_request_templates/Default.md` · `docs/00-rules/{PUSH_DOCUMENTATION_RULE,DEFINITION_OF_DONE}.md`
+  - **رأس مرجعيّة فقط، بلا مساسٍ بالمحتوى:** `ROADMAP.md` · `MASTER_PROGRESS.md` · `TASK_LOG.md`
+- **Services:** — (حوكمةٌ ووثائقُ وبوابات CI؛ لا خدمةَ تغيّرت ولا سطرَ منطقٍ واحد)
+- **Why:** كان في المستودع أربعُ وثائقِ تقدّمٍ تتجاوز **1.3 MB** بلا مرجعٍ أوّلَ يُقرأ قبل العمل، **ولا شيءَ فيه يُخبر بما يجري الآن ومن يجريه** — فاللوحةُ والسجلُّ يُخبران بما **انتهى**. فجهتان — بشريّان أو وكيلان آليّان أو بشريٌّ ووكيل — قد تبدآن نفسَ النطاقِ في نفسِ الأسبوعِ ولا تعلمُ إحداهما بالأخرى حتى وقتِ الدمج، فيُهدر عملُ أحدِهما أو يُدمَج تعارضٌ صامت. والاحتمالُ قائمٌ فعلاً لا نظريّاً: **15 خدمةً من 26 لا تزال `placeholder`**، وبعضُها فارغٌ **بقرارٍ معماريّ** ([ADR-014](../15-decisions/ADR-014-reputation-derived-scores-and-fact-sourced-fraud-signals.md) القرار 1) فمن يملؤها يكسرُ قراراً وهو يظنُّ أنّه يسدُّ فراغاً. والحلُّ في أربعةِ قرارات: مرجعٌ أوّلَ واحدٌ ([README](README.md)) بترتيبِ مرجعيّةٍ **مُعلَنٍ** من سبعِ طبقات · **محوران متعامدان** (`Phase 00–24` للمجالِ · `M0–M7` للجاهزيّة) و`Mx-yy` **المعرّفُ الوحيدُ** في الـcommit والـMR والسجل · **حجزُ نطاقٍ مسبقٌ مقروءٌ آليّاً** يرفضُ التقاطعَ من الأساس · وبوابةٌ واحدةٌ `verify-governance.sh` تُميّزُ **الفاشلَ من المُتخطَّى من الناجح** لأنّ فحصاً تُخطّي ليس فحصاً نجح. والسجلاتُ القديمةُ **بقيت في مكانِها بلا حذفٍ ولا استبدال** — أُضيف إليها رأسُ مرجعيّةٍ فقط، لأنّ 654 KB من سجلٍّ زمنيٍّ أثبتُ ذاكرةٍ في المستودع ودهسُها بملفٍّ بديلٍ خسارةٌ لا تنظيم. البدائلُ المرفوضةُ الستّةُ في [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md) §3.
+- **Tests:** `bash scripts/checks/test-governance.sh` — يَنسخُ المستودعَ إلى `/tmp` ويُنشئ **git حقيقيّاً** ويُجرّب **14 حالةً** فيتحقّقُ أنّ كلَّ واحدةٍ تنتهي كما يجب: حجزٌ مزدوجٌ لنفسِ العنصر · **تقاطعُ نطاقٍ بين مالكين مختلفين** · **نطاقٌ منفصلٌ تماماً يجبُ أن يُسمَحَ به** (لا منعَ زائد) · حجزٌ منتهي المهلة · مهلةٌ تتجاوزُ 14 يوماً · عنصرُ عملٍ غيرُ موجودٍ في اللوحة · مالكٌ فارغ · ملفٌ داخلَ النطاقِ المحجوز · **ملفٌ خارجَه** · فرعٌ بلا حجزٍ نشط · كودٌ بلا سجلٍّ ولوحة · والمدخلُ الموحّدُ في سياقِ git. المقيسُ محلّيّاً: **14 ناجحاً · 0 فاشل**. **وكشفَ اختبارُ الطرفِ إلى الطرفِ — تشغيلُ البوابةِ على هذا العملِ نفسِه مقابلَ `main` الفعليّة — عيباً كامناً في سكربتِ الحزمةِ المُقدَّمةِ يرفضُ عملاً صحيحاً بصمت:** `git diff … | grep -Eq` مع `set -o pipefail` — فـ`grep -q` يُغلقُ الأنبوبَ عند أوّلِ تطابقٍ فيتلقّى `git` إشارةَ `SIGPIPE`، و`pipefail` يُحوّلُ ذلك إلى فشلٍ في الأنبوبِ كلِّه، فيُقرأ التطابقُ الصحيحُ **كعدمِ تطابق**. و`TASK_LOG` يتجاوزُ 650 KB فالعيبُ يقعُ **دائماً لا نادراً**، أي أنّ البوابةَ كانت سترفضُ كلَّ عملٍ صحيحٍ في المستودعِ بصمت. أُصلح بالتقاطِ الـdiff في متغيّرٍ ثمّ البحثِ بلا أنبوب، وأُضيف له **حارسُ انحدارٍ صريحٌ** هو الحالةُ الرابعةَ عشرة: «يقبلُ إدخالاً صحيحاً مع diff كبير». و`.gitlab-ci.yml` تحقّقَ YAML بـ**23 وظيفةً بلا إسقاطِ أيِّ وظيفةٍ قائمة** (`build-test` · `doc-coverage` · كلُّ وظائفِ `db-integration` و`exit-gate-e2e` بما فيها `subscription-exit-gate-e2e` سليمةٌ). **وكشفَ الاختبارُ عيباً فعليّاً في التصميمِ الأوّل:** تعديلُ `WORK_CLAIMS.md` وحدَه — وهو **الخطوةُ الإلزاميّةُ قبلَ أيِّ كود** — كان يُطالِبُ بإدخالِ `TASK_LOG` كاملٍ قبلَ وجودِ عملٍ يُوثَّق، فأُضيفت `WORK_CLAIMS.md` و`WORK_INDEX.md` إلى `LEDGER_ONLY_PATHS` وأُعيد الاختبارُ فصار 13/13.
+- **Next:** **الإلزامُ الفعليُّ يحتاجُ عملاً إداريّاً خارجَ المستودعِ لا يملكُه سكربتٌ داخلَه:** حمايةُ `main` ومنعُ الدفعِ المباشرِ عليها وفرضُ نجاحِ الـpipeline قبلَ الدمجِ وموافقةُ `CODEOWNERS` على `docs/16-progress/`. فـ`pre-push` يُتجاوَزُ بـ`--no-verify`، و`governance-guard` لا تُلزِم إلّا إن كان الـpipeline إلزاميّاً. ثمّ متابعةُ **M5-11 (Phase 11)** من المراجعةِ 4/6.
+- **Related:** [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md) · [WORK_CLAIM_RULE](../00-rules/WORK_CLAIM_RULE.md) · [README](README.md) · [WORK_CLAIMS](WORK_CLAIMS.md) · [WORK_INDEX](WORK_INDEX.md)
+
+---
 
 ### [2026-08-25] Phase 11 · MR 3/6 — استمراريّةُ السوقِ على Postgres: **العقدُ يُطبَّق حرفاً، والإسقاطُ محروسٌ بالتسلسل، والاختبارُ يُصحَّح لا الكود**
 

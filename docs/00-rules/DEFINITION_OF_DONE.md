@@ -10,9 +10,13 @@
 
 ## 1. Definition of Ready (DoR)
 
+> **بند صفري مُضاف (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** لا يُعدّ العمل `Ready` قبل تشغيل `bash scripts/checks/find-existing-work.sh "<المجال>"` والتأكد أن لا جهة أخرى تعمله، ثم إضافة سطر حجز نشط في [`WORK_CLAIMS.md`](../16-progress/WORK_CLAIMS.md) بنطاق مسارات محدّد. القاعدة: [`WORK_CLAIM_RULE.md`](WORK_CLAIM_RULE.md).
+
 قبل بدء أي Feature يجب توفر:
 
 ```text
+No duplicate work (find-existing-work.sh)
+Active scope claim (WORK_CLAIMS.md)
 Problem defined
 Acceptance criteria
 Dependencies
@@ -46,6 +50,8 @@ Owner team
 Implementation
 Tests
 Docs
+Ledger + Board updated
+Claim released
 Observability
 Security
 Migration

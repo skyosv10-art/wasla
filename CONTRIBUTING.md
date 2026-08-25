@@ -30,7 +30,43 @@ pnpm typecheck                      # فحص الأنواع
 - التسلسل الزمني الرسمي للمراحل: [`docs/16-progress/ROADMAP.md`](docs/16-progress/ROADMAP.md)
 - سجل المهام بكل دفع: [`docs/16-progress/TASK_LOG.md`](docs/16-progress/TASK_LOG.md)
 
-**التطبيق:** job الـ `doc-coverage` في `.gitlab-ci.yml` يفشل أي MR يمس الكود (`apps/ bots/ services/ packages/ infra/ scripts/`) دون تحديث في `docs/`. الـ hook المحلي (`scripts/hooks/pre-push`) تنبيه مبكر فقط؛ الإلزام الفعلي خادمي.
+**التطبيق:** وظيفتا `doc-coverage` و`governance-guard` في `.gitlab-ci.yml` تفشلان أي MR يمس الكود (`apps/ bots/ services/ packages/ infra/ scripts/`) دون تحديث `TASK_LOG.md` و`LAUNCH_EXECUTION_BOARD.md` معاً. الـ hook المحلي (`scripts/hooks/pre-push`) تنبيه مبكر فقط؛ الإلزام الفعلي خادمي.
+
+---
+
+## 0.1 ابحث قبل أن تكتب — قاعدة منع تكرار العمل (ملزمة آلياً)
+
+> **لا يبدأ أحد عملاً قبل أن يتأكد أن أحداً غيره لا يعمله الآن، ولم يعمله قبله.**
+
+المستودع فيه جهات متعددة: بشر ووكلاء آليون. ولوحة التنفيذ تُخبر بما **انتهى** لا بما **يجري الآن**، فالحجز هو الطبقة التي تمنع جهتين من بناء نفس الشيء مرتين.
+
+**قبل أول سطر كود:**
+
+```bash
+pnpm run work:find "marketplace search"      # أو: bash scripts/checks/find-existing-work.sh "..."
+```
+
+يبحث في الحجوزات النشطة وخريطة الملكية واللوحة والسجل والكود الفعلي وقرارات ADR. وإن وجد عملاً مطابقاً أو حجزاً نشطاً، **لا تُنشئ عملاً موازياً** — نسّق مع مالكه أو أنشئ عنصراً تابعاً يشير إليه.
+
+**قبل أول commit:** أضف سطر حجز في [`docs/16-progress/WORK_CLAIMS.md`](docs/16-progress/WORK_CLAIMS.md) بعنصر عمل ومالك وفرع و**مسارات نطاق محددة** وتاريخ انتهاء (≤ 14 يوماً).
+
+**قبل الدفع:** شغّل البوابة الموحّدة:
+
+```bash
+pnpm run governance:verify
+```
+
+**بعد الدمج:** حرّر الحجز إلى `Released`، وحدّث اللوحة و[`WORK_INDEX.md`](docs/16-progress/WORK_INDEX.md).
+
+| المرجع | الغرض |
+|---|---|
+| [`docs/16-progress/README.md`](docs/16-progress/README.md) | **نقطة الدخول** — ترتيب المرجعية وسير العمل في 7 خطوات |
+| [`docs/00-rules/WORK_CLAIM_RULE.md`](docs/00-rules/WORK_CLAIM_RULE.md) | القاعدة المُلزِمة والشروط الستّة المُنفَّذة آلياً |
+| [`docs/16-progress/WORK_CLAIMS.md`](docs/16-progress/WORK_CLAIMS.md) | من يعمل الآن وعلى أي نطاق |
+| [`docs/16-progress/WORK_INDEX.md`](docs/16-progress/WORK_INDEX.md) | من يملك كل خدمة/تطبيق/حزمة وحالتها |
+| [`docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md`](docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md) | بروتوكول التشغيل الكامل |
+
+**الإثبات لا الوصف:** `bash scripts/checks/test-governance.sh` يُنشئ مستودع git مؤقتاً ويُجرّب 14 حالة (حجز مزدوج · تقاطع نطاق · حجز منتهٍ · ملف خارج النطاق · فرع بلا حجز …) ويُثبت أن كل واحدة تُرفض فعلاً. تُشغّلها `governance-guard` في كل MR.
 
 ---
 

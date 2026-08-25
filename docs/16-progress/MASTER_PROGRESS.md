@@ -1,5 +1,9 @@
 # MASTER_PROGRESS — لوحة تقدم المراحل
 
+> **⚠ ترتيب المرجعية (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** نقطة الدخول الإلزامية للمستودع هي [`docs/16-progress/README.md`](README.md)، ومصدر الحقيقة لبوابات الإطلاق هو [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) و[`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md). **هذه الوثيقة سجل تقدم محور `Phase 00–24`** وتبقى مُلزِمة في مجالها. أما قرار الجاهزية للإطلاق فمرجعه اللوحة لا هذه الوثيقة.
+>
+> **ولا يبدأ أحد عملاً** قبل `bash scripts/checks/find-existing-work.sh "<المجال>"` وسطر حجز في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) — [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md).
+
 > **النطاق:** حالة جميع المراحل Phase 00 → Phase 24 (المراحل 71-103 + المراحل الفرعية في الدليل التنفيذي).
 >
 > **المرجع الأم:** أقسام 71-103 من الدليل التنفيذي + القسم 106 (Progress Ledger).

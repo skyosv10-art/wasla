@@ -1,5 +1,9 @@
 # ROADMAP — خارطة طريق التنفيذ الزمنية (ملزمة)
 
+> **⚠ ترتيب المرجعية (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** نقطة الدخول الإلزامية للمستودع هي [`docs/16-progress/README.md`](README.md)، ومصدر الحقيقة لبوابات الإطلاق هو [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) و[`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md). **هذه الوثيقة مصدر الحقيقة لمحور `Phase 00–24`** (تسلسل بناء المنتج والمجال) وتبقى مُلزِمة في مجالها. ويُحظر إدخال أي ترقيم `Mx` فيها: المعرّف المستخدم في الـcommit والـMR والسجل هو `Mx-yy` من اللوحة وحده.
+>
+> **ولا يبدأ أحد عملاً** قبل `bash scripts/checks/find-existing-work.sh "<المجال>"` وسطر حجز في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) — [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md).
+
 > **النوع:** مصدر الحقيقة للتسلسل الزمني للتنفيذ (Binding Execution Roadmap).
 >
 > **القاعدة الملزمة:** هذا هو المسار الرسمي. أي شخص يعمل في المشروع — مطور أو وكيل آلي — يسير على هذه الوثيقة بترتيبها. لا تبدأ مرحلة قبل اجتياز **Exit Gate** للمرحلة السابقة.

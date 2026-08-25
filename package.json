@@ -12,7 +12,12 @@
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "clean": "pnpm -r run clean && rimraf node_modules"
+    "clean": "pnpm -r run clean && rimraf node_modules",
+    "governance:verify": "bash scripts/checks/verify-governance.sh",
+    "governance:test": "bash scripts/checks/test-governance.sh",
+    "work:find": "bash scripts/checks/find-existing-work.sh",
+    "work:claims": "bash scripts/checks/validate-work-claims.sh",
+    "board:validate": "bash scripts/checks/validate-launch-board.sh"
   },
   "devDependencies": {
     "json-schema-to-typescript": "^15.0.4",

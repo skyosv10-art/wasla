@@ -71,7 +71,12 @@ TASK_LOG="docs/16-progress/TASK_LOG.md"
 if [ -f "$TASK_LOG" ]; then
   board_ids="$(printf '%s\n' "$rows" | awk -F'|' '{id=$2; gsub(/^ +| +$/, "", id); print id}' | sort -u)"
   logged_ids="$(grep -E '^- \*\*Work Item\(s\):\*\* ' "$TASK_LOG" 2>/dev/null | sed -E 's/.*\*\*Work Item\(s\):\*\* ([^ ]+).*/\1/' | grep -Ev '^Mx-yy$' | sort -u || true)"
-  bad_log="$(printf '%s\n' "$logged_ids" | while read -r id; do [ -z "$id" ] && continue; printf '%s\n' "$board_ids" | grep -Fxq "$id" || echo "$id"; done)"
+  # لا أنبوبَ قبل `grep -Fxq`: تحت `set -o pipefail` يخرج `grep -q` عند أوّلِ تطابقٍ
+  # فيُغلقُ الأنبوب، فيموتُ `printf` بـSIGPIPE، فتصيرُ حالةُ الأنبوبِ 141 ويقرأها الشرطُ
+  # «لا تطابق» — فيُرفَض معرِّفٌ موجودٌ على اللوحة. العيبُ احتماليٌّ (يعتمد على سبقِ
+  # `printf` لخروجِ `grep`) فيظهر رفضاً عشوائيّاً لعملٍ صحيح، وهو أسوأُ من فشلٍ ثابت.
+  # مُثبَتٌ تجريبيّاً: 66 نتيجةً خاطئةً من 300 على قائمةٍ كبيرة، و0 من 300 بعد العلاج.
+  bad_log="$(while read -r id; do [ -z "$id" ] && continue; grep -Fxq "$id" <<< "$board_ids" || echo "$id"; done <<< "$logged_ids")"
   if [ -n "$bad_log" ]; then
     echo 'خطأ: TASK_LOG يحتوي Work Item غير موجود في لوحة التنفيذ:' >&2
     printf '%s\n' "$bad_log" >&2

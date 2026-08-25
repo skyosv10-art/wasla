@@ -33,7 +33,7 @@
 | `services/dispatch/` | Implemented | — | Phase 07 | |
 | `services/negotiations/` | Implemented | — | Phase 08 | |
 | `services/reputation/` | Implemented | M0-08 (دليل تشغيل) | Phase 09 | |
-| `services/subscriptions/` | Implemented | — | Phase 10 | بوابة الخروج اجتازت |
+| `services/subscriptions/` | Implemented | M0-01 (حارس تركيب) | Phase 10 | بوابة الخروج اجتازت · `__tests__/composition.test.ts` يحرس حقنَ الساعةِ والمُوَلِّدِ في `http/server.ts` |
 | `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **العمل الجاري حاليًا — 3/6 مراجعات** |
 | `services/search/` | Placeholder | M5-12 | Phase 12 | |
 | `services/delivery/` | Placeholder | M5-13 | Phase 13 | |

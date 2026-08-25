@@ -156,6 +156,17 @@ git add -A >/dev/null; git commit -qm "valid entry with large diff" >/dev/null
 t "يقبل إدخالاً صحيحاً مع diff كبير (حارس SIGPIPE)" pass bash scripts/checks/require-doc-update.sh origin/main HEAD
 git reset -q --hard HEAD~1
 
+# حارس انحدار 2: نفسُ مصيدةِ SIGPIPE في `validate-launch-board.sh` (فحصُ مراجع
+# TASK_LOG مقابل اللوحة). العيبُ احتماليٌّ لا حتميّ، فحالةٌ واحدةٌ لا تكفي: تُشغَّل
+# البوّابةُ 40 مرّةً على لوحةٍ وسجلٍّ صحيحين، ويجب أن تنجح **كلَّها**. قبلَ العلاج
+# كانت تفشل عشوائيّاً؛ بعدَه لا تفشل أبداً.
+printf '\n\033[1m[ج2] ثباتُ مدقّقِ اللوحة (حارس SIGPIPE الثاني)\033[0m\n'
+board_stable=1
+for _ in $(seq 1 40); do
+  bash scripts/checks/validate-launch-board.sh docs/16-progress/LAUNCH_EXECUTION_BOARD.md >/dev/null 2>&1 || board_stable=0
+done
+t "مدقّق اللوحة يقبل لوحةً صحيحةً في 40 تشغيلاً بلا تقلّب" pass test "$board_stable" = "1"
+
 printf '\n\033[1m[د] المدخل الموحّد\033[0m\n'
 t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD
 

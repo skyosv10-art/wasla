@@ -53,6 +53,8 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | scripts/checks/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 
 ---
 

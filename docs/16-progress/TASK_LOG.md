@@ -28,6 +28,40 @@
 
 ## السجل
 
+### [2026-08-25] M0-10 — قيدٌ كان مكتوباً ولا يمنع شيئاً
+
+- **Work Item(s):** M0-10
+- **Claim:** CLM-0006 · الفرع `fix/m0-10-eligibility-reasons-cardinality` · النطاق `services/drivers/,docs/16-progress/`
+- **Files:** `services/drivers/contracts/schema.sql` · `services/drivers/src/infrastructure/drizzle/schema.ts` · `services/drivers/src/__tests__/repository.integration.test.ts` · `docs/16-progress/{LAUNCH_EXECUTION_BOARD,WORK_CLAIMS,TASK_LOG}.md`
+- **Services:** `drivers` — **هذا البندُ وحدَه يلمسُ كودَ إنتاج**، لأنّ العيبَ في الـDDL نفسِه.
+
+- **Why:** الفشلُ الأخيرُ في `drivers-db-integration`. وخلافاً لـ`M0-09` لم يكن التأكيدُ هو المخطئ: كان القيدُ **لا يرفضُ شيئاً**.
+
+- **الجذر:** `ck_eligibility_log_reasons` كان `to_state = 'eligible' OR array_length(reasons, 1) >= 1`. و`array_length` تُعطي **NULL** للمصفوفةِ الفارغة لا صفراً، و`NULL >= 1` تُعطي NULL، و**Postgres يعدُّ نتيجةَ NULL في CHECK مستوفاةً**. فكان القيدُ يقبل الصفَّ الوحيدَ الذي كُتب ليمنعه: حكمُ `ineligible` بلا سببٍ واحد — وهو حرفيّاً ما يقول تعليقُ الـDDL فوقَه إنّه «حاسبٌ لا يشرح نفسه»، وما تسمّيه مرآةُ Drizzle «الصفَّ الذي يتّصل السائقُ بالدعمِ بسببه».
+
+- **دليلُ الجذرِ بالسبرِ لا بالاستنتاج:** `array_length('{}',1)` = `null` · `(array_length('{}',1) >= 1)` = `null` · `cardinality('{}')` = `0` · `(cardinality('{}') >= 1)` = `false`. ثمّ جدولانِ حقيقيّان بالقيدَينِ:
+
+| | `ineligible` بلا سبب | `ineligible` بسببٍ واحد | `eligible` بلا سبب |
+|---|---|---|---|
+| الصيغةُ القديمة | **قبِلَ ← العيب** | قبِلَ ✓ | قبِلَ ✓ |
+| الصيغةُ الجديدة | **رفضَ ✓** | قبِلَ ✓ | قبِلَ ✓ |
+
+فالعلاجُ يمنع المخالفَ **ولا يمنع شيئاً مشروعاً** — وهذا العمودانِ الأخيرانِ هما ما يفصل الإصلاحَ عن التضييق.
+
+- **العلاج:** `cardinality(reasons) >= 1` (تُعطي 0 للفارغة فتصير المقارنةُ FALSE صريحةً)، في `contracts/schema.sql` **وفي مرآةِ Drizzle معاً** — لو تُركت المرآةُ لانحرفَ العقدُ، و`schema-drift.test.ts` هو ما يلتقط ذلك (28 حالةً، خضراء).
+
+- **لا ترحيلَ لأنّه لا يوجد اصطلاحُ ترحيلٍ في المستودع:** لا مجلّدَ `migrations` في أيِّ خدمة؛ `contracts/schema.sql` هو المصدرُ الوحيدُ ويُطبَّق كاملاً. وقرارُ الإصدارِ **NO-GO** ولا قاعدةَ منشورة، فتعديلُ الـDDL هو الإصلاحُ الكامل. **ولا أخترعُ آليّةً غيرَ موجودة**؛ ولو نُشرت قاعدةٌ لاحقاً فالمطلوبُ `ALTER TABLE ... DROP CONSTRAINT` ثمّ `ADD CONSTRAINT` بعد تنظيفِ أيِّ صفٍّ مخالفٍ سبقَ قبولُه.
+
+- **ونظرتُ خارجَ الموضع:** بحثتُ عن النمطِ نفسِه في المستودعِ كلِّه. الموضعانِ الآخرانِ (`service_kinds` في `drivers` و`matching`) **سليمانِ** لأنّهما يكتبان `array_length(...) IS NULL OR ...` صراحةً، فالفارغةُ مُعالَجةٌ بفرعٍ مقصود. فالعلاجُ محدودٌ بموضعِه ولم أوسّعْه بلا سبب.
+
+- **Tests:** `drivers-db-integration` **79/79 — الوظيفةُ خضراءُ بالكامل** (كانت 27 فشلاً قبل `M0-02`). اختباراتُ الوحدة **195/195** ومنها `schema-drift` 28 و`contract-drift` 23. `pnpm -r run typecheck` **صفرُ أخطاء**.
+
+- **Next:** `M0-03` (`fileParallelism` في `identity`) ثمّ `M0-12` (فكُّ ارتباطِ حزمةِ الإثبات).
+
+- **⚠ البوّابةُ لم تُنفَّذ في CI:** حصّةُ الدقائقِ منتهية (`ci_quota_exceeded`)؛ التحقُّقُ يدويٌّ محليٌّ بالكامل.
+
+- **Related:** [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md) · مُكدَّسٌ فوقَ `M0-09`
+
 ### [2026-08-25] M0-09 — القيودُ كانت ترفضُ فعلاً، والتأكيدُ عَمِيَ عنها
 
 - **Work Item(s):** M0-09

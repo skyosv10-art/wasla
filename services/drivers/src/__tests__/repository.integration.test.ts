@@ -655,9 +655,10 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
     it("refuses a non-eligible verdict with no reasons", async () => {
       // ck_eligibility_log_reasons — the constraint that makes "why is this driver not
       // getting orders?" always answerable.
-      await expect(pg.eligibilityLog.append(entry("ineligible", []))).rejects.toMatchObject({
-        constraint: "ck_eligibility_log_reasons",
-      });
+      await expectRefusedBy(
+        pg.eligibilityLog.append(entry("ineligible", [])),
+        "ck_eligibility_log_reasons",
+      );
     });
   });
 

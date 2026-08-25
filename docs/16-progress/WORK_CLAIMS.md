@@ -56,6 +56,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | scripts/checks/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0005 | M0-09 | @uxxxu | fix/m0-09-drizzle-constraint-assertions | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0006 | M0-10 | @uxxxu | fix/m0-10-eligibility-reasons-cardinality | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 
 ---
 

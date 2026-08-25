@@ -21,6 +21,7 @@
 | عوائق التدقيق المفتوحة | AUD-001 إلى AUD-008 |
 | المراجعة التالية | عند إغلاق M0-01..M0-08 أو قبل أي بدء لنطاق جديد |
 | مالك البرنامج | `@uxxxu` |
+| **حالة إنفاذ CI** | ⚠ **معطّل** — حصّة دقائق CI منتهية، فتفشل الوظائف كلّها بـ`ci_quota_exceeded` قبل أن تبدأ (يشمل `build-test` وكل `db-integration` وكل `exit-gate-e2e` على `main` نفسها). **حتى تُجدَّد الحصّة أو يُسجَّل runner خاص: التحقق يدوي إلزامي** عبر `pnpm governance:verify` و`pnpm governance:test`، ويُرفَق خرجهما في كل MR كدليل مؤقت. |
 | المرحلة الجارية فعلًا | `Phase 11 — Marketplace Foundation` (يقابل `M5-11`) — 3/6 مراجعات |
 | رابط خارطة الطريق | [LAUNCH_TO_100_ROADMAP.md](LAUNCH_TO_100_ROADMAP.md) |
 | سجل الحجز | [WORK_CLAIMS.md](WORK_CLAIMS.md) |
@@ -32,11 +33,11 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M0-01 | إصلاح تركيب الاشتراكات واختبار الجذر | Subscriptions / QA | — | Not Started | typecheck أخضر + composition test + MR | تمرير `uuidIdGenerator` ثم تشغيل verify. |
+| M0-01 | إصلاح تركيب الاشتراكات واختبار الجذر | Subscriptions / QA | — | Ready for Gate | typecheck أخضر + composition test + MR | العيبُ المُدقَّق **مُصلَحٌ سلفاً في الكود** (المواقعُ الستّةُ كلُّها تُمرِّر المُوَلِّد)، والفجوةُ الباقيةُ كانت **غيابَ حارسٍ**: لا اختبارَ واحداً يستورد `http/server.ts`. أُضيف `composition.test.ts` (10 تأكيدات) — typecheck أخضر على المستودع كلِّه، 215/215 اختباراً في الخدمة، و3 طفراتٍ مقصودةٍ رُفضت. ينتقل إلى `Completed` بعد إجازة المالك الثانوي. |
 | M0-02 | إصلاح fixture مطابقة السائقين | Drivers / QA | M0-01 | Not Started | Postgres conformance أخضر مرتين | بذرة zone catalog في جانب الذاكرة. |
 | M0-03 | عزل DDL لاختبارات الهوية | Identity / QA | M0-01 | Not Started | 10 تشغيلات integration بلا سباق | اختيار schema-per-worker أو serialization. |
 | M0-04 | أمر verify موحد وCI مانع | DevEx / QA | M0-01..03 | Not Started | أمر موثق + artifact + CI mandatory | تحديد tools وcoverage policy. |
-| M0-05 | تفعيل بروتوكول/لوحة الحوكمة + نظام منع تكرار العمل | @uxxxu / Program | — | Ready for Gate | وظيفة `governance-guard` خضراء على MR الدمج + ADR-017 | إجازة الـMR ومراجعة CODEOWNERS، ثم النقل إلى `Completed` برابط pipeline. |
+| M0-05 | تفعيل بروتوكول/لوحة الحوكمة + نظام منع تكرار العمل | @uxxxu / Program | — | Ready for Gate | وظيفة `governance-guard` خضراء على MR الدمج + ADR-017 | **الدليل غير مستوفى: البوابة لم تُنفَّذ في MR !81 لنقص رصيد CI (`ci_quota_exceeded`، 0/21 وظيفة بدأت) لا لعيب في التغيير.** التحقق محلي: 5/5 بوابات و14/14 حالة إثبات. يبقى `Ready for Gate` حتى تركض البوابة فعلاً. |
 | M0-06 | تحديث الاعتماديات والثغرات | DevEx / Security | M0-04 | Not Started | audit أخضر أو قبول خطر منتهٍ | تحديد نسخ الإصلاح واختبارها. |
 | M0-07 | سجل المخاطر والاستثناءات | Security / Program | M0-05 | Not Started | risk register مع مالك/تاريخ | إضافة السجل وربطه باللوحة. |
 | M0-08 | baseline آلي للبيئة والاختبارات | QA / DevEx | M0-04 | Not Started | artifacts قابلة للتكرار | تعريف metadata/artifact format. |

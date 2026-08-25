@@ -52,11 +52,15 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLM-0001 | M0-05 | @uxxxu | chore/unified-roadmap-governance | docs/16-progress/,docs/00-rules/,docs/15-decisions/,scripts/checks/,scripts/hooks/,.gitlab/,.gitlab-ci.yml,CONTRIBUTING.md,package.json | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 
 ---
 
 ## 3. الحجوزات المحرَّرة (Released)
+
+| Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
+| --- | --- | --- | --- | --- | --- |
+| CLM-0001 | M0-05 | @uxxxu | chore/unified-roadmap-governance | 2026-08-25 | دُمج في `main` عبر [MR !81](https://gitlab.com/uxxxu/wasla/-/merge_requests/81). وبقي `M0-05` نفسُه `Ready for Gate` لا `Completed`: دليلُ إغلاقه بوابةٌ خضراء، والبوابةُ لم تُنفَّذ لنقصِ رصيدِ CI. |
 
 يُنقل السطر إلى هنا **بعد الدمج**، مع رابط دليل قابل للتحقق (MR أو pipeline).
 

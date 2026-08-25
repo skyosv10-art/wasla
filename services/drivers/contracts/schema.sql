@@ -290,8 +290,14 @@ CREATE TABLE IF NOT EXISTS driver_eligibility_log (
                                         'suspended','reinstated','expiry_tick','recompute')),
     evaluated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- حالةٌ غير مؤهَّلة بلا سبب واحد على الأقل تعني حاسباً لا يشرح نفسه.
+    --
+    -- `cardinality` لا `array_length`: الثانية تُعطي NULL للمصفوفة الفارغة لا صفراً،
+    -- و`NULL >= 1` تُعطي NULL، وPostgres يعدُّ نتيجةَ NULL في CHECK **مستوفاةً**. فكان
+    -- القيدُ يقبل الصفَّ الوحيدَ الذي كُتب ليمنعه: `ineligible` بلا سببٍ واحد. أمّا
+    -- `cardinality` فتُعطي 0 للفارغة فتصير المقارنةُ FALSE صريحةً. مُثبَتٌ بالسبر:
+    -- الصيغةُ القديمةُ قبِلَت الصفَّ المخالف، والجديدةُ رفضَتْه وأبقَت الصفَّينِ المشروعَين.
     CONSTRAINT ck_eligibility_log_reasons CHECK (
-        to_state = 'eligible' OR array_length(reasons, 1) >= 1
+        to_state = 'eligible' OR cardinality(reasons) >= 1
     )
 );
 

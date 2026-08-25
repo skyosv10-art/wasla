@@ -54,6 +54,28 @@ repo-structure:
       echo "OK: docs/16-progress/MASTER_PROGRESS.md"
       echo "OK: docs/15-decisions/ADR-001"
 
+      echo "==> فحص وجود وثائق الحوكمة الموحّدة"
+      for f in docs/16-progress/README.md \
+               docs/16-progress/LAUNCH_TO_100_ROADMAP.md \
+               docs/16-progress/LAUNCH_EXECUTION_BOARD.md \
+               docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md \
+               docs/16-progress/WORK_CLAIMS.md \
+               docs/16-progress/WORK_INDEX.md \
+               docs/00-rules/WORK_CLAIM_RULE.md \
+               docs/00-rules/PUSH_DOCUMENTATION_RULE.md; do
+        if [ ! -f "$f" ]; then
+          echo "ERROR: وثيقة حوكمة إلزامية مفقودة: $f"
+          exit 1
+        fi
+        echo "OK: $f"
+      done
+
+      echo "==> فحص بنية لوحة التنفيذ"
+      bash scripts/checks/validate-launch-board.sh
+
+      echo "==> فحص سلامة سجل الحجوزات"
+      bash scripts/checks/validate-work-claims.sh
+
       echo "==> فحص عدم وجود أسرار في المستودع"
       if [ ! -x scripts/checks/scan-secrets.sh ]; then
         echo "ERROR: scripts/checks/scan-secrets.sh غير قابل للتنفيذ" >&2
@@ -90,14 +112,43 @@ doc-coverage:
   before_script:
     - apk add --no-cache bash git
     - |
-      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
       git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
   script:
     - |
-      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
       bash scripts/checks/require-doc-update.sh "origin/$TARGET" HEAD
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ─────────────────────────────────────────────────────────────────────
+# بوابة الحوكمة الموحّدة — منع تكرار العمل بين جهتين.
+# تُنفّذ verify-governance.sh: لوحة + حجوزات نطاق + قاعدة التوثيق + أسرار.
+# ثم تُشغّل test-governance.sh لتُثبت أن الفحوص ترفض فعلاً لا شكلاً.
+# المرجع: docs/00-rules/WORK_CLAIM_RULE.md · docs/16-progress/README.md
+# ─────────────────────────────────────────────────────────────────────
+governance-guard:
+  stage: validate
+  image: alpine:3.20
+  variables:
+    GIT_DEPTH: "50"
+  before_script:
+    - apk add --no-cache bash git python3 coreutils findutils grep sed
+    - |
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
+      git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
+  script:
+    - |
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
+      echo "==> بوابة الحوكمة: النطاق origin/$TARGET..HEAD"
+      bash scripts/checks/verify-governance.sh "origin/$TARGET" HEAD
+    - |
+      echo "==> إثبات أن الفحوص ترفض فعلاً (14 حالة)"
+      bash scripts/checks/test-governance.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # ─────────────────────────────────────────────────────────────────────
 # بناء واختبار (Phase 00 build/test foundation — ADR-003).

@@ -12,6 +12,14 @@
 
 > **كل من عدّل في المشروع وأراد دفع شيء إلى المستودع، عليه أن يوثّق عمله، ثم يدفع التوثيق مع الدفع إلى شجرة المستودع في نفس العملية.**
 
+> **توسيع مُلزِم (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** لم يبقَ «تحديث أي ملف في `docs/`» كافياً. الحدّ الأدنى المُنفَّذ آلياً صار **ثلاثة** لا واحداً:
+>
+> 1. **إدخال في [`TASK_LOG.md`](../16-progress/TASK_LOG.md)** يحوي سطر `**Work Item(s):** Mx-yy`.
+> 2. **تحديث صف في [`LAUNCH_EXECUTION_BOARD.md`](../16-progress/LAUNCH_EXECUTION_BOARD.md)** — حالة أو دليل أو عائق أو خطوة تالية.
+> 3. **سطر حجز نشط في [`WORK_CLAIMS.md`](../16-progress/WORK_CLAIMS.md)** يغطي كل مسار مُعدَّل — [`WORK_CLAIM_RULE.md`](WORK_CLAIM_RULE.md).
+>
+> البوابة الموحّدة: `pnpm run governance:verify`. وتُنفّذها وظيفتا `doc-coverage` و`governance-guard`.
+
 بصيغة إجرائية:
 
 ```text

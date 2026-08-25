@@ -1,77 +1,82 @@
 #!/usr/bin/env bash
-# require-doc-update.sh — فحص القاعدة الملزمة: كل دفع يمس الكود يجب أن يرافقه تحديث توثيق.
+# require-doc-update.sh — قاعدة حاكمة: كل تغيير ذي معنى يحدّث سجل العمل ولوحة الإطلاق.
 #
-# يُستخدم من مكانين:
-#   1. scripts/hooks/pre-push      (إلزام محلي قبل الدفع)
-#   2. .gitlab-ci.yml :: doc-coverage  (إلزام خادمي على كل Merge Request)
-#
-# الاستخدام:
-#   require-doc-update.sh [OLD_SHA] [NEW_SHA]
-#   - بدون وسائط: يقارن الفرع الحالي ضد origin/main.
-#   - بوسيطين: يقارن النطاق OLD_SHA..NEW_SHA.
+# الاستخدام: require-doc-update.sh [OLD_SHA] [NEW_SHA]
+# بدون وسائط: يقارن origin/main مع HEAD. في CI يمرر نطاق MR صراحة.
 set -euo pipefail
 
-CODE_PATHS='^apps/|^bots/|^services/|^packages/|^infra/|^scripts/'
-DOC_PATHS='^docs/'
-
+CODE_OR_CONFIG_PATHS='^(apps/|bots/|services/|packages/|infra/|scripts/|\.gitlab-ci\.yml$|package\.json$|pnpm-lock\.yaml$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$)'
+# سجلات مشتركة يكتب فيها الجميع بحكم القاعدة: تعديلها وحدها ليس «تغييراً ذا معنى».
+# WORK_CLAIMS.md مُدرَجة لأن حجز النطاق خطوة إلزامية تسبق أي كود، فلا يصح أن تُطالب بإدخال TASK_LOG قبل وجود عمل.
+LEDGER_ONLY_PATHS='^docs/16-progress/(TASK_LOG\.md|LAUNCH_EXECUTION_BOARD\.md|MASTER_PROGRESS\.md|WORK_CLAIMS\.md|WORK_INDEX\.md)$'
+TASK_LOG='docs/16-progress/TASK_LOG.md'
+BOARD='docs/16-progress/LAUNCH_EXECUTION_BOARD.md'
 OLD="${1:-origin/main}"
 NEW="${2:-HEAD}"
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "تخطّي الفحص: لسنا داخل مستودع git." >&2
+  echo 'تخطي الفحص: لسنا داخل مستودع git.' >&2
+  exit 0
+fi
+if ! git rev-parse --verify "${OLD}^{commit}" >/dev/null 2>&1; then
+  echo "خطأ: تعذر حل النقطة المرجعية '$OLD' — الرفض fail-closed." >&2
+  exit 1
+fi
+if ! git rev-parse --verify "${NEW}^{commit}" >/dev/null 2>&1; then NEW='HEAD'; fi
+
+FILES="$(git -c color.ui=false diff --name-only "${OLD}..${NEW}" 2>/dev/null || true)"
+if [ -z "$FILES" ]; then
+  echo 'OK: لا توجد تغييرات في النطاق المحدد.'
   exit 0
 fi
 
-# التحقق من وجود النقطة المرجعية القديمة.
-# سياسة fail-closed: إذا تعذّر حل القاعدة، نرفض الدفع بدل المقارنة ضد شجرة فارغة
-# (التي قد تُسقط كل ملفات docs/ القديمة كـ"مغيّرة" فتسبب نجاحاً كاذباً).
-if ! git rev-parse --verify "${OLD}^{commit}" >/dev/null 2>&1; then
-  echo "خطأ: تعذّر حل النقطة المرجعية '$OLD'." >&2
-  echo "       نفّذ: git fetch origin main  (أو حدّد قاعدة صحيحة)." >&2
-  echo "       لا يمكن التحقق من قاعدة التوثيق → رفض (fail-closed)." >&2
+CODE_OR_CONFIG="$(printf '%s\n' "$FILES" | grep -E "$CODE_OR_CONFIG_PATHS" || true)"
+NON_LEDGER_DOCS="$(printf '%s\n' "$FILES" | grep -E '^docs/' | grep -Ev "$LEDGER_ONLY_PATHS" || true)"
+MEANINGFUL="$(printf '%s\n%s\n' "$CODE_OR_CONFIG" "$NON_LEDGER_DOCS" | sed '/^$/d' | sort -u)"
+if [ -z "$MEANINGFUL" ]; then
+  echo 'OK: التغيير محصور في سجلات التقدم أو metadata غير ذات معنى.'
+  exit 0
+fi
+
+missing=()
+printf '%s\n' "$FILES" | grep -Fxq "$TASK_LOG" || missing+=("$TASK_LOG")
+printf '%s\n' "$FILES" | grep -Fxq "$BOARD" || missing+=("$BOARD")
+if [ "${#missing[@]}" -ne 0 ]; then
+  cat >&2 <<MSG
+==================================================================
+خطأ: قاعدة خارطة الطريق مع كل دفع غير محققة.
+==================================================================
+توجد تغييرات ذات معنى في:
+$(printf '  - %s\n' "$MEANINGFUL")
+
+يجب أن يتغير في النطاق نفسه:
+$(printf '  - %s\n' "${missing[@]}")
+
+الحل:
+  1. أضف إدخالاً جديداً في TASK_LOG يذكر Work Item(s) والاختبارات والدليل والخطوة التالية.
+  2. حدّث صف/صفوف لوحة التنفيذ: الحالة أو الدليل أو العائق أو الخطوة التالية.
+  3. شغّل scripts/checks/validate-launch-board.sh ثم أعد الدفع.
+
+المرجع: docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md
+==================================================================
+MSG
   exit 1
 fi
 
-if ! git rev-parse --verify "${NEW}^{commit}" >/dev/null 2>&1; then
-  NEW="HEAD"
+# لا يكفي لمس السجل؛ يلزم إدخال يتضمن Work Item(s) في diff نفسه.
+# لا يُستخدم أنبوب هنا: `grep -q` يُغلق الأنبوب عند أول تطابق فيتلقّى git إشارة SIGPIPE،
+# و`set -o pipefail` يُحوّل ذلك إلى فشلٍ في الأنبوب كلّه — فيُرفض عملٌ صحيحٌ كلّما كبر الـdiff.
+# TASK_LOG يتجاوز 650 KB، فهذا العيب يقع دائماً لا نادراً. الحل: التقاط الـdiff أوّلاً ثم البحث بلا أنبوب.
+TASK_LOG_DIFF="$(git -c color.ui=false diff --unified=0 "${OLD}..${NEW}" -- "$TASK_LOG" 2>/dev/null || true)"
+if ! grep -Eq '^\+.*\*\*Work Item\(s\):\*\* [A-Z][0-9A-Za-z-]+' <<< "$TASK_LOG_DIFF"; then
+  echo 'خطأ: TASK_LOG لم يحو إدخالاً مضافاً بصيغة **Work Item(s):** <ID> في هذا النطاق.' >&2
+  exit 1
 fi
 
-FILES="$(git diff --name-only "${OLD}..${NEW}" 2>/dev/null || true)"
+bash scripts/checks/validate-launch-board.sh "$BOARD"
 
-if [ -z "$FILES" ]; then
-  echo "OK: لا توجد تغييرات في النطاق المحدد."
-  exit 0
-fi
+# منع تكرار العمل بين جهتين: يجب أن يكون النطاق محجوزاً وغير متقاطع.
+# المرجع: docs/00-rules/WORK_CLAIM_RULE.md
+bash scripts/checks/validate-work-claims.sh "$OLD" "$NEW"
 
-CODE_CHANGES="$(printf '%s\n' "$FILES" | grep -E "$CODE_PATHS" || true)"
-DOC_CHANGES="$(printf '%s\n' "$FILES" | grep -E "$DOC_PATHS" || true)"
-
-if [ -z "$CODE_CHANGES" ]; then
-  echo "OK: التغييرات لا تمس مسارات الكود (توثيق/إعداد فقط)."
-  exit 0
-fi
-
-if [ -n "$DOC_CHANGES" ]; then
-  echo "OK: تم تحديث التوثيق مع تغييرات الكود."
-  exit 0
-fi
-
-cat >&2 <<'MSG'
-==================================================================
-خطأ: قاعدة التوثيق مع الدفع غير محققة (PUSH_DOCUMENTATION_RULE).
-==================================================================
-عدّلت ملفات ضمن مسارات الكود:
-  apps/ bots/ services/ packages/ infra/ scripts/
-
-لكنك لم تُعدّل أي ملف ضمن docs/.
-القاعدة الملزمة: كل دفع يمس الكود يجب أن يرافقه تحديث توثيق ضمن docs/
-(الحد الأدنى: إضافة إدخال في docs/16-progress/TASK_LOG.md يصف ما فعلته ولماذا).
-
-الحل:
-  1. أضف/عدّل ملفاً ضمن docs/ يوثّق التغيير (يُفضّل TASK_LOG.md).
-  2. أعد الدفع.
-
-المرجع: docs/00-rules/PUSH_DOCUMENTATION_RULE.md
-==================================================================
-MSG
-exit 1
+echo 'OK: سجل العمل ولوحة الإطلاق وحجز النطاق محدَّثة مع التغيير ذي المعنى.'

@@ -14,11 +14,22 @@ BOARD="docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
 MAX_TTL_DAYS=14
 
 # سجلات مشتركة يكتب فيها الجميع بحكم القاعدة — مستثناة من فحص التقاطع والاحتواء.
+#
+# هذه القائمة **واحدة في ثلاثة مواضع** ويجب أن تبقى متطابقة حرفاً بحرف:
+#   1) هذا المصفوف
+#   2) LEDGER_ONLY_PATHS في scripts/checks/require-doc-update.sh
+#   3) كتلة «مسارات مستثناة من فحص التقاطع» في docs/16-progress/WORK_CLAIMS.md
+# قبل M0-12 كانت الثلاثةُ بثلاثِ قوائم: هذا المصفوف يستثني WORK_INDEX ولا يستثني
+# MASTER_PROGRESS، والوثيقةُ تفعل العكس، و`require-doc-update.sh` يستثني الخمسةَ.
+# فمَن اتَّبع الوثيقةَ وحدَّث MASTER_PROGRESS.md رُفض دفعُه بتقاطعٍ لا ذنبَ له فيه.
+# القرار (مالك البرنامج · M0-12): الخمسةُ كلُّها مستثناة، لأنّ القاعدةَ نفسَها تُلزم
+# الجميعَ بتحديثها، ومنعُ ما تُلزم به يعني منعَ الالتزام بالقاعدة.
 SHARED_LEDGERS=(
   "docs/16-progress/TASK_LOG.md"
   "docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
   "docs/16-progress/WORK_CLAIMS.md"
   "docs/16-progress/WORK_INDEX.md"
+  "docs/16-progress/MASTER_PROGRESS.md"
 )
 
 # المسارات التي تُوجب حجزاً (نفس تعريف require-doc-update.sh)

@@ -34,7 +34,7 @@
 | `services/negotiations/` | Implemented | — | Phase 08 | |
 | `services/reputation/` | Implemented | M0-08 (دليل تشغيل) | Phase 09 | |
 | `services/subscriptions/` | Implemented | M0-01 (حارس تركيب) | Phase 10 | بوابة الخروج اجتازت · `__tests__/composition.test.ts` يحرس حقنَ الساعةِ والمُوَلِّدِ في `http/server.ts` |
-| `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **العمل الجاري حاليًا — 4/6 مراجعات** · الحدُّ HTTP قائمٌ (`docs/04-api/MARKETPLACE_HTTP.md`) |
+| `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **العمل الجاري حاليًا — 3/6 مراجعات** |
 | `services/search/` | Placeholder | M5-12 | Phase 12 | |
 | `services/delivery/` | Placeholder | M5-13 | Phase 13 | |
 | `services/partners/` | Placeholder | M5-14 | Phase 14 | |
@@ -111,5 +111,7 @@
 | `scripts/hooks/pre-push` | Implemented | M0-05 |
 | `.gitlab-ci.yml` — `governance-guard` | Implemented | M0-05 |
 | `.gitlab-ci.yml` — بوابات E2E حتى Phase 10 | Implemented | M0-08 |
-| `.gitlab-ci.yml` — `marketplace-db-integration` | Implemented | M5-11 |
+| `scripts/checks/test-governance.sh` | Implemented | M0-12 |
+| `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
+| `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |

@@ -47,7 +47,9 @@ import {
   foreignKey,
   index,
   integer,
+  jsonb,
   pgTable,
+  primaryKey,
   smallint,
   text,
   timestamp,
@@ -339,6 +341,34 @@ export const productInventory = pgTable(
   ],
 );
 
+// ---------------------------------------------------------------------------
+// 9) marketplace_idempotency — مفتاحٌ واحدٌ لكلّ كتابة، والجوابُ يُحفَظ
+// ---------------------------------------------------------------------------
+
+/**
+ * مرآةُ جدولِ منعِ التكرار — دخلت في المراجعة 4/6 مع الطبقةِ التي تقرأ الترويسة.
+ *
+ * والمفتاحُ الأوّليُّ **مركّبٌ** `(route_key, idempotency_key)` كما في نصِّ العقد، وليس
+ * `idempotency_key` وحدَه: مفتاحٌ من مُتَّصلٍ يصلح لمسارٍ واحد، وجدولٌ بمفتاحٍ واحدٍ كان
+ * سيجعل `POST /stores` و`POST /stores/{slug}/products` يتزاحمان على مفتاحٍ أعاده عميلٌ بحسنِ
+ * نيّة — فيُردُّ جوابُ متجرٍ عن طلبِ منتج.
+ *
+ * ولا قيدَ مُسمّىً هنا: نصُّ العقدِ يكتب `CHECK` لا اسمَ لها، وحارسُ الانحرافِ يقارن
+ * أسماءَ القيودِ حرفاً — فقيدٌ مُسمّىً في المرآةِ وحدَها كان سيُسقطه.
+ */
+export const marketplaceIdempotency = pgTable(
+  "marketplace_idempotency",
+  {
+    idempotencyKey: text("idempotency_key").notNull(),
+    routeKey: text("route_key").notNull(),
+    requestHash: text("request_hash").notNull(),
+    responseStatus: integer("response_status").notNull(),
+    responseBody: jsonb("response_body").notNull(),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.routeKey, table.idempotencyKey] })],
+);
+
 /**
  * جداولُ العقدِ التي لا مرآةَ لها في هذه المراجعة — **بالاسمِ ومعه المراجعةُ التي تصلها**.
  *
@@ -347,6 +377,5 @@ export const productInventory = pgTable(
  * القائمةُ تحمل اسماً انعكس فعلاً.
  */
 export const NOT_MIRRORED_TABLES: ReadonlyArray<string> = Object.freeze([
-  "marketplace_idempotency", // ← المراجعة 4/6، مع طبقةِ HTTP التي تقرأ `Idempotency-Key`
   "marketplace_outbox", // ← المراجعة 5/6، مع الأحداثِ في معاملةِ القرارِ نفسِها
 ]);

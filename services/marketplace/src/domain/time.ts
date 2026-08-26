@@ -42,3 +42,19 @@ export function assertTimestamp(value: unknown, field = "timestamp"): string {
 export function isAtOrAfter(instant: string, boundary: string): boolean {
   return toEpochMillis(instant, "instant") >= toEpochMillis(boundary, "boundary");
 }
+
+/**
+ * ساعةٌ محقونةٌ: `now()` نصُّ ISO لا `Date`.
+ *
+ * الواجهةُ تُعلَن في المجالِ ولا تُنفَّذ فيه: التنفيذُ الوحيدُ (`app/runtime.ts`) هو الملفُّ
+ * الواحدُ المُعلَنُ في `REAL_CLOCK_FILES`، وهذا ما يجعل حارسَ النقاءِ يقول «لا ساعةَ مخفيّة»
+ * ويبقى صادقاً بعد دخولِ HTTP. ولمَ نصٌّ لا `Date`؟ لأنّ كلَّ لحظةٍ في هذه الخدمةِ تُكتَب
+ * وتُقارَن نصّاً (`decided_at` · `added_at` · `occurred_at`)، وكائنُ `Date` في المجالِ كان
+ * سيُدخل منطقةً زمنيّةً محليّةً إلى مقارنةٍ لا تعرفها.
+ *
+ * وهي ليست «تِكّة»: القرار 2 يمنع مرورَ الوقتِ أن يقرّر شيئاً في هذا الحدّ — الساعةُ تُسمّي
+ * لحظةَ قرارٍ صنعه إنسانٌ، ولا تصنع قراراً.
+ */
+export interface Clock {
+  now(): string;
+}

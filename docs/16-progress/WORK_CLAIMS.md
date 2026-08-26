@@ -55,6 +55,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | scripts/checks/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0005 | M5-11 | @uxxxu (agent:computer) | feat/phase11-mr4-marketplace-http | services/marketplace/,docs/04-api/,.gitlab-ci.yml,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
 
 ---
 

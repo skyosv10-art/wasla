@@ -29,7 +29,11 @@
  */
 
 import { STORE_STAFF_ROLES, type StoreStaffRole } from "./contract-sets.js";
-import { storeOwnerRoleImmutable, validationFailed } from "./errors.js";
+import {
+  storeOwnerRoleImmutable,
+  storeStaffAlreadyMember,
+  validationFailed,
+} from "./errors.js";
 import type { StoreStaffEntry } from "./model.js";
 
 /** دورٌ مقبولٌ من قائمةِ العقدِ المُقفَلة. */
@@ -80,7 +84,16 @@ export function assertStaffAddition(input: {
   if (input.role === "owner") throw storeOwnerRoleImmutable(input.memberPublicId);
   const active = activeStaff(input.existing);
   if (active.some((entry) => entry.memberPublicId === input.memberPublicId)) {
-    throw validationFailed("member_public_id", "a member that is not already active in this store");
+    /**
+     * عضويّةٌ نشطةٌ مكرّرةٌ رمزُها `STORE_STAFF_ALREADY_MEMBER` لا رمزُ تحقُّقٍ عامّ.
+     *
+     * وهذا صُحِّح في المراجعة 4/6 حين ظهر الحدُّ: العقدُ يُعلن `409` لهذه الحقيقةِ،
+     * والقيدُ `ux_store_staff_active_member` يترجم إلى الرمزِ نفسِه في `db/constraints.ts` —
+     * فكان في الخدمةِ جوابان لحقيقةٍ واحدةٍ، والفحصُ المجاليُّ يسبق القاعدةَ دائماً فلا
+     * يُقرأ رمزُ القيدِ من السلكِ أبداً. و`400` تقول للعميل «أصلِح مُدخلَك» وهو لا يستطيع:
+     * المُدخلُ صحيحٌ والحالةُ هي المانع، وذلك معنى `409` بالضبط.
+     */
+    throw storeStaffAlreadyMember(input.memberPublicId);
   }
   return input.role;
 }

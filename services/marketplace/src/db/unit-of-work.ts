@@ -30,17 +30,21 @@
  * متجرٍ لا صفَّ دفترٍ له بعد، وقفلٌ على ماضٍ غيرِ موجودٍ لا يمنع سباقاً؛ والقفلُ المتشائم قرارٌ
  * يُعلَن إن أثبت القياسُ أنّ الإعادةَ مُكلفة.
  *
- * ## والمجموعةُ خمسةُ مخازنَ لا سبعة
+ * ## والمجموعةُ ستّةُ مخازنَ لا سبعة
  *
- * لا `idempotency` ولا `outbox` في هذه المجموعة، وهذا **قرارٌ مكتوبٌ**: منعُ التكرارِ يهبط في
- * المراجعة 4/6 مع الطبقةِ التي تقرأ `Idempotency-Key`، وصندوقُ الصادرِ في 5/6 لأنّه يُكتب في
- * معاملةِ القرارِ نفسِها ولا معنى له خارجَها. ودرسُ الطور 10 المكتوبُ في `contracts/schema.sql`
- * صريحٌ: مخزنٌ يهبط قبل ما يصله يبقى غيرَ موصولٍ ويظنّ الجميعُ أنّه يعمل.
+ * `idempotency` انضمّ في المراجعة 4/6 مع الطبقةِ التي تقرأ `Idempotency-Key` — ووجودُه **داخلَ**
+ * المجموعةِ هو ما يجعل الحرسَ والحفظَ يقعان في معاملةِ الكتابةِ نفسِها: مخزنٌ يُبنى على `db`
+ * لا على `tx` كان سيقرأ ويكتب خارجَ المعاملة، فيبقى مفتاحٌ محفوظاً لكتابةٍ تراجعت.
+ *
+ * ولا `outbox` بعد: صندوقُ الصادرِ في 5/6 لأنّه يُكتب في معاملةِ القرارِ نفسِها ولا معنى له
+ * خارجَها. ودرسُ الطور 10 المكتوبُ في `contracts/schema.sql` صريحٌ: مخزنٌ يهبط قبل ما يصله يبقى
+ * غيرَ موصولٍ ويظنّ الجميعُ أنّه يعمل.
  */
 
 import { isSequenceRace } from "./constraints.js";
 import type { Db, DbOrTx } from "./client.js";
 import { PostgresCategoryStore } from "./categories.js";
+import { PostgresIdempotencyStore } from "./idempotency.js";
 import { PostgresMarketplaceLedger } from "./ledger.js";
 import { PostgresMarketplaceProjection } from "./projection.js";
 import { PostgresResourceStore } from "./resources.js";
@@ -52,6 +56,7 @@ export interface MarketplaceStores {
   readonly projection: PostgresMarketplaceProjection;
   readonly staff: PostgresStaffStore;
   readonly categories: PostgresCategoryStore;
+  readonly idempotency: PostgresIdempotencyStore;
 }
 
 /** كلُّ المخازنِ مربوطةً بنفسِ الاتصالِ — فلا يقع نصفُها خارجَ المعاملة. */
@@ -62,6 +67,7 @@ export function bindStores(db: DbOrTx): MarketplaceStores {
     projection: new PostgresMarketplaceProjection(db),
     staff: new PostgresStaffStore(db),
     categories: new PostgresCategoryStore(db),
+    idempotency: new PostgresIdempotencyStore(db),
   };
 }
 

@@ -28,7 +28,7 @@
  * الزمنيَّ غيرَ حاسمٍ، والتسلسلُ فريدٌ بقيدٍ فالترتيبُ به تامٌّ وحتميّ.
  */
 
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 import type { DbOrTx } from "./client.js";
@@ -43,6 +43,7 @@ import {
   type StoreReviewRecord,
 } from "./rows.js";
 import { validationFailed } from "../domain/errors.js";
+import { boundedPageLimit, type Page } from "./paging.js";
 import type {
   InventoryAdjustmentEntry,
   ProductReviewEntry,
@@ -170,5 +171,64 @@ export class PostgresMarketplaceLedger {
       .where(eq(inventoryAdjustments.productId, productId))
       .orderBy(asc(inventoryAdjustments.adjustmentSequence));
     return rows.map(toInventoryAdjustment);
+  }
+  /**
+   * صفحةُ مراجعاتِ متجرٍ بترتيبِ السجلِّ — والمفتاحُ رقمُ التسلسلِ لا لحظةُ القرار.
+   *
+   * `state_sequence` مُتّصلٌ من واحدٍ وفريدٌ لكلّ متجرٍ (`ux_store_reviews_sequence`)، فهو
+   * مفتاحُ استمرارٍ تامٌّ بعمودٍ واحد. و`decided_at` لم يصلح مفتاحاً: قرارانِ في نفسِ
+   * الميلي-ثانيةِ يجعلان الصفحةَ تُعيد أحدَهما مرّتَين أو تُسقطه.
+   *
+   * ويبقى الفارقُ الذي أنشأته المراجعة 3/6 مقروءاً هنا: المتجرُ يُنشأ في التسلسلِ **1 بلا
+   * صفِّ سجلٍّ**، فأوّلُ صفٍّ في `store_reviews` تسلسلُه **2** و`from_state` فيه `draft`.
+   * فقارئُ الصفحةِ لا يرى مراجعةً بالتسلسل 1 أبداً، وهذا ليس نقصاً في السجلّ.
+   */
+  async listStoreReviewsPage(
+    storeId: string,
+    options: { readonly after?: number; readonly limit?: number } = {},
+  ): Promise<Page<StoreReviewRecord, number>> {
+    const limit = boundedPageLimit(options.limit);
+    const conditions = [eq(storeReviews.storeId, storeId)];
+    if (options.after !== undefined) {
+      if (!Number.isSafeInteger(options.after) || options.after < 0) {
+        throw validationFailed("cursor", "non-negative state_sequence");
+      }
+      conditions.push(gt(storeReviews.stateSequence, options.after));
+    }
+    const rows = await this.db
+      .select()
+      .from(storeReviews)
+      .where(and(...conditions))
+      .orderBy(asc(storeReviews.stateSequence))
+      .limit(limit + 1);
+    const page = rows.slice(0, limit).map(toStoreReview);
+    const last = rows.length > limit ? page[page.length - 1] : undefined;
+    return last === undefined ? { items: page } : { items: page, nextCursor: last.stateSequence };
+  }
+
+  /** وصفحةُ فروقِ المخزونِ كذلك: التسلسلُ مفتاحاً، وأقدمُ فرقٍ أوّلاً كما في السجلّ. */
+  async listInventoryAdjustmentsPage(
+    productId: string,
+    options: { readonly after?: number; readonly limit?: number } = {},
+  ): Promise<Page<InventoryAdjustmentRecord, number>> {
+    const limit = boundedPageLimit(options.limit);
+    const conditions = [eq(inventoryAdjustments.productId, productId)];
+    if (options.after !== undefined) {
+      if (!Number.isSafeInteger(options.after) || options.after < 0) {
+        throw validationFailed("cursor", "non-negative adjustment_sequence");
+      }
+      conditions.push(gt(inventoryAdjustments.adjustmentSequence, options.after));
+    }
+    const rows = await this.db
+      .select()
+      .from(inventoryAdjustments)
+      .where(and(...conditions))
+      .orderBy(asc(inventoryAdjustments.adjustmentSequence))
+      .limit(limit + 1);
+    const page = rows.slice(0, limit).map(toInventoryAdjustment);
+    const last = rows.length > limit ? page[page.length - 1] : undefined;
+    return last === undefined
+      ? { items: page }
+      : { items: page, nextCursor: last.adjustmentSequence };
   }
 }

@@ -15,9 +15,10 @@
  * الملفُّ أيضاً أنّ **كلَّ** اسمٍ في `TRANSLATED_CONSTRAINTS` و`SEQUENCE_RACE_CONSTRAINTS`
  * موجودٌ في نصِّ العقدِ حرفاً: ترجمةٌ تنتظر قيداً لا وجودَ له هي فرعٌ ميتٌ يبدو حمايةً.
  *
- * والمفحوصُ في هذه المراجعةِ **ثمانيةُ جداولَ من عشرة** بقرارٍ مكتوبٍ في `schema.ts`:
- * `marketplace_idempotency` تنعكس في 4/6 مع الطبقةِ التي تقرأ `Idempotency-Key`، و
- * `marketplace_outbox` في 5/6 لأنّها تُكتب في معاملةِ القرارِ نفسِها. والمقارنةُ بالقائمةِ
+ * والمفحوصُ في هذه المراجعةِ **تسعةُ جداولَ من عشرة** بقرارٍ مكتوبٍ في `schema.ts`: انعكست
+ * `marketplace_idempotency` في 4/6 كما وُعِد، مع الطبقةِ التي تقرأ `Idempotency-Key` فعلاً —
+ * ومرآةٌ تسبق قارئَها كانت ستكون جدولاً محروساً لا يكتب فيه أحد. وبقيت
+ * `marketplace_outbox` إلى 5/6 لأنّها تُكتب في معاملةِ القرارِ نفسِها. والمقارنةُ بالقائمةِ
  * المُعلَنةِ تبقى قائمةً: جدولٌ يُضاف إلى العقدِ غداً بلا مرآةٍ يُفشل هذا الاختبار.
  *
  * والقيودُ غيرُ المُسمّاةِ في العقدِ (تعدادُ الحالاتِ · صيغةُ المُعرّفِ · حدودُ الطول) لا مرآةَ
@@ -34,6 +35,7 @@ import { SEQUENCE_RACE_CONSTRAINTS, TRANSLATED_CONSTRAINTS } from "../db/constra
 import {
   NOT_MIRRORED_TABLES,
   inventoryAdjustments,
+  marketplaceIdempotency,
   productInventory,
   productReviews,
   products,
@@ -47,6 +49,7 @@ const DDL = readFileSync(SCHEMA_CONTRACT_PATH, "utf8");
 
 const MIRRORED = [
   storeCategories,
+  marketplaceIdempotency,
   stores,
   storeReviews,
   storeStaff,
@@ -129,9 +132,10 @@ describe("حارسُ الانحراف يقرأ العقدَ فعلاً", () => {
     expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(10);
   });
 
-  it("والمرآةُ ثمانيةُ جداولٍ بأسمائها", () => {
+  it("والمرآةُ تسعةُ جداولٍ بأسمائها", () => {
     expect(MIRRORED.map((table) => getTableConfig(table).name).sort()).toEqual([
       "inventory_adjustments",
+      "marketplace_idempotency",
       "product_inventory",
       "product_reviews",
       "products",

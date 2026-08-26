@@ -23,7 +23,7 @@
 | مالك البرنامج | `@uxxxu` |
 | **حالة إنفاذ CI** | ⚠ **معطّل** — حصّة دقائق CI منتهية، فتفشل الوظائف كلّها بـ`ci_quota_exceeded` قبل أن تبدأ (يشمل `build-test` وكل `db-integration` وكل `exit-gate-e2e` على `main` نفسها). **حتى تُجدَّد الحصّة أو يُسجَّل runner خاص: التحقق يدوي إلزامي** عبر `pnpm governance:verify` و`pnpm governance:test`، ويُرفَق خرجهما في كل MR كدليل مؤقت. |
 | **أول تحقّق فعلي منذ توقّف CI** | 2026-08-25 — شُغّلت **وظائفُ قاعدةِ البيانات الثمانَ عشرةَ كلُّها** محليّاً مقابل PostgreSQL 15.6 (ثنائيّاتٌ محمولةٌ تعمل بلا صلاحيّاتِ root، قاعدةٌ مستهلَكةٌ منفصلةٌ لكلِّ وظيفة، مصادقةٌ محليّة — **بلا أيِّ سرٍّ ولا أيِّ قاعدةٍ مُستضافة**). النتيجة: **17/18 خضراء، 450 اختباراً**، والفاشلةُ الوحيدةُ `drivers-db-integration`. بعد `M0-02`: 27 فشلاً ← **7**، وكلُّها مُشخَّصةٌ ومُسجَّلةٌ في `M0-09` و`M0-10`. |
-| المرحلة الجارية فعلًا | `Phase 11 — Marketplace Foundation` (يقابل `M5-11`) — 3/6 مراجعات |
+| المرحلة الجارية فعلًا | `Phase 11 — Marketplace Foundation` (يقابل `M5-11`) — **4/6 مراجعات** (طبقةُ التطبيقِ والحدُّ HTTP على المنفذ 8094) |
 | رابط خارطة الطريق | [LAUNCH_TO_100_ROADMAP.md](LAUNCH_TO_100_ROADMAP.md) |
 | سجل الحجز | [WORK_CLAIMS.md](WORK_CLAIMS.md) |
 | فهرس الملكية | [WORK_INDEX.md](WORK_INDEX.md) |
@@ -102,7 +102,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M5-11 | Marketplace Foundation | Marketplace / Data | M4 | Not Started | phase exit gate | ADR/contracts first. |
+| M5-11 | Marketplace Foundation | Marketplace / Data | M4 | In Progress | phase exit gate | 4/6 مكتملة (حدُّ HTTP · المنفذ 8094). التالي 5/6: صادرٌ وتزامنُ مخزون. الحجز CLM-0005. |
 | M5-12 | Marketplace Search | Search / Marketplace | M5-11 | Not Started | relevance/load gate | search ADR. |
 | M5-13 | Store Orders & Delivery | Delivery / Orders | M5-11,M5-12 | Not Started | inventory/payment E2E | workflow contract. |
 | M5-14 | Partner / Enterprise | Partners / Security | M5-13 | Not Started | tenant/SLA gate | identity/tenancy ADR. |

@@ -65,7 +65,8 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
-| CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | 2026-08-26 | دُمج في `main` عبر الالتزام [`183a7369`](https://gitlab.com/uxxxu/wasla/-/commit/183a7369) (علاجُ SIGPIPE). حُرِّر **بقرارِ مالكِ البرنامجِ** لتسليمِ `scripts/checks/` إلى `M0-12`. و`M0-11` نفسُه يبقى **`Ready for Gate` لا `Completed`**: دليلُ إغلاقه «40 تشغيلاً بلا تقلّب + حالةُ انحدار»، وحالةُ الانحدارِ كانت **تفشل لسببٍ غيرِ ما تحرسه** حتى عُولجت في `M0-12`. |
+| CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | 2026-08-26 | حُرِّر بقرارِ مالكِ البرنامج (`M0-12`): عملُ `M0-11` مدفوعٌ ومدموجٌ في الالتزامِ `183a7369`، وبقاءُ الحجزِ نشطاً كان يمنع `M0-12` من العملِ على `scripts/checks/` وهو نطاقُه المُعلَنُ على اللوحة. `M0-11` نفسُه يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، والحصّةُ منتهية. |
+| CLM-0005 | M5-11 | @uxxxu (agent:computer) | feat/phase11-mr4-marketplace-http | 2026-08-26 | حُرِّر لأنّ الفرعَ دُمج في `main` عبر [MR !87](https://gitlab.com/uxxxu/wasla/-/merge_requests/87) (الالتزامُ `38c73e4c`، الدمجُ `8f16670e`). رُصد في `M0-12` كحجزٍ نشطٍ لفرعٍ مدموج. `M5-11` يبقى `In Progress` — MR 4/6. |
 | CLM-0001 | M0-05 | @uxxxu | chore/unified-roadmap-governance | 2026-08-25 | دُمج في `main` عبر [MR !81](https://gitlab.com/uxxxu/wasla/-/merge_requests/81). وبقي `M0-05` نفسُه `Ready for Gate` لا `Completed`: دليلُ إغلاقه بوابةٌ خضراء، والبوابةُ لم تُنفَّذ لنقصِ رصيدِ CI. |
 
 يُنقل السطر إلى هنا **بعد الدمج**، مع رابط دليل قابل للتحقق (MR أو pipeline).

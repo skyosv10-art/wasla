@@ -45,6 +45,8 @@ docs/16-progress/WORK_INDEX.md
 docs/16-progress/MASTER_PROGRESS.md
 ```
 
+> **⚠ تصحيحٌ (`M0-13` — إغلاق):** لا تُسمَّ هذه الخمسةُ في عمودِ النطاقِ إطلاقاً. `is_shared()` يتخطّاها في **فحصِ التقاطعِ وفحصِ الاحتواءِ كليهما**، و`MEANINGFUL` لا يشمل `docs/` أصلاً فلا يبلغُها الفحصُ. تسميتُها في `CLM-0005`/`CLM-0006`/`CLM-0007` كانت **زائدةً لا مُلزَمةً** — وهو وصفٌ خاطئٌ كتبتُه في سجلِّ `M0-12` وصحّحتُه هنا.
+>
 > **القائمة الحاكمة واحدة في أربعةِ مواضع** (رُصد الموضعُ الرابعُ في `M0-13`: [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md) §3 نفسُها كانت تُعلن أربعةً بلا `MASTER_PROGRESS.md`). هذه الخمسة **بالحرف** هي `SHARED_LEDGERS` في [`validate-work-claims.sh`](../../scripts/checks/validate-work-claims.sh) و`LEDGER_ONLY_PATHS` في [`require-doc-update.sh`](../../scripts/checks/require-doc-update.sh). أيُّ إضافةٍ هنا تُضاف في الموضعين معاً، وإلّا رُفض دفعُ مَن اتَّبع الوثيقة. (كانت الوثيقةُ تُعلن `MASTER_PROGRESS.md` ولا تُعلن `WORK_INDEX.md`، و`validate-work-claims.sh` يفعل العكس، و`require-doc-update.sh` يُعلن الخمسةَ — ثلاثةُ مواضعَ بثلاثِ قوائم. وُحِّدت في `M0-12` بقرارِ مالكِ البرنامج.)
 
 أي مسار مشترك آخر يحتاجه حجزان في وقت واحد يُحل بتقسيم العنصر أو تسلسله بقرار Program Owner مسجَّل في اللوحة — **لا بتعطيل الفحص**.
@@ -57,8 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | scripts/checks/,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
-| CLM-0007 | M0-13 | @uxxxu (agent:computer) | fix/m0-13-agent-owner-normalization | scripts/checks/,docs/00-rules/WORK_CLAIM_RULE.md,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | docs/16-progress/ | 2026-08-26 | 2026-09-08 | Active |
 
 ---
 
@@ -66,6 +67,8 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | 2026-08-26 | دُمج في `main` عبر [MR !88](https://gitlab.com/uxxxu/wasla/-/merge_requests/88) (الالتزامُ `04d90968`، الدمجُ `8b44b143`) وحُذف الفرع. `M0-12` يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، وخطُّ الأنابيبِ `#2793103205` على `main` فشلَ بـ`ci_quota_exceeded` في الوظائفِ العشرينَ كلِّها. |
+| CLM-0007 | M0-13 | @uxxxu (agent:computer) | fix/m0-13-agent-owner-normalization | 2026-08-26 | دُمج في `main` عبر [MR !89](https://gitlab.com/uxxxu/wasla/-/merge_requests/89) (الالتزامُ `74463452`، الدمجُ `0edc4ff5`) وحُذف الفرع. واستهدافُ الطلبِ نُقل إلى `main` تلقائيّاً عندَ دمجِ !88 — لم يُحتَج تدخُّلاً يدويّاً. |
 | CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | 2026-08-26 | حُرِّر بقرارِ مالكِ البرنامج (`M0-12`): عملُ `M0-11` مدفوعٌ ومدموجٌ في الالتزامِ `183a7369`، وبقاءُ الحجزِ نشطاً كان يمنع `M0-12` من العملِ على `scripts/checks/` وهو نطاقُه المُعلَنُ على اللوحة. `M0-11` نفسُه يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، والحصّةُ منتهية. |
 | CLM-0005 | M5-11 | @uxxxu (agent:computer) | feat/phase11-mr4-marketplace-http | 2026-08-26 | حُرِّر لأنّ الفرعَ دُمج في `main` عبر [MR !87](https://gitlab.com/uxxxu/wasla/-/merge_requests/87) (الالتزامُ `38c73e4c`، الدمجُ `8f16670e`). رُصد في `M0-12` كحجزٍ نشطٍ لفرعٍ مدموج. `M5-11` يبقى `In Progress` — MR 4/6. |
 | CLM-0001 | M0-05 | @uxxxu | chore/unified-roadmap-governance | 2026-08-25 | دُمج في `main` عبر [MR !81](https://gitlab.com/uxxxu/wasla/-/merge_requests/81). وبقي `M0-05` نفسُه `Ready for Gate` لا `Completed`: دليلُ إغلاقه بوابةٌ خضراء، والبوابةُ لم تُنفَّذ لنقصِ رصيدِ CI. |

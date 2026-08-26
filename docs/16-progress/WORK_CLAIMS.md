@@ -45,6 +45,8 @@ docs/16-progress/WORK_INDEX.md
 docs/16-progress/MASTER_PROGRESS.md
 ```
 
+> **⚠ تعارضُ مُعرِّفاتٍ سبَّبتُه أنا، وعلاجُه (2026-08-26):** `CLM-0005` و`CLM-0006` كانا **مأخوذَينِ** على فرعَي `M0-09` و`M0-10` منذ 2026-08-25 بمالكٍ `@uxxxu`. وأنا خصّصتُهما لـ`M5-11` و`M0-12` لأنّي قرأتُ سجلَّ `main` وحدَه ولم أنظر في الفروعِ الأخرى — **وهو نفسُ خطأِ «قراءةِ مصدرٍ واحدٍ والحكمِ بأنّه كلُّ الحقيقة»** الذي كنتُ أُعالجه في `M0-12`. أُعيد ترقيمُ حجزَي الفرعَينِ إلى `CLM-0009` و`CLM-0010` عندَ إنزالِ عملِهما، ولم تُمسَّ `CLM-0005`/`CLM-0006` على `main`. **والحدُّ البنيويُّ باقٍ:** السجلُّ نفسُه ملفٌّ في المستودعِ، ولكلِّ فرعٍ نسختُه — فلا شيءَ يمنع فرعَينِ من تخصيصِ المُعرِّفِ الواحدِ لعنصرَينِ مختلفَين. لا يكشفه فحصٌ يقرأ فرعاً واحداً.
+>
 > **⚠ تصحيحٌ (`M0-13` — إغلاق):** لا تُسمَّ هذه الخمسةُ في عمودِ النطاقِ إطلاقاً. `is_shared()` يتخطّاها في **فحصِ التقاطعِ وفحصِ الاحتواءِ كليهما**، و`MEANINGFUL` لا يشمل `docs/` أصلاً فلا يبلغُها الفحصُ. تسميتُها في `CLM-0005`/`CLM-0006`/`CLM-0007` كانت **زائدةً لا مُلزَمةً** — وهو وصفٌ خاطئٌ كتبتُه في سجلِّ `M0-12` وصحّحتُه هنا.
 >
 > **القائمة الحاكمة واحدة في أربعةِ مواضع** (رُصد الموضعُ الرابعُ في `M0-13`: [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md) §3 نفسُها كانت تُعلن أربعةً بلا `MASTER_PROGRESS.md`). هذه الخمسة **بالحرف** هي `SHARED_LEDGERS` في [`validate-work-claims.sh`](../../scripts/checks/validate-work-claims.sh) و`LEDGER_ONLY_PATHS` في [`require-doc-update.sh`](../../scripts/checks/require-doc-update.sh). أيُّ إضافةٍ هنا تُضاف في الموضعين معاً، وإلّا رُفض دفعُ مَن اتَّبع الوثيقة. (كانت الوثيقةُ تُعلن `MASTER_PROGRESS.md` ولا تُعلن `WORK_INDEX.md`، و`validate-work-claims.sh` يفعل العكس، و`require-doc-update.sh` يُعلن الخمسةَ — ثلاثةُ مواضعَ بثلاثِ قوائم. وُحِّدت في `M0-12` بقرارِ مالكِ البرنامج.)
@@ -60,6 +62,8 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | docs/16-progress/ | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0009 | M0-09 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0010 | M0-10 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
 
 ---
 

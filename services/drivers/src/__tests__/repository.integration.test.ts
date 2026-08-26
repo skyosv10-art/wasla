@@ -37,6 +37,25 @@ const VEHICLE_B = "aaaaaaaa-0000-4000-8000-000000000002";
 const DOC_A = "bbbbbbbb-0000-4000-8000-000000000001";
 const DOC_B = "bbbbbbbb-0000-4000-8000-000000000002";
 
+/**
+ * Assert that a write was refused by a specific named CHECK constraint.
+ *
+ * Why the message and not `error.constraint`: the adapter's `rethrowNamed` prefixes the
+ * message with the constraint name *precisely because* the driver does not reliably
+ * expose it as a property. `drizzle-orm` wraps the `pg` error in a `DrizzleQueryError`
+ * whose own enumerable keys are `query`, `params` and `cause`, so `error.constraint` is
+ * `undefined` at the top level and only reachable through the cause chain — which is
+ * exactly the walk `constraintName` in the adapter performs.
+ *
+ * So asserting the message checks the contract the adapter documents and guarantees,
+ * while asserting the property checked an incidental detail of whichever driver version
+ * happened to be installed. The constraints below did refuse every write all along; it
+ * was the assertion that stopped being able to see it.
+ */
+async function expectRefusedBy(promise: Promise<unknown>, constraint: string): Promise<void> {
+  await expect(promise).rejects.toThrow(new RegExp(`^${constraint}:`));
+}
+
 function profileInput(waslaPublicId = DRIVER): CreateProfileInput {
   return {
     waslaPublicId,
@@ -351,9 +370,10 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
       // ck_driver_vehicles_retired_not_primary — a retired car cannot be the one the
       // driver's registration is checked against.
       const created = await pg.vehicles.create(vehicle(VEHICLE_A, "veh-000001", true));
-      await expect(
+      await expectRefusedBy(
         pg.vehicles.saveAll([{ ...created, status: "retired" }]),
-      ).rejects.toMatchObject({ constraint: "ck_driver_vehicles_retired_not_primary" });
+        "ck_driver_vehicles_retired_not_primary",
+      );
     });
 
     it("accepts an empty saveAll without a statement", async () => {
@@ -523,39 +543,44 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
       // nobody is accountable for; a rejection with no reason code is a driver told
       // "no" with nothing to fix.
       const created = await pg.documents.create(document(DOC_A, "doc-000001"));
-      await expect(
+      await expectRefusedBy(
         pg.documents.saveAll([{ ...created, status: "verified", reviewedAt: NOW, reviewedBy: null }]),
-      ).rejects.toMatchObject({ constraint: "ck_driver_documents_review_coherence" });
-      await expect(
+        "ck_driver_documents_review_coherence",
+      );
+      await expectRefusedBy(
         pg.documents.saveAll([
           { ...created, status: "rejected", reviewedAt: NOW, reviewedBy: "ops-1" },
         ]),
-      ).rejects.toMatchObject({ constraint: "ck_driver_documents_review_coherence" });
+        "ck_driver_documents_review_coherence",
+      );
     });
 
     it("refuses an expiry that precedes the issue date", async () => {
       // ck_driver_documents_dates.
-      await expect(
+      await expectRefusedBy(
         pg.documents.create(
           document(DOC_A, "doc-000001", { issuedAt: "2027-01-01", expiresAt: "2025-01-01" }),
         ),
-      ).rejects.toMatchObject({ constraint: "ck_driver_documents_dates" });
+        "ck_driver_documents_dates",
+      );
     });
 
     it("refuses a vehicle-scoped type with no vehicle, and the reverse", async () => {
       // ck_driver_documents_vehicle_scope. A vehicle registration with no vehicle
       // cannot be checked against anything, and a national ID attached to a car
       // would disappear the day the car is retired.
-      await expect(
+      await expectRefusedBy(
         pg.documents.create(
           document(DOC_A, "doc-000001", { documentType: "vehicle_registration", vehicleId: null }),
         ),
-      ).rejects.toMatchObject({ constraint: "ck_driver_documents_vehicle_scope" });
-      await expect(
+        "ck_driver_documents_vehicle_scope",
+      );
+      await expectRefusedBy(
         pg.documents.create(
           document(DOC_B, "doc-000002", { documentType: "national_id", vehicleId: VEHICLE_A }),
         ),
-      ).rejects.toMatchObject({ constraint: "ck_driver_documents_vehicle_scope" });
+        "ck_driver_documents_vehicle_scope",
+      );
     });
 
     it("throws documentNotFound when saveAll names an unknown id", async () => {
@@ -630,9 +655,10 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
     it("refuses a non-eligible verdict with no reasons", async () => {
       // ck_eligibility_log_reasons — the constraint that makes "why is this driver not
       // getting orders?" always answerable.
-      await expect(pg.eligibilityLog.append(entry("ineligible", []))).rejects.toMatchObject({
-        constraint: "ck_eligibility_log_reasons",
-      });
+      await expectRefusedBy(
+        pg.eligibilityLog.append(entry("ineligible", [])),
+        "ck_eligibility_log_reasons",
+      );
     });
   });
 
@@ -671,12 +697,14 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
 
     it("refuses a success with a failure code, and a failure without one", async () => {
       // ck_candidacy_publication_outcome.
-      await expect(pg.publications.append(attempt("published", "why"))).rejects.toMatchObject({
-        constraint: "ck_candidacy_publication_outcome",
-      });
-      await expect(pg.publications.append(attempt("rejected", null))).rejects.toMatchObject({
-        constraint: "ck_candidacy_publication_outcome",
-      });
+      await expectRefusedBy(
+        pg.publications.append(attempt("published", "why")),
+        "ck_candidacy_publication_outcome",
+      );
+      await expectRefusedBy(
+        pg.publications.append(attempt("rejected", null)),
+        "ck_candidacy_publication_outcome",
+      );
     });
   });
 
@@ -740,11 +768,18 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
 
     it("accepts the namespaced key length the domain validator allows at its maximum", async () => {
       // The reason §9 of the DDL widened this column to 192: the key stored here is
-      // `vehicle:<21 chars>:<caller key>`, so a caller-legal 128-character key
-      // produces a 151-character row. At 128 it would have been rejected by a
-      // constraint the caller could never have anticipated or explained.
+      // `vehicle:<wasla id>:<caller key>`, so a caller-legal 128-character key produces
+      // a 150-character row — `"vehicle:"` is 8, `WS-1000000001` is 13, the separator
+      // is 1, and the caller key is 128. At 128 the column would have rejected a key
+      // the caller could never have anticipated or explained.
+      //
+      // The previous 151 was arithmetic no run had ever checked: the whole file is
+      // skipped without DATABASE_URL, so the expectation could stay wrong indefinitely
+      // on any machine — and every machine was such a machine. It says nothing about
+      // the column, which is correct at 192, and everything about the cost of an
+      // assertion no green run ever executed.
       const key = `vehicle:${DRIVER}:${"k".repeat(128)}`;
-      expect(key.length).toBe(151);
+      expect(key.length).toBe(150);
       await pg.idempotency.remember(key, "fingerprint-a");
       expect(await pg.idempotency.find(key)).toBe("fingerprint-a");
     });

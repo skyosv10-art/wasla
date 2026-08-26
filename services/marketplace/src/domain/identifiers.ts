@@ -28,7 +28,7 @@ import {
   STORE_SLUG_PATTERN,
   WASLA_PUBLIC_ID_PATTERN,
 } from "./contract-sets.js";
-import { storeSlugReserved, validationFailed } from "./errors.js";
+import { STORE_SLUG_FIELD, storeSlugReserved, validationFailed } from "./errors.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -67,7 +67,7 @@ export function assertUuid(value: unknown, field = "id"): string {
  * المطابقة: رمزان لا رمزٌ واحدٌ، لأنّ الأوّلَ يعني «اختر غيرَها» والثاني يعني «اكتبها صحيحةً»،
  * ورمزٌ جامعٌ يترك صاحبَ المتجرِ يُصلح ما ليس مكسوراً.
  */
-export function assertStoreSlug(value: unknown, field = "slug"): string {
+export function assertStoreSlug(value: unknown, field = STORE_SLUG_FIELD): string {
   if (typeof value !== "string" || !STORE_SLUG_PATTERN.test(value)) {
     throw validationFailed(field, "lowercase slug matching ^[a-z][a-z0-9-]{2,47}$");
   }

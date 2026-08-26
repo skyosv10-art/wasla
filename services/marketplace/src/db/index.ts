@@ -24,7 +24,38 @@ export {
 export { PostgresCategoryStore, type CategoryDraft } from "./categories.js";
 export { PostgresMarketplaceLedger } from "./ledger.js";
 export { PostgresMarketplaceProjection } from "./projection.js";
-export { PostgresResourceStore } from "./resources.js";
+export {
+  PostgresResourceStore,
+  type ProductPageCursor,
+  type ProductPageFilter,
+  type ProductVisibilityRow,
+  type StorePageCursor,
+  type StorePageFilter,
+} from "./resources.js";
+export {
+  PAGE_LIMIT_DEFAULT,
+  PAGE_LIMIT_MAX,
+  boundedPageLimit,
+  type Page,
+} from "./paging.js";
+export {
+  IDEMPOTENCY_KEY_MAX_LENGTH,
+  IDEMPOTENCY_KEY_MIN_LENGTH,
+  PostgresIdempotencyStore,
+  REQUEST_HASH_LENGTH,
+  RESPONSE_STATUS_MAX,
+  RESPONSE_STATUS_MIN,
+  ROUTE_KEY_MAX_LENGTH,
+  ROUTE_KEY_MIN_LENGTH,
+  assertIdempotencyKey,
+  assertRequestHash,
+  assertResponseStatus,
+  assertRouteKey,
+  type IdempotencyDraft,
+  type IdempotencyRecord,
+  type RememberOutcome,
+  type StoredResponse,
+} from "./idempotency.js";
 export { PostgresStaffStore } from "./staff.js";
 export {
   iso,

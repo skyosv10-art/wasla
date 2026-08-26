@@ -34,6 +34,7 @@ import {
   type StoreState,
 } from "./contract-sets.js";
 import {
+  STORE_SLUG_FIELD,
   productCategoryNotLeaf,
   productNotModerated,
   storeCategoryInactive,
@@ -126,7 +127,7 @@ function assertCategoryDepth(depth: number): number {
  */
 export function assertStoreSlugMutable(firstApprovedAt: string | undefined): void {
   if (firstApprovedAt !== undefined) {
-    throw validationFailed("slug", "immutable once the store has been approved at least once");
+    throw validationFailed(STORE_SLUG_FIELD, "immutable once the store has been approved at least once");
   }
 }
 

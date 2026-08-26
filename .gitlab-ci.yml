@@ -794,6 +794,38 @@ subscriptions-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/subscriptions-service test:integration
 
+# وظيفةُ تكاملِ السوقِ (المرحلة 11 · المراجعة 4/6).
+#
+# ولمَ لم تكن موجودةً قبل اليوم؟ لأنّ المراجعاتَ 1–3 كتبت المخزنَ واختباراتِه ولم تصل إلى
+# حدٍّ يُنادى، فبقيت حزمةُ `test:integration` في السوقِ تعمل على أجهزةِ المُطوّرين ولا يقرؤها
+# خطُّ التسليم. وهذا يعني — بصراحةٍ تُسجَّل — أنّ 44 اختبارَ تكاملٍ من المراجعاتِ الثلاثِ
+# السابقةِ لم تكن مفحوصةً في CI قطّ؛ وهذه الوظيفةُ تُدخلها كلَّها مع الخمسينَ الجديدة.
+#
+# والحزمةُ تشمل `http.integration` (التسعَ عشرةَ عمليّةً على قاعدةٍ حقيقيّة) و
+# `idempotency-replay.integration` (المساراتُ العشرُ الكاتبةُ: نفسُ المفتاحِ ⇒ نفسُ البايتات،
+# ومفتاحٌ مُعادٌ لمُدخلٍ آخرَ ⇒ 409). وبغياب DATABASE_URL تتخطّى الملفّاتُ نفسَها (skipIf)
+# فيبقى `pnpm -r test` أخضرَ على جهازٍ بلا قاعدة — ولذلك وجودُ هذه الوظيفةِ هو ما يجعل
+# الاختباراتَ حرساً لا نيّةً.
+#
+# قاعدةٌ مستقلّةٌ (wasla_marketplace_test) حتى لا تتداخل صفوفُها مع وظيفةٍ أخرى ويبقى الفشلُ
+# منسوباً لوظيفةٍ واحدة. و`postgres:15` هنا مقابلَ 18 على جهازِ التطوير: فرقٌ **مُعلَنٌ** في
+# سجلِّ العمل لا مكتومٌ — لا قيدَ ولا دالّةَ في هذه الخدمةِ تعتمد ميزةً بعد 15، وحين يُرفَّع
+# الأساسُ تُرفَّع كلُّ الوظائفِ معاً في مراجعةٍ تملكه.
+marketplace-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_marketplace_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_marketplace_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/marketplace-service test:integration
+
 # بوابةُ خروج المرحلة 10 (MR 6/6):
 #   packages/subscription-e2e/src/__tests__/phase10-exit-gate.e2e.test.ts
 #

@@ -23,7 +23,16 @@
  * - `FS_READING_FILES = ["db/migrate.ts"]` — ملفٌ واحدٌ يقرأ `contracts/schema.sql` ليُطبّقَه حرفاً.
  * - `DB_AWARE_FILES` — ثمانيةُ ملفاتٍ تحت `db/` وحدَها، ولا ملفَّ مجالٍ واحدٌ في القائمة: وهذا
  *   هو موضوعُ الحراسةِ أصلاً — القاعدةُ دخلت الخدمةَ ولم تدخل المجال.
- * - `HTTP_AWARE_FILES` و`REAL_CLOCK_FILES` — **تبقيان فارغتَين**: لا إطارَ HTTP قبل 4/6، ولا
+ * - `REAL_CLOCK_FILES = ["app/runtime.ts"]` — **ملفٌ واحدٌ** فيه `new Date()`، وهو تنفيذُ
+ *   `Clock` الوحيد في الخدمة. وساعةٌ تُقرأ في خدمةِ تطبيقٍ مباشرةً كانت ستجعل كلَّ اختبارٍ
+ *   يعتمد على ساعةِ المُشغّل، والحقنُ يجعل الزمنَ وسيطاً يُثبَّت في الاختبار.
+ * - `HTTP_AWARE_FILES = ["http/app.ts", "http/errors.ts"]` — الأوّلُ يبني الخادمَ ويُسجّل
+ *   المسارات، والثاني يستورد `FastifyReply` **نوعاً وحدَه**. و`http/server.ts` ليس فيها: هو
+ *   يستورد `createMarketplaceApp` ولا يعرف الإطارَ نصّاً — فالقائمةُ محسوبةٌ من المصدرِ لا
+ *   من التوقّع.
+ * - `ENV_READING_FILES` صارت ملفَّين في 4/6: `db/migrate-cli.ts` و`http/server.ts`، وهذا
+ *   الحدُّ الأقصى المُعلَن.
+ * - وقد كانت القائمتان الأولى والثانية فارغتَين قبل 4/6: لا إطارَ HTTP قبلها، ولا
  *   قارئَ ساعةٍ في الطبقةِ أبداً؛ الأزمنةُ إمّا وسيطٌ من المُنادي أو `DEFAULT now()` في القاعدةِ
  *   نفسِها. وملاحظةٌ دقيقة: `new Date(arg)` مسموحٌ والممنوعُ `Date.now()` و`new Date()` بلا
  *   وسيطٍ — فالتحويلُ ليس قراءةً للساعة.
@@ -103,12 +112,13 @@ function filesMatching(pattern: RegExp): readonly string[] {
 }
 
 /** قوائمُ الاستثناءِ المُعلَنةُ بعد 3/6 — بأسماءِ ملفاتِها، ومحروسةٌ موجَباً. */
-const REAL_CLOCK_FILES: readonly string[] = [];
-const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts"];
+const REAL_CLOCK_FILES: readonly string[] = ["app/runtime.ts"];
+const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts", "http/server.ts"];
 const FS_READING_FILES: readonly string[] = ["db/migrate.ts"];
 const DB_AWARE_FILES: readonly string[] = [
   "db/categories.ts",
   "db/client.ts",
+  "db/idempotency.ts",
   "db/ledger.ts",
   "db/migrate.ts",
   "db/projection.ts",
@@ -116,7 +126,7 @@ const DB_AWARE_FILES: readonly string[] = [
   "db/schema.ts",
   "db/staff.ts",
 ];
-const HTTP_AWARE_FILES: readonly string[] = [];
+const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts"];
 
 /**
  * ملفاتُ الاستمراريّةِ المُعلَنةُ خارجَ `domain/` — مراجعةُ 3/6 وحدَها، ولا ملفَّ `app/`
@@ -127,10 +137,12 @@ const PERSISTENCE_FILES: readonly string[] = [
   "db/categories.ts",
   "db/client.ts",
   "db/constraints.ts",
+  "db/idempotency.ts",
   "db/index.ts",
   "db/ledger.ts",
   "db/migrate-cli.ts",
   "db/migrate.ts",
+  "db/paging.ts",
   "db/projection.ts",
   "db/resources.ts",
   "db/rows.ts",
@@ -138,6 +150,41 @@ const PERSISTENCE_FILES: readonly string[] = [
   "db/staff.ts",
   "db/unit-of-work.ts",
 ];
+
+/**
+ * ملفاتُ طبقةِ التطبيقِ وطبقةِ HTTP — دخلتا في **مراجعةِ 4/6** بأسمائها.
+ *
+ * وثلاثةُ حدودٍ تُحرَس بالشكلِ هنا: `domain/` لا تعرف شيئاً من فوقِها، و`app/` تُنسّق ولا
+ * تعرف الإطارَ، و`http/` تُصيغ ولا تفتح معاملةً. وقائمةٌ بنمطِ `app/**` كانت ستُبيح ملفاً
+ * جديداً يخرق أحدَ هذه الحدودِ بلا أن يراه مُراجع.
+ */
+const APPLICATION_FILES: readonly string[] = [
+  "app/catalog.ts",
+  "app/context.ts",
+  "app/cursor.ts",
+  "app/idempotency.ts",
+  "app/index.ts",
+  "app/products.ts",
+  "app/runtime.ts",
+  "app/stores.ts",
+];
+const HTTP_FILES: readonly string[] = [
+  "http/app.ts",
+  "http/errors.ts",
+  "http/mappers.ts",
+  "http/requests.ts",
+  "http/server.ts",
+];
+
+/**
+ * حيث يُحسب الظهورُ ويُصاغ — ولا حيث يُخزَّن.
+ *
+ * القرارُ 3 يمنع **عمودَ ظهورٍ مُخزَّناً**، ولا يمنع العقدَ من إعلانِ `is_visible` في جوابِ
+ * منتج: المستهلكُ يحتاج الحقيقةَ محسوبةً. فالحارسُ يبقى **بلا استثناءٍ واحدٍ** في `domain/`
+ * و`db/` — لا حقلَ في مرآةِ الجدولِ ولا في سجلٍّ يُقرأ — ويُستثنى ملفّان: `app/products.ts`
+ * تُشتقُّ فيه القيمةُ من دالّةِ المجالِ عند كلِّ قراءة، و`http/mappers.ts` يُسمّيها باسمِ العقد.
+ */
+const VISIBILITY_COMPUTED_FILES: readonly string[] = ["app/products.ts", "http/mappers.ts"];
 
 describe("مسحُ المصدر", () => {
   it("يجد ملفاتٍ فعلاً — فلا يمرّ الحارسُ على قائمةٍ فارغة", () => {
@@ -154,7 +201,7 @@ describe("مسحُ المصدر", () => {
     expect(sample).toContain("export function");
   });
 
-  it("وكلُّ ملفٍّ يقيم في `domain/` أو `db/` إلّا بابَ الحزمة", () => {
+  it("وكلُّ ملفٍّ يقيم في `domain/` أو `db/` أو `app/` أو `http/` إلّا بابَ الحزمة", () => {
     /**
      * الشكلُ نفسُه حارسٌ: لا يجوز أن يخرج ملفٌ إلى `app/` أو `http/` قبل موعدِه في 4/6.
      * وقد سقط هذا الاختبارُ عند دخولِ `db/` كما قيل في 2/6 أنّه سيسقط، فحُدِّث بقائمةٍ
@@ -163,7 +210,12 @@ describe("مسحُ المصدر", () => {
     const outside = sourceFiles()
       .map((path) => relative(SRC, path).split(sep).join("/"))
       .filter((file) => !file.startsWith("domain/"));
-    expect(outside).toEqual([...PERSISTENCE_FILES, "index.ts"]);
+    expect(outside).toEqual([
+      ...APPLICATION_FILES,
+      ...PERSISTENCE_FILES,
+      ...HTTP_FILES,
+      "index.ts",
+    ]);
   });
 });
 
@@ -187,7 +239,7 @@ describe("لا ساعةَ مخفيّة (القرار 2)", () => {
     ).toEqual([]);
   });
 
-  it("ومن يقرأ ساعةَ النظام: لا أحد — والقائمةُ المُعلَنةُ فارغةٌ بالضبط", () => {
+  it("ومن يقرأ ساعةَ النظام: تنفيذُ `Clock` وحدَه — والقائمةُ المُعلَنةُ بالضبط", () => {
     expect(filesMatching(/\bDate\s*\.\s*now\s*\(|new\s+Date\s*\(\s*\)/)).toEqual([
       ...REAL_CLOCK_FILES,
     ]);
@@ -271,14 +323,14 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     ).toEqual([]);
   });
 
-  it("ومن يعرف المُشغّلَ: `db/` وحدَها — ومن يعرف الإطارَ: لا أحد", () => {
+  it("ومن يعرف المُشغّلَ: `db/` وحدَها — ومن يعرف الإطارَ: ملفّا `http/` بأسمائهما", () => {
     expect(filesMatching(/from\s+["']pg["']|from\s+["'][^"']*drizzle-orm[^"']*["']/)).toEqual([
       ...DB_AWARE_FILES,
     ]);
     expect(filesMatching(/from\s+["']fastify["']/)).toEqual([...HTTP_AWARE_FILES]);
   });
 
-  it("والتبعيّاتُ ثلاثٌ بأسمائها: العقدُ والمُشغّلُ ومُنشئُ الاستعلامات", () => {
+  it("والتبعيّاتُ أربعٌ بأسمائها: العقدُ والمُشغّلُ ومُنشئُ الاستعلاماتِ والإطار", () => {
     /**
      * القائمةُ مكتوبةٌ صريحةً حتى تسقط أوّلُ تبعيّةٍ تُضاف بلا قرارٍ موثَّق: مكتبةُ تحقّقٍ
      * أو عميلُ HTTP أو مُجدولٌ هنا يعني أنّ الخدمةَ صارت تفعل ما لم تُعلنه هذه المراجعة.
@@ -291,6 +343,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
       "@wasla/contracts-marketplace",
       "drizzle-orm",
+      "fastify",
       "pg",
     ]);
   });
@@ -369,14 +422,25 @@ describe("لا ظهورَ مُخزَّنٌ ولا كسرَ في السعر (ال
      * المُخزَّنِ لا على الحساب.
      */
     expect(
+      scan(
+        [
+          ["is_visible", /\bis_visible\b/],
+          ["isVisible حقلاً", /\bisVisible\s*[?]?\s*:/],
+        ],
+        new Set(VISIBILITY_COMPUTED_FILES),
+      ),
+    ).toEqual([]);
+    expect(filesMatching(/\bis_visible\b|\bisVisible\s*[?]?\s*:/)).toEqual([
+      ...VISIBILITY_COMPUTED_FILES,
+    ]);
+    expect(
       scan([
-        ["is_visible", /\bis_visible\b/],
-        ["isVisible حقلاً", /\bisVisible\s*[?]?\s*:/],
         ["visibleAt", /\bvisible_?[Aa]t\b/],
         ["visibilityState", /\bvisibility_?[Ss]tate\b/],
       ]),
     ).toEqual([]);
     expect(codeOnly(join(SRC, "domain", "visibility.ts"))).toContain("export function isVisible");
+    expect(codeOnly(join(SRC, "app", "products.ts"))).toContain("isVisible(");
   });
 
   it("لا كسرَ ولا تنسيقَ عملةٍ ولا حسابَ عائمٍ في السعر", () => {

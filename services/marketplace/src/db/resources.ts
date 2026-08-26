@@ -28,15 +28,84 @@
  * بلا صفٍّ في `store_reviews` — وذاك **عطبٌ** بنصِّ القرار 1 لا اختصار.
  */
 
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt, or, sql, type SQL } from "drizzle-orm";
 
 import type { DbOrTx } from "./client.js";
 import { translateConstraint } from "./constraints.js";
-import { products, stores } from "./schema.js";
+import { productInventory, products, stores } from "./schema.js";
 import { toProduct, toStore, type ProductRecord, type StoreRecord } from "./rows.js";
+import { boundedPageLimit, type Page } from "./paging.js";
 import { STORE_ACTIVE_STATES } from "../domain/catalog.js";
 import { validationFailed } from "../domain/errors.js";
 import type { ProductDraft, StoreDraft } from "../domain/model.js";
+import { INVENTORY_INITIAL_QUANTITY, INVENTORY_INITIAL_SEQUENCE } from "../domain/inventory.js";
+
+/**
+ * نافذةُ الموضعِ لا بدَّ أن تكون شرطاً حاضراً.
+ *
+ * `or` و`and` في Drizzle تُعيدان `undefined` حين لا مُعامِلَ لهما، وتمريرُ `undefined` إلى
+ * `where` يُسقط الشرطَ كلَّه بصمتٍ — فتصير صفحةٌ ثانيةٌ **مسحاً كاملاً** يُعيد ما سبق. والرفضُ
+ * الصريحُ هنا يجعل هذا العيبَ خطأً مقروءاً لا صفحةً مكرّرةً يُكتشَف تكرارُها في الإنتاج.
+ */
+function keysetWindow(condition: SQL | undefined): SQL {
+  if (condition === undefined) throw validationFailed("cursor", "a decodable keyset position");
+  return condition;
+}
+import type {
+  ProductModerationState,
+  ProductState,
+  StoreState,
+} from "../domain/contract-sets.js";
+
+/**
+ * موضعُ الاستمرارِ في قراءةٍ مُصفَّحة: لحظةُ الإنشاءِ ثمّ المُعرِّفُ فاصلاً.
+ *
+ * ولمَ عمودان لا `OFFSET`؟ لأنّ `OFFSET` يقرأ ما تجاوزه ثمّ يُهمله — فتكلفةُ الصفحةِ العاشرةِ
+ * عشرةُ أمثالِ الأولى — **ثمّ يُخطئ**: صفٌّ جديدٌ يُدرَج في الأثناءِ يُزحزح كلَّ شيءٍ فيُقرأ
+ * صفٌّ مرّتَين أو يُقفَز صفٌّ بلا قراءة. والمفتاحُ المُركَّبُ يُصيب الفهرسَ ويبقى صادقاً مع
+ * الكتابةِ المتزامنة، و`createdAt` وحدَه لا يكفي لأنّه ليس فريداً.
+ */
+export interface StorePageCursor {
+  readonly createdAt: string;
+  readonly storeId: string;
+}
+
+/** مُرشِّحاتُ قراءةِ المتاجر — واحدٌ منها على الأقلّ إلزاميٌّ، والإلزامُ يُفرَض على الحدّ. */
+export interface StorePageFilter {
+  readonly state?: StoreState;
+  readonly ownerPublicId?: string;
+  readonly categoryId?: string;
+  readonly after?: StorePageCursor;
+  readonly limit?: number;
+}
+
+/** موضعُ الاستمرارِ في قراءةِ منتجاتِ متجر. */
+export interface ProductPageCursor {
+  readonly createdAt: string;
+  readonly productId: string;
+}
+
+export interface ProductPageFilter {
+  readonly state?: ProductState;
+  readonly moderationState?: ProductModerationState;
+  readonly after?: ProductPageCursor;
+  readonly limit?: number;
+}
+
+/**
+ * منتجٌ مع حقائقِ الظهورِ الثلاثِ الأخرى في قراءةٍ واحدة.
+ *
+ * الظهورُ يُحسَب وقتَ القراءةِ من أربعةِ شروطٍ (القرار 3)، وثلاثةٌ منها في جدولَين آخرَين.
+ * فإمّا أن تُقرأ معه في وصلةٍ واحدةٍ، وإمّا أن تُقرأ في حلقةٍ صفّاً صفّاً — وهي `N+1` التي
+ * تجعل صفحةً من خمسينَ منتجاً مئةً وواحداً من الاستعلامات.
+ */
+export interface ProductVisibilityRow {
+  readonly product: ProductRecord;
+  readonly storeState: StoreState;
+  readonly storeSlug: string;
+  readonly quantityOnHand: number;
+  readonly lastAdjustmentSequence: number;
+}
 
 export class PostgresResourceStore {
   constructor(private readonly db: DbOrTx) {}
@@ -164,5 +233,144 @@ export class PostgresResourceStore {
       .where(eq(products.storeId, storeId))
       .orderBy(asc(products.sku));
     return rows.map(toProduct);
+  }
+  /**
+   * صفحةُ متاجرَ بمُرشِّحٍ ومفتاحٍ مُركَّب — الأحدثُ أوّلاً.
+   *
+   * والقراءةُ تطلب `limit + 1` صفّاً ثمّ تُسقط الزائد: هذه هي الطريقةُ الوحيدةُ لمعرفةِ «هل
+   * بعدها شيء؟» بلا `count(*)` على المجموعةِ كلِّها. وغيابُ `next_cursor` هو إشارةُ الانتهاءِ
+   * الوحيدة — لا عددُ الصفوفِ، لأنّ صفحةً تامّةً قد تكون الأخيرة.
+   *
+   * ولا فرعَ «بلا مُرشِّح» هنا: المسحُ الكاملُ يُرفض على الحدِّ برمزٍ مُسمّىً
+   * (`MARKETPLACE_FILTER_REQUIRED`) قبل أن يصل المخزنَ.
+   */
+  async listStoresPage(filter: StorePageFilter): Promise<Page<StoreRecord, StorePageCursor>> {
+    const limit = boundedPageLimit(filter.limit);
+    const conditions = [];
+    if (filter.state !== undefined) conditions.push(eq(stores.state, filter.state));
+    if (filter.ownerPublicId !== undefined) {
+      conditions.push(eq(stores.ownerPublicId, filter.ownerPublicId));
+    }
+    if (filter.categoryId !== undefined) conditions.push(eq(stores.categoryId, filter.categoryId));
+    if (filter.after !== undefined) {
+      const boundary = new Date(filter.after.createdAt);
+      conditions.push(
+        keysetWindow(
+          or(
+            lt(stores.createdAt, boundary),
+            and(eq(stores.createdAt, boundary), lt(stores.storeId, filter.after.storeId)),
+          ),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(stores)
+      .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+      .orderBy(desc(stores.createdAt), desc(stores.storeId))
+      .limit(limit + 1);
+
+    const page = rows.slice(0, limit).map(toStore);
+    const last = rows.length > limit ? page[page.length - 1] : undefined;
+    return last === undefined
+      ? { items: page }
+      : { items: page, nextCursor: { createdAt: last.createdAt, storeId: last.storeId } };
+  }
+
+  /**
+   * صفحةُ منتجاتِ متجرٍ مع حقائقِ ظهورِها — الأحدثُ أوّلاً.
+   *
+   * ولا مُرشِّحَ `visible_only` في هذا الاستعلام: الظهورُ دالّةٌ في المجال (`isVisible`)،
+   * وكتابةُ شروطِها الأربعةِ ثانيةً في `WHERE` كانت ستُنشئ نسختَين تنحرف إحداهما عن الأخرى
+   * عند أوّلِ تعديلٍ للشرط. فالمخزنُ يُعيد الحقائق، والطبقةُ العليا تسأل المجالَ — ولذلك قد
+   * تعود صفحةٌ أقصرَ من `limit` عند `visible_only=true`، وغيابُ `next_cursor` وحدَه هو
+   * الانتهاء.
+   */
+  async listProductsPage(
+    storeId: string,
+    filter: ProductPageFilter = {},
+  ): Promise<Page<ProductVisibilityRow, ProductPageCursor>> {
+    const limit = boundedPageLimit(filter.limit);
+    const conditions = [eq(products.storeId, storeId)];
+    if (filter.state !== undefined) conditions.push(eq(products.state, filter.state));
+    if (filter.moderationState !== undefined) {
+      conditions.push(eq(products.moderationState, filter.moderationState));
+    }
+    if (filter.after !== undefined) {
+      const boundary = new Date(filter.after.createdAt);
+      conditions.push(
+        keysetWindow(
+          or(
+            lt(products.createdAt, boundary),
+            and(eq(products.createdAt, boundary), lt(products.productId, filter.after.productId)),
+          ),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select({
+        product: products,
+        store: stores,
+        quantityOnHand: productInventory.quantityOnHand,
+        lastAdjustmentSequence: productInventory.lastAdjustmentSequence,
+      })
+      .from(products)
+      .innerJoin(stores, eq(stores.storeId, products.storeId))
+      .leftJoin(productInventory, eq(productInventory.productId, products.productId))
+      .where(and(...conditions))
+      .orderBy(desc(products.createdAt), desc(products.productId))
+      .limit(limit + 1);
+
+    const page: ProductVisibilityRow[] = rows.slice(0, limit).map((row) => ({
+      product: toProduct(row.product),
+      storeState: toStore(row.store).state,
+      storeSlug: row.store.slug,
+      quantityOnHand: row.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,
+      lastAdjustmentSequence: row.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
+    }));
+    const last = rows.length > limit ? page[page.length - 1] : undefined;
+    return last === undefined
+      ? { items: page }
+      : {
+          items: page,
+          nextCursor: {
+            createdAt: last.product.createdAt,
+            productId: last.product.productId,
+          },
+        };
+  }
+
+  /**
+   * منتجٌ واحدٌ مع حقائقِ ظهورِه — نفسُ الوصلةِ بلا تصفيح.
+   *
+   * ولمَ لا `findProductById` ثمّ قراءتان؟ لأنّ ثلاثَ قراءاتٍ في معاملةٍ واحدةٍ تُعيد ثلاثَ
+   * لقطاتٍ منسجمةً هنا، لكنّها في قراءةٍ بلا معاملةٍ (وهو حالُ `GET`) قد تُصيب حالتَي متجرٍ
+   * مختلفتَين قبلَ وبعدَ قرارِ مُعتدِلٍ — فيُقال «ظاهرٌ» عن منتجٍ في متجرٍ أُوقف.
+   */
+  async findProductVisibility(productId: string): Promise<ProductVisibilityRow | undefined> {
+    const rows = await this.db
+      .select({
+        product: products,
+        store: stores,
+        quantityOnHand: productInventory.quantityOnHand,
+        lastAdjustmentSequence: productInventory.lastAdjustmentSequence,
+      })
+      .from(products)
+      .innerJoin(stores, eq(stores.storeId, products.storeId))
+      .leftJoin(productInventory, eq(productInventory.productId, products.productId))
+      .where(eq(products.productId, productId))
+      .limit(1);
+    const row = rows[0];
+    return row === undefined
+      ? undefined
+      : {
+          product: toProduct(row.product),
+          storeState: toStore(row.store).state,
+          storeSlug: row.store.slug,
+          quantityOnHand: row.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,
+          lastAdjustmentSequence: row.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
+        };
   }
 }

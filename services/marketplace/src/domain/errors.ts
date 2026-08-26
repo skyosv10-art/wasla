@@ -127,10 +127,20 @@ export function productTransitionNotAllowed(from: string | null, to: string): Ma
   });
 }
 
+/**
+ * اسمُ حقلِ اللاحقةِ كما يُرسِله العميلُ — لا كما يُسمّيه العمود.
+ *
+ * الوثيقةُ تقول إنّ `field` «اسمُ الحقلِ المرفوض»، والعميلُ أرسل `store_slug` لا `slug`؛
+ * فتسميةُ العمودِ كانت تُرشِد العميلَ إلى حقلٍ لا وجودَ له في جسمِه. وثابتٌ واحدٌ هنا
+ * أفضلُ من ثلاثِ نصوصٍ متكرّرةٍ تنحرف واحدةً بعد أخرى (`storeSlugReserved` ·
+ * `storeSlugTaken` · `assertStoreSlug`).
+ */
+export const STORE_SLUG_FIELD = "store_slug";
+
 export function storeSlugReserved(storeSlug: string): MarketplaceError {
   return new MarketplaceError("STORE_SLUG_RESERVED", "هذه اللاحقةُ محجوزةٌ للمنصّة.", {
     store_slug: storeSlug,
-    field: "slug",
+    field: STORE_SLUG_FIELD,
   });
 }
 
@@ -188,7 +198,7 @@ export function inventoryInsufficientQuantity(quantityOnHand: number): Marketpla
 export function storeSlugTaken(storeSlug: string): MarketplaceError {
   return new MarketplaceError("STORE_SLUG_TAKEN", "هذه اللاحقةُ مأخوذةٌ لمتجرٍ آخر.", {
     store_slug: storeSlug,
-    field: "slug",
+    field: STORE_SLUG_FIELD,
     constraint: "ux_stores_slug_lower",
   });
 }
@@ -220,4 +230,111 @@ export function storeOwnerLimitReached(limit: number): MarketplaceError {
     "بلغ المالكُ حدَّ المتاجرِ النشطةِ المسموحَ في هذا الطور.",
     { expected: `at most ${limit} active store(s) per owner`, constraint: "ux_stores_owner_active" },
   );
+}
+
+// --- بانياتُ المراجعة 4/6: ما لا يعرفه المجالُ النقيُّ وحدَه ---------------------
+//
+// نزلت هنا لا في `app/` بقصد: `MarketplaceError` هي النوعُ الواحدُ الذي تقرؤه طبقةُ HTTP
+// وتُشتَقُّ منه الحالةُ بالصنفِ لا بجدولٍ يدويّ، فبانيةٌ في `app/` كانت ستُنتج خطأً لا يمرّ
+// من `isMarketplaceError` — أي `503` على «متجرٌ غيرُ موجود». والحقيقةُ التي يحتاجها كلُّ رمزٍ
+// أدناه (صفٌّ غائبٌ · مفتاحٌ أُعيد · مُرشِّحٌ ناقصٌ · مخزنٌ غيرُ مهيّأ) تُكتشَف في المخزنِ أو
+// على الحدّ، لكنّ **الرمزَ والرسالةَ والتفاصيلَ** تبقى مُعلَنةً في موضعٍ واحد.
+
+/** متجرٌ غيرُ موجودٍ باللاحقةِ التي طُلب بها — واللاحقةُ تُعاد لأنّها مُعرِّفٌ علنيّ. */
+export function storeNotFound(storeSlug: string): MarketplaceError {
+  return new MarketplaceError("STORE_NOT_FOUND", "لا متجرَ بهذه اللاحقة.", {
+    store_slug: storeSlug,
+  });
+}
+
+/**
+ * منتجٌ غيرُ موجود.
+ *
+ * `product_id` يُعاد لأنّه مُعرِّفٌ أعطاه المُنادي بنفسِه، فإعادتُه لا تُفصح عن شيءٍ لا
+ * يعرفه — وهي الفرقُ بين «أيَّ منتجٍ تعني؟» و«لم أجد ما أرسلتَه».
+ */
+export function productNotFound(productId: string): MarketplaceError {
+  return new MarketplaceError("PRODUCT_NOT_FOUND", "لا منتجَ بهذا المُعرّف.", {
+    product_id: productId,
+  });
+}
+
+/** تصنيفٌ غيرُ موجودٍ في الشجرة — والشجرةُ بيانُ منصّةٍ تُزرَع في المراجعة 5/6 لا في مسار. */
+export function storeCategoryNotFound(categorySlug: string): MarketplaceError {
+  return new MarketplaceError("STORE_CATEGORY_NOT_FOUND", "لا تصنيفَ بهذه اللاحقة.", {
+    category_slug: categorySlug,
+  });
+}
+
+/** عضوٌ غيرُ موجودٍ **نشطاً** في هذا المتجر؛ والمُزالُ سابقاً ليس عضواً حاضراً. */
+export function storeStaffNotFound(memberPublicId: string): MarketplaceError {
+  return new MarketplaceError("STORE_STAFF_NOT_FOUND", "لا عضوَ نشطٌ بهذا المُعرّف في المتجر.", {
+    member_public_id: memberPublicId,
+  });
+}
+
+/**
+ * `Idempotency-Key` غائبةٌ عن كتابةٍ تُلزمها — رمزٌ خاصٌّ لا `VALIDATION_FAILED`.
+ *
+ * الفرقُ عمليٌّ لا شكليّ: المُتَّصلُ الذي نسي الترويسةَ يجب أن يقرأ تعليمةً واحدةً واضحةً
+ * («أضف مفتاحاً») لا أن يبحث في `details.field` عن سببِ رفضٍ يظنّه في حمولته.
+ */
+export function marketplaceIdempotencyKeyRequired(): MarketplaceError {
+  return new MarketplaceError(
+    "MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED",
+    "هذه الكتابةُ تلزمها ترويسةُ Idempotency-Key.",
+    { field: "Idempotency-Key", expected: "8..128 characters" },
+  );
+}
+
+/**
+ * نفسُ المفتاحِ لحمولةٍ مختلفة — تعارضٌ مُسمّىً لا كتابةٌ صامتة.
+ *
+ * وهو **ليس** جوابَ الإعادة: الإعادةُ بنفسِ المفتاحِ ونفسِ الحمولةِ تُعيد الجوابَ المحفوظَ
+ * بحرفِه بحالته المحفوظة. وهذا الرمزُ لحالةٍ واحدةٍ فقط: مفتاحٌ مُستعملٌ لطلبٍ آخر — أي خللٌ
+ * في توليدِ المفاتيحِ عند المُنادي، وإخفاؤه كان سيُنتج جواباً عن طلبٍ لم يُرسَل.
+ */
+export function marketplaceIdempotencyKeyReused(): MarketplaceError {
+  return new MarketplaceError(
+    "MARKETPLACE_IDEMPOTENCY_KEY_REUSED",
+    "هذا المفتاحُ مُستعملٌ لطلبٍ بحمولةٍ مختلفة.",
+    { field: "Idempotency-Key", expected: "a key not used for a different payload" },
+  );
+}
+
+/** طلبُ مراجعةٍ ثانٍ ومتجرٌ في `pending_review` أصلاً: مراجعةٌ واحدةٌ معلّقةٌ لا صفٌّ ثانٍ. */
+export function storeReviewAlreadyPending(storeSlug: string): MarketplaceError {
+  return new MarketplaceError(
+    "STORE_REVIEW_ALREADY_PENDING",
+    "للمتجرِ طلبُ مراجعةٍ معلّقٌ فعلاً.",
+    { store_slug: storeSlug, from_state: "pending_review" },
+  );
+}
+
+/**
+ * قراءةُ قائمةٍ بلا مُرشِّحٍ واحدٍ على الأقلّ.
+ *
+ * ولمَ يُرفض المسحُ الكامل؟ لأنّ `GET /stores` بلا مُرشِّحٍ يُقرأ «كلُّ متاجرِ المنصّة» —
+ * صفحةً بعد صفحةٍ على فهرسٍ لا يخدمها، ثمّ يصير المسارُ الذي يُسقط القاعدةَ عند أوّلِ نموّ.
+ * والمُرشِّحُ الإلزاميُّ يجعل كلَّ قراءةٍ تُصيب فهرساً مُعلَناً في العقد.
+ */
+export function marketplaceFilterRequired(expected: string): MarketplaceError {
+  return new MarketplaceError(
+    "MARKETPLACE_FILTER_REQUIRED",
+    "هذه القراءةُ تلزمها مُرشِّحٌ واحدٌ على الأقلّ.",
+    { field: "query", expected },
+  );
+}
+
+/**
+ * الاستمراريّةُ غيرُ مهيّأة — `503` لا `500`.
+ *
+ * الفرقُ هو ما يقرؤه المُنادي: `503` تعني «حاولْ لاحقاً، الخللُ عندنا وقد يزول»، و`500` تعني
+ * «طلبُك أسقط شيئاً». وخدمةٌ أُقلعت بلا `DATABASE_URL` حالتُها الأولى لا الثانية، ولذلك تبقى
+ * `GET /health` ناطقةً بـ`degraded` وتُجيب كلُّ عمليّةٍ أخرى بهذا الرمز.
+ */
+export function marketplaceUnavailable(reason: string): MarketplaceError {
+  return new MarketplaceError("MARKETPLACE_UNAVAILABLE", `السوقُ غيرُ متاحٍ حالياً: ${reason}.`, {
+    expected: "configured persistence",
+  });
 }

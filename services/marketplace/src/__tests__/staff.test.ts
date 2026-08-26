@@ -104,7 +104,9 @@ describe("إضافةُ عضو", () => {
   it("ترفض عضواً فعّالاً مكرّراً وتقبل عودةَ مختومٍ بصفٍّ جديد", () => {
     expectCode(
       () => assertStaffAddition({ role: "staff", memberPublicId: MANAGER, existing: roster }),
-      "MARKETPLACE_VALIDATION_FAILED",
+      // الرمزُ هو رمزُ العقدِ ورمزُ القيدِ معاً: كان `MARKETPLACE_VALIDATION_FAILED` حتى
+      // المراجعة 4/6، فكان السلكُ يقول 400 لحقيقةٍ يُعلنها العقدُ 409.
+      "STORE_STAFF_ALREADY_MEMBER",
     );
     expect(
       assertStaffAddition({

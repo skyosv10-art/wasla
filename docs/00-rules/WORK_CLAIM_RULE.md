@@ -30,7 +30,19 @@
 | 5 | **عدم الانتهاء** | تاريخ `Expires` مضى (الحد الأقصى **14 يومًا** من `Started`). |
 | 6 | **مالك بشري** | عمود المالك فارغ، أو وكيل آلي بلا مسؤول بشري بصيغة `@handle (agent:<name>)`. |
 
-المسارات تُقارن كـ**بادئات مسار** (`services/marketplace/` يشمل كل ما تحته). أربعة سجلات مشتركة **مستثناة من فحص التقاطع** لأن الجميع يكتب فيها بحكم القاعدة نفسها: `TASK_LOG.md` · `LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `WORK_INDEX.md`.
+المسارات تُقارن كـ**بادئات مسار** (`services/marketplace/` يشمل كل ما تحته). **خمسة** سجلات مشتركة **مستثناة من فحص التقاطع** لأن الجميع يكتب فيها بحكم القاعدة نفسها:
+
+```text
+docs/16-progress/TASK_LOG.md
+docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+docs/16-progress/WORK_CLAIMS.md
+docs/16-progress/WORK_INDEX.md
+docs/16-progress/MASTER_PROGRESS.md
+```
+
+> **هذه القائمة واحدةٌ في أربعةِ مواضع**، ويحرسُ تطابقَها [`scripts/checks/lib/check-shared-ledgers.py`](../../scripts/checks/lib/check-shared-ledgers.py): هذه الكتلة · الكتلةُ نظيرتُها في [`WORK_CLAIMS.md`](../16-progress/WORK_CLAIMS.md) · `SHARED_LEDGERS` في `validate-work-claims.sh` · `LEDGER_ONLY_PATHS` في `require-doc-update.sh`. أيُّ إضافةٍ تُضاف في الأربعةِ معاً. (كانت هذه الوثيقةُ **رابعَ** مواضعِ الانحرافِ المرصودِ في `M0-12`: تُعلن أربعةً بلا `MASTER_PROGRESS.md`. رُصدت في `M0-13` ووُحِّدت.)
+
+**تطبيعُ المالك (`M0-13`):** الشرطُ 4 يقارن **الجهةَ المسؤولةَ** لا نصَّ العمودِ حرفيّاً. والجهةُ هي المقبضُ البشريُّ: ما قبل `` (agent:``. فـ`@handle (agent:x)` و`@handle` **جهةٌ واحدة** — الوكيلُ يعمل باسمِ صاحبِه لا بصفتِه جهةً ثانية — أمّا `@a (agent:x)` و`@b (agent:x)` فجهتان. ولولا هذا التطبيعُ لكان الشرطُ 6 يُلزم بصيغةٍ يُعاقب عليها الشرطُ 4.
 
 ## 4. الإجراء الإلزامي قبل الحجز
 

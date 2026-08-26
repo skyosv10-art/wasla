@@ -113,6 +113,8 @@
 | `scripts/checks/test-governance.sh` | Implemented | M0-12 |
 | `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
 | `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
+| `scripts/checks/validate-work-claims.sh` | Implemented | M0-05, M0-12, M0-13 |
+| `docs/00-rules/WORK_CLAIM_RULE.md` | Implemented | M0-05, M0-13 |
 | `.gitlab-ci.yml` — بوابات E2E حتى Phase 10 | Implemented | M0-08 |
 | `.gitlab-ci.yml` — `marketplace-db-integration` | Implemented | M5-11 |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |

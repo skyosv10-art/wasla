@@ -139,6 +139,22 @@ $(row CLM-8002 "$ITEM_B" @alpha test/beta "services/alpha/")
 ROWS
 t "يسمح بتقاطع نطاق لنفس المالك" pass bash scripts/checks/validate-work-claims.sh
 
+# حالتا M0-13: الوكيلُ وصاحبُه **جهةٌ واحدة**، ومالكانِ مختلفانِ **جهتان**.
+# الحالتانِ متلازمتانِ بقصد: الأولى وحدَها تُرضيها دالةٌ تُرجِع صفراً دائماً
+# — أي تعطيلٌ كاملٌ لفحصِ التقاطعِ في ثوبِ تطبيع. والثانيةُ هي التي تمنع ذلك.
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" "@alpha" test/alpha "services/alpha/")
+$(row CLM-8002 "$ITEM_B" "@alpha (agent:computer)" test/beta "services/alpha/")
+ROWS
+t "يسمح بتقاطع الوكيل مع صاحبِه (جهة واحدة)" pass bash scripts/checks/validate-work-claims.sh
+
+# وكيلانِ لصاحبَينِ مختلفَين: جهتانِ وإن تشابهت اللاحقةُ — يُرفض.
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" "@alpha (agent:computer)" test/alpha "services/alpha/")
+$(row CLM-8002 "$ITEM_B" "@beta (agent:computer)" test/beta "services/alpha/nested/")
+ROWS
+t "يرفض تقاطع وكيلَينِ لصاحبَينِ مختلفَين" fail bash scripts/checks/validate-work-claims.sh
+
 # حالة 6: حجز منتهي المهلة
 ledger <<ROWS
 $(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/" "$D_PAST_S" "$D_PAST_E")

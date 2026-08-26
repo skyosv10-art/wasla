@@ -305,9 +305,15 @@ export const driverEligibilityLog = pgTable(
     }).onDelete("cascade"),
     // "ineligible, no reason given" is the one row this table must never contain:
     // it is exactly the row a driver would call support about.
+    //
+    // `cardinality`, not `array_length`: the latter returns NULL for an empty array
+    // rather than 0, `NULL >= 1` is NULL, and Postgres treats a NULL CHECK result as
+    // SATISFIED — so the constraint accepted the exact row it exists to forbid.
+    // `cardinality` returns 0, making the comparison an explicit FALSE. Must stay
+    // identical to contracts/schema.sql §7; contract-drift.test.ts is what notices.
     check(
       "ck_eligibility_log_reasons",
-      sql`${table.toState} = 'eligible' OR array_length(${table.reasons}, 1) >= 1`,
+      sql`${table.toState} = 'eligible' OR cardinality(${table.reasons}) >= 1`,
     ),
     index("ix_driver_eligibility_log_driver").on(table.waslaPublicId, table.evaluatedAt.desc()),
   ],

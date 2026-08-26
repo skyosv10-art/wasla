@@ -45,7 +45,7 @@ docs/16-progress/WORK_INDEX.md
 docs/16-progress/MASTER_PROGRESS.md
 ```
 
-> **القائمة الحاكمة واحدة:** هذه الخمسة **بالحرف** هي `SHARED_LEDGERS` في [`validate-work-claims.sh`](../../scripts/checks/validate-work-claims.sh) و`LEDGER_ONLY_PATHS` في [`require-doc-update.sh`](../../scripts/checks/require-doc-update.sh). أيُّ إضافةٍ هنا تُضاف في الموضعين معاً، وإلّا رُفض دفعُ مَن اتَّبع الوثيقة. (كانت الوثيقةُ تُعلن `MASTER_PROGRESS.md` ولا تُعلن `WORK_INDEX.md`، و`validate-work-claims.sh` يفعل العكس، و`require-doc-update.sh` يُعلن الخمسةَ — ثلاثةُ مواضعَ بثلاثِ قوائم. وُحِّدت في `M0-12` بقرارِ مالكِ البرنامج.)
+> **القائمة الحاكمة واحدة في أربعةِ مواضع** (رُصد الموضعُ الرابعُ في `M0-13`: [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md) §3 نفسُها كانت تُعلن أربعةً بلا `MASTER_PROGRESS.md`). هذه الخمسة **بالحرف** هي `SHARED_LEDGERS` في [`validate-work-claims.sh`](../../scripts/checks/validate-work-claims.sh) و`LEDGER_ONLY_PATHS` في [`require-doc-update.sh`](../../scripts/checks/require-doc-update.sh). أيُّ إضافةٍ هنا تُضاف في الموضعين معاً، وإلّا رُفض دفعُ مَن اتَّبع الوثيقة. (كانت الوثيقةُ تُعلن `MASTER_PROGRESS.md` ولا تُعلن `WORK_INDEX.md`، و`validate-work-claims.sh` يفعل العكس، و`require-doc-update.sh` يُعلن الخمسةَ — ثلاثةُ مواضعَ بثلاثِ قوائم. وُحِّدت في `M0-12` بقرارِ مالكِ البرنامج.)
 
 أي مسار مشترك آخر يحتاجه حجزان في وقت واحد يُحل بتقسيم العنصر أو تسلسله بقرار Program Owner مسجَّل في اللوحة — **لا بتعطيل الفحص**.
 
@@ -58,6 +58,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | scripts/checks/,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0007 | M0-13 | @uxxxu (agent:computer) | fix/m0-13-agent-owner-normalization | scripts/checks/,docs/00-rules/WORK_CLAIM_RULE.md,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
 
 ---
 

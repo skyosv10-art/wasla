@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""check-shared-ledgers.py — قائمةُ السجلاتِ المشتركةِ واحدةٌ في ثلاثةِ مواضع.
+"""check-shared-ledgers.py — قائمةُ السجلاتِ المشتركةِ واحدةٌ في أربعةِ مواضع.
 
 الموضعُ الأوّل:  SHARED_LEDGERS   في scripts/checks/validate-work-claims.sh
 الموضعُ الثاني: LEDGER_ONLY_PATHS في scripts/checks/require-doc-update.sh
 الموضعُ الثالث: كتلةُ «مسارات مستثناة من فحص التقاطع» في docs/16-progress/WORK_CLAIMS.md
+الموضعُ الرابع: كتلةُ السجلاتِ المستثناةِ في docs/00-rules/WORK_CLAIM_RULE.md §3
 
-لماذا يلزم حارسٌ لهذا (M0-12): كانت الثلاثةُ بثلاثِ قوائمَ مختلفة — المدقِّقُ يستثني
-WORK_INDEX ولا يستثني MASTER_PROGRESS، والوثيقةُ تفعل العكس، والثالثُ يستثني الخمسةَ.
-فمَن قرأ الوثيقةَ وحدَّث MASTER_PROGRESS.md رُفض دفعُه بتقاطعٍ لا ذنبَ له فيه. والانحرافُ
-لا يُكتشف بالقراءةِ لأنّ كلَّ موضعٍ صحيحٌ وحدَه؛ لا يُكتشف إلّا بمقارنةِ الثلاثةِ معاً.
+لماذا يلزم حارسٌ لهذا (M0-12): كانت المواضعُ بقوائمَ مختلفة — المدقِّقُ يستثني
+WORK_INDEX ولا يستثني MASTER_PROGRESS، وWORK_CLAIMS.md يفعل العكس، وrequire-doc-update
+يستثني الخمسةَ. فمَن قرأ الوثيقةَ وحدَّث MASTER_PROGRESS.md رُفض دفعُه بتقاطعٍ لا ذنبَ
+له فيه. والانحرافُ لا يُكتشف بالقراءةِ لأنّ كلَّ موضعٍ صحيحٌ وحدَه؛ لا يُكتشف إلّا
+بالمقارنة.
 
-الخروج 0 إن تطابقت الثلاثةُ، و1 مع بيانِ الفرقِ إن اختلفت.
+وفي M0-13 ظهر **موضعٌ رابعٌ** لم يكن الحارسُ يقرؤه: WORK_CLAIM_RULE.md §3 — وهو
+**الوثيقةُ الحاكمةُ نفسُها** — كان يُعلن أربعةً بلا MASTER_PROGRESS.md. أي أنّ الحارسَ
+المكتوبَ في M0-12 كان يحرس ثلاثةً من أربعةٍ، فيمرُّ أخطرُ المواضعِ بلا حرس. أُضيف هنا.
+
+الخروج 0 إن تطابقت المواضعُ الأربعة، و1 مع بيانِ الفرقِ إن اختلفت.
 """
 
 import re
@@ -20,6 +26,7 @@ from pathlib import Path
 VALIDATE = "scripts/checks/validate-work-claims.sh"
 REQUIRE = "scripts/checks/require-doc-update.sh"
 DOC = "docs/16-progress/WORK_CLAIMS.md"
+RULE = "docs/00-rules/WORK_CLAIM_RULE.md"
 
 
 def read(root: Path, rel: str) -> str:
@@ -48,14 +55,24 @@ def from_require(text: str) -> set[str]:
     return {prefix + a.replace("\\.", ".") for a in alts.split("|")}
 
 
-def from_doc(text: str) -> set[str]:
-    idx = text.find("مسارات مستثناة")
+def block_after(text: str, anchor: str, where: str) -> set[str]:
+    """يقرأ أوّلَ كتلةِ ```text بعد نصٍّ مرجعيّ. مشتركٌ بين الوثيقتَين."""
+    idx = text.find(anchor)
     if idx == -1:
-        sys.exit(f"✗ لم أجد عنوان «مسارات مستثناة» في {DOC}")
+        sys.exit(f"✗ لم أجد «{anchor}» في {where}")
     m = re.search(r"```text\n(.*?)```", text[idx:], re.S)
     if not m:
-        sys.exit(f"✗ لم أجد كتلة ```text بعد عنوان «مسارات مستثناة» في {DOC}")
+        sys.exit(f"✗ لم أجد كتلة ```text بعد «{anchor}» في {where}")
     return {ln.strip() for ln in m.group(1).splitlines() if ln.strip()}
+
+
+def from_doc(text: str) -> set[str]:
+    return block_after(text, "مسارات مستثناة", DOC)
+
+
+def from_rule(text: str) -> set[str]:
+    # الموضعُ الرابع (M0-13): الوثيقةُ الحاكمةُ نفسُها.
+    return block_after(text, "مستثناة من فحص التقاطع", RULE)
 
 
 def main() -> int:
@@ -64,20 +81,21 @@ def main() -> int:
         VALIDATE: from_validate(read(root, VALIDATE)),
         REQUIRE: from_require(read(root, REQUIRE)),
         DOC: from_doc(read(root, DOC)),
+        RULE: from_rule(read(root, RULE)),
     }
 
     union = set().union(*sources.values())
     if not union:
-        sys.exit("✗ القوائم الثلاث فارغة — لا يمكن أن تكون هذه هي الحالة الصحيحة.")
+        sys.exit("✗ كل القوائم فارغة — لا يمكن أن تكون هذه هي الحالة الصحيحة.")
 
     drift = {name: s for name, s in sources.items() if s != union}
     if not drift:
-        print(f"✓ قائمة السجلات المشتركة متطابقة في المواضع الثلاثة ({len(union)} سجلاً):")
+        print(f"✓ قائمة السجلات المشتركة متطابقة في المواضع الـ{len(sources)} ({len(union)} سجلاً):")
         for p in sorted(union):
             print(f"    {p}")
         return 0
 
-    print("✗ انحراف في قائمة السجلات المشتركة بين المواضع الثلاثة:\n", file=sys.stderr)
+    print(f"✗ انحراف في قائمة السجلات المشتركة بين المواضع الـ{len(sources)}:\n", file=sys.stderr)
     for name, s in sources.items():
         missing = sorted(union - s)
         mark = "✓" if not missing else "✗"

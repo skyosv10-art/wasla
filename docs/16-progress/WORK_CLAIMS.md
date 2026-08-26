@@ -41,8 +41,11 @@ bash scripts/checks/verify-governance.sh
 docs/16-progress/TASK_LOG.md
 docs/16-progress/LAUNCH_EXECUTION_BOARD.md
 docs/16-progress/WORK_CLAIMS.md
+docs/16-progress/WORK_INDEX.md
 docs/16-progress/MASTER_PROGRESS.md
 ```
+
+> **القائمة الحاكمة واحدة:** هذه الخمسة **بالحرف** هي `SHARED_LEDGERS` في [`validate-work-claims.sh`](../../scripts/checks/validate-work-claims.sh) و`LEDGER_ONLY_PATHS` في [`require-doc-update.sh`](../../scripts/checks/require-doc-update.sh). أيُّ إضافةٍ هنا تُضاف في الموضعين معاً، وإلّا رُفض دفعُ مَن اتَّبع الوثيقة. (كانت الوثيقةُ تُعلن `MASTER_PROGRESS.md` ولا تُعلن `WORK_INDEX.md`، و`validate-work-claims.sh` يفعل العكس، و`require-doc-update.sh` يُعلن الخمسةَ — ثلاثةُ مواضعَ بثلاثِ قوائم. وُحِّدت في `M0-12` بقرارِ مالكِ البرنامج.)
 
 أي مسار مشترك آخر يحتاجه حجزان في وقت واحد يُحل بتقسيم العنصر أو تسلسله بقرار Program Owner مسجَّل في اللوحة — **لا بتعطيل الفحص**.
 
@@ -53,9 +56,8 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | scripts/checks/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0005 | M5-11 | @uxxxu (agent:computer) | feat/phase11-mr4-marketplace-http | services/marketplace/,docs/04-api/,.gitlab-ci.yml,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | scripts/checks/,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md | 2026-08-26 | 2026-09-08 | Active |
 
 ---
 
@@ -63,6 +65,8 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | 2026-08-26 | حُرِّر بقرارِ مالكِ البرنامج (`M0-12`): عملُ `M0-11` مدفوعٌ ومدموجٌ في الالتزامِ `183a7369`، وبقاءُ الحجزِ نشطاً كان يمنع `M0-12` من العملِ على `scripts/checks/` وهو نطاقُه المُعلَنُ على اللوحة. `M0-11` نفسُه يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، والحصّةُ منتهية. |
+| CLM-0005 | M5-11 | @uxxxu (agent:computer) | feat/phase11-mr4-marketplace-http | 2026-08-26 | حُرِّر لأنّ الفرعَ دُمج في `main` عبر [MR !87](https://gitlab.com/uxxxu/wasla/-/merge_requests/87) (الالتزامُ `38c73e4c`، الدمجُ `8f16670e`). رُصد في `M0-12` كحجزٍ نشطٍ لفرعٍ مدموج. `M5-11` يبقى `In Progress` — MR 4/6. |
 | CLM-0001 | M0-05 | @uxxxu | chore/unified-roadmap-governance | 2026-08-25 | دُمج في `main` عبر [MR !81](https://gitlab.com/uxxxu/wasla/-/merge_requests/81). وبقي `M0-05` نفسُه `Ready for Gate` لا `Completed`: دليلُ إغلاقه بوابةٌ خضراء، والبوابةُ لم تُنفَّذ لنقصِ رصيدِ CI. |
 
 يُنقل السطر إلى هنا **بعد الدمج**، مع رابط دليل قابل للتحقق (MR أو pipeline).

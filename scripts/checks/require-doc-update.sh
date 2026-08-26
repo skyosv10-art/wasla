@@ -38,9 +38,16 @@ if [ -z "$MEANINGFUL" ]; then
   exit 0
 fi
 
+# لا أنبوبَ قبل `grep -Fxq` — نفسُ مصيدةِ SIGPIPE التي عولِجت في M0-11 أسفلَ هذا الملف
+# وفي validate-launch-board.sh، وكانت **باقيةً هنا**: `grep -q` يخرج عند أوّلِ تطابقٍ
+# فيُغلق الأنبوب، فيموتُ `printf` بـSIGPIPE، فتصير حالةُ الأنبوبِ 141 وتحت `pipefail`
+# تُقرأ «لا تطابق» — فيُرفض عملٌ صحيحٌ يحمل تحديثَ السجلِّ واللوحةِ فعلاً.
+# هنا `$FILES` صغيرٌ عادةً فالعيبُ **احتماليٌّ لا حتميّ**: يقع حين يسبق خروجُ grep
+# فراغَ printf من الكتابة. رُصد في M0-12 كتقلّبٍ في حزمةِ الإثبات (24/25 ثمّ 25/25)،
+# ويحرسه الآن «قاعدة التوثيق تقبل حالةً صحيحةً في 40 تشغيلاً بلا تقلّب».
 missing=()
-printf '%s\n' "$FILES" | grep -Fxq "$TASK_LOG" || missing+=("$TASK_LOG")
-printf '%s\n' "$FILES" | grep -Fxq "$BOARD" || missing+=("$BOARD")
+grep -Fxq "$TASK_LOG" <<< "$FILES" || missing+=("$TASK_LOG")
+grep -Fxq "$BOARD" <<< "$FILES" || missing+=("$BOARD")
 if [ "${#missing[@]}" -ne 0 ]; then
   cat >&2 <<MSG
 ==================================================================

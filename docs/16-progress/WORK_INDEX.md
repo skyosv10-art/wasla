@@ -110,6 +110,9 @@
 | `scripts/checks/` | Implemented | M0-05 |
 | `scripts/hooks/pre-push` | Implemented | M0-05 |
 | `.gitlab-ci.yml` — `governance-guard` | Implemented | M0-05 |
+| `scripts/checks/test-governance.sh` | Implemented | M0-12 |
+| `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
+| `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
 | `.gitlab-ci.yml` — بوابات E2E حتى Phase 10 | Implemented | M0-08 |
 | `.gitlab-ci.yml` — `marketplace-db-integration` | Implemented | M5-11 |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |

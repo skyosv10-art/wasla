@@ -60,6 +60,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0018 | M0-07 | @uxxxu (agent:computer) | feat/m0-07-risk-register | docs/07-security/,scripts/checks/,docs/00-rules/ | 2026-08-27 | 2026-09-10 | Active |
 
 > **`CLM-0002` حُرِّر بقرارِ مالكِ البرنامجِ 2026-08-27** ونُقل إلى §3 (رُصد بائتاً في `M0-15`، وأُغلق في `M0-17`). وفي المقابل `CLM-0004` (M0-02) **نشطٌ بحقٍّ**: فرعُه قائمٌ ومتقدِّمٌ على `main` بالتزامَين، وفيه فرقٌ حقيقيٌّ في `services/drivers/src/__tests__/repository.integration.test.ts` — أي عملٌ لم يُدمَج بعد.
 

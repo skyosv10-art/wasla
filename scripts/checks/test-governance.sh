@@ -480,6 +480,160 @@ fresh_declares_skip() {
 }
 t "عند الجهل يُعلن التخطّي ولا يدّعي نجاحاً كاملاً" pass fresh_declares_skip
 
+printf '\n\033[1m[ز] هدفُ طلبِ الدمج — فرعٌ مدموجٌ أو محذوفٌ يُعلِق العمل (M0-17)\033[0m\n'
+
+# مسرحٌ معزولٌ لكلِّ حالةٍ للسببِ عينِه المُعلَنِ في القسمِ [هج]: الفحصُ يسأل `origin`
+# ويقارن أسلافاً، فلو أُضيف `origin` إلى $T لانقلب معنى `origin/main` عندَ بقيّةِ
+# الحالات. ويُنزع متغيّرا CI من البيئةِ في كلِّ تشغيل، وإلّا لأفسدت وظيفةُ
+# `governance-guard` حالةَ «لا هدفَ معلوم» — أي لفشلت الحزمةُ لسببٍ من صنعِ البيئةِ لا من عيب.
+MRT_SRC="$REPO_ROOT/scripts/checks/validate-mr-target.sh"
+
+_mrt_stage() { # _mrt_stage <اسم> <أُضيف origin؟ 0|1> [سكربتٌ بديل] → يطبع مسارَ المسرح
+  local name="$1" with_origin="$2" script="${3:-$MRT_SRC}"
+  local S="/tmp/gov_mrt_$name"
+  rm -rf "$S" "$S.origin"
+  mkdir -p "$S/scripts/checks"
+  cp "$script" "$S/scripts/checks/validate-mr-target.sh"
+  (
+    cd "$S" || exit 1
+    git init -q -b main; git config user.email t@t.t; git config user.name t
+    printf 'seed\n' > seed.txt; git add -A >/dev/null; git commit -qm seed >/dev/null
+    if (( with_origin )); then
+      git init -q --bare "$S.origin"
+      git remote add origin "$S.origin"
+      git push -q origin main >/dev/null 2>&1
+    fi
+  )
+  printf '%s' "$S"
+}
+
+_mrt() { # _mrt <مسرح> [وسائط...] — يُشغّل الفحصَ ببيئةٍ منزوعةِ متغيّراتِ CI
+  local S="$1"; shift
+  ( cd "$S" && env -u CI_MERGE_REQUEST_TARGET_BRANCH_NAME -u CI_DEFAULT_BRANCH \
+      bash scripts/checks/validate-mr-target.sh "$@" )
+}
+
+# (1) الهدفُ هو الفرعُ الافتراضيُّ — الحالةُ السويّةُ وأكثرُها وقوعاً → يمرّ
+mrt_default_target() { local S; S="$(_mrt_stage def 1)"; _mrt "$S" main main; }
+t "يمرّ طلباً يستهدف الفرعَ الافتراضيّ" pass mrt_default_target
+
+# (2) هدفٌ غيرُ افتراضيٍّ متقدّمٌ بالتزام — طلبٌ مكدّسٌ مشروعٌ → يمرّ (بتنبيه)
+# مرجعٌ موجبٌ لازمٌ: لولاه لما دلّت السلبيّةُ بعده على شيء — فقد يكون الفحصُ
+# يرفض كلّ هدفٍ غيرِ الافتراضيّ، وذلك تعطيلٌ للتكديسِ لا حراسةٌ للعمل.
+mrt_stacked_ok() {
+  local S; S="$(_mrt_stage stacked 1)"
+  ( cd "$S" && git checkout -q -b feat/base && printf 'a\n' > a.txt && git add -A >/dev/null \
+      && git commit -qm "التزامٌ ليس في main" >/dev/null && git push -q origin feat/base >/dev/null 2>&1 \
+      && git checkout -q main )
+  _mrt "$S" feat/base main
+}
+t "يمرّ هدفاً متقدّماً (طلبٌ مكدّسٌ مشروع)" pass mrt_stacked_ok
+
+# (3) هدفٌ **مدموجٌ أصلاً** في الافتراضيّ → يُرفَض. وهذا عينُ ما وقع في MR !96:
+# دُمج !95 إلى main أوّلاً، ثمّ دُمج !96 إلى فرعِ !95 بعدَه — فبقي عملُ M0-16 خارجَ main.
+mrt_merged_target() {
+  local S; S="$(_mrt_stage merged 1)"
+  ( cd "$S" && git checkout -q -b chore/closeout && printf 'c\n' > c.txt && git add -A >/dev/null \
+      && git commit -qm "عملُ فرعِ الإقفال" >/dev/null && git push -q origin chore/closeout >/dev/null 2>&1 \
+      && git checkout -q main && git merge -q --no-ff -m "دمجُ الهدفِ في main" chore/closeout >/dev/null \
+      && git push -q origin main >/dev/null 2>&1 )
+  _mrt "$S" chore/closeout main
+}
+t "يرفض هدفاً مدموجاً أصلاً في الافتراضيّ" fail mrt_merged_target
+
+# (4) هدفٌ **محذوفٌ** من المستودع → يُرفَض: لا فرعَ يُدمج إليه.
+mrt_deleted_target() {
+  local S; S="$(_mrt_stage gone 1)"
+  ( cd "$S" && git checkout -q -b chore/gone && printf 'g\n' > g.txt && git add -A >/dev/null \
+      && git commit -qm g >/dev/null && git push -q origin chore/gone >/dev/null 2>&1 \
+      && git push -q origin --delete chore/gone >/dev/null 2>&1 \
+      && git checkout -q main && git branch -qD chore/gone \
+      && git update-ref -d refs/remotes/origin/chore/gone 2>/dev/null; true )
+  _mrt "$S" chore/gone main
+}
+t "يرفض هدفاً محذوفاً من المستودع" fail mrt_deleted_target
+
+# (5) لا موضوعَ للحكم (لا وسيطٌ ولا متغيّرُ CI) → «لا ينطبق» ولا يدّعي جزئيّةً.
+# والتفريقُ مقصودٌ: لو قيل «جزئي» هنا لصار كلُّ خطٍّ على main يُعلِن نقصاً لا وجودَ له.
+mrt_not_applicable() {
+  local S out rc; S="$(_mrt_stage na 1)"
+  out="$(_mrt "$S" 2>&1)"; rc=$?
+  (( rc == 0 )) || { printf '%s\n' "$out"; echo "✗ رُفض الدفعُ ولا طلبَ دمجٍ أصلاً"; return 1; }
+  grep -q 'لا ينطبق' <<< "$out" || { printf '%s\n' "$out"; echo "✗ لم يُعلِن «لا ينطبق»"; return 1; }
+  grep -q 'جزئي' <<< "$out" && { printf '%s\n' "$out"; echo "✗ خلط عدمَ الانطباقِ بالجهلِ فأعلن نقصاً لا وجودَ له"; return 1; }
+  return 0
+}
+t "بلا طلبٍ يقول «لا ينطبق» ولا يدّعي جزئيّة" pass mrt_not_applicable
+
+# (6) وعندَ الجهل (هدفٌ معلومُ الاسمِ ولا مرجعٌ ولا وصولَ إلى origin) → تخطٍّ
+# مُعلَنٌ بوسمِ «جزئي»، ولا يُرفَض الدفعُ لأنّ الجهلَ ليس دليلَ عَلَق.
+mrt_declares_skip() {
+  local S out rc; S="$(_mrt_stage blind 0)"
+  out="$(_mrt "$S" feat/unknowable main 2>&1)"; rc=$?
+  (( rc == 0 )) || { printf '%s\n' "$out"; echo "✗ رُفض على جهلٍ لا على دليل"; return 1; }
+  grep -q 'تخط' <<< "$out" || { printf '%s\n' "$out"; echo "✗ تُخطّي ولم يُعلِن التخطّي"; return 1; }
+  grep -q 'جزئي' <<< "$out" || { printf '%s\n' "$out"; echo "✗ ادّعى نجاحاً كاملاً وهو لم يفحص"; return 1; }
+  return 0
+}
+t "عند الجهل يُعلن التخطّي ويوسمُه جزئيّاً" pass mrt_declares_skip
+
+# ── اختباراتُ طفرةٍ: كلُّ حالةٍ يجب أن تكشف عيباً يُسقِطُها وحدَها ───────────
+# حالةٌ تمرّ ولا تكشف عيباً ليست حراسةً بل زينةٌ. وكلُّ طفرةٍ تُسقِط **ما تقصده
+# وحدَه** — فلو أسقطت أكثرَ لدلّ ذلك على حالاتٍ متداخلةٍ لا على دقّة.
+_mrt_mutant() { # _mrt_mutant <python-expr-ملف> → يطبع مسارَ نسخةٍ مُطفَرة
+  local tag="$1" old="$2" new="$3"
+  local M="/tmp/gov_mrt_mutant_$tag.sh"
+  python3 - "$MRT_SRC" "$M" "$old" "$new" <<'PY'
+import sys
+src,dst,old,new = sys.argv[1:5]
+s = open(src, encoding='utf-8').read()
+assert old in s, "لم أجد الموضعَ المقصودَ للطفرة: " + old
+open(dst,'w',encoding='utf-8').write(s.replace(old,new,1))
+PY
+  printf '%s' "$M"
+}
+
+# طفرة 1: تحييدُ حكمِ «مدموجٌ أصلاً» — يجب أن تسقط الحالةُ (3) وحدَها.
+mrt_mutation_merged() {
+  local M rc=0; M="$(_mrt_mutant merged \
+    'if git merge-base --is-ancestor "$T_SHA" "$D_SHA" 2>/dev/null; then' \
+    'if false; then')"
+  local S; S="$(_mrt_stage mut_merged 1 "$M")"
+  ( cd "$S" && git checkout -q -b chore/closeout && printf 'c\n' > c.txt && git add -A >/dev/null \
+      && git commit -qm c >/dev/null && git push -q origin chore/closeout >/dev/null 2>&1 \
+      && git checkout -q main && git merge -q --no-ff -m m chore/closeout >/dev/null \
+      && git push -q origin main >/dev/null 2>&1 )
+  _mrt "$S" chore/closeout main >/dev/null 2>&1 && rc=1   # مرّ وكان يجب أن يُرفَض
+  (( rc == 1 ))
+}
+t "حالةُ «الهدفُ مدموج» تكشف فعلاً (اختبارُ طفرة)" pass mrt_mutation_merged
+
+# طفرة 2: تحييدُ رفضِ الهدفِ المحذوف — يجب أن تسقط الحالةُ (4) وحدَها.
+mrt_mutation_deleted() {
+  local M rc=0; M="$(_mrt_mutant deleted 'if (( T_RC == 2 )); then' 'if false; then')"
+  local S; S="$(_mrt_stage mut_gone 1 "$M")"
+  ( cd "$S" && git checkout -q -b chore/gone && printf 'g\n' > g.txt && git add -A >/dev/null \
+      && git commit -qm g >/dev/null && git push -q origin chore/gone >/dev/null 2>&1 \
+      && git push -q origin --delete chore/gone >/dev/null 2>&1 \
+      && git checkout -q main && git branch -qD chore/gone \
+      && git update-ref -d refs/remotes/origin/chore/gone 2>/dev/null; true )
+  _mrt "$S" chore/gone main >/dev/null 2>&1 && rc=1
+  (( rc == 1 ))
+}
+t "حالةُ «الهدفُ محذوف» تكشف فعلاً (اختبارُ طفرة)" pass mrt_mutation_deleted
+
+# طفرة 3: خلطُ «لا ينطبق» بالجهلِ — يجب أن تسقط الحالةُ (5) وحدَها.
+mrt_mutation_conflate() {
+  local M rc=0; M="$(_mrt_mutant conflate \
+    'not_applicable "ليس سياقَ طلبِ دمج' \
+    'skip "ليس سياقَ طلبِ دمج')"
+  local S out; S="$(_mrt_stage mut_na 1 "$M")"
+  out="$(_mrt "$S" 2>&1)"
+  grep -q 'جزئي' <<< "$out" && rc=1   # أعلن نقصاً لا وجودَ له
+  (( rc == 1 ))
+}
+t "حالةُ تمييزِ «لا ينطبق» من الجهلِ تكشف فعلاً (اختبارُ طفرة)" pass mrt_mutation_conflate
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

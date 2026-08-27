@@ -916,6 +916,198 @@ cim_mut_door4() {
 }
 t "البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً" pass cim_mut_door4
 
+printf '\n\033[1m[ي] تدقيقُ الاعتمادياتِ والثغرات (M0-06)\033[0m\n'
+# الحارسُ يسأل مُسجَّلَ npm عبرَ الشبكةِ، ويقرأ `package.json` و`SECURITY_RULES.md`.
+# فتُبنى له **جذورٌ صناعيّةٌ** في /tmp، ويُغذَّى **مخارجَ تدقيقٍ مُصطنَعةً** عبرَ
+# `DEP_AUDIT_JSON` و`DEP_AUDIT_PROD_JSON` — فلا تُشوَّه وثيقةٌ حقيقيّةٌ، ولا تصير
+# الحزمةُ رهينةَ الشبكةِ أو رهينةَ ثغرةٍ تُنشر غداً (سابقةُ M0-12).
+DEP_SRC="$REPO_ROOT/scripts/checks/validate-dependency-audit.sh"
+
+_dep_audit_fixture() { # _dep_audit_fixture <ملف> <عدد> [ghsa:module:severity ...]
+  local out="$1" total="$2"; shift 2
+  python3 - "$out" "$total" "$@" <<'PY'
+import json, sys
+out, total = sys.argv[1], int(sys.argv[2])
+adv = {}
+for i, spec in enumerate(sys.argv[3:], start=1):
+    ghsa, module, sev = spec.split(":")
+    adv[str(i)] = {"id": i, "module_name": module, "severity": sev,
+                   "url": "https://github.com/advisories/" + ghsa,
+                   "vulnerable_versions": "<9.9.9", "patched_versions": ">=9.9.9",
+                   "title": "fixture"}
+sev_count = {"info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 0}
+for a in adv.values():
+    sev_count[a["severity"]] = sev_count.get(a["severity"], 0) + 1
+if total and not adv:
+    sev_count["high"] = total
+json.dump({"actions": [], "advisories": adv, "muted": [],
+           "metadata": {"vulnerabilities": sev_count, "dependencies": 1,
+                        "devDependencies": 0, "optionalDependencies": 0,
+                        "totalDependencies": 1}},
+          open(out, "w", encoding="utf-8"))
+PY
+}
+
+_dep_root() { # _dep_root <tag> <pm> <overrides-json> <سطورُ §11...>
+  local tag="$1" pm="$2" ovr="$3"; shift 3
+  local R="/tmp/gov_dep_$tag"
+  rm -rf "$R"; mkdir -p "$R/docs/00-rules"
+  python3 - "$R/package.json" "$pm" "$ovr" <<'PY'
+import json, sys
+path, pm, ovr = sys.argv[1], sys.argv[2], sys.argv[3]
+d = {"name": "fixture", "private": True, "devDependencies": {}}
+if pm:
+    d["packageManager"] = pm
+if ovr:
+    d["pnpm"] = {"overrides": json.loads(ovr)}
+json.dump(d, open(path, "w", encoding="utf-8"))
+PY
+  printf 'lockfileVersion: 9.0\n' > "$R/pnpm-lock.yaml"
+  {
+    printf '# قواعد الأمان — نسخةٌ صناعيّةٌ للاختبار\n\n'
+    printf '## 11. اعتمادياتُ الطرفِ الثالثِ وتدقيقُ الثغرات\n\n'
+    printf '```text\n'
+    local line
+    for line in "$@"; do printf '%s\n' "$line"; done
+    printf '```\n'
+  } > "$R/docs/00-rules/SECURITY_RULES.md"
+  printf '%s\n' "$R"
+}
+
+_dep() { # _dep <جذر> <تدقيقُ الكل> <تدقيقُ الإنتاج> [سكربتٌ بديل]
+  local root="$1" all="$2" prod="$3" script="${4:-$DEP_SRC}"
+  DEP_AUDIT_JSON="$all" DEP_AUDIT_PROD_JSON="$prod" bash "$script" "$root"
+}
+
+# مخارجُ تدقيقٍ مُصطنَعةٌ: نظيفٌ · ثغرةٌ في الإنتاج · ثغرتانِ في أدواتِ التطوير.
+_dep_audit_fixture /tmp/dep_clean.json 0
+_dep_audit_fixture /tmp/dep_prod_vuln.json 0 "GHSA-prod-0001-aaaa:express:critical"
+_dep_audit_fixture /tmp/dep_dev_vuln.json 0 "GHSA-dev-0001-bbbb:vitest:critical"
+
+DEP_TOMORROW="$(date -u -d "$TODAY +30 days" +%Y-%m-%d)"
+DEP_YESTERDAY="$(date -u -d "$TODAY -1 day" +%Y-%m-%d)"
+
+# (1) الحالةُ الموجبةُ الكاملة: إنتاجٌ نظيفٌ · لا ثغرةَ · مديرٌ مثبَّتٌ · لا override.
+R_OK="$(_dep_root ok 'pnpm@9.15.9' '' '# لا استثناءَ ولا تثبيتَ قسريّ')"
+t "جذرٌ نظيفٌ يمرُّ (إنتاجٌ نقيٌّ · لا ثغرةَ · مديرٌ مثبَّتٌ)" pass \
+  _dep "$R_OK" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (2) البابُ 1: ثغرةٌ في شجرةِ الإنتاج تُسقِط ولو كانت مكتوبةً في §11 —
+#     فالبابُ الأوّلُ لا استثناءَ فيه، وهذا ما يميّزه عن البابِ الثاني.
+R_PROD="$(_dep_root prod 'pnpm@9.15.9' '' \
+  "GHSA-prod-0001-aaaa | expires:$DEP_TOMORROW | owner:@tester | مكتوبٌ ومع ذلك يجب أن يُسقِط")"
+t "ثغرةٌ في شجرةِ الإنتاجِ تُسقِط ولو كانت مُعلَنةً" fail \
+  _dep "$R_PROD" /tmp/dep_prod_vuln.json /tmp/dep_prod_vuln.json
+
+# (3) البابُ 2: ثغرةُ أداةِ تطويرٍ غيرُ مكتوبةٍ في §11 تُسقِط.
+R_UNDECL="$(_dep_root undecl 'pnpm@9.15.9' '' '# لا استثناءَ')"
+t "ثغرةُ تطويرٍ غيرُ مُعلَنةٍ في §11 تُسقِط" fail \
+  _dep "$R_UNDECL" /tmp/dep_dev_vuln.json /tmp/dep_clean.json
+
+# (4) البابُ 2: المكتوبةُ بمهلةٍ ساريةٍ تمرُّ — قبولُ الخطرِ آليّةٌ لا شعار.
+R_DECL="$(_dep_root decl 'pnpm@9.15.9' '' \
+  "GHSA-dev-0001-bbbb | expires:$DEP_TOMORROW | owner:@tester | أداةُ تطويرٍ لا تُشحَن")"
+t "ثغرةُ تطويرٍ مُعلَنةٌ بمهلةٍ ساريةٍ تمرُّ" pass \
+  _dep "$R_DECL" /tmp/dep_dev_vuln.json /tmp/dep_clean.json
+
+# (5) البابُ 2: المهلةُ المنقضيةُ تُسقِط — وإلّا صار القبولُ أبديّاً بالنسيان.
+R_EXP="$(_dep_root expired 'pnpm@9.15.9' '' \
+  "GHSA-dev-0001-bbbb | expires:$DEP_YESTERDAY | owner:@tester | مهلةٌ انقضت أمس")"
+t "قبولُ خطرٍ انقضت مهلتُه يُسقِط" fail \
+  _dep "$R_EXP" /tmp/dep_dev_vuln.json /tmp/dep_clean.json
+
+# (6) البابُ 3: مديرُ حزمٍ تقريبيٌّ يُسقِط — لأنّ كلَّ آلةٍ تحلُّ شجرةً أخرى.
+R_PM="$(_dep_root pm '^pnpm@9.15.9' '' '# لا استثناءَ')"
+t "packageManager غيرُ مثبَّتٍ يُسقِط" fail \
+  _dep "$R_PM" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (7) البابُ 3: غيابُ ملفِّ القفلِ يُسقِط.
+R_NOLOCK="$(_dep_root nolock 'pnpm@9.15.9' '' '# لا استثناءَ')"; rm -f "$R_NOLOCK/pnpm-lock.yaml"
+t "غيابُ pnpm-lock.yaml يُسقِط" fail \
+  _dep "$R_NOLOCK" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (8) البابُ 4: تثبيتٌ قسريٌّ بلا سببٍ مكتوبٍ يُسقِط ولو كان التدقيقُ نظيفاً —
+#     فالنظافةُ اليومَ قد تكون بتجميدِ نسخةٍ تُثقَب غداً.
+R_OVR="$(_dep_root ovr 'pnpm@9.15.9' '{"lodash":"4.17.21"}' '# لا سببَ مكتوباً')"
+t "override بلا سببٍ مكتوبٍ يُسقِط ولو كان التدقيقُ نظيفاً" fail \
+  _dep "$R_OVR" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (9) البابُ 4: نفسُ التثبيتِ مع سببٍ مكتوبٍ يمرُّ.
+R_OVR_OK="$(_dep_root ovrok 'pnpm@9.15.9' '{"lodash":"4.17.21"}' \
+  "override:lodash | expires:$DEP_TOMORROW | owner:@tester | سببٌ مكتوبٌ ومُراجَعٌ بمهلة")"
+t "override بسببٍ مكتوبٍ يمرُّ" pass \
+  _dep "$R_OVR_OK" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (10) الوثيقةُ بلا كتلةِ §11 تُسقِط — لا مرجعَ لقبولِ الخطرِ فلا حكمَ.
+R_NOANCHOR="/tmp/gov_dep_noanchor"; rm -rf "$R_NOANCHOR"; mkdir -p "$R_NOANCHOR/docs/00-rules"
+cp "$R_OK/package.json" "$R_NOANCHOR/package.json"; cp "$R_OK/pnpm-lock.yaml" "$R_NOANCHOR/pnpm-lock.yaml"
+printf '# قواعد الأمان\n\nبلا كتلةِ §11 إطلاقاً.\n' > "$R_NOANCHOR/docs/00-rules/SECURITY_RULES.md"
+t "غيابُ كتلةِ §11 من الوثيقةِ يُسقِط" fail \
+  _dep "$R_NOANCHOR" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (11) سجلٌّ بصيغةٍ خاطئةٍ في §11 يُسقِط — الصيغةُ عقدٌ يقرؤه الحارسُ حرفيّاً.
+R_BAD="$(_dep_root badrow 'pnpm@9.15.9' '' 'GHSA-dev-0001-bbbb بلا مهلةٍ ولا مالكٍ')"
+t "سجلُّ §11 بصيغةٍ خاطئةٍ يُسقِط" fail \
+  _dep "$R_BAD" /tmp/dep_clean.json /tmp/dep_clean.json
+
+# (12) التخطّي مُعلَنٌ بالرمزِ 2 حين لا pnpm ولا تدقيقَ جاهزاً — لا نجاحٌ كاذبٌ
+#      ولا فشلٌ كاذبٌ. والفرقُ بين 0 و2 هو ما يمنع البوّابةَ من تجميلِ الجهل.
+dep_skip_rc2() {
+  local out rc
+  out="$(env -u DEP_AUDIT_JSON -u DEP_AUDIT_PROD_JSON PATH=/usr/bin:/bin \
+    bash "$DEP_SRC" "$R_OK" 2>&1)"; rc=$?
+  (( rc == 2 )) || return 1
+  [[ "$out" == *"لم يُسأل"* ]] || return 1
+  return 0
+}
+t "غيابُ pnpm يُعلَن تخطّياً بالرمزِ 2 لا نجاحاً" pass dep_skip_rc2
+
+# ── اختباراتُ الطفرةِ: أربعةُ أبوابٍ، كلٌّ يُحيَّد وحدَه ───────────────────
+# لا يكفي أن ترفضَ الحالاتُ: يجب أن يكون **البابُ المقصودُ** هو الرافضَ.
+_dep_mutant() { # _dep_mutant <وسم> <مرساة> <بديل> → يطبع مسارَ سكربتٍ مطفَّر
+  local tag="$1" anchor="$2" repl="$3"
+  local M="/tmp/gov_dep_mut_$tag.sh"
+  python3 - "$DEP_SRC" "$M" "$anchor" "$repl" <<'PY'
+import sys
+src, dst, anchor, repl = sys.argv[1:5]
+text = open(src, encoding="utf-8").read()
+if anchor not in text:
+    sys.exit("MISSING_ANCHOR")
+open(dst, "w", encoding="utf-8").write(text.replace(anchor, repl, 1))
+PY
+  printf '%s\n' "$M"
+}
+
+dep_mut_door1() {
+  local m; m="$(_dep_mutant door1 'PROBLEMS+=("البابُ 1:' ': #')" || return 1
+  _dep "$R_PROD" /tmp/dep_prod_vuln.json /tmp/dep_prod_vuln.json "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 1 (نقاءُ الإنتاج) يكشف فعلاً" pass dep_mut_door1
+
+dep_mut_door2() {
+  local m; m="$(_dep_mutant door2 'PROBLEMS+=("البابُ 2: ثغرةٌ' ': #')" || return 1
+  _dep "$R_UNDECL" /tmp/dep_dev_vuln.json /tmp/dep_clean.json "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 2 (كلُّ ثغرةٍ مُعلَنةٌ) يكشف فعلاً" pass dep_mut_door2
+
+dep_mut_expiry() {
+  local m; m="$(_dep_mutant expiry 'PROBLEMS+=("البابُ 2: قبولُ الخطرِ' ': #')" || return 1
+  _dep "$R_EXP" /tmp/dep_dev_vuln.json /tmp/dep_clean.json "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "شرطُ انقضاءِ المهلةِ يكشف فعلاً" pass dep_mut_expiry
+
+dep_mut_door3() {
+  local m; m="$(_dep_mutant door3 'PROBLEMS+=("البابُ 3: packageManager' ': #')" || return 1
+  _dep "$R_PM" /tmp/dep_clean.json /tmp/dep_clean.json "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 3 (مديرُ حزمٍ مثبَّتٌ) يكشف فعلاً" pass dep_mut_door3
+
+dep_mut_door4() {
+  local m; m="$(_dep_mutant door4 'PROBLEMS+=("البابُ 4:' ': #')" || return 1
+  _dep "$R_OVR" /tmp/dep_clean.json /tmp/dep_clean.json "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 4 (تثبيتٌ قسريٌّ مُبرَّرٌ) يكشف فعلاً" pass dep_mut_door4
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

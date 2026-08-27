@@ -113,6 +113,9 @@ Dispatch: concurrency tests
 ### عزل اختبارات التكامل (شرطٌ في DoD)
 
 - [ ] `pnpm verify` يمرّ محلّيّاً، وأرتفاكتُه مرفوعٌ في الخطِّ، وكلُّ «تخطٍّ» فيه مُبرَّرٌ (M0-04 · [VERIFY_COMMAND.md](./VERIFY_COMMAND.md)).
+- [ ] لا ثغرةَ معروفةً في شجرةِ الإنتاجِ (`pnpm audit --prod` = صفر)، وكلُّ ثغرةِ أداةِ
+      تطويرٍ باقيةٍ مُعلَنةٌ بمالكٍ ومهلةٍ ساريةٍ، وكلُّ `pnpm.overrides` مُبرَّرٌ
+      (M0-06 · [SECURITY_RULES.md §11](SECURITY_RULES.md) · محروسٌ بالفحصِ 9 في `verify-governance.sh`).
 - [ ] خدمةٌ لها ملفّانِ تكامليّانِ أو أكثر: `vitest.integration.config.ts` فيه
       `fileParallelism: false` (أو وسمُ `GOV-ISOLATION: schema-per-worker`)، وملفّاتُ
       التكاملِ مستثناةٌ من `vitest.config.ts` الافتراضيّ.
@@ -136,5 +139,6 @@ Dispatch: concurrency tests
 - [ENGINEERING_DOCUMENTATION_LAW.md](ENGINEERING_DOCUMENTATION_LAW.md)
 - [GIT_RULES.md](GIT_RULES.md) — قواعد Git وMR
 - [TESTING_RULES.md](TESTING_RULES.md) — قواعد الاختبار · §1 عزلُ اختباراتِ التكامل (M0-03)
+- [SECURITY_RULES.md §11](SECURITY_RULES.md) — تدقيقُ الاعتمادياتِ وقبولُ الخطرِ المؤقّت (M0-06)
 - [SECURITY_RULES.md](SECURITY_RULES.md) — الأمان
 - [/CONTRIBUTING.md](../../CONTRIBUTING.md) — قالب تحديث المطور

@@ -114,6 +114,11 @@
 | `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
 | `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
 | `scripts/checks/validate-work-claims.sh` | Implemented | M0-05, M0-12, M0-13 |
+| `scripts/checks/validate-launch-board.sh` | Implemented | M0-05, M0-11 |
+| `scripts/checks/lib/meaningful-paths.sh` | Implemented | M0-14, M0-15 |
+| `scripts/checks/validate-claim-freshness.sh` | Implemented | M0-16 |
+| `scripts/checks/validate-mr-target.sh` | Implemented | M0-17 |
+| `docs/00-rules/GIT_RULES.md` §3.1 (هدفُ الطلب) | Implemented | M0-17 |
 | `docs/00-rules/WORK_CLAIM_RULE.md` | Implemented | M0-05, M0-13 |
 | `.gitlab-ci.yml` — بوابات E2E حتى Phase 10 | Implemented | M0-08 |
 | `.gitlab-ci.yml` — `marketplace-db-integration` | Implemented | M5-11 |

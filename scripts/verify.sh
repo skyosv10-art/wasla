@@ -62,9 +62,9 @@ run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
 
 # ── 3) بوّابةُ الحوكمةِ (ثمانيةُ فحوصٍ) ────────────────────────────────────
 if [[ -n "$OLD" && -n "$NEW" ]]; then
-  run_step "بوّابةُ الحوكمة (9 فحوصٍ)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
+  run_step "بوّابةُ الحوكمة (10 فحوصٍ)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
 else
-  run_step "بوّابةُ الحوكمة (9 فحوصٍ)" bash scripts/checks/verify-governance.sh
+  run_step "بوّابةُ الحوكمة (10 فحوصٍ)" bash scripts/checks/verify-governance.sh
 fi
 
 # ── 4) إثباتُ أنّ الحوكمةَ ترفض فعلاً ────────────────────────────────────

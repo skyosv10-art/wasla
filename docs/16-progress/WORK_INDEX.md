@@ -115,6 +115,8 @@
 | `scripts/checks/validate-repo-structure.sh` | Implemented | M0-04 |
 | `scripts/checks/validate-ci-mandatory.sh` | Implemented | M0-04 |
 | `scripts/checks/validate-dependency-audit.sh` | Implemented | M0-06 |
+| `scripts/checks/validate-risk-register.sh` | Implemented | M0-07 |
+| `docs/07-security/RISK_REGISTER.md` | Implemented | M0-07 |
 | `scripts/checks/lib/required-artifacts.sh` — مصدرٌ واحدٌ للإلزام | Implemented | M0-04 |
 | `docs/00-rules/VERIFY_COMMAND.md` | Implemented | M0-04 |
 | `.gitlab-ci.yml` — `verify` (أرتفاكت `when: always`) | Implemented | M0-04 |

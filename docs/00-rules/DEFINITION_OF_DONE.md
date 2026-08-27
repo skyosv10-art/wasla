@@ -110,6 +110,13 @@ Reputation: deterministic rule tests
 Dispatch: concurrency tests
 ```
 
+### عزل اختبارات التكامل (شرطٌ في DoD)
+
+- [ ] خدمةٌ لها ملفّانِ تكامليّانِ أو أكثر: `vitest.integration.config.ts` فيه
+      `fileParallelism: false` (أو وسمُ `GOV-ISOLATION: schema-per-worker`)، وملفّاتُ
+      التكاملِ مستثناةٌ من `vitest.config.ts` الافتراضيّ.
+      المرجع: [TESTING_RULES.md §1](TESTING_RULES.md) · محروسٌ بالفحصِ 7 في `verify-governance.sh`.
+
 ### اختبارات التزامن (Concurrency Tests) المطلوبة خصوصًا
 
 - Two drivers accept same order.
@@ -126,5 +133,6 @@ Dispatch: concurrency tests
 
 - [ENGINEERING_DOCUMENTATION_LAW.md](ENGINEERING_DOCUMENTATION_LAW.md)
 - [GIT_RULES.md](GIT_RULES.md) — قواعد Git وMR
+- [TESTING_RULES.md](TESTING_RULES.md) — قواعد الاختبار · §1 عزلُ اختباراتِ التكامل (M0-03)
 - [SECURITY_RULES.md](SECURITY_RULES.md) — الأمان
 - [/CONTRIBUTING.md](../../CONTRIBUTING.md) — قالب تحديث المطور

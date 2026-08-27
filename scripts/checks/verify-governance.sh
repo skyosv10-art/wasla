@@ -2,7 +2,8 @@
 # verify-governance.sh — المدخل الموحّد لكل فحوص الحوكمة. أمر واحد يُشغّله البشري والوكيل وCI.
 #
 # الفحوص: 0) وجود الوثائق · 1) اللوحة · 2) الحجوزات · 3) التوثيق مع الدفع ·
-#         4) بياتُ الحجوزات (M0-16) · 5) هدفُ طلبِ الدمج (M0-17) · 6) الأسرار.
+#         4) بياتُ الحجوزات (M0-16) · 5) هدفُ طلبِ الدمج (M0-17) · 6) الأسرار ·
+#         7) عزلُ DDL في اختباراتِ التكامل (M0-03).
 #
 #   bash scripts/checks/verify-governance.sh              # يقارن origin/main..HEAD
 #   bash scripts/checks/verify-governance.sh OLD NEW      # نطاق صريح (CI)
@@ -52,6 +53,7 @@ REQUIRED_DOCS=(
   "docs/00-rules/WORK_CLAIM_RULE.md"
   "docs/00-rules/PUSH_DOCUMENTATION_RULE.md"
   "docs/00-rules/DEFINITION_OF_DONE.md"
+  "docs/00-rules/TESTING_RULES.md"
 )
 MISSING_DOCS=()
 for d in "${REQUIRED_DOCS[@]}"; do
@@ -141,6 +143,27 @@ if [[ -f scripts/checks/scan-secrets.sh ]]; then
   run_check "6) فحص الأسرار" bash scripts/checks/scan-secrets.sh
 else
   SKIPPED+=("6) فحص الأسرار — السكربت غير موجود")
+fi
+
+# ── 7) عزلُ DDL في اختباراتِ التكامل (M0-03) ─────────────────────────────
+# لا يُحتاج git ولا قاعدةَ بيانات: السؤالُ **أيضمن الإعدادُ ألّا يجري ملفّانِ**
+# يُسقطان جداولَ القاعدةِ نفسِها معاً. ويُفرَّق في الاحتسابِ بين ثلاثةِ مخارجَ كما
+# في الفحصَين 4 و5: فشلٌ (رمزٌ ≠ 0) · «لا ينطبق» مرورٌ بوسمٍ صريحٍ (لا خدمةَ لها
+# ملفّانِ أصلاً — وليس ذلك نقصاً في الفحص) · وإلّا مرورٌ كامل. ولا وجهَ لـ«جزئي»
+# هنا: الفحصُ يقرأ ملفّاتِ الإعدادِ من القرصِ فلا يبقى موضعُ جهلٍ يُعلَن.
+if [[ -f scripts/checks/validate-integration-isolation.sh ]]; then
+  hdr "7) عزلُ DDL في اختباراتِ التكامل"
+  ISO_OUT="$(bash scripts/checks/validate-integration-isolation.sh 2>&1)"; ISO_RC=$?
+  printf '%s\n' "$ISO_OUT"
+  if (( ISO_RC != 0 )); then
+    FAILED+=("7) عزلُ DDL في اختباراتِ التكامل")
+  elif [[ "$ISO_OUT" == *"لا ينطبق"* ]]; then
+    PASSED+=("7) عزلُ DDL (لا ينطبق — لا خدمةَ بملفَّين تكامليَّين)")
+  else
+    PASSED+=("7) عزلُ DDL في اختباراتِ التكامل")
+  fi
+else
+  SKIPPED+=("7) عزلُ DDL — السكربت غير موجود")
 fi
 
 # ── الخلاصة ─────────────────────────────────────────────────────────────

@@ -60,11 +60,11 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0002 | M0-01 | @uxxxu | fix/m0-01-subscription-composition-guard | services/subscriptions/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+
+> **`CLM-0002` — حجزٌ بائتٌ بحكمِ الدليلِ، لكنّه ليس حجزَ الوكيلِ فلم يُحرَّر من تلقاءِ نفسِه (رُصد في `M0-15`):** فرعُه `fix/m0-01-subscription-composition-guard` **غيرُ موجودٍ** (`404 Ref Not Found`)، وعملُه مدموجٌ في [MR !82](https://gitlab.com/uxxxu/wasla/-/merge_requests/82) (`merged_at: 2026-08-25T17:56:01Z`، الدمجُ `0c48a9d7`). فالبروتوكول §8.1 يقتضي تحريرَه. المالكُ فيه `@uxxxu` بلا وسمِ وكيلٍ — أي عملُ بشرٍ — **فالتحريرُ قرارُ مالكِ البرنامجِ لا قرارُ الوكيل**.
+>
+> وفي المقابل `CLM-0004` (M0-02) **نشطٌ بحقٍّ**: فرعُه قائمٌ ومتقدِّمٌ على `main` بالتزامَين، وفيه فرقٌ حقيقيٌّ في `services/drivers/src/__tests__/repository.integration.test.ts` — أي عملٌ لم يُدمَج بعد.
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | docs/16-progress/ | 2026-08-26 | 2026-09-08 | Active |
-| CLM-0009 | M0-09 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
-| CLM-0010 | M0-10 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
-| CLM-0012 | M0-15 | @uxxxu (agent:computer) | fix/m0-15-meaningful-filter-parity | scripts/checks/,docs/00-rules/ | 2026-08-27 | 2026-09-08 | Active |
 
 ---
 
@@ -72,6 +72,10 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0012 | M0-15 | @uxxxu (agent:computer) | fix/m0-15-meaningful-filter-parity | 2026-08-27 | دُمج في `main` عبر [MR !94](https://gitlab.com/uxxxu/wasla/-/merge_requests/94) (الالتزامُ `2ea7e64f`، الدمجُ `704e2f3a`). وتُحقِّق من **نتيجةِ الدمجِ** لا من الفرع: أُنزلت شجرةُ `main` بعدَ الدمجِ وقُوبلت بشجرةِ العملِ فكانت **مطابقةً بلا فرقٍ** (`diff -r`)، ثمّ شُغِّلت الحزمةُ على تلك الشجرةِ نفسِها فجاءت **32 ناجح · 0 فاشل**. `M0-15` يبقى `Ready for Gate` لا `Completed`: خطُّ الأنابيبِ `#2796336446` على `main` فشلَ بـ`ci_quota_exceeded` في وظائفِه **الأربعِ والعشرينَ** كلِّها بـ`started_at: null`، وكذلك `#2796270457` على الطلبِ (**22** وظيفة) — لا وظيفةَ واحدةَ بدأت. |
+| CLM-0010 | M0-10 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | 2026-08-27 | **حجزٌ بائتٌ رُصد في `M0-15`:** بقي `Active` بعدَ دمجِ فرعِه في [MR !91](https://gitlab.com/uxxxu/wasla/-/merge_requests/91) (الدمجُ `82eab091`، `merged_at: 2026-08-26T23:38:49Z`) وحذفِ الفرعِ — والفرعُ لم يعد موجوداً (`404 Ref Not Found` على نقطةِ الفروع). فالتحريرُ تطبيقٌ حرفيٌّ للبروتوكول §8.1 لا قرارٌ جديد. `M0-10` يبقى `Ready for Gate`. |
+| CLM-0009 | M0-09 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | 2026-08-27 | **حجزٌ بائتٌ رُصد في `M0-15`:** نفسُ فرعِ `CLM-0010`، مدموجٌ في [MR !91](https://gitlab.com/uxxxu/wasla/-/merge_requests/91) (الدمجُ `82eab091`) والفرعُ محذوف. تحريرٌ بحكمِ §8.1. `M0-09` يبقى `Ready for Gate`. |
+| CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | 2026-08-27 | **حجزٌ بائتٌ رُصد في `M0-15`:** مدموجٌ في [MR !90](https://gitlab.com/uxxxu/wasla/-/merge_requests/90) (الدمجُ `8c4269c1`، `merged_at: 2026-08-26T22:55:53Z`) والفرعُ محذوف. تحريرٌ بحكمِ §8.1. `M0-13` يبقى `Ready for Gate`. |
 | CLM-0011 | M0-14 | @uxxxu (agent:computer) | fix/m0-14-meaningful-docs-scope | 2026-08-27 | دُمج في `main` عبر [MR !92](https://gitlab.com/uxxxu/wasla/-/merge_requests/92) (الالتزامُ `fc34e708`، الدمجُ `084dbab8`). وتُحقِّق محليّاً من **نتيجةِ الدمجِ نفسِها**: أُنزلت شجرةُ `main` بعدَ الدمجِ وقُوبلت بالفرعِ فكانت **مطابقةً بلا فرق**، ثمّ `verify-governance.sh` خمسةٌ خضراءُ و`test-governance.sh` **30/30** على تلك الشجرة. `M0-14` يبقى `Ready for Gate` لا `Completed`: خطُّ الأنابيبِ `#2796132705` على `main` فشلَ بـ`ci_quota_exceeded` في وظائفِه الأربعِ والعشرينَ كلِّها، وكذلك `#2796070035` على الطلبِ (22 وظيفة) و`#2796065617` على الفرعِ (وظيفتان) — لا وظيفةَ واحدةَ بدأت. الفرعُ لم يُحذف. |
 | CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | 2026-08-26 | دُمج في `main` عبر [MR !88](https://gitlab.com/uxxxu/wasla/-/merge_requests/88) (الالتزامُ `04d90968`، الدمجُ `8b44b143`) وحُذف الفرع. `M0-12` يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، وخطُّ الأنابيبِ `#2793103205` على `main` فشلَ بـ`ci_quota_exceeded` في الوظائفِ العشرينَ كلِّها. |
 | CLM-0007 | M0-13 | @uxxxu (agent:computer) | fix/m0-13-agent-owner-normalization | 2026-08-26 | دُمج في `main` عبر [MR !89](https://gitlab.com/uxxxu/wasla/-/merge_requests/89) (الالتزامُ `74463452`، الدمجُ `0edc4ff5`) وحُذف الفرع. واستهدافُ الطلبِ نُقل إلى `main` تلقائيّاً عندَ دمجِ !88 — لم يُحتَج تدخُّلاً يدويّاً. |

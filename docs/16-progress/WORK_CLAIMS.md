@@ -65,6 +65,7 @@ docs/16-progress/MASTER_PROGRESS.md
 >
 > وفي المقابل `CLM-0004` (M0-02) **نشطٌ بحقٍّ**: فرعُه قائمٌ ومتقدِّمٌ على `main` بالتزامَين، وفيه فرقٌ حقيقيٌّ في `services/drivers/src/__tests__/repository.integration.test.ts` — أي عملٌ لم يُدمَج بعد.
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0013 | M0-16 | @uxxxu (agent:computer) | fix/m0-16-claim-freshness-guard | scripts/checks/,docs/00-rules/,.gitlab-ci.yml | 2026-08-27 | 2026-09-08 | Active |
 
 ---
 

@@ -12,6 +12,7 @@
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
+    "verify": "bash scripts/verify.sh",
     "clean": "pnpm -r run clean && rimraf node_modules",
     "governance:verify": "bash scripts/checks/verify-governance.sh",
     "governance:test": "bash scripts/checks/test-governance.sh",

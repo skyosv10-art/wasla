@@ -747,6 +747,175 @@ iso_mutation_single() {
 }
 t "حدُّ «ملفٌّ واحدٌ لا يُسابق نفسَه» مقصودٌ لا عرَضٌ (اختبارُ طفرة)" pass iso_mutation_single
 
+printf '\n\033[1m[ط] الأمرُ الموحَّدُ وCI مانعٌ لا مُجمِّل (M0-04)\033[0m\n'
+# الحارسُ يقرأ `.gitlab-ci.yml` و`VERIFY_COMMAND.md` و`scripts/`، فتُبنى له **جذورٌ
+# صناعيّةٌ** في /tmp ولا يُشوَّه ملفٌّ حقيقيٌّ أبداً: تشويهُ الحقيقيِّ يجعل الحالةَ
+# تكذب متى أُصلح الملفُّ أو أُعيدت تسميةُ وظيفةٍ (سابقةُ M0-12).
+CIM_SRC="$REPO_ROOT/scripts/checks/validate-ci-mandatory.sh"
+RS_SRC="$REPO_ROOT/scripts/checks/validate-repo-structure.sh"
+
+_ci_stage() { # _ci_stage <tag> <نمط> → يطبع مسارَ جذرٍ صناعيّ
+  local tag="$1" mode="$2"
+  local R="/tmp/gov_ci_$tag"
+  rm -rf "$R"; mkdir -p "$R/docs/00-rules" "$R/scripts/checks/lib"
+  # سكربتاتُ الفحصِ الحقيقيّةُ تُنسَخ (القائمةُ منها يقرؤها البابُ 4)، والوثيقةُ كذلك.
+  cp "$REPO_ROOT"/scripts/checks/*.sh "$R/scripts/checks/" 2>/dev/null
+  cp "$REPO_ROOT"/scripts/checks/lib/* "$R/scripts/checks/lib/" 2>/dev/null
+  cp "$REPO_ROOT/docs/00-rules/VERIFY_COMMAND.md" "$R/docs/00-rules/"
+  cp "$REPO_ROOT/scripts/verify.sh" "$R/scripts/verify.sh"
+  # خطُّ CI صناعيٌّ صغيرٌ: وظيفةٌ تستدعي الأمرَ الموحَّد، وأخرى إرشاديّةٌ مُعلَنة.
+  cat > "$R/.gitlab-ci.yml" <<'YAML'
+stages:
+  - validate
+
+verify:
+  stage: validate
+  script:
+    - bash scripts/verify.sh
+
+markdown-lint:
+  stage: validate
+  allow_failure: true
+  script:
+    - echo lint
+YAML
+  case "$mode" in
+    ok) : ;;
+    no_verify)      # البابُ 1: لا وظيفةَ تستدعي الأمرَ الموحَّد
+      sed -i 's|bash scripts/verify.sh|echo skipped|' "$R/.gitlab-ci.yml" ;;
+    verify_soft)    # البابُ 1: تستدعيه لكنّها لا تُسقِط
+      sed -i '/^verify:/,/bash scripts\/verify.sh/ s|^  stage: validate|  stage: validate\n  allow_failure: true|' \
+        "$R/.gitlab-ci.yml" ;;
+    inline_list)    # البابُ 2: رجوعُ قائمةِ الإلزامِ المضمَّنةِ إلى YAML
+      printf '\nrepo-structure:\n  stage: validate\n  script:\n    - for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
+        >> "$R/.gitlab-ci.yml" ;;
+    undeclared_af)  # البابُ 3: استثناءُ إخفاقٍ غيرُ مُعلَنٍ في الوثيقة
+      printf '\nflaky-job:\n  stage: validate\n  allow_failure: true\n  script:\n    - echo maybe\n' \
+        >> "$R/.gitlab-ci.yml" ;;
+    orphan_guard)   # البابُ 4: حارسٌ لا يصل إليه الأمرُ الموحَّد ولا هو مُعلَن
+      # اسمُ الملفِّ يُبنى في وقتِ التشغيلِ لا يُكتَب حرفيّاً: البابُ 4 يقيس الوصولَ
+      # بالبحثِ النصّيِّ عن المسارِ في السكربتات، فلو كُتب المسارُ حرفيّاً هنا لَعَدَّه
+      # الحارسُ «موصولاً» من حزمةِ الاختبارِ نفسِها — وهو ما وقع أوّلَ تشغيلٍ وكشفته
+      # هذه الحالةُ (حدُّ الحارسِ المُعلَن: كلُّ ذكرٍ نصّيٍّ وصولٌ، تحفّظاً).
+      local seg; seg="validate-$(printf orphan)-probe.sh"
+      printf '#!/usr/bin/env bash\nexit 0\n' > "$R/scripts/checks/$seg" ;;
+    no_anchor)      # الوثيقةُ بلا كتلةِ §4 → سقوطٌ صريحٌ لا مرورٌ بقائمةٍ فارغة
+      sed -i 's|^## 4\. وظائفُ CI المسموحُ لها بالإخفاق|## 4. عنوانٌ مُغيَّرٌ|' \
+        "$R/docs/00-rules/VERIFY_COMMAND.md" ;;
+  esac
+  printf '%s' "$R"
+}
+
+_cim() { # _cim <جذر> [سكربتٌ بديلٌ مُطفَّر]
+  local root="$1" script="${2:-$CIM_SRC}"
+  ( cd "$REPO_ROOT" && bash "$script" "$root" )
+}
+
+_cim_mutant() { # _cim_mutant <tag> <القديم> <الجديد> → مسارُ نسخةٍ مُطفَّرة
+  local tag="$1" old="$2" new="$3"
+  local M="/tmp/gov_cim_mut_$tag.sh"
+  sed "s|$old|$new|" "$CIM_SRC" > "$M"
+  cmp -s "$M" "$CIM_SRC" && { echo "✗ الطفرةُ $tag لم تُغيّر شيئاً — النمطُ غيرُ موجود" >&2; return 1; }
+  printf '%s' "$M"
+}
+
+# (1) مرجعٌ موجبٌ — المستودعُ الحقيقيُّ نفسُه يجب أن يمرّ. ولولا هذه الحالةُ لما
+# دلّت السلبيّاتُ بعدها على شيء: حارسٌ يرفض كلَّ شيءٍ «يكشف» كلَّ عيبٍ وكلَّ سليم.
+cim_real() { _cim "$REPO_ROOT"; }
+t "يمرّ على إعدادِ المستودعِ الحقيقيِّ كما هو" pass cim_real
+
+# (2) جذرٌ صناعيٌّ سليمٌ يمرّ أيضاً — وإلّا كانت الحالاتُ بعدَه ترفض لأنّ الجذرَ
+# صناعيٌّ لا لأنّ العيبَ فيه.
+cim_ok() { _cim "$(_ci_stage ok ok)"; }
+t "يمرّ على جذرٍ صناعيٍّ سليم" pass cim_ok
+
+# (3) البابُ 1: خطٌّ لا يستدعي الأمرَ الموحَّدَ → يُرفَض. أمرٌ موحَّدٌ لا تُشغّله CI
+# ليس بوّابةً بل ملفٌّ في المستودع.
+cim_no_verify() { _cim "$(_ci_stage no_verify no_verify)"; }
+t "يرفض خطّاً لا يستدعي الأمرَ الموحَّد" fail cim_no_verify
+
+# (4) البابُ 1: يستدعيه في وظيفةٍ allow_failure → يُرفَض. الاستدعاءُ بلا إسقاطٍ زينة.
+cim_soft() { _cim "$(_ci_stage verify_soft verify_soft)"; }
+t "يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةٍ لا تُسقِط" fail cim_soft
+
+# (5) البابُ 2: رجوعُ قائمةِ الإلزامِ المضمَّنةِ إلى YAML → يُرفَض. هذا **العيبُ
+# الأصليُّ** الذي كان فرقُه 12 عنصراً عن قائمةِ البوّابة.
+cim_inline() { _cim "$(_ci_stage inline_list inline_list)"; }
+t "يرفض رجوعَ قائمةِ الإلزامِ المضمَّنةِ إلى YAML" fail cim_inline
+
+# (6) البابُ 3: allow_failure غيرُ مُعلَنٍ في §4 → يُرفَض. والمُعلَنُ (markdown-lint)
+# يمرُّ في الحالةِ (2) — فالفحصُ يفرّق بين استثناءٍ مقصودٍ وآخرَ صامت.
+cim_undeclared() { _cim "$(_ci_stage undeclared_af undeclared_af)"; }
+t "يرفض استثناءَ إخفاقٍ غيرَ مُعلَنٍ في الوثيقة" fail cim_undeclared
+
+# (7) البابُ 4: حارسٌ يتيمٌ → يُرفَض. العيبُ المقيسُ: find-existing-work.sh لم
+# تستدعِه وظيفةُ CI واحدةٌ — وهو اليومَ مُعلَنٌ في §5 لا مسكوتٌ عنه.
+cim_orphan() { _cim "$(_ci_stage orphan_guard orphan_guard)"; }
+t "يرفض حارساً لا يصل إليه الأمرُ الموحَّدُ ولا هو مُعلَن" fail cim_orphan
+
+# (8) وثيقةٌ بلا كتلةِ §4 → سقوطٌ صريحٌ. ولولا هذه الحالةُ لأمكن للحارسِ أن يمرَّ
+# بقائمةِ استثناءاتٍ فارغةٍ لأنّه لم يجد الكتلةَ — أخطرُ من رفضٍ خاطئٍ.
+cim_no_anchor() { _cim "$(_ci_stage no_anchor no_anchor)"; }
+t "يسقط صريحاً إن غابت كتلةُ §4 من الوثيقة" fail cim_no_anchor
+
+# (9) بنيةُ المستودعِ: ملفُّ جذرٍ ناقصٌ → يُرفَض، والناقصُ كلُّه يُطبَع لا أوّلُه.
+rs_missing() {
+  local R="/tmp/gov_rs_missing"; rm -rf "$R"; mkdir -p "$R"
+  local out rc; out="$( cd "$REPO_ROOT" && bash "$RS_SRC" "$R" 2>&1 )"; rc=$?
+  (( rc != 0 )) || { echo "✗ مرَّ جذرٌ فارغٌ"; return 1; }
+  grep -q 'README.md' <<< "$out" || { printf '%s\n' "$out"; echo "✗ لم يُسمِّ الناقصَ"; return 1; }
+  grep -q 'TESTING_RULES.md' <<< "$out" || { printf '%s\n' "$out"; echo "✗ لم يُبلِّغ عن الوثائقِ كلِّها"; return 1; }
+  return 0
+}
+t "بنيةُ المستودع: يرفض جذراً ناقصاً ويُسمّي كلَّ ناقصٍ" pass rs_missing
+
+# (10) مصدرٌ واحدٌ فعلاً: عنصرٌ يُضاف إلى `required-artifacts.sh` يظهر في
+# **الموضعَين** — البنيةِ والبوّابةِ — بلا تحريرِ أيٍّ منهما. وهذه الحالةُ هي التي
+# تُثبت أنّ العلاجَ «مصدرٌ واحدٌ» لا «نسختانِ متطابقتانِ اليومَ».
+rs_single_source() {
+  local L="$REPO_ROOT/scripts/checks/lib/required-artifacts.sh"
+  local M="/tmp/gov_rs_lib"; rm -rf "$M"; mkdir -p "$M/checks/lib"
+  cp "$REPO_ROOT"/scripts/checks/*.sh "$M/checks/" 2>/dev/null
+  cp "$REPO_ROOT"/scripts/checks/lib/* "$M/checks/lib/" 2>/dev/null
+  sed -i 's|^REQUIRED_DOCS=(|REQUIRED_DOCS=(\n  "docs/00-rules/GHOST_RULE.md"|' "$M/checks/lib/required-artifacts.sh"
+  local out1 out2
+  out1="$( cd "$REPO_ROOT" && bash "$M/checks/validate-repo-structure.sh" "$REPO_ROOT" 2>&1 )" && {
+    printf '%s\n' "$out1"; echo "✗ البنيةُ لم تر العنصرَ المُضافَ"; return 1; }
+  grep -q 'GHOST_RULE.md' <<< "$out1" || { printf '%s\n' "$out1"; echo "✗ البنيةُ لم تُسمِّ العنصرَ المُضافَ"; return 1; }
+  out2="$( cd "$REPO_ROOT" && bash "$M/checks/verify-governance.sh" 2>&1 )" && {
+    echo "✗ البوّابةُ لم تر العنصرَ المُضافَ"; return 1; }
+  grep -q 'GHOST_RULE.md' <<< "$out2" || { printf '%s\n' "$out2" | tail -5; echo "✗ البوّابةُ لم تُسمِّ العنصرَ المُضافَ"; return 1; }
+  return 0
+}
+t "مصدرٌ واحدٌ: عنصرٌ يُضاف مرّةً يُلزِم البنيةَ والبوّابةَ معاً" pass rs_single_source
+
+# ── اختباراتُ الطفرةِ: أربعةُ أبوابٍ، كلٌّ يُحيَّد وحدَه ───────────────────
+# لا يكفي أن ترفضَ الحالاتُ: يجب أن يكون **كلُّ بابٍ** هو الذي رفض. فإن حُيِّد
+# بابٌ ومرَّت حالتُه فالحالةُ كانت تحرس شيئاً آخر.
+cim_mut_door1() {
+  local m; m="$(_cim_mutant door1 'PROBLEMS+=("البابُ 1: لا وظيفةَ CI تستدعي' ': #')" || return 1
+  _cim "$(_ci_stage no_verify no_verify)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 1 (مدخلٌ مُستدعىً) يكشف فعلاً" pass cim_mut_door1
+
+cim_mut_door2() {
+  local m; m="$(_cim_mutant door2 'PROBLEMS+=("البابُ 2:' ': #')" || return 1
+  _cim "$(_ci_stage inline_list inline_list)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 2 (لا كتلةَ مضمَّنةً) يكشف فعلاً" pass cim_mut_door2
+
+cim_mut_door3() {
+  local m; m="$(_cim_mutant door3 'PROBLEMS+=("البابُ 3:' ': #')" || return 1
+  _cim "$(_ci_stage undeclared_af undeclared_af)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 3 (لا استثناءَ صامتاً) يكشف فعلاً" pass cim_mut_door3
+
+cim_mut_door4() {
+  local m; m="$(_cim_mutant door4 'PROBLEMS+=("البابُ 4:' ': #')" || return 1
+  _cim "$(_ci_stage orphan_guard orphan_guard)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً" pass cim_mut_door4
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

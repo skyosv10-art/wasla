@@ -108,3 +108,6 @@ tmp/
 
 # ─── Drizzle (generated on demand; schema.sql is the canonical DDL) ──
 services/identity/drizzle/
+
+# أرتفاكتُ الأمرِ الموحَّد (M0-04) — يُولَّد ولا يُلتزَم.
+artifacts/

@@ -9,82 +9,24 @@ stages:
 variables:
   GIT_DEPTH: "1"
 
-# التحقق من وجود الملفات الإلزامية لكل مستودع وقواعد المستودع.
+# ─────────────────────────────────────────────────────────────────────
+# بنيةُ المستودعِ الإلزاميّة — **بلا قائمةٍ مضمَّنةٍ هنا** (M0-04).
+# كانت هذه الوظيفةُ تكتب قائمةَ الملفّاتِ والأدلّةِ داخلَ `script:`، فصارت
+# نسخةً ثانيةً تفارق `REQUIRED_DOCS` في البوّابةِ بـ12 عنصراً — ولا يمكن
+# تشغيلُها محلّياً. المصدرُ الواحدُ الآنَ: scripts/checks/lib/required-artifacts.sh
+# ويحرس رجوعَ الكتلةِ المضمَّنةِ: scripts/checks/validate-ci-mandatory.sh (البابُ 2).
+# المرجع: docs/00-rules/VERIFY_COMMAND.md §2
+# ─────────────────────────────────────────────────────────────────────
 repo-structure:
   stage: validate
   image: alpine:3.20
   before_script:
-    - apk add --no-cache bash
+    - apk add --no-cache bash python3
   script:
-    - |
-      set -e
-      echo "==> فحص وجود الملفات الإلزامية في جذر المستودع"
-      for f in README.md CONTRIBUTING.md SECURITY.md CODEOWNERS .gitignore; do
-        if [ ! -f "$f" ]; then
-          echo "ERROR: ملف إلزامي مفقود: $f"
-          exit 1
-        fi
-        echo "OK: $f"
-      done
-
-      echo "==> فحص وجود أدلة المستودع الأساسية"
-      for d in apps bots services packages infra scripts docs; do
-        if [ ! -d "$d" ]; then
-          echo "ERROR: دليل إلزامي مفقود: $d"
-          exit 1
-        fi
-        echo "OK: $d/"
-      done
-
-      echo "==> فحص وجود قوانين docs/00-rules"
-      for f in docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md \
-               docs/00-rules/DEFINITION_OF_DONE.md \
-               docs/00-rules/GIT_RULES.md \
-               docs/00-rules/SECURITY_RULES.md; do
-        if [ ! -f "$f" ]; then
-          echo "ERROR: قانون إلزامي مفقود: $f"
-          exit 1
-        fi
-        echo "OK: $f"
-      done
-
-      echo "==> فحص وجود لوحة التقدم و ADR"
-      test -f docs/16-progress/MASTER_PROGRESS.md || { echo "ERROR: MASTER_PROGRESS.md مفقود"; exit 1; }
-      test -f docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md || { echo "ERROR: ADR-001 مفقود"; exit 1; }
-      echo "OK: docs/16-progress/MASTER_PROGRESS.md"
-      echo "OK: docs/15-decisions/ADR-001"
-
-      echo "==> فحص وجود وثائق الحوكمة الموحّدة"
-      for f in docs/16-progress/README.md \
-               docs/16-progress/LAUNCH_TO_100_ROADMAP.md \
-               docs/16-progress/LAUNCH_EXECUTION_BOARD.md \
-               docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md \
-               docs/16-progress/WORK_CLAIMS.md \
-               docs/16-progress/WORK_INDEX.md \
-               docs/00-rules/WORK_CLAIM_RULE.md \
-               docs/00-rules/PUSH_DOCUMENTATION_RULE.md; do
-        if [ ! -f "$f" ]; then
-          echo "ERROR: وثيقة حوكمة إلزامية مفقودة: $f"
-          exit 1
-        fi
-        echo "OK: $f"
-      done
-
-      echo "==> فحص بنية لوحة التنفيذ"
-      bash scripts/checks/validate-launch-board.sh
-
-      echo "==> فحص سلامة سجل الحجوزات"
-      bash scripts/checks/validate-work-claims.sh
-
-      echo "==> فحص عدم وجود أسرار في المستودع"
-      if [ ! -x scripts/checks/scan-secrets.sh ]; then
-        echo "ERROR: scripts/checks/scan-secrets.sh غير قابل للتنفيذ" >&2
-        exit 1
-      fi
-      bash scripts/checks/scan-secrets.sh
-      echo "OK: لا أنماط أسرار واضحة"
-
-      echo "==> جميع فحوصات بنية المستودع نجحت"
+    - bash scripts/checks/validate-repo-structure.sh
+    - bash scripts/checks/validate-launch-board.sh
+    - bash scripts/checks/validate-work-claims.sh
+    - bash scripts/checks/scan-secrets.sh
 
 # فحص قواعد Markdown (اختياري — يتجاهل إذا لم تتوفر الأداة).
 markdown-lint:
@@ -186,6 +128,30 @@ build-test:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
+
+
+# ─────────────────────────────────────────────────────────────────────
+# الأمرُ الموحَّد (M0-04) — نفسُ ما يشغّله المطوّرُ بـ`pnpm verify`.
+# لا وظيفةَ تفحص شيئاً لا يقدر عليه المطوّرُ محلّياً، ولا فحصٌ محلّيٌّ لا يجري هنا.
+# الأنواعُ والاختباراتُ تُتخطّى هنا **بوسمٍ صريحٍ في الأرتفاكت** لأنّ وظائفَ
+# build-test وdb-integration تُشغّلها باعتمادياتٍ وقاعدةٍ حقيقيّة.
+# والأرتفاكتُ يُرفَع `when: always` — فالتقريرُ يُقرأ عندَ الإخفاقِ خاصّةً.
+# المرجع: docs/00-rules/VERIFY_COMMAND.md §6
+# ─────────────────────────────────────────────────────────────────────
+verify:
+  stage: validate
+  image: alpine:3.20
+  variables:
+    VERIFY_SKIP_NODE: "1"
+  before_script:
+    - apk add --no-cache bash git python3 grep
+  script:
+    - bash scripts/verify.sh
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - artifacts/verify/
 
 # Identity (Phase 01 Exit Gate persistence verification):
 # services/identity/src/__tests__/postgres-repository.integration.test.ts

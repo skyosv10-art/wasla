@@ -64,7 +64,6 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | docs/16-progress/ | 2026-08-26 | 2026-09-08 | Active |
 | CLM-0009 | M0-09 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
 | CLM-0010 | M0-10 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
-| CLM-0011 | M0-14 | @uxxxu (agent:computer) | fix/m0-14-meaningful-docs-scope | scripts/checks/,docs/00-rules/ | 2026-08-27 | 2026-09-08 | Active |
 
 ---
 
@@ -72,6 +71,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0011 | M0-14 | @uxxxu (agent:computer) | fix/m0-14-meaningful-docs-scope | 2026-08-27 | دُمج في `main` عبر [MR !92](https://gitlab.com/uxxxu/wasla/-/merge_requests/92) (الالتزامُ `fc34e708`، الدمجُ `084dbab8`). وتُحقِّق محليّاً من **نتيجةِ الدمجِ نفسِها**: أُنزلت شجرةُ `main` بعدَ الدمجِ وقُوبلت بالفرعِ فكانت **مطابقةً بلا فرق**، ثمّ `verify-governance.sh` خمسةٌ خضراءُ و`test-governance.sh` **30/30** على تلك الشجرة. `M0-14` يبقى `Ready for Gate` لا `Completed`: خطُّ الأنابيبِ `#2796132705` على `main` فشلَ بـ`ci_quota_exceeded` في وظائفِه الأربعِ والعشرينَ كلِّها، وكذلك `#2796070035` على الطلبِ (22 وظيفة) و`#2796065617` على الفرعِ (وظيفتان) — لا وظيفةَ واحدةَ بدأت. الفرعُ لم يُحذف. |
 | CLM-0006 | M0-12 | @uxxxu (agent:computer) | fix/m0-12-governance-proof-isolation | 2026-08-26 | دُمج في `main` عبر [MR !88](https://gitlab.com/uxxxu/wasla/-/merge_requests/88) (الالتزامُ `04d90968`، الدمجُ `8b44b143`) وحُذف الفرع. `M0-12` يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، وخطُّ الأنابيبِ `#2793103205` على `main` فشلَ بـ`ci_quota_exceeded` في الوظائفِ العشرينَ كلِّها. |
 | CLM-0007 | M0-13 | @uxxxu (agent:computer) | fix/m0-13-agent-owner-normalization | 2026-08-26 | دُمج في `main` عبر [MR !89](https://gitlab.com/uxxxu/wasla/-/merge_requests/89) (الالتزامُ `74463452`، الدمجُ `0edc4ff5`) وحُذف الفرع. واستهدافُ الطلبِ نُقل إلى `main` تلقائيّاً عندَ دمجِ !88 — لم يُحتَج تدخُّلاً يدويّاً. |
 | CLM-0003 | M0-11 | @uxxxu | fix/m0-11-governance-gate-sigpipe | 2026-08-26 | حُرِّر بقرارِ مالكِ البرنامج (`M0-12`): عملُ `M0-11` مدفوعٌ ومدموجٌ في الالتزامِ `183a7369`، وبقاءُ الحجزِ نشطاً كان يمنع `M0-12` من العملِ على `scripts/checks/` وهو نطاقُه المُعلَنُ على اللوحة. `M0-11` نفسُه يبقى `Ready for Gate` لا `Completed`: دليلُ الإغلاقِ بوّابةٌ خضراءُ في CI، والحصّةُ منتهية. |

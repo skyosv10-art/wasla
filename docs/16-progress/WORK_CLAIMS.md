@@ -64,6 +64,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0008 | M0-13 | @uxxxu (agent:computer) | chore/m0-13-closeout-and-drift-findings | docs/16-progress/ | 2026-08-26 | 2026-09-08 | Active |
 | CLM-0009 | M0-09 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
 | CLM-0010 | M0-10 | @uxxxu (agent:computer) | fix/m0-09-m0-10-renumber-and-land | services/drivers/ | 2026-08-26 | 2026-09-08 | Active |
+| CLM-0011 | M0-14 | @uxxxu (agent:computer) | fix/m0-14-meaningful-docs-scope | scripts/checks/,docs/00-rules/ | 2026-08-27 | 2026-09-08 | Active |
 
 ---
 

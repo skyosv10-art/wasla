@@ -33,7 +33,19 @@ SHARED_LEDGERS=(
 )
 
 # المسارات التي تُوجب حجزاً (نفس تعريف require-doc-update.sh)
-MEANINGFUL='^(apps/|bots/|services/|packages/|infra/|scripts/|\.gitlab-ci\.yml$|package\.json$|pnpm-lock\.yaml$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$)'
+#
+# M0-14: أُضيف `docs/`. كان المرشِّحُ **لا يشمله إطلاقاً**، فتعديلٌ يقتصر على وثائقَ
+# يخرج المدقِّقُ فيه بـ«لا تغييرات ذات معنى تُوجب حجزاً» **قبلَ أن يبحثَ عن حجزٍ
+# للفرعِ أصلاً** — مُثبَتٌ بالسبر: فرعٌ بلا أيِّ حجزٍ يُعدِّل `WORK_CLAIM_RULE.md`
+# مرَّ برمزِ خروجٍ `0`. أي أنّ منعَ التكرارِ كان يحمي `services/` و`scripts/`
+# ولا يحمي `docs/`: جهتانِ قد تُعيدانِ كتابةَ نفسِ الوثيقةِ — بل نفسِ القاعدةِ
+# الحاكمةِ — بلا حجزٍ وبلا تحذير.
+#
+# والاستثناءُ الذي لا يجوز أن يسقط: السجلاتُ المشتركةُ الخمسةُ (`SHARED_LEDGERS`).
+# القاعدةُ نفسُها تُلزم **كلَّ** دافعٍ بتحديثِها، فلو أوجبت حجزاً لَصار كلُّ توثيقٍ
+# مستحيلاً بلا حجزٍ سابق. ولا تُكتب هنا قائمةٌ ثانيةٌ لها: يُرشَّح بـ`is_shared()`
+# على المصفوفِ الواحدِ أدناه، فلا يُخلَق موضعُ انحرافٍ خامس.
+MEANINGFUL='^(apps/|bots/|services/|packages/|infra/|scripts/|docs/|\.gitlab-ci\.yml$|package\.json$|pnpm-lock\.yaml$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$)'
 
 fail() { printf '\n\033[31m✗ رفض حجز العمل:\033[0m %s\n' "$1" >&2; exit 1; }
 info() { printf '  %s\n' "$1"; }
@@ -175,7 +187,16 @@ git rev-parse --git-dir >/dev/null 2>&1 || fail "لا مستودع git هنا، 
 CHANGED="$(git diff --name-only "$OLD_REF" "$NEW_REF" -- 2>/dev/null || true)"
 [[ -n "$CHANGED" ]] || { ok "لا ملفات مُعدّلة بين $OLD_REF و$NEW_REF."; exit 0; }
 
-MEANINGFUL_CHANGED="$(printf '%s\n' "$CHANGED" | grep -E "$MEANINGFUL" || true)"
+# لا أنبوبَ إلى grep هنا (مصيدةُ SIGPIPE — M0-11/M0-12): يُرشَّح بحلقةٍ داخل bash،
+# والسجلاتُ المشتركةُ تُستثنى بـ`is_shared()` لا بقائمةٍ ثانية (M0-14).
+MEANINGFUL_CHANGED=""
+while IFS= read -r f; do
+  [[ -n "$f" ]] || continue
+  is_shared "$f" && continue
+  [[ "$f" =~ $MEANINGFUL ]] || continue
+  MEANINGFUL_CHANGED+="$f"$'\n'
+done <<< "$CHANGED"
+MEANINGFUL_CHANGED="${MEANINGFUL_CHANGED%$'\n'}"
 if [[ -z "$MEANINGFUL_CHANGED" ]]; then
   ok "لا تغييرات ذات معنى تُوجب حجزاً."
   exit 0

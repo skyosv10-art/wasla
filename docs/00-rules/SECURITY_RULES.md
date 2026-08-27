@@ -215,6 +215,7 @@ Release gates
 - [/docs/07-security/](../07-security/) — وثائق الأمان التفصيلية
 - [/docs/14-runbooks/](../14-runbooks/) — Runbooks الحوادث
 - [§11 اعتماديات الطرف الثالث](#11-اعتمادياتُ-الطرفِ-الثالثِ-وتدقيقُ-الثغرات) — تدقيقُ الثغراتِ وقبولُ الخطرِ المؤقّت
+- [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) — سجلُّ المخاطرِ والاستثناءاتِ (`M0-07`): كلُّ خطرٍ بمالكٍ ومهلةِ مراجعةٍ، محروسٌ بالفحصِ 10
 
 ---
 
@@ -241,5 +242,7 @@ override:vitest | expires:2026-11-25 | owner:@uxxxu | يرفع vitest إلى 3.2
 override:vite | expires:2026-11-25 | owner:@uxxxu | يضمن vite ≥ 6.4.3 (CVE-2026-53571 عاليةٌ · CVE-2026-53632 · CVE-2026-39365) — وهي اعتماديةٌ غيرُ مباشرةٍ تأتي مع vitest، فلا مالكَ لنسختِها في أيِّ package.json.
 override:esbuild | expires:2026-11-25 | owner:@uxxxu | يضمن esbuild ≥ 0.25.12 (GHSA-67mh-4wv8-2f99) في سلسلتَين: vitest>vite>esbuild، وdrizzle-kit>@esbuild-kit/*>esbuild@0.18.20 — و@esbuild-kit مهجورٌ وdrizzle-kit 0.31.10 أحدثُ المتاحِ، فلا مخرجَ إلّا التثبيتُ القسريّ.
 ```
+
+**كلُّ سجلٍّ في الكتلةِ أعلاه له خطرٌ مُسجَّلٌ** في [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) (`M0-07`) بمالكٍ وتاريخِ مراجعةٍ **أسبقَ من `expires:`** — يقابلهما البابُ الثالثُ في `validate-risk-register.sh` صفّاً بصفٍّ، فلا استثناءَ هنا يمضي بلا خطرٍ يُراجَع هناك.
 
 **إعادةُ التدقيقِ:** `pnpm audit` و`pnpm audit --prod` قبلَ كلِّ دفعٍ يمسُّ `package.json` أو `pnpm-lock.yaml`، ونتيجتُهما تُكتب في `TASK_LOG.md` رقماً لا وصفاً.

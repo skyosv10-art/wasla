@@ -1108,6 +1108,207 @@ dep_mut_door4() {
 }
 t "البابُ 4 (تثبيتٌ قسريٌّ مُبرَّرٌ) يكشف فعلاً" pass dep_mut_door4
 
+printf '\n\033[1m[ك] سجلُّ المخاطرِ والاستثناءات (M0-07)\033[0m\n'
+# الحارسُ يقرأ ثلاثَ وثائقَ (السجلُّ · `SECURITY_RULES.md` §11 · اللوحةُ) ويقارن
+# تواريخَ بتاريخِ اليوم. فتُبنى له **جذورٌ صناعيّةٌ كاملةٌ** في /tmp ويُثبَّت «اليومُ»
+# بـ`RISK_TODAY` — فلا تُشوَّه وثيقةٌ حقيقيّةٌ، ولا تصير الحالاتُ كاذبةً بمرورِ
+# الوقتِ حينَ تنقضي مهلةُ مراجعةٍ حقيقيّةٍ (سابقةُ M0-12).
+RISK_SRC="$REPO_ROOT/scripts/checks/validate-risk-register.sh"
+RISK_ANCHOR='## 3. السجلُّ (كتلةٌ مقروءةٌ آليّاً — يقرؤها الحارسُ)'
+SEC_ANCHOR='## 11. اعتمادياتُ الطرفِ الثالثِ وتدقيقُ الثغرات'
+
+_risk_root() { # _risk_root <tag> <orphan:yes|no> <sec-lines-count> <سطورُ §11...> -- <سطورُ السجلّ...>
+  local tag="$1" orphan="$2"; shift 2
+  local R="/tmp/gov_risk_$tag"
+  rm -rf "$R"; mkdir -p "$R/docs/00-rules" "$R/docs/07-security" "$R/docs/16-progress"
+  local sec=() reg=() seen=0 a
+  for a in "$@"; do
+    if [[ "$a" == "--" ]]; then seen=1; continue; fi
+    if (( seen )); then reg+=("$a"); else sec+=("$a"); fi
+  done
+  printf '# أمرُ التحقّقِ — نسخةٌ صناعيّةٌ\n' > "$R/docs/00-rules/VERIFY_COMMAND.md"
+  {
+    printf '# قواعدُ الأمان — نسخةٌ صناعيّةٌ\n\n'
+    [[ "$orphan" == "no" ]] && printf 'انظر [RISK_REGISTER.md](../07-security/RISK_REGISTER.md).\n\n'
+    printf '%s\n\n' "$SEC_ANCHOR"
+    printf '```text\n'
+    for a in "${sec[@]}"; do printf '%s\n' "$a"; done
+    printf '```\n'
+  } > "$R/docs/00-rules/SECURITY_RULES.md"
+  {
+    printf '# اللوحةُ — نسخةٌ صناعيّةٌ\n\n'
+    [[ "$orphan" == "no" ]] && printf '| M0-07 | سجل المخاطر | انظر docs/07-security/RISK_REGISTER.md |\n'
+  } > "$R/docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
+  {
+    printf '# RISK_REGISTER — نسخةٌ صناعيّةٌ\n\n'
+    printf '%s\n\n' "$RISK_ANCHOR"
+    printf '```text\n'
+    for a in "${reg[@]}"; do printf '%s\n' "$a"; done
+    printf '```\n'
+  } > "$R/docs/07-security/RISK_REGISTER.md"
+  printf '%s\n' "$R"
+}
+
+_risk() { # _risk <جذر> [today] [سكربت]
+  local root="$1" today="${2:-2026-08-27}" script="${3:-$RISK_SRC}"
+  RISK_TODAY="$today" bash "$script" "$root"
+}
+
+GOOD_ROW='RISK-0001 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | خطرٌ صناعيٌّ للاختبار'
+R_OK="$(_risk_root ok no -- "$GOOD_ROW")"
+t "سجلٌّ سليمٌ بمالكٍ ومهلةٍ ساريةٍ يمرّ" pass _risk "$R_OK"
+
+# ── البابُ 1: الصيغةُ والمرجعُ الحيُّ ────────────────────────────────────
+R_NOFILE="$(_risk_root nofile no -- "$GOOD_ROW")"; rm -f "$R_NOFILE/docs/07-security/RISK_REGISTER.md"
+t "غيابُ ملفِّ السجلِّ يُسقِط" fail _risk "$R_NOFILE"
+
+R_NOANCH="$(_risk_root noanchor no -- "$GOOD_ROW")"
+python3 -c 'import sys;p=sys.argv[1];t=open(p,encoding="utf-8").read();open(p,"w",encoding="utf-8").write(t.replace(sys.argv[2],"## 3. السجل"))' \
+  "$R_NOANCH/docs/07-security/RISK_REGISTER.md" "$RISK_ANCHOR"
+t "غيابُ المرساةِ الحرفيّةِ يُسقِط" fail _risk "$R_NOANCH"
+
+R_EMPTY="$(_risk_root empty no -- '# لا صفوفَ هنا')"
+t "كتلةٌ بلا سطرِ خطرٍ واحدٍ تُسقِط" fail _risk "$R_EMPTY"
+
+R_BADID="$(_risk_root badid no -- 'RISK-1 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "معرِّفٌ بغيرِ أربعةِ أرقامٍ يُسقِط" fail _risk "$R_BADID"
+
+R_BADSEV="$(_risk_root badsev no -- 'RISK-0001 | sev:urgent | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "شدّةٌ خارجَ المفرداتِ الأربعِ تُسقِط" fail _risk "$R_BADSEV"
+
+R_NOOWN="$(_risk_root noowner no -- 'RISK-0001 | sev:high | owner:uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "مالكٌ بلا مقبضِ @ يُسقِط" fail _risk "$R_NOOWN"
+
+R_BADOPEN="$(_risk_root badopen no -- 'RISK-0001 | sev:high | owner:@u | opened:27-08-2026 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "تاريخُ فتحٍ بغيرِ YYYY-MM-DD يُسقِط" fail _risk "$R_BADOPEN"
+
+R_BADREV="$(_risk_root badrev no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:soon | status:open | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "تاريخُ مراجعةٍ غيرُ تاريخٍ يُسقِط" fail _risk "$R_BADREV"
+
+R_BADST="$(_risk_root badstatus no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:maybe | ref:docs/00-rules/VERIFY_COMMAND.md | عنوان')"
+t "حالٌ خارجَ المفرداتِ الأربعِ تُسقِط" fail _risk "$R_BADST"
+
+R_NOREF="$(_risk_root noref no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref: | عنوان')"
+t "خطرٌ بلا مرجعٍ يُسقِط" fail _risk "$R_NOREF"
+
+R_DEADREF="$(_risk_root deadref no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/NOT_THERE.md | عنوان')"
+t "مرجعٌ لا وجودَ له (حكايةٌ لا دليلٌ) يُسقِط" fail _risk "$R_DEADREF"
+
+R_HTTPREF="$(_risk_root httpref no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref:https://gitlab.com/uxxxu/wasla/-/pipelines | عنوان')"
+t "مرجعٌ رابطٌ صريحٌ مقبولٌ" pass _risk "$R_HTTPREF"
+
+R_NOTITLE="$(_risk_root notitle no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/00-rules/VERIFY_COMMAND.md |')"
+t "خطرٌ بلا عنوانٍ يشرحه يُسقِط" fail _risk "$R_NOTITLE"
+
+R_DUP="$(_risk_root dup no -- "$GOOD_ROW" "$GOOD_ROW")"
+t "معرِّفٌ مُكرَّرٌ يُسقِط" fail _risk "$R_DUP"
+
+# ── البابُ 2: المهلةُ تنتهي ──────────────────────────────────────────────
+t "مهلةُ مراجعةٍ منقضيةٌ تُسقِط" fail _risk "$R_OK" 2026-10-01
+R_CLOSED="$(_risk_root closed no -- 'RISK-0001 | sev:high | owner:@u | opened:2026-01-01 | review:2026-02-01 | status:closed | ref:docs/00-rules/VERIFY_COMMAND.md | خطرٌ زالَ سببُه')"
+t "خطرٌ مُغلَقٌ لا تُحاسَب مهلتُه" pass _risk "$R_CLOSED" 2026-10-01
+t "مهلةٌ تنتهي اليومَ نفسَه ما زالت ساريةً" pass _risk "$R_OK" 2026-09-30
+
+# ── البابُ 3: لا استثناءَ بلا خطرٍ مُسجَّلٍ ─────────────────────────────────
+OVR='override:vitest | expires:2026-11-25 | owner:@uxxxu | سببٌ صناعيّ'
+ACC_ROW='RISK-0004 | sev:medium | owner:@u | opened:2026-08-27 | review:2026-11-01 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | تثبيتٌ قسريٌّ مؤقّت'
+R_ORPHEXC="$(_risk_root orphexc no "$OVR" -- "$GOOD_ROW")"
+t "استثناءٌ في §11 بلا خطرٍ مُسجَّلٍ يُسقِط" fail _risk "$R_ORPHEXC"
+
+R_MATCHED="$(_risk_root matched no "$OVR" -- "$GOOD_ROW" "$ACC_ROW" 'exception:override:vitest | risk:RISK-0004')"
+t "استثناءٌ مقابَلٌ بخطرٍ قائمٍ يمرّ" pass _risk "$R_MATCHED"
+
+R_GHSA="$(_risk_root ghsa no 'GHSA-aaaa-bbbb-cccc | expires:2026-11-25 | owner:@u | سببٌ' -- "$GOOD_ROW" "$ACC_ROW" 'exception:GHSA-aaaa-bbbb-cccc | risk:RISK-0004')"
+t "استثناءُ GHSA مقابَلٌ يمرّ" pass _risk "$R_GHSA"
+
+R_GHOST="$(_risk_root ghost no "$OVR" -- "$GOOD_ROW" 'exception:override:vitest | risk:RISK-0099')"
+t "مقابلةٌ إلى خطرٍ لا وجودَ له تُسقِط" fail _risk "$R_GHOST"
+
+R_EXCCLOSED="$(_risk_root excclosed no "$OVR" -- "$GOOD_ROW" 'RISK-0004 | sev:medium | owner:@u | opened:2026-08-27 | review:2026-11-01 | status:closed | ref:docs/00-rules/SECURITY_RULES.md | أُغلِق' 'exception:override:vitest | risk:RISK-0004')"
+t "استثناءٌ قائمٌ وخطرُه مُغلَقٌ يُسقِط" fail _risk "$R_EXCCLOSED"
+
+R_LATE="$(_risk_root late no "$OVR" -- "$GOOD_ROW" 'RISK-0004 | sev:medium | owner:@u | opened:2026-08-27 | review:2026-12-01 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | مراجعةٌ متأخّرةٌ' 'exception:override:vitest | risk:RISK-0004')"
+t "مراجعةٌ بعدَ انتهاءِ الاستثناءِ تُسقِط" fail _risk "$R_LATE"
+
+R_SAME="$(_risk_root sameday no "$OVR" -- "$GOOD_ROW" 'RISK-0004 | sev:medium | owner:@u | opened:2026-08-27 | review:2026-11-25 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | مراجعةٌ يومَ الانتهاءِ' 'exception:override:vitest | risk:RISK-0004')"
+t "مراجعةٌ يومَ انتهاءِ الاستثناءِ مقبولةٌ" pass _risk "$R_SAME"
+
+R_BADEXC="$(_risk_root badexc no "$OVR" -- "$GOOD_ROW" "$ACC_ROW" 'exception:override:vitest | RISK-0004')"
+t "سطرُ مقابلةٍ بصيغةٍ خاطئةٍ يُسقِط" fail _risk "$R_BADEXC"
+
+# ── البابُ 4: لا سجلَّ يتيماً ─────────────────────────────────────────────
+R_ORPHAN="$(_risk_root orphan yes -- "$GOOD_ROW")"
+t "سجلٌّ لا يُحال إليه من اللوحةِ وقواعدِ الأمانِ يُسقِط" fail _risk "$R_ORPHAN"
+
+# ── اختباراتُ الطفرةِ: كلُّ بابٍ يكشف بنفسِه ───────────────────────────────
+_risk_mutant() { # _risk_mutant <وسم> <مرساة> <بديل> → مسارُ سكربتٍ مطفَّر
+  local tag="$1" anchor="$2" repl="$3"
+  local M="/tmp/gov_risk_mut_$tag.sh"
+  python3 - "$RISK_SRC" "$M" "$anchor" "$repl" <<'PY'
+import sys
+src, dst, anchor, repl = sys.argv[1:5]
+text = open(src, encoding="utf-8").read()
+if anchor not in text:
+    sys.exit("MISSING_ANCHOR")
+open(dst, "w", encoding="utf-8").write(text.replace(anchor, repl, 1))
+PY
+  printf '%s\n' "$M"
+}
+
+risk_mut_door2() { # لو أُبطِل بابُ المهلةِ لمرَّ سجلٌّ منقضيةٌ مهلتُه
+  local m; m="$(_risk_mutant door2 'PROBLEMS+=("البابُ 2:' ': #')" || return 1
+  _risk "$R_OK" 2026-10-01 "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 2 (المهلةُ تنتهي) يكشف فعلاً" pass risk_mut_door2
+
+risk_mut_door3() { # لو أُبطِل بابُ المقابلةِ لمرَّ استثناءٌ بلا خطرٍ مُسجَّل
+  local m; m="$(_risk_mutant door3 'PROBLEMS+=("البابُ 3: الاستثناءُ' ': #')" || return 1
+  _risk "$R_ORPHEXC" 2026-08-27 "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 3 (لا استثناءَ بلا خطرٍ) يكشف فعلاً" pass risk_mut_door3
+
+risk_mut_door4() { # لو أُبطِل بابُ اليُتمِ لمرَّ سجلٌّ لا يُحال إليه
+  local m; m="$(_risk_mutant door4 'PROBLEMS+=("البابُ 4:' ': #')" || return 1
+  _risk "$R_ORPHAN" 2026-08-27 "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 4 (لا سجلَّ يتيماً) يكشف فعلاً" pass risk_mut_door4
+
+# والسجلُّ الحقيقيُّ في المستودعِ يمرُّ حارسَه بلا تشويهٍ — فالحزمةُ تُثبِت
+# الحارسَ على الصناعيِّ **وتُثبِت الحقيقيَّ على الحارس**.
+t "السجلُّ الحقيقيُّ في المستودعِ يمرُّ" pass bash "$RISK_SRC" "$REPO_ROOT"
+
+# ── إصلاحُ الإيجابيّةِ الكاذبةِ في فحصِ الأسرار (M0-07) ────────────────────
+# النمطُ القديمُ `sk-[0-9A-Za-z]` بلا حدِّ كلمةٍ طابقَ `risk-register` فأسقطَ
+# البوّابةَ على ملفٍّ سليمٍ. والحالتانِ أدناه تُثبِتان الحدَّين معاً: لا صراخَ على
+# اسمٍ مشروعٍ، **ولا صمتَ** عن توقيعٍ حقيقيّ.
+SEC_SCAN="$REPO_ROOT/scripts/checks/scan-secrets.sh"
+
+_secret_root() { # _secret_root <tag> <سطرُ المحتوى>
+  local tag="$1" body="$2"
+  local R="/tmp/gov_secret_$tag"
+  rm -rf "$R"; mkdir -p "$R"
+  printf '%s\n' "$body" > "$R/file.md"
+  ( cd "$R" && git init -q -b main && git config user.email t@t.t && git config user.name t \
+    && git add -A && git commit -qm x ) >/dev/null 2>&1
+  printf '%s\n' "$R"
+}
+
+_scan() { ( cd "$1" && bash "$SEC_SCAN" ); }
+
+R_SEC_OK="$(_secret_root ok 'راجع scripts/checks/validate-risk-register.sh و docs/07-security/RISK_REGISTER.md')"
+t "اسمٌ فيه risk- لا يُعَدُّ سرّاً (إيجابيّةٌ كاذبةٌ زالت)" pass _scan "$R_SEC_OK"
+
+# تُركَّب التوقيعاتُ من شِقَّين كي لا يوجدَ توقيعٌ كاملٌ حرفيّاً في ملفٍّ متتبَّعٍ،
+# فيصير الفحصُ السادسُ يُسقِط حزمةَ اختبارِه نفسَها (وهذا ما حدثَ فعلاً قبلَ التقسيم).
+R_SEC_BAD="$(_secret_root bad "OPENAI=sk-$(printf 'abcdefghijklmnopqrstuvwxyz0123')")"
+t "توقيعُ مفتاحٍ حقيقيِّ الطولِ ما زال يُكشَف" fail _scan "$R_SEC_BAD"
+
+R_SEC_AWS="$(_secret_root aws "AWS=AKIA$(printf 'ABCDEFGHIJKLMNOP')")"
+t "توقيعُ AKIA ما زال يُكشَف" fail _scan "$R_SEC_AWS"
+
+R_SEC_PAT="$(_secret_root pat "TOKEN=glpat-$(printf 'abcdefghijklmnopqrst')")"
+t "توقيعُ glpat ما زال يُكشَف" fail _scan "$R_SEC_PAT"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

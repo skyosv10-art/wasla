@@ -116,6 +116,9 @@ Dispatch: concurrency tests
 - [ ] لا ثغرةَ معروفةً في شجرةِ الإنتاجِ (`pnpm audit --prod` = صفر)، وكلُّ ثغرةِ أداةِ
       تطويرٍ باقيةٍ مُعلَنةٌ بمالكٍ ومهلةٍ ساريةٍ، وكلُّ `pnpm.overrides` مُبرَّرٌ
       (M0-06 · [SECURITY_RULES.md §11](SECURITY_RULES.md) · محروسٌ بالفحصِ 9 في `verify-governance.sh`).
+- [ ] كلُّ خطرٍ باقٍ أو استثناءٍ مقبولٍ في هذا العملِ له سطرٌ في
+      [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) بمالكٍ وتاريخِ مراجعةٍ، ولا مهلةَ
+      مراجعةٍ منقضيةً في السجلِّ (M0-07 · محروسٌ بالفحصِ 10 في `verify-governance.sh`).
 - [ ] خدمةٌ لها ملفّانِ تكامليّانِ أو أكثر: `vitest.integration.config.ts` فيه
       `fileParallelism: false` (أو وسمُ `GOV-ISOLATION: schema-per-worker`)، وملفّاتُ
       التكاملِ مستثناةٌ من `vitest.config.ts` الافتراضيّ.
@@ -140,5 +143,6 @@ Dispatch: concurrency tests
 - [GIT_RULES.md](GIT_RULES.md) — قواعد Git وMR
 - [TESTING_RULES.md](TESTING_RULES.md) — قواعد الاختبار · §1 عزلُ اختباراتِ التكامل (M0-03)
 - [SECURITY_RULES.md §11](SECURITY_RULES.md) — تدقيقُ الاعتمادياتِ وقبولُ الخطرِ المؤقّت (M0-06)
+- [RISK_REGISTER.md](../07-security/RISK_REGISTER.md) — سجلُّ المخاطرِ والاستثناءات (M0-07)
 - [SECURITY_RULES.md](SECURITY_RULES.md) — الأمان
 - [/CONTRIBUTING.md](../../CONTRIBUTING.md) — قالب تحديث المطور

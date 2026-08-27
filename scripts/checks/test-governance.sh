@@ -634,6 +634,119 @@ mrt_mutation_conflate() {
 }
 t "حالةُ تمييزِ «لا ينطبق» من الجهلِ تكشف فعلاً (اختبارُ طفرة)" pass mrt_mutation_conflate
 
+printf '\n\033[1m[ح] عزلُ DDL في اختباراتِ التكامل (M0-03)\033[0m\n'
+# الحارسُ يقرأ **إعداداتَ** الخدماتِ من القرص، فتُبنى له خدماتٌ صناعيّةٌ في /tmp
+# ولا يُشوَّه إعدادُ خدمةٍ حقيقيّةٍ أبداً: تشويهُ الحقيقيِّ يجعل الحالةَ تكذب متى
+# أُصلحت الخدمةُ أو أُعيدت تسميتُها — وهو عينُ الخلل الذي عولج في M0-12.
+ISO_SRC="$REPO_ROOT/scripts/checks/validate-integration-isolation.sh"
+
+_iso_stage() { # _iso_stage <tag> <عددُ الملفّات> <نمطُ الإعداد> [استثناءٌ افتراضيّ:1|0] → يطبع مسارَ مجلَّدِ خدمات
+  local tag="$1" nfiles="$2" mode="$3" excl="${4:-1}"
+  local S="/tmp/gov_iso_$tag"
+  rm -rf "$S"; mkdir -p "$S/svc/src/__tests__"
+  local i
+  for (( i = 1; i <= nfiles; i++ )); do
+    printf 'import { it } from "vitest";\nit("x", () => {});\n' > "$S/svc/src/__tests__/f$i.integration.test.ts"
+  done
+  if (( excl )); then
+    printf 'export default { test: { exclude: ["**/__tests__/*.{integration,e2e}.test.ts"] } };\n' \
+      > "$S/svc/vitest.config.ts"
+  else
+    printf 'export default { test: { exclude: ["**/node_modules/**"] } };\n' > "$S/svc/vitest.config.ts"
+  fi
+  case "$mode" in
+    serial) printf 'export default { test: { fileParallelism: false } };\n' > "$S/svc/vitest.integration.config.ts" ;;
+    loose)  printf 'export default { test: { include: ["src/__tests__/*.integration.test.ts"] } };\n' > "$S/svc/vitest.integration.config.ts" ;;
+    perworker) printf '// GOV-ISOLATION: schema-per-worker\nexport default { test: {} };\n' > "$S/svc/vitest.integration.config.ts" ;;
+    none)   : ;;   # لا إعدادَ تكاملٍ أصلاً
+  esac
+  printf '%s' "$S"
+}
+
+_iso() { # _iso <مجلَّدُ الخدمات> [سكربتٌ بديلٌ مُطفَّر]
+  local dir="$1" script="${2:-$ISO_SRC}"
+  ( cd "$REPO_ROOT" && bash "$script" "$dir" )
+}
+
+# (1) مرجعٌ موجبٌ — المستودعُ الحقيقيُّ نفسُه يجب أن يمرّ. ولولا هذه الحالةُ لما
+# دلّت السلبيّاتُ بعدها على شيء: حارسٌ يرفض كلَّ شيءٍ «يكشف» كلَّ عيبٍ وكلَّ سليم.
+t "يمرّ على خدماتِ المستودعِ الحقيقيّةِ كما هي" pass _iso "$REPO_ROOT/services"
+
+# (2) ملفّانِ يُسقطان الجداولَ وإعدادٌ بلا تسلسل → يُرفَض. وهذه حالةُ identity
+# قبلَ M0-03 حرفاً بحرف: فشلت حزمتُها 10/10 بأربعةِ عوامل على Postgres حقيقيّة.
+iso_loose() { _iso "$(_iso_stage loose 2 loose)"; }
+t "يرفض إعدادَ تكاملٍ بلا fileParallelism وله ملفّان" fail iso_loose
+
+# (3) ملفّانِ ولا إعدادَ تكاملٍ أصلاً → يُرفَض: الغيابُ ليس عزلاً.
+iso_missing() { _iso "$(_iso_stage missing 2 none)"; }
+t "يرفض غيابَ إعدادِ التكاملِ مع ملفَّين" fail iso_missing
+
+# (4) ملفٌّ واحدٌ بلا تسلسل → يمرّ، ويقول ذلك صريحاً. والتفريقُ مقصود: لو طُولب
+# صاحبُ الملفِّ الواحدِ بالتسلسلِ لصار الحارسُ يفرض طقساً لا يمنع سباقاً.
+iso_single() {
+  local out rc; out="$(_iso "$(_iso_stage single 1 loose)" 2>&1)"; rc=$?
+  (( rc == 0 )) || { printf '%s\n' "$out"; echo "✗ رُفض ملفٌّ واحدٌ لا يُسابق نفسَه"; return 1; }
+  grep -q 'لا يُطالَب بالتسلسل' <<< "$out" || { printf '%s\n' "$out"; echo "✗ مرّ بلا بيانِ سببِ المرور"; return 1; }
+  return 0
+}
+t "يمرّ ملفّاً واحداً ويُعلن أنّه لا يُسابق نفسَه" pass iso_single
+
+# (5) البديلُ الذي أجازته الخارطةُ (مخطّطٌ لكلِّ عامل) بوسمٍ مُعلَنٍ → يمرّ.
+iso_perworker() {
+  local out rc; out="$(_iso "$(_iso_stage perworker 3 perworker)" 2>&1)"; rc=$?
+  (( rc == 0 )) || { printf '%s\n' "$out"; echo "✗ رفض بديلاً أجازته خارطةُ الطريق"; return 1; }
+  grep -q 'لكلِّ عامل' <<< "$out" || { printf '%s\n' "$out"; echo "✗ لم يُعلِن أنّ العزلَ بالبديل"; return 1; }
+  return 0
+}
+t "يقبل «schema-per-worker» بوسمٍ مُعلَنٍ بدلَ التسلسل" pass iso_perworker
+
+# (6) البابُ الثاني: إعدادٌ افتراضيٌّ لا يستثني ملفّاتِ التكاملِ → يُرفَض حتّى لو
+# كان إعدادُ التكاملِ متسلسلاً؛ إذ تجري الملفّاتُ في «pnpm -r test» بتوازٍ كامل.
+iso_default_leak() { _iso "$(_iso_stage leak 2 serial 0)"; }
+t "يرفض إعداداً افتراضيّاً لا يستثني ملفّاتِ التكامل" fail iso_default_leak
+
+# ── اختباراتُ طفرةٍ: ثلاثُ طفراتٍ قُطريّةٌ، كلٌّ تُسقط حالتَها وحدَها ─────────
+_iso_mutant() { # _iso_mutant <tag> <القديم> <الجديد> → مسارُ نسخةٍ مُطفَّرة
+  local tag="$1" old="$2" new="$3"
+  local M="/tmp/gov_iso_mutant_$tag.sh"
+  python3 - "$ISO_SRC" "$M" "$old" "$new" <<'PY'
+import sys
+src, dst, old, new = sys.argv[1:5]
+s = open(src, encoding='utf-8').read()
+assert old in s, "لم أجد الموضعَ المقصودَ للطفرة: " + old
+open(dst, 'w', encoding='utf-8').write(s.replace(old, new, 1))
+PY
+  printf '%s' "$M"
+}
+
+# طفرة 1: قبولُ أيِّ إعدادِ تكاملٍ — يجب أن تسقط الحالةُ (2) وحدَها.
+iso_mutation_serial() {
+  local M rc=0; M="$(_iso_mutant serial \
+    "if grep -Eq 'fileParallelism:[[:space:]]*false' \"\$icfg\"; then" \
+    'if true; then')"
+  _iso "$(_iso_stage mut_serial 2 loose)" "$M" >/dev/null 2>&1 && rc=1
+  (( rc == 1 ))
+}
+t "حالةُ «بلا تسلسل» تكشف فعلاً (اختبارُ طفرة)" pass iso_mutation_serial
+
+# طفرة 2: تحييدُ حراسةِ البابِ الثاني — يجب أن تسقط الحالةُ (6) وحدَها.
+iso_mutation_default() {
+  local M rc=0; M="$(_iso_mutant default \
+    "if [[ -f \"\$dcfg\" ]] && ! grep -q 'integration,e2e\\|\\.integration\\.test\\.ts' \"\$dcfg\"; then" \
+    'if false; then')"
+  _iso "$(_iso_stage mut_leak 2 serial 0)" "$M" >/dev/null 2>&1 && rc=1
+  (( rc == 1 ))
+}
+t "حالةُ «الإعدادُ الافتراضيُّ يُسرّب» تكشف فعلاً (اختبارُ طفرة)" pass iso_mutation_default
+
+# طفرة 3: مطالبةُ الملفِّ الواحدِ بالتسلسل — يجب أن تسقط الحالةُ (4) وحدَها.
+iso_mutation_single() {
+  local M rc=0; M="$(_iso_mutant single 'if (( count < 2 )); then' 'if (( count < 1 )); then')"
+  _iso "$(_iso_stage mut_single 1 loose)" "$M" >/dev/null 2>&1 || rc=1
+  (( rc == 1 ))
+}
+t "حدُّ «ملفٌّ واحدٌ لا يُسابق نفسَه» مقصودٌ لا عرَضٌ (اختبارُ طفرة)" pass iso_mutation_single
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

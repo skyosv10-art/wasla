@@ -118,6 +118,9 @@
 | `scripts/checks/lib/meaningful-paths.sh` | Implemented | M0-14, M0-15 |
 | `scripts/checks/validate-claim-freshness.sh` | Implemented | M0-16 |
 | `scripts/checks/validate-mr-target.sh` | Implemented | M0-17 |
+| `scripts/checks/validate-integration-isolation.sh` | Implemented | M0-03 |
+| `docs/00-rules/TESTING_RULES.md` §1 (عزلُ اختباراتِ التكامل) | Implemented | M0-03 |
+| `services/identity/vitest.integration.config.ts` (تسلسلُ الملفّات) | Implemented | M0-03 |
 | `docs/00-rules/GIT_RULES.md` §3.1 (هدفُ الطلب) | Implemented | M0-17 |
 | `docs/00-rules/WORK_CLAIM_RULE.md` | Implemented | M0-05, M0-13 |
 | `.gitlab-ci.yml` — بوابات E2E حتى Phase 10 | Implemented | M0-08 |

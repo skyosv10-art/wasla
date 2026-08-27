@@ -324,6 +324,75 @@ printf '\n\033[1m[هـ] تطابقُ قائمةِ السجلات المشترك�
 # رُفض دفعُه. هذه الحالةُ تمنع عودتَه.
 t "القائمة واحدة في السكربتين والوثيقة" pass python3 "$REPO_ROOT/scripts/checks/lib/check-shared-ledgers.py" "$REPO_ROOT"
 
+printf '\n\033[1m[هث] مرشِّحُ التغييراتِ ذاتِ المعنى — مصدرٌ واحدٌ لا نسختان (M0-15)\033[0m\n'
+
+# لا تُقارَن هنا **نصوصُ** المرشِّحَين — فمقارنةُ النصِّ تمرُّ والسلوكُ مختلفٌ
+# (ترتيبٌ أو هروبٌ أو مجموعةٌ إضافيةٌ)، وتفشل والسلوكُ واحدٌ. يُقارَن **الحكمُ**:
+# لكلِّ بادئةٍ في المصدرِ الواحدِ يُبنى فرعٌ حقيقيٌّ بملفٍ تحتَها، ثمّ يُسأل المدقِّقان:
+# أمرَّ أحدُهما ورفضَ الآخر؟ فذلك انحرافٌ حيٌّ مهما تشابه النصّان.
+parity_check() {
+  local lib="$T/scripts/checks/lib/meaningful-paths.sh"
+  [[ -f "$lib" ]] || { echo "✗ المصدرُ الواحدُ غيرُ موجود: lib/meaningful-paths.sh"; return 1; }
+  # shellcheck source=/dev/null
+  source "$lib"
+  local raw="${MEANINGFUL_PATHS#^(}"; raw="${raw%)}"
+  local disagreements=0 tested=0
+  local tok path rc_claim rc_doc
+  while IFS= read -r tok; do
+    [[ -n "$tok" ]] || continue
+    if [[ "$tok" == */ ]]; then path="${tok}m0_15_probe.txt"; else path="${tok//\\/}"; path="${path%$}"; fi
+    git checkout -q -f -B test/parity origin-main
+    mkdir -p "$(dirname "$path")" 2>/dev/null
+    printf 'probe\n' >> "$path"
+    git add -A >/dev/null; git commit -qm "parity probe $path" >/dev/null
+    bash scripts/checks/validate-work-claims.sh origin/main HEAD >/dev/null 2>&1; rc_claim=$?
+    bash scripts/checks/require-doc-update.sh  origin/main HEAD >/dev/null 2>&1; rc_doc=$?
+    (( tested++ ))
+    # المرجوّ: كلاهما يرفض (تغييرٌ ذو معنى بلا حجزٍ وبلا توثيق)
+    if (( rc_claim == 0 || rc_doc == 0 )); then
+      echo "✗ اختلافٌ على «$path»: validate-work-claims=$rc_claim · require-doc-update=$rc_doc"
+      (( disagreements++ ))
+    fi
+  done <<< "${raw//|/$'\n'}"
+  git checkout -q -f test/alpha
+  git branch -qD test/parity >/dev/null 2>&1
+  (( tested >= 8 )) || { echo "✗ لم يُقرأ المرشِّحُ أصلاً: جُرِّبت $tested بادئةً فقط"; return 1; }
+  (( disagreements == 0 ))
+}
+t "المدقّقان يحكمان الحكمَ نفسه على كل بادئة" pass parity_check
+
+# والحالةُ الثانية: إعادةُ كتابةِ المرشِّحِ حرفيّاً في أحدِ الملفَّينِ — وهو ما وقع فعلاً
+# قبلَ M0-14 — تُكشَف. ولو كان العلاجُ حارسَ تطابقٍ نصِّيٍّ لما كشف هذا: النّصّانِ
+# متطابقانِ والسلوكُ مختلفٌ لأنّ أحدَهما توقّف عن قراءةِ المصدرِ الواحد.
+# والطفرةُ تُدفَن في **أساسِ** الفروعِ (`origin/main` الصناعيَّ) لا في شجرةِ العمل:
+#   • لو وُضِعت في شجرةِ العملِ لمحاها أوّلُ `git checkout -f` داخلَ parity_check.
+#   • ولو وُضِعت في فرعٍ يتفرّع منه المسبرُ لظهر `scripts/` في الفرقِ نفسِه،
+#     فيُرفَض كلُّ مسبرٍ لأنّ فيه كوداً لا لأجلِ ما يُختبَر — وهو عينُ الخطأِ الذي
+#     وقعت فيه حالتا M0-14 أوّلًا فمرّتا للسببِ الخطأ.
+parity_regression() {
+  local base_sha; base_sha="$(git rev-parse origin-main)"
+  local rc=0
+  git checkout -q -f -B test/mut origin-main
+  python3 - "$T/scripts/checks/validate-work-claims.sh" <<'MUT'
+import sys
+p=sys.argv[1]; s=open(p).read()
+old='MEANINGFUL="$MEANINGFUL_PATHS"'
+assert old in s, "لم أجد سطرَ الإسنادِ من المصدرِ الواحد"
+open(p,'w').write(s.replace(old, "MEANINGFUL='^(apps/|bots/|services/|packages/|infra/|scripts/)'",1))
+MUT
+  git add -A >/dev/null; git commit -qm "mutation: إعادة كتابة المرشّح محليّاً" >/dev/null
+  git update-ref refs/remotes/origin/main HEAD
+  git branch -f origin-main HEAD >/dev/null 2>&1
+  parity_check >/dev/null 2>&1 || rc=1
+  # إرجاعُ الأساسِ والشجرةِ إلى ما كانا عليه قبلَ الطفرة
+  git update-ref refs/remotes/origin/main "$base_sha"
+  git branch -f origin-main "$base_sha" >/dev/null 2>&1
+  git checkout -q -f test/alpha
+  git branch -qD test/mut >/dev/null 2>&1
+  (( rc == 1 ))
+}
+t "إعادة كتابة المرشّح محليّاً تُكشَف" pass parity_regression
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

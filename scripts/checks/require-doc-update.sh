@@ -5,7 +5,12 @@
 # بدون وسائط: يقارن origin/main مع HEAD. في CI يمرر نطاق MR صراحة.
 set -euo pipefail
 
-CODE_OR_CONFIG_PATHS='^(apps/|bots/|services/|packages/|infra/|scripts/|\.gitlab-ci\.yml$|package\.json$|pnpm-lock\.yaml$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$)'
+# مرشِّحُ الكودِ والإعداداتِ — **مصدرُه واحدٌ** في lib/meaningful-paths.sh (M0-15):
+# كان مكتوباً هنا وفي validate-work-claims.sh حرفيّاً بلا حارسِ تطابقٍ، فانحرف فعلاً
+# (`docs/` في أحدِهما لا في الآخر — عيبُ M0-14). الحارسُ يكشف الانحرافَ والمصدرُ
+# الواحدُ يمنعه.
+# shellcheck source=lib/meaningful-paths.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/meaningful-paths.sh"
 # سجلات مشتركة يكتب فيها الجميع بحكم القاعدة: تعديلها وحدها ليس «تغييراً ذا معنى».
 # WORK_CLAIMS.md مُدرَجة لأن حجز النطاق خطوة إلزامية تسبق أي كود، فلا يصح أن تُطالب بإدخال TASK_LOG قبل وجود عمل.
 LEDGER_ONLY_PATHS='^docs/16-progress/(TASK_LOG\.md|LAUNCH_EXECUTION_BOARD\.md|MASTER_PROGRESS\.md|WORK_CLAIMS\.md|WORK_INDEX\.md)$'

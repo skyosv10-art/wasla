@@ -28,6 +28,16 @@
 
 ## السجل
 
+### [2026-08-27] إغلاقُ M0-07 — دمجُ MR !106 وتحريرُ CLM-0018
+- **Work Item(s):** M0-07
+- **Files:** `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`
+- **Services:** —
+- **Why:** البروتوكول §8.1: الحجزُ يُحرَّر بدفعةِ إغلاقٍ مستقلّةٍ بعدَ الدمجِ لا قبلَه، كي يبقى الأثرُ مقروءاً لمن يأتي بعدُ.
+- **Tests:** لا كودَ مُنتَجٍ مُسَّ في هذه الدفعةِ (سجلّاتٌ فقط). أدلّةُ العملِ نفسِه في مدخلِ M0-07 أعلاه.
+- **ما لم يُتحقَّق منه:** خطُّ `#2797920709` على `main` بعدَ الدمجِ: **25 وظيفةً كلُّها `failed` بـ`ci_quota_exceeded` و`started_at: null` في 25/25** — أي أنّ ولا وظيفةً بدأت، فلا إثباتَ خطّيٍّ أنّ الفحصَ العاشرَ يركض في بيئةٍ نظيفةٍ. وهذا هو `RISK-0001` عينُه في السجلِّ الذي أُنشئ اليومَ.
+- **Next:** `M0-08` — الخطُّ الأساسُ الآليُّ (يعتمد على `M0-04`).
+- **Related:** [MR !106](https://gitlab.com/uxxxu/wasla/-/merge_requests/106) · الدمجُ `e3d1cc90` · `CLM-0018` مُحرَّرٌ
+
 ### [2026-08-27] M0-07 — سجلُّ المخاطرِ والاستثناءاتِ + الفحصُ العاشرُ + إصلاحُ إيجابيّةٍ كاذبةٍ في فحصِ الأسرار
 - **Work Item(s):** M0-07
 - **Files:** `docs/07-security/RISK_REGISTER.md` (جديد) · `scripts/checks/validate-risk-register.sh` (جديد) · `scripts/checks/verify-governance.sh` (الفحصُ 10) · `scripts/checks/scan-secrets.sh` (إصلاحُ النمط) · `scripts/checks/test-governance.sh` (+35 حالةً) · `scripts/checks/lib/required-artifacts.sh` · `scripts/verify.sh` (9 → 10 فحوصٍ) · `docs/00-rules/SECURITY_RULES.md` · `docs/00-rules/VERIFY_COMMAND.md` · `docs/00-rules/DEFINITION_OF_DONE.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `WORK_INDEX.md`

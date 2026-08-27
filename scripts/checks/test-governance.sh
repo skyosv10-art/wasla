@@ -240,8 +240,36 @@ git checkout -q -b test/unclaimed
 mkdir -p services/gamma/src && echo "export const g = 1" > services/gamma/src/index.ts
 git add -A >/dev/null; git commit -qm "no claim" >/dev/null
 t "يرفض الدفع من فرع بلا حجز نشط" fail bash scripts/checks/validate-work-claims.sh origin/main HEAD
+git reset -q --hard HEAD~1
+
 git checkout -q test/alpha
 git branch -qD test/unclaimed >/dev/null 2>&1
+
+# حالتا M0-14: `docs/` داخلَ الحماية، والسجلاتُ الخمسةُ خارجَها.
+#
+# الحالتانِ متلازمتانِ بقصد: الأولى وحدَها يُرضيها توسيعٌ يشمل كلَّ شيءٍ —
+# فيصير كلُّ توثيقٍ مستحيلاً بلا حجزٍ سابق، والقاعدةُ تُلزم **كلَّ** دافعٍ
+# بتحديثِ السجلاتِ الخمسة. والثانيةُ هي التي تمنع ذلك.
+#
+# وكلتاهما تنشأانِ من `origin/main` لا من `test/alpha`: لو فُرِعتا من فرعٍ يحمل
+# تعديلَ كودٍ لكان ذلك الكودُ في الفرقِ فيُوجِب حجزاً وحدَه — فتمرُّ الأولى
+# وتفشل الثانيةُ لسببٍ من صنعِ الحزمةِ لا من عيبٍ في البوّابة، وهو عينُ ما عولِج في M0-12.
+# والسجلُ هنا هو السجلُ الحقيقيُّ: لا حجزَ فيه لفروعِ الاختبار، وهو المطلوب.
+git checkout -q -b test/unclaimed-docs origin/main
+printf '\n<!-- حالة اختبار M0-14 -->\n' >> docs/00-rules/WORK_CLAIM_RULE.md
+git add -A >/dev/null; git commit -qm "docs change, no claim" >/dev/null
+t "يرفض تعديل وثيقة غير السجلات من فرع بلا حجز" fail bash scripts/checks/validate-work-claims.sh origin/main HEAD
+
+git checkout -q -b test/unclaimed-ledgers origin/main
+for f in TASK_LOG LAUNCH_EXECUTION_BOARD WORK_CLAIMS WORK_INDEX MASTER_PROGRESS; do
+  [[ -f "docs/16-progress/$f.md" ]] && printf '\n<!-- حالة اختبار M0-14 -->\n' >> "docs/16-progress/$f.md"
+done
+git add -A >/dev/null; git commit -qm "shared ledgers only, no claim" >/dev/null
+t "يسمح بالسجلات الخمسة من فرع بلا حجز" pass bash scripts/checks/validate-work-claims.sh origin/main HEAD
+
+git checkout -q -f test/alpha
+git branch -qD test/unclaimed-docs test/unclaimed-ledgers >/dev/null 2>&1
+cp /tmp/CL.fixture "$CL"
 
 printf '\n\033[1m[د] قاعدة التوثيق مع الدفع\033[0m\n'
 

@@ -144,7 +144,7 @@ governance-guard:
       echo "==> بوابة الحوكمة: النطاق origin/$TARGET..HEAD"
       bash scripts/checks/verify-governance.sh "origin/$TARGET" HEAD
     - |
-      echo "==> إثبات أن الفحوص ترفض فعلاً (14 حالة)"
+      echo "==> إثبات أن الفحوص ترفض فعلاً (عدد الحالات يُطبَع في ذيل الحزمة)"
       bash scripts/checks/test-governance.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"

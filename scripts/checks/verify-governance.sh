@@ -3,7 +3,10 @@
 #
 # الفحوص: 0) وجود الوثائق · 1) اللوحة · 2) الحجوزات · 3) التوثيق مع الدفع ·
 #         4) بياتُ الحجوزات (M0-16) · 5) هدفُ طلبِ الدمج (M0-17) · 6) الأسرار ·
-#         7) عزلُ DDL في اختباراتِ التكامل (M0-03).
+#         7) عزلُ DDL في اختباراتِ التكامل (M0-03) · 8) CI مانعٌ لا مُجمِّل (M0-04).
+#
+# وليست هذه البوّابةُ المدخلَ الأعلى بعدَ M0-04: `scripts/verify.sh` يُشغّلُها
+# ومعها بنيةُ المستودعِ والأنواعُ والاختباراتُ، ويكتبُ أرتفاكتاً (VERIFY_COMMAND.md).
 #
 #   bash scripts/checks/verify-governance.sh              # يقارن origin/main..HEAD
 #   bash scripts/checks/verify-governance.sh OLD NEW      # نطاق صريح (CI)
@@ -41,20 +44,12 @@ printf '%s║  فحص حوكمة WASLA — بوابة واحدة لكل الفح
 printf '%s╚══════════════════════════════════════════════════════════╝%s\n' "$BOLD" "$RST"
 
 # ── 0) وجود الوثائق الحاكمة ─────────────────────────────────────────────
+# القائمةُ **لا تُكتب هنا**: كانت نسخةً ثانيةً تفارق كتلةَ CI المضمَّنةَ في 12
+# عنصراً (M0-04). المصدرُ الواحدُ: scripts/checks/lib/required-artifacts.sh —
+# فما تُلزمه البوّابةُ محلّياً تُلزمه CI بعينِه، والعكس.
 hdr "0) وجود الوثائق الحاكمة"
-REQUIRED_DOCS=(
-  "docs/16-progress/README.md"
-  "docs/16-progress/LAUNCH_TO_100_ROADMAP.md"
-  "docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
-  "docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md"
-  "docs/16-progress/WORK_CLAIMS.md"
-  "docs/16-progress/WORK_INDEX.md"
-  "docs/16-progress/TASK_LOG.md"
-  "docs/00-rules/WORK_CLAIM_RULE.md"
-  "docs/00-rules/PUSH_DOCUMENTATION_RULE.md"
-  "docs/00-rules/DEFINITION_OF_DONE.md"
-  "docs/00-rules/TESTING_RULES.md"
-)
+# shellcheck source=lib/required-artifacts.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/required-artifacts.sh"
 MISSING_DOCS=()
 for d in "${REQUIRED_DOCS[@]}"; do
   if [[ -f "$d" ]]; then printf '  %s✓%s %s\n' "$GRN" "$RST" "$d"
@@ -164,6 +159,28 @@ if [[ -f scripts/checks/validate-integration-isolation.sh ]]; then
   fi
 else
   SKIPPED+=("7) عزلُ DDL — السكربت غير موجود")
+fi
+
+# ── 8) CI مانعٌ لا مُجمِّل (M0-04) ───────────────────────────────────
+# السّؤالُ: **أيُسقِطُ الخطُّ دفعاً معيباً؟** لا: أيُجمِّلُ؟ والفحصُ يقرأ النّصوصَ:
+# مدخلٌ موحَّدٌ مُستدعًَ · لا قائمةَ إلزامٍ مضمَّنةً · لا allow_failure صامتٌ · لا
+# حارسَ يتيمٍ. **وحدُّه المُعلَنُ** أنّه لا يسأل GitLab عن
+# `only_allow_merge_if_pipeline_succeeds` — وهو إعدادٌ خارجَ المستودع، وكان
+# `false` مقيساً 2026-08-27. فيُحتسبُ هذا الفحصُ **جزئيّاً دائماً**: إعدادُ
+# المستودعِ متّسقٌ، ورفضُ الدمجِ عندَ الإخفاقِ غيرُ مُفعَّلٍ ولا يُدَّعى خلافُه
+# (docs/00-rules/VERIFY_COMMAND.md §7). وتجميلُه نجاحاً كاملاً كان يُوهِمُ أنّ
+# البوّابةَ تمنعُ الدمجَ وهي لا تملكُ ذلك.
+if [[ -f scripts/checks/validate-ci-mandatory.sh ]]; then
+  hdr "8) CI مانعٌ لا مُجمِّل (M0-04)"
+  CIM_OUT="$(bash scripts/checks/validate-ci-mandatory.sh 2>&1)"; CIM_RC=$?
+  printf '%s\n' "$CIM_OUT"
+  if (( CIM_RC != 0 )); then
+    FAILED+=("8) CI مانعٌ لا مُجمِّل")
+  else
+    SKIPPED+=("8) CI مانعٌ — جزئيٌّ: الإعدادُ متّسقٌ، ورفضُ الدمجِ عندَ الإخفاقِ غيرُ مُفعَّل")
+  fi
+else
+  SKIPPED+=("8) CI مانعٌ — السكربت غير موجود")
 fi
 
 # ── الخلاصة ─────────────────────────────────────────────────────────────

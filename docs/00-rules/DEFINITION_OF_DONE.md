@@ -112,10 +112,12 @@ Dispatch: concurrency tests
 
 ### عزل اختبارات التكامل (شرطٌ في DoD)
 
+- [ ] `pnpm verify` يمرّ محلّيّاً، وأرتفاكتُه مرفوعٌ في الخطِّ، وكلُّ «تخطٍّ» فيه مُبرَّرٌ (M0-04 · [VERIFY_COMMAND.md](./VERIFY_COMMAND.md)).
 - [ ] خدمةٌ لها ملفّانِ تكامليّانِ أو أكثر: `vitest.integration.config.ts` فيه
       `fileParallelism: false` (أو وسمُ `GOV-ISOLATION: schema-per-worker`)، وملفّاتُ
       التكاملِ مستثناةٌ من `vitest.config.ts` الافتراضيّ.
       المرجع: [TESTING_RULES.md §1](TESTING_RULES.md) · محروسٌ بالفحصِ 7 في `verify-governance.sh`.
+- [`VERIFY_COMMAND.md`](./VERIFY_COMMAND.md) — الأمرُ الموحَّدُ `pnpm verify` وأرتفاكتُه وما يعنيه «CI مانعٌ».
 
 ### اختبارات التزامن (Concurrency Tests) المطلوبة خصوصًا
 

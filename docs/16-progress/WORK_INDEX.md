@@ -109,8 +109,14 @@
 | `docs/16-progress/` (نظام السجلات) | Implemented | M0-05 |
 | `scripts/checks/` | Implemented | M0-05 |
 | `scripts/hooks/pre-push` | Implemented | M0-05 |
-| `.gitlab-ci.yml` — `governance-guard` | Implemented | M0-05 |
-| `scripts/checks/test-governance.sh` | Implemented | M0-12 |
+| `.gitlab-ci.yml` — `governance-guard` | Implemented | M0-05, M0-04 |
+| `scripts/checks/test-governance.sh` | Implemented | M0-12, M0-04 |
+| `scripts/verify.sh` — الأمرُ الموحَّد | Implemented | M0-04 |
+| `scripts/checks/validate-repo-structure.sh` | Implemented | M0-04 |
+| `scripts/checks/validate-ci-mandatory.sh` | Implemented | M0-04 |
+| `scripts/checks/lib/required-artifacts.sh` — مصدرٌ واحدٌ للإلزام | Implemented | M0-04 |
+| `docs/00-rules/VERIFY_COMMAND.md` | Implemented | M0-04 |
+| `.gitlab-ci.yml` — `verify` (أرتفاكت `when: always`) | Implemented | M0-04 |
 | `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
 | `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
 | `scripts/checks/validate-work-claims.sh` | Implemented | M0-05, M0-12, M0-13 |

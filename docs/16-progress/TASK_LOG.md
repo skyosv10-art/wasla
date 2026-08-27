@@ -28,6 +28,16 @@
 
 ## السجل
 
+### [2026-08-27] M0-04 — أمرُ `verify` موحَّدٌ، وCI مانعٌ لا مُجمِّل
+- **Work Item(s):** M0-04
+- **Claim:** CLM-0016
+- **Files:** `scripts/verify.sh` (جديد) · `scripts/checks/validate-repo-structure.sh` (جديد) · `scripts/checks/validate-ci-mandatory.sh` (جديد) · `scripts/checks/lib/required-artifacts.sh` (جديد) · `docs/00-rules/VERIFY_COMMAND.md` (جديد) · `scripts/checks/verify-governance.sh` · `scripts/checks/test-governance.sh` · `.gitlab-ci.yml` · `package.json` · `.gitignore` · `docs/00-rules/DEFINITION_OF_DONE.md`
+- **Services:** —
+- **Why:** قِيس قبلَ العمل، لا افتراضاً: قائمةُ الملفّاتِ الإلزاميّةِ كانت **نسختَين** تفارق إحداهما الأخرى بـ12 عنصراً (19 ملفّاً + 7 أدلّةً مضمَّنةً في `.gitlab-ci.yml` مقابلَ 11 وثيقةً في `REQUIRED_DOCS`)، والمضمَّنةُ لا تُشغَّل محلّيّاً أصلاً. و`markdown-lint` كان مُقنَّعاً مرّتَين (`allow_failure: true` **و** `|| true`؛ و4 `|| true` في الملفّ). و`find-existing-work.sh` لا تستدعيه وظيفةُ CI واحدة. فالعلاجُ: مدخلٌ واحدٌ يشغّله المطوّرُ والخطُّ سواءً، ومصدرٌ واحدٌ للإلزامِ لا حارسُ تطابقٍ لنسختَين (سابقةُ M0-15)، وحارسٌ يمنع رجوعَ العيبِ بأربعةِ أبواب.
+- **Tests:** `bash scripts/verify.sh` → 4 نجحت · 0 أخفقت · 2 تُخطّي (الأنواعُ والاختباراتُ: لا `pnpm` في البيئة) وكتب `artifacts/verify/verify-report.{txt,json}`. `verify-governance.sh` → 6 نجحت · 0 أخفقت · 3 تُخطّي (منها الفحصُ 8 الجديدُ: جزئيٌّ بقصد). `test-governance.sh` → **68 ناجحاً · 0 فاشلاً** (كان 54)، منها 14 حالةً جديدةً في القسمِ `[ط]` و4 اختباراتِ طفرةٍ تُحيِّد كلَّ بابٍ وحدَه. والحالةُ (7) رفعت عيباً حقيقيّاً أوّلَ تشغيلٍ: مسارُ الحارسِ اليتيمِ كُتب حرفيّاً في الحزمةِ فعَدَّه البابُ 4 «موصولاً» — فبُني الاسمُ في وقتِ التشغيلِ وأُعلن حدُّ القياسِ في الوثيقةِ §5.
+- **Next:** M0-06 (تحديثُ الاعتمادياتِ والثغرات) أو M0-08 (baseline آليّ) — كلاهما يعتمد على M0-04. وعلى مالكِ المستودعِ متى عادت حصّةُ CI: تمكينُ `only_allow_merge_if_pipeline_succeeds` بالأمرِ الحرفيِّ في `VERIFY_COMMAND.md` §7.
+- **Related:** CLM-0016 · MR قيد الفتح · `docs/00-rules/VERIFY_COMMAND.md`
+
 ### [2026-08-27] M0-03 — إغلاقُ الدورة: دمجٌ إلى `main` وتحريرُ `CLM-0015`
 
 - **Work Item(s):** M0-03

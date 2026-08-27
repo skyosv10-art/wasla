@@ -393,6 +393,93 @@ MUT
 }
 t "إعادة كتابة المرشّح محليّاً تُكشَف" pass parity_regression
 
+printf '\n\033[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)\033[0m\n'
+
+# هذه الحالاتُ **لا تستعمل git المشتركَ في $T**: الفحصُ يسأل `origin` عن وجودِ
+# فرعٍ، فيُحتاج مستودعاً بعيداً حقيقيّاً (bare) ودفعاً وحذفاً. ولو أُضيف `origin`
+# إلى $T لانقلب معنى `origin/main` عندَ بقيّةِ الحالات — فتمرُّ أو تفشل لسببٍ من
+# صنعِ الحزمةِ لا من عيبٍ في البوّابة (عينُ ما عولِج في M0-12). فلكلِّ حالةٍ مسرحٌ معزول.
+FRESH="$REPO_ROOT/scripts/checks/validate-claim-freshness.sh"
+
+_fresh_stage() { # _fresh_stage <اسم> <أُضيف origin؟ 0|1> → يطبع مسارَ المسرح
+  local name="$1" with_origin="$2"
+  local S="/tmp/gov_fresh_$name"
+  rm -rf "$S" "$S.origin"
+  mkdir -p "$S/scripts/checks" "$S/docs/16-progress"
+  cp "$FRESH" "$S/scripts/checks/"
+  (
+    cd "$S" || exit 1
+    git init -q -b main; git config user.email t@t.t; git config user.name t
+    printf 'seed\n' > seed.txt; git add -A >/dev/null; git commit -qm seed >/dev/null
+    if (( with_origin )); then
+      git init -q --bare "$S.origin"
+      git remote add origin "$S.origin"
+      git push -q origin main >/dev/null 2>&1
+    fi
+  )
+  printf '%s' "$S"
+}
+
+_fresh_claims() { # _fresh_claims <مسرح> <فرعُ الحجزِ النشط> [فرعُ حجزٍ محرّر]
+  local S="$1" active_branch="$2" released_branch="${3:-}"
+  {
+    printf '# حجوزاتُ عملٍ صناعيةٌ للاختبار\n\n## 2. الحجوزات النشطة\n\n'
+    printf '| Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |\n'
+    printf '| --- | --- | --- | --- | --- | --- | --- | --- |\n'
+    printf '| CLM-9001 | M0-99 | @t | %s | scripts/ | 2026-08-01 | 2026-12-31 | Active |\n' "$active_branch"
+    printf '\n## 3. الحجوزات المحرّرة\n\n'
+    printf '| Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |\n'
+    printf '| --- | --- | --- | --- | --- | --- |\n'
+    [[ -n "$released_branch" ]] && printf '| CLM-9002 | M0-98 | @t | %s | 2026-08-02 | دُمج وحُذف الفرع |\n' "$released_branch"
+  } > "$S/docs/16-progress/WORK_CLAIMS.md"
+}
+
+# (1) فرعٌ قائمٌ في origin → يمرُّ
+fresh_live_branch() {
+  local S; S="$(_fresh_stage live 1)"
+  ( cd "$S" && git checkout -q -b feat/alive && git push -q origin feat/alive >/dev/null 2>&1 && git checkout -q main && git branch -qD feat/alive )
+  _fresh_claims "$S" "feat/alive"
+  ( cd "$S" && bash scripts/checks/validate-claim-freshness.sh )
+}
+t "يمرّ حجزاً نشطاً فرعُه قائم في origin" pass fresh_live_branch
+
+# (2) فرعٌ دُفع ثمّ حُذف من origin والحجزُ لما يزل Active → يُرفَض
+# (وهذا عينُ ما وقع حقيقةً في CLM-0002 · CLM-0008 · CLM-0009 · CLM-0010.)
+fresh_deleted_branch() {
+  local S; S="$(_fresh_stage dead 1)"
+  ( cd "$S" && git checkout -q -b feat/dead && git push -q origin feat/dead >/dev/null 2>&1 \
+      && git push -q origin --delete feat/dead >/dev/null 2>&1 \
+      && git checkout -q main && git branch -qD feat/dead && git update-ref -d refs/remotes/origin/feat/dead )
+  _fresh_claims "$S" "feat/dead"
+  ( cd "$S" && bash scripts/checks/validate-claim-freshness.sh )
+}
+t "يرفض حجزاً نشطاً فرعُه محذوف" fail fresh_deleted_branch
+
+# (3) وصفوفُ «المحرّرة» لا تُحتسب — وإلّا لرُفض كلُّ مستودعٍ إلى الأبد:
+# كلُّ حجزٍ محرّرٍ فرعُه محذوفٌ بطبيعةِ الحال. (وهو الخطأُ الذي وقع في M0-12.)
+fresh_ignores_released() {
+  local S; S="$(_fresh_stage rel 1)"
+  ( cd "$S" && git checkout -q -b feat/alive2 && git push -q origin feat/alive2 >/dev/null 2>&1 && git checkout -q main && git branch -qD feat/alive2 )
+  _fresh_claims "$S" "feat/alive2" "feat/long-gone"
+  ( cd "$S" && bash scripts/checks/validate-claim-freshness.sh )
+}
+t "يهمل صفوف «المحرّرة» ولا يرفضها" pass fresh_ignores_released
+
+# (4) وعندَ الجهل **يُعلِن التخطّي ولا يدّعي النجاحَ الكامل**: لا origin ولا مرجعٌ
+# محليّ. ولا يُرفَض الدفعُ لأنّ الجهلَ ليس دليلَ بيات. ويُشترط أمرانِ معاً:
+# رمزُ خروجٍ 0، **ووجودُ إعلانِ التخطّي في المخرج** — وإلّا كان فحصاً يصمت عندَ الجهل.
+fresh_declares_skip() {
+  local S; S="$(_fresh_stage blind 0)"
+  _fresh_claims "$S" "feat/unknowable"
+  local out rc
+  out="$( cd "$S" && bash scripts/checks/validate-claim-freshness.sh 2>&1 )"; rc=$?
+  (( rc == 0 )) || { printf '%s\n' "$out"; echo "✗ رُفض الدفعُ على جهلٍ لا على دليلِ بيات"; return 1; }
+  grep -q 'تخط' <<< "$out" || { printf '%s\n' "$out"; echo "✗ تُخطّي ولم يُعلِن التخطّي"; return 1; }
+  grep -q 'جزئي' <<< "$out" || { printf '%s\n' "$out"; echo "✗ ادّعى نجاحاً كاملاً وهو لم يفحص"; return 1; }
+  return 0
+}
+t "عند الجهل يُعلن التخطّي ولا يدّعي نجاحاً كاملاً" pass fresh_declares_skip
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

@@ -18,8 +18,10 @@
  */
 
 export * from "./domain/catalog.js";
+export * from "./domain/category-seed.js";
 export * from "./domain/contract-sets.js";
 export * from "./domain/errors.js";
+export * from "./domain/events.js";
 export * from "./domain/identifiers.js";
 export * from "./domain/inventory.js";
 export * from "./domain/model.js";

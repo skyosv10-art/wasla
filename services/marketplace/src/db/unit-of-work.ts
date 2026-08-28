@@ -30,15 +30,23 @@
  * متجرٍ لا صفَّ دفترٍ له بعد، وقفلٌ على ماضٍ غيرِ موجودٍ لا يمنع سباقاً؛ والقفلُ المتشائم قرارٌ
  * يُعلَن إن أثبت القياسُ أنّ الإعادةَ مُكلفة.
  *
- * ## والمجموعةُ ستّةُ مخازنَ لا سبعة
+ * ## والمجموعةُ سبعةُ مخازنَ منذ 5/6
  *
  * `idempotency` انضمّ في المراجعة 4/6 مع الطبقةِ التي تقرأ `Idempotency-Key` — ووجودُه **داخلَ**
  * المجموعةِ هو ما يجعل الحرسَ والحفظَ يقعان في معاملةِ الكتابةِ نفسِها: مخزنٌ يُبنى على `db`
  * لا على `tx` كان سيقرأ ويكتب خارجَ المعاملة، فيبقى مفتاحٌ محفوظاً لكتابةٍ تراجعت.
  *
- * ولا `outbox` بعد: صندوقُ الصادرِ في 5/6 لأنّه يُكتب في معاملةِ القرارِ نفسِها ولا معنى له
- * خارجَها. ودرسُ الطور 10 المكتوبُ في `contracts/schema.sql` صريحٌ: مخزنٌ يهبط قبل ما يصله يبقى
- * غيرَ موصولٍ ويظنّ الجميعُ أنّه يعمل.
+ * و`outbox` انضمّ في 5/6 للسببِ نفسِه مقلوباً: الحدثُ يُكتب في معاملةِ القرارِ نفسِها ولا معنى له
+ * خارجَها، فمخزنٌ يُبنى على `db` لا على `tx` كان سيُنتج حدثاً منشوراً لقرارٍ تراجعت معاملتُه.
+ * ودرسُ الطور 10 المكتوبُ في `contracts/schema.sql` صريحٌ: مخزنٌ يهبط قبل ما يصله يبقى
+ * غيرَ موصولٍ ويظنّ الجميعُ أنّه يعمل — ولذلك لم يدخل المجموعةَ وحدَه: كلُّ قرارٍ في `app/`
+ * يكتب حدثَه في المراجعةِ نفسِها.
+ *
+ * ## ولا ناقلَ للصندوقِ هنا — دَينٌ مُعلَنٌ لا سهوٌ
+ *
+ * الناقلُ دَينُ المرحلة 09 المُعلَنُ في سجلِّ المخاطر، وقرارُه لم يُتّخذ بعد. فالأحداثُ تستقرُّ في
+ * الصندوقِ غيرَ منشورةٍ، وهذا **مُعلَنٌ لا مُخفٌّ**: لا `markPublished` في المخزن، ولا مُجدولَ
+ * يقرأها — ومجدولٌ هنا كان يُسقِط حارسَ القرار 2 في `purity.test.ts` بحقّ.
  */
 
 import { isSequenceRace } from "./constraints.js";
@@ -46,6 +54,7 @@ import type { Db, DbOrTx } from "./client.js";
 import { PostgresCategoryStore } from "./categories.js";
 import { PostgresIdempotencyStore } from "./idempotency.js";
 import { PostgresMarketplaceLedger } from "./ledger.js";
+import { PostgresOutboxStore } from "./outbox.js";
 import { PostgresMarketplaceProjection } from "./projection.js";
 import { PostgresResourceStore } from "./resources.js";
 import { PostgresStaffStore } from "./staff.js";
@@ -57,6 +66,7 @@ export interface MarketplaceStores {
   readonly staff: PostgresStaffStore;
   readonly categories: PostgresCategoryStore;
   readonly idempotency: PostgresIdempotencyStore;
+  readonly outbox: PostgresOutboxStore;
 }
 
 /** كلُّ المخازنِ مربوطةً بنفسِ الاتصالِ — فلا يقع نصفُها خارجَ المعاملة. */
@@ -68,6 +78,7 @@ export function bindStores(db: DbOrTx): MarketplaceStores {
     staff: new PostgresStaffStore(db),
     categories: new PostgresCategoryStore(db),
     idempotency: new PostgresIdempotencyStore(db),
+    outbox: new PostgresOutboxStore(db),
   };
 }
 
@@ -82,7 +93,9 @@ export const MAX_DECISION_ATTEMPTS = 3;
  * Postgres لا يفحص كودَنا. والخطّافُ `undefined` في كلِّ مسارٍ حقيقيّ، وستُثبت المراجعة 4/6
  * أنّه لا يُمرَّر من طبقةِ HTTP أبداً.
  */
-export type TransactionProbe = (stage: "after-ledger" | "after-projection") => Promise<void>;
+export type TransactionProbe = (
+  stage: "after-ledger" | "after-projection" | "after-outbox",
+) => Promise<void>;
 
 export interface UnitOfWorkContext {
   readonly stores: MarketplaceStores;

@@ -26,6 +26,7 @@
 
 import {
   loadCategoryFacts,
+  loadCategorySlugById,
   loadProductById,
   loadStoreBySlug,
   type MarketplaceServiceDeps,
@@ -51,9 +52,18 @@ import type {
 } from "../domain/contract-sets.js";
 import { productNotFound, validationFailed } from "../domain/errors.js";
 import {
+  inventoryAdjustedEvent,
+  productArchivedEvent,
+  productCreatedEvent,
+  productModeratedEvent,
+  productPublishedEvent,
+} from "../domain/events.js";
+import {
   INVENTORY_INITIAL_QUANTITY,
   INVENTORY_INITIAL_SEQUENCE,
   applyInventoryAdjustment,
+  reconcileInventory,
+  type InventoryReconciliation,
 } from "../domain/inventory.js";
 import { deriveProductModerationState } from "../domain/state.js";
 import { assertProductDecision, assertProductTransition } from "../domain/transitions.js";
@@ -175,6 +185,18 @@ export class MarketplaceProductService {
       });
 
       const product = await stores.resources.insertProduct(draft);
+      await stores.outbox.appendEvent(
+        productCreatedEvent({
+          productId: product.productId,
+          storeId: store.storeId,
+          storeSlug: store.slug,
+          sku: product.sku,
+          categorySlug: category.slug,
+          createdByPublicId: product.createdByPublicId,
+          occurredFor: product.createdAt,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
 
       if (input.initialQuantity !== undefined && input.initialQuantity > 0) {
         const entry = applyInventoryAdjustment({
@@ -185,10 +207,25 @@ export class MarketplaceProductService {
           adjustmentSequence: INVENTORY_INITIAL_SEQUENCE + 1,
           occurredAt: this.deps.clock.now(),
         });
-        await stores.ledger.appendInventoryAdjustment(product.productId, entry);
+        const adjustment = await stores.ledger.appendInventoryAdjustment(product.productId, entry);
         await probe?.("after-ledger");
         await stores.projection.applyInventoryProjection(product.productId, entry);
         await probe?.("after-projection");
+        await stores.outbox.appendEvent(
+          inventoryAdjustedEvent({
+            adjustmentId: adjustment.adjustmentId,
+            productId: product.productId,
+            storeId: store.storeId,
+            quantityDelta: adjustment.quantityDelta,
+            quantityAfter: adjustment.quantityAfter,
+            reasonCode: adjustment.reasonCode,
+            adjustmentSequence: adjustment.adjustmentSequence,
+            actorPublicId: adjustment.actorPublicId,
+            occurredFor: adjustment.occurredAt,
+            occurredAt: this.deps.clock.now(),
+          }),
+        );
+        await probe?.("after-outbox");
       }
 
       const quantityOnHand =
@@ -293,6 +330,7 @@ export class MarketplaceProductService {
         });
       }
 
+      const fromState = product.state;
       const projected = await stores.projection.projectProductState(productId, toState);
       if (projected === undefined) throw productNotFound(productId);
       await probe?.("after-projection");
@@ -310,14 +348,54 @@ export class MarketplaceProductService {
               (inventory?.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE) + 1,
             occurredAt: this.deps.clock.now(),
           });
-          await stores.ledger.appendInventoryAdjustment(productId, entry);
+          const adjustment = await stores.ledger.appendInventoryAdjustment(productId, entry);
           await probe?.("after-ledger");
           await stores.projection.applyInventoryProjection(productId, entry);
+          await stores.outbox.appendEvent(
+            inventoryAdjustedEvent({
+              adjustmentId: adjustment.adjustmentId,
+              productId,
+              storeId: product.storeId,
+              quantityDelta: adjustment.quantityDelta,
+              quantityAfter: adjustment.quantityAfter,
+              reasonCode: adjustment.reasonCode,
+              adjustmentSequence: adjustment.adjustmentSequence,
+              actorPublicId: adjustment.actorPublicId,
+              occurredFor: adjustment.occurredAt,
+              occurredAt: this.deps.clock.now(),
+            }),
+          );
         }
       }
 
       const row = await stores.resources.findProductVisibility(productId);
       if (row === undefined) throw productNotFound(productId);
+
+      await stores.outbox.appendEvent(
+        toState === "archived"
+          ? productArchivedEvent({
+              productId,
+              storeId: product.storeId,
+              storeSlug: row.storeSlug,
+              fromState,
+              actorPublicId,
+              occurredFor: row.product.updatedAt,
+              occurredAt: this.deps.clock.now(),
+            })
+          : productPublishedEvent({
+              productId,
+              storeId: product.storeId,
+              storeSlug: row.storeSlug,
+              categorySlug: await loadCategorySlugById(stores, row.product.categoryId),
+              fromState,
+              storeState: row.storeState,
+              quantityOnHand: row.quantityOnHand,
+              actorPublicId,
+              occurredFor: row.product.updatedAt,
+              occurredAt: this.deps.clock.now(),
+            }),
+      );
+      await probe?.("after-outbox");
 
       return await rememberOutcome(stores.idempotency, envelope, toView(row));
     });
@@ -368,6 +446,25 @@ export class MarketplaceProductService {
       if (projected === undefined) {
         throw validationFailed("moderation_sequence", "a projection newer than the stored one");
       }
+
+      const store = await stores.resources.findStoreById(product.storeId);
+      if (store === undefined) throw productNotFound(productId);
+      await stores.outbox.appendEvent(
+        productModeratedEvent({
+          productId,
+          storeId: product.storeId,
+          storeSlug: store.slug,
+          fromState: review.fromState,
+          toState,
+          moderationSequence: review.moderationSequence,
+          actorType: input.actorType,
+          ...(input.actorPublicId === undefined ? {} : { actorPublicId: input.actorPublicId }),
+          ...(input.reasonCode === undefined ? {} : { reasonCode: input.reasonCode }),
+          occurredFor: review.decidedAt,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
+      await probe?.("after-outbox");
 
       return await rememberOutcome(stores.idempotency, envelope, {
         review,
@@ -441,6 +538,21 @@ export class MarketplaceProductService {
       await probe?.("after-ledger");
       await stores.projection.applyInventoryProjection(productId, entry);
       await probe?.("after-projection");
+      await stores.outbox.appendEvent(
+        inventoryAdjustedEvent({
+          adjustmentId: adjustment.adjustmentId,
+          productId,
+          storeId: product.storeId,
+          quantityDelta: adjustment.quantityDelta,
+          quantityAfter: adjustment.quantityAfter,
+          reasonCode: adjustment.reasonCode,
+          adjustmentSequence: adjustment.adjustmentSequence,
+          actorPublicId: adjustment.actorPublicId,
+          occurredFor: adjustment.occurredAt,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
+      await probe?.("after-outbox");
 
       return await rememberOutcome(stores.idempotency, envelope, {
         adjustment,
@@ -448,5 +560,31 @@ export class MarketplaceProductService {
       });
     });
     return value;
+  }
+
+  /**
+   * تدقيقُ مخزونٍ: يُعيد بناءَ الرصيدِ من الدفترِ ويقارنُه بالإسقاطِ — قراءةٌ لا إصلاح.
+   *
+   * ## ولمَ لا يُصلِح الانحرافَ تلقائيّاً؟
+   *
+   * لأنّ الإسقاطَ لا يمكن أن ينحرف ما دام كلُّ فرقٍ يُكتب في معاملةِ دفترِه نفسِها؛
+   * فانحرافٌ موجودٌ يعني أنّ فرضاً أساسيّاً سقط (معاملةٌ كُسِرت، أو يدٌ كتبت في القاعدة)،
+   * وإصلاحٌ صامتٌ يمحو الدليلَ على العطبِ ويجعل السببَ غيرَ قابلٍ للاستدلال. وقرارُ الإصلاحِ
+   * ملكُ مالِكٍ لا ملكُ هذه المراجعة.
+   *
+   * ولا مسارَ HTTP لها في 5/6: عقدُ `contracts/api.openapi.yml` مجمدٌ عند خمسةَ عشرَ مساراً،
+   * ومسارٌ سادسَ عشرَ قرارُ عقدٍ يلزمه ADR لا سطراً يُدسّ.
+   */
+  async auditInventory(productId: string): Promise<InventoryReconciliation> {
+    return await this.deps.uow.read(async ({ stores }) => {
+      await loadProductById(stores, productId);
+      const ledger = await stores.ledger.listInventoryAdjustments(productId);
+      const inventory = await stores.projection.findInventory(productId);
+      return reconcileInventory({
+        ledger,
+        projectedQuantity: inventory?.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,
+        projectedSequence: inventory?.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
+      });
+    });
   }
 }

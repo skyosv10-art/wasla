@@ -56,6 +56,14 @@ export {
   type RememberOutcome,
   type StoredResponse,
 } from "./idempotency.js";
+export {
+  OUTBOX_BATCH_LIMIT_DEFAULT,
+  OUTBOX_BATCH_LIMIT_MAX,
+  PostgresOutboxStore,
+  envelopeOf,
+  type OutboxRecord,
+  type OutboxStore,
+} from "./outbox.js";
 export { PostgresStaffStore } from "./staff.js";
 export {
   iso,

@@ -21,7 +21,7 @@
  *   تنفيذيٌّ لا يستورده أحد. ولو قرأ `client.ts` البيئةَ لصار كلُّ من يستورده يفتح اتّصالاً
  *   لا يراه في وسائطِه — وهذا أوّلُ ما يجعل اختباراً يمسُّ قاعدةً لم يطلبها.
  * - `FS_READING_FILES = ["db/migrate.ts"]` — ملفٌ واحدٌ يقرأ `contracts/schema.sql` ليُطبّقَه حرفاً.
- * - `DB_AWARE_FILES` — ثمانيةُ ملفاتٍ تحت `db/` وحدَها، ولا ملفَّ مجالٍ واحدٌ في القائمة: وهذا
+ * - `DB_AWARE_FILES` — عشرةُ ملفاتٍ تحت `db/` وحدَها، ولا ملفَّ مجالٍ واحدٌ في القائمة: وهذا
  *   هو موضوعُ الحراسةِ أصلاً — القاعدةُ دخلت الخدمةَ ولم تدخل المجال.
  * - `REAL_CLOCK_FILES = ["app/runtime.ts"]` — **ملفٌ واحدٌ** فيه `new Date()`، وهو تنفيذُ
  *   `Clock` الوحيد في الخدمة. وساعةٌ تُقرأ في خدمةِ تطبيقٍ مباشرةً كانت ستجعل كلَّ اختبارٍ
@@ -121,6 +121,7 @@ const DB_AWARE_FILES: readonly string[] = [
   "db/idempotency.ts",
   "db/ledger.ts",
   "db/migrate.ts",
+  "db/outbox.ts",
   "db/projection.ts",
   "db/resources.ts",
   "db/schema.ts",
@@ -142,6 +143,7 @@ const PERSISTENCE_FILES: readonly string[] = [
   "db/ledger.ts",
   "db/migrate-cli.ts",
   "db/migrate.ts",
+  "db/outbox.ts",
   "db/paging.ts",
   "db/projection.ts",
   "db/resources.ts",

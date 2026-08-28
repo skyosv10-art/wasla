@@ -28,6 +28,32 @@
 
 ## السجل
 
+### [2026-08-28] M5-11 — المراجعةُ 5/6: صادرٌ في معاملةِ القرارِ نفسِها، وتزامنُ مخزونٍ محروسٌ
+
+- **Work Item(s):** M5-11
+- **Files:** جديدٌ: `services/marketplace/src/domain/events.ts` · `src/domain/category-seed.ts` · `src/db/outbox.ts` · `src/__tests__/{events,inventory-sync,category-seed}.test.ts` · `src/__tests__/{outbox,categories-seed}.integration.test.ts` · [`docs/02-architecture/MARKETPLACE_EVENTS.md`](../02-architecture/MARKETPLACE_EVENTS.md). ومُعدَّلٌ: `src/db/{categories,migrate-cli,schema,index,unit-of-work}.ts` · `src/domain/inventory.ts` · `src/app/{stores,products,context}.ts` · `src/index.ts` · `src/__tests__/{pg-harness,purity,schema-drift}.ts` · [`docs/12-testing/BASELINE.json`](../12-testing/BASELINE.json).
+- **Services:** `services/marketplace/`
+- **Why:** المراجعةُ 5/6 مُعلَنةٌ في الشجرةِ نفسِها لا في وصفٍ: `db/schema.ts` يسمّي `marketplace_outbox` «← المراجعة 5/6»، و`db/unit-of-work.ts` يقول «ولا `outbox` بعد». والخدمةُ كانت **تقرِّر ولا تُخبِر**: عشرةُ جداولَ ومسارٌ HTTP قائمٌ على المنفذِ 8094، ولا صفَّ صادرٍ واحدٌ يخرج من معاملةِ القرار — فكلُّ مستهلكٍ لاحقٍ (البحثُ في `M5-12`، والطلباتُ في `M5-13`) كان سيقرأ الجداولَ مباشرةً أو يستقصيها، وهو عينُ ما مَنعه `ADR-016`.
+- **Tests:** **البوّابةُ الموحَّدةُ على الفرعِ: عشرةُ فحوصٍ ناجحةٍ · 0 فاشلٌ · تخطّيانِ مُعلَنانِ · رمزُ الخروجِ 0** (4 بياتُ الحجوزات: لا وصولَ إلى الفروعِ من بيئةِ التشغيل · 8 `only_allow_merge_if_pipeline_succeeds` غيرُ مُفعَّلٍ). و`scripts/verify.sh` كاملاً: **ستّةُ فحوصٍ خضراءُ · 0 إخفاقٍ** — الأنواعُ 40/40 حزمةً، والاختباراتُ **3464 ناجحاً في 206 ملفَّ تنفيذٍ**، وحزمةُ إثباتِ الحوكمةِ **141 حالةً · 0 فاشلاً**. والجديدُ في الخدمةِ وحدَها: الحزمةُ السريعةُ **13 ملفّاً/233 اختباراً ← 16 ملفّاً/316 اختباراً** (`events.test.ts` 57 · `inventory-sync.test.ts` 13 · `category-seed.test.ts` 13)، و`tsc --noEmit` رمزُ الخروجِ **0** بلا خطأٍ واحدٍ. وأُعيد توليدُ الأساسِ (M0-08) من سجلِّ تحقّقٍ **أخضرَ مقيسٍ** لا موروثٍ: `static.test_files_tracked` 243 ← **248**، والبصمةُ `sha256:0b2364fb…` ← **`sha256:7b95bd9d…6accaf`**.
+- **ما لم يُتحقَّق منه — يُقال ولا يُخفى:** **ملفّا اختبارِ التكاملِ (`outbox.integration.test.ts` 444 سطراً · `categories-seed.integration.test.ts` 147 سطراً) كُتبا ولم يُشغَّلا**: لا ثنائيّاتِ PostgreSQL في بيئةِ هذه الجلسةِ، ووظيفةُ `marketplace-db-integration` في الخطِّ لا تبدأ (`ci_quota_exceeded` — `RISK-0001`). فهما **كودٌ مُراجَعٌ لا دليلٌ مُشغَّلٌ**، وشرطُ إغلاقِ الطورِ يبقى تشغيلَهما على محرّكٍ حقيقيّ. ولا ناقلَ ولا `markPublished`: دَينٌ مُعلَنٌ من الطورِ 09 يُثبَّت غيابُه بتأكيدٍ صريحٍ في اختبارِ التكاملِ حتّى لا يُظَنَّ منجَزاً.
+- **قراراتٌ تُقال لا تُستنتَج:** (1) `storeApprovedEvent` كان يكتب `reason_code` والعقدُ `MarketplaceStoreApprovedV1` بـ`additionalProperties:false` ويُعلن `is_first_approval` بدلَه — **مخالفةُ عقدٍ حقيقيّةٌ** أُصلحت. (2) الضمانُ **at-least-once** لا exactly-once، وإزالةُ التكرارِ واجبٌ تعاقديٌّ على المستهلكِ لا على المُنتِج. (3) `event_id` من `gen_random_uuid()` داخلَ جملةِ الإدراجِ نفسِها، و`randomUUID(` ممنوعٌ في `src/` بحارسِ `purity.test.ts` — فلا مُوَلِّدَ عشوائيٍّ يتسلّل إلى مجالٍ نقيّ. (4) بذرُ التصنيفاتِ في `db/migrate-cli.ts` لا في `applyMarketplaceSchema` (تُنفِّذ `contracts/schema.sql` حرفيّاً، و`resetData` تقتطع بينَ الاختبارات)، و`MARKETPLACE_CATEGORY_SEED` **مُجمَّدةٌ خاليةً بقرارٍ** حتّى يملكَ التصنيفاتِ مالكُ محتوى، و`seedCategories` بـ`onConflictDoNothing` على `slug` فلا تملك صفّاً قائماً. (5) عندَ الأرشفةِ يُلحَق `inventory_adjusted` (`archive_zeroed`) **قبلَ** `product_archived` — والترتيبُ مُؤكَّدٌ في الاختبار. (6) دَينٌ مُعلَنٌ **لم يُصلَح بقرارٍ لا سهواً**: `assertTimestamp`/`toEpochMillis` في `src/domain/time.ts` تقبلانِ طابعاً بلا إزاحةٍ والعقدُ يشترط `format: date-time`.
+- **Next:** المراجعةُ 6/6 (إعادةُ تشغيلِ مسارِ HTTP وبوّابةُ الطورِ)، وقبلَها **تشغيلُ اختبارَي التكاملِ على Postgres حقيقيّ** ([`docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md`](../14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md)). ولا ينتقل `M5-11` إلى `Completed`: بوّابةُ خروجِ الطورِ قرارُ مالكٍ ثانويٍّ لا للعامل (البروتوكول §9).
+- **Related:** CLM-0020 · [ADR-016](../15-decisions/ADR-016-marketplace-store-ownership-catalog-and-moderation-boundary.md) · `contracts/events.json` · `contracts/schema.sql` §10 · M0-08 (الأساس) · RISK-0001 · RISK-0007
+
+---
+
+### [2026-08-28] M5-11 — تسجيلُ الحجزِ `CLM-0020` قبلَ أيِّ سطرِ كودٍ (المراجعةُ 5/6)
+
+- **Work Item(s):** M5-11
+- **Files:** `docs/16-progress/{WORK_CLAIMS,LAUNCH_EXECUTION_BOARD,TASK_LOG}.md` — لا ملفَّ كودٍ واحدًا في هذا الالتزام.
+- **Services:** `services/marketplace/` (محجوزٌ لمّا يُمسَّ)
+- **Why:** `WORK_CLAIM_RULE.md` يمنع أيَّ `commit` قبلَ وجودِ سطرِ حجزٍ نشطٍ بالفرعِ نفسِه. والمرحلةُ الجاريةُ فعلاً `Phase 11 · M5-11` عندَ **4/6**، والمراجعةُ 5/6 مُعلَنةُ المحتوى في الشجرةِ نفسِها لا في وصفٍ: `db/schema.ts` سطر 380 يسمّي `marketplace_outbox` «← المراجعة 5/6»، و`db/unit-of-work.ts` سطر 39 يقول «ولا `outbox` بعد»، و`db/categories.ts` سطر 13 يقول إنّ 5/6 تبذر التصنيفاتِ الأوّليّة. و`CLM-0005` المذكورُ في خانةِ اللوحةِ **مُحرَّرٌ** منذُ دمجِ !87، فلا يُعاد استعمالُه (معرِّفُ حجزٍ لا يُكرّر).
+- **Tests:** `bash scripts/checks/find-existing-work.sh "marketplace outbox"` — **لا نتائجَ في الأقسامِ السبعةِ كلِّها** (لا حجزَ نشطٌ ولا كودٌ قائمٌ ولا عنصرُ لوحةٍ موازٍ)، و`find-existing-work.sh "inventory"` يردُّ `ADR-016` وصفَّ `M5-13` التابعَ للطورِ 13 لا لهذا. وبوّابةُ الحوكمةِ على هذا الفرعِ **عشرةٌ ناجحةٌ · 0 فاشلٌ · تخطّيانِ مُعلَنانِ · رمزُ الخروجِ 0**.
+- **Next:** التنفيذُ: مرآةُ `marketplace_outbox`، ومخزنُ صادرٍ داخلَ وحدةِ العملِ نفسِها، وباني أحداثٍ للأنواعِ الثلاثةَ عشرَ، وحارسُ تزامنِ مخزونٍ بينَ الدفترِ والرّصيد، وتوثيقٌ، وإعادةُ توليدِ الأساسِ (M0-08).
+- **Related:** CLM-0020 · [ADR-016](../15-decisions/ADR-016-marketplace-store-ownership-catalog-and-moderation-boundary.md) · `contracts/events.json` · `contracts/schema.sql` §10 · CLM-0005 (مُحرَّرٌ لا يُعاد)
+
+---
+
 ### [2026-08-28] M0-08 — إغلاقُ الدورة: تحريرُ `CLM-0019` بعدَ دمجِ MR !108
 
 - **Work Item(s):** M0-08

@@ -86,3 +86,23 @@ export async function loadCategoryFacts(
     isActive: category.isActive,
   };
 }
+
+/**
+ * لاحقةُ تصنيفٍ بمُعرِّفه — قراءةٌ واحدةٌ تُضاف لحمولةِ الحدثِ لا لقرارٍ.
+ *
+ * ولمَ تُقرأ ولا تُحمَل من الصفِّ؟ لأنّ `stores.category_id` و`products.category_id`
+ * مُعرِّفاتٌ داخليّةٌ، وعقدُ الأحداثِ يحمل `category_slug` وحدَه: مُستهلكٌ خارجَ الخدمةِ لا يعرف
+ * جدولَ التصنيفاتِ ولا يجب أن يستعلمه. ولاحقةٌ تُنسخ في المتجرِ أو المنتجِ كانت ستصير عموداً
+ * راكداً يخالف التصنيفَ يومَ تُعاد تسميةُ لاحقته.
+ *
+ * ويُرفع `STORE_CATEGORY_NOT_FOUND` عند الغياب: مفتاحٌ أجنبيٌّ في العقدِ يجعله مستحيلاً، فبلوغُه
+ * يعني عطباً في القاعدةِ يجب أن يظهر لا حدثاً بلاحقةٍ فارغة.
+ */
+export async function loadCategorySlugById(
+  stores: MarketplaceStores,
+  categoryId: string,
+): Promise<string> {
+  const category = await stores.categories.findById(categoryId);
+  if (category === undefined) throw storeCategoryNotFound(categoryId);
+  return category.slug;
+}

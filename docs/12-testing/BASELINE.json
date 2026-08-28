@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-08-28T13:13:48Z",
+  "generated_at": "2026-08-28T23:14:28Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "18a054c768bb816fde612184264ffd16db386710",
-    "branch": "main",
+    "commit": "a2db39baff74982bf95bc162f5847b2a5fc52c69",
+    "branch": "feat/m5-11-marketplace-outbox-inventory-sync",
     "dirty": true,
-    "dirty_files": 26,
+    "dirty_files": 10,
     "dirty_reason": "نسخةٌ محلّيّةٌ تُدفَع عبرَ الواجهةِ البرمجيّةِ لا عبرَ git push",
-    "tracked_files": 1076
+    "tracked_files": 1085
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 25,
     "ci_allow_failure": 1,
     "governance_checks": 11,
-    "risks_not_closed": 11
+    "risks_not_closed": 12
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m5-11-b.log",
+    "source": "/tmp/verify-fix2.log",
     "tests_passed": 3464,
     "test_files_executed": 206,
     "governance_suite_cases": 141,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:7b95bd9d6515116dedb29816d02fae52b87010202606ce89eaeee4e8fe6accaf",
+  "fingerprint": "sha256:34b4827f131a4fe189481b6ac1915da512592922166462b55316b418d0783c08",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

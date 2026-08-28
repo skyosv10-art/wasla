@@ -9,8 +9,11 @@
  *
  * ## والإدخالُ مُعلَنٌ للبذرِ وحدَه
  *
- * `insertCategory` موجودةٌ لأنّ الاختبارَ يحتاج تصنيفاً حقيقيّاً (لا مبذورٍ في الترحيل ·
- * `migrate.ts`)، ولأنّ المراجعةَ 5/6 تبذر التصنيفاتِ الأوّليّة. ولا مسارَ HTTP ينشئ تصنيفاً:
+ * `insertCategory` تُدرِج صفّاً واحداً ويستعملها الاختبارُ ليحصل على تصنيفٍ حقيقيّ، و
+ * `seedCategories` تبذر شجرةً مُعلَنةً **قابلةً للإعادة**: تُنادى من `db/migrate-cli.ts` بعدَ
+ * المخطّطِ، تُسطِّح الشجرةَ (أبٌ قبلَ أوراقِه كي يصحّ المفتاحُ الأجنبيّ)، وتُدرِج بـ
+ * `onConflictDoNothing` على اللاحقةِ فلا تملك صفّاً موجوداً — تفصيلُ العلّةِ عند الدالّةِ
+ * نفسِها. ولا مسارَ HTTP ينشئ تصنيفاً:
  * الشجرةُ بيانُ منصّةٍ لا مُدخلُ مستخدمٍ (وذاك نصُّ العقدِ في `store_categories`)، وفتحُها
  * للمستخدمِ كان سينتج «الكترونيات» و«إلكترونيات» تصنيفَين لمعنى واحد.
  *
@@ -23,6 +26,10 @@ import { asc, eq, sql } from "drizzle-orm";
 import type { DbOrTx } from "./client.js";
 import { storeCategories } from "./schema.js";
 import { toCategory, type CategoryRecord } from "./rows.js";
+import {
+  flattenCategorySeed,
+  type CategorySeedRoot,
+} from "../domain/category-seed.js";
 import { validationFailed } from "../domain/errors.js";
 import type { CategoryFacts } from "../domain/model.js";
 
@@ -86,6 +93,64 @@ export class PostgresCategoryStore {
     const record = await this.findById(categoryId);
     if (record === undefined) return undefined;
     return { slug: record.slug, depth: record.depth, isActive: record.isActive };
+  }
+
+  /**
+   * يبذر شجرةً مُعلَنةً **عَكوساً**: ما وُجد يُترك، وما غاب يُكتب، ولا شيءَ يُدهَس.
+   *
+   * ## ولمَ `onConflictDoNothing` لا `onConflictDoUpdate`؟
+   *
+   * لأنّ التحديثَ يجعل البذرَ **مالكاً دائماً** للصفِّ: مالكٌ يعطّل تصنيفاً في لوحةٍ
+   * يرى تعطيلَه يُلغى صامتاً في أوّلِ نشرٍ تالٍ، وهو أسوأُ من أن لا يعمل التعطيلُ أصلاً
+   * لأنّه يعمل ثمّ يُراجع. والبذرُ **يُنشِئ ما غاب ولا يملك ما وُجد**؛ وتغييرُ عنوانٍ
+   * مبذورٍ قرارُ مالكٍ لا أثرٌ جانبيٌّ لإعادةِ تشغيلِ مُهاجرة.
+   *
+   * ## ولمَ يُقرأ الأبُ بلاحقته بعد الإدخال؟
+   *
+   * لأنّ `onConflictDoNothing` تُعيد **صفرَ صفوفٍ** حين يكون الصفُّ موجوداً، فمُعرِّفُ الأبِ
+   * لا يأتي من `returning()` في الركضةِ الثانية. وحملُ المُعرِّفِ من الركضةِ الأولى في الذاكرةِ
+   * وحدَه كان سيعمل في المرّةِ الأولى ويسقط في الثانية — وهو أسوأُ أنواعِ العطب: عطبٌ لا
+   * يظهر إلّا في بيئةٍ مُرقّاة لا في بيئةٍ نقيّة.
+   */
+  async seedCategories(
+    roots: ReadonlyArray<CategorySeedRoot>,
+  ): Promise<{ readonly inserted: number; readonly existing: number }> {
+    const rows = flattenCategorySeed(roots);
+    let inserted = 0;
+    let existing = 0;
+
+    for (const row of rows) {
+      const parentCategoryId =
+        row.parentSlug === undefined ? null : (await this.requireBySlug(row.parentSlug)).categoryId;
+
+      const returned = await this.db
+        .insert(storeCategories)
+        .values({
+          categoryId: sql`gen_random_uuid()`,
+          slug: row.slug,
+          depth: row.depth,
+          parentCategoryId,
+          labelAr: row.labelAr,
+          labelEn: row.labelEn ?? null,
+          labelUr: row.labelUr ?? null,
+          sortOrder: row.sortOrder,
+          isActive: true,
+        })
+        .onConflictDoNothing({ target: storeCategories.slug })
+        .returning();
+
+      if (returned[0] === undefined) existing += 1;
+      else inserted += 1;
+    }
+
+    return { inserted, existing };
+  }
+
+  /** لاحقةٌ يجب أن توجد — والغيابُ عطبٌ في البذرِ لا حالةٌ يدور عليها المُنادي. */
+  private async requireBySlug(slug: string): Promise<CategoryRecord> {
+    const record = await this.findBySlug(slug);
+    if (record === undefined) throw validationFailed("parent_slug", `a seeded category: ${slug}`);
+    return record;
   }
 
   /** الشجرةُ كما تُعرض: بالعمقِ ثمّ بالترتيبِ المُعلَنِ ثمّ باللاحقة — ترتيبٌ تامٌّ وثابت. */

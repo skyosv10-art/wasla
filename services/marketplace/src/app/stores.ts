@@ -28,6 +28,7 @@
 
 import {
   loadCategoryFacts,
+  loadCategorySlugById,
   loadStoreBySlug,
   type MarketplaceServiceDeps,
 } from "./context.js";
@@ -53,6 +54,13 @@ import {
   storeStaffNotFound,
   validationFailed,
 } from "../domain/errors.js";
+import {
+  storeApprovedEvent,
+  storeDecisionEvent,
+  storeRegisteredEvent,
+  storeStaffAddedEvent,
+  storeStaffRemovedEvent,
+} from "../domain/events.js";
 import { assertStaffAddition, assertStaffRemoval, sealStaffRemoval } from "../domain/staff.js";
 import { deriveStoreState } from "../domain/state.js";
 import { assertStoreDecision } from "../domain/transitions.js";
@@ -147,6 +155,18 @@ export class MarketplaceStoreService {
       });
 
       const store = await stores.resources.insertStore(draft);
+      await stores.outbox.appendEvent(
+        storeRegisteredEvent({
+          storeId: store.storeId,
+          storeSlug: store.slug,
+          ownerPublicId: store.ownerPublicId,
+          categorySlug: category.slug,
+          stateSequence: store.stateSequence,
+          actorPublicId: store.ownerPublicId,
+          occurredFor: store.createdAt,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
       return await rememberOutcome(stores.idempotency, envelope, store);
     });
     return value;
@@ -265,6 +285,32 @@ export class MarketplaceStoreService {
         throw validationFailed("state_sequence", "a projection newer than the stored one");
       }
 
+      const categorySlug = await loadCategorySlugById(stores, projected.categoryId);
+      const shared = {
+        storeId: projected.storeId,
+        storeSlug: projected.slug,
+        ownerPublicId: projected.ownerPublicId,
+        categorySlug,
+        fromState: review.fromState,
+        toState,
+        stateSequence: review.stateSequence,
+        actorType: input.actorType,
+        ...(input.actorPublicId === undefined ? {} : { actorPublicId: input.actorPublicId }),
+        ...(input.reasonCode === undefined ? {} : { reasonCode: input.reasonCode }),
+        occurredFor: review.decidedAt,
+        occurredAt: this.deps.clock.now(),
+      } as const;
+      await stores.outbox.appendEvent(
+        toState === "approved"
+          ? storeApprovedEvent({
+              ...shared,
+              toState: "approved",
+              isFirstApproval: isFirstApproval(ledger),
+            })
+          : storeDecisionEvent(shared),
+      );
+      await probe?.("after-outbox");
+
       return await rememberOutcome(stores.idempotency, envelope, {
         review,
         store: projected,
@@ -326,6 +372,18 @@ export class MarketplaceStoreService {
         addedByPublicId: input.addedByPublicId,
         addedAt: this.deps.clock.now(),
       });
+      await stores.outbox.appendEvent(
+        storeStaffAddedEvent({
+          storeId: store.storeId,
+          storeSlug: store.slug,
+          staffId: member.staffId,
+          memberPublicId: member.memberPublicId,
+          role: member.role,
+          actorPublicId: input.addedByPublicId,
+          occurredFor: member.addedAt,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
       return await rememberOutcome(stores.idempotency, envelope, member);
     });
     return value;
@@ -364,10 +422,34 @@ export class MarketplaceStoreService {
       });
       if (removed === undefined) throw storeStaffNotFound(memberPublicId);
 
+      await stores.outbox.appendEvent(
+        storeStaffRemovedEvent({
+          storeId: store.storeId,
+          storeSlug: store.slug,
+          staffId: removed.staffId,
+          memberPublicId: removed.memberPublicId,
+          role: removed.role,
+          actorPublicId: removedByPublicId,
+          occurredFor: sealed.removedAt as string,
+          occurredAt: this.deps.clock.now(),
+        }),
+      );
+
       return await rememberOutcome(stores.idempotency, envelope, removed);
     });
     return value;
   }
+}
+
+/**
+ * `is_first_approval` يُقرأ من الدفترِ قبلَ القرارِ لا من الحالةِ المُسقَطة.
+ *
+ * ولمَ لا عمودٌ `approved_at` يُقرأ منه الجوابُ مباشرةً؟ لأنّه يكون حقيقةً ثانيةً عن الماضي،
+ * والدفترُ أصلُها الواحدُ (القرار 3): عمودٌ يُنسى تحديثُه مرّةً يجعل اعتماداً تاسعاً يُعلَن
+ * أوّلاً. والدفترُ هنا مقروءٌ أصلاً في المعاملةِ نفسِها، فلا قراءةَ زائدة.
+ */
+function isFirstApproval(ledger: ReadonlyArray<StoreReviewRecord>): boolean {
+  return !ledger.some((review) => review.toState === "approved");
 }
 
 /** يفكّ موضعَ متاجرَ مُعتِماً إلى شكلِ المخزن — والفكُّ في موضعٍ واحدٍ لا في كلّ نداء. */

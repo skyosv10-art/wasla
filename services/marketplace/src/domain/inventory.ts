@@ -119,3 +119,62 @@ export function deriveQuantityOnHand(ledger: readonly InventoryAdjustmentEntry[]
 
   return quantity;
 }
+
+/**
+ * حُكمُ تدقيقٍ: الدفترُ وما بُني منه، والإسقاطُ وما هو عليه، والفرقُ بينهما إن وُجد.
+ *
+ * ولمَ حُكمٌ يُعاد لا استثناءٌ يُرفَع؟ لأنّ `deriveQuantityOnHand` ترفع عند دفترٍ **متناقضٍ في
+ * نفسِه** (تسلسلٌ مثقوبٌ أو `quantity_after` لا يطابق الجمعَ) — وذاك عطبٌ في الدفترِ لا يُقرأ.
+ * أمّا اختلافُ الإسقاطِ عن دفترٍ سليمٍ فحقيقةٌ تُقاس وتُقرأ وتُقارن، ورفعُها استثناءً كان
+ * سيمنع مالكاً من رؤيةِ مقدارِ الانحرافِ واتّجاهِه — وهو ما يحتاجه ليقرّر.
+ */
+export interface InventoryReconciliation {
+  readonly ledgerQuantity: number;
+  readonly ledgerSequence: number;
+  readonly projectedQuantity: number;
+  readonly projectedSequence: number;
+  readonly quantityDrift: number;
+  readonly sequenceDrift: number;
+  readonly inSync: boolean;
+}
+
+/**
+ * يقارن دفترَ المخزونِ بإسقاطِه — دالّةٌ صرفةٌ لا تعرف قاعدةً ولا تكتب شيئاً.
+ *
+ * ## ولمَ التسلسلُ يُقاس مع الرصيد؟
+ *
+ * لأنّ رصيدَين متساويَين لا يعنيان تزامناً: إسقاطٌ فقد سطراً بفرقِ `+5` ثمّ فقد آخرَ بفرقِ
+ * `-5` يُعطي الرصيدَ نفسَه وتسلسلاً أقصرَ باثنَين. والتسلسلُ هو الشاهدُ على **عددِ** ما وصل،
+ * والرصيدُ شاهدٌ على **مقدارِه**؛ وشاهدٌ واحدٌ يمرّ عليه انحرافٌ متعادلٌ بلا أثر.
+ *
+ * ولمَ `ledgerSequence` من طولِ الدفترِ لا من آخرِ سطرٍ فيه؟ لأنّ `deriveQuantityOnHand` أثبتت
+ * قبلَ سطرٍ واحدٍ أنّ التسلسلَ متّصلٌ يبدأ من واحد، فطولُه هو آخرُه بالضرورة — وقراءةُ الحقلِ
+ * من الصفِّ الأخيرِ كانت ستُصدِّق رقماً بلا إثباتٍ لو تغيّر ذاك الحرسُ يوماً.
+ */
+export function reconcileInventory(input: {
+  readonly ledger: readonly InventoryAdjustmentEntry[];
+  readonly projectedQuantity: number;
+  readonly projectedSequence: number;
+}): InventoryReconciliation {
+  if (!Number.isSafeInteger(input.projectedQuantity) || input.projectedQuantity < 0) {
+    throw validationFailed("quantity_on_hand", "non-negative integer");
+  }
+  if (!Number.isSafeInteger(input.projectedSequence) || input.projectedSequence < 0) {
+    throw validationFailed("last_adjustment_sequence", "non-negative integer");
+  }
+
+  const ledgerQuantity = deriveQuantityOnHand(input.ledger);
+  const ledgerSequence = input.ledger.length;
+  const quantityDrift = input.projectedQuantity - ledgerQuantity;
+  const sequenceDrift = input.projectedSequence - ledgerSequence;
+
+  return {
+    ledgerQuantity,
+    ledgerSequence,
+    projectedQuantity: input.projectedQuantity,
+    projectedSequence: input.projectedSequence,
+    quantityDrift,
+    sequenceDrift,
+    inSync: quantityDrift === 0 && sequenceDrift === 0,
+  };
+}

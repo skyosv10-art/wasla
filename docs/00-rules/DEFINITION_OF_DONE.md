@@ -119,6 +119,10 @@ Dispatch: concurrency tests
 - [ ] كلُّ خطرٍ باقٍ أو استثناءٍ مقبولٍ في هذا العملِ له سطرٌ في
       [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) بمالكٍ وتاريخِ مراجعةٍ، ولا مهلةَ
       مراجعةٍ منقضيةً في السجلِّ (M0-07 · محروسٌ بالفحصِ 10 في `verify-governance.sh`).
+- [ ] عدَّاداتُ الأساسِ الساكنةُ في [`BASELINE.json`](../12-testing/BASELINE.json) مطابقةٌ للحالةِ
+      الحيّةِ، وكلُّ تغيُّرٍ فيها مُعادُ التوليدِ بـ`scripts/baseline.sh` ومُعلَنٌ سببُه لا
+      مُحرَّرٌ بيدٍ (M0-08 · [BASELINE_FORMAT.md](../12-testing/BASELINE_FORMAT.md) · محروسٌ
+      بالفحصِ 11 في `verify-governance.sh`).
 - [ ] خدمةٌ لها ملفّانِ تكامليّانِ أو أكثر: `vitest.integration.config.ts` فيه
       `fileParallelism: false` (أو وسمُ `GOV-ISOLATION: schema-per-worker`)، وملفّاتُ
       التكاملِ مستثناةٌ من `vitest.config.ts` الافتراضيّ.

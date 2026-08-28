@@ -107,7 +107,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M5-11 | Marketplace Foundation | Marketplace / Data | M4 | In Progress | phase exit gate | 4/6 مكتملة (حدُّ HTTP · المنفذ 8094). التالي 5/6: صادرٌ وتزامنُ مخزون. الحجز CLM-0005. |
+| M5-11 | Marketplace Foundation | Marketplace / Data | M4 | In Progress | phase exit gate | 4/6 مكتملة (حدُّ HTTP · المنفذ 8094). **المراجعةُ 5/6 بدأت 2026-08-28 بالحجزِ `CLM-0020`** (الفرع `feat/m5-11-marketplace-outbox-inventory-sync`) — صادرٌ في معاملةِ القرارِ نفسِها وتزامنُ مخزون. **و`CLM-0005` المذكورُ هنا قبلًا مُحرَّرٌ** منذُ دمجِ [!87](https://gitlab.com/uxxxu/wasla/-/merge_requests/87) (الدمجُ `8f16670e`)، فمعرِّفُ الحجزِ لا يُعاد استعمالُه. |
 | M5-12 | Marketplace Search | Search / Marketplace | M5-11 | Not Started | relevance/load gate | search ADR. |
 | M5-13 | Store Orders & Delivery | Delivery / Orders | M5-11,M5-12 | Not Started | inventory/payment E2E | workflow contract. |
 | M5-14 | Partner / Enterprise | Partners / Security | M5-13 | Not Started | tenant/SLA gate | identity/tenancy ADR. |

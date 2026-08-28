@@ -1,6 +1,6 @@
 # قاعدةُ الأمرِ الموحَّد (VERIFY_COMMAND)
 
-> **الحالة:** ساريةٌ · **العنصر:** `M0-04` (وأُضيف الفحصُ 9 في `M0-06` والفحصُ 10 في `M0-07`) · **آخر تحديث:** 2026-08-27
+> **الحالة:** ساريةٌ · **العنصر:** `M0-04` (وأُضيف الفحصُ 9 في `M0-06` والفحصُ 10 في `M0-07` والفحصُ 11 في `M0-08`) · **آخر تحديث:** 2026-08-28
 > **المرجعُ الحاكم:** [ROADMAP_OPERATING_PROTOCOL.md](../16-progress/ROADMAP_OPERATING_PROTOCOL.md)
 > · [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md) · [TESTING_RULES.md](TESTING_RULES.md)
 
@@ -50,7 +50,7 @@ scripts/checks/lib/required-artifacts.sh
 | الطبقة | الأداة | الحال |
 | --- | --- | --- |
 | بنيةُ المستودعِ والوثائق | `validate-repo-structure.sh` | إلزاميّةٌ · تُسقِط |
-| الحوكمة (10 فحوصٍ) | `verify-governance.sh` | إلزاميّةٌ · تُسقِط |
+| الحوكمة (11 فحصاً) | `verify-governance.sh` | إلزاميّةٌ · تُسقِط |
 | إثباتُ أنّ الحوكمةَ ترفض فعلاً | `test-governance.sh` | إلزاميّةٌ · تُسقِط |
 | الأسرار | `scan-secrets.sh` | إلزاميّةٌ · تُسقِط (داخلَ البوّابة) |
 | الأنواع | `tsc` عبر `pnpm -r typecheck` | إلزاميّةٌ في CI · تُتخطّى محلّياً بلا اعتمادياتٍ **بوسمٍ صريح** |
@@ -58,6 +58,7 @@ scripts/checks/lib/required-artifacts.sh
 | اختباراتُ التكامل | وظائفُ `*-db-integration` بـPostgres | إلزاميّةٌ في CI فقط (تحتاج قاعدةً) |
 | تدقيقُ الثغرات | `pnpm audit` عبر `validate-dependency-audit.sh` | إلزاميّةٌ · تُسقِط (الفحصُ 9) · **تُعلَن جزئيّةً بالرمزِ 2** بلا شبكةٍ أو بلا `pnpm` — `SECURITY_RULES.md` §11 |
 | سجلُّ المخاطرِ والاستثناءات | `validate-risk-register.sh` | إلزاميّةٌ · تُسقِط (الفحصُ 10) · نصّيّةٌ بحتٌ لا تُتخطّى — [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) |
+| الأساسُ الآليُّ للبيئةِ والاختبارات | `baseline.sh` + `validate-baseline.sh` | إلزاميّةٌ · تُسقِط (الفحصُ 11) · تقارن العدَّاداتِ الساكنةَ الحيّةَ بـ[`BASELINE.json`](../12-testing/BASELINE.json) وتُبرهن ثباتَ البصمةِ — الصيغةُ في [`BASELINE_FORMAT.md`](../12-testing/BASELINE_FORMAT.md) |
 | Markdown | `markdownlint-cli2` | **إرشاديّةٌ لا تُسقِط** — انظر §4 |
 
 ولا `eslint` في المستودعِ اليومَ (لا إعدادَ ولا اعتماديّةَ — مقيسٌ)، فلا يُدَّعى

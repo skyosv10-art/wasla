@@ -1,0 +1,46 @@
+{
+  "schema": "wasla.baseline/v1",
+  "generated_at": "2026-08-28T00:06:30Z",
+  "generator": "scripts/baseline.sh",
+  "repo": {
+    "commit": "aa53d07a3c3202d6c8a5d71991f1e1b775c3672b",
+    "branch": "main",
+    "dirty": true,
+    "dirty_files": 19,
+    "dirty_reason": "نسخةٌ محلّيّةٌ تُدفَع عبرَ الواجهةِ البرمجيّةِ لا عبرَ git push",
+    "tracked_files": 1069
+  },
+  "env": {
+    "node": "v20.20.1",
+    "pnpm": "9.15.9",
+    "os": "Linux",
+    "arch": "x86_64",
+    "python": "3.14.3"
+  },
+  "lock": {
+    "path": "pnpm-lock.yaml",
+    "sha256": "39a7a4f5acaef6d440b8f9a1aa5d58966b0b019e5bf5ebe7650f35ca1f6fbeba",
+    "lines": 2849
+  },
+  "static": {
+    "packages": 40,
+    "packages_with_typecheck": 40,
+    "packages_with_test": 40,
+    "test_files_tracked": 243,
+    "ci_jobs": 25,
+    "ci_allow_failure": 1,
+    "governance_checks": 11,
+    "risks_not_closed": 11
+  },
+  "dynamic": {
+    "measured": true,
+    "source": "/tmp/verify-m0-08-final.log",
+    "tests_passed": 3379,
+    "test_files_executed": 203,
+    "governance_suite_cases": 141,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
+  },
+  "fingerprint": "sha256:0b2364fbe84e81ea8f15386cb5773aca55e6de50409f333588c8a4a98bc22c8e",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
+}

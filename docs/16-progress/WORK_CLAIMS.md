@@ -60,6 +60,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0019 | M0-08 | @uxxxu (agent:computer) | feat/m0-08-automated-baseline | docs/12-testing/,scripts/,docs/00-rules/,docs/07-security/ | 2026-08-28 | 2026-09-11 | Active |
 
 > **توسيعُ نطاقِ `CLM-0018` (نفسُ اليومِ، نفسُ الجهةِ):** كُتب النطاقُ أوّلاً `scripts/checks/` ثمَّ وُسِّع إلى `scripts/` لأنّ تسجيلَ الفحصِ العاشرِ يقتضي تحديثَ تسميةِ البوّابةِ في [`scripts/verify.sh`](../../scripts/verify.sh) (9 → 10 فحوصٍ) وهو خارجَ `scripts/checks/`. ويُذكر التوسيعُ ولا يُخفى: تحريرُ النطاقِ صامتاً بعدَ بدءِ العملِ هو عينُ ما تمنعه القاعدةُ.
 

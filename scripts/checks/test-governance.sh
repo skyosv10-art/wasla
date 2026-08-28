@@ -1309,6 +1309,138 @@ t "توقيعُ AKIA ما زال يُكشَف" fail _scan "$R_SEC_AWS"
 R_SEC_PAT="$(_secret_root pat "TOKEN=glpat-$(printf 'abcdefghijklmnopqrst')")"
 t "توقيعُ glpat ما زال يُكشَف" fail _scan "$R_SEC_PAT"
 
+printf '\n\033[1m[ل] الأساسُ الآليُّ للبيئةِ والاختبارات (M0-08)\033[0m\n'
+# الحارسُ يقيس الشجرةَ **حيّاً** ويقارنها بأساسٍ مُلتزَمٍ. فلا يكفي أن تُبنى له
+# وثائقُ نصٍّ: يُبنى **مستودعٌ صناعيٌّ كاملٌ** في /tmp (git حقيقيٌّ لالتزامٍ من 40
+# محرفاً · قفلٌ · حزمةٌ · CI · بوّابةٌ · سجلُّ مخاطرَ)، ثمَّ يُولَّد أساسُه بالمولِّدِ
+# نفسِه فيصير الحيُّ مطابقاً بالبناءِ لا بالحظِّ — وبعدَها تُطفَّر الحالاتُ واحدةً
+# واحدةً. والوقتُ مُثبَّتٌ بـ`BASELINE_STAMP` فلا تصير الحالةُ كاذبةً بمرورِ الأيّام.
+BASE_SRC="$REPO_ROOT/scripts/checks/validate-baseline.sh"
+BASE_GEN="$REPO_ROOT/scripts/baseline.sh"
+
+_base_root() { # _base_root <tag> [orphan:yes|no]
+  local tag="$1"
+  local orphan="${2:-no}"
+  local R="/tmp/gov_base_$tag"
+  rm -rf "$R"
+  mkdir -p "$R/docs/12-testing" "$R/docs/16-progress" "$R/docs/00-rules" \
+           "$R/docs/07-security" "$R/scripts/checks/lib"
+  cp "$REPO_ROOT/scripts/checks/lib/baseline_canon.py" "$R/scripts/checks/lib/"
+  printf 'lockfileVersion: 9.0\nimporters:\n  .: {}\n' > "$R/pnpm-lock.yaml"
+  printf '{"name":"synthetic","scripts":{"typecheck":"tsc","test":"vitest"}}\n' > "$R/package.json"
+  printf 'stages:\n  - test\nunit:\n  script: echo 1\n' > "$R/.gitlab-ci.yml"
+  printf '# بوّابةٌ صناعيّةٌ\n# ── 1) أوّلُ فحصٍ ───\n# ── 2) ثانيها ───\n' > "$R/scripts/checks/verify-governance.sh"
+  printf 'RISK-0001 | sev:low | owner:@u | opened:2026-08-28 | review:2026-09-28 | status:open | ref:package.json | خطرٌ صناعيٌّ\n' > "$R/docs/07-security/RISK_REGISTER.md"
+  printf '# صيغةُ الأساسِ — نسخةٌ صناعيّةٌ\n' > "$R/docs/12-testing/BASELINE_FORMAT.md"
+  # الأساسُ المُلتزَمُ ومُخلَّفاتُ python تُستثنى في الجذرِ الصناعيِّ: تُنسَخُ **بعدَ**
+  # الالتزامِ فتُقرأ الشجرةُ «مُعدَّلةً» فيُسقِطها البابُ الرابعُ بلا سببٍ مكتوبٍ.
+  printf '__pycache__/\ndocs/12-testing/BASELINE.json\n' > "$R/.gitignore"
+  if [[ "$orphan" == "no" ]]; then
+    printf '| M0-08 | أساسٌ آليٌّ | انظر docs/12-testing/BASELINE.json |\n' > "$R/docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
+    printf 'مجموعةُ الأدوات: BASELINE.json\n' > "$R/docs/00-rules/VERIFY_COMMAND.md"
+  else
+    printf '| M0-08 | أساسٌ آليٌّ | لا إحالةَ |\n' > "$R/docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
+    printf 'مجموعةُ الأدوات: لا إحالةَ\n' > "$R/docs/00-rules/VERIFY_COMMAND.md"
+  fi
+  ( cd "$R" && git init -q . && git add -A >/dev/null 2>&1 \
+    && git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
+  # السجلُّ **خارجَ** الجذرِ: ملفٌّ غيرُ مُتتبَّعٍ داخلَه يجعل الشجرةَ «مُعدَّلةً»
+  # فيُسقِطها البابُ الرابعُ بلا سببٍ مكتوبٍ — وهو عيبٌ وقعَ في أوّلِ تشغيلٍ.
+  local LOGF="/tmp/gov_base_${tag}.log"
+  printf 'Test Files  7 passed (7)\nTests  99 passed (99)\nالنتيجة: 12 ناجح · 0 فاشل\n' > "$LOGF"
+  printf 'التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' >> "$LOGF"
+  PYTHONDONTWRITEBYTECODE=1 BASELINE_ROOT="$R" BASELINE_STAMP="2026-08-28T00:00:00Z" \
+    bash "$BASE_GEN" --log "$LOGF" --stdout > "/tmp/gov_base_${tag}.json" 2>/dev/null
+  cp "/tmp/gov_base_${tag}.json" "$R/docs/12-testing/BASELINE.json"
+  printf '%s\n' "$R"
+}
+
+_base_mut() { # _base_mut <جذر> <تعبيرُ python على المتغيّر d>
+  python3 - "$1/docs/12-testing/BASELINE.json" "$2" <<'PYX'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding="utf-8"))
+exec(sys.argv[2])
+json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+PYX
+}
+
+B_OK="$(_base_root ok)"
+t "أساسٌ مُولَّدٌ من الشجرةِ نفسِها يمرّ" pass bash "$BASE_SRC" "$B_OK"
+
+# ── البابُ 1: الصيغةُ والاتّساقُ الذاتيُّ ──────────────────────────────────
+B_NOFILE="$(_base_root nofile)"; rm -f "$B_NOFILE/docs/12-testing/BASELINE.json"
+t "غيابُ الأساسِ المُلتزَمِ يُسقِط" fail bash "$BASE_SRC" "$B_NOFILE"
+
+B_BADJSON="$(_base_root badjson)"; printf 'ليس JSON\n' > "$B_BADJSON/docs/12-testing/BASELINE.json"
+t "أساسٌ ليس JSON صالحاً يُسقِط" fail bash "$BASE_SRC" "$B_BADJSON"
+
+B_SCHEMA="$(_base_root schema)"; _base_mut "$B_SCHEMA" 'd["schema"]="wasla.baseline/v99"'
+t "مُعرِّفُ صيغةٍ مخالفٌ يُسقِط" fail bash "$BASE_SRC" "$B_SCHEMA"
+
+B_MISS="$(_base_root misscounter)"; _base_mut "$B_MISS" 'd["static"].pop("ci_jobs")'
+t "عدَّادٌ ساكنٌ محذوفٌ يُسقِط" fail bash "$BASE_SRC" "$B_MISS"
+
+B_TYPE="$(_base_root badtype)"; _base_mut "$B_TYPE" 'd["static"]["packages"]="أربعون"'
+t "عدَّادٌ ليس عدداً صحيحاً يُسقِط" fail bash "$BASE_SRC" "$B_TYPE"
+
+B_NOENV="$(_base_root noenv)"; _base_mut "$B_NOENV" 'd["env"]["node"]=""'
+t "بيئةٌ بلا إصدارِ node تُسقِط" fail bash "$BASE_SRC" "$B_NOENV"
+
+B_HAND="$(_base_root handedited)"; _base_mut "$B_HAND" 'd["static"]["test_files_tracked"]=999'
+t "عدَّادٌ حُرِّر بيدٍ بلا إعادةِ بصمٍ يُسقِط (البصمةُ تكشفه)" fail bash "$BASE_SRC" "$B_HAND"
+
+B_FP="$(_base_root badfp)"; _base_mut "$B_FP" 'd["fingerprint"]="sha256:"+"0"*64'
+t "بصمةٌ مُلفَّقةٌ تُسقِط" fail bash "$BASE_SRC" "$B_FP"
+
+# ── البابُ 2: لا انحدارَ صامتاً ───────────────────────────────────────────
+B_REG="$(_base_root regression)"; rm -f "$B_REG/package.json"
+t "حذفُ حزمةٍ من الشجرةِ يُسقِط (انحدارٌ حيٌّ ضدّ الأساسِ)" fail bash "$BASE_SRC" "$B_REG"
+
+B_ADD="$(_base_root added)"
+mkdir -p "$B_ADD/svc" && printf 'export const x=1;\n' > "$B_ADD/svc/a.test.ts"
+t "إضافةُ ملفِّ اختبارٍ بلا إعادةِ توليدٍ تُسقِط" fail bash "$BASE_SRC" "$B_ADD"
+
+B_LOCK="$(_base_root lockchange)"; printf 'lockfileVersion: 9.0\n# تغيَّر\n' > "$B_LOCK/pnpm-lock.yaml"
+t "تغيُّرُ بصمةِ ملفِّ القفلِ يُسقِط" fail bash "$BASE_SRC" "$B_LOCK"
+
+# ── البابُ 3: التكرارُ يُثبَت لا يُدَّعى ────────────────────────────────────
+B_VOL="$(_base_root volatile)"
+_base_mut "$B_VOL" 'd["generated_at"]="1999-01-01T00:00:00Z"; d["env"]["python"]="0.0.0"'
+t "تغيُّرُ الوقتِ والبيئةِ وحدَهما لا يُسقِط (وإلّا استحالَ التكرارُ)" pass bash "$BASE_SRC" "$B_VOL"
+
+# ── البابُ 4: لا أساسَ يتيماً ولا مُجمِّلاً ─────────────────────────────────
+B_NOFMT="$(_base_root nofmt)"; rm -f "$B_NOFMT/docs/12-testing/BASELINE_FORMAT.md"
+t "أساسٌ بلا صيغةٍ موثَّقةٍ يُسقِط" fail bash "$BASE_SRC" "$B_NOFMT"
+
+B_ORPH="$(_base_root orphan yes)"
+t "أساسٌ لا تُحيل إليه اللوحةُ ولا أمرُ التحقّقِ يُسقِط" fail bash "$BASE_SRC" "$B_ORPH"
+
+B_NODYN="$(_base_root nodyn)"
+PYTHONDONTWRITEBYTECODE=1 BASELINE_ROOT="$B_NODYN" BASELINE_STAMP="2026-08-28T00:00:00Z" \
+  bash "$BASE_GEN" --stdout > /tmp/gov_base_nodyn2.json 2>/dev/null
+cp /tmp/gov_base_nodyn2.json "$B_NODYN/docs/12-testing/BASELINE.json"
+t "أساسٌ بلا أرقامٍ حركيّةٍ مقيسةٍ يُسقِط (measured=false)" fail bash "$BASE_SRC" "$B_NODYN"
+
+# حكمُ التحقّقِ يُشترط **تسجيلُه** لا خُضرتُه: شرطُ الخُضرةِ حلقةٌ مفرغةٌ لا
+# تُكسَر إلّا بتلفيقٍ — وقعت فعلاً في M0-08 (انظر رأسَ الحارس).
+B_FAILSUITE="$(_base_root failsuite)"; _base_mut "$B_FAILSUITE" 'd["dynamic"]["governance_suite_failed"]=1'
+t "أساسٌ مُثبَّتٌ على حزمةٍ فيها إخفاقٌ مُسجَّلٌ يمرّ (لا حلقةَ مفرغةً)" pass bash "$BASE_SRC" "$B_FAILSUITE"
+
+B_NOGSF="$(_base_root nogsf)"; _base_mut "$B_NOGSF" 'd["dynamic"]["governance_suite_failed"]=None'
+t "عددُ إخفاقاتِ الحزمةِ غيرُ مُسجَّلٍ يُسقِط" fail bash "$BASE_SRC" "$B_NOGSF"
+
+B_NOTPASS="$(_base_root notpassed)"; _base_mut "$B_NOTPASS" 'd["dynamic"]["verify_overall"]=None'
+t "حكمُ التحقّقِ مجهولاً يُسقِط" fail bash "$BASE_SRC" "$B_NOTPASS"
+
+B_DIRTY="$(_base_root dirtyreason)"
+_base_mut "$B_DIRTY" 'd["repo"]["dirty"]=True; d["repo"]["dirty_files"]=3; d["repo"]["dirty_reason"]=""'
+t "شجرةٌ مُعدَّلةٌ بلا سببٍ مكتوبٍ تُسقِط" fail bash "$BASE_SRC" "$B_DIRTY"
+
+B_DIRTYOK="$(_base_root dirtyok)"
+_base_mut "$B_DIRTYOK" 'd["repo"]["dirty"]=True; d["repo"]["dirty_files"]=3; d["repo"]["dirty_reason"]="نسخةُ اختبارٍ صناعيّةٌ"'
+t "شجرةٌ مُعدَّلةٌ بسببٍ مُعلَنٍ تمرّ" pass bash "$BASE_SRC" "$B_DIRTYOK"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

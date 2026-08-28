@@ -28,6 +28,16 @@
 
 ## السجل
 
+### [2026-08-28] M0-08 — أساسٌ آليٌّ للبيئةِ والاختبارات: أرتفاكتٌ يقيس ويُقارَن به لا يُصدَّق
+
+- **Work Item(s):** M0-08
+- **Files:** `scripts/baseline.sh` · `scripts/checks/lib/baseline_canon.py` · `scripts/checks/validate-baseline.sh` · `docs/12-testing/BASELINE.json` · `docs/12-testing/BASELINE_FORMAT.md` · `scripts/checks/verify-governance.sh` (الفحصُ 11) · `scripts/verify.sh` · `scripts/checks/test-governance.sh` (القسمُ [ل]) · `scripts/checks/lib/required-artifacts.sh` · `docs/00-rules/VERIFY_COMMAND.md` · `docs/00-rules/DEFINITION_OF_DONE.md` · `docs/07-security/RISK_REGISTER.md` (RISK-0011) · `docs/16-progress/{LAUNCH_EXECUTION_BOARD,WORK_INDEX,TASK_LOG,WORK_CLAIMS}.md`
+- **Services:** — (حوكمةٌ وأدواتٌ فقط)
+- **Why:** أرتفاكتُ `M0-04` كان **ستّةَ حقولٍ بلا حقلِ بيئةٍ واحدٍ وبلا عدَّادٍ واحدٍ**، و`artifacts/` مُستثنىً في `.gitignore` فلا أساسَ مُلتزَمٌ في المستودعِ أصلاً. فكان «قابلٌ للتكرار» متحقِّقاً بأسوأِ معناه: يتكرَّر لأنّه لا يقيس شيئاً — لو حُذفَ مئةُ اختبارٍ لبقيَ أخضرَ متطابقاً حرفيّاً.
+- **Tests:** `validate-baseline.sh` أربعةُ أبوابٍ ناجحةٍ · بوّابةُ الحوكمةِ 11 فحصاً · حزمةُ الإثباتِ **120 → 141 ناجحاً · 0 فاشلاً** (21 حالةً جديدةً في القسمِ [ل] على مستودعاتٍ صناعيّةٍ بـgit حقيقيٍّ ووقتٍ مُثبَّتٍ) · `scripts/verify.sh` ستّةُ فحوصٍ ناجحةٍ (`/tmp/verify-m0-08-final.log`) · والبابُ الثاني أسقطَ البوّابةَ فعلاً عندَ 10→11 فحصاً قبلَ إعادةِ التوليد؛ وتشغيلانِ بحكمَين مختلفَين أعطَيا البصمةَ نفسَها `sha256:0b2364fb…` (برهانٌ تجريبيٌّ للثبات).
+- **Next:** طلبُ دمجٍ إلى `main`، ثمَّ إغلاقُ CLM-0019 في دفعةٍ منفصلةٍ (§8.1)، ثمَّ العنصرُ التالي في اللوحة.
+- **Related:** CLM-0019 · RISK-0011 · [`BASELINE_FORMAT.md`](../12-testing/BASELINE_FORMAT.md) · M0-04 (الأمرُ الموحَّد) · M0-07 (سجلُّ المخاطر)
+
 ### [2026-08-27] إغلاقُ M0-07 — دمجُ MR !106 وتحريرُ CLM-0018
 - **Work Item(s):** M0-07
 - **Files:** `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`

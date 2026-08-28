@@ -60,6 +60,8 @@ REQUIRED_DOCS=(
   "docs/00-rules/TESTING_RULES.md"
   "docs/00-rules/VERIFY_COMMAND.md"
   "docs/07-security/RISK_REGISTER.md"
+  "docs/12-testing/BASELINE_FORMAT.md"
+  "docs/12-testing/BASELINE.json"
   "docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md"
   "docs/16-progress/README.md"
   "docs/16-progress/MASTER_PROGRESS.md"

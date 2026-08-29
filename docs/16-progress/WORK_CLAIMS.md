@@ -61,6 +61,10 @@ docs/16-progress/MASTER_PROGRESS.md
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0021 | M1-01 | @uxxxu (agent:computer) | feat/m1-01-unified-principal-model | packages/auth-sdk/,docs/15-decisions/,docs/07-security/,docs/14-runbooks/,pnpm-lock.yaml | 2026-08-30 | 2026-09-13 | Active |
+| CLM-0022 | M0-08 | @uxxxu (agent:computer) | feat/m1-01-unified-principal-model | docs/12-testing/ | 2026-08-30 | 2026-09-13 | Active |
+| CLM-0023 | M0-19 | @uxxxu (agent:computer) | feat/m1-01-unified-principal-model | scripts/checks/,docs/00-rules/ | 2026-08-30 | 2026-09-13 | Active |
+
+> **لمَ حجزانِ على فرعٍ واحدٍ لا واحدٌ موسَّعٌ (2026-08-30):** أوجب `M0-08` إعادةَ توليدِ `docs/12-testing/BASELINE.json` **معَ** هذه الدفعةِ لا بعدَها (أربعةُ عدّاداتٍ ساكنةٍ تغيّرت: الحزمُ 41→42 · ملفّاتُ الاختبارِ 249→252 · المخاطرُ 13→14 · وبصمةُ ملفِّ القفل). والملفُ خارجَ نطاقِ `CLM-0021`، **فرفضه الفحصُ الثاني فعلاً** لا افتراضاً. و[`WORK_CLAIM_RULE.md` §6](../00-rules/WORK_CLAIM_RULE.md) تمنع توسيعَ سطرٍ قائمٍ بعدَ بدءِ الكتابةِ وتأمر بـ«حجزٍ ثانٍ لعنصرِ عملٍ ثانٍ» — فهذا هو، ولم يُحرَّر عمودُ النطاقِ في `CLM-0021` حرفاً واحداً.
 
 > **حالةُ `CLM-0020` عندَ نهايةِ جلسةِ 2026-08-29:** الحجزُ يبقى **`Active`**. أُغلق في هذه الجلسةِ أكبرُ بندٍ مُعلَنٍ في «ما لم يُتحقَّق منه»: **شُغِّلت مجموعةُ تكاملِ خدمةِ السوقِ على PostgreSQL 17 حقيقيٍّ — عشرةُ ملفّاتٍ · 118 اختباراً ناجحاً · 0 فاشلٍ**، بعدَ إحضارِ المحرّكِ بوصفةِ [LOCAL_POSTGRES_FOR_TESTS.md](../14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md). والتشغيلُ **لم يُصدِّق ما كُتب بل أسقطَ عيباً حقيقيّاً** في ترتيبِ الصندوقِ (`RISK-0012`) أُصلح وثُبِّت بتأكيدٍ على سببِه. وتبقى **المراجعةُ 6/6** (بوّابةُ خروجِ الطورِ) فالحجزُ لا يُحرَّر.
 

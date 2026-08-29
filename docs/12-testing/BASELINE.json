@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-08-29T11:03:00Z",
+  "generated_at": "2026-08-29T23:37:08Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "318e8f649555ba506d52adf44e43ba1386fa8939",
-    "branch": "feat/m5-11-marketplace-outbox-inventory-sync",
-    "dirty": true,
-    "dirty_files": 11,
-    "dirty_reason": "نسخةٌ محلّيّةٌ تُدفَع عبرَ الواجهةِ البرمجيّةِ لا عبرَ git push",
-    "tracked_files": 1085
+    "commit": "310f88ee5065b3aa382863ad24e8b6bc3e86a92c",
+    "branch": "feat/m1-01-unified-principal-model",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 1103
   },
   "env": {
     "node": "v20.20.1",
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "358e5ff6e4d623733b85be183221d3ba8f8268bc125af24bfe3a05b7f0fd2ec8",
-    "lines": 2870
+    "sha256": "8ade2eeb2f15be7de352c305fd326c22d6d887431c45e299ecb504f8c3f134e3",
+    "lines": 2876
   },
   "static": {
-    "packages": 41,
-    "packages_with_typecheck": 41,
-    "packages_with_test": 41,
-    "test_files_tracked": 249,
+    "packages": 42,
+    "packages_with_typecheck": 42,
+    "packages_with_test": 42,
+    "test_files_tracked": 252,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 11,
-    "risks_not_closed": 13
+    "risks_not_closed": 14
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-gate11c.log",
-    "tests_passed": 3464,
-    "test_files_executed": 206,
-    "governance_suite_cases": 141,
+    "source": "/home/user/workspace/verify_m1c.log",
+    "tests_passed": 3532,
+    "test_files_executed": 209,
+    "governance_suite_cases": 143,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:6b0f2f59e35b4557a295818950fb18c1848c01430c0b2ca021bd2f82abdbd4d6",
+  "fingerprint": "sha256:8195f770138c67cc3e31540d793362179ef92666db553ab598e86a7ad9f71f93",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

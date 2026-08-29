@@ -1,0 +1,19 @@
+{
+  "name": "@wasla/marketplace-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 11 exit gate — حدُّ السوقِ على مُستمعٍ حقيقيٍّ وقاعدةٍ حقيقيّة، وكلُّ حدثٍ يكتبه يُصدَّق على العقدِ المنشورِ لا على فهمِ الاختبارِ له (Phase 11 · MR 6/6).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/contracts-marketplace": "workspace:*",
+    "@wasla/marketplace-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

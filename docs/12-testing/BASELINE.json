@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-08-28T23:14:28Z",
+  "generated_at": "2026-08-29T11:03:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a2db39baff74982bf95bc162f5847b2a5fc52c69",
+    "commit": "318e8f649555ba506d52adf44e43ba1386fa8939",
     "branch": "feat/m5-11-marketplace-outbox-inventory-sync",
     "dirty": true,
-    "dirty_files": 10,
+    "dirty_files": 11,
     "dirty_reason": "نسخةٌ محلّيّةٌ تُدفَع عبرَ الواجهةِ البرمجيّةِ لا عبرَ git push",
     "tracked_files": 1085
   },
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "39a7a4f5acaef6d440b8f9a1aa5d58966b0b019e5bf5ebe7650f35ca1f6fbeba",
-    "lines": 2849
+    "sha256": "358e5ff6e4d623733b85be183221d3ba8f8268bc125af24bfe3a05b7f0fd2ec8",
+    "lines": 2870
   },
   "static": {
-    "packages": 40,
-    "packages_with_typecheck": 40,
-    "packages_with_test": 40,
-    "test_files_tracked": 248,
-    "ci_jobs": 25,
+    "packages": 41,
+    "packages_with_typecheck": 41,
+    "packages_with_test": 41,
+    "test_files_tracked": 249,
+    "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 11,
-    "risks_not_closed": 12
+    "risks_not_closed": 13
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-fix2.log",
+    "source": "/tmp/verify-gate11c.log",
     "tests_passed": 3464,
     "test_files_executed": 206,
     "governance_suite_cases": 141,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:34b4827f131a4fe189481b6ac1915da512592922166462b55316b418d0783c08",
+  "fingerprint": "sha256:6b0f2f59e35b4557a295818950fb18c1848c01430c0b2ca021bd2f82abdbd4d6",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

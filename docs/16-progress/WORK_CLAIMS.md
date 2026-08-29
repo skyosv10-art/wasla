@@ -60,6 +60,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0021 | M1-01 | @uxxxu (agent:computer) | feat/m1-01-unified-principal-model | packages/auth-sdk/,docs/15-decisions/,docs/07-security/,docs/14-runbooks/,pnpm-lock.yaml | 2026-08-30 | 2026-09-13 | Active |
 
 > **حالةُ `CLM-0020` عندَ نهايةِ جلسةِ 2026-08-29:** الحجزُ يبقى **`Active`**. أُغلق في هذه الجلسةِ أكبرُ بندٍ مُعلَنٍ في «ما لم يُتحقَّق منه»: **شُغِّلت مجموعةُ تكاملِ خدمةِ السوقِ على PostgreSQL 17 حقيقيٍّ — عشرةُ ملفّاتٍ · 118 اختباراً ناجحاً · 0 فاشلٍ**، بعدَ إحضارِ المحرّكِ بوصفةِ [LOCAL_POSTGRES_FOR_TESTS.md](../14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md). والتشغيلُ **لم يُصدِّق ما كُتب بل أسقطَ عيباً حقيقيّاً** في ترتيبِ الصندوقِ (`RISK-0012`) أُصلح وثُبِّت بتأكيدٍ على سببِه. وتبقى **المراجعةُ 6/6** (بوّابةُ خروجِ الطورِ) فالحجزُ لا يُحرَّر.
 

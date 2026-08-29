@@ -113,6 +113,12 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
 
+  packages/auth-sdk:
+    dependencies:
+      '@wasla/errors':
+        specifier: workspace:*
+        version: link:../errors
+
   packages/bot-runtime:
     dependencies:
       '@wasla/channel-core':

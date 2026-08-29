@@ -34,7 +34,7 @@
 | `services/negotiations/` | Implemented | — | Phase 08 | |
 | `services/reputation/` | Implemented | M0-08 (دليل تشغيل) | Phase 09 | |
 | `services/subscriptions/` | Implemented | M0-01 (حارس تركيب) | Phase 10 | بوابة الخروج اجتازت · `__tests__/composition.test.ts` يحرس حقنَ الساعةِ والمُوَلِّدِ في `http/server.ts` |
-| `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **العمل الجاري حاليًا — 5/6 مراجعات** · الحدُّ HTTP قائمٌ (`docs/04-api/MARKETPLACE_HTTP.md`) · **الصادرُ وتزامنُ المخزون** قائمانِ 2026-08-28 (`src/db/outbox.ts` · `src/domain/events.ts` · [`docs/02-architecture/MARKETPLACE_EVENTS.md`](../02-architecture/MARKETPLACE_EVENTS.md)) — **ولا ناقلَ بعدُ** (دَينُ الطورِ 09) واختبارا التكاملِ **لم يُشغَّلا** (لا Postgres · `RISK-0007`) |
+| `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **العمل الجاري حاليًا — 5/6 مراجعات** · الحدُّ HTTP قائمٌ (`docs/04-api/MARKETPLACE_HTTP.md`) · **الصادرُ وتزامنُ المخزون** قائمانِ 2026-08-28 (`src/db/outbox.ts` · `src/domain/events.ts` · [`docs/02-architecture/MARKETPLACE_EVENTS.md`](../02-architecture/MARKETPLACE_EVENTS.md)) — **ولا ناقلَ بعدُ** (دَينُ الطورِ 09). ومجموعةُ التكاملِ **شُغِّلت على PostgreSQL 17 في 2026-08-29: 118/118**، وأسقطَ التشغيلُ عيبَ ترتيبٍ أُصلح (`RISK-0012`) |
 | `services/search/` | Placeholder | M5-12 | Phase 12 | |
 | `services/delivery/` | Placeholder | M5-13 | Phase 13 | |
 | `services/partners/` | Placeholder | M5-14 | Phase 14 | |

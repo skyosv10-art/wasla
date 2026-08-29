@@ -281,6 +281,47 @@ describe.skipIf(!PG_ENABLED)("صندوقُ الصادرِ فوق Postgres", () =
       });
     });
 
+    /**
+     * هذا الاختبارُ **وُلد من إخفاقٍ حقيقيٍّ لا من تخطيطٍ**: أوّلُ تشغيلٍ لهذه المجموعةِ على
+     * Postgres حقيقيٍّ (2026-08-29 · بوّابةُ خروجِ الطورِ) أسقطَ تأكيدَ الترتيبِ فوقَه — جاءَ
+     * `inventory_adjusted` **قبلَ** `product_created` رغمَ أنّ الكودَ يُلحِقهما بهذا الترتيبِ.
+     * والسببُ أنّ `created_at` كان `DEFAULT now()`، و`now()` لحظةُ **بدءِ المعاملةِ** فتتساوى
+     * في كلِّ صفوفِها، فيسقط الترتيبُ على `outbox_id` وهو مُعرِّفٌ عشوائيّ. فكان تأكيدُ ترتيبِ
+     * الأرشفةِ أدناه ينجح **بحظِّ مقارنةِ مُعرِّفَينِ** لا بضمان.
+     *
+     * فلا يكفي أن يعودَ الترتيبُ صحيحاً — يجب أن يُثبَت **سببُ** صحّتِه: أنّ الطابعَينِ
+     * مختلفانِ فعلاً على دقّةِ المحرّكِ. ولذلك يُقرأ العمودُ خاماً: `OutboxRecord.createdAt`
+     * سلسلةُ `Date` بدقّةِ الميلي، والمحرّكُ يرتّب بالميكرو — فتأكيدٌ على السلسلةِ يُخفي
+     * الفرقَ الذي نُثبِته.
+     */
+    it("والطابعُ داخلَ المعاملةِ الواحدةِ يتقدّم فعلاً — لا ترتيبَ بحظِّ مُعرِّفٍ عشوائيّ", async () => {
+      await registerStore();
+      await approveStore();
+      await createProduct("SKU-ORD", 7);
+
+      const raw = await pg.pool.query<{
+        readonly event_type: string;
+        readonly created_at: string;
+        readonly same_as_txn_start: boolean;
+      }>(
+        `SELECT event_type,
+                created_at::text AS created_at,
+                created_at = now() AS same_as_txn_start
+           FROM marketplace_outbox
+          WHERE event_type IN ('marketplace.product_created', 'marketplace.inventory_adjusted')
+          ORDER BY created_at ASC`,
+      );
+
+      expect(raw.rows.map((row) => row.event_type)).toEqual([
+        "marketplace.product_created",
+        "marketplace.inventory_adjusted",
+      ]);
+      // طابعانِ متمايزانِ: هذا هو الضمانُ، لا مجرّدُ ترتيبٍ عادَ صحيحاً هذه المرّة.
+      expect(new Set(raw.rows.map((row) => row.created_at)).size).toBe(2);
+      // ولا واحدٌ منهما يساوي لحظةَ بدءِ معاملةِ هذا الاستعلامِ — أي ليس `now()` مُجمَّدةً.
+      expect(raw.rows.every((row) => row.same_as_txn_start === false)).toBe(true);
+    });
+
     it("ومنتجٌ بلا مخزونٍ أوّليٍّ لا يكتب حدثَ فرقٍ — لا فرقَ صفريٌّ يُنشَر", async () => {
       await registerStore();
       await approveStore();

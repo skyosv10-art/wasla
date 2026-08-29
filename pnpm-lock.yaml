@@ -481,6 +481,27 @@ importers:
 
   packages/errors: {}
 
+  packages/marketplace-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/contracts-marketplace':
+        specifier: workspace:*
+        version: link:../contracts/marketplace
+      '@wasla/marketplace-service':
+        specifier: workspace:*
+        version: link:../../services/marketplace
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
+
   packages/negotiation-e2e:
     devDependencies:
       '@types/node':

@@ -604,6 +604,22 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
 
+  packages/service-auth:
+    dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../auth-sdk
+      '@wasla/errors':
+        specifier: workspace:*
+        version: link:../errors
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
+
   packages/subscription-e2e:
     devDependencies:
       '@types/node':

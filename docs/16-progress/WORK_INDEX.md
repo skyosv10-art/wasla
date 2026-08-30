@@ -24,7 +24,7 @@
 
 | منطقة الكود | الحالة | العنصر المالك | المرحلة | ملاحظة |
 |---|---|---|---|---|
-| `services/identity/` | Implemented | M1-01 … M1-09 (دَين أمني) | Phase 01 | المصادقة على الحدود غير مكتملة (AUD-004) |
+| `services/identity/` | Implemented | M1-02 … M1-09 (دَين أمني) | Phase 01 | المصادقة على الحدود غير مكتملة (AUD-004). **M1-01 أُنجز:** النموذجُ في `packages/auth-sdk` و[ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md) يُلزِم أن يكون إصدارُ هويّةِ المستخدمِ من هنا لا من خدمةٍ ثانية |
 | `services/geography/` | Implemented | — | Phase 02 | |
 | `services/customers/` | Implemented | — | Phase 04 | |
 | `services/drivers/` | Implemented | — | Phase 05 | |
@@ -41,7 +41,7 @@
 | `services/rides/` | Placeholder | M5-15 | Phase 15 | |
 | `services/referrals/` | Placeholder | M5-16 | Phase 16 | |
 | `services/billing/` | Placeholder | M5-17 | Phase 17 | |
-| `services/auth/` | Placeholder | M1 | — | يُحسم أولًا: خدمة مستقلة أم توسيع `identity`؟ (قرار M1-01) |
+| `services/auth/` | Placeholder **بقرار** | — | — | **حُسم في [ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md) (M1-01): لا خدمةَ `auth` مستقلّة.** الإصدارُ يتبع `identity` والفرضُ مكتبةُ `auth-sdk`. المجلَّدُ فارغٌ **بقرارٍ لا بإغفال** — لا يُملأ بلا ADR ناقض |
 | `services/notifications/` | Placeholder | M3 | — | |
 | `services/chat/` | Placeholder | M5 | Phase 08 | جزء من التفاوض حاليًا |
 | `services/fraud/` | Placeholder | M6-19 | Phase 09 | |
@@ -95,7 +95,7 @@
 |---|---|---|
 | نواة | `config` · `contracts` · `errors` · `events` · `telemetry` · `date-time` · `i18n` · `ui` | **مشتركة عالية الخطورة** — أي تعديل يحتاج حجزًا صريحًا للمسار الفرعي |
 | قنوات | `channel-core` · `channel-postgres` · `telegram-adapter` · `bot-runtime` | |
-| أمن | `auth-sdk` | يتبع M1 |
+| أمن | `auth-sdk` | **Implemented (M1-01)** — نموذجُ `Principal` الموحَّدُ وقراءتُه وقراراتُ التفويضِ وتمثيلُه الآمن ([ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md)). نقطةُ الفرضِ الوحيدةُ لكلِّ حدٍّ؛ M1-02..M1-05 تبني عليها ولا تُنشئ نموذجاً موازياً |
 | اختبار | `test-utils` · `channel-e2e` · `customer-e2e` · `driver-e2e` · `order-e2e` · `dispatch-e2e` · `negotiation-e2e` · `reputation-e2e` · `subscription-e2e` | كل حزمة `*-e2e` مربوطة ببوابة خروج مرحلتها |
 
 > **تحذير التكرار:** `packages/contracts/` أكثر مسار يتصادم عليه العمل. احجز المسار الفرعي المحدد (مثل `packages/contracts/src/marketplace/`) لا الحزمة كاملة.

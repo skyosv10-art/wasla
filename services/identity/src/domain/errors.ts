@@ -27,6 +27,9 @@ export type IdentityErrorCode =
   | "IDENTITY_USERNAME_NO_CHANGE"
   | "IDENTITY_RECOVERY_METHOD_INVALID"
   | "IDENTITY_USER_SUSPENDED"
+  // جلساتُ البشر (M1-02 · ADR-019)
+  | "IDENTITY_SESSION_REPLAY"
+  | "IDENTITY_SESSION_NOT_FOUND"
   | "IDENTITY_INTERNAL_ERROR";
 
 const HTTP_BY_CLASS: Record<IdentityErrorClass, number> = {
@@ -73,7 +76,13 @@ function classOf(code: IdentityErrorCode): IdentityErrorClass {
       return "not_found";
     case "IDENTITY_LINK_ALREADY_LINKED":
     case "IDENTITY_USER_SUSPENDED":
+    // إعادةُ استعمالِ init-data ليست خطأً في المُدخَلِ بل تعارضٌ مع واقعٍ
+    // مُسجَّلٍ: هذه الرسالةُ استُعمِلت مرّةً. و409 تقول ذلك بلا أن تُفصِح
+    // للمهاجمِ عن سببٍ أدقّ.
+    case "IDENTITY_SESSION_REPLAY":
       return "conflict";
+    case "IDENTITY_SESSION_NOT_FOUND":
+      return "not_found";
     case "IDENTITY_LINK_INVALID_PROVIDER":
     case "IDENTITY_USERNAME_NO_CHANGE":
     case "IDENTITY_RECOVERY_METHOD_INVALID":

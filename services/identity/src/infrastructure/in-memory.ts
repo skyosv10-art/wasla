@@ -16,6 +16,7 @@ import type {
   HistoryEntry,
   RecoveryRequest,
 } from "../domain/model.js";
+import type { Session } from "../domain/session.js";
 import type {
   Clock,
   IdGenerator,
@@ -26,6 +27,8 @@ import type {
   AddLinkInput,
   RecordHistoryInput,
   CreateRecoveryInput,
+  CreateSessionInput,
+  SessionRepository,
 } from "../ports.js";
 
 export class SystemClock implements Clock {
@@ -87,6 +90,10 @@ export class InMemoryIdentityRepository implements IdentityRepository {
       if (u.waslaPublicId === waslaPublicId) return u;
     }
     return null;
+  }
+
+  async findUserByInternalUuid(internalUuid: string): Promise<User | null> {
+    return this.users.get(internalUuid) ?? null;
   }
 
   async createUser(input: CreateUserInput): Promise<User> {
@@ -202,5 +209,71 @@ export class InMemoryIdentityRepository implements IdentityRepository {
   /** Test helper: generate and format the next public id. */
   async nextPublicId(seq: PublicIdSequence): Promise<string> {
     return formatWaslaPublicId(await seq.next());
+  }
+}
+
+/**
+ * مخزنُ جلساتٍ في الذاكرة — للاختبارِ الوحديِّ فقط (**M1-02**).
+ *
+ * **حدُّه المُعلَن:** منعُ الإعادةِ هنا يعمل داخلَ العمليّةِ الواحدةِ فقط.
+ * وفي الإنتاجِ لا يجوز الاعتمادُ عليه أبداً: نسختانِ من الخدمةِ تعنيان
+ * ذاكرتَينِ منفصلتَينِ فتمرُّ الإعادةُ. الضمانةُ الحقيقيّةُ هي الفهرسُ
+ * الفريدُ في Postgres، والاختبارُ الذي يُثبِتها اختبارُ تكاملٍ على قاعدةٍ
+ * حقيقيّةٍ لا هذا الوهم.
+ */
+export class InMemorySessionRepository implements SessionRepository {
+  private sessions = new Map<string, Session>();
+  private byTokenHash = new Map<string, string>();
+  private usedInitData = new Set<string>();
+
+  async createSession(input: CreateSessionInput): Promise<Session> {
+    if (input.initDataHash !== null && this.usedInitData.has(input.initDataHash)) {
+      throw new IdentityError(
+        "IDENTITY_SESSION_REPLAY",
+        "رسالةُ init-data استُعمِلت من قبل لإصدارِ جلسة.",
+      );
+    }
+    if (this.byTokenHash.has(input.tokenHash)) {
+      // تصادمُ رمزَينِ عشوائيَّينِ بطولِ 256 بتاً غيرُ عمليٍّ؛ فوقوعُه يعني
+      // عيباً في التوليدِ لا حالةً طبيعيّةً، فيُرفَع لا يُبتَلع.
+      throw new IdentityError("IDENTITY_INTERNAL_ERROR", "تصادمُ بصمةِ رمزِ جلسة.");
+    }
+    const session: Session = {
+      ...input,
+      lastSeenAt: null,
+      revokedAt: null,
+      revokedReason: null,
+    };
+    this.sessions.set(session.id, session);
+    this.byTokenHash.set(session.tokenHash, session.id);
+    if (session.initDataHash !== null) this.usedInitData.add(session.initDataHash);
+    return session;
+  }
+
+  async findSessionByTokenHash(tokenHash: string): Promise<Session | null> {
+    const id = this.byTokenHash.get(tokenHash);
+    return id === undefined ? null : (this.sessions.get(id) ?? null);
+  }
+
+  async touchSession(sessionId: string, seenAt: string): Promise<void> {
+    const current = this.sessions.get(sessionId);
+    if (current === undefined) return;
+    this.sessions.set(sessionId, { ...current, lastSeenAt: seenAt });
+  }
+
+  async revokeSession(sessionId: string, revokedAt: string, reason: string): Promise<void> {
+    const current = this.sessions.get(sessionId);
+    if (current === undefined) {
+      throw new IdentityError("IDENTITY_SESSION_NOT_FOUND", "لا جلسةَ بهذا المعرّف.");
+    }
+    // أوّلُ سببٍ يبقى: التكرارُ لا يُخفِق ولا يُعيد الكتابة.
+    if (current.revokedAt !== null) return;
+    this.sessions.set(sessionId, { ...current, revokedAt, revokedReason: reason });
+  }
+
+  async listSessionsForUser(userInternalUuid: string): Promise<Session[]> {
+    return [...this.sessions.values()]
+      .filter((s) => s.userInternalUuid === userInternalUuid)
+      .sort((a, b) => Date.parse(b.issuedAt) - Date.parse(a.issuedAt));
   }
 }

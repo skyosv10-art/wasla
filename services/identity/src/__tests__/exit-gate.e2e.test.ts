@@ -40,7 +40,7 @@ describe.skipIf(!ENABLED)("Phase 01 Exit Gate E2E (HTTP → Postgres)", () => {
 
     // Clean slate + canonical DDL + public-id sequence.
     await pool.query(
-      "DROP TABLE IF EXISTS identity_outbox, identity_recovery_requests, identity_history, identity_links, identity_users CASCADE",
+      "DROP TABLE IF EXISTS identity_sessions, identity_outbox, identity_recovery_requests, identity_history, identity_links, identity_users CASCADE",
     );
     await pool.query(await readFile(SCHEMA_SQL_PATH, "utf-8"));
     await ensurePublicIdSequence(db);

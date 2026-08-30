@@ -167,3 +167,46 @@ export const identityOutbox = pgTable(
     uniqueIndex("ix_identity_outbox_unpublished").on(table.occurredAt),
   ],
 );
+
+/**
+ * identity_sessions — جلساتُ البشر (**M1-02** · **ADR-019**).
+ *
+ * الفهرسُ الفريدُ الجزئيُّ على `init_data_hash` هو **ضمانةُ منعِ الإعادة**:
+ * لا ذاكرةَ عمليّةٍ تُغني عنه لأنّ النسخَ لا تتشارك ذاكرةً. وجزئيٌّ لأنّ
+ * القنواتَ التي لا init-data لها تُخزّن NULL، ولو كان الفهرسُ كاملاً لَمنعَ
+ * وجودَ أكثرَ من جلسةٍ واحدةٍ بلا init-data في بعضِ الدلالات.
+ */
+export const identitySessions = pgTable(
+  "identity_sessions",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    userInternalUuid: uuid("user_internal_uuid").notNull(),
+    actorType: text("actor_type").notNull().default("customer"),
+    channel: text("channel").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    initDataHash: text("init_data_hash"),
+    issuedAt: timestamp("issued_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedReason: text("revoked_reason"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.userInternalUuid],
+      foreignColumns: [identityUsers.internalUuid],
+    }).onDelete("restrict"),
+    uniqueIndex("uq_identity_sessions_token").on(table.tokenHash),
+    index("ix_identity_sessions_user").on(table.userInternalUuid, table.issuedAt),
+    check(
+      "identity_sessions_actor_type_check",
+      sql`${table.actorType} IN ('customer','driver','admin','support')`,
+    ),
+    check(
+      "identity_sessions_channel_check",
+      sql`${table.channel} IN ('telegram','web','mobile')`,
+    ),
+  ],
+);

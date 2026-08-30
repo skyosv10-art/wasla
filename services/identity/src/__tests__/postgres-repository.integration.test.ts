@@ -49,7 +49,7 @@ describe.skipIf(!ENABLED)("Identity Postgres integration", () => {
 
     // Clean slate + apply the canonical DDL + the public-id sequence.
     await pool.query(
-      "DROP TABLE IF EXISTS identity_outbox, identity_recovery_requests, identity_history, identity_links, identity_users CASCADE",
+      "DROP TABLE IF EXISTS identity_sessions, identity_outbox, identity_recovery_requests, identity_history, identity_links, identity_users CASCADE",
     );
     const schemaSql = await readFile(SCHEMA_SQL_PATH, "utf-8");
     await pool.query(schemaSql);

@@ -19,6 +19,11 @@ import type {
   VerificationMethod,
   UserStatus,
 } from "./domain/model.js";
+import type {
+  Session,
+  SessionActorType,
+  SessionChannel,
+} from "./domain/session.js";
 
 /** Wall-clock time as ISO-8601 string. */
 export interface Clock {
@@ -87,6 +92,15 @@ export interface IdentityRepository {
   /** Find a user by their Wasla Public ID. */
   findUserByPublicId(waslaPublicId: string): Promise<User | null>;
 
+  /**
+   * Find a user by their internal UUID (M1-02).
+   *
+   * تُقرأ بها الجلسةُ صاحبَها: الجلسةُ تحمل المعرِّفَ الداخليَّ، والـ
+   * `Principal` يحمل المعرِّفَ العامَّ — فلا بدَّ من جسرٍ بينهما. ولا يجوز
+   * أن يعبرَ المعرِّفُ الداخليُّ الحدَّ إلى استجابةٍ أو سجلٍّ (SECURITY_RULES §11).
+   */
+  findUserByInternalUuid(internalUuid: string): Promise<User | null>;
+
   /** Create a new user (internal_uuid + wasla_public_id supplied by caller). */
   createUser(input: CreateUserInput): Promise<User>;
 
@@ -132,4 +146,52 @@ export interface Outbox {
   append(event: IdentityEvent): Promise<void>;
   /** Read appended (unpublished) events — used by tests and the future relay. */
   unread(): Promise<IdentityEvent[]>;
+}
+
+/**
+ * منفذُ جلساتِ البشرِ (عنصرُ العمل **M1-02** · **ADR-019**).
+ *
+ * فُصِل عن `IdentityRepository` بقصد: الهويّةُ سجلٌّ دائمٌ يُقرأ كثيراً
+ * ويُكتَب قليلاً، والجلسةُ سطرٌ قصيرُ العمرِ يُكتَب في كلِّ دخولٍ ويُقرأ في
+ * كلِّ طلب. خلطُهما في منفذٍ واحدٍ يجعل كلَّ وهمٍ (fake) في الاختبارِ يحمل
+ * ما لا يحتاجه.
+ */
+export interface SessionRepository {
+  /**
+   * يُنشئ جلسةً.
+   *
+   * **يجب** على المُنفِّذِ أن يُخفِق بـ`IdentityError('IDENTITY_SESSION_REPLAY')`
+   * إذا كان `initDataHash` مستعملاً من قبل — وهذه هي ضمانةُ منعِ الإعادة.
+   * المُنفِّذُ فوقَ Postgres يترجم `23505` على الفهرسِ الفريد؛ ولا يجوز
+   * لأيِّ مُنفِّذٍ أن يُنفِّذ «اقرأ ثمّ اكتب» لأنّه يترك نافذةَ تسابُقٍ.
+   */
+  createSession(input: CreateSessionInput): Promise<Session>;
+
+  /** يجد جلسةً ببصمةِ رمزِها؛ `null` إن لم توجد. */
+  findSessionByTokenHash(tokenHash: string): Promise<Session | null>;
+
+  /** يُسجّل آخِرَ استعمالٍ للجلسة (تدقيقٌ لا تفويض). */
+  touchSession(sessionId: string, seenAt: string): Promise<void>;
+
+  /**
+   * يُلغي جلسةً. عمليّةٌ **مُتماثِلةُ التكرارِ** (idempotent): إلغاءُ
+   * جلسةٍ مُلغاةٍ لا يُخفِق ولا يُغيّر السببَ الأوّل — فأوّلُ سببٍ هو
+   * الحقيقةُ الأمنيّةُ، وما بعدَه تكرارُ نداءٍ.
+   */
+  revokeSession(sessionId: string, revokedAt: string, reason: string): Promise<void>;
+
+  /** جلساتُ مستخدمٍ (الأحدثُ أوّلاً) — للتدقيقِ و«اسحب كلَّ أجهزتي». */
+  listSessionsForUser(userInternalUuid: string): Promise<Session[]>;
+}
+
+/** مُدخَلُ إنشاءِ جلسة. */
+export interface CreateSessionInput {
+  readonly id: string;
+  readonly userInternalUuid: string;
+  readonly actorType: SessionActorType;
+  readonly channel: SessionChannel;
+  readonly tokenHash: string;
+  readonly initDataHash: string | null;
+  readonly issuedAt: string;
+  readonly expiresAt: string;
 }

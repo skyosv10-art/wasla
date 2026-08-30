@@ -95,6 +95,49 @@ CREATE TABLE IF NOT EXISTS identity_outbox (
 CREATE INDEX IF NOT EXISTS ix_identity_outbox_unpublished ON identity_outbox (occurred_at) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 6) identity_sessions — جلساتُ البشرِ (M1-02 · ADR-019)
+--
+--    منعُ الإعادةِ (replay) قيدٌ في قاعدةِ البيانات لا ذاكرةٌ في العملية:
+--    `uq_identity_sessions_init_data` تجعل ثانيَ استعمالٍ لنفسِ رسالةِ
+--    init-data يُخفِق بـ23505 وإن جاء إلى نسخةٍ أخرى من الخدمة. ولا يُمكن
+--    لذاكرةٍ محلّيّةٍ أن تُعطيَ هذه الضمانةَ عبرَ النسخ.
+--
+--    ولا يُخزَّن الرمزُ (token) نفسُه بل sha256 له: تسريبُ قاعدةِ البيانات
+--    لا يُسلِّم جلساتٍ قابلةً للاستعمال.
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS identity_sessions (
+    id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_internal_uuid UUID         NOT NULL REFERENCES identity_users(internal_uuid) ON DELETE RESTRICT,
+    actor_type         TEXT         NOT NULL DEFAULT 'customer'
+                       CHECK (actor_type IN ('customer','driver','admin','support')),
+    channel            TEXT         NOT NULL
+                       CHECK (channel IN ('telegram','web','mobile')),
+    -- sha256 للرمزِ المُعطَى للعميل (64 محرفَ hex) — الرمزُ نفسُه لا يُخزَّن.
+    -- التفرّدُ مفروضٌ بـ`uq_identity_sessions_token` أدناه لا بـUNIQUE سطريّةٍ،
+    -- كي لا يُنشأَ فهرسانِ لنفسِ القيد.
+    token_hash         TEXT         NOT NULL
+                       CHECK (token_hash ~ '^[0-9a-f]{64}$'),
+    -- بصمةُ رسالةِ init-data التي أصدرت الجلسةَ؛ NULL لقنواتٍ لا init-data لها.
+    init_data_hash     TEXT
+                       CHECK (init_data_hash IS NULL OR init_data_hash ~ '^[0-9a-f]{64}$'),
+    issued_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    expires_at         TIMESTAMPTZ  NOT NULL,
+    last_seen_at       TIMESTAMPTZ,
+    revoked_at         TIMESTAMPTZ,
+    revoked_reason     TEXT,
+    CHECK (expires_at > issued_at),
+    -- سببٌ بلا وقتٍ يعني سجلّاً يكذب: إمّا الاثنانِ أو لا شيء.
+    CHECK ((revoked_at IS NULL) = (revoked_reason IS NULL))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_identity_sessions_token
+    ON identity_sessions (token_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_identity_sessions_init_data
+    ON identity_sessions (init_data_hash) WHERE init_data_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS ix_identity_sessions_user
+    ON identity_sessions (user_internal_uuid, issued_at DESC);
+
+-- ─────────────────────────────────────────────────────────────────────
 -- updated_at trigger
 -- ─────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION identity_set_updated_at() RETURNS TRIGGER AS $$
@@ -113,6 +156,7 @@ COMMIT;
 -- ─────────────────────────────────────────────────────────────────────
 -- التراجع (rollback) — يُحذف بترتيب عكسي للتبعيات.
 -- ─────────────────────────────────────────────────────────────────────
+-- DROP TABLE IF EXISTS identity_sessions;
 -- DROP TABLE IF EXISTS identity_outbox;
 -- DROP TABLE IF EXISTS identity_recovery_requests;
 -- DROP TABLE IF EXISTS identity_history;

@@ -776,6 +776,9 @@ importers:
 
   services/identity:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-identity':
         specifier: workspace:*
         version: link:../../packages/contracts/identity

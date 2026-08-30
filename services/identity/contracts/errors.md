@@ -32,6 +32,8 @@
 | `IDENTITY_USERNAME_NO_CHANGE` | `unprocessable` | Username الجديد مطابق للقديم | تسجيل تغيير username بنفس القيمة |
 | `IDENTITY_RECOVERY_METHOD_INVALID` | `unprocessable` | وسيلة تحقق غير مدعومة أو تعتمد على Telegram كمصدر وحيد | POST /recovery بـ verification_method غير صالح |
 | `IDENTITY_USER_SUSPENDED` | `conflict` | المستخدم موقوف والعملية غير مسموحة | محاولة إضافة رابط لمستخدم موقوف |
+| `IDENTITY_SESSION_REPLAY` | `conflict` | رسالة init-data استُعمِلت من قبل لإصدار جلسة | إعادة إرسال نفس init-data (منع replay — M1-02) |
+| `IDENTITY_SESSION_NOT_FOUND` | `not_found` | لا جلسة بهذا المعرّف | سحب جلسة غير موجودة |
 | `IDENTITY_INTERNAL_ERROR` | `service_unavailable` | خطأ داخلي غير متوقع | خطأ غير مُصنّف (degraded) |
 
 ---

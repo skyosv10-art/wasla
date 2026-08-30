@@ -14,6 +14,7 @@ export * from "./domain/model.js";
 export * from "./domain/errors.js";
 export * from "./domain/public-id.js";
 export * from "./domain/events.js";
+export * from "./domain/session.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
 
@@ -24,6 +25,7 @@ export * from "./infrastructure/drizzle/schema.js";
 export {
   PostgresIdentityRepository,
   PostgresOutbox,
+  PostgresSessionRepository,
 } from "./infrastructure/drizzle/repository.js";
 export { PostgresPublicIdSequence } from "./infrastructure/drizzle/public-id-sequence.js";
 
@@ -42,3 +44,15 @@ export { startRecovery } from "./use-cases/start-recovery.js";
 export type { StartRecoveryInput } from "./use-cases/start-recovery.js";
 export { getIdentityHistory } from "./use-cases/get-identity-history.js";
 export type { GetIdentityHistoryInput } from "./use-cases/get-identity-history.js";
+
+// جلساتُ البشر (M1-02 · ADR-019).
+export {
+  issueSessionFromTelegram,
+  revokeSession,
+  verifySessionToken,
+} from "./use-cases/session.js";
+export type {
+  IssuedSession,
+  SessionUseCaseDeps,
+  VerifiedTelegramSessionRequest,
+} from "./use-cases/session.js";

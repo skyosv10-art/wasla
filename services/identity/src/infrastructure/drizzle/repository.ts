@@ -27,12 +27,19 @@ import type {
   RecoveryStatus,
 } from "../../domain/model.js";
 import type {
+  Session,
+  SessionActorType,
+  SessionChannel,
+} from "../../domain/session.js";
+import type {
   IdentityRepository,
   Outbox,
   CreateUserInput,
   AddLinkInput,
   RecordHistoryInput,
   CreateRecoveryInput,
+  CreateSessionInput,
+  SessionRepository,
 } from "../../ports.js";
 
 import {
@@ -41,6 +48,7 @@ import {
   identityHistory,
   identityRecoveryRequests,
   identityOutbox,
+  identitySessions,
 } from "./schema.js";
 import type { Db } from "./db.js";
 
@@ -123,6 +131,15 @@ export class PostgresIdentityRepository implements IdentityRepository {
       .select()
       .from(identityUsers)
       .where(eq(identityUsers.waslaPublicId, waslaPublicId))
+      .limit(1);
+    return rows[0] ? mapUser(rows[0]) : null;
+  }
+
+  async findUserByInternalUuid(internalUuid: string): Promise<User | null> {
+    const rows = await this.db
+      .select()
+      .from(identityUsers)
+      .where(eq(identityUsers.internalUuid, internalUuid))
       .limit(1);
     return rows[0] ? mapUser(rows[0]) : null;
   }
@@ -321,4 +338,152 @@ export class PostgresOutbox implements Outbox {
       .orderBy(asc(identityOutbox.id));
     return rows.map((row) => row.payload);
   }
+}
+
+/**
+ * مستودعُ جلساتٍ فوقَ Postgres (**M1-02** · **ADR-019**).
+ *
+ * الفارقُ الجوهريُّ عن نسخةِ الذاكرة: منعُ الإعادةِ هنا ليس فحصاً في
+ * الكودِ بل ترجمةً لخطأِ قيدٍ من المحرّك. ولذلك لا يوجد «اقرأ ثمّ اكتب»
+ * في هذا الملفِّ إطلاقاً — ذلك النمطُ يترك نافذةً بين القراءةِ والكتابةِ
+ * يعبرُها طلبانِ متوازيانِ بنفسِ الرسالة.
+ */
+export class PostgresSessionRepository implements SessionRepository {
+  constructor(private readonly db: Db) {}
+
+  async createSession(input: CreateSessionInput): Promise<Session> {
+    try {
+      const rows = await this.db
+        .insert(identitySessions)
+        .values({
+          id: input.id,
+          userInternalUuid: input.userInternalUuid,
+          actorType: input.actorType,
+          channel: input.channel,
+          tokenHash: input.tokenHash,
+          initDataHash: input.initDataHash,
+          issuedAt: new Date(input.issuedAt),
+          expiresAt: new Date(input.expiresAt),
+        })
+        .returning();
+      const row = rows[0];
+      if (row === undefined) {
+        throw new IdentityError("IDENTITY_INTERNAL_ERROR", "insert session returned no row");
+      }
+      return mapSession(row);
+    } catch (error) {
+      // 23505 = unique_violation. ونُميّز الفهرسَ بالاسمِ لا بالتخمين:
+      // تصادمُ بصمةِ الرمزِ عيبٌ في التوليدِ (503)، وتكرارُ init-data
+      // هجومُ إعادةٍ أو ضغطةُ زرٍّ مزدوجةٌ (409) — وخلطُهما يُخفي أحدَهما.
+      if (isUniqueViolation(error, "uq_identity_sessions_init_data")) {
+        throw new IdentityError(
+          "IDENTITY_SESSION_REPLAY",
+          "رسالةُ init-data استُعمِلت من قبل لإصدارِ جلسة.",
+          { class: "conflict" },
+        );
+      }
+      if (isUniqueViolation(error, "uq_identity_sessions_token")) {
+        throw new IdentityError("IDENTITY_INTERNAL_ERROR", "تصادمُ بصمةِ رمزِ جلسة.");
+      }
+      throw error;
+    }
+  }
+
+  async findSessionByTokenHash(tokenHash: string): Promise<Session | null> {
+    const rows = await this.db
+      .select()
+      .from(identitySessions)
+      .where(eq(identitySessions.tokenHash, tokenHash))
+      .limit(1);
+    return rows[0] ? mapSession(rows[0]) : null;
+  }
+
+  async touchSession(sessionId: string, seenAt: string): Promise<void> {
+    await this.db
+      .update(identitySessions)
+      .set({ lastSeenAt: new Date(seenAt) })
+      .where(eq(identitySessions.id, sessionId));
+  }
+
+  async revokeSession(sessionId: string, revokedAt: string, reason: string): Promise<void> {
+    // `isNull(revokedAt)` تجعل العمليّةَ مُتماثِلةَ التكرارِ في **جملةٍ
+    // واحدةٍ**: أوّلُ سببٍ يبقى، ونداءٌ ثانٍ لا يُصيب سطراً.
+    const rows = await this.db
+      .update(identitySessions)
+      .set({ revokedAt: new Date(revokedAt), revokedReason: reason })
+      .where(
+        and(eq(identitySessions.id, sessionId), isNull(identitySessions.revokedAt)),
+      )
+      .returning({ id: identitySessions.id });
+
+    if (rows.length > 0) return;
+
+    // لا سطرَ تأثَّر: إمّا أنّها مُلغاةٌ سابقاً (تكرارٌ مقبول) أو لا وجودَ
+    // لها (خطأٌ يجب أن يُرى). والتمييزُ يلزمه قراءةٌ — وهي آمنةٌ هنا لأنّها
+    // لا تُقرِّر كتابةً.
+    const existing = await this.db
+      .select({ id: identitySessions.id })
+      .from(identitySessions)
+      .where(eq(identitySessions.id, sessionId))
+      .limit(1);
+    if (existing.length === 0) {
+      throw new IdentityError("IDENTITY_SESSION_NOT_FOUND", "لا جلسةَ بهذا المعرّف.");
+    }
+  }
+
+  async listSessionsForUser(userInternalUuid: string): Promise<Session[]> {
+    const rows = await this.db
+      .select()
+      .from(identitySessions)
+      .where(eq(identitySessions.userInternalUuid, userInternalUuid))
+      .orderBy(desc(identitySessions.issuedAt));
+    return rows.map(mapSession);
+  }
+}
+
+/**
+ * هل الخطأُ خرقَ قيدِ تفرُّدٍ على الفهرسِ المُسمَّى؟
+ *
+ * **ويُمشى في سلسلةِ `cause`** ولا يُفحَص الكائنُ الأعلى وحدَه. وهذا ليس
+ * احتياطاً نظريّاً: النسخةُ الأولى فحصت الأعلى فقط، فأخفقت بوابةُ M1-02 على
+ * Postgres حقيقيٍّ لأنّ `drizzle-orm` تُلفّ خطأَ `pg` في `DrizzleQueryError`
+ * فيصير `code` في `cause` لا في الأعلى. أي أنّ منعَ الإعادةِ كان يعمل في
+ * المحرّكِ ويُترجَم عندَنا إلى خطأٍ غيرِ مُصنَّفٍ (500) بدلَ 409 — وما كشفَه
+ * إلّا اختبارٌ على قاعدةٍ حقيقيّةٍ؛ لم يكن مُنفِّذُ الذاكرةِ ليكشفه أبداً.
+ */
+function isUniqueViolation(error: unknown, constraint: string): boolean {
+  let current: unknown = error;
+  // حدٌّ للعمقِ كي لا تُدوِّر سلسلةُ `cause` دائريّةٌ إلى الأبد.
+  for (let depth = 0; depth < 8 && typeof current === "object" && current !== null; depth += 1) {
+    const e = current as {
+      code?: unknown;
+      constraint?: unknown;
+      message?: unknown;
+      cause?: unknown;
+    };
+    if (e.code === "23505") {
+      if (typeof e.constraint === "string") return e.constraint === constraint;
+      // بعضُ مسارات الأخطاء لا تحمل `constraint`؛ فالرسالةُ آخرُ ملجأٍ
+      // ويُقال إنّها أضعفُ من الحقلِ المُهيكَل.
+      return typeof e.message === "string" && e.message.includes(constraint);
+    }
+    current = e.cause;
+  }
+  return false;
+}
+
+function mapSession(row: typeof identitySessions.$inferSelect): Session {
+  return {
+    id: row.id,
+    userInternalUuid: row.userInternalUuid,
+    actorType: row.actorType as SessionActorType,
+    channel: row.channel as SessionChannel,
+    tokenHash: row.tokenHash,
+    initDataHash: row.initDataHash,
+    issuedAt: row.issuedAt.toISOString(),
+    expiresAt: row.expiresAt.toISOString(),
+    lastSeenAt: row.lastSeenAt === null ? null : row.lastSeenAt.toISOString(),
+    revokedAt: row.revokedAt === null ? null : row.revokedAt.toISOString(),
+    revokedReason: row.revokedReason,
+  };
 }

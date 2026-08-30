@@ -42,3 +42,16 @@ export {
   type HeaderBag,
 } from "./webhook-auth.js";
 export { cleanLanguageCode, cleanLine, cleanText } from "./sanitize.js";
+export {
+  DEFAULT_CLOCK_SKEW_SECONDS,
+  DEFAULT_INIT_DATA_MAX_AGE_SECONDS,
+  fingerprintInitData,
+  InitDataError,
+  InitDataRejection,
+  signInitDataForTests,
+  verifyTelegramInitData,
+  type InitDataRejectionValue,
+  type TelegramInitDataUser,
+  type VerifiedInitData,
+  type VerifyInitDataOptions,
+} from "./init-data.js";

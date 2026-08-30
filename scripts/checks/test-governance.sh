@@ -226,6 +226,30 @@ git add -A >/dev/null; git commit -qm "out of scope" >/dev/null
 t "يرفض تعديل ملف خارج النطاق المحجوز" fail bash scripts/checks/validate-work-claims.sh origin/main HEAD
 git reset -q --hard HEAD~1
 
+# ── حالتا M0-19: حجزانِ نشطانِ على الفرعِ الواحدِ يُقرآنِ معاً لا أوّلُهما ──
+#
+# العيبُ الذي أنتج هذا العنصرَ: كان الحارسُ يقف عندَ أوّلِ حجزٍ يطابق الفرعَ، فيرفض
+# ملفّاً يُغطّيه حجزٌ ثانٍ نشطٌ على الفرعِ نفسِه — وهو الحلُّ الذي تأمر به §6 وتطبعه
+# رسالةُ رفضِه هو. والحالتانِ متلازمتانِ بقصد: الأولى وحدَها يُرضيها اتّحادٌ يقبل كلَّ
+# شيءٍ، والثانيةُ تُثبت أنّ الاتّحادَ **حدٌّ لا إلغاءٌ للحدّ** — ما خرج عن الحجزَينِ معاً
+# يبقى مرفوضاً.
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+$(row CLM-8003 "$ITEM_B" @alpha test/alpha "services/delta/")
+ROWS
+mkdir -p services/alpha/src services/delta/src
+echo "export const a = 2" > services/alpha/src/index.ts
+echo "export const d = 1" > services/delta/src/index.ts
+git add -A >/dev/null; git commit -qm "two claims one branch" >/dev/null
+t "يقبل ملفَّينِ يغطّيهما حجزانِ نشطانِ على الفرعِ نفسِه (M0-19)" pass bash scripts/checks/validate-work-claims.sh origin/main HEAD
+
+mkdir -p services/epsilon/src && echo "export const e = 1" > services/epsilon/src/index.ts
+git add -A >/dev/null; git commit -qm "outside the union" >/dev/null
+t "يرفض ملفّاً خارجَ اتّحادِ الحجزَينِ معاً (M0-19)" fail bash scripts/checks/validate-work-claims.sh origin/main HEAD
+git reset -q --hard HEAD~2
+cp /tmp/CL.fixture "$CL"
+git add -A >/dev/null; git commit -qm "restore ledger" >/dev/null
+
 # السجلات المشتركة الخمسة: مسموحةٌ وإن لم تُذكر في النطاق
 for f in TASK_LOG LAUNCH_EXECUTION_BOARD WORK_CLAIMS WORK_INDEX MASTER_PROGRESS; do
   [[ -f "docs/16-progress/$f.md" ]] && printf '\n<!-- حالة اختبار -->\n' >> "docs/16-progress/$f.md"

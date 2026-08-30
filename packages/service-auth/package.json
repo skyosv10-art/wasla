@@ -1,0 +1,26 @@
+{
+  "name": "@wasla/service-auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA service-to-service identity (M1-03) — mints and verifies workload tokens, and is the only place that knows how a service proves who it is (ADR-020). auth-sdk stays free of signatures by ADR-018.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/auth-sdk": "workspace:*",
+    "@wasla/errors": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

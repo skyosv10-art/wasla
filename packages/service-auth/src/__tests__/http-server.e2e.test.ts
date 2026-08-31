@@ -22,7 +22,7 @@ import { MIN_SECRET_BYTES, ServiceAuthKeyRegistry } from "../keys.js";
 
 const SECRET = "e".repeat(MIN_SECRET_BYTES);
 const keys = new ServiceAuthKeyRegistry({
-  keys: [{ kid: "k1", secret: SECRET }],
+  keys: [{ kid: "k1", secret: SECRET, status: "active" }],
   activeKid: "k1",
 });
 
@@ -116,7 +116,7 @@ describe("حدُّ خدمةٍ حقيقيٌّ عبرَ HTTP", () => {
 
   it("401 لرمزٍ مُوقَّعٍ بسرٍّ آخرَ", async () => {
     const forged = new ServiceAuthKeyRegistry({
-      keys: [{ kid: "k1", secret: "f".repeat(MIN_SECRET_BYTES) }],
+      keys: [{ kid: "k1", secret: "f".repeat(MIN_SECRET_BYTES), status: "active" }],
       activeKid: "k1",
     });
     const response = await fetch(`${baseUrl}${PROTECTED_PATH}`, {

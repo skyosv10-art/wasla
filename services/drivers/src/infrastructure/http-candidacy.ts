@@ -59,6 +59,8 @@
 
 import { createHash } from "node:crypto";
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { driverUnavailable, isDriverError } from "../domain/errors.js";
 import type { ProjectedAvailability } from "../domain/model.js";
 import type { CandidacyProjection, CandidacyProjectionPort } from "../ports.js";
@@ -72,7 +74,19 @@ export interface HttpCandidacyOptions {
   readonly fetchImpl?: typeof fetch;
   /** Injectable clock, so the generated key is deterministic under test. */
   readonly clock?: { now(): string };
+  /**
+   * Signs every outbound call (M1-03). Required with no default on purpose: a
+   * default of «unsigned» would pass every test here and fail only in production,
+   * where a 401 reads like matching being broken rather than us forgetting.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
+
+/** The scopes this client needs on matching's boundary, and no more. */
+export const DRIVERS_MATCHING_SCOPES: readonly string[] = [
+  "matching:candidacy:read",
+  "matching:candidacy:write",
+];
 
 /** Matching's error body is FLAT (`{code,message,trace_id}`), unlike this service's nested one. */
 interface MatchingErrorBody {
@@ -101,6 +115,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly clock: { now(): string };
+  private readonly signRequest: ServiceRequestSigner;
   /** Breaks key ties between same-content publications inside one clock tick. */
   private attemptSequence = 0;
 
@@ -109,6 +124,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     this.timeoutMs = options.timeoutMs ?? 2000;
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.clock = options.clock ?? { now: () => new Date().toISOString() };
+    this.signRequest = options.signRequest;
   }
 
   /**
@@ -123,7 +139,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
    */
   async read(waslaPublicId: string): Promise<{ availabilityState: ProjectedAvailability } | null> {
     const response = await this.call(
-      `${this.baseUrl}/candidacy/${encodeURIComponent(waslaPublicId)}`,
+      `/candidacy/${encodeURIComponent(waslaPublicId)}`,
       { method: "GET" },
     );
     if (response.status === 404) return null;
@@ -154,7 +170,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     }
 
     const response = await this.call(
-      `${this.baseUrl}/candidacy/${encodeURIComponent(projection.waslaPublicId)}`,
+      `/candidacy/${encodeURIComponent(projection.waslaPublicId)}`,
       {
         method: "PUT",
         headers,
@@ -188,11 +204,17 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     return `drv-${projection.waslaPublicId}-${stamp}-${this.attemptSequence}-${contentHash(projection)}`;
   }
 
-  private async call(url: string, init: RequestInit): Promise<Response> {
+  /** `path` is signed as it goes on the wire, so the binding matches what matching reads. */
+  private async call(path: string, init: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const method = init.method ?? "GET";
     try {
-      return await this.fetchImpl(url, { ...init, signal: controller.signal });
+      return await this.fetchImpl(`${this.baseUrl}${path}`, {
+        ...init,
+        headers: { ...(init.headers as Record<string, string> | undefined), ...this.signRequest(method, path) },
+        signal: controller.signal,
+      });
     } catch (error) {
       if (isDriverError(error)) throw error;
       throw driverUnavailable("تعذّر الوصول إلى خدمة المطابقة");

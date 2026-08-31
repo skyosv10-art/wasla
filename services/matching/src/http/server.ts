@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
+import { InMemoryServiceTokenReplayGuard, keyRegistryFromEnv } from "@wasla/service-auth";
 
 import { createMatchingDb } from "../infrastructure/drizzle/db.js";
 import { PostgresMatchingUnitOfWork } from "../infrastructure/drizzle/transaction.js";
@@ -61,9 +62,32 @@ function buildWiring(): Wiring {
   };
 }
 
+/**
+ * مفاتيح هوية الخدمة ومخزن آثار الإعادة.
+ *
+ * لا قيمة افتراضية للمفاتيح: خدمة بلا مفاتيح لا تستطيع أن تفرق منادياً من
+ * مزوّر، فتشغيلها «مؤقتاً بلا فرض» هو تشغيل الثغرة التي تسدها هذه الدفعة.
+ * فالإخفاق عند الإقلاع برسالة تسمّي المتغير أرخص من نشرٍ مفتوح لا أحد يراه.
+ *
+ * ومخزن الآثار في الذاكرة **دين معلن (RISK-0015)**: نسختان من الخدمة لا تتشاركان
+ * ذاكرة، فرمز التقُط يمكن أن يُعاد على النسخة الأخرى. Redis هو السد، وعقد
+ * `ServiceTokenReplayGuard` مكتوب كي يكون الاستبدال تغيير سطر في هذا الملف.
+ */
+function serviceIdentityWiring(): {
+  keys: ReturnType<typeof keyRegistryFromEnv>;
+  replayGuard: InMemoryServiceTokenReplayGuard;
+} {
+  return { keys: keyRegistryFromEnv(process.env), replayGuard: new InMemoryServiceTokenReplayGuard() };
+}
+
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
-  const app = createMatchingApp({ runner, health, logger: true });
+  const app = createMatchingApp({
+    runner,
+    health,
+    logger: true,
+    serviceIdentity: serviceIdentityWiring(),
+  });
 
   if (pool) {
     app.addHook("onClose", async () => {

@@ -25,6 +25,12 @@ import type { MatchingRunner } from "../runner.js";
 
 import { sendMatchingError } from "./errors.js";
 import {
+  MATCHING_SCOPES,
+  registerServiceIdentity,
+  type MatchingRouteConfig,
+  type MatchingServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   assertRequestIdLength,
   requireIdempotencyKey,
   toCandidateQuery,
@@ -41,6 +47,22 @@ export interface CreateMatchingAppOptions {
   runner: MatchingRunner;
   logger?: boolean;
   health?: MatchingHealthDescriptor;
+  /**
+   * فرض هوية الخدمة. **إلزامي بلا قيمة افتراضية بقصد**: القيمة الافتراضية كانت
+   * ستجعل نسيان التركيب في جذر ما خدمةً مفتوحة تمر كل اختباراتها، وهي بذاتها
+   * الثغرة التي تسدها هذه الدفعة. فمن أراد حداً بلا فرض عليه أن يكتب ذلك صراحة
+   * في جذر تركيبه، ولا موضع في المستودع يكتبه.
+   */
+  serviceIdentity: MatchingServiceIdentityOptions;
+}
+
+/** الصلاحيات المعلنة على مسارات المطابقة (domain:resource:action). */
+export const MATCHING_ROUTE_SCOPES = MATCHING_SCOPES;
+
+const OPEN: MatchingRouteConfig = { serviceIdentity: "open" };
+
+function scoped(...scopes: readonly string[]): MatchingRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 const DEFAULT_HEALTH: MatchingHealthDescriptor = { persistence: "memory" };
@@ -58,7 +80,10 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     sendMatchingError(reply, error, request.id);
   });
 
-  app.get("/health", async (_request, reply) => {
+  // قبل المسارات: كي يرى حاجز التصنيف كل مسار يُسجّل بعده.
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     // تعذر قراءة النسخة لا يجعل العملية سليمة؛ نعلن degraded بدلاً من إخفاء عطل
     // سيظهر حتماً في أول تقييم حقيقي.
     let activeRulesetVersion: number | null = null;
@@ -77,7 +102,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     });
   });
 
-  app.post("/matching/candidates", async (request, reply) => {
+  app.post("/matching/candidates", { config: scoped(MATCHING_SCOPES.candidatesEvaluate) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const input = toCandidateQuery(request.body, traceId);
@@ -87,7 +112,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send(toCandidateResult(result));
   });
 
-  app.put("/candidacy/:driverPublicId", async (request, reply) => {
+  app.put("/candidacy/:driverPublicId", { config: scoped(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -103,7 +128,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send(toCandidacy(candidacy));
   });
 
-  app.get("/candidacy/:driverPublicId", async (request, reply) => {
+  app.get("/candidacy/:driverPublicId", { config: scoped(MATCHING_SCOPES.candidacyRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const driverPublicId = (request.params as { driverPublicId?: unknown }).driverPublicId;
@@ -111,7 +136,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send(toCandidacy(candidacy));
   });
 
-  app.post("/candidacy/:driverPublicId/availability", async (request, reply) => {
+  app.post("/candidacy/:driverPublicId/availability", { config: scoped(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -127,7 +152,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send(toCandidacy(candidacy));
   });
 
-  app.get("/matching/rulesets", async (request, reply) => {
+  app.get("/matching/rulesets", { config: scoped(MATCHING_SCOPES.rulesetsRead) }, async (request, reply) => {
     // يُفحص مُعرّف التتبع على كل مسار بلا استثناء؛ مسار واحد معفٌ يكفي لإدخال مُعرّف
     // متجاوز إلى السجلات، وحينها يصير الحد حدّاً في الورق لا في التشغيل.
     assertRequestIdLength(request.headers, request.id);
@@ -135,7 +160,7 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send({ rulesets: rulesets.map(toRuleset) });
   });
 
-  app.get("/matching/decisions/:decisionId", async (request, reply) => {
+  app.get("/matching/decisions/:decisionId", { config: scoped(MATCHING_SCOPES.decisionsRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const decisionId = (request.params as { decisionId?: unknown }).decisionId;

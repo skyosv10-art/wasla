@@ -1465,6 +1465,90 @@ B_DIRTYOK="$(_base_root dirtyok)"
 _base_mut "$B_DIRTYOK" 'd["repo"]["dirty"]=True; d["repo"]["dirty_files"]=3; d["repo"]["dirty_reason"]="نسخةُ اختبارٍ صناعيّةٌ"'
 t "شجرةٌ مُعدَّلةٌ بسببٍ مُعلَنٍ تمرّ" pass bash "$BASE_SRC" "$B_DIRTYOK"
 
+printf '\n\033[1m[م] تغطيةُ إنفاذِ هويّةِ الخدمة (M1-03)\033[0m\n'
+# الحارسُ يقرأُ قرصاً محضاً: ملفّاتُ عملاءَ صادرين + سجلٌّ + ملفُّ تطبيقِ الحدّ.
+# فيُبنى جذرٌ صناعيٌّ صغيرٌ بثلاثةِ عملاءَ وسجلٍّ صادقٍ، ثمَّ تُطفَّرُ الحالاتُ
+# واحدةً واحدةً. والنسخةُ الحقيقيّةُ من الحارسِ تُنسَخُ إلى الجذرِ لأنّه يستنبطُ
+# جذرَ المستودعِ من موضعِ نفسِه.
+SAC_SRC="$REPO_ROOT/scripts/checks/validate-service-auth-coverage.sh"
+
+_sac_root() { # _sac_root <tag>
+  local R="/tmp/gov_sac_$1"
+  rm -rf "$R"
+  mkdir -p "$R/scripts/checks" "$R/docs/07-security" \
+           "$R/services/matching/src/http" "$R/services/matching/src/infrastructure" \
+           "$R/services/dispatch/src/infrastructure"
+  cp "$SAC_SRC" "$R/scripts/checks/"
+  printf 'export class HttpMatchingPort { constructor(o) { this.signRequest = o.signRequest; } }\n' \
+    > "$R/services/dispatch/src/infrastructure/http-matching.ts"
+  printf 'export class HttpGeographyPort {}\n' \
+    > "$R/services/matching/src/infrastructure/http-geography.ts"
+  printf 'registerServiceIdentity(app, wiring);\n' > "$R/services/matching/src/http/app.ts"
+  cat > "$R/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md" <<'MD'
+# سجلٌّ صناعيّ
+<!-- coverage-ledger:start -->
+enforced: matching
+
+| العميل | إلى | الحالة | البرهان |
+|---|---|---|---|
+| `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | اختبارٌ صناعيّ |
+| `services/matching/src/infrastructure/http-geography.ts` | geography | مؤجَّل | بوّابةُ M1-04 |
+<!-- coverage-ledger:end -->
+MD
+  printf '%s\n' "$R"
+}
+
+_sac() { bash "$1/scripts/checks/validate-service-auth-coverage.sh"; }
+
+S_OK="$(_sac_root ok)"
+t "سجلٌّ صادقٌ وحدٌّ مفروضٌ يمرّ" pass _sac "$S_OK"
+
+# البابُ 2: العميلُ الجديدُ غيرُ المُعلَنِ — العيبُ الذي أُنشئَ الحارسُ له
+S_NEW="$(_sac_root newclient)"
+printf 'export class HttpBillingPort {}\n' > "$S_NEW/services/dispatch/src/infrastructure/http-billing.ts"
+t "عميلٌ صادرٌ جديدٌ بلا صفٍّ في السجلِّ يُسقِط" fail _sac "$S_NEW"
+
+# ونفسُ العميلِ إن أُعلِنَ مؤجَّلاً بمرجعِه يمرّ: الحارسُ يطلب إعلاناً لا كمالاً
+S_NEWDECL="$(_sac_root newdeclared)"
+printf 'export class HttpBillingPort {}\n' > "$S_NEWDECL/services/dispatch/src/infrastructure/http-billing.ts"
+sed -i 's|<!-- coverage-ledger:end -->|\| `services/dispatch/src/infrastructure/http-billing.ts` \| billing \| مؤجَّل \| بوّابةُ M1-04 \|\n<!-- coverage-ledger:end -->|' \
+  "$S_NEWDECL/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "العميلُ الجديدُ المُعلَنُ مؤجَّلاً بمرجعٍ يمرّ (إعلانٌ لا كمال)" pass _sac "$S_NEWDECL"
+
+# البابُ 3: سجلٌّ يدَّعي توقيعاً لا وجودَ له
+S_LIE="$(_sac_root lyingledger)"
+printf 'export class HttpMatchingPort {}\n' > "$S_LIE/services/dispatch/src/infrastructure/http-matching.ts"
+t "سجلٌّ يقول «موقَّع» ولا signRequest في الشفرةِ يُسقِط" fail _sac "$S_LIE"
+
+# والعكسُ خطرٌ أيضاً: شفرةٌ توقِّعُ وسجلٌّ متأخِّرٌ يقول «مؤجَّل»
+S_STALE="$(_sac_root staleledger)"
+printf 'export class HttpGeographyPort { constructor(o) { this.signRequest = o.signRequest; } }\n' \
+  > "$S_STALE/services/matching/src/infrastructure/http-geography.ts"
+t "شفرةٌ توقِّعُ وسجلٌّ يقول «مؤجَّل» يُسقِط (سجلٌّ متأخِّرٌ)" fail _sac "$S_STALE"
+
+# البابُ 4: دَينٌ بلا مرجعِ بوّابةٍ
+S_NOREF="$(_sac_root noref)"
+sed -i 's|بوّابةُ M1-04|بلا مرجعٍ|' "$S_NOREF/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "صفٌّ «مؤجَّل» بلا مرجعِ M1-04 يُسقِط" fail _sac "$S_NOREF"
+
+# البابُ 5: حدٌّ مُعلَنٌ مفروضاً ولا إنفاذَ في شفرتِه
+S_NOENF="$(_sac_root noenforce)"
+printf 'const app = fastify();\n' > "$S_NOENF/services/matching/src/http/app.ts"
+t "حدٌّ مُعلَنٌ مفروضاً بلا registerServiceIdentity يُسقِط" fail _sac "$S_NOENF"
+
+# البابُ 1: السجلُّ نفسُه
+S_NOLED="$(_sac_root noledger)"; rm -f "$S_NOLED/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "غيابُ سجلِّ التغطيةِ يُسقِط" fail _sac "$S_NOLED"
+
+S_NOMARK="$(_sac_root nomarker)"
+sed -i 's|<!-- coverage-ledger:start -->||' "$S_NOMARK/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "سجلٌّ بلا علامةِ بدايةٍ يُسقِط" fail _sac "$S_NOMARK"
+
+# ولا حدَّ مُعلَنٌ أصلاً: دفعةٌ تدّعي إنفاذاً ولا تسمّي حدَّها
+S_NOSVC="$(_sac_root nosvc)"
+sed -i 's|^enforced: matching$||' "$S_NOSVC/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "سجلٌّ بلا حدٍّ مُعلَنٍ مفروضاً يُسقِط" fail _sac "$S_NOSVC"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

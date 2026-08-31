@@ -22,7 +22,7 @@ import { AuthErrorCode, AuthenticationError } from "@wasla/auth-sdk";
 export type ServiceAuthRejection =
   /** لا ترويسةَ إثباتٍ إطلاقاً — طلبٌ مجهولٌ لا طلبٌ مرفوضٌ. */
   | "missing_credentials"
-  /** البادئةُ ليست `wsvc1.` — نسخةٌ غيرُ مدعومةٍ أو نصٌّ غريبٌ. */
+  /** البادئةُ ليست `wsvc2.` — نسخةٌ غيرُ مدعومةٍ (منها `wsvc1` المنسوخة) أو نصٌّ غريبٌ. */
   | "unsupported_scheme"
   /** عددُ الأقسامِ أو ترميزُها أو صيغةُ الحِمْلِ غيرُ صالحةٍ. */
   | "malformed_token"
@@ -30,6 +30,12 @@ export type ServiceAuthRejection =
   | "invalid_claims"
   /** المفتاحُ المُشار إليه بـ`kid` غيرُ معروفٍ لهذا المُتحقِّق. */
   | "unknown_key"
+  /**
+   * المفتاحُ معروفٌ **ومسحوبٌ**. يُفرَق عن `unknown_key` لأنّ الأولَ خطأُ
+   * إعدادٍ غالباً، والثانيَ **استعمالُ مفتاحٍ سُحِب قصداً** — وهو دليلٌ محتمَلٌ
+   * على حادثةٍ لا على سوءِ نشرٍ (ADR-022 §5).
+   */
+  | "revoked_key"
   /** التوقيعُ لا يُطابق. */
   | "bad_signature"
   /** `iat` في المستقبلِ أكثرَ من هامشِ الانحرافِ المسموح. */
@@ -41,7 +47,13 @@ export type ServiceAuthRejection =
   /** `aud` لا يُطابق اسمَ الخدمةِ المُتحقِّقةِ. */
   | "audience_mismatch"
   /** الرمزُ مربوطٌ بطلبٍ آخرَ (طريقةٌ أو مسارٌ مختلفٌ). */
-  | "request_binding_mismatch";
+  | "request_binding_mismatch"
+  /**
+   * رمزٌ صحيحُ التوقيعِ **رُئي من قبلُ** داخلَ نافذةِ عمرِه (ADR-021). ولا
+   * يُنطَق بهذا السببِ إلّا بعدَ إثباتِ التوقيعِ، فلا يستدلُّ به مَن لا يملك
+   * مفتاحاً على وجودِ أثرٍ في المخزن.
+   */
+  | "replayed_token";
 
 /** رفضُ إثباتِ هويّةِ خدمة. يحمل كودَ ADR-018 وسبباً تشخيصيّاً داخليّاً. */
 export class ServiceAuthError extends AuthenticationError {

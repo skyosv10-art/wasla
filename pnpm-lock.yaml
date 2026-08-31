@@ -442,6 +442,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../../services/orders
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -478,6 +481,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../../services/orders
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -540,6 +546,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../../services/orders
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -702,6 +711,9 @@ importers:
       '@wasla/contracts-matching':
         specifier: workspace:*
         version: link:../../packages/contracts/matching
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -733,6 +745,9 @@ importers:
       '@wasla/contracts-driver':
         specifier: workspace:*
         version: link:../../packages/contracts/driver
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -854,9 +869,15 @@ importers:
 
   services/matching:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-matching':
         specifier: workspace:*
         version: link:../../packages/contracts/matching
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)

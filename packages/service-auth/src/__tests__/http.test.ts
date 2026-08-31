@@ -16,7 +16,7 @@ import { mintServiceToken } from "../token.js";
 
 const SECRET = "h".repeat(MIN_SECRET_BYTES);
 const keys = new ServiceAuthKeyRegistry({
-  keys: [{ kid: "k1", secret: SECRET }],
+  keys: [{ kid: "k1", secret: SECRET, status: "active" }],
   activeKid: "k1",
 });
 const NOW = new Date("2026-08-30T12:00:00.000Z");

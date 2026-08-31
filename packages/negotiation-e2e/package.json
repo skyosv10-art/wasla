@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@wasla/service-auth": "workspace:*",
     "@types/pg": "^8.23.1",
     "@wasla/contracts-negotiation": "workspace:*",
     "@wasla/customers-service": "workspace:*",

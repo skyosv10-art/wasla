@@ -8,10 +8,18 @@
  * and the `422`/`503` split depend on.
  */
 
+import {
+  createServiceRequestSigner,
+  SERVICE_AUTH_HEADER,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { describe, expect, it } from "vitest";
 
 import { isDriverError } from "../domain/errors.js";
-import { HttpCandidacyPort } from "../infrastructure/http-candidacy.js";
+import {
+  DRIVERS_MATCHING_SCOPES,
+  HttpCandidacyPort,
+} from "../infrastructure/http-candidacy.js";
 import { HttpZoneCatalogPort } from "../infrastructure/http-zone-catalog.js";
 import type { CandidacyProjection } from "../ports.js";
 import { declareAvailability } from "../use-cases/manage-profile.js";
@@ -119,11 +127,30 @@ describe("دليل المناطق عبر HTTP", () => {
   });
 });
 
+/**
+ * موقّع اختباري حقيقي لا مزدوج فارغ: النداء الصادر يجب أن يحمل ترويسة يقبلها
+ * الحد فعلاً، والمزدوج الفارغ كان سيُخفي أن التوقيع لا يُرسَل أصلاً (M1-03).
+ */
+const TEST_SIGNER = createServiceRequestSigner({
+  serviceName: "drivers",
+  audience: "matching",
+  keys: new ServiceAuthKeyRegistry({
+    keys: [{ kid: "test", secret: "drivers-test-secret-0123456789abcd", status: "active" }],
+    activeKid: "test",
+  }),
+  scopes: DRIVERS_MATCHING_SCOPES,
+});
+
 describe("منفذ الترشيح عبر HTTP", () => {
   function candidacy(answers: readonly (Response | Error)[]) {
     const { fetchImpl, calls } = stubFetch(answers);
     return {
-      port: new HttpCandidacyPort({ baseUrl: "http://matching:8088/", fetchImpl, clock: CLOCK }),
+      port: new HttpCandidacyPort({
+        baseUrl: "http://matching:8088/",
+        fetchImpl,
+        clock: CLOCK,
+        signRequest: TEST_SIGNER,
+      }),
       calls,
     };
   }
@@ -132,6 +159,17 @@ describe("منفذ الترشيح عبر HTTP", () => {
     const { port, calls } = candidacy([json(200, { availability_state: "busy" })]);
     expect(await port.read(DRIVER)).toEqual({ availabilityState: "busy" });
     expect(calls[0]?.url).toBe(`http://matching:8088/candidacy/${DRIVER}`);
+  });
+
+  it("يوقّع القراءة والنشر معاً: لا نداء صادر بلا هوية (M1-03)", async () => {
+    const { port, calls } = candidacy([json(200, { availability_state: "busy" }), json(200, {})]);
+    await port.read(DRIVER);
+    await port.publish(PROJECTION);
+    for (const call of calls) {
+      expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./);
+    }
+    // ورمزان مختلفان: الرمز مربوط بالمسار ويُحرق عند أول استعمال.
+    expect(calls[0]?.headers[SERVICE_AUTH_HEADER]).not.toBe(calls[1]?.headers[SERVICE_AUTH_HEADER]);
   });
 
   it("404 يعني لا صفّ بعد، لا تعطّلاً", async () => {
@@ -192,6 +230,7 @@ describe("منفذ الترشيح عبر HTTP", () => {
           return new Date(millis).toISOString();
         },
       },
+      signRequest: TEST_SIGNER,
     });
     await port.publish(PROJECTION);
     await port.publish(PROJECTION);
@@ -212,6 +251,7 @@ describe("منفذ الترشيح عبر HTTP", () => {
       baseUrl: "http://matching:8088",
       fetchImpl,
       clock: { now: () => "2026-08-22T09:00:00.000Z" },
+      signRequest: TEST_SIGNER,
     });
 
     await port.publish(PROJECTION);

@@ -26,7 +26,9 @@
  * configuration it is describing instead of mutating the process it runs in.
  */
 
-import { HttpCandidacyPort } from "./http-candidacy.js";
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+
+import { DRIVERS_MATCHING_SCOPES, HttpCandidacyPort } from "./http-candidacy.js";
 import { HttpZoneCatalogPort } from "./http-zone-catalog.js";
 import { InMemoryZoneCatalogPort } from "./in-memory.js";
 import type { CandidacyProjectionPort, ZoneCatalogPort } from "../ports.js";
@@ -34,6 +36,9 @@ import type { CandidacyProjectionPort, ZoneCatalogPort } from "../ports.js";
 /** Exactly the variables this wiring reads. Nothing else may be added silently. */
 export interface DriverOutboundEnv {
   readonly MATCHING_SERVICE_URL?: string | undefined;
+  /** M1-03: `kid:status:secret` entries; read only when a matching URL is configured. */
+  readonly WASLA_SERVICE_AUTH_KEYS?: string | undefined;
+  readonly WASLA_SERVICE_AUTH_ACTIVE_KID?: string | undefined;
   readonly GEOGRAPHY_SERVICE_URL?: string | undefined;
   readonly DRIVER_DEV_ZONE_IDS?: string | undefined;
 }
@@ -82,7 +87,19 @@ export class UnconfiguredCandidacyPort implements CandidacyProjectionPort {
 export function configuredCandidacy(env: DriverOutboundEnv): CandidacyProjectionPort {
   const baseUrl = env.MATCHING_SERVICE_URL?.trim();
   if (baseUrl === undefined || baseUrl.length === 0) return new UnconfiguredCandidacyPort();
-  return new HttpCandidacyPort({ baseUrl });
+  // M1-03: a configured URL now also requires identity keys. Reading them here — and
+  // throwing when they are absent — keeps «unconfigured» (a settled fact, handled above)
+  // apart from «configured but unable to prove who we are» (a misconfiguration that must
+  // stop the process rather than turn every publication into an unexplained 401).
+  return new HttpCandidacyPort({
+    baseUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "drivers",
+      audience: "matching",
+      keys: keyRegistryFromEnv(env as Record<string, string | undefined>),
+      scopes: DRIVERS_MATCHING_SCOPES,
+    }),
+  });
 }
 
 /** Whether a real matching URL was configured — the choice a root may need to see. */

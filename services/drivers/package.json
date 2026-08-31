@@ -19,6 +19,7 @@
     "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
+    "@wasla/service-auth": "workspace:*",
     "@wasla/contracts-driver": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.23.0",

@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { assertRequestIdLength, requireIdempotencyKey } from "../http/requests.js";
 
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+
 import {
   candidacyPayload,
   candidatePayload,
   createHttpHarness,
+  createTestKeyRegistry,
   DRIVER_ID,
   IDEMPOTENCY_KEY,
+  signFor,
   ZONE_PICKUP,
 } from "./http-support.js";
 
@@ -71,8 +75,13 @@ describe("الرموز التشغيلية المنشورة", () => {
           throw new Error("temporary failure");
         },
       },
+      serviceIdentity: { keys: createTestKeyRegistry(), replayGuard: new InMemoryServiceTokenReplayGuard() },
     });
-    const response = await app.inject({ method: "GET", url: "/matching/rulesets" });
+    const response = await app.inject({
+      method: "GET",
+      url: "/matching/rulesets",
+      headers: signFor("GET", "/matching/rulesets"),
+    });
     expect(response.statusCode).toBe(503);
     expect(response.json()).toMatchObject({ code: "MATCHING_UNAVAILABLE" });
     await app.close();

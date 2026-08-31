@@ -1,0 +1,19 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-08-31T06-30-22Z",
+  "project_id": "85566384",
+  "ref": "main",
+  "pipeline_id": "2803320544",
+  "pipeline_status": "failed",
+  "jobs_total": 26,
+  "jobs_started": 0,
+  "started_at": null,
+  "verdict": "NOT VERIFIED",
+  "reason": "ci_quota_exceeded",
+  "job_statuses": {
+    "failed": 26
+  },
+  "failure_reasons": {
+    "ci_quota_exceeded": 26
+  }
+}

@@ -85,6 +85,7 @@ import {
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
+  DISPATCH_MATCHING_SCOPES,
   createDirectRunner as createDispatchDirectRunner,
   createInMemoryStores,
   HttpMatchingPort,
@@ -137,7 +138,48 @@ import {
   SystemClock as OrderClock,
   type OrderRunner,
 } from "@wasla/orders-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { Pool } from "pg";
+
+
+/**
+ * Service-identity material for the matching boundary (M1-03).
+ *
+ * One secret for every actor in this gate: what is proven here is the WIRE, and key
+ * management has its own suite in `packages/service-auth`. Each client still signs with
+ * only the scopes it needs, so a scope mistake surfaces here rather than in production.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+/** كامل صلاحيات المطابقة — للسِند وحده، وكل عميل إنتاجي يوقّع بصلاحياته هو. */
+const GATE_MATCHING_SCOPES: readonly string[] = [
+  "matching:candidates:evaluate",
+  "matching:candidacy:read",
+  "matching:candidacy:write",
+  "matching:rulesets:read",
+  "matching:decisions:read",
+];
+
+function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
+function gateSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "matching",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
 
 /** Postgres mode is opt-in for NEGOTIATIONS; the gate itself is not opt-in. */
 export const NEGOTIATION_DATABASE_URL = process.env.NEGOTIATION_DATABASE_URL;
@@ -347,6 +389,11 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     }),
     health: { persistence: "memory" },
     logger: false,
+    // M1-03: matching enforces service identity; dispatch's client below signs.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await matchingApp.listen({ port: 0, host: "127.0.0.1" });
   const matchingUrl = `http://127.0.0.1:${(matchingApp.server.address() as AddressInfo).port}`;
@@ -355,7 +402,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   const dispatchApp = createDispatchApp({
     runner: createDispatchDirectRunner({
       ...createInMemoryStores(),
-      matching: new HttpMatchingPort({ baseUrl: matchingUrl }),
+      matching: new HttpMatchingPort({
+        baseUrl: matchingUrl,
+        signRequest: gateSigner("dispatch", DISPATCH_MATCHING_SCOPES),
+      }),
       orders: new HttpOrderEnginePort({ baseUrl: ordersUrl }),
       rules: new StaticRulesProvider(rules),
       clock,
@@ -473,6 +523,8 @@ export interface CallInit {
   readonly idempotencyKey?: string;
   readonly customerScope?: string;
   readonly traceId?: string;
+  /** Extra headers — service identity on the matching boundary (M1-03). */
+  readonly headers?: Record<string, string>;
 }
 
 async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
@@ -486,6 +538,7 @@ async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.customerScope === undefined ? {} : { "x-customer-public-id": init.customerScope }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
+      ...(init.headers ?? {}),
     },
     ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
@@ -502,8 +555,20 @@ export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpRe
   call(gate.customerUrl, init);
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.ordersUrl, init);
+/**
+ * Every direct call to matching in this suite is signed (M1-03). The seed helpers that
+ * plant candidacy rows are service-to-service traffic like any other, and matching now
+ * refuses traffic with no identity — so the harness carries one instead of the boundary
+ * being loosened for the suite's convenience.
+ */
 export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.matchingUrl, init);
+  call(gate.matchingUrl, {
+    ...init,
+    headers: {
+      ...gateSigner("e2e-harness", GATE_MATCHING_SCOPES)(init.method, init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.dispatchUrl, init);
 export const callNegotiations = (gate: GateContext, init: CallInit): Promise<HttpResult> =>

@@ -1,9 +1,25 @@
+import {
+  createServiceRequestSigner,
+  SERVICE_AUTH_HEADER,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { HttpMatchingPort } from "../infrastructure/http-matching.js";
+import { DISPATCH_MATCHING_SCOPES, HttpMatchingPort } from "../infrastructure/http-matching.js";
 import type { CandidateRequest } from "../ports.js";
 
 afterEach(() => vi.unstubAllGlobals());
+
+/** موقّع اختباري حقيقي: النداء يجب أن يحمل ترويسة يقبلها حد المطابقة (M1-03). */
+const TEST_SIGNER = createServiceRequestSigner({
+  serviceName: "dispatch",
+  audience: "matching",
+  keys: new ServiceAuthKeyRegistry({
+    keys: [{ kid: "test", secret: "dispatch-test-secret-0123456789ab", status: "active" }],
+    activeKid: "test",
+  }),
+  scopes: DISPATCH_MATCHING_SCOPES,
+});
 
 const request = {
   orderId: "10000000-0000-4000-8000-000000000001",
@@ -20,11 +36,13 @@ describe("محول المطابقة", () => {
   it("يرسل استعلام المرشحين كاملاً بلا مفتاح تكرار ويقبل القائمة الفارغة", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ decision_id: "d", ruleset_version: 1, evaluated_at: "2026-01-01T00:00:00.000Z", candidates: [], counts: { considered: 0, eligible: 0, returned: 0 }, empty_reason_code: "NO_AVAILABLE_DRIVERS" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
-    const result = await new HttpMatchingPort({ baseUrl: "http://matching.test" }).candidates(request);
+    const result = await new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER }).candidates(request);
     expect(result.emptyReasonCode).toBe("NO_AVAILABLE_DRIVERS");
     const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("http://matching.test/matching/candidates");
-    expect(options.headers).toEqual({ "content-type": "application/json" });
+    expect(options.headers).toMatchObject({ "content-type": "application/json" });
+    // M1-03: كل نداء صادر موقّع، ولا يُقبل هذا الاختبار بترويسة هوية غائبة.
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./);
     expect((options.headers as Record<string, string>)["idempotency-key"]).toBeUndefined();
     expect(JSON.parse(options.body as string)).toEqual({
       order_id: request.orderId,
@@ -40,7 +58,7 @@ describe("محول المطابقة", () => {
 
   it("يرفض الجواب غير المفهوم ويعامل 404 للتوافر كفشل غير قاذف", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response("{}", { status: 200 })).mockResolvedValueOnce(new Response("", { status: 404 })));
-    const port = new HttpMatchingPort({ baseUrl: "http://matching.test" });
+    const port = new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER });
     await expect(port.candidates(request)).rejects.toMatchObject({ code: "DISPATCH_MATCHING_RESULT_INVALID" });
     await expect(port.markUnavailable("WS-0000000001", "OFFER_ACCEPTED", "2026-01-01T00:00:00.000Z")).resolves.toBeUndefined();
   });
@@ -48,28 +66,28 @@ describe("محول المطابقة", () => {
   it("يعامل 503 من المرشحين كمنفذ غير متاح", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 503 })));
 
-    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test" }).candidates(request))
+    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER }).candidates(request))
       .rejects.toMatchObject({ code: "DISPATCH_ENGINE_UNAVAILABLE" });
   });
 
   it("يعامل انقطاع شبكة المرشحين كمنفذ غير متاح", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("انقطاع")));
 
-    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test" }).candidates(request))
+    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER }).candidates(request))
       .rejects.toMatchObject({ code: "DISPATCH_ENGINE_UNAVAILABLE" });
   });
 
   it("يعامل مهلة المرشحين كمنفذ غير متاح", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(Object.assign(new Error("مهلة"), { name: "AbortError" })));
 
-    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test", timeoutMs: 1 }).candidates(request))
+    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test", timeoutMs: 1, signRequest: TEST_SIGNER }).candidates(request))
       .rejects.toMatchObject({ code: "DISPATCH_ENGINE_UNAVAILABLE" });
   });
 
   it("يرسل تغيير توافر السائق مع مفتاح حتمي وهوية الموزع", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response("", { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
-    const port = new HttpMatchingPort({ baseUrl: "http://matching.test" });
+    const port = new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER });
     const changedAt = "2026-01-01T00:00:00.000Z";
 
     await port.markUnavailable("WS-0000000001", "OFFER_ACCEPTED", changedAt);
@@ -95,7 +113,7 @@ describe("محول المطابقة", () => {
   it("لا يسقط قبول العرض عندما لا يجد تغيير التوافر صف المرشح", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 404 })));
 
-    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test" })
+    await expect(new HttpMatchingPort({ baseUrl: "http://matching.test", signRequest: TEST_SIGNER })
       .markUnavailable("WS-0000000001", "OFFER_ACCEPTED", "2026-01-01T00:00:00.000Z"))
       .resolves.toBeUndefined();
   });

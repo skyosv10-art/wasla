@@ -7,15 +7,15 @@
  *
  * ── الصيغةُ ولماذا ليست JWT ──────────────────────────────────────────────
  *
- *     wsvc1.<base64url(JSON الحِمْل)>.<base64url(HMAC-SHA256)>
+ *     wsvc2.<base64url(JSON الحِمْل)>.<base64url(HMAC-SHA256)>
  *
  * **لا ترويسةَ خوارزميّةٍ في الرمز، وهذا أهمُّ سطرٍ في الملفّ.** JWT تجعل
  * المُهاجمَ يُخبِر المُتحقِّقَ **بأيِّ خوارزميّةٍ يتحقَّق** (`alg`)، وتاريخُ ذلك
  * الحقلِ هو تاريخُ `alg: none` وخلطِ `HS256` بـ`RS256`. فالخوارزميّةُ هنا
- * **ثابتةٌ في الكودِ**، والنسخةُ وحدَها في البادئةِ `wsvc1`، وأيُّ بادئةٍ أخرى
+ * **ثابتةٌ في الكودِ**، والنسخةُ وحدَها في البادئةِ `wsvc2`، وأيُّ بادئةٍ أخرى
  * تُرفَض قبلَ أن يُفَكَّ ترميزُ حرفٍ واحد.
  *
- * والتوقيعُ يُحسَب على **النصِّ المُرسَلِ حرفيّاً** (`wsvc1.<payload>`) لا على
+ * والتوقيعُ يُحسَب على **النصِّ المُرسَلِ حرفيّاً** (`wsvc2.<payload>`) لا على
  * إعادةِ تسلسلِ الحِمْلِ بعدَ تحليلِه — فلا فرجةَ بين «ما وُقِّع» و«ما قُرِئ»،
  * وهي الفرجةُ التي تُستغَلُّ في هجماتِ التسلسلِ المُتباعِد.
  *
@@ -24,14 +24,23 @@
  * لا يُعاد استخدامُه على نداءِ حذفٍ. ولا يُقبَل رمزٌ بلا ربطٍ: خيارُ «بلا ربط»
  * كان سيُنتِج حاملَ سلطةٍ عامّاً بعمرِ دقيقةٍ، وهذا ما كان يُفترَض منعُه.
  *
+ * ── لِمَ `wsvc2` ولمَ اليومَ ─────────────────────────────────────────────────
+ * أُضيفَ `jti` **حقلاً إلزاميّاً** كي يكون لكلِّ رمزٍ أثرٌ يُحفَظ فيُعرَف المُعاد
+ * (ADR-021). وحقلٌ إلزاميٌّ جديدٌ **تغييرُ صيغةٍ لا إعدادٍ**، فبُدِّلت البادئةُ:
+ * رمزُ `wsvc1` يُرفَض اليومَ بـ`unsupported_scheme` قبلَ فكِّ ترميزِ حرفٍ.
+ * والوقتُ هو اليومَ لأنّه آخرُ يومٍ يكون فيه التبديلُ مجّانيّاً: لا حدَّ مفروضاً
+ * في الإنتاجِ بعدُ، فلا مِنتاجَ قائماً يُكسَر. وتوافقٌ خَلفيٌّ مع صيغةٍ بلا `jti`
+ * كان سيعني حارسَ إعادةٍ يُتخطّى بحذفِ حقلٍ — أي حارساً اسمُه حارسٌ فقط.
+ *
  * ── ما لا يفعله هذا الملفُّ (يُقال ولا يُدَّعى خلافُه) ──────────────────────
- * - **لا يمنع الإعادةَ داخلَ نافذةِ العمر.** لا مخزنَ `jti` هنا؛ الحمايةُ هي
- *   قِصَرُ العمرِ + الربطُ بالطلبِ. وهذا دَينٌ مُعلَنٌ في ADR-020 §3 لا نقصٌ مُخفى.
- * - **لا يُفرَض على أيِّ حدٍّ HTTP.** الفرضُ على حدودِ الخدماتِ عنصرُ `M1-04`.
+ * - **لا يسأل مخزنَ الآثارِ بنفسِه.** يُنتِج `jti` ويُسلِّمه في
+ *   `verifyServiceTokenDetailed`، ومَن يسأل الحارسَ هو نقطةُ الفرضِ (`enforce.ts`)
+ *   — كي تبقى هذه الدالّةُ نقيّةً بلا حالةٍ ولا انتظارٍ، ويبقى الحارسُ قراراً واحداً
+ *   في موضعٍ واحدٍ لا فحصاً مبثوثاً.
  * - **لا يُشتَقُّ تفويضٌ.** الصلاحيّاتُ تُمرَّر وتُقرَأ، ومصفوفةُ الأدوارِ `M1-05`.
  */
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 import type { ServicePrincipal } from "@wasla/auth-sdk";
 
@@ -39,7 +48,13 @@ import { ServiceAuthError } from "./errors.js";
 import type { ServiceAuthKeyRegistry } from "./keys.js";
 
 /** بادئةُ النسخةِ. تغييرُها تغييرُ صيغةٍ لا إعدادٍ. */
-export const SERVICE_TOKEN_SCHEME = "wsvc1";
+export const SERVICE_TOKEN_SCHEME = "wsvc2";
+
+/**
+ * الصيغةُ السابقةُ — بلا `jti` فبلا حارسِ إعادةٍ. تُذكَر هنا **لتُرفَض باسمِها**
+ * لا لتُقبَل: بقاؤها في القراءةِ يُبطِل الحارسَ كلَّه.
+ */
+export const SUPERSEDED_TOKEN_SCHEMES: readonly string[] = ["wsvc1"];
 
 /** العمرُ الافتراضيُّ للرمز: 60 ثانيةً — نداءٌ داخليٌّ لا جلسةٌ. */
 export const DEFAULT_SERVICE_TOKEN_TTL_SECONDS = 60;
@@ -57,6 +72,16 @@ export const DEFAULT_CLOCK_SKEW_SECONDS = 60;
 /** صيغةُ اسمِ الخدمةِ: كما في `services/<name>` — لا اسمٌ حرٌّ. */
 const SERVICE_NAME_PATTERN = /^[a-z][a-z0-9-]{1,39}$/;
 
+/**
+ * صيغةُ `jti`: حروفُ base64url، 22..64. والحدُّ الأدنى ليس ذوقاً: 22 حرفاً هي
+ * ترميزُ 16 بايتاً عشوائيّةً (128 بتاً)، وما دونَها يجعل التخمينَ ممكناً —
+ * ومُهاجمٌ يُخمِّن `jti` رمزٍ لم يُرسَل بعدُ يستطيع **حَرْقَه** فيمنع نداءً شريفاً.
+ */
+const JTI_PATTERN = /^[A-Za-z0-9_-]{22,64}$/;
+
+/** عددُ بايتاتِ العشوائيّةِ في `jti` المُنتَج. */
+const JTI_RANDOM_BYTES = 16;
+
 /** حِمْلُ الرمزِ كما يُسلسَل. أسماءٌ قصيرةٌ لأنّه يعبر في ترويسةٍ. */
 interface ServiceTokenPayload {
   /** معرِّفُ المفتاح. */
@@ -73,8 +98,26 @@ interface ServiceTokenPayload {
   exp: number;
   /** الربطُ بالطلبِ: `<METHOD> <path>`. */
   req: string;
+  /** المعرِّفُ الفريدُ للرمزِ — أثرُ منعِ الإعادةِ (ADR-021). */
+  jti: string;
   /** المعرِّفُ العامُّ لمَن يُنفَّذ الطلبُ نيابةً عنه (اختياريٌّ). */
   obo?: string;
+}
+
+/**
+ * ما يحتاجه حارسُ الإعادةِ من رمزٍ **أُثبِت توقيعُه**: لا أكثرَ ولا سرَّ فيه.
+ * ويُخرَج منفصلاً عن `ServicePrincipal` لأنّ شكلَ الـ`Principal` مِلكُ ADR-018
+ * ولا يُضاف إليه حقلُ نقلٍ خاصٌّ بصيغةِ رمزٍ واحدةٍ.
+ */
+export interface VerifiedServiceTokenTrace {
+  readonly kid: string;
+  readonly jti: string;
+  readonly expiresAtMs: number;
+}
+
+export interface VerifiedServiceToken {
+  readonly principal: ServicePrincipal;
+  readonly trace: VerifiedServiceTokenTrace;
 }
 
 export interface MintServiceTokenOptions {
@@ -93,6 +136,12 @@ export interface MintServiceTokenOptions {
   readonly now: Date;
   readonly ttlSeconds?: number;
   readonly onBehalfOfPublicId?: string;
+  /**
+   * معرِّفٌ فريدٌ صريحٌ. **للاختبارِ الحتميِّ وحدَه**: يُمرَّر كي يُثبَت أنّ
+   * الرمزَ نفسَه يُرفَض مرّتَينِ. وفي الإنتاجِ يُولَّد من عشوائيّةٍ معتمَدةٍ،
+   * ولا يُشتَقُّ من الطلبِ ولا من الوقتِ — معرِّفٌ مُشتَقٌّ معرِّفٌ مُتوقَّعٌ.
+   */
+  readonly jti?: string;
 }
 
 export interface VerifyServiceTokenOptions {
@@ -184,6 +233,11 @@ export function mintServiceToken(options: MintServiceTokenOptions): string {
     throw new TypeError("اللحظةُ الحاضرةُ غيرُ صالحة.");
   }
 
+  const jti = options.jti ?? base64UrlEncode(randomBytes(JTI_RANDOM_BYTES));
+  if (!JTI_PATTERN.test(jti)) {
+    throw new TypeError("معرِّفُ الرمزِ jti لا يطابق الصيغةَ المسموحة.");
+  }
+
   const issuedAt = secondsFrom(now);
   const payload: ServiceTokenPayload = {
     kid: keys.activeKid,
@@ -193,6 +247,7 @@ export function mintServiceToken(options: MintServiceTokenOptions): string {
     iat: issuedAt,
     exp: issuedAt + ttlSeconds,
     req: canonicalRequestBinding(method, path),
+    jti,
     ...(onBehalfOfPublicId === undefined ? {} : { obo: onBehalfOfPublicId }),
   };
 
@@ -217,6 +272,18 @@ export function verifyServiceToken(
   token: string,
   options: VerifyServiceTokenOptions,
 ): ServicePrincipal {
+  return verifyServiceTokenDetailed(token, options).principal;
+}
+
+/**
+ * نفسُ التحقُّقِ، ويُسلَّم معَ الـ`Principal` **أثرُ الرمزِ** (`kid` · `jti` ·
+ * لحظةُ الانتهاءِ) كي يسألَ به حارسُ الإعادةِ **بعدَ إثباتِ التوقيعِ لا
+ * قبلَه** — والترتيبُ شرطٌ أمنيٌّ لا ترتيبٌ إنشائيٌّ (ADR-021 §4).
+ */
+export function verifyServiceTokenDetailed(
+  token: string,
+  options: VerifyServiceTokenOptions,
+): VerifiedServiceToken {
   const {
     audience,
     method,
@@ -253,11 +320,18 @@ export function verifyServiceToken(
 
   const payload = decodePayload(encodedPayload);
 
-  // ── 2) المفتاح ──
-  const secret = keys.secretFor(payload.kid);
-  if (secret === undefined) {
+  // ── 2) المفتاحُ وحالُه في دورةِ الحياة ──
+  // المفتاحُ المسحوبُ (`revoked`) **لا يُحذَف من السجلِّ بل يُرفَض باسمِه**:
+  // حذفُه يجعل السحبَ والخطأَ المطبعيَّ حادثةً واحدةً في السجلِّ (`unknown_key`)،
+  // ومَن يُحقّق حادثَ سرقةِ مفتاحٍ يحتاج أن يرى فرقًا (ADR-022 §5).
+  const resolved = keys.resolveVerificationKey(payload.kid);
+  if (resolved.status === "unknown") {
     throw new ServiceAuthError("unknown_key", "معرِّفُ المفتاحِ غيرُ معروف.");
   }
+  if (resolved.status === "revoked") {
+    throw new ServiceAuthError("revoked_key", "مفتاحُ الرمزِ مسحوبٌ.");
+  }
+  const secret = resolved.secret;
 
   // ── 3) التوقيعُ — قبلَ أيِّ حكمٍ دلاليّ ──
   const expected = mac(secret, encodedPayload);
@@ -306,13 +380,20 @@ export function verifyServiceToken(
   }
 
   return {
-    kind: "service",
-    serviceName: payload.svc,
-    audience: payload.aud,
-    scopes: Object.freeze([...payload.scp]),
-    issuedAt: new Date(payload.iat * 1000).toISOString(),
-    expiresAt: new Date(payload.exp * 1000).toISOString(),
-    ...(payload.obo === undefined ? {} : { onBehalfOfPublicId: payload.obo }),
+    principal: {
+      kind: "service",
+      serviceName: payload.svc,
+      audience: payload.aud,
+      scopes: Object.freeze([...payload.scp]),
+      issuedAt: new Date(payload.iat * 1000).toISOString(),
+      expiresAt: new Date(payload.exp * 1000).toISOString(),
+      ...(payload.obo === undefined ? {} : { onBehalfOfPublicId: payload.obo }),
+    },
+    trace: {
+      kid: payload.kid,
+      jti: payload.jti,
+      expiresAtMs: payload.exp * 1000,
+    },
   };
 }
 
@@ -340,7 +421,7 @@ function decodePayload(encodedPayload: string): ServiceTokenPayload {
   }
 
   const candidate = parsed as Record<string, unknown>;
-  const { kid, svc, aud, scp, iat, exp, req, obo } = candidate;
+  const { kid, svc, aud, scp, iat, exp, req, jti, obo } = candidate;
 
   if (typeof kid !== "string" || kid === "") {
     throw new ServiceAuthError("invalid_claims", "الحقلُ kid غيرُ صالح.");
@@ -369,6 +450,11 @@ function decodePayload(encodedPayload: string): ServiceTokenPayload {
   if (typeof req !== "string" || req === "") {
     throw new ServiceAuthError("invalid_claims", "الحقلُ req غيرُ صالح.");
   }
+  // غيابُ `jti` **ليس تسامحاً**: رمزٌ بلا أثرٍ لا يستطيع الحارسُ أن يعرفَ
+  // أنّه مُعادٌ، فقبولُه يفتحُ النافذةَ التي أُغلقت بإسقاطِ حقلٍ واحدٍ.
+  if (typeof jti !== "string" || !JTI_PATTERN.test(jti)) {
+    throw new ServiceAuthError("invalid_claims", "الحقلُ jti غيرُ صالح.");
+  }
   if (obo !== undefined && (typeof obo !== "string" || obo === "")) {
     throw new ServiceAuthError("invalid_claims", "الحقلُ obo غيرُ صالح.");
   }
@@ -381,6 +467,7 @@ function decodePayload(encodedPayload: string): ServiceTokenPayload {
     iat: iat as number,
     exp: exp as number,
     req,
+    jti,
     ...(obo === undefined ? {} : { obo: obo as string }),
   };
 }

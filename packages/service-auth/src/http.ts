@@ -14,8 +14,12 @@ import { anonymous } from "@wasla/auth-sdk";
 import type { Principal, ServicePrincipal } from "@wasla/auth-sdk";
 
 import { ServiceAuthError } from "./errors.js";
-import type { MintServiceTokenOptions, VerifyServiceTokenOptions } from "./token.js";
-import { mintServiceToken, verifyServiceToken } from "./token.js";
+import type {
+  MintServiceTokenOptions,
+  VerifiedServiceTokenTrace,
+  VerifyServiceTokenOptions,
+} from "./token.js";
+import { mintServiceToken, verifyServiceTokenDetailed } from "./token.js";
 
 /**
  * ترويسةُ إثباتِ هويّةِ الخدمة. **ليست `Authorization`** بقصدٍ: `Authorization`
@@ -71,6 +75,24 @@ export function authenticateServiceRequest(
   headers: Readonly<Record<string, string | string[] | undefined>>,
   options: VerifyServiceTokenOptions,
 ): { principal: Principal; rejection?: ServiceAuthError } {
+  const { principal, rejection } = authenticateServiceRequestDetailed(headers, options);
+  return rejection === undefined ? { principal } : { principal, rejection };
+}
+
+/**
+ * نفسُ التحقُّقِ، ويُسلَّم معَه **أثرُ الرمزِ** (`kid` · `jti` · لحظةُ الانتهاءِ)
+ * عندَ النجاحِ وحدَه. ووجودُ `trace` هو **دليلُ أنّ التوقيعَ أُثبِت**: فمَن يريد
+ * أن يسألَ حارسَ الإعادةِ لا يستطيع أن يسألَه إلّا وقد ثبتَ له التوقيعُ أوّلاً،
+ * لأنّه لا يملك أثراً قبلَ ذلك. وهذا ترتيبٌ مفروضٌ بالنوعِ لا بالتذكيرِ في تعليقٍ.
+ */
+export function authenticateServiceRequestDetailed(
+  headers: Readonly<Record<string, string | string[] | undefined>>,
+  options: VerifyServiceTokenOptions,
+): {
+  principal: Principal;
+  trace?: VerifiedServiceTokenTrace;
+  rejection?: ServiceAuthError;
+} {
   let token: string | undefined;
   try {
     token = readHeader(headers);
@@ -86,7 +108,8 @@ export function authenticateServiceRequest(
   }
 
   try {
-    return { principal: verifyServiceToken(token, options) };
+    const verified = verifyServiceTokenDetailed(token, options);
+    return { principal: verified.principal, trace: verified.trace };
   } catch (error) {
     if (error instanceof ServiceAuthError) {
       return {

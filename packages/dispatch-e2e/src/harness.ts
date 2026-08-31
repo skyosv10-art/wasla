@@ -87,6 +87,7 @@ import {
 import {
   createDispatchApp,
   createDispatchDb,
+  DISPATCH_MATCHING_SCOPES,
   createDirectRunner as createDispatchDirectRunner,
   createInMemoryStores,
   HttpMatchingPort,
@@ -137,6 +138,11 @@ import {
   InMemoryOutbox as InMemoryOrderOutbox,
   SystemClock as OrderClock,
 } from "@wasla/orders-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { Pool } from "pg";
 
 /** Postgres mode is opt-in for MATCHING and DISPATCH; the gate itself is not opt-in. */
@@ -218,6 +224,32 @@ export class GateClock {
   }
 }
 
+/**
+ * مادة مفاتيح البوابة (M1-03).
+ *
+ * السر واحد لكل مشغّلي البوابة لأن ما يُبرهن هنا هو **الفرض** لا إدارة المفاتيح:
+ * إدارة المفاتيح لها اختباراتها في `packages/service-auth`. والمفتاح المزوّر
+ * موجود كي يُبرهن أن التوقيع يُفحص فعلاً، لا أن الترويسة موجودة.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+const GATE_FORGED_SECRET = "gate-forged-secret-0123456789abcdef";
+
+const GATE_MATCHING_SCOPES: readonly string[] = [
+  "matching:candidates:evaluate",
+  "matching:candidacy:read",
+  "matching:candidacy:write",
+  "matching:rulesets:read",
+  "matching:decisions:read",
+];
+
+function gateKeys(secret: string): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 export interface GateContext {
   readonly identityUrl: string;
   readonly geographyUrl: string;
@@ -231,6 +263,15 @@ export interface GateContext {
   readonly persistence: "postgres" | "memory";
   /** Everything dispatch appended, whichever store is in play. */
   dispatchEvents(): Promise<AnyDispatchEvent[]>;
+  /**
+   * Service-identity material for the matching boundary (M1-03). Exposed so the
+   * enforcement scenario can send a call with NO identity, a FORGED one, a valid
+   * one, and a valid one with the wrong scope — over the same real socket every
+   * other scenario uses.
+   */
+  readonly serviceIdentity: {
+    sign(method: string, path: string, options?: { scopes?: readonly string[]; forged?: boolean }): Record<string, string>;
+  };
   close(): Promise<void>;
 }
 
@@ -335,16 +376,30 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     });
   }
 
+  // M1-03: matching now enforces service identity on every business route.
+  const serviceAuthKeys = gateKeys(GATE_SERVICE_AUTH_SECRET);
   const matchingApp = createMatchingApp({
     runner: matchingRunner,
     health: { persistence: DISPATCH_DATABASE_URL ? "postgres" : "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: serviceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await matchingApp.listen({ port: 0, host: "127.0.0.1" });
   const matchingUrl = `http://127.0.0.1:${(matchingApp.server.address() as AddressInfo).port}`;
 
   // --- dispatch: real service, PRODUCTION adapters to matching and the engine
-  const matchingPort = new HttpMatchingPort({ baseUrl: matchingUrl });
+  const matchingPort = new HttpMatchingPort({
+    baseUrl: matchingUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "dispatch",
+      audience: "matching",
+      keys: serviceAuthKeys,
+      scopes: DISPATCH_MATCHING_SCOPES,
+    }),
+  });
   const ordersPort = new HttpOrderEnginePort({ baseUrl: ordersUrl });
   const rulesProvider = new StaticRulesProvider(rules);
   let dispatchRunner: DispatchRunner;
@@ -395,6 +450,15 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     clock,
     persistence: DISPATCH_DATABASE_URL ? "postgres" : "memory",
     dispatchEvents: () => readDispatchEvents(),
+    serviceIdentity: {
+      sign: (method, path, options = {}) =>
+        createServiceRequestSigner({
+          serviceName: "dispatch",
+          audience: "matching",
+          keys: gateKeys(options.forged === true ? GATE_FORGED_SECRET : GATE_SERVICE_AUTH_SECRET),
+          scopes: options.scopes ?? GATE_MATCHING_SCOPES,
+        })(method, path),
+    },
     close: async () => {
       await dispatchApp.close();
       await matchingApp.close();
@@ -423,6 +487,8 @@ export interface CallInit {
   readonly idempotencyKey?: string;
   readonly customerScope?: string;
   readonly traceId?: string;
+  /** Extra headers — service identity in the M1-03 scenarios. */
+  readonly headers?: Record<string, string>;
 }
 
 async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
@@ -436,6 +502,7 @@ async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.customerScope === undefined ? {} : { "x-customer-public-id": init.customerScope }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
+      ...(init.headers ?? {}),
     },
     ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
@@ -452,7 +519,17 @@ export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpRe
   call(gate.customerUrl, init);
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.ordersUrl, init);
+/**
+ * Matching calls are signed by default (M1-03): every scenario that talks to matching
+ * describes its own subject, not the identity plumbing. The enforcement scenario uses
+ * `callMatchingUnsigned` with explicit headers so what it proves stays visible.
+ */
 export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
+  call(gate.matchingUrl, {
+    ...init,
+    headers: { ...gate.serviceIdentity.sign(init.method, init.path), ...(init.headers ?? {}) },
+  });
+export const callMatchingUnsigned = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.matchingUrl, init);
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.dispatchUrl, init);

@@ -1,0 +1,19 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-08-31T10-42-33Z",
+  "project_id": "85566384",
+  "ref": "feat/m1-03-gap-closure",
+  "pipeline_id": "2805165622",
+  "pipeline_status": "failed",
+  "jobs_total": 23,
+  "jobs_started": 0,
+  "started_at": null,
+  "verdict": "NOT VERIFIED",
+  "reason": "ci_quota_exceeded",
+  "job_statuses": {
+    "failed": 23
+  },
+  "failure_reasons": {
+    "ci_quota_exceeded": 23
+  }
+}

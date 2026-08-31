@@ -17,20 +17,22 @@ import {
   MAX_SERVICE_TOKEN_TTL_SECONDS,
   mintServiceToken,
   SERVICE_TOKEN_SCHEME,
+  SUPERSEDED_TOKEN_SCHEMES,
   verifyServiceToken,
+  verifyServiceTokenDetailed,
 } from "../token.js";
 
 const SECRET = "k".repeat(MIN_SECRET_BYTES);
 const OTHER_SECRET = "z".repeat(MIN_SECRET_BYTES);
 
 const keys = new ServiceAuthKeyRegistry({
-  keys: [{ kid: "k1", secret: SECRET }],
+  keys: [{ kid: "k1", secret: SECRET, status: "active" }],
   activeKid: "k1",
 });
 
 /** سجلٌّ لمُهاجمٍ يملك مفتاحاً بمعرِّفٍ مطابقٍ وسرٍّ مختلف. */
 const forgedKeys = new ServiceAuthKeyRegistry({
-  keys: [{ kid: "k1", secret: OTHER_SECRET }],
+  keys: [{ kid: "k1", secret: OTHER_SECRET, status: "active" }],
   activeKid: "k1",
 });
 
@@ -165,7 +167,7 @@ describe("mintServiceToken — الصيغة", () => {
     expect(payload).not.toHaveProperty("alg");
     expect(payload).not.toHaveProperty("typ");
     expect(Object.keys(payload).sort()).toEqual(
-      ["aud", "exp", "iat", "kid", "req", "scp", "svc"].sort(),
+      ["aud", "exp", "iat", "jti", "kid", "req", "scp", "svc"].sort(),
     );
   });
 
@@ -234,7 +236,7 @@ describe("verifyServiceToken — الأبوابُ بترتيبِها", () => {
     const [, payload, signature] = token.split(".");
     expect(
       reject(() =>
-        verifyServiceToken(`wsvc2.${payload}.${signature}`, verifyDefaults),
+        verifyServiceToken(`wsvc9.${payload}.${signature}`, verifyDefaults),
       ).reason,
     ).toBe("unsupported_scheme");
   });
@@ -460,13 +462,13 @@ describe("verifyServiceToken — الجمهورُ والربطُ بالطلب", 
 describe("التدويرُ بلا انقطاع", () => {
   it("يتحقَّق من رمزٍ مُوقَّعٍ بالمفتاحِ السابقِ بعدَ تبديلِ النشط", () => {
     const before = new ServiceAuthKeyRegistry({
-      keys: [{ kid: "old", secret: `${SECRET}-old` }],
+      keys: [{ kid: "old", secret: `${SECRET}-old`, status: "active" }],
       activeKid: "old",
     });
     const after = new ServiceAuthKeyRegistry({
       keys: [
-        { kid: "old", secret: `${SECRET}-old` },
-        { kid: "new", secret: `${SECRET}-new` },
+        { kid: "old", secret: `${SECRET}-old`, status: "verify_only" },
+        { kid: "new", secret: `${SECRET}-new`, status: "active" },
       ],
       activeKid: "new",
     });
@@ -477,7 +479,7 @@ describe("التدويرُ بلا انقطاع", () => {
 
     // وبعدَ إسقاطِ المفتاحِ القديمِ يُرفَض — فالتدويرُ يُكمِل دورتَه.
     const rotated = new ServiceAuthKeyRegistry({
-      keys: [{ kid: "new", secret: `${SECRET}-new` }],
+      keys: [{ kid: "new", secret: `${SECRET}-new`, status: "active" }],
       activeKid: "new",
     });
     expect(
@@ -485,5 +487,154 @@ describe("التدويرُ بلا انقطاع", () => {
         verifyServiceToken(oldToken, { ...verifyDefaults, keys: rotated }),
       ).reason,
     ).toBe("unknown_key");
+  });
+});
+
+describe("wsvc1 — الصيغةُ المنسوخةُ تُرفَض باسمِها (ADR-021)", () => {
+  it("رمزٌ ببادئةِ wsvc1 يُرفَض ولو كان توقيعُه صحيحاً لتلك الصيغة", () => {
+    // يُبنى رمزُ wsvc1 كما كان يُبنى بالضبط: حِمْلٌ بلا `jti`، وتوقيعٌ على
+    // `wsvc1.<payload>` بالسرِّ الصحيح. فالرفضُ هنا ليس رفضَ توقيعٍ بل رفضُ
+    // **نسخةٍ**، وهذا هو ما يمنع تخطّي حارسِ الإعادةِ بإسقاطِ حقلٍ.
+    const legacyPayload = Buffer.from(
+      JSON.stringify({
+        kid: "k1",
+        svc: "customers",
+        aud: "identity",
+        scp: [],
+        iat: Math.floor(NOW.getTime() / 1000),
+        exp: Math.floor(NOW.getTime() / 1000) + 60,
+        req: canonicalRequestBinding("GET", "/identity/users/pub_123"),
+      }),
+      "utf8",
+    ).toString("base64url");
+    const legacySignature = createHmac("sha256", SECRET)
+      .update(`wsvc1.${legacyPayload}`)
+      .digest("base64url");
+
+    expect(SUPERSEDED_TOKEN_SCHEMES).toContain("wsvc1");
+    expect(
+      reject(() =>
+        verifyServiceToken(
+          `wsvc1.${legacyPayload}.${legacySignature}`,
+          verifyDefaults,
+        ),
+      ).reason,
+    ).toBe("unsupported_scheme");
+  });
+
+  it("وحِمْلٌ بلا `jti` يُرفَض حتّى ببادئةِ wsvc2 وتوقيعٍ مُطابقٍ", () => {
+    // البابُ الثاني: لو غُيِّرت البادئةُ فقط، يجب أن يقع الرفضُ على الحقلِ
+    // نفسِه — فالحارسُ لا يعتمد على بادئةٍ وحدَها.
+    const token = mintServiceToken(mintDefaults);
+    const tampered = retamper(token, (payload) => {
+      delete payload.jti;
+    }, keys);
+    expect(reject(() => verifyServiceToken(tampered, verifyDefaults)).reason).toBe(
+      "invalid_claims",
+    );
+  });
+});
+
+describe("jti — المعرِّفُ الفريدُ (ADR-021)", () => {
+  it("يُنتَج تلقائيّاً ويختلف في كلِّ رمزٍ ولو تطابقَ كلُّ شيءٍ آخر", () => {
+    const jtis = new Set(
+      Array.from({ length: 200 }, () => {
+        const token = mintServiceToken(mintDefaults);
+        const payload = JSON.parse(
+          Buffer.from(token.split(".")[1] as string, "base64url").toString("utf8"),
+        ) as { jti: string };
+        return payload.jti;
+      }),
+    );
+    expect(jtis.size).toBe(200);
+  });
+
+  it("لا يُشتَقُّ من الوقتِ ولا من الطلبِ — رمزانِ في اللحظةِ نفسِها لهما أثرانِ", () => {
+    const first = mintServiceToken(mintDefaults);
+    const second = mintServiceToken(mintDefaults);
+    expect(first).not.toBe(second);
+  });
+
+  it("يُسلَّم في الأثرِ بعدَ التحقُّقِ مع المفتاحِ ولحظةِ الانتهاء", () => {
+    const token = mintServiceToken({ ...mintDefaults, jti: "A".repeat(22) });
+    const verified = verifyServiceTokenDetailed(token, verifyDefaults);
+    expect(verified.trace).toEqual({
+      kid: "k1",
+      jti: "A".repeat(22),
+      expiresAtMs: NOW.getTime() + 60_000,
+    });
+    expect(verified.principal.kind).toBe("service");
+  });
+
+  it("يرفض المِنتاجُ معرِّفاً أقصرَ من 22 حرفاً — قِصَرُه يُتيح حَرْقَ رمزٍ بالتخمين", () => {
+    expect(() =>
+      mintServiceToken({ ...mintDefaults, jti: "short" }),
+    ).toThrow(TypeError);
+  });
+
+  it("يرفض المُتحقِّقُ صيغةَ jti غيرَ الصالحةِ حتّى بتوقيعٍ مُطابقٍ", () => {
+    for (const jti of ["", "short", "x".repeat(65), "has space", 42]) {
+      const token = mintServiceToken(mintDefaults);
+      const tampered = retamper(token, (payload) => {
+        payload.jti = jti;
+      }, keys);
+      expect(reject(() => verifyServiceToken(tampered, verifyDefaults)).reason).toBe(
+        "invalid_claims",
+      );
+    }
+  });
+
+  it("فسادُ jti بابٌ بنيويٌّ يُفحَص مع الحِمْلِ، وما بعدَ التوقيعِ دلاليٌّ", () => {
+    // **قياسٌ لا دعوى:** فحصُ صيغةِ `jti` يقع في بابِ فكِّ الحِمْلِ، أي **قبلَ**
+    // التوقيعِ — كما هو حالُ كلِّ الحقولِ البنيويّةِ في هذه الصيغة. وهذا لا
+    // يُسرِّب حكماً دلاليّاً: أقصى ما يعلمه المُهاجمُ أنّ حِمْلَه غيرُ سليمِ
+    // الشكلِ، وهو ما يعلمه أصلاً لأنّه هو مَن كتبَه. والأبوابُ الدلاليّةُ
+    // (انتهاءٌ · جمهورٌ · ربطٌ · إعادةٌ) تبقى **كلُّها بعدَ** إثباتِ التوقيع.
+    const tamperedShape = retamper(
+      mintServiceToken(mintDefaults),
+      (payload) => {
+        payload.jti = "nope";
+      },
+      undefined,
+    );
+    expect(
+      reject(() => verifyServiceToken(tamperedShape, verifyDefaults)).reason,
+    ).toBe("invalid_claims");
+
+    // وحِمْلٌ سليمُ الشكلِ بـ`jti` مستبدَلٍ وتوقيعٍ قديمٍ يقع على بابِ التوقيعِ:
+    // فالمُهاجمُ لا يستطيع استبدالَ أثرِ رمزٍ التقطَه بأثرٍ من عندِه.
+    const tamperedSigned = retamper(
+      mintServiceToken(mintDefaults),
+      (payload) => {
+        payload.jti = "B".repeat(22);
+      },
+      undefined,
+    );
+    expect(
+      reject(() => verifyServiceToken(tamperedSigned, verifyDefaults)).reason,
+    ).toBe("bad_signature");
+  });
+});
+
+describe("المفتاحُ المسحوبُ (ADR-022)", () => {
+  it("يُرفَض بسببٍ يُميِّزه عن المجهولِ — ولو كان توقيعُه صحيحاً", () => {
+    const signing = new ServiceAuthKeyRegistry({
+      keys: [{ kid: "stolen", secret: `${SECRET}-st`, status: "active" }],
+      activeKid: "stolen",
+    });
+    const token = mintServiceToken({ ...mintDefaults, keys: signing });
+
+    const afterIncident = new ServiceAuthKeyRegistry({
+      keys: [
+        { kid: "stolen", secret: "", status: "revoked" },
+        { kid: "fresh", secret: `${SECRET}-fr`, status: "active" },
+      ],
+      activeKid: "fresh",
+    });
+    expect(
+      reject(() =>
+        verifyServiceToken(token, { ...verifyDefaults, keys: afterIncident }),
+      ).reason,
+    ).toBe("revoked_key");
   });
 });

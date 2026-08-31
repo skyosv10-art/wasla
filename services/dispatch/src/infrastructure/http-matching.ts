@@ -1,3 +1,5 @@
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { engineUnavailable, matchingResultInvalid } from "../domain/errors.js";
 import type { CandidateRequest, CandidateResult, MatchingPort } from "../ports.js";
 
@@ -5,9 +7,21 @@ export const MATCHING_CANDIDATES_PATH = "/matching/candidates";
 export const MATCHING_AVAILABILITY_PATH = (driverPublicId: string): string =>
   `/candidacy/${driverPublicId}/availability`;
 
+/** الصلاحيات التي يحتاجها هذا العميل على حد المطابقة، لا أكثر. */
+export const DISPATCH_MATCHING_SCOPES: readonly string[] = [
+  "matching:candidates:evaluate",
+  "matching:candidacy:write",
+];
+
 export interface HttpMatchingOptions {
   readonly baseUrl: string;
   readonly timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (M1-03): القيمة
+   * الافتراضية «بلا توقيع» كانت ستجعل نداءً يُنسى توقيعه ينجح في كل اختبار
+   * ويُرَدّ 401 في الإنتاج وحده، وهو أسوأ موضع لاكتشاف نسيان.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
 
 interface MatchingCandidateBody {
@@ -21,10 +35,12 @@ interface MatchingCandidateBody {
 export class HttpMatchingPort implements MatchingPort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
 
   constructor(options: HttpMatchingOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
   }
 
   async candidates(request: CandidateRequest): Promise<CandidateResult> {
@@ -70,6 +86,9 @@ export class HttpMatchingPort implements MatchingPort {
         method,
         headers: {
           "content-type": "application/json",
+          // الرمز مربوط بهذه الطريقة وهذا المسار ويُحرق عند أول استعمال، فلا
+          // يُبنى مرة ويُعاد استعماله.
+          ...this.signRequest(method, path),
           ...(traceId === undefined ? {} : { "x-request-id": traceId }),
           ...(idempotencyKey === undefined ? {} : { "idempotency-key": idempotencyKey }),
         },

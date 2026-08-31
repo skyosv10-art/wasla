@@ -2,6 +2,12 @@ import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 
 import { DISPATCH_SERVICE_PORT } from "@wasla/contracts-dispatch";
+import {
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+  type ServiceRequestSigner,
+} from "@wasla/service-auth";
+
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
 
 import { createDispatchDb } from "../infrastructure/drizzle/db.js";
@@ -10,7 +16,7 @@ import {
   SequentialIdGenerator,
   StaticRulesProvider,
 } from "../infrastructure/in-memory.js";
-import { HttpMatchingPort } from "../infrastructure/http-matching.js";
+import { DISPATCH_MATCHING_SCOPES, HttpMatchingPort } from "../infrastructure/http-matching.js";
 import { HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
 import type { Clock, DispatchDependencies, IdGenerator, MatchingPort, OrderEnginePort } from "../ports.js";
 import { PostgresDispatchUnitOfWork } from "../infrastructure/drizzle/transaction.js";
@@ -61,9 +67,28 @@ function rules(): StaticRulesProvider {
   });
 }
 
+/**
+ * موقّع النداءات الصادرة إلى المطابقة (M1-03).
+ *
+ * المفاتيح تُقرأ من البيئة بلا قيمة افتراضية: منادٍ بلا مفاتيح يُرَدّ 401 من
+ * المطابقة، ويقرأ المشغّل الرد بوصفه عطل المطابقة لا نقص إعداد عنده. فالإخفاق
+ * عند الإقلاع يسمّي العلة في موضعها.
+ */
+function matchingSigner(): ServiceRequestSigner {
+  return createServiceRequestSigner({
+    serviceName: "dispatch",
+    audience: "matching",
+    keys: keyRegistryFromEnv(process.env),
+    scopes: DISPATCH_MATCHING_SCOPES,
+  });
+}
+
 function productionPorts(): { matching: MatchingPort; orders: OrderEnginePort } {
   return {
-    matching: new HttpMatchingPort({ baseUrl: process.env.MATCHING_BASE_URL ?? `http://localhost:${MATCHING_SERVICE_PORT}` }),
+    matching: new HttpMatchingPort({
+      baseUrl: process.env.MATCHING_BASE_URL ?? `http://localhost:${MATCHING_SERVICE_PORT}`,
+      signRequest: matchingSigner(),
+    }),
     orders: new HttpOrderEnginePort({ baseUrl: process.env.ORDERS_BASE_URL ?? "http://localhost:8087" }),
   };
 }

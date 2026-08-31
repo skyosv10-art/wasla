@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { createMatchingApp } from "../http/app.js";
 import { createDirectRunner } from "../runner.js";
 
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+
 import { createHarness } from "./harness.js";
-import { createHttpHarness } from "./http-support.js";
+import { createHttpHarness, createTestKeyRegistry } from "./http-support.js";
 
 describe("GET /health", () => {
   it("يعلن الذاكرة degraded ولو كانت نسخة القواعد المجمدة موجودة", async () => {
@@ -24,6 +26,7 @@ describe("GET /health", () => {
     const app = createMatchingApp({
       runner: createDirectRunner(createHarness()),
       health: { persistence: "postgres" },
+      serviceIdentity: { keys: createTestKeyRegistry(), replayGuard: new InMemoryServiceTokenReplayGuard() },
     });
     const response = await app.inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(200);

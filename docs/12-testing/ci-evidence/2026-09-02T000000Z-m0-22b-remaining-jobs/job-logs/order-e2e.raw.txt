@@ -1,0 +1,449 @@
+﻿2026-09-01T22:30:52.3103346Z Current runner version: '2.336.0'
+2026-09-01T22:30:52.3141356Z ##[group]Runner Image Provisioner
+2026-09-01T22:30:52.3142843Z Hosted Compute Agent
+2026-09-01T22:30:52.3143750Z Version: 20260819.586
+2026-09-01T22:30:52.3144828Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-01T22:30:52.3146000Z Build Date: 2026-08-18T23:20:18Z
+2026-09-01T22:30:52.3147201Z Worker ID: {0bb31424-4d2f-4c07-baf3-16a170c4b24e}
+2026-09-01T22:30:52.3148480Z Azure Region: northcentralus
+2026-09-01T22:30:52.3149453Z ##[endgroup]
+2026-09-01T22:30:52.3152020Z ##[group]Operating System
+2026-09-01T22:30:52.3153046Z Ubuntu
+2026-09-01T22:30:52.3153953Z 24.04.4
+2026-09-01T22:30:52.3154846Z LTS
+2026-09-01T22:30:52.3155691Z ##[endgroup]
+2026-09-01T22:30:52.3156538Z ##[group]Runner Image
+2026-09-01T22:30:52.3157633Z Image: ubuntu-24.04
+2026-09-01T22:30:52.3158641Z Version: 20260823.283.1
+2026-09-01T22:30:52.3160912Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-01T22:30:52.3163480Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+2026-09-01T22:30:52.3165269Z ##[endgroup]
+2026-09-01T22:30:52.3167011Z ##[group]GITHUB_TOKEN Permissions
+2026-09-01T22:30:52.3170150Z Contents: read
+2026-09-01T22:30:52.3171345Z Metadata: read
+2026-09-01T22:30:52.3172317Z ##[endgroup]
+2026-09-01T22:30:52.3175013Z Secret source: Actions
+2026-09-01T22:30:52.3177099Z Prepare workflow directory
+2026-09-01T22:30:52.4465015Z Prepare all required actions
+2026-09-01T22:30:52.4589555Z Getting action download info
+2026-09-01T22:30:52.7050091Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-01T22:30:52.9422640Z Complete job name: exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)
+2026-09-01T22:30:52.9873914Z ##[group]Checking docker version
+2026-09-01T22:30:52.9887302Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-09-01T22:30:53.0552932Z '1.48'
+2026-09-01T22:30:53.0564331Z Docker daemon API version: '1.48'
+2026-09-01T22:30:53.0565146Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-09-01T22:30:53.0750627Z '1.48'
+2026-09-01T22:30:53.0765010Z Docker client API version: '1.48'
+2026-09-01T22:30:53.0773778Z ##[endgroup]
+2026-09-01T22:30:53.0778005Z ##[group]Clean up resources from previous jobs
+2026-09-01T22:30:53.0784854Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=45a706"
+2026-09-01T22:30:53.0951906Z ##[command]/usr/bin/docker network prune --force --filter "label=45a706"
+2026-09-01T22:30:53.1112965Z ##[endgroup]
+2026-09-01T22:30:53.1113509Z ##[group]Create local container network
+2026-09-01T22:30:53.1123973Z ##[command]/usr/bin/docker network create --label 45a706 github_network_7dc6184454f64682bec013251a8e2b67
+2026-09-01T22:30:53.1770545Z e6189a2c2e61a8f15dcb4ebf8de90a38fe7016ed8d8c4156b07c82c46edb0087
+2026-09-01T22:30:53.1791653Z ##[endgroup]
+2026-09-01T22:30:53.1818613Z ##[group]Starting job container
+2026-09-01T22:30:53.1842276Z ##[command]/usr/bin/docker pull node:20-alpine
+2026-09-01T22:30:53.6590348Z 20-alpine: Pulling from library/node
+2026-09-01T22:30:53.7737650Z 6a0ac1617861: Pulling fs layer
+2026-09-01T22:30:53.7738702Z 4feea04c1543: Pulling fs layer
+2026-09-01T22:30:53.7739597Z b2cbbfe903b0: Pulling fs layer
+2026-09-01T22:30:53.7740478Z fff4e2c1b189: Pulling fs layer
+2026-09-01T22:30:53.7741875Z fff4e2c1b189: Waiting
+2026-09-01T22:30:53.9623989Z b2cbbfe903b0: Verifying Checksum
+2026-09-01T22:30:53.9665732Z b2cbbfe903b0: Download complete
+2026-09-01T22:30:53.9667675Z 6a0ac1617861: Verifying Checksum
+2026-09-01T22:30:53.9670913Z 6a0ac1617861: Download complete
+2026-09-01T22:30:54.0026719Z fff4e2c1b189: Verifying Checksum
+2026-09-01T22:30:54.0028286Z fff4e2c1b189: Download complete
+2026-09-01T22:30:54.0947047Z 4feea04c1543: Verifying Checksum
+2026-09-01T22:30:54.0949569Z 4feea04c1543: Download complete
+2026-09-01T22:30:54.1066322Z 6a0ac1617861: Pull complete
+2026-09-01T22:30:58.4774280Z 4feea04c1543: Pull complete
+2026-09-01T22:30:58.5379787Z b2cbbfe903b0: Pull complete
+2026-09-01T22:30:58.5526209Z fff4e2c1b189: Pull complete
+2026-09-01T22:30:58.5569981Z Digest: sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+2026-09-01T22:30:58.5582512Z Status: Downloaded newer image for node:20-alpine
+2026-09-01T22:30:58.5601074Z docker.io/library/node:20-alpine
+2026-09-01T22:30:58.5678424Z ##[command]/usr/bin/docker create --name 958058ad04e54aee9ee1f1ae97e61ddf_node20alpine_b77a21 --label 45a706 --workdir /__w/wasla/wasla --network github_network_7dc6184454f64682bec013251a8e2b67  -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.336.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" node:20-alpine "-f" "/dev/null"
+2026-09-01T22:30:58.5985533Z 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:30:58.6010230Z ##[command]/usr/bin/docker start 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:30:58.8186989Z 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:30:58.8208470Z ##[command]/usr/bin/docker ps --all --filter id=1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:30:58.8347990Z 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205 Up Less than a second
+2026-09-01T22:30:58.8370436Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:30:58.8509006Z HOME=/github/home
+2026-09-01T22:30:58.8510191Z GITHUB_ACTIONS=true
+2026-09-01T22:30:58.8511146Z CI=true
+2026-09-01T22:30:58.8511798Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-09-01T22:30:58.8512518Z NODE_VERSION=20.20.2
+2026-09-01T22:30:58.8513136Z YARN_VERSION=1.22.22
+2026-09-01T22:30:58.8531007Z ##[endgroup]
+2026-09-01T22:30:58.8532458Z ##[group]Starting postgres service container
+2026-09-01T22:30:58.8533704Z ##[command]/usr/bin/docker pull postgres:15
+2026-09-01T22:30:59.2681360Z 15: Pulling from library/postgres
+2026-09-01T22:30:59.4114063Z 6310eb16bf42: Pulling fs layer
+2026-09-01T22:30:59.4114608Z 639367129460: Pulling fs layer
+2026-09-01T22:30:59.4115023Z 248bdcd6e955: Pulling fs layer
+2026-09-01T22:30:59.4115431Z 8d2f3610bf84: Pulling fs layer
+2026-09-01T22:30:59.4115816Z 22bf49630d7e: Pulling fs layer
+2026-09-01T22:30:59.4116190Z d523576e6b46: Pulling fs layer
+2026-09-01T22:30:59.4116638Z d522ad15b8c1: Pulling fs layer
+2026-09-01T22:30:59.4117053Z 876153b11224: Pulling fs layer
+2026-09-01T22:30:59.4117433Z 04913c3958ed: Pulling fs layer
+2026-09-01T22:30:59.4117840Z a849d36c92a3: Pulling fs layer
+2026-09-01T22:30:59.4118232Z d6430d172c75: Pulling fs layer
+2026-09-01T22:30:59.4118624Z b86905d46631: Pulling fs layer
+2026-09-01T22:30:59.4122549Z 2659259e5615: Pulling fs layer
+2026-09-01T22:30:59.4133436Z 8f6bdf8e7ebe: Pulling fs layer
+2026-09-01T22:30:59.4134323Z d523576e6b46: Waiting
+2026-09-01T22:30:59.4135083Z d522ad15b8c1: Waiting
+2026-09-01T22:30:59.4136178Z 876153b11224: Waiting
+2026-09-01T22:30:59.4136918Z 04913c3958ed: Waiting
+2026-09-01T22:30:59.4137467Z a849d36c92a3: Waiting
+2026-09-01T22:30:59.4137977Z d6430d172c75: Waiting
+2026-09-01T22:30:59.4138479Z b86905d46631: Waiting
+2026-09-01T22:30:59.4138996Z 2659259e5615: Waiting
+2026-09-01T22:30:59.4139500Z 8f6bdf8e7ebe: Waiting
+2026-09-01T22:30:59.4140012Z 8d2f3610bf84: Waiting
+2026-09-01T22:30:59.4140336Z 22bf49630d7e: Waiting
+2026-09-01T22:30:59.4869541Z 639367129460: Verifying Checksum
+2026-09-01T22:30:59.4882913Z 639367129460: Download complete
+2026-09-01T22:30:59.5268946Z 248bdcd6e955: Verifying Checksum
+2026-09-01T22:30:59.5280502Z 248bdcd6e955: Download complete
+2026-09-01T22:30:59.5872076Z 8d2f3610bf84: Verifying Checksum
+2026-09-01T22:30:59.5881696Z 8d2f3610bf84: Download complete
+2026-09-01T22:30:59.6328320Z 6310eb16bf42: Verifying Checksum
+2026-09-01T22:30:59.6340847Z 6310eb16bf42: Download complete
+2026-09-01T22:30:59.6627048Z 22bf49630d7e: Verifying Checksum
+2026-09-01T22:30:59.6630354Z 22bf49630d7e: Download complete
+2026-09-01T22:30:59.6818567Z d523576e6b46: Verifying Checksum
+2026-09-01T22:30:59.6820141Z d523576e6b46: Download complete
+2026-09-01T22:30:59.7080056Z d522ad15b8c1: Verifying Checksum
+2026-09-01T22:30:59.7086905Z d522ad15b8c1: Download complete
+2026-09-01T22:30:59.7363422Z 876153b11224: Verifying Checksum
+2026-09-01T22:30:59.7369829Z 876153b11224: Download complete
+2026-09-01T22:30:59.7853982Z a849d36c92a3: Verifying Checksum
+2026-09-01T22:30:59.7871384Z a849d36c92a3: Download complete
+2026-09-01T22:30:59.8263016Z d6430d172c75: Verifying Checksum
+2026-09-01T22:30:59.8264624Z d6430d172c75: Download complete
+2026-09-01T22:30:59.8751434Z b86905d46631: Verifying Checksum
+2026-09-01T22:30:59.8752749Z b86905d46631: Download complete
+2026-09-01T22:30:59.9072420Z 2659259e5615: Verifying Checksum
+2026-09-01T22:30:59.9073255Z 2659259e5615: Download complete
+2026-09-01T22:30:59.9590857Z 8f6bdf8e7ebe: Verifying Checksum
+2026-09-01T22:30:59.9591378Z 8f6bdf8e7ebe: Download complete
+2026-09-01T22:31:00.3730074Z 04913c3958ed: Verifying Checksum
+2026-09-01T22:31:00.3731305Z 04913c3958ed: Download complete
+2026-09-01T22:31:01.0303415Z 6310eb16bf42: Pull complete
+2026-09-01T22:31:01.8458272Z 639367129460: Pull complete
+2026-09-01T22:31:02.1003066Z 248bdcd6e955: Pull complete
+2026-09-01T22:31:02.1523098Z 8d2f3610bf84: Pull complete
+2026-09-01T22:31:02.5217814Z 22bf49630d7e: Pull complete
+2026-09-01T22:31:02.6101094Z d523576e6b46: Pull complete
+2026-09-01T22:31:02.6186158Z d522ad15b8c1: Pull complete
+2026-09-01T22:31:02.6286160Z 876153b11224: Pull complete
+2026-09-01T22:31:06.9752018Z 04913c3958ed: Pull complete
+2026-09-01T22:31:06.9942854Z a849d36c92a3: Pull complete
+2026-09-01T22:31:07.0117031Z d6430d172c75: Pull complete
+2026-09-01T22:31:07.0244896Z b86905d46631: Pull complete
+2026-09-01T22:31:07.0337901Z 2659259e5615: Pull complete
+2026-09-01T22:31:07.0430895Z 8f6bdf8e7ebe: Pull complete
+2026-09-01T22:31:07.0481798Z Digest: sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957
+2026-09-01T22:31:07.0510072Z Status: Downloaded newer image for postgres:15
+2026-09-01T22:31:07.0521995Z docker.io/library/postgres:15
+2026-09-01T22:31:07.0541162Z ##[command]/usr/bin/docker create --name 4f339308196742acba20945f2131fd61_postgres15_4d11df --label 45a706 --network github_network_7dc6184454f64682bec013251a8e2b67 --network-alias postgres --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20 -e "POSTGRES_DB=wasla_order_e2e" -e "POSTGRES_USER=postgres" -e "POSTGRES_PASSWORD=postgres" -e GITHUB_ACTIONS=true -e CI=true postgres:15
+2026-09-01T22:31:07.0813033Z 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:07.0816463Z ##[command]/usr/bin/docker start 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:07.2446649Z 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:07.2454767Z ##[command]/usr/bin/docker ps --all --filter id=40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:31:07.2673654Z 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0 Up Less than a second (health: starting)
+2026-09-01T22:31:07.2740406Z ##[command]/usr/bin/docker port 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:07.2973247Z ##[endgroup]
+2026-09-01T22:31:07.2987700Z ##[group]Waiting for all services to be ready
+2026-09-01T22:31:07.3002597Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:07.3224018Z starting
+2026-09-01T22:31:07.3252569Z postgres service is starting, waiting 2 seconds before checking again.
+2026-09-01T22:31:09.3256175Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:09.3402637Z starting
+2026-09-01T22:31:09.3414085Z postgres service is starting, waiting 3 seconds before checking again.
+2026-09-01T22:31:13.1416919Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:13.1557633Z healthy
+2026-09-01T22:31:13.1576708Z postgres service is healthy.
+2026-09-01T22:31:13.1577585Z ##[endgroup]
+2026-09-01T22:31:13.1856164Z ##[group]Run apk add --no-cache git bash
+2026-09-01T22:31:13.1856580Z apk add --no-cache git bash
+2026-09-01T22:31:13.1860064Z shell: sh -e {0}
+2026-09-01T22:31:13.1860454Z env:
+2026-09-01T22:31:13.1860667Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:13.1861107Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:13.1861333Z ##[endgroup]
+2026-09-01T22:31:13.6176573Z ( 1/16) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+2026-09-01T22:31:13.6235959Z ( 2/16) Installing libncursesw (6.5_p20251123-r0)
+2026-09-01T22:31:13.6290054Z ( 3/16) Installing readline (8.3.1-r0)
+2026-09-01T22:31:13.6334082Z ( 4/16) Installing bash (5.3.3-r1)
+2026-09-01T22:31:13.6490036Z   Executing bash-5.3.3-r1.post-install
+2026-09-01T22:31:13.6526273Z ( 5/16) Installing brotli-libs (1.2.0-r0)
+2026-09-01T22:31:13.6616193Z ( 6/16) Installing c-ares (1.34.8-r0)
+2026-09-01T22:31:13.6658614Z ( 7/16) Installing libunistring (1.4.1-r0)
+2026-09-01T22:31:13.6779750Z ( 8/16) Installing libidn2 (2.3.8-r0)
+2026-09-01T22:31:13.6818927Z ( 9/16) Installing nghttp2-libs (1.69.0-r0)
+2026-09-01T22:31:13.6851149Z (10/16) Installing libpsl (0.21.5-r3)
+2026-09-01T22:31:13.6883249Z (11/16) Installing zstd-libs (1.5.7-r2)
+2026-09-01T22:31:13.6966483Z (12/16) Installing libcurl (8.20.0-r0)
+2026-09-01T22:31:13.7043513Z (13/16) Installing libexpat (2.8.4-r0)
+2026-09-01T22:31:13.7085864Z (14/16) Installing pcre2 (10.47-r0)
+2026-09-01T22:31:13.7163633Z (15/16) Installing git (2.52.0-r0)
+2026-09-01T22:31:13.8026144Z (16/16) Installing git-init-template (2.52.0-r0)
+2026-09-01T22:31:13.8089876Z Executing busybox-1.37.0-r30.trigger
+2026-09-01T22:31:13.8192100Z OK: 25.1 MiB in 34 packages
+2026-09-01T22:31:13.8921649Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:31:13.8929207Z ##[group]Run actions/checkout@v4
+2026-09-01T22:31:13.8929490Z with:
+2026-09-01T22:31:13.8929707Z   fetch-depth: 1
+2026-09-01T22:31:13.8929971Z   repository: skyosv10-art/wasla
+2026-09-01T22:31:13.8932831Z   token: ***
+2026-09-01T22:31:13.8933059Z   ssh-strict: true
+2026-09-01T22:31:13.8933276Z   ssh-user: git
+2026-09-01T22:31:13.8933495Z   persist-credentials: true
+2026-09-01T22:31:13.8933740Z   clean: true
+2026-09-01T22:31:13.8934064Z   sparse-checkout-cone-mode: true
+2026-09-01T22:31:13.8934409Z   fetch-tags: false
+2026-09-01T22:31:13.8934623Z   show-progress: true
+2026-09-01T22:31:13.8934891Z   lfs: false
+2026-09-01T22:31:13.8935198Z   submodules: false
+2026-09-01T22:31:13.8935418Z   set-safe-directory: true
+2026-09-01T22:31:13.8935720Z   allow-unsafe-pr-checkout: false
+2026-09-01T22:31:13.8936061Z env:
+2026-09-01T22:31:13.8936257Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:13.8936519Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:13.8936811Z ##[endgroup]
+2026-09-01T22:31:13.8984640Z ##[command]/usr/bin/docker exec  1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205 sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:31:14.1518565Z Syncing repository: skyosv10-art/wasla
+2026-09-01T22:31:14.1525027Z ##[group]Getting Git version info
+2026-09-01T22:31:14.1541959Z Working directory is '/__w/wasla/wasla'
+2026-09-01T22:31:14.1624787Z [command]/usr/bin/git version
+2026-09-01T22:31:14.1692245Z git version 2.52.0
+2026-09-01T22:31:14.1722759Z ##[endgroup]
+2026-09-01T22:31:14.1755548Z Temporarily overriding HOME='/__w/_temp/e7318047-828f-4879-b9f8-dd974931324b' before making global git config changes
+2026-09-01T22:31:14.1758731Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:31:14.1759567Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:31:14.1810907Z Deleting the contents of '/__w/wasla/wasla'
+2026-09-01T22:31:14.1833204Z ##[group]Initializing the repository
+2026-09-01T22:31:14.1836452Z [command]/usr/bin/git init /__w/wasla/wasla
+2026-09-01T22:31:14.1904088Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-01T22:31:14.1905420Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-01T22:31:14.1906580Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-01T22:31:14.1907461Z hint: call:
+2026-09-01T22:31:14.1908102Z hint:
+2026-09-01T22:31:14.1908976Z hint: 	git config --global init.defaultBranch <name>
+2026-09-01T22:31:14.1909774Z hint:
+2026-09-01T22:31:14.1910663Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-01T22:31:14.1911943Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-01T22:31:14.1913356Z hint:
+2026-09-01T22:31:14.1913913Z hint: 	git branch -m <name>
+2026-09-01T22:31:14.1914401Z hint:
+2026-09-01T22:31:14.1914919Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-01T22:31:14.1915838Z Initialized empty Git repository in /__w/wasla/wasla/.git/
+2026-09-01T22:31:14.1944606Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-09-01T22:31:14.2002036Z ##[endgroup]
+2026-09-01T22:31:14.2018701Z ##[group]Disabling automatic garbage collection
+2026-09-01T22:31:14.2019573Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-01T22:31:14.2094298Z ##[endgroup]
+2026-09-01T22:31:14.2095123Z ##[group]Setting up auth
+2026-09-01T22:31:14.2095928Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:31:14.2146624Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:31:14.2470114Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:31:14.2484148Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:31:14.2969811Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:31:14.2971759Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:31:14.3084463Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-01T22:31:14.3127415Z ##[endgroup]
+2026-09-01T22:31:14.3128410Z ##[group]Fetching the repository
+2026-09-01T22:31:14.3143362Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6412be856251e58acf88703320851dd136e94a75:refs/remotes/pull/5/merge
+2026-09-01T22:31:15.1602321Z From https://github.com/skyosv10-art/wasla
+2026-09-01T22:31:15.1604027Z  * [new ref]         6412be856251e58acf88703320851dd136e94a75 -> pull/5/merge
+2026-09-01T22:31:15.1652693Z ##[endgroup]
+2026-09-01T22:31:15.1653637Z ##[group]Determining the checkout info
+2026-09-01T22:31:15.1655090Z ##[endgroup]
+2026-09-01T22:31:15.1661968Z [command]/usr/bin/git sparse-checkout disable
+2026-09-01T22:31:15.1707307Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-01T22:31:15.1738270Z ##[group]Checking out the ref
+2026-09-01T22:31:15.1743598Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/5/merge
+2026-09-01T22:31:15.3508097Z Note: switching to 'refs/remotes/pull/5/merge'.
+2026-09-01T22:31:15.3508532Z 
+2026-09-01T22:31:15.3508978Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-01T22:31:15.3509738Z changes and commit them, and you can discard any commits you make in this
+2026-09-01T22:31:15.3510535Z state without impacting any branches by switching back to a branch.
+2026-09-01T22:31:15.3511815Z 
+2026-09-01T22:31:15.3512104Z If you want to create a new branch to retain commits you create, you may
+2026-09-01T22:31:15.3512820Z do so (now or later) by using -c with the switch command. Example:
+2026-09-01T22:31:15.3513200Z 
+2026-09-01T22:31:15.3513394Z   git switch -c <new-branch-name>
+2026-09-01T22:31:15.3513665Z 
+2026-09-01T22:31:15.3513833Z Or undo this operation with:
+2026-09-01T22:31:15.3514084Z 
+2026-09-01T22:31:15.3514229Z   git switch -
+2026-09-01T22:31:15.3514449Z 
+2026-09-01T22:31:15.3514759Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-01T22:31:15.3515224Z 
+2026-09-01T22:31:15.3515761Z HEAD is now at 6412be8 Merge 7b25864744b16b85b396732ef0e28f7ee0dbdf28 into 7056ba5c05c7ea87c55f02cb24f58945ed2f4229
+2026-09-01T22:31:15.3517586Z ##[endgroup]
+2026-09-01T22:31:15.3554713Z [command]/usr/bin/git log -1 --format=%H
+2026-09-01T22:31:15.3581867Z 6412be856251e58acf88703320851dd136e94a75
+2026-09-01T22:31:15.3792573Z ##[group]Run corepack enable
+2026-09-01T22:31:15.3792891Z corepack enable
+2026-09-01T22:31:15.3793244Z corepack prepare "pnpm@${PNPM_VERSION}" --activate
+2026-09-01T22:31:15.3793715Z shell: sh -e {0}
+2026-09-01T22:31:15.3793929Z env:
+2026-09-01T22:31:15.3794133Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:15.3794385Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:15.3794610Z ##[endgroup]
+2026-09-01T22:31:15.6318477Z Preparing pnpm@9.15.9 for immediate activation...
+2026-09-01T22:31:16.7406125Z ##[group]Run pnpm install --frozen-lockfile
+2026-09-01T22:31:16.7406507Z pnpm install --frozen-lockfile
+2026-09-01T22:31:16.7406908Z shell: sh -e {0}
+2026-09-01T22:31:16.7407113Z env:
+2026-09-01T22:31:16.7407315Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:16.7407546Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:16.7407768Z ##[endgroup]
+2026-09-01T22:31:17.4540925Z Scope: all 43 workspace projects
+2026-09-01T22:31:17.5333065Z Lockfile is up to date, resolution step is skipped
+2026-09-01T22:31:17.5835269Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-09-01T22:31:17.6668048Z Packages: +164
+2026-09-01T22:31:17.6668855Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-09-01T22:31:18.5862061Z Progress: resolved 164, reused 0, downloaded 17, added 6
+2026-09-01T22:31:19.5892989Z Progress: resolved 164, reused 0, downloaded 106, added 95
+2026-09-01T22:31:20.5901822Z Progress: resolved 164, reused 0, downloaded 162, added 146
+2026-09-01T22:31:20.6441678Z Progress: resolved 164, reused 0, downloaded 164, added 164, done
+2026-09-01T22:31:20.9582421Z .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-09-01T22:31:21.0382100Z .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-09-01T22:31:21.6631527Z 
+2026-09-01T22:31:21.6632073Z devDependencies:
+2026-09-01T22:31:21.6632644Z + json-schema-to-typescript 15.0.4
+2026-09-01T22:31:21.6633205Z + openapi-typescript 7.13.0
+2026-09-01T22:31:21.6633689Z + typescript 5.9.3
+2026-09-01T22:31:21.6634083Z + vitest 3.2.7
+2026-09-01T22:31:21.6634334Z 
+2026-09-01T22:31:22.0361964Z Done in 5.1s using pnpm v9.15.9
+2026-09-01T22:31:22.0883044Z ##[group]Run echo "ORDER_DATABASE_URL=***postgres:5432/wasla_order_e2e" >> "$GITHUB_ENV"
+2026-09-01T22:31:22.0884291Z echo "ORDER_DATABASE_URL=***postgres:5432/wasla_order_e2e" >> "$GITHUB_ENV"
+2026-09-01T22:31:22.0885280Z shell: sh -e {0}
+2026-09-01T22:31:22.0885598Z env:
+2026-09-01T22:31:22.0885896Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:22.0886261Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:22.0886612Z ##[endgroup]
+2026-09-01T22:31:22.2131991Z ##[group]Run pnpm --filter @wasla/order-e2e test
+2026-09-01T22:31:22.2132594Z pnpm --filter @wasla/order-e2e test
+2026-09-01T22:31:22.2133203Z shell: sh -e {0}
+2026-09-01T22:31:22.2133516Z env:
+2026-09-01T22:31:22.2133819Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:22.2134182Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:22.2134977Z   ORDER_DATABASE_URL: ***postgres:5432/wasla_order_e2e
+2026-09-01T22:31:22.2135492Z ##[endgroup]
+2026-09-01T22:31:23.0753842Z 
+2026-09-01T22:31:23.0938436Z > @wasla/order-e2e@0.1.0 test /__w/wasla/wasla/packages/order-e2e
+2026-09-01T22:31:23.0961477Z > vitest run
+2026-09-01T22:31:23.1161831Z 
+2026-09-01T22:31:23.7091055Z 
+2026-09-01T22:31:23.7122067Z  RUN  v3.2.7 /__w/wasla/wasla/packages/order-e2e
+2026-09-01T22:31:23.7291509Z 
+2026-09-01T22:31:25.8520951Z stdout | src/__tests__/phase06-exit-gate.e2e.test.ts
+2026-09-01T22:31:25.8522173Z [phase06-gate] engine persistence = postgres
+2026-09-01T22:31:25.8522655Z 
+2026-09-01T22:31:38.2149838Z  ✓ src/__tests__/phase06-exit-gate.e2e.test.ts (16 tests) 12548ms
+2026-09-01T22:31:38.2153353Z    ✓ 2. the full journey, over HTTP > walks published → completed and ends in a terminal state  378ms
+2026-09-01T22:31:38.2154511Z    ✓ 3. the whole transition table, over HTTP (441 pairs) > accepts exactly the published edges and refuses every other pair  11304ms
+2026-09-01T22:31:38.2424754Z 
+2026-09-01T22:31:38.2433921Z  Test Files  1 passed (1)
+2026-09-01T22:31:38.2439330Z       Tests  16 passed (16)
+2026-09-01T22:31:38.2445131Z    Start at  22:31:23
+2026-09-01T22:31:38.2455810Z    Duration  14.55s (transform 924ms, setup 0ms, collect 1.59s, tests 12.55s, environment 0ms, prepare 147ms)
+2026-09-01T22:31:38.2460335Z 
+2026-09-01T22:31:38.4282059Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:31:38.4283498Z Post job cleanup.
+2026-09-01T22:31:38.4291632Z ##[command]/usr/bin/docker exec  1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205 sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:31:38.7111414Z [command]/usr/bin/git version
+2026-09-01T22:31:38.7242486Z git version 2.52.0
+2026-09-01T22:31:38.7431838Z Temporarily overriding HOME='/__w/_temp/a2cdd7e4-16de-489f-b353-b4b9ea3bc46c' before making global git config changes
+2026-09-01T22:31:38.7441733Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:31:38.7481655Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:31:38.7721624Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:31:38.7861490Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:31:38.8122240Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:31:38.8141556Z http.https://github.com/.extraheader
+2026-09-01T22:31:38.8298877Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-01T22:31:38.8462810Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:31:38.8541750Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:31:38.8641802Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:31:38.9107973Z Stop and remove container: 958058ad04e54aee9ee1f1ae97e61ddf_node20alpine_b77a21
+2026-09-01T22:31:38.9126605Z ##[command]/usr/bin/docker rm --force 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:31:39.0380324Z 1814b17f715c1dc50f214361faee9be465f4ea4fd03574d5800036814ccc8205
+2026-09-01T22:31:39.0414426Z Print service container logs: 4f339308196742acba20945f2131fd61_postgres15_4d11df
+2026-09-01T22:31:39.0422605Z ##[command]/usr/bin/docker logs --details 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:39.0584854Z  initdb: warning: enabling "trust" authentication for local connections
+2026-09-01T22:31:39.0590443Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-09-01T22:31:39.0592269Z  2026-09-01 22:31:08.284 UTC [1] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:31:39.0593464Z  2026-09-01 22:31:08.285 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-01T22:31:39.0594214Z  2026-09-01 22:31:08.285 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-01T22:31:39.0595049Z  2026-09-01 22:31:08.286 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:31:39.0595946Z  2026-09-01 22:31:08.290 UTC [63] LOG:  database system was shut down at 2026-09-01 22:31:08 UTC
+2026-09-01T22:31:39.0596709Z  2026-09-01 22:31:08.294 UTC [1] LOG:  database system is ready to accept connections
+2026-09-01T22:31:39.0597448Z  The files belonging to this database system will be owned by user "postgres".
+2026-09-01T22:31:39.0598101Z  This user must also own the server process.
+2026-09-01T22:31:39.0598528Z  
+2026-09-01T22:31:39.0598928Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-09-01T22:31:39.0599599Z  The default database encoding has accordingly been set to "UTF8".
+2026-09-01T22:31:39.0600259Z  The default text search configuration will be set to "english".
+2026-09-01T22:31:39.0600912Z  
+2026-09-01T22:31:39.0601249Z  Data page checksums are disabled.
+2026-09-01T22:31:39.0601635Z  
+2026-09-01T22:31:39.0602090Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-09-01T22:31:39.0602723Z  creating subdirectories ... ok
+2026-09-01T22:31:39.0603228Z  selecting dynamic shared memory implementation ... posix
+2026-09-01T22:31:39.0603789Z  selecting default max_connections ... 100
+2026-09-01T22:31:39.0604263Z  selecting default shared_buffers ... 128MB
+2026-09-01T22:31:39.0604724Z  selecting default time zone ... Etc/UTC
+2026-09-01T22:31:39.0606953Z  creating configuration files ... ok
+2026-09-01T22:31:39.0607624Z  running bootstrap script ... ok
+2026-09-01T22:31:39.0608093Z  performing post-bootstrap initialization ... ok
+2026-09-01T22:31:39.0608586Z  syncing data to disk ... ok
+2026-09-01T22:31:39.0608946Z  
+2026-09-01T22:31:39.0609209Z  
+2026-09-01T22:31:39.0609585Z  Success. You can now start the database server using:
+2026-09-01T22:31:39.0610059Z  
+2026-09-01T22:31:39.0610432Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-09-01T22:31:39.0611108Z  
+2026-09-01T22:31:39.0612088Z  waiting for server to start....2026-09-01 22:31:07.970 UTC [47] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:31:39.0613434Z  2026-09-01 22:31:07.971 UTC [47] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:31:39.0614305Z  2026-09-01 22:31:07.974 UTC [50] LOG:  database system was shut down at 2026-09-01 22:31:07 UTC
+2026-09-01T22:31:39.0615448Z  2026-09-01 22:31:07.977 UTC [47] LOG:  database system is ready to accept connections
+2026-09-01T22:31:39.0616018Z   done
+2026-09-01T22:31:39.0616298Z  server started
+2026-09-01T22:31:39.0616609Z  CREATE DATABASE
+2026-09-01T22:31:39.0616901Z  
+2026-09-01T22:31:39.0617158Z  
+2026-09-01T22:31:39.0617961Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-09-01T22:31:39.0618590Z  
+2026-09-01T22:31:39.0618979Z  2026-09-01 22:31:08.158 UTC [47] LOG:  received fast shutdown request
+2026-09-01T22:31:39.0619787Z  waiting for server to shut down....2026-09-01 22:31:08.159 UTC [47] LOG:  aborting any active transactions
+2026-09-01T22:31:39.0620604Z  2026-09-01 22:31:08.163 UTC [47] LOG:  background worker "logical replication launcher" (PID 53) exited with exit code 1
+2026-09-01T22:31:39.0621573Z  2026-09-01 22:31:08.163 UTC [48] LOG:  shutting down
+2026-09-01T22:31:39.0622186Z  2026-09-01 22:31:08.163 UTC [48] LOG:  checkpoint starting: shutdown immediate
+2026-09-01T22:31:39.0623610Z  2026-09-01 22:31:08.179 UTC [48] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.014 s, sync=0.002 s, total=0.017 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4239 kB, estimate=4239 kB
+2026-09-01T22:31:39.0625105Z  2026-09-01 22:31:08.186 UTC [47] LOG:  database system is shut down
+2026-09-01T22:31:39.0625614Z   done
+2026-09-01T22:31:39.0625898Z  server stopped
+2026-09-01T22:31:39.0626207Z  
+2026-09-01T22:31:39.0626575Z  PostgreSQL init process complete; ready for start up.
+2026-09-01T22:31:39.0627044Z  
+2026-09-01T22:31:39.0631828Z Stop and remove container: 4f339308196742acba20945f2131fd61_postgres15_4d11df
+2026-09-01T22:31:39.0633010Z ##[command]/usr/bin/docker rm --force 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:39.1744202Z 40f60ed714c610a23d8f7159d0a257a09d038ff16bfb17decf13d5abb6a787a0
+2026-09-01T22:31:39.1775091Z Remove container network: github_network_7dc6184454f64682bec013251a8e2b67
+2026-09-01T22:31:39.1779996Z ##[command]/usr/bin/docker network rm github_network_7dc6184454f64682bec013251a8e2b67
+2026-09-01T22:31:39.2681648Z github_network_7dc6184454f64682bec013251a8e2b67
+2026-09-01T22:31:39.2759124Z Cleaning up orphan processes
+2026-09-01T22:31:39.3105507Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

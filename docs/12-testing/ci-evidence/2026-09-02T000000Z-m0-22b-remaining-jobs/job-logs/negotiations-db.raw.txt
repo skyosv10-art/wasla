@@ -1,0 +1,586 @@
+﻿2026-09-01T22:30:41.7839156Z Current runner version: '2.336.0'
+2026-09-01T22:30:41.7900418Z ##[group]Runner Image Provisioner
+2026-09-01T22:30:41.7901673Z Hosted Compute Agent
+2026-09-01T22:30:41.7902629Z Version: 20260819.586
+2026-09-01T22:30:41.7903618Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-01T22:30:41.7904712Z Build Date: 2026-08-18T23:20:18Z
+2026-09-01T22:30:41.7905846Z Worker ID: {cd0509bd-3f85-40f4-b7f0-a6146e1f8778}
+2026-09-01T22:30:41.7907054Z Azure Region: eastus
+2026-09-01T22:30:41.7907980Z ##[endgroup]
+2026-09-01T22:30:41.7930466Z ##[group]Operating System
+2026-09-01T22:30:41.7931524Z Ubuntu
+2026-09-01T22:30:41.7932375Z 24.04.4
+2026-09-01T22:30:41.7933187Z LTS
+2026-09-01T22:30:41.7933984Z ##[endgroup]
+2026-09-01T22:30:41.7934816Z ##[group]Runner Image
+2026-09-01T22:30:41.7935808Z Image: ubuntu-24.04
+2026-09-01T22:30:41.7936722Z Version: 20260823.283.1
+2026-09-01T22:30:41.7939032Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-01T22:30:41.7941525Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+2026-09-01T22:30:41.7943160Z ##[endgroup]
+2026-09-01T22:30:41.7944852Z ##[group]GITHUB_TOKEN Permissions
+2026-09-01T22:30:41.7947980Z Contents: read
+2026-09-01T22:30:41.7952357Z Metadata: read
+2026-09-01T22:30:41.7953366Z ##[endgroup]
+2026-09-01T22:30:41.7956430Z Secret source: Actions
+2026-09-01T22:30:41.7958653Z Prepare workflow directory
+2026-09-01T22:30:41.8824383Z Prepare all required actions
+2026-09-01T22:30:41.8891825Z Getting action download info
+2026-09-01T22:30:42.0805847Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-01T22:30:42.3468547Z Complete job name: db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)
+2026-09-01T22:30:42.3910623Z ##[group]Checking docker version
+2026-09-01T22:30:42.3923706Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-09-01T22:30:42.4776653Z '1.48'
+2026-09-01T22:30:42.4794212Z Docker daemon API version: '1.48'
+2026-09-01T22:30:42.4794995Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-09-01T22:30:42.4962360Z '1.48'
+2026-09-01T22:30:42.4976751Z Docker client API version: '1.48'
+2026-09-01T22:30:42.4982198Z ##[endgroup]
+2026-09-01T22:30:42.4984780Z ##[group]Clean up resources from previous jobs
+2026-09-01T22:30:42.4990344Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=eb6463"
+2026-09-01T22:30:42.5141998Z ##[command]/usr/bin/docker network prune --force --filter "label=eb6463"
+2026-09-01T22:30:42.5299544Z ##[endgroup]
+2026-09-01T22:30:42.5300082Z ##[group]Create local container network
+2026-09-01T22:30:42.5310555Z ##[command]/usr/bin/docker network create --label eb6463 github_network_d4ba268cc58a498e8238a665393ab703
+2026-09-01T22:30:42.5944255Z cd67a48ae384445d72a6e8dbc5ae6e72abe12eaf6b65c1c37ebdb5bfe0a5a100
+2026-09-01T22:30:42.5960945Z ##[endgroup]
+2026-09-01T22:30:42.5984714Z ##[group]Starting job container
+2026-09-01T22:30:42.6006164Z ##[command]/usr/bin/docker pull node:20-alpine
+2026-09-01T22:30:42.8392484Z 20-alpine: Pulling from library/node
+2026-09-01T22:30:42.9275694Z 6a0ac1617861: Pulling fs layer
+2026-09-01T22:30:42.9276580Z 4feea04c1543: Pulling fs layer
+2026-09-01T22:30:42.9277390Z b2cbbfe903b0: Pulling fs layer
+2026-09-01T22:30:42.9278114Z fff4e2c1b189: Pulling fs layer
+2026-09-01T22:30:42.9279246Z fff4e2c1b189: Waiting
+2026-09-01T22:30:42.9764660Z b2cbbfe903b0: Verifying Checksum
+2026-09-01T22:30:42.9766283Z b2cbbfe903b0: Download complete
+2026-09-01T22:30:42.9878189Z 6a0ac1617861: Verifying Checksum
+2026-09-01T22:30:42.9880675Z 6a0ac1617861: Download complete
+2026-09-01T22:30:43.1974305Z fff4e2c1b189: Verifying Checksum
+2026-09-01T22:30:43.1975606Z fff4e2c1b189: Download complete
+2026-09-01T22:30:43.2046468Z 6a0ac1617861: Pull complete
+2026-09-01T22:30:43.2144452Z 4feea04c1543: Verifying Checksum
+2026-09-01T22:30:43.2145874Z 4feea04c1543: Download complete
+2026-09-01T22:30:45.2055345Z 4feea04c1543: Pull complete
+2026-09-01T22:30:45.2666274Z b2cbbfe903b0: Pull complete
+2026-09-01T22:30:45.2801532Z fff4e2c1b189: Pull complete
+2026-09-01T22:30:45.2845983Z Digest: sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+2026-09-01T22:30:45.2861489Z Status: Downloaded newer image for node:20-alpine
+2026-09-01T22:30:45.2876762Z docker.io/library/node:20-alpine
+2026-09-01T22:30:45.2962082Z ##[command]/usr/bin/docker create --name e11b7826829b4ebf94937ac171cc00d8_node20alpine_1407a0 --label eb6463 --workdir /__w/wasla/wasla --network github_network_d4ba268cc58a498e8238a665393ab703  -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.336.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" node:20-alpine "-f" "/dev/null"
+2026-09-01T22:30:45.3247751Z 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:30:45.3260868Z ##[command]/usr/bin/docker start 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:30:45.5421521Z 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:30:45.5457806Z ##[command]/usr/bin/docker ps --all --filter id=3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:30:45.5589476Z 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50 Up Less than a second
+2026-09-01T22:30:45.5611207Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:30:45.5751513Z HOME=/github/home
+2026-09-01T22:30:45.5752534Z GITHUB_ACTIONS=true
+2026-09-01T22:30:45.5764203Z CI=true
+2026-09-01T22:30:45.5764858Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-09-01T22:30:45.5765404Z NODE_VERSION=20.20.2
+2026-09-01T22:30:45.5765913Z YARN_VERSION=1.22.22
+2026-09-01T22:30:45.5773964Z ##[endgroup]
+2026-09-01T22:30:45.5775370Z ##[group]Starting postgres service container
+2026-09-01T22:30:45.5776347Z ##[command]/usr/bin/docker pull postgres:15
+2026-09-01T22:30:45.8016037Z 15: Pulling from library/postgres
+2026-09-01T22:30:45.9148546Z 6310eb16bf42: Pulling fs layer
+2026-09-01T22:30:45.9149506Z 639367129460: Pulling fs layer
+2026-09-01T22:30:45.9149924Z 248bdcd6e955: Pulling fs layer
+2026-09-01T22:30:45.9150427Z 8d2f3610bf84: Pulling fs layer
+2026-09-01T22:30:45.9150847Z 22bf49630d7e: Pulling fs layer
+2026-09-01T22:30:45.9151382Z d523576e6b46: Pulling fs layer
+2026-09-01T22:30:45.9151831Z d522ad15b8c1: Pulling fs layer
+2026-09-01T22:30:45.9152219Z 876153b11224: Pulling fs layer
+2026-09-01T22:30:45.9152722Z 04913c3958ed: Pulling fs layer
+2026-09-01T22:30:45.9153234Z a849d36c92a3: Pulling fs layer
+2026-09-01T22:30:45.9153694Z d6430d172c75: Pulling fs layer
+2026-09-01T22:30:45.9154163Z b86905d46631: Pulling fs layer
+2026-09-01T22:30:45.9154627Z 2659259e5615: Pulling fs layer
+2026-09-01T22:30:45.9155011Z 8f6bdf8e7ebe: Pulling fs layer
+2026-09-01T22:30:45.9155392Z 8d2f3610bf84: Waiting
+2026-09-01T22:30:45.9155928Z 22bf49630d7e: Waiting
+2026-09-01T22:30:45.9156270Z d523576e6b46: Waiting
+2026-09-01T22:30:45.9156691Z d522ad15b8c1: Waiting
+2026-09-01T22:30:45.9157092Z 876153b11224: Waiting
+2026-09-01T22:30:45.9157495Z 04913c3958ed: Waiting
+2026-09-01T22:30:45.9157905Z a849d36c92a3: Waiting
+2026-09-01T22:30:45.9176348Z d6430d172c75: Waiting
+2026-09-01T22:30:45.9177150Z b86905d46631: Waiting
+2026-09-01T22:30:45.9178210Z 2659259e5615: Waiting
+2026-09-01T22:30:45.9179043Z 8f6bdf8e7ebe: Waiting
+2026-09-01T22:30:45.9546327Z 639367129460: Verifying Checksum
+2026-09-01T22:30:45.9547309Z 639367129460: Download complete
+2026-09-01T22:30:45.9957339Z 248bdcd6e955: Verifying Checksum
+2026-09-01T22:30:45.9960379Z 248bdcd6e955: Download complete
+2026-09-01T22:30:46.0109263Z 8d2f3610bf84: Verifying Checksum
+2026-09-01T22:30:46.0110145Z 8d2f3610bf84: Download complete
+2026-09-01T22:30:46.0703362Z 6310eb16bf42: Verifying Checksum
+2026-09-01T22:30:46.0703865Z 6310eb16bf42: Download complete
+2026-09-01T22:30:46.0722049Z d523576e6b46: Verifying Checksum
+2026-09-01T22:30:46.0722799Z d523576e6b46: Download complete
+2026-09-01T22:30:46.0827439Z 22bf49630d7e: Verifying Checksum
+2026-09-01T22:30:46.0829031Z 22bf49630d7e: Download complete
+2026-09-01T22:30:46.1113947Z 876153b11224: Verifying Checksum
+2026-09-01T22:30:46.1114938Z 876153b11224: Download complete
+2026-09-01T22:30:46.1131608Z d522ad15b8c1: Verifying Checksum
+2026-09-01T22:30:46.1133122Z d522ad15b8c1: Download complete
+2026-09-01T22:30:46.1455887Z d6430d172c75: Verifying Checksum
+2026-09-01T22:30:46.1460552Z d6430d172c75: Download complete
+2026-09-01T22:30:46.1467170Z a849d36c92a3: Verifying Checksum
+2026-09-01T22:30:46.1468113Z a849d36c92a3: Download complete
+2026-09-01T22:30:46.1817045Z 2659259e5615: Verifying Checksum
+2026-09-01T22:30:46.1817938Z 2659259e5615: Download complete
+2026-09-01T22:30:46.1918073Z b86905d46631: Verifying Checksum
+2026-09-01T22:30:46.1924908Z b86905d46631: Download complete
+2026-09-01T22:30:46.2131043Z 8f6bdf8e7ebe: Verifying Checksum
+2026-09-01T22:30:46.2132893Z 8f6bdf8e7ebe: Download complete
+2026-09-01T22:30:46.7698157Z 04913c3958ed: Verifying Checksum
+2026-09-01T22:30:46.7704926Z 04913c3958ed: Download complete
+2026-09-01T22:30:47.4163873Z 6310eb16bf42: Pull complete
+2026-09-01T22:30:48.2187770Z 639367129460: Pull complete
+2026-09-01T22:30:48.4603793Z 248bdcd6e955: Pull complete
+2026-09-01T22:30:48.5180752Z 8d2f3610bf84: Pull complete
+2026-09-01T22:30:48.8686837Z 22bf49630d7e: Pull complete
+2026-09-01T22:30:48.9431687Z d523576e6b46: Pull complete
+2026-09-01T22:30:48.9534619Z d522ad15b8c1: Pull complete
+2026-09-01T22:30:48.9617750Z 876153b11224: Pull complete
+2026-09-01T22:30:53.1991972Z 04913c3958ed: Pull complete
+2026-09-01T22:30:53.2156066Z a849d36c92a3: Pull complete
+2026-09-01T22:30:53.2273468Z d6430d172c75: Pull complete
+2026-09-01T22:30:53.2394186Z b86905d46631: Pull complete
+2026-09-01T22:30:53.2578738Z 2659259e5615: Pull complete
+2026-09-01T22:30:53.2655171Z 8f6bdf8e7ebe: Pull complete
+2026-09-01T22:30:53.2690130Z Digest: sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957
+2026-09-01T22:30:53.2698138Z Status: Downloaded newer image for postgres:15
+2026-09-01T22:30:53.2710504Z docker.io/library/postgres:15
+2026-09-01T22:30:53.2727266Z ##[command]/usr/bin/docker create --name af56bcfa0e1c45e183d9615e210d31e0_postgres15_4c6daf --label eb6463 --network github_network_d4ba268cc58a498e8238a665393ab703 --network-alias postgres --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20 -e "POSTGRES_DB=wasla_negotiations_test" -e "POSTGRES_USER=postgres" -e "POSTGRES_PASSWORD=postgres" -e GITHUB_ACTIONS=true -e CI=true postgres:15
+2026-09-01T22:30:53.2966414Z 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:53.2980085Z ##[command]/usr/bin/docker start 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:53.4460001Z 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:53.4469340Z ##[command]/usr/bin/docker ps --all --filter id=278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:30:53.4660820Z 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661 Up Less than a second (health: starting)
+2026-09-01T22:30:53.4683380Z ##[command]/usr/bin/docker port 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:53.4913059Z ##[endgroup]
+2026-09-01T22:30:53.4926822Z ##[group]Waiting for all services to be ready
+2026-09-01T22:30:53.4940459Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:53.5145026Z starting
+2026-09-01T22:30:53.5154764Z postgres service is starting, waiting 2 seconds before checking again.
+2026-09-01T22:30:55.5157179Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:55.5305433Z starting
+2026-09-01T22:30:55.5320939Z postgres service is starting, waiting 3 seconds before checking again.
+2026-09-01T22:30:59.5024386Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:30:59.5163401Z healthy
+2026-09-01T22:30:59.5180016Z postgres service is healthy.
+2026-09-01T22:30:59.5180834Z ##[endgroup]
+2026-09-01T22:30:59.5460071Z ##[group]Run apk add --no-cache git bash
+2026-09-01T22:30:59.5460484Z apk add --no-cache git bash
+2026-09-01T22:30:59.5463789Z shell: sh -e {0}
+2026-09-01T22:30:59.5464241Z env:
+2026-09-01T22:30:59.5464447Z   NODE_VERSION: 20.20.1
+2026-09-01T22:30:59.5464686Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:30:59.5464912Z ##[endgroup]
+2026-09-01T22:30:59.9633993Z ( 1/16) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+2026-09-01T22:30:59.9682653Z ( 2/16) Installing libncursesw (6.5_p20251123-r0)
+2026-09-01T22:30:59.9764995Z ( 3/16) Installing readline (8.3.1-r0)
+2026-09-01T22:30:59.9825832Z ( 4/16) Installing bash (5.3.3-r1)
+2026-09-01T22:30:59.9987106Z   Executing bash-5.3.3-r1.post-install
+2026-09-01T22:31:00.0024580Z ( 5/16) Installing brotli-libs (1.2.0-r0)
+2026-09-01T22:31:00.0127466Z ( 6/16) Installing c-ares (1.34.8-r0)
+2026-09-01T22:31:00.0175445Z ( 7/16) Installing libunistring (1.4.1-r0)
+2026-09-01T22:31:00.0309693Z ( 8/16) Installing libidn2 (2.3.8-r0)
+2026-09-01T22:31:00.0356227Z ( 9/16) Installing nghttp2-libs (1.69.0-r0)
+2026-09-01T22:31:00.0392495Z (10/16) Installing libpsl (0.21.5-r3)
+2026-09-01T22:31:00.0425833Z (11/16) Installing zstd-libs (1.5.7-r2)
+2026-09-01T22:31:00.0506652Z (12/16) Installing libcurl (8.20.0-r0)
+2026-09-01T22:31:00.0589440Z (13/16) Installing libexpat (2.8.4-r0)
+2026-09-01T22:31:00.0674186Z (14/16) Installing pcre2 (10.47-r0)
+2026-09-01T22:31:00.0771207Z (15/16) Installing git (2.52.0-r0)
+2026-09-01T22:31:00.1435474Z (16/16) Installing git-init-template (2.52.0-r0)
+2026-09-01T22:31:00.1473279Z Executing busybox-1.37.0-r30.trigger
+2026-09-01T22:31:00.1546998Z OK: 25.1 MiB in 34 packages
+2026-09-01T22:31:00.2233663Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:31:00.2240369Z ##[group]Run actions/checkout@v4
+2026-09-01T22:31:00.2240650Z with:
+2026-09-01T22:31:00.2240861Z   fetch-depth: 1
+2026-09-01T22:31:00.2241118Z   repository: skyosv10-art/wasla
+2026-09-01T22:31:00.2244156Z   token: ***
+2026-09-01T22:31:00.2244380Z   ssh-strict: true
+2026-09-01T22:31:00.2244599Z   ssh-user: git
+2026-09-01T22:31:00.2244817Z   persist-credentials: true
+2026-09-01T22:31:00.2245057Z   clean: true
+2026-09-01T22:31:00.2245278Z   sparse-checkout-cone-mode: true
+2026-09-01T22:31:00.2245541Z   fetch-tags: false
+2026-09-01T22:31:00.2245756Z   show-progress: true
+2026-09-01T22:31:00.2245972Z   lfs: false
+2026-09-01T22:31:00.2246211Z   submodules: false
+2026-09-01T22:31:00.2246428Z   set-safe-directory: true
+2026-09-01T22:31:00.2246680Z   allow-unsafe-pr-checkout: false
+2026-09-01T22:31:00.2246929Z env:
+2026-09-01T22:31:00.2247126Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:00.2247426Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:00.2247678Z ##[endgroup]
+2026-09-01T22:31:00.2294808Z ##[command]/usr/bin/docker exec  3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50 sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:31:00.5059506Z Syncing repository: skyosv10-art/wasla
+2026-09-01T22:31:00.5061736Z ##[group]Getting Git version info
+2026-09-01T22:31:00.5062895Z Working directory is '/__w/wasla/wasla'
+2026-09-01T22:31:00.5188176Z [command]/usr/bin/git version
+2026-09-01T22:31:00.5205946Z git version 2.52.0
+2026-09-01T22:31:00.5308914Z ##[endgroup]
+2026-09-01T22:31:00.5317886Z Temporarily overriding HOME='/__w/_temp/d1595370-1f05-4d86-93a2-2cf029c194c8' before making global git config changes
+2026-09-01T22:31:00.5319201Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:31:00.5320109Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:31:00.5552828Z Deleting the contents of '/__w/wasla/wasla'
+2026-09-01T22:31:00.5569416Z ##[group]Initializing the repository
+2026-09-01T22:31:00.5726728Z [command]/usr/bin/git init /__w/wasla/wasla
+2026-09-01T22:31:00.5779044Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-01T22:31:00.5961152Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-01T22:31:00.6210029Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-01T22:31:00.6211075Z hint: call:
+2026-09-01T22:31:00.6299276Z hint:
+2026-09-01T22:31:00.6338629Z hint: 	git config --global init.defaultBranch <name>
+2026-09-01T22:31:00.6341091Z hint:
+2026-09-01T22:31:00.6349784Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-01T22:31:00.6350921Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-01T22:31:00.6352132Z hint:
+2026-09-01T22:31:00.6352675Z hint: 	git branch -m <name>
+2026-09-01T22:31:00.6353588Z hint:
+2026-09-01T22:31:00.6354395Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-01T22:31:00.6355745Z Initialized empty Git repository in /__w/wasla/wasla/.git/
+2026-09-01T22:31:00.6360196Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-09-01T22:31:00.6361600Z ##[endgroup]
+2026-09-01T22:31:00.6362202Z ##[group]Disabling automatic garbage collection
+2026-09-01T22:31:00.6362746Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-01T22:31:00.6363873Z ##[endgroup]
+2026-09-01T22:31:00.6364434Z ##[group]Setting up auth
+2026-09-01T22:31:00.6365016Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:31:00.6367304Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:31:00.6369780Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:31:00.6372040Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:31:00.6374234Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:31:00.6375833Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:31:00.6574753Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-01T22:31:00.6616185Z ##[endgroup]
+2026-09-01T22:31:00.6617146Z ##[group]Fetching the repository
+2026-09-01T22:31:00.6631489Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6412be856251e58acf88703320851dd136e94a75:refs/remotes/pull/5/merge
+2026-09-01T22:31:01.2246355Z From https://github.com/skyosv10-art/wasla
+2026-09-01T22:31:01.2247543Z  * [new ref]         6412be856251e58acf88703320851dd136e94a75 -> pull/5/merge
+2026-09-01T22:31:01.2258914Z ##[endgroup]
+2026-09-01T22:31:01.2260419Z ##[group]Determining the checkout info
+2026-09-01T22:31:01.2261922Z ##[endgroup]
+2026-09-01T22:31:01.2270375Z [command]/usr/bin/git sparse-checkout disable
+2026-09-01T22:31:01.2313941Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-01T22:31:01.2353206Z ##[group]Checking out the ref
+2026-09-01T22:31:01.2353883Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/5/merge
+2026-09-01T22:31:01.4144220Z Note: switching to 'refs/remotes/pull/5/merge'.
+2026-09-01T22:31:01.4144960Z 
+2026-09-01T22:31:01.4145961Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-01T22:31:01.4147874Z changes and commit them, and you can discard any commits you make in this
+2026-09-01T22:31:01.4148700Z state without impacting any branches by switching back to a branch.
+2026-09-01T22:31:01.4149156Z 
+2026-09-01T22:31:01.4149685Z If you want to create a new branch to retain commits you create, you may
+2026-09-01T22:31:01.4150413Z do so (now or later) by using -c with the switch command. Example:
+2026-09-01T22:31:01.4159497Z 
+2026-09-01T22:31:01.4160009Z   git switch -c <new-branch-name>
+2026-09-01T22:31:01.4160962Z 
+2026-09-01T22:31:01.4161485Z Or undo this operation with:
+2026-09-01T22:31:01.4162379Z 
+2026-09-01T22:31:01.4164617Z   git switch -
+2026-09-01T22:31:01.4165479Z 
+2026-09-01T22:31:01.4167189Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-01T22:31:01.4168226Z 
+2026-09-01T22:31:01.4169579Z HEAD is now at 6412be8 Merge 7b25864744b16b85b396732ef0e28f7ee0dbdf28 into 7056ba5c05c7ea87c55f02cb24f58945ed2f4229
+2026-09-01T22:31:01.4172593Z ##[endgroup]
+2026-09-01T22:31:01.4206978Z [command]/usr/bin/git log -1 --format=%H
+2026-09-01T22:31:01.4233453Z 6412be856251e58acf88703320851dd136e94a75
+2026-09-01T22:31:01.4459573Z ##[group]Run corepack enable
+2026-09-01T22:31:01.4459887Z corepack enable
+2026-09-01T22:31:01.4460225Z corepack prepare "pnpm@${PNPM_VERSION}" --activate
+2026-09-01T22:31:01.4460605Z echo "node   $(node --version)"
+2026-09-01T22:31:01.4460901Z echo "pnpm   $(pnpm --version)"
+2026-09-01T22:31:01.4461290Z shell: sh -e {0}
+2026-09-01T22:31:01.4461494Z env:
+2026-09-01T22:31:01.4461695Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:01.4461921Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:01.4462148Z ##[endgroup]
+2026-09-01T22:31:01.6977565Z Preparing pnpm@9.15.9 for immediate activation...
+2026-09-01T22:31:02.7680812Z node   v20.20.2
+2026-09-01T22:31:03.2838010Z pnpm   9.15.9
+2026-09-01T22:31:03.2928670Z ##[group]Run pnpm install --frozen-lockfile
+2026-09-01T22:31:03.2929289Z pnpm install --frozen-lockfile
+2026-09-01T22:31:03.2929859Z shell: sh -e {0}
+2026-09-01T22:31:03.2930173Z env:
+2026-09-01T22:31:03.2930475Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:03.2930776Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:03.2931103Z ##[endgroup]
+2026-09-01T22:31:03.8972860Z Scope: all 43 workspace projects
+2026-09-01T22:31:03.9712683Z Lockfile is up to date, resolution step is skipped
+2026-09-01T22:31:04.0246948Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-09-01T22:31:04.1076022Z Packages: +164
+2026-09-01T22:31:04.1076836Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-09-01T22:31:05.0266139Z Progress: resolved 164, reused 0, downloaded 22, added 10
+2026-09-01T22:31:06.0266174Z Progress: resolved 164, reused 0, downloaded 111, added 102
+2026-09-01T22:31:06.7502519Z Progress: resolved 164, reused 0, downloaded 164, added 164, done
+2026-09-01T22:31:07.0302192Z .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-09-01T22:31:07.1201026Z .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-09-01T22:31:07.6819648Z 
+2026-09-01T22:31:07.6820334Z devDependencies:
+2026-09-01T22:31:07.6820790Z + json-schema-to-typescript 15.0.4
+2026-09-01T22:31:07.6821270Z + openapi-typescript 7.13.0
+2026-09-01T22:31:07.6821648Z + typescript 5.9.3
+2026-09-01T22:31:07.6821985Z + vitest 3.2.7
+2026-09-01T22:31:07.6822167Z 
+2026-09-01T22:31:08.0309557Z Done in 4.5s using pnpm v9.15.9
+2026-09-01T22:31:08.0817524Z ##[group]Run pnpm --filter @wasla/negotiations-service test:integration
+2026-09-01T22:31:08.0819085Z pnpm --filter @wasla/negotiations-service test:integration
+2026-09-01T22:31:08.0819811Z shell: sh -e {0}
+2026-09-01T22:31:08.0820137Z env:
+2026-09-01T22:31:08.0820447Z   NODE_VERSION: 20.20.1
+2026-09-01T22:31:08.0820810Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:31:08.0821702Z   DATABASE_URL: ***postgres:5432/wasla_negotiations_test
+2026-09-01T22:31:08.0822220Z ##[endgroup]
+2026-09-01T22:31:08.8851883Z 
+2026-09-01T22:31:08.8899958Z > @wasla/negotiations-service@0.1.0 test:integration /__w/wasla/wasla/services/negotiations
+2026-09-01T22:31:08.9249715Z > vitest run --config vitest.integration.config.ts
+2026-09-01T22:31:08.9454237Z 
+2026-09-01T22:31:09.5988804Z 
+2026-09-01T22:31:09.5999675Z  RUN  v3.2.7 /__w/wasla/wasla/services/negotiations
+2026-09-01T22:31:09.6008672Z 
+2026-09-01T22:31:12.7819821Z  ✓ src/__tests__/repository.integration.test.ts (41 tests) 1774ms
+2026-09-01T22:31:14.0642672Z  ✓ src/__tests__/port-conformance.integration.test.ts (10 tests) 754ms
+2026-09-01T22:31:15.1764787Z  ✓ src/__tests__/atomicity.integration.test.ts (11 tests) 659ms
+2026-09-01T22:31:15.1893686Z 
+2026-09-01T22:31:15.1909382Z  Test Files  3 passed (3)
+2026-09-01T22:31:15.1910500Z       Tests  62 passed (62)
+2026-09-01T22:31:15.1911055Z    Start at  22:31:09
+2026-09-01T22:31:15.1928018Z    Duration  5.59s (transform 691ms, setup 0ms, collect 1.57s, tests 3.19s, environment 2ms, prepare 327ms)
+2026-09-01T22:31:15.1936073Z 
+2026-09-01T22:31:15.3558677Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:31:15.3560141Z Post job cleanup.
+2026-09-01T22:31:15.3569181Z ##[command]/usr/bin/docker exec  3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50 sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:31:15.5985876Z [command]/usr/bin/git version
+2026-09-01T22:31:15.6081680Z git version 2.52.0
+2026-09-01T22:31:15.6195866Z Temporarily overriding HOME='/__w/_temp/b22f2ec8-5e05-4728-b28f-e24844112cd7' before making global git config changes
+2026-09-01T22:31:15.6197778Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:31:15.6219688Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:31:15.6309124Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:31:15.6361605Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:31:15.6639103Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:31:15.6693680Z http.https://github.com/.extraheader
+2026-09-01T22:31:15.6703439Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-01T22:31:15.6753528Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:31:15.7024604Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:31:15.7099482Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:31:15.7596426Z Stop and remove container: e11b7826829b4ebf94937ac171cc00d8_node20alpine_1407a0
+2026-09-01T22:31:15.7601860Z ##[command]/usr/bin/docker rm --force 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:31:16.1636955Z 3160af84b9422408090544a85fcfdf5c39e0ed65a82487b5c5cd7c8fd5d82e50
+2026-09-01T22:31:16.1666125Z Print service container logs: af56bcfa0e1c45e183d9615e210d31e0_postgres15_4c6daf
+2026-09-01T22:31:16.1671558Z ##[command]/usr/bin/docker logs --details 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:31:16.1814177Z  initdb: warning: enabling "trust" authentication for local connections
+2026-09-01T22:31:16.1815162Z  The files belonging to this database system will be owned by user "postgres".
+2026-09-01T22:31:16.1816002Z  This user must also own the server process.
+2026-09-01T22:31:16.1817321Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-09-01T22:31:16.1819224Z  2026-09-01 22:30:54.449 UTC [1] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:31:16.1820569Z  2026-09-01 22:30:54.450 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-01T22:31:16.1821456Z  2026-09-01 22:30:54.450 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-01T22:31:16.1822418Z  2026-09-01 22:30:54.451 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:31:16.1823451Z  2026-09-01 22:30:54.454 UTC [65] LOG:  database system was shut down at 2026-09-01 22:30:54 UTC
+2026-09-01T22:31:16.1824387Z  2026-09-01 22:30:54.460 UTC [1] LOG:  database system is ready to accept connections
+2026-09-01T22:31:16.1825650Z  2026-09-01 22:31:11.194 UTC [95] ERROR:  new row for relation "negotiation_policies" violates check constraint "ck_negotiation_policies_amount_bounds"
+2026-09-01T22:31:16.1827216Z  2026-09-01 22:31:11.194 UTC [95] DETAIL:  Failing row contains (2, invalid-policy, SAR, 100, 100, 2, 60, 120, 10, 10, f, 2026-09-01 22:31:11.194187+00).
+2026-09-01T22:31:16.1828547Z  2026-09-01 22:31:11.194 UTC [95] STATEMENT:  INSERT INTO negotiation_policies (
+2026-09-01T22:31:16.1829564Z  	           policy_version, label, currency, min_amount_minor, max_amount_minor, max_rounds,
+2026-09-01T22:31:16.1830621Z  	           round_ttl_seconds, thread_ttl_seconds, max_message_length, max_messages_per_thread
+2026-09-01T22:31:16.1831310Z  
+2026-09-01T22:31:16.1831717Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-09-01T22:31:16.1832404Z  The default database encoding has accordingly been set to "UTF8".
+2026-09-01T22:31:16.1833071Z  The default text search configuration will be set to "english".
+2026-09-01T22:31:16.1833829Z  	         ) VALUES (2, 'invalid-policy', 'SAR', 100, 100, 2, 60, 120, 10, 10)
+2026-09-01T22:31:16.1834896Z  2026-09-01 22:31:11.249 UTC [96] ERROR:  new row for relation "negotiation_policies" violates check constraint "ck_negotiation_policies_ttl_order"
+2026-09-01T22:31:16.1836167Z  2026-09-01 22:31:11.249 UTC [96] DETAIL:  Failing row contains (2, invalid-policy, SAR, 100, 200, 2, 120, 60, 10, 10, f, 2026-09-01 22:31:11.24945+00).
+2026-09-01T22:31:16.1836839Z  2026-09-01 22:31:11.249 UTC [96] STATEMENT:  INSERT INTO negotiation_policies (
+2026-09-01T22:31:16.1837386Z  	           policy_version, label, currency, min_amount_minor, max_amount_minor, max_rounds,
+2026-09-01T22:31:16.1837956Z  	           round_ttl_seconds, thread_ttl_seconds, max_message_length, max_messages_per_thread
+2026-09-01T22:31:16.1848177Z  	         ) VALUES (2, 'invalid-policy', 'SAR', 100, 200, 2, 120, 60, 10, 10)
+2026-09-01T22:31:16.1849349Z  2026-09-01 22:31:11.301 UTC [97] ERROR:  duplicate key value violates unique constraint "ux_negotiation_threads_order_driver"
+2026-09-01T22:31:16.1850815Z  2026-09-01 22:31:11.301 UTC [97] DETAIL:  Key (order_public_id, driver_public_id)=(ORD-0000000001, WS-0000000003) already exists.
+2026-09-01T22:31:16.1851431Z  2026-09-01 22:31:11.301 UTC [97] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1852101Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1852618Z  	           service_kind, policy_version, currency, opening_amount_minor, opened_by,
+2026-09-01T22:31:16.1853035Z  	           expires_at, next_tick_at
+2026-09-01T22:31:16.1853372Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 1, 'SAR', 3000, 'customer', $6, $6)
+2026-09-01T22:31:16.1853983Z  2026-09-01 22:31:11.346 UTC [98] ERROR:  duplicate key value violates unique constraint "ux_negotiation_threads_dispatch_offer"
+2026-09-01T22:31:16.1854721Z  2026-09-01 22:31:11.346 UTC [98] DETAIL:  Key (dispatch_offer_id)=(00000000-0000-4000-8000-000000000001) already exists.
+2026-09-01T22:31:16.1855272Z  2026-09-01 22:31:11.346 UTC [98] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1855763Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1856271Z  	           service_kind, policy_version, currency, opening_amount_minor, opened_by,
+2026-09-01T22:31:16.1856656Z  	           expires_at, next_tick_at
+2026-09-01T22:31:16.1857006Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 1, 'SAR', 3000, 'customer', $6, $6)
+2026-09-01T22:31:16.1857664Z  2026-09-01 22:31:11.387 UTC [99] ERROR:  new row for relation "negotiation_threads" violates check constraint "ck_negotiation_threads_open_is_clean"
+2026-09-01T22:31:16.1860176Z  2026-09-01 22:31:11.387 UTC [99] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000001, ORD-0000000001, WS-0000000002, WS-0000000003, 00000000-0000-4000-8000-000000000001, ride, open, null, 1, SAR, 3000, customer, 0, 0, null, 2026-08-23 00:00:00+00, 2026-08-23 00:00:00+00, 2026-08-23 00:00:00+00, 2026-09-01 22:31:11.38685+00, 2026-09-01 22:31:11.38685+00, 1).
+2026-09-01T22:31:16.1861440Z  2026-09-01 22:31:11.387 UTC [99] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1861813Z  
+2026-09-01T22:31:16.1862199Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1862719Z  	           service_kind, policy_version, currency, opening_amount_minor, opened_by,
+2026-09-01T22:31:16.1863136Z  	           expires_at, next_tick_at, closed_at
+2026-09-01T22:31:16.1863495Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 1, 'SAR', 3000, 'customer', $6, $6, $6)
+2026-09-01T22:31:16.1864169Z  2026-09-01 22:31:11.424 UTC [100] ERROR:  new row for relation "negotiation_threads" violates check constraint "ck_negotiation_threads_closed_has_reason"
+2026-09-01T22:31:16.1865614Z  2026-09-01 22:31:11.424 UTC [100] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000001, ORD-0000000001, WS-0000000002, WS-0000000003, 00000000-0000-4000-8000-000000000001, ride, cancelled, order_withdrawn, 1, SAR, 3000, customer, 0, 0, null, 2026-08-23 00:00:00+00, null, null, 2026-09-01 22:31:11.423869+00, 2026-09-01 22:31:11.423869+00, 1).
+2026-09-01T22:31:16.1866814Z  2026-09-01 22:31:11.424 UTC [100] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1867304Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1867800Z  	           service_kind, state, close_reason_code, policy_version, currency,
+2026-09-01T22:31:16.1868203Z  	           opening_amount_minor, opened_by, expires_at
+2026-09-01T22:31:16.1869383Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 'cancelled', 'order_withdrawn', 1, 'SAR',
+2026-09-01T22:31:16.1869985Z  	                   3000, 'customer', $6)
+2026-09-01T22:31:16.1870934Z  2026-09-01 22:31:11.463 UTC [101] ERROR:  new row for relation "negotiation_threads" violates check constraint "ck_negotiation_threads_agreed_names_round"
+2026-09-01T22:31:16.1872588Z  2026-09-01 22:31:11.463 UTC [101] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000001, ORD-0000000001, WS-0000000002, WS-0000000003, 00000000-0000-4000-8000-000000000001, ride, agreed, order_withdrawn, 1, SAR, 3000, customer, 0, 0, null, 2026-08-23 00:00:00+00, null, 2026-08-23 00:00:00+00, 2026-09-01 22:31:11.463395+00, 2026-09-01 22:31:11.463395+00, 1).
+2026-09-01T22:31:16.1873963Z  2026-09-01 22:31:11.463 UTC [101] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1874461Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1874950Z  	           service_kind, state, close_reason_code, policy_version, currency,
+2026-09-01T22:31:16.1875371Z  	           opening_amount_minor, opened_by, expires_at, closed_at
+2026-09-01T22:31:16.1875871Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 'agreed', 'order_withdrawn', 1, 'SAR',
+2026-09-01T22:31:16.1876252Z  	                   3000, 'customer', $6, $6)
+2026-09-01T22:31:16.1876845Z  2026-09-01 22:31:11.502 UTC [102] ERROR:  new row for relation "negotiation_threads" violates check constraint "ck_negotiation_threads_round_counters"
+2026-09-01T22:31:16.1878640Z  2026-09-01 22:31:11.502 UTC [102] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000001, ORD-0000000001, WS-0000000002, WS-0000000003, 00000000-0000-4000-8000-000000000001, ride, open, null, 1, SAR, 3000, customer, 0, 1, null, 2026-08-23 00:00:00+00, 2026-08-23 00:00:00+00, null, 2026-09-01 22:31:11.501793+00, 2026-09-01 22:31:11.501793+00, 1).
+2026-09-01T22:31:16.1879845Z  2026-09-01 22:31:11.502 UTC [102] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1880331Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1880839Z  	           service_kind, policy_version, currency, opening_amount_minor, opened_by,
+2026-09-01T22:31:16.1881289Z  	           round_count, current_round_no, expires_at, next_tick_at
+2026-09-01T22:31:16.1881686Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 1, 'SAR', 3000, 'customer', 0, 1, $6, $6)
+2026-09-01T22:31:16.1882364Z  2026-09-01 22:31:11.542 UTC [103] ERROR:  new row for relation "negotiation_threads" violates check constraint "ck_negotiation_threads_agreed_round_exists"
+2026-09-01T22:31:16.1883777Z  2026-09-01 22:31:11.542 UTC [103] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000001, ORD-0000000001, WS-0000000002, WS-0000000003, 00000000-0000-4000-8000-000000000001, ride, agreed, agreed, 1, SAR, 3000, customer, 2, 1, 2, 2026-08-23 00:00:00+00, null, 2026-08-23 00:00:00+00, 2026-09-01 22:31:11.542259+00, 2026-09-01 22:31:11.542259+00, 1).
+2026-09-01T22:31:16.1884953Z  2026-09-01 22:31:11.542 UTC [103] STATEMENT:  INSERT INTO negotiation_threads (
+2026-09-01T22:31:16.1885462Z  	           id, order_public_id, customer_public_id, driver_public_id, dispatch_offer_id,
+2026-09-01T22:31:16.1885946Z  	           service_kind, state, close_reason_code, policy_version, currency,
+2026-09-01T22:31:16.1886450Z  	           opening_amount_minor, opened_by, round_count, current_round_no, agreed_round_no,
+2026-09-01T22:31:16.1886871Z  	           expires_at, closed_at
+2026-09-01T22:31:16.1887200Z  	         ) VALUES ($1, $2, $3, $4, $5, 'ride', 'agreed', 'agreed', 1, 'SAR', 3000,
+2026-09-01T22:31:16.1887564Z  	                   'customer', 2, 1, 2, $6, $6)
+2026-09-01T22:31:16.1888068Z  2026-09-01 22:31:11.583 UTC [104] ERROR:  duplicate key value violates unique constraint "ux_negotiation_rounds_thread_no"
+2026-09-01T22:31:16.1889011Z  2026-09-01 22:31:11.583 UTC [104] DETAIL:  Key (thread_id, round_no)=(aaaaaaaa-0000-4000-8000-000000000001, 1) already exists.
+2026-09-01T22:31:16.1889612Z  2026-09-01 22:31:11.583 UTC [104] STATEMENT:  INSERT INTO negotiation_rounds (
+2026-09-01T22:31:16.1890096Z  	           id, thread_id, round_no, proposed_by, amount_minor, currency, state, expires_at
+2026-09-01T22:31:16.1890543Z  	         ) VALUES ($1, $2, 1, 'driver', 3100, 'SAR', 'expired', $3)
+2026-09-01T22:31:16.1891166Z  2026-09-01 22:31:11.615 UTC [105] ERROR:  new row for relation "negotiation_rounds" violates check constraint "ck_negotiation_rounds_state_timestamp"
+2026-09-01T22:31:16.1892463Z  2026-09-01 22:31:11.615 UTC [105] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, customer, 3000, SAR, accepted, null, 2026-08-23 00:00:00+00, null, 2026-09-01 22:31:11.614785+00).
+2026-09-01T22:31:16.1893501Z  2026-09-01 22:31:11.615 UTC [105] STATEMENT:  INSERT INTO negotiation_rounds (
+2026-09-01T22:31:16.1893973Z  	           id, thread_id, round_no, proposed_by, amount_minor, currency, state, expires_at
+2026-09-01T22:31:16.1894417Z  	         ) VALUES ($1, $2, 1, 'customer', 3000, 'SAR', 'accepted', $3)
+2026-09-01T22:31:16.1895057Z  2026-09-01 22:31:11.647 UTC [106] ERROR:  new row for relation "negotiation_rounds" violates check constraint "ck_negotiation_rounds_no_self_resolution"
+2026-09-01T22:31:16.1896244Z  2026-09-01 22:31:11.647 UTC [106] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, customer, 3000, SAR, accepted, customer, 2026-08-23 00:00:00+00, 2026-08-23 00:00:00+00, 2026-09-01 22:31:11.647505+00).
+2026-09-01T22:31:16.1897190Z  2026-09-01 22:31:11.647 UTC [106] STATEMENT:  INSERT INTO negotiation_rounds (
+2026-09-01T22:31:16.1897673Z  	           id, thread_id, round_no, proposed_by, amount_minor, currency, state, resolved_by,
+2026-09-01T22:31:16.1898114Z  	           expires_at, responded_at
+2026-09-01T22:31:16.1898753Z  	         ) VALUES ($1, $2, 1, 'customer', 3000, 'SAR', 'accepted', 'customer', $3, $3)
+2026-09-01T22:31:16.1899360Z  2026-09-01 22:31:11.681 UTC [107] ERROR:  duplicate key value violates unique constraint "ux_negotiation_rounds_one_pending"
+2026-09-01T22:31:16.1900038Z  2026-09-01 22:31:11.681 UTC [107] DETAIL:  Key (thread_id)=(aaaaaaaa-0000-4000-8000-000000000001) already exists.
+2026-09-01T22:31:16.1900581Z  2026-09-01 22:31:11.681 UTC [107] STATEMENT:  INSERT INTO negotiation_rounds (
+2026-09-01T22:31:16.1901039Z  	           id, thread_id, round_no, proposed_by, amount_minor, currency, expires_at
+2026-09-01T22:31:16.1901764Z  	         ) VALUES ($1, $2, 2, 'driver', 3100, 'SAR', $3)
+2026-09-01T22:31:16.1902622Z  2026-09-01 22:31:11.715 UTC [108] ERROR:  duplicate key value violates unique constraint "ux_negotiation_rounds_one_accepted"
+2026-09-01T22:31:16.1903728Z  2026-09-01 22:31:11.715 UTC [108] DETAIL:  Key (thread_id)=(aaaaaaaa-0000-4000-8000-000000000001) already exists.
+2026-09-01T22:31:16.1904584Z  2026-09-01 22:31:11.715 UTC [108] STATEMENT:  INSERT INTO negotiation_rounds (
+2026-09-01T22:31:16.1905364Z  	           id, thread_id, round_no, proposed_by, amount_minor, currency, state, resolved_by,
+2026-09-01T22:31:16.1905938Z  	           expires_at, responded_at
+2026-09-01T22:31:16.1906294Z  	         ) VALUES ($1, $2, 2, 'driver', 3100, 'SAR', 'accepted', 'customer', $3, $3)
+2026-09-01T22:31:16.1906874Z  2026-09-01 22:31:11.749 UTC [109] ERROR:  duplicate key value violates unique constraint "ux_negotiation_messages_thread_seq"
+2026-09-01T22:31:16.1907604Z  2026-09-01 22:31:11.749 UTC [109] DETAIL:  Key (thread_id, sequence_no)=(aaaaaaaa-0000-4000-8000-000000000001, 1) already exists.
+2026-09-01T22:31:16.1908665Z  2026-09-01 22:31:11.749 UTC [109] STATEMENT:  INSERT INTO negotiation_messages (id, thread_id, sequence_no, author_role, system_code)
+2026-09-01T22:31:16.1909234Z  	         VALUES ($1, $2, 1, 'system', 'second')
+2026-09-01T22:31:16.1909831Z  2026-09-01 22:31:11.782 UTC [110] ERROR:  new row for relation "negotiation_messages" violates check constraint "ck_negotiation_messages_body_or_code"
+2026-09-01T22:31:16.1910900Z  2026-09-01 22:31:11.782 UTC [110] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, system, null, ar, null, null, null, null, 2026-09-01 22:31:11.782571+00).
+2026-09-01T22:31:16.1911855Z  2026-09-01 22:31:11.782 UTC [110] STATEMENT:  INSERT INTO negotiation_messages (id, thread_id, sequence_no, author_role)
+2026-09-01T22:31:16.1912351Z  	         VALUES ($1, $2, 1, 'system')
+2026-09-01T22:31:16.1913098Z  2026-09-01 22:31:11.816 UTC [111] ERROR:  new row for relation "negotiation_messages" violates check constraint "ck_negotiation_messages_redaction"
+2026-09-01T22:31:16.1914394Z  2026-09-01 22:31:11.816 UTC [111] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, customer, لا تحذفني, ar, null, null, 2026-08-23 00:00:00+00, null, 2026-09-01 22:31:11.816062+00).
+2026-09-01T22:31:16.1915364Z  2026-09-01 22:31:11.816 UTC [111] STATEMENT:  INSERT INTO negotiation_messages (
+2026-09-01T22:31:16.1915803Z  	           id, thread_id, sequence_no, author_role, body, redacted_at
+2026-09-01T22:31:16.1916198Z  	         ) VALUES ($1, $2, 1, 'customer', 'لا تحذفني', $3)
+2026-09-01T22:31:16.1916756Z  2026-09-01 22:31:11.850 UTC [112] ERROR:  duplicate key value violates unique constraint "ux_negotiation_agreements_order_driver"
+2026-09-01T22:31:16.1917512Z  2026-09-01 22:31:11.850 UTC [112] DETAIL:  Key (order_public_id, driver_public_id)=(ORD-0000000001, WS-0000000003) already exists.
+2026-09-01T22:31:16.1918122Z  2026-09-01 22:31:11.850 UTC [112] STATEMENT:  INSERT INTO negotiation_agreements (
+2026-09-01T22:31:16.1918879Z  	           thread_id, order_public_id, driver_public_id, round_no, amount_minor, currency,
+2026-09-01T22:31:16.1919373Z  	           accepted_by, policy_version, agreed_at, next_handoff_at
+2026-09-01T22:31:16.1919759Z  	         ) VALUES ($1, $2, $3, 1, 3100, 'SAR', 'customer', 1, $4, $4)
+2026-09-01T22:31:16.1920415Z  2026-09-01 22:31:11.896 UTC [113] ERROR:  new row for relation "negotiation_agreements" violates check constraint "ck_negotiation_agreements_handed_off_at"
+2026-09-01T22:31:16.1921636Z  2026-09-01 22:31:11.896 UTC [113] DETAIL:  Failing row contains (aaaaaaaa-0000-4000-8000-000000000001, ORD-1000000001, WS-1000000003, 1, 3000, SAR, driver, 1, 2026-08-23 00:00:00+00, handed_off, 0, null, null, null, 2026-09-01 22:31:11.896024+00, 2026-09-01 22:31:11.896024+00).
+2026-09-01T22:31:16.1922633Z  2026-09-01 22:31:11.896 UTC [113] STATEMENT:  INSERT INTO negotiation_agreements (
+2026-09-01T22:31:16.1923122Z  	           thread_id, order_public_id, driver_public_id, round_no, amount_minor, currency,
+2026-09-01T22:31:16.1923590Z  	           accepted_by, policy_version, agreed_at, handoff_state
+2026-09-01T22:31:16.1923985Z  	         ) VALUES ($1, $2, $3, 1, 3000, 'SAR', 'driver', 1, $4, 'handed_off')
+2026-09-01T22:31:16.1924653Z  2026-09-01 22:31:11.927 UTC [114] ERROR:  new row for relation "negotiation_agreements" violates check constraint "ck_negotiation_agreements_terminal_no_retry"
+2026-09-01T22:31:16.1925941Z  2026-09-01 22:31:11.927 UTC [114] DETAIL:  Failing row contains (aaaaaaaa-0000-4000-8000-000000000001, ORD-1000000001, WS-1000000003, 1, 3000, SAR, driver, 1, 2026-08-23 00:00:00+00, rejected, 0, null, 2026-08-23 00:00:00+00, order_rejected, 2026-09-01 22:31:11.927157+00, 2026-09-01 22:31:11.927157+00).
+2026-09-01T22:31:16.1926974Z  2026-09-01 22:31:11.927 UTC [114] STATEMENT:  INSERT INTO negotiation_agreements (
+2026-09-01T22:31:16.1927458Z  	           thread_id, order_public_id, driver_public_id, round_no, amount_minor, currency,
+2026-09-01T22:31:16.1928007Z  	           accepted_by, policy_version, agreed_at, handoff_state, next_handoff_at, last_error_code
+2026-09-01T22:31:16.1928797Z  	         ) VALUES ($1, $2, $3, 1, 3000, 'SAR', 'driver', 1, $4, 'rejected', $4, 'order_rejected')
+2026-09-01T22:31:16.1929506Z  2026-09-01 22:31:11.962 UTC [115] ERROR:  new row for relation "negotiation_agreements" violates check constraint "ck_negotiation_agreements_failure_named"
+2026-09-01T22:31:16.1930692Z  2026-09-01 22:31:11.962 UTC [115] DETAIL:  Failing row contains (aaaaaaaa-0000-4000-8000-000000000001, ORD-1000000001, WS-1000000003, 1, 3000, SAR, driver, 1, 2026-08-23 00:00:00+00, rejected, 0, null, null, null, 2026-09-01 22:31:11.962502+00, 2026-09-01 22:31:11.962502+00).
+2026-09-01T22:31:16.1931653Z  2026-09-01 22:31:11.962 UTC [115] STATEMENT:  INSERT INTO negotiation_agreements (
+2026-09-01T22:31:16.1932284Z  	           thread_id, order_public_id, driver_public_id, round_no, amount_minor, currency,
+2026-09-01T22:31:16.1932747Z  	           accepted_by, policy_version, agreed_at, handoff_state
+2026-09-01T22:31:16.1933248Z  	         ) VALUES ($1, $2, $3, 1, 3000, 'SAR', 'driver', 1, $4, 'rejected')
+2026-09-01T22:31:16.1933820Z  2026-09-01 22:31:12.214 UTC [116] ERROR:  duplicate key value violates unique constraint "ux_negotiation_price_handoffs_attempt"
+2026-09-01T22:31:16.1934546Z  2026-09-01 22:31:12.214 UTC [116] DETAIL:  Key (thread_id, attempt_no)=(aaaaaaaa-0000-4000-8000-000000000001, 1) already exists.
+2026-09-01T22:31:16.1935155Z  2026-09-01 22:31:12.214 UTC [116] STATEMENT:  INSERT INTO negotiation_price_handoffs (
+2026-09-01T22:31:16.1935657Z  	           id, thread_id, attempt_no, amount_minor, currency, requested_at
+2026-09-01T22:31:16.1936031Z  	         ) VALUES ($1, $2, 1, 3000, 'SAR', $3)
+2026-09-01T22:31:16.1936660Z  2026-09-01 22:31:12.246 UTC [117] ERROR:  new row for relation "negotiation_price_handoffs" violates check constraint "ck_negotiation_price_handoffs_completion"
+2026-09-01T22:31:16.1937740Z  2026-09-01 22:31:12.246 UTC [117] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, 3000, SAR, 2026-08-23 00:00:00+00, accepted, null, null, null).
+2026-09-01T22:31:16.1938768Z  2026-09-01 22:31:12.246 UTC [117] STATEMENT:  INSERT INTO negotiation_price_handoffs (
+2026-09-01T22:31:16.1939262Z  	           id, thread_id, attempt_no, amount_minor, currency, requested_at, outcome
+2026-09-01T22:31:16.1939678Z  	         ) VALUES ($1, $2, 1, 3000, 'SAR', $3, 'accepted')
+2026-09-01T22:31:16.1940329Z  2026-09-01 22:31:12.281 UTC [118] ERROR:  new row for relation "negotiation_price_handoffs" violates check constraint "ck_negotiation_price_handoffs_failure_named"
+2026-09-01T22:31:16.1941451Z  2026-09-01 22:31:12.281 UTC [118] DETAIL:  Failing row contains (00000000-0000-4000-8000-000000000010, aaaaaaaa-0000-4000-8000-000000000001, 1, 3000, SAR, 2026-08-23 00:00:00+00, rejected, null, null, 2026-08-23 00:00:00+00).
+2026-09-01T22:31:16.1942335Z  2026-09-01 22:31:12.281 UTC [118] STATEMENT:  INSERT INTO negotiation_price_handoffs (
+2026-09-01T22:31:16.1942867Z  	           id, thread_id, attempt_no, amount_minor, currency, requested_at, outcome, completed_at
+2026-09-01T22:31:16.1943331Z  	         ) VALUES ($1, $2, 1, 3000, 'SAR', $3, 'rejected', $3)
+2026-09-01T22:31:16.1943659Z  Data page checksums are disabled.
+2026-09-01T22:31:16.1943922Z  
+2026-09-01T22:31:16.1944228Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-09-01T22:31:16.1944621Z  creating subdirectories ... ok
+2026-09-01T22:31:16.1944943Z  selecting dynamic shared memory implementation ... posix
+2026-09-01T22:31:16.1945292Z  selecting default max_connections ... 100
+2026-09-01T22:31:16.1945592Z  selecting default shared_buffers ... 128MB
+2026-09-01T22:31:16.1945894Z  selecting default time zone ... Etc/UTC
+2026-09-01T22:31:16.1946192Z  creating configuration files ... ok
+2026-09-01T22:31:16.1946477Z  running bootstrap script ... ok
+2026-09-01T22:31:16.1946776Z  performing post-bootstrap initialization ... ok
+2026-09-01T22:31:16.1947091Z  syncing data to disk ... ok
+2026-09-01T22:31:16.1947324Z  
+2026-09-01T22:31:16.1947507Z  
+2026-09-01T22:31:16.1947750Z  Success. You can now start the database server using:
+2026-09-01T22:31:16.1948048Z  
+2026-09-01T22:31:16.1948467Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-09-01T22:31:16.1948812Z  
+2026-09-01T22:31:16.1949453Z  waiting for server to start....2026-09-01 22:30:54.140 UTC [49] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:31:16.1950299Z  2026-09-01 22:30:54.140 UTC [49] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:31:16.1950855Z  2026-09-01 22:30:54.142 UTC [52] LOG:  database system was shut down at 2026-09-01 22:30:54 UTC
+2026-09-01T22:31:16.1951522Z  2026-09-01 22:30:54.146 UTC [49] LOG:  database system is ready to accept connections
+2026-09-01T22:31:16.1951898Z   done
+2026-09-01T22:31:16.1952271Z  server started
+2026-09-01T22:31:16.1952488Z  CREATE DATABASE
+2026-09-01T22:31:16.1952692Z  
+2026-09-01T22:31:16.1952872Z  
+2026-09-01T22:31:16.1953189Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-09-01T22:31:16.1953573Z  
+2026-09-01T22:31:16.1953922Z  waiting for server to shut down...2026-09-01 22:30:54.324 UTC [49] LOG:  received fast shutdown request
+2026-09-01T22:31:16.1954433Z  .2026-09-01 22:30:54.324 UTC [49] LOG:  aborting any active transactions
+2026-09-01T22:31:16.1955023Z  2026-09-01 22:30:54.328 UTC [49] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
+2026-09-01T22:31:16.1955543Z  2026-09-01 22:30:54.328 UTC [50] LOG:  shutting down
+2026-09-01T22:31:16.1955927Z  2026-09-01 22:30:54.328 UTC [50] LOG:  checkpoint starting: shutdown immediate
+2026-09-01T22:31:16.1956886Z  2026-09-01 22:30:54.344 UTC [50] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.013 s, sync=0.002 s, total=0.016 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4239 kB, estimate=4239 kB
+2026-09-01T22:31:16.1957787Z  2026-09-01 22:30:54.350 UTC [49] LOG:  database system is shut down
+2026-09-01T22:31:16.1958110Z   done
+2026-09-01T22:31:16.1958474Z  server stopped
+2026-09-01T22:31:16.1958683Z  
+2026-09-01T22:31:16.1958923Z  PostgreSQL init process complete; ready for start up.
+2026-09-01T22:31:16.1959242Z  
+2026-09-01T22:31:16.1963028Z Stop and remove container: af56bcfa0e1c45e183d9615e210d31e0_postgres15_4c6daf
+2026-09-01T22:31:16.1964316Z ##[command]/usr/bin/docker rm --force 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:31:16.3087187Z 278e6ccb61d53db0ccbf31ac7b4d5b59b6ecc332b07932ae7c4c6d99a4592661
+2026-09-01T22:31:16.3120397Z Remove container network: github_network_d4ba268cc58a498e8238a665393ab703
+2026-09-01T22:31:16.3126523Z ##[command]/usr/bin/docker network rm github_network_d4ba268cc58a498e8238a665393ab703
+2026-09-01T22:31:16.3923394Z github_network_d4ba268cc58a498e8238a665393ab703
+2026-09-01T22:31:16.4002995Z Cleaning up orphan processes
+2026-09-01T22:31:16.4320191Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

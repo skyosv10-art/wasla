@@ -1,0 +1,65 @@
+{
+  "total_count": 3,
+  "artifacts": [
+    {
+      "id": 9796874204,
+      "node_id": "MDg6QXJ0aWZhY3Q5Nzk2ODc0MjA0",
+      "name": "typecheck-log",
+      "size_in_bytes": 646,
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796874204",
+      "archive_download_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796874204/zip",
+      "expired": false,
+      "digest": "sha256:cd4db1b035a674b5cc45aaa99875c9d87ffd49551ae7e3c5ba31faa33d0d85e1",
+      "created_at": "2026-09-01T10:44:24Z",
+      "updated_at": "2026-09-01T10:44:24Z",
+      "expires_at": "2026-10-01T10:44:24Z",
+      "workflow_run": {
+        "id": 33498726052,
+        "repository_id": 1352934013,
+        "head_repository_id": 1352934013,
+        "head_branch": "main",
+        "head_sha": "fce1f054083965ff533be284948e4e1ecce6ec88"
+      }
+    },
+    {
+      "id": 9796848525,
+      "node_id": "MDg6QXJ0aWZhY3Q5Nzk2ODQ4NTI1",
+      "name": "test-log",
+      "size_in_bytes": 9048,
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796848525",
+      "archive_download_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796848525/zip",
+      "expired": false,
+      "digest": "sha256:ab1c2f5ae783f6cc7698624444bd521da9a65a7f7898d47a9be7d681eee24faa",
+      "created_at": "2026-09-01T10:43:38Z",
+      "updated_at": "2026-09-01T10:43:38Z",
+      "expires_at": "2026-10-01T10:43:37Z",
+      "workflow_run": {
+        "id": 33498726052,
+        "repository_id": 1352934013,
+        "head_repository_id": 1352934013,
+        "head_branch": "main",
+        "head_sha": "fce1f054083965ff533be284948e4e1ecce6ec88"
+      }
+    },
+    {
+      "id": 9796825303,
+      "node_id": "MDg6QXJ0aWZhY3Q5Nzk2ODI1MzAz",
+      "name": "verify-report",
+      "size_in_bytes": 1196,
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796825303",
+      "archive_download_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/artifacts/9796825303/zip",
+      "expired": false,
+      "digest": "sha256:9277ffa1f1a2e8c1026631cf9ef7f34755b3513de401cd0e45f1030640aa2155",
+      "created_at": "2026-09-01T10:42:55Z",
+      "updated_at": "2026-09-01T10:42:55Z",
+      "expires_at": "2026-10-01T10:42:54Z",
+      "workflow_run": {
+        "id": 33498726052,
+        "repository_id": 1352934013,
+        "head_repository_id": 1352934013,
+        "head_branch": "main",
+        "head_sha": "fce1f054083965ff533be284948e4e1ecce6ec88"
+      }
+    }
+  ]
+}

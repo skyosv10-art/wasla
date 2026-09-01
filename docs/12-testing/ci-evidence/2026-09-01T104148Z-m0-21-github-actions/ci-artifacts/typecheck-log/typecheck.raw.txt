@@ -1,0 +1,85 @@
+Scope: 42 of 43 workspace projects
+packages/contracts/channel typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/customer typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/dispatch typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/driver typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/dispatch typecheck: Done
+packages/contracts/geography typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/channel typecheck: Done
+packages/contracts/identity typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/customer typecheck: Done
+packages/contracts/marketplace typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/driver typecheck: Done
+packages/contracts/matching typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/geography typecheck: Done
+packages/contracts/negotiation typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/identity typecheck: Done
+packages/contracts/order typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/matching typecheck: Done
+packages/contracts/reputation typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/marketplace typecheck: Done
+packages/contracts/subscription typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/negotiation typecheck: Done
+packages/errors typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/order typecheck: Done
+packages/contracts/reputation typecheck: Done
+packages/contracts/subscription typecheck: Done
+packages/errors typecheck: Done
+packages/auth-sdk typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-core typecheck$ tsc -p tsconfig.json --noEmit
+services/customers typecheck$ tsc -p tsconfig.json --noEmit
+services/marketplace typecheck$ tsc -p tsconfig.json --noEmit
+packages/auth-sdk typecheck: Done
+services/negotiations typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-core typecheck: Done
+services/orders typecheck$ tsc -p tsconfig.json --noEmit
+services/customers typecheck: Done
+services/reputation typecheck$ tsc -p tsconfig.json --noEmit
+services/marketplace typecheck: Done
+services/subscriptions typecheck$ tsc -p tsconfig.json --noEmit
+services/negotiations typecheck: Done
+services/orders typecheck: Done
+services/reputation typecheck: Done
+services/subscriptions typecheck: Done
+packages/channel-postgres typecheck$ tsc -p tsconfig.json --noEmit
+packages/marketplace-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/reputation-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/service-auth typecheck$ tsc -p tsconfig.json --noEmit
+packages/service-auth typecheck: Done
+packages/subscription-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-postgres typecheck: Done
+packages/telegram-adapter typecheck$ tsc -p tsconfig.json --noEmit
+packages/marketplace-e2e typecheck: Done
+services/identity typecheck$ tsc -p tsconfig.json --noEmit
+packages/reputation-e2e typecheck: Done
+packages/telegram-adapter typecheck: Done
+packages/subscription-e2e typecheck: Done
+services/identity typecheck: Done
+packages/bot-runtime typecheck$ tsc -p tsconfig.json --noEmit
+services/drivers typecheck$ tsc -p tsconfig.json --noEmit
+services/dispatch typecheck$ tsc -p tsconfig.json --noEmit
+services/geography typecheck$ tsc -p tsconfig.json --noEmit
+packages/bot-runtime typecheck: Done
+services/matching typecheck$ tsc -p tsconfig.json --noEmit
+services/geography typecheck: Done
+services/drivers typecheck: Done
+services/dispatch typecheck: Done
+services/matching typecheck: Done
+bots/customer-bot typecheck$ tsc -p tsconfig.json --noEmit
+bots/driver-bot typecheck$ tsc -p tsconfig.json --noEmit
+bots/partner-bot typecheck$ tsc -p tsconfig.json --noEmit
+packages/dispatch-e2e typecheck$ tsc -p tsconfig.json --noEmit
+bots/partner-bot typecheck: Done
+packages/driver-e2e typecheck$ tsc -p tsconfig.json --noEmit
+bots/customer-bot typecheck: Done
+packages/negotiation-e2e typecheck$ tsc -p tsconfig.json --noEmit
+bots/driver-bot typecheck: Done
+packages/order-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/dispatch-e2e typecheck: Done
+packages/order-e2e typecheck: Done
+packages/driver-e2e typecheck: Done
+packages/negotiation-e2e typecheck: Done
+packages/channel-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/customer-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/customer-e2e typecheck: Done
+packages/channel-e2e typecheck: Done

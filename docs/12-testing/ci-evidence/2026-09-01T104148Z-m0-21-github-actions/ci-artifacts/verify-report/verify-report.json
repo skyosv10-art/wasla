@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-09-01T10:42:54Z",
+  "commit": "fce1f054083965ff533be284948e4e1ecce6ec88",
+  "branch": "main",
+  "overall": "passed",
+  "checks": [
+    {
+      "name": "بنيةُ المستودعِ والوثائقُ الحاكمة",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "name": "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "name": "بوّابةُ الحوكمة (12 فحصاً)",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "name": "حزمةُ اختبارِ الحوكمة (ترفض فعلاً لا شكلاً)",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "name": "الأنواعُ (pnpm -r typecheck)",
+      "status": "skipped",
+      "exit_code": 0
+    },
+    {
+      "name": "الاختبارات (pnpm -r test)",
+      "status": "skipped",
+      "exit_code": 0
+    }
+  ],
+  "reference": "docs/00-rules/VERIFY_COMMAND.md"
+}

@@ -1,0 +1,151 @@
+﻿2026-09-01T10:41:52.0818952Z Current runner version: '2.337.0'
+2026-09-01T10:41:52.0842340Z ##[group]Runner Image Provisioner
+2026-09-01T10:41:52.0843107Z Hosted Compute Agent
+2026-09-01T10:41:52.0843676Z Version: 20260819.586
+2026-09-01T10:41:52.0844287Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-01T10:41:52.0844961Z Build Date: 2026-08-18T23:20:18Z
+2026-09-01T10:41:52.0845631Z Worker ID: {987aec93-1fb3-4a7a-b262-d6dde2319994}
+2026-09-01T10:41:52.0846287Z Azure Region: westcentralus
+2026-09-01T10:41:52.0846848Z ##[endgroup]
+2026-09-01T10:41:52.0848225Z ##[group]Operating System
+2026-09-01T10:41:52.0848859Z Ubuntu
+2026-09-01T10:41:52.0849378Z 24.04.4
+2026-09-01T10:41:52.0849846Z LTS
+2026-09-01T10:41:52.0850304Z ##[endgroup]
+2026-09-01T10:41:52.0850868Z ##[group]Runner Image
+2026-09-01T10:41:52.0851412Z Image: ubuntu-24.04
+2026-09-01T10:41:52.0852409Z Version: 20260823.283.1
+2026-09-01T10:41:52.0853529Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-01T10:41:52.0854973Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+2026-09-01T10:41:52.0855826Z ##[endgroup]
+2026-09-01T10:41:52.0856861Z ##[group]GITHUB_TOKEN Permissions
+2026-09-01T10:41:52.0858680Z Contents: read
+2026-09-01T10:41:52.0859315Z Metadata: read
+2026-09-01T10:41:52.0859827Z ##[endgroup]
+2026-09-01T10:41:52.0862183Z Secret source: Actions
+2026-09-01T10:41:52.0863210Z Prepare workflow directory
+2026-09-01T10:41:52.1364177Z Prepare all required actions
+2026-09-01T10:41:52.1434540Z Getting action download info
+2026-09-01T10:41:52.5452480Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-01T10:41:52.7045670Z Complete job name: doc-coverage
+2026-09-01T10:41:52.7702631Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:41:52.7710976Z ##[group]Run actions/checkout@v4
+2026-09-01T10:41:52.7711879Z with:
+2026-09-01T10:41:52.7712348Z   ref: main
+2026-09-01T10:41:52.7712846Z   fetch-depth: 0
+2026-09-01T10:41:52.7713377Z   repository: skyosv10-art/wasla
+2026-09-01T10:41:52.7717332Z   token: ***
+2026-09-01T10:41:52.7717819Z   ssh-strict: true
+2026-09-01T10:41:52.7718299Z   ssh-user: git
+2026-09-01T10:41:52.7718821Z   persist-credentials: true
+2026-09-01T10:41:52.7719366Z   clean: true
+2026-09-01T10:41:52.7719847Z   sparse-checkout-cone-mode: true
+2026-09-01T10:41:52.7720474Z   fetch-tags: false
+2026-09-01T10:41:52.7720956Z   show-progress: true
+2026-09-01T10:41:52.7721584Z   lfs: false
+2026-09-01T10:41:52.7722140Z   submodules: false
+2026-09-01T10:41:52.7722653Z   set-safe-directory: true
+2026-09-01T10:41:52.7723206Z   allow-unsafe-pr-checkout: false
+2026-09-01T10:41:52.7724010Z env:
+2026-09-01T10:41:52.7724531Z   NODE_VERSION: 20.20.1
+2026-09-01T10:41:52.7725177Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:41:52.7725672Z ##[endgroup]
+2026-09-01T10:41:52.8866759Z Syncing repository: skyosv10-art/wasla
+2026-09-01T10:41:52.8870392Z ##[group]Getting Git version info
+2026-09-01T10:41:52.8872497Z Working directory is '/home/runner/work/wasla/wasla'
+2026-09-01T10:41:52.8875152Z [command]/usr/bin/git version
+2026-09-01T10:41:52.9024570Z git version 2.55.0
+2026-09-01T10:41:52.9062944Z ##[endgroup]
+2026-09-01T10:41:52.9079253Z Temporarily overriding HOME='/home/runner/work/_temp/ed2d040c-081f-43f2-9bce-a4c462ce9b10' before making global git config changes
+2026-09-01T10:41:52.9082473Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T10:41:52.9085033Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-09-01T10:41:52.9148875Z Deleting the contents of '/home/runner/work/wasla/wasla'
+2026-09-01T10:41:52.9151278Z ##[group]Initializing the repository
+2026-09-01T10:41:52.9153948Z [command]/usr/bin/git init /home/runner/work/wasla/wasla
+2026-09-01T10:41:52.9285009Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-01T10:41:52.9286531Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-01T10:41:52.9287988Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-01T10:41:52.9289465Z hint: call:
+2026-09-01T10:41:52.9296792Z hint:
+2026-09-01T10:41:52.9297479Z hint: 	git config --global init.defaultBranch <name>
+2026-09-01T10:41:52.9298244Z hint:
+2026-09-01T10:41:52.9298878Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-01T10:41:52.9299852Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-01T10:41:52.9300629Z hint:
+2026-09-01T10:41:52.9301093Z hint: 	git branch -m <name>
+2026-09-01T10:41:52.9303949Z hint:
+2026-09-01T10:41:52.9305023Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-01T10:41:52.9306725Z Initialized empty Git repository in /home/runner/work/wasla/wasla/.git/
+2026-09-01T10:41:52.9336600Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-09-01T10:41:52.9364405Z ##[endgroup]
+2026-09-01T10:41:52.9366045Z ##[group]Disabling automatic garbage collection
+2026-09-01T10:41:52.9367441Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-01T10:41:52.9485464Z ##[endgroup]
+2026-09-01T10:41:52.9489040Z ##[group]Setting up auth
+2026-09-01T10:41:52.9491101Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T10:41:52.9523226Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T10:41:52.9925706Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T10:41:52.9970915Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T10:41:53.0196428Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T10:41:53.0223197Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T10:41:53.0399941Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-01T10:41:53.0430729Z ##[endgroup]
+2026-09-01T10:41:53.0432373Z ##[group]Fetching the repository
+2026-09-01T10:41:53.0440237Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-09-01T10:41:55.0915781Z From https://github.com/skyosv10-art/wasla
+2026-09-01T10:41:55.0917504Z  * [new branch]      chore/m0-14-closeout    -> origin/chore/m0-14-closeout
+2026-09-01T10:41:55.0919603Z  * [new branch]      chore/phase00-build-foundation -> origin/chore/phase00-build-foundation
+2026-09-01T10:41:55.0922661Z  * [new branch]      docs/identity-stack-adr -> origin/docs/identity-stack-adr
+2026-09-01T10:41:55.0924594Z  * [new branch]      docs/roadmap-post-merge -> origin/docs/roadmap-post-merge
+2026-09-01T10:41:55.0926595Z  * [new branch]      feat/m0-21-github-actions-ci -> origin/feat/m0-21-github-actions-ci
+2026-09-01T10:41:55.0929217Z  * [new branch]      feat/m1-02-telegram-session-verification -> origin/feat/m1-02-telegram-session-verification
+2026-09-01T10:41:55.0934900Z  * [new branch]      feat/m1-03-gap-closure  -> origin/feat/m1-03-gap-closure
+2026-09-01T10:41:55.0938857Z  * [new branch]      feat/phase01-identity-contracts -> origin/feat/phase01-identity-contracts
+2026-09-01T10:41:55.0944474Z  * [new branch]      fix/m0-02-drivers-conformance-zone-seed -> origin/fix/m0-02-drivers-conformance-zone-seed
+2026-09-01T10:41:55.0951081Z  * [new branch]      fix/m0-09-drizzle-constraint-assertions -> origin/fix/m0-09-drizzle-constraint-assertions
+2026-09-01T10:41:55.0956603Z  * [new branch]      fix/m0-10-eligibility-reasons-cardinality -> origin/fix/m0-10-eligibility-reasons-cardinality
+2026-09-01T10:41:55.0961314Z  * [new branch]      fix/m0-14-meaningful-docs-scope -> origin/fix/m0-14-meaningful-docs-scope
+2026-09-01T10:41:55.0966070Z  * [new branch]      fix/m0-15-meaningful-filter-parity -> origin/fix/m0-15-meaningful-filter-parity
+2026-09-01T10:41:55.0970606Z  * [new branch]      fix/phase00-ci-secret-scan -> origin/fix/phase00-ci-secret-scan
+2026-09-01T10:41:55.0973944Z  * [new branch]      main                    -> origin/main
+2026-09-01T10:41:55.0979724Z ##[endgroup]
+2026-09-01T10:41:55.0982485Z ##[group]Determining the checkout info
+2026-09-01T10:41:55.0983982Z [command]/usr/bin/git branch --list --remote origin/main
+2026-09-01T10:41:55.0986743Z   origin/main
+2026-09-01T10:41:55.0995892Z ##[endgroup]
+2026-09-01T10:41:55.0998347Z [command]/usr/bin/git sparse-checkout disable
+2026-09-01T10:41:55.1038363Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-01T10:41:55.1081248Z ##[group]Checking out the ref
+2026-09-01T10:41:55.1085331Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-01T10:41:55.1843804Z Switched to a new branch 'main'
+2026-09-01T10:41:55.1850191Z branch 'main' set up to track 'origin/main'.
+2026-09-01T10:41:55.1857879Z ##[endgroup]
+2026-09-01T10:41:55.1896309Z [command]/usr/bin/git log -1 --format=%H
+2026-09-01T10:41:55.1921940Z fce1f054083965ff533be284948e4e1ecce6ec88
+2026-09-01T10:41:55.2156111Z ##[group]Run TARGET="${GITHUB_BASE_REF:-main}"
+2026-09-01T10:41:55.2157763Z TARGET="${GITHUB_BASE_REF:-main}"
+2026-09-01T10:41:55.2159844Z git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
+2026-09-01T10:41:55.2162445Z bash scripts/checks/require-doc-update.sh "origin/$TARGET" HEAD
+2026-09-01T10:41:55.2190255Z shell: /usr/bin/bash -e {0}
+2026-09-01T10:41:55.2191445Z env:
+2026-09-01T10:41:55.2192500Z   NODE_VERSION: 20.20.1
+2026-09-01T10:41:55.2193589Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:41:55.2194631Z ##[endgroup]
+2026-09-01T10:41:56.0062520Z OK: لا توجد تغييرات في النطاق المحدد.
+2026-09-01T10:41:56.0203281Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:41:56.0204816Z Post job cleanup.
+2026-09-01T10:41:56.1122627Z [command]/usr/bin/git version
+2026-09-01T10:41:56.1157624Z git version 2.55.0
+2026-09-01T10:41:56.1232831Z Temporarily overriding HOME='/home/runner/work/_temp/23516b0f-e9d1-49e7-a5df-57431abb1391' before making global git config changes
+2026-09-01T10:41:56.1239646Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T10:41:56.1241349Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-09-01T10:41:56.1313200Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T10:41:56.1355930Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T10:41:56.1703398Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T10:41:56.1745202Z http.https://github.com/.extraheader
+2026-09-01T10:41:56.1763905Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-01T10:41:56.1814500Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T10:41:56.2224312Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T10:41:56.2271200Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T10:41:56.2681561Z Cleaning up orphan processes
+2026-09-01T10:41:56.2899087Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

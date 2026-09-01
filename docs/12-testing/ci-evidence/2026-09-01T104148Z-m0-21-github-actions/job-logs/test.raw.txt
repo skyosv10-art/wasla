@@ -1,0 +1,827 @@
+﻿2026-09-01T10:41:52.5116752Z Current runner version: '2.337.0'
+2026-09-01T10:41:52.5141860Z ##[group]Runner Image Provisioner
+2026-09-01T10:41:52.5142587Z Hosted Compute Agent
+2026-09-01T10:41:52.5143190Z Version: 20260819.586
+2026-09-01T10:41:52.5143712Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-01T10:41:52.5144336Z Build Date: 2026-08-18T23:20:18Z
+2026-09-01T10:41:52.5144906Z Worker ID: {662ab7e7-4aa6-4a8e-a1f4-d9e7789a9fc0}
+2026-09-01T10:41:52.5145488Z Azure Region: westus
+2026-09-01T10:41:52.5147013Z ##[endgroup]
+2026-09-01T10:41:52.5148892Z ##[group]Operating System
+2026-09-01T10:41:52.5149588Z Ubuntu
+2026-09-01T10:41:52.5150274Z 24.04.4
+2026-09-01T10:41:52.5150936Z LTS
+2026-09-01T10:41:52.5151566Z ##[endgroup]
+2026-09-01T10:41:52.5152196Z ##[group]Runner Image
+2026-09-01T10:41:52.5152837Z Image: ubuntu-24.04
+2026-09-01T10:41:52.5153541Z Version: 20260823.283.1
+2026-09-01T10:41:52.5155035Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-01T10:41:52.5156956Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+2026-09-01T10:41:52.5158258Z ##[endgroup]
+2026-09-01T10:41:52.5159286Z ##[group]GITHUB_TOKEN Permissions
+2026-09-01T10:41:52.5160981Z Contents: read
+2026-09-01T10:41:52.5161550Z Metadata: read
+2026-09-01T10:41:52.5162005Z ##[endgroup]
+2026-09-01T10:41:52.5163844Z Secret source: Actions
+2026-09-01T10:41:52.5164782Z Prepare workflow directory
+2026-09-01T10:41:52.5903578Z Prepare all required actions
+2026-09-01T10:41:52.5944164Z Getting action download info
+2026-09-01T10:41:52.9386743Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-01T10:41:53.4134177Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-09-01T10:41:54.0960656Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-09-01T10:41:54.4171640Z Complete job name: test
+2026-09-01T10:41:54.4932094Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:41:54.4941501Z ##[group]Run actions/checkout@v4
+2026-09-01T10:41:54.4942391Z with:
+2026-09-01T10:41:54.4942979Z   fetch-depth: 1
+2026-09-01T10:41:54.4943645Z   repository: skyosv10-art/wasla
+2026-09-01T10:41:54.4950230Z   token: ***
+2026-09-01T10:41:54.4950846Z   ssh-strict: true
+2026-09-01T10:41:54.4951473Z   ssh-user: git
+2026-09-01T10:41:54.4952106Z   persist-credentials: true
+2026-09-01T10:41:54.4952798Z   clean: true
+2026-09-01T10:41:54.4953435Z   sparse-checkout-cone-mode: true
+2026-09-01T10:41:54.4954199Z   fetch-tags: false
+2026-09-01T10:41:54.4954833Z   show-progress: true
+2026-09-01T10:41:54.4955475Z   lfs: false
+2026-09-01T10:41:54.4956112Z   submodules: false
+2026-09-01T10:41:54.4956780Z   set-safe-directory: true
+2026-09-01T10:41:54.4957503Z   allow-unsafe-pr-checkout: false
+2026-09-01T10:41:54.4958699Z env:
+2026-09-01T10:41:54.4959281Z   NODE_VERSION: 20.20.1
+2026-09-01T10:41:54.4959946Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:41:54.4960583Z ##[endgroup]
+2026-09-01T10:41:54.6614826Z Syncing repository: skyosv10-art/wasla
+2026-09-01T10:41:54.6618282Z ##[group]Getting Git version info
+2026-09-01T10:41:54.6621515Z Working directory is '/home/runner/work/wasla/wasla'
+2026-09-01T10:41:54.6623509Z [command]/usr/bin/git version
+2026-09-01T10:41:54.8869307Z git version 2.55.0
+2026-09-01T10:41:54.8878434Z ##[endgroup]
+2026-09-01T10:41:54.8883669Z Temporarily overriding HOME='/home/runner/work/_temp/5fc2efbc-d7aa-4be2-95b1-39d5362bccb7' before making global git config changes
+2026-09-01T10:41:54.8884703Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T10:41:54.8885475Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-09-01T10:41:54.9156344Z Deleting the contents of '/home/runner/work/wasla/wasla'
+2026-09-01T10:41:54.9160767Z ##[group]Initializing the repository
+2026-09-01T10:41:54.9165465Z [command]/usr/bin/git init /home/runner/work/wasla/wasla
+2026-09-01T10:41:54.9911722Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-01T10:41:54.9912915Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-01T10:41:54.9915374Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-01T10:41:54.9915861Z hint: call:
+2026-09-01T10:41:54.9916097Z hint:
+2026-09-01T10:41:54.9916449Z hint: 	git config --global init.defaultBranch <name>
+2026-09-01T10:41:54.9916810Z hint:
+2026-09-01T10:41:54.9917180Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-01T10:41:54.9918062Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-01T10:41:54.9918576Z hint:
+2026-09-01T10:41:54.9918852Z hint: 	git branch -m <name>
+2026-09-01T10:41:54.9919154Z hint:
+2026-09-01T10:41:54.9919550Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-01T10:41:54.9920158Z Initialized empty Git repository in /home/runner/work/wasla/wasla/.git/
+2026-09-01T10:41:54.9921521Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-09-01T10:41:55.0083275Z ##[endgroup]
+2026-09-01T10:41:55.0084228Z ##[group]Disabling automatic garbage collection
+2026-09-01T10:41:55.0086579Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-01T10:41:55.0123678Z ##[endgroup]
+2026-09-01T10:41:55.0124587Z ##[group]Setting up auth
+2026-09-01T10:41:55.0129859Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T10:41:55.0164363Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T10:41:55.0806053Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T10:41:55.0809276Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T10:41:55.0985154Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T10:41:55.1013165Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T10:41:55.1228113Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-01T10:41:55.1266809Z ##[endgroup]
+2026-09-01T10:41:55.1268675Z ##[group]Fetching the repository
+2026-09-01T10:41:55.1278016Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +fce1f054083965ff533be284948e4e1ecce6ec88:refs/remotes/origin/main
+2026-09-01T10:41:56.3689169Z From https://github.com/skyosv10-art/wasla
+2026-09-01T10:41:56.3691178Z  * [new ref]         fce1f054083965ff533be284948e4e1ecce6ec88 -> origin/main
+2026-09-01T10:41:56.3708581Z ##[endgroup]
+2026-09-01T10:41:56.3709096Z ##[group]Determining the checkout info
+2026-09-01T10:41:56.3709668Z ##[endgroup]
+2026-09-01T10:41:56.3710038Z [command]/usr/bin/git sparse-checkout disable
+2026-09-01T10:41:56.3743489Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-01T10:41:56.3788953Z ##[group]Checking out the ref
+2026-09-01T10:41:56.3798630Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-01T10:41:56.4615285Z Switched to a new branch 'main'
+2026-09-01T10:41:56.4629528Z branch 'main' set up to track 'origin/main'.
+2026-09-01T10:41:56.4631802Z ##[endgroup]
+2026-09-01T10:41:56.4672909Z [command]/usr/bin/git log -1 --format=%H
+2026-09-01T10:41:56.4700633Z fce1f054083965ff533be284948e4e1ecce6ec88
+2026-09-01T10:41:56.4940844Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:41:56.4942266Z ##[group]Run actions/setup-node@v4
+2026-09-01T10:41:56.4942482Z with:
+2026-09-01T10:41:56.4942655Z   node-version: 20.20.1
+2026-09-01T10:41:56.4942839Z   always-auth: false
+2026-09-01T10:41:56.4943017Z   check-latest: false
+2026-09-01T10:41:56.4944940Z   token: ***
+2026-09-01T10:41:56.4945100Z env:
+2026-09-01T10:41:56.4945260Z   NODE_VERSION: 20.20.1
+2026-09-01T10:41:56.5011345Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:41:56.5011756Z ##[endgroup]
+2026-09-01T10:41:56.6277792Z Attempting to download 20.20.1...
+2026-09-01T10:41:56.6378497Z (node:1927) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-01T10:41:56.6380339Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-01T10:41:57.2915831Z Acquiring 20.20.1 - x64 from https://github.com/actions/node-versions/releases/download/20.20.1-22746716736/node-20.20.1-linux-x64.tar.gz
+2026-09-01T10:41:57.6988584Z Extracting ...
+2026-09-01T10:41:57.7080706Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/b46c7b50-58c6-4391-bbf8-c6107d7faefd -f /home/runner/work/_temp/52cf8696-9aaa-4450-ae97-36f512f10db5
+2026-09-01T10:41:58.6454881Z Adding to the cache ...
+2026-09-01T10:42:05.7073520Z ##[group]Environment details
+2026-09-01T10:42:06.0139019Z node: v20.20.1
+2026-09-01T10:42:06.0139575Z npm: 10.8.2
+2026-09-01T10:42:06.0139940Z yarn: 1.22.22
+2026-09-01T10:42:06.0140818Z ##[endgroup]
+2026-09-01T10:42:06.0328279Z ##[group]Run corepack enable
+2026-09-01T10:42:06.0328591Z corepack enable
+2026-09-01T10:42:06.0328884Z corepack prepare "pnpm@${PNPM_VERSION}" --activate
+2026-09-01T10:42:06.0329196Z echo "node   $(node --version)"
+2026-09-01T10:42:06.0329449Z echo "pnpm   $(pnpm --version)"
+2026-09-01T10:42:06.0369604Z shell: /usr/bin/bash -e {0}
+2026-09-01T10:42:06.0369930Z env:
+2026-09-01T10:42:06.0370163Z   NODE_VERSION: 20.20.1
+2026-09-01T10:42:06.0370422Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:42:06.0370674Z ##[endgroup]
+2026-09-01T10:42:06.1556319Z Preparing pnpm@9.15.9 for immediate activation...
+2026-09-01T10:42:07.0276168Z node   v20.20.1
+2026-09-01T10:42:07.3852430Z pnpm   9.15.9
+2026-09-01T10:42:07.3883992Z ##[group]Run pnpm install --frozen-lockfile
+2026-09-01T10:42:07.3884302Z pnpm install --frozen-lockfile
+2026-09-01T10:42:07.3921571Z shell: /usr/bin/bash -e {0}
+2026-09-01T10:42:07.3921783Z env:
+2026-09-01T10:42:07.3921949Z   NODE_VERSION: 20.20.1
+2026-09-01T10:42:07.3922135Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:42:07.3922315Z ##[endgroup]
+2026-09-01T10:42:07.7156100Z Scope: all 43 workspace projects
+2026-09-01T10:42:07.7762021Z Lockfile is up to date, resolution step is skipped
+2026-09-01T10:42:07.8109094Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-09-01T10:42:07.8819110Z Packages: +164
+2026-09-01T10:42:07.8851426Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-09-01T10:42:08.8153762Z Progress: resolved 164, reused 0, downloaded 57, added 45
+2026-09-01T10:42:09.8178945Z Progress: resolved 164, reused 0, downloaded 146, added 131
+2026-09-01T10:42:10.1119290Z Progress: resolved 164, reused 0, downloaded 164, added 164, done
+2026-09-01T10:42:10.3138519Z .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-09-01T10:42:10.3698106Z .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-09-01T10:42:10.8634511Z 
+2026-09-01T10:42:10.8635250Z devDependencies:
+2026-09-01T10:42:10.8640207Z + json-schema-to-typescript 15.0.4
+2026-09-01T10:42:10.8640900Z + openapi-typescript 7.13.0
+2026-09-01T10:42:10.8641987Z + typescript 5.9.3
+2026-09-01T10:42:10.8642492Z + vitest 3.2.7
+2026-09-01T10:42:10.8643159Z 
+2026-09-01T10:42:11.1477404Z Done in 3.6s using pnpm v9.15.9
+2026-09-01T10:42:11.1634242Z ##[group]Run pnpm -r run test 2>&1 | tee test.log
+2026-09-01T10:42:11.1634744Z pnpm -r run test 2>&1 | tee test.log
+2026-09-01T10:42:11.1688607Z shell: /usr/bin/bash -e {0}
+2026-09-01T10:42:11.1688939Z env:
+2026-09-01T10:42:11.1689194Z   NODE_VERSION: 20.20.1
+2026-09-01T10:42:11.1689500Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:42:11.1689785Z ##[endgroup]
+2026-09-01T10:42:11.6234370Z Scope: 42 of 43 workspace projects
+2026-09-01T10:42:11.6294697Z packages/contracts/channel test$ vitest run
+2026-09-01T10:42:11.6709408Z packages/contracts/customer test$ vitest run
+2026-09-01T10:42:11.6728685Z packages/contracts/dispatch test$ vitest run
+2026-09-01T10:42:11.6907889Z packages/contracts/driver test$ vitest run
+2026-09-01T10:42:12.4726266Z packages/contracts/customer test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/customer
+2026-09-01T10:42:12.8512594Z packages/contracts/driver test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/driver
+2026-09-01T10:42:12.8538900Z packages/contracts/channel test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/channel
+2026-09-01T10:42:12.9309996Z packages/contracts/dispatch test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/dispatch
+2026-09-01T10:42:13.6479391Z packages/contracts/customer test:  ✓ src/__tests__/contracts.test.ts (29 tests) 38ms
+2026-09-01T10:42:13.8943608Z packages/contracts/channel test:  ✓ src/__tests__/events.test.ts (11 tests) 17ms
+2026-09-01T10:42:13.9171680Z packages/contracts/driver test:  ✓ src/__tests__/contracts.test.ts (13 tests) 39ms
+2026-09-01T10:42:13.9770053Z packages/contracts/dispatch test:  ✓ src/__tests__/contracts.test.ts (9 tests) 25ms
+2026-09-01T10:42:14.4006765Z packages/contracts/customer test:  ✓ src/__tests__/events.test.ts (13 tests) 54ms
+2026-09-01T10:42:14.4172434Z packages/contracts/channel test:  ✓ src/__tests__/contracts.test.ts (13 tests) 8ms
+2026-09-01T10:42:14.4455139Z packages/contracts/customer test:  Test Files  2 passed (2)
+2026-09-01T10:42:14.4529732Z packages/contracts/customer test:       Tests  42 passed (42)
+2026-09-01T10:42:14.4546232Z packages/contracts/customer test:    Start at  10:42:12
+2026-09-01T10:42:14.4548876Z packages/contracts/customer test:    Duration  2.03s (transform 443ms, setup 0ms, collect 491ms, tests 92ms, environment 1ms, prepare 560ms)
+2026-09-01T10:42:14.5012329Z packages/contracts/driver test:  ✓ src/__tests__/events.test.ts (10 tests) 40ms
+2026-09-01T10:42:14.6424149Z packages/contracts/dispatch test:  ✓ src/__tests__/events.test.ts (4 tests) 50ms
+2026-09-01T10:42:14.7769524Z packages/contracts/customer test: Done
+2026-09-01T10:42:14.7851986Z packages/contracts/geography test$ vitest run
+2026-09-01T10:42:14.9796937Z packages/contracts/channel test:  ✓ src/__tests__/errors.test.ts (10 tests) 18ms
+2026-09-01T10:42:15.0161064Z packages/contracts/channel test:  Test Files  3 passed (3)
+2026-09-01T10:42:15.0233465Z packages/contracts/channel test:       Tests  34 passed (34)
+2026-09-01T10:42:15.0304526Z packages/contracts/channel test:    Start at  10:42:12
+2026-09-01T10:42:15.0352813Z packages/contracts/channel test:    Duration  2.18s (transform 347ms, setup 0ms, collect 389ms, tests 43ms, environment 3ms, prepare 742ms)
+2026-09-01T10:42:15.0854769Z packages/contracts/dispatch test:  ✓ src/__tests__/boundary.test.ts (4 tests) 15ms
+2026-09-01T10:42:15.1706078Z packages/contracts/driver test:  ✓ src/__tests__/schema.test.ts (29 tests) 24ms
+2026-09-01T10:42:15.2538278Z packages/contracts/channel test: Done
+2026-09-01T10:42:15.2619350Z packages/contracts/identity test$ vitest run
+2026-09-01T10:42:15.7054684Z packages/contracts/geography test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/geography
+2026-09-01T10:42:15.7182007Z packages/contracts/dispatch test:  ✓ src/__tests__/schema.test.ts (5 tests) 8ms
+2026-09-01T10:42:15.7569531Z packages/contracts/dispatch test:  Test Files  4 passed (4)
+2026-09-01T10:42:15.7664729Z packages/contracts/dispatch test:       Tests  22 passed (22)
+2026-09-01T10:42:15.7702522Z packages/contracts/dispatch test:    Start at  10:42:12
+2026-09-01T10:42:15.7761397Z packages/contracts/dispatch test:    Duration  2.90s (transform 325ms, setup 0ms, collect 383ms, tests 97ms, environment 10ms, prepare 1.03s)
+2026-09-01T10:42:15.8469987Z packages/contracts/driver test:  ✓ src/__tests__/boundary.test.ts (7 tests) 16ms
+2026-09-01T10:42:15.8953757Z packages/contracts/driver test:  Test Files  4 passed (4)
+2026-09-01T10:42:15.9001032Z packages/contracts/driver test:       Tests  59 passed (59)
+2026-09-01T10:42:15.9041917Z packages/contracts/driver test:    Start at  10:42:12
+2026-09-01T10:42:15.9169879Z packages/contracts/driver test:    Duration  3.10s (transform 338ms, setup 0ms, collect 539ms, tests 119ms, environment 6ms, prepare 855ms)
+2026-09-01T10:42:16.1659377Z packages/contracts/driver test: Done
+2026-09-01T10:42:16.1963496Z packages/contracts/marketplace test$ vitest run
+2026-09-01T10:42:16.1963995Z packages/contracts/dispatch test: Done
+2026-09-01T10:42:16.1964448Z packages/contracts/matching test$ vitest run
+2026-09-01T10:42:16.1976454Z packages/contracts/identity test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/identity
+2026-09-01T10:42:16.5333696Z packages/contracts/geography test:  ✓ src/__tests__/contracts.test.ts (10 tests) 11ms
+2026-09-01T10:42:17.0271827Z packages/contracts/identity test:  ✓ src/__tests__/events.test.ts (7 tests) 20ms
+2026-09-01T10:42:17.0998286Z packages/contracts/matching test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/matching
+2026-09-01T10:42:17.1950037Z packages/contracts/geography test:  ✓ src/__tests__/events.test.ts (5 tests) 17ms
+2026-09-01T10:42:17.2003948Z packages/contracts/marketplace test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/marketplace
+2026-09-01T10:42:17.2540148Z packages/contracts/geography test:  Test Files  2 passed (2)
+2026-09-01T10:42:17.2558885Z packages/contracts/geography test:       Tests  15 passed (15)
+2026-09-01T10:42:17.2944061Z packages/contracts/geography test:    Start at  10:42:15
+2026-09-01T10:42:17.2974659Z packages/contracts/geography test:    Duration  1.49s (transform 206ms, setup 0ms, collect 274ms, tests 28ms, environment 1ms, prepare 298ms)
+2026-09-01T10:42:17.6288236Z packages/contracts/geography test: Done
+2026-09-01T10:42:17.6345246Z packages/contracts/negotiation test$ vitest run
+2026-09-01T10:42:17.6534547Z packages/contracts/identity test:  ✓ src/__tests__/contracts.test.ts (6 tests) 4ms
+2026-09-01T10:42:17.7320227Z packages/contracts/identity test:  Test Files  2 passed (2)
+2026-09-01T10:42:17.7335780Z packages/contracts/identity test:       Tests  13 passed (13)
+2026-09-01T10:42:17.7820318Z packages/contracts/identity test:    Start at  10:42:16
+2026-09-01T10:42:17.7847493Z packages/contracts/identity test:    Duration  1.50s (transform 207ms, setup 0ms, collect 227ms, tests 24ms, environment 4ms, prepare 417ms)
+2026-09-01T10:42:17.9159670Z packages/contracts/matching test:  ✓ src/__tests__/contracts.test.ts (10 tests) 30ms
+2026-09-01T10:42:18.0361268Z packages/contracts/identity test: Done
+2026-09-01T10:42:18.0382965Z packages/contracts/order test$ vitest run
+2026-09-01T10:42:18.0511947Z packages/contracts/marketplace test:  ✓ src/__tests__/schema.test.ts (12 tests) 17ms
+2026-09-01T10:42:18.5219682Z packages/contracts/negotiation test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/negotiation
+2026-09-01T10:42:18.5350065Z packages/contracts/matching test:  ✓ src/__tests__/events.test.ts (6 tests) 19ms
+2026-09-01T10:42:18.9451798Z packages/contracts/marketplace test:  ✓ src/__tests__/contracts.test.ts (16 tests) 84ms
+2026-09-01T10:42:19.0559819Z packages/contracts/order test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/order
+2026-09-01T10:42:19.1964866Z packages/contracts/negotiation test:  ✓ src/__tests__/schema.test.ts (30 tests) 32ms
+2026-09-01T10:42:19.3075217Z packages/contracts/matching test:  ✓ src/__tests__/boundary.test.ts (3 tests) 6ms
+2026-09-01T10:42:19.6776692Z packages/contracts/matching test:  ✓ src/__tests__/schema.test.ts (5 tests) 7ms
+2026-09-01T10:42:19.7258185Z packages/contracts/matching test:  Test Files  4 passed (4)
+2026-09-01T10:42:19.7303471Z packages/contracts/matching test:       Tests  24 passed (24)
+2026-09-01T10:42:19.7318866Z packages/contracts/matching test:    Start at  10:42:17
+2026-09-01T10:42:19.7320195Z packages/contracts/matching test:    Duration  2.66s (transform 207ms, setup 0ms, collect 318ms, tests 62ms, environment 6ms, prepare 831ms)
+2026-09-01T10:42:19.7569764Z packages/contracts/marketplace test:  ✓ src/__tests__/boundary.test.ts (10 tests) 25ms
+2026-09-01T10:42:19.8914428Z packages/contracts/negotiation test:  ✓ src/__tests__/events.test.ts (13 tests) 46ms
+2026-09-01T10:42:20.0570063Z packages/contracts/order test:  ✓ src/__tests__/contracts.test.ts (49 tests) 53ms
+2026-09-01T10:42:20.0674618Z packages/contracts/matching test: Done
+2026-09-01T10:42:20.0698596Z packages/contracts/reputation test$ vitest run
+2026-09-01T10:42:20.4622972Z packages/contracts/marketplace test:  ✓ src/__tests__/events.test.ts (8 tests) 63ms
+2026-09-01T10:42:20.4989573Z packages/contracts/marketplace test:  Test Files  4 passed (4)
+2026-09-01T10:42:20.5033825Z packages/contracts/marketplace test:       Tests  46 passed (46)
+2026-09-01T10:42:20.5099066Z packages/contracts/marketplace test:    Start at  10:42:17
+2026-09-01T10:42:20.5173814Z packages/contracts/marketplace test:    Duration  3.34s (transform 389ms, setup 0ms, collect 589ms, tests 189ms, environment 2ms, prepare 947ms)
+2026-09-01T10:42:20.5253054Z packages/contracts/negotiation test:  ✓ src/__tests__/boundary.test.ts (13 tests) 41ms
+2026-09-01T10:42:20.6708020Z packages/contracts/order test:  ✓ src/__tests__/boundary.test.ts (31 tests) 62ms
+2026-09-01T10:42:20.8260022Z packages/contracts/marketplace test: Done
+2026-09-01T10:42:20.8319270Z packages/contracts/subscription test$ vitest run
+2026-09-01T10:42:21.0290216Z packages/contracts/reputation test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/reputation
+2026-09-01T10:42:21.0901623Z packages/contracts/negotiation test:  ✓ src/__tests__/contracts.test.ts (14 tests) 42ms
+2026-09-01T10:42:21.1210776Z packages/contracts/negotiation test:  Test Files  4 passed (4)
+2026-09-01T10:42:21.1723266Z packages/contracts/negotiation test:       Tests  70 passed (70)
+2026-09-01T10:42:21.1728357Z packages/contracts/negotiation test:    Start at  10:42:18
+2026-09-01T10:42:21.2053910Z packages/contracts/negotiation test:    Duration  2.60s (transform 317ms, setup 0ms, collect 467ms, tests 161ms, environment 4ms, prepare 836ms)
+2026-09-01T10:42:21.3800353Z packages/contracts/order test:  ✓ src/__tests__/transitions-doc.test.ts (21 tests) 78ms
+2026-09-01T10:42:21.4537451Z packages/contracts/negotiation test: Done
+2026-09-01T10:42:21.4540798Z packages/errors test$ vitest run
+2026-09-01T10:42:21.9533288Z packages/contracts/subscription test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/contracts/subscription
+2026-09-01T10:42:22.0857909Z packages/contracts/order test:  ✓ src/__tests__/events.test.ts (18 tests) 60ms
+2026-09-01T10:42:22.1125179Z packages/contracts/reputation test:  ✓ src/__tests__/schema.test.ts (24 tests) 82ms
+2026-09-01T10:42:22.1851287Z packages/contracts/order test:  Test Files  4 passed (4)
+2026-09-01T10:42:22.1878954Z packages/contracts/order test:       Tests  119 passed (119)
+2026-09-01T10:42:22.2435744Z packages/contracts/order test:    Start at  10:42:18
+2026-09-01T10:42:22.2440547Z packages/contracts/order test:    Duration  3.06s (transform 352ms, setup 0ms, collect 552ms, tests 253ms, environment 4ms, prepare 926ms)
+2026-09-01T10:42:22.2442001Z packages/errors test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/errors
+2026-09-01T10:42:22.3932962Z packages/contracts/order test: Done
+2026-09-01T10:42:22.7653148Z packages/contracts/reputation test:  ✓ src/__tests__/events.test.ts (20 tests) 47ms
+2026-09-01T10:42:22.7737528Z packages/contracts/subscription test:  ✓ src/__tests__/contracts.test.ts (11 tests) 27ms
+2026-09-01T10:42:22.8335193Z packages/errors test:  ✓ src/__tests__/errors.test.ts (3 tests) 9ms
+2026-09-01T10:42:22.8367237Z packages/errors test:  Test Files  1 passed (1)
+2026-09-01T10:42:22.8398355Z packages/errors test:       Tests  3 passed (3)
+2026-09-01T10:42:22.8437017Z packages/errors test:    Start at  10:42:22
+2026-09-01T10:42:22.8441578Z packages/errors test:    Duration  610ms (transform 116ms, setup 0ms, collect 84ms, tests 9ms, environment 3ms, prepare 210ms)
+2026-09-01T10:42:22.9992333Z packages/errors test: Done
+2026-09-01T10:42:23.1128009Z packages/contracts/subscription test:  ✓ src/__tests__/schema.test.ts (7 tests) 14ms
+2026-09-01T10:42:23.1411250Z packages/contracts/reputation test:  ✓ src/__tests__/boundary.test.ts (19 tests) 15ms
+2026-09-01T10:42:23.4058232Z packages/contracts/subscription test:  ✓ src/__tests__/boundary.test.ts (7 tests) 10ms
+2026-09-01T10:42:23.4354083Z packages/contracts/reputation test:  ✓ src/__tests__/contracts.test.ts (18 tests) 17ms
+2026-09-01T10:42:23.4499511Z packages/contracts/reputation test:  Test Files  4 passed (4)
+2026-09-01T10:42:23.4519423Z packages/contracts/reputation test:       Tests  81 passed (81)
+2026-09-01T10:42:23.4538962Z packages/contracts/reputation test:    Start at  10:42:20
+2026-09-01T10:42:23.4541986Z packages/contracts/reputation test:    Duration  2.42s (transform 350ms, setup 0ms, collect 448ms, tests 162ms, environment 5ms, prepare 626ms)
+2026-09-01T10:42:23.5909062Z packages/contracts/reputation test: Done
+2026-09-01T10:42:23.6459470Z packages/contracts/subscription test:  ✓ src/__tests__/events.test.ts (6 tests) 10ms
+2026-09-01T10:42:23.6563088Z packages/contracts/subscription test:  Test Files  4 passed (4)
+2026-09-01T10:42:23.6579213Z packages/contracts/subscription test:       Tests  31 passed (31)
+2026-09-01T10:42:23.6588948Z packages/contracts/subscription test:    Start at  10:42:21
+2026-09-01T10:42:23.6609247Z packages/contracts/subscription test:    Duration  1.76s (transform 219ms, setup 0ms, collect 268ms, tests 61ms, environment 2ms, prepare 391ms)
+2026-09-01T10:42:23.7455555Z packages/contracts/subscription test: Done
+2026-09-01T10:42:23.7463201Z packages/auth-sdk test$ vitest run
+2026-09-01T10:42:23.7465884Z packages/channel-core test$ vitest run
+2026-09-01T10:42:23.7469650Z services/customers test$ vitest run
+2026-09-01T10:42:23.7472073Z services/marketplace test$ vitest run
+2026-09-01T10:42:24.4759828Z packages/auth-sdk test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/auth-sdk
+2026-09-01T10:42:24.7121857Z services/marketplace test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/marketplace
+2026-09-01T10:42:24.7840089Z services/customers test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/customers
+2026-09-01T10:42:24.8257487Z packages/channel-core test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/channel-core
+2026-09-01T10:42:25.4424090Z packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 23ms
+2026-09-01T10:42:26.2360415Z packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 52ms
+2026-09-01T10:42:26.2787547Z packages/channel-core test:  ✓ src/__tests__/groups.test.ts (16 tests) 35ms
+2026-09-01T10:42:26.3258515Z services/marketplace test:  ✓ src/__tests__/purity.test.ts (21 tests) 562ms
+2026-09-01T10:42:26.8934944Z packages/channel-core test:  ✓ src/__tests__/receive-update.test.ts (12 tests) 31ms
+2026-09-01T10:42:26.8936815Z packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 6ms
+2026-09-01T10:42:26.9569937Z packages/auth-sdk test:  Test Files  3 passed (3)
+2026-09-01T10:42:26.9609999Z packages/auth-sdk test:       Tests  68 passed (68)
+2026-09-01T10:42:27.0208771Z packages/auth-sdk test:    Start at  10:42:24
+2026-09-01T10:42:27.0220719Z packages/auth-sdk test:    Duration  2.43s (transform 365ms, setup 0ms, collect 450ms, tests 81ms, environment 2ms, prepare 668ms)
+2026-09-01T10:42:27.4512169Z packages/auth-sdk test: Done
+2026-09-01T10:42:27.4574410Z services/negotiations test$ vitest run
+2026-09-01T10:42:27.5140387Z services/customers test:  ✓ src/__tests__/http/app.test.ts (34 tests) 666ms
+2026-09-01T10:42:27.5159292Z services/marketplace test:  ✓ src/__tests__/events.test.ts (57 tests) 113ms
+2026-09-01T10:42:27.6804323Z packages/channel-core test:  ✓ src/__tests__/send-message.test.ts (14 tests) 37ms
+2026-09-01T10:42:28.2485276Z services/negotiations test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/negotiations
+2026-09-01T10:42:28.4661088Z packages/channel-core test:  ✓ src/__tests__/retry.test.ts (9 tests) 27ms
+2026-09-01T10:42:28.6379842Z services/customers test:  ✓ src/__tests__/http-order-intake.test.ts (17 tests) 602ms
+2026-09-01T10:42:28.9589984Z packages/channel-core test:  ✓ src/__tests__/neutrality.guard.test.ts (40 tests) 25ms
+2026-09-01T10:42:29.3983943Z services/customers test:  ✓ src/__tests__/order-request-submit.test.ts (11 tests) 58ms
+2026-09-01T10:42:29.6058405Z packages/channel-core test:  ✓ src/__tests__/launch-surfaces.test.ts (5 tests) 13ms
+2026-09-01T10:42:29.7739547Z services/marketplace test:  ✓ src/__tests__/http-drift.test.ts (32 tests) 360ms
+2026-09-01T10:42:30.0489826Z services/customers test:  ✓ src/__tests__/order-request-preview.test.ts (13 tests) 32ms
+2026-09-01T10:42:30.2599902Z packages/channel-core test:  ✓ src/__tests__/deep-link.test.ts (8 tests) 14ms
+2026-09-01T10:42:30.2929495Z packages/channel-core test:  Test Files  7 passed (7)
+2026-09-01T10:42:30.2959225Z packages/channel-core test:       Tests  104 passed (104)
+2026-09-01T10:42:30.3020140Z packages/channel-core test:    Start at  10:42:24
+2026-09-01T10:42:30.3099459Z packages/channel-core test:    Duration  5.46s (transform 718ms, setup 0ms, collect 1.15s, tests 182ms, environment 4ms, prepare 1.57s)
+2026-09-01T10:42:30.6101123Z packages/channel-core test: Done
+2026-09-01T10:42:30.6158701Z services/orders test$ vitest run
+2026-09-01T10:42:30.8844162Z services/customers test:  ✓ src/__tests__/schema-drift.test.ts (17 tests) 30ms
+2026-09-01T10:42:31.0791357Z services/negotiations test:  ✓ src/__tests__/http.test.ts (36 tests) 814ms
+2026-09-01T10:42:31.5307936Z services/marketplace test:  ✓ src/__tests__/http-degraded.test.ts (30 tests) 669ms
+2026-09-01T10:42:31.7059879Z services/customers test:  ✓ src/__tests__/events-privacy.test.ts (3 tests) 18ms
+2026-09-01T10:42:31.7177278Z services/orders test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/orders
+2026-09-01T10:42:31.9500613Z services/negotiations test:  ✓ src/__tests__/constraints.test.ts (25 tests) 46ms
+2026-09-01T10:42:32.2115324Z services/marketplace test:  ✓ src/__tests__/composition.test.ts (14 tests) 64ms
+2026-09-01T10:42:32.3080802Z services/customers test:  ✓ src/__tests__/saved-places.test.ts (10 tests) 35ms
+2026-09-01T10:42:32.7637772Z services/negotiations test:  ✓ src/__tests__/outbound-ports.test.ts (21 tests) 134ms
+2026-09-01T10:42:33.0324167Z services/marketplace test:  ✓ src/__tests__/state.test.ts (14 tests) 24ms
+2026-09-01T10:42:33.0710990Z services/customers test:  ✓ src/__tests__/customer-profile.test.ts (8 tests) 30ms
+2026-09-01T10:42:33.2964911Z services/negotiations test:  ✓ src/__tests__/agreement.test.ts (14 tests) 71ms
+2026-09-01T10:42:33.6801340Z services/customers test:  ✓ src/__tests__/mappers.test.ts (4 tests) 18ms
+2026-09-01T10:42:33.6803232Z services/customers test:  Test Files  9 passed (9)
+2026-09-01T10:42:33.7540106Z services/customers test:       Tests  117 passed (117)
+2026-09-01T10:42:33.7569623Z services/customers test:    Start at  10:42:24
+2026-09-01T10:42:33.7823618Z services/customers test:    Duration  8.86s (transform 1.01s, setup 0ms, collect 2.37s, tests 1.49s, environment 21ms, prepare 2.05s)
+2026-09-01T10:42:33.7828225Z services/marketplace test:  ✓ src/__tests__/errors.test.ts (16 tests) 63ms
+2026-09-01T10:42:33.8865465Z services/customers test: Done
+2026-09-01T10:42:33.8866422Z services/reputation test$ vitest run
+2026-09-01T10:42:34.0347421Z services/negotiations test:  ✓ src/__tests__/rounds.test.ts (16 tests) 64ms
+2026-09-01T10:42:34.3308547Z services/marketplace test:  ✓ src/__tests__/transitions.test.ts (16 tests) 31ms
+2026-09-01T10:42:34.4997763Z services/orders test:  ✓ src/__tests__/http/app.test.ts (56 tests) 1094ms
+2026-09-01T10:42:34.8557193Z services/negotiations test:  ✓ src/__tests__/domain.test.ts (19 tests) 45ms
+2026-09-01T10:42:35.0079908Z services/reputation test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/reputation
+2026-09-01T10:42:35.1478379Z services/orders test:  ✓ src/__tests__/assignments.test.ts (21 tests) 61ms
+2026-09-01T10:42:35.1783385Z services/marketplace test:  ✓ src/__tests__/schema-drift.test.ts (32 tests) 69ms
+2026-09-01T10:42:35.6120062Z services/negotiations test:  ✓ src/__tests__/schema-drift.test.ts (27 tests) 44ms
+2026-09-01T10:42:35.7699639Z services/marketplace test:  ✓ src/__tests__/inventory-sync.test.ts (13 tests) 11ms
+2026-09-01T10:42:36.4493198Z services/marketplace test:  ✓ src/__tests__/category-seed.test.ts (13 tests) 32ms
+2026-09-01T10:42:36.5118256Z services/orders test:  ✓ src/__tests__/transition-order.test.ts (459 tests) 588ms
+2026-09-01T10:42:36.8469410Z services/negotiations test:  ✓ src/__tests__/http-drift.test.ts (14 tests) 181ms
+2026-09-01T10:42:36.9349448Z services/marketplace test:  ✓ src/__tests__/catalog.test.ts (15 tests) 38ms
+2026-09-01T10:42:37.1918624Z services/orders test:  ✓ src/__tests__/state-machine.test.ts (28 tests) 59ms
+2026-09-01T10:42:37.5238902Z services/negotiations test:  ✓ src/__tests__/open-thread.test.ts (15 tests) 49ms
+2026-09-01T10:42:37.5777427Z services/marketplace test:  ✓ src/__tests__/staff.test.ts (13 tests) 31ms
+2026-09-01T10:42:37.9395056Z services/orders test:  ✓ src/__tests__/ingest-order.test.ts (27 tests) 54ms
+2026-09-01T10:42:37.9424311Z services/reputation test:  ✓ src/__tests__/http.test.ts (44 tests) 931ms
+2026-09-01T10:42:38.1343413Z services/marketplace test:  ✓ src/__tests__/identifiers.test.ts (12 tests) 22ms
+2026-09-01T10:42:38.3489901Z services/negotiations test:  ✓ src/__tests__/read.test.ts (12 tests) 53ms
+2026-09-01T10:42:38.6085847Z services/orders test:  ✓ src/__tests__/mappers.test.ts (14 tests) 36ms
+2026-09-01T10:42:38.6125817Z services/reputation test:  ✓ src/__tests__/drain-outbox.test.ts (14 tests) 32ms
+2026-09-01T10:42:38.6683556Z services/marketplace test:  ✓ src/__tests__/inventory.test.ts (11 tests) 21ms
+2026-09-01T10:42:38.9192538Z services/negotiations test:  ✓ src/__tests__/tick.test.ts (13 tests) 30ms
+2026-09-01T10:42:39.2309707Z services/marketplace test:  ✓ src/__tests__/visibility.test.ts (7 tests) 25ms
+2026-09-01T10:42:39.2587004Z services/marketplace test:  Test Files  16 passed (16)
+2026-09-01T10:42:39.2590952Z services/marketplace test:       Tests  316 passed (316)
+2026-09-01T10:42:39.2630233Z services/marketplace test:    Start at  10:42:24
+2026-09-01T10:42:39.2663580Z services/marketplace test:    Duration  14.54s (transform 1.44s, setup 0ms, collect 3.78s, tests 2.14s, environment 15ms, prepare 3.33s)
+2026-09-01T10:42:39.3147033Z services/reputation test:  ✓ src/__tests__/purity.test.ts (15 tests) 174ms
+2026-09-01T10:42:39.4823331Z services/orders test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 30ms
+2026-09-01T10:42:39.5978956Z services/negotiations test:  ✓ src/__tests__/privacy.test.ts (7 tests) 63ms
+2026-09-01T10:42:39.6543200Z services/marketplace test: Done
+2026-09-01T10:42:39.6544195Z services/subscriptions test$ vitest run
+2026-09-01T10:42:39.9395683Z services/reputation test:  ✓ src/__tests__/inbound-translate.test.ts (22 tests) 38ms
+2026-09-01T10:42:40.0125009Z services/orders test:  ✓ src/__tests__/read-order.test.ts (11 tests) 17ms
+2026-09-01T10:42:40.0938606Z services/orders test:  Test Files  8 passed (8)
+2026-09-01T10:42:40.0979773Z services/orders test:       Tests  635 passed (635)
+2026-09-01T10:42:40.1510208Z services/orders test:    Start at  10:42:31
+2026-09-01T10:42:40.1558151Z services/orders test:    Duration  8.33s (transform 890ms, setup 0ms, collect 2.16s, tests 1.94s, environment 9ms, prepare 1.68s)
+2026-09-01T10:42:40.2663905Z services/negotiations test:  ✓ src/__tests__/messages.test.ts (10 tests) 60ms
+2026-09-01T10:42:40.3069854Z services/negotiations test:  Test Files  13 passed (13)
+2026-09-01T10:42:40.3580204Z services/negotiations test:       Tests  229 passed (229)
+2026-09-01T10:42:40.3609485Z services/negotiations test:    Start at  10:42:28
+2026-09-01T10:42:40.4080361Z services/negotiations test:    Duration  12.01s (transform 1.07s, setup 0ms, collect 3.53s, tests 1.65s, environment 9ms, prepare 2.49s)
+2026-09-01T10:42:40.4081745Z services/orders test: Done
+2026-09-01T10:42:40.5390169Z services/subscriptions test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/subscriptions
+2026-09-01T10:42:40.5702969Z services/reputation test:  ✓ src/__tests__/consume-source-event.test.ts (10 tests) 30ms
+2026-09-01T10:42:40.5760586Z services/negotiations test: Done
+2026-09-01T10:42:40.8489196Z services/reputation test:  ✓ src/__tests__/fraud.test.ts (23 tests) 22ms
+2026-09-01T10:42:41.0934909Z services/reputation test:  ✓ src/__tests__/source-events-drift.test.ts (11 tests) 11ms
+2026-09-01T10:42:41.1302673Z services/subscriptions test:  ✓ src/__tests__/purity.test.ts (24 tests) 149ms
+2026-09-01T10:42:41.3529635Z services/reputation test:  ✓ src/__tests__/constraints.test.ts (18 tests) 14ms
+2026-09-01T10:42:41.7796311Z services/reputation test:  ✓ src/__tests__/submit-rating.test.ts (17 tests) 42ms
+2026-09-01T10:42:41.9450608Z services/subscriptions test:  ✓ src/__tests__/http-drift.test.ts (23 tests) 109ms
+2026-09-01T10:42:42.1638346Z services/reputation test:  ✓ src/__tests__/schema-drift.test.ts (30 tests) 27ms
+2026-09-01T10:42:42.5436489Z services/subscriptions test:  ✓ src/__tests__/events.test.ts (21 tests) 16ms
+2026-09-01T10:42:42.7667179Z services/reputation test:  ✓ src/__tests__/http-drift.test.ts (13 tests) 88ms
+2026-09-01T10:42:42.8480098Z services/subscriptions test:  ✓ src/__tests__/state.test.ts (24 tests) 13ms
+2026-09-01T10:42:43.0211743Z services/reputation test:  ✓ src/__tests__/score.test.ts (20 tests) 9ms
+2026-09-01T10:42:43.1404077Z services/subscriptions test:  ✓ src/__tests__/transitions.test.ts (18 tests) 19ms
+2026-09-01T10:42:43.3178411Z services/reputation test:  ✓ src/__tests__/reads.test.ts (18 tests) 19ms
+2026-09-01T10:42:43.4060992Z services/subscriptions test:  ✓ src/__tests__/composition.test.ts (10 tests) 20ms
+2026-09-01T10:42:43.6324576Z services/reputation test:  ✓ src/__tests__/run-tick.test.ts (12 tests) 28ms
+2026-09-01T10:42:43.6992779Z services/subscriptions test:  ✓ src/__tests__/referral.test.ts (18 tests) 12ms
+2026-09-01T10:42:43.9406459Z services/reputation test:  ✓ src/__tests__/record-fact.test.ts (15 tests) 18ms
+2026-09-01T10:42:43.9591671Z services/subscriptions test:  ✓ src/__tests__/plans.test.ts (13 tests) 9ms
+2026-09-01T10:42:43.9667211Z services/reputation test:  Test Files  15 passed (15)
+2026-09-01T10:42:43.9717479Z services/reputation test:       Tests  282 passed (282)
+2026-09-01T10:42:43.9720758Z services/reputation test:    Start at  10:42:34
+2026-09-01T10:42:43.9748768Z services/reputation test:    Duration  9.02s (transform 1.13s, setup 0ms, collect 2.72s, tests 1.48s, environment 10ms, prepare 1.73s)
+2026-09-01T10:42:44.1103740Z services/reputation test: Done
+2026-09-01T10:42:44.4365298Z services/subscriptions test:  ✓ src/__tests__/http-degraded.test.ts (18 tests) 128ms
+2026-09-01T10:42:44.6172665Z services/subscriptions test:  ✓ src/__tests__/periods.test.ts (15 tests) 7ms
+2026-09-01T10:42:44.8711286Z services/subscriptions test:  ✓ src/__tests__/schema-drift.test.ts (23 tests) 15ms
+2026-09-01T10:42:45.0384274Z services/subscriptions test:  ✓ src/__tests__/referral-code.test.ts (8 tests) 5ms
+2026-09-01T10:42:45.0527553Z services/subscriptions test:  Test Files  12 passed (12)
+2026-09-01T10:42:45.0532297Z services/subscriptions test:       Tests  215 passed (215)
+2026-09-01T10:42:45.0534909Z services/subscriptions test:    Start at  10:42:40
+2026-09-01T10:42:45.0536177Z services/subscriptions test:    Duration  4.54s (transform 515ms, setup 0ms, collect 1.44s, tests 503ms, environment 7ms, prepare 966ms)
+2026-09-01T10:42:45.1429740Z services/subscriptions test: Done
+2026-09-01T10:42:45.1430677Z packages/channel-postgres test$ vitest run
+2026-09-01T10:42:45.1431653Z packages/marketplace-e2e test$ vitest run
+2026-09-01T10:42:45.1432310Z packages/reputation-e2e test$ vitest run
+2026-09-01T10:42:45.1433211Z packages/service-auth test$ vitest run
+2026-09-01T10:42:45.9900903Z packages/channel-postgres test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/channel-postgres
+2026-09-01T10:42:46.0619789Z packages/service-auth test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/service-auth
+2026-09-01T10:42:46.0789847Z packages/marketplace-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/marketplace-e2e
+2026-09-01T10:42:46.1196692Z packages/reputation-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/reputation-e2e
+2026-09-01T10:42:47.2700637Z packages/service-auth test:  ✓ src/__tests__/token.test.ts (43 tests) 98ms
+2026-09-01T10:42:47.4295435Z packages/channel-postgres test:  ✓ src/__tests__/schema-drift.test.ts (9 tests) 31ms
+2026-09-01T10:42:47.4654440Z packages/channel-postgres test:  Test Files  1 passed (1)
+2026-09-01T10:42:47.4698505Z packages/channel-postgres test:       Tests  9 passed (9)
+2026-09-01T10:42:47.4742142Z packages/channel-postgres test:    Start at  10:42:45
+2026-09-01T10:42:47.4758333Z packages/channel-postgres test:    Duration  1.52s (transform 282ms, setup 0ms, collect 689ms, tests 31ms, environment 3ms, prepare 323ms)
+2026-09-01T10:42:47.8251500Z packages/channel-postgres test: Done
+2026-09-01T10:42:47.8348674Z packages/subscription-e2e test$ vitest run
+2026-09-01T10:42:48.3039243Z packages/service-auth test:  ✓ src/__tests__/enforce.test.ts (18 tests) 69ms
+2026-09-01T10:42:48.9744787Z packages/subscription-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/subscription-e2e
+2026-09-01T10:42:49.1194921Z packages/service-auth test:  ✓ src/__tests__/keys.test.ts (27 tests) 48ms
+2026-09-01T10:42:49.2231785Z packages/marketplace-e2e test:  ↓ src/__tests__/phase11-exit-gate.e2e.test.ts (6 tests | 6 skipped)
+2026-09-01T10:42:49.2689219Z packages/marketplace-e2e test:  Test Files  1 skipped (1)
+2026-09-01T10:42:49.2749018Z packages/marketplace-e2e test:       Tests  6 skipped (6)
+2026-09-01T10:42:49.2793616Z packages/marketplace-e2e test:    Start at  10:42:46
+2026-09-01T10:42:49.2819231Z packages/marketplace-e2e test:    Duration  3.19s (transform 1.36s, setup 0ms, collect 2.39s, tests 0ms, environment 9ms, prepare 302ms)
+2026-09-01T10:42:49.6421749Z packages/marketplace-e2e test: Done
+2026-09-01T10:42:49.6498739Z packages/telegram-adapter test$ vitest run
+2026-09-01T10:42:49.9508488Z packages/service-auth test:  ✓ src/__tests__/http-server.e2e.test.ts (10 tests) 150ms
+2026-09-01T10:42:50.2696792Z packages/reputation-e2e test:  ✓ src/__tests__/phase09-exit-gate.e2e.test.ts (12 tests) 1203ms
+2026-09-01T10:42:50.3349435Z packages/reputation-e2e test:  Test Files  1 passed (1)
+2026-09-01T10:42:50.3465463Z packages/reputation-e2e test:       Tests  12 passed (12)
+2026-09-01T10:42:50.3508896Z packages/reputation-e2e test:    Start at  10:42:46
+2026-09-01T10:42:50.3559253Z packages/reputation-e2e test:    Duration  4.21s (transform 1.36s, setup 0ms, collect 2.40s, tests 1.20s, environment 2ms, prepare 235ms)
+2026-09-01T10:42:50.6975936Z packages/telegram-adapter test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/telegram-adapter
+2026-09-01T10:42:50.7049010Z packages/reputation-e2e test: Done
+2026-09-01T10:42:50.7062142Z services/identity test$ vitest run
+2026-09-01T10:42:50.7179564Z packages/service-auth test:  ✓ src/__tests__/http.test.ts (14 tests) 23ms
+2026-09-01T10:42:51.2491449Z packages/service-auth test:  ✓ src/__tests__/replay.test.ts (11 tests) 13ms
+2026-09-01T10:42:51.6349823Z packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 56ms
+2026-09-01T10:42:51.7560904Z services/identity test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/identity
+2026-09-01T10:42:51.9791709Z packages/service-auth test:  ✓ src/__tests__/outbound.test.ts (4 tests) 19ms
+2026-09-01T10:42:52.0195764Z packages/service-auth test:  Test Files  7 passed (7)
+2026-09-01T10:42:52.0249201Z packages/service-auth test:       Tests  127 passed (127)
+2026-09-01T10:42:52.0289078Z packages/service-auth test:    Start at  10:42:46
+2026-09-01T10:42:52.0343274Z packages/service-auth test:    Duration  5.96s (transform 668ms, setup 0ms, collect 1.28s, tests 420ms, environment 7ms, prepare 1.62s)
+2026-09-01T10:42:52.3880876Z packages/subscription-e2e test:  ↓ src/__tests__/phase10-exit-gate.e2e.test.ts (3 tests | 3 skipped)
+2026-09-01T10:42:52.4447395Z packages/subscription-e2e test:  Test Files  1 skipped (1)
+2026-09-01T10:42:52.4549350Z packages/subscription-e2e test:       Tests  3 skipped (3)
+2026-09-01T10:42:52.4609112Z packages/subscription-e2e test:    Start at  10:42:48
+2026-09-01T10:42:52.4706326Z packages/subscription-e2e test:    Duration  3.47s (transform 1.57s, setup 0ms, collect 2.80s, tests 0ms, environment 2ms, prepare 214ms)
+2026-09-01T10:42:52.4790811Z packages/service-auth test: Done
+2026-09-01T10:42:52.6367041Z packages/subscription-e2e test: Done
+2026-09-01T10:42:52.6698725Z packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 15ms
+2026-09-01T10:42:53.1401301Z packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 20ms
+2026-09-01T10:42:53.2419259Z services/identity test:  ✓ src/__tests__/session.test.ts (28 tests) 22ms
+2026-09-01T10:42:53.4506865Z packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 15ms
+2026-09-01T10:42:53.7935686Z packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 9ms
+2026-09-01T10:42:53.9912493Z services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 174ms
+2026-09-01T10:42:54.0928118Z packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 9ms
+2026-09-01T10:42:54.3434069Z packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 6ms
+2026-09-01T10:42:54.6509591Z services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 11ms
+2026-09-01T10:42:54.6650129Z packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 5ms
+2026-09-01T10:42:54.9702102Z packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 7ms
+2026-09-01T10:42:55.0059565Z packages/telegram-adapter test:  Test Files  9 passed (9)
+2026-09-01T10:42:55.0129477Z packages/telegram-adapter test:       Tests  132 passed (132)
+2026-09-01T10:42:55.0139269Z packages/telegram-adapter test:    Start at  10:42:50
+2026-09-01T10:42:55.0171555Z packages/telegram-adapter test:    Duration  4.30s (transform 797ms, setup 0ms, collect 1.33s, tests 142ms, environment 5ms, prepare 1.06s)
+2026-09-01T10:42:55.1770837Z packages/telegram-adapter test: Done
+2026-09-01T10:42:55.2179555Z services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 9ms
+2026-09-01T10:42:55.5789645Z services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 4ms
+2026-09-01T10:42:55.5890607Z services/identity test:  Test Files  5 passed (5)
+2026-09-01T10:42:55.5904846Z services/identity test:       Tests  52 passed (52)
+2026-09-01T10:42:55.5928826Z services/identity test:    Start at  10:42:51
+2026-09-01T10:42:55.5983724Z services/identity test:    Duration  3.83s (transform 560ms, setup 0ms, collect 2.18s, tests 221ms, environment 4ms, prepare 593ms)
+2026-09-01T10:42:55.6832517Z services/identity test: Done
+2026-09-01T10:42:55.6838280Z packages/bot-runtime test$ vitest run
+2026-09-01T10:42:55.6845281Z services/dispatch test$ vitest run
+2026-09-01T10:42:55.6846104Z services/drivers test$ vitest run
+2026-09-01T10:42:55.6849298Z services/geography test$ vitest run
+2026-09-01T10:42:56.4569509Z services/drivers test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/drivers
+2026-09-01T10:42:56.6049396Z packages/bot-runtime test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/bot-runtime
+2026-09-01T10:42:56.7000384Z services/geography test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/geography
+2026-09-01T10:42:56.7132674Z services/dispatch test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/dispatch
+2026-09-01T10:42:57.9306937Z services/drivers test:  ✓ src/__tests__/contract-drift.test.ts (23 tests) 136ms
+2026-09-01T10:42:58.9844732Z services/geography test:  ✓ src/__tests__/http/app.test.ts (16 tests) 645ms
+2026-09-01T10:42:59.2125548Z packages/bot-runtime test:  ✓ src/__tests__/conversation.test.ts (13 tests) 483ms
+2026-09-01T10:42:59.5052523Z services/dispatch test:  ✓ src/__tests__/tick.test.ts (26 tests) 103ms
+2026-09-01T10:42:59.5459667Z services/drivers test:  ✓ src/__tests__/outbound-ports.test.ts (30 tests) 81ms
+2026-09-01T10:42:59.6016596Z services/geography test:  ✓ src/__tests__/user-location.test.ts (11 tests) 26ms
+2026-09-01T10:43:00.1311031Z services/drivers test:  ✓ src/__tests__/state-machines.test.ts (20 tests) 88ms
+2026-09-01T10:43:00.2655150Z services/geography test:  ✓ src/__tests__/hierarchy.test.ts (10 tests) 22ms
+2026-09-01T10:43:00.6319621Z packages/bot-runtime test:  ✓ src/__tests__/webhook.test.ts (14 tests) 456ms
+2026-09-01T10:43:00.7029977Z services/geography test:  ✓ src/__tests__/locale.test.ts (4 tests) 7ms
+2026-09-01T10:43:00.7613982Z services/geography test:  Test Files  4 passed (4)
+2026-09-01T10:43:00.7668981Z services/geography test:       Tests  41 passed (41)
+2026-09-01T10:43:00.7669802Z services/geography test:    Start at  10:42:56
+2026-09-01T10:43:00.7670983Z services/geography test:    Duration  4.06s (transform 535ms, setup 0ms, collect 1.01s, tests 700ms, environment 1ms, prepare 1.02s)
+2026-09-01T10:43:01.0539929Z services/dispatch test:  ✓ src/__tests__/accept-offer.test.ts (17 tests) 97ms
+2026-09-01T10:43:01.0628070Z services/geography test: Done
+2026-09-01T10:43:01.0651406Z services/matching test$ vitest run
+2026-09-01T10:43:01.6659936Z packages/bot-runtime test:  ✓ src/__tests__/groups.test.ts (14 tests) 248ms
+2026-09-01T10:43:02.2379620Z services/matching test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/services/matching
+2026-09-01T10:43:02.3109158Z services/dispatch test:  ✓ src/__tests__/cancel-job.test.ts (14 tests) 126ms
+2026-09-01T10:43:02.3755206Z services/drivers test:  ✓ src/__tests__/http-profile.test.ts (17 tests) 640ms
+2026-09-01T10:43:03.2956736Z services/drivers test:  ✓ src/__tests__/eligibility.test.ts (16 tests) 135ms
+2026-09-01T10:43:03.5039629Z services/matching test:  ✓ src/__tests__/evaluate-candidates.test.ts (26 tests) 75ms
+2026-09-01T10:43:03.6679542Z packages/bot-runtime test:  ✓ src/__tests__/runtime.test.ts (6 tests) 299ms
+2026-09-01T10:43:03.8853077Z services/dispatch test:  ✓ src/__tests__/contract-drift.test.ts (15 tests) 181ms
+2026-09-01T10:43:04.0796006Z services/drivers test:  ✓ src/__tests__/schema-drift.test.ts (28 tests) 16ms
+2026-09-01T10:43:04.1968597Z services/matching test:  ✓ src/__tests__/manage-candidacy.test.ts (23 tests) 19ms
+2026-09-01T10:43:04.4227285Z packages/bot-runtime test:  ✓ src/__tests__/config.test.ts (23 tests) 29ms
+2026-09-01T10:43:04.7092963Z services/drivers test:  ✓ src/__tests__/publication.test.ts (16 tests) 98ms
+2026-09-01T10:43:05.0067002Z services/matching test:  ✓ src/__tests__/scoring.test.ts (29 tests) 226ms
+2026-09-01T10:43:05.2293163Z services/dispatch test:  ✓ src/__tests__/events-contract.test.ts (8 tests) 169ms
+2026-09-01T10:43:05.5834345Z packages/bot-runtime test:  ✓ src/__tests__/messages.test.ts (8 tests) 186ms
+2026-09-01T10:43:05.9749069Z services/drivers test:  ✓ src/__tests__/http-drift.test.ts (12 tests) 165ms
+2026-09-01T10:43:06.1133064Z packages/bot-runtime test:  ✓ src/__tests__/identity-bootstrap.test.ts (7 tests) 19ms
+2026-09-01T10:43:06.7749675Z services/dispatch test:  ✓ src/__tests__/reject-offer.test.ts (12 tests) 87ms
+2026-09-01T10:43:06.8469603Z services/matching test:  ✓ src/__tests__/http-service-identity.test.ts (12 tests) 367ms
+2026-09-01T10:43:07.2294195Z packages/bot-runtime test:  ✓ src/__tests__/launch-surfaces.test.ts (8 tests) 148ms
+2026-09-01T10:43:07.2690248Z packages/bot-runtime test:  Test Files  8 passed (8)
+2026-09-01T10:43:07.2729116Z packages/bot-runtime test:       Tests  93 passed (93)
+2026-09-01T10:43:07.2765628Z packages/bot-runtime test:    Start at  10:42:56
+2026-09-01T10:43:07.2809364Z packages/bot-runtime test:    Duration  10.66s (transform 1.34s, setup 0ms, collect 4.17s, tests 1.87s, environment 8ms, prepare 1.92s)
+2026-09-01T10:43:07.5244082Z services/matching test:  ✓ src/__tests__/filters.test.ts (22 tests) 12ms
+2026-09-01T10:43:07.5999933Z services/dispatch test:  ✓ src/__tests__/http-order-engine.test.ts (22 tests) 141ms
+2026-09-01T10:43:07.6358999Z packages/bot-runtime test: Done
+2026-09-01T10:43:07.6459976Z services/drivers test:  ✓ src/__tests__/http-documents.test.ts (7 tests) 417ms
+2026-09-01T10:43:07.9459743Z services/matching test:  ✓ src/__tests__/mappers.test.ts (9 tests) 14ms
+2026-09-01T10:43:08.2863513Z services/dispatch test:  ✓ src/__tests__/schema-drift.test.ts (18 tests) 20ms
+2026-09-01T10:43:08.5269664Z services/matching test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 10ms
+2026-09-01T10:43:08.7113578Z services/drivers test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 303ms
+2026-09-01T10:43:08.8619768Z services/matching test:  ✓ src/__tests__/ruleset-drift.test.ts (8 tests) 14ms
+2026-09-01T10:43:09.2129600Z services/dispatch test:  ✓ src/__tests__/mappers.test.ts (10 tests) 46ms
+2026-09-01T10:43:09.2426575Z services/drivers test:  ✓ src/__tests__/privacy.test.ts (4 tests) 41ms
+2026-09-01T10:43:09.8191627Z services/matching test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 243ms
+2026-09-01T10:43:10.2182590Z services/dispatch test:  ✓ src/__tests__/create-job.test.ts (13 tests) 34ms
+2026-09-01T10:43:10.2622313Z services/drivers test:  ✓ src/__tests__/http-vehicles.test.ts (7 tests) 279ms
+2026-09-01T10:43:10.6537541Z services/matching test:  ✓ src/__tests__/http-candidacy.test.ts (5 tests) 147ms
+2026-09-01T10:43:10.7269604Z services/dispatch test:  ✓ src/__tests__/state-machine.test.ts (19 tests) 23ms
+2026-09-01T10:43:11.3288584Z services/drivers test:  ✓ src/__tests__/http-eligibility.test.ts (7 tests) 273ms
+2026-09-01T10:43:11.3633208Z services/drivers test:  Test Files  13 passed (13)
+2026-09-01T10:43:11.3634388Z services/drivers test:       Tests  196 passed (196)
+2026-09-01T10:43:11.3702968Z services/drivers test:    Start at  10:42:56
+2026-09-01T10:43:11.3734895Z services/drivers test:    Duration  14.91s (transform 1.49s, setup 0ms, collect 5.80s, tests 2.67s, environment 17ms, prepare 2.51s)
+2026-09-01T10:43:11.4686633Z services/matching test:  ✓ src/__tests__/http-candidates.test.ts (4 tests) 166ms
+2026-09-01T10:43:11.5888342Z services/drivers test: Done
+2026-09-01T10:43:11.7967907Z services/dispatch test:  ✓ src/__tests__/http-offer-detail.test.ts (9 tests) 208ms
+2026-09-01T10:43:11.8765082Z services/matching test:  ✓ src/__tests__/http-geography.test.ts (4 tests) 39ms
+2026-09-01T10:43:12.4690511Z services/matching test:  ✓ src/__tests__/http-health.test.ts (2 tests) 90ms
+2026-09-01T10:43:12.5109891Z services/matching test:  Test Files  13 passed (13)
+2026-09-01T10:43:12.5128555Z services/matching test:       Tests  172 passed (172)
+2026-09-01T10:43:12.5540596Z services/matching test:    Start at  10:43:02
+2026-09-01T10:43:12.5567367Z services/matching test:    Duration  10.24s (transform 997ms, setup 0ms, collect 3.03s, tests 1.42s, environment 16ms, prepare 2.21s)
+2026-09-01T10:43:12.6506880Z services/matching test: Done
+2026-09-01T10:43:12.6519271Z services/dispatch test:  ✓ src/__tests__/http-jobs.test.ts (11 tests) 236ms
+2026-09-01T10:43:13.0285828Z services/dispatch test:  ✓ src/__tests__/run-tick.test.ts (8 tests) 23ms
+2026-09-01T10:43:13.2827125Z services/dispatch test:  ✓ src/__tests__/http-matching.test.ts (7 tests) 23ms
+2026-09-01T10:43:13.7800077Z services/dispatch test:  ✓ src/__tests__/http-offers.test.ts (6 tests) 131ms
+2026-09-01T10:43:14.2552959Z services/dispatch test:  ✓ src/__tests__/http-errors.test.ts (5 tests) 111ms
+2026-09-01T10:43:14.4082741Z services/dispatch test:  ✓ src/__tests__/deadlines.test.ts (10 tests) 4ms
+2026-09-01T10:43:14.8582726Z services/dispatch test:  ✓ src/__tests__/http-tick.test.ts (4 tests) 96ms
+2026-09-01T10:43:15.2763759Z services/dispatch test:  ✓ src/__tests__/http-health.test.ts (2 tests) 73ms
+2026-09-01T10:43:15.3050276Z services/dispatch test:  Test Files  20 passed (20)
+2026-09-01T10:43:15.3060582Z services/dispatch test:       Tests  236 passed (236)
+2026-09-01T10:43:15.3061480Z services/dispatch test:    Start at  10:42:56
+2026-09-01T10:43:15.3062788Z services/dispatch test:    Duration  18.58s (transform 1.67s, setup 0ms, collect 9.40s, tests 1.93s, environment 7ms, prepare 2.51s)
+2026-09-01T10:43:15.3883025Z services/dispatch test: Done
+2026-09-01T10:43:15.3886008Z bots/customer-bot test$ vitest run
+2026-09-01T10:43:15.3889187Z bots/driver-bot test$ vitest run
+2026-09-01T10:43:15.3891506Z bots/partner-bot test$ vitest run
+2026-09-01T10:43:15.3893572Z packages/dispatch-e2e test$ vitest run
+2026-09-01T10:43:16.1370095Z bots/partner-bot test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/bots/partner-bot
+2026-09-01T10:43:16.1589625Z bots/driver-bot test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/bots/driver-bot
+2026-09-01T10:43:16.4181631Z bots/customer-bot test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/bots/customer-bot
+2026-09-01T10:43:16.4279908Z packages/dispatch-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/dispatch-e2e
+2026-09-01T10:43:19.3619575Z bots/partner-bot test:  ✓ src/__tests__/partner-bot.test.ts (6 tests) 384ms
+2026-09-01T10:43:19.4346493Z bots/partner-bot test:  Test Files  1 passed (1)
+2026-09-01T10:43:19.4396256Z bots/partner-bot test:       Tests  6 passed (6)
+2026-09-01T10:43:19.4431169Z bots/partner-bot test:    Start at  10:43:16
+2026-09-01T10:43:19.4451347Z bots/partner-bot test:    Duration  3.30s (transform 1.07s, setup 0ms, collect 2.20s, tests 384ms, environment 1ms, prepare 298ms)
+2026-09-01T10:43:19.6958587Z bots/partner-bot test: Done
+2026-09-01T10:43:19.6966637Z packages/driver-e2e test$ vitest run
+2026-09-01T10:43:20.5102834Z bots/customer-bot test:  ✓ src/__tests__/customer-flows.test.ts (14 tests) 394ms
+2026-09-01T10:43:20.5479969Z bots/driver-bot test:  ✓ src/__tests__/driver-flows.test.ts (21 tests) 461ms
+2026-09-01T10:43:20.7001087Z packages/driver-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/driver-e2e
+2026-09-01T10:43:21.1356834Z bots/customer-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 20ms
+2026-09-01T10:43:21.1557323Z bots/driver-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 25ms
+2026-09-01T10:43:21.7574213Z packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول
+2026-09-01T10:43:21.7589065Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:22.6130383Z packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي
+2026-09-01T10:43:22.6187555Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:22.9821176Z bots/customer-bot test:  ✓ src/__tests__/customer-bot.test.ts (6 tests) 336ms
+2026-09-01T10:43:22.9970840Z packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُصعِّد إلى المجتمع بلا مرشّحين ثم يُعلن النفاد بعد نافذة التصعيد
+2026-09-01T10:43:22.9979748Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:23.0758588Z bots/customer-bot test:  Test Files  3 passed (3)
+2026-09-01T10:43:23.0789077Z bots/customer-bot test:       Tests  32 passed (32)
+2026-09-01T10:43:23.0839120Z bots/customer-bot test:    Start at  10:43:16
+2026-09-01T10:43:23.0856972Z bots/customer-bot test:    Duration  6.66s (transform 1.57s, setup 0ms, collect 3.81s, tests 751ms, environment 1ms, prepare 818ms)
+2026-09-01T10:43:23.2390397Z packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > موجة بعرضين: يفوز واحد ويُغلق الآخر superseded لا rejected
+2026-09-01T10:43:23.2401597Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:23.2459124Z bots/driver-bot test:  ✓ src/__tests__/driver-bot.test.ts (6 tests) 400ms
+2026-09-01T10:43:23.2511110Z bots/driver-bot test:    ✓ driver bot > exposes its own Mini App from the environment  318ms
+2026-09-01T10:43:23.2892333Z bots/driver-bot test:  Test Files  3 passed (3)
+2026-09-01T10:43:23.2919027Z bots/driver-bot test:       Tests  39 passed (39)
+2026-09-01T10:43:23.2958843Z bots/driver-bot test:    Start at  10:43:16
+2026-09-01T10:43:23.3061412Z bots/driver-bot test:    Duration  7.13s (transform 1.80s, setup 0ms, collect 4.40s, tests 886ms, environment 6ms, prepare 684ms)
+2026-09-01T10:43:23.4178745Z bots/customer-bot test: Done
+2026-09-01T10:43:23.4257828Z packages/negotiation-e2e test$ vitest run
+2026-09-01T10:43:23.4323419Z packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · the run is unambiguous about what it proved > يُصرِّح بمخزنه: /health يقول postgres عند رفع البوابة و memory دونه
+2026-09-01T10:43:23.4398935Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:23.5148037Z packages/dispatch-e2e test:  ✓ src/__tests__/phase07-exit-gate.e2e.test.ts (5 tests) 1912ms
+2026-09-01T10:43:23.5176726Z packages/dispatch-e2e test:    ✓ Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول  1012ms
+2026-09-01T10:43:23.5198437Z packages/dispatch-e2e test:    ✓ Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي  381ms
+2026-09-01T10:43:23.6343032Z bots/driver-bot test: Done
+2026-09-01T10:43:23.6382146Z packages/order-e2e test$ vitest run
+2026-09-01T10:43:24.3744675Z packages/negotiation-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/negotiation-e2e
+2026-09-01T10:43:24.4891627Z packages/order-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/order-e2e
+2026-09-01T10:43:25.4912293Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > بلا هوية ⇒ 401، وقبل أيّ منطقِ عمل
+2026-09-01T10:43:25.4933141Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:25.6554781Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة
+2026-09-01T10:43:25.6605677Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:25.7820161Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ ⇒ يمرّ الطلب إلى منطق العمل (404 لا 401)
+2026-09-01T10:43:25.7821906Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:25.9621108Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ بصلاحيةٍ خاطئة ⇒ 403: التوثيق ليس التخويل
+2026-09-01T10:43:25.9698218Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:26.0790574Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ يُحرَق: النداء الثاني بالرمز نفسه ⇒ 401 (سياسةُ الإعادة، ADR-021)
+2026-09-01T10:43:26.0813656Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:26.1300747Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ مربوطٌ بالمسار والطريقة: رمزُ مسارٍ آخر ⇒ 401
+2026-09-01T10:43:26.1391550Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:26.1791407Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > مسارٌ غير مصنَّفٍ يُرفَض قبل 404: الافتراضُ منعٌ لا سماح
+2026-09-01T10:43:26.1899286Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:26.2638472Z packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > ‏/health يبقى مفتوحاً: الإنفاذُ لا يُعمي المراقبة
+2026-09-01T10:43:26.2709024Z packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+2026-09-01T10:43:26.3260095Z packages/dispatch-e2e test:  ✓ src/__tests__/service-identity-enforcement.e2e.test.ts (8 tests) 1001ms
+2026-09-01T10:43:26.3291073Z packages/dispatch-e2e test:    ✓ M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > بلا هوية ⇒ 401، وقبل أيّ منطقِ عمل  329ms
+2026-09-01T10:43:26.3952500Z packages/dispatch-e2e test:  Test Files  2 passed (2)
+2026-09-01T10:43:26.3993497Z packages/dispatch-e2e test:       Tests  13 passed (13)
+2026-09-01T10:43:26.4078569Z packages/dispatch-e2e test:    Start at  10:43:16
+2026-09-01T10:43:26.4156892Z packages/dispatch-e2e test:    Duration  9.96s (transform 2.69s, setup 0ms, collect 5.82s, tests 2.91s, environment 5ms, prepare 426ms)
+2026-09-01T10:43:26.8174761Z packages/dispatch-e2e test: Done
+2026-09-01T10:43:26.9599368Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله
+2026-09-01T10:43:26.9623625Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:27.5662322Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > الأهليّة ليست ادّعاءً: قبل المراجعة لا عرض، وبعدها عرض
+2026-09-01T10:43:27.5665523Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:27.7526206Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > تنتهي الرخصة، فتُخرجه نبضة واحدة، فلا يعود التوزيع يراه
+2026-09-01T10:43:27.7541105Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:27.9330504Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة الثانية لا تجد شيئاً ولا تنشر ثانية — سكونها من حالتها
+2026-09-01T10:43:27.9359358Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.0756171Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة تُحدِّث `last_tick_at` الذي يقرأه `/health`، والتخزين مُعلَن
+2026-09-01T10:43:28.0783782Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.1380271Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > منطقة لا تعرفها الجغرافيا تُرفض، ولا يبقى للسائق منطقة
+2026-09-01T10:43:28.1399148Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.2585014Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > المنطقة المعروفة تُقبَل — فالرفض أعلاه ليس رفضاً لكل شيء
+2026-09-01T10:43:28.2659517Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.2909406Z packages/order-e2e test: stdout | src/__tests__/phase06-exit-gate.e2e.test.ts
+2026-09-01T10:43:28.2969085Z packages/order-e2e test: [phase06-gate] engine persistence = memory
+2026-09-01T10:43:28.3399019Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > سائق مشغول يعلن «متاح» فيبقى `busy` عند المطابقة
+2026-09-01T10:43:28.3407907Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.5239407Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > إعلان `offline` ينزل إلى المطابقة فوراً — الأقلّ توافراً مسموح دائماً
+2026-09-01T10:43:28.5289079Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.6764509Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > سائق معلَّق لا يصله عرض، والمطابقة تقرأ `suspended` لا `ineligible`
+2026-09-01T10:43:28.6805968Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:28.9109870Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > إعادة التمكين تُعيده إلى التجمّع بنفس المسار
+2026-09-01T10:43:28.9111983Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:29.0895292Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > المطابقة تُنشئ الصفّ بـ200 لا 201، ومفتاح منع التكرار مطلوب
+2026-09-01T10:43:29.0951409Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:29.2300250Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > أحداث الأهليّة تُقيَّد في صندوق البريد — لا تغيّر صامت
+2026-09-01T10:43:29.2329145Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:29.3531655Z packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > سائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة
+2026-09-01T10:43:29.3600221Z packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+2026-09-01T10:43:29.5697740Z packages/driver-e2e test:  ✓ src/__tests__/phase05-exit-gate.e2e.test.ts (14 tests) 2737ms
+2026-09-01T10:43:29.5699716Z packages/driver-e2e test:    ✓ المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله  730ms
+2026-09-01T10:43:29.6268687Z packages/driver-e2e test:  Test Files  1 passed (1)
+2026-09-01T10:43:29.6319257Z packages/driver-e2e test:       Tests  14 passed (14)
+2026-09-01T10:43:29.6349004Z packages/driver-e2e test:    Start at  10:43:20
+2026-09-01T10:43:29.6391058Z packages/driver-e2e test:    Duration  8.92s (transform 3.27s, setup 0ms, collect 5.62s, tests 2.74s, environment 1ms, prepare 222ms)
+2026-09-01T10:43:29.8796677Z packages/driver-e2e test: Done
+2026-09-01T10:43:30.4036963Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > declares which store it ran against, and answers /health from it
+2026-09-01T10:43:30.4058755Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:30.5520553Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1 · happy path: intake → wave → thread → accept → the engine holds the price
+2026-09-01T10:43:30.5559213Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:30.7420642Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1b · the negotiated number is the one both parties last saw, after a counter
+2026-09-01T10:43:30.7439830Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:30.8950451Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 2 · the same accept key twice: one agreement, one price, one hand-off
+2026-09-01T10:43:30.8959106Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.0559299Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 3 · the engine refuses the second agreement, and the agreement survives it
+2026-09-01T10:43:31.0561634Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.2027307Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 4 · the engine is down at accept time: pending with a retry moment, then delivered
+2026-09-01T10:43:31.2039582Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.3193577Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > refuses to open a thread on a customer_offer order, reading price_mode from the engine
+2026-09-01T10:43:31.3228971Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.3986681Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+2026-09-01T10:43:31.4018793Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.4250429Z packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+2026-09-01T10:43:31.4268882Z packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+2026-09-01T10:43:31.5032494Z packages/negotiation-e2e test:  ✓ src/__tests__/phase08-exit-gate.e2e.test.ts (8 tests) 1188ms
+2026-09-01T10:43:31.5377249Z packages/negotiation-e2e test:  Test Files  1 passed (1)
+2026-09-01T10:43:31.5398720Z packages/negotiation-e2e test:       Tests  8 passed (8)
+2026-09-01T10:43:31.5430807Z packages/negotiation-e2e test:    Start at  10:43:24
+2026-09-01T10:43:31.5459274Z packages/negotiation-e2e test:    Duration  7.16s (transform 3.04s, setup 0ms, collect 5.15s, tests 1.19s, environment 0ms, prepare 319ms)
+2026-09-01T10:43:31.7349145Z packages/negotiation-e2e test: Done
+2026-09-01T10:43:31.8518928Z packages/order-e2e test:  ✓ src/__tests__/phase06-exit-gate.e2e.test.ts (16 tests) 3746ms
+2026-09-01T10:43:31.8520743Z packages/order-e2e test:    ✓ 3. the whole transition table, over HTTP (441 pairs) > accepts exactly the published edges and refuses every other pair  3084ms
+2026-09-01T10:43:31.8749701Z packages/order-e2e test:  Test Files  1 passed (1)
+2026-09-01T10:43:31.8767127Z packages/order-e2e test:       Tests  16 passed (16)
+2026-09-01T10:43:31.8772166Z packages/order-e2e test:    Start at  10:43:24
+2026-09-01T10:43:31.8794410Z packages/order-e2e test:    Duration  7.39s (transform 1.84s, setup 0ms, collect 3.02s, tests 3.75s, environment 2ms, prepare 323ms)
+2026-09-01T10:43:31.9694681Z packages/order-e2e test: Done
+2026-09-01T10:43:31.9704707Z packages/customer-e2e test$ vitest run
+2026-09-01T10:43:31.9705422Z packages/channel-e2e test$ vitest run
+2026-09-01T10:43:32.4585794Z packages/channel-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/channel-e2e
+2026-09-01T10:43:32.5120049Z packages/customer-e2e test:  RUN  v3.2.7 /home/runner/work/wasla/wasla/packages/customer-e2e
+2026-09-01T10:43:33.9759042Z packages/channel-e2e test:  ✓ src/__tests__/m1-02-session-gate.e2e.test.ts (17 tests | 10 skipped) 17ms
+2026-09-01T10:43:34.9656439Z packages/customer-e2e test: stdout | src/__tests__/phase04-exit-gate.e2e.test.ts
+2026-09-01T10:43:34.9679104Z packages/customer-e2e test: [phase04-exit-gate] persistence=memory
+2026-09-01T10:43:35.7004809Z packages/channel-e2e test:  ✓ src/__tests__/phase03-exit-gate.e2e.test.ts (8 tests | 1 skipped) 250ms
+2026-09-01T10:43:35.7168902Z packages/channel-e2e test:  Test Files  2 passed (2)
+2026-09-01T10:43:35.7189499Z packages/channel-e2e test:       Tests  14 passed | 11 skipped (25)
+2026-09-01T10:43:35.7195710Z packages/channel-e2e test:    Start at  10:43:32
+2026-09-01T10:43:35.7210069Z packages/channel-e2e test:    Duration  3.26s (transform 1.31s, setup 0ms, collect 2.43s, tests 267ms, environment 1ms, prepare 207ms)
+2026-09-01T10:43:35.8082981Z packages/channel-e2e test: Done
+2026-09-01T10:43:37.2875168Z packages/customer-e2e test:  ✓ src/__tests__/phase04-exit-gate.e2e.test.ts (11 tests) 2408ms
+2026-09-01T10:43:37.2877301Z packages/customer-e2e test:    ✓ Phase 04 exit gate — customer → Customer Core → order engine > reports a timeout as a timeout when the engine never answers  2019ms
+2026-09-01T10:43:37.3068889Z packages/customer-e2e test:  Test Files  1 passed (1)
+2026-09-01T10:43:37.3124323Z packages/customer-e2e test:       Tests  11 passed (11)
+2026-09-01T10:43:37.3139029Z packages/customer-e2e test:    Start at  10:43:32
+2026-09-01T10:43:37.3140458Z packages/customer-e2e test:    Duration  4.80s (transform 1.18s, setup 0ms, collect 2.04s, tests 2.41s, environment 0ms, prepare 110ms)
+2026-09-01T10:43:37.3959917Z packages/customer-e2e test: Done
+2026-09-01T10:43:37.4098389Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:43:37.4099370Z ##[group]Run actions/upload-artifact@v4
+2026-09-01T10:43:37.4099593Z with:
+2026-09-01T10:43:37.4099748Z   name: test-log
+2026-09-01T10:43:37.4099915Z   path: test.log
+2026-09-01T10:43:37.4100077Z   retention-days: 30
+2026-09-01T10:43:37.4100257Z   if-no-files-found: warn
+2026-09-01T10:43:37.4100622Z   compression-level: 6
+2026-09-01T10:43:37.4100807Z   overwrite: false
+2026-09-01T10:43:37.4100985Z   include-hidden-files: false
+2026-09-01T10:43:37.4101178Z env:
+2026-09-01T10:43:37.4101335Z   NODE_VERSION: 20.20.1
+2026-09-01T10:43:37.4101517Z   PNPM_VERSION: 9.15.9
+2026-09-01T10:43:37.4101688Z ##[endgroup]
+2026-09-01T10:43:37.5508882Z (node:9605) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-01T10:43:37.5510116Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-01T10:43:37.5586368Z With the provided path, there will be 1 file uploaded
+2026-09-01T10:43:37.5638973Z Artifact name is valid!
+2026-09-01T10:43:37.5668747Z Root directory input is valid!
+2026-09-01T10:43:37.9442459Z Beginning upload of artifact content to blob storage
+2026-09-01T10:43:37.9631595Z (node:9605) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-09-01T10:43:38.2205901Z Uploaded bytes 9048
+2026-09-01T10:43:38.2956192Z Finished uploading artifact content to blob storage!
+2026-09-01T10:43:38.2957397Z SHA256 digest of uploaded artifact zip is ab1c2f5ae783f6cc7698624444bd521da9a65a7f7898d47a9be7d681eee24faa
+2026-09-01T10:43:38.2959585Z Finalizing artifact upload
+2026-09-01T10:43:38.5986205Z Artifact test-log.zip successfully finalized. Artifact ID 9796848525
+2026-09-01T10:43:38.5987262Z Artifact test-log has been successfully uploaded! Final size is 9048 bytes. Artifact ID is 9796848525
+2026-09-01T10:43:38.5998741Z Artifact download URL: https://github.com/skyosv10-art/wasla/actions/runs/33498726052/artifacts/9796848525
+2026-09-01T10:43:38.6150817Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:43:38.6151764Z Post job cleanup.
+2026-09-01T10:43:38.7195701Z (node:9618) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-01T10:43:38.7196954Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-01T10:43:38.7374712Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T10:43:38.7376274Z Post job cleanup.
+2026-09-01T10:43:38.8304180Z [command]/usr/bin/git version
+2026-09-01T10:43:38.8386730Z git version 2.55.0
+2026-09-01T10:43:38.8499036Z Temporarily overriding HOME='/home/runner/work/_temp/e2e49dd4-e01e-4dd8-b8d9-e5a0964f9211' before making global git config changes
+2026-09-01T10:43:38.8535312Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T10:43:38.8560085Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-09-01T10:43:38.8631233Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T10:43:38.8679223Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T10:43:38.9298846Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T10:43:38.9352118Z http.https://github.com/.extraheader
+2026-09-01T10:43:38.9377924Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-01T10:43:38.9499328Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T10:43:38.9923754Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T10:43:38.9960234Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T10:43:39.0301512Z Cleaning up orphan processes
+2026-09-01T10:43:39.0529463Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

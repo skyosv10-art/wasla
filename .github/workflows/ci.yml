@@ -1,0 +1,266 @@
+# .github/workflows/ci.yml — WASLA CI · النقلُ الأوّلُ إلى GitHub Actions (M0-21)
+#
+# ── لماذا يوجد هذا الملفُّ ───────────────────────────────────────────────
+# `RISK-0001`: خطُّ GitLab لم يبدأ قطُّ منذ 2026-08-25 — كلُّ وظيفةٍ تُنهى بـ
+# `ci_quota_exceeded` و`started_at: null`، أي **لا وظيفةَ بدأت أصلاً**. فكلُّ
+# أدلّةِ البوّاباتِ في هذا المستودعِ محلّيّةٌ، وخمسةَ عشرَ عنصراً عالقٌ في
+# `Ready for Gate` وصفرُ عناصرَ `Completed` (`RISK-0003`).
+#
+# وهذا الملفُّ **لا يُعيد بناءَ CI**. غرضُه واحدٌ يُقاس: **أن يبدأ خطٌّ فعلاً
+# وينفّذَ الشفرةَ ويُخرِجَ نتيجةً قابلةً للتدقيق.** ولذلك نُقل **الحدُّ الأدنى
+# المانعُ** وحدَه: ستُّ وظائفَ كنسيّةٌ لا خمسٌ وعشرون. ووظائفُ قاعدةِ البياناتِ
+# والبوّاباتُ من طرفٍ إلى طرفٍ (عشرون وظيفةً) **تبقى في `.gitlab-ci.yml` كما هي**
+# حتّى يُثبِتَ هذا الخطُّ نفسَه، ثمّ تُنقَل في `M0-22`.
+#
+#   قرارُ مالكِ البرنامجِ 2026-09-01 · ADR-023 · العنصر M0-21 · الحجز CLM-0031
+#
+# ── قاعدةُ التكافؤ ──────────────────────────────────────────────────────
+# كلُّ وظيفةٍ هنا تُشغِّلُ **الأمرَ نفسَه حرفاً بحرفٍ** كما في `.gitlab-ci.yml`.
+# لا تبسيطَ ولا إعادةَ تفسيرٍ ولا تخفيفَ شرطٍ. ومَن أرادَ التحقُّقَ فليقارِن
+# سطرَ `run:` بسطرِ `script:` في نظيرِه المذكورِ في تعليقِ كلِّ وظيفة.
+#
+# ── ما لم يُنقَل ولا يُدَّعى ─────────────────────────────────────────────
+#   • `markdown-lint` — إرشاديٌّ (`allow_failure: true` · `RISK-0008`). لا يمنع.
+#   • عشرون وظيفةَ `*-db-integration` و`*-exit-gate-e2e` — نطاقُ `M0-22`.
+#
+# ── حدٌّ مُعلَنٌ لا مكتوم ─────────────────────────────────────────────────
+# `scripts/checks/validate-ci-mandatory.sh` (البابُ 1..4) يقرأ `.gitlab-ci.yml`
+# **وحدَه**. فهذا الملفُّ اليومَ **غيرُ محروسٍ** بأبوابِه الأربعة: لو حُذفت منه
+# وظيفةُ `verify` غداً لَما أسقطَ ذلك بوّابةً. توسيعُ الحارسِ ليقرأَ المصدرَين
+# مُسجَّلٌ في `M0-22` ولم يُنفَّذ هنا — لأنّ توسيعَ حارسٍ في الدفعةِ التي تُقاس
+# به هو عينُ ما تمنعه قاعدةُ صدقِ القياس.
+#
+# المرجع: docs/15-decisions/ADR-023-ci-migration-to-github-actions.md
+#         docs/00-rules/VERIFY_COMMAND.md · docs/07-security/RISK_REGISTER.md
+
+name: WASLA CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wasla-ci-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # مثبَّتانِ تثبيتاً تامّاً على بصمةِ الأساسِ docs/12-testing/BASELINE.json
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────
+  # 1) repo-structure — نظيرُ `.gitlab-ci.yml : repo-structure`
+  #    أربعةُ سكربتاتٍ بالترتيبِ نفسِه، بلا قائمةٍ مضمَّنةٍ هنا (M0-04 البابُ 2).
+  # ───────────────────────────────────────────────────────────────────
+  repo-structure:
+    name: repo-structure
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: validate-repo-structure
+        run: bash scripts/checks/validate-repo-structure.sh
+      - name: validate-launch-board
+        run: bash scripts/checks/validate-launch-board.sh
+      - name: validate-work-claims
+        run: bash scripts/checks/validate-work-claims.sh
+      - name: scan-secrets
+        run: bash scripts/checks/scan-secrets.sh
+
+  # ───────────────────────────────────────────────────────────────────
+  # 2) doc-coverage — نظيرُ `.gitlab-ci.yml : doc-coverage`
+  #    قاعدةُ التوثيقِ مع كلِّ دفعٍ (PUSH_DOCUMENTATION_RULE).
+  #    `TARGET` هنا هو نظيرُ `CI_MERGE_REQUEST_TARGET_BRANCH_NAME` ثمَّ
+  #    `CI_DEFAULT_BRANCH` — بالترتيبِ نفسِه.
+  # ───────────────────────────────────────────────────────────────────
+  doc-coverage:
+    name: doc-coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+      - name: require-doc-update
+        run: |
+          TARGET="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
+          bash scripts/checks/require-doc-update.sh "origin/$TARGET" HEAD
+
+  # ───────────────────────────────────────────────────────────────────
+  # 3) governance-guard — نظيرُ `.gitlab-ci.yml : governance-guard`
+  #    البوّابةُ الموحَّدةُ ثمَّ حزمةُ الإثباتِ التي تُثبت أنّ الفحوصَ ترفض
+  #    فعلاً لا شكلاً. الأمرانِ بالترتيبِ نفسِه.
+  # ───────────────────────────────────────────────────────────────────
+  governance-guard:
+    name: governance-guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+      - name: verify-governance
+        run: |
+          TARGET="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
+          echo "==> بوابة الحوكمة: النطاق origin/$TARGET..HEAD"
+          bash scripts/checks/verify-governance.sh "origin/$TARGET" HEAD
+      # السببُ الجذريُّ (2) نفسُه في ADR-023 §6: `test-governance.sh` يُشغِّلُ
+      # بابَ الأساسِ (M0-08) الذي يقيسُ `pnpm --version`، وصورةُ
+      # `alpine:3.20` في نظيرِ هذه الوظيفةِ تُثبِّتُ
+      # `bash git python3 coreutils findutils grep sed` — **بلا pnpm**.
+      # فالعيبُ كان قائماً في GitLab هنا أيضاً ولم يُكتشَف لأنّ الوظيفةَ
+      # لم تبدأ قطُّ. إعطاءُ الفحصِ بيئتَه لا تعطيلُه.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: test-governance
+        run: |
+          echo "==> إثبات أن الفحوص ترفض فعلاً (عدد الحالات يُطبَع في ذيل الحزمة)"
+          bash scripts/checks/test-governance.sh
+
+  # ───────────────────────────────────────────────────────────────────
+  # 4) verify — نظيرُ `.gitlab-ci.yml : verify`
+  #    `VERIFY_SKIP_NODE: "1"` منقولٌ كما هو: هذه الوظيفةُ تحرسُ المدخلَ
+  #    الموحَّدَ ولا تُعيد تشغيلَ الأنواعِ والاختباراتِ — لهما وظيفتانِ
+  #    مستقلّتانِ أدناه. والأرتفاكتُ يُرفَع `when: always` كما في الأصل.
+  # ───────────────────────────────────────────────────────────────────
+  verify:
+    name: verify
+    runs-on: ubuntu-24.04
+    env:
+      VERIFY_SKIP_NODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+      # `VERIFY_SKIP_NODE=1` يتخطّى **الأنواعَ والاختباراتِ وحدَها**، ولا
+      # يتخطّى البابَ الأوّلَ من `M0-08` الذي يقيسُ `env.pnpm` في الأساس.
+      # وصورةُ `alpine:3.20` في `.gitlab-ci.yml` تُثبِّتُ `bash git python3 grep`
+      # فقط — **بلا node ولا pnpm**، فوظيفةُ `verify` هناك كانت ستُخفِقُ
+      # بالسببِ نفسِه لو بدأت يوماً. لم تبدأ، فلم يُكتشَف. هذا أوّلُ تشغيلٍ
+      # يكشفُه (INC/ADR-023 §6). وتوفيرُ السلسلةِ ليس تخفيفَ فحصٍ بل
+      # إعطاءُ الفحصِ البيئةَ التي يقيسُها.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: verify.sh
+        run: bash scripts/verify.sh
+      - name: رفع أرتفاكت التحقق
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-report
+          path: artifacts/verify/
+          retention-days: 30
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────
+  # 5) typecheck — الشطرُ الأوّلُ من `.gitlab-ci.yml : build-test`
+  #    فُصلَ عن `test` بقرارِ مالكِ البرنامجِ (2026-09-01) ليكون لكلِّ شرطٍ
+  #    في البوّابةِ وظيفةٌ تُقابله وحدَها، فلا يُخفي إخفاقُ أحدِهما الآخر.
+  #    الأمرُ نفسُه حرفاً: `pnpm install --frozen-lockfile` ثمَّ `pnpm -r run typecheck`.
+  # ───────────────────────────────────────────────────────────────────
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: typecheck
+        run: pnpm -r run typecheck 2>&1 | tee typecheck.log
+      - name: رفع سجل الأنواع
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-log
+          path: typecheck.log
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────────
+  # 6) test — الشطرُ الثاني من `.gitlab-ci.yml : build-test`
+  #    `pnpm -r run test` كما هو. ولا قاعدةَ بياناتٍ هنا بقصدٍ: اختباراتُ
+  #    التكاملِ مستثناةٌ من الإعدادِ الافتراضيِّ بحارسٍ قائمٍ (M0-03)، ونقلُها
+  #    نطاقُ `M0-22`.
+  # ───────────────────────────────────────────────────────────────────
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: test
+        run: pnpm -r run test 2>&1 | tee test.log
+      - name: رفع سجل الاختبارات
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: test.log
+          retention-days: 30
+          if-no-files-found: warn

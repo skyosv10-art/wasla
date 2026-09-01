@@ -1,0 +1,515 @@
+﻿2026-09-01T22:31:43.5601775Z Current runner version: '2.337.0'
+2026-09-01T22:31:43.5629208Z ##[group]Runner Image Provisioner
+2026-09-01T22:31:43.5630154Z Hosted Compute Agent
+2026-09-01T22:31:43.5630933Z Version: 20260819.586
+2026-09-01T22:31:43.5631606Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-01T22:31:43.5632342Z Build Date: 2026-08-18T23:20:18Z
+2026-09-01T22:31:43.5633123Z Worker ID: {25ace1be-9be6-4e45-a49e-76a7625932fa}
+2026-09-01T22:31:43.5633872Z Azure Region: westus2
+2026-09-01T22:31:43.5634493Z ##[endgroup]
+2026-09-01T22:31:43.5636399Z ##[group]Operating System
+2026-09-01T22:31:43.5637290Z Ubuntu
+2026-09-01T22:31:43.5637920Z 24.04.4
+2026-09-01T22:31:43.5638448Z LTS
+2026-09-01T22:31:43.5639078Z ##[endgroup]
+2026-09-01T22:31:43.5639666Z ##[group]Runner Image
+2026-09-01T22:31:43.5640289Z Image: ubuntu-24.04
+2026-09-01T22:31:43.5640922Z Version: 20260823.283.1
+2026-09-01T22:31:43.5642232Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-01T22:31:43.5643932Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+2026-09-01T22:31:43.5644953Z ##[endgroup]
+2026-09-01T22:31:43.5646112Z ##[group]GITHUB_TOKEN Permissions
+2026-09-01T22:31:43.5648371Z Contents: read
+2026-09-01T22:31:43.5649127Z Metadata: read
+2026-09-01T22:31:43.5649707Z ##[endgroup]
+2026-09-01T22:31:43.5651886Z Secret source: Actions
+2026-09-01T22:31:43.5653133Z Prepare workflow directory
+2026-09-01T22:31:43.6403124Z Prepare all required actions
+2026-09-01T22:31:43.6452632Z Getting action download info
+2026-09-01T22:31:43.9936099Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-01T22:31:44.2410387Z Complete job name: db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)
+2026-09-01T22:31:44.2883610Z ##[group]Checking docker version
+2026-09-01T22:31:44.2897243Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-09-01T22:31:44.3785764Z '1.48'
+2026-09-01T22:31:44.3796444Z Docker daemon API version: '1.48'
+2026-09-01T22:31:44.3797658Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-09-01T22:31:44.3995567Z '1.48'
+2026-09-01T22:31:44.4010512Z Docker client API version: '1.48'
+2026-09-01T22:31:44.4016085Z ##[endgroup]
+2026-09-01T22:31:44.4020030Z ##[group]Clean up resources from previous jobs
+2026-09-01T22:31:44.4025444Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=d55301"
+2026-09-01T22:31:44.4198226Z ##[command]/usr/bin/docker network prune --force --filter "label=d55301"
+2026-09-01T22:31:44.4362118Z ##[endgroup]
+2026-09-01T22:31:44.4362684Z ##[group]Create local container network
+2026-09-01T22:31:44.4373221Z ##[command]/usr/bin/docker network create --label d55301 github_network_399e5a06940349d6ab30dca3ffd779e2
+2026-09-01T22:31:44.5110822Z 37278168a5160a6c0ff93c835d981ec474bc75a0456d3206a6922b5846b7dc49
+2026-09-01T22:31:44.5121502Z ##[endgroup]
+2026-09-01T22:31:44.5145233Z ##[group]Starting job container
+2026-09-01T22:31:44.5168384Z ##[command]/usr/bin/docker pull node:20-alpine
+2026-09-01T22:31:45.4652479Z 20-alpine: Pulling from library/node
+2026-09-01T22:31:45.7427164Z 6a0ac1617861: Pulling fs layer
+2026-09-01T22:31:45.7428535Z 4feea04c1543: Pulling fs layer
+2026-09-01T22:31:45.7429767Z b2cbbfe903b0: Pulling fs layer
+2026-09-01T22:31:45.7430999Z fff4e2c1b189: Pulling fs layer
+2026-09-01T22:31:46.0188193Z b2cbbfe903b0: Verifying Checksum
+2026-09-01T22:31:46.0197582Z b2cbbfe903b0: Download complete
+2026-09-01T22:31:46.0669863Z 6a0ac1617861: Verifying Checksum
+2026-09-01T22:31:46.0674437Z 6a0ac1617861: Download complete
+2026-09-01T22:31:46.2123741Z 4feea04c1543: Verifying Checksum
+2026-09-01T22:31:46.2127930Z 4feea04c1543: Download complete
+2026-09-01T22:31:46.2749086Z fff4e2c1b189: Verifying Checksum
+2026-09-01T22:31:46.2752386Z fff4e2c1b189: Download complete
+2026-09-01T22:31:46.2775514Z 6a0ac1617861: Pull complete
+2026-09-01T22:31:48.1526723Z 4feea04c1543: Pull complete
+2026-09-01T22:31:48.2201414Z b2cbbfe903b0: Pull complete
+2026-09-01T22:31:48.2373454Z fff4e2c1b189: Pull complete
+2026-09-01T22:31:48.2443270Z Digest: sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+2026-09-01T22:31:48.2455117Z Status: Downloaded newer image for node:20-alpine
+2026-09-01T22:31:48.2465751Z docker.io/library/node:20-alpine
+2026-09-01T22:31:48.2550555Z ##[command]/usr/bin/docker create --name d0d5e664069749d7adeb3859f3a3f22e_node20alpine_251301 --label d55301 --workdir /__w/wasla/wasla --network github_network_399e5a06940349d6ab30dca3ffd779e2  -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.337.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" node:20-alpine "-f" "/dev/null"
+2026-09-01T22:31:48.2830488Z 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:31:48.2853181Z ##[command]/usr/bin/docker start 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:31:48.5148231Z 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:31:48.5156749Z ##[command]/usr/bin/docker ps --all --filter id=4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:31:48.5296689Z 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d Up Less than a second
+2026-09-01T22:31:48.5317333Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:31:48.5466151Z HOME=/github/home
+2026-09-01T22:31:48.5467173Z GITHUB_ACTIONS=true
+2026-09-01T22:31:48.5468455Z CI=true
+2026-09-01T22:31:48.5480981Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-09-01T22:31:48.5482206Z NODE_VERSION=20.20.2
+2026-09-01T22:31:48.5482630Z YARN_VERSION=1.22.22
+2026-09-01T22:31:48.5491401Z ##[endgroup]
+2026-09-01T22:31:48.5492716Z ##[group]Starting postgres service container
+2026-09-01T22:31:48.5493990Z ##[command]/usr/bin/docker pull postgres:15
+2026-09-01T22:31:49.4695893Z 15: Pulling from library/postgres
+2026-09-01T22:31:49.7663609Z 6310eb16bf42: Pulling fs layer
+2026-09-01T22:31:49.7664214Z 639367129460: Pulling fs layer
+2026-09-01T22:31:49.7664653Z 248bdcd6e955: Pulling fs layer
+2026-09-01T22:31:49.7665106Z 8d2f3610bf84: Pulling fs layer
+2026-09-01T22:31:49.7665580Z 22bf49630d7e: Pulling fs layer
+2026-09-01T22:31:49.7665986Z d523576e6b46: Pulling fs layer
+2026-09-01T22:31:49.7666429Z d522ad15b8c1: Pulling fs layer
+2026-09-01T22:31:49.7667085Z 876153b11224: Pulling fs layer
+2026-09-01T22:31:49.7667545Z 04913c3958ed: Pulling fs layer
+2026-09-01T22:31:49.7668004Z a849d36c92a3: Pulling fs layer
+2026-09-01T22:31:49.7668421Z d6430d172c75: Pulling fs layer
+2026-09-01T22:31:49.7668668Z b86905d46631: Pulling fs layer
+2026-09-01T22:31:49.7668926Z 2659259e5615: Pulling fs layer
+2026-09-01T22:31:49.7669183Z 8f6bdf8e7ebe: Pulling fs layer
+2026-09-01T22:31:49.7669622Z 8d2f3610bf84: Waiting
+2026-09-01T22:31:49.7669850Z 22bf49630d7e: Waiting
+2026-09-01T22:31:49.7670058Z d523576e6b46: Waiting
+2026-09-01T22:31:49.7670259Z 04913c3958ed: Waiting
+2026-09-01T22:31:49.7670524Z a849d36c92a3: Waiting
+2026-09-01T22:31:49.7670866Z d6430d172c75: Waiting
+2026-09-01T22:31:49.7671073Z b86905d46631: Waiting
+2026-09-01T22:31:49.7671272Z 2659259e5615: Waiting
+2026-09-01T22:31:49.7671478Z 8f6bdf8e7ebe: Waiting
+2026-09-01T22:31:49.7671730Z d522ad15b8c1: Waiting
+2026-09-01T22:31:49.7672072Z 876153b11224: Waiting
+2026-09-01T22:31:50.0139186Z 639367129460: Verifying Checksum
+2026-09-01T22:31:50.0143986Z 639367129460: Download complete
+2026-09-01T22:31:50.0850894Z 248bdcd6e955: Verifying Checksum
+2026-09-01T22:31:50.0868251Z 248bdcd6e955: Download complete
+2026-09-01T22:31:50.1789863Z 6310eb16bf42: Verifying Checksum
+2026-09-01T22:31:50.1814115Z 6310eb16bf42: Download complete
+2026-09-01T22:31:50.2997691Z 8d2f3610bf84: Verifying Checksum
+2026-09-01T22:31:50.3013135Z 8d2f3610bf84: Download complete
+2026-09-01T22:31:50.4160958Z 22bf49630d7e: Verifying Checksum
+2026-09-01T22:31:50.4161712Z 22bf49630d7e: Download complete
+2026-09-01T22:31:50.4780530Z d523576e6b46: Verifying Checksum
+2026-09-01T22:31:50.4787834Z d523576e6b46: Download complete
+2026-09-01T22:31:50.5459916Z d522ad15b8c1: Verifying Checksum
+2026-09-01T22:31:50.5461855Z d522ad15b8c1: Download complete
+2026-09-01T22:31:50.6529870Z 876153b11224: Verifying Checksum
+2026-09-01T22:31:50.6530400Z 876153b11224: Download complete
+2026-09-01T22:31:50.7985608Z a849d36c92a3: Verifying Checksum
+2026-09-01T22:31:50.7987148Z a849d36c92a3: Download complete
+2026-09-01T22:31:50.9227453Z d6430d172c75: Verifying Checksum
+2026-09-01T22:31:50.9228794Z d6430d172c75: Download complete
+2026-09-01T22:31:51.0861569Z b86905d46631: Verifying Checksum
+2026-09-01T22:31:51.0862244Z b86905d46631: Download complete
+2026-09-01T22:31:51.2392327Z 2659259e5615: Verifying Checksum
+2026-09-01T22:31:51.2394164Z 2659259e5615: Download complete
+2026-09-01T22:31:51.2538911Z 04913c3958ed: Verifying Checksum
+2026-09-01T22:31:51.2540074Z 04913c3958ed: Download complete
+2026-09-01T22:31:51.3277090Z 8f6bdf8e7ebe: Verifying Checksum
+2026-09-01T22:31:51.3278659Z 8f6bdf8e7ebe: Download complete
+2026-09-01T22:31:51.5315370Z 6310eb16bf42: Pull complete
+2026-09-01T22:31:52.3499575Z 639367129460: Pull complete
+2026-09-01T22:31:52.5639632Z 248bdcd6e955: Pull complete
+2026-09-01T22:31:52.6162650Z 8d2f3610bf84: Pull complete
+2026-09-01T22:31:52.9980503Z 22bf49630d7e: Pull complete
+2026-09-01T22:31:53.0869331Z d523576e6b46: Pull complete
+2026-09-01T22:31:53.0982135Z d522ad15b8c1: Pull complete
+2026-09-01T22:31:53.1100673Z 876153b11224: Pull complete
+2026-09-01T22:31:57.3914522Z 04913c3958ed: Pull complete
+2026-09-01T22:31:57.4098491Z a849d36c92a3: Pull complete
+2026-09-01T22:31:57.4273192Z d6430d172c75: Pull complete
+2026-09-01T22:31:57.4443852Z b86905d46631: Pull complete
+2026-09-01T22:31:57.4561723Z 2659259e5615: Pull complete
+2026-09-01T22:31:57.4671682Z 8f6bdf8e7ebe: Pull complete
+2026-09-01T22:31:57.4711784Z Digest: sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957
+2026-09-01T22:31:57.4730899Z Status: Downloaded newer image for postgres:15
+2026-09-01T22:31:57.4737920Z docker.io/library/postgres:15
+2026-09-01T22:31:57.4761268Z ##[command]/usr/bin/docker create --name 7e6bb3b0145a44e089376694b2115eeb_postgres15_1237fd --label d55301 --network github_network_399e5a06940349d6ab30dca3ffd779e2 --network-alias postgres --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20 -e "POSTGRES_DB=wasla_reputation_test" -e "POSTGRES_USER=postgres" -e "POSTGRES_PASSWORD=postgres" -e GITHUB_ACTIONS=true -e CI=true postgres:15
+2026-09-01T22:31:57.5041175Z e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:57.5053564Z ##[command]/usr/bin/docker start e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:57.6579776Z e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:57.6584249Z ##[command]/usr/bin/docker ps --all --filter id=e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-09-01T22:31:57.6793735Z e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85 Up Less than a second (health: starting)
+2026-09-01T22:31:57.6803194Z ##[command]/usr/bin/docker port e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:57.7058498Z ##[endgroup]
+2026-09-01T22:31:57.7071234Z ##[group]Waiting for all services to be ready
+2026-09-01T22:31:57.7085403Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:57.7316848Z starting
+2026-09-01T22:31:57.7329634Z postgres service is starting, waiting 2 seconds before checking again.
+2026-09-01T22:31:59.7333975Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:31:59.7481097Z starting
+2026-09-01T22:31:59.7496107Z postgres service is starting, waiting 4 seconds before checking again.
+2026-09-01T22:32:04.0895935Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:32:04.1043953Z healthy
+2026-09-01T22:32:04.1063930Z postgres service is healthy.
+2026-09-01T22:32:04.1064688Z ##[endgroup]
+2026-09-01T22:32:04.1342951Z ##[group]Run apk add --no-cache git bash
+2026-09-01T22:32:04.1343364Z apk add --no-cache git bash
+2026-09-01T22:32:04.1347557Z shell: sh -e {0}
+2026-09-01T22:32:04.1348130Z env:
+2026-09-01T22:32:04.1348347Z   NODE_VERSION: 20.20.1
+2026-09-01T22:32:04.1348594Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:32:04.1348819Z ##[endgroup]
+2026-09-01T22:32:04.6562504Z ( 1/16) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+2026-09-01T22:32:04.6657997Z ( 2/16) Installing libncursesw (6.5_p20251123-r0)
+2026-09-01T22:32:04.6775298Z ( 3/16) Installing readline (8.3.1-r0)
+2026-09-01T22:32:04.6872871Z ( 4/16) Installing bash (5.3.3-r1)
+2026-09-01T22:32:04.7121741Z   Executing bash-5.3.3-r1.post-install
+2026-09-01T22:32:04.7158433Z ( 5/16) Installing brotli-libs (1.2.0-r0)
+2026-09-01T22:32:04.7313465Z ( 6/16) Installing c-ares (1.34.8-r0)
+2026-09-01T22:32:04.7394388Z ( 7/16) Installing libunistring (1.4.1-r0)
+2026-09-01T22:32:04.7603907Z ( 8/16) Installing libidn2 (2.3.8-r0)
+2026-09-01T22:32:04.7691183Z ( 9/16) Installing nghttp2-libs (1.69.0-r0)
+2026-09-01T22:32:04.7759935Z (10/16) Installing libpsl (0.21.5-r3)
+2026-09-01T22:32:04.7833317Z (11/16) Installing zstd-libs (1.5.7-r2)
+2026-09-01T22:32:04.7955932Z (12/16) Installing libcurl (8.20.0-r0)
+2026-09-01T22:32:04.8073891Z (13/16) Installing libexpat (2.8.4-r0)
+2026-09-01T22:32:04.8143617Z (14/16) Installing pcre2 (10.47-r0)
+2026-09-01T22:32:04.8259196Z (15/16) Installing git (2.52.0-r0)
+2026-09-01T22:32:04.8978286Z (16/16) Installing git-init-template (2.52.0-r0)
+2026-09-01T22:32:04.9046784Z Executing busybox-1.37.0-r30.trigger
+2026-09-01T22:32:04.9132432Z OK: 25.1 MiB in 34 packages
+2026-09-01T22:32:04.9661405Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:32:04.9667994Z ##[group]Run actions/checkout@v4
+2026-09-01T22:32:04.9668282Z with:
+2026-09-01T22:32:04.9668490Z   fetch-depth: 1
+2026-09-01T22:32:04.9668729Z   repository: skyosv10-art/wasla
+2026-09-01T22:32:04.9671282Z   token: ***
+2026-09-01T22:32:04.9671498Z   ssh-strict: true
+2026-09-01T22:32:04.9671709Z   ssh-user: git
+2026-09-01T22:32:04.9671931Z   persist-credentials: true
+2026-09-01T22:32:04.9672170Z   clean: true
+2026-09-01T22:32:04.9672395Z   sparse-checkout-cone-mode: true
+2026-09-01T22:32:04.9672657Z   fetch-tags: false
+2026-09-01T22:32:04.9672876Z   show-progress: true
+2026-09-01T22:32:04.9673093Z   lfs: false
+2026-09-01T22:32:04.9673315Z   submodules: false
+2026-09-01T22:32:04.9673540Z   set-safe-directory: true
+2026-09-01T22:32:04.9673791Z   allow-unsafe-pr-checkout: false
+2026-09-01T22:32:04.9674066Z env:
+2026-09-01T22:32:04.9674253Z   NODE_VERSION: 20.20.1
+2026-09-01T22:32:04.9674479Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:32:04.9674697Z ##[endgroup]
+2026-09-01T22:32:04.9721751Z ##[command]/usr/bin/docker exec  4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:32:05.2637279Z Syncing repository: skyosv10-art/wasla
+2026-09-01T22:32:05.2639842Z ##[group]Getting Git version info
+2026-09-01T22:32:05.2640998Z Working directory is '/__w/wasla/wasla'
+2026-09-01T22:32:05.2710713Z [command]/usr/bin/git version
+2026-09-01T22:32:05.2828083Z git version 2.52.0
+2026-09-01T22:32:05.2989791Z ##[endgroup]
+2026-09-01T22:32:05.3027959Z Temporarily overriding HOME='/__w/_temp/3e5cd945-7251-4f28-87c8-a69eee6bb904' before making global git config changes
+2026-09-01T22:32:05.3107629Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:32:05.3109491Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:32:05.3112584Z Deleting the contents of '/__w/wasla/wasla'
+2026-09-01T22:32:05.3114827Z ##[group]Initializing the repository
+2026-09-01T22:32:05.3115802Z [command]/usr/bin/git init /__w/wasla/wasla
+2026-09-01T22:32:05.3117573Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-01T22:32:05.3119096Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-01T22:32:05.3121020Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-01T22:32:05.3122182Z hint: call:
+2026-09-01T22:32:05.3123379Z hint:
+2026-09-01T22:32:05.3125570Z hint: 	git config --global init.defaultBranch <name>
+2026-09-01T22:32:05.3126575Z hint:
+2026-09-01T22:32:05.3128077Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-01T22:32:05.3129523Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-01T22:32:05.3131044Z hint:
+2026-09-01T22:32:05.3132022Z hint: 	git branch -m <name>
+2026-09-01T22:32:05.3133407Z hint:
+2026-09-01T22:32:05.3134536Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-01T22:32:05.3136177Z Initialized empty Git repository in /__w/wasla/wasla/.git/
+2026-09-01T22:32:05.3148290Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-09-01T22:32:05.3193042Z ##[endgroup]
+2026-09-01T22:32:05.3194223Z ##[group]Disabling automatic garbage collection
+2026-09-01T22:32:05.3205469Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-01T22:32:05.3281725Z ##[endgroup]
+2026-09-01T22:32:05.3282653Z ##[group]Setting up auth
+2026-09-01T22:32:05.3289063Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:32:05.3365673Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:32:05.3700999Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:32:05.3761261Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:32:05.4034424Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:32:05.4092614Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:32:05.4336664Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-01T22:32:05.4412991Z ##[endgroup]
+2026-09-01T22:32:05.4414250Z ##[group]Fetching the repository
+2026-09-01T22:32:05.4429073Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6412be856251e58acf88703320851dd136e94a75:refs/remotes/pull/5/merge
+2026-09-01T22:32:06.0169910Z From https://github.com/skyosv10-art/wasla
+2026-09-01T22:32:06.0174863Z  * [new ref]         6412be856251e58acf88703320851dd136e94a75 -> pull/5/merge
+2026-09-01T22:32:06.0186194Z ##[endgroup]
+2026-09-01T22:32:06.0193175Z ##[group]Determining the checkout info
+2026-09-01T22:32:06.0194327Z ##[endgroup]
+2026-09-01T22:32:06.0194903Z [command]/usr/bin/git sparse-checkout disable
+2026-09-01T22:32:06.0248158Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-01T22:32:06.0278573Z ##[group]Checking out the ref
+2026-09-01T22:32:06.0284690Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/5/merge
+2026-09-01T22:32:06.2065869Z Note: switching to 'refs/remotes/pull/5/merge'.
+2026-09-01T22:32:06.2066619Z 
+2026-09-01T22:32:06.2070192Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-01T22:32:06.2071154Z changes and commit them, and you can discard any commits you make in this
+2026-09-01T22:32:06.2071995Z state without impacting any branches by switching back to a branch.
+2026-09-01T22:32:06.2072492Z 
+2026-09-01T22:32:06.2072801Z If you want to create a new branch to retain commits you create, you may
+2026-09-01T22:32:06.2073536Z do so (now or later) by using -c with the switch command. Example:
+2026-09-01T22:32:06.2073983Z 
+2026-09-01T22:32:06.2074172Z   git switch -c <new-branch-name>
+2026-09-01T22:32:06.2074484Z 
+2026-09-01T22:32:06.2074651Z Or undo this operation with:
+2026-09-01T22:32:06.2074903Z 
+2026-09-01T22:32:06.2075038Z   git switch -
+2026-09-01T22:32:06.2075245Z 
+2026-09-01T22:32:06.2075582Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-01T22:32:06.2076110Z 
+2026-09-01T22:32:06.2076646Z HEAD is now at 6412be8 Merge 7b25864744b16b85b396732ef0e28f7ee0dbdf28 into 7056ba5c05c7ea87c55f02cb24f58945ed2f4229
+2026-09-01T22:32:06.2079617Z ##[endgroup]
+2026-09-01T22:32:06.2114727Z [command]/usr/bin/git log -1 --format=%H
+2026-09-01T22:32:06.2140719Z 6412be856251e58acf88703320851dd136e94a75
+2026-09-01T22:32:06.2347535Z ##[group]Run corepack enable
+2026-09-01T22:32:06.2347912Z corepack enable
+2026-09-01T22:32:06.2348265Z corepack prepare "pnpm@${PNPM_VERSION}" --activate
+2026-09-01T22:32:06.2348642Z echo "node   $(node --version)"
+2026-09-01T22:32:06.2348944Z echo "pnpm   $(pnpm --version)"
+2026-09-01T22:32:06.2349302Z shell: sh -e {0}
+2026-09-01T22:32:06.2349523Z env:
+2026-09-01T22:32:06.2349721Z   NODE_VERSION: 20.20.1
+2026-09-01T22:32:06.2349953Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:32:06.2350176Z ##[endgroup]
+2026-09-01T22:32:06.4960509Z Preparing pnpm@9.15.9 for immediate activation...
+2026-09-01T22:32:07.8252249Z node   v20.20.2
+2026-09-01T22:32:08.3892525Z pnpm   9.15.9
+2026-09-01T22:32:08.3983887Z ##[group]Run pnpm install --frozen-lockfile
+2026-09-01T22:32:08.3984297Z pnpm install --frozen-lockfile
+2026-09-01T22:32:08.3984679Z shell: sh -e {0}
+2026-09-01T22:32:08.3984891Z env:
+2026-09-01T22:32:08.3985087Z   NODE_VERSION: 20.20.1
+2026-09-01T22:32:08.3985320Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:32:08.3985543Z ##[endgroup]
+2026-09-01T22:32:09.0172859Z Scope: all 43 workspace projects
+2026-09-01T22:32:09.1238984Z Lockfile is up to date, resolution step is skipped
+2026-09-01T22:32:09.2042868Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-09-01T22:32:09.2725136Z Packages: +164
+2026-09-01T22:32:09.2734380Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-09-01T22:32:10.2060996Z Progress: resolved 164, reused 0, downloaded 15, added 7
+2026-09-01T22:32:11.2068810Z Progress: resolved 164, reused 0, downloaded 83, added 68
+2026-09-01T22:32:12.2028659Z Progress: resolved 164, reused 0, downloaded 164, added 164, done
+2026-09-01T22:32:12.4478600Z .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-09-01T22:32:12.5108634Z .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-09-01T22:32:12.9499341Z 
+2026-09-01T22:32:12.9499960Z devDependencies:
+2026-09-01T22:32:12.9500722Z + json-schema-to-typescript 15.0.4
+2026-09-01T22:32:12.9501674Z + openapi-typescript 7.13.0
+2026-09-01T22:32:12.9502471Z + typescript 5.9.3
+2026-09-01T22:32:12.9503186Z + vitest 3.2.7
+2026-09-01T22:32:12.9503612Z 
+2026-09-01T22:32:13.1930637Z Done in 4.6s using pnpm v9.15.9
+2026-09-01T22:32:13.2286337Z ##[group]Run pnpm --filter @wasla/reputation-service test:integration
+2026-09-01T22:32:13.2287394Z pnpm --filter @wasla/reputation-service test:integration
+2026-09-01T22:32:13.2287862Z shell: sh -e {0}
+2026-09-01T22:32:13.2288076Z env:
+2026-09-01T22:32:13.2288271Z   NODE_VERSION: 20.20.1
+2026-09-01T22:32:13.2288508Z   PNPM_VERSION: 9.15.9
+2026-09-01T22:32:13.2289077Z   DATABASE_URL: ***postgres:5432/wasla_reputation_test
+2026-09-01T22:32:13.2289404Z ##[endgroup]
+2026-09-01T22:32:13.8105909Z 
+2026-09-01T22:32:13.8107510Z > @wasla/reputation-service@0.1.0 test:integration /__w/wasla/wasla/services/reputation
+2026-09-01T22:32:13.8109206Z > vitest run --config vitest.integration.config.ts
+2026-09-01T22:32:13.8109835Z 
+2026-09-01T22:32:14.3048771Z 
+2026-09-01T22:32:14.3052298Z  RUN  v3.2.7 /__w/wasla/wasla/services/reputation
+2026-09-01T22:32:14.3053696Z 
+2026-09-01T22:32:16.1807591Z  ✓ src/__tests__/port-conformance.integration.test.ts (19 tests) 928ms
+2026-09-01T22:32:18.1446281Z  ✓ src/__tests__/repository.integration.test.ts (27 tests) 1388ms
+2026-09-01T22:32:19.4062850Z  ✓ src/__tests__/atomicity.integration.test.ts (6 tests) 576ms
+2026-09-01T22:32:19.4299221Z 
+2026-09-01T22:32:19.4324467Z  Test Files  3 passed (3)
+2026-09-01T22:32:19.4336948Z       Tests  52 passed (52)
+2026-09-01T22:32:19.4357963Z    Start at  22:32:14
+2026-09-01T22:32:19.4375821Z    Duration  5.13s (transform 388ms, setup 0ms, collect 1.36s, tests 2.89s, environment 1ms, prepare 335ms)
+2026-09-01T22:32:19.4387694Z 
+2026-09-01T22:32:19.6734309Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-01T22:32:19.6737179Z Post job cleanup.
+2026-09-01T22:32:19.6750658Z ##[command]/usr/bin/docker exec  4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d sh -c "cat /etc/*release | grep ^ID"
+2026-09-01T22:32:20.0840893Z [command]/usr/bin/git version
+2026-09-01T22:32:20.1037893Z git version 2.52.0
+2026-09-01T22:32:20.1410619Z Temporarily overriding HOME='/__w/_temp/bfd3e20b-add1-4b30-a0d6-0052fe9f2c18' before making global git config changes
+2026-09-01T22:32:20.1465067Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-01T22:32:20.1484648Z [command]/usr/bin/git config --global --add safe.directory /__w/wasla/wasla
+2026-09-01T22:32:20.1608464Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-01T22:32:20.1720646Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-01T22:32:20.1817250Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-01T22:32:20.1836306Z http.https://github.com/.extraheader
+2026-09-01T22:32:20.1839826Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-01T22:32:20.1899116Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-01T22:32:20.2208030Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-01T22:32:20.2318347Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-01T22:32:20.2697916Z Stop and remove container: d0d5e664069749d7adeb3859f3a3f22e_node20alpine_251301
+2026-09-01T22:32:20.2704297Z ##[command]/usr/bin/docker rm --force 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:32:20.4308224Z 4b0ebbafab44f913650c3a610c0de5a9d8d3e16a53c70a0c248f29eca5da930d
+2026-09-01T22:32:20.4343258Z Print service container logs: 7e6bb3b0145a44e089376694b2115eeb_postgres15_1237fd
+2026-09-01T22:32:20.4352882Z ##[command]/usr/bin/docker logs --details e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:32:20.4660977Z  initdb: warning: enabling "trust" authentication for local connections
+2026-09-01T22:32:20.4678287Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-09-01T22:32:20.4679613Z  The files belonging to this database system will be owned by user "postgres".
+2026-09-01T22:32:20.4683493Z  2026-09-01 22:31:58.691 UTC [1] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:32:20.4684724Z  This user must also own the server process.
+2026-09-01T22:32:20.4685714Z  2026-09-01 22:31:58.692 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-01T22:32:20.4686377Z  
+2026-09-01T22:32:20.4687441Z  2026-09-01 22:31:58.692 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-01T22:32:20.4688304Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-09-01T22:32:20.4689528Z  2026-09-01 22:31:58.693 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:32:20.4690454Z  The default database encoding has accordingly been set to "UTF8".
+2026-09-01T22:32:20.4691559Z  2026-09-01 22:31:58.697 UTC [64] LOG:  database system was shut down at 2026-09-01 22:31:58 UTC
+2026-09-01T22:32:20.4692435Z  The default text search configuration will be set to "english".
+2026-09-01T22:32:20.4693481Z  2026-09-01 22:31:58.703 UTC [1] LOG:  database system is ready to accept connections
+2026-09-01T22:32:20.4694146Z  
+2026-09-01T22:32:20.4695299Z  2026-09-01 22:32:15.412 UTC [92] ERROR:  new row for relation "reputation_rulesets" violates check constraint "ck_reputation_rulesets_score_bounds"
+2026-09-01T22:32:20.4696397Z  Data page checksums are disabled.
+2026-09-01T22:32:20.4698244Z  2026-09-01 22:32:15.412 UTC [92] DETAIL:  Failing row contains (2, parity, 50, 50, 50, 5, 180, 50, 80, 35, 72, 30, 24, f, 2026-09-01 22:32:15.409649+00).
+2026-09-01T22:32:20.4699199Z  
+2026-09-01T22:32:20.4701799Z  2026-09-01 22:32:15.412 UTC [92] STATEMENT:  INSERT INTO reputation_rulesets (ruleset_version, label, score_floor, score_ceiling, starting_score, min_facts_for_score, decay_half_life_days, tier_standard_at, tier_trusted_at, tier_under_watch_below, rating_window_hours, fraud_window_days, recompute_interval_hours, is_frozen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+2026-09-01T22:32:20.4704546Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-09-01T22:32:20.4706145Z  2026-09-01 22:32:15.443 UTC [92] ERROR:  new row for relation "reputation_rulesets" violates check constraint "ck_reputation_rulesets_start_in_bounds"
+2026-09-01T22:32:20.4707955Z  creating subdirectories ... ok
+2026-09-01T22:32:20.4709158Z  2026-09-01 22:32:15.443 UTC [92] DETAIL:  Failing row contains (2, parity, 0, 100, 101, 5, 180, 50, 80, 35, 72, 30, 24, f, 2026-09-01 22:32:15.44205+00).
+2026-09-01T22:32:20.4710241Z  selecting dynamic shared memory implementation ... posix
+2026-09-01T22:32:20.4713506Z  2026-09-01 22:32:15.443 UTC [92] STATEMENT:  INSERT INTO reputation_rulesets (ruleset_version, label, score_floor, score_ceiling, starting_score, min_facts_for_score, decay_half_life_days, tier_standard_at, tier_trusted_at, tier_under_watch_below, rating_window_hours, fraud_window_days, recompute_interval_hours, is_frozen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+2026-09-01T22:32:20.4716045Z  selecting default max_connections ... 100
+2026-09-01T22:32:20.4717617Z  2026-09-01 22:32:15.470 UTC [92] ERROR:  new row for relation "reputation_rulesets" violates check constraint "ck_reputation_rulesets_tier_order"
+2026-09-01T22:32:20.4718950Z  selecting default shared_buffers ... 128MB
+2026-09-01T22:32:20.4720196Z  2026-09-01 22:32:15.470 UTC [92] DETAIL:  Failing row contains (2, parity, 0, 100, 60, 5, 180, 80, 50, 35, 72, 30, 24, f, 2026-09-01 22:32:15.46966+00).
+2026-09-01T22:32:20.4721189Z  selecting default time zone ... Etc/UTC
+2026-09-01T22:32:20.4723882Z  2026-09-01 22:32:15.470 UTC [92] STATEMENT:  INSERT INTO reputation_rulesets (ruleset_version, label, score_floor, score_ceiling, starting_score, min_facts_for_score, decay_half_life_days, tier_standard_at, tier_trusted_at, tier_under_watch_below, rating_window_hours, fraud_window_days, recompute_interval_hours, is_frozen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+2026-09-01T22:32:20.4726408Z  creating configuration files ... ok
+2026-09-01T22:32:20.4727859Z  2026-09-01 22:32:15.495 UTC [92] ERROR:  duplicate key value violates unique constraint "pk_reputation_rule_weights"
+2026-09-01T22:32:20.4728779Z  running bootstrap script ... ok
+2026-09-01T22:32:20.4729959Z  2026-09-01 22:32:15.495 UTC [92] DETAIL:  Key (ruleset_version, subject_type, fact_kind)=(1, customer, order_completed) already exists.
+2026-09-01T22:32:20.4731006Z  performing post-bootstrap initialization ... ok
+2026-09-01T22:32:20.4732331Z  2026-09-01 22:32:15.495 UTC [92] STATEMENT:  INSERT INTO reputation_rule_weights (ruleset_version, subject_type, fact_kind, weight_points)
+2026-09-01T22:32:20.4733354Z  syncing data to disk ... ok
+2026-09-01T22:32:20.4734081Z  	             VALUES (1, 'customer', 'order_completed', 3)
+2026-09-01T22:32:20.4734597Z  
+2026-09-01T22:32:20.4735569Z  2026-09-01 22:32:15.519 UTC [92] ERROR:  duplicate key value violates unique constraint "pk_reputation_fraud_thresholds"
+2026-09-01T22:32:20.4736458Z  
+2026-09-01T22:32:20.4737615Z  2026-09-01 22:32:15.519 UTC [92] DETAIL:  Key (ruleset_version, rule_code)=(1, accept_then_abandon) already exists.
+2026-09-01T22:32:20.4738574Z  Success. You can now start the database server using:
+2026-09-01T22:32:20.4740012Z  2026-09-01 22:32:15.519 UTC [92] STATEMENT:  INSERT INTO reputation_fraud_thresholds (ruleset_version, rule_code, subject_type, threshold_count, severity)
+2026-09-01T22:32:20.4741121Z  
+2026-09-01T22:32:20.4741778Z  	             VALUES (1, 'accept_then_abandon', 'driver', 3, 'high')
+2026-09-01T22:32:20.4742444Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-09-01T22:32:20.4743624Z  2026-09-01 22:32:15.549 UTC [92] ERROR:  duplicate key value violates unique constraint "ux_reputation_facts_source"
+2026-09-01T22:32:20.4744477Z  
+2026-09-01T22:32:20.4746008Z  2026-09-01 22:32:15.549 UTC [92] DETAIL:  Key (subject_type, subject_public_id, fact_kind, order_public_id, source_sequence)=(customer, WS-1000000001, order_completed, ORD-0000000001, 1) already exists.
+2026-09-01T22:32:20.4748479Z  waiting for server to start....2026-09-01 22:31:58.379 UTC [48] LOG:  starting PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-09-01T22:32:20.4752806Z  2026-09-01 22:32:15.549 UTC [92] STATEMENT:  insert into "reputation_facts" ("id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning "id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id"
+2026-09-01T22:32:20.4756265Z  2026-09-01 22:31:58.379 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-01T22:32:20.4762829Z  2026-09-01 22:32:15.586 UTC [93] ERROR:  new row for relation "reputation_scores" violates check constraint "ck_reputation_scores_non_negative"
+2026-09-01T22:32:20.4764915Z  2026-09-01 22:32:15.586 UTC [93] DETAIL:  Failing row contains (customer, WS-1000000001, 1, -1, standard, 5, 44444444-4444-4444-8444-000000000001, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, null).
+2026-09-01T22:32:20.4770174Z  2026-09-01 22:32:15.586 UTC [93] STATEMENT:  insert into "reputation_scores" ("subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) on conflict ("subject_type","subject_public_id") do update set "ruleset_version" = $11, "score_points" = $12, "tier" = $13, "fact_count" = $14, "computed_through_fact_id" = $15, "computed_at" = $16, "next_recompute_at" = $17, "trace_id" = $18 returning "subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id"
+2026-09-01T22:32:20.4774861Z  2026-09-01 22:32:15.626 UTC [94] ERROR:  new row for relation "reputation_scores" violates check constraint "ck_reputation_scores_new_has_no_history"
+2026-09-01T22:32:20.4776528Z  2026-09-01 22:32:15.626 UTC [94] DETAIL:  Failing row contains (customer, WS-1000000001, 1, 63, new, 3, null, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, null).
+2026-09-01T22:32:20.4781605Z  2026-09-01 22:32:15.626 UTC [94] STATEMENT:  insert into "reputation_scores" ("subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) on conflict ("subject_type","subject_public_id") do update set "ruleset_version" = $11, "score_points" = $12, "tier" = $13, "fact_count" = $14, "computed_through_fact_id" = $15, "computed_at" = $16, "next_recompute_at" = $17, "trace_id" = $18 returning "subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id"
+2026-09-01T22:32:20.4786144Z  2026-09-01 22:32:15.661 UTC [95] ERROR:  duplicate key value violates unique constraint "ux_reputation_ratings_order_pair"
+2026-09-01T22:32:20.4788721Z  2026-09-01 22:32:15.661 UTC [95] DETAIL:  Key (order_public_id, rater_public_id, subject_public_id)=(ORD-0000000001, WS-1000000001, WS-2000000002) already exists.
+2026-09-01T22:32:20.4792310Z  2026-09-01 22:32:15.661 UTC [95] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4795733Z  2026-09-01 22:32:15.694 UTC [96] ERROR:  new row for relation "reputation_ratings" violates check constraint "ck_reputation_ratings_no_self"
+2026-09-01T22:32:20.4798170Z  2026-09-01 22:32:15.694 UTC [96] DETAIL:  Failing row contains (44444444-4444-4444-8444-000000000001, ORD-0000000001, customer, WS-1000000001, driver, WS-1000000001, 5, on_time, 1, 2026-03-01 12:00:00+00, 2026-09-01 22:32:15.693613+00, null).
+2026-09-01T22:32:20.4802160Z  2026-09-01 22:32:15.694 UTC [96] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4805869Z  2026-09-01 22:32:15.731 UTC [97] ERROR:  new row for relation "reputation_ratings" violates check constraint "ck_reputation_ratings_cross_side"
+2026-09-01T22:32:20.4808592Z  2026-09-01 22:32:15.731 UTC [97] DETAIL:  Failing row contains (44444444-4444-4444-8444-000000000001, ORD-0000000001, customer, WS-1000000001, customer, WS-2000000002, 5, on_time, 1, 2026-03-01 12:00:00+00, 2026-09-01 22:32:15.730654+00, null).
+2026-09-01T22:32:20.4812600Z  2026-09-01 22:32:15.731 UTC [97] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4816024Z  2026-09-01 22:32:15.766 UTC [98] ERROR:  new row for relation "fraud_signals" violates check constraint "ck_fraud_signals_window_order"
+2026-09-01T22:32:20.4818569Z  2026-09-01 22:32:15.766 UTC [98] DETAIL:  Failing row contains (44444444-4444-4444-8444-000000000001, driver, WS-2000000002, repeated_driver_cancellation, medium, 2026-03-01 13:00:00+00, 2026-03-01 12:00:00+00, 6, 4, 1, 2026-03-01 13:00:00+00, 2026-09-01 22:32:15.765516+00, null).
+2026-09-01T22:32:20.4822878Z  2026-09-01 22:32:15.766 UTC [98] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4826575Z  2026-09-01 22:32:15.798 UTC [99] ERROR:  new row for relation "fraud_signals" violates check constraint "ck_fraud_signals_over_threshold"
+2026-09-01T22:32:20.4828984Z  2026-09-01 22:32:15.798 UTC [99] DETAIL:  Failing row contains (44444444-4444-4444-8444-000000000001, driver, WS-2000000002, repeated_driver_cancellation, medium, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, 2, 4, 1, 2026-03-01 13:00:00+00, 2026-09-01 22:32:15.798405+00, null).
+2026-09-01T22:32:20.4833360Z  2026-09-01 22:32:15.798 UTC [99] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4837200Z  2026-09-01 22:32:15.840 UTC [100] ERROR:  duplicate key value violates unique constraint "ux_fraud_signals_rule_window"
+2026-09-01T22:32:20.4838996Z  2026-09-01 22:32:15.840 UTC [100] DETAIL:  Key (subject_type, subject_public_id, rule_code, window_ended_at)=(driver, WS-2000000002, repeated_driver_cancellation, 2026-03-01 13:00:00+00) already exists.
+2026-09-01T22:32:20.4843036Z  2026-09-01 22:32:15.840 UTC [100] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4847076Z  2026-09-01 22:32:17.080 UTC [102] ERROR:  duplicate key value violates unique constraint "ux_reputation_facts_source"
+2026-09-01T22:32:20.4849043Z  2026-09-01 22:32:17.080 UTC [102] DETAIL:  Key (subject_type, subject_public_id, fact_kind, order_public_id, source_sequence)=(customer, WS-1000000001, order_completed, ORD-0000000001, 1) already exists.
+2026-09-01T22:32:20.4853108Z  2026-09-01 22:32:17.080 UTC [102] STATEMENT:  insert into "reputation_facts" ("id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning "id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id"
+2026-09-01T22:32:20.4857841Z  2026-09-01 22:32:17.258 UTC [103] ERROR:  new row for relation "reputation_scores" violates check constraint "ck_reputation_scores_non_negative"
+2026-09-01T22:32:20.4860012Z  2026-09-01 22:32:17.258 UTC [103] DETAIL:  Failing row contains (customer, WS-1000000001, 1, -1, standard, 5, 33333333-3333-4333-8333-000000000001, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, null).
+2026-09-01T22:32:20.4864958Z  2026-09-01 22:32:17.258 UTC [103] STATEMENT:  insert into "reputation_scores" ("subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) on conflict ("subject_type","subject_public_id") do update set "ruleset_version" = $11, "score_points" = $12, "tier" = $13, "fact_count" = $14, "computed_through_fact_id" = $15, "computed_at" = $16, "next_recompute_at" = $17, "trace_id" = $18 returning "subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id"
+2026-09-01T22:32:20.4869882Z  2026-09-01 22:32:17.463 UTC [104] ERROR:  new row for relation "reputation_scores" violates check constraint "ck_reputation_scores_new_has_no_history"
+2026-09-01T22:32:20.4871580Z  2026-09-01 22:32:17.463 UTC [104] DETAIL:  Failing row contains (customer, WS-1000000001, 1, 63, new, 3, null, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, null).
+2026-09-01T22:32:20.4876236Z  2026-09-01 22:32:17.463 UTC [104] STATEMENT:  insert into "reputation_scores" ("subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) on conflict ("subject_type","subject_public_id") do update set "ruleset_version" = $11, "score_points" = $12, "tier" = $13, "fact_count" = $14, "computed_through_fact_id" = $15, "computed_at" = $16, "next_recompute_at" = $17, "trace_id" = $18 returning "subject_type", "subject_public_id", "ruleset_version", "score_points", "tier", "fact_count", "computed_through_fact_id", "computed_at", "next_recompute_at", "trace_id"
+2026-09-01T22:32:20.4881114Z  2026-09-01 22:32:17.575 UTC [105] ERROR:  duplicate key value violates unique constraint "ux_reputation_ratings_order_pair"
+2026-09-01T22:32:20.4882682Z  2026-09-01 22:32:17.575 UTC [105] DETAIL:  Key (order_public_id, rater_public_id, subject_public_id)=(ORD-0000000001, WS-1000000001, WS-2000000002) already exists.
+2026-09-01T22:32:20.4886420Z  2026-09-01 22:32:17.575 UTC [105] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4890151Z  2026-09-01 22:32:17.617 UTC [106] ERROR:  new row for relation "reputation_ratings" violates check constraint "ck_reputation_ratings_no_self"
+2026-09-01T22:32:20.4892424Z  2026-09-01 22:32:17.617 UTC [106] DETAIL:  Failing row contains (33333333-3333-4333-8333-000000000001, ORD-0000000001, customer, WS-1000000001, driver, WS-1000000001, 5, on_time, 1, 2026-03-01 12:00:00+00, 2026-09-01 22:32:17.617182+00, null).
+2026-09-01T22:32:20.4896388Z  2026-09-01 22:32:17.617 UTC [106] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4900246Z  2026-09-01 22:32:17.656 UTC [107] ERROR:  new row for relation "reputation_ratings" violates check constraint "ck_reputation_ratings_cross_side"
+2026-09-01T22:32:20.4902375Z  2026-09-01 22:32:17.656 UTC [107] DETAIL:  Failing row contains (33333333-3333-4333-8333-000000000001, ORD-0000000001, customer, WS-1000000001, customer, WS-2000000002, 5, on_time, 1, 2026-03-01 12:00:00+00, 2026-09-01 22:32:17.655959+00, null).
+2026-09-01T22:32:20.4906413Z  2026-09-01 22:32:17.656 UTC [107] STATEMENT:  insert into "reputation_ratings" ("id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, default, $11) returning "id", "order_public_id", "rater_type", "rater_public_id", "subject_type", "subject_public_id", "stars", "reason_code", "ruleset_version", "submitted_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4909904Z  2026-09-01 22:32:17.751 UTC [108] ERROR:  duplicate key value violates unique constraint "ux_fraud_signals_rule_window"
+2026-09-01T22:32:20.4911695Z  2026-09-01 22:32:17.751 UTC [108] DETAIL:  Key (subject_type, subject_public_id, rule_code, window_ended_at)=(driver, WS-2000000002, repeated_driver_cancellation, 2026-03-01 13:00:00+00) already exists.
+2026-09-01T22:32:20.4915737Z  2026-09-01 22:32:17.751 UTC [108] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4919814Z  2026-09-01 22:32:17.789 UTC [109] ERROR:  new row for relation "fraud_signals" violates check constraint "ck_fraud_signals_window_order"
+2026-09-01T22:32:20.4922045Z  2026-09-01 22:32:17.789 UTC [109] DETAIL:  Failing row contains (33333333-3333-4333-8333-000000000001, driver, WS-2000000002, repeated_driver_cancellation, medium, 2026-03-01 13:00:00+00, 2026-03-01 12:00:00+00, 6, 4, 1, 2026-03-01 13:00:00+00, 2026-09-01 22:32:17.788548+00, null).
+2026-09-01T22:32:20.4926496Z  2026-09-01 22:32:17.789 UTC [109] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4930534Z  2026-09-01 22:32:17.830 UTC [110] ERROR:  new row for relation "fraud_signals" violates check constraint "ck_fraud_signals_over_threshold"
+2026-09-01T22:32:20.4932936Z  2026-09-01 22:32:17.830 UTC [110] DETAIL:  Failing row contains (33333333-3333-4333-8333-000000000001, driver, WS-2000000002, repeated_driver_cancellation, medium, 2026-03-01 12:00:00+00, 2026-03-01 13:00:00+00, 2, 4, 1, 2026-03-01 13:00:00+00, 2026-09-01 22:32:17.829915+00, null).
+2026-09-01T22:32:20.4937668Z  2026-09-01 22:32:17.830 UTC [110] STATEMENT:  insert into "fraud_signals" ("id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, default, $12) returning "id", "subject_type", "subject_public_id", "rule_code", "severity", "window_started_at", "window_ended_at", "observed_count", "threshold_count", "ruleset_version", "raised_at", "created_at", "trace_id"
+2026-09-01T22:32:20.4941113Z  2026-09-01 22:32:18.117 UTC [111] ERROR:  invalid input syntax for type uuid: "c-ORD-0000000001"
+2026-09-01T22:32:20.4942036Z  2026-09-01 22:32:18.117 UTC [111] CONTEXT:  unnamed portal parameter $7 = '...'
+2026-09-01T22:32:20.4945383Z  2026-09-01 22:32:18.117 UTC [111] STATEMENT:  insert into "reputation_facts" ("id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning "id", "subject_type", "subject_public_id", "fact_kind", "order_public_id", "source_event_type", "source_event_id", "source_sequence", "actor_type", "reason_code", "occurred_at", "recorded_at", "trace_id"
+2026-09-01T22:32:20.4948936Z  2026-09-01 22:31:58.382 UTC [51] LOG:  database system was shut down at 2026-09-01 22:31:58 UTC
+2026-09-01T22:32:20.4949825Z  2026-09-01 22:31:58.386 UTC [48] LOG:  database system is ready to accept connections
+2026-09-01T22:32:20.4950501Z   done
+2026-09-01T22:32:20.4950817Z  server started
+2026-09-01T22:32:20.4951164Z  CREATE DATABASE
+2026-09-01T22:32:20.4951493Z  
+2026-09-01T22:32:20.4951781Z  
+2026-09-01T22:32:20.4952328Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-09-01T22:32:20.4953025Z  
+2026-09-01T22:32:20.4953657Z  waiting for server to shut down...2026-09-01 22:31:58.566 UTC [48] LOG:  received fast shutdown request
+2026-09-01T22:32:20.4954586Z  .2026-09-01 22:31:58.566 UTC [48] LOG:  aborting any active transactions
+2026-09-01T22:32:20.4955611Z  2026-09-01 22:31:58.569 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-09-01T22:32:20.4956574Z  2026-09-01 22:31:58.570 UTC [49] LOG:  shutting down
+2026-09-01T22:32:20.4972162Z  2026-09-01 22:31:58.570 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-09-01T22:32:20.4974014Z  2026-09-01 22:31:58.587 UTC [49] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.013 s, sync=0.003 s, total=0.018 s; sync files=301, longest=0.002 s, average=0.001 s; distance=4239 kB, estimate=4239 kB
+2026-09-01T22:32:20.4975765Z  2026-09-01 22:31:58.593 UTC [48] LOG:  database system is shut down
+2026-09-01T22:32:20.4976348Z   done
+2026-09-01T22:32:20.4976665Z  server stopped
+2026-09-01T22:32:20.4977227Z  
+2026-09-01T22:32:20.4977657Z  PostgreSQL init process complete; ready for start up.
+2026-09-01T22:32:20.4978197Z  
+2026-09-01T22:32:20.4983827Z Stop and remove container: 7e6bb3b0145a44e089376694b2115eeb_postgres15_1237fd
+2026-09-01T22:32:20.4985136Z ##[command]/usr/bin/docker rm --force e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:32:21.0011185Z e39e3655f67d759841f3c8b15126990c9b0a5738eb3357bc5426f7bd9bd55b85
+2026-09-01T22:32:21.0026817Z Remove container network: github_network_399e5a06940349d6ab30dca3ffd779e2
+2026-09-01T22:32:21.0033781Z ##[command]/usr/bin/docker network rm github_network_399e5a06940349d6ab30dca3ffd779e2
+2026-09-01T22:32:21.0980051Z github_network_399e5a06940349d6ab30dca3ffd779e2
+2026-09-01T22:32:21.1082244Z Cleaning up orphan processes
+2026-09-01T22:32:21.1491349Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

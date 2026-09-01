@@ -264,3 +264,175 @@ jobs:
           path: test.log
           retention-days: 30
           if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────────
+  # M0-22B — الوظائفُ العشرون الباقيةُ من `.gitlab-ci.yml`.
+  #
+  # كلُّ وظيفةٍ من العشرين في GitLab كانت `extends: .db-integration-base`
+  # بالبنيةِ نفسِها حرفاً: `node:20-alpine` · corepack · خدمةُ `postgres:15`
+  # واحدةٌ باسمِ قاعدةٍ مستقلٍّ · متغيّرُ وصلٍ واحدٌ · ثمّ أمرانِ:
+  #   pnpm install --frozen-lockfile
+  #   pnpm --filter <pkg> <script>
+  # فالاختلافُ بينَها **بياناتٌ لا منطقٌ**، ولذلك تُنقَل مصفوفةً لا عشرينَ
+  # كتلةً متطابقةً — وكلُّ ساقٍ تبقى فحصاً مستقلَّ الاسمِ والنتيجةِ، فيبقى
+  # الإخفاقُ منسوباً إلى وظيفةٍ واحدةٍ كما نصَّ تعليقُ `.gitlab-ci.yml`.
+  #
+  # وثلاثةُ فروقٍ عن GitLab تُعلَن ولا تُطوى (ADR-023 §7):
+  #   1. الصورةُ `node:20-alpine` مُبقاةٌ عبرَ `container:` لا عبرَ `runs-on`،
+  #      فتبقى خدمةُ `postgres` مُخاطَبةً بالاسمِ `postgres` كما في GitLab
+  #      لا بـ`localhost` — وهذا يُبقي سلاسلَ الوصلِ **حرفاً كما هي**.
+  #   2. alpine بلا `git`، وactions/checkout يحتاجه — فيُضاف `apk add git`.
+  #      وGitLab لم يحتَجه لأنّ عامِلَه يجلبُ الشفرةَ خارجَ الحاويةِ.
+  #   3. GitHub لا يعرف `variables:` على مستوى الوظيفةِ باسمٍ متغيّرٍ، واسمُ
+  #      متغيّرِ الوصلِ يختلفُ بينَ السيقانِ (`DATABASE_URL` تارةً و
+  #      `CUSTOMER_DATABASE_URL` تارةً) — وهو **فرقٌ مقصودٌ** شرحه
+  #      `.gitlab-ci.yml`، فيُكتب المتغيّرُ إلى `$GITHUB_ENV` باسمِه من
+  #      المصفوفةِ حفاظاً على القصدِ لا تبسيطاً له.
+  #
+  # وانتظارُ جاهزيّةِ القاعدةِ صريحٌ بـ`health-cmd`: GitLab كان يشغّل الخدمةَ
+  # ولا يضمنُ جاهزيّتَها، وكان الاختبارُ نفسُه يتحمّلُ ذلك. الانتظارُ هنا
+  # يزيدُ الوثوقيّةَ ولا يغيّر ما يُفحَص.
+  # ───────────────────────────────────────────────────────────────────
+  db-integration:
+    name: db-integration
+    runs-on: ubuntu-24.04
+    container: node:20-alpine
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leg: identity
+            pkg: "@wasla/identity-service"
+            db: wasla_test
+          - leg: geography
+            pkg: "@wasla/geography-service"
+            db: wasla_geo_test
+          - leg: channel
+            pkg: "@wasla/channel-postgres"
+            db: wasla_channel_test
+          - leg: customer
+            pkg: "@wasla/customers-service"
+            db: wasla_customer_test
+          - leg: order
+            pkg: "@wasla/orders-service"
+            db: wasla_orders_test
+          - leg: matching
+            pkg: "@wasla/matching-service"
+            db: wasla_matching_test
+          - leg: dispatch
+            pkg: "@wasla/dispatch-service"
+            db: wasla_dispatch_test
+          - leg: drivers
+            pkg: "@wasla/drivers-service"
+            db: wasla_drivers_test
+          - leg: negotiations
+            pkg: "@wasla/negotiations-service"
+            db: wasla_negotiations_test
+          - leg: reputation
+            pkg: "@wasla/reputation-service"
+            db: wasla_reputation_test
+          - leg: subscriptions
+            pkg: "@wasla/subscriptions-service"
+            db: wasla_subscriptions_test
+          - leg: marketplace
+            pkg: "@wasla/marketplace-service"
+            db: wasla_marketplace_test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ matrix.db }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: git داخل alpine (لا يأتي مع الصورة)
+        run: apk add --no-cache git bash
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: "${{ matrix.leg }} · test:integration"
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/${{ matrix.db }}
+        run: pnpm --filter ${{ matrix.pkg }} test:integration
+
+  exit-gate-e2e:
+    name: exit-gate-e2e
+    runs-on: ubuntu-24.04
+    container: node:20-alpine
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leg: channel
+            pkg: "@wasla/channel-e2e"
+            db: wasla_channel_e2e
+            var: DATABASE_URL
+          - leg: customer
+            pkg: "@wasla/customer-e2e"
+            db: wasla_customer_e2e
+            var: CUSTOMER_DATABASE_URL
+          - leg: order
+            pkg: "@wasla/order-e2e"
+            db: wasla_order_e2e
+            var: ORDER_DATABASE_URL
+          - leg: dispatch
+            pkg: "@wasla/dispatch-e2e"
+            db: wasla_dispatch_e2e
+            var: DISPATCH_DATABASE_URL
+          - leg: driver
+            pkg: "@wasla/driver-e2e"
+            db: wasla_driver_e2e
+            var: DRIVER_DATABASE_URL
+          - leg: negotiation
+            pkg: "@wasla/negotiation-e2e"
+            db: wasla_negotiation_e2e
+            var: NEGOTIATION_DATABASE_URL
+          - leg: subscription
+            pkg: "@wasla/subscription-e2e"
+            db: wasla_subscription_e2e
+            var: DATABASE_URL
+          - leg: marketplace
+            pkg: "@wasla/marketplace-e2e"
+            db: wasla_marketplace_e2e
+            var: DATABASE_URL
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ matrix.db }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: git داخل alpine (لا يأتي مع الصورة)
+        run: apk add --no-cache git bash
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)"
+        run: echo "${{ matrix.var }}=postgres://postgres:postgres@postgres:5432/${{ matrix.db }}" >> "$GITHUB_ENV"
+      - name: "${{ matrix.leg }} · exit gate"
+        run: pnpm --filter ${{ matrix.pkg }} test

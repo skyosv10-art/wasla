@@ -62,7 +62,8 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0029 | M1-03 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | packages/service-auth/,packages/dispatch-e2e/,packages/driver-e2e/,packages/negotiation-e2e/,services/matching/,services/dispatch/,services/drivers/,scripts/,docs/15-decisions/,docs/07-security/,docs/00-rules/,docs/14-runbooks/,pnpm-lock.yaml | 2026-08-31 | 2026-09-14 | Active |
 | CLM-0030 | M0-08 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | docs/12-testing/ | 2026-08-31 | 2026-09-14 | Active |
-| CLM-0033 | M0-22A | @uxxxu (agent:computer) | feat/m0-22a-branch-protection | docs/00-rules/,docs/07-security/,docs/15-decisions/,docs/12-testing/ | 2026-09-01 | 2026-09-15 | Active |
+| CLM-0033 | M0-22A | @uxxxu (agent:computer) | feat/m0-22a-branch-protection | docs/00-rules/,docs/07-security/,docs/15-decisions/,docs/12-testing/ | 2026-09-01 | 2026-09-15 | Released |
+| CLM-0034 | M0-22B | @uxxxu (agent:computer) | feat/m0-22b-remaining-jobs | .github/,.gitlab-ci.yml,docs/15-decisions/,docs/12-testing/,docs/07-security/ | 2026-09-02 | 2026-09-16 | Active |
 
 > **`CLM-0033` — حجزُ `M0-22A`، ونطاقُه يُفسَّرُ لا يُسرَد (2026-09-01):** `docs/00-rules/` لأنّ قاعدةَ «`Completed` لا تُمنَحُ إلّا باجتماعِ Implementation + Verification + Gate» قرارُ حوكمةٍ ثبَّتَه المالكُ ويجبُ أن يسكنَ القاعدةَ لا سجلَّ المهامِّ وحدَه · و`docs/07-security/` لإغلاقِ `RISK-0001` وإعادةِ صياغةِ `RISK-0002` على ما يُغلقُه فعلاً · و`docs/15-decisions/` لقرارِ إجبارِ الفحوصِ · و`docs/12-testing/ci-evidence/` لدليلِ الرفضِ المتعمَّدِ. **والعنصرُ `M0-22A` مُسجَّلٌ في اللوحةِ قبلَ الحجزِ لا بعدَه**، لأنّ مدقِّقَ الحجوزاتِ يرفضُ حجزاً لعنصرٍ لا وجودَ له.
 

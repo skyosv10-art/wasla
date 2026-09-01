@@ -87,6 +87,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
       - name: require-doc-update
         run: |
@@ -105,6 +112,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
       - name: verify-governance
         run: |
@@ -131,7 +145,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # نظيرُ سلوكِ GitLab: المُشغِّلُ هناك يخرجُ على **فرعٍ مُسمّى**
+          # (`CI_COMMIT_REF_NAME`). و`actions/checkout` على حدثِ
+          # `pull_request` يخرجُ افتراضاً على **دمجٍ مؤقَّتٍ بـHEAD منفصلٍ**،
+          # فيُجيب `git rev-parse --abbrev-ref HEAD` بـ`HEAD` وترفضُ
+          # `validate-work-claims.sh` بحقٍّ: «الحجزُ يرتبطُ بفرعٍ مُسمّى».
+          # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
+      # `VERIFY_SKIP_NODE=1` يتخطّى **الأنواعَ والاختباراتِ وحدَها**، ولا
+      # يتخطّى البابَ الأوّلَ من `M0-08` الذي يقيسُ `env.pnpm` في الأساس.
+      # وصورةُ `alpine:3.20` في `.gitlab-ci.yml` تُثبِّتُ `bash git python3 grep`
+      # فقط — **بلا node ولا pnpm**، فوظيفةُ `verify` هناك كانت ستُخفِقُ
+      # بالسببِ نفسِه لو بدأت يوماً. لم تبدأ، فلم يُكتشَف. هذا أوّلُ تشغيلٍ
+      # يكشفُه (INC/ADR-023 §6). وتوفيرُ السلسلةِ ليس تخفيفَ فحصٍ بل
+      # إعطاءُ الفحصِ البيئةَ التي يقيسُها.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
       - name: verify.sh
         run: bash scripts/verify.sh
       - name: رفع أرتفاكت التحقق

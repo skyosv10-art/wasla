@@ -48,13 +48,13 @@
 | 1 | Workflow Started | ✅ | `run 33498726052` · `status: completed` |
 | 2 | All 6 Jobs Started | ✅ | ستُّ قيمِ `started_at ≠ null` في §2 · `jobs.json` |
 | 3 | All Required Jobs PASS | ✅ | ستُّ `conclusion: success` · لا `allow_failure` في أيٍّ منها |
-| 4 | Canonical `verify.sh` PASS | ✅ | `artifacts/verify-report/verify-report.txt` → `الخلاصة: passed` |
-| 5 | `typecheck` PASS | ✅ | `logs/typecheck.log` · 0 خطأ · 40 حزمة |
-| 6 | `test` PASS | ✅ | `logs/test.log` · 3748 ناجحاً · 0 فاشلاً |
-| 7 | `governance` PASS | ✅ | `logs/governance-guard.log` → `النتيجة: 153 ناجح · 0 فاشل` |
-| 8 | `doc-coverage` PASS | ✅ | `logs/doc-coverage.log` · `conclusion: success` |
-| 9 | Artifacts موجودة | ✅ | `verify-report` (1241B) · `test-log` (9625B) · `typecheck-log` (647B) — مُنزَّلةٌ ومفكوكةٌ في `artifacts/` |
-| 10 | Logs قابلة للمراجعة | ✅ | ستُّ سجلّاتٍ كاملةٍ في `logs/` — 2560 سطراً |
+| 4 | Canonical `verify.sh` PASS | ✅ | `ci-artifacts/verify-report/verify-report.txt` → `الخلاصة: passed` |
+| 5 | `typecheck` PASS | ✅ | `job-logs/typecheck.raw.txt` · 0 خطأ · 40 حزمة |
+| 6 | `test` PASS | ✅ | `job-logs/test.raw.txt` · 3748 ناجحاً · 0 فاشلاً |
+| 7 | `governance` PASS | ✅ | `job-logs/governance-guard.raw.txt` → `النتيجة: 153 ناجح · 0 فاشل` |
+| 8 | `doc-coverage` PASS | ✅ | `job-logs/doc-coverage.raw.txt` · `conclusion: success` |
+| 9 | Artifacts موجودة | ✅ | `verify-report` (1241B) · `test-log` (9625B) · `typecheck-log` (647B) — مُنزَّلةٌ ومفكوكةٌ في `ci-artifacts/` |
+| 10 | Logs قابلة للمراجعة | ✅ | ستُّ سجلّاتٍ كاملةٍ في `job-logs/` — 2560 سطراً · مُنزَّلةٌ من GitHub لا مُلخَّصة |
 
 **الحكم: `GATE PASSED` — عشرةٌ من عشرة، كلُّها من تشغيلٍ واحدٍ على `main`.**
 
@@ -73,6 +73,8 @@ run.json          استجابةُ /actions/runs/33498726052 كاملةً
 jobs.json         استجابةُ /jobs — فيها started_at لكلِّ وظيفة
 artifacts.json    استجابةُ /artifacts
 summary.json      الخلاصةُ المستخرَجةُ آليّاً من الثلاثةِ أعلاه
-logs/*.log        ستُّ سجلّاتٍ كاملةٍ منزَّلةٍ من GitHub
-artifacts/        الأرتفاكتاتُ الثلاثةُ منزَّلةً ومفكوكة
+job-logs/*.raw.txt  ستُّ سجلّاتٍ كاملةٍ منزَّلةٍ من GitHub
+ci-artifacts/       الأرتفاكتاتُ الثلاثةُ منزَّلةً ومفكوكة
 ```
+
+**ولمَ اللاحقةُ `.raw.txt` لا `.log`، ويُكتبُ صراحةً لا صمتاً:** ملفُّ `.gitignore` يستبعدُ `*.log` و`logs/` و`artifacts/` (الأسطر 8-11 و48-51 و113)، فحفظُ السجلّاتِ بلاحقتِها الأصليّةِ كان **سيُسقِطُها من الالتزامِ بصمتٍ** ويترُكُ البندَ 10 مدَّعىً بلا ملفّاتٍ خلفَه. ولذلك سُمّي مجلَّدُ الأرتفاكتاتِ `ci-artifacts/` لا `artifacts/` للسببِ نفسِه. والمجلَّداتُ السابقةُ في `ci-evidence/` تتبعُ العُرفَ نفسَه (`pipeline.raw.json` · `pipeline.err`). **والمحتوى لم يُمَسّ:** أُزيلت رموزُ ألوانِ الطرفيّةِ فقط (`\x1b[...m`) وبقيَ كلُّ سطرٍ بطابعِه الزمنيِّ كما نزلَ من GitHub.

@@ -1,0 +1,601 @@
+Scope: 42 of 43 workspace projects
+packages/contracts/channel test$ vitest run
+packages/contracts/customer test$ vitest run
+packages/contracts/dispatch test$ vitest run
+packages/contracts/driver test$ vitest run
+packages/contracts/customer test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/customer[39m
+packages/contracts/driver test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/driver[39m
+packages/contracts/channel test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/channel[39m
+packages/contracts/dispatch test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/dispatch[39m
+packages/contracts/customer test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+packages/contracts/channel test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+packages/contracts/driver test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+packages/contracts/dispatch test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+packages/contracts/customer test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+packages/contracts/channel test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+packages/contracts/customer test: [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+packages/contracts/customer test: [2m      Tests [22m [1m[32m42 passed[39m[22m[90m (42)[39m
+packages/contracts/customer test: [2m   Start at [22m 10:42:12
+packages/contracts/customer test: [2m   Duration [22m 2.03s[2m (transform 443ms, setup 0ms, collect 491ms, tests 92ms, environment 1ms, prepare 560ms)[22m
+packages/contracts/driver test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+packages/contracts/dispatch test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+packages/contracts/customer test: Done
+packages/contracts/geography test$ vitest run
+packages/contracts/channel test:  [32m✓[39m src/__tests__/errors.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+packages/contracts/channel test: [2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+packages/contracts/channel test: [2m      Tests [22m [1m[32m34 passed[39m[22m[90m (34)[39m
+packages/contracts/channel test: [2m   Start at [22m 10:42:12
+packages/contracts/channel test: [2m   Duration [22m 2.18s[2m (transform 347ms, setup 0ms, collect 389ms, tests 43ms, environment 3ms, prepare 742ms)[22m
+packages/contracts/dispatch test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+packages/contracts/driver test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+packages/contracts/channel test: Done
+packages/contracts/identity test$ vitest run
+packages/contracts/geography test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/geography[39m
+packages/contracts/dispatch test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+packages/contracts/dispatch test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/dispatch test: [2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+packages/contracts/dispatch test: [2m   Start at [22m 10:42:12
+packages/contracts/dispatch test: [2m   Duration [22m 2.90s[2m (transform 325ms, setup 0ms, collect 383ms, tests 97ms, environment 10ms, prepare 1.03s)[22m
+packages/contracts/driver test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+packages/contracts/driver test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/driver test: [2m      Tests [22m [1m[32m59 passed[39m[22m[90m (59)[39m
+packages/contracts/driver test: [2m   Start at [22m 10:42:12
+packages/contracts/driver test: [2m   Duration [22m 3.10s[2m (transform 338ms, setup 0ms, collect 539ms, tests 119ms, environment 6ms, prepare 855ms)[22m
+packages/contracts/driver test: Done
+packages/contracts/marketplace test$ vitest run
+packages/contracts/dispatch test: Done
+packages/contracts/matching test$ vitest run
+packages/contracts/identity test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/identity[39m
+packages/contracts/geography test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+packages/contracts/identity test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+packages/contracts/matching test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/matching[39m
+packages/contracts/geography test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+packages/contracts/marketplace test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/marketplace[39m
+packages/contracts/geography test: [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+packages/contracts/geography test: [2m      Tests [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+packages/contracts/geography test: [2m   Start at [22m 10:42:15
+packages/contracts/geography test: [2m   Duration [22m 1.49s[2m (transform 206ms, setup 0ms, collect 274ms, tests 28ms, environment 1ms, prepare 298ms)[22m
+packages/contracts/geography test: Done
+packages/contracts/negotiation test$ vitest run
+packages/contracts/identity test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+packages/contracts/identity test: [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+packages/contracts/identity test: [2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+packages/contracts/identity test: [2m   Start at [22m 10:42:16
+packages/contracts/identity test: [2m   Duration [22m 1.50s[2m (transform 207ms, setup 0ms, collect 227ms, tests 24ms, environment 4ms, prepare 417ms)[22m
+packages/contracts/matching test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+packages/contracts/identity test: Done
+packages/contracts/order test$ vitest run
+packages/contracts/marketplace test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+packages/contracts/negotiation test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/negotiation[39m
+packages/contracts/matching test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+packages/contracts/marketplace test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+packages/contracts/order test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/order[39m
+packages/contracts/negotiation test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+packages/contracts/matching test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+packages/contracts/matching test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+packages/contracts/matching test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/matching test: [2m      Tests [22m [1m[32m24 passed[39m[22m[90m (24)[39m
+packages/contracts/matching test: [2m   Start at [22m 10:42:17
+packages/contracts/matching test: [2m   Duration [22m 2.66s[2m (transform 207ms, setup 0ms, collect 318ms, tests 62ms, environment 6ms, prepare 831ms)[22m
+packages/contracts/marketplace test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+packages/contracts/negotiation test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+packages/contracts/order test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m49 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+packages/contracts/matching test: Done
+packages/contracts/reputation test$ vitest run
+packages/contracts/marketplace test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+packages/contracts/marketplace test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/marketplace test: [2m      Tests [22m [1m[32m46 passed[39m[22m[90m (46)[39m
+packages/contracts/marketplace test: [2m   Start at [22m 10:42:17
+packages/contracts/marketplace test: [2m   Duration [22m 3.34s[2m (transform 389ms, setup 0ms, collect 589ms, tests 189ms, environment 2ms, prepare 947ms)[22m
+packages/contracts/negotiation test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+packages/contracts/order test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+packages/contracts/marketplace test: Done
+packages/contracts/subscription test$ vitest run
+packages/contracts/reputation test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/reputation[39m
+packages/contracts/negotiation test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+packages/contracts/negotiation test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/negotiation test: [2m      Tests [22m [1m[32m70 passed[39m[22m[90m (70)[39m
+packages/contracts/negotiation test: [2m   Start at [22m 10:42:18
+packages/contracts/negotiation test: [2m   Duration [22m 2.60s[2m (transform 317ms, setup 0ms, collect 467ms, tests 161ms, environment 4ms, prepare 836ms)[22m
+packages/contracts/order test:  [32m✓[39m src/__tests__/transitions-doc.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+packages/contracts/negotiation test: Done
+packages/errors test$ vitest run
+packages/contracts/subscription test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/contracts/subscription[39m
+packages/contracts/order test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+packages/contracts/reputation test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+packages/contracts/order test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/order test: [2m      Tests [22m [1m[32m119 passed[39m[22m[90m (119)[39m
+packages/contracts/order test: [2m   Start at [22m 10:42:18
+packages/contracts/order test: [2m   Duration [22m 3.06s[2m (transform 352ms, setup 0ms, collect 552ms, tests 253ms, environment 4ms, prepare 926ms)[22m
+packages/errors test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/errors[39m
+packages/contracts/order test: Done
+packages/contracts/reputation test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+packages/contracts/subscription test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+packages/errors test:  [32m✓[39m src/__tests__/errors.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+packages/errors test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/errors test: [2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+packages/errors test: [2m   Start at [22m 10:42:22
+packages/errors test: [2m   Duration [22m 610ms[2m (transform 116ms, setup 0ms, collect 84ms, tests 9ms, environment 3ms, prepare 210ms)[22m
+packages/errors test: Done
+packages/contracts/subscription test:  [32m✓[39m src/__tests__/schema.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+packages/contracts/reputation test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+packages/contracts/subscription test:  [32m✓[39m src/__tests__/boundary.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+packages/contracts/reputation test:  [32m✓[39m src/__tests__/contracts.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+packages/contracts/reputation test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/reputation test: [2m      Tests [22m [1m[32m81 passed[39m[22m[90m (81)[39m
+packages/contracts/reputation test: [2m   Start at [22m 10:42:20
+packages/contracts/reputation test: [2m   Duration [22m 2.42s[2m (transform 350ms, setup 0ms, collect 448ms, tests 162ms, environment 5ms, prepare 626ms)[22m
+packages/contracts/reputation test: Done
+packages/contracts/subscription test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+packages/contracts/subscription test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+packages/contracts/subscription test: [2m      Tests [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+packages/contracts/subscription test: [2m   Start at [22m 10:42:21
+packages/contracts/subscription test: [2m   Duration [22m 1.76s[2m (transform 219ms, setup 0ms, collect 268ms, tests 61ms, environment 2ms, prepare 391ms)[22m
+packages/contracts/subscription test: Done
+packages/auth-sdk test$ vitest run
+packages/channel-core test$ vitest run
+services/customers test$ vitest run
+services/marketplace test$ vitest run
+packages/auth-sdk test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/auth-sdk[39m
+services/marketplace test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/marketplace[39m
+services/customers test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/customers[39m
+packages/channel-core test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/channel-core[39m
+packages/auth-sdk test:  [32m✓[39m src/__tests__/authorize.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+packages/auth-sdk test:  [32m✓[39m src/__tests__/principal.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/groups.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/purity.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 562[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/receive-update.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+packages/auth-sdk test:  [32m✓[39m src/__tests__/describe.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+packages/auth-sdk test: [2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+packages/auth-sdk test: [2m      Tests [22m [1m[32m68 passed[39m[22m[90m (68)[39m
+packages/auth-sdk test: [2m   Start at [22m 10:42:24
+packages/auth-sdk test: [2m   Duration [22m 2.43s[2m (transform 365ms, setup 0ms, collect 450ms, tests 81ms, environment 2ms, prepare 668ms)[22m
+packages/auth-sdk test: Done
+services/negotiations test$ vitest run
+services/customers test:  [32m✓[39m src/__tests__/http/app.test.ts [2m([22m[2m34 tests[22m[2m)[22m[33m 666[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m57 tests[22m[2m)[22m[32m 113[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/send-message.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+services/negotiations test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/negotiations[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/retry.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/http-order-intake.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 602[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/neutrality.guard.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/order-request-submit.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/launch-surfaces.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/http-drift.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 360[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/order-request-preview.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+packages/channel-core test:  [32m✓[39m src/__tests__/deep-link.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+packages/channel-core test: [2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+packages/channel-core test: [2m      Tests [22m [1m[32m104 passed[39m[22m[90m (104)[39m
+packages/channel-core test: [2m   Start at [22m 10:42:24
+packages/channel-core test: [2m   Duration [22m 5.46s[2m (transform 718ms, setup 0ms, collect 1.15s, tests 182ms, environment 4ms, prepare 1.57s)[22m
+packages/channel-core test: Done
+services/orders test$ vitest run
+services/customers test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/http.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 814[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/http-degraded.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 669[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/events-privacy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+services/orders test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/orders[39m
+services/negotiations test:  [32m✓[39m src/__tests__/constraints.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/composition.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/saved-places.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/outbound-ports.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 134[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/state.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/customer-profile.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/agreement.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+services/customers test:  [32m✓[39m src/__tests__/mappers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+services/customers test: [2m Test Files [22m [1m[32m9 passed[39m[22m[90m (9)[39m
+services/customers test: [2m      Tests [22m [1m[32m117 passed[39m[22m[90m (117)[39m
+services/customers test: [2m   Start at [22m 10:42:24
+services/customers test: [2m   Duration [22m 8.86s[2m (transform 1.01s, setup 0ms, collect 2.37s, tests 1.49s, environment 21ms, prepare 2.05s)[22m
+services/marketplace test:  [32m✓[39m src/__tests__/errors.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+services/customers test: Done
+services/reputation test$ vitest run
+services/negotiations test:  [32m✓[39m src/__tests__/rounds.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/transitions.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/http/app.test.ts [2m([22m[2m56 tests[22m[2m)[22m[33m 1094[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/domain.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+services/reputation test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/reputation[39m
+services/orders test:  [32m✓[39m src/__tests__/assignments.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/inventory-sync.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/category-seed.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/transition-order.test.ts [2m([22m[2m459 tests[22m[2m)[22m[33m 588[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/http-drift.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 181[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/catalog.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/state-machine.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/open-thread.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/staff.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/ingest-order.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/http.test.ts [2m([22m[2m44 tests[22m[2m)[22m[33m 931[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/identifiers.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/read.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/mappers.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/drain-outbox.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/inventory.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/tick.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+services/marketplace test:  [32m✓[39m src/__tests__/visibility.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+services/marketplace test: [2m Test Files [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+services/marketplace test: [2m      Tests [22m [1m[32m316 passed[39m[22m[90m (316)[39m
+services/marketplace test: [2m   Start at [22m 10:42:24
+services/marketplace test: [2m   Duration [22m 14.54s[2m (transform 1.44s, setup 0ms, collect 3.78s, tests 2.14s, environment 15ms, prepare 3.33s)[22m
+services/reputation test:  [32m✓[39m src/__tests__/purity.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 174[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+services/negotiations test:  [32m✓[39m src/__tests__/privacy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+services/marketplace test: Done
+services/subscriptions test$ vitest run
+services/reputation test:  [32m✓[39m src/__tests__/inbound-translate.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+services/orders test:  [32m✓[39m src/__tests__/read-order.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+services/orders test: [2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+services/orders test: [2m      Tests [22m [1m[32m635 passed[39m[22m[90m (635)[39m
+services/orders test: [2m   Start at [22m 10:42:31
+services/orders test: [2m   Duration [22m 8.33s[2m (transform 890ms, setup 0ms, collect 2.16s, tests 1.94s, environment 9ms, prepare 1.68s)[22m
+services/negotiations test:  [32m✓[39m src/__tests__/messages.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+services/negotiations test: [2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+services/negotiations test: [2m      Tests [22m [1m[32m229 passed[39m[22m[90m (229)[39m
+services/negotiations test: [2m   Start at [22m 10:42:28
+services/negotiations test: [2m   Duration [22m 12.01s[2m (transform 1.07s, setup 0ms, collect 3.53s, tests 1.65s, environment 9ms, prepare 2.49s)[22m
+services/orders test: Done
+services/subscriptions test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/subscriptions[39m
+services/reputation test:  [32m✓[39m src/__tests__/consume-source-event.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+services/negotiations test: Done
+services/reputation test:  [32m✓[39m src/__tests__/fraud.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/source-events-drift.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/purity.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 149[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/constraints.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/submit-rating.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/http-drift.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/events.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/http-drift.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/state.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/score.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/transitions.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/reads.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/composition.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/run-tick.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/referral.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+services/reputation test:  [32m✓[39m src/__tests__/record-fact.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/plans.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+services/reputation test: [2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+services/reputation test: [2m      Tests [22m [1m[32m282 passed[39m[22m[90m (282)[39m
+services/reputation test: [2m   Start at [22m 10:42:34
+services/reputation test: [2m   Duration [22m 9.02s[2m (transform 1.13s, setup 0ms, collect 2.72s, tests 1.48s, environment 10ms, prepare 1.73s)[22m
+services/reputation test: Done
+services/subscriptions test:  [32m✓[39m src/__tests__/http-degraded.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 128[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/periods.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+services/subscriptions test:  [32m✓[39m src/__tests__/referral-code.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+services/subscriptions test: [2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+services/subscriptions test: [2m      Tests [22m [1m[32m215 passed[39m[22m[90m (215)[39m
+services/subscriptions test: [2m   Start at [22m 10:42:40
+services/subscriptions test: [2m   Duration [22m 4.54s[2m (transform 515ms, setup 0ms, collect 1.44s, tests 503ms, environment 7ms, prepare 966ms)[22m
+services/subscriptions test: Done
+packages/channel-postgres test$ vitest run
+packages/marketplace-e2e test$ vitest run
+packages/reputation-e2e test$ vitest run
+packages/service-auth test$ vitest run
+packages/channel-postgres test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/channel-postgres[39m
+packages/service-auth test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/service-auth[39m
+packages/marketplace-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/marketplace-e2e[39m
+packages/reputation-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/reputation-e2e[39m
+packages/service-auth test:  [32m✓[39m src/__tests__/token.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+packages/channel-postgres test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+packages/channel-postgres test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/channel-postgres test: [2m      Tests [22m [1m[32m9 passed[39m[22m[90m (9)[39m
+packages/channel-postgres test: [2m   Start at [22m 10:42:45
+packages/channel-postgres test: [2m   Duration [22m 1.52s[2m (transform 282ms, setup 0ms, collect 689ms, tests 31ms, environment 3ms, prepare 323ms)[22m
+packages/channel-postgres test: Done
+packages/subscription-e2e test$ vitest run
+packages/service-auth test:  [32m✓[39m src/__tests__/enforce.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+packages/subscription-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/subscription-e2e[39m
+packages/service-auth test:  [32m✓[39m src/__tests__/keys.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+packages/marketplace-e2e test:  [2m[90m↓[39m[22m src/__tests__/phase11-exit-gate.e2e.test.ts [2m([22m[2m6 tests[22m[2m | [22m[33m6 skipped[39m[2m)[22m
+packages/marketplace-e2e test: [2m Test Files [22m [33m1 skipped[39m[90m (1)[39m
+packages/marketplace-e2e test: [2m      Tests [22m [33m6 skipped[39m[90m (6)[39m
+packages/marketplace-e2e test: [2m   Start at [22m 10:42:46
+packages/marketplace-e2e test: [2m   Duration [22m 3.19s[2m (transform 1.36s, setup 0ms, collect 2.39s, tests 0ms, environment 9ms, prepare 302ms)[22m
+packages/marketplace-e2e test: Done
+packages/telegram-adapter test$ vitest run
+packages/service-auth test:  [32m✓[39m src/__tests__/http-server.e2e.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 150[2mms[22m[39m
+packages/reputation-e2e test:  [32m✓[39m src/__tests__/phase09-exit-gate.e2e.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1203[2mms[22m[39m
+packages/reputation-e2e test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/reputation-e2e test: [2m      Tests [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+packages/reputation-e2e test: [2m   Start at [22m 10:42:46
+packages/reputation-e2e test: [2m   Duration [22m 4.21s[2m (transform 1.36s, setup 0ms, collect 2.40s, tests 1.20s, environment 2ms, prepare 235ms)[22m
+packages/telegram-adapter test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/telegram-adapter[39m
+packages/reputation-e2e test: Done
+services/identity test$ vitest run
+packages/service-auth test:  [32m✓[39m src/__tests__/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+packages/service-auth test:  [32m✓[39m src/__tests__/replay.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/init-data.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+services/identity test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/identity[39m
+packages/service-auth test:  [32m✓[39m src/__tests__/outbound.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+packages/service-auth test: [2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+packages/service-auth test: [2m      Tests [22m [1m[32m127 passed[39m[22m[90m (127)[39m
+packages/service-auth test: [2m   Start at [22m 10:42:46
+packages/service-auth test: [2m   Duration [22m 5.96s[2m (transform 668ms, setup 0ms, collect 1.28s, tests 420ms, environment 7ms, prepare 1.62s)[22m
+packages/subscription-e2e test:  [2m[90m↓[39m[22m src/__tests__/phase10-exit-gate.e2e.test.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m
+packages/subscription-e2e test: [2m Test Files [22m [33m1 skipped[39m[90m (1)[39m
+packages/subscription-e2e test: [2m      Tests [22m [33m3 skipped[39m[90m (3)[39m
+packages/subscription-e2e test: [2m   Start at [22m 10:42:48
+packages/subscription-e2e test: [2m   Duration [22m 3.47s[2m (transform 1.57s, setup 0ms, collect 2.80s, tests 0ms, environment 2ms, prepare 214ms)[22m
+packages/service-auth test: Done
+packages/subscription-e2e test: Done
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/channel-adapter.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/update-parser.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+services/identity test:  [32m✓[39m src/__tests__/session.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/port-conformance.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/keyboard.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+services/identity test:  [32m✓[39m src/__tests__/http/app.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 174[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/group-updates.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/error-mapping.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+services/identity test:  [32m✓[39m src/__tests__/resolve-telegram-identity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/rate-limit.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+packages/telegram-adapter test:  [32m✓[39m src/__tests__/webhook-auth.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+packages/telegram-adapter test: [2m Test Files [22m [1m[32m9 passed[39m[22m[90m (9)[39m
+packages/telegram-adapter test: [2m      Tests [22m [1m[32m132 passed[39m[22m[90m (132)[39m
+packages/telegram-adapter test: [2m   Start at [22m 10:42:50
+packages/telegram-adapter test: [2m   Duration [22m 4.30s[2m (transform 797ms, setup 0ms, collect 1.33s, tests 142ms, environment 5ms, prepare 1.06s)[22m
+packages/telegram-adapter test: Done
+services/identity test:  [32m✓[39m src/__tests__/operations.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+services/identity test:  [32m✓[39m src/__tests__/public-id.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+services/identity test: [2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+services/identity test: [2m      Tests [22m [1m[32m52 passed[39m[22m[90m (52)[39m
+services/identity test: [2m   Start at [22m 10:42:51
+services/identity test: [2m   Duration [22m 3.83s[2m (transform 560ms, setup 0ms, collect 2.18s, tests 221ms, environment 4ms, prepare 593ms)[22m
+services/identity test: Done
+packages/bot-runtime test$ vitest run
+services/dispatch test$ vitest run
+services/drivers test$ vitest run
+services/geography test$ vitest run
+services/drivers test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/drivers[39m
+packages/bot-runtime test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/bot-runtime[39m
+services/geography test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/geography[39m
+services/dispatch test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/dispatch[39m
+services/drivers test:  [32m✓[39m src/__tests__/contract-drift.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+services/geography test:  [32m✓[39m src/__tests__/http/app.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 645[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/conversation.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 483[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/tick.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 103[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/outbound-ports.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+services/geography test:  [32m✓[39m src/__tests__/user-location.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/state-machines.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+services/geography test:  [32m✓[39m src/__tests__/hierarchy.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/webhook.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 456[2mms[22m[39m
+services/geography test:  [32m✓[39m src/__tests__/locale.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+services/geography test: [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+services/geography test: [2m      Tests [22m [1m[32m41 passed[39m[22m[90m (41)[39m
+services/geography test: [2m   Start at [22m 10:42:56
+services/geography test: [2m   Duration [22m 4.06s[2m (transform 535ms, setup 0ms, collect 1.01s, tests 700ms, environment 1ms, prepare 1.02s)[22m
+services/dispatch test:  [32m✓[39m src/__tests__/accept-offer.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+services/geography test: Done
+services/matching test$ vitest run
+packages/bot-runtime test:  [32m✓[39m src/__tests__/groups.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 248[2mms[22m[39m
+services/matching test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/services/matching[39m
+services/dispatch test:  [32m✓[39m src/__tests__/cancel-job.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 126[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/http-profile.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 640[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/eligibility.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 135[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/evaluate-candidates.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/runtime.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 299[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/contract-drift.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 181[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/manage-candidacy.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/config.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/publication.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/scoring.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 226[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/events-contract.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 169[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/messages.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 186[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/http-drift.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 165[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/identity-bootstrap.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/reject-offer.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 87[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/http-service-identity.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 367[2mms[22m[39m
+packages/bot-runtime test:  [32m✓[39m src/__tests__/launch-surfaces.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+packages/bot-runtime test: [2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+packages/bot-runtime test: [2m      Tests [22m [1m[32m93 passed[39m[22m[90m (93)[39m
+packages/bot-runtime test: [2m   Start at [22m 10:42:56
+packages/bot-runtime test: [2m   Duration [22m 10.66s[2m (transform 1.34s, setup 0ms, collect 4.17s, tests 1.87s, environment 8ms, prepare 1.92s)[22m
+services/matching test:  [32m✓[39m src/__tests__/filters.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-order-engine.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 141[2mms[22m[39m
+packages/bot-runtime test: Done
+services/drivers test:  [32m✓[39m src/__tests__/http-documents.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 417[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/mappers.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/schema-drift.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/http-errors.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 303[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/ruleset-drift.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/mappers.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/privacy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/http-errors.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 243[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/create-job.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/http-vehicles.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 279[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/http-candidacy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 147[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/state-machine.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+services/drivers test:  [32m✓[39m src/__tests__/http-eligibility.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 273[2mms[22m[39m
+services/drivers test: [2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+services/drivers test: [2m      Tests [22m [1m[32m196 passed[39m[22m[90m (196)[39m
+services/drivers test: [2m   Start at [22m 10:42:56
+services/drivers test: [2m   Duration [22m 14.91s[2m (transform 1.49s, setup 0ms, collect 5.80s, tests 2.67s, environment 17ms, prepare 2.51s)[22m
+services/matching test:  [32m✓[39m src/__tests__/http-candidates.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 166[2mms[22m[39m
+services/drivers test: Done
+services/dispatch test:  [32m✓[39m src/__tests__/http-offer-detail.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 208[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/http-geography.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+services/matching test:  [32m✓[39m src/__tests__/http-health.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+services/matching test: [2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+services/matching test: [2m      Tests [22m [1m[32m172 passed[39m[22m[90m (172)[39m
+services/matching test: [2m   Start at [22m 10:43:02
+services/matching test: [2m   Duration [22m 10.24s[2m (transform 997ms, setup 0ms, collect 3.03s, tests 1.42s, environment 16ms, prepare 2.21s)[22m
+services/matching test: Done
+services/dispatch test:  [32m✓[39m src/__tests__/http-jobs.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 236[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/run-tick.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-matching.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-offers.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 131[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-errors.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/deadlines.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-tick.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+services/dispatch test:  [32m✓[39m src/__tests__/http-health.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+services/dispatch test: [2m Test Files [22m [1m[32m20 passed[39m[22m[90m (20)[39m
+services/dispatch test: [2m      Tests [22m [1m[32m236 passed[39m[22m[90m (236)[39m
+services/dispatch test: [2m   Start at [22m 10:42:56
+services/dispatch test: [2m   Duration [22m 18.58s[2m (transform 1.67s, setup 0ms, collect 9.40s, tests 1.93s, environment 7ms, prepare 2.51s)[22m
+services/dispatch test: Done
+bots/customer-bot test$ vitest run
+bots/driver-bot test$ vitest run
+bots/partner-bot test$ vitest run
+packages/dispatch-e2e test$ vitest run
+bots/partner-bot test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/bots/partner-bot[39m
+bots/driver-bot test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/bots/driver-bot[39m
+bots/customer-bot test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/bots/customer-bot[39m
+packages/dispatch-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/dispatch-e2e[39m
+bots/partner-bot test:  [32m✓[39m src/__tests__/partner-bot.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 384[2mms[22m[39m
+bots/partner-bot test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+bots/partner-bot test: [2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+bots/partner-bot test: [2m   Start at [22m 10:43:16
+bots/partner-bot test: [2m   Duration [22m 3.30s[2m (transform 1.07s, setup 0ms, collect 2.20s, tests 384ms, environment 1ms, prepare 298ms)[22m
+bots/partner-bot test: Done
+packages/driver-e2e test$ vitest run
+bots/customer-bot test:  [32m✓[39m src/__tests__/customer-flows.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 394[2mms[22m[39m
+bots/driver-bot test:  [32m✓[39m src/__tests__/driver-flows.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 461[2mms[22m[39m
+packages/driver-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/driver-e2e[39m
+bots/customer-bot test:  [32m✓[39m src/__tests__/negotiation-flows.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+bots/driver-bot test:  [32m✓[39m src/__tests__/negotiation-flows.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/phase07-exit-gate.e2e.test.ts[2m > [22m[2mPhase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22m[2mيقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/phase07-exit-gate.e2e.test.ts[2m > [22m[2mPhase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22m[2mيُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+bots/customer-bot test:  [32m✓[39m src/__tests__/customer-bot.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 336[2mms[22m[39m
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/phase07-exit-gate.e2e.test.ts[2m > [22m[2mPhase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22m[2mيُصعِّد إلى المجتمع بلا مرشّحين ثم يُعلن النفاد بعد نافذة التصعيد
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+bots/customer-bot test: [2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+bots/customer-bot test: [2m      Tests [22m [1m[32m32 passed[39m[22m[90m (32)[39m
+bots/customer-bot test: [2m   Start at [22m 10:43:16
+bots/customer-bot test: [2m   Duration [22m 6.66s[2m (transform 1.57s, setup 0ms, collect 3.81s, tests 751ms, environment 1ms, prepare 818ms)[22m
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/phase07-exit-gate.e2e.test.ts[2m > [22m[2mPhase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22m[2mموجة بعرضين: يفوز واحد ويُغلق الآخر superseded لا rejected
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+bots/driver-bot test:  [32m✓[39m src/__tests__/driver-bot.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 400[2mms[22m[39m
+bots/driver-bot test:    [33m[2m✓[22m[39m driver bot[2m > [22mexposes its own Mini App from the environment [33m 318[2mms[22m[39m
+bots/driver-bot test: [2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+bots/driver-bot test: [2m      Tests [22m [1m[32m39 passed[39m[22m[90m (39)[39m
+bots/driver-bot test: [2m   Start at [22m 10:43:16
+bots/driver-bot test: [2m   Duration [22m 7.13s[2m (transform 1.80s, setup 0ms, collect 4.40s, tests 886ms, environment 6ms, prepare 684ms)[22m
+bots/customer-bot test: Done
+packages/negotiation-e2e test$ vitest run
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/phase07-exit-gate.e2e.test.ts[2m > [22m[2mPhase 07 exit gate · the run is unambiguous about what it proved[2m > [22m[2mيُصرِّح بمخزنه: /health يقول postgres عند رفع البوابة و memory دونه
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  [32m✓[39m src/__tests__/phase07-exit-gate.e2e.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1912[2mms[22m[39m
+packages/dispatch-e2e test:    [33m[2m✓[22m[39m Phase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22mيقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول [33m 1012[2mms[22m[39m
+packages/dispatch-e2e test:    [33m[2m✓[22m[39m Phase 07 exit gate · dispatch finds a driver over real HTTP[2m > [22mيُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي [33m 381[2mms[22m[39m
+bots/driver-bot test: Done
+packages/order-e2e test$ vitest run
+packages/negotiation-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/negotiation-e2e[39m
+packages/order-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/order-e2e[39m
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mبلا هوية ⇒ 401، وقبل أيّ منطقِ عمل
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mهويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mهويّةٌ صحيحةٌ ⇒ يمرّ الطلب إلى منطق العمل (404 لا 401)
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mهويّةٌ صحيحةٌ بصلاحيةٍ خاطئة ⇒ 403: التوثيق ليس التخويل
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mالرمزُ يُحرَق: النداء الثاني بالرمز نفسه ⇒ 401 (سياسةُ الإعادة، ADR-021)
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mالرمزُ مربوطٌ بالمسار والطريقة: رمزُ مسارٍ آخر ⇒ 401
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2mمسارٌ غير مصنَّفٍ يُرفَض قبل 404: الافتراضُ منعٌ لا سماح
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: [90mstdout[2m | src/__tests__/service-identity-enforcement.e2e.test.ts[2m > [22m[2mM1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22m[2m‏/health يبقى مفتوحاً: الإنفاذُ لا يُعمي المراقبة
+packages/dispatch-e2e test: [22m[39m[phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  [32m✓[39m src/__tests__/service-identity-enforcement.e2e.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1001[2mms[22m[39m
+packages/dispatch-e2e test:    [33m[2m✓[22m[39m M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك[2m > [22mبلا هوية ⇒ 401، وقبل أيّ منطقِ عمل [33m 329[2mms[22m[39m
+packages/dispatch-e2e test: [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+packages/dispatch-e2e test: [2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+packages/dispatch-e2e test: [2m   Start at [22m 10:43:16
+packages/dispatch-e2e test: [2m   Duration [22m 9.96s[2m (transform 2.69s, setup 0ms, collect 5.82s, tests 2.91s, environment 5ms, prepare 426ms)[22m
+packages/dispatch-e2e test: Done
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالمسار الكامل: من التسجيل إلى طلب مقبول[2m > [22m[2mسائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالمسار الكامل: من التسجيل إلى طلب مقبول[2m > [22m[2mالأهليّة ليست ادّعاءً: قبل المراجعة لا عرض، وبعدها عرض
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mنبضة واحدة تُخرجه من التجمّع[2m > [22m[2mتنتهي الرخصة، فتُخرجه نبضة واحدة، فلا يعود التوزيع يراه
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mنبضة واحدة تُخرجه من التجمّع[2m > [22m[2mالنبضة الثانية لا تجد شيئاً ولا تنشر ثانية — سكونها من حالتها
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mنبضة واحدة تُخرجه من التجمّع[2m > [22m[2mالنبضة تُحدِّث `last_tick_at` الذي يقرأه `/health`، والتخزين مُعلَن
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mدليل المناطق يُسأل عبر HTTP[2m > [22m[2mمنطقة لا تعرفها الجغرافيا تُرفض، ولا يبقى للسائق منطقة
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mدليل المناطق يُسأل عبر HTTP[2m > [22m[2mالمنطقة المعروفة تُقبَل — فالرفض أعلاه ليس رفضاً لكل شيء
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/order-e2e test: [90mstdout[2m | src/__tests__/phase06-exit-gate.e2e.test.ts
+packages/order-e2e test: [22m[39m[phase06-gate] engine persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالجهوزية: نواة السائق لا ترفع سائقاً مشغولاً[2m > [22m[2mسائق مشغول يعلن «متاح» فيبقى `busy` عند المطابقة
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالجهوزية: نواة السائق لا ترفع سائقاً مشغولاً[2m > [22m[2mإعلان `offline` ينزل إلى المطابقة فوراً — الأقلّ توافراً مسموح دائماً
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالتعليق يخرج السائق من التجمّع[2m > [22m[2mسائق معلَّق لا يصله عرض، والمطابقة تقرأ `suspended` لا `ineligible`
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالتعليق يخرج السائق من التجمّع[2m > [22m[2mإعادة التمكين تُعيده إلى التجمّع بنفس المسار
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالحدّ بين الخدمتين مُسجَّل لا مُستنتَج[2m > [22m[2mالمطابقة تُنشئ الصفّ بـ200 لا 201، ومفتاح منع التكرار مطلوب
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالحدّ بين الخدمتين مُسجَّل لا مُستنتَج[2m > [22m[2mأحداث الأهليّة تُقيَّد في صندوق البريد — لا تغيّر صامت
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: [90mstdout[2m | src/__tests__/phase05-exit-gate.e2e.test.ts[2m > [22m[2mالحدّ بين الخدمتين مُسجَّل لا مُستنتَج[2m > [22m[2mسائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة
+packages/driver-e2e test: [22m[39m[phase05-gate] driver-core persistence = memory
+packages/driver-e2e test:  [32m✓[39m src/__tests__/phase05-exit-gate.e2e.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 2737[2mms[22m[39m
+packages/driver-e2e test:    [33m[2m✓[22m[39m المسار الكامل: من التسجيل إلى طلب مقبول[2m > [22mسائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله [33m 730[2mms[22m[39m
+packages/driver-e2e test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/driver-e2e test: [2m      Tests [22m [1m[32m14 passed[39m[22m[90m (14)[39m
+packages/driver-e2e test: [2m   Start at [22m 10:43:20
+packages/driver-e2e test: [2m   Duration [22m 8.92s[2m (transform 3.27s, setup 0ms, collect 5.62s, tests 2.74s, environment 1ms, prepare 222ms)[22m
+packages/driver-e2e test: Done
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mdeclares which store it ran against, and answers /health from it
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mscenario 1 · happy path: intake → wave → thread → accept → the engine holds the price
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mscenario 1b · the negotiated number is the one both parties last saw, after a counter
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mscenario 2 · the same accept key twice: one agreement, one price, one hand-off
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mscenario 3 · the engine refuses the second agreement, and the agreement survives it
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mscenario 4 · the engine is down at accept time: pending with a retry moment, then delivered
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the price crosses four services[2m > [22m[2mrefuses to open a thread on a customer_offer order, reading price_mode from the engine
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the wiring itself[2m > [22m[2manswers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: [90mstdout[2m | src/__tests__/phase08-exit-gate.e2e.test.ts[2m > [22m[2mPhase 08 exit gate · the wiring itself[2m > [22m[2manswers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [22m[39m[phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test:  [32m✓[39m src/__tests__/phase08-exit-gate.e2e.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1188[2mms[22m[39m
+packages/negotiation-e2e test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/negotiation-e2e test: [2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+packages/negotiation-e2e test: [2m   Start at [22m 10:43:24
+packages/negotiation-e2e test: [2m   Duration [22m 7.16s[2m (transform 3.04s, setup 0ms, collect 5.15s, tests 1.19s, environment 0ms, prepare 319ms)[22m
+packages/negotiation-e2e test: Done
+packages/order-e2e test:  [32m✓[39m src/__tests__/phase06-exit-gate.e2e.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 3746[2mms[22m[39m
+packages/order-e2e test:    [33m[2m✓[22m[39m 3. the whole transition table, over HTTP (441 pairs)[2m > [22maccepts exactly the published edges and refuses every other pair [33m 3084[2mms[22m[39m
+packages/order-e2e test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/order-e2e test: [2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+packages/order-e2e test: [2m   Start at [22m 10:43:24
+packages/order-e2e test: [2m   Duration [22m 7.39s[2m (transform 1.84s, setup 0ms, collect 3.02s, tests 3.75s, environment 2ms, prepare 323ms)[22m
+packages/order-e2e test: Done
+packages/customer-e2e test$ vitest run
+packages/channel-e2e test$ vitest run
+packages/channel-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/channel-e2e[39m
+packages/customer-e2e test: [1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/wasla/wasla/packages/customer-e2e[39m
+packages/channel-e2e test:  [32m✓[39m src/__tests__/m1-02-session-gate.e2e.test.ts [2m([22m[2m17 tests[22m[2m | [22m[33m10 skipped[39m[2m)[22m[32m 17[2mms[22m[39m
+packages/customer-e2e test: [90mstdout[2m | src/__tests__/phase04-exit-gate.e2e.test.ts
+packages/customer-e2e test: [22m[39m[phase04-exit-gate] persistence=memory
+packages/channel-e2e test:  [32m✓[39m src/__tests__/phase03-exit-gate.e2e.test.ts [2m([22m[2m8 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 250[2mms[22m[39m
+packages/channel-e2e test: [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+packages/channel-e2e test: [2m      Tests [22m [1m[32m14 passed[39m[22m[2m | [22m[33m11 skipped[39m[90m (25)[39m
+packages/channel-e2e test: [2m   Start at [22m 10:43:32
+packages/channel-e2e test: [2m   Duration [22m 3.26s[2m (transform 1.31s, setup 0ms, collect 2.43s, tests 267ms, environment 1ms, prepare 207ms)[22m
+packages/channel-e2e test: Done
+packages/customer-e2e test:  [32m✓[39m src/__tests__/phase04-exit-gate.e2e.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 2408[2mms[22m[39m
+packages/customer-e2e test:    [33m[2m✓[22m[39m Phase 04 exit gate — customer → Customer Core → order engine[2m > [22mreports a timeout as a timeout when the engine never answers [33m 2019[2mms[22m[39m
+packages/customer-e2e test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+packages/customer-e2e test: [2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+packages/customer-e2e test: [2m   Start at [22m 10:43:32
+packages/customer-e2e test: [2m   Duration [22m 4.80s[2m (transform 1.18s, setup 0ms, collect 2.04s, tests 2.41s, environment 0ms, prepare 110ms)[22m
+packages/customer-e2e test: Done

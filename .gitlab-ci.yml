@@ -72,13 +72,17 @@ doc-coverage:
 # ثم تُشغّل test-governance.sh لتُثبت أن الفحوص ترفض فعلاً لا شكلاً.
 # المرجع: docs/00-rules/WORK_CLAIM_RULE.md · docs/16-progress/README.md
 # ─────────────────────────────────────────────────────────────────────
+# العيبُ الكامنُ نفسُه (ADR-023 §6) — نسخةٌ ثانيةٌ منه: بوّابةُ الحوكمةِ
+# تشملُ الفحصَ 11 (أساسُ M0-08) وهو يقرأُ `pnpm --version`. صُحِّح في M0-22B.
 governance-guard:
   stage: validate
-  image: alpine:3.20
+  image: node:20-alpine
   variables:
     GIT_DEPTH: "50"
   before_script:
     - apk add --no-cache bash git python3 coreutils findutils grep sed
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
     - |
       TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
       git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
@@ -138,13 +142,22 @@ build-test:
 # والأرتفاكتُ يُرفَع `when: always` — فالتقريرُ يُقرأ عندَ الإخفاقِ خاصّةً.
 # المرجع: docs/00-rules/VERIFY_COMMAND.md §6
 # ─────────────────────────────────────────────────────────────────────
+# عيبٌ كامنٌ صُحِّح في M0-22B (ADR-023 §6): كانت الصورةُ `alpine:3.20` بلا
+# node ولا pnpm، فيقرأ `scripts/verify.sh` الحقلَ `env.pnpm` فارغاً ويُخفقُ
+# أساسُ M0-08. ولم يُكتشَف العيبُ سنةً كاملةً **لأنّ الوظيفةَ لم تبدأ قطُّ**
+# (الحصّةُ منتهيةٌ منذ 2026-08-25) — فالأحمرُ الذي لا يجري لا يُعلِّمُ شيئاً.
+# كشفَه أوّلُ تشغيلٍ حقيقيٍّ على GitHub، فصُحِّح هنا أيضاً حفاظاً على تكافؤِ
+# الملفَّين. والصورةُ صارت `node:20-alpine` لأنّ الحقلَ يحتاج المُفسِّرَ نفسَه
+# لا محاكاةً له. و`VERIFY_SKIP_NODE` باقٍ: الأنواعُ والاختباراتُ لبناءٍ آخر.
 verify:
   stage: validate
-  image: alpine:3.20
+  image: node:20-alpine
   variables:
     VERIFY_SKIP_NODE: "1"
   before_script:
     - apk add --no-cache bash git python3 grep
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
   script:
     - bash scripts/verify.sh
   artifacts:

@@ -1,0 +1,23 @@
+GitLab job                       GitHub leg                   db  img  var  url  script
+db-integration                   db-integration/identity      OK   OK   OK   OK   OK 
+geography-db-integration         db-integration/geography     OK   OK   OK   OK   OK 
+channel-db-integration           db-integration/channel       OK   OK   OK   OK   OK 
+customer-db-integration          db-integration/customer      OK   OK   OK   OK   OK 
+order-db-integration             db-integration/order         OK   OK   OK   OK   OK 
+matching-db-integration          db-integration/matching      OK   OK   OK   OK   OK 
+dispatch-db-integration          db-integration/dispatch      OK   OK   OK   OK   OK 
+drivers-db-integration           db-integration/drivers       OK   OK   OK   OK   OK 
+negotiations-db-integration      db-integration/negotiations  OK   OK   OK   OK   OK 
+reputation-db-integration        db-integration/reputation    OK   OK   OK   OK   OK 
+subscriptions-db-integration     db-integration/subscriptions OK   OK   OK   OK   OK 
+marketplace-db-integration       db-integration/marketplace   OK   OK   OK   OK   OK 
+channel-exit-gate-e2e            exit-gate-e2e/channel        OK   OK   OK   OK   OK 
+customer-exit-gate-e2e           exit-gate-e2e/customer       OK   OK   OK   OK   OK 
+order-exit-gate-e2e              exit-gate-e2e/order          OK   OK   OK   OK   OK 
+dispatch-exit-gate-e2e           exit-gate-e2e/dispatch       OK   OK   OK   OK   OK 
+driver-exit-gate-e2e             exit-gate-e2e/driver         OK   OK   OK   OK   OK 
+negotiations-exit-gate-e2e       exit-gate-e2e/negotiation    OK   OK   OK   OK   OK 
+subscription-exit-gate-e2e       exit-gate-e2e/subscription   OK   OK   OK   OK   OK 
+marketplace-exit-gate-e2e        exit-gate-e2e/marketplace    OK   OK   OK   OK   OK 
+
+20 وظيفةً · 20 مطابقةٌ في الحقولِ الخمسةِ · 0 مختلفةٌ

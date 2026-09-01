@@ -126,6 +126,21 @@ jobs:
           git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true
           echo "==> بوابة الحوكمة: النطاق origin/$TARGET..HEAD"
           bash scripts/checks/verify-governance.sh "origin/$TARGET" HEAD
+      # السببُ الجذريُّ (2) نفسُه في ADR-023 §6: `test-governance.sh` يُشغِّلُ
+      # بابَ الأساسِ (M0-08) الذي يقيسُ `pnpm --version`، وصورةُ
+      # `alpine:3.20` في نظيرِ هذه الوظيفةِ تُثبِّتُ
+      # `bash git python3 coreutils findutils grep sed` — **بلا pnpm**.
+      # فالعيبُ كان قائماً في GitLab هنا أيضاً ولم يُكتشَف لأنّ الوظيفةَ
+      # لم تبدأ قطُّ. إعطاءُ الفحصِ بيئتَه لا تعطيلُه.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
       - name: test-governance
         run: |
           echo "==> إثبات أن الفحوص ترفض فعلاً (عدد الحالات يُطبَع في ذيل الحزمة)"

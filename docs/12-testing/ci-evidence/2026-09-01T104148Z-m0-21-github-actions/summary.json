@@ -1,0 +1,90 @@
+{
+  "run_id": 33498726052,
+  "run_number": 4,
+  "event": "push",
+  "branch": "main",
+  "head_sha": "fce1f054083965ff533be284948e4e1ecce6ec88",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-09-01T10:41:48Z",
+  "updated_at": "2026-09-01T10:44:27Z",
+  "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052",
+  "jobs": [
+    {
+      "name": "repo-structure",
+      "started_at": "2026-09-01T10:41:52Z",
+      "completed_at": "2026-09-01T10:42:00Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826822466"
+    },
+    {
+      "name": "verify",
+      "started_at": "2026-09-01T10:41:51Z",
+      "completed_at": "2026-09-01T10:43:28Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826822692"
+    },
+    {
+      "name": "typecheck",
+      "started_at": "2026-09-01T10:41:50Z",
+      "completed_at": "2026-09-01T10:44:26Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826822740"
+    },
+    {
+      "name": "doc-coverage",
+      "started_at": "2026-09-01T10:41:51Z",
+      "completed_at": "2026-09-01T10:41:58Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826822771"
+    },
+    {
+      "name": "test",
+      "started_at": "2026-09-01T10:41:51Z",
+      "completed_at": "2026-09-01T10:43:42Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826822852"
+    },
+    {
+      "name": "governance-guard",
+      "started_at": "2026-09-01T10:41:50Z",
+      "completed_at": "2026-09-01T10:42:58Z",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33498726052/job/99826823025"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "typecheck-log",
+      "size_in_bytes": 646,
+      "expired": false
+    },
+    {
+      "name": "test-log",
+      "size_in_bytes": 9048,
+      "expired": false
+    },
+    {
+      "name": "verify-report",
+      "size_in_bytes": 1196,
+      "expired": false
+    }
+  ],
+  "measured": {
+    "tests_passed": 3748,
+    "tests_skipped": 42,
+    "test_files_passed": 221,
+    "typecheck_errors": 0,
+    "governance_cases_passed": 153,
+    "governance_cases_failed": 0,
+    "verify_conclusion": "passed",
+    "verify_checks_passed": 4,
+    "verify_checks_skipped": 2
+  }
+}

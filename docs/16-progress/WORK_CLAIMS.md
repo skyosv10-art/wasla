@@ -63,6 +63,17 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0029 | M1-03 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | packages/service-auth/,packages/dispatch-e2e/,packages/driver-e2e/,packages/negotiation-e2e/,services/matching/,services/dispatch/,services/drivers/,scripts/,docs/15-decisions/,docs/07-security/,docs/00-rules/,docs/14-runbooks/,pnpm-lock.yaml | 2026-08-31 | 2026-09-14 | Active |
 | CLM-0030 | M0-08 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | docs/12-testing/ | 2026-08-31 | 2026-09-14 | Active |
 | CLM-0035 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-closeout | docs/12-testing/,docs/07-security/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0039 | M0-04 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch2 | docs/12-testing/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0040 | M0-05 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch2 | docs/12-testing/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0041 | M0-06 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch2 | docs/12-testing/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0042 | M0-07 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch2 | docs/12-testing/ | 2026-09-02 | 2026-09-16 | Active |
+
+
+> **`CLM-0039`..`CLM-0042` — أربعةُ حجوزاتٍ على فرعٍ واحدٍ، ولمَ بدأَ الترقيمُ من 0039 لا 0037 (2026-09-02):** العملُ **كتابةُ وثائقِ بوّاباتٍ** لأربعةِ عناصرَ في `Ready for Gate` (`M0-04`..`M0-07`)، ونطاقُها واحدٌ (`docs/12-testing/`) ومالكُها واحدٌ. **وحجزٌ واحدٌ لا يكفي** لأنّ الفحصَ الخامسَ يطلبُ عنصرَ عملٍ حقيقيّاً من اللوحةِ لكلِّ سطرٍ، فلا يُجمَعُ أربعةُ عناصرَ في سطرٍ واحدٍ. **والتقاطعُ بينَ الأربعةِ وبينَ `CLM-0034` قائمٌ فعلاً** على `docs/12-testing/`، وسلامتُه **من وحدةِ المالكِ لا من غيابِ التقاطعِ** — وهذا يُكتَبُ صريحاً كما كُتِبَ في `CLM-0031`؛ ولو دخلَ مالكٌ ثانٍ لَوجبَ التقسيمُ بقرارِ مالكِ البرنامجِ.
+>
+> **و`CLM-0037`/`CLM-0038` محجوزانِ لدفعةٍ أختٍ لم تُدمَج بعدُ:** خُصِّصا لـ`M0-01` و`M0-03` على الفرعِ `chore/m0-gate-docs-batch1` في [PR #8](https://github.com/skyosv10-art/wasla/pull/8)، وهذا السجلُّ نسختُه على `main` لا تراهما. **فالفجوةُ في الترقيمِ مقصودةٌ ومُعلَنةٌ** لئلّا يُخصَّصَ المُعرِّفُ الواحدُ لعنصرَينِ — **وهو عينُ الخطأِ المُسجَّلِ في رأسِ هذا الملفِّ** (`CLM-0005`/`CLM-0006`) حينَ قُرئ `main` وحدَه وحُكِمَ بأنّه كلُّ الحقيقةِ. **والحدُّ البنيويُّ باقٍ ولا يكشفه فحصٌ يقرأُ فرعاً واحداً**، فالاحتياطُ كتابيٌّ لا آليٌّ.
+>
+> **ولا تمسُّ هذه الحجوزاتُ شفرةً**: النطاقُ وثائقُ بوّاباتٍ وأدلّةُ CI، ولم يُغيَّر سطرٌ في `packages/` ولا `services/` ولا `scripts/` — والبوّاباتُ **تُوثِّقُ ما قِيسَ ولا تُنتِجُ خُضرةً جديدةً**.
 
 > **`CLM-0033` — حجزُ `M0-22A`، ونطاقُه يُفسَّرُ لا يُسرَد (2026-09-01):** `docs/00-rules/` لأنّ قاعدةَ «`Completed` لا تُمنَحُ إلّا باجتماعِ Implementation + Verification + Gate» قرارُ حوكمةٍ ثبَّتَه المالكُ ويجبُ أن يسكنَ القاعدةَ لا سجلَّ المهامِّ وحدَه · و`docs/07-security/` لإغلاقِ `RISK-0001` وإعادةِ صياغةِ `RISK-0002` على ما يُغلقُه فعلاً · و`docs/15-decisions/` لقرارِ إجبارِ الفحوصِ · و`docs/12-testing/ci-evidence/` لدليلِ الرفضِ المتعمَّدِ. **والعنصرُ `M0-22A` مُسجَّلٌ في اللوحةِ قبلَ الحجزِ لا بعدَه**، لأنّ مدقِّقَ الحجوزاتِ يرفضُ حجزاً لعنصرٍ لا وجودَ له.
 

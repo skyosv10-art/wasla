@@ -13,6 +13,10 @@
 | [`33569807797`](https://github.com/skyosv10-art/wasla/actions/runs/33569807797) | `push` · **`main`** | `0a752470` | 26 | **26** | `success` 26 |
 | [`33573216083`](https://github.com/skyosv10-art/wasla/actions/runs/33573216083) | `pull_request` · `chore/m0-22b-gate-closeout` | `1375ce2e` | 26 | **26** | `success` 26 |
 
+| [`33577596261`](https://github.com/skyosv10-art/wasla/actions/runs/33577596261) | `pull_request` · `chore/m0-gate-docs-batch1` | `da582286` | 26 | **26** | `success` 26 |
+
+**والخامسُ هو تشغيلُ [PR #8](https://github.com/skyosv10-art/wasla/pull/8) نفسِه** — أي الطلبِ الذي يحملُ هاتَينِ الوثيقتَينِ. وقد قُرئ **بعدَ الدفعِ لا قبلَه**: `completed · success`. **وحدُّه مُعلَنٌ:** دفعتُه وثائقُ محضةٌ، فخُضرتُه تُثبِتُ أنّ **الحوكمةَ والأنواعَ والاختباراتَ لم تنكسر بالوثائقِ**، ولا تُضيفُ دليلاً جديداً على شفرةِ `M0-01` و`M0-03` — تلكَ أثبتَتها الأربعةُ قبلَها.
+
 الحقولُ الخامُ لكلِّ تشغيلٍ في `jobs-<run_id>.json`، والمحصّلةُ في `verdict.json`.
 **وصفرُ وظيفةٍ بـ`started_at = null` في الأربعةِ** — وهو الفرقُ الذي دامَ ثمانيةَ
 خطوطٍ على GitLab.

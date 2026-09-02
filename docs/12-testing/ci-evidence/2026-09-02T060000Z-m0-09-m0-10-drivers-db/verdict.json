@@ -1,0 +1,73 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-02T060000Z",
+  "repository": "skyosv10-art/wasla",
+  "work_items": ["M0-09", "M0-10"],
+  "ci": {
+    "run_id": "33566652310",
+    "job": "db-integration",
+    "leg": "drivers",
+    "image": "postgres:15",
+    "conclusion": "success",
+    "started": true,
+    "test_files": 3,
+    "tests_passed": 79,
+    "tests_total": 79,
+    "raw_log": "docs/12-testing/ci-evidence/2026-09-02T000000Z-m0-22b-remaining-jobs/job-logs/drivers-db.raw.txt",
+    "constraint_rejection_observed_at_line": 449,
+    "constraint": "ck_eligibility_log_reasons"
+  },
+  "local": {
+    "postgres_version": "18.6",
+    "database_url_db": "wasla_drivers_test",
+    "nproc": 2,
+    "baseline_run": {
+      "test_files_passed": 3,
+      "tests_passed": 79,
+      "tests_total": 79,
+      "raw_log": "local-measurements/restored-79.raw.txt"
+    },
+    "mutation_run": {
+      "mutation": "cardinality(reasons) >= 1  ->  array_length(reasons, 1) >= 1",
+      "files_mutated": [
+        "services/drivers/contracts/schema.sql",
+        "services/drivers/src/infrastructure/drizzle/schema.ts"
+      ],
+      "tests_failed": 1,
+      "tests_passed": 78,
+      "failing_test": "Postgres adapters > eligibility log > refuses a non-eligible verdict with no reasons",
+      "assertion": "promise resolved instead of rejecting",
+      "raw_log": "local-measurements/mutation-array_length.raw.txt",
+      "restored": true,
+      "restore_check": "git diff --stat services/ == empty"
+    },
+    "null_semantics": {
+      "array_length_empty": null,
+      "cardinality_empty": 0,
+      "array_length_check_result": null,
+      "cardinality_check_result": false,
+      "raw_log": "local-measurements/null-semantics.txt"
+    }
+  },
+  "verdicts": {
+    "M0-09": {
+      "verdict": "VERIFIED",
+      "gate_recommendation": "PASSED",
+      "authority": "owner"
+    },
+    "M0-10": {
+      "criterion_1_offending_row_rejected": "VERIFIED",
+      "criterion_2_reversible_migration": "FAILED",
+      "verdict": "PARTIAL",
+      "gate_recommendation": "NOT PASSED",
+      "reason": "no migration artifact exists in the repository; services/drivers has neither drizzle.config.ts nor drizzle-kit",
+      "opened": ["M0-23", "RISK-0016"],
+      "authority": "owner"
+    }
+  },
+  "declared_limits": [
+    "local PostgreSQL 18.6 vs CI postgres:15 — version difference declared, CI log is the governing evidence",
+    "nproc = 2 in this environment",
+    "the historical 79/79 figure from 2026-08-25 is not retroactively endorsed; only today's two independent measurements are"
+  ]
+}

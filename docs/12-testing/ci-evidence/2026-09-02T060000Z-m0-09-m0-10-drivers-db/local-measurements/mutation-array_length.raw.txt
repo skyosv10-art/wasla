@@ -1,0 +1,105 @@
+
+> @wasla/drivers-service@0.1.0 test:integration /home/user/workspace/wasla/services/drivers
+> vitest run --config vitest.integration.config.ts
+
+
+ RUN  v3.2.7 /home/user/workspace/wasla/services/drivers
+
+ ❯ src/__tests__/repository.integration.test.ts (50 tests | 1 failed) 699ms
+   ✓ Postgres adapters > profiles > round-trips a profile with its defaults intact 16ms
+   ✓ Postgres adapters > profiles > returns null for a driver who does not exist 8ms
+   ✓ Postgres adapters > profiles > translates the duplicate primary key into driverAlreadyExists 11ms
+   ✓ Postgres adapters > profiles > refuses a wasla_public_id that does not match the contract's shape 16ms
+   ✓ Postgres adapters > profiles > applies a partial mutation and leaves the rest alone 18ms
+   ✓ Postgres adapters > profiles > lets the trigger own updated_at 15ms
+   ✓ Postgres adapters > profiles > throws driverNotFound for every write against a missing row 9ms
+   ✓ Postgres adapters > profiles > stores and clears the recheck instant 10ms
+   ✓ Postgres adapters > profiles > records the published state and the instant together 9ms
+   ✓ Postgres adapters > profiles > returns only due drivers, soonest first, within the limit 15ms
+   ✓ Postgres adapters > service zones > replaces the whole set and returns it by preference rank 11ms
+   ✓ Postgres adapters > service zones > replace is a replacement, not a merge 10ms
+   ✓ Postgres adapters > service zones > accepts an empty set 9ms
+   ✓ Postgres adapters > service zones > refuses two zones at the same preference rank 9ms
+   ✓ Postgres adapters > service zones > refuses the same zone twice 15ms
+   ✓ Postgres adapters > service zones > deletes a driver's zones with the driver (FK CASCADE) 16ms
+   ✓ Postgres adapters > vehicles > round-trips a vehicle and finds it by id and by key 10ms
+   ✓ Postgres adapters > vehicles > scopes find by owner, so one driver cannot read another's vehicle 9ms
+   ✓ Postgres adapters > vehicles > lists in creation order 11ms
+   ✓ Postgres adapters > vehicles > refuses a second primary vehicle 9ms
+   ✓ Postgres adapters > vehicles > allows any number of non-primary vehicles 18ms
+   ✓ Postgres adapters > vehicles > translates a reused idempotency key into idempotencyKeyReused 9ms
+   ✓ Postgres adapters > vehicles > saveAll demotes and promotes in one step 21ms
+   ✓ Postgres adapters > vehicles > saveAll validates the whole set before writing anything 9ms
+   ✓ Postgres adapters > vehicles > refuses a retired vehicle that is still primary 12ms
+   ✓ Postgres adapters > vehicles > accepts an empty saveAll without a statement 14ms
+   ✓ Postgres adapters > documents > returns DATE columns as calendar days, never as timestamps 12ms
+   ✓ Postgres adapters > documents > round-trips a document with its defaults intact 11ms
+   ✓ Postgres adapters > documents > lists in creation order 11ms
+   ✓ Postgres adapters > documents > refuses two live copies of the same driver-level document 10ms
+   ✓ Postgres adapters > documents > allows a second copy once the first is superseded 23ms
+   ✓ Postgres adapters > documents > scopes the live index by vehicle 11ms
+   ✓ Postgres adapters > documents > findLive matches the index's scoping, including the NULL vehicle 13ms
+   ✓ Postgres adapters > documents > findLive ignores rejected and superseded copies 12ms
+   ✓ Postgres adapters > documents > refuses a review with no reviewer, and a rejection with no reason 19ms
+   ✓ Postgres adapters > documents > refuses an expiry that precedes the issue date 16ms
+   ✓ Postgres adapters > documents > refuses a vehicle-scoped type with no vehicle, and the reverse 23ms
+   ✓ Postgres adapters > documents > throws documentNotFound when saveAll names an unknown id 15ms
+   ✓ Postgres adapters > eligibility policies > reads the seed the DDL ships 9ms
+   ✓ Postgres adapters > eligibility log > is append-only and ordered by insertion, not by instant 14ms
+   ✓ Postgres adapters > eligibility log > returns null when a driver has never been evaluated 8ms
+   × Postgres adapters > eligibility log > refuses a non-eligible verdict with no reasons 18ms
+     → promise resolved "{ waslaPublicId: 'WS-1000000001', …(6) }" instead of rejecting
+   ✓ Postgres adapters > candidacy publications > records every attempt in order, successful or not 10ms
+   ✓ Postgres adapters > candidacy publications > refuses a success with a failure code, and a failure without one 14ms
+   ✓ Postgres adapters > outbox > stores an event and returns it as unread 16ms
+   ✓ Postgres adapters > outbox > hides an event once it is marked published 10ms
+   ✓ Postgres adapters > outbox > refuses the same event_id twice 9ms
+   ✓ Postgres adapters > idempotency > remembers a fingerprint and returns it for the same key 21ms
+   ✓ Postgres adapters > idempotency > accepts the namespaced key length the domain validator allows at its maximum 15ms
+   ✓ Postgres adapters > idempotency > is idempotent about being remembered twice 14ms
+ ✓ src/__tests__/port-conformance.integration.test.ts (23 tests) 1586ms
+(node:8739) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ src/__tests__/atomicity.integration.test.ts (6 tests) 223ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/repository.integration.test.ts > Postgres adapters > eligibility log > refuses a non-eligible verdict with no reasons
+AssertionError: promise resolved "{ waslaPublicId: 'WS-1000000001', …(6) }" instead of rejecting
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "evaluatedAt": "2026-01-01T00:00:00.000Z",[39m
+[31m+   "fromState": null,[39m
+[31m+   "policyVersion": 1,[39m
+[31m+   "reasons": [],[39m
+[31m+   "toState": "ineligible",[39m
+[31m+   "trigger": "profile_changed",[39m
+[31m+   "waslaPublicId": "WS-1000000001",[39m
+[2m  }[22m
+
+ ❯ expectRefusedBy src/__tests__/repository.integration.test.ts:56:23
+     54|  */
+     55| async function expectRefusedBy(promise: Promise<unknown>, constraint: …
+     56|   await expect(promise).rejects.toThrow(new RegExp(`^${constraint}:`));
+       |                       ^
+     57| }
+     58| 
+ ❯ src/__tests__/repository.integration.test.ts:658:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 78 passed (79)
+   Start at  01:52:25
+   Duration  3.65s (transform 248ms, setup 0ms, collect 641ms, tests 2.51s, environment 1ms, prepare 181ms)
+
+/home/user/workspace/wasla/services/drivers:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/drivers-service@0.1.0 test:integration: `vitest run --config vitest.integration.config.ts`
+Exit status 1
+exit=1

@@ -63,6 +63,14 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0029 | M1-03 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | packages/service-auth/,packages/dispatch-e2e/,packages/driver-e2e/,packages/negotiation-e2e/,services/matching/,services/dispatch/,services/drivers/,scripts/,docs/15-decisions/,docs/07-security/,docs/00-rules/,docs/14-runbooks/,pnpm-lock.yaml | 2026-08-31 | 2026-09-14 | Active |
 | CLM-0030 | M0-08 | @uxxxu (agent:computer) | feat/m1-03-gap-closure | docs/12-testing/ | 2026-08-31 | 2026-09-14 | Active |
 | CLM-0035 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-closeout | docs/12-testing/,docs/07-security/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0043 | M0-09 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch3 | docs/12-testing/ | 2026-09-02 | 2026-09-16 | Active |
+| CLM-0044 | M0-10 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch3 | docs/12-testing/,docs/07-security/ | 2026-09-02 | 2026-09-16 | Active |
+
+> **`CLM-0043`/`CLM-0044` — دفعةُ البوّاباتِ الثالثةُ، وفجوةُ ترقيمٍ ثانيةٌ تُعلَنُ (2026-09-02):** المُعرِّفانِ `0037`..`0042` **محجوزانِ بطلبَي دمجٍ لم يُدمجا بعدُ** ([PR #8](https://github.com/skyosv10-art/wasla/pull/8) و[PR #9](https://github.com/skyosv10-art/wasla/pull/9))، فلا يُعادُ استعمالُهما وإن غابا عن هذا الملفِّ على `main`. **وهذه هي الفجوةُ الثانيةُ**، وتُكتَبُ صراحةً لأنّ الخطأَ التاريخيَّ `CLM-0005`/`CLM-0006` وقعَ من قراءةِ سجلِّ `main` وحدَه بلا نظرٍ في الفروعِ — والدرسُ يُطبَّقُ لا يُروى.
+
+> **ولمَ لا يُرفَضُ التقاطعُ:** `CLM-0030` نشطٌ على `docs/12-testing/` و`CLM-0035` على `docs/12-testing/,docs/07-security/` عينِهما. **والمالكُ واحدٌ** (`owner_party()` تقصُّ ` (agent:…)` فتقرأُ الطرفَينِ `@uxxxu`)، فلا رفض. **ويُكتَبُ صريحاً لا يُترَكُ لسكوتِ الفحصِ:** التداخلُ حقيقيٌّ في المسارِ، والذي يُبيحُه وحدةُ المسؤوليّةِ لا غيابُ التداخل.
+
+> **و`docs/07-security/` في نطاقِ `CLM-0044` وحدَه** — لتسجيلِ `RISK-0016` (غيابُ نظامِ الترحيلاتِ) وهو **نتيجةٌ مباشرةٌ لبندِ القبولِ الثاني في `M0-10`**، لا توسّعٌ مفتوحٌ. **ولم يُحجَز `M0-23`:** إنشاءُ صفٍّ على اللوحةِ لعنصرٍ **لا أعملُ عليه** ليس حجزاً، ولا يُحجَزُ ما قرارُه لمالكِ البرنامج.
 
 > **`CLM-0033` — حجزُ `M0-22A`، ونطاقُه يُفسَّرُ لا يُسرَد (2026-09-01):** `docs/00-rules/` لأنّ قاعدةَ «`Completed` لا تُمنَحُ إلّا باجتماعِ Implementation + Verification + Gate» قرارُ حوكمةٍ ثبَّتَه المالكُ ويجبُ أن يسكنَ القاعدةَ لا سجلَّ المهامِّ وحدَه · و`docs/07-security/` لإغلاقِ `RISK-0001` وإعادةِ صياغةِ `RISK-0002` على ما يُغلقُه فعلاً · و`docs/15-decisions/` لقرارِ إجبارِ الفحوصِ · و`docs/12-testing/ci-evidence/` لدليلِ الرفضِ المتعمَّدِ. **والعنصرُ `M0-22A` مُسجَّلٌ في اللوحةِ قبلَ الحجزِ لا بعدَه**، لأنّ مدقِّقَ الحجوزاتِ يرفضُ حجزاً لعنصرٍ لا وجودَ له.
 

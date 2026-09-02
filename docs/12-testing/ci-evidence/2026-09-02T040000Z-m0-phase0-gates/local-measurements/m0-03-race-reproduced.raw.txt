@@ -1,0 +1,46 @@
+
+ RUN  v3.2.7 /home/user/workspace/wasla/services/identity
+
+ ❯ src/__tests__/postgres-repository.integration.test.ts (3 tests | 1 failed) 99ms
+   ✓ Identity Postgres integration > creates a user from Telegram and is idempotent 20ms
+   ✓ Identity Postgres integration > keeps the identity stable across a Telegram username change 11ms
+   × Identity Postgres integration > rejects linking a Telegram id already owned by another user 32ms
+     → Failed query: select "id", "user_internal_uuid", "provider", "external_id", "verified", "linked_at" from "identity_links" where "identity_links"."user_internal_uuid" = $1
+params: e2d69113-de91-40c1-9caa-9a8d449ae24d
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/postgres-repository.integration.test.ts > Identity Postgres integration > rejects linking a Telegram id already owned by another user
+Error: Failed query: select "id", "user_internal_uuid", "provider", "external_id", "verified", "linked_at" from "identity_links" where "identity_links"."user_internal_uuid" = $1
+params: e2d69113-de91-40c1-9caa-9a8d449ae24d
+ ❯ NodePgPreparedQuery.queryWithCache ../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_pg@8.23.0/node_modules/src/pg-core/session.ts:73:11
+ ❯ ../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_pg@8.23.0/node_modules/src/node-postgres/session.ts:154:19
+ ❯ PostgresIdentityRepository.listLinks src/infrastructure/drizzle/repository.ts:217:18
+    215| 
+    216|   async listLinks(userInternalUuid: string): Promise<IdentityLink[]> {
+    217|     const rows = await this.db
+       |                  ^
+    218|       .select()
+    219|       .from(identityLinks)
+ ❯ resolveTelegramIdentity src/use-cases/resolve-telegram-identity.ts:187:17
+ ❯ src/__tests__/postgres-repository.integration.test.ts:143:5
+
+Caused by: error: relation "identity_links" does not exist
+ ❯ ../../node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.0/node_modules/pg-pool/index.js:45:11
+ ❯ ../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_pg@8.23.0/node_modules/src/node-postgres/session.ts:161:13
+ ❯ NodePgPreparedQuery.queryWithCache ../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_pg@8.23.0/node_modules/src/pg-core/session.ts:71:12
+ ❯ ../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_pg@8.23.0/node_modules/src/node-postgres/session.ts:154:19
+ ❯ PostgresIdentityRepository.listLinks src/infrastructure/drizzle/repository.ts:217:18
+ ❯ resolveTelegramIdentity src/use-cases/resolve-telegram-identity.ts:187:17
+ ❯ src/__tests__/postgres-repository.integration.test.ts:143:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { length: 113, severity: 'ERROR', code: '42P01', detail: undefined, hint: undefined, position: '92', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', routine: 'parserOpenTable' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  00:49:39
+   Duration  825ms (transform 262ms, setup 0ms, collect 527ms, tests 99ms, environment 1ms, prepare 78ms)
+

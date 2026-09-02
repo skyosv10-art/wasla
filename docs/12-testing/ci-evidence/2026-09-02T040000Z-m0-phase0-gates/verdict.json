@@ -1,0 +1,171 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-02T04-00-00Z",
+  "provider": "github-actions",
+  "repository": "skyosv10-art/wasla",
+  "verdict": "VERIFIED",
+  "reason": "four independent runs; 26/26 jobs started and success in each; identical packages/services/scripts tree",
+  "work_items": [
+    "M0-01",
+    "M0-02",
+    "M0-03"
+  ],
+  "code_tree_identity": {
+    "measured_by": "git diff --name-only <sha> 0a752470 -- packages services scripts",
+    "changed_files": {
+      "7b258647": 0,
+      "9afd9d52": 0,
+      "0a752470": 0,
+      "1375ce2e": 0
+    }
+  },
+  "declared_limits": [
+    "raw job logs of these runs are not archived here (download host blocked, 403); line-level log evidence comes from previously archived logs of runs 33566652310 and 33498726052, both on the identical code tree"
+  ],
+  "runs": {
+    "33566652310": {
+      "head_sha": "7b25864744b16b85b396732ef0e28f7ee0dbdf28",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "jobs": {
+        "doc-coverage": "success",
+        "test": "success",
+        "repo-structure": "success",
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)": "success",
+        "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)": "success",
+        "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)": "success",
+        "typecheck": "success",
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)": "success",
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)": "success",
+        "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)": "success",
+        "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)": "success",
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)": "success",
+        "db-integration (identity, @wasla/identity-service, wasla_test)": "success",
+        "governance-guard": "success",
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)": "success",
+        "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)": "success",
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)": "success",
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)": "success",
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)": "success",
+        "verify": "success",
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)": "success",
+        "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)": "success",
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)": "success",
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)": "success",
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)": "success",
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)": "success"
+      }
+    },
+    "33567256847": {
+      "head_sha": "9afd9d5237caa4770af6cf714dfb1c7b9b4c6fa6",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "jobs": {
+        "verify": "success",
+        "typecheck": "success",
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)": "success",
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)": "success",
+        "test": "success",
+        "db-integration (identity, @wasla/identity-service, wasla_test)": "success",
+        "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)": "success",
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)": "success",
+        "repo-structure": "success",
+        "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)": "success",
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)": "success",
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)": "success",
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)": "success",
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)": "success",
+        "governance-guard": "success",
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)": "success",
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)": "success",
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)": "success",
+        "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)": "success",
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)": "success",
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)": "success",
+        "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)": "success",
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)": "success",
+        "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)": "success",
+        "doc-coverage": "success",
+        "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)": "success"
+      }
+    },
+    "33569807797": {
+      "head_sha": "0a7524705bc06ac13b1a9077584bc369e6d3fa68",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "jobs": {
+        "verify": "success",
+        "repo-structure": "success",
+        "test": "success",
+        "governance-guard": "success",
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)": "success",
+        "typecheck": "success",
+        "doc-coverage": "success",
+        "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)": "success",
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)": "success",
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)": "success",
+        "db-integration (identity, @wasla/identity-service, wasla_test)": "success",
+        "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)": "success",
+        "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)": "success",
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)": "success",
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)": "success",
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)": "success",
+        "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)": "success",
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)": "success",
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)": "success",
+        "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)": "success",
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)": "success",
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)": "success",
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)": "success",
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)": "success",
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)": "success",
+        "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)": "success"
+      }
+    },
+    "33573216083": {
+      "head_sha": "1375ce2e921414e4619ffe02e429472fc00eadd5",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "jobs": {
+        "repo-structure": "success",
+        "governance-guard": "success",
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)": "success",
+        "verify": "success",
+        "doc-coverage": "success",
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)": "success",
+        "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)": "success",
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)": "success",
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)": "success",
+        "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)": "success",
+        "test": "success",
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)": "success",
+        "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)": "success",
+        "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)": "success",
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)": "success",
+        "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)": "success",
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)": "success",
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)": "success",
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)": "success",
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)": "success",
+        "db-integration (identity, @wasla/identity-service, wasla_test)": "success",
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)": "success",
+        "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)": "success",
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)": "success",
+        "typecheck": "success",
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)": "success"
+      }
+    }
+  }
+}

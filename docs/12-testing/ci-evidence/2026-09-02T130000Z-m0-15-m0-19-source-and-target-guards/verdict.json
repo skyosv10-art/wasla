@@ -153,14 +153,16 @@
     }
   },
   "ci": {
-    "status": "PENDING",
-    "run_id": null,
-    "head_sha": null,
-    "jobs_total": null,
-    "jobs_started": null,
-    "jobs_success": null,
-    "jobs_failed": null,
-    "note": "not-started != failed != code-failed; counts are read from the jobs API, never from the badge colour"
+    "status": "SUCCESS",
+    "run_id": 33596056706,
+    "head_sha": "e31b2ca4f49756f2a56d12027b58b28de70168da",
+    "jobs_total": 26,
+    "jobs_started": 26,
+    "jobs_success": 26,
+    "jobs_failed": 0,
+    "note": "not-started != failed != code-failed; counts are read from the jobs API, never from the badge colour",
+    "read_at": "2026-09-02T06:20:00Z",
+    "source": "GET /repos/skyosv10-art/wasla/actions/runs/33596056706/jobs"
   },
   "gate_enforcement": {
     "merge_blocking": false,
@@ -172,7 +174,7 @@
     "M0-16": "PASSED_LOCAL",
     "M0-17": "PASSED_LOCAL",
     "M0-19": "PASSED_LOCAL",
-    "ci": "PENDING",
+    "ci": "SUCCESS_26_OF_26",
     "completed_transition": "owner authority only"
   }
 }

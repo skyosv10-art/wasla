@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-08-31T11:13:46Z",
+  "generated_at": "2026-09-02T05:39:23Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "624a4c5028fa5f27dec9781a44454e5afd6157f1",
-    "branch": "feat/m1-03-gap-closure",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 1149
+    "commit": "44ab8bff3e64b2e94f20bde53c212dc135207c88",
+    "branch": "chore/m0-gate-docs-batch5",
+    "dirty": true,
+    "dirty_files": 22,
+    "dirty_reason": "توليدٌ على شجرةِ فرعِ دفعةِ البوّاباتِ الخامسةِ قبلَ الإيداعِ: أُضيفَ RISK-0016 فارتفعَ risks_not_closed من 14 إلى 15، والعدَّاداتُ الحركيّةُ مقروءةٌ من سجلِّ تحقُّقٍ أخضرَ كاملٍ (6/6)",
+    "tracked_files": 1220
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 14
+    "risks_not_closed": 15
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify3.log",
+    "source": "/tmp/b5_verify2.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 153,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:ae902babc8bb9632ea65e171711889cda4539fc0d36a428df10ba56faf48f149",
+  "fingerprint": "sha256:8bea4e9942fee33dce726002215cbe72618f1c0ea30e2042e6b35eeb77b0ddb7",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -1,0 +1,11 @@
+التحقّقُ من أنّ خطَّ GitHub Actions خارجَ مرشِّحِ «التغييراتِ ذاتِ المعنى»
+(مستودعٌ منسوخٌ في /tmp لا المستودعُ نفسُه — 2026-09-02):
+
+$ printf "\n# probe\n" >> .github/workflows/ci.yml && git commit -am "..."
+$ bash scripts/checks/validate-work-claims.sh origin/main HEAD
+  ✓ لا تغييرات ذات معنى تُوجب حجزاً.        rc=0
+$ bash scripts/checks/require-doc-update.sh origin/main HEAD
+  OK: التغيير محصور في سجلات التقدم أو metadata غير ذات معنى.   rc=0
+
+النتيجةُ: تعديلُ ملفِّ خطِّ CI الحيِّ لا يُوجب حجزاً ولا توثيقاً.
+والسببُ: المرشِّحُ يذكر `.gitlab-ci.yml` (إرثُ GitLab) ولا يذكر `.github/` قطُّ.

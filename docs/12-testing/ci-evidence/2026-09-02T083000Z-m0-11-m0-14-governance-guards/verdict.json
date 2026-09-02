@@ -1,0 +1,96 @@
+{
+  "extracted_at": "2026-09-02",
+  "branch": "chore/m0-gate-docs-batch4",
+  "base": "origin/main@44ab8bf",
+  "environment": {
+    "os": "Linux 6.1.155",
+    "bash": "5.3.9",
+    "nproc": 2,
+    "node": "v20.20.1",
+    "pnpm": "9.15.9",
+    "postgres_local": "18.6",
+    "postgres_ci": "15",
+    "note": "قياساتُ هذه الدفعةِ كلُّها صَدَفيّةٌ (bash) ولا تمسُّ قاعدةَ البيانات"
+  },
+  "governance_suite_baseline": { "cases": 153, "passed": 153, "failed": 0 },
+  "items": [
+    {
+      "id": "M0-11",
+      "criterion_verbatim": "40 تشغيلاً بلا تقلّب + حالةُ انحدار",
+      "local": "VERIFIED",
+      "ci": "PENDING",
+      "production": "NOT_VERIFIED",
+      "verdict": "PASSED_LOCAL_PENDING_CI",
+      "measurements": {
+        "clean_runs_no_flake": { "runs": 600, "failures": 0 },
+        "mutated_runs": { "runs": 1500, "failures": 2, "rate_pct": 0.13 },
+        "historical_claim_66_of_300": "NOT_REPRODUCED",
+        "suite_under_mutation": { "passed": 152, "failed": 1, "failing_case": "[د] قاعدة التوثيق تقبل حالةً صحيحةً في 40 تشغيلاً بلا تقلّب" },
+        "declared_guard_case_d2": "NOT_DIAGNOSTIC — مرَّ 40/40 تحتَ الطفرة"
+      },
+      "declared_limits": [
+        "قوّةُ حارسِ الأربعينِ تشغيلاً نحوَ 5 من المئةِ عندَ المعدَّلِ المقيس",
+        "الكشفُ يقع في [د] لا في [د2]",
+        "الرقمُ التاريخيُّ 66/300 غيرُ مُصادَقٍ عليه بأثرٍ رجعيّ"
+      ],
+      "owner_decision_offered": "حارسٌ حتميٌّ على لوحةٍ صناعيّةٍ مُكبَّرةٍ — عنصرُ عملٍ جديدٌ، سلطةُ مالك"
+    },
+    {
+      "id": "M0-12",
+      "criterion_verbatim": "26/26 على أيِّ فرعٍ وبأيِّ حالةِ سجل",
+      "local": "VERIFIED",
+      "ci": "PENDING",
+      "production": "NOT_VERIFIED",
+      "verdict": "PASSED_LOCAL_PENDING_CI",
+      "measurements": {
+        "branch_work": { "branch": "chore/m0-gate-docs-batch4", "passed": 153, "failed": 0 },
+        "branch_all_claims_released": { "branch": "test/m0-12-decoupling-probe", "passed": 153, "failed": 0 },
+        "branch_empty_ledger_table": { "branch": "test/m0-12-empty-ledger", "passed": 153, "failed": 0 }
+      },
+      "declared_limits": [
+        "العددُ 26 تاريخيٌّ وعددُ اليومِ 153 — نموُّ تغطيةٍ لا انحدار",
+        "إثباتُ سلوكٍ لا إثباتُ طفرة"
+      ]
+    },
+    {
+      "id": "M0-13",
+      "criterion_verbatim": "حالةٌ تُثبت أنّ @uxxxu و@uxxxu (agent:x) جهةٌ واحدةٌ · وحالةٌ تُثبت أنّ @uxxxu و@other جهتان · ثمّ بوّابةٌ خضراءُ في CI",
+      "local": "VERIFIED",
+      "ci": "PENDING",
+      "production": "NOT_VERIFIED",
+      "verdict": "PASSED_LOCAL_PENDING_CI",
+      "measurements": {
+        "mutation_literal_comparison": { "passed": 149, "failed": 4 },
+        "mutation_neutralised_normalizer": { "failing_cases": ["يرفض تقاطع نطاق بين مالكين مختلفين", "يرفض تقاطع وكيلَينِ لصاحبَينِ مختلفَين"] },
+        "live_ledger_dependency": "CLM-0004 (@uxxxu) ✕ CLM-0029 (@uxxxu (agent:computer)) على services/drivers/"
+      },
+      "corrections": [
+        "الرقمُ التاريخيُّ 27/1 صار اليومَ 149/4 — السببُ: نموُّ الحزمةِ وتغيُّرُ محتوى السجلِّ الحيِّ، لا انحدار"
+      ]
+    },
+    {
+      "id": "M0-14",
+      "criterion_verbatim": "حالةٌ تُثبت رفضَ تعديلِ وثيقةٍ غيرِ السجلاتِ من فرعٍ بلا حجز · وحالةٌ تُثبت بقاءَ السجلاتِ الخمسةِ مسموحةً بلا حجز · والحزمةُ خضراءُ كاملةً",
+      "local": "VERIFIED",
+      "ci": "PENDING",
+      "production": "NOT_VERIFIED",
+      "verdict": "PASSED_LOCAL_PENDING_CI",
+      "measurements": {
+        "mutation_docs_out_of_filter": { "passed": 152, "failed": 1, "failing_case": "يرفض تعديل وثيقة غير السجلات من فرع بلا حجز" },
+        "mutation_drop_is_shared": { "passed": 152, "failed": 1, "failing_case": "يسمح بالسجلات الخمسة من فرع بلا حجز" },
+        "diagonality": "TOTAL — كلُّ طفرةٍ أسقطت حالتَها وحدَها"
+      }
+    }
+  ],
+  "ci": {
+    "run_id": null,
+    "head_sha": null,
+    "jobs_total": null,
+    "jobs_started": null,
+    "jobs_success": null,
+    "jobs_failed": null,
+    "note": "لم يُقَس بعدُ — يُملأ من GET /actions/runs/<id>/jobs بعدَ الدفع"
+  },
+  "not_merge_blocking": "M0-22A محجوبٌ بـ403 Upgrade to GitHub Pro و RISK-0002 مفتوحٌ — فخضرةُ CI دليلٌ لا حاجزٌ",
+  "baseline_deferred": "لا تعديلَ على docs/12-testing/BASELINE.json في هذه الدفعةِ ولا إضافةَ خطرٍ — تفادياً لتصادمِ الأساسِ بينَ أربعةِ طلباتِ دمجٍ مفتوحةٍ غيرِ مدموجةٍ. هذا تأجيلٌ مُعلَنٌ لا إغفال."
+}

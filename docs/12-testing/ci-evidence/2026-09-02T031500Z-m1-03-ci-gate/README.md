@@ -45,12 +45,39 @@ Tests  13 passed (13)
 **والنقلُ من مجلَّدِ الطلبِ مشروعٌ بقياسٍ لا بظنٍّ:** `git diff --stat 9afd9d5 0a75247`
 أجابَ **صفرَ ملفّاتٍ** — فشجرةُ رأسِ الطلبِ وشجرةُ `main` بعدَ الدمجِ واحدةٌ حرفاً.
 
-### 3.2 حزمةُ `packages/service-auth` — دليلُ وظيفةٍ لا دليلُ سطرٍ
+### 3.2 حزمةُ `packages/service-auth` — دليلُ سطرٍ من أرتفاكتٍ محفوظٍ
 
-وظيفةُ `test` أمرُها `pnpm -r run test` وانتهت `success` بخطواتِها العشرِ. وهذا
-الأمرُ يشملُ `@wasla/service-auth` بحكمِ فضاءِ العملِ، **وحزمتُها 7 ملفّاتٍ و127
-اختباراً** مقيسةً محلّيّاً على الشجرةِ نفسِها (`pnpm --filter @wasla/service-auth test`).
-**والدليلُ هنا على مستوى الوظيفةِ لا السطرِ**، والفرقُ مكتوبٌ في §4 لا مطويٌّ.
+**تصحيحٌ لِما كُتب أوّلَ مرّةٍ في هذا الملفِّ نفسِه (2026-09-02):** كُتبَ أوّلاً أنّ
+هذه الحزمةَ «مُثبَتةٌ على مستوى الوظيفةِ لا السطرِ»، **وذلكَ كان أضعفَ من الواقعِ
+لا أقوى منه** — إذ لم يُفتَّش في أرتفاكتِ `test-log` المحفوظِ في المستودعِ. وقد
+فُتِّشَ فوُجدَ الدليلُ السطريُّ. **والخطأُ يُصحَّحُ ولا يُمحى** ([قانونُ التوثيقِ
+الهندسيِّ](../../../00-rules/ENGINEERING_DOCUMENTATION_LAW.md)).
+
+وفي أرتفاكتِ `test-log` للتشغيلِ [`33498726052`](https://github.com/skyosv10-art/wasla/actions/runs/33498726052)
+(`push` · `main` · `fce1f054`)، المحفوظِ في
+[`../2026-09-01T104148Z-m0-21-github-actions/ci-artifacts/test-log/test.raw.txt`](../2026-09-01T104148Z-m0-21-github-actions/ci-artifacts/test-log/test.raw.txt):
+
+```
+packages/service-auth test:  ✓ src/__tests__/token.test.ts (43 tests)
+packages/service-auth test:  ✓ src/__tests__/enforce.test.ts (18 tests)
+packages/service-auth test:  ✓ src/__tests__/keys.test.ts (27 tests)
+packages/service-auth test:  ✓ src/__tests__/http-server.e2e.test.ts (10 tests)
+packages/service-auth test:  ✓ src/__tests__/http.test.ts (14 tests)
+packages/service-auth test:  ✓ src/__tests__/replay.test.ts (11 tests)
+packages/service-auth test:  ✓ src/__tests__/outbound.test.ts (4 tests)
+packages/service-auth test:  Test Files  7 passed (7)
+packages/service-auth test:       Tests  127 passed (127)
+```
+
+**والنقلُ من تشغيلٍ أسبقَ مشروعٌ بقياسٍ لا بظنٍّ:**
+`git diff --name-only fce1f054 origin/main -- packages services` أجابَ **صفرَ ملفّاتٍ**،
+و`git diff fce1f054 origin/main -- packages/service-auth` أجابَ **صفرَ بايتاتٍ**.
+فالفرقُ بينَ التشغيلَينِ **`.github/workflows/ci.yml` و`.gitlab-ci.yml` ووثائقُ** لا
+شفرةٌ. أي أنّ **شفرةَ الحزمةِ التي جرت في `33498726052` هي شفرةُ `main` اليومَ حرفاً.**
+
+وتُدعَمُ هذه القراءةُ بوظيفةِ `test` في التشغيلِ الأحدثِ `33569807797` (`pnpm -r run test`
+= `success` بخطواتِها كلِّها) — **دليلٌ ثانٍ مستقلٌّ على مستوى الوظيفةِ**، لا بديلٌ
+عن الأوّل.
 
 ### 3.3 حارسُ تغطيةِ الإنفاذِ — البابُ الحوكميُّ
 
@@ -60,6 +87,6 @@ Tests  13 passed (13)
 ## 4. حدودٌ مُعلَنةٌ لا تُطوى
 
 1. **سجلّاتُ الوظائفِ الخامُ لهذا التشغيلِ بعينِه غيرُ محفوظةٍ** — لم تُتَح لا لأنّها لم تُطلَب: `GET /actions/jobs/{id}/logs` و`GET /actions/artifacts/{id}/zip` كلاهما يُحوِّلُ إلى `productionresultssa9.blob.core.windows.net`، وهو **محجوبٌ في بيئةِ التنفيذِ** (`CONNECT tunnel failed, response 403`) في كلِّ محاولةٍ. **وهذا يختلفُ عن دليلِ `M0-21`** حيثُ حُفظت `ci-artifacts/` — البيئةُ تغيّرت، لا المنهج.
-2. **دليلُ §3.2 على مستوى الوظيفةِ لا السطرِ.** «`pnpm -r run test` نجحَ» يُثبتُ أنّ اختباراتِ الحزمةِ لم تسقط؛ ولا يُثبتُ من هذا الملفِّ **عددَها** في تلكَ البيئةِ. والعددُ 127 **محلّيٌّ** ومُعلَنٌ كذلك.
+2. **دليلُ §3.2 سطريٌّ لكنّه من تشغيلٍ أسبقَ (`33498726052`) لا من `33569807797`.** والجسرُ بينَهما **قياسٌ** (صفرُ فرقٍ في `packages/` و`services/`) لا افتراضٌ؛ ومَن رفضَ الجسرَ فأمامَه الدليلُ الوظيفيُّ في التشغيلِ الأحدثِ. **وما لا يُدَّعى:** أنّ أرتفاكتَ `33569807797` نفسِه قُرئ — لم يُقرَأ لأنّه غيرُ قابلٍ للتنزيلِ هنا (الحدُّ 1).
 3. **`PRODUCTION` ما زالت `NOT VERIFIED`** — لا طبقةَ نشرٍ في المستودعِ (`infra/*` فيها `.gitkeep` وحدَها). فهذا دليلُ بوّابةٍ لا دليلُ إنتاجٍ.
 4. **الخطُّ يُنفِّذُ ولا يَمنعُ.** `required_status_checks` غيرُ مُسجَّلٍ (`M0-22A` · `RISK-0002` مفتوحٌ)، فنتيجةُ هذا التشغيلِ **إخباريّةٌ لا مانعةٌ**. وهذا لا يُنقِصُ من كونِه دليلاً على أنّ الشفرةَ تعملُ في بيئةٍ نظيفةٍ — ويُنقِصُ من الزعمِ بأنّ المستودعَ محميٌّ.

@@ -23,6 +23,7 @@
  *     pnpm --filter @wasla/matching-service test:integration
  */
 
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,6 +46,31 @@ const SERVICE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 
 export const DATABASE_URL = process.env.DATABASE_URL;
 export const PG_ENABLED = Boolean(DATABASE_URL);
+
+/**
+ * The tables the contract declares, parsed from `contracts/schema.sql` at load
+ * time. (M0-18)
+ *
+ * The integration suite must be able to say "every table the contract declares
+ * exists" WITHOUT reading tables that belong to another service — a shared test
+ * database is declared safe by `docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md` §3,
+ * and an assertion that read all of `public` turned "does the contract hold?"
+ * into "is this service alone in the database?" (`RISK-0014`).
+ *
+ * It is PARSED, not written out by hand: a list typed here could keep guarding a
+ * table the contract had already dropped, which is the exact drift these suites
+ * exist to catch. The regex is the same shape `schema-drift.test.ts` uses, so
+ * both read the contract the one way.
+ */
+export const CONTRACT_TABLES: readonly string[] = (() => {
+  const sql = readFileSync(path.join(SERVICE_ROOT, "contracts", "schema.sql"), "utf8");
+  const found = [...sql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/gu)].map((m) => m[1]!);
+  const unique = [...new Set(found)].sort();
+  if (unique.length === 0) {
+    throw new Error("contracts/schema.sql declared no tables — the parse, not the contract, is wrong");
+  }
+  return unique;
+})();
 
 /** Reverse dependency order — a decision's score rows drop before the decision. */
 const TABLES = [

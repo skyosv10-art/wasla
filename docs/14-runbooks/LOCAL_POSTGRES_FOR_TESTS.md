@@ -58,6 +58,26 @@ export DATABASE_URL="postgres://postgres@127.0.0.1:55432/postgres"
 >
 > (يُنفَّذ `node -e` من داخلِ مجلَّدِ خدمةٍ تملك `pg` في `node_modules` — الحزمةُ لا تشحن `psql`.)
 
+> **⚙ ما تغيَّر في `M0-18` (2026-09-03 · فرعُ `fix/m0-18-integration-suite-isolation`):** عُولج السببُ في موضعِه: التوكيدُ في
+> `services/matching/src/__tests__/postgres-repository.integration.test.ts` كان يقرأُ **كلَّ** جداولِ `public` ويوازيها بجداولِ العقدِ
+> بـ`toEqual`، فكانَ يُوكِّدُ ضمناً «لا خدمةَ أخرى تشاركُ القاعدةَ» — وهذا ليسَ عقداً للمطابقةِ، والقاعدةُ ليست ملكَها. فقُيِّد الاستعلامُ
+> بـ`table_name = ANY($1)` على قائمةٍ **تُقرأُ من `contracts/schema.sql` وقتَ التشغيلِ** (`CONTRACT_TABLES` في `pg-harness.ts`)، وقُيِّد استعلامُ
+> الفهارسِ بـ`tablename = ANY($1)`. وبُعدُ «لا جدولَ زائداً» لم يُحذَف بل انتقلَ إلى موضعِه الثابتِ في `schema-drift.test.ts`.
+> وأُضيفت حالةٌ **قُطريّةٌ** تُنشئُ جدولاً وفهرساً يُحاكيانِ خدمةً أخرى، فتُثبِتُ أوّلاً أنّ الاستعلامَ الواسعَ **يراهما** ثمّ أنّ المُقيَّدَ **لا يراهما**.
+>
+> **✅ والاشتراكُ صارَ آمناً مُصدَّقاً لا مُستنتَجاً (2026-09-03):** الوظيفةُ `db-integration-shared` (عدّاءٌ واحدٌ · `postgres:15` واحدةٌ ·
+> قاعدةٌ واحدةٌ `wasla_shared_test` · اثنتا عشرةَ مجموعةً تِباعاً بـ`scripts/ci/run-shared-db-integration.sh` · **بلا تنظيفٍ بينَ السيقانِ**)
+> نجحت على GitHub Actions في **تشغيلَينِ مستقلَّينِ على عدّاءَينِ مختلفَينِ**:
+> [`33722078269`](https://github.com/skyosv10-art/wasla/actions/runs/33722078269) و[`33723162624`](https://github.com/skyosv10-art/wasla/actions/runs/33723162624)،
+> وخطوةُ الاثنتي عشرةَ ساقاً `success` في كلَيهما. الدليلُ محفوظٌ في
+> [`ci-evidence/2026-09-03T060000Z-m0-18-shared-db-isolation/`](../12-testing/ci-evidence/2026-09-03T060000Z-m0-18-shared-db-isolation/README.md)
+> والحكمُ في [`M0-18_GATE.md`](../12-testing/M0-18_GATE.md).
+>
+> **وحدُّ الدعوى مُعلَنٌ:** ما قِيسَ هو **ترتيبٌ واحدٌ بعينِه** (ترتيبُ مصفوفةِ `db-integration` حرفاً)، فالوصفةُ آمنةٌ **في هذا الترتيبِ**
+> ولم يُقَس كلُّ ترتيبٍ ممكنٍ — و`RISK-0017` يحملُ هذا الحدَّ. **ولا يُقاسُ شيءٌ من هذا محلّيّاً في بيئةِ الوكيلِ**: لا Postgres ولا Docker
+> ولا صلاحيّةَ جذرٍ (`apt-cache policy postgresql` ⇒ `Candidate: (none)`)، فالمجموعةُ تُتخطّى بـ`DATABASE_URL` غائبٍ (34 حالةً `skipped`)
+> — و**التخطّي ليس نجاحاً**. فالقاعدةُ العمليّةُ أعلاه (قاعدةٌ لكلِّ خدمةٍ) تبقى **الأيسرَ للمطوِّرِ**، لا **اللازمَ للصحّةِ**.
+
 ```bash
 export DATABASE_URL="postgres://postgres@127.0.0.1:55432/postgres"
 pnpm --filter @wasla/negotiations-service test:integration

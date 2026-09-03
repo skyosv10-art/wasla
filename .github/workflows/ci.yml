@@ -368,6 +368,66 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/${{ matrix.db }}
         run: pnpm --filter ${{ matrix.pkg }} test:integration
 
+  # ───────────────────────────────────────────────────────────────────
+  # M0-18 — عدّاءٌ واحدٌ · قاعدةٌ واحدةٌ · اثنتا عشرةَ مجموعةً تِباعاً.
+  #
+  # `db-integration` أعلاه مصفوفةٌ تُعطي كلَّ ساقٍ **قاعدةً مستقلّةً**، فهي
+  # تُثبِتُ أنّ كلَّ خدمةٍ تعملُ **وحدَها** ولا تقولُ شيئاً عن عملِها **معاً**.
+  # و`RISK-0014` رُصد بالضبطِ في الفجوةِ بينَهما: توكيدٌ في مجموعةِ المطابقةِ
+  # كان يقرأُ **كلَّ** جداولِ القاعدةِ فيرى 53 جدولاً بدلَ 6 حينَ تسبقُه
+  # خدماتٌ أخرى على القاعدةِ نفسِها. فصارت نتيجةُ المجموعةِ **دالّةً في
+  # ترتيبِ التشغيلِ** لا في الشفرةِ وحدَها.
+  #
+  # و[`LOCAL_POSTGRES_FOR_TESTS.md` §3](../../docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md)
+  # تُعلنُ الاشتراكَ آمناً — فهذه الوظيفةُ هي **الفحصُ الذي يُصدِّقُ الوصفةَ
+  # أو يُكذِّبها**، لا زينةٌ فوقَ المصفوفةِ.
+  #
+  # ولماذا `fail-fast` لا ينطبقُ وسلسلةٌ واحدةٌ لا مصفوفةٌ: لأنّ المقصودَ
+  # **التراكمُ** نفسُه — كلُّ خدمةٍ تتركُ جداولَها في القاعدةِ لمن بعدَها.
+  # وتوزيعُها على عدّاءَينِ يُبطِلُ ما تقيسُه.
+  #
+  # والترتيبُ **هو ترتيبُ `db-integration` حرفاً** ولا يُعادُ رصفُه ليُسعِفَ
+  # مجموعةً: المطابقةُ سادسةً، فتسبقُها خمسُ خدماتٍ — وهي الحالةُ التي رُصد
+  # فيها الإخفاقُ 2026-08-30.
+  #
+  # ولا تُوقَفُ السلسلةُ عندَ أوّلِ إخفاقٍ: تُسجَّلُ كلُّ ساقٍ ثمّ تُطبَعُ
+  # خلاصةٌ وتُردُّ 1 إن أخفقت واحدةٌ — فيُقرأُ **مَن** أخفقَ لا **أنّ** شيئاً أخفق.
+  # ───────────────────────────────────────────────────────────────────
+  db-integration-shared:
+    name: db-integration-shared
+    runs-on: ubuntu-24.04
+    container: node:20-alpine
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: wasla_shared_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: git داخل alpine (لا يأتي مع الصورة)
+        run: apk add --no-cache git bash
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: اثنتا عشرةَ مجموعةً تِباعاً على قاعدةٍ واحدةٍ
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/wasla_shared_test
+        run: bash scripts/ci/run-shared-db-integration.sh
+
   exit-gate-e2e:
     name: exit-gate-e2e
     runs-on: ubuntu-24.04

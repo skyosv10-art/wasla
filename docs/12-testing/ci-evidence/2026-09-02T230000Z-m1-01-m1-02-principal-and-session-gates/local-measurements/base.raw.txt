@@ -1,0 +1,40 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 31ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 20ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 8ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 12ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 4ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  23:26:19
+packages/auth-sdk test:    Duration  879ms (transform 188ms, setup 0ms, collect 270ms, tests 33ms, environment 2ms, prepare 225ms)
+packages/auth-sdk test: Done
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 11ms
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 10ms
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 8ms
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 7ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 5ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 5ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 4ms
+packages/telegram-adapter test:  Test Files  9 passed (9)
+packages/telegram-adapter test:       Tests  132 passed (132)
+packages/telegram-adapter test:    Start at  23:26:19
+packages/telegram-adapter test:    Duration  2.08s (transform 302ms, setup 0ms, collect 502ms, tests 92ms, environment 4ms, prepare 531ms)
+packages/telegram-adapter test: Done
+services/identity test$ vitest run
+services/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/src/services/identity
+services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 99ms
+services/identity test:  ✓ src/__tests__/session.test.ts (28 tests) 17ms
+services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 8ms
+services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 8ms
+services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 4ms
+services/identity test:  Test Files  5 passed (5)
+services/identity test:       Tests  52 passed (52)
+services/identity test:    Start at  23:26:22
+services/identity test:    Duration  1.93s (transform 207ms, setup 0ms, collect 1.01s, tests 136ms, environment 1ms, prepare 272ms)
+services/identity test: Done
+exit_code=0

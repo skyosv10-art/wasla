@@ -1,0 +1,40 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 17ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 14ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 15ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 12ms
+packages/auth-sdk test:  ❯ src/__tests__/describe.test.ts (6 tests | 1 failed) 13ms
+packages/auth-sdk test:    × describePrincipal — تمثيلٌ آمنٌ للسجلّات > لا يُخرِج المعرِّفَ الداخليَّ ولا معرِّفَ الجلسةِ الخام 10ms
+packages/auth-sdk test:      → expected '{"kind":"user","actor":"customer","pu…' not to contain '3f0d5f6c-1f2a-4a9b-8c7d-9e1f2a3b4c5d'
+packages/auth-sdk test:    ✓ describePrincipal — تمثيلٌ آمنٌ للسجلّات > يُخرِج المعرِّفَ العامَّ ونوعَ الفاعلِ وعددَ الصلاحيّاتِ لا قائمتَها 0ms
+packages/auth-sdk test:    ✓ describePrincipal — تمثيلٌ آمنٌ للسجلّات > بصمةُ الجلسةِ حتميّةٌ وقصيرةٌ ولا تُستعمَل رمزاً 0ms
+packages/auth-sdk test:    ✓ describePrincipal — تمثيلٌ آمنٌ للسجلّات > جلستان مختلفتان تُعطيان بصمتَين مختلفتَين 1ms
+packages/auth-sdk test:    ✓ describePrincipal — تمثيلٌ آمنٌ للسجلّات > المجهولُ لا يحمل أيَّ حقلٍ يُعرِّف 0ms
+packages/auth-sdk test:    ✓ describePrincipal — تمثيلٌ آمنٌ للسجلّات > الخدمةُ تُوصَف باسمِها، والنيابةُ تُظهِر المعرِّفَ العامَّ وحدَه 0ms
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+packages/auth-sdk test:  FAIL  src/__tests__/describe.test.ts > describePrincipal — تمثيلٌ آمنٌ للسجلّات > لا يُخرِج المعرِّفَ الداخليَّ ولا معرِّفَ الجلسةِ الخام
+packages/auth-sdk test: AssertionError: expected '{"kind":"user","actor":"customer","pu…' not to contain '3f0d5f6c-1f2a-4a9b-8c7d-9e1f2a3b4c5d'
+packages/auth-sdk test: Expected: [32m"3f0d5f6c-1f2a-4a9b-8c7d-9e1f2a3b4c5d"[39m
+packages/auth-sdk test: Received: [31m"{"kind":"user","actor":"customer","publicId":"WSL-0000123","internalUuid":"3f0d5f6c-1f2a-4a9b-8c7d-9e1f2a3b4c5d","scopeCount":2,"sessionFingerprint":"0ebb7447","expiresAt":"2026-08-30T01:00:00.000Z"}"[39m
+packages/auth-sdk test:  ❯ src/__tests__/describe.test.ts:9:28
+packages/auth-sdk test:       7|   it("لا يُخرِج المعرِّفَ الداخليَّ ولا معرِّفَ الجلسةِ الخام", () => {
+packages/auth-sdk test:       8|     const serialized = JSON.stringify(describePrincipal(validUser));
+packages/auth-sdk test:       9|     expect(serialized).not.toContain(validUser.internalUuid);
+packages/auth-sdk test:        |                            ^
+packages/auth-sdk test:      10|     expect(serialized).not.toContain(validUser.sessionId);
+packages/auth-sdk test:      11|   });
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+packages/auth-sdk test:  Test Files  1 failed | 2 passed (3)
+packages/auth-sdk test:       Tests  1 failed | 67 passed (68)
+packages/auth-sdk test:    Start at  23:26:26
+packages/auth-sdk test:    Duration  844ms (transform 191ms, setup 0ms, collect 240ms, tests 41ms, environment 2ms, prepare 207ms)
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 11ms
+packages/auth-sdk test: Failed
+/home/user/workspace/wasla/src/packages/auth-sdk:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/auth-sdk@0.0.0 test: `vitest run`
+Exit status 1
+exit_code=1

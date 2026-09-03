@@ -1,0 +1,15 @@
+
+> @wasla/channel-e2e@0.1.0 test /home/user/workspace/wasla/src/packages/channel-e2e
+> vitest run
+
+
+ RUN  v3.2.7 /home/user/workspace/wasla/src/packages/channel-e2e
+
+ ✓ src/__tests__/phase03-exit-gate.e2e.test.ts (8 tests | 1 skipped) 221ms
+ ✓ src/__tests__/m1-02-session-gate.e2e.test.ts (17 tests | 10 skipped) 12ms
+
+ Test Files  2 passed (2)
+      Tests  14 passed | 11 skipped (25)
+   Start at  23:31:36
+   Duration  1.79s (transform 657ms, setup 0ms, collect 1.21s, tests 233ms, environment 0ms, prepare 109ms)
+

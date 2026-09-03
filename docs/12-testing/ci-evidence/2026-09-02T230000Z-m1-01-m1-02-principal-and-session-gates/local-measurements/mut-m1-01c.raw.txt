@@ -1,0 +1,67 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 16ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 4ms
+packages/auth-sdk test:  ❯ src/__tests__/principal.test.ts (33 tests | 2 failed) 18ms
+packages/auth-sdk test:    ✓ حُرّاسُ جنسِ الـPrincipal > يُميّز الأجناسَ الثلاثةَ بلا تداخل 2ms
+packages/auth-sdk test:    ✓ حُرّاسُ جنسِ الـPrincipal > المجهولُ يُبنى بسببٍ افتراضيٍّ صريحٍ لا بـundefined 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المسارُ الموجب > يقرأ فاعلاً بشريّاً كاملاً ويُجمِّدُه 1ms
+packages/auth-sdk test:    ✓ parsePrincipal — المسارُ الموجب > يقرأ هويّةَ خدمةٍ ويقبل النيابةَ عن مستخدم 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المسارُ الموجب > يُسقِط الحقولَ الاختياريّةَ الغائبةَ بدل وضعِ undefined فيها 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المسارُ الموجب > يقبل مستأجراً عندَ الفاعلِ الشريك 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المسارُ الموجب > يقبل المجهولَ بسببٍ معروف 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: ليس كائناً 1ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: مصفوفة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: null 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: جنسٌ غيرُ معروف 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: جنسٌ مفقود 0ms
+packages/auth-sdk test:    × parsePrincipal — المساراتُ السالبة > يرفض: سببُ مجهوليّةٍ غيرُ معروف 6ms
+packages/auth-sdk test:      → expected [Function] to throw an error
+packages/auth-sdk test:    × parsePrincipal — المساراتُ السالبة > يرفض: مجهولٌ بلا سبب 1ms
+packages/auth-sdk test:      → expected [Function] to throw an error
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: نوعُ فاعلٍ غيرُ معروف 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: قناةٌ غيرُ معروفة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: معرِّفٌ عامٌّ فارغ 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: معرِّفٌ داخليٌّ مفقود 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: معرِّفُ جلسةٍ مفقود 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: أدوارٌ ليست قائمة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّاتٌ ليست قائمة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّةٌ بجزءَين 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّةٌ بأربعةِ أجزاء 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّةٌ بأحرفٍ كبيرة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّةٌ مكرَّرة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: صلاحيّةٌ ليست نصّاً 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: تاريخُ إصدارٍ غيرُ صالح 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: تاريخُ انتهاءٍ مفقود 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: اسمُ خدمةٍ بأحرفٍ كبيرة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: اسمُ خدمةٍ بمسافة 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: جهةٌ مقصودةٌ فارغة 1ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > يرفض: نيابةٌ ليست نصّاً 0ms
+packages/auth-sdk test:    ✓ parsePrincipal — المساراتُ السالبة > لا يُترجم الفشلَ إلى مجهولٍ صامت 0ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 14ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 9ms
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+packages/auth-sdk test:  FAIL  src/__tests__/principal.test.ts > parsePrincipal — المساراتُ السالبة > يرفض: سببُ مجهوليّةٍ غيرُ معروف
+packages/auth-sdk test:  FAIL  src/__tests__/principal.test.ts > parsePrincipal — المساراتُ السالبة > يرفض: مجهولٌ بلا سبب
+packages/auth-sdk test: AssertionError: expected [Function] to throw an error
+packages/auth-sdk test:  ❯ src/__tests__/principal.test.ts:103:43
+packages/auth-sdk test:     101|   for (const [label, input] of rejected) {
+packages/auth-sdk test:     102|     it(`يرفض: ${label}`, () => {
+packages/auth-sdk test:     103|       expect(() => parsePrincipal(input)).toThrowError();
+packages/auth-sdk test:        |                                           ^
+packages/auth-sdk test:     104|       try {
+packages/auth-sdk test:     105|         parsePrincipal(input);
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+packages/auth-sdk test:  Test Files  1 failed | 2 passed (3)
+packages/auth-sdk test:       Tests  2 failed | 66 passed (68)
+packages/auth-sdk test:    Start at  23:26:28
+packages/auth-sdk test:    Duration  813ms (transform 166ms, setup 0ms, collect 218ms, tests 31ms, environment 2ms, prepare 198ms)
+packages/auth-sdk test: Failed
+/home/user/workspace/wasla/src/packages/auth-sdk:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/auth-sdk@0.0.0 test: `vitest run`
+Exit status 1
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 13ms
+exit_code=1

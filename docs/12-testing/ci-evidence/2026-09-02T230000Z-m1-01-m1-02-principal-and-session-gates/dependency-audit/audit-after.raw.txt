@@ -1,0 +1,5 @@
+# pnpm audit --prod  (بعدَ رفعِ fast-uri) — 2026-09-02
+No known vulnerabilities found
+
+# pnpm audit (الشجرةُ كاملةً)
+No known vulnerabilities found

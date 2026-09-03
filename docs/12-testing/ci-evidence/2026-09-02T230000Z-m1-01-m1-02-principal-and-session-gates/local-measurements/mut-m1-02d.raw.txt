@@ -1,0 +1,78 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  ❯ src/__tests__/init-data.test.ts (33 tests | 1 failed) 36ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — الطريقُ السليم > يقبل init-data مُوقَّعاً ويُعيد ما وُقِّع عليه 6ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — الطريقُ السليم > لا يُصدِر حقولاً لم تُوقَّع عليها تلغرام 1ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — الطريقُ السليم > يتجاهل حقلَ signature في حسابِ HMAC ولا يرفض بسببِ وجودِه 1ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — الطريقُ السليم > يقبل حقولاً لا يعرفها ولا يُسقِطها من التوقيع 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض توقيعاً بحرفٍ واحدٍ مختلف 1ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض حقلاً عُدِّل بعدَ التوقيع 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض توقيعاً بُني برمزِ روبوتٍ آخر 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض توقيعاً مبتوراً ولا يقبل بادئةً صحيحة 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض توقيعاً ليس hex 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > يرفض غيابَ hash أصلاً 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — التوقيع > متجَهٌ ثابتٌ: التوقيعُ يُطابق قيمةً محسوبةً خارجَ الدالّتَين 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — البنية > يرفض نصّاً فارغاً 0ms
+packages/telegram-adapter test:    × verifyTelegramInitData — البنية > يرفض حقلاً مكرَّراً — بابَ تلبيسِ المُعامِلات 13ms
+packages/telegram-adapter test:      → expected 'INIT_DATA_BAD_SIGNATURE' to be 'INIT_DATA_MALFORMED' // Object.is equality
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — البنية > يرفض حقلاً بلا علامةِ يساوي 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — البنية > يرفض ترميزاً مئويّاً معطوباً بدلَ أن ينفجر 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — البنية > يرفض مفتاحاً فارغاً 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يقبل عمراً يساوي الحدَّ بالضبط (الحدُّ شاملٌ بقرار) 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يرفض ثانيةً واحدةً بعدَ الحدّ 6ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يحترم حدَّ عمرٍ مُمرَّراً أضيقَ من الافتراضي 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يقبل انحرافَ ساعةٍ صغيراً للأمام 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يرفض auth_date من المستقبلِ البعيد 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يرفض auth_date غيرَ رقميٍّ وإن كان التوقيعُ سليماً 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يرفض auth_date سالباً 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — العمر > يفحص التوقيعَ قبلَ العمرِ — لا يُعلَن انتهاءُ صلاحيّةِ رسالةٍ مجهولةِ الأصل 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يرفض غيابَ user 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يرفض user ليس JSON 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يرفض معرِّفاً نصّيّاً وإن كان رقماً في صورةِ نصّ 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يرفض معرِّفاً أكبرَ من العددِ الصحيحِ الآمن 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يرفض معرِّفاً صفراً أو سالباً 0ms
+packages/telegram-adapter test:    ✓ verifyTelegramInitData — المستخدم > يُسقِط الحقولَ الغريبةَ ولا يُمرِّرها إلى المجال 0ms
+packages/telegram-adapter test:    ✓ رمزُ الروبوتِ وبصمةُ الرسالة > يُلقي خطأَ تهيئةٍ لا رفضَ مُدخَلٍ حين لا رمزَ للروبوت 0ms
+packages/telegram-adapter test:    ✓ رمزُ الروبوتِ وبصمةُ الرسالة > البصمةُ تختلف باختلافِ الرسالةِ وتثبت لنفسِ الرسالة 0ms
+packages/telegram-adapter test:    ✓ رمزُ الروبوتِ وبصمةُ الرسالة > البصمةُ ليست hash الواردةَ من تلغرام 0ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 13ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 9ms
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 11ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 4ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  23:26:40
+packages/auth-sdk test:    Duration  818ms (transform 179ms, setup 0ms, collect 230ms, tests 26ms, environment 2ms, prepare 210ms)
+packages/auth-sdk test: Done
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 12ms
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 11ms
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 9ms
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 7ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 5ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 4ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 4ms
+packages/telegram-adapter test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+packages/telegram-adapter test:  FAIL  src/__tests__/init-data.test.ts > verifyTelegramInitData — البنية > يرفض حقلاً مكرَّراً — بابَ تلبيسِ المُعامِلات
+packages/telegram-adapter test: AssertionError: expected 'INIT_DATA_BAD_SIGNATURE' to be 'INIT_DATA_MALFORMED' // Object.is equality
+packages/telegram-adapter test: Expected: [32m"INIT_DATA_[7mMALFORMED[27m"[39m
+packages/telegram-adapter test: Received: [31m"INIT_DATA_[7mBAD_SIGNATURE[27m"[39m
+packages/telegram-adapter test:  ❯ src/__tests__/init-data.test.ts:197:85
+packages/telegram-adapter test:     195|     // ويقرأ التطبيقُ الآخر.
+packages/telegram-adapter test:     196|     const raw = `${signInitDataForTests(baseFields(), BOT_TOKEN)}&user…
+packages/telegram-adapter test:     197|     expect(rejectionOf(() => verifyTelegramInitData(raw, BOT_TOKEN, { …
+packages/telegram-adapter test:        |                                                                                     ^
+packages/telegram-adapter test:     198|       InitDataRejection.Malformed,
+packages/telegram-adapter test:     199|     );
+packages/telegram-adapter test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+packages/telegram-adapter test:  Test Files  1 failed | 8 passed (9)
+packages/telegram-adapter test:       Tests  1 failed | 131 passed (132)
+packages/telegram-adapter test:    Start at  23:26:40
+packages/telegram-adapter test:    Duration  2.06s (transform 301ms, setup 0ms, collect 484ms, tests 99ms, environment 3ms, prepare 530ms)
+packages/telegram-adapter test: Failed
+/home/user/workspace/wasla/src/packages/telegram-adapter:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/telegram-adapter@0.1.0 test: `vitest run`
+Exit status 1
+exit_code=1

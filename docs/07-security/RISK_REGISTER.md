@@ -69,7 +69,7 @@ RISK-#### | sev:<critical|high|medium|low> | owner:@من | opened:YYYY-MM-DD | r
 RISK-0001 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:closed | ref:docs/12-testing/ci-evidence/2026-09-01T104148Z-m0-21-github-actions/README.md | أُغلق 2026-09-01 بتشغيل 33498726052 على main: ستُّ وظائف started_at≠null وsuccess في كلٍّ منها
 RISK-0002 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/16-progress/LAUNCH_EXECUTION_BOARD.md | لا required_status_checks على main فالدمجُ ممكنٌ وخطُّ CI فاشل — نطاقُ الإغلاق M0-22A
 RISK-0003 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/16-progress/LAUNCH_EXECUTION_BOARD.md | عنصرٌ واحدٌ Completed (M0-21) و15 ينتظر بوّابةً: الخطرُ خفَّ ولم يزُل فيبقى مفتوحاً
-RISK-0004 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-11-01 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | ثلاثةُ تثبيتاتٍ قسريّةٍ مؤقّتةٍ تُغلِق ثغراتٍ ونطاقاتُ 39 حزمةً لم توحَّد بعد
+RISK-0004 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-11-01 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | خمسةُ تثبيتاتٍ قسريّةٍ مؤقّتةٍ تُغلِق ثغراتٍ ونطاقاتُ 39 حزمةً لم توحَّد بعد
 RISK-0005 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-10-31 | status:accepted | ref:docs/00-rules/VERIFY_COMMAND.md | لا أداةَ تغطيةٍ في أيٍّ من 40 ملفَّ package.json فلا رقمَ يكشف اختباراً يُحذَف
 RISK-0006 | sev:low | owner:@uxxxu | opened:2026-08-27 | review:2026-10-31 | status:accepted | ref:docs/00-rules/VERIFY_COMMAND.md | لا eslint في المستودعِ: لا إعدادَ ولا اعتماديّةَ فعيوبُ النمطِ لا يمنعها إلّا مراجعةٌ بشريّة
 RISK-0007 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/12-testing/DB_INTEGRATION_CI.md | 20 وظيفةَ تكاملٍ تحتاج Postgres ولا تجري في التحقّقِ الموحَّدِ محلّيّاً
@@ -85,6 +85,8 @@ RISK-0015 | sev:high | owner:@uxxxu | opened:2026-08-31 | review:2026-09-30 | st
 exception:override:vitest | risk:RISK-0004
 exception:override:vite | risk:RISK-0004
 exception:override:esbuild | risk:RISK-0004
+exception:override:fast-uri@3 | risk:RISK-0004
+exception:override:fast-uri@4 | risk:RISK-0004
 ```
 
 ---
@@ -157,9 +159,21 @@ GitHub Actions بقرارِ [ADR-023](../15-decisions/ADR-023-ci-migration-to-gi
 
 ### RISK-0004 · تثبيتاتٌ قسريّةٌ مؤقّتةٌ (`medium` · علاجٌ جارٍ حتى مراجعةِ 2026-11-01)
 
-ثلاثةُ مفاتيحَ في `pnpm.overrides` (`vitest` · `vite` · `esbuild`) تُغلِق ثغراتِ
-`M0-06`، ومهلتُها المُعلَنةُ في §11 هي `2026-11-25` — **وتاريخُ المراجعةِ هنا أسبقُ
-منها بقصدٍ** كي تُراجَع قبلَ أن تنقضي لا بعدَها. **وما يجعلها خطراً لا حلّاً
+خمسةُ مفاتيحَ في `pnpm.overrides` (`vitest` · `vite` · `esbuild` · `fast-uri@3` ·
+`fast-uri@4`) تُغلِق ثغراتِ `M0-06`، ومهلتُها المُعلَنةُ في §11 هي `2026-11-25` —
+**وتاريخُ المراجعةِ هنا أسبقُ منها بقصدٍ** كي تُراجَع قبلَ أن تنقضي لا بعدَها.
+
+**والمفتاحانِ الأخيرانِ أُضيفا 2026-09-02 بقياسٍ لا بتوقُّعٍ:** أخفقَ البابُ الأوّلُ
+من `validate-dependency-audit.sh` على شجرةِ `main` بثمانِ ثغراتٍ في شجرةِ
+**الإنتاجِ** — أربعُ استشاراتٍ (high) في `fast-uri` على خطَّيه (`GHSA-5jgf-p345-68v8`
+· `GHSA-f65p-4m7j-42xc` · `GHSA-fph4-wmhf-6fwf` · `GHSA-jqff-g426-hqxp`)، تأتي
+غيرَ مباشرةٍ مع `fastify@5.12.1` عبرَ `ajv@8.20.0` و`fast-json-stringify@7.0.1`.
+**ولم يُقبَل الخطرُ ولم يُستثنَ:** البابُ الأوّلُ لا يقبل استثناءً أصلاً، فرُفعت
+النسختانِ إلى `3.1.7` و`4.1.4` فصار التدقيقُ **صفرَ ثغراتٍ في الشجرةِ كاملةً وفي
+شجرةِ الإنتاجِ**. **وهذا `RISK-0010` يتحقَّقُ حرفاً**: نظافةُ التدقيقِ رهنُ مُسجَّلِ
+npm يومَ التشغيلِ — فآخرُ خطٍّ أخضرَ على `main` ([`33578061424`](https://github.com/skyosv10-art/wasla/actions/runs/33578061424)
+· 2026-09-02T01:06Z) مضى بلا هذه الاستشاراتِ، ثمّ نُشرت، فصارت الشجرةُ نفسُها
+حمراءَ بلا أن يتغيَّرَ فيها سطرٌ واحدٌ. **وما يجعلها خطراً لا حلّاً
 نهائيّاً:** نطاقاتُ 39 ملفَّ `package.json` ما زالت `^2.1.0` لـ`vitest`، وأحدُها
 داخلَ نطاقِ `CLM-0004`؛ و`@esbuild-kit/*` مهجورٌ و`drizzle-kit@0.31.10` أحدثُ
 المنشورِ، فلا مخرجَ من سلسلتِه إلّا التثبيتُ القسريُّ اليوم.

@@ -1,0 +1,420 @@
+# pnpm why fast-uri -r --prod — 2026-09-02
+Legend: production dependency, optional only, dev only
+
+@wasla/customer-bot@0.1.0 /home/user/workspace/wasla/src/bots/customer-bot (PRIVATE)
+
+dependencies:
+@wasla/bot-runtime link:../../packages/bot-runtime
+└─┬ fastify 5.12.1
+  ├─┬ @fastify/ajv-compiler 4.0.6
+  │ ├─┬ ajv 8.20.0
+  │ │ └── fast-uri 3.1.7
+  │ ├─┬ ajv-formats 3.0.1
+  │ │ └─┬ ajv 8.20.0 peer
+  │ │   └── fast-uri 3.1.7
+  │ └── fast-uri 4.1.4
+  ├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+  │ └─┬ fast-json-stringify 7.0.1
+  │   ├─┬ ajv 8.20.0
+  │   │ └── fast-uri 3.1.7
+  │   ├─┬ ajv-formats 3.0.1
+  │   │ └─┬ ajv 8.20.0 peer
+  │   │   └── fast-uri 3.1.7
+  │   └── fast-uri 4.1.4
+  └─┬ fast-json-stringify 7.0.1
+    ├─┬ ajv 8.20.0
+    │ └── fast-uri 3.1.7
+    ├─┬ ajv-formats 3.0.1
+    │ └─┬ ajv 8.20.0 peer
+    │   └── fast-uri 3.1.7
+    └── fast-uri 4.1.4
+@wasla/customers-service link:../../services/customers
+└─┬ fastify 5.12.1
+  └─┬ @fastify/ajv-compiler 4.0.6
+    └─┬ ajv 8.20.0
+      └── fast-uri 3.1.7
+
+@wasla/driver-bot@0.1.0 /home/user/workspace/wasla/src/bots/driver-bot (PRIVATE)
+
+dependencies:
+@wasla/bot-runtime link:../../packages/bot-runtime
+└─┬ fastify 5.12.1
+  ├─┬ @fastify/ajv-compiler 4.0.6
+  │ ├─┬ ajv 8.20.0
+  │ │ └── fast-uri 3.1.7
+  │ ├─┬ ajv-formats 3.0.1
+  │ │ └─┬ ajv 8.20.0 peer
+  │ │   └── fast-uri 3.1.7
+  │ └── fast-uri 4.1.4
+  ├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+  │ └─┬ fast-json-stringify 7.0.1
+  │   ├─┬ ajv 8.20.0
+  │   │ └── fast-uri 3.1.7
+  │   ├─┬ ajv-formats 3.0.1
+  │   │ └─┬ ajv 8.20.0 peer
+  │   │   └── fast-uri 3.1.7
+  │   └── fast-uri 4.1.4
+  └─┬ fast-json-stringify 7.0.1
+    ├─┬ ajv 8.20.0
+    │ └── fast-uri 3.1.7
+    ├─┬ ajv-formats 3.0.1
+    │ └─┬ ajv 8.20.0 peer
+    │   └── fast-uri 3.1.7
+    └── fast-uri 4.1.4
+@wasla/drivers-service link:../../services/drivers
+└─┬ fastify 5.12.1
+  └─┬ @fastify/ajv-compiler 4.0.6
+    └─┬ ajv 8.20.0
+      └── fast-uri 3.1.7
+
+@wasla/partner-bot@0.1.0 /home/user/workspace/wasla/src/bots/partner-bot (PRIVATE)
+
+dependencies:
+@wasla/bot-runtime link:../../packages/bot-runtime
+└─┬ fastify 5.12.1
+  ├─┬ @fastify/ajv-compiler 4.0.6
+  │ ├─┬ ajv 8.20.0
+  │ │ └── fast-uri 3.1.7
+  │ ├─┬ ajv-formats 3.0.1
+  │ │ └─┬ ajv 8.20.0 peer
+  │ │   └── fast-uri 3.1.7
+  │ └── fast-uri 4.1.4
+  ├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+  │ └─┬ fast-json-stringify 7.0.1
+  │   ├─┬ ajv 8.20.0
+  │   │ └── fast-uri 3.1.7
+  │   ├─┬ ajv-formats 3.0.1
+  │   │ └─┬ ajv 8.20.0 peer
+  │   │   └── fast-uri 3.1.7
+  │   └── fast-uri 4.1.4
+  └─┬ fast-json-stringify 7.0.1
+    ├─┬ ajv 8.20.0
+    │ └── fast-uri 3.1.7
+    ├─┬ ajv-formats 3.0.1
+    │ └─┬ ajv 8.20.0 peer
+    │   └── fast-uri 3.1.7
+    └── fast-uri 4.1.4
+
+@wasla/bot-runtime@0.1.0 /home/user/workspace/wasla/src/packages/bot-runtime (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/customers-service@0.1.0 /home/user/workspace/wasla/src/services/customers (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/dispatch-service@0.1.0 /home/user/workspace/wasla/src/services/dispatch (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/drivers-service@0.1.0 /home/user/workspace/wasla/src/services/drivers (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/geography-service@0.1.0 /home/user/workspace/wasla/src/services/geography (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/identity-service@0.1.0 /home/user/workspace/wasla/src/services/identity (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/marketplace-service@0.1.0 /home/user/workspace/wasla/src/services/marketplace (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/matching-service@0.1.0 /home/user/workspace/wasla/src/services/matching (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/negotiations-service@0.1.0 /home/user/workspace/wasla/src/services/negotiations (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/orders-service@0.1.0 /home/user/workspace/wasla/src/services/orders (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/reputation-service@0.1.0 /home/user/workspace/wasla/src/services/reputation (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4
+
+@wasla/subscriptions-service@0.1.0 /home/user/workspace/wasla/src/services/subscriptions (PRIVATE)
+
+dependencies:
+fastify 5.12.1
+├─┬ @fastify/ajv-compiler 4.0.6
+│ ├─┬ ajv 8.20.0
+│ │ └── fast-uri 3.1.7
+│ ├─┬ ajv-formats 3.0.1
+│ │ └─┬ ajv 8.20.0 peer
+│ │   └── fast-uri 3.1.7
+│ └── fast-uri 4.1.4
+├─┬ @fastify/fast-json-stringify-compiler 5.1.0
+│ └─┬ fast-json-stringify 7.0.1
+│   ├─┬ ajv 8.20.0
+│   │ └── fast-uri 3.1.7
+│   ├─┬ ajv-formats 3.0.1
+│   │ └─┬ ajv 8.20.0 peer
+│   │   └── fast-uri 3.1.7
+│   └── fast-uri 4.1.4
+└─┬ fast-json-stringify 7.0.1
+  ├─┬ ajv 8.20.0
+  │ └── fast-uri 3.1.7
+  ├─┬ ajv-formats 3.0.1
+  │ └─┬ ajv 8.20.0 peer
+  │   └── fast-uri 3.1.7
+  └── fast-uri 4.1.4

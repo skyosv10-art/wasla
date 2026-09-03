@@ -25,7 +25,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { RULESET_V1, RULESET_V1_VERSION } from "../domain/ruleset.js";
 import type { Candidacy, MatchingDecision } from "../domain/model.js";
 import { candidacyFixture, NOW, ORDER_ID, ORDER_PUBLIC_ID, ZONE_PICKUP, ZONE_SAME_CITY } from "./harness.js";
-import { PG_ENABLED, resetData, setupPostgres, type PgFixture } from "./pg-harness.js";
+import { CONTRACT_TABLES, PG_ENABLED, resetData, setupPostgres, type PgFixture } from "./pg-harness.js";
 
 const DRIVER_A = "WS-8000000001";
 const DRIVER_B = "WS-8000000002";
@@ -81,21 +81,38 @@ describe.skipIf(!PG_ENABLED)("matching Postgres adapters", () => {
   // The schema itself                                                  //
   // ------------------------------------------------------------------ //
 
+  // ── M0-18 · لماذا لا تُقرأ القاعدةُ كلُّها ────────────────────────────
+  // كان هذا التوكيدُ يقرأُ **كلَّ** جداولِ `public` ويوازيها بجداولِ العقدِ
+  // بـ`toEqual`، فكانَ يُوكِّدُ — من غيرِ أن يُعلنَ — أنّ **لا خدمةَ أخرى
+  // تشاركُ القاعدةَ**. وذلك ليسَ عقداً لخدمةِ المطابقةِ: القاعدةُ ليست ملكَها،
+  // و`docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md` §3 تُعلنُ الاشتراكَ آمناً.
+  // فحينَ شُغِّلت الاثنتا عشرةَ مجموعةً تِباعاً على قاعدةٍ واحدةٍ (2026-08-30)
+  // رأى التوكيدُ 53 جدولاً بدلَ 6 وأخفقَ — وهو `RISK-0014`. وصارت نتيجةُ
+  // المجموعةِ **دالّةً في ترتيبِ التشغيلِ** لا في شفرةِ الخدمةِ.
+  //
+  // والعلاجُ ليسَ إضعافَ التوكيدِ بل **تصحيحَ موضوعِه**: العقدُ يقولُ
+  // «هذهِ الجداولُ الستةُ موجودةٌ» ولا يقولُ «ولا شيءَ غيرَها في القاعدةِ».
+  // فالاستعلامُ يُقيَّدُ بـ`= ANY($1)` — لا يرى غيرَ أسماءِ العقدِ إطلاقاً.
+  //
+  // **وما فُقد لم يُهدَر:** بُعدُ «لا جدولَ زائداً» محروسٌ ثابتاً في
+  // `schema-drift.test.ts` («declares exactly the tables the projection covers»)
+  // الذي يوازي DDLالعقدِ بمسقطِ Drizzle — بلا قاعدةٍ ولا اشتراكٍ. فالبعدُ
+  // انتقلَ إلى موضعِه الصحيحِ ولم يُحذَف.
+  //
+  // **وقائمةُ العقدِ تُقرأُ من الملفِ وقتَ التشغيلِ** لا تُكتَبُ حرفاً هنا،
+  // فلا يمكنُ لجدولٍ يُحذَفُ من `schema.sql` أن يبقى محروساً وهماً.
+  // ────────────────────────────────────────────────────────────────────
+
   it("creates every table and index the contract declares", async () => {
     const tables = await pg.pool.query<{ table_name: string }>(
-      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 1",
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY 1",
+      [CONTRACT_TABLES],
     );
-    expect(tables.rows.map((row) => row.table_name)).toEqual([
-      "driver_candidacy",
-      "matching_decision_candidates",
-      "matching_decisions",
-      "matching_idempotency",
-      "matching_outbox",
-      "matching_rulesets",
-    ]);
+    expect(tables.rows.map((row) => row.table_name)).toEqual([...CONTRACT_TABLES].sort());
 
     const indexes = await pg.pool.query<{ indexname: string }>(
-      "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' ORDER BY 1",
+      "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' AND tablename = ANY($1) ORDER BY 1",
+      [CONTRACT_TABLES],
     );
     const names = indexes.rows.map((row) => row.indexname);
     // The partial index is the one that keeps the candidate scan proportional to
@@ -105,6 +122,57 @@ describe.skipIf(!PG_ENABLED)("matching Postgres adapters", () => {
     expect(names).toContain("ix_candidacy_services");
     expect(names).toContain("ix_decisions_order");
     expect(names).toContain("ix_matching_outbox_unpublished");
+  });
+
+  // ── M0-18 · معيارُ القبولِ الثاني حرفاً ───────────────────────────────
+  // «وحالةٌ تُثبت أنّ توكيدَ ‹كلُّ ما يُعلنه العقدُ› لا يقرأ جداولَ خدمةٍ أخرى».
+  //
+  // وهذه الحالةُ **قُطريّةٌ**: لا تكتفي بأن التوكيدَ المُقيَّدَ لا يرى الدخيلَ،
+  // بل تُثبِتُ أوّلاً أنّ الاستعلامَ الواسعَ **يراه** — وإلا كانت الحالةُ
+  // زخرفةً تنجحُ لأنّ الدخيلَ لم يُخلَق أصلاً.
+  //
+  // والدخيلُ يُحاكي خدمةً أخرى بجدولٍ وفهرسٍ في `public`، ويُحذَفُ في
+  // `finally` فلا يُلوِّثُ ما بعدَه — لأنّ هذه المجموعةَ **هي** التي تُشغَّلُ
+  // على القاعدةِ المشتركةِ، فلا يجوزُ أن تُخلِّفَ ما خلَّفَه غيرُها.
+  // ────────────────────────────────────────────────────────────────────
+
+  it("reads only the contract's own tables when another service shares the database", async () => {
+    const foreignTable = "m0_18_foreign_service_probe";
+    const foreignIndex = "ix_m0_18_foreign_service_probe";
+
+    try {
+      await pg.pool.query(`CREATE TABLE ${foreignTable} (id BIGSERIAL PRIMARY KEY, note TEXT)`);
+      await pg.pool.query(`CREATE INDEX ${foreignIndex} ON ${foreignTable} (note)`);
+
+      // 1. الدخيلُ حقيقيٌّ: الاستعلامُ الواسعُ — وهو ما كان التوكيدُ يستعملُه —
+      //    يراه. فلو أخفقَ هذا السطرُ لكانَ ما بعدَه بلا معنى.
+      const wide = await pg.pool.query<{ table_name: string }>(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 1",
+      );
+      const wideNames = wide.rows.map((row) => row.table_name);
+      expect(wideNames).toContain(foreignTable);
+      // وهذا هو الإخفاقُ الأصليُّ حرفاً: الواسعُ **لا يساوي** جداولَ العقدِ.
+      expect(wideNames).not.toEqual([...CONTRACT_TABLES].sort());
+
+      // 2. والتوكيدُ المُقيَّدُ لا يراه، ويبقى مساوياً لجداولِ العقدِ تماماً.
+      const scoped = await pg.pool.query<{ table_name: string }>(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY 1",
+        [CONTRACT_TABLES],
+      );
+      const scopedNames = scoped.rows.map((row) => row.table_name);
+      expect(scopedNames).not.toContain(foreignTable);
+      expect(scopedNames).toEqual([...CONTRACT_TABLES].sort());
+
+      // 3. والفهارسُ كذلك — فقيدُ `tablename` لا اسمُ الفهرسِ، إذ الفهرسُ
+      //    الدخيلُ قد يُسمّى أيَّ شيءٍ ولا يُتوقَّعُ اسمُه.
+      const scopedIndexes = await pg.pool.query<{ indexname: string }>(
+        "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' AND tablename = ANY($1) ORDER BY 1",
+        [CONTRACT_TABLES],
+      );
+      expect(scopedIndexes.rows.map((row) => row.indexname)).not.toContain(foreignIndex);
+    } finally {
+      await pg.pool.query(`DROP TABLE IF EXISTS ${foreignTable} CASCADE`);
+    }
   });
 
   it("seeds ruleset version 1 exactly as the domain copy declares it", async () => {

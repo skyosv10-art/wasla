@@ -1,0 +1,20 @@
+{
+  "schema": "wasla.ci-evidence/v2",
+  "collected_at": "2026-09-03T09-00-10Z",
+  "provider": "github",
+  "subject": "skyosv10-art/wasla",
+  "ref": "main",
+  "run_id": "33735438235",
+  "run_status": "completed/failure",
+  "run_url": "https://github.com/skyosv10-art/wasla/actions/runs/33735438235",
+  "jobs_total": 26,
+  "jobs_started": 26,
+  "started_at": "2026-09-03T08:49:25Z",
+  "verdict": "FAILED",
+  "reason": "job_started_and_failed",
+  "job_statuses": {
+    "failure": 2,
+    "success": 24
+  },
+  "not_started_reasons": {}
+}

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-03T11:22:21Z",
+  "generated_at": "2026-09-03T12:07:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "074bfffc401dbac237d6f6180a1210d2cabcb399",
-    "branch": "fix/m0-22c-ci-guard-live-source",
+    "commit": "cf2eabf038a9526f7dbd7d41c5750361b69a7e69",
+    "branch": "fix/m0-22d-ci-evidence-github",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1245
+    "tracked_files": 1267
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 16
+    "risks_not_closed": 15
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify-m022c-r2.log",
+    "source": "/home/user/workspace/verify-m022d-r2.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 163,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+  "fingerprint": "sha256:cd103637cebf189dcdc2e29bd7b77688e57fc2a0e25f6c4e5e7613473bf3cb68",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

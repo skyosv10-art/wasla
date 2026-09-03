@@ -1,0 +1,20 @@
+{
+  "schema": "wasla.ci-evidence/v2",
+  "collected_at": "2026-09-03T08-24-34Z",
+  "provider": "github",
+  "subject": "skyosv10-art/wasla",
+  "ref": "fix/m0-22c-ci-guard-live-source",
+  "run_id": "33731869192",
+  "run_status": "completed/failure",
+  "run_url": "https://github.com/skyosv10-art/wasla/actions/runs/33731869192",
+  "jobs_total": 26,
+  "jobs_started": 26,
+  "started_at": "2026-09-03T08:09:49Z",
+  "verdict": "FAILED",
+  "reason": "job_started_and_failed",
+  "job_statuses": {
+    "success": 24,
+    "failure": 2
+  },
+  "not_started_reasons": {}
+}

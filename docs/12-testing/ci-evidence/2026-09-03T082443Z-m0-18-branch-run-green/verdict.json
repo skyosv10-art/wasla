@@ -1,0 +1,19 @@
+{
+  "schema": "wasla.ci-evidence/v2",
+  "collected_at": "2026-09-03T08-24-43Z",
+  "provider": "github",
+  "subject": "skyosv10-art/wasla",
+  "ref": "fix/m0-18-integration-suite-isolation",
+  "run_id": "33725969976",
+  "run_status": "completed/success",
+  "run_url": "https://github.com/skyosv10-art/wasla/actions/runs/33725969976",
+  "jobs_total": 27,
+  "jobs_started": 27,
+  "started_at": "2026-09-03T07:00:53Z",
+  "verdict": "PASSED",
+  "reason": "all_jobs_succeeded",
+  "job_statuses": {
+    "success": 27
+  },
+  "not_started_reasons": {}
+}

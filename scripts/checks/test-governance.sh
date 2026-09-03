@@ -781,7 +781,7 @@ RS_SRC="$REPO_ROOT/scripts/checks/validate-repo-structure.sh"
 _ci_stage() { # _ci_stage <tag> <نمط> → يطبع مسارَ جذرٍ صناعيّ
   local tag="$1" mode="$2"
   local R="/tmp/gov_ci_$tag"
-  rm -rf "$R"; mkdir -p "$R/docs/00-rules" "$R/scripts/checks/lib"
+  rm -rf "$R"; mkdir -p "$R/docs/00-rules" "$R/scripts/checks/lib" "$R/.github/workflows"
   # سكربتاتُ الفحصِ الحقيقيّةُ تُنسَخ (القائمةُ منها يقرؤها البابُ 4)، والوثيقةُ كذلك.
   cp "$REPO_ROOT"/scripts/checks/*.sh "$R/scripts/checks/" 2>/dev/null
   cp "$REPO_ROOT"/scripts/checks/lib/* "$R/scripts/checks/lib/" 2>/dev/null
@@ -803,8 +803,68 @@ markdown-lint:
   script:
     - echo lint
 YAML
+  # ومصدرٌ حيٌّ صناعيٌّ بجانبِه (M0-22C): الحارسُ يقيسُ **الملفَّين**، فجذرٌ بلا
+  # `ci.yml` يسقطُ لغيابِ ملفٍّ لا لعيبٍ فيه — وذلك يُفسِدُ دلالةَ كلِّ حالةٍ بعدَه.
+  cat > "$R/.github/workflows/ci.yml" <<'YAML'
+name: ci
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: verify.sh
+        run: bash scripts/verify.sh
+      - name: upload
+        if: always()
+        run: echo upload
+
+  markdown-lint:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - run: echo lint
+YAML
   case "$mode" in
     ok) : ;;
+    gh_no_verify)   # البابُ 1 على المصدرِ الحيِّ: لا وظيفةَ تستدعي الأمرَ الموحَّد
+      sed -i 's|bash scripts/verify.sh|echo skipped|' "$R/.github/workflows/ci.yml" ;;
+    gh_verify_soft) # البابُ 1: تستدعيه وظيفةٌ مُقنَّعةٌ بـcontinue-on-error
+      sed -i 's|^  verify:\n|&|' "$R/.github/workflows/ci.yml"
+      python3 - "$R/.github/workflows/ci.yml" <<'PYX'
+import sys
+p = sys.argv[1]
+t = open(p, encoding="utf-8").read()
+t = t.replace("  verify:\n    runs-on: ubuntu-24.04\n",
+              "  verify:\n    runs-on: ubuntu-24.04\n    continue-on-error: true\n", 1)
+open(p, "w", encoding="utf-8").write(t)
+PYX
+      ;;
+    gh_verify_if)   # البابُ 1: تستدعيه وظيفةٌ لا تعملُ إلّا بشرطٍ — ليست مانعةً
+      python3 - "$R/.github/workflows/ci.yml" <<'PYX'
+import sys
+p = sys.argv[1]
+t = open(p, encoding="utf-8").read()
+t = t.replace("  verify:\n    runs-on: ubuntu-24.04\n",
+              "  verify:\n    runs-on: ubuntu-24.04\n    if: github.ref == 'refs/heads/main'\n", 1)
+open(p, "w", encoding="utf-8").write(t)
+PYX
+      ;;
+    gh_inline_list) # البابُ 2 على المصدرِ الحيِّ: قائمةُ إلزامٍ مضمَّنةٌ في YAML
+      printf '\n  repo-structure:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
+        >> "$R/.github/workflows/ci.yml" ;;
+    gh_undeclared_af) # البابُ 3 على المصدرِ الحيِّ: تقنيعٌ غيرُ مُعلَنٍ في §4
+      printf '\n  flaky-job:\n    runs-on: ubuntu-24.04\n    continue-on-error: true\n    steps:\n      - run: echo maybe\n' \
+        >> "$R/.github/workflows/ci.yml" ;;
+    gh_undeclared_step_af) # البابُ 3: التقنيعُ في **خطوةٍ** لا في الوظيفة
+      printf '\n  sneaky-job:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo a\n        continue-on-error: true\n' \
+        >> "$R/.github/workflows/ci.yml" ;;
+    gh_no_jobs)     # ملفٌّ حيٌّ بلا وظائفَ → سقوطٌ صريحٌ لا مرورٌ بقائمةٍ فارغة
+      printf 'name: ci\non:\n  push:\n    branches: [main]\n' > "$R/.github/workflows/ci.yml" ;;
     no_verify)      # البابُ 1: لا وظيفةَ تستدعي الأمرَ الموحَّد
       sed -i 's|bash scripts/verify.sh|echo skipped|' "$R/.gitlab-ci.yml" ;;
     verify_soft)    # البابُ 1: تستدعيه لكنّها لا تُسقِط
@@ -877,6 +937,48 @@ t "يرفض استثناءَ إخفاقٍ غيرَ مُعلَنٍ في الوث�
 cim_orphan() { _cim "$(_ci_stage orphan_guard orphan_guard)"; }
 t "يرفض حارساً لا يصل إليه الأمرُ الموحَّدُ ولا هو مُعلَن" fail cim_orphan
 
+# ── المصدرُ الحيُّ (M0-22C) ──────────────────────────────────────────────
+# العيبُ المقيسُ الذي تُغلقُه هذه الحالاتُ: كان الحارسُ يقرأ `.gitlab-ci.yml`
+# وحدَه، و`.gitlab-ci.yml` لا يجري منذ 2026-08-25. فحذفُ وظيفةِ `verify` من
+# `.github/workflows/ci.yml` — الملفِّ الذي جرى فيه سبعٌ وعشرونَ وظيفةً — لم يكن
+# يُسقِطُ بوّابةً واحدةً. الحالاتُ التاليةُ تُثبِتُ بالطفرةِ أنّه صارَ يُسقِطُها.
+# وكلُّها على جذورٍ صناعيّةٍ: لا يُشوَّهُ `ci.yml` الحقيقيُّ أبداً (سابقةُ M0-12).
+
+# (9) الجذرُ الصناعيُّ فيه ملفٌّ حيٌّ سليمٌ ويمرُّ — مرجعٌ موجبٌ للحالاتِ بعدَه.
+#     ولولاه لدلَّ سقوطُ ما بعدَه على «الجذرُ ناقصٌ» لا على «العيبُ كُشِف».
+cim_gh_no_verify() { _cim "$(_ci_stage gh_no_verify gh_no_verify)"; }
+t "يرفض ملفَّ GitHub الحيَّ إذا لم تستدعِ وظيفةٌ الأمرَ الموحَّد" fail cim_gh_no_verify
+
+# (10) البابُ 1: `continue-on-error` على الوظيفةِ التي تستدعي الأمرَ الموحَّد.
+#      استدعاءٌ لا يُسقِطُ زينةٌ — وهو نظيرُ `allow_failure` حرفاً في المعنى.
+cim_gh_soft() { _cim "$(_ci_stage gh_verify_soft gh_verify_soft)"; }
+t "يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةِ GitHub مُقنَّعةٍ بـcontinue-on-error" fail cim_gh_soft
+
+# (11) البابُ 1: `if:` على الوظيفةِ. لا نظيرَ له في GitLab، وأُضيفَ لأنّ وظيفةً
+#      مشروطةً قد لا تعملُ في طلبِ الدمجِ أصلاً — فتبدو بوّابةً وليست بوّابة.
+cim_gh_if() { _cim "$(_ci_stage gh_verify_if gh_verify_if)"; }
+t "يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةِ GitHub مشروطةٍ بـif" fail cim_gh_if
+
+# (12) البابُ 2 على المصدرِ الحيِّ: رجوعُ قائمةِ الإلزامِ المضمَّنةِ — نفسُ عيبِ
+#      M0-04 لو هاجرَ معَ الخطِّ إلى الملفِّ الجديد.
+cim_gh_inline() { _cim "$(_ci_stage gh_inline_list gh_inline_list)"; }
+t "يرفض قائمةَ إلزامٍ مضمَّنةً في ملفِّ GitHub" fail cim_gh_inline
+
+# (13) البابُ 3 على المصدرِ الحيِّ: تقنيعٌ على مستوى الوظيفةِ غيرُ مُعلَنٍ في §4.
+cim_gh_undeclared() { _cim "$(_ci_stage gh_undeclared_af gh_undeclared_af)"; }
+t "يرفض وظيفةَ GitHub مُقنَّعةً غيرَ مُعلَنةٍ في الوثيقة" fail cim_gh_undeclared
+
+# (14) البابُ 3: التقنيعُ في **خطوةٍ** داخلَ وظيفةٍ سليمةِ الظاهر — وهذا أخفى
+#      صورِ التعطيلِ: الوظيفةُ تبدو مانعةً وسطرٌ واحدٌ فيها يُبطِلُ خطوةً.
+cim_gh_step_af() { _cim "$(_ci_stage gh_undeclared_step_af gh_undeclared_step_af)"; }
+t "يرفض تقنيعَ خطوةٍ داخلَ وظيفةِ GitHub غيرِ مُعلَنةٍ" fail cim_gh_step_af
+
+# (15) ملفٌّ حيٌّ بلا كتلةِ `jobs:` → سقوطٌ صريحٌ. ولولا هذه الحالةُ لأمكن أن
+#      يمرَّ الحارسُ على قائمةٍ فارغةٍ فيبدو أخضرَ وهو لم يقِس شيئاً — وهو
+#      عينُ الخطأِ الذي تمنعُه الحالةُ (8) على جانبِ الوثيقة.
+cim_gh_no_jobs() { _cim "$(_ci_stage gh_no_jobs gh_no_jobs)"; }
+t "يسقط صراحةً إذا خلا ملفُّ GitHub من وظائفَ" fail cim_gh_no_jobs
+
 # (8) وثيقةٌ بلا كتلةِ §4 → سقوطٌ صريحٌ. ولولا هذه الحالةُ لأمكن للحارسِ أن يمرَّ
 # بقائمةِ استثناءاتٍ فارغةٍ لأنّه لم يجد الكتلةَ — أخطرُ من رفضٍ خاطئٍ.
 cim_no_anchor() { _cim "$(_ci_stage no_anchor no_anchor)"; }
@@ -922,17 +1024,42 @@ cim_mut_door1() {
 }
 t "البابُ 1 (مدخلٌ مُستدعىً) يكشف فعلاً" pass cim_mut_door1
 
+# ومنذُ M0-22C صارَ لكلِّ بابٍ سطرا رفضٍ لا سطرٌ واحدٌ (مصدرٌ لكلِّ سطرٍ)، فنمطُ
+# الطفرةِ «البابُ ن (» يُصمِتُ السطرَين معاً — وهو المقصودُ هنا: تعطيلُ **البابِ**
+# لا تعطيلُ نصفِه. وتُقاسُ كلُّ جهةٍ وحدَها في الطفراتِ الخاصّةِ بالمصدرِ الحيِّ بعدَه.
 cim_mut_door2() {
-  local m; m="$(_cim_mutant door2 'PROBLEMS+=("البابُ 2:' ': #')" || return 1
+  local m; m="$(_cim_mutant door2 'PROBLEMS+=("البابُ 2 (' ': #')" || return 1
   _cim "$(_ci_stage inline_list inline_list)" "$m" >/dev/null 2>&1 && return 0 || return 1
 }
 t "البابُ 2 (لا كتلةَ مضمَّنةً) يكشف فعلاً" pass cim_mut_door2
 
 cim_mut_door3() {
-  local m; m="$(_cim_mutant door3 'PROBLEMS+=("البابُ 3:' ': #')" || return 1
+  local m; m="$(_cim_mutant door3 'PROBLEMS+=("البابُ 3 (' ': #')" || return 1
   _cim "$(_ci_stage undeclared_af undeclared_af)" "$m" >/dev/null 2>&1 && return 0 || return 1
 }
 t "البابُ 3 (لا استثناءَ صامتاً) يكشف فعلاً" pass cim_mut_door3
+
+# ── طفراتُ المصدرِ الحيِّ (M0-22C) ────────────────────────────────────────
+# هذه هي الحالاتُ التي تُثبِتُ أنّ الشِّقَّ الجديدَ **يكشف**، لا أنّه مكتوبٌ فقط:
+# نُبطِلُ سطرَ رفضِ الجهةِ الغيثوبيّةِ وحدَها، فإن ظلَّ الجذرُ المعطوبُ ساقطاً فمعناه
+# أنّ ما أسقطَه شيءٌ آخرُ — وهو ما تكشفُه هذه الحالاتُ بالسقوط.
+cim_mut_gh_door1() {
+  local m; m="$(_cim_mutant gh_door1 'PROBLEMS+=("البابُ 1 ($GH_FILE): لا وظيفةَ' ': #')" || return 1
+  _cim "$(_ci_stage gh_no_verify gh_no_verify)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 1 على المصدرِ الحيِّ يكشف فعلاً (طفرة)" pass cim_mut_gh_door1
+
+cim_mut_gh_door2() {
+  local m; m="$(_cim_mutant gh_door2 'PROBLEMS+=("البابُ 2 ($GH_FILE)' ': #')" || return 1
+  _cim "$(_ci_stage gh_inline_list gh_inline_list)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 2 على المصدرِ الحيِّ يكشف فعلاً (طفرة)" pass cim_mut_gh_door2
+
+cim_mut_gh_door3() {
+  local m; m="$(_cim_mutant gh_door3 'PROBLEMS+=("البابُ 3 ($GH_FILE)' ': #')" || return 1
+  _cim "$(_ci_stage gh_undeclared_af gh_undeclared_af)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 3 على المصدرِ الحيِّ يكشف فعلاً (طفرة)" pass cim_mut_gh_door3
 
 cim_mut_door4() {
   local m; m="$(_cim_mutant door4 'PROBLEMS+=("البابُ 4:' ': #')" || return 1

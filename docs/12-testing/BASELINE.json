@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-08-31T11:13:46Z",
+  "generated_at": "2026-09-03T00:22:22Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "624a4c5028fa5f27dec9781a44454e5afd6157f1",
-    "branch": "feat/m1-03-gap-closure",
+    "commit": "2120ecdc2400f65520c34011245611d8d0b22ef5",
+    "branch": "chore/m1-gate-docs-batch6",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1149
+    "tracked_files": 1223
   },
   "env": {
     "node": "v20.20.1",
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "33b6c7c2e8a0d116b259e2fea34592ef4e0cbf10958ca548d4fd0c5b0532b065",
-    "lines": 2916
+    "sha256": "f781064a2c808089cb0f57e39c8028ee410b1b4407580cc95eb5a9673ba646a6",
+    "lines": 2918
   },
   "static": {
     "packages": 43,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify3.log",
+    "source": "/home/user/workspace/verify-batch6c.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 153,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:ae902babc8bb9632ea65e171711889cda4539fc0d36a428df10ba56faf48f149",
+  "fingerprint": "sha256:e373840af310ecb496d0acc5f4e6cfbc9caeaf7ab876441d3632bf4bc5a24447",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

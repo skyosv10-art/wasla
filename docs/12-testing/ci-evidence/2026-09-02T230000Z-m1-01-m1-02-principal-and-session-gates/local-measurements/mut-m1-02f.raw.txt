@@ -1,0 +1,114 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 21ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 13ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 10ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 15ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 4ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  23:26:48
+packages/auth-sdk test:    Duration  847ms (transform 200ms, setup 0ms, collect 239ms, tests 27ms, environment 2ms, prepare 220ms)
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 11ms
+packages/auth-sdk test: Done
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 9ms
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 8ms
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 7ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 5ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 4ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 4ms
+packages/telegram-adapter test:  Test Files  9 passed (9)
+packages/telegram-adapter test:       Tests  132 passed (132)
+packages/telegram-adapter test:    Start at  23:26:48
+packages/telegram-adapter test:    Duration  1.95s (transform 255ms, setup 0ms, collect 449ms, tests 85ms, environment 3ms, prepare 522ms)
+packages/telegram-adapter test: Done
+services/identity test$ vitest run
+services/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/src/services/identity
+services/identity test:  ❯ src/__tests__/session.test.ts (28 tests | 2 failed) 29ms
+services/identity test:    ✓ issueSessionFromTelegram > يُصدِر جلسةً ويربطها بالمستخدمِ الصحيح 3ms
+services/identity test:    ✓ issueSessionFromTelegram > **لا يُخزّن الرمزَ** بل بصمتَه فقط 1ms
+services/identity test:    ✓ issueSessionFromTelegram > يُعطي رمزاً مختلفاً في كلِّ إصدارٍ ولو لنفسِ المستخدم 1ms
+services/identity test:    ✓ issueSessionFromTelegram > لا يُنشئ مستخدماً ثانياً لجلسةٍ ثانيةٍ لنفسِ الشخص 0ms
+services/identity test:    ✓ issueSessionFromTelegram > يحترم نوعَ الفاعلِ ومدّةً مُمرَّرةً 0ms
+services/identity test:    ✓ issueSessionFromTelegram > يرفض بصمةً ليست sha256 — خطأُ توصيلٍ لا مُدخَلُ مستخدم 1ms
+services/identity test:    ✓ issueSessionFromTelegram > يرفض إعادةَ استعمالِ نفسِ بصمةِ init-data (في هذا المُنفِّذِ) 1ms
+services/identity test:    ✓ issueSessionFromTelegram > لا يُخفِق حين تتساوى بصمةُ رسالتَينِ لمستخدمَينِ مختلفَين — التفرّدُ عالميّ 1ms
+services/identity test:    ✓ verifySessionToken > يُعيد UserPrincipal بالمعرِّفِ العامِّ لصاحبِ الجلسة 1ms
+services/identity test:    ✓ verifySessionToken > لا يشتقُّ أدواراً ولا صلاحيّاتٍ من نفسِه 1ms
+services/identity test:    ✓ verifySessionToken > يرفض رمزاً لا وجودَ له بـAUTHN_UNAUTHENTICATED 0ms
+services/identity test:    ✓ verifySessionToken > يرفض رمزاً صحيحَ الصيغةِ خُمِّن عشوائيّاً 1ms
+services/identity test:    ✓ verifySessionToken > يقبل قبلَ لحظةِ الانتهاءِ بثانيةٍ 0ms
+services/identity test:    × verifySessionToken > يرفض **عندَ** لحظةِ الانتهاءِ بالضبط — الحدُّ غيرُ شاملٍ كـauth-sdk 11ms
+services/identity test:      → promise resolved "{ kind: 'user', …(9) }" instead of rejecting
+services/identity test:    ✓ verifySessionToken > يرفض جلسةً مسحوبةً بـAUTHN_UNAUTHENTICATED لا بـAUTHN_EXPIRED 1ms
+services/identity test:    ✓ verifySessionToken > السحبُ يسبق الانتهاءَ في الحكمِ حين يقع الاثنان 0ms
+services/identity test:    ✓ verifySessionToken > يُسجّل آخِرَ استعمالٍ ولا يجعله شرطاً للنجاح 0ms
+services/identity test:    ✓ verifySessionToken > ينجح وإن أخفقت كتابةُ آخِرِ استعمال 0ms
+services/identity test:    ✓ verifySessionToken > يرفض جلسةً تُشير إلى مستخدمٍ لم يبقَ له سجلّ 0ms
+services/identity test:    ✓ revokeSession > يُسجّل وقتَ السحبِ وسببَه معاً 0ms
+services/identity test:    ✓ revokeSession > مُتماثِلُ التكرارِ: النداءُ الثاني لا يُخفِق ولا يُغيّر أوّلَ سبب 0ms
+services/identity test:    ✓ revokeSession > يرفض سحباً بلا سبب 0ms
+services/identity test:    ✓ revokeSession > يُخفِق على جلسةٍ لا وجودَ لها 0ms
+services/identity test:    ✓ revokeSession > سحبُ جلسةٍ لا يمسّ جلسةً أخرى لنفسِ المستخدم 0ms
+services/identity test:    × نواةُ المجالِ النقيّة > isSessionValid يتّفق مع الحدِّ غيرِ الشامل 1ms
+services/identity test:      → expected true to be false // Object.is equality
+services/identity test:    ✓ نواةُ المجالِ النقيّة > sessionExpiryFrom يرفض مدّةً غيرَ موجبة 0ms
+services/identity test:    ✓ نواةُ المجالِ النقيّة > hashSessionToken يرفض رمزاً فارغاً 0ms
+services/identity test:    ✓ نواةُ المجالِ النقيّة > sessionHashEquals يرفض ما ليس sha256 hex ولا يقبل بادئةً 0ms
+services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 91ms
+services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 8ms
+services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 8ms
+services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 4ms
+services/identity test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+services/identity test:  FAIL  src/__tests__/session.test.ts > verifySessionToken > يرفض **عندَ** لحظةِ الانتهاءِ بالضبط — الحدُّ غيرُ شاملٍ كـauth-sdk
+services/identity test: AssertionError: promise resolved "{ kind: 'user', …(9) }" instead of rejecting
+services/identity test: [32m- Expected[39m
+services/identity test: [31m+ Received[39m
+services/identity test: [32m- Error {[39m
+services/identity test: [32m-   "message": "rejected promise",[39m
+services/identity test: [31m+ {[39m
+services/identity test: [31m+   "actor": "customer",[39m
+services/identity test: [31m+   "channel": "telegram",[39m
+services/identity test: [31m+   "expiresAt": "2026-08-30T12:00:00.000Z",[39m
+services/identity test: [31m+   "internalUuid": "addfabf2-0319-4004-a75d-ce0988f4ebb6",[39m
+services/identity test: [31m+   "issuedAt": "2026-08-30T08:00:00.000Z",[39m
+services/identity test: [31m+   "kind": "user",[39m
+services/identity test: [31m+   "roles": [],[39m
+services/identity test: [31m+   "scopes": [],[39m
+services/identity test: [31m+   "sessionId": "7bffdeda-af7e-4f2f-8e85-e6d7687428fd",[39m
+services/identity test: [31m+   "waslaPublicId": "WS-0000000001",[39m
+services/identity test: [2m  }[22m
+services/identity test:  ❯ src/__tests__/session.test.ts:259:58
+services/identity test:     257|     const issued = await issue(h, 605, "v5");
+services/identity test:     258|     h.clock.advance(DEFAULT_SESSION_TTL_SECONDS);
+services/identity test:     259|     await expect(verifySessionToken(h.deps, issued.token)).rejects.toM…
+services/identity test:        |                                                          ^
+services/identity test:     260|       code: "AUTHN_EXPIRED",
+services/identity test:     261|     });
+services/identity test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+services/identity test:  FAIL  src/__tests__/session.test.ts > نواةُ المجالِ النقيّة > isSessionValid يتّفق مع الحدِّ غيرِ الشامل
+services/identity test: AssertionError: expected true to be false // Object.is equality
+services/identity test: [32m- Expected[39m
+services/identity test: [31m+ Received[39m
+services/identity test: [32m- false[39m
+services/identity test: [31m+ true[39m
+services/identity test:  ❯ src/__tests__/session.test.ts:364:52
+services/identity test:     362|     const expiry = new Date(issued.session.expiresAt);
+services/identity test:     363|     expect(isSessionValid(issued.session, new Date(expiry.getTime() - …
+services/identity test:     364|     expect(isSessionValid(issued.session, expiry)).toBe(false);
+services/identity test:        |                                                    ^
+services/identity test:     365|   });
+services/identity test:     366| 
+services/identity test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+services/identity test:  Test Files  1 failed | 4 passed (5)
+services/identity test:       Tests  2 failed | 50 passed (52)
+services/identity test:    Start at  23:26:50
+services/identity test:    Duration  1.92s (transform 219ms, setup 0ms, collect 1.01s, tests 140ms, environment 1ms, prepare 287ms)
+services/identity test: Failed
+/home/user/workspace/wasla/src/services/identity:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/identity-service@0.1.0 test: `vitest run`
+Exit status 1
+exit_code=1

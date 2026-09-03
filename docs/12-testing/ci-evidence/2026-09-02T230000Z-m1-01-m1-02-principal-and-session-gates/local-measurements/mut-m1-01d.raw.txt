@@ -1,0 +1,62 @@
+Scope: 3 of 43 workspace projects
+packages/auth-sdk test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/auth-sdk
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/src/packages/telegram-adapter
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 15ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 12ms
+packages/auth-sdk test:  ❯ src/__tests__/authorize.test.ts (29 tests | 1 failed) 17ms
+packages/auth-sdk test:    ✓ انتهاءُ المدّة > قبلَ الانتهاءِ: غيرُ منتهٍ 1ms
+packages/auth-sdk test:    ✓ انتهاءُ المدّة > عندَ لحظةِ الانتهاءِ نفسِها: ما زال سارياً (حدٌّ حصريٌّ مقصود) 0ms
+packages/auth-sdk test:    ✓ انتهاءُ المدّة > بعدَ الانتهاءِ بمِلّي ثانية: منتهٍ 0ms
+packages/auth-sdk test:    ✓ انتهاءُ المدّة > المجهولُ لا ينتهي لأنّه لا إثباتَ له 0ms
+packages/auth-sdk test:    ✓ انتهاءُ المدّة > إثباتٌ بلا تاريخِ انتهاءٍ يُعَدُّ منتهياً لا سارياً أبداً 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > يطابق صلاحيّةً حرفيّة 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > يرفض صلاحيّةً غيرَ ممنوحة 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > حرفُ البدلِ في الجزءِ الأخيرِ يمنح الأفعالَ كلَّها 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > لا يوجد بدلٌ مطلقٌ يفتح النظامَ كلَّه 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > المجهولُ لا يملك صلاحيّةً قطّ 1ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > hasAllScopes اقترانُ «و» لا «أو» 0ms
+packages/auth-sdk test:    ✓ مطابقةُ الصلاحيّات > الأدوارُ للفاعلِ البشريِّ فقط 0ms
+packages/auth-sdk test:    ✓ assertScopes — ترتيبُ الأبواب > يمرّ عندَ اكتمالِ الهويّةِ والصلاحيّة 1ms
+packages/auth-sdk test:    × assertScopes — ترتيبُ الأبواب > المجهولُ يُرفَض بـUNAUTHENTICATED لا بـFORBIDDEN 7ms
+packages/auth-sdk test:      → كان يجب أن يُرفَع خطأٌ ولم يُرفَع
+packages/auth-sdk test:    ✓ assertScopes — ترتيبُ الأبواب > المنتهي يُرفَض بـEXPIRED قبلَ فحصِ الصلاحيّة 0ms
+packages/auth-sdk test:    ✓ assertScopes — ترتيبُ الأبواب > نقصُ الصلاحيّةِ يُرفَض بـFORBIDDEN 0ms
+packages/auth-sdk test:    ✓ الجهةُ المقصودةُ بالرمز > يقبل رمزاً مُوجَّهاً إلى هذه الخدمة 0ms
+packages/auth-sdk test:    ✓ الجهةُ المقصودةُ بالرمز > يرفض إعادةَ استخدامِ الرمزِ على خدمةٍ أخرى 0ms
+packages/auth-sdk test:    ✓ الجهةُ المقصودةُ بالرمز > لا يُقيَّد الفاعلُ البشريُّ بجهةٍ مقصودةٍ هنا 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > صاحبُ الكائنِ يُقبَل 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > غيرُ الصاحبِ يُرفَض بـNOT_OWNER 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > المجهولُ لا يملك شيئاً 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > الإداريُّ لا يُستثنى ضمنيّاً — بل بصلاحيّةٍ صريحةٍ يُمرِّرها المُنادي 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > تجاوزٌ مُطلَبٌ ولا يملكه الفاعلُ لا يفتح الباب 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > خدمةٌ تنوب عن مستخدمٍ تُنسَب إليه المِلكيّة 0ms
+packages/auth-sdk test:    ✓ مِلكيّةُ الكائنِ ومنعُ IDOR > خدمةٌ بلا نيابةٍ لا تُنسَب إليها مِلكيّةُ أحد 0ms
+packages/auth-sdk test:    ✓ حدُّ المستأجر > يقبل مستأجرَه 0ms
+packages/auth-sdk test:    ✓ حدُّ المستأجر > يرفض مستأجراً آخر 0ms
+packages/auth-sdk test:    ✓ حدُّ المستأجر > فاعلٌ بلا مستأجرٍ لا يرى بياناتِ أيِّ مستأجر 0ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 12ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 4ms
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+packages/auth-sdk test:  FAIL  src/__tests__/authorize.test.ts > assertScopes — ترتيبُ الأبواب > المجهولُ يُرفَض بـUNAUTHENTICATED لا بـFORBIDDEN
+packages/auth-sdk test: Error: كان يجب أن يُرفَع خطأٌ ولم يُرفَع
+packages/auth-sdk test:  ❯ codeOf src/__tests__/authorize.test.ts:28:9
+packages/auth-sdk test:      26|     return (error as { code: string }).code;
+packages/auth-sdk test:      27|   }
+packages/auth-sdk test:      28|   throw new Error("كان يجب أن يُرفَع خطأٌ ولم يُرفَع");
+packages/auth-sdk test:        |         ^
+packages/auth-sdk test:      29| }
+packages/auth-sdk test:      30| 
+packages/auth-sdk test:  ❯ src/__tests__/authorize.test.ts:106:12
+packages/auth-sdk test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+packages/auth-sdk test:  Test Files  1 failed | 2 passed (3)
+packages/auth-sdk test:       Tests  1 failed | 67 passed (68)
+packages/auth-sdk test:    Start at  23:26:30
+packages/auth-sdk test:    Duration  821ms (transform 180ms, setup 0ms, collect 215ms, tests 33ms, environment 2ms, prepare 213ms)
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 12ms
+packages/auth-sdk test: Failed
+/home/user/workspace/wasla/src/packages/auth-sdk:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @wasla/auth-sdk@0.0.0 test: `vitest run`
+Exit status 1
+exit_code=1

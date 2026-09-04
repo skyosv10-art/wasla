@@ -1,0 +1,19 @@
+$ POST https://api.github.com/repos/skyosv10-art/wasla/git/refs
+--- request body ---
+{
+ "ref": "refs/heads/feat/m0-22a-branch-protection-enforcement",
+ "sha": "bff2c5f2e5d53f2d4ced9c5738774a2e5f42b361"
+}
+--- response ---
+HTTP 201
+
+{
+  "ref": "refs/heads/feat/m0-22a-branch-protection-enforcement",
+  "node_id": "REF_kwDOUKQifdoANHJlZnMvaGVhZHMvZmVhdC9tMC0yMmEtYnJhbmNoLXByb3RlY3Rpb24tZW5mb3JjZW1lbnQ",
+  "url": "https://api.github.com/repos/skyosv10-art/wasla/git/refs/heads/feat/m0-22a-branch-protection-enforcement",
+  "object": {
+    "sha": "bff2c5f2e5d53f2d4ced9c5738774a2e5f42b361",
+    "type": "commit",
+    "url": "https://api.github.com/repos/skyosv10-art/wasla/git/commits/bff2c5f2e5d53f2d4ced9c5738774a2e5f42b361"
+  }
+}

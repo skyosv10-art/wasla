@@ -1,0 +1,15 @@
+{
+ "full_name": "skyosv10-art/wasla",
+ "private": false,
+ "visibility": "public",
+ "default_branch": "main",
+ "updated_at": "2026-09-03T23:33:20Z",
+ "owner_type": "User",
+ "permissions": {
+  "admin": true,
+  "maintain": true,
+  "push": true,
+  "triage": true,
+  "pull": true
+ }
+}

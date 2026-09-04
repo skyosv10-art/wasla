@@ -1,0 +1,13 @@
+$ PUT https://api.github.com/repos/skyosv10-art/wasla/pulls/18/merge
+--- request body ---
+{
+ "merge_method": "merge"
+}
+--- response ---
+HTTP 405
+
+{
+  "message": "3 of 6 required status checks are failing.",
+  "documentation_url": "https://docs.github.com/articles/about-protected-branches",
+  "status": "405"
+}

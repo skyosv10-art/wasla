@@ -67,7 +67,7 @@ RISK-#### | sev:<critical|high|medium|low> | owner:@من | opened:YYYY-MM-DD | r
 ```text
 # سجلُّ المخاطر — الصيغةُ في §2. لا تُحرَّر هذه الكتلةُ إلّا بسطرٍ كاملِ الحقول.
 RISK-0001 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:closed | ref:docs/12-testing/ci-evidence/2026-09-01T104148Z-m0-21-github-actions/README.md | أُغلق 2026-09-01 بتشغيل 33498726052 على main: ستُّ وظائف started_at≠null وsuccess في كلٍّ منها
-RISK-0002 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/16-progress/LAUNCH_EXECUTION_BOARD.md | لا required_status_checks على main فالدمجُ ممكنٌ وخطُّ CI فاشل — نطاقُ الإغلاق M0-22A
+RISK-0002 | sev:high | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:closed | ref:docs/12-testing/ci-evidence/2026-09-04T120000Z-m0-22a-enforcement/README.md | أُغلق 2026-09-04 بالسلبِ لا بالإيجاب: طلبٌ أحمرُ #18 رُدَّت محاولةُ دمجِه بـ405 والدفعُ المباشرُ إلى main بـ422
 RISK-0003 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | status:open | ref:docs/16-progress/LAUNCH_EXECUTION_BOARD.md | عنصرٌ واحدٌ Completed (M0-21) و15 ينتظر بوّابةً: الخطرُ خفَّ ولم يزُل فيبقى مفتوحاً
 RISK-0004 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-11-01 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md | خمسةُ تثبيتاتٍ قسريّةٍ مؤقّتةٍ تُغلِق ثغراتٍ ونطاقاتُ 39 حزمةً لم توحَّد بعد
 RISK-0005 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-10-31 | status:accepted | ref:docs/00-rules/VERIFY_COMMAND.md | لا أداةَ تغطيةٍ في أيٍّ من 40 ملفَّ package.json فلا رقمَ يكشف اختباراً يُحذَف
@@ -128,7 +128,7 @@ GitHub Actions بقرارِ [ADR-023](../15-decisions/ADR-023-ci-migration-to-gi
 **وما لا يُغلقُه هذا:** أنّ الخطَّ يمرُّ **لا يعني أنّه يمنع**. سلطةُ الرفضِ
 مسألةُ `RISK-0002` أدناه ونطاقُها `M0-22A`.
 
-### RISK-0002 · الدمجُ لا يمنعه خطٌّ فاشل (`high` · **مفتوحٌ** · نطاقُ الإغلاق `M0-22A`)
+### RISK-0002 · الدمجُ لا يمنعه خطٌّ فاشل (`high` · **أُغلق 2026-09-04** · نطاقُ الإغلاق `M0-22A`)
 
 **أُعيدت صياغتُه 2026-09-01 على ما يُغلقُه فعلاً.** كان مُصاغاً على ضابطِ GitLab
 `only_allow_merge_if_pipeline_succeeds = False` (مقيسٌ) وعلى أنّه «يُرفع بمجرّدِ
@@ -150,6 +150,30 @@ GitHub Actions بقرارِ [ADR-023](../15-decisions/ADR-023-ci-migration-to-gi
 **والضابطُ القائمُ حاليّاً:** الدفعُ المباشرُ إلى `main` لا يجري — كلُّ ما دخلَ
 `main` في هذه الدفعةِ دخلَ عبرَ طلبِ دمجٍ موثَّقٍ — لكنّ هذا **عُرفٌ يلتزمُ به
 العاملُ، لا قاعدةٌ يفرضُها المستودع**، وهو ما يُصحَّحُ في `M0-22A`.
+
+---
+
+#### الإغلاقُ (2026-09-04) — بالسلبِ كما وُصفَ، لا بإعدادٍ يُقرأ
+
+زالَ حاجزُ الخطّةِ (`403 · Upgrade to GitHub Pro`) بعدَ أن صارَ المستودعُ
+`public` **بفعلِ مالكٍ لا بفعلِ عاملٍ**، فنُفِّذَ `M0-22A` بحمولتِه المُجازةِ
+في 2026-09-01 حرفاً. والدليلُ **ثلاثةُ أجوبةٍ خامّةٍ محفوظةٍ**، لا لقطةُ إعدادٍ:
+
+1. **الحمايةُ قائمةٌ:** `GET …/branches/main/protection` ⇒ الفحوصُ الستُّ اسماً
+   باسمٍ · `strict: true` · `enforce_admins.enabled: true`.
+2. **الدفعُ المباشرُ مرفوضٌ:** التزامٌ حقيقيٌّ `09ddacff` ثمّ
+   `PATCH /git/refs/heads/main` ⇒ **`422 · "6 of 6 required status checks are
+   expected."`** والتوكنُ `admin: true` — **فالرفضُ رفضُ ضابطٍ لا نقصِ صلاحيّة**.
+3. **ونصُّ الخطرِ بعينِه أُبطلَ:** طلبٌ أحمرُ متعمَّدٌ
+   [#18](https://github.com/skyosv10-art/wasla/pull/18) بتشغيلٍ
+   [`33872246335`](https://github.com/skyosv10-art/wasla/actions/runs/33872246335)
+   (27 وظيفةً بدأت · ثلاثٌ مطلوبةٌ `failure`) ⇒ `mergeable_state: blocked` ثمّ
+   `PUT …/merge` ⇒ **`405 · "3 of 6 required status checks are failing."`**
+
+**وما لا يُدَّعى مع الإغلاقِ:** الحمايةُ تمنعُ **دمجَ الأحمرِ**، ولا تمنعُ
+**تخضيرَ الأحمرِ بتعديلِ `ci.yml` نفسِه** — تلك ثغرةٌ أخرى نطاقُها `M0-22C`
+وهي مقيَّدةٌ مستقلّةً، ولا يُقرأُ إغلاقُ `RISK-0002` تغطيةً لها.
+الوثيقةُ: [`M0-22A_GATE.md`](../12-testing/M0-22A_GATE.md).
 
 ### RISK-0003 · لا عنصرَ `Completed` (`medium` · مفتوحٌ)
 

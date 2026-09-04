@@ -1,0 +1,140 @@
+$ GET https://api.github.com/repos/skyosv10-art/wasla/branches/main
+--- response ---
+HTTP 200
+
+{
+  "name": "main",
+  "commit": {
+    "sha": "bee9ed7094164dd1094bc826ec4b4ffeabc42e61",
+    "node_id": "C_kwDOUKQifdoAKGJlZTllZDcwOTQxNjRkZDEwOTRiYzgyNmVjNGI0ZmZlYWJjNDJlNjE",
+    "commit": {
+      "author": {
+        "name": "skyosv10-art",
+        "email": "skyosv10@gmail.com",
+        "date": "2026-09-03T23:33:15Z"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "date": "2026-09-03T23:33:15Z"
+      },
+      "message": "Merge pull request #16 from skyosv10-art/fix/m0-22d-ci-evidence-github\n\nM0-22D — مُستخرِجُ دليلِ CI يسألُ المصدرَ الحيَّ لا الميّتَ (RISK-0018 مُغلَقٌ)",
+      "tree": {
+        "sha": "1a63dfe5ada6827c73a3d91793d0471cb3b28637",
+        "url": "https://api.github.com/repos/skyosv10-art/wasla/git/trees/1a63dfe5ada6827c73a3d91793d0471cb3b28637"
+      },
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/git/commits/bee9ed7094164dd1094bc826ec4b4ffeabc42e61",
+      "comment_count": 0,
+      "verification": {
+        "verified": true,
+        "reason": "valid",
+        "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqmgO7CRC1aQ7uu5UhlAAAzfMQAJgjaYPvZe4kHkLxOxPaF29V\nv1MJlsPJHWskfScw7EPQdTUslkuDPJCpToBIjuCjvgOiZce1jz9IA1aM19DN+3gH\nnkltj+6WQkx4EyoBmaYCbknJRou4lx9Z2m0itN3M3yWC8l/erMKZVLh4SzOzm9Ec\n2IC5axC+ic/XOM2MCgpiROpo8lALuUcwA43+s330AjyTyyhuV2C8/eP150rd7MsG\nPv0l0DVySZnsnfuBJi820qx+pH0zi340d4ZMwHcpoVTmWjLDVT/ntQR7gzXnONs4\nI55kTHSm/oWaN57A0SwdZNXsvcZdh8aOQEEa4di6JKU02CxqQd518z+6YpdWYwXs\nV8tjG9VHE06gijHStMKzW+ebqHrmLSsCF/k/xKdBT7iycD42Ugs1MIPXqESEMpX+\nrnpqZUmtsAeDkKe1yb++c2P9oIkLUbiO/ZBjIXylftBrx01jGlSn8fpf2iM/5/hP\nADEe+IyRG01satR/bo0wzlhXVDRLI9M5jVwWNRl9KQOip1+bBjllqLm44uOtPWgN\nRFi/5aXfE9QKhEsYMVKQe1w6y0EslSUDBd49qHCRAjbSkHz7i54ZtJppd7KJaLI6\n0EXlLzFaLs0cQxJhwZ9ikENmqp1DklZavldAXgjZRAuZ7DpkzuN6z6FRwq4pp4WJ\nkRfsTEq34Xe0J3Eo1hYZ\n=5qPD\n-----END PGP SIGNATURE-----\n",
+        "payload": "tree 1a63dfe5ada6827c73a3d91793d0471cb3b28637\nparent 89c636648f0c6fb6fcda51b73d2c781f0c11ec23\nparent 5d45233ea149eca2abd0ac4d4e9753e3d2067cee\nauthor skyosv10-art <skyosv10@gmail.com> 1788478395 +0300\ncommitter GitHub <noreply@github.com> 1788478395 +0300\n\nMerge pull request #16 from skyosv10-art/fix/m0-22d-ci-evidence-github\n\nM0-22D — مُستخرِجُ دليلِ CI يسألُ المصدرَ الحيَّ لا الميّتَ (RISK-0018 مُغلَقٌ)",
+        "verified_at": "2026-09-03T23:33:16Z"
+      }
+    },
+    "url": "https://api.github.com/repos/skyosv10-art/wasla/commits/bee9ed7094164dd1094bc826ec4b4ffeabc42e61",
+    "html_url": "https://github.com/skyosv10-art/wasla/commit/bee9ed7094164dd1094bc826ec4b4ffeabc42e61",
+    "comments_url": "https://api.github.com/repos/skyosv10-art/wasla/commits/bee9ed7094164dd1094bc826ec4b4ffeabc42e61/comments",
+    "author": {
+      "login": "skyosv10-art",
+      "id": 291345653,
+      "node_id": "U_kgDOEV2U9Q",
+      "avatar_url": "https://avatars.githubusercontent.com/u/291345653?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/skyosv10-art",
+      "html_url": "https://github.com/skyosv10-art",
+      "followers_url": "https://api.github.com/users/skyosv10-art/followers",
+      "following_url": "https://api.github.com/users/skyosv10-art/following{/other_user}",
+      "gists_url": "https://api.github.com/users/skyosv10-art/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/skyosv10-art/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/skyosv10-art/subscriptions",
+      "organizations_url": "https://api.github.com/users/skyosv10-art/orgs",
+      "repos_url": "https://api.github.com/users/skyosv10-art/repos",
+      "events_url": "https://api.github.com/users/skyosv10-art/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/skyosv10-art/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "web-flow",
+      "id": 19864447,
+      "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/web-flow",
+      "html_url": "https://github.com/web-flow",
+      "followers_url": "https://api.github.com/users/web-flow/followers",
+      "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+      "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+      "organizations_url": "https://api.github.com/users/web-flow/orgs",
+      "repos_url": "https://api.github.com/users/web-flow/repos",
+      "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/web-flow/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "89c636648f0c6fb6fcda51b73d2c781f0c11ec23",
+        "url": "https://api.github.com/repos/skyosv10-art/wasla/commits/89c636648f0c6fb6fcda51b73d2c781f0c11ec23",
+        "html_url": "https://github.com/skyosv10-art/wasla/commit/89c636648f0c6fb6fcda51b73d2c781f0c11ec23"
+      },
+      {
+        "sha": "5d45233ea149eca2abd0ac4d4e9753e3d2067cee",
+        "url": "https://api.github.com/repos/skyosv10-art/wasla/commits/5d45233ea149eca2abd0ac4d4e9753e3d2067cee",
+        "html_url": "https://github.com/skyosv10-art/wasla/commit/5d45233ea149eca2abd0ac4d4e9753e3d2067cee"
+      }
+    ]
+  },
+  "_links": {
+    "self": "https://api.github.com/repos/skyosv10-art/wasla/branches/main",
+    "html": "https://github.com/skyosv10-art/wasla/tree/main"
+  },
+  "protected": true,
+  "protection": {
+    "enabled": true,
+    "required_status_checks": {
+      "enforcement_level": "everyone",
+      "contexts": [
+        "repo-structure",
+        "doc-coverage",
+        "governance-guard",
+        "verify",
+        "typecheck",
+        "test"
+      ],
+      "checks": [
+        {
+          "context": "repo-structure",
+          "app_id": 15368
+        },
+        {
+          "context": "doc-coverage",
+          "app_id": 15368
+        },
+        {
+          "context": "governance-guard",
+          "app_id": 15368
+        },
+        {
+          "context": "verify",
+          "app_id": 15368
+        },
+        {
+          "context": "typecheck",
+          "app_id": 15368
+        },
+        {
+          "context": "test",
+          "app_id": 15368
+        }
+      ]
+    }
+  },
+  "protection_url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection"
+}

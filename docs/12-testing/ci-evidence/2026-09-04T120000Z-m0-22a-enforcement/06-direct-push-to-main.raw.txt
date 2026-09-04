@@ -1,0 +1,14 @@
+$ PATCH https://api.github.com/repos/skyosv10-art/wasla/git/refs/heads/main
+--- request body ---
+{
+ "sha": "09ddacff9b272d11714db17f7cfca420025c2491",
+ "force": false
+}
+--- response ---
+HTTP 422
+
+{
+  "message": "6 of 6 required status checks are expected.",
+  "documentation_url": "https://docs.github.com/articles/about-protected-branches",
+  "status": "422"
+}

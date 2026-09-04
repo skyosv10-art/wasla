@@ -60,6 +60,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
+| CLM-0062 | M0-22A | @uxxxu (agent:computer) | feat/m0-22a-branch-protection-enforcement | docs/12-testing/,docs/07-security/RISK_REGISTER.md | 2026-09-04 | 2026-09-18 | Active |
 | CLM-0035 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-closeout | docs/12-testing/,docs/07-security/ | 2026-09-02 | 2026-09-16 | Active |
 
 > **`CLM-0057` — حجزٌ ثانٍ لعنصرٍ ثانٍ، ومخالفةٌ حوكميّةٌ مُعلَنةٌ لا مطويّةٌ (2026-09-03):**

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-03T12:07:17Z",
+  "generated_at": "2026-09-04T13:07:44Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cf2eabf038a9526f7dbd7d41c5750361b69a7e69",
-    "branch": "fix/m0-22d-ci-evidence-github",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 1267
+    "commit": "bee9ed7094164dd1094bc826ec4b4ffeabc42e61",
+    "branch": "feat/m0-22a-branch-protection-enforcement",
+    "dirty": true,
+    "dirty_files": 22,
+    "dirty_reason": "وُلِّد ضمن دفعةِ M0-22A قبلَ الالتزامِ: الملفّاتُ المُعدَّلةُ هي وثائقُ الدفعةِ نفسُها (دليلُ الإنفاذِ · بوّابةُ M0-22A · سجلُّ المخاطرِ · الدفاترُ المشتركةُ)، والعدَّاداتُ الحركيّةُ من تشغيلٍ أخضرَ كاملٍ على الشجرةِ نفسِها (verify-m022a-r2.log) قبلَ إضافةِ ملفِّ دليلِ إغلاقِ المِسبارِ — وهو ملفُّ نصٍّ لا يمسُّ اختباراً.",
+    "tracked_files": 1284
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 15
+    "risks_not_closed": 14
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify-m022d-r2.log",
+    "source": "/home/user/workspace/verify-m022a-r2.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 163,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:cd103637cebf189dcdc2e29bd7b77688e57fc2a0e25f6c4e5e7613473bf3cb68",
+  "fingerprint": "sha256:e373840af310ecb496d0acc5f4e6cfbc9caeaf7ab876441d3632bf4bc5a24447",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

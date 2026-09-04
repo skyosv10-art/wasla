@@ -1,0 +1,42 @@
+{
+ "run_id": 33872246335,
+ "total_jobs": 27,
+ "started": 27,
+ "required_jobs": [
+  {
+   "name": "governance-guard",
+   "started_at": "2026-09-04T12:20:12Z",
+   "conclusion": "failure"
+  },
+  {
+   "name": "repo-structure",
+   "started_at": "2026-09-04T12:20:11Z",
+   "conclusion": "success"
+  },
+  {
+   "name": "doc-coverage",
+   "started_at": "2026-09-04T12:20:11Z",
+   "conclusion": "failure"
+  },
+  {
+   "name": "verify",
+   "started_at": "2026-09-04T12:20:12Z",
+   "conclusion": "failure"
+  },
+  {
+   "name": "typecheck",
+   "started_at": "2026-09-04T12:20:44Z",
+   "conclusion": "success"
+  },
+  {
+   "name": "test",
+   "started_at": "2026-09-04T12:20:12Z",
+   "conclusion": "success"
+  }
+ ],
+ "all_failures": [
+  "doc-coverage",
+  "governance-guard",
+  "verify"
+ ]
+}

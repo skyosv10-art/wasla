@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T05:58:20Z",
+  "generated_at": "2026-09-05T12:40:19Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "297a9148edf536de7324df47168119aa46186646",
-    "branch": "chore/m0-25-merge-blocking-gate",
+    "commit": "2ce5374cc7fac737ebd4c6fc08d7dcbf375e540c",
+    "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "M0-25: حارسُ منعِ الدمجِ وسبعُ حالاتٍ جديدةٍ — إعادةُ توليدِ الأساسِ على حزمةٍ خضراءَ",
-    "tracked_files": 1368
+    "dirty_files": 11,
+    "dirty_reason": "M1-04 (الموجةُ 1): الوسيطُ المركزيُّ لهويّةِ الخدمةِ — إعادةُ توليدٍ على زيادةٍ مقيسةٍ (+1 ملفَّ اختبارٍ · +11 اختباراً · fastify في devDependencies · RISK-0024 مفتوحٌ) لا على نقصٍ",
+    "tracked_files": 1376
   },
   "env": {
     "node": "v20.20.1",
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "f781064a2c808089cb0f57e39c8028ee410b1b4407580cc95eb5a9673ba646a6",
-    "lines": 2918
+    "sha256": "7bf2ba313fc5039b7fd4bb81c6bac0ec671f6e6364ee23b518aa329d723f9f9d",
+    "lines": 2921
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 264,
+    "test_files_tracked": 265,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 16
+    "risks_not_closed": 17
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m025.log",
-    "tests_passed": 3748,
-    "test_files_executed": 221,
-    "governance_suite_cases": 172,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify_m104_v4.log",
+    "tests_passed": 3759,
+    "test_files_executed": 222,
+    "governance_suite_cases": 168,
+    "governance_suite_failed": 4,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+  "fingerprint": "sha256:4f134de7ea7a298daa76a4af66199438e0d3db2ed900e9a943e0634777ac0cfa",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

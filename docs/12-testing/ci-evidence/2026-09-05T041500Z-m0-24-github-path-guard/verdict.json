@@ -1,0 +1,27 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-05T04-15-00Z",
+  "work_items": [
+    "M0-24"
+  ],
+  "closes_risk": "RISK-0021",
+  "verdict": "PASSED",
+  "suite": {
+    "name": "test-governance.sh",
+    "passed": 165,
+    "failed": 0
+  },
+  "change": {
+    "file": "scripts/checks/lib/meaningful-paths.sh",
+    "added_prefix": "\\.github/"
+  },
+  "cases": [
+    "تعديلُ .github/workflows بلا حجزٍ يُرفَض",
+    "حذفُ .github من المرشّح يُكشَف (طفرةٌ)"
+  ],
+  "incidental_fix": "parity_check: نزعُ الهروبِ قبلَ بناءِ مسارِ المسبرِ لبادئاتِ المجلَّداتِ",
+  "not_measured": [
+    "جردُ تاريخِ المستودعِ لتعديلاتِ .github/ التي كانت ستُرفَض",
+    "مضمونُ تعديلِ الخطِّ (الحارسُ يُلزِمُ بحجزٍ لا يقرأُ التعديلَ)"
+  ]
+}

@@ -364,7 +364,11 @@ parity_check() {
   local tok path rc_claim rc_doc
   while IFS= read -r tok; do
     [[ -n "$tok" ]] || continue
-    if [[ "$tok" == */ ]]; then path="${tok}m0_15_probe.txt"; else path="${tok//\\/}"; path="${path%$}"; fi
+    # يُنزَع الهروبُ **قبلَ** التفريعِ: أوّلُ بادئةِ مجلَّدٍ مهروبةٍ (`\.github/`)
+    # كانت تُبنى حرفيّاً بالشرطةِ المائلةِ فيُصنَع مسارٌ لا وجودَ له، فيمرُّ المدقِّقانِ
+    # ويُعلَن «اختلافٌ» زائفٌ. (رُصد في M0-24.)
+    tok="${tok//\\/}"
+    if [[ "$tok" == */ ]]; then path="${tok}m0_15_probe.txt"; else path="${tok%$}"; fi
     git checkout -q -f -B test/parity origin-main
     mkdir -p "$(dirname "$path")" 2>/dev/null
     printf 'probe\n' >> "$path"
@@ -416,6 +420,46 @@ MUT
   (( rc == 1 ))
 }
 t "إعادة كتابة المرشّح محليّاً تُكشَف" pass parity_regression
+
+# ── [هث-3] خطُّ CI الحيُّ داخلَ المرشِّحِ (M0-24 · إغلاقُ RISK-0021) ──────────
+# الحالةُ العامّةُ أعلاه تجرِّب كلَّ بادئةٍ **في المرشِّحِ**، فهي لا تكشف بادئةً
+# **غائبةً** عنه: حذفُ `.github/` يُنقِص عددَ ما يُجرَّب ولا يُخفِق شيئاً. ولذلك
+# تُسمّى هنا باسمِها: تعديلُ ملفِّ خطٍّ حيٍّ بلا حجزٍ وبلا توثيقٍ **يُرفَض**.
+github_path_guarded() {
+  local rc_claim rc_doc
+  git checkout -q -f -B test/gh origin-main
+  mkdir -p .github/workflows
+  printf '\n# probe M0-24\n' >> .github/workflows/ci.yml
+  git add -A >/dev/null; git commit -qm "probe: تعديلُ خطِّ CI بلا حجزٍ" >/dev/null
+  bash scripts/checks/validate-work-claims.sh origin/main HEAD >/dev/null 2>&1; rc_claim=$?
+  bash scripts/checks/require-doc-update.sh  origin/main HEAD >/dev/null 2>&1; rc_doc=$?
+  git checkout -q -f test/alpha; git branch -qD test/gh >/dev/null 2>&1
+  (( rc_claim != 0 && rc_doc != 0 ))
+}
+t "تعديلُ .github/workflows بلا حجزٍ يُرفَض" pass github_path_guarded
+
+# وحالةُ الطفرةِ: تُسقِط البادئةَ من المصدرِ الواحدِ، فيجب أن **تنقلبَ** الحالةُ
+# أعلاه إلى مرورٍ. ولولاها لكانت الحالةُ السابقةُ قد تخضرُّ لسببٍ آخرَ (كأن يرفضَ
+# المدقِّقانِ كلَّ فرعٍ لعلّةٍ لا صلةَ لها بالمرشِّح).
+github_path_mutation() {
+  local base_sha rc=0; base_sha="$(git rev-parse origin-main)"
+  git checkout -q -f -B test/ghmut origin-main
+  python3 - "$T/scripts/checks/lib/meaningful-paths.sh" <<'MUT'
+import sys
+p=sys.argv[1]; s=open(p).read()
+assert '|\\.github/' in s, "لم أجد بادئةَ .github في المصدرِ الواحد"
+open(p,'w').write(s.replace('|\\.github/','',1))
+MUT
+  git add -A >/dev/null; git commit -qm "mutation: حذفُ .github من المرشّح" >/dev/null
+  git update-ref refs/remotes/origin/main HEAD
+  git branch -f origin-main HEAD >/dev/null 2>&1
+  github_path_guarded >/dev/null 2>&1 || rc=1
+  git update-ref refs/remotes/origin/main "$base_sha"
+  git branch -f origin-main "$base_sha" >/dev/null 2>&1
+  git checkout -q -f test/alpha; git branch -qD test/ghmut >/dev/null 2>&1
+  (( rc == 1 ))
+}
+t "حذفُ .github من المرشّح يُكشَف" pass github_path_mutation
 
 printf '\n\033[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)\033[0m\n'
 

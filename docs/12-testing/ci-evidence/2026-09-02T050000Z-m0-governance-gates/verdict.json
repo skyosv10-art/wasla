@@ -1,0 +1,101 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-02T05-00-00Z",
+  "provider": "github-actions",
+  "repository": "skyosv10-art/wasla",
+  "verdict": "VERIFIED",
+  "work_items": [
+    "M0-04",
+    "M0-05",
+    "M0-06",
+    "M0-07"
+  ],
+  "reason": "five independent runs; verify/governance-guard/typecheck/test all success in each; 26/26 jobs started",
+  "declared_limits": [
+    "the verify job itself runs four of six layers and declares the other two as SKIP, because typecheck and test run as separate named jobs; the artifact says so in its own summary",
+    "merge-blocking (required_status_checks) is NOT enforced: M0-22A is Blocked by an external permission (403 Upgrade to GitHub Pro), RISK-0002 open",
+    "raw job logs of these runs are not archived here: the download host is blocked in this environment (403); line-level evidence comes from logs already committed on main"
+  ],
+  "runs": {
+    "33566652310": {
+      "head_sha": "7b25864744b16b85b396732ef0e28f7ee0dbdf28",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "key_jobs": {
+        "doc-coverage": "success",
+        "test": "success",
+        "repo-structure": "success",
+        "typecheck": "success",
+        "governance-guard": "success",
+        "verify": "success"
+      }
+    },
+    "33567256847": {
+      "head_sha": "9afd9d5237caa4770af6cf714dfb1c7b9b4c6fa6",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "key_jobs": {
+        "verify": "success",
+        "typecheck": "success",
+        "test": "success",
+        "repo-structure": "success",
+        "governance-guard": "success",
+        "doc-coverage": "success"
+      }
+    },
+    "33569807797": {
+      "head_sha": "0a7524705bc06ac13b1a9077584bc369e6d3fa68",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "key_jobs": {
+        "verify": "success",
+        "repo-structure": "success",
+        "test": "success",
+        "governance-guard": "success",
+        "typecheck": "success",
+        "doc-coverage": "success"
+      }
+    },
+    "33573216083": {
+      "head_sha": "1375ce2e921414e4619ffe02e429472fc00eadd5",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "key_jobs": {
+        "repo-structure": "success",
+        "governance-guard": "success",
+        "verify": "success",
+        "doc-coverage": "success",
+        "test": "success",
+        "typecheck": "success"
+      }
+    },
+    "33577596261": {
+      "head_sha": "da582286ed346d2e0c797cd5f1149996daa3a4d1",
+      "jobs_total": 26,
+      "jobs_started": 26,
+      "conclusions": {
+        "success": 26
+      },
+      "key_jobs": {
+        "governance-guard": "success",
+        "typecheck": "success",
+        "doc-coverage": "success",
+        "test": "success",
+        "repo-structure": "success",
+        "verify": "success"
+      }
+    }
+  }
+}

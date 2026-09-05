@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T01:37:01Z",
+  "generated_at": "2026-09-05T02:37:53Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "68b741cb2532499bcfe4f1955ac07e533bcbf5ab",
-    "branch": "chore/m0-gates-reconcile-b5",
+    "commit": "54109cad42a9f1de641dfe11e9ece283ae9dd14c",
+    "branch": "fix/m0-22e-pipefail",
     "dirty": true,
-    "dirty_files": 10,
-    "dirty_reason": "regen after RISK-0021 added in reconcile batch 4 (green verify)",
-    "tracked_files": 1331
+    "dirty_files": 6,
+    "dirty_reason": "regen after RISK-0022 (green verify)",
+    "tracked_files": 1350
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 16
+    "risks_not_closed": 17
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_b5b.log",
+    "source": "/tmp/verify_pf2.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 163,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+  "fingerprint": "sha256:c55a0043a0e014981af76e7306c380b4b811fc94c3546b1455c37cb723e61065",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

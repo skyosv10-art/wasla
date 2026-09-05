@@ -220,7 +220,12 @@ jobs:
       - name: install
         run: pnpm install --frozen-lockfile
       - name: typecheck
-        run: pnpm -r run typecheck 2>&1 | tee typecheck.log
+        # `pipefail` ليس زينةً: بلا هذه السطرِ تكونُ حالةُ الخروجِ حالةَ `tee`
+        # لا حالةَ `pnpm`، **فيصيرُ فحصٌ مطلوبٌ عاجزاً بنيوياً عن الإخفاقِ**.
+        # قِيسَ ذلك بمِجَسٍّ أحمرَ متعمَّدٍ في `M0-22E` قبلَ هذا الإصلاحِ.
+        run: |
+          set -o pipefail
+          pnpm -r run typecheck 2>&1 | tee typecheck.log
       - name: رفع سجل الأنواع
         if: always()
         uses: actions/upload-artifact@v4
@@ -255,7 +260,13 @@ jobs:
       - name: install
         run: pnpm install --frozen-lockfile
       - name: test
-        run: pnpm -r run test 2>&1 | tee test.log
+        # المِجَسُّ الأحمرُ في `M0-22E` أدخلَ اختباراً **يُخفِقُ بقصدٍ**، فأخفقَ
+        # محلياً وبقيَ هذا الفحصُ **أخضرَ** في الخطِّ — لأنّ حالةَ الخروجِ كانت
+        # حالةَ `tee`. **فالخضرةُ كانت صامتةً لا صادقةً**، و`pipefail` يُصلِحُ
+        # السببَ لا العرَضَ.
+        run: |
+          set -o pipefail
+          pnpm -r run test 2>&1 | tee test.log
       - name: رفع سجل الاختبارات
         if: always()
         uses: actions/upload-artifact@v4

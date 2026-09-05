@@ -28,6 +28,18 @@
 
 ## السجل
 
+### [2026-09-05] `M0-22B` — زوالُ حاجزِ البوّابةِ: من `BLOCKED` إلى `PASSED`
+
+- **Work Item(s):** M0-22B
+- **Claim:** `CLM-0079` · الفرع `chore/m0-22b-gate-unblock-reconciliation` · النطاقُ `docs/12-testing/,docs/16-progress/`
+- **Files:** `docs/12-testing/M0-22B_GATE.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ
+- **Why:** بوّابةُ `M0-22B` كانت `BLOCKED` ببندِها الثاني عشرَ: تسجيلُ العشرينَ وظيفةً في `required_status_checks` كان محجوباً بقيدِ خطّةِ حسابٍ (`403 · Upgrade to GitHub Pro`). **وزالَ الحاجزُ** بنشرِ المستودعِ (فعلُ مالكٍ) وبتوسيعِ `required_status_checks` إلى 27 سياقاً (عملُ `M0-22E`)، فالعشرونَ وظيفةً صارت مُلزَمةً مانعةً.
+- **What:** بندُ البوّابةِ الثاني عشرَ انتقلَ من ⛔ `BLOCKED` إلى ✅ `VERIFIED` بدليلٍ خامٍّ من `GET /branches/main/protection` (27 سياقاً · `strict:true` · `enforce_admins:true`). وحكمُ البوّابةِ انتقلَ من `BLOCKED` إلى `PASSED` (12/12 ✅). والحالةُ تبقى `Ready for Gate` — النقلُ إلى `Completed` سلطةُ المالكِ (§9).
+- **Tests:** `bash scripts/checks/verify-governance.sh` و`bash scripts/checks/test-governance.sh` — قيدُ التشغيلِ.
+- **Next:** انتظارُ قراءِ CI على هذا الطلب.
+- **Related:** [`M0-22B_GATE.md`](../12-testing/M0-22B_GATE.md) · [`M0-22A_GATE.md`](../12-testing/M0-22A_GATE.md) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md)
+
 ### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
 
 - **Work Item(s):** M0-22C

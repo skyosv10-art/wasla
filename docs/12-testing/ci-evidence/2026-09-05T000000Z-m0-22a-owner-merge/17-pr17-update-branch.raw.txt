@@ -1,0 +1,10 @@
+$ PUT https://api.github.com/repos/skyosv10-art/wasla/pulls/17/update-branch
+--- request body ---
+{}
+--- response ---
+HTTP 202
+
+{
+  "message": "Updating pull request branch.",
+  "url": "https://api.github.com/repos/skyosv10-art/wasla/pulls/17"
+}

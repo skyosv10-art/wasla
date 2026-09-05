@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T00:48:37Z",
+  "generated_at": "2026-09-05T01:37:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "e70029d927498dc7af766fcad0484c7e295f45d3",
-    "branch": "chore/m0-gates-reconcile-b3",
+    "commit": "68b741cb2532499bcfe4f1955ac07e533bcbf5ab",
+    "branch": "chore/m0-gates-reconcile-b5",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "regen after RISK-0020 added in reconcile batch 2 (green verify)",
-    "tracked_files": 1308
+    "dirty_files": 10,
+    "dirty_reason": "regen after RISK-0021 added in reconcile batch 4 (green verify)",
+    "tracked_files": 1331
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 15
+    "risks_not_closed": 16
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_b3b.log",
+    "source": "/tmp/verify_b5b.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 163,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:cd103637cebf189dcdc2e29bd7b77688e57fc2a0e25f6c4e5e7613473bf3cb68",
+  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

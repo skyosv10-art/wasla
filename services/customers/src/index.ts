@@ -34,6 +34,7 @@ export type { HttpGeographyOptions } from "./infrastructure/http-geography.js";
 // The production order-engine adapter (Phase 06 · MR 5/6). Exported because the
 // Phase 06 exit gate must test *this* adapter, not a copy of it living in a test.
 export {
+  CUSTOMERS_ORDERS_SCOPES,
   HttpOrderIntakePort,
   ORDER_INTAKE_PATH,
   HTTP_ORDER_INTAKE_REASONS,

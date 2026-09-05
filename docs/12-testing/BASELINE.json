@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T13:05:30Z",
+  "generated_at": "2026-09-05T13:49:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ef465182435cfd8bba18cc6dceac9e2fc2a93f48",
+    "commit": "ed3e9f0d36db0aaa1893b8539aedfba3f30fbd6c",
     "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
-    "dirty_files": 5,
-    "dirty_reason": "M1-04 (الموجةُ 1): الوسيطُ المركزيُّ لهويّةِ الخدمةِ — إعادةُ توليدٍ على زيادةٍ مقيسةٍ (+1 ملفَّ اختبارٍ · +11 اختباراً · fastify في devDependencies · RISK-0024 وRISK-0025 مفتوحانِ) لا على نقصٍ",
+    "dirty_files": 34,
+    "dirty_reason": "M1-04 الموجةُ 2: فرضُ حدِّ الطلباتِ وتوقيعُ عملائِه الأربعةِ (CLM-0083)",
     "tracked_files": 1378
   },
   "env": {
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "7bf2ba313fc5039b7fd4bb81c6bac0ec671f6e6364ee23b518aa329d723f9f9d",
-    "lines": 2921
+    "sha256": "bec94c3e4cba44166da2269e4e31e2d9dfd98a4552cb8ae5d107107c62cd6e7d",
+    "lines": 2939
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 265,
+    "test_files_tracked": 266,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 18
+    "risks_not_closed": 19
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m104_v7.log",
-    "tests_passed": 3759,
-    "test_files_executed": 222,
-    "governance_suite_cases": 168,
-    "governance_suite_failed": 4,
+    "source": "/tmp/verify-w2.log",
+    "tests_passed": 3772,
+    "test_files_executed": 223,
+    "governance_suite_cases": 167,
+    "governance_suite_failed": 5,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:7db97444334365588cbe3f517a6825be75b70db00425d947b500d621f82a47c7",
+  "fingerprint": "sha256:85e6f7cf94e3b81303c6b0b16a60226a3e938da2bd8b569f0b7008c9c92b4cc5",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

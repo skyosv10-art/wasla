@@ -1,8 +1,8 @@
 # SERVICE_AUTH_ENFORCEMENT — خريطةُ إنفاذِ هويّةِ الخدمةِ وسجلُّ التغطية (ملزم)
 
-> **الحالة:** ساريةٌ · **العنصر:** `M1-03` · **آخر تحديث:** 2026-08-31 · **المالك:** @uxxxu
+> **الحالة:** ساريةٌ · **العنصر:** `M1-03` ثمّ `M1-04` · **آخر تحديث:** 2026-09-05 · **المالك:** @uxxxu
 >
-> **المرجع:** [`ADR-020`](../02-adr/ADR-020-service-to-service-authentication.md) · [`ADR-021`](../02-adr/ADR-021-service-token-replay-policy.md) · [`ADR-022`](../02-adr/ADR-022-service-auth-key-rotation.md) · [`M1-03_GATE.md`](../12-testing/M1-03_GATE.md) · محروسٌ بالفحصِ **12** في [`verify-governance.sh`](../../scripts/checks/verify-governance.sh)
+> **المرجع:** [`ADR-020`](../15-decisions/ADR-020-service-to-service-authentication.md) · [`ADR-021`](../15-decisions/ADR-021-service-token-replay-policy.md) · [`ADR-022`](../15-decisions/ADR-022-service-auth-key-rotation.md) · [`M1-03_GATE.md`](../12-testing/M1-03_GATE.md) · محروسٌ بالفحصِ **12** في [`verify-governance.sh`](../../scripts/checks/verify-governance.sh)
 
 ---
 
@@ -31,11 +31,25 @@
 
 ---
 
-## 2. الحدُّ المُثبَتُ في هذه الدفعة
+## 2. الحدودُ المُثبَتة
 
-**حدٌّ واحدٌ، مفروضٌ ببرهانٍ عبرَ مقبسٍ حقيقيّ: خدمةُ المطابقة.**
+**حدّانِ اليوم: خدمةُ المطابقة (`M1-03`) وحدُّ الطلبات (`M1-04` · الموجةُ الثانية).**
 
-الترتيبُ في `services/matching/src/http/app.ts`:
+الترتيبُ في الحدَّينِ واحدٌ لأنّ الوسيطَ واحدٌ: منذُ الموجةِ الأولى من `M1-04` صارَ
+الربطُ بـFastify كلُّه في
+[`packages/service-auth/src/fastify.ts`](../../packages/service-auth/src/fastify.ts)،
+ولا يبقى في الخدمةِ إلّا ثلاثةٌ تخصُّها: **جمهورُها** و**صلاحيّاتُها**
+و**مغلَّفُ خطئِها** — و`audience` و`denialBody` إلزاميّانِ عندَ الوسيطِ بلا قيمةٍ
+افتراضيّةٍ، فلا يخترعُ لخدمةٍ جمهورَ أخرى.
+
+### 2.0 لماذا الطلباتُ قبلَ الجغرافيا
+
+حدُّ الجغرافيا له ثلاثةُ عملاءَ أحدُهم في `services/drivers/`، وهي **محجوزةٌ لمالكٍ
+بشريٍّ** (`CLM-0004`). **وفرضُ حدٍّ قبلَ توقيعِ كلِّ عملائِه يعني `401` في الإنتاج**،
+فلا يُفرَضُ حدٌّ ما لم يُوقَّعْ كلُّ منادٍ له في الدفعةِ نفسِها. وعملاءُ الطلباتِ
+الأربعةُ كلُّهم خارجَ الحجزِ، فكانَ هذا الحدَّ **الممكنَ لا الأسهل**.
+
+### 2.1 الترتيبُ (واحدٌ في الحدَّين)
 
 1. `registerServiceIdentity(app, …)` **قبلَ** تسجيلِ أيِّ مسار.
 2. حارسٌ عندَ الإقلاعِ (`onRoute`): كلُّ مسارٍ يُسجَّلُ بلا `config.serviceIdentity`
@@ -46,7 +60,7 @@
    تُخبِرُ مهاجماً بما لا يحتاجُ أن يعرفَه.
 4. `/health` وحدَه مفتوحٌ بتصنيفٍ صريحٍ (`OPEN`): الإنفاذُ لا يُعمي المراقبة.
 
-### 2.1 مصفوفةُ القرار
+### 2.2 مصفوفةُ القرار
 
 | الحالة | الجواب | الرمز | لماذا |
 |---|---|---|---|
@@ -65,7 +79,7 @@
 سبباً يُعينُ مهاجماً على التمييزِ بين «لا مفتاح» و«توقيعٌ خاطئ». والسببُ الدقيقُ
 يُكتَبُ في السجلِّ التقنيِّ (`logReason`) لا في الجواب.
 
-### 2.2 البرهان
+### 2.3 برهانُ حدِّ المطابقة
 
 `packages/dispatch-e2e/src/__tests__/service-identity-enforcement.e2e.test.ts` —
 ثمانيةُ اختباراتٍ **عبرَ TCP** إلى الخدمةِ نفسِها التي تُشغّلُها بوّابةُ المرحلةِ
@@ -74,6 +88,26 @@
 
 وفي طبقةِ الخدمةِ: `services/matching/src/__tests__/http-service-identity.test.ts`
 (اثنا عشرَ اختباراً) للحالاتِ التي لا يبلغُها مقبسٌ بسهولةٍ كتعذُّرِ متجرِ الإعادة.
+
+### 2.4 برهانُ حدِّ الطلبات (`M1-04` · الموجةُ الثانية)
+
+- **الوسيطُ نفسُه:** `packages/service-auth/src/__tests__/fastify.test.ts` — أحدَ
+  عشرَ اختباراً على السلوكِ المشترَك (تصنيفٌ عندَ الإقلاع · مُغلَقٌ افتراضاً ·
+  `503` عندَ تعذُّرِ متجرِ الإعادة · السببُ يُسجَّلُ ولا يُعاد · قطعُ الاستعلام).
+- **الحدُّ نفسُه:** `services/orders/src/__tests__/http/service-identity.test.ts` —
+  أحدَ عشرَ اختباراً على جمهورِ الطلباتِ وصلاحيّاتِ مساراتِه ومغلَّفِ خطئِه.
+- **العملاءُ الأربعة:** لكلِّ عميلٍ اختبارٌ يقرأُ الترويسةَ على السلكِ نفسِه:
+  `services/customers/src/__tests__/http-order-intake.test.ts` ·
+  `services/dispatch/src/__tests__/http-order-engine.test.ts` ·
+  `services/negotiations/src/__tests__/outbound-ports.test.ts` (منفذانِ:
+  السعرُ المتفَقُ والقراءةُ الخدميّة).
+- **السلسلةُ كاملةً عبرَ مقابسَ حقيقيّة:** بوّاباتُ الخروجِ الخمسُ التي تُشغّلُ
+  محرّكَ الطلباتِ (`order-e2e` · `dispatch-e2e` · `driver-e2e` ·
+  `negotiation-e2e` · `reputation-e2e`) تبني الحدَّ **مفروضاً** وتُوقّعُ نداءاتِها،
+  فما تُبرهنُه هو السلسلةُ تعملُ موقَّعةً — لا حدٌّ خُفِّفَ لراحةِ الاختبار.
+
+**ما لا يُدَّعى هنا:** توقيعُ عملاءِ الطلباتِ لا يجعلُ `M1-04` منجَزاً. حدودُ
+`geography` و`identity` و`dispatch` **لم تُفرَضْ بعدُ**، والسجلُّ في §4 هو الرقمُ.
 
 ---
 
@@ -99,7 +133,7 @@
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -107,22 +141,28 @@
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
 | `services/customers/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
 | `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | مؤجَّل | حدُّ identity غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/customers/src/infrastructure/http-order-intake.ts` | orders | مؤجَّل | حدُّ orders غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/dispatch/src/infrastructure/http-order-engine.ts` | orders | مؤجَّل | حدُّ orders غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/customers/src/infrastructure/http-order-intake.ts` | orders | موقَّع | `services/customers/src/__tests__/http-order-intake.test.ts` · `CUSTOMERS_ORDERS_SCOPES` |
+| `services/dispatch/src/infrastructure/http-order-engine.ts` | orders | موقَّع | `services/dispatch/src/__tests__/http-order-engine.test.ts` · `DISPATCH_ORDERS_SCOPES` |
 | `services/drivers/src/infrastructure/http-zone-catalog.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
 | `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | مؤجَّل | حدُّ identity غيرُ مفروضٍ — بوّابةُ M1-04 |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | مؤجَّل | حدُّ orders غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch | مؤجَّل | حدُّ dispatch غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
+| `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع جزئيّاً | نداءُ الطلبِ موقَّعٌ (`NEGOTIATIONS_ORDER_LOOKUP_SCOPES`)؛ نداءُ التوزيعِ **مؤجَّلٌ** — حدُّ dispatch غيرُ مفروضٍ (M1-04 الموجةُ الرابعة) |
 
 <!-- coverage-ledger:end -->
 
-**قراءةُ العدد:** عميلانِ موقِّعانِ من أحدَ عشرَ. وهذا هو الرقمُ الصحيحُ الذي
-يُقال، لا «هويّةُ الخدمةِ مُنجَزةٌ».
+**قراءةُ العدد:** ستّةٌ موقِّعونَ من أحدَ عشرَ — اثنانِ إلى المطابقةِ وأربعةٌ إلى
+الطلبات — وأحدُ الستّةِ (`http-dispatch-offer.ts`) **يوقِّعُ أحدَ نداءَيه فقط**،
+لأنّه ينادي حدَّين: الطلباتِ (مفروضٌ) والتوزيعَ (غيرُ مفروضٍ بعد). وبقيَ خمسةٌ
+مؤجَّلونَ إلى حدودِ `geography` و`identity` و`dispatch`.
+
+وهذا هو الرقمُ الصحيحُ الذي يُقال، لا «هويّةُ الخدمةِ مُنجَزةٌ». والحارسُ يقرأُ
+`signRequest` في الملفِّ، فصفُّ «موقَّع جزئيّاً» يمرُّ عندَه لوجودِ التوقيعِ في
+الشفرةِ — **والقيدُ الباقي مُعلَنٌ في نصِّ الصفِّ نفسِه**، وهو ما يقرأُه إنسانٌ.
 
 ---
 
-## 5. صلاحيّاتُ حدِّ المطابقة
+## 5. صلاحيّاتُ الحدَّين
 
 النحوُ ثلاثيٌّ (`domain:resource:action`) كما في `auth-sdk`، والصلاحيّةُ تُطلَبُ
 بمقدارِ المسارِ لا بمقدارِ الخدمة:
@@ -136,6 +176,26 @@
 | `GET /matching/rulesets` | `matching:rulesets:read` |
 | `GET /matching/decisions/{id}` | `matching:decisions:read` |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح |
+
+### 5.1 حدُّ الطلبات (`M1-04`)
+
+| المسار | الصلاحيّةُ المطلوبة | المُنادي اليوم |
+|---|---|---|
+| `POST /orders` | `orders:intake:write` | customers |
+| `POST /orders/agreed-prices` | `orders:agreed-price:write` | negotiations |
+| `GET /orders/lookup` | `orders:order:read` | negotiations |
+| `GET /orders/{id}` | `orders:order:read` | قارئونَ خدميّون |
+| `GET /orders/{id}/history` | `orders:history:read` | قارئونَ خدميّون |
+| `POST /orders/{id}/transitions` | `orders:transition:write` | dispatch |
+| `POST /orders/{id}/assignments` | `orders:assignment:write` | dispatch |
+| `POST /orders/{id}/assignments/{assignmentId}/resolution` | `orders:assignment:write` | dispatch |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+**وقيدٌ يُقال هنا لا يُخفى:** `GET /orders/lookup` يقرأُ `order_public_id` من
+**سلسلةِ الاستعلامِ**، والربطُ لا يشملُها
+([`ADR-021` §4](../15-decisions/ADR-021-service-token-replay-policy.md)) — فرمزٌ
+وُقِّعَ لقراءةِ طلبٍ صالحٌ لقراءةِ غيرِه. الخطرُ مسجَّلٌ **RISK-0026**، ومُخفَّفٌ
+اليومَ بعمرٍ قصيرٍ للرمزِ وحرقِ `jti`، وعلاجُه الجذريُّ عندَ `M1-05`.
 
 وهذه صلاحيّاتُ **خدمةٍ** لا صلاحيّاتُ مستخدم. نموذجُ التخويلِ الكاملُ (خدمةٌ ·
 عمليّةٌ · موردٌ · نطاقٌ · أثرٌ) عنصرٌ مستقلٌّ هو `M1-05`، ولا يُدَّعى أنّ

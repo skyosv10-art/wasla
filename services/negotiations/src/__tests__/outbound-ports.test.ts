@@ -10,12 +10,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NegotiationError } from "../domain/errors.js";
+import { createServiceRequestSigner, SERVICE_AUTH_HEADER, ServiceAuthKeyRegistry } from "@wasla/service-auth";
+
 import {
   agreedPriceIdempotencyKey,
   HttpAgreedPricePort,
+  NEGOTIATIONS_ORDERS_SCOPES,
   ORDER_AGREED_PRICES_PATH,
 } from "../infrastructure/http-agreed-price.js";
-import { HttpDispatchOfferPort } from "../infrastructure/http-dispatch-offer.js";
+import {
+  HttpDispatchOfferPort,
+  NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
+} from "../infrastructure/http-dispatch-offer.js";
 import {
   configuredAgreedPrice,
   configuredDispatchOffers,
@@ -25,6 +31,28 @@ import {
   UnconfiguredAgreedPricePort,
   UnconfiguredDispatchOfferPort,
 } from "../infrastructure/runtime.js";
+
+/** موقّع اختباري حقيقي: النداء يجب أن يحمل ترويسة يقبلها حد الطلبات (M1-04). */
+const TEST_KEYS = new ServiceAuthKeyRegistry({
+  keys: [{ kid: "test", secret: "negotiations-orders-secret-01234", status: "active" }],
+  activeKid: "test",
+});
+
+const TEST_SIGNER = createServiceRequestSigner({
+  serviceName: "negotiations",
+  audience: "orders",
+  keys: TEST_KEYS,
+  scopes: NEGOTIATIONS_ORDERS_SCOPES,
+});
+
+/** موقّع القراءة الخدميّة: صلاحية قراءةِ طلبٍ وحدَها (M1-04). */
+const TEST_LOOKUP_SIGNER = createServiceRequestSigner({
+  serviceName: "negotiations",
+  audience: "orders",
+  keys: TEST_KEYS,
+  scopes: NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
+});
+
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -61,6 +89,7 @@ const json = (body: unknown, status = 200): Response =>
 
 const offerPort = (): HttpDispatchOfferPort =>
   new HttpDispatchOfferPort({
+    signRequest: TEST_LOOKUP_SIGNER,
     dispatchBaseUrl: "http://dispatch.test",
     ordersBaseUrl: "http://orders.test/",
   });
@@ -98,6 +127,15 @@ describe("منفذ عروض التوزيع الحقيقي", () => {
     expect(offerUrl).toBe(`http://dispatch.test/dispatch/offers/${OFFER_ID}`);
     // الشرطة الأخيرة في العنوان المُهيّأ تُقطع، ولا يصير المسار `//orders`.
     expect(orderUrl).toBe("http://orders.test/orders/lookup?order_public_id=ORD-0000000001");
+
+    // M1-04: نداء الطلب موقّع ونداء التوزيع ليس كذلك — حدُّ التوزيع لم يُفرَض بعد،
+    // ورمزٌ جمهورُه `orders` يُرفَض عنده على أي حال، فإرساله إليه توسيعُ أثرٍ بلا فائدة.
+    const [, offerInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [, orderInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect((orderInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(
+      /^wsvc2\./u,
+    );
+    expect((offerInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toBeUndefined();
   });
 
   it("لا يرسل مفتاح تكرار على قراءة", async () => {
@@ -191,6 +229,7 @@ describe("منفذ عروض التوزيع الحقيقي", () => {
     );
 
     const port = new HttpDispatchOfferPort({
+      signRequest: TEST_LOOKUP_SIGNER,
       dispatchBaseUrl: "http://dispatch.test",
       ordersBaseUrl: "http://orders.test",
       timeoutMs: 5,
@@ -233,7 +272,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ order_public_id: "ORD-0000000001" }, 201));
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(
+    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(
       handOffInput,
       { traceId: "trace-1" },
     );
@@ -247,6 +286,8 @@ describe("منفذ تسليم السعر الحقيقي", () => {
       "idempotency-key": agreedPriceIdempotencyKey(THREAD_ID),
       "x-request-id": "trace-1",
     });
+    // M1-04: حد الطلبات يفرض الهوية، فنداء بلا ترويسة يُرَدّ 401.
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
     expect(JSON.parse(options.body as string)).toEqual({
       order_public_id: "ORD-0000000001",
       negotiation_id: THREAD_ID,
@@ -260,7 +301,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
   it("مفتاح التفرّد لا يتغيّر برقم المحاولة — وإلّا سُجّل سعرٌ مرّتين", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({}, 200));
     vi.stubGlobal("fetch", fetchMock);
-    const port = new HttpAgreedPricePort({ baseUrl: "http://orders.test" });
+    const port = new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER });
 
     await port.handOff(handOffInput);
     await port.handOff({ ...handOffInput, attemptNo: 4 });
@@ -279,7 +320,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
   it("يقرأ 200 قبولاً كما يقرأ 201: إعادةٌ ناجحة ليست عطلاً", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json({}, 200)));
 
-    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(
+    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(
       handOffInput,
     );
 
@@ -290,7 +331,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
     const fetchMock = vi.fn().mockResolvedValue(json({}, 201));
     vi.stubGlobal("fetch", fetchMock);
 
-    await new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(handOffInput, {
+    await new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(handOffInput, {
       traceId: null,
     });
 
@@ -305,7 +346,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
         vi.fn().mockResolvedValue(json({ code: "ORDER_PRICE_NOT_NEGOTIABLE" }, status)),
       );
 
-      const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(
+      const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(
         handOffInput,
       );
 
@@ -320,7 +361,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
   it("رفضٌ بلا رمزٍ مقروء يبقى رفضاً: قرارٌ وقع، ورمزه تفصيل", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("not json", { status: 422 })));
 
-    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(
+    const result = await new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(
       handOffInput,
     );
 
@@ -331,13 +372,13 @@ describe("منفذ تسليم السعر الحقيقي", () => {
     for (const status of [500, 503, 404]) {
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status })));
       await expect(
-        new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(handOffInput),
+        new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(handOffInput),
       ).rejects.toBeInstanceOf(Error);
     }
 
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     await expect(
-      new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(handOffInput),
+      new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(handOffInput),
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -345,7 +386,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 503 })));
 
     await expect(
-      new HttpAgreedPricePort({ baseUrl: "http://orders.test" }).handOff(handOffInput),
+      new HttpAgreedPricePort({ baseUrl: "http://orders.test", signRequest: TEST_SIGNER }).handOff(handOffInput),
     ).rejects.not.toBeInstanceOf(NegotiationError);
   });
 });
@@ -353,11 +394,24 @@ describe("منفذ تسليم السعر الحقيقي", () => {
 describe("توصيل المنافذ الصادرة من البيئة", () => {
   const silent = (): void => undefined;
 
+  /** بيئة كاملة: عنوانان ومفاتيح هوية خدمة — لأن المنفذ الحقيقي صار موقِّعاً. */
+  const fullEnv = {
+    DISPATCH_SERVICE_URL: "http://dispatch.test",
+    ORDERS_SERVICE_URL: "http://orders.test",
+    WASLA_SERVICE_AUTH_KEYS: "test:active:negotiations-orders-secret-01234",
+    WASLA_SERVICE_AUTH_ACTIVE_KID: "test",
+  };
+
+  it("عنوانٌ موصولٌ بلا مفاتيح ⇒ إخفاقٌ عند الإقلاع لا نداءٌ يُرَدّ 401 (M1-04)", () => {
+    // منفذٌ حقيقيٌّ بلا موقّع كان سيُنادي بلا هوية، فيُقرأ الردُّ عطلَ محرّكِ
+    // الطلبات لا نقصَ إعدادٍ هنا. والرمي عند التوصيل يسمّي العلة في موضعها.
+    expect(() =>
+      configuredAgreedPrice({ ORDERS_SERVICE_URL: "http://orders.test" }, silent),
+    ).toThrow(/WASLA_SERVICE_AUTH_KEYS/u);
+  });
+
   it("العنوانان موجودان ⇒ المنفذان الحقيقيان", () => {
-    const env = {
-      DISPATCH_SERVICE_URL: "http://dispatch.test",
-      ORDERS_SERVICE_URL: "http://orders.test",
-    };
+    const env = fullEnv;
 
     expect(configuredDispatchOffers(env, silent)).toBeInstanceOf(HttpDispatchOfferPort);
     expect(configuredAgreedPrice(env, silent)).toBeInstanceOf(HttpAgreedPricePort);

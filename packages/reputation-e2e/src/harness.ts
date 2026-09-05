@@ -44,7 +44,13 @@ import {
   InMemoryOutbox as InMemoryOrderOutbox,
   transitionRule,
   type OrderDomainEvent,
+  ORDER_SCOPES,
 } from "@wasla/orders-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import {
   consumeSourceEvent,
   createDirectOutboxDrainRunner,
@@ -79,6 +85,8 @@ const DROPOFF_ZONE = "77777777-7777-4777-8777-777777777777";
 export interface GateContext {
   /** أصلُ محرّكِ الطلب — مُستمعٌ حقيقيٌّ على منفذٍ يمنحه النظام. */
   readonly ordersUrl: string;
+  /** يُوقّع نداءات البوابة المباشرة إلى المحرّك (M1-04). */
+  readonly signEngine: (method: string, path: string) => Record<string, string>;
   /** أصلُ خدمةِ السمعة — مُستمعٌ حقيقيٌّ آخر. */
   readonly reputationUrl: string;
   /** ساعةُ المحرّك، كي تسير الوقائعُ بترتيبٍ مقروءٍ في سجلّ التدقيق. */
@@ -99,6 +107,17 @@ export interface GateContext {
  * يستعملهما `http/server.ts` في كلِّ خدمة؛ الفرقُ الوحيدُ هو المستودعُ خلفهما.
  * ولو رفعنا هنا مِشْبكاً خاصّاً بالاختبار لكانت البوابةُ تُثبت تركيباً لا يوجد.
  */
+/** مادةُ مفاتيح البوابة (M1-04). سرٌّ واحد: المُبرهَن هنا الفرضُ لا إدارةُ المفاتيح. */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 export async function startGate(): Promise<GateContext> {
   // --- محرّكُ الطلب ---------------------------------------------------------
   const engineClock = new FixedClock(ENGINE_START_AT);
@@ -113,6 +132,12 @@ export async function startGate(): Promise<GateContext> {
     }),
     health: { persistence: "memory" },
     logger: false,
+    // M1-04: حدُّ الطلبات يفرض هوية الخدمة، والبوابةُ تُوقّع نداءاتها بدل أن
+    // يُخفَّف الحدُّ لراحتها.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await ordersApp.listen({ port: 0, host: "127.0.0.1" });
   const ordersUrl = `http://127.0.0.1:${(ordersApp.server.address() as AddressInfo).port}`;
@@ -130,6 +155,12 @@ export async function startGate(): Promise<GateContext> {
 
   return {
     ordersUrl,
+    signEngine: createServiceRequestSigner({
+      serviceName: "reputation-exit-gate",
+      audience: "orders",
+      keys: gateKeys(),
+      scopes: Object.values(ORDER_SCOPES),
+    }),
     reputationUrl,
     engineClock,
     reputation,
@@ -185,6 +216,8 @@ export async function callEngine(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...gate.signEngine(init.method, init.path.split("?")[0] ?? init.path),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.customerScope === undefined ? {} : { "x-customer-public-id": init.customerScope }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),

@@ -33,10 +33,15 @@
  * نجحت وسقط جوابها في الطريق. وبالمفتاح الثابت يُجيب المحرّك `200` فيُقرأ ذاك قبولاً.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import type { AgreedPriceHandoffResult, AgreedPricePort } from "../ports.js";
 
 /** مسار تسجيل السعر المتَّفق عليه في محرّك الطلب (MR 5/6). */
 export const ORDER_AGREED_PRICES_PATH = "/orders/agreed-prices";
+
+/** الصلاحيات التي يحتاجها هذا العميل على حد الطلبات، لا أكثر. */
+export const NEGOTIATIONS_ORDERS_SCOPES: readonly string[] = ["orders:agreed-price:write"];
 
 /** مفتاح التفرّد: خيطٌ واحد ⇒ مفتاحٌ واحد، مهما تكرّرت المحاولات. */
 export const agreedPriceIdempotencyKey = (threadId: string): string =>
@@ -46,15 +51,23 @@ export interface HttpAgreedPriceOptions {
   /** أصلُ محرّك الطلب (8087). بلا مسار ولا شرطة أخيرة. */
   readonly baseUrl: string;
   readonly timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (M1-04): القيمة
+   * الافتراضية «بلا توقيع» كانت ستجعل نداءً يُنسى توقيعه ينجح في كل اختبار
+   * ويُرَدّ 401 في الإنتاج وحده، وهو أسوأ موضع لاكتشاف نسيان.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
 
 export class HttpAgreedPricePort implements AgreedPricePort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
 
   constructor(options: HttpAgreedPriceOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
   }
 
   async handOff(
@@ -79,6 +92,8 @@ export class HttpAgreedPricePort implements AgreedPricePort {
           "content-type": "application/json",
           accept: "application/json",
           "idempotency-key": agreedPriceIdempotencyKey(input.threadId),
+          // الرمز مربوط بهذه الطريقة وهذا المسار ويُحرق عند أول استعمال.
+          ...this.signRequest("POST", ORDER_AGREED_PRICES_PATH),
           ...(options?.traceId ? { "x-request-id": options.traceId } : {}),
         },
         body: JSON.stringify({

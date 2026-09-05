@@ -581,6 +581,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../../services/orders
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -608,6 +611,9 @@ importers:
       '@wasla/reputation-service':
         specifier: workspace:*
         version: link:../../services/reputation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -682,6 +688,9 @@ importers:
       '@wasla/contracts-customer':
         specifier: workspace:*
         version: link:../../packages/contracts/customer
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -911,6 +920,9 @@ importers:
       '@wasla/contracts-negotiation':
         specifier: workspace:*
         version: link:../../packages/contracts/negotiation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -939,6 +951,9 @@ importers:
       '@wasla/contracts-order':
         specifier: workspace:*
         version: link:../../packages/contracts/order
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -955,6 +970,9 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

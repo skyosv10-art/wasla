@@ -102,6 +102,7 @@ import {
   InMemoryOutbox as InMemoryCustomerOutbox,
   SystemClock as CustomerClock,
   type UseCaseDeps,
+  CUSTOMERS_ORDERS_SCOPES,
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
@@ -113,6 +114,7 @@ import {
   SequentialIdGenerator as DispatchIdGenerator,
   StaticRulesProvider,
   type DispatchRules,
+  DISPATCH_ORDERS_SCOPES,
 } from "@wasla/dispatch-service";
 import {
   createDriverApp,
@@ -161,6 +163,7 @@ import {
   InMemoryOrderRepository,
   InMemoryOutbox as InMemoryOrderOutbox,
   SystemClock as OrderClock,
+  ORDER_SCOPES,
 } from "@wasla/orders-service";
 import {
   createServiceRequestSigner,
@@ -200,6 +203,20 @@ function gateSigner(serviceName: string, scopes: readonly string[]) {
   return createServiceRequestSigner({
     serviceName,
     audience: "matching",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
+/**
+ * M1-04: the order engine enforces service identity too, and a token minted for
+ * `matching` is refused by `orders` — the audience is what makes the two
+ * boundaries separate rather than one shared door.
+ */
+function ordersSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "orders",
     keys: gateServiceAuthKeys(),
     scopes,
   });
@@ -381,6 +398,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     }),
     health: { persistence: "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await ordersApp.listen({ port: 0, host: "127.0.0.1" });
   const ordersUrl = `http://127.0.0.1:${(ordersApp.server.address() as AddressInfo).port}`;
@@ -394,7 +415,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       idGen: new CustomerIdGenerator(),
       identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
       geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
-      orderIntake: new HttpOrderIntakePort({ baseUrl: ordersUrl }),
+      orderIntake: new HttpOrderIntakePort({
+        baseUrl: ordersUrl,
+        signRequest: ordersSigner("customers", CUSTOMERS_ORDERS_SCOPES),
+      }),
     } satisfies UseCaseDeps,
     health: { persistence: "memory", orderIntake: "configured" },
     logger: false,
@@ -476,7 +500,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
         baseUrl: matchingUrl,
         signRequest: gateSigner("dispatch", DISPATCH_MATCHING_SCOPES),
       }),
-      orders: new HttpOrderEnginePort({ baseUrl: ordersUrl }),
+      orders: new HttpOrderEnginePort({
+        baseUrl: ordersUrl,
+        signRequest: ordersSigner("dispatch", DISPATCH_ORDERS_SCOPES),
+      }),
       rules: new StaticRulesProvider(rules),
       clock,
       ids: new DispatchIdGenerator(),
@@ -559,8 +586,19 @@ export const callGeography = (gate: GateContext, init: CallInit): Promise<HttpRe
   call(gate.geographyUrl, init);
 export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.customerUrl, init);
+/** Direct engine calls are signed too (M1-04) — same reason as matching below. */
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.ordersUrl, init);
+  call(gate.ordersUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...ordersSigner("driver-exit-gate", Object.values(ORDER_SCOPES))(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+      ),
+      ...(init.headers ?? {}),
+    },
+  });
 /**
  * Every direct call to matching in this suite is signed (M1-03). The seed helpers that
  * plant candidacy rows are service-to-service traffic like any other, and matching now

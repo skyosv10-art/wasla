@@ -83,6 +83,7 @@ import {
   InMemoryOutbox as InMemoryCustomerOutbox,
   SystemClock as CustomerClock,
   type UseCaseDeps,
+  CUSTOMERS_ORDERS_SCOPES,
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
@@ -100,6 +101,7 @@ import {
   type AnyDispatchEvent,
   type DispatchRules,
   type DispatchRunner,
+  DISPATCH_ORDERS_SCOPES,
 } from "@wasla/dispatch-service";
 import {
   createGeographyApp,
@@ -137,6 +139,7 @@ import {
   InMemoryOrderRepository,
   InMemoryOutbox as InMemoryOrderOutbox,
   SystemClock as OrderClock,
+  ORDER_SCOPES,
 } from "@wasla/orders-service";
 import {
   createServiceRequestSigner,
@@ -255,6 +258,8 @@ export interface GateContext {
   readonly geographyUrl: string;
   readonly customerUrl: string;
   readonly ordersUrl: string;
+  /** Signs the gate's own direct calls to the engine (M1-04). */
+  readonly engineIdentity: { sign: (method: string, path: string) => Record<string, string> };
   readonly matchingUrl: string;
   readonly dispatchUrl: string;
   /** The injected clock — the only way time moves in this suite. */
@@ -321,6 +326,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   const geographyUrl = `http://127.0.0.1:${(geoApp.server.address() as AddressInfo).port}`;
 
   // --- the Order Engine: in-memory by declaration (see the header) ----------
+  // M1-04: the engine now enforces service identity on every business route,
+  // so the gate signs the two production adapters that call it and its own
+  // direct calls. Same key material as matching: one gate, one secret.
+  const orderServiceAuthKeys = gateKeys(GATE_SERVICE_AUTH_SECRET);
   const orderOutbox = new InMemoryOrderOutbox();
   const ordersApp = createOrderApp({
     runner: createOrderDirectRunner({
@@ -332,6 +341,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     }),
     health: { persistence: "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: orderServiceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await ordersApp.listen({ port: 0, host: "127.0.0.1" });
   const ordersUrl = `http://127.0.0.1:${(ordersApp.server.address() as AddressInfo).port}`;
@@ -345,7 +358,15 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       idGen: new CustomerIdGenerator(),
       identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
       geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
-      orderIntake: new HttpOrderIntakePort({ baseUrl: ordersUrl }),
+      orderIntake: new HttpOrderIntakePort({
+        baseUrl: ordersUrl,
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "orders",
+          keys: orderServiceAuthKeys,
+          scopes: CUSTOMERS_ORDERS_SCOPES,
+        }),
+      }),
     } satisfies UseCaseDeps,
     health: { persistence: "memory", orderIntake: "configured" },
     logger: false,
@@ -400,7 +421,15 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       scopes: DISPATCH_MATCHING_SCOPES,
     }),
   });
-  const ordersPort = new HttpOrderEnginePort({ baseUrl: ordersUrl });
+  const ordersPort = new HttpOrderEnginePort({
+    baseUrl: ordersUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "dispatch",
+      audience: "orders",
+      keys: orderServiceAuthKeys,
+      scopes: DISPATCH_ORDERS_SCOPES,
+    }),
+  });
   const rulesProvider = new StaticRulesProvider(rules);
   let dispatchRunner: DispatchRunner;
   let readDispatchEvents: () => Promise<AnyDispatchEvent[]>;
@@ -445,6 +474,14 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     geographyUrl,
     customerUrl,
     ordersUrl,
+    engineIdentity: {
+      sign: createServiceRequestSigner({
+        serviceName: "dispatch-exit-gate",
+        audience: "orders",
+        keys: orderServiceAuthKeys,
+        scopes: Object.values(ORDER_SCOPES),
+      }),
+    },
     matchingUrl,
     dispatchUrl,
     clock,
@@ -517,8 +554,16 @@ export const callIdentity = (gate: GateContext, init: CallInit): Promise<HttpRes
   call(gate.identityUrl, init);
 export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.customerUrl, init);
+/** Engine calls are signed by default (M1-04) — same reason as matching above. */
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.ordersUrl, init);
+  call(gate.ordersUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...gate.engineIdentity.sign(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 /**
  * Matching calls are signed by default (M1-03): every scenario that talks to matching
  * describes its own subject, not the identity plumbing. The enforcement scenario uses

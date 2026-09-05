@@ -86,6 +86,12 @@ import { recordAgreedPrice } from "../use-cases/record-agreed-price.js";
 
 import { sendOrderError } from "./errors.js";
 import {
+  ORDER_SCOPES,
+  registerServiceIdentity,
+  type OrderRouteConfig,
+  type OrderServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   assertIdempotencyKeyAgreement,
   assertRequestIdLength,
   requireCustomerScope,
@@ -118,6 +124,23 @@ export interface CreateOrderAppOptions {
    * outage.
    */
   health?: OrderHealthDescriptor;
+  /**
+   * فرض هوية الخدمة على هذا الحد. **إلزامي بلا قيمة افتراضية بقصد**: القيمة
+   * الافتراضية كانت ستجعل نسيان التركيب في جذر ما محرّكَ طلبات مفتوحاً يمر كل
+   * اختباراته — وهي بذاتها الثغرة التي تسدها هذه الدفعة. فمن أراد حداً بلا فرض
+   * فليكتب ذلك صراحة في جذر تركيبه، ولا موضع في المستودع يكتبه.
+   */
+  serviceIdentity: OrderServiceIdentityOptions;
+}
+
+/** الصلاحيات المعلنة على مسارات الطلبات (domain:resource:action). */
+export const ORDER_ROUTE_SCOPES = ORDER_SCOPES;
+
+/** `/health` وحده: لا يقرأ ولا يكتب بيانات مجالية. */
+const OPEN: OrderRouteConfig = { serviceIdentity: "open" };
+
+function scoped(...scopes: readonly string[]): OrderRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 const DEFAULT_HEALTH: OrderHealthDescriptor = { persistence: "memory" };
@@ -189,10 +212,13 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     sendOrderError(reply, error, request.id);
   });
 
+  // قبل المسارات: كي يرى حاجز التصنيف كل مسار يُسجّل بعده.
+  registerServiceIdentity(app, options.serviceIdentity);
+
   // --- ops -----------------------------------------------------------------
 
   // `ok` only with durable storage, per the contract's /health description.
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({
       status: health.persistence === "postgres" ? "ok" : "degraded",
       service: "orders-service",
@@ -202,7 +228,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
 
   // --- intake --------------------------------------------------------------
 
-  app.post("/orders/intake", async (request, reply) => {
+  app.post("/orders/intake", { config: scoped(ORDER_SCOPES.intakeWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -227,7 +253,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
   // scope here would invent authorization semantics for a boundary that carries
   // no customer identity and would make the public order id unusable across
   // services.
-  app.post("/orders/agreed-prices", async (request, reply) => {
+  app.post("/orders/agreed-prices", { config: scoped(ORDER_SCOPES.agreedPriceWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -253,7 +279,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
 
   // This summary is intentionally registered before `/:orderId`: it is a
   // service resource, not an order whose literal id happens to be "lookup".
-  app.get("/orders/lookup", async (request, reply) => {
+  app.get("/orders/lookup", { config: scoped(ORDER_SCOPES.orderRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const orderPublicId = (request.query as { order_public_id?: unknown }).order_public_id;
@@ -270,7 +296,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply.status(200).send(orderSummaryToWire(order));
   });
 
-  app.get("/orders/:orderId", async (request, reply) => {
+  app.get("/orders/:orderId", { config: scoped(ORDER_SCOPES.orderRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const scope = requireCustomerScope(request.headers, traceId);
@@ -282,7 +308,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply.status(200).send(orderToWire(detail.order, detail.activeAssignment));
   });
 
-  app.get("/orders/:orderId/history", async (request, reply) => {
+  app.get("/orders/:orderId/history", { config: scoped(ORDER_SCOPES.historyRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const scope = requireCustomerScope(request.headers, traceId);
@@ -300,7 +326,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
 
   // --- transitions ---------------------------------------------------------
 
-  app.post("/orders/:orderId/transitions", async (request, reply) => {
+  app.post("/orders/:orderId/transitions", { config: scoped(ORDER_SCOPES.transitionWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -324,7 +350,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
 
   // --- assignments ---------------------------------------------------------
 
-  app.post("/orders/:orderId/assignments", async (request, reply) => {
+  app.post("/orders/:orderId/assignments", { config: scoped(ORDER_SCOPES.assignmentWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -343,7 +369,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply.status(201).send(assignmentToWire(assignment));
   });
 
-  app.patch("/orders/:orderId/assignments/:assignmentId", async (request, reply) => {
+  app.patch("/orders/:orderId/assignments/:assignmentId", { config: scoped(ORDER_SCOPES.assignmentWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     // Required for symmetry with every other write, even though the resolution

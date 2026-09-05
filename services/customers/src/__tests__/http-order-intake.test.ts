@@ -12,13 +12,31 @@
  * (MR 6/6), which drives this same adapter against `createOrderApp`.
  */
 
+import { createServiceRequestSigner, SERVICE_AUTH_HEADER, ServiceAuthKeyRegistry } from "@wasla/service-auth";
+
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { isOrderIntakeFailure, OrderIntakeFailure } from "../domain/errors.js";
-import { HttpOrderIntakePort, ORDER_INTAKE_PATH } from "../infrastructure/http-order-intake.js";
+import {
+  CUSTOMERS_ORDERS_SCOPES,
+  HttpOrderIntakePort,
+  ORDER_INTAKE_PATH,
+} from "../infrastructure/http-order-intake.js";
 import type { OrderIntakeRequestInput } from "../ports.js";
+
+/** موقّع اختباري حقيقي: النداء يجب أن يحمل ترويسة يقبلها حد الطلبات (M1-04). */
+const TEST_SIGNER = createServiceRequestSigner({
+  serviceName: "customers",
+  audience: "orders",
+  keys: new ServiceAuthKeyRegistry({
+    keys: [{ kid: "test", secret: "customers-orders-secret-01234567", status: "active" }],
+    activeKid: "test",
+  }),
+  scopes: CUSTOMERS_ORDERS_SCOPES,
+});
+
 
 // ---------------------------------------------------------------------------
 // A scripted engine on a real port
@@ -146,7 +164,7 @@ async function reasonOf(promise: Promise<unknown>): Promise<string | null> {
 describe("HttpOrderIntakePort — the handover on the wire", () => {
   it("posts the published payload to /orders/intake and returns the engine's reference", async () => {
     const engine = await startEngine({ status: 201, body: ACCEPTED });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     const result = await port.submitOrderRequest(intakeInput());
 
@@ -167,12 +185,15 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("forwards the customer's idempotency key, never a new one", async () => {
     const engine = await startEngine({ status: 201, body: ACCEPTED });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await port.submitOrderRequest(intakeInput({ idempotencyKey: "customer-key-9" }));
 
     const call = engine.received[0]!;
     expect(call.headers["idempotency-key"]).toBe("customer-key-9");
+    // M1-04: حد الطلبات يفرض الهوية، فنداء بلا ترويسة يُرَدّ 401 في الإنتاج وحده
+    // لو لم يُثبَّت هنا. والترويسة مربوطة بهذه الطريقة وهذا المسار.
+    expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
     // The body carries the same key: the engine rejects a disagreement (400), so
     // the two must come from one source.
     expect(call.body.idempotency_key).toBe("customer-key-9");
@@ -180,7 +201,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("forwards the trace id when there is one, and sends no header when there is not", async () => {
     const engine = await startEngine({ status: 201, body: ACCEPTED });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await port.submitOrderRequest(intakeInput(), { traceId: "trace-abc" });
     await port.submitOrderRequest(intakeInput());
@@ -191,7 +212,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("treats 200 as success: it is the engine replaying the same key, not a conflict", async () => {
     const engine = await startEngine({ status: 200, body: ACCEPTED });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(port.submitOrderRequest(intakeInput())).resolves.toEqual({
       orderPublicId: "ORD-0000000042",
@@ -204,7 +225,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 422,
       body: { code: "ORDER_ZONE_NOT_SERVED", message: "…", trace_id: "t" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_REJECTED",
@@ -216,7 +237,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 409,
       body: { code: "ORDER_IDEMPOTENCY_KEY_REUSED", message: "…", trace_id: "t" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     const reason = await reasonOf(port.submitOrderRequest(intakeInput()));
     expect(reason).toBe("CUSTOMER_ORDER_INTAKE_REJECTED");
@@ -227,7 +248,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 422,
       body: { code: "ORDER_PRICE_MODE_CONFLICT", message: "…", trace_id: "t" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(port.submitOrderRequest(intakeInput())).rejects.toThrow(
       /ORDER_PRICE_MODE_CONFLICT/,
@@ -239,7 +260,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 400,
       body: { code: "ORDER_VALIDATION_FAILED", message: "…", trace_id: "t" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -248,7 +269,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("maps 404 to unavailable: a path the engine does not publish is our mistake", async () => {
     const engine = await startEngine({ status: 404, body: {} });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -260,7 +281,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 503,
       body: { code: "ORDER_ENGINE_UNAVAILABLE", message: "…", trace_id: "t" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -269,7 +290,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("maps 500 to unavailable", async () => {
     const engine = await startEngine({ status: 500, body: "boom" });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -278,7 +299,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("times out into TIMEOUT — distinct from unavailable, because the order may exist", async () => {
     const engine = await startEngine({ hang: true });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, timeoutMs: 60 });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, timeoutMs: 60, signRequest: TEST_SIGNER });
 
     const reason = await reasonOf(port.submitOrderRequest(intakeInput()));
     expect(reason).toBe("CUSTOMER_ORDER_INTAKE_TIMEOUT");
@@ -291,7 +312,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
     const baseUrl = engine.baseUrl;
     await engine.close();
     servers.length = 0;
-    const port = new HttpOrderIntakePort({ baseUrl, timeoutMs: 200 });
+    const port = new HttpOrderIntakePort({ baseUrl, timeoutMs: 200, signRequest: TEST_SIGNER });
 
     const error = await port
       .submitOrderRequest(intakeInput())
@@ -303,7 +324,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("refuses an acceptance with no usable reference", async () => {
     const engine = await startEngine({ status: 201, body: { accepted_at: "2026-08-21T18:00:00Z" } });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -315,7 +336,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
       status: 201,
       body: { order_public_id: "42", accepted_at: "2026-08-21T18:00:00Z" },
     });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -324,7 +345,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("refuses an acceptance whose body is not JSON", async () => {
     const engine = await startEngine({ status: 201, body: "<html>proxy error</html>" });
-    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl });
+    const port = new HttpOrderIntakePort({ baseUrl: engine.baseUrl, signRequest: TEST_SIGNER });
 
     await expect(reasonOf(port.submitOrderRequest(intakeInput()))).resolves.toBe(
       "CUSTOMER_ORDER_INTAKE_UNAVAILABLE",
@@ -333,7 +354,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
 
   it("tolerates a trailing slash in the configured base url", async () => {
     const engine = await startEngine({ status: 201, body: ACCEPTED });
-    const port = new HttpOrderIntakePort({ baseUrl: `${engine.baseUrl}/` });
+    const port = new HttpOrderIntakePort({ baseUrl: `${engine.baseUrl}/`, signRequest: TEST_SIGNER });
 
     await port.submitOrderRequest(intakeInput());
 

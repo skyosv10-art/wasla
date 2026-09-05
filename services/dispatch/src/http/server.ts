@@ -17,7 +17,7 @@ import {
   StaticRulesProvider,
 } from "../infrastructure/in-memory.js";
 import { DISPATCH_MATCHING_SCOPES, HttpMatchingPort } from "../infrastructure/http-matching.js";
-import { HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
+import { DISPATCH_ORDERS_SCOPES, HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
 import type { Clock, DispatchDependencies, IdGenerator, MatchingPort, OrderEnginePort } from "../ports.js";
 import { PostgresDispatchUnitOfWork } from "../infrastructure/drizzle/transaction.js";
 import { createDirectRunner, PostgresDispatchRunner, type DispatchRunner } from "../runner.js";
@@ -83,13 +83,31 @@ function matchingSigner(): ServiceRequestSigner {
   });
 }
 
+/**
+ * موقّع النداءات الصادرة إلى محرّك الطلبات (M1-04).
+ *
+ * الحجة هي حجة موقّع المطابقة نفسها: المفاتيح من البيئة بلا قيمة افتراضية،
+ * والجمهور `orders` لا `matching` — فرمزٌ لحدٍّ لا يُقبل على حدٍّ آخر.
+ */
+function ordersSigner(): ServiceRequestSigner {
+  return createServiceRequestSigner({
+    serviceName: "dispatch",
+    audience: "orders",
+    keys: keyRegistryFromEnv(process.env),
+    scopes: DISPATCH_ORDERS_SCOPES,
+  });
+}
+
 function productionPorts(): { matching: MatchingPort; orders: OrderEnginePort } {
   return {
     matching: new HttpMatchingPort({
       baseUrl: process.env.MATCHING_BASE_URL ?? `http://localhost:${MATCHING_SERVICE_PORT}`,
       signRequest: matchingSigner(),
     }),
-    orders: new HttpOrderEnginePort({ baseUrl: process.env.ORDERS_BASE_URL ?? "http://localhost:8087" }),
+    orders: new HttpOrderEnginePort({
+      baseUrl: process.env.ORDERS_BASE_URL ?? "http://localhost:8087",
+      signRequest: ordersSigner(),
+    }),
   };
 }
 

@@ -96,6 +96,8 @@ import {
   StaticRulesProvider,
   type DispatchRules,
   DISPATCH_ORDERS_SCOPES,
+  DISPATCH_SCOPES,
+  DISPATCH_SERVICE_AUDIENCE,
 } from "@wasla/dispatch-service";
 import {
   createGeographyApp,
@@ -442,6 +444,13 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
 
   // --- dispatch: real service, PRODUCTION adapters to matching and the engine
   const dispatchApp = createDispatchApp({
+    // `M1-04` · الموجةُ الرابعة: الحدُّ مفروضٌ هنا كما في الإنتاجِ، ومنفذُ
+    // التفاوضِ الحقيقيُّ (`configuredDispatchOffers` أدناه) هو الذي يوقّعُ
+    // نداءَه إليه — فسلسلةُ «تفاوضٌ → توزيعٌ» تُقاسُ موقَّعةً لا مُدَّعاةً.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
     runner: createDispatchDirectRunner({
       ...createInMemoryStores(),
       matching: new HttpMatchingPort({
@@ -652,7 +661,19 @@ export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpRes
     },
   });
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.dispatchUrl, init);
+  call(gate.dispatchUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...createServiceRequestSigner({
+        serviceName: "e2e-harness",
+        audience: DISPATCH_SERVICE_AUDIENCE,
+        keys: gateServiceAuthKeys(),
+        scopes: Object.values(DISPATCH_SCOPES),
+      })(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callNegotiations = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.negotiationsUrl, init);
 

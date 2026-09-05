@@ -33,6 +33,7 @@ import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-a
 import { HttpAgreedPricePort, NEGOTIATIONS_ORDERS_SCOPES } from "./http-agreed-price.js";
 import {
   HttpDispatchOfferPort,
+  NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
   NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
 } from "./http-dispatch-offer.js";
 import {
@@ -78,9 +79,10 @@ export function configuredDispatchOffers(
     return new HttpDispatchOfferPort({
       dispatchBaseUrl,
       ordersBaseUrl,
-      // نداءُ التوزيعِ غيرُ موقَّعٍ (حدُّه لم يُفرَض بعد)، ونداءُ الطلبِ موقَّعٌ:
-      // العنوانانِ حاضرانِ هنا معاً، فالمنفذُ لا يُبنى نصفَ موصولٍ أصلاً.
-      signRequest: createServiceRequestSigner({
+      // النداءانِ **موقَّعانِ كلاهما** منذ الموجةِ الرابعةِ: حدُّ التوزيعِ صارَ
+      // مفروضاً كحدِّ الطلباتِ. والجمهورانِ مختلفانِ بقصدٍ — رمزٌ لأحدِ الحدَّينِ
+      // يُرفَض عندَ الآخرِ — والمفاتيحُ من البيئةِ بلا قيمةٍ افتراضيّةٍ.
+      signOrdersRequest: createServiceRequestSigner({
         serviceName: "negotiations",
         audience: "orders",
         keys: keyRegistryFromEnv({
@@ -88,6 +90,15 @@ export function configuredDispatchOffers(
           WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
         }),
         scopes: NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
+      }),
+      signDispatchRequest: createServiceRequestSigner({
+        serviceName: "negotiations",
+        audience: "dispatch",
+        keys: keyRegistryFromEnv({
+          WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+        }),
+        scopes: NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
       }),
     });
   }

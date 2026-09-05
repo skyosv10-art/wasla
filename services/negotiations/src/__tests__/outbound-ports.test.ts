@@ -20,6 +20,7 @@ import {
 } from "../infrastructure/http-agreed-price.js";
 import {
   HttpDispatchOfferPort,
+  NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
   NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
 } from "../infrastructure/http-dispatch-offer.js";
 import {
@@ -52,6 +53,23 @@ const TEST_LOOKUP_SIGNER = createServiceRequestSigner({
   keys: TEST_KEYS,
   scopes: NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
 });
+
+/** موقّعُ قراءةِ العرضِ: جمهورُه `dispatch` وصلاحيّتُه القراءةُ وحدَها (M1-04 · الموجةُ الرابعة). */
+const TEST_DISPATCH_SIGNER = createServiceRequestSigner({
+  serviceName: "negotiations",
+  audience: "dispatch",
+  keys: TEST_KEYS,
+  scopes: NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
+});
+
+/** يقرأُ حِمْلَ الرمزِ بلا تحقّقٍ — للتأكّدِ من الجمهورِ والصلاحيّاتِ في الاختبارِ وحدَه. */
+function tokenClaims(header: string): { aud: string; scp: string[] } {
+  const [, payload] = header.split(".");
+  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+    aud: string;
+    scp: string[];
+  };
+}
 
 
 afterEach(() => vi.unstubAllGlobals());
@@ -89,7 +107,8 @@ const json = (body: unknown, status = 200): Response =>
 
 const offerPort = (): HttpDispatchOfferPort =>
   new HttpDispatchOfferPort({
-    signRequest: TEST_LOOKUP_SIGNER,
+    signOrdersRequest: TEST_LOOKUP_SIGNER,
+    signDispatchRequest: TEST_DISPATCH_SIGNER,
     dispatchBaseUrl: "http://dispatch.test",
     ordersBaseUrl: "http://orders.test/",
   });
@@ -128,14 +147,22 @@ describe("منفذ عروض التوزيع الحقيقي", () => {
     // الشرطة الأخيرة في العنوان المُهيّأ تُقطع، ولا يصير المسار `//orders`.
     expect(orderUrl).toBe("http://orders.test/orders/lookup?order_public_id=ORD-0000000001");
 
-    // M1-04: نداء الطلب موقّع ونداء التوزيع ليس كذلك — حدُّ التوزيع لم يُفرَض بعد،
-    // ورمزٌ جمهورُه `orders` يُرفَض عنده على أي حال، فإرساله إليه توسيعُ أثرٍ بلا فائدة.
+    // M1-04 · الموجةُ الرابعة: النداءانِ موقَّعانِ، **وبجمهورَينِ مختلفَينِ**
+    // وصلاحيّتَينِ مختلفتَينِ. لو وُقِّعا برمزٍ واحدٍ لمرَّ الاختبارُ الأوّلُ
+    // ورُدَّ الإنتاجُ `401` عندَ أحدِ الحدَّينِ — فالجمهورُ يُقاسُ هنا لا يُفترَض.
     const [, offerInit] = fetchMock.mock.calls[0] as [string, RequestInit];
     const [, orderInit] = fetchMock.mock.calls[1] as [string, RequestInit];
-    expect((orderInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(
-      /^wsvc2\./u,
-    );
-    expect((offerInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toBeUndefined();
+    const orderToken = (orderInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER];
+    const offerToken = (offerInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER];
+    expect(orderToken).toMatch(/^wsvc2\./u);
+    expect(offerToken).toMatch(/^wsvc2\./u);
+    expect(tokenClaims(orderToken)).toMatchObject({ aud: "orders", scp: ["orders:order:read"] });
+    expect(tokenClaims(offerToken)).toMatchObject({
+      aud: "dispatch",
+      scp: ["dispatch:offer:read"],
+    });
+    // القبولُ والإلغاءُ والنبضةُ ليست في الرمزِ: قراءةُ عرضٍ لا تُحمَل بقدرةٍ عليها.
+    expect(tokenClaims(offerToken).scp).not.toContain("dispatch:offer:accept");
   });
 
   it("لا يرسل مفتاح تكرار على قراءة", async () => {
@@ -229,7 +256,8 @@ describe("منفذ عروض التوزيع الحقيقي", () => {
     );
 
     const port = new HttpDispatchOfferPort({
-      signRequest: TEST_LOOKUP_SIGNER,
+      signOrdersRequest: TEST_LOOKUP_SIGNER,
+    signDispatchRequest: TEST_DISPATCH_SIGNER,
       dispatchBaseUrl: "http://dispatch.test",
       ordersBaseUrl: "http://orders.test",
       timeoutMs: 5,

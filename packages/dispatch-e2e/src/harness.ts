@@ -103,6 +103,8 @@ import {
   type DispatchRules,
   type DispatchRunner,
   DISPATCH_ORDERS_SCOPES,
+  DISPATCH_SCOPES,
+  DISPATCH_SERVICE_AUDIENCE,
 } from "@wasla/dispatch-service";
 import {
   createGeographyApp,
@@ -479,10 +481,17 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     readDispatchEvents = () => stores.outbox.unread();
   }
 
+  const dispatchServiceAuthKeys = gateKeys(GATE_SERVICE_AUTH_SECRET);
   const dispatchApp = createDispatchApp({
     runner: dispatchRunner,
     health: { persistence: DISPATCH_DATABASE_URL ? "postgres" : "memory" },
     logger: false,
+    // `M1-04` · الموجةُ الرابعة: حدُّ التوزيعِ مفروضٌ في البوّابةِ كما في الإنتاجِ.
+    // بوّابةٌ تُشغّلُه بلا فرضٍ تُثبِتُ مسلكاً لا وجودَ له بعدَ النشرِ.
+    serviceIdentity: {
+      keys: dispatchServiceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await dispatchApp.listen({ port: 0, host: "127.0.0.1" });
   const dispatchUrl = `http://127.0.0.1:${(dispatchApp.server.address() as AddressInfo).port}`;
@@ -616,7 +625,31 @@ export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpRes
   });
 export const callMatchingUnsigned = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.matchingUrl, init);
+/**
+ * توقيعُ نداءِ البوّابةِ إلى حدِّ التوزيعِ (`M1-04` · الموجةُ الرابعة). كحدِّ
+ * الهويّةِ: الصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً،
+ * والسيناريو الذي يُثبِتُ الفرضَ يُنادي بـ`callDispatchUnsigned` كي يبقى ما
+ * يُثبِتُه مرئيّاً.
+ */
+function dispatchSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: DISPATCH_SERVICE_AUDIENCE,
+    keys: gateKeys(GATE_SERVICE_AUTH_SECRET),
+    scopes: Object.values(DISPATCH_SCOPES),
+  });
+}
+
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
+  call(gate.dispatchUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...dispatchSigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
+export const callDispatchUnsigned = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.dispatchUrl, init);
 
 let keyCounter = 0;

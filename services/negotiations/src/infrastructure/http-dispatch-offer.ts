@@ -51,6 +51,14 @@ export const ORDER_LOOKUP_PATH = (orderPublicId: string): string =>
  */
 export const NEGOTIATIONS_ORDER_LOOKUP_SCOPES: readonly string[] = ["orders:order:read"];
 
+/**
+ * ما يطلبه هذا المنفذ من حدِّ التوزيع: قراءةُ عرضٍ واحدٍ لا غير (M1-04، الموجةُ
+ * الرابعة). **ولا يحمل `dispatch:offer:accept` ولا `dispatch:job:cancel` ولا
+ * `dispatch:tick:write`**: سؤالُ «هل هذا العرض قائم» لا يجوز أن يُحمَل برمزٍ
+ * يقدر به على قبول العرض نيابةً عن سائقٍ أو على دفع نبضة المحرّك.
+ */
+export const NEGOTIATIONS_DISPATCH_OFFER_SCOPES: readonly string[] = ["dispatch:offer:read"];
+
 /** وضعُ السعر الذي يسمح بالتفاوض. أيّ قيمةٍ أخرى تعني «هذا الطلب ليس محلَّ تفاوض». */
 const NEGOTIABLE_PRICE_MODE = "negotiable";
 
@@ -63,31 +71,33 @@ export interface HttpDispatchOfferOptions {
   readonly ordersBaseUrl: string;
   /**
    * موقّعُ النداءِ إلى حدِّ الطلبات (M1-04). **إلزاميٌّ ولا قيمةَ افتراضيّةَ له**:
-   *
-   * والاسمُ بلا لاحقةٍ لأنّه **التوقيعُ الوحيدُ على هذا المنفذِ اليومَ**: المنفذُ
-   * ينادي حدَّين، وحدُّ الطلباتِ وحدَه مفروضٌ. ويومَ يُفرَضُ حدُّ التوزيعِ
-   * (`M1-04` الموجةُ الرابعة) يصيرُ الاسمانِ صريحَينِ لكلِّ وجهةٍ.
-   *
    * حدُّ الطلبات يفرض الهويّة، ونداءٌ بلا توقيعٍ يُرَدُّ `401` فيُقرأ في السجلِّ
    * «محرّكُ الطلبِ لا يجيب» لا «جذرُ التركيبِ نسيَ الموقّع».
-   *
-   * ولا يُوقَّع نداءُ **التوزيع**: حدُّه لم يُفرَض بعدُ (`M1-04` الموجةُ الرابعة)،
-   * ورمزٌ جمهورُه `orders` يُرفَض عندَه على أيِّ حال.
    */
-  readonly signRequest: ServiceRequestSigner;
+  readonly signOrdersRequest: ServiceRequestSigner;
+  /**
+   * موقّعُ النداءِ إلى حدِّ التوزيعِ (M1-04، الموجةُ الرابعة). **إلزاميٌّ ولا
+   * قيمةَ افتراضيّةَ له** للسببِ نفسِه — وقد صارَ الاسمانِ صريحَينِ لكلِّ وجهةٍ
+   * كما وُعِدَ في الموجةِ الثانيةِ، لأنّ **الجمهورَينِ مختلفانِ**: رمزٌ جمهورُه
+   * `orders` يُرفَض عند التوزيعِ وبالعكس، وموقّعٌ واحدٌ لوجهتَينِ كانَ سيجعلُ
+   * ذلكَ الرفضَ خطأً في التركيبِ لا يُرى إلّا في الإنتاجِ.
+   */
+  readonly signDispatchRequest: ServiceRequestSigner;
   readonly timeoutMs?: number;
 }
 
 export class HttpDispatchOfferPort implements DispatchOfferPort {
   private readonly dispatchBaseUrl: string;
   private readonly ordersBaseUrl: string;
-  private readonly signRequest: ServiceRequestSigner;
+  private readonly signOrdersRequest: ServiceRequestSigner;
+  private readonly signDispatchRequest: ServiceRequestSigner;
   private readonly timeoutMs: number;
 
   constructor(options: HttpDispatchOfferOptions) {
     this.dispatchBaseUrl = options.dispatchBaseUrl.replace(/\/+$/, "");
     this.ordersBaseUrl = options.ordersBaseUrl.replace(/\/+$/, "");
-    this.signRequest = options.signRequest;
+    this.signOrdersRequest = options.signOrdersRequest;
+    this.signDispatchRequest = options.signDispatchRequest;
     // ٢٠٠٠ms هي المهلة نفسها التي تستعملها بقيّة المنافذ الصادرة في المستودع
     // (`services/dispatch/src/infrastructure/http-order-engine.ts`). التوحيد مقصود:
     // مهلةٌ تختلف من محوّلٍ لآخر تجعل «الخدمة بطيئة» تظهر عطلاً في نصف المسارات فقط.
@@ -95,9 +105,14 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
   }
 
   async describe(dispatchOfferId: string): Promise<DispatchOfferSnapshot | null> {
+    // الربطُ هنا **كامل**: مُعرِّفُ العرضِ جزءٌ من المسارِ لا من سلسلةِ
+    // الاستفسارِ، فرمزٌ وُقِّعَ لقراءةِ عرضٍ لا يصلحُ لقراءةِ غيرِه — بخلافِ
+    // `/orders/lookup` أدناه (`RISK-0026`).
+    const offerPath = DISPATCH_OFFER_PATH(dispatchOfferId);
     const offer = await this.readJson(
-      `${this.dispatchBaseUrl}${DISPATCH_OFFER_PATH(dispatchOfferId)}`,
+      `${this.dispatchBaseUrl}${offerPath}`,
       "عرض الإرسال",
+      this.signDispatchRequest("GET", offerPath),
     );
     if (offer === null) return null;
 
@@ -123,7 +138,7 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
     const order = await this.readJson(
       `${this.ordersBaseUrl}${ORDER_LOOKUP_PATH(orderPublicId)}`,
       "الطلب",
-      this.signRequest("GET", "/orders/lookup"),
+      this.signOrdersRequest("GET", "/orders/lookup"),
     );
     if (order === null) return null;
 

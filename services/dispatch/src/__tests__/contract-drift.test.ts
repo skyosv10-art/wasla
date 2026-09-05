@@ -48,7 +48,7 @@ import {
   WAVE_TRANSITIONS,
 } from "../domain/state-machine.js";
 import { DISPATCH_INDEX_NAMES } from "../infrastructure/in-memory.js";
-import { createDispatchApp } from "../http/app.js";
+import { createSignedDispatchApp as createDispatchApp } from "./service-identity-support.js";
 import { createDirectRunner } from "../runner.js";
 import { createHarness } from "./harness.js";
 

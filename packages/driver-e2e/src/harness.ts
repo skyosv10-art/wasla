@@ -116,6 +116,8 @@ import {
   StaticRulesProvider,
   type DispatchRules,
   DISPATCH_ORDERS_SCOPES,
+  DISPATCH_SCOPES,
+  DISPATCH_SERVICE_AUDIENCE,
 } from "@wasla/dispatch-service";
 import {
   createDriverApp,
@@ -222,6 +224,20 @@ function ordersSigner(serviceName: string, scopes: readonly string[]) {
     audience: "orders",
     keys: gateServiceAuthKeys(),
     scopes,
+  });
+}
+
+/**
+ * `M1-04` · الموجةُ الرابعة: حدُّ التوزيعِ صارَ مفروضاً كحدَّي المطابقةِ
+ * والطلباتِ، وجمهورُه ثالثٌ مستقلٌّ — فرمزُ المطابقةِ لا يفتحُه ولا العكس.
+ * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً.
+ */
+function dispatchSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: DISPATCH_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(DISPATCH_SCOPES),
   });
 }
 
@@ -512,6 +528,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   // --- dispatch: real service, PRODUCTION adapters to matching and the engine
   const stores = createInMemoryStores();
   const dispatchApp = createDispatchApp({
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
     runner: createDispatchDirectRunner({
       ...stores,
       matching: new HttpMatchingPort({
@@ -654,7 +674,14 @@ export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpRes
     },
   });
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.dispatchUrl, init);
+  call(gate.dispatchUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...dispatchSigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callDrivers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.driversUrl, init);
 

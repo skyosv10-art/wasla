@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T16:07:40Z",
+  "generated_at": "2026-09-05T17:29:59Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2c5c991946a2e0ccdb9c373189a06c8493aabe3d",
+    "commit": "21d9cd9ab9a0802ad36c4f84ee570ccfa7cf352d",
     "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "M1-04 الموجةُ 3: فرضُ حدِّ الهويّةِ وتوقيعُ مُنادِيهِ الأربعةِ",
+    "dirty_files": 26,
+    "dirty_reason": "M1-04 الموجةُ الرابعة: فرضُ حدِّ التوزيعِ وتوقيعُ مُناديه الوحيدِ — الأساسُ يُعادُ توليدُه من سجلِّ تشغيلٍ حقيقيٍّ لا لتخضيرِ شيءٍ.",
     "tracked_files": 1384
   },
   "env": {
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "ffca33ab5cdea551c2be09d4691430d642cac6e219dfce5b1152c934342f0825",
-    "lines": 2957
+    "sha256": "23db6a3151a86be84ee817e7d8a28960abf9ac1eb06ffb127b22cc8cb4a7b85f",
+    "lines": 2960
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 267,
+    "test_files_tracked": 268,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
-    "tests_passed": 3788,
-    "test_files_executed": 224,
+    "source": "/tmp/verify4.log",
+    "tests_passed": 3803,
+    "test_files_executed": 225,
     "governance_suite_cases": 167,
     "governance_suite_failed": 5,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:70e404b88d1f3353d5913ada678e5406575dfc220b487109577debf418df56d6",
+  "fingerprint": "sha256:29386f02122c9616a08a031b59dbc89a18988a32394913cb690ad9a4deda1d9b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

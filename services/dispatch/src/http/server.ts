@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import { DISPATCH_SERVICE_PORT } from "@wasla/contracts-dispatch";
 import {
   createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
   type ServiceRequestSigner,
 } from "@wasla/service-auth";
@@ -138,7 +139,21 @@ function buildWiring(): Wiring {
 
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
-  const app = createDispatchApp({ runner, health, logger: true });
+  // M1-04 (الموجةُ الرابعةُ): الحدُّ مفروضٌ، والمفاتيحُ من البيئةِ بلا قيمةٍ
+  // افتراضيّةٍ — فنشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يسقطُ عندَ الإقلاعِ لا
+  // بعدَ أوّلِ نداءٍ. ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ مُعلَنٌ
+  // (`RISK-0015`)**: نسختانِ لا تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ أن يُعادَ
+  // على الأخرى — و`Redis` هو السدُّ، وعقدُ `ServiceTokenReplayGuard` مكتوبٌ كي
+  // يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+  const app = createDispatchApp({
+    runner,
+    health,
+    logger: true,
+    serviceIdentity: {
+      keys: keyRegistryFromEnv(process.env),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
+  });
   if (pool) app.addHook("onClose", async () => { await pool.end(); });
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
     process.once(signal, () => { void app.close().then(() => process.exit(0)); });

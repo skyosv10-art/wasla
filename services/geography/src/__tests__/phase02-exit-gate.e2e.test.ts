@@ -97,6 +97,20 @@ function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
   });
 }
 
+/**
+ * توقيعُ نداءٍ مُحقَنٍ مباشرةً في حدِّ الهويّةِ. البوّابةُ هنا تنوبُ عن **منفذِ
+ * القنواتِ** (بوتُ العميلِ) حينَ تُنشئُ الحسابَ، فتحملُ صلاحيّتَه وحدَها
+ * `identity:resolve:write` — لا صلاحيّةَ ربطٍ ولا استعادةٍ.
+ */
+function signIdentity(method: string, path: string): Record<string, string> {
+  return createServiceRequestSigner({
+    serviceName: "phase02-exit-gate",
+    audience: "identity",
+    keys: gateServiceAuthKeys(),
+    scopes: ["identity:resolve:write"],
+  })(method, path);
+}
+
 describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () => {
   let identityPool: import("pg").Pool;
   let geoPool: import("pg").Pool;
@@ -176,6 +190,7 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
     const created = await identityApp.inject({
       method: "POST",
       url: "/identity/resolve",
+      headers: signIdentity("POST", "/identity/resolve"),
       payload: {
         telegram_user_id: TELEGRAM_USER_ID,
         telegram_username: "phase02_gate",
@@ -221,6 +236,7 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
     const identityAfter = await identityApp.inject({
       method: "POST",
       url: "/identity/resolve",
+      headers: signIdentity("POST", "/identity/resolve"),
       payload: {
         telegram_user_id: TELEGRAM_USER_ID,
         telegram_username: "phase02_gate",
@@ -241,6 +257,7 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
     const renamed = await identityApp.inject({
       method: "POST",
       url: "/identity/resolve",
+      headers: signIdentity("POST", "/identity/resolve"),
       payload: {
         telegram_user_id: TELEGRAM_USER_ID,
         telegram_username: "phase02_gate_renamed",

@@ -60,7 +60,9 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0080 | M0-22E | @uxxxu (agent:computer) | chore/m0-22e-risk-0022-closure | docs/07-security/,docs/12-testing/,docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+
+> **`CLM-0078` حُرِّر (2026-09-05) — دُمج عبر [PR #34](https://github.com/skyosv10-art/wasla/pull/34):** `GET /pulls/34` أجابَ `merged: true` · `merged_at: 2026-09-05T11:16:34Z` · التزامُ الدمجِ [`424ebfd6`](https://github.com/skyosv10-art/wasla/commit/424ebfd6f03447b32ea207e2f1a8a28e66af114d)، و`GET /compare/main...chore/m0-22c-22e-board-reconciliation` أجابَ `status: behind` · **`ahead_by: 0`** — فلا التزامَ على الفرعِ خارجَ `main`. **والتحريرُ بالقياسِ لا بالثقةِ في زرِّ الدمجِ:** الشرطُ في [`WORK_CLAIM_RULE.md` §8.1](../00-rules/WORK_CLAIM_RULE.md) `ahead_by = 0` لا `merged = true` وحدَها.
 
 > **`CLM-0077` حُرِّر (2026-09-05) — دُمج عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33):** التزامُ الدمجِ `5a9bb69` (`merged_at: 2026-09-05T06:09:52Z`)، و`git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ).
 
@@ -190,6 +192,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | 2026-09-05 | **دُمج في `main` عبر [PR #34](https://github.com/skyosv10-art/wasla/pull/34)** بقرارِ مالكِ البرنامجِ (`merged_at: 2026-09-05T11:16:34Z` · التزامُ الدمجِ [`424ebfd6`](https://github.com/skyosv10-art/wasla/commit/424ebfd6f03447b32ea207e2f1a8a28e66af114d))، و`GET /compare/main...chore/m0-22c-22e-board-reconciliation` ⇒ `behind` · **`ahead_by: 0`**. |
 | CLM-0077 | M0-25 | @uxxxu (agent:computer) | chore/m0-25-merge-blocking-gate | 2026-09-05 | **دُمج في `main` عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33)** بقرارِ مالكِ البرنامجِ (`merged_at: 2026-09-05T06:09:52Z` · التزامُ الدمجِ `5a9bb69`). **والفرعُ مقيسٌ:** `git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ). |
 | CLM-0056 | M0-18 | @uxxxu (agent:computer) | fix/m0-18-integration-suite-isolation | 2026-09-03 | **دُمج في `main` عبر [PR #14](https://github.com/skyosv10-art/wasla/pull/14)** بقرارِ مالكِ البرنامجِ، والتزامُ الدمجِ [`5b60f6a3`](https://github.com/skyosv10-art/wasla/commit/5b60f6a393cea17c6cb6ab599fb7beb30a198528). **والدليلُ مقيسٌ:** تشغيلُ الفرعِ [`33745121061`](https://github.com/skyosv10-art/wasla/actions/runs/33745121061) 27/27، وتشغيلُ الجذعِ بعدَ الدمجِ [`33746092919`](https://github.com/skyosv10-art/wasla/actions/runs/33746092919) 27/27 بما فيها `db-integration-shared`. ولا يُقرأُ الدمجُ ترقيةً إلى `Completed`. |
 | CLM-0057 | M0-06 | @uxxxu (agent:computer) | fix/m0-18-integration-suite-isolation | 2026-09-03 | **نفسُ الدمجِ** ([PR #14](https://github.com/skyosv10-art/wasla/pull/14) · [`5b60f6a3`](https://github.com/skyosv10-art/wasla/commit/5b60f6a393cea17c6cb6ab599fb7beb30a198528)). |

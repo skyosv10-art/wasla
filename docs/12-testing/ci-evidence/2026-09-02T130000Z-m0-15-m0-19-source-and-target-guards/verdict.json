@@ -1,0 +1,180 @@
+{
+  "measured_at": "2026-09-02T13:00:00Z",
+  "branch": "chore/m0-gate-docs-batch5",
+  "base": "origin/main@44ab8bf",
+  "work_items": [
+    "M0-15",
+    "M0-16",
+    "M0-17",
+    "M0-19"
+  ],
+  "claims": [
+    "CLM-0049",
+    "CLM-0050",
+    "CLM-0051",
+    "CLM-0052"
+  ],
+  "environment": {
+    "os": "Linux 6.1.155",
+    "bash": "5.3.9",
+    "nproc": 2,
+    "node": "v20.20.1",
+    "pnpm": "9.15.9",
+    "note": "all measurements are shell-only; no database involved"
+  },
+  "local": {
+    "suite": "scripts/checks/test-governance.sh",
+    "baseline": {
+      "pass": 153,
+      "fail": 0
+    },
+    "mutations": [
+      {
+        "id": "mut-m0-15a",
+        "item": "M0-15",
+        "change": "hardcode the meaningful-paths filter inside validate-work-claims.sh instead of sourcing the single source",
+        "result": {
+          "pass": 151,
+          "fail": 2
+        },
+        "cases_dropped": [
+          "المدقّقان يحكمان الحكمَ نفسه على كل بادئة",
+          "يرفض تعديل وثيقة غير السجلات من فرع بلا حجز (M0-14)"
+        ],
+        "diagonal": false,
+        "declared": "single defect surfaces in two guards; not overlapping cases"
+      },
+      {
+        "id": "mut-m0-15b",
+        "item": "M0-15",
+        "change": "remove the packages/ prefix from the single source itself",
+        "result": {
+          "pass": 153,
+          "fail": 0
+        },
+        "cases_dropped": [],
+        "diagonal": false,
+        "declared": "BLIND SPOT — parity iterates only prefixes present in the filter"
+      },
+      {
+        "id": "mut-m0-16a",
+        "item": "M0-16",
+        "change": "stale-claim block exit 1 -> exit 0",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "يرفض حجزاً نشطاً فرعُه محذوف"
+        ],
+        "diagonal": true
+      },
+      {
+        "id": "mut-m0-16b",
+        "item": "M0-16",
+        "change": "awk filter also counts released (NF==8) rows",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "يهمل صفوف «المحرّرة» ولا يرفضها"
+        ],
+        "diagonal": true
+      },
+      {
+        "id": "mut-m0-16c",
+        "item": "M0-16",
+        "change": "skip message claims full success instead of partial",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "عند الجهل يُعلن التخطّي ولا يدّعي نجاحاً كاملاً"
+        ],
+        "diagonal": true
+      },
+      {
+        "id": "mut-m0-17a",
+        "item": "M0-17",
+        "change": "neutralise merge-base --is-ancestor check in the LIVE file",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "يرفض هدفاً مدموجاً أصلاً في الافتراضيّ"
+        ],
+        "diagonal": true
+      },
+      {
+        "id": "mut-m0-17b",
+        "item": "M0-17",
+        "change": "neutralise deleted-target check (T_RC == 2) in the LIVE file",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "يرفض هدفاً محذوفاً من المستودع"
+        ],
+        "diagonal": true
+      },
+      {
+        "id": "mut-m0-19",
+        "item": "M0-19",
+        "change": "re-insert break into the per-branch claim union loop",
+        "result": {
+          "pass": 152,
+          "fail": 1
+        },
+        "cases_dropped": [
+          "يقبل ملفَّينِ يغطّيهما حجزانِ نشطانِ على الفرعِ نفسِه (M0-19)"
+        ],
+        "diagonal": true
+      }
+    ],
+    "tree_clean_after": true
+  },
+  "measured_gap": {
+    "risk": "RISK-0021",
+    "finding": ".github/ is absent from CODE_OR_CONFIG_PATHS while the GitLab-era .gitlab-ci.yml is still listed",
+    "probe": "editing .github/workflows/ci.yml on an unclaimed branch: validate-work-claims.sh rc=0, require-doc-update.sh rc=0",
+    "evidence": "local-measurements/probe-github-workflows.txt",
+    "not_fixed_here": "changing the filter changes guard behaviour; that is a work item, not a gate-doc edit",
+    "side_effect": {
+      "what": "opening RISK-0021 raised static.risks_not_closed 14 -> 15, so the live tree diverged from the committed BASELINE.json",
+      "observed": "verify-governance check 11 failed, governance suite 152/1, scripts/verify.sh 4/6",
+      "evidence_failed": "local-measurements/verify-run1-baseline-drift.raw.txt",
+      "resolution": "regenerated with scripts/baseline.sh --log from a fully green verify log, with BASELINE_DIRTY_REASON written; fingerprint sha256:8bea4e9942fee33dce726002215cbe72618f1c0ea30e2042e6b35eeb77b0ddb7",
+      "evidence_green": "local-measurements/verify-run2-green.raw.txt",
+      "not_done": "check 11 was not disabled, the file was not excluded from the guard, no counter was hand-edited"
+    }
+  },
+  "ci": {
+    "status": "SUCCESS",
+    "run_id": 33596056706,
+    "head_sha": "e31b2ca4f49756f2a56d12027b58b28de70168da",
+    "jobs_total": 26,
+    "jobs_started": 26,
+    "jobs_success": 26,
+    "jobs_failed": 0,
+    "note": "not-started != failed != code-failed; counts are read from the jobs API, never from the badge colour",
+    "read_at": "2026-09-02T06:20:00Z",
+    "source": "GET /repos/skyosv10-art/wasla/actions/runs/33596056706/jobs"
+  },
+  "gate_enforcement": {
+    "merge_blocking": false,
+    "reason": "M0-22A blocked by 403 Upgrade to GitHub Pro; RISK-0002 open; verify-governance check 8 skipped",
+    "consequence": "green CI is informational, not merge-blocking"
+  },
+  "verdict": {
+    "M0-15": "PASSED_LOCAL_WITH_DECLARED_LIMIT",
+    "M0-16": "PASSED_LOCAL",
+    "M0-17": "PASSED_LOCAL",
+    "M0-19": "PASSED_LOCAL",
+    "ci": "SUCCESS_26_OF_26",
+    "completed_transition": "owner authority only"
+  }
+}

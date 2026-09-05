@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T12:40:19Z",
+  "generated_at": "2026-09-05T13:05:30Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2ce5374cc7fac737ebd4c6fc08d7dcbf375e540c",
+    "commit": "ef465182435cfd8bba18cc6dceac9e2fc2a93f48",
     "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
-    "dirty_files": 11,
-    "dirty_reason": "M1-04 (الموجةُ 1): الوسيطُ المركزيُّ لهويّةِ الخدمةِ — إعادةُ توليدٍ على زيادةٍ مقيسةٍ (+1 ملفَّ اختبارٍ · +11 اختباراً · fastify في devDependencies · RISK-0024 مفتوحٌ) لا على نقصٍ",
-    "tracked_files": 1376
+    "dirty_files": 5,
+    "dirty_reason": "M1-04 (الموجةُ 1): الوسيطُ المركزيُّ لهويّةِ الخدمةِ — إعادةُ توليدٍ على زيادةٍ مقيسةٍ (+1 ملفَّ اختبارٍ · +11 اختباراً · fastify في devDependencies · RISK-0024 وRISK-0025 مفتوحانِ) لا على نقصٍ",
+    "tracked_files": 1378
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 17
+    "risks_not_closed": 18
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m104_v4.log",
+    "source": "/tmp/verify_m104_v7.log",
     "tests_passed": 3759,
     "test_files_executed": 222,
     "governance_suite_cases": 168,
     "governance_suite_failed": 4,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:4f134de7ea7a298daa76a4af66199438e0d3db2ed900e9a943e0634777ac0cfa",
+  "fingerprint": "sha256:7db97444334365588cbe3f517a6825be75b70db00425d947b500d621f82a47c7",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -60,7 +60,9 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0077 | M0-25 | @uxxxu (agent:computer) | chore/m0-25-merge-blocking-gate | scripts/checks/,docs/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+
+> **`CLM-0077` حُرِّر (2026-09-05) — دُمج عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33):** التزامُ الدمجِ `5a9bb69` (`merged_at: 2026-09-05T06:09:52Z`)، و`git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ).
 
 > **قياسُ حالاتِ الفروعِ بعدَ دمجِ [#19](https://github.com/skyosv10-art/wasla/pull/19) و[#17](https://github.com/skyosv10-art/wasla/pull/17) — 2026-09-05 (`main` = [`b312a6ac`](https://github.com/skyosv10-art/wasla/commit/b312a6acdc06d85e6ef4d6d61faeebca97836a23)):**
 > أمرَ مالكُ البرنامجِ (القرارُ 4) بألّا تُسوّى الحجوزُ **إلّا بعدَ إثباتِ حالةِ فروعِها وفقَ شجرةِ الدمجِ الحاليّةِ**. فسُئلَ المستودعُ عن كلِّ فرعٍ بـ`GET /compare/main...<branch>`، وهذا المقيسُ حرفًا:
@@ -188,6 +190,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0077 | M0-25 | @uxxxu (agent:computer) | chore/m0-25-merge-blocking-gate | 2026-09-05 | **دُمج في `main` عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33)** بقرارِ مالكِ البرنامجِ (`merged_at: 2026-09-05T06:09:52Z` · التزامُ الدمجِ `5a9bb69`). **والفرعُ مقيسٌ:** `git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ). |
 | CLM-0056 | M0-18 | @uxxxu (agent:computer) | fix/m0-18-integration-suite-isolation | 2026-09-03 | **دُمج في `main` عبر [PR #14](https://github.com/skyosv10-art/wasla/pull/14)** بقرارِ مالكِ البرنامجِ، والتزامُ الدمجِ [`5b60f6a3`](https://github.com/skyosv10-art/wasla/commit/5b60f6a393cea17c6cb6ab599fb7beb30a198528). **والدليلُ مقيسٌ:** تشغيلُ الفرعِ [`33745121061`](https://github.com/skyosv10-art/wasla/actions/runs/33745121061) 27/27، وتشغيلُ الجذعِ بعدَ الدمجِ [`33746092919`](https://github.com/skyosv10-art/wasla/actions/runs/33746092919) 27/27 بما فيها `db-integration-shared`. ولا يُقرأُ الدمجُ ترقيةً إلى `Completed`. |
 | CLM-0057 | M0-06 | @uxxxu (agent:computer) | fix/m0-18-integration-suite-isolation | 2026-09-03 | **نفسُ الدمجِ** ([PR #14](https://github.com/skyosv10-art/wasla/pull/14) · [`5b60f6a3`](https://github.com/skyosv10-art/wasla/commit/5b60f6a393cea17c6cb6ab599fb7beb30a198528)). |
 | CLM-0053 | M1-01 | @uxxxu (agent:computer) | chore/m1-gate-docs-batch6 | 2026-09-03 | **دُمج في `main` عبر [PR #13](https://github.com/skyosv10-art/wasla/pull/13)** بقرارِ مالكِ البرنامجِ (`APPROVE MERGE ORDER` · 2026-09-03)، والتزامُ الدمجِ [`32415e3c`](https://github.com/skyosv10-art/wasla/commit/32415e3cbbad428d75b806dcfd1e352adb4399ba). **والفرعُ مقيسٌ `ahead 0 · behind 1` بعدَ الدمجِ** — أي لا يحملُ عملاً غيرَ مدموجٍ. تحريرٌ بالبروتوكولِ §8.1 (إقفالُ الدورةِ). |

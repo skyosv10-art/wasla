@@ -39,11 +39,12 @@ import {
   type ProcessedUpdateStorePort,
 } from "@wasla/channel-core";
 import { createChannelStores } from "@wasla/channel-postgres";
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
 import { TelegramChannelAdapter, TelegramUpdateParser } from "@wasla/telegram-adapter";
 
 import type { BotConfig } from "./config.js";
 import { SingleBotRegistry } from "./config.js";
-import { HttpIdentityBootstrap } from "./identity-bootstrap.js";
+import { CHANNEL_IDENTITY_SCOPES, HttpIdentityBootstrap } from "./identity-bootstrap.js";
 import { CryptoIdGenerator, SystemClock } from "./system.js";
 
 /** Assembled dependencies of one bot process, ready for `createBotApp`. */
@@ -129,6 +130,17 @@ export function buildBotRuntime(
     (config.identityServiceUrl
       ? new HttpIdentityBootstrap({
           baseUrl: config.identityServiceUrl,
+          // M1-04: حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ. والصلاحيّةُ حلُّ هويّةٍ
+          // وحدَها — لا ربطٌ ولا استعادةٌ.
+          signRequest: createServiceRequestSigner({
+            serviceName: `${config.bot}-bot`,
+            audience: "identity",
+            keys: keyRegistryFromEnv({
+              WASLA_SERVICE_AUTH_KEYS: config.serviceAuthKeys,
+              WASLA_SERVICE_AUTH_ACTIVE_KID: config.serviceAuthActiveKid,
+            }),
+            scopes: CHANNEL_IDENTITY_SCOPES,
+          }),
           ...(config.identityTimeoutMs === undefined
             ? {}
             : { timeoutMs: config.identityTimeoutMs }),

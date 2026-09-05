@@ -33,7 +33,8 @@
 
 ## 2. الحدودُ المُثبَتة
 
-**حدّانِ اليوم: خدمةُ المطابقة (`M1-03`) وحدُّ الطلبات (`M1-04` · الموجةُ الثانية).**
+**ثلاثةُ حدودٍ اليوم: خدمةُ المطابقة (`M1-03`) · حدُّ الطلبات (`M1-04` · الموجةُ
+الثانية) · حدُّ الهويّة (`M1-04` · الموجةُ الثالثة).**
 
 الترتيبُ في الحدَّينِ واحدٌ لأنّ الوسيطَ واحدٌ: منذُ الموجةِ الأولى من `M1-04` صارَ
 الربطُ بـFastify كلُّه في
@@ -109,6 +110,38 @@
 **ما لا يُدَّعى هنا:** توقيعُ عملاءِ الطلباتِ لا يجعلُ `M1-04` منجَزاً. حدودُ
 `geography` و`identity` و`dispatch` **لم تُفرَضْ بعدُ**، والسجلُّ في §4 هو الرقمُ.
 
+### 2.5 برهانُ حدِّ الهويّة (`M1-04` · الموجةُ الثالثة)
+
+- **الحدُّ نفسُه:** `services/identity/src/__tests__/http/service-identity.test.ts`
+  — أربعَ عشرةَ حالةً: بلا ترويسةٍ ⇒ `401` · ترويسةٌ مزوَّرةٌ ⇒ `401` ·
+  الصلاحيّةُ الصحيحةُ ⇒ `201` · صلاحيّةٌ ناقصةٌ ⇒ `403` · إعادةٌ ⇒ `401` ·
+  تعذُّرُ متجرِ الإعادةِ ⇒ `503` · رمزُ قراءةٍ لا يربطُ هويّةً ⇒ `403` · رمزُ
+  قراءةٍ لا يبدأُ استعادةً ⇒ `403` · استعادةٌ بلا توقيعٍ ⇒ `401` · رمزٌ لمسارٍ
+  آخرَ ⇒ `401` · **رمزٌ لمستخدمٍ آخرَ ⇒ `401`** (المعرِّفُ داخلَ المسارِ هنا،
+  فالربطُ كاملٌ — بخلافِ `RISK-0026`) · `/health` مفتوحٌ ⇒ `200` · مسارٌ مجهولٌ
+  ⇒ `401` قبلَ `404` · مسارٌ غيرُ مصنَّفٍ يُسقِطُ الخدمةَ عندَ الإقلاع.
+- **العملاءُ الثلاثةُ للحدِّ:** عميلا القراءةِ في `services/customers` و
+  `services/geography` (`CUSTOMERS_IDENTITY_SCOPES` · `GEOGRAPHY_IDENTITY_SCOPES`
+  — `identity:user:read` وحدَها)، و**منفذُ إقلاعِ الهويّةِ في طبقةِ القنواتِ**
+  `packages/bot-runtime/src/identity-bootstrap.ts`
+  (`CHANNEL_IDENTITY_SCOPES` — `identity:resolve:write` وحدَها؛ الاختبارُ
+  `packages/bot-runtime/src/__tests__/identity-bootstrap.test.ts` يقرأُ الترويسةَ
+  على السلكِ). ومنه تُبنى بوتاتُ العميلِ والسائقِ والشريكِ الثلاثةُ، وكذلك
+  `bots/customer-bot/src/customer-core.ts`.
+- **السلسلةُ كاملةً عبرَ مقابسَ حقيقيّة:** بوّاباتُ الخروجِ التي تُشغّلُ خدمةَ
+  الهويّةِ (`order-e2e` · `dispatch-e2e` · `driver-e2e` · `negotiation-e2e` ·
+  `customer-e2e` · `channel-e2e` · بوّابةُ الطورِ الثاني في `services/geography`)
+  تبني الحدَّ **مفروضاً** وتوقّعُ نداءاتِها.
+- **الإقلاعُ يرفضُ التناقضَ:** `packages/bot-runtime/src/config.ts` يُسقِطُ أيَّ
+  بوتٍ وُصِلَ بـ`IDENTITY_SERVICE_URL` بلا `WASLA_SERVICE_AUTH_KEYS` و
+  `WASLA_SERVICE_AUTH_ACTIVE_KID`. والسببُ يُقالُ صريحاً: بوتٌ يُقلِعُ بلا مفاتيحَ
+  يُرَدُّ `401` عندَ كلِّ `/start`، فيُخبِرُ المستخدمَ أنّ هويّتَه تعذَّرت وهي
+  متاحةٌ — ورسالةٌ تُسمّي المتغيّرَ الناقصَ أرخصُ من ذلك.
+
+**ما لا يُدَّعى هنا:** فرضُ حدِّ الهويّةِ لا يجعلُ `M1-04` منجَزاً. حدّا
+`geography` و`dispatch` **لم يُفرَضا بعدُ**، والسجلُّ في §4 هو الرقمُ. ولا يُدَّعى
+أنّ متغيّراتِ البيئةِ مُعَدّةٌ في أيِّ نشرٍ — لم يُقَسْ ذلك.
+
 ---
 
 ## 3. ما لم يُفرَض بعدُ (إعلانٌ لا اعتذار)
@@ -133,28 +166,38 @@
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | `service-identity-enforcement.e2e.test.ts` · `DISPATCH_MATCHING_SCOPES` |
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
 | `services/customers/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | مؤجَّل | حدُّ identity غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/identity/src/__tests__/http/service-identity.test.ts` · `CUSTOMERS_IDENTITY_SCOPES` |
 | `services/customers/src/infrastructure/http-order-intake.ts` | orders | موقَّع | `services/customers/src/__tests__/http-order-intake.test.ts` · `CUSTOMERS_ORDERS_SCOPES` |
 | `services/dispatch/src/infrastructure/http-order-engine.ts` | orders | موقَّع | `services/dispatch/src/__tests__/http-order-engine.test.ts` · `DISPATCH_ORDERS_SCOPES` |
 | `services/drivers/src/infrastructure/http-zone-catalog.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
-| `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | مؤجَّل | حدُّ identity غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` · `GEOGRAPHY_IDENTITY_SCOPES` |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
 | `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع جزئيّاً | نداءُ الطلبِ موقَّعٌ (`NEGOTIATIONS_ORDER_LOOKUP_SCOPES`)؛ نداءُ التوزيعِ **مؤجَّلٌ** — حدُّ dispatch غيرُ مفروضٍ (M1-04 الموجةُ الرابعة) |
 
 <!-- coverage-ledger:end -->
 
-**قراءةُ العدد:** ستّةٌ موقِّعونَ من أحدَ عشرَ — اثنانِ إلى المطابقةِ وأربعةٌ إلى
-الطلبات — وأحدُ الستّةِ (`http-dispatch-offer.ts`) **يوقِّعُ أحدَ نداءَيه فقط**،
-لأنّه ينادي حدَّين: الطلباتِ (مفروضٌ) والتوزيعَ (غيرُ مفروضٍ بعد). وبقيَ خمسةٌ
-مؤجَّلونَ إلى حدودِ `geography` و`identity` و`dispatch`.
+**قراءةُ العدد:** ثمانيةٌ موقِّعونَ من أحدَ عشرَ في هذا السجلِّ — اثنانِ إلى
+المطابقةِ وأربعةٌ إلى الطلباتِ واثنانِ إلى الهويّةِ — وأحدُ الثمانيةِ
+(`http-dispatch-offer.ts`) **يوقِّعُ أحدَ نداءَيه فقط**، لأنّه ينادي حدَّين:
+الطلباتِ (مفروضٌ) والتوزيعَ (غيرُ مفروضٍ بعد). وبقيَ ثلاثةٌ مؤجَّلونَ إلى حدَّي
+`geography` و`dispatch`.
+
+**وثغرةٌ بنيويّةٌ في هذا السجلِّ تُقالُ هنا لا تُخفى:** الحارسُ لا يقيسُ إلّا
+`services/*/src/infrastructure/http-*.ts`، فمُنادو حدِّ الهويّةِ **من خارجِ
+`services/` غيرُ مرئيّينَ له أصلاً** — وهم اليومَ ثلاثةٌ فعليّونَ:
+`packages/bot-runtime/src/identity-bootstrap.ts` (منفذُ القنواتِ، ومنه البوتاتُ
+الثلاثةُ) و`bots/customer-bot/src/customer-core.ts`، وقد وُقِّعا في هذه الموجةِ
+**لكنّ صدقَهما لا يحرسُه أحدٌ**. الخطرُ مسجَّلٌ **RISK-0027**. والدليلُ على أنّ
+الثغرةَ ليست نظريّةً: هذان المُناديانِ لم يظهرا في جردَينِ متتاليَينِ، وكشفَهما
+**تشغيلُ الاختباراتِ** لا قراءةُ السجلِّ.
 
 وهذا هو الرقمُ الصحيحُ الذي يُقال، لا «هويّةُ الخدمةِ مُنجَزةٌ». والحارسُ يقرأُ
 `signRequest` في الملفِّ، فصفُّ «موقَّع جزئيّاً» يمرُّ عندَه لوجودِ التوقيعِ في
@@ -196,6 +239,22 @@
 ([`ADR-021` §4](../15-decisions/ADR-021-service-token-replay-policy.md)) — فرمزٌ
 وُقِّعَ لقراءةِ طلبٍ صالحٌ لقراءةِ غيرِه. الخطرُ مسجَّلٌ **RISK-0026**، ومُخفَّفٌ
 اليومَ بعمرٍ قصيرٍ للرمزِ وحرقِ `jti`، وعلاجُه الجذريُّ عندَ `M1-05`.
+
+### 5.2 حدُّ الهويّة (`M1-04` · الموجةُ الثالثة)
+
+| المسار | الصلاحيّةُ المطلوبة | المُنادي اليوم |
+|---|---|---|
+| `POST /identity/resolve` | `identity:resolve:write` | بوتاتُ القنواتِ الثلاثةُ عبرَ `bot-runtime` |
+| `GET /identity/users/{waslaPublicId}` | `identity:user:read` | customers · geography · customer-bot |
+| `POST /identity/users/{waslaPublicId}/links` | `identity:link:write` | لا مُناديَ خدميٌّ اليومَ |
+| `POST /identity/users/{waslaPublicId}/recovery` | `identity:recovery:write` | لا مُناديَ خدميٌّ اليومَ |
+| `GET /identity/users/{waslaPublicId}/history` | `identity:history:read` | لا مُناديَ خدميٌّ اليومَ |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+**والفصلُ هنا ليس تزيّناً:** رمزُ بوتٍ يحملُ `identity:resolve:write` وحدَها، فلا
+يقدرُ برمزِه على ربطِ هويّةٍ ولا على بدءِ استعادةِ حسابٍ — وهما أخطرُ ما في هذا
+الحدِّ. وكذلك عميلا القراءةِ يحملانِ `identity:user:read` وحدَها. وثلاثُ حالاتٍ
+في برهانِ §2.5 تُثبِتُ الرفضَ `403` عندَ تجاوزِ ذلك، لا الادّعاءَ.
 
 وهذه صلاحيّاتُ **خدمةٍ** لا صلاحيّاتُ مستخدم. نموذجُ التخويلِ الكاملُ (خدمةٌ ·
 عمليّةٌ · موردٌ · نطاقٌ · أثرٌ) عنصرٌ مستقلٌّ هو `M1-05`، ولا يُدَّعى أنّ

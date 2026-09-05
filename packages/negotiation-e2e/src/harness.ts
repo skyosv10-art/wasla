@@ -83,6 +83,7 @@ import {
   SystemClock as CustomerClock,
   type UseCaseDeps,
   CUSTOMERS_ORDERS_SCOPES,
+  CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
@@ -107,6 +108,8 @@ import {
 } from "@wasla/geography-service";
 import {
   createIdentityApp,
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
   CryptoIdGenerator as IdentityIdGenerator,
   InMemoryIdentityRepository,
   InMemoryOutbox as InMemoryIdentityOutbox,
@@ -327,6 +330,9 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   );
 
   // --- identity: a real service on an ephemeral port ------------------------
+  const identityServiceAuthKeys = gateServiceAuthKeys();
+  // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+  // **مفروضاً** وتوقِّعُ عملاءَه بالمفاتيحِ نفسِها — لا تُعطِّلُ الفرضَ لتمرَّ.
   const identityApp = createIdentityApp({
     deps: {
       repo: new InMemoryIdentityRepository(),
@@ -336,6 +342,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       idGen: new IdentityIdGenerator(),
     },
     logger: false,
+    serviceIdentity: {
+      keys: identityServiceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await identityApp.listen({ port: 0, host: "127.0.0.1" });
   const identityUrl = `http://127.0.0.1:${(identityApp.server.address() as AddressInfo).port}`;
@@ -391,7 +401,15 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       outbox: new InMemoryCustomerOutbox(),
       clock: new CustomerClock(),
       idGen: new CustomerIdGenerator(),
-      identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
+      identityLookup: new HttpIdentityLookupPort({
+        baseUrl: identityUrl,
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "identity",
+          keys: identityServiceAuthKeys,
+          scopes: CUSTOMERS_IDENTITY_SCOPES,
+        }),
+      }),
       geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
       orderIntake: new HttpOrderIntakePort({
         baseUrl: ordersUrl,
@@ -580,8 +598,30 @@ async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
   };
 }
 
+
+/**
+ * توقيعُ نداءِ البوّابةِ إلى حدِّ الهويّةِ (`M1-04`). الحدُّ صارَ مُغلَقاً
+ * افتراضاً، فبوّابةٌ تُنادي بلا توقيعٍ تُخفِقُ 401 لسببٍ لا علاقةَ له بموضوعِها.
+ * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً، لا خدمةً
+ * واحدةً بصلاحيّةٍ ضيّقةٍ.
+ */
+function identitySigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: IDENTITY_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(IDENTITY_SCOPES),
+  });
+}
+
 export const callIdentity = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.identityUrl, init);
+  call(gate.identityUrl, {
+    ...init,
+    headers: {
+      ...identitySigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.customerUrl, init);
 /** Direct engine calls are signed too (M1-04) — same reason as matching below. */

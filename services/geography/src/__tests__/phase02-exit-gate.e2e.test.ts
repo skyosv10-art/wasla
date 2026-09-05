@@ -34,6 +34,11 @@ import {
   CryptoIdGenerator as IdentityIdGenerator,
   createIdentityApp,
 } from "@wasla/identity-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 
 import {
   createDb,
@@ -43,6 +48,7 @@ import {
   CryptoIdGenerator,
   HttpIdentityLookupPort,
   createGeographyApp,
+  GEOGRAPHY_IDENTITY_SCOPES,
 } from "../index.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -77,6 +83,20 @@ const IDENTITY_TABLES =
 
 const TELEGRAM_USER_ID = 920100200;
 
+/**
+ * مادّةُ مفاتيحِ البوّابةِ (`M1-04`). سرٌّ واحدٌ لأنّ المُبرهَنَ هنا **السلسلةُ
+ * الموقَّعةُ** عبرَ HTTP حقيقيٍّ لا إدارةُ المفاتيحِ.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () => {
   let identityPool: import("pg").Pool;
   let geoPool: import("pg").Pool;
@@ -96,6 +116,9 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
     await identityPool.query(await readFile(IDENTITY_SCHEMA_SQL, "utf-8"));
     await ensurePublicIdSequence(identityCreated.db);
 
+    // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+    // **مفروضاً** وتوقِّعُ عميلَه بالمفاتيحِ نفسِها — لا تُعطِّلُ الفرضَ لتمرَّ.
+    const identityServiceAuthKeys = gateServiceAuthKeys();
     identityApp = createIdentityApp({
       deps: {
         repo: new PostgresIdentityRepository(identityCreated.db),
@@ -103,6 +126,10 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
         publicIdSeq: new PostgresPublicIdSequence(identityCreated.db),
         clock: new IdentitySystemClock(),
         idGen: new IdentityIdGenerator(),
+      },
+      serviceIdentity: {
+        keys: identityServiceAuthKeys,
+        replayGuard: new InMemoryServiceTokenReplayGuard(),
       },
     });
     // Real HTTP listener so HttpIdentityLookupPort is exercised for real.
@@ -126,6 +153,12 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
         idGen: new CryptoIdGenerator(),
         identityLookup: new HttpIdentityLookupPort({
           baseUrl: identityBaseUrl,
+          signRequest: createServiceRequestSigner({
+            serviceName: "geography",
+            audience: "identity",
+            keys: identityServiceAuthKeys,
+            scopes: GEOGRAPHY_IDENTITY_SCOPES,
+          }),
         }),
       },
     });

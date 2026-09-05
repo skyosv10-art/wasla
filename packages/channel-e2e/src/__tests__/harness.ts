@@ -36,12 +36,19 @@ import { buildApp as buildCustomerBot } from "@wasla/customer-bot";
 import { buildApp as buildDriverBot } from "@wasla/driver-bot";
 import {
   createIdentityApp,
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
   CryptoIdGenerator as IdentityIdGenerator,
   InMemoryIdentityRepository,
   InMemoryOutbox as InMemoryIdentityOutbox,
   InMemoryPublicIdSequence,
   SystemClock as IdentitySystemClock,
 } from "@wasla/identity-service";
+import {
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+  createServiceRequestSigner,
+} from "@wasla/service-auth";
 import { buildApp as buildPartnerBot } from "@wasla/partner-bot";
 import { Pool } from "pg";
 
@@ -91,8 +98,30 @@ export interface IdentityService {
  * `port: 0` and `127.0.0.1` on purpose: a fixed port would make two suites
  * collide, and binding a public interface in a test is an avoidable exposure.
  */
+/**
+ * مادّةُ مفاتيحِ البوّابةِ (`M1-04`). سرٌّ واحدٌ لأنّ المُبرهَنَ هنا **السلسلةُ
+ * الموقَّعةُ** بينَ البوتِ وحدِّ الهويّةِ لا إدارةُ المفاتيحِ.
+ *
+ * **ويُصدَّرُ نصُّ `WASLA_SERVICE_AUTH_KEYS` كما تكتبُه بيئةُ النشرِ** لأنّ
+ * البوتَ يقرأُ مفاتيحَه من حُقيبةِ بيئتِه (`envFor`) لا من كائنٍ يُمرَّرُ إليه —
+ * فما تُبرهنُه البوّابةُ هو ما ينشرُه المُشغِّلُ حرفاً بحرفٍ.
+ */
+export const GATE_SERVICE_AUTH_KID = "gate-active";
+export const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+/** الصيغةُ المنشورةُ «kid:status:secret» — لا الصيغةُ القديمةُ «kid:secret». */
+export const GATE_SERVICE_AUTH_KEYS_ENV = `${GATE_SERVICE_AUTH_KID}:active:${GATE_SERVICE_AUTH_SECRET}`;
+
+export function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 export async function startIdentityService(): Promise<IdentityService> {
   const outbox = new InMemoryIdentityOutbox();
+  // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+  // **مفروضاً** وتُعطي البوتَ مفاتيحَه عبرَ `envFor` — لا تُعطِّلُ الفرضَ لتمرَّ.
   const app = createIdentityApp({
     deps: {
       repo: new InMemoryIdentityRepository(),
@@ -102,6 +131,10 @@ export async function startIdentityService(): Promise<IdentityService> {
       idGen: new IdentityIdGenerator(),
     },
     logger: false,
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
 
   await app.listen({ port: 0, host: "127.0.0.1" });
@@ -143,7 +176,16 @@ export function envFor(bot: BotKind, options: BuildGateBotsOptions = {}): Record
     [`${prefix}_TOKEN`]: `${bot}-bot-token`,
     [`${prefix}_WEBHOOK_SECRET`]: WEBHOOK_SECRET,
     [`${prefix}_MINI_APP_URL`]: MINI_APP_URL[bot],
-    ...(options.identityUrl === undefined ? {} : { IDENTITY_SERVICE_URL: options.identityUrl }),
+    ...(options.identityUrl === undefined
+      ? {}
+      : {
+          IDENTITY_SERVICE_URL: options.identityUrl,
+          // M1-04: بوتٌ يُنادي حدَّ الهويّةِ بلا مفاتيحَ يُرَدُّ 401؛ والمفاتيحُ
+          // تُسلَّمُ هنا كما تُسلَّمُ في النشرِ، فلا يُخفي الاختبارُ متغيّراً
+          // لازماً في الإنتاجِ.
+          WASLA_SERVICE_AUTH_KEYS: GATE_SERVICE_AUTH_KEYS_ENV,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: GATE_SERVICE_AUTH_KID,
+        }),
     ...(options.databaseUrl === undefined ? {} : { DATABASE_URL: options.databaseUrl }),
   };
 }
@@ -283,4 +325,20 @@ export async function truncateChannelTables(pool: Pool): Promise<void> {
 /** Open the suite's own pool (separate from the bots' pools, read-only use). */
 export function openPool(connectionString: string): Pool {
   return new Pool({ connectionString, max: 2 });
+}
+
+/**
+ * توقيعُ نداءٍ مباشرٍ إلى حدِّ الهويّةِ من داخلِ البوّابةِ (`M1-04`).
+ *
+ * البوّابةُ تسألُ الهويّةَ مباشرةً لتتحقّقَ ممّا فعلَته البوتاتُ. والحدُّ صارَ
+ * مُغلَقاً افتراضاً، فالسؤالُ بلا توقيعٍ يُرَدُّ 401 لسببٍ لا علاقةَ له بموضوعِ
+ * البوّابةِ. والمفاتيحُ هي مفاتيحُ البوتاتِ نفسُها لأنّ الحدَّ واحدٌ.
+ */
+export function signIdentityRequest(method: string, path: string): Record<string, string> {
+  return createServiceRequestSigner({
+    serviceName: "channel-exit-gate",
+    audience: IDENTITY_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(IDENTITY_SCOPES),
+  })(method, path);
 }

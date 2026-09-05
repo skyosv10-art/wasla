@@ -39,6 +39,9 @@ importers:
       '@wasla/customers-service':
         specifier: workspace:*
         version: link:../../services/customers
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -132,6 +135,9 @@ importers:
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../contracts/channel
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       '@wasla/telegram-adapter':
         specifier: workspace:*
         version: link:../telegram-adapter
@@ -194,6 +200,9 @@ importers:
       '@wasla/partner-bot':
         specifier: workspace:*
         version: link:../../bots/partner-bot
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       '@wasla/telegram-adapter':
         specifier: workspace:*
         version: link:../telegram-adapter
@@ -408,6 +417,9 @@ importers:
       '@wasla/identity-service':
         specifier: workspace:*
         version: link:../../services/identity
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -790,6 +802,9 @@ importers:
       '@wasla/contracts-geography':
         specifier: workspace:*
         version: link:../../packages/contracts/geography
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -827,6 +842,9 @@ importers:
       '@wasla/contracts-identity':
         specifier: workspace:*
         version: link:../../packages/contracts/identity
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)

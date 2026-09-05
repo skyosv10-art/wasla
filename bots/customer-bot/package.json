@@ -18,6 +18,7 @@
     "start": "node --import tsx src/main.ts"
   },
   "dependencies": {
+    "@wasla/service-auth": "workspace:*",
     "@wasla/bot-runtime": "workspace:*",
     "@wasla/contracts-channel": "workspace:*",
     "@wasla/customers-service": "workspace:*",

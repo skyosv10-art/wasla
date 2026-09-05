@@ -27,7 +27,10 @@ export * from "./domain/validation.js";
 export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
-export { HttpIdentityLookupPort } from "./infrastructure/http-identity-lookup.js";
+export {
+  HttpIdentityLookupPort,
+  CUSTOMERS_IDENTITY_SCOPES,
+} from "./infrastructure/http-identity-lookup.js";
 export type { HttpIdentityLookupOptions } from "./infrastructure/http-identity-lookup.js";
 export { HttpGeographyPort } from "./infrastructure/http-geography.js";
 export type { HttpGeographyOptions } from "./infrastructure/http-geography.js";

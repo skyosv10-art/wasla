@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T05:25:35Z",
+  "generated_at": "2026-09-05T05:58:20Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d6716f0d40ef75e447253fb9a0c2b5b50582a4e2",
-    "branch": "chore/m0-24-github-path-guard",
+    "commit": "297a9148edf536de7324df47168119aa46186646",
+    "branch": "chore/m0-25-merge-blocking-gate",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "M0-24: إضافةُ .github إلى المرشِّحِ وإغلاقُ RISK-0021 — إعادةُ توليدِ الأساسِ على حزمةٍ خضراءَ",
-    "tracked_files": 1365
+    "dirty_files": 9,
+    "dirty_reason": "M0-25: حارسُ منعِ الدمجِ وسبعُ حالاتٍ جديدةٍ — إعادةُ توليدِ الأساسِ على حزمةٍ خضراءَ",
+    "tracked_files": 1368
   },
   "env": {
     "node": "v20.20.1",
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m024b.log",
+    "source": "/tmp/verify_m025.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
-    "governance_suite_cases": 165,
+    "governance_suite_cases": 172,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

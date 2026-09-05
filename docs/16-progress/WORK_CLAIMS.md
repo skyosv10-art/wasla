@@ -60,7 +60,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
-| CLM-0076 | M0-24 | @uxxxu (agent:computer) | chore/m0-24-github-path-guard | scripts/checks/,docs/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0077 | M0-25 | @uxxxu (agent:computer) | chore/m0-25-merge-blocking-gate | scripts/checks/,docs/ | 2026-09-05 | 2026-09-19 | Active |
 
 > **قياسُ حالاتِ الفروعِ بعدَ دمجِ [#19](https://github.com/skyosv10-art/wasla/pull/19) و[#17](https://github.com/skyosv10-art/wasla/pull/17) — 2026-09-05 (`main` = [`b312a6ac`](https://github.com/skyosv10-art/wasla/commit/b312a6acdc06d85e6ef4d6d61faeebca97836a23)):**
 > أمرَ مالكُ البرنامجِ (القرارُ 4) بألّا تُسوّى الحجوزُ **إلّا بعدَ إثباتِ حالةِ فروعِها وفقَ شجرةِ الدمجِ الحاليّةِ**. فسُئلَ المستودعُ عن كلِّ فرعٍ بـ`GET /compare/main...<branch>`، وهذا المقيسُ حرفًا:
@@ -214,6 +214,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0073 | M1-01 | @uxxxu (agent:computer) | docs/m1-gates-closeout | 2026-09-05 | **حُرِّرَ بدمجِ [PR #31](https://github.com/skyosv10-art/wasla/pull/31)**: تشغيلٌ [`33944362271`](https://github.com/skyosv10-art/wasla/actions/runs/33944362271) — **27/27 بدأت ونجحت** — ثمّ دمجٌ ⇒ [`b48e877e`](https://github.com/skyosv10-art/wasla/commit/b48e877efcbbbe33fa0dee40d187be3723c37cdc). |
 | CLM-0074 | M1-02 | @uxxxu (agent:computer) | docs/m1-gates-closeout | 2026-09-05 | **حُرِّرَ بدمجِ [PR #31](https://github.com/skyosv10-art/wasla/pull/31)** — التشغيلُ نفسُه. |
 | CLM-0075 | M1-03 | @uxxxu (agent:computer) | docs/m1-gates-closeout | 2026-09-05 | **حُرِّرَ بدمجِ [PR #31](https://github.com/skyosv10-art/wasla/pull/31)** — التشغيلُ نفسُه، وبه بلغَ دليلُ بوّابةِ `M1-03` فرعَ `main` بعدَ ثلاثةِ أيّامٍ خارجَه. |
+| CLM-0076 | M0-24 | @uxxxu (agent:computer) | chore/m0-24-github-path-guard | 2026-09-05 | **حُرِّرَ بدمجِ [PR #32](https://github.com/skyosv10-art/wasla/pull/32)**: تشغيلٌ [`33947239888`](https://github.com/skyosv10-art/wasla/actions/runs/33947239888) — **27/27 بدأت ونجحت** — ثمّ دمجٌ ⇒ [`f48fcddf`](https://github.com/skyosv10-art/wasla/commit/f48fcddfdd81e38dca00f8960045e08b04cc39d9). |
 | CLM-0049 | M0-15 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch5 | 2026-09-05 | **لم يُدمَجْ فرعُه ولن يُدمَجَ** — [PR #12](https://github.com/skyosv10-art/wasla/pull/12) مُستبعَدٌ بقرارِ المالكِ 5، ومحتواه نُقلَ في دفعةِ التسويةِ ت-4 (`CLM-0068`) مع تصحيحِ ترقيمِ خطرِه `RISK-0016` ⇒ `RISK-0021`. **والمعرِّفُ يبقى محجوزًا**، والفرعُ **لا يُحذَفُ**. |
 | CLM-0050 | M0-16 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch5 | 2026-09-05 | **لم يُدمَجْ فرعُه ولن يُدمَجَ** — [PR #12](https://github.com/skyosv10-art/wasla/pull/12) مُستبعَدٌ بقرارِ المالكِ 5، ومحتواه نُقلَ في دفعةِ التسويةِ ت-4 (`CLM-0068`). **والمعرِّفُ يبقى محجوزًا**، والفرعُ **لا يُحذَفُ**. |
 | CLM-0051 | M0-17 | @uxxxu (agent:computer) | chore/m0-gate-docs-batch5 | 2026-09-05 | **لم يُدمَجْ فرعُه ولن يُدمَجَ** — [PR #12](https://github.com/skyosv10-art/wasla/pull/12) مُستبعَدٌ بقرارِ المالكِ 5، ومحتواه نُقلَ في دفعةِ التسويةِ ت-4 (`CLM-0068`). **والمعرِّفُ يبقى محجوزًا**، والفرعُ **لا يُحذَفُ**. |

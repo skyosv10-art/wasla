@@ -1,0 +1,67 @@
+{
+  "schema": "wasla.merge-blocking/v1",
+  "provider": "github",
+  "repository": "skyosv10-art/wasla",
+  "branch": "main",
+  "measured_at": "2026-09-05T02:00:00Z",
+  "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks",
+  "protection": {
+    "required_status_checks": {
+      "strict": true,
+      "contexts": [
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+        "db-integration (identity, @wasla/identity-service, wasla_test)",
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared",
+        "doc-coverage",
+        "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)",
+        "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)",
+        "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
+        "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)",
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)",
+        "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)",
+        "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
+        "governance-guard",
+        "repo-structure",
+        "test",
+        "typecheck",
+        "verify"
+      ]
+    },
+    "enforce_admins": true,
+    "required_pull_request_reviews": null
+  },
+  "blocking_proofs": [
+    {
+      "pull_request": 27,
+      "run_id": 33937989985,
+      "red_checks": 3,
+      "http_status": 405,
+      "message": "3 of 27 required status checks are failing.",
+      "raw": "docs/12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks/api-responses/33-probe-merge-attempt.raw.json"
+    },
+    {
+      "pull_request": 27,
+      "run_id": 33940167412,
+      "red_checks": 4,
+      "http_status": 405,
+      "message": "4 of 27 required status checks are failing.",
+      "raw": "docs/12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks/api-responses/35-probe2-merge-attempt.raw.json"
+    }
+  ],
+  "not_claimed": [
+    "اللقطةُ مؤرَّخةٌ لا حيّةٌ: الحارسُ يقارنُ الخطَّ بها، ولا يسألُ GitHub في كلِّ تشغيلٍ إلّا إذا وُفِّرَ ملفُّ حمايةٍ حيٌّ عبرَ WASLA_PROTECTION_JSON.",
+    "الحمايةُ إعدادٌ خارجَ المستودعِ: من يملكُ صلاحيةَ الإدارةِ يستطيعُ تغييرَها، وهذا الحارسُ يكشفُ الانحرافَ عندَ إعادةِ القياسِ لا يمنعُه."
+  ]
+}

@@ -461,6 +461,98 @@ MUT
 }
 t "حذفُ .github من المرشّح يُكشَف" pass github_path_mutation
 
+printf '\n\033[1m[هخ] منعُ الدمجِ — الحمايةُ تُطابق الخطَّ أو تُرفَض (M0-25)\033[0m\n'
+# السؤالُ: **أيكشفُ الحارسُ وظيفةً في الخطِّ بلا سياقٍ مطلوبٍ يقابلُها؟** فالحمايةُ
+# إعدادٌ خارجَ المستودعِ لا يملكُ سكربتٌ محلّيٌّ إثباتَ تفعيلِه، **والذي يملكُه
+# المستودعُ** أن تُطابق لقطتُه المؤرَّخةُ وظائفَ خطِّه. وكلُّ حالةٍ هنا تبني
+# مستودعاً صغيراً في `/tmp` وتُطفِّر ملفّاً واحداً، فلا يُلمَس المستودعُ نفسُه.
+_mb_repo() { # → مسارُ مستودعٍ صغيرٍ صالحٍ (لقطةٌ مطابقةٌ + خطٌّ + مرجعٌ خامٌّ)
+  local R; R="$(mktemp -d /tmp/gov_mb_XXXXXX)"
+  ( cd "$R" && git init -q && git config user.email a@b && git config user.name t )
+  mkdir -p "$R/.github/workflows" "$R/docs/12-testing/ev" "$R/scripts/checks"
+  cat > "$R/.github/workflows/ci.yml" <<'YAML'
+name: ci
+on: [push]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 1
+  db-integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - leg: identity
+            db: wasla_test
+    steps:
+      - run: echo 1
+YAML
+  printf '{"m":"405"}\n' > "$R/docs/12-testing/ev/merge-405.json"
+  python3 -c "
+import json,sys
+R=sys.argv[1]
+json.dump({'schema':'wasla.merge-blocking/v1','provider':'github','repository':'x/y','branch':'main',
+ 'measured_at':'2026-09-05T00:00:00Z','measured_from':'GET /branches/main/protection',
+ 'protection':{'required_status_checks':{'strict':True,'contexts':['verify','db-integration (identity, wasla_test)']},'enforce_admins':True},
+ 'blocking_proofs':[{'pull_request':1,'http_status':405,'message':'1 of 2 required status checks are failing.','raw':'docs/12-testing/ev/merge-405.json'}]},
+ open(R+'/docs/12-testing/MERGE_BLOCKING.json','w',encoding='utf-8'),ensure_ascii=False)
+" "$R"
+  cp "$REPO_ROOT/scripts/checks/validate-merge-blocking.sh" "$R/scripts/checks/"
+  ( cd "$R" && git add -A >/dev/null && git commit -qm init >/dev/null )
+  printf '%s' "$R"
+}
+_mb_run() { ( cd "$1" && bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? ); }
+_mb_patch() { python3 -c "
+import json,sys
+p=sys.argv[1]+'/docs/12-testing/MERGE_BLOCKING.json'; d=json.load(open(p,encoding='utf-8'))
+k,v=sys.argv[2],sys.argv[3]
+if k=='admins': d['protection']['enforce_admins']=False
+elif k=='proofs': d['blocking_proofs']=[]
+json.dump(d,open(p,'w',encoding='utf-8'),ensure_ascii=False)
+" "$1" "$2" x; }
+
+mb_valid()      { local R rc; R="$(_mb_repo)"; rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 2 ]]; }
+t "لقطةٌ مطابقةٌ ومُبرهَنةٌ ⇒ جزئيٌّ مُعلَنٌ (2) لا نجاحٌ مُجمَّلٌ" pass mb_valid
+
+# **الحالةُ الجوهريّةُ:** وظيفةٌ جديدةٌ في الخطِّ بلا سياقٍ مطلوبٍ — وهي الطريقةُ
+# الوحيدةُ التي يُفقَد بها المنعُ صامتاً بعدَ إثباتِه.
+mb_new_job_unguarded() {
+  local R rc; R="$(_mb_repo)"
+  printf '  smoke:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo 1\n' >> "$R/.github/workflows/ci.yml"
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "وظيفةٌ في الخطِّ بلا سياقٍ مطلوبٍ تُرفَض" pass mb_new_job_unguarded
+
+mb_admins_off() { local R rc; R="$(_mb_repo)"; _mb_patch "$R" admins; rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]; }
+t "enforce_admins معطَّلاً يُرفَض (المالكُ يتجاوزُ الحارسَ)" pass mb_admins_off
+
+mb_no_proof() { local R rc; R="$(_mb_repo)"; _mb_patch "$R" proofs; rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]; }
+t "لقطةٌ بلا برهانِ رفضٍ 405 تُرفَض (دعوى بلا قياسٍ)" pass mb_no_proof
+
+mb_dead_proof_ref() {
+  local R rc; R="$(_mb_repo)"; rm -f "$R/docs/12-testing/ev/merge-405.json"
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "مرجعُ برهانِ الرفضِ الميتُ يُرفَض" pass mb_dead_proof_ref
+
+# وسؤالٌ حَيٌّ مطابقٌ يرفعُ الحكمَ إلى 0 — وإلّا لبقيَ «جزئيّاً» أبداً مهما قِيس.
+mb_live_match() {
+  local R rc; R="$(_mb_repo)"
+  printf '%s\n' '{"required_status_checks":{"strict":true,"contexts":["verify","db-integration (identity, wasla_test)"]},"enforce_admins":{"enabled":true}}' > "$R/live.json"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/live.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 0 ]]
+}
+t "سؤالٌ حَيٌّ مطابقٌ يرفعُ الحكمَ إلى نجاحٍ كاملٍ" pass mb_live_match
+
+mb_live_drift() {
+  local R rc; R="$(_mb_repo)"
+  printf '%s\n' '{"required_status_checks":{"strict":true,"contexts":["verify"]},"enforce_admins":{"enabled":true}}' > "$R/live.json"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/live.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "حمايةٌ حيّةٌ انحرفت عن اللقطةِ تُرفَض" pass mb_live_drift
+
 printf '\n\033[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)\033[0m\n'
 
 # هذه الحالاتُ **لا تستعمل git المشتركَ في $T**: الفحصُ يسأل `origin` عن وجودِ

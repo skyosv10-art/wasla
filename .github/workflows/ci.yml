@@ -598,14 +598,32 @@ jobs:
       # ولذلك يُرشَّحُ الآنَ بجزءٍ **مخصوصٍ بساقِ Postgres** لا يشترِكُ فيه
       # مُنفِّذُ الذاكرةِ.
       # ───────────────────────────────────────────────────────────────
-      - name: "M1-02 · منعُ الإعادةِ يُقاسُ وحدَه (لا يُستدَلُّ عليه)"
+      - name: "M1-02 · التشغيلُ المخصوصُ لحالةِ منعِ الإعادةِ"
         if: matrix.leg == 'channel'
+        continue-on-error: true
         run: |
           set -o pipefail
           pnpm --filter ${{ matrix.pkg }} exec vitest run \
             src/__tests__/m1-02-session-gate.e2e.test.ts \
             -t 'تُرفَض بقيدِ المحرّك' \
             --reporter=verbose 2>&1 | tee m1-02-replay.log
+      # الخطواتُ الثلاثُ التاليةُ **أدواتُ قياسٍ لا زينةٌ**: سجلُّ الوظيفةِ الخامُّ
+      # غيرُ قابلٍ للتنزيلِ في بيئةِ التنفيذِ، **وحكمُ كلِّ خطوةٍ مقروءٌ في
+      # `jobs` JSON**. فكلُّ سؤالٍ تشخيصيٍّ يُجعَلُ خطوةً مستقلّةً ليُقرأَ جوابُه
+      # من الخارجِ — **والتشخيصُ يُبنى ولا يُخمَّنُ**.
+      - name: "تشخيصٌ · متغيّرُ الوصلِ مُصدَّرٌ إلى الخطوةِ"
+        if: matrix.leg == 'channel'
+        run: test -n "${DATABASE_URL:-}"
+      - name: "تشخيصٌ · مجموعةُ Postgres لم تُتخطَّ"
+        if: matrix.leg == 'channel'
+        run: |
+          if grep -qE 'Test Files +1 skipped' m1-02-replay.log; then
+            echo "المجموعةُ تُخطَّت بالكاملِ — لم تُقَسْ" >&2
+            exit 1
+          fi
+      - name: "M1-02 · حالةٌ واحدةٌ ناجحةٌ وإلّا فلا قياسَ"
+        if: matrix.leg == 'channel'
+        run: |
           if ! grep -qE 'Tests +1 passed' m1-02-replay.log; then
             echo "M1-02: حالةُ منعِ الإعادةِ لم تُقَسْ — لا تُقبَلُ خضرةٌ صامتةٌ" >&2
             exit 1

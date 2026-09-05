@@ -28,6 +28,18 @@
 
 ## السجل
 
+### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
+
+- **Work Item(s):** M0-22C
+- **Claim:** `CLM-0078` · الفرع `chore/m0-22c-22e-board-reconciliation` · النطاقُ `docs/16-progress/`
+- **Files:** `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ
+- **Why:** لوحةُ التنفيذِ كانت تُنكرُ ثلاثَ حقائقَ مقيسةٍ في آنٍ واحد: (1) بوّابةُ `M0-22E` **`PASSED`** بـ27 فحصاً مطلوباً وحالةُ اللوحةِ `In Progress` (2) إسلامُ `fast-uri` دُمجَ إلى `main` (`pnpm.overrides`) و`main` 27/27 خضراءُ، فسببُ بقاءِ `M0-22C` في `In Progress` **زالَ** (3) `CLM-0077` دُمجَ عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33) والفرقُ صفرٌ، فبقاؤه في الحجوزاتِ النشطةِ يُعطّلُ `scripts/checks/,docs/`. وحالةُ إنفاذِ CI كانت تقولُ «⚠ معطّل» والخطُّ يجري 27 وظيفةً مانعةً.
+- **What:** انتقلَ `M0-22C` و`M0-22E` من `In Progress` إلى `Ready for Gate` (النقلُ إلى `Completed` سلطةُ المالكِ §9). وحُرِّرَ `CLM-0077` في §3 بدليلِ دمجٍ خامٍّ. وحالةُ إنفاذِ CI انتقلت من «⚠ معطّل» إلى «✅ مُفعَّل» بحدودٍ مُعلَنةٍ (اللقطةُ مؤرَّخةٌ لا حيّةٌ). وتاريخُ آخرِ تحقّقٍ انتقل من `2026-09-02` إلى `2026-09-05`.
+- **Tests:** `bash scripts/checks/verify-governance.sh` و`bash scripts/checks/test-governance.sh` — قيدُ التشغيلِ.
+- **Next:** انتظارُ قراءِ CI على هذا الطلب.
+- **Related:** [PR #33](https://github.com/skyosv10-art/wasla/pull/33) (`CLM-0077`) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md) · [`M0-22C_GATE.md`](../12-testing/M0-22C_GATE.md)
+
 ### [2026-09-05] `M0-25` — الفحصُ الثامنُ لم يعُدْ «جزئيّاً أبداً»
 
 - **Work Item(s):** M0-25

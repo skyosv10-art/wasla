@@ -1,0 +1,180 @@
+$ GET https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection
+--- response ---
+HTTP 200
+
+{
+  "url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection",
+  "required_status_checks": {
+    "url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection/required_status_checks",
+    "strict": true,
+    "contexts": [
+      "repo-structure",
+      "doc-coverage",
+      "governance-guard",
+      "verify",
+      "typecheck",
+      "test",
+      "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+      "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+      "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+      "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+      "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+      "db-integration (identity, @wasla/identity-service, wasla_test)",
+      "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+      "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+      "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+      "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+      "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+      "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+      "db-integration-shared",
+      "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)",
+      "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)",
+      "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
+      "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)",
+      "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)",
+      "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)",
+      "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
+      "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)"
+    ],
+    "contexts_url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection/required_status_checks/contexts",
+    "checks": [
+      {
+        "context": "repo-structure",
+        "app_id": 15368
+      },
+      {
+        "context": "doc-coverage",
+        "app_id": 15368
+      },
+      {
+        "context": "governance-guard",
+        "app_id": 15368
+      },
+      {
+        "context": "verify",
+        "app_id": 15368
+      },
+      {
+        "context": "typecheck",
+        "app_id": 15368
+      },
+      {
+        "context": "test",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (identity, @wasla/identity-service, wasla_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "app_id": 15368
+      },
+      {
+        "context": "db-integration-shared",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
+        "app_id": 15368
+      },
+      {
+        "context": "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
+        "app_id": 15368
+      }
+    ]
+  },
+  "required_signatures": {
+    "url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection/required_signatures",
+    "enabled": false
+  },
+  "enforce_admins": {
+    "url": "https://api.github.com/repos/skyosv10-art/wasla/branches/main/protection/enforce_admins",
+    "enabled": true
+  },
+  "required_linear_history": {
+    "enabled": false
+  },
+  "allow_force_pushes": {
+    "enabled": false
+  },
+  "allow_deletions": {
+    "enabled": false
+  },
+  "block_creations": {
+    "enabled": false
+  },
+  "required_conversation_resolution": {
+    "enabled": false
+  },
+  "lock_branch": {
+    "enabled": false
+  },
+  "allow_fork_syncing": {
+    "enabled": false
+  }
+}

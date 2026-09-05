@@ -1,0 +1,50 @@
+{
+  "item": "M0-22E",
+  "date": "2026-09-05",
+  "claim": "CLM-0071",
+  "verdict": "PASSED",
+  "criteria": [
+    {
+      "id": "1",
+      "text": "required_status_checks توسَّعت من 6 إلى 27 سياقاً",
+      "result": "PASSED",
+      "measured_by": "GET /branches/main/protection بعد PUT",
+      "evidence": "api-responses/31-protection-verify.raw.json",
+      "value": {"contexts": 27, "strict": true, "enforce_admins": true}
+    },
+    {
+      "id": "2",
+      "text": "إخفاق فحص مطلوب يمنع الدمج فعلياً",
+      "result": "PASSED",
+      "measured_by": "PUT /pulls/27/merge على مِجَسّ أحمر متعمَّد",
+      "evidence": "api-responses/33-probe-merge-attempt.raw.json · api-responses/35-probe2-merge-attempt.raw.json",
+      "value": {"http": 405, "message_first": "3 of 27 required status checks are failing.", "message_second": "4 of 27 required status checks are failing."}
+    },
+    {
+      "id": "3",
+      "text": "خطوة apk add لم تعد محاولة واحدة",
+      "result": "PASSED",
+      "measured_by": "ci.yml + تشغيل 33937422500",
+      "evidence": "https://github.com/skyosv10-art/wasla/actions/runs/33937422500",
+      "value": {"jobs": 27, "started": 27, "success": 27}
+    },
+    {
+      "id": "4",
+      "text": "فحصا typecheck و test صارا قادرَين على الإخفاق",
+      "result": "PASSED",
+      "measured_by": "إعادة المِجَسّ الأحمر فوق إصلاح pipefail",
+      "evidence": "api-responses/34-probe2-jobs.raw.json",
+      "value": {"run": 33940167412, "red": ["doc-coverage", "governance-guard", "test", "verify"]}
+    }
+  ],
+  "not_measured": [
+    "قدرة كل فحص من السبعة والعشرين على الإخفاق منفرداً — المِجَسّ أحمَرَ أربعةً فقط",
+    "مراجعة الأحكام السابقة التي استندت إلى خضرة test/typecheck قبل إصلاح pipefail"
+  ],
+  "runs": {
+    "apk_retry_green": 33937422500,
+    "probe_before_pipefail": 33937989985,
+    "pipefail_fix_green": 33939652905,
+    "probe_after_pipefail": 33940167412
+  }
+}

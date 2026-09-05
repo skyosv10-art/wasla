@@ -1,0 +1,18 @@
+
+> @wasla/drivers-service@0.1.0 test:integration /home/user/workspace/wasla/services/drivers
+> vitest run --config vitest.integration.config.ts
+
+
+ RUN  v3.2.7 /home/user/workspace/wasla/services/drivers
+
+ ✓ src/__tests__/repository.integration.test.ts (50 tests) 728ms
+ ✓ src/__tests__/port-conformance.integration.test.ts (23 tests) 1678ms
+(node:8948) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ src/__tests__/atomicity.integration.test.ts (6 tests) 222ms
+
+ Test Files  3 passed (3)
+      Tests  79 passed (79)
+   Start at  01:52:30
+   Duration  3.74s (transform 234ms, setup 0ms, collect 641ms, tests 2.63s, environment 0ms, prepare 162ms)
+

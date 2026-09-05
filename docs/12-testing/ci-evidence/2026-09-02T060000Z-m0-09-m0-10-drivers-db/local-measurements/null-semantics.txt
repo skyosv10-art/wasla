@@ -1,0 +1,5 @@
+ array_length_empty | cardinality_empty | al_check | card_check | al_text 
+--------------------+-------------------+----------+------------+---------
+                    |                 0 |          | f          | NULL
+(1 row)
+

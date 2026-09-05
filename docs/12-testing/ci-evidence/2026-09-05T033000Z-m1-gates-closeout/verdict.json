@@ -1,0 +1,50 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-05T03-30-00Z",
+  "provider": "github-actions",
+  "repository": "skyosv10-art/wasla",
+  "ref": "main",
+  "work_items": [
+    "M1-01",
+    "M1-02",
+    "M1-03"
+  ],
+  "claim": "CLM-0073,CLM-0074,CLM-0075",
+  "verdict": "PASSED",
+  "gates": {
+    "M1-01": {
+      "verdict": "PASSED",
+      "basis": "قياسٌ محلّيٌّ مباشرٌ (68 اختباراً · typecheck) + verify.sh كاملاً على main الحاليِّ",
+      "caveat": "شقُّ CI كان يمرُّ بوظيفتَي test/typecheck قبلَ إصلاح RISK-0022"
+    },
+    "M1-02": {
+      "verdict": "PASSED",
+      "basis": "خطوةٌ مستقلّةٌ تقيسُ حالةَ منعِ الإعادةِ وحدَها على Postgres حقيقيٍّ",
+      "run": 33943679830,
+      "step": "M1-02 · حالةٌ واحدةٌ ناجحةٌ وإلّا فلا قياسَ",
+      "step_conclusion": "success",
+      "previously": "⚠️ مُستدَلٌّ عليه من نجاحِ الوظيفةِ"
+    },
+    "M1-03": {
+      "verdict": "PASSED",
+      "basis": "دليلُ CI الحقيقيُّ (run 33569807797 · 26/26) مُضافاً إليه إعادةُ قياسِ service-auth محلّيّاً",
+      "run": 33569807797,
+      "remeasured": {
+        "package": "@wasla/service-auth",
+        "files": 7,
+        "tests": 127
+      }
+    }
+  },
+  "protection_now": {
+    "required_contexts": 27,
+    "strict": true,
+    "enforce_admins": true,
+    "blocking_proven": "405 twice — M0-22E_GATE.md"
+  },
+  "not_measured": [
+    "مراجعةُ كلِّ الأحكامِ السابقةِ التي استندت إلى خضرةِ test/typecheck قبلَ RISK-0022",
+    "LOCAL(PG) لبوّابةِ M1-02",
+    "PRODUCTION في البوّاباتِ الثلاثِ"
+  ]
+}

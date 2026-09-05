@@ -1,0 +1,30 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-02T03-15-00Z",
+  "provider": "github-actions",
+  "repository": "skyosv10-art/wasla",
+  "ref": "main",
+  "commit": "0a7524705bc06ac13b1a9077584bc369e6d3fa68",
+  "run_id": "33569807797",
+  "run_event": "push",
+  "run_status": "success",
+  "jobs_total": 26,
+  "jobs_started": 26,
+  "started_at": "2026-09-01T23:10:44Z",
+  "verdict": "VERIFIED",
+  "reason": "jobs started and succeeded on main",
+  "job_statuses": { "success": 26 },
+  "failure_reasons": {},
+  "work_item": "M1-03",
+  "m1_03_direct_log_evidence": {
+    "job": "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
+    "test_file": "src/__tests__/service-identity-enforcement.e2e.test.ts",
+    "tests_passed": 8,
+    "log_source": "../2026-09-02T000000Z-m0-22b-remaining-jobs/job-logs/dispatch-e2e.raw.txt",
+    "same_tree_proof": "git diff --stat 9afd9d5 0a75247 = 0 files"
+  },
+  "declared_limits": [
+    "raw job logs of run 33569807797 not archived: log download host blocked in the execution environment (CONNECT tunnel failed, 403)",
+    "packages/service-auth unit tests (127) proven at job/step level in the `test` job (pnpm -r run test = success), not at log line level"
+  ]
+}

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-04T13:22:13Z",
+  "generated_at": "2026-09-05T00:48:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a6780da44e0a8beaa76a23b92e5d67d75166e0c2",
-    "branch": "feat/m0-22a-branch-protection-enforcement",
+    "commit": "e70029d927498dc7af766fcad0484c7e295f45d3",
+    "branch": "chore/m0-gates-reconcile-b3",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "وُلِّد ضمن دفعةِ M0-22A (الشوطُ الثاني) قبلَ الالتزامِ: المُضافُ خمسةُ ملفّاتِ دليلٍ خامٍّ من تشغيلِ CI الحقيقيِّ لطلبِ #19، والعدَّاداتُ الحركيّةُ من تشغيلٍ أخضرَ كاملٍ على الشجرةِ نفسِها (verify-m022a-r2.log) — ولا يمسُّ ملفُّ نصٍّ اختباراً.",
-    "tracked_files": 1289
+    "dirty_files": 8,
+    "dirty_reason": "regen after RISK-0020 added in reconcile batch 2 (green verify)",
+    "tracked_files": 1308
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 14
+    "risks_not_closed": 15
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify-m022a-r2.log",
+    "source": "/tmp/verify_b3b.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 163,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:e373840af310ecb496d0acc5f4e6cfbc9caeaf7ab876441d3632bf4bc5a24447",
+  "fingerprint": "sha256:cd103637cebf189dcdc2e29bd7b77688e57fc2a0e25f6c4e5e7613473bf3cb68",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

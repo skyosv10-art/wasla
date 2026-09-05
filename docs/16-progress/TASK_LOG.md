@@ -28,6 +28,23 @@
 
 ## السجل
 
+### [2026-09-05] `M0-22E` — `typecheck` يُرى أحمرَ لأوّلِ مرّةٍ: إغلاقُ `RISK-0022` وفتحُ `RISK-0023`
+
+- **Work Item(s):** M0-22E
+- **Claim:** `CLM-0080` · الفرع `chore/m0-22e-risk-0022-closure` · النطاقُ `docs/07-security/,docs/12-testing/,docs/16-progress/`
+- **Files:** `docs/07-security/RISK_REGISTER.md` · `docs/12-testing/M0-22E_GATE.md` · `docs/12-testing/ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/` (جديدٌ: `README.md` · `verdict.json` · `api-responses/01-probe-run-jobs.raw.json`) · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ ودليلُ خطٍّ
+- **Why:** `RISK-0022` (`high`) يشترطُ لإغلاقِه شرطاً واحداً: أن **يُرى الفحصُ أحمرَ**، ونصُّه يذكرُ **فحصَينِ** لا فحصاً واحداً (`test` و`typecheck`، والعلّةُ فيهما واحدةٌ: حالةُ خروجِ الأنبوبِ حالةُ `tee`). وقُرِئَ الملفُّ الخامُّ للجولةِ السابقةِ ([`34-probe2-jobs.raw.json`](../12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks/api-responses/34-probe2-jobs.raw.json)) فكانَ فيهِ `test → failure` و**`typecheck → success`** — لأنّ مِجَسَّ [PR #27](https://github.com/skyosv10-art/wasla/pull/27) **لم يحوِ خطأَ أنواعٍ قطُّ**. **فحُكمُ المعيارِ الرابعِ في بوّابةِ `M0-22E` كانَ أوسعَ من دليلِه بمقدارِ فحصٍ كاملٍ** — وذلكَ عينُ الاستدلالِ الذي أنشأَ الخطرَ: افتراضُ أنّ ما لم يُقَسْ يُشبِهُ ما قُيسَ.
+- **What:** مِجَسٌّ أحمرُ فيهِ **عيبانِ متعمَّدانِ لا عيبٌ واحدٌ** ([PR #36](https://github.com/skyosv10-art/wasla/pull/36) · `probe/risk-0022-red-proof` · **لم يُدمَجْ وأُغلِقَ**): تأكيدٌ يُخفِقُ يستهدفُ `test`، وخطأُ `TS2322` يستهدفُ `typecheck` — لأنّ إخفاقَ تأكيدٍ في زمنِ التشغيلِ **لا يراه `tsc` أصلاً** والعكسُ كذلكَ. ثمّ أُغلِقَ `RISK-0022` بالدليلِ، **ولم تُدفَنْ بقيّتُه** («لم تُراجَعِ الأحكامُ السابقةُ واحداً واحداً») بل نُقِلت خطراً مستقلّاً `RISK-0023` (`medium`). وصُحِّحَ سنَدُ المعيارِ الرابعِ في البوّابةِ **بالإضافةِ لا بالمحوِ** (§7 جديدٌ). وحُرِّرَ `CLM-0078` بعدَ دمجِ [PR #34](https://github.com/skyosv10-art/wasla/pull/34).
+- **Tests:** **محلّيّاً قبلَ الدفعِ:** `pnpm --filter @wasla/errors typecheck` ⇒ `TS2322` · `Exit status 2` · `pnpm --filter @wasla/errors test` ⇒ `Tests 1 failed | 4 passed` · `Exit status 1`. **وفي الخطِّ** (تشغيلُ [`33964043338`](https://github.com/skyosv10-art/wasla/actions/runs/33964043338) · 27 وظيفةً بدأت وأكملت): `test` ⇒ **`failure`** والخطوةُ المُخفِقةُ `6 · test` · `typecheck` ⇒ **`failure`** والخطوةُ المُخفِقةُ `6 · typecheck`. **والخطوةُ السابعةُ «رفعُ السجلِّ» بقيت `success` في الحالَينِ** — فالعلاجُ أصلحَ حالةَ الخروجِ ولم يُلغِ `tee`. الحمراءُ خمسٌ والخضراءُ اثنتانِ وعشرونَ.
+- **Status (§9):** `RISK-0022` ⇒ **`closed`** · `RISK-0023` ⇒ **`open`** · `M0-22E` يبقى **`Ready for Gate`** — النقلُ إلى `Completed` سلطةُ المالكِ.
+- **Security/Data/Deployment:** لا أثرَ. لا كودَ إنتاجٍ تغيَّرَ في هذه الدفعةِ؛ ملفُّ المِجَسِّ يعيشُ على فرعِ المِجَسِّ وحدَه ولا يبلغُ `main`.
+- **وما لا يُدَّعى:** (1) **لم تُبرهَنْ** قدرةُ الفحوصِ الخمسةِ والعشرينَ الباقيةِ على الإخفاقِ. (2) **ولم يُقرَأْ نصُّ السجلِّ الخامِّ** للوظيفتَينِ: مضيفُ تنزيلِ سجلّاتِ الوظائفِ خارجَ الشبكةِ المسموحةِ في بيئةِ التنفيذِ، فالمقروءُ حكمُ الواجهةِ على الوظيفةِ **وعلى الخطوةِ السادسةِ بعينِها** — وهو الحكمُ ذاتُه الذي تقرؤه حمايةُ الفرعِ. (3) **ولم تُعَدْ محاولةُ دمجٍ ممنوعةٍ** على المِجَسِّ: المنعُ مقيسٌ سلفاً بـ`405` مرّتَينِ في دليلِ `M0-22E`، **والدمجُ صلاحيةُ المالكِ فلا تُطرَقُ واجهتُه بلا حاجةٍ**.
+- **Known Issue/Blocker:** `CLM-0079` (على فرعِ [PR #35](https://github.com/skyosv10-art/wasla/pull/35) المفتوحِ) يحجزُ `docs/12-testing/` أيضاً، **وهو غيرُ مُسجَّلٍ على `main`** فلا يراه المدقِّقُ. والملفّاتُ مختلفةٌ (`M0-22B_GATE.md` هناكَ · `M0-22E_GATE.md` ودليلٌ جديدٌ هنا)، **لكنّ التداخلَ في النطاقِ مُعلَنٌ لا مطويٌّ**. و[PR #35](https://github.com/skyosv10-art/wasla/pull/35) حالتُه `mergeable: false` · `dirty` لأنّه سابقٌ لدمجِ [PR #34](https://github.com/skyosv10-art/wasla/pull/34).
+- **Evidence:** [`ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/`](../12-testing/ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/)
+- **Next:** انتظارُ قراءةِ CI على هذا الطلبِ، ثمّ قرارُ المالكِ في الدمجِ.
+- **Related:** [PR #36](https://github.com/skyosv10-art/wasla/pull/36) (المِجَسُّ · لا يُدمَجُ) · [PR #28](https://github.com/skyosv10-art/wasla/pull/28) (`set -o pipefail`) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md) · [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md)
+
 ### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
 
 - **Work Item(s):** M0-22C

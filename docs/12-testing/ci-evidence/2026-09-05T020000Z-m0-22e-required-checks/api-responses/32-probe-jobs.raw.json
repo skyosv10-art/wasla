@@ -1,0 +1,2909 @@
+$ GET https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985/jobs?per_page=100
+--- response ---
+HTTP 200
+
+{
+  "total_count": 27,
+  "jobs": [
+    {
+      "id": 101229567219,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCc8w",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567219",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567219",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:03:51Z",
+      "name": "doc-coverage",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "require-doc-update",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567219",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001552,
+      "runner_name": "GitHub Actions 1000001552",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567271,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdJw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567271",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567271",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:03:53Z",
+      "name": "governance-guard",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "verify-governance",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 4,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "test-governance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567271",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001551,
+      "runner_name": "GitHub Actions 1000001551",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567298,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdQg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567298",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567298",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:25Z",
+      "name": "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:14Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:14Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "subscription · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:22Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:22Z",
+          "completed_at": "2026-09-05T02:04:22Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:22Z",
+          "completed_at": "2026-09-05T02:04:23Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:23Z",
+          "completed_at": "2026-09-05T02:04:23Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567298",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001554,
+      "runner_name": "GitHub Actions 1000001554",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567299,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdQw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567299",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567299",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:09Z",
+      "name": "test",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:52Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:03:52Z",
+          "completed_at": "2026-09-05T02:03:54Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:03:54Z",
+          "completed_at": "2026-09-05T02:03:57Z"
+        },
+        {
+          "name": "test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:03:57Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "رفع سجل الاختبارات",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567299",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001553,
+      "runner_name": "GitHub Actions 1000001553",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567310,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdTg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567310",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567310",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:57Z",
+      "name": "verify",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:03:48Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:48Z",
+          "completed_at": "2026-09-05T02:03:53Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:03:53Z",
+          "completed_at": "2026-09-05T02:03:55Z"
+        },
+        {
+          "name": "verify.sh",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-09-05T02:03:55Z",
+          "completed_at": "2026-09-05T02:04:54Z"
+        },
+        {
+          "name": "رفع أرتفاكت التحقق",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:54Z",
+          "completed_at": "2026-09-05T02:04:55Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-09-05T02:04:55Z",
+          "completed_at": "2026-09-05T02:04:55Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-09-05T02:04:55Z",
+          "completed_at": "2026-09-05T02:04:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:55Z",
+          "completed_at": "2026-09-05T02:04:55Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567310",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001556,
+      "runner_name": "GitHub Actions 1000001556",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567311,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdTw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567311",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567311",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:05:10Z",
+      "name": "db-integration-shared",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:45Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:02Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:02Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "اثنتا عشرةَ مجموعةً تِباعاً على قاعدةٍ واحدةٍ",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:05:08Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:05:08Z",
+          "completed_at": "2026-09-05T02:05:08Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:05:08Z",
+          "completed_at": "2026-09-05T02:05:08Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:05:08Z",
+          "completed_at": "2026-09-05T02:05:09Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567311",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001564,
+      "runner_name": "GitHub Actions 1000001564",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567315,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdUw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567315",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567315",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:14Z",
+      "name": "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:45Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:59Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:59Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:01Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:01Z",
+          "completed_at": "2026-09-05T02:04:02Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:02Z",
+          "completed_at": "2026-09-05T02:04:05Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:05Z",
+          "completed_at": "2026-09-05T02:04:05Z"
+        },
+        {
+          "name": "driver · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:05Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567315",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001555,
+      "runner_name": "GitHub Actions 1000001555",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567316,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdVA",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567316",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567316",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:05:23Z",
+      "name": "typecheck",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:45Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:47Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:03:47Z",
+          "completed_at": "2026-09-05T02:03:51Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:03:51Z",
+          "completed_at": "2026-09-05T02:03:52Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:03:52Z",
+          "completed_at": "2026-09-05T02:03:55Z"
+        },
+        {
+          "name": "typecheck",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:03:55Z",
+          "completed_at": "2026-09-05T02:05:21Z"
+        },
+        {
+          "name": "رفع سجل الأنواع",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:05:21Z",
+          "completed_at": "2026-09-05T02:05:21Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:05:21Z",
+          "completed_at": "2026-09-05T02:05:22Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:05:22Z",
+          "completed_at": "2026-09-05T02:05:22Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:05:22Z",
+          "completed_at": "2026-09-05T02:05:22Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567316",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001558,
+      "runner_name": "GitHub Actions 1000001558",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567331,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdYw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567331",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567331",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:18Z",
+      "name": "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:05Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:05Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:11Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        },
+        {
+          "name": "customer · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:11Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567331",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001563,
+      "runner_name": "GitHub Actions 1000001563",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567344,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdcA",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567344",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567344",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:45Z",
+      "completed_at": "2026-09-05T02:04:17Z",
+      "name": "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:05Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:05Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:09Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:09Z",
+          "completed_at": "2026-09-05T02:04:09Z"
+        },
+        {
+          "name": "dispatch · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:09Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567344",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001557,
+      "runner_name": "GitHub Actions 1000001557",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567350,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCddg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567350",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567350",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:14Z",
+      "name": "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:01Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:01Z",
+          "completed_at": "2026-09-05T02:04:01Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:01Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:08Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:08Z",
+          "completed_at": "2026-09-05T02:04:08Z"
+        },
+        {
+          "name": "channel · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:08Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:11Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567350",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001559,
+      "runner_name": "GitHub Actions 1000001559",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567355,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdew",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567355",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567355",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:04:16Z",
+      "completed_at": "2026-09-05T02:04:23Z",
+      "name": "repo-structure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:18Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:18Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "validate-repo-structure",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "validate-launch-board",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "validate-work-claims",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "scan-secrets",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567355",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001573,
+      "runner_name": "GitHub Actions 1000001573",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567373,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdjQ",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567373",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567373",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:52Z",
+      "completed_at": "2026-09-05T02:04:23Z",
+      "name": "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:53Z",
+          "completed_at": "2026-09-05T02:03:53Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:53Z",
+          "completed_at": "2026-09-05T02:04:10Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:10Z",
+          "completed_at": "2026-09-05T02:04:10Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:10Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:13Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:13Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "negotiation · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:21Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:21Z",
+          "completed_at": "2026-09-05T02:04:21Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567373",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001566,
+      "runner_name": "GitHub Actions 1000001566",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567374,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdjg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567374",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567374",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:45Z",
+      "completed_at": "2026-09-05T02:04:17Z",
+      "name": "db-integration (identity, @wasla/identity-service, wasla_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:05Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:05Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        },
+        {
+          "name": "identity · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:11Z",
+          "completed_at": "2026-09-05T02:04:14Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:14Z",
+          "completed_at": "2026-09-05T02:04:14Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:14Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567374",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001560,
+      "runner_name": "GitHub Actions 1000001560",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567391,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdnw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567391",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567391",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:21Z",
+      "name": "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:45Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:02Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:02Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "order · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567391",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001562,
+      "runner_name": "GitHub Actions 1000001562",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567392,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdoA",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567392",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567392",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:15Z",
+      "name": "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:02Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:02Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:06Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:06Z",
+          "completed_at": "2026-09-05T02:04:09Z"
+        },
+        {
+          "name": "channel · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:09Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:13Z",
+          "completed_at": "2026-09-05T02:04:13Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567392",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001561,
+      "runner_name": "GitHub Actions 1000001561",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567398,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdpg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567398",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567398",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:04:16Z",
+      "completed_at": "2026-09-05T02:04:53Z",
+      "name": "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:38Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:38Z",
+          "completed_at": "2026-09-05T02:04:38Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:38Z",
+          "completed_at": "2026-09-05T02:04:40Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:40Z",
+          "completed_at": "2026-09-05T02:04:41Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:41Z",
+          "completed_at": "2026-09-05T02:04:43Z"
+        },
+        {
+          "name": "negotiations · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:43Z",
+          "completed_at": "2026-09-05T02:04:50Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:50Z",
+          "completed_at": "2026-09-05T02:04:50Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:50Z",
+          "completed_at": "2026-09-05T02:04:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:51Z",
+          "completed_at": "2026-09-05T02:04:51Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567398",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001574,
+      "runner_name": "GitHub Actions 1000001574",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567430,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdxg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567430",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567430",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:04:11Z",
+      "completed_at": "2026-09-05T02:04:47Z",
+      "name": "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:13Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:13Z",
+          "completed_at": "2026-09-05T02:04:32Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:32Z",
+          "completed_at": "2026-09-05T02:04:33Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:33Z",
+          "completed_at": "2026-09-05T02:04:34Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:34Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:36Z",
+          "completed_at": "2026-09-05T02:04:39Z"
+        },
+        {
+          "name": "dispatch · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:39Z",
+          "completed_at": "2026-09-05T02:04:45Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:45Z",
+          "completed_at": "2026-09-05T02:04:45Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:45Z",
+          "completed_at": "2026-09-05T02:04:45Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:45Z",
+          "completed_at": "2026-09-05T02:04:45Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567430",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001571,
+      "runner_name": "GitHub Actions 1000001571",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567432,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCdyA",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567432",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567432",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:04:14Z",
+      "completed_at": "2026-09-05T02:04:53Z",
+      "name": "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:14Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:40Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:40Z",
+          "completed_at": "2026-09-05T02:04:41Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:41Z",
+          "completed_at": "2026-09-05T02:04:43Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:43Z",
+          "completed_at": "2026-09-05T02:04:44Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:44Z",
+          "completed_at": "2026-09-05T02:04:46Z"
+        },
+        {
+          "name": "customer · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:46Z",
+          "completed_at": "2026-09-05T02:04:50Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:50Z",
+          "completed_at": "2026-09-05T02:04:50Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:50Z",
+          "completed_at": "2026-09-05T02:04:52Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:52Z",
+          "completed_at": "2026-09-05T02:04:52Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567432",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001572,
+      "runner_name": "GitHub Actions 1000001572",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567448,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd2A",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567448",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567448",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:04:03Z",
+      "completed_at": "2026-09-05T02:04:59Z",
+      "name": "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:30Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:30Z",
+          "completed_at": "2026-09-05T02:04:31Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:31Z",
+          "completed_at": "2026-09-05T02:04:32Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:32Z",
+          "completed_at": "2026-09-05T02:04:34Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:34Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        },
+        {
+          "name": "drivers · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:36Z",
+          "completed_at": "2026-09-05T02:04:56Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:56Z",
+          "completed_at": "2026-09-05T02:04:57Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:57Z",
+          "completed_at": "2026-09-05T02:04:57Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:57Z",
+          "completed_at": "2026-09-05T02:04:57Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567448",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001570,
+      "runner_name": "GitHub Actions 1000001570",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567449,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd2Q",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567449",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567449",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:52Z",
+      "completed_at": "2026-09-05T02:04:21Z",
+      "name": "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:53Z",
+          "completed_at": "2026-09-05T02:03:53Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:53Z",
+          "completed_at": "2026-09-05T02:04:08Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:08Z",
+          "completed_at": "2026-09-05T02:04:09Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:09Z",
+          "completed_at": "2026-09-05T02:04:10Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:10Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "order · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567449",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001567,
+      "runner_name": "GitHub Actions 1000001567",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567456,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd4A",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567456",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567456",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:44Z",
+      "completed_at": "2026-09-05T02:04:12Z",
+      "name": "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:45Z",
+          "completed_at": "2026-09-05T02:03:46Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:46Z",
+          "completed_at": "2026-09-05T02:04:00Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:00Z",
+          "completed_at": "2026-09-05T02:04:01Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:01Z",
+          "completed_at": "2026-09-05T02:04:03Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:03Z",
+          "completed_at": "2026-09-05T02:04:04Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:04Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:07Z"
+        },
+        {
+          "name": "marketplace · exit gate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-05T02:04:07Z",
+          "completed_at": "2026-09-05T02:04:10Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:10Z",
+          "completed_at": "2026-09-05T02:04:10Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-05T02:04:10Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-05T02:04:11Z",
+          "completed_at": "2026-09-05T02:04:11Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567456",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001565,
+      "runner_name": "GitHub Actions 1000001565",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567457,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd4Q",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567457",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567457",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:42Z",
+      "started_at": "2026-09-05T02:03:54Z",
+      "completed_at": "2026-09-05T02:04:28Z",
+      "name": "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:55Z",
+          "completed_at": "2026-09-05T02:03:56Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:56Z",
+          "completed_at": "2026-09-05T02:04:12Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:12Z",
+          "completed_at": "2026-09-05T02:04:13Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:13Z",
+          "completed_at": "2026-09-05T02:04:14Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:14Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:19Z"
+        },
+        {
+          "name": "reputation · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:19Z",
+          "completed_at": "2026-09-05T02:04:24Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:24Z",
+          "completed_at": "2026-09-05T02:04:24Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:24Z",
+          "completed_at": "2026-09-05T02:04:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:25Z",
+          "completed_at": "2026-09-05T02:04:25Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567457",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001568,
+      "runner_name": "GitHub Actions 1000001568",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567478,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd9g",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567478",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567478",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:43Z",
+      "started_at": "2026-09-05T02:03:54Z",
+      "completed_at": "2026-09-05T02:04:38Z",
+      "name": "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:03:55Z",
+          "completed_at": "2026-09-05T02:03:55Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:03:55Z",
+          "completed_at": "2026-09-05T02:04:15Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:15Z",
+          "completed_at": "2026-09-05T02:04:16Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:16Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:18Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:18Z",
+          "completed_at": "2026-09-05T02:04:21Z"
+        },
+        {
+          "name": "marketplace · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:21Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:36Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:36Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:36Z",
+          "completed_at": "2026-09-05T02:04:36Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567478",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001569,
+      "runner_name": "GitHub Actions 1000001569",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567481,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCd-Q",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567481",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567481",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:43Z",
+      "started_at": "2026-09-05T02:04:16Z",
+      "completed_at": "2026-09-05T02:04:56Z",
+      "name": "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:17Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:17Z",
+          "completed_at": "2026-09-05T02:04:41Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:41Z",
+          "completed_at": "2026-09-05T02:04:42Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:42Z",
+          "completed_at": "2026-09-05T02:04:43Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:43Z",
+          "completed_at": "2026-09-05T02:04:44Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:44Z",
+          "completed_at": "2026-09-05T02:04:47Z"
+        },
+        {
+          "name": "matching · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:47Z",
+          "completed_at": "2026-09-05T02:04:52Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:52Z",
+          "completed_at": "2026-09-05T02:04:52Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:52Z",
+          "completed_at": "2026-09-05T02:04:54Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:54Z",
+          "completed_at": "2026-09-05T02:04:54Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567481",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001575,
+      "runner_name": "GitHub Actions 1000001575",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567567,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCeTw",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567567",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567567",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:43Z",
+      "started_at": "2026-09-05T02:04:19Z",
+      "completed_at": "2026-09-05T02:04:51Z",
+      "name": "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:21Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:21Z",
+          "completed_at": "2026-09-05T02:04:38Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:38Z",
+          "completed_at": "2026-09-05T02:04:39Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:39Z",
+          "completed_at": "2026-09-05T02:04:40Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:40Z",
+          "completed_at": "2026-09-05T02:04:42Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:42Z",
+          "completed_at": "2026-09-05T02:04:45Z"
+        },
+        {
+          "name": "geography · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:45Z",
+          "completed_at": "2026-09-05T02:04:48Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:04:48Z",
+          "completed_at": "2026-09-05T02:04:49Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:04:49Z",
+          "completed_at": "2026-09-05T02:04:49Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:04:49Z",
+          "completed_at": "2026-09-05T02:04:49Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567567",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001577,
+      "runner_name": "GitHub Actions 1000001577",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 101229567570,
+      "run_id": 33937989985,
+      "workflow_name": "WASLA CI",
+      "head_branch": "probe/m0-22e-required-checks-red",
+      "run_url": "https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33937989985",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUKQifc8AAAAXkcCeUg",
+      "head_sha": "5dab4ec8ca770fbad24da79360234076f5ce42bf",
+      "url": "https://api.github.com/repos/skyosv10-art/wasla/actions/jobs/101229567570",
+      "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33937989985/job/101229567570",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-05T02:03:43Z",
+      "started_at": "2026-09-05T02:04:19Z",
+      "completed_at": "2026-09-05T02:05:10Z",
+      "name": "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:20Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-05T02:04:20Z",
+          "completed_at": "2026-09-05T02:04:49Z"
+        },
+        {
+          "name": "git داخل alpine (لا يأتي مع الصورة)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-05T02:04:49Z",
+          "completed_at": "2026-09-05T02:04:50Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-05T02:04:50Z",
+          "completed_at": "2026-09-05T02:04:52Z"
+        },
+        {
+          "name": "تفعيل pnpm المثبَّت",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-05T02:04:52Z",
+          "completed_at": "2026-09-05T02:04:53Z"
+        },
+        {
+          "name": "install",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-05T02:04:53Z",
+          "completed_at": "2026-09-05T02:04:56Z"
+        },
+        {
+          "name": "subscriptions · test:integration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-05T02:04:56Z",
+          "completed_at": "2026-09-05T02:05:06Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-05T02:05:06Z",
+          "completed_at": "2026-09-05T02:05:06Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-05T02:05:06Z",
+          "completed_at": "2026-09-05T02:05:08Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-05T02:05:08Z",
+          "completed_at": "2026-09-05T02:05:08Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/skyosv10-art/wasla/check-runs/101229567570",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001576,
+      "runner_name": "GitHub Actions 1000001576",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

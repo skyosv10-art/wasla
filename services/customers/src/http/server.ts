@@ -37,6 +37,8 @@
  * Port via PORT (default 8086 — identity 8080, geography 8081; see ports table).
  */
 
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+
 import type { Pool } from "pg";
 
 import {
@@ -47,9 +49,12 @@ import {
   SystemClock,
   UnavailableOrderIntake,
 } from "../infrastructure/in-memory.js";
-import { HttpOrderIntakePort } from "../infrastructure/http-order-intake.js";
+import { CUSTOMERS_ORDERS_SCOPES, HttpOrderIntakePort } from "../infrastructure/http-order-intake.js";
 import { HttpGeographyPort } from "../infrastructure/http-geography.js";
-import { HttpIdentityLookupPort } from "../infrastructure/http-identity-lookup.js";
+import {
+  HttpIdentityLookupPort,
+  CUSTOMERS_IDENTITY_SCOPES,
+} from "../infrastructure/http-identity-lookup.js";
 import { createCustomerDb } from "../infrastructure/drizzle/db.js";
 import {
   PostgresCustomerOutbox,
@@ -74,7 +79,17 @@ class PermissiveIdentityLookup implements IdentityLookupPort {
 function buildIdentityLookup(): IdentityLookupPort {
   const baseUrl = process.env.IDENTITY_SERVICE_URL;
   return baseUrl
-    ? new HttpIdentityLookupPort({ baseUrl })
+    ? new HttpIdentityLookupPort({
+        baseUrl,
+        // M1-04 (الموجة 3): حد الهويّة صار يفرض هوية الخدمة. والصلاحية المطلوبة
+        // قراءةُ مستخدم وحدها — لا ربطَ هويّةٍ ولا بدءَ استعادةٍ.
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "identity",
+          keys: keyRegistryFromEnv(process.env),
+          scopes: CUSTOMERS_IDENTITY_SCOPES,
+        }),
+      })
     : new PermissiveIdentityLookup();
 }
 
@@ -99,6 +114,15 @@ function buildOrderIntake(): {
   return {
     orderIntake: new HttpOrderIntakePort({
       baseUrl,
+      // M1-04: حد الطلبات صار يفرض هوية الخدمة. المفاتيح من البيئة بلا قيمة
+      // افتراضية: منادٍ بلا مفاتيح يُرَدّ 401 فيُقرأ الرد عطلَ محرّكِ الطلبات لا
+      // نقصَ إعدادٍ هنا، والإخفاق عند الإقلاع يسمّي العلة في موضعها.
+      signRequest: createServiceRequestSigner({
+        serviceName: "customers",
+        audience: "orders",
+        keys: keyRegistryFromEnv(process.env),
+        scopes: CUSTOMERS_ORDERS_SCOPES,
+      }),
       ...(timeoutMs === undefined ? {} : { timeoutMs }),
     }),
     label: "configured",

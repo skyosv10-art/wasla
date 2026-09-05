@@ -56,3 +56,15 @@ export type {
   SessionUseCaseDeps,
   VerifiedTelegramSessionRequest,
 } from "./use-cases/session.js";
+
+// فرضُ هويّةِ الخدمةِ على حدِّ الهويّةِ (M1-04 · الموجةُ 3).
+export {
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
+  registerServiceIdentity as registerIdentityServiceIdentity,
+} from "./http/service-identity.js";
+export type {
+  IdentityRouteConfig,
+  IdentityRouteIdentity,
+  IdentityServiceIdentityOptions,
+} from "./http/service-identity.js";

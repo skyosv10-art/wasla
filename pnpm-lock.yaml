@@ -39,6 +39,9 @@ importers:
       '@wasla/customers-service':
         specifier: workspace:*
         version: link:../../services/customers
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -132,6 +135,9 @@ importers:
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../contracts/channel
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       '@wasla/telegram-adapter':
         specifier: workspace:*
         version: link:../telegram-adapter
@@ -194,6 +200,9 @@ importers:
       '@wasla/partner-bot':
         specifier: workspace:*
         version: link:../../bots/partner-bot
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       '@wasla/telegram-adapter':
         specifier: workspace:*
         version: link:../telegram-adapter
@@ -408,6 +417,9 @@ importers:
       '@wasla/identity-service':
         specifier: workspace:*
         version: link:../../services/identity
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -581,6 +593,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../../services/orders
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -608,6 +623,9 @@ importers:
       '@wasla/reputation-service':
         specifier: workspace:*
         version: link:../../services/reputation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -627,6 +645,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
+      fastify:
+        specifier: ^5.12.1
+        version: 5.12.1
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
@@ -679,6 +700,9 @@ importers:
       '@wasla/contracts-customer':
         specifier: workspace:*
         version: link:../../packages/contracts/customer
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -707,6 +731,9 @@ importers:
 
   services/dispatch:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-dispatch':
         specifier: workspace:*
         version: link:../../packages/contracts/dispatch
@@ -778,6 +805,9 @@ importers:
       '@wasla/contracts-geography':
         specifier: workspace:*
         version: link:../../packages/contracts/geography
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -815,6 +845,9 @@ importers:
       '@wasla/contracts-identity':
         specifier: workspace:*
         version: link:../../packages/contracts/identity
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -908,6 +941,9 @@ importers:
       '@wasla/contracts-negotiation':
         specifier: workspace:*
         version: link:../../packages/contracts/negotiation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -936,6 +972,9 @@ importers:
       '@wasla/contracts-order':
         specifier: workspace:*
         version: link:../../packages/contracts/order
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
@@ -952,6 +991,9 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

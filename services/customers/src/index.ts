@@ -27,13 +27,17 @@ export * from "./domain/validation.js";
 export * from "./domain/events.js";
 export * from "./ports.js";
 export * from "./infrastructure/in-memory.js";
-export { HttpIdentityLookupPort } from "./infrastructure/http-identity-lookup.js";
+export {
+  HttpIdentityLookupPort,
+  CUSTOMERS_IDENTITY_SCOPES,
+} from "./infrastructure/http-identity-lookup.js";
 export type { HttpIdentityLookupOptions } from "./infrastructure/http-identity-lookup.js";
 export { HttpGeographyPort } from "./infrastructure/http-geography.js";
 export type { HttpGeographyOptions } from "./infrastructure/http-geography.js";
 // The production order-engine adapter (Phase 06 · MR 5/6). Exported because the
 // Phase 06 exit gate must test *this* adapter, not a copy of it living in a test.
 export {
+  CUSTOMERS_ORDERS_SCOPES,
   HttpOrderIntakePort,
   ORDER_INTAKE_PATH,
   HTTP_ORDER_INTAKE_REASONS,

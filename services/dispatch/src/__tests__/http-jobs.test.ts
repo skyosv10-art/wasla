@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createDispatchApp } from "../http/app.js";
+import { createSignedDispatchApp as createDispatchApp } from "./service-identity-support.js";
 import { createDirectRunner } from "../runner.js";
 import { createHarness, orderRef, ZONE_ID } from "./harness.js";
 

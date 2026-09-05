@@ -54,6 +54,7 @@ import {
   type CustomerEvent,
   type Outbox,
   type UseCaseDeps,
+  CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import {
   createGeographyApp,
@@ -65,7 +66,14 @@ import {
   SystemClock as GeoSystemClock,
 } from "@wasla/geography-service";
 import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
+import {
   createIdentityApp,
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
   CryptoIdGenerator as IdentityIdGenerator,
   InMemoryIdentityRepository,
   InMemoryOutbox as InMemoryIdentityOutbox,
@@ -123,9 +131,26 @@ export interface GateContext {
   close(): Promise<void>;
 }
 
+/**
+ * مادّةُ مفاتيحِ البوّابةِ (`M1-04`). سرٌّ واحدٌ لأنّ المُبرهَنَ هنا **السلسلةُ
+ * الموقَّعةُ** لا إدارةُ المفاتيحِ — ولها اختباراتُها في `packages/service-auth`.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 /** Start the gate: four listeners, one store set, one bot. */
 export async function startGate(): Promise<GateContext> {
   // --- identity: a real service on an ephemeral port ------------------------
+  const identityServiceAuthKeys = gateServiceAuthKeys();
+  // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+  // **مفروضاً** وتوقِّعُ عميلَه بالمفاتيحِ نفسِها — لا تُعطِّلُ الفرضَ لتمرَّ.
   const identityEvents = new InMemoryIdentityOutbox();
   const identityApp = createIdentityApp({
     deps: {
@@ -136,6 +161,10 @@ export async function startGate(): Promise<GateContext> {
       idGen: new IdentityIdGenerator(),
     },
     logger: false,
+    serviceIdentity: {
+      keys: identityServiceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await identityApp.listen({ port: 0, host: "127.0.0.1" });
   const identityUrl = `http://127.0.0.1:${(identityApp.server.address() as AddressInfo).port}`;
@@ -178,7 +207,15 @@ export async function startGate(): Promise<GateContext> {
     outbox,
     clock: new SystemClock(),
     idGen: new CryptoIdGenerator(),
-    identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
+    identityLookup: new HttpIdentityLookupPort({
+      baseUrl: identityUrl,
+      signRequest: createServiceRequestSigner({
+        serviceName: "customers",
+        audience: "identity",
+        keys: identityServiceAuthKeys,
+        scopes: CUSTOMERS_IDENTITY_SCOPES,
+      }),
+    }),
     geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
     orderIntake: new HttpStubOrderIntake({ baseUrl: engine.baseUrl }),
   };
@@ -208,6 +245,11 @@ export async function startGate(): Promise<GateContext> {
       CUSTOMER_BOT_WEBHOOK_SECRET: WEBHOOK_SECRET,
       CUSTOMER_BOT_MINI_APP_URL: MINI_APP_URL,
       IDENTITY_SERVICE_URL: identityUrl,
+      // M1-04: بوتٌ يُنادي حدَّ الهويّةِ بلا مفاتيحَ يُرَدُّ 401 فيقولُ للعميلِ
+      // إنّ هويّتَه غيرُ موجودةٍ وهي موجودةٌ. والمفاتيحُ تُسلَّمُ هنا بالصيغةِ
+      // المنشورةِ نفسِها «kid:status:secret».
+      WASLA_SERVICE_AUTH_KEYS: `${GATE_SERVICE_AUTH_KID}:active:${GATE_SERVICE_AUTH_SECRET}`,
+      WASLA_SERVICE_AUTH_ACTIVE_KID: GATE_SERVICE_AUTH_KID,
     },
     channel,
     customerFlows: new UseCaseCustomerFlows(deps),
@@ -375,9 +417,16 @@ export async function resolveIdentity(
   gate: GateContext,
   telegramUserId: number,
 ): Promise<{ readonly waslaPublicId: string; readonly created: boolean }> {
+  // M1-04: حدُّ الهويّةِ مُغلَقٌ افتراضاً، فالبوّابةُ توقّعُ كما يوقّعُ البوتُ.
+  const sign = createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: IDENTITY_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(IDENTITY_SCOPES),
+  });
   const response = await fetch(`${gate.identityUrl}/identity/resolve`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...sign("POST", "/identity/resolve") },
     body: JSON.stringify({ telegram_user_id: telegramUserId, source: "customer_bot" }),
   });
   const body = (await response.json()) as { wasla_public_id: string; created: boolean };

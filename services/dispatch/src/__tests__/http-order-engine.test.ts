@@ -1,6 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
+import { createServiceRequestSigner, SERVICE_AUTH_HEADER, ServiceAuthKeyRegistry } from "@wasla/service-auth";
+
+import { DISPATCH_ORDERS_SCOPES, HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
+
+/** موقّع اختباري حقيقي: النداء يجب أن يحمل ترويسة يقبلها حد الطلبات (M1-04). */
+const TEST_SIGNER = createServiceRequestSigner({
+  serviceName: "dispatch",
+  audience: "orders",
+  keys: new ServiceAuthKeyRegistry({
+    keys: [{ kid: "test", secret: "dispatch-orders-secret-0123456789", status: "active" }],
+    activeKid: "test",
+  }),
+  scopes: DISPATCH_ORDERS_SCOPES,
+});
+
 
 const orderId = "10000000-0000-4000-8000-000000000001";
 const assignmentId = "70000000-0000-4000-8000-000000000001";
@@ -12,10 +26,20 @@ const assignment = { id: assignmentId };
 afterEach(() => vi.unstubAllGlobals());
 
 function port(timeoutMs?: number): HttpOrderEnginePort {
-  return new HttpOrderEnginePort({ baseUrl: "http://orders.test", timeoutMs });
+  return new HttpOrderEnginePort({ baseUrl: "http://orders.test", timeoutMs, signRequest: TEST_SIGNER });
 }
 
 describe("محول محرّك الطلبات لتسجيل العرض", () => {
+  it("يوقّع كل نداء صادر بترويسة هوية مربوطة بالطريقة والمسار (M1-04)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(assignment), { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await port().registerOffer(registerInput);
+    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`http://orders.test/orders/${orderId}/assignments`);
+    // نداء بلا ترويسة هوية يُرَدّ 401 من حد الطلبات؛ فغيابها هنا عطلٌ لا تفصيل.
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
+  });
+
   it("يعيد applied عند إنشاء تسجيل العرض", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(assignment), { status: 201 })));
     await expect(port().registerOffer(registerInput)).resolves.toEqual({ outcome: "applied", assignmentId });

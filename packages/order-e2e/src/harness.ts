@@ -57,6 +57,8 @@ import {
   InMemoryOutbox as InMemoryCustomerOutbox,
   SystemClock as CustomerClock,
   type UseCaseDeps,
+  CUSTOMERS_ORDERS_SCOPES,
+  CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import {
   createGeographyApp,
@@ -69,6 +71,8 @@ import {
 } from "@wasla/geography-service";
 import {
   createIdentityApp,
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
   CryptoIdGenerator as IdentityIdGenerator,
   InMemoryIdentityRepository,
   InMemoryOutbox as InMemoryIdentityOutbox,
@@ -91,8 +95,29 @@ import {
   type OrderDomainEvent,
   type OrderRunner,
   type Outbox as OrderOutbox,
+  ORDER_SCOPES,
 } from "@wasla/orders-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { Pool } from "pg";
+
+/**
+ * مادة مفاتيح البوابة (M1-04). سرٌّ واحد لأن المُبرهَن هنا هو **السلسلة
+ * الموقَّعة** لا إدارةُ المفاتيح — وإدارتها لها اختباراتها في
+ * `packages/service-auth`.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
 
 /** Postgres mode is opt-in for the ENGINE; the gate itself is not opt-in. */
 export const ORDER_DATABASE_URL = process.env.ORDER_DATABASE_URL;
@@ -125,6 +150,13 @@ export interface GateContext {
   readonly identityUrl: string;
   /** `postgres` or `memory` — for the ENGINE. Reported so a run is unambiguous. */
   readonly persistence: "postgres" | "memory";
+  /**
+   * Sign an outbound call to the engine (M1-04). The gate drives engine routes
+   * that Phase 07 drives from `dispatch` and `negotiations`, so it signs with
+   * every scope the boundary declares — the point proven here is the chain
+   * working **signed**, not scope granting, which is M1-05 at the issuer.
+   */
+  readonly signEngine: (method: string, path: string) => Record<string, string>;
   /** Everything the engine appended, whichever store is in play. */
   engineEvents(): Promise<OrderDomainEvent[]>;
   close(): Promise<void>;
@@ -132,7 +164,14 @@ export interface GateContext {
 
 /** Start the gate: four listeners, one engine store set. */
 export async function startGate(): Promise<GateContext> {
+  // مفاتيحُ البوّابةِ تُبنى مرّةً واحدةً وتُشتَرَكُ بينَ الحدَّينِ المفروضَينِ
+  // (الطلباتُ · الهويّةُ) وعملائِهما — فما يُبرهَنُ هنا أنّ السلسلةَ كاملةً
+  // تعملُ **موقَّعةً**، لا أنّ الفرضَ مُعطَّلٌ في الاختبارِ.
+  const serviceAuthKeys = gateKeys();
+
   // --- identity: a real service on an ephemeral port ------------------------
+  // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+  // **مفروضاً** وتوقِّعُ عملاءَه بالمفاتيحِ نفسِها — لا تُعطِّلُ الفرضَ لتمرَّ.
   const identityApp = createIdentityApp({
     deps: {
       repo: new InMemoryIdentityRepository(),
@@ -142,6 +181,10 @@ export async function startGate(): Promise<GateContext> {
       idGen: new IdentityIdGenerator(),
     },
     logger: false,
+    serviceIdentity: {
+      keys: serviceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await identityApp.listen({ port: 0, host: "127.0.0.1" });
   const identityUrl = `http://127.0.0.1:${(identityApp.server.address() as AddressInfo).port}`;
@@ -187,10 +230,17 @@ export async function startGate(): Promise<GateContext> {
     readEvents = () => outbox.unread();
   }
 
+  // M1-04: حدّ الطلبات صار يفرض هوية الخدمة على كل مسار مجالي. البوابة تبني
+  // مفاتيح واحدة وتوقّع بها منفذ القبول الإنتاجي — فما يُبرهَن هنا أن السلسلة
+  // كاملةً تعمل **موقَّعةً**، لا أن الفرض مُعطَّل في الاختبار.
   const ordersApp = createOrderApp({
     runner,
     health: { persistence: ORDER_DATABASE_URL ? "postgres" : "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: serviceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await ordersApp.listen({ port: 0, host: "127.0.0.1" });
   const ordersUrl = `http://127.0.0.1:${(ordersApp.server.address() as AddressInfo).port}`;
@@ -202,10 +252,26 @@ export async function startGate(): Promise<GateContext> {
       outbox: new InMemoryCustomerOutbox(),
       clock: new CustomerClock(),
       idGen: new CustomerIdGenerator(),
-      identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
+      identityLookup: new HttpIdentityLookupPort({
+        baseUrl: identityUrl,
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "identity",
+          keys: serviceAuthKeys,
+          scopes: CUSTOMERS_IDENTITY_SCOPES,
+        }),
+      }),
       geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
       // The one import this whole gate exists for.
-      orderIntake: new HttpOrderIntakePort({ baseUrl: ordersUrl }),
+      orderIntake: new HttpOrderIntakePort({
+        baseUrl: ordersUrl,
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "orders",
+          keys: serviceAuthKeys,
+          scopes: CUSTOMERS_ORDERS_SCOPES,
+        }),
+      }),
     } satisfies UseCaseDeps,
     // A build with a store and a real engine may say `ok`. The engine being
     // real is what makes this honest here and dishonest anywhere else.
@@ -218,6 +284,12 @@ export async function startGate(): Promise<GateContext> {
   return {
     customerUrl,
     ordersUrl,
+    signEngine: createServiceRequestSigner({
+      serviceName: "order-exit-gate",
+      audience: "orders",
+      keys: serviceAuthKeys,
+      scopes: Object.values(ORDER_SCOPES),
+    }),
     identityUrl,
     persistence: ORDER_DATABASE_URL ? "postgres" : "memory",
     engineEvents: () => readEvents(),
@@ -293,11 +365,14 @@ export async function callEngine(
     readonly traceId?: string;
   },
 ): Promise<HttpResult> {
+  // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+  const signedPath = init.path.split("?")[0] ?? init.path;
   return call(gate.ordersUrl, {
     method: init.method,
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      ...gate.signEngine(init.method, signedPath),
       ...(init.idempotencyKey === undefined
         ? {}
         : { "idempotency-key": init.idempotencyKey }),
@@ -327,12 +402,28 @@ let channelUserCounter = 900_000;
  * order-request use case refuses a customer without one — and this gate must not
  * reach into a store to invent a state the API cannot produce.
  */
+/**
+ * توقيعُ نداءِ البوّابةِ إلى حدِّ الهويّةِ (`M1-04`). الحدُّ صارَ مُغلَقاً
+ * افتراضاً، فبوّابةٌ تُنادي بلا توقيعٍ تُخفِقُ 401 لسببٍ لا علاقةَ له بموضوعِها.
+ * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً، لا خدمةً
+ * واحدةً بصلاحيّةٍ ضيّقةٍ.
+ */
+function identitySigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: IDENTITY_SERVICE_AUDIENCE,
+    keys: gateKeys(),
+    scopes: Object.values(IDENTITY_SCOPES),
+  });
+}
+
 export async function onboardCustomer(gate: GateContext): Promise<string> {
   channelUserCounter += 1;
   const resolved = await call(gate.identityUrl, {
     method: "POST",
     path: "/identity/resolve",
     body: { telegram_user_id: channelUserCounter, source: "customer_bot" },
+    headers: identitySigner()("POST", "/identity/resolve"),
   });
   const waslaPublicId = resolved.body.wasla_public_id as string;
   const profile = await callCustomers(gate, {

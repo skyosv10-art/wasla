@@ -102,6 +102,8 @@ import {
   InMemoryOutbox as InMemoryCustomerOutbox,
   SystemClock as CustomerClock,
   type UseCaseDeps,
+  CUSTOMERS_ORDERS_SCOPES,
+  CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
@@ -113,6 +115,9 @@ import {
   SequentialIdGenerator as DispatchIdGenerator,
   StaticRulesProvider,
   type DispatchRules,
+  DISPATCH_ORDERS_SCOPES,
+  DISPATCH_SCOPES,
+  DISPATCH_SERVICE_AUDIENCE,
 } from "@wasla/dispatch-service";
 import {
   createDriverApp,
@@ -141,6 +146,8 @@ import {
 } from "@wasla/geography-service";
 import {
   createIdentityApp,
+  IDENTITY_SCOPES,
+  IDENTITY_SERVICE_AUDIENCE,
   CryptoIdGenerator as IdentityIdGenerator,
   InMemoryIdentityRepository,
   InMemoryOutbox as InMemoryIdentityOutbox,
@@ -161,6 +168,7 @@ import {
   InMemoryOrderRepository,
   InMemoryOutbox as InMemoryOrderOutbox,
   SystemClock as OrderClock,
+  ORDER_SCOPES,
 } from "@wasla/orders-service";
 import {
   createServiceRequestSigner,
@@ -202,6 +210,34 @@ function gateSigner(serviceName: string, scopes: readonly string[]) {
     audience: "matching",
     keys: gateServiceAuthKeys(),
     scopes,
+  });
+}
+
+/**
+ * M1-04: the order engine enforces service identity too, and a token minted for
+ * `matching` is refused by `orders` — the audience is what makes the two
+ * boundaries separate rather than one shared door.
+ */
+function ordersSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "orders",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
+/**
+ * `M1-04` · الموجةُ الرابعة: حدُّ التوزيعِ صارَ مفروضاً كحدَّي المطابقةِ
+ * والطلباتِ، وجمهورُه ثالثٌ مستقلٌّ — فرمزُ المطابقةِ لا يفتحُه ولا العكس.
+ * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً.
+ */
+function dispatchSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: DISPATCH_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(DISPATCH_SCOPES),
   });
 }
 
@@ -343,6 +379,9 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   );
 
   // --- identity: a real service on an ephemeral port ------------------------
+  const identityServiceAuthKeys = gateServiceAuthKeys();
+  // M1-04 (الموجةُ 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، فالبوّابةُ تُشغِّلُه
+  // **مفروضاً** وتوقِّعُ عملاءَه بالمفاتيحِ نفسِها — لا تُعطِّلُ الفرضَ لتمرَّ.
   const identityApp = createIdentityApp({
     deps: {
       repo: new InMemoryIdentityRepository(),
@@ -352,6 +391,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       idGen: new IdentityIdGenerator(),
     },
     logger: false,
+    serviceIdentity: {
+      keys: identityServiceAuthKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await identityApp.listen({ port: 0, host: "127.0.0.1" });
   const identityUrl = `http://127.0.0.1:${(identityApp.server.address() as AddressInfo).port}`;
@@ -381,6 +424,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     }),
     health: { persistence: "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await ordersApp.listen({ port: 0, host: "127.0.0.1" });
   const ordersUrl = `http://127.0.0.1:${(ordersApp.server.address() as AddressInfo).port}`;
@@ -392,9 +439,20 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       outbox: new InMemoryCustomerOutbox(),
       clock: new CustomerClock(),
       idGen: new CustomerIdGenerator(),
-      identityLookup: new HttpIdentityLookupPort({ baseUrl: identityUrl }),
+      identityLookup: new HttpIdentityLookupPort({
+        baseUrl: identityUrl,
+        signRequest: createServiceRequestSigner({
+          serviceName: "customers",
+          audience: "identity",
+          keys: identityServiceAuthKeys,
+          scopes: CUSTOMERS_IDENTITY_SCOPES,
+        }),
+      }),
       geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
-      orderIntake: new HttpOrderIntakePort({ baseUrl: ordersUrl }),
+      orderIntake: new HttpOrderIntakePort({
+        baseUrl: ordersUrl,
+        signRequest: ordersSigner("customers", CUSTOMERS_ORDERS_SCOPES),
+      }),
     } satisfies UseCaseDeps,
     health: { persistence: "memory", orderIntake: "configured" },
     logger: false,
@@ -470,13 +528,20 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   // --- dispatch: real service, PRODUCTION adapters to matching and the engine
   const stores = createInMemoryStores();
   const dispatchApp = createDispatchApp({
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
     runner: createDispatchDirectRunner({
       ...stores,
       matching: new HttpMatchingPort({
         baseUrl: matchingUrl,
         signRequest: gateSigner("dispatch", DISPATCH_MATCHING_SCOPES),
       }),
-      orders: new HttpOrderEnginePort({ baseUrl: ordersUrl }),
+      orders: new HttpOrderEnginePort({
+        baseUrl: ordersUrl,
+        signRequest: ordersSigner("dispatch", DISPATCH_ORDERS_SCOPES),
+      }),
       rules: new StaticRulesProvider(rules),
       clock,
       ids: new DispatchIdGenerator(),
@@ -553,14 +618,47 @@ async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
   };
 }
 
+
+/**
+ * توقيعُ نداءِ البوّابةِ إلى حدِّ الهويّةِ (`M1-04`). الحدُّ صارَ مُغلَقاً
+ * افتراضاً، فبوّابةٌ تُنادي بلا توقيعٍ تُخفِقُ 401 لسببٍ لا علاقةَ له بموضوعِها.
+ * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً، لا خدمةً
+ * واحدةً بصلاحيّةٍ ضيّقةٍ.
+ */
+function identitySigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: IDENTITY_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(IDENTITY_SCOPES),
+  });
+}
+
 export const callIdentity = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.identityUrl, init);
+  call(gate.identityUrl, {
+    ...init,
+    headers: {
+      ...identitySigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callGeography = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.geographyUrl, init);
 export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.customerUrl, init);
+/** Direct engine calls are signed too (M1-04) — same reason as matching below. */
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.ordersUrl, init);
+  call(gate.ordersUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...ordersSigner("driver-exit-gate", Object.values(ORDER_SCOPES))(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+      ),
+      ...(init.headers ?? {}),
+    },
+  });
 /**
  * Every direct call to matching in this suite is signed (M1-03). The seed helpers that
  * plant candidacy rows are service-to-service traffic like any other, and matching now
@@ -576,7 +674,14 @@ export const callMatching = (gate: GateContext, init: CallInit): Promise<HttpRes
     },
   });
 export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.dispatchUrl, init);
+  call(gate.dispatchUrl, {
+    ...init,
+    headers: {
+      // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      ...dispatchSigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 export const callDrivers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.driversUrl, init);
 

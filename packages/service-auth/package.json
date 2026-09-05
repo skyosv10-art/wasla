@@ -8,6 +8,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./fastify": {
+      "types": "./src/fastify.ts",
+      "import": "./src/fastify.ts"
     }
   },
   "scripts": {
@@ -21,6 +25,15 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "fastify": "^5.12.1"
+  },
+  "peerDependencies": {
+    "fastify": "^5.12.1"
+  },
+  "peerDependenciesMeta": {
+    "fastify": {
+      "optional": true
+    }
   }
 }

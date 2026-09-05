@@ -12,6 +12,12 @@ import { rejectOffer } from "../use-cases/reject-offer.js";
 
 import { sendDispatchError } from "./errors.js";
 import {
+  DISPATCH_SCOPES,
+  registerServiceIdentity,
+  type DispatchRouteConfig,
+  type DispatchServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   assertRequestIdLength,
   requireIdempotencyKey,
   toCancelJobRequest,
@@ -30,9 +36,22 @@ export interface DispatchTickState {
 
 export interface CreateDispatchAppOptions {
   runner: DispatchRunner;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`). **إلزاميٌّ بلا قيمةٍ
+   * افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ» تجعلُ نسيانَ التركيبِ في
+   * جذرٍ واحدٍ يمرُّ صامتاً في كلِّ اختبارٍ ويُكشَفُ في الإنتاجِ وحدَه.
+   */
+  serviceIdentity: DispatchServiceIdentityOptions;
   health?: DispatchHealthDescriptor;
   tickState?: DispatchTickState;
   logger?: boolean;
+}
+
+/** `/health` وحدَه مفتوحٌ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: DispatchRouteConfig = { serviceIdentity: "open" };
+
+function scoped(...scopes: readonly string[]): DispatchRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 const DEFAULT_HEALTH: DispatchHealthDescriptor = { persistence: "memory" };
@@ -46,7 +65,10 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     sendDispatchError(reply, error, request.id);
   });
 
-  app.get("/health", async (_request, reply) => {
+  // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَه لا ما قبلَه.
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({
       status: health.persistence === "postgres" ? "ok" : "degraded",
       service: "dispatch-service",
@@ -55,7 +77,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     });
   });
 
-  app.post("/dispatch/jobs", async (request, reply) => {
+  app.post("/dispatch/jobs", { config: scoped(DISPATCH_SCOPES.jobWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -72,7 +94,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(result.replayed ? 200 : 201).send(toApiJob(result.job));
   });
 
-  app.get("/dispatch/jobs/:job_id", async (request, reply) => {
+  app.get("/dispatch/jobs/:job_id", { config: scoped(DISPATCH_SCOPES.jobRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const jobId = toPathId((request.params as { job_id?: unknown }).job_id, "job_id", traceId);
@@ -80,7 +102,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiJob(job));
   });
 
-  app.get("/dispatch/jobs/:job_id/offers", async (request, reply) => {
+  app.get("/dispatch/jobs/:job_id/offers", { config: scoped(DISPATCH_SCOPES.offerRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const jobId = toPathId((request.params as { job_id?: unknown }).job_id, "job_id", traceId);
@@ -88,7 +110,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiOfferList(offers));
   });
 
-  app.get("/dispatch/offers/:offer_id", async (request, reply) => {
+  app.get("/dispatch/offers/:offer_id", { config: scoped(DISPATCH_SCOPES.offerRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const offerId = toPathId((request.params as { offer_id?: unknown }).offer_id, "offer_id", traceId);
@@ -97,7 +119,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(offerDetailToWire(offer));
   });
 
-  app.post("/dispatch/tick", async (request, reply) => {
+  app.post("/dispatch/tick", { config: scoped(DISPATCH_SCOPES.tickWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     requireIdempotencyKey(request.headers, traceId);
@@ -109,7 +131,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiTickResult(outcome));
   });
 
-  app.post("/dispatch/offers/:offer_id/accept", async (request, reply) => {
+  app.post("/dispatch/offers/:offer_id/accept", { config: scoped(DISPATCH_SCOPES.offerAccept) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -118,7 +140,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiOffer(result.offer));
   });
 
-  app.post("/dispatch/offers/:offer_id/reject", async (request, reply) => {
+  app.post("/dispatch/offers/:offer_id/reject", { config: scoped(DISPATCH_SCOPES.offerReject) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -133,7 +155,7 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiOffer(result.offer));
   });
 
-  app.post("/dispatch/jobs/:job_id/cancel", async (request, reply) => {
+  app.post("/dispatch/jobs/:job_id/cancel", { config: scoped(DISPATCH_SCOPES.jobCancel) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);

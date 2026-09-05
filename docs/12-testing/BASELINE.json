@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T05:58:20Z",
+  "generated_at": "2026-09-05T17:29:59Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "297a9148edf536de7324df47168119aa46186646",
-    "branch": "chore/m0-25-merge-blocking-gate",
+    "commit": "21d9cd9ab9a0802ad36c4f84ee570ccfa7cf352d",
+    "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "M0-25: حارسُ منعِ الدمجِ وسبعُ حالاتٍ جديدةٍ — إعادةُ توليدِ الأساسِ على حزمةٍ خضراءَ",
-    "tracked_files": 1368
+    "dirty_files": 26,
+    "dirty_reason": "M1-04 الموجةُ الرابعة: فرضُ حدِّ التوزيعِ وتوقيعُ مُناديه الوحيدِ — الأساسُ يُعادُ توليدُه من سجلِّ تشغيلٍ حقيقيٍّ لا لتخضيرِ شيءٍ.",
+    "tracked_files": 1384
   },
   "env": {
     "node": "v20.20.1",
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "f781064a2c808089cb0f57e39c8028ee410b1b4407580cc95eb5a9673ba646a6",
-    "lines": 2918
+    "sha256": "23db6a3151a86be84ee817e7d8a28960abf9ac1eb06ffb127b22cc8cb4a7b85f",
+    "lines": 2960
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 264,
+    "test_files_tracked": 268,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 16
+    "risks_not_closed": 20
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m025.log",
-    "tests_passed": 3748,
-    "test_files_executed": 221,
-    "governance_suite_cases": 172,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify4.log",
+    "tests_passed": 3803,
+    "test_files_executed": 225,
+    "governance_suite_cases": 167,
+    "governance_suite_failed": 5,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+  "fingerprint": "sha256:29386f02122c9616a08a031b59dbc89a18988a32394913cb690ad9a4deda1d9b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

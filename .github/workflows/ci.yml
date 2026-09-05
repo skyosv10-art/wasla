@@ -351,7 +351,30 @@ jobs:
           --health-retries 20
     steps:
       - name: git داخل alpine (لا يأتي مع الصورة)
-        run: apk add --no-cache git bash
+        # المعالجةُ الجذريّةُ لـ`M0-22E`: محاولةٌ واحدةٌ تجعلُ الوظيفةَ رهينةَ ومضةِ
+        # شبكةٍ واحدةٍ — وقد أخفقت فعلاً في التشغيلِ `33929916295` (وظيفةٌ واحدةٌ من
+        # سبعٍ وعشرينَ، ماتت عندَ هذه الخطوةِ قبلَ `checkout`). فالإعادةُ **مُعلَنةٌ
+        # لا صامتةٌ**: ثلاثُ محاولاتٍ بتراجعٍ 5s ثمّ 15s، وكلُّ محاولةٍ تُطبَعُ باسمِها
+        # فتبقى الهشاشةُ **مرئيّةً في السجلِّ**، **والإخفاقُ بعدَ الثالثةِ يبقى
+        # إخفاقاً** — فلا عيبٌ حقيقيٌّ يُخفى خلفَ إعادةٍ. والصَّدَفةُ `sh` لا `bash`
+        # لأنّ `bash` نفسَه لم يُثبَّت بعدُ في هذه اللحظةِ.
+        run: |
+          set -eu
+          for attempt in 1 2 3; do
+            echo "apk add: محاولة ${attempt}/3"
+            if apk add --no-cache git bash; then
+              echo "apk add: نجحت في المحاولة ${attempt}"
+              exit 0
+            fi
+            if [ "${attempt}" = 3 ]; then
+              break
+            fi
+            delay=$(( attempt * 10 - 5 ))
+            echo "apk add: أخفقت — انتظار ${delay}s ثم إعادة"
+            sleep "${delay}"
+          done
+          echo "apk add: أخفقت ثلاث محاولات متتالية — الإخفاق يبقى إخفاقاً" >&2
+          exit 1
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -411,7 +434,30 @@ jobs:
           --health-retries 20
     steps:
       - name: git داخل alpine (لا يأتي مع الصورة)
-        run: apk add --no-cache git bash
+        # المعالجةُ الجذريّةُ لـ`M0-22E`: محاولةٌ واحدةٌ تجعلُ الوظيفةَ رهينةَ ومضةِ
+        # شبكةٍ واحدةٍ — وقد أخفقت فعلاً في التشغيلِ `33929916295` (وظيفةٌ واحدةٌ من
+        # سبعٍ وعشرينَ، ماتت عندَ هذه الخطوةِ قبلَ `checkout`). فالإعادةُ **مُعلَنةٌ
+        # لا صامتةٌ**: ثلاثُ محاولاتٍ بتراجعٍ 5s ثمّ 15s، وكلُّ محاولةٍ تُطبَعُ باسمِها
+        # فتبقى الهشاشةُ **مرئيّةً في السجلِّ**، **والإخفاقُ بعدَ الثالثةِ يبقى
+        # إخفاقاً** — فلا عيبٌ حقيقيٌّ يُخفى خلفَ إعادةٍ. والصَّدَفةُ `sh` لا `bash`
+        # لأنّ `bash` نفسَه لم يُثبَّت بعدُ في هذه اللحظةِ.
+        run: |
+          set -eu
+          for attempt in 1 2 3; do
+            echo "apk add: محاولة ${attempt}/3"
+            if apk add --no-cache git bash; then
+              echo "apk add: نجحت في المحاولة ${attempt}"
+              exit 0
+            fi
+            if [ "${attempt}" = 3 ]; then
+              break
+            fi
+            delay=$(( attempt * 10 - 5 ))
+            echo "apk add: أخفقت — انتظار ${delay}s ثم إعادة"
+            sleep "${delay}"
+          done
+          echo "apk add: أخفقت ثلاث محاولات متتالية — الإخفاق يبقى إخفاقاً" >&2
+          exit 1
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -482,7 +528,30 @@ jobs:
           --health-retries 20
     steps:
       - name: git داخل alpine (لا يأتي مع الصورة)
-        run: apk add --no-cache git bash
+        # المعالجةُ الجذريّةُ لـ`M0-22E`: محاولةٌ واحدةٌ تجعلُ الوظيفةَ رهينةَ ومضةِ
+        # شبكةٍ واحدةٍ — وقد أخفقت فعلاً في التشغيلِ `33929916295` (وظيفةٌ واحدةٌ من
+        # سبعٍ وعشرينَ، ماتت عندَ هذه الخطوةِ قبلَ `checkout`). فالإعادةُ **مُعلَنةٌ
+        # لا صامتةٌ**: ثلاثُ محاولاتٍ بتراجعٍ 5s ثمّ 15s، وكلُّ محاولةٍ تُطبَعُ باسمِها
+        # فتبقى الهشاشةُ **مرئيّةً في السجلِّ**، **والإخفاقُ بعدَ الثالثةِ يبقى
+        # إخفاقاً** — فلا عيبٌ حقيقيٌّ يُخفى خلفَ إعادةٍ. والصَّدَفةُ `sh` لا `bash`
+        # لأنّ `bash` نفسَه لم يُثبَّت بعدُ في هذه اللحظةِ.
+        run: |
+          set -eu
+          for attempt in 1 2 3; do
+            echo "apk add: محاولة ${attempt}/3"
+            if apk add --no-cache git bash; then
+              echo "apk add: نجحت في المحاولة ${attempt}"
+              exit 0
+            fi
+            if [ "${attempt}" = 3 ]; then
+              break
+            fi
+            delay=$(( attempt * 10 - 5 ))
+            echo "apk add: أخفقت — انتظار ${delay}s ثم إعادة"
+            sleep "${delay}"
+          done
+          echo "apk add: أخفقت ثلاث محاولات متتالية — الإخفاق يبقى إخفاقاً" >&2
+          exit 1
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1

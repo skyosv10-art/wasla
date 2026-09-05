@@ -174,10 +174,28 @@ if [[ -f scripts/checks/validate-ci-mandatory.sh ]]; then
   hdr "8) CI مانعٌ لا مُجمِّل (M0-04)"
   CIM_OUT="$(bash scripts/checks/validate-ci-mandatory.sh 2>&1)"; CIM_RC=$?
   printf '%s\n' "$CIM_OUT"
-  if (( CIM_RC != 0 )); then
-    FAILED+=("8) CI مانعٌ لا مُجمِّل")
+  # ومنذ M0-25 لم يعُدِ الشقُّ الثاني مسكوتاً عنه: `validate-merge-blocking.sh`
+  # يقيسُ ما يملكُ المستودعُ إثباتَه — **مطابقةَ وظائفِ الخطِّ بالسياقاتِ المطلوبةِ**
+  # في لقطةٍ مؤرَّخةٍ، و`strict`/`enforce_admins`، **وبرهانَ رفضٍ 405 بمرجعٍ حَيٍّ**.
+  # ويبقى `2` (جزئيٌّ مُعلَنٌ) ما دامت اللقطةُ مؤرَّخةً لا حيّةً: **التخطّي لا يُجمَّل
+  # نجاحاً، والنجاحُ لا يُدَّعى بلا سؤالٍ حَيٍّ.**
+  MB_RC=0
+  if [[ -f scripts/checks/validate-merge-blocking.sh ]]; then
+    MB_OUT="$(bash scripts/checks/validate-merge-blocking.sh 2>&1)"; MB_RC=$?
+    printf '%s\n' "$MB_OUT"
   else
-    SKIPPED+=("8) CI مانعٌ — جزئيٌّ: الإعدادُ متّسقٌ، ورفضُ الدمجِ عندَ الإخفاقِ غيرُ مُفعَّل")
+    MB_RC=3
+  fi
+  if (( CIM_RC != 0 )); then
+    FAILED+=("8) CI مانعٌ لا مُجمِّل")
+  elif (( MB_RC == 1 )); then
+    FAILED+=("8) CI مانعٌ — الحمايةُ المُعلَنةُ لا تطابقُ الخطَّ")
+  elif (( MB_RC == 0 )); then
+    PASSED+=("8) CI مانعٌ — الحمايةُ مطابقةٌ ومُبرهَنةٌ ومسؤولةٌ حيّاً")
+  elif (( MB_RC == 2 )); then
+    SKIPPED+=("8) CI مانعٌ — جزئيٌّ: الأبوابُ نجحت على لقطةٍ مؤرَّخةٍ، ولم تُسأل الواجهةُ حيّاً")
+  else
+    SKIPPED+=("8) CI مانعٌ — جزئيٌّ: حارسُ منعِ الدمجِ غيرُ موجودٍ")
   fi
 else
   SKIPPED+=("8) CI مانعٌ — السكربت غير موجود")

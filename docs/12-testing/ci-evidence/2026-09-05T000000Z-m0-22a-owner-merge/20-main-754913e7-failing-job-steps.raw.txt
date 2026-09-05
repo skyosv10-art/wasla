@@ -1,0 +1,55 @@
+$ GET https://api.github.com/repos/skyosv10-art/wasla/actions/runs/33929916295/jobs
+--- الوظيفةُ الوحيدةُ غيرُ الناجحةِ ---
+{
+  "name": "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+  "html_url": "https://github.com/skyosv10-art/wasla/actions/runs/33929916295/job/101206242332",
+  "started_at": "2026-09-04T23:33:02Z",
+  "conclusion": "failure",
+  "steps": [
+    {
+      "number": 1,
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "number": 2,
+      "name": "Initialize containers",
+      "conclusion": "success"
+    },
+    {
+      "number": 3,
+      "name": "git داخل alpine (لا يأتي مع الصورة)",
+      "conclusion": "failure"
+    },
+    {
+      "number": 4,
+      "name": "Run actions/checkout@v4",
+      "conclusion": "skipped"
+    },
+    {
+      "number": 5,
+      "name": "تفعيل pnpm المثبَّت",
+      "conclusion": "skipped"
+    },
+    {
+      "number": 6,
+      "name": "install",
+      "conclusion": "skipped"
+    },
+    {
+      "number": 7,
+      "name": "geography · test:integration",
+      "conclusion": "skipped"
+    },
+    {
+      "number": 14,
+      "name": "Stop containers",
+      "conclusion": "success"
+    },
+    {
+      "number": 15,
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ]
+}

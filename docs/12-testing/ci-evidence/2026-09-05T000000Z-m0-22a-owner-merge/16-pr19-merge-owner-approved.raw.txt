@@ -1,0 +1,15 @@
+$ PUT https://api.github.com/repos/skyosv10-art/wasla/pulls/19/merge
+--- request body ---
+{
+ "merge_method": "merge",
+ "commit_title": "Merge pull request #19 from skyosv10-art/feat/m0-22a-branch-protection-enforcement",
+ "commit_message": "feat(M0-22A): إنفاذُ حمايةِ الفرعِ — الأحمرُ لا يُدمَجُ، مقيسًا لا موصوفًا"
+}
+--- response ---
+HTTP 200
+
+{
+  "sha": "754913e7db98f7e4771312dcaa58ea1731f32183",
+  "merged": true,
+  "message": "Pull Request successfully merged"
+}

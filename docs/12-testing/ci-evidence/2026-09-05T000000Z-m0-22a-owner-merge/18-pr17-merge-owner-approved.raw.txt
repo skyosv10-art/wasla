@@ -1,0 +1,13 @@
+$ PUT https://api.github.com/repos/skyosv10-art/wasla/pulls/17/merge
+--- request body ---
+{
+ "merge_method": "merge"
+}
+--- response ---
+HTTP 200
+
+{
+  "sha": "b312a6acdc06d85e6ef4d6d61faeebca97836a23",
+  "merged": true,
+  "message": "Pull Request successfully merged"
+}

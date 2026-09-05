@@ -61,6 +61,7 @@ docs/16-progress/MASTER_PROGRESS.md
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CLM-0004 | M0-02 | @uxxxu | fix/m0-02-drivers-conformance-zone-seed | services/drivers/,docs/16-progress/ | 2026-08-25 | 2026-09-08 | Active |
 | CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0079 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-unblock-reconciliation | docs/12-testing/,docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
 
 > **`CLM-0077` حُرِّر (2026-09-05) — دُمج عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33):** التزامُ الدمجِ `5a9bb69` (`merged_at: 2026-09-05T06:09:52Z`)، و`git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ).
 

@@ -28,6 +28,18 @@
 
 ## السجل
 
+### [2026-09-05] `M0-22B` — زوالُ حاجزِ البوّابةِ: من `BLOCKED` إلى `PASSED`
+
+- **Work Item(s):** M0-22B
+- **Claim:** `CLM-0079` · الفرع `chore/m0-22b-gate-unblock-reconciliation` · النطاقُ `docs/12-testing/,docs/16-progress/`
+- **Files:** `docs/12-testing/M0-22B_GATE.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ
+- **Why:** بوّابةُ `M0-22B` كانت `BLOCKED` ببندِها الثاني عشرَ: تسجيلُ العشرينَ وظيفةً في `required_status_checks` كان محجوباً بقيدِ خطّةِ حسابٍ (`403 · Upgrade to GitHub Pro`). **وزالَ الحاجزُ** بنشرِ المستودعِ (فعلُ مالكٍ) وبتوسيعِ `required_status_checks` إلى 27 سياقاً (عملُ `M0-22E`)، فالعشرونَ وظيفةً صارت مُلزَمةً مانعةً.
+- **What:** بندُ البوّابةِ الثاني عشرَ انتقلَ من ⛔ `BLOCKED` إلى ✅ `VERIFIED` بدليلٍ خامٍّ من `GET /branches/main/protection` (27 سياقاً · `strict:true` · `enforce_admins:true`). وحكمُ البوّابةِ انتقلَ من `BLOCKED` إلى `PASSED` (12/12 ✅). والحالةُ تبقى `Ready for Gate` — النقلُ إلى `Completed` سلطةُ المالكِ (§9).
+- **Tests:** `verify-governance.sh` — 12/12 (11 pass + 1 skip by design). `test-governance.sh` — 172/0. CI on [PR #35](https://github.com/skyosv10-art/wasla/pull/35): run [`33960804940`](https://github.com/skyosv10-art/wasla/actions/runs/33960804940) — **28/28 green** (27 GitHub Actions + Devin Review).
+- **Next:** انتظارُ قرارِ المالكِ بدمجِ الطلب.
+- **Related:** [`M0-22B_GATE.md`](../12-testing/M0-22B_GATE.md) · [`M0-22A_GATE.md`](../12-testing/M0-22A_GATE.md) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md)
+
 ### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
 
 - **Work Item(s):** M0-22C

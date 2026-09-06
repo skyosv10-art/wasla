@@ -7,7 +7,7 @@
     "branch": "feat/m1-04-central-service-identity-middleware",
     "dirty": true,
     "dirty_files": 13,
-    "dirty_reason": "دمجُ main في فرعِ M1-04 لفكِّ التعارضِ: عادَ سجلُّ المخاطرِ إلى حالِ main (RISK-0022 مفتوحٌ) فارتفعَ risks_not_closed 20⇒21، وأُعيدَ توليدُ الأساسِ من تشغيلٍ حقيقيٍّ رمزُه صفرٌ لا لتخضيرِ فحصٍ.",
+    "dirty_reason": "دمجُ main (يضمُّ [#37]) في فرعِ M1-04: RISK-0022 صار مُغلَقاً في main فانخفضَ risks_not_closed 21⇒20. أُعيدَ حسابُ البصمةِ على الجوهرِ المتغيِّرِ فقط، وحُفِظَتِ البيئةُ والعدَّاداتُ الحركيّةُ المقيسةُ من تشغيلِ #38 الأصليِّ.",
     "tracked_files": 1395
   },
   "env": {
@@ -30,7 +30,7 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 21
+    "risks_not_closed": 20
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:c9956647879ba5cc3339503ceca323f5135d6f4ab6b0cef903929ff6930e8b86",
+  "fingerprint": "sha256:29386f02122c9616a08a031b59dbc89a18988a32394913cb690ad9a4deda1d9b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -12,6 +12,8 @@
  * Port via PORT (default 8081 — identity uses 8080; see api.openapi.yml).
  */
 
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+
 import { createGeographyApp } from "./app.js";
 import {
   SystemClock,
@@ -20,6 +22,7 @@ import {
   InMemoryOutbox,
   InMemoryIdentityLookupPort,
   HttpIdentityLookupPort,
+  GEOGRAPHY_IDENTITY_SCOPES,
   PostgresGeographyRepository,
   PostgresOutbox,
   createDb,
@@ -30,7 +33,17 @@ import type { UseCaseDeps } from "../use-cases/deps.js";
 function buildIdentityLookup(): IdentityLookupPort {
   const baseUrl = process.env.IDENTITY_SERVICE_URL;
   if (baseUrl) {
-    return new HttpIdentityLookupPort({ baseUrl });
+    return new HttpIdentityLookupPort({
+      baseUrl,
+      // M1-04 (الموجة 3): حد الهويّة صار يفرض هوية الخدمة. والصلاحية المطلوبة
+      // قراءةُ مستخدم وحدها — لا ربطَ هويّةٍ ولا بدءَ استعادةٍ.
+      signRequest: createServiceRequestSigner({
+        serviceName: "geography",
+        audience: "identity",
+        keys: keyRegistryFromEnv(process.env),
+        scopes: GEOGRAPHY_IDENTITY_SCOPES,
+      }),
+    });
   }
   // Dev fallback: assumes every format-valid public id exists.
   return new InMemoryIdentityLookupPort();

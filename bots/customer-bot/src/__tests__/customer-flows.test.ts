@@ -49,6 +49,10 @@ const ENV = {
   CUSTOMER_BOT_WEBHOOK_SECRET: SECRET,
   CUSTOMER_BOT_MINI_APP_URL: "https://apps.wasla.test/customer",
   IDENTITY_SERVICE_URL: "http://identity:8080",
+  // M1-04: عنوانُ الهويّةِ بلا مادّةِ مفاتيحَ يُرفَضُ عندَ الإقلاعِ عمداً،
+  // لأنّ حدَّ الهويّةِ يفرضُ التوقيعَ. فتُسلَّمُ المادّةُ هنا كما في النشرِ.
+  WASLA_SERVICE_AUTH_KEYS: "test-active:active:bots-test-secret-0123456789ab",
+  WASLA_SERVICE_AUTH_ACTIVE_KID: "test-active",
 };
 
 /** A Customer Core that records what it was asked, and answers what we told it. */

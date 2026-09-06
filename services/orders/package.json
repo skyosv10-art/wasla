@@ -20,12 +20,14 @@
   },
   "dependencies": {
     "@wasla/contracts-order": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
     "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@wasla/auth-sdk": "workspace:*",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",

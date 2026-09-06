@@ -1,0 +1,621 @@
+{
+ "source": "GET repos/skyosv10-art/wasla/actions/jobs/<id>/logs",
+ "jobs": {
+  "db-integration-shared": {
+   "job_id": 101406210974,
+   "scopes": {
+    "services/identity": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     }
+    ],
+    "services/geography": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase02-exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     }
+    ],
+    "packages/channel-postgres": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/stores.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     }
+    ],
+    "services/customers": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     }
+    ],
+    "services/orders": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/matching": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/dispatch": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/drivers": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/negotiations": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/reputation": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ],
+    "services/subscriptions": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/http.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/events.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/idempotency-replay.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/ledger.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/migrate.integration.test.ts"
+     }
+    ],
+    "services/marketplace": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/http.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/outbox.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/idempotency-replay.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/stores.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/products.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/inventory.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/categories-seed.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/staff.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/migrate.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    5,
+    10
+   ]
+  },
+  "db-integration (geography, @wasla/geography-service, wasla_geo_test)": {
+   "job_id": 101406210993,
+   "scopes": {
+    "services/geography": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase02-exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2
+   ]
+  },
+  "db-integration (order, @wasla/orders-service, wasla_orders_test)": {
+   "job_id": 101406211075,
+   "scopes": {
+    "services/orders": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)": {
+   "job_id": 101406211088,
+   "scopes": {
+    "services/drivers": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)": {
+   "job_id": 101406211090,
+   "scopes": {
+    "packages/order-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase06-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)": {
+   "job_id": 101406211092,
+   "scopes": {
+    "packages/subscription-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase10-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)": {
+   "job_id": 101406211099,
+   "scopes": {
+    "packages/marketplace-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase11-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "db-integration (matching, @wasla/matching-service, wasla_matching_test)": {
+   "job_id": 101406211114,
+   "scopes": {
+    "services/matching": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)": {
+   "job_id": 101406211132,
+   "scopes": {
+    "packages/driver-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase05-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "db-integration (customer, @wasla/customers-service, wasla_customer_test)": {
+   "job_id": 101406211136,
+   "scopes": {
+    "services/customers": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2
+   ]
+  },
+  "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)": {
+   "job_id": 101406211137,
+   "scopes": {
+    "packages/customer-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase04-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)": {
+   "job_id": 101406211139,
+   "scopes": {
+    "services/marketplace": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/http.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/outbox.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/idempotency-replay.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/stores.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/products.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/inventory.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/categories-seed.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/staff.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/migrate.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    10
+   ]
+  },
+  "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)": {
+   "job_id": 101406211143,
+   "scopes": {
+    "services/dispatch": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)": {
+   "job_id": 101406211145,
+   "scopes": {
+    "services/negotiations": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)": {
+   "job_id": 101406211154,
+   "scopes": {
+    "services/reputation": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/repository.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/atomicity.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    3
+   ]
+  },
+  "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)": {
+   "job_id": 101406211158,
+   "scopes": {
+    "services/subscriptions": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/http.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/events.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/idempotency-replay.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/ledger.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/migrate.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    5
+   ]
+  },
+  "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)": {
+   "job_id": 101406211161,
+   "scopes": {
+    "packages/channel-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/m1-02-session-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase03-exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/m1-02-session-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2,
+    1
+   ]
+  },
+  "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)": {
+   "job_id": 101406211168,
+   "scopes": {
+    "packages/channel-postgres": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/stores.integration.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/port-conformance.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2
+   ]
+  },
+  "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)": {
+   "job_id": 101406211177,
+   "scopes": {
+    "packages/negotiation-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase08-exit-gate.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    1
+   ]
+  },
+  "db-integration (identity, @wasla/identity-service, wasla_test)": {
+   "job_id": 101406211199,
+   "scopes": {
+    "services/identity": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/postgres-repository.integration.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2
+   ]
+  },
+  "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)": {
+   "job_id": 101406211213,
+   "scopes": {
+    "packages/dispatch-e2e": [
+     {
+      "mark": "✓",
+      "file": "src/__tests__/phase07-exit-gate.e2e.test.ts"
+     },
+     {
+      "mark": "✓",
+      "file": "src/__tests__/service-identity-enforcement.e2e.test.ts"
+     }
+    ]
+   },
+   "test_files_passed": [
+    2
+   ]
+  }
+ }
+}

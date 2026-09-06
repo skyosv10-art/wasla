@@ -1,0 +1,45 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "item": "M0-28",
+  "claim": "CLM-0092",
+  "date": "2026-09-06",
+  "verdict": "MEASURED",
+  "gate_recommendation": "PASSED",
+  "authority": "owner",
+  "question": "الثلاثةُ والأربعونَ ملفَّ اختبارٍ التي لا يُنفِّذُها pnpm -r test — أمستثناةٌ بقصدٍ أم ميْتةٌ؟",
+  "answer": "مستثناةٌ بقصدٍ مكتوبٍ ومُنفَّذةٌ كلُّها في CI — لا ملفَّ ميْتاً.",
+  "measured_on_commit": "15d01fa1196ac92de4711aca6acf4bed44772125",
+  "counts": {
+    "tracked": 264,
+    "executed_by_pnpm_r_test": 221,
+    "gap": 43,
+    "integration": 39,
+    "e2e": 4,
+    "executed_nowhere": 0,
+    "orphan_integration_scripts": 0
+  },
+  "ci_log_verification": {
+    "jobs_read": 21,
+    "attribution": "vitest `RUN v<ver> <cwd>` يُسنِد كلَّ سطرِ ✓ إلى حزمتِه — فلا يُخلَط ملفّانِ متشابهانِ في الاسمِ",
+    "files_observed_running": 43,
+    "files_not_observed": [],
+    "run_id": "34003413849"
+  },
+  "layers": {
+    "local": "VERIFIED",
+    "ci": "VERIFIED",
+    "production": "NOT VERIFIED"
+  },
+  "not_claimed": [
+    "لا يُدَّعى أنّ التغطيةَ كافيةٌ — المقيسُ أنّ كلَّ مكتوبٍ يركض لا أنّ المكتوبَ يكفي.",
+    "لا يُدَّعى أنّ test_files_tracked وtest_files_executed صارا مقارَنَينِ — نطاقانِ مختلفانِ، وإصلاحُهما قرارُ مالكِ M0-08.",
+    "لم يُفتَحْ خطرٌ لأنّ المقيسَ لم يكن عيباً — وفتحُ خطرٍ بلا عيبٍ إفسادٌ للسجلِّ.",
+    "لم يُمَسّ عدَّادٌ ولا حارسٌ ولا إعدادُ vitest ولا ci.yml.",
+    "القراءةُ لقطةُ جريةٍ واحدةٍ لا ضمانٌ دائمٌ — لا حارسَ يمنعُ ملفّاً جديداً يُستثنى بلا وظيفةٍ.",
+    "الدمجُ قرارُ مالكِ البرنامجِ — M0-28 يبقى Ready for Gate لا Completed."
+  ],
+  "raw": [
+    "measurements/test-coverage-audit.raw.json",
+    "api-responses/ci-run-test-files.json"
+  ]
+}

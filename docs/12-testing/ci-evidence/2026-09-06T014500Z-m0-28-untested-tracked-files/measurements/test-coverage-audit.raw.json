@@ -1,0 +1,742 @@
+{
+  "measured_at_commit": "7b0992e592c5492b7763acfea4931ca25e0a9cdc",
+  "verify_log": "docs/12-testing/ci-evidence/2026-09-06T014500Z-m0-28-untested-tracked-files/local-measurements/verify.log",
+  "tracked_test_files": 264,
+  "executed_by_pnpm_r_test": 221,
+  "not_executed_locally": 43,
+  "ci_matrices": {
+    "db_integration": [
+      "@wasla/channel-postgres",
+      "@wasla/customers-service",
+      "@wasla/dispatch-service",
+      "@wasla/drivers-service",
+      "@wasla/geography-service",
+      "@wasla/identity-service",
+      "@wasla/marketplace-service",
+      "@wasla/matching-service",
+      "@wasla/negotiations-service",
+      "@wasla/orders-service",
+      "@wasla/reputation-service",
+      "@wasla/subscriptions-service"
+    ],
+    "db_integration_shared": [
+      "@wasla/channel-postgres",
+      "@wasla/customers-service",
+      "@wasla/dispatch-service",
+      "@wasla/drivers-service",
+      "@wasla/geography-service",
+      "@wasla/identity-service",
+      "@wasla/marketplace-service",
+      "@wasla/matching-service",
+      "@wasla/negotiations-service",
+      "@wasla/orders-service",
+      "@wasla/reputation-service",
+      "@wasla/subscriptions-service"
+    ],
+    "exit_gate_e2e": [
+      "@wasla/channel-e2e",
+      "@wasla/customer-e2e",
+      "@wasla/dispatch-e2e",
+      "@wasla/driver-e2e",
+      "@wasla/marketplace-e2e",
+      "@wasla/negotiation-e2e",
+      "@wasla/order-e2e",
+      "@wasla/subscription-e2e"
+    ]
+  },
+  "files": [
+    {
+      "file": "packages/channel-postgres/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "packages/channel-postgres",
+      "package": "@wasla/channel-postgres",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "packages/channel-postgres/src/__tests__/stores.integration.test.ts",
+      "package_dir": "packages/channel-postgres",
+      "package": "@wasla/channel-postgres",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "packages/marketplace-e2e/src/__tests__/phase11-exit-gate.e2e.test.ts",
+      "package_dir": "packages/marketplace-e2e",
+      "package": "@wasla/marketplace-e2e",
+      "matched_integration_include": null,
+      "has_test_integration_script": false,
+      "covered_by_ci_jobs": [
+        "exit-gate-e2e"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)"
+      ]
+    },
+    {
+      "file": "packages/subscription-e2e/src/__tests__/phase10-exit-gate.e2e.test.ts",
+      "package_dir": "packages/subscription-e2e",
+      "package": "@wasla/subscription-e2e",
+      "matched_integration_include": null,
+      "has_test_integration_script": false,
+      "covered_by_ci_jobs": [
+        "exit-gate-e2e"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)"
+      ]
+    },
+    {
+      "file": "services/customers/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/customers",
+      "package": "@wasla/customers-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/customers/src/__tests__/postgres-repository.integration.test.ts",
+      "package_dir": "services/customers",
+      "package": "@wasla/customers-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/dispatch/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/dispatch",
+      "package": "@wasla/dispatch-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/dispatch/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/dispatch",
+      "package": "@wasla/dispatch-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/dispatch/src/__tests__/repository.integration.test.ts",
+      "package_dir": "services/dispatch",
+      "package": "@wasla/dispatch-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/drivers/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/drivers",
+      "package": "@wasla/drivers-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/drivers/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/drivers",
+      "package": "@wasla/drivers-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/drivers/src/__tests__/repository.integration.test.ts",
+      "package_dir": "services/drivers",
+      "package": "@wasla/drivers-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts",
+      "package_dir": "services/geography",
+      "package": "@wasla/geography-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/geography/src/__tests__/postgres-repository.integration.test.ts",
+      "package_dir": "services/geography",
+      "package": "@wasla/geography-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (geography, @wasla/geography-service, wasla_geo_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/identity/src/__tests__/exit-gate.e2e.test.ts",
+      "package_dir": "services/identity",
+      "package": "@wasla/identity-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (identity, @wasla/identity-service, wasla_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/identity/src/__tests__/postgres-repository.integration.test.ts",
+      "package_dir": "services/identity",
+      "package": "@wasla/identity-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (identity, @wasla/identity-service, wasla_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/categories-seed.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/http.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/idempotency-replay.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/inventory.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/migrate.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/outbox.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/products.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/staff.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/marketplace/src/__tests__/stores.integration.test.ts",
+      "package_dir": "services/marketplace",
+      "package": "@wasla/marketplace-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/matching/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/matching",
+      "package": "@wasla/matching-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/matching/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/matching",
+      "package": "@wasla/matching-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/matching/src/__tests__/postgres-repository.integration.test.ts",
+      "package_dir": "services/matching",
+      "package": "@wasla/matching-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (matching, @wasla/matching-service, wasla_matching_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/negotiations/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/negotiations",
+      "package": "@wasla/negotiations-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/negotiations/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/negotiations",
+      "package": "@wasla/negotiations-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/negotiations/src/__tests__/repository.integration.test.ts",
+      "package_dir": "services/negotiations",
+      "package": "@wasla/negotiations-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/orders/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/orders",
+      "package": "@wasla/orders-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/orders/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/orders",
+      "package": "@wasla/orders-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/orders/src/__tests__/postgres-repository.integration.test.ts",
+      "package_dir": "services/orders",
+      "package": "@wasla/orders-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (order, @wasla/orders-service, wasla_orders_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/reputation/src/__tests__/atomicity.integration.test.ts",
+      "package_dir": "services/reputation",
+      "package": "@wasla/reputation-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/reputation/src/__tests__/port-conformance.integration.test.ts",
+      "package_dir": "services/reputation",
+      "package": "@wasla/reputation-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/reputation/src/__tests__/repository.integration.test.ts",
+      "package_dir": "services/reputation",
+      "package": "@wasla/reputation-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/subscriptions/src/__tests__/events.integration.test.ts",
+      "package_dir": "services/subscriptions",
+      "package": "@wasla/subscriptions-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/subscriptions/src/__tests__/http.integration.test.ts",
+      "package_dir": "services/subscriptions",
+      "package": "@wasla/subscriptions-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/subscriptions/src/__tests__/idempotency-replay.integration.test.ts",
+      "package_dir": "services/subscriptions",
+      "package": "@wasla/subscriptions-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/subscriptions/src/__tests__/ledger.integration.test.ts",
+      "package_dir": "services/subscriptions",
+      "package": "@wasla/subscriptions-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared"
+      ]
+    },
+    {
+      "file": "services/subscriptions/src/__tests__/migrate.integration.test.ts",
+      "package_dir": "services/subscriptions",
+      "package": "@wasla/subscriptions-service",
+      "matched_integration_include": true,
+      "has_test_integration_script": true,
+      "covered_by_ci_jobs": [
+        "db-integration",
+        "db-integration-shared"
+      ],
+      "executed_nowhere": false,
+      "observed_in_ci_jobs": [
+        "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
+        "db-integration-shared"
+      ]
+    }
+  ],
+  "executed_nowhere": [],
+  "orphan_integration_scripts": [],
+  "ci_log_verification": {
+    "jobs_read": 21,
+    "attribution": "vitest `RUN v<ver> <cwd>` يُسنِد كلَّ سطرِ ✓ إلى حزمتِه — فلا يُخلَط ملفّانِ متشابهانِ في الاسمِ",
+    "files_observed_running": 43,
+    "files_not_observed": []
+  },
+  "ci_extract_written_to": "api-responses/ci-run-test-files.json"
+}

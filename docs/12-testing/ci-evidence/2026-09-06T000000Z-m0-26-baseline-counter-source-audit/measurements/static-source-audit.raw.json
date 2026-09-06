@@ -1,0 +1,70 @@
+{
+  "measured_at_commit": "424ebfd6f03447b32ea207e2f1a8a28e66af114d",
+  "baseline_commit": "297a9148edf536de7324df47168119aa46186646",
+  "baseline_generated_at": "2026-09-05T05:58:20Z",
+  "counters": {
+    "packages": {
+      "measured_now": 43,
+      "committed_baseline": 43,
+      "matches_baseline": true,
+      "source_read": "**/package.json (شجرةُ العملِ)",
+      "source_liveness": "live"
+    },
+    "packages_with_typecheck": {
+      "measured_now": 43,
+      "committed_baseline": 43,
+      "matches_baseline": true,
+      "source_read": "**/package.json → scripts.typecheck",
+      "source_liveness": "live"
+    },
+    "packages_with_test": {
+      "measured_now": 43,
+      "committed_baseline": 43,
+      "matches_baseline": true,
+      "source_read": "**/package.json → scripts.test",
+      "source_liveness": "live"
+    },
+    "test_files_tracked": {
+      "measured_now": 264,
+      "committed_baseline": 264,
+      "matches_baseline": true,
+      "source_read": "**/*.{test,spec}.{ts,tsx,js,mjs}",
+      "source_liveness": "live"
+    },
+    "ci_jobs": {
+      "measured_now": 26,
+      "committed_baseline": 26,
+      "matches_baseline": true,
+      "source_read": ".gitlab-ci.yml",
+      "source_liveness": "abandoned"
+    },
+    "ci_allow_failure": {
+      "measured_now": 1,
+      "committed_baseline": 1,
+      "matches_baseline": true,
+      "source_read": ".gitlab-ci.yml",
+      "source_liveness": "abandoned"
+    },
+    "governance_checks": {
+      "measured_now": 12,
+      "committed_baseline": 12,
+      "matches_baseline": true,
+      "source_read": "scripts/checks/verify-governance.sh",
+      "source_liveness": "live"
+    },
+    "risks_not_closed": {
+      "measured_now": 16,
+      "committed_baseline": 16,
+      "matches_baseline": true,
+      "source_read": "docs/07-security/RISK_REGISTER.md",
+      "source_liveness": "live"
+    }
+  },
+  "gitlab_ci_present": true,
+  "github_workflow_files": [
+    ".github/workflows/ci.yml"
+  ],
+  "github_job_keys": 12,
+  "github_continue_on_error_true": 0,
+  "test_files_present_but_untracked": []
+}

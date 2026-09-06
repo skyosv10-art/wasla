@@ -36,9 +36,9 @@
 - **Services:** لا خدمةَ — وثيقةُ حوكمةٍ وتخطيطٍ
 - **Why:** قرارُ الإصدارِ `NO-GO` بأربعةِ موانعَ P0 مفتوحةٍ، ولا توجدُ خريطةُ تبعيّاتٍ تنفيذيّةٌ تُرتِّبُ العملَ نحوَ `GO`. تُحوِّلُ هذه الدفعةُ الحالةَ الحاليّةَ إلى خريطةٍ قابلةٍ للتنفيذِ دونَ أن تبنيَ الموانعَ نفسَها (§19).
 - **What:** خريطةُ تبعيّاتٍ عبرَ أربعةِ مساراتٍ (A الأمان/الثقة · B البنيةُ التحتيّة/العمليّات · C البيانات/قاعدةُ البيانات · D منتجُ MVP)، 16 بوّابةً بمعاييرِ خروجٍ، موانعُ مالكٍ/خارجيّةٌ/ميدانيّةٌ مُعلَنةٌ، تعريفُ `GO`، والحالاتُ الطرفيّةُ الثلاث (`RED`/`YELLOW`/`GREEN`). مُستنبَطٌ من قراءةِ المستودعِ في 2026-09-06 (`main@7b0992e`) لا من التقريرِ القديم.
-- **Tests:** `verify-governance.sh` محليًّا + فحوصُ الحوكمةِ الفرديّةُ (`validate-work-claims.sh` · `require-doc-update.sh` · `validate-launch-board.sh` · `validate-repo-structure.sh`) + قراءةُ CI الفعليّةُ على هذه الدفعةِ.
-- **Status (§9):** `M2-10` ⇒ `Ready for Gate` (الرفعُ إلى `Completed` سلطةُ المالكِ).
-- **Next:** قراءةُ نتيجةِ CI؛ إن خضراءُ فالمهمّةُ مُكتملةٌ، وإلّا فمعالجةُ الإخفاقِ. الرفعُ إلى `Completed` قرارُ `@uxxxu`.
+- **Tests:** `verify-governance.sh` محليًّا (rc=0) + فحوصُ الحوكمةِ الفرديّةُ (`validate-work-claims.sh` · `require-doc-update.sh` · `validate-launch-board.sh` · `validate-repo-structure.sh`) + **CI الفعليُّ على هذه الدفعةِ**: التشغيلُ [`34043790551`](https://github.com/skyosv10-art/wasla/actions/runs/34043790551) على الفرعِ `chore/m2-10-p0-executive-roadmap` — **27/27 نجاحًا · 0 إخفاقًا** (`governance-guard` ✅ · `verify` ✅ · `doc-coverage` ✅ · `repo-structure` ✅ · `typecheck` ✅ · `test` ✅ · `db-integration` 12/12 ✅ · `db-integration-shared` ✅ · `exit-gate-e2e` 7/7 ✅).
+- **Status (§9):** `M2-10` ⇒ `Ready for Gate` — **CI أخضرُ 27/27 بدليل** (الرفعُ إلى `Completed` ودمجُ الـPR قرارُ مالكِ `@uxxxu`).
+- **Next:** انتظارُ قرارِ مالكِ البرنامجِ بدمجِ [PR #43](https://github.com/skyosv10-art/wasla/pull/43). لا تُدمَجُ ذاتيًّا (سلطةُ المالك).
 - **Related:** [`P0_EXECUTIVE_ROADMAP.md`](P0_EXECUTIVE_ROADMAP.md) · [`P0_EXECUTIVE_ROADMAP.svg`](P0_EXECUTIVE_ROADMAP.svg) · [`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md) `M2-10` · [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.15
 
 ### [2026-09-06] `M0-26` — تدقيقُ مصادرِ عدَّاداتِ الأساسِ: المهجورُ عدَّادانِ لا واحدٌ

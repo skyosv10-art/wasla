@@ -139,11 +139,26 @@ describe("loadBotConfig", () => {
   it("carries the identity service configuration through", () => {
     const config = loadBotConfig(
       "partner",
-      envFor("partner", { IDENTITY_SERVICE_URL: "http://identity:8080", IDENTITY_TIMEOUT_MS: "1500" }),
+      envFor("partner", {
+        IDENTITY_SERVICE_URL: "http://identity:8080",
+        IDENTITY_TIMEOUT_MS: "1500",
+        WASLA_SERVICE_AUTH_KEYS: "test-active:active:bot-runtime-test-secret-0123456789",
+        WASLA_SERVICE_AUTH_ACTIVE_KID: "test-active",
+      }),
     );
 
     expect(config.identityServiceUrl).toBe("http://identity:8080");
     expect(config.identityTimeoutMs).toBe(1500);
+    expect(config.serviceAuthActiveKid).toBe("test-active");
+  });
+
+  it("يرفض الإقلاع إذا وُصل حدُّ الهويّةِ بلا مادّةِ مفاتيحَ (M1-04)", () => {
+    // حدُّ الهويّةِ يفرضُ التوقيعَ: بوتٌ يُقلِعُ بلا مفاتيحَ سيُرَدُّ 401 عندَ
+    // كلِّ `/start`، فيقولُ للمستخدمِ إنّ هويّتَه تعذَّرت وهي متاحةٌ. الإخفاقُ
+    // عندَ الإقلاعِ يُسمّي المتغيّرَ الناقصَ بدلَ ذلك.
+    expect(() =>
+      loadBotConfig("partner", envFor("partner", { IDENTITY_SERVICE_URL: "http://identity:8080" })),
+    ).toThrow(/WASLA_SERVICE_AUTH_KEYS/);
   });
 
   it("carries a Postgres DATABASE_URL through (MR 5 persistence)", () => {

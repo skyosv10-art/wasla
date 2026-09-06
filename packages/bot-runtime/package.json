@@ -19,6 +19,7 @@
     "@wasla/channel-core": "workspace:*",
     "@wasla/channel-postgres": "workspace:*",
     "@wasla/contracts-channel": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "@wasla/telegram-adapter": "workspace:*",
     "fastify": "^5.12.1"
   },

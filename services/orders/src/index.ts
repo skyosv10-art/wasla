@@ -57,6 +57,16 @@ export { PostgresOrderOutbox } from "./infrastructure/drizzle/repository.js";
 export { PostgresOrderUnitOfWork } from "./infrastructure/drizzle/transaction.js";
 export { createOrderApp } from "./http/app.js";
 export type { CreateOrderAppOptions, OrderHealthDescriptor } from "./http/app.js";
+export {
+  ORDER_SCOPES,
+  ORDERS_SERVICE_AUDIENCE,
+  registerServiceIdentity as registerOrderServiceIdentity,
+} from "./http/service-identity.js";
+export type {
+  OrderRouteConfig,
+  OrderRouteIdentity,
+  OrderServiceIdentityOptions,
+} from "./http/service-identity.js";
 export { sendOrderError } from "./http/errors.js";
 export type { OrderErrorBody } from "./http/errors.js";
 export {

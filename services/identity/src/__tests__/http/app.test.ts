@@ -12,7 +12,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 
 import {
   createIdentityApp,
-  type CreateIdentityAppOptions,
 } from "../../http/app.js";
 import type { UseCaseDeps } from "../../use-cases/resolve-telegram-identity.js";
 import {
@@ -22,6 +21,8 @@ import {
   InMemoryOutbox,
   InMemoryPublicIdSequence,
 } from "../../index.js";
+
+import { createIdentityHttpHarness } from "./support.js";
 
 function buildDeps(): UseCaseDeps {
   return {
@@ -33,8 +34,13 @@ function buildDeps(): UseCaseDeps {
   };
 }
 
-function buildApp(deps: UseCaseDeps): CreateIdentityAppOptions {
-  return { deps, logger: false };
+/**
+ * `M1-04`: الحدُّ يفرضُ هويّةَ الخدمةِ، فاختباراتُ العقدِ تُنادى **موقَّعةً**.
+ * والتوقيعُ يُلَفُّ في `createIdentityHttpHarness` لا يُكرَّرُ في كلِّ نداءٍ —
+ * وإثباتُ الفرضِ نفسِه في `service-identity.test.ts` بـ`rawInject` بلا توقيعٍ.
+ */
+function buildApp(deps: UseCaseDeps): ReturnType<typeof createIdentityApp> {
+  return createIdentityHttpHarness(deps).app;
 }
 
 describe("Identity HTTP app — /identity/resolve", () => {
@@ -44,7 +50,7 @@ describe("Identity HTTP app — /identity/resolve", () => {
   });
 
   it("creates a new user (201) and is idempotent (200)", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
 
     const created = await app.inject({
       method: "POST",
@@ -82,7 +88,7 @@ describe("Identity HTTP app — /identity/resolve", () => {
   });
 
   it("returns 400 IDENTITY_MISSING_TELEGRAM_ID when telegram_user_id is missing", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const res = await app.inject({
       method: "POST",
       url: "/identity/resolve",
@@ -103,7 +109,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId", () => {
   });
 
   it("returns 200 the user when found", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const created = await app.inject({
       method: "POST",
       url: "/identity/resolve",
@@ -125,7 +131,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId", () => {
   });
 
   it("returns 404 IDENTITY_NOT_FOUND for a nonexistent user", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const res = await app.inject({
       method: "GET",
       url: "/identity/users/WS-0000000099",
@@ -136,7 +142,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId", () => {
   });
 
   it("returns 400 IDENTITY_INVALID_PUBLIC_ID for a malformed id", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const res = await app.inject({
       method: "GET",
       url: "/identity/users/not-a-valid-id",
@@ -156,7 +162,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId/links", () => {
   });
 
   it("adds a phone link (200) and rejects a bad provider (422)", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const created = await app.inject({
       method: "POST",
       url: "/identity/resolve",
@@ -188,7 +194,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId/links", () => {
   });
 
   it("returns 409 IDENTITY_LINK_ALREADY_LINKED when the link belongs to another user", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     // User A owns telegram id 10.
     await app.inject({
       method: "POST",
@@ -223,7 +229,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId/recovery", () => 
   });
 
   it("starts recovery (202) and rejects an invalid method (422)", async () => {
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const created = await app.inject({
       method: "POST",
       url: "/identity/resolve",
@@ -259,7 +265,7 @@ describe("Identity HTTP app — /identity/users/:waslaPublicId/recovery", () => 
 describe("Identity HTTP app — /identity/users/:waslaPublicId/history", () => {
   it("returns 200 the history array", async () => {
     const deps = buildDeps();
-    const app = createIdentityApp(buildApp(deps));
+    const app = buildApp(deps);
     const created = await app.inject({
       method: "POST",
       url: "/identity/resolve",

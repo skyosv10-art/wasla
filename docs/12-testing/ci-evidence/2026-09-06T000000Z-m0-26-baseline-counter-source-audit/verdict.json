@@ -82,5 +82,32 @@
       "8) CI مانعٌ — لقطةٌ مؤرَّخةٌ",
       "9) تدقيقُ الاعتمادياتِ — لم يُسأل مُسجَّلُ npm"
     ]
+  },
+  "ci": {
+    "pr": 39,
+    "run_id": 34001256454,
+    "head_sha": "34b2c22aedfcf10bb93ac832d64ba6d4f2bee5f3",
+    "workflow": "WASLA CI",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs_total": 27,
+    "jobs_success": 27,
+    "jobs_with_null_started_at": 0,
+    "checks": "28/28 pass (27 وظيفةً + Devin Review خارجيّاً)",
+    "raw": [
+      "api-responses/ci-run-34001256454.raw.json",
+      "api-responses/ci-run-34001256454-jobs.raw.json",
+      "api-responses/pr-39-checks.raw.txt"
+    ],
+    "note_section_9": "لم يُكتفَ بلونِ الخطِّ: قُرِئت حالةُ كلِّ وظيفةٍ وحُقِّقَ أنّ started_at غيرُ فارغٍ في 27/27."
+  },
+  "merge": {
+    "pr": 39,
+    "state": "MERGED",
+    "merged_at": "2026-09-06T00:28:20Z",
+    "merge_commit": "7b0992e592c5492b7763acfea4931ca25e0a9cdc",
+    "merged_sha": "34b2c22aedfcf10bb93ac832d64ba6d4f2bee5f3",
+    "authority": "owner",
+    "note": "دُمِجَ الطلبُ بقرارِ مالكِ البرنامجِ على الرأسِ 34b2c22 قبلَ أن تُرفَعَ طبقةُ CI في وثيقةِ البوّابةِ؛ فطبقةُ البوّابةِ تلحقُ في طلبٍ تالٍ. ولم يُدمَج شيءٌ بيدِ العميلِ."
   }
 }

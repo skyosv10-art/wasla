@@ -34,6 +34,7 @@ export * from "./run-tick.js";
 export * from "./infrastructure/http-order-engine.js";
 export * from "./infrastructure/http-matching.js";
 export * from "./http/app.js";
+export * from "./http/service-identity.js";
 
 // Postgres adapters (Phase 07 · MR 5a/6). Exported so the HTTP layer of MR 5b/6 —
 // and the exit-gate harness of MR 6/6 — can bind real storage without knowing how

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createDispatchApp } from "../http/app.js";
+import { createSignedDispatchApp as createDispatchApp } from "./service-identity-support.js";
 import type { DispatchRunner } from "../runner.js";
 import { createDispatchJob } from "../use-cases/create-job.js";
 import { readDispatchOffer } from "../use-cases/read-job.js";

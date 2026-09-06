@@ -37,6 +37,7 @@ import {
   type IdentityBootstrapResult,
 } from "@wasla/channel-core";
 import type { BotKind } from "@wasla/contracts-channel";
+import type { ServiceRequestSigner } from "@wasla/service-auth";
 
 /** `fetch`, narrowed to what this adapter uses (injectable in tests). */
 export type FetchLike = (
@@ -44,12 +45,30 @@ export type FetchLike = (
   init?: { method?: string; headers?: Record<string, string>; body?: string; signal?: AbortSignal },
 ) => Promise<{ status: number; json: () => Promise<unknown> }>;
 
+/** المسارُ المنشورُ الذي يُنادى هنا، بلا سلسلةِ استفسارٍ. */
+export const IDENTITY_RESOLVE_PATH = "/identity/resolve";
+
+/**
+ * الصلاحيّةُ الوحيدةُ التي تحتاجُها طبقةُ القناةِ على حدِّ الهويّةِ: **حلُّ
+ * هويّةٍ**. ولا تحملُ `identity:link:write` ولا `identity:recovery:write`: بوتٌ
+ * يُقلِعُ هويّةَ مستخدمٍ لا يجوزُ أن يقدرَ برمزِه على ربطِ هويّةٍ أو بدءِ
+ * استعادةِ حسابٍ (`ADR-001` · `ADR-007` القاعدةُ 4).
+ */
+export const CHANNEL_IDENTITY_SCOPES: readonly string[] = ["identity:resolve:write"];
+
 export interface HttpIdentityBootstrapOptions {
   /** Base URL of the identity service, e.g. http://identity:8080 */
   readonly baseUrl: string;
   /** Request timeout in ms (default 2000 — same budget geography uses). */
   readonly timeoutMs?: number;
   readonly fetchImpl?: FetchLike;
+  /**
+   * موقّعُ النداءِ الصادرِ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ** (`M1-04`):
+   * القيمةُ الافتراضيّةُ «بلا توقيعٍ» كانت ستجعلُ نداءً يُنسى توقيعُه ينجحُ في
+   * كلِّ اختبارٍ ويُرَدُّ 401 في الإنتاجِ وحدَه — والأثرُ هناك أنّ البوتَ يقولُ
+   * للمستخدمِ «تعذَّرَ إنشاءُ هويّتِك» عندَ كلِّ `/start`.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
 
 /** `source` values the identity contract accepts, derived from the bot kind. */
@@ -77,11 +96,13 @@ export class HttpIdentityBootstrap implements IdentityBootstrapPort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
   private readonly fetchImpl: FetchLike;
+  private readonly signRequest: ServiceRequestSigner;
 
   constructor(options: HttpIdentityBootstrapOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
     this.fetchImpl = options.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
+    this.signRequest = options.signRequest;
   }
 
   async ensureIdentity(input: IdentityBootstrapInput): Promise<IdentityBootstrapResult> {
@@ -94,10 +115,11 @@ export class HttpIdentityBootstrap implements IdentityBootstrapPort {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const response = await this.fetchImpl(`${this.baseUrl}/identity/resolve`, {
+      const response = await this.fetchImpl(`${this.baseUrl}${IDENTITY_RESOLVE_PATH}`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
+          ...this.signRequest("POST", IDENTITY_RESOLVE_PATH),
           ...(input.traceId ? { "x-trace-id": input.traceId } : {}),
         },
         body: JSON.stringify(body),

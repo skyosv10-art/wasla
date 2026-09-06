@@ -28,8 +28,14 @@
  * تخمينٍ أسوأ من خيطٍ لا يُفتح.
  */
 
-import { HttpAgreedPricePort } from "./http-agreed-price.js";
-import { HttpDispatchOfferPort } from "./http-dispatch-offer.js";
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+
+import { HttpAgreedPricePort, NEGOTIATIONS_ORDERS_SCOPES } from "./http-agreed-price.js";
+import {
+  HttpDispatchOfferPort,
+  NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
+  NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
+} from "./http-dispatch-offer.js";
 import {
   UnconfiguredAgreedPricePort,
   UnconfiguredDispatchOfferPort,
@@ -40,6 +46,13 @@ import type { AgreedPricePort, DispatchOfferPort } from "../ports.js";
 export interface NegotiationOutboundEnv {
   readonly DISPATCH_SERVICE_URL?: string | undefined;
   readonly ORDERS_SERVICE_URL?: string | undefined;
+  /**
+   * مفاتيح هوية الخدمة (M1-04). تُقرأ هنا لأن حد الطلبات صار يفرض الهوية،
+   * فالمنفذ الحقيقي لا يُبنى بلا موقّع — والمتغيّران يُذكران صراحة كي يبقى هذا
+   * السطر «بالضبط ما يقرأه هذا التوصيل» ولا يُضاف إليه شيء بصمت.
+   */
+  readonly WASLA_SERVICE_AUTH_KEYS?: string | undefined;
+  readonly WASLA_SERVICE_AUTH_ACTIVE_KID?: string | undefined;
 }
 
 /** أين تذهب ملاحظة التوصيل: `console.warn` في عمليّة، وجاسوسٌ في اختبار. */
@@ -63,7 +76,31 @@ export function configuredDispatchOffers(
   const dispatchBaseUrl = trimmed(env.DISPATCH_SERVICE_URL);
   const ordersBaseUrl = trimmed(env.ORDERS_SERVICE_URL);
   if (dispatchBaseUrl !== null && ordersBaseUrl !== null) {
-    return new HttpDispatchOfferPort({ dispatchBaseUrl, ordersBaseUrl });
+    return new HttpDispatchOfferPort({
+      dispatchBaseUrl,
+      ordersBaseUrl,
+      // النداءانِ **موقَّعانِ كلاهما** منذ الموجةِ الرابعةِ: حدُّ التوزيعِ صارَ
+      // مفروضاً كحدِّ الطلباتِ. والجمهورانِ مختلفانِ بقصدٍ — رمزٌ لأحدِ الحدَّينِ
+      // يُرفَض عندَ الآخرِ — والمفاتيحُ من البيئةِ بلا قيمةٍ افتراضيّةٍ.
+      signOrdersRequest: createServiceRequestSigner({
+        serviceName: "negotiations",
+        audience: "orders",
+        keys: keyRegistryFromEnv({
+          WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+        }),
+        scopes: NEGOTIATIONS_ORDER_LOOKUP_SCOPES,
+      }),
+      signDispatchRequest: createServiceRequestSigner({
+        serviceName: "negotiations",
+        audience: "dispatch",
+        keys: keyRegistryFromEnv({
+          WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+        }),
+        scopes: NEGOTIATIONS_DISPATCH_OFFER_SCOPES,
+      }),
+    });
   }
   const missing = [
     dispatchBaseUrl === null ? "DISPATCH_SERVICE_URL" : null,
@@ -88,7 +125,24 @@ export function configuredAgreedPrice(
   log: WiringLog,
 ): AgreedPricePort {
   const baseUrl = trimmed(env.ORDERS_SERVICE_URL);
-  if (baseUrl !== null) return new HttpAgreedPricePort({ baseUrl });
+  if (baseUrl !== null) {
+    // **يُرمى عند نقص المفاتيح ولا يُصمَت**: عنوانٌ موصولٌ بلا مفاتيح يعني نداءً
+    // يُرَدّ 401 من محرّك الطلب، فيُقرأ عطلَ المحرّك لا نقصَ إعدادٍ هنا. والإخفاق
+    // عند الإقلاع يسمّي العلة في موضعها. أما غياب العنوان فيبقى كما كان: تسليمٌ
+    // مؤجَّل لا تفاوضٌ متوقّف (ADR-013 القرار 2).
+    return new HttpAgreedPricePort({
+      baseUrl,
+      signRequest: createServiceRequestSigner({
+        serviceName: "negotiations",
+        audience: "orders",
+        keys: keyRegistryFromEnv({
+          WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+        }),
+        scopes: NEGOTIATIONS_ORDERS_SCOPES,
+      }),
+    });
+  }
   log(
     "ORDERS_SERVICE_URL غير مضبوط: الاتفاقات ستقع وتبقى غير مُسلَّمة إلى محرّك الطلب " +
       "(handoff_state=pending ثم abandoned بعد نفاد المحاولات).",

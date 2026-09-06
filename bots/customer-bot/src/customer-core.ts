@@ -38,7 +38,9 @@ import {
   type IdentityLookupPort,
   type Locale,
   type UseCaseDeps,
+  CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
+import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
 import type { Pool } from "pg";
 
 import {
@@ -190,6 +192,17 @@ export interface CustomerFlowsWiring {
 export interface CustomerFlowsEnv {
   readonly CUSTOMER_DATABASE_URL?: string | undefined;
   readonly IDENTITY_SERVICE_URL?: string | undefined;
+  /**
+   * مادّةُ مفاتيحِ هويّةِ الخدمةِ (`M1-04`). تُقرأُ من هذه الحُقيبةِ لا من
+   * `process.env`، على نفسِ نهجِ باقي المتغيّراتِ هنا: متغيّرٌ ناقصٌ يُخفِقُ
+   * **في موضعِه** لا يُورَثُ صامتاً من الصَّدَفةِ.
+   *
+   * **ولا قيمةَ افتراضيّةَ «بلا توقيعٍ»:** حدُّ الهويّةِ يفرضُ التوقيعَ، وبوتٌ
+   * بلا مفاتيحَ يُرَدُّ 401 فيُخبِرُ العميلَ أنّ هويّتَه غيرُ موجودةٍ وهي
+   * موجودةٌ — وذلك أسوأُ من إخفاقٍ ظاهرٍ عندَ الإقلاعِ.
+   */
+  readonly WASLA_SERVICE_AUTH_KEYS?: string | undefined;
+  readonly WASLA_SERVICE_AUTH_ACTIVE_KID?: string | undefined;
   readonly GEOGRAPHY_SERVICE_URL?: string | undefined;
   readonly NEGOTIATIONS_SERVICE_URL?: string | undefined;
 }
@@ -216,7 +229,20 @@ export function buildCustomerFlows(env: CustomerFlowsEnv): CustomerFlowsWiring |
   const clock = new SystemClock();
   const idGen = new CryptoIdGenerator();
   const identityLookup: IdentityLookupPort = env.IDENTITY_SERVICE_URL
-    ? new HttpIdentityLookupPort({ baseUrl: env.IDENTITY_SERVICE_URL })
+    ? new HttpIdentityLookupPort({
+        baseUrl: env.IDENTITY_SERVICE_URL,
+        // M1-04 (الموجة 3): حدُّ الهويّةِ يفرضُ هويّةَ الخدمةِ، والصلاحيّةُ
+        // المطلوبةُ قراءةُ مستخدمٍ وحدَها — لا ربطَ هويّةٍ ولا بدءَ استعادةٍ.
+        signRequest: createServiceRequestSigner({
+          serviceName: "customer-bot",
+          audience: "identity",
+          keys: keyRegistryFromEnv({
+            WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+            WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+          }),
+          scopes: CUSTOMERS_IDENTITY_SCOPES,
+        }),
+      })
     : new PermissiveIdentityLookup();
   const geography: GeographyPort = env.GEOGRAPHY_SERVICE_URL
     ? new HttpGeographyPort({ baseUrl: env.GEOGRAPHY_SERVICE_URL })

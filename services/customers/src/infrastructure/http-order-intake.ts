@@ -71,6 +71,8 @@
  *   ORDER_HTTP.md rather than faked with a placeholder token.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { OrderIntakeFailure } from "../domain/errors.js";
 import type { IntakeFailureReason } from "../domain/model.js";
 import type {
@@ -84,6 +86,9 @@ import { toOrderIntakeRequestDto } from "../use-cases/mappers.js";
 /** The engine's published intake path (orders service contract). */
 export const ORDER_INTAKE_PATH = "/orders/intake";
 
+/** الصلاحيات التي يحتاجها هذا العميل على حد الطلبات، لا أكثر. */
+export const CUSTOMERS_ORDERS_SCOPES: readonly string[] = ["orders:intake:write"];
+
 export interface HttpOrderIntakeOptions {
   /** Base URL of the order engine, e.g. http://orders:8087 */
   readonly baseUrl: string;
@@ -95,6 +100,12 @@ export interface HttpOrderIntakeOptions {
    * into a stuck bot conversation.
    */
   readonly timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (M1-04): القيمة
+   * الافتراضية «بلا توقيع» كانت ستجعل نداءً يُنسى توقيعه ينجح في كل اختبار
+   * ويُرَدّ 401 في الإنتاج وحده، وهو أسوأ موضع لاكتشاف نسيان.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
 
 interface IntakeResponseBody {
@@ -109,10 +120,12 @@ const ORDER_PUBLIC_ID_PATTERN = /^ORD-[0-9]{10}$/;
 export class HttpOrderIntakePort implements OrderIntakePort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
 
   constructor(options: HttpOrderIntakeOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
   }
 
   async submitOrderRequest(
@@ -127,6 +140,8 @@ export class HttpOrderIntakePort implements OrderIntakePort {
         headers: {
           "content-type": "application/json",
           "idempotency-key": request.idempotencyKey,
+          // الرمز مربوط بهذه الطريقة وهذا المسار ويُحرق عند أول استعمال.
+          ...this.signRequest("POST", ORDER_INTAKE_PATH),
           ...(context.traceId === undefined
             ? {}
             : { "x-request-id": context.traceId }),

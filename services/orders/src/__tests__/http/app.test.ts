@@ -20,16 +20,16 @@ import { describe, expect, it } from "vitest";
 
 import { createOrderApp } from "../../http/app.js";
 import { requireIdempotencyKey } from "../../http/requests.js";
-import { createDirectRunner } from "../../runner.js";
 import {
   bindAcceptedAssignment,
   createOrder,
   driveTo,
-  makeHarness,
   orderInStatus,
   publicId,
   type Harness,
 } from "../harness.js";
+
+import { createOrderHttpHarness } from "./support.js";
 
 const CUSTOMER = publicId(1);
 const OTHER_CUSTOMER = publicId(2);
@@ -41,14 +41,16 @@ interface Fixture {
   app: ReturnType<typeof createOrderApp>;
 }
 
+/**
+ * السند نفسه بعد `M1-04`: الحد صار يفرض هوية الخدمة، فالنداء غير الموقّع يُرَدّ
+ * `401`. والتوقيع يجري في `createOrderHttpHarness` لفّاً حول `inject` كي تبقى
+ * هذه الاختبارات مُثبِتةً للعقد لا لتجهيز الرمز — **وإثبات الفرض نفسه في ملف
+ * مستقل يستعمل `rawInject` بلا توقيع**، فلا يُخفي اللفُّ ما يجب أن يُثبَت.
+ */
 function fixture(
   health?: Parameters<typeof createOrderApp>[0]["health"],
 ): Fixture {
-  const harness = makeHarness();
-  const app = createOrderApp({
-    runner: createDirectRunner(harness),
-    ...(health === undefined ? {} : { health }),
-  });
+  const { harness, app } = createOrderHttpHarness(health);
   return { harness, app };
 }
 

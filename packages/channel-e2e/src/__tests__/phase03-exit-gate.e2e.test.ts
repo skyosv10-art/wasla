@@ -52,6 +52,7 @@ import {
   postWebhook,
   readOutbox,
   resetChannelSchema,
+  signIdentityRequest,
   startIdentityService,
   startUpdate,
   truncateChannelTables,
@@ -211,7 +212,10 @@ describe(`Phase 03 Exit Gate (${PERSISTENCE} stores)`, () => {
     // second and third bot resolved the one the first created.
     const resolved = await fetch(`${identity.baseUrl}/identity/resolve`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...signIdentityRequest("POST", "/identity/resolve"),
+      },
       body: JSON.stringify({ telegram_user_id: TELEGRAM_USER_ID, source: "customer_bot" }),
     });
     expect(resolved.status).toBe(200);

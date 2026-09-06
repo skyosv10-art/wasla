@@ -16,6 +16,7 @@
     "@wasla/geography-service": "workspace:*",
     "@wasla/identity-service": "workspace:*",
     "@wasla/orders-service": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "pg": "^8.23.0",
     "vitest": "^2.1.0"
   }

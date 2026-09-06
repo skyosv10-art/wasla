@@ -54,6 +54,7 @@ import {
   type CustomerEvent,
   type Outbox,
   type UseCaseDeps,
+  CUSTOMERS_GEOGRAPHY_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import {
@@ -145,6 +146,20 @@ function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
   });
 }
 
+/**
+ * `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ، وكلُّ عميلٍ يوقِّعُ
+ * بصلاحيّاتِهِ المعلنةِ لجمهورِ `geography` — لا رمزَ مشترَكاً بينَ الحدودِ.
+ */
+function geoSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "geography",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
+
 /** Start the gate: four listeners, one store set, one bot. */
 export async function startGate(): Promise<GateContext> {
   // --- identity: a real service on an ephemeral port ------------------------
@@ -179,6 +194,12 @@ export async function startGate(): Promise<GateContext> {
       identityLookup: new GeoIdentityLookup(),
     },
     logger: false,
+    // `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ في البوّابةِ كما في
+    // الإنتاجِ. بوّابةٌ تُشغّلُه بلا فرضٍ تُثبِتُ مسلكاً لا وجودَ له بعدَ النشرِ.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await geoApp.listen({ port: 0, host: "127.0.0.1" });
   const geographyUrl = `http://127.0.0.1:${(geoApp.server.address() as AddressInfo).port}`;
@@ -216,7 +237,10 @@ export async function startGate(): Promise<GateContext> {
         scopes: CUSTOMERS_IDENTITY_SCOPES,
       }),
     }),
-    geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
+    geography: new HttpGeographyPort({
+      baseUrl: geographyUrl,
+      signRequest: geoSigner("customers", CUSTOMERS_GEOGRAPHY_SCOPES),
+    }),
     orderIntake: new HttpStubOrderIntake({ baseUrl: engine.baseUrl }),
   };
 

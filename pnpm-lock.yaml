@@ -802,6 +802,9 @@ importers:
 
   services/geography:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-geography':
         specifier: workspace:*
         version: link:../../packages/contracts/geography

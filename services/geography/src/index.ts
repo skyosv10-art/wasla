@@ -55,3 +55,13 @@ export { createGeographyApp } from "./http/app.js";
 export type { CreateGeographyAppOptions } from "./http/app.js";
 export { sendGeographyError } from "./http/errors.js";
 export type { GeographyErrorBody } from "./http/errors.js";
+export {
+  GEO_SCOPES,
+  GEOGRAPHY_SERVICE_AUDIENCE,
+  registerServiceIdentity as registerGeographyServiceIdentity,
+} from "./http/service-identity.js";
+export type {
+  GeographyRouteConfig,
+  GeographyRouteIdentity,
+  GeographyServiceIdentityOptions,
+} from "./http/service-identity.js";

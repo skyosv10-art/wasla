@@ -20,7 +20,10 @@ import {
   DRIVERS_MATCHING_SCOPES,
   HttpCandidacyPort,
 } from "../infrastructure/http-candidacy.js";
-import { HttpZoneCatalogPort } from "../infrastructure/http-zone-catalog.js";
+import {
+  DRIVERS_GEOGRAPHY_SCOPES,
+  HttpZoneCatalogPort,
+} from "../infrastructure/http-zone-catalog.js";
 import type { CandidacyProjection } from "../ports.js";
 import { declareAvailability } from "../use-cases/manage-profile.js";
 import { readEligibility } from "../use-cases/read-eligibility.js";
@@ -77,9 +80,31 @@ const PROJECTION: CandidacyProjection = {
 const CLOCK = { now: () => "2026-01-01T00:00:00.000Z" };
 
 describe("دليل المناطق عبر HTTP", () => {
+  /**
+   * موقّعٌ لجمهورِ الجغرافيا وحدَه (`M1-04` الموجةُ الخامسةُ): رمزُ المطابقةِ
+   * يُرَدُّ عندَ هذا الحدِّ، فاختبارُهُ بموقّعٍ واحدٍ كان سيُخفي أنّ الجمهورَينِ
+   * مفترقانِ.
+   */
+  const GEO_TEST_SIGNER = createServiceRequestSigner({
+    serviceName: "drivers",
+    audience: "geography",
+    keys: new ServiceAuthKeyRegistry({
+      keys: [{ kid: "test", secret: "drivers-test-secret-0123456789abcd", status: "active" }],
+      activeKid: "test",
+    }),
+    scopes: DRIVERS_GEOGRAPHY_SCOPES,
+  });
+
   function catalog(answers: readonly (Response | Error)[]) {
     const { fetchImpl, calls } = stubFetch(answers);
-    return { port: new HttpZoneCatalogPort({ baseUrl: "http://geo:8081", fetchImpl }), calls };
+    return {
+      port: new HttpZoneCatalogPort({
+        baseUrl: "http://geo:8081",
+        fetchImpl,
+        signRequest: GEO_TEST_SIGNER,
+      }),
+      calls,
+    };
   }
 
   it("يقرأ المنطقة النشِطة من مسار الجغرافيا المعلن", async () => {
@@ -87,6 +112,14 @@ describe("دليل المناطق عبر HTTP", () => {
     expect([...(await port.existing([ZONE_A]))]).toEqual([ZONE_A]);
     expect(calls[0]?.url).toBe(`http://geo:8081/geo/zones/${ZONE_A}`);
     expect(calls[0]?.method).toBe("GET");
+    // النداءُ موقَّعٌ برمزٍ جمهورُهُ `geography` وصلاحيّتُهُ المعلنةُ وحدَها.
+    const token = calls[0]?.headers["x-wasla-service-auth"];
+    expect(typeof token).toBe("string");
+    const payload = JSON.parse(
+      Buffer.from(String(token).split(".")[1], "base64url").toString("utf8"),
+    ) as { aud?: string; scp?: string[] };
+    expect(payload.aud).toBe("geography");
+    expect(payload.scp).toEqual(["geography:zone:read"]);
   });
 
   it("يستثني المنطقة المعطَّلة: موجودة في الهرم ولا يجوز تأليف عمل فيها", async () => {

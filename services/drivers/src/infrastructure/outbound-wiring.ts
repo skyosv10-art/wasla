@@ -29,7 +29,10 @@
 import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
 
 import { DRIVERS_MATCHING_SCOPES, HttpCandidacyPort } from "./http-candidacy.js";
-import { HttpZoneCatalogPort } from "./http-zone-catalog.js";
+import {
+  DRIVERS_GEOGRAPHY_SCOPES,
+  HttpZoneCatalogPort,
+} from "./http-zone-catalog.js";
 import { InMemoryZoneCatalogPort } from "./in-memory.js";
 import type { CandidacyProjectionPort, ZoneCatalogPort } from "../ports.js";
 
@@ -130,7 +133,19 @@ export function matchingConfigured(env: DriverOutboundEnv): boolean {
 export function configuredZoneCatalog(env: DriverOutboundEnv, log: WiringLog): ZoneCatalogPort {
   const baseUrl = env.GEOGRAPHY_SERVICE_URL?.trim();
   if (baseUrl !== undefined && baseUrl.length > 0) {
-    return new HttpZoneCatalogPort({ baseUrl });
+    // M1-04 (الموجةُ الخامسة): حدُّ الجغرافيا مفروضٌ، فكلُّ نداءٍ صادرٍ إليه
+    // موقَّعٌ — وبقرارِ المالكِ (`CLM-0004` حُرِّرَ بإذنِهِ في 2026-09-07) لا
+    // بقرارِ الوكيلِ. المفاتيحُ من البيئةِ بلا قيمةٍ افتراضيّةٍ: منادٍ بلا
+    // مفاتيحَ يُرَدُّ 401 فيُقرأ الردُّ عطلَ الجغرافيا لا نقصَ إعدادٍ هنا.
+    return new HttpZoneCatalogPort({
+      baseUrl,
+      signRequest: createServiceRequestSigner({
+        serviceName: "drivers",
+        audience: "geography",
+        keys: keyRegistryFromEnv(env as Record<string, string | undefined>),
+        scopes: DRIVERS_GEOGRAPHY_SCOPES,
+      }),
+    });
   }
   const catalog = new InMemoryZoneCatalogPort();
   const configured = (env.DRIVER_DEV_ZONE_IDS ?? "")

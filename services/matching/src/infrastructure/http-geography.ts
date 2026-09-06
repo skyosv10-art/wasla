@@ -6,6 +6,8 @@
  * يحجب منطقة صحيحة. لا توجد إعادة محاولة حتى لا تضاعف زمن قرار المطابقة.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { matchingUnavailable } from "../domain/errors.js";
 import type { ZoneLineage } from "../domain/model.js";
 import type { ZoneHierarchyPort } from "../ports.js";
@@ -15,7 +17,16 @@ export interface HttpZoneHierarchyOptions {
   baseUrl?: string;
   /** حد زمني صارم يمنع اعتماداً متعثراً من تعطيل تقييم المطابقة. */
   timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (`M1-04` الموجةُ
+   * الخامسةُ): حدُّ الجغرافيا مفروضٌ الآن، فنداءٌ بلا توقيعٍ يُرَدُّ 401 في
+   * الإنتاجِ وحدَه.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
+
+/** الصلاحيّاتُ التي يحتاجُها هذا العميلُ على حدِّ الجغرافيا، لا أكثر. */
+export const MATCHING_GEOGRAPHY_SCOPES: readonly string[] = ["geography:zone:read"];
 
 type PathLevel = { id?: unknown };
 interface ZoneDetailResponse {
@@ -54,10 +65,12 @@ function toLineage(zoneId: string, response: ZoneDetailResponse): ZoneLineage {
 export class HttpZoneHierarchy implements ZoneHierarchyPort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
 
-  constructor(options: HttpZoneHierarchyOptions = {}) {
+  constructor(options: HttpZoneHierarchyOptions) {
     this.baseUrl = (options.baseUrl ?? "http://localhost:8081").replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
   }
 
   async resolve(zoneIds: readonly string[]): Promise<Map<string, ZoneLineage>> {
@@ -76,10 +89,13 @@ export class HttpZoneHierarchy implements ZoneHierarchyPort {
   private async resolveOne(zoneId: string): Promise<ZoneLineage | null> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const path = `/geo/zones/${encodeURIComponent(zoneId)}`;
     try {
-      const response = await fetch(`${this.baseUrl}/geo/zones/${encodeURIComponent(zoneId)}`, {
+      const response = await fetch(`${this.baseUrl}${path}`, {
         method: "GET",
         signal: controller.signal,
+        // الرمز مربوطٌ بهذه الطريقةِ وهذا المسارِ ويُحرَقُ عندَ أوّلِ استعمالٍ.
+        headers: this.signRequest("GET", path),
       });
       if (response.status === 404) return null;
       if (response.status !== 200) {

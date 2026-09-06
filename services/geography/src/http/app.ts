@@ -22,6 +22,11 @@
  *   GET  /geo/users/:waslaPublicId/location
  *   PUT  /geo/users/:waslaPublicId/location
  *   GET  /geo/users/:waslaPublicId/location/history
+ *
+ * M1-04 (wave 5): every route above is classified for service identity —
+ * `/health` is explicitly open, every domain route requires a scope — and an
+ * unclassified route drops the boot. The wiring lives in the central middleware
+ * (`@wasla/service-auth/fastify`); this file only declares the classification.
  */
 
 import Fastify, { type FastifyInstance } from "fastify";
@@ -43,6 +48,12 @@ import { getUserLocationHistory } from "../use-cases/get-user-location-history.j
 import { setUserLocation } from "../use-cases/set-user-location.js";
 
 import { sendGeographyError } from "./errors.js";
+import {
+  GEO_SCOPES,
+  registerServiceIdentity,
+  type GeographyRouteConfig,
+  type GeographyServiceIdentityOptions,
+} from "./service-identity.js";
 
 /** Supported locales (ar = default/fallback per ADR-006). */
 const SUPPORTED_LOCALES: readonly UseCaseLocale[] = ["ar", "en", "ur"];
@@ -58,8 +69,22 @@ const ALLOWED_SOURCES: readonly SetUserLocationRequest["source"][] = [
 
 export interface CreateGeographyAppOptions {
   deps: UseCaseDeps;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04` · الموجةُ الخامسةُ). **إلزاميٌّ
+   * بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ» تجعلُ نسيانَ
+   * التركيبِ في جذرٍ واحدٍ يمرُّ صامتاً في كلِّ اختبارٍ ويُكشَفُ في الإنتاجِ
+   * وحدَه.
+   */
+  serviceIdentity: GeographyServiceIdentityOptions;
   /** Enable Fastify's request logger (pino). Off by default for tests. */
   logger?: boolean;
+}
+
+/** `/health` وحدَه مفتوحٌ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: GeographyRouteConfig = { serviceIdentity: "open" };
+
+function scoped(...scopes: readonly string[]): GeographyRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 /**
@@ -133,48 +158,69 @@ export function createGeographyApp(
   // outbox envelopes are correlated with the HTTP request (Observability DoD).
   const withTrace = (traceId: string): UseCaseDeps => ({ ...deps, traceId });
 
+  // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَه لا ما قبلَه.
+  registerServiceIdentity(app, options.serviceIdentity);
+
   // GET /health — liveness probe (not part of the contract API surface).
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({ status: "ok" });
   });
 
   // --- hierarchy -----------------------------------------------------------
 
-  app.get("/geo/countries", async (request, reply) => {
+  app.get("/geo/countries", { config: scoped(GEO_SCOPES.hierarchyRead) }, async (request, reply) => {
     const locale = parseLocale((request.query as { locale?: string }).locale);
     const countries = await listCountries(deps, locale);
     return reply.status(200).send(countries);
   });
 
-  app.get("/geo/countries/:countryId/regions", async (request, reply) => {
+  app.get(
+    "/geo/countries/:countryId/regions",
+    { config: scoped(GEO_SCOPES.hierarchyRead) },
+    async (request, reply) => {
     const { countryId } = request.params as { countryId: string };
     const locale = parseLocale((request.query as { locale?: string }).locale);
     const regions = await listRegions(deps, countryId, locale);
     return reply.status(200).send(regions);
   });
 
-  app.get("/geo/regions/:regionId/cities", async (request, reply) => {
-    const { regionId } = request.params as { regionId: string };
-    const locale = parseLocale((request.query as { locale?: string }).locale);
-    const cities = await listCities(deps, regionId, locale);
-    return reply.status(200).send(cities);
-  });
+  app.get(
+    "/geo/regions/:regionId/cities",
+    { config: scoped(GEO_SCOPES.hierarchyRead) },
+    async (request, reply) => {
+      const { regionId } = request.params as { regionId: string };
+      const locale = parseLocale((request.query as { locale?: string }).locale);
+      const cities = await listCities(deps, regionId, locale);
+      return reply.status(200).send(cities);
+    },
+  );
 
-  app.get("/geo/cities/:cityId/districts", async (request, reply) => {
-    const { cityId } = request.params as { cityId: string };
-    const locale = parseLocale((request.query as { locale?: string }).locale);
-    const districts = await listDistricts(deps, cityId, locale);
-    return reply.status(200).send(districts);
-  });
+  app.get(
+    "/geo/cities/:cityId/districts",
+    { config: scoped(GEO_SCOPES.hierarchyRead) },
+    async (request, reply) => {
+      const { cityId } = request.params as { cityId: string };
+      const locale = parseLocale((request.query as { locale?: string }).locale);
+      const districts = await listDistricts(deps, cityId, locale);
+      return reply.status(200).send(districts);
+    },
+  );
 
-  app.get("/geo/districts/:districtId/zones", async (request, reply) => {
-    const { districtId } = request.params as { districtId: string };
-    const locale = parseLocale((request.query as { locale?: string }).locale);
-    const zones = await listZones(deps, districtId, locale);
-    return reply.status(200).send(zones);
-  });
+  app.get(
+    "/geo/districts/:districtId/zones",
+    { config: scoped(GEO_SCOPES.hierarchyRead) },
+    async (request, reply) => {
+      const { districtId } = request.params as { districtId: string };
+      const locale = parseLocale((request.query as { locale?: string }).locale);
+      const zones = await listZones(deps, districtId, locale);
+      return reply.status(200).send(zones);
+    },
+  );
 
-  app.get("/geo/zones/:zoneId", async (request, reply) => {
+  app.get(
+    "/geo/zones/:zoneId",
+    { config: scoped(GEO_SCOPES.zoneRead) },
+    async (request, reply) => {
     const { zoneId } = request.params as { zoneId: string };
     const locale = parseLocale((request.query as { locale?: string }).locale);
     const zone = await getZone(deps, zoneId, locale);
@@ -183,16 +229,23 @@ export function createGeographyApp(
 
   // --- user location -------------------------------------------------------
 
-  app.get("/geo/users/:waslaPublicId/location", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
-    const locale = parseLocale((request.query as { locale?: string }).locale);
-    const location = await getUserLocation(deps, { waslaPublicId, locale });
-    return reply.status(200).send(location);
-  });
+  app.get(
+    "/geo/users/:waslaPublicId/location",
+    { config: scoped(GEO_SCOPES.locationRead) },
+    async (request, reply) => {
+      const { waslaPublicId } = request.params as { waslaPublicId: string };
+      const locale = parseLocale((request.query as { locale?: string }).locale);
+      const location = await getUserLocation(deps, { waslaPublicId, locale });
+      return reply.status(200).send(location);
+    },
+  );
 
   // PUT → 201 on the first assignment, 200 on a change (or an idempotent
   // re-set of the same zone), per the OpenAPI contract.
-  app.put("/geo/users/:waslaPublicId/location", async (request, reply) => {
+  app.put(
+    "/geo/users/:waslaPublicId/location",
+    { config: scoped(GEO_SCOPES.locationWrite) },
+    async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
     const locale = parseLocale((request.query as { locale?: string }).locale);
     const body = parseSetLocationBody(request.body);
@@ -207,6 +260,7 @@ export function createGeographyApp(
 
   app.get(
     "/geo/users/:waslaPublicId/location/history",
+    { config: scoped(GEO_SCOPES.locationRead) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
       const locale = parseLocale((request.query as { locale?: string }).locale);

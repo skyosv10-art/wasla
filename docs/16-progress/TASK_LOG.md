@@ -28,6 +28,19 @@
 
 ## السجل
 
+### [2026-09-06] `M2-10` — خريطةُ تبعيّاتِ P0 التنفيذيّةُ: من NO-GO إلى GO
+
+- **Work Item(s):** M2-10
+- **Claim:** `CLM-0091` · الفرع `chore/m2-10-p0-executive-roadmap` · النطاقُ `docs/16-progress/P0_EXECUTIVE_ROADMAP.md,docs/16-progress/P0_EXECUTIVE_ROADMAP.svg,docs/16-progress/P0_EXECUTIVE_ROADMAP.png`
+- **Files:** `docs/16-progress/P0_EXECUTIVE_ROADMAP.md` (جديدٌ) · `docs/16-progress/P0_EXECUTIVE_ROADMAP.svg` (جديدٌ، متجهيٌّ قابلٌ للتحرير) · `docs/16-progress/P0_EXECUTIVE_ROADMAP.png` (جديدٌ، اختياريٌّ) · السجلّاتُ المشتركةُ (`LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `TASK_LOG.md`)
+- **Services:** لا خدمةَ — وثيقةُ حوكمةٍ وتخطيطٍ
+- **Why:** قرارُ الإصدارِ `NO-GO` بأربعةِ موانعَ P0 مفتوحةٍ، ولا توجدُ خريطةُ تبعيّاتٍ تنفيذيّةٌ تُرتِّبُ العملَ نحوَ `GO`. تُحوِّلُ هذه الدفعةُ الحالةَ الحاليّةَ إلى خريطةٍ قابلةٍ للتنفيذِ دونَ أن تبنيَ الموانعَ نفسَها (§19).
+- **What:** خريطةُ تبعيّاتٍ عبرَ أربعةِ مساراتٍ (A الأمان/الثقة · B البنيةُ التحتيّة/العمليّات · C البيانات/قاعدةُ البيانات · D منتجُ MVP)، 16 بوّابةً بمعاييرِ خروجٍ، موانعُ مالكٍ/خارجيّةٌ/ميدانيّةٌ مُعلَنةٌ، تعريفُ `GO`، والحالاتُ الطرفيّةُ الثلاث (`RED`/`YELLOW`/`GREEN`). مُستنبَطٌ من قراءةِ المستودعِ في 2026-09-06 (`main@7b0992e`) لا من التقريرِ القديم.
+- **Tests:** `verify-governance.sh` محليًّا + فحوصُ الحوكمةِ الفرديّةُ (`validate-work-claims.sh` · `require-doc-update.sh` · `validate-launch-board.sh` · `validate-repo-structure.sh`) + قراءةُ CI الفعليّةُ على هذه الدفعةِ.
+- **Status (§9):** `M2-10` ⇒ `Ready for Gate` (الرفعُ إلى `Completed` سلطةُ المالكِ).
+- **Next:** قراءةُ نتيجةِ CI؛ إن خضراءُ فالمهمّةُ مُكتملةٌ، وإلّا فمعالجةُ الإخفاقِ. الرفعُ إلى `Completed` قرارُ `@uxxxu`.
+- **Related:** [`P0_EXECUTIVE_ROADMAP.md`](P0_EXECUTIVE_ROADMAP.md) · [`P0_EXECUTIVE_ROADMAP.svg`](P0_EXECUTIVE_ROADMAP.svg) · [`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md) `M2-10` · [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.15
+
 ### [2026-09-06] `M0-26` — تدقيقُ مصادرِ عدَّاداتِ الأساسِ: المهجورُ عدَّادانِ لا واحدٌ
 
 - **Work Item(s):** M0-26

@@ -93,6 +93,7 @@
 | M2-07 | workers/outbox/ticks/DLQ | Platform / Service owners | M2-02,M2-05 | Not Started | crash/retry/dedupe proof | جرد كل outbox/tick. |
 | M2-08 | logs/metrics/traces/alerts | SRE / Platform | M2-01..07 | Not Started | synthetic trace/dashboard | تحديد SLI baseline. |
 | M2-09 | staging parity/deploy/rollback | Platform / QA | M2-01..08 | Not Started | successful staged deploy/rollback | إنشاء environment. |
+| M2-10 | P0 Executive Visual Roadmap (NO-GO→GO) | Program / DevEx | M1,M2 | Ready for Gate | P0_EXECUTIVE_ROADMAP.md + .svg | owner review + CI green. |
 
 ### M3 — التطبيقات والعمليات
 

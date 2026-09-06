@@ -82,6 +82,7 @@ import {
   InMemoryOutbox as InMemoryCustomerOutbox,
   SystemClock as CustomerClock,
   type UseCaseDeps,
+  CUSTOMERS_GEOGRAPHY_SCOPES,
   CUSTOMERS_ORDERS_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
@@ -123,6 +124,7 @@ import {
   createMatchingApp,
   createDirectRunner as createMatchingDirectRunner,
   HttpZoneHierarchy,
+  MATCHING_GEOGRAPHY_SCOPES,
 } from "@wasla/matching-service";
 import {
   configuredAgreedPrice,
@@ -195,9 +197,23 @@ function ordersSigner(serviceName: string, scopes: readonly string[]) {
 }
 
 function gateSigner(serviceName: string, scopes: readonly string[]) {
+
   return createServiceRequestSigner({
     serviceName,
     audience: "matching",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
+/**
+ * `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ، وكلُّ عميلٍ يوقِّعُ
+ * بصلاحيّاتِهِ المعلنةِ لجمهورِ `geography` — لا رمزَ مشترَكاً بينَ الحدودِ.
+ */
+function geoSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "geography",
     keys: gateServiceAuthKeys(),
     scopes,
   });
@@ -362,6 +378,12 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       identityLookup: new GeoIdentityLookup(),
     },
     logger: false,
+    // `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ في البوّابةِ كما في
+    // الإنتاجِ. بوّابةٌ تُشغّلُه بلا فرضٍ تُثبِتُ مسلكاً لا وجودَ له بعدَ النشرِ.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await geoApp.listen({ port: 0, host: "127.0.0.1" });
   const geographyUrl = `http://127.0.0.1:${(geoApp.server.address() as AddressInfo).port}`;
@@ -412,7 +434,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
           scopes: CUSTOMERS_IDENTITY_SCOPES,
         }),
       }),
-      geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
+      geography: new HttpGeographyPort({
+      baseUrl: geographyUrl,
+      signRequest: geoSigner("customers", CUSTOMERS_GEOGRAPHY_SCOPES),
+    }),
       orderIntake: new HttpOrderIntakePort({
         baseUrl: ordersUrl,
         signRequest: ordersSigner("customers", CUSTOMERS_ORDERS_SCOPES),
@@ -428,7 +453,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   const matchingApp = createMatchingApp({
     runner: createMatchingDirectRunner({
       ...createInMemoryDependencies({ now: GATE_EPOCH }),
-      zones: new HttpZoneHierarchy({ baseUrl: geographyUrl }),
+      zones: new HttpZoneHierarchy({
+        baseUrl: geographyUrl,
+        signRequest: geoSigner("matching", MATCHING_GEOGRAPHY_SCOPES),
+      }),
       clock,
     }),
     health: { persistence: "memory" },

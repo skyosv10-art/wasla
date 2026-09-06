@@ -21,6 +21,8 @@
  * such in the architecture doc rather than smuggled into the port signature.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { CustomerError } from "../domain/errors.js";
 import type { ZoneReference } from "../domain/model.js";
 import type { GeographyPort } from "../ports.js";
@@ -32,7 +34,17 @@ export interface HttpGeographyOptions {
   locale?: "ar" | "en" | "ur";
   /** Request timeout in ms (default 2000). */
   timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (`M1-04` الموجةُ
+   * الخامسةُ): حدُّ الجغرافيا مفروضٌ الآن، والقيمةُ الافتراضيّةُ «بلا توقيعٍ»
+   * كانت ستَجعلُ نداءً يُنسى توقيعُهُ ينجحُ في كلِّ اختبارٍ ويُرَدُّ 401 في
+   * الإنتاجِ وحدَه.
+   */
+  readonly signRequest: ServiceRequestSigner;
 }
+
+/** الصلاحيّاتُ التي يحتاجُها هذا العميلُ على حدِّ الجغرافيا، لا أكثر. */
+export const CUSTOMERS_GEOGRAPHY_SCOPES: readonly string[] = ["geography:zone:read"];
 
 interface ZoneDetailResponse {
   id?: unknown;
@@ -58,23 +70,33 @@ function buildPath(detail: ZoneDetailResponse): string | null {
   return parts.length === 0 ? null : parts.join(" / ");
 }
 
+/** المسارُ الموقَّعُ بلا سلسلةِ استفسارٍ: الربطُ يغطّي المسارَ (ADR-021 §4). */
+const ZONE_DETAIL_PATH = (zoneId: string): string => `/geo/zones/${encodeURIComponent(zoneId)}`;
+
 export class HttpGeographyPort implements GeographyPort {
   private readonly baseUrl: string;
   private readonly locale: "ar" | "en" | "ur";
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
 
   constructor(options: HttpGeographyOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.locale = options.locale ?? "ar";
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
   }
 
   async findZone(zoneId: string): Promise<ZoneReference | null> {
-    const url = `${this.baseUrl}/geo/zones/${encodeURIComponent(zoneId)}?locale=${this.locale}`;
+    const url = `${this.baseUrl}${ZONE_DETAIL_PATH(zoneId)}?locale=${this.locale}`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const response = await fetch(url, { method: "GET", signal: controller.signal });
+      const response = await fetch(url, {
+        method: "GET",
+        signal: controller.signal,
+        // الرمز مربوطٌ بهذه الطريقةِ وهذا المسارِ ويُحرَقُ عندَ أوّلِ استعمالٍ.
+        headers: this.signRequest("GET", ZONE_DETAIL_PATH(zoneId)),
+      });
       if (response.status === 404) return null;
       if (response.status !== 200) {
         throw new CustomerError(

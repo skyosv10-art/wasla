@@ -12,7 +12,11 @@
  * Port via PORT (default 8081 — identity uses 8080; see api.openapi.yml).
  */
 
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import { createGeographyApp } from "./app.js";
 import {
@@ -77,7 +81,20 @@ async function buildDeps(): Promise<UseCaseDeps> {
 
 async function main(): Promise<void> {
   const deps = await buildDeps();
-  const app = createGeographyApp({ deps, logger: true });
+  // M1-04 (الموجةُ الخامسة): الحدُّ مفروضٌ، والمفاتيحُ من البيئةِ بلا قيمةٍ
+  // افتراضيّةٍ — فنشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يسقطُ عندَ الإقلاعِ لا
+  // بعدَ أوّلِ نداءٍ. ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ مُعلَنٌ
+  // (`RISK-0015`)**: نسختانِ لا تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ أن يُعادَ
+  // على الأخرى — و`Redis` هو السدُّ، وعقدُ `ServiceTokenReplayGuard` مكتوبٌ كي
+  // يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+  const app = createGeographyApp({
+    deps,
+    logger: true,
+    serviceIdentity: {
+      keys: keyRegistryFromEnv(process.env),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
+  });
   const port = Number(process.env.PORT ?? 8081);
 
   try {

@@ -11,12 +11,19 @@ import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
-import { InMemoryServiceTokenReplayGuard, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import { createMatchingDb } from "../infrastructure/drizzle/db.js";
 import { PostgresMatchingUnitOfWork } from "../infrastructure/drizzle/transaction.js";
 import { createInMemoryDependencies } from "../infrastructure/in-memory.js";
-import { HttpZoneHierarchy } from "../infrastructure/http-geography.js";
+import {
+  HttpZoneHierarchy,
+  MATCHING_GEOGRAPHY_SCOPES,
+} from "../infrastructure/http-geography.js";
 import type { Clock, IdGenerator } from "../ports.js";
 import { createDirectRunner, PostgresMatchingRunner, type MatchingRunner } from "../runner.js";
 
@@ -41,7 +48,19 @@ interface Wiring {
 }
 
 function buildWiring(): Wiring {
-  const zones = new HttpZoneHierarchy({ baseUrl: process.env.GEOGRAPHY_BASE_URL ?? "http://localhost:8081" });
+  const zones = new HttpZoneHierarchy({
+    baseUrl: process.env.GEOGRAPHY_BASE_URL ?? "http://localhost:8081",
+    // M1-04 (الموجةُ الخامسة): حدُّ الجغرافيا مفروضٌ، فكلُّ نداءٍ صادرٍ إليه
+    // موقَّعٌ. المفاتيحُ من البيئةِ بلا قيمةٍ افتراضيّةٍ: منادٍ بلا مفاتيح
+    // يُرَدُّ 401 فيُقرأ الردُّ عطلَ الجغرافيا لا نقصَ إعدادٍ هنا، والإخفاقُ
+    // عندَ الإقلاعِ يسمّي العلةَ في موضعِها.
+    signRequest: createServiceRequestSigner({
+      serviceName: "matching",
+      audience: "geography",
+      keys: keyRegistryFromEnv(process.env),
+      scopes: MATCHING_GEOGRAPHY_SCOPES,
+    }),
+  });
   const clock = new SystemClock();
   const ids = new CryptoIdGenerator();
 

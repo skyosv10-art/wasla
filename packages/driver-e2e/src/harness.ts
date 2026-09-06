@@ -95,6 +95,7 @@ import { resolve } from "node:path";
 import {
   createCustomerApp,
   CryptoIdGenerator as CustomerIdGenerator,
+  CUSTOMERS_GEOGRAPHY_SCOPES,
   HttpGeographyPort,
   HttpIdentityLookupPort,
   HttpOrderIntakePort,
@@ -125,6 +126,7 @@ import {
   createDirectRunner as createDriverDirectRunner,
   createInMemoryEnvironment,
   DRIVERS_MATCHING_SCOPES,
+  DRIVERS_GEOGRAPHY_SCOPES,
   HttpCandidacyPort,
   HttpZoneCatalogPort,
   PostgresDriverOutbox,
@@ -159,6 +161,7 @@ import {
   createMatchingApp,
   createDirectRunner as createMatchingDirectRunner,
   HttpZoneHierarchy,
+  MATCHING_GEOGRAPHY_SCOPES,
 } from "@wasla/matching-service";
 import {
   createDirectRunner as createOrderDirectRunner,
@@ -222,6 +225,19 @@ function ordersSigner(serviceName: string, scopes: readonly string[]) {
   return createServiceRequestSigner({
     serviceName,
     audience: "orders",
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
+/**
+ * `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ، وكلُّ عميلٍ يوقِّعُ
+ * بصلاحيّاتِهِ المعلنةِ لجمهورِ `geography` — لا رمزَ مشترَكاً بينَ الحدودِ.
+ */
+function geoSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: "geography",
     keys: gateServiceAuthKeys(),
     scopes,
   });
@@ -409,6 +425,12 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
       identityLookup: new GeoIdentityLookup(),
     },
     logger: false,
+    // `M1-04` · الموجةُ الخامسة: حدُّ الجغرافيا مفروضٌ في البوّابةِ كما في
+    // الإنتاجِ. بوّابةٌ تُشغّلُه بلا فرضٍ تُثبِتُ مسلكاً لا وجودَ له بعدَ النشرِ.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await geoApp.listen({ port: 0, host: "127.0.0.1" });
   const geographyUrl = `http://127.0.0.1:${(geoApp.server.address() as AddressInfo).port}`;
@@ -448,7 +470,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
           scopes: CUSTOMERS_IDENTITY_SCOPES,
         }),
       }),
-      geography: new HttpGeographyPort({ baseUrl: geographyUrl }),
+      geography: new HttpGeographyPort({
+        baseUrl: geographyUrl,
+        signRequest: geoSigner("customers", CUSTOMERS_GEOGRAPHY_SCOPES),
+      }),
       orderIntake: new HttpOrderIntakePort({
         baseUrl: ordersUrl,
         signRequest: ordersSigner("customers", CUSTOMERS_ORDERS_SCOPES),
@@ -464,7 +489,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
   const matchingApp = createMatchingApp({
     runner: createMatchingDirectRunner({
       ...createInMemoryDependencies({ now: GATE_EPOCH }),
-      zones: new HttpZoneHierarchy({ baseUrl: geographyUrl }),
+      zones: new HttpZoneHierarchy({
+        baseUrl: geographyUrl,
+        signRequest: geoSigner("matching", MATCHING_GEOGRAPHY_SCOPES),
+      }),
       clock,
     }),
     health: { persistence: "memory" },
@@ -489,7 +517,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     clock,
     signRequest: gateSigner("drivers", DRIVERS_MATCHING_SCOPES),
   });
-  const zoneCatalog = new HttpZoneCatalogPort({ baseUrl: geographyUrl });
+  const zoneCatalog = new HttpZoneCatalogPort({
+    baseUrl: geographyUrl,
+    signRequest: geoSigner("drivers", DRIVERS_GEOGRAPHY_SCOPES),
+  });
   const ids = new DriverIdGenerator();
   const pools: Pool[] = [];
   let driverRunner: DriverRunner;

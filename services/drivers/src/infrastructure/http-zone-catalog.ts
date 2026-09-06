@@ -42,6 +42,8 @@
  * zones, and the caller's own retry is both cheaper and visible to him.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { driverUnavailable, isDriverError } from "../domain/errors.js";
 import type { ZoneCatalogPort } from "../ports.js";
 
@@ -50,9 +52,18 @@ export interface HttpZoneCatalogOptions {
   readonly baseUrl: string;
   /** Per-request timeout in ms (default 2000). */
   readonly timeoutMs?: number;
+  /**
+   * موقّع النداء الصادر. **إلزامي بلا قيمة افتراضية بقصد** (`M1-04` الموجةُ
+   * الخامسةُ): حدُّ الجغرافيا مفروضٌ الآن، فنداءٌ بلا توقيعٍ يُرَدُّ 401 في
+   * الإنتاجِ وحدَه.
+   */
+  readonly signRequest: ServiceRequestSigner;
   /** Injectable for tests; defaults to the global `fetch`. */
   readonly fetchImpl?: typeof fetch;
 }
+
+/** الصلاحيّاتُ التي يحتاجُها هذا العميلُ على حدِّ الجغرافيا، لا أكثر. */
+export const DRIVERS_GEOGRAPHY_SCOPES: readonly string[] = ["geography:zone:read"];
 
 interface ZoneDetailResponse {
   id?: unknown;
@@ -62,11 +73,13 @@ interface ZoneDetailResponse {
 export class HttpZoneCatalogPort implements ZoneCatalogPort {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly signRequest: ServiceRequestSigner;
   private readonly fetchImpl: typeof fetch;
 
   constructor(options: HttpZoneCatalogOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? 2000;
+    this.signRequest = options.signRequest;
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 
@@ -93,11 +106,14 @@ export class HttpZoneCatalogPort implements ZoneCatalogPort {
   private async isActive(zoneId: string): Promise<boolean> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const path = `/geo/zones/${encodeURIComponent(zoneId)}`;
     try {
-      const response = await this.fetchImpl(
-        `${this.baseUrl}/geo/zones/${encodeURIComponent(zoneId)}`,
-        { method: "GET", signal: controller.signal },
-      );
+      const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        method: "GET",
+        signal: controller.signal,
+        // الرمز مربوطٌ بهذه الطريقةِ وهذا المسارِ ويُحرَقُ عندَ أوّلِ استعمالٍ.
+        headers: this.signRequest("GET", path),
+      });
       if (response.status === 404) return false;
       if (response.status !== 200) {
         throw driverUnavailable("خدمة الجغرافيا أعادت حالة غير مقروءة لدليل المناطق");

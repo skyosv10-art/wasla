@@ -1,6 +1,6 @@
 # SERVICE_AUTH_ENFORCEMENT — خريطةُ إنفاذِ هويّةِ الخدمةِ وسجلُّ التغطية (ملزم)
 
-> **الحالة:** ساريةٌ · **العنصر:** `M1-03` ثمّ `M1-04` · **آخر تحديث:** 2026-09-05 · **المالك:** @uxxxu
+> **الحالة:** ساريةٌ · **العنصر:** `M1-03` ثمّ `M1-04` · **آخر تحديث:** 2026-09-07 · **المالك:** @uxxxu
 >
 > **المرجع:** [`ADR-020`](../15-decisions/ADR-020-service-to-service-authentication.md) · [`ADR-021`](../15-decisions/ADR-021-service-token-replay-policy.md) · [`ADR-022`](../15-decisions/ADR-022-service-auth-key-rotation.md) · [`M1-03_GATE.md`](../12-testing/M1-03_GATE.md) · محروسٌ بالفحصِ **12** في [`verify-governance.sh`](../../scripts/checks/verify-governance.sh)
 
@@ -33,9 +33,11 @@
 
 ## 2. الحدودُ المُثبَتة
 
-**أربعةُ حدودٍ اليوم: خدمةُ المطابقة (`M1-03`) · حدُّ الطلبات (`M1-04` · الموجةُ
+**خمسةُ حدودٍ اليوم: خدمةُ المطابقة (`M1-03`) · حدُّ الطلبات (`M1-04` · الموجةُ
 الثانية) · حدُّ الهويّة (`M1-04` · الموجةُ الثالثة) · حدُّ التوزيع (`M1-04` ·
-الموجةُ الرابعة).**
+الموجةُ الرابعة) · حدُّ الجغرافيا (`M1-04` · الموجةُ الخامسة، 2026-09-07).**
+وبها اكتملَ فرضُ الهويّةِ على **حدودِ المحرِّكاتِ المُنفَّذةِ كلِّها** — فلا حدَّ
+محرِّكٍ بلا فرضٍ بعدَ اليومِ.
 
 الترتيبُ في الحدودِ واحدٌ لأنّ الوسيطَ واحدٌ: منذُ الموجةِ الأولى من `M1-04` صارَ
 الربطُ بـFastify كلُّه في
@@ -44,12 +46,17 @@
 و**مغلَّفُ خطئِها** — و`audience` و`denialBody` إلزاميّانِ عندَ الوسيطِ بلا قيمةٍ
 افتراضيّةٍ، فلا يخترعُ لخدمةٍ جمهورَ أخرى.
 
-### 2.0 لماذا الطلباتُ قبلَ الجغرافيا
+### 2.0 لماذا الطلباتُ قبلَ الجغرافيا (ولمَ فُرِضَ الجغرافيا آخراً)
 
-حدُّ الجغرافيا له ثلاثةُ عملاءَ أحدُهم في `services/drivers/`، وهي **محجوزةٌ لمالكٍ
-بشريٍّ** (`CLM-0004`). **وفرضُ حدٍّ قبلَ توقيعِ كلِّ عملائِه يعني `401` في الإنتاج**،
-فلا يُفرَضُ حدٌّ ما لم يُوقَّعْ كلُّ منادٍ له في الدفعةِ نفسِها. وعملاءُ الطلباتِ
-الأربعةُ كلُّهم خارجَ الحجزِ، فكانَ هذا الحدَّ **الممكنَ لا الأسهل**.
+حدُّ الجغرافيا له ثلاثةُ عملاءَ أحدُهم في `services/drivers/`، وكانت **محجوزةً
+لمالكٍ بشريٍّ** (`CLM-0004`). **وفرضُ حدٍّ قبلَ توقيعِ كلِّ عملائِه يعني `401` في
+الإنتاج**، فلا يُفرَضُ حدٌّ ما لم يُوقَّعْ كلُّ منادٍ له في الدفعةِ نفسِها. وعملاءُ
+الطلباتِ الأربعةُ كلُّهم خارجَ الحجزِ، فكانَ هذا الحدَّ **الممكنَ لا الأسهل**.
+وأُزيلَ المانعُ **بقرارِ مالكِ الحجزِ نفسِه (2026-09-07): حُرِّرَ `CLM-0004`**
+بعدَ أن ثبتَ أنّ التزامَي فرعِه القديمَين (`9d4339d` · `608d009`) محتواهما
+**مُستبدَلٌ بعملٍ أحدثَ في `main`** (موجاتُ M0-09/M1-04) — فحُرِّرَ الحجزُ
+بإذنِ صاحبِه لا بانتزاعِه، ثمّ فُرِضَ الحدُّ ووُقِّعَ عملاؤه الثلاثةُ في الدفعةِ
+نفسِها.
 
 ### 2.1 الترتيبُ (واحدٌ في الحدَّين)
 
@@ -191,8 +198,11 @@
   بـ`fetch` عارٍ يتجاوزُ مُساعِدَ البوّابةِ، فردَّ الحدُّ `401` وسقطَ اختباران.
   والعلاجُ تمريرُ النداءَينِ عبرَ `callDispatch` الموقِّع — لا تخفيفُ الحدِّ.
 
-**ما لا يُدَّعى هنا:** فرضُ حدِّ التوزيعِ لا يجعلُ `M1-04` منجَزاً. حدُّ
-`geography` **لم يُفرَضْ بعدُ** وعملاؤه الثلاثةُ مؤجَّلونَ، والسجلُّ في §4 هو
+**ما لا يُدَّعى هنا:** فرضُ الحدودِ الخمسةِ لا يجعلُ `M1-04` منجَزاً:
+بوّابةُ `M1-04_GATE.md` لم تُكتَبْ بعدُ، و`AUD-004`/`AUD-005` مفتوحانِ،
+و`RISK-0027` مفتوحٌ — وقد تجلّى فعليّاً في هذه الموجةِ: منادٍ رابعٌ للجغرافيا
+في `bots/customer-bot/src/customer-core.ts` كانَ خارجَ سجلِّ الحارسِ كليّاً،
+اكتشفَه فحصُ الأنواعِ لا الحارسُ، ووُقِّعَ في الدفعةِ نفسِها. والسجلُّ في §4 هو
 الرقمُ. ولا يُدَّعى أنّ متغيّراتِ البيئةِ مُعَدّةٌ في أيِّ نشرٍ — لم يُقَسْ ذلك.
 
 ---
@@ -219,30 +229,30 @@
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | `service-identity-enforcement.e2e.test.ts` · `DISPATCH_MATCHING_SCOPES` |
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
-| `services/customers/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/customers/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/customers/src/__tests__` (عبر بوّاباتِ e2e) · `CUSTOMERS_GEOGRAPHY_SCOPES` |
 | `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/identity/src/__tests__/http/service-identity.test.ts` · `CUSTOMERS_IDENTITY_SCOPES` |
 | `services/customers/src/infrastructure/http-order-intake.ts` | orders | موقَّع | `services/customers/src/__tests__/http-order-intake.test.ts` · `CUSTOMERS_ORDERS_SCOPES` |
 | `services/dispatch/src/infrastructure/http-order-engine.ts` | orders | موقَّع | `services/dispatch/src/__tests__/http-order-engine.test.ts` · `DISPATCH_ORDERS_SCOPES` |
-| `services/drivers/src/infrastructure/http-zone-catalog.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/drivers/src/infrastructure/http-zone-catalog.ts` | geography | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` · `DRIVERS_GEOGRAPHY_SCOPES` |
 | `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` · `GEOGRAPHY_IDENTITY_SCOPES` |
-| `services/matching/src/infrastructure/http-geography.ts` | geography | مؤجَّل | حدُّ geography غيرُ مفروضٍ — بوّابةُ M1-04 |
+| `services/matching/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/matching/src/__tests__/http-geography.test.ts` يقرأُ `aud` و`scp` · `MATCHING_GEOGRAPHY_SCOPES` |
 | `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع | موقِّعانِ صريحانِ بجمهورَينِ: `NEGOTIATIONS_ORDER_LOOKUP_SCOPES` و`NEGOTIATIONS_DISPATCH_OFFER_SCOPES` · `services/negotiations/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` من الرمزَين |
 
 <!-- coverage-ledger:end -->
 
-**قراءةُ العدد:** ثمانيةٌ موقِّعونَ من أحدَ عشرَ في هذا السجلِّ — اثنانِ إلى
-المطابقةِ وأربعةٌ إلى الطلباتِ واثنانِ إلى الهويّةِ — **وأحدُ الثمانيةِ
-(`http-dispatch-offer.ts`) صارَ يوقِّعُ نداءَيه كلَيهما** منذُ الموجةِ الرابعةِ،
-بموقِّعَينِ صريحَينِ لجمهورَينِ (`orders` و`dispatch`). وبقيَ ثلاثةٌ مؤجَّلونَ،
-**كلُّهم إلى حدِّ `geography` وحدَه** — وهو الحدُّ الأخيرُ غيرُ المفروضِ، وسببُ
-تأجيلِه حجزُ `CLM-0004` لا صعوبتُه.
+**قراءةُ العدد:** أحدَ عشرَ موقِّعاً من أحدَ عشرَ في هذا السجلِّ — اثنانِ إلى
+المطابقةِ وأربعةٌ إلى الطلباتِ واثنانِ إلى الهويّةِ وثلاثةٌ إلى الجغرافيا —
+**وأحدُهم (`http-dispatch-offer.ts`) يوقِّعُ نداءَيه كلَيهما** بموقِّعَينِ
+صريحَينِ لجمهورَينِ (`orders` و`dispatch`). ولا مؤجَّلَ بعدَ اليومِ: حدُّ
+`geography` فُرِضَ في الموجةِ الخامسةِ (2026-09-07) **بإذنِ المالكِ في تحريرِ
+`CLM-0004`** — لا قبلهُ.
 
 **وثغرةٌ بنيويّةٌ في هذا السجلِّ تُقالُ هنا لا تُخفى:** الحارسُ لا يقيسُ إلّا
 `services/*/src/infrastructure/http-*.ts`، فمُنادو حدِّ الهويّةِ **من خارجِ

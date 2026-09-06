@@ -12,10 +12,7 @@
  */
 import { describe, it, expect } from "vitest";
 
-import {
-  createGeographyApp,
-  type CreateGeographyAppOptions,
-} from "../../http/app.js";
+import { createSignedGeographyApp } from "../service-identity-support.js";
 import type { UseCaseDeps } from "../../use-cases/deps.js";
 import {
   SAUDI_FIXTURE_IDS,
@@ -40,20 +37,18 @@ function buildDeps(options?: { knownIds?: string[] }): UseCaseDeps {
   };
 }
 
-function buildApp(deps: UseCaseDeps): CreateGeographyAppOptions {
-  return { deps, logger: false };
-}
+
 
 describe("Geography HTTP app — hierarchy routes", () => {
   it("GET /health returns 200 ok", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: "ok" });
   });
 
   it("GET /geo/countries defaults to locale ar", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({ method: "GET", url: "/geo/countries" });
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -63,7 +58,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
   });
 
   it("GET /geo/countries?locale=en returns English names", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({
       method: "GET",
       url: "/geo/countries?locale=en",
@@ -73,7 +68,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
   });
 
   it("rejects an unsupported locale with GEO_UNSUPPORTED_LOCALE (400)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({
       method: "GET",
       url: "/geo/countries?locale=fr",
@@ -86,7 +81,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
   });
 
   it("walks the full hierarchy: regions → cities → districts → zones", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
 
     const regions = await app.inject({
       method: "GET",
@@ -118,7 +113,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
   });
 
   it("maps missing parents to their stable *_NOT_FOUND code (404)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const cases: [string, string][] = [
       [`/geo/countries/${UNKNOWN_UUID}/regions`, "GEO_COUNTRY_NOT_FOUND"],
       [`/geo/regions/${UNKNOWN_UUID}/cities`, "GEO_REGION_NOT_FOUND"],
@@ -134,7 +129,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
   });
 
   it("GET /geo/zones/:id returns the zone with its full localized path", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({
       method: "GET",
       url: `/geo/zones/${I.zoneHaraEast}?locale=en`,
@@ -150,7 +145,7 @@ describe("Geography HTTP app — hierarchy routes", () => {
 
 describe("Geography HTTP app — user location routes", () => {
   it("PUT sets the first location (201) then changes it (200) — Exit Gate path", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
 
     const created = await app.inject({
       method: "PUT",
@@ -174,7 +169,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("PUT with the same zone is idempotent (200, no version bump)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const first = await app.inject({
       method: "PUT",
       url: `/geo/users/${USER}/location`,
@@ -190,7 +185,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("GET returns the current location and 404 when none is set", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
 
     const missing = await app.inject({
       method: "GET",
@@ -214,7 +209,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("GET history returns the ordered change log (old_zone null first)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     await app.inject({
       method: "PUT",
       url: `/geo/users/${USER}/location`,
@@ -240,7 +235,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("rejects an invalid Wasla Public ID with GEO_INVALID_PUBLIC_ID (400)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({
       method: "GET",
       url: "/geo/users/WS-123/location",
@@ -250,7 +245,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("rejects a malformed PUT body with GEO_INVALID_REQUEST_BODY (400)", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
 
     const noZone = await app.inject({
       method: "PUT",
@@ -270,7 +265,7 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("returns GEO_ZONE_NOT_FOUND (404) for an unknown zone", async () => {
-    const app = createGeographyApp(buildApp(buildDeps()));
+    const app = createSignedGeographyApp({ deps: buildDeps(), logger: false });
     const res = await app.inject({
       method: "PUT",
       url: `/geo/users/${USER}/location`,
@@ -281,9 +276,10 @@ describe("Geography HTTP app — user location routes", () => {
   });
 
   it("returns GEO_IDENTITY_NOT_FOUND (404) for an unknown identity", async () => {
-    const app = createGeographyApp(
-      buildApp(buildDeps({ knownIds: ["WS-0000000002"] })),
-    );
+    const app = createSignedGeographyApp({
+      deps: buildDeps({ knownIds: ["WS-0000000002"] }),
+      logger: false,
+    });
     const res = await app.inject({
       method: "PUT",
       url: `/geo/users/${USER}/location`,
@@ -295,7 +291,7 @@ describe("Geography HTTP app — user location routes", () => {
 
   it("emits set then changed events with the request id as trace_id", async () => {
     const deps = buildDeps();
-    const app = createGeographyApp(buildApp(deps));
+    const app = createSignedGeographyApp({ deps: deps, logger: false });
     await app.inject({
       method: "PUT",
       url: `/geo/users/${USER}/location`,

@@ -23,6 +23,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { AddressInfo } from "node:net";
+import type { InjectOptions, LightMyRequestResponse } from "fastify";
 
 import {
   createDb as createIdentityDb,
@@ -111,6 +112,22 @@ function signIdentity(method: string, path: string): Record<string, string> {
   })(method, path);
 }
 
+/**
+ * توقيعُ نداءٍ مُحقَنٍ مباشرةً في حدِّ الجغرافيا (`M1-04` · الموجةُ الخامسةُ).
+ * البوّابةُ هنا تنوبُ عن **مُحرِّكِ الطلباتِ/التوزيعِ** في تحديثِ موقعِ المستخدمِ،
+ * فتحملُ صلاحيّاتِ الموقعِ كلَّها؛ والسيناريو الذي يُثبِتُ الفرضَ على هذا الحدِّ
+ * يعيشُ في `service-identity.test.ts` و`packages/driver-e2e`، لا هنا.
+ */
+function signGeo(method: string, path: string): Record<string, string> {
+  const separator = path.indexOf("?");
+  return createServiceRequestSigner({
+    serviceName: "phase02-exit-gate",
+    audience: "geography",
+    keys: gateServiceAuthKeys(),
+    scopes: ["geography:hierarchy:read", "geography:zone:read", "geography:location:read", "geography:location:write"],
+  })(method, separator < 0 ? path : path.slice(0, separator));
+}
+
 describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () => {
   let identityPool: import("pg").Pool;
   let geoPool: import("pg").Pool;
@@ -160,6 +177,10 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
 
     geoOutbox = new PostgresOutbox(geoCreated.db);
     geoApp = createGeographyApp({
+      serviceIdentity: {
+        keys: gateServiceAuthKeys(),
+        replayGuard: new InMemoryServiceTokenReplayGuard(),
+      },
       deps: {
         repo: new PostgresGeographyRepository(geoCreated.db),
         outbox: geoOutbox,
@@ -176,6 +197,19 @@ describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () =>
         }),
       },
     });
+    // الموجةُ الخامسةُ: حقنُ البوّابةِ في حدِّ الجغرافيا يُوقَّعُ كلهُ كي تبقى
+    // اختباراتُ السيناريو على العقدِ لا على الهويّةِ — وفرضُ الحدِّ نفسِهِ
+    // يُثبَتُ بلا توقيعٍ في ملفّاتِ الإثباتِ المستقلّةِ.
+    const geoRawInject: (options: InjectOptions) => Promise<LightMyRequestResponse> =
+      geoApp.inject.bind(geoApp);
+    geoApp.inject = ((options: InjectOptions) =>
+      geoRawInject({
+        ...options,
+        headers: {
+          ...signGeo(String(options.method ?? "GET"), String(options.url ?? "/")),
+          ...(options.headers ?? {}),
+        },
+      })) as typeof geoApp.inject;
   });
 
   afterAll(async () => {

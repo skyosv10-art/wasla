@@ -50,7 +50,7 @@ import {
   UnavailableOrderIntake,
 } from "../infrastructure/in-memory.js";
 import { CUSTOMERS_ORDERS_SCOPES, HttpOrderIntakePort } from "../infrastructure/http-order-intake.js";
-import { HttpGeographyPort } from "../infrastructure/http-geography.js";
+import { HttpGeographyPort, CUSTOMERS_GEOGRAPHY_SCOPES } from "../infrastructure/http-geography.js";
 import {
   HttpIdentityLookupPort,
   CUSTOMERS_IDENTITY_SCOPES,
@@ -133,7 +133,19 @@ function buildGeography(): GeographyPort {
   const baseUrl = process.env.GEOGRAPHY_SERVICE_URL;
   // No URL → no zones: every stop is rejected with CUSTOMER_ZONE_NOT_FOUND,
   // which is the truthful answer when the zone hierarchy is not reachable.
-  return baseUrl ? new HttpGeographyPort({ baseUrl }) : new FakeGeography([]);
+  return baseUrl ? new HttpGeographyPort({
+    baseUrl,
+    // M1-04 (الموجةُ الخامسة): حدُّ الجغرافيا مفروضٌ، فكلُّ نداءٍ صادرٍ إليه
+    // موقَّعٌ. المفاتيحُ من البيئةِ بلا قيمةٍ افتراضيّةٍ: منادٍ بلا مفاتيح
+    // يُرَدُّ 401 فيُقرأ الردُّ عطلَ الجغرافيا لا نقصَ إعدادٍ هنا، والإخفاقُ
+    // عندَ الإقلاعِ يسمّي العلةَ في موضعِها.
+    signRequest: createServiceRequestSigner({
+      serviceName: "customers",
+      audience: "geography",
+      keys: keyRegistryFromEnv(process.env),
+      scopes: CUSTOMERS_GEOGRAPHY_SCOPES,
+    }),
+  }) : new FakeGeography([]);
 }
 
 interface Wiring {

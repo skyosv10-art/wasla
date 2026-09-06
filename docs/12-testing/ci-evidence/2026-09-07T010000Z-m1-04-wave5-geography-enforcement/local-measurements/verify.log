@@ -1,0 +1,1111 @@
+[1m╔══════════════════════════════════════════════════════════╗[0m
+[1m║  التحقّقُ الموحَّد — WASLA (M0-04)                          ║[0m
+[1m╚══════════════════════════════════════════════════════════╝[0m
+
+[1m── بنيةُ المستودعِ والوثائقُ الحاكمة[0m
+[32m✓ بنيةُ المستودعِ كاملةٌ:[0m 5 ملفَّ جذرٍ · 7 دليلاً · 20 وثيقةً حاكمةً.
+[2m  المصدرُ: scripts/checks/lib/required-artifacts.sh (M0-04)[0m
+
+[1m── اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)[0m
+[32m✓ CI مانعٌ في إعدادِه:[0m مصدرانِ مقيسانِ (.gitlab-ci.yml + .github/workflows/ci.yml بـ9 وظيفةٍ) · مدخلٌ موحَّدٌ مُستدعَى في كلَيهما · لا كتلةَ إلزامٍ مضمَّنةً · 1 استثناءَ إخفاقٍ مُعلَناً · 2 سكربتَ استكشافٍ مُعلَناً.
+[2m  ولا يشمل هذا رفضَ الدمجِ عندَ إخفاقِ الخطّ (only_allow_merge_if_pipeline_succeeds) — docs/00-rules/VERIFY_COMMAND.md §7.[0m
+
+[1m── بوّابةُ الحوكمة (12 فحصاً)[0m
+[1m╔══════════════════════════════════════════════════════════╗[0m
+[1m║  فحص حوكمة WASLA — بوابة واحدة لكل الفحوص                ║[0m
+[1m╚══════════════════════════════════════════════════════════╝[0m
+
+[2m──── 0) وجود الوثائق الحاكمة ────[0m
+  [32m✓[0m docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md
+  [32m✓[0m docs/00-rules/DEFINITION_OF_DONE.md
+  [32m✓[0m docs/00-rules/GIT_RULES.md
+  [32m✓[0m docs/00-rules/SECURITY_RULES.md
+  [32m✓[0m docs/00-rules/WORK_CLAIM_RULE.md
+  [32m✓[0m docs/00-rules/PUSH_DOCUMENTATION_RULE.md
+  [32m✓[0m docs/00-rules/TESTING_RULES.md
+  [32m✓[0m docs/00-rules/VERIFY_COMMAND.md
+  [32m✓[0m docs/07-security/RISK_REGISTER.md
+  [32m✓[0m docs/12-testing/BASELINE_FORMAT.md
+  [32m✓[0m docs/12-testing/BASELINE.json
+  [32m✓[0m docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md
+  [32m✓[0m docs/16-progress/README.md
+  [32m✓[0m docs/16-progress/MASTER_PROGRESS.md
+  [32m✓[0m docs/16-progress/LAUNCH_TO_100_ROADMAP.md
+  [32m✓[0m docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+  [32m✓[0m docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md
+  [32m✓[0m docs/16-progress/WORK_CLAIMS.md
+  [32m✓[0m docs/16-progress/WORK_INDEX.md
+  [32m✓[0m docs/16-progress/TASK_LOG.md
+
+[2m──── 1) بنية لوحة التنفيذ ────[0m
+OK: لوحة التنفيذ سليمة (84 عنصر/عناصر).
+OK: Work Item references في TASK_LOG تطابق IDs اللوحة.
+
+[2m──── 2) حجوزات العمل (سجل + ملفات مُعدّلة) ────[0m
+
+[1m=== فحص حجوزات العمل ===[0m
+  حجوزات نشطة: 3
+[32m✓[0m بنية الحجوزات النشطة صالحة (عنصر عمل موجود · مالك · فرع · نطاق · مهلة ≤ 14د).
+[32m✓[0m لا تقاطع في النطاقات بين مالكين مختلفين.
+[32m✓[0m لا ملفات مُعدّلة بين origin/main وHEAD.
+
+[2m──── 3) قاعدة التوثيق مع الدفع ────[0m
+OK: لا توجد تغييرات في النطاق المحدد.
+
+[2m──── 4) بياتُ الحجوزات (فرعٌ محذوفٌ وحجزٌ نشط) ────[0m
+  [32m✓[0m CLM-0097   M1-04    feat/m1-04-wave5-geography-enforcement  [33m(مرجعٌ محليّ)[0m
+  [32m✓[0m CLM-0078   M0-22C   chore/m0-22c-22e-board-reconciliation  [33m(مرجعُ origin محليّاً)[0m
+  [32m✓[0m CLM-0079   M0-22B   chore/m0-22b-gate-unblock-reconciliation  [33m(مرجعُ origin محليّاً)[0m
+
+[32m✓ كلُّ حجزٍ نشطٍ (3) فرعُه قائمٌ في المستودع.[0m
+
+[2m──── 5) هدفُ طلبِ الدمج (فرعٌ مدموجٌ أو محذوفٌ يُعلِق العمل) ────[0m
+  [33m○ لا ينطبق — ليس سياقَ طلبِ دمج (لا وسيطٌ ولا CI_MERGE_REQUEST_TARGET_BRANCH_NAME)[0m
+
+[2m──── 6) فحص الأسرار ────[0m
+OK: لا أنماط أسرار واضحة في الملفات المتتبعة (باستثناء ملفات الكاشف).
+
+[2m──── 7) عزلُ DDL في اختباراتِ التكامل ────[0m
+  [32m✓[0m customers      2 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m dispatch       3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m drivers        3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m geography      2 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m identity       2 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m marketplace    10 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m matching       3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m negotiations   3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m orders         3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m reputation     3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+  [32m✓[0m subscriptions  5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+
+[32m✓ عزلُ DDL مضمونٌ:[0m 11 خدمةً بالتسلسلِ.
+
+[2m──── 8) CI مانعٌ لا مُجمِّل (M0-04) ────[0m
+[32m✓ CI مانعٌ في إعدادِه:[0m مصدرانِ مقيسانِ (.gitlab-ci.yml + .github/workflows/ci.yml بـ9 وظيفةٍ) · مدخلٌ موحَّدٌ مُستدعَى في كلَيهما · لا كتلةَ إلزامٍ مضمَّنةً · 1 استثناءَ إخفاقٍ مُعلَناً · 2 سكربتَ استكشافٍ مُعلَناً.
+[2m  ولا يشمل هذا رفضَ الدمجِ عندَ إخفاقِ الخطّ (only_allow_merge_if_pipeline_succeeds) — docs/00-rules/VERIFY_COMMAND.md §7.[0m
+[32m  ✓ 27 سياقاً مطلوباً تُطابق وظائفَ الخطِّ حرفاً بحرفٍ[0m
+[32m  ✓ 2 محاولةَ دمجٍ رُدَّت فعلاً بـ405[0m
+[33m⊘ منعُ الدمجِ — جزئيٌّ مُعلَنٌ:[0m الأبوابُ الأربعةُ نجحت على **لقطةٍ مؤرَّخةٍ** (2026-09-05T02:00:00Z)، ولم تُسأل الواجهةُ حيّاً.
+[2m  والحيُّ يُسأل بتصدير WASLA_PROTECTION_JSON إلى ملفِّ ردِّ /branches/main/protection.[0m
+
+[2m──── 9) تدقيقُ الاعتماديات والثغرات (M0-06) ────[0m
+  [32m✓ البابُ 1:[0m شجرةُ الإنتاجِ نظيفةٌ (صفرُ ثغراتٍ).
+  [32m✓ البابُ 2:[0m الشجرةُ كاملةً بلا ثغرةٍ معروفةٍ — لا حاجةَ لاستثناءٍ أصلاً.
+[32m✓ تدقيقُ الاعتماديات:[0m شجرةُ الإنتاجِ نظيفةٌ · كلُّ ثغرةٍ مُعلَنةٌ بمهلةٍ سارية · مديرُ الحزمِ مثبَّتٌ · 5 تثبيتاً قسريّاً مُبرَّراً.
+
+[2m──── 10) سجلُّ المخاطرِ والاستثناءات (M0-07) ────[0m
+  [32m✓ البابُ 1:[0m الصيغةُ صالحةٌ ومراجعُها موجودةٌ (28 خطراً · 5 مقابلةً).
+  [32m✓ البابُ 2:[0m لا مهلةَ مراجعةٍ منقضيةً (اليومَ 2026-09-06).
+  [32m✓ البابُ 3:[0m كلُّ استثناءٍ في §11 يقابله خطرٌ قائمٌ بمراجعةٍ سابقةٍ لانتهائه.
+  [32m✓ البابُ 4:[0m السجلُّ مُحالٌ إليه من اللوحةِ ومن قواعدِ الأمان.
+[32m✓ سجلُّ المخاطر:[0m 28 خطراً بمالكٍ ومهلةٍ ساريةٍ · 5 استثناءً مقابَلاً · لا سجلَّ يتيماً.
+
+[2m──── 11) الأساسُ الآليُّ للبيئةِ والاختبارات (M0-08) ────[0m
+  [32m✓ البابُ 1:[0m الصيغةُ كاملةٌ والبصمةُ متّسقةٌ مع محتوياتِها.
+  [32m✓ البابُ 2:[0m العدَّاداتُ الساكنةُ الحيّةُ تطابق الأساسَ المُلتزَمَ (لا انحدارَ ولا زحفَ صامتاً).
+  [32m✓ البابُ 3:[0m البصمةُ ثابتةٌ على المتغيِّراتِ ومتغيِّرةٌ على الجوهرِ (8 عدَّاداتٍ + القفل).
+  [32m✓ البابُ 4:[0m الصيغةُ موثَّقةٌ · الأساسُ مُحالٌ إليه · أرقامُه الحركيّةُ مقيسةٌ · شجرتُه مُعلَنةٌ.
+[32m✓ الأساسُ الآليُّ:[0m صيغةٌ متّسقةٌ · لا انحدارَ في العدَّاداتِ الساكنةِ · تكرارٌ مُبرهَنٌ · sha256:30d16bd1642aadc6…
+
+[2m──── 12) تغطيةُ إنفاذِ هويّةِ الخدمة (M1-03) ────[0m
+  [32m✓[0m السّجلُّ موجودٌ: docs/07-security/SERVICE_AUTH_ENFORCEMENT.md
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-geography.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-identity-lookup.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-order-intake.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-matching.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-order-engine.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-candidacy.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-zone-catalog.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/geography/src/infrastructure/http-identity-lookup.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/matching/src/infrastructure/http-geography.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-agreed-price.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-dispatch-offer.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/dispatch/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/geography/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/identity/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/matching/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/orders/src/http/app.ts
+
+[32m✓ حارسُ تغطيةِ هويّةِ الخدمة: كلُّ عميلٍ مُعلَنٌ بصدقٍ، والحدُّ المُعلَنُ مفروضٌ.[0m
+  والتغطيةُ الكاملةُ ليست مُدَّعاةً هنا: بوّابةُ M1-04 المستقلّة.
+
+[1m╔══════════════════════════════════════════════════════════╗[0m
+[1m║  الخلاصة                                                  ║[0m
+[1m╚══════════════════════════════════════════════════════════╝[0m
+  [32m✓ نجح[0m   وجود الوثائق الحاكمة
+  [32m✓ نجح[0m   1) بنية لوحة التنفيذ
+  [32m✓ نجح[0m   2) حجوزات العمل (سجل + ملفات مُعدّلة)
+  [32m✓ نجح[0m   3) قاعدة التوثيق مع الدفع
+  [32m✓ نجح[0m   4) بياتُ الحجوزات (فرعٌ محذوفٌ وحجزٌ نشط)
+  [32m✓ نجح[0m   5) هدفُ طلبِ الدمج (لا ينطبق — ليس سياقَ طلبِ دمج)
+  [32m✓ نجح[0m   6) فحص الأسرار
+  [32m✓ نجح[0m   7) عزلُ DDL في اختباراتِ التكامل
+  [32m✓ نجح[0m   9) تدقيقُ الاعتماديات والثغرات
+  [32m✓ نجح[0m   10) سجلُّ المخاطرِ والاستثناءات
+  [32m✓ نجح[0m   11) الأساسُ الآليُّ للبيئةِ والاختبارات
+  [32m✓ نجح[0m   12) تغطيةُ إنفاذِ هويّةِ الخدمة
+  [33m⊘ تخطٍّ[0m  8) CI مانعٌ — جزئيٌّ: الأبوابُ نجحت على لقطةٍ مؤرَّخةٍ، ولم تُسأل الواجهةُ حيّاً
+
+[32m✓ الحوكمة: كل الفحوص المُنفَّذة نجحت.[0m
+  [33mتنبيه: 1 فحص تُخطّي — النجاح جزئي لا كامل.[0m
+
+
+[1m── حزمةُ اختبارِ الحوكمة (ترفض فعلاً لا شكلاً)[0m
+
+[1m═══ إثبات آلية منع تكرار العمل ═══[0m
+[2m  عناصر العمل المقروءة من اللوحة: M0-01 · M0-02   |   اليوم: 2026-09-06[0m
+
+[1m[أ] سلامة السجل الحقيقي[0m
+  [32m✓[0m السجل الحقيقي في المستودع سليم   (كما هو متوقع: pass)
+
+[1m[ب] سلامة السجل — على سجلٍّ صناعيٍّ لا يعتمد على صفٍّ حقيقي[0m
+  [32m✓[0m السجل الصناعي الأساس سليم (مرجع موجب) (كما هو متوقع: pass)
+  [32m✓[0m يرفض حجزين لنفس عنصر العمل           (كما هو متوقع: fail)
+  [32m✓[0m يرفض تقاطع نطاق بين مالكين مختلفين (كما هو متوقع: fail)
+  [32m✓[0m يسمح بنطاق منفصل تماماً (لا منع زائد) (كما هو متوقع: pass)
+  [32m✓[0m يسمح بتقاطع على سجلٍّ مشترك مستثنى (كما هو متوقع: pass)
+  [32m✓[0m يسمح بتقاطع نطاق لنفس المالك       (كما هو متوقع: pass)
+  [32m✓[0m يسمح بتقاطع الوكيل مع صاحبِه (جهة واحدة) (كما هو متوقع: pass)
+  [32m✓[0m يرفض تقاطع وكيلَينِ لصاحبَينِ مختلفَين (كما هو متوقع: fail)
+  [32m✓[0m يسمح بنفس العنصر لنفس الجهة على فرعين مُكدَّسين (كما هو متوقع: pass)
+  [32m✓[0m يرفض نفس العنصر لجهتين مختلفتين (كما هو متوقع: fail)
+  [32m✓[0m يرفض حجزاً منتهي المهلة                (كما هو متوقع: fail)
+  [32m✓[0m يرفض مهلة تتجاوز 14 يوماً               (كما هو متوقع: fail)
+  [32m✓[0m يرفض عنصر عمل غير موجود في اللوحة (كما هو متوقع: fail)
+  [32m✓[0m يرفض حجزاً بلا مالك                        (كما هو متوقع: fail)
+  [32m✓[0m يرفض مالكاً لا يبدأ بـ@                  (كما هو متوقع: fail)
+  [32m✓[0m يرفض حجزاً بنطاق فارغ                    (كما هو متوقع: fail)
+  [32m✓[0m يقبل مالكاً بصيغة الوكيل @handle (agent:x) (كما هو متوقع: pass)
+  [32m✓[0m يهمل صفوف «المحرَّرة» ولا يحتسبها حجزاً (حارس M0-12) (كما هو متوقع: pass)
+
+[1m[ج] احتواء الملفات المُعدّلة داخل النطاق المحجوز (git حقيقي)[0m
+  [32m✓[0m يسمح بتعديل داخل النطاق المحجوز (كما هو متوقع: pass)
+  [32m✓[0m يرفض تعديل ملف خارج النطاق المحجوز (كما هو متوقع: fail)
+  [32m✓[0m يقبل ملفَّينِ يغطّيهما حجزانِ نشطانِ على الفرعِ نفسِه (M0-19) (كما هو متوقع: pass)
+  [32m✓[0m يرفض ملفّاً خارجَ اتّحادِ الحجزَينِ معاً (M0-19) (كما هو متوقع: fail)
+  [32m✓[0m يسمح بتعديل السجلات المشتركة الخمسة خارج النطاق (كما هو متوقع: pass)
+  [32m✓[0m يرفض الدفع من فرع بلا حجز نشط       (كما هو متوقع: fail)
+  [32m✓[0m يرفض تعديل وثيقة غير السجلات من فرع بلا حجز (كما هو متوقع: fail)
+  [32m✓[0m يسمح بالسجلات الخمسة من فرع بلا حجز (كما هو متوقع: pass)
+
+[1m[د] قاعدة التوثيق مع الدفع[0m
+  [32m✓[0m يرفض كوداً بلا تحديث السجل واللوحة (كما هو متوقع: fail)
+  [32m✓[0m يرفض لمسَ السجل بلا إدخال يحمل Work Item(s) (كما هو متوقع: fail)
+  [32m✓[0m يقبل إدخالاً صحيحاً مع diff كبير (حارس SIGPIPE) (كما هو متوقع: pass)
+  [32m✓[0m قاعدة التوثيق تقبل حالةً صحيحةً في 40 تشغيلاً بلا تقلّب (كما هو متوقع: pass)
+
+[1m[د2] ثباتُ مدقّقِ اللوحة (حارس SIGPIPE الثاني)[0m
+  [32m✓[0m مدقّق اللوحة يقبل لوحةً صحيحةً في 40 تشغيلاً بلا تقلّب (كما هو متوقع: pass)
+
+[1m[هـ] تطابقُ قائمةِ السجلات المشتركة في مواضعها الثلاثة[0m
+  [32m✓[0m القائمة واحدة في السكربتين والوثيقة (كما هو متوقع: pass)
+
+[1m[هث] مرشِّحُ التغييراتِ ذاتِ المعنى — مصدرٌ واحدٌ لا نسختان (M0-15)[0m
+  [32m✓[0m المدقّقان يحكمان الحكمَ نفسه على كل بادئة (كما هو متوقع: pass)
+  [32m✓[0m إعادة كتابة المرشّح محليّاً تُكشَف (كما هو متوقع: pass)
+  [32m✓[0m تعديلُ .github/workflows بلا حجزٍ يُرفَض (كما هو متوقع: pass)
+  [32m✓[0m حذفُ .github من المرشّح يُكشَف          (كما هو متوقع: pass)
+
+[1m[هخ] منعُ الدمجِ — الحمايةُ تُطابق الخطَّ أو تُرفَض (M0-25)[0m
+  [32m✓[0m لقطةٌ مطابقةٌ ومُبرهَنةٌ ⇒ جزئيٌّ مُعلَنٌ (2) لا نجاحٌ مُجمَّلٌ (كما هو متوقع: pass)
+  [32m✓[0m وظيفةٌ في الخطِّ بلا سياقٍ مطلوبٍ تُرفَض (كما هو متوقع: pass)
+  [32m✓[0m enforce_admins معطَّلاً يُرفَض (المالكُ يتجاوزُ الحارسَ) (كما هو متوقع: pass)
+  [32m✓[0m لقطةٌ بلا برهانِ رفضٍ 405 تُرفَض (دعوى بلا قياسٍ) (كما هو متوقع: pass)
+  [32m✓[0m مرجعُ برهانِ الرفضِ الميتُ يُرفَض (كما هو متوقع: pass)
+  [32m✓[0m سؤالٌ حَيٌّ مطابقٌ يرفعُ الحكمَ إلى نجاحٍ كاملٍ (كما هو متوقع: pass)
+  [32m✓[0m حمايةٌ حيّةٌ انحرفت عن اللقطةِ تُرفَض (كما هو متوقع: pass)
+
+[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)[0m
+  [32m✓[0m يمرّ حجزاً نشطاً فرعُه قائم في origin (كما هو متوقع: pass)
+  [32m✓[0m يرفض حجزاً نشطاً فرعُه محذوف       (كما هو متوقع: fail)
+  [32m✓[0m يهمل صفوف «المحرّرة» ولا يرفضها (كما هو متوقع: pass)
+  [32m✓[0m عند الجهل يُعلن التخطّي ولا يدّعي نجاحاً كاملاً (كما هو متوقع: pass)
+
+[1m[ز] هدفُ طلبِ الدمج — فرعٌ مدموجٌ أو محذوفٌ يُعلِق العمل (M0-17)[0m
+  [32m✓[0m يمرّ طلباً يستهدف الفرعَ الافتراضيّ (كما هو متوقع: pass)
+  [32m✓[0m يمرّ هدفاً متقدّماً (طلبٌ مكدّسٌ مشروع) (كما هو متوقع: pass)
+  [32m✓[0m يرفض هدفاً مدموجاً أصلاً في الافتراضيّ (كما هو متوقع: fail)
+  [32m✓[0m يرفض هدفاً محذوفاً من المستودع   (كما هو متوقع: fail)
+  [32m✓[0m بلا طلبٍ يقول «لا ينطبق» ولا يدّعي جزئيّة (كما هو متوقع: pass)
+  [32m✓[0m عند الجهل يُعلن التخطّي ويوسمُه جزئيّاً (كما هو متوقع: pass)
+  [32m✓[0m حالةُ «الهدفُ مدموج» تكشف فعلاً (اختبارُ طفرة) (كما هو متوقع: pass)
+  [32m✓[0m حالةُ «الهدفُ محذوف» تكشف فعلاً (اختبارُ طفرة) (كما هو متوقع: pass)
+  [32m✓[0m حالةُ تمييزِ «لا ينطبق» من الجهلِ تكشف فعلاً (اختبارُ طفرة) (كما هو متوقع: pass)
+
+[1m[ح] عزلُ DDL في اختباراتِ التكامل (M0-03)[0m
+  [32m✓[0m يمرّ على خدماتِ المستودعِ الحقيقيّةِ كما هي (كما هو متوقع: pass)
+  [32m✓[0m يرفض إعدادَ تكاملٍ بلا fileParallelism وله ملفّان (كما هو متوقع: fail)
+  [32m✓[0m يرفض غيابَ إعدادِ التكاملِ مع ملفَّين (كما هو متوقع: fail)
+  [32m✓[0m يمرّ ملفّاً واحداً ويُعلن أنّه لا يُسابق نفسَه (كما هو متوقع: pass)
+  [32m✓[0m يقبل «schema-per-worker» بوسمٍ مُعلَنٍ بدلَ التسلسل (كما هو متوقع: pass)
+  [32m✓[0m يرفض إعداداً افتراضيّاً لا يستثني ملفّاتِ التكامل (كما هو متوقع: fail)
+  [32m✓[0m حالةُ «بلا تسلسل» تكشف فعلاً (اختبارُ طفرة) (كما هو متوقع: pass)
+  [32m✓[0m حالةُ «الإعدادُ الافتراضيُّ يُسرّب» تكشف فعلاً (اختبارُ طفرة) (كما هو متوقع: pass)
+  [32m✓[0m حدُّ «ملفٌّ واحدٌ لا يُسابق نفسَه» مقصودٌ لا عرَضٌ (اختبارُ طفرة) (كما هو متوقع: pass)
+
+[1m[ط] الأمرُ الموحَّدُ وCI مانعٌ لا مُجمِّل (M0-04)[0m
+  [32m✓[0m يمرّ على إعدادِ المستودعِ الحقيقيِّ كما هو (كما هو متوقع: pass)
+  [32m✓[0m يمرّ على جذرٍ صناعيٍّ سليم           (كما هو متوقع: pass)
+  [32m✓[0m يرفض خطّاً لا يستدعي الأمرَ الموحَّد (كما هو متوقع: fail)
+  [32m✓[0m يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةٍ لا تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m يرفض رجوعَ قائمةِ الإلزامِ المضمَّنةِ إلى YAML (كما هو متوقع: fail)
+  [32m✓[0m يرفض استثناءَ إخفاقٍ غيرَ مُعلَنٍ في الوثيقة (كما هو متوقع: fail)
+  [32m✓[0m يرفض حارساً لا يصل إليه الأمرُ الموحَّدُ ولا هو مُعلَن (كما هو متوقع: fail)
+  [32m✓[0m يرفض ملفَّ GitHub الحيَّ إذا لم تستدعِ وظيفةٌ الأمرَ الموحَّد (كما هو متوقع: fail)
+  [32m✓[0m يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةِ GitHub مُقنَّعةٍ بـcontinue-on-error (كما هو متوقع: fail)
+  [32m✓[0m يرفض استدعاءَ الأمرِ الموحَّدِ في وظيفةِ GitHub مشروطةٍ بـif (كما هو متوقع: fail)
+  [32m✓[0m يرفض قائمةَ إلزامٍ مضمَّنةً في ملفِّ GitHub (كما هو متوقع: fail)
+  [32m✓[0m يرفض وظيفةَ GitHub مُقنَّعةً غيرَ مُعلَنةٍ في الوثيقة (كما هو متوقع: fail)
+  [32m✓[0m يرفض تقنيعَ خطوةٍ داخلَ وظيفةِ GitHub غيرِ مُعلَنةٍ (كما هو متوقع: fail)
+  [32m✓[0m يسقط صراحةً إذا خلا ملفُّ GitHub من وظائفَ (كما هو متوقع: fail)
+  [32m✓[0m يسقط صريحاً إن غابت كتلةُ §4 من الوثيقة (كما هو متوقع: fail)
+  [32m✓[0m بنيةُ المستودع: يرفض جذراً ناقصاً ويُسمّي كلَّ ناقصٍ (كما هو متوقع: pass)
+  [32m✓[0m مصدرٌ واحدٌ: عنصرٌ يُضاف مرّةً يُلزِم البنيةَ والبوّابةَ معاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 1 (مدخلٌ مُستدعىً) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 2 (لا كتلةَ مضمَّنةً) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 3 (لا استثناءَ صامتاً) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 1 على المصدرِ الحيِّ يكشف فعلاً (طفرة) (كما هو متوقع: pass)
+  [32m✓[0m البابُ 2 على المصدرِ الحيِّ يكشف فعلاً (طفرة) (كما هو متوقع: pass)
+  [32m✓[0m البابُ 3 على المصدرِ الحيِّ يكشف فعلاً (طفرة) (كما هو متوقع: pass)
+  [32m✓[0m البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً (كما هو متوقع: pass)
+
+[1m[ي] تدقيقُ الاعتمادياتِ والثغرات (M0-06)[0m
+  [32m✓[0m جذرٌ نظيفٌ يمرُّ (إنتاجٌ نقيٌّ · لا ثغرةَ · مديرٌ مثبَّتٌ) (كما هو متوقع: pass)
+  [32m✓[0m ثغرةٌ في شجرةِ الإنتاجِ تُسقِط ولو كانت مُعلَنةً (كما هو متوقع: fail)
+  [32m✓[0m ثغرةُ تطويرٍ غيرُ مُعلَنةٍ في §11 تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m ثغرةُ تطويرٍ مُعلَنةٌ بمهلةٍ ساريةٍ تمرُّ (كما هو متوقع: pass)
+  [32m✓[0m قبولُ خطرٍ انقضت مهلتُه يُسقِط   (كما هو متوقع: fail)
+  [32m✓[0m packageManager غيرُ مثبَّتٍ يُسقِط        (كما هو متوقع: fail)
+  [32m✓[0m غيابُ pnpm-lock.yaml يُسقِط                     (كما هو متوقع: fail)
+  [32m✓[0m override بلا سببٍ مكتوبٍ يُسقِط ولو كان التدقيقُ نظيفاً (كما هو متوقع: fail)
+  [32m✓[0m override بسببٍ مكتوبٍ يمرُّ                (كما هو متوقع: pass)
+  [32m✓[0m غيابُ كتلةِ §11 من الوثيقةِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m سجلُّ §11 بصيغةٍ خاطئةٍ يُسقِط     (كما هو متوقع: fail)
+  [32m✓[0m غيابُ pnpm يُعلَن تخطّياً بالرمزِ 2 لا نجاحاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 1 (نقاءُ الإنتاج) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 2 (كلُّ ثغرةٍ مُعلَنةٌ) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m شرطُ انقضاءِ المهلةِ يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 3 (مديرُ حزمٍ مثبَّتٌ) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 4 (تثبيتٌ قسريٌّ مُبرَّرٌ) يكشف فعلاً (كما هو متوقع: pass)
+
+[1m[ك] سجلُّ المخاطرِ والاستثناءات (M0-07)[0m
+  [32m✓[0m سجلٌّ سليمٌ بمالكٍ ومهلةٍ ساريةٍ يمرّ (كما هو متوقع: pass)
+  [32m✓[0m غيابُ ملفِّ السجلِّ يُسقِط          (كما هو متوقع: fail)
+  [32m✓[0m غيابُ المرساةِ الحرفيّةِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m كتلةٌ بلا سطرِ خطرٍ واحدٍ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m معرِّفٌ بغيرِ أربعةِ أرقامٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m شدّةٌ خارجَ المفرداتِ الأربعِ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m مالكٌ بلا مقبضِ @ يُسقِط                (كما هو متوقع: fail)
+  [32m✓[0m تاريخُ فتحٍ بغيرِ YYYY-MM-DD يُسقِط   (كما هو متوقع: fail)
+  [32m✓[0m تاريخُ مراجعةٍ غيرُ تاريخٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m حالٌ خارجَ المفرداتِ الأربعِ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m خطرٌ بلا مرجعٍ يُسقِط                    (كما هو متوقع: fail)
+  [32m✓[0m مرجعٌ لا وجودَ له (حكايةٌ لا دليلٌ) يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m مرجعٌ رابطٌ صريحٌ مقبولٌ              (كما هو متوقع: pass)
+  [32m✓[0m خطرٌ بلا عنوانٍ يشرحه يُسقِط       (كما هو متوقع: fail)
+  [32m✓[0m معرِّفٌ مُكرَّرٌ يُسقِط               (كما هو متوقع: fail)
+  [32m✓[0m مهلةُ مراجعةٍ منقضيةٌ تُسقِط      (كما هو متوقع: fail)
+  [32m✓[0m خطرٌ مُغلَقٌ لا تُحاسَب مهلتُه   (كما هو متوقع: pass)
+  [32m✓[0m مهلةٌ تنتهي اليومَ نفسَه ما زالت ساريةً (كما هو متوقع: pass)
+  [32m✓[0m استثناءٌ في §11 بلا خطرٍ مُسجَّلٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m استثناءٌ مقابَلٌ بخطرٍ قائمٍ يمرّ (كما هو متوقع: pass)
+  [32m✓[0m استثناءُ GHSA مقابَلٌ يمرّ              (كما هو متوقع: pass)
+  [32m✓[0m مقابلةٌ إلى خطرٍ لا وجودَ له تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m استثناءٌ قائمٌ وخطرُه مُغلَقٌ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m مراجعةٌ بعدَ انتهاءِ الاستثناءِ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m مراجعةٌ يومَ انتهاءِ الاستثناءِ مقبولةٌ (كما هو متوقع: pass)
+  [32m✓[0m سطرُ مقابلةٍ بصيغةٍ خاطئةٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m سجلٌّ لا يُحال إليه من اللوحةِ وقواعدِ الأمانِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m البابُ 2 (المهلةُ تنتهي) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 3 (لا استثناءَ بلا خطرٍ) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m البابُ 4 (لا سجلَّ يتيماً) يكشف فعلاً (كما هو متوقع: pass)
+  [32m✓[0m السجلُّ الحقيقيُّ في المستودعِ يمرُّ (كما هو متوقع: pass)
+  [32m✓[0m اسمٌ فيه risk- لا يُعَدُّ سرّاً (إيجابيّةٌ كاذبةٌ زالت) (كما هو متوقع: pass)
+  [32m✓[0m توقيعُ مفتاحٍ حقيقيِّ الطولِ ما زال يُكشَف (كما هو متوقع: fail)
+  [32m✓[0m توقيعُ AKIA ما زال يُكشَف                 (كما هو متوقع: fail)
+  [32m✓[0m توقيعُ glpat ما زال يُكشَف                (كما هو متوقع: fail)
+
+[1m[ل] الأساسُ الآليُّ للبيئةِ والاختبارات (M0-08)[0m
+  [32m✓[0m أساسٌ مُولَّدٌ من الشجرةِ نفسِها يمرّ (كما هو متوقع: pass)
+  [32m✓[0m غيابُ الأساسِ المُلتزَمِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m أساسٌ ليس JSON صالحاً يُسقِط           (كما هو متوقع: fail)
+  [32m✓[0m مُعرِّفُ صيغةٍ مخالفٌ يُسقِط      (كما هو متوقع: fail)
+  [32m✓[0m عدَّادٌ ساكنٌ محذوفٌ يُسقِط        (كما هو متوقع: fail)
+  [32m✓[0m عدَّادٌ ليس عدداً صحيحاً يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m بيئةٌ بلا إصدارِ node تُسقِط           (كما هو متوقع: fail)
+  [32m✓[0m عدَّادٌ حُرِّر بيدٍ بلا إعادةِ بصمٍ يُسقِط (البصمةُ تكشفه) (كما هو متوقع: fail)
+  [32m✓[0m بصمةٌ مُلفَّقةٌ تُسقِط                 (كما هو متوقع: fail)
+  [32m✓[0m حذفُ حزمةٍ من الشجرةِ يُسقِط (انحدارٌ حيٌّ ضدّ الأساسِ) (كما هو متوقع: fail)
+  [32m✓[0m إضافةُ ملفِّ اختبارٍ بلا إعادةِ توليدٍ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m تغيُّرُ بصمةِ ملفِّ القفلِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m تغيُّرُ الوقتِ والبيئةِ وحدَهما لا يُسقِط (وإلّا استحالَ التكرارُ) (كما هو متوقع: pass)
+  [32m✓[0m أساسٌ بلا صيغةٍ موثَّقةٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m أساسٌ لا تُحيل إليه اللوحةُ ولا أمرُ التحقّقِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m أساسٌ بلا أرقامٍ حركيّةٍ مقيسةٍ يُسقِط (measured=false) (كما هو متوقع: fail)
+  [32m✓[0m أساسٌ مُثبَّتٌ على حزمةٍ فيها إخفاقٌ مُسجَّلٌ يمرّ (لا حلقةَ مفرغةً) (كما هو متوقع: pass)
+  [32m✓[0m عددُ إخفاقاتِ الحزمةِ غيرُ مُسجَّلٍ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m حكمُ التحقّقِ مجهولاً يُسقِط      (كما هو متوقع: fail)
+  [32m✓[0m شجرةٌ مُعدَّلةٌ بلا سببٍ مكتوبٍ تُسقِط (كما هو متوقع: fail)
+  [32m✓[0m شجرةٌ مُعدَّلةٌ بسببٍ مُعلَنٍ تمرّ (كما هو متوقع: pass)
+
+[1m[م] تغطيةُ إنفاذِ هويّةِ الخدمة (M1-03)[0m
+  [32m✓[0m سجلٌّ صادقٌ وحدٌّ مفروضٌ يمرّ     (كما هو متوقع: pass)
+  [32m✓[0m عميلٌ صادرٌ جديدٌ بلا صفٍّ في السجلِّ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m العميلُ الجديدُ المُعلَنُ مؤجَّلاً بمرجعٍ يمرّ (إعلانٌ لا كمال) (كما هو متوقع: pass)
+  [32m✓[0m سجلٌّ يقول «موقَّع» ولا signRequest في الشفرةِ يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m شفرةٌ توقِّعُ وسجلٌّ يقول «مؤجَّل» يُسقِط (سجلٌّ متأخِّرٌ) (كما هو متوقع: fail)
+  [32m✓[0m صفٌّ «مؤجَّل» بلا مرجعِ M1-04 يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m حدٌّ مُعلَنٌ مفروضاً بلا registerServiceIdentity يُسقِط (كما هو متوقع: fail)
+  [32m✓[0m غيابُ سجلِّ التغطيةِ يُسقِط        (كما هو متوقع: fail)
+  [32m✓[0m سجلٌّ بلا علامةِ بدايةٍ يُسقِط   (كما هو متوقع: fail)
+  [32m✓[0m سجلٌّ بلا حدٍّ مُعلَنٍ مفروضاً يُسقِط (كما هو متوقع: fail)
+
+[1m[و] المدخل الموحّد[0m
+  [32m✓[0m verify-governance يعمل في سياق git               (كما هو متوقع: pass)
+
+[1m═══ النتيجة: 174 ناجح · 0 فاشل ═══[0m
+
+
+[1m── حزمةُ اختبارِ دليلِ CI (ما لم يبدأ لا يُكتَبُ له حكمٌ)[0m
+[1m╔══════════════════════════════════════════════════════════╗[0m
+[1m║  حزمةُ اختبارِ دليلِ CI — ترفض فعلاً لا شكلاً (M0-22D)     ║[0m
+[1m╚══════════════════════════════════════════════════════════╝[0m
+
+[2m──── 1) حالاتُ الصحّةِ — GitHub (المُزوِّدُ الحيُّ) ────[0m
+  [32m✓[0m [github/all_success]                           PASSED ⇒ all_jobs_succeeded
+  [32m✓[0m [github/started_and_failed]                    FAILED ⇒ job_started_and_failed
+  [32m✓[0m [github/never_started]                         NOT VERIFIED ⇒ failure
+  [32m✓[0m [github/incomplete]                            NOT VERIFIED ⇒ incomplete_run
+  [32m✓[0m [github/skipped_ok]                            PASSED ⇒ all_jobs_succeeded
+  [32m✓[0m [github/no_jobs]                               NOT VERIFIED ⇒ no_jobs_readable
+  [32m✓[0m [github/garbage]                               NOT VERIFIED ⇒ no_jobs_readable
+
+[2m──── 2) حالاتُ الصحّةِ — GitLab (المسارُ التاريخيُّ يبقى مقيساً) ────[0m
+  [32m✓[0m [gitlab/all_success]                           PASSED ⇒ all_jobs_succeeded
+  [32m✓[0m [gitlab/started_and_failed]                    FAILED ⇒ job_started_and_failed
+  [32m✓[0m [gitlab/never_started]                         NOT VERIFIED ⇒ ci_quota_exceeded
+  [32m✓[0m [gitlab/no_jobs]                               NOT VERIFIED ⇒ no_jobs_readable
+
+[2m──── 3) طفراتٌ على السكربتِ — يجبُ أن تُخفِقَ ────[0m
+  [32m✓[0m [طفرة:steps     · github/never_started] رُفِضت كما يجب
+  [32m✓[0m [طفرة:order_failed · github/never_started] رُفِضت كما يجب
+  [32m✓[0m [طفرة:order_failed · gitlab/never_started] رُفِضت كما يجب
+  [32m✓[0m [طفرة:complete_else · github/incomplete] رُفِضت كما يجب
+
+[2m──── 4) طفراتٌ مكافئةٌ — صمدَ لها السكربتُ بحارسٍ ثانٍ (مُعلَنةٌ لا مُخفاةٌ) ────[0m
+  [32m✓[0m [طفرة:order · github/never_started]       NOT VERIFIED ⇒ failure
+  [32m✓[0m [طفرة:failed_nostart · github/never_started] NOT VERIFIED ⇒ failure
+  [32m✓[0m [طفرة:complete · github/incomplete]       NOT VERIFIED ⇒ incomplete_run
+
+[1m════════════════════════════════════════════════════════════[0m
+[32m✓ حزمةُ دليلِ CI: 18 ناجحاً · 0 فاشلٍ.[0m
+
+[1m── الأنواعُ (pnpm -r typecheck)[0m
+Scope: 42 of 43 workspace projects
+packages/contracts/channel typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/customer typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/dispatch typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/driver typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/dispatch typecheck: Done
+packages/contracts/geography typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/channel typecheck: Done
+packages/contracts/identity typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/customer typecheck: Done
+packages/contracts/marketplace typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/driver typecheck: Done
+packages/contracts/matching typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/identity typecheck: Done
+packages/contracts/negotiation typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/geography typecheck: Done
+packages/contracts/order typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/matching typecheck: Done
+packages/contracts/reputation typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/marketplace typecheck: Done
+packages/contracts/subscription typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/negotiation typecheck: Done
+packages/errors typecheck$ tsc -p tsconfig.json --noEmit
+packages/contracts/order typecheck: Done
+packages/contracts/reputation typecheck: Done
+packages/contracts/subscription typecheck: Done
+packages/errors typecheck: Done
+packages/auth-sdk typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-core typecheck$ tsc -p tsconfig.json --noEmit
+services/marketplace typecheck$ tsc -p tsconfig.json --noEmit
+services/reputation typecheck$ tsc -p tsconfig.json --noEmit
+packages/auth-sdk typecheck: Done
+services/subscriptions typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-core typecheck: Done
+services/reputation typecheck: Done
+services/marketplace typecheck: Done
+services/subscriptions typecheck: Done
+packages/channel-postgres typecheck$ tsc -p tsconfig.json --noEmit
+packages/marketplace-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/service-auth typecheck$ tsc -p tsconfig.json --noEmit
+packages/subscription-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-postgres typecheck: Done
+packages/telegram-adapter typecheck$ tsc -p tsconfig.json --noEmit
+packages/service-auth typecheck: Done
+packages/marketplace-e2e typecheck: Done
+packages/subscription-e2e typecheck: Done
+packages/telegram-adapter typecheck: Done
+packages/bot-runtime typecheck$ tsc -p tsconfig.json --noEmit
+services/customers typecheck$ tsc -p tsconfig.json --noEmit
+services/drivers typecheck$ tsc -p tsconfig.json --noEmit
+services/identity typecheck$ tsc -p tsconfig.json --noEmit
+services/identity typecheck: Done
+services/matching typecheck$ tsc -p tsconfig.json --noEmit
+packages/bot-runtime typecheck: Done
+services/negotiations typecheck$ tsc -p tsconfig.json --noEmit
+services/customers typecheck: Done
+services/orders typecheck$ tsc -p tsconfig.json --noEmit
+services/drivers typecheck: Done
+services/matching typecheck: Done
+services/negotiations typecheck: Done
+services/orders typecheck: Done
+bots/customer-bot typecheck$ tsc -p tsconfig.json --noEmit
+bots/driver-bot typecheck$ tsc -p tsconfig.json --noEmit
+bots/partner-bot typecheck$ tsc -p tsconfig.json --noEmit
+packages/reputation-e2e typecheck$ tsc -p tsconfig.json --noEmit
+bots/partner-bot typecheck: Done
+services/dispatch typecheck$ tsc -p tsconfig.json --noEmit
+packages/reputation-e2e typecheck: Done
+services/geography typecheck$ tsc -p tsconfig.json --noEmit
+bots/customer-bot typecheck: Done
+bots/driver-bot typecheck: Done
+services/geography typecheck: Done
+services/dispatch typecheck: Done
+packages/channel-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/customer-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/dispatch-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/driver-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/customer-e2e typecheck: Done
+packages/negotiation-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-e2e typecheck: Done
+packages/order-e2e typecheck$ tsc -p tsconfig.json --noEmit
+packages/dispatch-e2e typecheck: Done
+packages/driver-e2e typecheck: Done
+packages/order-e2e typecheck: Done
+packages/negotiation-e2e typecheck: Done
+
+[1m── الاختبارات (pnpm -r test)[0m
+Scope: 42 of 43 workspace projects
+packages/contracts/channel test$ vitest run
+packages/contracts/customer test$ vitest run
+packages/contracts/dispatch test$ vitest run
+packages/contracts/driver test$ vitest run
+packages/contracts/customer test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/customer
+packages/contracts/channel test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/channel
+packages/contracts/dispatch test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/dispatch
+packages/contracts/driver test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/driver
+packages/contracts/channel test:  ✓ src/__tests__/events.test.ts (11 tests) 12ms
+packages/contracts/dispatch test:  ✓ src/__tests__/events.test.ts (4 tests) 30ms
+packages/contracts/customer test:  ✓ src/__tests__/contracts.test.ts (29 tests) 30ms
+packages/contracts/driver test:  ✓ src/__tests__/events.test.ts (10 tests) 56ms
+packages/contracts/channel test:  ✓ src/__tests__/errors.test.ts (10 tests) 6ms
+packages/contracts/customer test:  ✓ src/__tests__/events.test.ts (13 tests) 15ms
+packages/contracts/customer test:  Test Files  2 passed (2)
+packages/contracts/customer test:       Tests  42 passed (42)
+packages/contracts/customer test:    Start at  22:53:32
+packages/contracts/customer test:    Duration  1.09s (transform 269ms, setup 0ms, collect 291ms, tests 45ms, environment 8ms, prepare 276ms)
+packages/contracts/dispatch test:  ✓ src/__tests__/contracts.test.ts (9 tests) 27ms
+packages/contracts/customer test: Done
+packages/contracts/geography test$ vitest run
+packages/contracts/driver test:  ✓ src/__tests__/contracts.test.ts (13 tests) 19ms
+packages/contracts/channel test:  ✓ src/__tests__/contracts.test.ts (13 tests) 12ms
+packages/contracts/channel test:  Test Files  3 passed (3)
+packages/contracts/channel test:       Tests  34 passed (34)
+packages/contracts/channel test:    Start at  22:53:32
+packages/contracts/channel test:    Duration  1.51s (transform 176ms, setup 0ms, collect 198ms, tests 30ms, environment 12ms, prepare 427ms)
+packages/contracts/dispatch test:  ✓ src/__tests__/boundary.test.ts (4 tests) 5ms
+packages/contracts/driver test:  ✓ src/__tests__/boundary.test.ts (7 tests) 5ms
+packages/contracts/channel test: Done
+packages/contracts/identity test$ vitest run
+packages/contracts/geography test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/geography
+packages/contracts/dispatch test:  ✓ src/__tests__/schema.test.ts (5 tests) 3ms
+packages/contracts/driver test:  ✓ src/__tests__/schema.test.ts (29 tests) 9ms
+packages/contracts/dispatch test:  Test Files  4 passed (4)
+packages/contracts/dispatch test:       Tests  22 passed (22)
+packages/contracts/dispatch test:    Start at  22:53:32
+packages/contracts/dispatch test:    Duration  2.05s (transform 144ms, setup 0ms, collect 194ms, tests 65ms, environment 22ms, prepare 623ms)
+packages/contracts/driver test:  Test Files  4 passed (4)
+packages/contracts/driver test:       Tests  59 passed (59)
+packages/contracts/driver test:    Start at  22:53:32
+packages/contracts/driver test:    Duration  2.05s (transform 182ms, setup 0ms, collect 244ms, tests 88ms, environment 10ms, prepare 713ms)
+packages/contracts/dispatch test: Done
+packages/contracts/marketplace test$ vitest run
+packages/contracts/driver test: Done
+packages/contracts/matching test$ vitest run
+packages/contracts/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/identity
+packages/contracts/geography test:  ✓ src/__tests__/events.test.ts (5 tests) 5ms
+packages/contracts/matching test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/matching
+packages/contracts/geography test:  ✓ src/__tests__/contracts.test.ts (10 tests) 4ms
+packages/contracts/geography test:  Test Files  2 passed (2)
+packages/contracts/geography test:       Tests  15 passed (15)
+packages/contracts/geography test:    Start at  22:53:34
+packages/contracts/geography test:    Duration  1.05s (transform 142ms, setup 0ms, collect 144ms, tests 9ms, environment 13ms, prepare 232ms)
+packages/contracts/identity test:  ✓ src/__tests__/events.test.ts (7 tests) 5ms
+packages/contracts/marketplace test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/marketplace
+packages/contracts/geography test: Done
+packages/contracts/negotiation test$ vitest run
+packages/contracts/matching test:  ✓ src/__tests__/events.test.ts (6 tests) 14ms
+packages/contracts/identity test:  ✓ src/__tests__/contracts.test.ts (6 tests) 3ms
+packages/contracts/identity test:  Test Files  2 passed (2)
+packages/contracts/identity test:       Tests  13 passed (13)
+packages/contracts/identity test:    Start at  22:53:35
+packages/contracts/identity test:    Duration  1.09s (transform 166ms, setup 0ms, collect 193ms, tests 8ms, environment 6ms, prepare 298ms)
+packages/contracts/marketplace test:  ✓ src/__tests__/events.test.ts (8 tests) 32ms
+packages/contracts/identity test: Done
+packages/contracts/order test$ vitest run
+packages/contracts/matching test:  ✓ src/__tests__/contracts.test.ts (10 tests) 15ms
+packages/contracts/marketplace test:  ✓ src/__tests__/schema.test.ts (12 tests) 44ms
+packages/contracts/negotiation test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/negotiation
+packages/contracts/matching test:  ✓ src/__tests__/boundary.test.ts (3 tests) 4ms
+packages/contracts/order test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/order
+packages/contracts/marketplace test:  ✓ src/__tests__/contracts.test.ts (16 tests) 27ms
+packages/contracts/matching test:  ✓ src/__tests__/schema.test.ts (5 tests) 4ms
+packages/contracts/matching test:  Test Files  4 passed (4)
+packages/contracts/matching test:       Tests  24 passed (24)
+packages/contracts/matching test:    Start at  22:53:35
+packages/contracts/matching test:    Duration  1.81s (transform 107ms, setup 0ms, collect 145ms, tests 38ms, environment 22ms, prepare 664ms)
+packages/contracts/negotiation test:  ✓ src/__tests__/events.test.ts (13 tests) 17ms
+packages/contracts/matching test: Done
+packages/contracts/reputation test$ vitest run
+packages/contracts/marketplace test:  ✓ src/__tests__/boundary.test.ts (10 tests) 20ms
+packages/contracts/marketplace test:  Test Files  4 passed (4)
+packages/contracts/marketplace test:       Tests  46 passed (46)
+packages/contracts/marketplace test:    Start at  22:53:36
+packages/contracts/marketplace test:    Duration  1.94s (transform 167ms, setup 0ms, collect 233ms, tests 123ms, environment 40ms, prepare 710ms)
+packages/contracts/order test:  ✓ src/__tests__/transitions-doc.test.ts (21 tests) 23ms
+packages/contracts/marketplace test: Done
+packages/contracts/subscription test$ vitest run
+packages/contracts/negotiation test:  ✓ src/__tests__/contracts.test.ts (14 tests) 37ms
+packages/contracts/reputation test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/reputation
+packages/contracts/order test:  ✓ src/__tests__/events.test.ts (18 tests) 16ms
+packages/contracts/subscription test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/subscription
+packages/contracts/negotiation test:  ✓ src/__tests__/schema.test.ts (30 tests) 18ms
+packages/contracts/reputation test:  ✓ src/__tests__/contracts.test.ts (18 tests) 31ms
+packages/contracts/order test:  ✓ src/__tests__/contracts.test.ts (49 tests) 44ms
+packages/contracts/subscription test:  ✓ src/__tests__/contracts.test.ts (11 tests) 15ms
+packages/contracts/negotiation test:  ✓ src/__tests__/boundary.test.ts (13 tests) 21ms
+packages/contracts/negotiation test:  Test Files  4 passed (4)
+packages/contracts/negotiation test:       Tests  70 passed (70)
+packages/contracts/negotiation test:    Start at  22:53:37
+packages/contracts/negotiation test:    Duration  2.39s (transform 218ms, setup 0ms, collect 311ms, tests 93ms, environment 8ms, prepare 697ms)
+packages/contracts/reputation test:  ✓ src/__tests__/events.test.ts (20 tests) 23ms
+packages/contracts/order test:  ✓ src/__tests__/boundary.test.ts (31 tests) 31ms
+packages/contracts/order test:  Test Files  4 passed (4)
+packages/contracts/order test:       Tests  119 passed (119)
+packages/contracts/order test:    Start at  22:53:37
+packages/contracts/order test:    Duration  2.40s (transform 276ms, setup 0ms, collect 346ms, tests 114ms, environment 10ms, prepare 762ms)
+packages/contracts/negotiation test: Done
+packages/errors test$ vitest run
+packages/contracts/subscription test:  ✓ src/__tests__/schema.test.ts (7 tests) 31ms
+packages/contracts/order test: Done
+packages/contracts/reputation test:  ✓ src/__tests__/schema.test.ts (24 tests) 32ms
+packages/contracts/subscription test:  ✓ src/__tests__/boundary.test.ts (7 tests) 7ms
+packages/errors test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/errors
+packages/contracts/reputation test:  ✓ src/__tests__/boundary.test.ts (19 tests) 27ms
+packages/contracts/reputation test:  Test Files  4 passed (4)
+packages/contracts/reputation test:       Tests  81 passed (81)
+packages/contracts/reputation test:    Start at  22:53:38
+packages/contracts/reputation test:    Duration  1.90s (transform 142ms, setup 0ms, collect 223ms, tests 113ms, environment 3ms, prepare 622ms)
+packages/contracts/subscription test:  ✓ src/__tests__/events.test.ts (6 tests) 15ms
+packages/contracts/subscription test:  Test Files  4 passed (4)
+packages/contracts/subscription test:       Tests  31 passed (31)
+packages/contracts/subscription test:    Start at  22:53:38
+packages/contracts/subscription test:    Duration  1.95s (transform 224ms, setup 0ms, collect 276ms, tests 68ms, environment 5ms, prepare 580ms)
+packages/contracts/reputation test: Done
+packages/errors test:  ✓ src/__tests__/errors.test.ts (3 tests) 6ms
+packages/errors test:  Test Files  1 passed (1)
+packages/errors test:       Tests  3 passed (3)
+packages/errors test:    Start at  22:53:40
+packages/errors test:    Duration  329ms (transform 68ms, setup 0ms, collect 44ms, tests 6ms, environment 5ms, prepare 110ms)
+packages/contracts/subscription test: Done
+packages/errors test: Done
+packages/auth-sdk test$ vitest run
+packages/channel-core test$ vitest run
+services/marketplace test$ vitest run
+services/reputation test$ vitest run
+packages/channel-core test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-core
+services/marketplace test:  RUN  v3.2.7 /home/user/workspace/wasla/services/marketplace
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/auth-sdk
+services/reputation test:  RUN  v3.2.7 /home/user/workspace/wasla/services/reputation
+packages/channel-core test:  ✓ src/__tests__/send-message.test.ts (14 tests) 55ms
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 40ms
+packages/channel-core test:  ✓ src/__tests__/receive-update.test.ts (12 tests) 24ms
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 41ms
+packages/channel-core test:  ✓ src/__tests__/neutrality.guard.test.ts (40 tests) 12ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 5ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  22:53:41
+packages/auth-sdk test:    Duration  1.94s (transform 262ms, setup 0ms, collect 414ms, tests 85ms, environment 5ms, prepare 583ms)
+packages/channel-core test:  ✓ src/__tests__/groups.test.ts (16 tests) 21ms
+packages/auth-sdk test: Done
+services/subscriptions test$ vitest run
+services/marketplace test:  ✓ src/__tests__/http-degraded.test.ts (30 tests) 584ms
+services/reputation test:  ✓ src/__tests__/http.test.ts (44 tests) 767ms
+packages/channel-core test:  ✓ src/__tests__/launch-surfaces.test.ts (5 tests) 5ms
+services/subscriptions test:  RUN  v3.2.7 /home/user/workspace/wasla/services/subscriptions
+services/marketplace test:  ✓ src/__tests__/purity.test.ts (21 tests) 203ms
+services/reputation test:  ✓ src/__tests__/purity.test.ts (15 tests) 110ms
+packages/channel-core test:  ✓ src/__tests__/retry.test.ts (9 tests) 12ms
+packages/channel-core test:  ✓ src/__tests__/deep-link.test.ts (8 tests) 12ms
+packages/channel-core test:  Test Files  7 passed (7)
+packages/channel-core test:       Tests  104 passed (104)
+packages/channel-core test:    Start at  22:53:41
+packages/channel-core test:    Duration  3.72s (transform 253ms, setup 0ms, collect 473ms, tests 141ms, environment 21ms, prepare 1.06s)
+packages/channel-core test: Done
+services/reputation test:  ✓ src/__tests__/http-drift.test.ts (13 tests) 148ms
+services/marketplace test:  ✓ src/__tests__/http-drift.test.ts (32 tests) 111ms
+services/subscriptions test:  ✓ src/__tests__/http-degraded.test.ts (18 tests) 252ms
+services/reputation test:  ✓ src/__tests__/reads.test.ts (18 tests) 26ms
+services/marketplace test:  ✓ src/__tests__/events.test.ts (57 tests) 39ms
+services/reputation test:  ✓ src/__tests__/run-tick.test.ts (12 tests) 17ms
+services/subscriptions test:  ✓ src/__tests__/purity.test.ts (24 tests) 227ms
+services/marketplace test:  ✓ src/__tests__/schema-drift.test.ts (32 tests) 27ms
+services/reputation test:  ✓ src/__tests__/schema-drift.test.ts (30 tests) 50ms
+services/marketplace test:  ✓ src/__tests__/composition.test.ts (14 tests) 32ms
+services/subscriptions test:  ✓ src/__tests__/http-drift.test.ts (23 tests) 145ms
+services/reputation test:  ✓ src/__tests__/consume-source-event.test.ts (10 tests) 25ms
+services/marketplace test:  ✓ src/__tests__/errors.test.ts (16 tests) 22ms
+services/reputation test:  ✓ src/__tests__/submit-rating.test.ts (17 tests) 32ms
+services/marketplace test:  ✓ src/__tests__/identifiers.test.ts (12 tests) 11ms
+services/subscriptions test:  ✓ src/__tests__/schema-drift.test.ts (23 tests) 34ms
+services/reputation test:  ✓ src/__tests__/inbound-translate.test.ts (22 tests) 14ms
+services/marketplace test:  ✓ src/__tests__/staff.test.ts (13 tests) 7ms
+services/subscriptions test:  ✓ src/__tests__/transitions.test.ts (18 tests) 23ms
+services/reputation test:  ✓ src/__tests__/record-fact.test.ts (15 tests) 17ms
+services/marketplace test:  ✓ src/__tests__/inventory.test.ts (11 tests) 5ms
+services/subscriptions test:  ✓ src/__tests__/state.test.ts (24 tests) 28ms
+services/reputation test:  ✓ src/__tests__/drain-outbox.test.ts (14 tests) 15ms
+services/marketplace test:  ✓ src/__tests__/transitions.test.ts (16 tests) 9ms
+services/subscriptions test:  ✓ src/__tests__/events.test.ts (21 tests) 10ms
+services/marketplace test:  ✓ src/__tests__/visibility.test.ts (7 tests) 14ms
+services/reputation test:  ✓ src/__tests__/score.test.ts (20 tests) 33ms
+services/subscriptions test:  ✓ src/__tests__/referral.test.ts (18 tests) 13ms
+services/marketplace test:  ✓ src/__tests__/state.test.ts (14 tests) 7ms
+services/subscriptions test:  ✓ src/__tests__/plans.test.ts (13 tests) 16ms
+services/reputation test:  ✓ src/__tests__/constraints.test.ts (18 tests) 21ms
+services/marketplace test:  ✓ src/__tests__/catalog.test.ts (15 tests) 10ms
+services/subscriptions test:  ✓ src/__tests__/composition.test.ts (10 tests) 15ms
+services/reputation test:  ✓ src/__tests__/source-events-drift.test.ts (11 tests) 17ms
+services/marketplace test:  ✓ src/__tests__/category-seed.test.ts (13 tests) 11ms
+services/subscriptions test:  ✓ src/__tests__/periods.test.ts (15 tests) 18ms
+services/reputation test:  ✓ src/__tests__/fraud.test.ts (23 tests) 9ms
+services/reputation test:  Test Files  15 passed (15)
+services/reputation test:       Tests  282 passed (282)
+services/reputation test:    Start at  22:53:41
+services/reputation test:    Duration  8.53s (transform 838ms, setup 0ms, collect 2.43s, tests 1.30s, environment 16ms, prepare 1.73s)
+services/marketplace test:  ✓ src/__tests__/inventory-sync.test.ts (13 tests) 7ms
+services/marketplace test:  Test Files  16 passed (16)
+services/marketplace test:       Tests  316 passed (316)
+services/marketplace test:    Start at  22:53:41
+services/marketplace test:    Duration  8.76s (transform 769ms, setup 0ms, collect 2.28s, tests 1.10s, environment 23ms, prepare 2.19s)
+services/reputation test: Done
+services/subscriptions test:  ✓ src/__tests__/referral-code.test.ts (8 tests) 6ms
+services/subscriptions test:  Test Files  12 passed (12)
+services/subscriptions test:       Tests  215 passed (215)
+services/subscriptions test:    Start at  22:53:44
+services/subscriptions test:    Duration  5.79s (transform 469ms, setup 0ms, collect 1.45s, tests 787ms, environment 10ms, prepare 1.38s)
+services/marketplace test: Done
+services/subscriptions test: Done
+packages/channel-postgres test$ vitest run
+packages/marketplace-e2e test$ vitest run
+packages/service-auth test$ vitest run
+packages/subscription-e2e test$ vitest run
+packages/subscription-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/subscription-e2e
+packages/service-auth test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/service-auth
+packages/marketplace-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/marketplace-e2e
+packages/channel-postgres test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-postgres
+packages/service-auth test:  ✓ src/__tests__/token.test.ts (43 tests) 177ms
+packages/channel-postgres test:  ✓ src/__tests__/schema-drift.test.ts (9 tests) 28ms
+packages/channel-postgres test:  Test Files  1 passed (1)
+packages/channel-postgres test:       Tests  9 passed (9)
+packages/channel-postgres test:    Start at  22:53:51
+packages/channel-postgres test:    Duration  992ms (transform 108ms, setup 0ms, collect 421ms, tests 28ms, environment 1ms, prepare 290ms)
+packages/channel-postgres test: Done
+packages/telegram-adapter test$ vitest run
+packages/marketplace-e2e test:  ↓ src/__tests__/phase11-exit-gate.e2e.test.ts (6 tests | 6 skipped)
+packages/marketplace-e2e test:  Test Files  1 skipped (1)
+packages/marketplace-e2e test:       Tests  6 skipped (6)
+packages/marketplace-e2e test:    Start at  22:53:51
+packages/marketplace-e2e test:    Duration  2.11s (transform 838ms, setup 0ms, collect 1.53s, tests 0ms, environment 1ms, prepare 216ms)
+packages/service-auth test:  ✓ src/__tests__/http-server.e2e.test.ts (10 tests) 277ms
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/telegram-adapter
+packages/marketplace-e2e test: Done
+packages/subscription-e2e test:  ↓ src/__tests__/phase10-exit-gate.e2e.test.ts (3 tests | 3 skipped)
+packages/subscription-e2e test:  Test Files  1 skipped (1)
+packages/subscription-e2e test:       Tests  3 skipped (3)
+packages/subscription-e2e test:    Start at  22:53:51
+packages/subscription-e2e test:    Duration  2.63s (transform 1.32s, setup 0ms, collect 2.19s, tests 0ms, environment 0ms, prepare 229ms)
+packages/subscription-e2e test: Done
+packages/service-auth test:  ✓ src/__tests__/fastify.test.ts (11 tests) 104ms
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 18ms
+packages/service-auth test:  ✓ src/__tests__/enforce.test.ts (18 tests) 21ms
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 18ms
+packages/service-auth test:  ✓ src/__tests__/keys.test.ts (27 tests) 14ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 22ms
+packages/service-auth test:  ✓ src/__tests__/http.test.ts (14 tests) 13ms
+packages/service-auth test:  ✓ src/__tests__/outbound.test.ts (4 tests) 6ms
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 14ms
+packages/service-auth test:  ✓ src/__tests__/replay.test.ts (11 tests) 7ms
+packages/service-auth test:  Test Files  8 passed (8)
+packages/service-auth test:       Tests  138 passed (138)
+packages/service-auth test:    Start at  22:53:51
+packages/service-auth test:    Duration  4.24s (transform 482ms, setup 0ms, collect 919ms, tests 618ms, environment 20ms, prepare 1.03s)
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 8ms
+packages/service-auth test: Done
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 8ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 5ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 6ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 5ms
+packages/telegram-adapter test:  Test Files  9 passed (9)
+packages/telegram-adapter test:       Tests  132 passed (132)
+packages/telegram-adapter test:    Start at  22:53:53
+packages/telegram-adapter test:    Duration  2.69s (transform 354ms, setup 0ms, collect 609ms, tests 104ms, environment 5ms, prepare 686ms)
+packages/telegram-adapter test: Done
+packages/bot-runtime test$ vitest run
+services/customers test$ vitest run
+services/drivers test$ vitest run
+services/identity test$ vitest run
+packages/bot-runtime test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/bot-runtime
+services/drivers test:  RUN  v3.2.7 /home/user/workspace/wasla/services/drivers
+services/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/services/identity
+services/customers test:  RUN  v3.2.7 /home/user/workspace/wasla/services/customers
+packages/bot-runtime test:  ✓ src/__tests__/messages.test.ts (8 tests) 235ms
+services/identity test:  ✓ src/__tests__/http/service-identity.test.ts (14 tests) 343ms
+services/drivers test:  ✓ src/__tests__/http-profile.test.ts (17 tests) 632ms
+services/customers test:  ✓ src/__tests__/http/app.test.ts (34 tests) 740ms
+packages/bot-runtime test:  ✓ src/__tests__/webhook.test.ts (14 tests) 480ms
+services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 278ms
+services/drivers test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 471ms
+services/customers test:  ✓ src/__tests__/http-order-intake.test.ts (17 tests) 522ms
+services/identity test:  ✓ src/__tests__/session.test.ts (28 tests) 47ms
+packages/bot-runtime test:  ✓ src/__tests__/conversation.test.ts (13 tests) 314ms
+services/customers test:  ✓ src/__tests__/order-request-preview.test.ts (13 tests) 37ms
+services/customers test:  ✓ src/__tests__/order-request-submit.test.ts (11 tests) 23ms
+services/drivers test:  ✓ src/__tests__/http-eligibility.test.ts (7 tests) 313ms
+services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 22ms
+services/customers test:  ✓ src/__tests__/saved-places.test.ts (10 tests) 18ms
+packages/bot-runtime test:  ✓ src/__tests__/runtime.test.ts (6 tests) 193ms
+services/customers test:  ✓ src/__tests__/schema-drift.test.ts (17 tests) 15ms
+services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 23ms
+services/drivers test:  ✓ src/__tests__/http-documents.test.ts (7 tests) 442ms
+services/customers test:  ✓ src/__tests__/mappers.test.ts (4 tests) 12ms
+packages/bot-runtime test:  ✓ src/__tests__/groups.test.ts (14 tests) 273ms
+services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 6ms
+services/identity test:  Test Files  6 passed (6)
+services/identity test:       Tests  66 passed (66)
+services/identity test:    Start at  22:53:56
+services/identity test:    Duration  7.49s (transform 788ms, setup 0ms, collect 3.96s, tests 719ms, environment 21ms, prepare 1.01s)
+services/customers test:  ✓ src/__tests__/events-privacy.test.ts (3 tests) 12ms
+services/identity test: Done
+services/matching test$ vitest run
+services/drivers test:  ✓ src/__tests__/http-vehicles.test.ts (7 tests) 412ms
+services/customers test:  ✓ src/__tests__/customer-profile.test.ts (8 tests) 8ms
+services/customers test:  Test Files  9 passed (9)
+services/customers test:       Tests  117 passed (117)
+services/customers test:    Start at  22:53:57
+services/customers test:    Duration  7.85s (transform 819ms, setup 0ms, collect 1.85s, tests 1.39s, environment 26ms, prepare 1.79s)
+packages/bot-runtime test:  ✓ src/__tests__/launch-surfaces.test.ts (8 tests) 301ms
+services/customers test: Done
+services/negotiations test$ vitest run
+services/matching test:  RUN  v3.2.7 /home/user/workspace/wasla/services/matching
+packages/bot-runtime test:  ✓ src/__tests__/config.test.ts (24 tests) 23ms
+services/drivers test:  ✓ src/__tests__/http-drift.test.ts (12 tests) 157ms
+services/negotiations test:  RUN  v3.2.7 /home/user/workspace/wasla/services/negotiations
+packages/bot-runtime test:  ✓ src/__tests__/identity-bootstrap.test.ts (8 tests) 47ms
+packages/bot-runtime test:  Test Files  8 passed (8)
+packages/bot-runtime test:       Tests  95 passed (95)
+packages/bot-runtime test:    Start at  22:53:56
+packages/bot-runtime test:    Duration  9.47s (transform 1.04s, setup 0ms, collect 3.61s, tests 1.87s, environment 12ms, prepare 1.52s)
+packages/bot-runtime test: Done
+services/orders test$ vitest run
+services/drivers test:  ✓ src/__tests__/privacy.test.ts (4 tests) 69ms
+services/matching test:  ✓ src/__tests__/http-service-identity.test.ts (12 tests) 428ms
+services/orders test:  RUN  v3.2.7 /home/user/workspace/wasla/services/orders
+services/drivers test:  ✓ src/__tests__/outbound-ports.test.ts (30 tests) 204ms
+services/negotiations test:  ✓ src/__tests__/http.test.ts (36 tests) 592ms
+services/matching test:  ✓ src/__tests__/http-candidacy.test.ts (5 tests) 178ms
+services/drivers test:  ✓ src/__tests__/publication.test.ts (16 tests) 66ms
+services/negotiations test:  ✓ src/__tests__/outbound-ports.test.ts (22 tests) 98ms
+services/drivers test:  ✓ src/__tests__/contract-drift.test.ts (23 tests) 84ms
+services/matching test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 425ms
+services/drivers test:  ✓ src/__tests__/eligibility.test.ts (16 tests) 74ms
+services/orders test:  ✓ src/__tests__/http/app.test.ts (56 tests) 936ms
+services/matching test:  ✓ src/__tests__/http-health.test.ts (2 tests) 160ms
+services/negotiations test:  ✓ src/__tests__/http-drift.test.ts (14 tests) 139ms
+services/drivers test:  ✓ src/__tests__/state-machines.test.ts (20 tests) 54ms
+services/matching test:  ✓ src/__tests__/scoring.test.ts (29 tests) 152ms
+services/orders test:  ✓ src/__tests__/transition-order.test.ts (459 tests) 297ms
+services/negotiations test:  ✓ src/__tests__/agreement.test.ts (14 tests) 19ms
+services/drivers test:  ✓ src/__tests__/schema-drift.test.ts (28 tests) 14ms
+services/drivers test:  Test Files  13 passed (13)
+services/drivers test:       Tests  196 passed (196)
+services/drivers test:    Start at  22:53:56
+services/drivers test:    Duration  14.96s (transform 988ms, setup 0ms, collect 4.90s, tests 2.99s, environment 36ms, prepare 2.28s)
+services/negotiations test:  ✓ src/__tests__/privacy.test.ts (7 tests) 68ms
+services/drivers test: Done
+services/matching test:  ✓ src/__tests__/http-candidates.test.ts (4 tests) 151ms
+services/orders test:  ✓ src/__tests__/http/service-identity.test.ts (11 tests) 199ms
+services/negotiations test:  ✓ src/__tests__/constraints.test.ts (25 tests) 22ms
+services/matching test:  ✓ src/__tests__/http-geography.test.ts (4 tests) 58ms
+services/orders test:  ✓ src/__tests__/assignments.test.ts (21 tests) 57ms
+services/matching test:  ✓ src/__tests__/evaluate-candidates.test.ts (26 tests) 18ms
+services/negotiations test:  ✓ src/__tests__/schema-drift.test.ts (27 tests) 39ms
+services/orders test:  ✓ src/__tests__/state-machine.test.ts (28 tests) 34ms
+services/negotiations test:  ✓ src/__tests__/read.test.ts (12 tests) 44ms
+services/matching test:  ✓ src/__tests__/manage-candidacy.test.ts (23 tests) 15ms
+services/orders test:  ✓ src/__tests__/mappers.test.ts (14 tests) 13ms
+services/negotiations test:  ✓ src/__tests__/rounds.test.ts (16 tests) 28ms
+services/matching test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 14ms
+services/orders test:  ✓ src/__tests__/read-order.test.ts (11 tests) 16ms
+services/negotiations test:  ✓ src/__tests__/open-thread.test.ts (15 tests) 28ms
+services/matching test:  ✓ src/__tests__/mappers.test.ts (9 tests) 11ms
+services/orders test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 8ms
+services/negotiations test:  ✓ src/__tests__/tick.test.ts (13 tests) 30ms
+services/matching test:  ✓ src/__tests__/filters.test.ts (22 tests) 14ms
+services/orders test:  ✓ src/__tests__/ingest-order.test.ts (27 tests) 36ms
+services/orders test:  Test Files  9 passed (9)
+services/orders test:       Tests  646 passed (646)
+services/orders test:    Start at  22:54:07
+services/orders test:    Duration  7.03s (transform 845ms, setup 0ms, collect 2.11s, tests 1.60s, environment 8ms, prepare 1.24s)
+services/negotiations test:  ✓ src/__tests__/messages.test.ts (10 tests) 17ms
+services/matching test:  ✓ src/__tests__/ruleset-drift.test.ts (8 tests) 9ms
+services/matching test:  Test Files  13 passed (13)
+services/matching test:       Tests  172 passed (172)
+services/matching test:    Start at  22:54:05
+services/matching test:    Duration  9.50s (transform 700ms, setup 0ms, collect 2.95s, tests 1.63s, environment 24ms, prepare 1.79s)
+services/orders test: Done
+services/matching test: Done
+services/negotiations test:  ✓ src/__tests__/domain.test.ts (19 tests) 13ms
+services/negotiations test:  Test Files  13 passed (13)
+services/negotiations test:       Tests  230 passed (230)
+services/negotiations test:    Start at  22:54:05
+services/negotiations test:    Duration  9.26s (transform 977ms, setup 0ms, collect 2.99s, tests 1.14s, environment 15ms, prepare 1.89s)
+services/negotiations test: Done
+bots/customer-bot test$ vitest run
+bots/driver-bot test$ vitest run
+bots/partner-bot test$ vitest run
+packages/reputation-e2e test$ vitest run
+bots/partner-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/partner-bot
+bots/customer-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/customer-bot
+bots/driver-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/driver-bot
+packages/reputation-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/reputation-e2e
+bots/partner-bot test:  ✓ src/__tests__/partner-bot.test.ts (6 tests) 330ms
+bots/partner-bot test:  Test Files  1 passed (1)
+bots/partner-bot test:       Tests  6 passed (6)
+bots/partner-bot test:    Start at  22:54:15
+bots/partner-bot test:    Duration  2.47s (transform 848ms, setup 0ms, collect 1.61s, tests 330ms, environment 8ms, prepare 153ms)
+bots/partner-bot test: Done
+services/dispatch test$ vitest run
+bots/customer-bot test:  ✓ src/__tests__/customer-flows.test.ts (14 tests) 187ms
+bots/driver-bot test:  ✓ src/__tests__/driver-flows.test.ts (21 tests) 330ms
+services/dispatch test:  RUN  v3.2.7 /home/user/workspace/wasla/services/dispatch
+packages/reputation-e2e test:  ✓ src/__tests__/phase09-exit-gate.e2e.test.ts (12 tests) 1009ms
+packages/reputation-e2e test:  Test Files  1 passed (1)
+packages/reputation-e2e test:       Tests  12 passed (12)
+packages/reputation-e2e test:    Start at  22:54:16
+packages/reputation-e2e test:    Duration  3.58s (transform 1.08s, setup 0ms, collect 2.15s, tests 1.01s, environment 7ms, prepare 188ms)
+bots/driver-bot test:  ✓ src/__tests__/driver-bot.test.ts (6 tests) 118ms
+packages/reputation-e2e test: Done
+services/geography test$ vitest run
+bots/customer-bot test:  ✓ src/__tests__/customer-bot.test.ts (6 tests) 257ms
+bots/customer-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 33ms
+bots/driver-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 27ms
+bots/customer-bot test:  Test Files  3 passed (3)
+bots/customer-bot test:       Tests  32 passed (32)
+bots/customer-bot test:    Start at  22:54:15
+bots/customer-bot test:    Duration  4.66s (transform 1.16s, setup 0ms, collect 2.87s, tests 476ms, environment 12ms, prepare 444ms)
+bots/driver-bot test:  Test Files  3 passed (3)
+bots/driver-bot test:       Tests  39 passed (39)
+bots/driver-bot test:    Start at  22:54:15
+bots/driver-bot test:    Duration  4.65s (transform 1.33s, setup 0ms, collect 2.83s, tests 476ms, environment 7ms, prepare 453ms)
+services/geography test:  RUN  v3.2.7 /home/user/workspace/wasla/services/geography
+bots/driver-bot test: Done
+bots/customer-bot test: Done
+services/dispatch test:  ✓ src/__tests__/service-identity.test.ts (15 tests) 169ms
+services/geography test:  ✓ src/__tests__/http/app.test.ts (16 tests) 224ms
+services/dispatch test:  ✓ src/__tests__/http-jobs.test.ts (11 tests) 139ms
+services/geography test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 157ms
+services/geography test:  ✓ src/__tests__/user-location.test.ts (11 tests) 9ms
+services/dispatch test:  ✓ src/__tests__/http-offer-detail.test.ts (9 tests) 126ms
+services/geography test:  ✓ src/__tests__/hierarchy.test.ts (10 tests) 8ms
+services/geography test:  ✓ src/__tests__/locale.test.ts (4 tests) 3ms
+services/geography test:  Test Files  5 passed (5)
+services/geography test:       Tests  54 passed (54)
+services/geography test:    Start at  22:54:20
+services/geography test:    Duration  2.24s (transform 396ms, setup 0ms, collect 754ms, tests 402ms, environment 7ms, prepare 380ms)
+services/geography test: Done
+services/dispatch test:  ✓ src/__tests__/http-offers.test.ts (6 tests) 104ms
+services/dispatch test:  ✓ src/__tests__/http-errors.test.ts (5 tests) 80ms
+services/dispatch test:  ✓ src/__tests__/http-tick.test.ts (4 tests) 78ms
+services/dispatch test:  ✓ src/__tests__/http-health.test.ts (2 tests) 66ms
+services/dispatch test:  ✓ src/__tests__/contract-drift.test.ts (15 tests) 63ms
+services/dispatch test:  ✓ src/__tests__/http-order-engine.test.ts (23 tests) 41ms
+services/dispatch test:  ✓ src/__tests__/tick.test.ts (26 tests) 33ms
+services/dispatch test:  ✓ src/__tests__/events-contract.test.ts (8 tests) 36ms
+services/dispatch test:  ✓ src/__tests__/http-matching.test.ts (7 tests) 26ms
+services/dispatch test:  ✓ src/__tests__/accept-offer.test.ts (17 tests) 25ms
+services/dispatch test:  ✓ src/__tests__/cancel-job.test.ts (14 tests) 22ms
+services/dispatch test:  ✓ src/__tests__/reject-offer.test.ts (12 tests) 22ms
+services/dispatch test:  ✓ src/__tests__/run-tick.test.ts (8 tests) 19ms
+services/dispatch test:  ✓ src/__tests__/mappers.test.ts (10 tests) 18ms
+services/dispatch test:  ✓ src/__tests__/create-job.test.ts (13 tests) 10ms
+services/dispatch test:  ✓ src/__tests__/state-machine.test.ts (19 tests) 9ms
+services/dispatch test:  ✓ src/__tests__/schema-drift.test.ts (18 tests) 6ms
+services/dispatch test:  ✓ src/__tests__/deadlines.test.ts (10 tests) 4ms
+services/dispatch test:  Test Files  21 passed (21)
+services/dispatch test:       Tests  252 passed (252)
+services/dispatch test:    Start at  22:54:19
+services/dispatch test:    Duration  9.33s (transform 831ms, setup 0ms, collect 4.63s, tests 1.10s, environment 5ms, prepare 1.27s)
+services/dispatch test: Done
+packages/channel-e2e test$ vitest run
+packages/customer-e2e test$ vitest run
+packages/dispatch-e2e test$ vitest run
+packages/driver-e2e test$ vitest run
+packages/dispatch-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/dispatch-e2e
+packages/customer-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/customer-e2e
+packages/driver-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/driver-e2e
+packages/channel-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-e2e
+packages/customer-e2e test: stdout | src/__tests__/phase04-exit-gate.e2e.test.ts
+packages/customer-e2e test: [phase04-exit-gate] persistence=memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/channel-e2e test:  ✓ src/__tests__/phase03-exit-gate.e2e.test.ts (8 tests | 1 skipped) 782ms
+packages/channel-e2e test:    ✓ Phase 03 Exit Gate (memory stores) > gives every bot its own Mini App and refuses the other two  355ms
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُصعِّد إلى المجتمع بلا مرشّحين ثم يُعلن النفاد بعد نافذة التصعيد
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > الأهليّة ليست ادّعاءً: قبل المراجعة لا عرض، وبعدها عرض
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > موجة بعرضين: يفوز واحد ويُغلق الآخر superseded لا rejected
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > تنتهي الرخصة، فتُخرجه نبضة واحدة، فلا يعود التوزيع يراه
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · the run is unambiguous about what it proved > يُصرِّح بمخزنه: /health يقول postgres عند رفع البوابة و memory دونه
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  ✓ src/__tests__/phase07-exit-gate.e2e.test.ts (5 tests) 1172ms
+packages/dispatch-e2e test:    ✓ Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول  642ms
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة الثانية لا تجد شيئاً ولا تنشر ثانية — سكونها من حالتها
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة تُحدِّث `last_tick_at` الذي يقرأه `/health`، والتخزين مُعلَن
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > منطقة لا تعرفها الجغرافيا تُرفض، ولا يبقى للسائق منطقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/channel-e2e test:  ✓ src/__tests__/m1-02-session-gate.e2e.test.ts (17 tests | 10 skipped) 19ms
+packages/channel-e2e test:  Test Files  2 passed (2)
+packages/channel-e2e test:       Tests  14 passed | 11 skipped (25)
+packages/channel-e2e test:    Start at  22:54:29
+packages/channel-e2e test:    Duration  5.15s (transform 1.83s, setup 0ms, collect 3.49s, tests 801ms, environment 2ms, prepare 326ms)
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > المنطقة المعروفة تُقبَل — فالرفض أعلاه ليس رفضاً لكل شيء
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > سائق مشغول يعلن «متاح» فيبقى `busy` عند المطابقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/channel-e2e test: Done
+packages/negotiation-e2e test$ vitest run
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > إعلان `offline` ينزل إلى المطابقة فوراً — الأقلّ توافراً مسموح دائماً
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > سائق معلَّق لا يصله عرض، والمطابقة تقرأ `suspended` لا `ineligible`
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > بلا هوية ⇒ 401، وقبل أيّ منطقِ عمل
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > إعادة التمكين تُعيده إلى التجمّع بنفس المسار
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/negotiation-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/negotiation-e2e
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ ⇒ يمرّ الطلب إلى منطق العمل (404 لا 401)
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ بصلاحيةٍ خاطئة ⇒ 403: التوثيق ليس التخويل
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > المطابقة تُنشئ الصفّ بـ200 لا 201، ومفتاح منع التكرار مطلوب
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ يُحرَق: النداء الثاني بالرمز نفسه ⇒ 401 (سياسةُ الإعادة، ADR-021)
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ مربوطٌ بالمسار والطريقة: رمزُ مسارٍ آخر ⇒ 401
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > أحداث الأهليّة تُقيَّد في صندوق البريد — لا تغيّر صامت
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/customer-e2e test:  ✓ src/__tests__/phase04-exit-gate.e2e.test.ts (11 tests) 3413ms
+packages/customer-e2e test:    ✓ Phase 04 exit gate — customer → Customer Core → order engine > reports a timeout as a timeout when the engine never answers  2052ms
+packages/customer-e2e test:  Test Files  1 passed (1)
+packages/customer-e2e test:       Tests  11 passed (11)
+packages/customer-e2e test:    Start at  22:54:29
+packages/customer-e2e test:    Duration  6.53s (transform 1.42s, setup 0ms, collect 2.63s, tests 3.41s, environment 4ms, prepare 201ms)
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > مسارٌ غير مصنَّفٍ يُرفَض قبل 404: الافتراضُ منعٌ لا سماح
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > سائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > ‏/health يبقى مفتوحاً: الإنفاذُ لا يُعمي المراقبة
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  ✓ src/__tests__/service-identity-enforcement.e2e.test.ts (8 tests) 949ms
+packages/dispatch-e2e test:  Test Files  2 passed (2)
+packages/dispatch-e2e test:       Tests  13 passed (13)
+packages/dispatch-e2e test:    Start at  22:54:29
+packages/dispatch-e2e test:    Duration  6.89s (transform 1.91s, setup 0ms, collect 3.99s, tests 2.12s, environment 10ms, prepare 259ms)
+packages/driver-e2e test:  ✓ src/__tests__/phase05-exit-gate.e2e.test.ts (14 tests) 2907ms
+packages/driver-e2e test:    ✓ المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله  512ms
+packages/driver-e2e test:    ✓ الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > سائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة  339ms
+packages/driver-e2e test:  Test Files  1 passed (1)
+packages/driver-e2e test:       Tests  14 passed (14)
+packages/driver-e2e test:    Start at  22:54:29
+packages/driver-e2e test:    Duration  6.99s (transform 2.15s, setup 0ms, collect 3.38s, tests 2.91s, environment 3ms, prepare 381ms)
+packages/customer-e2e test: Done
+packages/order-e2e test$ vitest run
+packages/dispatch-e2e test: Done
+packages/driver-e2e test: Done
+packages/order-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/order-e2e
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > declares which store it ran against, and answers /health from it
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1 · happy path: intake → wave → thread → accept → the engine holds the price
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1b · the negotiated number is the one both parties last saw, after a counter
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/order-e2e test: stdout | src/__tests__/phase06-exit-gate.e2e.test.ts
+packages/order-e2e test: [phase06-gate] engine persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 2 · the same accept key twice: one agreement, one price, one hand-off
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 3 · the engine refuses the second agreement, and the agreement survives it
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 4 · the engine is down at accept time: pending with a retry moment, then delivered
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > refuses to open a thread on a customer_offer order, reading price_mode from the engine
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test:  ✓ src/__tests__/phase08-exit-gate.e2e.test.ts (8 tests) 1091ms
+packages/negotiation-e2e test:  Test Files  1 passed (1)
+packages/negotiation-e2e test:       Tests  8 passed (8)
+packages/negotiation-e2e test:    Start at  22:54:35
+packages/negotiation-e2e test:    Duration  4.04s (transform 1.73s, setup 0ms, collect 2.44s, tests 1.09s, environment 6ms, prepare 184ms)
+packages/negotiation-e2e test: Done
+packages/order-e2e test:  ✓ src/__tests__/phase06-exit-gate.e2e.test.ts (16 tests) 3137ms
+packages/order-e2e test:    ✓ 3. the whole transition table, over HTTP (441 pairs) > accepts exactly the published edges and refuses every other pair  2658ms
+packages/order-e2e test:  Test Files  1 passed (1)
+packages/order-e2e test:       Tests  16 passed (16)
+packages/order-e2e test:    Start at  22:54:37
+packages/order-e2e test:    Duration  4.95s (transform 922ms, setup 0ms, collect 1.51s, tests 3.14s, environment 1ms, prepare 95ms)
+packages/order-e2e test: Done
+
+[1m╔══════════════════════════════════════════════════════════╗[0m
+[1m║  الخلاصة                                                  ║[0m
+[1m╚══════════════════════════════════════════════════════════╝[0m
+  [32m✓ نجح[0m   بنيةُ المستودعِ والوثائقُ الحاكمة
+  [32m✓ نجح[0m   اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)
+  [32m✓ نجح[0m   بوّابةُ الحوكمة (12 فحصاً)
+  [32m✓ نجح[0m   حزمةُ اختبارِ الحوكمة (ترفض فعلاً لا شكلاً)
+  [32m✓ نجح[0m   حزمةُ اختبارِ دليلِ CI (ما لم يبدأ لا يُكتَبُ له حكمٌ)
+  [32m✓ نجح[0m   الأنواعُ (pnpm -r typecheck)
+  [32m✓ نجح[0m   الاختبارات (pnpm -r test)
+
+[2mالأرتفاكت:[0m artifacts/verify/verify-report.txt · artifacts/verify/verify-report.json
+
+[32m✓ التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت.[0m
+

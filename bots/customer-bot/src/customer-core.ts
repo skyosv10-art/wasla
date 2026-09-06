@@ -38,6 +38,7 @@ import {
   type IdentityLookupPort,
   type Locale,
   type UseCaseDeps,
+  CUSTOMERS_GEOGRAPHY_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
 } from "@wasla/customers-service";
 import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
@@ -245,7 +246,20 @@ export function buildCustomerFlows(env: CustomerFlowsEnv): CustomerFlowsWiring |
       })
     : new PermissiveIdentityLookup();
   const geography: GeographyPort = env.GEOGRAPHY_SERVICE_URL
-    ? new HttpGeographyPort({ baseUrl: env.GEOGRAPHY_SERVICE_URL })
+    ? new HttpGeographyPort({
+      baseUrl: env.GEOGRAPHY_SERVICE_URL,
+      // M1-04 (الموجة 5): حدُّ الجغرافيا يفرضُ هويّةَ الخدمةِ، فنداءُ البوتِ
+      // موقَّعٌ بصلاحيّةِ قراءةِ منطقةٍ وحدَها.
+      signRequest: createServiceRequestSigner({
+        serviceName: "customer-bot",
+        audience: "geography",
+        keys: keyRegistryFromEnv({
+          WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+          WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+        }),
+        scopes: CUSTOMERS_GEOGRAPHY_SCOPES,
+      }),
+    })
     : new FakeGeography([]);
 
   const { pool, db } = createCustomerDb({ connectionString: databaseUrl });

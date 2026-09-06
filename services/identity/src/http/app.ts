@@ -26,11 +26,31 @@ import { startRecovery } from "../use-cases/start-recovery.js";
 import { getIdentityHistory } from "../use-cases/get-identity-history.js";
 
 import { sendIdentityError } from "./errors.js";
+import {
+  registerServiceIdentity,
+  IDENTITY_SCOPES,
+  type IdentityRouteConfig,
+  type IdentityServiceIdentityOptions,
+} from "./service-identity.js";
 
 export interface CreateIdentityAppOptions {
   deps: UseCaseDeps;
   /** Enable Fastify's request logger (pino). Off by default for tests. */
   logger?: boolean;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`). **إلزاميٌّ ولا قيمةَ افتراضيّةَ
+   * له بقصدٍ**: حدُّ الهويّةِ يربطُ هويّاتٍ خارجيّةً ويبدأُ استعادةَ حسابٍ، فبناءُ
+   * تطبيقٍ له بلا هويّةِ خدمةٍ **لا يُترجَمُ** — والنسيانُ لا يكونُ صامتاً.
+   */
+  serviceIdentity: IdentityServiceIdentityOptions;
+}
+
+/** مسار مفتوح بتصنيف صريح — لا استثناء صامت. */
+const OPEN: IdentityRouteConfig = { serviceIdentity: "open" };
+
+/** مسار يطلب صلاحية واحدة بالاسم. */
+function scoped(...scopes: readonly string[]): IdentityRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 /** Build the Identity Fastify app without starting to listen. */
@@ -44,27 +64,31 @@ export function createIdentityApp(
     sendIdentityError(reply, error, request.id);
   });
 
+  // فرضُ هويّةِ الخدمةِ **قبلَ تسجيلِ المساراتِ**: حاجزُ التصنيفِ عندَ `onRoute`
+  // لا يرى إلّا ما يُسجَّلُ بعدَه، فمسارٌ يُضافُ لاحقاً بلا تصنيفٍ يُسقِطُ الإقلاعَ.
+  registerServiceIdentity(app, options.serviceIdentity);
+
   // GET /health — liveness probe (not part of the contract API surface).
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({ status: "ok" });
   });
 
   // POST /identity/resolve — idempotent create/resolve from Telegram.
-  app.post("/identity/resolve", async (request, reply) => {
+  app.post("/identity/resolve", { config: scoped(IDENTITY_SCOPES.resolveWrite) }, async (request, reply) => {
     const body = request.body as ResolveIdentityRequest;
     const result = await resolveTelegramIdentity(deps, body);
     return reply.status(result.created ? 201 : 200).send(result);
   });
 
   // GET /identity/users/:waslaPublicId — read a user by Public ID.
-  app.get("/identity/users/:waslaPublicId", async (request, reply) => {
+  app.get("/identity/users/:waslaPublicId", { config: scoped(IDENTITY_SCOPES.userRead) }, async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
     const user = await getUser({ repo: deps.repo }, waslaPublicId);
     return reply.status(200).send(user);
   });
 
   // POST /identity/users/:waslaPublicId/links — add an external identity link.
-  app.post("/identity/users/:waslaPublicId/links", async (request, reply) => {
+  app.post("/identity/users/:waslaPublicId/links", { config: scoped(IDENTITY_SCOPES.linkWrite) }, async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
     const body = request.body as AddIdentityLinkRequest;
     const link = await addIdentityLink(deps, {
@@ -79,6 +103,7 @@ export function createIdentityApp(
   // POST /identity/users/:waslaPublicId/recovery — start account recovery.
   app.post(
     "/identity/users/:waslaPublicId/recovery",
+    { config: scoped(IDENTITY_SCOPES.recoveryWrite) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
       const body = request.body as StartRecoveryRequest;
@@ -93,6 +118,7 @@ export function createIdentityApp(
   // GET /identity/users/:waslaPublicId/history — identity change history.
   app.get(
     "/identity/users/:waslaPublicId/history",
+    { config: scoped(IDENTITY_SCOPES.historyRead) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
       const query = request.query as { field?: string };

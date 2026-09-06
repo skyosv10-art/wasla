@@ -23,6 +23,9 @@ import {
   CryptoIdGenerator,
   createIdentityApp,
 } from "../index.js";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+
+import { attachSigningInject, createTestKeyRegistry } from "./http/support.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const ENABLED = Boolean(DATABASE_URL);
@@ -53,7 +56,14 @@ describe.skipIf(!ENABLED)("Phase 01 Exit Gate E2E (HTTP → Postgres)", () => {
       idGen: new CryptoIdGenerator(),
     };
     outbox = deps.outbox;
-    app = createIdentityApp({ deps });
+    // M1-04: الحدُّ يفرضُ هويّةَ الخدمةِ، فبوّابةُ الخروجِ تُنادى موقَّعةً عبرَ
+    // السندِ نفسِه — وليس عبرَ تعطيلِ الفرضِ في الاختبارِ.
+    const keys = createTestKeyRegistry();
+    app = createIdentityApp({
+      deps,
+      serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() },
+    });
+    attachSigningInject(app, keys);
   });
 
   afterAll(async () => {

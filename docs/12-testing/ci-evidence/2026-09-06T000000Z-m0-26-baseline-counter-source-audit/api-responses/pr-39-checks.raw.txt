@@ -1,0 +1,28 @@
+Devin Review	pass	0	https://app.devin.ai/review/skyosv10-art/wasla/pull/39	Completed analysis in 2m 9s
+db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	pass	32s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415690	
+db-integration (customer, @wasla/customers-service, wasla_customer_test)	pass	29s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415674	
+db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	pass	36s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415635	
+db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	pass	32s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415752	
+db-integration (geography, @wasla/geography-service, wasla_geo_test)	pass	29s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415654	
+db-integration (identity, @wasla/identity-service, wasla_test)	pass	38s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415709	
+db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	pass	46s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415630	
+db-integration (matching, @wasla/matching-service, wasla_matching_test)	pass	31s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415721	
+db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	pass	31s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415585	
+db-integration (order, @wasla/orders-service, wasla_orders_test)	pass	33s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415717	
+db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	pass	32s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415583	
+db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	pass	37s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415598	
+db-integration-shared	pass	1m27s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415555	
+doc-coverage	pass	7s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415539	
+exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	pass	32s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415612	
+exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	pass	37s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415665	
+exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	pass	28s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415592	
+exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	pass	34s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415649	
+exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	pass	32s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415637	
+exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	pass	34s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415556	
+exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	pass	39s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415594	
+exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	pass	27s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415663	
+governance-guard	pass	1m8s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415507	
+repo-structure	pass	4s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415534	
+test	pass	1m1s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415552	
+typecheck	pass	1m7s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415451	
+verify	pass	1m12s	https://github.com/skyosv10-art/wasla/actions/runs/34001256454/job/101400415540	

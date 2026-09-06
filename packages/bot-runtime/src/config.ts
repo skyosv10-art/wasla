@@ -77,6 +77,16 @@ export interface BotConfig {
   readonly identityServiceUrl?: string;
   readonly identityTimeoutMs?: number;
   /**
+   * مادّةُ مفاتيحِ هويّةِ الخدمةِ (`M1-04`) بصيغةِ `kid:status:secret,…`.
+   *
+   * **غيابُها مع `IDENTITY_SERVICE_URL` مضبوطاً إخفاقٌ عندَ الإقلاعِ بقصدٍ:**
+   * حدُّ الهويّةِ يفرضُ التوقيعَ، وبوتٌ بلا مفاتيحَ يُرَدُّ 401 عندَ كلِّ
+   * `/start` — ورسالةٌ تسمّي المتغيّرَ الناقصَ أرخصُ من بوتٍ حيٍّ لا يُنشئُ
+   * هويّةً. ولا تُسجَّلُ في سجلٍّ أبداً.
+   */
+  readonly serviceAuthKeys?: string;
+  readonly serviceAuthActiveKid?: string;
+  /**
    * Postgres connection string for the channel tables; absent means «run with
    * in-memory stores» (local development and tests only — de-duplication and the
    * retry queue are then lost on restart).
@@ -255,6 +265,15 @@ export function loadBotConfig(bot: BotKind, env: EnvBag): BotConfig {
   }
 
   const identityServiceUrl = env.IDENTITY_SERVICE_URL?.trim();
+  const serviceAuthKeys = env.WASLA_SERVICE_AUTH_KEYS?.trim();
+  const serviceAuthActiveKid = env.WASLA_SERVICE_AUTH_ACTIVE_KID?.trim();
+  if (identityServiceUrl && (!serviceAuthKeys || !serviceAuthActiveKid)) {
+    // فرضٌ بلا مفاتيحَ = 401 على كلِّ `/start`. الإخفاقُ هنا يُسمّي العلّةَ.
+    throw new Error(
+      "IDENTITY_SERVICE_URL is set, so WASLA_SERVICE_AUTH_KEYS and " +
+        "WASLA_SERVICE_AUTH_ACTIVE_KID are required (M1-04 service identity).",
+    );
+  }
   const identityTimeoutMs = readTimeout(env);
   const databaseUrl = readDatabaseUrl(env);
 
@@ -264,6 +283,8 @@ export function loadBotConfig(bot: BotKind, env: EnvBag): BotConfig {
     webhookSecret,
     presence: loadBotPresence(bot, env),
     ...(identityServiceUrl ? { identityServiceUrl } : {}),
+    ...(serviceAuthKeys ? { serviceAuthKeys } : {}),
+    ...(serviceAuthActiveKid ? { serviceAuthActiveKid } : {}),
     ...(identityTimeoutMs === undefined ? {} : { identityTimeoutMs }),
     ...(databaseUrl === undefined ? {} : { databaseUrl }),
     groups: loadGroupPresences(env),

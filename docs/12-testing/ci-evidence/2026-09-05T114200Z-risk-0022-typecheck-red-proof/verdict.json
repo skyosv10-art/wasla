@@ -1,0 +1,112 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-05T11-42-00Z",
+  "work_items": [
+    "M0-22E"
+  ],
+  "claim": "CLM-0080",
+  "closes_risk": "RISK-0022",
+  "opens_risk": "RISK-0023",
+  "verdict": "PASSED",
+  "probe": {
+    "pull_request": 36,
+    "branch": "probe/risk-0022-red-proof",
+    "head_sha": "0f178a41ad003602fe1fbdd67b119d85898a1b49",
+    "merged": false,
+    "never_to_be_merged": true,
+    "file": "packages/errors/src/__tests__/risk-0022-red-probe.test.ts",
+    "deliberate_defects": [
+      {
+        "kind": "failing_assertion",
+        "targets": "test",
+        "detail": "expect('deliberate-red-probe').toBe('this-assertion-must-fail')"
+      },
+      {
+        "kind": "type_error",
+        "targets": "typecheck",
+        "detail": "TS2322 — const deliberateTypeError: number = <string>"
+      }
+    ]
+  },
+  "run": {
+    "id": 33964043338,
+    "url": "https://github.com/skyosv10-art/wasla/actions/runs/33964043338",
+    "jobs_total": 27,
+    "jobs_started": 27,
+    "red": [
+      "doc-coverage",
+      "governance-guard",
+      "test",
+      "typecheck",
+      "verify"
+    ],
+    "green": 22,
+    "expected_red_by_design": [
+      "doc-coverage",
+      "governance-guard"
+    ]
+  },
+  "criteria": [
+    {
+      "id": "1",
+      "text": "فحصُ test قادرٌ على الإخفاقِ بعدَ set -o pipefail",
+      "result": "PASSED",
+      "measured_by": "GET /actions/runs/33964043338/jobs — job=test",
+      "evidence": "api-responses/01-probe-run-jobs.raw.json",
+      "value": {
+        "conclusion": "failure",
+        "failing_step": {
+          "number": 6,
+          "name": "test"
+        },
+        "started_at": "2026-09-05T11:42:20Z"
+      }
+    },
+    {
+      "id": "2",
+      "text": "فحصُ typecheck قادرٌ على الإخفاقِ — وهو ما لم يُقَسْ قطُّ قبلَ اليومِ",
+      "result": "PASSED",
+      "measured_by": "GET /actions/runs/33964043338/jobs — job=typecheck",
+      "evidence": "api-responses/01-probe-run-jobs.raw.json",
+      "value": {
+        "conclusion": "failure",
+        "failing_step": {
+          "number": 6,
+          "name": "typecheck"
+        },
+        "started_at": "2026-09-05T11:42:20Z"
+      }
+    },
+    {
+      "id": "3",
+      "text": "العلاجُ أصلحَ حالةَ الخروجِ ولم يُلغِ tee — فالسجلُّ ما زالَ يُرفَعُ",
+      "result": "PASSED",
+      "measured_by": "الخطوةُ 7 «رفعُ السجلِّ» في الوظيفتَينِ المُخفِقتَينِ",
+      "evidence": "api-responses/01-probe-run-jobs.raw.json",
+      "value": {
+        "step_7_conclusion": "success",
+        "in_jobs": [
+          "test",
+          "typecheck"
+        ]
+      }
+    }
+  ],
+  "prior_gap_corrected": {
+    "document": "docs/12-testing/M0-22E_GATE.md",
+    "criterion": 4,
+    "was": "«typecheck و test قادرانِ على الإخفاقِ» — PASSED بمقياسٍ يُظهِرُ test أحمرَ فقط",
+    "measured_today_from_raw": {
+      "run": 33940167412,
+      "test": "failure",
+      "typecheck": "success"
+    },
+    "now": "الحكمُ صارَ مسنوداً بقياسٍ للفحصَينِ معاً"
+  },
+  "not_measured": [
+    "نصُّ السجلِّ الخامِّ للوظيفتَينِ — مضيفُ التنزيلِ خارجَ الشبكةِ المسموحةِ في بيئةِ التنفيذِ",
+    "قدرةُ الفحوصِ الخمسةِ والعشرينَ الباقيةِ على الإخفاقِ",
+    "مراجعةُ الأحكامِ السابقةِ المستندةِ إلى خضرةِ typecheck واحداً واحداً — نُقِلت إلى RISK-0023",
+    "محاولةُ دمجٍ ممنوعةٌ على هذا المِجَسِّ — مقيسةٌ سلفاً في دليلِ M0-22E والدمجُ صلاحيةُ المالكِ"
+  ]
+}

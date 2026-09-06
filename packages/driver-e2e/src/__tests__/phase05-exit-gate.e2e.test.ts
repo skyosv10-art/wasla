@@ -28,6 +28,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  callDispatch,
   callDrivers,
   callMatching,
   candidacyStatus,
@@ -96,14 +97,14 @@ describe("المسار الكامل: من التسجيل إلى طلب مقبو�
     // (هـ) يقبل من المسار نفسه الذي سيستدعيه بوت السائق.
     const accepted = await callDrivers(gate, { method: "GET", path: "/health" });
     expect(accepted.status).toBe(200);
-    const acceptance = await fetch(
-      `${gate.dispatchUrl}/dispatch/offers/${offers[0]?.id as string}/accept`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", "idempotency-key": nextKey("gate-accept") },
-        body: JSON.stringify({ driver_public_id: driver.waslaPublicId }),
-      },
-    );
+    // `M1-04` · الموجةُ الرابعة: حدُّ التوزيعِ صارَ مفروضاً، فالنداءُ يمرُّ
+    // بـ`callDispatch` كي يُوقَّع كما يُوقَّعُ في الإنتاجِ — لا بـ`fetch` عارٍ.
+    const acceptance = await callDispatch(gate, {
+      method: "POST",
+      path: `/dispatch/offers/${offers[0]?.id as string}/accept`,
+      idempotencyKey: nextKey("gate-accept"),
+      body: { driver_public_id: driver.waslaPublicId },
+    });
     expect(acceptance.status).toBe(200);
 
     // (و) الطلب صار مقبولاً عند المحرّك، والمهمّة انتهت عند التوزيع.
@@ -245,10 +246,11 @@ describe("الجهوزية: نواة السائق لا ترفع سائقاً م�
     const job = await createJob(gate, order);
     await tickDispatch(gate);
     const offers = await openOffers(gate, job.id as string);
-    await fetch(`${gate.dispatchUrl}/dispatch/offers/${offers[0]?.id as string}/accept`, {
+    await callDispatch(gate, {
       method: "POST",
-      headers: { "content-type": "application/json", "idempotency-key": nextKey("gate-accept") },
-      body: JSON.stringify({ driver_public_id: driver.waslaPublicId }),
+      path: `/dispatch/offers/${offers[0]?.id as string}/accept`,
+      idempotencyKey: nextKey("gate-accept"),
+      body: { driver_public_id: driver.waslaPublicId },
     });
     expect((await readCandidacy(gate, driver.waslaPublicId)).availability_state).toBe("busy");
 

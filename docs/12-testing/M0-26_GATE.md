@@ -15,7 +15,7 @@
 ```
 LOCAL      ✅ VERIFIED     — الثمانيةُ أُعيدَ قياسُها بمنطقِ baseline.sh عينِه فطابقت 8/8 (خامٌّ محفوظٌ)
            ✅ VERIFIED     — test-governance.sh: 172 ناجحاً · 0 فاشلاً (خامٌّ محفوظٌ) · verify-governance.sh rc=0
-CI         ⏳ NOT VERIFIED — يُقرأُ من التشغيلِ الفعليِّ على هذه الدفعةِ، ولا يُدَّعى قبلَه
+CI         ✅ VERIFIED     — PR #39 · تشغيل 34001256454 · 27 وظيفةً كلُّها success و`started_at` غيرُ فارغٍ (§9) · 28/28 فحصاً pass
 PRODUCTION ⚪ NOT VERIFIED — لا طبقةَ نشرٍ في المستودعِ
 ```
 

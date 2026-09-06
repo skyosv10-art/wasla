@@ -1,0 +1,86 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "collected_at": "2026-09-06T00-00-00Z",
+  "repository": "skyosv10-art/wasla",
+  "ref": "424ebfd6f03447b32ea207e2f1a8a28e66af114d",
+  "work_items": [
+    "M0-26"
+  ],
+  "claim": "CLM-0090",
+  "kind": "audit",
+  "verdict": "MEASURED",
+  "gate_recommendation": "PASSED",
+  "authority": "owner",
+  "extends_risk": "RISK-0016",
+  "closes_risk": null,
+  "baseline_compared": {
+    "file": "docs/12-testing/BASELINE.json",
+    "commit": "297a9148edf536de7324df47168119aa46186646",
+    "generated_at": "2026-09-05T05:58:20Z",
+    "counters_matching": 8,
+    "counters_total": 8,
+    "regenerated": false
+  },
+  "counters": {
+    "live_source": [
+      "packages",
+      "packages_with_typecheck",
+      "packages_with_test",
+      "test_files_tracked",
+      "governance_checks",
+      "risks_not_closed"
+    ],
+    "abandoned_source": [
+      "ci_jobs",
+      "ci_allow_failure"
+    ],
+    "abandoned_source_file": ".gitlab-ci.yml"
+  },
+  "new_finding": {
+    "counter": "ci_allow_failure",
+    "not_named_in": "RISK-0016",
+    "baseline_value": 1,
+    "gitlab_allow_failure_true": 1,
+    "github_continue_on_error_true": 0,
+    "why_worse": "يصفُ صرامةَ الخطِّ وصفاً معكوساً: يُعلِنُ وظيفةً مسموحاً لها بالإخفاقِ والخطُّ الحيُّ لا وظيفةَ فيه كذلك"
+  },
+  "unit_of_count": {
+    "github_job_keys": 12,
+    "required_status_contexts": 27,
+    "note": "الفحصُ المنسوبُ ساقُ مصفوفةٍ لا مفتاحٌ — داخلٌ في قرارِ العلاجِ لا في هذا القياسِ",
+    "raw": "api-responses/required-status-checks.raw.json"
+  },
+  "declared_limit_found": {
+    "counter": "test_files_tracked",
+    "issue": "الاسمُ يقول tracked والقراءةُ glob على شجرةِ العملِ لا git ls-files",
+    "measured_divergence_today": 0,
+    "recorded_as": "حدٌّ مُعلَنٌ لا خطرٌ مُسجَّلٌ — لم يقعْ بعدُ"
+  },
+  "changed_nothing": [
+    "scripts/baseline.sh",
+    "docs/12-testing/BASELINE.json",
+    ".github/workflows/ci.yml",
+    ".gitlab-ci.yml"
+  ],
+  "not_measured": [
+    "أثرُ الرقمَينِ على البابِ الثاني في validate-baseline.sh — دعوى RISK-0016 القائمةُ لم تُعَدْ برهنتُها",
+    "عدَّاداتُ dynamic وenv وlock",
+    "جردُ تاريخِ المستودعِ للحظاتِ التي كذبَ فيها الرقمانِ",
+    "اختيارُ العلاجِ — قرارُ مالكِ M0-08 بنصِّ RISK-0016"
+  ],
+  "suite": {
+    "name": "test-governance.sh",
+    "passed": 172,
+    "failed": 0,
+    "raw": "local-measurements/test-governance.raw.txt",
+    "environment_note": "أوّلُ تشغيلٍ أعطى 168 · 4 بسببِ غيابِ pnpm (env.pnpm فارغٌ)؛ والأربعُ مُثبَتةٌ على رأسِ main نفسِه في worktree منفصلٍ، فلمّا رُكّبَ pnpm@9.15.9 صارت 172 · 0. لا اختبارَ عُدِّلَ ولا استُثنيَ."
+  },
+  "gate_local": {
+    "verify_governance_rc": 0,
+    "raw": "local-measurements/verify-governance.raw.txt",
+    "skipped_partial": [
+      "8) CI مانعٌ — لقطةٌ مؤرَّخةٌ",
+      "9) تدقيقُ الاعتمادياتِ — لم يُسأل مُسجَّلُ npm"
+    ]
+  }
+}

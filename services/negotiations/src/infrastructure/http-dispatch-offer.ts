@@ -32,6 +32,8 @@
  * ناقصاً، لا انقطاعاً يُنسب إلى خدمةٍ أخرى في كل سجلٍّ يقرؤه مُشغّل بعد ذلك.
  */
 
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { negotiationUnavailable } from "../domain/errors.js";
 import type { NegotiationServiceKind } from "../domain/model.js";
 import type { DispatchOfferPort, DispatchOfferSnapshot } from "../ports.js";
@@ -43,6 +45,20 @@ export const DISPATCH_OFFER_PATH = (offerId: string): string => `/dispatch/offer
 export const ORDER_LOOKUP_PATH = (orderPublicId: string): string =>
   `/orders/lookup?order_public_id=${encodeURIComponent(orderPublicId)}`;
 
+/**
+ * ما يطلبه هذا المنفذ من حدِّ الطلبات: قراءةُ طلبٍ واحدٍ لا غير (M1-04).
+ * **تُعلَن ولا تُستنبَط**: منادٍ يطلب أكثرَ ممّا يحتاج يُوسّع أثرَ سرقةِ رمزٍ بلا سبب.
+ */
+export const NEGOTIATIONS_ORDER_LOOKUP_SCOPES: readonly string[] = ["orders:order:read"];
+
+/**
+ * ما يطلبه هذا المنفذ من حدِّ التوزيع: قراءةُ عرضٍ واحدٍ لا غير (M1-04، الموجةُ
+ * الرابعة). **ولا يحمل `dispatch:offer:accept` ولا `dispatch:job:cancel` ولا
+ * `dispatch:tick:write`**: سؤالُ «هل هذا العرض قائم» لا يجوز أن يُحمَل برمزٍ
+ * يقدر به على قبول العرض نيابةً عن سائقٍ أو على دفع نبضة المحرّك.
+ */
+export const NEGOTIATIONS_DISPATCH_OFFER_SCOPES: readonly string[] = ["dispatch:offer:read"];
+
 /** وضعُ السعر الذي يسمح بالتفاوض. أيّ قيمةٍ أخرى تعني «هذا الطلب ليس محلَّ تفاوض». */
 const NEGOTIABLE_PRICE_MODE = "negotiable";
 
@@ -53,17 +69,35 @@ export interface HttpDispatchOfferOptions {
   readonly dispatchBaseUrl: string;
   /** أصلُ محرّك الطلب (8087). */
   readonly ordersBaseUrl: string;
+  /**
+   * موقّعُ النداءِ إلى حدِّ الطلبات (M1-04). **إلزاميٌّ ولا قيمةَ افتراضيّةَ له**:
+   * حدُّ الطلبات يفرض الهويّة، ونداءٌ بلا توقيعٍ يُرَدُّ `401` فيُقرأ في السجلِّ
+   * «محرّكُ الطلبِ لا يجيب» لا «جذرُ التركيبِ نسيَ الموقّع».
+   */
+  readonly signOrdersRequest: ServiceRequestSigner;
+  /**
+   * موقّعُ النداءِ إلى حدِّ التوزيعِ (M1-04، الموجةُ الرابعة). **إلزاميٌّ ولا
+   * قيمةَ افتراضيّةَ له** للسببِ نفسِه — وقد صارَ الاسمانِ صريحَينِ لكلِّ وجهةٍ
+   * كما وُعِدَ في الموجةِ الثانيةِ، لأنّ **الجمهورَينِ مختلفانِ**: رمزٌ جمهورُه
+   * `orders` يُرفَض عند التوزيعِ وبالعكس، وموقّعٌ واحدٌ لوجهتَينِ كانَ سيجعلُ
+   * ذلكَ الرفضَ خطأً في التركيبِ لا يُرى إلّا في الإنتاجِ.
+   */
+  readonly signDispatchRequest: ServiceRequestSigner;
   readonly timeoutMs?: number;
 }
 
 export class HttpDispatchOfferPort implements DispatchOfferPort {
   private readonly dispatchBaseUrl: string;
   private readonly ordersBaseUrl: string;
+  private readonly signOrdersRequest: ServiceRequestSigner;
+  private readonly signDispatchRequest: ServiceRequestSigner;
   private readonly timeoutMs: number;
 
   constructor(options: HttpDispatchOfferOptions) {
     this.dispatchBaseUrl = options.dispatchBaseUrl.replace(/\/+$/, "");
     this.ordersBaseUrl = options.ordersBaseUrl.replace(/\/+$/, "");
+    this.signOrdersRequest = options.signOrdersRequest;
+    this.signDispatchRequest = options.signDispatchRequest;
     // ٢٠٠٠ms هي المهلة نفسها التي تستعملها بقيّة المنافذ الصادرة في المستودع
     // (`services/dispatch/src/infrastructure/http-order-engine.ts`). التوحيد مقصود:
     // مهلةٌ تختلف من محوّلٍ لآخر تجعل «الخدمة بطيئة» تظهر عطلاً في نصف المسارات فقط.
@@ -71,9 +105,14 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
   }
 
   async describe(dispatchOfferId: string): Promise<DispatchOfferSnapshot | null> {
+    // الربطُ هنا **كامل**: مُعرِّفُ العرضِ جزءٌ من المسارِ لا من سلسلةِ
+    // الاستفسارِ، فرمزٌ وُقِّعَ لقراءةِ عرضٍ لا يصلحُ لقراءةِ غيرِه — بخلافِ
+    // `/orders/lookup` أدناه (`RISK-0026`).
+    const offerPath = DISPATCH_OFFER_PATH(dispatchOfferId);
     const offer = await this.readJson(
-      `${this.dispatchBaseUrl}${DISPATCH_OFFER_PATH(dispatchOfferId)}`,
+      `${this.dispatchBaseUrl}${offerPath}`,
       "عرض الإرسال",
+      this.signDispatchRequest("GET", offerPath),
     );
     if (offer === null) return null;
 
@@ -92,9 +131,14 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
     }
 
     // ترتيبُ النداءين مقصود: لا نسأل محرّك الطلب عن طلبٍ حتى نعرف أنّ عرضاً يشير إليه.
+    // الربطُ لا يشمل سلسلةَ الاستعلامِ (ADR-021 §4)، والمعرّفُ العامُّ هنا في
+    // الاستعلامِ لا في المسارِ — فالتوقيعُ يربطُ `GET /orders/lookup` ولا يربطُ
+    // **أيَّ** طلبٍ يُسأل عنه. هذا أوّلُ موضعٍ ماديٍّ لهذا الدَّينِ المُعلَنِ،
+    // وهو مسجَّلٌ RISK-0026، ويُخفَّف اليومَ بعمرٍ قصيرٍ للرمزِ وحارسِ إعادةٍ.
     const order = await this.readJson(
       `${this.ordersBaseUrl}${ORDER_LOOKUP_PATH(orderPublicId)}`,
       "الطلب",
+      this.signOrdersRequest("GET", "/orders/lookup"),
     );
     if (order === null) return null;
 
@@ -122,6 +166,7 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
   private async readJson(
     url: string,
     subject: string,
+    extraHeaders: Record<string, string> = {},
   ): Promise<Record<string, unknown> | null> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -129,7 +174,7 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
     try {
       response = await fetch(url, {
         method: "GET",
-        headers: { accept: "application/json" },
+        headers: { accept: "application/json", ...extraHeaders },
         signal: controller.signal,
       });
     } catch (error) {

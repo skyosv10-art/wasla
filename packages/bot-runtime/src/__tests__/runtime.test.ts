@@ -63,11 +63,23 @@ function appFor(
   return { app, runtime };
 }
 
+/**
+ * مادّةُ مفاتيحِ هويّةِ الخدمةِ (`M1-04`) مع عنوانِ الهويّةِ: الإقلاعُ يرفضُ
+ * أحدَهما بلا الآخرِ عمداً، فالاختبارُ يُسلّمُهما معاً كما يفعلُ النشرُ.
+ */
+function identityEnv(): Record<string, string> {
+  return {
+    IDENTITY_SERVICE_URL: "http://identity:8080",
+    WASLA_SERVICE_AUTH_KEYS: "test-active:active:bot-runtime-test-secret-0123456789",
+    WASLA_SERVICE_AUTH_ACTIVE_KID: "test-active",
+  };
+}
+
 describe("buildBotRuntime", () => {
   it("runs an end-to-end /start with the channel and identity swapped out", async () => {
     const channel = new MockChannelAdapter();
     const identity = new FakeIdentityBootstrap();
-    const { app } = appFor("driver", envFor("driver", { IDENTITY_SERVICE_URL: "http://identity:8080" }), {
+    const { app } = appFor("driver", envFor("driver", identityEnv()), {
       channel,
       identity,
     });
@@ -111,7 +123,7 @@ describe("buildBotRuntime", () => {
   });
 
   it("builds the real Telegram adapter when no double is injected", async () => {
-    const { runtime } = appFor("partner", envFor("partner", { IDENTITY_SERVICE_URL: "http://identity:8080" }));
+    const { runtime } = appFor("partner", envFor("partner", identityEnv()));
 
     expect(runtime.outbound.channel.channel).toBe("telegram");
     expect(runtime.identityDegraded).toBe(false);

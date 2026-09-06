@@ -33,6 +33,7 @@
 import type { Pool } from "pg";
 
 import { ORDER_SERVICE_PORT } from "@wasla/contracts-order";
+import { InMemoryServiceTokenReplayGuard, keyRegistryFromEnv } from "@wasla/service-auth";
 
 import { createOrderDb } from "../infrastructure/drizzle/db.js";
 import { PostgresOrderRunner } from "../infrastructure/drizzle/runner.js";
@@ -46,6 +47,24 @@ import {
 import { createDirectRunner, type OrderRunner } from "../runner.js";
 
 import { createOrderApp, type OrderHealthDescriptor } from "./app.js";
+
+/**
+ * مفاتيح هوية الخدمة ومخزن آثار الإعادة لحد الطلبات.
+ *
+ * لا قيمة افتراضية للمفاتيح: خدمة بلا مفاتيح لا تفرّق منادياً من مزوّر، فتشغيلها
+ * «مؤقتاً بلا فرض» هو تشغيل الثغرة نفسها. والإخفاق عند الإقلاع برسالة تسمّي
+ * المتغير أرخص من محرّك طلبات مفتوح لا أحد يراه.
+ *
+ * ومخزن الآثار في الذاكرة **دين معلن (RISK-0015)**: نسختان من الخدمة لا تتشاركان
+ * ذاكرة، فرمز التُقط يمكن أن يُعاد على النسخة الأخرى. Redis هو السد، وعقد
+ * `ServiceTokenReplayGuard` مكتوب كي يكون الاستبدال تغيير سطر هنا.
+ */
+function serviceIdentityWiring(): {
+  keys: ReturnType<typeof keyRegistryFromEnv>;
+  replayGuard: InMemoryServiceTokenReplayGuard;
+} {
+  return { keys: keyRegistryFromEnv(process.env), replayGuard: new InMemoryServiceTokenReplayGuard() };
+}
 
 interface Wiring {
   runner: OrderRunner;
@@ -83,7 +102,12 @@ function buildWiring(): Wiring {
 
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
-  const app = createOrderApp({ runner, health, logger: true });
+  const app = createOrderApp({
+    runner,
+    health,
+    logger: true,
+    serviceIdentity: serviceIdentityWiring(),
+  });
 
   if (pool) {
     app.addHook("onClose", async () => {

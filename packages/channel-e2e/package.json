@@ -18,6 +18,7 @@
     "@wasla/driver-bot": "workspace:*",
     "@wasla/identity-service": "workspace:*",
     "@wasla/partner-bot": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "@wasla/telegram-adapter": "workspace:*",
     "pg": "^8.23.0",
     "vitest": "^2.1.0"

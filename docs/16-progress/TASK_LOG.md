@@ -28,6 +28,7 @@
 
 ## السجل
 
+
 ### [2026-09-06] `M0-22E` — فكُّ تعارضِ الطلبِ #37 بدمجِ `main`
 
 - **Work Item(s):** M0-22E
@@ -40,6 +41,20 @@
 - **Status (§9):** `M0-22E` يبقى **`Ready for Gate`** — **فكُّ تعارضٍ ليس رفعَ حالٍ.**
 - **وما لا يُدَّعى:** لا يُدَّعى أنّ CI أخضرُ: يُقرأُ بعدَ الدفعِ (§9). **والدمجُ سلطةُ المالكِ.**
 - **Next:** قراءةُ CI على [#37](https://github.com/skyosv10-art/wasla/pull/37) ثمّ قرارُ المالكِ.
+
+### [2026-09-06] `M0-22B` — فكُّ تعارضِ الطلبِ #35 بدمجِ `main`
+
+- **Work Item(s):** M0-22B
+- **Claim:** `CLM-0079` · الفرع `chore/m0-22b-gate-unblock-reconciliation` · النطاقُ كما هو
+- **Files:** `docs/16-progress/{TASK_LOG.md,WORK_CLAIMS.md}`
+- **Services:** لا خدمةَ — تسويةُ سجلّاتٍ
+- **Why:** `GET /pulls/35` أجابَ `mergeable: CONFLICTING` — **فالطلبُ لا يُدمَجُ ولو أرادَ المالكُ**. **وفكُّ التعارضِ ليس قرارَ دمجٍ.**
+- **What:** المتعارِضُ **سجلّانِ مشترَكانِ لا سطرَ شفرةٍ**، والقرارُ **اتّحادٌ**: صفُّ `CLM-0090` أُضيفَ إلى `CLM-0079`، وقيدُ `M0-26` (2026-09-06) صارَ في رأسِ السجلِّ قبلَ قيدِ `M0-22B` (2026-09-05) — **لا صفَّ حُذفَ ولا قيدَ حُرِّرَ ولا حكمَ غُيِّرَ.**
+- **Tests:** `verify-governance.sh` ⇒ كلُّ المُنفَّذِ ناجحٌ (تخطٍّ واحدٌ: سؤالُ الواجهةِ حيّاً).
+- **Status (§9):** `M0-22B` يبقى **`Ready for Gate`** — **فكُّ تعارضٍ ليس رفعَ حالٍ.**
+- **وما لا يُدَّعى:** لا يُدَّعى أنّ CI أخضرُ: يُقرأُ بعدَ الدفعِ (§9). **والدمجُ سلطةُ المالكِ.**
+- **Next:** قراءةُ CI على [#35](https://github.com/skyosv10-art/wasla/pull/35) ثمّ قرارُ المالكِ.
+
 
 ### [2026-09-06] `M0-26` — تدقيقُ مصادرِ عدَّاداتِ الأساسِ: المهجورُ عدَّادانِ لا واحدٌ
 
@@ -58,6 +73,7 @@
 - **وما لا يُدَّعى:** **لم يُصلَح شيءٌ.** لم يُمَسّ `scripts/baseline.sh` ولا `BASELINE.json` ولا `ci.yml`، **ولم تتغيَّرْ بصمةُ الأساسِ**. واختيارُ العلاجِ — عدُّ `.github/workflows/` بفردِ المصفوفاتِ أم حذفُ العدَّادَينِ — **قرارُ مالكِ `M0-08`** بنصِّ `RISK-0016`، **وهذا العنصرُ يقيسُ ولا يقرِّرُ**. ولم تُفحَصْ عدَّاداتُ `dynamic` ولا `env` ولا `lock`، **ولم تُعَدْ برهنةُ** دعوى `RISK-0016` أنّ البابَ الثاني في `validate-baseline.sh` لا يرى تغيُّرَ سطحِ CI.
 - **Related:** [دليلُ `M0-26`](../12-testing/ci-evidence/2026-09-06T000000Z-m0-26-baseline-counter-source-audit/README.md) · [`M0-26_GATE.md`](../12-testing/M0-26_GATE.md) · [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) · `M0-08`
 
+
 ### [2026-09-05] `M0-22E` — `typecheck` يُرى أحمرَ لأوّلِ مرّةٍ: إغلاقُ `RISK-0022` وفتحُ `RISK-0023`
 
 - **Work Item(s):** M0-22E
@@ -74,6 +90,19 @@
 - **Evidence:** [`ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/`](../12-testing/ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/)
 - **Next:** انتظارُ قراءةِ CI على هذا الطلبِ، ثمّ قرارُ المالكِ في الدمجِ.
 - **Related:** [PR #36](https://github.com/skyosv10-art/wasla/pull/36) (المِجَسُّ · لا يُدمَجُ) · [PR #28](https://github.com/skyosv10-art/wasla/pull/28) (`set -o pipefail`) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md) · [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md)
+
+### [2026-09-05] `M0-22B` — زوالُ حاجزِ البوّابةِ: من `BLOCKED` إلى `PASSED`
+
+- **Work Item(s):** M0-22B
+- **Claim:** `CLM-0079` · الفرع `chore/m0-22b-gate-unblock-reconciliation` · النطاقُ `docs/12-testing/,docs/16-progress/`
+- **Files:** `docs/12-testing/M0-22B_GATE.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ
+- **Why:** بوّابةُ `M0-22B` كانت `BLOCKED` ببندِها الثاني عشرَ: تسجيلُ العشرينَ وظيفةً في `required_status_checks` كان محجوباً بقيدِ خطّةِ حسابٍ (`403 · Upgrade to GitHub Pro`). **وزالَ الحاجزُ** بنشرِ المستودعِ (فعلُ مالكٍ) وبتوسيعِ `required_status_checks` إلى 27 سياقاً (عملُ `M0-22E`)، فالعشرونَ وظيفةً صارت مُلزَمةً مانعةً.
+- **What:** بندُ البوّابةِ الثاني عشرَ انتقلَ من ⛔ `BLOCKED` إلى ✅ `VERIFIED` بدليلٍ خامٍّ من `GET /branches/main/protection` (27 سياقاً · `strict:true` · `enforce_admins:true`). وحكمُ البوّابةِ انتقلَ من `BLOCKED` إلى `PASSED` (12/12 ✅). والحالةُ تبقى `Ready for Gate` — النقلُ إلى `Completed` سلطةُ المالكِ (§9).
+- **Tests:** `verify-governance.sh` — 12/12 (11 pass + 1 skip by design). `test-governance.sh` — 172/0. CI on [PR #35](https://github.com/skyosv10-art/wasla/pull/35): run [`33960804940`](https://github.com/skyosv10-art/wasla/actions/runs/33960804940) — **28/28 green** (27 GitHub Actions + Devin Review).
+- **Next:** انتظارُ قرارِ المالكِ بدمجِ الطلب.
+- **Related:** [`M0-22B_GATE.md`](../12-testing/M0-22B_GATE.md) · [`M0-22A_GATE.md`](../12-testing/M0-22A_GATE.md) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md)
+
 
 ### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
 

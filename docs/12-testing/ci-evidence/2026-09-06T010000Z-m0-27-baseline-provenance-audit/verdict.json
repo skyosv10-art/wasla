@@ -36,10 +36,26 @@
     "لم يُدَّع أنّ الأرقامَ القديمةَ كاذبةٌ — أُعيدَ إنتاجُ 3748 و221 مطابقَينِ. الدعوى عدمُ قابليّةِ التحقّقِ.",
     "لم تُفسَّر فجوةُ الـ43 ملفّاً.",
     "لم يُمَسّ scripts/baseline.sh ولا .github/workflows/ ولا .gitlab-ci.yml؛ وRISK-0016 على حالِه.",
-    "لا طبقةَ إنتاجٍ ولا يُدَّعى فيها شيءٌ."
+    "لا طبقةَ إنتاجٍ ولا يُدَّعى فيها شيءٌ.",
+    "الدمجُ قرارُ مالكِ البرنامجِ — M0-27 يبقى Ready for Gate لا Completed."
   ],
   "raw": [
     "measurements/provenance-audit.raw.json",
     "local-measurements/verify.log"
-  ]
+  ],
+  "ci": {
+    "pull_request": 41,
+    "run_id": "34003413849",
+    "checks": "28/28 pass",
+    "jobs_total": 27,
+    "jobs_success": 27,
+    "jobs_with_null_started_at": 0,
+    "read_from": "GET repos/skyosv10-art/wasla/actions/runs/34003413849/jobs",
+    "note": "خضرةُ CI لا تنفي المقيسَ: الأبوابُ لا تسألُ أيُحَلُّ repo.commit ولا أيوجَدُ dynamic.source — وهذا عينُ ما رُصِدَ."
+  },
+  "layers": {
+    "local": "VERIFIED",
+    "ci": "VERIFIED",
+    "production": "NOT VERIFIED"
+  }
 }

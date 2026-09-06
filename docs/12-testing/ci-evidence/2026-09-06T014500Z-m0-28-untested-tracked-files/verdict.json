@@ -41,5 +41,14 @@
   "raw": [
     "measurements/test-coverage-audit.raw.json",
     "api-responses/ci-run-test-files.json"
-  ]
+  ],
+  "branch_ci": {
+    "pull_request": 42,
+    "run_id": "34004243352",
+    "checks": "28/28 pass",
+    "jobs_total": 27,
+    "jobs_success": 27,
+    "jobs_with_null_started_at": 0,
+    "read_from": "GET repos/skyosv10-art/wasla/actions/runs/34004243352/jobs"
+  }
 }

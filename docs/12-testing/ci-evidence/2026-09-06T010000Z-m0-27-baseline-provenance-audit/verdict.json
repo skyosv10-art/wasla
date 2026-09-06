@@ -1,0 +1,45 @@
+{
+  "schema": "wasla.ci-evidence/v1",
+  "item": "M0-27",
+  "claim": "CLM-0091",
+  "date": "2026-09-06",
+  "verdict": "MEASURED",
+  "gate_recommendation": "PASSED",
+  "authority": "owner",
+  "question": "كلُّ حقلٍ خارجَ static في BASELINE.json — أيُمكِنُ إرجاعُه إلى مصدرٍ قائمٍ اليومَ؟",
+  "measured_on_commit": "7b0992e592c5492b7763acfea4931ca25e0a9cdc",
+  "findings": {
+    "env_matches_live": "5/5",
+    "lock_matches_live": "sha256 + lines",
+    "repo_commit_resolves": false,
+    "repo_commit_is_ancestor_of_main": false,
+    "dynamic_source_exists": false,
+    "dynamic_source_inside_tree": false,
+    "dynamic_in_fingerprint": false,
+    "tracked_vs_executed_gap": 43
+  },
+  "risk_opened": "RISK-0028",
+  "baseline_regenerated": {
+    "why": "فتحُ RISK-0028 رفعَ risks_not_closed من 16 إلى 17 فأسقطَ البابَ الثاني — وهو ما يأمرُ به الحارسُ نفسُه.",
+    "on_green_suite": true,
+    "verify_rc": 0,
+    "governance_suite": "172 · 0",
+    "tests_passed": 3748,
+    "test_files_executed": 221,
+    "old_fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+    "new_fingerprint": "sha256:c55a0043a0e014981af76e7306c380b4b811fc94c3546b1455c37cb723e61065",
+    "new_repo_commit": "7b0992e592c5492b7763acfea4931ca25e0a9cdc",
+    "new_dynamic_source": "docs/12-testing/ci-evidence/2026-09-06T010000Z-m0-27-baseline-provenance-audit/local-measurements/verify.log"
+  },
+  "not_claimed": [
+    "لم يُشدَّد validate-baseline.sh — الثغرةُ البنيويّةُ قائمةٌ وRISK-0028 مفتوحٌ.",
+    "لم يُدَّع أنّ الأرقامَ القديمةَ كاذبةٌ — أُعيدَ إنتاجُ 3748 و221 مطابقَينِ. الدعوى عدمُ قابليّةِ التحقّقِ.",
+    "لم تُفسَّر فجوةُ الـ43 ملفّاً.",
+    "لم يُمَسّ scripts/baseline.sh ولا .github/workflows/ ولا .gitlab-ci.yml؛ وRISK-0016 على حالِه.",
+    "لا طبقةَ إنتاجٍ ولا يُدَّعى فيها شيءٌ."
+  ],
+  "raw": [
+    "measurements/provenance-audit.raw.json",
+    "local-measurements/verify.log"
+  ]
+}

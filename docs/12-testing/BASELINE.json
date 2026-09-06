@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-05T05:58:20Z",
+  "generated_at": "2026-09-06T01:09:45Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "297a9148edf536de7324df47168119aa46186646",
-    "branch": "chore/m0-25-merge-blocking-gate",
+    "commit": "7b0992e592c5492b7763acfea4931ca25e0a9cdc",
+    "branch": "chore/m0-27-baseline-dynamic-env-lock-audit",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "M0-25: حارسُ منعِ الدمجِ وسبعُ حالاتٍ جديدةٍ — إعادةُ توليدِ الأساسِ على حزمةٍ خضراءَ",
-    "tracked_files": 1368
+    "dirty_files": 5,
+    "dirty_reason": "M0-27: فتحُ RISK-0028 يرفع risks_not_closed من 16 إلى 17، وأُعيدَ توليدُ الأساسِ على حزمةٍ خضراءَ (verify rc=0) بسجلٍّ محفوظٍ داخلَ الشجرةِ",
+    "tracked_files": 1381
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 12,
-    "risks_not_closed": 16
+    "risks_not_closed": 17
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_m025.log",
+    "source": "docs/12-testing/ci-evidence/2026-09-06T010000Z-m0-27-baseline-provenance-audit/local-measurements/verify.log",
     "tests_passed": 3748,
     "test_files_executed": 221,
     "governance_suite_cases": 172,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:53e98702699cb7f72dedc81f9b3942b28701feb65cb87647e5ff78b49fae47b9",
+  "fingerprint": "sha256:c55a0043a0e014981af76e7306c380b4b811fc94c3546b1455c37cb723e61065",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

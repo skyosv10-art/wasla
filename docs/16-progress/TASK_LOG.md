@@ -28,6 +28,20 @@
 
 ## السجل
 
+
+### [2026-09-06] `M0-22E` — فكُّ تعارضِ الطلبِ #37 بدمجِ `main`
+
+- **Work Item(s):** M0-22E
+- **Claim:** `CLM-0080` · الفرع `chore/m0-22e-risk-0022-closure` · النطاقُ كما هو
+- **Files:** `docs/07-security/RISK_REGISTER.md` · `docs/16-progress/{TASK_LOG.md,WORK_CLAIMS.md}`
+- **Services:** لا خدمةَ — تسويةُ سجلّاتٍ
+- **Why:** `GET /pulls/37` أجابَ `mergeable: CONFLICTING` — **فالطلبُ لا يُدمَجُ ولو أرادَ المالكُ**.
+- **What:** `RISK-0022` **بقيَ `closed`** — **وهذا الطلبُ بعينِه موضعُ الحكمِ فيه** (بُرهنَ الأحمرُ في [#36](https://github.com/skyosv10-art/wasla/pull/36))، بخلافِ [#38](https://github.com/skyosv10-art/wasla/pull/38) الذي أُعيدَ فيه `open` لأنّه **ليس موضعَه**. و`RISK-0016` أُخذَ بنصِّه المُوسَّعِ من `main` (عدَّادانِ لا عدَّادٌ · قياسُ `M0-26`). والسجلّانِ المشترَكانِ **اتّحادٌ** — لا صفَّ حُذفَ ولا قيدَ حُرِّرَ.
+- **Tests:** `verify-governance.sh` ⇒ **كلُّ الفحوصِ المُنفَّذةِ نجحت** — **بلا تخطٍّ**.
+- **Status (§9):** `M0-22E` يبقى **`Ready for Gate`** — **فكُّ تعارضٍ ليس رفعَ حالٍ.**
+- **وما لا يُدَّعى:** لا يُدَّعى أنّ CI أخضرُ: يُقرأُ بعدَ الدفعِ (§9). **والدمجُ سلطةُ المالكِ.**
+- **Next:** قراءةُ CI على [#37](https://github.com/skyosv10-art/wasla/pull/37) ثمّ قرارُ المالكِ.
+
 ### [2026-09-06] `M0-22B` — فكُّ تعارضِ الطلبِ #35 بدمجِ `main`
 
 - **Work Item(s):** M0-22B
@@ -40,6 +54,7 @@
 - **Status (§9):** `M0-22B` يبقى **`Ready for Gate`** — **فكُّ تعارضٍ ليس رفعَ حالٍ.**
 - **وما لا يُدَّعى:** لا يُدَّعى أنّ CI أخضرُ: يُقرأُ بعدَ الدفعِ (§9). **والدمجُ سلطةُ المالكِ.**
 - **Next:** قراءةُ CI على [#35](https://github.com/skyosv10-art/wasla/pull/35) ثمّ قرارُ المالكِ.
+
 
 ### [2026-09-06] `M0-26` — تدقيقُ مصادرِ عدَّاداتِ الأساسِ: المهجورُ عدَّادانِ لا واحدٌ
 
@@ -58,6 +73,24 @@
 - **وما لا يُدَّعى:** **لم يُصلَح شيءٌ.** لم يُمَسّ `scripts/baseline.sh` ولا `BASELINE.json` ولا `ci.yml`، **ولم تتغيَّرْ بصمةُ الأساسِ**. واختيارُ العلاجِ — عدُّ `.github/workflows/` بفردِ المصفوفاتِ أم حذفُ العدَّادَينِ — **قرارُ مالكِ `M0-08`** بنصِّ `RISK-0016`، **وهذا العنصرُ يقيسُ ولا يقرِّرُ**. ولم تُفحَصْ عدَّاداتُ `dynamic` ولا `env` ولا `lock`، **ولم تُعَدْ برهنةُ** دعوى `RISK-0016` أنّ البابَ الثاني في `validate-baseline.sh` لا يرى تغيُّرَ سطحِ CI.
 - **Related:** [دليلُ `M0-26`](../12-testing/ci-evidence/2026-09-06T000000Z-m0-26-baseline-counter-source-audit/README.md) · [`M0-26_GATE.md`](../12-testing/M0-26_GATE.md) · [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) · `M0-08`
 
+
+### [2026-09-05] `M0-22E` — `typecheck` يُرى أحمرَ لأوّلِ مرّةٍ: إغلاقُ `RISK-0022` وفتحُ `RISK-0023`
+
+- **Work Item(s):** M0-22E
+- **Claim:** `CLM-0080` · الفرع `chore/m0-22e-risk-0022-closure` · النطاقُ `docs/07-security/,docs/12-testing/,docs/16-progress/`
+- **Files:** `docs/07-security/RISK_REGISTER.md` · `docs/12-testing/M0-22E_GATE.md` · `docs/12-testing/ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/` (جديدٌ: `README.md` · `verdict.json` · `api-responses/01-probe-run-jobs.raw.json`) · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`
+- **Services:** لا خدمةَ — سجلّاتُ الحوكمةِ ودليلُ خطٍّ
+- **Why:** `RISK-0022` (`high`) يشترطُ لإغلاقِه شرطاً واحداً: أن **يُرى الفحصُ أحمرَ**، ونصُّه يذكرُ **فحصَينِ** لا فحصاً واحداً (`test` و`typecheck`، والعلّةُ فيهما واحدةٌ: حالةُ خروجِ الأنبوبِ حالةُ `tee`). وقُرِئَ الملفُّ الخامُّ للجولةِ السابقةِ ([`34-probe2-jobs.raw.json`](../12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks/api-responses/34-probe2-jobs.raw.json)) فكانَ فيهِ `test → failure` و**`typecheck → success`** — لأنّ مِجَسَّ [PR #27](https://github.com/skyosv10-art/wasla/pull/27) **لم يحوِ خطأَ أنواعٍ قطُّ**. **فحُكمُ المعيارِ الرابعِ في بوّابةِ `M0-22E` كانَ أوسعَ من دليلِه بمقدارِ فحصٍ كاملٍ** — وذلكَ عينُ الاستدلالِ الذي أنشأَ الخطرَ: افتراضُ أنّ ما لم يُقَسْ يُشبِهُ ما قُيسَ.
+- **What:** مِجَسٌّ أحمرُ فيهِ **عيبانِ متعمَّدانِ لا عيبٌ واحدٌ** ([PR #36](https://github.com/skyosv10-art/wasla/pull/36) · `probe/risk-0022-red-proof` · **لم يُدمَجْ وأُغلِقَ**): تأكيدٌ يُخفِقُ يستهدفُ `test`، وخطأُ `TS2322` يستهدفُ `typecheck` — لأنّ إخفاقَ تأكيدٍ في زمنِ التشغيلِ **لا يراه `tsc` أصلاً** والعكسُ كذلكَ. ثمّ أُغلِقَ `RISK-0022` بالدليلِ، **ولم تُدفَنْ بقيّتُه** («لم تُراجَعِ الأحكامُ السابقةُ واحداً واحداً») بل نُقِلت خطراً مستقلّاً `RISK-0023` (`medium`). وصُحِّحَ سنَدُ المعيارِ الرابعِ في البوّابةِ **بالإضافةِ لا بالمحوِ** (§7 جديدٌ). وحُرِّرَ `CLM-0078` بعدَ دمجِ [PR #34](https://github.com/skyosv10-art/wasla/pull/34).
+- **Tests:** **محلّيّاً قبلَ الدفعِ:** `pnpm --filter @wasla/errors typecheck` ⇒ `TS2322` · `Exit status 2` · `pnpm --filter @wasla/errors test` ⇒ `Tests 1 failed | 4 passed` · `Exit status 1`. **وفي الخطِّ** (تشغيلُ [`33964043338`](https://github.com/skyosv10-art/wasla/actions/runs/33964043338) · 27 وظيفةً بدأت وأكملت): `test` ⇒ **`failure`** والخطوةُ المُخفِقةُ `6 · test` · `typecheck` ⇒ **`failure`** والخطوةُ المُخفِقةُ `6 · typecheck`. **والخطوةُ السابعةُ «رفعُ السجلِّ» بقيت `success` في الحالَينِ** — فالعلاجُ أصلحَ حالةَ الخروجِ ولم يُلغِ `tee`. الحمراءُ خمسٌ والخضراءُ اثنتانِ وعشرونَ.
+- **Status (§9):** `RISK-0022` ⇒ **`closed`** · `RISK-0023` ⇒ **`open`** · `M0-22E` يبقى **`Ready for Gate`** — النقلُ إلى `Completed` سلطةُ المالكِ.
+- **Security/Data/Deployment:** لا أثرَ. لا كودَ إنتاجٍ تغيَّرَ في هذه الدفعةِ؛ ملفُّ المِجَسِّ يعيشُ على فرعِ المِجَسِّ وحدَه ولا يبلغُ `main`.
+- **وما لا يُدَّعى:** (1) **لم تُبرهَنْ** قدرةُ الفحوصِ الخمسةِ والعشرينَ الباقيةِ على الإخفاقِ. (2) **ولم يُقرَأْ نصُّ السجلِّ الخامِّ** للوظيفتَينِ: مضيفُ تنزيلِ سجلّاتِ الوظائفِ خارجَ الشبكةِ المسموحةِ في بيئةِ التنفيذِ، فالمقروءُ حكمُ الواجهةِ على الوظيفةِ **وعلى الخطوةِ السادسةِ بعينِها** — وهو الحكمُ ذاتُه الذي تقرؤه حمايةُ الفرعِ. (3) **ولم تُعَدْ محاولةُ دمجٍ ممنوعةٍ** على المِجَسِّ: المنعُ مقيسٌ سلفاً بـ`405` مرّتَينِ في دليلِ `M0-22E`، **والدمجُ صلاحيةُ المالكِ فلا تُطرَقُ واجهتُه بلا حاجةٍ**.
+- **Known Issue/Blocker:** `CLM-0079` (على فرعِ [PR #35](https://github.com/skyosv10-art/wasla/pull/35) المفتوحِ) يحجزُ `docs/12-testing/` أيضاً، **وهو غيرُ مُسجَّلٍ على `main`** فلا يراه المدقِّقُ. والملفّاتُ مختلفةٌ (`M0-22B_GATE.md` هناكَ · `M0-22E_GATE.md` ودليلٌ جديدٌ هنا)، **لكنّ التداخلَ في النطاقِ مُعلَنٌ لا مطويٌّ**. و[PR #35](https://github.com/skyosv10-art/wasla/pull/35) حالتُه `mergeable: false` · `dirty` لأنّه سابقٌ لدمجِ [PR #34](https://github.com/skyosv10-art/wasla/pull/34).
+- **Evidence:** [`ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/`](../12-testing/ci-evidence/2026-09-05T114200Z-risk-0022-typecheck-red-proof/)
+- **Next:** انتظارُ قراءةِ CI على هذا الطلبِ، ثمّ قرارُ المالكِ في الدمجِ.
+- **Related:** [PR #36](https://github.com/skyosv10-art/wasla/pull/36) (المِجَسُّ · لا يُدمَجُ) · [PR #28](https://github.com/skyosv10-art/wasla/pull/28) (`set -o pipefail`) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md) · [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md)
+
 ### [2026-09-05] `M0-22B` — زوالُ حاجزِ البوّابةِ: من `BLOCKED` إلى `PASSED`
 
 - **Work Item(s):** M0-22B
@@ -69,6 +102,7 @@
 - **Tests:** `verify-governance.sh` — 12/12 (11 pass + 1 skip by design). `test-governance.sh` — 172/0. CI on [PR #35](https://github.com/skyosv10-art/wasla/pull/35): run [`33960804940`](https://github.com/skyosv10-art/wasla/actions/runs/33960804940) — **28/28 green** (27 GitHub Actions + Devin Review).
 - **Next:** انتظارُ قرارِ المالكِ بدمجِ الطلب.
 - **Related:** [`M0-22B_GATE.md`](../12-testing/M0-22B_GATE.md) · [`M0-22A_GATE.md`](../12-testing/M0-22A_GATE.md) · [`M0-22E_GATE.md`](../12-testing/M0-22E_GATE.md)
+
 
 ### [2026-09-05] `M0-22C` · `M0-22E` — تسويةُ حالاتِ اللوحةِ وإطلاقُ `CLM-0077`
 

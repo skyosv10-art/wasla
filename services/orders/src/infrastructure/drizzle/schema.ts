@@ -38,6 +38,7 @@ import {
   smallint,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -92,30 +93,76 @@ export const orders = pgTable(
       .default(sql`now()`),
   },
   (table) => [
+    // ── قيودُ CHECK العموديّةُ (أسماءُ PG الافتراضيّةُ المطابقةُ للعقدِ) ──
     check(
-      "ck_orders_public_id_shape",
+      "orders_order_public_id_check",
       sql`${table.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
     ),
     check(
-      "ck_orders_customer_public_id_shape",
+      "orders_customer_public_id_check",
       sql`${table.customerPublicId} ~ '^WS-[0-9]{10}$'`,
     ),
     check(
-      "ck_orders_order_type_domain",
+      "orders_order_type_check",
       sql`${table.orderType} IN ('ride','delivery')`,
     ),
     check(
-      "ck_orders_vehicle_class_domain",
+      "orders_vehicle_class_check",
       sql`${table.vehicleClass} IN ('sedan','suv','van','pickup','motorcycle','truck_small')`,
     ),
     check(
-      "ck_orders_status_domain",
+      "orders_status_check",
       sql`${table.status} IN ('published','searching','offered','negotiating','accepted','assigned','driver_en_route','arrived','in_progress','completed','driver_rejected','driver_timeout','expired','no_driver_found','customer_cancelled','driver_cancelled','partner_cancelled','blocked','failed','payment_disputed','under_review')`,
     ),
     check(
-      "ck_orders_price_mode_domain",
+      "orders_status_reason_code_check",
+      sql`${table.statusReasonCode} IS NULL OR char_length(${table.statusReasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "orders_price_mode_check",
       sql`${table.priceMode} IN ('customer_offer','negotiable')`,
     ),
+    check(
+      "orders_offered_amount_minor_check",
+      sql`${table.offeredAmountMinor} IS NULL OR ${table.offeredAmountMinor} > 0`,
+    ),
+    check(
+      "orders_offered_currency_check",
+      sql`${table.offeredCurrency} IS NULL OR ${table.offeredCurrency} ~ '^[A-Z]{3}$'`,
+    ),
+    check(
+      "orders_agreed_amount_minor_check",
+      sql`${table.agreedAmountMinor} IS NULL OR ${table.agreedAmountMinor} > 0`,
+    ),
+    check(
+      "orders_agreed_currency_check",
+      sql`${table.agreedCurrency} IS NULL OR ${table.agreedCurrency} ~ '^[A-Z]{3}$'`,
+    ),
+    check(
+      "orders_shipment_description_check",
+      sql`${table.shipmentDescription} IS NULL OR char_length(${table.shipmentDescription}) <= 300`,
+    ),
+    check(
+      "orders_shipment_type_check",
+      sql`${table.shipmentType} IS NULL OR ${table.shipmentType} IN ('parcel','documents','food','goods','other')`,
+    ),
+    check(
+      "orders_shipment_weight_kg_check",
+      sql`${table.shipmentWeightKg} IS NULL OR (${table.shipmentWeightKg} >= 0 AND ${table.shipmentWeightKg} <= 3000)`,
+    ),
+    check(
+      "orders_notes_check",
+      sql`${table.notes} IS NULL OR char_length(${table.notes}) <= 300`,
+    ),
+    check(
+      "orders_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "orders_payload_fingerprint_check",
+      sql`char_length(${table.payloadFingerprint}) = 64`,
+    ),
+    // ── قيودُ CHECK الجدوليّةُ (متطابقةٌ بالاسمِ مع العقدِ) ──
     check(
       "ck_orders_price_mode_amount",
       sql`(${table.priceMode} = 'customer_offer' AND ${table.offeredAmountMinor} IS NOT NULL AND ${table.offeredCurrency} IS NOT NULL) OR (${table.priceMode} = 'negotiable' AND ${table.offeredAmountMinor} IS NULL AND ${table.offeredCurrency} IS NULL)`,
@@ -137,20 +184,26 @@ export const orders = pgTable(
       sql`${table.orderType} = 'delivery' OR (${table.shipmentDescription} IS NULL AND ${table.shipmentType} IS NULL AND ${table.shipmentWeightKg} IS NULL)`,
     ),
     check(
+      "ck_orders_terminal_needs_reason",
+      sql`${table.status} NOT IN ('expired','no_driver_found','customer_cancelled','driver_cancelled','partner_cancelled','blocked','failed') OR ${table.statusReasonCode} IS NOT NULL`,
+    ),
+    check(
       "ck_orders_assignment_matches_status",
       sql`(${table.status} IN ('accepted','assigned','driver_en_route','arrived','in_progress','completed') AND ${table.activeAssignmentId} IS NOT NULL) OR (${table.status} IN ('published','searching','offered','negotiating') AND ${table.activeAssignmentId} IS NULL) OR ${table.status} IN ('driver_rejected','driver_timeout','expired','no_driver_found','customer_cancelled','driver_cancelled','partner_cancelled','blocked','failed','payment_disputed','under_review')`,
     ),
-    uniqueIndex("ux_orders_public_id").on(table.orderPublicId),
+    // ── قيودُ UNIQUE (لا فهارسُ فريدةٌ) — inline UNIQUE في العقدِ ──
+    unique("orders_order_public_id_key").on(table.orderPublicId),
+    unique("orders_order_request_id_key").on(table.orderRequestId),
+    // ── فهارسُ فريدةٌ (CREATE UNIQUE INDEX في العقدِ) ──
     uniqueIndex("ux_orders_idempotency_key").on(table.idempotencyKey),
-    uniqueIndex("ux_orders_request_id").on(table.orderRequestId),
     uniqueIndex("ux_orders_agreed_negotiation")
       .on(table.agreedNegotiationId)
       .where(sql`${table.agreedNegotiationId} IS NOT NULL`),
-    index("ix_orders_customer").on(table.customerPublicId, table.createdAt),
-    index("ix_orders_status").on(table.status, table.createdAt),
-    // fk_orders_active_assignment is added by the canonical DDL via ALTER TABLE
-    // (mutual dependency with order_assignments). Drizzle mirrors the same
-    // ordering: the FK is enforced at the SQL level, not in this projection.
+    // ── فهارسُ عاديّةٌ (DESC بلا NULLS LAST — raw SQL يطابقُ العقدَ) ──
+    index("ix_orders_customer").on(table.customerPublicId, sql`${table.createdAt} DESC`),
+    index("ix_orders_status").on(table.status, sql`${table.createdAt} DESC`),
+    // fk_orders_active_assignment يُضافُ في قسمِ الإلحاقِ المُراجَعِ (ALTER TABLE)
+    // كمرجعٍ متبادلٍ مع order_assignments — مطابقاً للعقدِ (خارجَ نطاقِ التوليدِ الآليِّ).
   ],
 );
 
@@ -175,21 +228,34 @@ export const orderStops = pgTable(
       .default(sql`now()`),
   },
   (table) => [
-    check("ck_order_stops_sequence_positive", sql`${table.sequence} >= 0`),
+    check("order_stops_sequence_check", sql`${table.sequence} >= 0`),
     check(
-      "ck_order_stops_kind_domain",
+      "order_stops_kind_check",
       sql`${table.kind} IN ('pickup','dropoff')`,
     ),
     check(
-      "ck_order_stops_source_domain",
+      "order_stops_label_check",
+      sql`${table.label} IS NULL OR char_length(${table.label}) <= 60`,
+    ),
+    check(
+      "order_stops_source_check",
       sql`${table.source} IN ('map','telegram_location','link','text_search','saved_place','manual_zone')`,
+    ),
+    check(
+      "order_stops_latitude_check",
+      sql`${table.latitude} IS NULL OR ${table.latitude} BETWEEN -90 AND 90`,
+    ),
+    check(
+      "order_stops_longitude_check",
+      sql`${table.longitude} IS NULL OR ${table.longitude} BETWEEN -180 AND 180`,
     ),
     check(
       "ck_order_stops_coordinates_complete",
       sql`(${table.latitude} IS NULL) = (${table.longitude} IS NULL)`,
     ),
-    uniqueIndex("ux_order_stops_order_sequence").on(table.orderId, table.sequence),
+    unique("ux_order_stops_order_sequence").on(table.orderId, table.sequence),
     foreignKey({
+      name: "order_stops_order_id_fkey",
       columns: [table.orderId],
       foreignColumns: [orders.id],
     }).onDelete("cascade"),
@@ -219,10 +285,22 @@ export const orderStatusHistory = pgTable(
       .default(sql`now()`),
   },
   (table) => [
-    check("ck_order_status_history_sequence_positive", sql`${table.sequence} >= 1`),
+    check("order_status_history_sequence_check", sql`${table.sequence} >= 1`),
     check(
-      "ck_order_status_history_actor_type_domain",
+      "order_status_history_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR char_length(${table.reasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "order_status_history_actor_type_check",
       sql`${table.actorType} IN ('system','customer','driver','partner','admin')`,
+    ),
+    check(
+      "order_status_history_actor_ref_check",
+      sql`${table.actorRef} IS NULL OR ${table.actorRef} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "order_status_history_trace_id_check",
+      sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     check(
       "ck_order_status_history_progresses",
@@ -232,11 +310,12 @@ export const orderStatusHistory = pgTable(
       "ck_order_status_history_actor_ref",
       sql`(${table.actorType} = 'system' AND ${table.actorRef} IS NULL) OR (${table.actorType} <> 'system' AND ${table.actorRef} IS NOT NULL)`,
     ),
-    uniqueIndex("ux_order_status_history_order_sequence").on(
+    unique("ux_order_status_history_order_sequence").on(
       table.orderId,
       table.sequence,
     ),
     foreignKey({
+      name: "order_status_history_order_id_fkey",
       columns: [table.orderId],
       foreignColumns: [orders.id],
     }).onDelete("cascade"),
@@ -273,32 +352,37 @@ export const orderAssignments = pgTable(
   },
   (table) => [
     check(
-      "ck_order_assignments_driver_public_id_shape",
+      "order_assignments_driver_public_id_check",
       sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
     ),
-    check("ck_order_assignments_sequence_positive", sql`${table.sequence} >= 1`),
+    check("order_assignments_sequence_check", sql`${table.sequence} >= 1`),
     check(
-      "ck_order_assignments_state_domain",
+      "order_assignments_assignment_state_check",
       sql`${table.assignmentState} IN ('offered','accepted','rejected','expired','cancelled')`,
+    ),
+    check(
+      "order_assignments_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR char_length(${table.reasonCode}) BETWEEN 3 AND 64`,
     ),
     check(
       "ck_order_assignments_state_timestamp",
       sql`(${table.assignmentState} = 'offered' AND ${table.acceptedAt} IS NULL AND ${table.rejectedAt} IS NULL AND ${table.expiredAt} IS NULL AND ${table.cancelledAt} IS NULL) OR (${table.assignmentState} = 'accepted' AND ${table.acceptedAt} IS NOT NULL) OR (${table.assignmentState} = 'rejected' AND ${table.rejectedAt} IS NOT NULL) OR (${table.assignmentState} = 'expired' AND ${table.expiredAt} IS NOT NULL) OR (${table.assignmentState} = 'cancelled' AND ${table.cancelledAt} IS NOT NULL)`,
     ),
-    uniqueIndex("ux_order_assignments_order_sequence").on(
+    unique("ux_order_assignments_order_sequence").on(
       table.orderId,
       table.sequence,
     ),
-    uniqueIndex("ux_order_assignments_order_driver").on(
+    unique("ux_order_assignments_order_driver").on(
       table.orderId,
       table.driverPublicId,
     ),
     foreignKey({
+      name: "order_assignments_order_id_fkey",
       columns: [table.orderId],
       foreignColumns: [orders.id],
     }).onDelete("cascade"),
     index("ix_order_assignments_order").on(table.orderId, table.sequence),
-    index("ix_order_assignments_driver").on(table.driverPublicId, table.offeredAt),
+    index("ix_order_assignments_driver").on(table.driverPublicId, sql`${table.offeredAt} DESC`),
   ],
 );
 
@@ -323,8 +407,16 @@ export const orderOutbox = pgTable(
   },
   (table) => [
     check(
-      "ck_order_outbox_aggregate_type_domain",
+      "order_outbox_event_version_check",
+      sql`${table.eventVersion} ~ '^v[0-9]+$'`,
+    ),
+    check(
+      "order_outbox_aggregate_type_check",
       sql`${table.aggregateType} IN ('order','order_assignment')`,
+    ),
+    check(
+      "order_outbox_trace_id_check",
+      sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_order_outbox_unpublished")
       .on(table.occurredAt)

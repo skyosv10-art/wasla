@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T12:25:13Z",
+  "generated_at": "2026-09-07T13:14:58Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2d92450f21beeab656297730d3a79d71e423d4e8",
-    "branch": "feat/m0-23-migrations-phase2a",
+    "commit": "0e57807bd2e2e879209cebf99290b482ca51ffb7",
+    "branch": "feat/m0-23-orders-migrations",
     "dirty": true,
-    "dirty_files": 12,
-    "dirty_reason": "إلحاقُ خدمتَيْ identity وgeography بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2a): توقيعُFK/UNIQUE/partial-index/DESC في schema.ts، وتوليدُ الترحيلِ، وإلحاقُ الدالةِّ والمُطلِقاتِ، ورفاقُ الترجعِ، واختبارُ الدورةِ الكاملةِ، وإزالةُ استثناءِ .gitignore لـidentity/drizzle (نموٌّ 270→272 ملفَّ اختبارٍ)",
-    "tracked_files": 1435
+    "dirty_files": 6,
+    "dirty_reason": "إلحاقُ خدمةِ orders بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2b-1): مصالحةُ schema.ts إلى العقدِ (إعادةُ تسميةِ 11 قيدَ CHECK إلى أسماءِ PG الافتراضيّةِ + 17 قيدَ CHECK مفقودٍ + تحويلُ uniqueIndex إلى قيودِ UNIQUE + أسماءُ FK + DESC raw SQL)، وتوليدُ الترحيلِ، وإلحاقُ الدالةِّ والمُطلِقَينِ وfk_orders_active_assignment، ورفيقُ الترجعِ، واختبارُ الدورةِ (0 فروقٍ · 35/35 تكامليّاً · 646/646 وحدويّاً · نموٌّ 272→273 ملفَّ اختبارٍ)",
+    "tracked_files": 1446
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 272,
+    "test_files_tracked": 273,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
+    "source": "/tmp/verify3.log",
     "tests_passed": 3836,
     "test_files_executed": 228,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:589d443695975247c8d60b29e4be25a20896dca521e6281c1d045332e565ba07",
+  "fingerprint": "sha256:8b6121655a0b1f27433b22cccb7c0a4590c4048db9ec1015f9da2e24c25ba673",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

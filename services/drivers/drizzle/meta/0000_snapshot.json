@@ -1,0 +1,1269 @@
+{
+  "id": "5bc31363-781e-435c-a006-02b131480143",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.driver_candidacy_publications": {
+      "name": "driver_candidacy_publications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eligibility_state": {
+          "name": "eligibility_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "availability_state": {
+          "name": "availability_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_kinds": {
+          "name": "service_kinds",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "zone_ids": {
+          "name": "zone_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "vehicle_class": {
+          "name": "vehicle_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "failure_code": {
+          "name": "failure_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempted_at": {
+          "name": "attempted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_driver_candidacy_publications_driver": {
+          "name": "ix_driver_candidacy_publications_driver",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"attempted_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_candidacy_publications_failed": {
+          "name": "ix_driver_candidacy_publications_failed",
+          "columns": [
+            {
+              "expression": "\"attempted_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_candidacy_publications\".\"outcome\" <> 'published'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "driver_candidacy_publications_wasla_public_id_fkey": {
+          "name": "driver_candidacy_publications_wasla_public_id_fkey",
+          "tableFrom": "driver_candidacy_publications",
+          "tableTo": "driver_profiles",
+          "columnsFrom": [
+            "wasla_public_id"
+          ],
+          "columnsTo": [
+            "wasla_public_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_candidacy_publications_eligibility_state_check": {
+          "name": "driver_candidacy_publications_eligibility_state_check",
+          "value": "\"driver_candidacy_publications\".\"eligibility_state\" IN ('eligible','ineligible','suspended','unknown')"
+        },
+        "driver_candidacy_publications_availability_state_check": {
+          "name": "driver_candidacy_publications_availability_state_check",
+          "value": "\"driver_candidacy_publications\".\"availability_state\" IN ('available','busy','offline')"
+        },
+        "driver_candidacy_publications_vehicle_class_check": {
+          "name": "driver_candidacy_publications_vehicle_class_check",
+          "value": "\"driver_candidacy_publications\".\"vehicle_class\" IS NULL OR \"driver_candidacy_publications\".\"vehicle_class\" IN ('sedan','suv','van','pickup','motorcycle','truck_small')"
+        },
+        "driver_candidacy_publications_outcome_check": {
+          "name": "driver_candidacy_publications_outcome_check",
+          "value": "\"driver_candidacy_publications\".\"outcome\" IN ('published','rejected','unavailable')"
+        },
+        "driver_candidacy_publications_failure_code_check": {
+          "name": "driver_candidacy_publications_failure_code_check",
+          "value": "\"driver_candidacy_publications\".\"failure_code\" IS NULL OR char_length(\"driver_candidacy_publications\".\"failure_code\") BETWEEN 3 AND 64"
+        },
+        "ck_candidacy_publication_outcome": {
+          "name": "ck_candidacy_publication_outcome",
+          "value": "(\"driver_candidacy_publications\".\"outcome\" = 'published' AND \"driver_candidacy_publications\".\"failure_code\" IS NULL) OR (\"driver_candidacy_publications\".\"outcome\" <> 'published' AND \"driver_candidacy_publications\".\"failure_code\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_documents": {
+      "name": "driver_documents",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_type": {
+          "name": "document_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage_ref": {
+          "name": "storage_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicle_id": {
+          "name": "vehicle_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_by": {
+          "name": "reviewed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejection_reason_code": {
+          "name": "rejection_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ux_driver_documents_one_live_per_type": {
+          "name": "ux_driver_documents_one_live_per_type",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "document_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "COALESCE(\"vehicle_id\", '00000000-0000-0000-0000-000000000000'::uuid)",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"driver_documents\".\"status\" IN ('pending','verified')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ux_driver_documents_idempotency": {
+          "name": "ux_driver_documents_idempotency",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_documents_owner": {
+          "name": "ix_driver_documents_owner",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_documents_expiry": {
+          "name": "ix_driver_documents_expiry",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_documents\".\"status\" = 'verified' AND \"driver_documents\".\"expires_at\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "driver_documents_wasla_public_id_fkey": {
+          "name": "driver_documents_wasla_public_id_fkey",
+          "tableFrom": "driver_documents",
+          "tableTo": "driver_profiles",
+          "columnsFrom": [
+            "wasla_public_id"
+          ],
+          "columnsTo": [
+            "wasla_public_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "driver_documents_vehicle_id_fkey": {
+          "name": "driver_documents_vehicle_id_fkey",
+          "tableFrom": "driver_documents",
+          "tableTo": "driver_vehicles",
+          "columnsFrom": [
+            "vehicle_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_documents_document_type_check": {
+          "name": "driver_documents_document_type_check",
+          "value": "\"driver_documents\".\"document_type\" IN ('national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo')"
+        },
+        "driver_documents_storage_ref_check": {
+          "name": "driver_documents_storage_ref_check",
+          "value": "char_length(\"driver_documents\".\"storage_ref\") BETWEEN 8 AND 200"
+        },
+        "driver_documents_status_check": {
+          "name": "driver_documents_status_check",
+          "value": "\"driver_documents\".\"status\" IN ('pending','verified','rejected','superseded')"
+        },
+        "driver_documents_reviewed_by_check": {
+          "name": "driver_documents_reviewed_by_check",
+          "value": "\"driver_documents\".\"reviewed_by\" IS NULL OR char_length(\"driver_documents\".\"reviewed_by\") BETWEEN 2 AND 64"
+        },
+        "driver_documents_rejection_reason_code_check": {
+          "name": "driver_documents_rejection_reason_code_check",
+          "value": "\"driver_documents\".\"rejection_reason_code\" IS NULL OR char_length(\"driver_documents\".\"rejection_reason_code\") BETWEEN 3 AND 64"
+        },
+        "driver_documents_idempotency_key_check": {
+          "name": "driver_documents_idempotency_key_check",
+          "value": "char_length(\"driver_documents\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "ck_driver_documents_review_coherence": {
+          "name": "ck_driver_documents_review_coherence",
+          "value": "(\"driver_documents\".\"status\" = 'pending' AND \"driver_documents\".\"reviewed_at\" IS NULL AND \"driver_documents\".\"reviewed_by\" IS NULL AND \"driver_documents\".\"rejection_reason_code\" IS NULL) OR (\"driver_documents\".\"status\" = 'verified' AND \"driver_documents\".\"reviewed_at\" IS NOT NULL AND \"driver_documents\".\"reviewed_by\" IS NOT NULL AND \"driver_documents\".\"rejection_reason_code\" IS NULL) OR (\"driver_documents\".\"status\" = 'rejected' AND \"driver_documents\".\"reviewed_at\" IS NOT NULL AND \"driver_documents\".\"reviewed_by\" IS NOT NULL AND \"driver_documents\".\"rejection_reason_code\" IS NOT NULL) OR (\"driver_documents\".\"status\" = 'superseded')"
+        },
+        "ck_driver_documents_dates": {
+          "name": "ck_driver_documents_dates",
+          "value": "\"driver_documents\".\"issued_at\" IS NULL OR \"driver_documents\".\"expires_at\" IS NULL OR \"driver_documents\".\"expires_at\" > \"driver_documents\".\"issued_at\""
+        },
+        "ck_driver_documents_vehicle_scope": {
+          "name": "ck_driver_documents_vehicle_scope",
+          "value": "(\"driver_documents\".\"document_type\" IN ('vehicle_registration','vehicle_insurance','vehicle_photo') AND \"driver_documents\".\"vehicle_id\" IS NOT NULL) OR (\"driver_documents\".\"document_type\" IN ('national_id','driving_license') AND \"driver_documents\".\"vehicle_id\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_eligibility_log": {
+      "name": "driver_eligibility_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_state": {
+          "name": "from_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_state": {
+          "name": "to_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reasons": {
+          "name": "reasons",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trigger": {
+          "name": "trigger",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluated_at": {
+          "name": "evaluated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_driver_eligibility_log_driver": {
+          "name": "ix_driver_eligibility_log_driver",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"evaluated_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "driver_eligibility_log_wasla_public_id_fkey": {
+          "name": "driver_eligibility_log_wasla_public_id_fkey",
+          "tableFrom": "driver_eligibility_log",
+          "tableTo": "driver_profiles",
+          "columnsFrom": [
+            "wasla_public_id"
+          ],
+          "columnsTo": [
+            "wasla_public_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_eligibility_log_from_state_check": {
+          "name": "driver_eligibility_log_from_state_check",
+          "value": "\"driver_eligibility_log\".\"from_state\" IS NULL OR \"driver_eligibility_log\".\"from_state\" IN ('eligible','ineligible','suspended','unknown')"
+        },
+        "driver_eligibility_log_to_state_check": {
+          "name": "driver_eligibility_log_to_state_check",
+          "value": "\"driver_eligibility_log\".\"to_state\" IN ('eligible','ineligible','suspended','unknown')"
+        },
+        "driver_eligibility_log_policy_version_check": {
+          "name": "driver_eligibility_log_policy_version_check",
+          "value": "\"driver_eligibility_log\".\"policy_version\" >= 1"
+        },
+        "driver_eligibility_log_trigger_check": {
+          "name": "driver_eligibility_log_trigger_check",
+          "value": "\"driver_eligibility_log\".\"trigger\" IN ('profile_changed','document_reviewed','document_submitted','vehicle_changed','zones_changed','availability_declared','suspended','reinstated','expiry_tick','recompute')"
+        },
+        "ck_eligibility_log_reasons": {
+          "name": "ck_eligibility_log_reasons",
+          "value": "\"driver_eligibility_log\".\"to_state\" = 'eligible' OR cardinality(\"driver_eligibility_log\".\"reasons\") >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_eligibility_policies": {
+      "name": "driver_eligibility_policies",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "required_documents_ride": {
+          "name": "required_documents_ride",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "ARRAY['national_id','driving_license','vehicle_registration']::TEXT[]"
+        },
+        "required_documents_delivery": {
+          "name": "required_documents_delivery",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "ARRAY['national_id','driving_license','vehicle_registration']::TEXT[]"
+        },
+        "require_primary_vehicle": {
+          "name": "require_primary_vehicle",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "require_service_zone": {
+          "name": "require_service_zone",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "document_grace_days": {
+          "name": "document_grace_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_eligibility_policies_version_check": {
+          "name": "driver_eligibility_policies_version_check",
+          "value": "\"driver_eligibility_policies\".\"version\" >= 1"
+        },
+        "driver_eligibility_policies_label_check": {
+          "name": "driver_eligibility_policies_label_check",
+          "value": "char_length(\"driver_eligibility_policies\".\"label\") BETWEEN 3 AND 64"
+        },
+        "driver_eligibility_policies_document_grace_days_check": {
+          "name": "driver_eligibility_policies_document_grace_days_check",
+          "value": "\"driver_eligibility_policies\".\"document_grace_days\" BETWEEN 0 AND 60"
+        },
+        "ck_policy_required_documents_known": {
+          "name": "ck_policy_required_documents_known",
+          "value": "\"driver_eligibility_policies\".\"required_documents_ride\" <@ ARRAY['national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo']::TEXT[] AND \"driver_eligibility_policies\".\"required_documents_delivery\" <@ ARRAY['national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo']::TEXT[]"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_idempotency": {
+      "name": "driver_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_idempotency_idempotency_key_check": {
+          "name": "driver_idempotency_idempotency_key_check",
+          "value": "char_length(\"driver_idempotency\".\"idempotency_key\") BETWEEN 8 AND 192"
+        },
+        "driver_idempotency_payload_fingerprint_check": {
+          "name": "driver_idempotency_payload_fingerprint_check",
+          "value": "char_length(\"driver_idempotency\".\"payload_fingerprint\") BETWEEN 1 AND 4096"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_outbox": {
+      "name": "driver_outbox",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_version": {
+          "name": "event_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_driver_outbox_unpublished": {
+          "name": "ix_driver_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "driver_outbox_event_id_key": {
+          "name": "driver_outbox_event_id_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "driver_outbox_aggregate_type_check": {
+          "name": "driver_outbox_aggregate_type_check",
+          "value": "\"driver_outbox\".\"aggregate_type\" IN ('driver','driver_document','driver_vehicle')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_profiles": {
+      "name": "driver_profiles",
+      "schema": "",
+      "columns": {
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preferred_locale": {
+          "name": "preferred_locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ar'"
+        },
+        "work_city_zone_id": {
+          "name": "work_city_zone_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_kinds": {
+          "name": "service_kinds",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "declared_availability": {
+          "name": "declared_availability",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offline'"
+        },
+        "verification_status": {
+          "name": "verification_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unverified'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "suspension_reason_code": {
+          "name": "suspension_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eligibility_policy_version": {
+          "name": "eligibility_policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "eligibility_recheck_at": {
+          "name": "eligibility_recheck_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_published_state": {
+          "name": "last_published_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_published_at": {
+          "name": "last_published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_driver_profiles_recheck": {
+          "name": "ix_driver_profiles_recheck",
+          "columns": [
+            {
+              "expression": "eligibility_recheck_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_profiles\".\"eligibility_recheck_at\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_profiles_work_city": {
+          "name": "ix_driver_profiles_work_city",
+          "columns": [
+            {
+              "expression": "work_city_zone_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_profiles\".\"work_city_zone_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_profiles_wasla_public_id_check": {
+          "name": "driver_profiles_wasla_public_id_check",
+          "value": "\"driver_profiles\".\"wasla_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "driver_profiles_display_name_check": {
+          "name": "driver_profiles_display_name_check",
+          "value": "\"driver_profiles\".\"display_name\" IS NULL OR char_length(\"driver_profiles\".\"display_name\") BETWEEN 1 AND 80"
+        },
+        "driver_profiles_preferred_locale_check": {
+          "name": "driver_profiles_preferred_locale_check",
+          "value": "\"driver_profiles\".\"preferred_locale\" IN ('ar','en','ur')"
+        },
+        "driver_profiles_service_kinds_check": {
+          "name": "driver_profiles_service_kinds_check",
+          "value": "array_length(\"driver_profiles\".\"service_kinds\", 1) IS NULL OR \"driver_profiles\".\"service_kinds\" <@ ARRAY['ride','delivery']::TEXT[]"
+        },
+        "driver_profiles_declared_availability_check": {
+          "name": "driver_profiles_declared_availability_check",
+          "value": "\"driver_profiles\".\"declared_availability\" IN ('available','offline')"
+        },
+        "driver_profiles_verification_status_check": {
+          "name": "driver_profiles_verification_status_check",
+          "value": "\"driver_profiles\".\"verification_status\" IN ('unverified','pending_review','verified','rejected')"
+        },
+        "driver_profiles_status_check": {
+          "name": "driver_profiles_status_check",
+          "value": "\"driver_profiles\".\"status\" IN ('active','suspended')"
+        },
+        "driver_profiles_suspension_reason_code_check": {
+          "name": "driver_profiles_suspension_reason_code_check",
+          "value": "\"driver_profiles\".\"suspension_reason_code\" IS NULL OR char_length(\"driver_profiles\".\"suspension_reason_code\") BETWEEN 3 AND 64"
+        },
+        "driver_profiles_eligibility_policy_version_check": {
+          "name": "driver_profiles_eligibility_policy_version_check",
+          "value": "\"driver_profiles\".\"eligibility_policy_version\" >= 1"
+        },
+        "driver_profiles_last_published_state_check": {
+          "name": "driver_profiles_last_published_state_check",
+          "value": "\"driver_profiles\".\"last_published_state\" IS NULL OR \"driver_profiles\".\"last_published_state\" IN ('eligible','ineligible','suspended','unknown')"
+        },
+        "ck_driver_profiles_suspension_reason": {
+          "name": "ck_driver_profiles_suspension_reason",
+          "value": "(\"driver_profiles\".\"status\" = 'suspended' AND \"driver_profiles\".\"suspension_reason_code\" IS NOT NULL) OR (\"driver_profiles\".\"status\" = 'active' AND \"driver_profiles\".\"suspension_reason_code\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_service_zones": {
+      "name": "driver_service_zones",
+      "schema": "",
+      "columns": {
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zone_id": {
+          "name": "zone_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preference_rank": {
+          "name": "preference_rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ux_driver_service_zones_rank": {
+          "name": "ux_driver_service_zones_rank",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "preference_rank",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_service_zones_zone": {
+          "name": "ix_driver_service_zones_zone",
+          "columns": [
+            {
+              "expression": "zone_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "driver_service_zones_wasla_public_id_fkey": {
+          "name": "driver_service_zones_wasla_public_id_fkey",
+          "tableFrom": "driver_service_zones",
+          "tableTo": "driver_profiles",
+          "columnsFrom": [
+            "wasla_public_id"
+          ],
+          "columnsTo": [
+            "wasla_public_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "driver_service_zones_pkey": {
+          "name": "driver_service_zones_pkey",
+          "columns": [
+            "wasla_public_id",
+            "zone_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_service_zones_preference_rank_check": {
+          "name": "driver_service_zones_preference_rank_check",
+          "value": "\"driver_service_zones\".\"preference_rank\" BETWEEN 1 AND 50"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.driver_vehicles": {
+      "name": "driver_vehicles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "wasla_public_id": {
+          "name": "wasla_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicle_class": {
+          "name": "vehicle_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "make": {
+          "name": "make",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model_year": {
+          "name": "model_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plate_number": {
+          "name": "plate_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ux_driver_vehicles_one_primary": {
+          "name": "ux_driver_vehicles_one_primary",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"driver_vehicles\".\"is_primary\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ux_driver_vehicles_idempotency": {
+          "name": "ux_driver_vehicles_idempotency",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_driver_vehicles_owner": {
+          "name": "ix_driver_vehicles_owner",
+          "columns": [
+            {
+              "expression": "wasla_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "driver_vehicles_wasla_public_id_fkey": {
+          "name": "driver_vehicles_wasla_public_id_fkey",
+          "tableFrom": "driver_vehicles",
+          "tableTo": "driver_profiles",
+          "columnsFrom": [
+            "wasla_public_id"
+          ],
+          "columnsTo": [
+            "wasla_public_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_vehicles_vehicle_class_check": {
+          "name": "driver_vehicles_vehicle_class_check",
+          "value": "\"driver_vehicles\".\"vehicle_class\" IN ('sedan','suv','van','pickup','motorcycle','truck_small')"
+        },
+        "driver_vehicles_make_check": {
+          "name": "driver_vehicles_make_check",
+          "value": "\"driver_vehicles\".\"make\" IS NULL OR char_length(\"driver_vehicles\".\"make\") BETWEEN 1 AND 40"
+        },
+        "driver_vehicles_model_check": {
+          "name": "driver_vehicles_model_check",
+          "value": "\"driver_vehicles\".\"model\" IS NULL OR char_length(\"driver_vehicles\".\"model\") BETWEEN 1 AND 40"
+        },
+        "driver_vehicles_model_year_check": {
+          "name": "driver_vehicles_model_year_check",
+          "value": "\"driver_vehicles\".\"model_year\" IS NULL OR \"driver_vehicles\".\"model_year\" BETWEEN 1970 AND 2100"
+        },
+        "driver_vehicles_color_check": {
+          "name": "driver_vehicles_color_check",
+          "value": "\"driver_vehicles\".\"color\" IS NULL OR char_length(\"driver_vehicles\".\"color\") BETWEEN 1 AND 24"
+        },
+        "driver_vehicles_plate_number_check": {
+          "name": "driver_vehicles_plate_number_check",
+          "value": "\"driver_vehicles\".\"plate_number\" IS NULL OR char_length(\"driver_vehicles\".\"plate_number\") BETWEEN 3 AND 16"
+        },
+        "driver_vehicles_status_check": {
+          "name": "driver_vehicles_status_check",
+          "value": "\"driver_vehicles\".\"status\" IN ('active','retired')"
+        },
+        "driver_vehicles_idempotency_key_check": {
+          "name": "driver_vehicles_idempotency_key_check",
+          "value": "char_length(\"driver_vehicles\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "ck_driver_vehicles_retired_not_primary": {
+          "name": "ck_driver_vehicles_retired_not_primary",
+          "value": "\"driver_vehicles\".\"status\" = 'active' OR \"driver_vehicles\".\"is_primary\" = false"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

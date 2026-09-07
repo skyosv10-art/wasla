@@ -68,6 +68,12 @@ export const customerProfiles = pgTable(
       "customer_profiles_status_check",
       sql`${table.status} IN ('active','suspended')`,
     ),
+    // ── إلحاقُ موجةِ M0-23 (ADR-024): فحوصٌ كان العقدُ يفرضُها والإسقاطُ يُغفِلُها
+    // ── فكان الإسقاطُ أرخى من العقدِ (انحدارٌ صامتٌ مُقاسٌ لا مُتخيَّلٌ).
+    check(
+      "customer_profiles_display_name_check",
+      sql`${table.displayName} IS NULL OR char_length(${table.displayName}) BETWEEN 1 AND 80`,
+    ),
   ],
 );
 
@@ -98,6 +104,27 @@ export const customerSavedPlaces = pgTable(
     check(
       "customer_saved_places_wasla_public_id_check",
       sql`${table.waslaPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    // ── إلحاقُ موجةِ M0-23 (ADR-024): فحوصُ العقدِ الناقصةُ في الإسقاطِ.
+    check(
+      "customer_saved_places_label_check",
+      sql`char_length(${table.label}) BETWEEN 1 AND 60`,
+    ),
+    check(
+      "customer_saved_places_address_text_check",
+      sql`${table.addressText} IS NULL OR char_length(${table.addressText}) <= 160`,
+    ),
+    check(
+      "customer_saved_places_latitude_check",
+      sql`${table.latitude} IS NULL OR ${table.latitude} BETWEEN -90 AND 90`,
+    ),
+    check(
+      "customer_saved_places_longitude_check",
+      sql`${table.longitude} IS NULL OR ${table.longitude} BETWEEN -180 AND 180`,
+    ),
+    check(
+      "customer_saved_places_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
     ),
     // Half a coordinate is worse than none: it would place a stop on the equator.
     check(
@@ -158,6 +185,35 @@ export const customerOrderRequests = pgTable(
     check(
       "customer_order_requests_wasla_public_id_check",
       sql`${table.waslaPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    // ── إلحاقُ موجةِ M0-23 (ADR-024): فحوصُ العقدِ الناقصةُ في الإسقاطِ.
+    check(
+      "customer_order_requests_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "customer_order_requests_offered_amount_minor_check",
+      sql`${table.offeredAmountMinor} IS NULL OR ${table.offeredAmountMinor} > 0`,
+    ),
+    check(
+      "customer_order_requests_currency_check",
+      sql`${table.currency} IS NULL OR ${table.currency} ~ '^[A-Z]{3}$'`,
+    ),
+    check(
+      "customer_order_requests_shipment_type_check",
+      sql`${table.shipmentType} IS NULL OR ${table.shipmentType} IN ('parcel','documents','food','goods','other')`,
+    ),
+    check(
+      "customer_order_requests_shipment_description_check",
+      sql`${table.shipmentDescription} IS NULL OR char_length(${table.shipmentDescription}) <= 300`,
+    ),
+    check(
+      "customer_order_requests_weight_kg_check",
+      sql`${table.weightKg} IS NULL OR (${table.weightKg} >= 0 AND ${table.weightKg} <= 3000)`,
+    ),
+    check(
+      "customer_order_requests_notes_check",
+      sql`${table.notes} IS NULL OR char_length(${table.notes}) <= 500`,
     ),
     check(
       "customer_order_requests_status_check",
@@ -234,12 +290,31 @@ export const customerOrderRequestStops = pgTable(
       "customer_order_request_stops_source_check",
       sql`${table.source} IN ('map','telegram_location','link','text_search','saved_place','manual_zone')`,
     ),
+    // ── إلحاقُ موجةِ M0-23 (ADR-024): فحوصُ العقدِ الناقصةُ في الإسقاطِ.
+    check(
+      "customer_order_request_stops_label_check",
+      sql`${table.label} IS NULL OR char_length(${table.label}) <= 160`,
+    ),
+    check(
+      "customer_order_request_stops_latitude_check",
+      sql`${table.latitude} IS NULL OR ${table.latitude} BETWEEN -90 AND 90`,
+    ),
+    check(
+      "customer_order_request_stops_longitude_check",
+      sql`${table.longitude} IS NULL OR ${table.longitude} BETWEEN -180 AND 180`,
+    ),
     check(
       "ck_customer_order_request_stops_coordinates_complete",
       sql`(${table.latitude} IS NULL) = (${table.longitude} IS NULL)`,
     ),
-    primaryKey({ columns: [table.orderRequestId, table.sequence] }),
+    // ── M0-23 (ADR-024): الاسمُ الصريحُ يُطابِقُ ما يولِّدُهُ PostgreSQL للعقدِ
+    // ── (customer_order_request_stops_pkey) فلا ينحرفَ الترحيلُ عن العقدِ اسماً.
+    primaryKey({
+      name: "customer_order_request_stops_pkey",
+      columns: [table.orderRequestId, table.sequence],
+    }),
     foreignKey({
+      name: "customer_order_request_stops_order_request_id_fkey",
       columns: [table.orderRequestId],
       foreignColumns: [customerOrderRequests.id],
     }).onDelete("cascade"),
@@ -255,7 +330,9 @@ export const customerOutbox = pgTable(
   "customer_outbox",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    eventId: uuid("event_id").notNull().unique(),
+    // ── M0-23 (ADR-024): الاسمُ الصريحُ (customer_outbox_event_id_key) يُطابِقُ
+    // ── تسميةَ PostgreSQL للعقدِ لا الافتراضَ المولَّدَ («_unique»).
+    eventId: uuid("event_id").notNull().unique("customer_outbox_event_id_key"),
     eventType: text("event_type").notNull(),
     eventVersion: text("event_version").notNull(),
     aggregateType: text("aggregate_type").notNull(),

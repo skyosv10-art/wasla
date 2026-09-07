@@ -1839,6 +1839,76 @@ S_NOSVC="$(_sac_root nosvc)"
 sed -i 's|^enforced: matching$||' "$S_NOSVC/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
 t "سجلٌّ بلا حدٍّ مُعلَنٍ مفروضاً يُسقِط" fail _sac "$S_NOSVC"
 
+printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'
+# الحارسُ يقيسُ على **المنتظِمين** (مَن له journal) وحدَهم — فالتطبيقُ تدريجيٌّ
+# (ADR-024 §2.4) — وكلُّ حالةٍ هنا تُثبِتُ باباً بذاتِه: رفيقُ الترجعِ · اليتيمُ ·
+# الترجعُ المُزوَّرُ · إعلانُ عدمِ العكسيّةِ · وفحصُ الدفعةِ بمراجعَ git.
+MIG_SRC="$REPO_ROOT/scripts/checks/validate-migrations.sh"
+
+_mig_root() { # _mig_root <tag>
+  local R="/tmp/gov_mig_$1"
+  rm -rf "$R"
+  mkdir -p "$R/scripts/checks" "$R/services/svc-a/drizzle/meta" "$R/services/svc-b/src/db"
+  cp "$MIG_SRC" "$R/scripts/checks/"
+  printf '{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1,"tag":"0000_base"}]}\n' \
+    > "$R/services/svc-a/drizzle/meta/_journal.json"
+  printf 'CREATE TABLE t1 (id uuid PRIMARY KEY);\n' > "$R/services/svc-a/drizzle/0000_base.sql"
+  printf 'DROP TABLE IF EXISTS t1;\n' > "$R/services/svc-a/drizzle/0000_base.down.sql"
+  printf 'export const x = 1;\n' > "$R/services/svc-b/src/db/schema.ts"
+  printf '%s\n' "$R"
+}
+
+_mig() { bash "$1/scripts/checks/validate-migrations.sh"; }
+
+M_OK="$(_mig_root ok)"
+t "خدمةٌ منتظمةٌ: journal وترحيلٌ ورفيقُ ترجعٍ يمرّ" pass _mig "$M_OK"
+
+# البابُ 1: ترحيلٌ بلا رفيقِ ترجعٍ — العيبُ الذي أُنشئَ الحارسُ له
+M_NODOWN="$(_mig_root nodown)"; rm "$M_NODOWN/services/svc-a/drizzle/0000_base.down.sql"
+t "ترحيلٌ بلا رفيقِ ترجعٍ يُسقِط (ADR-024 §2.2)" fail _mig "$M_NODOWN"
+
+# ترحيلٌ في الـjournal بلا ملفٍّ أصلاً
+M_NOFILE="$(_mig_root nofile)"; rm "$M_NOFILE/services/svc-a/drizzle/0000_base.sql"
+t "tag في الـjournal بلا ملفٍّ يُسقِط" fail _mig "$M_NOFILE"
+
+# ملفٌّ يتيمٌ خارجَ الـjournal
+M_ORPHAN="$(_mig_root orphan)"; printf 'CREATE TABLE t2 (id int);\n' > "$M_ORPHAN/services/svc-a/drizzle/0001_orphan.sql"
+t "ملفُّ ترحيلٍ يتيمٌ خارجَ الـjournal يُسقِط" fail _mig "$M_ORPHAN"
+
+# البابُ 3: الترجعُ المُزوَّرُ — ملفٌّ من تعليقاتٍ خالصةٍ
+M_FAKE="$(_mig_root fake)"; printf -- '-- ترجعٌ مُزوَّرٌ\n-- لا عبارةَ فيه\n' > "$M_FAKE/services/svc-a/drizzle/0000_base.down.sql"
+t "رفيقُ ترجعٍ من تعليقاتٍ خالصةٍ (مُزوَّرٌ) يُسقِط" fail _mig "$M_FAKE"
+
+# journal بلا أيةِ ترحيلاتٍ
+M_EMPTY="$(_mig_root empty)"; printf '{"version":"7","dialect":"postgresql","entries":[]}\n' \
+  > "$M_EMPTY/services/svc-a/drizzle/meta/_journal.json"; rm "$M_EMPTY/services/svc-a/drizzle/0000_base.sql" "$M_EMPTY/services/svc-a/drizzle/0000_base.down.sql"
+t "journal فارغُ الترحيلاتِ يُسقِط" fail _mig "$M_EMPTY"
+
+# علامةُ عدمِ العكسيّةِ: إعلانٌ صريحٌ يُعفي من الرفيق — لا down مُزوَّراً
+M_IRREV="$(_mig_root irrev)"; rm "$M_IRREV/services/svc-a/drizzle/0000_base.down.sql"
+sed -i '1i -- غير عكوس: حذفُ عمودٍ بلا مصدرَ — بقرارِ مالكٍ مُسجَّلٍ في TASK_LOG' \
+  "$M_IRREV/services/svc-a/drizzle/0000_base.sql"
+t "علامةُ «غير عكوس» تُعفي من الرفيق وتُعلَن" pass _mig "$M_IRREV"
+
+# البابُ 2: فحصُ الدفعةِ — يحتاجُ git حقيقيّاً في اللقطةِ
+M_DIFF="$(_mig_root diff)"
+( cd "$M_DIFF" && git init -q -b main && git config user.email t@t.t && git config user.name t \
+  && git add -A && git commit -qm base )
+mkdir -p "$M_DIFF/services/svc-a/src/infrastructure/drizzle"
+printf 'export const schema = 2;\n' > "$M_DIFF/services/svc-a/src/infrastructure/drizzle/schema.ts"
+( cd "$M_DIFF" && git add -A && git commit -qm "schema change without migration" )
+t "تغييرُ مخطَّطٍ في منتظِمةٍ بلا ترحيلٍ جديدٍ (بمراجعَ git) يُسقِط" fail \
+  bash -c 'cd "$0" && bash scripts/checks/validate-migrations.sh HEAD~1 HEAD' "$M_DIFF"
+
+# وغيرُ المنتظِمةِ: إعلانٌ لا رفضٌ — الموجاتُ القادمةُ تعالجُها (§2.4)
+M_DIFF2="$(_mig_root diff2)"
+( cd "$M_DIFF2" && git init -q -b main && git config user.email t@t.t && git config user.name t \
+  && git add -A && git commit -qm base )
+printf 'export const schema2 = 2;\n' >> "$M_DIFF2/services/svc-b/src/db/schema.ts"
+( cd "$M_DIFF2" && git add -A && git commit -qm "unenrolled schema change" )
+t "تغييرُ مخططٍ في غيرِ منتظِمةٍ يمرّ (تدرُّجٌ معلنٌ لا رفضٌ)" pass \
+  bash -c 'cd "$0" && bash scripts/checks/validate-migrations.sh HEAD~1 HEAD' "$M_DIFF2"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

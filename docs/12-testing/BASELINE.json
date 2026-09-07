@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T16:35:29Z",
+  "generated_at": "2026-09-07T18:14:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "aba476ca0b08d94d79004146ad7444881ea54a63",
+    "commit": "b8174a38d8083cba8c1655daedfebdc39a2372e1",
     "branch": "feat/m0-23-dispatch-migrations",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "إلحاقُ خدمةِ dispatch بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 3): مصالحةُ schema.ts مع العقدِ حرفاً (أسماءُ قيودٍ كنسيّةٌ + 18 قيدَ CHECK عموديّاً مفقوداً) + توليدُ الترحيلِ 0000_foamy_johnny_blaze + اختبارُ الدورةِ الكاملةِ (3/3) + تحديثُ الأساسِ",
+    "dirty_files": 5,
+    "dirty_reason": "إكمالُ §8 (drizzle-kit إلى dispatch package.json/lockfile) + تحريرُ CLM-0103 البائت + إعادةُ توليدِ الأساسِ الملتزَمِ بقرارٍ مكتوبٍ (§8.1) — قيدَ الالتزام",
     "tracked_files": 1465
   },
   "env": {
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "67e7c59593fddd0e8c784a947620919adf828643a265733fa8174c7b937eb595",
-    "lines": 2963
+    "sha256": "4ad746e0ed4d8db584d647c4eff2a9ea33dded195bb167d057b383b56b55f198",
+    "lines": 2966
   },
   "static": {
     "packages": 43,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_dispatch4.log",
+    "source": "/tmp/fresh_verify.log",
     "tests_passed": 3816,
     "test_files_executed": 226,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:6bfb96f943c95bf29e6a4de43714b3f94c741e29253c7426b02d6037e593f545",
+  "fingerprint": "sha256:e34965da84e9b79e7010c01c4004f490dc95286f3c602695a19a08af4f5458ea",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

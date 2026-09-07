@@ -83,13 +83,13 @@ function ddlTableBody(tableName: string): string {
 }
 
 /**
- * يفصل تعريفاتِ الأعمدة متعدّدةَ الأسطر عن القيود متعدّدةِ الأسطر.
+ * يجمعُ تعريفاتِ الأعمدةِ كاملةً (متعدِّدةَ الأسطرِ) من جسمِ الجدولِ.
  *
  * كلُّ عمودٍ في العقد يبدأ بمسافةٍ ثمّ اسمٍ ونوعِ PostgreSQL؛ أمّا التعليقاتُ والقيودُ
  * فلا تُطابق هذه البداية. وجمعُ الأسطر التالية ضروريٌّ لأنّ `CHECK (... IN (...))` في
  * هذا العقد يُكتب على أسطرٍ ثلاثة.
  */
-function ddlColumns(tableName: string): ColumnShape[] {
+function ddlColumnDefinitions(tableName: string): string[] {
   const definitions: string[] = [];
   let current: string[] | null = null;
 
@@ -108,6 +108,12 @@ function ddlColumns(tableName: string): ColumnShape[] {
     if (current !== null && !line.startsWith("--")) current.push(line);
   }
   if (current !== null) definitions.push(current.join(" "));
+
+  return definitions;
+}
+
+function ddlColumns(tableName: string): ColumnShape[] {
+  const definitions = ddlColumnDefinitions(tableName);
 
   return definitions.map((definition) => {
     const match = new RegExp(
@@ -172,7 +178,16 @@ function drizzleNames(table: AnyTable): string[] {
     .sort();
 }
 
-/** القيودُ والفهارسُ المُسمّاةُ في العقد لهذا الجدول، داخلَه أو في `CREATE INDEX` بعده. */
+/**
+ * القيودُ والفهارسُ المُسمّاةُ في العقد لهذا الجدول، داخلَه أو في `CREATE INDEX` بعده.
+ *
+ * [مصالحة ADR-024] تُشتقُّ أيضاً الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ غيرِ المسماةِ:
+ * كلُّ عمودٍ يحملُ `CHECK` في تعريفِه يسمّيهِ PostgreSQL تلقائيّاً عندَ تطبيقِ
+ * العقدِ `<table>_<column>_check`، والمرآةُ تُسمّيهِ كذلك حرفاً منذُ الموجةِ 3
+ * (انظر رأس `schema.ts`). إغفالُ الاشتقاقِ كان سيُسقِطُ الحارسَ لمجرّدِ أنّ العقدَ
+ * يتركُ التسميةَ لقاعدةِ البياناتِ — مع أنّ الاسمَ حقيقةٌ في الكتالوجِ يقيسُها
+ * اختبارُ الدورةِ الكاملةِ في سبعةِ أبعادٍ.
+ */
 function ddlNames(tableName: string): string[] {
   const names = new Set<string>();
 
@@ -180,6 +195,16 @@ function ddlNames(tableName: string): string[] {
     new RegExp(`CONSTRAINT\\s+(${NAME_PATTERN})`, "gu"),
   )) {
     names.add(match[1] as string);
+  }
+
+  // الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ (العمودُ كاملُ التعريفِ متعدِّدَ الأسطرِ).
+  for (const definition of ddlColumnDefinitions(tableName)) {
+    if (/\bCHECK\b/u.test(definition)) {
+      const column = new RegExp(`^([a-z_]+)\\s`, "u").exec(definition)?.[1];
+      if (column !== undefined) {
+        names.add(`${tableName}_${column}_check`);
+      }
+    }
   }
 
   const indexPattern = new RegExp(

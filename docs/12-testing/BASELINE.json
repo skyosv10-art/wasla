@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T21:50:27Z",
+  "generated_at": "2026-09-07T23:06:52Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "5d85cb5d32a23788f7e126ec924870dbd90d0dc5",
-    "branch": "feat/m0-23-negotiations-migrations",
+    "commit": "bb1965e822a130f475331977fb88e5ef0080de25",
+    "branch": "feat/m0-23-reputation-migrations",
     "dirty": true,
     "dirty_files": 8,
-    "dirty_reason": "negotiations migrations wave 3: added migrations.integration.test.ts (test_files 277->278) and drizzle-kit devDep to services/negotiations (lock fingerprint changed). Regenerated from clean verify.sh run where all checks pass.",
-    "tracked_files": 1477
+    "dirty_reason": "reputation migrations wave 3: added migrations.integration.test.ts (test_files 278->279) and drizzle-kit devDep to services/reputation (lock fingerprint changed). Regenerated from clean verify.sh run where all checks pass.",
+    "tracked_files": 1483
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "b976c17fa5ce809cbc5d8c7150c17b114cd60eeb91d87406e4d625bfc63beebb",
-    "lines": 2975
+    "sha256": "2a75fff5e25abcc61210538a72a4dedd475023988c32cf941726823f52caf5d8",
+    "lines": 2978
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 278,
+    "test_files_tracked": 279,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_neg2.log",
+    "source": "/tmp/verify_rep2.log",
     "tests_passed": 3816,
     "test_files_executed": 226,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:f13b5e8dab075ac1f40aa5a0d95892c476af6f20cd06393b0f1caad1063ea27c",
+  "fingerprint": "sha256:761d3d12edf05fda1b374c289a0024ac35989082639779600bca2f96cee16aba",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

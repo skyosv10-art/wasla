@@ -4,23 +4,32 @@
  * ## هذا الملفُّ مرآةٌ لا مصدر
  *
  * الحقيقةُ في `services/reputation/contracts/schema.sql` (مُجمَّد، المراجعة 1/6)، وهو
- * نفسُه **الترحيل**: مُغلَّفٌ بـ`BEGIN;`/`COMMIT;` ويحمل في ذيله عكسَه (DROP بترتيبٍ
- * معاكس) تعليقاً. ولا يُنشئ هذا الملفُّ جدولاً ولا يُولّد DDL: لو صار توليدُ Drizzle هو
- * ما يُطبَّق على القاعدة لصار للمخطّط مصدران، ولاختلفا أوّلَ مرّةٍ يُضاف قيدٌ في أحدهما،
- * وذاك اختلافٌ يُكتشَف في الإنتاج لا في البناء.
+ * نفسُه **العقدُ القانونيُّ**: الكتالوجُ الذي يُقاسُ عليه كلُّ تمثيلٍ آخر. وهذا الملفُّ
+ * يُسقِطُ العقدَ إلى TypeScript لتُكمِلَ الاستعلاماتُ الترجمةَ، ويُولِّدُ منهُ
+ * `drizzle-kit generate` الترحيلاتِ العكوسةَ (ADR-024).
  *
  * ولذلك يحرسها اختبارُ `schema-drift.test.ts`: يقرأ الـDDL وقت التشغيل ويقارن
  * **الاتجاهين** — عمودٌ أو قيدٌ في العقد بلا مرآة، أو في المرآة بلا عقد، يُفشل البناء.
  * وهو لا يعدّ الأسماء وحدها: الخطأُ المؤذي أن يبقى الاسمُ ويتغيّر النوعُ أو الإلزامُ أو
  * الافتراض، فتمرّ كتابةٌ في الذاكرة وتُرفَض في القاعدة.
  *
+ * ## [مصالحة ADR-024 · الموجة 3]
+ *
+ * كانَ الإسقاطُ يُعلِنُ تعمُّدَ إغفالِ فحوصِ العمودِ الواحدِ («تسميةُ قيدٍ لم يُسمِّهِ
+ * Postgres تضعُ خيالاً في معجمِ حارسِ الانحدارِ»)، لكنّ ولادةَ المولِّدِ غيّرتِ الحسابَ:
+ * الترحيلُ المولَّدُ من إسقاطٍ بلا القيودِ المضمَّنةِ كانَ سيُنشئَ قاعدةً **أرخى من
+ * العقدِ** — انحدارٌ صامتٌ يعيشُ في الإنتاجِ لا في المرآةِ. فأُلحِقَت القيودُ المضمَّنةُ
+ * كلُّها بأسمائِها الكنونيّةِ `<table>_<column>_check` (وهو ما يسمّيهِ PostgreSQL
+ * فعلاً عندَ تطبيقِ العقدِ، فالاسمُ حقيقةٌ في الكتالوجِ لا خيالٌ)، وسُمِّيَت الروابطُ
+ * الكنونيّةَ `<table>_<column>_fkey`، وصِيغَت فهارسُ `DESC` بـ`sql\`DESC\`` المجرَّدِ
+ * لا `.desc()` الذي يُخرِجُ `DESC NULLS LAST` المخالفَ للعقدِ. والتكافؤُ يقيسُهُ
+ * اختبارُ الدورةِ الكاملةِ في سبعةِ أبعادِ كتالوجٍ (`migrations.integration.test.ts`).
+ *
  * ## ما لا يُمثَّل هنا وما يُمثَّل
  *
- * القيودُ **المُسمّاة** الخمسةَ عشرَ كلُّها ممثّلةٌ بأسمائها (`ck_`/`ux_`/`pk_`) لأنّها
- * القيودُ التي يُقارنها الحارسُ ويسمّيها الخطأُ في `details.constraint`. أمّا فحوصُ
- * العمود الواحد بلا اسمٍ (`subject_public_id ~ '^WS-…'` وأمثالُها) فتُسمّيها Postgres
- * تلقائياً ولا يُبنى عليها سلوك، فلا تُنسَخ هنا: نسخُها بأسماءٍ نختارها كان سيخلق أسماءً
- * لا وجودَ لها في القاعدة، وذاك أسوأُ من عدمِ نسخِها.
+ * القيودُ **المُسمّاة** كلُّها ممثّلةٌ بأسمائها (`ck_`/`ux_`/`pk_`) لأنّها
+ * القيودُ التي يُقارنها الحارسُ ويسمّيها الخطأُ في `details.constraint`. وكلُّ فحصِ
+ * عمودٍ واحدٍ ممثَّلٌ باسمِهِ الكنونيِّ كما يُسمّيهِ PostgreSQL عندَ تطبيقِ العقدِ.
  *
  * وأنواعُ `TIMESTAMPTZ` تبقى على تمثيل Drizzle الافتراضيّ (`Date`) ويُحوّلها المستودعُ
  * إلى نصّ ISO في موضعٍ واحد (`iso()`/`need()` في `repository.ts`)، كما في خدمة التفاوض.
@@ -34,6 +43,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -72,15 +82,49 @@ export const reputationRulesets = pgTable(
     isFrozen: boolean("is_frozen").notNull().default(false),
     createdAt: instant("created_at").notNull().default(sql`now()`),
   },
-  (table) => [
-    check("ck_reputation_rulesets_score_bounds", sql`${table.scoreCeiling} > ${table.scoreFloor}`),
+  (t) => [
+    check("reputation_rulesets_ruleset_version_check", sql`${t.rulesetVersion} >= 1`),
+    check(
+      "reputation_rulesets_label_check",
+      sql`char_length(${t.label}) BETWEEN 3 AND 64`,
+    ),
+    check("reputation_rulesets_score_floor_check", sql`${t.scoreFloor} >= 0`),
+    check("reputation_rulesets_score_ceiling_check", sql`${t.scoreCeiling} > 0`),
+    check("reputation_rulesets_starting_score_check", sql`${t.startingScore} >= 0`),
+    check(
+      "reputation_rulesets_min_facts_for_score_check",
+      sql`${t.minFactsForScore} BETWEEN 1 AND 100`,
+    ),
+    check(
+      "reputation_rulesets_decay_half_life_days_check",
+      sql`${t.decayHalfLifeDays} BETWEEN 7 AND 720`,
+    ),
+    check("reputation_rulesets_tier_standard_at_check", sql`${t.tierStandardAt} >= 0`),
+    check("reputation_rulesets_tier_trusted_at_check", sql`${t.tierTrustedAt} >= 0`),
+    check(
+      "reputation_rulesets_tier_under_watch_below_check",
+      sql`${t.tierUnderWatchBelow} >= 0`,
+    ),
+    check(
+      "reputation_rulesets_rating_window_hours_check",
+      sql`${t.ratingWindowHours} BETWEEN 1 AND 720`,
+    ),
+    check(
+      "reputation_rulesets_fraud_window_days_check",
+      sql`${t.fraudWindowDays} BETWEEN 1 AND 90`,
+    ),
+    check(
+      "reputation_rulesets_recompute_interval_hours_check",
+      sql`${t.recomputeIntervalHours} BETWEEN 1 AND 168`,
+    ),
+    check("ck_reputation_rulesets_score_bounds", sql`${t.scoreCeiling} > ${t.scoreFloor}`),
     check(
       "ck_reputation_rulesets_start_in_bounds",
-      sql`${table.startingScore} >= ${table.scoreFloor} AND ${table.startingScore} <= ${table.scoreCeiling}`,
+      sql`${t.startingScore} >= ${t.scoreFloor} AND ${t.startingScore} <= ${t.scoreCeiling}`,
     ),
     check(
       "ck_reputation_rulesets_tier_order",
-      sql`${table.tierTrustedAt} > ${table.tierStandardAt} AND ${table.tierUnderWatchBelow} <= ${table.tierStandardAt}`,
+      sql`${t.tierTrustedAt} > ${t.tierStandardAt} AND ${t.tierUnderWatchBelow} <= ${t.tierStandardAt}`,
     ),
   ],
 );
@@ -88,18 +132,33 @@ export const reputationRulesets = pgTable(
 export const reputationRuleWeights = pgTable(
   "reputation_rule_weights",
   {
-    rulesetVersion: integer("ruleset_version")
-      .notNull()
-      .references(() => reputationRulesets.rulesetVersion),
+    rulesetVersion: integer("ruleset_version").notNull(),
     subjectType: text("subject_type").notNull(),
     factKind: text("fact_kind").notNull(),
     weightPoints: integer("weight_points").notNull(),
     createdAt: instant("created_at").notNull().default(sql`now()`),
   },
-  (table) => [
+  (t) => [
+    foreignKey({
+      columns: [t.rulesetVersion],
+      foreignColumns: [reputationRulesets.rulesetVersion],
+      name: "reputation_rule_weights_ruleset_version_fkey",
+    }),
+    check(
+      "reputation_rule_weights_subject_type_check",
+      sql`${t.subjectType} IN ('customer','driver')`,
+    ),
+    check(
+      "reputation_rule_weights_fact_kind_check",
+      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received')`,
+    ),
+    check(
+      "reputation_rule_weights_weight_points_check",
+      sql`${t.weightPoints} BETWEEN -50 AND 50`,
+    ),
     primaryKey({
       name: "pk_reputation_rule_weights",
-      columns: [table.rulesetVersion, table.subjectType, table.factKind],
+      columns: [t.rulesetVersion, t.subjectType, t.factKind],
     }),
   ],
 );
@@ -107,19 +166,38 @@ export const reputationRuleWeights = pgTable(
 export const reputationFraudThresholds = pgTable(
   "reputation_fraud_thresholds",
   {
-    rulesetVersion: integer("ruleset_version")
-      .notNull()
-      .references(() => reputationRulesets.rulesetVersion),
+    rulesetVersion: integer("ruleset_version").notNull(),
     ruleCode: text("rule_code").notNull(),
     subjectType: text("subject_type").notNull(),
     thresholdCount: integer("threshold_count").notNull(),
     severity: text("severity").notNull(),
     createdAt: instant("created_at").notNull().default(sql`now()`),
   },
-  (table) => [
+  (t) => [
+    foreignKey({
+      columns: [t.rulesetVersion],
+      foreignColumns: [reputationRulesets.rulesetVersion],
+      name: "reputation_fraud_thresholds_ruleset_version_fkey",
+    }),
+    check(
+      "reputation_fraud_thresholds_rule_code_check",
+      sql`${t.ruleCode} IN ('repeated_customer_cancellation','repeated_driver_cancellation','accept_then_abandon','offer_timeout_streak','rating_extremity_burst')`,
+    ),
+    check(
+      "reputation_fraud_thresholds_subject_type_check",
+      sql`${t.subjectType} IN ('customer','driver')`,
+    ),
+    check(
+      "reputation_fraud_thresholds_threshold_count_check",
+      sql`${t.thresholdCount} BETWEEN 2 AND 100`,
+    ),
+    check(
+      "reputation_fraud_thresholds_severity_check",
+      sql`${t.severity} IN ('low','medium','high')`,
+    ),
     primaryKey({
       name: "pk_reputation_fraud_thresholds",
-      columns: [table.rulesetVersion, table.ruleCode],
+      columns: [t.rulesetVersion, t.ruleCode],
     }),
   ],
 );
@@ -145,25 +223,51 @@ export const reputationFacts = pgTable(
     recordedAt: instant("recorded_at").notNull().default(sql`now()`),
     traceId: text("trace_id"),
   },
-  (table) => [
+  (t) => [
+    check("reputation_facts_subject_type_check", sql`${t.subjectType} IN ('customer','driver')`),
+    check(
+      "reputation_facts_subject_public_id_check",
+      sql`${t.subjectPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "reputation_facts_fact_kind_check",
+      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received')`,
+    ),
+    check(
+      "reputation_facts_order_public_id_check",
+      sql`${t.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
+    ),
+    check(
+      "reputation_facts_source_event_type_check",
+      sql`char_length(${t.sourceEventType}) >= 3`,
+    ),
+    check("reputation_facts_source_sequence_check", sql`${t.sourceSequence} >= 1`),
+    check(
+      "reputation_facts_actor_type_check",
+      sql`${t.actorType} IN ('system','customer','driver','partner','admin')`,
+    ),
+    check(
+      "reputation_facts_reason_code_check",
+      sql`${t.reasonCode} IS NULL OR char_length(${t.reasonCode}) BETWEEN 2 AND 64`,
+    ),
     unique("ux_reputation_facts_source").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.factKind,
-      table.orderPublicId,
-      table.sourceSequence,
+      t.subjectType,
+      t.subjectPublicId,
+      t.factKind,
+      t.orderPublicId,
+      t.sourceSequence,
     ),
     index("ix_reputation_facts_subject").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.occurredAt.desc(),
+      t.subjectType,
+      t.subjectPublicId,
+      sql`${t.occurredAt} DESC`,
     ),
-    index("ix_reputation_facts_order").on(table.orderPublicId),
+    index("ix_reputation_facts_order").on(t.orderPublicId),
     index("ix_reputation_facts_kind_window").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.factKind,
-      table.occurredAt.desc(),
+      t.subjectType,
+      t.subjectPublicId,
+      t.factKind,
+      sql`${t.occurredAt} DESC`,
     ),
   ],
 );
@@ -177,9 +281,7 @@ export const reputationScores = pgTable(
   {
     subjectType: text("subject_type").notNull(),
     subjectPublicId: text("subject_public_id").notNull(),
-    rulesetVersion: integer("ruleset_version")
-      .notNull()
-      .references(() => reputationRulesets.rulesetVersion),
+    rulesetVersion: integer("ruleset_version").notNull(),
     scorePoints: integer("score_points").notNull(),
     tier: text("tier").notNull(),
     factCount: integer("fact_count").notNull(),
@@ -188,22 +290,37 @@ export const reputationScores = pgTable(
     nextRecomputeAt: instant("next_recompute_at").notNull(),
     traceId: text("trace_id"),
   },
-  (table) => [
-    primaryKey({
-      name: "pk_reputation_scores",
-      columns: [table.subjectType, table.subjectPublicId],
+  (t) => [
+    foreignKey({
+      columns: [t.rulesetVersion],
+      foreignColumns: [reputationRulesets.rulesetVersion],
+      name: "reputation_scores_ruleset_version_fkey",
     }),
-    check("ck_reputation_scores_non_negative", sql`${table.scorePoints} >= 0`),
+    check("reputation_scores_subject_type_check", sql`${t.subjectType} IN ('customer','driver')`),
+    check(
+      "reputation_scores_subject_public_id_check",
+      sql`${t.subjectPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "reputation_scores_tier_check",
+      sql`${t.tier} IN ('new','standard','trusted','under_watch')`,
+    ),
+    check("reputation_scores_fact_count_check", sql`${t.factCount} >= 0`),
+    check("ck_reputation_scores_non_negative", sql`${t.scorePoints} >= 0`),
     check(
       "ck_reputation_scores_new_has_no_history",
-      sql`${table.tier} <> 'new' OR ${table.factCount} = 0 OR ${table.computedThroughFactId} IS NOT NULL`,
+      sql`${t.tier} <> 'new' OR ${t.factCount} = 0 OR ${t.computedThroughFactId} IS NOT NULL`,
     ),
+    primaryKey({
+      name: "pk_reputation_scores",
+      columns: [t.subjectType, t.subjectPublicId],
+    }),
     index("ix_reputation_scores_tier").on(
-      table.subjectType,
-      table.tier,
-      table.scorePoints.desc(),
+      t.subjectType,
+      t.tier,
+      sql`${t.scorePoints} DESC`,
     ),
-    index("ix_reputation_scores_recompute_due").on(table.nextRecomputeAt),
+    index("ix_reputation_scores_recompute_due").on(t.nextRecomputeAt),
   ],
 );
 
@@ -222,27 +339,49 @@ export const reputationRatings = pgTable(
     subjectPublicId: text("subject_public_id").notNull(),
     stars: smallint("stars").notNull(),
     reasonCode: text("reason_code"),
-    rulesetVersion: integer("ruleset_version")
-      .notNull()
-      .references(() => reputationRulesets.rulesetVersion),
+    rulesetVersion: integer("ruleset_version").notNull(),
     submittedAt: instant("submitted_at").notNull(),
     createdAt: instant("created_at").notNull().default(sql`now()`),
     traceId: text("trace_id"),
   },
-  (table) => [
+  (t) => [
+    foreignKey({
+      columns: [t.rulesetVersion],
+      foreignColumns: [reputationRulesets.rulesetVersion],
+      name: "reputation_ratings_ruleset_version_fkey",
+    }),
+    check(
+      "reputation_ratings_order_public_id_check",
+      sql`${t.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
+    ),
+    check("reputation_ratings_rater_type_check", sql`${t.raterType} IN ('customer','driver')`),
+    check(
+      "reputation_ratings_rater_public_id_check",
+      sql`${t.raterPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check("reputation_ratings_subject_type_check", sql`${t.subjectType} IN ('customer','driver')`),
+    check(
+      "reputation_ratings_subject_public_id_check",
+      sql`${t.subjectPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check("reputation_ratings_stars_check", sql`${t.stars} BETWEEN 1 AND 5`),
+    check(
+      "reputation_ratings_reason_code_check",
+      sql`${t.reasonCode} IS NULL OR ${t.reasonCode} IN ('on_time','late_arrival','courteous','poor_conduct','unsafe_driving','vehicle_condition','route_deviation','no_show')`,
+    ),
     unique("ux_reputation_ratings_order_pair").on(
-      table.orderPublicId,
-      table.raterPublicId,
-      table.subjectPublicId,
+      t.orderPublicId,
+      t.raterPublicId,
+      t.subjectPublicId,
     ),
-    check("ck_reputation_ratings_no_self", sql`${table.raterPublicId} <> ${table.subjectPublicId}`),
-    check("ck_reputation_ratings_cross_side", sql`${table.raterType} <> ${table.subjectType}`),
+    check("ck_reputation_ratings_no_self", sql`${t.raterPublicId} <> ${t.subjectPublicId}`),
+    check("ck_reputation_ratings_cross_side", sql`${t.raterType} <> ${t.subjectType}`),
     index("ix_reputation_ratings_subject").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.submittedAt.desc(),
+      t.subjectType,
+      t.subjectPublicId,
+      sql`${t.submittedAt} DESC`,
     ),
-    index("ix_reputation_ratings_order").on(table.orderPublicId),
+    index("ix_reputation_ratings_order").on(t.orderPublicId),
   ],
 );
 
@@ -262,31 +401,46 @@ export const fraudSignals = pgTable(
     windowEndedAt: instant("window_ended_at").notNull(),
     observedCount: integer("observed_count").notNull(),
     thresholdCount: integer("threshold_count").notNull(),
-    rulesetVersion: integer("ruleset_version")
-      .notNull()
-      .references(() => reputationRulesets.rulesetVersion),
+    rulesetVersion: integer("ruleset_version").notNull(),
     raisedAt: instant("raised_at").notNull(),
     createdAt: instant("created_at").notNull().default(sql`now()`),
     traceId: text("trace_id"),
   },
-  (table) => [
-    check("ck_fraud_signals_window_order", sql`${table.windowEndedAt} > ${table.windowStartedAt}`),
+  (t) => [
+    foreignKey({
+      columns: [t.rulesetVersion],
+      foreignColumns: [reputationRulesets.rulesetVersion],
+      name: "fraud_signals_ruleset_version_fkey",
+    }),
+    check("fraud_signals_subject_type_check", sql`${t.subjectType} IN ('customer','driver')`),
+    check(
+      "fraud_signals_subject_public_id_check",
+      sql`${t.subjectPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "fraud_signals_rule_code_check",
+      sql`${t.ruleCode} IN ('repeated_customer_cancellation','repeated_driver_cancellation','accept_then_abandon','offer_timeout_streak','rating_extremity_burst')`,
+    ),
+    check("fraud_signals_severity_check", sql`${t.severity} IN ('low','medium','high')`),
+    check("fraud_signals_observed_count_check", sql`${t.observedCount} >= 0`),
+    check("fraud_signals_threshold_count_check", sql`${t.thresholdCount} >= 2`),
+    check("ck_fraud_signals_window_order", sql`${t.windowEndedAt} > ${t.windowStartedAt}`),
     check(
       "ck_fraud_signals_over_threshold",
-      sql`${table.observedCount} >= ${table.thresholdCount}`,
+      sql`${t.observedCount} >= ${t.thresholdCount}`,
     ),
     unique("ux_fraud_signals_rule_window").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.ruleCode,
-      table.windowEndedAt,
+      t.subjectType,
+      t.subjectPublicId,
+      t.ruleCode,
+      t.windowEndedAt,
     ),
     index("ix_fraud_signals_subject").on(
-      table.subjectType,
-      table.subjectPublicId,
-      table.raisedAt.desc(),
+      t.subjectType,
+      t.subjectPublicId,
+      sql`${t.raisedAt} DESC`,
     ),
-    index("ix_fraud_signals_rule").on(table.ruleCode, table.raisedAt.desc()),
+    index("ix_fraud_signals_rule").on(t.ruleCode, sql`${t.raisedAt} DESC`),
   ],
 );
 
@@ -312,7 +466,29 @@ export const reputationIdempotency = pgTable(
     responseBody: jsonb("response_body").notNull(),
     createdAt: instant("created_at").notNull().default(sql`now()`),
   },
-  (table) => [index("ix_reputation_idempotency_subject").on(table.subjectPublicId)],
+  (t) => [
+    check(
+      "reputation_idempotency_idempotency_key_check",
+      sql`char_length(${t.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "reputation_idempotency_scope_check",
+      sql`${t.scope} IN ('record_fact','submit_rating','recompute_score','tick')`,
+    ),
+    check(
+      "reputation_idempotency_subject_public_id_check",
+      sql`${t.subjectPublicId} IS NULL OR ${t.subjectPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "reputation_idempotency_payload_fingerprint_check",
+      sql`char_length(${t.payloadFingerprint}) = 64`,
+    ),
+    check(
+      "reputation_idempotency_response_status_check",
+      sql`${t.responseStatus} BETWEEN 100 AND 599`,
+    ),
+    index("ix_reputation_idempotency_subject").on(t.subjectPublicId),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -335,9 +511,22 @@ export const reputationOutbox = pgTable(
     traceId: text("trace_id"),
     createdAt: instant("created_at").notNull().default(sql`now()`),
   },
-  (table) => [
+  (t) => [
+    check(
+      "reputation_outbox_aggregate_type_check",
+      sql`${t.aggregateType} IN ('reputation_fact','reputation_score','reputation_rating','fraud_signal')`,
+    ),
+    check(
+      "reputation_outbox_event_type_check",
+      sql`char_length(${t.eventType}) >= 3`,
+    ),
+    check(
+      "reputation_outbox_event_version_check",
+      sql`${t.eventVersion} ~ '^v[0-9]+$'`,
+    ),
+    check("reputation_outbox_attempts_check", sql`${t.attempts} >= 0`),
     index("ix_reputation_outbox_unpublished")
-      .on(table.occurredAt)
-      .where(sql`${table.publishedAt} IS NULL`),
+      .on(t.occurredAt)
+      .where(sql`${t.publishedAt} IS NULL`),
   ],
 );

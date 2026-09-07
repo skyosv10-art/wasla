@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T13:31:03Z",
+  "generated_at": "2026-09-07T18:14:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "03055cd8ff9a6689c4125d100cb17b6035e68459",
-    "branch": "chore/risk-0020-progress-orders",
+    "commit": "b8174a38d8083cba8c1655daedfebdc39a2372e1",
+    "branch": "feat/m0-23-dispatch-migrations",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "إلحاقُ حزمةِ channel-postgres بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2b-2): إصلاحُ 3 انحرافاتٍ في schema.ts (فهرسُ DESC بـraw SQL بلا NULLS LAST + فهرسانِ جزئيّانِ ناقصا شرطِ WHERE)، وتوليدُ الترحيلِ، ونموذجُ التكافؤِ الخاصُّ بالحزمةِ (يحلُّ العقدَ من حزمةِ channel-core المنفصلةِ عبرَ مسارٍ نسبيٍّ — لا يفترضُ مجلدَ contracts محلّيّاً)، ورفيقُ الترجعِ، واختبارُ الدورةِ (0 فروقٍ · 24/24 تكامليّاً · 9/9 وحدويّاً · نموٌّ 273→274 ملفَّ اختبارٍ)",
-    "tracked_files": 1453
+    "dirty_files": 5,
+    "dirty_reason": "إكمالُ §8 (drizzle-kit إلى dispatch package.json/lockfile) + تحريرُ CLM-0103 البائت + إعادةُ توليدِ الأساسِ الملتزَمِ بقرارٍ مكتوبٍ (§8.1) — قيدَ الالتزام",
+    "tracked_files": 1465
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "67e7c59593fddd0e8c784a947620919adf828643a265733fa8174c7b937eb595",
-    "lines": 2963
+    "sha256": "4ad746e0ed4d8db584d647c4eff2a9ea33dded195bb167d057b383b56b55f198",
+    "lines": 2966
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 274,
+    "test_files_tracked": 275,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify4.log",
-    "tests_passed": 3836,
-    "test_files_executed": 228,
-    "governance_suite_cases": 182,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "source": "/tmp/fresh_verify.log",
+    "tests_passed": 3816,
+    "test_files_executed": 226,
+    "governance_suite_cases": 183,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
-  "fingerprint": "sha256:d516500358d6b71917701dba13611edf6fb9a4c3245b2f6f82920cf00d99a1e1",
+  "fingerprint": "sha256:e34965da84e9b79e7010c01c4004f490dc95286f3c602695a19a08af4f5458ea",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

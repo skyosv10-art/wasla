@@ -762,6 +762,9 @@ importers:
       '@wasla/orders-service':
         specifier: workspace:*
         version: link:../orders
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
       tsx:
         specifier: ^4.23.12
         version: 4.23.12

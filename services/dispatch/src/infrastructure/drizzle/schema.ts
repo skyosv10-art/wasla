@@ -25,6 +25,13 @@
  * the DDL, not a `jsonb` blob: these five numbers decide how long a customer waits,
  * and a CHECK on `wave_size >= 1` is reachable on a column and not on a JSON key.
  * `repository.ts` folds them back into the domain's `rules` object.
+ *
+ * ── إلحاقُ موجةِ M0-23 (ADR-024): تسميةٌ كنسيّةٌ لا افتراضيّةٌ ──
+ * قيودُ CHECK العموديّةُ تحملُ أسماءَ PostgreSQL الافتراضيّةَ المطابقةَ للعقدِ
+ * حرفاً (`<table>_<column>_check`)، وقيودُ UNIQUE العموديّةُ تحملُ `<table>_<column>_key`،
+ * وقيودُ الجدولِ تحملُ أسماءَها الصريحةَ (`ux_`/`ck_`). هكذا يُطابِقُ الترحيلُ المولَّدُ
+ * الكتالوجَ الناتجَ عن العقدِ في الأبعادِ السبعةِ كلِّها — فلا انحدارٌ صامتٌ في الاسمِ
+ * يُسقِطُ اختبارَ الدورةِ (`migrations.integration.test.ts`).
  */
 
 import { sql } from "drizzle-orm";
@@ -44,15 +51,18 @@ import {
 } from "drizzle-orm/pg-core";
 
 // --------------------------------------------------------------------------- //
-// 1) dispatch_jobs — one order being dispatched                              //
+// 1) dispatch_jobs — one order being dispatched                              ////
 // --------------------------------------------------------------------------- //
 
 export const dispatchJobs = pgTable(
   "dispatch_jobs",
   {
     id: uuid("id").primaryKey(),
-    orderId: uuid("order_id").notNull().unique(),
-    orderPublicId: text("order_public_id").notNull().unique(),
+    // ─ـ inline UNIQUE في العقدِ → `<table>_<column>_key` (لا `_unique`) ──
+    orderId: uuid("order_id").notNull().unique("dispatch_jobs_order_id_key"),
+    orderPublicId: text("order_public_id")
+      .notNull()
+      .unique("dispatch_jobs_order_public_id_key"),
     zoneId: uuid("zone_id").notNull(),
     orderType: text("order_type").notNull(),
     vehicleClass: text("vehicle_class").notNull(),
@@ -77,12 +87,50 @@ export const dispatchJobs = pgTable(
       .default(sql`now()`),
   },
   (table) => [
-    unique("ux_dispatch_jobs_idempotency_key").on(table.createdIdempotencyKey),
-    check("ck_dispatch_jobs_order_public_id_shape", sql`${table.orderPublicId} ~ '^ORD-[0-9]{10}$'`),
+    // ── قيودُ CHECK العموديّةُ (أسماءُ PG الافتراضيّةُ المطابقةُ للعقدِ) ──
     check(
-      "ck_dispatch_jobs_status_domain",
+      "dispatch_jobs_order_public_id_check",
+      sql`${table.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
+    ),
+    check(
+      "dispatch_jobs_order_type_check",
+      sql`${table.orderType} IN ('ride','delivery')`,
+    ),
+    check(
+      "dispatch_jobs_vehicle_class_check",
+      sql`${table.vehicleClass} IN ('sedan','suv','van','pickup','motorcycle','truck_small')`,
+    ),
+    check(
+      "dispatch_jobs_status_check",
       sql`${table.status} IN ('pending','dispatching','escalated_community','assigned','exhausted','cancelled')`,
     ),
+    check(
+      "dispatch_jobs_status_reason_code_check",
+      sql`${table.statusReasonCode} IS NULL OR char_length(${table.statusReasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "dispatch_jobs_ruleset_version_check",
+      sql`${table.rulesetVersion} >= 1`,
+    ),
+    check("dispatch_jobs_wave_size_check", sql`${table.waveSize} >= 1`),
+    check(
+      "dispatch_jobs_offer_timeout_seconds_check",
+      sql`${table.offerTimeoutSeconds} >= 1`,
+    ),
+    check("dispatch_jobs_max_waves_check", sql`${table.maxWaves} >= 1`),
+    check(
+      "dispatch_jobs_escalation_timeout_seconds_check",
+      sql`${table.escalationTimeoutSeconds} >= 1`,
+    ),
+    check(
+      "dispatch_jobs_created_idempotency_key_check",
+      sql`char_length(${table.createdIdempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "dispatch_jobs_payload_fingerprint_check",
+      sql`char_length(${table.payloadFingerprint}) = 64`,
+    ),
+    // ── قيودُ CHECK الجدوليّةُ (متطابقةٌ بالاسمِ مع العقدِ) ──
     // A terminal row without a reason is unexplainable to the operator who opens it.
     check(
       "ck_dispatch_jobs_terminal_needs_reason",
@@ -93,6 +141,9 @@ export const dispatchJobs = pgTable(
       "ck_dispatch_jobs_deadline_order",
       sql`${table.escalationExpiresAt} >= ${table.expiresAt}`,
     ),
+    // ── قيودُ UNIQUE الجدوليّةُ (`CONSTRAINT ux_... UNIQUE` في العقدِ) ──
+    unique("ux_dispatch_jobs_idempotency_key").on(table.createdIdempotencyKey),
+    // ── فهارسُ ──
     index("ix_dispatch_jobs_status_due").on(table.status, table.expiresAt),
     index("ix_dispatch_jobs_escalation_due")
       .on(table.escalationExpiresAt)
@@ -101,7 +152,7 @@ export const dispatchJobs = pgTable(
 );
 
 // --------------------------------------------------------------------------- //
-// 2) dispatch_waves — one round of simultaneous offers                       //
+// 2) dispatch_waves — one round of simultaneous offers                       ////
 // --------------------------------------------------------------------------- //
 
 export const dispatchWaves = pgTable(
@@ -130,8 +181,20 @@ export const dispatchWaves = pgTable(
       foreignColumns: [dispatchJobs.id],
       name: "dispatch_waves_job_id_fkey",
     }).onDelete("cascade"),
-    unique("ux_dispatch_waves_job_number").on(table.jobId, table.waveNumber),
-    check("ck_dispatch_waves_status_domain", sql`${table.status} IN ('open','completed','cancelled')`),
+    // ── قيودُ CHECK العموديّةُ ──
+    check(
+      "dispatch_waves_wave_number_check",
+      sql`${table.waveNumber} >= 1`,
+    ),
+    check(
+      "dispatch_waves_status_check",
+      sql`${table.status} IN ('open','completed','cancelled')`,
+    ),
+    check(
+      "dispatch_waves_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR char_length(${table.reasonCode}) BETWEEN 3 AND 64`,
+    ),
+    // ── قيودُ CHECK الجدوليّةُ ──
     check(
       "ck_dispatch_waves_terminal_needs_reason",
       sql`${table.status} = 'open' OR ${table.reasonCode} IS NOT NULL`,
@@ -140,6 +203,9 @@ export const dispatchWaves = pgTable(
       "ck_dispatch_waves_state_timestamp",
       sql`(${table.status} = 'open' AND ${table.completedAt} IS NULL) OR (${table.status} <> 'open' AND ${table.completedAt} IS NOT NULL)`,
     ),
+    // ── قيودُ UNIQUE الجدوليّةُ ──
+    unique("ux_dispatch_waves_job_number").on(table.jobId, table.waveNumber),
+    // ── فهارسُ فريدةٌ جزئيّةٌ (CREATE UNIQUE INDEX ... WHERE في العقدِ) ──
     // The partial unique index that makes "one open wave per job" true under two
     // concurrent ticks, instead of true-if-nobody-races.
     uniqueIndex("ux_dispatch_waves_one_open_job")
@@ -152,7 +218,7 @@ export const dispatchWaves = pgTable(
 );
 
 // --------------------------------------------------------------------------- //
-// 3) dispatch_offers — one driver's turn to answer                           //
+// 3) dispatch_offers — one driver's turn to answer                           ////
 // --------------------------------------------------------------------------- //
 
 export const dispatchOffers = pgTable(
@@ -189,14 +255,26 @@ export const dispatchOffers = pgTable(
       foreignColumns: [dispatchWaves.id],
       name: "dispatch_offers_wave_id_fkey",
     }).onDelete("cascade"),
+    // ── قيودُ CHECK العموديّةُ ──
+    check(
+      "dispatch_offers_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "dispatch_offers_status_check",
+      sql`${table.status} IN ('offered','accepted','rejected','timed_out','superseded','cancelled')`,
+    ),
+    check(
+      "dispatch_offers_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR char_length(${table.reasonCode}) BETWEEN 3 AND 64`,
+    ),
+    // ── قيودُ CHECK الجدوليّةُ ──
     // Includes rejected and timed-out offers on purpose: this is what stops wave 3
     // from re-asking the driver who declined in wave 1, even if the exclusion list
     // sent to matching was wrong.
-    unique("ux_dispatch_offers_job_driver").on(table.jobId, table.driverPublicId),
-    check("ck_dispatch_offers_driver_public_id_shape", sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`),
-    check(
-      "ck_dispatch_offers_status_domain",
-      sql`${table.status} IN ('offered','accepted','rejected','timed_out','superseded','cancelled')`,
+    unique("ux_dispatch_offers_job_driver").on(
+      table.jobId,
+      table.driverPublicId,
     ),
     check(
       "ck_dispatch_offers_terminal_needs_reason",
@@ -208,6 +286,7 @@ export const dispatchOffers = pgTable(
       "ck_dispatch_offers_state_timestamp",
       sql`(${table.status} = 'offered' AND ${table.respondedAt} IS NULL AND ${table.resolvedAt} IS NULL) OR (${table.status} = 'accepted' AND ${table.respondedAt} IS NOT NULL AND ${table.resolvedAt} IS NOT NULL) OR (${table.status} = 'rejected' AND ${table.respondedAt} IS NOT NULL AND ${table.resolvedAt} IS NOT NULL) OR (${table.status} IN ('timed_out','superseded','cancelled') AND ${table.resolvedAt} IS NOT NULL)`,
     ),
+    // ── فهارسُ ──
     index("ix_dispatch_offers_wave").on(table.waveId, table.offeredAt),
     index("ix_dispatch_offers_open_due")
       .on(table.expiresAt)
@@ -221,7 +300,7 @@ export const dispatchOffers = pgTable(
 );
 
 // --------------------------------------------------------------------------- //
-// 4) dispatch_outbox — the outbox                                            //
+// 4) dispatch_outbox — the outbox                                            ////
 // --------------------------------------------------------------------------- //
 
 export const dispatchOutbox = pgTable(
@@ -241,10 +320,17 @@ export const dispatchOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => [
-    check("ck_dispatch_outbox_event_version_shape", sql`${table.eventVersion} ~ '^v[0-9]+$'`),
     check(
-      "ck_dispatch_outbox_aggregate_type_domain",
+      "dispatch_outbox_event_version_check",
+      sql`${table.eventVersion} ~ '^v[0-9]+$'`,
+    ),
+    check(
+      "dispatch_outbox_aggregate_type_check",
       sql`${table.aggregateType} IN ('dispatch_job','dispatch_offer')`,
+    ),
+    check(
+      "dispatch_outbox_trace_id_check",
+      sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_dispatch_outbox_unpublished")
       .on(table.occurredAt)
@@ -258,7 +344,7 @@ export const dispatchOutbox = pgTable(
 );
 
 // --------------------------------------------------------------------------- //
-// 5) dispatch_idempotency — key memory (added by MR 5a/6)                    //
+// 5) dispatch_idempotency — key memory (added by MR 5a/6)                    ////
 // --------------------------------------------------------------------------- //
 
 export const dispatchIdempotency = pgTable(
@@ -272,8 +358,12 @@ export const dispatchIdempotency = pgTable(
   },
   (table) => [
     check(
-      "ck_dispatch_idempotency_key_length",
+      "dispatch_idempotency_idempotency_key_check",
       sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "dispatch_idempotency_payload_fingerprint_check",
+      sql`char_length(${table.payloadFingerprint}) BETWEEN 1 AND 4096`,
     ),
   ],
 );

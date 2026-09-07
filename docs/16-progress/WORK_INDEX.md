@@ -94,7 +94,7 @@
 | المجموعة | الحزم | ملاحظة الملكية |
 |---|---|---|
 | نواة | `config` · `contracts` · `errors` · `events` · `telemetry` · `date-time` · `i18n` · `ui` | **مشتركة عالية الخطورة** — أي تعديل يحتاج حجزًا صريحًا للمسار الفرعي |
-| قنوات | `channel-core` · `channel-postgres` · `telegram-adapter` · `bot-runtime` | |
+| قنوات | `channel-core` · `channel-postgres` · `telegram-adapter` · `bot-runtime` | M0-23 (موجة 2b-2) |
 | أمن | `auth-sdk` | **Implemented (M1-01)** — نموذجُ `Principal` الموحَّدُ وقراءتُه وقراراتُ التفويضِ وتمثيلُه الآمن ([ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md)). نقطةُ الفرضِ الوحيدةُ لكلِّ حدٍّ؛ M1-02..M1-05 تبني عليها ولا تُنشئ نموذجاً موازياً |
 | اختبار | `test-utils` · `channel-e2e` · `customer-e2e` · `driver-e2e` · `order-e2e` · `dispatch-e2e` · `negotiation-e2e` · `reputation-e2e` · `subscription-e2e` | كل حزمة `*-e2e` مربوطة ببوابة خروج مرحلتها |
 

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T13:14:58Z",
+  "generated_at": "2026-09-07T13:31:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "0e57807bd2e2e879209cebf99290b482ca51ffb7",
-    "branch": "feat/m0-23-orders-migrations",
+    "commit": "03055cd8ff9a6689c4125d100cb17b6035e68459",
+    "branch": "chore/risk-0020-progress-orders",
     "dirty": true,
-    "dirty_files": 6,
-    "dirty_reason": "إلحاقُ خدمةِ orders بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2b-1): مصالحةُ schema.ts إلى العقدِ (إعادةُ تسميةِ 11 قيدَ CHECK إلى أسماءِ PG الافتراضيّةِ + 17 قيدَ CHECK مفقودٍ + تحويلُ uniqueIndex إلى قيودِ UNIQUE + أسماءُ FK + DESC raw SQL)، وتوليدُ الترحيلِ، وإلحاقُ الدالةِّ والمُطلِقَينِ وfk_orders_active_assignment، ورفيقُ الترجعِ، واختبارُ الدورةِ (0 فروقٍ · 35/35 تكامليّاً · 646/646 وحدويّاً · نموٌّ 272→273 ملفَّ اختبارٍ)",
-    "tracked_files": 1446
+    "dirty_files": 3,
+    "dirty_reason": "إلحاقُ حزمةِ channel-postgres بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2b-2): إصلاحُ 3 انحرافاتٍ في schema.ts (فهرسُ DESC بـraw SQL بلا NULLS LAST + فهرسانِ جزئيّانِ ناقصا شرطِ WHERE)، وتوليدُ الترحيلِ، ونموذجُ التكافؤِ الخاصُّ بالحزمةِ (يحلُّ العقدَ من حزمةِ channel-core المنفصلةِ عبرَ مسارٍ نسبيٍّ — لا يفترضُ مجلدَ contracts محلّيّاً)، ورفيقُ الترجعِ، واختبارُ الدورةِ (0 فروقٍ · 24/24 تكامليّاً · 9/9 وحدويّاً · نموٌّ 273→274 ملفَّ اختبارٍ)",
+    "tracked_files": 1453
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 273,
+    "test_files_tracked": 274,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify3.log",
+    "source": "/tmp/verify4.log",
     "tests_passed": 3836,
     "test_files_executed": 228,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:8b6121655a0b1f27433b22cccb7c0a4590c4048db9ec1015f9da2e24c25ba673",
+  "fingerprint": "sha256:d516500358d6b71917701dba13611edf6fb9a4c3245b2f6f82920cf00d99a1e1",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

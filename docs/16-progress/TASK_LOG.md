@@ -1,5 +1,39 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-07 · M0-23 · الموجةُ 3 — مصالحةُ drivers وإلحاقُها بالترحيلاتِ المولَّدةِ العكوسةِ
+
+**Work Item(s):** M0-23 · **Reservation:** `CLM-0106` · **Branch:** `feat/m0-23-drivers-migrations` · **ADR:** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md)
+
+**ماذا تم إنجاز (1):** انتظَمَت `drivers` في الترحيلاتِ المولَّدةِ العكوسةِ — ثامنَ خدمةٍ/حزمةٍ. أُضيفَ `services/drivers/drizzle.config.ts` (مكيَّفٌ من matching: schema/out/dialect/dbCredentials/strict/verbose)، وسكربتاتُ `db:generate`/`db:push`/`db:studio` في `services/drivers/package.json`، و`drizzle-kit` (`^0.31.10`) كاعتمادِ تطويرٍ. وُلِّدَ الترحيلُ الأساسُ `drizzle/0000_mixed_squirrel_girl.sql` بـ`drizzle-kit generate`، وأُلحِقَ بيدٍ مُعلَمةٍ صريحاً (قسمُ «إلحاقٌ مُراجَعٌ — خارجَ نطاقِ التوليدِ» · ADR-024 §2.1) ما لا يولِّدُهُ drizzle-kit: دالةُ `driver_set_updated_at()` ومُطلِقاتُها الثلاثةُ (`trg_driver_profiles_updated_at` · `trg_driver_vehicles_updated_at` · `trg_driver_documents_updated_at`) وseed النسخةِ 1 من `driver_eligibility_policies` (`saudi-launch-v1` مجمَّدةً). وانضمَّ إليهِ رفيقُ الترجعِ `0000_mixed_squirrel_girl.down.sql` الذي يُسقِطُ المُطلِقاتِ والدالةَ صريحاً ثمّ الجداولَ التسعةَ بترتيبٍ عكسيٍّ للتبعيّاتِ (driver_idempotency · driver_outbox · driver_candidacy_publications · driver_eligibility_log · driver_eligibility_policies · driver_documents · driver_vehicles · driver_service_zones · driver_profiles)، واختبارُ الدورةِ الكاملةِ `src/__tests__/migrations.integration.test.ts` مكيَّفٌ من matching مع تحقُّقِ seed سياسةِ الأهليّةِ النسخةِ 1 بقيمِها الافتراضيّةِ كاملةً.
+
+**لماذا تم اختياره (2):** إكمالُ تطبيقِ ADR-024 على خدماتِ الموجةِ 3 المتبقية. drivers هي الخدمةُ التاليةُ في ترتيبِ الموجةِ 3 بعدَ اكتمالِ matching — وهي الخدمةُ التي رُصدَ منها أصلًا غيابُ الترحيلاتِ عندَ بوّابةِ `M0-10` (كانت بلا `drizzle.config.ts` وبلا `drizzle-kit`). بدونِ هذا الترحيلِ تبقى drivers خارجَ مسارِ «مخطَّطٌ قائمٌ ← معدَّلٌ» وتعتمدُ على `DROP`+إعادةِ تشغيلِ DDL — وهو يعملُ للاختبارِ لا للإنتاجِ.
+
+**أين تم التغيير (3):** `services/drivers/{drizzle.config.ts, package.json, src/infrastructure/drizzle/schema.ts, drizzle/0000_mixed_squirrel_girl.sql, drizzle/0000_mixed_squirrel_girl.down.sql, drizzle/meta/_journal.json, drizzle/meta/0000_snapshot.json, src/__tests__/migrations.integration.test.ts}`؛ `docs/16-progress/{TASK_LOG.md, WORK_CLAIMS.md, LAUNCH_EXECUTION_BOARD.md}`؛ `docs/12-testing/BASELINE.json`؛ `pnpm-lock.yaml`.
+
+**الملفات/الخدمات المتأثرة (4):** خدمةُ `@wasla/drivers-service` فقط (لا منطقٌ تشغيليٌّ — ترحيلاتٌ وإسقاطٌ واختبارٌ). لا يتأثرُ أيُّ مستهلكٍ: العقدُ (`contracts/schema.sql`) لم يُمسَّ، والإسقاطُ `schema.ts` هو الذي صُولِحَ ليطابقَ العقدَ حرفاً (انظر §7).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا شيء. العقدُ لم يُمسَّ؛ الإسقاطُ حُذِّيَ إلى العقدِ.
+
+**كيف تم الاختبار (6):** اختبارُ الدورةِ الكاملةِ للترحيلاتِ مُصمَّمٌ ليُقيسَ **4/4**: (أ) تكافؤُ الكتالوجِ في سبعةِ أبعادٍ (جداولٍ · أعمدةٍ · قيودٍ · فهارسٍ · مُطلِقاتٍ · دوالَّ · متتابعاتٍ) بينَ العقدِ والترحيلِ؛ (ب) seed النسخةِ 1 موجودٌ ومجمَّدٌ في القاعدتَينِ مع قياسِ الحقولِ الافتراضيّةِ التي تركَها seed العقدِ للأعمدةِ (الوثائقُ المطلوبةُ `['national_id','driving_license','vehicle_registration']` · `require_primary_vehicle=true` · `require_service_zone=true` · `document_grace_days=0`)؛ (ج) الترجعُ يُعيدُ القاعدةَ نظيفةً تماماً في الأبعادِ السبعةِ كلِّها؛ (د) إعادةُ التطبيقِ ودورةٌ ثانيةٌ متطابقةٌ مع إعادةِ قياسِ التكافؤِ كاملاً وعودةِ seed. **وقد شُغِّلَ محلّيّاً على PostgreSQL 18 حقيقيٍّ** (على سابقةِ `dispatch` لا `matching` التي اكتفت بـCI): **83/83 تكامليّاً** (repository 50 · port-conformance 23 · migrations 4 · atomicity 6) و**196/196 وحدويّاً** (13 ملفّاً)، و`pnpm -r typecheck` **رمزُ 0**، و`scripts/verify.sh` **7/7 ناجحةً** (3816 اختباراً · 183 حالةَ حوكمةٍ · 0 إخفاقاتٍ). وفي CI يُشغَّلُ في وظيفةِ `drivers-db-integration` القائمةِ (لا وظيفةَ جديدةَ).
+
+**ما المشاكل التي ظهرت (7):** الإسقاطُ الموجودُ كان مُخْلَصاً للعقدِ أكثرَ من إخوتهِ لكنّهُ لم يكن جاهزاً للتوليدِ (migration-ready): (1) أغفلَ **46 قيدَ CHECK عموديّاً** كان العقدُ يفرضُها مضمنةً (الأطوالُ · المدى · القوائمُ المقفلةُ · `^WS-[0-9]{10}$`) — الإسقاطُ القديمُ كان يُعلِنُ صراحةً أنّهُ لا يُسقِطُ القيودَ المضمنةَ لأنّ «تسميةَ قيدٍ لم يُسمِّهِ Postgres تضعُ خيالاً في معجمِ حارسِ الانحدارِ»، لكنّ ولادةَ المولِّدِ غيّرتِ الحسابَ: الأسماءُ الكنونيّةُ `<table>_<column>_check` هي ما يسمّيهِ Postgres فعلاً؛ (2) قيدُ `driver_outbox.event_id` الفريدُ كانَ سيتولّدُ باسمٍ افتراضيٍّ لا بالاسمِ الكنونيِّ `driver_outbox_event_id_key`؛ (3) الـPK المركّبُ في `driver_service_zones` كانَ سيتولّدُ `driver_service_zones_wasla_public_id_zone_id_pk` لا الكنونيَّ `driver_service_zones_pkey`؛ (4) الفهارسُ ذاتُ `DESC` (ثلاثةٌ) كانت ستتولّدُ `DESC NULLS LAST` بدلَ `DESC` المجرّدِ؛ (5) **فجوةٌ حقيقيّةٌ لم تكن شكليّةً:** عمودا `required_documents_ride`/`required_documents_delivery` في الإسقاطِ **بلا القيمتَينِ الافتراضيّتَينِ** `ARRAY['national_id','driving_license','vehicle_registration']::TEXT[]` — وseed العقدِ يتركُهما للقيمةِ الافتراضيّةِ، فترحيلٌ مولَّدٌ من الإسقاطِ القديمِ كانَ سيُسقِطُ seed كاملًا (فشلُ `INSERT` بـNOT NULL) لا مجرّدَ انحرافِ اسمٍ؛ (6) ترتيبُ شرطِ فهرسِ `ix_driver_documents_expiry` خُولِفَ إلى ترتيبِ العقدِ حرفاً (`status = 'verified' AND expires_at IS NOT NULL`) لأنّ `pg_get_indexdef` يُعيدُ طباعةَ شجرةِ التحليلِ بترتيبِها الأصليِّ فانحرافُ الترتيبِ ينجو دلاليّاً ويُسقِطُ فحصَ التكافؤِ الحرفيَّ. عُولِجَ الجميعُ بتجديدِ الإسقاطِ (46 قيداً كنونيّاً · `unique("driver_outbox_event_id_key")` · PK مسمّىً · `sql\`${table.x} DESC\`` بدلَ `.desc()` · الافتراضيّاتُ المفقودةُ · ترتيبُ الشرطِ)، والدالةُ والمُطلِقاتُ الثلاثةُ وseed النسخةِ 1 أُلحِقَت في قسمٍ مُعلَمٍ مُراجَعٍ لأنّ drizzle-kit لا يعبّرُ عنها.
+
+**ما الذي لم يكتمل (8):** لا شيءَ مؤجَّلٌ — نطاقُ الحجزِ `CLM-0106` شاملٌ منذُ البدايةِ (`pnpm-lock.yaml` و`docs/12-testing/` مضمَّنانِ تعلُّماً من خطأِ dispatch).
+
+**الخطوة التالية (9):** مراجعةُ الكودِ وفتحُ PR بعدَ الدفعِ، ثمّ بقيةُ خدماتِ الموجةِ 3 (negotiations · reputation · subscriptions · marketplace).
+
+**ما الذي يعتمد عليه العمل التالي (10):** اكتمالُ الموجةِ 3 كلِّها لإغلاقِ `RISK-0020`.
+
+**Migration/Deployment/Config (11):** ترحيلٌ عكوسٌ جديدٌ (الأوّلُ لـdrivers): `0000_mixed_squirrel_girl.sql` (أمامٌ مولَّدٌ + إلحاقٌ مُراجَعٌ للدالةِ والمُطلِقاتِ وseed النسخةِ 1) + `0000_mixed_squirrel_girl.down.sql` (رفيقُ ترجعٍ مُراجَعٌ). لا ترقيةَ بياناتٍ في هذه المرحلةِ.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** `RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجةِ 3 كلِّها (بقيَت negotiations · reputation · subscriptions · marketplace). التكافؤُ بسبعةِ أبعادٍ **مُتحقَّقٌ محلّيّاً** على PostgreSQL 18 حقيقيٍّ (وليسَ مفترضاً على CI وحدَها) — وCI يُعيدُ التحقُّقَ على PostgreSQL 15.
+
+**الروابط (13):** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md) · [LAUNCH_EXECUTION_BOARD M0-23](LAUNCH_EXECUTION_BOARD.md) · الفرعُ `feat/m0-23-drivers-migrations`
+
+**الشخص/الفريق الذي يتابع (14):** مالكُ البرنامجِ (فتحُ PR) · Team DB/Architecture (بقيّةُ الموجةِ 3)
+
+---
+
 ## 2026-09-07 · M0-23 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0105 بعدَ دمجِ PR #58
 
 **Work Item(s):** M0-23 · **Branch:** `chore/m0-23-release-claim-clm-0105` · **Scope:** `docs/16-progress/`

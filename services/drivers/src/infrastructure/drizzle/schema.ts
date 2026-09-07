@@ -34,11 +34,25 @@
  *    the new one enters it.
  * Both are checked per statement by Postgres, not at commit: they are not advice.
  *
- * Named CHECKs are projected; the DDL's INLINE (unnamed) checks are not, because
- * naming a constraint here that Postgres named `driver_profiles_status_check` would
- * put a fiction in the drift guard's vocabulary. The guard asserts the reverse
- * direction instead: every `ck_/ux_/ix_/trg_` name this service mentions anywhere
- * must exist in the DDL.
+ * [ADR-024 reconciliation] Constraint names are **canonical**, not bespoke: every
+ * column-level CHECK that the contract leaves inline (unnamed) is given the exact
+ * name PostgreSQL would auto-generate from it (`<table>_<column>_check`), every
+ * constraint the contract names explicitly (`ck_*` · `ux_*` · `ix_*`) keeps that
+ * name verbatim, and the inline `UNIQUE` on `driver_outbox.event_id` becomes the
+ * canonical constraint name `driver_outbox_event_id_key`. A projection with
+ * bespoke (or missing) names would generate a migration whose catalog diverges
+ * from the contract on every constraint name — exactly the drift that the
+ * full-cycle equivalence test (migrations.integration.test.ts) is here to catch.
+ * The composite primary key is named `driver_service_zones_pkey` to match
+ * PostgreSQL's auto-generated name for the contract's unnamed
+ * `PRIMARY KEY (wasla_public_id, zone_id)`.
+ *
+ * Deliberately NOT here — drizzle-kit cannot express them, so they travel as a
+ * hand-reviewed appended section of `drizzle/0000_*.sql` instead:
+ *  - the `driver_set_updated_at()` function and its three triggers
+ *    (`trg_driver_profiles_updated_at` · `trg_driver_vehicles_updated_at` ·
+ *    `trg_driver_documents_updated_at`),
+ *  - the frozen seed row of `driver_eligibility_policies` v1 'saudi-launch-v1'.
  */
 
 import { sql } from "drizzle-orm";
@@ -55,6 +69,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -89,6 +104,46 @@ export const driverProfiles = pgTable(
       .default(sql`now()`),
   },
   (table) => [
+    check(
+      "driver_profiles_wasla_public_id_check",
+      sql`${table.waslaPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "driver_profiles_display_name_check",
+      sql`${table.displayName} IS NULL OR char_length(${table.displayName}) BETWEEN 1 AND 80`,
+    ),
+    check(
+      "driver_profiles_preferred_locale_check",
+      sql`${table.preferredLocale} IN ('ar','en','ur')`,
+    ),
+    // The closed list is the same one locked in the order contract and in the
+    // candidacy projection: a missing kind hides a valid driver, an extra kind
+    // produces an offer that cannot be fulfilled.
+    check(
+      "driver_profiles_service_kinds_check",
+      sql`array_length(${table.serviceKinds}, 1) IS NULL OR ${table.serviceKinds} <@ ARRAY['ride','delivery']::TEXT[]`,
+    ),
+    check(
+      "driver_profiles_declared_availability_check",
+      sql`${table.declaredAvailability} IN ('available','offline')`,
+    ),
+    check(
+      "driver_profiles_verification_status_check",
+      sql`${table.verificationStatus} IN ('unverified','pending_review','verified','rejected')`,
+    ),
+    check("driver_profiles_status_check", sql`${table.status} IN ('active','suspended')`),
+    check(
+      "driver_profiles_suspension_reason_code_check",
+      sql`${table.suspensionReasonCode} IS NULL OR char_length(${table.suspensionReasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "driver_profiles_eligibility_policy_version_check",
+      sql`${table.eligibilityPolicyVersion} >= 1`,
+    ),
+    check(
+      "driver_profiles_last_published_state_check",
+      sql`${table.lastPublishedState} IS NULL OR ${table.lastPublishedState} IN ('eligible','ineligible','suspended','unknown')`,
+    ),
     // A suspension with no reason is a suspension nobody can explain to the driver,
     // and an active profile carrying a stale reason reads as still suspended.
     check(
@@ -124,8 +179,17 @@ export const driverServiceZones = pgTable(
       foreignColumns: [driverProfiles.waslaPublicId],
       name: "driver_service_zones_wasla_public_id_fkey",
     }).onDelete("cascade"),
-    // Composite primary key, as in the DDL: one row per (driver, zone).
-    primaryKey({ columns: [table.waslaPublicId, table.zoneId] }),
+    // Composite primary key, as in the DDL: one row per (driver, zone). Named
+    // canonically — PostgreSQL would auto-name the contract's unnamed
+    // `PRIMARY KEY (wasla_public_id, zone_id)` exactly this way.
+    primaryKey({
+      columns: [table.waslaPublicId, table.zoneId],
+      name: "driver_service_zones_pkey",
+    }),
+    check(
+      "driver_service_zones_preference_rank_check",
+      sql`${table.preferenceRank} BETWEEN 1 AND 50`,
+    ),
     // Two zones ranked "1" is not a preference, it is a tie the matcher must break
     // arbitrarily — so the database refuses it.
     uniqueIndex("ux_driver_service_zones_rank").on(table.waslaPublicId, table.preferenceRank),
@@ -164,6 +228,35 @@ export const driverVehicles = pgTable(
       foreignColumns: [driverProfiles.waslaPublicId],
       name: "driver_vehicles_wasla_public_id_fkey",
     }).onDelete("cascade"),
+    check(
+      "driver_vehicles_vehicle_class_check",
+      sql`${table.vehicleClass} IN ('sedan','suv','van','pickup','motorcycle','truck_small')`,
+    ),
+    check(
+      "driver_vehicles_make_check",
+      sql`${table.make} IS NULL OR char_length(${table.make}) BETWEEN 1 AND 40`,
+    ),
+    check(
+      "driver_vehicles_model_check",
+      sql`${table.model} IS NULL OR char_length(${table.model}) BETWEEN 1 AND 40`,
+    ),
+    check(
+      "driver_vehicles_model_year_check",
+      sql`${table.modelYear} IS NULL OR ${table.modelYear} BETWEEN 1970 AND 2100`,
+    ),
+    check(
+      "driver_vehicles_color_check",
+      sql`${table.color} IS NULL OR char_length(${table.color}) BETWEEN 1 AND 24`,
+    ),
+    check(
+      "driver_vehicles_plate_number_check",
+      sql`${table.plateNumber} IS NULL OR char_length(${table.plateNumber}) BETWEEN 3 AND 16`,
+    ),
+    check("driver_vehicles_status_check", sql`${table.status} IN ('active','retired')`),
+    check(
+      "driver_vehicles_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
     // A retired car cannot be the one we offer orders on.
     check(
       "ck_driver_vehicles_retired_not_primary",
@@ -218,6 +311,30 @@ export const driverDocuments = pgTable(
       foreignColumns: [driverVehicles.id],
       name: "driver_documents_vehicle_id_fkey",
     }).onDelete("cascade"),
+    check(
+      "driver_documents_document_type_check",
+      sql`${table.documentType} IN ('national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo')`,
+    ),
+    check(
+      "driver_documents_storage_ref_check",
+      sql`char_length(${table.storageRef}) BETWEEN 8 AND 200`,
+    ),
+    check(
+      "driver_documents_status_check",
+      sql`${table.status} IN ('pending','verified','rejected','superseded')`,
+    ),
+    check(
+      "driver_documents_reviewed_by_check",
+      sql`${table.reviewedBy} IS NULL OR char_length(${table.reviewedBy}) BETWEEN 2 AND 64`,
+    ),
+    check(
+      "driver_documents_rejection_reason_code_check",
+      sql`${table.rejectionReasonCode} IS NULL OR char_length(${table.rejectionReasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "driver_documents_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
     // Who decided, when, and — if refused — why. The audit question a month later is
     // "what did the reviewer see", and a row missing these cannot answer it.
     check(
@@ -244,9 +361,13 @@ export const driverDocuments = pgTable(
       .where(sql`${table.status} IN ('pending','verified')`),
     uniqueIndex("ux_driver_documents_idempotency").on(table.waslaPublicId, table.idempotencyKey),
     index("ix_driver_documents_owner").on(table.waslaPublicId, table.status),
+    // Predicate order follows the contract text verbatim (`status = 'verified'
+    // AND expires_at IS NOT NULL`): pg_get_indexdef reprints the stored tree, so a
+    // reordered predicate would survive semantically and still fail the catalog
+    // equivalence test on the indexdef string.
     index("ix_driver_documents_expiry")
       .on(table.expiresAt)
-      .where(sql`${table.expiresAt} IS NOT NULL AND ${table.status} = 'verified'`),
+      .where(sql`${table.status} = 'verified' AND ${table.expiresAt} IS NOT NULL`),
   ],
 );
 
@@ -259,8 +380,17 @@ export const driverEligibilityPolicies = pgTable(
   {
     version: integer("version").primaryKey(),
     label: text("label").notNull(),
-    requiredDocumentsRide: text("required_documents_ride").array().notNull(),
-    requiredDocumentsDelivery: text("required_documents_delivery").array().notNull(),
+    // القيمتان الافتراضيتان للوثائقِ المطلوبةِ مأخوذتان من العقدِ حرفاً (لا
+    // `'{}'`): seed النسخةِ 1 يتركُ العمودَينِ للقيمةِ الافتراضيّةِ، فغيابُها من
+    // الإسقاطِ كانَ سيُسقِطُ seed كاملًا عندَ التوليدِ.
+    requiredDocumentsRide: text("required_documents_ride")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['national_id','driving_license','vehicle_registration']::TEXT[]`),
+    requiredDocumentsDelivery: text("required_documents_delivery")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['national_id','driving_license','vehicle_registration']::TEXT[]`),
     requirePrimaryVehicle: boolean("require_primary_vehicle").notNull().default(true),
     requireServiceZone: boolean("require_service_zone").notNull().default(true),
     documentGraceDays: integer("document_grace_days").notNull().default(0),
@@ -271,6 +401,15 @@ export const driverEligibilityPolicies = pgTable(
       .default(sql`now()`),
   },
   (table) => [
+    check("driver_eligibility_policies_version_check", sql`${table.version} >= 1`),
+    check(
+      "driver_eligibility_policies_label_check",
+      sql`char_length(${table.label}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "driver_eligibility_policies_document_grace_days_check",
+      sql`${table.documentGraceDays} BETWEEN 0 AND 60`,
+    ),
     check(
       "ck_policy_required_documents_known",
       sql`${table.requiredDocumentsRide} <@ ARRAY['national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo']::TEXT[] AND ${table.requiredDocumentsDelivery} <@ ARRAY['national_id','driving_license','vehicle_registration','vehicle_insurance','vehicle_photo']::TEXT[]`,
@@ -303,6 +442,22 @@ export const driverEligibilityLog = pgTable(
       foreignColumns: [driverProfiles.waslaPublicId],
       name: "driver_eligibility_log_wasla_public_id_fkey",
     }).onDelete("cascade"),
+    check(
+      "driver_eligibility_log_from_state_check",
+      sql`${table.fromState} IS NULL OR ${table.fromState} IN ('eligible','ineligible','suspended','unknown')`,
+    ),
+    check(
+      "driver_eligibility_log_to_state_check",
+      sql`${table.toState} IN ('eligible','ineligible','suspended','unknown')`,
+    ),
+    check(
+      "driver_eligibility_log_policy_version_check",
+      sql`${table.policyVersion} >= 1`,
+    ),
+    check(
+      "driver_eligibility_log_trigger_check",
+      sql`${table.trigger} IN ('profile_changed','document_reviewed','document_submitted','vehicle_changed','zones_changed','availability_declared','suspended','reinstated','expiry_tick','recompute')`,
+    ),
     // "ineligible, no reason given" is the one row this table must never contain:
     // it is exactly the row a driver would call support about.
     //
@@ -315,7 +470,9 @@ export const driverEligibilityLog = pgTable(
       "ck_eligibility_log_reasons",
       sql`${table.toState} = 'eligible' OR cardinality(${table.reasons}) >= 1`,
     ),
-    index("ix_driver_eligibility_log_driver").on(table.waslaPublicId, table.evaluatedAt.desc()),
+    // `DESC` is a raw SQL expression (not `.desc()`): drizzle's `.desc()` renders
+    // as `DESC NULLS LAST`, which diverges from the contract's plain `DESC`.
+    index("ix_driver_eligibility_log_driver").on(table.waslaPublicId, sql`${table.evaluatedAt} DESC`),
   ],
 );
 
@@ -345,14 +502,37 @@ export const driverCandidacyPublications = pgTable(
       foreignColumns: [driverProfiles.waslaPublicId],
       name: "driver_candidacy_publications_wasla_public_id_fkey",
     }).onDelete("cascade"),
+    check(
+      "driver_candidacy_publications_eligibility_state_check",
+      sql`${table.eligibilityState} IN ('eligible','ineligible','suspended','unknown')`,
+    ),
+    check(
+      "driver_candidacy_publications_availability_state_check",
+      sql`${table.availabilityState} IN ('available','busy','offline')`,
+    ),
+    check(
+      "driver_candidacy_publications_vehicle_class_check",
+      sql`${table.vehicleClass} IS NULL OR ${table.vehicleClass} IN ('sedan','suv','van','pickup','motorcycle','truck_small')`,
+    ),
+    check(
+      "driver_candidacy_publications_outcome_check",
+      sql`${table.outcome} IN ('published','rejected','unavailable')`,
+    ),
+    check(
+      "driver_candidacy_publications_failure_code_check",
+      sql`${table.failureCode} IS NULL OR char_length(${table.failureCode}) BETWEEN 3 AND 64`,
+    ),
     // A failure with no code cannot be diagnosed; a success with one is a lie.
     check(
       "ck_candidacy_publication_outcome",
       sql`(${table.outcome} = 'published' AND ${table.failureCode} IS NULL) OR (${table.outcome} <> 'published' AND ${table.failureCode} IS NOT NULL)`,
     ),
-    index("ix_driver_candidacy_publications_driver").on(table.waslaPublicId, table.attemptedAt.desc()),
+    index("ix_driver_candidacy_publications_driver").on(
+      table.waslaPublicId,
+      sql`${table.attemptedAt} DESC`,
+    ),
     index("ix_driver_candidacy_publications_failed")
-      .on(table.attemptedAt.desc())
+      .on(sql`${table.attemptedAt} DESC`)
       .where(sql`${table.outcome} <> 'published'`),
   ],
 );
@@ -365,7 +545,7 @@ export const driverOutbox = pgTable(
   "driver_outbox",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    eventId: uuid("event_id").notNull().unique(),
+    eventId: uuid("event_id").notNull(),
     eventType: text("event_type").notNull(),
     eventVersion: text("event_version").notNull(),
     aggregateType: text("aggregate_type").notNull(),
@@ -379,6 +559,12 @@ export const driverOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => [
+    // Canonical name of the contract's inline `event_id UUID NOT NULL UNIQUE`.
+    unique("driver_outbox_event_id_key").on(table.eventId),
+    check(
+      "driver_outbox_aggregate_type_check",
+      sql`${table.aggregateType} IN ('driver','driver_document','driver_vehicle')`,
+    ),
     index("ix_driver_outbox_unpublished")
       .on(table.occurredAt)
       .where(sql`${table.publishedAt} IS NULL`),
@@ -399,4 +585,14 @@ export const driverIdempotency = pgTable(
       .notNull()
       .default(sql`now()`),
   },
+  (table) => [
+    check(
+      "driver_idempotency_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 192`,
+    ),
+    check(
+      "driver_idempotency_payload_fingerprint_check",
+      sql`char_length(${table.payloadFingerprint}) BETWEEN 1 AND 4096`,
+    ),
+  ],
 );

@@ -1,5 +1,39 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-07 · M0-23 · الموجةُ 3 — مصالحةُ dispatch وإلحاقُها بالترحيلاتِ المولَّدةِ العكوسةِ
+
+**Work Item(s):** M0-23 · **Reservation:** `CLM-0104` · **Branch:** `feat/m0-23-dispatch-migrations` · **ADR:** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md)
+
+**ماذا تم إنجاز (1):** انتظَمَت `dispatch` في الترحيلاتِ المولَّدةِ العكوسةِ — سادسَ خدمةً/حزمةً. أُضيفَ `services/dispatch/drizzle.config.ts` (مكيَّفٌ من customers: schema/out/dialect/dbCredentials/strict/verbose)، وسكربتاتُ `db:generate`/`db:push`/`db:studio` في `services/dispatch/package.json`. وُلِّدَ الترحيلُ الأساسُ `drizzle/0000_foamy_johnny_blaze.sql` بـ`drizzle-kit generate`، وأُلحِقَ بيدٍ مُعلَمةٍ صريحاً (قسمُ «إلحاقٌ مُراجَعٌ — خارجَ نطاقِ التوليدِ» · ADR-024 §2.1) فانضمَّ إليهِ رفيقُ الترجعِ `0000_foamy_johnny_blaze.down.sql` الذي يُسقِطُ المُطلِقاتِ والدالّةَ والفهارسَ والجداولَ بترتيبٍ عكسيٍّ للتبعيّاتِ، واختبارُ الدورةِ الكاملةِ `src/__tests__/migrations.integration.test.ts` مكيَّفٌ من customers.
+
+**لماذا تم اختياره (2):** إكمالُ تطبيقِ ADR-024 على خدماتِ الموجةِ 3 المتبقية. dispatch هي الخدمةُ الخامسةُ في ترتيبِ الموجةِ 3 المُعلَنِ (matching · dispatch · drivers · negotiations · reputation · subscriptions · marketplace)، ونقطةُ انطلاقِ الموجةِ بعدَ اكتمالِ الموجةِ 2 (5 خدماتٍ/حزمٍ منتظِمةٍ). بدونِ هذا الترحيلِ تبقى dispatch خارجَ مسارِ «مخطَّطٌ قائمٌ → معدَّلٌ» وتعتمدُ على `DROP`+إعادةِ تشغيلِ DDL — وهو يعملُ للاختبارِ لا للإنتاجِ.
+
+**أين تم التغيير (3):** `services/dispatch/{drizzle.config.ts, package.json, src/infrastructure/drizzle/schema.ts, drizzle/0000_foamy_johnny_blaze.sql, drizzle/0000_foamy_johnny_blaze.down.sql, drizzle/meta/_journal.json, drizzle/meta/0000_snapshot.json, src/__tests__/migrations.integration.test.ts}`؛ `docs/16-progress/{TASK_LOG.md, LAUNCH_EXECUTION_BOARD.md}`.
+
+**الملفات/الخدمات المتأثرة (4):** خدمةُ `@wasla/dispatch-service` فقط (لا منطقٌ تشغيليٌّ — ترحيلاتٌ وإسقاطٌ واختبارٌ). لا يتأثرُ أيُّ مستهلكٍ: العقدُ (`contracts/schema.sql`) لم يُمسَّ، والإسقاطُ حُذِّيَ إليهِ لا العكسُ.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا تغييرٌ في العقدِ. الإسقاطُ `schema.ts` هو الذي صُولِحَ ليطابقَ العقدَ حرفاً (انظر §7).
+
+**كيف تم الاختبار (6):** اختبارُ الدورةِ الكاملةِ للترحيلاتِ **3/3 ناجحةً** على PostgreSQL 17 محلّيّاً (`@embedded-postgres/linux-x64`): (أ) تكافؤُ الكتالوجِ في سبعةِ أبعادٍ (جداولٍ · أعمدةٍ · قيودٍ · فهارسٍ · مُطلِقاتٍ · دوالَّ · متتابعاتٍ) بينَ العقدِ والترحيلِ — 0 فروقٍ؛ (ب) الترجعُ يُعيدُ القاعدةَ نظيفةً تماماً؛ (ج) إعادةُ التطبيقِ ودورةٌ ثانيةٌ متطابقةٌ. ومجموعةُ التكاملِ **51/51 ناجحةً** (3 جديدةٍ + 48 سابقةً)، والوحدويّةُ **252/252 ناجحةً** (21 ملفّاً)، و`pnpm -r typecheck` **رمزُ 0**.
+
+**ما المشاكل التي ظهرت (7):** الإسقاطُ الموجودُ كان منحرفاً عن العقدِ بشكلٍ جوهريٍّ لا بسيطٍ: (1) استخدمَ اصطلاحَ تسميةٍ مختلفاً للقيودِ (`ck_dispatch_*_shape/domain/length`) بدلَ أسماءِ PostgreSQL الكنسيّةِ المُولَّدةِ تلقائيّاً للقيودِ العموديّةِ (`<table>_<column>_check`)؛ (2) أغفلَ 18 قيدَ CHECK عموديّاً كان العقدُ يفرضُها (order_type · vehicle_class · status · status_reason_code · ruleset_version · wave_size · offer_timeout_seconds · max_waves · escalation_timeout_seconds · created_idempotency_key · payload_fingerprint في jobs، وwave_number وstatus وreason_code في waves، وdriver_public_id وstatus وreason_code في offers، وevent_version وaggregate_type وtrace_id في outbox، وidempotency_key وpayload_fingerprint في idempotency)؛ (3) أغفلَ إعطاءَ أسماءٍ صريحةٍ لقيودِ UNIQUE العموديّةِ فكانَت ستُولِّدُ `_unique` بدلَ `_key` الكنسيّةِ. عُولِجَ بتجديدِ الإسقاطِ كاملاً بأسماءٍ كنسيّةٍ مطابقةٍ للعقدِ، تماماً كما فعلَت الموجةُ 2b-1 مع orders.
+
+**ما الذي لم يكتمل (8):** `pnpm-lock.yaml` يحتاجُ تحديثاً ميكانيكيّاً (3 أسطر: إضافةُ `drizzle-kit` كاعتمادِ تطويرٍ لـdispatch — مطلوبٌ ليعملَ `pnpm --filter @wasla/dispatch-service db:generate` ولاجمودِ CI على `--frozen-lockfile`)، لكنّهُ خارجَ نطاقِ الحجزِ `CLM-0104` (نطاقُهُ `services/dispatch/,docs/16-progress/,docs/12-testing/`، و`pnpm-lock.yaml` في جذرِ المستودعِ)، وقاعدةُ §6 تمنعُ توسيعَ الحجزِ بعدَ بدءِ الكتابةِ — فلا يُدفعُ ضمنَ هذا الحجز. المالكُ يقرِّرُ: توسيعُ الحجزِ ليشملَ `pnpm-lock.yaml` (حجزٌ ثانٍ)، أو قبولُ التغييرِ.
+
+**الخطوة التالية (9):** قرارُ المالكِ في `pnpm-lock.yaml` (توسيعُ الحجزِ أم قبولُ التغييرِ)، ثمّ فتحُ PR بعدَ المراجعةِ (لا يفتحُ الوكيلُ PR بنفسِه — المالكُ يفتحُه). ثمّ بقيةُ خدماتِ الموجةِ 3 (matching · drivers · negotiations · reputation · subscriptions · marketplace).
+
+**ما الذي يعتمد عليه العمل التالي (10):** اكتمالُ الموجةِ 3 كلِّها لإغلاقِ `RISK-0020`.
+
+**Migration/Deployment/Config (11):** ترحيلٌ عكوسٌ جديدٌ (الأوّلُ لـdispatch): `0000_foamy_johnny_blaze.sql` (أمامٌ مولَّدٌ + إلحاقٌ مُراجَعٌ للدالّةِ والمُطلِقاتِ) + `0000_foamy_johnny_blaze.down.sql` (رفيقُ ترجعٍ مُراجَعٌ). لا ترقيةَ بياناتٍ في هذه المرحلة.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** `RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجةِ 3 كلِّها. `drizzle-kit` (`^0.31.10`) أُضيفَ كاعتمادِ تطويرٍ لـdispatch مطابقاً للنمطِ (customers · orders · identity · geography تستخدمُه) — لكنّ تحديثَ `pnpm-lock.yaml` المقابلَ مُؤجَّلٌ لقرارِ المالكِ (انظر §8).
+
+**الروابط (13):** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md) · [LAUNCH_EXECUTION_BOARD M0-23](LAUNCH_EXECUTION_BOARD.md) · الفرعُ `feat/m0-23-dispatch-migrations`
+
+**الشخص/الفريق الذي يتابع (14):** مالكُ البرنامجِ (قرارُ `pnpm-lock.yaml` وفتحُ PR) · Team DB/Architecture (بقيةُ الموجةِ 3)
+
+---
+
 > **⚠ ترتيب المرجعية (2026-08-25 · [ADR-017](../15-decisions/ADR-017-unified-roadmap-governance-and-work-claim-system.md)):** نقطة الدخول الإلزامية للمستودع هي [`docs/16-progress/README.md`](README.md)، ومصدر الحقيقة لبوابات الإطلاق هو [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) و[`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md). **هذه الوثيقة السجل الزمني المُلزِم** ولا تُستبدل ولا تُختصر. وكل إدخال يجب أن يحوي سطر `**Work Item(s):** Mx-yy` — يتحقق منه `require-doc-update.sh` آلياً.
 >
 > **ولا يبدأ أحد عملاً** قبل `bash scripts/checks/find-existing-work.sh "<المجال>"` وسطر حجز في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) — [`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md).

@@ -16,7 +16,10 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "dev": "tsx watch src/http/server.ts",
-    "start": "node --import tsx src/http/server.ts"
+    "start": "node --import tsx src/http/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@wasla/auth-sdk": "workspace:*",

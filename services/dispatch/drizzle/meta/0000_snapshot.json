@@ -1,0 +1,792 @@
+{
+  "id": "4badc351-f2cb-41d5-8250-fb52ca0ec312",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.dispatch_idempotency": {
+      "name": "dispatch_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "dispatch_idempotency_idempotency_key_check": {
+          "name": "dispatch_idempotency_idempotency_key_check",
+          "value": "char_length(\"dispatch_idempotency\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "dispatch_idempotency_payload_fingerprint_check": {
+          "name": "dispatch_idempotency_payload_fingerprint_check",
+          "value": "char_length(\"dispatch_idempotency\".\"payload_fingerprint\") BETWEEN 1 AND 4096"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.dispatch_jobs": {
+      "name": "dispatch_jobs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zone_id": {
+          "name": "zone_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_type": {
+          "name": "order_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicle_class": {
+          "name": "vehicle_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "status_reason_code": {
+          "name": "status_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wave_size": {
+          "name": "wave_size",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offer_timeout_seconds": {
+          "name": "offer_timeout_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_waves": {
+          "name": "max_waves",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalation_timeout_seconds": {
+          "name": "escalation_timeout_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalation_expires_at": {
+          "name": "escalation_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_idempotency_key": {
+          "name": "created_idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_dispatch_jobs_status_due": {
+          "name": "ix_dispatch_jobs_status_due",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_dispatch_jobs_escalation_due": {
+          "name": "ix_dispatch_jobs_escalation_due",
+          "columns": [
+            {
+              "expression": "escalation_expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"dispatch_jobs\".\"status\" = 'escalated_community'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "dispatch_jobs_order_id_key": {
+          "name": "dispatch_jobs_order_id_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "order_id"
+          ]
+        },
+        "dispatch_jobs_order_public_id_key": {
+          "name": "dispatch_jobs_order_public_id_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "order_public_id"
+          ]
+        },
+        "ux_dispatch_jobs_idempotency_key": {
+          "name": "ux_dispatch_jobs_idempotency_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "created_idempotency_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "dispatch_jobs_order_public_id_check": {
+          "name": "dispatch_jobs_order_public_id_check",
+          "value": "\"dispatch_jobs\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "dispatch_jobs_order_type_check": {
+          "name": "dispatch_jobs_order_type_check",
+          "value": "\"dispatch_jobs\".\"order_type\" IN ('ride','delivery')"
+        },
+        "dispatch_jobs_vehicle_class_check": {
+          "name": "dispatch_jobs_vehicle_class_check",
+          "value": "\"dispatch_jobs\".\"vehicle_class\" IN ('sedan','suv','van','pickup','motorcycle','truck_small')"
+        },
+        "dispatch_jobs_status_check": {
+          "name": "dispatch_jobs_status_check",
+          "value": "\"dispatch_jobs\".\"status\" IN ('pending','dispatching','escalated_community','assigned','exhausted','cancelled')"
+        },
+        "dispatch_jobs_status_reason_code_check": {
+          "name": "dispatch_jobs_status_reason_code_check",
+          "value": "\"dispatch_jobs\".\"status_reason_code\" IS NULL OR char_length(\"dispatch_jobs\".\"status_reason_code\") BETWEEN 3 AND 64"
+        },
+        "dispatch_jobs_ruleset_version_check": {
+          "name": "dispatch_jobs_ruleset_version_check",
+          "value": "\"dispatch_jobs\".\"ruleset_version\" >= 1"
+        },
+        "dispatch_jobs_wave_size_check": {
+          "name": "dispatch_jobs_wave_size_check",
+          "value": "\"dispatch_jobs\".\"wave_size\" >= 1"
+        },
+        "dispatch_jobs_offer_timeout_seconds_check": {
+          "name": "dispatch_jobs_offer_timeout_seconds_check",
+          "value": "\"dispatch_jobs\".\"offer_timeout_seconds\" >= 1"
+        },
+        "dispatch_jobs_max_waves_check": {
+          "name": "dispatch_jobs_max_waves_check",
+          "value": "\"dispatch_jobs\".\"max_waves\" >= 1"
+        },
+        "dispatch_jobs_escalation_timeout_seconds_check": {
+          "name": "dispatch_jobs_escalation_timeout_seconds_check",
+          "value": "\"dispatch_jobs\".\"escalation_timeout_seconds\" >= 1"
+        },
+        "dispatch_jobs_created_idempotency_key_check": {
+          "name": "dispatch_jobs_created_idempotency_key_check",
+          "value": "char_length(\"dispatch_jobs\".\"created_idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "dispatch_jobs_payload_fingerprint_check": {
+          "name": "dispatch_jobs_payload_fingerprint_check",
+          "value": "char_length(\"dispatch_jobs\".\"payload_fingerprint\") = 64"
+        },
+        "ck_dispatch_jobs_terminal_needs_reason": {
+          "name": "ck_dispatch_jobs_terminal_needs_reason",
+          "value": "\"dispatch_jobs\".\"status\" NOT IN ('assigned','exhausted','cancelled') OR \"dispatch_jobs\".\"status_reason_code\" IS NOT NULL"
+        },
+        "ck_dispatch_jobs_deadline_order": {
+          "name": "ck_dispatch_jobs_deadline_order",
+          "value": "\"dispatch_jobs\".\"escalation_expires_at\" >= \"dispatch_jobs\".\"expires_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.dispatch_offers": {
+      "name": "dispatch_offers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "job_id": {
+          "name": "job_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wave_id": {
+          "name": "wave_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_assignment_id": {
+          "name": "order_assignment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offered'"
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "offered_at": {
+          "name": "offered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "responded_at": {
+          "name": "responded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_dispatch_offers_wave": {
+          "name": "ix_dispatch_offers_wave",
+          "columns": [
+            {
+              "expression": "wave_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "offered_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_dispatch_offers_open_due": {
+          "name": "ix_dispatch_offers_open_due",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"dispatch_offers\".\"status\" = 'offered'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ux_dispatch_offers_one_accepted_job": {
+          "name": "ux_dispatch_offers_one_accepted_job",
+          "columns": [
+            {
+              "expression": "job_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"dispatch_offers\".\"status\" = 'accepted'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dispatch_offers_job_id_fkey": {
+          "name": "dispatch_offers_job_id_fkey",
+          "tableFrom": "dispatch_offers",
+          "tableTo": "dispatch_jobs",
+          "columnsFrom": [
+            "job_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "dispatch_offers_wave_id_fkey": {
+          "name": "dispatch_offers_wave_id_fkey",
+          "tableFrom": "dispatch_offers",
+          "tableTo": "dispatch_waves",
+          "columnsFrom": [
+            "wave_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_dispatch_offers_job_driver": {
+          "name": "ux_dispatch_offers_job_driver",
+          "nullsNotDistinct": false,
+          "columns": [
+            "job_id",
+            "driver_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "dispatch_offers_driver_public_id_check": {
+          "name": "dispatch_offers_driver_public_id_check",
+          "value": "\"dispatch_offers\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "dispatch_offers_status_check": {
+          "name": "dispatch_offers_status_check",
+          "value": "\"dispatch_offers\".\"status\" IN ('offered','accepted','rejected','timed_out','superseded','cancelled')"
+        },
+        "dispatch_offers_reason_code_check": {
+          "name": "dispatch_offers_reason_code_check",
+          "value": "\"dispatch_offers\".\"reason_code\" IS NULL OR char_length(\"dispatch_offers\".\"reason_code\") BETWEEN 3 AND 64"
+        },
+        "ck_dispatch_offers_terminal_needs_reason": {
+          "name": "ck_dispatch_offers_terminal_needs_reason",
+          "value": "\"dispatch_offers\".\"status\" = 'offered' OR \"dispatch_offers\".\"reason_code\" IS NOT NULL"
+        },
+        "ck_dispatch_offers_state_timestamp": {
+          "name": "ck_dispatch_offers_state_timestamp",
+          "value": "(\"dispatch_offers\".\"status\" = 'offered' AND \"dispatch_offers\".\"responded_at\" IS NULL AND \"dispatch_offers\".\"resolved_at\" IS NULL) OR (\"dispatch_offers\".\"status\" = 'accepted' AND \"dispatch_offers\".\"responded_at\" IS NOT NULL AND \"dispatch_offers\".\"resolved_at\" IS NOT NULL) OR (\"dispatch_offers\".\"status\" = 'rejected' AND \"dispatch_offers\".\"responded_at\" IS NOT NULL AND \"dispatch_offers\".\"resolved_at\" IS NOT NULL) OR (\"dispatch_offers\".\"status\" IN ('timed_out','superseded','cancelled') AND \"dispatch_offers\".\"resolved_at\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.dispatch_outbox": {
+      "name": "dispatch_outbox",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_version": {
+          "name": "event_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_dispatch_outbox_unpublished": {
+          "name": "ix_dispatch_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"dispatch_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_dispatch_outbox_aggregate": {
+          "name": "ix_dispatch_outbox_aggregate",
+          "columns": [
+            {
+              "expression": "aggregate_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "aggregate_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "dispatch_outbox_event_version_check": {
+          "name": "dispatch_outbox_event_version_check",
+          "value": "\"dispatch_outbox\".\"event_version\" ~ '^v[0-9]+$'"
+        },
+        "dispatch_outbox_aggregate_type_check": {
+          "name": "dispatch_outbox_aggregate_type_check",
+          "value": "\"dispatch_outbox\".\"aggregate_type\" IN ('dispatch_job','dispatch_offer')"
+        },
+        "dispatch_outbox_trace_id_check": {
+          "name": "dispatch_outbox_trace_id_check",
+          "value": "\"dispatch_outbox\".\"trace_id\" IS NULL OR char_length(\"dispatch_outbox\".\"trace_id\") <= 128"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.dispatch_waves": {
+      "name": "dispatch_waves",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "job_id": {
+          "name": "job_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wave_number": {
+          "name": "wave_number",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ux_dispatch_waves_one_open_job": {
+          "name": "ux_dispatch_waves_one_open_job",
+          "columns": [
+            {
+              "expression": "job_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"dispatch_waves\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_dispatch_waves_open_due": {
+          "name": "ix_dispatch_waves_open_due",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"dispatch_waves\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dispatch_waves_job_id_fkey": {
+          "name": "dispatch_waves_job_id_fkey",
+          "tableFrom": "dispatch_waves",
+          "tableTo": "dispatch_jobs",
+          "columnsFrom": [
+            "job_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_dispatch_waves_job_number": {
+          "name": "ux_dispatch_waves_job_number",
+          "nullsNotDistinct": false,
+          "columns": [
+            "job_id",
+            "wave_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "dispatch_waves_wave_number_check": {
+          "name": "dispatch_waves_wave_number_check",
+          "value": "\"dispatch_waves\".\"wave_number\" >= 1"
+        },
+        "dispatch_waves_status_check": {
+          "name": "dispatch_waves_status_check",
+          "value": "\"dispatch_waves\".\"status\" IN ('open','completed','cancelled')"
+        },
+        "dispatch_waves_reason_code_check": {
+          "name": "dispatch_waves_reason_code_check",
+          "value": "\"dispatch_waves\".\"reason_code\" IS NULL OR char_length(\"dispatch_waves\".\"reason_code\") BETWEEN 3 AND 64"
+        },
+        "ck_dispatch_waves_terminal_needs_reason": {
+          "name": "ck_dispatch_waves_terminal_needs_reason",
+          "value": "\"dispatch_waves\".\"status\" = 'open' OR \"dispatch_waves\".\"reason_code\" IS NOT NULL"
+        },
+        "ck_dispatch_waves_state_timestamp": {
+          "name": "ck_dispatch_waves_state_timestamp",
+          "value": "(\"dispatch_waves\".\"status\" = 'open' AND \"dispatch_waves\".\"completed_at\" IS NULL) OR (\"dispatch_waves\".\"status\" <> 'open' AND \"dispatch_waves\".\"completed_at\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

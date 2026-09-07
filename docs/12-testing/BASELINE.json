@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T13:31:03Z",
+  "generated_at": "2026-09-07T16:35:29Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "03055cd8ff9a6689c4125d100cb17b6035e68459",
-    "branch": "chore/risk-0020-progress-orders",
+    "commit": "aba476ca0b08d94d79004146ad7444881ea54a63",
+    "branch": "feat/m0-23-dispatch-migrations",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "إلحاقُ حزمةِ channel-postgres بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2b-2): إصلاحُ 3 انحرافاتٍ في schema.ts (فهرسُ DESC بـraw SQL بلا NULLS LAST + فهرسانِ جزئيّانِ ناقصا شرطِ WHERE)، وتوليدُ الترحيلِ، ونموذجُ التكافؤِ الخاصُّ بالحزمةِ (يحلُّ العقدَ من حزمةِ channel-core المنفصلةِ عبرَ مسارٍ نسبيٍّ — لا يفترضُ مجلدَ contracts محلّيّاً)، ورفيقُ الترجعِ، واختبارُ الدورةِ (0 فروقٍ · 24/24 تكامليّاً · 9/9 وحدويّاً · نموٌّ 273→274 ملفَّ اختبارٍ)",
-    "tracked_files": 1453
+    "dirty_files": 1,
+    "dirty_reason": "إلحاقُ خدمةِ dispatch بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 3): مصالحةُ schema.ts مع العقدِ حرفاً (أسماءُ قيودٍ كنسيّةٌ + 18 قيدَ CHECK عموديّاً مفقوداً) + توليدُ الترحيلِ 0000_foamy_johnny_blaze + اختبارُ الدورةِ الكاملةِ (3/3) + تحديثُ الأساسِ",
+    "tracked_files": 1465
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 274,
+    "test_files_tracked": 275,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify4.log",
-    "tests_passed": 3836,
-    "test_files_executed": 228,
-    "governance_suite_cases": 182,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "source": "/tmp/verify_dispatch4.log",
+    "tests_passed": 3816,
+    "test_files_executed": 226,
+    "governance_suite_cases": 183,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
-  "fingerprint": "sha256:d516500358d6b71917701dba13611edf6fb9a4c3245b2f6f82920cf00d99a1e1",
+  "fingerprint": "sha256:6bfb96f943c95bf29e6a4de43714b3f94c741e29253c7426b02d6037e593f545",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

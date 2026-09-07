@@ -98,12 +98,12 @@ function ddlTableBody(tableName: string): string {
 }
 
 /**
- * يفصل تعريفات الأعمدة متعددة الأسطر عن القيود متعددة الأسطر.
+ * يجمع تعريفات الأعمدة كاملةً (متعددةَ الأسطرِ) من جسمِ الجدولِ.
  *
  * يبدأ كل عمود في العقد بمسافة ثم اسم ونوع PostgreSQL؛ أما التعليقات والقيود فلا تطابق هذه
  * البداية. تجميع الأسطر التالية مهم لحالات `state DEFAULT 'open'` التي يضعها العقد بسطرين.
  */
-function ddlColumns(tableName: string): ColumnShape[] {
+function ddlColumnDefinitions(tableName: string): string[] {
   const definitions: string[] = [];
   let current: string[] | null = null;
 
@@ -128,6 +128,12 @@ function ddlColumns(tableName: string): ColumnShape[] {
     }
   }
   if (current !== null) definitions.push(current.join(' '));
+
+  return definitions;
+}
+
+function ddlColumns(tableName: string): ColumnShape[] {
+  const definitions = ddlColumnDefinitions(tableName);
 
   return definitions.map((definition) => {
     const match =
@@ -201,7 +207,15 @@ function drizzleNames(table: AnyTable): string[] {
     .sort();
 }
 
-/** يجمع القيود والفهارس المسماة في العقد، سواء كانت داخل الجدول أو CREATE INDEX خارجه. */
+/**
+ * يجمع القيود والفهارس المسماة في العقد، سواء كانت داخل الجدول أو CREATE INDEX خارجه.
+ *
+ * [مصالحة ADR-024] تُشتقُّ أيضاً الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ غيرِ المسماةِ:
+ * كلُّ عمودٍ يحملُ `CHECK` في تعريفِه يسمّيهِ PostgreSQL تلقائيّاً عندَ تطبيقِ
+ * العقدِ `<table>_<column>_check`، والمرآةُ تُسمّيهِ كذلك حرفاً منذُ الموجةِ 3.
+ * إغفالُ الاشتقاقِ كان سيُسقِطُ الاختبارَ لمجرّدِ أنّ العقدَ يتركُ التسميةَ
+ * لقاعدةِ البياناتِ — مع أنّ الاسمَ حقيقةٌ في الكتالوجِ يقيسُها اختبارُ الدورةِ.
+ */
 function ddlNames(tableName: string): string[] {
   const names = new Set<string>();
   const body = ddlTableBody(tableName);
@@ -210,6 +224,16 @@ function ddlNames(tableName: string): string[] {
     /CONSTRAINT\s+((?:ck|ux)_negotiation_[a-z_]+)/gu,
   )) {
     names.add(match[1] as string);
+  }
+
+  // الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ (العمودُ كاملُ التعريفِ متعددَ الأسطرِ).
+  for (const definition of ddlColumnDefinitions(tableName)) {
+    if (/\bCHECK\b/u.test(definition)) {
+      const column = /^([a-z_]+)\s/u.exec(definition)?.[1];
+      if (column !== undefined) {
+        names.add(`${tableName}_${column}_check`);
+      }
+    }
   }
 
   const indexPattern =

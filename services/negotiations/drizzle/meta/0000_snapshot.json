@@ -1,0 +1,1458 @@
+{
+  "id": "a9a82f1e-680f-49f8-8373-b111f28fd258",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.negotiation_agreements": {
+      "name": "negotiation_agreements",
+      "schema": "",
+      "columns": {
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_no": {
+          "name": "round_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accepted_by": {
+          "name": "accepted_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agreed_at": {
+          "name": "agreed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "handoff_state": {
+          "name": "handoff_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "handoff_attempts": {
+          "name": "handoff_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "handed_off_at": {
+          "name": "handed_off_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_handoff_at": {
+          "name": "next_handoff_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_error_code": {
+          "name": "last_error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_negotiation_agreements_order": {
+          "name": "ix_negotiation_agreements_order",
+          "columns": [
+            {
+              "expression": "order_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_negotiation_agreements_handoff_due": {
+          "name": "ix_negotiation_agreements_handoff_due",
+          "columns": [
+            {
+              "expression": "next_handoff_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"negotiation_agreements\".\"handoff_state\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_agreements_thread_id_fkey": {
+          "name": "negotiation_agreements_thread_id_fkey",
+          "tableFrom": "negotiation_agreements",
+          "tableTo": "negotiation_threads",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "negotiation_agreements_policy_version_fkey": {
+          "name": "negotiation_agreements_policy_version_fkey",
+          "tableFrom": "negotiation_agreements",
+          "tableTo": "negotiation_policies",
+          "columnsFrom": [
+            "policy_version"
+          ],
+          "columnsTo": [
+            "policy_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_negotiation_agreements_order_driver": {
+          "name": "ux_negotiation_agreements_order_driver",
+          "nullsNotDistinct": false,
+          "columns": [
+            "order_public_id",
+            "driver_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_agreements_order_public_id_check": {
+          "name": "negotiation_agreements_order_public_id_check",
+          "value": "\"negotiation_agreements\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "negotiation_agreements_driver_public_id_check": {
+          "name": "negotiation_agreements_driver_public_id_check",
+          "value": "\"negotiation_agreements\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "negotiation_agreements_round_no_check": {
+          "name": "negotiation_agreements_round_no_check",
+          "value": "\"negotiation_agreements\".\"round_no\" >= 1"
+        },
+        "negotiation_agreements_amount_minor_check": {
+          "name": "negotiation_agreements_amount_minor_check",
+          "value": "\"negotiation_agreements\".\"amount_minor\" > 0"
+        },
+        "negotiation_agreements_currency_check": {
+          "name": "negotiation_agreements_currency_check",
+          "value": "\"negotiation_agreements\".\"currency\" ~ '^[A-Z]{3}$'"
+        },
+        "negotiation_agreements_accepted_by_check": {
+          "name": "negotiation_agreements_accepted_by_check",
+          "value": "\"negotiation_agreements\".\"accepted_by\" IN ('customer','driver')"
+        },
+        "negotiation_agreements_handoff_state_check": {
+          "name": "negotiation_agreements_handoff_state_check",
+          "value": "\"negotiation_agreements\".\"handoff_state\" IN ('pending','handed_off','rejected','abandoned')"
+        },
+        "negotiation_agreements_handoff_attempts_check": {
+          "name": "negotiation_agreements_handoff_attempts_check",
+          "value": "\"negotiation_agreements\".\"handoff_attempts\" >= 0"
+        },
+        "negotiation_agreements_last_error_code_check": {
+          "name": "negotiation_agreements_last_error_code_check",
+          "value": "\"negotiation_agreements\".\"last_error_code\" IS NULL OR char_length(\"negotiation_agreements\".\"last_error_code\") BETWEEN 3 AND 64"
+        },
+        "ck_negotiation_agreements_handed_off_at": {
+          "name": "ck_negotiation_agreements_handed_off_at",
+          "value": "(\n        \"negotiation_agreements\".\"handoff_state\" = 'handed_off' AND\n        \"negotiation_agreements\".\"handed_off_at\" IS NOT NULL AND\n        \"negotiation_agreements\".\"next_handoff_at\" IS NULL\n      ) OR (\n        \"negotiation_agreements\".\"handoff_state\" <> 'handed_off' AND\n        \"negotiation_agreements\".\"handed_off_at\" IS NULL\n      )"
+        },
+        "ck_negotiation_agreements_terminal_no_retry": {
+          "name": "ck_negotiation_agreements_terminal_no_retry",
+          "value": "\"negotiation_agreements\".\"handoff_state\" NOT IN ('rejected','abandoned') OR \"negotiation_agreements\".\"next_handoff_at\" IS NULL"
+        },
+        "ck_negotiation_agreements_failure_named": {
+          "name": "ck_negotiation_agreements_failure_named",
+          "value": "\"negotiation_agreements\".\"handoff_state\" NOT IN ('rejected','abandoned') OR \"negotiation_agreements\".\"last_error_code\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_idempotency": {
+      "name": "negotiation_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_body": {
+          "name": "response_body",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_negotiation_idempotency_thread": {
+          "name": "ix_negotiation_idempotency_thread",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_idempotency_thread_id_fkey": {
+          "name": "negotiation_idempotency_thread_id_fkey",
+          "tableFrom": "negotiation_idempotency",
+          "tableTo": "negotiation_threads",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_idempotency_idempotency_key_check": {
+          "name": "negotiation_idempotency_idempotency_key_check",
+          "value": "char_length(\"negotiation_idempotency\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "negotiation_idempotency_scope_check": {
+          "name": "negotiation_idempotency_scope_check",
+          "value": "\"negotiation_idempotency\".\"scope\" IN (\n        'open_thread','propose_round','accept_round',\n        'reject_round','post_message','cancel_thread'\n      )"
+        },
+        "negotiation_idempotency_payload_fingerprint_check": {
+          "name": "negotiation_idempotency_payload_fingerprint_check",
+          "value": "char_length(\"negotiation_idempotency\".\"payload_fingerprint\") = 64"
+        },
+        "negotiation_idempotency_response_status_check": {
+          "name": "negotiation_idempotency_response_status_check",
+          "value": "\"negotiation_idempotency\".\"response_status\" BETWEEN 100 AND 599"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_messages": {
+      "name": "negotiation_messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sequence_no": {
+          "name": "sequence_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_role": {
+          "name": "author_role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_locale": {
+          "name": "source_locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ar'"
+        },
+        "system_code": {
+          "name": "system_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "round_no": {
+          "name": "round_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "redacted_at": {
+          "name": "redacted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "redaction_reason_code": {
+          "name": "redaction_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_negotiation_messages_thread": {
+          "name": "ix_negotiation_messages_thread",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sequence_no",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_messages_thread_id_fkey": {
+          "name": "negotiation_messages_thread_id_fkey",
+          "tableFrom": "negotiation_messages",
+          "tableTo": "negotiation_threads",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_negotiation_messages_thread_seq": {
+          "name": "ux_negotiation_messages_thread_seq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "thread_id",
+            "sequence_no"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_messages_sequence_no_check": {
+          "name": "negotiation_messages_sequence_no_check",
+          "value": "\"negotiation_messages\".\"sequence_no\" >= 1"
+        },
+        "negotiation_messages_author_role_check": {
+          "name": "negotiation_messages_author_role_check",
+          "value": "\"negotiation_messages\".\"author_role\" IN ('customer','driver','system')"
+        },
+        "negotiation_messages_body_check": {
+          "name": "negotiation_messages_body_check",
+          "value": "\"negotiation_messages\".\"body\" IS NULL OR char_length(\"negotiation_messages\".\"body\") BETWEEN 1 AND 1000"
+        },
+        "negotiation_messages_source_locale_check": {
+          "name": "negotiation_messages_source_locale_check",
+          "value": "\"negotiation_messages\".\"source_locale\" IN ('ar','en','ur')"
+        },
+        "negotiation_messages_system_code_check": {
+          "name": "negotiation_messages_system_code_check",
+          "value": "\"negotiation_messages\".\"system_code\" IS NULL OR char_length(\"negotiation_messages\".\"system_code\") BETWEEN 3 AND 64"
+        },
+        "negotiation_messages_round_no_check": {
+          "name": "negotiation_messages_round_no_check",
+          "value": "\"negotiation_messages\".\"round_no\" IS NULL OR \"negotiation_messages\".\"round_no\" >= 1"
+        },
+        "negotiation_messages_redaction_reason_code_check": {
+          "name": "negotiation_messages_redaction_reason_code_check",
+          "value": "\"negotiation_messages\".\"redaction_reason_code\" IS NULL OR char_length(\"negotiation_messages\".\"redaction_reason_code\") BETWEEN 3 AND 64"
+        },
+        "ck_negotiation_messages_body_or_code": {
+          "name": "ck_negotiation_messages_body_or_code",
+          "value": "(\n        \"negotiation_messages\".\"author_role\" IN ('customer', 'driver') AND\n        \"negotiation_messages\".\"system_code\" IS NULL AND\n        (\"negotiation_messages\".\"body\" IS NOT NULL OR \"negotiation_messages\".\"redacted_at\" IS NOT NULL)\n      ) OR (\n        \"negotiation_messages\".\"author_role\" = 'system' AND\n        \"negotiation_messages\".\"system_code\" IS NOT NULL AND\n        \"negotiation_messages\".\"body\" IS NULL\n      )"
+        },
+        "ck_negotiation_messages_redaction": {
+          "name": "ck_negotiation_messages_redaction",
+          "value": "(\n        \"negotiation_messages\".\"redacted_at\" IS NULL AND\n        \"negotiation_messages\".\"redaction_reason_code\" IS NULL\n      ) OR (\n        \"negotiation_messages\".\"redacted_at\" IS NOT NULL AND\n        \"negotiation_messages\".\"redaction_reason_code\" IS NOT NULL AND\n        \"negotiation_messages\".\"body\" IS NULL\n      )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_outbox": {
+      "name": "negotiation_outbox",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_version": {
+          "name": "event_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_negotiation_outbox_unpublished": {
+          "name": "ix_negotiation_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"negotiation_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_outbox_aggregate_type_check": {
+          "name": "negotiation_outbox_aggregate_type_check",
+          "value": "\"negotiation_outbox\".\"aggregate_type\" IN (\n        'negotiation_thread','negotiation_round','negotiation_message'\n      )"
+        },
+        "negotiation_outbox_event_type_check": {
+          "name": "negotiation_outbox_event_type_check",
+          "value": "char_length(\"negotiation_outbox\".\"event_type\") >= 3"
+        },
+        "negotiation_outbox_event_version_check": {
+          "name": "negotiation_outbox_event_version_check",
+          "value": "\"negotiation_outbox\".\"event_version\" ~ '^v[0-9]+$'"
+        },
+        "negotiation_outbox_attempts_check": {
+          "name": "negotiation_outbox_attempts_check",
+          "value": "\"negotiation_outbox\".\"attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_policies": {
+      "name": "negotiation_policies",
+      "schema": "",
+      "columns": {
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "min_amount_minor": {
+          "name": "min_amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_amount_minor": {
+          "name": "max_amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_rounds": {
+          "name": "max_rounds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_ttl_seconds": {
+          "name": "round_ttl_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thread_ttl_seconds": {
+          "name": "thread_ttl_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_message_length": {
+          "name": "max_message_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_messages_per_thread": {
+          "name": "max_messages_per_thread",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_policies_policy_version_check": {
+          "name": "negotiation_policies_policy_version_check",
+          "value": "\"negotiation_policies\".\"policy_version\" >= 1"
+        },
+        "negotiation_policies_label_check": {
+          "name": "negotiation_policies_label_check",
+          "value": "char_length(\"negotiation_policies\".\"label\") BETWEEN 3 AND 64"
+        },
+        "negotiation_policies_currency_check": {
+          "name": "negotiation_policies_currency_check",
+          "value": "\"negotiation_policies\".\"currency\" ~ '^[A-Z]{3}$'"
+        },
+        "negotiation_policies_min_amount_minor_check": {
+          "name": "negotiation_policies_min_amount_minor_check",
+          "value": "\"negotiation_policies\".\"min_amount_minor\" > 0"
+        },
+        "negotiation_policies_max_amount_minor_check": {
+          "name": "negotiation_policies_max_amount_minor_check",
+          "value": "\"negotiation_policies\".\"max_amount_minor\" > 0"
+        },
+        "negotiation_policies_max_rounds_check": {
+          "name": "negotiation_policies_max_rounds_check",
+          "value": "\"negotiation_policies\".\"max_rounds\" BETWEEN 1 AND 20"
+        },
+        "negotiation_policies_round_ttl_seconds_check": {
+          "name": "negotiation_policies_round_ttl_seconds_check",
+          "value": "\"negotiation_policies\".\"round_ttl_seconds\" BETWEEN 30 AND 3600"
+        },
+        "negotiation_policies_thread_ttl_seconds_check": {
+          "name": "negotiation_policies_thread_ttl_seconds_check",
+          "value": "\"negotiation_policies\".\"thread_ttl_seconds\" BETWEEN 60 AND 86400"
+        },
+        "negotiation_policies_max_message_length_check": {
+          "name": "negotiation_policies_max_message_length_check",
+          "value": "\"negotiation_policies\".\"max_message_length\" BETWEEN 1 AND 1000"
+        },
+        "negotiation_policies_max_messages_per_thread_check": {
+          "name": "negotiation_policies_max_messages_per_thread_check",
+          "value": "\"negotiation_policies\".\"max_messages_per_thread\" BETWEEN 1 AND 500"
+        },
+        "ck_negotiation_policies_amount_bounds": {
+          "name": "ck_negotiation_policies_amount_bounds",
+          "value": "\"negotiation_policies\".\"max_amount_minor\" > \"negotiation_policies\".\"min_amount_minor\""
+        },
+        "ck_negotiation_policies_ttl_order": {
+          "name": "ck_negotiation_policies_ttl_order",
+          "value": "\"negotiation_policies\".\"thread_ttl_seconds\" >= \"negotiation_policies\".\"round_ttl_seconds\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_price_handoffs": {
+      "name": "negotiation_price_handoffs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attempt_no": {
+          "name": "attempt_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_negotiation_price_handoffs_thread": {
+          "name": "ix_negotiation_price_handoffs_thread",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"attempt_no\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_price_handoffs_thread_id_fkey": {
+          "name": "negotiation_price_handoffs_thread_id_fkey",
+          "tableFrom": "negotiation_price_handoffs",
+          "tableTo": "negotiation_agreements",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "thread_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_negotiation_price_handoffs_attempt": {
+          "name": "ux_negotiation_price_handoffs_attempt",
+          "nullsNotDistinct": false,
+          "columns": [
+            "thread_id",
+            "attempt_no"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_price_handoffs_attempt_no_check": {
+          "name": "negotiation_price_handoffs_attempt_no_check",
+          "value": "\"negotiation_price_handoffs\".\"attempt_no\" >= 1"
+        },
+        "negotiation_price_handoffs_amount_minor_check": {
+          "name": "negotiation_price_handoffs_amount_minor_check",
+          "value": "\"negotiation_price_handoffs\".\"amount_minor\" > 0"
+        },
+        "negotiation_price_handoffs_currency_check": {
+          "name": "negotiation_price_handoffs_currency_check",
+          "value": "\"negotiation_price_handoffs\".\"currency\" ~ '^[A-Z]{3}$'"
+        },
+        "negotiation_price_handoffs_outcome_check": {
+          "name": "negotiation_price_handoffs_outcome_check",
+          "value": "\"negotiation_price_handoffs\".\"outcome\" IS NULL OR \"negotiation_price_handoffs\".\"outcome\" IN ('accepted','rejected','unavailable')"
+        },
+        "negotiation_price_handoffs_response_status_check": {
+          "name": "negotiation_price_handoffs_response_status_check",
+          "value": "\"negotiation_price_handoffs\".\"response_status\" IS NULL OR \"negotiation_price_handoffs\".\"response_status\" BETWEEN 100 AND 599"
+        },
+        "negotiation_price_handoffs_error_code_check": {
+          "name": "negotiation_price_handoffs_error_code_check",
+          "value": "\"negotiation_price_handoffs\".\"error_code\" IS NULL OR char_length(\"negotiation_price_handoffs\".\"error_code\") BETWEEN 3 AND 64"
+        },
+        "ck_negotiation_price_handoffs_completion": {
+          "name": "ck_negotiation_price_handoffs_completion",
+          "value": "(\n        \"negotiation_price_handoffs\".\"outcome\" IS NULL AND\n        \"negotiation_price_handoffs\".\"completed_at\" IS NULL\n      ) OR (\n        \"negotiation_price_handoffs\".\"outcome\" IS NOT NULL AND\n        \"negotiation_price_handoffs\".\"completed_at\" IS NOT NULL\n      )"
+        },
+        "ck_negotiation_price_handoffs_failure_named": {
+          "name": "ck_negotiation_price_handoffs_failure_named",
+          "value": "\"negotiation_price_handoffs\".\"outcome\" IS NULL OR \"negotiation_price_handoffs\".\"outcome\" = 'accepted' OR \"negotiation_price_handoffs\".\"error_code\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_rounds": {
+      "name": "negotiation_rounds",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_no": {
+          "name": "round_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposed_by": {
+          "name": "proposed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "resolved_by": {
+          "name": "resolved_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "responded_at": {
+          "name": "responded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_negotiation_rounds_thread": {
+          "name": "ix_negotiation_rounds_thread",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"round_no\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ux_negotiation_rounds_one_pending": {
+          "name": "ux_negotiation_rounds_one_pending",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"negotiation_rounds\".\"state\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ux_negotiation_rounds_one_accepted": {
+          "name": "ux_negotiation_rounds_one_accepted",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"negotiation_rounds\".\"state\" = 'accepted'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_negotiation_rounds_pending_due": {
+          "name": "ix_negotiation_rounds_pending_due",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"negotiation_rounds\".\"state\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_rounds_thread_id_fkey": {
+          "name": "negotiation_rounds_thread_id_fkey",
+          "tableFrom": "negotiation_rounds",
+          "tableTo": "negotiation_threads",
+          "columnsFrom": [
+            "thread_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_negotiation_rounds_thread_no": {
+          "name": "ux_negotiation_rounds_thread_no",
+          "nullsNotDistinct": false,
+          "columns": [
+            "thread_id",
+            "round_no"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_rounds_round_no_check": {
+          "name": "negotiation_rounds_round_no_check",
+          "value": "\"negotiation_rounds\".\"round_no\" >= 1"
+        },
+        "negotiation_rounds_proposed_by_check": {
+          "name": "negotiation_rounds_proposed_by_check",
+          "value": "\"negotiation_rounds\".\"proposed_by\" IN ('customer','driver')"
+        },
+        "negotiation_rounds_amount_minor_check": {
+          "name": "negotiation_rounds_amount_minor_check",
+          "value": "\"negotiation_rounds\".\"amount_minor\" > 0"
+        },
+        "negotiation_rounds_currency_check": {
+          "name": "negotiation_rounds_currency_check",
+          "value": "\"negotiation_rounds\".\"currency\" ~ '^[A-Z]{3}$'"
+        },
+        "negotiation_rounds_state_check": {
+          "name": "negotiation_rounds_state_check",
+          "value": "\"negotiation_rounds\".\"state\" IN ('pending','accepted','rejected','superseded','expired')"
+        },
+        "negotiation_rounds_resolved_by_check": {
+          "name": "negotiation_rounds_resolved_by_check",
+          "value": "\"negotiation_rounds\".\"resolved_by\" IS NULL OR \"negotiation_rounds\".\"resolved_by\" IN ('customer','driver')"
+        },
+        "ck_negotiation_rounds_state_timestamp": {
+          "name": "ck_negotiation_rounds_state_timestamp",
+          "value": "(\n        \"negotiation_rounds\".\"state\" = 'pending' AND\n        \"negotiation_rounds\".\"responded_at\" IS NULL AND\n        \"negotiation_rounds\".\"resolved_by\" IS NULL\n      ) OR (\n        \"negotiation_rounds\".\"state\" IN ('accepted', 'rejected') AND\n        \"negotiation_rounds\".\"responded_at\" IS NOT NULL AND\n        \"negotiation_rounds\".\"resolved_by\" IS NOT NULL\n      ) OR (\n        \"negotiation_rounds\".\"state\" IN ('superseded', 'expired') AND\n        \"negotiation_rounds\".\"resolved_by\" IS NULL\n      )"
+        },
+        "ck_negotiation_rounds_no_self_resolution": {
+          "name": "ck_negotiation_rounds_no_self_resolution",
+          "value": "\"negotiation_rounds\".\"resolved_by\" IS NULL OR \"negotiation_rounds\".\"resolved_by\" <> \"negotiation_rounds\".\"proposed_by\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.negotiation_threads": {
+      "name": "negotiation_threads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "customer_public_id": {
+          "name": "customer_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dispatch_offer_id": {
+          "name": "dispatch_offer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_kind": {
+          "name": "service_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "close_reason_code": {
+          "name": "close_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opening_amount_minor": {
+          "name": "opening_amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opened_by": {
+          "name": "opened_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_count": {
+          "name": "round_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "current_round_no": {
+          "name": "current_round_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "agreed_round_no": {
+          "name": "agreed_round_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "next_tick_at": {
+          "name": "next_tick_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "ix_negotiation_threads_order": {
+          "name": "ix_negotiation_threads_order",
+          "columns": [
+            {
+              "expression": "order_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"created_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_negotiation_threads_driver": {
+          "name": "ix_negotiation_threads_driver",
+          "columns": [
+            {
+              "expression": "driver_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"created_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_negotiation_threads_state": {
+          "name": "ix_negotiation_threads_state",
+          "columns": [
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"created_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_negotiation_threads_tick_due": {
+          "name": "ix_negotiation_threads_tick_due",
+          "columns": [
+            {
+              "expression": "next_tick_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"negotiation_threads\".\"state\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "negotiation_threads_policy_version_fkey": {
+          "name": "negotiation_threads_policy_version_fkey",
+          "tableFrom": "negotiation_threads",
+          "tableTo": "negotiation_policies",
+          "columnsFrom": [
+            "policy_version"
+          ],
+          "columnsTo": [
+            "policy_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_negotiation_threads_order_driver": {
+          "name": "ux_negotiation_threads_order_driver",
+          "nullsNotDistinct": false,
+          "columns": [
+            "order_public_id",
+            "driver_public_id"
+          ]
+        },
+        "ux_negotiation_threads_dispatch_offer": {
+          "name": "ux_negotiation_threads_dispatch_offer",
+          "nullsNotDistinct": false,
+          "columns": [
+            "dispatch_offer_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "negotiation_threads_order_public_id_check": {
+          "name": "negotiation_threads_order_public_id_check",
+          "value": "\"negotiation_threads\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "negotiation_threads_customer_public_id_check": {
+          "name": "negotiation_threads_customer_public_id_check",
+          "value": "\"negotiation_threads\".\"customer_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "negotiation_threads_driver_public_id_check": {
+          "name": "negotiation_threads_driver_public_id_check",
+          "value": "\"negotiation_threads\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "negotiation_threads_service_kind_check": {
+          "name": "negotiation_threads_service_kind_check",
+          "value": "\"negotiation_threads\".\"service_kind\" IN ('ride','delivery')"
+        },
+        "negotiation_threads_state_check": {
+          "name": "negotiation_threads_state_check",
+          "value": "\"negotiation_threads\".\"state\" IN ('open','agreed','declined','expired','cancelled')"
+        },
+        "negotiation_threads_close_reason_code_check": {
+          "name": "negotiation_threads_close_reason_code_check",
+          "value": "\"negotiation_threads\".\"close_reason_code\" IS NULL OR \"negotiation_threads\".\"close_reason_code\" IN (\n        'agreed',\n        'declined_by_customer','declined_by_driver',\n        'max_rounds_reached','thread_expired',\n        'cancelled_by_dispatch','order_withdrawn'\n      )"
+        },
+        "negotiation_threads_currency_check": {
+          "name": "negotiation_threads_currency_check",
+          "value": "\"negotiation_threads\".\"currency\" ~ '^[A-Z]{3}$'"
+        },
+        "negotiation_threads_opening_amount_minor_check": {
+          "name": "negotiation_threads_opening_amount_minor_check",
+          "value": "\"negotiation_threads\".\"opening_amount_minor\" > 0"
+        },
+        "negotiation_threads_opened_by_check": {
+          "name": "negotiation_threads_opened_by_check",
+          "value": "\"negotiation_threads\".\"opened_by\" IN ('customer','driver')"
+        },
+        "negotiation_threads_round_count_check": {
+          "name": "negotiation_threads_round_count_check",
+          "value": "\"negotiation_threads\".\"round_count\" >= 0"
+        },
+        "negotiation_threads_current_round_no_check": {
+          "name": "negotiation_threads_current_round_no_check",
+          "value": "\"negotiation_threads\".\"current_round_no\" >= 0"
+        },
+        "negotiation_threads_agreed_round_no_check": {
+          "name": "negotiation_threads_agreed_round_no_check",
+          "value": "\"negotiation_threads\".\"agreed_round_no\" IS NULL OR \"negotiation_threads\".\"agreed_round_no\" >= 1"
+        },
+        "negotiation_threads_version_check": {
+          "name": "negotiation_threads_version_check",
+          "value": "\"negotiation_threads\".\"version\" >= 1"
+        },
+        "ck_negotiation_threads_open_is_clean": {
+          "name": "ck_negotiation_threads_open_is_clean",
+          "value": "\"negotiation_threads\".\"state\" <> 'open' OR (\n        \"negotiation_threads\".\"closed_at\" IS NULL AND\n        \"negotiation_threads\".\"agreed_round_no\" IS NULL AND\n        \"negotiation_threads\".\"close_reason_code\" IS NULL\n      )"
+        },
+        "ck_negotiation_threads_closed_has_reason": {
+          "name": "ck_negotiation_threads_closed_has_reason",
+          "value": "\"negotiation_threads\".\"state\" = 'open' OR (\n        \"negotiation_threads\".\"closed_at\" IS NOT NULL AND\n        \"negotiation_threads\".\"close_reason_code\" IS NOT NULL AND\n        \"negotiation_threads\".\"next_tick_at\" IS NULL\n      )"
+        },
+        "ck_negotiation_threads_agreed_names_round": {
+          "name": "ck_negotiation_threads_agreed_names_round",
+          "value": "(\n        \"negotiation_threads\".\"state\" = 'agreed' AND\n        \"negotiation_threads\".\"agreed_round_no\" IS NOT NULL AND\n        \"negotiation_threads\".\"close_reason_code\" = 'agreed'\n      ) OR (\n        \"negotiation_threads\".\"state\" <> 'agreed' AND\n        \"negotiation_threads\".\"agreed_round_no\" IS NULL AND\n        \"negotiation_threads\".\"close_reason_code\" <> 'agreed'\n      ) OR \"negotiation_threads\".\"state\" = 'open'"
+        },
+        "ck_negotiation_threads_round_counters": {
+          "name": "ck_negotiation_threads_round_counters",
+          "value": "\"negotiation_threads\".\"current_round_no\" <= \"negotiation_threads\".\"round_count\""
+        },
+        "ck_negotiation_threads_agreed_round_exists": {
+          "name": "ck_negotiation_threads_agreed_round_exists",
+          "value": "\"negotiation_threads\".\"agreed_round_no\" IS NULL OR \"negotiation_threads\".\"agreed_round_no\" <= \"negotiation_threads\".\"current_round_no\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

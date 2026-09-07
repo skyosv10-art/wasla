@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| CLM-0108 | M0-23 | @uxxxu (agent:computer) | feat/m0-23-reputation-migrations | services/reputation/,docs/16-progress/,docs/12-testing/,pnpm-lock.yaml | 2026-09-07 | 2026-09-21 | Active |
 | CLM-0099 | M0-23 | @uxxxu (agent:computer) | feat/m0-23-migrations-phase1 | services/customers/,docs/15-decisions/,docs/16-progress/,docs/12-testing/,docs/07-security/,scripts/checks/,scripts/verify.sh | 2026-09-07 | 2026-09-21 | Released (PR #49 مُدمج 2026-09-07 · التزام الدمج 2d92450 · الموجة 1 كاملة) |
 | CLM-0100 | M0-23 | @uxxxu (agent:computer) | feat/m0-23-migrations-phase2a | services/identity/,services/geography/,docs/16-progress/,docs/12-testing/,docs/07-security/ | 2026-09-07 | 2026-09-21 | Released (PR #50 مُدمج 2026-09-07 · التزام الدمج 5aabe71 · الموجة 2a كاملة: identity+geography) |
 | CLM-0101 | M0-23 | @uxxxu (agent:computer) | feat/m0-23-orders-migrations | services/orders/,docs/16-progress/,docs/12-testing/ | 2026-09-07 | 2026-09-21 | Released (PR #52 مُدمج 2026-09-07 · التزام الدمج a137087 · الموجة 2b-1 كاملة: orders مصالحةٌ كاملةٌ للعقدِ) |

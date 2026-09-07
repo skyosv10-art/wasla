@@ -37,7 +37,7 @@ export const identityUsers = pgTable(
     internalUuid: uuid("internal_uuid")
       .primaryKey()
       .default(sql`gen_random_uuid()`),
-    waslaPublicId: text("wasla_public_id").notNull().unique(),
+    waslaPublicId: text("wasla_public_id").notNull().unique("identity_users_wasla_public_id_key"),
     status: text("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -48,6 +48,7 @@ export const identityUsers = pgTable(
     version: integer("version").notNull().default(1),
   },
   (table) => [
+    uniqueIndex("uq_identity_users_public_id").on(table.waslaPublicId),
     check(
       "identity_users_status_check",
       sql`${table.status} IN ('active','suspended','deleted','recovery_in_progress')`,
@@ -75,6 +76,7 @@ export const identityLinks = pgTable(
     ),
     index("ix_identity_links_user").on(table.userInternalUuid, table.provider),
     foreignKey({
+      name: "identity_links_user_internal_uuid_fkey",
       columns: [table.userInternalUuid],
       foreignColumns: [identityUsers.internalUuid],
     }).onDelete("restrict"),
@@ -103,8 +105,10 @@ export const identityHistory = pgTable(
     index("ix_identity_history_user_field").on(
       table.userInternalUuid,
       table.field,
+      sql`${table.effectiveAt} DESC`,
     ),
     foreignKey({
+      name: "identity_history_user_internal_uuid_fkey",
       columns: [table.userInternalUuid],
       foreignColumns: [identityUsers.internalUuid],
     }).onDelete("restrict"),
@@ -134,6 +138,7 @@ export const identityRecoveryRequests = pgTable(
   },
   (table) => [
     foreignKey({
+      name: "identity_recovery_requests_user_internal_uuid_fkey",
       columns: [table.userInternalUuid],
       foreignColumns: [identityUsers.internalUuid],
     }).onDelete("restrict"),
@@ -153,7 +158,7 @@ export const identityOutbox = pgTable(
   "identity_outbox",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    eventId: uuid("event_id").notNull().unique(),
+    eventId: uuid("event_id").notNull().unique("identity_outbox_event_id_key"),
     eventType: text("event_type").notNull(),
     eventVersion: text("event_version").notNull(),
     aggregateId: uuid("aggregate_id").notNull(),
@@ -164,7 +169,12 @@ export const identityOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("ix_identity_outbox_unpublished").on(table.occurredAt),
+    // فهرسٌ جزئيٌّ غيرُ فريدٍ — يلتقطُ الأحداثَ غيرَ المنشورةِ فقط. الفريدُ على
+    // occurred_at كان خطأً كامناً يمنعُ حدثَينِ بنفسِ الطابعِ الزمنيِّ — والعقدُ
+    // (contracts/schema.sql) جزئيٌّ غيرُ فريدٍ، فصُحِّحَ الإسقاطُ ليتطابقَ.
+    index("ix_identity_outbox_unpublished")
+      .on(table.occurredAt)
+      .where(sql`"identity_outbox"."published_at" IS NULL`),
   ],
 );
 
@@ -195,11 +205,12 @@ export const identitySessions = pgTable(
   },
   (table) => [
     foreignKey({
+      name: "identity_sessions_user_internal_uuid_fkey",
       columns: [table.userInternalUuid],
       foreignColumns: [identityUsers.internalUuid],
     }).onDelete("restrict"),
     uniqueIndex("uq_identity_sessions_token").on(table.tokenHash),
-    index("ix_identity_sessions_user").on(table.userInternalUuid, table.issuedAt),
+    index("ix_identity_sessions_user").on(table.userInternalUuid, sql`${table.issuedAt} DESC`),
     check(
       "identity_sessions_actor_type_check",
       sql`${table.actorType} IN ('customer','driver','admin','support')`,
@@ -208,5 +219,24 @@ export const identitySessions = pgTable(
       "identity_sessions_channel_check",
       sql`${table.channel} IN ('telegram','web','mobile')`,
     ),
+    check(
+      "identity_sessions_token_hash_check",
+      sql`${table.tokenHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "identity_sessions_init_data_hash_check",
+      sql`(${table.initDataHash} IS NULL OR ${table.initDataHash} ~ '^[0-9a-f]{64}$')`,
+    ),
+    check(
+      "identity_sessions_check",
+      sql`${table.expiresAt} > ${table.issuedAt}`,
+    ),
+    check(
+      "identity_sessions_check1",
+      sql`(${table.revokedAt} IS NULL) = (${table.revokedReason} IS NULL)`,
+    ),
+    uniqueIndex("uq_identity_sessions_init_data")
+      .on(table.initDataHash)
+      .where(sql`"identity_sessions"."init_data_hash" IS NOT NULL`),
   ],
 );

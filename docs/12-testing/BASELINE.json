@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T00:03:18Z",
+  "generated_at": "2026-09-07T12:25:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "58e0b88ca2ecafa61f3dc09e324b4c2447a6feb3",
-    "branch": "feat/m0-23-migrations-phase1",
+    "commit": "2d92450f21beeab656297730d3a79d71e423d4e8",
+    "branch": "feat/m0-23-migrations-phase2a",
     "dirty": true,
-    "dirty_files": 10,
-    "dirty_reason": "إضافةُ الفحصِ 13 (حارسُ الترحيلاتِ · M0-23) وحالاتِ إثباتِهِ التسعِ، واختبارِ الدورةِ الكاملةِ للترحيلاتِ في customers — موجةُ M0-23 الأولى (ADR-024)",
-    "tracked_files": 1426
+    "dirty_files": 12,
+    "dirty_reason": "إلحاقُ خدمتَيْ identity وgeography بنظامِ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 الموجةُ 2a): توقيعُFK/UNIQUE/partial-index/DESC في schema.ts، وتوليدُ الترحيلِ، وإلحاقُ الدالةِّ والمُطلِقاتِ، ورفاقُ الترجعِ، واختبارُ الدورةِ الكاملةِ، وإزالةُ استثناءِ .gitignore لـidentity/drizzle (نموٌّ 270→272 ملفَّ اختبارٍ)",
+    "tracked_files": 1435
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 270,
+    "test_files_tracked": 272,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-09-07T013000Z-m0-23-migrations-phase1/local-measurements/verify.log",
-    "tests_passed": 3816,
-    "test_files_executed": 226,
+    "source": "/tmp/verify2.log",
+    "tests_passed": 3836,
+    "test_files_executed": 228,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:83c360b9e0248167348a2a3cbb4570bb26965cb780aa6ae00f3c48df392283fd",
+  "fingerprint": "sha256:589d443695975247c8d60b29e4be25a20896dca521e6281c1d045332e565ba07",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

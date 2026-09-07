@@ -1,0 +1,101 @@
+# CI Evidence — M0-23 الموجة 2a: ترحيلاتُ identity وgeography العكوسة
+
+**العنصر:** M0-23 · **الفرع:** `feat/m0-23-migrations-phase2a` · **الحجز:** CLM-0100
+**التاريخ:** 2026-09-07T12:09Z · **الالتزام الأساس:** `2d92450` (دمج PR #49)
+
+## النطاق المنفَّذ
+
+توسيعُ نظامِ الترحيلاتِ المولَّدةِ العكوسةِ (ADR-024) ليشملَ خدمتَيْن
+إضافيَّتَيْنِ من الموجةِ الثانيةِ:
+
+- **`services/identity`** — 6 جداول + outbox + مُطلِق `updated_at`.
+- **`services/geography`** — 7 جداول + 4 جداولِ أسماءٍ + outbox + 6 مُطلِقاتٍ.
+
+## الإسقاطُ (schema.ts) أُصلِحَ ليطابقَ العقدَ
+
+الإسقاطُ في كلِّ خدمةٍ كان **أرخى من العقدِ** (قيودٌ وفهارسُ غائبةٌ، وأسماءُ
+قيدٍ مفتاحيٍّ طويلةٌ لا تطابقُ اصطلاحَ PostgreSQL في العقدِ). صُحِّحَت:
+
+| الانحرافُ | العلاجُ في `schema.ts` |
+|---|---|
+| أسماءُ FK طويلة (`..._user_internal_uuid_..._fk`) | `foreignKey({...}, { name: "..._fkey" })` |
+| PK مركَّبةٌ (`..._pk`) | `primaryKey({ columns, name: "..._pkey" })` |
+| قيودُ `UNIQUE` (`..._unique`) | `.unique("..._key")` |
+| فهرسٌ جزئيٌّ غائرٌ على outbox | `.where(sql\`"tbl"."col" IS NULL\`)` |
+| ترتيبُ `DESC` بإضافةِ `NULLS LAST` | `sql\`${table.col} DESC\`` |
+| قيودُ `CHECK` مفقودةٌ | إلحاقُها صريحةً |
+| فهارسُ فريدةٌ مفقودةٌ | إلحاقُها |
+
+## أرتفاكتاتُ الترحيلِ
+
+لكلِّ خدمةٍ (`identity` · `geography`):
+- `drizzle/0000_*.sql` — مولَّدٌ بـ`drizzle-kit generate` + **قسمُ إلحاقٍ مُراجَعٍ**
+  للدالةِّ والمُطلِقاتِ (خارجَ نطاقِ التوليدِ، مُعلَمٌ صريحاً لا مُدَّعى).
+- `drizzle/0000_*.down.sql` — رفيقُ الترجعِ المُراجَعُ (ترتيبٌ عكسيٌّ تامٌّ).
+- `drizzle/meta/_journal.json` + `0000_snapshot.json` — بياناتُ drizzle الوصفيةُ.
+- `src/__tests__/migrations.integration.test.ts` — اختبارُ الدورةِ الكاملةِ (نُسِخَ من `customers`).
+
+## التحقّقُ
+
+### اختبارُ التكافؤِ مع العقدِ (7 أبعادِ كتالوجٍ)
+
+`scripts/checks/` (برنامجُ المقارنةِ المؤقَّتُ `diff-migration.mjs`) يطبِّقُ الترحيلَ
+على قاعدةِ بياناتٍ، ثمّ يقارنُ الكتالوجَ بالعقدِ (`contracts/schema.sql`) عبرَ:
+جداولٍ · أعمدةٍ · قيودٍ · فهارسٍ · مُطلِقاتٍ · دوالَّ · متتابعاتٍ.
+
+- **identity:** 0 فروقٍ (بعدَ إصلاحِ الإسقاطِ).
+- **geography:** 0 فروقٍ (بعدَ إصلاحِ الإسقاطِ).
+
+### اختبارُ الدورةِ الكاملةِ (`migrations.integration.test.ts`)
+
+3 حالاتٍ لكلِّ خدمةٍ: تطبيقٌ + تحقّقُ التكافؤِ · ترجعٌ يُعيدُ القاعدةَ نظيفةً · إعادةُ تطبيقٍ ودورةٌ ثانيةٌ.
+
+- **identity:** 8/8 اختباراتِ تكاملٍ (3 ترحيلٍ + 2 exit-gate + 3 postgres-repository).
+- **geography:** 10/10 اختباراتِ تكاملٍ (3 ترحيلٍ + 3 exit-gate + 4 postgres-repository).
+
+### الاختباراتُ الوحدويةُ
+
+- **identity:** 66/66.
+- **geography:** 54/54.
+
+### الحارسُ والأساسُ
+
+- `validate-migrations.sh`: الخدماتُ المنتظِمةُ `customers · geography · identity`
+  — journal سليمٌ ورفاقُ ترجعٍ حاضرون.
+- `validate-baseline.sh`: 4 أبوابٍ ناجحةٌ (الصيغةُ · لا انحدارَ · تكرارٌ مُبرهَنٌ · سببٌ مكتوبٌ).
+- `verify-governance.sh`: كلُّ الفحوصِ المُنفَّذةِ نجحت (الفحصُ 8 CI متخطًّى — يُنفَّذ على الـPR).
+- الأساسُ الآليُّ: `test_files_tracked` 270→272 · `tests_passed` 3816→3836 · بصمةٌ `589d4436`.
+
+## ما لم يُنفَّذ (مؤجَّلٌ كموجةٍ 2b)
+
+- **`orders`** — `schema.ts` إسقاطٌ جزئيٌّ يتبنّى اصطلاحَ تسميةٍ مختلفاً عن العقدِ
+  (`ck_orders_*_shape` مقابل `orders_*_check`) ويفتقدُ 28 قيدَ `CHECK`.
+  تتطلَّبُ مصالحةً كبيرةً لـ`schema.ts` (إعادةُ تسميةٍ + إلحاقُ قيودٍ) — عنصرُ عملٍ مستقلٌّ.
+- **`channel-postgres`** — حزمةٌ (لا خدمةٌ) بلا `contracts/schema.sql`؛
+  نمطُ «التكافؤِ مع العقدِ» لا ينطبقُ مباشرةً ويحتاجُ تصميمَ تكافؤٍ خاصّاً بالحزمة.
+
+`RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجتَيْنِ 2b و3.
+
+## نتائجُ CI (PR #50 · التشغيلُ `34121827783`)
+
+**27/27 فحصاً مطلوباً خضراء** (الحالةُ `MERGEABLE`):
+
+| الفحصُ | النتيجةُ | الزمنُ |
+|---|---|---|
+| `db-integration (identity)` | ✅ pass | 36s |
+| `db-integration (geography)` | ✅ pass | 46s |
+| `db-integration` (10 خدماتٍ أخرى) | ✅ pass | 28–54s |
+| `db-integration-shared` | ✅ pass | 1m33s |
+| `exit-gate-e2e` (8 بواباتٍ) | ✅ pass | 30–54s |
+| `typecheck` | ✅ pass | 1m39s |
+| `test` | ✅ pass | 1m11s |
+| `verify` | ✅ pass | 1m17s |
+| `governance-guard` | ✅ pass | 1m10s |
+| `repo-structure` | ✅ pass | 7s |
+| `doc-coverage` | ✅ pass | 6s |
+
+- **`Devin Review`** (مراجعةٌ خارجيّةٌ غيرُ مطلوبةٍ — `ci_allow_failure: 1`): `pending`.
+
+اختباراتُ الدورةِ للترحيلاتِ (`migrations.integration.test.ts`) جرتْ على PostgreSQL
+حقيقيٍّ في `db-integration (identity)` و`db-integration (geography)` — فالعكسيّةُ
+والتّكافؤُ مُثبَتانِ في CI لا محلّيّاً فحسب.

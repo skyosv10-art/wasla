@@ -1,6 +1,6 @@
 # فهرس ملكية العمل (Work Index)
 
-**الحالة:** إلزامي · **آخر تحديث:** `2026-08-28` (مبني على فحص فعلي لشجرة المستودع)
+**الحالة:** إلزامي · **آخر تحديث:** `2026-09-07` (مبني على فحص فعلي لشجرة المستودع)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) · [`README.md`](README.md)
 
 > **الغرض:** جواب فوري لسؤال «هل هذا مبني أصلًا، ومن يملكه؟» قبل أن يفتح أحد عملًا مكررًا.
@@ -24,8 +24,8 @@
 
 | منطقة الكود | الحالة | العنصر المالك | المرحلة | ملاحظة |
 |---|---|---|---|---|
-| `services/identity/` | Implemented | M1-02 … M1-09 (دَين أمني) | Phase 01 | المصادقة على الحدود غير مكتملة (AUD-004). **M1-01 أُنجز:** النموذجُ في `packages/auth-sdk` و[ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md) يُلزِم أن يكون إصدارُ هويّةِ المستخدمِ من هنا لا من خدمةٍ ثانية |
-| `services/geography/` | Implemented | — | Phase 02 | |
+| `services/identity/` | Implemented | M1-02 … M1-09 (دَين أمني) · M0-23 (موجة 2a) | Phase 01 | المصادقة على الحدود غير مكتملة (AUD-004). **M1-01 أُنجز:** النموذجُ في `packages/auth-sdk` و[ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md) يُلزِم أن يكون إصدارُ هويّةِ المستخدمِ من هنا لا من خدمةٍ ثانية. **M0-23 (موجة 2a · [PR #50](https://github.com/skyosv10-art/wasla/pull/50)):** انتظمَ في الترحيلاتِ المولَّدةِ العكوسةِ (`drizzle/0000_*.sql` + `down.sql` + اختبارُ الدورةِ) |
+| `services/geography/` | Implemented | M0-23 (موجة 2a) | Phase 02 | **M0-23 (موجة 2a · [PR #50](https://github.com/skyosv10-art/wasla/pull/50)):** انتظمَ في الترحيلاتِ المولَّدةِ العكوسةِ (`drizzle/0000_*.sql` + `down.sql` + اختبارُ الدورةِ) |
 | `services/customers/` | Implemented | — | Phase 04 | |
 | `services/drivers/` | Implemented | — | Phase 05 | |
 | `services/orders/` | Implemented | — | Phase 06 | |

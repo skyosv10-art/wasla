@@ -64,7 +64,7 @@ export const channelUpdates = pgTable(
       sql`${table.status} IN ('processed','skipped','failed')`,
     ),
     uniqueIndex("ux_channel_updates_dedup").on(table.channel, table.bot, table.channelUpdateId),
-    index("ix_channel_updates_chat").on(table.channel, table.chatRef, table.receivedAt.desc()),
+    index("ix_channel_updates_chat").on(table.channel, table.chatRef, sql`${table.receivedAt} DESC`),
   ],
 );
 
@@ -119,7 +119,8 @@ export const channelDeliveries = pgTable(
     check("channel_deliveries_attempts_check", sql`${table.attempts} >= 0`),
     check("channel_deliveries_max_attempts_check", sql`${table.maxAttempts} >= 1`),
     uniqueIndex("ux_channel_deliveries_idempotency").on(table.channel, table.idempotencyKey),
-    index("ix_channel_deliveries_retry_queue").on(table.status, table.nextAttemptAt),
+    index("ix_channel_deliveries_retry_queue").on(table.status, table.nextAttemptAt)
+      .where(sql`${table.status} = 'queued'`),
   ],
 );
 
@@ -152,7 +153,8 @@ export const channelOutbox = pgTable(
   (table) => [
     check("channel_outbox_aggregate_type_check", sql`${table.aggregateType} = 'channel_chat'`),
     check("channel_outbox_event_version_check", sql`${table.eventVersion} ~ '^v[0-9]+$'`),
-    index("ix_channel_outbox_unpublished").on(table.occurredAt),
+    index("ix_channel_outbox_unpublished").on(table.occurredAt)
+      .where(sql`${table.publishedAt} IS NULL`),
   ],
 );
 

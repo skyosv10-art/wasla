@@ -52,6 +52,7 @@ export const geoCountries = pgTable(
       "geo_countries_status_check",
       sql`${table.status} IN ('active','inactive')`,
     ),
+    uniqueIndex("uq_geo_countries_code").on(table.code),
   ],
 );
 
@@ -73,7 +74,7 @@ export const geoRegions = pgTable(
   (table) => [
     check("geo_regions_status_check", sql`${table.status} IN ('active','inactive')`),
     uniqueIndex("uq_geo_regions_country_code").on(table.countryId, table.code),
-    foreignKey({ columns: [table.countryId], foreignColumns: [geoCountries.id] }).onDelete("restrict"),
+    foreignKey({ name: "geo_regions_country_id_fkey", columns: [table.countryId], foreignColumns: [geoCountries.id] }).onDelete("restrict"),
   ],
 );
 
@@ -95,7 +96,7 @@ export const geoCities = pgTable(
   (table) => [
     check("geo_cities_status_check", sql`${table.status} IN ('active','inactive')`),
     uniqueIndex("uq_geo_cities_region_code").on(table.regionId, table.code),
-    foreignKey({ columns: [table.regionId], foreignColumns: [geoRegions.id] }).onDelete("restrict"),
+    foreignKey({ name: "geo_cities_region_id_fkey", columns: [table.regionId], foreignColumns: [geoRegions.id] }).onDelete("restrict"),
   ],
 );
 
@@ -117,7 +118,7 @@ export const geoDistricts = pgTable(
   (table) => [
     check("geo_districts_status_check", sql`${table.status} IN ('active','inactive')`),
     uniqueIndex("uq_geo_districts_city_code").on(table.cityId, table.code),
-    foreignKey({ columns: [table.cityId], foreignColumns: [geoCities.id] }).onDelete("restrict"),
+    foreignKey({ name: "geo_districts_city_id_fkey", columns: [table.cityId], foreignColumns: [geoCities.id] }).onDelete("restrict"),
   ],
 );
 
@@ -139,7 +140,7 @@ export const geoZones = pgTable(
   (table) => [
     check("geo_zones_status_check", sql`${table.status} IN ('active','inactive')`),
     uniqueIndex("uq_geo_zones_district_code").on(table.districtId, table.code),
-    foreignKey({ columns: [table.districtId], foreignColumns: [geoDistricts.id] }).onDelete("restrict"),
+    foreignKey({ name: "geo_zones_district_id_fkey", columns: [table.districtId], foreignColumns: [geoDistricts.id] }).onDelete("restrict"),
   ],
 );
 
@@ -156,8 +157,8 @@ export const geoCountryNames = pgTable(
   },
   (table) => [
     check("geo_country_names_locale_check", sql`${table.locale} IN ('ar','en','ur')`),
-    primaryKey({ columns: [table.countryId, table.locale] }),
-    foreignKey({ columns: [table.countryId], foreignColumns: [geoCountries.id] }).onDelete("cascade"),
+    primaryKey({ columns: [table.countryId, table.locale], name: "geo_country_names_pkey" }),
+    foreignKey({ name: "geo_country_names_country_id_fkey", columns: [table.countryId], foreignColumns: [geoCountries.id] }).onDelete("cascade"),
   ],
 );
 
@@ -170,8 +171,8 @@ export const geoRegionNames = pgTable(
   },
   (table) => [
     check("geo_region_names_locale_check", sql`${table.locale} IN ('ar','en','ur')`),
-    primaryKey({ columns: [table.regionId, table.locale] }),
-    foreignKey({ columns: [table.regionId], foreignColumns: [geoRegions.id] }).onDelete("cascade"),
+    primaryKey({ columns: [table.regionId, table.locale], name: "geo_region_names_pkey" }),
+    foreignKey({ name: "geo_region_names_region_id_fkey", columns: [table.regionId], foreignColumns: [geoRegions.id] }).onDelete("cascade"),
   ],
 );
 
@@ -184,8 +185,8 @@ export const geoCityNames = pgTable(
   },
   (table) => [
     check("geo_city_names_locale_check", sql`${table.locale} IN ('ar','en','ur')`),
-    primaryKey({ columns: [table.cityId, table.locale] }),
-    foreignKey({ columns: [table.cityId], foreignColumns: [geoCities.id] }).onDelete("cascade"),
+    primaryKey({ columns: [table.cityId, table.locale], name: "geo_city_names_pkey" }),
+    foreignKey({ name: "geo_city_names_city_id_fkey", columns: [table.cityId], foreignColumns: [geoCities.id] }).onDelete("cascade"),
   ],
 );
 
@@ -198,8 +199,8 @@ export const geoDistrictNames = pgTable(
   },
   (table) => [
     check("geo_district_names_locale_check", sql`${table.locale} IN ('ar','en','ur')`),
-    primaryKey({ columns: [table.districtId, table.locale] }),
-    foreignKey({ columns: [table.districtId], foreignColumns: [geoDistricts.id] }).onDelete("cascade"),
+    primaryKey({ columns: [table.districtId, table.locale], name: "geo_district_names_pkey" }),
+    foreignKey({ name: "geo_district_names_district_id_fkey", columns: [table.districtId], foreignColumns: [geoDistricts.id] }).onDelete("cascade"),
   ],
 );
 
@@ -212,8 +213,8 @@ export const geoZoneNames = pgTable(
   },
   (table) => [
     check("geo_zone_names_locale_check", sql`${table.locale} IN ('ar','en','ur')`),
-    primaryKey({ columns: [table.zoneId, table.locale] }),
-    foreignKey({ columns: [table.zoneId], foreignColumns: [geoZones.id] }).onDelete("cascade"),
+    primaryKey({ columns: [table.zoneId, table.locale], name: "geo_zone_names_pkey" }),
+    foreignKey({ name: "geo_zone_names_zone_id_fkey", columns: [table.zoneId], foreignColumns: [geoZones.id] }).onDelete("cascade"),
   ],
 );
 
@@ -241,7 +242,7 @@ export const geoUserLocations = pgTable(
       sql`${table.source} IN ('customer_bot','driver_bot','partner_bot','admin','system')`,
     ),
     index("ix_geo_user_locations_zone").on(table.zoneId),
-    foreignKey({ columns: [table.zoneId], foreignColumns: [geoZones.id] }).onDelete("restrict"),
+    foreignKey({ name: "geo_user_locations_zone_id_fkey", columns: [table.zoneId], foreignColumns: [geoZones.id] }).onDelete("restrict"),
   ],
 );
 
@@ -264,8 +265,8 @@ export const geoUserLocationHistory = pgTable(
       "geo_user_location_history_source_check",
       sql`${table.source} IN ('customer_bot','driver_bot','partner_bot','admin','system')`,
     ),
-    index("ix_geo_user_location_history_user").on(table.waslaPublicId, table.changedAt),
-    foreignKey({ columns: [table.newZoneId], foreignColumns: [geoZones.id] }).onDelete("restrict"),
+    index("ix_geo_user_location_history_user").on(table.waslaPublicId, sql`${table.changedAt} DESC`),
+    foreignKey({ name: "geo_user_location_history_new_zone_id_fkey", columns: [table.newZoneId], foreignColumns: [geoZones.id] }).onDelete("restrict"),
   ],
 );
 
@@ -277,7 +278,7 @@ export const geoOutbox = pgTable(
   "geo_outbox",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    eventId: uuid("event_id").notNull().unique(),
+    eventId: uuid("event_id").notNull().unique("geo_outbox_event_id_key"),
     eventType: text("event_type").notNull(),
     eventVersion: text("event_version").notNull(),
     aggregateId: text("aggregate_id").notNull(),
@@ -286,7 +287,9 @@ export const geoOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => [
-    index("ix_geo_outbox_unpublished").on(table.occurredAt),
+    index("ix_geo_outbox_unpublished")
+      .on(table.occurredAt)
+      .where(sql`"geo_outbox"."published_at" IS NULL`),
   ],
 );
 

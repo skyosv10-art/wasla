@@ -24,6 +24,17 @@
  *
  * Scores are integer basis points (`INTEGER`), never floats: `0.1 + 0.2` is not
  * `0.3`, and the order of drivers is not a place for that.
+ *
+ * [ADR-024 reconciliation] Constraint names are **canonical**, not bespoke:
+ * every column-level CHECK that the contract leaves inline (unnamed) is given the
+ * exact name PostgreSQL would auto-generate from it (`<table>_<column>_check`),
+ * and every constraint the contract names explicitly (`ck_*` · `ux_*`) keeps that
+ * name verbatim. A projection with bespoke names would generate a migration
+ * whose catalog diverges from the contract on every constraint name — exactly
+ * the drift that the full-cycle equivalence test (migrations.integration.test.ts)
+ * is here to catch. The composite primary key is named
+ * `matching_decision_candidates_pkey` to match PostgreSQL's auto-generated name
+ * for the contract's unnamed `PRIMARY KEY (...)`.
  */
 
 import { sql } from "drizzle-orm";
@@ -71,30 +82,56 @@ export const driverCandidacy = pgTable(
   },
   (table) => [
     check(
-      "ck_candidacy_driver_public_id_shape",
+      "driver_candidacy_driver_public_id_check",
       sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
     ),
     check(
-      "ck_candidacy_availability_domain",
+      "driver_candidacy_availability_state_check",
       sql`${table.availabilityState} IN ('available','busy','offline')`,
     ),
     check(
-      "ck_candidacy_eligibility_domain",
+      "driver_candidacy_eligibility_state_check",
       sql`${table.eligibilityState} IN ('eligible','ineligible','suspended','unknown')`,
     ),
     check(
-      "ck_candidacy_eligibility_source_domain",
+      "driver_candidacy_eligibility_source_check",
       sql`${table.eligibilitySource} IN ('claimed','driver_core')`,
+    ),
+    check(
+      "driver_candidacy_service_kinds_check",
+      sql`array_length(${table.serviceKinds}, 1) IS NULL OR ${table.serviceKinds} <@ ARRAY['ride','delivery']::TEXT[]`,
+    ),
+    check(
+      "driver_candidacy_vehicle_class_check",
+      sql`${table.vehicleClass} IS NULL OR ${table.vehicleClass} IN ('sedan','suv','van','pickup','motorcycle','truck_small')`,
+    ),
+    check(
+      "driver_candidacy_offers_received_check",
+      sql`${table.offersReceived} >= 0`,
+    ),
+    check(
+      "driver_candidacy_offers_accepted_check",
+      sql`${table.offersAccepted} >= 0`,
+    ),
+    check(
+      "driver_candidacy_orders_completed_check",
+      sql`${table.ordersCompleted} >= 0`,
     ),
     check(
       "ck_candidacy_accepted_lte_received",
       sql`${table.offersAccepted} <= ${table.offersReceived}`,
     ),
+    check(
+      "driver_candidacy_updated_by_check",
+      sql`${table.updatedBy} IN ('driver_bot','admin','driver_core','test','unknown')`,
+    ),
     // The partial index of the contract: only a POSSIBLE candidate is indexed, so
     // its size follows the number of available drivers, not the number of people
-    // who ever registered.
+    // who ever registered. `DESC` is a raw SQL expression (not `.desc()`) so the
+    // generated index matches the contract verbatim — `.desc()` would emit
+    // `DESC NULLS LAST`, which diverges from the contract's plain `DESC`.
     index("ix_candidacy_ready")
-      .on(table.updatedAt.desc())
+      .on(sql`${table.updatedAt} DESC`)
       .where(
         sql`${table.availabilityState} = 'available' AND ${table.eligibilityState} = 'eligible'`,
       ),
@@ -133,12 +170,53 @@ export const matchingRulesets = pgTable(
     frozenAt: timestamp("frozen_at", { withTimezone: true }),
   },
   (table) => [
-    check("ck_ruleset_version_positive", sql`${table.version} >= 1`),
+    check("matching_rulesets_version_check", sql`${table.version} >= 1`),
+    check(
+      "matching_rulesets_label_check",
+      sql`char_length(${table.label}) BETWEEN 3 AND 64`,
+    ),
+    check("matching_rulesets_w_eta_check", sql`${table.wEta} BETWEEN 0 AND 100`),
+    check(
+      "matching_rulesets_w_distance_check",
+      sql`${table.wDistance} BETWEEN 0 AND 100`,
+    ),
+    check(
+      "matching_rulesets_w_zone_proximity_check",
+      sql`${table.wZoneProximity} BETWEEN 0 AND 100`,
+    ),
+    check(
+      "matching_rulesets_w_completion_check",
+      sql`${table.wCompletion} BETWEEN 0 AND 100`,
+    ),
+    check(
+      "matching_rulesets_w_rating_check",
+      sql`${table.wRating} BETWEEN 0 AND 100`,
+    ),
+    check(
+      "matching_rulesets_w_acceptance_check",
+      sql`${table.wAcceptance} BETWEEN 0 AND 100`,
+    ),
+    check(
+      "matching_rulesets_w_fairness_check",
+      sql`${table.wFairness} BETWEEN 0 AND 100`,
+    ),
     // The two constraints that a wrong ruleset would otherwise express as a
     // silent reordering of every driver in the country.
     check(
       "ck_ruleset_weights_sum_100",
       sql`${table.wEta} + ${table.wDistance} + ${table.wZoneProximity} + ${table.wCompletion} + ${table.wRating} + ${table.wAcceptance} + ${table.wFairness} = 100`,
+    ),
+    check(
+      "matching_rulesets_candidacy_freshness_seconds_check",
+      sql`${table.candidacyFreshnessSeconds} BETWEEN 15 AND 3600`,
+    ),
+    check(
+      "matching_rulesets_max_candidates_check",
+      sql`${table.maxCandidates} BETWEEN 1 AND 200`,
+    ),
+    check(
+      "matching_rulesets_fairness_horizon_seconds_check",
+      sql`${table.fairnessHorizonSeconds} BETWEEN 60 AND 86400`,
     ),
     check(
       "ck_ruleset_frozen_at",
@@ -180,8 +258,28 @@ export const matchingDecisions = pgTable(
       name: "matching_decisions_ruleset_version_fkey",
     }),
     check(
-      "ck_decision_order_public_id_shape",
+      "matching_decisions_order_public_id_check",
       sql`${table.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
+    ),
+    check(
+      "matching_decisions_order_type_check",
+      sql`${table.orderType} IN ('ride','delivery')`,
+    ),
+    check(
+      "matching_decisions_excluded_count_check",
+      sql`${table.excludedCount} >= 0`,
+    ),
+    check(
+      "matching_decisions_considered_count_check",
+      sql`${table.consideredCount} >= 0`,
+    ),
+    check(
+      "matching_decisions_eligible_count_check",
+      sql`${table.eligibleCount} >= 0`,
+    ),
+    check(
+      "matching_decisions_returned_count_check",
+      sql`${table.returnedCount} >= 0`,
     ),
     check(
       "ck_decision_counts_monotonic",
@@ -190,10 +288,14 @@ export const matchingDecisions = pgTable(
     // "Zero candidates" without a reason is worse than an error: it sends an
     // operator looking for a cause the row does not record.
     check(
+      "matching_decisions_empty_reason_code_check",
+      sql`${table.emptyReasonCode} IS NULL OR char_length(${table.emptyReasonCode}) BETWEEN 3 AND 64`,
+    ),
+    check(
       "ck_decision_empty_has_reason",
       sql`${table.returnedCount} > 0 OR ${table.emptyReasonCode} IS NOT NULL`,
     ),
-    index("ix_decisions_order").on(table.orderId, table.createdAt.desc()),
+    index("ix_decisions_order").on(table.orderId, sql`${table.createdAt} DESC`),
   ],
 );
 
@@ -215,7 +317,10 @@ export const matchingDecisionCandidates = pgTable(
     tiebreakBy: text("tiebreak_by"),
   },
   (table) => [
-    primaryKey({ columns: [table.decisionId, table.driverPublicId] }),
+    primaryKey({
+      columns: [table.decisionId, table.driverPublicId],
+      name: "matching_decision_candidates_pkey",
+    }),
     foreignKey({
       columns: [table.decisionId],
       foreignColumns: [matchingDecisions.id],
@@ -223,13 +328,36 @@ export const matchingDecisionCandidates = pgTable(
     }).onDelete("cascade"),
     // A repeated rank inside one decision means a non-deterministic ordering.
     unique("ux_decision_rank").on(table.decisionId, table.rank),
-    check("ck_candidate_rank_positive", sql`${table.rank} >= 1`),
     check(
-      "ck_candidate_score_bp_range",
+      "matching_decision_candidates_rank_check",
+      sql`${table.rank} >= 1`,
+    ),
+    check(
+      "matching_decision_candidates_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "matching_decision_candidates_score_bp_check",
       sql`${table.scoreBp} BETWEEN 0 AND 10000`,
     ),
     check(
-      "ck_candidate_tiebreak_domain",
+      "matching_decision_candidates_zone_proximity_bp_check",
+      sql`${table.zoneProximityBp} BETWEEN 0 AND 10000`,
+    ),
+    check(
+      "matching_decision_candidates_completion_bp_check",
+      sql`${table.completionBp} BETWEEN 0 AND 10000`,
+    ),
+    check(
+      "matching_decision_candidates_acceptance_bp_check",
+      sql`${table.acceptanceBp} BETWEEN 0 AND 10000`,
+    ),
+    check(
+      "matching_decision_candidates_fairness_bp_check",
+      sql`${table.fairnessBp} BETWEEN 0 AND 10000`,
+    ),
+    check(
+      "matching_decision_candidates_tiebreak_by_check",
       sql`${table.tiebreakBy} IS NULL OR ${table.tiebreakBy} IN ('score','last_offered_at','driver_public_id')`,
     ),
   ],
@@ -256,10 +384,17 @@ export const matchingOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => [
-    check("ck_outbox_event_version_shape", sql`${table.eventVersion} ~ '^v[0-9]+$'`),
     check(
-      "ck_outbox_aggregate_type_domain",
+      "matching_outbox_event_version_check",
+      sql`${table.eventVersion} ~ '^v[0-9]+$'`,
+    ),
+    check(
+      "matching_outbox_aggregate_type_check",
       sql`${table.aggregateType} IN ('driver_candidacy','matching_decision')`,
+    ),
+    check(
+      "matching_outbox_trace_id_check",
+      sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_matching_outbox_unpublished")
       .on(table.occurredAt)
@@ -282,8 +417,12 @@ export const matchingIdempotency = pgTable(
   },
   (table) => [
     check(
-      "ck_idempotency_key_length",
+      "matching_idempotency_idempotency_key_check",
       sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "matching_idempotency_payload_fingerprint_check",
+      sql`char_length(${table.payloadFingerprint}) BETWEEN 1 AND 4096`,
     ),
   ],
 );

@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T18:14:17Z",
+  "generated_at": "2026-09-07T19:39:29Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b8174a38d8083cba8c1655daedfebdc39a2372e1",
-    "branch": "feat/m0-23-dispatch-migrations",
+    "commit": "206bf54210b36e03dc6376cf63ac0a2c49bb351a",
+    "branch": "feat/m0-23-matching-migrations",
     "dirty": true,
-    "dirty_files": 5,
-    "dirty_reason": "إكمالُ §8 (drizzle-kit إلى dispatch package.json/lockfile) + تحريرُ CLM-0103 البائت + إعادةُ توليدِ الأساسِ الملتزَمِ بقرارٍ مكتوبٍ (§8.1) — قيدَ الالتزام",
+    "dirty_files": 7,
+    "dirty_reason": "matching migrations wave 3: added migrations.integration.test.ts (test_files 275->276) and drizzle-kit devDep to services/matching (lock fingerprint changed). Regenerated from clean verify.sh run where all 7 checks pass.",
     "tracked_files": 1465
   },
   "env": {
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "4ad746e0ed4d8db584d647c4eff2a9ea33dded195bb167d057b383b56b55f198",
-    "lines": 2966
+    "sha256": "ada9eb6ac07bbf235db529e57bcb78c818a840128342f1a206a04e50e241e030",
+    "lines": 2969
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 275,
+    "test_files_tracked": 276,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/fresh_verify.log",
+    "source": "/tmp/verify_matching2.log",
     "tests_passed": 3816,
     "test_files_executed": 226,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:e34965da84e9b79e7010c01c4004f490dc95286f3c602695a19a08af4f5458ea",
+  "fingerprint": "sha256:ca7fea79f267bc3715f2f2dd2990ec629283214db9e42000b5e3e9bf09d98c51",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

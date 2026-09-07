@@ -1,5 +1,39 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-07 · M0-23 · الموجةُ 3 — مصالحةُ matching وإلحاقُها بالترحيلاتِ المولَّدةِ العكوسةِ
+
+**Work Item(s):** M0-23 · **Reservation:** `CLM-0105` · **Branch:** `feat/m0-23-matching-migrations` · **ADR:** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md)
+
+**ماذا تم إنجاز (1):** انتظَمَت `matching` في الترحيلاتِ المولَّدةِ العكوسةِ — سابعَ خدمةً/حزمةً. أُضيفَ `services/matching/drizzle.config.ts` (مكيَّفٌ من dispatch: schema/out/dialect/dbCredentials/strict/verbose)، وسكربتاتُ `db:generate`/`db:push`/`db:studio` في `services/matching/package.json`، و`drizzle-kit` (`^0.31.10`) كاعتمادِ تطويرٍ (مطابقاً للنمطِ في dispatch · customers · orders · identity · geography). وُلِّدَ الترحيلُ الأساسُ `drizzle/0000_fuzzy_expediter.sql` بـ`drizzle-kit generate`، وأُلحِقَ بيدٍ مُعلَمةٍ صريحاً (قسمُ «إلحاقٌ مُراجَعٌ — خارجَ نطاقِ التوليدِ» · ADR-024 §2.1) seed النسخةِ 1 من `matching_rulesets` (`phase07-mvp-zone-and-fairness`) الذي لا يولِّدُهُ drizzle، فانضمَّ إليهِ رفيقُ الترجعِ `0000_fuzzy_expediter.down.sql` الذي يُسقِطُ الجداولَ الستّةَ بترتيبٍ عكسيٍّ للتبعيّاتِ (matching_idempotency · matching_outbox · matching_decision_candidates · matching_decisions · matching_rulesets · driver_candidacy)، واختبارُ الدورةِ الكاملةِ `src/__tests__/migrations.integration.test.ts` مكيَّفٌ من dispatch مع إضافةِ تحقُّقِ seed النسخةِ 1.
+
+**لماذا تم اختياره (2):** إكمالُ تطبيقِ ADR-024 على خدماتِ الموجةِ 3 المتبقية. matching هي الخدمةُ التاليةُ في ترتيبِ الموجةِ 3 المُعلَنِ (matching · dispatch · drivers · negotiations · reputation · subscriptions · marketplace) بعدَ اكتمالِ dispatch. بدونِ هذا الترحيلِ تبقى matching خارجَ مسارِ «مخطَّطٌ قائمٌ → معدَّلٌ» وتعتمدُ على `DROP`+إعادةِ تشغيلِ DDL — وهو يعملُ للاختبارِ لا للإنتاجِ.
+
+**أين تم التغيير (3):** `services/matching/{drizzle.config.ts, package.json, src/infrastructure/drizzle/schema.ts, drizzle/0000_fuzzy_expediter.sql, drizzle/0000_fuzzy_expediter.down.sql, drizzle/meta/_journal.json, drizzle/meta/0000_snapshot.json, src/__tests__/migrations.integration.test.ts}`؛ `docs/16-progress/{TASK_LOG.md, WORK_CLAIMS.md, LAUNCH_EXECUTION_BOARD.md}`؛ `docs/12-testing/BASELINE.json`؛ `pnpm-lock.yaml`.
+
+**الملفات/الخدمات المتأثرة (4):** خدمةُ `@wasla/matching-service` فقط (لا منطقٌ تشغيليٌّ — ترحيلاتٌ وإسقاطٌ واختبارٌ). لا يتأثرُ أيُّ مستهلكٍ: العقدُ (`contracts/schema.sql`) لم يُمسَّ، والإسقاطُ `schema.ts` هو الذي صُولِحَ ليطابقَ العقدَ حرفاً (انظر §7).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا تغييرٌ في العقدِ. الإسقاطُ `schema.ts` هو الذي صُولِحَ ليطابقَ العقدَ حرفاً (انظر §7).
+
+**كيف تم الاختبار (6):** اختبارُ الدورةِ الكاملةِ للترحيلاتِ مُصمَّمٌ ليُقيسَ **4/4**: (أ) تكافؤُ الكتالوجِ في سبعةِ أبعادٍ (جداولٍ · أعمدةٍ · قيودٍ · فهارسٍ · مُطلِقاتٍ · دوالَّ · متتابعاتٍ) بينَ العقدِ والترحيلِ؛ (ب) seed النسخةِ 1 موجودٌ ومجمّدٌ في القاعدتَينِ (مع تمطيطٍ زمنيٍّ مستقرٍّ بـ`frozen_at IS NOT NULL` والحقولِ الافتراضيّةِ `candidacy_freshness_seconds=120` · `max_candidates=20` · `fairness_horizon_seconds=3600`)؛ (ج) الترجعُ يُعيدُ القاعدةَ نظيفةً تماماً؛ (د) إعادةُ التطبيقِ ودورةٌ ثانيةٌ متطابقةٌ. يُتخطَّى كُلُّهُ حين لا تكونُ `DATABASE_URL` مضبوطةً (كإخوتهِ في المجلَّدِ) — يُشغَّلُ في وظيفةِ `matching-db-integration` القائمةِ في CI. والاختباراتُ الوحدويّةُ **172/172 ناجحةً** (13 ملفّاً)، و`pnpm -r typecheck` **رمزُ 0**، و`scripts/verify.sh` **7/7 ناجحةً** (3816 اختباراً · 182 حالةَ حوكمةٍ · 0 إخفاقات).
+
+**ما المشاكل التي ظهرت (7):** الإسقاطُ الموجودُ كان منحرفاً عن العقدِ بشكلٍ جوهريٍّ لا بسيطٍ، تماماً كما حدثَ في dispatch قبلَ مصالحتِها: (1) أغفلَ 30 قيدَ CHECK عموديّاً كان العقدُ يفرضُها (دوالُ domain والمدى والأطوالِ وغيرُها في كلِّ جدولٍ)؛ (2) استخدمَ أسماءَ قيودٍ مخصّصةً (`ck_candidacy_*` · `ck_ruleset_*` إلخ) بدلَ أسماءِ PostgreSQL الكنسيّةِ المُولَّدةِ تلقائيّاً للقيودِ العموديّةِ (`<table>_<column>_check`)؛ (3) أغفلَ إعطاءَ اسمٍ كنسيٍّ للـPK المركّبِ في `matching_decision_candidates` (`matching_decision_candidates_pkey`)؛ (4) الفهارسُ ذاتُ `DESC` كانَت ستُولِّدُ `DESC NULLS LAST` بدلَ `DESC` المجرَّدِ في العقدِ. عُولِجَ بتجديدِ الإسقاطِ كاملاً بأسماءٍ كنسيّةٍ مطابقةٍ للعقدِ (الأسماءُ الصريحةُ تُتركُ فقط للقيودِ التي يُسمّيها العقدُ صراحةً: `ck_candidacy_accepted_lte_received` · `ck_ruleset_weights_sum_100` · `ck_ruleset_frozen_at` · `ck_decision_counts_monotonic` · `ck_decision_empty_has_reason` · `ux_decision_rank`)، وباستخدامِ تعبيراتِ SQL الخامِ (`sql\`${table.createdAt} DESC\``) بدلَ `.desc()` لتجنُّبِ `NULLS LAST`، وبالـPK المركّبِ المُسمّى صراحةً بالكنسيّ. seed v1 أُلحِقَ يدوياً لأنّ drizzle-kit لا يولِّدُ `INSERT` من `pgTable`.
+
+**ما الذي لم يكتمل (8):** لا شيءَ مؤجَّلٌ — نطاقُ الحجزِ `CLM-0105` شاملٌ منذُ البدايةِ (يتضمّنُ `pnpm-lock.yaml` و`docs/12-testing/` تعلُّماً من خطأِ dispatch الذي أجّلَ القفلَ ثمّ تطلّبَ توسعةً). اختبارُ التكاملِ يتطلّبُ `DATABASE_URL` ولا يمكنُ تشغيلُهُ محليّاً بلا قاعدةِ بياناتٍ — يُتحقَّقُ من نجاحِهِ في CI.
+
+**الخطوة التالية (9):** مراجعةُ الكودِ وفتحُ PR بعدَ الدفعِ، ثمّ بقيةُ خدماتِ الموجةِ 3 (drivers · negotiations · reputation · subscriptions · marketplace).
+
+**ما الذي يعتمد عليه العمل التالي (10):** اكتمالُ الموجةِ 3 كلِّها لإغلاقِ `RISK-0020`.
+
+**Migration/Deployment/Config (11):** ترحيلٌ عكوسٌ جديدٌ (الأوّلُ لـmatching): `0000_fuzzy_expediter.sql` (أمامٌ مولَّدٌ + إلحاقٌ مُراجَعٌ لـseed النسخةِ 1) + `0000_fuzzy_expediter.down.sql` (رفيقُ ترجعٍ مُراجَعٌ). لا ترقيةَ بياناتٍ في هذه المرحلة.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** `RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجةِ 3 كلِّها. اختبارُ التكافؤِ بسبعةِ أبعادٍ لم يُتحقَّقْ منهُ محليّاً (لا قاعدةَ بياناتٍ في البيئةِ) — يعتمدُ على CI للتحققِ النهائيِّ.
+
+**الروابط (13):** [ADR-024](../15-decisions/ADR-024-generated-reversible-migrations.md) · [LAUNCH_EXECUTION_BOARD M0-23](LAUNCH_EXECUTION_BOARD.md) · الفرعُ `feat/m0-23-matching-migrations`
+
+**الشخص/الفريق الذي يتابع (14):** مالكُ البرنامجِ (فتحُ PR) · Team DB/Architecture (بقيةُ الموجةِ 3)
+
+---
+
 ## 2026-09-07 · M0-23 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0104 بعدَ دمجِ PR #56
 
 **Work Item(s):** M0-23 · **Branch:** `chore/m0-23-release-claim-clm-0104` · **Scope:** `docs/16-progress/`

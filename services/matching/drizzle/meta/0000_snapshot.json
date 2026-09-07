@@ -1,0 +1,851 @@
+{
+  "id": "fc918391-a0f9-40c5-91b6-3d22c7e2087e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.driver_candidacy": {
+      "name": "driver_candidacy",
+      "schema": "",
+      "columns": {
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "availability_state": {
+          "name": "availability_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offline'"
+        },
+        "eligibility_state": {
+          "name": "eligibility_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unknown'"
+        },
+        "eligibility_source": {
+          "name": "eligibility_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'claimed'"
+        },
+        "service_kinds": {
+          "name": "service_kinds",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "vehicle_class": {
+          "name": "vehicle_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zone_ids": {
+          "name": "zone_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "last_offered_at": {
+          "name": "last_offered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_assigned_at": {
+          "name": "last_assigned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "offers_received": {
+          "name": "offers_received",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "offers_accepted": {
+          "name": "offers_accepted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "orders_completed": {
+          "name": "orders_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unknown'"
+        }
+      },
+      "indexes": {
+        "ix_candidacy_ready": {
+          "name": "ix_candidacy_ready",
+          "columns": [
+            {
+              "expression": "\"updated_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"driver_candidacy\".\"availability_state\" = 'available' AND \"driver_candidacy\".\"eligibility_state\" = 'eligible'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_candidacy_zones": {
+          "name": "ix_candidacy_zones",
+          "columns": [
+            {
+              "expression": "zone_ids",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "ix_candidacy_services": {
+          "name": "ix_candidacy_services",
+          "columns": [
+            {
+              "expression": "service_kinds",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "driver_candidacy_driver_public_id_check": {
+          "name": "driver_candidacy_driver_public_id_check",
+          "value": "\"driver_candidacy\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "driver_candidacy_availability_state_check": {
+          "name": "driver_candidacy_availability_state_check",
+          "value": "\"driver_candidacy\".\"availability_state\" IN ('available','busy','offline')"
+        },
+        "driver_candidacy_eligibility_state_check": {
+          "name": "driver_candidacy_eligibility_state_check",
+          "value": "\"driver_candidacy\".\"eligibility_state\" IN ('eligible','ineligible','suspended','unknown')"
+        },
+        "driver_candidacy_eligibility_source_check": {
+          "name": "driver_candidacy_eligibility_source_check",
+          "value": "\"driver_candidacy\".\"eligibility_source\" IN ('claimed','driver_core')"
+        },
+        "driver_candidacy_service_kinds_check": {
+          "name": "driver_candidacy_service_kinds_check",
+          "value": "array_length(\"driver_candidacy\".\"service_kinds\", 1) IS NULL OR \"driver_candidacy\".\"service_kinds\" <@ ARRAY['ride','delivery']::TEXT[]"
+        },
+        "driver_candidacy_vehicle_class_check": {
+          "name": "driver_candidacy_vehicle_class_check",
+          "value": "\"driver_candidacy\".\"vehicle_class\" IS NULL OR \"driver_candidacy\".\"vehicle_class\" IN ('sedan','suv','van','pickup','motorcycle','truck_small')"
+        },
+        "driver_candidacy_offers_received_check": {
+          "name": "driver_candidacy_offers_received_check",
+          "value": "\"driver_candidacy\".\"offers_received\" >= 0"
+        },
+        "driver_candidacy_offers_accepted_check": {
+          "name": "driver_candidacy_offers_accepted_check",
+          "value": "\"driver_candidacy\".\"offers_accepted\" >= 0"
+        },
+        "driver_candidacy_orders_completed_check": {
+          "name": "driver_candidacy_orders_completed_check",
+          "value": "\"driver_candidacy\".\"orders_completed\" >= 0"
+        },
+        "ck_candidacy_accepted_lte_received": {
+          "name": "ck_candidacy_accepted_lte_received",
+          "value": "\"driver_candidacy\".\"offers_accepted\" <= \"driver_candidacy\".\"offers_received\""
+        },
+        "driver_candidacy_updated_by_check": {
+          "name": "driver_candidacy_updated_by_check",
+          "value": "\"driver_candidacy\".\"updated_by\" IN ('driver_bot','admin','driver_core','test','unknown')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matching_decision_candidates": {
+      "name": "matching_decision_candidates",
+      "schema": "",
+      "columns": {
+        "decision_id": {
+          "name": "decision_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rank": {
+          "name": "rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_bp": {
+          "name": "score_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zone_proximity_bp": {
+          "name": "zone_proximity_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completion_bp": {
+          "name": "completion_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acceptance_bp": {
+          "name": "acceptance_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fairness_bp": {
+          "name": "fairness_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tiebreak_by": {
+          "name": "tiebreak_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "matching_decision_candidates_decision_id_fkey": {
+          "name": "matching_decision_candidates_decision_id_fkey",
+          "tableFrom": "matching_decision_candidates",
+          "tableTo": "matching_decisions",
+          "columnsFrom": [
+            "decision_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "matching_decision_candidates_pkey": {
+          "name": "matching_decision_candidates_pkey",
+          "columns": [
+            "decision_id",
+            "driver_public_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "ux_decision_rank": {
+          "name": "ux_decision_rank",
+          "nullsNotDistinct": false,
+          "columns": [
+            "decision_id",
+            "rank"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "matching_decision_candidates_rank_check": {
+          "name": "matching_decision_candidates_rank_check",
+          "value": "\"matching_decision_candidates\".\"rank\" >= 1"
+        },
+        "matching_decision_candidates_driver_public_id_check": {
+          "name": "matching_decision_candidates_driver_public_id_check",
+          "value": "\"matching_decision_candidates\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "matching_decision_candidates_score_bp_check": {
+          "name": "matching_decision_candidates_score_bp_check",
+          "value": "\"matching_decision_candidates\".\"score_bp\" BETWEEN 0 AND 10000"
+        },
+        "matching_decision_candidates_zone_proximity_bp_check": {
+          "name": "matching_decision_candidates_zone_proximity_bp_check",
+          "value": "\"matching_decision_candidates\".\"zone_proximity_bp\" BETWEEN 0 AND 10000"
+        },
+        "matching_decision_candidates_completion_bp_check": {
+          "name": "matching_decision_candidates_completion_bp_check",
+          "value": "\"matching_decision_candidates\".\"completion_bp\" BETWEEN 0 AND 10000"
+        },
+        "matching_decision_candidates_acceptance_bp_check": {
+          "name": "matching_decision_candidates_acceptance_bp_check",
+          "value": "\"matching_decision_candidates\".\"acceptance_bp\" BETWEEN 0 AND 10000"
+        },
+        "matching_decision_candidates_fairness_bp_check": {
+          "name": "matching_decision_candidates_fairness_bp_check",
+          "value": "\"matching_decision_candidates\".\"fairness_bp\" BETWEEN 0 AND 10000"
+        },
+        "matching_decision_candidates_tiebreak_by_check": {
+          "name": "matching_decision_candidates_tiebreak_by_check",
+          "value": "\"matching_decision_candidates\".\"tiebreak_by\" IS NULL OR \"matching_decision_candidates\".\"tiebreak_by\" IN ('score','last_offered_at','driver_public_id')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matching_decisions": {
+      "name": "matching_decisions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dispatch_job_id": {
+          "name": "dispatch_job_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluated_at": {
+          "name": "evaluated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_type": {
+          "name": "order_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicle_class": {
+          "name": "vehicle_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pickup_zone_id": {
+          "name": "pickup_zone_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "excluded_count": {
+          "name": "excluded_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "considered_count": {
+          "name": "considered_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eligible_count": {
+          "name": "eligible_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "returned_count": {
+          "name": "returned_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empty_reason_code": {
+          "name": "empty_reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_decisions_order": {
+          "name": "ix_decisions_order",
+          "columns": [
+            {
+              "expression": "order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"created_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "matching_decisions_ruleset_version_fkey": {
+          "name": "matching_decisions_ruleset_version_fkey",
+          "tableFrom": "matching_decisions",
+          "tableTo": "matching_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "matching_decisions_order_public_id_check": {
+          "name": "matching_decisions_order_public_id_check",
+          "value": "\"matching_decisions\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "matching_decisions_order_type_check": {
+          "name": "matching_decisions_order_type_check",
+          "value": "\"matching_decisions\".\"order_type\" IN ('ride','delivery')"
+        },
+        "matching_decisions_excluded_count_check": {
+          "name": "matching_decisions_excluded_count_check",
+          "value": "\"matching_decisions\".\"excluded_count\" >= 0"
+        },
+        "matching_decisions_considered_count_check": {
+          "name": "matching_decisions_considered_count_check",
+          "value": "\"matching_decisions\".\"considered_count\" >= 0"
+        },
+        "matching_decisions_eligible_count_check": {
+          "name": "matching_decisions_eligible_count_check",
+          "value": "\"matching_decisions\".\"eligible_count\" >= 0"
+        },
+        "matching_decisions_returned_count_check": {
+          "name": "matching_decisions_returned_count_check",
+          "value": "\"matching_decisions\".\"returned_count\" >= 0"
+        },
+        "ck_decision_counts_monotonic": {
+          "name": "ck_decision_counts_monotonic",
+          "value": "\"matching_decisions\".\"returned_count\" <= \"matching_decisions\".\"eligible_count\" AND \"matching_decisions\".\"eligible_count\" <= \"matching_decisions\".\"considered_count\""
+        },
+        "matching_decisions_empty_reason_code_check": {
+          "name": "matching_decisions_empty_reason_code_check",
+          "value": "\"matching_decisions\".\"empty_reason_code\" IS NULL OR char_length(\"matching_decisions\".\"empty_reason_code\") BETWEEN 3 AND 64"
+        },
+        "ck_decision_empty_has_reason": {
+          "name": "ck_decision_empty_has_reason",
+          "value": "\"matching_decisions\".\"returned_count\" > 0 OR \"matching_decisions\".\"empty_reason_code\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matching_idempotency": {
+      "name": "matching_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "matching_idempotency_idempotency_key_check": {
+          "name": "matching_idempotency_idempotency_key_check",
+          "value": "char_length(\"matching_idempotency\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "matching_idempotency_payload_fingerprint_check": {
+          "name": "matching_idempotency_payload_fingerprint_check",
+          "value": "char_length(\"matching_idempotency\".\"payload_fingerprint\") BETWEEN 1 AND 4096"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matching_outbox": {
+      "name": "matching_outbox",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_version": {
+          "name": "event_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_matching_outbox_unpublished": {
+          "name": "ix_matching_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"matching_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "matching_outbox_event_version_check": {
+          "name": "matching_outbox_event_version_check",
+          "value": "\"matching_outbox\".\"event_version\" ~ '^v[0-9]+$'"
+        },
+        "matching_outbox_aggregate_type_check": {
+          "name": "matching_outbox_aggregate_type_check",
+          "value": "\"matching_outbox\".\"aggregate_type\" IN ('driver_candidacy','matching_decision')"
+        },
+        "matching_outbox_trace_id_check": {
+          "name": "matching_outbox_trace_id_check",
+          "value": "\"matching_outbox\".\"trace_id\" IS NULL OR char_length(\"matching_outbox\".\"trace_id\") <= 128"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matching_rulesets": {
+      "name": "matching_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "w_eta": {
+          "name": "w_eta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "w_distance": {
+          "name": "w_distance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "w_zone_proximity": {
+          "name": "w_zone_proximity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 40
+        },
+        "w_completion": {
+          "name": "w_completion",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 20
+        },
+        "w_rating": {
+          "name": "w_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "w_acceptance": {
+          "name": "w_acceptance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 20
+        },
+        "w_fairness": {
+          "name": "w_fairness",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 20
+        },
+        "candidacy_freshness_seconds": {
+          "name": "candidacy_freshness_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 120
+        },
+        "max_candidates": {
+          "name": "max_candidates",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 20
+        },
+        "fairness_horizon_seconds": {
+          "name": "fairness_horizon_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3600
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "frozen_at": {
+          "name": "frozen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "matching_rulesets_version_check": {
+          "name": "matching_rulesets_version_check",
+          "value": "\"matching_rulesets\".\"version\" >= 1"
+        },
+        "matching_rulesets_label_check": {
+          "name": "matching_rulesets_label_check",
+          "value": "char_length(\"matching_rulesets\".\"label\") BETWEEN 3 AND 64"
+        },
+        "matching_rulesets_w_eta_check": {
+          "name": "matching_rulesets_w_eta_check",
+          "value": "\"matching_rulesets\".\"w_eta\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_distance_check": {
+          "name": "matching_rulesets_w_distance_check",
+          "value": "\"matching_rulesets\".\"w_distance\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_zone_proximity_check": {
+          "name": "matching_rulesets_w_zone_proximity_check",
+          "value": "\"matching_rulesets\".\"w_zone_proximity\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_completion_check": {
+          "name": "matching_rulesets_w_completion_check",
+          "value": "\"matching_rulesets\".\"w_completion\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_rating_check": {
+          "name": "matching_rulesets_w_rating_check",
+          "value": "\"matching_rulesets\".\"w_rating\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_acceptance_check": {
+          "name": "matching_rulesets_w_acceptance_check",
+          "value": "\"matching_rulesets\".\"w_acceptance\" BETWEEN 0 AND 100"
+        },
+        "matching_rulesets_w_fairness_check": {
+          "name": "matching_rulesets_w_fairness_check",
+          "value": "\"matching_rulesets\".\"w_fairness\" BETWEEN 0 AND 100"
+        },
+        "ck_ruleset_weights_sum_100": {
+          "name": "ck_ruleset_weights_sum_100",
+          "value": "\"matching_rulesets\".\"w_eta\" + \"matching_rulesets\".\"w_distance\" + \"matching_rulesets\".\"w_zone_proximity\" + \"matching_rulesets\".\"w_completion\" + \"matching_rulesets\".\"w_rating\" + \"matching_rulesets\".\"w_acceptance\" + \"matching_rulesets\".\"w_fairness\" = 100"
+        },
+        "matching_rulesets_candidacy_freshness_seconds_check": {
+          "name": "matching_rulesets_candidacy_freshness_seconds_check",
+          "value": "\"matching_rulesets\".\"candidacy_freshness_seconds\" BETWEEN 15 AND 3600"
+        },
+        "matching_rulesets_max_candidates_check": {
+          "name": "matching_rulesets_max_candidates_check",
+          "value": "\"matching_rulesets\".\"max_candidates\" BETWEEN 1 AND 200"
+        },
+        "matching_rulesets_fairness_horizon_seconds_check": {
+          "name": "matching_rulesets_fairness_horizon_seconds_check",
+          "value": "\"matching_rulesets\".\"fairness_horizon_seconds\" BETWEEN 60 AND 86400"
+        },
+        "ck_ruleset_frozen_at": {
+          "name": "ck_ruleset_frozen_at",
+          "value": "(\"matching_rulesets\".\"is_frozen\" = FALSE AND \"matching_rulesets\".\"frozen_at\" IS NULL) OR (\"matching_rulesets\".\"is_frozen\" = TRUE AND \"matching_rulesets\".\"frozen_at\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

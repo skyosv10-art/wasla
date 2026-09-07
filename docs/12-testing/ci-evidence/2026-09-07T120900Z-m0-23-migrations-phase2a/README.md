@@ -75,3 +75,27 @@
   نمطُ «التكافؤِ مع العقدِ» لا ينطبقُ مباشرةً ويحتاجُ تصميمَ تكافؤٍ خاصّاً بالحزمة.
 
 `RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجتَيْنِ 2b و3.
+
+## نتائجُ CI (PR #50 · التشغيلُ `34121827783`)
+
+**27/27 فحصاً مطلوباً خضراء** (الحالةُ `MERGEABLE`):
+
+| الفحصُ | النتيجةُ | الزمنُ |
+|---|---|---|
+| `db-integration (identity)` | ✅ pass | 36s |
+| `db-integration (geography)` | ✅ pass | 46s |
+| `db-integration` (10 خدماتٍ أخرى) | ✅ pass | 28–54s |
+| `db-integration-shared` | ✅ pass | 1m33s |
+| `exit-gate-e2e` (8 بواباتٍ) | ✅ pass | 30–54s |
+| `typecheck` | ✅ pass | 1m39s |
+| `test` | ✅ pass | 1m11s |
+| `verify` | ✅ pass | 1m17s |
+| `governance-guard` | ✅ pass | 1m10s |
+| `repo-structure` | ✅ pass | 7s |
+| `doc-coverage` | ✅ pass | 6s |
+
+- **`Devin Review`** (مراجعةٌ خارجيّةٌ غيرُ مطلوبةٍ — `ci_allow_failure: 1`): `pending`.
+
+اختباراتُ الدورةِ للترحيلاتِ (`migrations.integration.test.ts`) جرتْ على PostgreSQL
+حقيقيٍّ في `db-integration (identity)` و`db-integration (geography)` — فالعكسيّةُ
+والتّكافؤُ مُثبَتانِ في CI لا محلّيّاً فحسب.

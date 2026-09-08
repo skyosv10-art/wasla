@@ -1,5 +1,23 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M0-23 · موجة 3 — `subscriptions` تنتظِم في الترحيلات المولَّدة العكوسة (CLM-0110)
+
+**Work Item(s):** M0-23 · **Branch:** `feat/m0-23-subscriptions-reversible-migrations` · **Scope:** `services/subscriptions/drizzle.config.ts,services/subscriptions/drizzle/,services/subscriptions/src/__tests__/,services/subscriptions/package.json,services/subscriptions/src/db/schema.ts,pnpm-lock.yaml,docs/16-progress/,docs/12-testing/`
+
+**ماذا تم إنجاز (1):** أُلحِقَت خدمةُ `subscriptions` (Phase 10 · المنفذ 8093 · 10 جداولَ) بنمطِ الترحيلاتِ المولَّدةِ العكوسةِ وفقَ ADR-024 — المرجعُ `services/reputation` (آخرُ موجةٍ مُنجَزة). أُنشِئَ `drizzle.config.ts` + ترحيلُ أساسٍ مولَّدٌ `drizzle/0000_third_sir_ram.sql` من `src/db/schema.ts` بـ`drizzle-kit generate` + رفيقُ ترجعٍ `0000_third_sir_ram.down.sql` مُراجَعٌ يدويّاً + `meta/_journal.json`، و`drizzle-kit` عُدَّ اعتماديّةَ تطويرٍ في `package.json` مع سكربتَي `db:generate` و`db:migrate`.
+
+**مصالحةُ القيود:** كشفَ التوليدُ اختلافَ تسميةِ قيودٍ بينَ `schema.ts` والعقدِ (نفسُ علّةِ موجةِ orders CLM-0101): قيودُ CHECK المضمَّنةُ العموديّةُ غيرُ مسماةٍ، والمفتاحانِ المركّبانِ بدونِ `_pkey` الكنونيّ، و`uniqueIndex` بدلَ قيدِ `_key`، وفهارسُ جزئيّةٌ بلا `WHERE`. فحُذِّيَت أسماءُ القيودِ في `schema.ts` (الأسماءُ وحدَها — لا بنيةُ جداولٍ ولا نوعُ عمودٍ ولا إلزاميّةٌ) لتطابقَ اصطلاحَ PostgreSQL الكنونيّ للعقدِ، فأصبحَ `drizzle-kit generate` يولِّدُ ترحيلاً متكافئ الأسماءِ مع العقدِ. لا تعديلَ على `contracts/schema.sql` — الترحيلُ مسارُ تطبيقٍ لا بديلُ العقد.
+
+**اختبارُ الدورةِ:** [`migrations.integration.test.ts`](../../services/subscriptions/src/__tests__/migrations.integration.test.ts) (251 سطراً) يقيسُ على PostgreSQL حقيقيٍّ (18 محلّيّاً): (1) تطبيقُ الترحيلِ المولَّدِ، (2) تكافؤٌ مع العقدِ في سبعةِ أبعادِ كتالوجٍ **بلا تطبيعٍ** (`column_default` و`is_nullable` و`contype` و`pg_get_constraintdef` كلُّها حرفيّةٌ — مطابقةٌ لاستعلامِ reputation)، (3) ترجعٌ يُعيدُ القاعدةَ نظيفةً، (4) إعادةُ تطبيقٍ ودورةٌ ثانية. **لا قسمُ بذورٍ:** عقدُ subscriptions بلا `INSERT INTO` (البذورُ برمجيّةٌ عبرَ `migrateSubscriptions()` في `src/db/migrate.ts`)، فلا قسمُ بذورٍ كـreputation.
+
+**التحقّق:** typecheck PASS · 215/215 وحدويّاً · **65/65 تكامليّاً** (تشملُ 3 اختباراتِ دورةٍ) · `verify-governance.sh` خضراء (exit 0) · `verify.sh` الكامل (43 حزمةً) ALL PASS. التزامُ: `8a2c2d2` (11 ملفاً · 2065 إدراجاً).
+
+**الأثر على المعارف المشتركة:** `docs/12-testing/BASELINE.json` تحرّك (عدّادُ ملفّاتِ الاختبارِ والبصمة) — مُستثناةٌ من القفلِ بقرارِ [`validate-baseline.sh`](../../scripts/checks/validate-baseline.sh) (`BASELINE_EXEMPT` · بقرارٍ مُعلَنٍ من الموجةِ الأولى).
+
+**ما لم يُنجَز:** `marketplace` آخرُ خدماتِ الموجةِ 3 بلا ترحيلاتٍ (موضوعُ الشريحةِ الثالثةِ — M5-12). `RISK-0020` يبقى مفتوحاً حتى اكتمالِ الموجةِ + إثباتِ الترقيةِ.
+
+---
+
 ## 2026-09-08 · M0-23 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0108 بعدَ دمجِ PR #64
 
 **Work Item(s):** M0-23 · **Branch:** `chore/m0-23-release-claim-clm-0108` · **Scope:** `docs/16-progress/`

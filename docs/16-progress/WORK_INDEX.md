@@ -33,7 +33,7 @@
 | `services/dispatch/` | Implemented | — | Phase 07 | |
 | `services/negotiations/` | Implemented | — | Phase 08 | |
 | `services/reputation/` | Implemented | M0-08 (دليل تشغيل) | Phase 09 | |
-| `services/subscriptions/` | Implemented | M0-01 (حارس تركيب) | Phase 10 | بوابة الخروج اجتازت · `__tests__/composition.test.ts` يحرس حقنَ الساعةِ والمُوَلِّدِ في `http/server.ts` |
+| `services/subscriptions/` | Implemented | M0-01 (حارس تركيب) · M0-23 (موجة 3) | Phase 10 | بوابة الخروج اجتازت · `__tests__/composition.test.ts` يحرس حقنَ الساعةِ والمُوَلِّدِ في `http/server.ts` · **انتظمت في الترحيلات المولَّدة العكوسة 2026-09-08 (CLM-0110): `drizzle.config.ts` + `0000_third_sir_ram.sql` مولَّدٌ + رفيقُ ترجعٍ + اختبارُ الدورةِ (تكافؤُ سبعةِ أبعادِ كتالوجٍ بلا تطبيعٍ · ترجعٌ نظيفٌ · إعادةُ تطبيقٍ ودورةٌ ثانية) — 65/65 تكامليّاً و215/215 وحدويّاً · مصالحةُ أسماءِ القيودِ في schema.ts (نمطُ موجةِ orders)** |
 | `services/marketplace/` | **In Progress** | **M5-11** | **Phase 11** | **6/6 مراجعات · بوّابةُ الخروجِ خضراءُ محلّيّاً 2026-08-29 (6/6 · 0 فاشلٌ) في `packages/marketplace-e2e` — والإغلاقُ قرارُ مالكٍ.** وما قبلَها — 5/6 مراجعات · الحدُّ HTTP قائمٌ (`docs/04-api/MARKETPLACE_HTTP.md`) · **الصادرُ وتزامنُ المخزون** قائمانِ 2026-08-28 (`src/db/outbox.ts` · `src/domain/events.ts` · [`docs/02-architecture/MARKETPLACE_EVENTS.md`](../02-architecture/MARKETPLACE_EVENTS.md)) — **ولا ناقلَ بعدُ** (دَينُ الطورِ 09). ومجموعةُ التكاملِ **شُغِّلت على PostgreSQL 17 في 2026-08-29: 118/118**، وأسقطَ التشغيلُ عيبَ ترتيبٍ أُصلح (`RISK-0012`) |
 | `services/search/` | Placeholder | M5-12 | Phase 12 | |
 | `services/delivery/` | Placeholder | M5-13 | Phase 13 | |

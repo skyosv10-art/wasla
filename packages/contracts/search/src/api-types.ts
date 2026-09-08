@@ -22,6 +22,9 @@ export interface paths {
   "/search/health": {
     get: operations["health"];
   };
+  "/search/ready": {
+    get: operations["ready"];
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -72,6 +75,11 @@ export interface components {
       items: components["schemas"]["ProductSearchResult"][];
       page: number;
       page_size: number;
+      /**
+       * عددُ المطابقاتِ **كلِّها** — تحسبُه القاعدةُ قبلَ التحديدِ (`count(*) OVER ()`)،
+       * فليس عددَ ما التُقِطَ للترتيبِ ولا عددَ عناصرِ الصفحةِ. وعمقُ الترقيمِ محدودٌ
+       * بنافذةِ ترتيبٍ، وما تجاوزَها يُرَدُّ `SEARCH_PAGE_OUT_OF_RANGE` لا يُخدَمُ مقصوصاً.
+       */
       total: number;
     };
     ErrorResponse: {
@@ -116,11 +124,35 @@ export interface operations {
       };
     };
   };
+  /** نبضةُ حياةٍ: لا تبعيّةَ ولا سؤالَ للفهرسِ. لا تُستعمَلُ للتوجيهِ. */
   health: {
     responses: {
       200: {
         content: {
           "application/json": { status: "ok" };
+        };
+      };
+    };
+  };
+  /**
+   * مسبارُ جاهزيّةٍ: يلمسُ نموذجَ القراءةِ فعلاً. `503` حينَ لا يُجيبُ الفهرسُ أو حينَ
+   * لا مسبارَ مُركَّبٌ — لا جاهزيّةَ افتراضاً بلا إثباتٍ. وفهرسٌ فارغٌ **جاهزٌ**.
+   */
+  ready: {
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            status: "ready";
+            index_reachable: true;
+            /** عيّنةٌ محدودةٌ لا عدٌّ كاملٌ — المسبارُ يجري كلَّ نبضةٍ. */
+            indexed_documents: number;
+          };
+        };
+      };
+      503: {
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
         };
       };
     };

@@ -123,7 +123,7 @@
 
 #### 2.3.2 الحدودُ المُعلَنةُ لهذه المراجعةِ
 
-- **طبقةُ HTTP:** **أُنجزت في المراجعة 3/N** — تطبيقُ Fastify (`http/app.ts`) بمسارَي `GET /search/products` و`GET /search/health`، منفذُ قراءةٍ مُحقَنٌ (`SearchProductsReadPort`)، معالجُ أخطاءٍ واحدٌ (503 كملاذٍ أخيرٍ لا 500)، تحويلٌ صريحٌ للنطاق↔العقد. القارئُ الفعليُّ `SearchIndexReader` (pg) مُختبرٌ تكامليًّا (يتخطّى بلا `DATABASE_URL`). **وأُنجزت بوّابةُ relevance/load (exit gate) في المراجعة 4/N** — [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md): حزمةُ `@wasla/search-e2e`، عشرونَ اختباراً على PostgreSQL حقيقيٍّ وسلكٍ حقيقيٍّ، الفهرسُ فيها **ناتجُ الـrelay لا مبذورٌ باليد**. وأمّا أنّ الصحّةَ ليست بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ فقد صارَ **مُثبَتاً بتوكيدٍ** لا موصوفاً: [`RISK-0030`](../07-security/RISK_REGISTER.md). M5-12 تبقى **In Progress** حتّى قرارِ مالكِ البرنامجِ.
+- **طبقةُ HTTP:** **أُنجزت في المراجعة 3/N** — تطبيقُ Fastify (`http/app.ts`) بمسارَي `GET /search/products` و`GET /search/health` (وانضمَّ إليهما `GET /search/ready` في المراجعةِ 5/N)، منفذُ قراءةٍ مُحقَنٌ (`SearchProductsReadPort`)، معالجُ أخطاءٍ واحدٌ (503 كملاذٍ أخيرٍ لا 500)، تحويلٌ صريحٌ للنطاق↔العقد. القارئُ الفعليُّ `SearchIndexReader` (pg) مُختبرٌ تكامليًّا (يتخطّى بلا `DATABASE_URL`). **وأُنجزت بوّابةُ relevance/load (exit gate) في المراجعة 4/N** — [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md): حزمةُ `@wasla/search-e2e`، عشرونَ اختباراً على PostgreSQL حقيقيٍّ وسلكٍ حقيقيٍّ، الفهرسُ فيها **ناتجُ الـrelay لا مبذورٌ باليد**. وأمّا أنّ الصحّةَ ليست بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ فقد كان **مُثبَتاً بتوكيدٍ** ثمّ **أُغلقَ في المراجعةِ 5/N** بمسارِ جاهزيّةٍ منفصلٍ: [`RISK-0030`](../07-security/RISK_REGISTER.md) `status:closed`. M5-12 تبقى **In Progress** حتّى قرارِ مالكِ البرنامجِ.
 - **وظيفتا CI (`search-db-integration` و`search-exit-gate-e2e`):** **أُنجزتا في المراجعة 4/N** — ساقانِ في مصفوفتَي `db-integration` و`exit-gate-e2e` بقاعدتَينِ مستقلّتَينِ (`wasla_search_test` · `wasla_search_e2e`) في `.github/workflows/ci.yml`، ووظيفتانِ مقابلتانِ في `.gitlab-ci.yml`، وساقٌ ثالثةٌ في `db-integration-shared` (13/13). واختباراتُ التكاملِ تُبقي تخطّيها بلا `DATABASE_URL` كما هي، فأُضيفَ حارسُ `EXIT_GATE_REQUIRE_DB` كي لا تُتخطّى البوّابةُ صامتةً حيثُ أُعلِنَ وجوبُها.
 - **منفذُ الكتالوجِ الفعليّ:** يُختبرُ الـrelay بـfake catalog؛ منفذُ HTTP الفعليّ (`GET /products/{productId}`) مُختبرٌ في عزلٍ في خدمةِ السوقِ (mapper `toProductResource`). تكاملُ HTTP بينَ الخدمتَين يُتركُ لمرحلةِ التشغيلِ (run-time) لاحقاً.
 
@@ -168,10 +168,14 @@
   (exit gate) ووظيفتا CI (`search-db-integration` · `search-exit-gate-e2e`) —
   **أُنجزت الثلاثةُ في المراجعة 4/N**
   ([`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md)).
-  **ويبقى مؤجَّلاً بندٌ واحدٌ:** رفعُ سقفِ المُرشَّحينَ (500) فوقَ بوّابةِ الحملِ —
-  وقد صارَ **مقيساً لا موصوفاً** (`total = 500` على ألفَي وثيقةٍ مُطابِقةٍ)
-  ومُسجَّلاً بمالكٍ ومهلةِ مراجعةٍ في [`RISK-0029`](../07-security/RISK_REGISTER.md)
-  بدلاً من بقائِه نثراً في وثيقةٍ.
+  **وأُغلقَ في المراجعةِ 5/N الدَّينانِ المُعلَنانِ:** `RISK-0029` — المجموعُ صارَ
+  مقيساً بـ`count(*) OVER ()` على مجموعةِ المطابقةِ قبلَ `LIMIT` (`total = 2000`
+  على ألفَي وثيقةٍ)، والسقفُ صارَ **نافذةَ ترتيبٍ** (`DEFAULT_RANKING_WINDOW = 5000`)
+  تحكمُ العملَ لا الحقيقةَ، وصفحةٌ أعمقُ منها تُرَدُّ `400 · SEARCH_PAGE_OUT_OF_RANGE`
+  لا تُخدَمُ من مجموعةٍ مقصوصةٍ. و`RISK-0030` — `GET /search/ready` يسألُ الفهرسَ
+  فعلاً بينما بقيَ `/search/health` نبضةَ حياةٍ، مقيسَينِ معاً في البوّابةِ.
+  **والحدُّ الباقي منقولٌ لا مطويٌّ:** الجاهزيّةُ تقيسُ الوصولَ لا الحداثةَ ⇒
+  [`RISK-0032`](../07-security/RISK_REGISTER.md).
 
 ## 5. العقدُ (Contract) المُلزِمُ
 

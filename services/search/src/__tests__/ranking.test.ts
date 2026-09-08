@@ -8,12 +8,16 @@ function product(overrides: Partial<IndexedProduct>): IndexedProduct {
     product_id: "p1",
     store_id: "s1",
     store_slug: "acme",
-    product_slug: "smart-phone",
-    category_id: "c1",
+    sku: "smart-phone",
+    category_slug: "c1",
     title_ar: "هاتف ذكي",
     title_en: "Smart Phone",
     price_minor_units: 50000,
     currency_code: "SAR",
+    store_state: "approved",
+    product_state: "published",
+    moderation_state: "approved",
+    quantity_on_hand: 10,
     ...overrides,
   };
 }
@@ -55,7 +59,7 @@ describe("rankProduct — scoring ladder (exact > prefix > fts > trigram)", () =
   });
 
   it("all terms present (fts proxy) => score 0.6", () => {
-    const p = product({ title_en: "A Smart Phone", product_slug: "device", title_ar: "هاتف" });
+    const p = product({ title_en: "A Smart Phone", sku: "device", title_ar: "هاتف" });
     const nq = normalizeQuery("smart phone");
     const r = rankProduct(p, nq);
     expect(r.score).toBe(0.6);
@@ -71,9 +75,9 @@ describe("rankProduct — scoring ladder (exact > prefix > fts > trigram)", () =
 
 describe("rankAndSort — ordering", () => {
   const products: IndexedProduct[] = [
-    product({ product_id: "a", title_ar: "هاتف ذكي", title_en: null, product_slug: "a" }),
-    product({ product_id: "b", title_ar: "هاتف", title_en: null, product_slug: "phone" }),
-    product({ product_id: "c", title_ar: "سيارة", title_en: null, product_slug: "car" }),
+    product({ product_id: "a", title_ar: "هاتف ذكي", title_en: null, sku: "a" }),
+    product({ product_id: "b", title_ar: "هاتف", title_en: null, sku: "phone" }),
+    product({ product_id: "c", title_ar: "سيارة", title_en: null, sku: "car" }),
   ];
 
   it("sorts by descending score and drops zero-score", () => {

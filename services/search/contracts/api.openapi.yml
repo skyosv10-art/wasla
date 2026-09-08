@@ -35,12 +35,12 @@ paths:
             minLength: 1
             maxLength: 200
         - $ref: '#/components/parameters/Locale'
-        - name: category_id
+        - name: category_slug
           in: query
           required: false
+          description: مقطعُ التصنيفِ للترشيحِ. من أصلِ السوقِ لا يُخترَع هنا.
           schema:
             type: string
-            format: uuid
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: sort
@@ -111,12 +111,12 @@ components:
 
     ProductSearchResult:
       type: object
-      required: [product_id, store_id, store_slug, product_slug, title_ar, price_minor_units, currency_code, category_id, score]
+      required: [product_id, store_id, store_slug, sku, title_ar, price_minor_units, currency_code, category_slug, score]
       properties:
         product_id: { type: string, format: uuid }
         store_id: { type: string, format: uuid }
         store_slug: { type: string }
-        product_slug: { type: string }
+        sku: { type: string, description: رقمُ المنتجِ الواحدُ داخلَ متجرٍه. }
         title_ar: { type: string }
         title_en: { type: string, nullable: true }
         price_minor_units:
@@ -124,7 +124,7 @@ components:
           minimum: 0
           description: سعرٌ بأصغرِ وحدةٍ (هللة). بيانُ كتالوجٍ لا معاملة (ADR-016 قرار 4).
         currency_code: { type: string, const: SAR }
-        category_id: { type: string, format: uuid }
+        category_slug: { type: string, description: مقطعُ التصنيفِ من السوقِ. }
         score:
           type: number
           minimum: 0

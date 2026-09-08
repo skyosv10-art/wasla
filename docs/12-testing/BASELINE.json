@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T15:11:03Z",
+  "generated_at": "2026-09-08T15:55:35Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "1845c20033c8833d1ce7027ace35106b5127b62a",
-    "branch": "feat/m5-12-marketplace-search",
+    "commit": "85dc17b6ede31aa1fde490db3b337a0efb344878",
+    "branch": "feat/m5-12-search-relay-consumer",
     "dirty": true,
-    "dirty_files": 11,
-    "dirty_reason": "M5-12 foundational PR (review 1/N): added services/search + packages/contracts/search (packages 43->45, test_files +4). Full green no-DB run: integration tests skipped (no DATABASE_URL), unit + contract tests pass (3850 passed). verify_overall=failed reflects the baseline chicken-and-egg (governance_suite_failed=1 is this check itself, resolved by this regeneration).",
-    "tracked_files": 1501
+    "dirty_files": 25,
+    "dirty_reason": "M5-12 review 2/N (relay consumer) — feature branch feat/m5-12-search-relay-consumer, pre-merge",
+    "tracked_files": 1525
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "1d812f3ae4040c5fe5fac1376a82ae47a89649f7fc4e35a87a8627f2e9b9c5ed",
-    "lines": 3009
+    "sha256": "986bf89a6140ab31e392f70102968b5d6e28c16f7472f7747d941a653c9b3d80",
+    "lines": 3018
   },
   "static": {
     "packages": 45,
     "packages_with_typecheck": 45,
     "packages_with_test": 45,
-    "test_files_tracked": 285,
+    "test_files_tracked": 289,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-combined.log",
-    "tests_passed": 3850,
-    "test_files_executed": 230,
+    "source": "pre-commit verification: typecheck + 43 unit + 4 integration (PostgreSQL 17) + verify-governance 13/13",
+    "tests_passed": 3875,
+    "test_files_executed": 233,
     "governance_suite_cases": 182,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
-  "fingerprint": "sha256:f0a8ad35c56af3bc771abd17356a38986e114a6142e5dbc9ecde2f7018498845",
+  "fingerprint": "sha256:254b28019a82b0a7049f71d08a89eb976ac744a02394ac7d0c7bea3fedfa22d3",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

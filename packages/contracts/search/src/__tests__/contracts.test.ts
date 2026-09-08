@@ -33,6 +33,35 @@ describe("search contracts — foundational invariants (ADR-025)", () => {
     expect(schemaCode).not.toMatch(/is_public/);
   });
 
+  it("index carries state columns so visibility is derived at read time (ADR-025 §2.2)", () => {
+    expect(schemaCode).toMatch(/store_state\s+TEXT\s+NOT NULL/);
+    expect(schemaCode).toMatch(/product_state\s+TEXT\s+NOT NULL/);
+    expect(schemaCode).toMatch(/moderation_state\s+TEXT\s+NOT NULL/);
+    expect(schemaCode).toMatch(/quantity_on_hand\s+INTEGER\s+NOT NULL/);
+  });
+
+  it("index uses category_slug from the catalog port, not a fabricated category_id", () => {
+    expect(schemaCode).toMatch(/category_slug\s+TEXT\s+NOT NULL/);
+    expect(schemaCode).not.toMatch(/category_id/);
+  });
+
+  it("index uses sku (catalog identity), not a fabricated product_slug", () => {
+    expect(schemaCode).toMatch(/\bsku\s+TEXT\s+NOT NULL/);
+    expect(schemaCode).not.toMatch(/product_slug/);
+  });
+
+  it("schema declares projection state tables owned by search (ADR-025 §2.3)", () => {
+    expect(schemaCode).toMatch(/CREATE TABLE IF NOT EXISTS search_marketplace_store_state/);
+    expect(schemaCode).toMatch(/CREATE TABLE IF NOT EXISTS search_marketplace_product_state/);
+    expect(schemaCode).toMatch(/CREATE TABLE IF NOT EXISTS search_relay_consumed_events/);
+    expect(schemaCode).toMatch(/CREATE TABLE IF NOT EXISTS search_relay_checkpoint/);
+  });
+
+  it("relay state columns enforce a closed status set for idempotency and dead-letter", () => {
+    expect(schemaCode).toMatch(/CHECK \(status IN \('pending','applied','skipped','skipped_stale','ignored','poisoned'\)\)/);
+    expect(schemaCode).toMatch(/attempt_count\s+INTEGER\s+NOT NULL DEFAULT 0/);
+  });
+
   it("schema uses integer halalas for price, not floating point (ADR-016 decision 4)", () => {
     expect(schemaCode).toMatch(/price_minor_units\s+INTEGER/);
     expect(schemaCode).toMatch(/currency_code\s+TEXT\s+NOT NULL CHECK \(currency_code = 'SAR'\)/);
@@ -42,6 +71,13 @@ describe("search contracts — foundational invariants (ADR-025)", () => {
     expect(api).toMatch(/\/search\/products/);
     expect(api).toMatch(/\/search\/health/);
     expect(api).toMatch(/operationId: searchProducts/);
+  });
+
+  it("api result exposes sku and category_slug (catalog port identity, not fabricated ids)", () => {
+    expect(api).toMatch(/sku:/);
+    expect(api).toMatch(/category_slug:/);
+    expect(api).not.toMatch(/category_id:/);
+    expect(api).not.toMatch(/product_slug:/);
   });
 
   it("api price is integer halalas (catalog datum, not a transaction)", () => {

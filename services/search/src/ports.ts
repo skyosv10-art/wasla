@@ -15,6 +15,7 @@
 
 import type { MarketplaceOutboxRow, RelayCheckpoint, CatalogProduct, ConsumedStatus } from "./domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "./domain/projector.js";
+import type { SearchPage } from "./domain/model.js";
 
 export interface MarketplaceEventSource {
   /** Read up to `limit` outbox rows strictly after the checkpoint (or from zero). */
@@ -48,4 +49,39 @@ export interface ProjectionStore {
 
   /** Full rebuild: clear index, projection state, consumed ledger, checkpoint. */
   clearAll(): Promise<void>;
+}
+
+/**
+ * Read-side port — query the DERIVED read model (`search_product_index`).
+ *
+ * This is the query boundary the HTTP layer depends on (ADR-025 §2.4). It reads
+ * ONLY search-owned tables — never JOINs marketplace tables directly (the limit
+ * from ADR-016 decision 9 / ADR-025 §2.3). Visibility is rebuilt by a WHERE on the
+ * four consumed-state columns, never a stored flag.
+ *
+ * Implementations:
+ *  - `SearchIndexReader` (infrastructure, pg Pool) — production, integration-tested.
+ *  - a fake in `http-app.test.ts` — unit, no DB.
+ *
+ * Throws `SearchUnavailableError` (SEARCH_INDEX_DEGRADED / SEARCH_INTERNAL_ERROR)
+ * when the read model is degraded or the query fails — the HTTP error handler
+ * maps that to 503.
+ */
+export type SearchSort = "relevance" | "price_asc" | "price_desc" | "newest";
+
+export interface SearchProductsQuery {
+  /** Normalized query text (whitespace-collapsed, diacritics stripped, lower-cased). */
+  readonly q: string;
+  readonly locale: "ar" | "en";
+  /** Optional category filter (verbatim from the request — not fabricated here). */
+  readonly categorySlug: string | null;
+  /** 1-based page. */
+  readonly page: number;
+  readonly pageSize: number;
+  readonly sort: SearchSort;
+}
+
+export interface SearchProductsReadPort {
+  /** Query the derived read model. Throws on degraded/unavailable (→ 503). */
+  search(query: SearchProductsQuery): Promise<SearchPage>;
 }

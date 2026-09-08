@@ -19,6 +19,7 @@
   "dependencies": {
     "@wasla/contracts-marketplace": "workspace:*",
     "@wasla/contracts-search": "workspace:*",
+    "fastify": "^5.12.1",
     "pg": "^8.13.0"
   },
   "devDependencies": {

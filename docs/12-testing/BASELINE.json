@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T16:30:31Z",
+  "generated_at": "2026-09-08T18:29:22Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "793b0df7ff920ce00686ea0b4cada2a661d750d1",
-    "branch": "feat/m5-12-search-relay-consumer",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "commit": "4a0aea08dd2acc7d0122feff393410bc9ee2c52d",
+    "branch": "feat/m5-12-search-http",
+    "dirty": true,
+    "dirty_files": 16,
+    "dirty_reason": "M5-12 review 3/N search HTTP boundary: +3 test files and fastify dependency",
     "tracked_files": 1538
   },
   "env": {
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "986bf89a6140ab31e392f70102968b5d6e28c16f7472f7747d941a653c9b3d80",
-    "lines": 3018
+    "sha256": "c275b023cb4aed412bfa89d0375c59e6ad8daf7756ca812cd5f5b502557dbae9",
+    "lines": 3021
   },
   "static": {
     "packages": 45,
     "packages_with_typecheck": 45,
     "packages_with_test": 45,
-    "test_files_tracked": 289,
+    "test_files_tracked": 292,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-final.log",
+    "source": "/tmp/verify-v3.log",
     "tests_passed": 3895,
     "test_files_executed": 235,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:148b94c831433f3e3217fbd8b4ed5336de9711e7bdaf9d2755aa7fcde13dfb91",
+  "fingerprint": "sha256:f41fdb859cf7ee77e3ac8277d76727687c71592a137c0b25bba03ca6b4d35419",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

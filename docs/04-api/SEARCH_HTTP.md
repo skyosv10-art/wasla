@@ -1,12 +1,12 @@
-# Search Service — طبقة HTTP (Phase 12 · MR 1/N)
+# Search Service — طبقة HTTP (Phase 12 · MR 3/N)
 
 > **النوع:** توثيق واجهة (API Layer) · **Scope:** عقد واجهة البحث في منتجات السوق، وقواعد التطبيع والترتيب، وحدودها مع نموذج القراءة المشتق.
 >
 > **المصدر الكنسي للعقد:** [`services/search/contracts/api.openapi.yml`](../../services/search/contracts/api.openapi.yml) · [`errors.md`](../../services/search/contracts/errors.md) · [`schema.sql`](../../services/search/contracts/schema.sql) · [`events.json`](../../services/search/contracts/events.json)
 >
-> **الخدمة:** `services/search` (منفذ **8012**) · **Status:** In Progress (PR أول تأسيسي) · **Last Updated:** 2026-09-08
+> **الخدمة:** `services/search` (منفذ **8012**) · **Status:** In Progress (المراجعة 3/N HTTP مُدمجة) · **Last Updated:** 2026-09-08
 >
-> **Related Code:** `services/search/src/domain/{model,query,visibility,ranking}.ts` · `services/search/src/__tests__/{query,visibility,ranking}.test.ts`
+> **Related Code:** `services/search/src/domain/{model,query,visibility,ranking}.ts` · `services/search/src/http/{app,requests,errors,mappers,server}.ts` · `services/search/src/infrastructure/search-index-reader.ts` · `services/search/src/__tests__/{http-requests,http-app,search-index-reader.integration}.test.ts`
 >
 > **Related Docs:** [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [ADR-016](../15-decisions/ADR-016-marketplace-store-ownership-catalog-and-moderation-boundary.md) · [ADR-004](../15-decisions/ADR-004-typed-contracts-from-openapi.md)
 
@@ -14,7 +14,7 @@
 
 ## 1. ماذا يُضاف في هذا العنصر
 
-هذا **PR أول تأسيسي (review 1/N)** لـ M5-12. لا يدّعي إكمال بوّابة relevance/load ولا المستهلك الكامل. ما يُغطّيه:
+هذا توثيقُ خدمةِ البحثِ لـ M5-12. **المراجعة 3/N (طبقة HTTP) مُدمجةٌ** فوق المراجعتَين 1/N (العقدُ والنطاقُ) و2/N (المستهلكُ relay). لا تُدّعى إكمالُ بوّابة relevance/load ولا وظائفُ CI التكامليّةُ بعد. ما يُغطّيه:
 
 - **عقدُ البياناتِ** (`schema.sql`): وثيقةُ فهرسِ المنتجِ المُشتقّة (`search_product_index`) مع فهارسِ `tsvector` (إنجليزي) و`pg_trgm` (عربي/تقريبي) وoutbox.
 - **عقدُ الواجهةِ** (`api.openapi.yml`): `GET /search/products` + `GET /search/health`.
@@ -29,7 +29,7 @@
 |---|---|---|
 | المستهلكُ الكاملُ (relay) لأحداثِ outbox السوقِ | قرارٌ معماريٌّ + تنفيذٌ يُفصَلان | ADR-025 §2.3 + TASK_LOG |
 | بوّابةُ relevance/load (exit gate) | فحوصُ أداءٍ صعبةٌ لا تُخلطُ مع القرارِ | ADR-025 §2.4 + TASK_LOG |
-| طبقةُ HTTP الكاملةُ (Fastify app) | تأتي بعد استقرارِ النطاقِ والعقدِ | TASK_LOG |
+| ~~طبقةُ HTTP الكاملةُ (Fastify app)~~ | **أُنجزت في المراجعة 3/N** — تطبيقُ Fastify مُحقَنٌ بمنفذِ قراءة، ومعالجُ أخطاءٍ واحد، و503 كملاذٍ أخير | TASK_LOG · SEARCH_HTTP §5 |
 | اختباراتٌ تكامليّةٌ على PostgreSQL + وظائفُ CI | تتطلّبُ ناقلًا وDB | ADR-025 §4 + TASK_LOG |
 
 ---
@@ -71,3 +71,42 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 - الكميّةُ `> 0`
 
 فوثيقةٌ لا تُبنى أصلًا لمنتجٍ غيرِ ظاهر. وإن اختلفتِ الحالةُ بينَ الفهرسِ والمصدر، فالفهرسُ هو الخطأُ ويُصلِحُهُ الاستهلاكُ أو إعادةُ البناءِ. **البحثُ ليس بوّابةَ معاملةٍ** — لا حجزَ ولا دفعَ، فالاتساقُ الناعمُ (eventual) مقبولٌ.
+
+---
+
+## 5. تنفيذُ طبقةِ HTTP (المراجعةُ 3/N)
+
+طبقةُ HTTP هي **حدٌّ مُحقَنٌ لا حدٌّ مُتصلٌ**: تطبيقُ Fastify يعتمدُ على `SearchProductsReadPort` مُحقَنٍ، فلا يفتحُ اتصالاً بقاعدةِ البياناتِ بنفسِه. الاختباراتُ تبني التطبيقَ بمنفذٍ وهميٍّ (fake) بلا DB؛ والتوصيلُ الفعليُّ في `http/server.ts`.
+
+### 5.1 المساراتُ
+
+- **`GET /search/products`** — يُحلِّلُ المعاملاتِ (`parseSearchRequest`)، يُمرِّرُها للمنفذِ، يُعيّنُ النتيجةَ إلى شكلِ العقدِ (`toSearchPage`).
+- **`GET /search/health`** — يُرجع `{ status: "ok" }`. **ليس بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ** — تحويلُ الصحّةِ إلى بوّابةِ relevance/load مؤجَّلٌ لمراجعةِ exit gate (ADR-025 §2.3.2).
+
+### 5.2 معالجُ أخطاءٍ واحدٌ، بلا try/catch في المعالِجات
+
+المعالِجاتُ تُلقي بأخطاءٍ مُصنَّفةٍ (`SearchValidationError` / `SearchUnavailableError`) أو تتركُ المنفذَ يُلقي؛ ومعالجُ `setErrorHandler` واحدٌ يُترجمُها عبرَ `sendSearchError`. لا يُغلِّفُ معالجٌ جسمَه بـtry/catch — فذلك يعني ترجمةً ثانيةً لنفسِ الخطأِ في مكانٍ لا يقرؤه أحدٌ، وأولُ مسارٍ ينسى الشكلَ يُرجعُ جسمًا لا يطابقُ `ErrorResponse`.
+
+### 5.3 503 لا 500
+
+الملاذُ الأخيرُ هو `503 SEARCH_INTERNAL_ERROR` لا `500`. نموذجُ قراءةِ البحثِ يعتمدُ على فهرسٍ مشتقٍّ تُغلبُ على إخفاقاتِه الحالةُ العابرةُ (اتصالٌ، مهلةٌ، تأخّرُ relay) — حالةٌ قابلةٌ لإعادةِ المحاولة. `500` يقولُ للعميلِ «عيبُ منطقٍ، لا تُعد»؛ `503` يقولُ «أعد». بحثٌ ينجحُ بعدَ ثانيتَين لا يُهجَرُ بعميلٍ حذرٍ.
+
+شكلُ الخطأِ مسطّحٌ `{ code, message, trace_id }` حسب `errors.md` — لا متداخلٌ `{ error: {...} }`.
+
+### 5.4 التحققُ والتحويل
+
+- **`parseSearchRequest`** (`http/requests.ts`): المصدرُ الوحيدُ لما يُعدُّ طلبَ بحثٍ صالحًا. القيمُ الموجودةُ-غيرُ-الصالحةِ تُرفَضُ (400) — لا تسكّتٌ إلى افتراضات. المصفوفاتُ مرفوضةٌ (مفتاحٌ مكرَّرٌ خطأُ عميلٍ)، لا يُؤخذُ أوّلُ عنصرٍ صمتًا.
+- **`toSearchPage`** (`http/mappers.ts`): يُحوِّلُ `SearchPage` النطاقيَّ إلى `SearchPage` العقدِ بتعيينٍ صريحٍ للحقول — لا `as`-cast — فيُصبحُ حقلٌ يُضافُ لأحدهما دونَ الآخرِ فشلَ نوعٍ لا انجرافَ شكلٍ صامت.
+
+### 5.5 القارئُ الفعليُّ (integration)
+
+`SearchIndexReader` (`infrastructure/search-index-reader.ts`) هو المحوِّلُ الإنتاجيُّ لـ`SearchProductsReadPort` فوقَ `pg.Pool`. يقرأُ **فقط** `search_product_index` — لا JOIN لجداولِ السوقِ (حدُّ ADR-016 القرارُ 9). الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ، لا رايةٌ مُخزَّنة. المطابقةُ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ (trigram + FTS + substring)، ثمَّ ترتيبُ النطاقِ (`rankAndSort`) يُعيدُ تسجيلَ النتائجِ بسُلَّمِ exact > prefix > fts > trigram. اختبارُ التكاملِ يتخطّى نفسَه بلا `DATABASE_URL` — ووظيفةُ CI `search-db-integration` التي تُشغِّلُه مؤجَّلةٌ (ADR-025 §4).
+
+### 5.6 ما يُؤجَّلُ بعدَ هذه المراجعة
+
+| المؤجَّل | أين يُسجَّل |
+|---|---|
+| بوّابةُ relevance/load (exit gate) | ADR-025 §2.3.2 + TASK_LOG |
+| وظيفةُ CI `search-db-integration` (تشغيلُ اختبارِ التكاملِ في CI) | ADR-025 §4 |
+| وظيفةُ CI `search-exit-gate-e2e` | ADR-025 §4 |
+| رفعُ سقفِ المُرشَّحينَ (v1: 500) فوقَ بوّابةِ الحملِ | SEARCH_HTTP §5.5 + TASK_LOG |

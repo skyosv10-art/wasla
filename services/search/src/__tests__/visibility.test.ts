@@ -4,7 +4,7 @@ import type { ConsumedProductState } from "../domain/visibility.js";
 
 const visible: ConsumedProductState = {
   store_state: "approved",
-  publication_state: "published",
+  product_state: "published",
   moderation_state: "approved",
   quantity_on_hand: 5,
 };
@@ -19,13 +19,13 @@ describe("visibility — rebuilt from consumed state (ADR-016 decision 3)", () =
   });
 
   it("store not approved => hidden", () => {
-    expect(isVisible(override({ store_state: "pending" }))).toBe(false);
+    expect(isVisible(override({ store_state: "pending_review" }))).toBe(false);
     expect(isVisible(override({ store_state: "suspended" }))).toBe(false);
   });
 
   it("product not published => hidden", () => {
-    expect(isVisible(override({ publication_state: "draft" }))).toBe(false);
-    expect(isVisible(override({ publication_state: "archived" }))).toBe(false);
+    expect(isVisible(override({ product_state: "draft" }))).toBe(false);
+    expect(isVisible(override({ product_state: "archived" }))).toBe(false);
   });
 
   it("moderation not approved => hidden", () => {

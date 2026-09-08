@@ -50,7 +50,7 @@ export function rankProduct(
 ): RankedResult {
   const ar = product.title_ar.toLowerCase();
   const en = (product.title_en ?? product.title_ar).toLowerCase();
-  const slug = product.product_slug.toLowerCase();
+  const slug = product.sku.toLowerCase();
   const q = nq.normalized;
 
   // exact full match on slug or title

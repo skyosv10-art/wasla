@@ -43,8 +43,8 @@ export interface components {
       q: string;
       /** اللغة المطلوبة للنتائج. الافتراضي ar. */
       locale?: components["schemas"]["Locale"];
-      /** معرّف التصنيف (filter). من أصلِ السوقِ لا يُخترَع هنا. */
-      category_id?: string;
+      /** مقطعُ التصنيفِ (filter). من أصلِ السوقِ لا يُخترَع هنا. */
+      category_slug?: string;
       /** تجزئة الصفحة (1-based). الافتراضي 1. */
       page?: number;
       /** حجم الصفحة. الافتراضي 20، الحد الأعلى 50. */
@@ -56,13 +56,15 @@ export interface components {
       product_id: string;
       store_id: string;
       store_slug: string;
-      product_slug: string;
+      /** رقمُ المنتجِ الواحدُ داخلَ متجرٍه (يأتيه من منفذِ قراءةِ الكتالوجِ). */
+      sku: string;
       title_ar: string;
       title_en: string | null;
-      /** سعرٌ بفاصلةٍ صحيحةٍ (هللة). بيانُ كتالوجٍ لا معاملة (ADR-016 قرار 4). */
+      /** سعرٌ صحيحٌ بأصغرِ وحدةٍ (هللة). بيانُ كتالوجٍ لا معاملة (ADR-016 قرار 4). */
       price_minor_units: number;
       currency_code: "SAR";
-      category_id: string;
+      /** مقطعُ التصنيفِ من السوقِ (منفذُ قراءةِ الكتالوجِ يُعيدهُ لا مُعرِّفُها). */
+      category_slug: string;
       /** درجةُ المطابقةِ المفسَّرةُ (0..1). ليست سحراً: exact > prefix > fts > trigram. */
       score: number;
     };
@@ -90,7 +92,7 @@ export interface operations {
       query: {
         q: string;
         locale?: components["schemas"]["Locale"];
-        category_id?: string;
+        category_slug?: string;
         page?: number;
         page_size?: number;
         sort?: components["schemas"]["SearchSort"];

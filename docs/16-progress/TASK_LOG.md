@@ -1,5 +1,39 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M5-12 · المراجعةُ 2/N — Relay Consumer (تصميمٌ وتنفيذٌ وإثباتٌ end-to-end)
+
+**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-relay-consumer` · **Claim:** CLM-0112 (نشط) · **Scope:** `services/search/` (عقود + نطاق + منافذ + relay + بنية تحتية + اختبارات) · `packages/contracts/search/` · `docs/15-decisions/ADR-025` (ملحق §2.3.1/§2.3.2) · دفاترُ مشتركةٌ مستثناةٌ (M0-14)
+
+**ماذا تم إنجاز (1):** صُمِّمَ ونُفِّذَ المستهلكُ (relay) لأحداثِ `marketplace_outbox` وفقَ ADR-025: ثلاثةُ منافذَ (`MarketplaceEventSource` · `CatalogReadPort` · `ProjectionStore`)، ونواةُ الإسقاطِ `projector.ts` (كشفُ قِدَمٍ بالتسلسلِ + انتقالاتُ الظهورِ)، ومحرّكُ الـrelay `relay.ts` (تماثُلٌ · إعادةٌ · سمٌّ · نقطةُ تقدُّمٍ · إعادةُ بناءٍ). خمسُ جداولِ حالةِ جديدةٍ في `schema.sql` (`search_marketplace_store_state` · `search_marketplace_product_state` · `search_outbox` · `search_relay_consumed_events` · `search_relay_checkpoint`) ووثيقةُ الفهرسِ تحملُ الآنَ أعمدةَ الحالةِ المُستهلَكةِ. ثلاثُ محوّلاتِ PostgreSQL حقيقيّةٍ. **43 اختبارَ وحدةٍ + 4 اختباراتِ تكاملٍ على PostgreSQL 17 حقيقيٍّ** (المسارُ الكاملُ · التسليمُ المزدوجُ · إعادةُ الترتيبِ · إعادةُ البناءِ) تُثبتُ `outbox event → relay → search read model → correct resulting state`.
+
+**لماذا تم اختياره (2):** المراجعةُ 2/N هي الخطوةُ الصحيحةُ التاليةُ لأنّ القرارَ المعماريَّ (ADR-025) يجعلُ `marketplace_outbox` مصدرَ الأحداثِ لنموذجِ القراءةِ — فلا يُبنى الـHTTP ولا بوّابةُ relevance/load قبلَ اكتمالِ الـrelay (تبعيّةٌ رسميّةٌ). كشفَ التنفيذُ ثلاثَ فجواتٍ بنيويّةٍ في العقودِ التأسيسيّةِ (نقصُ أعمدةِ الحالةِ · غيابُ العنوان/السعرِ عن الأحداثِ · غيابُ `markPublished`) وعُولِجَت كلُّها، لا إخفاءً.
+
+**أين تم التغيير (3):** `services/search/contracts/schema.sql` (6 جداول) · `services/search/src/domain/{consumed-events.ts,projector.ts,model.ts,visibility.ts,ranking.ts}` · `services/search/src/ports.ts` · `services/search/src/relay.ts` · `services/search/src/infrastructure/{marketplace-event-source.ts,catalog-read-port.ts,projection-store.ts}` · `services/search/src/__tests__/{relay.test.ts,relay.integration.test.ts,projector.test.ts,event-coverage.test.ts,pg-harness.ts}` · `services/search/vitest.{config,integration.config}.ts` · `packages/contracts/search/src/{api-types.ts,__tests__/contracts.test.ts}` · `docs/15-decisions/ADR-025-*.md` · `docs/12-testing/BASELINE.json` · `docs/16-progress/{TASK_LOG,WORK_INDEX,LAUNCH_EXECUTION_BOARD,WORK_CLAIMS}.md`
+
+**الملفات/الخدمات المتأثرة (4):** خدمةُ البحثِ `@wasla/search-service` (نطاقٌ + منافذُ + relay + بنيةٌ تحتيةٌ + اختبارات) · حزمةُ عقودِ البحثِ `@wasla/contracts-search` (الأنواعُ + عقودُ المخططِ).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** مخططُ `search_product_index` توسَّعَ بأعمدةِ الحالةِ المُستهلَكةِ (`store_state`/`product_state`/`moderation_state`/`quantity_on_hand`/`sku`/`category_slug`) وحُذفَ منه `category_id`/`product_slug`/`is_visible` (الظهورُ مشتقٌّ لا مخزَّن). أُضيفَت 5 جداولِ حالةِ/استهلاكٍ. عقدُ البحثِ `ProductSearchResult` و`SearchQuery` استبدلا `category_id`←`category_slug` و`product_slug`←`sku`. لا تغييرَ في أحداثِ السوقِ ولا في مخططِ `marketplace_outbox` (يُقرأُ فقط).
+
+**كيف تم الاختبار (6):** typecheck نظيفٌ (خدمةُ البحثِ + كاملُ المستودعِ) · **43/43 اختبارَ وحدةٍ** · **4/4 اختباراتِ تكاملٍ على PostgreSQL 17 مدمجٍ حقيقيٍّ** (`DATABASE_URL=postgres://postgres@127.0.0.1:55432/postgres`) · إثباتُ حمايةِ انحرافِ الأحداثِ (13 نوعاً مُصنَّفاً صريحاً) · verify-governance (13/13) · BASELINE مُحدَّثٌ. **عيبٌ صريحٌ وُجِدَ وأُصلِح:** كانَ `applyEvent` يُحدّثُ الحالةَ قبلَ جلبِ الكتالوجِ، فالفشلُ العابرُ يتركُ الحالةَ مُتحوّلةً فتتخطّى إعادةَ المحاولةِ بناءَ الوثيقةِ — صُحِّحَ بجلبِ الكتالوجِ قبلَ تحويرِ الحالةِ (إعادةُ المحاولةِ آمنةٌ).
+
+**ما المشاكل التي ظهرت (7):** (1) فجوةُ بنيةِ الفهرسِ: لا أعمدةَ حالةٍ → لا كشفَ تغيُّرٍ. عولجَ بجداولِ الحالةِ. (2) أحداثُ السوقِ بلا عنوانٍ/سعرٍ → منفذُ قراءةِ كتالوجٍ مُصرَّحٌ. (3) لا `markPublished` → نقطةُ تقدُّمٍ يملكُها البحثُ في `search_relay_checkpoint`. (4) اصطدامُ تسلسلِ `moderation_sequence` (تهيئةٌ 1 تتصادمُ مع أوّلِ قرارٍ) → التهيئةُ 0 والقيدُ `>=0`. (5) عدمُ تزامُنِ تحويرِ الحالةِ مع جلبِ الكتالوجِ → أُعيدَ ترتيبُ `applyEvent`.
+
+**ما الذي لم يكتمل (8):** بوّابةُ HTTP Layer وrelevance/load (تبعيّةٌ رسميّةٌ على اكتمالِ الـrelay — تُؤجَّلُ لمراجعةٍ لاحقةٍ) · وظيفةُ CI `search-db-integration` (تتخطّى بلا `DATABASE_URL`؛ مستوى الجمعِ مع محرّكِ Postgres المدمجِ غيرُ جاهزٍ بعدُ) · تكاملُ HTTP الفعليُّ بينَ الخدمتَين (يُتركُ لوقتِ التشغيلِ). M5-12 تبقى **In Progress**.
+
+**الخطوة التالية (9):** بعدَ دمجِ هذه المراجعةِ: المراجعةُ 3/N — HTTP Layer (Fastify) لخدمةِ البحثِ — لا تُبدأُ إلّا بعدَ اكتمالِ الـrelay وتصديقِ مالكِ البرنامجِ.
+
+**ما الذي يعتمد عليه العمل التالي (10):** اكتمالُ المستهلكِ (relay) وإثباتُه end-to-end — مُستوفىً في هذه المراجعةِ.
+
+**Migration/Deployment/Config (11):** مخططُ البحثِ يُطبَّقُ عبرَ `applySearchSchema` (DROP+CREATE في بيئةِ الاختبارِ). لا ترحيلاتٍ إنتاجيّةٍ بعدُ (طورُ التأسيسِ). منفذُ الكتالوجِ `GET /products/{productId}` مُصرَّحٌ بهِ في ADR-025 §2.3.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** (1) تكاملُ HTTP الفعليُّ بينَ الـrelay ومنفذِ الكتالوجِ يُتركُ لوقتِ التشغيلِ (الـrelay مُختبرٌ بـfake catalog؛ المنفذُ مُختبرٌ في عزلٍ). (2) الترتيبُ يعتمدُ على `created_at` + `outbox_id` — يُضمنُ الترتيبَ ضمنَ المعاملةِ الواحدةِ (`clock_timestamp`) لا عبرَ الخدماتِ. (3) `markPublished` دَينُ طورِ 09 — يُسجَّل في `search_relay_checkpoint` مملوكاً للبحثِ.
+
+**الروابط (13):** PR (قيدُ الإنشاءِ) · [ADR-025 §2.3.1](../15-decisions/ADR-025-marketplace-search-read-model.md) · [BASELINE](../12-testing/BASELINE.json)
+
+**الشخص/الفريق الذي يتابع (14):** مالكُ البرنامجِ (`@uxxxu`) — تصديقُ الاكتمالِ ونقلُ M5-12 إلى `Completed` قرارُه §9.
+
+---
+
 ## 2026-09-08 · M5-12 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0111 بعدَ دمجِ PR #73
 
 **Work Item(s):** M5-12 · **Branch:** `feat/m5-12-marketplace-search` (مُحذوفٌ بعدَ الدمجِ) · **Scope:** سجلاتٌ مشتركةٌ مستثناةٌ من الحجزِ (M0-14) + نطاقُ الحجزِ نفسِه المُحرَّرُ هنا

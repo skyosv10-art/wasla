@@ -13,13 +13,17 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@wasla/contracts-search": "workspace:*"
+    "@wasla/contracts-marketplace": "workspace:*",
+    "@wasla/contracts-search": "workspace:*",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
     "vitest": "^2.1.0"
   }
 }

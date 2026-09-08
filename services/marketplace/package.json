@@ -29,7 +29,10 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:migrate": "tsx src/db/migrate-cli.ts",
     "dev": "tsx watch src/http/server.ts",
-    "start": "node --import tsx src/http/server.ts"
+    "start": "node --import tsx src/http/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@wasla/contracts-marketplace": "workspace:*",
@@ -40,6 +43,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",
     "vitest": "^2.1.0"
   }

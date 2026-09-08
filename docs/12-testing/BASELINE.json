@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T15:55:35Z",
+  "generated_at": "2026-09-08T16:30:31Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "85dc17b6ede31aa1fde490db3b337a0efb344878",
+    "commit": "793b0df7ff920ce00686ea0b4cada2a661d750d1",
     "branch": "feat/m5-12-search-relay-consumer",
-    "dirty": true,
-    "dirty_files": 25,
-    "dirty_reason": "M5-12 review 2/N (relay consumer) — feature branch feat/m5-12-search-relay-consumer, pre-merge",
-    "tracked_files": 1525
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 1538
   },
   "env": {
     "node": "v20.20.1",
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "pre-commit verification: typecheck + 43 unit + 4 integration (PostgreSQL 17) + verify-governance 13/13",
-    "tests_passed": 3875,
-    "test_files_executed": 233,
-    "governance_suite_cases": 182,
+    "source": "/tmp/verify-final.log",
+    "tests_passed": 3895,
+    "test_files_executed": 235,
+    "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

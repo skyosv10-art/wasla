@@ -1,5 +1,37 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M5-12 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0112 بعدَ دمجِ PR #75 (relay consumer · المراجعة 2/N)
+
+**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-relay-consumer` (مُحذوفٌ بعدَ الدمجِ) · **Scope:** سجلاتٌ مشتركةٌ مستثناةٌ من الحجزِ (M0-14) + نطاقُ الحجزِ نفسِه المُحرَّرُ هنا
+
+**ماذا تم إنجاز (1):** حُرِّرَ حجزُ `CLM-0112` (search relay consumer) من «الحجوزاتِ النشطةِ» ونُقلَ إلى «المحرَّرة» بدليلِ دمجِه في [PR #75](https://github.com/skyosv10-art/wasla/pull/75) (مُدمجٌ 2026-09-08T17:21:20Z · الالتزامُ `18ba793a7e91ca8a6a7a4a402584d403eca85364` · squash). CI مقيسٌ: تشغيلُ الفرعِ [`34256193059`](https://github.com/skyosv10-art/wasla/actions/runs/34256193059) — **28 وظيفةً كلُّها `success`** (governance-guard ✓ · verify ✓ · typecheck ✓ · test ✓ · doc-coverage ✓ · repo-structure ✓ · Devin Review ✓ · 13 × db-integration ✓ · 9 × exit-gate-e2e ✓ · db-integration-shared ✓).
+
+**لماذا تم اختياره (2):** المراجعةُ 2/N (relay consumer) اكتملت بدليلٍ أخضرَ كاملٍ على الفرعِ (28/28)، فيُحرَّرُ الحجزُ وفقَ البروتوكولِ §8.1. الحالةُ تبقى `In Progress` لأنّ مركّبَ M5-12 لم يكتمل (مراجعاتٌ لاحقةٌ: exit gate · HTTP · تكاملٌ وCI) — نقلُه إلى `Completed` قرارُ مالكِ البرنامجِ §9.
+
+**أين تم التغيير (3):** `docs/16-progress/WORK_CLAIMS.md` (تحريرُ CLM-0112) · `docs/16-progress/TASK_LOG.md` (هذا الإدخالُ).
+
+**الملفات/الخدمات المتأثرة (4):** دفاترُ الحوكمةِ فقط.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا شيءَ جديدٌ في هذا الإغلاقِ (الكلُّ دُفعَ في المراجعةِ 2/N).
+
+**كيف تم الاختبار (6):** CI على الفرعِ قبلَ الدمجِ — 28/28 `success`.
+
+**ما المشاكل التي ظهرت (7):** لا شيءَ.
+
+**ما الذي لم يكتمل (8):** مراجعاتُ M5-12 اللاحقةُ (exit gate · HTTP · تكاملٌ وCI) — مُعلَنةٌ في ADR-025 §4.
+
+**الخطوة التالية (9):** المراجعةُ 3/N: بوّابةُ خروجِ relevance/load (exit gate) وطبقةُ HTTP (Fastify).
+
+**ما الذي يعتمد عليه العمل التالي (10):** المستهلكُ (relay) المُدمجُ في هذه المراجعةِ.
+
+**Migration/Deployment/Config (11):** لا شيءَ جديد.
+
+**مخاطر/قرارات تحتاج مراجعة (12):** قراراتُ ADR-025 المؤجَّلةُ.
+
+**الروابط (13):** [PR #75](https://github.com/skyosv10-art/wasla/pull/75) (الدمجُ `18ba793`) · [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [WORK_CLAIMS.md](WORK_CLAIMS.md) · البروتوكول §8.1
+
+**الشخص/الفريق الذي يتابع (14):** `@uxxxu (agent:perplexity-computer)` — نفّذَ التوثيقَ. مالكُ البرنامجِ (`@uxxxu`) صرّحَ بالدمجِ.
+
 ## 2026-09-08 · M5-12 · المراجعةُ 2/N — Relay Consumer (تصميمٌ وتنفيذٌ وإثباتٌ end-to-end)
 
 **Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-relay-consumer` · **Claim:** CLM-0112 (نشط) · **Scope:** `services/search/` (عقود + نطاق + منافذ + relay + بنية تحتية + اختبارات) · `packages/contracts/search/` · `docs/15-decisions/ADR-025` (ملحق §2.3.1/§2.3.2) · دفاترُ مشتركةٌ مستثناةٌ (M0-14)

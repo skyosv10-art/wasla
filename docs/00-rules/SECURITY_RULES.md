@@ -236,12 +236,14 @@ Release gates
 
 ```text
 # استثناءاتُ الثغرات: GHSA-… | expires:YYYY-MM-DD | owner:@من | السبب
-# (لا استثناءَ ساريَ المفعولِ اليومَ: تدقيقُ 2026-09-02 انتهى إلى صفرِ ثغراتٍ في الشجرةِ كاملةً وفي شجرةِ الإنتاجِ بعدَ رفعِ fast-uri — ولم يُقبَل خطرٌ، بل أُغلق.)
+# (تدقيقُ 2026-09-09 رصدَ ثلاثَ استشاراتٍ جديدةٍ نُشرت بعدَ تدقيقِ 2026-09-02: js-yaml أُغلقت بالرفعِ، وvitest قُبلت بمهلةٍ أدناه. وشجرةُ الإنتاجِ ما زالت صفراً.)
+GHSA-82fw-gwwq-j7x9 | expires:2026-12-08 | owner:@uxxxu | Vitest: قراءةُ ملفٍّ اعتباطيّةٌ عبرَ «redirect mock» في @vitest/mocker (moderate · يمسُّ >=2.1.0 <4.1.11). أداةُ تطويرٍ لا تُشحَن، والمسارُ المُستغَلُّ منه هو خادمُ العارضِ (browser mode / vitest --ui) — ولا وضعَ متصفِّحٍ في أيِّ vitest.config في المستودعِ ولا @vitest/ui مُثبَّتٌ ولا وظيفةَ CI تُشغِّلُ عارضاً. والنسخةُ المُصلَحةُ 4.1.11 قفزةٌ رئيسيّةٌ من 3.2.7 تمسُّ 45 حزمةً و39 ملفَّ package.json، فتُؤجَّلُ إلى ترقيةٍ مقصودةٍ لها عنصرُ عملٍ خاصٌّ لا إلى دفعةِ تدقيقٍ.
 # تثبيتاتٌ قسريّةٌ: override:<الحزمة> | expires:YYYY-MM-DD | owner:@من | السبب
 override:vitest | expires:2026-11-25 | owner:@uxxxu | يرفع vitest إلى 3.2.7 في المستودعِ كلِّه لإغلاقِ CVE-2026-47429 (حرِجةٌ، CVSS 9.8) — والنطاقاتُ المُعلَنةُ في 39 ملفَّ package.json ما زالت ^2.1.0، وتوحيدُها يحتاج لمسَ services/drivers/ المحجوزةِ في CLM-0004، فيُرفَع التثبيتُ حين تُحرَّر.
 override:vite | expires:2026-11-25 | owner:@uxxxu | يضمن vite ≥ 6.4.3 (CVE-2026-53571 عاليةٌ · CVE-2026-53632 · CVE-2026-39365) — وهي اعتماديةٌ غيرُ مباشرةٍ تأتي مع vitest، فلا مالكَ لنسختِها في أيِّ package.json.
 override:esbuild | expires:2026-11-25 | owner:@uxxxu | يضمن esbuild ≥ 0.25.12 (GHSA-67mh-4wv8-2f99) في سلسلتَين: vitest>vite>esbuild، وdrizzle-kit>@esbuild-kit/*>esbuild@0.18.20 — و@esbuild-kit مهجورٌ وdrizzle-kit 0.31.10 أحدثُ المتاحِ، فلا مخرجَ إلّا التثبيتُ القسريّ.
 override:fast-uri@3 | expires:2026-11-25 | owner:@uxxxu | يرفع fast-uri إلى ^3.1.6 في سلسلةِ ajv 8.20.0 لإغلاقِ أربعِ ثغراتٍ (high) رُصدت 2026-09-02 في التدقيقِ: GHSA-5jgf-p345-68v8 · GHSA-f65p-4m7j-42xc · GHSA-fph4-wmhf-6fwf · GHSA-jqff-g426-hqxp — وهي اعتماديّةٌ غيرُ مباشرةٍ تأتي مع fastify 5.12.1، فلا مالكَ لنسختِها في أيِّ package.json، والخطَّانِ 3.x و4.x يتعايشانِ في الشجرةِ فيُثبَّتُ كلٌّ منهما على حِدةٍ لئلّا يُقحَمَ ajv على واجهةِ 4.x.
+override:js-yaml@4 | expires:2026-11-25 | owner:@uxxxu | يرفع js-yaml إلى ^4.3.2 لإغلاقِ GHSA-2883-xcg3-v3hh (high: maxTotalMergeKeys لا يحدُّ استهلاكَ المعالجِ عندَ مصادرِ دمجٍ فارغةٍ) — وهي اعتماديّةٌ غيرُ مباشرةٍ تأتي مع json-schema-to-typescript وopenapi-typescript (@redocly/openapi-core)، فلا مالكَ لنسختِها في أيِّ package.json. والخطُّ 4.x وحدَه هو المُصابُ فيُثبَّتُ بمفتاحٍ مُقيَّدٍ بالنسخةِ الرئيسيّةِ.
 override:fast-uri@4 | expires:2026-11-25 | owner:@uxxxu | يرفع fast-uri إلى ^4.1.4 في سلسلةِ @fastify/ajv-compiler وfast-json-stringify لإغلاقِ الثغراتِ الأربعِ نفسِها — والحدُّ الأدنى المُصلَحُ لهذا الخطِّ 4.1.3 لا 3.1.6، فلا يُغني تثبيتٌ واحدٌ عن الآخر.
 ```
 

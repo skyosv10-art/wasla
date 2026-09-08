@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T21:10:05Z",
+  "generated_at": "2026-09-08T22:59:53Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a8c6b0bf6ed53d67e84c3879ca6c430514cc978f",
-    "branch": "feat/m5-12-search-exit-gate",
-    "dirty": false,
-    "dirty_files": 0,
+    "commit": "e84af3df35170c724eedb84f1e141098dce03321",
+    "branch": "chore/m0-06-dep-audit-refresh",
+    "dirty": true,
+    "dirty_files": 5,
     "dirty_reason": "",
     "tracked_files": 1555
   },
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "01fb3d85601675512b109d7c924239c9fb364cc5d63a0a7a8572c436f516fff8",
-    "lines": 3039
+    "sha256": "f0373940e3ce6e3e82309e0a4e756f1ad3f7033db711b2b661c406234f2a6dad",
+    "lines": 3040
   },
   "static": {
     "packages": 46,
@@ -30,17 +30,17 @@
     "ci_jobs": 28,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 23
+    "risks_not_closed": 24
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
+    "source": "/tmp/verify-m0-06.log",
     "tests_passed": 3896,
     "test_files_executed": 236,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:c93727d17c37f7d4c210d55215a84aa7d6432af44212c61c3caa337483b6e4cb",
+  "fingerprint": "sha256:2c6d2b5201cdaee618776c672cd974efb060368188bcdf38a1efcf7373719ef1",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

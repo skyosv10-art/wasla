@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T20:27:17Z",
+  "generated_at": "2026-09-08T20:59:14Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "e9479a9fc374d0d9d94d69884d9921898f3cbf30",
+    "commit": "28a97a4d0ce85f1c3c8562e0b70ee3317a4c3d7c",
     "branch": "feat/m5-12-search-exit-gate",
-    "dirty": true,
-    "dirty_files": 15,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1547
+    "tracked_files": 1555
   },
   "env": {
     "node": "v20.20.1",
@@ -33,13 +33,13 @@
     "risks_not_closed": 23
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "/tmp/verify.log",
+    "tests_passed": 3896,
+    "test_files_executed": 236,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:c93727d17c37f7d4c210d55215a84aa7d6432af44212c61c3caa337483b6e4cb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

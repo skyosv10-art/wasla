@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/search/events/v1",
+  "title": "WASLA Search Domain Events — v1",
+  "description": "عقد أحداث نطاق البحث (Event Contract). أحداثُ دورةِ حياةِ الفهرسِ (بُنيَ، أُعيدَ بناؤُهُ، تدهورَ) — لا أحداثِ السوقِ (تلك تُستهلَكُ لا تُنتَجُ). كل حدث مُصدّر versioned. أي تغيير غير متوافق للخلف يتطلب إصدار v2 + ADR. يُنشر عبر Outbox.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "type": "string", "const": "search-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "type": "string", "const": "index" },
+            "id": { "type": "string", "description": "index_id" }
+          }
+        },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "SearchIndexRebuiltV1": {
+      "type": "object",
+      "description": "أُعيدَ بناءُ الفهرسِ (bootstrap أو incremental أو يدويٌّ)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "search.index.rebuilt" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["index_id", "documents_indexed", "duration_ms", "source"],
+              "properties": {
+                "index_id": { "type": "string" },
+                "documents_indexed": { "type": "integer", "minimum": 0 },
+                "duration_ms": { "type": "integer", "minimum": 0 },
+                "source": { "type": "string", "enum": ["bootstrap", "incremental", "manual"] }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SearchIndexDegradedV1": {
+      "type": "object",
+      "description": "تدهورَ الفهرسُ (تأخّرُ الاستهلاكِ أو فشلُ إعادةِ البناءِ)",
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "event_type": { "const": "search.index.degraded" },
+            "event_version": { "const": "v1" },
+            "payload": {
+              "type": "object",
+              "required": ["index_id", "reason", "last_healthy_at"],
+              "properties": {
+                "index_id": { "type": "string" },
+                "reason": { "type": "string", "enum": ["ingestion_lag", "rebuild_failed", "partial"] },
+                "last_healthy_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

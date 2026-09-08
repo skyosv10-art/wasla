@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T04:04:46Z",
+  "generated_at": "2026-09-08T15:11:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "71cde4ba2c127c1b54394f39a3ec8414a99d2bc5",
-    "branch": "feat/m0-23-marketplace-migrations",
+    "commit": "1845c20033c8833d1ce7027ace35106b5127b62a",
+    "branch": "feat/m5-12-marketplace-search",
     "dirty": true,
-    "dirty_files": 12,
-    "dirty_reason": "marketplace migrations wave 3 (final service): added migrations.integration.test.ts (test_files 280->281) and drizzle-kit devDep to services/marketplace (lock fingerprint changed). Regenerated from clean verify.sh run where all checks pass.",
-    "tracked_files": 1495
+    "dirty_files": 11,
+    "dirty_reason": "M5-12 foundational PR (review 1/N): added services/search + packages/contracts/search (packages 43->45, test_files +4). Full green no-DB run: integration tests skipped (no DATABASE_URL), unit + contract tests pass (3850 passed). verify_overall=failed reflects the baseline chicken-and-egg (governance_suite_failed=1 is this check itself, resolved by this regeneration).",
+    "tracked_files": 1501
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "5ec1e0c7fc7fa4a208fde6241e144f14b201b12e3537e02c81670240581e5896",
-    "lines": 2984
+    "sha256": "1d812f3ae4040c5fe5fac1376a82ae47a89649f7fc4e35a87a8627f2e9b9c5ed",
+    "lines": 3009
   },
   "static": {
-    "packages": 43,
-    "packages_with_typecheck": 43,
-    "packages_with_test": 43,
-    "test_files_tracked": 281,
+    "packages": 45,
+    "packages_with_typecheck": 45,
+    "packages_with_test": 45,
+    "test_files_tracked": 285,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_mkt2.log",
-    "tests_passed": 3817,
-    "test_files_executed": 226,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify-combined.log",
+    "tests_passed": 3850,
+    "test_files_executed": 230,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:3dd9190e9de9621d1c01f7e907646c23a2d4c2776da3d30b9c1be7f0067ca0c9",
+  "fingerprint": "sha256:f0a8ad35c56af3bc771abd17356a38986e114a6142e5dbc9ecde2f7018498845",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

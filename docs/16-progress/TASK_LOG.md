@@ -1,5 +1,37 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M5-12 · المراجعةُ التأسيسيّةُ (review 1/N) — ADR-025 + عقودُ البحث + هيكلُ الخدمةِ
+
+**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-marketplace-search` · **Claim:** `CLM-0111` (`@uxxxu (agent:perplexity-computer)` · 2026-09-08 → ينتهي 2026-09-22 · Active)
+
+**ماذا تم إنجاز (1):** بدأت المراجعةُ التأسيسيّةُ لمركّبِ `M5-12 Marketplace Search`. صُدِّرَ [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) يُقرّرُ: (أ) فهرسُ البحثِ **نموذجُ قراءةٍ مشتقٌّ** يُعادُ بناؤه من أحداثِ صندوقِ الصادرِ (`marketplace_outbox`) لا قراءةٌ مباشرةٌ من جداولِ السوقِ (قراءةٌ مباشرةٌ تكسرُ حدَّ الخدمةِ — ADR-016 decision 9، رُفضَت). (ب) الظهورُ مُشتقٌّ من الحالةِ المستهلكةِ (not `store_active` · `product_status='published'` · `moderation_status='approved'` · `quantity_minor_units > 0`) لا رايةٌ مُخزَّنةٌ (`is_visible`). (ج) الترتيبُ مفسَّرٌ بأربعِ درجات: `exact match` > `prefix` > `full-text` > `trigram` similarity. (د) المعالجةُ ثنائيّةُ اللغةِ (AR/EN) بتطبيعٍ يُزيلُ التشكيلَ والتطويلَ ويُوحِّدُ الحالة. أُنشئت حزمةُ عقودٍ جديدةٌ `@wasla/contracts-search` (`packages/contracts/search/`) تُصدّرُ `api-types` (مساراتُ `GET /search/products` و`GET /search/health` + المخطّطات: `SearchQuery` · `ProductSearchResult` · `SearchPage`) و`events-types` (`SearchIndexRebuiltV1` · `SearchIndexDegradedV1` بمُغلَّفٍ موحَّدٍ). وأُنشئت خدمةُ `services/search/` بعقودِها (`contracts/schema.sql` بجدولِ `search_product_index` وفهارسِ `tsvector`+`pg_trgm` وعمودِ `price_minor_units INTEGER` بالحلال، و`contracts/api.openapi.yml`، و`contracts/events.json`، و`contracts/errors.md`، و`contracts/README.md`) ونواةِ نطاقِها (`src/domain/model.ts` · `query.ts` يُطبيعُ الاستعلامَ ويُزيلُ التشكيلَ والتطويلَ، `visibility.ts` يُطبِّقُ شروطَ ADR-016 decision 3 الأربعةَ، `ranking.ts` بسُلَّمِ الدرجاتِ الأربع، `index.ts`). واختباراتُ وحدةٍ في `src/__tests__/` (24 تأكيداً: تطبيعُ العربية/الإنجليزيّةِ، كشفُ الفراغِ، حدُّ الطول، تكافؤُ الثنائيّةِ، شروطُ الظهورِ الأربعة، الدرجاتُ والترتيب) واختباراتُ عقودٍ في `packages/contracts/search/src/__tests__/contracts.test.ts` (9 توكيداتٍ تُثبتُ غيابَ عمودِ `is_visible` وقيمةَ `price_minor_units` بالحلال وصحّةَ المُنتِج = `search-service`). وتُحدِّثُ ترويسةُ اللوحةِ و`WORK_INDEX` و`LAUNCH_EXECUTION_BOARD` لتعكسَ `M5-12 = In Progress`.
+
+**لماذا تم اختياره (2):** `M5-12` هو أوّلُ عنصرٍ على الطريقِ بعدَ إغلاقِ `M5-11`، واعتمادُه (`M5-11`) صارَ مُستوفىً. القرارُ المعماريُّ (فهرسٌ مشتقٌّ لا قراءةٌ مباشرةٌ) يلتزمُ بحدِّ الخدمةِ من ADR-016 decision 9 الذي كان قد أجّلَ البحثَ صراحةً إلى هذا الطورِ («البحثُ يُملَكُ لاحقاً بـPhase 12، وفهرسٌ نصفُ مبنيٍّ هنا كان سيصيرُ مصدرَ حقيقةٍ ثانياً»). أُنجزت المراجعةُ التأسيسيّةُ (1/N) لأنّ البحثَ مركّبٌ (استهلاكُ أحداث + إعادةُ بناءِ فهرس + بوّابةُ خروج) فلا يُبني دفعةً واحدةً، بل يبدأ بالقرارِ المعماريِّ والعقودِ والنواةِ القابلةِ للاختبارِ بلا قاعدةِ بيانات، ثمّ تُبنى عليها المراجعاتُ التاليةُ.
+
+**أين تم التغيير (3):** `docs/15-decisions/ADR-025-marketplace-search-read-model.md` (جديد) · `packages/contracts/search/` (جديد: `package.json` · `tsconfig.json` · `src/index.ts` · `src/api-types.ts` · `src/events-types.ts` · `src/__tests__/contracts.test.ts`) · `services/search/` (جديد: `contracts/{schema.sql,api.openapi.yml,events.json,errors.md,README.md}` · `package.json` · `tsconfig.json` · `vitest.config.ts` · `src/index.ts` · `src/domain/{model,query,visibility,ranking}.ts` · `src/__tests__/{query,visibility,ranking}.test.ts`) · `docs/04-api/SEARCH_HTTP.md` (جديد) · `docs/12-testing/BASELINE.json` (مُحدَّث: `packages` 43←45 · `test_files_tracked` 281←285 · البصمةُ `sha256:f0a8ad35…`) · `docs/16-progress/{LAUNCH_EXECUTION_BOARD,WORK_INDEX,TASK_LOG}.md` · `pnpm-lock.yaml` (حزمةٌ جديدة + اختباراتها).
+
+**الملفات/الخدمات المتأثرة (4):** `services/search/` (جديد بالكامل) · `packages/contracts/search/` (جديد بالكامل) · لا يُمسُّ `services/marketplace/**` إطلاقاً (الحدُّ من ADR-016 decision 9).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** API جديدٌ `GET /search/products` و`GET /search/health` (مُختبرٌ نوعيّاً بالعقود، غيرُ مُشغَّلٍ بـFastify بعد) · أحداثُ `SearchIndexRebuiltV1` و`SearchIndexDegradedV1` (مُنتِجُها `search-service`) · مخطّطٌ جديدٌ `search_product_index` (جدولُ قراءةٍ مشتقٌّ بفهارسِ `tsvector`+`pg_trgm`، بلا `is_visible`).
+
+**كيف تم الاختبار (6):** `pnpm --filter @wasla/contracts-search test` — **9/9 توكيداتٍ خضراء** (4ms) · `pnpm --filter @wasla/search-service test` — **24/24 توكيداً أخضر** · `pnpm -r typecheck` — نظيفٌ (40→42 حزمة) · `pnpm -r test` (تشغيلٌ كاملٌ أخضرُ بلا قاعدةِ بيانات: **3850 اختباراً ناجحاً**، اختباراتُ التكاملِ تُتخطّى لغيابِ `DATABASE_URL`) · `bash scripts/checks/verify-governance.sh` — **رمزُ الخروجِ 0** · 13 فحصاً ناجحاً · 0 فاشلاً · تخطّيانِ مُعلَنانِ (8) CI مانعٌ جزئيٌّ (لقطةٌ مؤرَّخةٌ) · (9) تدقيقُ الاعتمادياتِ جزئيٌّ (لا شبكة). وأُعيدَ توليدُ الأساسِ الآليِّ (M0-08) من سجلٍّ أخضرَ مقيسٍ: `packages` 43←45 · `test_files_tracked` 281←285 · `tests_passed` = 3850 · البصمةُ `sha256:f0a8ad35…`.
+
+**ما المشاكل التي ظهرت (7):** عقبةُ حوكمةٍ في أوّلِ تشغيلٍ: إضافةُ حزمتَينِ جديدتَينِ غيّرَت العدَّاداتِ الساكنةَ في الأساسِ (43→45) فأخفقَ البابُ الثاني من الفحصِ الحادي عشر. عولجت بإعادةِ توليدِ الأساسِ من تشغيلٍ أخضرَ كاملٍ (الخطواتُ أعلاه). كما اكتُشفَ أنّ حزمةَ `@wasla/contracts-search` كانت تُفشلُ `pnpm -r test` لأنّها بلا ملفِّ اختبارٍ (vitest يخرجُ برمزِ 1)، فأُضيفَ `contracts.test.ts` (9 توكيداتٍ) فصارَت خضراءَ.
+
+**ما الذي لم يكتمل (8):** (مُعلَنٌ صراحةً في ADR-025 §4): المستهلكُ الكاملُ (relay) لأحداثِ `marketplace_outbox` الذي يُعيدُ بناءَ الفهرس · بوّابةُ خروجِ relevance/load (exit gate) · طبقةُ HTTP الكاملةُ (Fastify) · اختباراتُ التكاملِ على PostgreSQL حقيقيٍّ ووظائفُ CI المقابلةُ (`search-db-integration` · `search-exit-gate-e2e`) · التحقّقُ من `verify-overall=passed` (الأساسُ الحاليُّ `verify_overall=failed` لأنّ الفحصَ الحادي عشر كان يفشلُ قبلَ إعادةِ التوليدِ — تناقضٌ دوريٌّ يُحلُّ عندَ دمجِ هذا الأساسِ وتشغيلٍ جديد). لا يُدَّعى إنجازُ أيٍّ من هذه في هذه المراجعة.
+
+**الخطوة التالية (9):** دفعُ الفرعِ وفتحُ طلبِ دمجٍ، ثمّ مراقبةُ CI (27 وظيفةً). بعدَ الدمج: المراجعةُ 2/N تُضيفُ المستهلكَ (relay) لأحداثِ outbox السوقِ وإعادةَ بناءِ الفهرس من الحالةِ المستهلكةِ.
+
+**ما الذي يعتمد عليه العمل التالي (10):** استهلاكُ `marketplace_outbox` يعتمدُ على مخطّطِه القائمَ في `services/marketplace/contracts/schema.sql` (مُنجزٌ في M5-11) — لا تعديلَ على السوقِ مطلوبٌ، قراءةٌ فقط.
+
+**Migration/Deployment/Config (11):** مخطّطٌ جديدٌ `search_product_index` (ترحيلٌ يُولَّدُ لاحقاً عندَ إضافةِ طبقةِ قاعدةِ البيانات — لا يُطبَّقُ في هذه المراجعةِ).
+
+**مخاطر/قرارات تحتاج مراجعة (12):** قراراتُ ADR-025 المؤجَّلةُ (مولِّدُ الترتيبِ الفعليِّ، سياسةُ إعادةِ البناءِ، بوّابةُ relevance/load، اختيارُ مُحرّكِ FTS). لا مخاطرَ مفتوحةٌ جديدةٌ تُسجَّلُ في هذا الطورِ.
+
+**الروابط (13):** [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [SEARCH_HTTP.md](../04-api/SEARCH_HTTP.md) · [WORK_CLAIMS.md](WORK_CLAIMS.md) (`CLM-0111`) · ADR-016 decision 9 (الأصلُ الذي أجّلَ البحثَ إلى هذا الطورِ)
+
+**الشخص/الفريق الذي يتابع (14):** `@uxxxu (agent:perplexity-computer)` — حجزٌ نشطٌ (`CLM-0111` · ينتهي 2026-09-22). القرارُ المعماريُّ في ADR-025 مُسلَّمٌ للمُراجِعِ.
+
 ## 2026-09-08 · M5-11 · إغلاقٌ بقرارِ مالكِ البرنامجِ (`M5-11 OWNER-CLOSEOUT`) — فتحُ بوابةِ M5-12
 
 **Work Item(s):** M5-11 · **Branch:** `chore/m5-11-owner-closeout` · **Scope:** `docs/16-progress/{LAUNCH_EXECUTION_BOARD,TASK_LOG,WORK_INDEX}.md` (سجلاتٌ مشتركةٌ مستثناةٌ من الحجزِ — M0-14)

@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: WASLA Marketplace Search API
+  version: 1.0.0
+  description: |
+    عقد واجهة خدمة البحث في السوق (Phase 12).
+
+    - الفهرسُ نموذجُ قراءةٍ مشتقٌّ من أحداثِ السوقِ، لا قراءةٌ مباشرةٌ من جداولِ السوقِ (ADR-025).
+    - الظهورُ مُشتقٌّ من الحالةِ المُستهلكةِ: متجرٌ approved · منتجٌ published · اعتدالٌ approved · كميّةٌ > 0 (ADR-016 القرارُ 3). لا عمودَ is_visible.
+    - البحثُ ثنائيُّ اللغةِ (ar/en). الترتيبُ مفسَّرٌ: exact > prefix > fts > trigram.
+    - البحثُ ليس بوّابةَ معاملةٍ: لا حجزَ ولا دفعَ. اتساقٌ ناعمٌ (eventual) مقبولٌ.
+  contact:
+    name: WASLA
+servers:
+  - url: http://localhost:8012
+    description: Local development
+
+tags:
+  - name: search
+    description: البحث في المنتجات
+
+paths:
+  /search/products:
+    get:
+      tags: [search]
+      summary: البحث في المنتجات
+      operationId: searchProducts
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: نص البحث الحر (عربي/إنجليز). يُطبَّع ويُجزَّأ قبل التنفيذ.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - $ref: '#/components/parameters/Locale'
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: sort
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SearchSort'
+      responses:
+        '200':
+          description: صفحة نتائج البحث
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchPage' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /search/health:
+    get:
+      tags: [search]
+      summary: فحص صحة الخدمة
+      operationId: health
+      responses:
+        '200':
+          description: الخدمة سليمة
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+
+components:
+  parameters:
+    Locale:
+      name: locale
+      in: query
+      required: false
+      description: اللغة المطلوبة للنتائج. الافتراضي ar.
+      schema: { $ref: '#/components/schemas/Locale' }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+
+  schemas:
+    Locale:
+      type: string
+      enum: [ar, en]
+      description: اللغة المدعومة. ar = الافتراضي (fallback).
+
+    SearchSort:
+      type: string
+      enum: [relevance, price_asc, price_desc, newest]
+      default: relevance
+
+    ProductSearchResult:
+      type: object
+      required: [product_id, store_id, store_slug, product_slug, title_ar, price_minor_units, currency_code, category_id, score]
+      properties:
+        product_id: { type: string, format: uuid }
+        store_id: { type: string, format: uuid }
+        store_slug: { type: string }
+        product_slug: { type: string }
+        title_ar: { type: string }
+        title_en: { type: string, nullable: true }
+        price_minor_units:
+          type: integer
+          minimum: 0
+          description: سعرٌ بأصغرِ وحدةٍ (هللة). بيانُ كتالوجٍ لا معاملة (ADR-016 قرار 4).
+        currency_code: { type: string, const: SAR }
+        category_id: { type: string, format: uuid }
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: درجةُ المطابقةِ المفسَّرةُ (0..1). exact > prefix > fts > trigram.
+
+    SearchPage:
+      type: object
+      required: [items, page, page_size, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProductSearchResult' }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1, maximum: 50 }
+        total: { type: integer, minimum: 0 }
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: كود ثابت (stable) }
+        message: { type: string }
+        trace_id: { type: string }
+
+  responses:
+    ValidationError:
+      description: مدخلات غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ServiceUnavailable:
+      description: الخدمة في وضع متدهور (degraded mode)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

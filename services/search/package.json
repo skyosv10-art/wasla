@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/search-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Marketplace Search service — derived read model, query normalization, bilingual ranking (Phase 12).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-search": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

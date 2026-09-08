@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T23:18:48Z",
+  "generated_at": "2026-09-08T23:51:55Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ed59de6904f0b2f3ea55f984e5314e3ca2ab9803",
-    "branch": "chore/m0-06-dep-audit-refresh",
+    "commit": "0274297a9ca226119ded39fed298ae910ed9422a",
+    "branch": "feat/m5-12-search-total-and-readiness",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1555
+    "tracked_files": 1556
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 28,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 24
+    "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-green.log",
-    "tests_passed": 3896,
+    "source": "/tmp/verify-5.log",
+    "tests_passed": 3900,
     "test_files_executed": 236,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2c6d2b5201cdaee618776c672cd974efb060368188bcdf38a1efcf7373719ef1",
+  "fingerprint": "sha256:a7aa67b23c5ebc8d5c3fd2ba3d8046b124fc99da901118947c29dfb0c06449c8",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

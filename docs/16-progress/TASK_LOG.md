@@ -1,8 +1,8 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
-## 2026-09-08 · M5-12 · المراجعةُ 3/N — طبقةُ HTTP (Fastify) لخدمةِ البحثِ · `CLM-0113`
+## 2026-09-08 · M5-12 · المراجعةُ 3/N — طبقةُ HTTP (Fastify) لخدمةِ البحثِ · `CLM-0114`
 
-**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-http` · **Claim:** `CLM-0113` (`@uxxxu (agent:perplexity-computer)` · 2026-09-08 → ينتهي 2026-09-22 · Active)
+**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-http` · **Claim:** `CLM-0114` (`@uxxxu (agent:perplexity-computer)` · 2026-09-08 → ينتهي 2026-09-22 · Active). **تنويهٌ على الحجز:** `CLM-0113` حُرِّر بقرارٍ توثيقيٍّ بعدَ بدءِ الكتابةِ — إضافةُ `fastify` حرّكتْ `pnpm-lock.yaml` خارجَ النطاقِ، و§6 تمنعُ التوسيعَ في مكانِه، فاتُّبعَ البديلُ الثالثُ (كسابقَتيه `CLM-0024`⇒`CLM-0025` و`CLM-0081`⇒`CLM-0082`): تحريرٌ وإعادةُ حجزٍ بـ`CLM-0114` بنطاقٍ أوسعَ يضمُّ `pnpm-lock.yaml` على الفرعِ والمالكِ نفسَيهما. سُجِّلَ في [WORK_CLAIMS.md](WORK_CLAIMS.md) §3.
 
 **ماذا تم إنجاز (1):** أُنشئت طبقةُ HTTP لخدمةِ البحثِ (المراجعةُ 3/N) فوقَ المراجعتَين 1/N (العقدُ والنطاقُ) و2/N (المستهلكُ relay). التطبيقُ `buildSearchHttpApp({ searchReadPort })` (`src/http/app.ts`) بمسارَين فقط: `GET /search/products` و`GET /search/health`، يعتمدُ على منفذِ قراءةٍ مُحقَنٍ `SearchProductsReadPort` (أُضيف إلى `src/ports.ts`) — فلا يفتحُ التطبيقُ اتصالاً بقاعدةِ البياناتِ بنفسِه. معالجُ أخطاءٍ واحدٌ (`setErrorHandler` + `sendSearchError`) بلا try/catch في المعالِجات، و**503 كملاذٍ أخيرٍ لا 500** (نموذجُ القراءةِ المشتقُّ يعتمدُ على حالةٍ عابرةٍ قابلةٍ لإعادةِ المحاولة). شكلُ الخطأِ مسطّحٌ `{ code, message, trace_id }` حسب `contracts/errors.md`.
 
@@ -22,7 +22,7 @@
 
 **ما الذي لم يكتمل (8):** بوّابةُ relevance/load (exit gate) · وظيفةُ CI `search-db-integration` (تشغيلُ اختبارِ التكاملِ في CI) · وظيفةُ CI `search-exit-gate-e2e` · رفعُ سقفِ المُرشَّحينَ (v1: 500). كلُّها مُعلَنةٌ في ADR-025 §4 وSEARCH_HTTP §5.6.
 
-**الخطوة التالية (9):** دفعُ الفرعِ وفتحُ طلبِ الدمجِ وانتظارُ CI (28 وظيفةً)، ثمَّ الدمجُ بـsquash، ثمَّ طلبُ إصدارِ CLM-0113 (كما في CLM-0112).
+**الخطوة التالية (9):** دفعُ الفرعِ وفتحُ طلبِ الدمجِ وانتظارُ CI (28 وظيفةً)، ثمَّ الدمجُ بـsquash، ثمَّ طلبُ إصدارِ CLM-0114 (كما في CLM-0112).
 
 **ما الذي يعتمد عليه العمل التالي (10):** المستهلكُ (relay) المُدمجُ في 2/N (يبني `search_product_index` الذي يقرأُ منه القارئُ) · طبقةُ HTTP في هذه المراجعةِ (الأساسُ لبوّابةِ exit gate).
 
@@ -30,9 +30,9 @@
 
 **مخاطر/قرارات تحتاج مراجعة (12):** سقفُ المُرشَّحينَ (500) حدٌّ مُعلَنٌ لـv1 — يُرفعُ فوقَ بوّابةِ الحملِ لاحقًا. مطابقةُ العربيّةِ FTS بلغةِ `english` لا تُدركُ العربيةَ — يعوّضُها trigram، والفجوةُ مُعلَنةٌ (ADR-025 §2.4).
 
-**الروابط (13):** [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [SEARCH_HTTP.md](../04-api/SEARCH_HTTP.md) · [WORK_CLAIMS.md](WORK_CLAIMS.md) (`CLM-0113`) · [BASELINE.json](../12-testing/BASELINE.json)
+**الروابط (13):** [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [SEARCH_HTTP.md](../04-api/SEARCH_HTTP.md) · [WORK_CLAIMS.md](WORK_CLAIMS.md) (`CLM-0114`) · [BASELINE.json](../12-testing/BASELINE.json)
 
-**الشخص/الفريق الذي يتابع (14):** `@uxxxu (agent:perplexity-computer)` — حجزٌ نشطٌ (`CLM-0113` · ينتهي 2026-09-22).
+**الشخص/الفريق الذي يتابع (14):** `@uxxxu (agent:perplexity-computer)` — حجزٌ نشطٌ (`CLM-0114` · ينتهي 2026-09-22).
 
 ## 2026-09-08 · M5-12 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0112 بعدَ دمجِ PR #75 (relay consumer · المراجعة 2/N)
 

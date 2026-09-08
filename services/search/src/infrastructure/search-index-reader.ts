@@ -16,16 +16,41 @@
  *
  * 1. SQL narrows the candidate set: visibility + text match (trigram similarity
  *    on `title_ar`, English FTS on `coalesce(title_en, title_ar)`, substring on
- *    `sku`) + optional category filter. Bounded by a candidate cap (v1: 500) — a
- *    documented limitation the relevance/load exit-gate review will revisit.
- * 2. Domain `rankAndSort` re-scores candidates with the explained ladder
+ *    `sku`) + optional category filter.
+ * 2. Domain `rankProduct` scores every candidate with the explained ladder
  *    (exact > prefix > fts > trigram) — the SAME tested rules unit tests cover,
  *    so SQL matching and domain scoring cannot drift on intent.
  *
+ * ## `total` is exact, and depth is refused out loud (review 5/N · RISK-0029)
+ *
+ * The previous version bounded the query by `LIMIT 500` and then reported
+ * `total = candidates.length`. On 2000 matching documents it answered
+ * `total = 500` — the cap truncated the COUNT, not just the page, so a client
+ * paginating on that number was paginating on a lie. Two changes close it:
+ *
+ *  - **`count(*) OVER ()`** is computed by PostgreSQL over the FULL match set
+ *    BEFORE `LIMIT`, so `total` is the exact number of visible matching
+ *    documents no matter how large the corpus is.
+ *  - **The cap became a declared ranking window** (`DEFAULT_RANKING_WINDOW`,
+ *    constructor-overridable). Global relevance ordering is only honest for the
+ *    rows actually scored; so a page whose last row would fall OUTSIDE the
+ *    window is REFUSED with `SEARCH_PAGE_OUT_OF_RANGE` (400) instead of being
+ *    served from a silently truncated set. Deep pagination is a bounded feature,
+ *    not an accidental one (the same choice Elasticsearch makes with
+ *    `max_result_window`).
+ *
+ * ## Who decides membership, and who decides order
+ *
+ * The SQL predicate decides **who matches** (that is what `count(*) OVER ()`
+ * counts); the domain ladder decides **the order** and the reported `score`.
+ * The reader therefore scores candidates WITHOUT dropping any — dropping a
+ * zero-score row here would make `items` and `total` disagree by construction.
+ * The exit gate measures that the two authorities agree on a real corpus rather
+ * than assuming it.
+ *
  * Non-relevance sorts (price_asc / price_desc / newest) order the matched
  * candidates directly; each item still carries its relevance score so the
- * `score` field is meaningful regardless of ordering. Pagination is applied
- * after scoring/sorting so `total` reflects the true result count.
+ * `score` field is meaningful regardless of ordering.
  */
 
 import type { Pool, QueryResultRow } from "pg";
@@ -33,11 +58,22 @@ import type { Pool, QueryResultRow } from "pg";
 import type { SearchProductsQuery, SearchProductsReadPort } from "../ports.js";
 import type { SearchPage, SearchResult, IndexedProduct } from "../domain/model.js";
 import { normalizeQuery } from "../domain/query.js";
-import { rankAndSort } from "../domain/ranking.js";
-import { SearchUnavailableError } from "../http/errors.js";
+import { rankProduct } from "../domain/ranking.js";
+import { SearchUnavailableError, SearchValidationError } from "../http/errors.js";
 
-/** v1 candidate cap — see file header. */
-const CANDIDATE_CAP = 500;
+/**
+ * Default ranking window — the maximum number of matching rows that are pulled
+ * out of PostgreSQL and scored by the domain ladder for one request. It bounds
+ * WORK, not TRUTH: `total` is counted over the full match set regardless of it
+ * (see file header). Raised from the v1 cap of 500 and made overridable so a
+ * deployment can trade memory for depth without editing code.
+ */
+export const DEFAULT_RANKING_WINDOW = 5000;
+
+export interface SearchIndexReaderOptions {
+  /** Override the ranking window (must be >= 1). */
+  readonly rankingWindow?: number;
+}
 
 const VISIBILITY_WHERE = [
   "store_state = 'approved'",
@@ -76,19 +112,43 @@ interface ReaderRow extends IndexedProduct {
 }
 
 export class SearchIndexReader implements SearchProductsReadPort {
-  constructor(private readonly pool: Pool) {}
+  private readonly rankingWindow: number;
+
+  constructor(
+    private readonly pool: Pool,
+    options: SearchIndexReaderOptions = {},
+  ) {
+    const window = options.rankingWindow ?? DEFAULT_RANKING_WINDOW;
+    if (!Number.isInteger(window) || window < 1) {
+      throw new RangeError("rankingWindow must be a positive integer");
+    }
+    this.rankingWindow = window;
+  }
 
   async search(query: SearchProductsQuery): Promise<SearchPage> {
+    const offset = (query.page - 1) * query.pageSize;
+    // Refuse depth BEFORE touching the database: a page that ends beyond the
+    // ranking window cannot be ordered honestly, so it is an out-of-range page,
+    // not a page served from a truncated set (RISK-0029).
+    if (offset + query.pageSize > this.rankingWindow) {
+      throw new SearchValidationError(
+        "SEARCH_PAGE_OUT_OF_RANGE",
+        `الترقيمُ العميقُ محدودٌ بنافذةِ ترتيبٍ قدرُها ${this.rankingWindow} نتيجةً`,
+      );
+    }
+
     const categoryFilter =
       query.categorySlug !== null ? " AND category_slug = $2" : "";
 
+    // `count(*) OVER ()` is evaluated over the whole match set BEFORE LIMIT —
+    // this is what makes `total` exact rather than capped.
     const sql = `
-      SELECT ${SELECT_COLUMNS}
+      SELECT ${SELECT_COLUMNS}, count(*) OVER () AS match_total
       FROM search_product_index
       WHERE ${VISIBILITY_WHERE}
         AND (${MATCH_SQL})
         ${categoryFilter}
-      LIMIT ${CANDIDATE_CAP}
+      LIMIT ${this.rankingWindow}
     `;
 
     // $1 = q (always bound). $2 = category_slug, bound only when present.
@@ -109,8 +169,9 @@ export class SearchIndexReader implements SearchProductsReadPort {
     const candidates: ReaderRow[] = rows.map(rowToReaderRow);
     const ranked = rankBySort(candidates, query);
 
-    const total = ranked.length;
-    const offset = (query.page - 1) * query.pageSize;
+    // Exact, uncapped: PostgreSQL counted the whole match set. With zero rows
+    // there is no window value to read, and zero is the truthful answer.
+    const total = rows.length > 0 ? Number(rows[0].match_total) : 0;
     const items = ranked.slice(offset, offset + query.pageSize);
 
     return {
@@ -143,10 +204,11 @@ function rowToReaderRow(row: QueryResultRow): ReaderRow {
 }
 
 /**
- * Apply the requested sort. For `relevance`, the domain ladder scores and
- * filters (score > 0). For other sorts, all matched candidates are kept and
- * ordered by the requested dimension — each item still carries its relevance
- * score so the `score` field is meaningful regardless of ordering.
+ * Apply the requested sort. Every matched candidate is kept in ALL sorts: the
+ * SQL predicate decided membership, so dropping a zero-score row here would make
+ * `items` disagree with the exact `total` (see file header). For `relevance` the
+ * domain ladder supplies the order; other sorts order by their dimension while
+ * still carrying the ladder score in `score`.
  */
 function rankBySort(
   candidates: ReaderRow[],
@@ -154,17 +216,20 @@ function rankBySort(
 ): SearchResult[] {
   const nq = normalizeQuery(query.q);
 
-  if (query.sort === "relevance") {
-    const ranked = rankAndSort(candidates, nq);
-    return ranked.map((r) => toSearchResult(r.product, r.score));
-  }
-
   const scored = candidates.map((product) => ({
     product,
-    score: scoreOf(product, nq),
+    score: rankProduct(product, nq).score,
   }));
 
-  if (query.sort === "price_asc") {
+  if (query.sort === "relevance") {
+    // Stable within equal scores: product_id breaks ties so two identical
+    // requests cannot return two different orders (pagination depends on it).
+    scored.sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.product.product_id.localeCompare(b.product.product_id),
+    );
+  } else if (query.sort === "price_asc") {
     scored.sort(
       (a, b) => a.product.price_minor_units - b.product.price_minor_units,
     );
@@ -187,15 +252,6 @@ function compareDesc(a: Date | null, b: Date | null): number {
   if (a === null) return 1;
   if (b === null) return -1;
   return b.getTime() - a.getTime();
-}
-
-/** Reuse the domain ladder to assign a single product's score. */
-function scoreOf(
-  product: IndexedProduct,
-  nq: ReturnType<typeof normalizeQuery>,
-): number {
-  const ranked = rankAndSort([product], nq);
-  return ranked.length > 0 ? ranked[0].score : 0;
 }
 
 function toSearchResult(

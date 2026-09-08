@@ -28,9 +28,9 @@
 | المؤجَّل | السبب | أين يُسجَّل |
 |---|---|---|
 | المستهلكُ الكاملُ (relay) لأحداثِ outbox السوقِ | قرارٌ معماريٌّ + تنفيذٌ يُفصَلان | ADR-025 §2.3 + TASK_LOG |
-| بوّابةُ relevance/load (exit gate) | فحوصُ أداءٍ صعبةٌ لا تُخلطُ مع القرارِ | ADR-025 §2.4 + TASK_LOG |
+| ~~بوّابةُ relevance/load (exit gate)~~ | **أُنجزت في المراجعة 4/N** — حزمةُ `@wasla/search-e2e`، عشرونَ اختباراً على PostgreSQL وسلكٍ حقيقيَّين | [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md) |
 | ~~طبقةُ HTTP الكاملةُ (Fastify app)~~ | **أُنجزت في المراجعة 3/N** — تطبيقُ Fastify مُحقَنٌ بمنفذِ قراءة، ومعالجُ أخطاءٍ واحد، و503 كملاذٍ أخير | TASK_LOG · SEARCH_HTTP §5 |
-| اختباراتٌ تكامليّةٌ على PostgreSQL + وظائفُ CI | تتطلّبُ ناقلًا وDB | ADR-025 §4 + TASK_LOG |
+| ~~اختباراتٌ تكامليّةٌ على PostgreSQL + وظائفُ CI~~ | **أُنجزت في المراجعة 4/N** — ساقانِ جديدتانِ في `db-integration` و`exit-gate-e2e` بقاعدتَينِ مستقلّتَين، وساقٌ ثالثةٌ في القاعدةِ المشتركةِ (13/13) | [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md) §7 |
 
 ---
 
@@ -81,7 +81,7 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 ### 5.1 المساراتُ
 
 - **`GET /search/products`** — يُحلِّلُ المعاملاتِ (`parseSearchRequest`)، يُمرِّرُها للمنفذِ، يُعيّنُ النتيجةَ إلى شكلِ العقدِ (`toSearchPage`).
-- **`GET /search/health`** — يُرجع `{ status: "ok" }`. **ليس بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ** — تحويلُ الصحّةِ إلى بوّابةِ relevance/load مؤجَّلٌ لمراجعةِ exit gate (ADR-025 §2.3.2).
+- **`GET /search/health`** — يُرجع `{ status: "ok" }`. **ليس بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ**، وهذا **مُثبَتٌ بقياسٍ** لا موصوفٌ: بوّابةُ المرحلةِ 12 تُسقِطُ جدولَ الفهرسِ فيُجيبُ `/search/products` بـ`503 · SEARCH_INDEX_DEGRADED` ويظلُّ `/search/health` يُجيبُ `ok` في اللحظةِ نفسِها. العلاجُ (مسارُ جاهزيّةٍ منفصلٌ) مُسجَّلٌ بمالكٍ ومهلةٍ في [`RISK-0030`](../07-security/RISK_REGISTER.md).
 
 ### 5.2 معالجُ أخطاءٍ واحدٌ، بلا try/catch في المعالِجات
 
@@ -100,13 +100,14 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 
 ### 5.5 القارئُ الفعليُّ (integration)
 
-`SearchIndexReader` (`infrastructure/search-index-reader.ts`) هو المحوِّلُ الإنتاجيُّ لـ`SearchProductsReadPort` فوقَ `pg.Pool`. يقرأُ **فقط** `search_product_index` — لا JOIN لجداولِ السوقِ (حدُّ ADR-016 القرارُ 9). الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ، لا رايةٌ مُخزَّنة. المطابقةُ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ (trigram + FTS + substring)، ثمَّ ترتيبُ النطاقِ (`rankAndSort`) يُعيدُ تسجيلَ النتائجِ بسُلَّمِ exact > prefix > fts > trigram. اختبارُ التكاملِ يتخطّى نفسَه بلا `DATABASE_URL` — ووظيفةُ CI `search-db-integration` التي تُشغِّلُه مؤجَّلةٌ (ADR-025 §4).
+`SearchIndexReader` (`infrastructure/search-index-reader.ts`) هو المحوِّلُ الإنتاجيُّ لـ`SearchProductsReadPort` فوقَ `pg.Pool`. يقرأُ **فقط** `search_product_index` — لا JOIN لجداولِ السوقِ (حدُّ ADR-016 القرارُ 9). الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ، لا رايةٌ مُخزَّنة. المطابقةُ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ (trigram + FTS + substring)، ثمَّ ترتيبُ النطاقِ (`rankAndSort`) يُعيدُ تسجيلَ النتائجِ بسُلَّمِ exact > prefix > fts > trigram. اختبارُ التكاملِ يتخطّى نفسَه بلا `DATABASE_URL`، **ووظيفةُ CI التي تُشغِّلُه قائمةٌ منذُ المراجعةِ 4/N**: `db-integration (search, @wasla/search-service, wasla_search_test)`. **وسقفُ المُرشَّحينَ (500) مقيسٌ الآنَ لا موصوفٌ:** على ألفَي وثيقةٍ مُطابِقةٍ يُرجعُ الحدُّ `total = 500` — [`RISK-0029`](../07-security/RISK_REGISTER.md).
 
 ### 5.6 ما يُؤجَّلُ بعدَ هذه المراجعة
 
 | المؤجَّل | أين يُسجَّل |
 |---|---|
-| بوّابةُ relevance/load (exit gate) | ADR-025 §2.3.2 + TASK_LOG |
-| وظيفةُ CI `search-db-integration` (تشغيلُ اختبارِ التكاملِ في CI) | ADR-025 §4 |
-| وظيفةُ CI `search-exit-gate-e2e` | ADR-025 §4 |
-| رفعُ سقفِ المُرشَّحينَ (v1: 500) فوقَ بوّابةِ الحملِ | SEARCH_HTTP §5.5 + TASK_LOG |
+| ~~بوّابةُ relevance/load (exit gate)~~ | **أُنجزت 4/N** — [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md) |
+| ~~وظيفةُ CI `search-db-integration`~~ | **أُنجزت 4/N** — ساقُ `search` في مصفوفةِ `db-integration` |
+| ~~وظيفةُ CI `search-exit-gate-e2e`~~ | **أُنجزت 4/N** — ساقُ `search` في مصفوفةِ `exit-gate-e2e` |
+| رفعُ سقفِ المُرشَّحينَ (v1: 500) فوقَ بوّابةِ الحملِ | [`RISK-0029`](../07-security/RISK_REGISTER.md) — **مقيسٌ الآنَ** بمالكٍ ومهلةِ مراجعةٍ |
+| مسارُ جاهزيّةٍ يسألُ الفهرسَ (`/search/ready`) | [`RISK-0030`](../07-security/RISK_REGISTER.md) — عيبٌ **مُثبَتٌ بتوكيدٍ** في البوّابةِ |

@@ -348,6 +348,12 @@ jobs:
           - leg: marketplace
             pkg: "@wasla/marketplace-service"
             db: wasla_marketplace_test
+          # `M5-12` · المراجعةُ 4/N — قاعدةُ قراءةِ البحثِ (`ADR-025` §4 رفعُ التأجيلِ).
+          # عشرةُ اختباراتٍ تمسُّ `pg_trgm` والفهرسةَ النصيّةَ ومحوّلَ القراءةِ — وكانت تُدارُ
+          # يداً في المراجعاتِ الثلاثِ الماضيةِ. وما يُدارُ يداً ليس حارساً.
+          - leg: search
+            pkg: "@wasla/search-service"
+            db: wasla_search_test
     services:
       postgres:
         image: postgres:15
@@ -525,6 +531,13 @@ jobs:
             pkg: "@wasla/marketplace-e2e"
             db: wasla_marketplace_e2e
             var: DATABASE_URL
+          # `M5-12` · بوّابةُ خروجِ الطورِ 12 — صلةٌ وحملٌ.
+          # **وهذهِ السّاقُ هي ما يجعلُ البوّابةَ بوّابةً**: الحزمةُ تتخطّى نفسَها بلا وصلٍ،
+          # فما لم يُدَرْ هنا بقاعدةٍ حيّةٍ فليس مقيساً أصلاً (وانظرْ `EXIT_GATE_REQUIRE_DB` أدناه).
+          - leg: search
+            pkg: "@wasla/search-e2e"
+            db: wasla_search_e2e
+            var: DATABASE_URL
     services:
       postgres:
         image: postgres:15
@@ -575,6 +588,12 @@ jobs:
       - name: "اسمُ متغيّرِ الوصلِ يختلفُ بينَ البوّاباتِ بقصدٍ (لا يُوحَّد)"
         run: echo "${{ matrix.var }}=postgres://postgres:postgres@postgres:5432/${{ matrix.db }}" >> "$GITHUB_ENV"
       - name: "${{ matrix.leg }} · exit gate"
+        # `EXIT_GATE_REQUIRE_DB=1`: داخلَ هذهِ الوظيفةِ **التخطّي إخفاقٌ**. وبلا هذا يكفي
+        # خطأٌ في اسمِ متغيّرِ الوصلِ لتُخرِجَ `vitest` صفراً وتُعلَنَ الوظيفةُ خضراءَ
+        # **ولم تُدَرْ حالةٌ واحدةٌ** (`RISK-0022`). وتُعلَنُ للسُّوقِ كلِّها عمداً: حزمةٌ لا
+        # تقرأُ المتغيّرَ تتجاهلُهُ، ومن يقرأُهُ يرثُ الحراسةَ بلا سطرٍ جديدٍ هنا.
+        env:
+          EXIT_GATE_REQUIRE_DB: "1"
         run: pnpm --filter ${{ matrix.pkg }} test
       # ───────────────────────────────────────────────────────────────
       # `M1-02` — بابُ **منعِ الإعادةِ** كان حكمُه `⚠️ مُستدَلًّا عليه`: وظيفةُ

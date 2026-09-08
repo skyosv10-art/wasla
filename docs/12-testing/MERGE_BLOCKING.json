@@ -3,13 +3,19 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-05T02:00:00Z",
+  "measured_at": "2026-09-08T20:50:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-08T205000Z-m5-12-required-checks",
   "protection": {
     "required_status_checks": {
       "strict": true,
       "contexts": [
+        "repo-structure",
+        "doc-coverage",
+        "governance-guard",
+        "verify",
+        "typecheck",
+        "test",
         "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
         "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
         "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
@@ -23,7 +29,6 @@
         "db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)",
         "db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)",
         "db-integration-shared",
-        "doc-coverage",
         "exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)",
         "exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)",
         "exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)",
@@ -32,11 +37,8 @@
         "exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)",
         "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
         "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
-        "governance-guard",
-        "repo-structure",
-        "test",
-        "typecheck",
-        "verify"
+        "db-integration (search, @wasla/search-service, wasla_search_test)",
+        "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)"
       ]
     },
     "enforce_admins": true,
@@ -62,6 +64,7 @@
   ],
   "not_claimed": [
     "اللقطةُ مؤرَّخةٌ لا حيّةٌ: الحارسُ يقارنُ الخطَّ بها، ولا يسألُ GitHub في كلِّ تشغيلٍ إلّا إذا وُفِّرَ ملفُّ حمايةٍ حيٌّ عبرَ WASLA_PROTECTION_JSON.",
-    "الحمايةُ إعدادٌ خارجَ المستودعِ: من يملكُ صلاحيةَ الإدارةِ يستطيعُ تغييرَها، وهذا الحارسُ يكشفُ الانحرافَ عندَ إعادةِ القياسِ لا يمنعُه."
+    "الحمايةُ إعدادٌ خارجَ المستودعِ: من يملكُ صلاحيةَ الإدارةِ يستطيعُ تغييرَها، وهذا الحارسُ يكشفُ الانحرافَ عندَ إعادةِ القياسِ لا يمنعُه.",
+    "السياقانِ الجديدانِ (search) أُضيفا إلى الحمايةِ الحيّةِ بأمرِ المالكِ الصريحِ 2026-09-08 عبرَ واجهةِ GitHub، وأُعيدَ قياسُ هذه اللقطةِ من الواجهةِ نفسِها لا بتحريرِ يدٍ: الدليلُ الخامُّ في evidence_dir."
   ]
 }

@@ -37,18 +37,27 @@ export const SEARCH_TABLES = [
   "search_product_index",
 ] as const;
 
-/** Minimal marketplace_outbox DDL matching the marketplace contract (no FKs). */
+/**
+ * Minimal `marketplace_outbox` DDL — **يُطابقُ عقدَ السوقِ حرفاً** بلا مفاتيحَ أجنبيّةٍ.
+ *
+ * ولمَ حرفاً؟ لأنّ `CREATE TABLE IF NOT EXISTS` **لا يفعلُ شيئاً** حينَ يكونُ الجدولُ
+ * الحقيقيُّ موجوداً — كما في وظيفةِ القاعدةِ المشتركةِ (`M0-18`). فنسخةٌ ألينُ من العقدِ
+ * (مفتاحٌ بقيمةٍ افتراضيّةٍ، وبلا قيودِ `CHECK`) تجعلُ المجموعةَ تنجحُ على قاعدةٍ نقيّةٍ
+ * وتُخفِقُ على قاعدةٍ مشتركةٍ — **وهو ما وقعَ فعلاً** عندَ ضمِّ ساقِ البحثِ إلى السلسلةِ
+ * 2026-09-08: `null value in column "outbox_id"`. والأسوأُ أنّها كانت تسمحُ ببذرِ حدثٍ
+ * لا يستطيعُ السوقُ إصدارَه أصلاً، فتُقاسُ حالةٌ لا وجودَ لها.
+ */
 const OUTBOX_DDL = `
 CREATE TABLE IF NOT EXISTS marketplace_outbox (
-    outbox_id      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_type     TEXT        NOT NULL,
-    event_version  TEXT        NOT NULL,
-    aggregate_type TEXT        NOT NULL,
+    outbox_id      UUID        PRIMARY KEY,
+    event_type     TEXT        NOT NULL CHECK (event_type ~ '^marketplace\\.[a-z_]+$'),
+    event_version  TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
+    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('store', 'product', 'inventory')),
     aggregate_id   TEXT        NOT NULL,
     payload        JSONB       NOT NULL,
-    occurred_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    occurred_at    TIMESTAMPTZ NOT NULL,
     published_at   TIMESTAMPTZ,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 `;
 
@@ -87,8 +96,8 @@ export async function seedOutboxEvent(
   },
 ): Promise<{ outbox_id: string; created_at: string }> {
   const result = await pool.query<{ outbox_id: string; created_at: string }>(
-    `INSERT INTO marketplace_outbox (event_type, event_version, aggregate_type, aggregate_id, payload, occurred_at, created_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
+    `INSERT INTO marketplace_outbox (outbox_id, event_type, event_version, aggregate_type, aggregate_id, payload, occurred_at, created_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5::jsonb, $6, $7)
      RETURNING outbox_id::text, created_at::text`,
     [
       event.event_type,

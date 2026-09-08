@@ -75,7 +75,37 @@ function tableBlock(table: string): string {
     .join("\n");
 }
 
-const TYPES = ["TEXT", "INTEGER", "BIGINT", "BOOLEAN", "UUID", "TIMESTAMPTZ", "JSONB", "SMALLINT"];
+const TYPES = ["TEXT", "INTEGER", "BIGINT", "BOOLEAN", "UUID", "TIMESTAMPTZ", "JSONB"];
+
+/**
+ * يجمعُ تعريفاتِ الأعمدةِ كاملةً (متعدِّدةَ الأسطرِ) من جسمِ الجدولِ.
+ *
+ * كلُّ عمودٍ في العقد يبدأ بمسافةٍ ثمّ اسمٍ ونوعِ PostgreSQL؛ أمّا التعليقاتُ والقيودُ
+ * فلا تُطابق هذه البداية. وجمعُ الأسطر التالية ضروريٌّ لأنّ `CHECK (... IN (...))` في
+ * هذا العقد يُكتب على أسطرٍ.
+ */
+function ddlColumnDefinitions(table: string): string[] {
+  const definitions: string[] = [];
+  let current: string[] | null = null;
+
+  for (const sourceLine of tableBlock(table).split("\n")) {
+    const line = sourceLine.trim();
+    if (new RegExp(`^[a-z_]+\\s+(?:${TYPES.join("|")})\\b`, "u").test(line)) {
+      if (current !== null) definitions.push(current.join(" "));
+      current = [line];
+      continue;
+    }
+    if (line.startsWith("CONSTRAINT")) {
+      if (current !== null) definitions.push(current.join(" "));
+      current = null;
+      continue;
+    }
+    if (current !== null && !line.startsWith("--")) current.push(line);
+  }
+  if (current !== null) definitions.push(current.join(" "));
+
+  return definitions;
+}
 
 function ddlColumns(table: string): ReadonlyArray<DdlColumn> {
   const columns: DdlColumn[] = [];
@@ -92,9 +122,48 @@ function ddlColumns(table: string): ReadonlyArray<DdlColumn> {
   return [...columns].sort((first, second) => first.name.localeCompare(second.name));
 }
 
+/**
+ * القيودُ والفهارسُ المُسمّاةُ في العقد لهذا الجدول، داخلَه أو في `CREATE INDEX` بعده.
+ *
+ * [مصالحة ADR-024] تُشتقُّ أيضاً الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ غيرِ المسماةِ:
+ * كلُّ عمودٍ يحملُ `CHECK` في تعريفِه يسمّيهِ PostgreSQL تلقائيّاً عندَ تطبيقِ
+ * العقدِ `<table>_<column>_check`، والمرآةُ تُسمّيهِ كذلك حرفاً (انظر رأس `schema.ts`).
+ * إغفالُ الاشتقاقِ كان سيُسقِطُ الحارسَ لمجرّدِ أنّ العقدَ يتركُ التسميةَ لقاعدةِ
+ * البياناتِ — مع أنّ الاسمَ حقيقةٌ في الكتالوجِ يقيسُها اختبارُ الدورةِ الكاملةِ
+ * في سبعةِ أبعادٍ.
+ */
 function ddlConstraintNames(table: string): ReadonlyArray<string> {
-  const names = [...tableBlock(table).matchAll(/CONSTRAINT\s+([a-z_]+)/gu)].map((hit) => hit[1]!);
-  return names.sort();
+  const names = new Set<string>();
+
+  for (const match of tableBlock(table).matchAll(/CONSTRAINT\s+([a-z_]+)/gu)) {
+    names.add(match[1] as string);
+  }
+
+  // الأسماءُ الكنونيّةُ للقيودِ المضمَّنةِ (العمودُ كاملُ التعريفِ متعدِّدَ الأسطرِ).
+  for (const definition of ddlColumnDefinitions(table)) {
+    if (/\bCHECK\b/u.test(definition)) {
+      const column = new RegExp(`^([a-z_]+)\\s`, "u").exec(definition)?.[1];
+      if (column !== undefined) {
+        names.add(`${table}_${column}_check`);
+      }
+    }
+  }
+
+  // المفتاحُ الأساسيُّ غيرُ المُسمّى في الجسمِ (مركّبٌ أو على مستوى الجدول) يُولّد
+  // PostgreSQLُ لهُ `<table>_pkey` عندَ التطبيقِ — والمرآةُ تُسمّيهِ كذلك حرفاً.
+  if (/\bPRIMARY KEY\b/u.test(tableBlock(table)) && !names.has(`${table}_pkey`)) {
+    names.add(`${table}_pkey`);
+  }
+
+  const indexPattern = new RegExp(
+    `CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ([a-z_]+)[\\s\\S]*?;`,
+    "gu",
+  );
+  for (const match of DDL.matchAll(indexPattern)) {
+    if (new RegExp(`ON ${table}\\s`, "u").test(match[0])) names.add(match[1] as string);
+  }
+
+  return [...names].sort();
 }
 
 /** نوعُ Postgres المُقابل لعمود Drizzle — خمسةُ أنواعٍ هي كلُّ ما تستعمله هذه المرآة. */
@@ -114,15 +183,37 @@ function mirrorColumns(table: (typeof MIRRORED)[number]): ReadonlyArray<DdlColum
     .sort((first, second) => first.name.localeCompare(second.name));
 }
 
+/**
+ * الأسماءُ التي عرّفتها المرآة: `check` و`unique` والفهارس **والمفاتيحُ الأساسيّة**.
+ *
+ * المفاتيحُ الأساسيّةُ في هذا العقد غيرُ مسمّاةٍ صراحةً، فيُولّد PostgreSQLُ لها
+ * `<table>_pkey` عندَ تطبيقِ العقدِ، والمرآةُ تُسمّيها كذلك حرفاً (سواءٌ أكانت
+ * مُركّبةً فتُسمّى صراحةً، أم أحاديّةَ العمودِ فيُتركُ اسمُها لقيمةِ `primaryKey`
+ * الافتراضيّةِ في Drizzle، وهي `<table>_pkey`). فلو أُهمل `primaryKeys` هنا
+ * لأمكن أن تُسمّي المرآةُ مفتاحَها `<table>_<cols>_pk` بينما القاعدةُ تحملُ اسماً آخر —
+ * فتنجحُ المطابقةُ على اسمٍ لا وجودَ له في القاعدة. وتُفهرَسُ الفهارسُ المسماةُ كذلك
+ * لأنّها جزءٌ من الكتالوجِ يقيسُها اختبارُ الدورةِ.
+ */
 function mirrorConstraintNames(table: (typeof MIRRORED)[number]): ReadonlyArray<string> {
   const config = getTableConfig(table);
-  return [
-    ...config.checks.map((check) => check.name),
-    ...config.uniqueConstraints.map((unique) => unique.name),
-    ...config.foreignKeys.map((key) => key.getName()),
-  ]
-    .filter((name): name is string => typeof name === "string" && name.length > 0)
-    .sort();
+  const names = new Set<string>(
+    [
+      ...config.checks.map((check) => check.name),
+      ...config.uniqueConstraints.map((unique) => unique.name),
+      ...config.foreignKeys.map((key) => key.getName()),
+      ...config.primaryKeys.map((key) => key.getName()),
+      ...config.indexes.map((index) => index.config.name),
+    ].filter((name): name is string => typeof name === "string" && name.length > 0),
+  );
+
+  // المفتاحُ الأساسيُّ أحاديُّ العمودِ غيرُ المُسمّى (`.primaryKey()` بلا اسم) لا يظهرُ في
+  // `primaryKeys` (يُحفَظُ كعَلَمٍ على العمودِ)، فيُولّد PostgreSQLُ لهُ `<table>_pkey`.
+  const singlePrimaryKey = config.columns.filter((column) => column.primary);
+  if (singlePrimaryKey.length === 1) {
+    names.add(`${config.name}_pkey`);
+  }
+
+  return [...names].sort();
 }
 
 describe("حارسُ الانحراف يقرأ العقدَ فعلاً", () => {

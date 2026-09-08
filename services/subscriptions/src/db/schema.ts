@@ -77,7 +77,47 @@ export const subscriptionPlans = pgTable(
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.planCode, table.planVersion] }),
+    primaryKey({
+      name: "subscription_plans_pkey",
+      columns: [table.planCode, table.planVersion],
+    }),
+    check(
+      "subscription_plans_plan_code_check",
+      sql`${table.planCode} ~ '^[a-z][a-z0-9-]{2,47}$'`,
+    ),
+    check("subscription_plans_plan_version_check", sql`${table.planVersion} >= 1`),
+    check(
+      "subscription_plans_label_check",
+      sql`char_length(${table.label}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "subscription_plans_trial_days_check",
+      sql`${table.trialDays} BETWEEN 0 AND 90`,
+    ),
+    check(
+      "subscription_plans_duration_days_check",
+      sql`${table.durationDays} BETWEEN 1 AND 730`,
+    ),
+    check(
+      "subscription_plans_community_grace_days_check",
+      sql`${table.communityGraceDays} BETWEEN 0 AND 90`,
+    ),
+    check(
+      "subscription_plans_community_daily_order_cap_check",
+      sql`${table.communityDailyOrderCap} BETWEEN 0 AND 1000`,
+    ),
+    check(
+      "subscription_plans_referral_reward_days_check",
+      sql`${table.referralRewardDays} BETWEEN 0 AND 365`,
+    ),
+    check(
+      "subscription_plans_referral_qualifying_facts_check",
+      sql`${table.referralQualifyingFacts} BETWEEN 1 AND 100`,
+    ),
+    check(
+      "subscription_plans_referral_window_days_check",
+      sql`${table.referralWindowDays} BETWEEN 1 AND 365`,
+    ),
     check(
       "ck_subscription_plans_frozen_at",
       sql`(${table.isFrozen} AND ${table.frozenAt} IS NOT NULL) OR (NOT ${table.isFrozen} AND ${table.frozenAt} IS NULL)`,
@@ -99,7 +139,18 @@ export const subscriptionPlanEntitlements = pgTable(
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.planCode, table.planVersion, table.entitlementCode] }),
+    primaryKey({
+      name: "subscription_plan_entitlements_pkey",
+      columns: [table.planCode, table.planVersion, table.entitlementCode],
+    }),
+    check(
+      "subscription_plan_entitlements_entitlement_code_check",
+      sql`${table.entitlementCode} IN ('accept_orders', 'daily_order_cap', 'priority_dispatch', 'zone_multi_select')`,
+    ),
+    check(
+      "subscription_plan_entitlements_limit_value_check",
+      sql`${table.limitValue} >= -1`,
+    ),
     foreignKey({
       name: "fk_subscription_plan_entitlements_plan",
       columns: [table.planCode, table.planVersion],
@@ -134,6 +185,22 @@ export const subscriptionPeriods = pgTable(
       columns: [table.planCode, table.planVersion],
       foreignColumns: [subscriptionPlans.planCode, subscriptionPlans.planVersion],
     }),
+    check(
+      "subscription_periods_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscription_periods_source_check",
+      sql`${table.source} IN ('trial', 'payment', 'referral_reward')`,
+    ),
+    check(
+      "subscription_periods_payment_reference_check",
+      sql`${table.paymentReference} IS NULL OR char_length(${table.paymentReference}) BETWEEN 4 AND 64`,
+    ),
+    check(
+      "subscription_periods_granted_days_check",
+      sql`${table.grantedDays} > 0`,
+    ),
     check("ck_subscription_periods_window", sql`${table.endsAt} > ${table.startsAt}`),
     check(
       "ck_subscription_periods_payment_reference",
@@ -163,6 +230,26 @@ export const subscriptionTransitions = pgTable(
   },
   (table) => [
     unique("ux_subscription_transitions_sequence").on(table.driverPublicId, table.sequence),
+    check(
+      "subscription_transitions_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscription_transitions_from_state_check",
+      sql`${table.fromState} IS NULL OR ${table.fromState} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check(
+      "subscription_transitions_to_state_check",
+      sql`${table.toState} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check(
+      "subscription_transitions_reason_code_check",
+      sql`${table.reasonCode} IN ('trial_granted', 'payment_activated', 'referral_reward_applied', 'period_ended', 'community_grace_ended')`,
+    ),
+    check(
+      "subscription_transitions_sequence_check",
+      sql`${table.sequence} >= 1`,
+    ),
     check(
       "ck_subscription_transitions_state_changes",
       sql`${table.fromState} IS DISTINCT FROM ${table.toState}`,
@@ -209,6 +296,18 @@ export const subscriptions = pgTable(
   },
   (table) => [
     unique("ux_subscriptions_driver").on(table.driverPublicId),
+    check(
+      "subscriptions_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscriptions_state_check",
+      sql`${table.state} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check(
+      "subscriptions_state_sequence_check",
+      sql`${table.stateSequence} >= 1`,
+    ),
     foreignKey({
       name: "fk_subscriptions_plan",
       columns: [table.planCode, table.planVersion],
@@ -218,7 +317,9 @@ export const subscriptions = pgTable(
       "ck_subscriptions_period_state",
       sql`(${table.state} IN ('trial', 'active') AND ${table.currentPeriodId} IS NOT NULL AND ${table.expiresAt} IS NOT NULL) OR (${table.state} IN ('expired', 'community') AND ${table.currentPeriodId} IS NULL AND ${table.expiresAt} IS NULL)`,
     ),
-    index("ix_subscriptions_expiring").on(table.expiresAt),
+    index("ix_subscriptions_expiring")
+      .on(table.expiresAt)
+      .where(sql`${table.state} IN ('trial', 'active')`),
   ],
 );
 
@@ -239,7 +340,17 @@ export const referralCodes = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     createdAt: instant("created_at").notNull().defaultNow(),
   },
-  (table) => [unique("ux_referral_codes_owner").on(table.ownerPublicId)],
+  (table) => [
+    unique("ux_referral_codes_owner").on(table.ownerPublicId),
+    check(
+      "referral_codes_referral_code_check",
+      sql`${table.referralCode} ~ '^WR-[0-9A-Z]{8}$'`,
+    ),
+    check(
+      "referral_codes_owner_public_id_check",
+      sql`${table.ownerPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+  ],
 );
 
 /**
@@ -280,6 +391,26 @@ export const referrals = pgTable(
     }),
     unique("ux_referrals_referee").on(table.refereePublicId),
     check(
+      "referrals_referrer_public_id_check",
+      sql`${table.referrerPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "referrals_referee_public_id_check",
+      sql`${table.refereePublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "referrals_state_check",
+      sql`${table.state} IN ('pending', 'qualified', 'rewarded', 'rejected')`,
+    ),
+    check(
+      "referrals_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR ${table.reasonCode} IN ('self_referral', 'referrer_not_active', 'referee_already_referred', 'referee_no_qualifying_facts', 'referral_window_expired', 'referee_subscription_never_activated')`,
+    ),
+    check(
+      "referrals_qualifying_fact_count_check",
+      sql`${table.qualifyingFactCount} >= 0`,
+    ),
+    check(
       "ck_referrals_not_self",
       sql`${table.referrerPublicId} <> ${table.refereePublicId}`,
     ),
@@ -288,6 +419,9 @@ export const referrals = pgTable(
       sql`(${table.state} = 'rejected' AND ${table.reasonCode} IS NOT NULL) OR (${table.state} <> 'rejected' AND ${table.reasonCode} IS NULL)`,
     ),
     index("ix_referrals_referrer").on(table.referrerPublicId, table.createdAt),
+    index("ix_referrals_pending")
+      .on(table.windowEndsAt)
+      .where(sql`${table.state} = 'pending'`),
   ],
 );
 
@@ -338,6 +472,14 @@ export const referralRewards = pgTable(
     }),
     unique("ux_referral_rewards_referral").on(table.referralId),
     unique("ux_referral_rewards_period").on(table.grantedPeriodId),
+    check(
+      "referral_rewards_beneficiary_public_id_check",
+      sql`${table.beneficiaryPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "referral_rewards_reward_days_check",
+      sql`${table.rewardDays} > 0`,
+    ),
   ],
 );
 
@@ -361,15 +503,36 @@ export const referralRewards = pgTable(
  * ولا قيدَ مُسمّىً في المرآة: فحوصُ العقد هنا (`char_length ... BETWEEN 8 AND 128` ...) بلا
  * أسماء، ويُقابلها في الكود `assertIdempotencyKey` قبل الكتابة.
  */
-export const subscriptionIdempotency = pgTable("subscription_idempotency", {
-  idempotencyKey: text("idempotency_key").primaryKey(),
-  routeKey: text("route_key").notNull(),
-  requestHash: text("request_hash").notNull(),
-  responseStatus: integer("response_status").notNull(),
-  responseBody: jsonb("response_body").notNull(),
-  traceId: text("trace_id"),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
+export const subscriptionIdempotency = pgTable(
+  "subscription_idempotency",
+  {
+    idempotencyKey: text("idempotency_key").primaryKey(),
+    routeKey: text("route_key").notNull(),
+    requestHash: text("request_hash").notNull(),
+    responseStatus: integer("response_status").notNull(),
+    responseBody: jsonb("response_body").notNull(),
+    traceId: text("trace_id"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "subscription_idempotency_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "subscription_idempotency_route_key_check",
+      sql`char_length(${table.routeKey}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "subscription_idempotency_request_hash_check",
+      sql`char_length(${table.requestHash}) = 64`,
+    ),
+    check(
+      "subscription_idempotency_response_status_check",
+      sql`${table.responseStatus} BETWEEN 200 AND 499`,
+    ),
+  ],
+);
 
 // ---------------------------------------------------------------------------
 // 10) صندوقُ الصادر — الحدثُ يُكتب مع الحقيقةِ في معاملةٍ واحدة
@@ -391,19 +554,39 @@ export const subscriptionIdempotency = pgTable("subscription_idempotency", {
  * و`attempts` و`last_error` ليسا ترفاً: تسليمٌ يفشل صامتاً يجعل «الصندوقُ فارغٌ» و«الناقلُ
  * مكسورٌ منذ ساعة» متشابهَين من الخارج.
  */
-export const subscriptionOutbox = pgTable("subscription_outbox", {
-  eventId: uuid("event_id").primaryKey(),
-  eventType: text("event_type").notNull(),
-  aggregateType: text("aggregate_type").notNull(),
-  aggregateId: text("aggregate_id").notNull(),
-  payload: jsonb("payload").notNull(),
-  occurredAt: instant("occurred_at").notNull(),
-  publishedAt: instant("published_at"),
-  attempts: integer("attempts").notNull().default(0),
-  lastError: text("last_error"),
-  traceId: text("trace_id"),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
+export const subscriptionOutbox = pgTable(
+  "subscription_outbox",
+  {
+    eventId: uuid("event_id").primaryKey(),
+    eventType: text("event_type").notNull(),
+    aggregateType: text("aggregate_type").notNull(),
+    aggregateId: text("aggregate_id").notNull(),
+    payload: jsonb("payload").notNull(),
+    occurredAt: instant("occurred_at").notNull(),
+    publishedAt: instant("published_at"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    traceId: text("trace_id"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "subscription_outbox_event_type_check",
+      sql`${table.eventType} ~ '^(subscription|referral)\\.[a-z_]+$'`,
+    ),
+    check(
+      "subscription_outbox_aggregate_type_check",
+      sql`${table.aggregateType} IN ('subscription', 'referral')`,
+    ),
+    check(
+      "subscription_outbox_attempts_check",
+      sql`${table.attempts} >= 0`,
+    ),
+    index("ix_subscription_outbox_unpublished")
+      .on(table.occurredAt)
+      .where(sql`${table.publishedAt} IS NULL`),
+  ],
+);
 
 /**
  * الجداولُ التي لا مرآةَ لها — **فارغةٌ بعد المراجعة 5/6**، وليست سطراً مُهمَلاً.

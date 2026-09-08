@@ -1,0 +1,1231 @@
+{
+  "id": "4d5957eb-a966-4f0e-b862-fb801d7e0332",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.referral_codes": {
+      "name": "referral_codes",
+      "schema": "",
+      "columns": {
+        "referral_code": {
+          "name": "referral_code",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "owner_public_id": {
+          "name": "owner_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_referral_codes_owner": {
+          "name": "ux_referral_codes_owner",
+          "nullsNotDistinct": false,
+          "columns": [
+            "owner_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "referral_codes_referral_code_check": {
+          "name": "referral_codes_referral_code_check",
+          "value": "\"referral_codes\".\"referral_code\" ~ '^WR-[0-9A-Z]{8}$'"
+        },
+        "referral_codes_owner_public_id_check": {
+          "name": "referral_codes_owner_public_id_check",
+          "value": "\"referral_codes\".\"owner_public_id\" ~ '^WS-[0-9]{10}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.referral_rewards": {
+      "name": "referral_rewards",
+      "schema": "",
+      "columns": {
+        "reward_id": {
+          "name": "reward_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "referral_id": {
+          "name": "referral_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_period_id": {
+          "name": "granted_period_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beneficiary_public_id": {
+          "name": "beneficiary_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reward_days": {
+          "name": "reward_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fk_referral_rewards_referral": {
+          "name": "fk_referral_rewards_referral",
+          "tableFrom": "referral_rewards",
+          "tableTo": "referrals",
+          "columnsFrom": [
+            "referral_id"
+          ],
+          "columnsTo": [
+            "referral_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_referral_rewards_period": {
+          "name": "fk_referral_rewards_period",
+          "tableFrom": "referral_rewards",
+          "tableTo": "subscription_periods",
+          "columnsFrom": [
+            "granted_period_id"
+          ],
+          "columnsTo": [
+            "period_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_referral_rewards_plan": {
+          "name": "fk_referral_rewards_plan",
+          "tableFrom": "referral_rewards",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_code",
+            "plan_version"
+          ],
+          "columnsTo": [
+            "plan_code",
+            "plan_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_referral_rewards_referral": {
+          "name": "ux_referral_rewards_referral",
+          "nullsNotDistinct": false,
+          "columns": [
+            "referral_id"
+          ]
+        },
+        "ux_referral_rewards_period": {
+          "name": "ux_referral_rewards_period",
+          "nullsNotDistinct": false,
+          "columns": [
+            "granted_period_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "referral_rewards_beneficiary_public_id_check": {
+          "name": "referral_rewards_beneficiary_public_id_check",
+          "value": "\"referral_rewards\".\"beneficiary_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "referral_rewards_reward_days_check": {
+          "name": "referral_rewards_reward_days_check",
+          "value": "\"referral_rewards\".\"reward_days\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.referrals": {
+      "name": "referrals",
+      "schema": "",
+      "columns": {
+        "referral_id": {
+          "name": "referral_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "referral_code": {
+          "name": "referral_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referrer_public_id": {
+          "name": "referrer_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referee_public_id": {
+          "name": "referee_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qualifying_fact_count": {
+          "name": "qualifying_fact_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "window_ends_at": {
+          "name": "window_ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state_changed_at": {
+          "name": "state_changed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_referrals_referrer": {
+          "name": "ix_referrals_referrer",
+          "columns": [
+            {
+              "expression": "referrer_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_referrals_pending": {
+          "name": "ix_referrals_pending",
+          "columns": [
+            {
+              "expression": "window_ends_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"referrals\".\"state\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_referrals_code": {
+          "name": "fk_referrals_code",
+          "tableFrom": "referrals",
+          "tableTo": "referral_codes",
+          "columnsFrom": [
+            "referral_code"
+          ],
+          "columnsTo": [
+            "referral_code"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_referrals_plan": {
+          "name": "fk_referrals_plan",
+          "tableFrom": "referrals",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_code",
+            "plan_version"
+          ],
+          "columnsTo": [
+            "plan_code",
+            "plan_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_referrals_referee": {
+          "name": "ux_referrals_referee",
+          "nullsNotDistinct": false,
+          "columns": [
+            "referee_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "referrals_referrer_public_id_check": {
+          "name": "referrals_referrer_public_id_check",
+          "value": "\"referrals\".\"referrer_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "referrals_referee_public_id_check": {
+          "name": "referrals_referee_public_id_check",
+          "value": "\"referrals\".\"referee_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "referrals_state_check": {
+          "name": "referrals_state_check",
+          "value": "\"referrals\".\"state\" IN ('pending', 'qualified', 'rewarded', 'rejected')"
+        },
+        "referrals_reason_code_check": {
+          "name": "referrals_reason_code_check",
+          "value": "\"referrals\".\"reason_code\" IS NULL OR \"referrals\".\"reason_code\" IN ('self_referral', 'referrer_not_active', 'referee_already_referred', 'referee_no_qualifying_facts', 'referral_window_expired', 'referee_subscription_never_activated')"
+        },
+        "referrals_qualifying_fact_count_check": {
+          "name": "referrals_qualifying_fact_count_check",
+          "value": "\"referrals\".\"qualifying_fact_count\" >= 0"
+        },
+        "ck_referrals_not_self": {
+          "name": "ck_referrals_not_self",
+          "value": "\"referrals\".\"referrer_public_id\" <> \"referrals\".\"referee_public_id\""
+        },
+        "ck_referrals_reason_code": {
+          "name": "ck_referrals_reason_code",
+          "value": "(\"referrals\".\"state\" = 'rejected' AND \"referrals\".\"reason_code\" IS NOT NULL) OR (\"referrals\".\"state\" <> 'rejected' AND \"referrals\".\"reason_code\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_idempotency": {
+      "name": "subscription_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "route_key": {
+          "name": "route_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_hash": {
+          "name": "request_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_body": {
+          "name": "response_body",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subscription_idempotency_idempotency_key_check": {
+          "name": "subscription_idempotency_idempotency_key_check",
+          "value": "char_length(\"subscription_idempotency\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "subscription_idempotency_route_key_check": {
+          "name": "subscription_idempotency_route_key_check",
+          "value": "char_length(\"subscription_idempotency\".\"route_key\") BETWEEN 3 AND 64"
+        },
+        "subscription_idempotency_request_hash_check": {
+          "name": "subscription_idempotency_request_hash_check",
+          "value": "char_length(\"subscription_idempotency\".\"request_hash\") = 64"
+        },
+        "subscription_idempotency_response_status_check": {
+          "name": "subscription_idempotency_response_status_check",
+          "value": "\"subscription_idempotency\".\"response_status\" BETWEEN 200 AND 499"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_outbox": {
+      "name": "subscription_outbox",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_subscription_outbox_unpublished": {
+          "name": "ix_subscription_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"subscription_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subscription_outbox_event_type_check": {
+          "name": "subscription_outbox_event_type_check",
+          "value": "\"subscription_outbox\".\"event_type\" ~ '^(subscription|referral)\\.[a-z_]+$'"
+        },
+        "subscription_outbox_aggregate_type_check": {
+          "name": "subscription_outbox_aggregate_type_check",
+          "value": "\"subscription_outbox\".\"aggregate_type\" IN ('subscription', 'referral')"
+        },
+        "subscription_outbox_attempts_check": {
+          "name": "subscription_outbox_attempts_check",
+          "value": "\"subscription_outbox\".\"attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_periods": {
+      "name": "subscription_periods",
+      "schema": "",
+      "columns": {
+        "period_id": {
+          "name": "period_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_reference": {
+          "name": "payment_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_days": {
+          "name": "granted_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_event_id": {
+          "name": "source_event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_subscription_periods_driver": {
+          "name": "ix_subscription_periods_driver",
+          "columns": [
+            {
+              "expression": "driver_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "starts_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_subscription_periods_plan": {
+          "name": "fk_subscription_periods_plan",
+          "tableFrom": "subscription_periods",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_code",
+            "plan_version"
+          ],
+          "columnsTo": [
+            "plan_code",
+            "plan_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subscription_periods_driver_public_id_check": {
+          "name": "subscription_periods_driver_public_id_check",
+          "value": "\"subscription_periods\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "subscription_periods_source_check": {
+          "name": "subscription_periods_source_check",
+          "value": "\"subscription_periods\".\"source\" IN ('trial', 'payment', 'referral_reward')"
+        },
+        "subscription_periods_payment_reference_check": {
+          "name": "subscription_periods_payment_reference_check",
+          "value": "\"subscription_periods\".\"payment_reference\" IS NULL OR char_length(\"subscription_periods\".\"payment_reference\") BETWEEN 4 AND 64"
+        },
+        "subscription_periods_granted_days_check": {
+          "name": "subscription_periods_granted_days_check",
+          "value": "\"subscription_periods\".\"granted_days\" > 0"
+        },
+        "ck_subscription_periods_window": {
+          "name": "ck_subscription_periods_window",
+          "value": "\"subscription_periods\".\"ends_at\" > \"subscription_periods\".\"starts_at\""
+        },
+        "ck_subscription_periods_payment_reference": {
+          "name": "ck_subscription_periods_payment_reference",
+          "value": "(\"subscription_periods\".\"source\" = 'payment' AND \"subscription_periods\".\"payment_reference\" IS NOT NULL) OR (\"subscription_periods\".\"source\" <> 'payment' AND \"subscription_periods\".\"payment_reference\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_plan_entitlements": {
+      "name": "subscription_plan_entitlements",
+      "schema": "",
+      "columns": {
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entitlement_code": {
+          "name": "entitlement_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "limit_value": {
+          "name": "limit_value",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fk_subscription_plan_entitlements_plan": {
+          "name": "fk_subscription_plan_entitlements_plan",
+          "tableFrom": "subscription_plan_entitlements",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_code",
+            "plan_version"
+          ],
+          "columnsTo": [
+            "plan_code",
+            "plan_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "subscription_plan_entitlements_pkey": {
+          "name": "subscription_plan_entitlements_pkey",
+          "columns": [
+            "plan_code",
+            "plan_version",
+            "entitlement_code"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subscription_plan_entitlements_entitlement_code_check": {
+          "name": "subscription_plan_entitlements_entitlement_code_check",
+          "value": "\"subscription_plan_entitlements\".\"entitlement_code\" IN ('accept_orders', 'daily_order_cap', 'priority_dispatch', 'zone_multi_select')"
+        },
+        "subscription_plan_entitlements_limit_value_check": {
+          "name": "subscription_plan_entitlements_limit_value_check",
+          "value": "\"subscription_plan_entitlements\".\"limit_value\" >= -1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_plans": {
+      "name": "subscription_plans",
+      "schema": "",
+      "columns": {
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trial_days": {
+          "name": "trial_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration_days": {
+          "name": "duration_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "community_grace_days": {
+          "name": "community_grace_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "community_daily_order_cap": {
+          "name": "community_daily_order_cap",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referral_reward_days": {
+          "name": "referral_reward_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referral_qualifying_facts": {
+          "name": "referral_qualifying_facts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referral_window_days": {
+          "name": "referral_window_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "frozen_at": {
+          "name": "frozen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "subscription_plans_pkey": {
+          "name": "subscription_plans_pkey",
+          "columns": [
+            "plan_code",
+            "plan_version"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subscription_plans_plan_code_check": {
+          "name": "subscription_plans_plan_code_check",
+          "value": "\"subscription_plans\".\"plan_code\" ~ '^[a-z][a-z0-9-]{2,47}$'"
+        },
+        "subscription_plans_plan_version_check": {
+          "name": "subscription_plans_plan_version_check",
+          "value": "\"subscription_plans\".\"plan_version\" >= 1"
+        },
+        "subscription_plans_label_check": {
+          "name": "subscription_plans_label_check",
+          "value": "char_length(\"subscription_plans\".\"label\") BETWEEN 3 AND 64"
+        },
+        "subscription_plans_trial_days_check": {
+          "name": "subscription_plans_trial_days_check",
+          "value": "\"subscription_plans\".\"trial_days\" BETWEEN 0 AND 90"
+        },
+        "subscription_plans_duration_days_check": {
+          "name": "subscription_plans_duration_days_check",
+          "value": "\"subscription_plans\".\"duration_days\" BETWEEN 1 AND 730"
+        },
+        "subscription_plans_community_grace_days_check": {
+          "name": "subscription_plans_community_grace_days_check",
+          "value": "\"subscription_plans\".\"community_grace_days\" BETWEEN 0 AND 90"
+        },
+        "subscription_plans_community_daily_order_cap_check": {
+          "name": "subscription_plans_community_daily_order_cap_check",
+          "value": "\"subscription_plans\".\"community_daily_order_cap\" BETWEEN 0 AND 1000"
+        },
+        "subscription_plans_referral_reward_days_check": {
+          "name": "subscription_plans_referral_reward_days_check",
+          "value": "\"subscription_plans\".\"referral_reward_days\" BETWEEN 0 AND 365"
+        },
+        "subscription_plans_referral_qualifying_facts_check": {
+          "name": "subscription_plans_referral_qualifying_facts_check",
+          "value": "\"subscription_plans\".\"referral_qualifying_facts\" BETWEEN 1 AND 100"
+        },
+        "subscription_plans_referral_window_days_check": {
+          "name": "subscription_plans_referral_window_days_check",
+          "value": "\"subscription_plans\".\"referral_window_days\" BETWEEN 1 AND 365"
+        },
+        "ck_subscription_plans_frozen_at": {
+          "name": "ck_subscription_plans_frozen_at",
+          "value": "(\"subscription_plans\".\"is_frozen\" AND \"subscription_plans\".\"frozen_at\" IS NOT NULL) OR (NOT \"subscription_plans\".\"is_frozen\" AND \"subscription_plans\".\"frozen_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscription_transitions": {
+      "name": "subscription_transitions",
+      "schema": "",
+      "columns": {
+        "transition_id": {
+          "name": "transition_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_state": {
+          "name": "from_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_state": {
+          "name": "to_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "period_id": {
+          "name": "period_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sequence": {
+          "name": "sequence",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_subscription_transitions_sequence": {
+          "name": "ux_subscription_transitions_sequence",
+          "nullsNotDistinct": false,
+          "columns": [
+            "driver_public_id",
+            "sequence"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "subscription_transitions_driver_public_id_check": {
+          "name": "subscription_transitions_driver_public_id_check",
+          "value": "\"subscription_transitions\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "subscription_transitions_from_state_check": {
+          "name": "subscription_transitions_from_state_check",
+          "value": "\"subscription_transitions\".\"from_state\" IS NULL OR \"subscription_transitions\".\"from_state\" IN ('trial', 'active', 'expired', 'community')"
+        },
+        "subscription_transitions_to_state_check": {
+          "name": "subscription_transitions_to_state_check",
+          "value": "\"subscription_transitions\".\"to_state\" IN ('trial', 'active', 'expired', 'community')"
+        },
+        "subscription_transitions_reason_code_check": {
+          "name": "subscription_transitions_reason_code_check",
+          "value": "\"subscription_transitions\".\"reason_code\" IN ('trial_granted', 'payment_activated', 'referral_reward_applied', 'period_ended', 'community_grace_ended')"
+        },
+        "subscription_transitions_sequence_check": {
+          "name": "subscription_transitions_sequence_check",
+          "value": "\"subscription_transitions\".\"sequence\" >= 1"
+        },
+        "ck_subscription_transitions_state_changes": {
+          "name": "ck_subscription_transitions_state_changes",
+          "value": "\"subscription_transitions\".\"from_state\" IS DISTINCT FROM \"subscription_transitions\".\"to_state\""
+        },
+        "ck_subscription_transitions_genesis": {
+          "name": "ck_subscription_transitions_genesis",
+          "value": "(\"subscription_transitions\".\"from_state\" IS NOT NULL) OR (\"subscription_transitions\".\"to_state\" = 'trial' AND \"subscription_transitions\".\"reason_code\" = 'trial_granted' AND \"subscription_transitions\".\"sequence\" = 1)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subscriptions": {
+      "name": "subscriptions",
+      "schema": "",
+      "columns": {
+        "subscription_id": {
+          "name": "subscription_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "driver_public_id": {
+          "name": "driver_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_code": {
+          "name": "plan_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_version": {
+          "name": "plan_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_period_id": {
+          "name": "current_period_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_sequence": {
+          "name": "state_sequence",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state_changed_at": {
+          "name": "state_changed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_subscriptions_expiring": {
+          "name": "ix_subscriptions_expiring",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"subscriptions\".\"state\" IN ('trial', 'active')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_subscriptions_plan": {
+          "name": "fk_subscriptions_plan",
+          "tableFrom": "subscriptions",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_code",
+            "plan_version"
+          ],
+          "columnsTo": [
+            "plan_code",
+            "plan_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_subscriptions_driver": {
+          "name": "ux_subscriptions_driver",
+          "nullsNotDistinct": false,
+          "columns": [
+            "driver_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "subscriptions_driver_public_id_check": {
+          "name": "subscriptions_driver_public_id_check",
+          "value": "\"subscriptions\".\"driver_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "subscriptions_state_check": {
+          "name": "subscriptions_state_check",
+          "value": "\"subscriptions\".\"state\" IN ('trial', 'active', 'expired', 'community')"
+        },
+        "subscriptions_state_sequence_check": {
+          "name": "subscriptions_state_sequence_check",
+          "value": "\"subscriptions\".\"state_sequence\" >= 1"
+        },
+        "ck_subscriptions_period_state": {
+          "name": "ck_subscriptions_period_state",
+          "value": "(\"subscriptions\".\"state\" IN ('trial', 'active') AND \"subscriptions\".\"current_period_id\" IS NOT NULL AND \"subscriptions\".\"expires_at\" IS NOT NULL) OR (\"subscriptions\".\"state\" IN ('expired', 'community') AND \"subscriptions\".\"current_period_id\" IS NULL AND \"subscriptions\".\"expires_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

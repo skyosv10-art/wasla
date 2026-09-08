@@ -1,5 +1,23 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M5-11 · مصالحةٌ توثيقيّةٌ لإغلاقِ الطور 11
+
+**Work Item(s):** M5-11 · **Branch:** `docs/phase11-closeout-reconciliation` · **Scope:** `docs/16-progress/ROADMAP.md,docs/16-progress/HANDOFF_NEXT_STEPS.md,docs/16-progress/MASTER_PROGRESS.md`
+
+**ماذا تم إنجاز (1):** صُحِّحَ انحرافٌ توثيقيّ: كانت `ROADMAP.md` (الترويسة + صفُّ الطور 11 + سجلُ §8) و`HANDOFF_NEXT_STEPS.md` (الترويسة) وصفُّ `MASTER_PROGRESS.md` تقولُ إنّ الطور 11 عند MR 3/6، بينما MR 4/6 و5/6 و6/6 مدموجةٌ في `main` (`38c73e4` · `b8fc903` · `c461a2d` عبر [MR !112](https://gitlab.com/uxxxu/wasla/-/merge_requests/112)) وبوّابةُ الخروجِ خضراءُ محلّيّاً (6/6 في `packages/marketplace-e2e`). حُدِّثَت الأوصافُ والأرقامُ لتُطابقَ اللوحةَ و`WORK_INDEX` والترويسةَ التي كانت صحيحةً وحدَها.
+
+**لماذا تم اختياره (2):** قاعدةُ التوثيقِ مع الدفعِ تُلزِمُ بأنْ تعكسَ المستنداتُ واقعَ `main` لا أن تتعطّلَ عنه؛ والانحرافُ بين النصِّ والواقعِ يعطّلُ من يأتي بعدَنا.
+
+**أين تم التغيير (3):** `docs/16-progress/{ROADMAP.md, HANDOFF_NEXT_STEPS.md, MASTER_PROGRESS.md, TASK_LOG.md, LAUNCH_EXECUTION_BOARD.md, WORK_CLAIMS.md}`.
+
+**الملفات/الخدمات المتأثرة (4):** دفاترُ التقدّمِ فقط — لا شيفرةَ ولا مخطَّطاتٍ ولا عقود.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا شيء.
+
+**كيف تم الاختبار (6):** `pnpm -r typecheck` نظيفٌ · `pnpm -r test` **3836 ناجحاً · 0 مُتخطّى** (منها `services/marketplace` 316 وحدةً + 118 تكاملاً على Postgres حقيقيٍّ) · `bash scripts/checks/verify-governance.sh` أخضرُ (13 فحصاً ناجحاً · 1 متخطّى: #8 CI حيٌّ غيرُ قابلٍ للقياسِ محلّيّاً).
+
+**ما المشاكل التي ظهرت (7):** لا شيءَ — تحديثُ حالةٍ صرفٌ لا تعديلَ ترتيبٍ ولا نقلَ مرحلةٍ. النقلُ إلى `Completed` متروكٌ لمالكِ البرنامجِ مشروطاً بدليلِ خطِّ CI (`RISK-0001`) وغيابِ الناقلِ.
+
 ## 2026-09-08 · M0-23 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0108 بعدَ دمجِ PR #64
 
 **Work Item(s):** M0-23 · **Branch:** `chore/m0-23-release-claim-clm-0108` · **Scope:** `docs/16-progress/`

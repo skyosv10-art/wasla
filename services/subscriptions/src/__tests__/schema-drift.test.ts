@@ -9,16 +9,21 @@
  * ولا يعدّ الأسماءَ وحدها: الخطأُ المؤذي أن يبقى الاسمُ ويتغيّر النوعُ أو الإلزام، فتمرّ
  * كتابةٌ في الذاكرة وتُرفَض في القاعدة. ولذلك يُقارن (الاسمُ · النوعُ · NOT NULL) لكلّ عمود.
  *
- * والقيودُ المُسمّاةُ تُقارن كذلك: هي التي يقرأ `repository.ts` أسماءَها ليُترجم الرفضَ إلى
- * رمزِ مجالٍ، فاسمٌ يتغيّر في العقد بلا مرآةٍ يُنتج خطأً خاماً بدل رمزٍ مُعلَن.
+ * ## [مصالحة ADR-024 · الموجة 3]
+ *
+ * كانَ الحارسُ يقارنُ القيودَ المُسمّاةَ **بحرفها** فقط، فأهملَ القيودَ المضمَّنةَ غيرَ المسماة
+ * (تعدادُ `state` · صيغةُ المُعرّف · طولُ مفتاحِ منعِ التكرار) بحجّةِ أنّ «اسمٌ نخترعهُ هنا لا
+ * وجودَ لهُ في القاعدة». لكنّ ولادةَ المولِّدِ (drizzle-kit) غيّرتِ الحسابَ: الترحيلُ
+ * المولَّدُ من إسقاطٍ بلا القيودِ المضمَّنةِ كانَ سيُنشئَ قاعدةً **أرخى من العقدِ** — انحدارٌ
+ * صامتٌ يعيشُ في الإنتاج. فأُلحِقَت القيودُ المضمَّنةُ كلُّها بأسمائِها الكنونيّةِ
+ * `<table>_<column>_check` في المرآة، وهذا الحارسُ **يشتقُّ تلكَ الأسماءَ من نصِّ العقدِ** كذلك
+ * (كلُّ عمودٍ يحملُ `CHECK` في تعريفِهِ يسمّيهِ PostgreSQLُ تلقائيّاً عندَ تطبيقِ العقدِ)،
+ * والمفاتيحُ المركّبةُ غيرُ المسماةِ يُشتقُّ لها `<table>_pkey`. فلا يبقى قيدٌ في المرآةِ بلا
+ * عقدٍ ولا عكسُ، والتكافؤُ الكاملُ يقيسُهُ اختبارُ الدورةِ في سبعةِ أبعادِ كتالوجٍ.
  *
  * وصار المفحوصُ في المراجعة 5/6 **عشرةَ جداولٍ من عشرة**: انعكست `referral_rewards` و
  * `subscription_idempotency` و`subscription_outbox` مع مخازنِها، فصارت `NOT_MIRRORED_TABLES`
  * فارغةً. والمقارنةُ بها تبقى قائمةً: جدولٌ يُضاف إلى العقد غداً بلا مرآةٍ يُفشل هذا الاختبار.
- *
- * والقيودُ غيرُ المُسمّاة في العقد (تعدادُ `state` · صيغةُ المُعرّف · طولُ مفتاحِ منعِ التكرار)
- * لا مرآةَ لها بقصد: هذا الحارسُ يقارن الأسماءَ بحرفها، واسمٌ نخترعه هنا لا وجودَ له في
- * القاعدة — فيصير الحارسُ يُثبت اتفاقَ مرآةٍ مع نفسِها.
  */
 
 import { readFileSync } from "node:fs";
@@ -92,12 +97,50 @@ function ddlColumns(table: string): ReadonlyArray<DdlColumn> {
   return [...columns].sort((first, second) => first.name.localeCompare(second.name));
 }
 
+/**
+ * أسماءُ القيود والفهارس في العقد لهذا الجدول، **بالاتجاهين**: المُسمّاةُ صراحةً
+ * (`CONSTRAINT ck_…` و`fk_…` و`ux_…`)، **والمُشتقّةُ كنونيّاً** للقيودِ المضمَّنةِ غيرِ
+ * المسماة (`<table>_<column>_check` لكلِّ عمودٍ يحملُ `CHECK`، و`<table>_pkey` لكلِّ مفتاحٍ
+ * مركّبٍ مُعلَنٍ على مستوى الجدول)، وأسماءُ `CREATE INDEX`.
+ *
+ * [مصالحة ADR-024] الاشتقاقُ الكنونيُّ ضرورةٌ لا ترفٌ: العقدُ يتركُ تسميةَ القيدِ المضمّنِ
+ * لقاعدةِ البيانات، فيسمّيهِ PostgreSQLُ `<table>_<column>_check` عندَ التطبيقِ — وهو اسمٌ
+ * حقيقيٌّ في الكتالوجِ يقيسُهُ اختبارُ الدورةِ في سبعةِ أبعاد. ولم يكن ممكناً أن يُتركَ هذا
+ * الحارسُ يقارنُ المُسمّى وحده: المرآةُ بعدَ المصالحةِ تُسمّيهِ كذلك، فإغفالُ الاشتقاقِ كان
+ * سيُسقطُ 41 قيداً يُثبتها اختبارُ الدورةِ أنّها مطابقة.
+ */
 function ddlConstraintNames(table: string): ReadonlyArray<string> {
-  const names = [...tableBlock(table).matchAll(/CONSTRAINT\s+([a-z_]+)/gu)].map((hit) => hit[1]!);
-  return names.sort();
+  const names = new Set<string>();
+  const body = tableBlock(table);
+
+  for (const match of body.matchAll(/CONSTRAINT\s+([a-z_]+)/gu)) {
+    names.add(match[1] as string);
+  }
+
+  for (const raw of body.split("\n")) {
+    const line = raw.trim();
+    const found = new RegExp(`^([a-z][a-z0-9_]*)\\s+(?:${TYPES.join("|")})\\b(.*)$`, "u").exec(line);
+    if (found && /\bCHECK\b/u.test(found[2]!)) {
+      names.add(`${table}_${found[1]!}_check`);
+    }
+  }
+
+  if (/^\s*PRIMARY KEY\s*\(/mu.test(body)) {
+    names.add(`${table}_pkey`);
+  }
+
+  const indexPattern = new RegExp(
+    `CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ([a-z_]+)[\\s\\S]*?;`,
+    "gu",
+  );
+  for (const match of DDL.matchAll(indexPattern)) {
+    if (new RegExp(`ON ${table}\\s`, "u").test(match[0])) names.add(match[1] as string);
+  }
+
+  return [...names].sort();
 }
 
-/** نوعُ Postgres المُقابل لعمود Drizzle — خمسةُ أنواعٍ هي كلُّ ما تستعمله هذه المرآة. */
+/** نوعُ Postgres المُقابل لعمود Drizzle. */
 function sqlTypeOf(columnType: string, sqlName: string): string {
   if (sqlName === "timestamp with time zone") return "TIMESTAMPTZ";
   if (columnType === "PgBigInt53") return "BIGINT";
@@ -114,12 +157,18 @@ function mirrorColumns(table: (typeof MIRRORED)[number]): ReadonlyArray<DdlColum
     .sort((first, second) => first.name.localeCompare(second.name));
 }
 
+/**
+ * ما تُسمّيه المرآةُ فعلاً: القيودُ (`check` و`unique` و`foreignKeys`) **والمفاتيحُ الأساسيّةُ
+ * المُسمّاةُ** (المركّبةُ فقط، إذ لا اسمَ للمفتاحِ المضمّنِ في Drizzle فيُفلتر) **والفهارسُ**.
+ */
 function mirrorConstraintNames(table: (typeof MIRRORED)[number]): ReadonlyArray<string> {
   const config = getTableConfig(table);
   return [
     ...config.checks.map((check) => check.name),
     ...config.uniqueConstraints.map((unique) => unique.name),
     ...config.foreignKeys.map((key) => key.getName()),
+    ...config.primaryKeys.map((key) => key.getName()),
+    ...config.indexes.map((index) => index.config.name),
   ]
     .filter((name): name is string => typeof name === "string" && name.length > 0)
     .sort();
@@ -154,7 +203,7 @@ describe.each(MIRRORED)("مطابقةُ المرآةِ للعقد", (table) => {
     expect(mirrorColumns(table)).toEqual(ddlColumns(name));
   });
 
-  it(`${name}: القيودُ المُسمّاةُ نفسُها`, () => {
+  it(`${name}: القيودُ والفهارسُ نفسُها في الاتجاهين`, () => {
     expect(mirrorConstraintNames(table)).toEqual(ddlConstraintNames(name));
   });
 });

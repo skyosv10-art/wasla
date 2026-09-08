@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-07T23:06:52Z",
+  "generated_at": "2026-09-08T01:57:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "bb1965e822a130f475331977fb88e5ef0080de25",
-    "branch": "feat/m0-23-reputation-migrations",
+    "commit": "1005425020bfb1015792911755dd8cbc440ac28d",
+    "branch": "feat/m0-23-subscriptions-migrations",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "reputation migrations wave 3: added migrations.integration.test.ts (test_files 278->279) and drizzle-kit devDep to services/reputation (lock fingerprint changed). Regenerated from clean verify.sh run where all checks pass.",
-    "tracked_files": 1483
+    "dirty_files": 9,
+    "dirty_reason": "subscriptions migrations wave 3: added migrations.integration.test.ts (test_files 279->280) and drizzle-kit devDep to services/subscriptions (lock fingerprint changed). Regenerated from clean verify.sh run where all checks pass.",
+    "tracked_files": 1489
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "2a75fff5e25abcc61210538a72a4dedd475023988c32cf941726823f52caf5d8",
-    "lines": 2978
+    "sha256": "a938d9aa381d73994b7804b404be9cb13bc632b14a8b1dd537ecd2f3aa75f0a7",
+    "lines": 2981
   },
   "static": {
     "packages": 43,
     "packages_with_typecheck": 43,
     "packages_with_test": 43,
-    "test_files_tracked": 279,
+    "test_files_tracked": 280,
     "ci_jobs": 26,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_rep2.log",
-    "tests_passed": 3816,
-    "test_files_executed": 226,
+    "source": "/tmp/verify_full2.log",
+    "tests_passed": 3836,
+    "test_files_executed": 228,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:761d3d12edf05fda1b374c289a0024ac35989082639779600bca2f96cee16aba",
+  "fingerprint": "sha256:d9b9e254eb43ca8f0b7aa9a916f337fda143b3d5867056683569f02fe3545412",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

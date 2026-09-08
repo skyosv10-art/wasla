@@ -27,14 +27,26 @@
  * (جداولِ العقدِ − جداولِ المرآة) **بالضبط**، فجدولٌ يُضاف إلى العقدِ غداً بلا مرآةٍ يُفشل
  * البناءَ حتّى يُعلَن بالاسمِ ومعه سببُه.
  *
- * ## والقيودُ غيرُ المُسمّاةِ لا مرآةَ لها بقصد
+ * ## القيودُ غيرُ المُسمّاةِ صارت مرآةً بأسمائِها الكنونيّةِ — [مصالحة ADR-024 · الموجة 3]
  *
  * تعداداتُ الحالاتِ وصيغُ المُعرّفاتِ وحدودُ الأطوالِ مكتوبةٌ في العقدِ فحوصاً **بلا أسماء**
- * (`CHECK (state IN (...))` · `CHECK (slug ~ '...')`)، فلا تُنعكس هنا: حارسُ الانحرافِ يقارن
- * القيودَ **المُسمّاةَ** بحرفِها، واسمٌ نخترعه في المرآةِ لا وجودَ له في القاعدةِ يجعل الحارسَ
- * يُثبت اتفاقَ مرآةٍ مع نفسِها. أمّا الفحصُ نفسُه فيبقى خطَّ الدفاعِ الثاني في القاعدة،
- * ويُقابله في الكودِ فحصٌ مُسمّىً قبلَ الكتابةِ من طبقةِ المجالِ (`assertStoreSlug` ·
- * `assertQuantityDelta` · `assertPriceMinorUnits`).
+ * (`CHECK (state IN (...))` · `CHECK (slug ~ '...')`)، وظلّت بلا مرآةٍ زمناً بحجّةِ أنّ حارسَ
+ * الانحرافِ يقارنُ المُسمّى بحرفِه. لكنّ ولادةَ المولّدِ (`drizzle-kit` · ADR-024) غيّرتِ
+ * الحسابَ: ترحيلٌ مولَّدٌ من إسقاطٍ بلا القيودِ المضمّنةِ كان سيُنشئَ قاعدةً **أرخى من العقدِ** —
+ * انحدارٌ صامتٌ يعيشُ في الإنتاج. فأُلحِقت كلُّها هنا بأسمائِها الكنونيّةِ
+ * `<table>_<column>_check` (الاسمُ الذي يُسمّيهِ PostgreSQLُ القيدَ المضمّنَ عندَ تطبيقِ
+ * العقدِ — اسمٌ حقيقيٌّ في الكتالوجِ يقيسُهُ اختبارُ الدورةِ في سبعةِ أبعاد)، وحارسُ
+ * الانحرافِ صار **يشتقّها من نصّ العقدِ** كذلك فلا يبقى قيدٌ في المرآةِ بلا عقدٍ ولا عكس. أمّا
+ * الفحصُ في القاعدةِ فبقي خطَّ الدفاعِ الثاني، ويُقابله في الكودِ فحصٌ مُسمّىً قبلَ الكتابةِ من
+ * طبقةِ المجالِ (`assertStoreSlug` · `assertQuantityDelta` · `assertPriceMinorUnits`).
+ *
+ * ## والفهارسُ الجزئيّةُ والتعبيريّةُ انعكست كذلك
+ *
+ * `ux_stores_slug_lower` (فريدٌ على `LOWER(slug)`) و`ux_stores_owner_active` (فريدٌ جزئيٌّ
+ * `WHERE state <> 'archived'`) و`ix_marketplace_outbox_unpublished` (جزئيٌّ على `WHERE
+ * published_at IS NULL`) كانت مكتوبةً في العقدِ **خارجَ** جسمِ الجدولِ فلم تُنعكس، واليوم
+ * تُعلَن هنا بأسمائِها لتولّدَ ترحيلاً متكافئاً؛ و`ix_store_reviews_store_seq` صار
+ * بترتيبِه الكاملِ (`state_sequence DESC`) كما في العقد.
  *
  * وأنواعُ `TIMESTAMPTZ` تبقى على تمثيلِ Drizzle الافتراضيّ (`Date`) ويُحوّلها المخزنُ إلى نصِّ
  * ISO في موضعٍ واحدٍ (`iso()` في `rows.ts`). و`mode: "string"` كان أقصرَ ظاهرياً وأسوأ: عميلُ
@@ -88,6 +100,18 @@ export const storeCategories = pgTable(
       columns: [table.parentCategoryId],
       foreignColumns: [table.categoryId],
     }),
+    check("store_categories_slug_check", sql`${table.slug} ~ '^[a-z][a-z0-9-]{1,47}$'`),
+    check("store_categories_depth_check", sql`${table.depth} IN (1, 2)`),
+    check("store_categories_label_ar_check", sql`char_length(${table.labelAr}) BETWEEN 2 AND 64`),
+    check(
+      "store_categories_label_en_check",
+      sql`${table.labelEn} IS NULL OR char_length(${table.labelEn}) BETWEEN 2 AND 64`,
+    ),
+    check(
+      "store_categories_label_ur_check",
+      sql`${table.labelUr} IS NULL OR char_length(${table.labelUr}) BETWEEN 2 AND 64`,
+    ),
+    check("store_categories_sort_order_check", sql`${table.sortOrder} BETWEEN 0 AND 999`),
     check(
       "ck_store_categories_depth_parent",
       sql`(${table.depth} = 1 AND ${table.parentCategoryId} IS NULL) OR (${table.depth} = 2 AND ${table.parentCategoryId} IS NOT NULL)`,
@@ -122,10 +146,34 @@ export const stores = pgTable(
       columns: [table.categoryId],
       foreignColumns: [storeCategories.categoryId],
     }),
+    check("stores_owner_public_id_check", sql`${table.ownerPublicId} ~ '^WS-[0-9]{10}$'`),
+    check("stores_slug_check", sql`${table.slug} ~ '^[a-z][a-z0-9-]{2,47}$'`),
+    check("stores_title_ar_check", sql`char_length(${table.titleAr}) BETWEEN 2 AND 80`),
+    check(
+      "stores_title_en_check",
+      sql`${table.titleEn} IS NULL OR char_length(${table.titleEn}) BETWEEN 2 AND 80`,
+    ),
+    check(
+      "stores_title_ur_check",
+      sql`${table.titleUr} IS NULL OR char_length(${table.titleUr}) BETWEEN 2 AND 80`,
+    ),
+    check(
+      "stores_description_ar_check",
+      sql`${table.descriptionAr} IS NULL OR char_length(${table.descriptionAr}) <= 2000`,
+    ),
+    check(
+      "stores_state_check",
+      sql`${table.state} IN ('draft', 'pending_review', 'approved', 'rejected', 'suspended', 'archived')`,
+    ),
+    check("stores_state_sequence_check", sql`${table.stateSequence} >= 1`),
     check(
       "ck_stores_first_approved_state",
       sql`${table.firstApprovedAt} IS NULL OR ${table.state} <> 'draft'`,
     ),
+    uniqueIndex("ux_stores_slug_lower").on(sql`lower(${table.slug})`),
+    uniqueIndex("ux_stores_owner_active")
+      .on(table.ownerPublicId)
+      .where(sql`${table.state} <> 'archived'`),
     index("ix_stores_state_category").on(table.state, table.categoryId),
   ],
 );
@@ -157,6 +205,31 @@ export const storeReviews = pgTable(
     }),
     unique("ux_store_reviews_sequence").on(table.storeId, table.stateSequence),
     check(
+      "store_reviews_decision_check",
+      sql`${table.decision} IN ('review_requested', 'approved', 'rejected', 'suspended', 'reinstated', 'archived')`,
+    ),
+    check(
+      "store_reviews_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR ${table.reasonCode} IN (
+            'incomplete_profile', 'prohibited_category', 'duplicate_store',
+            'misleading_title', 'unverified_owner', 'policy_violation', 'owner_request'
+        )`,
+    ),
+    check("store_reviews_actor_type_check", sql`${table.actorType} IN ('owner', 'moderator', 'system')`),
+    check(
+      "store_reviews_actor_public_id_check",
+      sql`${table.actorPublicId} IS NULL OR ${table.actorPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "store_reviews_from_state_check",
+      sql`${table.fromState} IS NULL OR ${table.fromState} IN ('draft', 'pending_review', 'approved', 'rejected', 'suspended', 'archived')`,
+    ),
+    check(
+      "store_reviews_to_state_check",
+      sql`${table.toState} IN ('draft', 'pending_review', 'approved', 'rejected', 'suspended', 'archived')`,
+    ),
+    check("store_reviews_state_sequence_check", sql`${table.stateSequence} >= 1`),
+    check(
       "ck_store_reviews_reason_required",
       sql`(${table.decision} IN ('rejected', 'suspended') AND ${table.reasonCode} IS NOT NULL)
           OR (${table.decision} NOT IN ('rejected', 'suspended') AND (${table.decision} = 'archived' OR ${table.reasonCode} IS NULL))`,
@@ -165,7 +238,7 @@ export const storeReviews = pgTable(
       "ck_store_reviews_actor",
       sql`(${table.actorType} = 'system' AND ${table.actorPublicId} IS NULL) OR (${table.actorType} <> 'system' AND ${table.actorPublicId} IS NOT NULL)`,
     ),
-    index("ix_store_reviews_store_seq").on(table.storeId, table.stateSequence),
+    index("ix_store_reviews_store_seq").on(table.storeId, table.stateSequence.desc()),
   ],
 );
 
@@ -191,6 +264,10 @@ export const storeStaff = pgTable(
       columns: [table.storeId],
       foreignColumns: [stores.storeId],
     }),
+    check("store_staff_member_public_id_check", sql`${table.memberPublicId} ~ '^WS-[0-9]{10}$'`),
+    check("store_staff_role_check", sql`${table.role} IN ('owner', 'manager', 'staff')`),
+    check("store_staff_added_by_public_id_check", sql`${table.addedByPublicId} ~ '^WS-[0-9]{10}$'`),
+    check("store_staff_removed_by_public_id_check", sql`${table.removedByPublicId} ~ '^WS-[0-9]{10}$'`),
     check(
       "ck_store_staff_removed_pair",
       sql`(${table.removedAt} IS NULL AND ${table.removedByPublicId} IS NULL) OR (${table.removedAt} IS NOT NULL AND ${table.removedByPublicId} IS NOT NULL)`,
@@ -249,6 +326,35 @@ export const products = pgTable(
       foreignColumns: [storeCategories.categoryId],
     }),
     unique("ux_products_store_sku").on(table.storeId, table.sku),
+    check("products_sku_check", sql`${table.sku} ~ '^[A-Za-z0-9][A-Za-z0-9._-]{1,39}$'`),
+    check("products_title_ar_check", sql`char_length(${table.titleAr}) BETWEEN 2 AND 120`),
+    check(
+      "products_title_en_check",
+      sql`${table.titleEn} IS NULL OR char_length(${table.titleEn}) BETWEEN 2 AND 120`,
+    ),
+    check(
+      "products_title_ur_check",
+      sql`${table.titleUr} IS NULL OR char_length(${table.titleUr}) BETWEEN 2 AND 120`,
+    ),
+    check(
+      "products_description_ar_check",
+      sql`${table.descriptionAr} IS NULL OR char_length(${table.descriptionAr}) <= 4000`,
+    ),
+    check(
+      "products_price_minor_units_check",
+      sql`${table.priceMinorUnits} BETWEEN 1 AND 100000000`,
+    ),
+    check("products_currency_code_check", sql`${table.currencyCode} = 'SAR'`),
+    check("products_state_check", sql`${table.state} IN ('draft', 'published', 'archived')`),
+    check(
+      "products_moderation_state_check",
+      sql`${table.moderationState} IN ('pending', 'approved', 'rejected')`,
+    ),
+    check("products_moderation_sequence_check", sql`${table.moderationSequence} >= 1`),
+    check(
+      "products_created_by_public_id_check",
+      sql`${table.createdByPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
     check(
       "ck_products_published_moderated",
       sql`${table.state} <> 'published' OR ${table.moderationState} = 'approved'`,
@@ -284,6 +390,30 @@ export const productReviews = pgTable(
       foreignColumns: [products.productId],
     }),
     unique("ux_product_reviews_sequence").on(table.productId, table.moderationSequence),
+    check("product_reviews_decision_check", sql`${table.decision} IN ('approved', 'rejected')`),
+    check(
+      "product_reviews_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR ${table.reasonCode} IN (
+            'prohibited_item', 'misleading_title', 'wrong_category', 'price_implausible', 'duplicate_listing', 'policy_violation'
+        )`,
+    ),
+    check("product_reviews_actor_type_check", sql`${table.actorType} IN ('moderator', 'system')`),
+    check(
+      "product_reviews_actor_public_id_check",
+      sql`${table.actorPublicId} IS NULL OR ${table.actorPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "product_reviews_from_state_check",
+      sql`${table.fromState} IS NULL OR ${table.fromState} IN ('pending', 'approved', 'rejected')`,
+    ),
+    check(
+      "product_reviews_to_state_check",
+      sql`${table.toState} IN ('pending', 'approved', 'rejected')`,
+    ),
+    check(
+      "product_reviews_moderation_sequence_check",
+      sql`${table.moderationSequence} >= 1`,
+    ),
     check(
       "ck_product_reviews_reason_required",
       sql`(${table.decision} = 'rejected' AND ${table.reasonCode} IS NOT NULL) OR (${table.decision} <> 'rejected' AND ${table.reasonCode} IS NULL)`,
@@ -319,6 +449,23 @@ export const inventoryAdjustments = pgTable(
       foreignColumns: [products.productId],
     }),
     unique("ux_inventory_adjustments_sequence").on(table.productId, table.adjustmentSequence),
+    check(
+      "inventory_adjustments_quantity_delta_check",
+      sql`${table.quantityDelta} <> 0 AND ${table.quantityDelta} BETWEEN -1000000 AND 1000000`,
+    ),
+    check("inventory_adjustments_quantity_after_check", sql`${table.quantityAfter} >= 0`),
+    check(
+      "inventory_adjustments_reason_code_check",
+      sql`${table.reasonCode} IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed')`,
+    ),
+    check(
+      "inventory_adjustments_actor_public_id_check",
+      sql`${table.actorPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "inventory_adjustments_adjustment_sequence_check",
+      sql`${table.adjustmentSequence} >= 1`,
+    ),
   ],
 );
 
@@ -340,6 +487,11 @@ export const productInventory = pgTable(
       columns: [table.productId],
       foreignColumns: [products.productId],
     }),
+    check("product_inventory_quantity_on_hand_check", sql`${table.quantityOnHand} >= 0`),
+    check(
+      "product_inventory_last_adjustment_sequence_check",
+      sql`${table.lastAdjustmentSequence} >= 0`,
+    ),
   ],
 );
 
@@ -368,7 +520,28 @@ export const marketplaceIdempotency = pgTable(
     responseBody: jsonb("response_body").notNull(),
     createdAt: instant("created_at").notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.routeKey, table.idempotencyKey] })],
+  (table) => [
+    primaryKey({
+      name: "marketplace_idempotency_pkey",
+      columns: [table.routeKey, table.idempotencyKey],
+    }),
+    check(
+      "marketplace_idempotency_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "marketplace_idempotency_route_key_check",
+      sql`${table.routeKey} ~ '^[a-z][a-z0-9_.]{2,63}$'`,
+    ),
+    check(
+      "marketplace_idempotency_request_hash_check",
+      sql`${table.requestHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "marketplace_idempotency_response_status_check",
+      sql`${table.responseStatus} BETWEEN 200 AND 299`,
+    ),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -385,30 +558,49 @@ export const marketplaceIdempotency = pgTable(
  * كان سيُصبح افتراضاً لا وجودَ له في القاعدة: حارسُ الانحرافِ لا يقارن الافتراضاتِ، فكان
  * سيمرّ ويُنتج صفّاً بلا مُعرِّفٍ يومَ يُدرَج بلا العمود.
  *
- * ## ولا قيدَ مُسمّىً هنا
- *
+ * ## ولا فحوصَ مُسمّاةً هنا
+
  * فحوصُ العقدِ الثلاثةُ على هذا الجدولِ (صيغةُ `event_type` وصيغةُ `event_version` وتعدادُ
- * `aggregate_type`) مكتوبةٌ **بلا أسماء**، فلا تُنعكس: حارسُ الانحرافِ يقارن المُسمّاةَ حرفاً.
- * ويُقابلها في الكودِ `domain/events.ts`: النوعُ والإصدارُ والجذرُ قيمٌ من قائمةٍ مُعلَنةٍ لا
- * نصوصٌ يُمرِّرها المُنادي.
+ * `aggregate_type`) مكتوبةٌ **بلا أسماء**، فلا تُسمّى في العقدِ. وأُلحقت هنا بأسمائِها
+ * الكنونيّةِ `<table>_<column>_check` في مصالحةِ ADR-024 ليولّدَ المولّدُ ترحيلاً متكافئاً،
+ * ويشتقّ حارسُ الانحرافِ الأسماءَ نفسَها من نصّ العقد. ويُقابلها في الكودِ
+ * `domain/events.ts`: النوعُ والإصدارُ والجذرُ قيمٌ من قائمةٍ مُعلَنةٍ لا
+ * نصوصٌ يُمرِّرها المُنادي.
  *
- * ## والفهرسُ الجزئيُّ لا يُنعكس أيضاً
+ * ## والفهرسُ الجزئيُّ انعكس في مصالحةِ ADR-024
  *
- * `ix_marketplace_outbox_unpublished` مُقيَّدٌ بـ`WHERE published_at IS NULL`، ويُنشَأ في
- * العقدِ **خارجَ** جسمِ الجدول. وحارسُ الانحرافِ يقارن ما في جسمِ `CREATE TABLE` وحدَه،
- * فإعلانُ `index()` هنا كان سيصير اسماً في المرآةِ لا يقابله شيءٌ مُقارَن.
+ * `ix_marketplace_outbox_unpublished` مُقيَّدٌ بـ`WHERE published_at IS NULL`، ويُنشَأ في
+ * العقدِ **خارجَ** جسمِ الجدول. انعكس هنا [بمصالحةِ ADR-024] كي يكونَ الترحيلُ المولَّدُ
+ * متكافئاً مع العقدِ في الأبعادِ السبعةِ كلِّها — واختبارُ الدورةِ يقيسُ التكافؤَ حرفاً.
  */
-export const marketplaceOutbox = pgTable("marketplace_outbox", {
-  outboxId: uuid("outbox_id").primaryKey(),
-  eventType: text("event_type").notNull(),
-  eventVersion: text("event_version").notNull(),
-  aggregateType: text("aggregate_type").notNull(),
-  aggregateId: text("aggregate_id").notNull(),
-  payload: jsonb("payload").notNull(),
-  occurredAt: instant("occurred_at").notNull(),
-  publishedAt: instant("published_at"),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
+export const marketplaceOutbox = pgTable(
+  "marketplace_outbox",
+  {
+    outboxId: uuid("outbox_id").primaryKey(),
+    eventType: text("event_type").notNull(),
+    eventVersion: text("event_version").notNull(),
+    aggregateType: text("aggregate_type").notNull(),
+    aggregateId: text("aggregate_id").notNull(),
+    payload: jsonb("payload").notNull(),
+    occurredAt: instant("occurred_at").notNull(),
+    publishedAt: instant("published_at"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "marketplace_outbox_event_type_check",
+      sql`${table.eventType} ~ '^marketplace\\.[a-z_]+$'`,
+    ),
+    check("marketplace_outbox_event_version_check", sql`${table.eventVersion} ~ '^v[0-9]+$'`),
+    check(
+      "marketplace_outbox_aggregate_type_check",
+      sql`${table.aggregateType} IN ('store', 'product', 'inventory')`,
+    ),
+    index("ix_marketplace_outbox_unpublished")
+      .on(table.createdAt)
+      .where(sql`${table.publishedAt} IS NULL`),
+  ],
+);
 
 /**
  * جداولُ العقدِ التي لا مرآةَ لها — **فارغةٌ منذ المراجعة 5/6**.

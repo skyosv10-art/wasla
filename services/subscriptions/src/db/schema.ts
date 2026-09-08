@@ -1,36 +1,35 @@
 /**
- * مرآةُ Drizzle لعقد PostgreSQL — **الجداولُ العشرةُ كلُّها**، بأسمائها وأنواعها وقيودها المُسمّاة.
+ * مرآةُ Drizzle لعقد PostgreSQL — **الجداولُ العشرةُ كلُّها**، بأسمائها وأنواعها وقيودها.
  *
  * ## هذا الملفُّ مرآةٌ لا مصدر
  *
  * الحقيقةُ في `services/subscriptions/contracts/schema.sql` (مُجمَّد، المراجعة 1/6)، وهو
- * نفسُه **الترحيل**: مُغلَّفٌ بـ`BEGIN;`/`COMMIT;` ويحمل في ذيله عكسَه تعليقاً. ولا يُولّد
- * هذا الملفُّ DDL ولا يُنشئ جدولاً؛ `migrate.ts` يُطبّق نصَّ العقد كما هو. ولو صار توليدُ
- * Drizzle هو ما يُطبَّق لصار للمخطّط مصدران، ولاختلفا أوّلَ مرّةٍ يُضاف قيدٌ في أحدهما.
+ * **العقدُ القانونيُّ**: الكتالوجُ الذي يُقاسُ عليه كلُّ تمثيلٍ آخر. وهذا الملفُّ يُسقِطُ
+ * العقدَ إلى TypeScript لتُكمِلَ الاستعلاماتُ الترجمةَ، ويُولِّدُ منهُ `drizzle-kit generate`
+ * الترحيلاتِ العكوسةَ (ADR-024).
  *
- * ## ولماذا صارت عشرةً في المراجعة 5/6
+ * ولذلك يحرسها اختبارُ `schema-drift.test.ts`: يقرأ الـDDL وقت التشغيل ويقارن
+ * **الاتجاهين** — عمودٌ أو قيدٌ أو فهرسٌ في العقد بلا مرآة، أو في المرآة بلا عقد، يُفشل
+ * البناء.
  *
- * كانت المرآةُ سبعةً بعد 4/6، وبقيت ثلاثةٌ بلا مرآةٍ **بقرارٍ مكتوب**: مرآةٌ لجدولٍ لا مخزنَ
- * له وعدٌ بلا مُنفِّذٍ ولا اختبار. وهذه المراجعةُ تكتب المخازنَ الثلاثةَ فعلاً —
- * `referral_rewards` (مكافأةُ الإحالةِ مرّةً واحدة) و`subscription_idempotency` (الجوابُ
- * المحفوظُ بنفسِ بايتاتِه) و`subscription_outbox` (الحدثُ مع الحقيقةِ في معاملةٍ واحدة) —
- * فانعكست الثلاثةُ وصارت `NOT_MIRRORED_TABLES` **فارغةً**.
+ * ## [مصالحة ADR-024 · الموجة 3]
  *
- * وفراغُ القائمةِ ليس سطراً مُهمَلاً: `schema-drift.test.ts` يُطابقها مع فرق (جداولُ العقد −
- * جداولُ المرآة)، فجدولٌ يُضاف إلى العقد غداً بلا مرآةٍ يُفشل البناءَ حتى يُعلَن بالاسم.
+ * كانَ الإسقاطُ يُعلِنُ تعمُّدَ إغفالِ فحوصِ العمودِ الواحدِ («تسميةُ قيدٍ لم يُسمِّهِ
+ * Postgres تضعُ خيالاً في معجمِ حارسِ الانحدارِ»)، لكنّ ولادةَ المولِّدِ غيّرتِ الحسابَ:
+ * الترحيلُ المولَّدُ من إسقاطٍ بلا القيودِ المضمَّنةِ كانَ سيُنشئَ قاعدةً **أرخى من
+ * العقدِ** — انحدارٌ صامتٌ يعيشُ في الإنتاجِ لا في المرآةِ. فأُلحِقَت القيودُ المضمَّنةُ
+ * كلُّها بأسمائِها الكنونيّةِ `<table>_<column>_check` (وهو ما يسمّيهِ PostgreSQL
+ * فعلاً عندَ تطبيقِ العقدِ، فالاسمُ حقيقةٌ في الكتالوجِ لا خيالٌ)، وصِيغَت فهارسُ `DESC`
+ * و`WHERE` كما في العقدِ، ووُسِّمت المفاتيحُ المركّبةُ بأسمائِها الكنونيّةِ (`_pkey`).
+ * والتكافؤُ يقيسُهُ اختبارُ الدورةِ الكاملةِ في سبعةِ أبعادِ كتالوجٍ
+ * (`migrations.integration.test.ts`)، وحارسُ الانحرافِ يشتقُّ الأسماءَ الكنونيّةَ للقيودِ
+ * المضمَّنةِ غيرِ المسماةِ من نصِّ العقدِ كذلك.
  *
- * ## وثلاثةُ قيودٍ بلا مرآةٍ بقصد
+ * ## ما لا يُمثَّل هنا
  *
- * `subscription_idempotency` و`subscription_outbox` تحملان في العقد فحوصاً **بلا أسماء**
- * (`char_length(...) BETWEEN 8 AND 128` · `event_type ~ '^(subscription|referral)\\.[a-z_]+$'`
- * ...)، فلا تُنعكس هنا: حارسُ الانحرافِ يقارن القيودَ **المُسمّاةَ** بحرفها، واسمٌ نخترعه في
- * المرآةِ لا وجودَ له في القاعدة — فيصير الحارسُ يُثبت اتفاقَ اسمٍ لا يحرسه أحد. أمّا الفحصُ
- * نفسُه فيبقى خطَّ الدفاع الثاني في القاعدة، ويُقابله في الكود فحصٌ مُسمّىً قبل الكتابة
- * (`assertIdempotencyKey` في `db/idempotency.ts`).
- *
- * وأنواعُ `TIMESTAMPTZ` تبقى على تمثيل Drizzle الافتراضيّ (`Date`) ويُحوّلها المخزنُ إلى
+ * أنواعُ `TIMESTAMPTZ` تبقى على تمثيل Drizzle الافتراضيّ (`Date`) ويُحوّلها المخزنُ إلى
  * نصّ ISO في موضعٍ واحد (`iso()` في `repository.ts`)، كما في خدمتَي التفاوض والسمعة.
- * و`mode: "string"` كان أقصرَ ظاهرياً وأسوأ: عميلُ `pg` يُعيد صيغةَ Postgres
+ * و`mode: \"string\"` كان أقصرَ ظاهرياً وأسوأ: عميلُ `pg` يُعيد صيغةَ Postgres
  * (`2026-03-01 12:00:00+00`) لا ISO، فيصير صفُّ القاعدة غيرَ مساوٍ لصفّ الذاكرة بـ`toEqual`
  * بلا فرقٍ في المعنى.
  */
@@ -77,7 +76,32 @@ export const subscriptionPlans = pgTable(
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.planCode, table.planVersion] }),
+    primaryKey({ name: "subscription_plans_pkey", columns: [table.planCode, table.planVersion] }),
+    check("subscription_plans_plan_code_check", sql`${table.planCode} ~ '^[a-z][a-z0-9-]{2,47}$'`),
+    check("subscription_plans_plan_version_check", sql`${table.planVersion} >= 1`),
+    check("subscription_plans_label_check", sql`char_length(${table.label}) BETWEEN 3 AND 64`),
+    check("subscription_plans_trial_days_check", sql`${table.trialDays} BETWEEN 0 AND 90`),
+    check("subscription_plans_duration_days_check", sql`${table.durationDays} BETWEEN 1 AND 730`),
+    check(
+      "subscription_plans_community_grace_days_check",
+      sql`${table.communityGraceDays} BETWEEN 0 AND 90`,
+    ),
+    check(
+      "subscription_plans_community_daily_order_cap_check",
+      sql`${table.communityDailyOrderCap} BETWEEN 0 AND 1000`,
+    ),
+    check(
+      "subscription_plans_referral_reward_days_check",
+      sql`${table.referralRewardDays} BETWEEN 0 AND 365`,
+    ),
+    check(
+      "subscription_plans_referral_qualifying_facts_check",
+      sql`${table.referralQualifyingFacts} BETWEEN 1 AND 100`,
+    ),
+    check(
+      "subscription_plans_referral_window_days_check",
+      sql`${table.referralWindowDays} BETWEEN 1 AND 365`,
+    ),
     check(
       "ck_subscription_plans_frozen_at",
       sql`(${table.isFrozen} AND ${table.frozenAt} IS NOT NULL) OR (NOT ${table.isFrozen} AND ${table.frozenAt} IS NULL)`,
@@ -99,12 +123,20 @@ export const subscriptionPlanEntitlements = pgTable(
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.planCode, table.planVersion, table.entitlementCode] }),
+    primaryKey({
+      name: "subscription_plan_entitlements_pkey",
+      columns: [table.planCode, table.planVersion, table.entitlementCode],
+    }),
     foreignKey({
       name: "fk_subscription_plan_entitlements_plan",
       columns: [table.planCode, table.planVersion],
       foreignColumns: [subscriptionPlans.planCode, subscriptionPlans.planVersion],
     }),
+    check(
+      "subscription_plan_entitlements_entitlement_code_check",
+      sql`${table.entitlementCode} IN ('accept_orders', 'daily_order_cap', 'priority_dispatch', 'zone_multi_select')`,
+    ),
+    check("subscription_plan_entitlements_limit_value_check", sql`${table.limitValue} >= -1`),
   ],
 );
 
@@ -134,6 +166,19 @@ export const subscriptionPeriods = pgTable(
       columns: [table.planCode, table.planVersion],
       foreignColumns: [subscriptionPlans.planCode, subscriptionPlans.planVersion],
     }),
+    check(
+      "subscription_periods_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscription_periods_source_check",
+      sql`${table.source} IN ('trial', 'payment', 'referral_reward')`,
+    ),
+    check(
+      "subscription_periods_payment_reference_check",
+      sql`${table.paymentReference} IS NULL OR char_length(${table.paymentReference}) BETWEEN 4 AND 64`,
+    ),
+    check("subscription_periods_granted_days_check", sql`${table.grantedDays} > 0`),
     check("ck_subscription_periods_window", sql`${table.endsAt} > ${table.startsAt}`),
     check(
       "ck_subscription_periods_payment_reference",
@@ -164,6 +209,23 @@ export const subscriptionTransitions = pgTable(
   (table) => [
     unique("ux_subscription_transitions_sequence").on(table.driverPublicId, table.sequence),
     check(
+      "subscription_transitions_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscription_transitions_from_state_check",
+      sql`${table.fromState} IS NULL OR ${table.fromState} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check(
+      "subscription_transitions_to_state_check",
+      sql`${table.toState} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check(
+      "subscription_transitions_reason_code_check",
+      sql`${table.reasonCode} IN ('trial_granted', 'payment_activated', 'referral_reward_applied', 'period_ended', 'community_grace_ended')`,
+    ),
+    check("subscription_transitions_sequence_check", sql`${table.sequence} >= 1`),
+    check(
       "ck_subscription_transitions_state_changes",
       sql`${table.fromState} IS DISTINCT FROM ${table.toState}`,
     ),
@@ -179,17 +241,8 @@ export const subscriptionTransitions = pgTable(
  *
  * هذا الجدولُ الوحيدُ في الخدمة الذي يُكتب فوق صفٍّ قائم، وذاك جائزٌ لأنّه **مُشتَقٌّ بالكامل**
  * من `subscription_periods` و`subscription_transitions`: حذفُه كلِّه وإعادةُ بنائه من الدفتر
- * لا تُفقد معلومةً واحدة (وهذا ما يُثبته `POST /subscriptions/{id}/recompute` واختبارُ
- * `projection.integration.test.ts`). ولذلك بقي الحارسُ النصّيُّ في `purity.test.ts` قائماً
+ * لا تُفقد معلومةً واحدة. ولذلك بقي الحارسُ النصّيُّ في `purity.test.ts` قائماً
  * على الدفتر، واستُثني هذا الملفُّ **باسمه** لا بتوسيع نمطٍ يُبيح التعديلَ في كلّ مكان.
- *
- * والأعمدةُ المُلزمة معاً محروسةٌ بـ`ck_subscriptions_period_state`: `trial`/`active` ⇒ مُدّةٌ
- * حاضرةٌ ونهايةٌ معلومة، و`expired`/`community` ⇒ الاثنان `NULL`. فصفٌّ يقول `active` بلا
- * نهايةٍ لا يستقرّ في القاعدة أصلاً، ولا نحتاج فحصاً في الكود يذكّرنا بذلك.
- *
- * وقيدُ `driver_public_id ~ '^WS-[0-9]{10}$'` والقيدُ على تعداد `state` بلا اسمٍ في العقد،
- * فلا مرآةَ لهما هنا: حارسُ الانحراف يقارن **القيودَ المُسمّاة** بحرفها، وإضافةُ اسمٍ من عندنا
- * كانت ستُنتج اسماً لا وجودَ له في القاعدة.
  */
 export const subscriptions = pgTable(
   "subscriptions",
@@ -215,21 +268,27 @@ export const subscriptions = pgTable(
       foreignColumns: [subscriptionPlans.planCode, subscriptionPlans.planVersion],
     }),
     check(
+      "subscriptions_driver_public_id_check",
+      sql`${table.driverPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "subscriptions_state_check",
+      sql`${table.state} IN ('trial', 'active', 'expired', 'community')`,
+    ),
+    check("subscriptions_state_sequence_check", sql`${table.stateSequence} >= 1`),
+    check(
       "ck_subscriptions_period_state",
       sql`(${table.state} IN ('trial', 'active') AND ${table.currentPeriodId} IS NOT NULL AND ${table.expiresAt} IS NOT NULL) OR (${table.state} IN ('expired', 'community') AND ${table.currentPeriodId} IS NULL AND ${table.expiresAt} IS NULL)`,
     ),
-    index("ix_subscriptions_expiring").on(table.expiresAt),
+    index("ix_subscriptions_expiring")
+      .on(table.expiresAt)
+      .where(sql`${table.state} IN ('trial', 'active')`),
   ],
 );
 
 /**
  * رمزُ الإحالة: صفٌّ واحدٌ لكلّ مالكٍ (`ux_referral_codes_owner`)، يُزرَع داخلَ معاملةِ بدءِ
- * التجربة — لا عند أوّل قراءة. والقراءةُ (`GET /referrals/codes/{owner}`) لا تكتب شيئاً
- * وتُجيب 404 حين يغيب الصفّ: إنشاءٌ عند القراءةِ يجعل `GET` كاتباً، فيُولِد رمزاً لمن لم
- * يبدأ تجربةً ويفتح طريقَ كتابةٍ غيرِ محميّةٍ بمفتاحِ تكرار.
- *
- * ولمَ لا يُنشأ مع الاشتراك؟ لأنّ الرمزَ ليس شرطاً لاشتراكٍ ولا يملكه دفترُ المُدَد؛ وإنشاؤه
- * في نفس معاملةِ التجربة كان سيجعل فشلَ صياغةِ رمزٍ يمنع سائقاً من بدء تجربته.
+ * التجربة — لا عند أوّل قراءة.
  */
 export const referralCodes = pgTable(
   "referral_codes",
@@ -239,15 +298,21 @@ export const referralCodes = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     createdAt: instant("created_at").notNull().defaultNow(),
   },
-  (table) => [unique("ux_referral_codes_owner").on(table.ownerPublicId)],
+  (table) => [
+    unique("ux_referral_codes_owner").on(table.ownerPublicId),
+    check(
+      "referral_codes_referral_code_check",
+      sql`${table.referralCode} ~ '^WR-[0-9A-Z]{8}$'`,
+    ),
+    check(
+      "referral_codes_owner_public_id_check",
+      sql`${table.ownerPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+  ],
 );
 
 /**
  * المطالبةُ بالإحالة — صفٌّ واحدٌ لكلّ **مُحالٍ** (`ux_referrals_referee`) لا لكلّ مُحيل.
- *
- * القيدُ على المُحال هو ما يمنع أن يُحسب سائقٌ جديدٌ لعشرة مُحيلين، وهو نفسُه الذي يجعل
- * إعادةَ المطالبة تُعاد جواباً محفوظاً بـ`200` بدل صفٍّ ثانٍ. و`ck_referrals_not_self` خطُّ
- * الدفاع الثاني تحت `referralSelfForbidden()` في المجال.
  */
 export const referrals = pgTable(
   "referrals",
@@ -280,6 +345,23 @@ export const referrals = pgTable(
     }),
     unique("ux_referrals_referee").on(table.refereePublicId),
     check(
+      "referrals_referrer_public_id_check",
+      sql`${table.referrerPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "referrals_referee_public_id_check",
+      sql`${table.refereePublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check(
+      "referrals_state_check",
+      sql`${table.state} IN ('pending', 'qualified', 'rewarded', 'rejected')`,
+    ),
+    check(
+      "referrals_reason_code_check",
+      sql`${table.reasonCode} IS NULL OR ${table.reasonCode} IN ('self_referral', 'referrer_not_active', 'referee_already_referred', 'referee_no_qualifying_facts', 'referral_window_expired', 'referee_subscription_never_activated')`,
+    ),
+    check("referrals_qualifying_fact_count_check", sql`${table.qualifyingFactCount} >= 0`),
+    check(
       "ck_referrals_not_self",
       sql`${table.referrerPublicId} <> ${table.refereePublicId}`,
     ),
@@ -288,23 +370,14 @@ export const referrals = pgTable(
       sql`(${table.state} = 'rejected' AND ${table.reasonCode} IS NOT NULL) OR (${table.state} <> 'rejected' AND ${table.reasonCode} IS NULL)`,
     ),
     index("ix_referrals_referrer").on(table.referrerPublicId, table.createdAt),
+    index("ix_referrals_pending")
+      .on(table.windowEndsAt)
+      .where(sql`${table.state} = 'pending'`),
   ],
 );
 
-// ---------------------------------------------------------------------------
-// 8) مكافآتُ الإحالة — صفٌّ واحدٌ لكلّ إحالةٍ ولكلّ مُدّةٍ ممنوحة (ADR-015 القرار 9)
-// ---------------------------------------------------------------------------
-
 /**
  * المكافأةُ **حقيقةٌ مُنجَزةٌ** لا نيّة: صفٌّ هنا يعني أنّ مُدّةً دخلت الدفترَ فعلاً.
- *
- * ولذلك `granted_period_id` إلزاميٌّ ومفتاحٌ أجنبيٌّ ومُتفرِّد: مكافأةٌ بلا مُدّةٍ كانت ستجعل
- * «مُنِحت 30 يوماً» صفّاً يقوله جدولُ المكافآتِ وينكره الدفتر، ومُدّةٌ واحدةٌ تُعلَّق عليها
- * مكافأتان كانت ستجعل الأيّامَ تُحسب مرّتين في التقرير بلا أن يُخلق يومٌ واحد.
- *
- * و`ux_referral_rewards_referral` هو الحارسُ الحقيقيُّ لـ«مرّةً واحدة»: التسليمُ at-least-once،
- * فإعادةُ تسليمِ `reputation.fact_recorded` تصل ثانيةً بالضرورة — ورفضُ القاعدةِ بقيدٍ
- * مُسمّىً يُترجَم إلى `REFERRAL_REWARD_ALREADY_GRANTED` خيرٌ من `if` يسبقه سباقٌ.
  */
 export const referralRewards = pgTable(
   "referral_rewards",
@@ -338,82 +411,86 @@ export const referralRewards = pgTable(
     }),
     unique("ux_referral_rewards_referral").on(table.referralId),
     unique("ux_referral_rewards_period").on(table.grantedPeriodId),
+    check(
+      "referral_rewards_beneficiary_public_id_check",
+      sql`${table.beneficiaryPublicId} ~ '^WS-[0-9]{10}$'`,
+    ),
+    check("referral_rewards_reward_days_check", sql`${table.rewardDays} > 0`),
   ],
 );
 
-// ---------------------------------------------------------------------------
-// 9) سجلُّ منعِ التكرار — الجوابُ المحفوظُ بنفسِ بايتاتِه لا «رأيتُ هذا المفتاح»
-// ---------------------------------------------------------------------------
+/**
+ * سجلُّ منعِ التكرار — الجوابُ المحفوظُ بنفسِ بايتاتِه لا «رأيتُ هذا المفتاح».
+ */
+export const subscriptionIdempotency = pgTable(
+  "subscription_idempotency",
+  {
+    idempotencyKey: text("idempotency_key").primaryKey(),
+    routeKey: text("route_key").notNull(),
+    requestHash: text("request_hash").notNull(),
+    responseStatus: integer("response_status").notNull(),
+    responseBody: jsonb("response_body").notNull(),
+    traceId: text("trace_id"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "subscription_idempotency_idempotency_key_check",
+      sql`char_length(${table.idempotencyKey}) BETWEEN 8 AND 128`,
+    ),
+    check(
+      "subscription_idempotency_route_key_check",
+      sql`char_length(${table.routeKey}) BETWEEN 3 AND 64`,
+    ),
+    check(
+      "subscription_idempotency_request_hash_check",
+      sql`char_length(${table.requestHash}) = 64`,
+    ),
+    check(
+      "subscription_idempotency_response_status_check",
+      sql`${table.responseStatus} BETWEEN 200 AND 499`,
+    ),
+  ],
+);
 
 /**
- * `response_status` و`response_body` عمودان في هذا الجدول لسببٍ واحد: إعادةُ المفتاحِ يجب أن
- * تُعيد **نفسَ الجواب** لا 409.
- *
- * النسخةُ الخاطئةُ الأرخصُ هنا جدولٌ بعمودٍ واحدٍ (`idempotency_key`) يقول «مرّ من قبل» ثم
- * يُجيب 409: عميلُ الجوّال الذي انقطع اتصالُه بعد الكتابةِ وقبل قراءةِ الجواب يُعيد الطلبَ —
- * وهو محقٌّ — فيرى رفضاً لعمليةٍ **نجحت**، فيُظهر للسائق «فشل الدفع» بعد أن خُصم منه.
- *
- * و`request_hash` يفصل «نفسَ الطلب» عن «مفتاحٍ أُعيد استعمالُه لطلبٍ آخر»: الأولُ يستحقّ
- * الجوابَ المحفوظ، والثاني خطأُ عميلٍ يستحقّ `SUBSCRIPTION_IDEMPOTENCY_KEY_REUSED`. ومفتاحٌ
- * بلا بصمةِ طلبٍ كان سيجعل «ابدأ تجربةً لسائقٍ» و«فعّل اشتراكَ سائقٍ آخر» بنفسِ المفتاحِ
- * يُعيدان جوابَ الأوّلِ للثاني.
- *
- * ولا قيدَ مُسمّىً في المرآة: فحوصُ العقد هنا (`char_length ... BETWEEN 8 AND 128` ...) بلا
- * أسماء، ويُقابلها في الكود `assertIdempotencyKey` قبل الكتابة.
+ * صندوقُ الصادر — الحدثُ يُكتب مع الحقيقةِ في معاملةٍ واحدة.
  */
-export const subscriptionIdempotency = pgTable("subscription_idempotency", {
-  idempotencyKey: text("idempotency_key").primaryKey(),
-  routeKey: text("route_key").notNull(),
-  requestHash: text("request_hash").notNull(),
-  responseStatus: integer("response_status").notNull(),
-  responseBody: jsonb("response_body").notNull(),
-  traceId: text("trace_id"),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
-
-// ---------------------------------------------------------------------------
-// 10) صندوقُ الصادر — الحدثُ يُكتب مع الحقيقةِ في معاملةٍ واحدة
-// ---------------------------------------------------------------------------
-
-/**
- * الحدثُ هنا لا في ناقلٍ خارجيّ، لأنّ الكتابةَ في القاعدةِ والنشرَ على الناقلِ لا يجتمعان
- * في معاملةٍ واحدة.
- *
- * النسخةُ الخاطئةُ الأرخص: `await bus.publish(event)` بعد `COMMIT`. تُصيب في التجربة وتُخطئ
- * في الإنتاج بأحد وجهَين — إمّا نُشر حدثٌ لمعاملةٍ انسحبت (مستهلكٌ يُصدّق تفعيلاً لم يحدث)،
- * أو نجحت المعاملةُ وسقطت العمليةُ قبل النشرِ (تفعيلٌ حقيقيٌّ لا يعرفه أحد). والثاني أسوأ:
- * لا أثرَ له في سجلٍّ ولا مقياسٍ، ويظهر بعد أسابيعَ كسائقٍ «فعّل ولم تُفتح له الأوامر».
- *
- * و`published_at` هو كلُّ الحالة: `NULL` تعني «لم يُنشَر بعد»، والفهرسُ الجزئيُّ في العقد
- * (`ix_subscription_outbox_unpublished`) يجعل المسحَ يقرأ غيرَ المنشورِ وحده — فلا يصير
- * الناشرُ أبطأَ كلَّ يومٍ لأنّ الجدولَ ينمو.
- *
- * و`attempts` و`last_error` ليسا ترفاً: تسليمٌ يفشل صامتاً يجعل «الصندوقُ فارغٌ» و«الناقلُ
- * مكسورٌ منذ ساعة» متشابهَين من الخارج.
- */
-export const subscriptionOutbox = pgTable("subscription_outbox", {
-  eventId: uuid("event_id").primaryKey(),
-  eventType: text("event_type").notNull(),
-  aggregateType: text("aggregate_type").notNull(),
-  aggregateId: text("aggregate_id").notNull(),
-  payload: jsonb("payload").notNull(),
-  occurredAt: instant("occurred_at").notNull(),
-  publishedAt: instant("published_at"),
-  attempts: integer("attempts").notNull().default(0),
-  lastError: text("last_error"),
-  traceId: text("trace_id"),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
+export const subscriptionOutbox = pgTable(
+  "subscription_outbox",
+  {
+    eventId: uuid("event_id").primaryKey(),
+    eventType: text("event_type").notNull(),
+    aggregateType: text("aggregate_type").notNull(),
+    aggregateId: text("aggregate_id").notNull(),
+    payload: jsonb("payload").notNull(),
+    occurredAt: instant("occurred_at").notNull(),
+    publishedAt: instant("published_at"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    traceId: text("trace_id"),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "subscription_outbox_event_type_check",
+      sql`${table.eventType} ~ '^(subscription|referral)\\.[a-z_]+$'`,
+    ),
+    check(
+      "subscription_outbox_aggregate_type_check",
+      sql`${table.aggregateType} IN ('subscription', 'referral')`,
+    ),
+    check("subscription_outbox_attempts_check", sql`${table.attempts} >= 0`),
+    index("ix_subscription_outbox_unpublished")
+      .on(table.occurredAt)
+      .where(sql`${table.publishedAt} IS NULL`),
+  ],
+);
 
 /**
  * الجداولُ التي لا مرآةَ لها — **فارغةٌ بعد المراجعة 5/6**، وليست سطراً مُهمَلاً.
  *
  * قائمةٌ مقروءةٌ من اختبارٍ خيرٌ من فقرةٍ في شرحٍ لا يقرؤها البناء: `schema-drift.test.ts`
  * يُطابقها مع فرق (جداولُ العقد − جداولُ المرآة) فلا يمرّ جدولٌ يُنسى في أحد الجانبين.
- *
- * وانعكس في 4/6 ثلاثةٌ (`subscriptions` · `referral_codes` · `referrals`)، وفي 5/6 الثلاثةُ
- * الباقيةُ (`referral_rewards` · `subscription_idempotency` · `subscription_outbox`) مع
- * مخازنِها ومُناديها. والقائمةُ تبقى مُصدَّرةً فارغةً لا تُحذَف: جدولٌ يُضاف إلى العقد غداً
- * بلا مرآةٍ يجب أن يُفشل البناءَ حتى يُعلَن هنا بالاسم — وحذفُ القائمةِ كان سيحذف الحارس.
  */
 export const NOT_MIRRORED_TABLES: ReadonlyArray<string> = Object.freeze([]);

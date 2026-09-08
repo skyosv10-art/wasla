@@ -645,6 +645,24 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
 
+  packages/search-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/search-service':
+        specifier: workspace:*
+        version: link:../../services/search
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
+
   packages/service-auth:
     dependencies:
       '@wasla/auth-sdk':

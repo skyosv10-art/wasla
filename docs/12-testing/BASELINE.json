@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-08T18:29:22Z",
+  "generated_at": "2026-09-08T20:27:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "4a0aea08dd2acc7d0122feff393410bc9ee2c52d",
-    "branch": "feat/m5-12-search-http",
+    "commit": "e9479a9fc374d0d9d94d69884d9921898f3cbf30",
+    "branch": "feat/m5-12-search-exit-gate",
     "dirty": true,
-    "dirty_files": 16,
-    "dirty_reason": "M5-12 review 3/N search HTTP boundary: +3 test files and fastify dependency",
-    "tracked_files": 1538
+    "dirty_files": 15,
+    "dirty_reason": "",
+    "tracked_files": 1547
   },
   "env": {
     "node": "v20.20.1",
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "c275b023cb4aed412bfa89d0375c59e6ad8daf7756ca812cd5f5b502557dbae9",
-    "lines": 3021
+    "sha256": "01fb3d85601675512b109d7c924239c9fb364cc5d63a0a7a8572c436f516fff8",
+    "lines": 3039
   },
   "static": {
-    "packages": 45,
-    "packages_with_typecheck": 45,
-    "packages_with_test": 45,
-    "test_files_tracked": 292,
-    "ci_jobs": 26,
+    "packages": 46,
+    "packages_with_typecheck": 46,
+    "packages_with_test": 46,
+    "test_files_tracked": 293,
+    "ci_jobs": 28,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 21
+    "risks_not_closed": 23
   },
   "dynamic": {
-    "measured": true,
-    "source": "/tmp/verify-v3.log",
-    "tests_passed": 3895,
-    "test_files_executed": 235,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "measured": false,
+    "source": null,
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:f41fdb859cf7ee77e3ac8277d76727687c71592a137c0b25bba03ca6b4d35419",
+  "fingerprint": "sha256:c93727d17c37f7d4c210d55215a84aa7d6432af44212c61c3caa337483b6e4cb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

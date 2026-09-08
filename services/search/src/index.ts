@@ -34,3 +34,12 @@ export * from "./http/requests.js";
 export * from "./http/mappers.js";
 export * from "./http/app.js";
 export * from "./infrastructure/search-index-reader.js";
+
+/*
+ * محوّلاتُ الناقلِ الإنتاجيّةُ — تُصدَّرُ كي تستعملَها بوّابةُ الخروجِ (`@wasla/search-e2e`)
+ * **بأعيانِها لا بنسخةٍ منها**. فبوّابةٌ تُعيدُ كتابةَ مصدرِ الأحداثِ أو مستودعِ الإسقاطِ في
+ * مِشْكاتِها إنّما تختبرُ مِشْكاتَها، وتمرُّ سالمةً على عطبٍ في المحوّلِ الذي يعملُ في الإنتاجِ.
+ */
+export * from "./infrastructure/marketplace-event-source.js";
+export * from "./infrastructure/projection-store.js";
+export * from "./infrastructure/catalog-read-port.js";

@@ -1,0 +1,18 @@
+{
+  "name": "@wasla/search-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 12 exit gate — بوّابةُ relevance/load لخدمةِ البحثِ: فهرسٌ يبنيه الناقلُ الحقيقيُّ من أحداثٍ حقيقيّةٍ، وحكمُ صلةٍ مُعلَنٌ يُقاسُ عبرَ السلكِ، وميزانيّةُ زمنٍ تُقاسُ ولا تُدَّعى (Phase 12 · المراجعة 4/N).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/search-service": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,5 +1,39 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-08 · M5-12 · المراجعةُ 3/N — طبقةُ HTTP (Fastify) لخدمةِ البحثِ · `CLM-0114`
+
+**Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-http` · **Claim:** `CLM-0114` (`@uxxxu (agent:perplexity-computer)` · 2026-09-08 → ينتهي 2026-09-22 · Active). **تنويهٌ على الحجز:** `CLM-0113` حُرِّر بقرارٍ توثيقيٍّ بعدَ بدءِ الكتابةِ — إضافةُ `fastify` حرّكتْ `pnpm-lock.yaml` خارجَ النطاقِ، و§6 تمنعُ التوسيعَ في مكانِه، فاتُّبعَ البديلُ الثالثُ (كسابقَتيه `CLM-0024`⇒`CLM-0025` و`CLM-0081`⇒`CLM-0082`): تحريرٌ وإعادةُ حجزٍ بـ`CLM-0114` بنطاقٍ أوسعَ يضمُّ `pnpm-lock.yaml` على الفرعِ والمالكِ نفسَيهما. سُجِّلَ في [WORK_CLAIMS.md](WORK_CLAIMS.md) §3.
+
+**ماذا تم إنجاز (1):** أُنشئت طبقةُ HTTP لخدمةِ البحثِ (المراجعةُ 3/N) فوقَ المراجعتَين 1/N (العقدُ والنطاقُ) و2/N (المستهلكُ relay). التطبيقُ `buildSearchHttpApp({ searchReadPort })` (`src/http/app.ts`) بمسارَين فقط: `GET /search/products` و`GET /search/health`، يعتمدُ على منفذِ قراءةٍ مُحقَنٍ `SearchProductsReadPort` (أُضيف إلى `src/ports.ts`) — فلا يفتحُ التطبيقُ اتصالاً بقاعدةِ البياناتِ بنفسِه. معالجُ أخطاءٍ واحدٌ (`setErrorHandler` + `sendSearchError`) بلا try/catch في المعالِجات، و**503 كملاذٍ أخيرٍ لا 500** (نموذجُ القراءةِ المشتقُّ يعتمدُ على حالةٍ عابرةٍ قابلةٍ لإعادةِ المحاولة). شكلُ الخطأِ مسطّحٌ `{ code, message, trace_id }` حسب `contracts/errors.md`.
+
+أُنشئت: `src/http/{errors,requests,mappers,app,server}.ts` (التحققُ والتحويلُ والتوصيلُ على المنفذِ 8012) · `src/infrastructure/search-index-reader.ts` (القارئُ الإنتاجيُّ فوقَ `pg.Pool`، يقرأُ **فقط** `search_product_index` بلا JOIN لجداولِ السوقِ — حدُّ ADR-016 decision 9؛ الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ لا رايةٌ مُخزَّنة؛ مطابقةٌ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ ثمَّ ترتيبُ النطاقِ `rankAndSort` يُعيدُ التسجيلَ بسُلَّمِ exact > prefix > fts > trigram). واختباراتُ وحدةٍ: `__tests__/http-requests.test.ts` (12 حالةً: التحليلُ والتحققُ، رفضُ المصفوفاتِ، الأكوادُ الصحيحةُ) و`__tests__/http-app.test.ts` (7 حالاتٍ: 200 للنتائج، 400 للتحققِ، 503 للتعطّلِ، ولا 500 أبدًا) بمنفذٍ وهميٍّ بلا DB. واختبارُ تكاملٍ `__tests__/search-index-reader.integration.test.ts` يتخطّى نفسَه بلا `DATABASE_URL` (كالـrelay) — يُثبتُ الظهورَ (إخفاءُ المخزونِ المُنفدِ وغيرِ المعتمدِ) والترتيبَ والتجزئةَ والفلترَةَ. أُضيفت اعتماديّةُ `fastify` (الإصدارُ 5.x المطابقُ لخدمةِ السوقِ) إلى `services/search/package.json`.
+
+**لماذا تم اختياره (2):** ADR-025 §2.3.2 كان قد أجّلَ HTTP Layer صراحةً حتّى اكتمالِ الـrelay (تبعيّةٌ رسميّةٌ) — فاكتملَ relay في المراجعةِ 2/N، وصارَ بناءُ HTTP ممكنًا. اختيرَ التصميمُ المُحقَنُ (لا متصلٌ) ليتحقّقَ العقدُ عبرَ منفذٍ وهميٍّ بلا قاعدةِ بيانات، تمامًا كما في خدمةِ السوقِ (`marketplace/src/http/`) — فيبقى التطبيقُ قابلًا للاختبارِ في أجزاءٍ من الثانيةِ. اختيرَ 503 لا 500 لأنّ إخفاقاتِ الفهرسِ المشتقِّ غالبًا عابرةٌ (اتصالٌ، مهلةٌ، تأخّرُ relay)، فبحثٌ ينجحُ بعدَ ثانيتَين لا يُهجَرُ بعميلٍ حذر.
+
+**أين تم التغيير (3):** `services/search/src/ports.ts` (إضافةُ `SearchProductsReadPort` + `SearchProductsQuery` + `SearchSort`) · `services/search/src/http/{errors,requests,mappers,app,server}.ts` (جديدٌ) · `services/search/src/infrastructure/search-index-reader.ts` (جديدٌ) · `services/search/src/index.ts` (تصديرُ HTTP والقارئ) · `services/search/src/__tests__/{http-requests,http-app,search-index-reader.integration}.test.ts` (جديدٌ) · `services/search/package.json` (اعتماديّةُ `fastify`) · `docs/04-api/SEARCH_HTTP.md` (القسمُ §5 + تحديثُ الترويسةِ) · `docs/15-decisions/ADR-025-marketplace-search-read-model.md` (§2.3.2 و§4: HTTP أُنجزَ) · `docs/12-testing/BASELINE.json` (إعادةُ التوليدِ: test_files_tracked 289→292 + بصمةُ القفلِ) · دفاترُ الحوكمةِ المشتركةُ (`WORK_CLAIMS`/`TASK_LOG`/`WORK_INDEX`/`LAUNCH_EXECUTION_BOARD`).
+
+**الملفات/الخدمات المتأثرة (4):** `services/search/` (طبقةُ HTTP + قارئُ pg + اختبارات) · وثائقُ `M5-12` (SEARCH_HTTP · ADR-025) · الأساسُ الآليُّ (`BASELINE.json`).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا تغييرَ في العقدِ (`api.openapi.yml`/`schema.sql`/`events.json`/`errors.md` ثابتةٌ) — هذه المراجعةُ **تُنفّذُ** العقدَ المُحدَّدَ في 1/N، لا تُعدِّلُه. المسارانِ `GET /search/products` و`GET /search/health` وأكوادُ الأخطاءِ كلُّها كانت مُعلَنةً في العقودِ.
+
+**كيف تم الاختبار (6):** محليًّا: `pnpm --filter @wasla/search-service test` → **62/62 نجاحًا** (19 جديدةً: 12 للطلبات + 7 للتطبيق). `pnpm -r typecheck` نجحَ. `pnpm -r test` نجحَ كلُّه. `bash scripts/checks/verify-governance.sh` نجحَ (13 فحصًا، تخطٍّ متوقَّعٌ واحدٌ: #8 CI مانعٌ حيًّا). أُعيدَ توليدُ `BASELINE.json` بدورتَين (قياسٌ مزدوجٌ لحلِّ التبعيةِ الدائريّةِ بين الحوكمةِ والأساسِ): verify_overall=passed · tests_passed=3894 · governance_suite_failed=0.
+
+**ما المشاكل التي ظهرت (7):** (أ) قيمُ `page`/`page_size` تصلُ كنصوصٍ من querystring — صُحِّحَ `parsePositiveInt` ليقبلَ النصَّ العدديَّ ويرفضَ غيرَ الصحيح. (ب) الأحرفُ العربيةُ في سلسلةِ URL في الاختبارِ تُفسَّرُ خطأً — استُخدمَ كائنُ `query` في `fastify.inject`. (ج) الحوكمةُ فشلت في #11 (الأساسُ الآليُّ) لأنّ عدَّادَ test_files_tracked تغيّرَ — حُلَّ بإعادةِ التوليدِ بقرارٍ مكتوبٍ (`BASELINE_DIRTY_REASON`) وقياسٍ مزدوج.
+
+**ما الذي لم يكتمل (8):** بوّابةُ relevance/load (exit gate) · وظيفةُ CI `search-db-integration` (تشغيلُ اختبارِ التكاملِ في CI) · وظيفةُ CI `search-exit-gate-e2e` · رفعُ سقفِ المُرشَّحينَ (v1: 500). كلُّها مُعلَنةٌ في ADR-025 §4 وSEARCH_HTTP §5.6.
+
+**الخطوة التالية (9):** دفعُ الفرعِ وفتحُ طلبِ الدمجِ وانتظارُ CI (28 وظيفةً)، ثمَّ الدمجُ بـsquash، ثمَّ طلبُ إصدارِ CLM-0114 (كما في CLM-0112).
+
+**ما الذي يعتمد عليه العمل التالي (10):** المستهلكُ (relay) المُدمجُ في 2/N (يبني `search_product_index` الذي يقرأُ منه القارئُ) · طبقةُ HTTP في هذه المراجعةِ (الأساسُ لبوّابةِ exit gate).
+
+**Migration/Deployment/Config (11):** لا ترحيلٌ جديد. التوصيلُ: `DATABASE_URL` من البيئةِ فقط (لا يُلتزَم في الشفرة)، المنفذُ 8012 (`PORT`).
+
+**مخاطر/قرارات تحتاج مراجعة (12):** سقفُ المُرشَّحينَ (500) حدٌّ مُعلَنٌ لـv1 — يُرفعُ فوقَ بوّابةِ الحملِ لاحقًا. مطابقةُ العربيّةِ FTS بلغةِ `english` لا تُدركُ العربيةَ — يعوّضُها trigram، والفجوةُ مُعلَنةٌ (ADR-025 §2.4).
+
+**الروابط (13):** [ADR-025](../15-decisions/ADR-025-marketplace-search-read-model.md) · [SEARCH_HTTP.md](../04-api/SEARCH_HTTP.md) · [WORK_CLAIMS.md](WORK_CLAIMS.md) (`CLM-0114`) · [BASELINE.json](../12-testing/BASELINE.json)
+
+**الشخص/الفريق الذي يتابع (14):** `@uxxxu (agent:perplexity-computer)` — حجزٌ نشطٌ (`CLM-0114` · ينتهي 2026-09-22).
+
 ## 2026-09-08 · M5-12 · إقفالُ دورةِ §8.1 — تحريرُ CLM-0112 بعدَ دمجِ PR #75 (relay consumer · المراجعة 2/N)
 
 **Work Item(s):** M5-12 · **Branch:** `feat/m5-12-search-relay-consumer` (مُحذوفٌ بعدَ الدمجِ) · **Scope:** سجلاتٌ مشتركةٌ مستثناةٌ من الحجزِ (M0-14) + نطاقُ الحجزِ نفسِه المُحرَّرُ هنا

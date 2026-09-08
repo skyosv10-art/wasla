@@ -1,5 +1,6 @@
 /**
- * @wasla/search-service — WASLA Marketplace Search domain core + relay (Phase 12).
+ * @wasla/search-service — WASLA Marketplace Search domain core, relay, and HTTP
+ * boundary (Phase 12).
  *
  * Derived READ MODEL (ADR-025): the search index is a projection rebuilt from
  * consumed marketplace events, NOT a second source of truth. Visibility is
@@ -12,9 +13,12 @@
  * retryable, with dead-letter + checkpoint + replay. End-to-end proof:
  * outbox event → relay → search read model → correct resulting state.
  *
- * Phase 12 acceptance criteria: "relevance/load gate" + "search ADR". The HTTP
- * layer and relevance/load gate are deferred to later reviews (their formal
- * dependency on the relay must complete first).
+ * Review 3/N — HTTP Boundary (ADR-025 §5): Fastify app exposing
+ * `GET /search/products` + `GET /search/health`, injected `SearchProductsReadPort`,
+ * request parsing/validation, domain→wire mapping, single error handler (503 as
+ * the last resort, never 500). Unit-tested with a fake port; the real pg reader
+ * (`SearchIndexReader`) is integration-tested. The relevance/load exit gate and
+ * the `search-db-integration` CI job remain deferred (ADR-025 §4) — declared.
  */
 
 export * from "./domain/model.js";
@@ -25,3 +29,8 @@ export * from "./domain/consumed-events.js";
 export * from "./domain/projector.js";
 export * from "./ports.js";
 export * from "./relay.js";
+export * from "./http/errors.js";
+export * from "./http/requests.js";
+export * from "./http/mappers.js";
+export * from "./http/app.js";
+export * from "./infrastructure/search-index-reader.js";

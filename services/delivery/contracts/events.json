@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wasla.local/delivery/events/v1",
   "title": "WASLA Fulfilment Workflow Domain Events v1",
-  "description": "أحداثُ خدمةِ الوفاءِ (Phase 13 · ADR-026). القاعدةُ الحاكمةُ: الحدثُ **أثرُ قرارٍ دخلَ الدفترَ** لا إعلانُ نيّةٍ، ولذلك كلُّ حمولةٍ تحملُ حالتَها السابقةَ واللاحقةَ وتسلسلَها وفاعلَها. وقاعدةُ الطورِ الأولى: **لا مالَ في أيِّ حمولةٍ** — لا `amount` ولا `fee` ولا `currency_code`: الدفعُ حدُّ M5-17 ولم يُبنَ، وحمولةٌ تحملُ رقمَ مالٍ اليومَ تُنسَخُ في سبعةِ مخازنَ قبلَ أن يُبنى. وقاعدةٌ ثانيةٌ: **لا نصَّ حرٍّ** — لا ملاحظةَ ولا عنواناً: أسبابُ الإخفاقِ قائمةٌ مغلقةٌ كي تُعَدَّ لا تُقرأَ. وقاعدةُ الخصوصيّةِ كما في كلِّ الأطوارِ (ADR-001 · ADR-007): لا اسمَ ولا هاتفَ ولا بريدَ ولا إحداثيّةَ؛ المراجعُ كلُّها مُعتِمةٌ بصيغةِ WS-##########. وكلُّ حدثٍ يُكتبُ في المعاملةِ نفسِها عبرَ delivery_outbox فلا تغييرَ صامتٌ.",
+  "description": "أحداثُ خدمةِ الوفاءِ (Phase 13 · ADR-026). القاعدةُ الحاكمةُ: الحدثُ **أثرُ قرارٍ دخلَ الدفترَ** لا إعلانُ نيّةٍ، ولذلك كلُّ حمولةٍ تحملُ حالتَها السابقةَ واللاحقةَ وتسلسلَها وفاعلَها. وقاعدةُ الطورِ الأولى: **لا مالَ في أيِّ حمولةٍ** — لا `amount` ولا `fee` ولا `currency_code`: الدفعُ حدُّ M5-17 ولم يُبنَ، وحمولةٌ تحملُ رقمَ مالٍ اليومَ تُنسَخُ في سبعةِ مخازنَ قبلَ أن يُبنى. وقاعدةٌ ثانيةٌ: **لا نصَّ حرٍّ** — لا ملاحظةَ ولا عنواناً: أسبابُ الإخفاقِ قائمةٌ مغلقةٌ كي تُعَدَّ لا تُقرأَ. وقاعدةُ الخصوصيّةِ كما في كلِّ الأطوارِ (ADR-001 · ADR-007): لا اسمَ ولا هاتفَ ولا بريدَ ولا إحداثيّةَ؛ المراجعُ كلُّها مُعتِمةٌ بصيغةِ WS-##########. وكلُّ حدثٍ يُكتبُ في المعاملةِ نفسِها عبرَ delivery_outbox فلا تغييرَ صامتٌ. **وبنيةُ هذا الملفِّ نفسِها حكمٌ:** الجذرُ `oneOf` على خمسةِ أنواعٍ كاملةٍ، كلُّ نوعٍ يُركِّبُ المغلَّفَ مع حمولتِه ويُثبِّتُ `event_type` و`event_version` ويرفضُ الزائدَ — فوثيقةٌ فارغةٌ `{}` أو غريبةٌ **لا تُصدَّقُ**. كانت النسخةُ الأولى تضعُ الحمولاتِ في `properties` اختياريّةً بلا `required` ولا تركيبٍ للمغلَّفِ، فكانَ `{}` يمرُّ — رُصدَ في المراجعةِ وصُحِّحَ قبلَ الدمجِ.",
   "$defs": {
     "EventEnvelope": {
       "type": "object",
@@ -131,10 +131,18 @@
         }
       },
       "additionalProperties": false
-    }
-  },
-  "properties": {
-    "fulfilment.requested": {
+    },
+    "OrderRef": {
+      "type": "string",
+      "pattern": "^ORD-[0-9]{10}$",
+      "description": "**يملكُ صيغتَه محرّكُ الطلبِ** (ADR-010) — لا تُفرَضُ عليه صيغتُنا."
+    },
+    "StoreRef": {
+      "type": "string",
+      "format": "uuid",
+      "description": "**يملكُ صيغتَه السوقُ** (ADR-016) وهي UUID."
+    },
+    "Payload_fulfilment_requested": {
       "type": "object",
       "description": "شحنةٌ دخلت الدفترَ. **لا تحملُ سطورَ الطلبِ ولا رصيدَ مخزونٍ**: السطورُ يملكُها محرّكُ الطلبِ والرصيدُ يملكُه السوقُ، ونسخةُ رصيدٍ تتقادمُ لحظةَ كتابتِها.",
       "required": [
@@ -149,10 +157,10 @@
           "$ref": "#/$defs/WaslaPublicId"
         },
         "order_ref": {
-          "$ref": "#/$defs/WaslaPublicId"
+          "$ref": "#/$defs/OrderRef"
         },
         "store_ref": {
-          "$ref": "#/$defs/WaslaPublicId"
+          "$ref": "#/$defs/StoreRef"
         },
         "state": {
           "const": "requested"
@@ -164,7 +172,7 @@
       },
       "additionalProperties": false
     },
-    "fulfilment.state_changed": {
+    "Payload_fulfilment_state_changed": {
       "type": "object",
       "description": "انتقالٌ دخلَ الدفترَ. يحملُ الطرفَينِ والتسلسلَ والفاعلَ — فمن قرأَه وحدَه أعادَ بناءَ المسيرةِ بلا سؤالِ الخدمةِ.",
       "required": [
@@ -183,10 +191,10 @@
           "$ref": "#/$defs/WaslaPublicId"
         },
         "order_ref": {
-          "$ref": "#/$defs/WaslaPublicId"
+          "$ref": "#/$defs/OrderRef"
         },
         "store_ref": {
-          "$ref": "#/$defs/WaslaPublicId"
+          "$ref": "#/$defs/StoreRef"
         },
         "driver_ref": {
           "oneOf": [
@@ -224,7 +232,7 @@
       },
       "additionalProperties": false
     },
-    "fulfilment.driver_assigned": {
+    "Payload_fulfilment_driver_assigned": {
       "type": "object",
       "description": "سائقٌ سُمّيَ للشحنةِ. **المرجعُ مُعتِمٌ**: الاسمُ والهاتفُ والإحداثيّةُ يملكُها دفترُ السائقينَ ولا تُنسَخُ هنا.",
       "required": [
@@ -246,7 +254,7 @@
       },
       "additionalProperties": false
     },
-    "fulfilment.driver_released": {
+    "Payload_fulfilment_driver_released": {
       "type": "object",
       "description": "سقطَ الإسنادُ فعادت الشحنةُ إلى الانتظارِ. **ليس إلغاءً**: المتجرُ جهّزَ فعلاً.",
       "required": [
@@ -268,7 +276,7 @@
       },
       "additionalProperties": false
     },
-    "fulfilment.terminated": {
+    "Payload_fulfilment_terminated": {
       "type": "object",
       "description": "نهايةٌ منتهيةٌ. بعدَها لا انتقالَ إطلاقاً.",
       "required": [
@@ -306,6 +314,348 @@
         }
       },
       "additionalProperties": false
+    },
+    "Event_fulfilment_requested": {
+      "$id": "https://wasla.local/delivery/events/v1/fulfilment.requested",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "const": "fulfilment.requested"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/Payload_fulfilment_requested"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event_fulfilment_state_changed": {
+      "$id": "https://wasla.local/delivery/events/v1/fulfilment.state_changed",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "const": "fulfilment.state_changed"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/Payload_fulfilment_state_changed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event_fulfilment_driver_assigned": {
+      "$id": "https://wasla.local/delivery/events/v1/fulfilment.driver_assigned",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "const": "fulfilment.driver_assigned"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/Payload_fulfilment_driver_assigned"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event_fulfilment_driver_released": {
+      "$id": "https://wasla.local/delivery/events/v1/fulfilment.driver_released",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "const": "fulfilment.driver_released"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/Payload_fulfilment_driver_released"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event_fulfilment_terminated": {
+      "$id": "https://wasla.local/delivery/events/v1/fulfilment.terminated",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        }
+      ],
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate",
+        "data"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "const": "fulfilment.terminated"
+        },
+        "event_version": {
+          "const": "v1"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/Payload_fulfilment_terminated"
+        }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "producer",
+    "aggregate",
+    "data"
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Event_fulfilment_requested"
+    },
+    {
+      "$ref": "#/$defs/Event_fulfilment_state_changed"
+    },
+    {
+      "$ref": "#/$defs/Event_fulfilment_driver_assigned"
+    },
+    {
+      "$ref": "#/$defs/Event_fulfilment_driver_released"
+    },
+    {
+      "$ref": "#/$defs/Event_fulfilment_terminated"
+    }
+  ]
 }

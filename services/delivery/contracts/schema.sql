@@ -10,8 +10,12 @@
 
 CREATE TABLE IF NOT EXISTS fulfilments (
   fulfilment_ref   TEXT PRIMARY KEY CHECK (fulfilment_ref ~ '^WS-[0-9]{10}$'),
-  order_ref        TEXT NOT NULL CHECK (order_ref ~ '^WS-[0-9]{10}$'),
-  store_ref        TEXT NOT NULL CHECK (store_ref ~ '^WS-[0-9]{10}$'),
+  -- **المرجعُ الأجنبيُّ يُصدَّقُ بصيغةِ مالكِه لا بصيغتِنا:** محرّكُ الطلبِ يُصدرُ
+  -- `ORD-##########` والسوقُ يُعرِّفُ المتجرَ بـ`UUID`. وعقدٌ فرضَ `WS-` عليهما معاً
+  -- **لا يستوفيه زوجٌ حقيقيٌّ** — رُصدَ في المراجعةِ وصُحِّحَ قبلَ الدمجِ.
+  -- ولا مفتاحَ أجنبيَّ إلى دفترٍ آخرَ: خدمةٌ أخرى وقاعدةٌ أخرى (ADR-010 · ADR-016).
+  order_ref        TEXT NOT NULL CHECK (order_ref ~ '^ORD-[0-9]{10}$'),
+  store_ref        UUID NOT NULL,
   driver_ref       TEXT NULL CHECK (driver_ref IS NULL OR driver_ref ~ '^WS-[0-9]{10}$'),
   state            TEXT NOT NULL CHECK (state IN (
                      'requested','accepted','preparing','ready_for_pickup','assigned',

@@ -43,6 +43,19 @@ export const DELIVERY_EVENT_TYPES = [
 ] as const;
 export type DeliveryEventType = (typeof DELIVERY_EVENT_TYPES)[number];
 
+/**
+ * **صيغُ المراجعِ الأجنبيّةِ يملكُها أصحابُها لا نحنُ** (ADR-010 · ADR-016):
+ * الطلبُ `ORD-##########` والمتجرُ `UUID`. وفرضُ صيغتِنا عليهما كانَ يجعلُ
+ * العقدَ **لا يستوفيه زوجٌ حقيقيٌّ** — رُصدَ في المراجعةِ وصُحِّحَ قبلَ الدمجِ.
+ */
+export const DELIVERY_REF_PATTERNS = {
+  fulfilment: /^WS-[0-9]{10}$/,
+  driver: /^WS-[0-9]{10}$/,
+  actor: /^WS-[0-9]{10}$/,
+  order: /^ORD-[0-9]{10}$/,
+  store: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+} as const;
+
 export interface DeliveryEventEnvelope {
   readonly event_id: string;
   readonly event_type: DeliveryEventType;
@@ -55,7 +68,9 @@ export interface DeliveryEventEnvelope {
 
 export interface DeliveryStateChangedPayload {
   readonly fulfilment_ref: string;
+  /** `ORD-##########` — صيغةُ محرّكِ الطلبِ. */
   readonly order_ref: string;
+  /** `UUID` — صيغةُ السوقِ. */
   readonly store_ref: string;
   readonly driver_ref: string | null;
   readonly from_state: DeliveryState;

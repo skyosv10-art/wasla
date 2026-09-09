@@ -5,13 +5,41 @@
  * والدفعُ حدُّ `M5-17` ولم يُبنَ بعدُ (ADR-026 §2 القرارُ الثالثُ).
  */
 
-/** مرجعٌ عامٌّ مُعتِمٌ — الصيغةُ نفسُها في كلِّ الأطوارِ (ADR-001). */
+/**
+ * **المراجعُ الأجنبيّةُ تُصدَّقُ بصيغةِ مالكِها لا بصيغتِنا.**
+ *
+ * رُصدَ في مراجعةِ هذا الطلبِ أنّ العقدَ كانَ يفرضُ `WS-##########` على
+ * `order_ref` و`store_ref` معاً — **فلا زوجَ حقيقيٌّ يستطيعُ استيفاءَه**:
+ * محرّكُ الطلبِ يُصدرُ `ORD-##########` من متتاليةٍ في قاعدتِه
+ * (`services/orders/contracts/schema.sql`)، والسوقُ يُعرِّفُ المتجرَ بـ`UUID`
+ * (`services/marketplace/contracts/schema.sql`). وعقدٌ لا يُستوفى **أسوأُ من
+ * غيابِ عقدٍ**: يمرُّ في الاختبارِ ويسقطُ في أوّلِ صفٍّ حقيقيٍّ.
+ */
+
+/** مرجعُ شخصٍ عامٌّ مُعتِمٌ — الصيغةُ نفسُها في كلِّ الأطوارِ (ADR-001). */
 export type WaslaPublicId = `WS-${string}`;
 
+/** مرجعُ الطلبِ — **يملكُ صيغتَه محرّكُ الطلبِ** (ADR-010). */
+export type OrderRef = `ORD-${string}`;
+
+/** مرجعُ المتجرِ — **يملكُ صيغتَه السوقُ** وهي `UUID` (ADR-016). */
+export type StoreRef = string;
+
 export const WASLA_PUBLIC_ID_PATTERN = /^WS-[0-9]{10}$/;
+export const ORDER_REF_PATTERN = /^ORD-[0-9]{10}$/;
+export const STORE_REF_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isWaslaPublicId(value: string): value is WaslaPublicId {
   return WASLA_PUBLIC_ID_PATTERN.test(value);
+}
+
+export function isOrderRef(value: string): value is OrderRef {
+  return ORDER_REF_PATTERN.test(value);
+}
+
+export function isStoreRef(value: string): boolean {
+  return STORE_REF_PATTERN.test(value);
 }
 
 /**
@@ -66,6 +94,17 @@ export interface Actor {
   readonly ref: WaslaPublicId | null;
 }
 
+/**
+ * **`system` وحدَه بلا مرجعٍ، ومن سواه بمرجعٍ إجباراً.**
+ * فاعلٌ بشريٌّ بلا مرجعٍ يجعلُ سطرَ التدقيقِ يقولُ «متجرٌ ما» — وهو لا شيءَ
+ * حينَ يُسألُ الدفترُ: **من فعلَ هذا؟** و`system` بمرجعِ شخصٍ يَنسبُ إلى إنسانٍ
+ * فعلاً لم يفعلْه.
+ */
+export function isWellFormedActor(actor: Actor): boolean {
+  if (actor.kind === "system") return actor.ref === null;
+  return actor.ref !== null && isWaslaPublicId(actor.ref);
+}
+
 /** أسبابُ الإخفاقِ والإلغاءِ — قائمةٌ مغلقةٌ كي تُعَدَّ لا تُقرأَ. */
 export const FAILURE_REASON_CODES = [
   "store_rejected",
@@ -86,8 +125,8 @@ export type FailureReasonCode = (typeof FAILURE_REASON_CODES)[number];
  */
 export interface Fulfilment {
   readonly fulfilment_ref: WaslaPublicId;
-  readonly order_ref: WaslaPublicId;
-  readonly store_ref: WaslaPublicId;
+  readonly order_ref: OrderRef;
+  readonly store_ref: StoreRef;
   readonly driver_ref: WaslaPublicId | null;
   readonly state: FulfilmentState;
   readonly sequence: number;

@@ -13,6 +13,7 @@ import {
   type FulfilmentTransition,
   type WaslaPublicId,
   isTerminal,
+  isWellFormedActor,
 } from "./model.js";
 
 /** رمزُ رفضٍ مغلقٌ — يُعَدُّ ولا يُقرأُ. */
@@ -20,6 +21,7 @@ export const TRANSITION_REJECTION_CODES = [
   "DELIVERY_TERMINAL_STATE",
   "DELIVERY_TRANSITION_NOT_ALLOWED",
   "DELIVERY_ACTOR_NOT_PERMITTED",
+  "DELIVERY_ACTOR_REF_INVALID",
   "DELIVERY_DRIVER_REQUIRED",
   "DELIVERY_DRIVER_NOT_EXPECTED",
   "DELIVERY_REASON_REQUIRED",
@@ -133,6 +135,11 @@ export function transition(
   }
   if (!edge.actors.includes(command.actor.kind)) {
     return { ok: false, code: "DELIVERY_ACTOR_NOT_PERMITTED" };
+  }
+  // سطرُ تدقيقٍ يقولُ «متجرٌ ما» لا يُجيبُ عن «من فعلَ هذا؟» — والحكمُ هنا
+  // لا في طبقةِ HTTP كي لا يُنسى في المستهلكِ وفي المهمّةِ المجدولةِ.
+  if (!isWellFormedActor(command.actor)) {
+    return { ok: false, code: "DELIVERY_ACTOR_REF_INVALID" };
   }
 
   const reason = command.failure_reason ?? null;

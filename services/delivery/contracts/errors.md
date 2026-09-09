@@ -11,6 +11,7 @@
 | `DELIVERY_TERMINAL_STATE` | محاولةُ مغادرةِ حالةٍ منتهيةٍ | `409` |
 | `DELIVERY_TRANSITION_NOT_ALLOWED` | الانتقالُ ليس في الجدولِ — **وما ليس فيه ممنوعٌ** | `422` |
 | `DELIVERY_ACTOR_NOT_PERMITTED` | الانتقالُ مسموحٌ لكنّ الفاعلَ ليس من أهلِه | `403` |
+| `DELIVERY_ACTOR_REF_INVALID` | فاعلٌ بشريٌّ بلا مرجعٍ، أو `system` بمرجعِ شخصٍ | `422` |
 | `DELIVERY_DRIVER_REQUIRED` | حالةٌ تحملُ سائقاً بلا مرجعِ سائقٍ | `422` |
 | `DELIVERY_DRIVER_NOT_EXPECTED` | مرجعُ سائقٍ في انتقالٍ لا يعنيه | `422` |
 | `DELIVERY_REASON_REQUIRED` | نهايةٌ غيرُ ناجحةٍ بلا سببٍ مُصنَّفٍ | `422` |

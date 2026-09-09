@@ -8,8 +8,11 @@ import {
   type Actor,
   type Fulfilment,
   type FulfilmentState,
+  isOrderRef,
+  isStoreRef,
   isTerminal,
   isWaslaPublicId,
+  isWellFormedActor,
 } from "../domain/model.js";
 import {
   allowedTransitions,
@@ -26,8 +29,8 @@ const OPERATOR: Actor = { kind: "operator", ref: "WS-0000000009" };
 function base(overrides: Partial<Fulfilment> = {}): Fulfilment {
   return {
     fulfilment_ref: "WS-1000000001",
-    order_ref: "WS-1000000002",
-    store_ref: "WS-0000000001",
+    order_ref: "ORD-1000000002",
+    store_ref: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
     driver_ref: null,
     state: "requested",
     sequence: 0,
@@ -45,6 +48,21 @@ describe("model", () => {
     expect(isWaslaPublicId("WS-0000000001")).toBe(true);
     expect(isWaslaPublicId("WS-1")).toBe(false);
     expect(isWaslaPublicId("+966500000000")).toBe(false);
+  });
+
+  it("المرجعُ الأجنبيُّ بصيغةِ مالكِه لا بصيغتِنا — وإلّا لم يستوفِ العقدَ زوجٌ حقيقيٌّ", () => {
+    // محرّكُ الطلبِ يُصدرُ ORD-، والسوقُ يُعرِّفُ المتجرَ بـUUID.
+    expect(isOrderRef("ORD-1000000002")).toBe(true);
+    expect(isOrderRef("WS-1000000002")).toBe(false);
+    expect(isStoreRef("3f2504e0-4f89-41d3-9a0c-0305e82c3301")).toBe(true);
+    expect(isStoreRef("WS-0000000001")).toBe(false);
+  });
+
+  it("`system` وحدَه بلا مرجعٍ، ومن سواه بمرجعٍ إجباراً", () => {
+    expect(isWellFormedActor({ kind: "system", ref: null })).toBe(true);
+    expect(isWellFormedActor({ kind: "system", ref: "WS-0000000001" })).toBe(false);
+    expect(isWellFormedActor({ kind: "store", ref: null })).toBe(false);
+    expect(isWellFormedActor({ kind: "store", ref: "WS-0000000001" })).toBe(true);
   });
 
   it("ثلاثُ حالاتٍ منتهيةٍ لا غيرُ", () => {
@@ -137,6 +155,26 @@ describe("الفاعلُ جزءٌ من الجدولِ لا من طبقةِ HTTP"
       cmd({ to: "cancelled", actor: OPERATOR, expected_sequence: 3, failure_reason: "operator_intervention" }),
     );
     expect(byOperator.ok).toBe(true);
+  });
+});
+
+describe("سطرُ التدقيقِ يجبُ أن يُجيبَ: من فعلَ هذا؟", () => {
+  it("متجرٌ بلا مرجعٍ يُرفَضُ ولو كانَ الانتقالُ مسموحاً", () => {
+    const r = transition(base(), cmd({ to: "accepted", actor: { kind: "store", ref: null } }));
+    expect(r).toEqual({ ok: false, code: "DELIVERY_ACTOR_REF_INVALID" });
+  });
+
+  it("`system` بمرجعِ شخصٍ يُرفَضُ — لا يُنسَبُ إلى إنسانٍ فعلٌ لم يفعلْه", () => {
+    const r = transition(
+      base({ state: "ready_for_pickup", sequence: 3 }),
+      cmd({
+        to: "assigned",
+        actor: { kind: "system", ref: "WS-0000000009" },
+        expected_sequence: 3,
+        driver_ref: "WS-0000000002",
+      }),
+    );
+    expect(r).toEqual({ ok: false, code: "DELIVERY_ACTOR_REF_INVALID" });
   });
 });
 

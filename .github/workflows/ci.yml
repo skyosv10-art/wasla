@@ -354,6 +354,14 @@ jobs:
           - leg: search
             pkg: "@wasla/search-service"
             db: wasla_search_test
+          # `M5-13` · المراجعةُ 3/N — محوّلاتُ PostgreSQL لمستهلكِ dispatch (ADR-026 §4.2
+          # رفعُ التأجيل): أحد عشرَ اختباراً يُثبتُ ما لا تُثبتُهُ البدائلُ الذهنيّةُ —
+          # الذرّيّةُ عندَ فشلٍ وسطَ المعاملةِ، ومنعُ التكرارِ بعدَ فقدانِ نقطةِ التقدّمِ،
+          # وعلامةُ الماءِ عبرَ دورةِ timestamptz كاملة، وأنّ المخططَ المطبَّقَ هو ملفُّ
+          # العقدِ من القرص. وكانت تُدارُ يداً — وما يُدارُ يداً ليس حارساً.
+          - leg: delivery
+            pkg: "@wasla/delivery-service"
+            db: wasla_delivery_test
     services:
       postgres:
         image: postgres:15

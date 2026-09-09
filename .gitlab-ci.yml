@@ -921,6 +921,30 @@ search-db-integration:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/search-service test:integration
 
+# `M5-13` · المراجعة 3/N — محوّلاتُ PostgreSQL لمستهلكِ dispatch (ADR-026 §4.2
+# رفعُ التأجيل). أحد عشرَ اختباراً على قاعدةٍ حقيقيّةٍ يُثبتُ ما لا تُثبتُهُ البدائلُ
+# الذهنيّةُ: الذرّيّةُ عندَ فشلٍ وسطَ المعاملةِ، ومنعُ التكرارِ بعدَ فقدانِ نقطةِ
+# التقدّمِ، وعلامةُ الماءِ عبرَ دورةِ timestamptz كاملة، وأنّ المخطّطَ المطبّقَ هو
+# ملفُّ العقدِ من القرص. قراءةٌ فقط من صندوقِ dispatch — لا published_at أبداً.
+#
+# قاعدةٌ مستقلّةٌ (wasla_delivery_test) كما في كلِّ ساقٍ حتى يبقى الفشلُ منسوباً
+# لوظيفةٍ واحدة. و`postgres:15` مقابلَ 18 على جهازِ التطويرِ: فرقٌ **مُعلَنٌ**
+# في سجلِّ العمل لا مكتومٌ.
+delivery-db-integration:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_delivery_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_delivery_test"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/delivery-service test:integration
+
 # بوابةُ خروج المرحلة 12 (MR 4/N):
 #   packages/search-e2e/src/__tests__/phase12-exit-gate.e2e.test.ts
 #

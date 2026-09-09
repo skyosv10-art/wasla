@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "خدمة طلبات المتجر والتوصيل (Phase 13) — المجموعة المستقلة لطلب المتجر (حالتان متعامدتان: fulfillment وpayment)، ومهمة التوصيل كمرآة خشنة لنتائج dispatch. هذه المراجعة الأولى: العقود ونواة النطاق فقط (العقد قبل التنفيذ — ADR-004)؛ HTTP والقاعدة والترحيلات مؤجلة (ADR-026 §4).",
+  "description": "خدمة طلبات المتجر والتوصيل (Phase 13) — المجموعة المستقلة لطلب المتجر (حالتان متعامدتان: fulfillment وpayment)، ومهمة التوصيل كمرآة خشنة لنتائج dispatch. هذه المراجعة الثالثة: محوّلات PostgreSQL لمستهلك dispatch (قراءةٌ فقط من صندوقِ التوزيعِ + مرآةٌ ذرّيّةٌ) ودفترُ استهلاكٍ وعلامةُ ماءٍ واختباراتُ تكاملٍ على PostgreSQL حقيقي؛ HTTP والترحيلات مؤجلة (ADR-026 §4).",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -13,13 +13,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@wasla/contracts-delivery": "workspace:*"
+    "@wasla/contracts-delivery": "workspace:*",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
     "vitest": "^2.1.0"
   }
 }

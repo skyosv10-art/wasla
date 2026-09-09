@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T00:57:43Z",
+  "generated_at": "2026-09-09T01:55:55Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "0a2c83212e81b334c104c2d37f3808e6ca6438ea",
-    "branch": "chore/m5-12-owner-closeout",
+    "commit": "974e6c0de0851241108a0552f9b68463412c11df",
+    "branch": "feat/m5-13-delivery-workflow-contract",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1556
+    "tracked_files": 1571
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "f0373940e3ce6e3e82309e0a4e756f1ad3f7033db711b2b661c406234f2a6dad",
-    "lines": 3040
+    "sha256": "305f8bad68204b86a2c4fd44bfb90ba7acbd1c4b7ed480fce0a1b8e4fa0504fa",
+    "lines": 3062
   },
   "static": {
-    "packages": 46,
-    "packages_with_typecheck": 46,
-    "packages_with_test": 46,
-    "test_files_tracked": 293,
+    "packages": 48,
+    "packages_with_typecheck": 48,
+    "packages_with_test": 48,
+    "test_files_tracked": 295,
     "ci_jobs": 28,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-8.log",
-    "tests_passed": 3900,
-    "test_files_executed": 236,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify-11.log",
+    "tests_passed": 3921,
+    "test_files_executed": 238,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:a7aa67b23c5ebc8d5c3fd2ba3d8046b124fc99da901118947c29dfb0c06449c8",
+  "fingerprint": "sha256:f937ae25fe86b830c752b1423c0940528513b4e014d6e24de21fdbf46ae74de3",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

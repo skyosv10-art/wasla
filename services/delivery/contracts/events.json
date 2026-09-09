@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/delivery/events/v1",
+  "title": "WASLA Fulfilment Workflow Domain Events v1",
+  "description": "أحداثُ خدمةِ الوفاءِ (Phase 13 · ADR-026). القاعدةُ الحاكمةُ: الحدثُ **أثرُ قرارٍ دخلَ الدفترَ** لا إعلانُ نيّةٍ، ولذلك كلُّ حمولةٍ تحملُ حالتَها السابقةَ واللاحقةَ وتسلسلَها وفاعلَها. وقاعدةُ الطورِ الأولى: **لا مالَ في أيِّ حمولةٍ** — لا `amount` ولا `fee` ولا `currency_code`: الدفعُ حدُّ M5-17 ولم يُبنَ، وحمولةٌ تحملُ رقمَ مالٍ اليومَ تُنسَخُ في سبعةِ مخازنَ قبلَ أن يُبنى. وقاعدةٌ ثانيةٌ: **لا نصَّ حرٍّ** — لا ملاحظةَ ولا عنواناً: أسبابُ الإخفاقِ قائمةٌ مغلقةٌ كي تُعَدَّ لا تُقرأَ. وقاعدةُ الخصوصيّةِ كما في كلِّ الأطوارِ (ADR-001 · ADR-007): لا اسمَ ولا هاتفَ ولا بريدَ ولا إحداثيّةَ؛ المراجعُ كلُّها مُعتِمةٌ بصيغةِ WS-##########. وكلُّ حدثٍ يُكتبُ في المعاملةِ نفسِها عبرَ delivery_outbox فلا تغييرَ صامتٌ.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّفٌ موحَّدٌ. لا حدثَ بلا مغلّفٍ.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "fulfilment.requested",
+            "fulfilment.state_changed",
+            "fulfilment.driver_assigned",
+            "fulfilment.driver_released",
+            "fulfilment.terminated"
+          ]
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "fulfilment"
+            },
+            "id": {
+              "$ref": "#/$defs/WaslaPublicId"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$"
+    },
+    "FulfilmentState": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "accepted",
+        "preparing",
+        "ready_for_pickup",
+        "assigned",
+        "picked_up",
+        "delivered",
+        "completed",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "ActorKind": {
+      "type": "string",
+      "enum": [
+        "store",
+        "driver",
+        "customer",
+        "system",
+        "operator"
+      ]
+    },
+    "FailureReasonCode": {
+      "type": "string",
+      "enum": [
+        "store_rejected",
+        "out_of_stock",
+        "customer_cancelled",
+        "no_driver_found",
+        "pickup_failed",
+        "delivery_failed",
+        "address_unreachable",
+        "operator_intervention"
+      ],
+      "description": "قائمةٌ مغلقةٌ. سببٌ حرٌّ كان سيجعلُ «ما أكثرُ أسبابِ إخفاقِ التسليمِ؟» سؤالاً يُجابُ بالقراءةِ لا بالعدِّ."
+    },
+    "Actor": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ActorKind"
+        },
+        "ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "`system` بلا مرجعٍ لأنّه ليس شخصاً."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "fulfilment.requested": {
+      "type": "object",
+      "description": "شحنةٌ دخلت الدفترَ. **لا تحملُ سطورَ الطلبِ ولا رصيدَ مخزونٍ**: السطورُ يملكُها محرّكُ الطلبِ والرصيدُ يملكُه السوقُ، ونسخةُ رصيدٍ تتقادمُ لحظةَ كتابتِها.",
+      "required": [
+        "fulfilment_ref",
+        "order_ref",
+        "store_ref",
+        "state",
+        "sequence"
+      ],
+      "properties": {
+        "fulfilment_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "order_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "store_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "state": {
+          "const": "requested"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "fulfilment.state_changed": {
+      "type": "object",
+      "description": "انتقالٌ دخلَ الدفترَ. يحملُ الطرفَينِ والتسلسلَ والفاعلَ — فمن قرأَه وحدَه أعادَ بناءَ المسيرةِ بلا سؤالِ الخدمةِ.",
+      "required": [
+        "fulfilment_ref",
+        "order_ref",
+        "store_ref",
+        "driver_ref",
+        "from_state",
+        "to_state",
+        "sequence",
+        "actor",
+        "failure_reason"
+      ],
+      "properties": {
+        "fulfilment_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "order_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "store_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "driver_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/WaslaPublicId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from_state": {
+          "$ref": "#/$defs/FulfilmentState"
+        },
+        "to_state": {
+          "$ref": "#/$defs/FulfilmentState"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "failure_reason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/FailureReasonCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "fulfilment.driver_assigned": {
+      "type": "object",
+      "description": "سائقٌ سُمّيَ للشحنةِ. **المرجعُ مُعتِمٌ**: الاسمُ والهاتفُ والإحداثيّةُ يملكُها دفترُ السائقينَ ولا تُنسَخُ هنا.",
+      "required": [
+        "fulfilment_ref",
+        "driver_ref",
+        "sequence"
+      ],
+      "properties": {
+        "fulfilment_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "driver_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "fulfilment.driver_released": {
+      "type": "object",
+      "description": "سقطَ الإسنادُ فعادت الشحنةُ إلى الانتظارِ. **ليس إلغاءً**: المتجرُ جهّزَ فعلاً.",
+      "required": [
+        "fulfilment_ref",
+        "previous_driver_ref",
+        "sequence"
+      ],
+      "properties": {
+        "fulfilment_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "previous_driver_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "fulfilment.terminated": {
+      "type": "object",
+      "description": "نهايةٌ منتهيةٌ. بعدَها لا انتقالَ إطلاقاً.",
+      "required": [
+        "fulfilment_ref",
+        "final_state",
+        "sequence",
+        "failure_reason"
+      ],
+      "properties": {
+        "fulfilment_ref": {
+          "$ref": "#/$defs/WaslaPublicId"
+        },
+        "final_state": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "cancelled",
+            "failed"
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "failure_reason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/FailureReasonCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "`null` عندَ `completed` وحدَه."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

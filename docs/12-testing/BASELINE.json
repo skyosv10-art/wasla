@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T14:25:48Z",
+  "generated_at": "2026-09-09T20:14:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "678f01bc030ef6ca69b4f7f2d2c1d297c9914a71",
-    "branch": "feat/m5-13-dispatch-relay-consumer",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "commit": "baf9c89db9721911727b50a3cb65970eac39bb02",
+    "branch": "feat/m5-13-dispatch-relay-postgres",
+    "dirty": true,
+    "dirty_files": 17,
+    "dirty_reason": "شجرة المراجعة 3/N غير ملتزَمة بعد: محوّلات PostgreSQL للمنفذين + اختبارات التكامل + CI + وثائق الحوكمة (CLM-0122)",
     "tracked_files": 1586
   },
   "env": {
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "7af59f84c212dfd80c3ed23f2edda7e9f80c0d4f056ae7d328d12f6c11f20f9f",
-    "lines": 3065
+    "sha256": "e3da78603520740c429fb7438a1f5dffbd580ad28f2d11d95e1ed05c64f3c72f",
+    "lines": 3071
   },
   "static": {
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 299,
-    "ci_jobs": 28,
+    "test_files_tracked": 300,
+    "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
     "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
+    "source": "/tmp/verify5.log",
     "tests_passed": 3987,
     "test_files_executed": 242,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:8e4e7d0cbb9c914cf296ed6725868c7c1d7b728a6d197d5b2afd627115d59fc3",
+  "fingerprint": "sha256:07742d372da0b371b4dcefdafc7afdacf7572fbc2a5a1a6bc8838ea7cf06ebdc",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

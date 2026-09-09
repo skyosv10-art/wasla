@@ -3,9 +3,9 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-08T20:50:00Z",
+  "measured_at": "2026-09-09T19:54:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-08T205000Z-m5-12-required-checks",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-09T195400Z-m5-13-required-checks",
   "protection": {
     "required_status_checks": {
       "strict": true,
@@ -38,7 +38,8 @@
         "exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)",
         "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
         "db-integration (search, @wasla/search-service, wasla_search_test)",
-        "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)"
+        "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)",
+        "db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)"
       ]
     },
     "enforce_admins": true,

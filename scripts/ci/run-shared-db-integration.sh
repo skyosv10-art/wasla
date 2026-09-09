@@ -52,6 +52,7 @@ LEGS=(
   # `db-integration` حرفاً**، وإقحامُها كان سيُزيحُ المطابقةَ عن موضعِها السادسِ
   # فيُبطِلُ الحالةَ التي رُصد فيها `RISK-0014`. وهي آخِرُ المنضمّينَ فتُذيَّلُ.
   "search|@wasla/search-service"
+  "delivery|@wasla/delivery-service"
 )
 
 echo "القاعدةُ المشتركةُ: ${DATABASE_URL%%\?*}"

@@ -149,6 +149,14 @@ CREATE TABLE IF NOT EXISTS delivery_tasks (
     -- تفويضُ dispatch: مرجعُ المهمّةِ هناك — لا نسخُ منطقِها هنا
     dispatch_job_ref   TEXT        CHECK (dispatch_job_ref IS NULL OR char_length(dispatch_job_ref) BETWEEN 1 AND 128),
 
+    -- علامةُ ماءِ dispatch (ADR-026 §2.4 · المراجعة 3/N): آخرُ حدثٍ استُهلكَ
+    -- نهائيّاً لهذهِ المهمّةِ (تطبيقاً أو تجاهلاً). ترتيبُها معجميٌّ على
+    -- (occurred_at, event_id) — الحدثُ الأقدمُ لا يتراجعُ بالحالةِ أبداً.
+    -- ملكُ التوصيلِ وحده: المستهلكُ لا يكتبُ في صندوقِ dispatch أبداً
+    -- (لا published_at) — التقدّمُ كلُّهُ هنا.
+    dispatch_last_occurred_at TIMESTAMPTZ,
+    dispatch_last_event_id   UUID,
+
     -- المندوبُ مرجعٌ opaque — لا اسمَ ولا هاتفَ (ADR-026 §2.6)
     courier_ref        TEXT        CHECK (courier_ref IS NULL OR courier_ref ~ '^WS-[0-9]{10}$'),
 
@@ -205,6 +213,9 @@ CREATE TABLE IF NOT EXISTS delivery_outbox (
     aggregate_id       TEXT        NOT NULL CHECK (char_length(aggregate_id) BETWEEN 1 AND 64),
     payload            JSONB       NOT NULL,
     trace_id           TEXT,
+    -- لحظةُ الواقعةِ من مظروفِ الحدثِ (المراجعة 3/N): نفسُ عمودِ السوقِ
+    -- والبحثِ — بلا هذا العمودِ يضيعُ occurred_at من المظروفِ عندَ الكتابةِ.
+    occurred_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     published_at       TIMESTAMPTZ
 );
@@ -212,5 +223,37 @@ CREATE TABLE IF NOT EXISTS delivery_outbox (
 CREATE INDEX IF NOT EXISTS ix_delivery_outbox_unpublished
     ON delivery_outbox (outbox_id)
     WHERE published_at IS NULL;
+
+-- ─────────────────────────────────────────────────────────────
+-- 7) delivery_relay_consumed_events — دفترُ استهلاكِ أحداثِ dispatch
+--    (منعُ التكرار · ADR-026 §4.2): كلُّ صفٍّ حدثٌ من dispatch_outbox
+--    حُسِمَ أمرُهُ نهائيّاً أو أُرجِئَ. المفتاحُ event_id نفسُهُ — فإعادةُ
+--    التسليمِ بعدَ إعادةِ بناءِ المستهلكِ no-op لا صفٌ ثانٍ.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_relay_consumed_events (
+    event_id       UUID        PRIMARY KEY,
+    event_type     TEXT        NOT NULL CHECK (char_length(event_type) BETWEEN 3 AND 96),
+    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('dispatch_job','dispatch_offer')),
+    aggregate_id   TEXT        NOT NULL CHECK (char_length(aggregate_id) BETWEEN 1 AND 64),
+    consumed_status TEXT     NOT NULL CHECK (consumed_status IN (
+                                   'pending','applied','skipped_stale',
+                                   'ignored','ignored_foreign','poisoned')),
+    attempt_count  INTEGER     NOT NULL CHECK (attempt_count >= 1),
+    last_error     TEXT,
+    consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- 8) delivery_relay_checkpoint — نقطةُ تقدّمِ المستهلكِ (المراجعة 3/N):
+--    آخرُ صفٍّ حُسِمَ أمرُهُ من dispatch_outbox. ملكُ التوصيلِ — لا علاقةَ
+--    لهُ بـ published_at في صندوقِ dispatch.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_relay_checkpoint (
+    consumer_id      TEXT        PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 3 AND 96),
+    last_occurred_at TIMESTAMPTZ NOT NULL,
+    last_event_id    UUID        NOT NULL,
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 COMMIT;

@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0122 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-dispatch-relay-postgres | services/delivery/,packages/contracts/delivery/,docs/15-decisions/,docs/16-progress/,docs/12-testing/,.github/workflows/ci.yml,.gitlab-ci.yml,scripts/ci/,pnpm-lock.yaml | 2026-09-09 | 2026-09-23 | Active |
 | CLM-0121 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-dispatch-relay-consumer | services/delivery/,packages/contracts/delivery/,docs/16-progress/,docs/12-testing/ | 2026-09-09 | 2026-09-23 | Released (PR #88 مُدمج 2026-09-09T16:07:30Z · التزام الدمج `6623515` · squash · CI مقيسٌ: 29 فحصاً كلُّها pass · إقفالُ دورة §8.1) |
 | CLM-0120 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-store-orders-delivery | services/delivery/,packages/contracts/delivery/,docs/15-decisions/,docs/16-progress/,docs/12-testing/,pnpm-lock.yaml | 2026-09-09 | 2026-09-23 | Released (PR #86 مُدمج 2026-09-09T13:12:02Z · التزام الدمج `9232815` · squash · CI مقيسٌ: 30 فحصاً كلُّها pass · إقفالُ دورة §8.1) |
 | CLM-0119 | M5-12 | @uxxxu (agent:perplexity-computer) | chore/m5-12-owner-closeout | docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #83 مُدمج 2026-09-09 · `6ea9d9e` · 30 فحصاً `pass`) |

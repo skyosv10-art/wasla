@@ -289,7 +289,7 @@ export function deliveryDriverAssignedEvent(
 export function deliveryStatusChangedEvent(
   task: DeliveryTask,
   from: DeliveryTask["state"],
-  reasonCode: "picked_up_from_store" | "in_transit" | "arrived_at_customer" | "offer_timed_out" | "offers_exhausted",
+  reasonCode: "picked_up_from_store" | "in_transit" | "arrived_at_customer" | "offer_timed_out" | "reassignment_cycle" | "offers_exhausted",
   context: EventContext,
   actor: DeliveryActor,
 ): DeliveryStatusChangedV1 {

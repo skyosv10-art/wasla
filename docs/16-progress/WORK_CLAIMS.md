@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0119 | M5-12 | @uxxxu (agent:perplexity-computer) | chore/m5-12-owner-closeout | docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Active |
 | CLM-0118 | M5-12 | @uxxxu (agent:perplexity-computer) | feat/m5-12-search-total-and-readiness | services/search/,packages/search-e2e/,packages/contracts/search/,docs/04-api/,docs/07-security/,docs/12-testing/,docs/15-decisions/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #81 مُدمج 2026-09-09T00:34:16Z · التزام الدمج e52b3a0 · squash · CI مقيسٌ: 30 فحصاً كلُّها pass · إقفال دورة §8.1) |
 | CLM-0117 | M0-06 | @uxxxu (agent:perplexity-computer) | chore/m0-06-dep-audit-refresh | package.json,pnpm-lock.yaml,docs/00-rules/,docs/07-security/,docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #80 مُدمج 2026-09-08T23:27:10Z · التزام الدمج 685586e · squash · CI مقيسٌ: 30 فحصاً كلُّها pass · إقفال دورة §8.1) |
 | CLM-0116 | M5-12 | @uxxxu (agent:perplexity-computer) | feat/m5-12-search-exit-gate | packages/search-e2e/,services/search/,.github/workflows/ci.yml,.gitlab-ci.yml,scripts/ci/,docs/04-api/,docs/12-testing/,docs/15-decisions/,docs/07-security/,docs/16-progress/,pnpm-lock.yaml,pnpm-workspace.yaml | 2026-09-08 | 2026-09-22 | Released (PR #79 مُدمج 2026-09-08T21:43:17Z · التزام الدمج e84af3d · CI مقيسٌ: تشغيل 34279193882 — 29 وظيفةً كلُّها success · إقفال دورة §8.1) |

@@ -1,0 +1,24 @@
+{
+  "name": "@wasla/contracts-delivery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "تبرير الحزمة (§7): سطح TypeScript موحّد لعقود خدمة التوصيل الكنسية — مجموعةُ طلبِ المتجرِ (الحالتانِ المتعامدتانِ: fulfillment · payment)، ومهمّةُ التوصيلِ (المرآةُ الخشنةُ لنتائجِ dispatch)، وأحداثُ النطاقِ الاثنا عشر، وكتالوجُ الأخطاءِ الثابتُ — كي يستهلكها بوتُ العميلِ ولوحةُ الإدارةِ وطورُ الفوترةِ (M5-17) بلا نسخِ أشكالِ الأحداثِ ولا جداولِ الانتقالاتِ، وبلا تنفيذٍ داخلَ الحزمةِ. مصدرُ الحقيقةِ لقراراتِ الحدودِ هو ADR-026؛ والعقدُ هنا عقدٌ لا تنفيذٌ.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../../services/delivery/contracts/api.openapi.yml -o src/api-types.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "openapi-typescript": "^7.13.0",
+    "vitest": "^2.1.0"
+  }
+}

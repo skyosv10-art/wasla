@@ -1,0 +1,315 @@
+openapi: 3.1.0
+info:
+  title: WASLA Delivery Service API (Store Orders & Delivery)
+  version: 0.1.0
+  description: |
+    عقدُ واجهةِ خدمةِ التوصيلِ (Phase 13 — Contract First · ADR-004).
+
+    المبادئُ الحاكمةُ (ADR-026): طلبُ المتجرِ مجموعةٌ مستقلّةٌ عن طلبِ النقلِ (§2.1) ·
+    حالةُ الدفعِ مرآةُ مرجعٍ خارجيٍّ (§2.2) · لا قراءةَ مخزونٍ إلا عبرَ الحدِّ المتَّفقِ
+    عليهِ (§2.3) · التوصيلُ مرآةٌ خشنةٌ لنتائجِ dispatch (§2.4) · الاستبدالُ قرارُ صنفٍ
+    (§2.5) · لا بياناتِ شخصيّةَ ولا إحداثيّاتٍ في أيِّ حمولةٍ (§2.6).
+
+    **حدٌّ مُعلَنٌ (مراجعةٌ 1/N):** هذه الواجهةُ **عقدٌ مُعرَّفٌ لا مُنفَّذٌ** — طبقةُ
+    HTTP (Fastify) والتركيبُ مؤجَّلانِ لمراجعةٍ لاحقةٍ (ADR-026 §4.2). يُحدِّدُ العقدُ
+    الشكلَ الآنَ كي لا يبنيَ مستهلكٌ فوقَ شكلٍ لم يُقرَّرْ بعدُ.
+servers:
+  - url: http://localhost:8097
+    description: مراجعةٌ محليّةٌ — التنفيذُ مؤجَّلٌ (ADR-026 §4.2)
+tags:
+  - name: store-orders
+    description: دورةُ حياةِ طلبِ المتجرِ (F1)
+  - name: delivery
+    description: مهمّةُ التوصيلِ (F2)
+  - name: health
+paths:
+  /store-orders:
+    post:
+      tags: [store-orders]
+      operationId: placeStoreOrder
+      summary: إنشاءُ طلبِ متجرٍ (تأكيدُ السلّةَ draft → placed)
+      description: |
+        لقطةُ الأصنافِ (كميّةٌ · سعرُ وقتِ الطلبِ) تُثبَّتُ هنا ولا تُقرأُ من الكتالوجِ
+        بعدَها (ADR-026 §2.3). أهليّةُ الأصنافِ تُقرأُ من السوقِ عبرَ الحدِّ المتَّفقِ
+        عليهِ لا من فهرسِ البحثِ (ADR-025 §2.2).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaceStoreOrderRequest"
+      responses:
+        "201":
+          description: طلبٌ مُنشأٌ في placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "503":
+          $ref: "#/components/responses/DependencyUnavailable"
+  /store-orders/{orderPublicId}:
+    get:
+      tags: [store-orders]
+      operationId: getStoreOrder
+      summary: قراءةُ طلبِ متجرٍ
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+      responses:
+        "200":
+          description: الطلبُ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+  /store-orders/{orderPublicId}/cancellation:
+    post:
+      tags: [store-orders]
+      operationId: cancelStoreOrder
+      summary: إلغاءُ طلبِ متجرٍ (قبلَ التسليمِ للمناديبِ)
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelStoreOrderRequest"
+      responses:
+        "200":
+          description: الطلبُ مُلغىً
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+  /store-orders/{orderPublicId}/delivery-task:
+    get:
+      tags: [delivery]
+      operationId: getDeliveryTaskForOrder
+      summary: مهمّةُ التوصيلِ لطلبِ متجرٍ
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+      responses:
+        "200":
+          description: المهمّةُ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryTaskResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+  /delivery/health:
+    get:
+      tags: [health]
+      operationId: getDeliveryHealth
+      summary: نبضةُ حياةِ الخدمة
+      responses:
+        "200":
+          description: الخدمةُ حيّةٌ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+components:
+  responses:
+    ValidationError:
+      description: مدخلاتٌ غيرُ صالحةٍ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFoundError:
+      description: غيرُ موجودٍ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ConflictError:
+      description: انتقالُ حالةٍ غيرُ جائزٍ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    DependencyUnavailable:
+      description: تبعيّةٌ (السوقُ · dispatch) غيرُ متاحةٍ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    WaslaPublicId:
+      type: string
+      pattern: "^WS-[0-9]{10}$"
+      description: مرجعٌ opaque — لا بياناتِ شخصيّةَ (ADR-026 §2.6)
+    FulfillmentState:
+      type: string
+      enum: [draft, placed, confirmed, picking, picked, ready_for_delivery, handed_to_courier, delivered, cancelled, rejected, failed]
+    PaymentState:
+      type: string
+      enum: [pending, authorized, captured, failed, refunding, partially_refunded, refunded]
+    DeliveryTaskState:
+      type: string
+      enum: [pending_eligibility, eligible, dispatch_requested, driver_assigned, timed_out, reassigned, exhausted, picked_up, in_transit, arrived, delivered, ineligible, failed, cancelled]
+    ProofType:
+      type: string
+      enum: [otp, photo, signature, pin_code]
+    OrderLineInput:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+    PlaceStoreOrderRequest:
+      type: object
+      required: [customer_ref, store_public_id, items]
+      properties:
+        customer_ref:
+          $ref: "#/components/schemas/WaslaPublicId"
+        store_public_id:
+          $ref: "#/components/schemas/WaslaPublicId"
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/OrderLineInput"
+        delivery_fee_minor_units:
+          type: integer
+          minimum: 0
+          description: رسومُ التوصيلِ (هللة) — لقطةُ عرضِ التوصيلِ وقتَ الطلبِ
+    CancelStoreOrderRequest:
+      type: object
+      required: [reason_code]
+      properties:
+        reason_code:
+          type: string
+          enum: [CUSTOMER_CHANGED_MIND, CUSTOMER_UNAVAILABLE, PAYMENT_FAILED, STORE_REQUESTED, SYSTEM_MAINTENANCE, DELIVERY_NOT_FEASIBLE]
+    OrderLine:
+      type: object
+      required: [line_no, product_id, sku, quantity, unit_price_minor_units, line_total_minor_units]
+      properties:
+        line_no:
+          type: integer
+          minimum: 1
+        product_id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price_minor_units:
+          type: integer
+          minimum: 0
+        line_total_minor_units:
+          type: integer
+          minimum: 0
+        substituted_product_id:
+          type: [string, "null"]
+          format: uuid
+        substitution_reason:
+          type: [string, "null"]
+          enum: [out_of_stock, customer_approved_alternative, store_policy, null]
+    StoreOrderResponse:
+      type: object
+      required: [order_id, public_id, customer_ref, store_public_id, fulfillment_state, payment_state, currency_code, items_total_minor_units, delivery_fee_minor_units, total_minor_units, items, version]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        public_id:
+          $ref: "#/components/schemas/WaslaPublicId"
+        customer_ref:
+          $ref: "#/components/schemas/WaslaPublicId"
+        store_public_id:
+          $ref: "#/components/schemas/WaslaPublicId"
+        fulfillment_state:
+          $ref: "#/components/schemas/FulfillmentState"
+        payment_state:
+          $ref: "#/components/schemas/PaymentState"
+        currency_code:
+          type: string
+          const: SAR
+        items_total_minor_units:
+          type: integer
+        delivery_fee_minor_units:
+          type: integer
+        total_minor_units:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        version:
+          type: integer
+    DeliveryTaskResponse:
+      type: object
+      required: [task_id, order_id, state, version]
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        state:
+          $ref: "#/components/schemas/DeliveryTaskState"
+        ineligibility_reason:
+          type: [string, "null"]
+          enum: [outside_coverage, store_not_orderable, no_courier_service, null]
+        dispatch_job_ref:
+          type: [string, "null"]
+        courier_ref:
+          type: [string, "null"]
+          description: مرجعٌ opaque للمندوبِ — لا اسمَ ولا هاتفَ (ADR-026 §2.6)
+        proof_type:
+          type: [string, "null"]
+          $ref: "#/components/schemas/ProofType"
+        proof_ref:
+          type: [string, "null"]
+        version:
+          type: integer
+    ErrorResponse:
+      type: object
+      required: [error_code, message, trace_id]
+      properties:
+        error_code:
+          type: string
+          description: كودٌ ثابتٌ من كتالوجِ errors.md — لا نصٍّ حرٍّ
+        message:
+          type: string
+          description: رسالةٌ للسجلِّ لا للمستخدمِ (التوطينُ مسارُ قناةٍ)
+        trace_id:
+          type: string
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok

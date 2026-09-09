@@ -1,10 +1,10 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T00:11:38Z",
+  "generated_at": "2026-09-09T00:57:43Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "9d40e6901bcebc5d99b5c0a2233d16aadfd517ab",
-    "branch": "feat/m5-12-search-total-and-readiness",
+    "commit": "0a2c83212e81b334c104c2d37f3808e6ca6438ea",
+    "branch": "chore/m5-12-owner-closeout",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
@@ -34,7 +34,7 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-7.log",
+    "source": "/tmp/verify-8.log",
     "tests_passed": 3900,
     "test_files_executed": 236,
     "governance_suite_cases": 183,

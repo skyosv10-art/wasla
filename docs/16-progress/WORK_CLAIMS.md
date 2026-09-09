@@ -59,7 +59,8 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
-| CLM-0120 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-delivery-workflow-contract | services/delivery/,packages/contracts/delivery/,docs/15-decisions/,docs/04-api/,docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Active |
+| CLM-0121 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-delivery-workflow-contract | services/delivery/,packages/contracts/delivery/,pnpm-lock.yaml,docs/15-decisions/,docs/04-api/,docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Active |
+| CLM-0120 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-delivery-workflow-contract | services/delivery/,packages/contracts/delivery/,docs/15-decisions/,docs/04-api/,docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (نطاقٌ ضيِّقٌ — لا يُوسَّع سطرٌ قائمٌ §6؛ خلَفَه CLM-0121) |
 | CLM-0119 | M5-12 | @uxxxu (agent:perplexity-computer) | chore/m5-12-owner-closeout | docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #83 مُدمج 2026-09-09 · `6ea9d9e` · 30 فحصاً `pass`) |
 | CLM-0118 | M5-12 | @uxxxu (agent:perplexity-computer) | feat/m5-12-search-total-and-readiness | services/search/,packages/search-e2e/,packages/contracts/search/,docs/04-api/,docs/07-security/,docs/12-testing/,docs/15-decisions/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #81 مُدمج 2026-09-09T00:34:16Z · التزام الدمج e52b3a0 · squash · CI مقيسٌ: 30 فحصاً كلُّها pass · إقفال دورة §8.1) |
 | CLM-0117 | M0-06 | @uxxxu (agent:perplexity-computer) | chore/m0-06-dep-audit-refresh | package.json,pnpm-lock.yaml,docs/00-rules/,docs/07-security/,docs/12-testing/,docs/16-progress/ | 2026-09-09 | 2026-09-23 | Released (PR #80 مُدمج 2026-09-08T23:27:10Z · التزام الدمج 685586e · squash · CI مقيسٌ: 30 فحصاً كلُّها pass · إقفال دورة §8.1) |

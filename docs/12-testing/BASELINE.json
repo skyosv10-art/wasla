@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T02:08:05Z",
+  "generated_at": "2026-09-09T03:27:58Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b39b35a5cafb877e105561308e64ee4cde8613dc",
+    "commit": "79ad0ef83ed6e26c3a5f880eb8cdb9fe97a4d661",
     "branch": "feat/m5-13-delivery-workflow-contract",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1571
+    "tracked_files": 1572
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 295,
+    "test_files_tracked": 296,
     "ci_jobs": 28,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-13.log",
-    "tests_passed": 3921,
-    "test_files_executed": 238,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify-m513b.log",
+    "tests_passed": 3931,
+    "test_files_executed": 239,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f937ae25fe86b830c752b1423c0940528513b4e014d6e24de21fdbf46ae74de3",
+  "fingerprint": "sha256:9eeacba9573a3ca751f4edc997b959b21b32b677cc18c370ae5187c113548f70",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

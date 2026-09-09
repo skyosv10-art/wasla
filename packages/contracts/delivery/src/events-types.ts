@@ -273,6 +273,7 @@ export interface DeliveryStatusChangedV1 extends DeliveryEventEnvelope {
       | "in_transit"
       | "arrived_at_customer"
       | "offer_timed_out"
+      | "reassignment_cycle"
       | "offers_exhausted";
     courier_ref?: WaslaPublicId | null;
     actor: DeliveryActor;

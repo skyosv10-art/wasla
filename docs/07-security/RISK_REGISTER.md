@@ -76,6 +76,7 @@ RISK-0007 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-30 | 
 RISK-0008 | sev:low | owner:@uxxxu | opened:2026-08-27 | review:2026-11-30 | status:accepted | ref:docs/00-rules/VERIFY_COMMAND.md | markdown-lint وظيفةٌ إرشاديّةٌ بـallow_failure فعيوبُ الصياغةِ لا تُسقِط
 RISK-0009 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-08 | status:closed | ref:docs/16-progress/WORK_CLAIMS.md | أُغلق 2026-09-09: شرطُه كانَ تقاطُعَ حجزٍ نشطٍ مع ترقياتِ M0-06، و CLM-0004 حُرِّرَ بقرارِ مالكِه البشريِّ 2026-09-07 وترقياتُ M0-06 دُمجت بلا تعارضٍ — والفرعُ البائتُ وحدَه انتقلَ إلى RISK-0033
 RISK-0033 | sev:low | owner:@uxxxu | opened:2026-09-09 | review:2026-10-09 | status:open | ref:docs/16-progress/WORK_CLAIMS.md | فرعٌ بائتٌ بلا حجزٍ ولا طلبِ دمجٍ: fix/m0-02-drivers-conformance-zone-seed قائمٌ merged:false وآخرُ التزامٍ فيه 9d4339d2 بتاريخِ 2026-08-25 — عملٌ في services/drivers/ لا يحرسُه حارسٌ لأنّ حارسَ البياتِ يقيسُ الحجوزاتِ لا الفروعَ
+RISK-0034 | sev:medium | owner:@uxxxu | opened:2026-09-09 | review:2026-10-09 | status:open | ref:docs/15-decisions/ADR-026-store-orders-and-delivery-boundary.md | جسرُ ORD-/WS- يسدُّ سلكَ التفويضِ الحقيقيَّ: عقدُ dispatch القائمُ (createDispatchJob) يشترطُ orderPublicId بنمطِ ORD-########## ويستدعي deps.orders.transitionOrder(→searching)، ومهامُ delivery على متجرِ WS- لا تُلبّي شرطاً منهما — فلا يوجدُ مُحوّلُ HTTP خلفَ منفذِ DispatchJobRequester (رُصد أثناء تنفيذِ CLM-0123، ADR-026 §4.7). قرارُ بُنيةِ الحجزِ بينَ طورَينِ قرارُ مالكٍ معماريٌّ؛ حتى الحسمِ يبقى سلكُ التفويضِ مُختبَراً على جسرٍ مزيّفٍ وضمانُ الترتيبِ الكاملُ (§4.6-2) غيرَ مُدَّعى — الربطُ الذرّيُّ والإعادةُ الآمنةُ والمفتاحُ الحتميُّ جاهزةٌ للتوصيلِ بمجرّدِ الحسم
 RISK-0010 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-27 | status:mitigating | ref:scripts/checks/validate-dependency-audit.sh | نظافةُ التدقيقِ رهنُ مُسجَّلِ npm يومَ التشغيل: صفرُ اليومِ ليس ضماناً للغد
 RISK-0011 | sev:medium | owner:@uxxxu | opened:2026-08-28 | review:2026-09-28 | status:mitigating | ref:docs/12-testing/BASELINE_FORMAT.md | الأساسُ المرجعيُّ يُحدَّث بيدٍ: عدَّاداتُه الحركيّةُ تبيت بلا تشغيلٍ دوريٍّ مُجدوَل
 RISK-0012 | sev:medium | owner:@uxxxu | opened:2026-08-29 | review:2026-09-29 | status:open | ref:docs/02-architecture/MARKETPLACE_EVENTS.md | صناديقُ الصادرِ الخمسةُ بلا عدَّادٍ متزايدٍ: ترتيبُ حدثَينِ في معاملةٍ واحدةٍ يسقط على مُعرِّفٍ عشوائيّ
@@ -296,6 +297,30 @@ npm يومَ التشغيلِ — فآخرُ خطٍّ أخضرَ على `main` (
 
 **والقرارُ ليس لي:** الفرعُ لمالكٍ بشريٍّ (`@uxxxu`)، ودمجُه أو حذفُه قرارُه —
 فالمُسجَّلُ هنا **رصدٌ بمهلةٍ** لا خطّةُ تنفيذٍ.
+
+### RISK-0034 · جسرُ ORD-/WS- يسدُّ سلكَ التفويضِ الحقيقيَّ (`medium` · مفتوحٌ · مراجعةٌ 2026-10-09)
+
+رُصد 2026-09-09 أثناء تنفيذِ سلكِ التفويضِ (CLM-0123، مراجعةُ 4/N): عقدُ
+`createDispatchJob` القائمُ في `services/dispatch` يشترطُ `orderPublicId`
+بنمطِ `ORD-##########` (مراجعُ `services/orders`) ويستدعي `deps.orders.transitionOrder(→searching)` — ومهامُ delivery على طلبِ متجرِ
+`WS-…` لا تُلبّي شرطاً منهما. فسلكُ التفويضِ نفّذَ جانبَ delivery كاملاً
+(المنفذُ `DispatchJobRequester`، الربطُ الذرّيُّ في `bindDispatchJob`،
+المفتاحُ الحتميُّ، اختباراتٌ على PostgreSQL حقيقيّة) **لكن خلفَ المنفذِ مُحوّلٌ
+مزيّفٌ للاختبارِ فقط** — لا يوجدُ مُحوّلُ HTTP إلى `POST /dispatch/jobs`.
+
+**الأثرُ:** ضمانُ الترتيبِ الكاملُ لـADR-026 §4.6-2 («لا نتيجةَ قابلةً
+للإسقاطِ تسبقُ الربطَ») **لا يُدَّعى** — المُقاسُ محليّاً: الربطُ ذرّيٌّ
+والإعادةُ آمنةٌ والأمرُ الصادرُ idempotent؛ والتوصيلُ الفعليُّ يتوقّفُ على
+قرارِ بُنيةِ الحجزِ بينَ طورَي orders وdelivery.
+
+**والقرارُ ليس لي:** بُنيةُ الحجزِ قرارٌ معماريٌّ لمالكِ المشروعِ (`@uxxxu`)
+مُعلَنٌ تأجيلُه في ADR-026 §5. حتى الحسمِ لا يُبنى مُحوّلٌ حقيقيٌّ (سيكونُ
+شيفرةً ميتةً أو تزييفاً للجسرِ) — والمنفذُ والعُقدُ جاهزةٌ للتوصيلِ
+بمجرّدِ الحسمِ.
+
+**والحدُّ البنيويُّ يُقالُ صريحاً:** هذا الخطرُ لا يحرسُه فحصٌ آليّ —
+حارسُ الحجوزاتِ يقيسُ الأعمارِ لا الانقطاعاتِ المعماريّة؛ مهلةُ المراجعةِ
+هي الحارسُ الوحيدُ.
 
 ### RISK-0010 · نظافةُ التدقيقِ مؤقّتةٌ بطبعِها (`medium` · علاجٌ جارٍ)
 

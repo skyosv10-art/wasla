@@ -21,6 +21,7 @@
 
 import type { DispatchOutboxRow, RelayCheckpoint, ConsumedStatus } from "./domain/consumed-events.js";
 import type { MirrorTransition } from "./domain/dispatch-mirror.js";
+import type { DelegatableTask } from "./domain/delegation.js";
 
 export interface DispatchEventSource {
   /** Read up to `limit` dispatch outbox rows strictly after the checkpoint (or from zero). */
@@ -68,4 +69,75 @@ export interface TaskMirrorStore {
   /* ── replay / rebuild ── */
   /** Clear mirror state + consumed ledger + checkpoint (NOT delivery_outbox). */
   clearMirrorState(): Promise<void>;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Dispatch delegation — the COMMAND side of ADR-026 §2.4 (review 4/N).
+ * Deliberately NOT part of TaskMirrorStore: that port is relay consumption
+ * (dispatch_outbox → mirror); this is the sending direction (task → dispatch
+ * job). Separate seams, separate fakes, same Postgres class may implement
+ * both — the responsibilities stay distinguishable at the type level.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/** Context of a delegation write — same shape as MirrorContext, own name. */
+export interface DelegationContext {
+  readonly eventId: string;
+  readonly occurredAt: string;
+  readonly traceId: string | null;
+}
+
+/**
+ * The outbound command port — delivery asks dispatch to own the matching.
+ *
+ * Delivery-owned fields ONLY: the command must not smuggle ORD- assumptions
+ * (ADR-026 §4.6-1 — dispatch is ORD-keyed, store orders are WS-). The real
+ * adapter (HTTP, composition root — deferred §4.2) bridges to dispatch's
+ * create-job contract behind the pending architectural decision recorded in
+ * the risk register; until then the port is tested with a fake.
+ */
+export interface DispatchJobRequester {
+  /**
+   * Request a dispatch job for an eligible task. MUST be idempotent per
+   * `idempotencyKey` (the key is deterministic per task — domain/delegation.ts).
+   * Throws on transport/dependency failure — the caller maps nothing, keeps
+   * zero local state, and retries.
+   */
+  requestJob(command: DispatchDelegationCommand): Promise<DispatchJobRequestOutcome>;
+}
+
+export interface DispatchDelegationCommand {
+  readonly taskId: string;
+  /** The store order this task delivers — a delivery-owned opaque ref. */
+  readonly orderId: string;
+  /** Deterministic (domain/delegation.ts) — crash-heal depends on it. */
+  readonly idempotencyKey: string;
+  readonly traceId: string | null;
+}
+
+export interface DispatchJobRequestOutcome {
+  /** The dispatch job's opaque ref — the ONLY legal join (§4.6-1), 1..128 chars. */
+  readonly jobRef: string;
+  /** True when dispatch remembered the key and returned the original job. */
+  readonly replayed: boolean;
+}
+
+/**
+ * The delivery-owned side of the bind — ONE transaction (ADR-026 §4.6-2):
+ * `dispatch_job_ref` + eligible→dispatch_requested + transition ledger row
+ * (actor `system`) + the `delivery.dispatch_requested` outbox event.
+ *
+ * Contract errors (DeliveryError):
+ *  - DELIVERY_TRANSITION_NOT_ALLOWED — the task is not `eligible` anymore,
+ *  - DELIVERY_CONCURRENT_UPDATE — a DIFFERENT jobRef is already bound,
+ *  and a raw throw means rollback — nothing survives a mid-bind crash.
+ */
+export interface TaskDelegationStore {
+  /** The task as the wire sees it — null when unknown. */
+  getTaskForDelegation(taskId: string): Promise<DelegatableTask | null>;
+  /**
+   * Atomically bind the job and move eligible→dispatch_requested.
+   * `already_bound` (same ref, idempotent) is NOT an error — the deterministic
+   * idempotency key makes a racing or retried caller ask for the same job.
+   */
+  bindDispatchJob(taskId: string, jobRef: string, context: DelegationContext): Promise<"bound" | "already_bound">;
 }

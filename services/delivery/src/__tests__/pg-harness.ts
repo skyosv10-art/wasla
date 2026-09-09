@@ -84,7 +84,7 @@ export async function setupPostgres(): Promise<PgFixture> {
   return { pool, close: () => pool.end() };
 }
 
-/** Seed a bound delivery task (order + task with `dispatch_job_ref`). */
+/** Seed a delivery task (order + task). `dispatchJobRef: null` seeds UNBOUND. */
 export async function seedTask(
   pool: Pool,
   overrides: Partial<{ taskId: string; orderId: string; publicId: string; state: string; dispatchJobRef: string | null }> = {},
@@ -92,7 +92,8 @@ export async function seedTask(
   const taskId = overrides.taskId ?? "aaaaaaaa-0000-0000-0000-000000000001";
   const orderId = overrides.orderId ?? "bbbbbbbb-0000-0000-0000-000000000002";
   const publicId = overrides.publicId ?? "WS-0000000001";
-  const jobId = overrides.dispatchJobRef ?? "job-agg-1";
+  // `??` would swallow an explicit null — an unbound seed must stay unbound.
+  const jobId = "dispatchJobRef" in overrides ? (overrides.dispatchJobRef as string | null) : "job-agg-1";
   await pool.query(
     `INSERT INTO store_orders (order_id, public_id, customer_ref, store_id, store_public_id,
                                fulfillment_state, payment_state, currency_code,

@@ -206,3 +206,101 @@ export function dispatchRow(overrides: Partial<DispatchOutboxRow> & { event_id: 
     ...overrides,
   };
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Delegation fakes (review 4/N — the command side, ADR-026 §2.4).
+ * The fake store mirrors what the Postgres adapter does in ONE transaction
+ * (ref + eligible→dispatch_requested + ledger + outbox event), and the fake
+ * requester mirrors dispatch's create-job idempotency (same key → same job,
+ * never a second one) — the two facts §4.6-2 needs from the wire's test seam.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+import type { DelegatableTask, MutableDelegatableTask } from "../domain/delegation.js";
+import {
+  DELEGATION_SOURCE_STATE,
+  DELEGATION_TARGET_STATE,
+  DISPATCH_DELEGATION_LEDGER_REASON,
+  deriveDelegationIdempotencyKey,
+} from "../domain/delegation.js";
+import type { DelegationContext, DispatchDelegationCommand, DispatchJobRequestOutcome, DispatchJobRequester, TaskDelegationStore } from "../ports.js";
+import { DeliveryError } from "../domain/errors.js";
+
+export class InMemoryDelegationStore implements TaskDelegationStore {
+  readonly tasks = new Map<string, MutableDelegatableTask & { ledger: { from: string; to: string; reason: string; actor: string; occurredAt: string }[]; outbox: string[] }>();
+
+  bindTask(task: DelegatableTask): void {
+    this.tasks.set(task.taskId, { ...task, ledger: [], outbox: [] });
+  }
+
+  async getTaskForDelegation(taskId: string): Promise<DelegatableTask | null> {
+    const t = this.tasks.get(taskId);
+    return t ? { taskId: t.taskId, orderId: t.orderId, state: t.state, dispatchJobRef: t.dispatchJobRef } : null;
+  }
+
+  async bindDispatchJob(taskId: string, jobRef: string, context: DelegationContext): Promise<"bound" | "already_bound"> {
+    const t = this.tasks.get(taskId);
+    if (!t) {
+      throw new DeliveryError("DELIVERY_TASK_NOT_FOUND", `مهمّة التوصيل ${taskId} غير موجودة`, { traceId: context.traceId ?? undefined });
+    }
+    if (t.dispatchJobRef !== null) {
+      if (t.dispatchJobRef === jobRef) return "already_bound";
+      throw new DeliveryError(
+        "DELIVERY_CONCURRENT_UPDATE",
+        `المهمّة مربوطةٌ بمهمّةِ توزيعٍ أخرى (${t.dispatchJobRef})`,
+        { traceId: context.traceId ?? undefined, details: { field: "dispatch_job_ref", expected: jobRef, actual: t.dispatchJobRef } },
+      );
+    }
+    if (t.state !== DELEGATION_SOURCE_STATE) {
+      throw new DeliveryError(
+        "DELIVERY_TRANSITION_NOT_ALLOWED",
+        `التفويضُ يبدأُ من ${DELEGATION_SOURCE_STATE} فقط — المهمّةُ في ${t.state}`,
+        { traceId: context.traceId ?? undefined, details: { from: t.state, to: DELEGATION_TARGET_STATE } },
+      );
+    }
+    // The atomic bind, in memory: state + ref + ledger row + outbox event id.
+    t.state = DELEGATION_TARGET_STATE;
+    t.dispatchJobRef = jobRef;
+    t.ledger.push({ from: DELEGATION_SOURCE_STATE, to: DELEGATION_TARGET_STATE, reason: DISPATCH_DELEGATION_LEDGER_REASON, actor: "system", occurredAt: context.occurredAt });
+    t.outbox.push(context.eventId);
+    return "bound";
+  }
+}
+
+/** A scripted dispatch bridge — records commands, scripts outcomes/failures. */
+export class FakeDispatchJobRequester implements DispatchJobRequester {
+  readonly commands: DispatchDelegationCommand[] = []
+  /** Key → job ref, dispatch's remembered idempotency. */
+  readonly remembered = new Map<string, string>();
+  /** Queue of outcomes or thrown errors, one per NEW key. */
+  readonly script: (DispatchJobRequestOutcome | Error)[] = []
+  /** When true, requestJob throws once for a new key then succeeds on retry. */
+  failFirstNKeys = 0;
+
+  async requestJob(command: DispatchDelegationCommand): Promise<DispatchJobRequestOutcome> {
+    this.commands.push(command);
+    const rememberedRef = this.remembered.get(command.idempotencyKey);
+    if (rememberedRef !== undefined) {
+      return { jobRef: rememberedRef, replayed: true };
+    }
+    if (this.failFirstNKeys > 0) {
+      this.failFirstNKeys -= 1;
+      throw new Error("dispatch bridge unavailable (scripted)");
+    }
+    const next = this.script.shift();
+    if (next instanceof Error) throw next;
+    const outcome: DispatchJobRequestOutcome = next ?? { jobRef: `job-${this.commands.length}`, replayed: false };
+    this.remembered.set(command.idempotencyKey, outcome.jobRef);
+    return outcome;
+  }
+}
+
+/** Deterministic id/clock for tests — readable event ids and ISO stamps. */
+export function deterministicIds(prefix = "evt") {
+  let n = 0;
+  return {
+    ids: { uuid: () => `${prefix}-${String(++n).padStart(4, "0")}` },
+    clock: { now: () => new Date("2026-09-09T12:00:00.000Z").toISOString() },
+  };
+}
+
+export { deriveDelegationIdempotencyKey };

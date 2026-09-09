@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T20:14:00Z",
+  "generated_at": "2026-09-09T22:16:04Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "baf9c89db9721911727b50a3cb65970eac39bb02",
-    "branch": "feat/m5-13-dispatch-relay-postgres",
+    "commit": "417be0e72744f925e802fe534f6c5f00fad9be5a",
+    "branch": "feat/m5-13-dispatch-delegation-wire",
     "dirty": true,
-    "dirty_files": 17,
-    "dirty_reason": "شجرة المراجعة 3/N غير ملتزَمة بعد: محوّلات PostgreSQL للمنفذين + اختبارات التكامل + CI + وثائق الحوكمة (CLM-0122)",
-    "tracked_files": 1586
+    "dirty_files": 13,
+    "dirty_reason": "شجرة المراجعة 4/N غير ملتزَمة بعد: إضافة خطر RISK-0034 (جسرُ ORD-/WS-) وملفَّي اختبارِ التفويضِ (وحدةً وتكاملاً) و111 اختباراً جديداً",
+    "tracked_files": 1593
   },
   "env": {
     "node": "v20.20.1",
@@ -26,21 +26,21 @@
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 300,
+    "test_files_tracked": 302,
     "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 23
+    "risks_not_closed": 24
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify5.log",
-    "tests_passed": 3987,
-    "test_files_executed": 242,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify4b.log",
+    "tests_passed": 4039,
+    "test_files_executed": 245,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:07742d372da0b371b4dcefdafc7afdacf7572fbc2a5a1a6bc8838ea7cf06ebdc",
+  "fingerprint": "sha256:a59da342c4b0c0cfe5f30bf8e6d4789fbf5820a1de861d91ab32718a8dd1ee9b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

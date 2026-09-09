@@ -29,8 +29,16 @@
 import type { Pool, PoolClient } from "pg";
 import type { ConsumedStatus, DispatchOutboxRow, RelayCheckpoint } from "../domain/consumed-events.js";
 import type { MirrorTransition } from "../domain/dispatch-mirror.js";
-import type { MirrorContext, TaskMirrorStore } from "../ports.js";
 import {
+  DELEGATION_SOURCE_STATE,
+  DELEGATION_TARGET_STATE,
+  DISPATCH_DELEGATION_LEDGER_REASON,
+  type DelegatableTask,
+} from "../domain/delegation.js";
+import { DeliveryError } from "../domain/errors.js";
+import type { DelegationContext, MirrorContext, TaskDelegationStore, TaskMirrorStore } from "../ports.js";
+import {
+  deliveryDispatchRequestedEvent,
   deliveryDriverAssignedEvent,
   deliveryStatusChangedEvent,
   deliveryTaskCancelledEvent,
@@ -46,7 +54,7 @@ interface TaskRow {
   readonly version: number;
 }
 
-export class PostgresTaskMirrorStore implements TaskMirrorStore {
+export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationStore {
   constructor(private readonly pool: Pool) {}
 
   /* ── checkpoint (delivery-owned) ── */
@@ -73,6 +81,106 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore {
                      updated_at = now()`,
       [consumerId, checkpoint.last_occurred_at, checkpoint.last_event_id],
     );
+  }
+
+  /* ── delegation (command side, ADR-026 §2.4/§4.6-2, review 4/N) ── */
+
+  async getTaskForDelegation(taskId: string): Promise<DelegatableTask | null> {
+    const r = await this.pool.query<{ task_id: string; order_id: string; state: string; dispatch_job_ref: string | null }>(
+      `SELECT task_id::text, order_id::text, state, dispatch_job_ref
+         FROM delivery_tasks WHERE task_id = $1::uuid`,
+      [taskId],
+    );
+    if (!r.rows.length) return null;
+    const row = r.rows[0];
+    return {
+      taskId: row.task_id,
+      orderId: row.order_id,
+      state: row.state as DelegatableTask["state"],
+      dispatchJobRef: row.dispatch_job_ref,
+    };
+  }
+
+  async bindDispatchJob(taskId: string, jobRef: string, context: DelegationContext): Promise<"bound" | "already_bound"> {
+    return this.withTransaction(async (tx) => {
+      const sel = await tx.query<TaskRow & { dispatch_job_ref: string | null }>(
+        `SELECT task_id::text, order_id::text, state, courier_ref, version, dispatch_job_ref
+           FROM delivery_tasks WHERE task_id = $1::uuid
+         FOR UPDATE`,
+        [taskId],
+      );
+      const task = sel.rows[0];
+      if (!task) {
+        throw new DeliveryError(
+          "DELIVERY_TASK_NOT_FOUND",
+          `مهمّة التوصيل ${taskId} غير موجودة`,
+          { traceId: context.traceId ?? undefined },
+        );
+      }
+      if (task.dispatch_job_ref !== null) {
+        if (task.dispatch_job_ref === jobRef) {
+          // The deterministic idempotency key makes a racing or retried caller
+          // ask for the same job — replay, not contradiction.
+          return "already_bound" as const;
+        }
+        // A DIFFERENT ref is a contradiction the design refuses to swallow —
+        // it means two delegation wires (or a broken bridge) bound one task
+        // to two jobs. Loud, contract-coded, nothing written.
+        throw new DeliveryError(
+          "DELIVERY_CONCURRENT_UPDATE",
+          `المهمّة ${taskId} مربوطةٌ بمهمّةِ توزيعٍ أخرى (${task.dispatch_job_ref}) — لا يُربطُ مهمّتانِ بمهمّةٍ واحدة`,
+          { traceId: context.traceId ?? undefined, details: { field: "dispatch_job_ref", expected: jobRef, actual: task.dispatch_job_ref } },
+        );
+      }
+      if (task.state !== DELEGATION_SOURCE_STATE) {
+        throw new DeliveryError(
+          "DELIVERY_TRANSITION_NOT_ALLOWED",
+          `التفويضُ يبدأُ من ${DELEGATION_SOURCE_STATE} فقط — المهمّةُ في ${task.state}`,
+          { traceId: context.traceId ?? undefined, details: { from: task.state, to: DELEGATION_TARGET_STATE } },
+        );
+      }
+
+      // 1. Task state + the ref — ONE UPDATE (eligible → dispatch_requested).
+      await tx.query(
+        `UPDATE delivery_tasks
+            SET state = $2,
+                dispatch_job_ref = $3,
+                version = version + 1,
+                updated_at = now()
+          WHERE task_id = $1::uuid`,
+        [taskId, DELEGATION_TARGET_STATE, jobRef],
+      );
+
+      // 2. Transition ledger — append-only, actor is system (the wire).
+      await tx.query(
+        `INSERT INTO delivery_task_transitions
+           (task_id, from_state, to_state, reason_code, actor_type, actor_ref, trace_id, occurred_at)
+         VALUES ($1::uuid, $2, $3, $4, 'system', NULL, $5, $6::timestamptz)`,
+        [taskId, DELEGATION_SOURCE_STATE, DELEGATION_TARGET_STATE, DISPATCH_DELEGATION_LEDGER_REASON, context.traceId, context.occurredAt],
+      );
+
+      // 3. The delegation's domain event — same transaction, so a consumer of
+      //    delivery.dispatch_requested can never see an unbound task.
+      const event = this.buildDelegationEvent(task, jobRef, context);
+      await tx.query(
+        `INSERT INTO delivery_outbox
+           (event_id, event_type, event_version, aggregate_type, aggregate_id,
+            payload, trace_id, occurred_at)
+         VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb, $7, $8::timestamptz)
+         ON CONFLICT (event_id) DO NOTHING`,
+        [
+          event.event_id,
+          event.event_type,
+          event.event_version,
+          event.aggregate.type,
+          event.aggregate.id,
+          JSON.stringify(event.payload),
+          event.trace_id,
+          event.occurred_at,
+        ],
+      );
+      return "bound" as const;
+    });
   }
 
   /* ── the coarse mirror ── */
@@ -248,6 +356,27 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore {
     } finally {
       client.release();
     }
+  }
+
+  /** The delegation event (§2.4) — same builder the fake uses, task now bound. */
+  private buildDelegationEvent(
+    task: TaskRow & { dispatch_job_ref: string | null },
+    jobRef: string,
+    context: DelegationContext,
+  ): DeliveryDomainEvent {
+    const domainTask = {
+      taskId: task.task_id,
+      orderId: task.order_id,
+      state: DELEGATION_TARGET_STATE,
+      courierRef: task.courier_ref,
+      dispatchJobRef: jobRef,
+      version: task.version + 1,
+    } as never;
+    return deliveryDispatchRequestedEvent(domainTask, DELEGATION_SOURCE_STATE as never, {
+      eventId: context.eventId,
+      occurredAt: context.occurredAt,
+      traceId: context.traceId,
+    });
   }
 
   /** Same builder logic as the in-memory fake (mirror-fakes.buildEvent). */

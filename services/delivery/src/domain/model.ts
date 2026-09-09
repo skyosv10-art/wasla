@@ -1,144 +1,103 @@
 /**
- * نواةُ مجالِ الوفاءِ — الأنواعُ وحدَها، بلا إدخالٍ ولا إخراجٍ (ADR-026).
+ * Delivery service domain model (Phase 13) — the store-order aggregate.
  *
- * لا مالَ هنا ولا نصَّ حرٍّ ولا بياناً شخصيّاً: المراجعُ كلُّها مُعتِمةٌ،
- * والدفعُ حدُّ `M5-17` ولم يُبنَ بعدُ (ADR-026 §2 القرارُ الثالثُ).
- */
-
-/**
- * **المراجعُ الأجنبيّةُ تُصدَّقُ بصيغةِ مالكِها لا بصيغتِنا.**
+ * This aggregate is a STORE ORDER: a cart of item snapshots from ONE store
+ * (ADR-026 §2.1). It is NOT the transport order of services/orders — that
+ * lifecycle (21 states, ADR-010) models a single-driver transport journey;
+ * this one models pick-pack-substitute-deliver with orthogonal payment
+ * mirroring (§2.2).
  *
- * رُصدَ في مراجعةِ هذا الطلبِ أنّ العقدَ كانَ يفرضُ `WS-##########` على
- * `order_ref` و`store_ref` معاً — **فلا زوجَ حقيقيٌّ يستطيعُ استيفاءَه**:
- * محرّكُ الطلبِ يُصدرُ `ORD-##########` من متتاليةٍ في قاعدتِه
- * (`services/orders/contracts/schema.sql`)، والسوقُ يُعرِّفُ المتجرَ بـ`UUID`
- * (`services/marketplace/contracts/schema.sql`). وعقدٌ لا يُستوفى **أسوأُ من
- * غيابِ عقدٍ**: يمرُّ في الاختبارِ ويسقطُ في أوّلِ صفٍّ حقيقيٍّ.
+ * Two orthogonal state fields, never one mixed column:
+ *  - `fulfillmentState` — THIS service's decision (§3.1).
+ *  - `paymentState` — a mirror of an external payment intent referenced by
+ *    `paymentRef`. No money is processed here; billing is M5-17 (§2.2).
+ *
+ * Items are SNAPSHOTS, not inventory balances (§2.3): quantity and price are
+ * captured at order time and never re-read from the catalog. Live quantities
+ * are read through the agreed marketplace port only — this model holds none.
+ *
+ * Privacy (§2.6 · ADR-001 · ADR-007): every human and store is an opaque
+ * `WS-##########` ref. No names, phones, addresses or coordinates exist in
+ * this model — live status is a state transition, not a location.
  */
 
-/** مرجعُ شخصٍ عامٌّ مُعتِمٌ — الصيغةُ نفسُها في كلِّ الأطوارِ (ADR-001). */
-export type WaslaPublicId = `WS-${string}`;
+import type {
+  FulfillmentState,
+  PaymentState,
+  WaslaPublicId,
+} from "@wasla/contracts-delivery";
 
-/** مرجعُ الطلبِ — **يملكُ صيغتَه محرّكُ الطلبِ** (ADR-010). */
-export type OrderRef = `ORD-${string}`;
-
-/** مرجعُ المتجرِ — **يملكُ صيغتَه السوقُ** وهي `UUID` (ADR-016). */
-export type StoreRef = string;
-
-export const WASLA_PUBLIC_ID_PATTERN = /^WS-[0-9]{10}$/;
-export const ORDER_REF_PATTERN = /^ORD-[0-9]{10}$/;
-export const STORE_REF_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isWaslaPublicId(value: string): value is WaslaPublicId {
-  return WASLA_PUBLIC_ID_PATTERN.test(value);
+/** An item snapshot line, immutable after creation except substitution (§2.5). */
+export interface StoreOrderItem {
+  readonly orderItemId: string;
+  readonly lineNo: number;
+  /** Logical marketplace product reference — no cross-service FK (§2.3). */
+  readonly productId: string;
+  readonly sku: string;
+  readonly quantity: number;
+  /** Snapshot taken at order time — never re-read from the catalog. */
+  readonly unitPriceMinorUnits: number;
+  readonly lineTotalMinorUnits: number;
+  /** Substitution is a LINE decision, only during picking (§2.5). */
+  readonly substitutedProductId?: string;
+  readonly substitutionReason?: "out_of_stock" | "customer_approved_alternative" | "store_policy";
+  readonly substitutionPriceDeltaMinorUnits?: number;
 }
 
-export function isOrderRef(value: string): value is OrderRef {
-  return ORDER_REF_PATTERN.test(value);
+/** A store order, exactly as the ledger sees it. */
+export interface StoreOrder {
+  readonly orderId: string;
+  readonly publicId: WaslaPublicId;
+  readonly customerRef: WaslaPublicId;
+  readonly storeId: string;
+  readonly storePublicId: WaslaPublicId;
+  readonly fulfillmentState: FulfillmentState;
+  readonly paymentState: PaymentState;
+  readonly paymentRef: string | null;
+  readonly currencyCode: "SAR";
+  readonly itemsTotalMinorUnits: number;
+  readonly deliveryFeeMinorUnits: number;
+  readonly totalMinorUnits: number;
+  readonly items: readonly StoreOrderItem[];
+  /** Optimistic concurrency — every transition bumps this. */
+  readonly version: number;
 }
 
-export function isStoreRef(value: string): boolean {
-  return STORE_REF_PATTERN.test(value);
+/** Proof of delivery — REQUIRED for delivered, forbidden elsewhere (§2.4). */
+export interface ProofOfDelivery {
+  readonly proofType: "otp" | "photo" | "signature" | "pin_code";
+  readonly proofRef: string;
 }
 
 /**
- * حالاتُ الشحنةِ الثمانِ السائرةُ ونهايتانِ منتهيتانِ.
- * القائمةُ **مغلقةٌ**: حالةٌ حرّةٌ نصّيّةٌ تجعلُ «كم شحنةً عَلِقت قبلَ الالتقاطِ؟»
- * سؤالاً يُجابُ بالقراءةِ لا بالعدِّ (ADR-026 §3).
+ * The delivery task — a COARSE MIRROR of dispatch results (§2.4).
+ *
+ * The precise logic (waves, offers, timeouts) belongs to services/dispatch;
+ * this record only projects outcomes into coarse states. `dispatchJobRef`
+ * delegates by reference, never by copying logic.
  */
-export const FULFILMENT_STATES = [
-  "requested",
-  "accepted",
-  "preparing",
-  "ready_for_pickup",
-  "assigned",
-  "picked_up",
-  "delivered",
-  "completed",
-  "cancelled",
-  "failed",
-] as const;
-
-export type FulfilmentState = (typeof FULFILMENT_STATES)[number];
-
-/** الحالاتُ المنتهيةُ: لا انتقالَ يخرجُ منها إطلاقاً. */
-export const TERMINAL_STATES: readonly FulfilmentState[] = [
-  "completed",
-  "cancelled",
-  "failed",
-];
-
-export function isTerminal(state: FulfilmentState): boolean {
-  return TERMINAL_STATES.includes(state);
-}
-
-/**
- * الفاعلُ مُصنَّفٌ لا حرٌّ — ومن يجوزُ له الانتقالُ جزءٌ من جدولِ الانتقالاتِ
- * لا من طبقةِ HTTP، لأنّ صلاحيّةً تعيشُ في المُتحكِّمِ تُنسى في المستهلكِ
- * وفي المهمّةِ المجدولةِ (ADR-026 §2 القرارُ الرابعُ).
- */
-export const ACTOR_KINDS = [
-  "store",
-  "driver",
-  "customer",
-  "system",
-  "operator",
-] as const;
-
-export type ActorKind = (typeof ACTOR_KINDS)[number];
-
-/** فاعلٌ: صنفُه ومرجعُه المُعتِمُ. `system` بلا مرجعٍ لأنّه ليس شخصاً. */
-export interface Actor {
-  readonly kind: ActorKind;
-  readonly ref: WaslaPublicId | null;
-}
-
-/**
- * **`system` وحدَه بلا مرجعٍ، ومن سواه بمرجعٍ إجباراً.**
- * فاعلٌ بشريٌّ بلا مرجعٍ يجعلُ سطرَ التدقيقِ يقولُ «متجرٌ ما» — وهو لا شيءَ
- * حينَ يُسألُ الدفترُ: **من فعلَ هذا؟** و`system` بمرجعِ شخصٍ يَنسبُ إلى إنسانٍ
- * فعلاً لم يفعلْه.
- */
-export function isWellFormedActor(actor: Actor): boolean {
-  if (actor.kind === "system") return actor.ref === null;
-  return actor.ref !== null && isWaslaPublicId(actor.ref);
-}
-
-/** أسبابُ الإخفاقِ والإلغاءِ — قائمةٌ مغلقةٌ كي تُعَدَّ لا تُقرأَ. */
-export const FAILURE_REASON_CODES = [
-  "store_rejected",
-  "out_of_stock",
-  "customer_cancelled",
-  "no_driver_found",
-  "pickup_failed",
-  "delivery_failed",
-  "address_unreachable",
-  "operator_intervention",
-] as const;
-
-export type FailureReasonCode = (typeof FAILURE_REASON_CODES)[number];
-
-/**
- * الشحنةُ: **لا تحملُ نسخةَ رصيدِ مخزونٍ ولا مبلغاً**. الرصيدُ يُقرأُ من مالكِه
- * (ADR-026 §3)، والمالُ حدُّ `M5-17`.
- */
-export interface Fulfilment {
-  readonly fulfilment_ref: WaslaPublicId;
-  readonly order_ref: OrderRef;
-  readonly store_ref: StoreRef;
-  readonly driver_ref: WaslaPublicId | null;
-  readonly state: FulfilmentState;
-  readonly sequence: number;
-  readonly failure_reason: FailureReasonCode | null;
-}
-
-/** أثرُ انتقالٍ دخلَ الدفترَ — حالتُه السابقةُ واللاحقةُ وتسلسلُه وفاعلُه. */
-export interface FulfilmentTransition {
-  readonly fulfilment_ref: WaslaPublicId;
-  readonly from_state: FulfilmentState;
-  readonly to_state: FulfilmentState;
-  readonly sequence: number;
-  readonly actor: Actor;
-  readonly failure_reason: FailureReasonCode | null;
+export interface DeliveryTask {
+  readonly taskId: string;
+  readonly orderId: string;
+  readonly state:
+    | "pending_eligibility"
+    | "eligible"
+    | "dispatch_requested"
+    | "driver_assigned"
+    | "timed_out"
+    | "reassigned"
+    | "exhausted"
+    | "picked_up"
+    | "in_transit"
+    | "arrived"
+    | "delivered"
+    | "ineligible"
+    | "failed"
+    | "cancelled";
+  readonly ineligibilityReason: "outside_coverage" | "store_not_orderable" | "no_courier_service" | null;
+  readonly dispatchJobRef: string | null;
+  /** Opaque courier ref — no name, no phone (§2.6). */
+  readonly courierRef: WaslaPublicId | null;
+  readonly proof: ProofOfDelivery | null;
+  readonly version: number;
 }

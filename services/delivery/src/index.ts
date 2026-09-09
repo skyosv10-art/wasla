@@ -1,6 +1,97 @@
 /**
- * سطحُ خدمةِ الوفاءِ (ADR-026) — المراجعةُ 1/N: نواةُ مجالٍ نقيّةٌ وعقودٌ.
- * لا محوّلَ قاعدةٍ ولا HTTP بعدُ، ولا يُدَّعى ذلك (ADR-026 §4).
+ * @wasla/delivery-service — public surface (review 1/N).
+ *
+ * This review publishes the DOMAIN CORE plus the DISPATCH RELAY CONSUMER
+ * (review 2/N: classification, the coarse-mirror projection, ports and the
+ * engine — ADR-026 §2.4/§4.1). HTTP, Postgres adapters and the dispatch
+ * delegation wire remain deferred (ADR-026 §4) — nothing here imports
+ * fastify, pg or any runtime dependency by design.
  */
-export * from "./domain/model.js";
-export * from "./domain/state-machine.js";
+
+export type {
+  DeliveryTask,
+  ProofOfDelivery,
+  StoreOrder,
+  StoreOrderItem,
+} from "./domain/model.js";
+export {
+  FULFILLMENT_TRANSITIONS,
+  PAYMENT_TRANSITIONS,
+  DELIVERY_TASK_TRANSITIONS,
+  STATE_SPACES,
+  canCompleteDelivery,
+  canConfirmOrder,
+  isDeliveryTaskTerminal,
+  isDeliveryTaskTransitionAllowed,
+  isFulfillmentTerminal,
+  isFulfillmentTransitionAllowed,
+  isPaymentTerminal,
+  isPaymentTransitionAllowed,
+} from "./domain/state-machine.js";
+export type {
+  DeliveryTaskTransitionRule,
+  FulfillmentTransitionRule,
+  PaymentTransitionRule,
+} from "./domain/state-machine.js";
+export { DeliveryError, isDeliveryError, illegalTransition } from "./domain/errors.js";
+export type { DeliveryErrorDetails } from "./domain/errors.js";
+export type { DeliveryDomainEvent, EventContext } from "./domain/events.js";
+export {
+  deliveryCompletedEvent,
+  deliveryDispatchRequestedEvent,
+  deliveryDriverAssignedEvent,
+  deliveryEligibilityResolvedEvent,
+  deliveryFailedEvent,
+  deliveryStatusChangedEvent,
+  deliveryTaskCancelledEvent,
+  deliveryTaskCreatedEvent,
+  storeOrderCreatedEvent,
+  storeOrderFulfillmentStateChangedEvent,
+  storeOrderItemSubstitutedEvent,
+  storeOrderPaymentStateChangedEvent,
+} from "./domain/events.js";
+export {
+  assertPublicId,
+  isValidPublicId,
+  isValidUuid,
+  validateCatalogSnapshot,
+  validatePlaceOrderInput,
+  validateProof,
+  validateSubstitutionInput,
+} from "./domain/validation.js";
+export type { OrderLineInput, PlaceOrderInput } from "./domain/validation.js";
+
+/* ── review 2/N: the dispatch relay consumer (ADR-026 §2.4, §4.1) ── */
+export type {
+  ConsumedStatus,
+  DispatchEventClassification,
+  DispatchEventType,
+  DispatchOutboxRow,
+  ProjectableDispatchEvent,
+  RelayCheckpoint,
+} from "./domain/consumed-events.js";
+export {
+  DISPATCH_EVENT_TYPES,
+  DispatchPayloadError,
+  ZERO_CHECKPOINT,
+  classifyDispatchEvent,
+  isTerminal,
+} from "./domain/consumed-events.js";
+export type { MirrorDecision, MirrorEmission, MirrorTask, MirrorTransition } from "./domain/dispatch-mirror.js";
+export {
+  DISPATCH_JOB_CANCELLED_REASON,
+  projectDispatchEvent,
+} from "./domain/dispatch-mirror.js";
+export type {
+  DispatchEventSource,
+  MirrorContext,
+  TaskMirrorStore,
+} from "./ports.js";
+export {
+  DEFAULT_RELAY_CONFIG,
+  SUPPORTED_EVENT_VERSION,
+  rebuildAll,
+  replayFrom,
+  runRelayBatch,
+} from "./relay.js";
+export type { BatchOutcome, RelayConfig, RelayDeps, RelayLogEntry } from "./relay.js";

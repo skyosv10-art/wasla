@@ -1,0 +1,1275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/delivery/events/v1",
+  "title": "WASLA Store Orders & Delivery Domain Events v1",
+  "description": "أحداث خدمة التوصيل (Phase 13 — طلباتُ المتجرِ والتوصيلُ). القاعدة الحاكمة (ADR-026): الحدث أثرُ قرارٍ دخل دفتراً — لا إعلانَ نيّةٍ ولا نتيجةَ مؤقّت. كلُّ حمولةِ قرارٍ تحمل حالتَها السابقةَ واللاحقةَ وسببَها المغلقَ وفاعلَها. وكلُّ حدثٍ يُكتبُ في المعاملةِ نفسِها عبرَ delivery_outbox فلا تغييرَ صامت. قواعدُ الخصوصيّةِ (ADR-026 §2.6 · ADR-001 · ADR-007): لا اسمَ ولا هاتفَ ولا بريدَ ولا إحداثيّاتَ ولا مُعرّفَ قناة — المالكُ والمندوبُ مراجعُ opaque بصيغة WS-##########، والحالةُ الحيّةُ انتقالُ حالةٍ لا موقعٌ. والمالُ (إذا وُجدَ) لقطةُ طلبٍ بأصغرِ وحدةٍ وعملةِ SAR وحدها — لا معاملةَ ولا تحصيلَ (الدفعُ مرآةُ مرجعٍ خارجيٍّ · الفوترةُ M5-17). والاستبدالُ قرارُ صنفٍ لا طلبٍ (ADR-026 §2.5). والتوصيلُ مرآةٌ خشنةٌ لنتائجِ dispatch — لا منطقَ عروضٍ ولا موجاتٍ هنا (ADR-026 §2.4).",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث وصلة. لا حدث بلا مغلّف.",
+      "required": [
+        "event_id",
+        "event_type",
+        "event_version",
+        "occurred_at",
+        "producer",
+        "aggregate"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "event_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "const": "delivery-service"
+        },
+        "aggregate": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "store_order",
+                "delivery_task"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "WaslaPublicId": {
+      "type": "string",
+      "pattern": "^WS-[0-9]{10}$"
+    },
+    "ActorType": {
+      "type": "string",
+      "enum": [
+        "system",
+        "customer",
+        "store",
+        "courier",
+        "admin",
+        "dispatch"
+      ]
+    },
+    "FulfillmentState": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "placed",
+        "confirmed",
+        "picking",
+        "picked",
+        "ready_for_delivery",
+        "handed_to_courier",
+        "delivered",
+        "cancelled",
+        "rejected",
+        "failed"
+      ]
+    },
+    "PaymentState": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "authorized",
+        "captured",
+        "failed",
+        "refunding",
+        "partially_refunded",
+        "refunded"
+      ]
+    },
+    "DeliveryTaskState": {
+      "type": "string",
+      "enum": [
+        "pending_eligibility",
+        "eligible",
+        "dispatch_requested",
+        "driver_assigned",
+        "timed_out",
+        "reassigned",
+        "exhausted",
+        "picked_up",
+        "in_transit",
+        "arrived",
+        "delivered",
+        "ineligible",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "StoreOrderCancelReasonCode": {
+      "type": "string",
+      "enum": [
+        "CUSTOMER_CHANGED_MIND",
+        "CUSTOMER_UNAVAILABLE",
+        "PAYMENT_FAILED",
+        "STORE_REQUESTED",
+        "SYSTEM_MAINTENANCE",
+        "DELIVERY_NOT_FEASIBLE"
+      ],
+      "description": "قائمةٌ مغلقة. سببٌ حرٌّ كان سيجعل «لماذا أُلغيَ الطلبُ؟» سؤالاً يُجابُ بالقراءةِ لا بالعدّ."
+    },
+    "StoreOrderRejectReasonCode": {
+      "type": "string",
+      "enum": [
+        "OUT_OF_STOCK",
+        "STORE_CLOSED",
+        "ITEM_UNAVAILABLE",
+        "PRICE_MISMATCH",
+        "POLICY_VIOLATION"
+      ]
+    },
+    "FulfillmentReasonCode": {
+      "type": "string",
+      "enum": [
+        "CART_CONFIRMED",
+        "PAYMENT_AUTHORIZED",
+        "PICKING_STARTED",
+        "PICKING_COMPLETED",
+        "READY_FOR_HANDOVER",
+        "COURIER_ACCEPTED",
+        "DELIVERED_WITH_PROOF",
+        "DELIVERY_ATTEMPTS_EXHAUSTED",
+        "SUBSTITUTION_APPLIED"
+      ]
+    },
+    "PaymentReasonCode": {
+      "type": "string",
+      "enum": [
+        "AUTHORIZATION_SUCCEEDED",
+        "CAPTURE_SUCCEEDED",
+        "AUTHORIZATION_FAILED",
+        "REFUND_INITIATED",
+        "REFUND_COMPLETED",
+        "PARTIAL_REFUND_COMPLETED"
+      ]
+    },
+    "SubstitutionReasonCode": {
+      "type": "string",
+      "enum": [
+        "out_of_stock",
+        "customer_approved_alternative",
+        "store_policy"
+      ]
+    },
+    "IneligibilityReasonCode": {
+      "type": "string",
+      "enum": [
+        "outside_coverage",
+        "store_not_orderable",
+        "no_courier_service"
+      ]
+    },
+    "DeliveryFailReasonCode": {
+      "type": "string",
+      "enum": [
+        "CUSTOMER_UNREACHABLE",
+        "ADDRESS_NOT_FOUND",
+        "ORDER_DAMAGED",
+        "COURIER_ABORTED",
+        "ATTEMPTS_EXHAUSTED"
+      ]
+    },
+    "ProofType": {
+      "type": "string",
+      "enum": [
+        "otp",
+        "photo",
+        "signature",
+        "pin_code"
+      ]
+    },
+    "OrderTotals": {
+      "type": "object",
+      "description": "لقطةُ مالِ الطلبِ وقتَ الإنشاءِ — أصغرُ وحدةٍ (هللة) وعملةٌ واحدةٌ (SAR). لا يُقرأُ سعرُ الكتالوجِ بعدَ الطلبِ (ADR-026 §2.6).",
+      "required": [
+        "currency_code",
+        "items_total_minor_units",
+        "delivery_fee_minor_units",
+        "total_minor_units"
+      ],
+      "properties": {
+        "currency_code": {
+          "const": "SAR"
+        },
+        "items_total_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delivery_fee_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "OrderLineSnapshot": {
+      "type": "object",
+      "required": [
+        "line_no",
+        "product_id",
+        "sku",
+        "quantity",
+        "unit_price_minor_units",
+        "line_total_minor_units"
+      ],
+      "properties": {
+        "line_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "product_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sku": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit_price_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line_total_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "StoreOrderCreatedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.created"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "customer_ref",
+                "store_id",
+                "store_public_id",
+                "from_state",
+                "to_state",
+                "items",
+                "totals",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "customer_ref": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "store_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "store_public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/FulfillmentState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/FulfillmentState"
+                },
+                "items": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/OrderLineSnapshot"
+                  }
+                },
+                "totals": {
+                  "$ref": "#/$defs/OrderTotals"
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StoreOrderFulfillmentStateChangedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.fulfillment_state_changed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/FulfillmentState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/FulfillmentState"
+                },
+                "reason_code": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/FulfillmentReasonCode"
+                    },
+                    {
+                      "$ref": "#/$defs/StoreOrderCancelReasonCode"
+                    },
+                    {
+                      "$ref": "#/$defs/StoreOrderRejectReasonCode"
+                    }
+                  ]
+                },
+                "payment_state": {
+                  "$ref": "#/$defs/PaymentState"
+                },
+                "proof": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "required": [
+                    "proof_type",
+                    "proof_ref"
+                  ],
+                  "properties": {
+                    "proof_type": {
+                      "$ref": "#/$defs/ProofType"
+                    },
+                    "proof_ref": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    }
+                  }
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StoreOrderPaymentStateChangedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.payment_state_changed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/PaymentState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/PaymentState"
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/PaymentReasonCode"
+                },
+                "payment_ref": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StoreOrderItemSubstitutedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.item_substituted"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "line_no",
+                "original_product_id",
+                "substituted_product_id",
+                "quantity",
+                "reason_code",
+                "price_delta_minor_units",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "line_no": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "original_product_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "substituted_product_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/SubstitutionReasonCode"
+                },
+                "price_delta_minor_units": {
+                  "type": "integer",
+                  "description": "فرقُ السعرِ محسوبٌ لا مُخمَّنٌ: سعرُ البديلِ ناقصَ لقطةِ الأصليِّ — قد يكونُ سالباً (ADR-026 §2.5)."
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryTaskCreatedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.task_created"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "order_public_id",
+                "from_state",
+                "to_state"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "order_public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryEligibilityResolvedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.eligibility_resolved"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "eligible",
+                "ineligibility_reason"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "eligible": {
+                  "type": "boolean"
+                },
+                "ineligibility_reason": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/IneligibilityReasonCode"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryDispatchRequestedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.dispatch_requested"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "dispatch_job_ref"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "dispatch_job_ref": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "description": "مرجعُ مهمّةِ dispatch الناتجةِ — التفويضُ بالمرجعِ لا بنسخِ المنطقِ (ADR-026 §2.4)."
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryDriverAssignedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.driver_assigned"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "courier_ref",
+                "reason_code"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "courier_ref": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "reason_code": {
+                  "type": "string",
+                  "enum": [
+                    "dispatch_offer_accepted",
+                    "reassignment_cycle"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryStatusChangedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.status_changed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "actor"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "reason_code": {
+                  "type": "string",
+                  "enum": [
+                    "picked_up_from_store",
+                    "in_transit",
+                    "arrived_at_customer",
+                    "offer_timed_out",
+                    "offers_exhausted"
+                  ]
+                },
+                "courier_ref": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/WaslaPublicId"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              "description": "الحالةُ الحيّةُ انتقالُ حالةٍ لا موقعٌ: لا إحداثيّاتِ في الحمولةِ (ADR-026 §2.6)."
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryCompletedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.completed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "proof_type",
+                "proof_ref",
+                "courier_ref"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "const": "delivered"
+                },
+                "proof_type": {
+                  "$ref": "#/$defs/ProofType"
+                },
+                "proof_ref": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "courier_ref": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                }
+              },
+              "description": "لا تسليمَ بلا إثباتٍ (ADR-026 §2.4): الحمولةُ تحملُ الإثباتَ بنوعِهِ ومرجعِهِ."
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryFailedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.failed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "reason_code"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "const": "failed"
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/DeliveryFailReasonCode"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryTaskCancelledV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "delivery.task_cancelled"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "delivery_task"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "from_state",
+                "to_state",
+                "reason_code"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/DeliveryTaskState"
+                },
+                "to_state": {
+                  "const": "cancelled"
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/StoreOrderCancelReasonCode"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryDomainEvent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StoreOrderCreatedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderFulfillmentStateChangedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderPaymentStateChangedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderItemSubstitutedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryTaskCreatedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryEligibilityResolvedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryDispatchRequestedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryDriverAssignedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryStatusChangedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryCompletedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryFailedV1"
+        },
+        {
+          "$ref": "#/$defs/DeliveryTaskCancelledV1"
+        }
+      ]
+    }
+  }
+}

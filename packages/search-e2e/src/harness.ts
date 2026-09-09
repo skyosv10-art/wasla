@@ -63,6 +63,7 @@ import {
   DEFAULT_RELAY_CONFIG,
   PostgresMarketplaceEventSource,
   PostgresProjectionStore,
+  SearchIndexHealthProbe,
   SearchIndexReader,
   buildSearchHttpApp,
   runRelayBatch,
@@ -94,11 +95,16 @@ export const CAT_LOAD = "load-fixtures";
 export const LOAD_FIXTURE_SIZE = 2000;
 
 /**
- * سقفُ المُرشَّحينَ المُعلَنُ في `search-index-reader.ts` — يُعادُ إعلانُهُ هنا **نسخةً ثانيةً
- * بقصدٍ**: البوّابةُ تقيسُ السقفَ من سلوكِ الخدمةِ، فلو غُيِّرَ في المصدرِ ولم يُغيَّرْ هنا
- * سقطت البوّابةُ باسمِها — وهذا هو المطلوبُ من حارسٍ لا من مساعِد.
+ * نافذةُ الترتيبِ المُعلَنةُ في `search-index-reader.ts` (`DEFAULT_RANKING_WINDOW`) —
+ * تُعادُ كتابتُها هنا **نسخةً ثانيةً بقصدٍ**: البوّابةُ تقيسُ الحدَّ من سلوكِ الخدمةِ، فلو
+ * غُيِّرَ في المصدرِ ولم يُغيَّرْ هنا سقطت البوّابةُ باسمِها — وهذا هو المطلوبُ من حارسٍ
+ * لا من مساعِد.
+ *
+ * وكان اسمُهُ في المراجعةِ 4/N `DECLARED_CANDIDATE_CAP = 500`، وكان يقصُّ `total` نفسَهُ
+ * لا الصفحةَ فحسبُ (`RISK-0029`). وقد صارَ الآنَ حدّاً للعملِ لا للحقيقةِ: `total` مقيسٌ
+ * بـ`count(*) OVER ()` على المطابقاتِ كلِّها، والنافذةُ تحكمُ عمقَ الترقيمِ وحدَهُ.
  */
-export const DECLARED_CANDIDATE_CAP = 500;
+export const DECLARED_RANKING_WINDOW = 5000;
 
 const searchSchemaSql = readFileSync(
   resolve(__dirname, "../../../services/search/contracts/schema.sql"),
@@ -189,7 +195,13 @@ export async function startGate(): Promise<GateContext> {
   await pool.query(OUTBOX_DDL);
   await pool.query(searchSchemaSql);
 
-  const built = buildSearchHttpApp({ searchReadPort: new SearchIndexReader(pool) });
+  const built = buildSearchHttpApp({
+    searchReadPort: new SearchIndexReader(pool),
+    // بالمحوّلِ الإنتاجيِّ نفسِهِ وعلى الحوضِ نفسِهِ — مسبارُ جاهزيّةٍ يُركَّبُ في البوّابةِ
+    // وحدَها لا يُثبتُ شيئاً عن `server.ts`. وكاتمُ السجلِّ لئلّا يمتلئَ مخرجُ البوّابةِ
+    // بأثرِ إخفاقٍ **مقصودٍ** في اختبارِ التدهورِ.
+    indexHealthPort: new SearchIndexHealthProbe(pool, { error: () => {} }),
+  });
   app = built;
   await built.fastify.listen({ port: 0, host: "127.0.0.1" });
   const { port } = built.fastify.server.address() as AddressInfo;

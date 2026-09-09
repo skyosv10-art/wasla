@@ -9,6 +9,9 @@ info:
     - الظهورُ مُشتقٌّ من الحالةِ المُستهلكةِ: متجرٌ approved · منتجٌ published · اعتدالٌ approved · كميّةٌ > 0 (ADR-016 القرارُ 3). لا عمودَ is_visible.
     - البحثُ ثنائيُّ اللغةِ (ar/en). الترتيبُ مفسَّرٌ: exact > prefix > fts > trigram.
     - البحثُ ليس بوّابةَ معاملةٍ: لا حجزَ ولا دفعَ. اتساقٌ ناعمٌ (eventual) مقبولٌ.
+    - `total` عددُ المطابقاتِ **كلِّها** (يُحسَبُ في القاعدةِ قبلَ التحديدِ)، لا عددُ ما التُقِطَ للترتيبِ.
+    - عمقُ الترقيمِ محدودٌ بنافذةِ ترتيبٍ (5000 نتيجةً): صفحةٌ تتجاوزُها تُرَدُّ 400 لا تُخدَمُ مقصوصةً.
+    - `/search/health` حياةٌ (لا تبعيّةَ) · `/search/ready` جاهزيّةٌ (تسألُ الفهرسَ).
   contact:
     name: WASLA
 servers:
@@ -60,17 +63,49 @@ paths:
   /search/health:
     get:
       tags: [search]
-      summary: فحص صحة الخدمة
+      summary: نبضةُ حياةٍ (liveness) — لا تسألُ الفهرسَ
+      description: |
+        تُجيبُ ما دامت العمليّةُ حيّةً، بلا تبعيّةٍ. **ليست بوّابةَ توجيهٍ**: نسخةٌ فقدت
+        نموذجَ قراءتِها تبقى `ok` هنا ولا تُعادُ تشغيلاً — التوجيهُ يُقرَّرُ من
+        `/search/ready`.
       operationId: health
       responses:
         '200':
-          description: الخدمة سليمة
+          description: العمليّةُ حيّةٌ
           content:
             application/json:
               schema:
                 type: object
+                required: [status]
                 properties:
                   status: { type: string, const: ok }
+
+  /search/ready:
+    get:
+      tags: [search]
+      summary: مسبارُ جاهزيّةٍ (readiness) — يسألُ الفهرسَ
+      description: |
+        يلمسُ نموذجَ القراءةِ فعلاً. `200` إن أجابَ الفهرسُ، و`503 SEARCH_INDEX_DEGRADED`
+        إن لم يُجِبْ أو إن لم يُركَّبْ مسبارٌ (لا جاهزيّةَ افتراضاً بلا إثباتٍ).
+        **فهرسٌ فارغٌ جاهزٌ** (`indexed_documents: 0`) — نشرٌ باردٌ قبلَ أوّلِ تشغيلٍ
+        للناقلِ لا يجوزُ أن يَقفِلَ على نفسِه. والمسبارُ يقيسُ **الوصولَ لا الحداثةَ**.
+      operationId: ready
+      responses:
+        '200':
+          description: الخدمةُ قادرةٌ على خدمةِ بحثٍ
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, index_reachable, indexed_documents]
+                properties:
+                  status: { type: string, const: ready }
+                  index_reachable: { type: boolean, const: true }
+                  indexed_documents:
+                    type: integer
+                    minimum: 0
+                    description: عددُ الوثائقِ في عيّنةٍ محدودةٍ (لا عدٌّ كاملٌ — المسبارُ يجري كلَّ نبضةٍ).
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
 components:
   parameters:

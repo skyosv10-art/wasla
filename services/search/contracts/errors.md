@@ -23,7 +23,7 @@
 |---|---|---|---|
 | `SEARCH_QUERY_EMPTY` | `validation_error` | نص البحث فارغ | `q` مفقود أو فارغ بعد التقليم |
 | `SEARCH_QUERY_TOO_LONG` | `validation_error` | نص البحث يتجاوز الحد | `q` أطول من 200 حرف |
-| `SEARCH_PAGE_OUT_OF_RANGE` | `validation_error` | رقم الصفحة خارج النطاق | `page` < 1 أو > الصفحة الأخيرة المحسوبة |
+| `SEARCH_PAGE_OUT_OF_RANGE` | `validation_error` | رقم الصفحة خارج النطاق | `page` < 1، أو صفحةٌ ينتهي آخِرُ صفٍّ فيها خارجَ نافذةِ الترتيبِ (5000) |
 | `SEARCH_PAGE_SIZE_INVALID` | `validation_error` | حجم الصفحة غير صالح | `page_size` < 1 أو > 50 |
 | `SEARCH_UNSUPPORTED_LOCALE` | `validation_error` | locale غير مدعوم | locale ليس ضمن `ar`/`en` |
 | `SEARCH_SORT_INVALID` | `validation_error` | ترتيب غير معروف | `sort` ليس ضمن القيم المسموحة |
@@ -52,6 +52,8 @@
 | نص بحث أطول من 200 حرف | `SEARCH_QUERY_TOO_LONG` (400) |
 | `locale` غير مدعوم (مثال: `fr`) | `SEARCH_UNSUPPORTED_LOCALE` (400) |
 | `page_size` = 0 أو > 50 | `SEARCH_PAGE_SIZE_INVALID` (400) |
-| `page` يتجاوز الصفحة الأخيرة | `SEARCH_PAGE_OUT_OF_RANGE` (400) |
+| `page` يتجاوز نافذةَ الترتيبِ (مثال: `page=101` بـ`page_size=50`) | `SEARCH_PAGE_OUT_OF_RANGE` (400) — **يُرفَضُ قبلَ لمسِ القاعدةِ**، ولا يُخدَمُ من مجموعةٍ مقصوصةٍ |
 | الفهرس غير جاهز (تدهورٌ) | `SEARCH_INDEX_DEGRADED` (503) |
+| الفهرسُ غيرُ قابلٍ للوصولِ عندَ `GET /search/ready` | `SEARCH_INDEX_DEGRADED` (503) — بينما يبقى `GET /search/health` بـ`200`: العمليّةُ حيّةٌ وغيرُ جاهزةٍ، وهما سؤالانِ مختلفانِ |
+| لا مسبارَ جاهزيّةٍ مُركَّبٌ في التطبيقِ | `SEARCH_INDEX_DEGRADED` (503) — لا تُعلَنُ الجاهزيّةُ افتراضاً بلا إثباتٍ |
 | منتجٌ موقوفٌ ظهر في النتائج | خطأٌ في الفهرس — يُصلَحُ بالاستهلاكِ التاليِّ أو إعادةِ البناءِ (لا يُرجَع للمستخدمِ خطأً، بل يُزالُ من النتائجِ) |

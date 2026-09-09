@@ -23,7 +23,7 @@ import {
   CAT_APPLIANCES,
   CAT_LOAD,
   CAT_PHONES,
-  DECLARED_CANDIDATE_CAP,
+  DECLARED_RANKING_WINDOW,
   LOAD_FIXTURE_SIZE,
   PENDING_STORE_ID,
   PENDING_STORE_SLUG,
@@ -556,10 +556,10 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 12 · البحثُ �
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 8) الحدُّ المُعلَنُ — سقفُ المُرشَّحينَ يُقاسُ لا يُقالُ
+  // 8) المجموعُ صادقٌ — والعمقُ يُرفَضُ جهراً (RISK-0029 · مُغلَقٌ في المراجعةِ 5/N)
   // ───────────────────────────────────────────────────────────────────────────
 
-  it(`سقفُ المُرشَّحينَ ${DECLARED_CANDIDATE_CAP} حدٌّ مقيسٌ: استعلامٌ يُطابقُ ${LOAD_FIXTURE_SIZE} وثيقةً يُرجِعُ سقفاً`, async () => {
+  it(`استعلامٌ يُطابقُ ${LOAD_FIXTURE_SIZE} وثيقةً يُرجِعُ المجموعَ كاملاً لا مقصوصاً`, async () => {
     const response = await search(gate, { q: "أداة حمل", page_size: 50 });
     expect(response.status).toBe(200);
 
@@ -569,10 +569,36 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 12 · البحثُ �
     );
     expect(Number(matching.rows[0].count)).toBe(LOAD_FIXTURE_SIZE);
 
-    // المجموعُ المُعلَنُ للمستخدمِ **مقصوصٌ عندَ السقفِ** — وهذا هو `RISK-0029` بعينِه،
-    // مقيساً هنا لا مذكوراً في تعليقٍ. وتغييرُ السقفِ في المصدرِ يُسقطُ هذا التوكيدَ باسمِه.
-    expect(response.body.total).toBe(DECLARED_CANDIDATE_CAP);
-    expect(response.body.total).toBeLessThan(LOAD_FIXTURE_SIZE);
+    // كان هذا التوكيدُ في المراجعةِ 4/N يُثبتُ الكذبةَ: `total === 500`. صار يُثبتُ
+    // إغلاقَها — القاعدةُ تَعُدُّ المطابقاتِ كلَّها قبلَ `LIMIT`، فالمجموعُ يُطابقُ ما في
+    // الجدولِ عدداً بعدد. ولو عادَ القصُّ سقطت البوّابةُ ها هنا.
+    expect(response.body.total).toBe(LOAD_FIXTURE_SIZE);
+    expect(response.body.items).toHaveLength(50);
+  });
+
+  it("صفحةٌ أعمقُ من نافذةِ الترتيبِ تُرفَضُ 400 لا تُخدَمُ من مجموعةٍ مقصوصةٍ", async () => {
+    // آخِرُ صفٍّ في الصفحةِ يقعُ عندَ 5050 > 5000 — فالصفحةُ خارجَ النطاقِ.
+    const response = await search(gate, {
+      q: "أداة حمل",
+      page: Math.floor(DECLARED_RANKING_WINDOW / 50) + 1,
+      page_size: 50,
+    });
+
+    expect(response.status, response.text).toBe(400);
+    expect((response.body as unknown as Record<string, unknown>).code).toBe(
+      "SEARCH_PAGE_OUT_OF_RANGE",
+    );
+  });
+
+  it("آخِرُ صفحةٍ تقعُ داخلَ النافذةِ تماماً تُخدَمُ 200", async () => {
+    const response = await search(gate, {
+      q: "أداة حمل",
+      page: DECLARED_RANKING_WINDOW / 50,
+      page_size: 50,
+    });
+
+    expect(response.status, response.text).toBe(200);
+    expect(response.body.total).toBe(LOAD_FIXTURE_SIZE);
   });
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -580,10 +606,15 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 12 · البحثُ �
   //    آخِرُ ما يجري في الملفِّ: يُسقِطُ الجدولَ فيُفسِدُ ما بعدَهُ.
   // ───────────────────────────────────────────────────────────────────────────
 
-  it("فهرسٌ غائبٌ يُردُّ 503 لا 500 — والصحّةُ تبقى ok وهي لا تسألُ الفهرسَ", async () => {
+  it("فهرسٌ غائبٌ يُردُّ 503 — والجاهزيّةُ تحمرُّ معَهُ بينما تبقى الحياةُ خضراءَ", async () => {
     const healthy = await get(gate, "/search/health");
     expect(healthy.status).toBe(200);
     expect(healthy.body.status).toBe("ok");
+
+    // وقبلَ الإسقاطِ: الجاهزيّةُ خضراءُ لأنّها سألت الفهرسَ فأجابَ.
+    const readyBefore = await get(gate, "/search/ready");
+    expect(readyBefore.status, readyBefore.text).toBe(200);
+    expect(readyBefore.body.status).toBe("ready");
 
     await gate.pool.query("DROP TABLE search_product_index CASCADE");
 
@@ -591,9 +622,15 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 12 · البحثُ �
     expect(degraded.status, degraded.text).toBe(503);
     expect((degraded.body as unknown as Record<string, unknown>).code).toBe("SEARCH_INDEX_DEGRADED");
 
-    // **حدٌّ مقيسٌ لا مُدَّعى:** الصحّةُ تقولُ `ok` والفهرسُ غائبٌ. مُعلَنٌ في ترويسةِ
-    // `http/app.ts` («Health is not a DB gate») ومُسجَّلٌ `RISK-0030` — وموازِنُ الحملِ الذي
-    // يقرأُ هذا المسارَ سيوجِّهُ إلى نسخةٍ لا تخدمُ. البوّابةُ تُثبتُ الفجوةَ ولا تُغلِقُها.
+    // **`RISK-0030` مُغلَقٌ ومقيسٌ:** الجاهزيّةُ تحمرُّ معَ الفهرسِ الغائبِ، فلا يُوجِّهُ
+    // موازِنُ الحملِ إلى نسخةٍ لا تخدمُ. وكانت هذه الصفحةُ في المراجعةِ 4/N تُثبتُ العكسَ.
+    const readyAfter = await get(gate, "/search/ready");
+    expect(readyAfter.status, readyAfter.text).toBe(503);
+    expect((readyAfter.body as unknown as Record<string, unknown>).code).toBe(
+      "SEARCH_INDEX_DEGRADED",
+    );
+
+    // والحياةُ تبقى خضراءَ: العمليّةُ حيّةٌ ولا تُعادُ تشغيلاً لأنّ نموذجَ قراءتِها غابَ.
     const stillOk = await get(gate, "/search/health");
     expect(stillOk.status).toBe(200);
     expect(stillOk.body.status).toBe("ok");

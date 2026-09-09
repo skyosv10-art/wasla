@@ -16,6 +16,7 @@ import {
   type PgFixture,
 } from "./pg-harness.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
+import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 
 const VISIBLE_ID = "11111111-1111-1111-1111-111111111111";
 const HIDDEN_ID = "22222222-2222-2222-2222-222222222222";
@@ -202,5 +203,143 @@ describe.runIf(PG_ENABLED)("SearchIndexReader (integration)", () => {
     expect(page.total).toBe(2);
     expect(page.items[0].price_minor_units).toBe(10000);
     expect(page.items[1].price_minor_units).toBe(30000);
+  });
+
+  /*
+   * RISK-0029. The old reader answered `total = candidates.length` under a hard
+   * `LIMIT 500`, so a 2000-document corpus reported `total = 500`. These tests
+   * use a deliberately TINY ranking window (10) so the same lie is reproducible
+   * with 40 rows instead of 2000 — the defect was never about the number 500,
+   * it was about the count being taken after the limit.
+   */
+  it("reports an EXACT total for matches beyond the ranking window", async () => {
+    for (let i = 0; i < 40; i += 1) {
+      await seedRow(
+        visibleProduct({
+          product_id: `11111111-1111-1111-1111-1111111${String(i).padStart(5, "0")}`,
+          sku: `sku-${i}`,
+          title_ar: `سماعة بلوتوث ${i}`,
+        }),
+      );
+    }
+    const reader = new SearchIndexReader(fixture.pool, { rankingWindow: 10 });
+
+    const page = await reader.search({
+      q: "سماعة",
+      locale: "ar",
+      categorySlug: null,
+      page: 1,
+      pageSize: 5,
+      sort: "relevance",
+    });
+
+    // The window bounded the WORK (10 rows scored) — not the TRUTH.
+    expect(page.total).toBe(40);
+    expect(page.items).toHaveLength(5);
+  });
+
+  it("refuses a page that ends beyond the ranking window instead of truncating", async () => {
+    for (let i = 0; i < 40; i += 1) {
+      await seedRow(
+        visibleProduct({
+          product_id: `11111111-1111-1111-1111-2222222${String(i).padStart(5, "0")}`,
+          sku: `sku-${i}`,
+          title_ar: `سماعة بلوتوث ${i}`,
+        }),
+      );
+    }
+    const reader = new SearchIndexReader(fixture.pool, { rankingWindow: 10 });
+
+    // page 3 × size 5 ends at row 15 > window 10.
+    await expect(
+      reader.search({
+        q: "سماعة",
+        locale: "ar",
+        categorySlug: null,
+        page: 3,
+        pageSize: 5,
+        sort: "relevance",
+      }),
+    ).rejects.toMatchObject({
+      name: "SearchValidationError",
+      code: "SEARCH_PAGE_OUT_OF_RANGE",
+    });
+  });
+
+  it("serves the last page that fits exactly inside the window", async () => {
+    for (let i = 0; i < 40; i += 1) {
+      await seedRow(
+        visibleProduct({
+          product_id: `11111111-1111-1111-1111-3333333${String(i).padStart(5, "0")}`,
+          sku: `sku-${i}`,
+          title_ar: `سماعة بلوتوث ${i}`,
+        }),
+      );
+    }
+    const reader = new SearchIndexReader(fixture.pool, { rankingWindow: 10 });
+
+    const page = await reader.search({
+      q: "سماعة",
+      locale: "ar",
+      categorySlug: null,
+      page: 2,
+      pageSize: 5,
+      sort: "relevance",
+    });
+
+    expect(page.items).toHaveLength(5);
+    expect(page.total).toBe(40);
+  });
+
+  it("relevance order is stable across two identical requests", async () => {
+    for (let i = 0; i < 12; i += 1) {
+      await seedRow(
+        visibleProduct({
+          product_id: `11111111-1111-1111-1111-4444444${String(i).padStart(5, "0")}`,
+          sku: `sku-${i}`,
+          title_ar: "سماعة بلوتوث",
+        }),
+      );
+    }
+    const reader = new SearchIndexReader(fixture.pool);
+    const query = {
+      q: "سماعة",
+      locale: "ar" as const,
+      categorySlug: null,
+      page: 1,
+      pageSize: 12,
+      sort: "relevance" as const,
+    };
+
+    const a = await reader.search(query);
+    const b = await reader.search(query);
+
+    // Equal scores must not reorder between calls, or pagination drops rows.
+    expect(a.items.map((i) => i.product_id)).toEqual(
+      b.items.map((i) => i.product_id),
+    );
+  });
+
+  /*
+   * RISK-0030. A readiness probe is only worth its name if it goes red on a
+   * read model that is actually missing — so the unreachable case drops the
+   * table rather than mocking a rejection.
+   */
+  it("readiness probe reports the index reachable with a document count", async () => {
+    await seedRow(visibleProduct());
+    const probe = new SearchIndexHealthProbe(fixture.pool, { error: () => {} });
+
+    const health = await probe.probe();
+
+    expect(health).toEqual({ index_reachable: true, indexed_documents: 1 });
+  });
+
+  it("readiness probe reports UNREACHABLE when the read model is missing", async () => {
+    await fixture.pool.query("DROP TABLE IF EXISTS search_product_index CASCADE");
+    const probe = new SearchIndexHealthProbe(fixture.pool, { error: () => {} });
+
+    const health = await probe.probe();
+
+    expect(health).toEqual({ index_reachable: false, indexed_documents: null });
   });
 });

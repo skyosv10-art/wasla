@@ -19,6 +19,13 @@
  * the last resort, never 500). Unit-tested with a fake port; the real pg reader
  * (`SearchIndexReader`) is integration-tested. The relevance/load exit gate and
  * the `search-db-integration` CI job remain deferred (ADR-025 §4) — declared.
+ *
+ * Review 5/N — Truthful `total` and real readiness (RISK-0029 · RISK-0030):
+ * `count(*) OVER ()` makes `total` exact beyond any candidate cap, the cap
+ * becomes a declared ranking window that REFUSES deeper pages with
+ * `SEARCH_PAGE_OUT_OF_RANGE` instead of serving a truncated set, and
+ * `GET /search/ready` (`SearchIndexHealthPort` + `SearchIndexHealthProbe`)
+ * answers readiness by touching the index while `/search/health` stays liveness.
  */
 
 export * from "./domain/model.js";
@@ -34,6 +41,7 @@ export * from "./http/requests.js";
 export * from "./http/mappers.js";
 export * from "./http/app.js";
 export * from "./infrastructure/search-index-reader.js";
+export * from "./infrastructure/search-index-health-probe.js";
 
 /*
  * محوّلاتُ الناقلِ الإنتاجيّةُ — تُصدَّرُ كي تستعملَها بوّابةُ الخروجِ (`@wasla/search-e2e`)

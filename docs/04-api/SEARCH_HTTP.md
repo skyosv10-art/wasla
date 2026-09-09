@@ -17,7 +17,7 @@
 هذا توثيقُ خدمةِ البحثِ لـ M5-12. **المراجعة 3/N (طبقة HTTP) مُدمجةٌ** فوق المراجعتَين 1/N (العقدُ والنطاقُ) و2/N (المستهلكُ relay). لا تُدّعى إكمالُ بوّابة relevance/load ولا وظائفُ CI التكامليّةُ بعد. ما يُغطّيه:
 
 - **عقدُ البياناتِ** (`schema.sql`): وثيقةُ فهرسِ المنتجِ المُشتقّة (`search_product_index`) مع فهارسِ `tsvector` (إنجليزي) و`pg_trgm` (عربي/تقريبي) وoutbox.
-- **عقدُ الواجهةِ** (`api.openapi.yml`): `GET /search/products` + `GET /search/health`.
+- **عقدُ الواجهةِ** (`api.openapi.yml`): `GET /search/products` + `GET /search/health` + `GET /search/ready`.
 - **عقدُ الأحداثِ** (`events.json`): أحداثُ دورةِ حياةِ الفهرسِ (بُنيَ/أُعيدَ بناؤُهُ/تدهورَ).
 - **كتالوجُ الأخطاءِ** (`errors.md`): أكوادٌ ثابتةٌ + مساراتُ فشلٍ.
 - **نواةُ النطاقِ** (`src/domain/`): تطبيعُ الاستعلامِ (عربي/إنجليز)، قواعدُ الترتيبِ المفسَّرة، قواعدُ الظهورِ المُعادةِ من الحالةِ.
@@ -81,7 +81,8 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 ### 5.1 المساراتُ
 
 - **`GET /search/products`** — يُحلِّلُ المعاملاتِ (`parseSearchRequest`)، يُمرِّرُها للمنفذِ، يُعيّنُ النتيجةَ إلى شكلِ العقدِ (`toSearchPage`).
-- **`GET /search/health`** — يُرجع `{ status: "ok" }`. **ليس بوّابةَ جاهزيّةٍ تَسألُ الفهرسَ**، وهذا **مُثبَتٌ بقياسٍ** لا موصوفٌ: بوّابةُ المرحلةِ 12 تُسقِطُ جدولَ الفهرسِ فيُجيبُ `/search/products` بـ`503 · SEARCH_INDEX_DEGRADED` ويظلُّ `/search/health` يُجيبُ `ok` في اللحظةِ نفسِها. العلاجُ (مسارُ جاهزيّةٍ منفصلٌ) مُسجَّلٌ بمالكٍ ومهلةٍ في [`RISK-0030`](../07-security/RISK_REGISTER.md).
+- **`GET /search/health`** — **حياةٌ (liveness)**: يُرجع `{ status: "ok" }` بلا تبعيّةٍ ولا سؤالٍ للفهرسِ. وهذا **مقصودٌ لا نقصٌ**: نسخةٌ فقدت نموذجَ قراءتِها لا تُعادُ تشغيلاً، بل تُخرَجُ من التوجيهِ وحدَه.
+- **`GET /search/ready`** — **جاهزيّةٌ (readiness)**: يسألُ الفهرسَ فعلاً عبرَ `SearchIndexHealthPort`. يُرجع `200 · { status: "ready", index_reachable: true, indexed_documents: N }` إن أجابَ الفهرسُ، و`503 · SEARCH_INDEX_DEGRADED` إن لم يُجِبْ أو إن لم يُركَّبْ مسبارٌ أصلاً (لا جاهزيّةَ افتراضاً بلا إثباتٍ). **مُثبَتٌ بقياسٍ:** البوّابةُ تُسقِطُ جدولَ الفهرسِ فتقيسُ `products ⇒ 503` و`ready ⇒ 503` و`health ⇒ 200` في اللحظةِ نفسِها — وهو إغلاقُ [`RISK-0030`](../07-security/RISK_REGISTER.md). **والحدُّ الباقي مُعلَنٌ:** المسبارُ يقيسُ الوصولَ لا الحداثةَ ⇒ [`RISK-0032`](../07-security/RISK_REGISTER.md).
 
 ### 5.2 معالجُ أخطاءٍ واحدٌ، بلا try/catch في المعالِجات
 
@@ -96,11 +97,16 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 ### 5.4 التحققُ والتحويل
 
 - **`parseSearchRequest`** (`http/requests.ts`): المصدرُ الوحيدُ لما يُعدُّ طلبَ بحثٍ صالحًا. القيمُ الموجودةُ-غيرُ-الصالحةِ تُرفَضُ (400) — لا تسكّتٌ إلى افتراضات. المصفوفاتُ مرفوضةٌ (مفتاحٌ مكرَّرٌ خطأُ عميلٍ)، لا يُؤخذُ أوّلُ عنصرٍ صمتًا.
+- **عمقُ الترقيمِ**: صفحةٌ ينتهي آخِرُ صفٍّ فيها خارجَ نافذةِ الترتيبِ تُرَدُّ `400 · SEARCH_PAGE_OUT_OF_RANGE` **قبلَ** لمسِ القاعدةِ. ترتيبُ الصلةِ لا يصدُقُ إلّا على ما رُتِّبَ فعلاً، فخدمةُ صفحةٍ عميقةٍ من مجموعةٍ مقصوصةٍ كذبةٌ أخرى. (وهو حدُّ `max_result_window` نفسُه في Elasticsearch.)
 - **`toSearchPage`** (`http/mappers.ts`): يُحوِّلُ `SearchPage` النطاقيَّ إلى `SearchPage` العقدِ بتعيينٍ صريحٍ للحقول — لا `as`-cast — فيُصبحُ حقلٌ يُضافُ لأحدهما دونَ الآخرِ فشلَ نوعٍ لا انجرافَ شكلٍ صامت.
 
 ### 5.5 القارئُ الفعليُّ (integration)
 
-`SearchIndexReader` (`infrastructure/search-index-reader.ts`) هو المحوِّلُ الإنتاجيُّ لـ`SearchProductsReadPort` فوقَ `pg.Pool`. يقرأُ **فقط** `search_product_index` — لا JOIN لجداولِ السوقِ (حدُّ ADR-016 القرارُ 9). الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ، لا رايةٌ مُخزَّنة. المطابقةُ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ (trigram + FTS + substring)، ثمَّ ترتيبُ النطاقِ (`rankAndSort`) يُعيدُ تسجيلَ النتائجِ بسُلَّمِ exact > prefix > fts > trigram. اختبارُ التكاملِ يتخطّى نفسَه بلا `DATABASE_URL`، **ووظيفةُ CI التي تُشغِّلُه قائمةٌ منذُ المراجعةِ 4/N**: `db-integration (search, @wasla/search-service, wasla_search_test)`. **وسقفُ المُرشَّحينَ (500) مقيسٌ الآنَ لا موصوفٌ:** على ألفَي وثيقةٍ مُطابِقةٍ يُرجعُ الحدُّ `total = 500` — [`RISK-0029`](../07-security/RISK_REGISTER.md).
+`SearchIndexReader` (`infrastructure/search-index-reader.ts`) هو المحوِّلُ الإنتاجيُّ لـ`SearchProductsReadPort` فوقَ `pg.Pool`. يقرأُ **فقط** `search_product_index` — لا JOIN لجداولِ السوقِ (حدُّ ADR-016 القرارُ 9). الظهورُ شرطُ WHERE على الأعمدةِ الأربعةِ، لا رايةٌ مُخزَّنة. المطابقةُ على مرحلتَين: SQL يُضيِّقُ المُرشَّحينَ (trigram + FTS + substring)، ثمَّ سُلَّمُ النطاقِ (`rankProduct`) يُسجِّلُ المُرشَّحينَ بترتيبِ exact > prefix > fts > trigram. اختبارُ التكاملِ يتخطّى نفسَه بلا `DATABASE_URL`، **ووظيفةُ CI التي تُشغِّلُه قائمةٌ منذُ المراجعةِ 4/N**: `db-integration (search, @wasla/search-service, wasla_search_test)`.
+
+**والمجموعُ صادقٌ منذُ المراجعةِ 5/N (إغلاقُ [`RISK-0029`](../07-security/RISK_REGISTER.md)):** `count(*) OVER ()` تحسبُه القاعدةُ على مجموعةِ المطابقةِ **قبلَ** `LIMIT`، فـ`total` عددُ ما يُطابِقُ لا عددُ ما التُقِط. والسقفُ القديمُ (500) صارَ **نافذةَ ترتيبٍ مُعلَنةً** (`DEFAULT_RANKING_WINDOW = 5000`) تحكمُ **العملَ** لا الحقيقةَ.
+
+**وقاعدةُ العضويّةِ:** شرطُ SQL يُقرِّرُ مَن يُطابِقُ، والسُّلَّمُ يُقرِّرُ الترتيبَ والدرجةَ. فلا يُسقِطُ القارئُ صفّاً بدرجةٍ صفراً — إسقاطُه يجعلُ `items` و`total` يتخالفانِ بالبناءِ.
 
 ### 5.6 ما يُؤجَّلُ بعدَ هذه المراجعة
 
@@ -109,5 +115,7 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 | ~~بوّابةُ relevance/load (exit gate)~~ | **أُنجزت 4/N** — [`PHASE12_EXIT_GATE_E2E.md`](../12-testing/PHASE12_EXIT_GATE_E2E.md) |
 | ~~وظيفةُ CI `search-db-integration`~~ | **أُنجزت 4/N** — ساقُ `search` في مصفوفةِ `db-integration` |
 | ~~وظيفةُ CI `search-exit-gate-e2e`~~ | **أُنجزت 4/N** — ساقُ `search` في مصفوفةِ `exit-gate-e2e` |
-| رفعُ سقفِ المُرشَّحينَ (v1: 500) فوقَ بوّابةِ الحملِ | [`RISK-0029`](../07-security/RISK_REGISTER.md) — **مقيسٌ الآنَ** بمالكٍ ومهلةِ مراجعةٍ |
-| مسارُ جاهزيّةٍ يسألُ الفهرسَ (`/search/ready`) | [`RISK-0030`](../07-security/RISK_REGISTER.md) — عيبٌ **مُثبَتٌ بتوكيدٍ** في البوّابةِ |
+| ~~سقفُ المُرشَّحينَ يقطعُ العدَّ~~ | **أُغلق 5/N** — [`RISK-0029`](../07-security/RISK_REGISTER.md) `status:closed` · `count(*) OVER ()` + نافذةُ ترتيبٍ مُعلَنةٌ |
+| ~~مسارُ جاهزيّةٍ يسألُ الفهرسَ (`/search/ready`)~~ | **أُغلق 5/N** — [`RISK-0030`](../07-security/RISK_REGISTER.md) `status:closed` |
+| حداثةُ الفهرسِ جزءاً من الجاهزيّةِ (ميزانيّةُ عمرٍ لنقطةِ التقدُّمِ) | [`RISK-0032`](../07-security/RISK_REGISTER.md) — حدٌّ **مُعلَنٌ** بمالكٍ ومهلةِ مراجعةٍ |
+| قياسُ زمنِ استعلامٍ يملأُ النافذةَ كلَّها (5000 صفّاً) وكلفةِ العدِّ على كتالوجٍ إنتاجيٍّ | [`RISK-0029`](../07-security/RISK_REGISTER.md) §«ما لا يُدَّعى» |

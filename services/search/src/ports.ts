@@ -85,3 +85,25 @@ export interface SearchProductsReadPort {
   /** Query the derived read model. Throws on degraded/unavailable (→ 503). */
   search(query: SearchProductsQuery): Promise<SearchPage>;
 }
+
+/**
+ * Readiness probe over the derived read model (review 5/N · RISK-0030).
+ *
+ * Separate from `SearchProductsReadPort` on purpose: readiness must be
+ * answerable WITHOUT a user query, and a search port that needs `q`, `locale`,
+ * `page`… cannot answer "can I serve at all?". Implementations must be cheap
+ * enough to run on every orchestrator poll.
+ *
+ * `probe()` reports reachability; it MUST NOT throw for a merely degraded index —
+ * it returns `index_reachable: false` so the HTTP layer owns the status code.
+ */
+export interface SearchIndexHealth {
+  /** True only when the read model answered a query in this call. */
+  readonly index_reachable: boolean;
+  /** Documents currently in the index; `null` when unknown (unreachable). */
+  readonly indexed_documents: number | null;
+}
+
+export interface SearchIndexHealthPort {
+  probe(): Promise<SearchIndexHealth>;
+}

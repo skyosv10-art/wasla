@@ -2,7 +2,8 @@
  * Search service production entrypoint (ADR-025 §5).
  *
  * Wires `DATABASE_URL` → a `pg.Pool` → `SearchIndexReader` (the read-side
- * adapter) → `buildSearchHttpApp`, then listens on `PORT` (default 8012, per
+ * adapter) + `SearchIndexHealthProbe` (the readiness adapter) →
+ * `buildSearchHttpApp`, then listens on `PORT` (default 8012, per
  * api.openapi.yml `servers`).
  *
  * Credentials are NEVER committed: `DATABASE_URL` is read from the environment
@@ -15,6 +16,7 @@ import { Pool } from "pg";
 
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
+import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = Number(process.env.PORT ?? 8012);
@@ -27,7 +29,13 @@ async function main(): Promise<void> {
 
   const pool = new Pool({ connectionString: DATABASE_URL });
   const readPort = new SearchIndexReader(pool);
-  const { fastify, close } = buildSearchHttpApp({ searchReadPort: readPort });
+  // Readiness shares the pool on purpose: a probe on its own connection would
+  // report "ready" while the pool the searches use is exhausted (RISK-0030).
+  const indexHealthPort = new SearchIndexHealthProbe(pool);
+  const { fastify, close } = buildSearchHttpApp({
+    searchReadPort: readPort,
+    indexHealthPort,
+  });
 
   try {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });

@@ -11,6 +11,8 @@ import { describe, expect, it } from "vitest";
 
 import { buildSearchHttpApp } from "../http/app.js";
 import type {
+  SearchIndexHealth,
+  SearchIndexHealthPort,
   SearchProductsQuery,
   SearchProductsReadPort,
 } from "../ports.js";
@@ -37,6 +39,15 @@ function fakeReadPort(
           total: 0,
         }
       );
+    },
+  };
+}
+
+/** A fake readiness probe: reports exactly the state the test declares. */
+function fakeHealthPort(health: SearchIndexHealth): SearchIndexHealthPort {
+  return {
+    async probe(): Promise<SearchIndexHealth> {
+      return health;
     },
   };
 }
@@ -72,6 +83,92 @@ describe("search HTTP app", () => {
       const res = await fastify.inject({ method: "GET", url: "/search/health" });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toEqual({ status: "ok" });
+    } finally {
+      await close();
+    }
+  });
+
+  /*
+   * Readiness (RISK-0030). The bug these tests pin: with a degraded index the
+   * service answered `health: ok` while every search returned 503. So the
+   * assertions below are deliberately PAIRED — each readiness state is checked
+   * together with liveness, because the defect was the two answers agreeing when
+   * they should have disagreed.
+   */
+  it("GET /search/ready returns 200 {status:'ready'} when the probe reaches the index", async () => {
+    const { fastify, close } = buildSearchHttpApp({
+      searchReadPort: fakeReadPort(),
+      indexHealthPort: fakeHealthPort({
+        index_reachable: true,
+        indexed_documents: 42,
+      }),
+    });
+    try {
+      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({
+        status: "ready",
+        index_reachable: true,
+        indexed_documents: 42,
+      });
+    } finally {
+      await close();
+    }
+  });
+
+  it("GET /search/ready returns 503 SEARCH_INDEX_DEGRADED while /search/health stays 200", async () => {
+    const { fastify, close } = buildSearchHttpApp({
+      searchReadPort: fakeReadPort({
+        throw: new SearchUnavailableError("SEARCH_INDEX_DEGRADED", "degraded"),
+      }),
+      indexHealthPort: fakeHealthPort({
+        index_reachable: false,
+        indexed_documents: null,
+      }),
+    });
+    try {
+      const ready = await fastify.inject({ method: "GET", url: "/search/ready" });
+      expect(ready.statusCode).toBe(503);
+      expect(ready.json().code).toBe("SEARCH_INDEX_DEGRADED");
+
+      // Liveness must NOT follow readiness: the process is alive and must not
+      // be restarted just because its read model is unreachable.
+      const health = await fastify.inject({
+        method: "GET",
+        url: "/search/health",
+      });
+      expect(health.statusCode).toBe(200);
+      expect(health.json()).toEqual({ status: "ok" });
+    } finally {
+      await close();
+    }
+  });
+
+  it("GET /search/ready returns 503 when no probe is wired (never ready by default)", async () => {
+    const { fastify, close } = buildSearchHttpApp({
+      searchReadPort: fakeReadPort(),
+    });
+    try {
+      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      expect(res.statusCode).toBe(503);
+      expect(res.json().code).toBe("SEARCH_INDEX_DEGRADED");
+    } finally {
+      await close();
+    }
+  });
+
+  it("an empty index is READY, not degraded (cold start must not deadlock)", async () => {
+    const { fastify, close } = buildSearchHttpApp({
+      searchReadPort: fakeReadPort(),
+      indexHealthPort: fakeHealthPort({
+        index_reachable: true,
+        indexed_documents: 0,
+      }),
+    });
+    try {
+      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().indexed_documents).toBe(0);
     } finally {
       await close();
     }

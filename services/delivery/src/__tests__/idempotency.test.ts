@@ -182,3 +182,28 @@ describe("buildReadinessResponse", () => {
     expect(body.not_claimed).toEqual(["marketplace_catalog_not_probed"]);
   });
 });
+
+/**
+ * حارسُ الانحرافِ بينَ المجالِ والمخطَّطِ — أُضيفَ في المراجعةِ 9/N بعدَ أن دفعنا ثمنَهُ.
+ *
+ * أضافتِ المراجعةُ مسارَينِ تماثُليَّينِ إلى `IDEMPOTENT_ROUTES` ونسيتْ قيدَ
+ * `route` في `contracts/schema.sql`؛ فمرَّتِ اختباراتُ الوحدةِ كلُّها (لا قاعدةَ
+ * فيها) ومرَّ التكاملُ (لا يكتبُ مفتاحاً)، وسقطَ الطلبُ الصحيحُ في **بوّابةِ
+ * الخروجِ** بـ500 من قيدِ قاعدةٍ. والدرسُ ليس «اكتبْ بحذرٍ» بل «اجعلِ القائمتَينِ
+ * مقروءتَينِ في مكانٍ واحدٍ»: هذا الاختبارُ يقرأُ الورقةَ من القرصِ ويُوازنُها
+ * بالمجالِ، فيسقطُ في ثانيةٍ لا في بوّابةٍ تستغرقُ دقيقةً على قاعدةٍ بعيدةٍ.
+ */
+describe("schema/domain drift guard", () => {
+  it("قيدُ route في المخطَّطِ يُطابقُ IDEMPOTENT_ROUTES مجموعةً", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { dirname, resolve } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const here = dirname(fileURLToPath(import.meta.url));
+    const sql = readFileSync(resolve(here, "../../contracts/schema.sql"), "utf8");
+
+    const block = /route\s+TEXT\s+NOT NULL CHECK \(route IN \(([^)]*)\)\)/u.exec(sql);
+    expect(block, "قيدُ route غيرَ موجودٍ في المخطَّطِ — أو تغيَّرَ شكلُهُ").not.toBeNull();
+    const inSchema = [...block![1].matchAll(/'([^']+)'/gu)].map((m) => m[1]).sort();
+    expect(inSchema).toEqual([...IDEMPOTENT_ROUTES].sort());
+  });
+});

@@ -29,6 +29,9 @@ export { DELIVERY_EVENT_TYPES } from "./events-types.js";
 // المراجعةُ 6/N: حدُّ HTTP يحتاجُ الكتالوجَ المغلقَ قيمةً لا نوعاً فقط؛
 // دونَهُ كانَ المحلِّلُ سيُعيدُ سردَ الأسبابِ في ملفِّهِ — وثاني سردٍ ينحرفُ.
 export { STORE_ORDER_CANCEL_REASON_CODES } from "./events-types.js";
+// المراجعةُ 9/N: مرآةُ الدفعِ تحتاجُ أسبابَها قيمةً — المحلِّلُ يرفضُ سبباً خارجَ
+// الكتالوجِ قبلَ لمسِ القاعدةِ، وسردٌ ثانٍ في ملفِّ الخدمةِ كانَ سينحرفُ عن العقدِ.
+export { PAYMENT_REASON_CODES } from "./events-types.js";
 
 import type { components } from "./api-types.js";
 

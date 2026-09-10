@@ -72,6 +72,10 @@ import type { DeliveryTask, StoreOrder, StoreOrderItem } from "../domain/model.j
 import type {
   CancelOrderOutcome,
   CancellationWrite,
+  ConfirmOrderOutcome,
+  ConfirmationWrite,
+  MirrorPaymentOutcome,
+  PaymentMirrorWrite,
   IdempotencyIntent,
   IdempotentReplay,
   PlaceOrderOutcome,
@@ -233,30 +237,112 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
     });
   }
 
+  /**
+   * مرآةُ الدفعِ (المراجعةُ 9/N · §2.2 · §3.2): قُفلٌ فنسخةٌ فتحديثٌ فدفترٌ
+   * (`state_kind = 'payment'`) فصندوقٌ — وكلُّهُ في `BEGIN` واحدٍ.
+   *
+   * وحرسٌ ثانٍ تحتَ القُفلِ: إن كانت الحالةُ المحفوظةُ غيرَ التي قُرِئَ عليها
+   * القرارُ، يُرفَضُ `DELIVERY_CONCURRENT_UPDATE` حتّى لو وافقَتِ النسخةُ. والنسخةُ
+   * تكفي اليومَ لأنَّ كلَّ انتقالٍ يرفعُها؛ والفحصُ المُزدَوَجُ يبقى لأنَّ أوّلَ من
+   * يكتبُ تحديثاً ينسى `version + 1` سيجدُ هنا سُدّاً لا ثغرةً.
+   */
+  async mirrorPayment(write: PaymentMirrorWrite): Promise<MirrorPaymentOutcome> {
+    return this.inTransaction<MirrorPaymentOutcome>(async (client) => {
+      const replay = await lookupIdempotencyKey(client, write.idempotency);
+      if (replay !== null) return replay;
+
+      const current = await lockOrder(client, write.orderId, write.expectedVersion);
+      if (current.payment_state !== write.fromPaymentState) {
+        throw new DeliveryError(
+          "DELIVERY_CONCURRENT_UPDATE",
+          "تغيَّرَت مرآةُ الدفعِ بينَ القرارِ والكتابةِ — أعِد المحاولةَ",
+          { details: { expected: write.fromPaymentState, actual: String(current.payment_state) } },
+        );
+      }
+
+      await client.query(
+        `UPDATE store_orders
+            SET payment_state = $2,
+                payment_ref = $3,
+                version = version + 1,
+                updated_at = now()
+          WHERE order_id = $1`,
+        [write.orderId, write.toPaymentState, write.paymentRef],
+      );
+      // فاعلٌ `system` ومرجعٌ فارغٌ: المرآةُ تعكسُ قرارَ مُزوِّدٍ، وإسنادُها للعميلِ
+      // في الدفترِ كانَ سيجعلُ تدقيقَ استردادٍ يتّهمُ من لم يفعل.
+      await client.query(
+        `INSERT INTO store_order_transitions (
+           order_id, state_kind, from_state, to_state, reason_code,
+           actor_type, actor_ref, trace_id
+         ) VALUES ($1,'payment',$2,$3,$4,'system',NULL,$5)`,
+        [write.orderId, write.fromPaymentState, write.toPaymentState, write.reasonCode, write.traceId],
+      );
+
+      await appendOutbox(client, write.events, write.traceId);
+      const order = await readOrderAfterWrite(client, write.orderId);
+      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      return { kind: "applied", order };
+    });
+  }
+
+  /**
+   * التأكيدُ (§2.2): والبوّابةُ المركَّبةُ تُقرَأُ **تحتَ القُفلِ** لا في القرارِ وحدَهُ.
+   *
+   * مرآةٌ كانت `authorized` لحظةَ القرارِ وانقلبَت إلى `failed` قبلَ الكتابةِ تمنعُ
+   * التأكيدَ: وإلّا لكانَ الطلبُ مُؤكَّداً بدفعٍ فاشلٍ — وهو أسوأُ ما يمكنُ أن تُنتجَهُ
+   * بوّابةٌ تقرأُ حالتَينِ متعامدتَينِ في لحظتَينِ مختلفتَينِ.
+   */
+  async confirmOrder(write: ConfirmationWrite): Promise<ConfirmOrderOutcome> {
+    return this.inTransaction<ConfirmOrderOutcome>(async (client) => {
+      const replay = await lookupIdempotencyKey(client, write.idempotency);
+      if (replay !== null) return replay;
+
+      const current = await lockOrder(client, write.orderId, write.expectedVersion);
+      if (current.fulfillment_state !== write.fromFulfillmentState) {
+        throw new DeliveryError(
+          "DELIVERY_CONCURRENT_UPDATE",
+          "تغيَّرَ الطلبُ بينَ القرارِ والكتابةِ — أعِد المحاولةَ",
+          { details: { expected: write.fromFulfillmentState, actual: String(current.fulfillment_state) } },
+        );
+      }
+      if (current.payment_state !== "authorized") {
+        throw new DeliveryError(
+          "DELIVERY_PAYMENT_NOT_AUTHORIZED",
+          `لا تأكيدَ لطلبٍ ومرآةُ الدفعِ في ${String(current.payment_state)} — البوّابةُ تطلبُ authorized`,
+          { details: { expected: "authorized", actual: String(current.payment_state) } },
+        );
+      }
+
+      await client.query(
+        `UPDATE store_orders
+            SET fulfillment_state = 'confirmed',
+                version = version + 1,
+                updated_at = now()
+          WHERE order_id = $1`,
+        [write.orderId],
+      );
+      await client.query(
+        `INSERT INTO store_order_transitions (
+           order_id, state_kind, from_state, to_state, reason_code,
+           actor_type, actor_ref, trace_id
+         ) VALUES ($1,'fulfillment',$2,'confirmed','PAYMENT_AUTHORIZED','system',NULL,$3)`,
+        [write.orderId, write.fromFulfillmentState, write.traceId],
+      );
+
+      await appendOutbox(client, write.events, write.traceId);
+      const order = await readOrderAfterWrite(client, write.orderId);
+      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      return { kind: "applied", order };
+    });
+  }
+
   async cancelOrder(write: CancellationWrite): Promise<CancelOrderOutcome> {
     return this.inTransaction<CancelOrderOutcome>(async (client) => {
       const replay = await lookupIdempotencyKey(client, write.idempotency);
       if (replay !== null) return replay;
 
-      const locked = await client.query(
-        `SELECT ${ORDER_COLUMNS} FROM store_orders WHERE order_id = $1 FOR UPDATE`,
-        [write.orderId],
-      );
-      if (locked.rows.length === 0) {
-        throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المعرّفِ", {
-          details: { field: "order_id", actual: write.orderId },
-        });
-      }
-      const current = locked.rows[0];
-      if (Number(current.version) !== write.expectedVersion) {
-        throw new DeliveryError(
-          "DELIVERY_CONCURRENT_UPDATE",
-          "تغيَّرَ الطلبُ بينَ القراءةِ والكتابةِ — أعِد المحاولةَ",
-          {
-            details: { expected: String(write.expectedVersion), actual: String(current.version) },
-          },
-        );
-      }
+      const current = await lockOrder(client, write.orderId, write.expectedVersion);
 
       await client.query(
         `UPDATE store_orders
@@ -304,18 +390,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
 
       await appendOutbox(client, write.events, write.traceId);
 
-      const after = await client.query(
-        `SELECT ${ORDER_COLUMNS} FROM store_orders WHERE order_id = $1`,
-        [write.orderId],
-      );
-      const items = await client.query(
-        `SELECT line_no, product_id, sku, quantity, unit_price_minor_units,
-                line_total_minor_units, substituted_product_id, substitution_reason,
-                substitution_price_delta_minor_units, order_item_id
-           FROM store_order_items WHERE order_id = $1 ORDER BY line_no`,
-        [write.orderId],
-      );
-      const order = toOrder(after.rows[0], items.rows);
+      const order = await readOrderAfterWrite(client, write.orderId);
       await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
       return { kind: "applied", order };
     });
@@ -340,6 +415,61 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
       client.release();
     }
   }
+}
+
+/**
+ * القُفلُ وفحصُ النسخةِ في مكانٍ واحدٍ — تستعملُهُ الكتاباتُ الثلاثُ (إلغاءٌ · مرآةُ
+ * دفعٍ · تأكيدٌ).
+ *
+ * وثلاثُ نسخٍ من `SELECT ... FOR UPDATE` ومقارنةِ نسخةٍ كانت ستعني أنَّ أوّلَ من
+ * ينسى `FOR UPDATE` في الرابعةِ يُنشئُ صفَّي دفترٍ لحدثٍ واحدٍ — وهو عطبٌ لا يظهرُ
+ * إلاّ تحتَ تزامُنٍ حقيقيٍّ، أي في الإنتاجِ.
+ */
+async function lockOrder(
+  client: PoolClient,
+  orderId: string,
+  expectedVersion: number,
+): Promise<OrderRow> {
+  const locked = await client.query(
+    `SELECT ${ORDER_COLUMNS} FROM store_orders WHERE order_id = $1 FOR UPDATE`,
+    [orderId],
+  );
+  if (locked.rows.length === 0) {
+    throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المعرّفِ", {
+      details: { field: "order_id", actual: orderId },
+    });
+  }
+  const current = locked.rows[0] as OrderRow;
+  if (Number(current.version) !== expectedVersion) {
+    throw new DeliveryError(
+      "DELIVERY_CONCURRENT_UPDATE",
+      "تغيَّرَ الطلبُ بينَ القراءةِ والكتابةِ — أعِد المحاولةَ",
+      { details: { expected: String(expectedVersion), actual: String(current.version) } },
+    );
+  }
+  return current;
+}
+
+/**
+ * الطلبُ كما صارَ بعدَ الكتابةِ، من داخلِ المعاملةِ نفسِها.
+ *
+ * ولا يُبنى الجوابُ من المجموعةِ التي حسبَها النطاقُ: العمودُ المحسوبُ في القاعدةِ
+ * (`total_minor_units`) و`version` بعدَ `+ 1` حقيقتانِ تملكُهُما القاعدةُ، ومن يُجيبُ
+ * بتقديرِهِ لهما يُجيبُ بما لم يُحفَظ.
+ */
+async function readOrderAfterWrite(client: PoolClient, orderId: string): Promise<StoreOrder> {
+  const after = await client.query(
+    `SELECT ${ORDER_COLUMNS} FROM store_orders WHERE order_id = $1`,
+    [orderId],
+  );
+  const items = await client.query(
+    `SELECT line_no, product_id, sku, quantity, unit_price_minor_units,
+            line_total_minor_units, substituted_product_id, substitution_reason,
+            substitution_price_delta_minor_units, order_item_id
+       FROM store_order_items WHERE order_id = $1 ORDER BY line_no`,
+    [orderId],
+  );
+  return toOrder(after.rows[0], items.rows);
 }
 
 /**

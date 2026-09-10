@@ -986,3 +986,42 @@ search-exit-gate-e2e:
   script:
     - pnpm install --frozen-lockfile
     - pnpm --filter @wasla/search-e2e test
+
+# ─────────────────────────────────────────────────────────────────────────────
+# `M5-13` · بوّابةُ خروجِ الطورِ 13 — مرآةُ الدفعِ والتأكيدُ على **خدمتَينِ حقيقيَّتَينِ**
+#   packages/delivery-e2e/src/__tests__/phase13-exit-gate.e2e.test.ts
+#
+# هذه البوّابةُ وحدَها ترفعُ مُستمعَينِ: تطبيقَ السوقِ وتطبيقَ التوصيلِ، على قاعدةٍ
+# واحدةٍ بمخطَّطَيهما، ثمَّ تُنادي بينهما بـ`fetch` على منفذَينِ. وما تُثبتُهُ ولا
+# يُثبتُهُ اختبارُ وحدةٍ ولا تكاملٍ:
+#   • أنَّ لقطةَ السعرِ تُؤخَذُ من السوقِ الحقيقيِّ بـ`store_slug` (§4.11)، فمنتجٌ
+#     مسودّةٌ يُرفَضُ رفضاً دائماً 400-class **والسوقُ هوَ من قالَ ذلك** — لا مُزيَّفٌ.
+#   • أنَّ الشوطَ `placed → confirmed` مقطوعٌ فعلاً: مرآةُ دفعٍ ثمَّ تأكيدٌ، ودفترُ
+#     الانتقالاتِ بمحورَيهِ الثلاثةِ صفوفٍ.
+#   • أنَّ كلَّ حدثٍ في الصندوقِ يُطابقُ `contracts/events.json` المنشورَ، و`published_at`
+#     فيها NULL: لا ناقلَ يختمُ ما لم يُرسَلْ.
+#   • أنَّ حدثَ مخزونٍ **كتبَهُ السوقُ** يعبرُ الناقلَ إلى دفترِ التوصيلِ.
+#   • أنَّ الجوابَ المحفوظَ يصمدُ بايتاً ببايتٍ **على الشبكةِ** مع `Idempotent-Replay: true`،
+#     وأنَّ نفسَ المفتاحِ بجسمٍ آخرَ 409 — وهوَ ما لا يقيسُهُ `app.inject`.
+#
+# وأوّلُ تشغيلٍ لها كشفَ عطبَينِ حقيقيَّينِ مرَّا من 209 اختبارِ وحدةٍ و48 تكاملٍ: قيدُ
+# `route` في المخطَّطِ ناقصاً مسارَينِ (500 على طلبٍ صحيحٍ)، و`content-type: application/json`
+# بجسمٍ فارغٍ على مسارٍ لا جسمَ لهُ (500 يُسمّي طلبَ العميلِ عطبَنا).
+#
+# قاعدةٌ مستقلّةٌ (wasla_delivery_e2e) كي لا تتداخلَ صفوفُها مع delivery-db-integration،
+# و`EXIT_GATE_REQUIRE_DB=1` يجعلُ التخطّيَ إخفاقاً باسمِهِ داخلَ الوظيفةِ.
+delivery-exit-gate-e2e:
+  extends: .db-integration-base
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_DB: wasla_delivery_e2e
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  variables:
+    DATABASE_URL: "postgres://postgres:postgres@postgres:5432/wasla_delivery_e2e"
+    EXIT_GATE_REQUIRE_DB: "1"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm --filter @wasla/delivery-e2e test

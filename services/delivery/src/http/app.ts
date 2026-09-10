@@ -2,16 +2,18 @@
  * Delivery HTTP boundary — Fastify app (ADR-026 §4.2, lifted for the network
  * edge in review 6/N · contracts/api.openapi.yml).
  *
- * Exactly the six routes the contract publishes, no more: a route that is not
+ * Exactly the eight routes the contract publishes, no more: a route that is not
  * in the contract is a private API nobody documented, and the first client that
  * finds it makes it permanent.
  *
- *   POST /store-orders                               → 201 (Idempotency-Key)
- *   GET  /store-orders/{orderPublicId}               → 200
- *   POST /store-orders/{orderPublicId}/cancellation  → 200 (Idempotency-Key)
- *   GET  /store-orders/{orderPublicId}/delivery-task → 200
- *   GET  /delivery/health                            → 200 (liveness)
- *   GET  /delivery/ready                             → 200/503 (readiness)
+ *   POST /store-orders                                 → 201 (Idempotency-Key)
+ *   GET  /store-orders/{orderPublicId}                 → 200
+ *   POST /store-orders/{orderPublicId}/cancellation    → 200 (Idempotency-Key)
+ *   PUT  /store-orders/{orderPublicId}/payment-mirror  → 200 (Idempotency-Key)
+ *   POST /store-orders/{orderPublicId}/confirmation    → 200 (Idempotency-Key)
+ *   GET  /store-orders/{orderPublicId}/delivery-task   → 200
+ *   GET  /delivery/health                              → 200 (liveness)
+ *   GET  /delivery/ready                               → 200/503 (readiness)
  *
  * ## Injected ports — this app never opens a database
  *
@@ -31,13 +33,14 @@
  *
  * ## The catalog port is OPTIONAL, and its absence is a 503 — not a fake
  *
- * `POST /store-orders` needs marketplace prices (§2.3). The store ref in this
- * contract is `WS-##########` while marketplace identifies stores by
- * `store_slug`/`store_id` and publishes no public store ref, so no HTTP
- * catalog adapter can be written today (ADR-026 §4.9-2). When no catalog port
- * is injected the route answers `503 DELIVERY_MARKETPLACE_UNAVAILABLE`:
- * placement is refused loudly instead of inventing prices, and reads and
- * cancellation — which need no catalog — work fully in production.
+ * `POST /store-orders` needs marketplace prices (§2.3). Review 8/N built the
+ * real HTTP catalog adapter — placement now carries `store_slug`, which is the
+ * reference marketplace actually publishes (§4.11) — so the port CAN be wired,
+ * and in production it is. It stays optional here for one reason: an operator
+ * may deliberately run this service without a catalog, and then the route must
+ * answer `503 DELIVERY_MARKETPLACE_UNAVAILABLE` rather than invent prices,
+ * while reads, cancellation, the payment mirror and confirmation — none of
+ * which need a catalog — keep working fully.
  *
  * ## Liveness AND readiness — two routes because they answer two questions
  *
@@ -53,14 +56,14 @@
  * 6), because an unready dependency is a state to report, not a defect to
  * translate. And what is not probed is not claimed: with no catalog port the
  * response lists `marketplace_catalog_not_wired` in `not_claimed` while still
- * reporting 200 if the database answers, because reads and cancellation ARE
- * servable then. Letting an unwireable dependency pin readiness at 503 forever
+ * reporting 200 if the database answers, because reads, cancellation and the
+ * payment routes ARE servable then. Letting an unwireable dependency pin readiness at 503 forever
  * would make the route useless and it would be turned off — which is how a
  * service ends up with no readiness check at all.
  *
  * ## The idempotency key is required, and parsed here — not in the use case
  *
- * Both writes demand `Idempotency-Key` (§4.10). The header and the request
+ * All four writes demand `Idempotency-Key` (§4.10). The header and the request
  * fingerprint are wire concerns, so the HTTP layer builds the intent and hands
  * it inward; the use cases and the store never read a header. A replay is
  * answered with the STORED status and body plus `Idempotent-Replay: true`, so
@@ -80,10 +83,17 @@ import type {
 import { assertIdempotencyKey, deriveRequestFingerprint } from "../domain/idempotency.js";
 import { sendDeliveryError } from "./errors.js";
 import { toDeliveryTaskResponse, toStoreOrderResponse } from "./mappers.js";
-import { parseCancelBody, parseOrderPublicIdParam, parsePlaceStoreOrderBody } from "./requests.js";
+import {
+  parseCancelBody,
+  parseOrderPublicIdParam,
+  parsePaymentMirrorBody,
+  parsePlaceStoreOrderBody,
+} from "./requests.js";
 import { buildReadinessResponse } from "./readiness.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
+import { mirrorPayment } from "../use-cases/mirror-payment.js";
+import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
 
 export interface DeliveryHttpDeps {
   readonly readPort: StoreOrderReadPort;
@@ -125,6 +135,46 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   app.setErrorHandler((error, request, reply) => {
     return sendDeliveryError(reply, error, String(request.id));
   });
+
+  /*
+   * جسمٌ فارغٌ مع `content-type: application/json` = **«لا جسمَ»**، لا خطأٌ.
+   *
+   * ومن أينَ جاءتِ الحاجةُ؟ `POST …/confirmation` (المراجعةُ 9/N) لا جسمَ لهُ
+   * في العقدِ: القرارُ كلُّهُ في المسارِ والحالةِ المحفوظةِ. وكلُّ عميلٍ عامٍّ
+   * (`curl -X POST -H 'content-type: application/json'`، ومعهُ أكثرُ مكتباتِ
+   * HTTP إذا لم يُحذَفِ الرأسُ صراحةً) يبعثُ الرأسَ ولا يبعثُ بايتاً؛
+   * ومُحلِّلُ Fastify الافتراضيُّ يُسقِطُ ذلكَ بـ`FST_ERR_CTP_EMPTY_JSON_BODY`. وأوّلُ
+   * من كشفَ أنَّ المسارَ غيرُ قابلٍ للنِّداءِ على السلكِ بوّابةُ الخروجِ: اختباراتُ
+   * الوحدةِ تستعملُ `app.inject` بلا رأسٍ، فلم ترَ ما يراهُ المُتكامِلُ.
+   *
+   * ولمَ لا يُتركُ للمُتكامِلِ أن يبعثَ `{}`؟ لأنَّ العقدَ لا يطلبُ جسماً، وشرطٌ غيرُ
+   * مكتوبٍ في الورقةِ يُكتَشَفُ في الإنتاجِ وحدهُ. ومساراتُ الكتابةِ التي **تطلبُ**
+   * جسماً لا تتسامحُ بهذا: مُحلِّلاتُها ترفضُ الغائبَ بـ400
+   * `DELIVERY_VALIDATION_FAILED` من عقدِنا لا من رسالةِ إطارٍ.
+   */
+  app.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (request, payload, done) => {
+      const raw = typeof payload === "string" ? payload.trim() : "";
+      if (raw === "") {
+        done(null, undefined);
+        return;
+      }
+      try {
+        done(null, JSON.parse(raw) as unknown);
+      } catch {
+        // وJSON معطوبٌ خطأُ مُنادٍ أيضاً — ورسالةُ المُحلِّلِ لا تُسَرَّبُ: قد تحملُ
+        // مقطعاً من الجسمِ، والجسمُ قد يحملُ مرجعَ دفعٍ (§2.6).
+        done(
+          new DeliveryError("DELIVERY_VALIDATION_FAILED", "جسمُ الطلبِ ليسَ JSON صالحاً", {
+            traceId: String(request.id),
+            details: { field: "body" },
+          }),
+        );
+      }
+    },
+  );
 
   app.post("/store-orders", async (request, reply) => {
     const traceId = String(request.id);
@@ -186,6 +236,78 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
       publicId,
       reasonCode,
+      traceId,
+      idempotency,
+    );
+    if (result.kind === "replayed") return sendReplay(reply, result.status, result.body);
+    return reply.status(200).send(toStoreOrderResponse(result.order));
+  });
+
+  /**
+   * مرآةُ الدفعِ: `PUT` لا `POST` — الطلبُ يُعلنُ حالةَ الدفعِ كما هيَ عندَ المُزوِّدِ،
+   * وإعلانُ نفسِ الحالةِ مرّتَينِ لا يُنشئُ شيئاً ثانياً. و`POST` كانَ سيوحي بأنَّ كلَّ
+   * نداءٍ يُنشئُ حركةَ دفعٍ جديدةً — ولا حركةَ دفعٍ تُنشَأُ هنا أصلاً (§2.2).
+   */
+  app.put("/store-orders/:orderPublicId/payment-mirror", async (request, reply) => {
+    const traceId = String(request.id);
+    const publicId = parseOrderPublicIdParam(request.params);
+    const body = parsePaymentMirrorBody(request.body);
+    const route = "PUT /store-orders/{orderPublicId}/payment-mirror" as const;
+    const idempotency: IdempotencyIntent = {
+      key: assertIdempotencyKey(request.headers["idempotency-key"]),
+      route,
+      // البصمةُ تشملُ `payment_ref` أيضاً: نفسُ المفتاحِ بمرجعٍ آخرَ إعادةُ استعمالٍ
+      // (409) لا إعادةُ محاولةٍ — ومُزوِّدانِ مختلفانِ لطلبٍ واحدٍ خطأُ تركيبٍ.
+      //
+      // والحقلُ الغائبُ **يُحذَفُ** من المُبصَّمِ ولا يُمرَّرُ `undefined`: البصمةُ
+      // ترفضُ `undefined` صراحةً (§4.10 · `canonicalJson`)، ولأنَّ «غائبٌ» و`null`
+      // معنيانِ مختلفانِ هنا فحذفُهُ هو ما يجعلُ البصمتَينِ مختلفتَينِ فعلاً.
+      fingerprint: deriveRequestFingerprint(route, publicId, {
+        payment_state: body.paymentState,
+        reason_code: body.reasonCode,
+        ...("paymentRef" in body ? { payment_ref: body.paymentRef } : {}),
+      }),
+      responseStatus: 200,
+      buildResponseBody: (written) => toStoreOrderResponse(written),
+    };
+    const result = await mirrorPayment(
+      { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
+      publicId,
+      {
+        paymentState: body.paymentState,
+        reasonCode: body.reasonCode,
+        ...("paymentRef" in body ? { paymentRef: body.paymentRef } : {}),
+      },
+      traceId,
+      idempotency,
+    );
+    if (result.kind === "replayed") return sendReplay(reply, result.status, result.body);
+    // `applied` و`unchanged` يُجابانِ سواءً: الحدُّ الشبكيُّ لا يملكُ ما يقولُهُ
+    // للمُزوِّدِ عن الفرقِ، والطلبُ في الحالتَينِ حيثُ أعلنَ المُزوِّدُ أنَّهُ يكونُ.
+    return reply.status(200).send(toStoreOrderResponse(result.order));
+  });
+
+  /**
+   * التأكيدُ: البوّابةُ المركَّبةُ (`placed` + مرآةُ دفعٍ `authorized`) — و409 هوَ
+   * جوابُ «الطريقُ غيرُ مسموحٍ» و«الدفعُ غيرُ مُخوَّلٍ» معاً، بشفرتَي خطأٍ متمايزتَينِ
+   * كي يعرفَ العميلُ أيَّ الشرطَينِ اختلَّ.
+   */
+  app.post("/store-orders/:orderPublicId/confirmation", async (request, reply) => {
+    const traceId = String(request.id);
+    const publicId = parseOrderPublicIdParam(request.params);
+    const route = "POST /store-orders/{orderPublicId}/confirmation" as const;
+    const idempotency: IdempotencyIntent = {
+      key: assertIdempotencyKey(request.headers["idempotency-key"]),
+      route,
+      // لا جسمَ للتأكيدِ، فالبصمةُ هيَ المسارُ والطلبُ وحدَهما — وكائنٌ فارغٌ صريحٌ
+      // أصدقُ من إسقاطِ الوسيطِ: البصمةُ تبقى محسوبةً على نفسِ الشكلِ.
+      fingerprint: deriveRequestFingerprint(route, publicId, {}),
+      responseStatus: 200,
+      buildResponseBody: (written) => toStoreOrderResponse(written),
+    };
+    const result = await confirmStoreOrder(
+      { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
+      publicId,
       traceId,
       idempotency,
     );

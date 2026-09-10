@@ -45,13 +45,19 @@ import { createHash } from "node:crypto";
 import { DeliveryError } from "./errors.js";
 
 /**
- * The two routes that carry a key — the write paths. Reads need no key
+ * The four routes that carry a key — every write path. Reads need no key
  * (repeating a read is free), so the type refuses one by construction rather
  * than trusting a caller not to pass `GET`.
+ *
+ * المراجعةُ 9/N أضافَت مرآةَ الدفعِ والتأكيدَ، وهما أحقُّ المساراتِ بالمفتاحِ: مُزوِّدُ
+ * الدفعِ يُعيدُ إرسالَ خطّافِهِ (webhook) عندَ أوّلِ مِهلةٍ، وتخويلٌ مرَّتَينِ في الدفترِ
+ * يجعلُ كلَّ من يحسبُ التخويلاتِ يحسبُ خطأً.
  */
 export const IDEMPOTENT_ROUTES = [
   "POST /store-orders",
   "POST /store-orders/{orderPublicId}/cancellation",
+  "PUT /store-orders/{orderPublicId}/payment-mirror",
+  "POST /store-orders/{orderPublicId}/confirmation",
 ] as const;
 export type IdempotentRoute = (typeof IDEMPOTENT_ROUTES)[number];
 

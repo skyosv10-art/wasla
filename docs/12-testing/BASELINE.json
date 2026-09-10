@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T09:28:49Z",
+  "generated_at": "2026-09-10T17:26:55Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2655d56ce69a6bba2b2e92eaac836aa127feed21",
-    "branch": "feat/m5-13-marketplace-catalog-http",
+    "commit": "063db5d89e75356948edfa75c621bff9e76e1898",
+    "branch": "feat/m5-13-payment-mirror-exit-gate",
     "dirty": true,
-    "dirty_files": 38,
-    "dirty_reason": "المراجعةُ 8/N (CLM-0127): ملفُّ اختبارٍ جديدٌ لمحوّلِ كتالوجِ السوقِ (309⇒310)، وبصمةُ pnpm-lock تغيَّرت بإضافةِ @wasla/contracts-marketplace و@wasla/service-auth كروابطِ workspace لخدمةِ التوصيلِ.",
-    "tracked_files": 1624
+    "dirty_files": 39,
+    "dirty_reason": "المراجعةُ 9/N (CLM-0128): مرآةُ الدفعِ والتأكيدُ وحزمةُ بوّابةِ خروجِ الطورِ 13 — ثلاثةُ ملفّاتِ اختبارٍ جديدةٍ (payment-mirror وحدةً وتكامُلاً + بوّابةُ delivery-e2e) وحزمةٌ جديدةٌ (@wasla/delivery-e2e) وساقٌ جديدةٌ في مصفوفةِ exit-gate-e2e وبصمةُ قفلٍ جديدةٌ لتبعيّاتِ الحزمةِ.",
+    "tracked_files": 1640
   },
   "env": {
     "node": "v20.20.1",
@@ -19,15 +19,15 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "8c326aae439c3215eb2b779b3ce1434118decc236511943fa5e3d79176fc5764",
-    "lines": 3080
+    "sha256": "d8dffa9dc227fa1c3a65bd37b0efc5947316bb62a3f21e4b917d294030882942",
+    "lines": 3107
   },
   "static": {
-    "packages": 48,
-    "packages_with_typecheck": 48,
-    "packages_with_test": 48,
-    "test_files_tracked": 310,
-    "ci_jobs": 29,
+    "packages": 49,
+    "packages_with_typecheck": 49,
+    "packages_with_test": 49,
+    "test_files_tracked": 313,
+    "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
     "risks_not_closed": 24
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify.log",
-    "tests_passed": 4109,
-    "test_files_executed": 248,
+    "tests_passed": 4136,
+    "test_files_executed": 250,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:14e9b358bfb970d6eb6b69c3c2cb4bb7188b15e2e1189133efd38ad76442de66",
+  "fingerprint": "sha256:5a91d2ce83a7536805941cf63dbd18d89373c5ea78aba969a6fc703ff098763f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

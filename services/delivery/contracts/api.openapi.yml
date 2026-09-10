@@ -24,8 +24,16 @@ info:
     مَهَلٌ) ⇒ `503 DELIVERY_MARKETPLACE_UNAVAILABLE`. ومتجرٌ غيرُ موافَقٍ عليه ⇒
     `409 DELIVERY_INELIGIBLE`.
 
-    **مفتاحُ التماثُلِ (مراجعةٌ 7/N — رُفِعَ دَينُ §4.9-3):** المسارانِ
-    الكاتبانِ يطلبانِ ترويسةَ `Idempotency-Key` **إلزاماً**؛ الإعادةُ بالمفتاحِ
+    **مرآةُ الدفعِ والتأكيدُ (مراجعةٌ 9/N · `CLM-0128`):** `PUT
+    /store-orders/{orderPublicId}/payment-mirror` يعكسُ حالةَ نيّةِ الدفعِ الخارجيّةِ
+    (§3.2) بلا أيِّ حقلٍ ماليٍّ، و`POST /store-orders/{orderPublicId}/confirmation`
+    يُطبّقُ البوّابةَ المركَّبةَ §2.2: `placed → confirmed` لا تمرُّ إلاّ بمرآةٍ
+    `authorized`، وإلاّ `409 DELIVERY_PAYMENT_NOT_AUTHORIZED`. وبهذا صارَ محورُ
+    «مخزونٍ/دفعٍ» قابلاً للسَّوقِ من طرفٍ إلى طرفٍ في بوّابةِ خروجِ الطورِ
+    (`packages/delivery-e2e`).
+
+    **مفتاحُ التماثُلِ (مراجعةٌ 7/N — رُفِعَ دَينُ §4.9-3 · وُسِّعَ في 9/N):** المساراتُ
+    الكاتبةُ الأربعةُ تطلبُ ترويسةَ `Idempotency-Key` **إلزاماً**؛ الإعادةُ بالمفتاحِ
     نفسِهِ والطلبِ نفسِهِ تُعيدُ جوابَ الأولِ حرفاً مع `Idempotent-Replay: true`
     ولا تكتبُ شيئاً؛ والمفتاحُ نفسُهُ بطلبٍ مختلفٍ يُرفَضُ
     `409 DELIVERY_IDEMPOTENCY_KEY_REUSED`. ومع المفتاحِ **يبقى** الملاذُ الأخيرُ
@@ -122,6 +130,82 @@ paths:
       responses:
         "200":
           description: الطلبُ مُلغىً (أو إعادةُ جوابِ إلغاءٍ سابقٍ بالمفتاحِ نفسِهِ)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /store-orders/{orderPublicId}/payment-mirror:
+    put:
+      tags: [store-orders]
+      operationId: mirrorStoreOrderPayment
+      summary: تحديثُ مرآةِ الدفعِ (حالةٌ خارجيّةٌ تُعكَسُ ولا تُقرَّرُ هنا)
+      description: |
+        `PUT` لا `POST`: المُرسِلُ يُعلنُ الحالةَ التي يراها عندَ مُزوِّدِ الدفعِ، وإعلانُ
+        الحالةِ نفسِها بالمرجعِ نفسِهِ مرّتَينِ لا يُنشئُ انتقالاً ثانياً (200 بلا أثرٍ).
+
+        والخدمةُ لا تُعالجُ مالاً (ADR-026 §2.2): لا مبلغَ في الجسمِ ولا وسيلةَ دفعٍ،
+        و`payment_ref` مرجعٌ opaque لا يُردُّ في أيِّ قراءةٍ (§2.6). وانتقالٌ خارجَ جدولِ
+        §3.2 يُرفَضُ `409 DELIVERY_TRANSITION_NOT_ALLOWED` — المرآةُ تعكسُ تاريخاً ممكناً لا
+        أيَّ تاريخٍ.
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMirrorRequest"
+      responses:
+        "200":
+          description: المرآةُ مُحدَّثةٌ (أو مُعلَنٌ لها ما هيَ عليهِ أصلاً — بلا أثرٍ)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /store-orders/{orderPublicId}/confirmation:
+    post:
+      tags: [store-orders]
+      operationId: confirmStoreOrder
+      summary: تأكيدُ طلبٍ (placed → confirmed — ولا يمرُّ إلاّ بمرآةٍ authorized)
+      description: |
+        البوّابةُ المركَّبةُ (ADR-026 §2.2): التأكيدُ قرارُ تنفيذٍ، وشرطُهُ أنَّ مرآةَ
+        الدفعِ `authorized`. مرآةٌ `pending` تُرفَضُ `409 DELIVERY_PAYMENT_NOT_AUTHORIZED`
+        وليسَ `TRANSITION_NOT_ALLOWED`: الفرقُ بينَ «انتظِر التخويلَ» و«لا طريقَ من هنا»
+        يجبُ أن يبقى مقروءاً للعميلِ.
+
+        ولا جسمَ للطلبِ: السببُ معروفٌ ومغلقٌ (`PAYMENT_AUTHORIZED`)، وحقلٌ حرٌّ هنا
+        كانَ سيصبحُ مكانَ تخزينٍ لملاحظاتٍ لا يقرأُها أحدٌ.
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: الطلبُ مُؤكَّدٌ (أو إعادةُ جوابِ تأكيدٍ سابقٍ بالمفتاحِ نفسِهِ)
           content:
             application/json:
               schema:
@@ -308,6 +392,25 @@ components:
         reason_code:
           type: string
           enum: [CUSTOMER_CHANGED_MIND, CUSTOMER_UNAVAILABLE, PAYMENT_FAILED, STORE_REQUESTED, SYSTEM_MAINTENANCE, DELIVERY_NOT_FEASIBLE]
+    PaymentMirrorRequest:
+      type: object
+      additionalProperties: false
+      required: [payment_state, reason_code]
+      description: |
+        مرآةُ نيّةٍ خارجيّةٍ: حالةٌ وسببٌ مغلقٌ ومرجعٌ — ولا حقلَ ماليَّ واحداً.
+        `additionalProperties: false` مقصودٌ: حقلٌ زائدٌ يُجاوَزُ صامتاً هو كيفَ يظنُّ
+        مُزوِّدٌ أنَّ وصلةَ حفظت مبلغاً ولم تحفظهُ.
+      properties:
+        payment_state:
+          $ref: "#/components/schemas/PaymentState"
+        reason_code:
+          type: string
+          enum: [AUTHORIZATION_SUCCEEDED, CAPTURE_SUCCEEDED, AUTHORIZATION_FAILED, REFUND_INITIATED, REFUND_COMPLETED, PARTIAL_REFUND_COMPLETED]
+        payment_ref:
+          type: [string, "null"]
+          minLength: 1
+          maxLength: 128
+          description: مرجعُ النيّةِ عندَ المُزوِّدِ — opaque ولا يُردُّ في أيِّ قراءةٍ (§2.6).
     OrderLine:
       type: object
       required: [line_no, product_id, sku, quantity, unit_price_minor_units, line_total_minor_units]

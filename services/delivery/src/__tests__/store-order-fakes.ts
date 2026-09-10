@@ -22,6 +22,10 @@ import type { DeliveryTask, StoreOrder } from "../domain/model.js";
 import type {
   CancelOrderOutcome,
   CancellationWrite,
+  ConfirmOrderOutcome,
+  ConfirmationWrite,
+  MirrorPaymentOutcome,
+  PaymentMirrorWrite,
   CatalogProductSnapshot,
   IdempotencyIntent,
   PlaceOrderOutcome,
@@ -103,6 +107,63 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
     this.outbox.push(...write.events);
     this.rememberKey(write.idempotency, cancelled);
     return { kind: "applied", order: cancelled };
+  }
+
+  /**
+   * مرآةُ الدفعِ في الذاكرةِ (المراجعةُ 9/N) — بنفسِ الحرسَينِ: النسخةُ **و**الحالةُ
+   * السابقةُ. فحصُ النسخةِ وحدَهُ كانَ سيجعلُ الزائفَ يقبلُ ما يرفضُهُ المحوّلُ، وأوّلُ
+   * فرقٍ بينَهُما يجعلُ اختباراتَ الوحدةِ تشهدُ لسلوكٍ لا وجودَ لهُ في الإنتاجِ.
+   */
+  async mirrorPayment(write: PaymentMirrorWrite): Promise<MirrorPaymentOutcome> {
+    const replay = this.resolveKey(write.idempotency);
+    if (replay !== null) return replay;
+    const entry = this.requireOrder(write.orderId, write.expectedVersion);
+    if (entry.paymentState !== write.fromPaymentState) {
+      throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَت مرآةُ الدفعِ بينَ القراءةِ والكتابةِ");
+    }
+    const mirrored: StoreOrder = {
+      ...entry,
+      paymentState: write.toPaymentState as StoreOrder["paymentState"],
+      paymentRef: write.paymentRef,
+      version: entry.version + 1,
+    };
+    this.orders.set(mirrored.publicId, mirrored);
+    this.outbox.push(...write.events);
+    this.rememberKey(write.idempotency, mirrored);
+    return { kind: "applied", order: mirrored };
+  }
+
+  /** التأكيدُ في الذاكرةِ — والبوّابةُ تُقرَأُ هنا ثانيةً كما تُقرَأُ تحتَ القُفلِ. */
+  async confirmOrder(write: ConfirmationWrite): Promise<ConfirmOrderOutcome> {
+    const replay = this.resolveKey(write.idempotency);
+    if (replay !== null) return replay;
+    const entry = this.requireOrder(write.orderId, write.expectedVersion);
+    if (entry.fulfillmentState !== write.fromFulfillmentState) {
+      throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَ الطلبُ بينَ القراءةِ والكتابةِ");
+    }
+    if (entry.paymentState !== "authorized") {
+      throw new DeliveryError("DELIVERY_PAYMENT_NOT_AUTHORIZED", "الدفعُ غيرُ مُخوَّلٍ");
+    }
+    const confirmed: StoreOrder = {
+      ...entry,
+      fulfillmentState: "confirmed",
+      version: entry.version + 1,
+    };
+    this.orders.set(confirmed.publicId, confirmed);
+    this.outbox.push(...write.events);
+    this.rememberKey(write.idempotency, confirmed);
+    return { kind: "applied", order: confirmed };
+  }
+
+  private requireOrder(orderId: string, expectedVersion: number): StoreOrder {
+    const entry = [...this.orders.values()].find((o) => o.orderId === orderId);
+    if (entry === undefined) {
+      throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المعرّفِ");
+    }
+    if (entry.version !== expectedVersion) {
+      throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَ الطلبُ بينَ القراءةِ والكتابةِ");
+    }
+    return entry;
   }
 
   /** Same two-step handshake as the Postgres adapter, in memory. */

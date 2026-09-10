@@ -338,9 +338,16 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_relay_checkpoint (
 -- ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS delivery_idempotency_keys (
     idempotency_key     TEXT        PRIMARY KEY CHECK (idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$'),
+    -- القائمةُ **مغلقةٌ** وتُطابقُ `IDEMPOTENT_ROUTES` حرفاً، ويحرسُ التطابقَ
+    -- اختبارٌ يقرأُ هذا الملفَّ (`idempotency.test.ts`). ولمَ حارسٌ؟ لأنَّ
+    -- المراجعةَ 9/N أضافت مسارَينِ إلى المجالِ ونسيتهما هنا، فكانَ الجوابُ 500
+    -- من قيدٍ في القاعدةِ على طلبٍ صحيحٍ تماماً — وأوّلُ من كشفَهُ بوّابةُ
+    -- الخروجِ لا اختبارُ خدمةٍ، فالحارسُ يُقصِّرُ الطريقَ إلى الكشفِ.
     route               TEXT        NOT NULL CHECK (route IN (
                                         'POST /store-orders',
-                                        'POST /store-orders/{orderPublicId}/cancellation')),
+                                        'POST /store-orders/{orderPublicId}/cancellation',
+                                        'PUT /store-orders/{orderPublicId}/payment-mirror',
+                                        'POST /store-orders/{orderPublicId}/confirmation')),
     request_fingerprint TEXT        NOT NULL CHECK (request_fingerprint ~ '^[0-9a-f]{64}$'),
     response_status     SMALLINT    NOT NULL CHECK (response_status IN (200, 201)),
     response_body       JSONB       NOT NULL,

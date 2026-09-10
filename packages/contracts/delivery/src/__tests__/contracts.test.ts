@@ -149,14 +149,16 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     expect(api).toMatch(/ReadinessResponse/);
   });
 
-  it("both write routes REQUIRE an Idempotency-Key header (review 7/N · §4.10-1)", () => {
+  it("all FOUR write routes REQUIRE an Idempotency-Key header (7/N · 9/N · §4.10-1)", () => {
     // الترويسةُ إلزاميَّةٌ لا اختياريَّةٌ: عميلٌ يُعيدُ المحاولةَ بلا مفتاحٍ يُنشئُ
     // طلباً ثانياً، والعقدُ الذي يسمحُ بذلك يسمحُ بفاتورةٍ مضاعفةٍ.
     expect(api).toMatch(/IdempotencyKey:/);
     expect(api).toMatch(/name: Idempotency-Key/);
     expect(api).toMatch(/in: header/);
-    // مرجعانِ فقط: مسارُ الإنشاءِ ومسارُ الإلغاءِ — لا قراءةٌ تحملُ مفتاحاً.
-    expect([...api.matchAll(/parameters\/IdempotencyKey/g)].length).toBe(2);
+    // أربعةُ مراجعَ: الإنشاءُ والإلغاءُ ومرآةُ الدفعِ والتأكيدُ (9/N) — ولا قراءةٌ
+    // تحملُ مفتاحاً. والعددُ مثبَّتٌ لأنَّ مساراً كاتباً خامساً بلا مفتاحٍ هو بالضبطِ
+    // العطبُ الذي يُنشئُ أثراً مضاعفاً عندَ أوّلِ إعادةِ محاولةٍ.
+    expect([...api.matchAll(/parameters\/IdempotencyKey/g)].length).toBe(4);
   });
 
   it("schema declares the idempotency ledger bound to the order it created (§4.10-1)", () => {
@@ -177,7 +179,7 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     // معالجُ الأخطاءِ الواحدُ يستطيعُ إرجاعَ 500 من أيِّ مسارٍ؛ مسارٌ لا يُعلنُهُ
     // يجعلُ العقدَ أضيقَ من الحقيقةِ.
     expect(api).toMatch(/InternalError:/);
-    expect([...api.matchAll(/responses\/InternalError/g)].length).toBe(4);
+    expect([...api.matchAll(/responses\/InternalError/g)].length).toBe(6);
     expect(DELIVERY_ERROR_CODES).toContain("DELIVERY_INTERNAL_ERROR");
   });
 

@@ -272,6 +272,12 @@ export interface StoredIdempotentResponse {
 }
 
 export type PlaceOrderOutcome = { readonly kind: "applied" } | IdempotentReplay;
+export type MirrorPaymentOutcome =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
+export type ConfirmOrderOutcome =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
 export type CancelOrderOutcome =
   | { readonly kind: "applied"; readonly order: StoreOrder }
   | IdempotentReplay;
@@ -319,6 +325,36 @@ export interface CancellationWrite {
   readonly idempotency?: IdempotencyIntent;
 }
 
+/**
+ * ما تكتبُهُ مرآةُ دفعٍ واحدةٌ (المراجعةُ 9/N · §2.2 · §3.2).
+ *
+ * `paymentRef` مُحسوبٌ في النطاقِ (`decidePaymentMirror`) لا في المحوّلِ: قاعدةُ «لا
+ * تُسقِطُ المرآةُ مرجعاً كانَ موجوداً» قرارٌ، ومحوّلٌ يُعيدُ حسابَها يُخطئُ وحدَهُ.
+ */
+export interface PaymentMirrorWrite {
+  readonly orderId: string;
+  /** Guard: the version the decision was made against (optimistic concurrency). */
+  readonly expectedVersion: number;
+  readonly fromPaymentState: string;
+  readonly toPaymentState: string;
+  readonly reasonCode: string;
+  /** The reference AFTER this mirror update — never re-derived downstream. */
+  readonly paymentRef: string | null;
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId: string | null;
+  readonly idempotency?: IdempotencyIntent;
+}
+
+/** ما يكتبُهُ تأكيدٌ واحدٌ: `placed → confirmed` وصفُّ دفترٍ وحدثٌ (§2.2). */
+export interface ConfirmationWrite {
+  readonly orderId: string;
+  readonly expectedVersion: number;
+  readonly fromFulfillmentState: string;
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId: string | null;
+  readonly idempotency?: IdempotencyIntent;
+}
+
 export interface StoreOrderWritePort {
   /**
    * Reserve the next public id (`WS-##########`). Separate from `placeOrder`
@@ -340,6 +376,23 @@ export interface StoreOrderWritePort {
    * this exact request.
    */
   cancelOrder(write: CancellationWrite): Promise<CancelOrderOutcome>;
+  /**
+   * ONE transaction: lock, version check, `payment_state`/`payment_ref` update,
+   * a `state_kind = 'payment'` ledger row, and the outbox event.
+   *
+   * The ledger row is what makes the mirror auditable: `payment_state` alone
+   * answers "where are we?" and never "how did we get here?", and a refund
+   * dispute is always the second question.
+   */
+  mirrorPayment(write: PaymentMirrorWrite): Promise<MirrorPaymentOutcome>;
+  /**
+   * ONE transaction: lock, version check, `fulfillment_state = 'confirmed'`,
+   * a `state_kind = 'fulfillment'` ledger row (`PAYMENT_AUTHORIZED`), and the
+   * outbox event. The payment gate is re-read under the lock inside the
+   * adapter too — a mirror that flipped to `failed` between the decision and
+   * the write must not be confirmed.
+   */
+  confirmOrder(write: ConfirmationWrite): Promise<ConfirmOrderOutcome>;
 }
 
 /** A price snapshot line as the catalog boundary returns it (§2.3). */

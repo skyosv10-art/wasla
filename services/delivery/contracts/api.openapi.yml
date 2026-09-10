@@ -10,12 +10,20 @@ info:
     عليهِ (§2.3) · التوصيلُ مرآةٌ خشنةٌ لنتائجِ dispatch (§2.4) · الاستبدالُ قرارُ صنفٍ
     (§2.5) · لا بياناتِ شخصيّةَ ولا إحداثيّاتٍ في أيِّ حمولةٍ (§2.6).
 
-    **حدٌّ مُعلَنٌ (مراجعةٌ 1/N):** هذه الواجهةُ **عقدٌ مُعرَّفٌ لا مُنفَّذٌ** — طبقةُ
-    HTTP (Fastify) والتركيبُ مؤجَّلانِ لمراجعةٍ لاحقةٍ (ADR-026 §4.2). يُحدِّدُ العقدُ
-    الشكلَ الآنَ كي لا يبنيَ مستهلكٌ فوقَ شكلٍ لم يُقرَّرْ بعدُ.
+    **حالةُ التنفيذِ (مراجعةٌ 6/N · `CLM-0125`):** طبقةُ HTTP **مُنفَّذةٌ** بـFastify فوقَ
+    هذا العقدِ حرفاً (`services/delivery/src/http/`) بمعالجِ أخطاءٍ واحدٍ ومنافذَ
+    مُحقونةٍ — رُفعَ تأجيلُ ADR-026 §4.2 في نصِّهِ الخاصِّ بالحدِّ الشبكيِّ وبمخزنِ
+    الطلباتِ على PostgreSQL.
+
+    **حدودٌ مُعلَنةٌ لا مُخفاةٌ (ADR-026 §4.9):** `POST /store-orders` يحتاجُ منفذَ
+    كتالوجِ السوقِ ليأخذَ لقطةَ السعرِ (§2.3)، ومرجعُ المتجرِ في هذا العقدِ
+    `WS-##########` بينما السوقُ يُعرِّفُ متجرَهُ بـ`store_slug`/`store_id` ولا يملكُ
+    مرجعاً عامّاً للمتجرِ — فلا مُحوّلَ HTTP للكتالوجِ اليومَ، والمسارُ يُجيبُ
+    `503 DELIVERY_MARKETPLACE_UNAVAILABLE` حتّى يُحسَمَ القرارُ. ولا مفتاحَ تماثُلٍ
+    (`Idempotency-Key`) في هذا العقدِ بعدُ — دَينٌ مُعلَنٌ (§4.9-3).
 servers:
   - url: http://localhost:8097
-    description: مراجعةٌ محليّةٌ — التنفيذُ مؤجَّلٌ (ADR-026 §4.2)
+    description: تشغيلٌ محليٌّ — `services/delivery/src/http/server.ts` (المراجعةُ 6/N)
 tags:
   - name: store-orders
     description: دورةُ حياةِ طلبِ المتجرِ (F1)
@@ -49,6 +57,8 @@ paths:
           $ref: "#/components/responses/ValidationError"
         "409":
           $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "503":
           $ref: "#/components/responses/DependencyUnavailable"
   /store-orders/{orderPublicId}:
@@ -69,8 +79,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /store-orders/{orderPublicId}/cancellation:
     post:
       tags: [store-orders]
@@ -95,10 +109,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "409":
           $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /store-orders/{orderPublicId}/delivery-task:
     get:
       tags: [delivery]
@@ -117,8 +135,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeliveryTaskResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "404":
           $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /delivery/health:
     get:
       tags: [health]
@@ -153,6 +175,14 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     DependencyUnavailable:
       description: تبعيّةٌ (السوقُ · dispatch) غيرُ متاحةٍ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: |
+        خطأٌ غيرُ مُصنَّفٍ (`DELIVERY_INTERNAL_ERROR`) — **لا يُعادُ الطلبُ تلقائيّاً**:
+        لا مفتاحَ تماثُلٍ في هذا العقدِ، فإعادةُ `POST /store-orders` قد تُنشئُ طلبَينِ.
       content:
         application/json:
           schema:

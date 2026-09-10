@@ -199,3 +199,102 @@ export interface InventoryObservationStore {
   /** Clear observations + consumed ledger + checkpoint (NOT delivery_outbox). */
   clearInventoryObservations(): Promise<void>;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Store-order aggregate ports — the HTTP boundary's seams (review 6/N,
+ * ADR-026 §4.2 deferral lifted for the network edge).
+ *
+ * Three ports, not one, because they answer three different questions and
+ * fail for three different reasons:
+ *
+ *  - `StoreOrderReadPort`  — the read side of `GET /store-orders/{id}` and
+ *    `GET .../delivery-task`. Pure lookups by PUBLIC id: the wire never
+ *    learns internal UUIDs as addresses (§2.6).
+ *  - `StoreOrderWritePort` — the two commands (place, cancel). Each one is
+ *    ONE database transaction; a use case that writes half a placement is a
+ *    corrupted ledger, not a partial success.
+ *  - `StoreOrderCatalogPort` — the marketplace boundary (§2.3): the ONLY
+ *    price source. Never a JOIN into marketplace tables; a caller-supplied
+ *    price would let the caller mint money (validation.ts header).
+ *
+ * The catalog port has NO Postgres adapter in this review and that is a
+ * DECLARED limit, not an oversight: `PlaceStoreOrderRequest.store_public_id`
+ * is a `WS-##########` store ref, while services/marketplace identifies a
+ * store by `store_slug`/`store_id` and publishes no public store ref
+ * (`StoreResource.owner_public_id` is the OWNER, a different subject). Until
+ * that mapping is decided, `POST /store-orders` answers
+ * `503 DELIVERY_MARKETPLACE_UNAVAILABLE` — the same honest gap as the
+ * ORD-/WS- bridge in RISK-0034, refused rather than faked.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+import type { StoreOrderCancelReasonCode, WaslaPublicId } from "@wasla/contracts-delivery";
+import type { DeliveryTask, StoreOrder } from "./domain/model.js";
+import type { DeliveryDomainEvent } from "./domain/events.js";
+
+export interface StoreOrderReadPort {
+  /** The order as the wire sees it — null when the public id is unknown. */
+  getOrderByPublicId(publicId: WaslaPublicId): Promise<StoreOrder | null>;
+  /** The delivery task of an order — null when the ORDER or the task is unknown. */
+  getTaskByOrderPublicId(publicId: WaslaPublicId): Promise<DeliveryTask | null>;
+}
+
+/** What one placement writes, built entirely in the domain before the write. */
+export interface PlacementWrite {
+  readonly order: StoreOrder;
+  readonly task: DeliveryTask;
+  /** Built by `domain/events.ts` — the store only appends them (§2.4). */
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId: string | null;
+}
+
+/** What one cancellation writes — the order after, plus its ledger rows. */
+export interface CancellationWrite {
+  readonly orderId: string;
+  /** Guard: the version the decision was made against (optimistic concurrency). */
+  readonly expectedVersion: number;
+  readonly fromFulfillmentState: string;
+  readonly reasonCode: StoreOrderCancelReasonCode;
+  /** The task's cancellation, when §3.3 has an edge from its current state. */
+  readonly taskCancellation: { readonly taskId: string; readonly fromState: string } | null;
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId: string | null;
+}
+
+export interface StoreOrderWritePort {
+  /**
+   * Reserve the next public id (`WS-##########`). Separate from `placeOrder`
+   * so the DOMAIN can build the order — and its events — with its final
+   * identity, instead of the adapter inventing ids the events never saw.
+   */
+  nextOrderPublicId(): Promise<WaslaPublicId>;
+  /** ONE transaction: order + items + transition + task + outbox rows. */
+  placeOrder(write: PlacementWrite): Promise<void>;
+  /**
+   * ONE transaction: `SELECT ... FOR UPDATE`, version check
+   * (`DELIVERY_CONCURRENT_UPDATE` on mismatch), state update, ledger rows,
+   * outbox events. Returns the order as it stands after the write.
+   */
+  cancelOrder(write: CancellationWrite): Promise<StoreOrder>;
+}
+
+/** A price snapshot line as the catalog boundary returns it (§2.3). */
+export interface CatalogProductSnapshot {
+  readonly productId: string;
+  readonly sku: string;
+  readonly unitPriceMinorUnits: number;
+}
+
+export interface StoreOrderCatalogPort {
+  /**
+   * Resolve the store behind a `WS-` ref. Returns null when unknown; throws
+   * a `DELIVERY_MARKETPLACE_UNAVAILABLE` DeliveryError when the boundary
+   * cannot be reached — the difference between "no such store" (404-class)
+   * and "we don't know" (503-class) must survive the port.
+   */
+  getStoreByPublicId(storePublicId: WaslaPublicId): Promise<{ storeId: string; orderable: boolean } | null>;
+  /** Price snapshots for the requested products, in the requested store. */
+  getProductSnapshots(
+    storeId: string,
+    productIds: readonly string[],
+  ): Promise<readonly CatalogProductSnapshot[]>;
+}

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T00:50:03Z",
+  "generated_at": "2026-09-10T07:15:21Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "86030d892a1b224aee4fc4841f0eb951139fc9b0",
-    "branch": "feat/m5-13-marketplace-inventory-consumer",
+    "commit": "576de3bfc68db56510facd6809177a011eaab667",
+    "branch": "feat/m5-13-delivery-http-boundary",
     "dirty": true,
-    "dirty_files": 11,
-    "dirty_reason": "إضافة مستهلك marketplace.inventory_adjusted وطبقة مراقبة المخزون (CLM-0124 · M5-13)",
-    "tracked_files": 1597
+    "dirty_files": 26,
+    "dirty_reason": "حدُّ HTTP لطلباتِ المتجرِ وجذرُ التركيبِ ومخزنُ PostgreSQL (CLM-0125 · M5-13 · المراجعةُ 6/N)",
+    "tracked_files": 1603
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "e3da78603520740c429fb7438a1f5dffbd580ad28f2d11d95e1ed05c64f3c72f",
-    "lines": 3071
+    "sha256": "ef7e5b8305c9d25a9fa3ed8758a0122214f3e602d1fbb0c046e4101366bd0bcb",
+    "lines": 3074
   },
   "static": {
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 304,
+    "test_files_tracked": 307,
     "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-full.log",
-    "tests_passed": 4017,
-    "test_files_executed": 244,
+    "source": "/tmp/verify2.log",
+    "tests_passed": 4053,
+    "test_files_executed": 246,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f4fd745a6e55b22c1a82b8445dab3b8ce625c9ee609393382a0000f502dd2dcb",
+  "fingerprint": "sha256:c08db74fa3dd562feb93a2588295d6b414f9b5ad177c37fd09b200e724e0bc7f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

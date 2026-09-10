@@ -124,3 +124,36 @@ export {
   runInventoryRelayBatch,
 } from "./marketplace-inventory-relay.js";
 export type { InventoryRelayConfig, InventoryRelayDeps } from "./marketplace-inventory-relay.js";
+
+/* ── review 6/N: the HTTP boundary + store-order aggregate (ADR-026 §4.2) ── */
+export { buildDeliveryHttpApp } from "./http/app.js";
+export type { DeliveryHttpApp, DeliveryHttpDeps } from "./http/app.js";
+export { sendDeliveryError } from "./http/errors.js";
+export type { DeliveryErrorBody } from "./http/errors.js";
+export {
+  parseCancelBody,
+  parseOrderPublicIdParam,
+  parsePlaceStoreOrderBody,
+} from "./http/requests.js";
+export { toDeliveryTaskResponse, toStoreOrderResponse } from "./http/mappers.js";
+export { buildStoreOrderPlacement } from "./domain/store-order-placement.js";
+export type {
+  PlacementIdentity,
+  PlacementResult,
+  PlacementSnapshot,
+} from "./domain/store-order-placement.js";
+export { decideCancellation } from "./domain/store-order-cancellation.js";
+export type { CancellationDecision } from "./domain/store-order-cancellation.js";
+export { placeStoreOrder } from "./use-cases/place-store-order.js";
+export type { PlaceStoreOrderDeps } from "./use-cases/place-store-order.js";
+export { cancelStoreOrder } from "./use-cases/cancel-store-order.js";
+export type { CancelStoreOrderDeps } from "./use-cases/cancel-store-order.js";
+export { StoreOrderStore } from "./infrastructure/store-order-store.js";
+export type {
+  CancellationWrite,
+  CatalogProductSnapshot,
+  PlacementWrite,
+  StoreOrderCatalogPort,
+  StoreOrderReadPort,
+  StoreOrderWritePort,
+} from "./ports.js";

@@ -49,6 +49,7 @@ export interface operations {
       "201": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
       "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "409": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "503": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
     };
   };
@@ -58,7 +59,9 @@ export interface operations {
     };
     responses: {
       "200": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
+      "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "404": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
     };
   };
   cancelStoreOrder: {
@@ -72,8 +75,10 @@ export interface operations {
     };
     responses: {
       "200": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
+      "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "404": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "409": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
     };
   };
   getDeliveryTaskForOrder: {
@@ -82,7 +87,9 @@ export interface operations {
     };
     responses: {
       "200": { content: { "application/json": components["schemas"]["DeliveryTaskResponse"] } };
+      "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
       "404": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
     };
   };
   getDeliveryHealth: {

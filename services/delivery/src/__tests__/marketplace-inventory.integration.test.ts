@@ -92,7 +92,7 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<InventoryRelayDeps> {
     const obs = (await pool.query(
       `SELECT store_id::text, product_id::text, last_adjustment_id::text, last_marketplace_event_id::text,
               last_adjustment_sequence, observed_quantity_after, last_quantity_delta, last_reason_code,
-              occurred_at::text AS occurred_for
+              occurred_for::text AS occurred_for
          FROM delivery_inventory_observations WHERE store_id = $1::uuid AND product_id = $2::uuid`,
       [STORE_ID, PRODUCT_ID],
     )).rows[0];

@@ -6,7 +6,7 @@
 
 **ماذا تم إنجاز:** رُفعَ تأجيلُ ADR-026 §2.3 و§4.8 — مسارُ الحجزِ الفعليُّ مُنفَّذٌ. **السوقُ:** `POST /stores/{storeSlug}/inventory/reserve` و`/release` بفروقٍ سالبةٍ/موجبةٍ في الدفترِ و`INVENTORY_RESERVATION_CONFLICT` (409) · 9 وحدةٍ + 7 تكاملٍ. **التوصيلُ:** `InventoryReservationPort` و`HttpMarketplaceReservationPort` موقعٌ بـ`ServiceRequestSigner` · `completeReservation` دالةٌ موحَّدةٌ تُستدعى مرةً واحدةً وتُكمِلُ الحجزَ عندَ الإعادةِ · `mirrorInventoryState` يُحدِّثُ `inventory_state` و`inventory_ref` تحتَ القُفلِ · `delivery_inventory_reservations` جدولٌ يُسجّلُ المرجعَ لا الرصيد · بوّابةُ تأكيدٍ مُركَّبة: `payment=authorized` **و** `inventory=reserved` · إلغاءٌ يُطلِقُ الحجزَ idempotent وخطأٌ صريحٌ (503) لو غاب المنفذ. **العقود:** `InventoryState` enum و`StoreOrderInventoryReservedV1`/`ReleasedV1` و`DELIVERY_INVENTORY_NOT_RESERVED`/`DELIVERY_INVENTORY_INSUFFICIENT`. المقيسُ: وحدةُ الخدمةِ **231/231** · وحدةُ السوقِ **326/326** · typecheck نظيف. عقدُ التوصيلِ مُحدَّثٌ لِ`state_kind IN ('fulfillment','payment','inventory')` وحرسُ التعامدِ صارَ يفحصُ `store_orders` وحدها لا المخطّطَ كلَّه. المؤجَّلُ مُعلَنٌ (§4.13): لا خصمَ نهائيّاً عندَ التسليمِ (`consumed`) · لا كشفَ تضاربٍ نشط.
 
-**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 10/N مُنجزةٌ محليّاً · PR #104 قيد CI).
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 10/N مُدمجةٌ · PR #104 · `CLM-0130` Released). لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
 
 
 ## 2026-09-10 · M5-13 · إقفال دورة §8.1 — `CLM-0128` · PR #102 مُدمج

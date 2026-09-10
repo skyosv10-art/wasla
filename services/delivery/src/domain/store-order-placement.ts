@@ -24,6 +24,8 @@
  * placement time would be a claim this service has not verified.
  */
 
+import { createHash } from "node:crypto";
+
 import type { WaslaPublicId } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "./errors.js";
@@ -146,11 +148,28 @@ export function buildStoreOrderPlacement(
  * A line's uuid derived from the order uuid and the line number.
  *
  * Not `crypto.randomUUID()`: this file must stay pure so the same inputs
- * produce the same rows in a test and in production. The last 12 hex digits
- * of the order id are replaced by the zero-padded line number — unique
- * within an order (the schema's real uniqueness key is `(order_id, line_no)`).
+ * produce the same rows in a test and in production.
+ *
+ * ## Why a digest and not "replace the tail with the line number" (fixed 7/N)
+ *
+ * The first version kept the order id's first 24 characters and wrote the line
+ * number into the last 12. That is unique WITHIN an order, but
+ * `order_item_id` is a GLOBAL primary key: any two orders whose uuids share
+ * their first 24 characters produced identical item ids, and the second
+ * placement died on `store_order_items_pkey` — a 500 on a valid request. The
+ * integration suite of review 7/N hit exactly that. Hashing the whole order id
+ * with the line number keeps every bit of the order id in the result, stays
+ * deterministic, and still yields a uuid-shaped value (version 8, RFC 9562's
+ * slot for application-defined uuids, with the standard variant bits).
  */
 function deriveItemId(orderId: string, lineNo: number): string {
-  const head = orderId.slice(0, 24);
-  return `${head}${lineNo.toString(16).padStart(12, "0")}`;
+  const digest = createHash("sha256").update(`${orderId}\u0000${lineNo}`).digest("hex");
+  const variant = ((Number.parseInt(digest[16]!, 16) & 0x3) | 0x8).toString(16);
+  return [
+    digest.slice(0, 8),
+    digest.slice(8, 12),
+    `8${digest.slice(13, 16)}`,
+    `${variant}${digest.slice(17, 20)}`,
+    digest.slice(20, 32),
+  ].join("-");
 }

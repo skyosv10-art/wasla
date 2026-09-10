@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T07:15:21Z",
+  "generated_at": "2026-09-10T08:14:51Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "576de3bfc68db56510facd6809177a011eaab667",
-    "branch": "feat/m5-13-delivery-http-boundary",
+    "commit": "89f580b2e4fe4b7bc3639a8e5d5ff79604930082",
+    "branch": "feat/m5-13-delivery-idempotency-readiness",
     "dirty": true,
-    "dirty_files": 26,
-    "dirty_reason": "حدُّ HTTP لطلباتِ المتجرِ وجذرُ التركيبِ ومخزنُ PostgreSQL (CLM-0125 · M5-13 · المراجعةُ 6/N)",
-    "tracked_files": 1603
+    "dirty_files": 30,
+    "dirty_reason": "المراجعةُ 7/N (CLM-0126): مفتاحُ التماثُلِ ومسارُ الجاهزيّةِ — ملفّا اختبارٍ جديدانِ (idempotency.test.ts · idempotency.integration.test.ts) وأربعُ وحداتٍ جديدةٍ",
+    "tracked_files": 1618
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 307,
+    "test_files_tracked": 310,
     "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
-    "tests_passed": 4053,
-    "test_files_executed": 246,
+    "source": "/tmp/verify.log",
+    "tests_passed": 4087,
+    "test_files_executed": 247,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:c08db74fa3dd562feb93a2588295d6b414f9b5ad177c37fd09b200e724e0bc7f",
+  "fingerprint": "sha256:cdb7b59042a7b80069720c954bdc39deb43b5a714474ef1aeef3dd85427ad473",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

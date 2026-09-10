@@ -15,6 +15,7 @@ import { DeliveryError } from "../domain/errors.js";
 import {
   CUSTOMER_REF,
   FakeCatalog,
+  FakeReadinessProbe,
   FakeStoreOrderStore,
   PRODUCT_A,
   PRODUCT_B,
@@ -25,6 +26,21 @@ import {
 } from "./store-order-fakes.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
+
+/**
+ * A fresh, valid `Idempotency-Key` per request (review 7/N).
+ *
+ * Both writes now REQUIRE the header, so every pre-existing case gets a unique
+ * one: a shared constant would make the second placement in a file a replay of
+ * the first and quietly turn an assertion about creation into an assertion
+ * about caching.
+ */
+let idempotencyCounter = 0;
+function idempotencyHeaders(): Record<string, string> {
+  idempotencyCounter += 1;
+  return { "idempotency-key": `http-test-key-${String(idempotencyCounter).padStart(6, "0")}` };
+}
+
 
 function buildApp(options: { store?: FakeStoreOrderStore; catalog?: FakeCatalog | null } = {}) {
   const store = options.store ?? new FakeStoreOrderStore();
@@ -48,12 +64,206 @@ describe("delivery HTTP — liveness", () => {
     await app.close();
   });
 
-  it("publishes ONLY the five contract routes — no undeclared readiness route", async () => {
-    const { app } = buildApp();
-    // The contract has no `/delivery/ready`; adding one would be exactly the
-    // drift this review avoids (the gap is declared in ADR-026 §4.9-4).
+  it("GET /delivery/health stays a pure liveness answer — it never probes", async () => {
+    // A read port that explodes: liveness must still say ok, because the
+    // process IS alive. Conflating the two is how a database blip restarts
+    // every pod at once.
+    const app = buildDeliveryHttpApp({
+      readPort: {
+        getOrderByPublicId: async () => {
+          throw new Error("database down");
+        },
+        getTaskByOrderPublicId: async () => null,
+        findIdempotentResponse: async () => null,
+      },
+      writePort: new FakeStoreOrderStore(),
+      newUuid: uuidSequence(),
+      now: () => NOW,
+    });
+    const res = await app.fastify.inject({ method: "GET", url: "/delivery/health" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ status: "ok" });
+    await app.close();
+  });
+});
+
+describe("delivery HTTP — readiness (§4.10-2)", () => {
+  it("200 ready when the probed database answers, with the catalog gap declared", async () => {
+    const store = new FakeStoreOrderStore();
+    const app = buildDeliveryHttpApp({
+      readPort: store,
+      writePort: store,
+      catalogPort: new FakeCatalog(),
+      readinessPort: new FakeReadinessProbe([{ name: "database", ok: true }]),
+      newUuid: uuidSequence(),
+      now: () => NOW,
+    });
     const res = await app.fastify.inject({ method: "GET", url: "/delivery/ready" });
-    expect(res.statusCode).toBe(404);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      status: "ready",
+      checks: [{ name: "database", ok: true }],
+      // The catalog port IS wired here, so nothing is unclaimed.
+      not_claimed: [],
+    });
+    await app.close();
+  });
+
+  it("503 unavailable with the failure reason when the probe fails", async () => {
+    const store = new FakeStoreOrderStore();
+    const app = buildDeliveryHttpApp({
+      readPort: store,
+      writePort: store,
+      readinessPort: new FakeReadinessProbe([{ name: "database", ok: false, detail: "unreachable" }]),
+      newUuid: uuidSequence(),
+      now: () => NOW,
+    });
+    const res = await app.fastify.inject({ method: "GET", url: "/delivery/ready" });
+    expect(res.statusCode).toBe(503);
+    const body = res.json();
+    expect(body.status).toBe("unavailable");
+    expect(body.checks).toEqual([{ name: "database", ok: false, detail: "unreachable" }]);
+    // The unwireable catalog is reported, not measured (§4.9-2, RISK-0030).
+    expect(body.not_claimed).toEqual(["marketplace_catalog_not_wired"]);
+    await app.close();
+  });
+
+  it("503 with probe_not_wired rather than a green answer when no probe is injected", async () => {
+    const { app } = buildApp();
+    const res = await app.fastify.inject({ method: "GET", url: "/delivery/ready" });
+    // "No checks failed" must never be reachable by performing no checks.
+    expect(res.statusCode).toBe(503);
+    expect(res.json().checks).toEqual([{ name: "database", ok: false, detail: "probe_not_wired" }]);
+    await app.close();
+  });
+});
+
+describe("delivery HTTP — idempotency (§4.10-1)", () => {
+  const placement = {
+    customer_ref: CUSTOMER_REF,
+    store_public_id: STORE_REF,
+    items: [{ product_id: PRODUCT_A, quantity: 1 }],
+    delivery_fee_minor_units: 500,
+  };
+  const KEY = "idem-http-000000000001";
+
+  it("400s a placement with no Idempotency-Key — the header is required", async () => {
+    const { app } = buildApp();
+    const res = await app.fastify.inject({ method: "POST", url: "/store-orders", payload: placement });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error_code).toBe("DELIVERY_VALIDATION_FAILED");
+    await app.close();
+  });
+
+  it("400s a key that is too short or carries illegal characters", async () => {
+    const { app } = buildApp();
+    for (const key of ["short", "has spaces in it here", "معرّفٌ-عربيٌّ-طويلٌ-جدًّا"]) {
+      const res = await app.fastify.inject({
+        method: "POST",
+        url: "/store-orders",
+        headers: { "idempotency-key": key },
+        payload: placement,
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error_code).toBe("DELIVERY_VALIDATION_FAILED");
+    }
+    await app.close();
+  });
+
+  it("replays the first response — one order, same body, Idempotent-Replay: true", async () => {
+    const { app, store } = buildApp();
+    const first = await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders",
+      headers: { "idempotency-key": KEY },
+      payload: placement,
+    });
+    expect(first.statusCode).toBe(201);
+    expect(first.headers["idempotent-replay"]).toBeUndefined();
+
+    const retry = await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders",
+      headers: { "idempotency-key": KEY },
+      payload: placement,
+    });
+    expect(retry.statusCode).toBe(201);
+    expect(retry.headers["idempotent-replay"]).toBe("true");
+    expect(retry.json()).toEqual(first.json());
+    // The whole point: the retry created NOTHING.
+    expect(store.orders.size).toBe(1);
+    await app.close();
+  });
+
+  it("409s the same key sent with a different body — one key, one request", async () => {
+    const { app, store } = buildApp();
+    await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders",
+      headers: { "idempotency-key": KEY },
+      payload: placement,
+    });
+    const res = await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders",
+      headers: { "idempotency-key": KEY },
+      // Same key, different quantity — a client bug, not a retry.
+      payload: { ...placement, items: [{ product_id: PRODUCT_A, quantity: 9 }] },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error_code).toBe("DELIVERY_IDEMPOTENCY_KEY_REUSED");
+    expect(store.orders.size).toBe(1);
+    await app.close();
+  });
+
+  it("replays a cancellation retry instead of answering DELIVERY_INVALID_TRANSITION", async () => {
+    const store = new FakeStoreOrderStore();
+    store.seed(fixedOrder({ fulfillmentState: "placed" }), fixedTask({ state: "eligible" }));
+    const { app } = buildApp({ store });
+    const url = "/store-orders/WS-0000000001/cancellation";
+    const first = await app.fastify.inject({
+      method: "POST",
+      url,
+      headers: { "idempotency-key": KEY },
+      payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
+    });
+    expect(first.statusCode).toBe(200);
+
+    const retry = await app.fastify.inject({
+      method: "POST",
+      url,
+      headers: { "idempotency-key": KEY },
+      payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
+    });
+    // Without the read-side pre-check this would be 409 INVALID_TRANSITION,
+    // because `cancelled → cancelled` is not an edge (§3.1).
+    expect(retry.statusCode).toBe(200);
+    expect(retry.headers["idempotent-replay"]).toBe("true");
+    expect(retry.json()).toEqual(first.json());
+    await app.close();
+  });
+
+  it("keeps a placement key and a cancellation key from colliding by route", async () => {
+    const store = new FakeStoreOrderStore();
+    store.seed(fixedOrder({ fulfillmentState: "placed" }), fixedTask({ state: "eligible" }));
+    const { app } = buildApp({ store });
+    await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders/WS-0000000001/cancellation",
+      headers: { "idempotency-key": KEY },
+      payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
+    });
+    // The same key on the OTHER route is a different request: the fingerprint
+    // includes the route, so this is a reuse conflict — never a silent replay
+    // of a cancellation body as a placement response.
+    const res = await app.fastify.inject({
+      method: "POST",
+      url: "/store-orders",
+      headers: { "idempotency-key": KEY },
+      payload: placement,
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error_code).toBe("DELIVERY_IDEMPOTENCY_KEY_REUSED");
     await app.close();
   });
 });
@@ -63,6 +273,7 @@ describe("delivery HTTP — placement", () => {
     const { app, store } = buildApp();
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -96,6 +307,7 @@ describe("delivery HTTP — placement", () => {
     const { app } = buildApp({ catalog: null });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -113,6 +325,7 @@ describe("delivery HTTP — placement", () => {
     const { app } = buildApp();
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -131,6 +344,7 @@ describe("delivery HTTP — placement", () => {
     const { app } = buildApp();
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -148,6 +362,7 @@ describe("delivery HTTP — placement", () => {
     const { app } = buildApp();
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -169,13 +384,13 @@ describe("delivery HTTP — placement", () => {
       items: [{ product_id: PRODUCT_A, quantity: 1 }],
       delivery_fee_minor_units: 0,
     };
-    const res = await closed.app.fastify.inject({ method: "POST", url: "/store-orders", payload });
+    const res = await closed.app.fastify.inject({ method: "POST", url: "/store-orders", payload, headers: idempotencyHeaders() });
     expect(res.statusCode).toBe(409);
     expect(res.json().error_code).toBe("DELIVERY_INELIGIBLE");
     await closed.app.close();
 
     const unknown = buildApp({ catalog: new FakeCatalog(null) });
-    const res2 = await unknown.app.fastify.inject({ method: "POST", url: "/store-orders", payload });
+    const res2 = await unknown.app.fastify.inject({ method: "POST", url: "/store-orders", payload, headers: idempotencyHeaders() });
     expect(res2.statusCode).toBe(400);
     expect(res2.json().error_code).toBe("DELIVERY_VALIDATION_FAILED");
     await unknown.app.close();
@@ -185,6 +400,7 @@ describe("delivery HTTP — placement", () => {
     const { app } = buildApp({ catalog: new FakeCatalog(undefined, {}) });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
@@ -263,6 +479,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp({ store });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000000001/cancellation",
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
@@ -284,6 +501,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp({ store });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000000001/cancellation",
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
@@ -302,6 +520,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp({ store });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000000001/cancellation",
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
@@ -318,6 +537,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp({ store });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000000001/cancellation",
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
@@ -331,6 +551,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp({ store });
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000000001/cancellation",
       payload: { reason_code: "BECAUSE_I_SAID_SO" },
     });
@@ -343,6 +564,7 @@ describe("delivery HTTP — cancellation", () => {
     const { app } = buildApp();
     const res = await app.fastify.inject({
       method: "POST",
+      headers: idempotencyHeaders(),
       url: "/store-orders/WS-0000009999/cancellation",
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
@@ -369,6 +591,7 @@ describe("delivery HTTP — the error contract itself", () => {
           throw new Error("boom");
         },
         getTaskByOrderPublicId: async () => null,
+        findIdempotentResponse: async () => null,
       },
       writePort: new FakeStoreOrderStore(),
       newUuid: uuidSequence(),
@@ -387,6 +610,7 @@ describe("delivery HTTP — the error contract itself", () => {
           throw new DeliveryError("DELIVERY_MARKETPLACE_UNAVAILABLE", "تعذَّرَ السوقُ");
         },
         getTaskByOrderPublicId: async () => null,
+        findIdempotentResponse: async () => null,
       },
       writePort: new FakeStoreOrderStore(),
       newUuid: uuidSequence(),

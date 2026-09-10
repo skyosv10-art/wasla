@@ -2,15 +2,16 @@
  * Delivery HTTP boundary — Fastify app (ADR-026 §4.2, lifted for the network
  * edge in review 6/N · contracts/api.openapi.yml).
  *
- * Exactly the five routes the contract publishes, no more: a route that is not
+ * Exactly the six routes the contract publishes, no more: a route that is not
  * in the contract is a private API nobody documented, and the first client that
  * finds it makes it permanent.
  *
- *   POST /store-orders                               → 201
+ *   POST /store-orders                               → 201 (Idempotency-Key)
  *   GET  /store-orders/{orderPublicId}               → 200
- *   POST /store-orders/{orderPublicId}/cancellation  → 200
+ *   POST /store-orders/{orderPublicId}/cancellation  → 200 (Idempotency-Key)
  *   GET  /store-orders/{orderPublicId}/delivery-task → 200
  *   GET  /delivery/health                            → 200 (liveness)
+ *   GET  /delivery/ready                             → 200/503 (readiness)
  *
  * ## Injected ports — this app never opens a database
  *
@@ -38,25 +39,49 @@
  * placement is refused loudly instead of inventing prices, and reads and
  * cancellation — which need no catalog — work fully in production.
  *
- * ## Liveness only, by contract — and that is a KNOWN gap
+ * ## Liveness AND readiness — two routes because they answer two questions
  *
- * The contract publishes `GET /delivery/health` and no readiness route. This
- * app therefore ships liveness only: it takes no dependency and cannot be a
- * deployment gate. The search service learned this the hard way (RISK-0030:
- * `health: ok` while every read returned 503). We do NOT add an undeclared
- * `/delivery/ready` here — adding routes outside the contract is the drift
- * this whole review exists to avoid — but the gap is recorded in ADR-026
- * §4.9-4 as a contract revision to make, not a detail to discover in
- * production.
+ * `GET /delivery/health` stays dependency-free: it answers "is this process
+ * alive?", and coupling it to the database would let a database blink trigger
+ * restarts. `GET /delivery/ready` (added to the contract in review 7/N,
+ * §4.9-4 lifted) answers "should traffic come here?" by actually probing the
+ * database. RISK-0030 is the precedent being avoided: `health: ok` while every
+ * read answered 503.
+ *
+ * Readiness answers `ReadinessResponse` on 503 as well as 200 — the single
+ * declared exception to "every failure is an `ErrorResponse`" (errors.md rule
+ * 6), because an unready dependency is a state to report, not a defect to
+ * translate. And what is not probed is not claimed: with no catalog port the
+ * response lists `marketplace_catalog_not_wired` in `not_claimed` while still
+ * reporting 200 if the database answers, because reads and cancellation ARE
+ * servable then. Letting an unwireable dependency pin readiness at 503 forever
+ * would make the route useless and it would be turned off — which is how a
+ * service ends up with no readiness check at all.
+ *
+ * ## The idempotency key is required, and parsed here — not in the use case
+ *
+ * Both writes demand `Idempotency-Key` (§4.10). The header and the request
+ * fingerprint are wire concerns, so the HTTP layer builds the intent and hands
+ * it inward; the use cases and the store never read a header. A replay is
+ * answered with the STORED status and body plus `Idempotent-Replay: true`, so
+ * a client can tell "created" from "already created" without diffing bodies.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 
 import { DeliveryError } from "../domain/errors.js";
-import type { StoreOrderCatalogPort, StoreOrderReadPort, StoreOrderWritePort } from "../ports.js";
+import type {
+  IdempotencyIntent,
+  ReadinessProbePort,
+  StoreOrderCatalogPort,
+  StoreOrderReadPort,
+  StoreOrderWritePort,
+} from "../ports.js";
+import { assertIdempotencyKey, deriveRequestFingerprint } from "../domain/idempotency.js";
 import { sendDeliveryError } from "./errors.js";
 import { toDeliveryTaskResponse, toStoreOrderResponse } from "./mappers.js";
 import { parseCancelBody, parseOrderPublicIdParam, parsePlaceStoreOrderBody } from "./requests.js";
+import { buildReadinessResponse } from "./readiness.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 
@@ -65,6 +90,9 @@ export interface DeliveryHttpDeps {
   readonly writePort: StoreOrderWritePort;
   /** Absent → `POST /store-orders` answers 503 (see the file header). */
   readonly catalogPort?: StoreOrderCatalogPort;
+  /** Absent → `GET /delivery/ready` answers 503 `probe_not_wired`: an
+   *  un-probed dependency is never reported as healthy. */
+  readonly readinessPort?: ReadinessProbePort;
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -73,6 +101,16 @@ export interface DeliveryHttpDeps {
 export interface DeliveryHttpApp {
   readonly fastify: FastifyInstance;
   readonly close: () => Promise<void>;
+}
+
+/**
+ * Replay a stored first response: its status, its body, plus an explicit
+ * header. Without the header a client cannot distinguish "created now" from
+ * "created earlier", and a retry that silently looks like a fresh 201 hides
+ * the very duplicate the key prevented.
+ */
+function sendReplay(reply: FastifyReply, status: number, body: unknown): FastifyReply {
+  return reply.status(status).header("Idempotent-Replay", "true").send(body);
 }
 
 export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
@@ -98,12 +136,24 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       );
     }
     const input = parsePlaceStoreOrderBody(request.body);
-    const order = await placeStoreOrder(
+    // The fingerprint hashes the PARSED input, not the raw body: two byte-wise
+    // different bodies that mean the same request (key order, whitespace) are
+    // the same request, and an honest retry must not be refused as a reuse.
+    const idempotency: IdempotencyIntent = {
+      key: assertIdempotencyKey(request.headers["idempotency-key"]),
+      route: "POST /store-orders",
+      fingerprint: deriveRequestFingerprint("POST /store-orders", null, input),
+      responseStatus: 201,
+      buildResponseBody: (written) => toStoreOrderResponse(written),
+    };
+    const result = await placeStoreOrder(
       { catalogPort: deps.catalogPort, writePort: deps.writePort, newUuid, now },
       input,
       traceId,
+      idempotency,
     );
-    return reply.status(201).send(toStoreOrderResponse(order));
+    if (result.kind === "replayed") return sendReplay(reply, result.status, result.body);
+    return reply.status(201).send(toStoreOrderResponse(result.order));
   });
 
   app.get("/store-orders/:orderPublicId", async (request, reply) => {
@@ -122,13 +172,25 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
     const reasonCode = parseCancelBody(request.body);
-    const order = await cancelStoreOrder(
+    const route = "POST /store-orders/{orderPublicId}/cancellation" as const;
+    const idempotency: IdempotencyIntent = {
+      key: assertIdempotencyKey(request.headers["idempotency-key"]),
+      route,
+      // The order's public id is part of the fingerprint: the same key on a
+      // DIFFERENT order with the same body must be a reuse, not a replay.
+      fingerprint: deriveRequestFingerprint(route, publicId, { reason_code: reasonCode }),
+      responseStatus: 200,
+      buildResponseBody: (written) => toStoreOrderResponse(written),
+    };
+    const result = await cancelStoreOrder(
       { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
       publicId,
       reasonCode,
       traceId,
+      idempotency,
     );
-    return reply.status(200).send(toStoreOrderResponse(order));
+    if (result.kind === "replayed") return sendReplay(reply, result.status, result.body);
+    return reply.status(200).send(toStoreOrderResponse(result.order));
   });
 
   app.get("/store-orders/:orderPublicId/delivery-task", async (request, reply) => {
@@ -150,6 +212,19 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   // Liveness: no dependency, no DB. Never fails while the process runs.
   app.get("/delivery/health", async () => {
     return { status: "ok" as const };
+  });
+
+  // Readiness: a real probe. 503 carries the readiness body, not an error body
+  // (contracts/api.openapi.yml · errors.md rule 6).
+  app.get("/delivery/ready", async (_request, reply) => {
+    const checks =
+      deps.readinessPort === undefined
+        ? // No probe wired → nothing was measured → nothing is claimed. A
+          // "ready" answer here would be the RISK-0030 lie in a new place.
+          ([{ name: "database", ok: false, detail: "probe_not_wired" }] as const)
+        : await deps.readinessPort.probe();
+    const body = buildReadinessResponse(checks, deps.catalogPort !== undefined);
+    return reply.status(body.status === "ready" ? 200 : 503).send(body);
   });
 
   return {

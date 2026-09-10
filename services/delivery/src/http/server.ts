@@ -23,12 +23,21 @@
  * This composition root is therefore PARTIAL by declaration — reads and
  * cancellation are complete, placement is refused — the same honesty as the
  * unwired ORD-/WS- dispatch bridge (RISK-0034).
+ *
+ * ## Readiness is wired to the SAME pool (review 7/N)
+ *
+ * `GET /delivery/ready` probes through `PostgresReadinessProbe` over the pool
+ * the routes use. A probe with its own connection could be green while the
+ * serving pool is exhausted — the failure mode readiness exists to catch.
+ * With the catalog port still absent, a ready answer means "reads and
+ * cancellation are servable", and the response says so in `not_claimed`.
  */
 
 import { Pool } from "pg";
 
 import { buildDeliveryHttpApp } from "./app.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
+import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = Number(process.env.PORT ?? 8097);
@@ -44,6 +53,10 @@ async function main(): Promise<void> {
   const { fastify, close } = buildDeliveryHttpApp({
     readPort: store,
     writePort: store,
+    // A REAL probe over the same pool the routes use: probing a second pool
+    // would report the health of a connection nobody serves traffic with
+    // (review 7/N · §4.10-2).
+    readinessPort: new PostgresReadinessProbe(pool),
     // catalogPort: intentionally absent — see the file header.
   });
 

@@ -37,6 +37,31 @@
  * column the schema gains next straight into a response mapper — and the
  * columns most likely to be added to a delivery table are exactly the ones
  * ADR-001 forbids from leaving it.
+ *
+ * ## Idempotency lives INSIDE the same transaction (review 7/N, §4.10)
+ *
+ * Both writes take an optional `idempotency` intent and handle it in two
+ * steps within the ONE transaction they already open:
+ *
+ *  1. Before any effect: look the key up. A stored row with the SAME request
+ *     fingerprint is a replay — return the stored status and body, write
+ *     nothing. A stored row with a DIFFERENT fingerprint is a reuse — refuse
+ *     with 409, because answering the first request's body to a second,
+ *     different request loses an order silently.
+ *  2. After the effect, still inside the transaction: insert the key with the
+ *     response the caller is about to receive. Same transaction is the whole
+ *     point — a key committed without its order would replay a response for
+ *     an order that never existed, and an order committed without its key
+ *     would let the retry create a duplicate.
+ *
+ * There is deliberately NO intermediate `in_progress` key state. A concurrent
+ * request with the same key loses the race on the primary key (`23505`) and
+ * is refused with `DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT`, rolling back with
+ * nothing written; its retry a moment later reads the committed key and
+ * replays. That is one wasted round trip in a rare race, in exchange for
+ * never needing a sweeper to clean up abandoned in-progress rows — an
+ * abandoned row is exactly how a key-based scheme starts refusing honest
+ * retries forever.
  */
 
 import type { Pool, PoolClient } from "pg";
@@ -45,10 +70,15 @@ import { DeliveryError } from "../domain/errors.js";
 import type { DeliveryDomainEvent } from "../domain/events.js";
 import type { DeliveryTask, StoreOrder, StoreOrderItem } from "../domain/model.js";
 import type {
+  CancelOrderOutcome,
   CancellationWrite,
+  IdempotencyIntent,
+  IdempotentReplay,
+  PlaceOrderOutcome,
   PlacementWrite,
   StoreOrderReadPort,
   StoreOrderWritePort,
+  StoredIdempotentResponse,
 } from "../ports.js";
 import type { WaslaPublicId } from "@wasla/contracts-delivery";
 
@@ -109,6 +139,21 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
     return toTask(rows[0]);
   }
 
+  async findIdempotentResponse(key: string): Promise<StoredIdempotentResponse | null> {
+    const { rows } = await this.pool.query(
+      `SELECT request_fingerprint, response_status, response_body
+         FROM delivery_idempotency_keys
+        WHERE idempotency_key = $1`,
+      [key],
+    );
+    if (rows.length === 0) return null;
+    return {
+      fingerprint: rows[0].request_fingerprint as string,
+      status: Number(rows[0].response_status),
+      body: rows[0].response_body,
+    };
+  }
+
   /* ── writes ───────────────────────────────────────────────────────── */
 
   async nextOrderPublicId(): Promise<WaslaPublicId> {
@@ -118,9 +163,12 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
     return rows[0].public_id as WaslaPublicId;
   }
 
-  async placeOrder(write: PlacementWrite): Promise<void> {
+  async placeOrder(write: PlacementWrite): Promise<PlaceOrderOutcome> {
     const { order, task } = write;
-    await this.inTransaction(async (client) => {
+    return this.inTransaction<PlaceOrderOutcome>(async (client) => {
+      const replay = await lookupIdempotencyKey(client, write.idempotency);
+      if (replay !== null) return replay;
+
       await client.query(
         `INSERT INTO store_orders (
            order_id, public_id, customer_ref, store_id, store_public_id,
@@ -180,11 +228,16 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
       );
 
       await appendOutbox(client, write.events, write.traceId);
+      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      return { kind: "applied" };
     });
   }
 
-  async cancelOrder(write: CancellationWrite): Promise<StoreOrder> {
-    return this.inTransaction(async (client) => {
+  async cancelOrder(write: CancellationWrite): Promise<CancelOrderOutcome> {
+    return this.inTransaction<CancelOrderOutcome>(async (client) => {
+      const replay = await lookupIdempotencyKey(client, write.idempotency);
+      if (replay !== null) return replay;
+
       const locked = await client.query(
         `SELECT ${ORDER_COLUMNS} FROM store_orders WHERE order_id = $1 FOR UPDATE`,
         [write.orderId],
@@ -262,7 +315,9 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
            FROM store_order_items WHERE order_id = $1 ORDER BY line_no`,
         [write.orderId],
       );
-      return toOrder(after.rows[0], items.rows);
+      const order = toOrder(after.rows[0], items.rows);
+      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      return { kind: "applied", order };
     });
   }
 
@@ -284,6 +339,88 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
     } finally {
       client.release();
     }
+  }
+}
+
+/**
+ * Step 1 of the idempotency handshake: has this key been used?
+ *
+ * Returns a replay when the key exists with the SAME fingerprint, `null` when
+ * the key is new (or no intent was supplied), and throws `409` when the key
+ * exists with a DIFFERENT fingerprint. The throw aborts the caller's
+ * transaction before any effect — a reused key must change nothing.
+ */
+async function lookupIdempotencyKey(
+  client: PoolClient,
+  intent: IdempotencyIntent | undefined,
+): Promise<IdempotentReplay | null> {
+  if (intent === undefined) return null;
+  const { rows } = await client.query(
+    `SELECT request_fingerprint, response_status, response_body
+       FROM delivery_idempotency_keys
+      WHERE idempotency_key = $1`,
+    [intent.key],
+  );
+  if (rows.length === 0) return null;
+  const stored = rows[0];
+  if (stored.request_fingerprint !== intent.fingerprint) {
+    throw new DeliveryError(
+      "DELIVERY_IDEMPOTENCY_KEY_REUSED",
+      "المفتاحُ نفسُهُ مُستعمَلٌ لطلبٍ مختلفٍ — ولِّد مفتاحاً جديداً",
+      // The two fingerprints are NOT reported: they hash the request body, and
+      // a diff of hashes tells the caller nothing it does not already know.
+      { details: { field: "Idempotency-Key" } },
+    );
+  }
+  return {
+    kind: "replayed",
+    status: Number(stored.response_status),
+    // `jsonb` comes back already parsed — the stored body is returned as it
+    // was stored, not re-serialized from a freshly read order (which could
+    // differ if the order changed after the first response).
+    body: stored.response_body,
+  };
+}
+
+/**
+ * Step 2: persist the key WITH the response, inside the caller's transaction.
+ *
+ * A `23505` here means another transaction committed the same key while this
+ * one was working. Refusing (and rolling back) is the only safe answer: this
+ * transaction's effect would be the duplicate the key exists to prevent.
+ */
+async function storeIdempotencyKey(
+  client: PoolClient,
+  intent: IdempotencyIntent | undefined,
+  order: StoreOrder,
+  traceId: string | null,
+): Promise<void> {
+  if (intent === undefined) return;
+  try {
+    await client.query(
+      `INSERT INTO delivery_idempotency_keys (
+         idempotency_key, route, request_fingerprint, response_status,
+         response_body, order_id, trace_id
+       ) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7)`,
+      [
+        intent.key,
+        intent.route,
+        intent.fingerprint,
+        intent.responseStatus,
+        JSON.stringify(intent.buildResponseBody(order)),
+        order.orderId,
+        traceId,
+      ],
+    );
+  } catch (error) {
+    if ((error as { code?: string }).code === "23505") {
+      throw new DeliveryError(
+        "DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT",
+        "طلبٌ بالمفتاحِ نفسِهِ يُعالَجُ الآنَ — أعِد بالمفتاحِ نفسِهِ بعدَ لحظةٍ",
+        { details: { field: "Idempotency-Key" } },
+      );
+    }
+    throw error;
   }
 }
 

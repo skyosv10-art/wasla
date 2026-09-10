@@ -21,8 +21,29 @@ import { FakeCatalog, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_REF, uuidSequenc
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { isDeliveryError } from "../domain/errors.js";
+import type { StoreOrder } from "../domain/model.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
+
+/**
+ * Unwrap an "applied" outcome (review 7/N).
+ *
+ * These cases send no `Idempotency-Key`, so the use case can only answer
+ * `applied`; a replay here would mean the adapter invented a key, and throwing
+ * says so instead of letting `undefined` leak into an assertion.
+ */
+async function applyPlacement(...args: Parameters<typeof placeStoreOrder>): Promise<StoreOrder> {
+  const result = await placeStoreOrder(...args);
+  if (result.kind !== "applied") throw new Error("unexpected idempotent replay on placement");
+  return result.order;
+}
+
+async function applyCancellation(...args: Parameters<typeof cancelStoreOrder>): Promise<StoreOrder> {
+  const result = await cancelStoreOrder(...args);
+  if (result.kind !== "applied") throw new Error("unexpected idempotent replay on cancellation");
+  return result.order;
+}
+
 
 describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   let pool: Pool;
@@ -70,7 +91,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("places an order writing rows, ledger and outbox in ONE transaction", async () => {
-    const order = await placeStoreOrder(deps(), placement, "trace-1");
+    const order = await applyPlacement(deps(), placement, "trace-1");
 
     const rows = await pool.query(
       `SELECT fulfillment_state, payment_state, items_total_minor_units,
@@ -114,7 +135,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("reads back an order and its task by public id", async () => {
-    const placed = await placeStoreOrder(deps(), placement, null);
+    const placed = await applyPlacement(deps(), placement, null);
     const read = await store.getOrderByPublicId(placed.publicId);
     expect(read?.totalMinorUnits).toBe(3250);
     expect(read?.items).toHaveLength(2);
@@ -125,8 +146,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("cancels an order, appends both ledger rows it owes, and bumps the version", async () => {
-    const placed = await placeStoreOrder(deps(), placement, null);
-    const cancelled = await cancelStoreOrder(deps(), placed.publicId, "CUSTOMER_CHANGED_MIND", "trace-2");
+    const placed = await applyPlacement(deps(), placement, null);
+    const cancelled = await applyCancellation(deps(), placed.publicId, "CUSTOMER_CHANGED_MIND", "trace-2");
 
     expect(cancelled.fulfillmentState).toBe("cancelled");
     expect(cancelled.version).toBe(2);
@@ -160,10 +181,10 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("cancels the task too, with its own ledger row, when §3.3 has the edge", async () => {
-    const placed = await placeStoreOrder(deps(), placement, null);
+    const placed = await applyPlacement(deps(), placement, null);
     await pool.query(`UPDATE delivery_tasks SET state = 'eligible' WHERE order_id = $1`, [placed.orderId]);
 
-    await cancelStoreOrder(deps(), placed.publicId, "DELIVERY_NOT_FEASIBLE", null);
+    await applyCancellation(deps(), placed.publicId, "DELIVERY_NOT_FEASIBLE", null);
 
     const task = await pool.query(
       `SELECT state, version FROM delivery_tasks WHERE order_id = $1`,
@@ -182,7 +203,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("refuses a stale cancellation with DELIVERY_CONCURRENT_UPDATE and writes nothing", async () => {
-    const placed = await placeStoreOrder(deps(), placement, null);
+    const placed = await applyPlacement(deps(), placement, null);
     // Someone else moved the order between the read and the write.
     await pool.query(
       `UPDATE store_orders SET fulfillment_state = 'confirmed', version = version + 1 WHERE order_id = $1`,
@@ -265,6 +286,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     const created = await app.fastify.inject({
       method: "POST",
       url: "/store-orders",
+      headers: { "idempotency-key": "pg-e2e-placement-000001" },
       payload: placement,
     });
     expect(created.statusCode).toBe(201);
@@ -284,6 +306,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     const cancelled = await app.fastify.inject({
       method: "POST",
       url: `/store-orders/${publicId}/cancellation`,
+      headers: { "idempotency-key": "pg-e2e-cancellation-0001" },
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
     expect(cancelled.statusCode).toBe(200);
@@ -292,6 +315,9 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     const again = await app.fastify.inject({
       method: "POST",
       url: `/store-orders/${publicId}/cancellation`,
+      // A DIFFERENT key: this is a new request, not a retry, so it must meet
+      // the state machine and be refused — not replayed (review 7/N).
+      headers: { "idempotency-key": "pg-e2e-cancellation-0002" },
       payload: { reason_code: "CUSTOMER_CHANGED_MIND" },
     });
     expect(again.statusCode).toBe(409);

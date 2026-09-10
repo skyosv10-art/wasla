@@ -8,18 +8,30 @@
  *
  * Every id and timestamp is injected or derived, so the same test run twice
  * produces byte-identical events — flaky ordering hides real bugs.
+ *
+ * The idempotency behaviour is modelled the same way (review 7/N): the fake
+ * really stores keys with their fingerprint and response, really replays, and
+ * really refuses a reused key. A fake that ignored the key would let a route
+ * bug — forgetting to pass the intent inward — pass every unit test, and only
+ * the integration suite would notice.
  */
 
 import { DeliveryError } from "../domain/errors.js";
 import type { DeliveryDomainEvent } from "../domain/events.js";
 import type { DeliveryTask, StoreOrder } from "../domain/model.js";
 import type {
+  CancelOrderOutcome,
   CancellationWrite,
   CatalogProductSnapshot,
+  IdempotencyIntent,
+  PlaceOrderOutcome,
   PlacementWrite,
+  ReadinessCheckResult,
+  ReadinessProbePort,
   StoreOrderCatalogPort,
   StoreOrderReadPort,
   StoreOrderWritePort,
+  StoredIdempotentResponse,
 } from "../ports.js";
 import type { WaslaPublicId } from "@wasla/contracts-delivery";
 
@@ -32,6 +44,7 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
   readonly orders = new Map<string, StoreOrder>();
   readonly tasks = new Map<string, DeliveryTask>();
   readonly outbox: DeliveryDomainEvent[] = [];
+  readonly idempotencyKeys = new Map<string, StoredIdempotentResponse>();
   private sequence = 5_000_000_001;
 
   seed(order: StoreOrder, task?: DeliveryTask): void {
@@ -47,17 +60,27 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
     return this.tasks.get(publicId) ?? null;
   }
 
+  async findIdempotentResponse(key: string): Promise<StoredIdempotentResponse | null> {
+    return this.idempotencyKeys.get(key) ?? null;
+  }
+
   async nextOrderPublicId(): Promise<WaslaPublicId> {
     return `WS-${String(this.sequence++).padStart(10, "0")}` as WaslaPublicId;
   }
 
-  async placeOrder(write: PlacementWrite): Promise<void> {
+  async placeOrder(write: PlacementWrite): Promise<PlaceOrderOutcome> {
+    const replay = this.resolveKey(write.idempotency);
+    if (replay !== null) return replay;
     this.orders.set(write.order.publicId, write.order);
     this.tasks.set(write.order.publicId, write.task);
     this.outbox.push(...write.events);
+    this.rememberKey(write.idempotency, write.order);
+    return { kind: "applied" };
   }
 
-  async cancelOrder(write: CancellationWrite): Promise<StoreOrder> {
+  async cancelOrder(write: CancellationWrite): Promise<CancelOrderOutcome> {
+    const replay = this.resolveKey(write.idempotency);
+    if (replay !== null) return replay;
     const entry = [...this.orders.values()].find((o) => o.orderId === write.orderId);
     if (entry === undefined) {
       throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المعرّفِ");
@@ -78,7 +101,44 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
       }
     }
     this.outbox.push(...write.events);
-    return cancelled;
+    this.rememberKey(write.idempotency, cancelled);
+    return { kind: "applied", order: cancelled };
+  }
+
+  /** Same two-step handshake as the Postgres adapter, in memory. */
+  private resolveKey(
+    intent: IdempotencyIntent | undefined,
+  ): { readonly kind: "replayed"; readonly status: number; readonly body: unknown } | null {
+    if (intent === undefined) return null;
+    const stored = this.idempotencyKeys.get(intent.key);
+    if (stored === undefined) return null;
+    if (stored.fingerprint !== intent.fingerprint) {
+      throw new DeliveryError(
+        "DELIVERY_IDEMPOTENCY_KEY_REUSED",
+        "المفتاحُ نفسُهُ مُستعمَلٌ لطلبٍ مختلفٍ",
+      );
+    }
+    return { kind: "replayed", status: stored.status, body: stored.body };
+  }
+
+  private rememberKey(intent: IdempotencyIntent | undefined, order: StoreOrder): void {
+    if (intent === undefined) return;
+    this.idempotencyKeys.set(intent.key, {
+      fingerprint: intent.fingerprint,
+      status: intent.responseStatus,
+      // Serialized and re-parsed exactly like `jsonb` would, so a test cannot
+      // pass by mutating the object the route also holds a reference to.
+      body: JSON.parse(JSON.stringify(intent.buildResponseBody(order))),
+    });
+  }
+}
+
+/** A readiness probe whose answer the test dictates — no database, no timing. */
+export class FakeReadinessProbe implements ReadinessProbePort {
+  constructor(private readonly checks: readonly ReadinessCheckResult[]) {}
+
+  async probe(): Promise<readonly ReadinessCheckResult[]> {
+    return this.checks;
   }
 }
 

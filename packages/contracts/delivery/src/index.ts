@@ -143,6 +143,16 @@ export const DELIVERY_ERROR_CODES = [
   // `POST /store-orders` بلا مفتاحِ تماثُلٍ في هذا العقدِ، فدعوةُ العميلِ
   // إلى الإعادةِ قد تُنشئُ طلبَينِ — 500 يقولُ «لا تُعِد» بصدقٍ.
   "DELIVERY_INTERNAL_ERROR",
+  // المراجعةُ 7/N: مفتاحُ التماثُلِ على المسارَينِ الكاتبَينِ (ADR-026 §4.10).
+  // مفتاحٌ نفسُهُ بطلبٍ مختلفٍ ⇒ رفضٌ صريحٌ لا إعادةُ جوابِ الطلبِ الأولِ:
+  // إعادةُ جوابٍ لطلبٍ آخرَ طلبٌ ضائعٌ بصمتٍ — أسوأُ صنفِ فشلٍ هنا.
+  "DELIVERY_IDEMPOTENCY_KEY_REUSED",
+  // مفتاحٌ نفسُهُ يُعالَجُ الآنَ في معاملةٍ أخرى ⇒ لا كتابةَ ثانيةً، والإعادةُ
+  // بعدَ لحظةٍ تُعيدُ جوابَ الأولِ (replay) لا طلباً ثانياً.
+  "DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT",
+  // مسبارُ الجاهزيّةِ سألَ القاعدةَ فلم تُجِب — 503 صريحٌ لا `ok` كاذبٌ
+  // (درسُ RISK-0030 في البحثِ · §4.10-2).
+  "DELIVERY_DATABASE_UNAVAILABLE",
 ] as const;
 export type DeliveryErrorCode = (typeof DELIVERY_ERROR_CODES)[number];
 
@@ -170,6 +180,9 @@ export const DELIVERY_ERROR_CODE_CLASS: Record<DeliveryErrorCode, DeliveryErrorC
   DELIVERY_DISPATCH_UNAVAILABLE: "dependency_unavailable",
   DELIVERY_CONCURRENT_UPDATE: "conflict",
   DELIVERY_INTERNAL_ERROR: "internal",
+  DELIVERY_IDEMPOTENCY_KEY_REUSED: "conflict",
+  DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT: "conflict",
+  DELIVERY_DATABASE_UNAVAILABLE: "dependency_unavailable",
 };
 
 /** The HTTP status derived from the class — the HTTP layer never re-classifies. */

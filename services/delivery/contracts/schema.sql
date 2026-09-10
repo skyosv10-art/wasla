@@ -316,4 +316,32 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_relay_checkpoint (
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ───────────────────────────────────────────────────
+-- 12) delivery_idempotency_keys — مفاتيحُ التماثُلِ للمسارَينِ الكاتبَينِ
+--     (المراجعةُ 7/N · ADR-026 §4.10 — رفعُ دَينِ §4.9-3).
+--
+--     الصفُ يُكتَبُ **داخلَ معاملةِ الأمرِ نفسِها** لا في معاملةٍ ثانيةٍ:
+--     مفتاحٌ مُلتَزَمٌ بلا طلبٍ (أو طلبٌ بلا مفتاحٍ) هو بالضبطِ الازدواجُ
+--     الذي يمنعُهُ هذا الجدولُ. ولذلك لا عمودَ حالةٍ وسيطةٍ (in_progress):
+--     وجودُ الصفِ مُلتَزَماً = الأمرُ تَمَّ وجوابُهُ محفوظٌ؛ وغيابُهُ = لم يتمَّ؛
+--     والتزاحُمُ يُحسَمُ بالمفتاحِ الفريدِ (23505 ⇒ 409 in_flight).
+--
+--     البصمةُ (sha256 لـcanonical JSON) تمنعُ «مفتاحٌ واحدٌ لطلبَينِ
+--     مختلفَينِ»: إعادةُ جوابِ الأولِ للثاني طلبٌ ضائعٌ بصمتٍ.
+--     الجوابُ المحفوظُ جسمُ العقدِ نفسُهُ (مراجعُ WS- ومبالغُ هللةٍ) —
+--     لا بياناتِ شخصيّةَ ولا إحداثيّاتٍ (§2.6).
+-- ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_idempotency_keys (
+    idempotency_key     TEXT        PRIMARY KEY CHECK (idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$'),
+    route               TEXT        NOT NULL CHECK (route IN (
+                                        'POST /store-orders',
+                                        'POST /store-orders/{orderPublicId}/cancellation')),
+    request_fingerprint TEXT        NOT NULL CHECK (request_fingerprint ~ '^[0-9a-f]{64}$'),
+    response_status     SMALLINT    NOT NULL CHECK (response_status IN (200, 201)),
+    response_body       JSONB       NOT NULL,
+    order_id            UUID        NOT NULL REFERENCES store_orders(order_id) ON DELETE CASCADE,
+    trace_id            TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 COMMIT;

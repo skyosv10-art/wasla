@@ -71,6 +71,9 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
 export const CONTRACT_TABLES = [...deliverySchemaSql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
 
 export const DELIVERY_TABLES = [
+  // Listed before store_orders: the FK cascades, but TRUNCATE order is also
+  // the order a reader learns the dependency in.
+  "delivery_idempotency_keys",
   "delivery_relay_checkpoint",
   "delivery_relay_consumed_events",
   "delivery_outbox",

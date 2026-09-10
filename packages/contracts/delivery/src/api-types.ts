@@ -13,7 +13,12 @@
  *    processing (§2.2 — billing is M5-17).
  *  - `courier_ref` / `customer_ref` / `store_public_id` are opaque WS-##########
  *    refs — no names, no phones, no coordinates anywhere (§2.6).
- *  - The HTTP layer is DECLARED, NOT IMPLEMENTED in review 1/N (ADR-026 §4.2).
+ *  - The HTTP layer is IMPLEMENTED since review 6/N (ADR-026 §4.2 lifted).
+ *  - Both write operations REQUIRE an `Idempotency-Key` header since review
+ *    7/N (§4.9-3 lifted); a replay answers the stored status/body verbatim and
+ *    a same-key-different-request is `409 DELIVERY_IDEMPOTENCY_KEY_REUSED`.
+ *  - `getDeliveryReadiness` is the ONE operation whose 503 body is not
+ *    `ErrorResponse` — it reports state, not a defect (errors.md rule 6).
  */
 
 /* ------------------------------------------------------------------ */
@@ -36,10 +41,16 @@ export interface paths {
   "/delivery/health": {
     get: operations["getDeliveryHealth"];
   };
+  "/delivery/ready": {
+    get: operations["getDeliveryReadiness"];
+  };
 }
 
 export interface operations {
   placeStoreOrder: {
+    parameters: {
+      header: { "Idempotency-Key": string };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["PlaceStoreOrderRequest"];
@@ -67,6 +78,7 @@ export interface operations {
   cancelStoreOrder: {
     parameters: {
       path: { orderPublicId: components["schemas"]["WaslaPublicId"] };
+      header: { "Idempotency-Key": string };
     };
     requestBody: {
       content: {
@@ -95,6 +107,13 @@ export interface operations {
   getDeliveryHealth: {
     responses: {
       "200": { content: { "application/json": components["schemas"]["HealthResponse"] } };
+    };
+  };
+  getDeliveryReadiness: {
+    responses: {
+      "200": { content: { "application/json": components["schemas"]["ReadinessResponse"] } };
+      /** الجسمُ جاهزيّةٌ لا خطأٌ — استثناءٌ مُعلَنٌ واحدٌ (errors.md قاعدةُ 6). */
+      "503": { content: { "application/json": components["schemas"]["ReadinessResponse"] } };
     };
   };
 }
@@ -216,6 +235,18 @@ export interface components {
     };
     HealthResponse: {
       status: "ok";
+    };
+    ReadinessCheck: {
+      name: "database";
+      ok: boolean;
+      /** سببٌ مقتضبٌ للسجلِّ — لا أسرارَ ولا مُدخَلاتٍ. */
+      detail?: string;
+    };
+    ReadinessResponse: {
+      status: "ready" | "unavailable";
+      checks: components["schemas"]["ReadinessCheck"][];
+      /** تبعيّاتٌ مُعلَنةٌ غيرُ موصولةٍ — لا تُسبَرُ ولا تُدّعى. */
+      not_claimed: "marketplace_catalog_not_wired"[];
     };
   };
 }

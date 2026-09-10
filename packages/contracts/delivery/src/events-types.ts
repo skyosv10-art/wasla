@@ -199,6 +199,7 @@ export interface StoreOrderInventoryReservedV1 extends DeliveryEventEnvelope {
     public_id: WaslaPublicId;
     from_state: InventoryState;
     to_state: "reserved";
+    reason_code: "INVENTORY_RESERVED";
     reservation_ref: string;
     actor: DeliveryActor;
   };
@@ -212,6 +213,7 @@ export interface StoreOrderInventoryReleasedV1 extends DeliveryEventEnvelope {
     public_id: WaslaPublicId;
     from_state: InventoryState;
     to_state: "released";
+    reason_code: "INVENTORY_RELEASED";
     reservation_ref: string;
     actor: DeliveryActor;
   };

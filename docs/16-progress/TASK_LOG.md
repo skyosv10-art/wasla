@@ -1,5 +1,16 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-10 · M5-13 · إقفال دورة §8.1 — `CLM-0128` · PR #102 مُدمج
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-payment-mirror-exit-gate` · **Claim:** `CLM-0128` → **Released**
+
+**ماذا تم إنجاز:** إقفالُ دورةِ §8.1 لحجز `CLM-0128` بعدَ دمجِ [PR #102](https://github.com/skyosv10-art/wasla/pull/102) (التزامُ الدمجِ `2bb24be` · `2026-09-10T18:16:14Z` · squash). فحوصُ CI المقيسةُ على الدمج: **31 فحصاً كلُّها `success`** (تشغيل [`34512732415`](https://github.com/skyosv10-art/wasla/actions/runs/34512732415)) — منها `verify` و`governance-guard` و`doc-coverage` و`typecheck` و`test` و`12 × db-integration` و`10 × exit-gate-e2e` و`repo-structure` و`Devin Review`. وُضِعَ سطرُ `CLM-0128` في `WORK_CLAIMS.md` إلى `Released` ببروتوكول §8.1 (`ahead_by = 0`).
+
+**القرارُ:** الحجزُ مُحرَّرٌ ببروتوكولِ الإقفالِ §8.1 — لا بمرورِ مهلةٍ ولا بانتزاعٍ.
+
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 9/N مُدمجةٌ). لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
+
+
 ## 2026-09-10 · M5-13 · المراجعةُ 9/N — مرآةُ الدفعِ والتأكيدُ وبوّابةُ خروجِ الطورِ 13 · `CLM-0128`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-payment-mirror-exit-gate` · **Claim:** `CLM-0128` (`@uxxxu (agent:perplexity-computer)` · 2026-09-10 → ينتهي 2026-09-24 · In Progress) · **Scope:** `services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`pnpm-lock.yaml`,`.github/workflows/`,`.gitlab-ci.yml`,`docs/04-api/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`

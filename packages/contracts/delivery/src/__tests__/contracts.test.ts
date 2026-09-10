@@ -61,9 +61,12 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
   it("fulfillment and payment are two ORTHOGONAL columns on store_orders (§2.2)", () => {
     expect(schemaCode).toMatch(/fulfillment_state\s+TEXT\s+NOT NULL CHECK/);
     expect(schemaCode).toMatch(/payment_state\s+TEXT\s+NOT NULL CHECK/);
-    // Orthogonality also means: no single mixed state column anywhere.
+    // Orthogonality also means: no single mixed state column on store_orders.
     expect(schemaCode).not.toMatch(/order_state\s+TEXT/);
-    expect(schemaCode).not.toMatch(/\bstatus\s+TEXT\s+NOT NULL/);
+    // A `status` column is allowed on delivery_inventory_reservations (review 10/N),
+    // but NOT on store_orders — that would collapse the two orthogonal axes.
+    const storeOrdersBlock = schemaCode.match(/CREATE TABLE IF NOT EXISTS store_orders \([\s\S]*?\);/)?.[0] ?? "";
+    expect(storeOrdersBlock).not.toMatch(/\bstatus\s+TEXT\s+NOT NULL/);
   });
 
   it("schema enums match the contract constants exactly, in ADR §3 order", () => {
@@ -126,7 +129,8 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
   });
 
   it("transitions ledgers are append-only shapes with closed actor sets", () => {
-    expect(schemaCode).toMatch(/state_kind\s+TEXT\s+NOT NULL CHECK \(state_kind IN \('fulfillment','payment'\)\)/);
+    // Review 10/N added 'inventory' to state_kind (ADR-026 §4.13).
+    expect(schemaCode).toMatch(/state_kind\s+TEXT\s+NOT NULL CHECK \(state_kind IN \('fulfillment','payment','inventory'\)\)/);
     expect(schemaCode).toMatch(/actor_type\s+TEXT\s+NOT NULL CHECK \(actor_type IN \('system','customer','store','courier','admin'\)\)/);
     expect(schemaCode).toMatch(/actor_type\s+TEXT\s+NOT NULL CHECK \(actor_type IN \('system','customer','store','courier','admin','dispatch'\)\)/);
     expect(schemaCode).toMatch(/CHECK \(to_state <> from_state\)/);

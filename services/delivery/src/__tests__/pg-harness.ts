@@ -49,6 +49,24 @@ CREATE TABLE IF NOT EXISTS dispatch_outbox (
 );
 `;
 
+/**
+ * Minimal `marketplace_outbox` DDL — **يُطابقُ عقدَ السوقِ حرفاً** بلا مفاتيحَ
+ * أجنبيّةٍ (`services/marketplace/contracts/schema.sql`).
+ */
+const MARKETPLACE_OUTBOX_DDL = `
+CREATE TABLE IF NOT EXISTS marketplace_outbox (
+    outbox_id               UUID        PRIMARY KEY,
+    event_type              TEXT        NOT NULL CHECK (event_type ~ '^marketplace\\.[a-z_]+$'),
+    event_version           TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
+    aggregate_type          TEXT        NOT NULL CHECK (aggregate_type IN ('store', 'product', 'inventory')),
+    aggregate_id            TEXT        NOT NULL,
+    payload                 JSONB       NOT NULL,
+    occurred_at             TIMESTAMPTZ NOT NULL,
+    published_at            TIMESTAMPTZ,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+`;
+
 /** Tables the delivery contract owns — extracted FROM the contract at runtime (M0-18). */
 export const CONTRACT_TABLES = [...deliverySchemaSql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
 
@@ -61,6 +79,9 @@ export const DELIVERY_TABLES = [
   "store_order_items",
   "store_order_transitions",
   "store_orders",
+  "delivery_inventory_observations",
+  "delivery_inventory_relay_consumed_events",
+  "delivery_inventory_relay_checkpoint",
 ] as const;
 
 export interface PgFixture {
@@ -70,11 +91,12 @@ export interface PgFixture {
 
 export async function applyDeliverySchema(pool: Pool): Promise<void> {
   await pool.query(DISPATCH_OUTBOX_DDL);
+  await pool.query(MARKETPLACE_OUTBOX_DDL);
   await pool.query(deliverySchemaSql);
 }
 
 export async function resetData(pool: Pool): Promise<void> {
-  await pool.query(`TRUNCATE ${DELIVERY_TABLES.join(", ")}, dispatch_outbox RESTART IDENTITY CASCADE`);
+  await pool.query(`TRUNCATE ${DELIVERY_TABLES.join(", ")}, dispatch_outbox, marketplace_outbox RESTART IDENTITY CASCADE`);
 }
 
 export async function setupPostgres(): Promise<PgFixture> {
@@ -139,4 +161,34 @@ export async function seedDispatchEvent(
     ],
   );
   return result.rows[0].event_id;
+}
+
+/** Seed a marketplace outbox row (inventory_adjusted) and return its outbox_id. */
+export async function seedMarketplaceEvent(
+  pool: Pool,
+  event: {
+    outbox_id?: string;
+    event_type?: string;
+    event_version?: string;
+    aggregate_type?: string;
+    aggregate_id?: string;
+    payload: Record<string, unknown>;
+    occurred_at?: string;
+  },
+): Promise<string> {
+  const result = await pool.query<{ outbox_id: string }>(
+    `INSERT INTO marketplace_outbox (outbox_id, event_type, event_version, aggregate_type, aggregate_id, payload, occurred_at)
+     VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6::jsonb, $7::timestamptz)
+     RETURNING outbox_id::text`,
+    [
+      event.outbox_id ?? null,
+      event.event_type ?? "marketplace.inventory_adjusted",
+      event.event_version ?? "v1",
+      event.aggregate_type ?? "inventory",
+      event.aggregate_id ?? "cccccccc-0000-0000-0000-000000000003",
+      JSON.stringify(event.payload),
+      event.occurred_at ?? new Date().toISOString(),
+    ],
+  );
+  return result.rows[0].outbox_id;
 }

@@ -141,3 +141,61 @@ export interface TaskDelegationStore {
    */
   bindDispatchJob(taskId: string, jobRef: string, context: DelegationContext): Promise<"bound" | "already_bound">;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Marketplace inventory consumer (ADR-026 §2.3 — "inventory is read via the
+ * agreed boundary, no writing to marketplace tables, delivery stores
+ * snapshots not balances"). The relay reads `marketplace_outbox` rows of type
+ * `marketplace.inventory_adjusted` and projects them into
+ * `delivery_inventory_observations` — a snapshot, never a balance.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+import type {
+  InventoryAdjustedData,
+  InventoryConsumedStatus,
+  InventoryRelayCheckpoint,
+  MarketplaceOutboxRow,
+} from "./domain/marketplace-inventory-events.js";
+
+/** Reads `marketplace_outbox` rows of type `marketplace.inventory_adjusted` AFTER a checkpoint. */
+export interface MarketplaceInventoryEventSource {
+  /** Read up to `limit` marketplace outbox rows strictly after the checkpoint (or from zero). */
+  readAfter(checkpoint: InventoryRelayCheckpoint | null, limit: number): Promise<readonly MarketplaceOutboxRow[]>;
+}
+
+/**
+ * The delivery-owned state the inventory relay writes — observation snapshots
+ * + consumed ledger + checkpoint, ALL atomic where the relay needs them.
+ *
+ * `observeInventoryAdjustment` is guarded by `adjustment_sequence`: an older
+ * adjustment is `skipped_stale` (the snapshot never regresses); a newer one
+ * upserts the observation. This is the inventory equivalent of the dispatch
+ * relay's per-task watermark — but per (store_id, product_id).
+ */
+export interface InventoryObservationStore {
+  /* ── checkpoint (delivery-owned) ── */
+  getInventoryCheckpoint(consumerId: string): Promise<InventoryRelayCheckpoint | null>;
+  writeInventoryCheckpoint(consumerId: string, checkpoint: InventoryRelayCheckpoint): Promise<void>;
+
+  /* ── consumed-event ledger (idempotency) ── */
+  getInventoryConsumed(eventId: string): Promise<{ status: InventoryConsumedStatus; attempt_count: number } | null>;
+  markInventoryConsumed(
+    eventId: string,
+    row: Pick<MarketplaceOutboxRow, "event_type" | "aggregate_type" | "aggregate_id">,
+    status: InventoryConsumedStatus,
+    attemptCount: number,
+    lastError?: string | null,
+  ): Promise<void>;
+
+  /* ── the inventory snapshot ── */
+  /**
+   * Upsert the observation for (store_id, product_id), guarded by sequence.
+   * Returns `"applied"` when the observation was updated, or `"skipped_stale"`
+   * when the incoming adjustment_sequence is older than the current one.
+   */
+  observeInventoryAdjustment(data: InventoryAdjustedData, context: MirrorContext): Promise<"applied" | "skipped_stale">;
+
+  /* ── replay / rebuild ── */
+  /** Clear observations + consumed ledger + checkpoint (NOT delivery_outbox). */
+  clearInventoryObservations(): Promise<void>;
+}

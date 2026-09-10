@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-09T22:16:04Z",
+  "generated_at": "2026-09-10T00:50:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "417be0e72744f925e802fe534f6c5f00fad9be5a",
-    "branch": "feat/m5-13-dispatch-delegation-wire",
+    "commit": "86030d892a1b224aee4fc4841f0eb951139fc9b0",
+    "branch": "feat/m5-13-marketplace-inventory-consumer",
     "dirty": true,
-    "dirty_files": 13,
-    "dirty_reason": "شجرة المراجعة 4/N غير ملتزَمة بعد: إضافة خطر RISK-0034 (جسرُ ORD-/WS-) وملفَّي اختبارِ التفويضِ (وحدةً وتكاملاً) و111 اختباراً جديداً",
-    "tracked_files": 1593
+    "dirty_files": 11,
+    "dirty_reason": "إضافة مستهلك marketplace.inventory_adjusted وطبقة مراقبة المخزون (CLM-0124 · M5-13)",
+    "tracked_files": 1597
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 302,
+    "test_files_tracked": 304,
     "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify4b.log",
-    "tests_passed": 4039,
-    "test_files_executed": 245,
+    "source": "/tmp/verify-full.log",
+    "tests_passed": 4017,
+    "test_files_executed": 244,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:a59da342c4b0c0cfe5f30bf8e6d4789fbf5820a1de861d91ab32718a8dd1ee9b",
+  "fingerprint": "sha256:f4fd745a6e55b22c1a82b8445dab3b8ce625c9ee609393382a0000f502dd2dcb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

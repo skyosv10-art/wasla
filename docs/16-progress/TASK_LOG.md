@@ -1,5 +1,29 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-10 · M5-13 · المراجعةُ 5/N — مستهلكُ marketplace.inventory_adjusted وإسقاطُ مراقبةِ المخزونِ · `CLM-0124`
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-marketplace-inventory-consumer` · **Claim:** `CLM-0124` (`@uxxxu (agent:perplexity-computer)` · 2026-09-10 → ينتهي 2026-09-24 · Active) · **Scope:** `services/delivery/`,`docs/15-decisions/`,`docs/16-progress/`,`docs/12-testing/`.
+
+**ماذا تم إنجاز (1):** رفعُ التأجيلِ المُعلَنِ في [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) §2.3 لجانبِ الاستهلاكِ: **(أ)** `domain/marketplace-inventory-events.ts` — أنواعٌ مُكتبوبةٌ (`MarketplaceOutboxRow` · `InventoryRelayCheckpoint` · `InventoryConsumedStatus` · `InventoryAdjustedData`) ومُصنِّفٌ `classifyMarketplaceInventoryEvent()` يتحقّقُ من الحمولةِ حقلًا بحقلٍ (UUID · عددٌ صحيحٌ غيرُ صفريٍّ للفرقِ · ≥0 للرصيدِ · تسلسلٌ ≥1 · رمزُ سببٍ مُدرَجٌ · معرّفُ فاعلٍ `WS-##########` · تاريخٌ ISO) ويرفضُ النسخةَ غيرَ `v1` سمًّا، والأحداثَ الأجنبيّةَ `ignored`. **(ب)** منفذانِ جديدانِ في `ports.ts`: `MarketplaceInventoryEventSource` (قراءةٌ فقط من `marketplace_outbox` — لا كتابةَ في `published_at`) و`InventoryObservationStore` (نقطةُ تقدّمٍ + دفترُ استهلاكٍ + إسقاطُ مراقبةٍ بترتيبِ تسلسلٍ). **(ج)** `marketplace-inventory-relay.ts` — محرّكُ دفعاتٍ بنمطِ relay التوزيعِ تماماً: تماثُلٌ (event_id مُستهلَكٌ ⇒ no-op) · فحصُ النسخةِ (غيرُ v1 ⇒ سمٌّ) · تصنيفٌ · إسقاطٌ أو سمٌّ · replay/rebuild. **(د)** `infrastructure/marketplace-inventory-event-source.ts` — `PostgresMarketplaceInventoryEventSource` يقرأُ `marketplace_outbox WHERE event_type = 'marketplace.inventory_adjusted'` بعدَ نقطةِ التقدّمِ بترتيبِ `(occurred_at, outbox_id)`. **(هـ)** `infrastructure/inventory-observation-store.ts` — `PostgresInventoryObservationStore`: معاملةٌ واحدةٌ للدفترِ والإسقاطِ، وحارسُ تسلسلٍ (`adjustment_sequence > last ⇒ UPDATE` · `≤ last ⇒ skipped_stale`)، و`ON CONFLICT DO NOTHING` للتماثُل. **(و)** DDL في `contracts/schema.sql`: ثلاثةُ جداولَ جديدة — `delivery_inventory_observations` (مفتاحٌ `(store_id, product_id)` · آخرُ رصيدٍ مُلاحَظٍ لا رصيدٌ سلطويٌّ) و`delivery_inventory_relay_consumed_events` و`delivery_inventory_relay_checkpoint`.
+
+**لماذا تم اختياره (2):** لأنّه **الخطوةُ التاليةُ المُسجَّلةُ حرفاً** في نهايةِ إدخالِ المراجعةِ 4/N («مستهلكُ `marketplace.inventory_adjusted`» أوّلُ الأولويات)، ولأنّ ADR-026 §2.3 يقرّرُ أنّ رصيدَ ما بعدَ الحجزِ يُستهلَكُ من هذه الأحداثِ للكشفِ عن التضاربِ — فبناءُ الإسقاطِ المُلاحِظِ الآن يُمهّدُ لكشفِ التضاربِ في المراجعاتِ اللاحقةِ بعدَ قرارِ الحجزِ.
+
+**أين تم التغيير (3):** `services/delivery/src/domain/marketplace-inventory-events.ts` (جديدٌ) · `services/delivery/src/ports.ts` (منفذانِ جديدانِ) · `services/delivery/src/marketplace-inventory-relay.ts` (جديدٌ) · `services/delivery/src/infrastructure/marketplace-inventory-event-source.ts` (جديدٌ) · `services/delivery/src/infrastructure/inventory-observation-store.ts` (جديدٌ) · `services/delivery/contracts/schema.sql` (ثلاثةُ جداولَ) · `services/delivery/src/__tests__/marketplace-inventory.test.ts` (جديدٌ · 19 وحدةً) · `services/delivery/src/__tests__/marketplace-inventory.integration.test.ts` (جديدٌ · 8 تكاملٍ) · `services/delivery/src/__tests__/pg-harness.ts` (DDL السوق + الجداول الجديدة + `seedMarketplaceEvent`) · `services/delivery/src/index.ts` (تصديرات) · `docs/15-decisions/ADR-026…` (§4.8) · دفاترُ الحوكمةِ.
+
+**الملفات/الخدمات المتأثرة (4):** `services/delivery` وحدها — لا ملفَّ في `services/marketplace` مُسَّ (جدولُ `marketplace_outbox` يُقرأُ فقط لا يُكتَبُ).
+
+**ما الـAPI/Event/Schema الذي تغير (5):** ثلاثةُ جداولَ DDL جديدة في `services/delivery/contracts/schema.sql`؛ لا تغييرَ في العقودِ ولا في كتالوجِ الأخطاءِ — إضافةٌ معماريّةٌ صافيةٌ.
+
+**كيف تم الاختبار (6):** **الوحدةُ:** `pnpm --filter @wasla/delivery-service test` ⇒ **97/97** (19 جديدة — تصنيفٌ صحيحٌ · حقولٌ ناقصةٌ · فرقٌ صفريٌّ · رصيدٌ سالبٌ · نوعُ حدثٍ خاطئٌ · نسخةٌ غيرُ مدعومةٍ · معرّفاتٌ غيرُ صالحةٍ). **التكاملُ:** 8 اختباراتٍ (تُخطّفُ بلا `DATABASE_URL`) — تطبيقٌ صحيحٌ · تماثُلٌ · تسلسلٌ أقدم/أحدث · سمٌّ للنسخةِ والحمولةِ · عزلُ منتجٍ · فشلٌ محقونٌ ⇒ لا أثرٍ جزئيّ. **الفحوصاتُ الموحّدةُ:** `scripts/verify.sh` سبعةٌ خضراءُ · `verify-governance.sh` 13 فحصاً (تخطّيانِ مُعلَنانِ) · الأنواعُ صفرُ أخطاء.
+
+**ما المشاكل التي ظهرت (7):** **(١)** الأساسُ الآليُّ (`BASELINE.json`) كانَ يحتاجُ تحديثاً — `test_files_tracked` 302→304 و`dynamic` كانَ `null`، فاستوجبَ توليداً بـ`--log` وضبطَ `repo.dirty_reason`. **(٢)** `marketplace_outbox` يُخزّنُ `outbox_id` (UUID PK) لا `event_id`، والحمولةُ في `payload` مباشرةً لا في مغلفٍ — تَكيّفَ المصدرُ والمعالجُ وفقَ ذلك.
+
+**ما الذي لم يكتمل (8):** **مُعلَنٌ لا مكتومٌ (ADR-026 §4.8):** كشفُ التضاربِ الفعليُّ (مقارنةُ `quantity_after` مع أصنافِ الطلباتِ النشطة) **مؤجَّلٌ** — يتوقّفُ على قرارِ مسارِ الحجزِ والدفعِ؛ والإسقاطُ الحاليُّ يُلاحظُ الرصيدَ ولا يقررُ تضارباً. ومُعلَنٌ كذلك: طبقةُ HTTP والتركيبُ النهائيُّ · بوّابةُ inventory/payment E2E · الترحيلاتُ المولّدةُ.
+
+**الخطوة التالية (9):** انتظارُ CI على الفرعِ ثمّ الدمجُ وإقفالُ دورةِ §8.1 لـ`CLM-0124`. وبعدَها: طبقةُ HTTP والتركيبُ (تحتاجُ قرارَ الجسرِ)، ثمّ بوّابةُ الخروجِ.
+
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 5/N من عنصرِ الطورِ). لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
+
 ## 2026-09-09 · M5-13 · المراجعةُ 4/N — سلكُ التفويضِ delivery→dispatch: الأمرُ الصادرُ والمفتاحُ الحتميُّ والربطُ الذرّيُّ · `CLM-0123`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-dispatch-delegation-wire` · **Claim:** `CLM-0123` (`@uxxxu (agent:perplexity-computer)` · 2026-09-09 → ينتهي 2026-09-23 · Active) · **Scope:** `services/delivery/`,`docs/15-decisions/`,`docs/07-security/`,`docs/16-progress/`,`docs/12-testing/`.

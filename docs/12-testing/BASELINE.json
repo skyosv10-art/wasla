@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T08:14:51Z",
+  "generated_at": "2026-09-10T08:21:10Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "89f580b2e4fe4b7bc3639a8e5d5ff79604930082",
+    "commit": "be5314a832a59e5c7a54d256bd83026c3a1046e2",
     "branch": "feat/m5-13-delivery-idempotency-readiness",
-    "dirty": true,
-    "dirty_files": 30,
-    "dirty_reason": "المراجعةُ 7/N (CLM-0126): مفتاحُ التماثُلِ ومسارُ الجاهزيّةِ — ملفّا اختبارٍ جديدانِ (idempotency.test.ts · idempotency.integration.test.ts) وأربعُ وحداتٍ جديدةٍ",
-    "tracked_files": 1618
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "المراجعةُ 7/N (CLM-0126): مفتاحُ التماثُلِ ومسارُ الجاهزيّةِ — ملفّا اختبارٍ جديدانِ وأربعُ وحداتٍ جديدةٍ (العدُّ على الشجرةِ المُتَتبَّعةِ: 309 بعدَ إزالةِ مخرَجِ بناءٍ مُهمَلٍ في dist/)",
+    "tracked_files": 1624
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 48,
     "packages_with_typecheck": 48,
     "packages_with_test": 48,
-    "test_files_tracked": 310,
+    "test_files_tracked": 309,
     "ci_jobs": 29,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:cdb7b59042a7b80069720c954bdc39deb43b5a714474ef1aeef3dd85427ad473",
+  "fingerprint": "sha256:453b4263c52fa6cb6692950748430df6ca29ef30533832df0f038499aec399b5",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

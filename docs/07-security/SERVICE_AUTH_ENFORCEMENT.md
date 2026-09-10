@@ -235,6 +235,7 @@
 |---|---|---|---|
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | `service-identity-enforcement.e2e.test.ts` · `DISPATCH_MATCHING_SCOPES` |
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
+| `services/delivery/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-catalog.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` · **حدُّ السوقِ نفسُهُ غيرُ مفروضٍ بعدُ** (المراجعةُ 8/N · `CLM-0127`): التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى، فلا يُؤجَّلُ إلى أن يُفرَضَ الحدُّ. |
 | `services/customers/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/customers/src/__tests__` (عبر بوّاباتِ e2e) · `CUSTOMERS_GEOGRAPHY_SCOPES` |
 | `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/identity/src/__tests__/http/service-identity.test.ts` · `CUSTOMERS_IDENTITY_SCOPES` |
 | `services/customers/src/infrastructure/http-order-intake.ts` | orders | موقَّع | `services/customers/src/__tests__/http-order-intake.test.ts` · `CUSTOMERS_ORDERS_SCOPES` |

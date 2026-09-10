@@ -12,7 +12,7 @@ import { buildStoreOrderPlacement } from "../domain/store-order-placement.js";
 import { decideCancellation } from "../domain/store-order-cancellation.js";
 import { isDeliveryError } from "../domain/errors.js";
 import { parseCancelBody, parseOrderPublicIdParam, parsePlaceStoreOrderBody } from "../http/requests.js";
-import { CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_REF, fixedOrder, fixedTask } from "./store-order-fakes.js";
+import { CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, fixedOrder, fixedTask } from "./store-order-fakes.js";
 
 const IDENTITY = {
   orderId: "bbbbbbbb-0000-4000-8000-000000000002",
@@ -29,7 +29,7 @@ const SNAPSHOTS = [
 function input(overrides: Partial<Parameters<typeof buildStoreOrderPlacement>[0]> = {}) {
   return {
     customer_ref: CUSTOMER_REF,
-    store_public_id: STORE_REF,
+    store_slug: STORE_SLUG,
     items: [{ product_id: PRODUCT_A, quantity: 2 }],
     delivery_fee_minor_units: 500,
     ...overrides,
@@ -176,7 +176,7 @@ describe("request parsing — no silent coercion", () => {
   it("refuses a string quantity, a null fee and a non-object body", () => {
     const base = {
       customer_ref: CUSTOMER_REF,
-      store_public_id: STORE_REF,
+      store_slug: STORE_SLUG,
       items: [{ product_id: PRODUCT_A, quantity: 1 }],
       delivery_fee_minor_units: 0,
     };

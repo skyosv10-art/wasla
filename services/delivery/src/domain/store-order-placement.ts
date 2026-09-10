@@ -26,7 +26,7 @@
 
 import { createHash } from "node:crypto";
 
-import type { WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "./errors.js";
 import type { DeliveryTask, StoreOrder, StoreOrderItem } from "./model.js";
@@ -116,7 +116,7 @@ export function buildStoreOrderPlacement(
     publicId: identity.publicId,
     customerRef: input.customer_ref as WaslaPublicId,
     storeId: identity.storeId,
-    storePublicId: input.store_public_id as WaslaPublicId,
+    storeSlug: input.store_slug as StoreSlug,
     // draft → placed happens AT placement: the ledger records the edge, the
     // row never lingers in `draft` (§3.1, reason `CART_CONFIRMED`).
     fulfillmentState: "placed",

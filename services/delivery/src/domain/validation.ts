@@ -5,9 +5,17 @@
  * Everything rejected here is rejected BEFORE any decision is recorded — a
  * validation failure must never reach the transition ledger.
  *
- * The OpaquePublicId rule (ADR-026 §2.6): every external human/store
- * reference is `WS-` + exactly 10 digits. Not "some string" — a shape, so a
- * leaked email or phone number is a validation error, not an incident.
+ * The OpaquePublicId rule (ADR-026 §2.6): every external reference THIS
+ * PLATFORM mints — customer, courier, order — is `WS-` + exactly 10 digits.
+ * Not "some string" but a shape, so a leaked email or phone number is a
+ * validation error, not an incident.
+ *
+ * The store is the one exception, and it is not a loophole (review 8/N,
+ * §4.11): its public reference is minted and published by
+ * `services/marketplace` as a `store_slug`, so this service validates the
+ * shape marketplace publishes instead of demanding a `WS-` id that exists
+ * nowhere. Requiring the shape we WISHED for is exactly what kept placement
+ * unwired for seven reviews.
  */
 
 import { DeliveryError } from "./errors.js";
@@ -27,6 +35,32 @@ export function assertPublicId(value: string, field: string): void {
   }
 }
 
+/**
+ * slug متجرِ السوقِ — المراجعةُ 8/N (ADR-026 §4.11).
+ *
+ * النمطُ منقولٌ حرفاً عن `services/marketplace/contracts/schema.sql` لا مخفَّفٌ
+ * ولا موسَّعٌ: نمطٌ أوسعُ هنا كان سيُمرّرُ مرجعاً يرفضُهُ السوقُ فيتحوّلُ
+ * خطأُ المُدخَلِ إلى نداءٍ شبكيٍّ فاشلٍ ثمّ إلى `404` يُقرأُ «لا متجرَ» بدلاً من
+ * «مرجعٌ فاسدٌ»؛ وأضيقُ منهُ كان سيرفضُ slug متجرٍ قائمٍ.
+ *
+ * ولماذا لا `assertPublicId`؟ لأنَّ مرجعَ المتجرِ لا تُصدرُهُ هذه الخدمةُ ولا
+ * تُصدرُهُ وصلةُ: يُنشِئُهُ السوقُ وينشُرُهُ في مساراتِهِ العامّةِ. ففرضُ صيغةِ
+ * `WS-` عليهِ كان هو العلّةَ التي أقفلتِ المسارَ سبعَ مراجعاتٍ (§4.9-2).
+ */
+const STORE_SLUG_PATTERN = /^[a-z][a-z0-9-]{2,47}$/;
+
+export function isValidStoreSlug(value: string): boolean {
+  return typeof value === "string" && STORE_SLUG_PATTERN.test(value);
+}
+
+export function assertStoreSlug(value: string, field: string): void {
+  if (!isValidStoreSlug(value)) {
+    throw new DeliveryError("DELIVERY_VALIDATION_FAILED", `${field} ليس slug متجرٍ صالحًا`, {
+      details: { field, actual: value, expected: "^[a-z][a-z0-9-]{2,47}$" },
+    });
+  }
+}
+
 /** An item line as it arrives from the (deferred) API surface. */
 export interface OrderLineInput {
   readonly product_id: string;
@@ -35,7 +69,7 @@ export interface OrderLineInput {
 
 export interface PlaceOrderInput {
   readonly customer_ref: string;
-  readonly store_public_id: string;
+  readonly store_slug: string;
   readonly items: readonly OrderLineInput[];
   readonly delivery_fee_minor_units?: number;
 }
@@ -49,7 +83,7 @@ export interface PlaceOrderInput {
  */
 export function validatePlaceOrderInput(input: PlaceOrderInput): void {
   assertPublicId(input.customer_ref, "customer_ref");
-  assertPublicId(input.store_public_id, "store_public_id");
+  assertStoreSlug(input.store_slug, "store_slug");
 
   if (!Array.isArray(input.items) || input.items.length === 0) {
     throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "الطلب يجب أن يحمل صنفًا واحدًا على الأقل", {

@@ -19,7 +19,7 @@ import {
   FakeStoreOrderStore,
   PRODUCT_A,
   PRODUCT_B,
-  STORE_REF,
+  STORE_SLUG,
   fixedOrder,
   fixedTask,
   uuidSequence,
@@ -103,8 +103,9 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
     expect(res.json()).toEqual({
       status: "ready",
       checks: [{ name: "database", ok: true }],
-      // The catalog port IS wired here, so nothing is unclaimed.
-      not_claimed: [],
+      // المراجعةُ 8/N: المنفذُ موصولٌ هنا، والجاهزيّةُ **لا تسبرُهُ** — ففراغُ
+      // `not_claimed` كانَ سيُقرأُ «تحقّقنا من السوقِ» ولم يتحقّقْ أحدٌ.
+      not_claimed: ["marketplace_catalog_not_probed"],
     });
     await app.close();
   });
@@ -123,7 +124,7 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
     const body = res.json();
     expect(body.status).toBe("unavailable");
     expect(body.checks).toEqual([{ name: "database", ok: false, detail: "unreachable" }]);
-    // The unwireable catalog is reported, not measured (§4.9-2, RISK-0030).
+    // منفذٌ غيرُ موصولٍ في هذا التركيبِ: يُعلَنُ ولا يُقاسُ (RISK-0030).
     expect(body.not_claimed).toEqual(["marketplace_catalog_not_wired"]);
     await app.close();
   });
@@ -141,7 +142,7 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
 describe("delivery HTTP — idempotency (§4.10-1)", () => {
   const placement = {
     customer_ref: CUSTOMER_REF,
-    store_public_id: STORE_REF,
+    store_slug: STORE_SLUG,
     items: [{ product_id: PRODUCT_A, quantity: 1 }],
     delivery_fee_minor_units: 500,
   };
@@ -277,7 +278,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [
           { product_id: PRODUCT_A, quantity: 2 },
           { product_id: PRODUCT_B, quantity: 3 },
@@ -311,7 +312,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [{ product_id: PRODUCT_A, quantity: 1 }],
         delivery_fee_minor_units: 0,
       },
@@ -329,7 +330,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [{ product_id: PRODUCT_A, quantity: 1, unit_price_minor_units: 1 }],
         delivery_fee_minor_units: 0,
       },
@@ -348,7 +349,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [{ product_id: PRODUCT_A, quantity: "2" }],
         delivery_fee_minor_units: 0,
       },
@@ -366,7 +367,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [{ product_id: PRODUCT_A, quantity: 1 }],
       },
     });
@@ -380,7 +381,7 @@ describe("delivery HTTP — placement", () => {
     });
     const payload = {
       customer_ref: CUSTOMER_REF,
-      store_public_id: STORE_REF,
+      store_slug: STORE_SLUG,
       items: [{ product_id: PRODUCT_A, quantity: 1 }],
       delivery_fee_minor_units: 0,
     };
@@ -404,7 +405,7 @@ describe("delivery HTTP — placement", () => {
       url: "/store-orders",
       payload: {
         customer_ref: CUSTOMER_REF,
-        store_public_id: STORE_REF,
+        store_slug: STORE_SLUG,
         items: [{ product_id: PRODUCT_A, quantity: 1 }],
         delivery_fee_minor_units: 0,
       },

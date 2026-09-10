@@ -17,7 +17,7 @@ import type { Pool } from "pg";
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { buildDeliveryHttpApp } from "../http/app.js";
-import { FakeCatalog, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_REF, uuidSequence } from "./store-order-fakes.js";
+import { FakeCatalog, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { isDeliveryError } from "../domain/errors.js";
@@ -75,7 +75,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
 
   const placement = {
     customer_ref: CUSTOMER_REF,
-    store_public_id: STORE_REF,
+    store_slug: STORE_SLUG,
     items: [
       { product_id: PRODUCT_A, quantity: 2 },
       { product_id: PRODUCT_B, quantity: 3 },
@@ -245,7 +245,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
           publicId: "WS-0009999001",
           customerRef: CUSTOMER_REF,
           storeId: "cccccccc-0000-4000-8000-000000000003",
-          storePublicId: STORE_REF,
+          storeSlug: STORE_SLUG,
           fulfillmentState: "placed",
           paymentState: "pending",
           paymentRef: null,

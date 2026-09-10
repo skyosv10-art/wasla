@@ -24,6 +24,7 @@
 import type {
   FulfillmentState,
   PaymentState,
+  StoreSlug,
   WaslaPublicId,
 } from "@wasla/contracts-delivery";
 
@@ -50,7 +51,8 @@ export interface StoreOrder {
   readonly publicId: WaslaPublicId;
   readonly customerRef: WaslaPublicId;
   readonly storeId: string;
-  readonly storePublicId: WaslaPublicId;
+  /** slug متجرِ السوقِ — مرجعُهُ العامُّ المنشورُ، لا `WS-` (المراجعةُ 8/N · §4.11). */
+  readonly storeSlug: StoreSlug;
   readonly fulfillmentState: FulfillmentState;
   readonly paymentState: PaymentState;
   readonly paymentRef: string | null;

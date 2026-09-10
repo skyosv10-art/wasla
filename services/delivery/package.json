@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@wasla/contracts-delivery": "workspace:*",
+    "@wasla/contracts-marketplace": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "fastify": "^5.12.1",
     "pg": "^8.13.0"
   },

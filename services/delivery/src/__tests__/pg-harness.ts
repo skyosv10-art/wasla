@@ -120,11 +120,11 @@ export async function seedTask(
   // `??` would swallow an explicit null — an unbound seed must stay unbound.
   const jobId = "dispatchJobRef" in overrides ? (overrides.dispatchJobRef as string | null) : "job-agg-1";
   await pool.query(
-    `INSERT INTO store_orders (order_id, public_id, customer_ref, store_id, store_public_id,
+    `INSERT INTO store_orders (order_id, public_id, customer_ref, store_id, store_slug,
                                fulfillment_state, payment_state, currency_code,
                                items_total_minor_units, delivery_fee_minor_units, total_minor_units)
      VALUES ($1::uuid, $2, $3, $4::uuid, $5, 'confirmed', 'authorized', 'SAR', 1000, 500, 1500)`,
-    [orderId, publicId, "WS-0000000009", "cccccccc-0000-0000-0000-000000000003", "WS-0000000002"],
+    [orderId, publicId, "WS-0000000009", "cccccccc-0000-0000-0000-000000000003", "matjar-alfawakih"],
   );
   await pool.query(
     `INSERT INTO delivery_tasks (task_id, order_id, state, dispatch_job_ref)

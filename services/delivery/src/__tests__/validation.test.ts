@@ -41,7 +41,7 @@ describe("opaque refs (ADR-026 §2.6)", () => {
 describe("place-order validation (ADR-026 §2.1, §2.3)", () => {
   const valid = {
     customer_ref: "WS-0123456789",
-    store_public_id: "WS-0987654321",
+    store_slug: "matjar-alfawakih",
     items: [{ product_id: UUID, quantity: 2 }],
     delivery_fee_minor_units: 500,
   };
@@ -50,15 +50,36 @@ describe("place-order validation (ADR-026 §2.1, §2.3)", () => {
     expect(() => validatePlaceOrderInput(valid)).not.toThrow();
   });
 
-  it("rejects non-opaque customer/store refs", () => {
+  it("rejects a non-opaque customer ref", () => {
     expectDeliveryError(
       () => validatePlaceOrderInput({ ...valid, customer_ref: "customer-1" }),
       "DELIVERY_VALIDATION_FAILED",
     );
-    expectDeliveryError(
-      () => validatePlaceOrderInput({ ...valid, store_public_id: "store-1" }),
-      "DELIVERY_VALIDATION_FAILED",
-    );
+  });
+
+  // المراجعةُ 8/N (§4.11): مرجعُ المتجرِ slug السوقِ لا `WS-`، والنمطُ
+  // منقولٌ عن عقدِ السوقِ حرفاً: ما يقبلُهُ هناكَ يُقبَلُ هنا، وما يرفضُهُ
+  // يُردَّ قبلَ أن يصيرَ نداءً شبكيًّا يعودُ 404 فيُقرأُ «لا متجرَ».
+  it("accepts marketplace-shaped slugs and rejects what marketplace rejects", () => {
+    for (const slug of ["store-1", "a1b", "matjar-alfawakih-jeddah-2"]) {
+      expect(() => validatePlaceOrderInput({ ...valid, store_slug: slug })).not.toThrow();
+    }
+    for (const slug of [
+      "WS-0000000002", // المرجعُ القديمُ: لا وجودَ لهُ في السوقِ أصلاً
+      "Matjar", // حروفٌ كبيرةٌ
+      "1matjar", // يبدأُ برقمٍ
+      "-matjar", // يبدأُ بشرطةٍ
+      "ab", // أقصرُ من الحدِّ
+      "a".repeat(49), // أطولُ من الحدِّ
+      "matjar_1", // شرطةٌ سفليّةٌ
+      "matjar/1", // محرفٌ يكسرُ المسارَ
+      "",
+    ]) {
+      expectDeliveryError(
+        () => validatePlaceOrderInput({ ...valid, store_slug: slug }),
+        "DELIVERY_VALIDATION_FAILED",
+      );
+    }
   });
 
   it("rejects an empty or missing cart", () => {

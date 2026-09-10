@@ -218,7 +218,7 @@ export interface InventoryObservationStore {
  *    price would let the caller mint money (validation.ts header).
  *
  * The catalog port has NO Postgres adapter in this review and that is a
- * DECLARED limit, not an oversight: `PlaceStoreOrderRequest.store_public_id`
+ * DECLARED limit, not an oversight: `PlaceStoreOrderRequest.store_slug`
  * is a `WS-##########` store ref, while services/marketplace identifies a
  * store by `store_slug`/`store_id` and publishes no public store ref
  * (`StoreResource.owner_public_id` is the OWNER, a different subject). Until
@@ -227,7 +227,7 @@ export interface InventoryObservationStore {
  * ORD-/WS- bridge in RISK-0034, refused rather than faked.
  * ════════════════════════════════════════════════════════════════════════ */
 
-import type { StoreOrderCancelReasonCode, WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreOrderCancelReasonCode, StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 import type { DeliveryTask, StoreOrder } from "./domain/model.js";
 import type { DeliveryDomainEvent } from "./domain/events.js";
 import type { IdempotentRoute } from "./domain/idempotency.js";
@@ -371,13 +371,24 @@ export interface ReadinessProbePort {
 
 export interface StoreOrderCatalogPort {
   /**
-   * Resolve the store behind a `WS-` ref. Returns null when unknown; throws
-   * a `DELIVERY_MARKETPLACE_UNAVAILABLE` DeliveryError when the boundary
-   * cannot be reached — the difference between "no such store" (404-class)
-   * and "we don't know" (503-class) must survive the port.
+   * Resolve the store behind its published slug. Returns null when unknown;
+   * throws a `DELIVERY_MARKETPLACE_UNAVAILABLE` DeliveryError when the
+   * boundary cannot be reached — the difference between "no such store"
+   * (404-class) and "we don't know" (503-class) must survive the port.
+   *
+   * Review 8/N: the parameter is a `StoreSlug`, not a `WaslaPublicId`. The old
+   * signature asked marketplace for an identity marketplace never published,
+   * which is why no adapter could exist (ADR-026 §4.9-2 → §4.11).
    */
-  getStoreByPublicId(storePublicId: WaslaPublicId): Promise<{ storeId: string; orderable: boolean } | null>;
-  /** Price snapshots for the requested products, in the requested store. */
+  getStoreBySlug(storeSlug: StoreSlug): Promise<{ storeId: string; orderable: boolean } | null>;
+  /**
+   * Price snapshots for the requested products, in the requested store.
+   *
+   * A product the store does not sell, or one not orderable right now, is
+   * ABSENT from the result rather than reported with a price: the domain then
+   * refuses the line by its own rule (`validateCatalogSnapshot`) instead of
+   * this port inventing a refusal reason it has no vocabulary for.
+   */
   getProductSnapshots(
     storeId: string,
     productIds: readonly string[],

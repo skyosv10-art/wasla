@@ -1,5 +1,14 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-10 · M5-13 · المراجعةُ 10/N — حجزُ وخصمُ المخزونِ عندَ وضعِ الطلبِ · `CLM-0129`
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-inventory-reservation` · **Claim:** `CLM-0129` (`@uxxxu (agent:perplexity-computer)` · 2026-09-10 → ينتهي 2026-09-24 · Active) · **Scope:** `services/marketplace/`,`packages/contracts/marketplace/`,`services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`pnpm-lock.yaml`,`.github/workflows/`,`.gitlab-ci.yml`,`docs/04-api/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`
+
+**ماذا سيتم إنجاز:** رفعُ تأجيلِ ADR-026 §2.3 و§4.8 — مسارُ الحجزِ الفعليُّ (طلبُ الحجزِ · التسويةُ · الاسترجاعُ عندَ الإلغاءِ). حجزُ الكميّةِ ملكُ السوقِ: يُضافُ مسارُ حجزٍ إلى خدمةِ السوقِ يخصمُ من `quantity_on_hand` بحدثِ `marketplace.inventory_adjusted`، ويُطلقُهُ التوصيلُ عندَ الإلغاءِ. والتوصيلُ يخزّنُ مرجعَ الحجزِ لكلِّ طلبٍ ويتحقّقُ منهُ عندَ التأكيدِ (§3.1: `placed → confirmed` يتطلّبُ `payment_state=authorized` **و** `inventory_reservation=reserved`).
+
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 10/N قيد التنفيذ).
+
+
 ## 2026-09-10 · M5-13 · إقفال دورة §8.1 — `CLM-0128` · PR #102 مُدمج
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-payment-mirror-exit-gate` · **Claim:** `CLM-0128` → **Released**

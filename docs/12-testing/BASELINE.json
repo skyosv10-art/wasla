@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T23:05:14Z",
+  "generated_at": "2026-09-10T23:23:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "798416e20d8be85d9fbe335a5de1798b1e8eca2c",
+    "commit": "afb55622790037ae5758f37ab04246a3ccbf188b",
     "branch": "feat/m5-13-inventory-consumed",
     "dirty": false,
     "dirty_files": 0,
@@ -34,9 +34,9 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-combined.log",
-    "tests_passed": null,
-    "test_files_executed": null,
+    "source": "/tmp/test-clean.log",
+    "tests_passed": 4184,
+    "test_files_executed": 255,
     "governance_suite_cases": 182,
     "governance_suite_failed": 1,
     "verify_overall": "failed"

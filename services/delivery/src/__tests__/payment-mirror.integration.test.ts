@@ -178,7 +178,7 @@ describe.skipIf(!PG_ENABLED)("مرآةُ الدفعِ والتأكيدُ — Pos
       "payment:authorized",
       "fulfillment:confirmed",
     ]);
-    expect(ledger.rows[2].reason_code).toBe("PAYMENT_AUTHORIZED");
+    expect(ledger.rows[3].reason_code).toBe("PAYMENT_AUTHORIZED");
   });
 
   it("تأكيدٌ ومرآةٌ في pending يُرفَضُ ولا يكتبُ شيئاً", async () => {

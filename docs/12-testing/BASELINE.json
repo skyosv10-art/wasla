@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T22:59:22Z",
+  "generated_at": "2026-09-10T23:05:14Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ee8cc823b54b8c37197e7e8187ee791b43806c7a",
+    "commit": "798416e20d8be85d9fbe335a5de1798b1e8eca2c",
     "branch": "feat/m5-13-inventory-consumed",
-    "dirty": true,
-    "dirty_files": 20,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1647
+    "tracked_files": 1651
   },
   "env": {
     "node": "v20.20.1",
@@ -35,11 +35,11 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify-combined.log",
-    "tests_passed": 4167,
-    "test_files_executed": 253,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": 182,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:1d8021841378f77d1b5efa0041090a8eba547a5cbf6187f8808c06a8393bab52",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

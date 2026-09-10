@@ -69,6 +69,7 @@ import type { Pool, PoolClient } from "pg";
 import { DeliveryError } from "../domain/errors.js";
 import type { DeliveryDomainEvent } from "../domain/events.js";
 import type { DeliveryTask, StoreOrder, StoreOrderItem } from "../domain/model.js";
+import { toStoreOrderResponse } from "../http/mappers.js";
 import type {
   CancelOrderOutcome,
   CancellationWrite,
@@ -443,6 +444,16 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
       );
       await appendOutbox(client, write.events, write.traceId ?? null);
       const order = await readOrderAfterWrite(client, write.orderId);
+      // Update any stored placement idempotency response so a retry replays
+      // the post-reservation order, not the pre-reservation snapshot (the
+      // mirror bumped the version; a replay returning the old version would
+      // falsely report a stale order).
+      await client.query(
+        `UPDATE delivery_idempotency_keys
+            SET response_body = $2
+          WHERE response_body->>'order_id' = $1`,
+        [write.orderId, JSON.stringify(toStoreOrderResponse(order))],
+      );
       return { kind: "applied", order };
     });
   }

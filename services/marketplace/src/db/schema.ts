@@ -456,11 +456,11 @@ export const inventoryAdjustments = pgTable(
     check("inventory_adjustments_quantity_after_check", sql`${table.quantityAfter} >= 0`),
     check(
       "inventory_adjustments_reason_code_check",
-      sql`${table.reasonCode} IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed')`,
+      sql`${table.reasonCode} IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed', 'reservation', 'reservation_release')`,
     ),
     check(
       "inventory_adjustments_actor_public_id_check",
-      sql`${table.actorPublicId} ~ '^WS-[0-9]{10}$'`,
+      sql`${table.actorPublicId} ~ '^WS-[0-9]{10}$' OR ${table.actorPublicId} ~ '^system:[a-z_]+$'`,
     ),
     check(
       "inventory_adjustments_adjustment_sequence_check",

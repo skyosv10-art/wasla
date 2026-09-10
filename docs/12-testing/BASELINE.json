@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T19:55:19Z",
+  "generated_at": "2026-09-10T20:38:56Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "57085765d56ab1a4215e0566fa335d79669bfe55",
+    "commit": "f87f9317d6ad3280b3704a95d1840a6c3ea321c7",
     "branch": "feat/m5-13-inventory-reservation",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "dirty": true,
+    "dirty_files": 5,
+    "dirty_reason": "review 10/N: fix actorPublicId validation + idempotency body update",
     "tracked_files": 1647
   },
   "env": {
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-combined.log",
-    "tests_passed": 583,
-    "test_files_executed": 32,
-    "governance_suite_cases": 13,
+    "source": "/tmp/verify-full2.log",
+    "tests_passed": 4167,
+    "test_files_executed": 253,
+    "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

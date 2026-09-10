@@ -19,6 +19,7 @@
 import { DeliveryError } from "../domain/errors.js";
 import type { DeliveryDomainEvent } from "../domain/events.js";
 import type { DeliveryTask, StoreOrder } from "../domain/model.js";
+import { toStoreOrderResponse } from "../http/mappers.js";
 import type {
   CancelOrderOutcome,
   CancellationWrite,
@@ -154,6 +155,9 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
     };
     this.orders.set(mirrored.publicId, mirrored);
     this.outbox.push(...write.events);
+    // Update any existing placement idempotency response so a replay returns
+    // the post-reservation order, not the pre-reservation snapshot.
+    this.updateIdempotencyResponseBody(mirrored);
     return { kind: "applied", order: mirrored };
   }
 
@@ -215,6 +219,17 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
       // pass by mutating the object the route also holds a reference to.
       body: JSON.parse(JSON.stringify(intent.buildResponseBody(order))),
     });
+  }
+
+  /** Update the body of any stored idempotency response for this order, so a
+   *  replay returns the post-mirror state rather than the pre-mirror snapshot. */
+  private updateIdempotencyResponseBody(order: StoreOrder): void {
+    for (const [key, stored] of this.idempotencyKeys) {
+      const body = stored.body as Record<string, unknown> | null;
+      if (body !== null && typeof body === "object" && body.order_id === order.orderId) {
+        this.idempotencyKeys.set(key, { ...stored, body: JSON.parse(JSON.stringify(toStoreOrderResponse(order))) });
+      }
+    }
   }
 }
 

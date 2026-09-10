@@ -66,6 +66,7 @@ import type {
   InventoryReservationStore,
   PlacementWrite,
   StoreOrderCatalogPort,
+  StoreOrderReadPort,
   StoreOrderWritePort,
 } from "../ports.js";
 
@@ -80,6 +81,7 @@ export type PlaceStoreOrderResult =
 
 export interface PlaceStoreOrderDeps {
   readonly catalogPort: StoreOrderCatalogPort;
+  readonly readPort: StoreOrderReadPort;
   readonly writePort: StoreOrderWritePort;
   readonly reservationPort: InventoryReservationPort;
   readonly reservationStore: InventoryReservationStore;
@@ -142,15 +144,32 @@ export async function placeStoreOrder(
   };
 
   const outcome = await deps.writePort.placeOrder(write);
-  if (outcome.kind === "replayed") return outcome;
+  if (outcome.kind === "replayed") {
+    const storedOrder = await deps.readPort.getOrderByPublicId(publicId);
+    if (storedOrder && storedOrder.inventoryState === "none") {
+      return await completeReservation(deps, storedOrder, occurredAt, traceId);
+    }
+    return outcome;
+  }
 
-  // ── Inventory reservation (review 10/N, ADR-026 §2.3) ──────────────
-  // The order is placed; now reserve inventory at the marketplace. The
-  // reservation is OUTSIDE the placement transaction: the marketplace owns
-  // the inventory data, and the idempotency key (derived from orderPublicId)
-  // makes a retry complete the same reservation rather than create a duplicate.
-  // On failure, the order remains in `placed` with inventory_state=none —
-  // the caller retries the whole placement with the same Idempotency-Key.
+  return await completeReservation(deps, order, occurredAt, traceId);
+}
+
+/**
+ * Complete the inventory reservation for an order that was placed but not yet
+ * reserved. Called both on first placement and on idempotent replay when the
+ * first attempt failed before `mirrorInventoryState`.
+ *
+ * The marketplace's idempotency key (derived from `orderPublicId`) ensures a
+ * duplicate reserve call is a no-op — it returns the same `reservation_ref`,
+ * not a second deduction.
+ */
+async function completeReservation(
+  deps: PlaceStoreOrderDeps,
+  order: StoreOrder,
+  occurredAt: string,
+  traceId: string | null,
+): Promise<PlaceStoreOrderResult> {
   const reservationResult = await deps.reservationPort.reserve(
     buildReservationCommand(order),
   );
@@ -162,7 +181,6 @@ export async function placeStoreOrder(
     );
   }
 
-  // Persist the reservation records in delivery's own table
   const reservations = order.items.map((item) => ({
     reservationId: deps.newUuid(),
     orderId: order.orderId,
@@ -174,13 +192,13 @@ export async function placeStoreOrder(
     marketplaceReservationRef: reservationResult.reservationRef,
     status: "active" as const,
     reservedAt: occurredAt,
+    traceId,
   }));
   await deps.reservationStore.saveReservations(order.orderId, reservations);
 
-  // Mirror the inventory state to the order
-  await deps.writePort.mirrorInventoryState({
+  const mirrored = await deps.writePort.mirrorInventoryState({
     orderId: order.orderId,
-    expectedVersion: 1,
+    expectedVersion: order.version,
     fromInventoryState: "none",
     toInventoryState: "reserved",
     inventoryRef: reservationResult.reservationRef,
@@ -193,5 +211,5 @@ export async function placeStoreOrder(
     traceId,
   });
 
-  return { kind: "applied", order };
+  return { kind: "applied", order: mirrored.order };
 }

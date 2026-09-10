@@ -139,7 +139,14 @@ export async function cancelStoreOrder(
     // The release is idempotent: a second call for the same reservation is a
     // no-op. If the release fails, the order is still cancelled — the
     // reservation will expire at the marketplace or be reconciled later.
-    if (order.inventoryState === "reserved" && deps.reservationPort && deps.reservationStore) {
+    if (order.inventoryState === "reserved") {
+      if (!deps.reservationPort || !deps.reservationStore) {
+        throw new DeliveryError(
+          "DELIVERY_MARKETPLACE_UNAVAILABLE",
+          "لا منفذَ حجزِ مخزونٍ مُركَّبٌ — الإفراجُ عن الحجزِ لا يُتخطّى (ADR-026 §2.3 · المراجعةُ 10/N)",
+          { traceId: traceId ?? undefined },
+        );
+      }
       const reservations = await deps.reservationStore.loadActiveReservations(order.orderId);
       if (reservations.length > 0) {
         const first = reservations[0];

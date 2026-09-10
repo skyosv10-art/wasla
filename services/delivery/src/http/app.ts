@@ -210,7 +210,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       buildResponseBody: (written) => toStoreOrderResponse(written),
     };
     const result = await placeStoreOrder(
-      { catalogPort: deps.catalogPort, writePort: deps.writePort, reservationPort: deps.reservationPort, reservationStore: deps.reservationStore, newUuid, now },
+      { catalogPort: deps.catalogPort, readPort: deps.readPort, writePort: deps.writePort, reservationPort: deps.reservationPort, reservationStore: deps.reservationStore, newUuid, now },
       input,
       traceId,
       idempotency,

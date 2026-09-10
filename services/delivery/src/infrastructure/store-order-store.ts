@@ -461,7 +461,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
           [
             r.reservationId, r.orderId, r.storeSlug, r.productId, r.sku,
             r.quantityReserved, r.unitPriceMinorUnits,
-            r.marketplaceReservationRef, r.reservedAt,
+            r.marketplaceReservationRef, r.traceId,
           ],
         );
       }
@@ -472,7 +472,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
     const { rows } = await this.pool.query(
       `SELECT reservation_id, order_id, store_slug, product_id, sku,
               quantity_reserved, unit_price_minor_units,
-              marketplace_reservation_ref, status, reserved_at
+              marketplace_reservation_ref, status, reserved_at, trace_id
          FROM delivery_inventory_reservations
         WHERE order_id = $1 AND status = 'active'
         ORDER BY reserved_at`,
@@ -489,6 +489,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
       marketplaceReservationRef: r.marketplace_reservation_ref,
       status: r.status as "active" | "released" | "consumed",
       reservedAt: r.reserved_at,
+      traceId: r.trace_id,
     }));
   }
 

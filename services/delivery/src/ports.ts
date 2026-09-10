@@ -552,4 +552,5 @@ export interface ReservationRecord {
   readonly marketplaceReservationRef: string;
   readonly status: "active" | "released" | "consumed";
   readonly reservedAt: string;
+  readonly traceId: string | null;
 }

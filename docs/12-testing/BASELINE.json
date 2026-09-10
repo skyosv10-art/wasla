@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T21:00:00Z",
+  "generated_at": "2026-09-10T19:31:26Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "pending",
+    "commit": "b6e4f3a22d428ca19df1f8ca1af5dac6fc9da05f",
     "branch": "feat/m5-13-inventory-reservation",
     "dirty": true,
-    "dirty_files": 25,
-    "dirty_reason": "المراجعةُ 10/N (CLM-0129): حجزُ وخصمُ المخزونِ عندَ وضعِ الطلبِ — أحداثٌ جديدةٌ (store_order.inventory_reserved/released) وأعمدةُ مخزونٍ على store_orders وجدولُ delivery_inventory_reservations جديدٌ ومنافذُ حجزٍ في delivery و http و ports ومنطقُ حجزٍ في domain واختباراتٌ محدَّثة.",
-    "tracked_files": 1640
+    "dirty_files": 7,
+    "dirty_reason": "",
+    "tracked_files": 1647
   },
   "env": {
     "node": "v20.20.1",
@@ -26,21 +26,21 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 313,
+    "test_files_tracked": 317,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
     "risks_not_closed": 24
   },
   "dynamic": {
-    "measured": true,
-    "source": "/tmp/verify.log",
-    "tests_passed": 4136,
-    "test_files_executed": 250,
-    "governance_suite_cases": 182,
-    "governance_suite_failed": 0,
-    "verify_overall": "pending"
+    "measured": false,
+    "source": null,
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:5a91d2ce83a7536805941cf63dbd18d89373c5ea78aba969a6fc703ff098763f",
+  "fingerprint": "sha256:6ec4f84697cde2cc3685f35d099395bae0d0d27306dde07a9a712d0de798d5f4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

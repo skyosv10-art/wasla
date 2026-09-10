@@ -201,8 +201,8 @@ describe.skipIf(!PG_ENABLED)("مسارُ الحجزِ والإفراجِ فوق 
       headers,
       payload,
     });
-    // الإعادةُ تُعيد 200 بالجوابِ المحفوظ
-    expect(second.statusCode).toBe(200);
+    // الإعادةُ تُعيد نفسَ الجوابِ المحفوظِ بحالته (201)
+    expect(second.statusCode).toBe(201);
     expect(second.json()).toEqual(first.json());
 
     // لم يُكتب صفٌّ ثانٍ

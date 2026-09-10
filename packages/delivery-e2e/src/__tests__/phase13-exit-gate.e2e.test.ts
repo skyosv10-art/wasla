@@ -248,6 +248,12 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
         reason_code: "CART_CONFIRMED",
       },
       {
+        state_kind: "inventory",
+        from_state: "none",
+        to_state: "reserved",
+        reason_code: "INVENTORY_RESERVED",
+      },
+      {
         state_kind: "payment",
         from_state: "pending",
         to_state: "authorized",

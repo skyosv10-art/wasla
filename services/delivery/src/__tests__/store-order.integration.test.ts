@@ -116,7 +116,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
 
     const ledger = await pool.query(
       `SELECT from_state, to_state, reason_code, actor_type
-         FROM store_order_transitions WHERE order_id = $1`,
+         FROM store_order_transitions WHERE order_id = $1 AND state_kind = 'fulfillment'`,
       [order.orderId],
     );
     expect(ledger.rows).toEqual([
@@ -132,6 +132,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     expect(outbox.rows.map((r) => r.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
     ]);
     expect(outbox.rows.every((r) => r.trace_id === "trace-1")).toBe(true);
   });
@@ -152,18 +153,18 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     const cancelled = await applyCancellation(deps(), placed.publicId, "CUSTOMER_CHANGED_MIND", "trace-2");
 
     expect(cancelled.fulfillmentState).toBe("cancelled");
-    expect(cancelled.version).toBe(2);
+    expect(cancelled.version).toBe(3);
 
     const row = await pool.query(
       `SELECT cancelled_at, version FROM store_orders WHERE public_id = $1`,
       [placed.publicId],
     );
     expect(row.rows[0].cancelled_at).not.toBeNull();
-    expect(Number(row.rows[0].version)).toBe(2);
+    expect(Number(row.rows[0].version)).toBe(3);
 
     const ledger = await pool.query(
       `SELECT to_state, reason_code FROM store_order_transitions
-        WHERE order_id = $1 ORDER BY transition_id`,
+        WHERE order_id = $1 AND state_kind = 'fulfillment' ORDER BY transition_id`,
       [placed.orderId],
     );
     expect(ledger.rows.map((r) => r.to_state)).toEqual(["placed", "cancelled"]);
@@ -178,6 +179,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     expect(outbox.rows.map((r) => r.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
       "store_order.fulfillment_state_changed",
     ]);
   });

@@ -170,9 +170,11 @@ describe.skipIf(!PG_ENABLED)("مرآةُ الدفعِ والتأكيدُ — Pos
         WHERE order_id = $1 ORDER BY occurred_at, transition_id`,
       [order.orderId],
     );
-    // ثلاثةُ صفوفٍ: الإنشاءُ (draft → placed) ثمّ المرآةُ ثمّ التأكيدُ.
+    // أربعةُ صفوفٍ: الإنشاءُ (draft → placed) ثمّ حجزُ المخزونِ (none → reserved)
+    // ثمّ مرآةُ الدفعِ (pending → authorized) ثمّ التأكيدُ (placed → confirmed).
     expect(ledger.rows.map((r) => `${String(r.state_kind)}:${String(r.to_state)}`)).toEqual([
       "fulfillment:placed",
+      "inventory:reserved",
       "payment:authorized",
       "fulfillment:confirmed",
     ]);

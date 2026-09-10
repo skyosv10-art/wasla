@@ -93,10 +93,12 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
 
     const orders = await pool.query(`SELECT count(*)::int AS n FROM store_orders`);
     expect(orders.rows[0].n).toBe(1);
-    // And nothing was emitted twice — a duplicated outbox row is a duplicated
+    // Three outbox rows: store_order.created, delivery.task_created, and
+    // store_order.inventory_reserved (the reservation mirror appends one).
+    // Nothing was emitted twice — a duplicated outbox row is a duplicated
     // downstream side effect.
     const outbox = await pool.query(`SELECT count(*)::int AS n FROM delivery_outbox`);
-    expect(outbox.rows[0].n).toBe(2);
+    expect(outbox.rows[0].n).toBe(3);
 
     await app.close();
   });

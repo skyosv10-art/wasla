@@ -10,14 +10,10 @@ import { describe, expect, it } from "vitest";
 
 import { buildDeliveryHttpApp } from "../http/app.js";
 import {
-  CUSTOMER_REF,
   FakeCatalog,
-  FakeReadinessProbe,
   FakeReservationPort,
   FakeReservationStore,
   FakeStoreOrderStore,
-  PRODUCT_A,
-  STORE_SLUG,
   fixedOrder,
   uuidSequence,
 } from "./store-order-fakes.js";

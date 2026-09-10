@@ -195,6 +195,13 @@ export type {
 } from "./infrastructure/http-marketplace-catalog.js";
 export { assertStoreSlug, isValidStoreSlug } from "./domain/validation.js";
 
+/* ── review 10/N: محوّلُ حجزِ المخزونِ عبرَ السوقِ (ADR-026 §2.3) ── */
+export {
+  DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
+  HttpMarketplaceReservationPort,
+} from "./infrastructure/http-marketplace-reservation.js";
+export type { HttpMarketplaceReservationOptions } from "./infrastructure/http-marketplace-reservation.js";
+
 /* ── review 9/N: مرآةُ الدفعِ والتأكيدُ ثمّ بوّابةُ خروجِ الطورِ 13 (§2.2 · §3.2) ── */
 export { decidePaymentMirror } from "./domain/payment-mirror.js";
 export type { PaymentMirrorDecision, PaymentMirrorInput } from "./domain/payment-mirror.js";

@@ -19,7 +19,7 @@ import type { Pool } from "pg";
 
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
-import { CUSTOMER_REF, FakeCatalog, PRODUCT_A, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
+import { CUSTOMER_REF, FakeCatalog, FakeReservationPort, FakeReservationStore, PRODUCT_A, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
 import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
@@ -52,6 +52,8 @@ describe.skipIf(!PG_ENABLED)("مرآةُ الدفعِ والتأكيدُ — Pos
     catalogPort: new FakeCatalog(),
     writePort: store,
     readPort: store,
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(`${Math.floor(Math.random() * 0xfffffff).toString(16).padStart(8, "0")}`),
     now: () => NOW,
   });
@@ -168,13 +170,15 @@ describe.skipIf(!PG_ENABLED)("مرآةُ الدفعِ والتأكيدُ — Pos
         WHERE order_id = $1 ORDER BY occurred_at, transition_id`,
       [order.orderId],
     );
-    // ثلاثةُ صفوفٍ: الإنشاءُ (draft → placed) ثمّ المرآةُ ثمّ التأكيدُ.
+    // أربعةُ صفوفٍ: الإنشاءُ (draft → placed) ثمّ حجزُ المخزونِ (none → reserved)
+    // ثمّ مرآةُ الدفعِ (pending → authorized) ثمّ التأكيدُ (placed → confirmed).
     expect(ledger.rows.map((r) => `${String(r.state_kind)}:${String(r.to_state)}`)).toEqual([
       "fulfillment:placed",
+      "inventory:reserved",
       "payment:authorized",
       "fulfillment:confirmed",
     ]);
-    expect(ledger.rows[2].reason_code).toBe("PAYMENT_AUTHORIZED");
+    expect(ledger.rows[3].reason_code).toBe("PAYMENT_AUTHORIZED");
   });
 
   it("تأكيدٌ ومرآةٌ في pending يُرفَضُ ولا يكتبُ شيئاً", async () => {

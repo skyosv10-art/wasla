@@ -61,6 +61,13 @@ CREATE TABLE IF NOT EXISTS store_orders (
                                      'refunding','partially_refunded','refunded')),
     payment_ref        TEXT        CHECK (payment_ref IS NULL OR char_length(payment_ref) BETWEEN 1 AND 128),
 
+    -- الحالةُ المتعامدةُ الثالثة: المخزونُ (مرآةُ حجزٍ في السوقِ · ADR-026 §2.3 · §3.1)
+    -- placed → confirmed يتطلّبُ payment_state=authorized **و** inventory_state=reserved.
+    -- الحجزُ طلبٌ يُرسَلُ إلى السوقِ عبرَ الحدِّ، والمرجعُ يُخزَّنُ هنا.
+    inventory_state    TEXT        NOT NULL DEFAULT 'none' CHECK (inventory_state IN (
+                                     'none','reserving','reserved','released','consumed')),
+    inventory_ref      TEXT        CHECK (inventory_ref IS NULL OR char_length(inventory_ref) BETWEEN 1 AND 128),
+
     -- المالُ لقطةُ طلبٍ بأصغرِ وحدةٍ (هللة) وعملةٍ واحدةٍ (ADR-026 §2.6)
     currency_code      TEXT        NOT NULL CHECK (currency_code = 'SAR'),
     items_total_minor_units    INTEGER NOT NULL CHECK (items_total_minor_units >= 0),
@@ -126,7 +133,7 @@ CREATE INDEX IF NOT EXISTS ix_store_order_items_order
 CREATE TABLE IF NOT EXISTS store_order_transitions (
     transition_id      BIGSERIAL   PRIMARY KEY,
     order_id           UUID        NOT NULL REFERENCES store_orders (order_id),
-    state_kind         TEXT        NOT NULL CHECK (state_kind IN ('fulfillment','payment')),
+    state_kind         TEXT        NOT NULL CHECK (state_kind IN ('fulfillment','payment','inventory')),
     from_state         TEXT        NOT NULL,
     to_state           TEXT        NOT NULL CHECK (to_state <> from_state),
     reason_code        TEXT        NOT NULL CHECK (char_length(reason_code) BETWEEN 3 AND 64),
@@ -355,5 +362,43 @@ CREATE TABLE IF NOT EXISTS delivery_idempotency_keys (
     trace_id            TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+COMMIT;
+
+-- ───────────────────────────────────────────────────
+-- 13) delivery_inventory_reservations — سجلُ حجوزاتِ المخزونِ (ADR-026 §2.3)
+--     كلُّ صفٍّ حجزُ كميةٍ لصنفٍ واحدٍ لطلبٍ واحدٍ. الحجزُ طلبٌ إلى السوقِ عبرَ
+--     الحدِّ المتَّفقِ عليهِ (POST /stores/:storeSlug/inventory/reserve)،
+--     والتحريرُ عكسُهُ (POST /stores/:storeSlug/inventory/release).
+--     التوصيلُ يخزِّنُ المرجعَ والكميّةَ المسؤولَ عنها، لا يملكُ الرصيدَ.
+-- ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_inventory_reservations (
+    reservation_id     UUID        PRIMARY KEY,
+    order_id           UUID        NOT NULL REFERENCES store_orders (order_id),
+    store_slug         TEXT        NOT NULL CHECK (store_slug ~ '^[a-z][a-z0-9-]{2,47}$'),
+    product_id         UUID        NOT NULL,
+    sku                TEXT        NOT NULL CHECK (char_length(sku) BETWEEN 1 AND 64),
+    quantity_reserved  INTEGER     NOT NULL CHECK (quantity_reserved >= 1),
+    unit_price_minor_units  INTEGER NOT NULL CHECK (unit_price_minor_units >= 0),
+
+    -- مرجعُ الحجزِ في السوقِ (idempotency key مشتقٌّ من order_public_id)
+    marketplace_reservation_ref TEXT NOT NULL CHECK (char_length(marketplace_reservation_ref) BETWEEN 1 AND 128),
+
+    status             TEXT        NOT NULL DEFAULT 'active' CHECK (status IN (
+                                     'active','released','consumed')),
+    reserved_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    released_at        TIMESTAMPTZ,
+    trace_id           TEXT,
+
+    UNIQUE (order_id, product_id) DEFERRABLE INITIALLY DEFERRED,
+    UNIQUE (marketplace_reservation_ref)
+);
+
+CREATE INDEX IF NOT EXISTS ix_delivery_inventory_reservations_order
+    ON delivery_inventory_reservations (order_id);
+
+CREATE INDEX IF NOT EXISTS ix_delivery_inventory_reservations_active
+    ON delivery_inventory_reservations (store_slug, product_id)
+    WHERE status = 'active';
 
 COMMIT;

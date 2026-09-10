@@ -3,7 +3,7 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-10T17:26:21Z",
+  "measured_at": "2026-09-10T21:00:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
   "evidence_dir": "docs/12-testing/ci-evidence/2026-09-10T172610Z-m5-13-exit-gate-required-check",
   "protection": {

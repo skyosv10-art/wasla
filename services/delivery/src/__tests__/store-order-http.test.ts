@@ -16,6 +16,8 @@ import {
   CUSTOMER_REF,
   FakeCatalog,
   FakeReadinessProbe,
+  FakeReservationPort,
+  FakeReservationStore,
   FakeStoreOrderStore,
   PRODUCT_A,
   PRODUCT_B,
@@ -49,6 +51,8 @@ function buildApp(options: { store?: FakeStoreOrderStore; catalog?: FakeCatalog 
     readPort: store,
     writePort: store,
     catalogPort: catalog,
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(),
     now: () => NOW,
   });
@@ -77,6 +81,8 @@ describe("delivery HTTP — liveness", () => {
         findIdempotentResponse: async () => null,
       },
       writePort: new FakeStoreOrderStore(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => NOW,
     });
@@ -95,6 +101,8 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
       writePort: store,
       catalogPort: new FakeCatalog(),
       readinessPort: new FakeReadinessProbe([{ name: "database", ok: true }]),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => NOW,
     });
@@ -116,6 +124,8 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
       readPort: store,
       writePort: store,
       readinessPort: new FakeReadinessProbe([{ name: "database", ok: false, detail: "unreachable" }]),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => NOW,
     });
@@ -300,6 +310,7 @@ describe("delivery HTTP — placement", () => {
     expect(store.outbox.map((e) => e.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
     ]);
     await app.close();
   });
@@ -595,6 +606,8 @@ describe("delivery HTTP — the error contract itself", () => {
         findIdempotentResponse: async () => null,
       },
       writePort: new FakeStoreOrderStore(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => NOW,
     });
@@ -614,6 +627,8 @@ describe("delivery HTTP — the error contract itself", () => {
         findIdempotentResponse: async () => null,
       },
       writePort: new FakeStoreOrderStore(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => NOW,
     });

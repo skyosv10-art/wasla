@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T17:26:55Z",
+  "generated_at": "2026-09-10T20:38:56Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "063db5d89e75356948edfa75c621bff9e76e1898",
-    "branch": "feat/m5-13-payment-mirror-exit-gate",
+    "commit": "f87f9317d6ad3280b3704a95d1840a6c3ea321c7",
+    "branch": "feat/m5-13-inventory-reservation",
     "dirty": true,
-    "dirty_files": 39,
-    "dirty_reason": "المراجعةُ 9/N (CLM-0128): مرآةُ الدفعِ والتأكيدُ وحزمةُ بوّابةِ خروجِ الطورِ 13 — ثلاثةُ ملفّاتِ اختبارٍ جديدةٍ (payment-mirror وحدةً وتكامُلاً + بوّابةُ delivery-e2e) وحزمةٌ جديدةٌ (@wasla/delivery-e2e) وساقٌ جديدةٌ في مصفوفةِ exit-gate-e2e وبصمةُ قفلٍ جديدةٌ لتبعيّاتِ الحزمةِ.",
-    "tracked_files": 1640
+    "dirty_files": 5,
+    "dirty_reason": "review 10/N: fix actorPublicId validation + idempotency body update",
+    "tracked_files": 1647
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 313,
+    "test_files_tracked": 317,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify.log",
-    "tests_passed": 4136,
-    "test_files_executed": 250,
-    "governance_suite_cases": 182,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "source": "/tmp/verify-full2.log",
+    "tests_passed": 4167,
+    "test_files_executed": 253,
+    "governance_suite_cases": 183,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
-  "fingerprint": "sha256:5a91d2ce83a7536805941cf63dbd18d89373c5ea78aba969a6fc703ff098763f",
+  "fingerprint": "sha256:6ec4f84697cde2cc3685f35d099395bae0d0d27306dde07a9a712d0de798d5f4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -56,6 +56,10 @@ export type ProductReviewResource = components["schemas"]["ProductReviewResource
 export type AdjustInventoryRequest = components["schemas"]["AdjustInventoryRequest"];
 export type InventoryAdjustmentResource = components["schemas"]["InventoryAdjustmentResource"];
 export type InventoryReadResponse = components["schemas"]["InventoryReadResponse"];
+export type ReservationItem = components["schemas"]["ReservationItem"];
+export type ReservationRequest = components["schemas"]["ReservationRequest"];
+export type ReservationResultItem = components["schemas"]["ReservationResultItem"];
+export type ReservationResponse = components["schemas"]["ReservationResponse"];
 export type HealthResponse = components["schemas"]["HealthResponse"];
 export type ErrorResponse = components["schemas"]["ErrorResponse"];
 
@@ -73,7 +77,7 @@ import type {
   StoreState,
 } from "./events-types.js";
 
-/** أربعةٌ وعشرون رمزاً في خمسةِ أصناف؛ مُقفلةٌ ومطابقةٌ لجدولِ `errors.md` سطراً بسطر. */
+/** خمسةٌ وعشرون رمزاً في خمسةِ أصناف؛ مُقفلةٌ ومطابقةٌ لجدولِ `errors.md` سطراً بسطر. */
 export const MARKETPLACE_ERROR_CODES = [
   "MARKETPLACE_VALIDATION_FAILED",
   "MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED",
@@ -97,6 +101,7 @@ export const MARKETPLACE_ERROR_CODES = [
   "PRODUCT_CATEGORY_NOT_LEAF",
   "STORE_OWNER_ROLE_IMMUTABLE",
   "INVENTORY_INSUFFICIENT_QUANTITY",
+  "INVENTORY_RESERVATION_CONFLICT",
   "STORE_REJECTION_REASON_REQUIRED",
   "MARKETPLACE_UNAVAILABLE",
 ] as const;
@@ -151,6 +156,7 @@ export const MARKETPLACE_ERROR_CODE_CLASS: Record<MarketplaceErrorCode, Marketpl
   PRODUCT_CATEGORY_NOT_LEAF: "unprocessable",
   STORE_OWNER_ROLE_IMMUTABLE: "unprocessable",
   INVENTORY_INSUFFICIENT_QUANTITY: "unprocessable",
+  INVENTORY_RESERVATION_CONFLICT: "conflict",
   STORE_REJECTION_REASON_REQUIRED: "unprocessable",
   MARKETPLACE_UNAVAILABLE: "service_unavailable",
 };
@@ -228,6 +234,8 @@ export const INVENTORY_REASON_CODES: readonly InventoryReasonCode[] = [
   "correction",
   "shrinkage",
   "archive_zeroed",
+  "reservation",
+  "reservation_release",
 ] as const;
 
 /** مطابقة لقيد `role` في `store_staff`. */
@@ -349,6 +357,8 @@ export const MARKETPLACE_API_PATHS = [
   "/stores",
   "/stores/{storeSlug}",
   "/stores/{storeSlug}/decisions",
+  "/stores/{storeSlug}/inventory/reserve",
+  "/stores/{storeSlug}/inventory/release",
   "/stores/{storeSlug}/products",
   "/stores/{storeSlug}/review-requests",
   "/stores/{storeSlug}/reviews",
@@ -357,11 +367,11 @@ export const MARKETPLACE_API_PATHS = [
 ] as const;
 
 /**
- * خمسةَ عشرَ مساراً فريداً تحمل تسعَ عشرةَ عمليّة: `/stores` و`/stores/{storeSlug}/staff`
+ * سبعةَ عشرَ مساراً فريداً تحمل إحدى وعشرين عمليّة: `/stores` و`/stores/{storeSlug}/staff`
  * و`/stores/{storeSlug}/products` و`/products/{productId}/inventory` يحمل كلٌّ منها
  * `GET` و`POST`، و`/stores/{storeSlug}/staff/{memberPublicId}` يحمل `DELETE`.
  */
-export const MARKETPLACE_API_OPERATION_COUNT = 19;
+export const MARKETPLACE_API_OPERATION_COUNT = 21;
 
 /** لا `502`: انظر §القاعدة في `services/marketplace/contracts/errors.md`. */
 export const MARKETPLACE_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;

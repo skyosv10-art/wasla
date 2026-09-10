@@ -23,7 +23,7 @@ import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 import { buildDeliveryHttpApp } from "../http/app.js";
-import { CUSTOMER_REF, FakeCatalog, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
+import { CUSTOMER_REF, FakeCatalog, FakeReservationPort, FakeReservationStore, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
 
@@ -52,6 +52,8 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       readinessPort: new PostgresReadinessProbe(pool),
       newUuid: uuidSequence(`${Math.floor(Math.random() * 0xfffffff).toString(16).padStart(8, "0")}`),
       now: () => NOW,
@@ -91,10 +93,12 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
 
     const orders = await pool.query(`SELECT count(*)::int AS n FROM store_orders`);
     expect(orders.rows[0].n).toBe(1);
-    // And nothing was emitted twice — a duplicated outbox row is a duplicated
+    // Three outbox rows: store_order.created, delivery.task_created, and
+    // store_order.inventory_reserved (the reservation mirror appends one).
+    // Nothing was emitted twice — a duplicated outbox row is a duplicated
     // downstream side effect.
     const outbox = await pool.query(`SELECT count(*)::int AS n FROM delivery_outbox`);
-    expect(outbox.rows[0].n).toBe(2);
+    expect(outbox.rows[0].n).toBe(3);
 
     await app.close();
   });

@@ -56,7 +56,9 @@ import { resolve } from "node:path";
 
 import {
   DELIVERY_MARKETPLACE_SCOPES,
+  DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
   HttpMarketplaceCatalogPort,
+  HttpMarketplaceReservationPort,
   PostgresInventoryObservationStore,
   PostgresMarketplaceInventoryEventSource,
   PostgresReadinessProbe,
@@ -183,6 +185,20 @@ function gateSigner(): ReturnType<typeof createServiceRequestSigner> {
   });
 }
 
+/** صانعُ توقيعٍ لمنفذِ الحجزِ — نفسُ المفتاحِ ونطاقُ الحجزِ. */
+function reservationSigner(): ReturnType<typeof createServiceRequestSigner> {
+  const keys = new ServiceAuthKeyRegistry({
+    keys: [{ kid: "gate-1", secret: "phase13-exit-gate-signing-secret-000001", status: "active" }],
+    activeKid: "gate-1",
+  });
+  return createServiceRequestSigner({
+    serviceName: "delivery",
+    audience: "marketplace",
+    keys,
+    scopes: DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
+  });
+}
+
 /**
  * يرفعُ الخدمتَينِ بتركيبِهما الإنتاجيِّ على قاعدةٍ واحدةٍ.
  *
@@ -229,6 +245,13 @@ export async function startGate(): Promise<GateContext> {
       // 10s لا 2s: القاعدةُ بعيدةٌ في التطويرِ، ونداءُ السوقِ يقرأُها.
       timeoutMs: 10_000,
     }),
+    // منفذُ الحجزِ على أصلِ السوقِ الحقيقيِّ — لا يُتخطّى (§2.3).
+    reservationPort: new HttpMarketplaceReservationPort({
+      baseUrl: marketplaceBaseUrl,
+      signRequest: reservationSigner(),
+      timeoutMs: 10_000,
+    }),
+    reservationStore: store,
     now: advancingClock(),
   });
   await delivery.fastify.listen({ port: 0, host: "127.0.0.1" });

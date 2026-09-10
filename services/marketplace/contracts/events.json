@@ -408,10 +408,10 @@
             "quantity_after": { "type": "integer", "minimum": 0 },
             "reason_code": {
               "type": "string",
-              "enum": ["initial_stock", "restock", "correction", "shrinkage", "archive_zeroed"]
+              "enum": ["initial_stock", "restock", "correction", "shrinkage", "archive_zeroed", "reservation", "reservation_release"]
             },
             "adjustment_sequence": { "type": "integer", "minimum": 1 },
-            "actor_public_id": { "$ref": "#/$defs/WaslaPublicId" },
+            "actor_public_id": { "oneOf": [{ "$ref": "#/$defs/WaslaPublicId" }, { "type": "string", "pattern": "^system:[a-z_]+$" }] },
             "occurred_for": { "type": "string", "format": "date-time" }
           }
         }

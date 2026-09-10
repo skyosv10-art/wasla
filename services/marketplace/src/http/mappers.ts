@@ -26,6 +26,7 @@ import type {
   InventoryReadResponse,
   ProductResource,
   ProductReviewResource,
+  ReservationResponse,
   StoreCategory,
   StoreResource,
   StoreReviewResource,
@@ -36,6 +37,7 @@ import type {
   InventoryView,
   ProductDecisionOutcome,
   ProductView,
+  ReservationOutcome,
 } from "../app/index.js";
 import type {
   CategoryRecord,
@@ -226,5 +228,20 @@ export function toStoreCategory(
         : slugOf(categories, category.parentCategoryId),
     sort_order: category.sortOrder,
     is_active: category.isActive,
+  };
+}
+
+/** جوابُ حجزٍ أو إفراجٍ — الأصنافُ المُطبَّق عليها الفروقُ والرصيدُ بعدها. */
+export function toReservationResponse(outcome: ReservationOutcome): ReservationResponse {
+  return {
+    order_public_id: outcome.orderPublicId,
+    store_id: outcome.storeId,
+    results: outcome.results.map((result) => ({
+      product_id: result.productId,
+      quantity_delta: result.quantityDelta,
+      quantity_after: result.quantityAfter,
+      adjustment_sequence: result.adjustmentSequence,
+      reason_code: result.reasonCode,
+    })),
   };
 }

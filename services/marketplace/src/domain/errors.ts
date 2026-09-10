@@ -192,6 +192,18 @@ export function inventoryInsufficientQuantity(quantityOnHand: number): Marketpla
 }
 
 /**
+ * سحبُ حجزٍ ينزل بالكميّةِ تحت الصفر. تُعاد الكميّةُ المتاحةُ والمُعرِّفُ لأنّها ما يحتاجه
+ * الطالبُ ليُقرّر: هذا تعارضُ حالةٍ مع طلبِ شراءٍ قائم لا خطأُ إدخال (ADR-026 §2.3).
+ */
+export function inventoryReservationConflict(productId: string, availableQuantity: number): MarketplaceError {
+  return new MarketplaceError(
+    "INVENTORY_RESERVATION_CONFLICT",
+    "الكميّةُ المتاحةُ لا تكفي هذا الحجز.",
+    { product_id: productId, quantity_on_hand: availableQuantity, expected: "quantity_on_hand >= requested quantity" },
+  );
+}
+
+/**
  * لاحقةُ متجرٍ مأخوذةٌ — يُترجَم إليها انتهاكُ `ux_stores_slug_lower` لا انتهاكُ `slug` وحدَه:
  * الفهرسُ على `LOWER(slug)` بقصد، فـ`Wasla-Store` و`wasla-store` تعارضٌ واحدٌ لا اثنان.
  */

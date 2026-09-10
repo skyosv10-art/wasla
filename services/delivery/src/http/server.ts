@@ -46,7 +46,11 @@ import {
   DELIVERY_MARKETPLACE_SCOPES,
   HttpMarketplaceCatalogPort,
 } from "../infrastructure/http-marketplace-catalog.js";
-import type { StoreOrderCatalogPort } from "../ports.js";
+import {
+  DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
+  HttpMarketplaceReservationPort,
+} from "../infrastructure/http-marketplace-reservation.js";
+import type { InventoryReservationPort, StoreOrderCatalogPort } from "../ports.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = Number(process.env.PORT ?? 8097);
@@ -82,6 +86,32 @@ function buildCatalogPort(): { catalogPort?: StoreOrderCatalogPort; label: strin
   };
 }
 
+function buildReservationPort(): { reservationPort: InventoryReservationPort; label: string } {
+  const baseUrl = process.env.MARKETPLACE_SERVICE_URL;
+  if (!baseUrl) {
+    return {
+      reservationPort: {
+        reserve: () => Promise.reject(new Error("MARKETPLACE_SERVICE_URL absent")),
+        release: () => Promise.resolve({ released: true }),
+      },
+      label: "unwired (MARKETPLACE_SERVICE_URL absent)",
+    };
+  }
+
+  return {
+    reservationPort: new HttpMarketplaceReservationPort({
+      baseUrl,
+      signRequest: createServiceRequestSigner({
+        serviceName: "delivery",
+        audience: "marketplace",
+        keys: keyRegistryFromEnv(process.env),
+        scopes: DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
+      }),
+    }),
+    label: `wired → ${baseUrl}`,
+  };
+}
+
 async function main(): Promise<void> {
   if (!DATABASE_URL) {
     console.error("DATABASE_URL is required");
@@ -91,15 +121,13 @@ async function main(): Promise<void> {
   const pool = new Pool({ connectionString: DATABASE_URL });
   const store = new StoreOrderStore(pool);
   const catalog = buildCatalogPort();
+  const reservation = buildReservationPort();
   const { fastify, close } = buildDeliveryHttpApp({
     readPort: store,
     writePort: store,
-    // A REAL probe over the same pool the routes use: probing a second pool
-    // would report the health of a connection nobody serves traffic with
-    // (review 7/N · §4.10-2).
+    reservationPort: reservation.reservationPort,
+    reservationStore: store,
     readinessPort: new PostgresReadinessProbe(pool),
-    // موصولٌ متى وُجِدَ العنوانُ، وغائبٌ بلا بديلٍ متى غابَ — والجاهزيّةُ تقولُ
-    // أيَّهما هو الحالُ في `not_claimed` (المراجعةُ 8/N).
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
   });
 
@@ -107,7 +135,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label}`);
+    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label}`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

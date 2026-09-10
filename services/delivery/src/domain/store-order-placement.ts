@@ -122,6 +122,8 @@ export function buildStoreOrderPlacement(
     fulfillmentState: "placed",
     paymentState: "pending",
     paymentRef: null,
+    inventoryState: "none",
+    inventoryRef: null,
     currencyCode: "SAR",
     itemsTotalMinorUnits: itemsTotal,
     deliveryFeeMinorUnits: deliveryFee,

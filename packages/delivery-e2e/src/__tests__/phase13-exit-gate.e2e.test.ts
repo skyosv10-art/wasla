@@ -248,6 +248,12 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
         reason_code: "CART_CONFIRMED",
       },
       {
+        state_kind: "inventory",
+        from_state: "none",
+        to_state: "reserved",
+        reason_code: "INVENTORY_RESERVED",
+      },
+      {
         state_kind: "payment",
         from_state: "pending",
         to_state: "authorized",
@@ -281,13 +287,13 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
 
     const rows = await deliveryOutbox(gate.pool);
 
-    // ثلاثةُ أحداثٍ لا أكثرَ: الطلبُ، ثمّ محورُ الدفعِ، ثمّ محورُ التنفيذِ.
-    // الترتيبُ مقروءٌ لا مُفترَضٌ: الإيداعُ يكتبُ حدثَ الطلبِ وحدثَ المهمّةِ في
-    // معاملةٍ واحدةٍ، ثمَّ تأتي المرآةُ فالتأكيدُ. وأيُّ زيادةٍ صامتةٍ هنا تُسقِطُ
-    // البوّابةَ — وهوَ المطلوبُ: ناشرٌ جديدٌ يُعلَنُ في العقدِ لا يُكتشَفُ لاحقاً.
+    // أربعةُ أحداثٍ: الطلبُ + المهمّةُ + حجزُ المخزونِ (المراجعةُ 10/N) ثمّ محورُ الدفعِ،
+    // ثمّ محورُ التنفيذِ. والترتيبُ مقروءٌ لا مُفترَضٌ: الإيداعُ يكتبُ حدثَ الطلبِ وحدثَ
+    // المهمّةِ في معاملةٍ واحدةٍ، ثمَّ يُعقِبُهُ حجزُ المخزونِ، فالمرآةُ، فالتأكيدُ.
     expect(rows.map((row) => row.event.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
       "store_order.payment_state_changed",
       "store_order.fulfillment_state_changed",
     ]);

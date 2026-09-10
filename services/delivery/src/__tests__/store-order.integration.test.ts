@@ -17,7 +17,7 @@ import type { Pool } from "pg";
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { buildDeliveryHttpApp } from "../http/app.js";
-import { FakeCatalog, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
+import { FakeCatalog, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { isDeliveryError } from "../domain/errors.js";
@@ -69,6 +69,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     catalogPort: new FakeCatalog(),
     writePort: store,
     readPort: store,
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(`${Math.floor(Math.random() * 0xfffffff).toString(16).padStart(8, "0")}`),
     now: () => NOW,
   });
@@ -114,7 +116,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
 
     const ledger = await pool.query(
       `SELECT from_state, to_state, reason_code, actor_type
-         FROM store_order_transitions WHERE order_id = $1`,
+         FROM store_order_transitions WHERE order_id = $1 AND state_kind = 'fulfillment'`,
       [order.orderId],
     );
     expect(ledger.rows).toEqual([
@@ -130,6 +132,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     expect(outbox.rows.map((r) => r.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
     ]);
     expect(outbox.rows.every((r) => r.trace_id === "trace-1")).toBe(true);
   });
@@ -150,18 +153,18 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     const cancelled = await applyCancellation(deps(), placed.publicId, "CUSTOMER_CHANGED_MIND", "trace-2");
 
     expect(cancelled.fulfillmentState).toBe("cancelled");
-    expect(cancelled.version).toBe(2);
+    expect(cancelled.version).toBe(3);
 
     const row = await pool.query(
       `SELECT cancelled_at, version FROM store_orders WHERE public_id = $1`,
       [placed.publicId],
     );
     expect(row.rows[0].cancelled_at).not.toBeNull();
-    expect(Number(row.rows[0].version)).toBe(2);
+    expect(Number(row.rows[0].version)).toBe(3);
 
     const ledger = await pool.query(
       `SELECT to_state, reason_code FROM store_order_transitions
-        WHERE order_id = $1 ORDER BY transition_id`,
+        WHERE order_id = $1 AND state_kind = 'fulfillment' ORDER BY transition_id`,
       [placed.orderId],
     );
     expect(ledger.rows.map((r) => r.to_state)).toEqual(["placed", "cancelled"]);
@@ -176,6 +179,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     expect(outbox.rows.map((r) => r.event_type)).toEqual([
       "store_order.created",
       "delivery.task_created",
+      "store_order.inventory_reserved",
       "store_order.fulfillment_state_changed",
     ]);
   });
@@ -249,6 +253,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
           fulfillmentState: "placed",
           paymentState: "pending",
           paymentRef: null,
+          inventoryState: "none",
+          inventoryRef: null,
           currencyCode: "SAR",
           itemsTotalMinorUnits: 100,
           deliveryFeeMinorUnits: -1,
@@ -279,6 +285,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence("ffffffff"),
       now: () => NOW,
     });

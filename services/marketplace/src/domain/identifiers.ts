@@ -54,6 +54,19 @@ export function assertWaslaPublicId(value: unknown, field = "public_id"): string
   return value;
 }
 
+const SYSTEM_ACTOR_PATTERN = /^system:[a-z_]+$/;
+
+/**
+ * فاعلُ تعديلِ المخزون: إمّا `WS-##########` (إنسانٌ) أو `system:service_name` (خدمةٌ).
+ * يُطابق قيدَ `CHECK` في المخطّطِ: `actor_public_id ~ '^WS-[0-9]{10}$' OR actor_public_id ~ '^system:[a-z_]+$'`.
+ */
+export function assertInventoryActorPublicId(value: unknown, field = "actor_public_id"): string {
+  if (typeof value !== "string" || (!WASLA_PUBLIC_ID_PATTERN.test(value) && !SYSTEM_ACTOR_PATTERN.test(value))) {
+    throw validationFailed(field, "WS-########## (ten digits) or system:service_name");
+  }
+  return value;
+}
+
 /** مُعرّفٌ داخليٌّ (UUID) لمتجرٍ أو منتجٍ أو تصنيف؛ يُفحَص شكلاً لا وجوداً. */
 export function assertUuid(value: unknown, field = "id"): string {
   if (typeof value !== "string" || !UUID_PATTERN.test(value)) {

@@ -60,6 +60,7 @@ import {
   assertStoreSlug,
   assertUuid,
   assertWaslaPublicId,
+  assertInventoryActorPublicId,
 } from "./identifiers.js";
 import { assertTimestamp } from "./time.js";
 
@@ -527,7 +528,7 @@ export function inventoryAdjustedEvent(input: InventoryAdjustedEventInput): Mark
     quantity_after: assertQuantity(input.quantityAfter, "quantity_after"),
     reason_code: assertMember(input.reasonCode, INVENTORY_REASON_CODES, "reason_code"),
     adjustment_sequence: assertSequence(input.adjustmentSequence, "adjustment_sequence"),
-    actor_public_id: assertWaslaPublicId(input.actorPublicId, "actor_public_id"),
+    actor_public_id: assertInventoryActorPublicId(input.actorPublicId, "actor_public_id"),
     occurred_for: assertTimestamp(input.occurredFor, "occurred_for"),
   };
   return {

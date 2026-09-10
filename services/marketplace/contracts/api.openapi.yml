@@ -683,6 +683,71 @@ paths:
         '422': { $ref: '#/components/responses/Unprocessable' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
+  /stores/{storeSlug}/inventory/reserve:
+    post:
+      tags: [inventory]
+      summary: حجز كميّة المخزون لطلبٍ واردٍ من خدمةِ التسليم
+      operationId: reserveStoreInventory
+      description: |
+        حجزُ الكميّةِ ملكُ السوقِ (ADR-026 §2.3): طلبُ حجزٍ واردٌ من خدمةِ التسليم (الطور 13). لكلِّ
+        صنفٍ يُطبَّق فرقَ سالبٍ بسبَب `reservation` وفاعلُه `system:delivery`. وإن لم تكفِ الكميّةُ
+        لأيِّ صنفٍ يُعاد `409` برمزِ `INVENTORY_INSUFFICIENT_QUANTITY` ولا يُكتبُ شيء. والإعارةُ تُعالَج
+        بمفتاحِ التفرّدِ كأيِّ كتابة.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReservationRequest' }
+      responses:
+        '201':
+          description: حُجِزَت الكميّاتُ ودخلت الدفترَ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '200':
+          description: إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /stores/{storeSlug}/inventory/release:
+    post:
+      tags: [inventory]
+      summary: إطلاق كميّةٍ محجوزةٍ لطلبٍ من خدمةِ التسليم
+      operationId: releaseStoreInventory
+      description: |
+        إطلاقُ حجزٍ سابقٍ: لكلِّ صنفٍ يُطبَّق فرقَ موجبٍ بسبَب `reservation_release` وفاعلُه
+        `system:delivery`. والإطلاقُ يُعيد الكميّةَ إلى الرصيدِ بلا فحصِ كفايةٍ لأنّه زيادةٌ لا سحب.
+      parameters:
+        - $ref: '#/components/parameters/StoreSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReservationRequest' }
+      responses:
+        '200':
+          description: أُطلِقَت الكميّاتُ وعادت إلى الدفتر
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
 components:
   parameters:
     StoreSlug:
@@ -790,7 +855,7 @@ components:
 
     InventoryReasonCode:
       type: string
-      enum: [initial_stock, restock, correction, shrinkage, archive_zeroed]
+      enum: [initial_stock, restock, correction, shrinkage, archive_zeroed, reservation, reservation_release]
 
     StoreCategory:
       type: object
@@ -1040,7 +1105,11 @@ components:
           maximum: 1000000
           description: فرقٌ موقّعٌ غيرُ صفريّ. فرقٌ صفريٌّ ليس حدثاً؛ قبولُه يُنتج دفتراً فيه صفوفٌ لا تعني شيئاً.
         reason_code: { $ref: '#/components/schemas/InventoryReasonCode' }
-        actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: string, pattern: '^system:[a-z_]+$' }
+          description: مُعرّفُ الفاعل — إمّا `WS-##########` أو `system:<service>` كـ`system:delivery`.
 
     InventoryAdjustmentResource:
       type: object
@@ -1054,7 +1123,11 @@ components:
         quantity_after: { type: integer, minimum: 0 }
         reason_code: { $ref: '#/components/schemas/InventoryReasonCode' }
         adjustment_sequence: { type: integer, minimum: 1 }
-        actor_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+        actor_public_id:
+          oneOf:
+            - { $ref: '#/components/schemas/WaslaPublicId' }
+            - { type: string, pattern: '^system:[a-z_]+$' }
+          description: مُعرّفُ الفاعل — إمّا `WS-##########` أو `system:<service>` كـ`system:delivery`.
         occurred_at: { type: string, format: date-time }
 
     InventoryReadResponse:
@@ -1071,6 +1144,63 @@ components:
           description: فارغةٌ حين لا يُطلب الدفتر؛ الفراغُ ليس غياباً للدفترِ بل عدمَ طلبٍ له.
           items: { $ref: '#/components/schemas/InventoryAdjustmentResource' }
         next_cursor: { type: [string, 'null'] }
+
+    ReservationItem:
+      type: object
+      required: [product_id, quantity]
+      additionalProperties: false
+      properties:
+        product_id: { type: string, format: uuid }
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: الكميّةُ المطلوبُ حجزُها أو إطلاقُها — عددٌ صحيحٌ موجب.
+
+    ReservationRequest:
+      type: object
+      required: [order_public_id, items, idempotency_key]
+      additionalProperties: false
+      properties:
+        order_public_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: مُعرّفُ الطلب العلنيُّ من خدمةِ التسليم.
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ReservationItem' }
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: مفتاحُ التفرّدِ الذي يُستعمَل في مِغلافِ الإعادةِ للطلبِ كلِّه.
+
+    ReservationResultItem:
+      type: object
+      required: [product_id, quantity_delta, quantity_after, adjustment_sequence, reason_code]
+      additionalProperties: false
+      properties:
+        product_id: { type: string, format: uuid }
+        quantity_delta:
+          type: integer
+          not: { const: 0 }
+          description: الفرقُ المُطبَّق — سالبٌ في الحجزِ وموجبٌ في الإطلاق.
+        quantity_after: { type: integer, minimum: 0 }
+        adjustment_sequence: { type: integer, minimum: 1 }
+        reason_code: { $ref: '#/components/schemas/InventoryReasonCode' }
+
+    ReservationResponse:
+      type: object
+      required: [order_public_id, store_id, results]
+      additionalProperties: false
+      properties:
+        order_public_id: { type: string }
+        store_id: { type: string, format: uuid }
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/ReservationResultItem' }
 
     HealthResponse:
       type: object
@@ -1115,6 +1245,7 @@ components:
                 - PRODUCT_CATEGORY_NOT_LEAF
                 - STORE_OWNER_ROLE_IMMUTABLE
                 - INVENTORY_INSUFFICIENT_QUANTITY
+                - INVENTORY_RESERVATION_CONFLICT
                 - STORE_REJECTION_REASON_REQUIRED
                 - MARKETPLACE_UNAVAILABLE
             message: { type: string }

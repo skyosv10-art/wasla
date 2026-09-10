@@ -21,7 +21,7 @@ import { buildDeliveryHttpApp } from "../http/app.js";
 import { decidePaymentMirror } from "../domain/payment-mirror.js";
 import { decideConfirmation } from "../domain/store-order-confirmation.js";
 import { DeliveryError } from "../domain/errors.js";
-import { FakeCatalog, FakeStoreOrderStore, fixedOrder, fixedTask, uuidSequence } from "./store-order-fakes.js";
+import { FakeCatalog, FakeReservationPort, FakeReservationStore, FakeStoreOrderStore, fixedOrder, fixedTask, uuidSequence } from "./store-order-fakes.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
 
@@ -38,6 +38,8 @@ function buildApp(seed = fixedOrder()) {
     readPort: store,
     writePort: store,
     catalogPort: new FakeCatalog(),
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(),
     now: () => NOW,
   });

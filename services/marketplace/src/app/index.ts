@@ -52,6 +52,8 @@ export {
   type ProductDecisionInput,
   type ProductDecisionOutcome,
   type ProductView,
+  type ReservationOutcome,
+  type ReservationRequest,
 } from "./products.js";
 export {
   MarketplaceCatalogService,

@@ -54,15 +54,19 @@
 import type { StoreSlug } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "../domain/errors.js";
-import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, type EventContext } from "../domain/events.js";
+import { buildReservationCommand } from "../domain/inventory-reservation.js";
+import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, storeOrderInventoryReservedEvent, type EventContext } from "../domain/events.js";
 import { buildStoreOrderPlacement } from "../domain/store-order-placement.js";
 import type { PlaceOrderInput } from "../domain/validation.js";
 import type { StoreOrder } from "../domain/model.js";
 import type {
   IdempotencyIntent,
   IdempotentReplay,
+  InventoryReservationPort,
+  InventoryReservationStore,
   PlacementWrite,
   StoreOrderCatalogPort,
+  StoreOrderReadPort,
   StoreOrderWritePort,
 } from "../ports.js";
 
@@ -77,7 +81,10 @@ export type PlaceStoreOrderResult =
 
 export interface PlaceStoreOrderDeps {
   readonly catalogPort: StoreOrderCatalogPort;
+  readonly readPort: StoreOrderReadPort;
   readonly writePort: StoreOrderWritePort;
+  readonly reservationPort: InventoryReservationPort;
+  readonly reservationStore: InventoryReservationStore;
   /** Injected so tests are deterministic — no hidden clock, no hidden uuid. */
   readonly newUuid: () => string;
   readonly now: () => string;
@@ -137,6 +144,72 @@ export async function placeStoreOrder(
   };
 
   const outcome = await deps.writePort.placeOrder(write);
-  if (outcome.kind === "replayed") return outcome;
-  return { kind: "applied", order };
+  if (outcome.kind === "replayed") {
+    const storedOrder = await deps.readPort.getOrderByPublicId(publicId);
+    if (storedOrder && storedOrder.inventoryState === "none") {
+      return await completeReservation(deps, storedOrder, occurredAt, traceId);
+    }
+    return outcome;
+  }
+
+  return await completeReservation(deps, order, occurredAt, traceId);
+}
+
+/**
+ * Complete the inventory reservation for an order that was placed but not yet
+ * reserved. Called both on first placement and on idempotent replay when the
+ * first attempt failed before `mirrorInventoryState`.
+ *
+ * The marketplace's idempotency key (derived from `orderPublicId`) ensures a
+ * duplicate reserve call is a no-op — it returns the same `reservation_ref`,
+ * not a second deduction.
+ */
+async function completeReservation(
+  deps: PlaceStoreOrderDeps,
+  order: StoreOrder,
+  occurredAt: string,
+  traceId: string | null,
+): Promise<PlaceStoreOrderResult> {
+  const reservationResult = await deps.reservationPort.reserve(
+    buildReservationCommand(order),
+  );
+  if (!reservationResult.reserved) {
+    throw new DeliveryError(
+      "DELIVERY_INVENTORY_INSUFFICIENT",
+      `المخزونُ لا يكفي للصنفِ ${reservationResult.insufficientProductId ?? "غيرِ معروفٍ"}: المتاحُ ${reservationResult.availableQuantity ?? 0}`,
+      { traceId: traceId ?? undefined, details: { field: "quantity" } },
+    );
+  }
+
+  const reservations = order.items.map((item) => ({
+    reservationId: deps.newUuid(),
+    orderId: order.orderId,
+    storeSlug: order.storeSlug,
+    productId: item.productId,
+    sku: item.sku,
+    quantityReserved: item.quantity,
+    unitPriceMinorUnits: item.unitPriceMinorUnits,
+    marketplaceReservationRef: reservationResult.reservationRef,
+    status: "active" as const,
+    reservedAt: occurredAt,
+    traceId,
+  }));
+  await deps.reservationStore.saveReservations(order.orderId, reservations);
+
+  const mirrored = await deps.writePort.mirrorInventoryState({
+    orderId: order.orderId,
+    expectedVersion: order.version,
+    fromInventoryState: "none",
+    toInventoryState: "reserved",
+    inventoryRef: reservationResult.reservationRef,
+    reasonCode: "INVENTORY_RESERVED",
+    events: [
+      storeOrderInventoryReservedEvent(order, { eventId: deps.newUuid(), occurredAt: deps.now(), traceId }, {
+        reservation_ref: reservationResult.reservationRef,
+      }),
+    ],
+    traceId,
+  });
+
+  return { kind: "applied", order: mirrored.order };
 }

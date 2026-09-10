@@ -44,6 +44,8 @@ export const MARKETPLACE_ROUTE_KEYS = Object.freeze({
   productArchive: "product.archive",
   productDecide: "product.decide",
   inventoryAdjust: "inventory.adjust",
+  inventoryReserve: "inventory.reserve",
+  inventoryRelease: "inventory.release",
 } as const);
 
 /** يُحمِّل متجراً بلاحقته أو يرفع `STORE_NOT_FOUND` — لا `undefined` يسري في الطبقة. */

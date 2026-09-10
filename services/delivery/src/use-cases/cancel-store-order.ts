@@ -29,6 +29,7 @@ import { DeliveryError } from "../domain/errors.js";
 import {
   deliveryTaskCancelledEvent,
   storeOrderFulfillmentStateChangedEvent,
+  storeOrderInventoryReleasedEvent,
   type DeliveryDomainEvent,
   type EventContext,
 } from "../domain/events.js";
@@ -39,6 +40,8 @@ import type {
   CancellationWrite,
   IdempotencyIntent,
   IdempotentReplay,
+  InventoryReservationPort,
+  InventoryReservationStore,
   StoreOrderReadPort,
   StoreOrderWritePort,
 } from "../ports.js";
@@ -60,6 +63,9 @@ export type CancelStoreOrderResult =
 export interface CancelStoreOrderDeps {
   readonly readPort: StoreOrderReadPort;
   readonly writePort: StoreOrderWritePort;
+  /** Absent → cancellation skips inventory release (review 10/N). */
+  readonly reservationPort?: InventoryReservationPort;
+  readonly reservationStore?: InventoryReservationStore;
   readonly newUuid: () => string;
   readonly now: () => string;
 }
@@ -125,5 +131,53 @@ export async function cancelStoreOrder(
     idempotency,
   };
 
-  return deps.writePort.cancelOrder(write);
+  return deps.writePort.cancelOrder(write).then(async (result) => {
+    if (result.kind === "replayed") return result;
+
+    // ── Release inventory reservation (review 10/N, ADR-026 §2.3) ──────
+    // If the order had reserved inventory, release it at the marketplace.
+    // The release is idempotent: a second call for the same reservation is a
+    // no-op. If the release fails, the order is still cancelled — the
+    // reservation will expire at the marketplace or be reconciled later.
+    if (order.inventoryState === "reserved") {
+      if (!deps.reservationPort || !deps.reservationStore) {
+        throw new DeliveryError(
+          "DELIVERY_MARKETPLACE_UNAVAILABLE",
+          "لا منفذَ حجزِ مخزونٍ مُركَّبٌ — الإفراجُ عن الحجزِ لا يُتخطّى (ADR-026 §2.3 · المراجعةُ 10/N)",
+          { traceId: traceId ?? undefined },
+        );
+      }
+      const reservations = await deps.reservationStore.loadActiveReservations(order.orderId);
+      if (reservations.length > 0) {
+        const first = reservations[0];
+        await deps.reservationPort.release({
+          orderPublicId: order.publicId,
+          storeSlug: order.storeSlug,
+          reservationRef: first.marketplaceReservationRef,
+          items: reservations.map((r) => ({ productId: r.productId, quantity: r.quantityReserved })),
+        });
+        await deps.reservationStore.releaseReservations(order.orderId);
+
+        // Mirror the inventory state to released
+        await deps.writePort.mirrorInventoryState({
+          orderId: order.orderId,
+          expectedVersion: order.version + 1,
+          fromInventoryState: "reserved",
+          toInventoryState: "released",
+          inventoryRef: first.marketplaceReservationRef,
+          reasonCode: "INVENTORY_RELEASED",
+          events: [
+            storeOrderInventoryReleasedEvent(
+              result.order,
+              { eventId: deps.newUuid(), occurredAt: deps.now(), traceId },
+              { reservation_ref: first.marketplaceReservationRef },
+            ),
+          ],
+          traceId,
+        });
+      }
+    }
+
+    return result;
+  });
 }

@@ -36,6 +36,7 @@ import {
   type MarketplaceCatalogService,
   type MarketplaceProductService,
   type MarketplaceStoreService,
+  type ReservationOutcome,
   type StoredIdempotentResponse,
 } from "../app/index.js";
 import { marketplaceUnavailable } from "../domain/errors.js";
@@ -45,6 +46,7 @@ import {
   toInventoryReadResponse,
   toProductResource,
   toProductReviewResource,
+  toReservationResponse,
   toStoreCategory,
   toStoreResource,
   toStoreReviewResource,
@@ -63,6 +65,7 @@ import {
   parseProductQuery,
   parseRegisterStore,
   parseRemoveStaff,
+  parseReservation,
   parseReviewRequest,
   parseStoreDecision,
   parseStoreQuery,
@@ -422,6 +425,38 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
       })),
     );
     return reply.status(201).send(toInventoryAdjustmentResource(outcome));
+  });
+
+  // --- الحجزُ والإفراجُ (الطور 13) ------------------------------------------------
+
+  app.post("/stores/:storeSlug/inventory/reserve", async (request, reply): Promise<FastifyReply> => {
+    const storeSlug = pathParam(request.params, "storeSlug");
+    const input = parseReservation(request.body);
+    const { products } = deps();
+    const outcome = await products.reserveInventory(
+      storeSlug,
+      input,
+      envelope(request.headers, MARKETPLACE_ROUTE_KEYS.inventoryReserve, input, (result: ReservationOutcome) => ({
+        responseStatus: 201,
+        responseBody: toReservationResponse(result),
+      })),
+    );
+    return reply.status(201).send(toReservationResponse(outcome));
+  });
+
+  app.post("/stores/:storeSlug/inventory/release", async (request, reply): Promise<FastifyReply> => {
+    const storeSlug = pathParam(request.params, "storeSlug");
+    const input = parseReservation(request.body);
+    const { products } = deps();
+    const outcome = await products.releaseInventory(
+      storeSlug,
+      input,
+      envelope(request.headers, MARKETPLACE_ROUTE_KEYS.inventoryRelease, input, (result: ReservationOutcome) => ({
+        responseStatus: 200,
+        responseBody: toReservationResponse(result),
+      })),
+    );
+    return reply.status(200).send(toReservationResponse(outcome));
   });
 
   return app;

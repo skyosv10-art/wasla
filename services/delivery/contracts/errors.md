@@ -27,6 +27,8 @@
 | `DELIVERY_TRANSITION_NOT_ALLOWED` | انتقالُ حالةٍ لا تسمحُه آلةُ الحالاتِ (ADR-026 §3) | أيُّ انتقالٍ |
 | `DELIVERY_CANCEL_NOT_ALLOWED` | الطلبُ تجاوزَ آخرَ نقطةِ إلغاءٍ (تُسلِّمُ للمندوبِ) | الإلغاءُ |
 | `DELIVERY_PAYMENT_NOT_AUTHORIZED` | لا انتقالَ إلى confirmed إلا بpayment_state=authorized (ADR-026 §2.2) | التأكيدُ |
+| `DELIVERY_INVENTORY_NOT_RESERVED` | لا انتقالَ إلى confirmed إلا بinventory_state=reserved (ADR-026 §2.3 · المراجعةُ 10/N) | التأكيدُ |
+| `DELIVERY_INVENTORY_INSUFFICIENT` | المخزونُ لا يكفي لطلبِ الحجزِ — رمزُ 409 لا 422 (ADR-026 §2.3) | الحجزُ |
 | `DELIVERY_INVALID_PROOF` | تسليمٌ بلا إثباتٍ أو إثباتٌ على حالةٍ غيرِ مُسلَّمةٍ (ADR-026 §2.4) | التسليمُ |
 | `DELIVERY_SUBSTITUTION_NOT_ALLOWED` | استبدالُ صنفٍ خارجَ مرحلةِ الانتقاءِ (picking) (ADR-026 §2.5) | الاستبدالُ |
 | `DELIVERY_SUBSTITUTION_WRONG_STORE` | البديلُ من متجرٍ آخرَ — مسموحٌ فقط داخلَ المتجرِ نفسِهِ (ADR-026 §2.5) | الاستبدالُ |

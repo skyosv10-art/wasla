@@ -50,7 +50,7 @@ import type {
   ProductReasonCode,
   ProductState,
 } from "../domain/contract-sets.js";
-import { productNotFound, validationFailed } from "../domain/errors.js";
+import { productNotFound, inventoryReservationConflict, validationFailed } from "../domain/errors.js";
 import {
   inventoryAdjustedEvent,
   productArchivedEvent,
@@ -65,6 +65,13 @@ import {
   reconcileInventory,
   type InventoryReconciliation,
 } from "../domain/inventory.js";
+import {
+  buildReleaseAdjustments,
+  buildReservationAdjustments,
+  toReservationResults,
+  type ReservationItem,
+  type ReservationResult,
+} from "../domain/reservation.js";
 import { deriveProductModerationState } from "../domain/state.js";
 import { assertProductDecision, assertProductTransition } from "../domain/transitions.js";
 import { isVisible } from "../domain/visibility.js";
@@ -123,6 +130,19 @@ export interface ProductDecisionOutcome {
 export interface InventoryAdjustmentOutcome {
   readonly adjustment: InventoryAdjustmentRecord;
   readonly storeId: string;
+}
+
+/** طلبُ حجزٍ أو إفراجٍ من خدمةِ التسليم. */
+export interface ReservationRequest {
+  readonly orderPublicId: string;
+  readonly items: ReadonlyArray<ReservationItem>;
+}
+
+/** نتيجةُ حجزٍ أو إفراجٍ — الأصنافُ المُطبَّق عليها الفروقُ والرصيدُ بعدها. */
+export interface ReservationOutcome {
+  readonly orderPublicId: string;
+  readonly storeId: string;
+  readonly results: ReadonlyArray<ReservationResult>;
 }
 
 export interface ListProductsQuery {
@@ -586,5 +606,178 @@ export class MarketplaceProductService {
         projectedSequence: inventory?.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
       });
     });
+  }
+
+  /**
+   * حجزُ كميّاتٍ لطلبٍ من خدمةِ التسليم — فروقٌ سالبةٌ بسبَب `reservation`.
+   *
+   * يُفحَص الرصيدُ قبل الكتابة: إن لم تكفِ الكميّةُ لأيِّ صنفٍ يُعاد `INVENTORY_INSUFFICIENT_QUANTITY`
+   * (409) ولا يُكتبُ شيءٌ — لا فرقٌ جزئيٌّ يبقى في الدفترِ لطلبٍ لم يكتمل. وكلُّ فرقٍ يُكتب في
+   * الدفترِ ويُسقَط ويُنشَر حدثُه في معاملةٍ واحدة.
+   */
+  async reserveInventory(
+    storeSlug: string,
+    request: ReservationRequest,
+    envelope: IdempotencyEnvelope<ReservationOutcome>,
+  ): Promise<ReservationOutcome> {
+    const { value } = await this.deps.uow.write(async ({ stores, probe }) => {
+      await replayGuard(stores.idempotency, envelope);
+
+      const store = await loadStoreBySlug(stores, storeSlug);
+
+      // اقرأ أرصدةَ كلِّ صنفٍ من الإسقاط — في معاملةِ الكتابةِ نفسِها فلا نافذةُ فرقَين متزامنَين.
+      const inventoryMap = new Map<string, { readonly quantityOnHand: number; readonly lastAdjustmentSequence: number }>();
+      for (const item of request.items) {
+        const product = await loadProductById(stores, item.productId);
+        if (product.storeId !== store.storeId) throw productNotFound(item.productId);
+        const inventory = await stores.projection.findInventory(item.productId);
+        inventoryMap.set(item.productId, {
+          quantityOnHand: inventory?.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,
+          lastAdjustmentSequence: inventory?.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
+        });
+      }
+
+      // تحقّق من الكفاية قبل البناء: الحجزُ تعارضُ حالةٍ لا خطأُ إدخال (409 لا 422).
+      for (const item of request.items) {
+        const inv = inventoryMap.get(item.productId)!;
+        if (inv.quantityOnHand < item.quantity) {
+          throw inventoryReservationConflict(item.productId, inv.quantityOnHand);
+        }
+      }
+
+      const entries = buildReservationAdjustments(
+        request.items,
+        inventoryMap,
+        this.deps.clock.now(),
+      );
+      const writtenAdjustments = [] as Array<{
+        readonly productId: string;
+        readonly quantityDelta: number;
+        readonly quantityAfter: number;
+        readonly adjustmentSequence: number;
+        readonly reasonCode: InventoryReasonCode;
+      }>;
+      for (let index = 0; index < request.items.length; index++) {
+        const item = request.items[index]!;
+        const entry = entries[index]!;
+        const adjustment = await stores.ledger.appendInventoryAdjustment(item.productId, entry);
+        await probe?.("after-ledger");
+        await stores.projection.applyInventoryProjection(item.productId, entry);
+        await probe?.("after-projection");
+        await stores.outbox.appendEvent(
+          inventoryAdjustedEvent({
+            adjustmentId: adjustment.adjustmentId,
+            productId: item.productId,
+            storeId: store.storeId,
+            quantityDelta: adjustment.quantityDelta,
+            quantityAfter: adjustment.quantityAfter,
+            reasonCode: adjustment.reasonCode,
+            adjustmentSequence: adjustment.adjustmentSequence,
+            actorPublicId: adjustment.actorPublicId,
+            occurredFor: adjustment.occurredAt,
+            occurredAt: this.deps.clock.now(),
+          }),
+        );
+        await probe?.("after-outbox");
+        writtenAdjustments.push({
+          productId: item.productId,
+          quantityDelta: adjustment.quantityDelta,
+          quantityAfter: adjustment.quantityAfter,
+          adjustmentSequence: adjustment.adjustmentSequence,
+          reasonCode: adjustment.reasonCode,
+        });
+      }
+
+      const outcome: ReservationOutcome = {
+        orderPublicId: request.orderPublicId,
+        storeId: store.storeId,
+        results: toReservationResults(writtenAdjustments),
+      };
+
+      return await rememberOutcome(stores.idempotency, envelope, outcome);
+    });
+    return value;
+  }
+
+  /**
+   * إفراجُ كميّاتٍ محجوزةٍ لطلبٍ من خدمةِ التسليم — فروقٌ موجبةٌ بسبَب `reservation_release`.
+   *
+   * ولا فحصَ للرصيدِ: الإفراجُ زيادةٌ لا سحب. وكلُّ فرقٍ يُكتب ويُسقَط ويُنشَر في معاملةٍ واحدة.
+   */
+  async releaseInventory(
+    storeSlug: string,
+    request: ReservationRequest,
+    envelope: IdempotencyEnvelope<ReservationOutcome>,
+  ): Promise<ReservationOutcome> {
+    const { value } = await this.deps.uow.write(async ({ stores, probe }) => {
+      await replayGuard(stores.idempotency, envelope);
+
+      const store = await loadStoreBySlug(stores, storeSlug);
+
+      // اقرأ أرصدةَ كلِّ صنفٍ من الإسقاط — في معاملةِ الكتابةِ نفسِها.
+      const inventoryMap = new Map<string, { readonly quantityOnHand: number; readonly lastAdjustmentSequence: number }>();
+      for (const item of request.items) {
+        const product = await loadProductById(stores, item.productId);
+        if (product.storeId !== store.storeId) throw productNotFound(item.productId);
+        const inventory = await stores.projection.findInventory(item.productId);
+        inventoryMap.set(item.productId, {
+          quantityOnHand: inventory?.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,
+          lastAdjustmentSequence: inventory?.lastAdjustmentSequence ?? INVENTORY_INITIAL_SEQUENCE,
+        });
+      }
+
+      const entries = buildReleaseAdjustments(
+        request.items,
+        inventoryMap,
+        this.deps.clock.now(),
+      );
+
+      const writtenAdjustments = [] as Array<{
+        readonly productId: string;
+        readonly quantityDelta: number;
+        readonly quantityAfter: number;
+        readonly adjustmentSequence: number;
+        readonly reasonCode: InventoryReasonCode;
+      }>;
+      for (let index = 0; index < request.items.length; index++) {
+        const item = request.items[index]!;
+        const entry = entries[index]!;
+        const adjustment = await stores.ledger.appendInventoryAdjustment(item.productId, entry);
+        await probe?.("after-ledger");
+        await stores.projection.applyInventoryProjection(item.productId, entry);
+        await probe?.("after-projection");
+        await stores.outbox.appendEvent(
+          inventoryAdjustedEvent({
+            adjustmentId: adjustment.adjustmentId,
+            productId: item.productId,
+            storeId: store.storeId,
+            quantityDelta: adjustment.quantityDelta,
+            quantityAfter: adjustment.quantityAfter,
+            reasonCode: adjustment.reasonCode,
+            adjustmentSequence: adjustment.adjustmentSequence,
+            actorPublicId: adjustment.actorPublicId,
+            occurredFor: adjustment.occurredAt,
+            occurredAt: this.deps.clock.now(),
+          }),
+        );
+        await probe?.("after-outbox");
+        writtenAdjustments.push({
+          productId: item.productId,
+          quantityDelta: adjustment.quantityDelta,
+          quantityAfter: adjustment.quantityAfter,
+          adjustmentSequence: adjustment.adjustmentSequence,
+          reasonCode: adjustment.reasonCode,
+        });
+      }
+
+      const outcome: ReservationOutcome = {
+        orderPublicId: request.orderPublicId,
+        storeId: store.storeId,
+        results: toReservationResults(writtenAdjustments),
+      };
+
+      return await rememberOutcome(stores.idempotency, envelope, outcome);
+    });
+    return value;
   }
 }

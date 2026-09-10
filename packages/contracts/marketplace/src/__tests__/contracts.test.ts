@@ -79,7 +79,7 @@ describe("تمثيل OpenAPI للسوق", () => {
   });
   it("يمنع اختلاف عدد العمليات عن الثابت المعلن", () => {
     expect(apiOperationCount(openApiYml)).toBe(MARKETPLACE_API_OPERATION_COUNT);
-    expect(MARKETPLACE_API_OPERATION_COUNT).toBe(19);
+    expect(MARKETPLACE_API_OPERATION_COUNT).toBe(21);
   });
   it("يمنع رمز استجابة خارج كتالوج HTTP المعلن", () => {
     for (const status of apiStatuses(openApiYml)) expect([...MARKETPLACE_HTTP_STATUS_CODES]).toContain(status as never);

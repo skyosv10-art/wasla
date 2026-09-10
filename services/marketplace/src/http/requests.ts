@@ -232,6 +232,7 @@ export const ADJUST_INVENTORY_KEYS = Object.freeze([
   "reason_code",
   "actor_public_id",
 ]);
+export const RESERVATION_KEYS = Object.freeze(["order_public_id", "items", "idempotency_key"]);
 
 export function parseRegisterStore(raw: unknown): {
   ownerPublicId: string;
@@ -381,6 +382,36 @@ export function parseAdjustInventory(raw: unknown): {
     reasonCode: oneOf(payload["reason_code"], INVENTORY_REASON_CODES, "reason_code"),
     actorPublicId: requiredString(payload, "actor_public_id"),
   };
+}
+
+export function parseReservation(raw: unknown): {
+  orderPublicId: string;
+  items: ReadonlyArray<{ readonly productId: string; readonly quantity: number }>;
+} {
+  const payload = object(raw);
+  onlyKeys(payload, RESERVATION_KEYS);
+  const orderPublicId = requiredString(payload, "order_public_id");
+  const rawItems = payload["items"];
+  if (!Array.isArray(rawItems) || rawItems.length === 0) {
+    throw validationFailed("items", "a non-empty array");
+  }
+  const items = rawItems.map((item, index) => {
+    if (item === null || typeof item !== "object" || Array.isArray(item)) {
+      throw validationFailed(`items[${index}]`, "an object");
+    }
+    const record = item as Record<string, unknown>;
+    const extra = Object.keys(record).filter((key) => key !== "product_id" && key !== "quantity");
+    if (extra.length > 0) {
+      throw validationFailed(`items[${index}].${extra[0]}`, "one of product_id, quantity");
+    }
+    const productId = requiredString(record, "product_id");
+    const quantity = requiredInteger(record, "quantity");
+    if (quantity < 1) {
+      throw validationFailed(`items[${index}].quantity`, "positive integer");
+    }
+    return { productId, quantity };
+  });
+  return { orderPublicId, items };
 }
 
 /** معلَمُ مسارٍ حاضرٌ — غيابُه عيبُ توجيهٍ لا خطأُ مُتَّصل، فيُرفض بوضوح. */

@@ -352,6 +352,10 @@ components:
     PaymentState:
       type: string
       enum: [pending, authorized, captured, failed, refunding, partially_refunded, refunded]
+    InventoryState:
+      type: string
+      enum: [none, reserving, reserved, released, consumed]
+      description: حالةُ حجزِ المخزونِ على الطلبِ (المراجعةُ 10/N · ADR-026 §2.3)
     DeliveryTaskState:
       type: string
       enum: [pending_eligibility, eligible, dispatch_requested, driver_assigned, timed_out, reassigned, exhausted, picked_up, in_transit, arrived, delivered, ineligible, failed, cancelled]
@@ -440,7 +444,7 @@ components:
           enum: [out_of_stock, customer_approved_alternative, store_policy, null]
     StoreOrderResponse:
       type: object
-      required: [order_id, public_id, customer_ref, store_slug, fulfillment_state, payment_state, currency_code, items_total_minor_units, delivery_fee_minor_units, total_minor_units, items, version]
+      required: [order_id, public_id, customer_ref, store_slug, fulfillment_state, payment_state, inventory_state, currency_code, items_total_minor_units, delivery_fee_minor_units, total_minor_units, items, version]
       properties:
         order_id:
           type: string
@@ -455,6 +459,13 @@ components:
           $ref: "#/components/schemas/FulfillmentState"
         payment_state:
           $ref: "#/components/schemas/PaymentState"
+        inventory_state:
+          $ref: "#/components/schemas/InventoryState"
+        inventory_ref:
+          type: string
+          nullable: true
+          maxLength: 128
+          description: مرجعُ الحجزِ عندَ السوقِ (المراجعةُ 10/N)
         currency_code:
           type: string
           const: SAR

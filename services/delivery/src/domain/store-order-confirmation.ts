@@ -22,7 +22,7 @@
  * نفسُ فرقِ الإلغاءِ (`use-cases/cancel-store-order.ts`).
  */
 
-import { illegalTransition, paymentNotAuthorized } from "./errors.js";
+import { illegalTransition, paymentNotAuthorized, inventoryNotReserved } from "./errors.js";
 import type { StoreOrder } from "./model.js";
 import { canConfirmOrder, isFulfillmentTransitionAllowed } from "./state-machine.js";
 
@@ -40,6 +40,11 @@ export function decideConfirmation(order: StoreOrder, traceId?: string): Confirm
   }
 
   if (!canConfirmOrder(order)) throw paymentNotAuthorized(order.paymentState, traceId);
+
+  // البوّابةُ المركَّبةُ (§3.1): placed → confirmed يتطلّبُ أيضاً inventory_state=reserved
+  if (order.inventoryState !== "reserved") {
+    throw inventoryNotReserved(order.inventoryState, traceId);
+  }
 
   return { fromFulfillmentState: from };
 }

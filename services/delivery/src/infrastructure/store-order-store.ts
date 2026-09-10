@@ -74,12 +74,16 @@ import type {
   CancellationWrite,
   ConfirmOrderOutcome,
   ConfirmationWrite,
+  InventoryMirrorWrite,
+  InventoryReservationStore,
+  MirrorInventoryOutcome,
   MirrorPaymentOutcome,
   PaymentMirrorWrite,
   IdempotencyIntent,
   IdempotentReplay,
   PlaceOrderOutcome,
   PlacementWrite,
+  ReservationRecord,
   StoreOrderReadPort,
   StoreOrderWritePort,
   StoredIdempotentResponse,
@@ -88,7 +92,8 @@ import type { StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 
 const ORDER_COLUMNS = `
   order_id, public_id, customer_ref, store_id, store_slug,
-  fulfillment_state, payment_state, payment_ref, currency_code,
+  fulfillment_state, payment_state, payment_ref, inventory_state, inventory_ref,
+  currency_code,
   items_total_minor_units, delivery_fee_minor_units, total_minor_units, version
 `;
 
@@ -108,7 +113,7 @@ const TASK_COLUMNS_QUALIFIED = TASK_COLUMNS.split(",")
   .map((column) => `t.${column.trim()}`)
   .join(", ");
 
-export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort {
+export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort, InventoryReservationStore {
   constructor(private readonly pool: Pool) {}
 
   /* ── reads ────────────────────────────────────────────────────────── */
@@ -176,10 +181,11 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
       await client.query(
         `INSERT INTO store_orders (
            order_id, public_id, customer_ref, store_id, store_slug,
-           fulfillment_state, payment_state, payment_ref, currency_code,
+           fulfillment_state, payment_state, payment_ref, inventory_state, inventory_ref,
+           currency_code,
            items_total_minor_units, delivery_fee_minor_units, total_minor_units,
            placed_at, version
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'SAR',$9,$10,$11, now(), 1)`,
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'SAR',$11,$12,$13, now(), 1)`,
         [
           order.orderId,
           order.publicId,
@@ -189,6 +195,8 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
           order.fulfillmentState,
           order.paymentState,
           order.paymentRef,
+          order.inventoryState,
+          order.inventoryRef,
           order.itemsTotalMinorUnits,
           order.deliveryFeeMinorUnits,
           order.totalMinorUnits,
@@ -313,6 +321,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
           { details: { expected: "authorized", actual: String(current.payment_state) } },
         );
       }
+      if (current.inventory_state !== "reserved") {
+        throw new DeliveryError(
+          "DELIVERY_INVENTORY_NOT_RESERVED",
+          `لا تأكيدَ لطلبٍ وحالةُ المخزونِ ${String(current.inventory_state)} — البوّابةُ تطلبُ reserved`,
+          { details: { expected: "reserved", actual: String(current.inventory_state) } },
+        );
+      }
 
       await client.query(
         `UPDATE store_orders
@@ -394,6 +409,107 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
       await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
       return { kind: "applied", order };
     });
+  }
+
+  /**
+   * مرآةُ المخزونِ (المراجعةُ 10/N · §2.3): تحديثُ `inventory_state` و`inventory_ref`
+   * تحتَ القُفلِ، ثمّ دفترُ انتقالٍ (`state_kind = 'inventory'`) ثمّ صندوقٌ.
+   */
+  async mirrorInventoryState(write: InventoryMirrorWrite): Promise<MirrorInventoryOutcome> {
+    return this.inTransaction(async (client) => {
+      const current = await lockOrder(client, write.orderId, write.expectedVersion);
+      if (current.inventory_state !== write.fromInventoryState) {
+        throw new DeliveryError(
+          "DELIVERY_CONCURRENT_UPDATE",
+          "تغيَّرَت حالةُ المخزونِ بينَ القرارِ والكتابةِ — أعِد المحاولةَ",
+          { details: { expected: write.fromInventoryState, actual: String(current.inventory_state) } },
+        );
+      }
+      await client.query(
+        `UPDATE store_orders
+            SET inventory_state = $2,
+                inventory_ref = $3,
+                version = version + 1,
+                updated_at = now()
+          WHERE order_id = $1`,
+        [write.orderId, write.toInventoryState, write.inventoryRef],
+      );
+      await client.query(
+        `INSERT INTO store_order_transitions (
+           order_id, state_kind, from_state, to_state, reason_code,
+           actor_type, actor_ref, trace_id
+         ) VALUES ($1,'inventory',$2,$3,$4,'system',NULL,$5)`,
+        [write.orderId, write.fromInventoryState, write.toInventoryState, write.reasonCode, write.traceId ?? null],
+      );
+      await appendOutbox(client, write.events, write.traceId ?? null);
+      const order = await readOrderAfterWrite(client, write.orderId);
+      return { kind: "applied", order };
+    });
+  }
+
+  /* ── inventory reservations (review 10/N) ─────────────────────────── */
+
+  async saveReservations(_orderId: string, reservations: readonly ReservationRecord[]): Promise<void> {
+    await this.inTransaction(async (client) => {
+      for (const r of reservations) {
+        await client.query(
+          `INSERT INTO delivery_inventory_reservations (
+             reservation_id, order_id, store_slug, product_id, sku,
+             quantity_reserved, unit_price_minor_units,
+             marketplace_reservation_ref, status, reserved_at, trace_id
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'active',now(),$9)`,
+          [
+            r.reservationId, r.orderId, r.storeSlug, r.productId, r.sku,
+            r.quantityReserved, r.unitPriceMinorUnits,
+            r.marketplaceReservationRef, r.reservedAt,
+          ],
+        );
+      }
+    });
+  }
+
+  async loadActiveReservations(orderId: string): Promise<readonly ReservationRecord[]> {
+    const { rows } = await this.pool.query(
+      `SELECT reservation_id, order_id, store_slug, product_id, sku,
+              quantity_reserved, unit_price_minor_units,
+              marketplace_reservation_ref, status, reserved_at
+         FROM delivery_inventory_reservations
+        WHERE order_id = $1 AND status = 'active'
+        ORDER BY reserved_at`,
+      [orderId],
+    );
+    return rows.map((r) => ({
+      reservationId: r.reservation_id,
+      orderId: r.order_id,
+      storeSlug: r.store_slug,
+      productId: r.product_id,
+      sku: r.sku,
+      quantityReserved: Number(r.quantity_reserved),
+      unitPriceMinorUnits: Number(r.unit_price_minor_units),
+      marketplaceReservationRef: r.marketplace_reservation_ref,
+      status: r.status as "active" | "released" | "consumed",
+      reservedAt: r.reserved_at,
+    }));
+  }
+
+  async releaseReservations(orderId: string): Promise<number> {
+    const { rowCount } = await this.pool.query(
+      `UPDATE delivery_inventory_reservations
+          SET status = 'released', released_at = now()
+        WHERE order_id = $1 AND status = 'active'`,
+      [orderId],
+    );
+    return rowCount ?? 0;
+  }
+
+  async consumeReservations(orderId: string): Promise<number> {
+    const { rowCount } = await this.pool.query(
+      `UPDATE delivery_inventory_reservations
+          SET status = 'consumed'
+        WHERE order_id = $1 AND status = 'active'`,
+      [orderId],
+    );
+    return rowCount ?? 0;
   }
 
   /**
@@ -592,6 +708,8 @@ interface OrderRow {
   fulfillment_state: string;
   payment_state: string;
   payment_ref: string | null;
+  inventory_state: string;
+  inventory_ref: string | null;
   items_total_minor_units: string | number;
   delivery_fee_minor_units: string | number;
   total_minor_units: string | number;
@@ -641,6 +759,8 @@ function toOrder(row: OrderRow, itemRows: readonly ItemRow[]): StoreOrder {
     fulfillmentState: row.fulfillment_state as StoreOrder["fulfillmentState"],
     paymentState: row.payment_state as StoreOrder["paymentState"],
     paymentRef: row.payment_ref,
+    inventoryState: row.inventory_state as StoreOrder["inventoryState"],
+    inventoryRef: row.inventory_ref,
     currencyCode: "SAR",
     itemsTotalMinorUnits: Number(row.items_total_minor_units),
     deliveryFeeMinorUnits: Number(row.delivery_fee_minor_units),

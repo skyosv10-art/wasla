@@ -32,6 +32,7 @@ import {
   type FulfillmentReasonCode,
   type FulfillmentState,
   type IneligibilityReasonCode,
+  type InventoryState,
   type OrderLineSnapshot,
   type OrderTotals,
   type PaymentReasonCode,
@@ -39,6 +40,8 @@ import {
   type StoreOrderCancelReasonCode,
   type StoreOrderCreatedV1,
   type StoreOrderFulfillmentStateChangedV1,
+  type StoreOrderInventoryReservedV1,
+  type StoreOrderInventoryReleasedV1,
   type StoreOrderItemSubstitutedV1,
   type StoreOrderPaymentStateChangedV1,
   type SubstitutionReasonCode,
@@ -142,6 +145,54 @@ export function storeOrderPaymentStateChangedEvent(
       reason_code: reasonCode,
       payment_ref: order.paymentRef,
       actor,
+    },
+  };
+}
+
+/** `store_order.inventory_reserved` — reservation placed at marketplace (§2.3, review 10/N). */
+export function storeOrderInventoryReservedEvent(
+  order: StoreOrder,
+  context: EventContext,
+  details: { reservation_ref: string },
+): StoreOrderInventoryReservedV1 {
+  return {
+    event_id: context.eventId,
+    event_type: DELIVERY_EVENT_TYPES.STORE_ORDER_INVENTORY_RESERVED,
+    event_version: "v1",
+    occurred_at: context.occurredAt,
+    producer: "delivery-service",
+    aggregate: { type: "store_order", id: order.orderId },
+    trace_id: context.traceId ?? null,
+    payload: {
+      public_id: order.publicId,
+      from_state: order.inventoryState as InventoryState,
+      to_state: "reserved",
+      reservation_ref: details.reservation_ref,
+      actor: { actor_type: "system", actor_ref: null },
+    },
+  };
+}
+
+/** `store_order.inventory_released` — reservation released on cancellation (§2.3, review 10/N). */
+export function storeOrderInventoryReleasedEvent(
+  order: StoreOrder,
+  context: EventContext,
+  details: { reservation_ref: string },
+): StoreOrderInventoryReleasedV1 {
+  return {
+    event_id: context.eventId,
+    event_type: DELIVERY_EVENT_TYPES.STORE_ORDER_INVENTORY_RELEASED,
+    event_version: "v1",
+    occurred_at: context.occurredAt,
+    producer: "delivery-service",
+    aggregate: { type: "store_order", id: order.orderId },
+    trace_id: context.traceId ?? null,
+    payload: {
+      public_id: order.publicId,
+      from_state: order.inventoryState as InventoryState,
+      to_state: "released",
+      reservation_ref: details.reservation_ref,
+      actor: { actor_type: "system", actor_ref: null },
     },
   };
 }

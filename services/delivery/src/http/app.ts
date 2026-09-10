@@ -75,6 +75,8 @@ import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 import { DeliveryError } from "../domain/errors.js";
 import type {
   IdempotencyIntent,
+  InventoryReservationPort,
+  InventoryReservationStore,
   ReadinessProbePort,
   StoreOrderCatalogPort,
   StoreOrderReadPort,
@@ -100,6 +102,10 @@ export interface DeliveryHttpDeps {
   readonly writePort: StoreOrderWritePort;
   /** Absent → `POST /store-orders` answers 503 (see the file header). */
   readonly catalogPort?: StoreOrderCatalogPort;
+  /** Absent → `POST /store-orders` answers 503 (review 10/N). */
+  readonly reservationPort?: InventoryReservationPort;
+  /** Required by placement and cancellation when `reservationPort` is wired. */
+  readonly reservationStore?: InventoryReservationStore;
   /** Absent → `GET /delivery/ready` answers 503 `probe_not_wired`: an
    *  un-probed dependency is never reported as healthy. */
   readonly readinessPort?: ReadinessProbePort;
@@ -185,6 +191,13 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         { traceId },
       );
     }
+    if (deps.reservationPort === undefined || deps.reservationStore === undefined) {
+      throw new DeliveryError(
+        "DELIVERY_MARKETPLACE_UNAVAILABLE",
+        "لا منفذَ حجزِ مخزونٍ مُركَّبٌ — الحجزُ لا يُتخطّى (ADR-026 §2.3 · المراجعةُ 10/N)",
+        { traceId },
+      );
+    }
     const input = parsePlaceStoreOrderBody(request.body);
     // The fingerprint hashes the PARSED input, not the raw body: two byte-wise
     // different bodies that mean the same request (key order, whitespace) are
@@ -197,7 +210,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       buildResponseBody: (written) => toStoreOrderResponse(written),
     };
     const result = await placeStoreOrder(
-      { catalogPort: deps.catalogPort, writePort: deps.writePort, newUuid, now },
+      { catalogPort: deps.catalogPort, writePort: deps.writePort, reservationPort: deps.reservationPort, reservationStore: deps.reservationStore, newUuid, now },
       input,
       traceId,
       idempotency,
@@ -233,7 +246,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       buildResponseBody: (written) => toStoreOrderResponse(written),
     };
     const result = await cancelStoreOrder(
-      { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
+      { readPort: deps.readPort, writePort: deps.writePort, reservationPort: deps.reservationPort, reservationStore: deps.reservationStore, newUuid, now },
       publicId,
       reasonCode,
       traceId,

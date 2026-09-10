@@ -321,8 +321,8 @@ CREATE TABLE IF NOT EXISTS inventory_adjustments (
     -- أيَّ كتابةٍ خارجَ الدفتر.
     quantity_after          INTEGER     NOT NULL CHECK (quantity_after >= 0),
     reason_code             TEXT        NOT NULL
-        CHECK (reason_code IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed')),
-    actor_public_id         TEXT        NOT NULL CHECK (actor_public_id ~ '^WS-[0-9]{10}$'),
+        CHECK (reason_code IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed', 'reservation', 'reservation_release')),
+    actor_public_id         TEXT        NOT NULL CHECK (actor_public_id ~ '^WS-[0-9]{10}$' OR actor_public_id ~ '^system:[a-z_]+$'),
     adjustment_sequence     INTEGER     NOT NULL CHECK (adjustment_sequence >= 1),
     occurred_at             TIMESTAMPTZ NOT NULL,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),

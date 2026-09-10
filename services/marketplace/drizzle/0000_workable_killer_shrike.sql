@@ -11,8 +11,8 @@ CREATE TABLE "inventory_adjustments" (
 	CONSTRAINT "ux_inventory_adjustments_sequence" UNIQUE("product_id","adjustment_sequence"),
 	CONSTRAINT "inventory_adjustments_quantity_delta_check" CHECK ("inventory_adjustments"."quantity_delta" <> 0 AND "inventory_adjustments"."quantity_delta" BETWEEN -1000000 AND 1000000),
 	CONSTRAINT "inventory_adjustments_quantity_after_check" CHECK ("inventory_adjustments"."quantity_after" >= 0),
-	CONSTRAINT "inventory_adjustments_reason_code_check" CHECK ("inventory_adjustments"."reason_code" IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed')),
-	CONSTRAINT "inventory_adjustments_actor_public_id_check" CHECK ("inventory_adjustments"."actor_public_id" ~ '^WS-[0-9]{10}$'),
+	CONSTRAINT "inventory_adjustments_reason_code_check" CHECK ("inventory_adjustments"."reason_code" IN ('initial_stock', 'restock', 'correction', 'shrinkage', 'archive_zeroed', 'reservation', 'reservation_release')),
+	CONSTRAINT "inventory_adjustments_actor_public_id_check" CHECK ("inventory_adjustments"."actor_public_id" ~ '^WS-[0-9]{10}$' OR "inventory_adjustments"."actor_public_id" ~ '^system:[a-z_]+$'),
 	CONSTRAINT "inventory_adjustments_adjustment_sequence_check" CHECK ("inventory_adjustments"."adjustment_sequence" >= 1)
 );
 --> statement-breakpoint

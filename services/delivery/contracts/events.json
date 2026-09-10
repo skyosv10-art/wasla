@@ -575,6 +575,189 @@
         }
       ]
     },
+    "InventoryState": {
+      "type": "string",
+      "enum": ["none", "reserving", "reserved", "released", "consumed"],
+      "description": "حالةُ المخزونِ على الطلبِ (المراجعةُ 10/N · ADR-026 §2.3)."
+    },
+    "InventoryReasonCode": {
+      "type": "string",
+      "enum": ["INVENTORY_RESERVED", "INVENTORY_INSUFFICIENT", "INVENTORY_RELEASED", "INVENTORY_CONSUMED"],
+      "description": "سبَبُ انتقالِ حالةِ المخزون."
+    },
+    "StoreOrderInventoryReservedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.inventory_reserved"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "reservation_ref",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/InventoryState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/InventoryState"
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/InventoryReasonCode"
+                },
+                "reservation_ref": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StoreOrderInventoryReleasedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.inventory_released"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "reservation_ref",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/InventoryState"
+                },
+                "to_state": {
+                  "$ref": "#/$defs/InventoryState"
+                },
+                "reason_code": {
+                  "$ref": "#/$defs/InventoryReasonCode"
+                },
+                "reservation_ref": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "StoreOrderItemSubstitutedV1": {
       "allOf": [
         {
@@ -1250,6 +1433,12 @@
         },
         {
           "$ref": "#/$defs/StoreOrderItemSubstitutedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderInventoryReservedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderInventoryReleasedV1"
         },
         {
           "$ref": "#/$defs/DeliveryTaskCreatedV1"

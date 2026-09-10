@@ -24,6 +24,10 @@ import type {
   CancellationWrite,
   ConfirmOrderOutcome,
   ConfirmationWrite,
+  InventoryMirrorWrite,
+  InventoryReservationPort,
+  InventoryReservationStore,
+  MirrorInventoryOutcome,
   MirrorPaymentOutcome,
   PaymentMirrorWrite,
   CatalogProductSnapshot,
@@ -133,6 +137,26 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
     return { kind: "applied", order: mirrored };
   }
 
+  /**
+   * مرآةُ المخزونِ في الذاكرةِ — نفسُ الحرسَينِ: النسخةُ **و**الحالةُ السابقةُ
+   * (المراجعةُ 10/N). فحصُ النسخةِ وحدَهُ كانَ سيجعلُ الزائفَ يقبلُ ما يرفضُهُ المحوّلُ.
+   */
+  async mirrorInventoryState(write: InventoryMirrorWrite): Promise<MirrorInventoryOutcome> {
+    const entry = this.requireOrder(write.orderId, write.expectedVersion);
+    if (entry.inventoryState !== write.fromInventoryState) {
+      throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَت حالةُ المخزونِ بينَ القرارِ والكتابةِ");
+    }
+    const mirrored: StoreOrder = {
+      ...entry,
+      inventoryState: write.toInventoryState as StoreOrder["inventoryState"],
+      inventoryRef: write.inventoryRef,
+      version: entry.version + 1,
+    };
+    this.orders.set(mirrored.publicId, mirrored);
+    this.outbox.push(...write.events);
+    return { kind: "applied", order: mirrored };
+  }
+
   /** التأكيدُ في الذاكرةِ — والبوّابةُ تُقرَأُ هنا ثانيةً كما تُقرَأُ تحتَ القُفلِ. */
   async confirmOrder(write: ConfirmationWrite): Promise<ConfirmOrderOutcome> {
     const replay = this.resolveKey(write.idempotency);
@@ -235,6 +259,49 @@ export function uuidSequence(prefix = "dddddddd"): () => string {
   };
 }
 
+/**
+ * A fake `InventoryReservationPort` (review 10/N) — always succeeds.
+ *
+ * `reserve()` returns `reserved: true` with a deterministic ref; `release()`
+ * returns `released: true`. Tests that need to exercise the insufficient-stock
+ * path can override the result via the constructor.
+ */
+export class FakeReservationPort implements InventoryReservationPort {
+  constructor(
+    private readonly reserveResult: { reserved: boolean; reservationRef: string; insufficientProductId?: string; availableQuantity?: number } = {
+      reserved: true,
+      reservationRef: "fake-ref",
+    },
+  ) {}
+
+  async reserve(): Promise<{ reserved: boolean; reservationRef: string; insufficientProductId?: string; availableQuantity?: number }> {
+    return this.reserveResult;
+  }
+
+  async release(): Promise<{ released: boolean }> {
+    return { released: true };
+  }
+}
+
+/**
+ * A fake `InventoryReservationStore` (review 10/N) — a no-op store.
+ *
+ * `saveReservations()` stores nothing, `loadActiveReservations()` returns `[]`,
+ * `releaseReservations()` and `consumeReservations()` return `0`.
+ */
+export class FakeReservationStore implements InventoryReservationStore {
+  async saveReservations(): Promise<void> {}
+  async loadActiveReservations(): Promise<readonly never[]> {
+    return [];
+  }
+  async releaseReservations(): Promise<number> {
+    return 0;
+  }
+  async consumeReservations(): Promise<number> {
+    return 0;
+  }
+}
+
 export function fixedOrder(overrides: Partial<StoreOrder> = {}): StoreOrder {
   return {
     orderId: "bbbbbbbb-0000-4000-8000-000000000002",
@@ -245,6 +312,8 @@ export function fixedOrder(overrides: Partial<StoreOrder> = {}): StoreOrder {
     fulfillmentState: "placed",
     paymentState: "pending",
     paymentRef: null,
+    inventoryState: "reserved",
+    inventoryRef: "fake-reservation-ref",
     currencyCode: "SAR",
     itemsTotalMinorUnits: 1000,
     deliveryFeeMinorUnits: 500,

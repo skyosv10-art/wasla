@@ -90,7 +90,7 @@ export type ProductActorType = "moderator" | "system";
  * سؤالاً بلا جواب: `shrinkage` و`correction` رقمان متساويان ومعنيان مختلفان تماماً — الأوّلُ
  * فقدٌ حقيقيٌّ يُحصى، والثاني خطأُ إدخالٍ يُصحَّح.
  */
-export type InventoryReasonCode = "initial_stock" | "restock" | "correction" | "shrinkage" | "archive_zeroed";
+export type InventoryReasonCode = "initial_stock" | "restock" | "correction" | "shrinkage" | "archive_zeroed" | "reservation" | "reservation_release";
 
 /** أدوارُ الطاقم. قائمةٌ مغلقةٌ والمالكُ واحدٌ بقيدِ `ux_store_staff_single_owner`. */
 export type StoreStaffRole = "owner" | "manager" | "staff";

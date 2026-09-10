@@ -92,6 +92,16 @@ export const PAYMENT_STATES = [
 ] as const;
 export type PaymentState = (typeof PAYMENT_STATES)[number];
 
+/** Every inventory reservation state, in ADR-026 §2.3 order (review 10/N). */
+export const INVENTORY_STATES = [
+  "none",
+  "reserving",
+  "reserved",
+  "released",
+  "consumed",
+] as const;
+export type InventoryState = (typeof INVENTORY_STATES)[number];
+
 /** Mirror states an external intent never leaves (ADR-026 §3.2). */
 export const PAYMENT_TERMINAL_STATES = ["failed", "refunded"] as const;
 export type PaymentTerminalState = (typeof PAYMENT_TERMINAL_STATES)[number];
@@ -163,6 +173,10 @@ export const DELIVERY_ERROR_CODES = [
   // مسبارُ الجاهزيّةِ سألَ القاعدةَ فلم تُجِب — 503 صريحٌ لا `ok` كاذبٌ
   // (درسُ RISK-0030 في البحثِ · §4.10-2).
   "DELIVERY_DATABASE_UNAVAILABLE",
+  // المراجعةُ 10/N: بوّابةُ المخزونِ المركَّبةُ (§3.1): لا تأكيدَ بلا حجزٍ.
+  "DELIVERY_INVENTORY_NOT_RESERVED",
+  // الحجزُ فشلَ: مخزونُ السوقِ لا يكفي.
+  "DELIVERY_INVENTORY_INSUFFICIENT",
 ] as const;
 export type DeliveryErrorCode = (typeof DELIVERY_ERROR_CODES)[number];
 
@@ -193,6 +207,8 @@ export const DELIVERY_ERROR_CODE_CLASS: Record<DeliveryErrorCode, DeliveryErrorC
   DELIVERY_IDEMPOTENCY_KEY_REUSED: "conflict",
   DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT: "conflict",
   DELIVERY_DATABASE_UNAVAILABLE: "dependency_unavailable",
+  DELIVERY_INVENTORY_NOT_RESERVED: "conflict",
+  DELIVERY_INVENTORY_INSUFFICIENT: "conflict",
 };
 
 /** The HTTP status derived from the class — the HTTP layer never re-classifies. */

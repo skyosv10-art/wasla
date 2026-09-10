@@ -17,7 +17,7 @@ import type { Pool } from "pg";
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { buildDeliveryHttpApp } from "../http/app.js";
-import { FakeCatalog, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
+import { FakeCatalog, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { isDeliveryError } from "../domain/errors.js";
@@ -69,6 +69,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
     catalogPort: new FakeCatalog(),
     writePort: store,
     readPort: store,
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(`${Math.floor(Math.random() * 0xfffffff).toString(16).padStart(8, "0")}`),
     now: () => NOW,
   });
@@ -249,6 +251,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
           fulfillmentState: "placed",
           paymentState: "pending",
           paymentRef: null,
+          inventoryState: "none",
+          inventoryRef: null,
           currencyCode: "SAR",
           itemsTotalMinorUnits: 100,
           deliveryFeeMinorUnits: -1,
@@ -279,6 +283,8 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence("ffffffff"),
       now: () => NOW,
     });

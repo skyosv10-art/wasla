@@ -282,6 +282,23 @@ export type CancelOrderOutcome =
   | { readonly kind: "applied"; readonly order: StoreOrder }
   | IdempotentReplay;
 
+/** The write for an inventory state mirror (review 10/N, ADR-026 §2.3). */
+export interface InventoryMirrorWrite {
+  readonly orderId: string;
+  readonly expectedVersion: number;
+  readonly fromInventoryState: string;
+  readonly toInventoryState: string;
+  readonly inventoryRef: string | null;
+  readonly reasonCode: string;
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId?: string | null;
+}
+
+export interface MirrorInventoryOutcome {
+  readonly kind: "applied";
+  readonly order: StoreOrder;
+}
+
 export interface StoreOrderReadPort {
   /** The order as the wire sees it — null when the public id is unknown. */
   getOrderByPublicId(publicId: WaslaPublicId): Promise<StoreOrder | null>;
@@ -393,6 +410,11 @@ export interface StoreOrderWritePort {
    * the write must not be confirmed.
    */
   confirmOrder(write: ConfirmationWrite): Promise<ConfirmOrderOutcome>;
+  /**
+   * ONE transaction: lock, version check, `inventory_state`/`inventory_ref` update,
+   * a `state_kind = 'inventory'` ledger row, and the outbox event (review 10/N).
+   */
+  mirrorInventoryState(write: InventoryMirrorWrite): Promise<MirrorInventoryOutcome>;
 }
 
 /** A price snapshot line as the catalog boundary returns it (§2.3). */
@@ -446,4 +468,88 @@ export interface StoreOrderCatalogPort {
     storeId: string,
     productIds: readonly string[],
   ): Promise<readonly CatalogProductSnapshot[]>;
+}
+
+/**
+ * Inventory reservation port — the marketplace boundary for reserving and
+ * releasing stock on order placement / cancellation (ADR-026 §2.3, review 10/N).
+ *
+ * The delivery service sends a reservation request to the marketplace, which
+ * owns the inventory data (quantity_on_hand). The marketplace applies a
+ * negative delta with reason "reservation" and publishes
+ * `marketplace.inventory_adjusted`. On cancellation, the delivery service
+ * requests a release — a positive delta with reason "reservation_release".
+ *
+ * The idempotency key is derived deterministically from the order's public id,
+ * so a retry after a network failure completes the same reservation rather
+ * than creating a duplicate.
+ */
+export interface ReservationLine {
+  readonly productId: string;
+  readonly quantity: number;
+}
+
+export interface ReservationRequest {
+  readonly orderPublicId: string;
+  readonly storeSlug: StoreSlug;
+  readonly items: readonly ReservationLine[];
+}
+
+export interface ReservationResult {
+  readonly reserved: boolean;
+  readonly reservationRef: string;
+  readonly insufficientProductId?: string;
+  readonly availableQuantity?: number;
+}
+
+export interface ReleaseRequest {
+  readonly orderPublicId: string;
+  readonly storeSlug: StoreSlug;
+  readonly reservationRef: string;
+  readonly items: readonly ReservationLine[];
+}
+
+export interface InventoryReservationPort {
+  /**
+   * Reserve inventory for an order. Returns `reserved: true` on success, or
+   * `reserved: false` with the insufficient product when stock is short.
+   * Throws `DELIVERY_MARKETPLACE_UNAVAILABLE` when the boundary is unreachable.
+   */
+  reserve(req: ReservationRequest): Promise<ReservationResult>;
+  /**
+   * Release a previously made reservation. Idempotent: a second call for the
+   * same reservation is a no-op that returns success.
+   */
+  release(req: ReleaseRequest): Promise<{ released: boolean }>;
+}
+
+/**
+ * Reservation store — the delivery-side record of reservations made (review 10/N).
+ *
+ * Each row is one reserved line item for one order. The store is queried by the
+ * confirmation gate to verify `inventory_state=reserved` before allowing
+ * `placed → confirmed`.
+ */
+export interface InventoryReservationStore {
+  /** Persist reservations for an order. */
+  saveReservations(orderId: string, reservations: readonly ReservationRecord[]): Promise<void>;
+  /** Load all active reservations for an order. */
+  loadActiveReservations(orderId: string): Promise<readonly ReservationRecord[]>;
+  /** Mark reservations as released (on cancellation). */
+  releaseReservations(orderId: string): Promise<number>;
+  /** Mark reservations as consumed (on fulfillment). */
+  consumeReservations(orderId: string): Promise<number>;
+}
+
+export interface ReservationRecord {
+  readonly reservationId: string;
+  readonly orderId: string;
+  readonly storeSlug: StoreSlug;
+  readonly productId: string;
+  readonly sku: string;
+  readonly quantityReserved: number;
+  readonly unitPriceMinorUnits: number;
+  readonly marketplaceReservationRef: string;
+  readonly status: "active" | "released" | "consumed";
+  readonly reservedAt: string;
 }

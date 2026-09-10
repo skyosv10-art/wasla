@@ -193,6 +193,12 @@ export interface components {
       | "refunding"
       | "partially_refunded"
       | "refunded";
+    InventoryState:
+      | "none"
+      | "reserving"
+      | "reserved"
+      | "released"
+      | "consumed";
     DeliveryTaskState:
       | "pending_eligibility"
       | "eligible"

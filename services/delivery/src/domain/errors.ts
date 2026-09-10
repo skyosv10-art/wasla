@@ -110,3 +110,29 @@ export function substitutionNotAllowed(
     { traceId, details: { actual: state, expected: "picking" } },
   );
 }
+
+/** The composite inventory gate (§3.1): confirmed needs a reserved inventory. */
+export function inventoryNotReserved(
+  actual: string,
+  traceId?: string,
+): DeliveryError {
+  return new DeliveryError(
+    "DELIVERY_INVENTORY_NOT_RESERVED",
+    `لا تأكيدَ لطلبٍ وحالةُ المخزونِ ${actual} — البوّابةُ تطلبُ reserved`,
+    { traceId, details: { expected: "reserved", actual } },
+  );
+}
+
+/** Inventory reservation failed — insufficient stock at the marketplace. */
+export function inventoryInsufficient(
+  productId: string,
+  available: number,
+  requested: number,
+  traceId?: string,
+): DeliveryError {
+  return new DeliveryError(
+    "DELIVERY_INVENTORY_INSUFFICIENT",
+    `المخزونُ لا يكفي للصنفِ ${productId}: المتاحُ ${available} والمطلوبُ ${requested}`,
+    { traceId, details: { field: "quantity", expected: String(requested), actual: String(available) } },
+  );
+}

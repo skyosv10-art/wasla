@@ -25,6 +25,7 @@ export type WaslaPublicId = components["schemas"]["WaslaPublicId"];
 export type StoreSlug = components["schemas"]["StoreSlug"];
 export type FulfillmentState = components["schemas"]["FulfillmentState"];
 export type PaymentState = components["schemas"]["PaymentState"];
+export type InventoryState = components["schemas"]["InventoryState"];
 export type DeliveryTaskState = components["schemas"]["DeliveryTaskState"];
 export type ProofType = components["schemas"]["ProofType"];
 
@@ -190,6 +191,32 @@ export interface StoreOrderPaymentStateChangedV1 extends DeliveryEventEnvelope {
   };
 }
 
+export interface StoreOrderInventoryReservedV1 extends DeliveryEventEnvelope {
+  event_type: "store_order.inventory_reserved";
+  event_version: "v1";
+  aggregate: { type: "store_order"; id: string };
+  payload: {
+    public_id: WaslaPublicId;
+    from_state: InventoryState;
+    to_state: "reserved";
+    reservation_ref: string;
+    actor: DeliveryActor;
+  };
+}
+
+export interface StoreOrderInventoryReleasedV1 extends DeliveryEventEnvelope {
+  event_type: "store_order.inventory_released";
+  event_version: "v1";
+  aggregate: { type: "store_order"; id: string };
+  payload: {
+    public_id: WaslaPublicId;
+    from_state: InventoryState;
+    to_state: "released";
+    reservation_ref: string;
+    actor: DeliveryActor;
+  };
+}
+
 export interface StoreOrderItemSubstitutedV1 extends DeliveryEventEnvelope {
   event_type: "store_order.item_substituted";
   event_version: "v1";
@@ -325,6 +352,8 @@ export type DeliveryDomainEvent =
   | StoreOrderCreatedV1
   | StoreOrderFulfillmentStateChangedV1
   | StoreOrderPaymentStateChangedV1
+  | StoreOrderInventoryReservedV1
+  | StoreOrderInventoryReleasedV1
   | StoreOrderItemSubstitutedV1
   | DeliveryTaskCreatedV1
   | DeliveryEligibilityResolvedV1
@@ -340,6 +369,8 @@ export const DELIVERY_EVENT_TYPES = {
   STORE_ORDER_CREATED: "store_order.created",
   STORE_ORDER_FULFILLMENT_STATE_CHANGED: "store_order.fulfillment_state_changed",
   STORE_ORDER_PAYMENT_STATE_CHANGED: "store_order.payment_state_changed",
+  STORE_ORDER_INVENTORY_RESERVED: "store_order.inventory_reserved",
+  STORE_ORDER_INVENTORY_RELEASED: "store_order.inventory_released",
   STORE_ORDER_ITEM_SUBSTITUTED: "store_order.item_substituted",
   DELIVERY_TASK_CREATED: "delivery.task_created",
   DELIVERY_ELIGIBILITY_RESOLVED: "delivery.eligibility_resolved",

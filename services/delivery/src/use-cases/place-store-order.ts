@@ -54,13 +54,16 @@
 import type { StoreSlug } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "../domain/errors.js";
-import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, type EventContext } from "../domain/events.js";
+import { buildReservationCommand } from "../domain/inventory-reservation.js";
+import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, storeOrderInventoryReservedEvent, type EventContext } from "../domain/events.js";
 import { buildStoreOrderPlacement } from "../domain/store-order-placement.js";
 import type { PlaceOrderInput } from "../domain/validation.js";
 import type { StoreOrder } from "../domain/model.js";
 import type {
   IdempotencyIntent,
   IdempotentReplay,
+  InventoryReservationPort,
+  InventoryReservationStore,
   PlacementWrite,
   StoreOrderCatalogPort,
   StoreOrderWritePort,
@@ -78,6 +81,8 @@ export type PlaceStoreOrderResult =
 export interface PlaceStoreOrderDeps {
   readonly catalogPort: StoreOrderCatalogPort;
   readonly writePort: StoreOrderWritePort;
+  readonly reservationPort: InventoryReservationPort;
+  readonly reservationStore: InventoryReservationStore;
   /** Injected so tests are deterministic — no hidden clock, no hidden uuid. */
   readonly newUuid: () => string;
   readonly now: () => string;
@@ -138,5 +143,55 @@ export async function placeStoreOrder(
 
   const outcome = await deps.writePort.placeOrder(write);
   if (outcome.kind === "replayed") return outcome;
+
+  // ── Inventory reservation (review 10/N, ADR-026 §2.3) ──────────────
+  // The order is placed; now reserve inventory at the marketplace. The
+  // reservation is OUTSIDE the placement transaction: the marketplace owns
+  // the inventory data, and the idempotency key (derived from orderPublicId)
+  // makes a retry complete the same reservation rather than create a duplicate.
+  // On failure, the order remains in `placed` with inventory_state=none —
+  // the caller retries the whole placement with the same Idempotency-Key.
+  const reservationResult = await deps.reservationPort.reserve(
+    buildReservationCommand(order),
+  );
+  if (!reservationResult.reserved) {
+    throw new DeliveryError(
+      "DELIVERY_INVENTORY_INSUFFICIENT",
+      `المخزونُ لا يكفي للصنفِ ${reservationResult.insufficientProductId ?? "غيرِ معروفٍ"}: المتاحُ ${reservationResult.availableQuantity ?? 0}`,
+      { traceId: traceId ?? undefined, details: { field: "quantity" } },
+    );
+  }
+
+  // Persist the reservation records in delivery's own table
+  const reservations = order.items.map((item) => ({
+    reservationId: deps.newUuid(),
+    orderId: order.orderId,
+    storeSlug: order.storeSlug,
+    productId: item.productId,
+    sku: item.sku,
+    quantityReserved: item.quantity,
+    unitPriceMinorUnits: item.unitPriceMinorUnits,
+    marketplaceReservationRef: reservationResult.reservationRef,
+    status: "active" as const,
+    reservedAt: occurredAt,
+  }));
+  await deps.reservationStore.saveReservations(order.orderId, reservations);
+
+  // Mirror the inventory state to the order
+  await deps.writePort.mirrorInventoryState({
+    orderId: order.orderId,
+    expectedVersion: 1,
+    fromInventoryState: "none",
+    toInventoryState: "reserved",
+    inventoryRef: reservationResult.reservationRef,
+    reasonCode: "INVENTORY_RESERVED",
+    events: [
+      storeOrderInventoryReservedEvent(order, { eventId: deps.newUuid(), occurredAt: deps.now(), traceId }, {
+        reservation_ref: reservationResult.reservationRef,
+      }),
+    ],
+    traceId,
+  });
+
   return { kind: "applied", order };
 }

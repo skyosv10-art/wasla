@@ -348,6 +348,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stores/{storeSlug}/inventory/reserve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * حجز كميّة المخزون لطلبٍ واردٍ من خدمةِ التسليم
+         * @description حجزُ الكميّةِ ملكُ السوقِ (ADR-026 §2.3): طلبُ حجزٍ واردٌ من خدمةِ التسليم (الطور 13). لكلِّ
+         *     صنفٍ يُطبَّق فرقَ سالبٍ بسبَب `reservation` وفاعلُه `system:delivery`. وإن لم تكفِ الكميّةُ
+         *     لأيِّ صنفٍ يُعاد `409` برمزِ `INVENTORY_INSUFFICIENT_QUANTITY` ولا يُكتبُ شيء. والإعارةُ تُعالَج
+         *     بمفتاحِ التفرّدِ كأيِّ كتابة.
+         */
+        post: operations["reserveStoreInventory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/{storeSlug}/inventory/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * إطلاق كميّةٍ محجوزةٍ لطلبٍ من خدمةِ التسليم
+         * @description إطلاقُ حجزٍ سابقٍ: لكلِّ صنفٍ يُطبَّق فرقَ موجبٍ بسبَب `reservation_release` وفاعلُه
+         *     `system:delivery`. والإطلاقُ يُعيد الكميّةَ إلى الرصيدِ بلا فحصِ كفايةٍ لأنّه زيادةٌ لا سحب.
+         */
+        post: operations["releaseStoreInventory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -374,7 +418,7 @@ export interface components {
         /** @enum {string} */
         ProductReasonCode: "prohibited_item" | "misleading_title" | "wrong_category" | "price_implausible" | "duplicate_listing" | "policy_violation";
         /** @enum {string} */
-        InventoryReasonCode: "initial_stock" | "restock" | "correction" | "shrinkage" | "archive_zeroed";
+        InventoryReasonCode: "initial_stock" | "restock" | "correction" | "shrinkage" | "archive_zeroed" | "reservation" | "reservation_release";
         StoreCategory: {
             category_slug: components["schemas"]["CategorySlug"];
             label_ar: string;
@@ -548,7 +592,8 @@ export interface components {
             /** @description فرقٌ موقّعٌ غيرُ صفريّ. فرقٌ صفريٌّ ليس حدثاً؛ قبولُه يُنتج دفتراً فيه صفوفٌ لا تعني شيئاً. */
             quantity_delta: number;
             reason_code: components["schemas"]["InventoryReasonCode"];
-            actor_public_id: components["schemas"]["WaslaPublicId"];
+            /** @description مُعرّفُ الفاعل — إمّا `WS-##########` أو `system:<service>` كـ`system:delivery`. */
+            actor_public_id: components["schemas"]["WaslaPublicId"] | string;
         };
         InventoryAdjustmentResource: {
             /** Format: uuid */
@@ -561,7 +606,8 @@ export interface components {
             quantity_after: number;
             reason_code: components["schemas"]["InventoryReasonCode"];
             adjustment_sequence: number;
-            actor_public_id: components["schemas"]["WaslaPublicId"];
+            /** @description مُعرّفُ الفاعل — إمّا `WS-##########` أو `system:<service>` كـ`system:delivery`. */
+            actor_public_id: components["schemas"]["WaslaPublicId"] | string;
             /** Format: date-time */
             occurred_at: string;
         };
@@ -576,6 +622,34 @@ export interface components {
             adjustments: components["schemas"]["InventoryAdjustmentResource"][];
             next_cursor: string | null;
         };
+        ReservationItem: {
+            /** Format: uuid */
+            product_id: string;
+            /** @description الكميّةُ المطلوبُ حجزُها أو إطلاقُها — عددٌ صحيحٌ موجب. */
+            quantity: number;
+        };
+        ReservationRequest: {
+            /** @description مُعرّفُ الطلب العلنيُّ من خدمةِ التسليم. */
+            order_public_id: string;
+            items: components["schemas"]["ReservationItem"][];
+            /** @description مفتاحُ التفرّدِ الذي يُستعمَل في مِغلافِ الإعادةِ للطلبِ كلِّه. */
+            idempotency_key: string;
+        };
+        ReservationResultItem: {
+            /** Format: uuid */
+            product_id: string;
+            /** @description الفرقُ المُطبَّق — سالبٌ في الحجزِ وموجبٌ في الإطلاق. */
+            quantity_delta: number;
+            quantity_after: number;
+            adjustment_sequence: number;
+            reason_code: components["schemas"]["InventoryReasonCode"];
+        };
+        ReservationResponse: {
+            order_public_id: string;
+            /** Format: uuid */
+            store_id: string;
+            results: components["schemas"]["ReservationResultItem"][];
+        };
         HealthResponse: {
             /** @enum {string} */
             status: "ok" | "degraded" | "unavailable";
@@ -585,7 +659,7 @@ export interface components {
         ErrorResponse: {
             error: {
                 /** @enum {string} */
-                code: "MARKETPLACE_VALIDATION_FAILED" | "MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED" | "MARKETPLACE_FILTER_REQUIRED" | "STORE_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "STORE_CATEGORY_NOT_FOUND" | "STORE_STAFF_NOT_FOUND" | "MARKETPLACE_IDEMPOTENCY_KEY_REUSED" | "STORE_SLUG_TAKEN" | "STORE_OWNER_LIMIT_REACHED" | "PRODUCT_SKU_TAKEN" | "STORE_STAFF_ALREADY_MEMBER" | "STORE_REVIEW_ALREADY_PENDING" | "STORE_DECISION_NOT_ALLOWED" | "PRODUCT_TRANSITION_NOT_ALLOWED" | "STORE_SLUG_RESERVED" | "STORE_NOT_APPROVED" | "PRODUCT_NOT_MODERATED" | "STORE_CATEGORY_INACTIVE" | "PRODUCT_CATEGORY_NOT_LEAF" | "STORE_OWNER_ROLE_IMMUTABLE" | "INVENTORY_INSUFFICIENT_QUANTITY" | "STORE_REJECTION_REASON_REQUIRED" | "MARKETPLACE_UNAVAILABLE";
+                code: "MARKETPLACE_VALIDATION_FAILED" | "MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED" | "MARKETPLACE_FILTER_REQUIRED" | "STORE_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "STORE_CATEGORY_NOT_FOUND" | "STORE_STAFF_NOT_FOUND" | "MARKETPLACE_IDEMPOTENCY_KEY_REUSED" | "STORE_SLUG_TAKEN" | "STORE_OWNER_LIMIT_REACHED" | "PRODUCT_SKU_TAKEN" | "STORE_STAFF_ALREADY_MEMBER" | "STORE_REVIEW_ALREADY_PENDING" | "STORE_DECISION_NOT_ALLOWED" | "PRODUCT_TRANSITION_NOT_ALLOWED" | "STORE_SLUG_RESERVED" | "STORE_NOT_APPROVED" | "PRODUCT_NOT_MODERATED" | "STORE_CATEGORY_INACTIVE" | "PRODUCT_CATEGORY_NOT_LEAF" | "STORE_OWNER_ROLE_IMMUTABLE" | "INVENTORY_INSUFFICIENT_QUANTITY" | "INVENTORY_RESERVATION_CONFLICT" | "STORE_REJECTION_REASON_REQUIRED" | "MARKETPLACE_UNAVAILABLE";
                 message: string;
                 /**
                  * @description تفاصيلُ بنيويّةٌ بلا إعادةِ قيمةِ المدخل. الحقولُ معدودةٌ لا حقيبةٌ حرّة؛ فتحُها بلا عقدٍ
@@ -1403,6 +1477,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryAdjustmentResource"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    reserveStoreInventory: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description إلزامي لكل فعل يغير دفتراً أو إسقاطاً؛ إعادةُ المحاولةِ تعيد جواباً محفوظاً ولا تُنشئ قراراً أو فرقاً ثانياً. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description يصبح `trace_id` في الخطأ؛ فصلُ التتبّعِ عن حمولةِ العملِ يمنع خلطَ المُعرّفِ التشغيليِّ ببياناتِ المجال. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                /** @description مُعرّف المتجر في الرابط؛ فريدٌ بلا حساسيةٍ لحالةِ الأحرفِ ومُقفَلٌ بعد أوّلِ اعتماد. */
+                storeSlug: components["parameters"]["StoreSlug"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationRequest"];
+            };
+        };
+        responses: {
+            /** @description إعادةُ محاولةٍ بنفس مفتاح التفرّد؛ يُعاد الجوابُ المحفوظ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationResponse"];
+                };
+            };
+            /** @description حُجِزَت الكميّاتُ ودخلت الدفترَ */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    releaseStoreInventory: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description إلزامي لكل فعل يغير دفتراً أو إسقاطاً؛ إعادةُ المحاولةِ تعيد جواباً محفوظاً ولا تُنشئ قراراً أو فرقاً ثانياً. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description يصبح `trace_id` في الخطأ؛ فصلُ التتبّعِ عن حمولةِ العملِ يمنع خلطَ المُعرّفِ التشغيليِّ ببياناتِ المجال. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                /** @description مُعرّف المتجر في الرابط؛ فريدٌ بلا حساسيةٍ لحالةِ الأحرفِ ومُقفَلٌ بعد أوّلِ اعتماد. */
+                storeSlug: components["parameters"]["StoreSlug"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationRequest"];
+            };
+        };
+        responses: {
+            /** @description أُطلِقَت الكميّاتُ وعادت إلى الدفتر */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];

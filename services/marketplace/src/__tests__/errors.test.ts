@@ -38,9 +38,9 @@ const EXPECTED_STATUS: Record<MarketplaceErrorClass, number> = {
 };
 
 describe("الكتالوجُ واحدٌ ولا يُنسَخ", () => {
-  it("أربعةٌ وعشرون رمزاً لكلٍّ منها صنفٌ مُعلَن", () => {
-    expect(MARKETPLACE_ERROR_CODES).toHaveLength(24);
-    expect(new Set(MARKETPLACE_ERROR_CODES).size).toBe(24);
+  it("خمسةٌ وعشرون رمزاً لكلٍّ منها صنفٌ مُعلَن", () => {
+    expect(MARKETPLACE_ERROR_CODES).toHaveLength(25);
+    expect(new Set(MARKETPLACE_ERROR_CODES).size).toBe(25);
     for (const code of MARKETPLACE_ERROR_CODES) {
       expect(Object.keys(EXPECTED_STATUS)).toContain(MARKETPLACE_ERROR_CODE_CLASS[code]);
     }

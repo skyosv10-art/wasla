@@ -23,6 +23,7 @@
 
 import type {
   FulfillmentState,
+  InventoryState,
   PaymentState,
   StoreSlug,
   WaslaPublicId,
@@ -56,6 +57,9 @@ export interface StoreOrder {
   readonly fulfillmentState: FulfillmentState;
   readonly paymentState: PaymentState;
   readonly paymentRef: string | null;
+  /** Inventory reservation state — mirror of marketplace reservation (§2.3 · review 10/N). */
+  readonly inventoryState: InventoryState;
+  readonly inventoryRef: string | null;
   readonly currencyCode: "SAR";
   readonly itemsTotalMinorUnits: number;
   readonly deliveryFeeMinorUnits: number;

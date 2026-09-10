@@ -19,7 +19,7 @@ import type { Pool } from "pg";
 
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
-import { CUSTOMER_REF, FakeCatalog, PRODUCT_A, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
+import { CUSTOMER_REF, FakeCatalog, FakeReservationPort, FakeReservationStore, PRODUCT_A, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
 import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
@@ -52,6 +52,8 @@ describe.skipIf(!PG_ENABLED)("مرآةُ الدفعِ والتأكيدُ — Pos
     catalogPort: new FakeCatalog(),
     writePort: store,
     readPort: store,
+    reservationPort: new FakeReservationPort(),
+    reservationStore: new FakeReservationStore(),
     newUuid: uuidSequence(`${Math.floor(Math.random() * 0xfffffff).toString(16).padStart(8, "0")}`),
     now: () => NOW,
   });

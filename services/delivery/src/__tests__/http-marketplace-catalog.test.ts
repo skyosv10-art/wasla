@@ -329,7 +329,7 @@ describe("HttpMarketplaceCatalogPort · price snapshots", () => {
 describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", () => {
   it("places an order for a slug — the answer that was 503 for seven reviews", async () => {
     const { buildDeliveryHttpApp } = await import("../http/app.js");
-    const { FakeStoreOrderStore, CUSTOMER_REF, uuidSequence } = await import(
+    const { FakeStoreOrderStore, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, uuidSequence } = await import(
       "./store-order-fakes.js"
     );
 
@@ -352,6 +352,8 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
         signRequest: stubSigner(),
         fetchImpl,
       }),
+      reservationPort: new FakeReservationPort(),
+      reservationStore: new FakeReservationStore(),
       newUuid: uuidSequence(),
       now: () => "2026-09-10T10:00:00.000Z",
     });
@@ -380,7 +382,7 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
 
   it("400s an unknown slug and 503s an outage — the two must not merge", async () => {
     const { buildDeliveryHttpApp } = await import("../http/app.js");
-    const { FakeStoreOrderStore, CUSTOMER_REF, uuidSequence } = await import(
+    const { FakeStoreOrderStore, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, uuidSequence } = await import(
       "./store-order-fakes.js"
     );
 
@@ -401,6 +403,8 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
           signRequest: stubSigner(),
           fetchImpl,
         }),
+        reservationPort: new FakeReservationPort(),
+        reservationStore: new FakeReservationStore(),
         newUuid: uuidSequence(),
         now: () => "2026-09-10T10:00:00.000Z",
       });

@@ -140,6 +140,33 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     expect(api).toMatch(/operationId: getDeliveryHealth/);
   });
 
+  it("api declares the readiness route as its own operation (review 7/N · §4.10-2)", () => {
+    // مسارُ الجاهزيَّةِ منفصلٌ عن الحياةِ: الأوَّلُ يفحصُ التبعيَّاتِ، والثاني يقولُ
+    // «العمليَّةُ حيَّةٌ» فقط. دمجُهما يجعلُ عطَلَ قاعدةٍ يُعيدُ تشغيلَ كلِّ نسخةٍ.
+    expect(api).toMatch(/operationId: getDeliveryReadiness/);
+    expect(api).toMatch(/\/delivery\/ready:/);
+    // الجاهزيَّةُ تُجيبُ بنفسِ الجسدِ في الحالتينِ، فالفاحصُ يقرأُ سبباً لا نصّاً.
+    expect(api).toMatch(/ReadinessResponse/);
+  });
+
+  it("both write routes REQUIRE an Idempotency-Key header (review 7/N · §4.10-1)", () => {
+    // الترويسةُ إلزاميَّةٌ لا اختياريَّةٌ: عميلٌ يُعيدُ المحاولةَ بلا مفتاحٍ يُنشئُ
+    // طلباً ثانياً، والعقدُ الذي يسمحُ بذلك يسمحُ بفاتورةٍ مضاعفةٍ.
+    expect(api).toMatch(/IdempotencyKey:/);
+    expect(api).toMatch(/name: Idempotency-Key/);
+    expect(api).toMatch(/in: header/);
+    // مرجعانِ فقط: مسارُ الإنشاءِ ومسارُ الإلغاءِ — لا قراءةٌ تحملُ مفتاحاً.
+    expect([...api.matchAll(/parameters\/IdempotencyKey/g)].length).toBe(2);
+  });
+
+  it("schema declares the idempotency ledger bound to the order it created (§4.10-1)", () => {
+    expect(schemaCode).toMatch(/CREATE TABLE IF NOT EXISTS delivery_idempotency_keys/);
+    // البصمةُ هي ما يمنعُ مفتاحاً واحداً من خدمةِ طلبينِ مختلفينِ.
+    expect(schemaCode).toMatch(/request_fingerprint\s+TEXT\s+NOT NULL/);
+    // الحذفُ المتتالي: مفتاحٌ يشيرُ إلى طلبٍ محذوفٍ يُعيدُ جسداً لطلبٍ لا وجودَ لهُ.
+    expect(schemaCode).toMatch(/REFERENCES store_orders\(order_id\) ON DELETE CASCADE/);
+  });
+
   it("api declares the HTTP layer as IMPLEMENTED since review 6/N (§4.2 lifted)", () => {
     // حتّى المراجعةِ 5/N كان العقدُ يقولُ «مُعرَّفٌ لا مُنفَّذٌ»؛ المراجعةُ 6/N رفعتِ
     // الحدَّ الشبكيَّ، فالوصفُ القديمُ لو بقيَ لكانَ كذباً موثَّقاً.

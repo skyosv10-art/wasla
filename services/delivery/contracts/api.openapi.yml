@@ -10,7 +10,7 @@ info:
     عليهِ (§2.3) · التوصيلُ مرآةٌ خشنةٌ لنتائجِ dispatch (§2.4) · الاستبدالُ قرارُ صنفٍ
     (§2.5) · لا بياناتِ شخصيّةَ ولا إحداثيّاتٍ في أيِّ حمولةٍ (§2.6).
 
-    **حالةُ التنفيذِ (مراجعةٌ 6/N · `CLM-0125`):** طبقةُ HTTP **مُنفَّذةٌ** بـFastify فوقَ
+    **حالةُ التنفيذِ (مراجعةٌ 7/N · `CLM-0126`):** طبقةُ HTTP **مُنفَّذةٌ** بـFastify فوقَ
     هذا العقدِ حرفاً (`services/delivery/src/http/`) بمعالجِ أخطاءٍ واحدٍ ومنافذَ
     مُحقونةٍ — رُفعَ تأجيلُ ADR-026 §4.2 في نصِّهِ الخاصِّ بالحدِّ الشبكيِّ وبمخزنِ
     الطلباتِ على PostgreSQL.
@@ -19,8 +19,19 @@ info:
     كتالوجِ السوقِ ليأخذَ لقطةَ السعرِ (§2.3)، ومرجعُ المتجرِ في هذا العقدِ
     `WS-##########` بينما السوقُ يُعرِّفُ متجرَهُ بـ`store_slug`/`store_id` ولا يملكُ
     مرجعاً عامّاً للمتجرِ — فلا مُحوّلَ HTTP للكتالوجِ اليومَ، والمسارُ يُجيبُ
-    `503 DELIVERY_MARKETPLACE_UNAVAILABLE` حتّى يُحسَمَ القرارُ. ولا مفتاحَ تماثُلٍ
-    (`Idempotency-Key`) في هذا العقدِ بعدُ — دَينٌ مُعلَنٌ (§4.9-3).
+    `503 DELIVERY_MARKETPLACE_UNAVAILABLE` حتّى يُحسَمَ القرارُ.
+
+    **مفتاحُ التماثُلِ (مراجعةٌ 7/N — رُفِعَ دَينُ §4.9-3):** المسارانِ
+    الكاتبانِ يطلبانِ ترويسةَ `Idempotency-Key` **إلزاماً**؛ الإعادةُ بالمفتاحِ
+    نفسِهِ والطلبِ نفسِهِ تُعيدُ جوابَ الأولِ حرفاً مع `Idempotent-Replay: true`
+    ولا تكتبُ شيئاً؛ والمفتاحُ نفسُهُ بطلبٍ مختلفٍ يُرفَضُ
+    `409 DELIVERY_IDEMPOTENCY_KEY_REUSED`. ومع المفتاحِ **يبقى** الملاذُ الأخيرُ
+    `500` لا `503` (contracts/errors.md قاعدةُ 5).
+
+    **الجاهزيّةُ (رُفِعَ دَينُ §4.9-4):** `GET /delivery/ready` يسبُرُ القاعدةَ
+    فعلاً، ويُجيبُ **بجسمِ `ReadinessResponse` نفسِهِ في 200 و503 معاً** — الاستثناءُ
+    الوحيدُ المُعلَنُ لقاعدةِ «كلُّ خطأٍ جسمُ `ErrorResponse`»، لأنَّ المسبارَ
+    يُبلِّغُ حالةً لا عيباً.
 servers:
   - url: http://localhost:8097
     description: تشغيلٌ محليٌّ — `services/delivery/src/http/server.ts` (المراجعةُ 6/N)
@@ -46,6 +57,8 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/PlaceStoreOrderRequest"
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "201":
           description: طلبٌ مُنشأٌ في placed
@@ -96,6 +109,7 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/WaslaPublicId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -104,7 +118,7 @@ paths:
               $ref: "#/components/schemas/CancelStoreOrderRequest"
       responses:
         "200":
-          description: الطلبُ مُلغىً
+          description: الطلبُ مُلغىً (أو إعادةُ جوابِ إلغاءٍ سابقٍ بالمفتاحِ نفسِهِ)
           content:
             application/json:
               schema:
@@ -153,7 +167,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+  /delivery/ready:
+    get:
+      tags: [health]
+      operationId: getDeliveryReadiness
+      summary: جاهزيّةُ الخدمةِ (سبرٌ حقيقيٌّ للتبعيّاتِ)
+      description: |
+        ليس نبضةً: يسألُ القاعدةَ بـ`SELECT` على جدولٍ حقيقيٍّ بمهلةٍ
+        قصيرةٍ. ما لا يُسبَرُ لا يُدّعى: منفذُ كتالوجِ السوقِ غيرُ موصولٍ
+        (§4.9-2) فيُذكَرُ في `not_claimed` ولا يُحسَبُ جاهزيّةً ولا يجعلُ
+        المسارَ 503 أبديّاً (درسُ RISK-0030). القراءةُ والإلغاءُ قابلانِ للخدمةِ
+        متى كانتِ القاعدةُ حاضرةً، فذلك معنى 200 هنا.
+      responses:
+        "200":
+          description: جاهزٌ — كلُّ ما يُسبَرُ يستجيبُ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+        "503":
+          description: |
+            غيرُ جاهزٍ — **والجسمُ `ReadinessResponse` لا `ErrorResponse`**
+            (الاستثناءُ الوحيدُ المُعلَنُ · errors.md قاعدةُ 6).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
 components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        مفتاحٌ يولِّدُهُ العميلُ للطلبِ الواحدِ ويُعيدُهُ حرفاً مع كلِّ محاولةِ
+        إعادةٍ. uuid v4 يستوفيهِ. الحدُّ الأدنى 16 محرفاً مقصودٌ: مفتاحٌ قصيرٌ
+        يتصادمُ بينَ عميلَينِ، والتصادمُ هنا يعني عميلاً يقرأُ جوابَ طلبِ غيرِهِ.
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
   responses:
     ValidationError:
       description: مدخلاتٌ غيرُ صالحةٍ
@@ -343,3 +395,33 @@ components:
         status:
           type: string
           const: ok
+    ReadinessResponse:
+      type: object
+      required: [status, checks, not_claimed]
+      description: |
+        جسمُ الجاهزيّةِ في 200 و503 معاً. `status` يُشتَقُّ من `checks`
+        المسبورةِ وحدَها؛ و`not_claimed` تبعيّاتٌ مُعلَنةٌ غيرُ موصولةٍ
+        لا تُسبَرُ ولا تُدّعى — إعلانٌ لا إخفاءٌ.
+      properties:
+        status:
+          type: string
+          enum: [ready, unavailable]
+        checks:
+          type: array
+          items:
+            type: object
+            required: [name, ok]
+            properties:
+              name:
+                type: string
+                enum: [database]
+              ok:
+                type: boolean
+              detail:
+                type: string
+                description: سببٌ مقتضبٌ للسجلِّ لا للمستخدمِ — لا أسرارَ ولا مُدخَلاتٍ.
+        not_claimed:
+          type: array
+          items:
+            type: string
+            enum: [marketplace_catalog_not_wired]

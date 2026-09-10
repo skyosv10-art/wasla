@@ -157,3 +157,28 @@ export type {
   StoreOrderReadPort,
   StoreOrderWritePort,
 } from "./ports.js";
+
+/* ── review 7/N: idempotency + readiness (ADR-026 §4.10) ── */
+export {
+  IDEMPOTENCY_KEY_PATTERN,
+  IDEMPOTENT_ROUTES,
+  assertIdempotencyKey,
+  canonicalJson,
+  deriveRequestFingerprint,
+} from "./domain/idempotency.js";
+export type { IdempotentRoute } from "./domain/idempotency.js";
+export { resolveIdempotentReplay } from "./use-cases/idempotency-guard.js";
+export { buildReadinessResponse } from "./http/readiness.js";
+export type { ReadinessResponseBody } from "./http/readiness.js";
+export {
+  DEFAULT_READINESS_TIMEOUT_MS,
+  PostgresReadinessProbe,
+  readinessFailureReason,
+} from "./infrastructure/readiness-probe.js";
+export type {
+  IdempotencyIntent,
+  IdempotentReplay,
+  ReadinessCheckResult,
+  ReadinessProbePort,
+  StoredIdempotentResponse,
+} from "./ports.js";

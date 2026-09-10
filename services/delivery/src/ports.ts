@@ -230,12 +230,68 @@ export interface InventoryObservationStore {
 import type { StoreOrderCancelReasonCode, WaslaPublicId } from "@wasla/contracts-delivery";
 import type { DeliveryTask, StoreOrder } from "./domain/model.js";
 import type { DeliveryDomainEvent } from "./domain/events.js";
+import type { IdempotentRoute } from "./domain/idempotency.js";
+
+/**
+ * One request's idempotency contract, carried INTO the write so the key and
+ * the effect land in the SAME transaction (review 7/N, ADR-026 §4.10).
+ *
+ * The key is deliberately not a separate port with its own `begin`/`finish`
+ * calls: two transactions mean a window where the key is committed and the
+ * order is not (a retry then replays a response for an order that was rolled
+ * back), or the reverse (a duplicate order). Passing the intent inward keeps
+ * atomicity a property of the adapter's single transaction.
+ *
+ * `buildResponseBody` receives the order the transaction actually wrote, so
+ * the stored body is the same body the caller receives — not a re-serialized
+ * guess assembled by a different code path later.
+ */
+export interface IdempotencyIntent {
+  readonly key: string;
+  readonly route: IdempotentRoute;
+  /** sha256 of the canonical request — a mismatch is a reuse, not a replay. */
+  readonly fingerprint: string;
+  /** The status to store and to replay verbatim (201 place · 200 cancel). */
+  readonly responseStatus: 200 | 201;
+  readonly buildResponseBody: (order: StoreOrder) => unknown;
+}
+
+/** A stored first response, replayed byte-for-byte on a retry. */
+export interface IdempotentReplay {
+  readonly kind: "replayed";
+  readonly status: number;
+  readonly body: unknown;
+}
+
+/** A stored key as the read side sees it — fingerprint included, so the
+ *  caller can tell a replay from a reuse before doing any work. */
+export interface StoredIdempotentResponse {
+  readonly fingerprint: string;
+  readonly status: number;
+  readonly body: unknown;
+}
+
+export type PlaceOrderOutcome = { readonly kind: "applied" } | IdempotentReplay;
+export type CancelOrderOutcome =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
 
 export interface StoreOrderReadPort {
   /** The order as the wire sees it — null when the public id is unknown. */
   getOrderByPublicId(publicId: WaslaPublicId): Promise<StoreOrder | null>;
   /** The delivery task of an order — null when the ORDER or the task is unknown. */
   getTaskByOrderPublicId(publicId: WaslaPublicId): Promise<DeliveryTask | null>;
+  /**
+   * A previously stored response for an idempotency key — null when unused.
+   *
+   * On the read port, and consulted BEFORE the domain runs, because the retry
+   * of a successful cancellation would otherwise die in the domain: the order
+   * is already `cancelled`, and `cancelled → cancelled` is not an edge (§3.1),
+   * so the caller would get `409 DELIVERY_INVALID_TRANSITION` instead of the
+   * response it is retrying for. The transactional check inside the write port
+   * stays — this one is for a correct answer, that one is for atomicity.
+   */
+  findIdempotentResponse(key: string): Promise<StoredIdempotentResponse | null>;
 }
 
 /** What one placement writes, built entirely in the domain before the write. */
@@ -245,6 +301,8 @@ export interface PlacementWrite {
   /** Built by `domain/events.ts` — the store only appends them (§2.4). */
   readonly events: readonly DeliveryDomainEvent[];
   readonly traceId: string | null;
+  /** Optional so fakes and internal callers may write without a wire key. */
+  readonly idempotency?: IdempotencyIntent;
 }
 
 /** What one cancellation writes — the order after, plus its ledger rows. */
@@ -258,6 +316,7 @@ export interface CancellationWrite {
   readonly taskCancellation: { readonly taskId: string; readonly fromState: string } | null;
   readonly events: readonly DeliveryDomainEvent[];
   readonly traceId: string | null;
+  readonly idempotency?: IdempotencyIntent;
 }
 
 export interface StoreOrderWritePort {
@@ -267,14 +326,20 @@ export interface StoreOrderWritePort {
    * identity, instead of the adapter inventing ids the events never saw.
    */
   nextOrderPublicId(): Promise<WaslaPublicId>;
-  /** ONE transaction: order + items + transition + task + outbox rows. */
-  placeOrder(write: PlacementWrite): Promise<void>;
+  /**
+   * ONE transaction: order + items + transition + task + outbox rows — and,
+   * when `write.idempotency` is present, the key row too. `replayed` means
+   * nothing was written and the stored first response must be returned.
+   */
+  placeOrder(write: PlacementWrite): Promise<PlaceOrderOutcome>;
   /**
    * ONE transaction: `SELECT ... FOR UPDATE`, version check
    * (`DELIVERY_CONCURRENT_UPDATE` on mismatch), state update, ledger rows,
-   * outbox events. Returns the order as it stands after the write.
+   * outbox events. Returns the order as it stands after the write, or the
+   * stored first response when the idempotency key has already been used for
+   * this exact request.
    */
-  cancelOrder(write: CancellationWrite): Promise<StoreOrder>;
+  cancelOrder(write: CancellationWrite): Promise<CancelOrderOutcome>;
 }
 
 /** A price snapshot line as the catalog boundary returns it (§2.3). */
@@ -282,6 +347,26 @@ export interface CatalogProductSnapshot {
   readonly productId: string;
   readonly sku: string;
   readonly unitPriceMinorUnits: number;
+}
+
+/**
+ * A readiness probe (review 7/N, ADR-026 §4.10-2 — §4.9-4 lifted).
+ *
+ * A port, not a direct pool call in the route, for the same reason every other
+ * dependency here is a port: the route must be testable without a database,
+ * and the probe must be replaceable without touching the HTTP layer. Only
+ * checks this port actually performs may appear in the response — an
+ * unwired dependency is reported as `not_claimed`, never as a passing check.
+ */
+export interface ReadinessCheckResult {
+  readonly name: "database";
+  readonly ok: boolean;
+  readonly detail?: string;
+}
+
+export interface ReadinessProbePort {
+  /** Never throws: an unreachable dependency IS the answer, not an error. */
+  probe(): Promise<readonly ReadinessCheckResult[]>;
 }
 
 export interface StoreOrderCatalogPort {

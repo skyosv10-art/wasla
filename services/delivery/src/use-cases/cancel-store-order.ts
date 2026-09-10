@@ -34,11 +34,28 @@ import {
 } from "../domain/events.js";
 import type { StoreOrder } from "../domain/model.js";
 import { decideCancellation } from "../domain/store-order-cancellation.js";
+import { resolveIdempotentReplay } from "./idempotency-guard.js";
 import type {
   CancellationWrite,
+  IdempotencyIntent,
+  IdempotentReplay,
   StoreOrderReadPort,
   StoreOrderWritePort,
 } from "../ports.js";
+
+/**
+ * Either the cancellation was applied, or the same key had already cancelled
+ * this exact order and the stored first response is replayed.
+ *
+ * A replay is NOT the same as a second cancellation attempt without a key:
+ * that one reaches the domain and is refused (`DELIVERY_INVALID_TRANSITION`,
+ * because `cancelled → cancelled` is not an edge in §3.1). Both answers are
+ * correct for their question — "is my retry done?" vs "cancel this again" —
+ * and the key is what distinguishes them.
+ */
+export type CancelStoreOrderResult =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
 
 export interface CancelStoreOrderDeps {
   readonly readPort: StoreOrderReadPort;
@@ -52,7 +69,14 @@ export async function cancelStoreOrder(
   publicId: WaslaPublicId,
   reasonCode: StoreOrderCancelReasonCode,
   traceId: string | null,
-): Promise<StoreOrder> {
+  idempotency?: IdempotencyIntent,
+): Promise<CancelStoreOrderResult> {
+  // BEFORE the domain runs: a retry of a successful cancellation must replay
+  // the stored response, not be refused by the state machine for asking to
+  // cancel an order that is already cancelled (see `idempotency-guard.ts`).
+  const replay = await resolveIdempotentReplay(deps.readPort, idempotency, traceId);
+  if (replay !== null) return replay;
+
   const order = await deps.readPort.getOrderByPublicId(publicId);
   if (order === null) {
     throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المرجعِ", {
@@ -98,6 +122,7 @@ export async function cancelStoreOrder(
     taskCancellation: decision.taskCancellation,
     events,
     traceId,
+    idempotency,
   };
 
   return deps.writePort.cancelOrder(write);

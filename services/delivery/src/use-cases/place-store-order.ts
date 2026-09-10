@@ -26,9 +26,29 @@
  * It does not decide eligibility (the task starts `pending_eligibility`), it
  * does not touch payment (that mirror is external, §2.2), and it does not
  * retry the catalog: a dependency failure surfaces as
- * `DELIVERY_MARKETPLACE_UNAVAILABLE` and the caller decides. With no
- * idempotency key in this contract (declared debt, ADR-026 §4.9-3), a retry
- * loop here could mint duplicate orders.
+ * `DELIVERY_MARKETPLACE_UNAVAILABLE` and the caller decides. Even now that an
+ * `Idempotency-Key` makes the CALLER's retry safe (review 7/N, §4.10), an
+ * internal retry loop here would still be wrong: it would reuse the same key
+ * and turn a transient dependency failure into a 409 instead of the honest
+ * dependency error the caller must see.
+ *
+ * ## Where the idempotency key is checked — and why placement differs from cancel
+ *
+ * Placement passes the intent THROUGH to the write port, which resolves it
+ * inside the one transaction that also writes the order
+ * (`store-order-store.ts`). A replayed placement therefore still resolves the
+ * store, still takes price snapshots, and still burns a sequence value before
+ * the replay is detected — wasted work on a rare retry, and nothing worse: the
+ * transaction rolls back and the stored first response is returned.
+ *
+ * Cancellation cannot rely on that alone and adds a read-side pre-check
+ * (`idempotency-guard.ts`), because its retry hits a domain refusal first: the
+ * order is already `cancelled` and `cancelled → cancelled` is not an edge. The
+ * asymmetry is deliberate and it is the smaller evil — the alternative is a
+ * pre-check on this path too, i.e. an extra round trip on every placement to
+ * save work on retries that should be rare. Both paths keep the transactional
+ * check, so the GUARANTEE is identical either way; only the wasted effort on a
+ * retry differs.
  */
 
 import type { WaslaPublicId } from "@wasla/contracts-delivery";
@@ -39,10 +59,21 @@ import { buildStoreOrderPlacement } from "../domain/store-order-placement.js";
 import type { PlaceOrderInput } from "../domain/validation.js";
 import type { StoreOrder } from "../domain/model.js";
 import type {
+  IdempotencyIntent,
+  IdempotentReplay,
   PlacementWrite,
   StoreOrderCatalogPort,
   StoreOrderWritePort,
 } from "../ports.js";
+
+/**
+ * Either the placement happened (and `order` is what was written) or the key
+ * had already been used for this exact request and the stored first response
+ * must be replayed verbatim.
+ */
+export type PlaceStoreOrderResult =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
 
 export interface PlaceStoreOrderDeps {
   readonly catalogPort: StoreOrderCatalogPort;
@@ -56,7 +87,8 @@ export async function placeStoreOrder(
   deps: PlaceStoreOrderDeps,
   input: PlaceOrderInput,
   traceId: string | null,
-): Promise<StoreOrder> {
+  idempotency?: IdempotencyIntent,
+): Promise<PlaceStoreOrderResult> {
   const store = await deps.catalogPort.getStoreByPublicId(input.store_public_id as WaslaPublicId);
   if (store === null) {
     // The catalog ANSWERED and the answer was "no such store": a client
@@ -101,8 +133,10 @@ export async function placeStoreOrder(
       deliveryTaskCreatedEvent(task, order.publicId, taskContext),
     ],
     traceId,
+    idempotency,
   };
 
-  await deps.writePort.placeOrder(write);
-  return order;
+  const outcome = await deps.writePort.placeOrder(write);
+  if (outcome.kind === "replayed") return outcome;
+  return { kind: "applied", order };
 }

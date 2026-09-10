@@ -74,6 +74,27 @@ describe("placement builder — money and identity", () => {
     }
   });
 
+  it("item ids are unique ACROSS orders, not only within one (regression, 7/N)", () => {
+    // Two order ids that differ ONLY in their last 12 characters. The first
+    // derivation kept the first 24 characters and overwrote the tail with the
+    // line number, so both orders produced the SAME order_item_id and the
+    // second placement died on store_order_items_pkey — a 500 on a valid
+    // request, found by the review 7/N integration suite.
+    const left = buildStoreOrderPlacement(input(), SNAPSHOTS, {
+      ...IDENTITY,
+      orderId: "0f28887e-0000-4000-8000-000000000001",
+    });
+    const right = buildStoreOrderPlacement(input(), SNAPSHOTS, {
+      ...IDENTITY,
+      orderId: "0f28887e-0000-4000-8000-000000000005",
+    });
+    const ids = [...left.order.items, ...right.order.items].map((i) => i.orderItemId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) {
+      expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    }
+  });
+
   it("is pure — the same inputs build byte-identical aggregates", () => {
     const a = buildStoreOrderPlacement(input(), SNAPSHOTS, IDENTITY);
     const b = buildStoreOrderPlacement(input(), SNAPSHOTS, IDENTITY);

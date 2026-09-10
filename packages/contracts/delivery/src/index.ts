@@ -26,6 +26,9 @@
 export type * from "./api-types.js";
 export type * from "./events-types.js";
 export { DELIVERY_EVENT_TYPES } from "./events-types.js";
+// المراجعةُ 6/N: حدُّ HTTP يحتاجُ الكتالوجَ المغلقَ قيمةً لا نوعاً فقط؛
+// دونَهُ كانَ المحلِّلُ سيُعيدُ سردَ الأسبابِ في ملفِّهِ — وثاني سردٍ ينحرفُ.
+export { STORE_ORDER_CANCEL_REASON_CODES } from "./events-types.js";
 
 import type { components } from "./api-types.js";
 
@@ -134,6 +137,12 @@ export const DELIVERY_ERROR_CODES = [
   "DELIVERY_MARKETPLACE_UNAVAILABLE",
   "DELIVERY_DISPATCH_UNAVAILABLE",
   "DELIVERY_CONCURRENT_UPDATE",
+  // المراجعةُ 6/N: الحدُّ الأخيرُ لطبقةِ HTTP — خطأٌ غيرُ مُصنَّفٍ لا يجوزُ أن
+  // يخرجَ بجسمٍ خارجَ `ErrorResponse` ولا أن يستعيرَ كوداً يعني شيئاً آخرَ
+  // («تعذَّرَ السوقُ» ليس اسماً لعيبٍ في الشيفرةِ). ولا يُصنَّفُ 503:
+  // `POST /store-orders` بلا مفتاحِ تماثُلٍ في هذا العقدِ، فدعوةُ العميلِ
+  // إلى الإعادةِ قد تُنشئُ طلبَينِ — 500 يقولُ «لا تُعِد» بصدقٍ.
+  "DELIVERY_INTERNAL_ERROR",
 ] as const;
 export type DeliveryErrorCode = (typeof DELIVERY_ERROR_CODES)[number];
 
@@ -142,6 +151,7 @@ export const DELIVERY_ERROR_CLASS_STATUS = {
   not_found: 404,
   conflict: 409,
   dependency_unavailable: 503,
+  internal: 500,
 } as const;
 export type DeliveryErrorClass = keyof typeof DELIVERY_ERROR_CLASS_STATUS;
 
@@ -159,6 +169,7 @@ export const DELIVERY_ERROR_CODE_CLASS: Record<DeliveryErrorCode, DeliveryErrorC
   DELIVERY_MARKETPLACE_UNAVAILABLE: "dependency_unavailable",
   DELIVERY_DISPATCH_UNAVAILABLE: "dependency_unavailable",
   DELIVERY_CONCURRENT_UPDATE: "conflict",
+  DELIVERY_INTERNAL_ERROR: "internal",
 };
 
 /** The HTTP status derived from the class — the HTTP layer never re-classifies. */

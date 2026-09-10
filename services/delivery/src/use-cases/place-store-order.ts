@@ -1,0 +1,108 @@
+/**
+ * Place a store order (ADR-026 §2.1 · §2.3 · §3.1 · §3.3).
+ *
+ * The orchestration, and only the orchestration: resolve the store through
+ * the marketplace boundary, take price snapshots, reserve the public id,
+ * ask the DOMAIN to build the aggregate and its events, hand the whole
+ * thing to the store as ONE write.
+ *
+ * ## Events are built in the domain, never here and never in HTTP
+ *
+ * `domain/events.ts` owns every envelope. If this file assembled payloads,
+ * a second entry point (a relay, a CLI, a test harness) would assemble them
+ * differently and the outbox would carry two dialects of the same event.
+ * The rule from review 1/N holds: state changes through ANY path emit their
+ * event, from one builder.
+ *
+ * ## Why the id is reserved BEFORE the aggregate is built
+ *
+ * `store_order.created` carries `public_id`. An adapter that generated the
+ * id during the insert would force the event to be patched after the fact —
+ * so the sequence is read first, and the domain builds rows and events that
+ * agree by construction.
+ *
+ * ## What this use case deliberately does NOT do
+ *
+ * It does not decide eligibility (the task starts `pending_eligibility`), it
+ * does not touch payment (that mirror is external, §2.2), and it does not
+ * retry the catalog: a dependency failure surfaces as
+ * `DELIVERY_MARKETPLACE_UNAVAILABLE` and the caller decides. With no
+ * idempotency key in this contract (declared debt, ADR-026 §4.9-3), a retry
+ * loop here could mint duplicate orders.
+ */
+
+import type { WaslaPublicId } from "@wasla/contracts-delivery";
+
+import { DeliveryError } from "../domain/errors.js";
+import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, type EventContext } from "../domain/events.js";
+import { buildStoreOrderPlacement } from "../domain/store-order-placement.js";
+import type { PlaceOrderInput } from "../domain/validation.js";
+import type { StoreOrder } from "../domain/model.js";
+import type {
+  PlacementWrite,
+  StoreOrderCatalogPort,
+  StoreOrderWritePort,
+} from "../ports.js";
+
+export interface PlaceStoreOrderDeps {
+  readonly catalogPort: StoreOrderCatalogPort;
+  readonly writePort: StoreOrderWritePort;
+  /** Injected so tests are deterministic — no hidden clock, no hidden uuid. */
+  readonly newUuid: () => string;
+  readonly now: () => string;
+}
+
+export async function placeStoreOrder(
+  deps: PlaceStoreOrderDeps,
+  input: PlaceOrderInput,
+  traceId: string | null,
+): Promise<StoreOrder> {
+  const store = await deps.catalogPort.getStoreByPublicId(input.store_public_id as WaslaPublicId);
+  if (store === null) {
+    // The catalog ANSWERED and the answer was "no such store": a client
+    // mistake (400), not an outage (503). The error catalog has no
+    // `DELIVERY_STORE_NOT_FOUND`, and `DELIVERY_ORDER_NOT_FOUND` would name
+    // the wrong subject — declared in ADR-026 §4.9-2.
+    throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "مرجعُ المتجرِ غيرُ معروفٍ في السوقِ", {
+      traceId: traceId ?? undefined,
+      details: { field: "store_public_id", actual: input.store_public_id },
+    });
+  }
+  if (!store.orderable) {
+    throw new DeliveryError("DELIVERY_INELIGIBLE", "المتجرُ لا يستقبلُ طلباتٍ الآنَ", {
+      traceId: traceId ?? undefined,
+      details: { field: "store_public_id", actual: "store_not_orderable" },
+    });
+  }
+
+  const productIds = input.items.map((line) => line.product_id);
+  const snapshots = await deps.catalogPort.getProductSnapshots(store.storeId, productIds);
+
+  const publicId = await deps.writePort.nextOrderPublicId();
+  const { order, task } = buildStoreOrderPlacement(input, snapshots, {
+    orderId: deps.newUuid(),
+    taskId: deps.newUuid(),
+    publicId,
+    storeId: store.storeId,
+  });
+
+  const occurredAt = deps.now();
+  const orderContext: EventContext = { eventId: deps.newUuid(), occurredAt, traceId };
+  const taskContext: EventContext = { eventId: deps.newUuid(), occurredAt, traceId };
+
+  const write: PlacementWrite = {
+    order,
+    task,
+    events: [
+      storeOrderCreatedEvent(order, orderContext, {
+        actor_type: "customer",
+        actor_ref: order.customerRef,
+      }),
+      deliveryTaskCreatedEvent(task, order.publicId, taskContext),
+    ],
+    traceId,
+  };
+
+  await deps.writePort.placeOrder(write);
+  return order;
+}

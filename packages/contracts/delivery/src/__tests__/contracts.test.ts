@@ -140,8 +140,18 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     expect(api).toMatch(/operationId: getDeliveryHealth/);
   });
 
-  it("api declares the HTTP layer as DECLARED, NOT IMPLEMENTED in review 1/N (§4.2)", () => {
-    expect(api).toMatch(/عقدٌ مُعرَّفٌ لا مُنفَّذٌ/);
+  it("api declares the HTTP layer as IMPLEMENTED since review 6/N (§4.2 lifted)", () => {
+    // حتّى المراجعةِ 5/N كان العقدُ يقولُ «مُعرَّفٌ لا مُنفَّذٌ»؛ المراجعةُ 6/N رفعتِ
+    // الحدَّ الشبكيَّ، فالوصفُ القديمُ لو بقيَ لكانَ كذباً موثَّقاً.
+    expect(api).toMatch(/طبقةُ HTTP \*\*مُنفَّذةٌ\*\*/);
+  });
+
+  it("every non-health route declares the unclassified 500 body (review 6/N)", () => {
+    // معالجُ الأخطاءِ الواحدُ يستطيعُ إرجاعَ 500 من أيِّ مسارٍ؛ مسارٌ لا يُعلنُهُ
+    // يجعلُ العقدَ أضيقَ من الحقيقةِ.
+    expect(api).toMatch(/InternalError:/);
+    expect([...api.matchAll(/responses\/InternalError/g)].length).toBe(4);
+    expect(DELIVERY_ERROR_CODES).toContain("DELIVERY_INTERNAL_ERROR");
   });
 
   it("api carries no personal-data fields (§2.6)", () => {

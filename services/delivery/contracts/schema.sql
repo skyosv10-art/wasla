@@ -256,4 +256,57 @@ CREATE TABLE IF NOT EXISTS delivery_relay_checkpoint (
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ─────────────────────────────────────────────────────────────
+-- 9) delivery_inventory_observations — لقطاتُ مخزونٍ من السوق (ADR-026 §2.3)
+--    المستهلكُ يقرأُ فرقَ المخزونِ من السوقِ ويُخزِّنُ لقطةً لا رصيداً: آخرُ
+--    تسويةٍ لكلِّ (متجرٍ، منتجٍ) بكميّتِها بعدَ التسويةِ وتسلسلِها. لا JOINَ
+--    إلى جداولِ السوقِ ولا كتابةً فيها — الحدُّ المتَّفقُ عليهِ.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_inventory_observations (
+    store_id              UUID        NOT NULL,
+    product_id            UUID        NOT NULL,
+    last_adjustment_id    UUID        NOT NULL,
+    last_marketplace_event_id UUID    NOT NULL,
+    last_adjustment_sequence  INTEGER NOT NULL,
+    observed_quantity_after   INTEGER NOT NULL,
+    last_quantity_delta       INTEGER NOT NULL,
+    last_reason_code          TEXT    NOT NULL,
+    occurred_for          TIMESTAMPTZ NOT NULL,
+    observed_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    trace_id              TEXT,
+    PRIMARY KEY (store_id, product_id)
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- 10) delivery_inventory_relay_consumed_events — دفترُ استهلاكِ أحداثِ
+--     مخزونِ السوق (منعُ التكرار · ADR-026 §2.3): كلُّ صفٍّ حدثٌ من
+--     marketplace_outbox حُسِمَ أمرُهُ نهائيّاً أو أُرجِئَ. المفتاحُ event_id
+--     نفسُهُ — فإعادةُ التسليمِ بعدَ إعادةِ بناءِ المستهلكِ no-op لا صفٌ ثانٍ.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_inventory_relay_consumed_events (
+    event_id       UUID        PRIMARY KEY,
+    event_type     TEXT        NOT NULL CHECK (char_length(event_type) BETWEEN 3 AND 96),
+    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('store','product','inventory')),
+    aggregate_id   TEXT        NOT NULL CHECK (char_length(aggregate_id) BETWEEN 1 AND 64),
+    consumed_status TEXT     NOT NULL CHECK (consumed_status IN (
+                                   'pending','applied','skipped_stale',
+                                   'ignored','poisoned')),
+    attempt_count  INTEGER     NOT NULL CHECK (attempt_count >= 1),
+    last_error     TEXT,
+    consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────────────────────
+-- 11) delivery_inventory_relay_checkpoint — نقطةُ تقدّمِ مستهلكِ المخزونِ:
+--     آخرُ صفٍّ حُسِمَ أمرُهُ من marketplace_outbox. ملكُ التوصيلِ — لا علاقةَ
+--     لهُ بـ published_at في صندوقِ السوق.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_inventory_relay_checkpoint (
+    consumer_id      TEXT        PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 3 AND 96),
+    last_occurred_at TIMESTAMPTZ NOT NULL,
+    last_event_id    UUID        NOT NULL,
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 COMMIT;

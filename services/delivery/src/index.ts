@@ -95,3 +95,32 @@ export {
   runRelayBatch,
 } from "./relay.js";
 export type { BatchOutcome, RelayConfig, RelayDeps, RelayLogEntry } from "./relay.js";
+
+/* ── marketplace inventory consumer (ADR-026 §2.3) ── */
+export type {
+  InventoryAdjustedData,
+  InventoryConsumedStatus,
+  InventoryRelayCheckpoint,
+  MarketplaceInventoryClassification,
+  MarketplaceInventoryEventType,
+  MarketplaceOutboxRow,
+} from "./domain/marketplace-inventory-events.js";
+export {
+  MARKETPLACE_INVENTORY_EVENT_TYPES,
+  MarketplacePayloadError,
+  ZERO_INVENTORY_CHECKPOINT,
+  classifyMarketplaceInventoryEvent,
+  isInventoryTerminal,
+} from "./domain/marketplace-inventory-events.js";
+export type {
+  InventoryObservationStore,
+  MarketplaceInventoryEventSource,
+} from "./ports.js";
+export {
+  DEFAULT_INVENTORY_RELAY_CONFIG,
+  SUPPORTED_INVENTORY_EVENT_VERSION,
+  rebuildInventoryObservations,
+  replayInventoryFrom,
+  runInventoryRelayBatch,
+} from "./marketplace-inventory-relay.js";
+export type { InventoryRelayConfig, InventoryRelayDeps } from "./marketplace-inventory-relay.js";

@@ -15,11 +15,14 @@ info:
     مُحقونةٍ — رُفعَ تأجيلُ ADR-026 §4.2 في نصِّهِ الخاصِّ بالحدِّ الشبكيِّ وبمخزنِ
     الطلباتِ على PostgreSQL.
 
-    **حدودٌ مُعلَنةٌ لا مُخفاةٌ (ADR-026 §4.9):** `POST /store-orders` يحتاجُ منفذَ
-    كتالوجِ السوقِ ليأخذَ لقطةَ السعرِ (§2.3)، ومرجعُ المتجرِ في هذا العقدِ
-    `WS-##########` بينما السوقُ يُعرِّفُ متجرَهُ بـ`store_slug`/`store_id` ولا يملكُ
-    مرجعاً عامّاً للمتجرِ — فلا مُحوّلَ HTTP للكتالوجِ اليومَ، والمسارُ يُجيبُ
-    `503 DELIVERY_MARKETPLACE_UNAVAILABLE` حتّى يُحسَمَ القرارُ.
+    **كتالوجُ السوقِ موصولٌ (مراجعةٌ 8/N · `CLM-0127` — رُفِعَ دَينُ ADR-026 §4.9-2):**
+    `POST /store-orders` يقرأُ المتجرَ ولقطاتِ السعرِ من حدِّ السوقِ المنشورِ عبرَ
+    HTTP (`GET /stores/{storeSlug}` ثمّ `GET /products/{productId}`) بنداءٍ
+    **موقَّعٍ** (ADR-020). ومرجعُ المتجرِ في هذا العقدِ صارَ `store_slug` — المرجعَ
+    الذي ينشرُهُ السوقُ فعلاً — بدلَ `WS-##########` الذي لم يكن يُطابقُ شيئاً
+    هناك. والفرقُ محفوظٌ: «لا متجرَ بهذا الـslug» ⇒ `400`، و«لا نعلمُ» (عطلٌ أو
+    مَهَلٌ) ⇒ `503 DELIVERY_MARKETPLACE_UNAVAILABLE`. ومتجرٌ غيرُ موافَقٍ عليه ⇒
+    `409 DELIVERY_INELIGIBLE`.
 
     **مفتاحُ التماثُلِ (مراجعةٌ 7/N — رُفِعَ دَينُ §4.9-3):** المسارانِ
     الكاتبانِ يطلبانِ ترويسةَ `Idempotency-Key` **إلزاماً**؛ الإعادةُ بالمفتاحِ
@@ -174,10 +177,15 @@ paths:
       summary: جاهزيّةُ الخدمةِ (سبرٌ حقيقيٌّ للتبعيّاتِ)
       description: |
         ليس نبضةً: يسألُ القاعدةَ بـ`SELECT` على جدولٍ حقيقيٍّ بمهلةٍ
-        قصيرةٍ. ما لا يُسبَرُ لا يُدّعى: منفذُ كتالوجِ السوقِ غيرُ موصولٍ
-        (§4.9-2) فيُذكَرُ في `not_claimed` ولا يُحسَبُ جاهزيّةً ولا يجعلُ
-        المسارَ 503 أبديّاً (درسُ RISK-0030). القراءةُ والإلغاءُ قابلانِ للخدمةِ
-        متى كانتِ القاعدةُ حاضرةً، فذلك معنى 200 هنا.
+        قصيرةٍ. **ما لا يُسبَرُ لا يُدّعى**، ومنذُ المراجعةِ 8/N صارَ الفرقُ
+        ثلاثيّاً لا ثنائيّاً: كتالوجُ السوقِ **موصولٌ** الآنَ (§4.11) لكنَّ
+        الجاهزيّةَ لا تسبرُهُ، فيُذكَرُ `marketplace_catalog_not_probed`؛ وإن
+        لم يُوصَلْ في تركيبٍ ما فيُذكَرُ `marketplace_catalog_not_wired`. وفي
+        الحالَينِ لا يُحسَبُ جاهزيّةً ولا يجعلُ المسارَ 503 أبديّاً (درسُ
+        RISK-0030). ولماذا لا يُسبَرُ؟ لأنَّ سبرَ حدٍّ خارجيٍّ في كلِّ نبضةِ
+        جاهزيّةٍ يُحوّلُ مِجَسَّ المنظِّمِ إلى حِمْلٍ على السوقِ، ويجعلُ عطلَ
+        السوقِ يُخرِجُ هذه الخدمةَ من الخدمةِ كلَّها — بينما القراءةُ والإلغاءُ
+        يعملانِ بلا سوقٍ.
       responses:
         "200":
           description: جاهزٌ — كلُّ ما يُسبَرُ يستجيبُ
@@ -244,6 +252,16 @@ components:
       type: string
       pattern: "^WS-[0-9]{10}$"
       description: مرجعٌ opaque — لا بياناتِ شخصيّةَ (ADR-026 §2.6)
+    StoreSlug:
+      type: string
+      pattern: "^[a-z][a-z0-9-]{2,47}$"
+      description: |
+        مرجعُ المتجرِ العامُّ: **الـslug الذي ينشرُهُ السوقُ** ويستعملُهُ في كلِّ
+        مسارٍ عامٍّ (`GET /stores/{storeSlug}`)، ومقفولٌ عندَه بعدَ أوّلِ موافقةٍ.
+        وهو **ليس** `WaslaPublicId`: لا صيغةَ `WS-` له ولا opacity — قاعدةُ
+        ADR-026 §2.6 تلزمُ المراجعَ التي تُصدرُها وصلةٌ نفسُها، أمّا مرجعُ
+        المتجرِ فمِلكُ السوقِ، فيُستعمَلُ كما نُشِرَ لا كما نتمنّاه
+        (المراجعةُ 8/N · §4.11).
     FulfillmentState:
       type: string
       enum: [draft, placed, confirmed, picking, picked, ready_for_delivery, handed_to_courier, delivered, cancelled, rejected, failed]
@@ -268,12 +286,12 @@ components:
           minimum: 1
     PlaceStoreOrderRequest:
       type: object
-      required: [customer_ref, store_public_id, items]
+      required: [customer_ref, store_slug, items]
       properties:
         customer_ref:
           $ref: "#/components/schemas/WaslaPublicId"
-        store_public_id:
-          $ref: "#/components/schemas/WaslaPublicId"
+        store_slug:
+          $ref: "#/components/schemas/StoreSlug"
         items:
           type: array
           minItems: 1
@@ -319,7 +337,7 @@ components:
           enum: [out_of_stock, customer_approved_alternative, store_policy, null]
     StoreOrderResponse:
       type: object
-      required: [order_id, public_id, customer_ref, store_public_id, fulfillment_state, payment_state, currency_code, items_total_minor_units, delivery_fee_minor_units, total_minor_units, items, version]
+      required: [order_id, public_id, customer_ref, store_slug, fulfillment_state, payment_state, currency_code, items_total_minor_units, delivery_fee_minor_units, total_minor_units, items, version]
       properties:
         order_id:
           type: string
@@ -328,8 +346,8 @@ components:
           $ref: "#/components/schemas/WaslaPublicId"
         customer_ref:
           $ref: "#/components/schemas/WaslaPublicId"
-        store_public_id:
-          $ref: "#/components/schemas/WaslaPublicId"
+        store_slug:
+          $ref: "#/components/schemas/StoreSlug"
         fulfillment_state:
           $ref: "#/components/schemas/FulfillmentState"
         payment_state:
@@ -424,4 +442,4 @@ components:
           type: array
           items:
             type: string
-            enum: [marketplace_catalog_not_wired]
+            enum: [marketplace_catalog_not_wired, marketplace_catalog_not_probed]

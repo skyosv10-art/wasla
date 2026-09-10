@@ -23,7 +23,7 @@ export function toStoreOrderResponse(order: StoreOrder): StoreOrderResponse {
     order_id: order.orderId,
     public_id: order.publicId,
     customer_ref: order.customerRef,
-    store_public_id: order.storePublicId,
+    store_slug: order.storeSlug,
     fulfillment_state: order.fulfillmentState,
     payment_state: order.paymentState,
     currency_code: "SAR",

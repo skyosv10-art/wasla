@@ -11,7 +11,8 @@
  *    order (that is services/orders, ADR-010).
  *  - `payment_state` is a mirror of an external payment intent, never money
  *    processing (§2.2 — billing is M5-17).
- *  - `courier_ref` / `customer_ref` / `store_public_id` are opaque WS-##########
+ *  - `courier_ref` / `customer_ref` are opaque WS-##########; `store_slug` is
+ *    the marketplace's published store slug (review 8/N, ADR-026 §4.11)
  *    refs — no names, no phones, no coordinates anywhere (§2.6).
  *  - The HTTP layer is IMPLEMENTED since review 6/N (ADR-026 §4.2 lifted).
  *  - Both write operations REQUIRE an `Idempotency-Key` header since review
@@ -126,6 +127,8 @@ export interface components {
   schemas: {
     /** مرجعٌ opaque — لا بياناتِ شخصيّةَ (ADR-026 §2.6). */
     WaslaPublicId: string;
+    /** slug متجرِ السوقِ: `^[a-z][a-z0-9-]{2,47}$` (المراجعةُ 8/N). */
+    StoreSlug: string;
     FulfillmentState:
       | "draft"
       | "placed"
@@ -168,7 +171,7 @@ export interface components {
     };
     PlaceStoreOrderRequest: {
       customer_ref: components["schemas"]["WaslaPublicId"];
-      store_public_id: components["schemas"]["WaslaPublicId"];
+      store_slug: components["schemas"]["StoreSlug"];
       items: components["schemas"]["OrderLineInput"][];
       /** رسومُ التوصيلِ (هللة) — لقطةُ عرضِ التوصيلِ وقتَ الطلبِ. */
       delivery_fee_minor_units: number;
@@ -200,7 +203,7 @@ export interface components {
       order_id: string;
       public_id: components["schemas"]["WaslaPublicId"];
       customer_ref: components["schemas"]["WaslaPublicId"];
-      store_public_id: components["schemas"]["WaslaPublicId"];
+      store_slug: components["schemas"]["StoreSlug"];
       fulfillment_state: components["schemas"]["FulfillmentState"];
       payment_state: components["schemas"]["PaymentState"];
       currency_code: "SAR";
@@ -246,7 +249,7 @@ export interface components {
       status: "ready" | "unavailable";
       checks: components["schemas"]["ReadinessCheck"][];
       /** تبعيّاتٌ مُعلَنةٌ غيرُ موصولةٍ — لا تُسبَرُ ولا تُدّعى. */
-      not_claimed: "marketplace_catalog_not_wired"[];
+      not_claimed: ("marketplace_catalog_not_wired" | "marketplace_catalog_not_probed")[];
     };
   };
 }

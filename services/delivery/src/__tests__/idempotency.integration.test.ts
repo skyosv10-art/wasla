@@ -23,7 +23,7 @@ import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 import { buildDeliveryHttpApp } from "../http/app.js";
-import { CUSTOMER_REF, FakeCatalog, PRODUCT_A, PRODUCT_B, STORE_REF, uuidSequence } from "./store-order-fakes.js";
+import { CUSTOMER_REF, FakeCatalog, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
 
@@ -59,7 +59,7 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
 
   const placement = {
     customer_ref: CUSTOMER_REF,
-    store_public_id: STORE_REF,
+    store_slug: STORE_SLUG,
     items: [
       { product_id: PRODUCT_A, quantity: 2 },
       { product_id: PRODUCT_B, quantity: 3 },

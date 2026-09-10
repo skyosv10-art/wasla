@@ -40,6 +40,13 @@ export type { paths } from "./api-types.js";
 /** Opaque external reference — WS-##########, never personal data (§2.6). */
 export type WaslaPublicId = components["schemas"]["WaslaPublicId"];
 
+/**
+ * مرجعُ متجرِ السوقِ العامُّ: الـslug الذي ينشرُهُ `services/marketplace` في كلِّ
+ * مسارٍ عامٍّ ويُقفِلُهُ بعدَ أوّلِ موافقةٍ. ليس `WaslaPublicId`: قاعدةُ §2.6
+ * تلزمُ ما تُصدرُهُ وصلةٌ، ومرجعُ المتجرِ مِلكُ السوقِ (المراجعةُ 8/N · §4.11).
+ */
+export type StoreSlug = components["schemas"]["StoreSlug"];
+
 // --- Lifecycle state constants ----------------------------------------
 
 /** Every fulfillment state, in ADR-026 §3.1 order. */

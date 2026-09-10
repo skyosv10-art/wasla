@@ -168,9 +168,17 @@ describe("buildReadinessResponse", () => {
 
   it("reports the unwired catalog in not_claimed rather than as a failed check", () => {
     const body = buildReadinessResponse([{ name: "database", ok: true }], false);
-    // If the unwireable catalog (§4.9-2) counted as a check, readiness could
-    // never be green and the deployment gate would be deleted within a week.
+    // If the unwired catalog counted as a check, readiness could never be green
+    // and the deployment gate would be deleted within a week.
     expect(body.status).toBe("ready");
     expect(body.not_claimed).toEqual(["marketplace_catalog_not_wired"]);
+  });
+
+  // المراجعةُ 8/N: «موصولٌ» لا يعني «مسبورٌ». الحقلُ الفارغُ عندَ الوصلِ كانَ
+  // سيُقرأُ شهادةَ تحقُّقٍ لم تحدثْ — وهي بالضبطِ الكذبةُ التي أُنشِئَ لمنعِها.
+  it("says not_probed — never empty — once the catalog IS wired", () => {
+    const body = buildReadinessResponse([{ name: "database", ok: true }], true);
+    expect(body.status).toBe("ready");
+    expect(body.not_claimed).toEqual(["marketplace_catalog_not_probed"]);
   });
 });

@@ -51,7 +51,7 @@
  * retry differs.
  */
 
-import type { WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreSlug } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "../domain/errors.js";
 import { storeOrderCreatedEvent, deliveryTaskCreatedEvent, type EventContext } from "../domain/events.js";
@@ -89,7 +89,7 @@ export async function placeStoreOrder(
   traceId: string | null,
   idempotency?: IdempotencyIntent,
 ): Promise<PlaceStoreOrderResult> {
-  const store = await deps.catalogPort.getStoreByPublicId(input.store_public_id as WaslaPublicId);
+  const store = await deps.catalogPort.getStoreBySlug(input.store_slug as StoreSlug);
   if (store === null) {
     // The catalog ANSWERED and the answer was "no such store": a client
     // mistake (400), not an outage (503). The error catalog has no
@@ -97,13 +97,13 @@ export async function placeStoreOrder(
     // the wrong subject — declared in ADR-026 §4.9-2.
     throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "مرجعُ المتجرِ غيرُ معروفٍ في السوقِ", {
       traceId: traceId ?? undefined,
-      details: { field: "store_public_id", actual: input.store_public_id },
+      details: { field: "store_slug", actual: input.store_slug },
     });
   }
   if (!store.orderable) {
     throw new DeliveryError("DELIVERY_INELIGIBLE", "المتجرُ لا يستقبلُ طلباتٍ الآنَ", {
       traceId: traceId ?? undefined,
-      details: { field: "store_public_id", actual: "store_not_orderable" },
+      details: { field: "store_slug", actual: "store_not_orderable" },
     });
   }
 

@@ -777,6 +777,12 @@ importers:
       '@wasla/contracts-delivery':
         specifier: workspace:*
         version: link:../../packages/contracts/delivery
+      '@wasla/contracts-marketplace':
+        specifier: workspace:*
+        version: link:../../packages/contracts/marketplace
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       fastify:
         specifier: ^5.12.1
         version: 5.12.1

@@ -79,7 +79,7 @@ export function parsePlaceStoreOrderBody(body: unknown): PlaceOrderInput {
 
   return {
     customer_ref: asString(raw.customer_ref, "customer_ref"),
-    store_public_id: asString(raw.store_public_id, "store_public_id"),
+    store_slug: asString(raw.store_slug, "store_slug"),
     items,
     // Required by the contract — absent is a validation failure, NOT zero.
     delivery_fee_minor_units: asInteger(raw.delivery_fee_minor_units, "delivery_fee_minor_units"),

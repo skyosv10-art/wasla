@@ -78,7 +78,7 @@ export function storeOrderCreatedEvent(
       public_id: order.publicId,
       customer_ref: order.customerRef,
       store_id: order.storeId,
-      store_public_id: order.storePublicId,
+      store_slug: order.storeSlug,
       from_state: "draft",
       to_state: order.fulfillmentState,
       items: order.items.map(toLineSnapshot),

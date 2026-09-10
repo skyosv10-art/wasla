@@ -80,10 +80,10 @@ import type {
   StoreOrderWritePort,
   StoredIdempotentResponse,
 } from "../ports.js";
-import type { WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 
 const ORDER_COLUMNS = `
-  order_id, public_id, customer_ref, store_id, store_public_id,
+  order_id, public_id, customer_ref, store_id, store_slug,
   fulfillment_state, payment_state, payment_ref, currency_code,
   items_total_minor_units, delivery_fee_minor_units, total_minor_units, version
 `;
@@ -171,7 +171,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
 
       await client.query(
         `INSERT INTO store_orders (
-           order_id, public_id, customer_ref, store_id, store_public_id,
+           order_id, public_id, customer_ref, store_id, store_slug,
            fulfillment_state, payment_state, payment_ref, currency_code,
            items_total_minor_units, delivery_fee_minor_units, total_minor_units,
            placed_at, version
@@ -181,7 +181,7 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort 
           order.publicId,
           order.customerRef,
           order.storeId,
-          order.storePublicId,
+          order.storeSlug,
           order.fulfillmentState,
           order.paymentState,
           order.paymentRef,
@@ -458,7 +458,7 @@ interface OrderRow {
   public_id: string;
   customer_ref: string;
   store_id: string;
-  store_public_id: string;
+  store_slug: string;
   fulfillment_state: string;
   payment_state: string;
   payment_ref: string | null;
@@ -507,7 +507,7 @@ function toOrder(row: OrderRow, itemRows: readonly ItemRow[]): StoreOrder {
     publicId: row.public_id as WaslaPublicId,
     customerRef: row.customer_ref as WaslaPublicId,
     storeId: row.store_id,
-    storePublicId: row.store_public_id as WaslaPublicId,
+    storeSlug: row.store_slug as StoreSlug,
     fulfillmentState: row.fulfillment_state as StoreOrder["fulfillmentState"],
     paymentState: row.payment_state as StoreOrder["paymentState"],
     paymentRef: row.payment_ref,

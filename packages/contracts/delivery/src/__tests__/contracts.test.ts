@@ -229,6 +229,37 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     expect(eventsRaw).not.toMatch(/latitude|longitude|phone|email|first_name|last_name|full_name|address_line|chat_id|telegram/i);
   });
 
+  /*
+   * المراجعةُ 8/N (§4.9-2 → §4.11): مرجعُ المتجرِ هو slug السوقِ.
+   *
+   * الحارسُ هنا يمنعُ **الانحدارَ** لا يزيّنُ القرارَ: أيُّ عودةٍ إلى
+   * `store_public_id` أو إلى نمطِ `WS-` لمرجعِ المتجرِ تُعيدُ العلّةَ التي
+   * أقفلتْ `POST /store-orders` سبعَ مراجعاتٍ — عمودٌ يطلبُ هويّةً لا يُصدرُها
+   * أحدٌ، فلا محوّلَ يمكنُ كتابتُهُ إلّا بمِعجمٍ مخترعٍ.
+   */
+  it("the store reference is the marketplace slug — never a WS- id again", () => {
+    expect(schema).not.toMatch(/store_public_id/);
+    expect(api).not.toMatch(/store_public_id/);
+    expect(eventsRaw).not.toMatch(/store_public_id/);
+
+    // العمودُ يحملُ نمطَ الـslug حرفاً كما ينشرُهُ السوقُ.
+    expect(schema).toMatch(/store_slug\s+TEXT\s+NOT NULL CHECK \(store_slug ~ '\^\[a-z\]\[a-z0-9-\]\{2,47\}\$'\)/);
+
+    // وفي العقدِ: نوعٌ مستقلٌّ، لا `WaslaPublicId` مُعادُ استعمالُهُ.
+    expect(api).toMatch(/StoreSlug:\n\s+type: string\n\s+pattern: "\^\[a-z\]\[a-z0-9-\]\{2,47\}\$"/);
+    const slugFieldRefs = [...api.matchAll(/store_slug:\n\s+\$ref: "#\/components\/schemas\/(\w+)"/g)].map((m) => m[1]);
+    expect(slugFieldRefs.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(slugFieldRefs)).toEqual(new Set(["StoreSlug"]));
+  });
+
+  /*
+   * «موصولٌ» ليسَ «مسبوراً»: الجاهزيّةُ تصرّحُ بأنّها لم تسألِ السوقَ.
+   * إخلاءُ `not_claimed` عندَ الوصلِ كانَ سيقولُ «تحقّقنا» ولم يتحقّقْ أحدٌ.
+   */
+  it("readiness can say the catalog is wired but not probed", () => {
+    expect(api).toMatch(/enum: \[marketplace_catalog_not_wired, marketplace_catalog_not_probed\]/);
+  });
+
   it("errors.md catalog matches DELIVERY_ERROR_CODES exactly", () => {
     const codesInMd = [...errors.matchAll(/`(DELIVERY_[A-Z_]+)`/g)].map((m) => m[1]);
     expect(new Set(codesInMd)).toEqual(new Set(DELIVERY_ERROR_CODES));

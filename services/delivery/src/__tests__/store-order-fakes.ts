@@ -33,10 +33,10 @@ import type {
   StoreOrderWritePort,
   StoredIdempotentResponse,
 } from "../ports.js";
-import type { WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 
 export const CUSTOMER_REF = "WS-0000000009" as WaslaPublicId;
-export const STORE_REF = "WS-0000000002" as WaslaPublicId;
+export const STORE_SLUG = "matjar-alfawakih" as StoreSlug;
 export const PRODUCT_A = "11111111-1111-4111-8111-111111111111";
 export const PRODUCT_B = "22222222-2222-4222-8222-222222222222";
 
@@ -151,7 +151,7 @@ export class FakeCatalog implements StoreOrderCatalogPort {
     private readonly prices: Record<string, number> = { [PRODUCT_A]: 1000, [PRODUCT_B]: 250 },
   ) {}
 
-  async getStoreByPublicId(): Promise<{ storeId: string; orderable: boolean } | null> {
+  async getStoreBySlug(): Promise<{ storeId: string; orderable: boolean } | null> {
     return this.store;
   }
 
@@ -180,7 +180,7 @@ export function fixedOrder(overrides: Partial<StoreOrder> = {}): StoreOrder {
     publicId: "WS-0000000001" as WaslaPublicId,
     customerRef: CUSTOMER_REF,
     storeId: "cccccccc-0000-4000-8000-000000000003",
-    storePublicId: STORE_REF,
+    storeSlug: STORE_SLUG,
     fulfillmentState: "placed",
     paymentState: "pending",
     paymentRef: null,

@@ -21,6 +21,8 @@ import type { components } from "./api-types.js";
 
 /** Shared schema pieces. */
 export type WaslaPublicId = components["schemas"]["WaslaPublicId"];
+/** slug متجرِ السوقِ — مرجعُ المتجرِ العامُّ (المراجعةُ 8/N · ADR-026 §4.11). */
+export type StoreSlug = components["schemas"]["StoreSlug"];
 export type FulfillmentState = components["schemas"]["FulfillmentState"];
 export type PaymentState = components["schemas"]["PaymentState"];
 export type DeliveryTaskState = components["schemas"]["DeliveryTaskState"];
@@ -150,7 +152,7 @@ export interface StoreOrderCreatedV1 extends DeliveryEventEnvelope {
     public_id: WaslaPublicId;
     customer_ref: WaslaPublicId;
     store_id: string;
-    store_public_id: WaslaPublicId;
+    store_slug: StoreSlug;
     from_state: FulfillmentState;
     to_state: FulfillmentState;
     items: OrderLineSnapshot[];

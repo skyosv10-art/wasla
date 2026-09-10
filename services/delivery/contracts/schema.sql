@@ -42,7 +42,12 @@ CREATE TABLE IF NOT EXISTS store_orders (
     public_id          TEXT        NOT NULL UNIQUE CHECK (public_id ~ '^WS-[0-9]{10}$'),
     customer_ref       TEXT        NOT NULL CHECK (customer_ref ~ '^WS-[0-9]{10}$'),
     store_id           UUID        NOT NULL,                -- مرجعٌ منطقيٌّ لمتجرِ السوقِ — لا FK عبرَ الحدِّ (ADR-026 §2.3)
-    store_public_id    TEXT        NOT NULL CHECK (store_public_id ~ '^WS-[0-9]{10}$'),
+    -- مرجعُ المتجرِ العامُّ = الـslug الذي ينشرُهُ السوقُ في كلِّ مسارٍ عامٍّ
+    -- (services/marketplace/contracts/schema.sql: `^[a-z][a-z0-9-]{2,47}$`
+    -- ومقفولٌ بعدَ أوّلِ موافقةٍ). المراجعةُ 8/N رفعتْ دَينَ ADR-026 §4.9-2:
+    -- لم يكن للسوقِ مرجعٌ عامٌّ بصيغةِ `WS-`، فكانَ العمودُ يطلبُ هويّةً لا
+    -- يملكُها أحدٌ. §4.11 تشرحُ لماذا لا مِعجمَ تحويلٍ في هذه الخدمةِ.
+    store_slug         TEXT        NOT NULL CHECK (store_slug ~ '^[a-z][a-z0-9-]{2,47}$'),
 
     -- الحالةُ المتعامدةُ الأولى: التنفيذُ (قرارُ هذه الخدمةِ · ADR-026 §3.1)
     fulfillment_state  TEXT        NOT NULL CHECK (fulfillment_state IN (

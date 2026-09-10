@@ -1,12 +1,12 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 7/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 8/N)
 
-> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الستّةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ، وجذرُ التركيبِ، وحدودُه المُعلَنةُ.
+> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الستّةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 7/N — التماثُلُ والجاهزيّةُ) · **Last Updated:** 2026-09-10
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 8/N — محوّلُ كتالوجِ السوقِ) · **Last Updated:** 2026-09-10
 >
-> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,store-order.integration,idempotency.integration}.test.ts`
+> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
 > **Related Docs:** [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [SEARCH_HTTP](SEARCH_HTTP.md) (نسقُ الحدِّ) · [MARKETPLACE_HTTP](MARKETPLACE_HTTP.md) (مصدرُ الكتالوجِ) · [DISPATCH_HTTP](DISPATCH_HTTP.md)
 
@@ -14,13 +14,12 @@
 
 ## 1. ماذا يُضاف في هذه المراجعة
 
-ترفعُ هذه المراجعةُ **دَينَينِ مُعلَنَينِ** من [ADR-026 §4.9](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) فوقَ حدِّ HTTP الذي بُنيَ في المراجعةِ 6/N:
+ترفعُ هذه المراجعةُ **أقدمَ دَينٍ في الخدمةِ**: [ADR-026 §4.9-2](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) قالَ إنّ محوّلَ الكتالوجِ «متعذّرٌ معماريّاً»، فبقيَ `POST /store-orders` يُجيبُ `503` سبعَ مراجعاتٍ. والعلّةُ لم تكن شبكةً بل **مرجعاً**:
 
-- **`Idempotency-Key` إلزاميّةٌ على المسارَينِ الكاتبَينِ** (§4.9-3): مفتاحٌ + بصمةُ طلبٍ + جسدُ الجوابِ في **الصفقةِ نفسِها** التي تكتبُ الأثرَ، فإعادةُ المحاولةِ تُعيدُ الجوابَ الأوّلَ ولا تُنشئُ طلباً ثانياً.
-- **`GET /delivery/ready` بمسبارٍ حقيقيٍّ** (§4.9-4): يسألُ القاعدةَ فعلاً بمهلةٍ، ويُعلنُ ما لم يُفحَص في `not_claimed` بدلَ ادّعاءِ جاهزيّةٍ كاملةٍ.
-- **جدولٌ ثانيَ عشرَ في المخطّطِ**: `delivery_idempotency_keys` — مفتاحٌ مفتاحاً أوّليّاً، وبصمةٌ `sha256`، وجسدُ جوابٍ `jsonb`، ومرجعٌ للطلبِ بحذفٍ متتالٍ.
-- **ثلاثةُ رموزِ خطأٍ جديدةٍ** (17 بدلَ 14): `DELIVERY_IDEMPOTENCY_KEY_REUSED` · `DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT` · `DELIVERY_DATABASE_UNAVAILABLE`.
-- **إصلاحُ عَيبٍ وجدَهُ التكامُلُ**: `order_item_id` كانَ فريداً داخلَ الطلبِ لا عبرَ الطلباتِ (§6).
+- **مرجعُ المتجرِ صارَ `store_slug`** — المفتاحَ العامَّ الذي ينشرُهُ السوقُ فعلاً (`^[a-z][a-z0-9-]{2,47}$`، مقفولٌ بعدَ أوّلِ موافقةٍ) بدلَ `store_public_id ~ ^WS-##########$` الذي **لا يُصدرُهُ أحدٌ**. لا جدولَ تعيينٍ اختُرِعَ: لا شيءَ كانَ سيُعبِّئُهُ ([§4.11-1](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)).
+- **`HttpMarketplaceCatalogPort` موصولٌ في `server.ts`** — يقرأُ `GET /stores/{storeSlug}` و`GET /products/{productId}` من عقدِ السوقِ، **يُوقِّعُ كلَّ نداءٍ** بنطاقَي قراءةٍ، ويُميّزُ `404` (جوابٌ) من `503` بسببٍ من **سبعةٍ مغلقةٍ**.
+- **`POST /store-orders` يُنشئُ طلباً فعلاً** — بسعرٍ من لقطةِ السوقِ لا من العميلِ. مقيسٌ من الحدِّ إلى الحدِّ.
+- **الجاهزيّةُ تقولُ `marketplace_catalog_not_probed`** بدلَ `marketplace_catalog_not_wired`: موصولٌ ولم يُسبَرْ — والحقلُ لا يفرغُ أبداً.
 
 ---
 
@@ -121,9 +120,28 @@ GET /delivery/ready → 200
 - **`genReqId`** يُولِّدُ `trace_id` لكلِّ طلبٍ، ويسيرُ مع الحدثِ إلى الصادرِ (`delivery_outbox.trace_id`) — مقيسٌ على قاعدةٍ حقيقيّةٍ.
 - **المُعيِّناتُ صريحةٌ حقلاً حقلاً** (لا `...spread` ولا `as`): `store_id` الداخليُّ للسوقِ و`payment_ref` **لا يظهرانِ أبداً**، ولا اسمَ ولا هاتفَ ولا إحداثيَّ في مواردِ المهمّةِ (§2.6 — مقيسٌ باختبارٍ يفحصُ الجسمَ كلَّه بنمطٍ).
 
-### 4.1 جذرُ التركيبِ جزئيٌّ — **مُعلَنٌ**
+### 4.1 جذرُ التركيبِ صارَ كاملاً — والكتالوجُ موصولٌ (المراجعةُ 8/N)
 
-`catalogPort` **غيرُ موصولٍ** في `server.ts`. عقدُ السوقِ لا ينشرُ مرجعاً عامّاً للمتجرِ (`StoreResource` فيه `store_id` داخليٌّ و`store_slug` و`owner_public_id`، ولا `WS-` للمتجرِ نفسِه)، وADR-026 §2.3 يمنعُ الوصولَ المباشرَ لجداولِ السوقِ — فمحوّلُ HTTP للكتالوجِ **متعذّرٌ معماريّاً** حتى يُحسَمَ تعيينُ `store_public_id ⇄ store_id` ([§4.9-2](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)). ولا يُزيَّفُ الحدُّ ذلك: بلا منفذِ كتالوجٍ يُرَدُّ **`503 DELIVERY_MARKETPLACE_UNAVAILABLE`** على الإنشاءِ — لا سعرٌ مُخترَعٌ ولا صفرٌ افتراضيٌّ. والقراءاتُ والإلغاءُ تعملُ كاملةً بلا كتالوجٍ.
+`catalogPort` **موصولٌ** الآنَ: `server.ts` يبني `HttpMarketplaceCatalogPort` عندَ وجودِ `MARKETPLACE_SERVICE_URL` (ومهلةٌ اختياريّةٌ `MARKETPLACE_TIMEOUT_MS`)، بموقِّعٍ صريحٍ (`createServiceRequestSigner` · `audience: "marketplace"` · `DELIVERY_MARKETPLACE_SCOPES`). وبلا العنوانِ يبقى المنفذُ غيرَ موصولٍ ويُرَدُّ `503` على الإنشاءِ كما كانَ — **الغيابُ مُعلَنٌ في سجلِّ الإقلاعِ وفي الجاهزيّةِ**، لا مُخترَعٌ.
+
+### 4.2 محوّلُ الكتالوجِ: ما يقولُهُ وما يرفضُ قولَهُ
+
+| ما يحدثُ عندَ السوقِ | ما يفعلُهُ المحوّلُ | ما يراهُ العميلُ |
+|---|---|---|
+| `200` ومتجرٌ `approved` و`is_slug_locked` | لقطةٌ + `orderable: true` | `201` |
+| `200` ومتجرٌ بأيِّ حالةٍ أخرى | `orderable: false` | `409 DELIVERY_INELIGIBLE` (`store_not_orderable`) |
+| `404` على الـslug | `null` (رفضٌ **دائمٌ**) | `400 DELIVERY_VALIDATION_FAILED` |
+| منتجٌ `404` أو `is_visible ≠ true` أو لمتجرٍ آخرَ | **يُحذَفُ** من اللقطةِ | رفضُ المجالِ للسطرِ |
+| سعرٌ غيرُ صحيحٍ · عملةٌ غيرُ `SAR` · slug مُخالفٌ | `marketplace_contract_drift` | `503 DELIVERY_MARKETPLACE_UNAVAILABLE` |
+| `401/403` · `400/422` · `5xx` · مهلةٌ · تعذُّرُ وصولٍ | سببٌ من القائمةِ المغلقةِ | `503` |
+
+ثلاثةُ قراراتٍ تستحقُّ التصريحَ:
+
+- **لا لقطةَ جزئيّةٌ.** إخفاقُ نداءِ منتجٍ واحدٍ يُسقِطُ الدفعةَ كلَّها: لقطةٌ ناقصةٌ كانت ستجعلَ المجالَ يرفضُ السطرَ الغائبَ بـ«منتجٌ غيرُ معروفٍ» — **خطأٌ دائمٌ عن عطلٍ عابرٍ** يُقنعُ العميلَ بأنّ سلّتَهُ خاطئةٌ.
+- **السببُ مفردةٌ مغلقةٌ لا نصُّ استثناءٍ.** نصُّ خطأِ الشبكةِ يقتبسُ العنوانَ وربّما الرمزَ — نفسُ درسِ مسبارِ الجاهزيّةِ ([§4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)).
+- **موقَّعٌ ولو كانَ حدُّ السوقِ غيرَ مفروضٍ بعدُ.** التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى؛ والصدقُ مُسجَّلٌ في [`SERVICE_AUTH_ENFORCEMENT.md`](../07-security/SERVICE_AUTH_ENFORCEMENT.md): «موقَّعٌ» و**الحدُّ غيرُ مفروضٍ** — لا «مُؤمَّنٌ».
+
+نداءٌ واحدٌ لكلِّ مُعرِّفٍ (لا مسارَ قائمةٍ: صفحاتُهُ تجعلُ منتجاً في الصفحةِ الثانيةِ يُقرأُ «غيرَ موجودٍ»)، وسلّةٌ مُكرَّرةٌ تُسألُ مرّةً، وسقفُ توازٍ **4**، ومهلةٌ **2000ms**، و**لا إعادةَ محاولةٍ** — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ وهي أصدقُ من إعادةٍ مخفيّةٍ تُضاعِفُ الحملَ.
 
 ---
 
@@ -147,7 +165,9 @@ GET /delivery/ready → 200
 
 | المؤجَّلُ | أين يُسجَّلُ |
 |---|---|
-| محوّلُ كتالوجِ السوقِ (`catalogPort`) موصولاً في الإنتاجِ | [ADR-026 §4.9-2](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — حجبٌ معماريٌّ (لا مرجعَ عامًّا للمتجرِ) |
+| فحصُ جاهزيّةٍ يسألُ السوقَ (الكتالوجُ **موصولٌ** لا **مسبورٌ**) | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — `marketplace_catalog_not_probed` مُعلَنٌ |
+| إعادةُ محاولةٍ أو قاطعُ دورةٍ في محوّلِ الكتالوجِ | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ |
+| حجزُ مخزونٍ أو خصمُهُ عندَ الإنشاءِ | ADR-026 §2.3 · §4.8 — اللقطةُ سعرٌ وسببُ وجودٍ فقط |
 | حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ دوريّةٌ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الجدولُ ينمو، والحذفُ اليومَ متتالٍ عن الطلبِ فقط |
 | `Retry-After` وحالةُ «قيدَ المعالجةِ» في تسابُقِ المفتاحِ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — التسابُقُ يُكتشَفُ بخطأِ تفرُّدٍ لا بحالةٍ مُخزَّنةٍ |
 | فحوصُ جاهزيّةٍ للسوقِ وجسرِ الإرسالِ وتراكُمِ الصادرِ | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · مُعلَنةٌ في `not_claimed` لا مسكوتٌ عنها |

@@ -182,3 +182,15 @@ export type {
   ReadinessProbePort,
   StoredIdempotentResponse,
 } from "./ports.js";
+
+/* ── review 8/N: محوّلُ كتالوجِ السوقِ الحقيقيُّ (ADR-026 §4.9-2 → §4.11) ── */
+export {
+  DELIVERY_MARKETPLACE_SCOPES,
+  HttpMarketplaceCatalogPort,
+  MARKETPLACE_FAILURE_REASONS,
+} from "./infrastructure/http-marketplace-catalog.js";
+export type {
+  HttpMarketplaceCatalogOptions,
+  MarketplaceFailureReason,
+} from "./infrastructure/http-marketplace-catalog.js";
+export { assertStoreSlug, isValidStoreSlug } from "./domain/validation.js";

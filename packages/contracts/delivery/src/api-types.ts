@@ -36,6 +36,12 @@ export interface paths {
   "/store-orders/{orderPublicId}/cancellation": {
     post: operations["cancelStoreOrder"];
   };
+  "/store-orders/{orderPublicId}/payment-mirror": {
+    put: operations["mirrorStoreOrderPayment"];
+  };
+  "/store-orders/{orderPublicId}/confirmation": {
+    post: operations["confirmStoreOrder"];
+  };
   "/store-orders/{orderPublicId}/delivery-task": {
     get: operations["getDeliveryTaskForOrder"];
   };
@@ -85,6 +91,44 @@ export interface operations {
       content: {
         "application/json": components["schemas"]["CancelStoreOrderRequest"];
       };
+    };
+    responses: {
+      "200": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
+      "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "404": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "409": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+    };
+  };
+  /**
+   * المراجعةُ 9/N — مرآةُ الدفعِ (ADR-026 §2.2 · §3.2 · §4.12).
+   *
+   * `PUT` لا `POST`: المُرسِلُ يُعلنُ **حالةَ** المرآةِ التي يراها لا فعلاً يطلبُه،
+   * وإعلانُ الحالةِ نفسِها مرّتَينِ لا يُنشئُ شيئاً ثانياً — وهذا معنى المرآةِ.
+   */
+  mirrorStoreOrderPayment: {
+    parameters: {
+      path: { orderPublicId: components["schemas"]["WaslaPublicId"] };
+      header: { "Idempotency-Key": string };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PaymentMirrorRequest"];
+      };
+    };
+    responses: {
+      "200": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
+      "400": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "404": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "409": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+      "500": { content: { "application/json": components["schemas"]["ErrorResponse"] } };
+    };
+  };
+  /** المراجعةُ 9/N — البوّابةُ المركَّبةُ: placed → confirmed (ADR-026 §2.2). */
+  confirmStoreOrder: {
+    parameters: {
+      path: { orderPublicId: components["schemas"]["WaslaPublicId"] };
+      header: { "Idempotency-Key": string };
     };
     responses: {
       "200": { content: { "application/json": components["schemas"]["StoreOrderResponse"] } };
@@ -184,6 +228,23 @@ export interface components {
         | "STORE_REQUESTED"
         | "SYSTEM_MAINTENANCE"
         | "DELIVERY_NOT_FEASIBLE";
+    };
+    /**
+     * مرآةُ نيّةِ دفعٍ خارجيّةٍ: **حالةٌ** ومرجعٌ وسببٌ مغلقٌ — لا مبلغَ ولا وسيلةَ
+     * دفعٍ ولا أيَّ حقلٍ ماليٍّ. هذه الخدمةُ لا تُعالجُ مالاً (ADR-026 §2.2)، ومن
+     * يُرسلُ المبلغَ هنا يجعلُ الخدمةَ طرفاً ماليّاً بلا قرارٍ يُجيزُ ذلك.
+     */
+    PaymentMirrorRequest: {
+      payment_state: components["schemas"]["PaymentState"];
+      reason_code:
+        | "AUTHORIZATION_SUCCEEDED"
+        | "CAPTURE_SUCCEEDED"
+        | "AUTHORIZATION_FAILED"
+        | "REFUND_INITIATED"
+        | "REFUND_COMPLETED"
+        | "PARTIAL_REFUND_COMPLETED";
+      /** مرجعُ النيّةِ عندَ مُزوِّدِ الدفعِ — opaque، 1..128 محرفاً. */
+      payment_ref?: string | null;
     };
     OrderLine: {
       line_no: number;

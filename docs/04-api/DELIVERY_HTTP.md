@@ -1,10 +1,10 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 8/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 9/N)
 
-> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الستّةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، وحدودُه المُعلَنةُ.
+> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الثمانيةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 8/N — محوّلُ كتالوجِ السوقِ) · **Last Updated:** 2026-09-10
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 9/N — مرآةُ الدفعِ والتأكيدُ وبوّابةُ خروجِ الطورِ) · **Last Updated:** 2026-09-10
 >
 > **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
@@ -12,7 +12,19 @@
 
 ---
 
-## 1. ماذا يُضاف في هذه المراجعة
+## 1. ماذا يُضاف في هذه المراجعة (9/N)
+
+ترفعُ هذه المراجعةُ **البندَ 4 من ADR-026 §4** (بوّابةُ خروجِ المخزونِ والدفعِ)، وقبلَهُ السلكَ الذي كانَ ناقصاً:
+
+- **`PUT /store-orders/{orderPublicId}/payment-mirror`** — مرآةُ حالةِ دفعٍ خارجيّةٍ بمرجعِها. تعكسُ ولا تُقرِّرُ: الحافّةُ تُوازنُ بجدولِ §3.2، **والسببُ يُوازنُ بالحافّةِ** (لكلِّ حافّةٍ سببٌ واحدٌ يصفُها). حالةٌ مُعادةٌ بنفسِ المرجعِ **لا أثرَ لها**؛ ونفسُها بمرجعٍ مختلفٍ **409**.
+- **`POST /store-orders/{orderPublicId}/confirmation`** — يقطعُ `placed → confirmed` بسببِ `PAYMENT_AUTHORIZED` بعدَ تخويلِ الدفعِ. **ولا جسمَ لهُ:** القرارُ كلُّهُ في المسارِ والحالةِ المحفوظةِ. وكانَ `canConfirmOrder` مكتوباً **بلا مُنادٍ** قبلَ هذه المراجعةِ، فالحافّةُ غيرُ قابلةٍ للوصولِ.
+- **المسارانِ تماثُليّانِ** (`Idempotency-Key` إلزاميّةٌ)، وقيدُ `route` في المخطَّطِ صارَ يعرفُهما — **وحارسٌ يقرأُ الورقةَ من القرصِ** يمنعُ الانحرافَ نفسَهُ مستقبلاً (§6.2).
+- **مُحلِّلُ جسمٍ ومُترجِمُ أخطاءٍ أصدقانِ:** جسمٌ فارغٌ مع رأسِ JSON = «لا جسمَ»، وكلُّ خطأِ إطارٍ 4xx = `400 DELIVERY_VALIDATION_FAILED` لا `500` (§3.2).
+- **بوّابةُ خروجِ الطورِ** في `@wasla/delivery-e2e`: خدمتانِ حقيقيَّتانِ على مُستمعَينِ وقاعدةٍ واحدةٍ ⇒ [`PHASE13_EXIT_GATE_E2E.md`](../12-testing/PHASE13_EXIT_GATE_E2E.md).
+
+---
+
+## 1أ. ما أضافتْهُ المراجعةُ 8/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **أقدمَ دَينٍ في الخدمةِ**: [ADR-026 §4.9-2](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) قالَ إنّ محوّلَ الكتالوجِ «متعذّرٌ معماريّاً»، فبقيَ `POST /store-orders` يُجيبُ `503` سبعَ مراجعاتٍ. والعلّةُ لم تكن شبكةً بل **مرجعاً**:
 
@@ -23,13 +35,15 @@
 
 ---
 
-## 2. المساراتُ الستّةُ (لا سابعَ)
+## 2. المساراتُ الثمانيةُ (لا تاسعَ)
 
 | الطريقةُ والمسارُ | الغرضُ | النجاحُ |
 |---|---|---|
 | `POST /store-orders` | إنشاءُ طلبِ متجرٍ ومهمّةِ توصيلِه · **`Idempotency-Key` إلزاميّةٌ** | **201** `StoreOrderResource` |
 | `GET /store-orders/{orderPublicId}` | قراءةُ الطلبِ بأصنافِه | **200** `StoreOrderResource` |
 | `POST /store-orders/{orderPublicId}/cancellation` | إلغاءُ الطلبِ بسببٍ من كتالوجٍ مغلقٍ · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
+| `PUT /store-orders/{orderPublicId}/payment-mirror` | مرآةُ حالةِ الدفعِ الخارجيّةِ ومرجعِها · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
+| `POST /store-orders/{orderPublicId}/confirmation` | تأكيدُ الطلبِ بعدَ تخويلِ الدفعِ · **لا جسمَ** · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
 | `GET /store-orders/{orderPublicId}/delivery-task` | قراءةُ مهمّةِ التوصيلِ (مرآةٌ خشنةٌ) | **200** `DeliveryTaskResource` |
 | `GET /delivery/health` | **حياةٌ (liveness)** بلا تبعيّةٍ | **200** `{ status: "ok" }` |
 | `GET /delivery/ready` | **جاهزيّةٌ (readiness)** بمسبارِ قاعدةٍ حقيقيٍّ | **200** / **503** `ReadinessResponse` |
@@ -110,6 +124,18 @@ GET /delivery/ready → 200
 
 خطأٌ غيرُ مُصنَّفٍ يُرَدُّ **`500 DELIVERY_INTERNAL_ERROR`**. والمراجعةُ 7/N أعادتِ النظرَ في هذا الخيارِ صراحةً بعدَ وصولِ مفتاحِ التماثُلِ — **وأبقتهُ**: المفتاحُ يجعلُ الإعادةَ **آمنةً** لكنّهُ لا يجعلُ الفشلَ المجهولَ **عابراً**، و`503` دعوةٌ للإعادةِ على ما قد يكونُ عيباً دائماً في الشيفرةِ. فـ`500` تقولُ الحقيقةَ: عيبٌ يُفحَصُ لا عبورٌ يُعاد؛ والعميلُ الذي يريدُ إعادةً آمنةً يملكُها الآنَ بالمفتاحِ نفسِهِ ([§4.10-4](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)). والأخطاءُ المُعلَنةُ تبعيّةً (`DELIVERY_MARKETPLACE_UNAVAILABLE` · `DELIVERY_DISPATCH_UNAVAILABLE` · `DELIVERY_DATABASE_UNAVAILABLE`) تبقى **503** — الملاذُ لا يبتلعُها (مقيسٌ باختبارَين متقابلَين).
 
+### 3.2 جسمُ الطلبِ: الفارغُ ليسَ خطأً، وخطأُ الإطارِ ليسَ عطبَنا (9/N)
+
+`POST …/confirmation` لا جسمَ لهُ في العقدِ، وكلُّ عميلٍ عامٍّ يبعثُ `content-type: application/json` ولو لم يبعثْ بايتاً. ومُحلِّلُ Fastify الافتراضيُّ كانَ يُسقِطُ ذلكَ بـ`FST_ERR_CTP_EMPTY_JSON_BODY` فيُجيبُ الملاذُ الأخيرُ **500** — أي يُسمّي طلبَ العميلِ عطبَنا **ويقولُ «لا تُعِدْ»** عن شيءٍ يُصلَحُ في محاولةٍ واحدةٍ. وكشفتْهُ بوّابةُ الخروجِ لأنَّ `app.inject` بلا `payload` لا يبعثُ الرأسَ أصلاً.
+
+فصارَ الحدُّ:
+
+- **جسمٌ فارغٌ ⇒ «لا جسمَ»** (`undefined`). والمساراتُ التي **تطلبُ** جسماً ترفضُ الغائبَ بـ`400 DELIVERY_VALIDATION_FAILED` **من عقدِنا** لا من رسالةِ إطارٍ.
+- **JSON معطوبٌ ⇒ 400** بلا اقتباسِ الجسمِ في الرسالةِ: قد يحملُ مرجعَ دفعٍ (§2.6).
+- **كلُّ خطأِ إطارٍ بحالٍ 4xx ⇒ `DELIVERY_VALIDATION_FAILED`** بحالِ الكتالوجِ (400)، لا بحالٍ يُنسَخُ كما جاءَ فيصيرَ جدولَ حالاتٍ ثانياً. ورمزُ الإطارِ يبقى في الرسالةِ فلا تضيعُ دقّةُ السببِ.
+
+و`500 DELIVERY_INTERNAL_ERROR` يبقى **للمجهولِ وحدَهُ** (§3.1) — وهذا ما يجعلُ معناهُ صالحاً للقراءةِ.
+
 ---
 
 ## 4. الحدُّ مُحقَنٌ لا مُتصلٌ
@@ -155,9 +181,17 @@ GET /delivery/ready → 200
 
 ---
 
-## 6. عَيبٌ حقيقيٌّ وجدَهُ التكامُلُ (المراجعةُ 7/N)
+## 6. عيوبٌ حقيقيّةٌ وجدَتْها الطبقاتُ العُليا
+
+### 6.1 اشتقاقُ مُعرِّفِ السطرِ — وجدَهُ التكامُلُ (المراجعةُ 7/N)
 
 `order_item_id` مفتاحٌ أوّليٌّ **عامٌّ** في `store_order_items`، لكنّ اشتقاقَهُ كانَ يُبقي أوّلَ 24 محرفاً من مُعرِّفِ الطلبِ ويكتبُ رقمَ السطرِ في الاثنَي عشرَ الأخيرةِ — فريدٌ **داخلَ** الطلبِ فقط. فطلبانِ يتشابهُ صدرُ مُعرِّفَيهِما أنتجا مُعرِّفَ سطرٍ واحداً والثاني ماتَ على `store_order_items_pkey`: **500 على طلبٍ سليمٍ**. صارَ الاشتقاقُ بصمةَ `sha256` على `مُعرِّفِ الطلبِ ⊕ رقمِ السطرِ` بشكلِ uuid نسخةِ 8 — حتميٌّ كما كانَ (فالبانيةُ نقيّةٌ)، ويحفظُ كلَّ بتاتِ مُعرِّفِ الطلبِ. مُثبَّتٌ باختبارِ انحدارٍ يبني طلبَينِ يختلفُ مُعرِّفاهُما في الذيلِ وحدَهُ.
+
+### 6.2 قيدُ `route` في المخطَّطِ — وجدَتْهُ بوّابةُ الخروجِ (المراجعةُ 9/N)
+
+أضافتِ المراجعةُ مسارَينِ تماثُليَّينِ إلى `IDEMPOTENT_ROUTES` ولم يُوسَّعْ قيدُ `route IN (…)` في [`schema.sql`](../../services/delivery/contracts/schema.sql). ومرَّ ذلكَ من **209 اختبارِ وحدةٍ** (لا قاعدةَ فيها) و**48 اختبارَ تكاملٍ** (مساراتُها القديمةُ وحدَها تكتبُ مفاتيحَ)، وسقطَ أوّلُ نداءٍ صحيحٍ على قاعدةٍ حقيقيّةٍ بـ**500 من قيدِ قاعدةٍ**.
+
+والعلاجُ ليسَ «اكتبْ بحذرٍ»: حارسٌ في اختباراتِ الوحدةِ **يقرأُ الورقةَ من القرصِ**، يستخرجُ حرفيّاتِ القيدِ ويوازنُها بـ`IDEMPOTENT_ROUTES` مجموعةً. فالانحرافُ نفسُهُ يسقطُ الآنَ في ثانيةٍ بلا قاعدةٍ، لا في بوّابةٍ بعيدةٍ تستغرقُ دقيقةً.
 
 ---
 
@@ -172,5 +206,6 @@ GET /delivery/ready → 200
 | `Retry-After` وحالةُ «قيدَ المعالجةِ» في تسابُقِ المفتاحِ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — التسابُقُ يُكتشَفُ بخطأِ تفرُّدٍ لا بحالةٍ مُخزَّنةٍ |
 | فحوصُ جاهزيّةٍ للسوقِ وجسرِ الإرسالِ وتراكُمِ الصادرِ | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · مُعلَنةٌ في `not_claimed` لا مسكوتٌ عنها |
 | حافّةُ `pending_eligibility → cancelled` في §3.3 | [ADR-026 §4.9-1](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — قرارُ عقدٍ لا إصلاحُ شيفرةٍ |
-| بوّابةُ خروجِ الطورِ (inventory/payment E2E) | ADR-026 §4 (البندُ 4) |
+| ~~بوّابةُ خروجِ الطورِ (inventory/payment E2E)~~ **رُفِعَ في 9/N** | [`PHASE13_EXIT_GATE_E2E.md`](../12-testing/PHASE13_EXIT_GATE_E2E.md) — 7/7 على قاعدةٍ حقيقيّةٍ · [ADR-026 §4.12](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) |
+| مُزوِّدُ دفعٍ حقيقيٌّ وتحقُّقُ توقيعِ webhook | [ADR-026 §4.12](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المرآةُ تعكسُ ما يُعلَنُ لها عبرَ حدٍّ مُوقَّعٍ بينَ خدماتٍ |
 | ترحيلاتٌ مولَّدةٌ (drizzle) بدلَ `schema.sql` يدويّاً | ADR-026 §4 (البندُ 5) |

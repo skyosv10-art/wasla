@@ -60,6 +60,29 @@ export function sendDeliveryError(
     } satisfies DeliveryErrorBody);
   }
 
+  /*
+   * خطأُ إطارٍ بحالٍ 4xx = خطأُ **مُنادٍ** لا عطبُ خدمةٍ — والمراجعةُ 9/N كشفتْهُ
+   * على السلكِ: `POST …/confirmation` بلا جسمٍ ومع `content-type: application/json`
+   * كانَ يُجابُ `500 DELIVERY_INTERNAL_ERROR`. والجوابُ كذبتانِ في واحدٍ: يُسمّي
+   * طلبَ العميلِ عطبَنا، ويقولُ «لا تُعِدْ» عن شيءٍ يُصلِحُهُ العميلُ في محاولةٍ
+   * واحدةٍ. فما جاءَ من الإطارِ بحالٍ 4xx يُترجَمُ إلى شفرةِ التحقُّقِ.
+   *
+   * والحالُ يُعادُ إلى 400 من الكتالوجِ لا يُنسَخُ كما جاءَ (415 مثلاً): جدولُ
+   * الحالاتِ واحدٌ في `@wasla/contracts-delivery`، وحالٌ يُخالفُ شفرتَهُ كانَ سيصيرُ
+   * حقيقةً ثانيةً — وهيَ عينُ ما يمنعُهُ رأسُ هذا الملفِّ. ودقّةُ السببِ لا تضيعُ:
+   * رمزُ الإطارِ يبقى في الرسالةِ (`FST_ERR_CTP_*`).
+   */
+  const frameworkStatus = (error as { readonly statusCode?: unknown }).statusCode;
+  if (typeof frameworkStatus === "number" && frameworkStatus >= 400 && frameworkStatus < 500) {
+    const code = (error as { readonly code?: unknown }).code;
+    const detail = typeof code === "string" ? ` (${code})` : "";
+    return reply.status(400).send({
+      error_code: "DELIVERY_VALIDATION_FAILED",
+      message: `${error instanceof Error ? error.message : "طلبٌ غيرُ مقبولٍ"}${detail}`,
+      trace_id: traceId,
+    } satisfies DeliveryErrorBody);
+  }
+
   // Unknown: keep the message for the log, keep the code stable for clients.
   const message = error instanceof Error ? error.message : "خطأٌ غيرُ متوقَّعٍ في خدمةِ التوصيلِ";
   return reply.status(500).send({

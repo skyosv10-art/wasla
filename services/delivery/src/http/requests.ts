@@ -25,8 +25,17 @@
  * letting an unknown code reach a database CHECK and surface as a 500.
  */
 
-import { STORE_ORDER_CANCEL_REASON_CODES } from "@wasla/contracts-delivery";
-import type { StoreOrderCancelReasonCode, WaslaPublicId } from "@wasla/contracts-delivery";
+import {
+  PAYMENT_REASON_CODES,
+  PAYMENT_STATES,
+  STORE_ORDER_CANCEL_REASON_CODES,
+} from "@wasla/contracts-delivery";
+import type {
+  PaymentReasonCode,
+  PaymentState,
+  StoreOrderCancelReasonCode,
+  WaslaPublicId,
+} from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "../domain/errors.js";
 import type { OrderLineInput, PlaceOrderInput } from "../domain/validation.js";
@@ -110,4 +119,61 @@ export function parseCancelBody(body: unknown): StoreOrderCancelReasonCode {
     throw invalid("reason_code", "سببُ الإلغاءِ ليس من الكتالوجِ المغلقِ", code);
   }
   return code as StoreOrderCancelReasonCode;
+}
+
+/**
+ * Parse `PUT /store-orders/{id}/payment-mirror` body (review 9/N · §2.2).
+ *
+ * Three rules the contract states and this parser enforces literally:
+ *
+ *  1. `payment_state` and `reason_code` are members of CLOSED catalogs. An
+ *     unknown value must not reach a database CHECK and surface as a 500.
+ *  2. `additionalProperties: false` is enforced HERE, not merely documented.
+ *     A provider that sends `amount_minor_units` must be refused loudly:
+ *     silently ignoring it is how an integrator concludes Wasla stored an
+ *     amount it never stored (§2.2 — no money is processed in this service).
+ *  3. A MISSING `payment_ref` is not `null`. Missing means "nothing new to
+ *     say"; `null` means "no reference at the provider". The distinction is
+ *     what stops a terse webhook from erasing an audit trail, so the parser
+ *     preserves it (`undefined` vs `null`) instead of normalising.
+ */
+export function parsePaymentMirrorBody(body: unknown): {
+  paymentState: PaymentState;
+  reasonCode: PaymentReasonCode;
+  paymentRef?: string | null;
+} {
+  const raw = asObject(body, "body");
+
+  const allowed = new Set(["payment_state", "reason_code", "payment_ref"]);
+  for (const key of Object.keys(raw)) {
+    if (!allowed.has(key)) {
+      throw invalid(key, "حقلٌ غيرُ مُعلَنٍ في العقدِ — ولا حقلَ ماليَّ في مرآةِ الدفعِ (§2.2)", key);
+    }
+  }
+
+  const state = asString(raw.payment_state, "payment_state");
+  if (!(PAYMENT_STATES as readonly string[]).includes(state)) {
+    throw invalid("payment_state", "حالةُ الدفعِ ليست من الكتالوجِ المغلقِ", state);
+  }
+  const reason = asString(raw.reason_code, "reason_code");
+  if (!(PAYMENT_REASON_CODES as readonly string[]).includes(reason)) {
+    throw invalid("reason_code", "سببُ المرآةِ ليس من الكتالوجِ المغلقِ", reason);
+  }
+
+  const parsed: { paymentState: PaymentState; reasonCode: PaymentReasonCode; paymentRef?: string | null } = {
+    paymentState: state as PaymentState,
+    reasonCode: reason as PaymentReasonCode,
+  };
+
+  if ("payment_ref" in raw) {
+    const ref = raw.payment_ref;
+    if (ref === null) return { ...parsed, paymentRef: null };
+    const text = asString(ref, "payment_ref");
+    if (text.length < 1 || text.length > 128) {
+      throw invalid("payment_ref", "مرجعُ الدفعِ بطولِ 1..128 محرفاً", String(text.length));
+    }
+    return { ...parsed, paymentRef: text };
+  }
+
+  return parsed;
 }

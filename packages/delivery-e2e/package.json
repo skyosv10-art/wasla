@@ -1,0 +1,21 @@
+{
+  "name": "@wasla/delivery-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Phase 13 exit gate — السوقُ والتوصيلُ مُستمعانِ حقيقيّانِ على قاعدةٍ واحدةٍ حقيقيّةٍ: الطلبُ يُوضَعُ بلقطةِ سعرٍ مأخوذةٍ عبرَ الشبكةِ من السوقِ، ومرآةُ الدفعِ ثمّ التأكيدُ يقطعانِ الشوطَ إلى confirmed، وحدثُ مخزونٍ حقيقيٌّ يصلُ عبرَ الناقلِ، وكلُّ حدثٍ يُكتَبُ يُصدَّقُ على العقدِ المنشورِ (المراجعة 9/N).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/contracts-delivery": "workspace:*",
+    "@wasla/delivery-service": "workspace:*",
+    "@wasla/marketplace-service": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

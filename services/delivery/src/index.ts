@@ -194,3 +194,34 @@ export type {
   MarketplaceFailureReason,
 } from "./infrastructure/http-marketplace-catalog.js";
 export { assertStoreSlug, isValidStoreSlug } from "./domain/validation.js";
+
+/* ── review 9/N: مرآةُ الدفعِ والتأكيدُ ثمّ بوّابةُ خروجِ الطورِ 13 (§2.2 · §3.2) ── */
+export { decidePaymentMirror } from "./domain/payment-mirror.js";
+export type { PaymentMirrorDecision, PaymentMirrorInput } from "./domain/payment-mirror.js";
+export { decideConfirmation } from "./domain/store-order-confirmation.js";
+export type { ConfirmationDecision } from "./domain/store-order-confirmation.js";
+export { mirrorPayment } from "./use-cases/mirror-payment.js";
+export type { MirrorPaymentDeps, MirrorPaymentResult } from "./use-cases/mirror-payment.js";
+export { confirmStoreOrder } from "./use-cases/confirm-store-order.js";
+export type {
+  ConfirmStoreOrderDeps,
+  ConfirmStoreOrderResult,
+} from "./use-cases/confirm-store-order.js";
+export type {
+  ConfirmOrderOutcome,
+  ConfirmationWrite,
+  MirrorPaymentOutcome,
+  PaymentMirrorWrite,
+} from "./ports.js";
+/**
+ * محوّلاتُ Postgres الأربعةُ التي كانت مكتوبةً وغيرَ مُصدَّرةٍ.
+ *
+ * بوّابةُ الخروجِ (`@wasla/delivery-e2e`) ترفعُ الرحلةَ على خدمتَينِ حقيقيّتَينِ، ولا
+ * تستطيعُ ذلكَ بنسخٍ محليّةٍ من المحوّلاتِ: نسخةٌ في الاختبارِ تُثبِتُ أنَّ النسخةَ
+ * تعملُ لا أنَّ الخدمةَ تعملُ. وتصديرُها هنا هو الفرقُ بينَ بوّابةٍ تشهدُ للإنتاجِ
+ * وبينَ اختبارٍ يشهدُ لنفسِهِ.
+ */
+export { PostgresInventoryObservationStore } from "./infrastructure/inventory-observation-store.js";
+export { PostgresMarketplaceInventoryEventSource } from "./infrastructure/marketplace-inventory-event-source.js";
+export { PostgresTaskMirrorStore } from "./infrastructure/task-mirror-store.js";
+export { PostgresDispatchEventSource } from "./infrastructure/dispatch-event-source.js";

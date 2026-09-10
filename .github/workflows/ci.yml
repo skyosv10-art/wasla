@@ -546,6 +546,15 @@ jobs:
             pkg: "@wasla/search-e2e"
             db: wasla_search_e2e
             var: DATABASE_URL
+          # `M5-13` · بوّابةُ خروجِ الطورِ 13 — **الوحيدةُ التي ترفعُ خدمتَينِ حقيقيَّتَينِ**:
+          # السوقُ يُنشرُ منتجاً ويكتبُ حدثَ مخزونٍ، والتوصيلُ يأخذُ اللقطةَ عبرَ HTTP
+          # حقيقيٍّ ويقطعُ `placed → confirmed` بمرآةِ دفعٍ ثمَّ تأكيدٍ. وما دونَ سلكٍ
+          # حقيقيٍّ لا يُقاسُ: أوّلُ تشغيلٍ لها كشفَ قيدَ قاعدةٍ ناقصاً و500 على جسمٍ
+          # فارغٍ — عطبانِ مرَّا من 209 اختبارِ وحدةٍ و48 اختبارَ تكاملٍ.
+          - leg: delivery
+            pkg: "@wasla/delivery-e2e"
+            db: wasla_delivery_e2e
+            var: DATABASE_URL
     services:
       postgres:
         image: postgres:15

@@ -42,6 +42,7 @@ import {
   type StoreOrderFulfillmentStateChangedV1,
   type StoreOrderInventoryReservedV1,
   type StoreOrderInventoryReleasedV1,
+  type StoreOrderInventoryConsumedV1,
   type StoreOrderItemSubstitutedV1,
   type StoreOrderPaymentStateChangedV1,
   type SubstitutionReasonCode,
@@ -193,6 +194,31 @@ export function storeOrderInventoryReleasedEvent(
       from_state: order.inventoryState as InventoryState,
       to_state: "released",
       reason_code: "INVENTORY_RELEASED",
+      reservation_ref: details.reservation_ref,
+      actor: { actor_type: "system", actor_ref: null },
+    },
+  };
+}
+
+/** `store_order.inventory_consumed` — final consumption at delivery (§4.13, review 11/N). */
+export function storeOrderInventoryConsumedEvent(
+  order: StoreOrder,
+  context: EventContext,
+  details: { reservation_ref: string },
+): StoreOrderInventoryConsumedV1 {
+  return {
+    event_id: context.eventId,
+    event_type: DELIVERY_EVENT_TYPES.STORE_ORDER_INVENTORY_CONSUMED,
+    event_version: "v1",
+    occurred_at: context.occurredAt,
+    producer: "delivery-service",
+    aggregate: { type: "store_order", id: order.orderId },
+    trace_id: context.traceId ?? null,
+    payload: {
+      public_id: order.publicId,
+      from_state: order.inventoryState as InventoryState,
+      to_state: "consumed",
+      reason_code: "INVENTORY_CONSUMED",
       reservation_ref: details.reservation_ref,
       actor: { actor_type: "system", actor_ref: null },
     },

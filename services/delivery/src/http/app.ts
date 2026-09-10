@@ -2,7 +2,7 @@
  * Delivery HTTP boundary — Fastify app (ADR-026 §4.2, lifted for the network
  * edge in review 6/N · contracts/api.openapi.yml).
  *
- * Exactly the eight routes the contract publishes, no more: a route that is not
+ * Exactly the nine routes the contract publishes, no more: a route that is not
  * in the contract is a private API nobody documented, and the first client that
  * finds it makes it permanent.
  *
@@ -11,6 +11,7 @@
  *   POST /store-orders/{orderPublicId}/cancellation    → 200 (Idempotency-Key)
  *   PUT  /store-orders/{orderPublicId}/payment-mirror  → 200 (Idempotency-Key)
  *   POST /store-orders/{orderPublicId}/confirmation    → 200 (Idempotency-Key)
+ *   POST /store-orders/{orderPublicId}/fulfillment-transition → 200 (Idempotency-Key)
  *   GET  /store-orders/{orderPublicId}/delivery-task   → 200
  *   GET  /delivery/health                              → 200 (liveness)
  *   GET  /delivery/ready                               → 200/503 (readiness)
@@ -87,6 +88,7 @@ import { sendDeliveryError } from "./errors.js";
 import { toDeliveryTaskResponse, toStoreOrderResponse } from "./mappers.js";
 import {
   parseCancelBody,
+  parseFulfillmentTransitionBody,
   parseOrderPublicIdParam,
   parsePaymentMirrorBody,
   parsePlaceStoreOrderBody,
@@ -96,6 +98,7 @@ import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
 import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
+import { fulfillmentTransition } from "../use-cases/fulfillment-transition.js";
 
 export interface DeliveryHttpDeps {
   readonly readPort: StoreOrderReadPort;
@@ -321,6 +324,60 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     const result = await confirmStoreOrder(
       { readPort: deps.readPort, writePort: deps.writePort, newUuid, now },
       publicId,
+      traceId,
+      idempotency,
+    );
+    if (result.kind === "replayed") return sendReplay(reply, result.status, result.body);
+    return reply.status(200).send(toStoreOrderResponse(result.order));
+  });
+
+  // ── Fulfillment transition (review 11/N, ADR-026 §4.13) ────────────
+  // One route for the remaining fulfillment edges:
+  // confirmed → picking → picked → ready_for_delivery → handed_to_courier → delivered
+  // `delivered` requires proof of delivery (§2.4) and triggers inventory
+  // `reserved → consumed` in the same transaction (no marketplace call).
+  app.post("/store-orders/:orderPublicId/fulfillment-transition", async (request, reply) => {
+    const traceId = String(request.id);
+    const publicId = parseOrderPublicIdParam(request.params);
+    const parsed = parseFulfillmentTransitionBody(request.body);
+    const route = "POST /store-orders/{orderPublicId}/fulfillment-transition" as const;
+
+    // Build proof if both fields are present
+    let proof: { proofType: "otp" | "photo" | "signature" | "pin_code"; proofRef: string } | null = null;
+    if (parsed.proofType !== undefined && parsed.proofRef !== undefined) {
+      const validProofTypes = ["otp", "photo", "signature", "pin_code"];
+      if (!validProofTypes.includes(parsed.proofType)) {
+        throw new DeliveryError(
+          "DELIVERY_VALIDATION_FAILED",
+          "نوعُ الإثباتِ ليس من الكتالوجِ المغلقِ",
+          { details: { field: "proof_type", actual: parsed.proofType } },
+        );
+      }
+      proof = {
+        proofType: parsed.proofType as "otp" | "photo" | "signature" | "pin_code",
+        proofRef: parsed.proofRef,
+      };
+    }
+
+    const idempotency: IdempotencyIntent = {
+      key: assertIdempotencyKey(request.headers["idempotency-key"]),
+      route,
+      fingerprint: deriveRequestFingerprint(route, publicId, parsed),
+      responseStatus: 200,
+      buildResponseBody: (written) => toStoreOrderResponse(written),
+    };
+
+    const result = await fulfillmentTransition(
+      {
+        readPort: deps.readPort,
+        writePort: deps.writePort,
+        reservationStore: deps.reservationStore,
+        newUuid,
+        now,
+      },
+      publicId,
+      parsed.toState,
+      proof,
       traceId,
       idempotency,
     );

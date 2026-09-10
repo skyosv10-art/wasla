@@ -58,6 +58,7 @@ export const IDEMPOTENT_ROUTES = [
   "POST /store-orders/{orderPublicId}/cancellation",
   "PUT /store-orders/{orderPublicId}/payment-mirror",
   "POST /store-orders/{orderPublicId}/confirmation",
+  "POST /store-orders/{orderPublicId}/fulfillment-transition",
 ] as const;
 export type IdempotentRoute = (typeof IDEMPOTENT_ROUTES)[number];
 

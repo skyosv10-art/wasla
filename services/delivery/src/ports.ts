@@ -227,7 +227,7 @@ export interface InventoryObservationStore {
  * ORD-/WS- bridge in RISK-0034, refused rather than faked.
  * ════════════════════════════════════════════════════════════════════════ */
 
-import type { StoreOrderCancelReasonCode, StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
+import type { StoreOrderCancelReasonCode, FulfillmentReasonCode, StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 import type { DeliveryTask, StoreOrder } from "./domain/model.js";
 import type { DeliveryDomainEvent } from "./domain/events.js";
 import type { IdempotentRoute } from "./domain/idempotency.js";
@@ -279,6 +279,9 @@ export type ConfirmOrderOutcome =
   | { readonly kind: "applied"; readonly order: StoreOrder }
   | IdempotentReplay;
 export type CancelOrderOutcome =
+  | { readonly kind: "applied"; readonly order: StoreOrder }
+  | IdempotentReplay;
+export type FulfillmentTransitionOutcome =
   | { readonly kind: "applied"; readonly order: StoreOrder }
   | IdempotentReplay;
 
@@ -372,6 +375,32 @@ export interface ConfirmationWrite {
   readonly idempotency?: IdempotencyIntent;
 }
 
+/** ما يكتبُهُ انتقالُ تنفيذٍ واحدٌ: `fulfillment_state` وصفُّ دفترٍ وحدثٌ (§4.13). */
+export interface FulfillmentTransitionWrite {
+  readonly orderId: string;
+  readonly expectedVersion: number;
+  readonly fromFulfillmentState: string;
+  readonly toFulfillmentState: string;
+  readonly reasonCode: FulfillmentReasonCode;
+  readonly actor: { readonly actor_type: string; readonly actor_ref: string | null };
+  readonly events: readonly DeliveryDomainEvent[];
+  readonly traceId: string | null;
+  readonly idempotency?: IdempotencyIntent;
+  /**
+   * When the transition is `handed_to_courier → delivered`, the inventory
+   * consume is written in the SAME transaction: `reserved → consumed` + the
+   * `store_order.inventory_consumed` outbox event + the reservations ledger
+   * update. Null for all other transitions (no inventory side-effect).
+   */
+  readonly inventoryConsume?: {
+    readonly fromInventoryState: string;
+    readonly toInventoryState: string;
+    readonly inventoryRef: string;
+    readonly reasonCode: string;
+    readonly events: readonly DeliveryDomainEvent[];
+  } | null;
+}
+
 export interface StoreOrderWritePort {
   /**
    * Reserve the next public id (`WS-##########`). Separate from `placeOrder`
@@ -415,6 +444,14 @@ export interface StoreOrderWritePort {
    * a `state_kind = 'inventory'` ledger row, and the outbox event (review 10/N).
    */
   mirrorInventoryState(write: InventoryMirrorWrite): Promise<MirrorInventoryOutcome>;
+  /**
+   * ONE transaction: lock, version check, `fulfillment_state` update, a
+   * `state_kind = 'fulfillment'` ledger row, the outbox event — and, when
+   * `write.inventoryConsume` is present (the `delivered` edge), the inventory
+   * `reserved → consumed` transition and its outbox event in the same atomic
+   * write (review 11/N, ADR-026 §4.13).
+   */
+  fulfillmentTransition(write: FulfillmentTransitionWrite): Promise<FulfillmentTransitionOutcome>;
 }
 
 /** A price snapshot line as the catalog boundary returns it (§2.3). */

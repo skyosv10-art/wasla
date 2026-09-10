@@ -75,6 +75,8 @@ import type {
   CancellationWrite,
   ConfirmOrderOutcome,
   ConfirmationWrite,
+  FulfillmentTransitionOutcome,
+  FulfillmentTransitionWrite,
   InventoryMirrorWrite,
   InventoryReservationStore,
   MirrorInventoryOutcome,
@@ -454,6 +456,79 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
           WHERE response_body->>'order_id' = $1`,
         [write.orderId, JSON.stringify(toStoreOrderResponse(order))],
       );
+      return { kind: "applied", order };
+    });
+  }
+
+  /**
+   * انتقالُ التنفيذِ (المراجعةُ 11/N · §4.13): تحديثُ `fulfillment_state` تحتَ القُفلِ،
+   * ثمّ دفترُ انتقالٍ، ثمّ صندوقٌ — وعندَ `delivered` يُكتبُ الخصمُ النهائيُّ في نفسِ المعاملةِ.
+   */
+  async fulfillmentTransition(write: FulfillmentTransitionWrite): Promise<FulfillmentTransitionOutcome> {
+    return this.inTransaction<FulfillmentTransitionOutcome>(async (client) => {
+      const replay = await lookupIdempotencyKey(client, write.idempotency);
+      if (replay !== null) return replay;
+
+      const current = await lockOrder(client, write.orderId, write.expectedVersion);
+      if (current.fulfillment_state !== write.fromFulfillmentState) {
+        throw new DeliveryError(
+          "DELIVERY_CONCURRENT_UPDATE",
+          "تغيَّرَ الطلبُ بينَ القرارِ والكتابةِ — أعِد المحاولةَ",
+          { details: { expected: write.fromFulfillmentState, actual: String(current.fulfillment_state) } },
+        );
+      }
+
+      await client.query(
+        `UPDATE store_orders
+            SET fulfillment_state = $2,
+                version = version + 1,
+                updated_at = now()
+          WHERE order_id = $1`,
+        [write.orderId, write.toFulfillmentState],
+      );
+      await client.query(
+        `INSERT INTO store_order_transitions (
+           order_id, state_kind, from_state, to_state, reason_code,
+           actor_type, actor_ref, trace_id
+         ) VALUES ($1,'fulfillment',$2,$3,$4,$5,$6,$7)`,
+        [
+          write.orderId, write.fromFulfillmentState, write.toFulfillmentState,
+          write.reasonCode, write.actor.actor_type, write.actor.actor_ref,
+          write.traceId,
+        ],
+      );
+
+      // When delivered: consume inventory in the SAME transaction (§4.13)
+      if (write.inventoryConsume !== null && write.inventoryConsume !== undefined) {
+        const ic = write.inventoryConsume;
+        if (current.inventory_state !== ic.fromInventoryState) {
+          throw new DeliveryError(
+            "DELIVERY_CONCURRENT_UPDATE",
+            "تغيَّرَت حالةُ المخزونِ بينَ القرارِ والكتابةِ — أعِد المحاولةَ",
+            { details: { expected: ic.fromInventoryState, actual: String(current.inventory_state) } },
+          );
+        }
+        await client.query(
+          `UPDATE store_orders
+              SET inventory_state = $2,
+                  version = version + 1,
+                  updated_at = now()
+            WHERE order_id = $1`,
+          [write.orderId, ic.toInventoryState],
+        );
+        await client.query(
+          `INSERT INTO store_order_transitions (
+             order_id, state_kind, from_state, to_state, reason_code,
+             actor_type, actor_ref, trace_id
+           ) VALUES ($1,'inventory',$2,$3,$4,'system',NULL,$5)`,
+          [write.orderId, ic.fromInventoryState, ic.toInventoryState, ic.reasonCode, write.traceId],
+        );
+        await appendOutbox(client, ic.events, write.traceId);
+      }
+
+      await appendOutbox(client, write.events, write.traceId);
+      const order = await readOrderAfterWrite(client, write.orderId);
+      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
       return { kind: "applied", order };
     });
   }

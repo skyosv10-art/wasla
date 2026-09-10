@@ -218,6 +218,60 @@ paths:
           $ref: "#/components/responses/ConflictError"
         "500":
           $ref: "#/components/responses/InternalError"
+  /store-orders/{orderPublicId}/fulfillment-transition:
+    post:
+      tags: [store-orders]
+      operationId: fulfillmentTransition
+      summary: انتقالُ تنفيذٍ (confirmed → picking → ... → delivered)
+      description: |
+        مسارٌ واحدٌ يُديرُ انتقالاتِ الإكمالِ الستّةَ الباقيةَ (المراجعةُ 11/N،
+        ADR-026 §4.13): `confirmed → picking → picked → ready_for_delivery →
+        handed_to_courier → delivered`.
+
+        حافّةُ `handed_to_courier → delivered` تتطلَّبُ إثباتَ تسليمٍ (`proof_type`
+        و`proof_ref`) وتُحرِّكُ الخصمَ النهائيَّ للمخزونِ (`reserved → consumed`) في
+        نفسِ المعاملةِ — لا نداءَ للسوقِ: الحجزُ خصمٌ بالفعل.
+      parameters:
+        - name: orderPublicId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WaslaPublicId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to_state]
+              properties:
+                to_state:
+                  $ref: "#/components/schemas/FulfillmentState"
+                proof_type:
+                  type: string
+                  enum: [otp, photo, signature, pin_code]
+                  description: مطلوبٌ عندَ to_state=delivered.
+                proof_ref:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  description: مطلوبٌ عندَ to_state=delivered.
+      responses:
+        "200":
+          description: انتقلَ الطلبُ إلى الحالةِ المطلوبةِ (أو إعادةُ جوابٍ سابقٍ)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrderResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /store-orders/{orderPublicId}/delivery-task:
     get:
       tags: [delivery]

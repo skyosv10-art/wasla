@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T20:38:56Z",
+  "generated_at": "2026-09-10T22:59:22Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f87f9317d6ad3280b3704a95d1840a6c3ea321c7",
-    "branch": "feat/m5-13-inventory-reservation",
+    "commit": "ee8cc823b54b8c37197e7e8187ee791b43806c7a",
+    "branch": "feat/m5-13-inventory-consumed",
     "dirty": true,
-    "dirty_files": 5,
-    "dirty_reason": "review 10/N: fix actorPublicId validation + idempotency body update",
+    "dirty_files": 20,
+    "dirty_reason": "",
     "tracked_files": 1647
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 317,
+    "test_files_tracked": 319,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-full2.log",
+    "source": "/tmp/verify-combined.log",
     "tests_passed": 4167,
     "test_files_executed": 253,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:6ec4f84697cde2cc3685f35d099395bae0d0d27306dde07a9a712d0de798d5f4",
+  "fingerprint": "sha256:1d8021841378f77d1b5efa0041090a8eba547a5cbf6187f8808c06a8393bab52",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -219,6 +219,20 @@ export interface StoreOrderInventoryReleasedV1 extends DeliveryEventEnvelope {
   };
 }
 
+export interface StoreOrderInventoryConsumedV1 extends DeliveryEventEnvelope {
+  event_type: "store_order.inventory_consumed";
+  event_version: "v1";
+  aggregate: { type: "store_order"; id: string };
+  payload: {
+    public_id: WaslaPublicId;
+    from_state: InventoryState;
+    to_state: "consumed";
+    reason_code: "INVENTORY_CONSUMED";
+    reservation_ref: string;
+    actor: DeliveryActor;
+  };
+}
+
 export interface StoreOrderItemSubstitutedV1 extends DeliveryEventEnvelope {
   event_type: "store_order.item_substituted";
   event_version: "v1";
@@ -356,6 +370,7 @@ export type DeliveryDomainEvent =
   | StoreOrderPaymentStateChangedV1
   | StoreOrderInventoryReservedV1
   | StoreOrderInventoryReleasedV1
+  | StoreOrderInventoryConsumedV1
   | StoreOrderItemSubstitutedV1
   | DeliveryTaskCreatedV1
   | DeliveryEligibilityResolvedV1
@@ -373,6 +388,7 @@ export const DELIVERY_EVENT_TYPES = {
   STORE_ORDER_PAYMENT_STATE_CHANGED: "store_order.payment_state_changed",
   STORE_ORDER_INVENTORY_RESERVED: "store_order.inventory_reserved",
   STORE_ORDER_INVENTORY_RELEASED: "store_order.inventory_released",
+  STORE_ORDER_INVENTORY_CONSUMED: "store_order.inventory_consumed",
   STORE_ORDER_ITEM_SUBSTITUTED: "store_order.item_substituted",
   DELIVERY_TASK_CREATED: "delivery.task_created",
   DELIVERY_ELIGIBILITY_RESOLVED: "delivery.eligibility_resolved",

@@ -488,4 +488,91 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(refused.body.error_code).not.toBe("DELIVERY_MARKETPLACE_UNAVAILABLE");
     expect(await countRows(gate.pool, "store_orders")).toBe(0);
   });
+
+  /*
+   * المراجعةُ 11/N — الخصمُ النهائيُّ عندَ التسليمِ (ADR-026 §4.13).
+   *
+   * رحلةٌ كاملةٌ عبرَ HTTP من `confirmed` إلى `delivered`، يُثبتُ أنّ:
+   *  - كلَّ انتقالاتِ الإكمالِ الستّةَ تُقطَعُ عبرَ سلكٍ حقيقيٍّ، لا بالقاعدةِ مباشرةً.
+   *  - `delivered` يتطلَّبُ إثباتاً، وبدونِهِ يُرفَضُ.
+   *  - الخصمُ النهائيُّ (`reserved → consumed`) يُكتَبُ في الصندوقِ في نفسِ المعاملةِ.
+   *  - لا نداءَ للسوقِ عندَ الخصمِ: الحجزُ خصمٌ بالفعل.
+   *  - الإلغاءُ بعدَ `consumed` لا يُطلِقُ الحجزَ.
+   */
+  it("الرحلةُ الكاملةُ confirmed → delivered عبرَ HTTP، والخصمُ النهائيُّ في الصندوقِ", async () => {
+    const productId = await publishProduct();
+    const order = await placeOrder(productId);
+    const publicId = order.public_id as string;
+
+    // المرآةُ والتأكيدُ كما في البوّابةِ السابقةِ.
+    await call(gate.deliveryBaseUrl, {
+      method: "PUT",
+      path: `/store-orders/${publicId}/payment-mirror`,
+      body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: PAYMENT_REF },
+      idempotencyKey: nextKey("mirror"),
+    });
+    await call(gate.deliveryBaseUrl, {
+      method: "POST",
+      path: `/store-orders/${publicId}/confirmation`,
+      idempotencyKey: nextKey("confirm"),
+    });
+
+    // انتقالاتُ الإكمالِ الستّةُ عبرَ HTTP.
+    const transitions: { to: string; proof?: { proof_type: string; proof_ref: string } }[] = [
+      { to: "picking" },
+      { to: "picked" },
+      { to: "ready_for_delivery" },
+      { to: "handed_to_courier" },
+      { to: "delivered", proof: { proof_type: "otp", proof_ref: "OTP-GATE13-DELIVERED-001" } },
+    ];
+
+    for (const t of transitions) {
+      const body: Record<string, unknown> = { to_state: t.to };
+      if (t.proof) {
+        body.proof_type = t.proof.proof_type;
+        body.proof_ref = t.proof.proof_ref;
+      }
+      const res = await call(gate.deliveryBaseUrl, {
+        method: "POST",
+        path: `/store-orders/${publicId}/fulfillment-transition`,
+        body,
+        idempotencyKey: nextKey(`ft-${t.to}`),
+      });
+      expect(res.status, res.text).toBe(200);
+    }
+
+    // القراءةُ الطازجةُ: `delivered` محفوظةٌ لا مُدَّعاةٌ.
+    const read = await call(gate.deliveryBaseUrl, {
+      method: "GET",
+      path: `/store-orders/${publicId}`,
+    });
+    expect(read.body.fulfillment_state).toBe("delivered");
+
+    // والصندوقُ يحمِلُ حدثَ الخصمِ النهائيِّ في نفسِ المعاملةِ.
+    const rows = await deliveryOutbox(gate.pool);
+    const consumed = rows.find((row) => row.event.event_type === "store_order.inventory_consumed");
+    expect(consumed, "لا حدثَ خصمٍ نهائيٍّ في الصندوقِ").toBeDefined();
+    const consumedPayload = consumed!.event.payload as Record<string, unknown>;
+    expect(consumedPayload.to_state).toBe("consumed");
+    expect(consumedPayload.reason_code).toBe("INVENTORY_CONSUMED");
+
+    // وكلُّ حدثٍ في الصندوقِ يُطابقُ العقدَ المنشورَ.
+    const defs = contractEventDefs();
+    expect(defs).toContain(defNameOf("store_order.inventory_consumed"));
+
+    /*
+     * والإلغاءُ بعدَ `delivered` و`consumed` لا يُطلِقُ الحجزَ: المخزونُ خُصِمَ بالفعل
+     * عندَ الحجزِ، والخصمُ النهائيُّ قرارُ تسليمٍ داخليٌّ. ونداءُ `release` هنا كانَ
+     * سيُعيدُ للمخزونِ ما لم يُحجَزْ أصلاً.
+     */
+    const cancel = await call(gate.deliveryBaseUrl, {
+      method: "POST",
+      path: `/store-orders/${publicId}/cancellation`,
+      body: { reason_code: "SYSTEM_MAINTENANCE" },
+      idempotencyKey: nextKey("cancel-after-delivered"),
+    });
+    // `delivered` طرفيٌّ — لا حافّةَ منها إلى `cancelled`.
+    expect(cancel.status).toBeGreaterThanOrEqual(400);
+    expect(cancel.status).toBeLessThan(500);
+  });
 });

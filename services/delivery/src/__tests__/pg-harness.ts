@@ -14,16 +14,14 @@
  * `docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md`).
  */
 
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Pool } from "pg";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const deliverySchemaSql = readFileSync(
-  resolve(__dirname, "../../contracts/schema.sql"),
-  "utf8",
-);
+import { readSchemaContract } from "../db/migrate.js";
+
+// مسارٌ واحدٌ إلى العقدِ لا مسارانِ: `src/db/migrate.ts` يُصدِّرُ المسارَ والقارئَ، ويقرأُ
+// الحارسُ (`schema-drift.test.ts`) والترحيلُ (`migrate-cli.ts`) نفسَ الملفِّ. وقارئٌ ثانٍ
+// هنا كان سيبقى صحيحاً حتّى يتحرّكَ الملفُّ، ثمّ يُخفقُ أحدُ المسارَينِ وحدَه.
+const deliverySchemaSql = readSchemaContract();
 
 /** وجودُ العنوانِ وحدَهُ هو مفتاحُ تشغيلِ التكامل. */
 export const DATABASE_URL = process.env.DATABASE_URL;

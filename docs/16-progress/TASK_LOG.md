@@ -1,5 +1,18 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-11 · M5-13 · إقفال دورة §8.1 — `CLM-0133` · PR #107 مُدمج
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-delivery-migrations` → `chore/clm-0133-closeout` · **Claim:** `CLM-0133` → **Released**
+
+**ماذا تم إنجاز:** إقفالُ دورةِ §8.1 لحجزِ `CLM-0133` بعدَ دمجِ [PR #107](https://github.com/skyosv10-art/wasla/pull/107) (`2026-09-11T16:43:18Z` · التزامُ الدمجِ [`ae9a033`](https://github.com/skyosv10-art/wasla/commit/ae9a033482c133af6ca9fe7d8c22f0322b995e94) · squash) — انتظامُ `services/delivery` في الترحيلاتِ المولَّدةِ العكسيّةِ ورفعُ **آخِرِ بنودِ التأجيلِ الخمسةِ** في [ADR-026 §4](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md). فحوصُ CI المقيسةُ: **33 فحصاً كلُّها `pass`** — `governance-guard` · `verify` · `typecheck` · `test` · `roadmap` · `repo-structure` · `doc-coverage` · `Devin Review` · 14 × `db-integration` (منها `delivery`) · `db-integration-shared` · 10 × `exit-gate-e2e` (منها `delivery`). وُضِعَ سطرُ `CLM-0133` في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) §2 إلى `Released` وأُضيفَ سطرُهُ في §3 بدليلِ الدمجِ.
+
+**القرارُ:** الحجزُ مُحرَّرٌ ببروتوكولِ الإقفالِ §8.1 — لا بمرورِ مهلةٍ ولا بانتزاعٍ. ولا حجزَ خلَفاً لهُ في هذه الدفعةِ: الدفعةُ لا تمسُّ إلّا الدفاترَ المشتركةَ المستثناةَ من التزاحُمِ، والمراجعةُ 13/N تُحجَزُ بنطاقِها حينَ تبدأُ.
+
+**الخطوة التالية:** المراجعةُ 13/N المُقترَحةُ — حياةُ مفاتيحِ التماثُلِ ومُكنستُها ([ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)): الدَينُ الباقي الوحيدُ الذي لا يحتاجُ قرارَ مالكٍ ولا يمسُّ حدَّ خدمةٍ أخرى، **وصارَ تنفيذُهُ ممكناً بأمانٍ لأوّلِ مرّةٍ** لأنَّ لمخطَّطِ التوصيلِ مساراً إلى قاعدةٍ قائمةٍ.
+
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 12/N مُدمجةٌ). لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
+
+
 ## 2026-09-11 · M5-13 · المراجعةُ 12/N — الانتظامُ في الترحيلاتِ المولَّدةِ العكسيّةِ · `CLM-0133`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-delivery-migrations` · **Claim:** `CLM-0133` (خلَفٌ لِـ`CLM-0132` المُطلَقِ لإضافةِ `docs/07-security/` إلى النطاقِ — WORK_CLAIM_RULE §6) (`@uxxxu (agent:perplexity-computer)` · 2026-09-11 → ينتهي 2026-09-25 · Active) · **Scope:** `services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`pnpm-lock.yaml`,`ROADMAP.md`,`docs/04-api/`,`docs/07-security/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`

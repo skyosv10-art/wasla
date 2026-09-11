@@ -1,5 +1,16 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-11 · M5-13 · إقفالُ حجزِ `CLM-0134` (§8.1) — المراجعةُ 13/N مُدمجةٌ
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-idempotency-retention` · **Claim:** `CLM-0134` → **Released**
+
+**ماذا تم إنجاز:** إقفالُ دورةِ §8.1 لحجزِ `CLM-0134` بعدَ دمجِ [PR #109](https://github.com/skyosv10-art/wasla/pull/109) (`2026-09-11T18:59:06Z` · التزامُ الدمجِ [`14cc4d0`](https://github.com/skyosv10-art/wasla/commit/14cc4d091f00ccf5ed9166cd1a1323033b1fd6f6) · squash) — حياةُ مفاتيحِ التماثُلِ ومُكنستُها ورفعُ دَينِ [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md). فحوصُ CI المقيسةُ: **33 فحصاً كلُّها `pass`** (تشغيلُ [`34635278790`](https://github.com/skyosv10-art/wasla/actions/runs/34635278790)) — `governance-guard` · `verify` · `typecheck` · `test` · `doc-coverage` · `repo-structure` · `Devin Review` · 15 × `db-integration` (منها `delivery`) · 10 × `exit-gate-e2e` (منها `delivery`). وُضِعَ سطرُ `CLM-0134` في [`WORK_CLAIMS.md`](WORK_CLAIMS.md) إلى `Released` وأُضيفَ صفُّهُ في §3 بدليلِ الدمجِ.
+
+**القرارُ:** الحجزُ مُحرَّرٌ ببروتوكولِ الإقفالِ §8.1 — لا بمرورِ مهلةٍ ولا بانتزاعٍ. **والمراجعةُ 14/N المُقترَحةُ:** وصلُ مُنادٍ للمُكنسةِ (جدولٌ تشغيليٌّ) أو مسبارُ جاهزيّةِ السوقِ — وما بقيَ من §4 قراراتُ مالكٍ لا يُقرّرُها وكيلٌ.
+
+**الحالة (10):** `M5-13` ⇒ `In Progress` (المراجعةُ 13/N مُدمجةٌ). لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
+
+
 ## 2026-09-11 · M5-13 · المراجعةُ 13/N — حياةُ مفاتيحِ التماثُلِ ومُكنستُها · `CLM-0134`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-idempotency-retention` · **Claim:** `CLM-0134` (`@uxxxu (agent:perplexity-computer)` · 2026-09-11 → ينتهي 2026-09-25 · Active) · **Scope:** `services/delivery/`,`ROADMAP.md`,`docs/04-api/`,`docs/07-security/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`

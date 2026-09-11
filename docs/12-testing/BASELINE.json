@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-10T23:31:43Z",
+  "generated_at": "2026-09-11T16:30:42Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3ef80df4b8d456f0bb86d1b65162d9e5f7eb6f40",
-    "branch": "feat/m5-13-inventory-consumed",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 1651
+    "commit": "61a7daba40688e721269fae2fea3d7951e3019b4",
+    "branch": "feat/m5-13-delivery-migrations",
+    "dirty": true,
+    "dirty_files": 22,
+    "dirty_reason": "مراجعةُ 12/N (CLM-0133): انتظامُ services/delivery في الترحيلاتِ المولَّدةِ العكسيّةِ — الأساسُ مُولَّدٌ قبلَ التزامِ الدفعةِ لأنّ الفحصَ 11 مانعٌ لدفعٍ بأساسٍ بائتٍ",
+    "tracked_files": 1664
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "d8dffa9dc227fa1c3a65bd37b0efc5947316bb62a3f21e4b917d294030882942",
-    "lines": 3107
+    "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
+    "lines": 3116
   },
   "static": {
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 319,
+    "test_files_tracked": 321,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/test-final.log",
-    "tests_passed": 4184,
-    "test_files_executed": 255,
+    "source": "/tmp/verify12b.log",
+    "tests_passed": 4216,
+    "test_files_executed": 256,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:1d8021841378f77d1b5efa0041090a8eba547a5cbf6187f8808c06a8393bab52",
+  "fingerprint": "sha256:adaaf711ce12599929f8edd50838c9f7180929f9a87f61e2debadb26eff54e98",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -249,3 +249,25 @@ export type {
   SweepExpiredIdempotencyKeysResult,
 } from "./use-cases/sweep-expired-idempotency-keys.js";
 export type { IdempotencyKeySweepBatch, IdempotencyKeySweepPort } from "./ports.js";
+
+/* ── review 14/N: مُنادي المُكنسةِ (ADR-026 §4.16 · رفعُ دَينِ §4.15 أ) ──
+ *
+ * يُصدَّرُ المنطقُ لا حدُّ التشغيلِ: `idempotency-sweep-cli.ts` يُنهي العمليّةَ
+ * عندَ استيرادِهِ (`process.exit`)، فتصديرُهُ من فهرسِ الحزمةِ كانَ سيقتلُ كلَّ
+ * من استوردَ الحزمةَ.
+ */
+export {
+  SWEEP_EXIT_DRAINED,
+  SWEEP_EXIT_FAILED,
+  SWEEP_EXIT_ACCUMULATING,
+  SWEEP_EXIT_CONTENDED,
+  resolveSweepRunnerConfig,
+  exitCodeForSweep,
+  runIdempotencySweepRound,
+  formatSweepReportLine,
+} from "./ops/idempotency-sweep-runner.js";
+export type {
+  IdempotencySweepRunnerConfig,
+  IdempotencySweepRunReport,
+  RunIdempotencySweepRoundInput,
+} from "./ops/idempotency-sweep-runner.js";

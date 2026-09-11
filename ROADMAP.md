@@ -1,8 +1,8 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-11 (M5-13 review 13/N — idempotency-key lifetime and sweeper)
-**Last milestone:** delivery idempotency keys now have a stored lifetime (`expires_at`) and a batched sweeper route (ADR-026 §4.15 — lifting the retention debt declared in §4.10). Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
+**Last updated:** 2026-09-12 (M5-13 review 14/N — a caller for the idempotency-key sweeper)
+**Last milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 ## What this project is
 
@@ -98,6 +98,32 @@ Nothing else has been changed in this repository by the WASLA integration work.
   The upgrade is proven against a table that already holds rows, so the §4.14 gap is
   closed **for this migration**; `RISK-0020` stays open for the repository as a whole,
   by owner decision.
+- **M5-13 (Store Orders & Delivery) — review 14/N, claim `CLM-0135`.** The sweeper now has a
+  caller. Added: `src/ops/idempotency-sweep-runner.ts`, the pure half — it reads the two
+  sweep settings out of a plain env record (decimal digits only; `5oo`, `0`, `-1`, `2.5`,
+  `0x10` and `1e3` are all **refused loudly**, because `Number.isInteger(Number(raw))` was
+  measured accepting `0x10` as 16), runs one round through the existing use case, and returns
+  a report plus an exit code — it touches no `process`, opens no connection and prints
+  nothing; and `src/ops/idempotency-sweep-cli.ts`, the only process boundary — it requires
+  `DATABASE_URL`, opens a single-connection pool, writes the report line to stdout and errors
+  to stderr, closes the pool in `finally` and exits with the report's code. Exit codes are the
+  alarm channel and are deliberately distinct: `0` drained, `1` failed, `3` hit the batch
+  ceiling with work left, `4` an empty batch while expired rows remain (transient lock
+  contention). `2` is left alone — Node itself produces it on a broken import. The caller
+  talks to the database directly rather than calling its own HTTP route, so no service-auth
+  key has to live on a scheduler host and no client timeout can cut a long round in half; the
+  route stays for manual in-network maintenance. Killing the process mid-round is safe by
+  construction (each batch commits alone, the round limit is a local counter), so there is no
+  graceful-shutdown handler and no lock against overlapping runs. A text guard
+  (`ops-runner-purity.test.ts`) asserts that `src/ops/` contains no timers or cron, and that
+  env reads, `process.exit` and stream writes occur in exactly the one declared boundary file
+  — asserted by set equality, so a second entry point must be declared to pass. Measured:
+  delivery unit **329/329 in 20 files**, delivery integration **69/69 in 9 files** (six new
+  tests spawn the real command as a child process against real PostgreSQL and assert exit
+  code, stdout and stderr). Not claimed: the schedule itself is not in this repository — the
+  crontab line and the Kubernetes `CronJob` example in the runbook are written, not proven
+  against a deployment, since `infra/` still holds only `.gitkeep`; and there is still no
+  metric or alert on `remaining`, only an exit code an operator can wire.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-11T18:45:41Z",
+  "generated_at": "2026-09-11T23:08:34Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7f74352f53d5a0cdadd7b819b88e0b0db29bb2c8",
-    "branch": "feat/m5-13-idempotency-retention",
+    "commit": "2a3f6c068813690d34f1c40e36ed72184a45f45f",
+    "branch": "feat/m5-14-idempotency-sweep-runner",
     "dirty": true,
-    "dirty_files": 22,
-    "dirty_reason": "إعادةُ قياسِ الأساسِ بعدَ المراجعةِ 13/N: ملفَّا اختبارٍ جديدانِ (323 بدلَ 321) لحياةِ مفاتيحِ التماثُلِ ومُكنستِها",
-    "tracked_files": 1670
+    "dirty_files": 15,
+    "dirty_reason": "أساسٌ مولَّدٌ من سِجلِّ تحقُّقٍ أخضرَ قبلَ الدفعِ (المراجعةُ 14/N)",
+    "tracked_files": 1676
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 323,
+    "test_files_tracked": 326,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify13b.log",
-    "tests_passed": 4233,
-    "test_files_executed": 257,
+    "source": "/tmp/verify-14d.log",
+    "tests_passed": 4265,
+    "test_files_executed": 259,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:86d5dde0e92db2a4c00ea22bac632b84112a7dd984df4489f2eaf36cf0e7e7be",
+  "fingerprint": "sha256:01ed8e576c9bdb19889914498264bb37b0045b2ab5838302259476aa0f840f8e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

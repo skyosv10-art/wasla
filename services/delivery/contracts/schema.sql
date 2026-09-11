@@ -361,8 +361,25 @@ CREATE TABLE IF NOT EXISTS delivery_idempotency_keys (
     response_body       JSONB       NOT NULL,
     order_id            UUID        NOT NULL REFERENCES store_orders(order_id) ON DELETE CASCADE,
     trace_id            TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- حياةُ المفتاحِ (المراجعةُ 13/N · ADR-026 §4.15 — رفعُ دَينِ §4.10).
+    --
+    -- ولمَ عمودٌ صريحٌ لا `created_at + interval` محسوبةً في كلِّ استعلامٍ؟
+    -- لأنَّ المدّةَ **صفةُ الصفِّ لا صفةُ الشفرةِ**: خفضُ المدّةِ في الإعدادِ
+    -- بعدَ كتابةِ صفٍّ يجبُ ألّا يُميتَ مفتاحاً وُعِدَ صاحبُهُ بأربعٍ وعشرينَ
+    -- ساعةً — وحسابُها عندَ القراءةِ يفعلُ ذلكَ بالضبطِ وبأثرٍ رجعيٍّ.
+    -- وعمودٌ مفهرسٌ يجعلُ المُكنسةَ مسحاً لمدىً لا مسحاً للجدولِ كلِّهِ.
+    expires_at          TIMESTAMPTZ NOT NULL,
+    -- مفتاحٌ ميِّتٌ عندَ كتابتِهِ يُلغي الحمايةَ صامتاً: مدّةٌ صفرٌ أو سالبةٌ
+    -- تعني أنَّ كلَّ إعادةٍ تُنشئُ طلباً ثانياً. فالقيدُ يمنعُ الإعدادَ الخاطئَ
+    -- في القاعدةِ لا في الشفرةِ وحدَها.
+    CHECK (expires_at > created_at)
 );
+
+-- مسحُ المُكنسةِ: مدىً على `expires_at` وحدَهُ. ولا فهرسَ جزئيٌّ بـ`now()`
+-- لأنَّها ليست ثابتةً (IMMUTABLE) فلا تُقبَلُ في تعريفِ فهرسٍ.
+CREATE INDEX IF NOT EXISTS ix_delivery_idempotency_keys_expiry
+    ON delivery_idempotency_keys (expires_at);
 
 COMMIT;
 

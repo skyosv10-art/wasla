@@ -80,6 +80,7 @@ import type {
   InventoryReservationStore,
   ReadinessProbePort,
   StoreOrderCatalogPort,
+  IdempotencyKeySweepPort,
   StoreOrderReadPort,
   StoreOrderWritePort,
 } from "../ports.js";
@@ -99,6 +100,7 @@ import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
 import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
 import { fulfillmentTransition } from "../use-cases/fulfillment-transition.js";
+import { sweepExpiredIdempotencyKeys } from "../use-cases/sweep-expired-idempotency-keys.js";
 
 export interface DeliveryHttpDeps {
   readonly readPort: StoreOrderReadPort;
@@ -112,6 +114,13 @@ export interface DeliveryHttpDeps {
   /** Absent → `GET /delivery/ready` answers 503 `probe_not_wired`: an
    *  un-probed dependency is never reported as healthy. */
   readonly readinessPort?: ReadinessProbePort;
+  /**
+   * Absent → `POST /delivery/idempotency-keys/sweep` answers 500
+   * `DELIVERY_INTERNAL_ERROR` (خلافاً لـ503 التي تعني تبعيّةً خارجيّةً عاجزةً:
+   * مُكنسةٌ غيرُ مُركَّبةٍ خطأُ تركيبٍ عندَنا لا عجزُ جارٍ): مُكنسةٌ غيرُ مُركَّبةٍ لا تُجيبُ «مسحتُ صفراً»،
+   * فالصفرُ الكاذبُ يُقرأُ نظافةً (المراجعةُ 13/N · ADR-026 §4.15).
+   */
+  readonly idempotencySweepPort?: IdempotencyKeySweepPort;
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -130,6 +139,44 @@ export interface DeliveryHttpApp {
  */
 function sendReplay(reply: FastifyReply, status: number, body: unknown): FastifyReply {
   return reply.status(status).header("Idempotent-Replay", "true").send(body);
+}
+
+/**
+ * حدودُ جَولةِ المسحِ من الجسمِ — اختياريّةٌ كلُّها.
+ *
+ * والتحقُّقُ صريحٌ لا `Number(x) || default`: صفرٌ وسالبٌ وكسرٌ ونصٌّ كلُّها
+ * أخطاءُ منادٍ تُقالُ لهُ بـ400، لا قيمٌ تُصحَّحُ لهُ صامتةً إلى الافتراضِ
+ * (`errors.md` القاعدةُ 3).
+ */
+function parseSweepOptions(
+  body: unknown,
+  traceId: string,
+): { batchSize?: number; maxBatches?: number } {
+  if (body === undefined || body === null) return {};
+  if (typeof body !== "object" || Array.isArray(body)) {
+    throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "جسمُ المسحِ كائنٌ أو لا شيءَ", {
+      traceId,
+      details: { field: "body", actual: Array.isArray(body) ? "array" : typeof body },
+    });
+  }
+  const raw = body as Record<string, unknown>;
+  const read = (field: "batch_size" | "max_batches"): number | undefined => {
+    const value = raw[field];
+    if (value === undefined || value === null) return undefined;
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+      throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "حدُّ المسحِ عددٌ صحيحٌ ≥ 1", {
+        traceId,
+        details: { field, actual: String(value) },
+      });
+    }
+    return value;
+  };
+  const batchSize = read("batch_size");
+  const maxBatches = read("max_batches");
+  return {
+    ...(batchSize === undefined ? {} : { batchSize }),
+    ...(maxBatches === undefined ? {} : { maxBatches }),
+  };
 }
 
 export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
@@ -417,6 +464,42 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         : await deps.readinessPort.probe();
     const body = buildReadinessResponse(checks, deps.catalogPort !== undefined);
     return reply.status(body.status === "ready" ? 200 : 503).send(body);
+  });
+
+  /*
+   * صيانةُ حياةِ مفاتيحِ التماثُلِ (المراجعةُ 13/N · ADR-026 §4.15).
+   *
+   * ولمَ مسارٌ لا `setInterval` في الخدمةِ؟ لأنَّ المنظومةَ قرَّرَت ذلكَ قبلَ هذهِ
+   * المراجعةِ ولها فيهِ حُجّةٌ: خدماتُ السمعةِ والاشتراكاتِ تحرسُ بـ`purity.test.ts`
+   * أن لا مُجدوِلَ داخلَ خدمةٍ، وتعرضُ العملَ الدوريَّ مساراً يُنادى
+   * (`POST /reputation/tick`). ومُجدوِلٌ في العمليّةِ يعني: عملاً يتضاعفُ بعددِ
+   * النُّسَخِ، ولا سبيلَ لإيقافِهِ في حادثةٍ إلّا بإعادةِ نشرٍ، ولا قياسَ لهُ إلّا
+   * في السجلِّ. والمسارُ يُنادى من جدولٍ خارجيٍّ فيبقى القرارُ «متى» عندَ التشغيلِ.
+   *
+   * والردُّ يحملُ الأرقامَ المقيسةَ لا «تمَّ»: عددُ الدفعاتِ والمحذوفُ والباقي
+   * وسببُ التوقُّفِ — فمراقبٌ يقرأُ `remaining` المتزايدَ يعرفُ أنَّ الجَولةَ أصغرُ
+   * من التراكُمِ قبلَ أن يمتلئَ قرصٌ.
+   */
+  app.post("/delivery/idempotency-keys/sweep", async (request, reply) => {
+    const traceId = String(request.id);
+    if (deps.idempotencySweepPort === undefined) {
+      throw new DeliveryError(
+        "DELIVERY_INTERNAL_ERROR",
+        "لا مُكنسةَ مفاتيحَ مُركَّبةٌ — لا يُدَّعى مسحٌ لم يقعْ (ADR-026 §4.15)",
+        { traceId },
+      );
+    }
+    const options = parseSweepOptions(request.body, traceId);
+    const result = await sweepExpiredIdempotencyKeys({
+      sweepPort: deps.idempotencySweepPort,
+      ...options,
+    });
+    return reply.status(200).send({
+      batches: result.batches,
+      deleted: result.deleted,
+      remaining: result.remaining,
+      stopped_because: result.stoppedBecause,
+    });
   });
 
   return {

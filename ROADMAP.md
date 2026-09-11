@@ -1,8 +1,8 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-11 (M5-13 review 12/N — delivery migrations enrolment)
-**Last milestone:** `services/delivery` enrolled in generated reversible migrations (ADR-024 wave 4 / ADR-026 §4 item 5 — the last of that ADR's five founding deferrals). Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
+**Last updated:** 2026-09-11 (M5-13 review 13/N — idempotency-key lifetime and sweeper)
+**Last milestone:** delivery idempotency keys now have a stored lifetime (`expires_at`) and a batched sweeper route (ADR-026 §4.15 — lifting the retention debt declared in §4.10). Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 ## What this project is
 
@@ -77,25 +77,27 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
-- **M5-13 (Store Orders & Delivery) — review 12/N, claim `CLM-0133`.** `services/delivery`
-  is now enrolled in the repository's generated reversible migration system
-  (`docs/15-decisions/ADR-024-generated-reversible-migrations.md`), which brings the
-  number of enrolled services/packages to 13. Added: a drizzle mirror of the 13
-  contract tables and the `store_order_public_id_seq` sequence
-  (`services/delivery/src/db/schema.ts`), `drizzle.config.ts`, a generated forward
-  migration `drizzle/0000_whole_triathlon.sql` with a hand-reviewed companion
-  `0000_whole_triathlon.down.sql`, a schema-drift guard that compares mirror and
-  contract in both directions without a database, and a migration-cycle integration
-  test that compares the contract-built database against a migration-built one across
-  seven catalog dimensions, then reverts and re-applies. `services/delivery/contracts/schema.sql`
-  remains the source of truth and the service runtime still applies it verbatim.
-  Two deviations were found and fixed while proving equivalence: PostgreSQL's real
-  constraint-naming algorithm (multi-column checks named `<table>_check`, a collision
-  suffix on the label — `store_order_items_check1` — and 63-character truncation that
-  eats the longer name), and drizzle's `.desc()` emitting `DESC NULLS LAST` where the
-  contract says plain `DESC` (which is `NULLS FIRST`). `RISK-0020` stays open: proving
-  an upgrade against a database that already holds data is an owner decision and is
-  unrelated to this service.
+- **M5-13 (Store Orders & Delivery) — review 13/N, claim `CLM-0134`.** Delivery idempotency
+  keys now expire. Added: an `expires_at TIMESTAMPTZ NOT NULL` column on
+  `delivery_idempotency_keys` with a table-level `CHECK (expires_at > created_at)` and an
+  index on the expiry, mirrored in `src/db/schema.ts`; a generated, hand-corrected
+  migration `drizzle/0001_idempotency_key_lifetime.sql` (plus its `.down.sql`) that adds
+  the column nullable, backfills it to `created_at + 24 hours`, then sets `NOT NULL` —
+  the generator's single `ADD COLUMN ... NOT NULL` statement was measured failing with
+  `23502` against a table that already held a row; a boot-time resolver for
+  `IDEMPOTENCY_KEY_TTL_SECONDS` (default 86400, floor 3600) that **refuses to start**
+  rather than silently correcting a bad value; expiry-aware reads plus an atomic
+  `ON CONFLICT ... DO UPDATE ... WHERE expires_at <= now()` takeover of dead rows, so an
+  expired key is reusable without a spurious 409 while a live key still answers 409; and
+  a batched sweeper (`DELETE ... FOR UPDATE SKIP LOCKED`, batch 500, at most 20 batches
+  per round) exposed as `POST /delivery/idempotency-keys/sweep` returning measured counts
+  (`batches`, `deleted`, `remaining`, `stopped_because`) instead of a bare acknowledgement.
+  No in-process scheduler: the platform bans `setInterval` in services and exposes
+  periodic work as a route. Nothing schedules the sweep yet — that wiring and its cadence
+  are an operational decision; what changed is that the backlog is now measurable.
+  The upgrade is proven against a table that already holds rows, so the §4.14 gap is
+  closed **for this migration**; `RISK-0020` stays open for the repository as a whole,
+  by owner decision.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 
@@ -155,10 +157,11 @@ Nothing. No legacy component is switched off before its replacement is proven.
 
 Measured on real PostgreSQL 17.6, not estimated:
 
-- `services/delivery` unit suite: **280/280** in 17 files (was 248 in 16 — the 32 new
-  tests are the schema-drift guard).
-- `services/delivery` integration suite: **51/51** in 7 files (was 48 in 6 — the three
-  new tests are catalog equivalence, reversibility and re-application).
+- `services/delivery` unit suite: **297/297** in 18 files (was 280 in 17 — the 17 new
+  tests cover the TTL resolver, the sweep loop and the sweep route).
+- `services/delivery` integration suite: **63/63** in 8 files (was 51 in 7 — the 12 new
+  tests cover stored TTL, expiry-aware replay, dead-row takeover, the database CHECK,
+  batching, `SKIP LOCKED` under a real lock, the route, and the upgrade over existing rows).
 - `@wasla/contracts-delivery`: **26/26**.
 - `@wasla/delivery-e2e` phase-13 exit gate with a database: **8/8**.
 - `pnpm -r typecheck`: clean.

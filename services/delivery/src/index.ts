@@ -232,3 +232,20 @@ export { PostgresInventoryObservationStore } from "./infrastructure/inventory-ob
 export { PostgresMarketplaceInventoryEventSource } from "./infrastructure/marketplace-inventory-event-source.js";
 export { PostgresTaskMirrorStore } from "./infrastructure/task-mirror-store.js";
 export { PostgresDispatchEventSource } from "./infrastructure/dispatch-event-source.js";
+
+/* ── review 13/N: حياةُ مفاتيحِ التماثُلِ ومُكنستُها (ADR-026 §4.15 · رفعُ دَينِ §4.10) ── */
+export {
+  IDEMPOTENCY_KEY_TTL_SECONDS,
+  IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS,
+  resolveIdempotencyTtlSeconds,
+} from "./domain/idempotency.js";
+export {
+  sweepExpiredIdempotencyKeys,
+  IDEMPOTENCY_SWEEP_BATCH_SIZE,
+  IDEMPOTENCY_SWEEP_MAX_BATCHES,
+} from "./use-cases/sweep-expired-idempotency-keys.js";
+export type {
+  SweepExpiredIdempotencyKeysInput,
+  SweepExpiredIdempotencyKeysResult,
+} from "./use-cases/sweep-expired-idempotency-keys.js";
+export type { IdempotencyKeySweepBatch, IdempotencyKeySweepPort } from "./ports.js";

@@ -67,10 +67,13 @@
 import type { Pool, PoolClient } from "pg";
 
 import { DeliveryError } from "../domain/errors.js";
+import { IDEMPOTENCY_KEY_TTL_SECONDS } from "../domain/idempotency.js";
 import type { DeliveryDomainEvent } from "../domain/events.js";
 import type { DeliveryTask, StoreOrder, StoreOrderItem } from "../domain/model.js";
 import { toStoreOrderResponse } from "../http/mappers.js";
 import type {
+  IdempotencyKeySweepBatch,
+  IdempotencyKeySweepPort,
   CancelOrderOutcome,
   CancellationWrite,
   ConfirmOrderOutcome,
@@ -116,8 +119,23 @@ const TASK_COLUMNS_QUALIFIED = TASK_COLUMNS.split(",")
   .map((column) => `t.${column.trim()}`)
   .join(", ");
 
-export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort, InventoryReservationStore {
-  constructor(private readonly pool: Pool) {}
+export class StoreOrderStore
+  implements
+    StoreOrderReadPort,
+    StoreOrderWritePort,
+    InventoryReservationStore,
+    IdempotencyKeySweepPort
+{
+  /**
+   * @param pool مجمَّعُ الاتّصالِ.
+   * @param idempotencyTtlSeconds حياةُ مفتاحِ التماثُلِ بالثواني (المراجعةُ 13/N ·
+   *   ADR-026 §4.15). تُحلُّ من البيئةِ في جِذعِ التركيبِ
+   *   (`resolveIdempotencyTtlSeconds`) لا هنا: المخزنُ لا يقرأُ بيئةً.
+   */
+  constructor(
+    private readonly pool: Pool,
+    private readonly idempotencyTtlSeconds: number = IDEMPOTENCY_KEY_TTL_SECONDS,
+  ) {}
 
   /* ── reads ────────────────────────────────────────────────────────── */
 
@@ -153,9 +171,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
 
   async findIdempotentResponse(key: string): Promise<StoredIdempotentResponse | null> {
     const { rows } = await this.pool.query(
+      // expires_at > now(): مفتاحٌ منتهٍ **غيرُ موجودٍ** في نظرِ كلِّ قارئٍ —
+      // ولا يكفي أن تحذفَهُ المُكنسةُ لاحقاً، إذ بينَ الانتهاءِ والمسحِ نافذةٌ
+      // لو قرأتْها الخدمةُ لأعادَت جواباً وعدَت مدّتُهُ بالانقضاءِ.
       `SELECT request_fingerprint, response_status, response_body
          FROM delivery_idempotency_keys
-        WHERE idempotency_key = $1`,
+        WHERE idempotency_key = $1
+          AND expires_at > now()`,
       [key],
     );
     if (rows.length === 0) return null;
@@ -164,6 +186,17 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
       status: Number(rows[0].response_status),
       body: rows[0].response_body,
     };
+  }
+
+  /**
+   * `IdempotencyKeySweepPort` — صيانةٌ في الخلفيّةِ لا مسارَ طلبٍ.
+   *
+   * بلا معاملةٍ مُصرَّحةٍ: العبارةُ الواحدةُ ذرّيّةٌ بنفسِها، ولفُّها في معاملةٍ
+   * يطيلُ عمرَ القفلِ بلا فائدةٍ. وقياسُ الباقي استعلامٌ ثانٍ بعدَها بقصدٍ —
+   * رقمٌ تقريبيٌّ حديثٌ أنفعُ من رقمٍ دقيقٍ داخلَ معاملةٍ طويلةٍ.
+   */
+  async deleteExpiredIdempotencyKeys(limit: number): Promise<IdempotencyKeySweepBatch> {
+    return deleteExpiredIdempotencyKeysBatch(this.pool, limit);
   }
 
   /* ── writes ───────────────────────────────────────────────────────── */
@@ -243,7 +276,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
       );
 
       await appendOutbox(client, write.events, write.traceId);
-      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      await storeIdempotencyKey(
+        client,
+        write.idempotency,
+        order,
+        write.traceId,
+        this.idempotencyTtlSeconds,
+      );
       return { kind: "applied" };
     });
   }
@@ -292,7 +331,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
 
       await appendOutbox(client, write.events, write.traceId);
       const order = await readOrderAfterWrite(client, write.orderId);
-      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      await storeIdempotencyKey(
+        client,
+        write.idempotency,
+        order,
+        write.traceId,
+        this.idempotencyTtlSeconds,
+      );
       return { kind: "applied", order };
     });
   }
@@ -350,7 +395,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
 
       await appendOutbox(client, write.events, write.traceId);
       const order = await readOrderAfterWrite(client, write.orderId);
-      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      await storeIdempotencyKey(
+        client,
+        write.idempotency,
+        order,
+        write.traceId,
+        this.idempotencyTtlSeconds,
+      );
       return { kind: "applied", order };
     });
   }
@@ -409,7 +460,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
       await appendOutbox(client, write.events, write.traceId);
 
       const order = await readOrderAfterWrite(client, write.orderId);
-      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      await storeIdempotencyKey(
+        client,
+        write.idempotency,
+        order,
+        write.traceId,
+        this.idempotencyTtlSeconds,
+      );
       return { kind: "applied", order };
     });
   }
@@ -528,7 +585,13 @@ export class StoreOrderStore implements StoreOrderReadPort, StoreOrderWritePort,
 
       await appendOutbox(client, write.events, write.traceId);
       const order = await readOrderAfterWrite(client, write.orderId);
-      await storeIdempotencyKey(client, write.idempotency, order, write.traceId);
+      await storeIdempotencyKey(
+        client,
+        write.idempotency,
+        order,
+        write.traceId,
+        this.idempotencyTtlSeconds,
+      );
       return { kind: "applied", order };
     });
   }
@@ -689,9 +752,12 @@ async function lookupIdempotencyKey(
 ): Promise<IdempotentReplay | null> {
   if (intent === undefined) return null;
   const { rows } = await client.query(
+    // المدّةُ تُقاسُ بساعةِ القاعدةِ (now()) لا بساعةِ العقدةِ: عقدتانِ
+    // بساعتَينِ متفارقتَينِ يجبُ ألّا تختلفا في «أحيٌّ هذا المفتاحُ أم ميّتٌ».
     `SELECT request_fingerprint, response_status, response_body
        FROM delivery_idempotency_keys
-      WHERE idempotency_key = $1`,
+      WHERE idempotency_key = $1
+        AND expires_at > now()`,
     [intent.key],
   );
   if (rows.length === 0) return null;
@@ -718,23 +784,56 @@ async function lookupIdempotencyKey(
 /**
  * Step 2: persist the key WITH the response, inside the caller's transaction.
  *
- * A `23505` here means another transaction committed the same key while this
- * one was working. Refusing (and rolling back) is the only safe answer: this
- * transaction's effect would be the duplicate the key exists to prevent.
+ * ## ولمَ `ON CONFLICT` بدلَ `INSERT` مجرَّدٍ (المراجعةُ 13/N · §4.15)
+ *
+ * قبلَ المدّةِ كانَ كلُّ تصادُمٍ على المفتاحِ معناهُ واحداً: طلبٌ آخرُ سبقَني
+ * بالمفتاحِ نفسِهِ، فالرفضُ (`409`) هوَ الجوابُ الوحيدُ الآمنُ. وبعدَ المدّةِ صارَ
+ * للتصادُمِ معنيانِ: صفٌّ **حيٌّ** (طلبٌ قيدَ المعالجةِ — الرفضُ كما كانَ)، وصفٌّ
+ * **منتهٍ** لم تصلْهُ المُكنسةُ بعدُ (مفتاحٌ حُرٌّ يجبُ أن يُعادَ استعمالُهُ، إذ
+ * القارئُ في الخطوةِ الأولى رآهُ غيرَ موجودٍ فمضى — فرفضٌ هنا يعني `409` على
+ * منادٍ بريءٍ سببُهُ صفٌّ ميّتٌ لم يُمسَح).
+ *
+ * فالكتابةُ تستولي على الصفِّ المنتهي في **عبارةٍ واحدةٍ ذرّيّةٍ**
+ * (`WHERE ... expires_at <= now()`) لا بحذفٍ ثمّ إدراجٍ (نافذةٌ بينَهما يفوزُ
+ * فيها طلبانِ معاً). وصفرُ صفوفٍ راجعةٍ = الصفُّ حيٌّ = الرفضُ نفسُهُ الذي كانَ.
+ * ويبقى صيدُ `23505` على حالِهِ لسباقٍ يقعُ بينَ إدراجَينِ متزامنَينِ خارجَ مسارِ
+ * التعارُضِ — لأنَّ `ON CONFLICT` لا يُغني عن تسلسُلٍ في كلِّ مستوياتِ العزلِ.
  */
 async function storeIdempotencyKey(
   client: PoolClient,
   intent: IdempotencyIntent | undefined,
   order: StoreOrder,
   traceId: string | null,
+  ttlSeconds: number,
 ): Promise<void> {
   if (intent === undefined) return;
+  const inFlight = (): never => {
+    throw new DeliveryError(
+      "DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT",
+      "طلبٌ بالمفتاحِ نفسِهِ يُعالَجُ الآنَ — أعِد بالمفتاحِ نفسِهِ بعدَ لحظةٍ",
+      { details: { field: "Idempotency-Key" } },
+    );
+  };
   try {
-    await client.query(
+    const { rowCount } = await client.query(
       `INSERT INTO delivery_idempotency_keys (
          idempotency_key, route, request_fingerprint, response_status,
-         response_body, order_id, trace_id
-       ) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7)`,
+         response_body, order_id, trace_id, expires_at
+       ) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7, now() + make_interval(secs => $8::double precision))
+       ON CONFLICT (idempotency_key) DO UPDATE
+          SET route               = EXCLUDED.route,
+              request_fingerprint = EXCLUDED.request_fingerprint,
+              response_status     = EXCLUDED.response_status,
+              response_body       = EXCLUDED.response_body,
+              order_id            = EXCLUDED.order_id,
+              trace_id            = EXCLUDED.trace_id,
+              -- created_at يُجدَّدُ لأنَّ الصفَّ صارَ لطلبٍ آخرَ: لولا ذلكَ لبقيَ
+              -- زمنُ أوّلِ استعمالٍ فصارَ قيدُ (expires_at > created_at) يقيسُ
+              -- عمرَ صفٍّ ميّتٍ لا عمرَ الطلبِ الحاضرِ.
+              created_at          = now(),
+              expires_at          = now() + make_interval(secs => $8::double precision)
+        WHERE delivery_idempotency_keys.expires_at <= now()
+       RETURNING idempotency_key`,
       [
         intent.key,
         intent.route,
@@ -743,18 +842,61 @@ async function storeIdempotencyKey(
         JSON.stringify(intent.buildResponseBody(order)),
         order.orderId,
         traceId,
+        ttlSeconds,
       ],
     );
+    if (rowCount === 0) inFlight();
   } catch (error) {
-    if ((error as { code?: string }).code === "23505") {
-      throw new DeliveryError(
-        "DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT",
-        "طلبٌ بالمفتاحِ نفسِهِ يُعالَجُ الآنَ — أعِد بالمفتاحِ نفسِهِ بعدَ لحظةٍ",
-        { details: { field: "Idempotency-Key" } },
-      );
-    }
+    if ((error as { code?: string }).code === "23505") inFlight();
     throw error;
   }
+}
+
+/**
+ * مسحُ المفاتيحِ المنتهيةِ — دفعةً واحدةً محدودةً (المراجعةُ 13/N · §4.15).
+ *
+ * ## ثلاثةُ قراراتٍ في استعلامٍ واحدٍ
+ *
+ *  - **`LIMIT` لا حذفاً شاملاً:** `DELETE ... WHERE expires_at <= now()` بلا حدٍّ
+ *    على جدولٍ أُهمِلَ شهراً يُقفِلُ ملايينَ الصفوفِ في معاملةٍ واحدةٍ فينمو
+ *    سجلُّ WAL ويطولُ القفلُ — والمُكنسةُ التي تُعطِّلُ الخدمةَ لتنظّفَها أسوأُ من
+ *    جدولٍ كبيرٍ.
+ *  - **`FOR UPDATE SKIP LOCKED`:** صفٌّ منتهٍ قد يكونُ في اللحظةِ نفسِها هدفَ
+ *    استيلاءِ كتابةٍ (`ON CONFLICT ... DO UPDATE` أعلاهُ). ومن غيرِ التخطّي
+ *    تنتظرُ المُكنسةُ المعاملةَ الكاتبةَ — أي أنَّ صيانةً في الخلفيّةِ تُبطئُ
+ *    مساراً في المقدّمةِ. فالتخطّي يجعلُ الصفَّ المتنازَعَ عليهِ شأنَ الدفعةِ
+ *    القادمةِ لا شأنَ المنادي الحاضرِ.
+ *  - **`remaining` مُقاسٌ لا مُقدَّرٌ:** يُعادُ عددُ ما بقيَ منتهياً بعدَ الدفعةِ
+ *    ليقفَ حلقُ الاستعمالِ على رقمٍ لا على تخمينٍ، وليُقاسَ التراكُمُ إن كانَ.
+ */
+async function deleteExpiredIdempotencyKeysBatch(
+  pool: Pool,
+  limit: number,
+): Promise<IdempotencyKeySweepBatch> {
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error(`حدُّ دفعةِ المسحِ يجبُ أن يكونَ عدداً صحيحاً ≥ 1 (القيمةُ: ${limit})`);
+  }
+  const deleted = await pool.query(
+    `DELETE FROM delivery_idempotency_keys
+      WHERE idempotency_key IN (
+        SELECT idempotency_key
+          FROM delivery_idempotency_keys
+         WHERE expires_at <= now()
+         ORDER BY expires_at
+         LIMIT $1
+         FOR UPDATE SKIP LOCKED
+      )`,
+    [limit],
+  );
+  const remaining = await pool.query(
+    `SELECT count(*)::bigint AS remaining
+       FROM delivery_idempotency_keys
+      WHERE expires_at <= now()`,
+  );
+  return {
+    deleted: deleted.rowCount ?? 0,
+    remaining: Number(remaining.rows[0].remaining),
+  };
 }
 
 /** Append domain events to the outbox — envelope fields, never re-derived. */

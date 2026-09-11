@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-11T16:30:42Z",
+  "generated_at": "2026-09-11T18:45:41Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "61a7daba40688e721269fae2fea3d7951e3019b4",
-    "branch": "feat/m5-13-delivery-migrations",
+    "commit": "7f74352f53d5a0cdadd7b819b88e0b0db29bb2c8",
+    "branch": "feat/m5-13-idempotency-retention",
     "dirty": true,
     "dirty_files": 22,
-    "dirty_reason": "مراجعةُ 12/N (CLM-0133): انتظامُ services/delivery في الترحيلاتِ المولَّدةِ العكسيّةِ — الأساسُ مُولَّدٌ قبلَ التزامِ الدفعةِ لأنّ الفحصَ 11 مانعٌ لدفعٍ بأساسٍ بائتٍ",
-    "tracked_files": 1664
+    "dirty_reason": "إعادةُ قياسِ الأساسِ بعدَ المراجعةِ 13/N: ملفَّا اختبارٍ جديدانِ (323 بدلَ 321) لحياةِ مفاتيحِ التماثُلِ ومُكنستِها",
+    "tracked_files": 1670
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 321,
+    "test_files_tracked": 323,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify12b.log",
-    "tests_passed": 4216,
-    "test_files_executed": 256,
+    "source": "/tmp/verify13b.log",
+    "tests_passed": 4233,
+    "test_files_executed": 257,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:adaaf711ce12599929f8edd50838c9f7180929f9a87f61e2debadb26eff54e98",
+  "fingerprint": "sha256:86d5dde0e92db2a4c00ea22bac632b84112a7dd984df4489f2eaf36cf0e7e7be",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

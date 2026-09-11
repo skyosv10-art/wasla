@@ -36,8 +36,17 @@
  *
  * Nothing in this file touches a database or a clock: the fingerprint must be
  * reproducible by a retry hours later, so it cannot include a timestamp, a
- * trace id, or a generated uuid. Retention/sweeping of stored keys is a
- * declared deferral (ADR-026 §4.10-3), not a hidden one.
+ * trace id, or a generated uuid.
+ *
+ * ## Retention — no longer deferred (المراجعةُ 13/N · ADR-026 §4.15)
+ *
+ * Storage was the deferral declared in §4.10-3: keys accumulated forever, so a
+ * table that only ever grew was the price of a guarantee that only ever
+ * mattered for minutes. This file now owns the ONE number that decides how
+ * long a key lives; the sweeper that enforces it lives in
+ * `use-cases/sweep-expired-idempotency-keys.ts`, and the clock stays in the
+ * database (`now()`), never here — two nodes with a skewed clock must not
+ * disagree about whether a key is alive.
  */
 
 import { createHash } from "node:crypto";
@@ -142,4 +151,62 @@ export function deriveRequestFingerprint(
   return createHash("sha256")
     .update(`${route}\u0000${target ?? ""}\u0000${canonicalJson(payload)}`)
     .digest("hex");
+}
+
+// ---------------------------------------------------------------------------
+// حياةُ المفتاحِ (المراجعةُ 13/N · ADR-026 §4.15)
+// ---------------------------------------------------------------------------
+
+/**
+ * Default key lifetime: 24 hours.
+ *
+ * الرقمُ ليس ذوقاً: المفتاحُ يحمي **إعادةَ محاولةٍ**، وإعادةُ المحاولةِ إمّا آليّةٌ
+ * (ثوانٍ) أو بشريّةٌ (دقائقُ إلى ساعاتٍ) أو استئنافُ خطّافِ دفعٍ من مُزوِّدٍ —
+ * وأطولُ سياسةِ إعادةٍ في مُزوِّدي الدفعِ تُقاسُ بالساعاتِ لا بالأيّامِ. فيومٌ
+ * كاملٌ يغطّي الثلاثةَ بهامشٍ، ويُبقي الجدولَ في حجمِ يومٍ من الكتابةِ لا في
+ * حجمِ عمرِ الخدمةِ. والمدّةُ **صفةُ الصفِّ** (`expires_at`) لا صفةُ الاستعلامِ:
+ * تغييرُ الإعدادِ لا يُميتُ مفتاحاً وُعِدَ بيومٍ ولا يُحيي منتهياً.
+ */
+export const IDEMPOTENCY_KEY_TTL_SECONDS = 86_400;
+
+/**
+ * أدنى مدّةٍ مقبولةٍ: ساعةٌ.
+ *
+ * ولمَ حدٌّ أدنى أصلاً؟ لأنَّ `IDEMPOTENCY_KEY_TTL_SECONDS=1` إعدادٌ **يُلغي
+ * الحمايةَ بلا أن يُعلِنَ إلغاءَها**: كلُّ إعادةِ محاولةٍ تصلُ بعدَ ثانيةٍ فتجدُ
+ * المفتاحَ ميّتاً فتُنشئُ طلباً ثانياً — وهوَ عينُ الطلبِ المكرَّرِ الذي وُضِعَ
+ * المفتاحُ لمنعِهِ، فيبدو النظامُ سليماً ويكونُ أعطبَ من نظامٍ بلا مفاتيحَ (إذ
+ * يظنُّ المنادي نفسَهُ محميّاً).
+ */
+export const IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS = 3_600;
+
+/**
+ * Resolve the lifetime from the environment.
+ *
+ * وهذا الحقلُ **يُوقِفُ الإقلاعَ** على قيمةٍ خاطئةٍ، خلافاً لـ`MARKETPLACE_TIMEOUT_MS`
+ * الذي يُهمِلُ غيرَ المقروءِ إلى الافتراضِ (`http/server.ts`). والفرقُ مقصودٌ لا
+ * تناقُضٌ: مَهَلٌ خاطئٌ يُبطئُ نداءً ويُعلِنُ عن نفسِهِ في أوّلِ رَدٍّ، أمّا مدّةٌ
+ * خاطئةٌ فتفتحُ ثغرةَ تكرارٍ **صامتةً** لا يكشفُها إلّا حادثةُ طلبٍ مزدوجٍ عندَ
+ * عميلٍ. وحقلُ سلامةٍ يُخفَضُ في صمتٍ أسوأُ من خدمةٍ لا تُقلِعُ.
+ *
+ * @throws Error عندَ قيمةٍ غيرِ عدديّةٍ أو غيرِ صحيحةٍ أو أقلَّ من الحدِّ الأدنى.
+ */
+export function resolveIdempotencyTtlSeconds(
+  env: Readonly<Record<string, string | undefined>>,
+): number {
+  const raw = env.IDEMPOTENCY_KEY_TTL_SECONDS;
+  if (raw === undefined || raw.trim() === "") return IDEMPOTENCY_KEY_TTL_SECONDS;
+
+  const value = Number(raw);
+  if (!Number.isInteger(value)) {
+    throw new Error(
+      `IDEMPOTENCY_KEY_TTL_SECONDS يجبُ أن يكونَ عدداً صحيحاً من الثواني (القيمةُ: ${raw})`,
+    );
+  }
+  if (value < IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS) {
+    throw new Error(
+      `IDEMPOTENCY_KEY_TTL_SECONDS=${value} أقلُّ من الحدِّ الأدنى ${IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS} ثانيةً — مدّةٌ أقصرُ تُلغي حمايةَ التماثُلِ صامتةً`,
+    );
+  }
+  return value;
 }

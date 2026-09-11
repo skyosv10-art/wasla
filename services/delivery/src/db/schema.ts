@@ -553,6 +553,10 @@ export const deliveryIdempotencyKeys = pgTable(
     orderId: uuid("order_id").notNull(),
     traceId: text("trace_id"),
     createdAt: instant("created_at").notNull().defaultNow(),
+    // حياةُ المفتاحِ (المراجعةُ 13/N · §4.15): بلا `defaultNow()` بقصدٍ — المدّةُ
+    // تُحسَبُ في الكتابةِ من إعدادٍ لا في القاعدةِ من ثابتٍ، وافتراضٌ هنا كانَ
+    // سيجعلَ صفّاً يُكتَبُ بلا مدّةٍ **صالحاً** فيَحيا أبداً بلا أن يشتكيَ أحدٌ.
+    expiresAt: instant("expires_at").notNull(),
   },
   (table) => [
     foreignKey({
@@ -581,6 +585,10 @@ export const deliveryIdempotencyKeys = pgTable(
       "delivery_idempotency_keys_trace_id_check",
       sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
+    // مُقاسٌ لا مُفترَضٌ: فحصٌ على مستوى الجدولِ (عمودانِ) تُسمّيهِ Postgres
+    // `<table>_check` بلا اسمِ عمودٍ — قُرِئَ من `pg_constraint` بعدَ تطبيقِ العقدِ.
+    check("delivery_idempotency_keys_check", sql`${table.expiresAt} > ${table.createdAt}`),
+    index("ix_delivery_idempotency_keys_expiry").on(table.expiresAt),
   ],
 );
 

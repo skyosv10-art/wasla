@@ -40,6 +40,7 @@ import { Pool } from "pg";
 import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
 
 import { buildDeliveryHttpApp } from "./app.js";
+import { resolveIdempotencyTtlSeconds } from "../domain/idempotency.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 import {
@@ -119,7 +120,11 @@ async function main(): Promise<void> {
   }
 
   const pool = new Pool({ connectionString: DATABASE_URL });
-  const store = new StoreOrderStore(pool);
+  // حياةُ مفتاحِ التماثُلِ تُحلُّ هنا في جِذعِ التركيبِ لا في المخزنِ: قيمةٌ خاطئةٌ
+  // تُوقِفُ الإقلاعَ برسالةٍ تُسمّي المتغيّرَ، ولا تُكتشَفُ في أوّلِ كتابةٍ
+  // (`domain/idempotency.ts` يشرحُ لِمَ الفشلُ صائحٌ هنا ومُهمَلٌ في المَهَلِ).
+  const idempotencyTtlSeconds = resolveIdempotencyTtlSeconds(process.env);
+  const store = new StoreOrderStore(pool, idempotencyTtlSeconds);
   const catalog = buildCatalogPort();
   const reservation = buildReservationPort();
   const { fastify, close } = buildDeliveryHttpApp({
@@ -128,6 +133,7 @@ async function main(): Promise<void> {
     reservationPort: reservation.reservationPort,
     reservationStore: store,
     readinessPort: new PostgresReadinessProbe(pool),
+    idempotencySweepPort: store,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
   });
 
@@ -135,7 +141,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label}`);
+    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

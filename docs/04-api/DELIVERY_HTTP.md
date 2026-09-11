@@ -1,10 +1,10 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 9/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 13/N)
 
 > **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الثمانيةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 9/N — مرآةُ الدفعِ والتأكيدُ وبوّابةُ خروجِ الطورِ) · **Last Updated:** 2026-09-10
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 13/N — حياةُ مفاتيحِ التماثُلِ ومُكنستُها) · **Last Updated:** 2026-09-11
 >
 > **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
@@ -12,7 +12,18 @@
 
 ---
 
-## 1. ماذا يُضاف في هذه المراجعة (9/N)
+## 1. ماذا يُضاف في هذه المراجعة (13/N)
+
+ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)** (حياةُ مفاتيحِ التماثُلِ ومُكنستُها) — والتفصيلُ في [§4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md):
+
+- **`POST /delivery/idempotency-keys/sweep`** — مسارُ صيانةٍ يحذفُ المفاتيحَ المنتهيةَ بدفعاتٍ محدودةٍ ويُعيدُ **أرقاماً مقيسةً** لا «تمَّ»: `{batches, deleted, remaining, stopped_because}`. جسمُهُ اختياريٌّ (`batch_size` · `max_batches`)، **ولا `Idempotency-Key` عليهِ**: الحذفُ عمليّةٌ متماثلةٌ بطبعِها (لا يحذفُ إلّا ما انتهى) فمفتاحٌ عليها زينةٌ.
+- **لكلِّ مفتاحٍ مدّةٌ محفوظةٌ في صفِّهِ** (`expires_at`) لا محسوبةٌ عندَ القراءةِ: مفتاحٌ انتهى **كأنَّهُ غيرُ موجودٍ** (لا إعادةَ جوابٍ ولا 409)، ومفتاحٌ حيٌّ على حالِهِ في §2.3 حرفاً.
+- **`IDEMPOTENCY_KEY_TTL_SECONDS`** إعدادٌ بحدٍّ أدنى (افتراضُهُ `86400`، وحدُّهُ `3600`) **يُوقِفُ الإقلاعَ** عندَ قيمةٍ خاطئةٍ ولا يُصحِّحُها صامتاً.
+- **تصحيحُ انحرافٍ في هذا المستندِ:** مسارُ `POST /store-orders/{orderPublicId}/fulfillment-transition` أُضيفَ في المراجعةِ 11/N ولم يُدرَجْ في جدولِ المساراتِ هنا، فبقيَ الجدولُ يقولُ «ثمانيةٌ» وهيَ عشرةٌ. أُدرِجَ الآنَ — ومستندٌ يُعدُّ مساراتِ خدمةٍ خطأً يُقرأُ عقداً.
+
+---
+
+## 1أ. ما أضافتْهُ المراجعةُ 9/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **البندَ 4 من ADR-026 §4** (بوّابةُ خروجِ المخزونِ والدفعِ)، وقبلَهُ السلكَ الذي كانَ ناقصاً:
 
@@ -24,7 +35,7 @@
 
 ---
 
-## 1أ. ما أضافتْهُ المراجعةُ 8/N (مرجعٌ)
+## 1ب. ما أضافتْهُ المراجعةُ 8/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **أقدمَ دَينٍ في الخدمةِ**: [ADR-026 §4.9-2](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) قالَ إنّ محوّلَ الكتالوجِ «متعذّرٌ معماريّاً»، فبقيَ `POST /store-orders` يُجيبُ `503` سبعَ مراجعاتٍ. والعلّةُ لم تكن شبكةً بل **مرجعاً**:
 
@@ -35,7 +46,7 @@
 
 ---
 
-## 2. المساراتُ الثمانيةُ (لا تاسعَ)
+## 2. المساراتُ العشرةُ (لا حادي عشرَ)
 
 | الطريقةُ والمسارُ | الغرضُ | النجاحُ |
 |---|---|---|
@@ -44,9 +55,11 @@
 | `POST /store-orders/{orderPublicId}/cancellation` | إلغاءُ الطلبِ بسببٍ من كتالوجٍ مغلقٍ · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
 | `PUT /store-orders/{orderPublicId}/payment-mirror` | مرآةُ حالةِ الدفعِ الخارجيّةِ ومرجعِها · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
 | `POST /store-orders/{orderPublicId}/confirmation` | تأكيدُ الطلبِ بعدَ تخويلِ الدفعِ · **لا جسمَ** · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
+| `POST /store-orders/{orderPublicId}/fulfillment-transition` | تحريكُ طورِ التنفيذِ (وعندَ `delivered` يُخصَمُ المخزونُ) · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
 | `GET /store-orders/{orderPublicId}/delivery-task` | قراءةُ مهمّةِ التوصيلِ (مرآةٌ خشنةٌ) | **200** `DeliveryTaskResource` |
 | `GET /delivery/health` | **حياةٌ (liveness)** بلا تبعيّةٍ | **200** `{ status: "ok" }` |
 | `GET /delivery/ready` | **جاهزيّةٌ (readiness)** بمسبارِ قاعدةٍ حقيقيٍّ | **200** / **503** `ReadinessResponse` |
+| `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` |
 
 `orderPublicId` بنمطِ `^WS-[0-9]{10}$` حصراً — كلُّ ما دونَه **400 قبلَ لمسِ القاعدةِ**.
 
@@ -90,7 +103,29 @@ POST /store-orders
 - **المسارُ داخلَ البصمةِ**: مفتاحٌ استُعملَ للإلغاءِ لا يصلحُ للإنشاءِ — 409 لا إعادةُ جسدِ إلغاءٍ كجوابِ إنشاءٍ.
 - **صفقةٌ واحدةٌ**: صفُّ المفتاحِ يُكتَبُ مع الأثرِ لا بعدَهُ. صفقتانِ تفتحانِ نافذةً يُنشَأُ فيها الطلبُ بلا مفتاحٍ محفوظٍ، فتُعيدُ المحاولةُ إنشاءَهُ ثانيةً.
 - **الإلغاءُ يفحصُ المفتاحَ قبلَ آلةِ الحالاتِ**: `cancelled → cancelled` ليست حافّةً (§3.1)، فلولا الفحصُ المُسبَقُ لكانتِ الإعادةُ المشروعةُ `DELIVERY_INVALID_TRANSITION`.
-- **لا حياةَ محدَّدةً للمفاتيحِ ولا مُكنسةَ حذفٍ** بعدُ — دَينٌ مُعلَنٌ في [§4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md).
+- **للمفاتيحِ حياةٌ محدَّدةٌ ومُكنسةٌ** (المراجعةُ 13/N): الجدولُ الأعلى يصفُ **المفتاحَ الحيَّ**؛ والمنتهي يُعامَلُ معاملةَ الجديدِ — التفصيلُ في §2.5 و[§4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md).
+
+### 2.5 حياةُ المفتاحِ ومُكنستُهُ (13/N)
+
+كلُّ صفِّ مفتاحٍ يُكتَبُ بـ`expires_at = now() + مدّةٍ` **بساعةِ القاعدةِ** (نُسَخُ الخدمةِ متعدّدةٌ وساعاتُها تنزلقُ)، والمدّةُ **محفوظةٌ في الصفِّ** لا محسوبةٌ عندَ القراءةِ: إنقاصُ الإعدادِ لا يقتلُ بأثرٍ رجعيٍّ مفتاحاً وُعِدَ عميلُهُ بيومٍ.
+
+| الحالةُ | الجوابُ |
+|---|---|
+| مفتاحٌ **حيٌّ** | كما في §2.3 حرفاً (إعادةٌ · 409 إعادةُ استعمالٍ · 409 تسابُقٌ) |
+| مفتاحٌ **منتهٍ** + الطلبُ نفسُهُ | **الأثرُ يُنفَّذُ من جديدٍ** · 201/200 **بلا** `Idempotent-Replay` |
+| مفتاحٌ **منتهٍ** + طلبٌ مختلفٌ | **يُقبَلُ** (201/200) — لا 409: الصفُّ الميّتُ يُستولى عليهِ تحديثاً ذرّيّاً |
+
+```json
+POST /delivery/idempotency-keys/sweep
+{ "batch_size": 500, "max_batches": 20 }          ← اختياريٌّ، وهذهِ هيَ الافتراضاتُ
+→ 200 { "batches": 3, "deleted": 1200, "remaining": 0, "stopped_because": "drained" }
+```
+
+- **`stopped_because`** مفردةٌ من قائمةٍ مغلقةٍ: `drained` (لا منتهيَ بقيَ) · `empty_batch` (دفعةٌ فارغةٌ وقد بقيَ عملٌ — صفوفٌ مقفولةٌ لكاتبٍ، تُتخطّى بـ`SKIP LOCKED` ولا تُنتظَرُ) · `max_batches` (السقفُ بلغَ والتراكُمُ في `remaining`).
+- **`remaining`** هوَ ما بقيَ منتهياً بعدَ الجَولةِ: رقمٌ متزايدٌ بينَ جَولتَينِ يعني أنَّ الجَولةَ أصغرُ من التراكُمِ **قبلَ** أن يمتلئَ قرصٌ.
+- **حدٌّ خاطئٌ في الجسمِ** (`batch_size` أو `max_batches` غيرُ صحيحٍ أو دونَ الواحدِ) **400 `DELIVERY_VALIDATION_FAILED`** يُسمّي الحقلَ — **قبلَ** أيِّ نداءٍ للقاعدةِ.
+- **مُكنسةٌ غيرُ مُركَّبةٍ** ⇒ **500 `DELIVERY_INTERNAL_ERROR`** لا `200 {deleted: 0}`: الصفرُ الكاذبُ يُقرأُ نظافةً. وهيَ `500` لا `503` لأنَّ `503` هنا معناها تبعيّةٌ خارجيّةٌ عاجزةٌ (§3.1).
+- **لا مُجدوِلَ داخلَ العمليّةِ:** لا `setInterval` في الخدمةِ (سابقةُ `POST /reputation/tick`)؛ فمن يُنادي المسارَ ومتى **قرارٌ تشغيليٌّ** لم يُوصَلْ في هذه المراجعةِ.
 
 ### 2.4 الجاهزيّةُ: تقيسُ أو تعترفُ
 
@@ -202,7 +237,8 @@ GET /delivery/ready → 200
 | فحصُ جاهزيّةٍ يسألُ السوقَ (الكتالوجُ **موصولٌ** لا **مسبورٌ**) | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — `marketplace_catalog_not_probed` مُعلَنٌ |
 | إعادةُ محاولةٍ أو قاطعُ دورةٍ في محوّلِ الكتالوجِ | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ |
 | حجزُ مخزونٍ أو خصمُهُ عندَ الإنشاءِ | ADR-026 §2.3 · §4.8 — اللقطةُ سعرٌ وسببُ وجودٍ فقط |
-| حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ دوريّةٌ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الجدولُ ينمو، والحذفُ اليومَ متتالٍ عن الطلبِ فقط |
+| ~~حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ~~ **رُفِعَ في المراجعةِ 13/N** | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.5 — `expires_at` في الصفِّ ومُكنسةٌ بدفعاتٍ على مسارٍ |
+| **مُنادٍ** للمُكنسةِ (جدولٌ خارجيٌّ وتواتُرُهُ) ونطاقُ صيانةٍ مستقلٌّ لمسارِها | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المسارُ قائمٌ ومقيسٌ، ووصلُهُ قرارٌ تشغيليٌّ · والتراكُمُ صارَ مقروءاً في `remaining` |
 | `Retry-After` وحالةُ «قيدَ المعالجةِ» في تسابُقِ المفتاحِ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — التسابُقُ يُكتشَفُ بخطأِ تفرُّدٍ لا بحالةٍ مُخزَّنةٍ |
 | فحوصُ جاهزيّةٍ للسوقِ وجسرِ الإرسالِ وتراكُمِ الصادرِ | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · مُعلَنةٌ في `not_claimed` لا مسكوتٌ عنها |
 | حافّةُ `pending_eligibility → cancelled` في §3.3 | [ADR-026 §4.9-1](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — قرارُ عقدٍ لا إصلاحُ شيفرةٍ |

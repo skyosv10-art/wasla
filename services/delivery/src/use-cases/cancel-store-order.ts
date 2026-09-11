@@ -139,6 +139,10 @@ export async function cancelStoreOrder(
     // The release is idempotent: a second call for the same reservation is a
     // no-op. If the release fails, the order is still cancelled — the
     // reservation will expire at the marketplace or be reconciled later.
+    //
+    // review 11/N (§4.13): if inventory is already `consumed` (the order was
+    // delivered), do NOT release — the inventory was already deducted at
+    // reservation time and consumption is a terminal inventory state.
     if (order.inventoryState === "reserved") {
       if (!deps.reservationPort || !deps.reservationStore) {
         throw new DeliveryError(

@@ -26,11 +26,13 @@
  */
 
 import {
+  FULFILLMENT_STATES,
   PAYMENT_REASON_CODES,
   PAYMENT_STATES,
   STORE_ORDER_CANCEL_REASON_CODES,
 } from "@wasla/contracts-delivery";
 import type {
+  FulfillmentState,
   PaymentReasonCode,
   PaymentState,
   StoreOrderCancelReasonCode,
@@ -173,6 +175,46 @@ export function parsePaymentMirrorBody(body: unknown): {
       throw invalid("payment_ref", "مرجعُ الدفعِ بطولِ 1..128 محرفاً", String(text.length));
     }
     return { ...parsed, paymentRef: text };
+  }
+
+  return parsed;
+}
+
+/**
+ * Parse `POST /store-orders/{id}/fulfillment-transition` body (review 11/N · §4.13).
+ *
+ * `to_state` is a member of the closed fulfillment state catalog. `proof` is
+ * required when `to_state === "delivered"` and forbidden otherwise — enforced
+ * in the domain, not here (the parser only checks shape and membership).
+ */
+export function parseFulfillmentTransitionBody(body: unknown): {
+  toState: FulfillmentState;
+  proofType?: string;
+  proofRef?: string;
+} {
+  const raw = asObject(body, "body");
+
+  const allowed = new Set(["to_state", "proof_type", "proof_ref"]);
+  for (const key of Object.keys(raw)) {
+    if (!allowed.has(key)) {
+      throw invalid(key, "حقلٌ غيرُ مُعلَنٍ في العقدِ", key);
+    }
+  }
+
+  const state = asString(raw.to_state, "to_state");
+  if (!(FULFILLMENT_STATES as readonly string[]).includes(state)) {
+    throw invalid("to_state", "حالةُ التنفيذِ ليست من الكتالوجِ المغلقِ", state);
+  }
+
+  const parsed: { toState: FulfillmentState; proofType?: string; proofRef?: string } = {
+    toState: state as FulfillmentState,
+  };
+
+  if ("proof_type" in raw) {
+    parsed.proofType = asString(raw.proof_type, "proof_type");
+  }
+  if ("proof_ref" in raw) {
+    parsed.proofRef = asString(raw.proof_ref, "proof_ref");
   }
 
   return parsed;

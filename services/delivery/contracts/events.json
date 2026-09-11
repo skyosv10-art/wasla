@@ -758,6 +758,91 @@
         }
       ]
     },
+    "StoreOrderInventoryConsumedV1": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/EventEnvelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "event_type",
+            "payload"
+          ],
+          "properties": {
+            "event_type": {
+              "const": "store_order.inventory_consumed"
+            },
+            "event_version": {
+              "const": "v1"
+            },
+            "aggregate": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "const": "store_order"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "payload": {
+              "type": "object",
+              "required": [
+                "public_id",
+                "from_state",
+                "to_state",
+                "reason_code",
+                "reservation_ref",
+                "actor"
+              ],
+              "properties": {
+                "public_id": {
+                  "$ref": "#/$defs/WaslaPublicId"
+                },
+                "from_state": {
+                  "$ref": "#/$defs/InventoryState"
+                },
+                "to_state": {
+                  "const": "consumed"
+                },
+                "reason_code": {
+                  "const": "INVENTORY_CONSUMED"
+                },
+                "reservation_ref": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "actor": {
+                  "type": "object",
+                  "required": [
+                    "actor_type"
+                  ],
+                  "properties": {
+                    "actor_type": {
+                      "$ref": "#/$defs/ActorType"
+                    },
+                    "actor_ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "StoreOrderItemSubstitutedV1": {
       "allOf": [
         {
@@ -1439,6 +1524,9 @@
         },
         {
           "$ref": "#/$defs/StoreOrderInventoryReleasedV1"
+        },
+        {
+          "$ref": "#/$defs/StoreOrderInventoryConsumedV1"
         },
         {
           "$ref": "#/$defs/DeliveryTaskCreatedV1"

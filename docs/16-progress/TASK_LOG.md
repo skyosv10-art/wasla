@@ -1,5 +1,14 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-11 · M5-13 · المراجعةُ 11/N — الخصمُ النهائيُّ للمخزونِ عندَ التسليمِ · `CLM-0131`
+
+**Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-inventory-consumed` · **Claim:** `CLM-0131` (`@uxxxu (agent:perplexity-computer)` · 2026-09-11 → ينتهي 2026-09-25 · Active) · **Scope:** `services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`pnpm-lock.yaml`,`.github/workflows/`,`.gitlab-ci.yml`,`docs/04-api/`,`docs/07-security/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`
+
+**ماذا تم إنجاز:** قيد التنفيذ — رفع تأجيل ADR-026 §4.13 للخصم النهائي (`consumed`). مسار `POST /store-orders/{orderPublicId}/fulfillment-transition` يُدير انتقالات الإكمال: `confirmed → picking → picked → ready_for_delivery → handed_to_courier → delivered` (مع إثبات). عند `delivered`: inventory `reserved → consumed`، حدث `store_order.inventory_consumed`، لا نداء للسوق (الحجزُ خصمٌ بالفعل).
+
+**الحالة (11):** `M5-13` ⇒ `In Progress` (المراجعةُ 11/N قيد التنفيذ).
+
+
 ## 2026-09-10 · M5-13 · المراجعةُ 10/N — حجزُ وخصمُ المخزونِ عندَ وضعِ الطلبِ · `CLM-0130`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-13-inventory-reservation` · **Claim:** `CLM-0130` (خلفٌ لِـ`CLM-0129` المُطلَقِ لإضافةِ `docs/07-security/` إلى النطاقِ — WORK_CLAIM_RULE §6) (`@uxxxu (agent:perplexity-computer)` · 2026-09-10 → ينتهي 2026-09-24 · Active) · **Scope:** `services/marketplace/`,`packages/contracts/marketplace/`,`services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`pnpm-lock.yaml`,`.github/workflows/`,`.gitlab-ci.yml`,`docs/04-api/`,`docs/07-security/`,`docs/12-testing/`,`docs/15-decisions/`,`docs/16-progress/`

@@ -25,6 +25,8 @@ import type {
   CancellationWrite,
   ConfirmOrderOutcome,
   ConfirmationWrite,
+  FulfillmentTransitionOutcome,
+  FulfillmentTransitionWrite,
   InventoryMirrorWrite,
   InventoryReservationPort,
   InventoryReservationStore,
@@ -181,6 +183,42 @@ export class FakeStoreOrderStore implements StoreOrderReadPort, StoreOrderWriteP
     this.outbox.push(...write.events);
     this.rememberKey(write.idempotency, confirmed);
     return { kind: "applied", order: confirmed };
+  }
+
+  /** انتقالُ التنفيذِ في الذاكرةِ (المراجعةُ 11/N · §4.13). */
+  async fulfillmentTransition(write: FulfillmentTransitionWrite): Promise<FulfillmentTransitionOutcome> {
+    const replay = this.resolveKey(write.idempotency);
+    if (replay !== null) return replay;
+    const entry = this.requireOrder(write.orderId, write.expectedVersion);
+    if (entry.fulfillmentState !== write.fromFulfillmentState) {
+      throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَ الطلبُ بينَ القراءةِ والكتابةِ");
+    }
+
+    let updated: StoreOrder = {
+      ...entry,
+      fulfillmentState: write.toFulfillmentState as StoreOrder["fulfillmentState"],
+      version: entry.version + 1,
+    };
+
+    // When delivered: consume inventory in the same transaction
+    if (write.inventoryConsume !== null && write.inventoryConsume !== undefined) {
+      const ic = write.inventoryConsume;
+      if (entry.inventoryState !== ic.fromInventoryState) {
+        throw new DeliveryError("DELIVERY_CONCURRENT_UPDATE", "تغيَّرَت حالةُ المخزونِ بينَ القرارِ والكتابةِ");
+      }
+      updated = {
+        ...updated,
+        inventoryState: ic.toInventoryState as StoreOrder["inventoryState"],
+        inventoryRef: ic.inventoryRef,
+        version: updated.version + 1,
+      };
+      this.outbox.push(...ic.events);
+    }
+
+    this.orders.set(updated.publicId, updated);
+    this.outbox.push(...write.events);
+    this.rememberKey(write.idempotency, updated);
+    return { kind: "applied", order: updated };
   }
 
   private requireOrder(orderId: string, expectedVersion: number): StoreOrder {

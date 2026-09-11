@@ -2,7 +2,7 @@
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
 **Last updated:** 2026-09-11
-**Last milestone:** Roadmap and roadmap-freshness gate introduced. No application code has been changed yet by the WASLA integration work.
+**Last milestone:** Roadmap and roadmap-freshness gate introduced and exercised. No application code has been changed yet by the WASLA integration work.
 
 ## What this project is
 
@@ -65,6 +65,13 @@ today is not a claim of ownership.
 - [x] Roadmap-freshness gate (`scripts/check-roadmap.mjs` +
       `.github/workflows/roadmap.yml`): a push that changes implementation and
       does not update this file fails CI.
+- [x] Gate proven on a live CI run: run "Roadmap freshness" on commit
+      `2cb88e4c` failed with
+      `ROADMAP.md was not updated alongside implementation changes:
+      - .github/workflows/roadmap.yml`.
+      That failure is the gate correctly refusing its own bootstrap commit,
+      which added the workflow without touching ROADMAP.md. The commit that
+      updates this file passes.
 
 Nothing else has been changed in this repository by the WASLA integration work.
 

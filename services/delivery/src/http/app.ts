@@ -16,6 +16,12 @@
  *   GET  /delivery/health                              → 200 (liveness)
  *   GET  /delivery/ready                               → 200/503 (readiness)
  *
+ * ومعَها مساراتُ **تشغيلٍ** لا ينشرُها العقدُ لأنَّها ليستْ وعداً لعميلٍ،
+ * وموضعُ توصيفِها `docs/04-api/DELIVERY_HTTP.md`:
+ *
+ *   POST /delivery/idempotency-keys/sweep              → 200 (المراجعةُ 13/N · §4.15)
+ *   GET  /delivery/inventory-conflicts                 → 200 (المراجعةُ 16/N · §4.18)
+ *
  * ## Injected ports — this app never opens a database
  *
  * Every dependency arrives through `DeliveryHttpDeps`. Unit tests build the
@@ -76,6 +82,7 @@ import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 import { DeliveryError } from "../domain/errors.js";
 import type {
   IdempotencyIntent,
+  InventoryConflictReadPort,
   InventoryReservationPort,
   InventoryReservationStore,
   ReadinessProbePort,
@@ -134,6 +141,15 @@ export interface DeliveryHttpDeps {
    * هذه الخدمةَ من الدورةِ (`http/readiness.ts` يُفصِّلُ الحُجّةَ).
    */
   readonly marketplaceObservationPort?: DependencyObservationPort;
+  /**
+   * قراءةُ راياتِ تضاربِ المخزونِ (المراجعةُ 16/N · ADR-026 §4.18).
+   *
+   * غائبٌ ⇒ `GET /delivery/inventory-conflicts` يُجيبُ 500
+   * `DELIVERY_INTERNAL_ERROR` لا 200 بقائمةٍ فارغةٍ: قائمةٌ فارغةٌ تُقرأُ
+   * «لا تضاربَ» والحقيقةُ «لا أدري» — وهي أخطرُ من خطأٍ مُعلَنٍ
+   * (نفسُ حُجّةِ `idempotencySweepPort`: الصفرُ الكاذبُ يُقرأُ نظافةً).
+   */
+  readonly inventoryConflictReadPort?: InventoryConflictReadPort;
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -190,6 +206,54 @@ function parseSweepOptions(
     ...(batchSize === undefined ? {} : { batchSize }),
     ...(maxBatches === undefined ? {} : { maxBatches }),
   };
+}
+
+/**
+ * مُعامِلاتُ استعلامِ راياتِ التضاربِ — تُرفَضُ ولا تُصحَّحُ صامتةً.
+ *
+ * وأرقامُ `limit` **عشريةٌ فقط**: `Number("0x10")` يُعطي 16 و`Number.isInteger` يرضى
+ * بهِ، ومُشغِّلٌ كتبَ `0x10` لم يطلبْ 16 — بل أخطأَ، والتصحيحُ الصامتُ يخفي
+ * خطأَهُ. (نفسُ قاعدةِ حاسماتِ البيئةِ في هذا المستودعِ.)
+ */
+const INVENTORY_CONFLICTS_DEFAULT_LIMIT = 50;
+const INVENTORY_CONFLICTS_MAX_LIMIT = 500;
+
+function parseInventoryConflictsQuery(
+  query: unknown,
+  traceId: string,
+): { unacknowledgedOnly: boolean; limit: number } {
+  const raw = (query ?? {}) as Record<string, unknown>;
+
+  const rawUnack = raw["unacknowledged_only"];
+  let unacknowledgedOnly = true; // الافتراضُ ما يحتاجُهُ مُشغِّلٌ في حادثةٍ.
+  if (rawUnack !== undefined && rawUnack !== null && rawUnack !== "") {
+    if (rawUnack !== "true" && rawUnack !== "false") {
+      throw new DeliveryError(
+        "DELIVERY_VALIDATION_FAILED",
+        "`unacknowledged_only` تقبلُ `true` أو `false` حرفاً",
+        { traceId, details: { field: "unacknowledged_only", actual: String(rawUnack) } },
+      );
+    }
+    unacknowledgedOnly = rawUnack === "true";
+  }
+
+  const rawLimit = raw["limit"];
+  let limit = INVENTORY_CONFLICTS_DEFAULT_LIMIT;
+  if (rawLimit !== undefined && rawLimit !== null && rawLimit !== "") {
+    const text = String(rawLimit);
+    const decimalOnly = /^[0-9]+$/u.test(text);
+    const parsed = Number(text);
+    if (!decimalOnly || !Number.isInteger(parsed) || parsed < 1 || parsed > INVENTORY_CONFLICTS_MAX_LIMIT) {
+      throw new DeliveryError(
+        "DELIVERY_VALIDATION_FAILED",
+        `\`limit\` عددٌ عشريٌّ صحيحٌ بينَ 1 و${INVENTORY_CONFLICTS_MAX_LIMIT}`,
+        { traceId, details: { field: "limit", actual: text } },
+      );
+    }
+    limit = parsed;
+  }
+
+  return { unacknowledgedOnly, limit };
 }
 
 export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
@@ -530,6 +594,64 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       deleted: result.deleted,
       remaining: result.remaining,
       stopped_because: result.stoppedBecause,
+    });
+  });
+
+  /*
+   * قراءةُ راياتِ تضاربِ المخزونِ (المراجعةُ 16/N · ADR-026 §4.18 · رفعُ دَينِ §4.8).
+   *
+   * مسارُ **قراءةٍ تشغيليَّةٍ** لا مسارُ عميلٍ — ولذلكَ ليسَ في
+   * `contracts/api.openapi.yml` بل في `docs/04-api/DELIVERY_HTTP.md` وحدهِ، على سابقةِ
+   * `POST /delivery/idempotency-keys/sweep` (المراجعةُ 13/N): العقدُ المنشورُ وعدٌ
+   * لعميلٍ خارجيٍّ، ومسارُ صيانةٍ يُناديهِ مُشغِّلٌ ليسَ وعداً لأحدٍ.
+   *
+   * **ولا هويّةَ خدمةٍ عليهِ** — وهذا نقصٌ مُعلَنٌ لا اختيارٌ مُريحٌ: هذهِ الخدمةُ
+   * تُوقِّعُ طلباتِها الصادرةَ (`createServiceRequestSigner` في `server.ts`) ولا
+   * تتحقّقُ من واردٍ أبداً — فلا موضعَ أُعلِّقُ عليهِ تحقّقاً، وإضافةُ طبقةِ
+   * تحقّقٍ واردٍ للمرّةِ الأولى في مراجعةٍ موضوعُها كشفُ تضاربٍ توسيعُ نطاقٍ
+   * يمسُّ المساراتِ التسعةَ كلَّها. والدَّينُ مكتوبٌ في §4.18 لا مسكوتٌ عنهُ.
+   *
+   * والردُّ يحملُ `changes_order_state: false` على كلِّ صفٍّ: من يقرأُ رايةً في
+   * حادثةٍ لا يقرأُ ADR — سابقةُ `gates_readiness: false` (§4.17-2).
+   */
+  app.get("/delivery/inventory-conflicts", async (request, reply) => {
+    const traceId = String(request.id);
+    if (deps.inventoryConflictReadPort === undefined) {
+      throw new DeliveryError(
+        "DELIVERY_INTERNAL_ERROR",
+        "لا منفذَ قراءةِ راياتٍ مُركَّبٌ — لا يُدَّعى خلوٌّ لم يُقسَ (ADR-026 §4.18)",
+        { traceId },
+      );
+    }
+    const { unacknowledgedOnly, limit } = parseInventoryConflictsQuery(request.query, traceId);
+    const rows = await deps.inventoryConflictReadPort.listInventoryConflicts({
+      unacknowledgedOnly,
+      limit,
+    });
+    return reply.status(200).send({
+      // المُعامِلاتُ المطبّقةُ تُردَّدُ: قارئٌ يرى عشرةً ولا يدري أَسقفٌ أم كلٌّ
+      // يقرأُ خطأً. ولا «total»: عدٌّ كاملٌ طلبٌ ثانٍ لا يطلبُهُ أحدٌ بعدُ.
+      applied_filter: { unacknowledged_only: unacknowledgedOnly, limit },
+      count: rows.length,
+      conflicts: rows.map((row) => ({
+        adjustment_id: row.adjustmentId,
+        marketplace_event_id: row.marketplaceEventId,
+        store_id: row.storeId,
+        product_id: row.productId,
+        conflict_kind: row.kind,
+        reason_code: row.reasonCode,
+        quantity_delta: row.quantityDelta,
+        observed_quantity_after: row.observedQuantityAfter,
+        adjustment_sequence: row.adjustmentSequence,
+        affected_order_count: row.affectedOrderCount,
+        affected_units_total: row.affectedUnitsTotal,
+        affected_order_public_ids: row.affectedOrderPublicIds,
+        changes_order_state: row.changesOrderState,
+        occurred_for: row.occurredFor,
+        detected_at: row.detectedAt,
+        acknowledged_at: row.acknowledgedAt,
+        acknowledged_by: row.acknowledgedBy,
+      })),
     });
   });
 

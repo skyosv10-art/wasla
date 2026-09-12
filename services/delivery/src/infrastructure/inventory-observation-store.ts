@@ -4,6 +4,7 @@
  * ONE transaction:
  *
  *   delivery_inventory_observations (upsert, guarded by sequence)
+ *   delivery_inventory_conflicts    (رايةٌ تُرفَعُ إن شكَّ الفرقُ في حجزٍ نشطٍ)
  *
  * …so a crash mid-observe leaves NOTHING behind — proven on real Postgres in
  * `marketplace-inventory.integration.test.ts` (rollback test).
@@ -26,7 +27,17 @@ import type {
   MarketplaceOutboxRow,
   InventoryRelayCheckpoint,
 } from "../domain/marketplace-inventory-events.js";
-import type { InventoryObservationStore, MirrorContext } from "../ports.js";
+import type {
+  InventoryObservationOutcome,
+  InventoryObservationStore,
+  MirrorContext,
+} from "../ports.js";
+import {
+  assessInventoryConflict,
+  type ActiveReservationLine,
+  type InventoryConflictKind,
+  type InventoryConflictRow,
+} from "../domain/inventory-conflict.js";
 
 export class PostgresInventoryObservationStore implements InventoryObservationStore {
   constructor(private readonly pool: Pool) {}
@@ -89,8 +100,11 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
 
   /* ── the inventory snapshot ── */
 
-  async observeInventoryAdjustment(data: InventoryAdjustedData, context: MirrorContext): Promise<"applied" | "skipped_stale"> {
-    return this.withTransaction(async (tx) => {
+  async observeInventoryAdjustment(
+    data: InventoryAdjustedData,
+    context: MirrorContext,
+  ): Promise<InventoryObservationOutcome> {
+    return this.withTransaction<InventoryObservationOutcome>(async (tx) => {
       // Lock the existing observation row (if any) — FOR UPDATE prevents a
       // concurrent observer from racing the sequence check.
       const existing = await tx.query<{ last_adjustment_sequence: number }>(
@@ -105,7 +119,7 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
       if (existing.rows.length > 0) {
         const currentSeq = existing.rows[0].last_adjustment_sequence;
         if (data.adjustment_sequence <= currentSeq) {
-          return "skipped_stale";
+          return { observation: "skipped_stale" };
         }
       }
 
@@ -139,8 +153,141 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
           context.traceId,
         ],
       );
-      return "applied";
+
+      /* ── حكمُ التضاربِ — في المعاملةِ نفسِها (ADR-026 §4.18) ── */
+
+      // مسارُ الربطِ ليسَ مباشراً ولا يمكنُ أن يكونَ: الرصدُ يأتي بـ`store_id`
+      // (uuid ينشرُهُ حدثُ السوقِ)، والحجزُ يُخزَّنُ بـ`store_slug` (المرجعُ العامُّ
+      // الوحيدُ للمتجرِ · §4.9-2). و`store_orders` هوَ الصفُّ الوحيدُ الذي يحملُ
+      // الاثنينِ، فالطريقُ عبرَهُ لا عبرَ معجمِ تحويلٍ (§4.11 يرفضُ المعجمَ).
+      // والترتيبُ حتميٌّ لأنَّ المصفوفةَ المُخزَّنةَ تُقارَنُ في الاختبارِ.
+      const reservations = await tx.query<{
+        order_id: string;
+        public_id: string;
+        quantity_reserved: number;
+      }>(
+        `SELECT r.order_id::text, o.public_id, r.quantity_reserved
+           FROM delivery_inventory_reservations r
+           JOIN store_orders o ON o.order_id = r.order_id
+          WHERE o.store_id = $1::uuid
+            AND r.product_id = $2::uuid
+            AND r.status = 'active'
+          ORDER BY o.public_id`,
+        [data.store_id, data.product_id],
+      );
+
+      const activeReservations: readonly ActiveReservationLine[] = reservations.rows.map((row) => ({
+        orderId: row.order_id,
+        orderPublicId: row.public_id,
+        quantityReserved: row.quantity_reserved,
+      }));
+
+      const assessment = assessInventoryConflict({
+        adjustment: data,
+        activeReservations,
+        detectedAt: new Date().toISOString(),
+      });
+
+      if (assessment.conflict) {
+        const report = assessment.report;
+        // `ON CONFLICT DO NOTHING` لا `DO UPDATE`: الفرقُ حدثٌ ماضٍ لا يتغيّرُ،
+        // وتحديثُ رايةٍ أُقِرَّت إلى غيرِ مُقَرّةٍ عندَ إعادةِ تسليمٍ يُلغي قرارَ مُشغِّلٍ.
+        await tx.query(
+          `INSERT INTO delivery_inventory_conflicts
+             (adjustment_id, marketplace_event_id, store_id, product_id,
+              conflict_kind, reason_code, quantity_delta, observed_quantity_after,
+              adjustment_sequence, affected_order_count, affected_units_total,
+              affected_order_public_ids, changes_order_state,
+              occurred_for, detected_at, trace_id)
+           VALUES ($1::uuid, $2::uuid, $3::uuid, $4::uuid,
+                   $5, $6, $7, $8,
+                   $9, $10, $11,
+                   $12::text[], FALSE,
+                   $13::timestamptz, $14::timestamptz, $15)
+           ON CONFLICT (adjustment_id) DO NOTHING`,
+          [
+            report.adjustmentId,
+            context.eventId,
+            report.storeId,
+            report.productId,
+            report.kind,
+            report.reasonCode,
+            report.quantityDelta,
+            report.observedQuantityAfter,
+            report.adjustmentSequence,
+            report.affectedOrderCount,
+            report.affectedUnitsTotal,
+            report.affectedOrderPublicIds,
+            data.occurred_for,
+            report.detectedAt,
+            context.traceId,
+          ],
+        );
+      }
+
+      return { observation: "applied", conflict: assessment };
     });
+  }
+
+  /* ── قراءةُ راياتِ التضاربِ ── */
+
+  async listInventoryConflicts(query: {
+    readonly unacknowledgedOnly: boolean;
+    readonly limit: number;
+  }): Promise<readonly InventoryConflictRow[]> {
+    // التصفيةُ بـ`$1` لا بتركيبِ نصٍّ: فرعانِ في استعلامٍ واحدٍ يعنيانِ خطًّا واحدًا
+    // يُختبرُ، والفهرسُ الجزئيُّ يُستخدَمُ حينَ يكونُ الشرطُ مُقيِّداً فعلاً.
+    const r = await this.pool.query<{
+      adjustment_id: string;
+      marketplace_event_id: string;
+      store_id: string;
+      product_id: string;
+      conflict_kind: InventoryConflictKind;
+      reason_code: string;
+      quantity_delta: number;
+      observed_quantity_after: number;
+      adjustment_sequence: number;
+      affected_order_count: number;
+      affected_units_total: number;
+      affected_order_public_ids: string[];
+      occurred_for: Date;
+      detected_at: Date;
+      acknowledged_at: Date | null;
+      acknowledged_by: string | null;
+      trace_id: string | null;
+    }>(
+      `SELECT adjustment_id::text, marketplace_event_id::text, store_id::text, product_id::text,
+              conflict_kind, reason_code, quantity_delta, observed_quantity_after,
+              adjustment_sequence, affected_order_count, affected_units_total,
+              affected_order_public_ids, occurred_for, detected_at,
+              acknowledged_at, acknowledged_by, trace_id
+         FROM delivery_inventory_conflicts
+        WHERE ($1::boolean = FALSE OR acknowledged_at IS NULL)
+        ORDER BY detected_at DESC, adjustment_id
+        LIMIT $2`,
+      [query.unacknowledgedOnly, query.limit],
+    );
+
+    return r.rows.map((row) => ({
+      kind: row.conflict_kind,
+      storeId: row.store_id,
+      productId: row.product_id,
+      adjustmentId: row.adjustment_id,
+      adjustmentSequence: row.adjustment_sequence,
+      quantityDelta: row.quantity_delta,
+      observedQuantityAfter: row.observed_quantity_after,
+      reasonCode: row.reason_code,
+      affectedOrderCount: row.affected_order_count,
+      affectedUnitsTotal: row.affected_units_total,
+      affectedOrderPublicIds: row.affected_order_public_ids,
+      detectedAt: row.detected_at.toISOString(),
+      changesOrderState: false as const,
+      marketplaceEventId: row.marketplace_event_id,
+      occurredFor: row.occurred_for.toISOString(),
+      acknowledgedAt: row.acknowledged_at?.toISOString() ?? null,
+      acknowledgedBy: row.acknowledged_by,
+      traceId: row.trace_id,
+    }));
   }
 
   /* ── replay / rebuild ── */
@@ -148,6 +295,10 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
   async clearInventoryObservations(): Promise<void> {
     await this.withTransaction(async (tx) => {
       await tx.query(`DELETE FROM delivery_inventory_observations`);
+      // الراياتُ تمضي معَ اللقطاتِ: إعادةُ بناءٍ تُبقي راياتٍ قديمةً تعني راياتٍ
+      // مُكرّرةً لا مُضاعفةً (المفتاحُ يمنعُ)، لكنَّها أيضاً تعني **إقراراً مُحتفَظاً
+      // بهِ لحادثةٍ أُعيدَ بناءُها** — وإعادةُ البناءِ تعني أنَّ الحكمَ يُعادُ.
+      await tx.query(`DELETE FROM delivery_inventory_conflicts`);
       await tx.query(`DELETE FROM delivery_inventory_relay_consumed_events`);
       await tx.query(`DELETE FROM delivery_inventory_relay_checkpoint`);
     });

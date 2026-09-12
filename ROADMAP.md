@@ -1,8 +1,10 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 15/N — a marketplace readiness probe that informs without gating)
-**Last milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
+**Last updated:** 2026-09-12 (M5-13 review 16/N — active inventory conflict detection that informs without gating)
+**Previous milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
+
+**Last milestone:** delivery now detects active inventory conflicts — the last debt in ADR-026 §4 that needed neither an owner decision nor an independent scope. The inventory observation projection recorded `quantity_after` and never asked whether the adjustment casts doubt on units a live order is holding; it does now, and **not by the rule §4.8 itself wrote**. A reservation is a negative delta in the marketplace's own inventory ledger, so the `quantity_after` arriving on `marketplace.inventory_adjusted` is *already net of our reservations*: comparing it against reserved demand double-counts and would raise a flag on every healthy order in the system. The criterion is the adjustment's **reason**, not a quantity comparison. New: `delivery_inventory_conflicts` (a flag ledger written in the same transaction as the observation), a pure `assessInventoryConflict()` with closed kind and dismissal vocabularies, and `GET /delivery/inventory-conflicts` for operators. Every flag carries `changes_order_state: false` on the wire and a `CHECK (changes_order_state = FALSE)` in the database: it informs, it never cancels, transitions or releases. Details in ADR-026 §4.18 and `docs/04-api/DELIVERY_HTTP.md`.
 
 ## What this project is
 
@@ -157,6 +159,51 @@ Nothing else has been changed in this repository by the WASLA integration work.
   is still empty — an owner decision), no probe for the dispatch bridge or outbox lag, and no
   circuit breaker: a fifteen-second-old observation is far too stale a decision to refuse an
   order with.
+- **M5-13 (Store Orders & Delivery) — review 16/N, claim `CLM-0137`.** Active inventory
+  conflict detection, lifting the debt declared in ADR-026 §4.8 — the last §4 debt that
+  needed neither an owner decision nor an independent scope. The headline finding is that
+  **the rule §4.8 wrote is wrong and was not implemented.** §4.8 asked for "comparing the
+  observed `quantity_after` against active order lines", but a reservation is a negative delta
+  in the marketplace's *own* inventory ledger (`services/marketplace/src/domain/reservation.ts`
+  writes `reason_code: 'reservation'` as `system:delivery`) and `product_inventory.quantity_on_hand`
+  carries `CHECK (>= 0)`. So `quantity_after` is already net of our reservations: a store with
+  three units and one order reserving all three reports `quantity_after = 0`, which is perfect
+  health. That comparison would have flagged **every** healthy order — a hundred percent noise
+  rate. There is therefore no quantity-versus-quantity comparison anywhere in this
+  implementation; the criterion is whether the adjustment's **reason** casts doubt on units we
+  hold. Added: `src/domain/inventory-conflict.ts` — a pure assessment with three closed kinds
+  (`stock_zeroed_while_reserved`, which outranks the reason because severity comes first;
+  `downward_correction_while_reserved`; `shrinkage_while_reserved`) and four closed dismissals
+  evaluated in a fixed, contractual order (`no_active_reservation`,
+  `delivery_own_reservation_flow`, `quantity_increase`, `reason_not_conflicting`), with our own
+  `reservation`/`reservation_release` excluded by construction — without that exclusion our own
+  action flags us on every order placed. `delivery_inventory_conflicts` (fourteenth table,
+  eleven named checks, migration `0002_inventory_conflict_ledger` plus a hand-reviewed reverse)
+  is written in the **same transaction** as the observation, because an observation stored
+  without its flag means a consumed event and a lost doubt with no way back, and with
+  `ON CONFLICT DO NOTHING` rather than `DO UPDATE`, because a redelivery must not erase an
+  operator's acknowledgement. The stale guard still comes first: a stale `adjustment_sequence`
+  writes no flag at all, so the port now returns a discriminated
+  `InventoryObservationOutcome` instead of `void`. Active demand is joined through
+  `store_orders`, the only row carrying both the marketplace `store_id` and the `order_id`
+  (reservations carry `store_slug`), so no marketplace table is joined and no cross-boundary
+  `REFERENCES` is added. `GET /delivery/inventory-conflicts` returns the flags with the
+  applied filter echoed in the body — whoever reads a zero learns *under which filter* it was
+  zero — and is deliberately absent from `api.openapi.yml`, following the sweep route
+  precedent exactly. The contract guard in `packages/contracts/delivery` earned a mention: it
+  forbids `reserved_quantity` anywhere in the delivery schema (delivery holds no balance,
+  §2.3), it really did fail on the first column name, and the column was renamed to
+  `affected_units_total` rather than the guard widened. Measured on real PostgreSQL: delivery
+  unit **412/412 in 25 files** (was 382 in 23), delivery integration **84/84 in 10 files**
+  (was 69 in 9), delivery contracts **28/28**, exit gate **8/8**, `pnpm -r typecheck` clean
+  repository-wide, contract-versus-migration equivalence measured across seven catalogue
+  dimensions, and all eleven constraint names read out of a real catalogue rather than
+  predicted. Not claimed: no inbound service-auth on any delivery route (the service signs
+  outbound only — an independent scope for all eleven routes together); no write route for
+  acknowledgement yet (the columns exist and are read, acknowledgement is manual on the
+  database); no metric, alert or time series on the flags; no retention policy for the flag
+  ledger; and a flag does not prove damage — a `shrinkage` exceeding free stock is *refused*
+  by the marketplace, so a recorded loss is a floor, not a measure.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

@@ -420,3 +420,79 @@ CREATE INDEX IF NOT EXISTS ix_delivery_inventory_reservations_active
     WHERE status = 'active';
 
 COMMIT;
+
+-- ───────────────────────────────────────────────────
+-- 14) delivery_inventory_conflicts — رايةُ تضاربِ مخزونٍ على حجزٍ نشطٍ
+--     (ADR-026 §4.8 · رُفِعَ الدَّينُ في المراجعةِ 16/N — انظر §4.18)
+--
+--     صفٌّ واحدٌ لكلِّ فرقِ مخزونٍ مرصودٍ شكَّكَ في وحداتٍ نحملُها. **تقريرٌ
+--     لا أمرٌ**: لا انتقالَ حالةٍ ولا إفراجَ حجزٍ يُشتقُّ منهُ — ولذلك
+--     `changes_order_state BOOLEAN NOT NULL DEFAULT FALSE CHECK (= FALSE)`
+--     مُعلَنٌ في الصفِّ نفسِهِ على سابقةِ `gates_readiness` (§4.17-2): من
+--     يقرأُ صفّاً في حادثةٍ لا يقرأُ ADR.
+--
+--     **ولا مقارنةَ كميّةٍ بكميّةٍ هنا** — الحجزُ فرقٌ سالبٌ مخصومٌ سلفاً من
+--     `quantity_on_hand` في دفترِ السوقِ، فمقارنةُ `observed_quantity_after`
+--     بحجزِنا تعدُّ الشيءَ مرّتَينِ. التفصيلُ في رأسِ
+--     `src/domain/inventory-conflict.ts`.
+--
+--     المفتاحُ الأوّليُّ `(adjustment_id)`: الفرقُ واحدٌ في دفترِ السوقِ
+--     (`inventory_adjustments.adjustment_id` مفتاحٌ أوّليٌّ هناك)، فإعادةُ
+--     تسليمِ الحدثِ نفسِهِ `ON CONFLICT DO NOTHING` ولا تُضاعِفُ الرايةَ.
+--     ولا `REFERENCES` عبرَ الحدِّ (ADR-026 §2.3).
+-- ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS delivery_inventory_conflicts (
+    adjustment_id         UUID        PRIMARY KEY,
+    marketplace_event_id  UUID        NOT NULL,
+    store_id              UUID        NOT NULL,
+    product_id            UUID        NOT NULL,
+
+    -- مفرداتٌ مغلقةٌ تُطابقُ `INVENTORY_CONFLICT_KINDS` في
+    -- `src/domain/inventory-conflict.ts` حرفاً — إضافةُ نوعٍ ترحيلٌ مُعلَنٌ.
+    conflict_kind         TEXT        NOT NULL CHECK (conflict_kind IN (
+                                        'stock_zeroed_while_reserved',
+                                        'downward_correction_while_reserved',
+                                        'shrinkage_while_reserved')),
+
+    -- سببُ الفرقِ الأصليُّ يُحفَظُ مستقلاً عن التصنيفِ: التصنيفُ يُقدِّمُ الأشدَّ
+    -- (صفرٌ) على السببِ، فلو لم يُحفَظِ السببُ لضاعَ الفرقُ بينَ صفرٍ بفقدٍ
+    -- وصفرٍ بأرشفةٍ — وهُما حادثتانِ مختلفتانِ تماماً للمُشغِّلِ.
+    reason_code           TEXT        NOT NULL CHECK (reason_code IN (
+                                        'correction','shrinkage','archive_zeroed')),
+
+    quantity_delta        INTEGER     NOT NULL CHECK (quantity_delta < 0),
+    observed_quantity_after INTEGER   NOT NULL CHECK (observed_quantity_after >= 0),
+    adjustment_sequence   INTEGER     NOT NULL CHECK (adjustment_sequence >= 1),
+
+    affected_order_count  INTEGER     NOT NULL CHECK (affected_order_count >= 1),
+    affected_units_total INTEGER   NOT NULL CHECK (affected_units_total >= 1),
+    -- مراجعُ الطلباتِ العامّةُ مصفوفةً مرتَّبةً — لا جدولَ ربطٍ ثانياً: الرايةُ
+    -- تُقرأُ سطراً واحداً في حادثةٍ، وجدولُ ربطٍ يعني استعلامَينِ لسطرٍ واحدٍ.
+    affected_order_public_ids TEXT[]  NOT NULL CHECK (
+                                        array_length(affected_order_public_ids, 1) >= 1
+                                        AND array_length(affected_order_public_ids, 1) = affected_order_count),
+
+    -- الرصدُ لا يحكمُ: ثابتٌ مُعلَنٌ في الصفِّ لا محسوبٌ في القارئِ.
+    changes_order_state   BOOLEAN     NOT NULL DEFAULT FALSE CHECK (changes_order_state = FALSE),
+
+    -- الإقرارُ التشغيليُّ: من قرأَ الرايةَ ومتى. `NULL` تعني «لم يقرأْها أحدٌ بعدُ»،
+    -- وهيَ الحالةُ التي يُصفّي عليها مسارُ القراءةِ افتراضاً.
+    acknowledged_at       TIMESTAMPTZ,
+    acknowledged_by       TEXT        CHECK (acknowledged_by IS NULL OR char_length(acknowledged_by) BETWEEN 1 AND 128),
+    CONSTRAINT ck_delivery_inventory_conflicts_ack CHECK (
+        (acknowledged_at IS NULL) = (acknowledged_by IS NULL)),
+
+    occurred_for          TIMESTAMPTZ NOT NULL,
+    detected_at           TIMESTAMPTZ NOT NULL,
+    trace_id              TEXT
+);
+
+-- القراءةُ التشغيليّةُ الوحيدةُ: غيرُ المُقَرِّ أوّلاً والأحدثُ أوّلاً.
+CREATE INDEX IF NOT EXISTS ix_delivery_inventory_conflicts_unacknowledged
+    ON delivery_inventory_conflicts (detected_at DESC)
+    WHERE acknowledged_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS ix_delivery_inventory_conflicts_product
+    ON delivery_inventory_conflicts (store_id, product_id);
+
+COMMIT;

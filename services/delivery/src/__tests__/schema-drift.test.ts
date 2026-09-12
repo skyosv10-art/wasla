@@ -47,6 +47,7 @@ import { SCHEMA_CONTRACT_PATH } from "../db/migrate.js";
 import {
   NOT_MIRRORED_TABLES,
   deliveryIdempotencyKeys,
+  deliveryInventoryConflicts,
   deliveryInventoryObservations,
   deliveryInventoryRelayCheckpoint,
   deliveryInventoryRelayConsumedEvents,
@@ -77,6 +78,7 @@ const MIRRORED = [
   deliveryInventoryRelayCheckpoint,
   deliveryIdempotencyKeys,
   deliveryInventoryReservations,
+  deliveryInventoryConflicts,
 ];
 
 const NAMEDATALEN = 64;
@@ -145,14 +147,20 @@ const TYPES = [
   "JSONB",
   "SMALLINT",
 ];
-const COLUMN_LINE = new RegExp(`^([a-z][a-z0-9_]*)\\s+(${TYPES.join("|")})\\b(.*)$`, "u");
+// اللاحقةُ `[]` جزءٌ من النوعِ لا من بقيّةِ السطرِ: `TEXT` و`TEXT[]` نوعانِ مختلفانِ في
+// الكتالوجِ، وإغفالُ اللاحقةِ كانَ سيُمرِّرُ مرآةَ مصفوفةٍ على عمودٍ مفردٍ وبالعكسِ
+// (`affected_order_public_ids` في `delivery_inventory_conflicts` أوّلُ مصفوفةٍ في العقدِ).
+const COLUMN_LINE = new RegExp(
+  `^([a-z][a-z0-9_]*)\\s+(${TYPES.join("|")})\\b(\\[\\])?(.*)$`,
+  "u",
+);
 
 /** أسطرُ الأعمدةِ بترتيبِ العقدِ — أساسُ كلِّ اشتقاقٍ بعدَها. */
 function columnLines(table: string): ReadonlyArray<{ name: string; type: string; rest: string }> {
   const rows: Array<{ name: string; type: string; rest: string }> = [];
   for (const raw of tableBlock(table).split("\n")) {
     const found = COLUMN_LINE.exec(raw.trim());
-    if (found) rows.push({ name: found[1]!, type: found[2]!, rest: found[3]! });
+    if (found) rows.push({ name: found[1]!, type: `${found[2]!}${found[3] ?? ""}`, rest: found[4]! });
   }
   return rows;
 }
@@ -290,15 +298,16 @@ function mirrorConstraintNames(table: (typeof MIRRORED)[number]): ReadonlyArray<
 }
 
 describe("حارسُ الانحرافِ يقرأُ العقدَ فعلاً", () => {
-  it("العقدُ مقروءٌ وفيهِ ثلاثةَ عشرَ جدولاً ومتتالٌ واحدٌ", () => {
+  it("العقدُ مقروءٌ وفيهِ أربعةَ عشرَ جدولاً ومتتالٌ واحدٌ", () => {
     expect(DDL).toContain("CREATE TABLE IF NOT EXISTS store_orders");
-    expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(13);
+    expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(14);
     expect(DDL).toContain("CREATE SEQUENCE IF NOT EXISTS store_order_public_id_seq");
   });
 
-  it("والمرآةُ ثلاثةَ عشرَ جدولاً بأسمائِها", () => {
+  it("والمرآةُ أربعةَ عشرَ جدولاً بأسمائِها", () => {
     expect(MIRRORED.map((table) => getTableConfig(table).name).sort()).toEqual([
       "delivery_idempotency_keys",
+      "delivery_inventory_conflicts",
       "delivery_inventory_observations",
       "delivery_inventory_relay_checkpoint",
       "delivery_inventory_relay_consumed_events",

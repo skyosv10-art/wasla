@@ -1,46 +1,46 @@
 {
-  "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-12T00:33:17Z",
-  "generator": "scripts/baseline.sh",
-  "repo": {
-    "commit": "cd23ed30386358ed871ec749c1e0113172432a04",
-    "branch": "feat/m5-15-marketplace-readiness-probe",
-    "dirty": true,
-    "dirty_files": 25,
-    "dirty_reason": "المراجعةُ 15/N — مسبارُ جاهزيّةِ السوقِ (CLM-0136)",
-    "tracked_files": 1681
-  },
-  "env": {
-    "node": "v20.20.1",
-    "pnpm": "9.15.9",
-    "os": "Linux",
-    "arch": "x86_64",
-    "python": "3.14.3"
-  },
-  "lock": {
-    "path": "pnpm-lock.yaml",
-    "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
-    "lines": 3116
-  },
-  "static": {
-    "packages": 49,
-    "packages_with_typecheck": 49,
-    "packages_with_test": 49,
-    "test_files_tracked": 329,
-    "ci_jobs": 30,
-    "ci_allow_failure": 1,
-    "governance_checks": 13,
-    "risks_not_closed": 24
-  },
-  "dynamic": {
-    "measured": true,
-    "source": "/tmp/verify15b.log",
-    "tests_passed": 4320,
-    "test_files_executed": 262,
-    "governance_suite_cases": 183,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
-  },
-  "fingerprint": "sha256:2ccf012e528f573e105132470831acbf8852006dcee3a4759e3879191860ec21",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md"
+ "schema": "wasla.baseline/v1",
+ "generated_at": "2026-09-12T03:12:02Z",
+ "generator": "scripts/baseline.sh",
+ "repo": {
+  "commit": "390d4dd2b820535aeb46485eebb495ba07a28577",
+  "branch": "feat/m5-16-inventory-conflict-detection",
+  "dirty": true,
+  "dirty_files": 25,
+  "dirty_reason": "المراجعةُ 16/N — كشفُ تضاربِ المخزونِ النشطِ (CLM-0137)",
+  "tracked_files": 1688
+ },
+ "env": {
+  "node": "v20.20.1",
+  "pnpm": "9.15.9",
+  "os": "Linux",
+  "arch": "x86_64",
+  "python": "3.14.3"
+ },
+ "lock": {
+  "path": "pnpm-lock.yaml",
+  "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
+  "lines": 3116
+ },
+ "static": {
+  "packages": 49,
+  "packages_with_typecheck": 49,
+  "packages_with_test": 49,
+  "test_files_tracked": 332,
+  "ci_jobs": 30,
+  "ci_allow_failure": 1,
+  "governance_checks": 13,
+  "risks_not_closed": 24
+ },
+ "dynamic": {
+  "measured": true,
+  "source": "/tmp/verify16c.log",
+  "tests_passed": 4350,
+  "test_files_executed": 264,
+  "governance_suite_cases": 183,
+  "governance_suite_failed": 0,
+  "verify_overall": "passed"
+ },
+ "fingerprint": "sha256:5641bee2950a769943779ea19b10e849b7be9de0137e82d368dacdf184215d48",
+ "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

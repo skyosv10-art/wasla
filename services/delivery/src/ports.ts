@@ -156,6 +156,19 @@ import type {
   InventoryRelayCheckpoint,
   MarketplaceOutboxRow,
 } from "./domain/marketplace-inventory-events.js";
+import type { InventoryConflictAssessment, InventoryConflictRow } from "./domain/inventory-conflict.js";
+
+/**
+ * نتيجةُ رصدِ فرقِ مخزونٍ واحدٍ — نوعٌ مُفرَّقٌ لا سلسلةٌ (المراجعةُ 16/N · ADR-026 §4.18).
+ *
+ * ولمَ نوعٌ مُفرَّقٌ؟ لأنَّ الحكمَ على التضاربِ **لا معنى لهُ** حينَ يُتخطّى الفرقُ
+ * لقِدَمِهِ: لا سطرَ رُصِدَ فلا سؤالَ يُسألُ. وحقلٌ اختياريٌّ (`conflict?: … | null`)
+ * كانَ سيُتيحُ للقارئِ أن يقرأَ «لا تضاربَ» من تخطٍّ ويُسجّلَهُ نظافةً — وهو كذبٌ
+ * صامتٌ. فالنوعُ يجعلَ التمييزَ إلزاماً في وقتِ الترجمةِ لا اجتهاداً.
+ */
+export type InventoryObservationOutcome =
+  | { readonly observation: "skipped_stale" }
+  | { readonly observation: "applied"; readonly conflict: InventoryConflictAssessment };
 
 /** Reads `marketplace_outbox` rows of type `marketplace.inventory_adjusted` AFTER a checkpoint. */
 export interface MarketplaceInventoryEventSource {
@@ -171,8 +184,34 @@ export interface MarketplaceInventoryEventSource {
  * adjustment is `skipped_stale` (the snapshot never regresses); a newer one
  * upserts the observation. This is the inventory equivalent of the dispatch
  * relay's per-task watermark — but per (store_id, product_id).
+ *
+ * ومنذُ المراجعةِ 16/N يحملُ الرصدُ حكماً ثانياً في **المعاملةِ نفسِها**: هل يُشكِّكُ
+ * هذا الفرقُ في حجوزٍ نشطةٍ (ADR-026 §4.18)؟ ومعاملةٌ واحدةٌ لا اثنتانِ لأنَّ رصداً
+ * مُثبَتاً برايةٍ مفقودةٍ يعني حادثةً بلا أثرٍ، ورايةً بلا رصدٍ يعني تقريراً عن لقطةٍ
+ * لا وجودَ لها.
  */
-export interface InventoryObservationStore {
+/**
+ * قراءةُ راياتِ التضاربِ (المراجعةُ 16/N · ADR-026 §4.18).
+ *
+ * منفذٌ منفردٌ بحركةٍ واحدةٍ لا لأنَّ التقسيمَ جميلٌ، بل لأنَّ حدَّ HTTP يحتاجُ
+ * هذهِ الحركةَ وحدَها: حقنُ `InventoryObservationStore` كاملاً في التطبيقِ يُعطي
+ * مسارَ قراءةٍ مفاتيحَ `clearInventoryObservations()` ومراقبَ متتالٍ، وأوّلُ خطأٍ
+ * في مُعالِجٍ يصيرُ محذاً لا يُرَدُّ. والمخزنُ الفعليُّ يُحقّقُ الاثنينِ، فلا
+ * مُحوِّلَ في الوسطِ.
+ */
+export interface InventoryConflictReadPort {
+  /**
+   * الأحدثُ أوّلاً، وغيرُ المُقَرِّ وحدَهُ حينَ `unacknowledgedOnly` — ومحدودةٌ
+   * بسقفٍ مُمَرَّرٍ: مسارُ قراءةٍ بلا سقفٍ يصيرُ مُفرِغَ جدولٍ أوّلَ مرّةٍ يكثُرُ
+   * فيهِ الصفُّ.
+   */
+  listInventoryConflicts(query: {
+    readonly unacknowledgedOnly: boolean;
+    readonly limit: number;
+  }): Promise<readonly InventoryConflictRow[]>;
+}
+
+export interface InventoryObservationStore extends InventoryConflictReadPort {
   /* ── checkpoint (delivery-owned) ── */
   getInventoryCheckpoint(consumerId: string): Promise<InventoryRelayCheckpoint | null>;
   writeInventoryCheckpoint(consumerId: string, checkpoint: InventoryRelayCheckpoint): Promise<void>;
@@ -192,8 +231,16 @@ export interface InventoryObservationStore {
    * Upsert the observation for (store_id, product_id), guarded by sequence.
    * Returns `"applied"` when the observation was updated, or `"skipped_stale"`
    * when the incoming adjustment_sequence is older than the current one.
+   *
+   * وحينَ `"applied"` يحملُ الجوابُ حكمَ التضاربِ معَهُ — وقد أُثبِتَتِ الرايةُ (إن رُفِعَت)
+   * في المعاملةِ نفسِها. وإثباتُ الرايةِ مُتماثِلٌ بمفتاحِ الفرقِ (`adjustment_id`)،
+   * فإعادةُ تسليمِ الحدثِ لا تُضاعِفُ صفّاً — ومعَ ذلكَ يبقى حارسُ المتتالِ هوَ الحاجزَ
+   * الأوّلَ: تخطٍّ لقِدَمٍ لا يكتبُ رايةً أصلاً.
    */
-  observeInventoryAdjustment(data: InventoryAdjustedData, context: MirrorContext): Promise<"applied" | "skipped_stale">;
+  observeInventoryAdjustment(
+    data: InventoryAdjustedData,
+    context: MirrorContext,
+  ): Promise<InventoryObservationOutcome>;
 
   /* ── replay / rebuild ── */
   /** Clear observations + consumed ledger + checkpoint (NOT delivery_outbox). */

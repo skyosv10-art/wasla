@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 14/N — a caller for the idempotency-key sweeper)
+**Last updated:** 2026-09-12 (M5-13 review 15/N — a marketplace readiness probe that informs without gating)
 **Last milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 ## What this project is
@@ -124,6 +124,39 @@ Nothing else has been changed in this repository by the WASLA integration work.
   crontab line and the Kubernetes `CronJob` example in the runbook are written, not proven
   against a deployment, since `infra/` still holds only `.gitkeep`; and there is still no
   metric or alert on `remaining`, only an exit code an operator can wire.
+- **M5-13 (Store Orders & Delivery) — review 15/N, claim `CLM-0136`.** `GET /delivery/ready`
+  now asks the marketplace instead of admitting it never did. Until this review the response
+  carried `not_claimed: ["marketplace_catalog_not_probed"]`: the catalog port was wired
+  (review 8/N) but readiness never probed it. Both reasons review 8/N gave for refusing to
+  probe still hold, so the answer is an **observation, not a check**. Added:
+  `src/domain/dependency-probe.ts` — a pure `CachedDependencyProbe` with an injected clock
+  that caches one observation per TTL per replica (`MARKETPLACE_PROBE_TTL_MS`, default
+  15000), caches failures as well as successes (otherwise a marketplace outage costs a full
+  timeout on *every* heartbeat, i.e. the protection disappears exactly when it is needed),
+  coalesces concurrent heartbeats onto a single in-flight call, and never reports a negative
+  age; and `src/infrastructure/http-marketplace-probe.ts` — a signed `GET /health` call with
+  an **empty scope list** (a health probe reads no store and no product), a client-side
+  `AbortSignal` timeout (`MARKETPLACE_PROBE_TIMEOUT_MS`, default 1000) and a closed reason
+  vocabulary. The probe reads the **body**, not the HTTP code: marketplace `/health` answers
+  200 unconditionally and carries `status: "ok" | "degraded" | "unavailable"` in the body
+  (its `catalog.health()` really queries the database), so a code-only probe would have
+  reported a marketplace that had lost its database as healthy — and an unknown status is
+  `marketplace_contract_drift`, not health. The result enters the response as
+  `dependencies: [{name, ok, detail?, observed_at, age_ms, gates_readiness: false}]` and
+  **never** influences `status`, which is still derived from `checks` alone: reads,
+  cancellation and fulfillment transitions need no marketplace, so evicting this service
+  from rotation for another service's outage would widen the outage rather than contain it.
+  `gates_readiness` is declared on the wire (and pinned `const: false` in the contract)
+  because whoever reads the body during an incident does not read the ADR. Both new settings
+  refuse to boot on a non-decimal value rather than falling back silently, and the same
+  measurement from review 14/N was applied to `resolveIdempotencyTtlSeconds`, which still
+  accepted `0x10` as 16. Measured: delivery unit **382/382 in 23 files** (was 329 in 20),
+  delivery contracts **28/28** (was 26), exit gate **8/8** now wired to a real probe against
+  the real marketplace origin — proving a signature with empty scopes is actually accepted at
+  that boundary. Not claimed: no metric or alert on the observation (`docs/13-observability/`
+  is still empty — an owner decision), no probe for the dispatch bridge or outbox lag, and no
+  circuit breaker: a fifteen-second-old observation is far too stale a decision to refuse an
+  order with.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

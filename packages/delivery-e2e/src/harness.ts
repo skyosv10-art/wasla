@@ -57,7 +57,11 @@ import { resolve } from "node:path";
 import {
   DELIVERY_MARKETPLACE_SCOPES,
   DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
+  CachedDependencyProbe,
+  DEFAULT_MARKETPLACE_PROBE_TTL_MS,
+  DELIVERY_MARKETPLACE_PROBE_SCOPES,
   HttpMarketplaceCatalogPort,
+  HttpMarketplaceHealthProbe,
   HttpMarketplaceReservationPort,
   PostgresInventoryObservationStore,
   PostgresMarketplaceInventoryEventSource,
@@ -185,6 +189,26 @@ function gateSigner(): ReturnType<typeof createServiceRequestSigner> {
   });
 }
 
+/**
+ * صانعُ توقيعٍ لمسبارِ الجاهزيّةِ — نفسُ المفتاحِ و**بلا صلاحيّةٍ** (المراجعةُ 15/N).
+ *
+ * قائمةٌ فارغةٌ لأنَّ مسبارَ صحّةٍ لا يقرأُ متجراً ولا منتجاً؛ ولأنَّ البوّابةَ
+ * تُوقِّعُ بمفتاحٍ حقيقيٍّ فإنَّ نجاحَ الرصدِ هنا يُثبِتُ أنَّ التوقيعَ بصلاحيّاتٍ
+ * فارغةٍ **يُقبَلُ فعلاً** على حدِّ السوقِ — لا في وحدةٍ مزروعةِ الـ`fetch`.
+ */
+function probeSigner(): ReturnType<typeof createServiceRequestSigner> {
+  const keys = new ServiceAuthKeyRegistry({
+    keys: [{ kid: "gate-1", secret: "phase13-exit-gate-signing-secret-000001", status: "active" }],
+    activeKid: "gate-1",
+  });
+  return createServiceRequestSigner({
+    serviceName: "delivery",
+    audience: "marketplace",
+    keys,
+    scopes: DELIVERY_MARKETPLACE_PROBE_SCOPES,
+  });
+}
+
 /** صانعُ توقيعٍ لمنفذِ الحجزِ — نفسُ المفتاحِ ونطاقُ الحجزِ. */
 function reservationSigner(): ReturnType<typeof createServiceRequestSigner> {
   const keys = new ServiceAuthKeyRegistry({
@@ -252,6 +276,20 @@ export async function startGate(): Promise<GateContext> {
       timeoutMs: 10_000,
     }),
     reservationStore: store,
+    /*
+     * ومسبارُ رصدٍ حقيقيٌّ على `/health` السوقِ (المراجعةُ 15/N · §4.17): لا
+     * `fetchImpl` مزروعٌ، فالبوّابةُ تُثبِتُ أنَّ الرصدَ يعبرُ حدّاً حقيقيّاً
+     * بتوقيعٍ حقيقيٍّ — وأنَّ الجاهزيّةَ صارت تُفرِغُ `not_claimed` بحقٍّ لا بدعوى.
+     * وصلاحيّةُ الرصدِ الافتراضيّةُ باقيةٌ ليكونَ المُختبَرُ هوَ التركيبَ الإنتاجيَّ.
+     */
+    marketplaceObservationPort: new CachedDependencyProbe(
+      new HttpMarketplaceHealthProbe({
+        baseUrl: marketplaceBaseUrl,
+        signRequest: probeSigner(),
+        timeoutMs: 10_000,
+      }),
+      { name: "marketplace_catalog", ttlMs: DEFAULT_MARKETPLACE_PROBE_TTL_MS },
+    ),
     now: advancingClock(),
   });
   await delivery.fastify.listen({ port: 0, host: "127.0.0.1" });

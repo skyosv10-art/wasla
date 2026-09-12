@@ -267,6 +267,40 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     expect(api).toMatch(/enum: \[marketplace_catalog_not_wired, marketplace_catalog_not_probed\]/);
   });
 
+  /*
+   * والرصدُ المُعلِمُ (المراجعةُ 15/N · §4.17): العقدُ يُلزِمُ `dependencies`
+   * ويُثبِّتُ `gates_readiness` على `false`. لو صارَ حقلاً حرّاً لَجازَ لتركيبٍ
+   * أن يُعلِنَ رصداً حاكماً، وهوَ نقضُ القرارِ الذي أنشأَ الحقلَ.
+   */
+  it("readiness publishes dependency observations that never gate status", () => {
+    expect(api).toMatch(/required: \[status, checks, not_claimed, dependencies\]/);
+    expect(api).toMatch(/required: \[name, ok, observed_at, age_ms, gates_readiness\]/);
+    expect(api).toMatch(/enum: \[marketplace_catalog\]/);
+    expect(api).toMatch(/gates_readiness:\n\s+type: boolean\n\s+const: false/);
+    // عمرٌ لا يكونُ سالباً — مُلزَمٌ في العقدِ لا في التطبيقِ وحدَهُ.
+    expect(api).toMatch(/age_ms:\n\s+type: integer\n\s+minimum: 0/);
+  });
+
+  /*
+   * ومِعجمُ أسبابِ السبرِ مُعلَنٌ في العقدِ لأنَّ من يقرأُ الجاهزيّةَ يبني عليهِ
+   * إنذاراً؛ سببٌ يظهرُ ولم يُعلَنْ يُقرأُ حقلاً حرّاً فيُبنى عليهِ نصٌّ هشٌّ.
+   */
+  it("the probe reason vocabulary is declared, not free text", () => {
+    for (const reason of [
+      "marketplace_unreachable",
+      "marketplace_timeout",
+      "marketplace_denied_identity",
+      "marketplace_error_status",
+      "marketplace_unreadable_body",
+      "marketplace_contract_drift",
+      "marketplace_degraded",
+      "marketplace_unavailable",
+      "probe_threw",
+    ]) {
+      expect(api).toContain(reason);
+    }
+  });
+
   it("errors.md catalog matches DELIVERY_ERROR_CODES exactly", () => {
     const codesInMd = [...errors.matchAll(/`(DELIVERY_[A-Z_]+)`/g)].map((m) => m[1]);
     expect(new Set(codesInMd)).toEqual(new Set(DELIVERY_ERROR_CODES));

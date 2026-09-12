@@ -414,12 +414,34 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const ready = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/ready" });
     expect(ready.status, ready.text).toBe(200);
     /*
-     * الكتالوجُ **موصولٌ** هنا (محوّلٌ حقيقيٌّ على أصلٍ حقيقيٍّ)، ومع ذلكَ يبقى في
-     * `not_claimed` بعلامةِ «غيرُ مفحوصٍ»: الجاهزيّةُ لا تفحصُ حدَّ السوقِ فلا
-     * تدّعي صحّتَهُ. وإفراغُ الحقلِ عندَ الوصلِ كانَ سيكونُ الكذبةَ التي أُنشِئَ
-     * الحقلُ لمنعِها (§4.11).
+     * والكتالوجُ **موصولٌ ومرصودٌ** الآنَ (المراجعةُ 15/N · §4.17): مسبارٌ حقيقيٌّ
+     * يعبرُ حدَّ السوقِ بتوقيعٍ حقيقيٍّ بلا صلاحيّةٍ. فإفراغُ `not_claimed` هنا
+     * ليسَ دعوى بل نتيجةُ سؤالٍ حصلَ — وهذا هوَ الفرقُ الذي كانَ الحقلُ يحفظُهُ
+     * حينَ كانَ يقولُ `marketplace_catalog_not_probed` (§4.11).
      */
-    expect(ready.body.not_claimed).toEqual(["marketplace_catalog_not_probed"]);
+    expect(ready.body.not_claimed).toEqual([]);
+    expect(ready.body.dependencies).toHaveLength(1);
+    const observations = ready.body.dependencies as readonly Record<string, unknown>[];
+    const observation = observations[0]!;
+    expect(observation.name).toBe("marketplace_catalog");
+    // `ok` حقيقيٌّ: `/health` السوقِ يسألُ قاعدتَهُ فعلاً، فالخُضرةُ تعني مخزناً يُجيبُ.
+    expect(observation.ok, ready.text).toBe(true);
+    expect(observation.detail).toBeUndefined();
+    expect(observation.age_ms as number).toBeGreaterThanOrEqual(0);
+    expect(Date.parse(observation.observed_at as string)).not.toBeNaN();
+    /*
+     * ومُعلِمٌ لا حاكمٌ: الحقلُ يُصرّحُ بذلكَ على السلكِ. ولو صارَ حاكماً لَأخرجَ
+     * عطلُ السوقِ هذه الخدمةَ من الدورةِ بينما القراءةُ والإلغاءُ يعملانِ.
+     */
+    expect(observation.gates_readiness).toBe(false);
+    expect(ready.body.status).toBe("ready");
+
+    // ونبضةٌ ثانيةٌ تُقرأُ من الرصدِ المُخزَّنِ: عمرٌ لا يتراجعُ وحالةٌ لا تتبدّلُ.
+    const second = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/ready" });
+    expect(second.status, second.text).toBe(200);
+    const secondObservation = (second.body.dependencies as readonly Record<string, unknown>[])[0]!;
+    expect(secondObservation.ok).toBe(true);
+    expect(secondObservation.age_ms as number).toBeGreaterThanOrEqual(observation.age_ms as number);
 
     const health = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/health" });
     expect(health.status, health.text).toBe(200);

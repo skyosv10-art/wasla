@@ -1,10 +1,10 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 18/N — the inventory-conflict acknowledgement write route)
-**Previous milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
+**Last updated:** 2026-09-12 (M5-13 review 19/N — a measured retry delay on the concurrent-idempotency refusal)
+**Previous milestone:** the inventory-conflict flag ledger gained a write route: `POST /delivery/inventory-conflicts/{flag_id}/acknowledgement` records the acknowledger from the **proven service identity alone** — never from the request body — and the first acknowledgement wins in a single statement, with a tenth scope separated from the read path (ADR-026 §4.20, lifting the debt declared in §4.18). Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
-**Last milestone:** delivery now detects active inventory conflicts — the last debt in ADR-026 §4 that needed neither an owner decision nor an independent scope. The inventory observation projection recorded `quantity_after` and never asked whether the adjustment casts doubt on units a live order is holding; it does now, and **not by the rule §4.8 itself wrote**. A reservation is a negative delta in the marketplace's own inventory ledger, so the `quantity_after` arriving on `marketplace.inventory_adjusted` is *already net of our reservations*: comparing it against reserved demand double-counts and would raise a flag on every healthy order in the system. The criterion is the adjustment's **reason**, not a quantity comparison. New: `delivery_inventory_conflicts` (a flag ledger written in the same transaction as the observation), a pure `assessInventoryConflict()` with closed kind and dismissal vocabularies, and `GET /delivery/inventory-conflicts` for operators. Every flag carries `changes_order_state: false` on the wire and a `CHECK (changes_order_state = FALSE)` in the database: it informs, it never cancels, transitions or releases. Details in ADR-026 §4.18 and `docs/04-api/DELIVERY_HTTP.md`.
+**Last milestone:** a lost idempotency-key race now answers `409 DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT` **with `Retry-After: 1`**, lifting the oldest surviving debt in ADR-026 §4 (declared in §4.10-1 at review 7/N). A bare refusal said "you failed" without saying "retry", so the caller either spun in a tight loop or abandoned a request that had actually succeeded. The value is measured, not guessed: twelve concurrent rounds on real PostgreSQL 18.6 produced eleven refusals, and in every one an **immediate** retry was answered `201` with `Idempotent-Replay: true` — the winner's key row is already committed when the refusal is raised, so the true wait is zero and `1` is simply the smallest integer that does not read as "spin now". The header is keyed by **error code, not status**: `DELIVERY_IDEMPOTENCY_KEY_REUSED` shares the same `409` and must not carry it, because its retry can never succeed. The contract declares the header machine-readably, and the exit gate re-measures the race over a real socket — `app.inject` never touches the HTTP header serialiser. Details in ADR-026 §4.21 and `docs/04-api/DELIVERY_HTTP.md` §2.3.
 
 ## What this project is
 
@@ -315,6 +315,56 @@ Nothing else has been changed in this repository by the WASLA integration work.
   No metric or alert on flags or acknowledgers (`docs/13-observability/` is empty); no retention
   policy for the flag ledger; `trace_id` still not published in the rows; still no
   `securitySchemes` in the published contract; `services/marketplace` still not enforced.
+- **M5-13 (Store Orders & Delivery) — review 19/N, claim `CLM-0140`.** The concurrency
+  refusal now tells the caller *when* to retry. Until now a lost idempotency-key race
+  answered a bare `409 DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT`: correct, and useless — it
+  said "you failed" without saying "retry", so the caller either spun in a tight loop
+  (turning a millisecond of contention into database load) or gave up and lost a request
+  that had **actually succeeded**. This lifts the oldest surviving debt in ADR-026 §4,
+  declared in §4.10-1 at review 7/N.
+  New: `src/http/retry-after.ts`, a pure module that imports no framework and knows no
+  reply — it holds a closed `Partial<Record<DeliveryErrorCode, number>>` with exactly one
+  key, and exports `declaredRetryAfterSeconds()` so a test can read the promise instead
+  of trusting a comment. The error mapper sets the header only when that lookup returns a
+  number. The value is **measured, not guessed**: probing the race on real PostgreSQL
+  18.6 over twelve concurrent rounds produced eleven refusals, and in every one of them an
+  **immediate** retry — no wait at all — was answered `201` with `Idempotent-Replay: true`.
+  The winner's key row is therefore already committed when the refusal is raised and the
+  true wait is zero; `1` is chosen because `0` reads as "spin now" and `1` is the smallest
+  integer that does not. Delta-seconds, not an HTTP-date, so response validity does not
+  depend on two clocks agreeing. It is a constant in code, not an environment variable,
+  because the contract publishes `minimum: 1` and a tunable would let the answer drift
+  from the contract without failing a test.
+  Keyed by **error code, not status**: three different errors share `409`, and only this
+  one is worth retrying — `DELIVERY_IDEMPOTENCY_KEY_REUSED` is a caller construction bug
+  whose retry can never succeed, and `DELIVERY_CONCURRENT_UPDATE` needs a fresh read and a
+  new decision, not the same request again. A status-keyed rule would have lied in two
+  cases out of three. `components/responses/ConflictError` in `contracts/api.openapi.yml`
+  now declares the header machine-readably (`type: integer, minimum: 1`), and a contract
+  guard asserts it is the only `headers:` block in the file and that
+  `DependencyUnavailable` has none.
+  Proven in three layers, each measuring a real race: 10 unit assertions without a
+  database; an integration test on real PostgreSQL that creates the race with
+  `Promise.all` in a loop and **fails explicitly if no refusal is ever observed**; and the
+  phase-13 exit gate, which repeats the measurement **over a real socket** because
+  `app.inject` never touches the HTTP header serialiser — a header dropped or renamed by
+  the listener would have passed green in integration and been invisible to every real
+  caller. The gate reads the header as a **string** (`"1"`), proving the RFC 9110 §10.2.3
+  `delay-seconds = 1*DIGIT` form and not merely the value, and it asserts the promise is
+  honest: the immediate retry replays the winner's body byte for byte. The gate was rerun
+  five times, 17/17 each time.
+  Not claimed: `packages/contracts/delivery/src/api-types.ts` still models **no response
+  header for any route** — it is hand-authored, and the fix is one convention for every
+  response at once, the same argument as the missing `securitySchemes`. Measured and
+  recorded as a trap: running `pnpm generate` in that package **overwrites the
+  hand-authored file** with a machine dump (721 insertions, 306 deletions); it was
+  reverted. No metric or alert on refusal frequency, so a race that becomes a pattern
+  rather than an incident says nothing. No `Retry-After` on `503`
+  (`DEPENDENCY_UNAVAILABLE`, `MARKETPLACE_UNAVAILABLE`) — the standard's own example case —
+  because a dependency's recovery time is **not measured here**, and an unmeasured promise
+  is the thing this review argues against. No `429` and no rate limiting on this boundary
+  at all. And no claim about probability: the loop proves the race occurs, not how often,
+  and every measurement is on 18.6 locally — CI runs 15/17.6, untested for this.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 
@@ -372,16 +422,21 @@ Nothing. No legacy component is switched off before its replacement is proven.
 
 ## Tests that pass at this commit
 
-Measured on real PostgreSQL 17.6, not estimated:
+Measured on real PostgreSQL 18.6, not estimated (CI runs 15/17.6 — that combination is
+not measured here):
 
-- `services/delivery` unit suite: **297/297** in 18 files (was 280 in 17 — the 17 new
-  tests cover the TTL resolver, the sweep loop and the sweep route).
-- `services/delivery` integration suite: **63/63** in 8 files (was 51 in 7 — the 12 new
-  tests cover stored TTL, expiry-aware replay, dead-row takeover, the database CHECK,
-  batching, `SKIP LOCKED` under a real lock, the route, and the upgrade over existing rows).
-- `@wasla/contracts-delivery`: **26/26**.
-- `@wasla/delivery-e2e` phase-13 exit gate with a database: **8/8**.
+- `services/delivery` unit suite: **459/459** in 29 files (was 449 in 28 — the 10 new
+  tests cover the retry-delay table, its bounds and the declared-promise reader).
+- `services/delivery` integration suite: **91/91** in 10 files (was 90 — the new test
+  creates a real idempotency-key race in a loop and asserts both the header and that an
+  immediate retry replays; it fails explicitly if no refusal is ever observed).
+- `@wasla/contracts-delivery`: **29/29** (was 28 — the new guard asserts `ConflictError`
+  is the only response declaring `Retry-After`).
+- `@wasla/delivery-e2e` phase-13 exit gate with a database: **17/17** in 1 file (was 16),
+  rerun five times with the same result.
 - `pnpm -r typecheck`: clean.
+- `bash scripts/checks/verify-governance.sh`: all executed checks pass; two declared
+  partial skips (claim dormancy across branches, and live CI status).
 
 No existing test was modified or removed. The cross-repository WASLA integration work
 still has no test of its own here.

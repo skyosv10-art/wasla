@@ -404,6 +404,14 @@ export interface HttpResult {
   readonly text: string;
   readonly body: Record<string, unknown>;
   readonly replayHeader: string | null;
+  /**
+   * `Retry-After` كما وصلَ **نصّاً** (المراجعةُ 19/N · ADR-026 §4.21).
+   *
+   * نصٌّ لا عددٌ بقصدٍ: الدعوى أنَّ ما يُقرأُ على السلكِ `"1"` حرفاً — عددٌ
+   * مُحلَّلٌ كانَ سيُساوي `"1.0"` و`" 1"` بالقيمةِ ويصمُتَ عن أنَّهما يُخالفانِ
+   * `delay-seconds = 1*DIGIT` في RFC 9110 §10.2.3.
+   */
+  readonly retryAfterHeader: string | null;
 }
 
 /** نداءٌ عبرَ الشبكةِ على مُستمعٍ — لا `app.inject` في هذه الحزمةِ بحالٍ. */
@@ -435,6 +443,7 @@ export async function call(
     text,
     body: text ? (JSON.parse(text) as Record<string, unknown>) : {},
     replayHeader: response.headers.get("idempotent-replay"),
+    retryAfterHeader: response.headers.get("retry-after"),
   };
 }
 

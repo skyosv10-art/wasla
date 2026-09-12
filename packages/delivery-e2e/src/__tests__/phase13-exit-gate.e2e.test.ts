@@ -411,6 +411,94 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(reused.status, reused.text).toBe(409);
     expect(reused.body.error_code).toBe("DELIVERY_IDEMPOTENCY_KEY_REUSED");
+    /*
+     * ولا `Retry-After` هنا (المراجعةُ 19/N · ADR-026 §4.21): الحالُ 409 نفسُهُ
+     * الذي يحملُها في رفضِ التزامُنِ، فلو كانَ الوصلُ بالحالِ لا بالرمزِ لَنطقَت
+     * هذه أيضاً — وهيَ إعادةٌ **لن تنجحَ أبداً** فالوعدُ فيها كذبٌ.
+     */
+    expect(reused.retryAfterHeader).toBeNull();
+    expect(replay.retryAfterHeader).toBeNull();
+    expect(first.retryAfterHeader).toBeNull();
+  });
+
+  /*
+   * `Retry-After` على مقبسٍ حقيقيٍّ (المراجعةُ 19/N · ADR-026 §4.21).
+   *
+   * ولمَ في البوّابةِ وقد أُثبِتَت في التكامُلِ؟ لأنَّ `app.inject` لا يمرُّ على
+   * مُسلسِلِ ترويساتِ HTTP: ترويسةٌ يُسقِطُها المُستمعُ أو يُعيدُ تسميتَها كانت
+   * ستمُرَّ خضراءَ هناكَ وتغيبَ عن كلِّ منادٍ حقيقيٍّ. **والقراءةُ نصٌّ لا عددٌ**
+   * كي تُثبَتَ الصيغةُ (`1*DIGIT`) لا القيمةُ وحدَها.
+   *
+   * والدعوى الأهمُّ أنَّ الوعدَ **صادقٌ**: إعادةٌ فوريّةٌ — بلا انتظارِ الثانيةِ
+   * التي وعدَت بها الترويسةُ — تُعيدُ جوابَ الرابحِ **بايتاً ببايتٍ**. أي أنَّ
+   * `1` فائضٌ على المقيسِ (صفرٌ) لا عجزٌ عنهُ.
+   *
+   * والحلقةُ لأنَّ التسابُقَ لا يُفرَضُ من الخارجِ، **والسقوطُ صريحٌ إن لم يظهرِ
+   * الرفضُ** فلا يمرُّ الاختبارُ بلا أن يقيسَ شيئاً.
+   */
+  it("رفضُ التزامُنِ يُعلِنُ `Retry-After: 1` على السلكِ، والإعادةُ الفوريّةُ تُثبِتُ صدقَهُ", async () => {
+    const productId = await publishProduct();
+    // مخزونٌ يكفي كلَّ دورةٍ: كلُّ دورةٍ رابحةٌ تحجزُ وحدةً، والبوّابةُ لا تُصفِّرُ
+    // بينَ الدوراتِ — فنفادُهُ كانَ سيُنتِجُ 409 مخزونٍ يُشبِهُ المطلوبَ ولا يعنيهِ.
+    const restocked = await call(gate.marketplaceBaseUrl, {
+      method: "POST",
+      path: `/products/${productId}/inventory`,
+      body: { quantity_delta: 30, reason_code: "restock", actor_public_id: OWNER },
+      idempotencyKey: nextKey("restock-race"),
+    });
+    expect(restocked.status, restocked.text).toBe(201);
+
+    const body = {
+      customer_ref: CUSTOMER,
+      store_slug: STORE_SLUG,
+      items: [{ product_id: productId, quantity: 1 }],
+      delivery_fee_minor_units: DELIVERY_FEE_MINOR_UNITS,
+    };
+
+    let refusals = 0;
+    for (let round = 0; round < 12 && refusals === 0; round += 1) {
+      const key = nextKey(`race-${round}`);
+      const [left, right] = await Promise.all([
+        callDelivery(gate, { method: "POST", path: "/store-orders", body, idempotencyKey: key }),
+        callDelivery(gate, { method: "POST", path: "/store-orders", body, idempotencyKey: key }),
+      ]);
+
+      const loser = left.status === 409 ? left : right.status === 409 ? right : null;
+      /*
+       * ولا طلبَ ثانياً في أيِّ دورةٍ — والعَدُّ **بالإنشاءِ لا بالحالِ**: قياسٌ
+       * فعليٌّ أظهرَ دورةً أجابَت `201`/`201`، والثاني فيها **إعادةٌ** قرأَت صفَّ
+       * الرابحِ المُثبَتَ (`Idempotent-Replay: true`) لا إنشاءً ثانياً. فتوكيدُ
+       * «واحدٌ فقط 201» كانَ سيسقطُ على سلوكٍ صحيحٍ تماماً.
+       */
+      for (const r of [left, right]) expect([201, 409]).toContain(r.status);
+      const created = [left, right].filter((r) => r.status === 201 && r.replayHeader === null);
+      expect(created).toHaveLength(1);
+      if (loser === null) continue;
+      refusals += 1;
+
+      const winner = loser === left ? right : left;
+      expect(loser.body.error_code).toBe("DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT");
+      expect(loser.retryAfterHeader).toBe("1");
+      // الجسمُ ثلاثةُ حقولٍ كما ينشرُ العقدُ — الترويسةُ سطحُ نقلٍ لا حقلٌ.
+      expect(Object.keys(loser.body).sort()).toEqual(["error_code", "message", "trace_id"]);
+
+      const retry = await callDelivery(gate, {
+        method: "POST",
+        path: "/store-orders",
+        body,
+        idempotencyKey: key,
+      });
+      expect(retry.status, retry.text).toBe(201);
+      expect(retry.replayHeader).toBe("true");
+      expect(canonicalJson(retry.body)).toBe(canonicalJson(winner.body));
+      // والإعادةُ الناجحةُ لا تَعِدُ بشيءٍ.
+      expect(retry.retryAfterHeader).toBeNull();
+    }
+
+    expect(
+      refusals,
+      "لم يظهرِ الرفضُ المتزامنُ في اثنتَي عشرةَ دورةً على السلكِ — لا قياسَ فلا مرورَ",
+    ).toBe(1);
   });
 
   it("الجاهزيّةُ تُعلِنُ ما لا تدّعيهِ، والحياةُ لا تسألُ القاعدةَ", async () => {

@@ -1,5 +1,29 @@
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
+## 2026-09-12 · إقفالُ `CLM-0136` — دورةُ §8.1 بعدَ دمجِ المراجعةِ 15/N
+
+**Work Item(s):** M5-13 · **Branch:** `chore/clm-0136-closeout` · **Claim:** إقفالٌ دفتريٌّ (لا شفرةَ ولا عقدَ)
+
+**ماذا تم إنجاز (1):** نقلُ `CLM-0136` إلى `Released` في [§2](WORK_CLAIMS.md) وإضافةُ صفِّ بيّنةِ الدمجِ في §3 لـ[PR #113](https://github.com/skyosv10-art/wasla/pull/113) (مُدمجٌ `2026-09-12T00:49:49Z` · التزامُ الدمجِ [`cb60043`](https://github.com/skyosv10-art/wasla/commit/cb600430f654a71ab3f086c9dcd014acaf3c2001) · squash · **33 فحصاً كلُّها `pass`**) — البروتوكولُ §8.1 يُوجِبُ الإقفالَ **بدفعةٍ** لا بمرورِ مهلةِ الحجزِ.
+
+**لماذا تم اختياره (2):** لأنَّ حجزاً نشطاً على نطاقٍ مُدمجٍ يمنعُ الحجزَ التاليَ على `services/delivery/` و`packages/contracts/delivery/` ويجعلُ الدفترَ يكذبُ على `main`.
+
+**أين تم التغيير (3):** [`docs/16-progress/WORK_CLAIMS.md`](WORK_CLAIMS.md) §2 و§3 · [`docs/16-progress/TASK_LOG.md`](TASK_LOG.md) (هذا الإدخالُ).
+
+**الملفات/الخدمات المتأثرة (4):** دفاترُ الحوكمةِ وحدَها. لا خدمةَ ولا حزمةَ ولا عقدَ ولا مخطَّطَ.
+
+**ما الـAPI/Event/Schema الذي تغير (5):** لا شيءَ.
+
+**كيف تم الاختبار (6):** `bash scripts/checks/verify-governance.sh` — مخرجاتُهُ الفعليّةُ في طلبِ الدمجِ، وفحوصُ CI الإلزاميّةُ عليه.
+
+**ما المشاكل التي ظهرت (7):** لا شيءَ.
+
+**ما الذي لم يكتمل (8):** الدُّيونُ المُعلَنةُ في [ADR-026 §4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) كما هيَ: لا مقياسَ ولا تنبيهَ على الرصدِ (`docs/13-observability/` فارغٌ · قرارُ مالكٍ) · لا سبرَ لجسرِ الإرسالِ ولا لتراكُمِ الصادرِ · لا قاطعَ دورةٍ (عن قصدٍ) · حدُّ السوقِ لا يُلزِمُ التوقيعَ بعدُ · نطاقُ صيانةٍ مستقلٌّ لمسارِ المُكنسةِ · `Retry-After` على `IN_FLIGHT` · حافّةُ §4.9-1 (قرارُ مالكٍ) · تضاربُ المخزونِ النشطِ (§4.8) · جسرُ `ORD-`/`WS-` · و[`RISK-0020`](../07-security/RISK_REGISTER.md) مفتوحٌ للمستودعِ.
+
+**الخطوة التالية (9):** **ما بقيَ من [ADR-026 §4](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) كلُّهُ يحتاجُ قراراً لا اختياراً:** سبيلُ المقاييسِ والتنبيهِ · حافّةُ `pending_eligibility → cancelled` (§4.9-1) · جسرُ `ORD-`/`WS-` (`RISK-0034`) · كشفُ تضاربِ المخزونِ النشطِ (§4.8). فالمراجعةُ 16/N تستلزمُ توجيهَ مالكِ البرنامجِ.
+
+**الحالة (10):** `M5-13` ⇒ `In Progress`. لا نقلَ إلى `Completed` — قرارُ مالكِ البرنامجِ وحدَه (§9).
+
 ## 2026-09-12 · M5-13 · المراجعةُ 15/N — مسبارُ جاهزيّةِ السوقِ · `CLM-0136`
 
 **Work Item(s):** M5-13 (Store Orders & Delivery) · **Branch:** `feat/m5-15-marketplace-readiness-probe` · **Claim:** `CLM-0136` (`@uxxxu (agent:perplexity-computer)` · 2026-09-12 → ينتهي 2026-09-26 · Active) · **Scope:** `services/delivery/`,`packages/contracts/delivery/`,`packages/delivery-e2e/`,`ROADMAP.md`,`docs/04-api/`,`docs/07-security/`,`docs/12-testing/`,`docs/13-observability/`,`docs/14-runbooks/`,`docs/15-decisions/`,`docs/16-progress/`

@@ -30,11 +30,21 @@
  * because the use cases raise `DELIVERY_MARKETPLACE_UNAVAILABLE` /
  * `DELIVERY_DISPATCH_UNAVAILABLE` explicitly — the fallback exists for
  * defects, and a defect is not a retry hint.
+ *
+ * ## `Retry-After` يُقالُ هنا لأنَّ هذا موضعُ الترجمةِ الوحيدُ
+ *
+ * المراجعةُ 19/N (ADR-026 §4.21) أضافَت مَهَلاً **مقيساً** على رفضِ التماثُلِ
+ * المتزامنِ. ووُصِلَ في هذا الملفِّ لا في المسارِ الذي يرمي، لأنَّ اثنَي عشرَ
+ * مساراً مُسجَّلاً تعبُرُ كلُّها من `sendDeliveryError`؛ ووصلُهُ عندَ الرمي كانَ
+ * سيعني اثنَي عشرَ موضعاً ينسى أحدُها. **والقرارُ أيُّ رمزٍ يستحقُّ مَهَلاً ليسَ
+ * هنا** بل في `retry-after.ts` خالصاً معَ ما قِيسَ لهُ — وهذا الملفُّ يسألُ ولا
+ * يُقرِّرُ، كما لا يملكُ جدولَ حالاتٍ.
  */
 
 import type { FastifyReply } from "fastify";
 
 import { isDeliveryError } from "../domain/errors.js";
+import { retryAfterSecondsForDeliveryError } from "./retry-after.js";
 
 /** Wire body — matches `ErrorResponse` in the delivery contract exactly. */
 export interface DeliveryErrorBody {
@@ -53,6 +63,8 @@ export function sendDeliveryError(
   traceId: string,
 ): FastifyReply {
   if (isDeliveryError(error)) {
+    const retryAfter = retryAfterSecondsForDeliveryError(error);
+    if (retryAfter !== null) reply.header("Retry-After", String(retryAfter));
     return reply.status(error.httpStatus).send({
       error_code: error.code,
       message: error.message,

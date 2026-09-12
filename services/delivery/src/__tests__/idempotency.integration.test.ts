@@ -225,6 +225,68 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
     await app.close();
   });
 
+  /*
+   * المراجعةُ 19/N (ADR-026 §4.21): هذا هوَ **القياسُ الذي منهُ جاءَت قيمةُ**
+   * `Retry-After`، لا مجرَّدُ تحقُّقٍ من وجودِ ترويسةٍ.
+   *
+   * الدعوى المُقاسةُ: لحظةَ نُطقِ الرفضِ يكونُ صفُّ الرابحِ **مُثبَتاً** في
+   * القاعدةِ — فالخاسرُ تعطَّلَ على الفهرسِ الفريدِ حتّى أثبتَ الرابحُ. وبرهانُها
+   * أنَّ إعادةً **فوريّةً بلا انتظارٍ** تُعيدُ جوابَ الأوّلِ حرفاً معَ
+   * `Idempotent-Replay: true`. أي أنَّ الزمنَ اللازمَ حقيقةً صفرٌ، و`1` فائضٌ لا
+   * عجزٌ — ولذلكَ لا تُساوى الترويسةُ بمهلةٍ مُخمَّنةٍ.
+   *
+   * ولمَ حلقةٌ لا دورةٌ واحدةٌ؟ لأنَّ الرفضَ **تسابُقٌ لا يُفرَضُ من الخارجِ**:
+   * لا خُطّافَ في المعاملةِ ولا سبيلَ لحقنِ صفٍّ حيٍّ بينَ خطوتَي المفتاحِ. وقياسٌ
+   * فعليٌّ أعطى الرفضَ في إحدى عشرةَ دورةٍ من اثنَتَي عشرةَ، فعشرونَ دورةً تكفي
+   * بفائضٍ واسعٍ. **وإن لم يظهرِ الرفضُ أصلاً سقطَ الاختبارُ صراحةً** ولم يمُرَّ
+   * فارغاً — فاختبارٌ يمرُّ بلا أن يقيسَ شيئاً أسوأُ من غيابِهِ.
+   */
+  it("the refused racer is told `retry-after: 1` and an IMMEDIATE retry replays", async () => {
+    let refusals = 0;
+
+    for (let round = 0; round < 20 && refusals === 0; round += 1) {
+      await resetData(pool);
+      const app = buildApp();
+      const key = `pg-idem-retryafter-${String(round).padStart(5, "0")}`;
+      const [left, right] = await Promise.all([
+        post(app, "/store-orders", key, placement),
+        post(app, "/store-orders", key, placement),
+      ]);
+
+      const loser = left.statusCode === 409 ? left : right.statusCode === 409 ? right : null;
+      if (loser === null) {
+        await app.close();
+        continue;
+      }
+      refusals += 1;
+
+      const winner = loser === left ? right : left;
+      expect(loser.json().error_code).toBe("DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT");
+      // المَهَلُ ثوانٍ صحيحةٌ (`delay-seconds` في RFC 9110 §10.2.3) لا تاريخُ HTTP:
+      // لا اتّفاقَ ساعتَينِ مطلوبٌ.
+      expect(loser.headers["retry-after"]).toBe("1");
+      // والجسمُ لم يتغيَّرْ: ثلاثةُ حقولٍ كما ينشرُ العقدُ.
+      expect(Object.keys(loser.json()).sort()).toEqual(["error_code", "message", "trace_id"]);
+
+      // البرهانُ: إعادةٌ فوريّةٌ — بلا `setTimeout` ولا انتظارِ ثانيةٍ — تُعيدُ
+      // جوابَ الرابحِ حرفاً. فلو كانَ الصفُّ غيرَ مُثبَتٍ لَعادَ 409 ثانياً.
+      const retry = await post(app, "/store-orders", key, placement);
+      expect(retry.statusCode).toBe(201);
+      expect(retry.headers["idempotent-replay"]).toBe("true");
+      expect(retry.json()).toEqual(winner.json());
+
+      // ولا طلبَ ثانياً وُلِدَ من كلِّ هذا.
+      const orders = await pool.query(`SELECT count(*)::int AS n FROM store_orders`);
+      expect(orders.rows[0].n).toBe(1);
+      await app.close();
+    }
+
+    expect(
+      refusals,
+      "لم يظهرِ الرفضُ المتزامنُ في عشرينَ دورةً — القياسُ لم يحدثْ، فلا يُدَّعى مرورٌ",
+    ).toBe(1);
+  });
+
   it("the schema refuses a malformed key or an undeclared route outright", async () => {
     // Defence in depth: the HTTP layer validates, and the table refuses anyway.
     // A future internal caller that skips the boundary must not be able to

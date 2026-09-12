@@ -301,6 +301,47 @@ describe("delivery contracts — foundational invariants (ADR-026)", () => {
     }
   });
 
+  /*
+   * المراجعةُ 19/N (ADR-026 §4.21): الترويسةُ **مُعلَنةٌ آليّاً** في مُكوِّنِ
+   * `ConflictError` وحدَهُ — لا في كلِّ جوابِ 409 على حدةٍ. والحرسُ يمنعُ ثلاثةَ
+   * انفلاتاتٍ: أن تُنسى الترويسةُ من العقدِ بعدَ أن صارَ الحدُّ يُرسِلُها، وأن
+   * تُوسَّعَ إلى `HTTP-date` أو إلى `0` فتُخالفَ المقيسَ، وأن تُنسَخَ إلى جوابٍ
+   * آخرَ يَعِدُ بما لم يُقَسْ لهُ.
+   *
+   * والحرسُ نصّيٌّ لا بمحلِّلِ YAML لأنَّ هذه الحزمةَ **بلا محلِّلٍ** أصلاً وكلُّ
+   * حرسٍ فيها نصٌّ — وإدخالُ تبعيّةٍ لأجلِ توكيدٍ واحدٍ تكلفةٌ لا تُقابِلُها
+   * دقّةٌ هنا: كتلةُ `headers:` **واحدةٌ** في المِلَفِّ كلِّهِ، فمَوضِعُها لا
+   * يحتاجُ استدلالاً.
+   */
+  it("ConflictError declares Retry-After as measured delta-seconds (review 19/N · §4.21)", () => {
+    // كتلةُ ترويسةٍ واحدةٌ في العقدِ كلِّهِ — أيُّ ثانيةٍ تُسقِطُ هذا الحرسَ
+    // فتُقرَأَ بقصدٍ لا تمرَّ بالسهوِ.
+    const headerBlocks = [...api.matchAll(/^\s+headers:$/gm)];
+    expect(headerBlocks).toHaveLength(1);
+
+    // وهيَ داخلَ `ConflictError` لا في مُكوِّنٍ آخرَ.
+    const conflict = api.slice(
+      api.indexOf("    ConflictError:"),
+      api.indexOf("    DependencyUnavailable:"),
+    );
+    expect(conflict).toContain("headers:");
+    expect(conflict).toContain("Retry-After:");
+    // عددٌ صحيحٌ لا نصٌّ: `HTTP-date` يستلزمُ اتّفاقَ ساعتَينِ، و§4.21 رفضَهُ.
+    expect(conflict).toMatch(/type:\s*integer/);
+    // و`0` مُستبعَدٌ بالعقدِ لا بالعُرفِ: يُقرأُ أمراً بالدَّوَرانِ.
+    expect(conflict).toMatch(/minimum:\s*1/);
+    // والقيمةُ مشروطةٌ برمزٍ واحدٍ، والشرطُ منصوصٌ في العقدِ لا متروكٌ للفهمِ.
+    expect(conflict).toContain("DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT");
+
+    // ولا يَعِدُ حالٌ آخرُ بشيءٍ: العطلُ لا يُعرَفُ زمنُ عودتِهِ، ومدخلاتٌ فاسدةٌ
+    // لا تُصلِحُها ثانيةٌ. فغيابُ الترويسةِ هناكَ **قرارٌ مُثبَّتٌ** لا إغفالٌ.
+    const dependency = api.slice(
+      api.indexOf("    DependencyUnavailable:"),
+      api.indexOf("    InternalError:"),
+    );
+    expect(dependency).not.toContain("Retry-After");
+  });
+
   it("errors.md catalog matches DELIVERY_ERROR_CODES exactly", () => {
     const codesInMd = [...errors.matchAll(/`(DELIVERY_[A-Z_]+)`/g)].map((m) => m[1]);
     expect(new Set(codesInMd)).toEqual(new Set(DELIVERY_ERROR_CODES));

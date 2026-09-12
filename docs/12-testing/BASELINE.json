@@ -1,46 +1,46 @@
 {
- "schema": "wasla.baseline/v1",
- "generated_at": "2026-09-12T06:27:43Z",
- "generator": "scripts/baseline.sh",
- "repo": {
-  "commit": "d75add522ed0f15c4358259e414ef717e55d1cd2",
-  "branch": "feat/m5-18-inventory-conflict-acknowledgement",
-  "dirty": true,
-  "dirty_files": 23,
-  "dirty_reason": "المراجعةُ 18/N (CLM-0139): مسارُ كتابةِ إقرارِ رايةِ التضاربِ — ملفّا اختبارٍ جديدانِ ودعاوى جديدةٌ في التكامُلِ والبوّابةِ",
-  "tracked_files": 1693
- },
- "env": {
-  "node": "v20.20.1",
-  "pnpm": "9.15.9",
-  "os": "Linux",
-  "arch": "x86_64",
-  "python": "3.14.3"
- },
- "lock": {
-  "path": "pnpm-lock.yaml",
-  "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
-  "lines": 3116
- },
- "static": {
-  "packages": 49,
-  "packages_with_typecheck": 49,
-  "packages_with_test": 49,
-  "test_files_tracked": 336,
-  "ci_jobs": 30,
-  "ci_allow_failure": 1,
-  "governance_checks": 13,
-  "risks_not_closed": 25
- },
- "dynamic": {
-  "measured": true,
-  "source": "/tmp/verify18b.log",
-  "tests_passed": 4387,
-  "test_files_executed": 267,
-  "governance_suite_cases": 183,
-  "governance_suite_failed": 0,
-  "verify_overall": "passed"
- },
- "fingerprint": "sha256:3842f1a83f35905ac51f4d0e4a851c9703c45874fa5df368e1d9f530c08030b3",
- "reference": "docs/12-testing/BASELINE_FORMAT.md"
+  "schema": "wasla.baseline/v1",
+  "generated_at": "2026-09-12T13:44:44Z",
+  "generator": "scripts/baseline.sh",
+  "repo": {
+    "commit": "a8e1a11d57d5a43898c5751ce49fabe9268b5e7c",
+    "branch": "feat/m5-20-inventory-actor-contract-alignment",
+    "dirty": true,
+    "dirty_files": 12,
+    "dirty_reason": "المراجعةُ 20/N (CLM-0141): إقفالُ RISK-0035 من جهةِ MARKET وحدَها — مُستهلِكٌ وُسِّعَ إلى حدِّ عقدِ مُنتِجِهِ، وملفُّ حرسِ انحرافٍ جديدٌ، ودعاوى جديدةٌ في الوحدةِ والتكامُلِ والبوّابةِ",
+    "tracked_files": 1696
+  },
+  "env": {
+    "node": "v20.20.1",
+    "pnpm": "9.15.9",
+    "os": "Linux",
+    "arch": "x86_64",
+    "python": "3.14.3"
+  },
+  "lock": {
+    "path": "pnpm-lock.yaml",
+    "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
+    "lines": 3116
+  },
+  "static": {
+    "packages": 49,
+    "packages_with_typecheck": 49,
+    "packages_with_test": 49,
+    "test_files_tracked": 337,
+    "ci_jobs": 30,
+    "ci_allow_failure": 1,
+    "governance_checks": 13,
+    "risks_not_closed": 24
+  },
+  "dynamic": {
+    "measured": true,
+    "source": "/tmp/verify20.log",
+    "tests_passed": 4412,
+    "test_files_executed": 269,
+    "governance_suite_cases": 183,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
+  },
+  "fingerprint": "sha256:88d1c7b2dc9f9d1762ada7ec6b470a92beb83f328c8cbed800928048d7862f63",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

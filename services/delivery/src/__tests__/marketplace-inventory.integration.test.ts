@@ -216,6 +216,55 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<InventoryRelayDeps> {
     expect((await store.getInventoryConsumed(badId))?.status).toBe("poisoned");
   });
 
+  /* ── RISK-0035: خصمُ الحجزِ بفاعلٍ نظاميٍّ يُطبَّقُ ولا يُسَمُّ ── */
+
+  /*
+   * هذا هوَ الصفُّ الذي كانَ **يُفقَدُ** قبلَ المراجعةِ 20/N: حدُّ السوقِ
+   * يكتبُ خصمَ الحجزِ بـ`actor_public_id: "system:delivery"`، فيَسُمُّهُ المُصنِّفُ
+   * **وتتقدَّمُ نقطةُ التقدُّمِ فوقَهُ** فلا إعادةَ ولا تنبيهَ.
+   *
+   * والدعوى توكِّدُ **أربعًا لا واحدةً**: أنَّ الصفَّ `applied` لا `poisoned`،
+   * وأنَّ اللقطةَ **دَخلَت الدفترَ فعلاً** بالرّقمِ والسببِ والتّسلسلِ — فالقبولُ
+   * وحدَهُ لا يُثبِتُ أنَّ الحدثَ وصلَ، وأنَّ نقطةَ التقدُّمِ تقدَّمَت إلى هذا الحدثِ
+   * **بعدَ أن دَخلَ** لا فوقَهُ.
+   */
+  it("RISK-0035: يُطبِّقُ خصمَ حجزٍ بفاعلٍ نظاميٍّ `system:delivery` ولا يُسَمُّهُ", async () => {
+    const eventId = await seedMarketplaceEvent(pool, {
+      payload: validPayload({
+        actor_public_id: "system:delivery",
+        reason_code: "reservation",
+        quantity_delta: -2,
+        quantity_after: 7,
+        adjustment_sequence: 1,
+      }),
+      occurred_at: ts(0),
+    });
+
+    const outcome = await runInventoryRelayBatch(await makeDeps(pool));
+    expect({ applied: outcome.applied, poisoned: outcome.poisoned }).toEqual({
+      applied: 1,
+      poisoned: 0,
+    });
+    expect((await store.getInventoryConsumed(eventId))?.status).toBe("applied");
+
+    const obs = (await pool.query(
+      `SELECT last_adjustment_sequence, observed_quantity_after, last_quantity_delta, last_reason_code
+         FROM delivery_inventory_observations WHERE store_id = $1::uuid AND product_id = $2::uuid`,
+      [STORE_ID, PRODUCT_ID],
+    )).rows[0];
+    expect(obs, "لم تدخلِ اللقطةُ الدفترَ").toMatchObject({
+      last_adjustment_sequence: 1,
+      observed_quantity_after: 7,
+      last_quantity_delta: -2,
+      last_reason_code: "reservation",
+    });
+
+    expect(
+      await store.getInventoryCheckpoint(DEFAULT_INVENTORY_RELAY_CONFIG.consumerId),
+      "تقدَّمَت نقطةُ التقدُّمِ فوقَ الحدثِ لا إليهِ",
+    ).toEqual({ last_occurred_at: ts(0), last_event_id: eventId });
+  });
+
   /* ── event for a different product doesn't affect other observations ── */
 
   it("does not affect another product's observation when observing a different product", async () => {

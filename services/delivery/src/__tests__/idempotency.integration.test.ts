@@ -22,7 +22,7 @@ import type { LightMyRequestResponse } from "fastify";
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { CUSTOMER_REF, FakeCatalog, FakeReservationPort, FakeReservationStore, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 
 const NOW = "2026-09-10T10:00:00.000Z";
@@ -48,7 +48,7 @@ describe.skipIf(!PG_ENABLED)("delivery idempotency + readiness — PostgreSQL", 
   });
 
   const buildApp = () =>
-    buildDeliveryHttpApp({
+    createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),

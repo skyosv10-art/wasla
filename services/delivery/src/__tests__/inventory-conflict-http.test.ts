@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import type { InventoryConflictReadPort } from "../ports.js";
 import type { InventoryConflictRow } from "../domain/inventory-conflict.js";
 import {
@@ -69,7 +69,7 @@ class FakeInventoryConflictReadPort implements InventoryConflictReadPort {
 
 function buildApp(port?: InventoryConflictReadPort) {
   const store = new FakeStoreOrderStore();
-  return buildDeliveryHttpApp({
+  return createSignedDeliveryApp({
     readPort: store,
     writePort: store,
     catalogPort: new FakeCatalog(),

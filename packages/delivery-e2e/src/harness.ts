@@ -66,6 +66,8 @@ import {
   PostgresInventoryObservationStore,
   PostgresMarketplaceInventoryEventSource,
   PostgresReadinessProbe,
+  DELIVERY_SCOPES,
+  DELIVERY_SERVICE_AUDIENCE,
   StoreOrderStore,
   buildDeliveryHttpApp,
   runInventoryRelayBatch,
@@ -85,7 +87,12 @@ import {
   type MarketplaceStores,
 } from "@wasla/marketplace-service/db";
 import { createMarketplaceApp } from "@wasla/marketplace-service/http";
-import { ServiceAuthKeyRegistry, createServiceRequestSigner } from "@wasla/service-auth";
+import {
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+  createServiceRequestSigner,
+  serviceAuthHeaders,
+} from "@wasla/service-auth";
 import type { Pool } from "pg";
 
 type MarketplaceApp = ReturnType<typeof createMarketplaceApp>;
@@ -148,6 +155,14 @@ export interface GateContext {
   readonly stores: MarketplaceStores;
   /** دفعةُ ناقلِ المخزونِ — تُنادى صراحةً: لا حلقةَ خلفيّةٍ في بوّابةٍ. */
   readonly relayInventory: () => Promise<BatchOutcome>;
+  /**
+   * مفاتيحُ توقيعِ النداءِ **الداخلِ** إلى حدِّ التوصيلِ (المراجعةُ 17/N).
+   *
+   * وتُنشَرُ في السياقِ لا تُخفى في `callDelivery`: البوّابةُ تحتاجُ أن توقِّعَ
+   * بمفتاحٍ **مسحوبٍ** أو بسرٍّ **مزوَّرٍ** لتُثبِتَ الرفضَ على السلكِ، ولا تقدرُ
+   * على ذلكَ إن كانَ السجلُّ محجوباً.
+   */
+  readonly deliveryInboundKeys: ServiceAuthKeyRegistry;
   readonly close: () => Promise<void>;
 }
 
@@ -224,6 +239,23 @@ function reservationSigner(): ReturnType<typeof createServiceRequestSigner> {
 }
 
 /**
+ * سجلُّ مفاتيحِ النداءِ **الداخلِ** إلى حدِّ التوصيلِ — سرٌّ مستقلٌّ عن سرِّ
+ * الصادرِ إلى السوقِ عن قصدٍ: خلطُهما كانَ سيُخفي أنَّ الاتجاهَينِ حدّانِ
+ * مختلفانِ لهما جمهورانِ مختلفانِ (`delivery` · `marketplace`).
+ */
+function deliveryInboundKeyRegistry(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [
+      { kid: "gate-inbound-1", secret: "phase13-gate-delivery-inbound-secret-01", status: "active" },
+    ],
+    activeKid: "gate-inbound-1",
+  });
+}
+
+/** كلُّ صلاحيّاتِ حدِّ التوصيلِ: البوّابةُ تُثبِتُ الرحلةَ لا نقصَ الصلاحيّةِ. */
+export const ALL_DELIVERY_SCOPES: readonly string[] = Object.values(DELIVERY_SCOPES);
+
+/**
  * يرفعُ الخدمتَينِ بتركيبِهما الإنتاجيِّ على قاعدةٍ واحدةٍ.
  *
  * وقاعدةٌ واحدةٌ لا اثنتانِ **لأنَّ الناقلَ يقرأُ صندوقَ السوقِ بـSQL** (§4.7):
@@ -258,7 +290,20 @@ export async function startGate(): Promise<GateContext> {
   const marketplaceBaseUrl = `http://127.0.0.1:${(marketplace.server.address() as AddressInfo).port}`;
 
   const store = new StoreOrderStore(pool);
+  /*
+   * حدُّ التوصيلِ **مفروضٌ** في البوّابةِ كما هوَ في الإنتاجِ (المراجعةُ 17/N ·
+   * `M1-04` الموجةُ السادسةُ): بوّابةٌ تبني الحدَّ غيرَ مفروضٍ تشهدُ لتركيبٍ لا
+   * وجودَ لهُ، وهيَ **الموضعُ الوحيدُ** الذي يُثبِتُ الفرضَ على مقبسٍ حقيقيٍّ —
+   * `app.inject` في اختباراتِ الوحدةِ لا يمرُّ بالشبكةِ. وقد سبقَ في §2.6 أنَّ
+   * `fetch` عارياً في بوّابةٍ أخرى كشفَ عيباً حقيقيّاً بـ401، فالعلاجُ توقيعُ
+   * النداءِ لا إضعافُ الحدِّ.
+   */
+  const deliveryInboundKeys = deliveryInboundKeyRegistry();
   const delivery = buildDeliveryHttpApp({
+    serviceIdentity: {
+      keys: deliveryInboundKeys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
     readPort: store,
     writePort: store,
     readinessPort: new PostgresReadinessProbe(pool),
@@ -305,6 +350,7 @@ export async function startGate(): Promise<GateContext> {
     db,
     stores,
     relayInventory: () => runInventoryRelayBatch({ events: relayEvents, store: relayStore }),
+    deliveryInboundKeys,
     close: async () => {
       await delivery.close();
       await marketplace.close();
@@ -358,12 +404,15 @@ export async function call(
     readonly body?: unknown;
     readonly idempotencyKey?: string;
     readonly traceId?: string;
+    /** ترويساتٌ إضافيّةٌ — بها يُوقَّعُ النداءُ الداخلُ (المراجعةُ 17/N). */
+    readonly headers?: Readonly<Record<string, string>>;
   },
 ): Promise<HttpResult> {
   const response = await fetch(`${baseUrl}${init.path}`, {
     method: init.method,
     headers: {
       "content-type": "application/json",
+      ...(init.headers ?? {}),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },
@@ -376,6 +425,42 @@ export async function call(
     body: text ? (JSON.parse(text) as Record<string, unknown>) : {},
     replayHeader: response.headers.get("idempotent-replay"),
   };
+}
+
+/**
+ * نداءٌ **موقَّعٌ** على حدِّ التوصيلِ — وهوَ ما تستعملُهُ كلُّ دعوى رحلةٍ.
+ *
+ * والتوقيعُ يُبنى لكلِّ نداءٍ على حدةٍ لأنَّ الرمزَ **مربوطٌ بالطريقةِ والمسارِ**
+ * ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md)):
+ * رمزٌ واحدٌ يُعادُ استعمالُهُ كانَ سيُرفَضُ بـ401 عندَ ثاني نداءٍ (إعادةٌ ·
+ * ADR-021) — وهذا نفسُهُ يُثبَتُ صريحاً في دعوى الفرضِ.
+ *
+ * و`call` يبقى **عارياً** ولا يُلفُّ: إثباتُ الرفضِ يحتاجُ نداءً بلا توقيعٍ.
+ */
+export async function callDelivery(
+  gate: Pick<GateContext, "deliveryBaseUrl" | "deliveryInboundKeys">,
+  init: {
+    readonly method: string;
+    readonly path: string;
+    readonly body?: unknown;
+    readonly idempotencyKey?: string;
+    readonly traceId?: string;
+    readonly scopes?: readonly string[];
+    readonly keys?: ServiceAuthKeyRegistry;
+  },
+): Promise<HttpResult> {
+  const separator = init.path.indexOf("?");
+  const headers = serviceAuthHeaders({
+    serviceName: "core",
+    audience: DELIVERY_SERVICE_AUDIENCE,
+    method: init.method.toUpperCase(),
+    // المسارُ الموقَّعُ بلا استعلامٍ (ADR-021 §4 · `RISK-0026` مفتوحٌ).
+    path: separator < 0 ? init.path : init.path.slice(0, separator),
+    keys: init.keys ?? gate.deliveryInboundKeys,
+    now: new Date(),
+    scopes: init.scopes ?? ALL_DELIVERY_SCOPES,
+  });
+  return call(gate.deliveryBaseUrl, { ...init, headers });
 }
 
 /**

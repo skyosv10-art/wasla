@@ -23,6 +23,7 @@ import {
   STORE_SLUG,
   UNIT_PRICE_MINOR_UNITS,
   call,
+  callDelivery,
   canonicalJson,
   contractEventDefs,
   countRows,
@@ -162,7 +163,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
 
   /** طلبٌ يُوضَعُ عبرَ حدِّ التوصيلِ بلقطةِ سعرٍ مأخوذةٍ من السوقِ عبرَ الشبكةِ. */
   async function placeOrder(productId: string): Promise<Record<string, unknown>> {
-    const placed = await call(gate.deliveryBaseUrl, {
+    const placed = await callDelivery(gate, {
       method: "POST",
       path: "/store-orders",
       body: {
@@ -200,7 +201,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     );
 
     // مرآةُ الدفعِ: `PUT` يُعلِنُ حالةَ المُزوِّدِ — ولا مالَ يُعالَجُ هنا (§2.2).
-    const mirrored = await call(gate.deliveryBaseUrl, {
+    const mirrored = await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: {
@@ -216,7 +217,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(mirrored.body.fulfillment_state).toBe("placed");
 
     // التأكيدُ: البوّابةُ المركَّبةُ (`placed` + دفعٌ مُخوَّلٌ) — وقبلَ 9/N كانت لا تُنادى.
-    const confirmed = await call(gate.deliveryBaseUrl, {
+    const confirmed = await callDelivery(gate, {
       method: "POST",
       path: `/store-orders/${publicId}/confirmation`,
       idempotencyKey: nextKey("confirm"),
@@ -226,7 +227,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(confirmed.body.payment_state).toBe("authorized");
 
     // والقراءةُ الطازجةُ من القاعدةِ لا من الجوابِ المُعادِ — الحالةُ محفوظةٌ لا مُدَّعاةٌ.
-    const read = await call(gate.deliveryBaseUrl, {
+    const read = await callDelivery(gate, {
       method: "GET",
       path: `/store-orders/${publicId}`,
     });
@@ -273,13 +274,13 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const order = await placeOrder(productId);
     const publicId = order.public_id as string;
 
-    await call(gate.deliveryBaseUrl, {
+    await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: PAYMENT_REF },
       idempotencyKey: nextKey("mirror"),
     });
-    await call(gate.deliveryBaseUrl, {
+    await callDelivery(gate, {
       method: "POST",
       path: `/store-orders/${publicId}/confirmation`,
       idempotencyKey: nextKey("confirm"),
@@ -372,7 +373,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const publicId = order.public_id as string;
     const key = nextKey("mirror-replay");
 
-    const first = await call(gate.deliveryBaseUrl, {
+    const first = await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: PAYMENT_REF },
@@ -381,7 +382,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(first.status, first.text).toBe(200);
     expect(first.replayHeader).toBeNull();
 
-    const replay = await call(gate.deliveryBaseUrl, {
+    const replay = await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: PAYMENT_REF },
@@ -400,7 +401,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
      * ونفسُ المفتاحِ بمرجعٍ آخرَ إعادةُ استعمالٍ لا إعادةُ محاولةٍ: مُزوِّدانِ
      * مختلفانِ لطلبٍ واحدٍ خطأُ تركيبٍ يجبُ أن يُصرَخَ بهِ لا أن يُجابَ بجوابٍ قديمٍ.
      */
-    const reused = await call(gate.deliveryBaseUrl, {
+    const reused = await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: "psp_other_ref" },
@@ -411,7 +412,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
   });
 
   it("الجاهزيّةُ تُعلِنُ ما لا تدّعيهِ، والحياةُ لا تسألُ القاعدةَ", async () => {
-    const ready = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/ready" });
+    const ready = await callDelivery(gate, { method: "GET", path: "/delivery/ready" });
     expect(ready.status, ready.text).toBe(200);
     /*
      * والكتالوجُ **موصولٌ ومرصودٌ** الآنَ (المراجعةُ 15/N · §4.17): مسبارٌ حقيقيٌّ
@@ -437,13 +438,13 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(ready.body.status).toBe("ready");
 
     // ونبضةٌ ثانيةٌ تُقرأُ من الرصدِ المُخزَّنِ: عمرٌ لا يتراجعُ وحالةٌ لا تتبدّلُ.
-    const second = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/ready" });
+    const second = await callDelivery(gate, { method: "GET", path: "/delivery/ready" });
     expect(second.status, second.text).toBe(200);
     const secondObservation = (second.body.dependencies as readonly Record<string, unknown>[])[0]!;
     expect(secondObservation.ok).toBe(true);
     expect(secondObservation.age_ms as number).toBeGreaterThanOrEqual(observation.age_ms as number);
 
-    const health = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/health" });
+    const health = await callDelivery(gate, { method: "GET", path: "/delivery/health" });
     expect(health.status, health.text).toBe(200);
   });
 
@@ -494,7 +495,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
      * الجوابَ **400-class** (رفضٌ دائمٌ) لا 503 (تعذُّرٌ عابرٌ): السوقُ أجابَ،
      * وجوابُهُ «لا يُطلَبُ». وخلطُ الاثنَينِ كانَ سيجعلَ العميلَ يُعيدُ المحاولةَ أبداً.
      */
-    const refused = await call(gate.deliveryBaseUrl, {
+    const refused = await callDelivery(gate, {
       method: "POST",
       path: "/store-orders",
       body: {
@@ -527,13 +528,13 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const publicId = order.public_id as string;
 
     // المرآةُ والتأكيدُ كما في البوّابةِ السابقةِ.
-    await call(gate.deliveryBaseUrl, {
+    await callDelivery(gate, {
       method: "PUT",
       path: `/store-orders/${publicId}/payment-mirror`,
       body: { payment_state: "authorized", reason_code: "AUTHORIZATION_SUCCEEDED", payment_ref: PAYMENT_REF },
       idempotencyKey: nextKey("mirror"),
     });
-    await call(gate.deliveryBaseUrl, {
+    await callDelivery(gate, {
       method: "POST",
       path: `/store-orders/${publicId}/confirmation`,
       idempotencyKey: nextKey("confirm"),
@@ -554,7 +555,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
         body.proof_type = t.proof.proof_type;
         body.proof_ref = t.proof.proof_ref;
       }
-      const res = await call(gate.deliveryBaseUrl, {
+      const res = await callDelivery(gate, {
         method: "POST",
         path: `/store-orders/${publicId}/fulfillment-transition`,
         body,
@@ -564,7 +565,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     }
 
     // القراءةُ الطازجةُ: `delivered` محفوظةٌ لا مُدَّعاةٌ.
-    const read = await call(gate.deliveryBaseUrl, {
+    const read = await callDelivery(gate, {
       method: "GET",
       path: `/store-orders/${publicId}`,
     });
@@ -587,7 +588,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
      * عندَ الحجزِ، والخصمُ النهائيُّ قرارُ تسليمٍ داخليٌّ. ونداءُ `release` هنا كانَ
      * سيُعيدُ للمخزونِ ما لم يُحجَزْ أصلاً.
      */
-    const cancel = await call(gate.deliveryBaseUrl, {
+    const cancel = await callDelivery(gate, {
       method: "POST",
       path: `/store-orders/${publicId}/cancellation`,
       body: { reason_code: "SYSTEM_MAINTENANCE" },
@@ -596,5 +597,43 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     // `delivered` طرفيٌّ — لا حافّةَ منها إلى `cancelled`.
     expect(cancel.status).toBeGreaterThanOrEqual(400);
     expect(cancel.status).toBeLessThan(500);
+  });
+
+  /**
+   * فرضُ الهويّةِ **على السلكِ** (`M1-04` · الموجةُ السادسةُ · المراجعةُ 17/N).
+   *
+   * واختباراتُ الوحدةِ تُثبِتُ المصفوفةَ كلَّها عبرَ `app.inject`، وهيَ لا تمرُّ
+   * بمقبسٍ ولا بترجمةِ ترويساتٍ حقيقيّةٍ. وهذه الدعاوى الثلاثُ هيَ **الموضعُ
+   * الوحيدُ** الذي يشهدُ أنَّ الحدَّ مفروضٌ على مُستمعٍ حقيقيٍّ كما سيكونُ في
+   * الإنتاجِ — ولذلكَ تستعملُ `call` **عارياً** لا `callDelivery`.
+   */
+  describe("بوّابة الطور 13 — المصادقة الداخلة على مستمع حقيقي", () => {
+    it("طلبٌ بلا توقيعٍ على مسارٍ مُغلَقٍ يُرَدُّ 401 بمغلّف عقد التوصيل", async () => {
+      const res = await call(gate.deliveryBaseUrl, {
+        method: "POST",
+        path: "/store-orders",
+        body: { customer_ref: CUSTOMER, store_slug: STORE_SLUG, items: [], delivery_fee_minor_units: 0 },
+        idempotencyKey: nextKey("unsigned"),
+      });
+      expect(res.status, res.text).toBe(401);
+      expect(res.body.error_code).toBe("AUTHN_UNAUTHENTICATED");
+      expect(res.body.trace_id).toBeTruthy();
+      // ولا `code`: مغلّفُ هذا الحدِّ `error_code` في الرفضِ كما في كلِّ خطأٍ.
+      expect(res.body.code).toBeUndefined();
+    });
+
+    it("قراءةُ طلبٍ بلا توقيعٍ تُرَدُّ 401 لا 404 — لا استكشافَ مُعرِّفاتٍ بلا هويّةٍ", async () => {
+      const res = await call(gate.deliveryBaseUrl, {
+        method: "GET",
+        path: "/store-orders/WS-0000000001",
+      });
+      expect(res.status, res.text).toBe(401);
+    });
+
+    it("`/delivery/health` يُجيبُ 200 بلا توقيعٍ — مفتوحٌ بقصدٍ لا سهواً", async () => {
+      const res = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/health" });
+      expect(res.status, res.text).toBe(200);
+      expect(res.body.status).toBe("ok");
+    });
   });
 });

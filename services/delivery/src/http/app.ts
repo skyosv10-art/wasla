@@ -22,6 +22,13 @@
  *   POST /delivery/idempotency-keys/sweep              → 200 (المراجعةُ 13/N · §4.15)
  *   GET  /delivery/inventory-conflicts                 → 200 (المراجعةُ 16/N · §4.18)
  *
+ * ## هويّةُ الخدمةِ مفروضةٌ على الأحدَ عشرَ جميعاً (`M1-04` · المراجعةُ 17/N)
+ *
+ * تسعةٌ مُغلَقةٌ بصلاحيّةٍ، ومسارَا الرصدِ (`/delivery/health` ·
+ * `/delivery/ready`) مفتوحانِ **بتصنيفٍ صريحٍ** لا بإغفالٍ. والحُجّةُ لكلِّ قرارٍ
+ * عندَ التصنيفِ أدناهُ وفي [`service-identity.ts`](./service-identity.ts).
+ * ومسارٌ يُسجَّلُ بلا تصنيفٍ **يُسقِطُ الإقلاعَ**.
+ *
  * ## Injected ports — this app never opens a database
  *
  * Every dependency arrives through `DeliveryHttpDeps`. Unit tests build the
@@ -93,6 +100,12 @@ import type {
 } from "../ports.js";
 import { assertIdempotencyKey, deriveRequestFingerprint } from "../domain/idempotency.js";
 import { sendDeliveryError } from "./errors.js";
+import {
+  DELIVERY_SCOPES,
+  registerServiceIdentity,
+  type DeliveryRouteConfig,
+  type DeliveryServiceIdentityOptions,
+} from "./service-identity.js";
 import { toDeliveryTaskResponse, toStoreOrderResponse } from "./mappers.js";
 import {
   parseCancelBody,
@@ -150,6 +163,13 @@ export interface DeliveryHttpDeps {
    * (نفسُ حُجّةِ `idempotencySweepPort`: الصفرُ الكاذبُ يُقرأُ نظافةً).
    */
   readonly inventoryConflictReadPort?: InventoryConflictReadPort;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`، الموجةُ السادسةُ · المراجعةُ
+   * 17/N). **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ»
+   * تجعلُ نسيانَ التركيبِ في جذرٍ واحدٍ يمرُّ صامتاً في كلِّ اختبارٍ ويُكشَفُ في
+   * الإنتاجِ وحدَهُ. والتفصيلُ في `http/service-identity.ts`.
+   */
+  readonly serviceIdentity: DeliveryServiceIdentityOptions;
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -270,6 +290,34 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   });
 
   /*
+   * ── تصنيفُ المساراتِ لهويّةِ الخدمةِ (`M1-04` الموجةُ السادسةُ) ──────────
+   *
+   * مسارَا الرصدِ وحدَهما مفتوحانِ، **وكلاهما بقرارٍ مكتوبٍ لا بإغفالٍ**:
+   *
+   *   - `GET /delivery/health` — لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً، و«الإنفاذُ
+   *     لا يُعمي المراقبةَ»: حياةٌ مربوطةٌ برمزٍ تعني أنَّ انتهاءَ سرٍّ يُقرأُ
+   *     موتَ عمليّةٍ فتُعادُ تشغيلاً وهيَ سليمةٌ.
+   *   - `GET /delivery/ready` — **وهذا قرارٌ يُعلَنُ لأنَّهُ ليسَ نسخاً عن
+   *     الموجاتِ السابقةِ**: حدُّ التوزيعِ لم يكنْ لهُ مسارُ جاهزيّةٍ أصلاً،
+   *     فلا سابقةَ تُنسَخُ. ومُنادي الجاهزيّةِ ليسَ خدمةً بل **مُنسِّقُ النشرِ**
+   *     (kubelet وموازِنُ حِملٍ)، وهوَ لا يملكُ رمزَ خدمةٍ ولا يجوزُ أن يملكَهُ:
+   *     إعطاءُ المُنسِّقِ سرَّ توقيعٍ ليقرأَ جاهزيّةً مُقايضةٌ أسوأُ من الانفتاحِ.
+   *     وإغلاقُهُ **يوقِفُ النشرَ** لا المهاجمَ: نسخةٌ جاهزيّتُها 401 لا تدخلُ
+   *     الدورةَ أبداً. وما يُسرَّبُ محصورٌ مقيساً: أسماءُ تبعيّاتٍ وحالاتُها
+   *     و`not_claimed` — **لا مُعرِّفَ طلبٍ ولا متجرٍ ولا مبلغَ** (`http/readiness.ts`).
+   *
+   * وكلُّ ما بعدَهُما مُغلَقٌ بصلاحيّةٍ. **ومسارٌ يُسجَّلُ بلا تصنيفٍ يُسقِطُ
+   * الإقلاعَ** — فمسارٌ ثانيَ عشرَ في مراجعةٍ قادمةٍ لن يمرَّ بلا قرارٍ مكتوبٍ.
+   */
+  const OPEN: DeliveryRouteConfig = { serviceIdentity: "open" };
+  const scoped = (...scopes: readonly string[]): DeliveryRouteConfig => ({
+    serviceIdentity: { scopes },
+  });
+
+  // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ لا ما قبلَهُ.
+  registerServiceIdentity(app, deps.serviceIdentity);
+
+  /*
    * جسمٌ فارغٌ مع `content-type: application/json` = **«لا جسمَ»**، لا خطأٌ.
    *
    * ومن أينَ جاءتِ الحاجةُ؟ `POST …/confirmation` (المراجعةُ 9/N) لا جسمَ لهُ
@@ -309,7 +357,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     },
   );
 
-  app.post("/store-orders", async (request, reply) => {
+  app.post("/store-orders", { config: scoped(DELIVERY_SCOPES.storeOrderWrite) }, async (request, reply) => {
     const traceId = String(request.id);
     if (deps.catalogPort === undefined) {
       throw new DeliveryError(
@@ -346,7 +394,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(201).send(toStoreOrderResponse(result.order));
   });
 
-  app.get("/store-orders/:orderPublicId", async (request, reply) => {
+  app.get("/store-orders/:orderPublicId", { config: scoped(DELIVERY_SCOPES.storeOrderRead) }, async (request, reply) => {
     const publicId = parseOrderPublicIdParam(request.params);
     const order = await deps.readPort.getOrderByPublicId(publicId);
     if (order === null) {
@@ -358,7 +406,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(200).send(toStoreOrderResponse(order));
   });
 
-  app.post("/store-orders/:orderPublicId/cancellation", async (request, reply) => {
+  app.post("/store-orders/:orderPublicId/cancellation", { config: scoped(DELIVERY_SCOPES.storeOrderCancel) }, async (request, reply) => {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
     const reasonCode = parseCancelBody(request.body);
@@ -388,7 +436,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
    * وإعلانُ نفسِ الحالةِ مرّتَينِ لا يُنشئُ شيئاً ثانياً. و`POST` كانَ سيوحي بأنَّ كلَّ
    * نداءٍ يُنشئُ حركةَ دفعٍ جديدةً — ولا حركةَ دفعٍ تُنشَأُ هنا أصلاً (§2.2).
    */
-  app.put("/store-orders/:orderPublicId/payment-mirror", async (request, reply) => {
+  app.put("/store-orders/:orderPublicId/payment-mirror", { config: scoped(DELIVERY_SCOPES.paymentMirrorWrite) }, async (request, reply) => {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
     const body = parsePaymentMirrorBody(request.body);
@@ -432,7 +480,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
    * جوابُ «الطريقُ غيرُ مسموحٍ» و«الدفعُ غيرُ مُخوَّلٍ» معاً، بشفرتَي خطأٍ متمايزتَينِ
    * كي يعرفَ العميلُ أيَّ الشرطَينِ اختلَّ.
    */
-  app.post("/store-orders/:orderPublicId/confirmation", async (request, reply) => {
+  app.post("/store-orders/:orderPublicId/confirmation", { config: scoped(DELIVERY_SCOPES.storeOrderConfirm) }, async (request, reply) => {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
     const route = "POST /store-orders/{orderPublicId}/confirmation" as const;
@@ -460,7 +508,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   // confirmed → picking → picked → ready_for_delivery → handed_to_courier → delivered
   // `delivered` requires proof of delivery (§2.4) and triggers inventory
   // `reserved → consumed` in the same transaction (no marketplace call).
-  app.post("/store-orders/:orderPublicId/fulfillment-transition", async (request, reply) => {
+  app.post("/store-orders/:orderPublicId/fulfillment-transition", { config: scoped(DELIVERY_SCOPES.fulfillmentTransition) }, async (request, reply) => {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
     const parsed = parseFulfillmentTransitionBody(request.body);
@@ -509,7 +557,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(200).send(toStoreOrderResponse(result.order));
   });
 
-  app.get("/store-orders/:orderPublicId/delivery-task", async (request, reply) => {
+  app.get("/store-orders/:orderPublicId/delivery-task", { config: scoped(DELIVERY_SCOPES.deliveryTaskRead) }, async (request, reply) => {
     const publicId = parseOrderPublicIdParam(request.params);
     const task = await deps.readPort.getTaskByOrderPublicId(publicId);
     if (task === null) {
@@ -526,13 +574,13 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   });
 
   // Liveness: no dependency, no DB. Never fails while the process runs.
-  app.get("/delivery/health", async () => {
+  app.get("/delivery/health", { config: OPEN }, async () => {
     return { status: "ok" as const };
   });
 
   // Readiness: a real probe. 503 carries the readiness body, not an error body
   // (contracts/api.openapi.yml · errors.md rule 6).
-  app.get("/delivery/ready", async (_request, reply) => {
+  app.get("/delivery/ready", { config: OPEN }, async (_request, reply) => {
     const checks =
       deps.readinessPort === undefined
         ? // No probe wired → nothing was measured → nothing is claimed. A
@@ -575,7 +623,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
    * وسببُ التوقُّفِ — فمراقبٌ يقرأُ `remaining` المتزايدَ يعرفُ أنَّ الجَولةَ أصغرُ
    * من التراكُمِ قبلَ أن يمتلئَ قرصٌ.
    */
-  app.post("/delivery/idempotency-keys/sweep", async (request, reply) => {
+  app.post("/delivery/idempotency-keys/sweep", { config: scoped(DELIVERY_SCOPES.idempotencySweep) }, async (request, reply) => {
     const traceId = String(request.id);
     if (deps.idempotencySweepPort === undefined) {
       throw new DeliveryError(
@@ -614,7 +662,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
    * والردُّ يحملُ `changes_order_state: false` على كلِّ صفٍّ: من يقرأُ رايةً في
    * حادثةٍ لا يقرأُ ADR — سابقةُ `gates_readiness: false` (§4.17-2).
    */
-  app.get("/delivery/inventory-conflicts", async (request, reply) => {
+  app.get("/delivery/inventory-conflicts", { config: scoped(DELIVERY_SCOPES.inventoryConflictsRead) }, async (request, reply) => {
     const traceId = String(request.id);
     if (deps.inventoryConflictReadPort === undefined) {
       throw new DeliveryError(

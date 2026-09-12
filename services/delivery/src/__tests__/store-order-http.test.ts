@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { DeliveryError } from "../domain/errors.js";
 import {
   CUSTOMER_REF,
@@ -47,7 +47,7 @@ function idempotencyHeaders(): Record<string, string> {
 function buildApp(options: { store?: FakeStoreOrderStore; catalog?: FakeCatalog | null } = {}) {
   const store = options.store ?? new FakeStoreOrderStore();
   const catalog = options.catalog === null ? undefined : (options.catalog ?? new FakeCatalog());
-  const app = buildDeliveryHttpApp({
+  const app = createSignedDeliveryApp({
     readPort: store,
     writePort: store,
     catalogPort: catalog,
@@ -72,7 +72,7 @@ describe("delivery HTTP — liveness", () => {
     // A read port that explodes: liveness must still say ok, because the
     // process IS alive. Conflating the two is how a database blip restarts
     // every pod at once.
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: {
         getOrderByPublicId: async () => {
           throw new Error("database down");
@@ -96,7 +96,7 @@ describe("delivery HTTP — liveness", () => {
 describe("delivery HTTP — readiness (§4.10-2)", () => {
   it("200 ready when the probed database answers, with the catalog gap declared", async () => {
     const store = new FakeStoreOrderStore();
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),
@@ -123,7 +123,7 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
 
   it("503 unavailable with the failure reason when the probe fails", async () => {
     const store = new FakeStoreOrderStore();
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       readinessPort: new FakeReadinessProbe([{ name: "database", ok: false, detail: "unreachable" }]),
@@ -600,7 +600,7 @@ describe("delivery HTTP — the error contract itself", () => {
 
   it("an unclassified failure is 500 DELIVERY_INTERNAL_ERROR, never 503", async () => {
     // A read port that explodes with a plain Error — a defect, not an outage.
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: {
         getOrderByPublicId: async () => {
           throw new Error("boom");
@@ -621,7 +621,7 @@ describe("delivery HTTP — the error contract itself", () => {
   });
 
   it("a declared dependency failure stays 503 — the fallback did not swallow it", async () => {
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: {
         getOrderByPublicId: async () => {
           throw new DeliveryError("DELIVERY_MARKETPLACE_UNAVAILABLE", "تعذَّرَ السوقُ");

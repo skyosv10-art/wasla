@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import {
   FakeCatalog,
   FakeReservationPort,
@@ -29,7 +29,7 @@ function idempotencyHeaders(): Record<string, string> {
 function buildApp(options: { store?: FakeStoreOrderStore; catalog?: FakeCatalog | null } = {}) {
   const store = options.store ?? new FakeStoreOrderStore();
   const catalog = options.catalog === null ? undefined : (options.catalog ?? new FakeCatalog());
-  const app = buildDeliveryHttpApp({
+  const app = createSignedDeliveryApp({
     readPort: store,
     writePort: store,
     catalogPort: catalog,

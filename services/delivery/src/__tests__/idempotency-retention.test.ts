@@ -20,7 +20,7 @@ import {
   IDEMPOTENCY_SWEEP_MAX_BATCHES,
   sweepExpiredIdempotencyKeys,
 } from "../use-cases/sweep-expired-idempotency-keys.js";
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import type { IdempotencyKeySweepBatch, IdempotencyKeySweepPort } from "../ports.js";
 import { FakeStoreOrderStore } from "./store-order-fakes.js";
 
@@ -161,7 +161,7 @@ describe("sweepExpiredIdempotencyKeys — حلقةُ الدفعاتِ", () => {
 describe("POST /delivery/idempotency-keys/sweep — مسارُ الصيانةِ", () => {
   const buildApp = (sweepPort?: IdempotencyKeySweepPort) => {
     const store = new FakeStoreOrderStore();
-    return buildDeliveryHttpApp({
+    return createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       ...(sweepPort === undefined ? {} : { idempotencySweepPort: sweepPort }),

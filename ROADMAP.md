@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 16/N — active inventory conflict detection that informs without gating)
+**Last updated:** 2026-09-12 (M5-13 review 17/N — inbound service authentication on the delivery boundary)
 **Previous milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 **Last milestone:** delivery now detects active inventory conflicts — the last debt in ADR-026 §4 that needed neither an owner decision nor an independent scope. The inventory observation projection recorded `quantity_after` and never asked whether the adjustment casts doubt on units a live order is holding; it does now, and **not by the rule §4.8 itself wrote**. A reservation is a negative delta in the marketplace's own inventory ledger, so the `quantity_after` arriving on `marketplace.inventory_adjusted` is *already net of our reservations*: comparing it against reserved demand double-counts and would raise a flag on every healthy order in the system. The criterion is the adjustment's **reason**, not a quantity comparison. New: `delivery_inventory_conflicts` (a flag ledger written in the same transaction as the observation), a pure `assessInventoryConflict()` with closed kind and dismissal vocabularies, and `GET /delivery/inventory-conflicts` for operators. Every flag carries `changes_order_state: false` on the wire and a `CHECK (changes_order_state = FALSE)` in the database: it informs, it never cancels, transitions or releases. Details in ADR-026 §4.18 and `docs/04-api/DELIVERY_HTTP.md`.
@@ -204,6 +204,52 @@ Nothing else has been changed in this repository by the WASLA integration work.
   database); no metric, alert or time series on the flags; no retention policy for the flag
   ledger; and a flag does not prove damage — a `shrinkage` exceeding free stock is *refused*
   by the marketplace, so a recorded loss is a floor, not a measure.
+- **M5-13 (Store Orders & Delivery) — review 17/N, claim `CLM-0138`.** Inbound service
+  authentication on the delivery boundary, lifting the debt declared in ADR-026 §4.18 ("no
+  inbound auth on any route — the service signs outbound only"). Nine of the eleven routes now
+  require a proven service identity (`aud = delivery`) **and a scope that is unique to that
+  route**: `delivery:store-order:{write,read,cancel,confirm}`, `delivery:payment-mirror:write`,
+  `delivery:fulfillment:transition`, `delivery:delivery-task:read`,
+  `delivery:ops:idempotency-sweep`, `delivery:ops:inventory-conflicts:read`. Missing identity
+  is `401`, proven identity with a missing scope is `403`, and the two answers are never
+  conflated. `GET /delivery/health` and `GET /delivery/ready` stay **open by a written
+  decision**: their caller is the deployment orchestrator, which holds no service key — closing
+  them stops deployments, not attackers. An unregistered path answers `401` **before** `404`,
+  so the service surface cannot be mapped without a key, and a newly registered route with no
+  identity classification **fails startup** rather than passing silently.
+  The measured finding worth recording is that the shared middleware emits **three** denial
+  codes, not two: `packages/service-auth/src/errors.ts` `codeFor()` returns `AUTHN_EXPIRED` for
+  an expired token and `AUTHN_AUDIENCE_MISMATCH` for a token aimed at another boundary,
+  otherwise `AUTHN_UNAUTHENTICATED`. A test was written asserting two and **failed**; the
+  assertion and the source comments were corrected to the measured truth rather than the
+  behaviour bent to the guess. Both exceptions are only ever spoken *after* the signature is
+  proven, so they serve an honest operator diagnosing a deployment mistake and tell an attacker
+  without a key nothing. Denials use this contract's flat envelope
+  `{error_code, message, trace_id}` — not dispatch's `code` — and deliberately carry no
+  `DELIVERY_` prefix, because they are the vocabulary of every boundary in the system
+  (ADR-020, ADR-021) and a caller who programs against `AUTHZ_FORBIDDEN` at one boundary must
+  read the same code here.
+  This is also **the first boundary enforced before a production caller exists**: a measured
+  search found no in-repo HTTP caller of any of the eleven routes outside `services/delivery/**`
+  except `packages/delivery-e2e`, so enforcement preceded adoption and broke no caller.
+  Measured: **20 new proof cases** in `services/delivery/src/__tests__/service-identity.test.ts`
+  (the full matrix, four dangerous writes unreachable by read tokens, and binding limits — other
+  path, other method, other order id, health and ready still open, unknown route `401` before
+  `404`, unclassified route rejected at startup); delivery unit **432/432 in 26 files** (was
+  412 in 25); delivery integration **84/84 in 10 files**, unchanged; exit gate **11/11** (was
+  8/8) including three on-the-wire proofs issued with raw `fetch` against the running gate
+  rather than through the signing helper; `pnpm -r typecheck` clean repository-wide. No
+  `pnpm-lock.yaml` change: both packages already depended on `@wasla/service-auth`.
+  Not claimed: `api.openapi.yml` was **not touched** — the published contract declares neither
+  `securitySchemes` nor `401`/`403`, which is a **real gap, not a good choice**, and it is the
+  precedent of all five previously enforced boundaries, so the fix is one contract convention
+  for every boundary at once rather than a second convention invented here.
+  `services/marketplace` is still not enforced (declared, not fixed). `RISK-0026` (the query
+  string is not bound into the signature — it affects `GET /delivery/inventory-conflicts`) and
+  `RISK-0015` (the replay guard is in-memory, so it is per-process) remain open. Role-to-scope
+  granting is `M1-05`: this boundary declares what each route *requires*; who deserves a scope
+  is the token issuer's decision. `docs/12-testing/M1-04_GATE.md` still describes five
+  enforced boundaries and needs a sixth-wave update — a declared debt.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

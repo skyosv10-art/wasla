@@ -299,6 +299,14 @@ export async function startGate(): Promise<GateContext> {
    * النداءِ لا إضعافُ الحدِّ.
    */
   const deliveryInboundKeys = deliveryInboundKeyRegistry();
+  /*
+   * مخزنُ الرصدِ يُبنى **قبلَ** التطبيقِ لأنَّ البوّابةَ تُركِّبُهُ في موضعَينِ:
+   * ناقلُ الرصدِ (`relayInventory`) ومسارَا التشغيلِ على الراياتِ. وبقاؤُهُ بعدَهُ
+   * كانَ يعني أنَّ مسارَي القراءةِ والإقرارِ **غيرُ مُركَّبَينِ في البوّابةِ**
+   * فيُجيبانِ 500، فلا تشهدُ البوّابةُ على تركيبٍ ناقصٍ في `server.ts` أصلاً
+   * (المراجعةُ 18/N).
+   */
+  const relayStore = new PostgresInventoryObservationStore(pool);
   const delivery = buildDeliveryHttpApp({
     serviceIdentity: {
       keys: deliveryInboundKeys,
@@ -321,6 +329,10 @@ export async function startGate(): Promise<GateContext> {
       timeoutMs: 10_000,
     }),
     reservationStore: store,
+    // نفسُ المخزنِ لمسارَي التشغيلِ كما في `server.ts` بالحرفِ: بوّابةٌ تُركِّبُ
+    // غيرَ ما يُركِّبُهُ جذرُ الإنتاجِ تشهدُ على نظامٍ آخرَ.
+    inventoryConflictReadPort: relayStore,
+    inventoryConflictAcknowledgementPort: relayStore,
     /*
      * ومسبارُ رصدٍ حقيقيٌّ على `/health` السوقِ (المراجعةُ 15/N · §4.17): لا
      * `fetchImpl` مزروعٌ، فالبوّابةُ تُثبِتُ أنَّ الرصدَ يعبرُ حدّاً حقيقيّاً
@@ -340,7 +352,6 @@ export async function startGate(): Promise<GateContext> {
   await delivery.fastify.listen({ port: 0, host: "127.0.0.1" });
   const deliveryBaseUrl = `http://127.0.0.1:${(delivery.fastify.server.address() as AddressInfo).port}`;
 
-  const relayStore = new PostgresInventoryObservationStore(pool);
   const relayEvents = new PostgresMarketplaceInventoryEventSource(pool);
 
   return {

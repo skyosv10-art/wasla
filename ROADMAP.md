@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 17/N — inbound service authentication on the delivery boundary)
+**Last updated:** 2026-09-12 (M5-13 review 18/N — the inventory-conflict acknowledgement write route)
 **Previous milestone:** the delivery idempotency-key sweeper now has a caller: a one-shot CLI (`pnpm --filter @wasla/delivery-service sweep:idempotency`) that runs a single sweep round, prints one machine-readable JSON report line to stdout and exits with a distinct code per outcome (ADR-026 §4.16 — lifting the first debt declared in §4.15), documented as a schedule in `docs/14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md`. Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 **Last milestone:** delivery now detects active inventory conflicts — the last debt in ADR-026 §4 that needed neither an owner decision nor an independent scope. The inventory observation projection recorded `quantity_after` and never asked whether the adjustment casts doubt on units a live order is holding; it does now, and **not by the rule §4.8 itself wrote**. A reservation is a negative delta in the marketplace's own inventory ledger, so the `quantity_after` arriving on `marketplace.inventory_adjusted` is *already net of our reservations*: comparing it against reserved demand double-counts and would raise a flag on every healthy order in the system. The criterion is the adjustment's **reason**, not a quantity comparison. New: `delivery_inventory_conflicts` (a flag ledger written in the same transaction as the observation), a pure `assessInventoryConflict()` with closed kind and dismissal vocabularies, and `GET /delivery/inventory-conflicts` for operators. Every flag carries `changes_order_state: false` on the wire and a `CHECK (changes_order_state = FALSE)` in the database: it informs, it never cancels, transitions or releases. Details in ADR-026 §4.18 and `docs/04-api/DELIVERY_HTTP.md`.
@@ -250,6 +250,71 @@ Nothing else has been changed in this repository by the WASLA integration work.
   granting is `M1-05`: this boundary declares what each route *requires*; who deserves a scope
   is the token issuer's decision. `docs/12-testing/M1-04_GATE.md` still describes five
   enforced boundaries and needs a sixth-wave update — a declared debt.
+- **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
+  write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
+  acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that
+  writes `acknowledged_by` without inbound authentication is **an acknowledgement with no
+  acknowledger**. `POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement` is
+  **schema-free**: `acknowledged_at`, `acknowledged_by`, the half-acknowledgement `CHECK` and
+  the partial index have existed since 16/N and were created **for this route**, so what was
+  missing was the door, not the ledger — which is itself evidence that the §4.18-9 decision to
+  add the columns early was right.
+  The acknowledger is taken **from the proven token only** (`service:<name>` or
+  `service:<name>/on-behalf-of:<publicId>`), and any non-empty body is **rejected `400`, never
+  silently ignored** — silent ignoring would produce the worst outcome available: a row in an
+  **accountability ledger** bearing a name other than the one the caller believes it signed
+  with. The rejection is justified by *the route having no body at all*, not by one field being
+  reserved, so there is no ban-list to forget a future addition in. A composed identity longer
+  than 128 characters is **rejected, not truncated**: a truncated identity in an accountability
+  ledger is a lie that reads as a fact.
+  A **tenth scope**, `delivery:ops:inventory-conflicts:acknowledge`, is separate from `:read`
+  **by construction**, so whoever reads the board does not close incidents in their own name;
+  a read-only token is answered `403` on a real socket in the phase-13 gate.
+  **The first acknowledgement wins, in one statement** (`WITH upd AS (UPDATE … WHERE
+  acknowledged_at IS NULL RETURNING …) SELECT … UNION ALL … WHERE NOT EXISTS`), so there is no
+  window between "is it acknowledged?" and "acknowledge it" for a concurrent call to enter —
+  proven with `Promise.all` and two different acknowledgers: one wins, the other reads the
+  winner, and never both. The second call answers **`200`, not `409`**, with an explicit
+  `outcome: "acknowledged" | "already_acknowledged"` discriminator that **names the first
+  acknowledger**: the requested state is satisfied, so `409` would push a caller into a retry
+  that cannot help, but staying silent about the difference would let a second operator believe
+  an incident is in their custody when it is in someone else's. There is deliberately **no
+  `Idempotency-Key`**: the operation is idempotent **in its nature** (`WHERE acknowledged_at IS
+  NULL`), not by machinery, and demanding a key here would falsely imply the key is the
+  protection — which would break the day key semantics change.
+  A malformed `adjustmentId` is `400` **before touching the database**, not `404`, because
+  `404` would send an operator hunting the database for a row that exists; an unknown flag is
+  `404` with a new code `DELIVERY_INVENTORY_CONFLICT_NOT_FOUND` and no row is created. An
+  unwired write port answers **`500`**, never `200 {outcome: "acknowledged"}` — a stricter
+  stance than its read counterpart, because a falsely empty list reads as cleanliness while a
+  false acknowledgement closes a real incident in an operator's mind with no trace in any ledger.
+  The route stays **out of `api.openapi.yml`**, the third ops path to do so on the sweep and
+  read precedents verbatim: the published contract stays **nine** routes, the registered surface
+  becomes **twelve**.
+  Discovered while wiring the gate: `packages/delivery-e2e/src/harness.ts` was passing
+  **neither** ops port, so the read route merged in 16/N had never been exercised by the exit
+  gate at all. Both are wired now.
+  Measured on PostgreSQL 18.6 locally (CI runs 17.6): 7 unit cases for the composer and 10 for
+  the route; inventory-conflict integration **21/21** (was 15/15); exit gate **16/16** (was
+  11/11), including a full journey over a real socket; `pnpm -r typecheck` clean
+  repository-wide.
+  **A real pre-existing defect was found here and deliberately not fixed here**
+  ([`RISK-0035`](docs/07-security/RISK_REGISTER.md), `high`): the marketplace writes
+  `actor_public_id: "system:delivery"` on the reservation-decrement event, and the delivery
+  inventory relay's classifier requires `^WS-[0-9]{10}$`, so the row is **poisoned and the
+  checkpoint advances past it** — the event is *lost*, not held. It surfaced because this is the
+  first case in the repository that relays inventory **after** placing an order (measured: 2
+  applied, 1 poisoned), and it stayed hidden because `observed_quantity_after` is absolute, so
+  any later applied event repairs the snapshot. Fixing it means either widening the classifier's
+  actor pattern or changing **a published event payload**, both of which are contract decisions
+  and not something to slip into a route delivery. The measurement is **pinned in the gate with
+  an exact assertion** (`{applied: 2, poisoned: 1}`) rather than a lenient one, so the defect is
+  measured, not masked.
+  Not claimed: no `un-acknowledge` route — **a policy question, not a forgotten method**: who
+  may overturn another operator's judgement, and with what trace is the reversal itself kept?
+  No metric or alert on flags or acknowledgers (`docs/13-observability/` is empty); no retention
+  policy for the flag ledger; `trace_id` still not published in the rows; still no
+  `securitySchemes` in the published contract; `services/marketplace` still not enforced.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

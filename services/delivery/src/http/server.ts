@@ -216,6 +216,9 @@ async function main(): Promise<void> {
     readinessPort: new PostgresReadinessProbe(pool),
     idempotencySweepPort: store,
     inventoryConflictReadPort: inventoryObservations,
+    // نفسُ المخزنِ لمنفذَينِ: القراءةُ والإقرارُ يعملانِ على نفسِ الصفِّ، ومُحوِّلٌ
+    // ثانٍ في الوسطِ كانَ سيسمحُ لهما بأن يقرآ صفَّينِ مختلفَينِ (المراجعةُ 18/N).
+    inventoryConflictAcknowledgementPort: inventoryObservations,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
     ...(observation.observationPort === undefined
       ? {}

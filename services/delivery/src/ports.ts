@@ -211,7 +211,54 @@ export interface InventoryConflictReadPort {
   }): Promise<readonly InventoryConflictRow[]>;
 }
 
-export interface InventoryObservationStore extends InventoryConflictReadPort {
+/**
+ * نتيجةُ إقرارِ رايةٍ واحدةٍ — نوعٌ مُفرَّقٌ ثلاثيٌّ (المراجعةُ 18/N · ADR-026 §4.20).
+ *
+ * ثلاثةُ فروعٍ لا اثنانِ، لأنَّ ثلاثةَ أشياءَ **مختلفةٍ** قد تقعُ: أقررتُها أنا الآنَ،
+ * أو أقرَّها غيري قبلي، أو لا رايةَ بهذا المفتاحِ. وحقلٌ منطقيٌّ واحدٌ
+ * (`acknowledged: boolean`) كانَ سيخلطُ الأخيرَينِ في «لم يقع» — فيقرأُ المُشغِّلُ
+ * «أُقِرَّت سابقاً» على مُعرِّفٍ أخطأَ نسخَهُ، ويُغلِقُ حادثةً ما زالت مفتوحةً.
+ *
+ * والصفُّ يُرَدُّ في الفرعَينِ الأوّلَينِ لأنَّ الجوابَ يجبُ أن يُسمِّيَ **المُقِرَّ
+ * الفعليَّ**: مُشغِّلٌ ثانٍ نادى المسارَ يحتاجُ أن يرى اسمَ الأوّلِ لا تأكيداً
+ * صامتاً يجعلُهُ يظنُّ الواقعةَ لهُ.
+ */
+export type InventoryConflictAcknowledgementOutcome =
+  | { readonly acknowledgement: "recorded"; readonly row: InventoryConflictRow }
+  | { readonly acknowledgement: "already_recorded"; readonly row: InventoryConflictRow }
+  | { readonly acknowledgement: "unknown_conflict" };
+
+/**
+ * كتابةُ إقرارِ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20 — رفعُ دَينِ §4.18).
+ *
+ * **منفذٌ ثانٍ لا حركةٌ في `InventoryConflictReadPort`**: مسارُ القراءةِ يُحقَنُ في
+ * تطبيقٍ قد لا يملكُ سلطةَ الكتابةِ، وضمُّ الكتابةِ إلى منفذِ القراءةِ يعني أنَّ
+ * كلَّ قارئٍ صارَ كاتباً بالبناءِ. وهذا هوَ نفسُ التعليلِ الذي فصلَ منفذَ القراءةِ
+ * عن `InventoryObservationStore` كاملاً في §4.18.
+ *
+ * **ولا إفراجَ عن الإقرارِ (`un-acknowledge`) في هذا المنفذِ.** ومحلُّهُ من العقدِ
+ * مُعلَنٌ لا مُغفَلٌ: تراجعٌ عن إقرارٍ قرارُ سياسةٍ (مَن يملكُ نقضَ حكمِ مُشغِّلٍ
+ * آخرَ؟) لا تفصيلُ تنفيذٍ، وهوَ دَينٌ مذكورٌ في §4.20 لا حركةٌ نُسِيَت.
+ */
+export interface InventoryConflictAcknowledgementPort {
+  /**
+   * **الأوّلُ يفوزُ ولا يُكتَبُ فوقَهُ أبداً.** وهذا ليسَ تفضيلاً: §4.18-6 قرَّرَ أنَّ
+   * إعادةَ تسليمِ حدثٍ لا تمحو إقرارَ مُشغِّلٍ (`ON CONFLICT DO NOTHING`)، ومسارُ
+   * كتابةٍ يمحوهُ يكونُ قد نقضَ القرارَ نفسَهُ من البابِ الآخرِ.
+   *
+   * ويجبُ أن يكونَ **عمليّةً واحدةً ذرّيّةً**: قراءةٌ ثمَّ كتابةٌ في نداءَينِ تُتيحُ
+   * لمُشغِّلَينِ أن يقرآ «غيرُ مُقَرَّةٍ» ثمَّ يكتبَ الثاني فوقَ الأوّلِ.
+   */
+  acknowledgeInventoryConflict(input: {
+    readonly adjustmentId: string;
+    readonly acknowledgedBy: string;
+    readonly acknowledgedAt: string;
+  }): Promise<InventoryConflictAcknowledgementOutcome>;
+}
+
+export interface InventoryObservationStore
+  extends InventoryConflictReadPort,
+    InventoryConflictAcknowledgementPort {
   /* ── checkpoint (delivery-owned) ── */
   getInventoryCheckpoint(consumerId: string): Promise<InventoryRelayCheckpoint | null>;
   writeInventoryCheckpoint(consumerId: string, checkpoint: InventoryRelayCheckpoint): Promise<void>;

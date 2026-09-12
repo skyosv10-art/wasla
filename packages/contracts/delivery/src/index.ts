@@ -177,6 +177,12 @@ export const DELIVERY_ERROR_CODES = [
   "DELIVERY_INVENTORY_NOT_RESERVED",
   // الحجزُ فشلَ: مخزونُ السوقِ لا يكفي.
   "DELIVERY_INVENTORY_INSUFFICIENT",
+  // المراجعةُ 18/N: إقرارُ رايةِ تضاربٍ (§4.20). رايةٌ لا وجودَ لها ⇒ 404
+  // صريحٌ لا 200 «أُقِرَّت»: مُشغِّلٌ أخطأَ في نسخِ `adjustment_id` يجبُ أن
+  // يعلمَ أنَّهُ لم يُقِرَّ شيئاً، لا أن يُطمَأَنَ على واقعةٍ ما زالت مفتوحةً.
+  // وكودٌ خاصٌّ لا `DELIVERY_ORDER_NOT_FOUND`: الرايةُ ليست طلباً، ومنادٍ
+  // يُصنِّفُ 404 بالكودِ لا بالمسارِ سيُحيلُ حادثةَ مخزونٍ إلى فريقِ الطلباتِ.
+  "DELIVERY_INVENTORY_CONFLICT_NOT_FOUND",
 ] as const;
 export type DeliveryErrorCode = (typeof DELIVERY_ERROR_CODES)[number];
 
@@ -209,6 +215,7 @@ export const DELIVERY_ERROR_CODE_CLASS: Record<DeliveryErrorCode, DeliveryErrorC
   DELIVERY_DATABASE_UNAVAILABLE: "dependency_unavailable",
   DELIVERY_INVENTORY_NOT_RESERVED: "conflict",
   DELIVERY_INVENTORY_INSUFFICIENT: "conflict",
+  DELIVERY_INVENTORY_CONFLICT_NOT_FOUND: "not_found",
 };
 
 /** The HTTP status derived from the class — the HTTP layer never re-classifies. */

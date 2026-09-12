@@ -1,14 +1,14 @@
 {
  "schema": "wasla.baseline/v1",
- "generated_at": "2026-09-12T05:03:39Z",
+ "generated_at": "2026-09-12T06:27:43Z",
  "generator": "scripts/baseline.sh",
  "repo": {
-  "commit": "d69527e68758bb68fe879bff9a8792354f48c50c",
-  "branch": "feat/m5-17-delivery-inbound-service-auth",
+  "commit": "d75add522ed0f15c4358259e414ef717e55d1cd2",
+  "branch": "feat/m5-18-inventory-conflict-acknowledgement",
   "dirty": true,
-  "dirty_files": 29,
-  "dirty_reason": "المراجعةُ 17/N — المُصادقةُ الداخلةُ على حدِّ التوصيلِ (CLM-0138)",
-  "tracked_files": 1691
+  "dirty_files": 23,
+  "dirty_reason": "المراجعةُ 18/N (CLM-0139): مسارُ كتابةِ إقرارِ رايةِ التضاربِ — ملفّا اختبارٍ جديدانِ ودعاوى جديدةٌ في التكامُلِ والبوّابةِ",
+  "tracked_files": 1693
  },
  "env": {
   "node": "v20.20.1",
@@ -26,21 +26,21 @@
   "packages": 49,
   "packages_with_typecheck": 49,
   "packages_with_test": 49,
-  "test_files_tracked": 333,
+  "test_files_tracked": 336,
   "ci_jobs": 30,
   "ci_allow_failure": 1,
   "governance_checks": 13,
-  "risks_not_closed": 24
+  "risks_not_closed": 25
  },
  "dynamic": {
   "measured": true,
-  "source": "/tmp/verify17c.log",
-  "tests_passed": 4370,
-  "test_files_executed": 265,
+  "source": "/tmp/verify18b.log",
+  "tests_passed": 4387,
+  "test_files_executed": 267,
   "governance_suite_cases": 183,
   "governance_suite_failed": 0,
   "verify_overall": "passed"
  },
- "fingerprint": "sha256:6cd2ad33a9ec3bc3b9373792062afa29695da74e6ed964b7aed03f4d0445fca4",
+ "fingerprint": "sha256:3842f1a83f35905ac51f4d0e4a851c9703c45874fa5df368e1d9f530c08030b3",
  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

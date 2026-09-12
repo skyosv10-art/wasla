@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import {
@@ -95,7 +95,7 @@ describe.skipIf(!PG_ENABLED)("مُنادي مُكنسةِ مفاتيحِ الت�
     await resetData(pool);
 
     const store = new StoreOrderStore(pool);
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),

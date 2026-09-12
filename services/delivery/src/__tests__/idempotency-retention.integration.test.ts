@@ -24,7 +24,7 @@ import { resolve } from "node:path";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { IDEMPOTENCY_KEY_TTL_SECONDS } from "../domain/idempotency.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { sweepExpiredIdempotencyKeys } from "../use-cases/sweep-expired-idempotency-keys.js";
@@ -81,7 +81,7 @@ describe.skipIf(!PG_ENABLED)("حياةُ مفاتيحِ التماثُلِ وم�
   });
 
   const buildApp = (ttlStore: StoreOrderStore = store) =>
-    buildDeliveryHttpApp({
+    createSignedDeliveryApp({
       readPort: ttlStore,
       writePort: ttlStore,
       catalogPort: new FakeCatalog(),

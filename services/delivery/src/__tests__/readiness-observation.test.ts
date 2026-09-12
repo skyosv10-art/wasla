@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { buildReadinessResponse } from "../http/readiness.js";
 import type {
   DependencyObservation,
@@ -134,7 +134,7 @@ describe("buildReadinessResponse — أربعةُ أجوبةٍ لا اثنانِ
 describe("GET /delivery/ready — الرصدُ على السلكِ", () => {
   function buildApp(observationPort?: DependencyObservationPort) {
     const store = new FakeStoreOrderStore();
-    return buildDeliveryHttpApp({
+    return createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),

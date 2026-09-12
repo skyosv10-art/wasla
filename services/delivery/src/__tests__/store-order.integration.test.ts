@@ -16,7 +16,7 @@ import type { Pool } from "pg";
 
 import { PG_ENABLED, resetData, setupPostgres } from "./pg-harness.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
-import { buildDeliveryHttpApp } from "../http/app.js";
+import { createSignedDeliveryApp } from "./service-identity-support.js";
 import { FakeCatalog, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, PRODUCT_A, PRODUCT_B, STORE_SLUG, uuidSequence } from "./store-order-fakes.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
@@ -281,7 +281,7 @@ describe.skipIf(!PG_ENABLED)("store-order store — PostgreSQL", () => {
   });
 
   it("serves the real HTTP boundary end to end over Postgres", async () => {
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new FakeCatalog(),

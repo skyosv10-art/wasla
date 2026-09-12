@@ -300,3 +300,20 @@ export type {
   MarketplaceProbeReason,
 } from "./infrastructure/http-marketplace-probe.js";
 export type { DependencyObservationBody } from "./http/readiness.js";
+
+/* ── review 17/N: فرضُ هويّةِ الخدمةِ الداخلةِ (`M1-04` الموجةُ السادسةُ) ──
+ *
+ * يُصدَّرُ الجمهورُ والصلاحيّاتُ **لأنَّ كلَّ منادٍ يحتاجُهما ليُوقِّعَ**، ولا
+ * يُصدَّرانِ نسخةً ثانيةً عندَ المنادي: نسختانِ من اسمِ صلاحيّةٍ تفترقانِ في
+ * مراجعةٍ ويُكتشَفُ الفرقُ بـ403 في الإنتاجِ.
+ */
+export {
+  DELIVERY_SCOPES,
+  DELIVERY_SERVICE_AUDIENCE,
+  registerServiceIdentity,
+} from "./http/service-identity.js";
+export type {
+  DeliveryRouteConfig,
+  DeliveryRouteIdentity,
+  DeliveryServiceIdentityOptions,
+} from "./http/service-identity.js";

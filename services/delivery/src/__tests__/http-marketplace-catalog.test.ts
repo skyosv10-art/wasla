@@ -328,7 +328,7 @@ describe("HttpMarketplaceCatalogPort · price snapshots", () => {
  */
 describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", () => {
   it("places an order for a slug — the answer that was 503 for seven reviews", async () => {
-    const { buildDeliveryHttpApp } = await import("../http/app.js");
+    const { createSignedDeliveryApp } = await import("./service-identity-support.js");
     const { FakeStoreOrderStore, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, uuidSequence } = await import(
       "./store-order-fakes.js"
     );
@@ -344,7 +344,7 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
     }) as unknown as typeof fetch;
 
     const store = new FakeStoreOrderStore();
-    const app = buildDeliveryHttpApp({
+    const app = createSignedDeliveryApp({
       readPort: store,
       writePort: store,
       catalogPort: new HttpMarketplaceCatalogPort({
@@ -381,7 +381,7 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
   });
 
   it("400s an unknown slug and 503s an outage — the two must not merge", async () => {
-    const { buildDeliveryHttpApp } = await import("../http/app.js");
+    const { createSignedDeliveryApp } = await import("./service-identity-support.js");
     const { FakeStoreOrderStore, FakeReservationPort, FakeReservationStore, CUSTOMER_REF, uuidSequence } = await import(
       "./store-order-fakes.js"
     );
@@ -395,7 +395,7 @@ describe("HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11)", 
       const fetchImpl = (async () =>
         ({ status: marketplaceStatus, json: async () => ({}) }) as unknown as Response) as unknown as typeof fetch;
       const store = new FakeStoreOrderStore();
-      const app = buildDeliveryHttpApp({
+      const app = createSignedDeliveryApp({
         readPort: store,
         writePort: store,
         catalogPort: new HttpMarketplaceCatalogPort({

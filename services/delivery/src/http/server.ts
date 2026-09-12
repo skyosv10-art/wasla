@@ -37,7 +37,11 @@
 
 import { Pool } from "pg";
 
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  InMemoryServiceTokenReplayGuard,
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import { buildDeliveryHttpApp } from "./app.js";
 import { resolveIdempotencyTtlSeconds } from "../domain/idempotency.js";
@@ -187,7 +191,24 @@ async function main(): Promise<void> {
   // فيهِ ملكُ المرحّلِ (`marketplace-inventory-relay.ts`) والتطبيقُ لا يرى منهُ
   // إلّا `InventoryConflictReadPort` — والمحدودُ بالنوعِ لا بالنيّةِ.
   const inventoryObservations = new PostgresInventoryObservationStore(pool);
+  /*
+   * فرضُ هويّةِ الخدمةِ الداخلةِ (`M1-04` الموجةُ السادسةُ · المراجعةُ 17/N).
+   *
+   * والمفاتيحُ من البيئةِ **بلا قيمةٍ افتراضيّةٍ**: نشرٌ بلا
+   * `WASLA_SERVICE_AUTH_KEYS` يسقطُ عندَ الإقلاعِ لا بعدَ أوّلِ نداءٍ — وهوَ
+   * نفسُ الحاسمُ الذي يُستعملُ سلفاً في هذا الملفِّ للتوقيعِ **الصادرِ**، فالحدُّ
+   * الآنَ يُوقِّعُ ويتحقَّقُ بمَعينِ مفاتيحَ واحدٍ.
+   *
+   * ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ مُعلَنٌ (`RISK-0015`)**: نسختانِ لا
+   * تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ أن يُعادَ على الأخرى — و`Redis` هوَ
+   * السدُّ، وعقدُ `ServiceTokenReplayGuard` مكتوبٌ كي يكونَ الاستبدالُ تغييرَ
+   * سطرٍ هنا.
+   */
   const { fastify, close } = buildDeliveryHttpApp({
+    serviceIdentity: {
+      keys: keyRegistryFromEnv(process.env),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
     readPort: store,
     writePort: store,
     reservationPort: reservation.reservationPort,
@@ -205,7 +226,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired`);
+    console.log(`delivery service listening on :${PORT} · inbound service identity: enforced (audience=delivery) · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

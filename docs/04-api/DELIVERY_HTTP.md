@@ -12,14 +12,38 @@
 
 ---
 
-## 1. ماذا يُضاف في هذه المراجعة (16/N)
+## 1. ماذا يُضاف في هذه المراجعة (17/N)
+
+ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)**
+(«لا مُصادقةَ داخلةً على أيِّ مسارٍ») — والتفصيلُ في
+[§4.19](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) وفي
+[سجلِّ الإنفاذِ §2.7](../07-security/SERVICE_AUTH_ENFORCEMENT.md):
+
+- **المساراتُ التسعةُ المُغلَقةُ تطلبُ هويّةَ خدمةٍ مُثبَتةً** (`aud = delivery`)
+  **وصلاحيّةً مُفرَدةً لكلِّ مسارٍ** — الجدولُ في §2 أدناهُ. ومَن نادى بلا ترويسةٍ
+  يُرَدُّ `401`، ومَن نادى بهويّةٍ صحيحةٍ وصلاحيّةٍ ناقصةٍ يُرَدُّ `403`.
+- **`GET /delivery/health` و`GET /delivery/ready` مفتوحانِ بقرارٍ مكتوبٍ** —
+  منادِيهما مُنسِّقُ النشرِ ولا يملكُ مفتاحَ خدمةٍ؛ إغلاقُهما يوقفُ النشرَ لا
+  المهاجمَ.
+- **ومسارٌ مجهولٌ يُرَدُّ `401` قبلَ `404`**: الحدُّ **مُغلَقٌ افتراضاً**، فلا
+  يُستكشَفُ سطحُ الخدمةِ بلا هويّةٍ. ومسارٌ جديدٌ يُسجَّلُ بلا تصنيفٍ **يُسقِطُ
+  الإقلاعَ** لا يمرُّ صامتاً.
+- **ومغلَّفُ الرفضِ مغلَّفُ هذا العقدِ**: `{error_code, message, trace_id}` —
+  لا `code`. التفصيلُ في §3.3.
+- **و`api.openapi.yml` لم يُمَسَّ**: العقدُ المنشورُ لا يُعلِنُ `401`/`403` ولا
+  `securitySchemes` — **نقصٌ مُعلَنٌ** على سابقةِ حدودِ المنظومةِ الخمسِ، لا خيارٌ
+  حسنٌ (§7).
+
+---
+
+## 1أ. ما أضافتْهُ المراجعةُ 16/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.8](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)** (كشفُ تضاربِ المخزونِ النشطِ) — والتفصيلُ في [§4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md):
 
 - **`GET /delivery/inventory-conflicts`** — مسارُ **قراءةٍ للمُشغِّلِ** يُعيدُ رياتِ الشكِّ المُسجَّلةَ في `delivery_inventory_conflicts`: `{applied_filter:{unacknowledged_only, limit}, count, conflicts:[…]}`. لا جسمَ، ولا `Idempotency-Key` (قراءةٌ محضةٌ)، **ولا مكانَ لهُ في `api.openapi.yml`** — سطحُ تشغيلٍ لا سطحُ مستهلكٍ، على سابقةِ مسارِ المُكنسةِ حرفاً.
 - **`applied_filter` يُعادُ في الجسمِ لا يُفترَضُ.** `unacknowledged_only` افتراضُهُ `true` و`limit` افتراضُهُ `50` وسقفُهُ `500`؛ فمَن يقرأُ صفراً يعرفُ **بأيِّ ترشيحٍ** كانَ صفراً — قائمةٌ فارغةٌ بلا ترشيحٍ مُعلَنٍ تُقرأُ سلامةً.
 - **كلُّ رايةٍ تحملُ `changes_order_state: false`** — مُعلَنٌ على السلكِ لا مُستَنتَجٌ، ومُقيَّدٌ في القاعدةِ بـ`CHECK (changes_order_state = FALSE)`: الرايةُ لا تُلغي طلباً ولا تُحرِّكُ حالةً ولا تُفرِجُ حجزاً. سابقةُ `gates_readiness: false` (§4.17-2).
-- **`trace_id` لا يُنشَرُ في الصفوفِ** وإنْ كانَ مخزوناً: مسارٌ بلا مُصادقةٍ داخلةٍ لا يُصدِّرُ معرِّفَ تتبُّعٍ يربطُ سجلّاتِ خدماتٍ أخرى.
+- **`trace_id` لا يُنشَرُ في الصفوفِ** وإنْ كانَ مخزوناً: كانَ السببُ أنَّ مساراً بلا مُصادقةٍ داخلةٍ لا يُصدِّرُ معرِّفَ تتبُّعٍ يربطُ سجلّاتِ خدماتٍ أخرى. **وصارَ للمسارِ مُصادقةٌ داخلةٌ في 17/N** (`delivery:ops:inventory-conflicts:read`)، ومع ذلكَ **لم يُنشَرْ** الحقلُ: نشرُهُ قرارُ عقدٍ مستقلٌّ لا نتيجةُ فرضِ هويّةٍ.
 
 ---
 
@@ -59,19 +83,24 @@
 
 ## 2. المساراتُ الإحدى عشرةَ (لا ثانيةَ عشرةَ)
 
-| الطريقةُ والمسارُ | الغرضُ | النجاحُ |
-|---|---|---|
-| `POST /store-orders` | إنشاءُ طلبِ متجرٍ ومهمّةِ توصيلِه · **`Idempotency-Key` إلزاميّةٌ** | **201** `StoreOrderResource` |
-| `GET /store-orders/{orderPublicId}` | قراءةُ الطلبِ بأصنافِه | **200** `StoreOrderResource` |
-| `POST /store-orders/{orderPublicId}/cancellation` | إلغاءُ الطلبِ بسببٍ من كتالوجٍ مغلقٍ · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
-| `PUT /store-orders/{orderPublicId}/payment-mirror` | مرآةُ حالةِ الدفعِ الخارجيّةِ ومرجعِها · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
-| `POST /store-orders/{orderPublicId}/confirmation` | تأكيدُ الطلبِ بعدَ تخويلِ الدفعِ · **لا جسمَ** · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
-| `POST /store-orders/{orderPublicId}/fulfillment-transition` | تحريكُ طورِ التنفيذِ (وعندَ `delivered` يُخصَمُ المخزونُ) · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` |
-| `GET /store-orders/{orderPublicId}/delivery-task` | قراءةُ مهمّةِ التوصيلِ (مرآةٌ خشنةٌ) | **200** `DeliveryTaskResource` |
-| `GET /delivery/health` | **حياةٌ (liveness)** بلا تبعيّةٍ | **200** `{ status: "ok" }` |
-| `GET /delivery/ready` | **جاهزيّةٌ (readiness)** بمسبارِ قاعدةٍ حقيقيٍّ | **200** / **503** `ReadinessResponse` |
-| `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` |
-| `GET /delivery/inventory-conflicts` | **تشغيلٌ:** رياتُ تضاربِ المخزونِ · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, count, conflicts[]}` |
+| الطريقةُ والمسارُ | الغرضُ | النجاحُ | الصلاحيّةُ المطلوبةُ (17/N) |
+|---|---|---|---|
+| `POST /store-orders` | إنشاءُ طلبِ متجرٍ ومهمّةِ توصيلِه · **`Idempotency-Key` إلزاميّةٌ** | **201** `StoreOrderResource` | `delivery:store-order:write` |
+| `GET /store-orders/{orderPublicId}` | قراءةُ الطلبِ بأصنافِه | **200** `StoreOrderResource` | `delivery:store-order:read` |
+| `POST /store-orders/{orderPublicId}/cancellation` | إلغاءُ الطلبِ بسببٍ من كتالوجٍ مغلقٍ · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` | `delivery:store-order:cancel` |
+| `PUT /store-orders/{orderPublicId}/payment-mirror` | مرآةُ حالةِ الدفعِ الخارجيّةِ ومرجعِها · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` | `delivery:payment-mirror:write` — **لا يحملُها منادٍ آخرُ** |
+| `POST /store-orders/{orderPublicId}/confirmation` | تأكيدُ الطلبِ بعدَ تخويلِ الدفعِ · **لا جسمَ** · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` | `delivery:store-order:confirm` |
+| `POST /store-orders/{orderPublicId}/fulfillment-transition` | تحريكُ طورِ التنفيذِ (وعندَ `delivered` يُخصَمُ المخزونُ) · **`Idempotency-Key` إلزاميّةٌ** | **200** `StoreOrderResource` | `delivery:fulfillment:transition` |
+| `GET /store-orders/{orderPublicId}/delivery-task` | قراءةُ مهمّةِ التوصيلِ (مرآةٌ خشنةٌ) | **200** `DeliveryTaskResource` | `delivery:delivery-task:read` |
+| `GET /delivery/health` | **حياةٌ (liveness)** بلا تبعيّةٍ | **200** `{ status: "ok" }` | **مفتوحٌ بقصدٍ** |
+| `GET /delivery/ready` | **جاهزيّةٌ (readiness)** بمسبارِ قاعدةٍ حقيقيٍّ | **200** / **503** `ReadinessResponse` | **مفتوحٌ بقصدٍ** |
+| `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` | `delivery:ops:idempotency-sweep` |
+| `GET /delivery/inventory-conflicts` | **تشغيلٌ:** رياتُ تضاربِ المخزونِ · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, count, conflicts[]}` | `delivery:ops:inventory-conflicts:read` |
+
+**والصلاحيّةُ ليست الهويّةَ:** كلُّ مسارٍ مُغلَقٍ يطلبُ **الاثنَينِ** — هويّةً
+مُثبَتةً (توقيعٌ صحيحٌ · جمهورٌ `delivery` · مربوطٌ بهذهِ الطريقةِ وهذا المسارِ ·
+غيرُ معادٍ) **ثمَّ** الصلاحيّةَ. فنقصُ الأولى `401` ونقصُ الثانيةِ `403`، ولا
+يُخلَطُ الجوابانِ.
 
 `orderPublicId` بنمطِ `^WS-[0-9]{10}$` حصراً — كلُّ ما دونَه **400 قبلَ لمسِ القاعدةِ**.
 
@@ -212,6 +241,20 @@ GET /delivery/ready → 200
 
 الترجمةُ من الخطأِ إلى الحالةِ في مكانٍ واحدٍ (`httpStatusForDeliveryError`): `validation ⇒ 400` · `not_found ⇒ 404` · `conflict ⇒ 409` · `dependency_unavailable ⇒ 503` · `internal ⇒ 500`.
 
+### 3.0 ورفضُ الهويّةِ يستعملُ المغلَّفَ نفسَهُ (17/N)
+
+`401` و`403` و`503` الصادرةُ من فرضِ هويّةِ الخدمةِ تخرجُ بـ**نفسِ** الحقولِ
+الثلاثةِ: `{error_code, message, trace_id}` — لا `code` (وهوَ ما يستعملُهُ حدُّ
+التوزيعِ) ولا `details`. وأكوادُها **بلا سابقةِ `DELIVERY_`** لأنَّها مفرداتُ
+حدودِ المنظومةِ كلِّها: `AUTHN_UNAUTHENTICATED` · `AUTHN_EXPIRED` ·
+`AUTHN_AUDIENCE_MISMATCH` · `AUTHZ_FORBIDDEN` ·
+`SERVICE_AUTH_REPLAY_STORE_UNAVAILABLE`. والتفصيلُ وسببُ كلِّ استثناءٍ في
+[`errors.md`](../../services/delivery/contracts/errors.md).
+
+**ولا سببَ في نصِّ الرفضِ:** «توقيعٌ خاطئٌ» و«مفتاحٌ مسحوبٌ» و«رمزٌ معادٌ» كلُّها
+كودٌ واحدٌ — التمييزُ بينَها خريطةٌ للمهاجمِ. ويُستثنى الانتهاءُ واختلافُ الجمهورِ
+لأنَّهما لا يُنطَقُ بهما إلّا **بعدَ** إثباتِ التوقيعِ.
+
 ### 3.1 الملاذُ الأخيرُ 500 لا 503 — عكسَ البحثِ عن قصدٍ
 
 خطأٌ غيرُ مُصنَّفٍ يُرَدُّ **`500 DELIVERY_INTERNAL_ERROR`**. والمراجعةُ 7/N أعادتِ النظرَ في هذا الخيارِ صراحةً بعدَ وصولِ مفتاحِ التماثُلِ — **وأبقتهُ**: المفتاحُ يجعلُ الإعادةَ **آمنةً** لكنّهُ لا يجعلُ الفشلَ المجهولَ **عابراً**، و`503` دعوةٌ للإعادةِ على ما قد يكونُ عيباً دائماً في الشيفرةِ. فـ`500` تقولُ الحقيقةَ: عيبٌ يُفحَصُ لا عبورٌ يُعاد؛ والعميلُ الذي يريدُ إعادةً آمنةً يملكُها الآنَ بالمفتاحِ نفسِهِ ([§4.10-4](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)). والأخطاءُ المُعلَنةُ تبعيّةً (`DELIVERY_MARKETPLACE_UNAVAILABLE` · `DELIVERY_DISPATCH_UNAVAILABLE` · `DELIVERY_DATABASE_UNAVAILABLE`) تبقى **503** — الملاذُ لا يبتلعُها (مقيسٌ باختبارَين متقابلَين).
@@ -295,8 +338,10 @@ GET /delivery/ready → 200
 | إعادةُ محاولةٍ أو قاطعُ دورةٍ في محوّلِ الكتالوجِ | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ |
 | حجزُ مخزونٍ أو خصمُهُ عندَ الإنشاءِ | ADR-026 §2.3 · §4.8 — اللقطةُ سعرٌ وسببُ وجودٍ فقط |
 | ~~كشفُ تضاربِ المخزونِ النشطِ (الرصدُ يُسجّلُ ولا يسألُ)~~ **رُفِعَ في المراجعةِ 16/N** | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رايةٌ **تُخبِرُ لا تحكُمُ** في `delivery_inventory_conflicts` بمعيارِ **السببِ** لا الكمّيّةِ، و`GET /delivery/inventory-conflicts` يقرؤُها |
-| **مسارُ كتابةٍ لإقرارِ رايةٍ** (`POST …/acknowledgement`) | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — العمودانِ موجودانِ ويُقرآنِ، والإقرارُ اليومَ يدويٌّ على القاعدةِ |
-| **مُصادقةٌ داخلةٌ على مساراتِ الخدمةِ كلِّها** (التوقيعُ صادرٌ فقط) | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — نطاقٌ مستقلٌّ للمساراتِ الإحدى عشرةَ معاً، لا في مراجعةِ كشفِ تضاربٍ |
+| **مسارُ كتابةٍ لإقرارِ رايةٍ** (`POST …/acknowledgement`) | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [§4.19](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — العمودانِ موجودانِ ويُقرآنِ، والإقرارُ اليومَ يدويٌّ على القاعدةِ. وكانَ الحاجزُ **غيابَ المُصادقةِ الداخلةِ** (إقرارٌ بلا مُقِرٍّ)، وقد رُفِعَ في 17/N — فصارَ المسارُ **مُمكِناً ونطاقاً تالياً** |
+| ~~**مُصادقةٌ داخلةٌ على مساراتِ الخدمةِ كلِّها** (التوقيعُ صادرٌ فقط)~~ **رُفِعَ في المراجعةِ 17/N** | [ADR-026 §4.19](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [سجلُّ الإنفاذِ §2.7](../07-security/SERVICE_AUTH_ENFORCEMENT.md) — تسعُ صلاحيّاتٍ لتسعةِ مساراتٍ مُغلَقةٍ، ومسارَا الرصدِ مفتوحانِ بقرارٍ مكتوبٍ |
+| **`401`/`403` و`securitySchemes` غيرُ مُعلَنةٍ في `api.openapi.yml`** | [ADR-026 §4.19](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — **نقصٌ حقيقيٌّ** لا خيارٌ حسنٌ؛ وهوَ سابقةُ حدودِ المنظومةِ الخمسِ كلِّها، وعلاجُهُ عقدٌ لكلِّ الحدودِ معاً لا لحدٍّ واحدٍ فيصيرَ في المنظومةِ عقدانِ |
+| **تفويضُ الأدوارِ إلى الصلاحيّاتِ (`M1-05`)** | [ADR-026 §4.19](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — هذا الحدُّ يُعلِنُ ما **يطلبُهُ** كلُّ مسارٍ، ومَن يستحقُّ صلاحيّةً قرارُ مُصدِرِ الرمزِ |
 | ~~حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ~~ **رُفِعَ في المراجعةِ 13/N** | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.5 — `expires_at` في الصفِّ ومُكنسةٌ بدفعاتٍ على مسارٍ |
 | ~~**مُنادٍ** للمُكنسةِ (جدولٌ خارجيٌّ وتواتُرُهُ)~~ **رُفِعَ في المراجعةِ 14/N** | [ADR-026 §4.16](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [دليلُ التشغيلِ](../14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md) — أمرٌ لقطةٌ واحدةٌ (`pnpm --filter @wasla/delivery-service sweep:idempotency`) يُصيبُ القاعدةَ مباشرةً بلا هويّةِ خدمةٍ، ويخرجُ بـ`0` نظيفاً و`3` بلغَ السقفَ و`4` مزاحمةَ قفلٍ و`1` إخفاقاً · **والجَدوَلُ نفسُهُ ليسَ في المستودعِ** (لا بيانَ بنيةٍ تحتيّةٍ بعدُ) |
 | نطاقُ صيانةٍ مستقلٌّ لمسارِ المُكنسةِ عبرَ HTTP | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المسارُ **يبقى** لصيانةٍ يدويّةٍ من داخلِ الشبكةِ، ولا يستعملُهُ المُنادي المُجدوَلُ (§4.16-2) فلا يُوسَّعُ سطحُهُ |

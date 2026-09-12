@@ -1,14 +1,14 @@
 {
  "schema": "wasla.baseline/v1",
- "generated_at": "2026-09-12T03:12:02Z",
+ "generated_at": "2026-09-12T05:03:39Z",
  "generator": "scripts/baseline.sh",
  "repo": {
-  "commit": "390d4dd2b820535aeb46485eebb495ba07a28577",
-  "branch": "feat/m5-16-inventory-conflict-detection",
+  "commit": "d69527e68758bb68fe879bff9a8792354f48c50c",
+  "branch": "feat/m5-17-delivery-inbound-service-auth",
   "dirty": true,
-  "dirty_files": 25,
-  "dirty_reason": "المراجعةُ 16/N — كشفُ تضاربِ المخزونِ النشطِ (CLM-0137)",
-  "tracked_files": 1688
+  "dirty_files": 29,
+  "dirty_reason": "المراجعةُ 17/N — المُصادقةُ الداخلةُ على حدِّ التوصيلِ (CLM-0138)",
+  "tracked_files": 1691
  },
  "env": {
   "node": "v20.20.1",
@@ -26,7 +26,7 @@
   "packages": 49,
   "packages_with_typecheck": 49,
   "packages_with_test": 49,
-  "test_files_tracked": 332,
+  "test_files_tracked": 333,
   "ci_jobs": 30,
   "ci_allow_failure": 1,
   "governance_checks": 13,
@@ -34,13 +34,13 @@
  },
  "dynamic": {
   "measured": true,
-  "source": "/tmp/verify16c.log",
-  "tests_passed": 4350,
-  "test_files_executed": 264,
+  "source": "/tmp/verify17c.log",
+  "tests_passed": 4370,
+  "test_files_executed": 265,
   "governance_suite_cases": 183,
   "governance_suite_failed": 0,
   "verify_overall": "passed"
  },
- "fingerprint": "sha256:5641bee2950a769943779ea19b10e849b7be9de0137e82d368dacdf184215d48",
+ "fingerprint": "sha256:6cd2ad33a9ec3bc3b9373792062afa29695da74e6ed964b7aed03f4d0445fca4",
  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

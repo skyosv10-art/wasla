@@ -271,3 +271,32 @@ export type {
   IdempotencySweepRunReport,
   RunIdempotencySweepRoundInput,
 } from "./ops/idempotency-sweep-runner.js";
+
+/* ── review 15/N: a real marketplace readiness observation (ADR-026 §4.17) ── */
+export {
+  CachedDependencyProbe,
+  DEFAULT_MARKETPLACE_PROBE_TTL_MS,
+  DEPENDENCY_NAMES,
+  PROBE_THREW_DETAIL,
+  resolveMarketplaceProbeConfig,
+} from "./domain/dependency-probe.js";
+export type {
+  CachedDependencyProbeOptions,
+  DependencyName,
+  DependencyObservation,
+  DependencyObservationPort,
+  DependencyProbePort,
+  DependencyProbeResult,
+  MarketplaceProbeConfig,
+} from "./domain/dependency-probe.js";
+export {
+  DEFAULT_MARKETPLACE_PROBE_TIMEOUT_MS,
+  DELIVERY_MARKETPLACE_PROBE_SCOPES,
+  HttpMarketplaceHealthProbe,
+  MARKETPLACE_PROBE_REASONS,
+} from "./infrastructure/http-marketplace-probe.js";
+export type {
+  HttpMarketplaceHealthProbeOptions,
+  MarketplaceProbeReason,
+} from "./infrastructure/http-marketplace-probe.js";
+export type { DependencyObservationBody } from "./http/readiness.js";

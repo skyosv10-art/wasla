@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-11T23:08:34Z",
+  "generated_at": "2026-09-12T00:33:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2a3f6c068813690d34f1c40e36ed72184a45f45f",
-    "branch": "feat/m5-14-idempotency-sweep-runner",
+    "commit": "cd23ed30386358ed871ec749c1e0113172432a04",
+    "branch": "feat/m5-15-marketplace-readiness-probe",
     "dirty": true,
-    "dirty_files": 15,
-    "dirty_reason": "أساسٌ مولَّدٌ من سِجلِّ تحقُّقٍ أخضرَ قبلَ الدفعِ (المراجعةُ 14/N)",
-    "tracked_files": 1676
+    "dirty_files": 25,
+    "dirty_reason": "المراجعةُ 15/N — مسبارُ جاهزيّةِ السوقِ (CLM-0136)",
+    "tracked_files": 1681
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 326,
+    "test_files_tracked": 329,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-14d.log",
-    "tests_passed": 4265,
-    "test_files_executed": 259,
+    "source": "/tmp/verify15b.log",
+    "tests_passed": 4320,
+    "test_files_executed": 262,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:01ed8e576c9bdb19889914498264bb37b0045b2ab5838302259476aa0f840f8e",
+  "fingerprint": "sha256:2ccf012e528f573e105132470831acbf8852006dcee3a4759e3879191860ec21",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

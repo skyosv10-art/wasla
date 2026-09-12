@@ -324,6 +324,13 @@ paths:
         جاهزيّةٍ يُحوّلُ مِجَسَّ المنظِّمِ إلى حِمْلٍ على السوقِ، ويجعلُ عطلَ
         السوقِ يُخرِجُ هذه الخدمةَ من الخدمةِ كلَّها — بينما القراءةُ والإلغاءُ
         يعملانِ بلا سوقٍ.
+
+        ومنذُ المراجعةِ 15/N صارَ الفرقُ **رباعيّاً**: إن رُكِّبَ مسبارُ
+        الرصدِ (`MARKETPLACE_SERVICE_URL`) سُئِلَ حدُّ السوقِ فعلاً، فيُفرَغُ
+        `not_claimed` وتظهرُ مُدخلةٌ في `dependencies` بعمرِها. والحُجّتانِ
+        أعلاهُ لم تُنقَضا: السبرُ **مُخزَّنٌ بمهلةِ صلاحيّةٍ** فالحِمْلُ مسقوفٌ
+        بنداءٍ واحدٍ لكلِّ نُسخةٍ لكلِّ مهلةٍ لا بعددِ النبضاتِ، و**لا يحكمُ
+        `status`** فلا يُخرِجُ عطلُ السوقِ هذه الخدمةَ من الدورةِ.
       responses:
         "200":
           description: جاهزٌ — كلُّ ما يُسبَرُ يستجيبُ
@@ -583,11 +590,17 @@ components:
           const: ok
     ReadinessResponse:
       type: object
-      required: [status, checks, not_claimed]
+      required: [status, checks, not_claimed, dependencies]
       description: |
         جسمُ الجاهزيّةِ في 200 و503 معاً. `status` يُشتَقُّ من `checks`
         المسبورةِ وحدَها؛ و`not_claimed` تبعيّاتٌ مُعلَنةٌ غيرُ موصولةٍ
         لا تُسبَرُ ولا تُدّعى — إعلانٌ لا إخفاءٌ.
+
+        و`dependencies` (المراجعةُ 15/N · §4.17) رصدٌ **مُعلِمٌ لا حاكمٌ**:
+        سبرٌ لحدِّ السوقِ مُخزَّنٌ بمهلةِ صلاحيّةٍ، يُنشَرُ بعمرِهِ
+        (`age_ms`) **ولا يُغيّرُ `status`** — ولذا يُعلَنُ في كلِّ مُدخلةٍ
+        `gates_readiness: false` على السلكِ لا في وثيقةٍ خارجَهُ. فعطلُ
+        السوقِ يُقرأُ ولا يُخرِجُ هذه الخدمةَ من الدورةِ.
       properties:
         status:
           type: string
@@ -611,3 +624,37 @@ components:
           items:
             type: string
             enum: [marketplace_catalog_not_wired, marketplace_catalog_not_probed]
+        dependencies:
+          type: array
+          description: |
+            أرصادُ تبعيّاتٍ خارجيّةٍ. فارغةٌ إن لم يُركَّبْ مسبارٌ — وحينَها
+            يبقى `not_claimed` معلناً أنَّ التبعيّةَ لم تُسبَرْ.
+          items:
+            type: object
+            required: [name, ok, observed_at, age_ms, gates_readiness]
+            properties:
+              name:
+                type: string
+                enum: [marketplace_catalog]
+              ok:
+                type: boolean
+              detail:
+                type: string
+                description: |
+                  سببٌ من مِعجمٍ مغلقٍ: marketplace_unreachable ·
+                  marketplace_timeout · marketplace_denied_identity ·
+                  marketplace_error_status · marketplace_unreadable_body ·
+                  marketplace_contract_drift · marketplace_degraded ·
+                  marketplace_unavailable · probe_threw. لا نصَّ استثناءٍ
+                  ولا اسمَ مضيفٍ ولا سرَّ.
+              observed_at:
+                type: string
+                format: date-time
+              age_ms:
+                type: integer
+                minimum: 0
+                description: عمرُ الرصدِ المُخزَّنِ — لا يكونُ سالباً ولو رجعَت ساعةُ النظامِ.
+              gates_readiness:
+                type: boolean
+                const: false
+                description: مُعلَنٌ ثابتاً — الرصدُ لا يحكمُ `status` أبداً.

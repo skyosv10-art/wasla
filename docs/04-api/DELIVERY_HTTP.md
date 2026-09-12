@@ -1,12 +1,12 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 13/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 15/N)
 
 > **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الثمانيةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 13/N — حياةُ مفاتيحِ التماثُلِ ومُكنستُها) · **Last Updated:** 2026-09-11
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 15/N — مسبارُ جاهزيّةِ السوقِ: رصدٌ مُعلِمٌ لا حاكمٌ) · **Last Updated:** 2026-09-12
 >
-> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
+> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog,http-marketplace-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/domain/dependency-probe.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
 > **Related Docs:** [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [SEARCH_HTTP](SEARCH_HTTP.md) (نسقُ الحدِّ) · [MARKETPLACE_HTTP](MARKETPLACE_HTTP.md) (مصدرُ الكتالوجِ) · [DISPATCH_HTTP](DISPATCH_HTTP.md)
 
@@ -133,11 +133,28 @@ POST /delivery/idempotency-keys/sweep
 GET /delivery/ready → 200
 { "status": "ready",
   "checks": [{ "name": "database", "ok": true }],
-  "not_claimed": ["marketplace_catalog_not_wired"] }
+  "not_claimed": [],
+  "dependencies": [
+    { "name": "marketplace_catalog", "ok": true,
+      "observed_at": "2026-09-12T00:00:00.000Z", "age_ms": 3000,
+      "gates_readiness": false }
+  ] }
 ```
+
+**والجوابُ أربعةُ أحوالٍ لا اثنانِ** (المراجعةُ 15/N · [§4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)):
+
+| الحالُ | `not_claimed` | `dependencies` |
+|---|---|---|
+| كتالوجٌ غيرُ موصولٍ | `["marketplace_catalog_not_wired"]` | `[]` |
+| موصولٌ بلا مسبارٍ مُركَّبٍ | `["marketplace_catalog_not_probed"]` | `[]` |
+| موصولٌ ومرصودٌ سليماً | `[]` | مُدخلةٌ بـ`ok: true` |
+| موصولٌ ومرصودٌ عاطلاً | `[]` | مُدخلةٌ بـ`ok: false` وسببٍ — **و`status` يبقى `ready`** |
 
 - **المسبارُ حقيقيٌّ**: `SET LOCAL statement_timeout` + `SELECT 1 FROM store_orders LIMIT 1` في صفقةٍ ضمنيّةٍ (فالمهلةُ ترتدُّ ولا تُسرَّبُ إلى مستعملٍ لاحقٍ للاتّصالِ المُجمَّعِ)، ومعَها مهلةٌ من جانبِ العميلِ لأنّ اتصالاً معلَّقاً لا يُرجِعُ رمزَ خطأٍ أصلاً. والمسبارُ **لا يرمي أبداً**: مسارُ جاهزيّةٍ يرمي يُجيبُ 500، و500 ليست حكماً يقرأُهُ المُنسِّقُ.
 - **نفسُ المجمَّعِ (pool) الذي تخدمُ بهِ المساراتُ**: مسبارٌ باتّصالٍ خاصٍّ قد يكونُ أخضرَ والمجمَّعُ الخادمُ مُستنفَدٌ — وهو العطَلُ الذي وُجدتِ الجاهزيّةُ لكشفِهِ.
+- **الرصدُ مُعلِمٌ لا حاكمٌ** (15/N): `dependencies` سبرٌ حقيقيٌّ لحدِّ السوقِ (`GET /health` عندَ السوقِ، موقَّعٌ **بلا صلاحيّةٍ**) **لا يُغيّرُ `status` أبداً** — والحقلُ يُعلِنُ ذلكَ على السلكِ (`gates_readiness: false`) لا في وثيقةٍ. فسوقٌ ساقطٌ وقاعدةٌ سليمةٌ ⇒ **200 `ready`** ومُدخلةٌ حمراءُ تُسمّي السببَ: القراءةُ والإلغاءُ وانتقالاتُ التنفيذِ لا تحتاجُ سوقاً، والإنشاءُ وحدَهُ يحتاجُهُ — فإخراجُ الخدمةِ من الدورةِ لعطلِ غيرِها كانَ سيُوسِّعَ العطلَ لا يحتويهِ.
+- **ومُخزَّنٌ بمهلةِ صلاحيّةٍ**: نداءٌ واحدٌ لكلِّ `MARKETPLACE_PROBE_TTL_MS` (افتراضُهُ 15000) لكلِّ نسخةٍ، **والإخفاقُ مُخزَّنٌ كالنجاحِ** لئلّا يُكلِّفَ عطلُ السوقِ مَهَلاً كاملاً في كلِّ نبضةٍ، ونبضاتٌ متزامنةٌ تنتظرُ **النداءَ نفسَهُ**. و`age_ms` عمرُ الرصدِ — لا يكونُ سالباً ولو رجعَت ساعةُ النظامِ. ومَهَلُ النداءِ `MARKETPLACE_PROBE_TIMEOUT_MS` (افتراضُهُ 1000)؛ وكلاهما **يُوقِفُ الإقلاعَ** على قيمةٍ غيرِ عشريّةٍ صريحةٍ ولا يُصحَّحُ صامتاً.
+- **الحالةُ من الجسمِ لا من رمزِ HTTP**: حدُّ السوقِ يُجيبُ `/health` بـ**200 دائماً** والحالةُ في جسمِهِ (`ok` · `degraded` · `unavailable`)، فمسبارٌ يقرأُ الرمزَ وحدَهُ كانَ سيُبلِّغُ سلامةَ سوقٍ فقدَ قاعدتَهُ. وسببُ الإخفاقِ مفردةٌ مغلقةٌ: `marketplace_unreachable` · `marketplace_timeout` · `marketplace_denied_identity` · `marketplace_error_status` · `marketplace_unreadable_body` · `marketplace_contract_drift` · `marketplace_degraded` · `marketplace_unavailable` · `probe_threw`.
 - **`not_claimed` لا فحصٌ فاشلٌ**: الكتالوجُ غيرُ الموصولِ (§4.1) لا يُحسَبُ فحصاً — فحصٌ لا يمكنُ أن ينجحَ يعني جاهزيّةً مستحيلةً وبوّابةَ نشرٍ تُحذَفُ بعدَ أسبوعٍ. والجاهزيّةُ الخضراءُ هنا تعني: **القراءاتُ والإلغاءُ صالحةٌ للخدمةِ**.
 - **قائمةُ فحوصٍ فارغةٌ ⇒ `unavailable`**: «لا فحصَ فشلَ» لا يُنالُ بعدمِ الفحصِ (درسُ [`RISK-0030`](../07-security/RISK_REGISTER.md)). وبلا مسبارٍ محقونٍ يُجيبُ المسارُ **503** بـ`detail: "probe_not_wired"`.
 - **سببُ الفشلِ مفردةٌ من قائمةٍ مغلقةٍ** (`statement_timeout` · `schema_missing` · `authentication_failed` · `database_missing` · `pg_<code>` · `probe_timeout` · `unreachable`) لا نصُّ المُشغِّلِ: نصُّ خطأِ الاتّصالِ يقتبسُ سلسلةَ الاتّصالِ وفيها كلمةُ السرِّ — **مقيسٌ باختبارٍ** يمرّرُ خطأً يحملُ كلمةَ سرٍّ ويتأكّدُ أنّها لا تظهرُ.
@@ -234,14 +251,14 @@ GET /delivery/ready → 200
 
 | المؤجَّلُ | أين يُسجَّلُ |
 |---|---|
-| فحصُ جاهزيّةٍ يسألُ السوقَ (الكتالوجُ **موصولٌ** لا **مسبورٌ**) | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — `marketplace_catalog_not_probed` مُعلَنٌ |
+| ~~فحصُ جاهزيّةٍ يسألُ السوقَ (الكتالوجُ **موصولٌ** لا **مسبورٌ**)~~ **رُفِعَ في المراجعةِ 15/N** | [ADR-026 §4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رصدٌ **مُعلِمٌ لا حاكمٌ** مُخزَّنٌ بمهلةِ صلاحيّةٍ في `dependencies`، و`status` يبقى مُشتَقّاً من `checks` وحدَها |
 | إعادةُ محاولةٍ أو قاطعُ دورةٍ في محوّلِ الكتالوجِ | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ |
 | حجزُ مخزونٍ أو خصمُهُ عندَ الإنشاءِ | ADR-026 §2.3 · §4.8 — اللقطةُ سعرٌ وسببُ وجودٍ فقط |
 | ~~حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ~~ **رُفِعَ في المراجعةِ 13/N** | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.5 — `expires_at` في الصفِّ ومُكنسةٌ بدفعاتٍ على مسارٍ |
 | ~~**مُنادٍ** للمُكنسةِ (جدولٌ خارجيٌّ وتواتُرُهُ)~~ **رُفِعَ في المراجعةِ 14/N** | [ADR-026 §4.16](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [دليلُ التشغيلِ](../14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md) — أمرٌ لقطةٌ واحدةٌ (`pnpm --filter @wasla/delivery-service sweep:idempotency`) يُصيبُ القاعدةَ مباشرةً بلا هويّةِ خدمةٍ، ويخرجُ بـ`0` نظيفاً و`3` بلغَ السقفَ و`4` مزاحمةَ قفلٍ و`1` إخفاقاً · **والجَدوَلُ نفسُهُ ليسَ في المستودعِ** (لا بيانَ بنيةٍ تحتيّةٍ بعدُ) |
 | نطاقُ صيانةٍ مستقلٌّ لمسارِ المُكنسةِ عبرَ HTTP | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المسارُ **يبقى** لصيانةٍ يدويّةٍ من داخلِ الشبكةِ، ولا يستعملُهُ المُنادي المُجدوَلُ (§4.16-2) فلا يُوسَّعُ سطحُهُ |
 | `Retry-After` وحالةُ «قيدَ المعالجةِ» في تسابُقِ المفتاحِ | [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — التسابُقُ يُكتشَفُ بخطأِ تفرُّدٍ لا بحالةٍ مُخزَّنةٍ |
-| فحوصُ جاهزيّةٍ للسوقِ وجسرِ الإرسالِ وتراكُمِ الصادرِ | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · مُعلَنةٌ في `not_claimed` لا مسكوتٌ عنها |
+| فحوصُ جاهزيّةٍ لجسرِ الإرسالِ وتراكُمِ الصادرِ (**السوقُ مرصودٌ الآنَ**) | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [§4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رصدُ السوقِ رُفِعَ في 15/N، وما بقيَ مُعلَنٌ في `not_claimed` لا مسكوتٌ عنهُ |
 | حافّةُ `pending_eligibility → cancelled` في §3.3 | [ADR-026 §4.9-1](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — قرارُ عقدٍ لا إصلاحُ شيفرةٍ |
 | ~~بوّابةُ خروجِ الطورِ (inventory/payment E2E)~~ **رُفِعَ في 9/N** | [`PHASE13_EXIT_GATE_E2E.md`](../12-testing/PHASE13_EXIT_GATE_E2E.md) — 7/7 على قاعدةٍ حقيقيّةٍ · [ADR-026 §4.12](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) |
 | مُزوِّدُ دفعٍ حقيقيٌّ وتحقُّقُ توقيعِ webhook | [ADR-026 §4.12](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المرآةُ تعكسُ ما يُعلَنُ لها عبرَ حدٍّ مُوقَّعٍ بينَ خدماتٍ |

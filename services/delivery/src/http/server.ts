@@ -51,6 +51,17 @@ import {
   DELIVERY_MARKETPLACE_RESERVATION_SCOPES,
   HttpMarketplaceReservationPort,
 } from "../infrastructure/http-marketplace-reservation.js";
+import {
+  DEFAULT_MARKETPLACE_PROBE_TIMEOUT_MS,
+  DELIVERY_MARKETPLACE_PROBE_SCOPES,
+  HttpMarketplaceHealthProbe,
+} from "../infrastructure/http-marketplace-probe.js";
+import {
+  CachedDependencyProbe,
+  DEFAULT_MARKETPLACE_PROBE_TTL_MS,
+  resolveMarketplaceProbeConfig,
+} from "../domain/dependency-probe.js";
+import type { DependencyObservationPort } from "../domain/dependency-probe.js";
 import type { InventoryReservationPort, StoreOrderCatalogPort } from "../ports.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -84,6 +95,49 @@ function buildCatalogPort(): { catalogPort?: StoreOrderCatalogPort; label: strin
       ...(timeoutMs === undefined ? {} : { timeoutMs }),
     }),
     label: `wired → ${baseUrl}`,
+  };
+}
+
+/**
+ * رصدُ السوقِ للجاهزيّةِ (المراجعةُ 15/N · ADR-026 §4.17).
+ *
+ * بلا عنوانِ سوقٍ لا مسبارَ — والجاهزيّةُ تقولُ `marketplace_catalog_not_wired`
+ * كما كانت. وبعنوانٍ: مسبارٌ مُوقَّعٌ بلا صلاحيّةٍ، مُغلَّفٌ بصلاحيّةِ رصدٍ
+ * (`ttlMs`) فالحِمْلُ مسقوفٌ لا بعددِ نبضاتِ المنظِّمِ.
+ *
+ * وإعدادُهُ يُحَلُّ هنا فيُوقِفُ الإقلاعَ على قيمةٍ خاطئةٍ — بخلافِ
+ * `MARKETPLACE_TIMEOUT_MS` أعلاهُ التي تُهمَلُ إلى الافتراضِ. والفرقُ مقصودٌ
+ * ومقيسٌ: مَهَلُ نداءِ الكتالوجِ حقلٌ ثانويٌّ يُصحِّحُهُ الاستعمالُ، أمّا
+ * **صلاحيّةُ الرصدِ** فهيَ نفسُها الحمايةُ من إغراقِ حدِّ السوقِ؛ ورقمٌ مُهمَلٌ
+ * صامتاً فيها يعني حمايةً يظنُّها المُشغِّلُ قائمةً وليست.
+ */
+function buildMarketplaceObservationPort(): {
+  observationPort?: DependencyObservationPort;
+  label: string;
+} {
+  const baseUrl = process.env.MARKETPLACE_SERVICE_URL;
+  if (!baseUrl) return { label: "unwired (MARKETPLACE_SERVICE_URL absent)" };
+
+  const config = resolveMarketplaceProbeConfig(process.env, {
+    ttlMs: DEFAULT_MARKETPLACE_PROBE_TTL_MS,
+    timeoutMs: DEFAULT_MARKETPLACE_PROBE_TIMEOUT_MS,
+  });
+  const probe = new HttpMarketplaceHealthProbe({
+    baseUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "delivery",
+      audience: "marketplace",
+      keys: keyRegistryFromEnv(process.env),
+      scopes: DELIVERY_MARKETPLACE_PROBE_SCOPES,
+    }),
+    timeoutMs: config.timeoutMs,
+  });
+  return {
+    observationPort: new CachedDependencyProbe(probe, {
+      name: "marketplace_catalog",
+      ttlMs: config.ttlMs,
+    }),
+    label: `probing ${baseUrl}/health · ttl ${config.ttlMs}ms · timeout ${config.timeoutMs}ms`,
   };
 }
 
@@ -127,6 +181,7 @@ async function main(): Promise<void> {
   const store = new StoreOrderStore(pool, idempotencyTtlSeconds);
   const catalog = buildCatalogPort();
   const reservation = buildReservationPort();
+  const observation = buildMarketplaceObservationPort();
   const { fastify, close } = buildDeliveryHttpApp({
     readPort: store,
     writePort: store,
@@ -135,13 +190,16 @@ async function main(): Promise<void> {
     readinessPort: new PostgresReadinessProbe(pool),
     idempotencySweepPort: store,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
+    ...(observation.observationPort === undefined
+      ? {}
+      : { marketplaceObservationPort: observation.observationPort }),
   });
 
   try {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s`);
+    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

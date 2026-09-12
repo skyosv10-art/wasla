@@ -312,11 +312,24 @@ export interface components {
       /** سببٌ مقتضبٌ للسجلِّ — لا أسرارَ ولا مُدخَلاتٍ. */
       detail?: string;
     };
+    DependencyObservation: {
+      name: "marketplace_catalog";
+      ok: boolean;
+      /** سببٌ من مِعجمٍ مغلقٍ — لا نصَّ استثناءٍ ولا اسمَ مضيفٍ ولا سرَّ. */
+      detail?: string;
+      observed_at: string;
+      /** عمرُ الرصدِ المُخزَّنِ بالمللي ثانية — لا يكونُ سالباً. */
+      age_ms: number;
+      /** مُعلَنٌ ثابتاً `false`: الرصدُ مُعلِمٌ لا حاكمٌ (المراجعةُ 15/N · §4.17). */
+      gates_readiness: false;
+    };
     ReadinessResponse: {
       status: "ready" | "unavailable";
       checks: components["schemas"]["ReadinessCheck"][];
       /** تبعيّاتٌ مُعلَنةٌ غيرُ موصولةٍ — لا تُسبَرُ ولا تُدّعى. */
       not_claimed: ("marketplace_catalog_not_wired" | "marketplace_catalog_not_probed")[];
+      /** أرصادُ تبعيّاتٍ مسبورةٍ — لا تُغيّرُ `status`. فارغةٌ بلا مسبارٍ. */
+      dependencies: components["schemas"]["DependencyObservation"][];
     };
   };
 }

@@ -197,12 +197,20 @@ export function resolveIdempotencyTtlSeconds(
   const raw = env.IDEMPOTENCY_KEY_TTL_SECONDS;
   if (raw === undefined || raw.trim() === "") return IDEMPOTENCY_KEY_TTL_SECONDS;
 
-  const value = Number(raw);
-  if (!Number.isInteger(value)) {
+  /*
+   * أرقامٌ عشريّةٌ صريحةٌ وحدَها — تصحيحٌ يتبعُ قياساً لا ذوقاً (المراجعةُ 15/N).
+   *
+   * كانَ الشرطُ `Number.isInteger(Number(raw))`، وقيسَ في المراجعةِ 14/N على
+   * حرسٍ مماثلٍ أنَّ `Number("0x10")` **ستّةَ عشرَ** و`Number("1e3")` **ألفٌ**:
+   * فمن كتبَ `0x10` في جَدوَلِهِ يظنُّ عشرةً ويأخذُ ستّةَ عشرَ صامتاً — وهذا
+   * الحقلُ حياةُ مفتاحِ تماثُلٍ، أي مالٌ يُخصَمُ مرّتَينِ إن قصُرَ خطأً.
+   */
+  if (!/^[0-9]+$/.test(raw.trim())) {
     throw new Error(
-      `IDEMPOTENCY_KEY_TTL_SECONDS يجبُ أن يكونَ عدداً صحيحاً من الثواني (القيمةُ: ${raw})`,
+      `IDEMPOTENCY_KEY_TTL_SECONDS يجبُ أن يكونَ عدداً صحيحاً من الثواني بأرقامٍ عشريّةٍ (القيمةُ: ${raw})`,
     );
   }
+  const value = Number(raw.trim());
   if (value < IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS) {
     throw new Error(
       `IDEMPOTENCY_KEY_TTL_SECONDS=${value} أقلُّ من الحدِّ الأدنى ${IDEMPOTENCY_KEY_TTL_FLOOR_SECONDS} ثانيةً — مدّةٌ أقصرُ تُلغي حمايةَ التماثُلِ صامتةً`,

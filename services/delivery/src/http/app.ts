@@ -94,6 +94,10 @@ import {
   parsePaymentMirrorBody,
   parsePlaceStoreOrderBody,
 } from "./requests.js";
+import type {
+  DependencyObservation,
+  DependencyObservationPort,
+} from "../domain/dependency-probe.js";
 import { buildReadinessResponse } from "./readiness.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
@@ -121,6 +125,15 @@ export interface DeliveryHttpDeps {
    * فالصفرُ الكاذبُ يُقرأُ نظافةً (المراجعةُ 13/N · ADR-026 §4.15).
    */
   readonly idempotencySweepPort?: IdempotencyKeySweepPort;
+  /**
+   * رصدُ حدِّ السوقِ للجاهزيّةِ (المراجعةُ 15/N · ADR-026 §4.17).
+   *
+   * غائبٌ ⇒ `GET /delivery/ready` يبقى على `marketplace_catalog_not_probed`
+   * كما كانَ: تركيبٌ بلا مسبارٍ لا يدّعي سبراً. وموجودٌ ⇒ يُنشَرُ الرصدُ في
+   * `dependencies` **ولا يُغيّرُ `status`** — العطلُ في خدمةٍ أخرى لا يُخرِجُ
+   * هذه الخدمةَ من الدورةِ (`http/readiness.ts` يُفصِّلُ الحُجّةَ).
+   */
+  readonly marketplaceObservationPort?: DependencyObservationPort;
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -462,7 +475,25 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
           // "ready" answer here would be the RISK-0030 lie in a new place.
           ([{ name: "database", ok: false, detail: "probe_not_wired" }] as const)
         : await deps.readinessPort.probe();
-    const body = buildReadinessResponse(checks, deps.catalogPort !== undefined);
+    /*
+     * الرصدُ لا يُسقِطُ المسارَ: منفذُ الرصدِ يتعهّدُ ألّا يرمي، ولو خُرِقَ
+     * التعهُّدُ لَأجابَ مُعالجُ الأخطاءِ `ErrorResponse` على مسارٍ عقدُهُ
+     * `ReadinessResponse` في 200 و503 معاً (errors.md قاعدةُ 6). فالحرسُ هنا
+     * ليسَ تزيّداً بل حفظُ عقدِ المسارِ من عيبٍ في محوّلٍ.
+     */
+    let observation: DependencyObservation | undefined;
+    if (deps.marketplaceObservationPort !== undefined) {
+      try {
+        observation = await deps.marketplaceObservationPort.observe();
+      } catch {
+        observation = undefined;
+      }
+    }
+    const body = buildReadinessResponse(
+      checks,
+      deps.catalogPort !== undefined,
+      observation,
+    );
     return reply.status(body.status === "ready" ? 200 : 503).send(body);
   });
 

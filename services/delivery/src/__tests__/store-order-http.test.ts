@@ -113,7 +113,10 @@ describe("delivery HTTP — readiness (§4.10-2)", () => {
       checks: [{ name: "database", ok: true }],
       // المراجعةُ 8/N: المنفذُ موصولٌ هنا، والجاهزيّةُ **لا تسبرُهُ** — ففراغُ
       // `not_claimed` كانَ سيُقرأُ «تحقّقنا من السوقِ» ولم يتحقّقْ أحدٌ.
+      // والمراجعةُ 15/N لم تُغيّرْ هذا التركيبَ: لا منفذَ رصدٍ هنا، فلا رصدَ
+      // يُنشَرُ ولا ادّعاءَ يُرفَعُ — الفرقُ يُقاسُ في `readiness-observation`.
       not_claimed: ["marketplace_catalog_not_probed"],
+      dependencies: [],
     });
     await app.close();
   });

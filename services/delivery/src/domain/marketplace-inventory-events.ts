@@ -123,10 +123,42 @@ function reqIsoDate(data: Record<string, unknown>, key: string): string {
   return v;
 }
 
-function reqWaslaPublicId(data: Record<string, unknown>, key: string): string {
+/**
+ * الفاعلُ المسموحُ في حمولةِ حدثِ المخزونِ — **نسخٌ حرفيٌّ** عن
+ * `MarketplaceInventoryAdjustedV1.data.actor_public_id` في
+ * `services/marketplace/contracts/events.json`، وهوَ `oneOf` من صيغتَينِ:
+ * مرجعُ وصلةٍ عامٌّ، أو فاعلٌ نظاميٌّ `system:<name>`.
+ *
+ * ولمَ صيغتانِ لا واحدةٌ: ليسَ كلُّ فرقِ مخزونٍ يقفُ خلفَهُ إنسانٌ. خصمُ الحجزِ
+ * تكتبُهُ **خدمةٌ** حينَ يوضَعُ طلبٌ، فلا مالكَ متجرٍ ضغطَ زرّاً كي يُنسَبَ إليهِ.
+ * ولذلكَ أعلنَ عقدُ السوقِ المنشورُ الصيغتَينِ معاً منذُ نشرِهِ.
+ *
+ * **والقاعدةُ التي كسرَها `RISK-0035`:** مُستهلِكٌ **أضيقُ** من عقدِ مُنتِجِهِ
+ * يُسقِطُ أحداثاً صحيحةً — وهوَ فقدٌ لا حمايةٌ. والمُستهلِكُ **الأوسعُ** أسوأُ
+ * ما يفعلُهُ أن يقبلَ ما لا يُنتَجُ. فالضيقُ يُخسِرُ حقيقةً موجودةً والسعةُ
+ * تنتظرُ حقيقةً لا تأتي، ولذلكَ يجبُ أن يكونَ تحقُّقُ المُستهلِكِ **مُحتوياً**
+ * لِما يُجيزُهُ المُنتِجُ لا أضيقَ منهُ.
+ */
+export const MARKETPLACE_ACTOR_PATTERNS = Object.freeze({
+  waslaPublicId: "^WS-[0-9]{10}$",
+  systemActor: "^system:[a-z_]+$",
+} as const);
+
+/**
+ * يتحقَّقُ من الفاعلِ بالصيغتَينِ المُعلَنتَينِ في عقدِ السوقِ. وقيمتُهُ لا
+ * تُخزَّنُ في `delivery_inventory_observations` أصلاً — التوصيلُ يقرأُ الفاعلَ
+ * ليَثِقَ بالحمولةِ لا ليَنسِبَ إليهِ شيئاً؛ ولذلكَ كانَ الرفضُ عليهِ أغلى ما
+ * يُدفَعُ مقابلَ أرخصِ ما يُحفَظُ.
+ */
+function reqInventoryActorId(data: Record<string, unknown>, key: string): string {
   const v = reqString(data, key);
-  if (!/^WS-[0-9]{10}$/.test(v)) {
-    throw new MarketplacePayloadError(`payload.${key} must match ^WS-[0-9]{10}$`);
+  if (
+    !new RegExp(MARKETPLACE_ACTOR_PATTERNS.waslaPublicId).test(v) &&
+    !new RegExp(MARKETPLACE_ACTOR_PATTERNS.systemActor).test(v)
+  ) {
+    throw new MarketplacePayloadError(
+      `payload.${key} must match ${MARKETPLACE_ACTOR_PATTERNS.waslaPublicId} or ${MARKETPLACE_ACTOR_PATTERNS.systemActor}`,
+    );
   }
   return v;
 }
@@ -175,7 +207,7 @@ export function classifyMarketplaceInventoryEvent(
       quantity_after,
       reason_code: reqString(row.data, "reason_code"),
       adjustment_sequence,
-      actor_public_id: reqWaslaPublicId(row.data, "actor_public_id"),
+      actor_public_id: reqInventoryActorId(row.data, "actor_public_id"),
       occurred_for: reqIsoDate(row.data, "occurred_for"),
     },
   };

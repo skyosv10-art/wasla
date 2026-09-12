@@ -365,6 +365,71 @@ Nothing else has been changed in this repository by the WASLA integration work.
   is the thing this review argues against. No `429` and no rate limiting on this boundary
   at all. And no claim about probability: the loop proves the race occurs, not how often,
   and every measurement is on 18.6 locally — CI runs 15/17.6, untested for this.
+- **M5-13 (Store Orders & Delivery) — review 20/N, claim `CLM-0141`.** `RISK-0035` is
+  closed, and the fix is one file: the consumer, not the contract. Every
+  reservation-decrement event in the system was being **silently lost** — the marketplace
+  writes `actor_public_id: "system:delivery"` on it, the delivery inventory relay's
+  classifier required `^WS-[0-9]{10}$`, so the row was poisoned and the checkpoint
+  advanced past it by design (one bad row must not block the queue), meaning the event was
+  never retried and never alerted on.
+  **The documented dilemma rested on a false premise.** The risk was recorded as a choice
+  between two doors, both "contract decisions": widen the classifier's actor pattern, or
+  change what the marketplace writes. Reading the published contract dissolved it —
+  `services/marketplace/contracts/events.json`,
+  `MarketplaceInventoryAdjustedV1.data.actor_public_id`, has declared the actor as a
+  **`oneOf` of two forms since it was published**: a Wasla public id, or
+  `{"type": "string", "pattern": "^system:[a-z_]+$"}`. `"system:delivery"` is therefore
+  **contract-legal, literally**. The producer never left its contract; the consumer was
+  **narrower than the contract it consumes**. So there was no second door and no owner
+  decision: **no published payload was changed, no migration was run, and
+  `services/marketplace` was not touched.**
+  The rule this leaves behind, written into the code and not just this bullet: a consumer's
+  validation must be a **superset** of what its producer's contract permits, never a
+  subset. A narrower consumer **destroys facts that exist** — and above an advancing
+  checkpoint it destroys them without a trace. The worst a wider consumer does is wait for
+  a fact that never arrives. The two costs are not comparable, so the safe direction is
+  declared rather than inferred.
+  The fix: an exported `MARKETPLACE_ACTOR_PATTERNS` constant plus a `reqInventoryActorId`
+  validator whose failure message **names both permitted forms**, so an operator reading an
+  incident learns what is allowed rather than what was rejected. `reqWaslaPublicId` was
+  deleted — it had no remaining caller, and a dead validator in a validation module is an
+  invitation to use it by mistake. Note also that `actor_public_id` is **never persisted**:
+  `delivery_inventory_observations` has no column for it, so the rejection was paying the
+  highest possible price for the cheapest possible field. No column was added; widening a
+  table for a field no one reads is refactoring, not fixing.
+  A new **drift guard** (`services/delivery/src/__tests__/marketplace-actor-contract-drift.test.ts`)
+  reads `events.json` itself, resolves the `oneOf` branches through `$defs`, and asserts the
+  classifier's pattern set is **literally equal** to the contract's, and that each branch has
+  a sample the classifier **actually accepts**. Add a third branch to the contract and the
+  test fails — because the original defect was not a logic error but a **drift between two
+  documents** that broke no build and tripped no type, and only dropped events in
+  production.
+  The boundary was not loosened: seven poison cases still fail (`system:`,
+  `system:Delivery`, `system:store-ops`, `system:delivery:extra`, `svc:delivery`, `WS-123`,
+  surrounding whitespace), both patterns anchored.
+  Measured on PostgreSQL 18.6 locally: delivery unit **473/473 in 30 files** (was 459/29),
+  delivery integration **92/92 in 10 files** (was 91/10), delivery contracts 29/29,
+  `pnpm -r typecheck` clean repository-wide, and the phase-13 exit gate **17/17** with the
+  pinned assertion flipped from `{applied: 2, poisoned: 1}` to `{applied: 3, poisoned: 0}`
+  on a real socket, plus two new assertions: **no poisoned row exists at all** in
+  `delivery_inventory_relay_consumed_events`, and the reservation row **specifically** is
+  `applied` (joined through `marketplace_outbox`, because the consumed ledger deliberately
+  does not store the payload — no second source of truth for a marketplace-owned event).
+  No conflict flag changed: `DELIVERY_OWN_REASONS` already dismisses
+  `reservation`/`reservation_release` as `delivery_own_reservation_flow` (§4.18), which was
+  decided in review 18/N and is not a consequence of this one.
+  Not claimed: **there is still no metric and no alert on poisoned rows**
+  (`docs/13-observability/` is empty), so the guard against this class of defect is a
+  **test, not an alarm** — it fails in CI and says nothing in production; that is the real
+  remaining limit. There is **no replay path for an already-poisoned row**, so in any
+  environment that ran before this fix the lost events **stay lost**; recovering them is an
+  operational re-relay from an earlier checkpoint, not code, and it was not performed. The
+  guard covers the actor field only, not the whole payload — `reason_code`, for instance,
+  is a 7-value enum in the contract and any non-empty string in the classifier, which is
+  the safe direction and was left alone; generalising the guard needs a JSON Schema
+  validator (no `ajv` in the service's dependencies today) and is its own scope. And
+  nothing here was measured on PostgreSQL 15/17.6 (the CI versions) or against a production
+  database.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

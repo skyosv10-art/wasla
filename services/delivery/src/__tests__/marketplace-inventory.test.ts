@@ -142,6 +142,54 @@ describe("classifyMarketplaceInventoryEvent — invalid actor_public_id → thro
   });
 });
 
+/*
+ * `RISK-0035` — الفاعلُ النظاميُّ. عقدُ السوقِ المنشورُ يُعلِنُ
+ * `actor_public_id` **صيغتَينِ** (`oneOf`): مرجعَ وصلةٍ أو `system:<name>`،
+ * وكانَ هذا المُصنِّفُ يشترطُ الأولى وحدَها فيَسُمُّ كلَّ حدثِ خصمِ حجزٍ
+ * (`"system:delivery"`) **وتتقدَّمُ نقطةُ التقدُّمِ فوقَهُ فيُفقَدُ الحدثُ**.
+ * فالدعاوى هنا تُثبِتُ القبولَ **ولا تُرخي الحدَّ**: ما ليسَ في إحدى الصيغتَينِ
+ * يبقى سُمّاً.
+ */
+describe("classifyMarketplaceInventoryEvent — actor_public_id: الصيغتانِ المُعلَنتانِ في العقدِ", () => {
+  it("يقبلُ مرجعَ وصلةٍ عامّاً `WS-##########`", () => {
+    const c = classifyMarketplaceInventoryEvent(row());
+    expect(c.kind).toBe("projectable");
+    if (c.kind === "projectable") expect(c.event.actor_public_id).toBe(ACTOR);
+  });
+
+  it("يقبلُ فاعلاً نظاميّاً `system:delivery` — وهوَ ما كانَ يُسَمُّ في `RISK-0035`", () => {
+    const c = classifyMarketplaceInventoryEvent(
+      row({ data: { ...validData(), actor_public_id: "system:delivery", reason_code: "reservation" } }),
+    );
+    expect(c.kind).toBe("projectable");
+    if (c.kind === "projectable") {
+      expect(c.event.actor_public_id).toBe("system:delivery");
+      expect(c.event.reason_code).toBe("reservation");
+    }
+  });
+
+  it("يقبلُ فاعلاً نظاميّاً بشُرطةٍ سُفلى `system:store_ops`", () => {
+    const c = classifyMarketplaceInventoryEvent(
+      row({ data: { ...validData(), actor_public_id: "system:store_ops" } }),
+    );
+    expect(c.kind).toBe("projectable");
+  });
+
+  it.each([
+    ["لاحقةٌ فارغةٌ", "system:"],
+    ["حرفٌ كبيرٌ", "system:Delivery"],
+    ["شُرطةٌ وسطى ليست في النمطِ", "system:store-ops"],
+    ["نقطتانِ ثانيتانِ", "system:delivery:extra"],
+    ["سابقةٌ غيرُ مُعلَنةٍ", "svc:delivery"],
+    ["مرجعٌ قصيرٌ", "WS-123"],
+    ["فراغٌ مُحيطٌ", " system:delivery "],
+  ])("يبقى سُمّاً: %s (`%s`)", (_why, actor) => {
+    expect(() =>
+      classifyMarketplaceInventoryEvent(row({ data: { ...validData(), actor_public_id: actor } })),
+    ).toThrow(MarketplacePayloadError);
+  });
+});
+
 describe("classifyMarketplaceInventoryEvent — invalid occurred_for → throws", () => {
   it("throws when occurred_for is not an ISO date-time", () => {
     expect(() =>

@@ -762,21 +762,53 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
       const outcome = await gate.relayInventory();
       /*
        * ثلاثةُ أحداثِ مخزونٍ في هذهِ الرحلةِ: التخزينُ (+9) وخصمُ الحجزِ (−2)
-       * والنقصُ (−7). واثنانِ يُطبَّقانِ **وواحدٌ يُسَمُّ** — وهذا عطبٌ حقيقيٌّ
-       * رُصِدَ هنا أوّلَ مرّةٍ وسُجِّلَ `RISK-0035`، **ولا يُصلَحُ في هذهِ
-       * المراجعةِ**: حدُّ السوقِ يكتبُ `actor_public_id: "system:delivery"` على
-       * حدثِ خصمِ الحجزِ، ومُصنِّفُ ناقلِ التوصيلِ يشترطُ `^WS-[0-9]{10}$` فيَسُمُّ
-       * الصفَّ وتتقدَّمُ نقطةُ التقدُّمِ فوقَهُ — أي حدثٌ **يُفقَدُ** لا يُعادُ.
-       * وإصلاحُهُ يمسُّ إمّا حمولةَ حدثٍ منشورٍ أو مُصنِّفَ الناقلِ، وكلاهما موضوعٌ
-       * قائمٌ بذاتِهِ لا يُدَسُّ في دَفعةِ مسارٍ آخرَ.
+       * والنقصُ (−7) — **والثلاثةُ تُطبَّقُ ولا مسمومَ**.
        *
-       * وتوكيدُ الرقمِ صريحٌ لا متساهلٌ: `toBeGreaterThan` كانَ سيصمتُ لو صارَ
-       * المسمومُ اثنَينِ، والعطبُ المُسجَّلُ يُقاسُ ولا يُغطّى.
+       * وهذا التوكيدُ هوَ موضِعُ إقفالِ `RISK-0035`: كانَ إلى المراجعةِ 19/N
+       * `{ applied: 2, poisoned: 1 }` — حدُّ السوقِ يكتبُ خصمَ الحجزِ بـ
+       * `actor_public_id: "system:delivery"`، ومُصنِّفُ ناقلِ التوصيلِ كانَ يشترطُ
+       * `^WS-[0-9]{10}$` وحدَهُ فيَسُمُّ الصفَّ **وتتقدَّمُ نقطةُ التقدُّمِ فوقَهُ**
+       * فيُفقَدُ الحدثُ. ولمّا قُرِئَ عقدُ السوقِ المنشورُ وُجِدَ أنَّهُ يُعلِنُ
+       * الفاعلَ `oneOf` من صيغتَينِ منذُ نشرِهِ (مرجعُ وصلةٍ أو `system:<name>`)،
+       * فالمُنتِجُ لم يخرُجِ عن عقدِهِ والمُستهلِكُ كانَ **أضيقَ منهُ**. فوُسِّعَ
+       * المُستهلِكُ إلى حدِّ عقدِ مُنتِجِهِ لا أوسَعَ — بلا تغييرِ حمولةٍ منشورةٍ
+       * ولا ترحيلٍ ولا مساسٍ بـ`services/marketplace`.
+       *
+       * وتوكيدُ الرقمِ صريحٌ لا متساهلٌ: `toBeGreaterThan` كانَ سيصمتُ لو عادَ
+       * المسمومُ واحداً، فالإقفالُ مُقاسٌ لا مُدَّعى.
        */
       expect({ applied: outcome.applied, poisoned: outcome.poisoned }).toEqual({
-        applied: 2,
-        poisoned: 1,
+        applied: 3,
+        poisoned: 0,
       });
+
+      // ولا صفَّ مسمومٌ في الدفترِ أصلاً — الدفترُ هوَ المصدرُ لا عدّادٌ في ذاكرةٍ.
+      const poisonedRows = await gate.pool.query<{ last_error: string | null }>(
+        `SELECT last_error FROM delivery_inventory_relay_consumed_events
+          WHERE consumed_status = 'poisoned'`,
+      );
+      expect(
+        poisonedRows.rows.map((r) => r.last_error),
+        "بقيَ صفٌّ مسمومٌ في دفترِ الاستهلاكِ",
+      ).toEqual([]);
+
+      /*
+       * وخصمُ الحجزِ بعينِهِ `applied` — والوصلُ بـ`marketplace_outbox` لأنَّ
+       * دفترَ الاستهلاكِ **لا يحفظُ الحمولةَ** (بقصدٍ: لا مصدرَ حقيقةٍ
+       * ثانياً لحدثٍ مملوكٍ للسوقِ). والتوكيدُ يقولُ ما يهمُّ: الصفُّ الذي
+       * فاعلُهُ نظاميٌّ دَخلَ واحداً ودَخلَ `applied`.
+       */
+      const reservationRow = await gate.pool.query<{ consumed_status: string }>(
+        `SELECT c.consumed_status
+           FROM delivery_inventory_relay_consumed_events c
+           JOIN marketplace_outbox o ON o.outbox_id = c.event_id
+          WHERE o.payload->>'reason_code' = 'reservation'
+            AND o.payload->>'actor_public_id' = 'system:delivery'`,
+      );
+      expect(
+        reservationRow.rows.map((r) => r.consumed_status),
+        "حدثُ خصمِ الحجزِ لم يُطبَّقْ بفاعلِهِ النظاميِّ",
+      ).toEqual(["applied"]);
 
       const conflicts = await gate.pool.query<{ adjustment_id: string }>(
         `SELECT adjustment_id::text FROM delivery_inventory_conflicts`,

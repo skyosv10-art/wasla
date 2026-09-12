@@ -13,6 +13,8 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { DELIVERY_SCOPES } from "@wasla/delivery-service";
+
 import {
   CATEGORY,
   CUSTOMER,
@@ -634,6 +636,159 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
       const res = await call(gate.deliveryBaseUrl, { method: "GET", path: "/delivery/health" });
       expect(res.status, res.text).toBe(200);
       expect(res.body.status).toBe("ok");
+    });
+  });
+
+  /**
+   * إقرارُ رايةِ تضاربٍ **على مقبسٍ حقيقيٍّ وقاعدةٍ حقيقيّةٍ** (المراجعةُ 18/N ·
+   * ADR-026 §4.20).
+   *
+   * وما لا يُثبِتُهُ اختبارُ وحدةٍ ولا اختبارُ تكامُلٍ وحدَهُ:
+   *
+   *   • **الرايةُ نفسُها لم تُلفَّقْ**: طلبٌ حقيقيٌّ يحجزُ، ثمَّ السوقُ يكتبُ
+   *     تعديلَ نقصٍ، ثمَّ الناقلُ يكشفُ — فالمُقَرُّ حادثةٌ وُلِدَتْ من الرحلةِ.
+   *   • **البابانِ مفصولانِ فعلاً**: رمزٌ يحملُ `:read` وحدَهُ **لا يُقِرُّ**. وهذا
+   *     هوَ مبرَّرُ الصلاحيّةِ العاشرةِ كلِّهِ، ولو مرَّ لصارَ كلُّ قارئِ لوحةٍ
+   *     قادراً على إغلاقِ الحوادثِ باسمِهِ.
+   *   • **التركيبُ في الجذرِ**: 404 لا 500 يشهدُ أنَّ المنفذَ مُركَّبٌ.
+   */
+  describe("بوّابة الطور 13 — إقرارُ رايةِ التضاربِ", () => {
+    const UNKNOWN_ADJUSTMENT = "cccccccc-0000-0000-0000-0000000000ee";
+    const ackPath = (adjustmentId: string) =>
+      `/delivery/inventory-conflicts/${adjustmentId}/acknowledgement`;
+
+    /** رحلةٌ كاملةٌ تُنتِجُ رايةً واحدةً، ويُعادُ مُعرِّفُ تعديلِها. */
+    async function raiseOneConflict(): Promise<string> {
+      const productId = await publishProduct();
+      // الطلبُ يحجزُ فعلاً عبرَ حدِّ السوقِ — لا صفَّ حجزٍ مزروعٍ.
+      await placeOrder(productId);
+
+      const adjusted = await call(gate.marketplaceBaseUrl, {
+        method: "POST",
+        path: `/products/${productId}/inventory`,
+        body: { quantity_delta: -7, reason_code: "shrinkage", actor_public_id: OWNER },
+        idempotencyKey: nextKey("shrink-under-reservation"),
+      });
+      expect(adjusted.status, adjusted.text).toBe(201);
+
+      const outcome = await gate.relayInventory();
+      /*
+       * ثلاثةُ أحداثِ مخزونٍ في هذهِ الرحلةِ: التخزينُ (+9) وخصمُ الحجزِ (−2)
+       * والنقصُ (−7). واثنانِ يُطبَّقانِ **وواحدٌ يُسَمُّ** — وهذا عطبٌ حقيقيٌّ
+       * رُصِدَ هنا أوّلَ مرّةٍ وسُجِّلَ `RISK-0035`، **ولا يُصلَحُ في هذهِ
+       * المراجعةِ**: حدُّ السوقِ يكتبُ `actor_public_id: "system:delivery"` على
+       * حدثِ خصمِ الحجزِ، ومُصنِّفُ ناقلِ التوصيلِ يشترطُ `^WS-[0-9]{10}$` فيَسُمُّ
+       * الصفَّ وتتقدَّمُ نقطةُ التقدُّمِ فوقَهُ — أي حدثٌ **يُفقَدُ** لا يُعادُ.
+       * وإصلاحُهُ يمسُّ إمّا حمولةَ حدثٍ منشورٍ أو مُصنِّفَ الناقلِ، وكلاهما موضوعٌ
+       * قائمٌ بذاتِهِ لا يُدَسُّ في دَفعةِ مسارٍ آخرَ.
+       *
+       * وتوكيدُ الرقمِ صريحٌ لا متساهلٌ: `toBeGreaterThan` كانَ سيصمتُ لو صارَ
+       * المسمومُ اثنَينِ، والعطبُ المُسجَّلُ يُقاسُ ولا يُغطّى.
+       */
+      expect({ applied: outcome.applied, poisoned: outcome.poisoned }).toEqual({
+        applied: 2,
+        poisoned: 1,
+      });
+
+      const conflicts = await gate.pool.query<{ adjustment_id: string }>(
+        `SELECT adjustment_id::text FROM delivery_inventory_conflicts`,
+      );
+      expect(conflicts.rows, "لا رايةَ كُشِفَتْ من الرحلةِ").toHaveLength(1);
+      return conflicts.rows[0]!.adjustment_id;
+    }
+
+    it("رمزٌ بصلاحيّةِ القراءةِ وحدَها لا يُقِرُّ — 403، والبابانِ مفصولانِ", async () => {
+      const res = await callDelivery(gate, {
+        method: "POST",
+        path: ackPath(UNKNOWN_ADJUSTMENT),
+        scopes: [DELIVERY_SCOPES.inventoryConflictsRead],
+      });
+      expect(res.status, res.text).toBe(403);
+      // و403 قبلَ أيِّ لمسٍ للقاعدةِ: لا يُقالُ لمن لا يملكُ الصلاحيّةَ «لا رايةَ
+      // بهذا المُعرِّفِ» — وذلكَ استكشافُ مُعرِّفاتٍ بلا حقٍّ.
+      expect(res.body.error_code).toBe("AUTHZ_FORBIDDEN");
+    });
+
+    it("بلا توقيعٍ ⇒ 401 لا 404 ولا 400", async () => {
+      const res = await call(gate.deliveryBaseUrl, {
+        method: "POST",
+        path: ackPath(UNKNOWN_ADJUSTMENT),
+      });
+      expect(res.status, res.text).toBe(401);
+      expect(res.body.error_code).toBe("AUTHN_UNAUTHENTICATED");
+    });
+
+    it("مُعرِّفٌ لا رايةَ لهُ ⇒ 404 بالرمزِ الخاصِّ — لا 500، فالمنفذُ مُركَّبٌ", async () => {
+      const res = await callDelivery(gate, {
+        method: "POST",
+        path: ackPath(UNKNOWN_ADJUSTMENT),
+        scopes: [DELIVERY_SCOPES.inventoryConflictAcknowledge],
+      });
+      expect(res.status, res.text).toBe(404);
+      expect(res.body.error_code).toBe("DELIVERY_INVENTORY_CONFLICT_NOT_FOUND");
+    });
+
+    it("جسمٌ يُسمّي المُقِرَّ يُرَدُّ 400 على السلكِ — المُقِرُّ من الرمزِ", async () => {
+      const res = await callDelivery(gate, {
+        method: "POST",
+        path: ackPath(UNKNOWN_ADJUSTMENT),
+        body: { acknowledged_by: "قسمُ العملياتِ" },
+        scopes: [DELIVERY_SCOPES.inventoryConflictAcknowledge],
+      });
+      // 400 **قبلَ** 404: خطأُ نداءٍ يُقالُ قبلَ البحثِ، وإلّا لَظنَّ المنادي أنَّ
+      // حقلَهُ مقبولٌ وأنَّ العيبَ في المُعرِّفِ وحدَهُ.
+      expect(res.status, res.text).toBe(400);
+      expect(res.body.error_code).toBe("DELIVERY_VALIDATION_FAILED");
+    });
+
+    it("رايةٌ حقيقيّةٌ من الرحلةِ: 200 `acknowledged` ثمَّ `already_acknowledged` باسمِ الأوّلِ", async () => {
+      const adjustmentId = await raiseOneConflict();
+
+      // وقبلَ الإقرارِ: اللوحةُ تُظهِرُها في غيرِ المُقَرِّ.
+      const before = await callDelivery(gate, {
+        method: "GET",
+        path: "/delivery/inventory-conflicts?unacknowledged_only=true",
+        scopes: [DELIVERY_SCOPES.inventoryConflictsRead],
+      });
+      expect(before.status, before.text).toBe(200);
+      expect(before.body.count).toBe(1);
+
+      const first = await callDelivery(gate, {
+        method: "POST",
+        path: ackPath(adjustmentId),
+        scopes: [DELIVERY_SCOPES.inventoryConflictAcknowledge],
+      });
+      expect(first.status, first.text).toBe(200);
+      expect(first.body.outcome).toBe("acknowledged");
+      const conflict = first.body.conflict as Record<string, unknown>;
+      // المُقِرُّ من الرمزِ الذي وقَّعَ هذا النداءَ (`core` في البوّابةِ)، ولا من
+      // جسمٍ ولا من افتراضٍ.
+      expect(conflict.acknowledged_by).toBe("service:core");
+      expect(conflict.acknowledged_at).toBeTruthy();
+      expect(conflict.adjustment_id).toBe(adjustmentId);
+      // ورايةُ الإقرارِ لا تُغيِّرُ حالةَ طلبٍ (§4.18): الإقرارُ حُكمٌ بشريٌّ لا
+      // انتقالُ حالةٍ.
+      expect(conflict.changes_order_state).toBe(false);
+
+      const second = await callDelivery(gate, {
+        method: "POST",
+        path: ackPath(adjustmentId),
+        scopes: [DELIVERY_SCOPES.inventoryConflictAcknowledge],
+      });
+      expect(second.status, second.text).toBe(200);
+      expect(second.body.outcome).toBe("already_acknowledged");
+      expect((second.body.conflict as Record<string, unknown>).acknowledged_at).toBe(
+        conflict.acknowledged_at,
+      );
+
+      // وبعدَ الإقرارِ تخرجُ من لوحةِ غيرِ المُقَرِّ: البابانِ على صفٍّ واحدٍ.
+      const after = await callDelivery(gate, {
+        method: "GET",
+        path: "/delivery/inventory-conflicts?unacknowledged_only=true",
+        scopes: [DELIVERY_SCOPES.inventoryConflictsRead],
+      });
+      expect(after.status, after.text).toBe(200);
+      expect(after.body.count).toBe(0);
     });
   });
 });

@@ -28,6 +28,7 @@ import type {
   InventoryRelayCheckpoint,
 } from "../domain/marketplace-inventory-events.js";
 import type {
+  InventoryConflictAcknowledgementOutcome,
   InventoryObservationOutcome,
   InventoryObservationStore,
   MirrorContext,
@@ -38,6 +39,66 @@ import {
   type InventoryConflictKind,
   type InventoryConflictRow,
 } from "../domain/inventory-conflict.js";
+
+/* ════════════════════════════════════════════════════════════════════════
+ * أعمدةُ دفترِ الرياتِ ومُحوِّلُها — **موضعٌ واحدٌ لمسارَينِ** (المراجعةُ 18/N)
+ *
+ * القراءةُ والإقرارُ كلاهما يُعيدُ الصفَّ نفسَهُ إلى نفسِ الحدِّ، ونسخُ القائمةِ
+ * والمُحوِّلِ مرّتَينِ يعني أنَّ عموداً يُضافُ لاحقاً يظهرُ في مسارٍ ويغيبُ عن
+ * الآخرِ — وهوَ انحرافٌ لا يُسقِطُ اختباراً بل يُنتِجُ جوابَينِ مختلفَينِ لسؤالٍ
+ * واحدٍ. والقائمةُ نصٌّ ثابتٌ لا مُركَّبٌ من مُدخَلٍ: لا سطحَ حَقنٍ هنا.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+const CONFLICT_COLUMNS = `adjustment_id::text, marketplace_event_id::text, store_id::text, product_id::text,
+              conflict_kind, reason_code, quantity_delta, observed_quantity_after,
+              adjustment_sequence, affected_order_count, affected_units_total,
+              affected_order_public_ids, occurred_for, detected_at,
+              acknowledged_at, acknowledged_by, trace_id`;
+
+interface ConflictColumnRow {
+  adjustment_id: string;
+  marketplace_event_id: string;
+  store_id: string;
+  product_id: string;
+  conflict_kind: InventoryConflictKind;
+  reason_code: string;
+  quantity_delta: number;
+  observed_quantity_after: number;
+  adjustment_sequence: number;
+  affected_order_count: number;
+  affected_units_total: number;
+  affected_order_public_ids: string[];
+  occurred_for: Date;
+  detected_at: Date;
+  acknowledged_at: Date | null;
+  acknowledged_by: string | null;
+  trace_id: string | null;
+}
+
+function mapConflictRow(row: ConflictColumnRow): InventoryConflictRow {
+  return {
+    kind: row.conflict_kind,
+    storeId: row.store_id,
+    productId: row.product_id,
+    adjustmentId: row.adjustment_id,
+    adjustmentSequence: row.adjustment_sequence,
+    quantityDelta: row.quantity_delta,
+    observedQuantityAfter: row.observed_quantity_after,
+    reasonCode: row.reason_code,
+    affectedOrderCount: row.affected_order_count,
+    affectedUnitsTotal: row.affected_units_total,
+    affectedOrderPublicIds: row.affected_order_public_ids,
+    detectedAt: row.detected_at.toISOString(),
+    // ثابتٌ لا مقروءٌ: العمودُ عليهِ `CHECK (= FALSE)` في القاعدةِ (§4.18-5)،
+    // فقراءتُهُ تُوحي أنَّهُ قد يكونُ `true` يوماً — والقاعدةُ ترفضُ ذلكَ.
+    changesOrderState: false as const,
+    marketplaceEventId: row.marketplace_event_id,
+    occurredFor: row.occurred_for.toISOString(),
+    acknowledgedAt: row.acknowledged_at?.toISOString() ?? null,
+    acknowledgedBy: row.acknowledged_by,
+    traceId: row.trace_id,
+  };
+}
 
 export class PostgresInventoryObservationStore implements InventoryObservationStore {
   constructor(private readonly pool: Pool) {}
@@ -235,32 +296,10 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
     readonly unacknowledgedOnly: boolean;
     readonly limit: number;
   }): Promise<readonly InventoryConflictRow[]> {
-    // التصفيةُ بـ`$1` لا بتركيبِ نصٍّ: فرعانِ في استعلامٍ واحدٍ يعنيانِ خطًّا واحدًا
-    // يُختبرُ، والفهرسُ الجزئيُّ يُستخدَمُ حينَ يكونُ الشرطُ مُقيِّداً فعلاً.
-    const r = await this.pool.query<{
-      adjustment_id: string;
-      marketplace_event_id: string;
-      store_id: string;
-      product_id: string;
-      conflict_kind: InventoryConflictKind;
-      reason_code: string;
-      quantity_delta: number;
-      observed_quantity_after: number;
-      adjustment_sequence: number;
-      affected_order_count: number;
-      affected_units_total: number;
-      affected_order_public_ids: string[];
-      occurred_for: Date;
-      detected_at: Date;
-      acknowledged_at: Date | null;
-      acknowledged_by: string | null;
-      trace_id: string | null;
-    }>(
-      `SELECT adjustment_id::text, marketplace_event_id::text, store_id::text, product_id::text,
-              conflict_kind, reason_code, quantity_delta, observed_quantity_after,
-              adjustment_sequence, affected_order_count, affected_units_total,
-              affected_order_public_ids, occurred_for, detected_at,
-              acknowledged_at, acknowledged_by, trace_id
+    // التصفيةُ بـ`$1` لا بتركيبِ نصٍّ: فرعانِ في استعلامٍ واحدٍ يعنيانِ خطًّا واحدًا
+    // يُختبرُ، والفهرسُ الجزئيُّ يُستخدَمُ حينَ يكونُ الشرطُ مُقيِّداً فعلاً.
+    const r = await this.pool.query<ConflictColumnRow>(
+      `SELECT ${CONFLICT_COLUMNS}
          FROM delivery_inventory_conflicts
         WHERE ($1::boolean = FALSE OR acknowledged_at IS NULL)
         ORDER BY detected_at DESC, adjustment_id
@@ -268,26 +307,55 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
       [query.unacknowledgedOnly, query.limit],
     );
 
-    return r.rows.map((row) => ({
-      kind: row.conflict_kind,
-      storeId: row.store_id,
-      productId: row.product_id,
-      adjustmentId: row.adjustment_id,
-      adjustmentSequence: row.adjustment_sequence,
-      quantityDelta: row.quantity_delta,
-      observedQuantityAfter: row.observed_quantity_after,
-      reasonCode: row.reason_code,
-      affectedOrderCount: row.affected_order_count,
-      affectedUnitsTotal: row.affected_units_total,
-      affectedOrderPublicIds: row.affected_order_public_ids,
-      detectedAt: row.detected_at.toISOString(),
-      changesOrderState: false as const,
-      marketplaceEventId: row.marketplace_event_id,
-      occurredFor: row.occurred_for.toISOString(),
-      acknowledgedAt: row.acknowledged_at?.toISOString() ?? null,
-      acknowledgedBy: row.acknowledged_by,
-      traceId: row.trace_id,
-    }));
+    return r.rows.map(mapConflictRow);
+  }
+
+  /* ── إقرارُ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20) ── */
+
+  /**
+   * عبارةٌ **واحدةٌ** لا اثنتانِ، ولا معاملةٌ مُصرَّحةٌ.
+   *
+   * والسببُ ليسَ اقتصادَ نداءٍ: `UPDATE … WHERE acknowledged_at IS NULL` هوَ
+   * وحدَهُ الحاجزُ الذي يجعلُ «الأوّلُ يفوزُ» صحيحاً تحتَ التزاحُمِ — فمُشغِّلانِ
+   * يُنادِيانِ في اللحظةِ نفسِها يُصيبُ أحدُهما صفّاً واحداً ويُصيبُ الآخرُ صفراً،
+   * ولا ثالثَ. وقراءةٌ ثمَّ كتابةٌ في نداءَينِ كانت ستُتيحُ للثاني أن يمحوَ الأوّلَ
+   * بينَ النداءَينِ، وهوَ نقضٌ لـ§4.18-6 من البابِ الآخرِ.
+   *
+   * وشكلُ العبارةِ يحلُّ سؤالاً حقيقيّاً: `RETURNING` وحدَهُ لا يُفرِّقُ بينَ
+   * «أُقِرَّت قبلي» و«لا وجودَ لها» — كلتاهما صفرُ صفوفٍ. فالفرعُ الثاني في
+   * `UNION ALL` يقرأُ الصفَّ **حينَ لم تُصِبْهُ الكتابةُ** (`NOT EXISTS (SELECT 1
+   * FROM upd)`)، فيُعادُ إمّا صفٌّ كتبتُهُ أنا بـ`recorded = TRUE`، أو صفٌّ
+   * أقرَّهُ غيري بـ`FALSE`، أو **لا صفَّ** — وهذا وحدَهُ يعني 404. وثلاثةُ
+   * أجوبةٍ من نداءٍ واحدٍ على لقطةٍ واحدةٍ: لا نافذةَ بينَ سؤالَينِ.
+   */
+  async acknowledgeInventoryConflict(input: {
+    readonly adjustmentId: string;
+    readonly acknowledgedBy: string;
+    readonly acknowledgedAt: string;
+  }): Promise<InventoryConflictAcknowledgementOutcome> {
+    const r = await this.pool.query<ConflictColumnRow & { recorded: boolean }>(
+      `WITH upd AS (
+         UPDATE delivery_inventory_conflicts
+            SET acknowledged_at = $2::timestamptz,
+                acknowledged_by = $3::text
+          WHERE adjustment_id = $1::uuid
+            AND acknowledged_at IS NULL
+         RETURNING ${CONFLICT_COLUMNS}, TRUE AS recorded
+       )
+       SELECT * FROM upd
+       UNION ALL
+       SELECT ${CONFLICT_COLUMNS}, FALSE AS recorded
+         FROM delivery_inventory_conflicts
+        WHERE adjustment_id = $1::uuid
+          AND NOT EXISTS (SELECT 1 FROM upd)`,
+      [input.adjustmentId, input.acknowledgedAt, input.acknowledgedBy],
+    );
+
+    const row = r.rows[0];
+    if (row === undefined) return { acknowledgement: "unknown_conflict" };
+    return row.recorded
+      ? { acknowledgement: "recorded", row: mapConflictRow(row) }
+      : { acknowledgement: "already_recorded", row: mapConflictRow(row) };
   }
 
   /* ── replay / rebuild ── */

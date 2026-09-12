@@ -21,10 +21,12 @@
  *
  *   POST /delivery/idempotency-keys/sweep              → 200 (المراجعةُ 13/N · §4.15)
  *   GET  /delivery/inventory-conflicts                 → 200 (المراجعةُ 16/N · §4.18)
+ *   POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement
+ *                                                      → 200 (المراجعةُ 18/N · §4.20)
  *
- * ## هويّةُ الخدمةِ مفروضةٌ على الأحدَ عشرَ جميعاً (`M1-04` · المراجعةُ 17/N)
+ * ## هويّةُ الخدمةِ مفروضةٌ على الاثنَي عشرَ جميعاً (`M1-04` · المراجعةُ 17/N)
  *
- * تسعةٌ مُغلَقةٌ بصلاحيّةٍ، ومسارَا الرصدِ (`/delivery/health` ·
+ * عشرةٌ مُغلَقةٌ بصلاحيّةٍ، ومسارَا الرصدِ (`/delivery/health` ·
  * `/delivery/ready`) مفتوحانِ **بتصنيفٍ صريحٍ** لا بإغفالٍ. والحُجّةُ لكلِّ قرارٍ
  * عندَ التصنيفِ أدناهُ وفي [`service-identity.ts`](./service-identity.ts).
  * ومسارٌ يُسجَّلُ بلا تصنيفٍ **يُسقِطُ الإقلاعَ**.
@@ -89,6 +91,7 @@ import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 import { DeliveryError } from "../domain/errors.js";
 import type {
   IdempotencyIntent,
+  InventoryConflictAcknowledgementPort,
   InventoryConflictReadPort,
   InventoryReservationPort,
   InventoryReservationStore,
@@ -99,6 +102,10 @@ import type {
   StoreOrderWritePort,
 } from "../ports.js";
 import { assertIdempotencyKey, deriveRequestFingerprint } from "../domain/idempotency.js";
+import {
+  composeConflictAcknowledger,
+  type InventoryConflictRow,
+} from "../domain/inventory-conflict.js";
 import { sendDeliveryError } from "./errors.js";
 import {
   DELIVERY_SCOPES,
@@ -163,6 +170,15 @@ export interface DeliveryHttpDeps {
    * (نفسُ حُجّةِ `idempotencySweepPort`: الصفرُ الكاذبُ يُقرأُ نظافةً).
    */
   readonly inventoryConflictReadPort?: InventoryConflictReadPort;
+  /**
+   * كتابةُ إقرارِ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20).
+   *
+   * غائبٌ ⇒ `POST …/acknowledgement` يُجيبُ 500 `DELIVERY_INTERNAL_ERROR` —
+   * **ولا 200 «أُقِرَّت»**، وهذا أشدُّ من نظيرِهِ في مسارِ القراءةِ: قائمةٌ فارغةٌ
+   * كاذبةٌ تُقرأُ نظافةً، أمّا إقرارٌ كاذبٌ فيُغلِقُ حادثةً **حقيقيّةً** في ذهنِ
+   * مُشغِّلٍ ولا يُبقي لها أثراً في القاعدةِ يُراجَعُ.
+   */
+  readonly inventoryConflictAcknowledgementPort?: InventoryConflictAcknowledgementPort;
   /**
    * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`، الموجةُ السادسةُ · المراجعةُ
    * 17/N). **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ»
@@ -276,6 +292,84 @@ function parseInventoryConflictsQuery(
   return { unacknowledgedOnly, limit };
 }
 
+/**
+ * صورةُ الرايةِ على السلكِ — **دالّةٌ واحدةٌ لمسارَينِ** (المراجعةُ 18/N).
+ *
+ * القراءةُ والإقرارُ يُظهِرانِ نفسَ الكائنِ، ونسخُ حروفِ الحقولِ في مُعالِجَينِ
+ * يعني أنَّ أوّلَ حقلٍ يُضافُ لاحقاً يظهرُ في مسارٍ ويغيبُ عن الآخرِ — فيرى
+ * المُشغِّلُ صفّاً في القائمةِ لا يُطابِقُ الصفَّ الذي أقرَّهُ للحظتِهِ.
+ * ولا `trace_id` هنا في الجسمِ العامِّ: هوَ في الصفِّ للتحقيقِ، ومغلَّفُ الجوابِ
+ * يحملُ `trace_id` الطلبِ الحاليِّ لا تتبُّعَ الحدثِ الأصليِّ — والاثنانِ في حقلٍ
+ * واحدٍ خلطٌ يُضيِّعُ التحقيقَ.
+ */
+function toInventoryConflictWire(row: InventoryConflictRow): Record<string, unknown> {
+  return {
+    adjustment_id: row.adjustmentId,
+    marketplace_event_id: row.marketplaceEventId,
+    store_id: row.storeId,
+    product_id: row.productId,
+    conflict_kind: row.kind,
+    reason_code: row.reasonCode,
+    quantity_delta: row.quantityDelta,
+    observed_quantity_after: row.observedQuantityAfter,
+    adjustment_sequence: row.adjustmentSequence,
+    affected_order_count: row.affectedOrderCount,
+    affected_units_total: row.affectedUnitsTotal,
+    affected_order_public_ids: row.affectedOrderPublicIds,
+    changes_order_state: row.changesOrderState,
+    occurred_for: row.occurredFor,
+    detected_at: row.detectedAt,
+    acknowledged_at: row.acknowledgedAt,
+    acknowledged_by: row.acknowledgedBy,
+  };
+}
+
+/**
+ * `adjustmentId` من المسارِ — **UUID أو 400، لا 404**.
+ *
+ * ولمَ لا 404؟ لأنَّ `not-a-uuid` ليسَ «رايةً غيرَ موجودةٍ» بل نداءٌ معطوبٌ:
+ * مُشغِّلٌ لصقَ سطراً كاملاً من سجلٍّ يجبُ أن يُقالَ لهُ «شكلُ المُعرِّفِ خطأٌ» لا
+ * «لا رايةَ» — والثاني يُرسِلُهُ يبحثُ في القاعدةِ عن صفٍّ موجودٍ. ولولا هذا
+ * الحاجزُ لبلغَ النصُّ `::uuid` في العبارةِ فارتدَّ خطأَ قاعدةٍ خاماً (22P02)
+ * مُترجَماً 500 — أي عيبٌ عندَنا على خطأِ منادٍ.
+ */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
+
+function parseAdjustmentIdParam(params: unknown, traceId: string): string {
+  const raw = (params ?? {}) as Record<string, unknown>;
+  const value = raw["adjustmentId"];
+  if (typeof value !== "string" || !UUID_PATTERN.test(value.toLowerCase())) {
+    throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "`adjustmentId` مُعرِّفُ UUID", {
+      traceId,
+      details: { field: "adjustmentId" },
+    });
+  }
+  return value.toLowerCase();
+}
+
+/**
+ * جسمُ الإقرارِ: **لا جسمَ**. وأيُّ جسمٍ يُرَدُّ 400 ولا يُتَجاهَلُ صامتاً.
+ *
+ * وهذا أهمُّ قرارٍ في هذا المسارِ. المنادي الذي يبعثُ
+ * `{"acknowledged_by":"فريقُ العملياتِ"}` **يظنُّ أنَّهُ سمّى المُقِرَّ**؛ وتجاهُلُ
+ * الحقلِ صامتاً يعني أنَّ الصفَّ سيحملُ اسماً آخرَ غيرَ الذي أرسلَهُ وهوَ لا
+ * يدري — أي دفترُ مسؤوليّةٍ يُخالِفُ ما يعتقدُهُ مَن كتبَ فيهِ. فالرفضُ الصريحُ
+ * هوَ الذي يُعلِّمُهُ أنَّ المُقِرَّ من الرمزِ لا من الجسمِ.
+ *
+ * ومُحلِّلُ هذا التطبيقِ يجعلُ الجسمَ الفارغَ `undefined` (انظرْ
+ * `addContentTypeParser` أدناهُ)، فالنداءُ الشريفُ `curl -X POST` يمرُّ بلا
+ * تحايُلٍ.
+ */
+function assertNoAcknowledgementBody(body: unknown, traceId: string): void {
+  if (body === undefined || body === null) return;
+  if (typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 0) return;
+  throw new DeliveryError(
+    "DELIVERY_VALIDATION_FAILED",
+    "لا جسمَ لهذا المسارِ — المُقِرُّ يُؤخَذُ من الهويّةِ المُثبَتةِ لا من الجسمِ (ADR-026 §4.20)",
+    { traceId, details: { field: "body" } },
+  );
+}
+
 export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
   const app = Fastify({
     // request.id becomes `trace_id` in every error body and every event.
@@ -307,7 +401,8 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
    *     و`not_claimed` — **لا مُعرِّفَ طلبٍ ولا متجرٍ ولا مبلغَ** (`http/readiness.ts`).
    *
    * وكلُّ ما بعدَهُما مُغلَقٌ بصلاحيّةٍ. **ومسارٌ يُسجَّلُ بلا تصنيفٍ يُسقِطُ
-   * الإقلاعَ** — فمسارٌ ثانيَ عشرَ في مراجعةٍ قادمةٍ لن يمرَّ بلا قرارٍ مكتوبٍ.
+   * الإقلاعَ** — وقد جُرِّبَ هذا فعلاً: المسارُ الثاني عشرَ (إقرارُ الرايةِ ·
+   * المراجعةُ 18/N) لم يمرَّ بلا صلاحيّةٍ مُصنَّفةٍ، فالحاجزُ ليسَ وعداً.
    */
   const OPEN: DeliveryRouteConfig = { serviceIdentity: "open" };
   const scoped = (...scopes: readonly string[]): DeliveryRouteConfig => ({
@@ -681,27 +776,111 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
       // يقرأُ خطأً. ولا «total»: عدٌّ كاملٌ طلبٌ ثانٍ لا يطلبُهُ أحدٌ بعدُ.
       applied_filter: { unacknowledged_only: unacknowledgedOnly, limit },
       count: rows.length,
-      conflicts: rows.map((row) => ({
-        adjustment_id: row.adjustmentId,
-        marketplace_event_id: row.marketplaceEventId,
-        store_id: row.storeId,
-        product_id: row.productId,
-        conflict_kind: row.kind,
-        reason_code: row.reasonCode,
-        quantity_delta: row.quantityDelta,
-        observed_quantity_after: row.observedQuantityAfter,
-        adjustment_sequence: row.adjustmentSequence,
-        affected_order_count: row.affectedOrderCount,
-        affected_units_total: row.affectedUnitsTotal,
-        affected_order_public_ids: row.affectedOrderPublicIds,
-        changes_order_state: row.changesOrderState,
-        occurred_for: row.occurredFor,
-        detected_at: row.detectedAt,
-        acknowledged_at: row.acknowledgedAt,
-        acknowledged_by: row.acknowledgedBy,
-      })),
+      conflicts: rows.map(toInventoryConflictWire),
     });
   });
+
+  /*
+   * ── إقرارُ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20) ─────────────────────────
+   *
+   * `POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement`
+   *
+   * ## المسارُ الثانيَ عشرَ، ومسارُ تشغيلٍ ثالثٌ خارجَ العقدِ المنشورِ
+   *
+   * على سابقةِ مسارِ المُكنسةِ ومسارِ القراءةِ حرفاً (§4.16 · §4.18-9): ليسَ في
+   * `api.openapi.yml` لأنَّهُ سطحُ مُشغِّلٍ لا سطحُ مستهلكٍ، وموضعُ توصيفِهِ
+   * `docs/04-api/DELIVERY_HTTP.md`.
+   *
+   * ## ولا `Idempotency-Key` — والسببُ ليسَ تخفيفاً
+   *
+   * مساراتُ الكتابةِ الأربعةُ تطلبُهُ (§4.10) لأنَّ إعادةَ نداءٍ فيها **تُنشئُ
+   * أثراً ثانياً**: طلبٌ ثانٍ، إلغاءٌ ثانٍ، انتقالٌ ثانٍ. وهذا المسارُ **مُتماثِلٌ
+   * في طبيعتِهِ** لا بآلةٍ: العمليّةُ «اضبطْ `acknowledged_at` إن كانَ فارغاً»
+   * والإعادةُ لا تُنتِجُ شيئاً ثانياً بل تُعيدُ نفسَ الصفِّ. ومفتاحٌ مطلوبٌ هنا
+   * كانَ سيُضيفُ مخزنَ مفاتيحَ وصفوفاً تُمسَحُ لاحقاً بلا حمايةٍ جديدةٍ — وأسوأُ
+   * من ذلكَ: كانَ سيُوهِمُ القارئَ أنَّ الحمايةَ **من المفتاحِ** لا من `WHERE
+   * acknowledged_at IS NULL`، فأوّلُ من يُبسِّطُ المفتاحَ يفقدُ الحمايةَ كلَّها.
+   *
+   * ## والجوابُ 200 في الحالتَينِ، **مع تمييزٍ صريحٍ في الجسمِ**
+   *
+   * `outcome: "acknowledged" | "already_acknowledged"`. ولمَ لا 409 على الثانيةِ؟
+   * لأنَّ الحالةَ المطلوبةَ **مُتحقِّقةٌ**: الرايةُ مُقَرَّةٌ، ورفضٌ يدفعُ المُنادي
+   * إلى إعادةٍ لا تُفيدُ أو إلى ظنِّ عيبٍ. ولمَ لا 200 صامتاً؟ لأنَّ المُقِرَّ
+   * **قد يكونُ غيري** — والجوابُ يحملُ `acknowledged_by` الفعليَّ، فيرى المُشغِّلُ
+   * الثاني اسمَ الأوّلِ ولا يظنُّ الواقعةَ لهُ. التمييزُ في الجسمِ لا في الرمزِ
+   * لأنَّهُ **معلومةٌ** لا فشلٌ.
+   */
+  app.post(
+    "/delivery/inventory-conflicts/:adjustmentId/acknowledgement",
+    { config: scoped(DELIVERY_SCOPES.inventoryConflictAcknowledge) },
+    async (request, reply) => {
+      const traceId = String(request.id);
+      if (deps.inventoryConflictAcknowledgementPort === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا منفذَ إقرارٍ مُركَّبٌ — لا يُدَّعى إقرارٌ لم يُكتَبْ (ADR-026 §4.20)",
+          { traceId },
+        );
+      }
+
+      const adjustmentId = parseAdjustmentIdParam(request.params, traceId);
+      assertNoAcknowledgementBody(request.body, traceId);
+
+      /*
+       * الهويّةُ المُثبَتةُ هيَ المصدرُ الوحيدُ للمُقِرِّ.
+       *
+       * وغيابُها على مسارٍ **مُغلَقٍ** مستحيلٌ بالبناءِ: الوسيطُ يملأُ
+       * `serviceCaller` قبلَ كلِّ مُعالِجٍ مفروضٍ أو يردُّ 401/403 ولا يبلغُ
+       * المُعالِجَ. فهذا الفرعُ حرسُ عيبٍ عندَنا — تصنيفُ المسارِ غُيِّرَ إلى
+       * `open` سهواً — و500 هوَ جوابُهُ الصادقُ. **ولا يُكتَبُ إقرارٌ بلا اسمٍ
+       * أبداً**: القاعدةُ ترفضُهُ بـ`ck_..._ack` والشيفرةُ ترفضُهُ قبلَها،
+       * فالمنعُ في موضعَينِ لأنَّ «إقرارٌ بلا مُقِرٍّ» هوَ عينُ ما مَنعَ هذا
+       * المسارَ سنةً كاملةً (§4.18).
+       */
+      const caller = request.serviceCaller;
+      if (caller === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا هويّةَ مُثبَتةً على مسارٍ مُغلَقٍ — لا يُكتَبُ إقرارٌ بلا مُقِرٍّ",
+          { traceId },
+        );
+      }
+
+      const composed = composeConflictAcknowledger({
+        serviceName: caller.serviceName,
+        onBehalfOfPublicId: caller.onBehalfOfPublicId,
+      });
+      if (composed.acknowledger === "rejected") {
+        // اسمٌ لا يُكتَبُ في العمودِ عيبُ تركيبٍ (اسمُ خدمةٍ فارغٌ أو أطولُ من
+        // 128 حرفاً)، لا خطأُ منادٍ: هوَ لا يملكُ تغييرَ اسمِ رمزِهِ من الجسمِ.
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          `تعذَّرَ تركيبُ اسمِ المُقِرِّ من الهويّةِ المُثبَتةِ (${composed.because})`,
+          { traceId },
+        );
+      }
+
+      const outcome = await deps.inventoryConflictAcknowledgementPort.acknowledgeInventoryConflict({
+        adjustmentId,
+        acknowledgedBy: composed.value,
+        acknowledgedAt: now(),
+      });
+
+      if (outcome.acknowledgement === "unknown_conflict") {
+        throw new DeliveryError(
+          "DELIVERY_INVENTORY_CONFLICT_NOT_FOUND",
+          "لا رايةَ تضاربٍ بهذا المُعرِّفِ",
+          { traceId },
+        );
+      }
+
+      return reply.status(200).send({
+        outcome:
+          outcome.acknowledgement === "recorded" ? "acknowledged" : "already_acknowledged",
+        conflict: toInventoryConflictWire(outcome.row),
+      });
+    },
+  );
 
   return {
     fastify: app,

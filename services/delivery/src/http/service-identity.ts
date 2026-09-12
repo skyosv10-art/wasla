@@ -112,6 +112,15 @@ export const DELIVERY_SCOPES = {
   deliveryTaskRead: "delivery:delivery-task:read",
   idempotencySweep: "delivery:ops:idempotency-sweep",
   inventoryConflictsRead: "delivery:ops:inventory-conflicts:read",
+  /**
+   * الصلاحيّةُ العاشرةُ (المراجعةُ 18/N · §4.20) — **مفصولةٌ عن `:read` بقصدٍ**.
+   *
+   * لوحةُ مُشغِّلٍ تسردُ الرياتِ تحتاجُ القراءةَ وحدَها؛ ومَن يقرأُ لا يجوزُ أن
+   * يستطيعَ **إغلاقَ** حادثةٍ باسمِهِ بالبناءِ. والإقرارُ ليسَ قراءةً أعلى: هوَ
+   * كتابةُ مسؤوليّةٍ في دفترٍ يُقرأُ في تحقيقٍ — ودمجُهُ في `:read` كانَ سيجعلَ
+   * كلَّ رمزِ لوحةٍ مسروقٍ قادراً على تصفيرِ قائمةِ ما لم يُنظَرْ فيهِ.
+   */
+  inventoryConflictAcknowledge: "delivery:ops:inventory-conflicts:acknowledge",
 } as const;
 
 export interface DeliveryServiceIdentityOptions {

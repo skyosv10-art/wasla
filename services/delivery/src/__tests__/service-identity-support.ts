@@ -59,6 +59,12 @@ export function signFor(
     scopes?: readonly string[];
     serviceName?: string;
     now?: Date;
+    /**
+     * الفاعلُ البشريُّ في السلسلةِ (`obo` في الرمزِ) — أُضيفَ في المراجعةِ 18/N
+     * لأنَّ مسارَ الإقرارِ يكتبُهُ في دفترِ مسؤوليّةٍ، فوجودُهُ في الرمزِ يجبُ أن
+     * يُثبَتَ **من التوقيعِ إلى العمودِ** لا أن يُفترَضَ.
+     */
+    onBehalfOfPublicId?: string;
   } = {},
 ): Record<string, string> {
   const separator = url.indexOf("?");
@@ -70,6 +76,9 @@ export function signFor(
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_DELIVERY_SCOPES,
+    ...(options.onBehalfOfPublicId === undefined
+      ? {}
+      : { onBehalfOfPublicId: options.onBehalfOfPublicId }),
   });
 }
 

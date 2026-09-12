@@ -510,6 +510,158 @@ function deps(pool: PgFixture["pool"]): InventoryRelayDeps {
     expect(unacked.map((row) => row.adjustmentSequence)).toEqual([2, 1]);
   });
 
+  /* ════════ الإقرارُ (المراجعةُ 18/N · §4.20) ════════ */
+
+  /** رايةٌ واحدةٌ على القاعدةِ، ويُعادُ مُعرِّفُها. */
+  async function seedOneConflict(): Promise<string> {
+    await seedReservedOrder();
+    await seedMarketplaceEvent(pool, { payload: payload(), occurred_at: ts(0) });
+    await runInventoryRelayBatch(deps(pool));
+    const rows = await conflictRows();
+    expect(rows).toHaveLength(1);
+    return String((rows[0] as Record<string, unknown>)["adjustment_id"]);
+  }
+
+  it("`acknowledgeInventoryConflict`: أوّلُ نداءٍ `recorded` ويكتبُ العمودَينِ معاً", async () => {
+    const adjustmentId = await seedOneConflict();
+
+    const outcome = await store.acknowledgeInventoryConflict({
+      adjustmentId,
+      acknowledgedBy: "service:ops-console/on-behalf-of:US-0000000042",
+      acknowledgedAt: ts(5),
+    });
+
+    expect(outcome.acknowledgement).toBe("recorded");
+    if (outcome.acknowledgement === "unknown_conflict") throw new Error("unreachable");
+    expect(outcome.row.acknowledgedBy).toBe("service:ops-console/on-behalf-of:US-0000000042");
+    expect(outcome.row.acknowledgedAt).toBe(ts(5));
+
+    // والصفُّ في القاعدةِ يُطابِقُ الجوابَ: `RETURNING` لا يَعِدُ بما لم يُكتَبْ.
+    const [stored] = await conflictRows();
+    const row = stored as Record<string, unknown>;
+    expect(row["acknowledged_by"]).toBe("service:ops-console/on-behalf-of:US-0000000042");
+    expect(row["acknowledged_at"]).not.toBeNull();
+    // و`ck_delivery_inventory_conflicts_ack` يمنعُ نصفَ إقرارٍ، فالعمودانِ معاً
+    // أو لا شيءَ — وقد أُثبِتَ منعُهُ أعلاهُ على القاعدةِ نفسِها.
+  });
+
+  it("الثاني `already_recorded` ويُعيدُ **المُقِرَّ الأوّلَ** — لا يُدهَسُ إقرارٌ قائمٌ", async () => {
+    const adjustmentId = await seedOneConflict();
+
+    await store.acknowledgeInventoryConflict({
+      adjustmentId,
+      acknowledgedBy: "service:ops-console/on-behalf-of:US-0000000007",
+      acknowledgedAt: ts(5),
+    });
+    const second = await store.acknowledgeInventoryConflict({
+      adjustmentId,
+      acknowledgedBy: "service:core",
+      acknowledgedAt: ts(9),
+    });
+
+    expect(second.acknowledgement).toBe("already_recorded");
+    if (second.acknowledgement === "unknown_conflict") throw new Error("unreachable");
+    // الدعوى: الأوّلُ يبقى. ولو كتبَ الثاني لَما استطاعَ تحقيقٌ أن يعرفَ **مَن**
+    // نظرَ في الحادثةِ فعلاً — والعمودُ يصيرُ «آخرُ من مرَّ» لا «مَن أقرَّ».
+    expect(second.row.acknowledgedBy).toBe("service:ops-console/on-behalf-of:US-0000000007");
+    expect(second.row.acknowledgedAt).toBe(ts(5));
+    const [stored] = await conflictRows();
+    expect((stored as Record<string, unknown>)["acknowledged_by"]).toBe(
+      "service:ops-console/on-behalf-of:US-0000000007",
+    );
+  });
+
+  it("نداءانِ متوازيانِ: واحدٌ `recorded` وواحدٌ `already_recorded` — لا اثنانِ يفوزانِ", async () => {
+    const adjustmentId = await seedOneConflict();
+
+    // وهذا ما لا يُثبِتُهُ بديلُ ذاكرةٍ: العبارةُ **واحدةٌ** (`WITH upd AS (UPDATE
+    // … WHERE acknowledged_at IS NULL) … UNION ALL SELECT … WHERE NOT EXISTS`)،
+    // فلا فُرجةَ بينَ «اقرأْ هل أُقِرَّت» و«اكتبْ» يدخلُ منها الثاني. ولو كانَ
+    // المسارُ قراءةً ثمَّ كتابةً لفازَ الاثنانِ ولكتبَ الثاني على الأوّلِ.
+    const [a, b] = await Promise.all([
+      store.acknowledgeInventoryConflict({
+        adjustmentId,
+        acknowledgedBy: "service:core",
+        acknowledgedAt: ts(5),
+      }),
+      store.acknowledgeInventoryConflict({
+        adjustmentId,
+        acknowledgedBy: "service:ops-console",
+        acknowledgedAt: ts(5),
+      }),
+    ]);
+
+    const outcomes = [a?.acknowledgement, b?.acknowledgement].sort();
+    expect(outcomes).toEqual(["already_recorded", "recorded"]);
+    // وكلا الجوابَينِ يُسمّي **نفسَ** المالكِ: الرابحُ واحدٌ ويُقرأُ واحداً.
+    if (a === undefined || b === undefined) throw new Error("unreachable");
+    if (a.acknowledgement === "unknown_conflict" || b.acknowledgement === "unknown_conflict") {
+      throw new Error("unreachable");
+    }
+    expect(a.row.acknowledgedBy).toBe(b.row.acknowledgedBy);
+  });
+
+  it("مُعرِّفٌ لا رايةَ لهُ ⇒ `unknown_conflict`، ولا صفَّ يُنشَأُ", async () => {
+    await seedOneConflict();
+
+    const outcome = await store.acknowledgeInventoryConflict({
+      adjustmentId: "cccccccc-0000-0000-0000-0000000000ee",
+      acknowledgedBy: "service:core",
+      acknowledgedAt: ts(5),
+    });
+
+    expect(outcome.acknowledgement).toBe("unknown_conflict");
+    // و«لا رايةَ» ليسَ «أنشئْ رايةً»: إقرارٌ لا يُخلِّقُ حادثةً لم تُكشَفْ.
+    expect(await conflictRows()).toHaveLength(1);
+    expect((((await conflictRows())[0] as Record<string, unknown>)["acknowledged_by"])).toBeNull();
+  });
+
+  it("الإقرارُ يُخرِجُ الرايةَ من قائمةِ غيرِ المُقَرِّ — البابانِ على صفٍّ واحدٍ", async () => {
+    const adjustmentId = await seedOneConflict();
+    expect(
+      await store.listInventoryConflicts({ unacknowledgedOnly: true, limit: 100 }),
+    ).toHaveLength(1);
+
+    await store.acknowledgeInventoryConflict({
+      adjustmentId,
+      acknowledgedBy: "service:core",
+      acknowledgedAt: ts(5),
+    });
+
+    // الدعوى: بابُ الكتابةِ وبابُ القراءةِ يقرآنِ نفسَ الصفِّ ونفسَ الفهرسِ
+    // الجزئيِّ (`ix_..._unacknowledged`). ولولا ذلكَ لبقيَتِ الرايةُ في لوحةِ
+    // المُشغِّلِ بعدَ إقرارِهِ لها فأقرَّها ثانيةً وثالثةً.
+    expect(
+      await store.listInventoryConflicts({ unacknowledgedOnly: true, limit: 100 }),
+    ).toHaveLength(0);
+    const [visible] = await store.listInventoryConflicts({
+      unacknowledgedOnly: false,
+      limit: 100,
+    });
+    expect(visible?.acknowledgedBy).toBe("service:core");
+  });
+
+  it("إعادةُ تسليمِ الحدثِ بعدَ الإقرارِ لا تُصفِّرُهُ — `DO NOTHING` ما زالَ يحمي", async () => {
+    const adjustmentId = await seedOneConflict();
+    await store.acknowledgeInventoryConflict({
+      adjustmentId,
+      acknowledgedBy: "service:ops-console/on-behalf-of:US-0000000007",
+      acknowledgedAt: ts(5),
+    });
+
+    // نفسُ الحدثِ يُسلَّمُ ثانيةً: الحمايةُ في الكشفِ (§4.18-6) والحمايةُ في
+    // الكتابةِ (`WHERE acknowledged_at IS NULL`) يجبُ أن تصمُدا **معاً** — ورفعُ
+    // إحداهما وحدَها يُعيدُ فتحَ حادثةٍ أُغلِقَتْ بحكمِ إنسانٍ.
+    await seedMarketplaceEvent(pool, { payload: payload(), occurred_at: ts(1) });
+    await runInventoryRelayBatch(deps(pool));
+
+    const rows = await conflictRows();
+    expect(rows).toHaveLength(1);
+    expect((rows[0] as Record<string, unknown>)["acknowledged_by"]).toBe(
+      "service:ops-console/on-behalf-of:US-0000000007",
+    );
+  });
+
   it("`clearInventoryObservations` يمحو الراياتِ كذلكَ — إعادةُ بناءٍ لا تُبقي راياتِ ماضٍ", async () => {
     await seedReservedOrder();
     await seedMarketplaceEvent(pool, { payload: payload(), occurred_at: ts(0) });

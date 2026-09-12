@@ -236,3 +236,77 @@ function countDistinctOrders(lines: readonly ActiveReservationLine[]): number {
 function distinctSortedPublicIds(lines: readonly ActiveReservationLine[]): readonly string[] {
   return [...new Set(lines.map((line) => line.orderPublicId))].sort();
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * مَن أقرَّ الرايةَ — تركيبُ `acknowledged_by` (المراجعةُ 18/N · ADR-026 §4.20)
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * الحدُّ الأقصى لعمودِ `acknowledged_by` في `contracts/schema.sql`:
+ * `CHECK (char_length(acknowledged_by) BETWEEN 1 AND 128)`.
+ *
+ * والرقمُ مُعلَنٌ هنا لا مُخمَّنٌ في المخزنِ: قيدٌ في القاعدةِ لا يعرفُهُ المُنتِجُ
+ * يعني أنَّ أوّلَ اسمِ خدمةٍ طويلٍ يُسقِطُ الكتابةَ بخطأِ قاعدةٍ خامٍ (23514) في
+ * وجهِ المُشغِّلِ بدلَ رسالةٍ تقولُ ما وقعَ.
+ */
+export const CONFLICT_ACKNOWLEDGER_MAX_LENGTH = 128;
+
+/** فاعلٌ مُثبَتٌ — بنيةٌ لا نوعُ SDK: النطاقُ لا يستوردُ طبقةَ مُصادقةٍ. */
+export interface ConflictAcknowledgerIdentity {
+  readonly serviceName: string;
+  readonly onBehalfOfPublicId?: string | undefined;
+}
+
+/** سببُ رفضِ تركيبِ المُقِرِّ — مفرداتٌ مغلقةٌ لا نصٌّ حرٌّ. */
+export type ConflictAcknowledgerRejection = "empty_service_name" | "too_long";
+
+export type ConflictAcknowledgerResult =
+  | { readonly acknowledger: "composed"; readonly value: string }
+  | { readonly acknowledger: "rejected"; readonly because: ConflictAcknowledgerRejection };
+
+/**
+ * يُركِّبُ نصَّ `acknowledged_by` من **الهويّةِ المُثبَتةِ وحدَها**.
+ *
+ * ## ولمَ لا يُقبَلُ في الجسمِ؟
+ *
+ * لأنَّ حقلاً في الجسمِ يجعلُ الإقرارَ **دعوى المنادي على نفسِهِ**: مَن يكتبُ
+ * `acknowledged_by: "قسمُ العملياتِ"` لم يُقِرَّ شيئاً، بل وقَّعَ بقلمٍ لا يملكُهُ.
+ * ودَينُ §4.18 نُصَّ على هذا حرفاً — «إقرارٌ بلا مُقِرٍّ» كانَ حاجزَ المسارِ حتى
+ * وُجِدَتِ المُصادقةُ الداخلةُ في 17/N (§4.19). فالمصدرُ الوحيدُ هوَ الرمزُ
+ * المُثبَتُ توقيعُهُ، ولا ثانيَ لهُ.
+ *
+ * ## والصيغةُ مُهيكلةٌ لا حرّةٌ، وتحملُ الإنسانَ إن وُجِدَ
+ *
+ * - `service:<name>` حينَ لا فاعلَ بشريّاً في السلسلةِ.
+ * - `service:<name>/on-behalf-of:<publicId>` حينَ حملَ الرمزُ
+ *   `onBehalfOfPublicId` — وهوَ المُعرِّفُ **العامُّ** وحدَهُ (`ServicePrincipal`
+ *   لا يحملُ الداخليَّ أصلاً، ADR-001).
+ *
+ * والسابقةُ `service:` مقصودةٌ: صفٌّ يقولُ `ops-console` وحدَهُ لا يُفرَّقُ عن
+ * إقرارٍ يدويٍّ على القاعدةِ كُتِبَ باسمِ إنسانٍ — ودفترُ الرياتِ يُقرأُ في تحقيقٍ،
+ * فالتمييزُ بينَ «أقرَّتْهُ خدمةٌ» و«أقرَّهُ إنسانٌ على القاعدةِ» هوَ نفسُ ما
+ * يُسألُ عنهُ.
+ *
+ * والطولُ يُرفَضُ ولا يُقتَطَعُ: هويّةٌ مقتطعةٌ في دفترِ مسؤوليّةٍ كذبةٌ صغيرةٌ
+ * تُقرأُ حقيقةً.
+ */
+export function composeConflictAcknowledger(
+  identity: ConflictAcknowledgerIdentity,
+): ConflictAcknowledgerResult {
+  const serviceName = identity.serviceName.trim();
+  if (serviceName === "") {
+    return { acknowledger: "rejected", because: "empty_service_name" };
+  }
+
+  const onBehalfOf = identity.onBehalfOfPublicId?.trim() ?? "";
+  const value =
+    onBehalfOf === ""
+      ? `service:${serviceName}`
+      : `service:${serviceName}/on-behalf-of:${onBehalfOf}`;
+
+  if (value.length > CONFLICT_ACKNOWLEDGER_MAX_LENGTH) {
+    return { acknowledger: "rejected", because: "too_long" };
+  }
+
+  return { acknowledger: "composed", value };
+}

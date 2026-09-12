@@ -43,6 +43,7 @@ import { buildDeliveryHttpApp } from "./app.js";
 import { resolveIdempotencyTtlSeconds } from "../domain/idempotency.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
+import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
 import {
   DELIVERY_MARKETPLACE_SCOPES,
   HttpMarketplaceCatalogPort,
@@ -182,6 +183,10 @@ async function main(): Promise<void> {
   const catalog = buildCatalogPort();
   const reservation = buildReservationPort();
   const observation = buildMarketplaceObservationPort();
+  // مخزنُ الرصدِ مُركَّبٌ هنا للقراءةِ فقط (المراجعةُ 16/N · ADR-026 §4.18): الكتابةُ
+  // فيهِ ملكُ المرحّلِ (`marketplace-inventory-relay.ts`) والتطبيقُ لا يرى منهُ
+  // إلّا `InventoryConflictReadPort` — والمحدودُ بالنوعِ لا بالنيّةِ.
+  const inventoryObservations = new PostgresInventoryObservationStore(pool);
   const { fastify, close } = buildDeliveryHttpApp({
     readPort: store,
     writePort: store,
@@ -189,6 +194,7 @@ async function main(): Promise<void> {
     reservationStore: store,
     readinessPort: new PostgresReadinessProbe(pool),
     idempotencySweepPort: store,
+    inventoryConflictReadPort: inventoryObservations,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
     ...(observation.observationPort === undefined
       ? {}
@@ -199,7 +205,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s`);
+    console.log(`delivery service listening on :${PORT} · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

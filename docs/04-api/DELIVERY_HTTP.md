@@ -1,18 +1,29 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 15/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 16/N)
 
-> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الثمانيةُ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
+> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الإحدى عشرةَ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 15/N — مسبارُ جاهزيّةِ السوقِ: رصدٌ مُعلِمٌ لا حاكمٌ) · **Last Updated:** 2026-09-12
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 16/N — كشفُ تضاربِ المخزونِ النشطِ: رايةٌ تُخبِرُ لا بوّابةٌ تحكُمُ) · **Last Updated:** 2026-09-12
 >
-> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog,http-marketplace-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/domain/dependency-probe.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
+> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog,http-marketplace-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/domain/dependency-probe.ts` · `services/delivery/src/domain/inventory-conflict.ts` · `services/delivery/src/infrastructure/inventory-observation-store.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
 > **Related Docs:** [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [SEARCH_HTTP](SEARCH_HTTP.md) (نسقُ الحدِّ) · [MARKETPLACE_HTTP](MARKETPLACE_HTTP.md) (مصدرُ الكتالوجِ) · [DISPATCH_HTTP](DISPATCH_HTTP.md)
 
 ---
 
-## 1. ماذا يُضاف في هذه المراجعة (13/N)
+## 1. ماذا يُضاف في هذه المراجعة (16/N)
+
+ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.8](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)** (كشفُ تضاربِ المخزونِ النشطِ) — والتفصيلُ في [§4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md):
+
+- **`GET /delivery/inventory-conflicts`** — مسارُ **قراءةٍ للمُشغِّلِ** يُعيدُ رياتِ الشكِّ المُسجَّلةَ في `delivery_inventory_conflicts`: `{applied_filter:{unacknowledged_only, limit}, count, conflicts:[…]}`. لا جسمَ، ولا `Idempotency-Key` (قراءةٌ محضةٌ)، **ولا مكانَ لهُ في `api.openapi.yml`** — سطحُ تشغيلٍ لا سطحُ مستهلكٍ، على سابقةِ مسارِ المُكنسةِ حرفاً.
+- **`applied_filter` يُعادُ في الجسمِ لا يُفترَضُ.** `unacknowledged_only` افتراضُهُ `true` و`limit` افتراضُهُ `50` وسقفُهُ `500`؛ فمَن يقرأُ صفراً يعرفُ **بأيِّ ترشيحٍ** كانَ صفراً — قائمةٌ فارغةٌ بلا ترشيحٍ مُعلَنٍ تُقرأُ سلامةً.
+- **كلُّ رايةٍ تحملُ `changes_order_state: false`** — مُعلَنٌ على السلكِ لا مُستَنتَجٌ، ومُقيَّدٌ في القاعدةِ بـ`CHECK (changes_order_state = FALSE)`: الرايةُ لا تُلغي طلباً ولا تُحرِّكُ حالةً ولا تُفرِجُ حجزاً. سابقةُ `gates_readiness: false` (§4.17-2).
+- **`trace_id` لا يُنشَرُ في الصفوفِ** وإنْ كانَ مخزوناً: مسارٌ بلا مُصادقةٍ داخلةٍ لا يُصدِّرُ معرِّفَ تتبُّعٍ يربطُ سجلّاتِ خدماتٍ أخرى.
+
+---
+
+## 1أ. ما أضافتْهُ المراجعةُ 13/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.10](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)** (حياةُ مفاتيحِ التماثُلِ ومُكنستُها) — والتفصيلُ في [§4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md):
 
@@ -46,7 +57,7 @@
 
 ---
 
-## 2. المساراتُ العشرةُ (لا حادي عشرَ)
+## 2. المساراتُ الإحدى عشرةَ (لا ثانيةَ عشرةَ)
 
 | الطريقةُ والمسارُ | الغرضُ | النجاحُ |
 |---|---|---|
@@ -60,6 +71,7 @@
 | `GET /delivery/health` | **حياةٌ (liveness)** بلا تبعيّةٍ | **200** `{ status: "ok" }` |
 | `GET /delivery/ready` | **جاهزيّةٌ (readiness)** بمسبارِ قاعدةٍ حقيقيٍّ | **200** / **503** `ReadinessResponse` |
 | `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` |
+| `GET /delivery/inventory-conflicts` | **تشغيلٌ:** رياتُ تضاربِ المخزونِ · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, count, conflicts[]}` |
 
 `orderPublicId` بنمطِ `^WS-[0-9]{10}$` حصراً — كلُّ ما دونَه **400 قبلَ لمسِ القاعدةِ**.
 
@@ -126,6 +138,34 @@ POST /delivery/idempotency-keys/sweep
 - **حدٌّ خاطئٌ في الجسمِ** (`batch_size` أو `max_batches` غيرُ صحيحٍ أو دونَ الواحدِ) **400 `DELIVERY_VALIDATION_FAILED`** يُسمّي الحقلَ — **قبلَ** أيِّ نداءٍ للقاعدةِ.
 - **مُكنسةٌ غيرُ مُركَّبةٍ** ⇒ **500 `DELIVERY_INTERNAL_ERROR`** لا `200 {deleted: 0}`: الصفرُ الكاذبُ يُقرأُ نظافةً. وهيَ `500` لا `503` لأنَّ `503` هنا معناها تبعيّةٌ خارجيّةٌ عاجزةٌ (§3.1).
 - **لا مُجدوِلَ داخلَ العمليّةِ:** لا `setInterval` في الخدمةِ (سابقةُ `POST /reputation/tick`)؛ فمن يُنادي المسارَ ومتى **قرارٌ تشغيليٌّ** لم يُوصَلْ في هذه المراجعةِ.
+
+### 2.3أ رياتُ تضاربِ المخزونِ: تُخبِرُ ولا تحكُمُ
+
+```json
+GET /delivery/inventory-conflicts?unacknowledged_only=true&limit=50
+→ 200 {
+  "applied_filter": { "unacknowledged_only": true, "limit": 50 },
+  "count": 1,
+  "conflicts": [{
+    "adjustment_id": "…", "store_id": "…", "product_id": "…",
+    "conflict_kind": "stock_zeroed_while_reserved",
+    "reason_code": "shrinkage",
+    "quantity_delta": -3, "observed_quantity_after": 0, "adjustment_sequence": 7,
+    "affected_order_count": 2, "affected_units_total": 3,
+    "affected_order_public_ids": ["WS-0000000001", "WS-0000000002"],
+    "changes_order_state": false,
+    "acknowledged_at": null, "acknowledged_by": null,
+    "occurred_for": "…", "detected_at": "…"
+  }]
+}
+```
+
+- **`conflict_kind`** مفردةٌ من قائمةٍ مغلقةٍ: `stock_zeroed_while_reserved` (الرصيدُ صارَ صفراً ونحنُ نحملُ وحداتٍ — يتقدّمُ على السببِ) · `downward_correction_while_reserved` (تصحيحٌ نازلٌ) · `shrinkage_while_reserved` (خُسرانٌ مُسجَّلٌ).
+- **لا مقارنةَ كمّيّةٍ بكمّيّةٍ.** `observed_quantity_after` **مخصومٌ منهُ حجزُنا سلفاً** (الحجزُ فرقٌ سالبٌ في دفترِ السوقِ)، فقراءةُ «صفرٌ» لا تعني نقصاً: متجرٌ بثلاثِ وحداتٍ وطلبٌ يحجزُها كلَّها يُعطي صفراً وهوَ صحّةٌ تامّةٌ. المعيارُ **سببُ** التعديلِ (ADR-026 §4.18-1).
+- **حجزُ التوصيلِ نفسُهُ وإفراجُهُ ليسا رايةً** (`reservation` · `reservation_release`) — وإلّا لأطلقَ كلُّ طلبٍ سليمٍ رايةً على نفسِهِ.
+- **`limit` غيرُ عشريٍّ أو صفرٌ أو فوقَ 500 ⇒ 400 `DELIVERY_VALIDATION_FAILED`** يُسمّي الحقلَ قبلَ لمسِ القاعدةِ (`0x10` مرفوضٌ صريحاً)، و`unacknowledged_only` يقبلُ `"true"`/`"false"` **حرفاً** لا `truthy`.
+- **منفذُ قراءةٍ غيرُ مُركَّبٍ ⇒ 500 `DELIVERY_INTERNAL_ERROR`** لا `200` بقائمةٍ فارغةٍ — الفراغُ الكاذبُ يُقرأُ سلامةً (نفسُ حُجّةِ المُكنسةِ في §2.3).
+- **لا مسارَ كتابةٍ للإقرارِ بعدُ:** `acknowledged_at`/`acknowledged_by` يُقرآنِ ولا يُكتبانِ عبرَ HTTP في هذه المراجعةِ (§4.18 — دَينٌ مُعلَنٌ).
 
 ### 2.4 الجاهزيّةُ: تقيسُ أو تعترفُ
 
@@ -254,6 +294,9 @@ GET /delivery/ready → 200
 | ~~فحصُ جاهزيّةٍ يسألُ السوقَ (الكتالوجُ **موصولٌ** لا **مسبورٌ**)~~ **رُفِعَ في المراجعةِ 15/N** | [ADR-026 §4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رصدٌ **مُعلِمٌ لا حاكمٌ** مُخزَّنٌ بمهلةِ صلاحيّةٍ في `dependencies`، و`status` يبقى مُشتَقّاً من `checks` وحدَها |
 | إعادةُ محاولةٍ أو قاطعُ دورةٍ في محوّلِ الكتالوجِ | [ADR-026 §4.11](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الإعادةُ عندَ العميلِ بمفتاحِ تماثُلِهِ |
 | حجزُ مخزونٍ أو خصمُهُ عندَ الإنشاءِ | ADR-026 §2.3 · §4.8 — اللقطةُ سعرٌ وسببُ وجودٍ فقط |
+| ~~كشفُ تضاربِ المخزونِ النشطِ (الرصدُ يُسجّلُ ولا يسألُ)~~ **رُفِعَ في المراجعةِ 16/N** | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رايةٌ **تُخبِرُ لا تحكُمُ** في `delivery_inventory_conflicts` بمعيارِ **السببِ** لا الكمّيّةِ، و`GET /delivery/inventory-conflicts` يقرؤُها |
+| **مسارُ كتابةٍ لإقرارِ رايةٍ** (`POST …/acknowledgement`) | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — العمودانِ موجودانِ ويُقرآنِ، والإقرارُ اليومَ يدويٌّ على القاعدةِ |
+| **مُصادقةٌ داخلةٌ على مساراتِ الخدمةِ كلِّها** (التوقيعُ صادرٌ فقط) | [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — نطاقٌ مستقلٌّ للمساراتِ الإحدى عشرةَ معاً، لا في مراجعةِ كشفِ تضاربٍ |
 | ~~حياةٌ محدَّدةٌ لمفاتيحِ التماثُلِ ومُكنسةُ حذفٍ~~ **رُفِعَ في المراجعةِ 13/N** | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.5 — `expires_at` في الصفِّ ومُكنسةٌ بدفعاتٍ على مسارٍ |
 | ~~**مُنادٍ** للمُكنسةِ (جدولٌ خارجيٌّ وتواتُرُهُ)~~ **رُفِعَ في المراجعةِ 14/N** | [ADR-026 §4.16](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [دليلُ التشغيلِ](../14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md) — أمرٌ لقطةٌ واحدةٌ (`pnpm --filter @wasla/delivery-service sweep:idempotency`) يُصيبُ القاعدةَ مباشرةً بلا هويّةِ خدمةٍ، ويخرجُ بـ`0` نظيفاً و`3` بلغَ السقفَ و`4` مزاحمةَ قفلٍ و`1` إخفاقاً · **والجَدوَلُ نفسُهُ ليسَ في المستودعِ** (لا بيانَ بنيةٍ تحتيّةٍ بعدُ) |
 | نطاقُ صيانةٍ مستقلٌّ لمسارِ المُكنسةِ عبرَ HTTP | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المسارُ **يبقى** لصيانةٍ يدويّةٍ من داخلِ الشبكةِ، ولا يستعملُهُ المُنادي المُجدوَلُ (§4.16-2) فلا يُوسَّعُ سطحُهُ |

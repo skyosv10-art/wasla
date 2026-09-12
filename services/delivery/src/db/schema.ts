@@ -1,5 +1,5 @@
 /**
- * مرآةُ Drizzle لعقدِ PostgreSQL في خدمةِ التوصيلِ — **الجداولُ الثلاثةَ عشرَ كلُّها**،
+ * مرآةُ Drizzle لعقدِ PostgreSQL في خدمةِ التوصيلِ — **الجداولُ الأربعةَ عشرَ كلُّها**،
  * بأسمائِها وأنواعِها وإلزامِها وقيودِها وفهارسِها، ومعها المتتالُ المستقلُّ
  * (`store_order_public_id_seq`).
  *
@@ -54,6 +54,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigserial,
+  boolean,
   check,
   foreignKey,
   index,
@@ -653,6 +654,89 @@ export const deliveryInventoryReservations = pgTable(
     index("ix_delivery_inventory_reservations_active")
       .on(table.storeSlug, table.productId)
       .where(sql`${table.status} = 'active'`),
+  ],
+);
+
+/**
+ * 14) `delivery_inventory_conflicts` — رايةُ تضاربِ مخزونٍ على حجزٍ نشطٍ
+ * (ADR-026 §4.8 · المراجعةُ 16/N · §4.18).
+ *
+ * `changesOrderState` عمودٌ لا يقبلُ إلّا `false` — مرآةُ قيدٍ مُعلَنٍ في العقدِ لا
+ * حسابٌ في القارئِ. و`affectedOrderPublicIds` مصفوفةُ نصٍّ (`TEXT[]`) لا جدولُ ربطٍ:
+ * الرايةُ تُقرأُ سطراً واحداً في حادثةٍ.
+ *
+ * وأسماءُ القيودِ **مقيسةٌ من كتالوجٍ حقيقيٍّ** طُبِّقَ عليهِ العقدُ قبلَ كتابةِ هذه
+ * المرآةِ (لا مقطوعَ منها: أطولُها 61 حرفاً)، والفحصُ المركّبُ الوحيدُ
+ * (`array_length = affected_order_count`) يمسُّ عمودَينِ فيحملُ اسمَ الجدولِ وحدَهُ.
+ */
+export const deliveryInventoryConflicts = pgTable(
+  "delivery_inventory_conflicts",
+  {
+    adjustmentId: uuid("adjustment_id").primaryKey(),
+    marketplaceEventId: uuid("marketplace_event_id").notNull(),
+    storeId: uuid("store_id").notNull(),
+    productId: uuid("product_id").notNull(),
+    conflictKind: text("conflict_kind").notNull(),
+    reasonCode: text("reason_code").notNull(),
+    quantityDelta: integer("quantity_delta").notNull(),
+    observedQuantityAfter: integer("observed_quantity_after").notNull(),
+    adjustmentSequence: integer("adjustment_sequence").notNull(),
+    affectedOrderCount: integer("affected_order_count").notNull(),
+    affectedUnitsTotal: integer("affected_units_total").notNull(),
+    affectedOrderPublicIds: text("affected_order_public_ids").array().notNull(),
+    changesOrderState: boolean("changes_order_state").notNull().default(false),
+    acknowledgedAt: instant("acknowledged_at"),
+    acknowledgedBy: text("acknowledged_by"),
+    occurredFor: instant("occurred_for").notNull(),
+    detectedAt: instant("detected_at").notNull(),
+    traceId: text("trace_id"),
+  },
+  (table) => [
+    check(
+      "delivery_inventory_conflicts_conflict_kind_check",
+      sql`${table.conflictKind} IN ('stock_zeroed_while_reserved','downward_correction_while_reserved','shrinkage_while_reserved')`,
+    ),
+    check(
+      "delivery_inventory_conflicts_reason_code_check",
+      sql`${table.reasonCode} IN ('correction','shrinkage','archive_zeroed')`,
+    ),
+    check("delivery_inventory_conflicts_quantity_delta_check", sql`${table.quantityDelta} < 0`),
+    check(
+      "delivery_inventory_conflicts_observed_quantity_after_check",
+      sql`${table.observedQuantityAfter} >= 0`,
+    ),
+    check(
+      "delivery_inventory_conflicts_adjustment_sequence_check",
+      sql`${table.adjustmentSequence} >= 1`,
+    ),
+    check(
+      "delivery_inventory_conflicts_affected_order_count_check",
+      sql`${table.affectedOrderCount} >= 1`,
+    ),
+    check(
+      "delivery_inventory_conflicts_affected_units_total_check",
+      sql`${table.affectedUnitsTotal} >= 1`,
+    ),
+    check(
+      "delivery_inventory_conflicts_check",
+      sql`array_length(${table.affectedOrderPublicIds}, 1) >= 1 AND array_length(${table.affectedOrderPublicIds}, 1) = ${table.affectedOrderCount}`,
+    ),
+    check(
+      "delivery_inventory_conflicts_changes_order_state_check",
+      sql`${table.changesOrderState} = FALSE`,
+    ),
+    check(
+      "delivery_inventory_conflicts_acknowledged_by_check",
+      sql`${table.acknowledgedBy} IS NULL OR char_length(${table.acknowledgedBy}) BETWEEN 1 AND 128`,
+    ),
+    check(
+      "ck_delivery_inventory_conflicts_ack",
+      sql`(${table.acknowledgedAt} IS NULL) = (${table.acknowledgedBy} IS NULL)`,
+    ),
+    index("ix_delivery_inventory_conflicts_unacknowledged")
+      .on(sql`${table.detectedAt} DESC`)
+      .where(sql`${table.acknowledgedAt} IS NULL`),
+    index("ix_delivery_inventory_conflicts_product").on(table.storeId, table.productId),
   ],
 );
 

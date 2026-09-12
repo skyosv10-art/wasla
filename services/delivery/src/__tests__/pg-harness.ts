@@ -83,6 +83,11 @@ export const DELIVERY_TABLES = [
   "delivery_inventory_observations",
   "delivery_inventory_relay_consumed_events",
   "delivery_inventory_relay_checkpoint",
+  // راياتُ التضاربِ (المراجعةُ 16/N): مذكورةٌ **صراحةً** لأنَّها لا تُقصَفُ
+  // تِبَعاً — لا مفتاحَ أجنبيّاً فيها إلى `store_orders` ولا إلى الرصدِ (وذاكَ
+  // مقصودٌ: الرايةُ سجلٌّ يبقى بعدَ الطلبِ). ولولا ذكرُها لَتَسرَّبَ صفٌّ من
+  // اختبارٍ إلى اختبارٍ، وأوّلُ عدٍّ يفشلُ يُقرأُ عيباً في الكشفِ لا في التنظيفِ.
+  "delivery_inventory_conflicts",
 ] as const;
 
 export interface PgFixture {

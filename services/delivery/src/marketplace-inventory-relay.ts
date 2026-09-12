@@ -23,7 +23,14 @@
  *    makes already-applied events no-ops; `rebuildInventoryObservations()`
  *    additionally clears the snapshot and re-reads from zero.
  *  - Version compatibility: only `event_version === "v1"` is consumed.
- *  - Observability: every event emits a structured log line.
+ *  - Observability: every event emits a structured log line — ومنذُ المراجعةِ 16/N
+ *    يحملُ سطرُ كلِّ فرقٍ مُطبَّقٍ **حكمَ التضاربِ** معَهُ: رايةٌ مرفوعةٌ
+ *    بنوعِها وعددِ الطلباتِ، أو رفضٌ بمفردةِ رفضٍ مسمّاةٍ لا بسكوتٍ
+ *    (ADR-026 §4.18).
+ *
+ * والرايةُ **تُعلِمُ ولا تحكُمُ**: لا إلغاءَ طلبٍ ولا إفراجَ حجزٍ ولا منعَ
+ * انتقالٍ يُشتَقُّ منها في أيِّ موضعٍ من هذا المرحّلِ (السببُ في رأسِ
+ * `domain/inventory-conflict.ts`).
  *
  * Boundary rule (ADR-026 §2.3): delivery stores SNAPSHOTS not balances —
  * the observation is the latest adjustment seen, never a running total.
@@ -140,10 +147,17 @@ async function processRow(
   const context: MirrorContext = { eventId: row.event_id, occurredAt: row.occurred_at, traceId: row.trace_id };
   try {
     const result = await deps.store.observeInventoryAdjustment(classification.event, context);
-    if (result === "skipped_stale") {
+    if (result.observation === "skipped_stale") {
       return finish(deps, row, "skipped_stale", attempt, `older sequence ${classification.event.adjustment_sequence} — snapshot not regressed`, log, "skipped");
     }
-    return finish(deps, row, "applied", attempt, `observed sequence ${classification.event.adjustment_sequence} → qty ${classification.event.quantity_after}`, log, "applied");
+    // حكمُ التضاربِ يدخلُ سطرَ السجلِّ ولا يدخلُ `BatchOutcome`: ذاكَ نوعٌ
+    // **مُشترَكٌ** معَ مرحّلِ الإرسالِ (`relay.ts`)، وتوسيعُهُ بحقلٍ لا معنى لهُ
+    // هناكَ إعادةُ هيكلةٍ تمسُّ مساراً لا علاقةَ لهُ بهذهِ المراجعةِ. والسطرُ هوَ
+    // ما يُقرأُ في حادثةٍ، والجدولُ هوَ المصدرُ المُعتمَدُ لا عدّادٌ في ذاكرةٍ.
+    const verdict = result.conflict.conflict
+      ? `conflict ${result.conflict.report.kind} — ${result.conflict.report.affectedOrderCount} order(s), ${result.conflict.report.affectedUnitsTotal} reserved unit(s), changes_order_state=false`
+      : `no conflict (${result.conflict.dismissedBecause})`;
+    return finish(deps, row, "applied", attempt, `observed sequence ${classification.event.adjustment_sequence} → qty ${classification.event.quantity_after}; ${verdict}`, log, "applied");
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (attempt > cfg.maxAttempts) {

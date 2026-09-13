@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-12T13:44:44Z",
+  "generated_at": "2026-09-13T02:29:19Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a8e1a11d57d5a43898c5751ce49fabe9268b5e7c",
-    "branch": "feat/m5-20-inventory-actor-contract-alignment",
+    "commit": "058914ddb73c145ec63f032b4bb6d7fef6e0af98",
+    "branch": "feat/m5-21-relay-dead-letter-observability",
     "dirty": true,
-    "dirty_files": 12,
-    "dirty_reason": "المراجعةُ 20/N (CLM-0141): إقفالُ RISK-0035 من جهةِ MARKET وحدَها — مُستهلِكٌ وُسِّعَ إلى حدِّ عقدِ مُنتِجِهِ، وملفُّ حرسِ انحرافٍ جديدٌ، ودعاوى جديدةٌ في الوحدةِ والتكامُلِ والبوّابةِ",
+    "dirty_files": 22,
+    "dirty_reason": "المراجعةُ 21/N (CLM-0142): مقياسُ الصفوفِ المسمومةِ وحكمُ تنبيهِهِ — مسارٌ ثالثَ عشرَ وصلاحيّةٌ حاديةَ عشرةَ ومحوِّلُ قراءةٍ محضةٍ على دفترَي الاستهلاكِ، وثلاثةُ ملفّاتِ اختبارٍ جديدةٍ (32 دعوى) وعقدُ مقياسٍ ودليلُ تشغيلٍ",
     "tracked_files": 1696
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 337,
+    "test_files_tracked": 340,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify20.log",
-    "tests_passed": 4412,
-    "test_files_executed": 269,
+    "source": "/tmp/verify21b.log",
+    "tests_passed": 4436,
+    "test_files_executed": 271,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:88d1c7b2dc9f9d1762ada7ec6b470a92beb83f328c8cbed800928048d7862f63",
+  "fingerprint": "sha256:0bb60aac99abe116daa73f499cedaee8e48f5d7905f22b8d9fe9ee3414e978f5",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

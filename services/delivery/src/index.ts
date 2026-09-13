@@ -317,3 +317,29 @@ export type {
   DeliveryRouteIdentity,
   DeliveryServiceIdentityOptions,
 } from "./http/service-identity.js";
+
+/* ── المراجعةُ 21/N: قياسُ رسائلِ الناقلِ المسمومةِ (ADR-026 §4.23) ──
+ *
+ * يُصدَّرُ العقدُ والمحوّلُ معاً لأنَّ **البوّابةَ الشاملةَ تُركِّبُ ما يُركِّبُهُ
+ * جذرُ الإنتاجِ بالحرفِ**: بوّابةٌ تُركِّبُ غيرَهُ تشهدُ على نظامٍ آخرَ، وتمرُّ
+ * خضراءَ على مسارٍ يُجيبُ 500 في الإنتاجِ. والعتباتُ تُصدَّرُ كذلكَ كي يقرأَها
+ * المراقِبُ من موضعٍ واحدٍ لا من نسخةٍ عندَهُ تفترقُ في مراجعةٍ.
+ */
+export {
+  RELAY_DEAD_LETTER_LEDGERS,
+  RELAY_DEAD_LETTER_THRESHOLDS,
+  RELAY_POISONED_STATUS,
+  classifyRelayDeadLetterSeverity,
+  oldestPoisonedAgeSeconds,
+} from "./domain/relay-dead-letters.js";
+export type {
+  RelayDeadLetterEventTypeCount,
+  RelayDeadLetterLedger,
+  RelayDeadLetterLedgerMetric,
+  RelayDeadLetterMetric,
+  RelayDeadLetterSeverity,
+  RelayDeadLetterVerdict,
+  RelayDeadLetterVerdictReason,
+} from "./domain/relay-dead-letters.js";
+export { PostgresRelayDeadLetterStore } from "./infrastructure/relay-dead-letter-store.js";
+export type { RelayDeadLetterReadPort } from "./ports.js";

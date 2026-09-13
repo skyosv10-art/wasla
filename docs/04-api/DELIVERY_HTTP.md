@@ -1,18 +1,44 @@
-# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 16/N)
+# Delivery Service — طبقة HTTP (Phase 13 · المراجعة 21/N)
 
-> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الاثنَتا عشرةَ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، وحدودُه المُعلَنةُ.
+> **النوع:** توثيق واجهة (API Layer) · **Scope:** حدُّ HTTP لطلباتِ المتجرِ ومهمّةِ التوصيلِ: المساراتُ الثلاثةَ عشرَ، ومفتاحُ التماثُلِ، والجاهزيّةُ، وشكلُ الخطأِ ومُحلِّلُ الجسمِ، **ومحوّلُ كتالوجِ السوقِ الموصولُ**، **ومرآةُ الدفعِ والتأكيدُ**، **ومقياسُ رسائلِ الناقلِ المسمومةِ**، وحدودُه المُعلَنةُ.
 >
 > **المصدر الكنسي للعقد:** [`services/delivery/contracts/api.openapi.yml`](../../services/delivery/contracts/api.openapi.yml) · [`errors.md`](../../services/delivery/contracts/errors.md) · [`schema.sql`](../../services/delivery/contracts/schema.sql) · [`events.json`](../../services/delivery/contracts/events.json)
 >
-> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 16/N — كشفُ تضاربِ المخزونِ النشطِ: رايةٌ تُخبِرُ لا بوّابةٌ تحكُمُ) · **Last Updated:** 2026-09-12
+> **الخدمة:** `services/delivery` (منفذ **8097**) · **Status:** In Progress (المراجعة 21/N — مقياسُ الرسائلِ المسمومةِ وحكمُ تنبيهِهِ: مُعلِمٌ لا حاكمٌ) · **Last Updated:** 2026-09-13
 >
-> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog,http-marketplace-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/domain/dependency-probe.ts` · `services/delivery/src/domain/inventory-conflict.ts` · `services/delivery/src/infrastructure/inventory-observation-store.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
+> **Related Code:** `services/delivery/src/http/{app,requests,errors,mappers,server}.ts` · `services/delivery/src/domain/{store-order-placement,store-order-cancellation,state-machine,events}.ts` · `services/delivery/src/use-cases/{place-store-order,cancel-store-order}.ts` · `services/delivery/src/domain/idempotency.ts` · `services/delivery/src/use-cases/idempotency-guard.ts` · `services/delivery/src/infrastructure/{store-order-store,readiness-probe,http-marketplace-catalog,http-marketplace-probe}.ts` · `services/delivery/src/http/readiness.ts` · `services/delivery/src/domain/dependency-probe.ts` · `services/delivery/src/domain/inventory-conflict.ts` · `services/delivery/src/infrastructure/inventory-observation-store.ts` · `services/delivery/src/domain/relay-dead-letters.ts` · `services/delivery/src/infrastructure/relay-dead-letter-store.ts` · `services/delivery/src/__tests__/{store-order-http,store-order-domain,idempotency,http-marketplace-catalog,store-order.integration,idempotency.integration}.test.ts`
 >
-> **Related Docs:** [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [SEARCH_HTTP](SEARCH_HTTP.md) (نسقُ الحدِّ) · [MARKETPLACE_HTTP](MARKETPLACE_HTTP.md) (مصدرُ الكتالوجِ) · [DISPATCH_HTTP](DISPATCH_HTTP.md)
+> **Related Docs:** [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [SEARCH_HTTP](SEARCH_HTTP.md) (نسقُ الحدِّ) · [MARKETPLACE_HTTP](MARKETPLACE_HTTP.md) (مصدرُ الكتالوجِ) · [DISPATCH_HTTP](DISPATCH_HTTP.md) · [عقدُ مقياسِ الرسائلِ المسمومةِ](../13-observability/DELIVERY_RELAY_DEAD_LETTERS.md) · [دليلُ تشغيلِها](../14-runbooks/RELAY_POISONED_EVENTS.md)
 
 ---
 
-## 1. ماذا يُضاف في هذه المراجعة (18/N)
+## 1. ماذا يُضاف في هذه المراجعة (21/N)
+
+ترفعُ هذه المراجعةُ **الحدَّ الأوّلَ المُعلَنَ في إقفالِ [`RISK-0035`](../07-security/RISK_REGISTER.md)**
+(«لا مقياسَ ولا تنبيهَ على المسمومِ بعدُ») — والتفصيلُ في
+[§4.23](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)
+وعقدُ المقياسِ في [`DELIVERY_RELAY_DEAD_LETTERS.md`](../13-observability/DELIVERY_RELAY_DEAD_LETTERS.md):
+
+- **مسارٌ ثالثَ عشرَ `GET /delivery/relay/dead-letters`** (§2.3ج) يقرأُ دفترَي
+  استهلاكِ الناقلَينِ (`dispatch` · `marketplace_inventory`) ويُجيبُ عددَ الصفوفِ
+  `poisoned` وتفصيلَها بنوعِ الحدثِ وأقدمَها وأحدثَها — **بصلاحيّةٍ حاديةَ عشرةَ**
+  `delivery:ops:relay-dead-letters:read` مفصولةٍ عن كلِّ ما قبلَها.
+- **حكمُ تنبيهٍ بعتبةٍ منشورةٍ في الجسمِ** (`alert`): `warning` عندَ **صفٍّ واحدٍ**
+  (فالصفُّ المسمومُ **حدثٌ مفقودٌ** لا حدثٌ مُحتجَزٌ)، و`critical` عندَ عشرةٍ أو
+  عندَ إهمالِ أقدمِهِ يوماً. والعتباتُ **ثوابتُ شيفرةٍ لا مُتغيِّراتُ بيئةٍ**،
+  وتُرَدُّ في `alert.thresholds` كي لا يكونَ للعتبةِ مصدرُ حقيقةٍ ثانٍ عندَ
+  المُراقِبِ.
+- **`gates_readiness: false` منشورٌ**: `critical` لا يُغيِّرُ `GET /delivery/ready`
+  — مُعلِمٌ لا حاكمٌ على سابقةِ [§4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)،
+  **مُثبَتاً بقياسٍ** (تسعةٌ وتسعونَ مسموماً و`/delivery/ready` يبقى `200 ready`).
+- **و`200` حتّى عندَ `critical`** — القياسُ نجحَ وإن ساءَ مقيسُهُ؛ **والخطأُ
+  الوحيدُ المشروعُ 500 حينَ لا منفذَ قياسٍ**: «لا أدري» لا تُترجَمُ صفراً.
+- **وأوّلُ ملفٍّ في `docs/13-observability/`** — كانَ فيها `.gitkeep` وحدَها،
+  وهوَ نقصٌ مُستشهَدٌ بهِ في `RISK-0035` وفي سجلِّ المهامِ.
+
+---
+
+## 1أ. ما أضافتْهُ المراجعةُ 18/N (مرجعٌ)
 
 ترفعُ هذه المراجعةُ **دَينَ [ADR-026 §4.18](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)**
 («لا مسارَ كتابةٍ للإقرارِ») — والتفصيلُ في
@@ -115,7 +141,7 @@
 
 ---
 
-## 2. المساراتُ الاثنَتا عشرةَ (لا ثالثةَ عشرةَ)
+## 2. المساراتُ الثلاثةَ عشرَ (لا رابعةَ عشرةَ)
 
 | الطريقةُ والمسارُ | الغرضُ | النجاحُ | الصلاحيّةُ المطلوبةُ (17/N) |
 |---|---|---|---|
@@ -131,6 +157,7 @@
 | `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` | `delivery:ops:idempotency-sweep` |
 | `GET /delivery/inventory-conflicts` | **تشغيلٌ:** رياتُ تضاربِ المخزونِ · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, count, conflicts[]}` | `delivery:ops:inventory-conflicts:read` |
 | `POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement` | **تشغيلٌ:** إقرارُ رايةٍ · **لا جسمَ** · **لا مفتاحَ تماثُلٍ** · **خارجَ العقدِ المنشورِ** | **200** `{outcome, conflict}` | `delivery:ops:inventory-conflicts:acknowledge` — **لا يحملُها قارئُ اللوحةِ** |
+| `GET /delivery/relay/dead-letters` | **تشغيلٌ:** عدَّادُ الرسائلِ المسمومةِ في دفترَي الناقلَينِ وحكمُ تنبيهِهِ · **قراءةٌ محضةٌ** · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, measured_at, total_poisoned, ledgers[], alert}` | `delivery:ops:relay-dead-letters:read` — **لا يحملُها منادٍ آخرُ** |
 
 **والصلاحيّةُ ليست الهويّةَ:** كلُّ مسارٍ مُغلَقٍ يطلبُ **الاثنَينِ** — هويّةً
 مُثبَتةً (توقيعٌ صحيحٌ · جمهورٌ `delivery` · مربوطٌ بهذهِ الطريقةِ وهذا المسارِ ·
@@ -278,6 +305,53 @@ POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement
   نظافةً، أمّا إقرارٌ كاذبٌ فيُغلِقُ حادثةً حقيقيّةً في ذهنِ مُشغِّلٍ بلا أثرٍ.
 - **وصلاحيّةُ القراءةِ لا تُقِرُّ:** رمزٌ يحملُ `:read` وحدَهُ يُرَدُّ **403** —
   مُثبَتٌ على مقبسٍ حقيقيٍّ في بوّابةِ الطورِ 13.
+
+### 2.3ج مقياسُ الرسائلِ المسمومةِ: الجدولُ هوَ الحقيقةُ (21/N)
+
+```json
+GET /delivery/relay/dead-letters?event_type_limit=25
+
+→ 200 {
+  "applied_filter": { "event_type_limit": 25 },
+  "measured_at": "2026-09-13T02:00:00.000Z",
+  "total_poisoned": 3,
+  "ledgers": [
+    { "ledger": "dispatch", "poisoned": 1,
+      "oldest_poisoned_at": "2026-09-13T00:10:00.000Z",
+      "newest_poisoned_at": "2026-09-13T00:10:00.000Z",
+      "by_event_type": [{ "event_type": "dispatch.job_assigned", "poisoned": 1 }] },
+    { "ledger": "marketplace_inventory", "poisoned": 2, "…": "…" }
+  ],
+  "alert": { "severity": "warning", "because": "poisoned_present",
+    "oldest_poisoned_age_seconds": 6600,
+    "thresholds": { "warning_poisoned": 1, "critical_poisoned": 10,
+                    "critical_age_seconds": 86400 },
+    "gates_readiness": false }
+}
+```
+
+- **لا عدَّادَ في العمليّةِ:** كلُّ نداءٍ يسألُ الدفترَينِ. وعدَّادٌ في الذاكرةِ
+  يُصفَّرُ بإعادةِ نشرٍ ويتضاعفُ بعددِ النُّسَخِ، **والصفرُ الكاذبُ يُقرأُ
+  نظافةً** — وهوَ عينُ ما جاءَ المقياسُ لينفِيَهُ.
+- **لقطةٌ واحدةٌ لا لقطتانِ:** الدفترانِ والتفصيلُ والطابعُ في **عبارةِ SQL
+  واحدةٍ**، فالمجموعُ المنشورُ يوافقُ لحظةً وُجِدَت فعلاً لا جمعَ استعلامَينِ
+  متباعدَينِ.
+- **`updated_at` هوَ المقيسُ لا `consumed_at`:** الصفُّ يُنشأُ عندَ **أوّلِ**
+  محاولةٍ ويُسَمُّ بعدَ استنفادِها، فـ`consumed_at` عمرُ أوّلِ محاولةٍ لا عمرُ
+  الفقدِ — ومقيسٌ خاطئٌ هنا يُصعِّدُ فقداً عمرُهُ دقائقُ. **مُثبَتٌ بصفٍّ
+  عمودَاهُ مختلفانِ** على قاعدةٍ حقيقيّةٍ.
+- **كلُّ دفترٍ يُذكَرُ وإن خلا:** دفترٌ يغيبُ عن الجوابِ لا يُفرَّقُ عن دفترٍ
+  نُسِيَ من الاستعلامِ. والحدُّ مُثبَتٌ **بالنوعِ**: دفترٌ مُصرَّحٌ بلا جدولٍ
+  خطأُ ترجمةٍ لا نقصٌ صامتٌ في رقمٍ.
+- **قراءةٌ محضةٌ مُثبَتةٌ بقياسٍ:** بصمةُ الدفترَينِ (كلُّ صفٍّ بحالتِهِ
+  ومحاولاتِهِ وطابعَيهِ) كما هيَ قبلَ النداءِ وبعدَهُ.
+- **`event_type_limit` (1..100 · افتراضُهُ 10) يقصُّ التفصيلَ ولا يقصُّ
+  المجموعَ**، وما دونَهُ — `0` · `101` · `2.5` · `0x10` · `-1` — **400 قبلَ
+  لمسِ القاعدةِ** ولا يُصحَّحُ صامتاً.
+- **و`last_error` غيرُ منشورٍ بقصدٍ:** قد يحملُ حمولةً أو رسالةً غيرَ مُصنَّفةٍ،
+  ومسارُ مقياسٍ لا يُسرِّبُ نصَّ خطأٍ. ويُقرأُ من القاعدةِ في
+  [دليلِ التشغيلِ](../14-runbooks/RELAY_POISONED_EVENTS.md) §2.
+- **ولا مسارَ إعادةِ معالجةٍ لصفٍّ مسمومٍ** — **دَينٌ مُعلَنٌ** (§7).
 
 ### 2.4 الجاهزيّةُ: تقيسُ أو تعترفُ
 
@@ -430,6 +504,9 @@ GET /delivery/ready → 200
 | ~~**مُنادٍ** للمُكنسةِ (جدولٌ خارجيٌّ وتواتُرُهُ)~~ **رُفِعَ في المراجعةِ 14/N** | [ADR-026 §4.16](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [دليلُ التشغيلِ](../14-runbooks/DELIVERY_IDEMPOTENCY_SWEEP.md) — أمرٌ لقطةٌ واحدةٌ (`pnpm --filter @wasla/delivery-service sweep:idempotency`) يُصيبُ القاعدةَ مباشرةً بلا هويّةِ خدمةٍ، ويخرجُ بـ`0` نظيفاً و`3` بلغَ السقفَ و`4` مزاحمةَ قفلٍ و`1` إخفاقاً · **والجَدوَلُ نفسُهُ ليسَ في المستودعِ** (لا بيانَ بنيةٍ تحتيّةٍ بعدُ) |
 | نطاقُ صيانةٍ مستقلٌّ لمسارِ المُكنسةِ عبرَ HTTP | [ADR-026 §4.15](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — المسارُ **يبقى** لصيانةٍ يدويّةٍ من داخلِ الشبكةِ، ولا يستعملُهُ المُنادي المُجدوَلُ (§4.16-2) فلا يُوسَّعُ سطحُهُ |
 | ~~`Retry-After` في تسابُقِ المفتاحِ~~ **رُفِعَ في المراجعةِ 19/N** — و**حالةُ «قيدَ المعالجةِ» المُخزَّنةُ لا تُدَّعى** | [ADR-026 §4.21](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.3 — `Retry-After: 1` **مقيسٌ** على PostgreSQL حقيقيّةٍ (أحدَ عشرَ رفضاً من اثنتَي عشرةَ دورةٍ متزامنةٍ · الإعادةُ الفوريّةُ تُعيدُ الجوابَ المحفوظَ)، وثابتٌ في الشيفرةِ لا مُتغيِّرُ بيئةٍ، وموصولٌ برمزِ الخطأِ لا بالحالِ · **والتسابُقُ يبقى مُكتشَفاً بخطأِ تفرُّدٍ** كما قرَّرَت §4.10 |
+| ~~**لا مقياسَ ولا تنبيهَ على الصفِّ المسمومِ** (`docs/13-observability/` فارغٌ)~~ **رُفِعَ في المراجعةِ 21/N** | [ADR-026 §4.23](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · §2.3ج · [عقدُ المقياسِ](../13-observability/DELIVERY_RELAY_DEAD_LETTERS.md) — `GET /delivery/relay/dead-letters` يقرأُ الدفترَينِ في لقطةٍ واحدةٍ بحكمٍ بعتبةٍ منشورةٍ، **مُعلِمٌ لا حاكمٌ** · **والإنذارُ الذي يرِنُّ ليسَ في المستودعِ** (لا بيانَ بنيةٍ تحتيّةٍ): المقياسُ يُقرأُ بالسؤالِ أو بأمرٍ من [دليلِ التشغيلِ](../14-runbooks/RELAY_POISONED_EVENTS.md) |
+| **إعادةُ معالجةِ صفٍّ `poisoned`** (`re-process`/`replay`) | [ADR-026 §4.23](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — **سؤالُ سلامةٍ لا طريقةٌ منسيّةٌ**: مَن يُقرِّرُ أنَّ الفسادَ زالَ، وهل يُعادُ تطبيقُ حدثٍ قديمٍ على حالةٍ تقدَّمَت؟ وحتّى الحسمِ فالترميمُ عملٌ تشغيليٌّ يدويٌّ موصوفٌ في [دليلِ التشغيلِ](../14-runbooks/RELAY_POISONED_EVENTS.md) §4 **غيرُ مقيسٍ ولا مُدَّعىً** |
+| **سياسةُ استبقاءٍ لدفترَي الاستهلاكِ** | [ADR-026 §4.23](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — الصفُّ المسمومُ يبقى للأبدِ فالعددُ **تراكميٌّ** و`warning` يبقى قائماً حتّى يُحذَفَ الصفُّ عن قصدٍ. مقصودٌ اليومَ (الفقدُ لا يُنسى) ومكتوبٌ كي لا يُقرأَ عطباً |
 | فحوصُ جاهزيّةٍ لجسرِ الإرسالِ وتراكُمِ الصادرِ (**السوقُ مرصودٌ الآنَ**) | [ADR-026 §4.10-5](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) · [§4.17](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — رصدُ السوقِ رُفِعَ في 15/N، وما بقيَ مُعلَنٌ في `not_claimed` لا مسكوتٌ عنهُ |
 | حافّةُ `pending_eligibility → cancelled` في §3.3 | [ADR-026 §4.9-1](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) — قرارُ عقدٍ لا إصلاحُ شيفرةٍ |
 | ~~بوّابةُ خروجِ الطورِ (inventory/payment E2E)~~ **رُفِعَ في 9/N** | [`PHASE13_EXIT_GATE_E2E.md`](../12-testing/PHASE13_EXIT_GATE_E2E.md) — 7/7 على قاعدةٍ حقيقيّةٍ · [ADR-026 §4.12](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md) |

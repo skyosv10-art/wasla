@@ -911,4 +911,54 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
       expect(after.body.count).toBe(0);
     });
   });
+  describe("بوّابة الطور 13 — قياسُ رسائلِ الناقلِ المسمومةِ (المراجعةُ 21/N · §4.23)", () => {
+    const PATH = "/delivery/relay/dead-letters";
+
+    /*
+     * نطاقُ ما تشهدُ عليهِ هذه الكتلةُ **مُصرَّحٌ**: أنَّ المسارَ مُركَّبٌ في
+     * الجذرِ الحقيقيِّ فيقيسُ الدفترَينِ على القاعدةِ الحقيقيّةِ، وأنَّ الصلاحيّةَ
+     * مفروضةٌ، وأنَّ حكمَهُ لا يمسُّ الجاهزيّةَ. أمّا سلوكُ التصعيدِ على صفوفٍ
+     * مسمومةٍ فمُثبَتٌ على قاعدةٍ حقيقيّةٍ في
+     * `services/delivery/src/__tests__/relay-dead-letters.integration.test.ts`:
+     * تسميمُ صفٍّ في البوّابةِ يحتاجُ استنفادَ خمسِ محاولاتٍ حقيقيّةٍ، وبوّابةٌ
+     * تُسمِّمُ صفّاً بكتابةٍ مباشرةٍ في الدفترِ لا تُثبِتُ طريقاً أصلاً.
+     */
+
+    it("مُركَّبٌ في الجذرِ الحقيقيِّ: 200 بكلا الدفترَينِ — لا 500 ولا دفترٌ محذوفٌ", async () => {
+      const res = await callDelivery(gate, {
+        method: "GET",
+        path: PATH,
+        scopes: [DELIVERY_SCOPES.relayDeadLettersRead],
+      });
+
+      expect(res.status, res.text).toBe(200);
+      const ledgers = res.body.ledgers as { ledger: string }[];
+      expect(ledgers.map((l) => l.ledger)).toEqual(["dispatch", "marketplace_inventory"]);
+      const alert = res.body.alert as {
+        thresholds: Record<string, number>;
+        gates_readiness: boolean;
+      };
+      // والعتبةُ منشورةٌ معَ الحكمِ: مَن يقرأُ تنبيهاً لا يقرأُ ADR.
+      expect(alert.thresholds).toEqual({
+        warning_poisoned: 1,
+        critical_poisoned: 10,
+        critical_age_seconds: 86_400,
+      });
+      expect(alert.gates_readiness).toBe(false);
+    });
+
+    it("بلا صلاحيّةِ الدفترِ ⇒ 403، وبلا توقيعٍ ⇒ 401 — مسارُ تشغيلٍ لا مسارٌ عامٌّ", async () => {
+      const forbidden = await callDelivery(gate, {
+        method: "GET",
+        path: PATH,
+        scopes: [DELIVERY_SCOPES.storeOrderRead],
+      });
+      expect(forbidden.status, forbidden.text).toBe(403);
+      expect(forbidden.body.error_code).toBe("AUTHZ_FORBIDDEN");
+
+      const unauthenticated = await call(gate.deliveryBaseUrl, { method: "GET", path: PATH });
+      expect(unauthenticated.status, unauthenticated.text).toBe(401);
+      expect(unauthenticated.body.error_code).toBe("AUTHN_UNAUTHENTICATED");
+    });
+  });
 });

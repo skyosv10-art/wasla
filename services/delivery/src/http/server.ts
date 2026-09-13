@@ -48,6 +48,7 @@ import { resolveIdempotencyTtlSeconds } from "../domain/idempotency.js";
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
+import { PostgresRelayDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
 import {
   DELIVERY_MARKETPLACE_SCOPES,
   HttpMarketplaceCatalogPort,
@@ -192,6 +193,14 @@ async function main(): Promise<void> {
   // إلّا `InventoryConflictReadPort` — والمحدودُ بالنوعِ لا بالنيّةِ.
   const inventoryObservations = new PostgresInventoryObservationStore(pool);
   /*
+   * عينُ الفقدِ (المراجعةُ 21/N · ADR-026 §4.23) — **تُركَّبُ دائماً بلا حاسمِ
+   * بيئةٍ**. ولمَ لا راية؟ لأنَّ رايةً تُطفَأُ تعني أنَّ أوّلَ نشرٍ يُنسى فيهِ
+   * تفعيلُها يُجيبُ 500 على عينِ المراقبةِ — والأسوأُ أنَّ صفّاً مسموماً يُكتَبُ
+   * في الدفترِ بلا أن يعلمَ أحدٌ **وهوَ بالذاتِ ما جاءَتْ لأجلِهِ**. والقراءةُ
+   * محضةٌ بلا كلفةِ كتابةٍ، فلا شيءَ تُحرسُ منهُ برايةٍ.
+   */
+  const relayDeadLetters = new PostgresRelayDeadLetterStore(pool);
+  /*
    * فرضُ هويّةِ الخدمةِ الداخلةِ (`M1-04` الموجةُ السادسةُ · المراجعةُ 17/N).
    *
    * والمفاتيحُ من البيئةِ **بلا قيمةٍ افتراضيّةٍ**: نشرٌ بلا
@@ -219,6 +228,7 @@ async function main(): Promise<void> {
     // نفسُ المخزنِ لمنفذَينِ: القراءةُ والإقرارُ يعملانِ على نفسِ الصفِّ، ومُحوِّلٌ
     // ثانٍ في الوسطِ كانَ سيسمحُ لهما بأن يقرآ صفَّينِ مختلفَينِ (المراجعةُ 18/N).
     inventoryConflictAcknowledgementPort: inventoryObservations,
+    relayDeadLetterReadPort: relayDeadLetters,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
     ...(observation.observationPort === undefined
       ? {}
@@ -229,7 +239,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · inbound service identity: enforced (audience=delivery) · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired`);
+    console.log(`delivery service listening on :${PORT} · inbound service identity: enforced (audience=delivery) · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired · relay dead-letter metric: wired`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

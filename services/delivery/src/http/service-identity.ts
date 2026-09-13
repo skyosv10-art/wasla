@@ -121,6 +121,17 @@ export const DELIVERY_SCOPES = {
    * كلَّ رمزِ لوحةٍ مسروقٍ قادراً على تصفيرِ قائمةِ ما لم يُنظَرْ فيهِ.
    */
   inventoryConflictAcknowledge: "delivery:ops:inventory-conflicts:acknowledge",
+  /**
+   * الصلاحيّةُ الحاديةَ عشرةَ (المراجعةُ 21/N · ADR-026 §4.23) — **صلاحيّةٌ
+   * رابعةٌ في عائلةِ `ops:` لا توسيعٌ لواحدةٍ قائمةٍ**.
+   *
+   * ولمَ لا تُضَمُّ إلى `inventoryConflictsRead`؟ لأنَّ نطاقَ المقروءِ مختلفٌ لا
+   * مُشابِهٌ: تلكَ تقرأُ راياتَ **مخزونِ السوقِ** وحدَها، وهذهِ تقرأُ دفترَ
+   * `dispatch` معَهُ — فمَن يملكُ لوحةَ تضارُبِ مخزونٍ يصيرُ بالضمِّ قادراً على
+   * سردِ أنواعِ أحداثِ التوزيعِ الفاسدةِ، وهيَ معلومةُ حدٍّ آخرَ. والفصلُ هوَ
+   * نفسُ تعليلِ §4.20 حينَ فُصِلَ الإقرارُ عن القراءةِ.
+   */
+  relayDeadLettersRead: "delivery:ops:relay-dead-letters:read",
 } as const;
 
 export interface DeliveryServiceIdentityOptions {

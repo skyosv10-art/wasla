@@ -87,7 +87,11 @@ import {
   type Db,
   type MarketplaceStores,
 } from "@wasla/marketplace-service/db";
-import { createMarketplaceApp } from "@wasla/marketplace-service/http";
+import {
+  MARKETPLACE_SCOPES,
+  MARKETPLACE_SERVICE_AUDIENCE,
+  createMarketplaceApp,
+} from "@wasla/marketplace-service/http";
 import {
   InMemoryServiceTokenReplayGuard,
   ServiceAuthKeyRegistry,
@@ -189,14 +193,22 @@ function advancingClock(): () => string {
  * والسرُّ مكتوبٌ هنا لأنَّهُ سرُّ **اختبارٍ** لا سرُّ بيئةٍ: قراءتُهُ من
  * `process.env` كانت ستجعلُ البوّابةَ تسقطُ على جهازٍ نظيفٍ لسببٍ لا علاقةَ لهُ
  * بالدعوى، وتركُ التوقيعِ كانَ سيُخالفُ ADR-020 — والتوقيعُ صفةُ المنادي لا رخصةٌ
- * من المُنادى (وحدُّ السوقِ لا يفرضُ الهويّةَ اليومَ، وهذا مُسجَّلٌ في
- * docs/07-security/SERVICE_AUTH_ENFORCEMENT.md).
+ * من المُنادى.
+ *
+ * **تصحيحٌ (`M1-04` · المراجعةُ 29/N):** كانَ هنا سطرٌ يقولُ «وحدُّ السوقِ لا
+ * يفرضُ الهويّةَ اليومَ». صارَ يفرضُها، وهذهِ البوّابةُ ترفعُهُ مفروضاً بهذا
+ * السجلِّ نفسِهِ — **فنجاحُ التوقيعِ هنا صارَ دعوىً لا مجاملةً**: قبلَ الفرضِ
+ * كانت النداءاتُ الموقَّعةُ تمرُّ لأنَّ لا أحدَ يقرأُ التوقيعَ.
  */
-function gateSigner(): ReturnType<typeof createServiceRequestSigner> {
-  const keys = new ServiceAuthKeyRegistry({
+function marketplaceOutboundKeyRegistry(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
     keys: [{ kid: "gate-1", secret: "phase13-exit-gate-signing-secret-000001", status: "active" }],
     activeKid: "gate-1",
   });
+}
+
+function gateSigner(): ReturnType<typeof createServiceRequestSigner> {
+  const keys = marketplaceOutboundKeyRegistry();
   return createServiceRequestSigner({
     serviceName: "delivery",
     audience: "marketplace",
@@ -213,10 +225,7 @@ function gateSigner(): ReturnType<typeof createServiceRequestSigner> {
  * فارغةٍ **يُقبَلُ فعلاً** على حدِّ السوقِ — لا في وحدةٍ مزروعةِ الـ`fetch`.
  */
 function probeSigner(): ReturnType<typeof createServiceRequestSigner> {
-  const keys = new ServiceAuthKeyRegistry({
-    keys: [{ kid: "gate-1", secret: "phase13-exit-gate-signing-secret-000001", status: "active" }],
-    activeKid: "gate-1",
-  });
+  const keys = marketplaceOutboundKeyRegistry();
   return createServiceRequestSigner({
     serviceName: "delivery",
     audience: "marketplace",
@@ -227,10 +236,7 @@ function probeSigner(): ReturnType<typeof createServiceRequestSigner> {
 
 /** صانعُ توقيعٍ لمنفذِ الحجزِ — نفسُ المفتاحِ ونطاقُ الحجزِ. */
 function reservationSigner(): ReturnType<typeof createServiceRequestSigner> {
-  const keys = new ServiceAuthKeyRegistry({
-    keys: [{ kid: "gate-1", secret: "phase13-exit-gate-signing-secret-000001", status: "active" }],
-    activeKid: "gate-1",
-  });
+  const keys = marketplaceOutboundKeyRegistry();
   return createServiceRequestSigner({
     serviceName: "delivery",
     audience: "marketplace",
@@ -286,6 +292,19 @@ export async function startGate(): Promise<GateContext> {
       catalog: new MarketplaceCatalogService(marketplaceDeps),
     },
     logger: false,
+    /*
+     * حدُّ السوقِ **مفروضٌ** في هذهِ البوّابةِ كحدِّ التوصيلِ أدناهُ (`M1-04` ·
+     * المراجعةُ 29/N)، وبسجلِّ المفاتيحِ نفسِهِ الذي توقِّعُ بهِ منافذُ التوصيلِ
+     * الثلاثةُ الصادرةُ إليهِ — فما يُثبَتُ هنا هوَ **سلسلةُ النداءِ كاملةً على
+     * مقبسٍ حقيقيٍّ**: توقيعُ التوصيلِ يُنشَأُ ثمَّ يُقرأُ ويُقبَلُ.
+     *
+     * وقبلَ الفرضِ كانت هذهِ الشهادةُ ناقصةً بلا أن تبدوَ ناقصةً: لو كانَ جمهورُ
+     * الرمزِ خاطئاً أو صلاحيّةٌ ناقصةً لمرَّ النداءُ كما هوَ.
+     */
+    serviceIdentity: {
+      keys: marketplaceOutboundKeyRegistry(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await marketplace.listen({ port: 0, host: "127.0.0.1" });
   const marketplaceBaseUrl = `http://127.0.0.1:${(marketplace.server.address() as AddressInfo).port}`;
@@ -489,6 +508,42 @@ export async function callDelivery(
     scopes: init.scopes ?? ALL_DELIVERY_SCOPES,
   });
   return call(gate.deliveryBaseUrl, { ...init, headers });
+}
+
+/**
+ * نداءٌ **موقَّعٌ** على حدِّ السوقِ في هذهِ البوّابةِ (`M1-04` · المراجعةُ 29/N).
+ *
+ * البوّابةُ تُعِدُّ عالمَها عبرَ حدِّ السوقِ (متجرٌ · منتجٌ · مخزونٌ) ثمَّ تسألُ
+ * التوصيلَ، وإعدادُها ليسَ محلَّ الدعوى — فيُوقَّعُ هنا في موضعٍ واحدٍ بكلِّ
+ * صلاحيّاتِ الحدِّ بدلَ أن تُرصَّ ترويسةٌ في خمسةَ عشرَ نداءً، وهوَ ما كانَ
+ * سيدفعُ إلى إضعافِ الحدِّ عندَ أوّلِ تغييرِ صيغةٍ.
+ *
+ * وما يخصُّ **الدعوى** — أنَّ التوصيلَ يوقِّعُ نداءَهُ إلى السوقِ فيُقبَلُ — يجري
+ * في منافذِ التوصيلِ الثلاثةِ نفسِها لا هنا، فهذا المُساعِدُ لا يُخفي شيئاً
+ * يجبُ إثباتُهُ. و`call` يبقى **عارياً** لمن أرادَ إثباتَ الرفضِ.
+ */
+export async function callMarketplace(
+  baseUrl: string,
+  init: {
+    readonly method: string;
+    readonly path: string;
+    readonly body?: unknown;
+    readonly idempotencyKey?: string;
+    readonly traceId?: string;
+  },
+): Promise<HttpResult> {
+  const separator = init.path.indexOf("?");
+  const headers = serviceAuthHeaders({
+    serviceName: "e2e-harness",
+    audience: MARKETPLACE_SERVICE_AUDIENCE,
+    method: init.method.toUpperCase(),
+    // المسارُ الموقَّعُ بلا استعلامٍ (ADR-021 §4 · `RISK-0026` مفتوحٌ).
+    path: separator < 0 ? init.path : init.path.slice(0, separator),
+    keys: marketplaceOutboundKeyRegistry(),
+    now: new Date(),
+    scopes: Object.values(MARKETPLACE_SCOPES),
+  });
+  return call(baseUrl, { ...init, headers });
 }
 
 /**

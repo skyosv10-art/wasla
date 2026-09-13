@@ -28,7 +28,7 @@ import {
   MARKETPLACE_SERVICE_PORT,
 } from "@wasla/contracts-marketplace";
 
-import { createMarketplaceApp } from "../http/app.js";
+import { createSignedMarketplaceApp } from "./service-identity-support.js";
 import { MARKETPLACE_INTERNAL_ERROR_CODE } from "../http/errors.js";
 import {
   ADD_STAFF_KEYS,
@@ -117,7 +117,7 @@ function contractOperations(): Set<string> {
  * Fastify يستنبطه من `GET` تلقائيّاً ولا يُعلنه أيُّ عقد.
  */
 async function registeredOperations(): Promise<Set<string>> {
-  const app = createMarketplaceApp();
+  const app = createSignedMarketplaceApp();
   await app.ready();
   const tree = app.printRoutes({ commonPrefix: false });
   await app.close();

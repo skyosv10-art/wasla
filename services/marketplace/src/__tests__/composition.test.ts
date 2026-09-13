@@ -199,6 +199,67 @@ describe("تركيبُ الجذر — مصدرُ اللاحَتميّةِ محق
   });
 });
 
+describe("هويّةُ الخدمةِ تُحقَن في كلِّ استدعاءٍ — ولا افتراضَ يسكتُ الغيابَ (M1-04 · 29/N)", () => {
+  /**
+   * الفرضُ مُغلَقٌ بالافتراضِ في الوسيطِ، لكنَّ الوسيطَ لا يُسجَّلُ إلّا إذا مُرِّرَت
+   * `serviceIdentity` — فمسارُ تشغيلٍ يبني التطبيقَ بلا هذا الوسيطِ كانَ سيرفعُ
+   * خادماً **بلا حدٍّ** وكلُّ اختباراتِ الحدِّ تبقى خضراء: فهيَ تبني تطبيقَها بنفسِها.
+   * ولذا يُقاسُ هنا **مسارُ التشغيلِ** لا مسارُ الاختبارِ.
+   *
+   * وثلاثُ دعاوى مستقلّةٌ لا واحدةٌ: أنَّ الاستدعاءَينِ كلَيهما يُمرّرانِ الهويّةَ
+   * (لا الأوّلَ وحدَهُ)، وأنَّ المصنعَ **بلا وسيطٍ افتراضيٍّ** (فالنسيانُ يُسقِطُ
+   * النوعَ لا يمرُّ)، وأنَّ الحقلَ **إلزاميٌّ** في العقدِ (لا `?`).
+   */
+  const APP = "http/app.ts";
+
+  it("كلا استدعاءَي `createMarketplaceApp` في حدِّ التشغيلِ يُمرِّرُ `serviceIdentity`", () => {
+    const code = readCode(SERVER);
+    const calls = [...code.matchAll(/createMarketplaceApp\s*\(\s*\{/gu)];
+    // استدعاءانِ بالضبطِ: وضعُ الذاكرةِ ووضعُ القاعدةِ. وثالثٌ يُضافُ بلا هويّةٍ
+    // كانَ سيمرُّ لو قيسَ «وجودُ الاسمِ» في الملفِّ بدلاً من كلِّ استدعاءٍ.
+    expect(calls).toHaveLength(2);
+    const unsigned = calls.filter((match) => {
+      const from = match.index ?? 0;
+      const body = code.slice(from, code.indexOf("});", from));
+      return !body.includes("serviceIdentity");
+    });
+    expect(unsigned).toEqual([]);
+  });
+
+  it("والهويّةُ تُبنى من البيئةِ في دالّةٍ واحدةٍ — لا مفاتيحَ مكتوبةً في الحدِّ", () => {
+    const code = readCode(SERVER);
+    expect(code).toContain("serviceIdentityFromEnv");
+    expect(code).toContain("keyRegistryFromEnv");
+    // سرٌّ مكتوبٌ حرفاً في حدِّ التشغيلِ أسوأُ من غيابِ الحدِّ: يمرُّ في المراجعةِ
+    // ويُنشَرُ في الصورةِ. والقياسُ على `secret:` المُسنَدِ نصّاً لا على الكلمةِ.
+    expect(code).not.toMatch(/secret\s*:\s*"/u);
+  });
+
+  it("والمصنعُ بلا وسيطٍ افتراضيٍّ — فالنسيانُ يُسقِطُ النوعَ ولا يمرُّ صامتاً", () => {
+    const code = readCode(APP);
+    expect(code).toMatch(/createMarketplaceApp\s*\(\s*options:\s*MarketplaceAppOptions\s*\)/u);
+    expect(code).not.toMatch(/options:\s*MarketplaceAppOptions\s*=/u);
+  });
+
+  it("والحقلُ إلزاميٌّ في العقدِ — لا `serviceIdentity?`", () => {
+    const code = readCode(APP);
+    expect(code).toMatch(/readonly serviceIdentity:\s*MarketplaceServiceIdentityOptions/u);
+    expect(code).not.toContain("serviceIdentity?");
+  });
+
+  it("والوسيطُ يُسجَّلُ قبلَ خطّافِ المُعامِلِ وقبلَ كلِّ مسارٍ", () => {
+    const code = readCode(APP);
+    const identity = code.indexOf("registerServiceIdentity(app");
+    const idempotency = code.indexOf('addHook("onRequest"');
+    const firstRoute = code.search(/app\.(?:get|post|delete|put|patch)\s*\(/u);
+    expect(identity).toBeGreaterThan(-1);
+    // ترتيبٌ مقصودٌ: طلبٌ بلا توقيعٍ يُردُّ 401 ولا يتعلَّمُ أنَّ الحدَّ يطلبُ
+    // `Idempotency-Key` — والغائبُ لا يُعرَّفُ بشكلِ الحدِّ قبلَ أن يُصدَّقَ.
+    expect(idempotency).toBeGreaterThan(identity);
+    expect(firstRoute).toBeGreaterThan(identity);
+  });
+});
+
 describe("وضعُ الذاكرةِ يبقى بلا خدمات — الصحّةُ ناطقةٌ والعملياتُ 503", () => {
   it("مسارُ غيابِ `DATABASE_URL` لا يُمرِّر خدمةً ولا يبني مخزناً", () => {
     const code = readCode(SERVER);

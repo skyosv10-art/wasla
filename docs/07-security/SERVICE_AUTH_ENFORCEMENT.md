@@ -324,6 +324,11 @@
 - **`services/marketplace` ما زالَ غيرَ مفروضٍ** (خارجَ سطورِ `enforced:` في §4)،
   فتوقيعُ التوصيلِ **الصادرُ** إليهِ يُقبَلُ لأنَّهُ لا يُفحَصُ. هذهِ الدفعةُ لا
   تُصلِحُ ذلكَ ولا تدَّعي إصلاحَهُ.
+  **⟵ صُحِّحَ في المراجعةِ 29/N (`CLM-0150`) بالإضافةِ لا بالمحوِ:** حدُّ السوقِ
+  صارَ مفروضاً (§2.8)، فالجملةُ أعلاهُ **صحيحةٌ تاريخيّاً لدفعةِ الموجةِ السادسةِ
+  ولم تبقَ صحيحةً اليومَ**. وتُركَت منطوقةً لأنَّ محوَها كانَ سيُخفي أنَّ
+  التوقيعَ الصادرَ بقيَ **غيرَ مفحوصٍ** من 8/N إلى 29/N — وهذهِ مدّةٌ يُقرأُ
+  فيها السجلُّ في مراجعةٍ.
 - **`M1-05` (تفويضُ الأدوارِ) خارجَ النطاقِ**: هذا الحدُّ يُعلِنُ ما **يطلبُهُ**
   كلُّ مسارٍ، ومَن يستحقُّ صلاحيّةً قرارُ مُصدِرِ الرمزِ.
 - `RISK-0026` مفتوحٌ **ويمسُّ هذا الحدَّ فعلاً**: `GET /delivery/inventory-conflicts`
@@ -332,11 +337,133 @@
   `RISK-0027` و`AUD-004`/`AUD-005` كلُّها باقيةٌ. ولم يُقَسْ أنَّ متغيّراتِ
   البيئةِ مُعَدّةٌ في أيِّ نشرٍ.
 
+### 2.8 برهانُ حدِّ السوقِ (`M1-04` · الموجةُ السابعة)
+
+- **لماذا هذا الحدُّ الآنَ:** بخلافِ الموجةِ السادسةِ، هذا الحدُّ **لهُ ثلاثةُ
+  منادينَ إنتاجيّينَ موقَّعينَ منذُ 8/N و10/N و15/N**
+  (`http-marketplace-catalog.ts` · `http-marketplace-probe.ts` ·
+  `http-marketplace-reservation.ts`) — أي أنَّ الشرطَ في §2.0 كانَ مُستوفىً
+  **قبلَ** هذهِ الدفعةِ، وما كانَ ناقصاً هوَ **الفحصُ** لا التوقيعُ. وقد قِيلَ
+  ذلكَ صريحاً في سجلِّ التغطيةِ ثلاثَ مرّاتٍ: «التوقيعُ صفةُ المنادي لا رخصةٌ من
+  المُنادى». فهذا الحدُّ **أرخصُ حدٍّ في المستودعِ فرضاً وأطولُهُ تأجيلاً**.
+- **وهذا يقلبُ اتّجاهَ الخطرِ:** رمزٌ موقَّعٌ صحيحٌ لم يكن يُغيِّرُ شيئاً، ورمزٌ
+  **مزوَّرٌ أو منتهٍ أو بلا صلاحيّةٍ** كانَ يُقبَلُ كذلكَ — فحملُ التوقيعِ كانَ
+  **زيّاً لا هويّةً**. و«حارسٌ يطمئنُّ عندَ الغيابِ أسوأُ من لا حارسٍ».
+- **ما يحرسُهُ هذا الحدُّ:** أخطرُ ما في المنظومةِ التجاريّةِ بعدَ الطلبِ نفسِهِ،
+  وأربعةٌ منهُ بالتسمية: `POST …/inventory/reserve` و`POST …/inventory/release`
+  (**حجزُ مخزونٍ حقيقيٍّ وإفراجُهُ** — ومنادٍ بلا هويّةٍ يُفرِغُ رفَّ متجرٍ أو
+  يُفرِجُ حجزَ طلبٍ حيٍّ) · `POST …/products/:id/publish` و`…/archive`
+  (**تغييرُ ظهورٍ عامٍّ**: نشرٌ يضعُ منتجاً أمامَ كلِّ عميلٍ، وأرشفةٌ تُخفيهِ) ·
+  `POST /stores/:slug/decisions` و`…/products/:id/decisions` (**قرارُ مراجعةٍ**
+  يُدخِلُ متجراً أو منتجاً إلى السوقِ).
+- **الحدُّ نفسُهُ:** [`services/marketplace/src/__tests__/service-identity.test.ts`](../../services/marketplace/src/__tests__/service-identity.test.ts)
+  — **24 حالةً مقيسةً**: بلا ترويسةٍ ⇒ `401` · مزوَّرةٌ بسرٍّ آخرَ ⇒ `401` ·
+  منتهيةٌ ⇒ `401` · جمهورٌ آخرُ (`delivery`) ⇒ `401` · الصلاحيّةُ الصحيحةُ
+  ⇒ **تعبرُ الحدَّ** · صلاحيّةٌ ناقصةٌ ⇒ `403` · إعادةُ الرمزِ نفسِهِ ⇒ `401` ·
+  تعذُّرُ مخزنِ آثارِ الإعادةِ ⇒ `503` · رمزُ مسارٍ آخرَ ⇒ `401` · رمزُ طريقةٍ
+  أخرى على المسارِ نفسِهِ ⇒ `401` · `/health` مفتوحٌ ⇒ `200` · مسارٌ مجهولٌ
+  ⇒ `401` قبلَ `404` · مسارٌ بلا تصنيفٍ يُسقِطُ **الإقلاعَ** لا الطلبَ.
+- **وفصلُ الخطرِ مقيسٌ لا مُعلَنٌ** (وهوَ لبُّ هذا الحدِّ): رمزُ قراءةٍ لا
+  يكتبُ متجراً ⇒ `403` · رمزُ **طلبِ** مراجعةٍ لا **يقرِّرُها** ⇒ `403` ·
+  رمزُ كتابةِ منتجٍ لا **ينشرُهُ ولا يؤرشفُهُ** ⇒ `403` · رمزُ **حجزٍ** لا
+  **يُفرِجُ** ⇒ `403` · رمزُ قراءةِ مخزونٍ لا **يُعدِّلُهُ** ⇒ `403`.
+- **وعلى السلكِ لا في `inject` وحدَهُ:** بوّابةُ خروجِ السوقِ
+  (`@wasla/marketplace-e2e`) تبني الحدَّ **مفروضاً** على مُستمعٍ حقيقيٍّ وتُوقِّعُ
+  نداءاتِها، وأُضيفَت إليها دعوى تُنادي بـ`fetch` **عارياً** ⇒ `401` بمغلَّفِ
+  العقدِ. وبوّابةُ خروجِ الطورِ 13 (`@wasla/delivery-e2e`) صارت تبني السوقَ
+  مفروضاً كذلكَ، و**15 موضعَ نداءٍ** فيها مرَّت إلى `callMarketplace` الموقِّعِ —
+  علاجُ الـ`401` توقيعُ المنادي لا إضعافُ الحدِّ، كما في §2.6 و§2.7.
+- **ترتيبُ الخطّافِ دعوى لا مصادفةً:** وسيطُ الهويّةِ يُسجَّلُ **قبلَ** خطّافِ
+  `Idempotency-Key` وقبلَ كلِّ مسارٍ — فطلبٌ بلا توقيعٍ يُردُّ `401` ولا يتعلَّمُ
+  أنَّ الحدَّ يطلبُ مُعامِلاً، وطلبٌ موقَّعٌ بلا مُعامِلٍ يُردُّ `400` كما كانَ.
+  ويُقاسُ الترتيبُ نصّاً في `composition.test.ts` معَ ثلاثِ دعاوى أخرى: أنَّ
+  **كلا** استدعاءَي `createMarketplaceApp` في حدِّ التشغيلِ يُمرِّرُ الهويّةَ،
+  وأنَّ المصنعَ **بلا وسيطٍ افتراضيٍّ**، وأنَّ الحقلَ **إلزاميٌّ** في العقدِ.
+  فالنسيانُ يُسقِطُ النوعَ ولا يُنتِجُ خادماً بلا حدٍّ.
+- **وستَّ عشرةَ صلاحيّةً لعشرينَ مساراً مُغلَقاً** من 21 مساراً (`/health`
+  وحدَهُ مفتوحٌ)، **وأربعٌ منها لم تُخترَعْ هنا**: `marketplace:store:read` و
+  `marketplace:product:read` و`marketplace:inventory:reserve` و
+  `marketplace:inventory:release` مُعلَنةٌ منذُ 8/N و10/N في عملاءِ التوصيلِ
+  الصادرينَ وفي `ADR-026` §6 — وتسميتُها من جديدٍ كانت ستُردُّ **كلَّ نداءٍ
+  إنتاجيٍّ قائمٍ** بـ`403`. **الاسمُ الموجودُ يُقرأُ، لا يُعادُ اختراعُهُ.**
+- **وثلاثةُ انقساماتٍ بقصدٍ مكتوبٍ**، والتقسيمُ بخطرِ المسارِ لا باسمِ الموردِ:
+  **طلبُ المراجعةِ ≠ قرارُها** (صاحبُ المتجرِ يطلبُ، والمُشرِفُ يُقرِّرُ؛ وصلاحيّةٌ
+  واحدةٌ كانت ستُجيزُ للطالبِ أن يُوافِقَ على نفسِهِ) · **كتابةُ المنتجِ ≠ دورةُ
+  حياتِهِ** (النشرُ والأرشفةُ يُغيِّرانِ الظهورَ العامَّ لا الحقلَ) ·
+  **الحجزُ ≠ الإفراجُ** (الإفراجُ تعويضٌ يُنفَّذُ في مسارِ فشلٍ — `ADR-026` §2.3 —
+  ومن يحجزُ لا يلزمُ أن يُفرِجَ حجزَ غيرِهِ).
+
+  والجدولُ أدناهُ **يقرأُهُ حرسانِ** لا عينٌ وحدَها: البابُ 6 من
+  `validate-service-auth-coverage.sh`، و
+  [`service-auth-docs-drift.test.ts`](../../services/marketplace/src/__tests__/service-auth-docs-drift.test.ts)
+  يُطابِقُ ما بينَ العلامتَينِ بـ`MARKETPLACE_SCOPES` في الشفرةِ حرفاً في
+  **هذهِ الوثيقةِ وفي بوّابةِ `M1-04_GATE.md`** معاً. وكُتِبَ هذا الحرسُ **معَ**
+  الفرضِ لا بعدَ أوّلِ انحرافٍ: حدُّ التوصيلِ انحرفَ مرّتَينِ قبلَ أن يُحرَسَ،
+  و**عطبٌ معروفٌ يُترَكُ ليقعَ مرّةً أخرى ليسَ سهواً بل قراراً**.
+
+  <!-- marketplace-scopes:begin -->
+
+  | الصلاحيّة | المسارُ الذي تفتحُه | أُضيفت في |
+  |---|---|---|
+  | `marketplace:category:read` | `GET /categories` | الموجةُ 7 (29/N) |
+  | `marketplace:store:read` | `GET /stores` · `GET /stores/:storeSlug` | **8/N** (عميلُ التوصيلِ) · فُرِضَت في 29/N |
+  | `marketplace:store:write` | `POST /stores` | الموجةُ 7 (29/N) |
+  | `marketplace:store:review:request` | `POST /stores/:storeSlug/review-requests` | الموجةُ 7 (29/N) |
+  | `marketplace:store:review:decide` | `POST /stores/:storeSlug/decisions` | الموجةُ 7 (29/N) |
+  | `marketplace:store:review:read` | `GET /stores/:storeSlug/reviews` | الموجةُ 7 (29/N) |
+  | `marketplace:staff:read` | `GET /stores/:storeSlug/staff` | الموجةُ 7 (29/N) |
+  | `marketplace:staff:write` | `POST /stores/:storeSlug/staff` · `DELETE /stores/:storeSlug/staff/:memberPublicId` | الموجةُ 7 (29/N) |
+  | `marketplace:product:read` | `GET /stores/:storeSlug/products` · `GET /products/:productPublicId` | **8/N** (عميلُ التوصيلِ) · فُرِضَت في 29/N |
+  | `marketplace:product:write` | `POST /stores/:storeSlug/products` | الموجةُ 7 (29/N) |
+  | `marketplace:product:lifecycle` | `POST /products/:productPublicId/publish` · `POST /products/:productPublicId/archive` | الموجةُ 7 (29/N) |
+  | `marketplace:product:review:decide` | `POST /products/:productPublicId/decisions` | الموجةُ 7 (29/N) |
+  | `marketplace:inventory:read` | `GET /products/:productPublicId/inventory` | الموجةُ 7 (29/N) |
+  | `marketplace:inventory:adjust` | `POST /products/:productPublicId/inventory` | الموجةُ 7 (29/N) |
+  | `marketplace:inventory:reserve` | `POST /inventory/reserve` | **10/N** (عميلُ الحجزِ) · فُرِضَت في 29/N |
+  | `marketplace:inventory:release` | `POST /inventory/release` | **10/N** (عميلُ الحجزِ) · فُرِضَت في 29/N |
+
+  <!-- marketplace-scopes:end -->
+
+  و**المسارُ المفتوحُ بقصدٍ مُعلَنٍ** خارجَ الكتلةِ أعلاهُ لأنَّهُ بلا صلاحيّةٍ
+  أصلاً: `GET /health` — ويُقاسُ انفتاحُهُ بـ`200` بلا توقيعٍ في الدعوى نفسِها.
+  و**لا `/ready` على هذا الحدِّ**: مسارُ الصحّةِ واحدٌ، فلا يُدَّعى ما ليسَ موجوداً.
+
+**ما لا يُدَّعى هنا:**
+
+- **مغلَّفُ الرفضِ ليسَ `ErrorResponse` المنشورَ** في
+  [`contracts/marketplace`](../../packages/contracts/marketplace/src/api-types.ts):
+  `error.code` هناكَ **قائمةٌ مُغلَقةٌ** من رموزِ مجالِ السوقِ (`MARKETPLACE_*`)،
+  ورمزُ رفضِ هويّةٍ ليسَ منها ولا يجوزُ أن يُدَسَّ فيها. و`as ErrorResponse`
+  كانَ **إخراسَ حارسٍ لا إصلاحَ حدٍّ**. فأُفرِدَ نوعٌ
+  (`MarketplaceServiceDenialBody`) يُطابِقُ **شكلَ** السلكِ حرفاً
+  (`{ error: { code, message }, trace_id }` بلا `details`) معَ رمزٍ نصّيٍّ حرٍّ،
+  وتُقاسُ مُطابقةُ الشكلِ في الدعوى. **والعقدُ المنشورُ لم يُمَسَّ.**
+- **`api.openapi.yml` لم يُمَسَّ**: العقدُ لا يُعلِنُ `401`/`403` ولا
+  `securitySchemes` — نقصٌ حقيقيٌّ مشترَكٌ بينَ الحدودِ السبعةِ كلِّها، وعلاجُهُ
+  عقدٌ واحدٌ لكلِّها لا لحدٍّ واحدٍ (§2.7).
+- **`RISK-0026` مفتوحٌ ويمسُّ هذا الحدَّ فعلاً**: `GET /stores` و
+  `GET /stores/:storeSlug/products` و`GET /stores/:storeSlug/reviews` تأخذُ
+  مُعامِلاتِ استفسارٍ، والرمزُ يربطُ المسارَ والطريقةَ **لا الاستعلامَ** — فرمزٌ
+  لصفحةٍ يقرأُ صفحةً أخرى. وهذا **مُثبَتٌ كعيبٍ قائمٍ** في دعوى صريحةٍ لا
+  مذكورٌ نصّاً وحدَهُ: يومَ يُغلَقُ الخطرُ تسقطُ تلكَ الدعوى ويُقرأُ إغلاقُهُ
+  بقصدٍ.
+- **`RISK-0015` باقٍ**: مخزنُ آثارِ الإعادةِ في الذاكرةِ — فالإعادةُ تُمنَعُ
+  داخلَ العمليّةِ الواحدةِ لا عبرَ نُسَخٍ.
+- **`M1-05` (تفويضُ الأدوارِ) خارجَ النطاقِ**: هذا الحدُّ يُعلِنُ ما **يطلبُهُ**
+  كلُّ مسارٍ، ومَن يستحقُّ صلاحيّةً قرارُ مُصدِرِ الرمزِ. وبالأخصِّ: `decisions`
+  تطلبُ صلاحيّةَ قرارٍ **ولا تُثبِتُ أنَّ حاملَها مُشرِفٌ**.
+- **ولم يُقَسْ أنَّ متغيّراتِ البيئةِ مُعَدّةٌ في أيِّ نشرٍ**: حدُّ التشغيلِ
+  يقرأُ المفاتيحَ من البيئةِ عبرَ `keyRegistryFromEnv`، ونشرٌ بلا مفاتيحَ
+  **يسقطُ عندَ الإقلاعِ** — وهذا مقصودٌ، لكنَّهُ لم يُختبَرْ في نشرٍ حقيقيٍّ.
+
 ---
 
 ## 3. ما لم يُفرَض بعدُ (إعلانٌ لا اعتذار)
 
-**بقيّةُ حدودِ النظامِ لا تفرضُ هويّةَ خدمةٍ اليوم.** هذا قرارٌ مُعلَنٌ لا سهوٌ:
+**بقيّةُ حدودِ النظامِ لا تفرضُ هويّةَ خدمةٍ اليوم.** والحدودُ المفروضةُ سبعةٌ
+بعدَ 29/N: `matching` · `orders` · `identity` · `dispatch` · `geography` ·
+`delivery` · `marketplace`. والباقي **غيرُ مفروضٍ** — وأخصُّهُ `negotiations`،
+ولهُ منادِيانِ بلا موقِّعٍ مقيساً (`RISK-0027` · §4). هذا قرارٌ مُعلَنٌ لا سهوٌ:
 سحبُ التغطيةِ الكاملةِ إلى هذه الدفعةِ كان يُوسِّعُ نطاقَها إلى ما لا يُراجَع، فآلَ
 الأمرُ إلى **تقدُّمٍ تدريجيٍّ قابلٍ للإثبات**: حدٌّ واحدٌ مبرهَنٌ الآنَ، وحارسٌ
 يمنعُ الانحدارَ، وبوّابةٌ مستقلّةٌ (`M1-04`) للتغطيةِ الكاملة.
@@ -356,13 +483,13 @@
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | `service-identity-enforcement.e2e.test.ts` · `DISPATCH_MATCHING_SCOPES` |
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
-| `services/delivery/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-catalog.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` · **حدُّ السوقِ نفسُهُ غيرُ مفروضٍ بعدُ** (المراجعةُ 8/N · `CLM-0127`): التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى، فلا يُؤجَّلُ إلى أن يُفرَضَ الحدُّ. |
+| `services/delivery/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-catalog.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` · **حدُّ السوقِ نفسُهُ غيرُ مفروضٍ بعدُ** (المراجعةُ 8/N · `CLM-0127`): التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى، فلا يُؤجَّلُ إلى أن يُفرَضَ الحدُّ. **⟵ وقد فُرِضَ الحدُّ في 29/N (`CLM-0150` · §2.8): هذا التوقيعُ صارَ مفحوصاً.** ويُقرأُ السطرُ الأصليُّ كما هوَ لأنَّ محوَهُ كانَ سيُخفي أنَّ التوقيعَ بقيَ بلا فحصٍ 21 مراجعةً. |
 | `services/delivery/src/infrastructure/http-marketplace-probe.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/marketplace-health-probe.test.ts` يقرأُ ترويسةَ التوقيعِ والمسارَ المُوقَّعَ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_PROBE_SCOPES` = **قائمةٌ فارغةٌ** عن قصدٍ (مسبارُ صحّةٍ لا يقرأُ متجراً ولا منتجاً، فحملُ نطاقِ قراءةٍ يُوسِّعُ أثرَ سرقةِ رمزٍ بلا سببٍ) · وبوّابةُ الخروجِ تُثبِتُ قبولَ هذا التوقيعِ على حدِّ السوقِ الحقيقيِّ (المراجعةُ 15/N · `CLM-0136`) |
 | `services/delivery/src/infrastructure/http-marketplace-reservation.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-reservation.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` (المراجعةُ 10/N · `CLM-0129`) |
 | `services/customers/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/customers/src/__tests__` (عبر بوّاباتِ e2e) · `CUSTOMERS_GEOGRAPHY_SCOPES` |
@@ -373,8 +500,8 @@
 | `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` · `GEOGRAPHY_IDENTITY_SCOPES` |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/matching/src/__tests__/http-geography.test.ts` يقرأُ `aud` و`scp` · `MATCHING_GEOGRAPHY_SCOPES` |
 | `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
-| `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. |
-| `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` غيرُ مفروضٍ. |
+| `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. **وقد فُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ بلا قيمةٍ افتراضيّةٍ في `HttpCustomerNegotiationsOptions`، والصلاحيّاتُ المُعلَنةُ `CUSTOMER_BOT_NEGOTIATIONS_SCOPES` (قراءةُ خيطٍ · قراءةُ دورٍ · قرارُ دورٍ) لا أوسعُ، والبرهانُ `bots/customer-bot/src/__tests__/http-negotiations-signing.test.ts` يقرأُ `aud` و`svc` و`scp` و`req` من الرمزِ نفسِهِ ويُثبتُ أنَّ مُوقِّعاً يرفضُ **لا يُخرِجُ نداءً أصلاً**. والسببُ الأصليُّ للتأجيلِ محفوظٌ أعلاهُ لا ممحوٌّ. |
+| `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` كانَ غيرَ مفروضٍ. **وفُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ، و`DRIVER_BOT_NEGOTIATIONS_SCOPES` ثلاثُ صلاحيّاتٍ لا أوسعُ، والبرهانُ `bots/driver-bot/src/__tests__/http-negotiations-signing.test.ts`. |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع | موقِّعانِ صريحانِ بجمهورَينِ: `NEGOTIATIONS_ORDER_LOOKUP_SCOPES` و`NEGOTIATIONS_DISPATCH_OFFER_SCOPES` · `services/negotiations/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` من الرمزَين |
 
 <!-- coverage-ledger:end -->
@@ -574,6 +701,57 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 ومسارُ رصدٍ واحدٌ مفتوحٌ — والقراءةُ الهرميّةُ الخمسةُ بصلاحيّةٍ واحدةٍ لأنَّها
 خطرٌ واحدٌ (قراءةُ شجرةٍ مرجعيّةٍ عامّةٍ)، أمّا موقعُ مستخدمٍ **بعينِه** فصلاحيّتُهُ
 مفصولةٌ قراءةً عن كتابةٍ: رمزٌ يقرأُ موقعاً لا يقدرُ بهِ على تحريكِهِ.
+
+---
+
+### 5.4 حدُّ المفاوضاتِ (`M1-04` · المراجعةُ 26/N)
+
+**ولماذا تأخَّرَ هذا الحدُّ عن الموجاتِ الستِّ، تُقالُ الحقيقةُ لا تُلطَّفُ:** لم
+يُؤجَّلْ بقرارٍ مكتوبٍ، بل لأنَّ مُنادِيَيهِ **لم يكونا مرئيَّينِ** — حارسُ
+التغطيةِ كانَ يقرأُ `services/` وحدَها فبقيَ عميلا `bots/` خارجَ بصرِهِ سنةَ
+عمرِ الحارسِ كلَّها (`RISK-0027`). فلمّا أُبصِرَ في 24/N ظهرَ العميلانِ
+«مؤجَّلَينِ» بسببٍ صادقٍ: توقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ طمأنينةٌ بلا فائدةٍ.
+وهذهِ الدَّفعةُ ترفعُ السببَ: **فُرِضَ الحدُّ أوّلاً، ثمَّ وُقِّعَ العميلانِ**.
+
+<!-- negotiations-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | المُنادي اليوم |
+|---|---|---|
+| `POST /negotiations` | `negotiations:thread:write` | محرّكُ الطلبِ |
+| `GET /negotiations` | `negotiations:thread:read` | customer-bot · driver-bot |
+| `GET /negotiations/{threadId}` | `negotiations:thread:read` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/cancel` | `negotiations:thread:write` | محرّكُ الطلبِ |
+| `GET /negotiations/{threadId}/rounds` | `negotiations:round:read` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/rounds` | `negotiations:round:write` | بوتا الطرفَينِ عندَ الاقتراحِ |
+| `POST /negotiations/{threadId}/rounds/{roundNo}/accept` | `negotiations:round:decide` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/rounds/{roundNo}/reject` | `negotiations:round:decide` | customer-bot · driver-bot |
+| `GET /negotiations/{threadId}/messages` | `negotiations:message:read` | بوتا الطرفَينِ |
+| `POST /negotiations/{threadId}/messages` | `negotiations:message:write` | بوتا الطرفَينِ |
+| `GET /negotiations/{threadId}/agreement` | `negotiations:agreement:read` | محرّكُ الطلبِ · بوتا الطرفَينِ |
+| `POST /negotiations/tick` | `negotiations:tick:run` | مُجدولٌ تشغيليٌّ |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- negotiations-scopes:end -->
+
+**والتقسيمُ يتبعُ الأفعالَ لا الجداولَ، وأهمُّ فرقَينِ فيهِ يُقاسانِ لا
+يُدَّعَيانِ:** الأوّلُ أنَّ **القبولَ والرفضَ** (`round:decide`) ليسا كـ**الاقتراحِ**
+(`round:write`) — فالقبولُ يُنشئُ اتّفاقاً ويُحرِّكُ سعراً في محرّكِ الطلبِ، ورمزٌ
+طُلِبَ لاقتراحِ دورٍ لا ينبغي أن يبلغَ إنهاءَ التفاوضِ؛ والثاني أنَّ **النبضةَ**
+(`tick:run`) صلاحيّةٌ مستقلّةٌ لأنَّها كتابةٌ جماعيّةٌ على خيوطِ كلِّ المستعملينَ
+ومُنادِيها مُجدولٌ لا بوتُ مستعملٍ. وكلا الفرقَينِ لهُ حالةُ رفضٍ `403` في
+`services/negotiations/src/__tests__/service-identity.test.ts`.
+
+**وما لا يُدَّعى:** فرضُ هذا الحدِّ **لا يُنجِزُ `M1-04`** ولا يُغلِقُ
+`RISK-0027`: يبقى حدُّ `services/marketplace` غيرَ مفروضٍ، ويبقى الخطرُ بعهدةِ
+مالكِهِ (§9 من `docs/16-progress/README.md`). ومَن يمنحُ أيَّ صلاحيّةٍ لأيِّ خدمةٍ
+قرارُ `M1-05` عندَ مُصدِرِ الرمزِ لا قرارُ هذا الجدولِ.
+
+**وقيدٌ يُقالُ هنا لا يُخفى:** `GET /negotiations` يُرشِّحُ بـ`orderPublicId` أو
+`driverPublicId` في **سلسلةِ الاستعلامِ**، والربطُ لا يشملُها
+([`ADR-021` §4](../15-decisions/ADR-021-service-token-replay-policy.md)) — فرمزٌ
+وُقِّعَ لسردِ خيوطِ طلبٍ صالحٌ لسردِ خيوطِ طلبٍ آخرَ. وهوَ الوجهُ نفسُهُ
+لـ**RISK-0026** المسجَّلِ على `GET /orders/lookup`، ومُخفَّفٌ اليومَ بعمرٍ قصيرٍ
+للرمزِ وحرقِ `jti`، وعلاجُهُ الجذريُّ عندَ `M1-05`.
 
 ---
 

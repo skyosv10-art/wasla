@@ -349,6 +349,25 @@ echo '# حالة اختبار' >> scripts/checks/verify-governance.sh
 git add -A >/dev/null; git commit -qm "valid entry with large diff" >/dev/null
 t "يقبل إدخالاً صحيحاً مع diff كبير (حارس SIGPIPE)" pass bash scripts/checks/require-doc-update.sh origin/main HEAD
 
+# ── M0-29: الصيغةُ تُقاسُ على الملفِّ كلِّه لا على الـdiff وحدَه ───────────
+# العيبُ المقيسُ 2026-09-13: سبعةُ إدخالاتٍ كتبت `**Work Item(s):** ` بشفرةٍ
+# مُسيَّجةٍ، ومرَّت ستٌّ منها إلى main، لأنَّ الفحصَ كانَ يكتفي بوجودِ **سطرٍ
+# مُضافٍ صحيحٍ** ولا يسألُ عنِ المنحرفِ إلى جانبِه. والسطرُ المنحرفُ بعدَ الدمجِ
+# يخرُجُ من نطاقِ كلِّ diff تالٍ فلا يراهُ حارسٌ أبداً. فالبابُ يقيسُ الحالةَ الآنَ.
+printf '\n### [2026-01-01] حالةُ اختبارٍ — صيغةٌ منحرفةٌ\n\n- **Work Item(s):** `%s`\n- **Why:** مُسيَّجٌ بشفرةٍ\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
+git add -A >/dev/null; git commit -qm "drifted work item format" >/dev/null
+t "يرفضُ سطراً منحرفَ الصيغةِ ولو صحَّ سطرٌ مُضافٌ آخرُ" fail bash scripts/checks/require-doc-update.sh origin/main HEAD
+git reset -q --hard HEAD~1
+
+# ولا يُقاسُ النثرُ إعلاناً: البابُ يُقاسُ على **إعلانِ الحقلِ** (سطرٌ يبدأُ بهِ بعدَ
+# علامةِ قائمةٍ اختياريّةٍ) لا على كلِّ ذكرٍ للحقلِ في جملةٍ تشرحُهُ — وإلّا لأسقطَ
+# البابُ كلَّ وثيقةٍ توثِّقُ البابَ نفسَهُ. وهذا **تمييزٌ لا تخفيفٌ**: كلُّ سطرٍ
+# منحرفٍ من السبعةِ المقيسةِ كانَ إعلاناً في أوّلِ سطرٍ، فلا يُفلِتُ واحدٌ منها.
+printf '\n### [2026-01-01] حالةُ اختبارٍ — نثرٌ يذكرُ الحقلَ\n\n- **Work Item(s):** %s\n- **Why:** يشترطُ الحارسُ سطرَ `**Work Item(s):**` عارياً بلا تسييجٍ\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
+git add -A >/dev/null; git commit -qm "prose mentioning the field" >/dev/null
+t "يقبلُ نثراً يذكرُ الحقلَ مُسيَّجاً ولا يخلطُهُ بإعلانٍ منحرفٍ" pass bash scripts/checks/require-doc-update.sh origin/main HEAD
+git reset -q --hard HEAD~1
+
 # حارس انحدار 3 (M0-12): مصيدةُ SIGPIPE كانت **باقيةً** في `require-doc-update.sh`
 # عند فحصِ وجودِ TASK_LOG واللوحةِ في قائمةِ الملفّات (`printf | grep -Fxq`)، ولم يُعالَج
 # في M0-11 إلّا موضعٌ واحدٌ في الملفِ نفسِه. والقائمةُ صغيرةٌ فالعيبُ احتماليٌّ: حالةٌ
@@ -579,6 +598,97 @@ mb_live_drift() {
   rm -rf "$R"; [[ "$rc" == 1 ]]
 }
 t "حمايةٌ حيّةٌ انحرفت عن اللقطةِ تُرفَض" pass mb_live_drift
+
+# ── M0-29: الحارسُ لا يطمأنُّ حينَ تغيبُ الحمايةُ ────────────────────────
+# العيبُ المقيسُ 2026-09-13: قُيِسَ أنَّ `main` غيرُ محميٍّ (protected=false)،
+# وكانَ الحارسُ يخرُجُ `2` برسالةِ «الأبوابُ نجحت … ولم تُسألِ الواجهةُ حيّاً»
+# — والرسالةُ كاذبةٌ: الواجهةُ سُئلت وأجابت بالنفيِ. فهذه الحالاتُ تقُفلُ
+# الطريقَ: قياسٌ سلبيٌّ يُسقِطُ، ولا يُقبَلُ إلّا بسطرِ خطرٍ مالكٍ مؤرَّخٍ سارٍ.
+_mb_risk() { # $1=repo $2=id $3=status $4=review
+  mkdir -p "$1/docs/07-security"
+  printf 'RISK-BLOCK\n```text\n%s | sev:critical | owner:@t | opened:2026-09-13 | review:%s | status:%s | ref:docs/12-testing/ev/merge-405.json | حالةُ اختبارٍ\n```\n' \
+    "$2" "$4" "$3" > "$1/docs/07-security/RISK_REGISTER.md"
+}
+_mb_livechecks() { # $1=repo $2=protected(true|false) $3=accepted_risk(""=لا شيء) $4=raw
+python3 -c "
+import json,sys
+p=sys.argv[1]+'/docs/12-testing/MERGE_BLOCKING.json'; d=json.load(open(p,encoding='utf-8'))
+c={'measured_at':'2026-09-13T17:00:00Z','measured_from':'GET /branches/main','protected':sys.argv[2]=='true','raw':sys.argv[4]}
+if sys.argv[3]: c['accepted_risk']=sys.argv[3]
+d['live_checks']=[c]
+json.dump(d,open(p,'w',encoding='utf-8'),ensure_ascii=False)
+" "$1" "$2" "$3" "$4"; }
+
+mb_neg_no_risk() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false "" docs/12-testing/ev/merge-405.json
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "قياسٌ حيٌّ يقولُ protected=false بلا خطرٍ يقبلُه يُسقِطُ البوّابةَ" pass mb_neg_no_risk
+
+mb_neg_risk_absent() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-9999 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "إحالةٌ على خطرٍ ليسَ في السجلِّ تُسقِطُ" pass mb_neg_risk_absent
+
+mb_neg_risk_expired() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2000-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "مهلةُ الخطرِ المنقضيةُ تُسقِطُ البوّابةَ آليّاً" pass mb_neg_risk_expired
+
+mb_neg_risk_closed() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 closed 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "خطرٌ مُغلَقٌ لا يقبلُ غيابَ الحمايةِ" pass mb_neg_risk_closed
+
+mb_neg_dead_raw() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/nope.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "مرجعُ القياسِ الحيِّ الميتُ يُرفَض" pass mb_neg_dead_raw
+
+mb_neg_accepted() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 2 ]]
+}
+t "غيابٌ مقبولٌ بخطرٍ سارٍ يُعلَنُ جزئيّاً (2) ولا يُجمَّلُ نجاحاً" pass mb_neg_accepted
+
+mb_pos_protected() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" true "" docs/12-testing/ev/merge-405.json
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 2 ]]
+}
+t "قياسٌ حيٌّ موجبٌ (protected=true) لا يُسقِطُ" pass mb_pos_protected
+
+# وطلبُ قياسٍ حيٍّ مُلزِمٌ لطالبِه: ملفٌ مفقودٌ لا يُكافَأُ بتخطٍّ مُريحٍ.
+mb_live_missing_file() {
+  local R rc; R="$(_mb_repo)"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/nope.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "طُلِبَ سؤالٌ حيٌّ وملفُّه مفقودٌ — يُرفَض لا يُهمَل" pass mb_live_missing_file
+
+# وجوابُ خطأٍ من الواجهةِ يُسمَّى تعذُّرَ قياسٍ ويُسقِطُ — لا يُقرَأُ حمايةً.
+mb_live_error_payload() {
+  local R rc; R="$(_mb_repo)"
+  printf '%s\n' '{"message":"Upgrade to GitHub Pro or make this repository public to enable this feature.","status":"403"}' > "$R/live.json"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/live.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "جوابُ 403 لا يُقرَأُ حمايةً بل تعذُّرَ قياسٍ" pass mb_live_error_payload
 
 printf '\n\033[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)\033[0m\n'
 
@@ -1234,7 +1344,9 @@ printf '\n\033[1m[ط2] سلسلةُ توريدِ سيرِ العملِ — كل�
 # العطبُ الذي أوجبَ هذه الحالاتِ مقيسٌ: حرّاسُ CI يقرؤون `ci.yml` و`.gitlab-ci.yml`
 # **بالاسمِ**، فسيرُ عملٍ ثالثٌ أُضيفَ إلى `main` (`2d604c4`) يجري على كلِّ طلبِ دمجٍ
 # بسرِّ المستودعِ وبصلاحيّةِ كتابةٍ **ولم يَرَه حارسٌ واحدٌ**. فهذه الحالاتُ تُثبِتُ
-# أنّ الحارسَ الجديدَ يرى الثلاثةَ ويُسقِطُ كلَّ بابٍ من أبوابِه وحدَه.
+# أنّ الحارسَ الجديدَ يرى كلَّ سيرٍ في الشجرةِ ويُسقِطُ كلَّ بابٍ من أبوابِه وحدَه.
+# وقد حذفَ المالكُ ذلك السيرَ الثالثَ من `main` (`b700236`) بعدَ فتحِ الدفعةِ —
+# وهو **تأكيدٌ للعطبِ لا نفيٌ له**: ظهرَ يوماً واختفى ولم تُسجِّلْ أيَّهما بوّابةٌ.
 WFG="$T/scripts/checks/validate-workflow-supply-chain.sh"
 
 _wf_root() { # نسخةُ جذرٍ معزولةٌ: لا تُلمَسُ شجرةُ الحزمةِ ولا المستودعُ الأصليُّ
@@ -1254,11 +1366,19 @@ t "سيرُ عملٍ غيرُ مُعلَنٍ يُرفَض" fail _wf_new sneak.ym
 # (3) وإعلانٌ بلا ملفٍّ رفضٌ أيضاً — لا جردَ يُجمِّلُه سطرٌ ميتٌ.
 t "إعلانٌ يتيمٌ بلا ملفٍّ يُرفَض" fail _wf_rm roadmap.yml
 
-# (4) جوهرُ العطبِ: عودةُ الفعلِ الخارجيِّ إلى وسمٍ متحرِّكٍ.
+# (4) جوهرُ العطبِ: فعلٌ خارجيٌّ يدخلُ سيراً مُعلَناً بوسمٍ متحرِّكٍ.
+# (كانت هذه الحالاتُ تُطفِّرُ `gemini-review.yml`؛ وقد حذفَهُ المالكُ من `main`
+#  بالالتزامِ `b700236` بعدَ فتحِ هذه الدفعةِ. فلم تُحذَفِ الحالاتُ ولم تُخفَّفْ،
+#  بل حُوِّلَ الحقنُ إلى سيرٍ **قائمٍ** — والمقيسُ هو المقيسُ نفسُه: أيُّ فعلٍ
+#  خارجيٍّ يدخلُ أيَّ سيرٍ بلا بصمةٍ يُرَدُّ.)
 t "فعلُ طرفٍ ثالثٍ بوسمٍ متحرِّكٍ يُرفَض" fail \
-  _wf_sed 's|@ecc2434351ef76b0084b788a3d61ec7d3acf44f9 # v2|@v2|' gemini-review.yml
+  _wf_sed 's|      - uses: actions/checkout@v4|      - uses: sshnaidm/gemini-code-review-action@v2|' roadmap.yml
 # (5) وبصمةٌ بلا وسمٍ مقروءٍ تُرفَض: أربعونَ خانةً لا يُراجِعُها بشرٌ بلا اسمٍ.
-t "بصمةٌ بلا وسمٍ مقروءٍ تُرفَض" fail _wf_sed 's| # v2||' gemini-review.yml
+t "بصمةٌ بلا وسمٍ مقروءٍ تُرفَض" fail \
+  _wf_sed 's|      - uses: actions/checkout@v4|      - uses: sshnaidm/gemini-code-review-action@ecc2434351ef76b0084b788a3d61ec7d3acf44f9|' roadmap.yml
+# (5ب) والحالةُ الموجبةُ المقابلةُ: بصمةٌ + وسمٌ مقروءٌ تمرُّ — وإلّا كانَ الحارسُ مانعاً للعملِ لا للخطرِ.
+t "بصمةٌ بوسمٍ مقروءٍ تمرُّ" pass \
+  _wf_sed 's|      - uses: actions/checkout@v4|      - uses: sshnaidm/gemini-code-review-action@ecc2434351ef76b0084b788a3d61ec7d3acf44f9 # v2|' roadmap.yml
 # (6) ومرجعُ فرعٍ في فعلِ طرفٍ أوّلٍ أسوأُ من الوسمِ — يتغيَّرُ بكلِّ دفعةٍ.
 t "فعلُ طرفٍ أوّلٍ بمرجعِ فرعٍ يُرفَض" fail _wf_sed 's|actions/checkout@v4|actions/checkout@main|' roadmap.yml
 # (7) وصورةُ حاوٍ بوسمٍ لا ببصمةٍ.
@@ -1269,7 +1389,9 @@ t "صورةُ حاوٍ بلا بصمةٍ تُرفَض" fail \
 # أوّلُ صياغةِ الحارسِ أَلزمت بدايةَ السطرِ فمرَّت `on: [pull_request_target]` بـrc=0
 # — عيبٌ مقيسٌ في الحارسِ نفسِه كشفته هذه الحالةُ قبلَ الدفعِ.
 t "pull_request_target مضمَّناً في قائمةٍ يُرفَض" fail \
-  _wf_sed 's|^on: \[pull_request\]|on: [pull_request_target]|' gemini-review.yml
+  _wf_append roadmap.yml '
+on: [pull_request_target]
+'
 t "pull_request_target بصياغةِ كتلةٍ يُرفَض" fail _wf_append roadmap.yml '
 on:
   pull_request_target:
@@ -2131,6 +2253,80 @@ printf 'export const schema2 = 2;\n' >> "$M_DIFF2/services/svc-b/src/db/schema.t
 ( cd "$M_DIFF2" && git add -A && git commit -qm "unenrolled schema change" )
 t "تغييرُ مخططٍ في غيرِ منتظِمةٍ يمرّ (تدرُّجٌ معلنٌ لا رفضٌ)" pass \
   bash -c 'cd "$0" && bash scripts/checks/validate-migrations.sh HEAD~1 HEAD' "$M_DIFF2"
+
+printf '\n\033[1m[ن] حتميّةُ الحرّاسِ — لا سباقَ إشارةٍ يُقرَأُ حكماً (RISK-0037)\033[0m\n'
+# **العطبُ المقيسُ:** `printf '%s\n' "${ARR[@]}" | grep -qxF "$x"` تحتَ `pipefail`
+# يرفضُ عضويّةً **موجودةً** حينَ يخرجُ `grep` عندَ أوّلِ تطابقٍ فيموتُ `printf`
+# بـ`SIGPIPE` فتصيرُ حالةُ الأنبوبِ 141. مقيساً بـ300 إعادةٍ: 9 رفضاتٍ كاذبةٍ
+# للمقارنةِ الواحدةِ · 0 من 300 بلا أنبوبٍ. وقد أسقطَ دفعةَ M1-04 مرّتَينِ على
+# شفرةٍ ووثائقَ لم يتغيَّرْ فيهما حرفٌ.
+#
+# **ولمَ لا يُبرهَنُ العطبُ باحتمالٍ هنا:** حالةٌ تنجحُ 99.8% من المرّاتِ هي عينُ
+# ما نُعالجُه. فيُبرهَنُ **حتميّاً**: مُنتِجٌ يكتبُ ميغابايتاتٍ (200 ألفِ سطرٍ)
+# و`grep` يخرجُ عندَ السطرِ الأوّلِ — فالكتابةُ في أنبوبٍ مُغلَقٍ مؤكَّدةٌ لا
+# مُحتملةٌ، والحالةُ تُسقِطُ في كلِّ تشغيلٍ أو لا تُسقِطُ أبداً.
+GP="$REPO_ROOT/scripts/checks/validate-guard-pipelines.sh"
+
+# **لمَ يُركَّبُ الأنبوبُ حرفاً في كلِّ لقمةٍ أدناهُ:** حارسُ الأنابيبِ يفحصُ
+# `scripts/**/*.sh` **كلَّها وهذا الملفُّ منها** — ولا يُستثنى ملفٌّ بالاسمِ، فإنّ
+# استثناءَ ملفٍّ يفتحُ باباً لاستثناءِ غيرِه. فتُبنى اللقماتُ المعيبةُ بتركيبِ
+# الحرفِ، فتبقى **معيبةً وقتَ التشغيلِ** — وهو موضعُ البرهانِ — بلا أن تُدخِلَ
+# النمطَ إلى نصٍّ يُشغَّلُ في المستودعِ.
+PIPE_CH='|'
+
+t "حارسُ الأنابيبِ يمرُّ على نصوصِ المستودعِ كلِّها" pass bash "$GP" "$REPO_ROOT"
+
+# طفرةٌ: النمطُ يعودُ في نصٍّ جديدٍ — وهو بعينِه ما وقعَ ثلاثَ مرّاتٍ
+GP_BAD=/tmp/gov_gp_bad; rm -rf "$GP_BAD"; mkdir -p "$GP_BAD/scripts/checks"
+printf '#!/usr/bin/env bash\nset -uo pipefail\nA=(x y)\nprintf "%%s\\n" "${A[@]}" %s grep -qxF "$1" || echo no\n' \
+  "$PIPE_CH" > "$GP_BAD/scripts/checks/bad.sh"
+t "عودةُ النمطِ في نصِّ حارسٍ جديدٍ تُسقِط" fail bash "$GP" "$GP_BAD"
+
+# وصيغةُ `-Fxq` (ترتيبٌ آخرُ للأعلامِ) لا تُفلِتُ: الحارسُ يفحصُ المعنى لا الحرف
+GP_BAD2=/tmp/gov_gp_bad2; rm -rf "$GP_BAD2"; mkdir -p "$GP_BAD2/scripts/checks"
+printf '#!/usr/bin/env bash\nset -uo pipefail\ncat /etc/hostname %s grep -Fxq "x"\n' \
+  "$PIPE_CH" > "$GP_BAD2/scripts/checks/bad2.sh"
+t "ترتيبٌ آخرُ للأعلامِ (-Fxq) لا يُفلِتُ من الحارسِ" fail bash "$GP" "$GP_BAD2"
+
+# والتعليلُ المكتوبُ لعطبٍ مُعالَجٍ يذكرُ النمطَ نصّاً — ومنعُ ذكرِه يمحو الدليلَ
+GP_CMT=/tmp/gov_gp_cmt; rm -rf "$GP_CMT"; mkdir -p "$GP_CMT/scripts/checks"
+printf '#!/usr/bin/env bash\nset -uo pipefail\n# عُولِجَ: كانَ printf ... %s grep -qxF ... فيرفضُ الصحيحَ (RISK-0037)\ntrue\n' \
+  "$PIPE_CH" > "$GP_CMT/scripts/checks/ok.sh"
+t "ذكرُ النمطِ في تعليلٍ مكتوبٍ يمرُّ (لا يُمحى دليلٌ سابقٌ)" pass bash "$GP" "$GP_CMT"
+
+# ── برهانُ العطبِ والرقعةِ حتميّاً، لا احتماليّاً ───────────────────────────
+GP_P=/tmp/gov_gp_proof; rm -rf "$GP_P"; mkdir -p "$GP_P"
+printf 'set -uo pipefail\nmapfile -t A < <(seq 1 200000)\nprintf "%%s\\n" "${A[@]}" %s grep -qxF "1"\n' \
+  "$PIPE_CH" > "$GP_P/old-array.sh"
+cat > "$GP_P/new-array.sh" <<'SH'
+set -uo pipefail
+mapfile -t A < <(seq 1 200000)
+has_exact() { local n="$1"; shift; local i; for i in "$@"; do [[ "$i" == "$n" ]] && return 0; done; return 1; }
+has_exact "1" "${A[@]}"
+SH
+printf 'set -uo pipefail\nBIG="$(seq 1 200000)"\nprintf "%%s" "$BIG" %s grep -q "^1$"\n' \
+  "$PIPE_CH" > "$GP_P/old-text.sh"
+cat > "$GP_P/new-text.sh" <<'SH'
+set -uo pipefail
+BIG="$(seq 1 200000)"
+grep -q '^1$' <<< "$BIG"
+SH
+t "النمطُ القديمُ يرفضُ عضويّةً موجودةً (سباقُ SIGPIPE حتميّاً)" fail bash "$GP_P/old-array.sh"
+t "مقارنةُ الغلافِ (has_exact) تُثبِتُ العضويّةَ نفسَها" pass bash "$GP_P/new-array.sh"
+t "أنبوبُ نصٍّ إلى grep -q يرفضُ مُطابِقاً موجوداً" fail bash "$GP_P/old-text.sh"
+t "السلسلةُ الواردةُ (<<<) تُثبِتُ المُطابِقَ نفسَه" pass bash "$GP_P/new-text.sh"
+
+# ── وثباتُ الحرّاسِ الثلاثةِ المُعالَجةِ: 40 تشغيلاً بلا تقلّب ──────────────
+# لا يُقاسُ الإصلاحُ بمرورِ حالةٍ واحدةٍ: العطبُ احتماليٌّ فالحالةُ الواحدةُ تمرُّ
+# بالعطبِ أيضاً في 97% من المرّاتِ. والعددُ 40 مُختارٌ لأنّ احتمالَ بقاءِ العطبِ
+# مُختفياً فيهِ ≈ 0.03% لكلِّ مقارنةٍ.
+sac_stable=1
+for _ in $(seq 1 40); do _sac "$S_OK" >/dev/null 2>&1 || sac_stable=0; done
+t "حارسُ التغطيةِ يقبلُ سجلّاً صادقاً في 40 تشغيلاً بلا تقلّب" pass test "$sac_stable" = "1"
+
+mig_stable=1
+for _ in $(seq 1 40); do _mig "$M_OK" >/dev/null 2>&1 || mig_stable=0; done
+t "حارسُ الترحيلاتِ يقبلُ جذراً صحيحاً في 40 تشغيلاً بلا تقلّب" pass test "$mig_stable" = "1"
 
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ

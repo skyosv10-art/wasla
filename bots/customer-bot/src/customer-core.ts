@@ -46,6 +46,7 @@ import type { Pool } from "pg";
 
 import {
   HttpCustomerNegotiations,
+  CUSTOMER_BOT_NEGOTIATIONS_SCOPES,
   UnconfiguredCustomerNegotiations,
 } from "./infrastructure/http-negotiations.js";
 import type { CustomerNegotiationsPort } from "./negotiation-flows.js";
@@ -308,5 +309,21 @@ export function buildInMemoryCustomerFlows(): CustomerFlowsPort {
 /** The missing negotiation URL remains an explicit dependency failure, never an empty list. */
 export function buildCustomerNegotiations(env: CustomerFlowsEnv): CustomerNegotiationsPort {
   const baseUrl = env.NEGOTIATIONS_SERVICE_URL?.trim();
-  return baseUrl ? new HttpCustomerNegotiations({ baseUrl }) : new UnconfiguredCustomerNegotiations();
+  if (!baseUrl) return new UnconfiguredCustomerNegotiations();
+  // M1-04 (المراجعةُ 26/N): حدُّ المفاوضاتِ صارَ مفروضاً، فالنداءُ موقَّعٌ
+  // بصلاحيّاتِ القراءةِ والقرارِ وحدَها. والمفاتيحُ من البيئةِ بلا قيمةٍ
+  // افتراضيّةٍ: نشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يرفعُ عندَ أوّلِ نداءٍ
+  // بوصفِهِ عطلَ تركيبٍ عندَنا، لا 401 يُقرأُ بوصفِهِ عطلَ الطرفِ الآخرِ.
+  return new HttpCustomerNegotiations({
+    baseUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "customer-bot",
+      audience: "negotiations",
+      keys: keyRegistryFromEnv({
+        WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+        WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+      }),
+      scopes: CUSTOMER_BOT_NEGOTIATIONS_SCOPES,
+    }),
+  });
 }

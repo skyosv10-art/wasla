@@ -61,7 +61,16 @@ import {
   type MarketplaceStores,
   type OutboxRecord,
 } from "@wasla/marketplace-service/db";
-import { createMarketplaceApp } from "@wasla/marketplace-service/http";
+import {
+  MARKETPLACE_SCOPES,
+  MARKETPLACE_SERVICE_AUDIENCE,
+  createMarketplaceApp,
+} from "@wasla/marketplace-service/http";
+import {
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+  createServiceRequestSigner,
+} from "@wasla/service-auth";
 import type { Pool } from "pg";
 
 /**
@@ -117,6 +126,45 @@ export interface GateContext {
 }
 
 /**
+ * مادّةُ هويّةِ الخدمةِ للبوّابةِ (`M1-04` · المراجعةُ 29/N).
+ *
+ * **البوّابةُ تفرضُ كما يفرضُ الإنتاجُ** — سرٌّ اختباريٌّ واحدٌ، لا فرضٌ مُعطَّلٌ.
+ * وبوّابةٌ تُرفَعُ بحدٍّ مفتوحٍ كانت ستُثبتُ عقداً لا يُشبهُ ما يركضُ، فتمرُّ
+ * وتمرُّ ثمَّ يُرَدُّ أوّلُ نداءٍ إنتاجيٍّ `401` بلا أن يقولَ ذلكَ أحدُ اختبارٍ.
+ *
+ * وإدارةُ المفاتيحِ لها سِندُها في `packages/service-auth`، فما يُثبَتُ هنا
+ * **السلكُ**: أنَّ النداءَ الموقَّعَ يمرُّ وأنَّ غيرَ الموقَّعِ يُرَدُّ — والثانيةُ
+ * مُثبَتةٌ في `__tests__/service-identity.e2e.test.ts` بنداءٍ عريانٍ لا يمرُّ
+ * على `call` أدناهُ.
+ */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+export function gateServiceAuthKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
+/**
+ * مُوقِّعُ البوّابةِ — بكلِّ صلاحيّاتِ الحدِّ لأنّها تُمثّلُ سلسلةَ النداءِ كاملةً،
+ * أمّا العميلُ الإنتاجيُّ فيوقِّعُ بصلاحيّاتِهِ المُعلَنةِ وحدَها
+ * (`DELIVERY_MARKETPLACE_SCOPES`).
+ *
+ * والمسارُ يُوقَّعُ **بلا سلسلةِ استعلامٍ** لأنَّ الربطَ لا يشملُها
+ * ([ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md) §4 ·
+ * `RISK-0026`)، وقطعُها هنا صراحةً لا ضمناً كي لا يُقرأَ الرفضُ عطلاً في
+ * البوّابةِ ويُضيَّعَ الوقتُ في غيرِ موضعِهِ.
+ */
+const signGateRequest = createServiceRequestSigner({
+  serviceName: "e2e-harness",
+  audience: MARKETPLACE_SERVICE_AUDIENCE,
+  keys: gateServiceAuthKeys(),
+  scopes: Object.values(MARKETPLACE_SCOPES),
+});
+
+/**
  * يرفع الخدمةَ بتركيبِها الإنتاجيِّ: `createMarketplaceApp` في نمطِ `postgres` على مِقبضِ
  * `node:http` حقيقيّ. ولا `probe` ولا مُضاعِفَ مخزنٍ — البوّابةُ تسأل ما سيجري في الإنتاج.
  */
@@ -138,6 +186,11 @@ export async function startGate(): Promise<GateContext> {
       catalog: new MarketplaceCatalogService(deps),
     },
     logger: false,
+    // البوّابةُ تفرضُ الهويّةَ كما يفرضُها حدُّ التشغيلِ — لا استثناءَ للسِند.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await app.listen({ port: 0, host: "127.0.0.1" });
   const { port } = app.server.address() as AddressInfo;
@@ -198,10 +251,13 @@ export async function call(
     readonly traceId?: string;
   },
 ): Promise<HttpResult> {
+  const queryAt = init.path.indexOf("?");
+  const signedPath = queryAt < 0 ? init.path : init.path.slice(0, queryAt);
   const response = await fetch(`${gate.baseUrl}${init.path}`, {
     method: init.method,
     headers: {
       "content-type": "application/json",
+      ...signGateRequest(init.method.toUpperCase(), signedPath),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },

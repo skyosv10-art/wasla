@@ -33,7 +33,7 @@ import { MarketplaceProductService } from "../app/products.js";
 import { MarketplaceStoreService } from "../app/stores.js";
 import { MarketplaceUnitOfWork } from "../db/unit-of-work.js";
 import type { Clock } from "../domain/time.js";
-import { createMarketplaceApp } from "../http/app.js";
+import { createSignedMarketplaceApp } from "./service-identity-support.js";
 import {
   MEMBER,
   MODERATOR,
@@ -91,7 +91,7 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
     await seedLeafCategory(pg.stores, CATEGORY);
     const uow = new MarketplaceUnitOfWork(pg.db);
     const deps = { uow, clock: fixedClock };
-    app = createMarketplaceApp({
+    app = createSignedMarketplaceApp({
       mode: "postgres",
       services: {
         stores: new MarketplaceStoreService(deps),

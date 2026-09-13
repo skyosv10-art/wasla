@@ -42,6 +42,12 @@ import {
 import { marketplaceUnavailable } from "../domain/errors.js";
 import { sendMarketplaceError } from "./errors.js";
 import {
+  MARKETPLACE_SCOPES,
+  registerServiceIdentity,
+  type MarketplaceRouteConfig,
+  type MarketplaceServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   toInventoryAdjustmentResource,
   toInventoryReadResponse,
   toProductResource,
@@ -84,6 +90,19 @@ export interface MarketplaceAppOptions {
   readonly services?: MarketplaceServices;
   readonly mode?: "postgres" | "memory";
   readonly logger?: boolean;
+  /**
+   * هويّةُ الخدمةِ — **إلزاميّةٌ بلا قيمةٍ افتراضيّةٍ** (`M1-04` · المراجعةُ 29/N).
+   *
+   * وهذا الحقلُ وحدَه هوَ ما نزعَ الافتراضَ عن `options` كلِّها: كانت
+   * `createMarketplaceApp()` تُستدعى بلا وسائطَ، فكانَ يكفي نسيانُ سطرٍ في
+   * تركيبٍ جديدٍ لتقومَ خدمةٌ **مفتوحةُ الحدِّ** تُصدِّقُ كلَّ منادٍ. وقيمةٌ
+   * افتراضيّةٌ هنا — ولو «آمنةٌ» — كانت ستجعلَ نشراً بلا
+   * `WASLA_SERVICE_AUTH_KEYS` يعملُ بهدوءٍ، والهدوءُ هوَ العطبُ.
+   *
+   * فلا افتراضَ: نشرٌ ناقصُ المفاتيحِ **يسقطُ عندَ الإقلاعِ** فيُسمّى العطبُ في
+   * موضعِه (`ADR-020` · `ADR-022`).
+   */
+  readonly serviceIdentity: MarketplaceServiceIdentityOptions;
 }
 
 /**
@@ -93,7 +112,7 @@ export interface MarketplaceAppOptions {
  * صادقةٍ بدلَ أن تسقط عند الإقلاع. ومنسّقُ حاوياتٍ يرى وعاءً يسقط ويعيد تشغيلَه بلا نهايةٍ
  * لا يُعطي أحداً السببَ؛ ووعاءٌ قائمٌ يقول `unavailable` يُعطيه في أوّلِ نداء.
  */
-export function createMarketplaceApp(options: MarketplaceAppOptions = {}): FastifyInstance {
+export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyInstance {
   const app = Fastify({
     logger: options.logger ?? false,
     requestIdHeader: "x-request-id",
@@ -148,6 +167,34 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
   }
 
   /**
+   * تصنيفُ المساراتِ (`M1-04` · المراجعةُ 29/N).
+   *
+   * `/health` وحدَهُ مفتوحٌ، وهوَ مفتوحٌ **عن قرارٍ لا عن سهوٍ**: منسّقُ
+   * الحاوياتِ ومسبارُ التسليمِ يقرآنِهِ قبلَ أن يملكا رمزاً، وجاهزيّةٌ تُجيبُ
+   * `401` تُوقِفُ النشرَ لا المهاجمَ. وما يُعادُ فيهِ محصورٌ مقيساً: `status`
+   * و`mode` — **لا مُعرِّفَ متجرٍ ولا منتجٍ ولا رصيدَ مخزونٍ**.
+   *
+   * وكلُّ ما بعدَهُ مُغلَقٌ بصلاحيّةٍ مُعلَنةٍ. **ومسارٌ يُسجَّلُ بلا تصنيفٍ
+   * يُسقِطُ الإقلاعَ** — فالمسارُ الثاني والعشرونَ، إن أُضيفَ غداً، لا يمرُّ
+   * صامتاً.
+   */
+  const OPEN: MarketplaceRouteConfig = { serviceIdentity: "open" };
+  const scoped = (...scopes: readonly string[]): MarketplaceRouteConfig => ({
+    serviceIdentity: { scopes },
+  });
+
+  /**
+   * قبلَ أوّلِ مسارٍ وقبلَ خطّافِ مفتاحِ التفرُّدِ أدناهُ — والترتيبُ مقصودٌ
+   * مرّتَين:
+   *
+   * 1. حاجزُ التصنيفِ عندَ `onRoute` يرى ما يُسجَّلُ **بعدَهُ** لا ما قبلَهُ.
+   * 2. خطّافاتُ `onRequest` تجري بترتيبِ تسجيلِها، فمنادٍ **بلا هويّةٍ** يُرَدُّ
+   *    `401` قبلَ أن يُقالَ لهُ «مفتاحُ تفرُّدِكَ ناقصٌ». وعكسُ الترتيبِ كانَ
+   *    يُعطي مجهولاً خريطةَ شروطِ الحدِّ نداءً بعدَ نداءٍ.
+   */
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  /**
    * حدُّ الطلبِ يُفحَص **قبل** كلِّ شيء — لا في وسطِ معالجٍ.
    *
    * وترتيبُ الفحصِ ليس تفصيلاً: خدمةٌ بلا قاعدةٍ كانت تُجيب `503` على `POST` ناقصِ
@@ -172,7 +219,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- الصحّةُ والتصنيفات -----------------------------------------------------
 
-  app.get("/health", async (_request, reply): Promise<FastifyReply> => {
+  app.get("/health", { config: OPEN }, async (_request, reply): Promise<FastifyReply> => {
     if (options.services === undefined) {
       return reply.status(200).send({ status: "unavailable", mode });
     }
@@ -180,7 +227,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(200).send({ status: health.status, mode });
   });
 
-  app.get("/categories", async (request, reply): Promise<FastifyReply> => {
+  app.get("/categories", { config: scoped(MARKETPLACE_SCOPES.categoryRead) }, async (request, reply): Promise<FastifyReply> => {
     const query = parseCategoryQuery(request.query);
     const { catalog } = deps();
     const index = await catalog.categorySlugIndex();
@@ -192,7 +239,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- المتاجر ---------------------------------------------------------------
 
-  app.post("/stores", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores", { config: scoped(MARKETPLACE_SCOPES.storeWrite) }, async (request, reply): Promise<FastifyReply> => {
     const input = parseRegisterStore(request.body);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
@@ -206,7 +253,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(201).send(toStoreResource(store, index));
   });
 
-  app.get("/stores", async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores", { config: scoped(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
     const query = parseStoreQuery(request.query);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
@@ -217,7 +264,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     });
   });
 
-  app.get("/stores/:storeSlug", async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores/:storeSlug", { config: scoped(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
@@ -225,7 +272,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(200).send(toStoreResource(store, index));
   });
 
-  app.post("/stores/:storeSlug/review-requests", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/review-requests", { config: scoped(MARKETPLACE_SCOPES.storeReviewRequest) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseReviewRequest(request.body);
     const { stores } = deps();
@@ -240,7 +287,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(201).send(toStoreReviewResource(outcome.review, storeSlug));
   });
 
-  app.post("/stores/:storeSlug/decisions", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/decisions", { config: scoped(MARKETPLACE_SCOPES.storeReviewDecide) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseStoreDecision(request.body);
     const { stores } = deps();
@@ -255,7 +302,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(201).send(toStoreReviewResource(outcome.review, storeSlug));
   });
 
-  app.get("/stores/:storeSlug/reviews", async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores/:storeSlug/reviews", { config: scoped(MARKETPLACE_SCOPES.storeReviewRead) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const query = parsePageQuery(request.query);
     const { stores } = deps();
@@ -271,14 +318,14 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- الطاقم ---------------------------------------------------------------
 
-  app.get("/stores/:storeSlug/staff", async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores/:storeSlug/staff", { config: scoped(MARKETPLACE_SCOPES.staffRead) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const { stores } = deps();
     const staff = await stores.listStaff(storeSlug);
     return reply.status(200).send({ staff: staff.map(toStoreStaffResource) });
   });
 
-  app.post("/stores/:storeSlug/staff", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/staff", { config: scoped(MARKETPLACE_SCOPES.staffWrite) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseAddStaff(request.body);
     const { stores } = deps();
@@ -295,6 +342,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   app.delete(
     "/stores/:storeSlug/staff/:memberPublicId",
+    { config: scoped(MARKETPLACE_SCOPES.staffWrite) },
     async (request, reply): Promise<FastifyReply> => {
       const storeSlug = pathParam(request.params, "storeSlug");
       const memberPublicId = pathParam(request.params, "memberPublicId");
@@ -315,7 +363,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- المنتجات -------------------------------------------------------------
 
-  app.get("/stores/:storeSlug/products", async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores/:storeSlug/products", { config: scoped(MARKETPLACE_SCOPES.productRead) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const query = parseProductQuery(request.query);
     const { products, catalog } = deps();
@@ -327,7 +375,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     });
   });
 
-  app.post("/stores/:storeSlug/products", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/products", { config: scoped(MARKETPLACE_SCOPES.productWrite) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseCreateProduct(request.body);
     const { products, catalog } = deps();
@@ -343,7 +391,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(201).send(toProductResource(view, index));
   });
 
-  app.get("/products/:productId", async (request, reply): Promise<FastifyReply> => {
+  app.get("/products/:productId", { config: scoped(MARKETPLACE_SCOPES.productRead) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const { products, catalog } = deps();
     const index = await catalog.categorySlugIndex();
@@ -351,7 +399,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(200).send(toProductResource(view, index));
   });
 
-  app.post("/products/:productId/publish", async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/publish", { config: scoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseProductAction(request.body);
     const { products, catalog } = deps();
@@ -367,7 +415,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(200).send(toProductResource(view, index));
   });
 
-  app.post("/products/:productId/archive", async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/archive", { config: scoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseProductAction(request.body);
     const { products, catalog } = deps();
@@ -383,7 +431,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(200).send(toProductResource(view, index));
   });
 
-  app.post("/products/:productId/decisions", async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/decisions", { config: scoped(MARKETPLACE_SCOPES.productReviewDecide) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseProductDecision(request.body);
     const { products } = deps();
@@ -400,7 +448,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- المخزون --------------------------------------------------------------
 
-  app.get("/products/:productId/inventory", async (request, reply): Promise<FastifyReply> => {
+  app.get("/products/:productId/inventory", { config: scoped(MARKETPLACE_SCOPES.inventoryRead) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const query = parseInventoryQuery(request.query);
     const { products } = deps();
@@ -412,7 +460,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     );
   });
 
-  app.post("/products/:productId/inventory", async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/inventory", { config: scoped(MARKETPLACE_SCOPES.inventoryAdjust) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseAdjustInventory(request.body);
     const { products } = deps();
@@ -429,7 +477,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   // --- الحجزُ والإفراجُ (الطور 13) ------------------------------------------------
 
-  app.post("/stores/:storeSlug/inventory/reserve", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/inventory/reserve", { config: scoped(MARKETPLACE_SCOPES.inventoryReserve) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseReservation(request.body);
     const { products } = deps();
@@ -444,7 +492,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
     return reply.status(201).send(toReservationResponse(outcome));
   });
 
-  app.post("/stores/:storeSlug/inventory/release", async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/inventory/release", { config: scoped(MARKETPLACE_SCOPES.inventoryRelease) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseReservation(request.body);
     const { products } = deps();
@@ -461,3 +509,15 @@ export function createMarketplaceApp(options: MarketplaceAppOptions = {}): Fasti
 
   return app;
 }
+
+export {
+  MARKETPLACE_SCOPES,
+  MARKETPLACE_SERVICE_AUDIENCE,
+  registerServiceIdentity,
+} from "./service-identity.js";
+export type {
+  MarketplaceRouteConfig,
+  MarketplaceRouteIdentity,
+  MarketplaceServiceDenialBody,
+  MarketplaceServiceIdentityOptions,
+} from "./service-identity.js";

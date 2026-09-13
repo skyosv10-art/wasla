@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@wasla/contracts-marketplace": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
     "pg": "^8.23.0"

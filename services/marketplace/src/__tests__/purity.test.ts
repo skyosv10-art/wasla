@@ -26,10 +26,17 @@
  * - `REAL_CLOCK_FILES = ["app/runtime.ts"]` — **ملفٌ واحدٌ** فيه `new Date()`، وهو تنفيذُ
  *   `Clock` الوحيد في الخدمة. وساعةٌ تُقرأ في خدمةِ تطبيقٍ مباشرةً كانت ستجعل كلَّ اختبارٍ
  *   يعتمد على ساعةِ المُشغّل، والحقنُ يجعل الزمنَ وسيطاً يُثبَّت في الاختبار.
- * - `HTTP_AWARE_FILES = ["http/app.ts", "http/errors.ts"]` — الأوّلُ يبني الخادمَ ويُسجّل
- *   المسارات، والثاني يستورد `FastifyReply` **نوعاً وحدَه**. و`http/server.ts` ليس فيها: هو
- *   يستورد `createMarketplaceApp` ولا يعرف الإطارَ نصّاً — فالقائمةُ محسوبةٌ من المصدرِ لا
- *   من التوقّع.
+ * - `HTTP_AWARE_FILES` — ثلاثةُ ملفاتٍ: `http/app.ts` يبني الخادمَ ويُسجّل المسارات،
+ *   و`http/errors.ts` يستورد `FastifyReply` **نوعاً وحدَه**، و`http/service-identity.ts`
+ *   يستورد `FastifyInstance` **نوعاً وحدَه** ليُركّب وسيطَ الهويّة (`M1-04` · المراجعةُ 29/N).
+ *   و`http/server.ts` ليس فيها: هو يستورد `createMarketplaceApp` ولا يعرف الإطارَ نصّاً —
+ *   فالقائمةُ محسوبةٌ من المصدرِ لا من التوقّع.
+ *
+ *   **والتبعيّةُ الخامسةُ دخلت في المراجعةِ 29/N بقرارٍ موثَّق:** `@wasla/service-auth` —
+ *   وهي حزمةُ المستودعِ التي تحملُ عقدَ الرمزِ وحاجزَ الإعادةِ والوسيطَ المشترك. ولمَ
+ *   تبعيّةٌ لا نسخةٌ محليّةٌ من الفحص: نسخةٌ محليّةٌ كانت ستصير **مصدرَ حقيقةٍ ثانياً**
+ *   لصيغةِ الرمزِ، فيُصلَح عيبٌ في حدٍّ ويبقى في سبعة. وليست عميلَ HTTP ولا مكتبةَ
+ *   تحقّقٍ ولا مُجدولاً — أي أنّها لا تُخالف ما تحرسه هذه القائمة أصلاً.
  * - `ENV_READING_FILES` صارت ملفَّين في 4/6: `db/migrate-cli.ts` و`http/server.ts`، وهذا
  *   الحدُّ الأقصى المُعلَن.
  * - وقد كانت القائمتان الأولى والثانية فارغتَين قبل 4/6: لا إطارَ HTTP قبلها، ولا
@@ -127,7 +134,11 @@ const DB_AWARE_FILES: readonly string[] = [
   "db/schema.ts",
   "db/staff.ts",
 ];
-const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts"];
+const HTTP_AWARE_FILES: readonly string[] = [
+  "http/app.ts",
+  "http/errors.ts",
+  "http/service-identity.ts",
+];
 
 /**
  * ملفاتُ الاستمراريّةِ المُعلَنةُ خارجَ `domain/` — مراجعةُ 3/6 وحدَها، ولا ملفَّ `app/`
@@ -176,6 +187,7 @@ const HTTP_FILES: readonly string[] = [
   "http/mappers.ts",
   "http/requests.ts",
   "http/server.ts",
+  "http/service-identity.ts",
 ];
 
 /**
@@ -344,6 +356,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
       .dependencies;
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
       "@wasla/contracts-marketplace",
+      "@wasla/service-auth",
       "drizzle-orm",
       "fastify",
       "pg",

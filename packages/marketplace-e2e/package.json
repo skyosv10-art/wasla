@@ -13,6 +13,7 @@
     "@types/pg": "^8.23.1",
     "@wasla/contracts-marketplace": "workspace:*",
     "@wasla/marketplace-service": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "pg": "^8.23.0",
     "vitest": "^2.1.0"
   }

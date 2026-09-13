@@ -15,7 +15,7 @@ import { describe, expect, it } from "vitest";
 
 import { MARKETPLACE_SERVICE_PORT } from "@wasla/contracts-marketplace";
 
-import { createMarketplaceApp } from "../http/app.js";
+import { createSignedMarketplaceApp } from "./service-identity-support.js";
 
 const OWNER = "WS-1000000001";
 const MEMBER = "WS-1000000003";
@@ -26,7 +26,7 @@ const KEY = "idem-0000000001";
 
 function degradedApp() {
   // لا `services`: هذا هو **نفسُ** ما يبنيه `http/server.ts` حين تغيب `DATABASE_URL`.
-  return createMarketplaceApp();
+  return createSignedMarketplaceApp();
 }
 
 /** الترويساتُ الكاملةُ لكتابةٍ مطابقةٍ للعقد — حتى يكون سببُ `503` هو العجزُ لا الحدّ. */

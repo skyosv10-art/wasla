@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0150 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-enforce-marketplace-boundary | services/marketplace/,packages/marketplace-e2e/,packages/delivery-e2e/,pnpm-lock.yaml,docs/07-security/,docs/12-testing/ | 2026-09-13 | 2026-09-27 | Active |
 | CLM-0149 | M0-29 | @uxxxu (agent:perplexity-computer) | chore/m0-29-merge-blocking-guard-truthfulness | scripts/checks/,docs/07-security/,docs/12-testing/ | 2026-09-13 | 2026-09-27 | Active |
 | CLM-0148 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-enforce-negotiations-boundary | services/negotiations/,bots/customer-bot/,bots/driver-bot/,packages/negotiation-e2e/,pnpm-lock.yaml,docs/07-security/,docs/12-testing/ | 2026-09-13 | 2026-09-27 | Active |
 | CLM-0147 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-enforce-negotiations-boundary | services/negotiations/,bots/customer-bot/,bots/driver-bot/,packages/negotiation-e2e/,docs/07-security/,docs/12-testing/ | 2026-09-13 | 2026-09-27 | Released (أُطلِقَ لإعادةِ الحجزِ بنطاقٍ أوسعَ يشملُ `pnpm-lock.yaml` — WORK_CLAIM_RULE §6 · سابقةُ CLM-0113⇒0114 · انظر الحاشيةَ أدناه) |

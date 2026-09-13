@@ -41,10 +41,15 @@ import {
   type DriverRunner,
   type DriverSharedDeps,
 } from "@wasla/drivers-service";
+import {
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 import type { Pool } from "pg";
 
 import {
   HttpDriverNegotiations,
+  DRIVER_BOT_NEGOTIATIONS_SCOPES,
   UnconfiguredDriverNegotiations,
 } from "./infrastructure/http-negotiations.js";
 import type { DriverNegotiationsPort } from "./negotiation-flows.js";
@@ -319,5 +324,21 @@ export function buildDriverFlowsOver(runner: DriverRunner): DriverFlowsPort {
 /** A missing URL means this bot cannot know the negotiation state; it must say so. */
 export function buildDriverNegotiations(env: DriverFlowsEnv): DriverNegotiationsPort {
   const baseUrl = env.NEGOTIATIONS_SERVICE_URL?.trim();
-  return baseUrl ? new HttpDriverNegotiations({ baseUrl }) : new UnconfiguredDriverNegotiations();
+  if (!baseUrl) return new UnconfiguredDriverNegotiations();
+  // M1-04 (المراجعةُ 26/N): حدُّ المفاوضاتِ صارَ مفروضاً، فالنداءُ موقَّعٌ
+  // بصلاحيّاتِ القراءةِ والقرارِ وحدَها. والمفاتيحُ من البيئةِ بلا قيمةٍ
+  // افتراضيّةٍ: نشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يرفعُ عندَ أوّلِ نداءٍ
+  // بوصفِهِ عطلَ تركيبٍ عندَنا، لا 401 يُقرأُ بوصفِهِ عطلَ الطرفِ الآخرِ.
+  return new HttpDriverNegotiations({
+    baseUrl,
+    signRequest: createServiceRequestSigner({
+      serviceName: "driver-bot",
+      audience: "negotiations",
+      keys: keyRegistryFromEnv({
+        WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+        WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+      }),
+      scopes: DRIVER_BOT_NEGOTIATIONS_SCOPES,
+    }),
+  });
 }

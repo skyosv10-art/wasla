@@ -65,6 +65,12 @@ import { runTick } from "../use-cases/run-tick.js";
 
 import { sendNegotiationError } from "./errors.js";
 import {
+  registerServiceIdentity,
+  NEGOTIATIONS_SCOPES,
+  type NegotiationsRouteConfig,
+  type NegotiationsServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   assertNoBody,
   assertRequestIdLength,
   requireIdempotencyKey,
@@ -102,6 +108,22 @@ export interface CreateNegotiationAppOptions {
   readonly health?: NegotiationHealthDescriptor;
   readonly tickState?: NegotiationTickState;
   readonly logger?: boolean;
+  /**
+   * فرضُ هويّةِ الخدمةِ — **إلزاميٌّ** (`M1-04`). ولا قيمةَ افتراضيّةَ لهُ عن
+   * قصدٍ: حدٌّ يُقلِعُ بلا مفاتيحَ حدٌّ مفتوحٌ، والافتراضُ الصامتُ هوَ الذي
+   * يجعلُ حدّاً يُظَنُّ مفروضاً وهوَ مكشوفٌ.
+   */
+  readonly serviceIdentity: NegotiationsServiceIdentityOptions;
+}
+
+/**
+ * `/health` وحدَهُ مفتوحٌ: لا يقرأُ بياناتٍ مجاليّةً ولا يكتبُها، ومِسبارُ
+ * حياةٍ لا يستطيعُ أن يحملَ رمزاً.
+ */
+const OPEN: NegotiationsRouteConfig = { serviceIdentity: "open" };
+
+function scoped(...scopes: readonly string[]): NegotiationsRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 const DEFAULT_HEALTH: NegotiationHealthDescriptor = { persistence: "memory" };
@@ -127,7 +149,10 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     sendNegotiationError(reply, error, request.id);
   });
 
-  app.get("/health", async (_request, reply) => {
+  // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ لا ما قبلَهُ.
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send(
       healthToWire({
         // `degraded` على الذاكرة ليس تشاؤماً: خدمةٌ تحفظ أسعاراً متفاوضاً عليها في الذاكرة
@@ -139,7 +164,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     );
   });
 
-  app.post("/negotiations", async (request, reply) => {
+  app.post("/negotiations", { config: scoped(NEGOTIATIONS_SCOPES.threadWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -151,7 +176,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(result.replay ? 200 : 201).send(threadToWire(result.thread));
   });
 
-  app.get("/negotiations", async (request, reply) => {
+  app.get("/negotiations", { config: scoped(NEGOTIATIONS_SCOPES.threadRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const filter = toThreadListQuery(request.query);
     // `NEGOTIATION_FILTER_REQUIRED` يُرفع من `listNegotiations` لا من هنا: «قراءةٌ بلا حدّ»
@@ -160,7 +185,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(200).send({ threads: threads.map(threadToWire) });
   });
 
-  app.post("/negotiations/tick", async (request, reply) => {
+  app.post("/negotiations/tick", { config: scoped(NEGOTIATIONS_SCOPES.tickRun) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     // العقد يشترط الترويسة والنبضةُ لا تُسجّل أثر إعادة: وذاك متّسق لا متهاون. تفرّدُ
     // النبضة من حالتها نفسها — تشغيلٌ ثانٍ لا يجد شيئاً مستحقاً فلا يُغيّر شيئاً — وتبقى
@@ -173,14 +198,14 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(200).send(tickResultToWire(result));
   });
 
-  app.get("/negotiations/:threadId", async (request, reply) => {
+  app.get("/negotiations/:threadId", { config: scoped(NEGOTIATIONS_SCOPES.threadRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     return reply.status(200).send(threadToWire(view.thread));
   });
 
-  app.post("/negotiations/:threadId/cancel", async (request, reply) => {
+  app.post("/negotiations/:threadId/cancel", { config: scoped(NEGOTIATIONS_SCOPES.threadWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -195,14 +220,14 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(200).send(threadToWire(result.thread));
   });
 
-  app.get("/negotiations/:threadId/rounds", async (request, reply) => {
+  app.get("/negotiations/:threadId/rounds", { config: scoped(NEGOTIATIONS_SCOPES.roundRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     return reply.status(200).send({ rounds: view.rounds.map(roundToWire) });
   });
 
-  app.post("/negotiations/:threadId/rounds", async (request, reply) => {
+  app.post("/negotiations/:threadId/rounds", { config: scoped(NEGOTIATIONS_SCOPES.roundWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -215,7 +240,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(result.replay ? 200 : 201).send(roundToWire(result.round));
   });
 
-  app.post("/negotiations/:threadId/rounds/:roundNo/accept", async (request, reply) => {
+  app.post("/negotiations/:threadId/rounds/:roundNo/accept", { config: scoped(NEGOTIATIONS_SCOPES.roundDecide) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -232,7 +257,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(result.replay ? 200 : 201).send(agreementToWire(result.agreement));
   });
 
-  app.post("/negotiations/:threadId/rounds/:roundNo/reject", async (request, reply) => {
+  app.post("/negotiations/:threadId/rounds/:roundNo/reject", { config: scoped(NEGOTIATIONS_SCOPES.roundDecide) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -248,14 +273,14 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(200).send(threadToWire(result.thread));
   });
 
-  app.get("/negotiations/:threadId/messages", async (request, reply) => {
+  app.get("/negotiations/:threadId/messages", { config: scoped(NEGOTIATIONS_SCOPES.messageRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     return reply.status(200).send({ messages: view.messages.map(messageToWire) });
   });
 
-  app.post("/negotiations/:threadId/messages", async (request, reply) => {
+  app.post("/negotiations/:threadId/messages", { config: scoped(NEGOTIATIONS_SCOPES.messageWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -268,7 +293,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     return reply.status(result.replay ? 200 : 201).send(messageToWire(result.message));
   });
 
-  app.get("/negotiations/:threadId/agreement", async (request, reply) => {
+  app.get("/negotiations/:threadId/agreement", { config: scoped(NEGOTIATIONS_SCOPES.agreementRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const threadId = threadIdOf(request.params);
     const agreement = await runner.read((deps) => readAgreement(deps, threadId));

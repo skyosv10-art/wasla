@@ -86,6 +86,7 @@ export * from "./use-cases/run-tick.js";
 export * from "./runner.js";
 export * from "./mappers.js";
 export * from "./http/app.js";
+export * from "./http/service-identity.js";
 export {
   sendNegotiationError,
   toWireDetails,

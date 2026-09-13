@@ -131,6 +131,8 @@ import {
   configuredDispatchOffers,
   createDirectNegotiationRunner,
   createNegotiationApp,
+  NEGOTIATIONS_SCOPES,
+  NEGOTIATIONS_SERVICE_AUDIENCE,
   createNegotiationDb,
   createInMemoryNegotiationDependencies,
   PostgresNegotiationRunner,
@@ -548,10 +550,17 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     });
   }
 
+  // `M1-04` · المراجعةُ 26/N: حدُّ المفاوضاتِ مفروضٌ في البوّابةِ كما في
+  // الإنتاجِ، ونداءاتُ البوّابةِ إليهِ موقَّعةٌ بالمفاتيحِ نفسِها. وبوّابةٌ
+  // تُشغِّلُ الحدَّ بلا فرضٍ تُثبِتُ مسلكاً لا وجودَ لهُ بعدَ النشرِ.
   const negotiationsApp = createNegotiationApp({
     runner: negotiationRunner,
     health: { persistence: NEGOTIATION_DATABASE_URL ? "postgres" : "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await negotiationsApp.listen({ port: 0, host: "127.0.0.1" });
   const negotiationsUrl = `http://127.0.0.1:${(negotiationsApp.server.address() as AddressInfo).port}`;
@@ -703,7 +712,19 @@ export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpRes
     },
   });
 export const callNegotiations = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.negotiationsUrl, init);
+  call(gate.negotiationsUrl, {
+    ...init,
+    headers: {
+      // الربطُ لا يشملُ سلسلةَ الاستعلامِ (ADR-021 §4)، فيُوقَّعُ المسارُ وحدَهُ.
+      ...createServiceRequestSigner({
+        serviceName: "e2e-harness",
+        audience: NEGOTIATIONS_SERVICE_AUDIENCE,
+        keys: gateServiceAuthKeys(),
+        scopes: Object.values(NEGOTIATIONS_SCOPES),
+      })(init.method, init.path.split("?")[0] ?? init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 
 let keyCounter = 0;
 

@@ -391,6 +391,52 @@ Nothing else has been changed in this repository by the WASLA integration work.
   (`node:http`, `net`) or a transitive package that wraps a client deep in its own dependency
   tree, and neither is measured today. And still no CI verdict: runs keep failing with zero steps
   started.
+- **M1-04 — the negotiations boundary is enforced and the two deferred bot clients are signed,
+  review 26/N, claim `CLM-0147`.** Review 24/N found two real outgoing clients that had never
+  been in the coverage ledger and had never signed a call —
+  `bots/{customer,driver}-bot/src/infrastructure/http-negotiations.ts` — and recorded them as
+  `مؤجَّل` with an honest reason rather than signing them on the spot: `services/negotiations`
+  did not verify inbound identity at all, so signing a call into a boundary that never reads the
+  token is reassurance with no effect. This review removes the reason instead of the symptom:
+  **the boundary is enforced first, then the clients are signed.** `services/negotiations` becomes
+  the **seventh** enforced boundary with nine scopes over thirteen routes
+  (`negotiations:thread:{write,read}`, `negotiations:round:{write,decide,read}`,
+  `negotiations:message:{write,read}`, `negotiations:agreement:read`, `negotiations:tick:run`),
+  `GET /health` open by explicit classification, and an unclassified route failing at boot rather
+  than defaulting open. The split follows verbs, not tables, and the two splits that matter have
+  their own `403` proofs on the wire: accepting or rejecting a round (`round:decide`) is not the
+  same power as proposing one (`round:write`), because accepting creates an agreement and moves a
+  price in the order engine; and the scheduler tick (`tick:run`) is a separate scope because it
+  writes across every user's threads and its caller is a scheduler, not a user's bot. Fourteen
+  proof cases were added in `services/negotiations/src/__tests__/service-identity.test.ts`
+  (no identity → 401 with no reason leaked, forged → 401, valid → pass, missing scope → 403,
+  replay → 401, replay store down → 503, a `round:write` token refused at accept, every thread /
+  round / message scope refused at the tick, a token bound to another thread id or another path
+  refused, unknown path → 401 before 404, and an unclassified route throwing at boot). The two bot
+  clients now take a **required** `signRequest` with no default — a missing signer is a
+  configuration fault at construction, not a silent unsigned call — and signing happens **outside**
+  the request `try` block so a refusing signer surfaces as a config fault rather than being
+  mislabelled `*_DEPENDENCY_UNAVAILABLE`. Each bot declares three scopes only
+  (`thread:read`, `round:read`, `round:decide`), which is strictly less than the nine the boundary
+  enforces, and four proof cases per bot read `aud`, `svc`, `scp` and the request binding `req`
+  **out of the token payload itself** rather than asserting a function exists, plus a case proving
+  a refusing signer means `fetch` is never called at all. The negotiation exit-gate harness now
+  starts the service **enforced** and signs its own calls, so the boundary is proven over a real
+  socket and not only by injection. Measured: negotiations service unit tests **244 passing in 14
+  files** (was 230/13), customer-bot **36** (was 32), driver-bot **43** (was 39), repo-wide
+  `pnpm -r test` **4469 passing in 275 files** (was 4447/272) with `EXIT=0`, `pnpm -r typecheck`
+  clean, and the coverage guard green on **seven** enforced boundaries and **47** scopes with
+  **zero deferred clients** — the first time that ledger has had no deferral since gate 2 was
+  widened to see `bots/`. Gate item 12 moves from ⚠️ partial to ✅ because its stated reason no
+  longer has a subject, and the old text is kept verbatim as evidence of what measurement could
+  see that day rather than deleted. Not claimed: this does **not** complete `M1-04` —
+  `services/marketplace` is still the one implemented boundary with no enforcement, promotion of
+  the item to `Completed` and closing `RISK-0027` remain the program owner's authority alone, the
+  query string is still outside the request binding so a token signed to list one order's threads
+  can list another's (`RISK-0026`, same shape as `GET /orders/lookup`, root fix at `M1-05`), the
+  replay guard is still in-process (`RISK-0015`), `api.openapi.yml` still documents no security
+  scheme, and **there is still no CI verdict**: every run continues to fail with zero steps
+  started, so the green reported here is local only.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
   write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
   acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that

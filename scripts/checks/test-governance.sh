@@ -1797,7 +1797,17 @@ enforced: matching
 |---|---|
 
 <!-- fetch-exceptions:end -->
+
+<!-- http-wrappers:begin -->
+
+| المكتبةُ | السببُ | مَن يستوردُها |
+|---|---|---|
+| — | لا مكتبةَ نداءٍ في الجذرِ الصناعيِّ. | — |
+
+<!-- http-wrappers:end -->
 MD
+  # وجذرٌ فيهِ `package.json` بلا مكتبةِ نداءٍ — فالبابُ 8 يمرُّ بصفرٍ وصفرٍ.
+  printf '{ "name": "synthetic", "dependencies": { "zod": "^3.0.0" } }\n' > "$R/package.json"
   printf '%s\n' "$R"
 }
 
@@ -1953,6 +1963,42 @@ mkdir -p "$S_FE_BOT/bots/customer-bot/src/infrastructure"
 printf 'export class P { async go() { return fetch("http://x/negotiations"); } }\n' \
   > "$S_FE_BOT/bots/customer-bot/src/infrastructure/http-negotiations.ts"
 t "عميلُ bots/ غيرُ مذكورٍ في السّجلِّ يُسقِط (البصرُ الموسَّعُ)" fail _sac "$S_FE_BOT"
+
+# ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
+# ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
+# **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،
+# والإعلانُ الصادقُ يُوسِّعُ جردَ البابِ 7 ليشملَ مُستورِدي المكتبةِ.
+_sac_add_dep() { # _sac_add_dep <root> <pkg>
+  python3 -c 'import json,sys,pathlib; p=pathlib.Path(sys.argv[1])/"package.json"; d=json.loads(p.read_text()); d.setdefault("dependencies",{})[sys.argv[2]]="^1.0.0"; p.write_text(json.dumps(d))' "$1" "$2"
+}
+_sac_declare_wrapper() { # _sac_declare_wrapper <root> <row>
+  python3 -c 'import sys,pathlib; m=pathlib.Path(sys.argv[1])/"docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"; s=m.read_text(); old="| — | لا مكتبةَ نداءٍ في الجذرِ الصناعيِّ. | — |"; assert s.count(old)==1; m.write_text(s.replace(old, sys.argv[2]))' "$1" "$2"
+}
+
+S_W1="$(_sac_root w_undeclared)"
+_sac_add_dep "$S_W1" axios
+t "البابُ 8: مكتبةُ نداءٍ في package.json بلا إعلانٍ تُسقِط" fail _sac "$S_W1"
+
+S_W2="$(_sac_root w_declared)"
+_sac_add_dep "$S_W2" axios
+_sac_declare_wrapper "$S_W2" '| `axios` | سببٌ صناعيٌّ مُعلَنٌ. | لا مستورِدَ |'
+t "البابُ 8: المكتبةُ المُعلَنةُ بسببِها تمرُّ" pass _sac "$S_W2"
+
+S_W3="$(_sac_root w_dead)"
+_sac_declare_wrapper "$S_W3" '| `undici` | إعلانٌ ميتٌ: لا وجودَ لها في أيِّ package.json. | — |'
+t "البابُ 8: إعلانُ مكتبةٍ لا وجودَ لها (إعلانٌ ميتٌ) يُسقِط" fail _sac "$S_W3"
+
+S_W4="$(_sac_root w_noblock)"
+python3 -c 'import sys,pathlib,re; m=pathlib.Path(sys.argv[1])/"docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"; s=re.sub(r"<!-- http-wrappers:begin -->.*?<!-- http-wrappers:end -->","",m.read_text(),flags=re.S); m.write_text(s)' "$S_W4"
+t "البابُ 8: حذفُ كتلةِ الأغلفةِ يُسقِط" fail _sac "$S_W4"
+
+# والإعلانُ يُوسِّعُ جردَ البابِ 7: مستورِدُ المكتبةِ المُعلَنةِ يُحاسَبُ مُنادياً
+S_W5="$(_sac_root w_importer)"
+_sac_add_dep "$S_W5" axios
+_sac_declare_wrapper "$S_W5" '| `axios` | سببٌ صناعيٌّ مُعلَنٌ. | مستورِدٌ واحدٌ |'
+printf "import axios from 'axios';\nexport const go = () => axios.post('http://x');\n" \
+  > "$S_W5/services/dispatch/src/sneaky-caller.ts"
+t "البابُ 8: مستورِدُ مكتبةٍ مُعلَنةٍ يدخلُ جردَ البابِ 7 فيُسقِطُ إن لم يُعلَنْ" fail _sac "$S_W5"
 
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'

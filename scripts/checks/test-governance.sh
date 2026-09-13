@@ -349,6 +349,25 @@ echo '# حالة اختبار' >> scripts/checks/verify-governance.sh
 git add -A >/dev/null; git commit -qm "valid entry with large diff" >/dev/null
 t "يقبل إدخالاً صحيحاً مع diff كبير (حارس SIGPIPE)" pass bash scripts/checks/require-doc-update.sh origin/main HEAD
 
+# ── M0-29: الصيغةُ تُقاسُ على الملفِّ كلِّه لا على الـdiff وحدَه ───────────
+# العيبُ المقيسُ 2026-09-13: سبعةُ إدخالاتٍ كتبت `**Work Item(s):** ` بشفرةٍ
+# مُسيَّجةٍ، ومرَّت ستٌّ منها إلى main، لأنَّ الفحصَ كانَ يكتفي بوجودِ **سطرٍ
+# مُضافٍ صحيحٍ** ولا يسألُ عنِ المنحرفِ إلى جانبِه. والسطرُ المنحرفُ بعدَ الدمجِ
+# يخرُجُ من نطاقِ كلِّ diff تالٍ فلا يراهُ حارسٌ أبداً. فالبابُ يقيسُ الحالةَ الآنَ.
+printf '\n### [2026-01-01] حالةُ اختبارٍ — صيغةٌ منحرفةٌ\n\n- **Work Item(s):** `%s`\n- **Why:** مُسيَّجٌ بشفرةٍ\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
+git add -A >/dev/null; git commit -qm "drifted work item format" >/dev/null
+t "يرفضُ سطراً منحرفَ الصيغةِ ولو صحَّ سطرٌ مُضافٌ آخرُ" fail bash scripts/checks/require-doc-update.sh origin/main HEAD
+git reset -q --hard HEAD~1
+
+# ولا يُقاسُ النثرُ إعلاناً: البابُ يُقاسُ على **إعلانِ الحقلِ** (سطرٌ يبدأُ بهِ بعدَ
+# علامةِ قائمةٍ اختياريّةٍ) لا على كلِّ ذكرٍ للحقلِ في جملةٍ تشرحُهُ — وإلّا لأسقطَ
+# البابُ كلَّ وثيقةٍ توثِّقُ البابَ نفسَهُ. وهذا **تمييزٌ لا تخفيفٌ**: كلُّ سطرٍ
+# منحرفٍ من السبعةِ المقيسةِ كانَ إعلاناً في أوّلِ سطرٍ، فلا يُفلِتُ واحدٌ منها.
+printf '\n### [2026-01-01] حالةُ اختبارٍ — نثرٌ يذكرُ الحقلَ\n\n- **Work Item(s):** %s\n- **Why:** يشترطُ الحارسُ سطرَ `**Work Item(s):**` عارياً بلا تسييجٍ\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
+git add -A >/dev/null; git commit -qm "prose mentioning the field" >/dev/null
+t "يقبلُ نثراً يذكرُ الحقلَ مُسيَّجاً ولا يخلطُهُ بإعلانٍ منحرفٍ" pass bash scripts/checks/require-doc-update.sh origin/main HEAD
+git reset -q --hard HEAD~1
+
 # حارس انحدار 3 (M0-12): مصيدةُ SIGPIPE كانت **باقيةً** في `require-doc-update.sh`
 # عند فحصِ وجودِ TASK_LOG واللوحةِ في قائمةِ الملفّات (`printf | grep -Fxq`)، ولم يُعالَج
 # في M0-11 إلّا موضعٌ واحدٌ في الملفِ نفسِه. والقائمةُ صغيرةٌ فالعيبُ احتماليٌّ: حالةٌ
@@ -579,6 +598,97 @@ mb_live_drift() {
   rm -rf "$R"; [[ "$rc" == 1 ]]
 }
 t "حمايةٌ حيّةٌ انحرفت عن اللقطةِ تُرفَض" pass mb_live_drift
+
+# ── M0-29: الحارسُ لا يطمأنُّ حينَ تغيبُ الحمايةُ ────────────────────────
+# العيبُ المقيسُ 2026-09-13: قُيِسَ أنَّ `main` غيرُ محميٍّ (protected=false)،
+# وكانَ الحارسُ يخرُجُ `2` برسالةِ «الأبوابُ نجحت … ولم تُسألِ الواجهةُ حيّاً»
+# — والرسالةُ كاذبةٌ: الواجهةُ سُئلت وأجابت بالنفيِ. فهذه الحالاتُ تقُفلُ
+# الطريقَ: قياسٌ سلبيٌّ يُسقِطُ، ولا يُقبَلُ إلّا بسطرِ خطرٍ مالكٍ مؤرَّخٍ سارٍ.
+_mb_risk() { # $1=repo $2=id $3=status $4=review
+  mkdir -p "$1/docs/07-security"
+  printf 'RISK-BLOCK\n```text\n%s | sev:critical | owner:@t | opened:2026-09-13 | review:%s | status:%s | ref:docs/12-testing/ev/merge-405.json | حالةُ اختبارٍ\n```\n' \
+    "$2" "$4" "$3" > "$1/docs/07-security/RISK_REGISTER.md"
+}
+_mb_livechecks() { # $1=repo $2=protected(true|false) $3=accepted_risk(""=لا شيء) $4=raw
+python3 -c "
+import json,sys
+p=sys.argv[1]+'/docs/12-testing/MERGE_BLOCKING.json'; d=json.load(open(p,encoding='utf-8'))
+c={'measured_at':'2026-09-13T17:00:00Z','measured_from':'GET /branches/main','protected':sys.argv[2]=='true','raw':sys.argv[4]}
+if sys.argv[3]: c['accepted_risk']=sys.argv[3]
+d['live_checks']=[c]
+json.dump(d,open(p,'w',encoding='utf-8'),ensure_ascii=False)
+" "$1" "$2" "$3" "$4"; }
+
+mb_neg_no_risk() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false "" docs/12-testing/ev/merge-405.json
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "قياسٌ حيٌّ يقولُ protected=false بلا خطرٍ يقبلُه يُسقِطُ البوّابةَ" pass mb_neg_no_risk
+
+mb_neg_risk_absent() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-9999 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "إحالةٌ على خطرٍ ليسَ في السجلِّ تُسقِطُ" pass mb_neg_risk_absent
+
+mb_neg_risk_expired() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2000-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "مهلةُ الخطرِ المنقضيةُ تُسقِطُ البوّابةَ آليّاً" pass mb_neg_risk_expired
+
+mb_neg_risk_closed() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 closed 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "خطرٌ مُغلَقٌ لا يقبلُ غيابَ الحمايةِ" pass mb_neg_risk_closed
+
+mb_neg_dead_raw() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/nope.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "مرجعُ القياسِ الحيِّ الميتُ يُرفَض" pass mb_neg_dead_raw
+
+mb_neg_accepted() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" false RISK-0036 docs/12-testing/ev/merge-405.json
+  _mb_risk "$R" RISK-0036 open 2099-01-01
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 2 ]]
+}
+t "غيابٌ مقبولٌ بخطرٍ سارٍ يُعلَنُ جزئيّاً (2) ولا يُجمَّلُ نجاحاً" pass mb_neg_accepted
+
+mb_pos_protected() {
+  local R rc; R="$(_mb_repo)"
+  _mb_livechecks "$R" true "" docs/12-testing/ev/merge-405.json
+  rc="$(_mb_run "$R")"; rm -rf "$R"; [[ "$rc" == 2 ]]
+}
+t "قياسٌ حيٌّ موجبٌ (protected=true) لا يُسقِطُ" pass mb_pos_protected
+
+# وطلبُ قياسٍ حيٍّ مُلزِمٌ لطالبِه: ملفٌ مفقودٌ لا يُكافَأُ بتخطٍّ مُريحٍ.
+mb_live_missing_file() {
+  local R rc; R="$(_mb_repo)"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/nope.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "طُلِبَ سؤالٌ حيٌّ وملفُّه مفقودٌ — يُرفَض لا يُهمَل" pass mb_live_missing_file
+
+# وجوابُ خطأٍ من الواجهةِ يُسمَّى تعذُّرَ قياسٍ ويُسقِطُ — لا يُقرَأُ حمايةً.
+mb_live_error_payload() {
+  local R rc; R="$(_mb_repo)"
+  printf '%s\n' '{"message":"Upgrade to GitHub Pro or make this repository public to enable this feature.","status":"403"}' > "$R/live.json"
+  rc="$( cd "$R" && WASLA_PROTECTION_JSON="$R/live.json" bash scripts/checks/validate-merge-blocking.sh >/dev/null 2>&1; echo $? )"
+  rm -rf "$R"; [[ "$rc" == 1 ]]
+}
+t "جوابُ 403 لا يُقرَأُ حمايةً بل تعذُّرَ قياسٍ" pass mb_live_error_payload
 
 printf '\n\033[1m[هج] بياتُ الحجوزات — فرعٌ محذوفٌ وحجزٌ نشط (M0-16)\033[0m\n'
 

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-13T07:05:56Z",
+  "generated_at": "2026-09-13T19:52:12Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a72cab27edf20037b9318c8c78da6708dee7030c",
-    "branch": "feat/m1-04-http-wrapper-lock",
+    "commit": "0ac547c4aba26e9b682128ad0aa58c100244c576",
+    "branch": "feat/m1-04-enforce-marketplace-boundary",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "المراجعةُ 25/N: قُفلُ أغلفةِ النداءِ (البابُ 8) · حزمةُ الحوكمةِ 196 ⇒ 201 حالةً",
-    "tracked_files": 1704
+    "dirty_files": 5,
+    "dirty_reason": "أُعيدَ التوليدُ على شجرةٍ مُعدَّلةٍ بقصدٍ: دفعةُ 29/N (CLM-0150) تفرضُ هويّةَ الخدمةِ على حدِّ السوقِ فتتحرَّكُ ثلاثةُ عدَّاداتٍ ساكنةٍ — test_files_tracked 341⇒344 (حرسُ الهويّةِ والانحرافِ والبوّابةُ على السلكِ) · risks_not_closed 24⇒25 (RISK-0037 المُكتشَفُ في الدفعةِ) · وبصمةُ pnpm-lock.yaml (إدخالُ @wasla/service-auth في حزمتَي السوقِ). ووثائقُ الدفعةِ غيرُ مُلتزَمةٍ بعدُ عندَ التوليدِ لأنَّ الأساسَ نفسَهُ من محتوياتِها.",
+    "tracked_files": 1709
   },
   "env": {
     "node": "v20.20.1",
@@ -19,28 +19,28 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "1800d3fec65f64f8807e480ef1837ad79ea378963435dcfe8443ecb0b3a44050",
-    "lines": 3116
+    "sha256": "07c99b5c572077e2f82d0e8f611c45f7187a21dae6e676dd7ebf1137256f2165",
+    "lines": 3122
   },
   "static": {
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 341,
+    "test_files_tracked": 344,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 24
+    "risks_not_closed": 25
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify25.log",
-    "tests_passed": 4447,
-    "test_files_executed": 272,
-    "governance_suite_cases": 201,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify.log",
+    "tests_passed": 4483,
+    "test_files_executed": 274,
+    "governance_suite_cases": 200,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:489ae5e751c54576adb672fee3aa05ca5619cd984202a835e2edf306904b19b9",
+  "fingerprint": "sha256:fbd4224b638a8743c493ee8fd3a3c4e888099e656aa7c394113850c2b8cc753c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

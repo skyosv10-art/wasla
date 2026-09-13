@@ -92,6 +92,7 @@ import { DeliveryError } from "../domain/errors.js";
 import type {
   IdempotencyIntent,
   InventoryConflictAcknowledgementPort,
+  RelayDeadLetterReadPort,
   InventoryConflictReadPort,
   InventoryReservationPort,
   InventoryReservationStore,
@@ -126,6 +127,10 @@ import type {
   DependencyObservationPort,
 } from "../domain/dependency-probe.js";
 import { buildReadinessResponse } from "./readiness.js";
+import {
+  RELAY_DEAD_LETTER_THRESHOLDS,
+  classifyRelayDeadLetterSeverity,
+} from "../domain/relay-dead-letters.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
@@ -179,6 +184,15 @@ export interface DeliveryHttpDeps {
    * مُشغِّلٍ ولا يُبقي لها أثراً في القاعدةِ يُراجَعُ.
    */
   readonly inventoryConflictAcknowledgementPort?: InventoryConflictAcknowledgementPort;
+  /**
+   * قياسُ الرسائلِ المسمومةِ في دفترَي الاستهلاكِ (المراجعةُ 21/N · ADR-026 §4.23).
+   *
+   * غائبٌ ⇒ `GET /delivery/relay/dead-letters` يُجيبُ 500 `DELIVERY_INTERNAL_ERROR`
+   * **ولا 200 بمقياسٍ صفريٍّ**: صفرٌ غيرُ مقيسٍ يُقرأُ «لا فقدَ» فيُغلِقُ لوحةَ
+   * مُشغِّلٍ على خبرٍ لم يُسأَلْ عنهُ أحدٌ — وهذا أخطرُ من صفرٍ في قائمةٍ
+   * (§4.18)، لأنَّ هذا المسارَ نفسُهُ هوَ العينُ التي تُراقِبُ الفقدَ.
+   */
+  readonly relayDeadLetterReadPort?: RelayDeadLetterReadPort;
   /**
    * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`، الموجةُ السادسةُ · المراجعةُ
    * 17/N). **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ»
@@ -250,7 +264,49 @@ function parseSweepOptions(
  * وأرقامُ `limit` **عشريةٌ فقط**: `Number("0x10")` يُعطي 16 و`Number.isInteger` يرضى
  * بهِ، ومُشغِّلٌ كتبَ `0x10` لم يطلبْ 16 — بل أخطأَ، والتصحيحُ الصامتُ يخفي
  * خطأَهُ. (نفسُ قاعدةِ حاسماتِ البيئةِ في هذا المستودعِ.)
+ *
+ * وتحقُّقُ `event_type_limit` في مسارِ المسمومِ يتبعُ نفسَ القاعدةِ حرفاً.
  */
+
+/**
+ * سقفُ تفصيلِ أنواعِ الأحداثِ لكلِّ دفترٍ (المراجعةُ 21/N).
+ *
+ * والافتراضُ عشرةٌ لا خمسونَ: هذا مسارُ **رصدٍ** يُنادى دوريًّا، وتفصيلٌ
+ * طويلٌ في كلِّ دقيقةٍ حملٌ لا يقرأُهُ أحدٌ. والمجموعُ لا يُسقَفُ أبداً — السقفُ
+ * على التفصيلِ وحدَهُ، فمجموعٌ مسقوفٌ كانَ سيُقرأُ عدداً أقلَّ ممّا وقعَ.
+ */
+const RELAY_DEAD_LETTER_EVENT_TYPE_DEFAULT_LIMIT = 10;
+const RELAY_DEAD_LETTER_EVENT_TYPE_MAX_LIMIT = 100;
+
+function parseRelayDeadLettersQuery(
+  query: unknown,
+  traceId: string,
+): { eventTypeLimit: number } {
+  const raw = (query ?? {}) as Record<string, unknown>;
+  const rawLimit = raw["event_type_limit"];
+  if (rawLimit === undefined || rawLimit === null || rawLimit === "") {
+    return { eventTypeLimit: RELAY_DEAD_LETTER_EVENT_TYPE_DEFAULT_LIMIT };
+  }
+
+  const text = String(rawLimit);
+  const decimalOnly = /^[0-9]+$/u.test(text);
+  const parsed = Number(text);
+  if (
+    !decimalOnly ||
+    !Number.isInteger(parsed) ||
+    parsed < 1 ||
+    parsed > RELAY_DEAD_LETTER_EVENT_TYPE_MAX_LIMIT
+  ) {
+    throw new DeliveryError(
+      "DELIVERY_VALIDATION_FAILED",
+      `\`event_type_limit\` عددٌ عشريٌّ صحيحٌ بينَ 1 و${RELAY_DEAD_LETTER_EVENT_TYPE_MAX_LIMIT}`,
+      { traceId, details: { field: "event_type_limit", actual: text } },
+    );
+  }
+
+  return { eventTypeLimit: parsed };
+}
+
 const INVENTORY_CONFLICTS_DEFAULT_LIMIT = 50;
 const INVENTORY_CONFLICTS_MAX_LIMIT = 500;
 
@@ -878,6 +934,83 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         outcome:
           outcome.acknowledgement === "recorded" ? "acknowledged" : "already_acknowledged",
         conflict: toInventoryConflictWire(outcome.row),
+      });
+    },
+  );
+
+  /*
+   * ── مقياسُ الرسائلِ المسمومةِ (المراجعةُ 21/N · ADR-026 §4.23) ──────────
+   *
+   * `GET /delivery/relay/dead-letters`
+   *
+   * ## المسارُ الثالثَ عشرَ، ومسارُ تشغيلٍ رابعٌ خارجَ العقدِ المنشورِ
+   *
+   * على سابقةِ §4.15 · §4.18 · §4.20 حرفاً: ليسَ في `contracts/api.openapi.yml` بل في
+   * `docs/04-api/DELIVERY_HTTP.md` وحدهِ — العقدُ المنشورُ وعدٌ لعميلٍ خارجيٍّ،
+   * وعينُ مُشغِّلٍ على فقدٍ داخليٍّ ليسَت وعداً لأحدٍ.
+   *
+   * ## والحكمُ يُحسَبُ **هنا** ويُنشَرُ معَ العتبةِ التي أنتجَتْهُ
+   *
+   * الجوابُ يحمِلُ `alert.severity` و`alert.because` و`alert.thresholds` معاً.
+   * ونشرُ العتبةِ ليسَ حشواً: مراقِبٌ يقرأُ `warning` ولا يعرِفُ عندَ أيِّ
+   * عددٍ أُطلِقَ لا يستطيعُ أن يكتبَ حادِثةً مفهومةً؛ وكتابةُ العتبةِ في المراقِبِ
+   * كانتْ ستجعلُها **مصدرَ حقيقةٍ مُكرَّراً** ينحرِفُ عن الثابِتِ بلا أن يُسقِطَ
+   * اختباراً. فالمراقِبُ يُنبِّهُ على `severity` ولا يُعيدُ حسابَهُ.
+   *
+   * ## و200 دائماً وإن كانَ الحكمُ `critical`
+   *
+   * والسببُ حدٌّ معنويٌّ: القياسُ **نجحَ** — ورمزُ خطأٍ على قياسٍ ناجحٍ لأنَّ
+   * مقيسَهُ سيّئٌ يجعلُ مُراقِباً يرى `HTTP 5xx` فيُعيدُ المحاولةَ ثمَّ يُنبِّهُ
+   * «مسارُ الرصدِ معطوبٌ» والحقيقةُ «الفقدُ واقعٌ». والخطأُ يُحفَظُ لما لم
+   * يُقَسْ وحدَهُ.
+   *
+   * ## ولا يمسُّ الجاهزيّةَ
+   *
+   * `gates_readiness: false` منشورٌ في الجوابِ لا مدفونٌ في ADR — سابقةُ §4.17-2
+   * و§4.18: مَن يقرأُ تنبيهاً في حادثةٍ لا يقرأُ قراراً معماريًّا.
+   */
+  app.get(
+    "/delivery/relay/dead-letters",
+    { config: scoped(DELIVERY_SCOPES.relayDeadLettersRead) },
+    async (request, reply) => {
+      const traceId = String(request.id);
+      if (deps.relayDeadLetterReadPort === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا منفذَ قياسِ مسمومٍ مُركَّبٌ — لا يُدَّعى خلوٌّ لم يُقَسْ (ADR-026 §4.23)",
+          { traceId },
+        );
+      }
+
+      const { eventTypeLimit } = parseRelayDeadLettersQuery(request.query, traceId);
+      const metric = await deps.relayDeadLetterReadPort.readRelayDeadLetters({ eventTypeLimit });
+      const verdict = classifyRelayDeadLetterSeverity(metric, new Date(now()));
+
+      return reply.status(200).send({
+        applied_filter: { event_type_limit: eventTypeLimit },
+        measured_at: metric.measuredAt,
+        total_poisoned: metric.totalPoisoned,
+        ledgers: metric.ledgers.map((ledger) => ({
+          ledger: ledger.ledger,
+          poisoned: ledger.poisoned,
+          oldest_poisoned_at: ledger.oldestPoisonedAt,
+          newest_poisoned_at: ledger.newestPoisonedAt,
+          by_event_type: ledger.byEventType.map((entry) => ({
+            event_type: entry.eventType,
+            poisoned: entry.poisoned,
+          })),
+        })),
+        alert: {
+          severity: verdict.severity,
+          because: verdict.because,
+          oldest_poisoned_age_seconds: verdict.oldestPoisonedAgeSeconds,
+          thresholds: {
+            warning_poisoned: RELAY_DEAD_LETTER_THRESHOLDS.warningPoisoned,
+            critical_poisoned: RELAY_DEAD_LETTER_THRESHOLDS.criticalPoisoned,
+            critical_age_seconds: RELAY_DEAD_LETTER_THRESHOLDS.criticalAgeSeconds,
+          },
+          gates_readiness: false,
+        },
       });
     },
   );

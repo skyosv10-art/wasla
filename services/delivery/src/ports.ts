@@ -157,6 +157,7 @@ import type {
   MarketplaceOutboxRow,
 } from "./domain/marketplace-inventory-events.js";
 import type { InventoryConflictAssessment, InventoryConflictRow } from "./domain/inventory-conflict.js";
+import type { RelayDeadLetterMetric } from "./domain/relay-dead-letters.js";
 
 /**
  * نتيجةُ رصدِ فرقِ مخزونٍ واحدٍ — نوعٌ مُفرَّقٌ لا سلسلةٌ (المراجعةُ 16/N · ADR-026 §4.18).
@@ -717,4 +718,38 @@ export interface IdempotencyKeySweepPort {
    * @param limit أقصى عددٍ يُحذَفُ في هذهِ الدفعةِ (يجبُ أن يكونَ ≥ 1).
    */
   deleteExpiredIdempotencyKeys(limit: number): Promise<IdempotencyKeySweepBatch>;
+}
+
+/**
+ * قراءةُ مقياسِ الرسائلِ المسمومةِ (المراجعةُ 21/N · ADR-026 §4.23).
+ *
+ * **منفذٌ مستقلٌّ لا حركةٌ في `InventoryObservationStore`**، ولهُ سببانِ:
+ *
+ * 1. **نطاقُهُ دفتَرانِ لا دفترٌ.** مخزنُ الرصدِ يملكُ دفترَ مخزونِ السوقِ وحدَهُ،
+ *    وهذا المقياسُ يسألُ دفترَ `dispatch` معَهُ. وضمُّهُ إلى مخزنٍ يملكُ أحدَهما
+ *    كانَ سيجعلَ مالكَ نصفِ الحقيقةِ يُجيبُ عنها كلِّها.
+ * 2. **قراءةٌ محضةٌ.** كلُّ حركةٍ في `InventoryObservationStore` تكتبُ أو تُشتَقُّ
+ *    من كتابةٍ؛ وقارئٌ تشغيليٌّ يُحقَنُ في تطبيقٍ لا يملكُ سلطةَ كتابةٍ —
+ *    نفسُ تعليلِ §4.18 الذي فصلَ `InventoryConflictReadPort`.
+ *
+ * **ولا حركةَ «أعِدْ معالجةَ المسمومِ» هنا.** والنقصُ مُعلَنٌ لا مُغفَلٌ: إعادةُ
+ * معالجةٍ قرارُ سياسةٍ (الدفترُ لا يحفظُ الحِملَ بقرارِ §2.3، فالإعادةُ تلزمُها
+ * قراءةٌ من `marketplace_outbox` وتراجُعٌ عن نقطةِ تقدُّمٍ مضت) لا تفصيلُ
+ * تنفيذٍ، ودَينُهُ مكتوبٌ في §4.23. ومسارُ **رصدٍ** يَحمِلُ زرَّ إعادةِ تشغيلٍ
+ * يُقرأُ صلاحيّةَ قراءةٍ ويعملُ عملَ كتابةٍ.
+ */
+export interface RelayDeadLetterReadPort {
+  /**
+   * قياسُ المسمومِ في الدفترَينِ في **لقطةٍ واحدةٍ**.
+   *
+   * ولقطةٌ واحدةٌ شرطٌ لا تحسينٌ: استعلامانِ متتاليانِ يُنتِجانِ مجموعاً لا
+   * يوافقُ أيَّ لحظةٍ وُجِدَت — فيُنبِّهُ المراقبُ على رقمٍ لم يكن قطُّ.
+   *
+   * @param query.eventTypeLimit أقصى عددِ أنواعِ أحداثٍ يُفصَّلُ لكلِّ دفترٍ (≥ 1).
+   *   والسقفُ إلزاميٌّ: تفصيلٌ بلا سقفٍ يصيرُ مُفرِغَ جدولٍ أوّلَ مرّةٍ يكثُرُ
+   *   فيهِ النوعُ — وهوَ مسارُ **رصدِ حادثةٍ** يُنادى وقتَ الضغطِ بالذاتِ.
+   */
+  readRelayDeadLetters(query: {
+    readonly eventTypeLimit: number;
+  }): Promise<RelayDeadLetterMetric>;
 }

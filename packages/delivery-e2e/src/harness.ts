@@ -66,6 +66,7 @@ import {
   PostgresInventoryObservationStore,
   PostgresMarketplaceInventoryEventSource,
   PostgresReadinessProbe,
+  PostgresRelayDeadLetterStore,
   DELIVERY_SCOPES,
   DELIVERY_SERVICE_AUDIENCE,
   StoreOrderStore,
@@ -334,6 +335,13 @@ export async function startGate(): Promise<GateContext> {
     inventoryConflictReadPort: relayStore,
     inventoryConflictAcknowledgementPort: relayStore,
     /*
+     * وقياسُ المسمومِ مُركَّبٌ كما في `server.ts` (المراجعةُ 21/N · §4.23):
+     * مسارٌ موضوعُهُ مراقبةُ الفقدِ إن بقيَ غيرَ مُركَّبٍ في البوّابةِ لم تشهدِ
+     * البوّابةُ على نقصِ تركيبٍ يُجيبُ 500 في الإنتاجِ — وهيَ أوّلُ عينٍ
+     * يُفتَّشُ عنها في حادثةٍ.
+     */
+    relayDeadLetterReadPort: new PostgresRelayDeadLetterStore(pool),
+    /*
      * ومسبارُ رصدٍ حقيقيٌّ على `/health` السوقِ (المراجعةُ 15/N · §4.17): لا
      * `fetchImpl` مزروعٌ، فالبوّابةُ تُثبِتُ أنَّ الرصدَ يعبرُ حدّاً حقيقيّاً
      * بتوقيعٍ حقيقيٍّ — وأنَّ الجاهزيّةَ صارت تُفرِغُ `not_claimed` بحقٍّ لا بدعوى.
@@ -405,7 +413,7 @@ export interface HttpResult {
   readonly body: Record<string, unknown>;
   readonly replayHeader: string | null;
   /**
-   * `Retry-After` كما وصلَ **نصّاً** (المراجعةُ 19/N · ADR-026 §4.21).
+   * `Retry-After` كما وصلَ **نصّاً** (المراجعةُ 19/N · ADR-026 §4.23).
    *
    * نصٌّ لا عددٌ بقصدٍ: الدعوى أنَّ ما يُقرأُ على السلكِ `"1"` حرفاً — عددٌ
    * مُحلَّلٌ كانَ سيُساوي `"1.0"` و`" 1"` بالقيمةِ ويصمُتَ عن أنَّهما يُخالفانِ

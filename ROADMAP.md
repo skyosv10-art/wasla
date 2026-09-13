@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-12 (M5-13 review 19/N — a measured retry delay on the concurrent-idempotency refusal)
+**Last updated:** 2026-09-13 (M5-13 review 21/N — a measured metric and a classified alert verdict on poisoned relay rows)
 **Previous milestone:** the inventory-conflict flag ledger gained a write route: `POST /delivery/inventory-conflicts/{flag_id}/acknowledgement` records the acknowledger from the **proven service identity alone** — never from the request body — and the first acknowledgement wins in a single statement, with a tenth scope separated from the read path (ADR-026 §4.20, lifting the debt declared in §4.18). Roadmap and roadmap-freshness gate remain in force. No cross-repository WASLA integration code has been changed yet; the change above is internal to MARKET.
 
 **Last milestone:** a lost idempotency-key race now answers `409 DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT` **with `Retry-After: 1`**, lifting the oldest surviving debt in ADR-026 §4 (declared in §4.10-1 at review 7/N). A bare refusal said "you failed" without saying "retry", so the caller either spun in a tight loop or abandoned a request that had actually succeeded. The value is measured, not guessed: twelve concurrent rounds on real PostgreSQL 18.6 produced eleven refusals, and in every one an **immediate** retry was answered `201` with `Idempotent-Replay: true` — the winner's key row is already committed when the refusal is raised, so the true wait is zero and `1` is simply the smallest integer that does not read as "spin now". The header is keyed by **error code, not status**: `DELIVERY_IDEMPOTENCY_KEY_REUSED` shares the same `409` and must not carry it, because its retry can never succeed. The contract declares the header machine-readably, and the exit gate re-measures the race over a real socket — `app.inject` never touches the HTTP header serialiser. Details in ADR-026 §4.21 and `docs/04-api/DELIVERY_HTTP.md` §2.3.
@@ -430,6 +430,70 @@ Nothing else has been changed in this repository by the WASLA integration work.
   validator (no `ajv` in the service's dependencies today) and is its own scope. And
   nothing here was measured on PostgreSQL 15/17.6 (the CI versions) or against a production
   database.
+- **M5-13 (Store Orders & Delivery) — review 21/N, claim `CLM-0142`.** The first of the
+  two limits declared when `RISK-0035` was closed is now lifted: there is a **measured
+  metric and a classified alert verdict** on poisoned relay rows. Route thirteen,
+  `GET /delivery/relay/dead-letters`, reads both consumed-event ledgers
+  (`delivery_relay_consumed_events`, `delivery_inventory_relay_consumed_events`) and
+  returns the `poisoned` count per ledger, a per-event-type breakdown, the oldest and
+  newest poisoned timestamps, and an `alert` verdict — behind an **eleventh scope**,
+  `delivery:ops:relay-dead-letters:read`, separate from everything before it.
+  **The table is the source of truth, not an in-process counter.** A counter in memory
+  would reset on redeploy and multiply by replica count, and **a false zero reads as
+  cleanliness** — which is precisely the defect the metric exists to deny. Both ledgers,
+  the breakdown and the measurement timestamp come from **one SQL statement**, so the
+  published total corresponds to a moment that actually existed; two sequential queries
+  would produce a total that never did, and an alert on a number that does not add up is
+  an alert that gets silenced. The measured column is `updated_at`, not `consumed_at`:
+  the row is created on the **first** attempt and poisoned after they are exhausted, so
+  `consumed_at` is the age of the first attempt, not the age of the loss.
+  **The thresholds are code constants published in the response body**
+  (`alert.thresholds`), following the `Retry-After` precedent of review 19/N. `warning`
+  fires at **one row**, because a poisoned row is a **lost event**, not a held one, and a
+  higher threshold would mean loss tolerated by written decision. `critical` fires at ten
+  (a standing systemic defect) or when the oldest is neglected for a day (the warning was
+  read and not acted on); the count reason takes precedence over the age reason when both
+  hold. An environment variable would be raised at night without review or trace; the
+  constant's change **fails a test named after it**. And a copy of the threshold at the
+  collector would be a second source of truth that diverges in one review and is
+  discovered in an incident.
+  **The verdict informs, it does not govern:** `gates_readiness: false` is published in
+  the body, and `critical` does not change `GET /delivery/ready` (the §4.17 precedent) —
+  proven by measurement, with 99 poisoned rows and readiness still `200 ready`. A corrupt
+  past event is not a present outage, and coupling them would let one poisoned row take
+  down a healthy service, after which **either the row gets deleted or the alert gets
+  weakened**. The route answers `200` even at `critical` — the measurement succeeded even
+  if what it measured is bad — and the only legitimate error is `500` when no measurement
+  port is wired: "I don't know" is said, never translated into zero.
+  **A real defect was found by the integration test alone.** Timestamps arrive as
+  **strings**, not `Date`, because the rows are wrapped in `json_agg` (the `pg` driver
+  does not convert inside JSON), so every read containing **at least one poisoned row**
+  threw a `TypeError` — the incident path specifically — **while the empty case passed**.
+  A metric that works when there is nothing and fails when there is something is worse
+  than no metric. No in-memory fake could have found it. Fixed at the root: the timestamp
+  is formatted in SQL (`to_char … AT TIME ZONE 'UTC'`), so its literal shape is decided
+  here rather than left to a driver layer, and the parser **raises** on an unreadable
+  timestamp instead of swallowing it as `null`.
+  Measured locally on PostgreSQL 18.6: **32 new tests** (14 pure-domain, 10 at the HTTP
+  boundary, 8 integration on a real database, including a **read-only proof** that the
+  two ledgers' fingerprints are unchanged across the call), and the phase-13 exit gate is
+  now **19/19** (was 17/17) with two assertions that the route is **wired into the real
+  composition root** — so it measures a real database rather than returning 500 — and that
+  `401`/`403` are enforced over a socket. `docs/13-observability/` now holds its first
+  file, a metric contract; the runbook is `docs/14-runbooks/RELAY_POISONED_EVENTS.md`.
+  Earlier statements across the docs that the directory "is empty" were true when written
+  and are annotated with audit notes rather than erased.
+  Not claimed: **no alarm rings**. There is no alerting system and no deployment
+  environment in this repository, so the metric is read by asking — whoever does not ask
+  does not know. There is still **no re-process/replay path for a poisoned row** (the
+  second limit of `RISK-0035` stands): it is a safety question, not a missing method — who
+  decides the corruption is gone, and is an old event re-applied to state that has moved
+  on? The operational repair is described in the runbook, **unmeasured and unclaimed**.
+  There is **no retention policy**, so the count is cumulative and `warning` stays up
+  until a row is deleted deliberately — intended today (loss is not forgotten) and written
+  down so it is not read as a defect. There is no acknowledgement column distinguishing a
+  handled poisoned row from a neglected one. And nothing here was measured on PostgreSQL
+  15/17.6 (the CI versions) or against a production database.
 - M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
   program owner's decision alone (governance protocol §9).
 

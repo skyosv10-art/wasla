@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-13T05:23:37Z",
+  "generated_at": "2026-09-13T07:05:56Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b6c727fcf51435944947ef391d997f4aff92a50b",
-    "branch": "feat/m1-04-coverage-guard-sees-bots-packages",
+    "commit": "a72cab27edf20037b9318c8c78da6708dee7030c",
+    "branch": "feat/m1-04-http-wrapper-lock",
     "dirty": true,
     "dirty_files": 9,
-    "dirty_reason": "المراجعةُ 24/N: إبصارُ bots/ وpackages/ في حارسِ التغطيةِ (البابانِ 2 و7) · حزمةُ الحوكمةِ 189 ⇒ 196 حالةً",
+    "dirty_reason": "المراجعةُ 25/N: قُفلُ أغلفةِ النداءِ (البابُ 8) · حزمةُ الحوكمةِ 196 ⇒ 201 حالةً",
     "tracked_files": 1704
   },
   "env": {
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify24b.log",
+    "source": "/tmp/verify25.log",
     "tests_passed": 4447,
     "test_files_executed": 272,
-    "governance_suite_cases": 196,
+    "governance_suite_cases": 201,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

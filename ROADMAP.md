@@ -360,6 +360,37 @@ Nothing else has been changed in this repository by the WASLA integration work.
   only, so a caller using `undici`, `axios`, or another wrapper is still invisible, and no
   false-positive rate over time has been measured. And still no CI verdict: every run fails with
   zero steps started, so the green reported here is local only.
+- **M1-04 — HTTP-wrapper lock closes the blind spot review 24/N declared, review 25/N, claim
+  `CLM-0146`.** Review 24/N ended with an explicit non-claim: gate 7 greps `fetch(` only, so a
+  caller using `axios`, `undici`, or any other wrapper stays invisible. Measured today, that hole
+  is empty — zero HTTP-client dependencies exist in any `package.json` outside `node_modules`,
+  and zero production files import one — but the hole is the dangerous kind: the day someone adds
+  `axios`, gate 7 goes blind **while staying green**, which is worse than `RISK-0027` was, because
+  that blindness is born green and warns nobody. So a new **gate 8** locks it by default-deny:
+  thirteen known HTTP client packages (`axios`, `undici`, `got`, `node-fetch`, `ky`, `superagent`,
+  `request`, `phin`, `needle`, `axios-retry`, `request-promise`, `isomorphic-fetch`,
+  `cross-fetch`) are rejected in any `package.json` unless declared **with a reason** as a table
+  row inside `<!-- http-wrappers:begin/end -->` in the ledger's new §4.2 — and once declared, the
+  wrapper's import pattern is **added to gate 7's census automatically**, so every file importing
+  it must itself be a counted client or a declared exception. Gate 8 also rejects a dead
+  declaration (a wrapper declared but present in no `package.json`) because it widens the census
+  with nothing behind it and simulates guarding, and it rejects deletion of the marker block. The
+  declaration is parsed from the **first cell of table rows only**, not from the block's prose, so
+  package names mentioned in the explanatory text are illustration rather than declaration — a
+  first implementation read every backticked token and produced three phantom declarations
+  (`fetch`, `node_modules`, `package.json`), which the guard correctly rejected as dead
+  declarations, and the parser was narrowed. Five mutation cases were added (undeclared dependency
+  fails, declared dependency passes, dead declaration fails, deleted block fails, and an importer
+  of a declared wrapper is pulled into gate 7 and fails when unlisted), taking the governance
+  suite to **201 passing, 0 failing** (was 196/0), and the gate document gained item 19. Also
+  recorded honestly: during this work a stray shell heredoc executed with an unset root variable
+  and deleted the new marker block from the real ledger instead of a synthetic fixture; the guard
+  caught it immediately ("marker block missing"), which is exactly the failure mode gate 8 is
+  built to catch, and the block was restored and re-measured green three times. Not claimed: the
+  lock stops a wrapper entering **through `package.json`**; it does not stop a raw socket call
+  (`node:http`, `net`) or a transitive package that wraps a client deep in its own dependency
+  tree, and neither is measured today. And still no CI verdict: runs keep failing with zero steps
+  started.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
   write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
   acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that

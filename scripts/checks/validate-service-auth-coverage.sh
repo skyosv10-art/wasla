@@ -24,6 +24,8 @@
 #      وpackages/ — إمّا عميلٌ مُحصَىً، أو استثناءٌ مُعلَنٌ بسببِه (`RISK-0027`).
 #   6) **جدولُ صلاحيّاتِ كلِّ حدٍّ يُطابِقُ ثابتَ الصلاحيّاتِ في شفرتِه** — لا
 #      صلاحيّةٌ مفروضةٌ غيرُ مكتوبةٍ، ولا صلاحيّةٌ مكتوبةٌ غيرُ مفروضةٍ.
+#   8) **لا مكتبةَ نداءٍ (axios/undici/…) في package.json بلا إعلانٍ** — وإلّا
+#      عمِيَ البابُ 7 بصمتٍ وبقيَ أخضرَ؛ والمُعلَنُ يُوسَّعُ بهِ جردُ البابِ 7.
 #
 # ولمَ أُضيفَ البابُ 6 (2026-09-13 · المراجعةُ 23/N): انحرافٌ صامتٌ قِيسَ لا
 # افتُرِضَ. جدولُ حدِّ التوصيلِ أعلنَ **تسعَ** صلاحيّاتٍ والشفرةُ تفرضُ **إحدى
@@ -198,6 +200,48 @@ for sfile in "${SCOPE_FILES[@]}"; do
   fi
 done
 
+# ── 8) قُفلُ أغلفةِ النداءِ: لا مكتبةَ HTTP تدخلُ بلا إعلانٍ ────────────────
+# البابُ 7 يقيسُ `fetch(` — وهذا حدُّهُ المُعلَنُ. فلو أُضيفَ `axios` أو `undici`
+# غداً لصارَ البابُ 7 أعمى **بصمتٍ** وبقيَ أخضرَ، وهوَ عمىً أسوأُ من عمى
+# `RISK-0027` لأنّه يُولَدُ أخضرَ. فيُقفَلُ البابُ هنا **بالرفضِ افتراضاً**: أيُّ
+# مكتبةِ نداءٍ في أيِّ `package.json` يجبُ أن تُعلَنَ بسببِها بينَ
+# `<!-- http-wrappers:begin/end -->` في السّجلِّ، وحينَ تُعلَنُ يُوسَّعُ جردُ
+# البابِ 7 ليشملَ مُستورِديها. وإعلانٌ لمكتبةٍ غيرِ موجودةٍ يُسقِطُ الفحصَ أيضاً:
+# الإعلانُ الميتُ يُوسِّعُ الجردَ بلا داعٍ ويُخفي الحقيقةَ كما يُخفيها غيابُه.
+HTTP_WRAPPERS=(axios undici got node-fetch ky superagent request phin needle axios-retry request-promise isomorphic-fetch cross-fetch)
+HW_BEGIN="<!-- http-wrappers:begin -->"; HW_END="<!-- http-wrappers:end -->"
+DECLARED_WRAPPERS=()
+if ! grep -qF "$HW_BEGIN" "$LEDGER" || ! grep -qF "$HW_END" "$LEDGER"; then
+  bad "كتلةُ أغلفةِ النداءِ المُعلَنةِ مفقودةٌ من السّجلِّ ($HW_BEGIN)"
+else
+  HW_BLOCK="$(awk -v b="$HW_BEGIN" -v e="$HW_END" 'index($0,b){f=1;next} index($0,e){f=0} f' "$LEDGER")"
+  # الإعلانُ يُقرأُ من **الخليّةِ الأولى في صفوفِ الجدولِ** وحدَها، لا من كلِّ
+  # ما بينَ العلامتَينِ: نثرُ الكتلةِ يذكرُ أسماءَ المكتباتِ تمثيلاً لا إعلاناً.
+  mapfile -t DECLARED_WRAPPERS < <(
+    grep -E '^\|' <<<"$HW_BLOCK" \
+      | awk -F'|' 'NF>2 {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2}' \
+      | grep -oE '^`[a-z0-9@/._-]+`$' | tr -d '`' | sort -u
+  )
+  mapfile -t PKG_FILES < <(find . -name package.json -not -path '*/node_modules/*' -not -path './dist/*' | sort)
+  FOUND_WRAPPERS=()
+  for w in "${HTTP_WRAPPERS[@]}"; do
+    for pf in "${PKG_FILES[@]}"; do
+      if grep -qE "\"$w\"[[:space:]]*:" "$pf"; then FOUND_WRAPPERS+=("$w"); break; fi
+    done
+  done
+  for w in "${FOUND_WRAPPERS[@]:-}"; do
+    [[ -n "$w" ]] || continue
+    printf '%s\n' "${DECLARED_WRAPPERS[@]:-}" | grep -qxF "$w" \
+      || bad "مكتبةُ نداءٍ في package.json بلا إعلانٍ في السّجلِّ — البابُ 7 يعمى عنها: $w"
+  done
+  for w in "${DECLARED_WRAPPERS[@]:-}"; do
+    [[ -n "$w" ]] || continue
+    printf '%s\n' "${FOUND_WRAPPERS[@]:-}" | grep -qxF "$w" \
+      || bad "إعلانُ غلافِ نداءٍ لا وجودَ له في أيِّ package.json (إعلانٌ ميتٌ): $w"
+  done
+  ok "قُفلُ أغلفةِ النداءِ: ${#FOUND_WRAPPERS[@]} مكتبةً موجودةً · ${#DECLARED_WRAPPERS[@]} مُعلَنةً (المرجعُ: fetch الأصليُّ وحدَه حينَ يكونُ العددُ صفراً)"
+fi
+
 # ── 7) لا مُناديَ خامٍ خارجَ البصرِ (إقفالُ `RISK-0027` بنيويّاً) ─────────────
 # البابُ 2 يرى ما يتبعُ التسميةَ `*/src/infrastructure/http-*.ts` وحدَه، فمَن
 # نادى حدّاً بـ`fetch(` من ملفٍّ بأيِّ اسمٍ آخرَ كانَ يمرُّ بلا حسابٍ. فيُحصى
@@ -228,8 +272,13 @@ else
   done
 
   # 7-ج) كلُّ مُنادٍ خامٍ: عميلٌ مُحصَىً أو استثناءٌ مُعلَنٌ
+  RAW_PATTERN='\bfetch\('
+  for w in "${DECLARED_WRAPPERS[@]:-}"; do
+    [[ -n "$w" ]] || continue
+    RAW_PATTERN="$RAW_PATTERN|from '$w'|from \"$w\"|require\('$w'\)"
+  done
   mapfile -t RAW_CALLERS < <(
-    grep -rlE '\bfetch\(' services bots packages \
+    grep -rlE "$RAW_PATTERN" services bots packages \
       --include='*.ts' \
       --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
       --exclude='*.test.ts' 2>/dev/null | sort -u

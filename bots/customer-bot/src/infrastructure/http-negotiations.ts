@@ -1,17 +1,56 @@
-/** HTTP is translated to flow codes here, so server prose never becomes bot copy. */
+/**
+ * HTTP is translated to flow codes here, so server prose never becomes bot copy.
+ *
+ * **التوقيعُ إلزاميٌّ** (`M1-04` · المراجعةُ 26/N): حدُّ المفاوضاتِ صارَ يفرضُ
+ * هويّةَ الخدمةِ، وهذا العميلُ كانَ آخرَ مُنادٍ غيرَ موقَّعٍ ظهرَ حينَ أبصرَ
+ * حارسُ التغطيةِ مجلَّدَ `bots/` في المراجعةِ 24/N (`RISK-0027`). ولا قيمةَ
+ * افتراضيّةَ للموقِّعِ عن قصدٍ: «بلا توقيعٍ» افتراضاً كانَ سيَجعلُ نداءً يُنسى
+ * توقيعُهُ ينجحُ في كلِّ اختبارٍ ويُرَدُّ 401 في الإنتاجِ وحدَهُ.
+ */
+import type { ServiceRequestSigner } from "@wasla/service-auth";
+
 import { CustomerFlowError } from "../flows.js";
 import type { CustomerNegotiationsPort, NegotiationRoundView, NegotiationThreadView } from "../negotiation-flows.js";
 
-export interface HttpCustomerNegotiationsOptions { readonly baseUrl: string; readonly timeoutMs?: number; }
+export interface HttpCustomerNegotiationsOptions {
+  readonly baseUrl: string;
+  readonly timeoutMs?: number;
+  /** موقِّعُ النداءِ الصادرِ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ.** */
+  readonly signRequest: ServiceRequestSigner;
+}
+
+/**
+ * الصلاحيّاتُ التي يحتاجُها هذا العميلُ على حدِّ المفاوضاتِ، لا أكثرَ.
+ * ولاحِظ ما ليسَ هنا: `thread:write` و`round:write` و`tick:run` — فبوتُ
+ * العميلِ في هذا المسارِ يقرأُ الخيوطَ والأدوارَ ويَقبَلُ أو يَرفُضُ، وفتحُ
+ * الخيطِ يجري من محرّكِ الطلبِ لا من هنا.
+ */
+export const CUSTOMER_BOT_NEGOTIATIONS_SCOPES: readonly string[] = [
+  "negotiations:thread:read",
+  "negotiations:round:read",
+  "negotiations:round:decide",
+];
 type WireThread = { id: string; service_kind: NegotiationThreadView["serviceKind"]; state: NegotiationThreadView["state"]; current_round_no: number };
 type WireRound = { round_no: number; proposed_by: NegotiationRoundView["proposedBy"]; amount_minor: number; currency: string; state: NegotiationRoundView["state"] };
 export class HttpCustomerNegotiations implements CustomerNegotiationsPort {
   private readonly baseUrl: string; private readonly timeoutMs: number;
-  constructor(options: HttpCustomerNegotiationsOptions) { this.baseUrl = options.baseUrl.replace(/\/+$/, ""); this.timeoutMs = options.timeoutMs ?? 2000; }
+  private readonly signRequest: ServiceRequestSigner;
+  constructor(options: HttpCustomerNegotiationsOptions) { this.baseUrl = options.baseUrl.replace(/\/+$/, ""); this.timeoutMs = options.timeoutMs ?? 2000; this.signRequest = options.signRequest; }
+  /**
+   * الطريقةُ تُقرأُ من `init.method` والمسارُ يُوقَّعُ كما هوَ: `canonicalRequestBinding`
+   * يقطعُ سلسلةَ الاستفسارِ **مركزيّاً** (ADR-021 §4)، والفاحصُ يقطعُها بالدالّةِ
+   * نفسِها — فتمريرُ «مسارٍ موقَّعٍ» ثانٍ من كلِّ موضعِ نداءٍ كانَ سيَخلُقُ حقيقةً
+   * ثانيةً عن حدودِ الربطِ يمكنُ أن تختلفَ عن الأولى بلا أن يرفضَها شيءٌ.
+   */
   private async request(path: string, init: RequestInit, traceId: string): Promise<unknown> {
+    // التوقيعُ **خارجَ** `try` بقصدٍ: مُوقِّعٌ يرفضُ (`refusingServiceRequestSigner`)
+    // عطلُ تركيبٍ عندَنا لا عطلُ الطرفِ الآخرِ، ولو وقعَ داخلَها لصارَ
+    // `CUSTOMER_DEPENDENCY_UNAVAILABLE` — أي لَقُرِئَ نسيانُ المفاتيحِ عندَنا
+    // بوصفِهِ خدمةَ مفاوضاتٍ ساقطةً، وذاكَ أسوأُ من العطلِ نفسِهِ.
+    const signature = this.signRequest(String(init.method ?? "GET"), path);
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, { ...init, signal: controller.signal, headers: { "content-type": "application/json", "x-request-id": traceId, ...init.headers } });
+      const response = await fetch(`${this.baseUrl}${path}`, { ...init, signal: controller.signal, headers: { "content-type": "application/json", "x-request-id": traceId, ...signature, ...init.headers } });
       if (response.ok) return response.status === 204 ? undefined : await response.json();
       if (response.status === 404) throw new CustomerFlowError("CUSTOMER_NEGOTIATION_NOT_FOUND");
       if (response.status === 409) throw new CustomerFlowError("CUSTOMER_NEGOTIATION_ROUND_STALE");

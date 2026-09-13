@@ -26,6 +26,7 @@ import {
   UNIT_PRICE_MINOR_UNITS,
   call,
   callDelivery,
+  callMarketplace,
   canonicalJson,
   contractEventDefs,
   countRows,
@@ -86,7 +87,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
   async function publishProduct(): Promise<string> {
     const market = gate.marketplaceBaseUrl;
 
-    const registered = await call(market, {
+    const registered = await callMarketplace(market, {
       method: "POST",
       path: "/stores",
       body: {
@@ -99,7 +100,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(registered.status, registered.text).toBe(201);
 
-    const requested = await call(market, {
+    const requested = await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/review-requests`,
       body: { requested_by_public_id: OWNER },
@@ -107,7 +108,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(requested.status, requested.text).toBe(201);
 
-    const approved = await call(market, {
+    const approved = await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/decisions`,
       body: { decision: "approved", actor_type: "moderator", actor_public_id: MODERATOR },
@@ -115,7 +116,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(approved.status, approved.text).toBe(201);
 
-    const created = await call(market, {
+    const created = await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/products`,
       body: {
@@ -131,7 +132,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(created.status, created.text).toBe(201);
     const productId = created.body.product_id as string;
 
-    const moderated = await call(market, {
+    const moderated = await callMarketplace(market, {
       method: "POST",
       path: `/products/${productId}/decisions`,
       body: { decision: "approved", actor_type: "moderator", actor_public_id: MODERATOR },
@@ -139,7 +140,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(moderated.status, moderated.text).toBe(201);
 
-    const stocked = await call(market, {
+    const stocked = await callMarketplace(market, {
       method: "POST",
       path: `/products/${productId}/inventory`,
       body: { quantity_delta: 9, reason_code: "restock", actor_public_id: OWNER },
@@ -147,7 +148,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     });
     expect(stocked.status, stocked.text).toBe(201);
 
-    const published = await call(market, {
+    const published = await callMarketplace(market, {
       method: "POST",
       path: `/products/${productId}/publish`,
       body: { actor_public_id: OWNER },
@@ -156,7 +157,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     expect(published.status, published.text).toBe(200);
 
     // الظهورُ شرطُ الطلبِ (`is_visible`)، وقراءتُهُ هنا تفصلُ فشلَ الرحلةِ عن فشلِ السلكِ.
-    const visible = await call(market, { method: "GET", path: `/products/${productId}` });
+    const visible = await callMarketplace(market, { method: "GET", path: `/products/${productId}` });
     expect(visible.status, visible.text).toBe(200);
     expect(visible.body.is_visible).toBe(true);
 
@@ -327,7 +328,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const productId = await publishProduct();
 
     // الصفُّ في `marketplace_outbox` يكتبُهُ **حدُّ السوقِ** لا الاختبارُ.
-    const adjusted = await call(gate.marketplaceBaseUrl, {
+    const adjusted = await callMarketplace(gate.marketplaceBaseUrl, {
       method: "POST",
       path: `/products/${productId}/inventory`,
       body: { quantity_delta: -3, reason_code: "shrinkage", actor_public_id: OWNER },
@@ -440,7 +441,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
     const productId = await publishProduct();
     // مخزونٌ يكفي كلَّ دورةٍ: كلُّ دورةٍ رابحةٌ تحجزُ وحدةً، والبوّابةُ لا تُصفِّرُ
     // بينَ الدوراتِ — فنفادُهُ كانَ سيُنتِجُ 409 مخزونٍ يُشبِهُ المطلوبَ ولا يعنيهِ.
-    const restocked = await call(gate.marketplaceBaseUrl, {
+    const restocked = await callMarketplace(gate.marketplaceBaseUrl, {
       method: "POST",
       path: `/products/${productId}/inventory`,
       body: { quantity_delta: 30, reason_code: "restock", actor_public_id: OWNER },
@@ -541,7 +542,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
   it("طلبٌ لمنتجٍ غيرِ ظاهرٍ يُرفَضُ رفضاً دائماً — والسوقُ هوَ من قالَ ذلكَ", async () => {
     const market = gate.marketplaceBaseUrl;
 
-    await call(market, {
+    await callMarketplace(market, {
       method: "POST",
       path: "/stores",
       body: {
@@ -552,19 +553,19 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
       },
       idempotencyKey: nextKey("register"),
     });
-    await call(market, {
+    await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/review-requests`,
       body: { requested_by_public_id: OWNER },
       idempotencyKey: nextKey("review"),
     });
-    await call(market, {
+    await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/decisions`,
       body: { decision: "approved", actor_type: "moderator", actor_public_id: MODERATOR },
       idempotencyKey: nextKey("store-decide"),
     });
-    const created = await call(market, {
+    const created = await callMarketplace(market, {
       method: "POST",
       path: `/stores/${STORE_SLUG}/products`,
       body: {
@@ -751,7 +752,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 13 · السوقُ �
       // الطلبُ يحجزُ فعلاً عبرَ حدِّ السوقِ — لا صفَّ حجزٍ مزروعٍ.
       await placeOrder(productId);
 
-      const adjusted = await call(gate.marketplaceBaseUrl, {
+      const adjusted = await callMarketplace(gate.marketplaceBaseUrl, {
         method: "POST",
         path: `/products/${productId}/inventory`,
         body: { quantity_delta: -7, reason_code: "shrinkage", actor_public_id: OWNER },

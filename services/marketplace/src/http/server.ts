@@ -17,6 +17,11 @@
  * سلوكٌ مختلفٌ في الإنتاج، وتاجرٌ يُسجّل متجراً يُنسى عند إعادةِ التشغيل.
  */
 
+import {
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
+
 import { MARKETPLACE_SERVICE_PORT } from "../domain/contract-sets.js";
 import { MarketplaceCatalogService } from "../app/catalog.js";
 import { MarketplaceProductService } from "../app/products.js";
@@ -39,13 +44,44 @@ function readPort(): number {
   return port;
 }
 
+/**
+ * هويّةُ الخدمةِ من البيئةِ — **بلا قيمةٍ افتراضيّةٍ** (`M1-04` · المراجعةُ 29/N).
+ *
+ * `keyRegistryFromEnv` تقرأُ `WASLA_SERVICE_AUTH_KEYS` وتُلقي عندَ غيابِها أو
+ * فسادِها، **فالإقلاعُ يسقطُ هنا** قبلَ أن يستمعَ الحدُّ على منفذٍ. وهذا خلافُ
+ * `DATABASE_URL` أعلاهُ عن قصدٍ، والفرقُ ليسَ تناقضاً:
+ *
+ * - قاعدةٌ غائبةٌ تُنتِجُ خدمةً **تقولُ** `503` صادقةً، والمُشغِّلُ يقرأُ السببَ
+ *   في جوابٍ.
+ * - مفاتيحُ هويّةٍ غائبةٌ تُنتِجُ حدّاً **مفتوحاً** يُصدِّقُ كلَّ منادٍ بهدوءٍ،
+ *   ولا أحدَ يقرأُ شيئاً حتّى يقعَ ما يقعُ. **والصمتُ هنا هوَ العطبُ**، فيُفضَّلُ
+ *   وعاءٌ لا يقومُ على حدٍّ يقومُ بلا بوّابٍ (`ADR-020` · `ADR-022`).
+ *
+ * ومخزنُ آثارِ الإعادةِ في الذاكرةِ — نسخةٌ لكلِّ وعاءٍ، فالإعادةُ تُمنَعُ داخلَ
+ * الوعاءِ لا عبرَ الأسطولِ. وهذا **`RISK-0015` مُسجَّلاً لا مُخبَّأً**، وحلُّهُ
+ * مخزنٌ مشتركٌ لا تعليقٌ أطولُ.
+ */
+function serviceIdentityFromEnv(): {
+  keys: ReturnType<typeof keyRegistryFromEnv>;
+  replayGuard: InMemoryServiceTokenReplayGuard;
+} {
+  return {
+    keys: keyRegistryFromEnv(process.env),
+    replayGuard: new InMemoryServiceTokenReplayGuard(),
+  };
+}
+
 export async function startMarketplaceServer(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   const port = readPort();
   const host = process.env.MARKETPLACE_SERVICE_HOST ?? "0.0.0.0";
 
   if (databaseUrl === undefined || databaseUrl.trim() === "") {
-    const app = createMarketplaceApp({ mode: "memory", logger: true });
+    const app = createMarketplaceApp({
+      mode: "memory",
+      logger: true,
+      serviceIdentity: serviceIdentityFromEnv(),
+    });
     await app.listen({ port, host });
     return;
   }
@@ -62,7 +98,12 @@ export async function startMarketplaceServer(): Promise<void> {
     products: new MarketplaceProductService(deps),
     catalog: new MarketplaceCatalogService(deps),
   };
-  const app = createMarketplaceApp({ services, mode: "postgres", logger: true });
+  const app = createMarketplaceApp({
+    services,
+    mode: "postgres",
+    logger: true,
+    serviceIdentity: serviceIdentityFromEnv(),
+  });
 
   // إغلاقٌ مُرتَّب: الحاضنةُ تُرسل `SIGTERM` ثمّ تقتل. وإسقاطُ العمليّةِ فوراً يقطع معاملةً
   // مفتوحةً في منتصفها — والقاعدةُ تتراجع عنها، لكنّ المُنادي يستلم انقطاعاً بلا رمزٍ يقرؤه.

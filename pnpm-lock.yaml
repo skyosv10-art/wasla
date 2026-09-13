@@ -573,6 +573,9 @@ importers:
       '@wasla/marketplace-service':
         specifier: workspace:*
         version: link:../../services/marketplace
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -995,6 +998,9 @@ importers:
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)

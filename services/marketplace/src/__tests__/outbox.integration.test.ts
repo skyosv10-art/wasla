@@ -41,7 +41,7 @@ import {
   storeRegisteredEvent,
 } from "../domain/events.js";
 import type { Clock } from "../domain/time.js";
-import { createMarketplaceApp } from "../http/app.js";
+import { createSignedMarketplaceApp } from "./service-identity-support.js";
 import {
   MEMBER,
   MODERATOR,
@@ -81,7 +81,7 @@ describe.skipIf(!PG_ENABLED)("صندوقُ الصادرِ فوق Postgres", () =
     await seedLeafCategory(pg.stores, CATEGORY);
     const uow = new MarketplaceUnitOfWork(pg.db);
     const deps = { uow, clock: fixedClock };
-    app = createMarketplaceApp({
+    app = createSignedMarketplaceApp({
       mode: "postgres",
       services: {
         stores: new MarketplaceStoreService(deps),

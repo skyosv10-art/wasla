@@ -43,6 +43,11 @@ import {
   type NegotiationRunner,
 } from "../runner.js";
 
+import {
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
+
 import { createNegotiationApp, type NegotiationHealthDescriptor } from "./app.js";
 
 interface Wiring {
@@ -83,7 +88,22 @@ function buildWiring(): Wiring {
 
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
-  const app = createNegotiationApp({ runner, health, logger: true });
+  // M1-04 (المراجعةُ 26/N): الحدُّ مفروضٌ، والمفاتيحُ من البيئةِ بلا قيمةٍ
+  // افتراضيّةٍ — فنشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يسقطُ عندَ **الإقلاعِ** لا
+  // بعدَ أوّلِ نداءٍ، والفرقُ بينَهما هوَ الفرقُ بينَ عطلٍ يُرى في النشرِ وحدٍّ
+  // مكشوفٍ يُرى في الاختراقِ. ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ
+  // مُعلَنٌ (`RISK-0015`)**: نسختانِ لا تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ
+  // أن يُعادَ على الأخرى — و`Redis` هوَ السدُّ، وعقدُ `ServiceTokenReplayGuard`
+  // مكتوبٌ كي يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+  const app = createNegotiationApp({
+    runner,
+    health,
+    logger: true,
+    serviceIdentity: {
+      keys: keyRegistryFromEnv(process.env),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
+  });
   if (pool) {
     app.addHook("onClose", async () => {
       await pool.end();

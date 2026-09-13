@@ -356,7 +356,7 @@
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -373,8 +373,8 @@
 | `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` · `GEOGRAPHY_IDENTITY_SCOPES` |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/matching/src/__tests__/http-geography.test.ts` يقرأُ `aud` و`scp` · `MATCHING_GEOGRAPHY_SCOPES` |
 | `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
-| `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. |
-| `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` غيرُ مفروضٍ. |
+| `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. **وقد فُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ بلا قيمةٍ افتراضيّةٍ في `HttpCustomerNegotiationsOptions`، والصلاحيّاتُ المُعلَنةُ `CUSTOMER_BOT_NEGOTIATIONS_SCOPES` (قراءةُ خيطٍ · قراءةُ دورٍ · قرارُ دورٍ) لا أوسعُ، والبرهانُ `bots/customer-bot/src/__tests__/http-negotiations-signing.test.ts` يقرأُ `aud` و`svc` و`scp` و`req` من الرمزِ نفسِهِ ويُثبتُ أنَّ مُوقِّعاً يرفضُ **لا يُخرِجُ نداءً أصلاً**. والسببُ الأصليُّ للتأجيلِ محفوظٌ أعلاهُ لا ممحوٌّ. |
+| `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` كانَ غيرَ مفروضٍ. **وفُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ، و`DRIVER_BOT_NEGOTIATIONS_SCOPES` ثلاثُ صلاحيّاتٍ لا أوسعُ، والبرهانُ `bots/driver-bot/src/__tests__/http-negotiations-signing.test.ts`. |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع | موقِّعانِ صريحانِ بجمهورَينِ: `NEGOTIATIONS_ORDER_LOOKUP_SCOPES` و`NEGOTIATIONS_DISPATCH_OFFER_SCOPES` · `services/negotiations/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` من الرمزَين |
 
 <!-- coverage-ledger:end -->
@@ -574,6 +574,57 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 ومسارُ رصدٍ واحدٌ مفتوحٌ — والقراءةُ الهرميّةُ الخمسةُ بصلاحيّةٍ واحدةٍ لأنَّها
 خطرٌ واحدٌ (قراءةُ شجرةٍ مرجعيّةٍ عامّةٍ)، أمّا موقعُ مستخدمٍ **بعينِه** فصلاحيّتُهُ
 مفصولةٌ قراءةً عن كتابةٍ: رمزٌ يقرأُ موقعاً لا يقدرُ بهِ على تحريكِهِ.
+
+---
+
+### 5.4 حدُّ المفاوضاتِ (`M1-04` · المراجعةُ 26/N)
+
+**ولماذا تأخَّرَ هذا الحدُّ عن الموجاتِ الستِّ، تُقالُ الحقيقةُ لا تُلطَّفُ:** لم
+يُؤجَّلْ بقرارٍ مكتوبٍ، بل لأنَّ مُنادِيَيهِ **لم يكونا مرئيَّينِ** — حارسُ
+التغطيةِ كانَ يقرأُ `services/` وحدَها فبقيَ عميلا `bots/` خارجَ بصرِهِ سنةَ
+عمرِ الحارسِ كلَّها (`RISK-0027`). فلمّا أُبصِرَ في 24/N ظهرَ العميلانِ
+«مؤجَّلَينِ» بسببٍ صادقٍ: توقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ طمأنينةٌ بلا فائدةٍ.
+وهذهِ الدَّفعةُ ترفعُ السببَ: **فُرِضَ الحدُّ أوّلاً، ثمَّ وُقِّعَ العميلانِ**.
+
+<!-- negotiations-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | المُنادي اليوم |
+|---|---|---|
+| `POST /negotiations` | `negotiations:thread:write` | محرّكُ الطلبِ |
+| `GET /negotiations` | `negotiations:thread:read` | customer-bot · driver-bot |
+| `GET /negotiations/{threadId}` | `negotiations:thread:read` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/cancel` | `negotiations:thread:write` | محرّكُ الطلبِ |
+| `GET /negotiations/{threadId}/rounds` | `negotiations:round:read` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/rounds` | `negotiations:round:write` | بوتا الطرفَينِ عندَ الاقتراحِ |
+| `POST /negotiations/{threadId}/rounds/{roundNo}/accept` | `negotiations:round:decide` | customer-bot · driver-bot |
+| `POST /negotiations/{threadId}/rounds/{roundNo}/reject` | `negotiations:round:decide` | customer-bot · driver-bot |
+| `GET /negotiations/{threadId}/messages` | `negotiations:message:read` | بوتا الطرفَينِ |
+| `POST /negotiations/{threadId}/messages` | `negotiations:message:write` | بوتا الطرفَينِ |
+| `GET /negotiations/{threadId}/agreement` | `negotiations:agreement:read` | محرّكُ الطلبِ · بوتا الطرفَينِ |
+| `POST /negotiations/tick` | `negotiations:tick:run` | مُجدولٌ تشغيليٌّ |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- negotiations-scopes:end -->
+
+**والتقسيمُ يتبعُ الأفعالَ لا الجداولَ، وأهمُّ فرقَينِ فيهِ يُقاسانِ لا
+يُدَّعَيانِ:** الأوّلُ أنَّ **القبولَ والرفضَ** (`round:decide`) ليسا كـ**الاقتراحِ**
+(`round:write`) — فالقبولُ يُنشئُ اتّفاقاً ويُحرِّكُ سعراً في محرّكِ الطلبِ، ورمزٌ
+طُلِبَ لاقتراحِ دورٍ لا ينبغي أن يبلغَ إنهاءَ التفاوضِ؛ والثاني أنَّ **النبضةَ**
+(`tick:run`) صلاحيّةٌ مستقلّةٌ لأنَّها كتابةٌ جماعيّةٌ على خيوطِ كلِّ المستعملينَ
+ومُنادِيها مُجدولٌ لا بوتُ مستعملٍ. وكلا الفرقَينِ لهُ حالةُ رفضٍ `403` في
+`services/negotiations/src/__tests__/service-identity.test.ts`.
+
+**وما لا يُدَّعى:** فرضُ هذا الحدِّ **لا يُنجِزُ `M1-04`** ولا يُغلِقُ
+`RISK-0027`: يبقى حدُّ `services/marketplace` غيرَ مفروضٍ، ويبقى الخطرُ بعهدةِ
+مالكِهِ (§9 من `docs/16-progress/README.md`). ومَن يمنحُ أيَّ صلاحيّةٍ لأيِّ خدمةٍ
+قرارُ `M1-05` عندَ مُصدِرِ الرمزِ لا قرارُ هذا الجدولِ.
+
+**وقيدٌ يُقالُ هنا لا يُخفى:** `GET /negotiations` يُرشِّحُ بـ`orderPublicId` أو
+`driverPublicId` في **سلسلةِ الاستعلامِ**، والربطُ لا يشملُها
+([`ADR-021` §4](../15-decisions/ADR-021-service-token-replay-policy.md)) — فرمزٌ
+وُقِّعَ لسردِ خيوطِ طلبٍ صالحٌ لسردِ خيوطِ طلبٍ آخرَ. وهوَ الوجهُ نفسُهُ
+لـ**RISK-0026** المسجَّلِ على `GET /orders/lookup`، ومُخفَّفٌ اليومَ بعمرٍ قصيرٍ
+للرمزِ وحرقِ `jti`، وعلاجُهُ الجذريُّ عندَ `M1-05`.
 
 ---
 

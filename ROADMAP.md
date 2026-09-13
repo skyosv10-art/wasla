@@ -249,7 +249,41 @@ Nothing else has been changed in this repository by the WASLA integration work.
   `RISK-0015` (the replay guard is in-memory, so it is per-process) remain open. Role-to-scope
   granting is `M1-05`: this boundary declares what each route *requires*; who deserves a scope
   is the token issuer's decision. `docs/12-testing/M1-04_GATE.md` still describes five
-  enforced boundaries and needs a sixth-wave update — a declared debt.
+  enforced boundaries and needs a sixth-wave update — a declared debt. **(Paid in review 22/N
+  below.)**
+- **M1-04 (central auth middleware) — gate update, review 22/N, claim `CLM-0143`.** Paying the
+  debt declared by the sixth wave, and while measuring it two real defects surfaced that no
+  check had caught. First, **silent documentation drift**: `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md`
+  §2.7 and `docs/12-testing/M1-04_GATE.md` both declared **nine** delivery scopes while
+  `DELIVERY_SCOPES` in `services/delivery/src/http/service-identity.ts` enforces **eleven** —
+  the tenth (`delivery:ops:inventory-conflicts:acknowledge`, review 18/N) and the eleventh
+  (`delivery:ops:relay-dead-letters:read`, review 21/N) were added to the code and never written
+  down. Check 12 (`validate-service-auth-coverage.sh`) reads the §4 client table, not the §2.7
+  scope table, so nothing failed. The fix is not a hand edit: the scope tables in both documents
+  are now wrapped in `<!-- delivery-scopes:begin/end -->` markers and a new guard,
+  `services/delivery/src/__tests__/service-auth-docs-drift.test.ts` (7 cases), reads the
+  exported constant and both documents and fails on a missing, invented, or duplicated scope —
+  and fails loudly if the markers themselves are deleted, so removing the markers cannot make
+  the guard pass. It was confirmed RED against the nine-row tables before the documents were
+  fixed. Second, routes 12 and 13 were classified with scopes in `app.ts` but had **never been
+  measured unsigned** — their HTTP tests all call through the signing harness, so enforcement
+  was inferred from middleware existence. Four boundary cases were added
+  (`service-identity.test.ts` 20 → 24): each route unsigned ⇒ `401 AUTHN_UNAUTHENTICATED`, and
+  each route with a valid token carrying a *different* delivery scope ⇒ `403 AUTHZ_FORBIDDEN`.
+  The delivery boundary as measured today: **13 routes = 11 closed (one scope each) + 2 open by
+  written decision** (`GET /delivery/health`, `GET /delivery/ready`). The gate document now
+  carries a three-layer status header, a new §3.1 with a four-row measured-evidence table for
+  waves 6 and reviews 18/N, 21/N, 22/N, and a new §5 holding the marked scope block.
+  Measured: repository-wide `pnpm -r test` **4447 passing in 272 files** (was 4436/271),
+  `pnpm -r typecheck` clean, governance gate green, `BASELINE.json` regenerated
+  (`static.test_files_tracked` 340 → 341).
+  Not claimed: the historical CI green for the wave-5 gate (run `34065473979`, 27/27,
+  2026-09-07) is preserved and **not extended forward** — no CI verdict exists for wave 6 or
+  anything after it, because every run since 2026-09-12T11:15Z fails with zero steps started
+  (account billing, `docs/14-runbooks/CI_RUNNER_UNBLOCK.md`). `services/marketplace` remains the
+  only implemented boundary with no enforcement, stated plainly rather than in a footnote.
+  `api.openapi.yml` was not touched. No deployment was measured. The guard matches scope
+  *names*, not the rationale next to them, and covers delivery only.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
   write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
   acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that

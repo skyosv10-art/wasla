@@ -398,6 +398,65 @@ describe("حد التوصيل — حدود الربط والتصنيف", () => {
     await app.close();
   });
 
+  /*
+   * ── المسارانِ الثاني عشرَ والثالثَ عشرَ ───────────────────────────────────
+   * أُضيفا بعدَ الموجةِ السادسةِ (المراجعتانِ 18/N و21/N) بصلاحيّتَيهما
+   * العاشرةِ والحاديةَ عشرةَ، **ولم يُثبَتْ فرضُهما في هذا الملفِّ** حينَها:
+   * اختباراتُ مسارَيهما تُنادي عبرَ السندِ الموقِّعِ، فكانت تشهدُ للسندِ لا
+   * للحدِّ (انظرْ ترويسةَ الملفِّ). والفرقُ ليسَ شكليّاً: مسارٌ يُصنَّفُ
+   * بصلاحيّةٍ في `app.ts` ولا يُقاسُ **بلا توقيعٍ** يبقى فرضُهُ استنتاجاً من
+   * وجودِ الوسيطِ لا قياساً عليهِ. وأخطرُهما الإقرارُ: كتابةُ مسؤوليّةٍ في دفترٍ
+   * يُقرأُ في تحقيقٍ. فالحالاتُ الأربعُ أدناهُ ترفعُ دَينَ قياسٍ لا تُجمِّلُ عدداً.
+   */
+  const ACKNOWLEDGEMENT = `/delivery/inventory-conflicts/${"11111111-1111-4111-8111-111111111111"}/acknowledgement`;
+  const DEAD_LETTERS = "/delivery/relay/dead-letters";
+
+  it("المسار الثاني عشر (إقرار الراية) بلا توقيع → 401 لا 500 ولا إقرار", async () => {
+    const { app, rawInject } = harnessApp();
+    const response = await rawInject({ method: "POST", url: ACKNOWLEDGEMENT });
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error_code).toBe(UNAUTHENTICATED);
+    await app.close();
+  });
+
+  it("رمزُ قراءةِ الرايات لا يُقرّها → 403؛ فالإقرار كتابةُ مسؤولية لا قراءةٌ أعلى", async () => {
+    const { app, rawInject, keys } = harnessApp();
+    const response = await rawInject({
+      method: "POST",
+      url: ACKNOWLEDGEMENT,
+      headers: signFor("POST", ACKNOWLEDGEMENT, {
+        keys,
+        scopes: [DELIVERY_SCOPES.inventoryConflictsRead],
+      }),
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error_code).toBe(FORBIDDEN);
+    await app.close();
+  });
+
+  it("المسار الثالث عشر (دفتر الرسائل الميتة) بلا توقيع → 401", async () => {
+    const { app, rawInject } = harnessApp();
+    const response = await rawInject({ method: "GET", url: DEAD_LETTERS });
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error_code).toBe(UNAUTHENTICATED);
+    await app.close();
+  });
+
+  it("رمزُ رايات المخزون لا يقرأ دفتر التوزيع الفاسد → 403؛ نطاقُ المقروء مختلف", async () => {
+    const { app, rawInject, keys } = harnessApp();
+    const response = await rawInject({
+      method: "GET",
+      url: DEAD_LETTERS,
+      headers: signFor("GET", DEAD_LETTERS, {
+        keys,
+        scopes: [DELIVERY_SCOPES.inventoryConflictsRead],
+      }),
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error_code).toBe(FORBIDDEN);
+    await app.close();
+  });
+
   it("مسار غير معروف يُرَدّ 401 قبل 404 — لا استكشاف مسارات بلا هوية", async () => {
     const { app, rawInject } = harnessApp();
     const response = await rawInject({ method: "GET", url: "/store-orders/x/does-not-exist" });

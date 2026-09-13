@@ -230,7 +230,8 @@
   `POST …/fulfillment-transition` (وعندَ التسليمِ **خصمٌ نهائيٌّ**
   `reserved ⇒ consumed` لا يُستردُّ).
 - **الحدُّ نفسُهُ:** `services/delivery/src/__tests__/service-identity.test.ts` —
-  **عشرونَ حالةً مقيسةً**: بلا ترويسةٍ ⇒ `401` · مزوَّرةٌ بسرٍّ آخرَ ⇒ `401` ·
+  **عشرونَ حالةً مقيسةً في الموجةِ السادسةِ** (وصارت **24** في 22/N بإضافةِ
+  أربعٍ للمسارَينِ الثاني عشرَ والثالثَ عشرَ): بلا ترويسةٍ ⇒ `401` · مزوَّرةٌ بسرٍّ آخرَ ⇒ `401` ·
   منتهيةٌ ⇒ `401` · جمهورٌ آخرُ ⇒ `401` · الصلاحيّةُ الصحيحةُ ⇒ `201` ·
   صلاحيّةٌ ناقصةٌ ⇒ `403` · إعادةُ الرمزِ نفسِهِ ⇒ `401` · تعذُّرُ مخزنِ آثارِ
   الإعادةِ ⇒ `503` · **رمزُ قراءةٍ لا يُعلِنُ طلباً مدفوعاً ولا يُلغيهِ ولا
@@ -246,22 +247,50 @@
   توقيعٍ ⇒ `401` لا `404` · `/delivery/health` بلا توقيعٍ ⇒ `200`. وبقيّةُ
   دعاوى البوّابةِ (18 موضعَ نداءٍ) مرَّت إلى `callDelivery` الموقِّعِ — علاجُ
   الـ`401` توقيعُ المنادي لا إضعافُ الحدِّ، كما في §2.6.
-- **الصلاحيّاتُ تسعٌ لتسعةِ مساراتٍ مُغلَقةٍ**، والتقسيمُ **بخطرِ المسارِ لا
+- **صلاحيّةٌ واحدةٌ لكلِّ مسارٍ مُغلَقٍ** (اليومَ: **11 صلاحيّةً لـ11 مساراً
+  مُغلَقاً** من 13 مساراً على هذا الحدِّ)، والتقسيمُ **بخطرِ المسارِ لا
   باسمِ الخدمةِ**: صلاحيّةٌ واحدةٌ لـ«التوصيلِ» كانت ستُعطي مَن يحتاجُ قراءةَ
   طلبٍ القدرةَ على إعلانِهِ مدفوعاً وإلغائِهِ وتقديمِ تنفيذِهِ.
 
-  | الصلاحيّة | المسارُ الذي تفتحُه |
-  |---|---|
-  | `delivery:store-order:write` | `POST /store-orders` |
-  | `delivery:store-order:read` | `GET /store-orders/:orderPublicId` |
-  | `delivery:store-order:cancel` | `POST /store-orders/:orderPublicId/cancellation` |
-  | `delivery:store-order:confirm` | `POST /store-orders/:orderPublicId/confirmation` |
-  | `delivery:payment-mirror:write` | `PUT /store-orders/:orderPublicId/payment-mirror` |
-  | `delivery:fulfillment:transition` | `POST /store-orders/:orderPublicId/fulfillment-transition` |
-  | `delivery:delivery-task:read` | `GET /store-orders/:orderPublicId/delivery-task` |
-  | `delivery:ops:idempotency-sweep` | `POST /delivery/idempotency-keys/sweep` |
-  | `delivery:ops:inventory-conflicts:read` | `GET /delivery/inventory-conflicts` |
-  | *(مفتوحٌ بقصدٍ)* | `GET /delivery/health` · `GET /delivery/ready` |
+  والجدولُ أدناهُ **يقرأُهُ حرسٌ** لا عينٌ وحدَها:
+  [`service-auth-docs-drift.test.ts`](../../services/delivery/src/__tests__/service-auth-docs-drift.test.ts)
+  يُطابِقُ ما بينَ العلامتَينِ بـ`DELIVERY_SCOPES` في الشفرةِ حرفاً — فلا
+  صلاحيّةٌ مفروضةٌ غائبةٌ عن هذا السجلِّ ولا صلاحيّةٌ في السجلِّ لا وجودَ لها.
+
+  <!-- delivery-scopes:begin -->
+
+  | الصلاحيّة | المسارُ الذي تفتحُه | أُضيفت في |
+  |---|---|---|
+  | `delivery:store-order:write` | `POST /store-orders` | الموجةُ 6 (17/N) |
+  | `delivery:store-order:read` | `GET /store-orders/:orderPublicId` | الموجةُ 6 (17/N) |
+  | `delivery:store-order:cancel` | `POST /store-orders/:orderPublicId/cancellation` | الموجةُ 6 (17/N) |
+  | `delivery:store-order:confirm` | `POST /store-orders/:orderPublicId/confirmation` | الموجةُ 6 (17/N) |
+  | `delivery:payment-mirror:write` | `PUT /store-orders/:orderPublicId/payment-mirror` | الموجةُ 6 (17/N) |
+  | `delivery:fulfillment:transition` | `POST /store-orders/:orderPublicId/fulfillment-transition` | الموجةُ 6 (17/N) |
+  | `delivery:delivery-task:read` | `GET /store-orders/:orderPublicId/delivery-task` | الموجةُ 6 (17/N) |
+  | `delivery:ops:idempotency-sweep` | `POST /delivery/idempotency-keys/sweep` | الموجةُ 6 (17/N) |
+  | `delivery:ops:inventory-conflicts:read` | `GET /delivery/inventory-conflicts` | الموجةُ 6 (17/N) |
+  | `delivery:ops:inventory-conflicts:acknowledge` | `POST /delivery/inventory-conflicts/:adjustmentId/acknowledgement` | 18/N (ADR-026 §4.20) |
+  | `delivery:ops:relay-dead-letters:read` | `GET /delivery/relay/dead-letters` | 21/N (ADR-026 §4.23) |
+
+  <!-- delivery-scopes:end -->
+
+  و**المسارانِ المفتوحانِ بقصدٍ مُعلَنٍ** خارجَ الكتلةِ أعلاهُ لأنَّهما بلا
+  صلاحيّةٍ أصلاً: `GET /delivery/health` · `GET /delivery/ready` — ويُقاسُ
+  انفتاحُهما بـ`200` بلا توقيعٍ في الدعوى نفسِها (انظرْ أدناهُ).
+
+- **وسجلُّ تصحيحٍ لا يُمحى:** هذا الجدولُ بقيَ من 2026-09-12 إلى 2026-09-13
+  يُعلِنُ **تسعَ** صلاحيّاتٍ والحدُّ يفرضُ إحدى عشرةَ — إذ أُضيفتِ العاشرةُ في
+  18/N والحاديةَ عشرةَ في 21/N ولم يُحدَّثِ السجلُّ. ولم يُسقِطْ ذلكَ بناءً ولا
+  اختباراً ولا الفحصَ 12 (يقرأُ سطورَ العملاءِ في §4 لا جدولَ §2.7)، فكانَ
+  **انحرافاً صامتاً في وثيقةِ أمنٍ**. وقد صُحِّحَ بالإضافةِ لا بالمحوِ، وأُغلِقَ
+  بابُ عودتِهِ بالحرسِ المذكورِ أعلاه (المراجعةُ 22/N).
+- **وفرضُ المسارَينِ الأخيرَينِ قِيسَ الآنَ لا استُنتِجَ:** حالاتُ الإثباتِ في
+  `service-identity.test.ts` صارت **24** بعدَ إضافةِ أربعٍ للمسارَينِ الثاني
+  عشرَ والثالثَ عشرَ: كلٌّ منهما **بلا توقيعٍ ⇒ 401**، ورمزُ
+  `inventory-conflicts:read` **لا يُقِرُّ** رايةً ⇒ 403 و**لا يقرأُ** دفترَ
+  الرسائلِ الميتةِ ⇒ 403. وقبلَ ذلكَ كانَ فرضُهما يُستنتَجُ من وجودِ الوسيطِ
+  لأنَّ اختباراتِ مسارَيهما تُنادي عبرَ السندِ الموقِّعِ.
 
 - **ولمَ `/delivery/ready` مفتوحٌ:** منادِيهِ **مُنسِّقُ النشرِ** (kubelet · موازِنُ
   حِملٍ) ولا يملكُ مفتاحَ خدمةٍ ولا يجوزُ أن يملكَهُ. إغلاقُهُ يوقفُ **النشرَ** لا

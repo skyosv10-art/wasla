@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-13T02:29:19Z",
+  "generated_at": "2026-09-13T03:17:35Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "058914ddb73c145ec63f032b4bb6d7fef6e0af98",
-    "branch": "feat/m5-21-relay-dead-letter-observability",
+    "commit": "b71a0771439d8e65e3a35ea84ea537b24ee6a924",
+    "branch": "docs/m1-04-gate-wave6-scope-drift",
     "dirty": true,
-    "dirty_files": 22,
-    "dirty_reason": "المراجعةُ 21/N (CLM-0142): مقياسُ الصفوفِ المسمومةِ وحكمُ تنبيهِهِ — مسارٌ ثالثَ عشرَ وصلاحيّةٌ حاديةَ عشرةَ ومحوِّلُ قراءةٍ محضةٍ على دفترَي الاستهلاكِ، وثلاثةُ ملفّاتِ اختبارٍ جديدةٍ (32 دعوى) وعقدُ مقياسٍ ودليلُ تشغيلٍ",
-    "tracked_files": 1696
+    "dirty_files": 10,
+    "dirty_reason": "22/N: تحديثُ بوّابةِ M1-04 وحرسُ انحرافِ الوثيقتَينِ — إعادةُ التوليدِ من سجلِّ تحقُّقٍ أخضرَ مقيسٍ",
+    "tracked_files": 1703
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 340,
+    "test_files_tracked": 341,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify21b.log",
-    "tests_passed": 4436,
-    "test_files_executed": 271,
+    "source": "/tmp/verify22b.log",
+    "tests_passed": 4447,
+    "test_files_executed": 272,
     "governance_suite_cases": 183,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:0bb60aac99abe116daa73f499cedaee8e48f5d7905f22b8d9fe9ee3414e978f5",
+  "fingerprint": "sha256:489ae5e751c54576adb672fee3aa05ca5619cd984202a835e2edf306904b19b9",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

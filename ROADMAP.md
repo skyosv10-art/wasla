@@ -326,6 +326,40 @@ Nothing else has been changed in this repository by the WASLA integration work.
   `api.openapi.yml` was not touched. And there is still no CI verdict: every run fails with zero
   steps started (account billing, `docs/14-runbooks/CI_RUNNER_UNBLOCK.md`), so local green is
   reported as local green and nothing more.
+- **M1-04 (central auth middleware) — coverage guard now sees `bots/` and `packages/`, review
+  24/N, claim `CLM-0145`.** Review 23/N ended by naming its own blind spot: `bots/` and
+  `packages/` stay outside check 12's vision (`RISK-0027`, open since 2026-09-05). Closing that
+  root cause produced a genuine, previously invisible defect: two real outbound clients,
+  `bots/customer-bot/src/infrastructure/http-negotiations.ts` and
+  `bots/driver-bot/src/infrastructure/http-negotiations.ts`, follow the repository's own client
+  naming convention, call `POST /negotiations/{thread}/rounds/{n}/{accept,reject}`, carry **no
+  signer at all** (measured: no `sign*Request` anywhere in either file), and **had never
+  appeared in the coverage ledger**. So the ledger's line "eleven signers out of eleven outbound
+  clients — nothing deferred" was true of `services/` and misleading if read as a claim about
+  the repository. Two changes: gate 2's discovery now globs `bots/*/src/infrastructure/http-*.ts`
+  alongside `services/`, and a new **gate 7** takes a census of every production file containing
+  `fetch(` under `services/`, `bots/`, and `packages/` (excluding `__tests__` and `*.test.ts`)
+  and requires each one to be either a counted client or an exception **declared with its reason**
+  inside `<!-- fetch-exceptions:begin/end -->` in the ledger. Gate 7 also rejects a *dead*
+  exception (a listed file that no longer exists), rejects smuggling a real client into the
+  exception list to exempt it from the ledger, and rejects deletion of the marker block —
+  measured today as **22 raw callers = 16 counted clients + 11 declared exceptions** (the eleven
+  being e2e harnesses, each with a written reason). The two bot clients were added to the ledger
+  as `مؤجَّل` with an `M1-04` reference and the honest reason: the `negotiations` boundary is
+  **not enforced** (measured — no `registerServiceIdentity` in
+  `services/negotiations/src/http/app.ts`), so signing a call to a boundary that verifies nothing
+  would buy reassurance rather than safety; they will be signed when the boundary is enforced,
+  and the guard now prevents forgetting them. Seven mutation cases were added to
+  `scripts/checks/test-governance.sh` (hidden raw caller, declared exception, dead exception,
+  client smuggled into exceptions, deleted marker block, an unlisted `bots/` client, and a clean
+  root) so the governance suite is **196 passing, 0 failing** (was 189/0). The gate document
+  gained item 18, and item 12's old note — "all existing callers are signed" — was corrected
+  **by addition**, not deleted: that sentence was false and only measurement could show it.
+  `RISK-0027` stays `open` until its owner reviews it (§9: promotion is the owner's authority),
+  while its technical cause is recorded as measured-closed. Not claimed: gate 7 matches `fetch(`
+  only, so a caller using `undici`, `axios`, or another wrapper is still invisible, and no
+  false-positive rate over time has been measured. And still no CI verdict: every run fails with
+  zero steps started, so the green reported here is local only.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
   write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
   acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that

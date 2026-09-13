@@ -1774,6 +1774,10 @@ _sac_root() { # _sac_root <tag>
   printf 'export class HttpGeographyPort {}\n' \
     > "$R/services/matching/src/infrastructure/http-geography.ts"
   printf 'registerServiceIdentity(app, wiring);\n' > "$R/services/matching/src/http/app.ts"
+  # والحدُّ المُعلَنُ مفروضاً له ملفُّ هويّةٍ في موضعِه — كما في المستودعِ الحقيقيِّ.
+  # (بلا ثابتِ صلاحيّاتٍ مُصدَّرٍ، فلا يُطلَبُ منه جدولٌ في البابِ 6.)
+  printf 'export function registerServiceIdentity() {}\n' \
+    > "$R/services/matching/src/http/service-identity.ts"
   cat > "$R/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md" <<'MD'
 # سجلٌّ صناعيّ
 <!-- coverage-ledger:start -->
@@ -1838,6 +1842,65 @@ t "سجلٌّ بلا علامةِ بدايةٍ يُسقِط" fail _sac "$S_NOMAR
 S_NOSVC="$(_sac_root nosvc)"
 sed -i 's|^enforced: matching$||' "$S_NOSVC/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
 t "سجلٌّ بلا حدٍّ مُعلَنٍ مفروضاً يُسقِط" fail _sac "$S_NOSVC"
+
+# ── البابُ 6: جدولُ الصلاحيّاتِ يُطابِقُ الشفرةَ (23/N) ──────────────────────
+# الجذرُ الصناعيُّ أعلاه لا ثابتَ صلاحيّاتٍ فيه، فيُبنى جذرٌ ثانٍ يضيفُ إلى الحدِّ
+# ملفَّ هويّةٍ بثابتٍ مُصدَّرٍ وكتلةً مُعلَّمةً صادقةً — ثمَّ تُطفَّرُ الحالاتُ.
+# وكلُّ حالةٍ تُثبِتُ باباً بذاتِه: الناقصُ · المُختلَقُ · العلامةُ المحذوفةُ.
+_sac_scope_root() { # _sac_scope_root <tag>
+  local R; R="$(_sac_root "scope_$1")"
+  cat > "$R/services/matching/src/http/service-identity.ts" <<'TS'
+export const MATCHING_SCOPES = {
+  a: "matching:candidates:evaluate",
+  b: "matching:candidacy:read",
+} as const;
+TS
+  cat >> "$R/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md" <<'MD'
+
+<!-- matching-scopes:begin -->
+
+| الصلاحيّة | المسار |
+|---|---|
+| `matching:candidates:evaluate` | `POST /matching/candidates` |
+| `matching:candidacy:read` | `GET /candidacy/{driver}` |
+
+<!-- matching-scopes:end -->
+MD
+  printf '%s\n' "$R"
+}
+
+S_SC_OK="$(_sac_scope_root ok)"
+t "جدولُ صلاحيّاتٍ مُعلَّمٌ مُطابِقٌ للشفرةِ يمرّ" pass _sac "$S_SC_OK"
+
+# صلاحيّةٌ أُضيفت إلى الشفرةِ ولم تُكتَبْ — العيبُ الذي أُنشئَ البابُ 6 له
+S_SC_MISS="$(_sac_scope_root missing)"
+sed -i 's|  b: "matching:candidacy:read",|  b: "matching:candidacy:read",\n  c: "matching:rulesets:read",|' \
+  "$S_SC_MISS/services/matching/src/http/service-identity.ts"
+t "صلاحيّةٌ مفروضةٌ في الشفرةِ وغيرُ مكتوبةٍ تُسقِط" fail _sac "$S_SC_MISS"
+
+# والعكسُ خطرٌ أيضاً: جدولٌ يُعلِنُ صلاحيّةً لا تفرضُها الشفرةُ
+S_SC_INV="$(_sac_scope_root invented)"
+sed -i 's|<!-- matching-scopes:end -->|\| `matching:decisions:read` \| `GET /matching/decisions/{id}` \|\n\n<!-- matching-scopes:end -->|' \
+  "$S_SC_INV/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "صلاحيّةٌ مكتوبةٌ لا تفرضُها الشفرةُ تُسقِط" fail _sac "$S_SC_INV"
+
+# وحذفُ العلامةِ لا يُسكِتُ الحارسَ: الغيابُ إخفاقٌ لا مرورٌ
+S_SC_NOMARK="$(_sac_scope_root nomark)"
+sed -i 's|<!-- matching-scopes:begin -->||' \
+  "$S_SC_NOMARK/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "حذفُ علامةِ الكتلةِ يُسقِط (لا تُشترى الخُضرةُ بحذفِ الحارسِ)" fail _sac "$S_SC_NOMARK"
+
+# وحدٌّ بلا ثابتِ صلاحيّاتٍ لا يُطلَبُ منه جدولٌ: الحارسُ لا يخترعُ شرطاً —
+# الجذرُ هنا فيه ملفُّ هويّةٍ بلا ثابتٍ مُصدَّرٍ، فيمرُّ البابُ 6 بلا جدولٍ.
+S_SC_NONE="$(_sac_root scope_none)"
+t "حدٌّ بلا ثابتِ صلاحيّاتٍ مُصدَّرٍ لا يُطلَبُ منه جدولٌ" pass _sac "$S_SC_NONE"
+
+# وحدٌّ مُعلَنٌ مفروضاً وملفُّ هويّتِه منقولٌ عن موضعِه يُسقِط: نقلُ الملفِّ
+# كانَ سيُخرِسُ البابَ 6 بلا هذا الشرطِ — فالإخراسُ نفسُه صارَ إخفاقاً.
+S_SC_MOVED="$(_sac_scope_root moved)"
+mv "$S_SC_MOVED/services/matching/src/http/service-identity.ts" \
+   "$S_SC_MOVED/services/matching/src/http/identity.ts"
+t "ملفُّ هويّةٍ منقولٌ عن موضعِه المُعلَنِ يُسقِط" fail _sac "$S_SC_MOVED"
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'
 # الحارسُ يقيسُ على **المنتظِمين** (مَن له journal) وحدَهم — فالتطبيقُ تدريجيٌّ

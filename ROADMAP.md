@@ -284,6 +284,48 @@ Nothing else has been changed in this repository by the WASLA integration work.
   only implemented boundary with no enforcement, stated plainly rather than in a footnote.
   `api.openapi.yml` was not touched. No deployment was measured. The guard matches scope
   *names*, not the rationale next to them, and covers delivery only.
+- **M1-04 (central auth middleware) — scope-table guard generalised to all six boundaries,
+  review 23/N, claim `CLM-0144`.** Review 22/N closed the delivery drift with a unit-test guard
+  and explicitly declared that it "covers delivery only". Measuring that residue produced a
+  worse finding than the one it closed: the four geography scopes enforced in code
+  (`geography:hierarchy:read`, `geography:zone:read`, `geography:location:read`,
+  `geography:location:write`) appear **nowhere in `docs/`** — measured by searching every scope
+  string across every documentation file, zero hits — and have been enforced since 2026-09-07.
+  So the delivery drift was never one service's accident; it was the pattern, and the missing
+  table is worse than a stale one because there is nothing to compare against. Chosen fix, among
+  legitimate alternatives: extend **check 12**
+  (`scripts/checks/validate-service-auth-coverage.sh`) with a new **gate 6** rather than add a
+  fourteenth governance check. Rationale: one source of truth (the exported `*_SCOPES` constant
+  in each `services/<svc>/src/http/service-identity.ts`), the strongest automatic enforcement
+  available (check 12 already runs in CI and in the governance gate), and no new check counter,
+  so no CI-config or baseline-counter churn. Gate 6 extracts every scope literal from each
+  boundary's exported constant and requires it inside that boundary's
+  `<!-- <svc>-scopes:begin/end -->` block in `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md`,
+  and requires that no scope inside the block is absent from the code. A second, narrower rule
+  was added after a fixture exposed the hole: every boundary the ledger declares **enforced**
+  must have `service-identity.ts` at its declared path, so moving or renaming the file **fails**
+  the check instead of silently skipping gate 6. Existing tables (matching, orders, identity,
+  dispatch) were wrapped in markers in place — no table was copied, so no truth was duplicated
+  — and a new §5.3 was written for geography with the nine closed routes measured from
+  `services/geography/src/http/app.ts` plus `GET /health` open by explicit classification. The
+  §5 heading, still reading "the two boundaries' scopes" while six are enforced, was corrected
+  **by addition**: the stale title and the six-day documentation gap are both recorded in place
+  rather than quietly overwritten. Measured: gate 6 was confirmed RED first — it rejected five
+  of six boundaries before the tables were marked — then green across **6 boundaries and 38
+  scopes** (delivery 11, dispatch 7, orders 6, identity 5, matching 5, geography 4). Six
+  mutation cases were added to `scripts/checks/test-governance.sh` proving the gate actually
+  rejects: a scope in code but not documented, a scope documented but not in code, a deleted
+  marker, a moved identity file (all must fail), plus a truthful table and a boundary with no
+  exported constant (must pass). The governance suite is **189 passing, 0 failing** (was 183/0).
+  `M1-04_GATE.md` gained item 17, so the tally is now **16 ✅ and one ⚠️ partial (12)**, and its
+  §5 records that the drift guard is now two layers over one truth source rather than one.
+  Not claimed: this gate matches scope **names** against code, not each scope's binding to its
+  route (that is proven on the wire in each boundary's `service-identity.test.ts`) and not the
+  correctness of the rationale written beside a name. `bots/` and `packages/` remain outside the
+  check's vision (`RISK-0027` still open). `services/marketplace` is still unenforced.
+  `api.openapi.yml` was not touched. And there is still no CI verdict: every run fails with zero
+  steps started (account billing, `docs/14-runbooks/CI_RUNNER_UNBLOCK.md`), so local green is
+  reported as local green and nothing more.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement
   write route, lifting the debt declared in ADR-026 §4.18 ("no write route for the
   acknowledgement") — the debt whose only blocker, per §4.19, had already fallen: a `POST` that

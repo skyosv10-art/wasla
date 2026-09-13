@@ -77,6 +77,8 @@ $ bash scripts/checks/validate-baseline.sh
 
 **11) الحزمةُ بعدَ كلِّ ما سبقَ.** `bash scripts/checks/test-governance.sh` ⇒ **212 ناجح · 0 فاشل** (كانت 201 قبلَ الدَّفعةِ · +11 حالةَ طفرةٍ). و`bash scripts/checks/verify-governance.sh` ⇒ **12 نجاحاً · 0 فشلٍ · تخطٍّ واحدٌ مُعلَنٌ** هوَ الفحصُ الثامنُ بالسببِ الصادقِ أعلاهُ.
 
+**12) وحكمُ الخطِّ قُرِئَ بعدَ الدفعِ لا قبلَهُ — وهوَ الحاجزُ لا النتيجةُ.** التشغيلُ `34773381793` (`WASLA CI` · `pull_request` · الالتزامُ `5752326`) انتهى في **خمسِ ثوانٍ**، وكلُّ وظائفِهِ الثمانِ بطولِ `steps` **صفراً**، والتعليقُ الرسميُّ حرفاً: «The job was not started because recent account payments have failed or your spending limit needs to be increased.» فالحكمُ **`NOT VERIFIED — JOB DID NOT START`** لا `FAIL`. الدليلُ الخامُّ في [`2026-09-13T180230Z-m0-29-ci-verdict/`](../12-testing/ci-evidence/2026-09-13T180230Z-m0-29-ci-verdict/README.md).
+
 **الخطوةُ التالية.** إنفاذُ هويّةِ الخدمةِ على حدِّ `services/marketplace` — آخرُ حدٍّ غيرِ مفروضٍ من `M1-04` (سبعةٌ مفروضةٌ · 47 نطاقاً · 0 مؤجَّلٌ).
 
 ## 2026-09-13 · تحريرُ الحجزِ `CLM-0146` بعدَ دمجِ قُفلِ الأغلفةِ

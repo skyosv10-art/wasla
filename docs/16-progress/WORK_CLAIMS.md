@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0152 | M0-31 | @uxxxu (agent:perplexity-computer) | chore/m0-31-workflow-supply-chain-guard | .github/workflows/,scripts/checks/ | 2026-09-14 | 2026-09-28 | Active |
 | CLM-0146 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-http-wrapper-lock | scripts/checks/,docs/07-security/,docs/12-testing/ | 2026-09-13 | 2026-09-27 | Released (PR #133 · 9f4dc90 · 2026-09-13) |
 | CLM-0145 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-coverage-guard-sees-bots-packages | scripts/checks/,docs/07-security/,docs/12-testing/,docs/16-progress/ | 2026-09-13 | 2026-09-27 | Released (PR #131 · 25d36a5 · 2026-09-13) |
 | CLM-0144 | M1-04 | @uxxxu (agent:perplexity-computer) | feat/m1-04-scope-table-guard-all-boundaries | scripts/checks/,services/delivery/src/__tests__/,docs/07-security/,docs/12-testing/,docs/16-progress/ | 2026-09-13 | 2026-09-27 | Released (PR #129 مُدمج 2026-09-13T04:17:38Z · التزامُ الدمجِ `91978a7` · squash · وحُذِفَ الفرعُ · تعميمُ حارسِ جدولِ الصلاحيّاتِ على الحدودِ الستّةِ بالبابِ السادسِ من الفحصِ 12 — المراجعةُ 23/N · `compare main…91978a7` ⇒ `identical` و`ahead_by = 0` مقروءاً لا مُفترَضاً · **ولا حكمَ CI**: 31/31 `failure` بـ`steps` صفرٍ — عطبُ حسابٍ · إقفالُ دورةِ §8.1) |

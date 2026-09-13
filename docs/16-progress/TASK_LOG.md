@@ -127,7 +127,14 @@
 في الذاكرةِ) و`RISK-0036` (حمايةُ `main` غائبةٌ) باقيانِ. و`M1-05` خارجَ النطاقِ:
 `decisions` تطلبُ صلاحيّةَ قرارٍ **ولا تُثبِتُ أنَّ حاملَها مُشرِفٌ**.
 
-**وما لم يُتحقَّق منهُ (CI).** **لا حكمَ خطٍّ لهذهِ الدفعةِ.** كلُّ تشغيلٍ منذُ
+**وما لم يُتحقَّق منهُ (CI) — مقيسٌ على رأسِ الدفعةِ لا مذكورٌ نصّاً.** التشغيلُ
+[`34779214942`](https://github.com/skyosv10-art/wasla/actions/runs/34779214942)
+لـ[PR #137](https://github.com/skyosv10-art/wasla/pull/137): **31 وظيفةً · 31
+بـ`steps` طولُها صفرٌ · خمسُ ثوانٍ من الإنشاءِ إلى الختمِ** بتنبيهٍ رسميٍّ
+«The job was not started because recent account payments have failed…» —
+والخامُّ محفوظٌ في
+[`ci-evidence/2026-09-13T195700Z-m1-04-marketplace-boundary-29n/`](../12-testing/ci-evidence/2026-09-13T195700Z-m1-04-marketplace-boundary-29n/README.md)
+ومعَهُ لقطةُ `main` بـ`"protected": false` في الوقتِ نفسِه. **لا حكمَ خطٍّ لهذهِ الدفعةِ.** كلُّ تشغيلٍ منذُ
 2026-09-12T11:15Z ينتهي في ثوانٍ بـ`steps` طولُها صفرٌ (عطبُ فواتيرِ الحسابِ)،
 والحالةُ تُسجَّلُ `NOT VERIFIED — JOB DID NOT START` **لا `FAIL`**
 ([`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md) القاعدةُ 3). **والأخضرُ المحلّيُّ

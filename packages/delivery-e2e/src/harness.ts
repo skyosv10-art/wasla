@@ -835,3 +835,4 @@ export function contractEventDefs(): readonly string[] {
  *
  * Delivery / Marketplace.
  */
+// test gemini review

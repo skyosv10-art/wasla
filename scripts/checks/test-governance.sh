@@ -1769,7 +1769,9 @@ _sac_root() { # _sac_root <tag>
            "$R/services/matching/src/http" "$R/services/matching/src/infrastructure" \
            "$R/services/dispatch/src/infrastructure"
   cp "$SAC_SRC" "$R/scripts/checks/"
-  printf 'export class HttpMatchingPort { constructor(o) { this.signRequest = o.signRequest; } }\n' \
+  # ويحملُ العميلُ نداءً خامّاً (`fetch(`) كما في المستودعِ الحقيقيِّ، فالبابُ 7
+  # يعدُّ المُنادينَ ويُسقِطُ جذراً لا مُناديَ فيهِ (موضعٌ لا وجودَ له).
+  printf 'export class HttpMatchingPort { constructor(o) { this.signRequest = o.signRequest; } async go() { return fetch("http://x"); } }\n' \
     > "$R/services/dispatch/src/infrastructure/http-matching.ts"
   printf 'export class HttpGeographyPort {}\n' \
     > "$R/services/matching/src/infrastructure/http-geography.ts"
@@ -1788,6 +1790,13 @@ enforced: matching
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | اختبارٌ صناعيّ |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | مؤجَّل | بوّابةُ M1-04 |
 <!-- coverage-ledger:end -->
+
+<!-- fetch-exceptions:begin -->
+
+| الملفُّ المُستثنى | السببُ |
+|---|---|
+
+<!-- fetch-exceptions:end -->
 MD
   printf '%s\n' "$R"
 }
@@ -1901,6 +1910,50 @@ S_SC_MOVED="$(_sac_scope_root moved)"
 mv "$S_SC_MOVED/services/matching/src/http/service-identity.ts" \
    "$S_SC_MOVED/services/matching/src/http/identity.ts"
 t "ملفُّ هويّةٍ منقولٌ عن موضعِه المُعلَنِ يُسقِط" fail _sac "$S_SC_MOVED"
+
+# ── البابُ 7: لا مُناديَ خامٍ خارجَ البصرِ (24/N · إقفالُ RISK-0027) ──────────
+S_FE_OK="$(_sac_root fe_ok)"
+t "جذرٌ كلُّ مُنادِيهِ عملاءُ مُحصَونَ يمرّ" pass _sac "$S_FE_OK"
+
+# مُنادٍ خامٌ بأيِّ اسمٍ لا يتبعُ تسميةَ العملاءِ: كانَ يمرُّ بلا حسابٍ قبلَ البابِ 7
+S_FE_HIDDEN="$(_sac_root fe_hidden)"
+printf 'export async function ping() { return fetch("http://x/orders"); }\n' \
+  > "$S_FE_HIDDEN/services/matching/src/infrastructure/sneaky-caller.ts"
+t "مُنادٍ خامٌ بلا ذكرٍ ولا استثناءٍ يُسقِط" fail _sac "$S_FE_HIDDEN"
+
+# وإعلانُهُ استثناءً بسببِهِ يُمرِّرُهُ — الحارسُ يطلبُ إعلاناً لا صمتاً
+S_FE_DECL="$(_sac_root fe_decl)"
+printf 'export async function ping() { return fetch("http://x/orders"); }\n' \
+  > "$S_FE_DECL/services/matching/src/infrastructure/sneaky-caller.ts"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/sneaky-caller.ts` \| مِعْوانٌ صناعيٌّ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_FE_DECL/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "مُنادٍ خامٌ مُعلَنٌ استثناءً بسببِهِ يمرّ" pass _sac "$S_FE_DECL"
+
+# والاستثناءُ الميتُ يُسقِط: سطرٌ لملفٍّ غيرِ موجودٍ يُخفي انحرافاً كما يُخفيهِ الصمتُ
+S_FE_DEAD="$(_sac_root fe_dead)"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/gone.ts` \| ملفٌّ محذوفٌ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_FE_DEAD/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "استثناءٌ لملفٍّ غيرِ موجودٍ (ميتٌ) يُسقِط" fail _sac "$S_FE_DEAD"
+
+# ولا يُدَسُّ عميلٌ حقيقيٌّ في الاستثناءاتِ ليُعفى من السّجلِّ
+S_FE_CLIENT="$(_sac_root fe_client)"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/dispatch/src/infrastructure/http-matching.ts` \| محاولةُ إعفاءٍ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_FE_CLIENT/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "عميلٌ صادرٌ مُدرَجٌ في الاستثناءاتِ يُسقِط" fail _sac "$S_FE_CLIENT"
+
+# وحذفُ كتلةِ الاستثناءاتِ لا يُسكِتُ البابَ
+S_FE_NOBLOCK="$(_sac_root fe_noblock)"
+sed -i 's|<!-- fetch-exceptions:begin -->||' \
+  "$S_FE_NOBLOCK/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "حذفُ كتلةِ الاستثناءاتِ يُسقِط" fail _sac "$S_FE_NOBLOCK"
+
+# وأهمُّها: عميلُ bots/ صارَ مرئيّاً — وهذا عينُ RISK-0027
+S_FE_BOT="$(_sac_root fe_bot)"
+mkdir -p "$S_FE_BOT/bots/customer-bot/src/infrastructure"
+printf 'export class P { async go() { return fetch("http://x/negotiations"); } }\n' \
+  > "$S_FE_BOT/bots/customer-bot/src/infrastructure/http-negotiations.ts"
+t "عميلُ bots/ غيرُ مذكورٍ في السّجلِّ يُسقِط (البصرُ الموسَّعُ)" fail _sac "$S_FE_BOT"
+
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'
 # الحارسُ يقيسُ على **المنتظِمين** (مَن له journal) وحدَهم — فالتطبيقُ تدريجيٌّ

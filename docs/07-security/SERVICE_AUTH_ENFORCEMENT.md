@@ -373,9 +373,40 @@
 | `services/geography/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts` · `GEOGRAPHY_IDENTITY_SCOPES` |
 | `services/matching/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/matching/src/__tests__/http-geography.test.ts` يقرأُ `aud` و`scp` · `MATCHING_GEOGRAPHY_SCOPES` |
 | `services/negotiations/src/infrastructure/http-agreed-price.ts` | orders | موقَّع | `services/negotiations/src/__tests__/outbound-ports.test.ts` · `NEGOTIATIONS_ORDERS_SCOPES` |
+| `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. |
+| `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | مؤجَّل | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` غيرُ مفروضٍ. |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع | موقِّعانِ صريحانِ بجمهورَينِ: `NEGOTIATIONS_ORDER_LOOKUP_SCOPES` و`NEGOTIATIONS_DISPATCH_OFFER_SCOPES` · `services/negotiations/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` من الرمزَين |
 
 <!-- coverage-ledger:end -->
+
+### 4.1 استثناءاتُ المُنادي الخامِ — مُعلَنةٌ بسببِها لا مسكوتٌ عنها
+
+الكتلةُ أدناهُ يقرأُها **البابُ 7** من `validate-service-auth-coverage.sh`: كلُّ
+ملفِّ إنتاجٍ فيهِ `fetch(` ولا يُحصى عميلاً يجبُ أن يكونَ هنا بسببِه، وكلُّ سطرٍ
+هنا يجبُ أن يكونَ ملفُّهُ موجوداً — فلا استثناءَ ميتٌ يُخفي انحرافاً، ولا عميلٌ
+حقيقيٌّ يُدَسُّ استثناءً (البابُ يرفضُ إدراجَ عميلٍ مُحصَىً هنا صراحةً).
+
+<!-- fetch-exceptions:begin -->
+
+| الملفُّ المُستثنى | السببُ |
+|---|---|
+| `packages/customer-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجٍ: يبني الخدماتَ في العمليّةِ نفسِها ويُنادي مقبساً محلّيّاً بتوقيعٍ مُصطنَعٍ للاختبارِ — ليسَ مساراً إنتاجيّاً ولا يُشتَقُّ منهُ رمزٌ حقيقيٌّ. |
+| `packages/customer-e2e/src/order-intake-http.ts` | تابعٌ للمِعْوانِ نفسِهِ: مُنادي طلباتٍ داخلَ البوّابةِ وحدَها. |
+| `packages/delivery-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ التوصيلِ. |
+| `packages/dispatch-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ التوزيعِ (ويُوقِّعُ نداءاتِهِ فعلاً لإثباتِ الإنفاذِ). |
+| `packages/driver-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ السائقينَ (يُوقِّعُ كذلكَ). |
+| `packages/marketplace-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ السوقِ. |
+| `packages/negotiation-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ المفاوضاتِ. |
+| `packages/order-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ الطلباتِ. |
+| `packages/reputation-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ السُّمعةِ. |
+| `packages/search-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ البحثِ. |
+| `packages/subscription-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ الاشتراكاتِ. |
+
+<!-- fetch-exceptions:end -->
+
+**وما لا يُدَّعى في هذه الكتلةِ:** الاستثناءُ يقولُ «هذا ليسَ مُنادياً إنتاجيّاً»
+ولا يقولُ «هذا آمنٌ». ومِعْوانٌ يتحوَّلُ يوماً إلى مسارٍ إنتاجيٍّ يجبُ أن يُنقَلَ
+إلى جدولِ العملاءِ أعلاهُ لا أن يبقى مستثنىً بسببٍ قديمٍ.
 
 **قراءةُ العدد:** اثنا عشرَ موقِّعاً من اثنا عشرَ في هذا السجلِّ — اثنانِ إلى
 المطابقةِ وأربعةٌ إلى الطلباتِ واثنانِ إلى الهويّةِ وثلاثةٌ إلى الجغرافيا
@@ -385,7 +416,19 @@
 `geography` فُرِضَ في الموجةِ الخامسةِ (2026-09-07) **بإذنِ المالكِ في تحريرِ
 `CLM-0004`** — لا قبلهُ.
 
-**وثغرةٌ بنيويّةٌ في هذا السجلِّ تُقالُ هنا لا تُخفى:** الحارسُ لا يقيسُ إلّا
+**وأُقفِلَت هذه الثغرةُ بنيويّاً في 24/N — والنصُّ القديمُ محفوظٌ أدناهُ لا ممحوٌّ،
+لأنَّ محوَ الدليلِ غيرِ المريحِ هوَ الانحرافُ عينُه:** البابُ 2 صارَ يقرأُ
+`bots/*/src/infrastructure/http-*.ts` معَ `services/`، **وأُضيفَ البابُ 7** فيُحصي
+كلَّ ملفِّ إنتاجٍ فيهِ `fetch(` في `services/` و`bots/` و`packages/` ويُشترِطُ أن
+يكونَ إمّا عميلاً مُحصَىً في السّجلِّ، أو استثناءً **مُعلَناً بسببِه** بينَ
+`<!-- fetch-exceptions:begin/end -->` أدناهُ — واستثناءٌ لملفٍّ غيرِ موجودٍ يُسقِطُ
+الفحصَ كما يُسقِطُهُ غيابُ الاستثناءِ. **وأوّلُ ما كشفَهُ البصرُ الجديدُ عميلانِ
+حقيقيّانِ لم يكونا في هذا السّجلِّ قطُّ** (`bots/{customer,driver}-bot/src/infrastructure/http-negotiations.ts`)
+— فدعوى «لا مؤجَّلَ بعدَ اليومِ» أعلاهُ كانت صادقةً في `services/` **ومُضلِّلةً إذا
+قُرئت دعوى مستودعٍ**، وهذا تصحيحٌ بالإضافةِ. ويبقى `RISK-0027` مفتوحاً حتّى
+يُراجِعَهُ مالكُهُ، لكنَّ سببَهُ التقنيَّ **مقيسٌ مُغلَقاً** لا موصوفاً.
+
+**والنصُّ الأصليُّ (2026-09-07) كما كُتِبَ:** الحارسُ لا يقيسُ إلّا
 `services/*/src/infrastructure/http-*.ts`، فمُنادو حدِّ الهويّةِ **من خارجِ
 `services/` غيرُ مرئيّينَ له أصلاً** — وهم اليومَ ثلاثةٌ فعليّونَ:
 `packages/bot-runtime/src/identity-bootstrap.ts` (منفذُ القنواتِ، ومنه البوتاتُ

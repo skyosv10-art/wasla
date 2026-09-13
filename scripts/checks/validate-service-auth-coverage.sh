@@ -20,6 +20,8 @@
 #   3) كلُّ صفٍّ يقول «موقَّع» يُثبِتُه grep في الملفِّ نفسِه — لا سجلَّ يكذب.
 #   4) كلُّ صفٍّ يقول «مؤجَّل» يحملُ مرجعَ البوّابةِ المؤجَّلِ إليها (M1-04).
 #   5) كلُّ حدٍّ يقول السّجلُّ إنّه مفروضٌ فيه registerServiceIdentity فعلاً.
+#   7) **لا مُناديَ خامٍ (`fetch(`) خارجَ بصرِ السّجلِّ** في services/ وbots/
+#      وpackages/ — إمّا عميلٌ مُحصَىً، أو استثناءٌ مُعلَنٌ بسببِه (`RISK-0027`).
 #   6) **جدولُ صلاحيّاتِ كلِّ حدٍّ يُطابِقُ ثابتَ الصلاحيّاتِ في شفرتِه** — لا
 #      صلاحيّةٌ مفروضةٌ غيرُ مكتوبةٍ، ولا صلاحيّةٌ مكتوبةٌ غيرُ مفروضةٍ.
 #
@@ -65,7 +67,15 @@ LEDGER_BODY="$(awk '/<!-- coverage-ledger:start -->/{f=1;next}/<!-- coverage-led
 # ── 2) كلُّ عميلٍ صادرٍ مذكورٌ ─────────────────────────────────────────────
 # العميلُ الصادرُ: services/*/src/infrastructure/http-*.ts — وهو الموضعُ الوحيدُ
 # الذي تُبنى فيه نداءاتُ HTTP الخارجةُ في هذا المستودع (ADR-007).
-mapfile -t CLIENTS < <(ls services/*/src/infrastructure/http-*.ts 2>/dev/null | sort)
+# **وتوسَّعَ البصرُ في 24/N (`RISK-0027`):** كانَ الحارسُ يقرأُ `services/` وحدَها،
+# فبقيَ مُنادو الحدودِ في `bots/` **غيرَ مرئيّينَ** له سنةَ عمرِهِ كلَّها؛ وقياسُ
+# اليومِ أظهرَ عميلَينِ حقيقيَّينِ بالتسميةِ نفسِها
+# (`bots/{customer,driver}-bot/src/infrastructure/http-negotiations.ts`) **لا
+# ذِكرَ لهما في السّجلِّ ولا توقيعَ في شفرتِهما** — فدعوى السّجلِّ «أحدَ عشرَ
+# موقِّعاً من أحدَ عشرَ عميلاً — لا مؤجَّلَ» كانت صادقةً في `services/` ومُضلِّلةً
+# إذا قُرئت دعوى مستودعٍ. والبابُ 7 أدناهُ يُغلِقُ الباقيَ: كلُّ مُنادٍ خامٍ
+# أينَما كانَ يُقابَلُ بالسّجلِّ أو باستثناءٍ مُعلَنٍ بسببِه.
+mapfile -t CLIENTS < <(ls services/*/src/infrastructure/http-*.ts bots/*/src/infrastructure/http-*.ts 2>/dev/null | sort)
 if (( ${#CLIENTS[@]} == 0 )); then
   bad "لم يُعثَر على أيِّ عميلٍ صادرٍ — تغيَّرَ التّرتيبُ، والحارسُ يفحصُ موضعاً لا وجودَ له"
 fi
@@ -187,6 +197,56 @@ for sfile in "${SCOPE_FILES[@]}"; do
     ok "جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: $svc (${#CODE_SCOPES[@]} صلاحيّةً)"
   fi
 done
+
+# ── 7) لا مُناديَ خامٍ خارجَ البصرِ (إقفالُ `RISK-0027` بنيويّاً) ─────────────
+# البابُ 2 يرى ما يتبعُ التسميةَ `*/src/infrastructure/http-*.ts` وحدَه، فمَن
+# نادى حدّاً بـ`fetch(` من ملفٍّ بأيِّ اسمٍ آخرَ كانَ يمرُّ بلا حسابٍ. فيُحصى
+# هنا **كلُّ** ملفِّ إنتاجٍ في `services/` و`bots/` و`packages/` فيهِ `fetch(`،
+# ويُشترَطُ أن يكونَ إمّا عميلاً مُحصَىً في البابِ 2، أو مذكوراً باستثناءٍ
+# مُعلَنٍ بسببِهِ بينَ `<!-- fetch-exceptions:begin/end -->` في السّجلِّ.
+# واستثناءٌ لملفٍّ غيرِ موجودٍ يُسقِطُ الفحصَ أيضاً: الاستثناءُ الميتُ يُخفي
+# انحرافاً كما يُخفيهِ غيابُ الاستثناءِ.
+FE_BEGIN="<!-- fetch-exceptions:begin -->"; FE_END="<!-- fetch-exceptions:end -->"
+if ! grep -qF "$FE_BEGIN" "$LEDGER" || ! grep -qF "$FE_END" "$LEDGER"; then
+  bad "كتلةُ استثناءاتِ المُنادي الخامِ مفقودةٌ من السّجلِّ ($FE_BEGIN)"
+else
+  FE_BLOCK="$(awk -v b="$FE_BEGIN" -v e="$FE_END" 'index($0,b){f=1;next} index($0,e){f=0} f' "$LEDGER")"
+  mapfile -t FE_PATHS < <(grep -oE '`[A-Za-z0-9_./-]+\.ts`' <<<"$FE_BLOCK" | tr -d '`' | sort -u)
+
+  # 7-أ) الاستثناءُ الميتُ يُسقِط
+  for fe in "${FE_PATHS[@]:-}"; do
+    [[ -n "$fe" ]] || continue
+    [[ -f "$fe" ]] || bad "استثناءٌ مُعلَنٌ لملفٍّ غيرِ موجودٍ (استثناءٌ ميتٌ): $fe"
+  done
+
+  # 7-ب) لا يُستثنى عميلٌ حقيقيٌّ من السّجلِّ بحجّةِ الاستثناءِ
+  for fe in "${FE_PATHS[@]:-}"; do
+    [[ -n "$fe" ]] || continue
+    if printf '%s\n' "${CLIENTS[@]}" | grep -qxF "$fe"; then
+      bad "عميلٌ صادرٌ مُدرَجٌ في الاستثناءاتِ — العميلُ يُقابَلُ بالسّجلِّ لا يُستثنى: $fe"
+    fi
+  done
+
+  # 7-ج) كلُّ مُنادٍ خامٍ: عميلٌ مُحصَىً أو استثناءٌ مُعلَنٌ
+  mapfile -t RAW_CALLERS < <(
+    grep -rlE '\bfetch\(' services bots packages \
+      --include='*.ts' \
+      --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
+      --exclude='*.test.ts' 2>/dev/null | sort -u
+  )
+  if (( ${#RAW_CALLERS[@]} == 0 )); then
+    bad "لا مُناديَ خامٍ في المستودعِ كلِّه — تغيَّرَ التّرتيبُ والحارسُ يعدُّ موضعاً لا وجودَ له"
+  fi
+  unseen=0
+  for rc in "${RAW_CALLERS[@]}"; do
+    printf '%s\n' "${CLIENTS[@]}" | grep -qxF "$rc" && continue
+    printf '%s\n' "${FE_PATHS[@]:-}" | grep -qxF "$rc" && continue
+    bad "مُنادٍ خامٌ خارجَ بصرِ السّجلِّ: $rc"
+    printf '      إمّا أن يُسمّى عميلاً في %s، أو يُعلَنَ استثناءً بسببِه بينَ العلامتَينِ.\n' "$LEDGER"
+    unseen=1
+  done
+  (( unseen )) || ok "لا مُناديَ خامٍ خارجَ البصرِ: ${#RAW_CALLERS[@]} ملفّاً (${#CLIENTS[@]} عميلاً + ${#FE_PATHS[@]} استثناءً مُعلَناً)"
+fi
 
 if (( FAIL )); then
   printf '\n%s✗ حارسُ تغطيةِ هويّةِ الخدمة: إخفاق. الدفعُ مرفوض.%s\n' "$RED" "$RST"

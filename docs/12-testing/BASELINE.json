@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-13T07:05:56Z",
+  "generated_at": "2026-09-13T17:46:38Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a72cab27edf20037b9318c8c78da6708dee7030c",
-    "branch": "feat/m1-04-http-wrapper-lock",
-    "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "المراجعةُ 25/N: قُفلُ أغلفةِ النداءِ (البابُ 8) · حزمةُ الحوكمةِ 196 ⇒ 201 حالةً",
-    "tracked_files": 1704
+    "commit": "2dc4daf6dca1519981b91674d59eba5ff6800b37",
+    "branch": "chore/m0-29-merge-blocking-guard-truthfulness",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 1710
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 24
+    "risks_not_closed": 25
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify25.log",
+    "source": "/tmp/verify.log",
     "tests_passed": 4447,
     "test_files_executed": 272,
-    "governance_suite_cases": 201,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": 211,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:489ae5e751c54576adb672fee3aa05ca5619cd984202a835e2edf306904b19b9",
+  "fingerprint": "sha256:4ddfb7f0f167ba1f21f7541711db4ef4186f7eef3c0703f61158e129b0b6c94f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

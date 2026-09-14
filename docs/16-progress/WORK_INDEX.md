@@ -116,6 +116,7 @@
 | `scripts/checks/validate-ci-mandatory.sh` | Implemented | M0-04 |
 | `scripts/checks/validate-dependency-audit.sh` | Implemented | M0-06 |
 | `scripts/checks/validate-risk-register.sh` | Implemented | M0-07 |
+| `scripts/checks/validate-migrations.sh` — أبوابُ الترحيلاتِ (1 journal · 2 دفعةٌ · 3 ترجعٌ زائفٌ · **4 برهانُ ترقيةٍ مأهولةٍ يُقاسُ بتشغيلِهِ** · 5 قاعدةٌ فعليّةٌ بلا انتظامٍ) | Implemented | M0-34, M0-23 |
 | `docs/07-security/RISK_REGISTER.md` | Implemented | M0-07 |
 | `scripts/baseline.sh` + `scripts/checks/lib/baseline_canon.py` | Implemented | M0-08 |
 | `scripts/checks/validate-baseline.sh` | Implemented | M0-08 |

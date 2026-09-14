@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T15:54:16Z",
+  "generated_at": "2026-09-14T16:24:40Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "aae3ec00fea317e22e88be503b4b34ba7fa49405",
-    "branch": "feat/m0-36-contract-declares-service-auth",
+    "commit": "5f5175000c40f6ca5b9724ac75cbbf8a0d3c5e91",
+    "branch": "fix/m0-34-upgrade-proof-must-run",
     "dirty": true,
-    "dirty_files": 10,
-    "dirty_reason": "دفعةُ M0-36 قيدَ الإعدادِ: البابُ التاسعُ وجردُ §5.9 وRISK-0041 وسجلّاتُ الحوكمةِ — الأساسُ مُولَّدٌ من سجلِّ تحقّقٍ أخضرَ كاملٍ على الشجرةِ نفسِها",
-    "tracked_files": 1987
+    "dirty_files": 6,
+    "dirty_reason": "M0-34 · CLM-0165: تشديدُ البابِ 4-ج ورفعُ حالاتِ الحوكمةِ 284 ← 292",
+    "tracked_files": 1988
   },
   "env": {
     "node": "v20.20.1",
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
+    "source": "/tmp/verify3.log",
     "tests_passed": 4545,
     "test_files_executed": 280,
-    "governance_suite_cases": 284,
+    "governance_suite_cases": 292,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

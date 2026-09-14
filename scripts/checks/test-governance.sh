@@ -2430,11 +2430,29 @@ PYJ
 }
 
 # البرهانُ يُكتَبُ ملفاً حقيقيّاً تحتَ src — فالحارسُ يبحثُ حيثُ يعيشُ البرهانُ.
-_mig_add_proof() { # _mig_add_proof <root> <declaration>
-  local R="$1" DECL="$2"
+# وبعدَ البابِ 4-ج لا يكفي تعليقٌ: فالنموذجُ الصناعيُّ هنا يحملُ ما يُلزِمُ بهِ
+# البابُ حاملَ العلامةِ — دعوى تشغيلٍ · زرعُ صفٍّ · قراءةُ الـjournal — كي تقيسَ
+# حالاتُ الطفرةِ **غيابَ واحدةٍ** لا غيابَ الملفِّ كلِّهِ.
+_mig_add_proof() { # _mig_add_proof <root> <declaration> [<file-name>]
+  local R="$1" DECL="$2" NAME="${3:-upgrade.integration.test.ts}"
   mkdir -p "$R/services/svc-a/src/__tests__"
-  printf '/** @wasla-upgrade-proof: %s */\n' "$DECL" \
-    > "$R/services/svc-a/src/__tests__/upgrade.integration.test.ts"
+  cat > "$R/services/svc-a/src/__tests__/$NAME" <<PROOF
+/** @wasla-upgrade-proof: $DECL */
+const journal = JSON.parse(await readFile("drizzle/meta/_journal.json", "utf8"));
+describe.skipIf(!process.env.DATABASE_URL)("برهانٌ صناعيٌّ", () => {
+  it("الصفُّ المزروعُ ينجو الترقيةَ", async () => {
+    await db.query(\`INSERT INTO t1 (c) VALUES ('x')\`);
+    expect(journal.entries.length).toBeGreaterThan(0);
+  });
+});
+PROOF
+}
+
+# ومُبضِعٌ يحذفُ سطراً واحداً من البرهانِ الصناعيِّ: كلُّ طفرةٍ تنزعُ شرطاً
+# واحداً من الخمسِ لتُقاسَ وحدَها لا مُجتمِعةً.
+_mig_proof_strip() { # _mig_proof_strip <root> <bash-regex-of-line-to-drop>
+  local F="$1/services/svc-a/src/__tests__/upgrade.integration.test.ts"
+  grep -vE "$2" "$F" > "$F.tmp" && mv "$F.tmp" "$F"
 }
 
 SAFE_ADD='ALTER TABLE t1 ADD COLUMN c timestamptz;'
@@ -2478,6 +2496,49 @@ t "النمطُ داخلَ تعليقٍ لا يُسقِط — شرحُ العط�
 
 M_U9="$(_mig_root u9)"
 t "لقطةٌ بأساسٍ وحدَه لا يُفعَّلُ عليها البابُ الرابعُ (تدرُّجٌ لا تعجيزٌ)" pass _mig "$M_U9"
+
+# ── البابُ 4-ج: البرهانُ يُقاسُ بتشغيلِهِ لا بعلامةٍ في تعليقٍ (M0-34) ────────
+# **والعطبُ كانَ في هذهِ الحزمةِ نفسِها لا في المستودعِ:** كانَ `_mig_add_proof`
+# يكتبُ ملفَّ **تعليقٍ محضاً** وتمرُّ حالاتُ القبولِ خضراءَ — أي أنَّ الحارسَ
+# كانَ يقبلُ سطرَ تعليقٍ برهاناً، وكانت الحزمةُ **تُصادِقُ على ذلكَ**. فكلُّ
+# حالةٍ أدناهُ تنزعُ شرطاً واحداً من الخمسِ وتطلبُ الرفضَ.
+
+M_P1="$(_mig_root p_notest)"; _mig_add_nonbase "$M_P1" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P1" all-non-baseline upgrade-proof.md
+t "علامةُ برهانٍ في ملفٍّ لا يُنفِّذُهُ المُشغِّلُ (ليسَ .test.ts) تُسقِط" fail _mig "$M_P1"
+
+M_P2="$(_mig_root p_nocase)"; _mig_add_nonbase "$M_P2" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P2" all-non-baseline
+_mig_proof_strip "$M_P2" '^  it\('
+t "برهانٌ بلا دعوى تشغيلٍ («it(») تُسقِط — تعليقٌ يشرحُ برهاناً ليسَ برهاناً" fail _mig "$M_P2"
+
+M_P3="$(_mig_root p_skip)"; _mig_add_nonbase "$M_P3" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P3" all-non-baseline
+sed -i 's|describe.skipIf(!process.env.DATABASE_URL)|describe.skip|' \
+  "$M_P3/services/svc-a/src/__tests__/upgrade.integration.test.ts"
+t "برهانٌ مُتخطًّى بلا شرطٍ (describe.skip) تُسقِط" fail _mig "$M_P3"
+
+M_P3B="$(_mig_root p_skipif)"; _mig_add_nonbase "$M_P3B" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P3B" all-non-baseline
+t "تخطٍّ بشرطِ بيئةٍ مقيسٍ (skipIf) يمرُّ — الحارسُ يفرِّقُ الشرطَ من الأبديِّ" pass _mig "$M_P3B"
+
+M_P4="$(_mig_root p_noseed)"; _mig_add_nonbase "$M_P4" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P4" all-non-baseline
+_mig_proof_strip "$M_P4" 'INSERT INTO'
+t "برهانٌ لا يزرعُ صفّاً («INSERT INTO» غائبٌ) تُسقِط — الفراغُ يُخفي 23502" fail _mig "$M_P4"
+
+M_P5="$(_mig_root p_nojournal)"; _mig_add_nonbase "$M_P5" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P5" all-non-baseline
+_mig_proof_strip "$M_P5" '_journal\.json'
+t "برهانٌ لا يقرأُ الـjournal تُسقِط — برهانٌ على SQL في الاختبارِ لا على الترحيلِ" fail _mig "$M_P5"
+
+M_P6="$(_mig_root p_todo)"; _mig_add_nonbase "$M_P6" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_P6" all-non-baseline
+sed -i 's|  it(|  it.todo(|' "$M_P6/services/svc-a/src/__tests__/upgrade.integration.test.ts"
+t "دعوى «it.todo» تُسقِط — وعدُ برهانٍ ليسَ برهاناً" fail _mig "$M_P6"
+
+# والمستودعُ الحقيقيُّ هوَ الحالةُ الأصدقُ: برهانُ التوصيلِ القائمُ يستوفي الخمسَ.
+t "برهانُ التوصيلِ في المستودعِ الحقيقيِّ يستوفي شروطَ البابِ 4-ج" pass bash "$MIG_SRC"
 
 # ── البابُ 5: خدمةٌ لها قاعدةٌ فعليّةٌ وليست منتظِمةً (M0-23 · موجةُ البحثِ) ──
 # والعطبُ المقيسُ الذي دعا إليهِ: خدمةُ البحثِ كانت تمرُّ بالإعلانِ وحدَهُ معَ عقدٍ

@@ -251,8 +251,8 @@
   توقيعٍ ⇒ `401` لا `404` · `/delivery/health` بلا توقيعٍ ⇒ `200`. وبقيّةُ
   دعاوى البوّابةِ (18 موضعَ نداءٍ) مرَّت إلى `callDelivery` الموقِّعِ — علاجُ
   الـ`401` توقيعُ المنادي لا إضعافُ الحدِّ، كما في §2.6.
-- **صلاحيّةٌ واحدةٌ لكلِّ مسارٍ مُغلَقٍ** (اليومَ: **11 صلاحيّةً لـ11 مساراً
-  مُغلَقاً** من 13 مساراً على هذا الحدِّ)، والتقسيمُ **بخطرِ المسارِ لا
+- **صلاحيّةٌ واحدةٌ لكلِّ مسارٍ مُغلَقٍ** (اليومَ: **12 صلاحيّةً لـ12 مساراً
+  مُغلَقاً** من 14 مساراً على هذا الحدِّ)، والتقسيمُ **بخطرِ المسارِ لا
   باسمِ الخدمةِ**: صلاحيّةٌ واحدةٌ لـ«التوصيلِ» كانت ستُعطي مَن يحتاجُ قراءةَ
   طلبٍ القدرةَ على إعلانِهِ مدفوعاً وإلغائِهِ وتقديمِ تنفيذِهِ.
 
@@ -276,6 +276,7 @@
   | `delivery:ops:inventory-conflicts:read` | `GET /delivery/inventory-conflicts` | الموجةُ 6 (17/N) |
   | `delivery:ops:inventory-conflicts:acknowledge` | `POST /delivery/inventory-conflicts/:adjustmentId/acknowledgement` | 18/N (ADR-026 §4.20) |
   | `delivery:ops:relay-dead-letters:read` | `GET /delivery/relay/dead-letters` | 21/N (ADR-026 §4.23) |
+  | `delivery:ops:relay-dead-letters:requeue` | `POST /delivery/relay/dead-letters/:ledger/:eventId/requeue` | 22/N (ADR-026 §4.24) |
 
   <!-- delivery-scopes:end -->
 

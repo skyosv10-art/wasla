@@ -138,6 +138,16 @@ export const DELIVERY_SCOPES = {
    * نفسُ تعليلِ §4.20 حينَ فُصِلَ الإقرارُ عن القراءةِ.
    */
   relayDeadLettersRead: "delivery:ops:relay-dead-letters:read",
+  /**
+   * الصلاحيّةُ الثانيةَ عشرةَ (المراجعةُ 22/N · `M5-13R` · ADR-026 §4.24) —
+   * **مفصولةٌ عن `relayDeadLettersRead` بنفسِ تعليلِ §4.20 حرفاً**.
+   *
+   * القراءةُ تسردُ الفقدَ؛ وهذهِ **تُحرِّكُ طابوراً**: تُعيدُ صفّاً إلى مسارِ
+   * الاستهلاكِ وتُرجِعُ نقطةَ تقدُّمِ مُرحِّلٍ إلى الصفرِ. ودمجُها في `:read`
+   * كانَ سيجعلَ كلَّ رمزِ لوحةِ رصدٍ مسروقٍ قادراً على إرجاعِ مُرحِّلَي التوصيلِ
+   * إلى أوّلِ الصندوقِ الصادرِ مِراراً — إغراقُ قراءةٍ بصلاحيّةِ **نظرٍ**.
+   */
+  relayDeadLettersRequeue: "delivery:ops:relay-dead-letters:requeue",
 } as const;
 
 export interface DeliveryServiceIdentityOptions {

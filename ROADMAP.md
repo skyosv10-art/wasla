@@ -683,8 +683,89 @@ Nothing else has been changed in this repository by the WASLA integration work.
   down so it is not read as a defect. There is no acknowledgement column distinguishing a
   handled poisoned row from a neglected one. And nothing here was measured on PostgreSQL
   15/17.6 (the CI versions) or against a production database.
-- M5-13 remains `In Progress` on the execution board. Promotion to `Completed` is the
-  program owner's decision alone (governance protocol §9).
+- **M5-13R (poisoned-row requeue) — review 22/N, claims `CLM-0157` + `CLM-0158`.** The
+  **second** limit declared when `RISK-0035` was closed is now lifted: a poisoned relay
+  row has a way back. Route fourteen,
+  `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue`, sits behind a **twelfth
+  scope**, `delivery:ops:relay-dead-letters:requeue`, **separate from `…:read`** — folding
+  requeue into the read scope would let any stolen dashboard token rewind both delivery
+  relays to zero repeatedly, a read-amplification flood held by a **look** permission.
+  Rejection happens **before the port is called**, and that is asserted, not assumed.
+  **Two moves in one transaction, or neither.** Review 39/N measured two facts before a
+  line was written: the consumed ledgers hold **no payload and no `occurred_at`** — they
+  are judgement ledgers, not message queues — and `poisoned` is a **terminal** status, so
+  `relay.ts` short-circuits it and `replayFrom` alone looks like a replay path while
+  replaying nothing. So the adapter lifts terminality (`poisoned` → `pending`) under
+  `FOR UPDATE` **and then** rewinds that ledger's checkpoint to `ZERO_CHECKPOINT` via
+  `ON CONFLICT`, on one connection in one transaction. Either move alone is a lie: lifting
+  the status alone drops the row out of the **§4.23 metric** (it is no longer `poisoned`)
+  while the advanced checkpoint means it is never read — **loss made more hidden than it
+  was**, which is worse than not requeuing at all. This is measured, not argued: **two
+  mutations** (disable the rewind; disable the status lift) each **fail the end-to-end
+  proof**, so the test is not decoration.
+  **Evidence is not erased.** `attempt_count` and `last_error` are deliberately left
+  untouched — the ledger keeps no history, so they are the only trace of **why** the row
+  was poisoned, and wiping them would make every rescue attempt destroy the cause of the
+  defect. The cost is **declared, not hidden**: the relay computes
+  `attempt = attempt_count + 1`, so an exhausted row gets exactly **one** more try and
+  then re-poisons with a fresh reason.
+  **The rewind cost is published in the response.** `rewind_cost:
+  "full_rescan_from_zero"` — there is no way to rewind *precisely* to just before one
+  event without copying a third field into the ledger and creating a duplicated source of
+  truth, which §4.23's own preamble rejects. Idempotency makes every terminal row on the
+  way back a **no-op**; the price is a batched rescan from the start of the outbox, a
+  **read, not a write**, on a rare operator action rather than a hot path. A caller
+  reading a bare `requeued` would think the replay was instant and escalate an incident
+  when the row is not applied within a second.
+  **`202`, not `200`; `requeued`, not `reprocessed`.** The call accepted the requeue; it
+  did not complete it. The relay reads the row on a later cycle and may re-poison
+  immediately if the cause is unchanged — a response saying "recovered" would **close an
+  incident over a standing loss**. Two distinct rejection codes, too:
+  `DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND` (404, no such row) and
+  `DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED` (409, row exists in another state, **with the
+  observed state in the message text**). Merging them would send an operator mid-incident
+  chasing a valid id, thinking they mis-copied it, when in fact a colleague beat them to
+  it a second earlier. The state is in the **message**, not `details`, by measurement:
+  the published delivery error contract is three fields and `http/errors.ts` **does not
+  emit `details`** — asserting on `details` would have been a green claim about a field
+  that never reaches the wire, and that is exactly what happened once and was corrected.
+  **A guard gap was closed on the way through.** Every check in
+  `scripts/checks/validate-launch-board.sh` — allowed status, closure evidence, duplicate
+  ids — runs over the output of a single strict `grep`. A row whose id did not match was
+  therefore **dropped from every check silently, and the guard exited green**. It surfaced
+  because this item was first filed as `M5-13-R` (two hyphens): the validator printed 90
+  items while the board held 91. That silent gap between the two numbers **is** the
+  defect. It is now a hard failure checked on the **id cell** rather than line-start, with
+  seven governance cases including the decisive one: a malformed row carrying a
+  **forbidden status** no longer escapes the status check. The governance suite went from
+  246 to 252 cases, zero failing.
+  Measured locally on PostgreSQL 18.6: **35 new tests** (9 pure-domain, 12 at the HTTP
+  boundary, **14 integration on a real database**). The claims a memory fake cannot make:
+  both moves commit together; `attempt_count` and `last_error` survive, asserted on real
+  columns; a **rejected call writes not one byte** (ledger and checkpoint fingerprints
+  before and after); the neighbouring relay's checkpoint is **untouched**; the checkpoint
+  row is **created** when absent; and the row leaves the §4.23 poisoned count read through
+  the metric adapter itself. The load-bearing test is the **end-to-end proof**: a relay
+  batch **before** the requeue applies **0** and leaves the task `dispatch_requested`;
+  after it, **1** is applied, the task is `driver_assigned` with its courier, and the
+  verdict is `applied`. Both blockers are staged in the fixture (terminal verdict **and**
+  an advanced checkpoint), so the test cannot bless an application that would have
+  happened anyway.
+  Not claimed: **no distributed lock** — an in-flight relay batch can advance the
+  checkpoint over the rewind after `COMMIT` and silently void the requeue; the row stays
+  `pending`, so it is **visible in the metric and not lost**, but may not be read until
+  another requeue. Lifting that needs an advisory lock on the consumer and is its own
+  scope, and it is the next priority because it is the only declared limit that voids work
+  already done. **One attempt for an exhausted row** (the price of keeping the evidence).
+  **No bulk requeue** — a hundred rows means a hundred rewinds to zero. **Only `poisoned`
+  is requeued.** And **no operator UI and no alert invokes this automatically**: the act
+  is a human decision, since an automatic requeue driven by a metric would turn a systemic
+  defect into an endless rescan loop. Nothing here was measured on PostgreSQL 15/17.6 (the
+  CI versions) or against a production database, and **CI itself returned no verdict**:
+  the account is billing-blocked (`RISK-0039`), so local green is not a gate verdict.
+- M5-13R moves to `Ready for Gate`, not `Completed`. M5-13 remains `In Progress` on the
+  execution board. Promotion to `Completed` is the program owner's decision alone
+  (governance protocol §9).
 
 ## Remaining, in dependency order
 

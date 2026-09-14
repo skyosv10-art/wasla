@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-14T10:57:39Z
-الالتزام: d1c9007c852d326ff2e7bd417c30572d91b199af  الفرع: feat/m5-13-r-poisoned-reprocess  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-09-14T11:36:31Z
+الالتزام: bb56b25e021aa063579dac1ae358f6636ce4f03a  الفرع: feat/m5-13-r-poisoned-reprocess  شجرةٌ نظيفةٌ
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3128 سطراً · sha256 09a541b4207fb26e…
 
@@ -15,12 +15,12 @@
   governance_checks          13
   risks_not_closed           28
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/v13r2.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/v13r5.log):
   tests_passed               4591
   test_files_executed        282
-  governance_suite_cases     252
-  governance_suite_failed    1
-  verify_overall             failed
+  governance_suite_cases     253
+  governance_suite_failed    0
+  verify_overall             passed
 
 البصمة: sha256:aa67ea208bab730b0dbf410b16b1c948f2595b5fec8d90fc5f8d2f0e077cd49e
 المرجع: docs/12-testing/BASELINE_FORMAT.md

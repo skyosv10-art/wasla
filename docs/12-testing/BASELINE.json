@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T10:57:39Z",
+  "generated_at": "2026-09-14T11:36:31Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d1c9007c852d326ff2e7bd417c30572d91b199af",
+    "commit": "bb56b25e021aa063579dac1ae358f6636ce4f03a",
     "branch": "feat/m5-13-r-poisoned-reprocess",
     "dirty": false,
     "dirty_files": 0,
@@ -34,12 +34,12 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/v13r2.log",
+    "source": "/tmp/v13r5.log",
     "tests_passed": 4591,
     "test_files_executed": 282,
-    "governance_suite_cases": 252,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_cases": 253,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
   "fingerprint": "sha256:aa67ea208bab730b0dbf410b16b1c948f2595b5fec8d90fc5f8d2f0e077cd49e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

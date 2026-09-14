@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T00:55:34Z",
+  "generated_at": "2026-09-14T01:16:10Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8da05a67d357c1b55d331d59e84a3aa63eae7413",
+    "commit": "64ef21d5497fbc9dc1187624d1d4e152180387b5",
     "branch": "chore/m0-33-ci-nonstart-reason-from-annotations",
-    "dirty": false,
-    "dirty_files": 0,
+    "dirty": true,
+    "dirty_files": 1,
     "dirty_reason": "",
-    "tracked_files": 1772
+    "tracked_files": 1773
   },
   "env": {
     "node": "v20.20.1",
@@ -34,9 +34,9 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify33.log",
-    "tests_passed": null,
-    "test_files_executed": null,
+    "source": "/tmp/verify33c.log",
+    "tests_passed": 4505,
+    "test_files_executed": 277,
     "governance_suite_cases": 236,
     "governance_suite_failed": 1,
     "verify_overall": "failed"

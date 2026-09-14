@@ -64,15 +64,15 @@ TODAY="$(date -u +%Y-%m-%d)"
 
 # ── استخراج الحجوزات النشطة ─────────────────────────────────────────────
 # صيغة الصف: | CLM-#### | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
+# القارئُ **واحدٌ** لا اثنانِ (M0-38): `lib/claims_rows.sh` يُستعملُ هنا وفي
+# `validate-claim-freshness.sh` — فلا يفترقُ مدقِّقانِ في قراءةِ سجلٍّ واحدٍ.
+# shellcheck source=lib/claims_rows.sh
+_ROWS_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/claims_rows.sh"
+[[ -r "$_ROWS_LIB" ]] || fail "قارئُ صفوفِ الحجوزاتِ غيرُ موجودٍ: $_ROWS_LIB (fail-closed)"
+source "$_ROWS_LIB"
+declare -F claims_active_rows >/dev/null || fail "قارئُ الحجوزاتِ لم يُعرِّفْ claims_active_rows (fail-closed)"
 ACTIVE_TSV="$(mktemp)"; trap 'rm -f "$ACTIVE_TSV"' EXIT
-awk -F'|' '
-  /^\| *CLM-[0-9]+ *\|/ {
-    for (i = 2; i <= NF; i++) { gsub(/^[ \t]+|[ \t]+$/, "", $i) }
-    if (NF < 9) next
-    if ($9 != "Active") next
-    print $2 "\t" $3 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8
-  }
-' "$CLAIMS" > "$ACTIVE_TSV"
+claims_active_rows "$CLAIMS" | cut -f1-7 > "$ACTIVE_TSV"
 
 ACTIVE_COUNT="$(wc -l < "$ACTIVE_TSV" | tr -d ' ')"
 info "حجوزات نشطة: $ACTIVE_COUNT"
@@ -156,6 +156,49 @@ while IFS=$'\t' read -r cid item owner branch scope started expires; do
   fi
 done < "$ACTIVE_TSV"
 ok "بنية الحجوزات النشطة صالحة (عنصر عمل موجود · مالك · فرع · نطاق · مهلة ≤ ${MAX_TTL_DAYS}د)."
+
+# ── 1-ج) السجلُّ لا يُناقِضُ نفسَه: حجزٌ نشطٌ ولهُ إفراجٌ مُوثَّقٌ (M0-38) ───
+#
+# **العطبُ المقيسُ لا المُتخيَّلُ (2026-09-14):** صفُّ `CLM-0078` بقيَ `Active`
+# **بينما فوقَهُ سطرُ إفراجٍ مُوثَّقٍ بالقياسِ** («حُرِّر (2026-09-05) — دُمج عبر
+# PR #34 · `ahead_by: 0`»). فالسجلُّ — وهوَ المصدرُ الوحيدُ لملكيّةِ النطاقاتِ —
+# كانَ يقولُ الشيءَ ونقيضَهُ في مكانَينِ، والحارسُ يقرأُ عمودَ الحالةِ **ولا يقرأُ
+# سطورَ الإفراجِ إطلاقاً**، فكانَ يعمى عن التناقضِ بنيويّاً لا سهواً.
+#
+# **والأثرُ ليسَ تجميليّاً:** الحجزُ الشبحُ يُقفِلُ مساراً على فرعٍ **محذوفٍ**
+# فلا يستطيعُ أحدٌ العملَ فيهِ، ويُسقِطُ الفحصَ الرابعَ (بياتُ الحجوزاتِ) كلَّما
+# كانَ `origin` مسؤولاً، ثمَّ يُصيِّرُ البوّابةَ كلَّها حمراءَ عندَ انقضاءِ مهلتِهِ
+# بلا عملٍ جديدٍ — أي عطبٌ **مؤجَّلٌ موقوتٌ** في مصدرِ حقيقةٍ واحدٍ.
+#
+# **والقياسُ دقيقٌ لا فضفاضٌ:** لا يُعَدُّ إفراجاً إلّا اقترانٌ مباشرٌ بينَ
+# المُعرِّفِ وفعلِ التحريرِ في أحدِ اتّجاهَينِ («`CLM-####` حُرِّر» أو
+# «حُرِّرَ `CLM-####`») — فذكرُ مُعرِّفٍ في سطرِ إفراجِ **غيرِهِ** (سابقةُ
+# `CLM-0148` التي تحكي تحريرَ `CLM-0147`) لا يُحسَبُ عليهِ. والتشكيلُ يُطبَّعُ
+# قبلَ المطابقةِ فلا يُفلِتُ الفعلُ باختلافِ حركةٍ.
+CONTRADICT="$(python3 - "$CLAIMS" <<'PYC'
+import re, sys, unicodedata
+raw = open(sys.argv[1], encoding="utf-8").read()
+# تطبيعُ التشكيلِ: الفعلُ نفسُه بحركاتٍ مختلفةٍ فعلٌ واحدٌ.
+norm = "".join(c for c in unicodedata.normalize("NFD", raw)
+                if not unicodedata.combining(c))
+released = set()
+released |= set(re.findall(r"CLM-(\d{4})`?\s*(?:—|-|:)?\s*حرر", norm))
+released |= set(re.findall(r"حرر[تةَ]?\s*`?CLM-(\d{4})", norm))
+print(" ".join(sorted(released)))
+PYC
+)" || fail "تعذّرَ قراءةُ سطورِ الإفراجِ من $CLAIMS (fail-closed)."
+
+while IFS=$'\t' read -r cid item owner branch scope started expires; do
+  [[ -n "${cid:-}" ]] || continue
+  num="${cid#CLM-}"
+  if grep -qw "$num" <<< "$CONTRADICT"; then
+    fail "$cid: السجلُّ يُناقِضُ نفسَه — الصفُّ «Active» ولهُ سطرُ إفراجٍ مُوثَّقٌ في $CLAIMS.
+     فإن كانَ العملُ قد دُمجَ فانقلِ الصفَّ إلى حالةِ الإفراجِ بدليلِهِ المقيسِ (§8.1)،
+     وإن كانَ الحجزُ ما زالَ نافذاً فصحِّحْ سطرَ الإفراجِ بسجلٍّ تدقيقيٍّ — ولا يُمحى دليلٌ.
+     وحجزٌ شبحٌ يُقفِلُ نطاقاً على فرعٍ محذوفٍ ويُسقِطُ البوّابةَ عندَ انقضاءِ مهلتِهِ."
+  fi
+done < "$ACTIVE_TSV"
+ok "لا تناقضَ في السجلِّ: لا حجزَ نشطاً ولهُ إفراجٌ مُوثَّقٌ."
 
 # ── 4) تقاطع النطاقات بين مالكين مختلفين ────────────────────────────────
 is_shared() {

@@ -177,6 +177,23 @@ _ti_second_workflow() {
 }
 t "يرفض استدعاءً ثانياً في سيرٍ خارجَ المُشغِّلِ" fail _ti_second_workflow
 
+# (8-ب) **والحالةُ نفسُها بلا `rg` في المسارِ** — وهذه ليست حالةً تخيُّليّةً:
+# `rg` غيرُ مُثبَّتٍ على عاملِ GitHub، وكانَ المسحُ يبتلعُ «الأمرُ غيرُ موجودٍ»
+# (`2>/dev/null || true`) فتخرجُ القائمةُ فارغةً **فيمرُّ البابُ الأوّلُ أخضرَ على لا
+# شيءٍ**. وأوّلُ حكمٍ حقيقيٍّ من CI (سيرُ 34873584143) أسقطَ الحالةَ (8) هناكَ وهيَ
+# خضراءُ هنا — أي **مُحلّيٌّ يُخالِفُ CI**، وهوَ عينُ ما أُنشئَ هذا الحارسُ لمنعِهِ.
+# فالحالةُ تُثبِتُ أنَّ الحكمَ لا يتغيّرُ بغيابِ أداةٍ خارجَ مسارِ الثقةِ.
+_ti_second_workflow_no_rg() {
+  local S; S="$(_ti_stage secwfnorg 1 0)"
+  mkdir -p "$S/.github/workflows" "$S/.norg"
+  { printf 'jobs:\n  test:\n    steps:\n'
+    printf '      - run: pnpm -r run '; printf 'test\n'
+  } > "$S/.github/workflows/ci.yml"
+  printf '#!/usr/bin/env bash\nexit 127\n' > "$S/.norg/rg"; chmod +x "$S/.norg/rg"
+  ( cd "$S" && PATH="$S/.norg:$PATH" bash scripts/checks/validate-test-invocation.sh )
+}
+t "يرفض الاستدعاءَ الثانيَ ولو غابَ rg (حُكمٌ لا يتغيّرُ بأداةٍ خارجَ مسارِ الثقةِ)" fail _ti_second_workflow_no_rg
+
 # (9) **استدعاءٌ ثانٍ في `package.json`:** حقلٌ لا سطرٌ — فحصٌ سطريٌّ وحدَهُ كانَ
 # سيُفلِتُهُ لأنَّ السطرَ يبدأُ بـ`"test":` لا بـ`pnpm`.
 _ti_second_script() {

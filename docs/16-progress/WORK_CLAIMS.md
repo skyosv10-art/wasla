@@ -59,6 +59,9 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0166 | M0-38 | @uxxxu (agent:perplexity-computer) | fix/m0-38-ledger-self-contradiction | scripts/checks/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Active |
+| CLM-0167 | M0-38 | @uxxxu (agent:perplexity-computer) | fix/m0-38-ledger-self-contradiction | docs/07-security/ | 2026-09-14 | 2026-09-28 | Active |
+| CLM-0168 | M0-38 | @uxxxu (agent:perplexity-computer) | fix/m0-38-ledger-self-contradiction | ROADMAP.md | 2026-09-14 | 2026-09-28 | Active |
 | CLM-0165 | M0-34 | @uxxxu (agent:perplexity-computer) | fix/m0-34-upgrade-proof-must-run | scripts/checks/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #157 · squash `0dbd333`) |
 | CLM-0164 | M0-36 | @uxxxu (agent:perplexity-computer) | feat/m0-36-contract-declares-service-auth | scripts/checks/,docs/07-security/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #155 · `402140c` · squash · وحُذِفَ الفرعُ · مُدمجٌ 2026-09-14 · البابُ التاسعُ وجردُ §5.9 وRISK-0041 وأحدَ عشرَ اختبارَ طفرةٍ (284 · 0) · **ولا حكمَ CI** (NOT VERIFIED · `account_billing_blocked` · 32 وظيفةً بـ`steps: []` و`runner_id: 0` · RISK-0039) · **ولا حمايةَ فرعٍ** (RISK-0036) · إقفالُ دورةِ §8.1) |
 | CLM-0162 | M0-23 | @uxxxu (agent:perplexity-computer) | feat/m0-23-search-migrations-enrollment | services/search/,pnpm-lock.yaml,docs/15-decisions/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #153 · `c2134ad` · squash · وحُذِفَ الفرعُ) |
@@ -140,9 +143,9 @@ docs/16-progress/MASTER_PROGRESS.md
 
 > **`CLM-0078` حُرِّر (2026-09-05) — دُمج عبر [PR #34](https://github.com/skyosv10-art/wasla/pull/34):** `GET /pulls/34` أجابَ `merged: true` · `merged_at: 2026-09-05T11:16:34Z` · التزامُ الدمجِ [`424ebfd6`](https://github.com/skyosv10-art/wasla/commit/424ebfd6f03447b32ea207e2f1a8a28e66af114d)، و`GET /compare/main...chore/m0-22c-22e-board-reconciliation` أجابَ `status: behind` · **`ahead_by: 0`** — فلا التزامَ على الفرعِ خارجَ `main`. **والتحريرُ بالقياسِ لا بالثقةِ في زرِّ الدمجِ:** الشرطُ في [`WORK_CLAIM_RULE.md` §8.1](../00-rules/WORK_CLAIM_RULE.md) `ahead_by = 0` لا `merged = true` وحدَها.
 
-| CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0078 | M0-22C | @uxxxu (agent:computer) | chore/m0-22c-22e-board-reconciliation | docs/16-progress/ | 2026-09-05 | 2026-09-19 | Released (PR #34 · merge `424ebfd6` · `ahead_by: 0` · **وتسويةُ حالةٍ 2026-09-14 · `CLM-0166`**: سطرُ الإفراجِ كانَ مكتوباً فوقَ الصفِّ منذُ 2026-09-05 **وعمودُ الحالةِ بقيَ `Active`** — فالسجلُّ يقولُ الشيءَ ونقيضَهُ. وقيسَ الفرعُ اليومَ: `git ls-remote --heads origin chore/m0-22c-22e-board-reconciliation` → **لا مرجعَ** · و`GET /compare/main...<branch>` → **404**. ولا يُمحى السطرُ القديمُ بل يُصحَّحُ العمودُ ويُسجَّلُ التصحيحُ) |
 
-| CLM-0079 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-unblock-reconciliation | docs/12-testing/,docs/16-progress/ | 2026-09-05 | 2026-09-19 | Active |
+| CLM-0079 | M0-22B | @uxxxu (agent:computer) | chore/m0-22b-gate-unblock-reconciliation | docs/12-testing/,docs/16-progress/ | 2026-09-05 | 2026-09-19 | Released (**تسويةٌ بالقياسِ 2026-09-14 · `CLM-0166`**: عملُ الحجزِ **على `main` فعلاً** — البندُ 12 في [`M0-22B_GATE.md`](../12-testing/M0-22B_GATE.md) يحملُ نصَّهُ ويذكرُ «التسويةُ 2026-09-05 (`CLM-0079`)» · وفرعُهُ **غيرُ موجودٍ**: `git ls-remote --heads origin chore/m0-22b-gate-unblock-reconciliation` → لا مرجعَ · و`GET /compare/main...<branch>` → **404**. فلا التزامَ عالقاً خارجَ `main` يُبرِّرُ إقفالَ `docs/12-testing/` و`docs/16-progress/` على فرعٍ محذوفٍ) |
 > **`CLM-0077` حُرِّر (2026-09-05) — دُمج عبر [PR #33](https://github.com/skyosv10-art/wasla/pull/33):** التزامُ الدمجِ `5a9bb69` (`merged_at: 2026-09-05T06:09:52Z`)، و`git diff main..origin/chore/m0-25-merge-blocking-gate --stat` أجابَ **صفرَ ملفّاتٍ** — فما دُمج هو ما قِيس بعينِه. تحريرٌ بالبروتوكول §8.1 (إقفالُ الدورةِ).
 
 > **قياسُ حالاتِ الفروعِ بعدَ دمجِ [#19](https://github.com/skyosv10-art/wasla/pull/19) و[#17](https://github.com/skyosv10-art/wasla/pull/17) — 2026-09-05 (`main` = [`b312a6ac`](https://github.com/skyosv10-art/wasla/commit/b312a6acdc06d85e6ef4d6d61faeebca97836a23)):**

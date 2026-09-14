@@ -232,6 +232,70 @@ $(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
 ROWS
 t "يهمل صفوف «المحرَّرة» ولا يحتسبها حجزاً (حارس M0-12)" pass bash scripts/checks/validate-work-claims.sh
 
+# ── حالة 14: السجلُّ لا يُناقِضُ نفسَه (M0-38) ────────────────────────────
+# **العطبُ المقيسُ:** بقيَ `CLM-0078` صفّاً `Active` وفوقَهُ سطرُ إفراجٍ مُوثَّقٌ
+# بالقياسِ منذُ 2026-09-05 — والحارسُ لا يقرأُ سطورَ الإفراجِ إطلاقاً فعمِيَ عن
+# التناقضِ بنيويّاً، فأُقفِلَ نطاقٌ على فرعٍ محذوفٍ وصارَ في السجلِّ عطبٌ موقوتٌ
+# ينفجرُ عندَ انقضاءِ المهلةِ. والحالاتُ أدناهُ تقيسُ الاتّجاهَينِ **وحدَّ الدقّةِ**.
+note() { printf '\n> %s\n' "$1" >> "$CL"; }  # سطرُ ملاحظةٍ يُلحَقُ بالسجلِّ الصناعيِّ
+
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+ROWS
+note "**\`CLM-8001\` حُرِّر (2026-09-05) — دُمج عبر PR #34 · \`ahead_by: 0\`.**"
+t "حجزٌ نشطٌ ولهُ سطرُ إفراجٍ («المُعرِّفُ ثمَّ الفعلُ») يُسقِط (M0-38)" fail bash scripts/checks/validate-work-claims.sh
+
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+ROWS
+note "**حُرِّرَ \`CLM-8001\`** وأُعيدَ الحجزُ بنطاقٍ أوسعَ."
+t "الاتّجاهُ المعاكسُ («الفعلُ ثمَّ المُعرِّفُ») يُسقِط أيضاً" fail bash scripts/checks/validate-work-claims.sh
+
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+ROWS
+note "**\`CLM-8001\` حرر (بلا تشكيلٍ) — دُمج.**"
+t "التشكيلُ لا يُفلِتُ الفعلَ — الفعلُ يُطبَّعُ قبلَ المطابقةِ" fail bash scripts/checks/validate-work-claims.sh
+
+# حدُّ الدقّةِ: سطرُ إفراجِ **غيرِهِ** لا يُحسَبُ عليهِ (سابقةُ CLM-0148/CLM-0147).
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+ROWS
+note "**\`CLM-8009\` — حُرِّرَ \`CLM-8008\` وأُعيدَ الحجزُ على الفرعِ نفسِه.**"
+t "ذكرُ إفراجِ حجزٍ آخرَ لا يُسقِطُ الحجزَ النشطَ (لا منعَ زائدٌ)" pass bash scripts/checks/validate-work-claims.sh
+
+# وذكرُ المُعرِّفِ في سياقٍ ليسَ إفراجاً لا يُسقِطُ: الاقترانُ مباشرٌ لا مجاورةٌ.
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+ROWS
+note "**\`CLM-8001\` — وُسِّعَ نطاقُهُ بقرارِ مالكِ البرنامجِ، ولم يُحرَّرْ بعدُ أيُّ حجزٍ في هذه الدفعةِ.**"
+t "ذكرُ المُعرِّفِ بلا اقترانٍ مباشرٍ بفعلِ التحريرِ يمرُّ" pass bash scripts/checks/validate-work-claims.sh
+
+# ── حالة 15: قارئٌ واحدٌ للسجلِّ — والمدقِّقانِ لا يفترقانِ (M0-38) ─────────
+# **العطبُ المقيسُ:** كانَ `validate-claim-freshness.sh` يقرأُ الحالةَ **احتواءً**
+# (`$9 ~ /Active/`) و`validate-work-claims.sh` **مطابقةً تامّةً** — ورأسُ الأوّلِ
+# يشهدُ بأنّهما سواءٌ. فصفٌّ **محرَّرٌ** دليلُ تحريرِهِ يذكرُ كلمةَ حالتِهِ السابقةِ
+# («وعمودُ الحالةِ بقيَ `Active`») قرأهُ الأوّلُ محرَّراً والثاني **نشطاً**، فأسقطَ
+# البوّابةَ على حجزٍ لا وجودَ لهُ — وهذا وقعَ فعلاً في دفعةِ `CLM-0166` نفسِها.
+# فصارَ القارئُ واحداً في `lib/claims_rows.sh`، والحالتانِ تقيسانِ **اتّفاقَهما**.
+ledger <<ROWS
+$(row CLM-8001 "$ITEM_A" @alpha test/alpha "services/alpha/")
+| CLM-8002 | $ITEM_B | @beta | test/beta-deleted | services/beta/ | $TODAY | $D_OK | Released (دُمجَ · وعمودُ الحالةِ كانَ \`Active\` قبلَ التسويةِ) |
+ROWS
+t "صفٌّ محرَّرٌ يذكرُ كلمةَ «Active» في دليلِهِ لا يُحتسَبُ حجزاً (حارسُ الحجوزاتِ)" pass bash scripts/checks/validate-work-claims.sh
+t "والقارئُ نفسُهُ في حارسِ البياتِ: لا فرعَ يُسأَلُ عنهُ لصفٍّ محرَّرٍ" pass bash scripts/checks/validate-claim-freshness.sh "$CL"
+
+# والاتّجاهُ الموجبُ يُقاسُ على القارئِ ذاتِهِ لا على الشبكةِ: صفٌّ نشطٌ **يُرى**،
+# وصفٌّ محرَّرٌ يذكرُ كلمةَ الحالةِ في دليلِهِ **لا يُرى** — حكمٌ واحدٌ للحارسَينِ.
+reader_sees_only_active() {
+  ( source scripts/checks/lib/claims_rows.sh
+    out="$(claims_active_rows "$CL")"
+    grep -q 'CLM-8001' <<< "$out" || { echo "✗ القارئُ لم يرَ الحجزَ النشطَ"; exit 1; }
+    grep -q 'CLM-8002' <<< "$out" && { echo "✗ القارئُ احتسبَ صفّاً محرَّراً حجزاً"; exit 1; }
+    exit 0 )
+}
+t "القارئُ يرى النشطَ ولا يرى المحرَّرَ الذي يذكرُ كلمةَ «Active» في دليلِهِ" pass reader_sees_only_active
+
 printf '\n\033[1m[ج] احتواء الملفات المُعدّلة داخل النطاق المحجوز (git حقيقي)\033[0m\n'
 
 ledger <<ROWS
@@ -763,8 +827,10 @@ _fresh_stage() { # _fresh_stage <اسم> <أُضيف origin؟ 0|1> → يطبع 
   local name="$1" with_origin="$2"
   local S="/tmp/gov_fresh_$name"
   rm -rf "$S" "$S.origin"
-  mkdir -p "$S/scripts/checks" "$S/docs/16-progress"
+  mkdir -p "$S/scripts/checks/lib" "$S/docs/16-progress"
   cp "$FRESH" "$S/scripts/checks/"
+  # القارئُ المشتركُ يُنسَخُ معَهُ (M0-38): الحارسُ يعتمدُهُ، وغيابُهُ رفضٌ لا صمتٌ.
+  cp "$REPO_ROOT/scripts/checks/lib/claims_rows.sh" "$S/scripts/checks/lib/"
   (
     cd "$S" || exit 1
     git init -q -b main; git config user.email t@t.t; git config user.name t
@@ -837,6 +903,19 @@ fresh_declares_skip() {
   return 0
 }
 t "عند الجهل يُعلن التخطّي ولا يدّعي نجاحاً كاملاً" pass fresh_declares_skip
+
+# (5) وغيابُ القارئِ المشتركِ **رفضٌ لا صمتٌ** (M0-38): مقيسٌ لا مُتخيَّلٌ — أوّلُ
+# ربطٍ للقارئِ في هذا الحارسِ قلبَ حالتَي طفرةٍ قائمتَينِ إلى «pass» لأنَّ الاستيرادَ
+# فشلَ في المسرحِ الصناعيِّ فصارتِ القائمةُ فارغةً و«لا حجوزاتٍ نشطةً» خضراءَ.
+# فحارسٌ يُلغي نفسَهُ عندَ نقصِ ملفٍّ أخطرُ من حارسٍ غائبٍ: غيابُهُ يُرى، وإلغاؤُهُ لا.
+fresh_missing_reader_fails_closed() {
+  local S; S="$(_fresh_stage noreader 1)"
+  ( cd "$S" && git checkout -q -b feat/alive3 && git push -q origin feat/alive3 >/dev/null 2>&1 && git checkout -q main && git branch -qD feat/alive3 )
+  _fresh_claims "$S" "feat/alive3"
+  rm -f "$S/scripts/checks/lib/claims_rows.sh"
+  ( cd "$S" && bash scripts/checks/validate-claim-freshness.sh )
+}
+t "غيابُ القارئِ المشتركِ يُسقِطُ الحارسَ ولا يُخضِرُهُ (fail-closed)" fail fresh_missing_reader_fails_closed
 
 printf '\n\033[1m[ز] هدفُ طلبِ الدمج — فرعٌ مدموجٌ أو محذوفٌ يُعلِق العمل (M0-17)\033[0m\n'
 

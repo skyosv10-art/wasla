@@ -126,7 +126,7 @@
 | `.gitlab-ci.yml` — `verify` (أرتفاكت `when: always`) | Implemented | M0-04 |
 | `scripts/checks/lib/check-shared-ledgers.py` | Implemented | M0-12 |
 | `scripts/checks/require-doc-update.sh` | Implemented | M0-11, M0-12 |
-| `scripts/checks/validate-work-claims.sh` | Implemented | M0-05, M0-12, M0-13 |
+| `scripts/checks/validate-work-claims.sh` (ومنها البابُ 1-ج: **السجلُّ لا يُناقِضُ نفسَه** — حجزٌ نشطٌ ولهُ إفراجٌ مُوثَّقٌ) | Implemented | M0-05, M0-12, M0-13, M0-38 |
 | `scripts/checks/validate-launch-board.sh` | Implemented | M0-05, M0-11 |
 | `scripts/checks/lib/meaningful-paths.sh` | Implemented | M0-14, M0-15 |
 | `scripts/checks/validate-claim-freshness.sh` | Implemented | M0-16 |

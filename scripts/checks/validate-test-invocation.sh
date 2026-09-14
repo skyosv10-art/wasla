@@ -48,18 +48,16 @@ RUNNER="scripts/run-tests.sh"
 # بنقطةٍ، و`rg` يتخطّى المخفيَّ افتراضيّاً — فكانَ الحارسُ **يعمى عن خطَّي CI
 # كلَّيهِما**، أي عن الموضعِ الأوّلِ الذي يُكرَّرُ فيهِ الاستدعاءُ. كشفَتْهُ حالةُ
 # حوكمةٍ (8) لا مراجعةٌ بالعينِ.
-OFFENDERS="$(
-  rg --line-number --no-heading --hidden \
-     -g '!.git/**' \
-     -g '!node_modules' -g '!**/dist/**' -g '!docs/**' -g '!*.md' \
-     -g "!$RUNNER" -g '!scripts/checks/validate-test-invocation.sh' \
-     -g '!scripts/checks/test-governance.sh' \
-     -g '!scripts/checks/lib/gov-cases-test-invocation.sh' \
-     '^[[:space:]]*(-[[:space:]]*)?(run:[[:space:]]*)?pnpm[^#]*(-r|--recursive)[^#]*\btest\b' \
-     . 2>/dev/null || true
-)"
-# ومداخلُ `package.json` تُقرأُ حقلاً لا سطراً: `"test": "pnpm -r run test"` لا
-# يبدأُ السطرَ بـ`pnpm` فكانَ سيُفلِتُ من فحصٍ سطريٍّ.
+# و**لا `rg` في مسارِ الثقةِ**: كانَ المسحُ `rg … 2>/dev/null || true`، و`rg` غيرُ
+# مُثبَّتٍ على عاملِ GitHub — فكانَ «الأمرُ غيرُ موجودٍ» يُبتلَعُ فتخرجُ القائمةُ
+# فارغةً **فيمرُّ هذا البابُ أخضرَ على لا شيءٍ**. كشفَهُ أوّلُ حكمٍ حقيقيٍّ من CI
+# (سيرُ 34873584143): حالةُ الطفرةِ (8) «متوقع fail وجاء pass» في CI وهيَ خضراءُ
+# محلّيّاً — أي مُحلّيٌّ يُخالِفُ CI، وهوَ عينُ ما أُنشئَ هذا الحارسُ لمنعِهِ.
+# فصارَ المسحُ بـ`python3` (شرطُ تشغيلِ البوّابةِ أصلاً) في المِلفِّ نفسِهِ الذي
+# يمسحُ `package.json` — مصدرُ حقيقةٍ واحدٌ، وأداةٌ ثالثةٌ أقلُّ.
+SCAN_RC=0
+OFFENDERS="$(python3 scripts/checks/lib/audit_test_invocation.py --scan-lines "$ROOT")" || SCAN_RC=$?
+(( SCAN_RC == 0 )) || fail "مَسحُ صيغةِ الاستدعاءِ أخفقَ (rc=$SCAN_RC) — ولا يُقرأُ العُطلُ نجاحاً."
 JSON_OFFENDERS="$(python3 scripts/checks/lib/audit_test_invocation.py --scan-scripts "$ROOT" || true)"
 if [[ -n "$JSON_OFFENDERS" ]]; then
   OFFENDERS="${OFFENDERS:+$OFFENDERS$'\n'}$JSON_OFFENDERS"

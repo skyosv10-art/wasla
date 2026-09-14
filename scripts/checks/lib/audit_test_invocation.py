@@ -1,5 +1,9 @@
 """تدقيقُ استدعاءِ الاختباراتِ **بمعيارٍ مستقلٍّ** عن مُشتَقِّ المُشغِّلِ. (M0-35)
 
+    python3 audit_test_invocation.py --scan-lines <root>
+        يطبعُ كلَّ سطرٍ يحملُ **صيغةَ** `pnpm … -r … test` خارجَ المُشغِّلِ —
+        بلا `rg`، فالأداةُ الغائبةُ كانت تُخرِجُ قائمةً فارغةً فحارساً أخضرَ.
+
     python3 audit_test_invocation.py --scan-scripts <root>
         يطبعُ كلَّ مدخلِ `scripts.*` في أيِّ `package.json` يستدعي
         `pnpm … -r … test` مباشرةً — أي استدعاءً ثانياً خارجَ المُشغِّلِ.
@@ -88,6 +92,54 @@ def scan_scripts(root: str) -> list[str]:
                     "%s: scripts.%s = %s" % (os.path.relpath(pj, root), name, body)
                 )
     return out
+
+
+# ── مسحُ الأسطرِ: صيغةُ الاستدعاءِ في أيِّ ملفٍّ نصّيٍّ ─────────────────────
+# ولمَ هنا لا بـ`rg`؟ لأنَّ الحارسَ كانَ يمسحُ بـ`rg … 2>/dev/null || true`،
+# و`rg` **غيرُ مُثبَّتٍ على عاملِ GitHub**: فكانَ «الأمرُ غيرُ موجودٍ» يُبتلَعُ
+# فتخرجُ القائمةُ فارغةً فيمرُّ البابُ الأوّلُ أخضرَ على لا شيءٍ. وذاكَ مقيسٌ لا
+# مُتخيَّلٌ: أوّلُ حكمٍ حقيقيٍّ من CI (سيرُ 34873584143) أسقطَ حالةَ الطفرةِ (8)
+# «متوقع fail وجاء pass» فيما هيَ خضراءُ محلّيّاً — أي **مُحلّيٌّ يُخالِفُ CI**، وهوَ
+# عينُ العطبِ الذي أُنشئَ هذا الحارسُ لمنعِهِ. و`python3` شرطُ تشغيلِ البوّابةِ
+# أصلاً، فالمسحُ بهِ يُلغي أداةً ثالثةً من مسارِ الثقةِ.
+_SCAN_SKIP_DIRS = {".git", "node_modules", "dist", "docs", ".pnpm-store", "coverage"}
+_SCAN_SKIP_FILES = {
+    "scripts/run-tests.sh",
+    "scripts/checks/validate-test-invocation.sh",
+    "scripts/checks/test-governance.sh",
+    "scripts/checks/lib/gov-cases-test-invocation.sh",
+}
+_INVOCATION_LINE = re.compile(
+    r"^[ \t]*(?:-[ \t]*)?(?:run:[ \t]*)?pnpm[^#]*(?:-r\b|--recursive\b)[^#]*\btest\b"
+)
+
+
+def scan_lines(root: str) -> list[str]:
+    """كلُّ سطرٍ يحملُ **صيغةَ** استدعاءِ الاختباراتِ خارجَ المُشغِّلِ.
+
+    والمخفيُّ يُمسَحُ بقصدٍ (`.github/workflows/` · `.gitlab-ci.yml`): كانَ الحارسُ
+    يعمى عنهُما فسقطَ أوّلُ موضعٍ يُكرَّرُ فيهِ الاستدعاءُ. والوثائقُ (`docs/` ·
+    `*.md`) خارجَ المسحِ لأنَّ منعَ **ذكرِ** العطبِ يُعاقِبُ التوثيقَ.
+    """
+    out: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in _SCAN_SKIP_DIRS]
+        for name in filenames:
+            if name.endswith(".md"):
+                continue
+            full = os.path.join(dirpath, name)
+            rel = os.path.relpath(full, root)
+            if rel in _SCAN_SKIP_FILES or os.path.islink(full):
+                continue
+            try:
+                with open(full, encoding="utf-8", errors="replace") as fh:
+                    for n, line in enumerate(fh, 1):
+                        if _INVOCATION_LINE.search(line):
+                            out.append("./%s:%d:%s" % (rel, n, line.rstrip("\n")))
+            except (OSError, ValueError):
+                # وتعذُّرُ القراءةِ **يُعلَنُ** ولا يُبتلَعُ: ملفٌّ لا يُقرأُ ليسَ ملفّاً نظيفاً.
+                out.append("./%s:0:<تعذَّرَ فتحُ الملفِّ للمسحِ>" % rel)
+    return sorted(out)
 
 
 # ── اكتمالُ الشِّقَّينِ ────────────────────────────────────────────────────
@@ -346,10 +398,14 @@ def audit_groups(root: str, text: str) -> list[str]:
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("usage: audit_test_invocation.py --scan-scripts|--audit-groups [root]")
+        print("usage: audit_test_invocation.py --scan-lines|--scan-scripts|--audit-groups [root]")
         return 2
     mode = sys.argv[1]
     root = sys.argv[2] if len(sys.argv) > 2 else "."
+    if mode == "--scan-lines":
+        for line in scan_lines(root):
+            print(line)
+        return 0
     if mode == "--scan-scripts":
         for line in scan_scripts(root):
             print(line)

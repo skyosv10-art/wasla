@@ -507,6 +507,40 @@ t "يرفضُ معرِّفاً بمسافةٍ بدلَ الشَّرطةِ" fail 
 t "لا يُنذِرُ على جدولٍ آخرَ لا معرِّفاتِ عملٍ فيهِ" pass \
   bash "$REPO_ROOT/scripts/checks/validate-launch-board.sh" "$GB/other_table.md"
 
+# ── M0-39: التقابلُ معَ السجلِّ لا يتعلَّقُ بمجلَّدِ العملِ ────────────────────
+# العطبُ المقيسُ بحكمِ CI (34877713456): الحارسُ يقرأُ اللوحةَ من الوسيطِ ثمَّ
+# يُقابِلُها بـ`docs/16-progress/TASK_LOG.md` **بمسارٍ نسبيٍّ ثابتٍ**. فمن جذرِ
+# المستودعِ قُوبِلَ سجلُّ الحقيقةِ بلوحةٍ اصطناعيّةٍ (فأحمرُ بلا معنى)، ومن أيِّ
+# مجلَّدٍ آخرَ سقطَ التقابلُ **صامتاً**. وثلاثتُها تُقاسُ:
+mkdir -p "$GB/sib"
+{ board_head; printf '| M9-01 | بندٌ سليمٌ | Delivery | — | In Progress | — |\n'; } > "$GB/sib/LAUNCH_EXECUTION_BOARD.md"
+printf '# سجل\n\n- **Work Item(s):** M9-01\n' > "$GB/sib/TASK_LOG.md"
+
+# (١) اللوحةُ الاصطناعيّةُ تُقابَلُ بسجلِّها الشقيقِ لا بسجلِّ المستودعِ — ومن
+#     **جذرِ المستودعِ** بالذاتِ، وهوَ المجلَّدُ الذي كانَ يُحمِّرُها في CI.
+t "لوحةٌ اصطناعيّةٌ تُقابَلُ بسجلِّها الشقيقِ لا بسجلِّ المستودعِ (من الجذرِ)" pass \
+  bash -c 'cd "$1" && bash scripts/checks/validate-launch-board.sh "$2"' _ "$REPO_ROOT" "$GB/sib/LAUNCH_EXECUTION_BOARD.md"
+
+# (٢) والتقابلُ **يرفضُ** معرِّفاً في السجلِّ الشقيقِ غائباً عن اللوحةِ — من أيِّ
+#     مجلَّدِ عملٍ: فحصٌ لا يُعطِّلُهُ `cd`.
+printf '# سجل\n\n- **Work Item(s):** M9-77\n' > "$GB/sib/TASK_LOG.md"
+t "معرِّفٌ في السجلِّ غائبٌ عن اللوحةِ يُرفَضُ من جذرِ المستودعِ" fail \
+  bash -c 'cd "$1" && bash scripts/checks/validate-launch-board.sh "$2"' _ "$REPO_ROOT" "$GB/sib/LAUNCH_EXECUTION_BOARD.md"
+t "المعرِّفُ الغائبُ يُرفَضُ كذلكَ من مجلَّدٍ آخرَ (لا تعطيلَ بـcd)" fail \
+  bash -c 'cd / && bash "$1/scripts/checks/validate-launch-board.sh" "$2"' _ "$REPO_ROOT" "$GB/sib/LAUNCH_EXECUTION_BOARD.md"
+
+# (٣) وغيابُ السجلِّ الشقيقِ عن لوحةٍ باسمِ لوحةِ المستودعِ **إخفاقٌ لا تخطٍّ**:
+#     فحصٌ إلزاميٌّ لا يُسكِتُهُ ملفٌّ ناقصٌ.
+mkdir -p "$GB/nolog"
+{ board_head; printf '| M9-01 | بندٌ سليمٌ | Delivery | — | In Progress | — |\n'; } > "$GB/nolog/LAUNCH_EXECUTION_BOARD.md"
+t "لوحةُ مستودعٍ بلا سجلٍّ شقيقٍ تُخفِقُ ولا تتخطّى (fail-closed)" fail \
+  bash -c 'cd / && bash "$1/scripts/checks/validate-launch-board.sh" "$2"' _ "$REPO_ROOT" "$GB/nolog/LAUNCH_EXECUTION_BOARD.md"
+
+# (٤) واللوحةُ الحقيقيّةُ تظلُّ خضراءَ ومُقابَلةً فعلاً من مجلَّدٍ أجنبيٍّ — والرسالةُ
+#     تذكرُ مسارَ السجلِّ الذي قُوبِلَ، فلا تُعلَنُ مطابقةٌ لم تُقَسْ.
+t "اللوحةُ الحيّةُ تُقابَلُ بسجلِّها من مجلَّدٍ أجنبيٍّ وتُعلِنُ مسارَهُ" pass \
+  bash -c 'cd / && out="$(bash "$1/scripts/checks/validate-launch-board.sh" "$1/docs/16-progress/LAUNCH_EXECUTION_BOARD.md")" && grep -q "docs/16-progress/TASK_LOG.md تطابق" <<< "$out"' _ "$REPO_ROOT"
+
 # والدعوى الأخيرةُ على **اللوحةِ الحقيقيّةِ**: عددُ العناصرِ المُنتقاةِ يساوي
 # عددَ الصفوفِ الحاملةِ معرِّفاً. وتفاوتُهما هوَ العَرَضُ الذي كشفَ العطبَ أوّلاً.
 selected="$(grep -cE '^\| M[0-9]+-[0-9A-Za-z]+ \|' "$BOARD" || true)"

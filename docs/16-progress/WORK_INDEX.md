@@ -130,6 +130,9 @@
 | `scripts/checks/lib/meaningful-paths.sh` | Implemented | M0-14, M0-15 |
 | `scripts/checks/validate-claim-freshness.sh` | Implemented | M0-16 |
 | `scripts/checks/validate-mr-target.sh` | Implemented | M0-17 |
+| `packages/service-auth/` — توقيعُ هويّةِ الخدمةِ وإنفاذُها (`SERVICE_AUTH_HEADER`) | Implemented | M1-03 |
+| `scripts/checks/validate-service-auth-coverage.sh` — تسعةُ أبوابٍ (تغطيةٌ · صلاحيّاتٌ · مُنادٍ خامٌّ · أغلفةُ نداءٍ · **صدقُ العقدِ المنشورِ**) | Implemented | M1-03 · M0-36 |
+| `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` §5.9 — جردُ دَينِ العقدِ المنشورِ (8 حدودٍ · `RISK-0041`) | Implemented | M0-36 (والإفراغُ مِلكُ M1-06) |
 | `scripts/checks/validate-integration-isolation.sh` | Implemented | M0-03 |
 | `docs/00-rules/TESTING_RULES.md` §1 (عزلُ اختباراتِ التكامل) | Implemented | M0-03 |
 | `services/identity/vitest.integration.config.ts` (تسلسلُ الملفّات) | Implemented | M0-03 |

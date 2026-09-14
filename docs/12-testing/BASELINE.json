@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T02:24:06Z",
+  "generated_at": "2026-09-14T02:56:52Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "95426215c816ccf435a283e02d19f755f31e6589",
+    "commit": "f1a2c87cc6c0336419493bd5bb145771a2c23fa6",
     "branch": "feat/m0-34-upgrade-with-data-proof",
     "dirty": false,
     "dirty_files": 0,
@@ -34,12 +34,12 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify34.log",
+    "source": "/tmp/verify34c.log",
     "tests_passed": 4505,
     "test_files_executed": 277,
-    "governance_suite_cases": 245,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_cases": 246,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
   "fingerprint": "sha256:0ece977f627608950a1391f256f0d6563c3edb2c5c9223d82943cfc6f01e07f4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

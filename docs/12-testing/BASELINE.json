@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T18:22:15Z",
+  "generated_at": "2026-09-14T19:39:53Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3cb44c3523dfe1be13d82404fa8a6605e28cb93e",
-    "branch": "fix/m0-39-board-guard-cwd",
+    "commit": "5dcfe39e5a7db21d87ac2256b45185af843d2179",
+    "branch": "fix/m0-40-not-verified-audit",
     "dirty": true,
-    "dirty_files": 6,
-    "dirty_reason": "M0-39: خمسُ حالاتِ حوكمةٍ جديدةٌ تُقيسُ استقلالَ حارسِ اللوحةِ عن مجلَّدِ العملِ وسلوكَهُ fail-closed (302 → 307)",
-    "tracked_files": 1991
+    "dirty_files": 15,
+    "dirty_reason": "M0-40 · CLM-0170: الفحصُ 15 (تدقيقُ أحكامِ CI) أُضيفَ إلى بوّابةِ الحوكمةِ ⇒ governance_checks 14→15، وخمسَ عشرةَ حالةً جديدةً ⇒ governance_suite_cases 307→322. مقيسٌ من تشغيلٍ أخضرَ كاملٍ (/tmp/verify9.log)",
+    "tracked_files": 1992
   },
   "env": {
     "node": "v20.20.1",
@@ -29,18 +29,18 @@
     "test_files_tracked": 353,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 14,
+    "governance_checks": 15,
     "risks_not_closed": 30
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify7.log",
+    "source": "/tmp/verify9.log",
     "tests_passed": 4545,
     "test_files_executed": 280,
-    "governance_suite_cases": 307,
+    "governance_suite_cases": 322,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:b0080309f9e348e22f1fedfcafd734896477daa841f57baf73672ca07cebe109",
+  "fingerprint": "sha256:0c4c6f47260b49393a94839d8077850260bd29adcb854a9190546dfd9b9f731c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

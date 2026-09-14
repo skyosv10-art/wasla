@@ -96,7 +96,7 @@ fail-closed: غيابُ اللوحةِ أو السجلِّ أو مكتبةِ ا�
 
 | الموضعُ | السيرُ | الحكمُ |
 |---|---|---|
-| الفرعُ · `WASLA CI` | — | — |
-| الفرعُ · `Roadmap freshness` | — | — |
+| الفرعُ · `WASLA CI` | [34888557578](https://github.com/skyosv10-art/wasla/actions/runs/34888557578) | **`success`** · 31 وظيفةً · **بدأَ منها 31** (لا `steps: []` ولا `runner_id: 0`) — حكمٌ لا امتناعٌ |
+| الفرعُ · `Roadmap freshness` | [34888552579](https://github.com/skyosv10-art/wasla/actions/runs/34888552579) | **`success`** |
 | `main` بعدَ الضمِّ · `WASLA CI` | — | — |
 | `main` بعدَ الضمِّ · `Roadmap freshness` | — | — |

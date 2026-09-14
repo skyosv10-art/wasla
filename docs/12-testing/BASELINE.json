@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T17:38:43Z",
+  "generated_at": "2026-09-14T18:22:15Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b2cb5fb7ae0916a847ca3ae6e94ed8e83a0ecb08",
-    "branch": "fix/m0-38-ledger-self-contradiction",
+    "commit": "3cb44c3523dfe1be13d82404fa8a6605e28cb93e",
+    "branch": "fix/m0-39-board-guard-cwd",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "M0-38 · CLM-0166/CLM-0167: بابٌ 1-ج + قارئٌ واحدٌ + fail-closed + مسحٌ بلا rg — 292 ← 302",
+    "dirty_files": 6,
+    "dirty_reason": "M0-39: خمسُ حالاتِ حوكمةٍ جديدةٌ تُقيسُ استقلالَ حارسِ اللوحةِ عن مجلَّدِ العملِ وسلوكَهُ fail-closed (302 → 307)",
     "tracked_files": 1991
   },
   "env": {
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify6.log",
+    "source": "/tmp/verify7.log",
     "tests_passed": 4545,
     "test_files_executed": 280,
-    "governance_suite_cases": 302,
+    "governance_suite_cases": 307,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

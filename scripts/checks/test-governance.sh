@@ -2254,6 +2254,82 @@ printf 'export const schema2 = 2;\n' >> "$M_DIFF2/services/svc-b/src/db/schema.t
 t "تغييرُ مخططٍ في غيرِ منتظِمةٍ يمرّ (تدرُّجٌ معلنٌ لا رفضٌ)" pass \
   bash -c 'cd "$0" && bash scripts/checks/validate-migrations.sh HEAD~1 HEAD' "$M_DIFF2"
 
+# ── البابُ 4: برهانُ الترقيةِ على قاعدةٍ مأهولةٍ (M0-34 · RISK-0020) ──────
+# **العطبُ المقيسُ لا المُتخيَّلُ:** `ALTER TABLE … ADD COLUMN c … NOT NULL` تنجحُ
+# في قاعدةٍ فارغةٍ وتسقطُ بـ`23502` في قاعدةٍ فيها صفٌّ واحدٌ. وقد أصدرَها
+# `drizzle-kit` فعلاً في `services/delivery/drizzle/0001_idempotency_key_lifetime.sql`
+# (رأسُ الملفِّ يشهدُ)، فنجا المستودعُ بمراجعةٍ يدويّةٍ وحدَها. والأبوابُ 1 و3
+# تقيسُ **وجودَ** ملفاتٍ لا **سلامةَ ترقيةٍ** — فما كانَ يراهُ حارسٌ.
+#
+# **ولمَ حالاتُ طفرةٍ لا تشغيلٌ للحارسِ وحدَه:** حارسٌ يمرُّ على مستودعٍ سليمٍ
+# لا يُثبِتُ أنّهُ يرفضُ شيئاً. فكلُّ حالةٍ أدناهُ تُدخِلُ العطبَ عمداً وتطلبُ
+# الرفضَ، وتُقابِلُها حالةٌ سليمةٌ تطلبُ القبولَ — وإلّا كانَ «الحارسُ» ثابتَ
+# الجوابِ لا حَكَماً.
+
+# يُضافُ ترحيلٌ غيرُ أساسٍ إلى لقطةٍ: هوَ ما يُفعِّلُ البابَ الرابعَ أصلاً.
+_mig_add_nonbase() { # _mig_add_nonbase <root> <tag> <up-sql>
+  local R="$1" TAG="$2" SQL="$3"
+  python3 - "$R/services/svc-a/drizzle/meta/_journal.json" "$TAG" <<'PYJ'
+import json, sys
+p, tag = sys.argv[1], sys.argv[2]
+j = json.load(open(p))
+j["entries"].append({"idx": len(j["entries"]), "version": "7", "when": 2, "tag": tag})
+json.dump(j, open(p, "w"))
+PYJ
+  printf '%s\n' "$SQL" > "$R/services/svc-a/drizzle/$TAG.sql"
+  printf 'ALTER TABLE t1 DROP COLUMN IF EXISTS c;\n' > "$R/services/svc-a/drizzle/$TAG.down.sql"
+}
+
+# البرهانُ يُكتَبُ ملفاً حقيقيّاً تحتَ src — فالحارسُ يبحثُ حيثُ يعيشُ البرهانُ.
+_mig_add_proof() { # _mig_add_proof <root> <declaration>
+  local R="$1" DECL="$2"
+  mkdir -p "$R/services/svc-a/src/__tests__"
+  printf '/** @wasla-upgrade-proof: %s */\n' "$DECL" \
+    > "$R/services/svc-a/src/__tests__/upgrade.integration.test.ts"
+}
+
+SAFE_ADD='ALTER TABLE t1 ADD COLUMN c timestamptz;'
+UNSAFE_ADD='ALTER TABLE t1 ADD COLUMN c timestamptz NOT NULL;'
+
+M_U1="$(_mig_root u1)"; _mig_add_nonbase "$M_U1" 0001_x "$SAFE_ADD"
+t "ترحيلٌ غيرُ أساسٍ بلا برهانِ ترقيةٍ يُسقِط (M0-34)" fail _mig "$M_U1"
+
+M_U2="$(_mig_root u2)"; _mig_add_nonbase "$M_U2" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_U2" all-non-baseline
+t "برهانُ ترقيةٍ يُعلِنُ «all-non-baseline» يُمرِّرُ" pass _mig "$M_U2"
+
+M_U3="$(_mig_root u3)"; _mig_add_nonbase "$M_U3" 0001_x "$SAFE_ADD"
+_mig_add_nonbase "$M_U3" 0002_y "$SAFE_ADD"
+_mig_add_proof "$M_U3" tags=0001_x
+t "تغطيةٌ مُجزَّأةٌ تترُكُ ترحيلاً غيرَ مُغطًّى تُسقِط" fail _mig "$M_U3"
+
+M_U4="$(_mig_root u4)"; _mig_add_nonbase "$M_U4" 0001_x "$SAFE_ADD"
+_mig_add_nonbase "$M_U4" 0002_y "$SAFE_ADD"
+_mig_add_proof "$M_U4" tags=0001_x,0002_y
+t "تغطيةٌ مُجزَّأةٌ تستوعبُ كلَّ ترحيلٍ غيرِ أساسٍ تُمرِّرُ" pass _mig "$M_U4"
+
+M_U5="$(_mig_root u5)"; _mig_add_nonbase "$M_U5" 0001_x "$SAFE_ADD"
+_mig_add_proof "$M_U5" شيءٌ-غيرُ-معروفٍ
+t "علامةُ برهانٍ بإعلانِ تغطيةٍ غيرِ صالحٍ تُسقِط" fail _mig "$M_U5"
+
+M_U6="$(_mig_root u6)"; _mig_add_nonbase "$M_U6" 0001_x "$UNSAFE_ADD"
+_mig_add_proof "$M_U6" all-non-baseline
+t "«ADD COLUMN … NOT NULL» بلا DEFAULT تُسقِط ولو حضرَ البرهانُ (23502)" fail _mig "$M_U6"
+
+M_U7="$(_mig_root u7)"
+_mig_add_nonbase "$M_U7" 0001_x "ALTER TABLE t1 ADD COLUMN c timestamptz DEFAULT now() NOT NULL;"
+_mig_add_proof "$M_U7" all-non-baseline
+t "النمطُ نفسُهُ معَ DEFAULT يمرُّ — الحارسُ يقيسُ الخطرَ لا الكلمةَ" pass _mig "$M_U7"
+
+M_U8="$(_mig_root u8)"
+_mig_add_nonbase "$M_U8" 0001_x "-- ALTER TABLE t1 ADD COLUMN c timestamptz NOT NULL;
+$SAFE_ADD"
+_mig_add_proof "$M_U8" all-non-baseline
+t "النمطُ داخلَ تعليقٍ لا يُسقِط — شرحُ العطبِ ليسَ ارتكابَه" pass _mig "$M_U8"
+
+M_U9="$(_mig_root u9)"
+t "لقطةٌ بأساسٍ وحدَه لا يُفعَّلُ عليها البابُ الرابعُ (تدرُّجٌ لا تعجيزٌ)" pass _mig "$M_U9"
+
 printf '\n\033[1m[ن] حتميّةُ الحرّاسِ — لا سباقَ إشارةٍ يُقرَأُ حكماً (RISK-0037)\033[0m\n'
 # **العطبُ المقيسُ:** `printf '%s\n' "${ARR[@]}" | grep -qxF "$x"` تحتَ `pipefail`
 # يرفضُ عضويّةً **موجودةً** حينَ يخرجُ `grep` عندَ أوّلِ تطابقٍ فيموتُ `printf`

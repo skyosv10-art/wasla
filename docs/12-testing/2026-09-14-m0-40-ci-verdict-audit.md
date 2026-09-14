@@ -98,5 +98,9 @@ fail-closed: غيابُ اللوحةِ أو السجلِّ أو مكتبةِ ا�
 |---|---|---|
 | الفرعُ · `WASLA CI` | [34888557578](https://github.com/skyosv10-art/wasla/actions/runs/34888557578) | **`success`** · 31 وظيفةً · **بدأَ منها 31** (لا `steps: []` ولا `runner_id: 0`) — حكمٌ لا امتناعٌ |
 | الفرعُ · `Roadmap freshness` | [34888552579](https://github.com/skyosv10-art/wasla/actions/runs/34888552579) | **`success`** |
-| `main` بعدَ الضمِّ · `WASLA CI` | — | — |
-| `main` بعدَ الضمِّ · `Roadmap freshness` | — | — |
+| `main` بعدَ ضمِّ #163 · `WASLA CI` | [34889635454](https://github.com/skyosv10-art/wasla/actions/runs/34889635454) | **`failure`** — ويُذكَرُ كما هوَ. السببُ **واحدٌ مقيسٌ**: الفحصُ 4 «بياتُ الحجوزات» رفضَ `CLM-0170` و`CLM-0171` نشطَينِ وقد **حُذِفَ فرعُهما بالدمجِ** — وهوَ صادقٌ: بينَ لحظةِ الضمِّ ولحظةِ التحريرِ كانَ السجلُّ يُشيرُ إلى فرعٍ غيرِ موجودٍ. |
+| `main` بعدَ ضمِّ #163 · `Roadmap freshness` | [34889635427](https://github.com/skyosv10-art/wasla/actions/runs/34889635427) | **`success`** |
+| فرعُ التحريرِ #164 · `WASLA CI` | [34890366417](https://github.com/skyosv10-art/wasla/actions/runs/34890366417) | **`success`** · و`Roadmap freshness` [34890359590](https://github.com/skyosv10-art/wasla/actions/runs/34890359590) `success` |
+| `main` بعدَ ضمِّ #164 (`4528233`) · `WASLA CI` | [34890987443](https://github.com/skyosv10-art/wasla/actions/runs/34890987443) | **`success`** — الحالةُ الأخيرةُ لِـ`main` خضراءُ بحكمِ CI حقيقيٍّ، و`Roadmap freshness` [34890987437](https://github.com/skyosv10-art/wasla/actions/runs/34890987437) `success` |
+
+**ولم يُخفَّفْ شيءٌ ليصيرَ الأخضرُ:** الحمرةُ أعلاهُ حارسٌ يقولُ الصدقَ، وعلاجُها كانَ **تحريرَ الحجزَينِ** (§8.1) لا تعطيلَ الفحصِ ولا إسكاتَ حالتِهِ. وهذا بذاتِهِ قياسٌ للحارسِ الرابعِ: تركُ التحريرِ صارَ **مستحيلاً بصمتٍ**.

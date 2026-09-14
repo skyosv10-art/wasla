@@ -60,11 +60,11 @@ run_step "بنيةُ المستودعِ والوثائقُ الحاكمة" \
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh
 
-# ── 3) بوّابةُ الحوكمةِ (ثلاثةَ عشرَ فحصاً — M0-23 أضافَ الثالثَ عشرَ) ────────────────────────────────────
+# ── 3) بوّابةُ الحوكمةِ (أربعةَ عشرَ فحصاً — M0-35 أضافَ الرابعَ عشرَ) ─────────────
 if [[ -n "$OLD" && -n "$NEW" ]]; then
-  run_step "بوّابةُ الحوكمة (13 فحصاً)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
+  run_step "بوّابةُ الحوكمة (14 فحصاً)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
 else
-  run_step "بوّابةُ الحوكمة (13 فحصاً)" bash scripts/checks/verify-governance.sh
+  run_step "بوّابةُ الحوكمة (14 فحصاً)" bash scripts/checks/verify-governance.sh
 fi
 
 # ── 4) إثباتُ أنّ الحوكمةَ ترفض فعلاً ────────────────────────────────────

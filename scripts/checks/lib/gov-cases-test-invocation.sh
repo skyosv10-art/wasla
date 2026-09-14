@@ -243,8 +243,13 @@ _ti_nested_pkg() {
     > "$S/packages/contracts/widget/src/__tests__/unit.test.ts"
   # يجبُ أن تظهرَ في شِقٍّ. ولا يكفي أن يمرَّ الحارسُ: يُقاسُ ظهورُها بالاسمِ،
   # وإلّا كانَ «أخضرُ» يعني «لم أرَها» كما كانَ يعني قبلَ الإصلاحِ.
-  python3 "$S/scripts/checks/lib/test_groups.py" "$S" \
-    | grep -qE "^(PARALLEL|SERIAL)$(printf '\t')packages/contracts/widget\$" || return 1
+  # ولا أنبوبَ يُغذّي `grep -q` هنا: يخرجُ `grep` عندَ أوّلِ تطابقٍ فيموتُ المُنتِجُ
+  # بـSIGPIPE فتُقرَأُ حالةُ الأنبوبِ 141 «لا تطابق» — وهوَ `RISK-0037` بعينِهِ،
+  # وحارسُ الأنابيبِ يرفضُ النمطَ. فالخَرْجُ يُحفَظُ ثمَّ يُقرَأُ بـherestring.
+  local groups
+  groups="$(python3 "$S/scripts/checks/lib/test_groups.py" "$S")" || return 1
+  grep -qE "^(PARALLEL|SERIAL)$(printf '\t')packages/contracts/widget\$" <<< "$groups" \
+    || return 1
   _ti "$S"
 }
 t "يُدرِجُ حزمةً في نمطٍ متداخلٍ (packages/contracts/*) في شِقٍّ" pass _ti_nested_pkg

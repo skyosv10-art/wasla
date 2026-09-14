@@ -29,14 +29,27 @@ TMPROOT="$(mktemp -d)"
 trap 'rm -rf "$TMPROOT"' EXIT
 
 # ── خامٌ مُصطنَعٌ ─────────────────────────────────────────────────────────
-_gh_job() { # _gh_job <name> <status> <conclusion> <started_at|null> <with_steps:0|1>
+_gh_job() { # _gh_job <name> <status> <conclusion> <started_at|null> <with_steps:0|1> [id]
   local steps="[]"
   (( $5 == 1 )) && steps='[{"name":"run","conclusion":"'"$3"'"}]'
   local started="null"
   [[ "$4" != "null" ]] && started="\"$4\""
-  printf '{"name":"%s","status":"%s","conclusion":%s,"started_at":%s,"steps":%s}' \
-    "$1" "$2" "$( [[ "$3" == "null" ]] && echo null || echo "\"$3\"" )" "$started" "$steps"
+  printf '{"id":%s,"name":"%s","status":"%s","conclusion":%s,"started_at":%s,"steps":%s}' \
+    "${6:-0}" "$1" "$2" "$( [[ "$3" == "null" ]] && echo null || echo "\"$3\"" )" "$started" "$steps"
 }
+
+# تعليقُ فحصٍ مُصطنَعٌ — بنفسِ شكلِ `GET /check-runs/<id>/annotations`.
+_gh_annotation() { # _gh_annotation <dir> <job_id> <message>
+  python3 -c '
+import json,sys
+json.dump([{"path":".github","annotation_level":"failure","message":sys.argv[3],
+            "start_line":1,"end_line":1}], open(sys.argv[1]+"/annotations."+sys.argv[2]+".raw.json","w"))
+' "$1" "$2" "$3"
+}
+
+# النصُّ الحرفيُّ الذي ردَّتْه واجهةُ GitHub لتشغيلِ `34792951183` في 2026-09-14
+# (محفوظٌ خاماً في docs/12-testing/ci-evidence/2026-09-14T003118Z-m0-33-billing-nonstart/).
+BILLING_MSG="The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings"
 
 make_fixture() { # make_fixture <dir> <provider> <case>
   local dir="$1" provider="$2" case="$3"
@@ -53,10 +66,23 @@ make_fixture() { # make_fixture <dir> <provider> <case>
           "$(_gh_job verify completed failure 2026-09-03T08:00:00Z 1)" \
           "$(_gh_job test completed success 2026-09-03T08:01:00Z 1)" > "$dir/jobs.raw.json" ;;
       never_started)
-        # حالُ الحصّةِ المنفَدةِ بلغةِ GitHub: خلاصةٌ `failure` وصفرُ خطواتٍ.
+        # حالُ الحصّةِ المنفَدةِ بلغةِ GitHub: خلاصةٌ `failure` وصفرُ خطواتٍ،
+        # **ولا تعليقَ**. فالسببُ غيرُ مقروءٍ — ولا يُخمَّنُ، ولا تُعادُ الخلاصةُ سبباً.
         printf '{"total_count":2,"jobs":[%s,%s]}' \
-          "$(_gh_job verify completed failure 2026-09-03T08:00:00Z 0)" \
-          "$(_gh_job test completed failure 2026-09-03T08:00:00Z 0)" > "$dir/jobs.raw.json" ;;
+          "$(_gh_job verify completed failure 2026-09-03T08:00:00Z 0 501)" \
+          "$(_gh_job test completed failure 2026-09-03T08:00:00Z 0 502)" > "$dir/jobs.raw.json" ;;
+      never_started_billing)
+        # الحالُ المقيسةُ على `main` في 2026-09-14: المُزوِّدُ ينشرُ السببَ حرفاً.
+        printf '{"total_count":2,"jobs":[%s,%s]}' \
+          "$(_gh_job verify completed failure 2026-09-14T00:10:00Z 0 601)" \
+          "$(_gh_job test completed failure 2026-09-14T00:10:00Z 0 602)" > "$dir/jobs.raw.json"
+        _gh_annotation "$dir" 601 "$BILLING_MSG"
+        _gh_annotation "$dir" 602 "$BILLING_MSG" ;;
+      never_started_unknown_annotation)
+        # تعليقٌ مقروءٌ لا يُطابِقُ رمزاً: يبقى `job_did_not_start` ولا يُخترَعُ رمزٌ.
+        printf '{"total_count":1,"jobs":[%s]}' \
+          "$(_gh_job verify completed failure 2026-09-14T00:10:00Z 0 701)" > "$dir/jobs.raw.json"
+        _gh_annotation "$dir" 701 "Something entirely unclassified happened" ;;
       incomplete)
         printf '{"total_count":2,"jobs":[%s,%s]}' \
           "$(_gh_job verify completed success 2026-09-03T08:00:00Z 1)" \
@@ -170,6 +196,29 @@ s = s.replace(a, "").replace(b, 'else:\n    verdict, reason = "PASSED", "all_job
 open(p, "w", encoding="utf-8").write(s)
 PY
       ;;
+    annotation_blind)
+      # إعماءُ السكربتِ عن التعليقِ — فيعودُ إلى سببٍ عامٍ، ويُفقَدُ السببُ المنشور.
+      python3 - "$stage/scripts/ci-evidence.sh" <<'PY'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+a = 'msg = None if did_start else annotation_message(j.get("id"))'
+assert a in s, "mutant `annotation_blind`: نمطٌ غير موجودٍ"
+open(p, "w", encoding="utf-8").write(s.replace(a, "msg = None"))
+PY
+      ;;
+    reason_is_conclusion)
+      # الرجوعُ إلى ما كانَ: تُعادُ الخلاصةُ سبباً — `failure` مكانَ السببِ المنشورِ.
+      python3 - "$stage/scripts/ci-evidence.sh" <<'PY'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+a = '"reason": None if did_start else (reason_from_message(msg) or "job_did_not_start"),'
+assert a in s, "mutant `reason_is_conclusion`: نمطٌ غير موجودٍ"
+open(p, "w", encoding="utf-8").write(
+    s.replace(a, '"reason": (concl or status or "unknown") if not did_start else None,'))
+PY
+      ;;
     *) printf '%s✗ طفرةٌ غيرُ معروفةٍ: %s%s\n' "$RED" "$mutant" "$RST"; return 2 ;;
   esac
 
@@ -231,7 +280,9 @@ printf '%s╚══════════════════════�
 printf '%s──── 1) حالاتُ الصحّةِ — GitHub (المُزوِّدُ الحيُّ) ────%s\n' "$DIM" "$RST"
 run_case - github all_success        PASSED         all_jobs_succeeded
 run_case - github started_and_failed FAILED         job_started_and_failed
-run_case - github never_started      "NOT VERIFIED" failure
+run_case - github never_started      "NOT VERIFIED" job_did_not_start
+run_case - github never_started_billing "NOT VERIFIED" account_billing_blocked
+run_case - github never_started_unknown_annotation "NOT VERIFIED" job_did_not_start
 run_case - github incomplete         "NOT VERIFIED" incomplete_run
 run_case - github skipped_ok         PASSED         all_jobs_succeeded
 run_case - github no_jobs            "NOT VERIFIED" no_jobs_readable
@@ -244,10 +295,13 @@ run_case - gitlab never_started      "NOT VERIFIED" ci_quota_exceeded
 run_case - gitlab no_jobs            "NOT VERIFIED" no_jobs_readable
 
 printf '\n%s──── 3) طفراتٌ على السكربتِ — يجبُ أن تُخفِقَ ────%s\n' "$DIM" "$RST"
-expect_fail steps         github never_started "NOT VERIFIED" failure
-expect_fail order_failed  github never_started "NOT VERIFIED" failure
+expect_fail steps         github never_started "NOT VERIFIED" job_did_not_start
+expect_fail order_failed  github never_started "NOT VERIFIED" job_did_not_start
 expect_fail order_failed  gitlab never_started "NOT VERIFIED" ci_quota_exceeded
 expect_fail complete_else github incomplete    "NOT VERIFIED" incomplete_run
+# M0-33: قراءةُ السببِ حرفاً قاعدةٌ مقيسةٌ لا تحسينٌ مُعلَنٌ.
+expect_fail annotation_blind    github never_started_billing "NOT VERIFIED" account_billing_blocked
+expect_fail reason_is_conclusion github never_started_billing "NOT VERIFIED" account_billing_blocked
 
 # ── 4) طفراتٌ صمدَ لها السكربتُ بحارسٍ ثانٍ ─────────────────────────────
 # وهذه **ليست** حالاتِ نجاحٍ مُجمَّلةً: كلُّ واحدةٍ منها طفرةٌ حقيقيّةٌ أُدخِلت
@@ -258,8 +312,8 @@ expect_fail complete_else github incomplete    "NOT VERIFIED" incomplete_run
 # فتُسجَّلُ **طفراتٍ مكافئةً** صريحةً، وتُقاسُ الفتكُ بالطفرتَينِ المركَّبتَينِ في §3.
 # وإخفاءُ هذا القسمِ كانَ يُغري بأربعِ «طفراتٍ ناجحةٍ» كاذبةٍ في العدَّادِ.
 printf '\n%s──── 4) طفراتٌ مكافئةٌ — صمدَ لها السكربتُ بحارسٍ ثانٍ (مُعلَنةٌ لا مُخفاةٌ) ────%s\n' "$DIM" "$RST"
-run_case order         github never_started "NOT VERIFIED" failure
-run_case failed_nostart github never_started "NOT VERIFIED" failure
+run_case order         github never_started "NOT VERIFIED" job_did_not_start
+run_case failed_nostart github never_started "NOT VERIFIED" job_did_not_start
 run_case complete      github incomplete    "NOT VERIFIED" incomplete_run
 
 printf '\n%s════════════════════════════════════════════════════════════%s\n' "$BOLD" "$RST"

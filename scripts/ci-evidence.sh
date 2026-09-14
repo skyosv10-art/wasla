@@ -49,15 +49,30 @@
 # `run.raw.json` و`jobs.raw.json`. والحزمةُ: `scripts/checks/test-ci-evidence.sh`.
 #
 # ── الاستيثاق ──────────────────────────────────────────────────────────
-# لا يُقرأُ سرٌّ في هذا الملفِّ ولا يُكتَب. إمّا أن يُمرَّرَ `GITHUB_TOKEN` (أو
-# `GITLAB_TOKEN` للمسارِ التاريخيِّ) في البيئةِ، وإمّا أن يُشغَّلَ داخلَ وسيطٍ
-# يُدخِلُ الاستيثاقَ للمضيفِ. وإن تعذَّرَ الوصولُ فالنتيجةُ `NOT VERIFIED` بسببٍ
-# `api_unreachable` — **لا إخفاق**: جهلُنا بحالِ CI ليس دليلاً على إخفاقِ CI.
+# لا يُقرأُ سرٌّ في هذا الملفِّ ولا يُكتَب. ثلاثةُ مساراتٍ بترتيبٍ ثابتٍ: `GITHUB_TOKEN`
+# في البيئةِ إن وُجِدَ، وإلّا وسيطُ `gh` المُستوثِقُ أصلاً على المضيفِ (M0-33 — المستودعُ
+# **خاصٌّ**، فالطلبُ المجهولُ يردُّ `404` ويُقرأُ خطأً على أنّه «لا تشغيلَ»)، وإلّا طلبٌ
+# مجهولٌ. وإن تعذَّرَ الوصولُ فالنتيجةُ `NOT VERIFIED` بسببٍ `api_unreachable` —
+# **لا إخفاق**: جهلُنا بحالِ CI ليس دليلاً على إخفاقِ CI.
 #
-# ── حدٌّ مُعلَنٌ على مُزوِّدِ GitHub ─────────────────────────────────────────
-# GitHub **لا يُصدِرُ حقلاً نظيراً لـ`failure_reason`**. فسببُ «لم تبدأ» يُشتَقُّ من
-# `conclusion` وخلوِّ `steps`، ولا يُقرأُ حرفاً كما يُقرأُ `ci_quota_exceeded` في
-# GitLab. والقاعدةُ نفسُها لا تتغيَّرُ: ما لم يبدأ لا يُكتَبُ `PASS` ولا `FAIL`.
+# ── سببُ «لم تبدأْ» على GitHub: يُقرأُ حرفاً (M0-33) ──────────────────────
+# كُتِبَ هنا سابقاً أنّ GitHub «لا يُصدِرُ حقلاً نظيراً لـ`failure_reason`، فالسببُ
+# مُشتَقٌّ لا مقروءٌ». **وذلك قِيسَ خطأً في 2026-09-14**: تشغيلُ `34792951183` على
+# `main` فيه إحدى وثلاثونَ وظيفةً كلُّها `failure` بـ`steps: []` و`runner_id: 0`
+# و`billable.UBUNTU.total_ms = 0`، و`GET /check-runs/<id>/annotations` يردُّ السببَ
+# **حرفاً**:
+#
+#   "The job was not started because recent account payments have failed or your
+#    spending limit needs to be increased…"
+#
+# فالسببُ منشورٌ، وكانَ السكربتُ يكتبُ مكانَه كلمةَ `failure` — أي **يُعيدُ الخلاصةَ
+# بدلَ السببِ**، فيقرأُ القارئُ «فشلٌ» حيثُ الحقيقةُ «مُنِعَ التشغيلُ لسببِ فوترةٍ».
+# فصارَ يُنزِّلُ التعليقَ لكلِّ وظيفةٍ لم تبدأْ، ويُصنِّفُه إلى رمزٍ ثابتٍ
+# (`account_billing_blocked` · `actions_disabled` · `runner_unavailable`)، ويحفظُ
+# النصَّ الحرفيَّ بجانبَه. وحينَ لا يُقرأُ تعليقٌ فالسببُ `job_did_not_start` —
+# **لا `failure`**: خلاصةٌ لا سبب.
+#
+# والقاعدةُ نفسُها لا تتغيَّرُ: ما لم يبدأ لا يُكتَبُ `PASS` ولا `FAIL`.
 #
 # المرجع: docs/12-testing/M1-03_GATE.md §13 · docs/12-testing/M0-22D_GATE.md
 #         docs/07-security/RISK_REGISTER.md RISK-0001 · RISK-0018
@@ -92,7 +107,16 @@ _curl() { # _curl <full-url> <header-name> <token>
   fi
 }
 
-_gh() { _curl "$GH_API/$1" "Authorization" "${GITHUB_TOKEN:+Bearer $GITHUB_TOKEN}"; }
+# ترتيبُ المساراتِ الثلاثةِ مقصودٌ ومُعلَنٌ (انظر «الاستيثاق» أعلاه).
+_gh() {
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    _curl "$GH_API/$1" "Authorization" "Bearer $GITHUB_TOKEN"
+  elif command -v gh >/dev/null 2>&1; then
+    gh api "$1" 2>/dev/null
+  else
+    _curl "$GH_API/$1" "Authorization" ""
+  fi
+}
 _gl() { _curl "$GL_API/$1" "PRIVATE-TOKEN" "${GITLAB_TOKEN:-}"; }
 
 printf '%s╔══════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$RST"
@@ -135,6 +159,20 @@ print(r[0]["id"] if r else "")' "$OUT/runs.raw.json" 2>/dev/null)"
   if [[ -n "$RUN_ID" ]]; then
     _gh "repos/$GH_REPO/actions/runs/$RUN_ID"                > "$OUT/run.raw.json"  2>>"$OUT/run.err"
     _gh "repos/$GH_REPO/actions/runs/$RUN_ID/jobs?per_page=100" > "$OUT/jobs.raw.json" 2>>"$OUT/run.err"
+    _gh "repos/$GH_REPO/actions/runs/$RUN_ID/timing"         > "$OUT/timing.raw.json" 2>>"$OUT/run.err"
+    # M0-33: سببُ «لم تبدأْ» يُقرأُ حرفاً من تعليقِ الفحصِ، لا يُشتَقُّ من الخلاصةِ.
+    # ومُعرِّفُ الوظيفةِ هو مُعرِّفُ فحصِها على GitHub، فلا بحثَ ولا تخمين.
+    while read -r JID; do
+      [[ -n "$JID" ]] || continue
+      _gh "repos/$GH_REPO/check-runs/$JID/annotations" > "$OUT/annotations.$JID.raw.json" 2>>"$OUT/run.err"
+    done < <(python3 -c '
+import json,sys
+try: d=json.load(open(sys.argv[1],encoding="utf-8"))
+except Exception: raise SystemExit
+for j in (d.get("jobs") or []):
+    if not (j.get("steps") or []) and j.get("id"):
+        print(j["id"])
+' "$OUT/jobs.raw.json" 2>/dev/null)
   fi
 else
   if [[ -n "${CI_EVIDENCE_PIPELINE:-}" ]]; then
@@ -190,6 +228,40 @@ def load(name):
 run = load("run.raw.json") or {}
 raw_jobs = load("jobs.raw.json")
 
+# ── M0-33: سببُ «لم تبدأْ» يُقرأُ من تعليقِ الفحصِ ───────────────────────
+# رموزٌ ثابتةٌ تُشتَقُّ من نصٍّ منشورٍ، والنصُّ الحرفيُّ يُحفَظُ بجانبِها لا يُستَبدَلُ بها،
+# كي يُراجَعَ التصنيفُ نفسُه من الخامِ. وما لا يُطابِقُ رمزاً يبقى `job_did_not_start`
+# مع نصِّه — ولا يُخمَّنُ له سببٌ.
+NONSTART_PATTERNS = (
+    ("account_billing_blocked", ("recent account payments have failed",
+                                 "spending limit", "payment")),
+    ("actions_disabled", ("actions is disabled", "workflows are disabled")),
+    ("runner_unavailable", ("no runner", "runner matching", "no hosted runner")),
+)
+
+
+def annotation_message(job_id):
+    """أوّلُ رسالةٍ غيرِ فارغةٍ في تعليقاتِ فحصِ الوظيفةِ، أو None."""
+    if not job_id:
+        return None
+    data = load("annotations.%s.raw.json" % job_id)
+    if not isinstance(data, list):
+        return None
+    for a in data:
+        if isinstance(a, dict):
+            msg = (a.get("message") or "").strip()
+            if msg:
+                return " ".join(msg.split())
+    return None
+
+
+def reason_from_message(msg):
+    low = (msg or "").lower()
+    for code, needles in NONSTART_PATTERNS:
+        if any(n in low for n in needles):
+            return code
+    return None
+
 # ── تطبيعٌ: مُزوِّدانِ، وسجلٌّ واحدٌ يُحكَمُ عليه ──────────────────────────
 # ولا يُخفى فرقُ المُزوِّدَينِ في التطبيعِ: يُكتَبُ `signal` في كلِّ سجلٍّ ليُقرأَ
 # **من أين** جاءَ الحكمُ بأنّ الوظيفةَ لم تبدأ.
@@ -204,6 +276,10 @@ if provider == "github":
         # GitHub يكتبُ started_at حتّى لوظيفةٍ لم تُنفِّذ خطوةً، فلا يُعتمَدُ وحدَه.
         did_start = bool(started) and bool(steps) and concl != "skipped"
         signal = "started_at+steps"
+        # M0-33: لا يُكتَبُ `failure` سبباً — تلك خلاصةٌ تُعادُ لا سببٌ يُقرأ.
+        msg = None if did_start else annotation_message(j.get("id"))
+        if msg:
+            signal = "started_at+steps+annotation"
         jobs.append({
             "name": j.get("name"), "status": status, "conclusion": concl,
             "started_at": started, "did_start": did_start, "signal": signal,
@@ -211,7 +287,8 @@ if provider == "github":
             "failed": did_start and concl == "failure",
             "success": concl == "success",
             "neutralized": concl in ("skipped", "cancelled", "neutral"),
-            "reason": (concl or status or "unknown") if not did_start else None,
+            "reason": None if did_start else (reason_from_message(msg) or "job_did_not_start"),
+            "message": msg,
         })
 else:
     for j in raw_jobs if isinstance(raw_jobs, list) else []:
@@ -226,11 +303,14 @@ else:
             "success": status == "success",
             "neutralized": status in ("skipped", "manual", "canceled"),
             "reason": (j.get("failure_reason") or "job_did_not_start") if not did_start else None,
+            "message": None,
         })
 
 started_jobs = [j for j in jobs if j["did_start"]]
 statuses = Counter(j["conclusion"] or j["status"] for j in jobs)
 reasons = Counter(j["reason"] for j in jobs if j["reason"])
+messages = Counter(j["message"] for j in jobs if j.get("message"))
+literal_reason = messages.most_common(1)[0][0] if messages else None
 
 # القاعدةُ الواحدةُ، وترتيبُها جزءٌ منها:
 # لا وظيفةَ بدأت ⇒ NOT VERIFIED — **قبلَ** أيِّ نظرٍ في الإخفاقِ. فحالُ الحصّةِ
@@ -278,18 +358,30 @@ lines = [
     "",
     f"- **السبب:** `{reason}`",
     f"- **started_at:** `{first_started or 'null'}`",
-    "- **الخام:** `run.raw.json` · `jobs.raw.json`",
+    "- **الخام:** `run.raw.json` · `jobs.raw.json`"
+    + (" · `annotations.<job_id>.raw.json`" if messages else ""),
     "",
 ]
+
+if literal_reason:
+    lines += [
+        "### السببُ كما نشرَه المُزوِّدُ (لا كما اشتُقَّ)",
+        "",
+        f"> {literal_reason}",
+        "",
+        "المصدرُ: `GET /repos/…/check-runs/<job_id>/annotations` — محفوظٌ خاماً بجانبِه،",
+        "فيُراجَعُ التصنيفُ إلى الرمزِ من النصِّ نفسِه لا من ثقةٍ بالسكربتِ.",
+        "",
+    ]
 
 if not_started:
     lines += [
         f"### وظائفُ لم تبدأ ({len(not_started)})",
         "",
-        "| الوظيفةُ | الحالُ | الخلاصةُ | إشارةُ «لم تبدأ» |",
-        "| --- | --- | --- | --- |",
+        "| الوظيفةُ | الحالُ | الخلاصةُ | إشارةُ «لم تبدأ» | السببُ |",
+        "| --- | --- | --- | --- | --- |",
     ] + [
-        f"| `{j['name']}` | `{j['status']}` | `{j['conclusion']}` | `{j['signal']}` |"
+        f"| `{j['name']}` | `{j['status']}` | `{j['conclusion']}` | `{j['signal']}` | `{j['reason']}` |"
         for j in not_started[:40]
     ] + [""]
 
@@ -307,8 +399,11 @@ else:
 if provider == "github":
     lines += [
         "",
-        "> **حدٌّ مُعلَنٌ:** GitHub لا يُصدِرُ حقلاً نظيراً لـ`failure_reason`، فسببُ",
-        "> «لم تبدأ» **مُشتَقٌّ** من `conclusion` وخلوِّ `steps` لا مقروءٌ حرفاً.",
+        "> **حدٌّ مُعلَنٌ (مُصحَّحٌ في M0-33):** GitHub لا يُصدِرُ حقلَ `failure_reason`",
+        "> في `…/jobs`، لكنّه **ينشرُ السببَ حرفاً** في",
+        "> `…/check-runs/<job_id>/annotations`. فصارَ السببُ يُقرأُ من ثمَّ، ويُصنَّفُ",
+        "> إلى رمزٍ ثابتٍ، ويُحفَظُ نصُّه خاماً. وحينَ لا يُقرأُ تعليقٌ فالسببُ",
+        "> `job_did_not_start` — **ولا يُكتَبُ `failure`**: تلك خلاصةٌ تُعادُ لا سببٌ.",
         "> والقاعدةُ نفسُها لا تتغيَّرُ: ما لم يبدأ لا يُكتَبُ له `PASS` ولا `FAIL`.",
     ]
 
@@ -332,6 +427,10 @@ json.dump(
         "reason": reason,
         "job_statuses": dict(statuses),
         "not_started_reasons": dict(reasons),
+        "not_started_messages": dict(messages),
+        "literal_reason": literal_reason,
+        "reason_source": ("check_run_annotation" if literal_reason
+                          else ("provider_field" if provider == "gitlab" else "derived")),
     },
     open(os.path.join(out, "verdict.json"), "w", encoding="utf-8"),
     ensure_ascii=False,

@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-14T01:27:16Z
-الالتزام: e0968692e18cc1e5614adc4123323d566ea48c46  الفرع: chore/m0-33-ci-nonstart-reason-from-annotations  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-09-14T01:38:26Z
+الالتزام: 5f3a601c98aeec80d6db940d406a5345a82542d8  الفرع: chore/m0-33-ci-nonstart-reason-from-annotations  شجرةٌ نظيفةٌ
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3128 سطراً · sha256 09a541b4207fb26e…
 
@@ -15,12 +15,12 @@
   governance_checks          13
   risks_not_closed           28
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify33d.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify33e.log):
   tests_passed               4505
   test_files_executed        277
-  governance_suite_cases     236
-  governance_suite_failed    1
-  verify_overall             failed
+  governance_suite_cases     237
+  governance_suite_failed    0
+  verify_overall             passed
 
 البصمة: sha256:b132fd504abc9ac8efdee9f1ea867b428461ba7582d71380761b754f620db77e
 المرجع: docs/12-testing/BASELINE_FORMAT.md

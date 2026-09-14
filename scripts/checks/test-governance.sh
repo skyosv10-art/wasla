@@ -2391,6 +2391,50 @@ t "النمطُ داخلَ تعليقٍ لا يُسقِط — شرحُ العط�
 M_U9="$(_mig_root u9)"
 t "لقطةٌ بأساسٍ وحدَه لا يُفعَّلُ عليها البابُ الرابعُ (تدرُّجٌ لا تعجيزٌ)" pass _mig "$M_U9"
 
+# ── البابُ 5: خدمةٌ لها قاعدةٌ فعليّةٌ وليست منتظِمةً (M0-23 · موجةُ البحثِ) ──
+# والعطبُ المقيسُ الذي دعا إليهِ: خدمةُ البحثِ كانت تمرُّ بالإعلانِ وحدَهُ معَ عقدٍ
+# حقيقيٍّ وطبقةِ pg تعملُ، مخفيّةً بينَ ثلاثةَ عشرَ هيكلاً فارغاً. وحالةُ `svc-b`
+# في الجذرِ الأساسِ هيَ الوجهُ الموجبُ: مرآةٌ بلا عقدٍ ولا pg — وتبقى تمرُّ في
+# الحالاتِ كلِّها أعلاهُ، فالبابُ لا يعاقبُ التدرُّجَ.
+_mig_real_db() { # _mig_real_db <root> — يجعلُ svc-b خدمةً ذاتَ قاعدةٍ فعليّةٍ غيرَ منتظِمةٍ
+  mkdir -p "$1/services/svc-b/contracts"
+  printf 'CREATE TABLE IF NOT EXISTS svc_b_rows (id uuid PRIMARY KEY);\n' \
+    > "$1/services/svc-b/contracts/schema.sql"
+  printf 'import { Pool } from "pg";\nexport const pool = new Pool();\n' \
+    > "$1/services/svc-b/src/db/pool.ts"
+}
+
+M_E1="$(_mig_root e1)"; _mig_real_db "$M_E1"
+t "خدمةٌ بعقدٍ فيهِ CREATE TABLE واستيرادِ pg ولا journal تُسقِط" fail _mig "$M_E1"
+
+# والعلامتانِ معاً شرطٌ لا إحداهما: عقدٌ بلا طبقةٍ نموذجٌ مكتوبٌ، وطبقةٌ بلا عقدٍ
+# خدمةٌ تقرأُ من قاعدةِ غيرِها — وكلتاهما حالةٌ قائمةٌ في المستودعِ فعلاً.
+M_E2="$(_mig_root e2)"; mkdir -p "$M_E2/services/svc-b/contracts"
+printf 'CREATE TABLE IF NOT EXISTS svc_b_rows (id uuid PRIMARY KEY);\n' > "$M_E2/services/svc-b/contracts/schema.sql"
+t "عقدٌ بلا استيرادِ pg لا يُسقِط — نموذجٌ مكتوبٌ لا قاعدةٌ تعملُ" pass _mig "$M_E2"
+
+M_E3="$(_mig_root e3)"
+printf 'import { Pool } from "pg";\nexport const pool = new Pool();\n' > "$M_E3/services/svc-b/src/db/pool.ts"
+t "استيرادُ pg بلا عقدٍ لا يُسقِط — قارئٌ من قاعدةِ غيرِها" pass _mig "$M_E3"
+
+M_E4="$(_mig_root e4)"; _mig_real_db "$M_E4"
+printf -- '-- @wasla-migrations-exempt: قاعدةٌ مملوكةٌ لطرفٍ ثالثٍ لا يملكُ المستودعُ ترقيتَها\n%s' \
+  "$(cat "$M_E4/services/svc-b/contracts/schema.sql")" > "$M_E4/services/svc-b/contracts/schema.sql"
+t "إعفاءٌ مُعلَنٌ بسببٍ مكتوبٍ يُمرِّرُ ويُعلَن" pass _mig "$M_E4"
+
+M_E5="$(_mig_root e5)"; _mig_real_db "$M_E5"
+printf -- '-- @wasla-migrations-exempt: لاحقاً\n%s' \
+  "$(cat "$M_E5/services/svc-b/contracts/schema.sql")" > "$M_E5/services/svc-b/contracts/schema.sql"
+t "إعفاءٌ بسببٍ مقتضبٍ يُسقِطُ — العلامةُ لا تُسكِتُ باباً بكلمةٍ" fail _mig "$M_E5"
+
+M_E6="$(_mig_root e6)"; _mig_real_db "$M_E6"
+mkdir -p "$M_E6/services/svc-b/drizzle/meta"
+printf '{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1,"tag":"0000_b"}]}\n' \
+  > "$M_E6/services/svc-b/drizzle/meta/_journal.json"
+printf 'CREATE TABLE svc_b_rows (id uuid PRIMARY KEY);\n' > "$M_E6/services/svc-b/drizzle/0000_b.sql"
+printf 'DROP TABLE IF EXISTS svc_b_rows;\n' > "$M_E6/services/svc-b/drizzle/0000_b.down.sql"
+t "والانتظامُ هوَ المخرجُ: الخدمةُ نفسُها بـjournal ورفيقِ ترجعٍ تمرُّ" pass _mig "$M_E6"
+
 printf '\n\033[1m[ن] حتميّةُ الحرّاسِ — لا سباقَ إشارةٍ يُقرَأُ حكماً (RISK-0037)\033[0m\n'
 # **العطبُ المقيسُ:** `printf '%s\n' "${ARR[@]}" | grep -qxF "$x"` تحتَ `pipefail`
 # يرفضُ عضويّةً **موجودةً** حينَ يخرجُ `grep` عندَ أوّلِ تطابقٍ فيموتُ `printf`

@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-13T23:58:18Z",
+  "generated_at": "2026-09-14T00:21:08Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "4d293fa0b997ccb2e73601e708e3012d54490d69",
+    "commit": "ab831d4670bf02036c46159a25ddae2c58dfb739",
     "branch": "chore/m0-32-post-merge-baseline",
-    "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "32/N: إعادةُ توليدِ الأساسِ بعدَ دمجِ ستِّ دفعاتٍ وتسجيلُ RISK-0038 — قبلَ الالتزامِ (CLM-0153)",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "32/N: توليدُ الأساسِ من تشغيلٍ ناجحٍ كاملٍ بعدَ الدمجِ (CLM-0153)",
     "tracked_files": 1731
   },
   "env": {
@@ -34,12 +34,12 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify32b.log",
+    "source": "/tmp/verify32d.log",
     "tests_passed": 4505,
     "test_files_executed": 277,
-    "governance_suite_cases": 236,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_cases": 237,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
   "fingerprint": "sha256:2b8b5247212e122ef6a7982c7bdf581708a2b20162cffc4918b6afd46dc5c4ae",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

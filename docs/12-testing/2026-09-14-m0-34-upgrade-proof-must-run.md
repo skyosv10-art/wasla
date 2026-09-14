@@ -69,3 +69,12 @@ bash scripts/verify.sh                      → أخضرُ كاملاً
 ## 6. حكمُ CI
 
 **`NOT VERIFIED · account_billing_blocked`** ([`RISK-0039`](../07-security/RISK_REGISTER.md)). والبندُ `M0-34` يبقى دونَ `Completed` — الترقيةُ لمالكِ البرنامجِ وحدَهُ ([§9](../16-progress/ROADMAP_OPERATING_PROTOCOL.md)).
+
+**والقياسُ الفعليُّ بعدَ الدفعِ (PR #157 · `a7da22b0ec1bb2e79f70625efa481e3006d9abd6`):**
+
+```
+runs?head_sha=a7da22b0ec1bb2e79f70625efa481e3006d9abd6  → "WASLA CI" conclusion=failure · "Roadmap freshness" conclusion=failure
+runs/34868559604/jobs      → 30/30 وظيفةً: steps=0 · runner_id=0
+```
+
+فـ«الفشلُ» هنا **ليسَ حكماً على الكودِ**: لم تُنفَّذ خطوةٌ واحدةٌ ولم يُخصَّصْ عاملٌ (`runner_id: 0`) — وهوَ توقيعُ حجزِ الفوترةِ بعينِهِ. فيُسجَّلُ الحكمُ **`NOT VERIFIED · account_billing_blocked`** ولا يُسجَّلُ أحمرَ ولا أخضرَ.

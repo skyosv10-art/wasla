@@ -1,0 +1,28 @@
+{
+  "schema": "wasla.ci-evidence/v2",
+  "collected_at": "2026-09-14T13-52-49Z",
+  "provider": "github",
+  "subject": "skyosv10-art/wasla",
+  "ref": "chore/release-clm-0160-0161",
+  "run_id": "34851953605",
+  "run_status": "queued/None",
+  "run_url": "https://github.com/skyosv10-art/wasla/actions/runs/34851953605",
+  "jobs_total": 31,
+  "jobs_started": 0,
+  "started_at": null,
+  "verdict": "NOT VERIFIED",
+  "reason": "account_billing_blocked",
+  "job_statuses": {
+    "failure": 30,
+    "queued": 1
+  },
+  "not_started_reasons": {
+    "account_billing_blocked": 30,
+    "job_did_not_start": 1
+  },
+  "not_started_messages": {
+    "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings": 30
+  },
+  "literal_reason": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings",
+  "reason_source": "check_run_annotation"
+}

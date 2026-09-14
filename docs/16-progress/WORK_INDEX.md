@@ -145,3 +145,4 @@
 | `packages/search-e2e/` — بوّابةُ خروجِ الطورِ 12 (22/22 محلّيّاً · [تفصيل](../12-testing/PHASE12_EXIT_GATE_E2E.md)) | Implemented | M5-12 |
 | `.gitlab-ci.yml` — `marketplace-exit-gate-e2e` (قاعدةٌ مستقلّةٌ `wasla_marketplace_e2e` · لم تركض على المُشغِّل: `RISK-0001`) | Implemented | M5-11 |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |
+| `scripts/checks/audit-ci-verdicts.sh` — تدقيقُ أحكامِ CI حيّاً (الفحصُ 15 · [سجلٌّ](../12-testing/CI_VERDICT_AUDIT.md)) | Implemented | M0-40 |

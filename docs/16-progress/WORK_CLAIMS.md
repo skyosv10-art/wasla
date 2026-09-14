@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
-| CLM-0165 | M0-34 | @uxxxu (agent:perplexity-computer) | fix/m0-34-upgrade-proof-must-run | scripts/checks/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Active |
+| CLM-0165 | M0-34 | @uxxxu (agent:perplexity-computer) | fix/m0-34-upgrade-proof-must-run | scripts/checks/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #157 · squash `0dbd333`) |
 | CLM-0164 | M0-36 | @uxxxu (agent:perplexity-computer) | feat/m0-36-contract-declares-service-auth | scripts/checks/,docs/07-security/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #155 · `402140c` · squash · وحُذِفَ الفرعُ · مُدمجٌ 2026-09-14 · البابُ التاسعُ وجردُ §5.9 وRISK-0041 وأحدَ عشرَ اختبارَ طفرةٍ (284 · 0) · **ولا حكمَ CI** (NOT VERIFIED · `account_billing_blocked` · 32 وظيفةً بـ`steps: []` و`runner_id: 0` · RISK-0039) · **ولا حمايةَ فرعٍ** (RISK-0036) · إقفالُ دورةِ §8.1) |
 | CLM-0162 | M0-23 | @uxxxu (agent:perplexity-computer) | feat/m0-23-search-migrations-enrollment | services/search/,pnpm-lock.yaml,docs/15-decisions/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #153 · `c2134ad` · squash · وحُذِفَ الفرعُ) |
 | CLM-0163 | M0-23 | @uxxxu (agent:perplexity-computer) | feat/m0-23-search-migrations-enrollment | scripts/checks/,docs/07-security/ | 2026-09-14 | 2026-09-28 | Released (PR #153 · `c2134ad` · squash · وحُذِفَ الفرعُ) |

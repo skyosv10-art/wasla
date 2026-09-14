@@ -25,6 +25,21 @@
 #   3) الترجعُ المُزوَّرُ ممنوعٌ: رفيقُ الترجعِ لا يكونُ فارغاً ولا تعليقاً خالصاً؛
 #      ومن لا تراجعَ له يُعلِنُهُ بعلامةِ «-- غير عكوس» في رأسِ ملفِّهِ لا أن
 #      يُخفاهُ.
+#   4) **برهانُ الترقيةِ** (M0-34 · RISK-0020): كلُّ ترحيلٍ **غيرِ أساسٍ** (tag لا
+#      يبدأُ بـ`0000_`) يعيشُ في خدمةٍ لها برهانُ ترقيةٍ على قاعدةٍ **مأهولةٍ**، لا
+#      برهانُ دورةٍ على قاعدةٍ فارغةٍ وحدَه. ويُرفَضُ في ملفِّ الترحيلِ نمطُ
+#      `ADD COLUMN … NOT NULL` بلا `DEFAULT` في عبارةٍ واحدةٍ.
+#
+#      ولمَ بابٌ رابعٌ أصلاً؟ لأنَّ العطبَ **مقيسٌ لا متخيَّلٌ**: رأسُ
+#      `services/delivery/drizzle/0001_idempotency_key_lifetime.sql` يشهدُ أنَّ
+#      `drizzle-kit` أصدرَ تلكَ العبارةَ بعينِها، وأنّها تسقطُ بـ`23502` في كلِّ
+#      قاعدةٍ فيها صفٌّ واحدٌ. فنجا المستودعُ **بمراجعةٍ يدويّةٍ وحدَها**، والمراجعةُ
+#      اليدويّةُ ليست حارساً. والبابانِ 1 و3 لا يريانِ هذا: كلاهما يقيسُ **وجودَ**
+#      ملفٍّ لا **سلامةَ ترقيةٍ**.
+#
+#      وحدُّ البابِ مُعلَنٌ: يقيسُ **الإعلانَ والنمطَ** (قراءةُ قرصٍ محضةٌ)، وأمّا
+#      التنفيذُ الفعليُّ على PostgreSQL فيقيسُهُ البرهانُ نفسُهُ في وظيفةِ
+#      db-integration. فهذا البابُ يمنعُ **غيابَ** البرهانِ، ولا يدَّعي تشغيلَهُ.
 #
 # المرجع: docs/15-decisions/ADR-024 · M0-23 · RISK-0020
 #
@@ -103,6 +118,82 @@ for svc in "${ENROLLED[@]:-}"; do
   done
 done
 (( ${#ENROLLED[@]} )) && ok "كلُّ الخدماتِ المُنتظِمةِ: journal سليمٌ ورفاقُ الترجعِ حاضرون (أو مُعلَنونَ غيرَ عكوسين)."
+
+# ── البابُ 4) برهانُ الترقيةِ على قاعدةٍ مأهولةٍ (M0-34 · RISK-0020) ──────
+# العلامةُ عقدٌ مقروءٌ آليّاً يكتبُهُ البرهانُ عن نفسِه:
+#   @wasla-upgrade-proof: all-non-baseline        ← يُغطّي كلَّ ترحيلٍ غيرِ أساسٍ
+#   @wasla-upgrade-proof: tags=0001_a,0002_b      ← يُغطّي المذكورينَ وحدَهم
+# والثانيةُ موجودةٌ لأنَّ خدمةً قد تحتاجُ براهينَ مُجزَّأةً؛ ومتى جُزِّئتْ لزمَ أن
+# يُغطّى **كلُّ** tag غيرِ أساسٍ، وإلّا فثغرةٌ مُعلَنةٌ لا مستورةٌ.
+UPGRADE_MARK='@wasla-upgrade-proof'
+for svc in "${ENROLLED[@]:-}"; do
+  [[ -n "$svc" ]] || continue
+  journal="$svc/drizzle/meta/_journal.json"
+  [[ -f "$journal" ]] || continue
+  mapfile -t all_tags < <(grep -oP '"tag"\s*:\s*"\K[^"]+' "$journal")
+  nonbase=()
+  for tag in "${all_tags[@]:-}"; do
+    [[ -n "$tag" ]] || continue
+    [[ "$tag" == 0000_* ]] && continue
+    nonbase+=("$tag")
+  done
+  (( ${#nonbase[@]} )) || continue
+
+  # 4-أ) نمطُ الخطرِ: عمودٌ جديدٌ NOT NULL بلا DEFAULT في عبارةٍ واحدةٍ.
+  # السّطرُ هو وحدةُ القياسِ لأنَّ `drizzle-kit` يُصدِرُ عبارةَ ALTER في سطرٍ واحدٍ؛
+  # ومَن كتبَها موزَّعةً على أسطُرٍ فقد كتبَها بيدِهِ وهو يعلمُ، وله البابُ نفسُهُ
+  # عبرَ المراجعةِ. والتعليقاتُ تُطرَحُ أوّلاً كيلا يُتَّهَمَ شرحٌ بأنّهُ عبارةٌ.
+  for tag in "${nonbase[@]}"; do
+    up="$svc/drizzle/$tag.sql"
+    [[ -f "$up" ]] || continue
+    body="$(grep -v '^[[:space:]]*--' "$up")"
+    while IFS= read -r line; do
+      [[ -n "$line" ]] || continue
+      shopt -s nocasematch
+      if [[ "$line" == *"ADD COLUMN"* && "$line" == *"NOT NULL"* \
+            && "$line" != *"DEFAULT"* && "$line" != *"GENERATED"* ]]; then
+        bad "$svc/$tag: «ADD COLUMN … NOT NULL» بلا DEFAULT في عبارةٍ واحدةٍ — تسقطُ بـ23502 على أوّلِ صفٍّ قائمٍ.
+     الطريقُ الآمنُ ثلاثُ خطواتٍ (ADR-024): أضِفْهُ قابلاً للفراغِ، ثمَّ عبِّئْهُ رجعيّاً، ثمَّ SET NOT NULL.
+     السطرُ: ${line:0:120}"
+      fi
+      shopt -u nocasematch
+    done <<< "$body"
+  done
+
+  # 4-ب) وجودُ البرهانِ وتغطيتُهُ.
+  proof_files="$(grep -rl -- "$UPGRADE_MARK" "$svc/src" 2>/dev/null || true)"
+  if [[ -z "$proof_files" ]]; then
+    bad "$svc: فيها ترحيلٌ غيرُ أساسٍ (${nonbase[*]}) بلا برهانِ ترقيةٍ على قاعدةٍ مأهولةٍ.
+     اكتبْ برهاناً تحتَ $svc/src/__tests__/ يحملُ العلامةَ «$UPGRADE_MARK: all-non-baseline» — اختبارُ الدورةِ على قاعدةٍ فارغةٍ لا يُغني (M0-34)."
+    continue
+  fi
+  covered_all=0
+  declared_tags=""
+  while IFS= read -r pf; do
+    [[ -n "$pf" ]] || continue
+    decl="$(grep -oP "$UPGRADE_MARK:\s*\K\S+" "$pf" | head -1)"
+    [[ "$decl" == "all-non-baseline" ]] && covered_all=1
+    [[ "$decl" == tags=* ]] && declared_tags="$declared_tags,${decl#tags=}"
+  done <<< "$proof_files"
+  if (( covered_all )); then
+    ok "$svc: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (${#nonbase[@]})."
+    continue
+  fi
+  if [[ -z "$declared_tags" ]]; then
+    bad "$svc: البرهانُ موجودٌ بلا إعلانِ تغطيةٍ صالحٍ — يلزمُ «$UPGRADE_MARK: all-non-baseline» أو «$UPGRADE_MARK: tags=…»."
+    continue
+  fi
+  missing=""
+  for tag in "${nonbase[@]}"; do
+    [[ ",$declared_tags," == *",$tag,"* ]] || missing="${missing:+$missing }$tag"
+  done
+  if [[ -n "$missing" ]]; then
+    bad "$svc: ترحيلاتٌ غيرُ أساسٍ خارجَ تغطيةِ برهانِ الترقيةِ: $missing"
+  else
+    ok "$svc: برهانُ الترقيةِ يُغطّي كلَّ ترحيلٍ غيرِ أساسٍ بإعلانٍ صريحٍ."
+  fi
+done
+
 
 # ── الخدماتُ غيرُ المنتظِمةِ: إعلانٌ لا رفضٌ (الموجاتُ 2 و3 عناصرُ عملٍ) ──
 mapfile -t ALL_SVCS < <(ls -d services/*/ 2>/dev/null | sed 's|/$||' | sort)

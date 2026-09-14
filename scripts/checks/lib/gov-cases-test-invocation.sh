@@ -21,7 +21,18 @@ _ti_stage() { # _ti_stage <tag> <gate_excludes:1|0> <ddl_in_closure:1|0> [drop_t
   local tag="$1" gate_excl="$2" ddl="$3" drop="${4:-0}"
   local S="/tmp/gov_ti_$tag"
   rm -rf "$S"; mkdir -p "$S/packages/gatepkg/src/__tests__" "$S/scripts/checks/lib"
-  cp "$TI_LIB/test_groups.py" "$TI_LIB/audit_test_invocation.py" "$S/scripts/checks/lib/"
+  cp "$TI_LIB/test_groups.py" "$TI_LIB/audit_test_invocation.py" \
+     "$TI_LIB/workspace_packages.py" "$S/scripts/checks/lib/"
+  # مساحةُ العملِ تُعلَنُ كما تُعلَنُ في المستودعِ الحقيقيِّ — **بنمطٍ متداخلٍ**
+  # (`packages/contracts/*`) لا بنمطٍ سطحيٍّ وحدَهُ، لأنَّ العطبَ الذي كُشِفَ في
+  # 2026-09-14 كانَ **جرداً يعمى عن النمطِ المتداخلِ** فتسقطُ أربعَ عشرةَ حزمةً.
+  cat > "$S/pnpm-workspace.yaml" <<'WS'
+packages:
+  - "packages/*"
+  - "packages/contracts/*"
+  - "services/*"
+  - "bots/*"
+WS
   cp "$REPO_ROOT/scripts/run-tests.sh" "$S/scripts/"
   cp "$TI_GUARD" "$S/scripts/checks/"
   printf '{"name":"root","scripts":{"test":"bash scripts/run-tests.sh"}}\n' > "$S/package.json"
@@ -209,6 +220,59 @@ NOTES
   _ti "$S"
 }
 t "لا يعدّ شرحَ DDL في تعليقٍ تنفيذاً لهُ" pass _ti_doc_comment_ok
+
+# ── (13)/(14) جردُ مساحةِ العملِ — العطبُ الذي مرَّ أخضرَ ─────────────────────
+# **مقيسٌ لا مُتخيَّلٌ (2026-09-14):** أوّلُ صياغةٍ لهذا الحارسِ ولمُشتَقِّ الشِّقَّينِ
+# كتبَ كلٌّ منهما جردَهُ بيدِهِ بالنمطِ `{packages,services,bots}/*` — و
+# `pnpm-workspace.yaml` يُعلِنُ `packages/contracts/*` أيضاً. فسقطَت **أربعَ عشرةَ
+# حزمةً** من الشِّقَّينِ كليهما فلم تُشغَّلْ: من **48 حزمةً · 282 ملفّاً · 4591
+# اختباراً** إلى **34 · 239 · 3991** — **600 اختباراً اختفَتْ والخلاصةُ خضراءُ**.
+# **والحارسُ لم يُمسِكْهُ لأنَّهُ كانَ يقيسُ بالعطبِ نفسِهِ**: دعوى «الاتّحادُ = كلُّ
+# حزمةٍ لها `test`» صادقةٌ حرفاً وكاذبةٌ معنىً حينَ يشتركُ الطرفانِ في خطأٍ واحدٍ.
+# أمسكَهُ **الأساسُ** (`tests_passed` انحدرَ) لا الحارسُ. فهاتانِ الحالتانِ تُثبِتانِ
+# أنَّهُ لا يعودُ.
+
+_ti_nested_pkg() {
+  local S; S="$(_ti_stage nested 1 0)"
+  mkdir -p "$S/packages/contracts/widget/src/__tests__"
+  printf '{"name":"@w/widget","scripts":{"test":"vitest run"}}\n' \
+    > "$S/packages/contracts/widget/package.json"
+  printf 'export default { test: { exclude: ["**/__tests__/*.{integration,e2e}.test.ts"] } };\n' \
+    > "$S/packages/contracts/widget/vitest.config.ts"
+  printf 'import { it } from "vitest";\nit("x", () => {});\n' \
+    > "$S/packages/contracts/widget/src/__tests__/unit.test.ts"
+  # يجبُ أن تظهرَ في شِقٍّ. ولا يكفي أن يمرَّ الحارسُ: يُقاسُ ظهورُها بالاسمِ،
+  # وإلّا كانَ «أخضرُ» يعني «لم أرَها» كما كانَ يعني قبلَ الإصلاحِ.
+  python3 "$S/scripts/checks/lib/test_groups.py" "$S" \
+    | grep -qE "^(PARALLEL|SERIAL)$(printf '\t')packages/contracts/widget\$" || return 1
+  _ti "$S"
+}
+t "يُدرِجُ حزمةً في نمطٍ متداخلٍ (packages/contracts/*) في شِقٍّ" pass _ti_nested_pkg
+
+_ti_shallow_inventory() {
+  local S; S="$(_ti_stage shallow 1 0)"
+  mkdir -p "$S/packages/contracts/widget/src/__tests__"
+  printf '{"name":"@w/widget","scripts":{"test":"vitest run"}}\n' \
+    > "$S/packages/contracts/widget/package.json"
+  printf 'export default { test: { exclude: ["**/__tests__/*.{integration,e2e}.test.ts"] } };\n' \
+    > "$S/packages/contracts/widget/vitest.config.ts"
+  printf 'import { it } from "vitest";\nit("x", () => {});\n' \
+    > "$S/packages/contracts/widget/src/__tests__/unit.test.ts"
+  # طفرةٌ: تُعادُ الحالةُ الأصليّةُ — جردٌ سطحيٌّ مكتوبٌ بيدٍ يتجاهلُ
+  # `pnpm-workspace.yaml`. و`pnpm` ما زالَ يرى الحزمةَ ⇒ فالمُصادِقُ الخارجيُّ
+  # يُخفِقُ. لو أُزيلَ المُصادِقُ لعادَ الحارسُ يُوافِقُ نفسَهُ ومرَّت هذه الحالةُ.
+  python3 - "$S/scripts/checks/lib/workspace_packages.py" <<'MUT'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "    for pat in workspace_patterns(root):"
+assert s.count(old) == 1
+s = s.replace(old, '    for pat in ("packages/*", "services/*", "bots/*"):', 1)
+io.open(p, "w", encoding="utf-8").write(s)
+MUT
+  _ti "$S"
+}
+t "يرفض جرداً سطحيّاً يُسقِطُ حزمَ النمطِ المتداخلِ (طفرة)" fail _ti_shallow_inventory
 
 # (12) **ثباتٌ:** 40 تشغيلاً بلا تقلّبٍ. وحارسُ سباقٍ **يتقلّبُ هوَ** أسوأُ من لا
 # حارسٍ: يُقرأُ إزعاجاً فيُسكَتُ. والعددُ 40 كما في حرّاسِ `RISK-0037`.

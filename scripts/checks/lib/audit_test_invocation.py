@@ -62,15 +62,22 @@ _IMPORT = re.compile(
     r"""(?:from|import)\s*\(?\s*["'](\.[^"']+)["']|import\s+["'](\.[^"']+)["']"""
 )
 _RECURSIVE_TEST = re.compile(r"\bpnpm\b[^&|;]*(?:-r\b|--recursive\b)[^&|;]*\btest\b")
-_ROOTS = ("packages", "services", "bots")
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from workspace_packages import (  # noqa: E402
+    all_packages,
+    packages_with_test as _ws_packages_with_test,
+    pnpm_packages,
+)
 
 
 # ── مسحُ مداخلِ `scripts.*` ────────────────────────────────────────────────
 def scan_scripts(root: str) -> list[str]:
     out: list[str] = []
-    for pj in [os.path.join(root, "package.json")] + sorted(
-        p for r in _ROOTS for p in glob.glob(os.path.join(root, r, "*", "package.json"))
-    ):
+    for pj in [os.path.join(root, "package.json")] + [
+        os.path.join(root, d, "package.json") for d in all_packages(root)
+    ]:
         if not os.path.exists(pj):
             continue
         with open(pj, encoding="utf-8") as fh:
@@ -85,13 +92,40 @@ def scan_scripts(root: str) -> list[str]:
 
 # ── اكتمالُ الشِّقَّينِ ────────────────────────────────────────────────────
 def packages_with_test(root: str) -> set[str]:
-    found: set[str] = set()
-    for r in _ROOTS:
-        for pj in glob.glob(os.path.join(root, r, "*", "package.json")):
-            with open(pj, encoding="utf-8") as fh:
-                if "test" in (json.load(fh).get("scripts") or {}):
-                    found.add(os.path.relpath(os.path.dirname(pj), root))
-    return found
+    """الجردُ من `pnpm-workspace.yaml` — لا نمطَ مكتوبٌ بيدٍ في هذا الملفِّ.
+
+    كانَ هنا `_ROOTS = ("packages", "services", "bots")` بنمطِ `*/package.json`،
+    وهوَ النمطُ نفسُهُ الذي كانَ في مُشتَقِّ الشِّقَّينِ — **فكانَ الحارسُ يُصادِقُ
+    المُشتَقَّ بعطبِ المُشتَقِّ نفسِهِ**، ومرَّ أخضرَ وأربعَ عشرةَ حزمةً ساقطةً
+    (`packages/contracts/*`) لا تُشغَّلُ أصلاً. (M0-35 · القياسُ في
+    `docs/12-testing/test-invocation-evidence/2026-09-14-m0-35.md`)
+    """
+    return set(_ws_packages_with_test(root))
+
+
+def inventory_drift(root: str) -> list[str]:
+    """مُصادَقةٌ **خارجيّةٌ** على الجردِ من `pnpm` نفسِهِ — الحَكَمُ لا نسخةٌ ثانيةٌ منّا.
+
+    لولا هذا لكانَ قارئُنا لـ`pnpm-workspace.yaml` مصدرَ حقيقةٍ **بلا مُكذِّبٍ**:
+    خطأٌ في قراءةِ نمطٍ يُنتِجُ جرداً ناقصاً يوافقُ نفسَهُ. وتعذُّرُ `pnpm` **إخفاقٌ
+    لا تخطٍّ**.
+    """
+    ours = set(all_packages(root))
+    theirs = set(pnpm_packages(root))
+    problems: list[str] = []
+    only_pnpm = sorted(theirs - ours)
+    if only_pnpm:
+        problems.append(
+            "حزمٌ يراها `pnpm` ولا يراها جردُنا — **فقد تسقطُ من الاختبارِ صامتةً**: "
+            + " · ".join(only_pnpm)
+        )
+    only_ours = sorted(ours - theirs)
+    if only_ours:
+        problems.append(
+            "حزمٌ في جردِنا لا يراها `pnpm` — جردٌ يصفُ ما لا يُشغَّلُ: "
+            + " · ".join(only_ours)
+        )
+    return problems
 
 
 # ── إغلاقُ الاستيرادِ من الاختباراتِ المُشغَّلةِ افتراضيّاً ─────────────────
@@ -263,7 +297,7 @@ def audit_groups(root: str, text: str) -> list[str]:
         elif kind == "OK":
             saw_ok = True
 
-    problems: list[str] = []
+    problems: list[str] = list(inventory_drift(root))
 
     # خَرْجٌ مقطوعٌ يُقرأُ إخفاقاً لا نجاحاً، وإلّا كانَ سكوتُ المُشتَقِّ يُنتِجُ
     # حارساً أخضرَ على لا شيءَ — وهيَ العلّةُ التي أنشأَت هذا الحارسَ.

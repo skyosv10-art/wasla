@@ -18,29 +18,23 @@
 
 from __future__ import annotations
 
-import glob
 import json
 import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from workspace_packages import packages_with_test  # noqa: E402
+
 _GATE_INCLUDE = re.compile(r"include:\s*\[[^\]]*\.e2e\.test\.ts")
 _EXCLUDE_TAG = "{integration,e2e}"
-_ROOTS = ("packages", "services", "bots")
 
 
 def derive(root: str = ".") -> list[tuple[str, bool]]:
     """يُرجِعُ [(مسارُ الحزمةِ، أهيَ بوّابةٌ؟)] مرتَّباً. يرفعُ عندَ العُطلِ."""
     out: list[tuple[str, bool]] = []
-    manifests: list[str] = []
-    for r in _ROOTS:
-        manifests.extend(glob.glob(os.path.join(root, r, "*", "package.json")))
-    for pj in sorted(manifests):
-        d = os.path.relpath(os.path.dirname(pj), root)
-        with open(pj, encoding="utf-8") as fh:
-            data = json.load(fh)          # عطبٌ يُرفَعُ لا يُبتلَعُ
-        if "test" not in (data.get("scripts") or {}):
-            continue
+    for d in packages_with_test(root):   # الجردُ من pnpm-workspace.yaml لا من نمطٍ بيدٍ
         cfg = os.path.join(root, d, "vitest.config.ts")
         gate = False
         if os.path.exists(cfg):

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T00:21:08Z",
+  "generated_at": "2026-09-14T00:55:34Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ab831d4670bf02036c46159a25ddae2c58dfb739",
-    "branch": "chore/m0-32-post-merge-baseline",
+    "commit": "8da05a67d357c1b55d331d59e84a3aa63eae7413",
+    "branch": "chore/m0-33-ci-nonstart-reason-from-annotations",
     "dirty": false,
     "dirty_files": 0,
-    "dirty_reason": "32/N: توليدُ الأساسِ من تشغيلٍ ناجحٍ كاملٍ بعدَ الدمجِ (CLM-0153)",
-    "tracked_files": 1731
+    "dirty_reason": "",
+    "tracked_files": 1772
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
-    "risks_not_closed": 27
+    "risks_not_closed": 28
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify32d.log",
-    "tests_passed": 4505,
-    "test_files_executed": 277,
-    "governance_suite_cases": 237,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/verify33.log",
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": 236,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2b8b5247212e122ef6a7982c7bdf581708a2b20162cffc4918b6afd46dc5c4ae",
+  "fingerprint": "sha256:b132fd504abc9ac8efdee9f1ea867b428461ba7582d71380761b754f620db77e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -67,6 +67,7 @@ import {
   PostgresMarketplaceInventoryEventSource,
   PostgresReadinessProbe,
   PostgresRelayDeadLetterStore,
+  PostgresRelayConsumerLock,
   DELIVERY_SCOPES,
   DELIVERY_SERVICE_AUDIENCE,
   StoreOrderStore,
@@ -380,6 +381,7 @@ export async function startGate(): Promise<GateContext> {
   const deliveryBaseUrl = `http://127.0.0.1:${(delivery.fastify.server.address() as AddressInfo).port}`;
 
   const relayEvents = new PostgresMarketplaceInventoryEventSource(pool);
+  const relayLock = new PostgresRelayConsumerLock(pool);
 
   return {
     deliveryBaseUrl,
@@ -387,7 +389,12 @@ export async function startGate(): Promise<GateContext> {
     pool,
     db,
     stores,
-    relayInventory: () => runInventoryRelayBatch({ events: relayEvents, store: relayStore }),
+    relayInventory: () =>
+      runInventoryRelayBatch({
+        events: relayEvents,
+        store: relayStore,
+        lock: relayLock,
+      }),
     deliveryInboundKeys,
     close: async () => {
       await delivery.close();

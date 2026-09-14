@@ -16,7 +16,7 @@ import {
   deliveryTaskCancelledEvent,
   type DeliveryDomainEvent,
 } from "../domain/events.js";
-import type { DispatchEventSource, MirrorContext, TaskMirrorStore } from "../ports.js";
+import type { DispatchEventSource, MirrorContext, RelayConsumerLock, TaskMirrorStore } from "../ports.js";
 
 export interface FakeTask {
   taskId: string;
@@ -291,6 +291,34 @@ export class FakeDispatchJobRequester implements DispatchJobRequester {
     const outcome: DispatchJobRequestOutcome = next ?? { jobRef: `job-${this.commands.length}`, replayed: false };
     this.remembered.set(command.idempotencyKey, outcome.jobRef);
     return outcome;
+  }
+}
+
+/**
+ * قفلُ مُستهلِكٍ زائفٌ **يُسجِّلُ ولا يحجبُ** (M5-13R · §4.24-ب) — لاختباراتِ
+ * المحرّكِ الصافيةِ: يُثبِتُ أنَّ الحيازةَ والإطلاقَ يحصلانِ في الترتيبِ الصحيحِ
+ * حولَ الدفعةِ، ويُتيحُ تسجيلَ تسلسلِ الدُعواتِ في الاختباراتِ التي تُريدُ مُشاهدةَ
+ * ترتيبِ الحُقولِ لا حجبَها.
+ */
+export class RecordingRelayLock implements RelayConsumerLock {
+  /** تُنادى قبلَ `fn` وبعدَهُ — للتحقُّقِ من الترتيبِ بدقّةٍ في الاختباراتِ. */
+  readonly calls: Array<{ consumerId: string; phase: "acquire" | "release"; at: number }> = [];
+  private n = 0;
+
+  async withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T> {
+    this.calls.push({ consumerId, phase: "acquire", at: ++this.n });
+    try {
+      return await fn();
+    } finally {
+      this.calls.push({ consumerId, phase: "release", at: ++this.n });
+    }
+  }
+
+  /** كلُّ حيازةٍ أُطلِقَت؟ — دفاعٌ ضدَّ تسريبٍ يُخضِرُ اختبارًا ويُسرِّبُ في الإنتاجِ. */
+  get balanced(): boolean {
+    const acquires = this.calls.filter((c) => c.phase === "acquire").length;
+    const releases = this.calls.filter((c) => c.phase === "release").length;
+    return acquires === releases;
   }
 }
 

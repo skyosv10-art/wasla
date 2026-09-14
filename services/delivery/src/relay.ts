@@ -47,7 +47,12 @@ import {
 import { projectDispatchEvent } from "./domain/dispatch-mirror.js";
 import { isDeliveryTaskTerminal } from "./domain/state-machine.js";
 import type { DeliveryTaskState } from "@wasla/contracts-delivery";
-import type { DispatchEventSource, TaskMirrorStore, MirrorContext } from "./ports.js";
+import type {
+  DispatchEventSource,
+  MirrorContext,
+  RelayConsumerLock,
+  TaskMirrorStore,
+} from "./ports.js";
 
 export const SUPPORTED_EVENT_VERSION = "v1";
 
@@ -66,6 +71,12 @@ export const DEFAULT_RELAY_CONFIG: RelayConfig = {
 export interface RelayDeps {
   readonly events: DispatchEventSource;
   readonly store: TaskMirrorStore;
+  /**
+   * إلزاميٌّ لا اختياريٌّ (M5-13R · §4.24-ب): دفعةٌ بلا قفلِ مُستهلِكٍ تستطيعُ أن
+   * تكتبَ نقطتَها فوقَ إرجاعِ إعادةٍ التزمَ للتوّ — فيُبطِلَ عملًا وقعَ فعلاً.
+   * والحقلُ هنا إلزاميٌّ فنسيانُهُ خطأُ ترجمةٍ (التعليلُ الكاملُ في `ports.ts`).
+   */
+  readonly lock: RelayConsumerLock;
   readonly config?: Partial<RelayConfig>;
   readonly log?: (entry: RelayLogEntry) => void;
 }
@@ -111,9 +122,21 @@ function extractJobId(row: DispatchOutboxRow): string {
  * Process one batch of dispatch outbox events. Returns the outcome and the
  * new checkpoint. Idempotent: re-running with the same events is a no-op for
  * already-terminal rows.
+ *
+ * **الدفعةُ كلُّها داخلَ قفلِ المُستهلِكِ** (M5-13R · §4.24-ب): من قراءةِ نقطةِ
+ * التقدُّمِ حتى آخرِ كتابةٍ فوقَها — فلا تلتقي معاملةُ إعادةٍ مع دفعةٍ في منتصفِها،
+ * ولو التقيا لَكتبَتِ الدفعةُ نقطتَها فوقَ إرجاعٍ التزمَ للتوّ. والحيازةُ نطاقُها
+ * نطاقُ `withConsumerLock` فلا يُنسى إطلاقُها في نداءٍ بعيدٍ.
  */
 export async function runRelayBatch(deps: RelayDeps): Promise<BatchOutcome> {
   const cfg = { ...DEFAULT_RELAY_CONFIG, ...deps.config };
+  return deps.lock.withConsumerLock(cfg.consumerId, () => runRelayBatchLocked(deps, cfg));
+}
+
+async function runRelayBatchLocked(
+  deps: RelayDeps,
+  cfg: RelayConfig,
+): Promise<BatchOutcome> {
   const log = deps.log ?? (() => {});
   const checkpoint = await deps.store.getCheckpoint(cfg.consumerId);
   const rows = await deps.events.readAfter(checkpoint, cfg.batchSize);
@@ -257,9 +280,16 @@ async function poison(
 /**
  * Replay: reset the checkpoint so idempotency makes already-applied events
  * no-ops. Safe to call repeatedly.
+ *
+ * **تحتَ قفلِ المُستهلِكِ** — وإلّا كانتْ إعادةُ ترتيبٍ تُبطِلُها دفعةٌ جاريةٌ بنفسِ
+ * السباقِ الذي يُبطِلُ إعادةَ السمِّ (§4.24-ب): نفسُ الجُرحِ لا يُرقَّعُ في موضعٍ
+ * ويُترَكُ مفتوحاً في الآخرِ.
  */
 export async function replayFrom(deps: RelayDeps, checkpoint: RelayCheckpoint | null): Promise<void> {
-  await deps.store.writeCheckpoint(deps.config?.consumerId ?? DEFAULT_RELAY_CONFIG.consumerId, checkpoint ?? ZERO_CHECKPOINT);
+  const consumerId = deps.config?.consumerId ?? DEFAULT_RELAY_CONFIG.consumerId;
+  await deps.lock.withConsumerLock(consumerId, () =>
+    deps.store.writeCheckpoint(consumerId, checkpoint ?? ZERO_CHECKPOINT),
+  );
 }
 
 /**

@@ -85,8 +85,14 @@ export {
 export type {
   DispatchEventSource,
   MirrorContext,
+  RelayConsumerLock,
   TaskMirrorStore,
 } from "./ports.js";
+export {
+  PostgresRelayConsumerLock,
+  RELAY_ADVISORY_LOCK_NAMESPACE,
+  relayAdvisoryLockKey,
+} from "./infrastructure/relay-advisory-lock.js";
 export {
   DEFAULT_RELAY_CONFIG,
   SUPPORTED_EVENT_VERSION,
@@ -356,3 +362,4 @@ export type {
 export { PostgresRelayRequeueStore } from "./infrastructure/relay-requeue-store.js";
 export type { RelayRequeueEffect } from "./infrastructure/relay-requeue-store.js";
 export type { RelayRequeuePort } from "./ports.js";
+/* ── M5-13R · §4.24-ب: إعادةُ السمِّ تحتَ قفلِ المُستهلِكِ ── */

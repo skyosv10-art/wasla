@@ -39,6 +39,7 @@ import {
   type RelayRequeueDecision,
 } from "../domain/relay-reprocess.js";
 import { ZERO_CHECKPOINT } from "../domain/consumed-events.js";
+import { relayAdvisoryLockKey } from "./relay-advisory-lock.js";
 
 /* ════════════════════════════════════════════════════════════════════════
  * الربطُ بينَ اسمِ المُشغِّلِ وجدولَيهِ — **ثوابتُ حرفيّةٌ، وموضعٌ واحدٌ**
@@ -121,6 +122,20 @@ export class PostgresRelayRequeueStore implements RelayRequeuePort {
     const client: PoolClient = await this.pool.connect();
     try {
       await client.query("BEGIN");
+
+      /*
+       * حيازةُ قفلِ المُستهلِكِ **قبلَ أيِّ قراءةٍ** (M5-13R · §4.24-ب) — القفلُ
+       * التشغيليُّ يُنفَكُّ آليّاً عندَ `COMMIT`/`ROLLBACK` فلا سطرَّ إطلاقِ يُنسى.
+       * والمفتاحُ من المصدرِ الواحدِ (`relay-advisory-lock.ts`) الذي يمتلكُ المُستهلِكُ
+       * الجلسةَ نفسَهُ — فلو انحرفَ أحدُ المفتاحَينِ لَصارَ القفلُ ديكورًا يمرُّ طرفانِ
+       * لا يلتقيانِ، وهوَ أخفُّ من لا قفلِ أصلاً لأنّهُ يُطمئنُ.
+       *
+       * ولماذا يُحجَزُ قبلَ الرفضِ لا بعدهُ: الرفضُ قراءةٌ لا كتابةً، لكنّهُ يقرأُ
+       * حالةً فوقَ صفٍّ قد تُحَرِّكُهُ دفعةٌ جاريةٌ في هذه اللحظةِ — فالقراءةُ تحتَ
+       * القفلِ تحملُ الجوابَ الصادقَ عن لحظةٍ لا يُشارِكُها أحدٌ.
+       */
+      const [lockNs, lockKey] = relayAdvisoryLockKey(tables.consumerId);
+      await client.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [lockNs, lockKey]);
 
       const found = await client.query<{ consumed_status: string }>(
         `SELECT consumed_status FROM ${tables.consumed} WHERE event_id = $1 FOR UPDATE`,

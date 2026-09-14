@@ -25,6 +25,7 @@ import {
 } from "./pg-harness.js";
 import { PostgresMarketplaceInventoryEventSource } from "../infrastructure/marketplace-inventory-event-source.js";
 import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import {
   runInventoryRelayBatch,
   DEFAULT_INVENTORY_RELAY_CONFIG,
@@ -57,6 +58,7 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<InventoryRelayDeps> {
   return {
     events: new PostgresMarketplaceInventoryEventSource(pool),
     store: new PostgresInventoryObservationStore(pool),
+    lock: new PostgresRelayConsumerLock(pool),
     config: { ...DEFAULT_INVENTORY_RELAY_CONFIG, batchSize: 10 },
   };
 }

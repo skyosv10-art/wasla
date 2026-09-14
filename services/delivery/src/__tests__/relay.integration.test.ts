@@ -29,6 +29,7 @@ import {
 } from "./pg-harness.js";
 import { PostgresDispatchEventSource } from "../infrastructure/dispatch-event-source.js";
 import { PostgresTaskMirrorStore } from "../infrastructure/task-mirror-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import { runRelayBatch, replayFrom, DEFAULT_RELAY_CONFIG, type RelayDeps } from "../relay.js";
 
 const JOB = "job-agg-1";
@@ -40,6 +41,7 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<RelayDeps> {
   return {
     events: new PostgresDispatchEventSource(pool),
     store: new PostgresTaskMirrorStore(pool),
+    lock: new PostgresRelayConsumerLock(pool),
     config: { ...DEFAULT_RELAY_CONFIG, batchSize: 10 },
   };
 }

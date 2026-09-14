@@ -10,9 +10,10 @@
 
 import { describe, expect, it } from "vitest";
 import type { RelayLogEntry } from "../relay.js";
-import { rebuildAll, runRelayBatch } from "../relay.js";
+import { rebuildAll, replayFrom, runRelayBatch } from "../relay.js";
 import type { DispatchOutboxRow } from "../domain/consumed-events.js";
-import { dispatchRow, InMemoryMirrorStore, ScriptedEventSource } from "./mirror-fakes.js";
+import { dispatchRow, InMemoryMirrorStore, RecordingRelayLock, ScriptedEventSource } from "./mirror-fakes.js";
+import type { RelayConsumerLock } from "../ports.js";
 
 const JOB = "11111111-1111-1111-1111-111111111111";
 const T = (n: number) => `2026-09-09T10:00:${String(n).padStart(2, "0")}.000Z`;
@@ -23,10 +24,11 @@ function makeStore() {
   return store;
 }
 
-function makeDeps(rows: readonly DispatchOutboxRow[], store = makeStore(), logs?: RelayLogEntry[]) {
+function makeDeps(rows: readonly DispatchOutboxRow[], store = makeStore(), logs?: RelayLogEntry[], lock: RelayConsumerLock = new RecordingRelayLock()) {
   return {
     events: new ScriptedEventSource(rows),
     store,
+    lock,
     log: logs ? (e: RelayLogEntry) => logs.push(e) : undefined,
   };
 }
@@ -222,7 +224,8 @@ describe("retry — pending failures do not advance the checkpoint", () => {
   it("after maxAttempts the row is poisoned and the stream moves on", async () => {
     const store = makeStore();
     store.failApplyNTimes = 99;
-    const deps = { events: new ScriptedEventSource([dispatchRow({ event_id: "e-1", event_type: "dispatch.offer_accepted", occurred_at: T(1), data: { job_id: JOB, driver_public_id: "WS-0123456789", accepted_at: T(1) } })]), store, config: { maxAttempts: 2 } };
+    const lock = new RecordingRelayLock();
+    const deps = { events: new ScriptedEventSource([dispatchRow({ event_id: "e-1", event_type: "dispatch.offer_accepted", occurred_at: T(1), data: { job_id: JOB, driver_public_id: "WS-0123456789", accepted_at: T(1) } })]), store, lock, config: { maxAttempts: 2 } };
     await runRelayBatch(deps); // attempt 1 → pending
     await runRelayBatch(deps); // attempt 2 → pending
     const third = await runRelayBatch(deps); // attempt 3 → poison
@@ -274,5 +277,79 @@ describe("observability", () => {
     expect(logs).toHaveLength(1);
     expect(logs[0]).toMatchObject({ event_id: "e-1", event_type: "dispatch.offer_sent", status: "ignored", attempt: 1 });
     expect(typeof logs[0].ts).toBe("string");
+  });
+});
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * قفلُ المُستهلِكِ حولَ الدفعةِ (M5-13R · §4.24-ب) — المحرّكُ الصافي.
+ *
+ * هذه الاختباراتُ تُثبِتُ **الترتيبَ** لا الحجبَ: الحيازةُ تسبقُ أوّلَ قراءةٍ
+ * والإطلاقُ يلي آخرَ كتابةٍ، لكلِّ مُستهلِكٍ **باسمِهِ**. أمّا الحجبُ نفسُهُ — أنَّ
+ * طرفاً ينتظرُ فعلاً — فبرهانُهُ تكامليٌّ على PostgreSQL
+ * (`relay-advisory-lock.integration.test.ts`) لأنَّ القفلَ الزائفَ لا يحجبُ
+ * أصلاً.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+describe("consumer lock — the batch owns the checkpoint exclusively (§4.24-ب)", () => {
+  it("acquires the lock under the DEFAULT consumerId before reading, releases after writing", async () => {
+    const order: string[] = [];
+    const lock: RelayConsumerLock = {
+      async withConsumerLock(consumerId, fn) {
+        order.push(`lock:${consumerId}`);
+        try {
+          return await fn();
+        } finally {
+          order.push("unlock");
+        }
+      },
+    };
+    const events = new ScriptedEventSource([
+      dispatchRow({ event_id: "e-1", event_type: "dispatch.offer_accepted", occurred_at: T(1), data: { job_id: JOB, driver_public_id: "WS-0123456789", accepted_at: T(1) } }),
+    ]);
+    const store = makeStore();
+    const originalWrite = store.writeCheckpoint.bind(store);
+    store.writeCheckpoint = async (consumerId, checkpoint) => {
+      order.push("writeCheckpoint");
+      return originalWrite(consumerId, checkpoint);
+    };
+    const deps = { events, store, lock };
+    await runRelayBatch(deps);
+    // الحيازةُ قبلَ أيِّ شَيءٍ، والإطلاقُ بعدَ آخرِ كتابةٍ — الترتيبُ نفسُهُ لا
+    // يجوزُ أن يتغيّرَ لأنَّ أيَّ انحرافٍ فيهِ يعيدُ فتحَ النافذةِ التي يُغلقُها.
+    expect(order).toEqual([
+      `lock:delivery-dispatch-relay-v1`,
+      "writeCheckpoint",
+      "unlock",
+    ]);
+  });
+
+  it("a custom consumerId is the lock key — two ledgers are two locks", async () => {
+    const lock = new RecordingRelayLock();
+    const deps = makeDeps([
+      dispatchRow({ event_id: "e-1", event_type: "dispatch.offer_sent", occurred_at: T(1), data: { job_id: JOB, offer_id: "of-1", wave_id: "w-1", driver_public_id: "WS-0123456789", expires_at: T(9) } }),
+    ], makeStore(), undefined, lock);
+    await runRelayBatch(deps);
+    expect(lock.calls.filter((c) => c.phase === "acquire").map((c) => c.consumerId)).toEqual(["delivery-dispatch-relay-v1"]);
+    expect(lock.balanced).toBe(true);
+  });
+
+  it("replayFrom writes the checkpoint under the lock too — same wound, same patch", async () => {
+    const lock = new RecordingRelayLock();
+    const deps = makeDeps([], makeStore(), undefined, lock);
+    await replayFrom(deps, null);
+    expect(lock.calls.map((c) => c.phase)).toEqual(["acquire", "release"]);
+    expect(lock.calls[0]!.consumerId).toBe("delivery-dispatch-relay-v1");
+  });
+
+  it("the lock is released even when the batch throws — no leak past a failure", async () => {
+    const lock = new RecordingRelayLock();
+    const store = makeStore();
+    store.getCheckpoint = async () => {
+      throw new Error("checkpoint store unavailable");
+    };
+    const deps = { events: new ScriptedEventSource([]), store, lock };
+    await expect(runRelayBatch(deps)).rejects.toThrow("checkpoint store unavailable");
+    expect(lock.balanced).toBe(true);
   });
 });

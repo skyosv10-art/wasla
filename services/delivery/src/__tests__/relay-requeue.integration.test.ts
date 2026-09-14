@@ -32,6 +32,7 @@ import { DEFAULT_RELAY_CONFIG, runRelayBatch, type RelayDeps } from "../relay.js
 import { PostgresDispatchEventSource } from "../infrastructure/dispatch-event-source.js";
 import { PostgresTaskMirrorStore } from "../infrastructure/task-mirror-store.js";
 import { PostgresRelayRequeueStore } from "../infrastructure/relay-requeue-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import { PostgresRelayDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
 
 const T0 = "2026-09-14T00:00:00.000Z";
@@ -396,6 +397,7 @@ describe.skipIf(!PG_ENABLED)("PostgresRelayRequeueStore — على قاعدةٍ 
     const deps = (): RelayDeps => ({
       events: new PostgresDispatchEventSource(pool),
       store: new PostgresTaskMirrorStore(pool),
+      lock: new PostgresRelayConsumerLock(pool),
       config: { ...DEFAULT_RELAY_CONFIG, batchSize: 10 },
     });
 

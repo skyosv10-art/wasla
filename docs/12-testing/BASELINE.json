@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T02:56:52Z",
+  "generated_at": "2026-09-14T10:57:39Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f1a2c87cc6c0336419493bd5bb145771a2c23fa6",
-    "branch": "feat/m0-34-upgrade-with-data-proof",
+    "commit": "d1c9007c852d326ff2e7bd417c30572d91b199af",
+    "branch": "feat/m5-13-r-poisoned-reprocess",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 1812
+    "tracked_files": 1854
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 348,
+    "test_files_tracked": 351,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 13,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify34c.log",
-    "tests_passed": 4505,
-    "test_files_executed": 277,
-    "governance_suite_cases": 246,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "/tmp/v13r2.log",
+    "tests_passed": 4591,
+    "test_files_executed": 282,
+    "governance_suite_cases": 252,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:0ece977f627608950a1391f256f0d6563c3edb2c5c9223d82943cfc6f01e07f4",
+  "fingerprint": "sha256:aa67ea208bab730b0dbf410b16b1c948f2595b5fec8d90fc5f8d2f0e077cd49e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

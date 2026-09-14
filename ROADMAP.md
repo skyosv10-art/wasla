@@ -683,7 +683,7 @@ Nothing else has been changed in this repository by the WASLA integration work.
   down so it is not read as a defect. There is no acknowledgement column distinguishing a
   handled poisoned row from a neglected one. And nothing here was measured on PostgreSQL
   15/17.6 (the CI versions) or against a production database.
-- **M5-13R (poisoned-row requeue) — review 22/N, claims `CLM-0157` + `CLM-0158`.** The
+- **M5-13R (poisoned-row requeue) — review 22/N, claims `CLM-0157` + `CLM-0158` + `CLM-0159`.** The
   **second** limit declared when `RISK-0035` was closed is now lifted: a poisoned relay
   row has a way back. Route fourteen,
   `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue`, sits behind a **twelfth

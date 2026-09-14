@@ -2,7 +2,7 @@
 
 ## 2026-09-14 · يدٌ تُعيدُ المسمومَ: حركتانِ في معاملةٍ واحدةٍ، وكلفةٌ مُعلَنةٌ (40/N · M5-13R)
 
-**Work Item(s):** M5-13R · **Branch:** `feat/m5-13-r-poisoned-reprocess` · **Claim:** `CLM-0157` (الخدمةُ والحرّاسُ والوثائقُ) + `CLM-0158` (`packages/contracts/delivery/`) — **حجزانِ لا واحدٌ**، لأنَّ الحاجةَ إلى حزمةِ العقودِ ظهرَت **بعدَ** بدءِ الكتابةِ، و[`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md) §6 يمنعُ توسيعَ حجزٍ قائمٍ (سابقةُ `CLM-0156`).
+**Work Item(s):** M5-13R · **Branch:** `feat/m5-13-r-poisoned-reprocess` · **Claim:** `CLM-0157` (الخدمةُ والحرّاسُ وسجلُّ الأمنِ والقياسُ) + `CLM-0158` (`packages/contracts/delivery/`) + `CLM-0159` (`docs/04-api/` و`docs/14-runbooks/`) — **ثلاثةُ حجوزاتٍ لا واحدٌ**، لأنَّ كلَّ نطاقٍ إضافيٍّ ظهرَ **بعدَ** بدءِ الكتابةِ، و[`WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md) §6 يمنعُ توسيعَ حجزٍ قائمٍ (سابقةُ `CLM-0156`) — **والحارسُ هوَ الذي كشفَ الثالثَ**، فرفضَ الدفعَ على ملفَّينِ خارجَ النطاقِ.
 
 **1) ماذا تغيّر.** صارَ للصفِّ المسمومِ **بابُ ردٍّ**:
 `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue` — المسارُ **الرابعَ

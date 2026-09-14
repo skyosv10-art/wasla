@@ -60,11 +60,11 @@ run_step "بنيةُ المستودعِ والوثائقُ الحاكمة" \
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh
 
-# ── 3) بوّابةُ الحوكمةِ (ثلاثةَ عشرَ فحصاً — M0-23 أضافَ الثالثَ عشرَ) ────────────────────────────────────
+# ── 3) بوّابةُ الحوكمةِ (أربعةَ عشرَ فحصاً — M0-35 أضافَ الرابعَ عشرَ) ─────────────
 if [[ -n "$OLD" && -n "$NEW" ]]; then
-  run_step "بوّابةُ الحوكمة (13 فحصاً)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
+  run_step "بوّابةُ الحوكمة (14 فحصاً)" bash scripts/checks/verify-governance.sh "$OLD" "$NEW"
 else
-  run_step "بوّابةُ الحوكمة (13 فحصاً)" bash scripts/checks/verify-governance.sh
+  run_step "بوّابةُ الحوكمة (14 فحصاً)" bash scripts/checks/verify-governance.sh
 fi
 
 # ── 4) إثباتُ أنّ الحوكمةَ ترفض فعلاً ────────────────────────────────────
@@ -91,7 +91,10 @@ elif [[ ! -d node_modules ]]; then
   skip_step "الاختبارات (pnpm -r test)" "الاعتمادياتُ غيرُ مثبَّتةٍ (لا node_modules)"
 else
   run_step "الأنواعُ (pnpm -r typecheck)" pnpm -r typecheck
-  run_step "الاختبارات (pnpm -r test)" pnpm -r test
+  # مصدرُ استدعاءٍ واحدٌ (`M0-35`): الشِّقُّ المتوازي ثمَّ شِقُّ البوّاباتِ
+  # مُسلسَلاً. و`pnpm -r test` مباشرةً كانَ يُسابِقُ إحدى عشرةَ حزمةَ بوّاباتٍ
+  # على قاعدةٍ واحدةٍ — بوّابةٌ تتقلّبُ ليست بوّابةً.
+  run_step "الاختبارات (scripts/run-tests.sh)" bash scripts/run-tests.sh
 fi
 
 # ── الأرتفاكت ────────────────────────────────────────────────────────────

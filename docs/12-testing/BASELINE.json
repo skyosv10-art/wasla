@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T13:48:37Z",
+  "generated_at": "2026-09-14T15:00:48Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ed0d41eedc424f3b3f69e678dd423448352306f1",
-    "branch": "fix/m0-35-gate-schema-serialization",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 1898
+    "commit": "fe910591befa9b2d3aa2bab00fe0bd5eb493fc71",
+    "branch": "feat/m0-23-search-migrations-enrollment",
+    "dirty": true,
+    "dirty_files": 17,
+    "dirty_reason": "الموجةُ 6 من M0-23: انتظامُ services/search في الترحيلاتِ + البابُ الخامسُ (CLM-0162/CLM-0163) — الأساسُ يُولَّدُ على الشجرةِ العاملةِ قبلَ الإيداعِ",
+    "tracked_files": 1972
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "09a541b4207fb26eafb499d8ea402669ac178ddcc86afcdf376278a96d93002a",
-    "lines": 3128
+    "sha256": "c4f5a830167cf2380b2fb5196cdf7be7df1e6c4c7712c5520562056f67b1381d",
+    "lines": 3137
   },
   "static": {
     "packages": 49,
     "packages_with_typecheck": 49,
     "packages_with_test": 49,
-    "test_files_tracked": 351,
+    "test_files_tracked": 353,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 14,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/v35e.log",
-    "tests_passed": 4591,
-    "test_files_executed": 282,
-    "governance_suite_cases": 267,
+    "source": "/tmp/verify2.log",
+    "tests_passed": 4545,
+    "test_files_executed": 280,
+    "governance_suite_cases": 273,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:b0b13cf97c7a5ee277fdaa32dd1a9118819c1e54f3d39a664d1d3b1272acd6f9",
+  "fingerprint": "sha256:443e400e8511cbab820712867af6aed16c7ae77a8b65409074a1463f577d2d4a",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

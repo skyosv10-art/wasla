@@ -1180,6 +1180,9 @@ importers:
       '@wasla/contracts-search':
         specifier: workspace:*
         version: link:../../packages/contracts/search
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)
       fastify:
         specifier: ^5.12.1
         version: 5.12.1
@@ -1193,6 +1196,12 @@ importers:
       '@types/pg':
         specifier: ^8.11.0
         version: 8.23.1
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)

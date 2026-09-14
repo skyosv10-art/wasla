@@ -2011,8 +2011,16 @@ _sac_root() { # _sac_root <tag>
   rm -rf "$R"
   mkdir -p "$R/scripts/checks" "$R/docs/07-security" \
            "$R/services/matching/src/http" "$R/services/matching/src/infrastructure" \
-           "$R/services/dispatch/src/infrastructure"
+           "$R/services/matching/contracts" \
+           "$R/services/dispatch/src/infrastructure" \
+           "$R/packages/service-auth/src"
   cp "$SAC_SRC" "$R/scripts/checks/"
+  # البابُ 9 يقرأُ اسمَ الترويسةِ من الشفرةِ لا من نصٍّ مكتوبٍ فيه، ويقرأُ
+  # العقدَ المنشورَ للحدِّ المفروضِ — فيُبنى الموضعانِ في الجذرِ الصناعيِّ.
+  printf 'export const SERVICE_AUTH_HEADER = "x-wasla-service-auth";\n' \
+    > "$R/packages/service-auth/src/http.ts"
+  printf 'openapi: 3.1.0\npaths:\n  /matching/candidates:\n    post:\n      operationId: evaluate\n' \
+    > "$R/services/matching/contracts/api.openapi.yml"
   # ويحملُ العميلُ نداءً خامّاً (`fetch(`) كما في المستودعِ الحقيقيِّ، فالبابُ 7
   # يعدُّ المُنادينَ ويُسقِطُ جذراً لا مُناديَ فيهِ (موضعٌ لا وجودَ له).
   printf 'export class HttpMatchingPort { constructor(o) { this.signRequest = o.signRequest; } async go() { return fetch("http://x"); } }\n' \
@@ -2049,6 +2057,14 @@ enforced: matching
 | — | لا مكتبةَ نداءٍ في الجذرِ الصناعيِّ. | — |
 
 <!-- http-wrappers:end -->
+
+<!-- contract-auth-debt:begin -->
+
+| الحدُّ | مساراتٌ مفروضةٌ | البوّابةُ المالكةُ |
+|---|---|---|
+| `matching` | 2 | `M1-06` |
+
+<!-- contract-auth-debt:end -->
 MD
   # وجذرٌ فيهِ `package.json` بلا مكتبةِ نداءٍ — فالبابُ 8 يمرُّ بصفرٍ وصفرٍ.
   printf '{ "name": "synthetic", "dependencies": { "zod": "^3.0.0" } }\n' > "$R/package.json"
@@ -2243,6 +2259,78 @@ _sac_declare_wrapper "$S_W5" '| `axios` | سببٌ صناعيٌّ مُعلَنٌ
 printf "import axios from 'axios';\nexport const go = () => axios.post('http://x');\n" \
   > "$S_W5/services/dispatch/src/sneaky-caller.ts"
 t "البابُ 8: مستورِدُ مكتبةٍ مُعلَنةٍ يدخلُ جردَ البابِ 7 فيُسقِطُ إن لم يُعلَنْ" fail _sac "$S_W5"
+
+# ── البابُ 9: العقدُ المنشورُ لا يكذبُ على مُصادقةٍ مفروضةٍ (M0-36) ───────────
+# العيبُ المقيسُ الذي أُنشئَ لهُ البابُ: ثمانيةُ حدودٍ تفرضُ الهويّةَ و**صفرُ**
+# عقودٍ منشورةٍ تُعلِنُها. والحارسُ لا يدَّعي إصلاحَ ذلكَ (مِلكُ `M1-06`)، بل
+# يُجمِّدُ الدَّينَ: لا ينمو بصمتٍ، ولا يبقى الجردُ بعدَ العلاجِ، ولا يُوعَدُ
+# بأمنٍ كاذبٍ. وكلُّ حالةٍ أدناهُ تُطفِّرُ اتّجاهاً واحداً وحدَه.
+_sac_debt_del_row() { # _sac_debt_del_row <root> <svc>
+  python3 -c 'import sys,pathlib,re; m=pathlib.Path(sys.argv[1])/"docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"; s=m.read_text(); n=re.sub(r"^\| `"+sys.argv[2]+r"` \|.*\n","",s,flags=re.M); assert n!=s; m.write_text(n)' "$1" "$2"
+}
+_sac_debt_add_row() { # _sac_debt_add_row <root> <row>
+  python3 -c 'import sys,pathlib; m=pathlib.Path(sys.argv[1])/"docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"; s=m.read_text(); old="<!-- contract-auth-debt:end -->"; assert s.count(old)==1; m.write_text(s.replace(old, sys.argv[2]+"\n"+old))' "$1" "$2"
+}
+_sac_declare_contract() { # _sac_declare_contract <root> <contract-path> <header>
+  printf 'openapi: 3.1.0\ncomponents:\n  securitySchemes:\n    ServiceIdentity:\n      type: apiKey\n      in: header\n      name: %s\n' "$3" > "$1/$2"
+}
+
+S_D_OK="$(_sac_root d_ok)"
+t "البابُ 9: حدٌّ مفروضٌ وعقدُهُ لا يُعلِنُ واسمُهُ في الجردِ بمرجعِه يمرّ" pass _sac "$S_D_OK"
+
+# 1) الدَّينُ لا ينمو بصمتٍ: حدٌّ مفروضٌ لا يُعلِنُ عقدُهُ ولا اسمُهُ في الجردِ
+S_D_GROW="$(_sac_root d_grow)"
+_sac_debt_del_row "$S_D_GROW" matching
+t "البابُ 9: حدٌّ مفروضٌ بعقدٍ ينفي المُصادقةَ بلا إعلانٍ في الجردِ يُسقِط" fail _sac "$S_D_GROW"
+
+# 2) الجردُ لا يتقادمُ: العقدُ صارَ يُعلِنُ والاسمُ باقٍ (إعلانٌ ميتٌ)
+S_D_DEAD="$(_sac_root d_dead)"
+_sac_declare_contract "$S_D_DEAD" services/matching/contracts/api.openapi.yml x-wasla-service-auth
+t "البابُ 9: عقدٌ صارَ يُعلِنُ واسمُهُ باقٍ في الجردِ يُسقِط (إعلانٌ ميتٌ)" fail _sac "$S_D_DEAD"
+
+# 3) ومسارُ العلاجِ الصحيحُ يمرُّ: العقدُ يُعلِنُ بالترويسةِ المفروضةِ والاسمُ خرجَ
+S_D_FIXED="$(_sac_root d_fixed)"
+_sac_declare_contract "$S_D_FIXED" services/matching/contracts/api.openapi.yml x-wasla-service-auth
+_sac_debt_del_row "$S_D_FIXED" matching
+t "البابُ 9: عقدٌ يُعلِنُ بالترويسةِ المفروضةِ وقد خرجَ من الجردِ يمرّ" pass _sac "$S_D_FIXED"
+
+# 4) والترويسةُ مصدرُها الشفرةُ: عقدٌ يُعلِنُ ترويسةً غيرَ المفروضةِ يُرَدُّ
+S_D_HDR="$(_sac_root d_header)"
+_sac_declare_contract "$S_D_HDR" services/matching/contracts/api.openapi.yml authorization
+_sac_debt_del_row "$S_D_HDR" matching
+t "البابُ 9: عقدٌ يُعلِنُ مُصادقةً بترويسةٍ غيرِ المفروضةِ يُسقِط" fail _sac "$S_D_HDR"
+
+# 5) الاتّجاهُ الأخطرُ: عقدُ حدٍّ غيرِ مفروضٍ يدَّعي مُصادقةً — ولا استثناءَ له
+S_D_FALSE="$(_sac_root d_false)"
+mkdir -p "$S_D_FALSE/services/dispatch/contracts"
+_sac_declare_contract "$S_D_FALSE" services/dispatch/contracts/api.openapi.yml x-wasla-service-auth
+t "البابُ 9: عقدٌ يدَّعي مُصادقةً ولا إنفاذَ لها في شفرةِ حدِّه يُسقِط" fail _sac "$S_D_FALSE"
+
+# 6) جردٌ متقادمٌ: اسمٌ لحدٍّ لا يُعلِنُ السّجلُّ إنفاذَه
+S_D_STALE="$(_sac_root d_stale)"
+_sac_debt_add_row "$S_D_STALE" '| `dispatch` | 3 | `M1-06` |'
+t "البابُ 9: اسمٌ في الجردِ لحدٍّ غيرِ مفروضٍ يُسقِط (جردٌ متقادمٌ)" fail _sac "$S_D_STALE"
+
+# 7) صفٌّ بلا مرجعِ البوّابةِ المالكةِ: دَينٌ بلا مالكٍ ليسَ إعلاناً
+S_D_NOREF="$(_sac_root d_noref)"
+_sac_debt_del_row "$S_D_NOREF" matching
+_sac_debt_add_row "$S_D_NOREF" '| `matching` | 2 | لاحقاً |'
+t "البابُ 9: صفُّ دَينٍ بلا مرجعِ M1-06 يُسقِط" fail _sac "$S_D_NOREF"
+
+# 8) وحذفُ كتلةِ الجردِ لا يُسكِتُ البابَ: الغيابُ إخفاقٌ لا مرورٌ
+S_D_NOBLK="$(_sac_root d_noblock)"
+python3 -c 'import sys,pathlib,re; m=pathlib.Path(sys.argv[1])/"docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"; m.write_text(re.sub(r"<!-- contract-auth-debt:begin -->.*?<!-- contract-auth-debt:end -->","",m.read_text(),flags=re.S))' "$S_D_NOBLK"
+t "البابُ 9: حذفُ كتلةِ جردِ الدَّينِ يُسقِط" fail _sac "$S_D_NOBLK"
+
+# 9) حدٌّ مفروضٌ بلا عقدٍ منشورٍ أصلاً: لا يُقاسُ إعلانُ ما لا يوجدُ
+S_D_NOCON="$(_sac_root d_nocontract)"
+rm -f "$S_D_NOCON/services/matching/contracts/api.openapi.yml"
+t "البابُ 9: حدٌّ مفروضٌ بلا عقدٍ منشورٍ في موضعِه يُسقِط" fail _sac "$S_D_NOCON"
+
+# 10) وموضعُ الترويسةِ نفسُهُ محروسٌ: حارسٌ يقيسُ موضعاً هُجِرَ يُسقِطُ نفسَه
+S_D_NOHDR="$(_sac_root d_noheader)"
+rm -f "$S_D_NOHDR/packages/service-auth/src/http.ts"
+t "البابُ 9: غيابُ مصدرِ اسمِ الترويسةِ يُسقِط (لا قياسَ على موضعٍ مهجورٍ)" fail _sac "$S_D_NOHDR"
 
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'

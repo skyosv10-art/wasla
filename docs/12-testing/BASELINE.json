@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T15:00:48Z",
+  "generated_at": "2026-09-14T15:54:16Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "fe910591befa9b2d3aa2bab00fe0bd5eb493fc71",
-    "branch": "feat/m0-23-search-migrations-enrollment",
+    "commit": "aae3ec00fea317e22e88be503b4b34ba7fa49405",
+    "branch": "feat/m0-36-contract-declares-service-auth",
     "dirty": true,
-    "dirty_files": 17,
-    "dirty_reason": "الموجةُ 6 من M0-23: انتظامُ services/search في الترحيلاتِ + البابُ الخامسُ (CLM-0162/CLM-0163) — الأساسُ يُولَّدُ على الشجرةِ العاملةِ قبلَ الإيداعِ",
-    "tracked_files": 1972
+    "dirty_files": 10,
+    "dirty_reason": "دفعةُ M0-36 قيدَ الإعدادِ: البابُ التاسعُ وجردُ §5.9 وRISK-0041 وسجلّاتُ الحوكمةِ — الأساسُ مُولَّدٌ من سجلِّ تحقّقٍ أخضرَ كاملٍ على الشجرةِ نفسِها",
+    "tracked_files": 1987
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 14,
-    "risks_not_closed": 29
+    "risks_not_closed": 30
   },
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify2.log",
     "tests_passed": 4545,
     "test_files_executed": 280,
-    "governance_suite_cases": 273,
+    "governance_suite_cases": 284,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:443e400e8511cbab820712867af6aed16c7ae77a8b65409074a1463f577d2d4a",
+  "fingerprint": "sha256:b0080309f9e348e22f1fedfcafd734896477daa841f57baf73672ca07cebe109",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- | --- |
+| CLM-0164 | M0-36 | @uxxxu (agent:perplexity-computer) | feat/m0-36-contract-declares-service-auth | scripts/checks/,docs/07-security/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Active |
 | CLM-0162 | M0-23 | @uxxxu (agent:perplexity-computer) | feat/m0-23-search-migrations-enrollment | services/search/,pnpm-lock.yaml,docs/15-decisions/,docs/12-testing/ | 2026-09-14 | 2026-09-28 | Released (PR #153 · `c2134ad` · squash · وحُذِفَ الفرعُ) |
 | CLM-0163 | M0-23 | @uxxxu (agent:perplexity-computer) | feat/m0-23-search-migrations-enrollment | scripts/checks/,docs/07-security/ | 2026-09-14 | 2026-09-28 | Released (PR #153 · `c2134ad` · squash · وحُذِفَ الفرعُ) |
 | CLM-0161 | M0-35 | @uxxxu (agent:perplexity-computer) | fix/m0-35-gate-schema-serialization | docs/00-rules/ | 2026-09-14 | 2026-09-28 | Released (PR #151 · `1b47503` · squash · وحُذِفَ الفرعُ · مُدمجٌ 2026-09-14T14:00Z · قاعدةُ مصدرِ الاستدعاءِ الواحدِ §1.1 · **ولا حكمَ CI** (NOT VERIFIED · `account_billing_blocked` · RISK-0039) · **ولا حمايةَ فرعٍ** (RISK-0036) · إقفالُ دورةِ §8.1) |

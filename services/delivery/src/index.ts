@@ -343,3 +343,16 @@ export type {
 } from "./domain/relay-dead-letters.js";
 export { PostgresRelayDeadLetterStore } from "./infrastructure/relay-dead-letter-store.js";
 export type { RelayDeadLetterReadPort } from "./ports.js";
+export {
+  RELAY_REQUEUE_TARGET_STATUS,
+  decideRelayRequeue,
+} from "./domain/relay-reprocess.js";
+export type {
+  RelayRequeueAccepted,
+  RelayRequeueDecision,
+  RelayRequeueRejected,
+  RelayRequeueRejectionReason,
+} from "./domain/relay-reprocess.js";
+export { PostgresRelayRequeueStore } from "./infrastructure/relay-requeue-store.js";
+export type { RelayRequeueEffect } from "./infrastructure/relay-requeue-store.js";
+export type { RelayRequeuePort } from "./ports.js";

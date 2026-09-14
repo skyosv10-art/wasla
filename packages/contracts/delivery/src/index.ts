@@ -183,6 +183,14 @@ export const DELIVERY_ERROR_CODES = [
   // وكودٌ خاصٌّ لا `DELIVERY_ORDER_NOT_FOUND`: الرايةُ ليست طلباً، ومنادٍ
   // يُصنِّفُ 404 بالكودِ لا بالمسارِ سيُحيلُ حادثةَ مخزونٍ إلى فريقِ الطلباتِ.
   "DELIVERY_INVENTORY_CONFLICT_NOT_FOUND",
+  // المراجعةُ 22/N (`M5-13R` · §4.24): إعادةُ صفٍّ مسمومٍ إلى الطابورِ.
+  // **كودانِ لا واحدٌ، والفرقُ بينَهما هوَ كلُّ الفائدةِ:** «لا صفَّ بهذا
+  // `event_id` في هذا الدفترِ» خطأُ نسخٍ عندَ المُشغِّلِ، و«الصفُّ موجودٌ
+  // وحالتُهُ ليست `poisoned`» يعني أنَّ أحداً سبقَهُ أو أنَّ المُعرِّفَ يخصُّ
+  // حدثاً طُبِّقَ. ودمجُهما في 404 واحدٍ كانَ سيجعلَ مُشغِّلاً في حادثةٍ
+  // يُطارِدُ مُعرِّفاً صحيحاً ظانّاً أنَّهُ أخطأَ نسخَهُ.
+  "DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND",
+  "DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED",
 ] as const;
 export type DeliveryErrorCode = (typeof DELIVERY_ERROR_CODES)[number];
 
@@ -216,6 +224,10 @@ export const DELIVERY_ERROR_CODE_CLASS: Record<DeliveryErrorCode, DeliveryErrorC
   DELIVERY_INVENTORY_NOT_RESERVED: "conflict",
   DELIVERY_INVENTORY_INSUFFICIENT: "conflict",
   DELIVERY_INVENTORY_CONFLICT_NOT_FOUND: "not_found",
+  DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND: "not_found",
+  // `conflict` لا `validation`: المُنادي لم يُخطئْ في شكلِ طلبِهِ، بل اصطدمَ
+  // بحالةٍ في الخادمِ تغيَّرَت — وهوَ عينُ تعريفِ 409.
+  DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED: "conflict",
 };
 
 /** The HTTP status derived from the class — the HTTP layer never re-classifies. */

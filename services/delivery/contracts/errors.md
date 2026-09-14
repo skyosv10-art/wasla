@@ -41,6 +41,8 @@
 | `DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT` | مفتاحٌ نفسُهُ يُعالَجُ الآنَ في معاملةٍ أخرى — لا كتابةَ ثانيةً، والإعادةُ تُعيدُ جوابَ الأولِ · **ويحملُ `Retry-After: 1`** وحدَهُ من الكتالوجِ (المراجعةُ 19/N · ADR-026 §4.21) | المسارانِ الكاتبانِ |
 | `DELIVERY_DATABASE_UNAVAILABLE` | مسبارُ الجاهزيّةِ سألَ القاعدةَ فلم تُجِب في المهلةِ | `GET /delivery/ready` |
 | `DELIVERY_INVENTORY_CONFLICT_NOT_FOUND` | لا رايةَ تضاربٍ بهذا `adjustment_id` — 404 صريحٌ لا 200 «أُقِرَّت»: مُشغِّلٌ أخطأَ النسخَ يجبُ أن يعلمَ أنَّ الواقعةَ ما زالت مفتوحةً (المراجعةُ 18/N · ADR-026 §4.20) | `POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement` |
+| `DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND` | لا صفَّ بهذا `event_id` في الدفترِ المطلوبِ — 404 (المراجعةُ 22/N · ADR-026 §4.24) | `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue` |
+| `DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED` | الصفُّ موجودٌ وحالتُهُ ليست `poisoned` — 409 لا 404: المُعرِّفُ صحيحٌ والحالةُ هيَ المانعُ، ودمجُهما كانَ يُضلِّلُ مُشغِّلاً في حادثةٍ (المراجعةُ 22/N · ADR-026 §4.24) | `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue` |
 | `AUTHN_UNAUTHENTICATED` | هويّةُ الخدمةِ الداخلةُ غيرُ مُثبَتةٍ — 401 (لا ترويسةَ · توقيعٌ خاطئٌ · مفتاحٌ مسحوبٌ · رمزٌ معادٌ · رمزٌ لمسارٍ أو طريقةٍ أخرى) · **بلا سابقةِ `DELIVERY_`** | كلُّ مسارٍ مُغلَقٍ (المراجعةُ 17/N) |
 | `AUTHN_EXPIRED` | رمزُ الخدمةِ صحيحُ التوقيعِ ومُنتهي المدّةِ — 401 يُقالُ للمنادي «جدِّدْ» لا «أنتَ مرفوضٌ»، ولا يُنطَقُ بهِ إلّا بعدَ إثباتِ التوقيعِ | كلُّ مسارٍ مُغلَقٍ |
 | `AUTHN_AUDIENCE_MISMATCH` | رمزٌ موجَّهٌ إلى حدٍّ آخرَ (`aud ≠ delivery`) — 401؛ وتمييزُهُ يُوفِّرُ ساعاتِ تشخيصِ خطأِ نشرٍ ولا يفيدُ مَن لا يملكُ مفتاحاً | كلُّ مسارٍ مُغلَقٍ |

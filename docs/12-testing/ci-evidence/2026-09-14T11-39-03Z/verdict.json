@@ -1,0 +1,26 @@
+{
+  "schema": "wasla.ci-evidence/v2",
+  "collected_at": "2026-09-14T11-39-03Z",
+  "provider": "github",
+  "subject": "skyosv10-art/wasla",
+  "ref": "feat/m5-13-r-poisoned-reprocess",
+  "run_id": "34839239946",
+  "run_status": "completed/failure",
+  "run_url": "https://github.com/skyosv10-art/wasla/actions/runs/34839239946",
+  "jobs_total": 31,
+  "jobs_started": 0,
+  "started_at": null,
+  "verdict": "NOT VERIFIED",
+  "reason": "account_billing_blocked",
+  "job_statuses": {
+    "failure": 31
+  },
+  "not_started_reasons": {
+    "account_billing_blocked": 31
+  },
+  "not_started_messages": {
+    "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings": 31
+  },
+  "literal_reason": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings",
+  "reason_source": "check_run_annotation"
+}

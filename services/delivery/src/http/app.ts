@@ -93,6 +93,7 @@ import type {
   IdempotencyIntent,
   InventoryConflictAcknowledgementPort,
   RelayDeadLetterReadPort,
+  RelayRequeuePort,
   InventoryConflictReadPort,
   InventoryReservationPort,
   InventoryReservationStore,
@@ -130,7 +131,10 @@ import { buildReadinessResponse } from "./readiness.js";
 import {
   RELAY_DEAD_LETTER_THRESHOLDS,
   classifyRelayDeadLetterSeverity,
+  RELAY_DEAD_LETTER_LEDGERS,
+  type RelayDeadLetterLedger,
 } from "../domain/relay-dead-letters.js";
+import { RELAY_REQUEUE_TARGET_STATUS } from "../domain/relay-reprocess.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
@@ -193,6 +197,16 @@ export interface DeliveryHttpDeps {
    * (§4.18)، لأنَّ هذا المسارَ نفسُهُ هوَ العينُ التي تُراقِبُ الفقدَ.
    */
   readonly relayDeadLetterReadPort?: RelayDeadLetterReadPort;
+  /**
+   * إعادةُ صفٍّ مسمومٍ إلى الطابورِ (المراجعةُ 22/N · `M5-13R` · ADR-026 §4.24).
+   *
+   * **منفذٌ ثانٍ اختياريٌّ مستقلٌّ عن منفذِ القراءةِ** — لا حقلٌ واحدٌ يخدمُ
+   * الاثنَينِ: تركيبةٌ تريدُ لوحةَ رصدٍ **تقرأُ ولا تُحرِّكُ** تُركِّبُ القراءةَ
+   * وحدَها، وذلكَ لا يُمكِنُ لو كانَ المنفذُ واحداً. وغيابُهُ ⇒ المسارُ يُجيبُ
+   * 500 `DELIVERY_INTERNAL_ERROR` **ولا 202 «أُعيدَ»**: ادّعاءُ إعادةٍ لم تقعْ
+   * يجعلُ مُشغِّلاً يُغلِقُ حادثةً على فقدٍ ما زالَ قائماً.
+   */
+  readonly relayRequeuePort?: RelayRequeuePort;
   /**
    * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`، الموجةُ السادسةُ · المراجعةُ
    * 17/N). **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ»
@@ -401,6 +415,48 @@ function parseAdjustmentIdParam(params: unknown, traceId: string): string {
     });
   }
   return value.toLowerCase();
+}
+
+/**
+ * مُعامِلا مسارِ الإعادةِ: اسمُ الدفترِ ومُعرِّفُ الحدثِ (المراجعةُ 22/N · §4.24).
+ *
+ * واسمُ الدفترِ يُطابَقُ بالقائمةِ **المُصرَّحةِ** لا بنمطٍ: القائمةُ هيَ نفسُها
+ * التي يشتقُّ منها المُحوِّلُ أسماءَ جداولِهِ، فاسمٌ لا يُطابِقُها يُرَدُّ 400
+ * **قبلَ** أن يقتربَ من نصِّ استعلامٍ — وهذا هوَ سببُ انعدامِ سطحِ الحقنِ هناك،
+ * لا التهذيبُ.
+ */
+function parseRequeueParams(
+  params: unknown,
+  traceId: string,
+): { ledger: RelayDeadLetterLedger; eventId: string } {
+  const raw = (params ?? {}) as Record<string, unknown>;
+
+  const rawLedger = raw["ledger"];
+  const ledger = RELAY_DEAD_LETTER_LEDGERS.find((candidate) => candidate === rawLedger);
+  if (ledger === undefined) {
+    throw new DeliveryError(
+      "DELIVERY_VALIDATION_FAILED",
+      `\`ledger\` أحدُ: ${RELAY_DEAD_LETTER_LEDGERS.join(" · ")}`,
+      {
+        traceId,
+        details: {
+          field: "ledger",
+          expected: RELAY_DEAD_LETTER_LEDGERS.join(","),
+          actual: typeof rawLedger === "string" ? rawLedger : String(rawLedger),
+        },
+      },
+    );
+  }
+
+  const rawEventId = raw["eventId"];
+  if (typeof rawEventId !== "string" || !UUID_PATTERN.test(rawEventId.toLowerCase())) {
+    throw new DeliveryError("DELIVERY_VALIDATION_FAILED", "`eventId` مُعرِّفُ UUID", {
+      traceId,
+      details: { field: "eventId" },
+    });
+  }
+
+  return { ledger, eventId: rawEventId.toLowerCase() };
 }
 
 /**
@@ -1011,6 +1067,98 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
           },
           gates_readiness: false,
         },
+      });
+    },
+  );
+
+  /*
+   * ── إعادةُ صفٍّ مسمومٍ إلى الطابورِ (المراجعةُ 22/N · `M5-13R` · §4.24) ──
+   *
+   * `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue`
+   *
+   * ## اليدُ التي كانت ناقصةً بعدَ العينِ
+   *
+   * §4.23 أعطى المُشغِّلَ مقياساً يقرأُ بهِ الفقدَ، ولم يُعطِهِ ما يُعيدُهُ بهِ.
+   * وعينٌ بلا يدٍ تُنتِجُ تنبيهاً يرِنُّ على ما لا يُفعَلُ فيهِ شيءٌ — فيُصمَّتُ.
+   *
+   * ## ومسارُ تشغيلٍ خامسٌ خارجَ العقدِ المنشورِ
+   *
+   * على سابقةِ §4.15 · §4.18 · §4.20 · §4.23 حرفاً: موثَّقٌ في
+   * `docs/04-api/DELIVERY_HTTP.md` لا في `contracts/api.openapi.yml` — إعادةُ
+   * صفٍّ في دفترٍ داخليٍّ ليست وعداً لعميلٍ خارجيٍّ.
+   *
+   * ## و**202** لا 200
+   *
+   * لأنَّ النداءَ لا يُنجِزُ إعادةَ المعالجةِ بل **يقبلُها**: الصفُّ يُرفَعُ إلى
+   * `pending`، وتُرجَعُ نقطةُ التقدُّمِ، ثمَّ يقرأُهُ المُرحِّلُ في دورةٍ
+   * لاحقةٍ. و200 كانَ سيُقرأُ «عولِجَ» — ومُشغِّلٌ يقرأُ «عولِجَ» يُغلِقُ
+   * الحادثةَ، وقد يكونُ الصفُّ سُمَّ ثانيةً بعدَ ثوانٍ لأنَّ سببَهُ ثابتٌ.
+   * **والجوابُ يقولُ `requeued` لا `reprocessed`** — والفرقُ ليسَ لفظاً.
+   *
+   * ## ولا يمسُّ الجاهزيّةَ ولا يُنشَرُ لهُ تماثُليّةٌ بمفتاحٍ
+   *
+   * الإعادةُ **تماثُليّةٌ بطبيعتِها**: نداءٌ ثانٍ على الصفِّ نفسِهِ يجدُهُ
+   * `pending` فيُرَدُّ 409 `NOT_POISONED` — لا يُضاعِفُ أثراً. فمفتاحُ تماثُليّةٍ
+   * هنا كانَ سيكونُ آلةً بلا عملٍ.
+   */
+  app.post(
+    "/delivery/relay/dead-letters/:ledger/:eventId/requeue",
+    { config: scoped(DELIVERY_SCOPES.relayDeadLettersRequeue) },
+    async (request, reply) => {
+      const traceId = String(request.id);
+      if (deps.relayRequeuePort === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا منفذَ إعادةٍ مُركَّبٌ — لا يُدَّعى أنَّ صفّاً أُعيدَ ولم يُعَدْ (ADR-026 §4.24)",
+          { traceId },
+        );
+      }
+
+      const { ledger, eventId } = parseRequeueParams(request.params, traceId);
+      assertNoAcknowledgementBody(request.body, traceId);
+
+      const decision = await deps.relayRequeuePort.requeuePoisonedEvent({ ledger, eventId });
+
+      if (decision.outcome === "rejected") {
+        if (decision.reason === "not_found") {
+          throw new DeliveryError(
+            "DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND",
+            "لا صفَّ بهذا المُعرِّفِ في هذا الدفترِ",
+            { traceId, details: { field: "eventId", actual: eventId } },
+          );
+        }
+        /*
+         * 409 **والحالةُ المقروءةُ في نصِّ الرسالةِ لا في `details`.**
+         *
+         * وهذا ليسَ ذوقاً: عقدُ خطأِ التوصيلِ المنشورُ ثلاثةُ حقولٍ
+         * (`error_code` · `message` · `trace_id`)، و`http/errors.ts` **لا
+         * يَنشُرُ `details` أصلاً**. فوضعُها هناكَ كانَ يجعلُ الاختبارَ يمرُّ على
+         * كائنٍ في الذاكرةِ **لا يصلُ السلكَ** — أي دعوى خضراءَ على حقلٍ لا
+         * يراهُ أحدٌ. والمُشغِّلُ يحتاجُ الحالةَ فعلاً (`applied` ⇒ لا شيءَ
+         * ليُعادَ · `pending` ⇒ زميلُهُ سبقَهُ)، فتُقالُ لهُ حيثُ يقرأُ.
+         */
+        throw new DeliveryError(
+          "DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED",
+          `الصفُّ موجودٌ وحالتُهُ «${decision.observedStatus ?? "unknown"}» لا «poisoned» — لا يُعادُ`,
+          { traceId },
+        );
+      }
+
+      return reply.status(202).send({
+        outcome: "requeued",
+        ledger,
+        event_id: eventId,
+        previous_status: decision.previousStatus,
+        new_status: RELAY_REQUEUE_TARGET_STATUS,
+        /*
+         * **كلفةُ الإعادةِ منشورةٌ لا مخفيّةٌ.** الدفترُ لا يحفظُ `occurred_at`،
+         * فالإرجاعُ إلى الصفرِ ومسحٌ من أوّلِ الصندوقِ الصادرِ على دفعاتٍ حتّى
+         * تعودَ النقطةُ. ومُشغِّلٌ لا يعلمُ ذلكَ يُصعِّدُ حادثةً لأنَّ الصفَّ لم
+         * يُطبَّقْ في ثانيةٍ.
+         */
+        checkpoint_rewound: true,
+        rewind_cost: "full_rescan_from_zero",
+        gates_readiness: false,
       });
     },
   );

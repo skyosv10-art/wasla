@@ -1,0 +1,5 @@
+$ GET https://api.github.com/repos/skyosv10-art/wasla/branches/main
+--- response ---
+HTTP 200
+
+{"name":"main","protected":false}

@@ -80,6 +80,14 @@
       "accepted_risk": "RISK-0036",
       "note": "الفرعُ main غيرُ محميٍّ: protected=false · و/protection و/rulesets يردّانِ 403 «ارقَ إلى Pro أو اجعلِ المستودعَ عامّاً» — سقطت الحمايةُ بسقوطِ التخويلِ لا بقرارٍ مكتوبٍ",
       "evidence_dir": "docs/12-testing/ci-evidence/2026-09-13T170000Z-m0-29-protection-gone"
+    },
+    {
+      "measured_at": "2026-09-14T21:52:00Z",
+      "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
+      "protected": true,
+      "raw": "docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored/api-responses/04-protection-after.raw.json",
+      "note": "الحمايةُ أُعيدت (M0-22B · CLM-0173) بعدَ زوالِ سببِ سقوطِها: المستودعُ صارَ عامًّا والحجبُ ارتفعَ. PUT ثمّ GET: strict:true · 31 سياقًا تطابقُ وظائفَ ci.yml الموسَّعةَ حرفيًا · enforce_admins:true · protected:true — والقياسُ بعدَ الكتابةِ لا نجاحُ PUT وحده (انظرِ دليلَ الأدلّةِ).",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored"
     }
   ]
 }

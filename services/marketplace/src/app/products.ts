@@ -65,6 +65,7 @@ import {
   reconcileInventory,
   type InventoryReconciliation,
 } from "../domain/inventory.js";
+import { assertActiveMembership } from "../domain/staff.js";
 import {
   buildReleaseAdjustments,
   buildReservationAdjustments,
@@ -181,11 +182,25 @@ export class MarketplaceProductService {
     storeSlug: string,
     input: CreateProductInput,
     envelope: IdempotencyEnvelope<ProductView>,
+    actorPublicId: string,
   ): Promise<ProductView> {
     const { value } = await this.deps.uow.write(async ({ stores, probe }) => {
       await replayGuard(stores.idempotency, envelope);
 
       const store = await loadStoreBySlug(stores, storeSlug);
+      /**
+       * عضويّةُ الفاعلِ في المتجرِ داخلَ المعاملةِ نفسِها التي يُكتبُ
+       * فيها المنتجُ (`M1-05B` الموجةُ 2) — **لا في قراءةٍ سابقةٍ عندَ
+       * الحدِّ**. والفرقُ ليسَ أناقةً: فحصٌ في معاملةٍ وكتابةٌ في
+       * أخرى يفتحُ نافذةً يُزالُ فيها العضوُ بينَ الفحصِ والكتابةِ
+       * فتمرُّ كتابةُ مَن لم يعدُ عضواً.
+       */
+      assertActiveMembership({
+        storeSlug,
+        actorPublicId,
+        storeOwnerPublicId: store.ownerPublicId,
+        existing: await stores.staff.listStaff(store.storeId),
+      });
       const category = await loadCategoryFacts(stores, input.categorySlug);
       assertProductCategory(category);
 

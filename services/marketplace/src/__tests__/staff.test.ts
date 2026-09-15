@@ -8,6 +8,8 @@ import { MarketplaceError } from "../domain/errors.js";
 import type { StoreStaffEntry } from "../domain/model.js";
 import {
   activeStaff,
+  assertActiveMembership,
+  assertActiveOwnership,
   assertRoleChange,
   assertSingleActiveOwner,
   assertStaffAddition,
@@ -169,5 +171,118 @@ describe("تعديلُ الدورِ وإزالةُ العضو", () => {
     expect(sealed.removedByPublicId).toBe(OWNER);
     expect(original.removedAt).toBeUndefined();
     expect(activeStaff([sealed])).toHaveLength(0);
+  });
+});
+
+// ── عضويّةُ المُستأجِرِ (`M1-05B` الموجةُ 2 · `CLM-0179`) ────────────────────
+/**
+ * هذانِ الحارسانِ هما **الطبقةُ الثانيةُ** من ربطِ المُستأجِرِ: الأولى عندَ
+ * الحدِّ (`tenantScoped` يرفضُ رمزاً بلا `obo`)، وهذهِ **داخلَ المعاملةِ**
+ * تسألُ «أهذا الفاعلُ من هذا المتجرِ؟».
+ *
+ * **والمالكُ ليسَ صفّاً في الطاقمِ** — قِيسَ بإسقاطِ 45 اختبارَ تكاملٍ فوقَ
+ * محرّكٍ حقيقيٍّ، لا بقراءةِ شفرةٍ. فالمِلكيّةُ تُقرأُ من `stores.owner_public_id`
+ * والعضويّةُ من `store_staff`، وخلطُهما كانَ سيُقفِلُ المتاجرَ على أصحابِها.
+ * ولذلكَ تُمرَّرُ `storeOwnerPublicId` صراحةً في كلِّ دعوىً أدناهُ.
+ */
+describe("عضويّةُ المُستأجِرِ: مَن يمسُّ متجراً", () => {
+  const SLUG = "madinah-electronics";
+
+  it("عضوٌ نشِطٌ في الطاقمِ يُقبَلُ", () => {
+    expect(() =>
+      assertActiveMembership({
+        storeSlug: SLUG,
+        actorPublicId: STAFF,
+        storeOwnerPublicId: OWNER,
+        existing: [member(STAFF, "staff")],
+      }),
+    ).not.toThrow();
+  });
+
+  it("والمالكُ يُقبَلُ **بلا صفِّ طاقمٍ البتّةَ** — وهذا هوَ العطبُ الذي قِيسَ", () => {
+    // لو رُدَّ هذا الحارسُ إلى `activeStaff` وحدَها لسقطَ هذا السطرُ وحدَهُ
+    // قبلَ أن يسقطَ أيُّ اختبارِ تكاملٍ — وهذا موضعُهُ الأرخصُ.
+    expect(() =>
+      assertActiveMembership({
+        storeSlug: SLUG,
+        actorPublicId: OWNER,
+        storeOwnerPublicId: OWNER,
+        existing: [],
+      }),
+    ).not.toThrow();
+  });
+
+  it("غيرُ العضوِ يُرَدُّ `STORE_NOT_FOUND` لا `403` — فلا يصيرُ الحدُّ عرّافاً", () => {
+    // **الفرقُ مقصودٌ ومكتوبٌ**: `403` يُفرِّقُ «موجودٌ ولستَ منهُ» عن «غيرُ
+    // موجودٍ»، فيصيرُ الحدُّ يُجيبُ عن وجودِ متاجرَ لا ينتسبُ إليها المُنادي.
+    expectCode(
+      () =>
+        assertActiveMembership({
+          storeSlug: SLUG,
+          actorPublicId: STAFF,
+          storeOwnerPublicId: OWNER,
+          existing: [member(MANAGER, "manager")],
+        }),
+      "STORE_NOT_FOUND",
+    );
+  });
+
+  it("والمُزالُ ليسَ عضواً — الختمُ يُقرأُ إزالةً لا سجلّاً فقط", () => {
+    expectCode(
+      () =>
+        assertActiveMembership({
+          storeSlug: SLUG,
+          actorPublicId: MANAGER,
+          storeOwnerPublicId: OWNER,
+          existing: [member(MANAGER, "manager", true)],
+        }),
+      "STORE_NOT_FOUND",
+    );
+  });
+
+  it("ومتجرٌ بلا طاقمٍ يردُّ كلَّ مَن ليسَ مالكَهُ — لا يُقرأُ الفراغُ سماحاً", () => {
+    expectCode(
+      () =>
+        assertActiveMembership({
+          storeSlug: SLUG,
+          actorPublicId: STAFF,
+          storeOwnerPublicId: OWNER,
+          existing: [],
+        }),
+      "STORE_NOT_FOUND",
+    );
+  });
+
+  it("والمِلكيّةُ أضيقُ من العضويّةِ: عضوٌ ليسَ مالكاً يُرَدُّ", () => {
+    // طلبُ المراجعةِ يكتبُ في الدفترِ `actorType` بقيمةِ المالكِ بلا شرطٍ،
+    // فلو قُبِلَ فيهِ مُجرَّدُ عضوٍ لكذَبَ الدفترُ. والفرضُ هنا **يُصدِّقُ
+    // دعوىً قائمةً** لا يخترعُ سياسةً جديدةً.
+    expectCode(
+      () =>
+        assertActiveOwnership({
+          storeSlug: SLUG,
+          actorPublicId: STAFF,
+          storeOwnerPublicId: OWNER,
+        }),
+      "STORE_NOT_FOUND",
+    );
+    expect(() =>
+      assertActiveOwnership({ storeSlug: SLUG, actorPublicId: OWNER, storeOwnerPublicId: OWNER }),
+    ).not.toThrow();
+  });
+
+  it("ورتبةُ `owner` في جدولِ الطاقمِ لا تصنعُ مالكاً — مصدرُ الحقيقةِ عمودُ المتجرِ", () => {
+    // دعوىً تمنعُ الارتدادَ إلى `findActiveOwner`: مَن لهُ صفُّ طاقمٍ بدورِ
+    // `owner` وليسَ صاحبَ العمودِ **ليسَ مالكاً**، وإلّا صارتْ ترقيةٌ في
+    // جدولٍ ثانويٍّ طريقاً إلى سلطةِ المالكِ.
+    expectCode(
+      () =>
+        assertActiveOwnership({
+          storeSlug: SLUG,
+          actorPublicId: MANAGER,
+          storeOwnerPublicId: OWNER,
+        }),
+      "STORE_NOT_FOUND",
+    );
   });
 });

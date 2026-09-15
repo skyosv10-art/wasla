@@ -528,6 +528,13 @@ export async function callDelivery(
  * وما يخصُّ **الدعوى** — أنَّ التوصيلَ يوقِّعُ نداءَهُ إلى السوقِ فيُقبَلُ — يجري
  * في منافذِ التوصيلِ الثلاثةِ نفسِها لا هنا، فهذا المُساعِدُ لا يُخفي شيئاً
  * يجبُ إثباتُهُ. و`call` يبقى **عارياً** لمن أرادَ إثباتَ الرفضِ.
+ *
+ * ── المُنتَفِعُ في الرمزِ (`M1-05B` الموجةُ 2 · `CLM-0179`) ──────────────────
+ * خمسةُ مساراتٍ على حدِّ السوقِ صارت تقتضي `obo`، **وليسَ منها مسارٌ يُنادِيهِ
+ * التوصيلُ في الإنتاجِ**: منافذُهُ الثلاثةُ تقرأُ المتجرَ وتحجِزُ وتُفرِجُ،
+ * وكلُّها بقيَتْ بلا ربطٍ بقرارٍ مكتوبٍ في `bindings.ts`. فما يُضافُ هنا يخصُّ
+ * **إعدادَ عالمِ البوّابةِ** (تسجيلُ متجرٍ وإنشاءُ منتجٍ) لا مسارَ التوصيلِ —
+ * وهذا بذاتِهِ دليلٌ مقيسٌ على أنَّ الربطَ لم يُوسَّعْ على مُنادٍ خدميٍّ.
  */
 export async function callMarketplace(
   baseUrl: string,
@@ -537,9 +544,11 @@ export async function callMarketplace(
     readonly body?: unknown;
     readonly idempotencyKey?: string;
     readonly traceId?: string;
+    readonly onBehalfOfPublicId?: string;
   },
 ): Promise<HttpResult> {
   const separator = init.path.indexOf("?");
+  const beneficiary = init.onBehalfOfPublicId ?? marketplaceBodyActor(init.body);
   const headers = serviceAuthHeaders({
     serviceName: "e2e-harness",
     audience: MARKETPLACE_SERVICE_AUDIENCE,
@@ -549,8 +558,33 @@ export async function callMarketplace(
     keys: marketplaceOutboundKeyRegistry(),
     now: new Date(),
     scopes: Object.values(MARKETPLACE_SCOPES),
+    ...(beneficiary === undefined ? {} : { onBehalfOfPublicId: beneficiary }),
   });
   return call(baseUrl, { ...init, headers });
+}
+
+/**
+ * حقولُ الفاعلِ في أجسامِ حدِّ السوقِ، مسطَّحةً لا مُشتقّةً.
+ *
+ * وتكرارُها في ثلاثِ حزمٍ **مقصودٌ**: ربطُ بوّابةِ خروجٍ بسندِ اختبارِ خدمةٍ
+ * أخرى كانَ سيجعلُ تغييراً في سندٍ يُغيِّرُ ما تُثبِتُهُ بوّابةٌ.
+ */
+const MARKETPLACE_BODY_ACTOR_FIELDS: readonly string[] = [
+  "added_by_public_id",
+  "removed_by_public_id",
+  "created_by_public_id",
+  "requested_by_public_id",
+  "actor_public_id",
+];
+
+function marketplaceBodyActor(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const record = body as Record<string, unknown>;
+  for (const field of MARKETPLACE_BODY_ACTOR_FIELDS) {
+    const value = record[field];
+    if (typeof value === "string" && value.trim() !== "") return value;
+  }
+  return undefined;
 }
 
 /**

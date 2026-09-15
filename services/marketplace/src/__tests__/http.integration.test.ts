@@ -33,7 +33,7 @@ import { MarketplaceProductService } from "../app/products.js";
 import { MarketplaceStoreService } from "../app/stores.js";
 import { MarketplaceUnitOfWork } from "../db/unit-of-work.js";
 import type { Clock } from "../domain/time.js";
-import { createSignedMarketplaceApp } from "./service-identity-support.js";
+import { buildSignedMarketplaceApp, signFor } from "./service-identity-support.js";
 import {
   MEMBER,
   MODERATOR,
@@ -81,6 +81,7 @@ const productBody = (sku = "SKU-001", initialQuantity?: number) => ({
 describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Postgres", () => {
   let pg: PgFixture;
   let app: FastifyInstance;
+  let keys: ReturnType<typeof buildSignedMarketplaceApp>["keys"];
 
   beforeAll(async () => {
     pg = await setupPostgres();
@@ -91,7 +92,7 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
     await seedLeafCategory(pg.stores, CATEGORY);
     const uow = new MarketplaceUnitOfWork(pg.db);
     const deps = { uow, clock: fixedClock };
-    app = createSignedMarketplaceApp({
+    const harness = buildSignedMarketplaceApp({
       mode: "postgres",
       services: {
         stores: new MarketplaceStoreService(deps),
@@ -99,6 +100,8 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
         catalog: new MarketplaceCatalogService(deps),
       },
     });
+    app = harness.app;
+    keys = harness.keys;
     await app.ready();
   });
 
@@ -410,7 +413,14 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
       expect(added.json().removed_at).toBeNull();
       expect(added.json().added_at).toBe(NOW);
 
-      const listed = await app.inject({ method: "GET", url: `/stores/${SLUG}/staff` });
+      // **قراءةُ الطاقمِ لا جسمَ لها** فلا يشتقُّ السندُ منها مُنتَفِعاً،
+      // ومسارُها مربوطٌ بالمُستأجِرِ منذُ `CLM-0179`. فيُوقَّعُ صراحةً باسمِ
+      // مالكِ المتجرِ — وهوَ عينُ ما تفعلُهُ بوّابةٌ حقيقيّةٌ تُنيبُ عن إنسانٍ.
+      const listed = await app.inject({
+        method: "GET",
+        url: `/stores/${SLUG}/staff`,
+        headers: signFor("GET", `/stores/${SLUG}/staff`, { keys, onBehalfOfPublicId: OWNER }),
+      });
       expect(listed.json().staff).toHaveLength(1);
     });
 
@@ -473,6 +483,102 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
       });
       expect(response.statusCode).toBe(404);
       expect(response.json().error.code).toBe("STORE_STAFF_NOT_FOUND");
+    });
+
+    // ── ربطُ المُستأجِرِ فوقَ محرّكٍ حقيقيٍّ (`M1-05B` الموجةُ 2 · `CLM-0179`) ─
+    /**
+     * **ما لا يُثبَتُ في الذاكرةِ**: رفضُ «رمزٍ بلا `obo`» يقعُ في الوسيطِ
+     * ويُقاسُ في `service-identity.test.ts`. أمّا رفضُ «`obo` لإنسانٍ **ليسَ**
+     * من هذا المتجرِ» فيقعُ **داخلَ المعاملةِ** بعدَ قراءةِ المتجرِ وطاقمِهِ،
+     * فلا سبيلَ إلى قياسِهِ إلّا بقاعدةٍ. ولو تُرِكَ لنمطِ الذاكرةِ لكانَ
+     * الحاجزُ الحقيقيُّ **بلا دليلٍ واحدٍ** والدفعةُ خضراءَ.
+     */
+    it("و`obo` لإنسانٍ ليسَ من المتجرِ يُرَدُّ `404` لا `403` — والصفُّ لا يُكتَب", async () => {
+      const before = await countRows(pg.pool, "store_staff");
+      const response = await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/stores/${SLUG}/staff`, {
+            keys,
+            onBehalfOfPublicId: OTHER_OWNER,
+          }),
+        },
+        // الجسمُ يُسمّي `OTHER_OWNER` أيضاً كي يكونَ الرفضُ عن **العضويّةِ**
+        // لا عن تنافُرِ الجسمِ معَ الرمزِ — وهما حاجزانِ مختلفانِ.
+        payload: { member_public_id: MEMBER, role: "staff", added_by_public_id: OTHER_OWNER },
+      });
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
+      // **والأثرُ يُقاسُ لا يُفترَض**: رفضٌ يكتبُ صفّاً ليسَ رفضاً.
+      expect(await countRows(pg.pool, "store_staff")).toBe(before);
+    });
+
+    it("وعضوٌ نشِطٌ ليسَ مالكاً يقرأُ الطاقمَ — فالفرضُ عضويّةٌ لا مِلكيّةٌ", async () => {
+      // الوجهُ الموجبُ للدعوى أعلاهُ. وهوَ **أيضاً** الدَّينُ المُسمّى في
+      // `RISK-0042`: العضويّةُ تكفي، والرتبةُ داخلَ المتجرِ لا تُفرَضُ بعدُ.
+      await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: write(),
+        payload: { member_public_id: MEMBER, role: "staff", added_by_public_id: OWNER },
+      });
+      const listed = await app.inject({
+        method: "GET",
+        url: `/stores/${SLUG}/staff`,
+        headers: signFor("GET", `/stores/${SLUG}/staff`, { keys, onBehalfOfPublicId: MEMBER }),
+      });
+      expect(listed.statusCode, listed.body).toBe(200);
+      expect(listed.json().staff).toHaveLength(1);
+    });
+
+    it("والمُزالُ يفقدُ القراءةَ فوراً — الختمُ يُقرأُ إزالةً في المعاملةِ نفسِها", async () => {
+      await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: write(),
+        payload: { member_public_id: MEMBER, role: "staff", added_by_public_id: OWNER },
+      });
+      await app.inject({
+        method: "DELETE",
+        url: `/stores/${SLUG}/staff/${MEMBER}`,
+        headers: write(),
+        payload: { removed_by_public_id: OWNER },
+      });
+      const listed = await app.inject({
+        method: "GET",
+        url: `/stores/${SLUG}/staff`,
+        headers: signFor("GET", `/stores/${SLUG}/staff`, { keys, onBehalfOfPublicId: MEMBER }),
+      });
+      expect(listed.statusCode, listed.body).toBe(404);
+      expect(listed.json().error.code).toBe("STORE_NOT_FOUND");
+    });
+
+    it("وطلبُ المراجعةِ يقتضي المالكَ لا مُجرَّدَ عضوٍ — فلا يكذبُ الدفترُ", async () => {
+      // الدفترُ يكتبُ `actorType` بقيمةِ المالكِ بلا شرطٍ؛ فلو مرَّ عضوٌ
+      // لَسَجَّلَ الدفترُ مالكاً لم يطلبْ. والدعوى تُقاسُ هنا لأنَّ الحارسَ
+      // يقرأُ `stores.owner_public_id` من القاعدةِ.
+      await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: write(),
+        payload: { member_public_id: MEMBER, role: "manager", added_by_public_id: OWNER },
+      });
+      const response = await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/review-requests`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/stores/${SLUG}/review-requests`, {
+            keys,
+            onBehalfOfPublicId: MEMBER,
+          }),
+        },
+        payload: { requested_by_public_id: MEMBER },
+      });
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
     });
   });
 

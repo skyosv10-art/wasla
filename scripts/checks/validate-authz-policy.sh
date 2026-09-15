@@ -138,13 +138,19 @@ for identity in sorted(glob.glob("services/*/src/http/service-identity.ts")):
     # التي يُجرِّبُها `gov-cases-authz-policy.sh`.
     app_clean = strip_comments(app_src)
     beneficiary_helpers = set()
+    # المسافةُ البادئةُ **مقروءةٌ لا مُهمَلةٌ**: صيغةٌ سابقةٌ طلبَتِ القوسَ
+    # الخاتمَ في العمودِ صفرٍ، فكانَ مساعدٌ مُعشَّشٌ داخلَ دالّةِ بناءِ التطبيقِ
+    # **غيرَ مرئيٍّ** لهذا الجردِ — ثمَّ يُقرأُ الأخضرُ إنفاذاً وهوَ غيابُ رؤيةٍ.
+    # فصارَ العمقُ مُلتَقَطاً (`\1`) والقوسُ الخاتمُ مطلوباً على عمقِهِ نفسِهِ،
+    # ويُقاسُ ذلكَ بطفرتَينِ في `gov-cases-authz-policy.sh` (تعشيشٌ وحدَهُ يمرُّ ·
+    # تعشيشٌ معَ تفريغِ المطلبِ يسقطُ) لا بملحوظةٍ.
     for helper in re.finditer(
-        r"function\s+(\w+)\s*\([^)]*\)\s*:\s*\w+\s*\{(.*?)\n\}",
+        r"(?m)^([ \t]*)function\s+(\w+)\s*\([^)]*\)\s*:\s*[^{\n]+\{(.*?)\n\1\}",
         app_clean,
         re.S,
     ):
-        if re.search(r'beneficiary:\s*"required"', helper.group(2)):
-            beneficiary_helpers.add(helper.group(1))
+        if re.search(r'beneficiary:\s*"required"', helper.group(3)):
+            beneficiary_helpers.add(helper.group(2))
     if beneficiary_helpers:
         beneficiary_helpers_by_service[svc] = sorted(beneficiary_helpers)
 
@@ -540,6 +546,44 @@ elif 'strength === "token-bound"' not in _count_decl.group(1):
     bad("`TOKEN_BOUND_OPERATION_COUNT` لا يُشتَقُّ من `strength === \"token-bound\"`")
 else:
     ok("`TOKEN_BOUND_OPERATION_COUNT` مُشتَقٌّ من الصفوفِ لا مكتوبٌ باليدِ")
+
+# `TENANT_BOUND_OPERATION_COUNT` — العددُ الذي أدخلَتْهُ الموجةُ 2 (`CLM-0179`).
+#
+# ولمَ بابٌ ثانٍ لعددٍ ثانٍ؟ لأنَّ البابَ أعلاهُ لا يقرأُ إلّا اسماً واحداً؛
+# فعددٌ جديدٌ مُشتَقٌّ كانَ سيُستبدَلُ برقمٍ مكتوبٍ باليدِ **والفحصُ أخضرُ**.
+# وقد قِيسَ ذلكَ بطفرةٍ في `gov-cases-authz-policy.sh` لا بالظنِّ.
+#
+# والبُعدُ مقروءٌ من الصفوفِ لا من الإعلانِ: الفرزُ يُطابِقُ ما تُطابِقُهُ
+# الشفرةُ، فلو ادّعى العددُ خمساً وقالتِ الصفوفُ ثلاثاً سقطَ الفحصُ.
+tenant_rows = {
+    (m.group(1), m.group(2), m.group(3))
+    for m in re.finditer(
+        r'audience:\s*"([^"]+)",\s*method:\s*"([^"]+)",\s*path:\s*"([^"]+)",'
+        r'\s*dimension:\s*"tenant",\s*strength:\s*"token-bound"',
+        bindings_src,
+    )
+}
+_tenant_decl = re.search(
+    r"export const TENANT_BOUND_OPERATION_COUNT\s*:\s*number\s*=(.*?);", bindings_src, re.S
+)
+if _tenant_decl is None:
+    bad("لم يُوجَدْ إعلانُ `TENANT_BOUND_OPERATION_COUNT` — عميَ قياسُ بُعدِ المُستأجِرِ")
+elif re.search(r"=\s*\d+\s*$", _tenant_decl.group(0).replace(";", "").strip()):
+    bad("`TENANT_BOUND_OPERATION_COUNT` رقمٌ مكتوبٌ باليدِ — والمكتوبُ لا يُقاسُ")
+elif 'dimension === "tenant"' not in _tenant_decl.group(1):
+    bad("`TENANT_BOUND_OPERATION_COUNT` لا يُشتَقُّ من `dimension === \"tenant\"`")
+elif not tenant_rows:
+    bad("لم يُقرأْ صفُّ `tenant` مربوطٌ بالرمزِ واحدٌ — والفراغُ لا يُقرأُ توافقاً")
+elif tenant_rows - matrix_token_bound:
+    bad(
+        "صفُّ `tenant` مربوطٌ لم يُقرأْهُ مِسبارُ البابِ 7: %s"
+        % sorted(tenant_rows - matrix_token_bound)
+    )
+else:
+    ok(
+        "`TENANT_BOUND_OPERATION_COUNT` مُشتَقٌّ من بُعدِ المُستأجِرِ — "
+        f"{len(tenant_rows)} عمليّةً كلُّها داخلَ جردِ البابِ 7"
+    )
 
 # ولا مسارَ مربوطٌ بمالكٍ يستقي هويّتَهُ من ترويسةٍ وحدَها: مُعالِجُ كلِّ مسارٍ
 # مُصنَّفٍ يجبُ أن يُنادِيَ قارئَ الرمزِ (`ownerPublicIdOf`) عبرَ مساعدٍ، فلا

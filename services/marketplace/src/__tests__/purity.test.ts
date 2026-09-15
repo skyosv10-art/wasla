@@ -344,17 +344,23 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     expect(filesMatching(/from\s+["']fastify["']/)).toEqual([...HTTP_AWARE_FILES]);
   });
 
-  it("والتبعيّاتُ أربعٌ بأسمائها: العقدُ والمُشغّلُ ومُنشئُ الاستعلاماتِ والإطار", () => {
+  it("والتبعيّاتُ خمسٌ بأسمائها: العقدُ والهويّةُ والمُشغّلُ ومُنشئُ الاستعلاماتِ والإطار", () => {
     /**
      * القائمةُ مكتوبةٌ صريحةً حتى تسقط أوّلُ تبعيّةٍ تُضاف بلا قرارٍ موثَّق: مكتبةُ تحقّقٍ
      * أو عميلُ HTTP أو مُجدولٌ هنا يعني أنّ الخدمةَ صارت تفعل ما لم تُعلنه هذه المراجعة.
      * وقُيل في 2/6: «`pg` و`drizzle-orm` تدخلان بقرارِ المراجعة 3/6 لا قبلَها» — وقد دخلتا،
      * وثالثةٌ لم تدخل: لا `drizzle-kit` ولا مُهاجرةٌ تُولَّد، فالمُهاجرةُ تُطبّق نصَّ العقدِ حرفاً.
+     *
+     * ودخلَتِ الخامسةُ `@wasla/auth-sdk` بقرارِ `M1-05B` الموجةِ 2: ربطُ المُنتَفِعِ
+     * بالمُستأجِرِ يقرأُ `obo` من الرمزِ بـ`ownerPublicIdOf`، وهيَ **تبعيّةُ إنتاجٍ لا
+     * تبعيّةُ تطويرٍ**: إعلانُها تطويراً يُمرِّرُ المستودعَ ويُسقطُ تركيباً مُنشورًا
+     * بـ`--prod`.
      */
     const manifest: unknown = JSON.parse(readFileSync(join(SRC, "..", "package.json"), "utf8"));
     const dependencies = (manifest as { readonly dependencies?: Record<string, string> })
       .dependencies;
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
+      "@wasla/auth-sdk",
       "@wasla/contracts-marketplace",
       "@wasla/service-auth",
       "drizzle-orm",

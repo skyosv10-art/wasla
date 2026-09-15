@@ -125,6 +125,29 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
   // المنتجاتِ يُنشِئُ منتجاً في **أيِّ** متجرٍ. والصلاحيّةُ هنا على مستوى الحدِّ
   // لا على مستوى المُستأجِرِ، وهوَ فرقٌ لم يكنْ مكتوباً قبلَ هذهِ الدفعةِ.
   //
+  // ── تصحيحٌ بالإضافةِ · `M1-05B` الموجةُ 2 · `CLM-0179` (2026-09-15) ─────────
+  // ما فوقَ **صحيحٌ في تاريخِهِ ولم يبقَ صحيحاً في خمسةٍ من الأحدَ عشرَ**، ولا
+  // يُمحى: يُقرأُ وصفاً لحالةٍ سابقةٍ يُقاسُ عليها التحسُّنُ.
+  //
+  // والمربوطُ الآن خمسةٌ (`staffRead` · `staffWrite` ×2 · `productWrite` ·
+  // `storeReviewRequest`): كلٌّ منها يُصنَّفُ `tenantScoped(...)` عندَ الحدِّ
+  // فيُرفَضُ رمزٌ بلا `obo` **قبلَ** أن يُمسَّ المتجرُ، ثمَّ تُفحَصُ العضويّةُ
+  // **داخلَ المعاملةِ نفسِها** بـ`assertActiveMembership` (`domain/staff.ts`) لا
+  // في قراءةٍ سابقةٍ — فلا نافذةَ بينَ الفحصِ والكتابةِ.
+  //
+  // ولمَ بقيَتْ ستٌّ `none` — **بأسبابٍ مكتوبةٍ لا بإغفالٍ** (في `note` كلِّ صفٍّ):
+  //   · أربعةٌ (`GET /stores/:slug` · `GET .../reviews` · `.../inventory/reserve` ·
+  //     `.../inventory/release`) **لها مُنادٍ إنتاجيٌّ مقيسٌ** في
+  //     `services/delivery` يُنادي **كخدمةٍ بلا مُنتَفِعٍ إنسانٍ**؛ فربطُها اليومَ
+  //     يُسقِطُ التوصيلَ لا المهاجمَ. وحدُّها الصحيحُ حدُّ خدمةٍ لا حدُّ مُستأجِرٍ.
+  //   · `GET .../products` قراءةُ كتالوجٍ عامٍّ يقرأُهُ التوصيلُ نفسُهُ.
+  //   · `POST .../decisions` **عكسُ السياسةِ لو رُبِطَ**: البتُّ في متجرٍ سلطةُ
+  //     منصّةٍ، وربطُهُ بعضويّةِ المتجرِ يجعلُ المتجرَ يوافقُ على نفسِهِ.
+  //
+  // وما لا يُدَّعى: المربوطُ يفرضُ **عضويّةً** لا **رتبةً**. فعضوٌ برتبةِ `staff`
+  // يُضيفُ عضواً في متجرِهِ، وذلكَ دَينٌ مُسمّىً في `RISK-0042` يحتاجُ رمزَ خطأٍ
+  // ثالثاً وتغييرَ عقدٍ — ولم يُنصَّفْ هنا كي لا يُقرأَ نصفُ إنفاذٍ إنفاذاً.
+  //
   // وكُتِبَتِ الصفوفُ مبسوطةً لا مُولَّدةً بـ`map` بقصدٍ: الفحصُ 16 يقرأُ هذا
   // الملفَّ ساكناً، وبياناتٌ مُولَّدةٌ في زمنِ التشغيلِ تُعمي الحارسَ عن نفسِها.
   {
@@ -134,16 +157,16 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:storeRead` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` بسببٍ مكتوبٍ: مُنادِيهِ الإنتاجيُّ المقيسُ خدمةُ التوصيلِ (`http-marketplace-catalog.ts` · `http-marketplace-probe.ts`) **كخدمةٍ بلا مُنتَفِعٍ إنسانٍ**، فربطُهُ بمُستأجِرٍ يُسقِطُ التوصيلَ لا المهاجمَ. وحدُّهُ الصحيحُ حدُّ خدمةٍ (`M1-06`).",
   },
   {
     audience: "marketplace",
     method: "POST",
     path: "/stores/:storeSlug/review-requests",
     dimension: "tenant",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:storeReviewRequest` على مستوى الحدِّ لا المُستأجِرِ.",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "`tenantScoped(storeReviewRequest)` يفرضُ `obo`؛ و`assertActiveOwnership` داخلَ المعاملةِ يفرضُ أنَّ الفاعلَ **المالكُ النشِطُ** لا مُجرَّدَ عضوٍ — لأنَّ الدفترَ يكتبُ `actorType` بقيمةِ المالكِ بلا شرطٍ، فالفرضُ يُصدِّقُ دعوىً قائمةً لا يخترعُ سياسةً.",
   },
   {
     audience: "marketplace",
@@ -152,7 +175,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:storeReviewDecide` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` **عن قصدٍ لا إغفالٍ**: البتُّ في متجرٍ سلطةُ منصّةٍ، وربطُهُ بعضويّةِ المتجرِ **عكسُ السياسةِ** — متجرٌ يوافقُ على نفسِهِ. وحدُّهُ دورُ اعتدالٍ عندَ مُصدِرِ الرمزِ لا عضويّةٌ.",
   },
   {
     audience: "marketplace",
@@ -161,34 +184,34 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:storeReviewRead` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` بسببٍ مكتوبٍ: دفترُ قراراتٍ تقرأُهُ الإدارةُ والمتجرُ معاً، ولا مُنتَفِعَ إنسانَ في مُنادِيهِ المقيسِ. وربطُهُ يحتاجُ فصلَ «قراءةِ الإدارةِ» عن «قراءةِ المتجرِ» وهوَ تغييرُ عقدٍ.",
   },
   {
     audience: "marketplace",
     method: "GET",
     path: "/stores/:storeSlug/staff",
     dimension: "tenant",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:staffRead` على مستوى الحدِّ لا المُستأجِرِ.",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "`tenantScoped(staffRead)` يفرضُ `obo`؛ و`assertActiveMembership` في `app/stores.ts:listStaff` يفرضُ عضويّةَ القارئِ. والرفضُ `STORE_NOT_FOUND` لا `403`: فرقُهما يجعلُ الحدَّ عرّافاً بوجودِ متاجرَ لا ينتسبُ إليها المُنادي.",
   },
   {
     audience: "marketplace",
     method: "POST",
     path: "/stores/:storeSlug/staff",
     dimension: "tenant",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:staffWrite` على مستوى الحدِّ لا المُستأجِرِ.",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "`tenantScoped(staffWrite)` يفرضُ `obo`؛ و`assertActiveMembership` في `app/stores.ts:addStaff` يفرضُ عضويّةَ المُضيفِ **داخلَ** معاملةِ الكتابةِ. وحقلُ `added_by_public_id` بقيَ في العقدِ **مُتحقَّقاً من تناسقِهِ معَ الرمزِ** لا حَكَماً.",
   },
   {
     audience: "marketplace",
     method: "DELETE",
     path: "/stores/:storeSlug/staff/:memberPublicId",
     dimension: "tenant",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:staffWrite` على مستوى الحدِّ لا المُستأجِرِ.",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "`tenantScoped(staffWrite)` يفرضُ `obo`؛ و`assertActiveMembership` تُفحَصُ **قبلَ** وجودِ المُزالِ في `app/stores.ts:removeStaff` — وعكسُ الترتيبِ كانَ يجعلُ المسارَ كاشفاً لعضويّاتِ متجرٍ لا ينتسبُ إليهِ المُنادي بفرقِ `STORE_STAFF_NOT_FOUND` عن `STORE_NOT_FOUND`.",
   },
   {
     audience: "marketplace",
@@ -197,16 +220,16 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:productRead` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` بسببٍ مكتوبٍ: كتالوجٌ عامٌّ تقرأُهُ خدمةُ التوصيلِ نفسُها، وليسَ فيهِ ما يخصُّ عضواً.",
   },
   {
     audience: "marketplace",
     method: "POST",
     path: "/stores/:storeSlug/products",
     dimension: "tenant",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:productWrite` على مستوى الحدِّ لا المُستأجِرِ.",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "`tenantScoped(productWrite)` يفرضُ `obo`؛ و`assertActiveMembership` في `app/products.ts:createProduct` يفرضُ عضويّةَ المُنشئِ داخلَ معاملةِ الكتابةِ. وحقلُ `created_by_public_id` مُتحقَّقٌ من تناسقِهِ معَ الرمزِ.",
   },
   {
     audience: "marketplace",
@@ -215,7 +238,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:inventoryReserve` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` بسببٍ مكتوبٍ: مُنادِيهِ الوحيدُ المقيسُ `services/delivery/src/.../http-marketplace-reservation.ts` **كخدمةٍ بلا مُنتَفِعٍ**؛ وربطُهُ بمُستأجِرٍ يُسقِطُ حجزَ المخزونِ في مسارِ طلبٍ حقيقيٍّ.",
   },
   {
     audience: "marketplace",
@@ -224,7 +247,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/marketplace/src/http/app.ts:pathParam",
-    note: "`storeSlug` مُعنوَنٌ في المسارِ ويُسلَّمُ إلى المُستودَعِ بلا تحقُّقِ عضويّةٍ؛ والصلاحيّةُ `marketplace:inventoryRelease` على مستوى الحدِّ لا المُستأجِرِ.",
+    note: "يبقى `none` بسببٍ مكتوبٍ: كنظيرِهِ في الحجزِ — والإفراجُ **تعويضٌ في مسارِ فشلٍ** (`ADR-026 §2.3`)، فربطُهُ بمُنتَفِعٍ إنسانٍ يجعلُ التعويضَ يفشلُ حيثُ يُحتاجُ أكثرَ ما يُحتاجُ.",
   },
 
   // ── الفاعلُ في دورةِ حياةِ المنتجِ: من **جسمِ** الطلبِ لا من الرمزِ ──────────
@@ -265,13 +288,29 @@ export const UNCLASSIFIED_OPERATION_COUNT: number =
  * عددُ العملياتِ التي يُثبِتُ **الرمزُ** مالكَها أو مستأجرَها.
  *
  * كانَ **صفراً** في `M1-05`، وصارَ **اثنتَينِ** في `M1-05B` (الموجةُ الأولى:
- * قراءةُ الطلبِ وسجلُّهُ). وهوَ **مُشتَقٌّ لا مكتوبٌ** كي لا يصيرَ رقماً
+ * قراءةُ الطلبِ وسجلُّهُ)، ثمَّ **سبعاً** في الموجةِ الثانيةِ (`CLM-0179`):
+ * خمسُ عملياتٍ على حدِّ السوقِ تُربَطُ بالمُستأجِرِ — انظرْ
+ * `TENANT_BOUND_OPERATION_COUNT` أدناهُ. وهوَ **مُشتَقٌّ لا مكتوبٌ** كي لا يصيرَ رقماً
  * يُحدَّثُ باليدِ فيُصدِّقُ ما لا تُثبِتُهُ الصفوفُ. والفحصُ 16 يُطابِقُهُ
  * بعددِ الصفوفِ ويُطابِقُ كلَّ صفٍّ `token-bound` بتصنيفِ مسارِهِ في شفرةِ
  * الحدِّ — فلا يكفي تغييرُ كلمةٍ هنا لرفعِ الرقمِ.
  */
 export const TOKEN_BOUND_OPERATION_COUNT: number = OPERATION_BINDINGS.filter(
   (b) => b.strength === "token-bound",
+).length;
+
+/**
+ * وكم من المربوطِ **بُعدُهُ مُستأجِرٌ** لا مالكُ مَورِدٍ (`M1-05B` الموجةُ 2).
+ *
+ * الفرقُ ليسَ تصنيفاً إداريّاً: ربطُ **المالكِ** يسألُ «أهذا المَورِدُ لهُ؟»
+ * ويُقارَنُ بصفٍّ واحدٍ، وربطُ **المُستأجِرِ** يسألُ «أهوَ من هذا المتجرِ؟»
+ * ويُقارَنُ بجدولِ عضويّةٍ **داخلَ المعاملةِ** لأنَّ العضويّةَ تُزالُ بينَ
+ * فحصٍ وكتابةٍ. فخلطُهما في رقمٍ واحدٍ يُخفي أنَّ أحدَ البُعدَينِ صفرٌ.
+ *
+ * ومُشتَقٌّ لا مكتوبٌ للسببِ نفسِهِ، ويُطابِقُهُ اختبارُ الحزمةِ بعددِ الصفوفِ.
+ */
+export const TENANT_BOUND_OPERATION_COUNT: number = OPERATION_BINDINGS.filter(
+  (b) => b.strength === "token-bound" && b.dimension === "tenant",
 ).length;
 
 export function bindingFor(

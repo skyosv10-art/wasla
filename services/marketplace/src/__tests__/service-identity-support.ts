@@ -83,8 +83,48 @@ export function signFor(
 }
 
 /**
+ * حقولُ الفاعلِ في أجسامِ هذا الحدِّ — **ثمانيةُ حقولٍ في خمسةِ أسماءٍ**
+ * (`services/marketplace/src/http/requests.ts`)، مرتَّبةً بأخصِّها.
+ *
+ * والقائمةُ مكتوبةٌ **مسطَّحةً** لا مُشتقّةً: حقلٌ جديدٌ يُضافُ للعقدِ ولا
+ * يُضافُ هنا يجعلُ اختبارَ عقدِهِ يسقطُ بـ`403`، وهوَ الجرسُ المقصودُ.
+ */
+const BODY_ACTOR_FIELDS: readonly string[] = [
+  "added_by_public_id",
+  "removed_by_public_id",
+  "created_by_public_id",
+  "requested_by_public_id",
+  "actor_public_id",
+];
+
+/** أوّلُ حقلِ فاعلٍ حاضرٍ في الجسمِ — أو `undefined` لجسمٍ لا يُسمّي فاعلاً. */
+export function beneficiaryFromPayload(payload: unknown): string | undefined {
+  if (typeof payload !== "object" || payload === null) return undefined;
+  const body = payload as Record<string, unknown>;
+  for (const field of BODY_ACTOR_FIELDS) {
+    const value = body[field];
+    if (typeof value === "string" && value.trim() !== "") return value;
+  }
+  return undefined;
+}
+
+/**
  * يلفُّ `inject` لتطبيقٍ قائمٍ كي يوقِّعَ كلَّ نداءٍ، ويعيدُ `inject` الأصليَّ
  * **بلا توقيعٍ** لمن أرادَ إثباتَ الرفضِ.
+ *
+ * ── والمُنتَفِعُ يُشتَقُّ من **جسمِ الطلبِ** الذي يكتبُهُ الاختبارُ نفسُهُ ─────
+ * وهذا نظيرُ ما فُعِلَ في حدِّ الطلباتِ في الموجةِ الأولى، حيثُ اشتُقَّ من
+ * ترويسةِ `X-Customer-Public-Id` (`M1-05B` · `support.ts`) — والفرقُ أنَّ
+ * فاعلَ هذا الحدِّ في الجسمِ لا في ترويسةٍ.
+ *
+ * **وهوَ يُريحُ اختبارَ العقدِ ويُعميهِ عنِ الحاجزِ في الوقتِ نفسِهِ** — يُقالُ
+ * ولا يُدّعى خلافُهُ. ولذلكَ **إثباتُ الحاجزِ ممنوعٌ في ملفّاتِ العقدِ
+ * ومكانُهُ `service-identity.test.ts`** بتوقيعٍ صريحٍ: رمزٌ بلا `obo`، ورمزٌ
+ * بـ`obo` يخالفُ الجسمَ، ورمزٌ بـ`obo` لغيرِ عضوٍ في المتجرِ. ولو كانَ
+ * اللَّفُ وحدَهُ لما كشفَ أحدٌ إزالةَ `beneficiary: "required"`.
+ *
+ * وقراءةُ الطاقمِ (`GET .../staff`) لا جسمَ لها: اختبارُها يُمرِّرُ ترويساتَهُ
+ * الموقَّعةَ صراحةً، وهيَ تَغلِبُ لأنَّها تُنشَرُ بعدَ التوقيعِ أدناهُ.
  */
 export function attachSigningInject(
   app: { inject: unknown },
@@ -94,14 +134,19 @@ export function attachSigningInject(
     inject: (options: InjectOptions) => Promise<LightMyRequestResponse>;
   };
   const rawInject = target.inject.bind(target);
-  target.inject = (options: InjectOptions) =>
-    rawInject({
+  target.inject = (options: InjectOptions) => {
+    const beneficiary = beneficiaryFromPayload(options.payload);
+    return rawInject({
       ...options,
       headers: {
-        ...signFor(String(options.method ?? "GET"), String(options.url ?? "/"), { keys }),
+        ...signFor(String(options.method ?? "GET"), String(options.url ?? "/"), {
+          keys,
+          ...(beneficiary === undefined ? {} : { onBehalfOfPublicId: beneficiary }),
+        }),
         ...(options.headers ?? {}),
       },
     });
+  };
   return rawInject;
 }
 

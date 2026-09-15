@@ -128,6 +128,15 @@ importers:
         specifier: workspace:*
         version: link:../errors
 
+  packages/authz-policy:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
+
   packages/bot-runtime:
     dependencies:
       '@wasla/channel-core':

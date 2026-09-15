@@ -549,9 +549,15 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     persistence: DISPATCH_DATABASE_URL ? "postgres" : "memory",
     dispatchEvents: () => readDispatchEvents(),
     serviceIdentity: {
+      // دورُ أسطولٍ مُعلَنٌ لا دورُ إنتاجٍ (الموجةُ 3 · `M1-05B` · ADR-030):
+      // كانَ هذا الموضعُ يُوقِّعُ بـ«dispatch» بخمسِ صلاحيّاتٍ (`GATE_MATCHING_SCOPES`)
+      // وسقفُ منحِ «dispatch» على حدِّ المطابقةِ **اثنتانِ** — فبوّابةُ خروجٍ كانت
+      // تختبرُ الحدَّ برمزٍ لا يحقُّ لدورِ الإنتاجِ أن يحملَهُ، فتُقاسُ المطابقةُ
+      // بأوسعَ مِمّا يجري في الإنتاجِ. وبعدَ أن صارَ الإصدارُ يُنفِذُ المصفوفةَ في
+      // زمنِ التشغيلِ صارَ هذا التركيبُ **يموتُ** لا يُلَيَّنُ لهُ الحاجزُ.
       sign: (method, path, options = {}) =>
         createServiceRequestSigner({
-          serviceName: "dispatch",
+          serviceName: "dispatch-matching-exit-gate",
           audience: "matching",
           keys: gateKeys(options.forged === true ? GATE_FORGED_SECRET : GATE_SERVICE_AUTH_SECRET),
           scopes: options.scopes ?? GATE_MATCHING_SCOPES,

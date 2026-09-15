@@ -78,6 +78,7 @@ done
 # (`validate-work-claims.sh` · `validate-risk-register.sh`) فليسَ تبعيّةً جديدةً.
 MEASURE_OUT="$(python3 - "$PKG" "$DOC" <<'PY'
 import glob
+import json
 import os
 import re
 import sys
@@ -613,6 +614,141 @@ for svc in sorted({route_service[k] for k in code_beneficiary_required if k in r
             f"مساراتٌ مُصنَّفةٌ في «{svc}» بلا مساعدٍ واحدٍ يُنتِجُ المطلبَ — "
             "التصنيفُ مُكرَّرٌ حرفيّاً فيَشيخُ متفرِّقاً"
         )
+
+# ── البابُ 8: جدولا الأسطولِ مُنسَدّانِ، وسقفُ جمهورِهِ مقيسٌ (`M1-05B` · الموجةُ 3)
+#
+# صارَ الإصدارُ يُنفِذُ المصفوفةَ في زمنِ التشغيلِ، فدورٌ بلا إعلانٍ يموتُ عندَ
+# البناءِ. ولئلّا يصيرَ العلاجُ **إعلاناً بلا معنىً** (اسمٌ يُضافُ ليَسكُتَ
+# الحاجزُ) يُقاسُ هنا أمرانِ: أنَّ الجردَ (`TEST_FLEET_ROLES`) والسقفَ
+# (`FLEET_GRANTS`) مُنسَدّانِ على بعضِهما بلا اسمٍ يتيمٍ في أيِّ الجهتَينِ،
+# وأنَّ كلَّ موضعِ توقيعٍ **في ملفّاتِ الاختبارِ** بدورِ أسطولٍ وجمهورٍ حرفيَّينِ
+# يقعُ داخلَ الجمهورِ المُعلَنِ لذلكَ الدورِ.
+_fleet_anchor = re.search(r"export const FLEET_GRANTS\b\s*:", grants_src)
+fleet = {}
+if _fleet_anchor is None:
+    bad("لم تُوجَدْ مِرساةُ `FLEET_GRANTS` في `grants.ts` — عميَ البابُ 8")
+else:
+    fleet_block = grants_src[_fleet_anchor.end() :]
+    for m in re.finditer(r'\n  "?([A-Za-z0-9_-]+)"?:\s*\{(.*?)\n  \},', fleet_block, re.S):
+        role, body = m.group(1), m.group(2)
+        aud_m = re.search(r'audiences:\s*(\[[^\]]*\]|"any-audience")', body)
+        reason_m = re.search(r'reason:\s*\n?\s*"([^"]*)"', body)
+        if aud_m is None:
+            bad(f"سقفُ أسطولٍ بلا `audiences` مقروءٍ: «{role}»")
+            continue
+        raw = aud_m.group(1)
+        auds = "any-audience" if raw == '"any-audience"' else tuple(re.findall(r'"([^"]+)"', raw))
+        fleet[role] = (auds, (reason_m.group(1) if reason_m else ""))
+
+if not fleet:
+    bad("لم يُقرأْ أيُّ سقفِ أسطولٍ — تغيَّرتْ صيغةُ `FLEET_GRANTS` فعميَ البابُ 8")
+else:
+    unpaired_inventory = sorted(test_roles - set(fleet))
+    unpaired_ceiling = sorted(set(fleet) - test_roles)
+    for role in unpaired_inventory:
+        bad(f"دورُ أسطولٍ في الجردِ بلا سقفٍ مُعلَنٍ في `FLEET_GRANTS`: «{role}»")
+    for role in unpaired_ceiling:
+        bad(f"سقفُ أسطولٍ بلا اسمٍ في جردِ `TEST_FLEET_ROLES`: «{role}»")
+    for role, (_auds, reason) in sorted(fleet.items()):
+        if len(reason.strip()) < 20:
+            bad(f"سقفُ أسطولٍ بلا سببٍ مكتوبٍ — والصفُّ بلا سببٍ يُقرأُ إذناً: «{role}»")
+        if role in grants:
+            bad(f"اسمٌ واحدٌ في العالمَينِ: «{role}» مُعلَنٌ أسطولاً وإنتاجاً معاً")
+    if not unpaired_inventory and not unpaired_ceiling:
+        ok(
+            f"جردُ الأسطولِ وسقفُهُ مُنسَدّانِ — {len(fleet)} دوراً، كلٌّ بسببٍ مكتوبٍ ولا اسمَ في العالمَينِ"
+        )
+
+fleet_site_violations = []
+fleet_sites = 0
+for path in TS_FILES:
+    if not is_test_file(path):
+        continue
+    src = strip_comments(read(path))
+    for m in re.finditer(r"createServiceRequestSigner\(\s*\{", src):
+        body = balanced_object(src, m.end() - 1)
+        if body is None:
+            continue
+        role_m = re.search(r'serviceName:\s*"([^"]+)"', body)
+        aud_m = re.search(r'audience:\s*"([^"]+)"', body)
+        if role_m is None or role_m.group(1) not in fleet:
+            continue
+        fleet_sites += 1
+        if aud_m is None:
+            continue
+        auds = fleet[role_m.group(1)][0]
+        if auds != "any-audience" and aud_m.group(1) not in auds:
+            fleet_site_violations.append(
+                f"«{role_m.group(1)}» يُوقِّعُ لـ«{aud_m.group(1)}» ولا جمهورَ لهُ عليهِ @ {path}"
+            )
+if fleet_site_violations:
+    for v in sorted(set(fleet_site_violations)):
+        bad("موضعُ توقيعٍ اختباريٌّ خارجَ سقفِ جمهورِهِ: " + v)
+elif fleet:
+    ok(f"كلُّ موضعِ توقيعٍ اختباريٍّ بدورِ أسطولٍ داخلَ جمهورِهِ المُعلَنِ — {fleet_sites} موضعاً")
+
+# ── البابُ 9: الإنفاذُ حيٌّ في المُوقِّعِ، والبدائيُّ مُسَيَّجٌ ─────────────
+#
+# البابُ 4 ساكنٌ: يقرأُ ما كُتِبَ في جذرِ تركيبٍ. ودورٌ يُمرَّرُ وسيطاً أو
+# صلاحيّاتٌ تأتي من `options` لا يراهُما أصلاً — وقد قِيسَ ذلكَ: الإنفاذُ الحيُّ
+# كشفَ أدواراً (`driver-exit-gate` · `negotiation-exit-gate`) لم يرَها الحارسُ
+# الساكنُ في أيِّ دفعةٍ سابقةٍ. فالإنفاذُ في زمنِ التشغيلِ شرطٌ، وهذا البابُ
+# يحرسُ **وجودَهُ**: حذفُ النداءِ من `createServiceRequestSigner` يُسقِطُ
+# الدفعةَ بلا انتظارِ اختبارٍ.
+#
+# وأمّا البدائيُّ (`mintServiceToken` · `serviceAuthHeaders`) فيبقى حرّاً
+# بقصدٍ — فالاختبارُ السلبيُّ يحتاجُ رمزاً زائدَ الصلاحيّةِ ليُقاسَ رفضُ الحدِّ،
+# ولو أُنفِذَتِ المصفوفةُ فيهِ لَاستحالَ القياسُ ولَصارتِ الخضرةُ عمىً. ولئلّا
+# يصيرَ بذلكَ **باباً خلفيّاً للإنتاجِ** يُسَيَّجُ ساكناً هنا: لا ذكرَ لهُ في
+# ملفٍّ إنتاجيٍّ خارجَ `packages/service-auth/`.
+OUTBOUND = "packages/service-auth/src/outbound.ts"
+if not os.path.exists(OUTBOUND):
+    bad(f"لم يُوجَدْ {OUTBOUND} — عميَ البابُ 9")
+else:
+    outbound_src = strip_comments(read(OUTBOUND))
+    signer_fn = re.search(
+        r"export function createServiceRequestSigner\((.*?)\n\}", outbound_src, re.S
+    )
+    if signer_fn is None:
+        bad("لم يُقرأْ جسمُ `createServiceRequestSigner` — عميَ البابُ 9")
+    elif "assertSignerComposition(" not in signer_fn.group(1):
+        bad(
+            "`createServiceRequestSigner` لا يُنادي `assertSignerComposition` — "
+            "الإنفاذُ عادَ ساكناً وحدَهُ، والساكنُ لا يرى دوراً يُمرَّرُ وسيطاً"
+        )
+    elif "@wasla/authz-policy" not in outbound_src:
+        bad("`assertSignerComposition` غيرُ مُستورَدٍ من `@wasla/authz-policy` في المُوقِّعِ")
+    else:
+        ok("الإنفاذُ حيٌّ في `createServiceRequestSigner` — `assertSignerComposition` مُنادىً لا مُعلَّقاً")
+
+    sa_pkg = json.loads(read("packages/service-auth/package.json"))
+    if "@wasla/authz-policy" not in sa_pkg.get("dependencies", {}):
+        bad(
+            "`@wasla/authz-policy` ليست في `dependencies` لـ`@wasla/service-auth` — "
+            "شفرةُ إنتاجٍ تستوردُ ما لا يُثبِّتُهُ العقدُ (`RISK-0043`)"
+        )
+    else:
+        ok("تبعيّةُ الإنفاذِ مُعلَنةٌ في `dependencies` لا في `devDependencies`")
+
+primitive_leaks = []
+for path in TS_FILES:
+    if path.startswith("packages/service-auth/") or is_test_file(path):
+        continue
+    src = strip_comments(read(path))
+    for name in ("mintServiceToken", "serviceAuthHeaders"):
+        if re.search(rf"\b{name}\b", src):
+            primitive_leaks.append(f"{name} @ {path}")
+if primitive_leaks:
+    for v in sorted(set(primitive_leaks)):
+        bad(
+            "بدائيُّ الإصدارِ مذكورٌ في ملفٍّ إنتاجيٍّ خارجَ `packages/service-auth/` — "
+            "بابٌ خلفيٌّ يتجاوزُ إنفاذَ المصفوفةِ: " + v
+        )
+else:
+    ok(
+        "بدائيُّ الإصدارِ مُسَيَّجٌ — لا ذكرَ لـ`mintServiceToken` ولا `serviceAuthHeaders` "
+        "في ملفٍّ إنتاجيٍّ خارجَ حزمةِ التوقيعِ"
+    )
 
 print("\n".join(out))
 PY

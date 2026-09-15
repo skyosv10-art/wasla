@@ -15,6 +15,8 @@
  * `HMAC-SHA256` على نصٍّ قصيرٍ، وكلفتُه لا تُقاس أمامَ كلفةِ نداءِ الشبكةِ نفسِه.
  */
 
+import { assertSignerComposition } from "@wasla/authz-policy";
+
 import type { ServiceAuthKeyRegistry } from "./keys.js";
 import { SERVICE_AUTH_HEADER, serviceAuthHeaders } from "./http.js";
 
@@ -57,10 +59,30 @@ export interface ServiceRequestSignerOptions {
   readonly ttlSeconds?: number;
 }
 
-/** يبني المُوقِّعَ. يُستدعى في جذرِ التركيبِ لا في العميل. */
+/**
+ * يبني المُوقِّعَ. يُستدعى في جذرِ التركيبِ لا في العميل.
+ *
+ * ── ولِمَ يُرفَضُ التركيبُ هنا لا عندَ أوّلِ نداءٍ ─────────────────────────
+ * منذُ الموجةِ 3 من `M1-05B` يُقاسُ التركيبُ على مصفوفةِ `M1-05` **في زمنِ
+ * التشغيلِ** (`assertSignerComposition`)، فخدمةٌ رُكِّبَتْ لتطلبَ صلاحيّةً لا
+ * تملكُها تموتُ عندَ الإقلاعِ — لا تُصدِرُ رمزاً زائدَ الصلاحيّةِ ثمَّ تنتظرَ
+ * أن يرفضَهُ الحدُّ الآخرُ. والرفضُ عندَ **البناءِ** لا عندَ النداءِ لأنَّ
+ * الثلاثيّةَ (دورٌ · جمهورٌ · صلاحيّاتٌ) ثابتةٌ في المُوقِّعِ، فتأخيرُ الحكمِ
+ * إلى أوّلِ نداءٍ كانَ سيُخفِي عطلَ إعدادٍ في مسارٍ باردٍ حتّى يُطرَقَ.
+ *
+ * وهذا الحاجزُ **بلا استثناءِ بيئةٍ ولا اسمٍ**: أدوارُ الاختبارِ تُقاسُ
+ * بسقفِها المُعلَنِ في `FLEET_GRANTS`، والاختباراتُ السلبيّةُ تصنعُ رمزَها
+ * الزائدَ من البدائيِّ (`mintServiceToken`) المُسَيَّجِ ساكناً بالبابِ 9.
+ */
 export function createServiceRequestSigner(
   options: ServiceRequestSignerOptions,
 ): ServiceRequestSigner {
+  assertSignerComposition({
+    role: options.serviceName,
+    audience: options.audience,
+    scopes: options.scopes,
+  });
+
   const now = options.now ?? (() => new Date());
   return (method: string, path: string, onBehalfOfPublicId?: string) =>
     serviceAuthHeaders({

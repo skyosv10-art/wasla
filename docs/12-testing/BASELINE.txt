@@ -1,26 +1,26 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-14T13:48:37Z
-الالتزام: ed0d41eedc424f3b3f69e678dd423448352306f1  الفرع: fix/m0-35-gate-schema-serialization  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-09-15T17:21:04Z
+الالتزام: aab501e729a5e89b2ec288d02ca6a7c817becb60  الفرع: feat/m1-05b-signer-scope-enforcement  شجرةٌ مُعدَّلةٌ (20 ملفّاً)
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
-القفل: pnpm-lock.yaml · 3128 سطراً · sha256 09a541b4207fb26e…
+القفل: pnpm-lock.yaml · 3152 سطراً · sha256 96180e66a7fb662a…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
-  packages                   49
-  packages_with_typecheck    49
-  packages_with_test         49
-  test_files_tracked         351
+  packages                   50
+  packages_with_typecheck    50
+  packages_with_test         50
+  test_files_tracked         356
   ci_jobs                    30
   ci_allow_failure           1
-  governance_checks          14
-  risks_not_closed           29
+  governance_checks          16
+  risks_not_closed           32
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/v35e.log):
-  tests_passed               4591
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify2.log):
+  tests_passed               4625
   test_files_executed        282
-  governance_suite_cases     267
-  governance_suite_failed    0
-  verify_overall             passed
+  governance_suite_cases     359
+  governance_suite_failed    1
+  verify_overall             failed
 
-البصمة: sha256:b0b13cf97c7a5ee277fdaa32dd1a9118819c1e54f3d39a664d1d3b1272acd6f9
+البصمة: sha256:31f2e92cad12ed486b5c70f6deca5253b4c01bb0da23c9021a03af9e2a2b4fc2
 المرجع: docs/12-testing/BASELINE_FORMAT.md

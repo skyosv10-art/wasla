@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T15:43:13Z",
+  "generated_at": "2026-09-15T17:21:04Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8cec4ef7ddc1720ac27b592e6bc2a0bfe39d7b26",
-    "branch": "feat/m1-05b-marketplace-tenant-binding",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "تجديدُ لقطةِ الأساسِ بعدَ الموجةِ 2 من M1-05B (CLM-0179): حزمةُ الحوكمةِ 347 → 353 حالةً، واختباراتُ السوقِ ازدادت (4 اختباراتِ حاجزٍ في التكاملِ + 7 في الطاقمِ + كتلتا هويّةِ الخدمةِ + اختباران في authz-policy)، وملفّاتٌ متتبَّعةٌ جديدةٌ (ADR-029).",
+    "commit": "aab501e729a5e89b2ec288d02ca6a7c817becb60",
+    "branch": "feat/m1-05b-signer-scope-enforcement",
+    "dirty": true,
+    "dirty_files": 20,
+    "dirty_reason": "دفعةُ CLM-0180 (M1-05B الموجةُ 3): الأساسُ يُولَّدُ من شجرةِ العملِ قبلَ الالتزامِ لأنَّ الأرقامَ الحركيّةَ تُقرأُ من سجلِّ التشغيلِ نفسِهِ",
     "tracked_files": 2022
   },
   "env": {
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "d3487da76b697cf08f4ed1f20dd4072e05fbb1ca03cbb156a6859c30c7176c03",
-    "lines": 3149
+    "sha256": "96180e66a7fb662a4545832700743402c5e4902599b3a01623a1317a6171bee5",
+    "lines": 3152
   },
   "static": {
     "packages": 50,
     "packages_with_typecheck": 50,
     "packages_with_test": 50,
-    "test_files_tracked": 355,
+    "test_files_tracked": 356,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 16,
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify2.log",
-    "tests_passed": 4608,
-    "test_files_executed": 281,
-    "governance_suite_cases": 352,
+    "tests_passed": 4625,
+    "test_files_executed": 282,
+    "governance_suite_cases": 359,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:dde89ba2cacdf2c3aac9017c21e280dc3153bdc35523da19fd5351eb165d109a",
+  "fingerprint": "sha256:31f2e92cad12ed486b5c70f6deca5253b4c01bb0da23c9021a03af9e2a2b4fc2",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

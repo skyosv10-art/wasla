@@ -280,7 +280,13 @@ export interface GateContext {
   readonly customerUrl: string;
   readonly ordersUrl: string;
   /** Signs the gate's own direct calls to the engine (M1-04). */
-  readonly engineIdentity: { sign: (method: string, path: string) => Record<string, string> };
+  readonly engineIdentity: {
+    sign: (
+      method: string,
+      path: string,
+      onBehalfOfPublicId?: string,
+    ) => Record<string, string>;
+  };
   readonly matchingUrl: string;
   readonly dispatchUrl: string;
   /** The injected clock — the only way time moves in this suite. */
@@ -637,7 +643,15 @@ export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResul
     ...init,
     headers: {
       // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
-      ...gate.engineIdentity.sign(init.method, init.path.split("?")[0] ?? init.path),
+      // المُنتَفِعُ يُحمَلُ في الرمزِ لا في الترويسةِ وحدَها (`M1-05B`): مساراتُ
+      // قراءةِ الطلبِ صارتْ `beneficiary: "required"`، فالسندُ يوقِّعُ نيابةً
+      // عن العميلِ الذي يُصرِّحُ بهِ في `customerScope` نفسِهِ — مصدرٌ واحدٌ
+      // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
+      ...gate.engineIdentity.sign(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+        init.customerScope,
+      ),
       ...(init.headers ?? {}),
     },
   });

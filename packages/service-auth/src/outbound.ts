@@ -25,6 +25,21 @@ import { SERVICE_AUTH_HEADER, serviceAuthHeaders } from "./http.js";
 export type ServiceRequestSigner = (
   method: string,
   path: string,
+  /**
+   * المُنتَفِعُ: المعرِّفُ العامُّ لمَن يُنفَّذُ هذا النداءُ نيابةً عنهُ
+   * (`obo` · `M1-05B`).
+   *
+   * **ولِمَ هوَ وسيطُ نداءٍ لا وسيطُ بناءٍ:** الخدمةُ واحدةٌ والمُنتَفِعُ
+   * يتغيَّرُ في كلِّ طلبٍ. فلو سكنَ في `createServiceRequestSigner` لصارَ
+   * المُوقِّعُ يُبنى لكلِّ مستخدمٍ — وهوَ عكسُ السببِ الذي بُنيَ لهُ
+   * (قرارٌ واحدٌ في جذرِ التركيبِ) — أو لصارَ المُنتَفِعُ ثابتاً كاذباً.
+   *
+   * ويبقى **اختياريّاً هنا** لأنّ أكثرَ النداءاتِ بينَ الخدماتِ لا نيابةَ
+   * فيها؛ و**إلزامُهُ يُفرَضُ عندَ المُستقبِلِ** بـ`beneficiary: "required"`
+   * على المسارِ، لا بجعلِ الوسيطِ إلزاميّاً عندَ كلِّ مُنادٍ. فالحدُّ هوَ
+   * مَن يعرفُ أيُّ عمليّاتِهِ مربوطةٌ بمالكٍ، لا المُنادي.
+   */
+  onBehalfOfPublicId?: string,
 ) => Record<string, string>;
 
 export interface ServiceRequestSignerOptions {
@@ -47,7 +62,7 @@ export function createServiceRequestSigner(
   options: ServiceRequestSignerOptions,
 ): ServiceRequestSigner {
   const now = options.now ?? (() => new Date());
-  return (method: string, path: string) =>
+  return (method: string, path: string, onBehalfOfPublicId?: string) =>
     serviceAuthHeaders({
       serviceName: options.serviceName,
       audience: options.audience,
@@ -57,6 +72,7 @@ export function createServiceRequestSigner(
       now: now(),
       scopes: options.scopes,
       ...(options.ttlSeconds === undefined ? {} : { ttlSeconds: options.ttlSeconds }),
+      ...(onBehalfOfPublicId === undefined ? {} : { onBehalfOfPublicId }),
     });
 }
 

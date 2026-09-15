@@ -29,7 +29,7 @@ import {
   type Harness,
 } from "../harness.js";
 
-import { createOrderHttpHarness } from "./support.js";
+import { createOrderHttpHarness, signFor } from "./support.js";
 
 const CUSTOMER = publicId(1);
 const OTHER_CUSTOMER = publicId(2);
@@ -524,14 +524,67 @@ describe("GET /orders/{orderId}", () => {
     expect(response.json().code).toBe("ORDER_NOT_FOUND");
   });
 
-  it("requires the owner scope header", async () => {
+  /**
+   * تصحيحٌ **بالإضافةِ** (`M1-05B`): كانَ هنا اختبارٌ واحدٌ اسمُهُ
+   * «يطالبُ بترويسةِ نطاقِ المالكِ» يتوقَّعُ 400. وقد صارَ المطلبُ
+   * **مطلبَينِ مستقلَّينِ**، ودمجُهما في اختبارٍ واحدٍ كانَ سيجعلُ
+   * مرورَ أحدِهما يُخفي سقوطَ الآخرِ. فانفصلا ولم يُحذَفْ أحدُهما:
+   *
+   *   1. رمزٌ بلا `obo` ⇒ **403 عندَ الوسيطِ** قبلَ أن يَبلُغَ المسارَ.
+   *   2. رمزٌ فيهِ `obo` ولا ترويسةَ ⇒ **400** — الترويسةُ لا تزالُ
+   *      إلزاميّةً بالعقدِ، ولكنَّها لم تَعُدْ حَكَماً.
+   */
+  it("رمزٌ بلا مُنتَفِعٍ ⇒ 403 عندَ الوسيطِ لا 400 عندَ المسارِ", async () => {
     const { harness, app } = fixture();
     const orderId = await createOrder(harness);
 
+    // لا ترويسةَ ⇒ اللَّفُ لا يشتقُّ `obo` ⇒ الرمزُ يصدرُ بلا مُنتَفِعٍ.
     const response = await app.inject({ method: "GET", url: `/orders/${orderId}` });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("رمزٌ فيهِ مُنتَفِعٌ ولا ترويسةَ ⇒ 400 (العقدُ قائمٌ)", async () => {
+    const { harness, keys, rawInject } = createOrderHttpHarness();
+    const orderId = await createOrder(harness);
+    const url = `/orders/${orderId}`;
+
+    const response = await rawInject({
+      method: "GET",
+      url,
+      headers: signFor("GET", url, { keys, onBehalfOfPublicId: CUSTOMER }),
+    });
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ORDER_VALIDATION_FAILED");
+  });
+
+  it("ترويسةٌ تخالفُ المُنتَفِعَ المُوَقَّعَ ⇒ 404 (النائبُ المُرتبكُ)", async () => {
+    const { harness, app, keys, rawInject } = createOrderHttpHarness();
+    const orderId = await createOrder(harness);
+    const url = `/orders/${orderId}`;
+
+    // الرمزُ يقولُ `CUSTOMER` — وهوَ مالكُ الطلبِ حقّاً — والترويسةُ تقولُ
+    // غيرَهُ. ولو كانتِ الترويسةُ حَكَماً لأنتجتْ 404 أيضاً — فلا يكفي
+    // رمزُ الحالةِ وحدَهُ دليلاً؛ ولذلكَ يُقابَلُ بالنداءِ المتناسقِ أدناهُ:
+    // متناسقٌ ⇒ 200، ومختلفٌ ⇒ 404. فالفرقُ هوَ الدليلُ لا الرقمُ.
+    const mismatched = await rawInject({
+      method: "GET",
+      url,
+      headers: {
+        ...signFor("GET", url, { keys, onBehalfOfPublicId: CUSTOMER }),
+        "x-customer-public-id": OTHER_CUSTOMER,
+      },
+    });
+    expect(mismatched.statusCode).toBe(404);
+    expect(mismatched.json().code).toBe("ORDER_NOT_FOUND");
+
+    const consistent = await app.inject({
+      method: "GET",
+      url,
+      headers: { "x-customer-public-id": CUSTOMER },
+    });
+    expect(consistent.statusCode).toBe(200);
   });
 
   it("refuses an orderId that is neither a uuid nor a public id", async () => {

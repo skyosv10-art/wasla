@@ -86,7 +86,12 @@ export interface GateContext {
   /** أصلُ محرّكِ الطلب — مُستمعٌ حقيقيٌّ على منفذٍ يمنحه النظام. */
   readonly ordersUrl: string;
   /** يُوقّع نداءات البوابة المباشرة إلى المحرّك (M1-04). */
-  readonly signEngine: (method: string, path: string) => Record<string, string>;
+  readonly signEngine: (
+    method: string,
+    path: string,
+    /** المُنتَفِعُ داخلَ الرمزِ (`obo` · `M1-05B`). */
+    onBehalfOfPublicId?: string,
+  ) => Record<string, string>;
   /** أصلُ خدمةِ السمعة — مُستمعٌ حقيقيٌّ آخر. */
   readonly reputationUrl: string;
   /** ساعةُ المحرّك، كي تسير الوقائعُ بترتيبٍ مقروءٍ في سجلّ التدقيق. */
@@ -217,7 +222,15 @@ export async function callEngine(
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
       // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
-      ...gate.signEngine(init.method, init.path.split("?")[0] ?? init.path),
+      // المُنتَفِعُ يُحمَلُ في الرمزِ لا في الترويسةِ وحدَها (`M1-05B`): مساراتُ
+      // قراءةِ الطلبِ صارتْ `beneficiary: "required"`، فالسندُ يوقِّعُ نيابةً
+      // عن العميلِ الذي يُصرِّحُ بهِ في `customerScope` نفسِهِ — مصدرٌ واحدٌ
+      // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
+      ...gate.signEngine(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+        init.customerScope,
+      ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.customerScope === undefined ? {} : { "x-customer-public-id": init.customerScope }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),

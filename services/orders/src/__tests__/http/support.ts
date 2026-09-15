@@ -52,6 +52,8 @@ export function signFor(
     scopes?: readonly string[];
     serviceName?: string;
     now?: Date;
+    /** هويّةُ الطرفِ المُنتَفِعِ داخلَ الرمزِ (`obo` · `M1-05B`). */
+    onBehalfOfPublicId?: string;
   } = {},
 ): Record<string, string> {
   const separator = url.indexOf("?");
@@ -63,6 +65,9 @@ export function signFor(
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_ORDER_SCOPES,
+    ...(options.onBehalfOfPublicId === undefined
+      ? {}
+      : { onBehalfOfPublicId: options.onBehalfOfPublicId }),
   });
 }
 
@@ -87,14 +92,31 @@ export function createOrderHttpHarness(health?: OrderHealthDescriptor): OrderHtt
   });
 
   const rawInject = app.inject.bind(app) as (options: InjectOptions) => Promise<LightMyRequestResponse>;
-  app.inject = ((options: InjectOptions) =>
-    rawInject({
+  app.inject = ((options: InjectOptions) => {
+    // المُنتَفِعُ يُشتَقُّ من الترويسةِ التي يكتبُها الاختبارُ نفسُهُ (`M1-05B`).
+    //
+    // **وهذا يُريحُ اختبارَ العقدِ ويُعميهِ عنِ الحاجزِ في الوقتِ نفسِهِ** —
+    // يُقالُ ولا يُدّعى خلافُهُ. ولذلكَ **إثباتُ الحاجزِ ممنوعٌ هنا ومكانُهُ
+    // `service-identity.test.ts`** بـ`rawInject` وبتوقيعٍ صريحٍ: رمزٌ بلا `obo`،
+    // ورمزٌ بـ`obo` يخالفُ الترويسةَ. ولو كانَ اللَّفُ وحدَهُ موجوداً لما
+    // كشفَ أحدٌ إزالةَ `beneficiary: "required"` — وهيَ الطفرةُ التي يُجرّبُها
+    // الفحصُ 16 في `gov-cases-authz-policy.sh`.
+    const headers = (options.headers ?? {}) as Record<string, unknown>;
+    const beneficiary =
+      headers["x-customer-public-id"] ?? headers["X-Customer-Public-Id"];
+    return rawInject({
       ...options,
       headers: {
-        ...signFor(String(options.method ?? "GET"), String(options.url ?? "/"), { keys }),
+        ...signFor(String(options.method ?? "GET"), String(options.url ?? "/"), {
+          keys,
+          ...(typeof beneficiary === "string"
+            ? { onBehalfOfPublicId: beneficiary }
+            : {}),
+        }),
         ...(options.headers ?? {}),
       },
-    })) as typeof app.inject;
+    });
+  }) as typeof app.inject;
 
   return { harness, app, keys, replayGuard, rawInject };
 }

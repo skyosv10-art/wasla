@@ -147,3 +147,8 @@
 | `.gitlab-ci.yml` — `marketplace-exit-gate-e2e` (قاعدةٌ مستقلّةٌ `wasla_marketplace_e2e` · لم تركض على المُشغِّل: `RISK-0001`) | Implemented | M5-11 |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |
 | `scripts/checks/audit-ci-verdicts.sh` — تدقيقُ أحكامِ CI حيّاً (الفحصُ 15 · [سجلٌّ](../12-testing/CI_VERDICT_AUDIT.md)) | Implemented | M0-40 |
+| `scripts/checks/validate-authz-policy.sh` البابُ 7 — ربطُ المُنتَفِعِ بالرمزِ مُثبَتٌ في الشفرةِ لا مُدَّعىً (5 حالاتِ طفرةٍ · [ADR-028](../15-decisions/ADR-028-token-bound-owner-binding.md)) | Implemented | M1-05B |
+| `packages/service-auth` — تصنيفُ `beneficiary: "required"` وإنفاذُهُ عندَ المُستَقبِلِ (`logReason: missing_beneficiary`) | Implemented | M1-05B |
+| `services/orders` — `ownerScoped` + `requireBeneficiary`: المالكُ من `obo` لا من ترويسةٍ (مسارانِ من 80 عمليّةً) | Implemented | M1-05B |
+| عضويّةُ المستأجرِ في السوقِ (`storeSlug` · 11 مساراً) — `RISK-0042` البندُ 2 | Missing | M1-05B |
+| `actorPublicId` من جسمِ الطلبِ في نشرِ المنتجِ وأرشفتِه — `RISK-0042` البندُ 3 | Missing | M1-05B |

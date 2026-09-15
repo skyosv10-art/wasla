@@ -1039,6 +1039,21 @@ Nothing else has been changed in this repository by the WASLA integration work.
   requeue · no acknowledgement history (a column, not a log table: the first acknowledger
   stays) · no alarm rings in this repository. **No CI verdict is claimed here — it is read
   from the CI runs after the push, and local green is not a gate verdict.**
+
+  **CI verdict read (2026-09-15, run 35013133735): 30 checks pass, two fail** —
+  `db-integration (delivery)` and `db-integration-shared`, on one assertion:
+  `relay-dead-letters.integration.test.ts` (review 21/N) compares `metric.ledgers`
+  **literally and completely** with `toEqual`, and the metric now publishes three new
+  fields (`acknowledgedPoisoned`, `unacknowledgedPoisoned`,
+  `oldestUnacknowledgedPoisonedAt`). The **expectation** was corrected with those three
+  fields plus the two new totals, and the comparison **stayed `toEqual` — it was not
+  softened to `toMatchObject`**: a field added silently to a published response *must*
+  fail this test, and that is exactly what it did. Softening the comparison would have
+  switched off the guard that worked. **That file does not run locally** (`describe.skipIf`,
+  no `DATABASE_URL`), making this the **second case in two days** where the CI verdict
+  proved something local green cannot — the first was `already_recorded` in review 23/N.
+  Local green is not a gate verdict, written twice now from measurement rather than
+  advice.
 - M5-13R moves to `Ready for Gate`, not `Completed`. M5-13 remains `In Progress` on the
   execution board. Promotion to `Completed` is the program owner's decision alone
   (governance protocol §9).

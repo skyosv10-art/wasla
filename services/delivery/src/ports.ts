@@ -200,6 +200,7 @@ import type {
 import type { InventoryConflictAssessment, InventoryConflictRow } from "./domain/inventory-conflict.js";
 import type { RelayDeadLetterLedger, RelayDeadLetterMetric } from "./domain/relay-dead-letters.js";
 import type { RelayRequeueDecision } from "./domain/relay-reprocess.js";
+import type { RelayAcknowledgementDecision } from "./domain/relay-acknowledgement.js";
 
 /**
  * نتيجةُ رصدِ فرقِ مخزونٍ واحدٍ — نوعٌ مُفرَّقٌ لا سلسلةٌ (المراجعةُ 16/N · ADR-026 §4.18).
@@ -833,4 +834,38 @@ export interface RelayRequeuePort {
     readonly ledger: RelayDeadLetterLedger;
     readonly eventId: string;
   }): Promise<RelayRequeueDecision>;
+}
+
+/**
+ * منفذُ **إقرارِ صفٍّ مسمومٍ** (المراجعةُ 24/N · M5-13 · §4.27).
+ *
+ * ## ومنفذٌ ثالثٌ مستقلٌّ لا توسيعٌ لمنفذِ الإعادةِ
+ *
+ * سابقةُ §4.24 حرفاً: القراءةُ منفذٌ، والإعادةُ منفذٌ، والإقرارُ ثالثٌ. والفصلُ
+ * هوَ عينُ ما يجعلُ صلاحيّةَ «أُقِرُّ بالفقدِ» **لا تُحرِّكُ طابوراً**: مَن
+ * يملكُ الإقرارَ لا يملكُ الإعادةَ بالضرورةِ، ودمجُهما في منفذٍ واحدٍ كانَ
+ * سيجعلَ النطاقَ الواحدَ يَحمِلُ الفعلَينِ — وهوَ أثقلُ من كلِّ ما تحرُسُهُ
+ * مصفوفةُ التفويضِ.
+ */
+export interface RelayDeadLetterAcknowledgementPort {
+  /**
+   * تُقِرُّ بصفٍّ مسمومٍ **واحدٍ** بمُعرِّفِهِ: تُضيفُ ثلاثيَّ (متى · مَن ·
+   * لماذا) ولا تمسُّ نهائيّةَ الصفِّ ولا `attempt_count` ولا `last_error`.
+   *
+   * @param cmd.acknowledgedBy المُقِرُّ **مُركَّباً من الهويّةِ المُثبَتةِ**
+   *   (`composeConflictAcknowledger`) لا من جسمِ الطلبِ — سابقةُ §4.20.
+   * @param cmd.reason السببُ مُقلَّماً ومقيساً (12…512) في الميدانِ النقيِّ قبلَ
+   *   الوصولِ هنا؛ والقاعدةُ تُنفِّذُ الحدَّ نفسَهُ بقيدٍ.
+   *
+   * @returns `acknowledged` أو `already_acknowledged` (بإقرارِ الأوّلِ كما هوَ،
+   *   لا يُكتَبُ فوقَهُ) أو `rejected` بسببٍ مُعدَّدٍ. ولا يُرفَعُ خطأٌ على
+   *   الرفضِ: «لا صفَّ بهذا المُعرِّفِ» جوابٌ صحيحٌ عن سؤالٍ صحيحٍ.
+   */
+  acknowledgePoisonedEvent(cmd: {
+    readonly ledger: RelayDeadLetterLedger;
+    readonly eventId: string;
+    readonly acknowledgedBy: string;
+    readonly reason: string;
+    readonly acknowledgedAt: string;
+  }): Promise<RelayAcknowledgementDecision>;
 }

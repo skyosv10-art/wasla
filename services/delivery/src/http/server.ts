@@ -49,6 +49,8 @@ import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import { PostgresReadinessProbe } from "../infrastructure/readiness-probe.js";
 import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
 import { PostgresRelayDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
+import { PostgresRelayRequeueStore } from "../infrastructure/relay-requeue-store.js";
+import { PostgresRelayAcknowledgementStore } from "../infrastructure/relay-dead-letter-acknowledgement-store.js";
 import {
   DELIVERY_MARKETPLACE_SCOPES,
   HttpMarketplaceCatalogPort,
@@ -201,6 +203,16 @@ async function main(): Promise<void> {
    */
   const relayDeadLetters = new PostgresRelayDeadLetterStore(pool);
   /*
+   * واليدُ والمحضرُ مُركَّبانِ معَ العينِ (المراجعةُ 24/N · §4.27) — **وتركيبُ
+   * الإعادةِ هنا رفعٌ لاكتشافٍ قيسَ في هذا البندِ لا تزيُّدٌ**: مسارُ §4.24
+   * كانَ مسجَّلاً ومقيساً وموثَّقاً ومنفذُهُ **غيرَ مُركَّبٍ في هذا الجذرِ**،
+   * فكانَ يُجيبُ 500 في الإنتاجِ حرفاً وهوَ أخضرُ في الوحدةِ والتكامُلِ — وهوَ
+   * عينُ ما يمنعُهُ تعليلُ تركيبِ راياتِ المخزونِ أعلاهُ وقياسِ §4.23، وما تقولُهُ
+   * قاعدةُ المستودَعِ: وجودُ الكودِ والاختبارِ لا يكونُ إثباتاً إنتاجيًّا.
+   */
+  const relayRequeue = new PostgresRelayRequeueStore(pool);
+  const relayAcknowledgement = new PostgresRelayAcknowledgementStore(pool);
+  /*
    * فرضُ هويّةِ الخدمةِ الداخلةِ (`M1-04` الموجةُ السادسةُ · المراجعةُ 17/N).
    *
    * والمفاتيحُ من البيئةِ **بلا قيمةٍ افتراضيّةٍ**: نشرٌ بلا
@@ -229,6 +241,8 @@ async function main(): Promise<void> {
     // ثانٍ في الوسطِ كانَ سيسمحُ لهما بأن يقرآ صفَّينِ مختلفَينِ (المراجعةُ 18/N).
     inventoryConflictAcknowledgementPort: inventoryObservations,
     relayDeadLetterReadPort: relayDeadLetters,
+    relayRequeuePort: relayRequeue,
+    relayDeadLetterAcknowledgementPort: relayAcknowledgement,
     ...(catalog.catalogPort === undefined ? {} : { catalogPort: catalog.catalogPort }),
     ...(observation.observationPort === undefined
       ? {}
@@ -239,7 +253,7 @@ async function main(): Promise<void> {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.
-    console.log(`delivery service listening on :${PORT} · inbound service identity: enforced (audience=delivery) · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired · relay dead-letter metric: wired`);
+    console.log(`delivery service listening on :${PORT} · inbound service identity: enforced (audience=delivery) · marketplace catalog: ${catalog.label} · reservation: ${reservation.label} · readiness probe: ${observation.label} · idempotency key ttl: ${idempotencyTtlSeconds}s · inventory conflict reads: wired · relay dead-letter metric: wired · relay dead-letter requeue: wired · relay dead-letter acknowledgement: wired`);
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();

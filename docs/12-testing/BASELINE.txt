@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-15T17:21:04Z
-الالتزام: aab501e729a5e89b2ec288d02ca6a7c817becb60  الفرع: feat/m1-05b-signer-scope-enforcement  شجرةٌ مُعدَّلةٌ (20 ملفّاً)
+التاريخ (UTC): 2026-09-15T19:19:18Z
+الالتزام: b67d144df5a113daab47ae4d7e4f560aecfe36ed  الفرع: feat/m5-13-dead-letter-acknowledgement  شجرةٌ مُعدَّلةٌ (41 ملفّاً)
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3152 سطراً · sha256 96180e66a7fb662a…
 
@@ -9,18 +9,18 @@
   packages                   50
   packages_with_typecheck    50
   packages_with_test         50
-  test_files_tracked         356
+  test_files_tracked         359
   ci_jobs                    30
   ci_allow_failure           1
   governance_checks          16
-  risks_not_closed           32
+  risks_not_closed           33
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify2.log):
-  tests_passed               4625
-  test_files_executed        282
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify24b.log):
+  tests_passed               4663
+  test_files_executed        284
   governance_suite_cases     359
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:31f2e92cad12ed486b5c70f6deca5253b4c01bb0da23c9021a03af9e2a2b4fc2
+البصمة: sha256:7c1725fa2f40b0e9f611c54d0a730d55cbc2b7975bdc29089ed9ad3f3a7789ac
 المرجع: docs/12-testing/BASELINE_FORMAT.md

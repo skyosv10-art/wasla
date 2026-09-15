@@ -37,6 +37,27 @@
  * سبباً لإخراجِ نُسَخِ التوصيلِ كلِّها من الدورةِ: الخدمةُ تخدمُ الطلباتِ
  * الحاضرةَ بلا نقصٍ، والمسمومُ حدثٌ ماضٍ فُقِدَ. وربطُهُما كانَ سيجعلَ حدثاً
  * فاسداً واحداً **انقطاعَ خدمةٍ**.
+ *
+ * ## المراجعةُ 24/N — الإقرارُ: «مسمومٌ عُولِجَ» ≠ «مسمومٌ أُهمِلَ» (ADR-026 §4.27)
+ *
+ * كانَ المقياسُ قبلَ هذهِ المراجعةِ يعرفُ حالتَينِ لا ثالثَ: صفٌّ مسمومٌ موجودٌ
+ * فتحذيرٌ، أو لا صفَّ فسكونٌ. وهذا يجعلُ **العودةَ إلى الأخضرِ مستحيلةً إلّا
+ * بمحوِ الدليلِ**: مُشغِّلٌ فحصَ الصفَّ وقرَّرَ أنَّ الحدثَ لا يُعادُ (بيانٌ فاسدٌ
+ * من منتِجٍ مُصلَحٍ مثلاً) لا يملكُ إلّا أن يعيشَ في تحذيرٍ دائمٍ أو يحذفَ الصفَّ.
+ * والتحذيرُ الدائمُ يُصمَّتُ بعدَ أسبوعٍ، والحذفُ يمحو دليلاً — وكلاهما ينتهي
+ * إلى الحالِ نفسِها: **مسمومٌ جديدٌ لا يراهُ أحدٌ**.
+ *
+ * فالمخرجُ الوحيدُ الذي لا يمحو ولا يُصمِّتُ: **إقرارٌ مُسجَّلٌ بمُقِرٍّ وسببٍ**.
+ * الصفُّ يبقى بحرفِهِ، والعددُ الكلِّيُّ يبقى مقيساً ومنشوراً، ويُستثنى من
+ * **الحكمِ** وحدَهُ. فالعودةُ إلى `ok` تصيرُ فعلاً مُوثَّقاً منسوباً لا محواً.
+ *
+ * وثلاثةُ حدودٍ تمنعُ أن يصيرَ الإقرارُ زرَّ إسكاتٍ:
+ *   1) لا إقرارَ جماعيَّ: صفٌّ صفٌّ بمعرِّفِهِ (سابقةُ §4.25 في الإعادةِ).
+ *   2) لا إقرارَ بلا سببٍ ولا بلا اسمٍ — والقاعدةُ تفرضُ الثلاثيَّ لا الشيفرةُ.
+ *   3) إعادةُ الصفِّ إلى `pending` تمحو إقرارَهُ **في القاعدةِ** (§4.27): صفٌّ
+ *      عادَ إلى الحياةِ لا يحملُ شهادةَ «عولِجَ» من حياتِهِ الأولى.
+ *
+ * و`totalPoisoned` يبقى منشوراً كما كانَ: الإقرارُ يُغيِّرُ **الحكمَ** لا المقياسَ.
  */
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -78,9 +99,19 @@ export interface RelayDeadLetterEventTypeCount {
 export interface RelayDeadLetterLedgerMetric {
   readonly ledger: RelayDeadLetterLedger;
   readonly poisoned: number;
+  /**
+   * المُقَرُّ بهِ وغيرُ المُقَرِّ بهِ — **ومجموعُهما `poisoned` حتماً** (§4.27).
+   *
+   * ونشرُ الثلاثةِ معاً مقصودٌ: نشرُ غيرِ المُقَرِّ بهِ وحدَهُ كانَ سيجعلُ
+   * الإقرارَ **حذفاً بمظهرٍ آخرَ** في عينِ قارئِ الجوابِ.
+   */
+  readonly acknowledgedPoisoned: number;
+  readonly unacknowledgedPoisoned: number;
   /** ISO-8601، أو `null` حينَ لا مسمومَ في هذا الدفترِ. */
   readonly oldestPoisonedAt: string | null;
   readonly newestPoisonedAt: string | null;
+  /** أقدمُ **غيرِ مُقَرٍّ بهِ** — وهوَ وحدَهُ ما تُقاسُ عليهِ عتبةُ العمرِ. */
+  readonly oldestUnacknowledgedPoisonedAt: string | null;
   readonly byEventType: readonly RelayDeadLetterEventTypeCount[];
 }
 
@@ -95,6 +126,8 @@ export interface RelayDeadLetterLedgerMetric {
 export interface RelayDeadLetterMetric {
   readonly measuredAt: string;
   readonly totalPoisoned: number;
+  readonly totalAcknowledgedPoisoned: number;
+  readonly totalUnacknowledgedPoisoned: number;
   readonly ledgers: readonly RelayDeadLetterLedgerMetric[];
 }
 
@@ -135,6 +168,14 @@ export type RelayDeadLetterSeverity = "ok" | "warning" | "critical";
  */
 export type RelayDeadLetterVerdictReason =
   | "no_poisoned_rows"
+  /**
+   * مسمومٌ موجودٌ **وكلُّهُ مُقَرٌّ بهِ** (§4.27) — سببٌ مستقلٌّ لا `no_poisoned_rows`.
+   *
+   * والفصلُ بينَهما جوهرُ المراجعةِ: «لا مسمومَ» و«مسمومٌ نظرَ فيهِ إنسانٌ
+   * وسمّاهُ» حالتانِ مختلفتانِ في العالَمِ، ودمجُهما في رمزٍ واحدٍ كانَ سيجعلُ
+   * لوحةً لا تُفرِّقُ بينَ دفترٍ نظيفٍ ودفترٍ فيهِ أربعونَ صفّاً مُقَرّاً بها.
+   */
+  | "all_poisoned_acknowledged"
   | "poisoned_present"
   | "poisoned_count_at_or_above_critical"
   | "oldest_poisoned_at_or_above_critical_age";
@@ -142,8 +183,15 @@ export type RelayDeadLetterVerdictReason =
 export interface RelayDeadLetterVerdict {
   readonly severity: RelayDeadLetterSeverity;
   readonly because: RelayDeadLetterVerdictReason;
-  /** عمرُ أقدمِ صفٍّ مسمومٍ بالثواني، أو `null` حينَ لا مسمومَ في الدفاترِ كلِّها. */
+  /**
+   * عمرُ أقدمِ صفٍّ مسمومٍ **أيّاً كانَ إقرارُهُ**، أو `null` حينَ لا مسمومَ.
+   *
+   * ويبقى منشوراً بمعناهُ الأوّلِ حرفاً: تغييرُ معنى حقلٍ قائمٍ صامتاً أسوأُ من
+   * إضافةِ حقلٍ. والحكمُ يُقاسُ على الحقلِ التالي لا على هذا.
+   */
   readonly oldestPoisonedAgeSeconds: number | null;
+  /** عمرُ أقدمِ **غيرِ مُقَرٍّ بهِ** — وهوَ المُقارَنُ بعتبةِ العمرِ (§4.27). */
+  readonly oldestUnacknowledgedPoisonedAgeSeconds: number | null;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -163,10 +211,33 @@ export function oldestPoisonedAgeSeconds(
   metric: Pick<RelayDeadLetterMetric, "ledgers">,
   at: Date,
 ): number | null {
+  return oldestAgeSeconds(metric, at, (ledger) => ledger.oldestPoisonedAt);
+}
+
+/**
+ * عمرُ أقدمِ صفٍّ مسمومٍ **غيرِ مُقَرٍّ بهِ** — بنفسِ قواعدِ القصِّ والعدمِ حرفاً.
+ *
+ * ولمَ دالّةٌ ثانيةٌ لا مُعامِلٌ في الأولى؟ لأنَّ الأولى منشورةٌ ومُختبَرةٌ
+ * ومقروءةٌ في الجوابِ، ومُعامِلٌ اختياريٌّ يُغيِّرُ معناها كانَ سيجعلُ نداءً
+ * قديماً يقيسُ شيئاً ونداءً جديداً يقيسُ آخرَ بالاسمِ نفسِهِ.
+ */
+export function oldestUnacknowledgedPoisonedAgeSeconds(
+  metric: Pick<RelayDeadLetterMetric, "ledgers">,
+  at: Date,
+): number | null {
+  return oldestAgeSeconds(metric, at, (ledger) => ledger.oldestUnacknowledgedPoisonedAt);
+}
+
+function oldestAgeSeconds(
+  metric: Pick<RelayDeadLetterMetric, "ledgers">,
+  at: Date,
+  pick: (ledger: RelayDeadLetterLedgerMetric) => string | null,
+): number | null {
   let oldestMs: number | null = null;
   for (const ledger of metric.ledgers) {
-    if (ledger.oldestPoisonedAt === null) continue;
-    const parsed = Date.parse(ledger.oldestPoisonedAt);
+    const value = pick(ledger);
+    if (value === null) continue;
+    const parsed = Date.parse(value);
     if (!Number.isFinite(parsed)) continue;
     if (oldestMs === null || parsed < oldestMs) oldestMs = parsed;
   }
@@ -184,34 +255,41 @@ export function oldestPoisonedAgeSeconds(
  * نداءٍ تعني مسارَ تشغيلٍ يستطيعُ تخفيفَ حكمِهِ على نفسِهِ.
  */
 export function classifyRelayDeadLetterSeverity(
-  metric: Pick<RelayDeadLetterMetric, "ledgers" | "totalPoisoned">,
+  metric: Pick<
+    RelayDeadLetterMetric,
+    "ledgers" | "totalPoisoned" | "totalUnacknowledgedPoisoned"
+  >,
   at: Date,
 ): RelayDeadLetterVerdict {
   const ageSeconds = oldestPoisonedAgeSeconds(metric, at);
+  const openAgeSeconds = oldestUnacknowledgedPoisonedAgeSeconds(metric, at);
+  const ages = {
+    oldestPoisonedAgeSeconds: ageSeconds,
+    oldestUnacknowledgedPoisonedAgeSeconds: openAgeSeconds,
+  } as const;
 
   if (metric.totalPoisoned < RELAY_DEAD_LETTER_THRESHOLDS.warningPoisoned) {
-    return { severity: "ok", because: "no_poisoned_rows", oldestPoisonedAgeSeconds: ageSeconds };
+    return { severity: "ok", because: "no_poisoned_rows", ...ages };
   }
 
-  if (metric.totalPoisoned >= RELAY_DEAD_LETTER_THRESHOLDS.criticalPoisoned) {
-    return {
-      severity: "critical",
-      because: "poisoned_count_at_or_above_critical",
-      oldestPoisonedAgeSeconds: ageSeconds,
-    };
+  // مسمومٌ موجودٌ وكلُّهُ مُقَرٌّ بهِ: `ok` **بسببٍ مختلفٍ** لا بسببِ الخلوِّ.
+  if (metric.totalUnacknowledgedPoisoned < RELAY_DEAD_LETTER_THRESHOLDS.warningPoisoned) {
+    return { severity: "ok", because: "all_poisoned_acknowledged", ...ages };
   }
 
-  if (ageSeconds !== null && ageSeconds >= RELAY_DEAD_LETTER_THRESHOLDS.criticalAgeSeconds) {
-    return {
-      severity: "critical",
-      because: "oldest_poisoned_at_or_above_critical_age",
-      oldestPoisonedAgeSeconds: ageSeconds,
-    };
+  // والعدُّ الحرِجُ يُقاسُ على **غيرِ المُقَرِّ بهِ** وحدَهُ: عشرةُ صفوفٍ نظرَ فيها
+  // إنسانٌ وسمّاها ليست عيباً منهجيّاً جارياً، وتصعيدُها كانَ سيُعيدُ الضجيجَ
+  // الذي تُلغيهِ هذهِ المراجعةُ من بابٍ آخرَ.
+  if (metric.totalUnacknowledgedPoisoned >= RELAY_DEAD_LETTER_THRESHOLDS.criticalPoisoned) {
+    return { severity: "critical", because: "poisoned_count_at_or_above_critical", ...ages };
   }
 
-  return {
-    severity: "warning",
-    because: "poisoned_present",
-    oldestPoisonedAgeSeconds: ageSeconds,
-  };
+  if (
+    openAgeSeconds !== null &&
+    openAgeSeconds >= RELAY_DEAD_LETTER_THRESHOLDS.criticalAgeSeconds
+  ) {
+    return { severity: "critical", because: "oldest_poisoned_at_or_above_critical_age", ...ages };
+  }
+
+  return { severity: "warning", because: "poisoned_present", ...ages };
 }

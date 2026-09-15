@@ -67,6 +67,8 @@ import {
   PostgresMarketplaceInventoryEventSource,
   PostgresReadinessProbe,
   PostgresRelayDeadLetterStore,
+  PostgresRelayRequeueStore,
+  PostgresRelayAcknowledgementStore,
   PostgresRelayConsumerLock,
   DELIVERY_SCOPES,
   DELIVERY_SERVICE_AUDIENCE,
@@ -361,6 +363,13 @@ export async function startGate(): Promise<GateContext> {
      * يُفتَّشُ عنها في حادثةٍ.
      */
     relayDeadLetterReadPort: new PostgresRelayDeadLetterStore(pool),
+    /*
+     * واليدُ والمحضرُ مُركَّبانِ كما في `server.ts` بالحرفِ (المراجعةُ 24/N ·
+     * §4.27): بوّابةٌ تُركّبُ غيرَ ما يُركّبُهُ جذرُ الإنتاجِ تشهدُ على نظامٍ
+     * آخرَ — ومسارُ الإعادةِ بقيَ دورتَينِ غيرَ مُركَّبٍ في الموضعَينِ معاً.
+     */
+    relayRequeuePort: new PostgresRelayRequeueStore(pool),
+    relayDeadLetterAcknowledgementPort: new PostgresRelayAcknowledgementStore(pool),
     /*
      * ومسبارُ رصدٍ حقيقيٌّ على `/health` السوقِ (المراجعةُ 15/N · §4.17): لا
      * `fetchImpl` مزروعٌ، فالبوّابةُ تُثبِتُ أنَّ الرصدَ يعبرُ حدّاً حقيقيّاً

@@ -185,8 +185,9 @@
 | `POST /delivery/idempotency-keys/sweep` | **صيانةٌ:** حذفُ المفاتيحِ المنتهيةِ بدفعاتٍ · **لا مفتاحَ تماثُلٍ** | **200** `{batches, deleted, remaining, stopped_because}` | `delivery:ops:idempotency-sweep` |
 | `GET /delivery/inventory-conflicts` | **تشغيلٌ:** رياتُ تضاربِ المخزونِ · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, count, conflicts[]}` | `delivery:ops:inventory-conflicts:read` |
 | `POST /delivery/inventory-conflicts/{adjustmentId}/acknowledgement` | **تشغيلٌ:** إقرارُ رايةٍ · **لا جسمَ** · **لا مفتاحَ تماثُلٍ** · **خارجَ العقدِ المنشورِ** | **200** `{outcome, conflict}` | `delivery:ops:inventory-conflicts:acknowledge` — **لا يحملُها قارئُ اللوحةِ** |
-| `GET /delivery/relay/dead-letters` | **تشغيلٌ:** عدَّادُ الرسائلِ المسمومةِ في دفترَي الناقلَينِ وحكمُ تنبيهِهِ · **قراءةٌ محضةٌ** · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, measured_at, total_poisoned, ledgers[], alert}` | `delivery:ops:relay-dead-letters:read` — **لا يحملُها منادٍ آخرُ** |
+| `GET /delivery/relay/dead-letters` | **تشغيلٌ:** عدَّادُ الرسائلِ المسمومةِ في دفترَي الناقلَينِ وحكمُ تنبيهِهِ · **قراءةٌ محضةٌ** · **خارجَ العقدِ المنشورِ** | **200** `{applied_filter, measured_at, total_poisoned, total_acknowledged_poisoned, total_unacknowledged_poisoned, ledgers[], alert}` (الثلاثةُ المُضافةُ في 24/N · §2.3هـ) | `delivery:ops:relay-dead-letters:read` — **لا يحملُها منادٍ آخرُ** |
 | `POST /delivery/relay/dead-letters/{ledger}/{eventId}/requeue` | **تشغيلٌ:** إعادةُ صفٍّ **مسمومٍ واحدٍ** إلى الطابورِ · **لا جسمَ** · **لا مفتاحَ تماثُلٍ** · **خارجَ العقدِ المنشورِ** | **202** `{outcome, ledger, event_id, previous_status, new_status, checkpoint_rewound, rewind_cost, gates_readiness}` | `delivery:ops:relay-dead-letters:requeue` — **لا يحملُها قارئُ المقياسِ** |
+| `POST /delivery/relay/dead-letters/{ledger}/{eventId}/acknowledge` | **تشغيلٌ:** إقرارُ صفٍّ **مسمومٍ واحدٍ** (إسكاتُ **حكمِ** المقياسِ لا عدِّهِ) · **جسمٌ إلزاميٌّ** `{reason}` · **لا مفتاحَ تماثُلٍ** · **خارجَ العقدِ المنشورِ** | **200** `{outcome, ledger, event_id, still_counted_in_total_poisoned, excluded_from_severity, acknowledgement{acknowledged_at, acknowledged_by, reason}}` | `delivery:ops:relay-dead-letters:acknowledge` — **لا يحملُها قارئُ المقياسِ ولا مُعيدُ الصفِّ** |
 
 **والصلاحيّةُ ليست الهويّةَ:** كلُّ مسارٍ مُغلَقٍ يطلبُ **الاثنَينِ** — هويّةً
 مُثبَتةً (توقيعٌ صحيحٌ · جمهورٌ `delivery` · مربوطٌ بهذهِ الطريقةِ وهذا المسارِ ·
@@ -439,6 +440,65 @@ POST /delivery/relay/dead-letters/dispatch/11111111-2222-4333-8444-555555555555/
   إرجاعِنا — الصفُّ يبقى `pending` فيُرى في المقياسِ ولا يُفقَدُ) · لا إعادةَ
   جُملةً · لا يُعادُ إلّا `poisoned`. والتفصيلُ في
   [§4.24](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md).
+
+### 2.3هـ إقرارُ المسمومِ: يُسكِتُ الحكمَ ولا يمحو العدَّ (24/N)
+
+```json
+POST /delivery/relay/dead-letters/dispatch/11111111-2222-4333-8444-555555555555/acknowledge
+{ "reason": "منتِجٌ حُذِفَ من السوقِ والحدثُ لا يُعادُ — RISK-0021" }
+
+→ 200 {
+  "outcome": "acknowledged",
+  "ledger": "dispatch",
+  "event_id": "11111111-2222-4333-8444-555555555555",
+  "still_counted_in_total_poisoned": true,
+  "excluded_from_severity": true,
+  "acknowledgement": {
+    "acknowledged_at": "2026-09-15T09:00:00.000Z",
+    "acknowledged_by": "service:ops-console/on-behalf-of:usr_01HQZX",
+    "reason": "منتِجٌ حُذِفَ من السوقِ والحدثُ لا يُعادُ — RISK-0021"
+  }
+}
+```
+
+- **الدَّينُ المرفوعُ:** §2.3ج كانَ يُصدِرُ `warning` على صفٍّ **قُرِئَ وحُكِمَ
+  عليهِ بأنَّهُ لا يُعادُ** (حدثٌ لمنتِجٍ حُذِفَ مثلاً) إلى الأبدِ. والمُشغِّلُ
+  أمامَ خيارَينِ كِلاهما سيّئٌ: إعادةُ صفٍّ يُسَمُّ فوراً (§2.3د)، أو تجاهُلُ
+  إنذارٍ دائمٍ — **وإنذارٌ يُتجاهَلُ يُدرِّبُ على تجاهُلِ الإنذارِ كلِّه**.
+- **`still_counted_in_total_poisoned: true` منشورٌ في الجسمِ لا في تعليقٍ:**
+  الإقرارُ **يُضيفُ شهادةً ولا يمحو دليلاً**. `total_poisoned` لا ينقُصُ،
+  و`consumed_status` يبقى `poisoned`، و`attempt_count` و`last_error`
+  و`updated_at` **لا تُمَسُّ** — وتقديمُ `updated_at` كانَ سيُصغِّرُ عمرَ فقدٍ
+  لم يُعالَجْ، أي تحسينَ رقمٍ بلا تحسينِ واقعٍ.
+- **المُستثنى هوَ الحكمُ وحدَهُ:** `alert.severity` يُحسَبُ على **غيرِ المُقَرِّ
+  بهِ** (عدداً وعمراً)، ومتى أُقِرَّ كلُّ مسمومٍ عادَ الحكمُ `ok` بسببٍ
+  **مُسمَّى** `all_poisoned_acknowledged` — لا `no_poisoned_events`. فالفرقُ
+  بينَ «لا فقدَ» و«فقدٌ مُقَرٌّ بهِ» يبقى مقروءاً في الجسمِ.
+- **والعمرانِ معاً منشورانِ:** `oldest_poisoned_at` (كما كانَ) و
+  `oldest_unacknowledged_poisoned_age_seconds` في `alert` — فمَن يقيسُ
+  الاستحقاقَ يقرأُ الثانيَ، ومَن يقيسُ الفقدَ الحقيقيَّ يقرأُ الأوّلَ.
+- **السببُ إلزاميٌّ وبحدٍّ أدنى 12 وأقصى 512 حرفاً** (بعدَ التشذيبِ ·
+  **يُرفَضُ ولا يُقتَصُّ**): «ok» ليسَ سبباً، وسببٌ مقتوصٌ شاهدٌ مُحرَّفٌ. وجسمٌ
+  بمفتاحٍ زائدٍ يُرَدُّ **400** لا يُتجاهَلُ صامتاً (سابقةُ §2.3ب). والحدّانِ
+  **في نصِّ الرسالةِ** لأنَّ عقدَ خطأِ التوصيلِ لا ينشرُ `details`.
+- **والمُقِرُّ من الهويّةِ المُثبَتةِ لا من الجسمِ** — مُركَّباً من الخدمةِ
+  والإنسانِ الذي أنابَها (`service:ops-console/on-behalf-of:usr_…`) كما في
+  §2.3ب حرفاً.
+- **إقرارٌ ثانٍ ⇒ 200 `already_acknowledged` بإقرارِ الأوّلِ** (لا 409): النداءُ
+  المُكرَّرُ لا يكتبُ فوقَ أوّلِ شاهدٍ، والمعاملةُ **تتراجَعُ** فلا أثرَ.
+  ودفترُ مسؤوليّةٍ يُكتَبُ فوقَ أوّلِ اسمٍ فيهِ ليسَ دفترَ مسؤوليّةٍ.
+- **ولا كودَ خطأٍ جديدٌ:** `DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND` (**404**) و
+  `DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED` (**409** · بالحالةِ المقروءةِ في
+  الرسالةِ) — نفسُ كودَي §2.3د.
+- **والقيودُ في القاعدةِ لا في الشيفرةِ وحدَها:** الثلاثيُّ (وقتٌ · مُقِرٌّ ·
+  سببٌ) **كلٌّ أو لا شيءَ**، والإقرارُ **لا يُكتَبُ إلّا على `poisoned`**،
+  والحدُّ 12..512 مفروضٌ بـ`CHECK`. فهجرةُ بياناتٍ أو مسارٌ إداريٌّ لا يُلتَفُّ
+  بهما على العقدِ.
+- **وإعادةٌ بعدَ إقرارٍ تمحو الإقرارَ** (§2.3د): الصفُّ يعودُ `pending` فيسقُطُ
+  ثلاثيُّهُ — فحكمُ «عُولِجَ» لا يَعبُرُ إلى حياةٍ ثانيةٍ للصفِّ.
+- **و500 حينَ لا منفذَ إقرارٍ مُركَّبٌ:** ادّعاءُ إقرارٍ لم يُكتَبْ أسوأُ من
+  رفضٍ. والتفصيلُ في
+  [§4.27](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md).
 
 ### 2.4 الجاهزيّةُ: تقيسُ أو تعترفُ
 

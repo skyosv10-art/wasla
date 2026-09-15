@@ -41,11 +41,11 @@
 | القياسُ | القيمةُ | مصدرُ القياسِ |
 | --- | --- | --- |
 | الحدودُ المفروضةُ | `8` | `services/*/src/http/service-identity.ts` |
-| المساراتُ المُسجَّلةُ | `89` | `services/*/src/http/app.ts` |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 80` | مساراتٌ تُعلِنُ `scoped(...)` |
+| المساراتُ المُسجَّلةُ | `90` | `services/*/src/http/app.ts` |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 81` | مساراتٌ تُعلِنُ `scoped(...)` |
 | المساراتُ المفتوحةُ | `OPEN_ROUTES = 9` | مساراتٌ تُعلِنُ `OPEN` |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
-| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 64` | اتّحادُ صلاحيّاتِ العملياتِ |
+| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 65` | اتّحادُ صلاحيّاتِ العملياتِ |
 | صلاحيّاتٌ مُعرَّفةٌ بلا مسارٍ يفرضُها | `0` | البابُ 2 |
 | أدوارُ الإنتاجِ المُعلَنةُ | `10` | `PRODUCTION_GRANTS` |
 | مواضعُ الإصدارِ الإنتاجيّةُ | `20` | `createServiceRequestSigner` في ملفٍّ غيرِ اختباريٍّ |
@@ -53,7 +53,7 @@
 | العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 7` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 5` | `OPERATION_BINDINGS` · حدُّ السوقِ |
 | العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `16` | `OPERATION_BINDINGS` |
-| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 64` | `80 − 16` |
+| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 65` | `81 − 16` |
 
 <!-- authz-matrix:end -->
 

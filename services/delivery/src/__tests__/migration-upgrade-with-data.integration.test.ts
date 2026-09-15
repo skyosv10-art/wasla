@@ -144,6 +144,19 @@ const SEEDED_OBSERVATION = {
   occurredFor: "2026-01-02T03:04:05.000Z",
 } as const;
 
+/**
+ * صفّانِ مسمومانِ — واحدٌ في كلِّ دفترٍ — يمسُّهما الترحيلُ `0003` (§4.27).
+ *
+ * وزرعُهما قبلَ الترقيةِ ليسَ تزييناً: قيودُ `CHECK` الأربعةُ التي يضيفُها
+ * `0003` تُفحَصُ عندَ الإضافةِ على **كلِّ صفٍّ قائمٍ**، فإن كانتِ القاعدةُ خاليةَ
+ * الدفترَينِ فالبرهانُ على فراغٍ ودعوى «مرَّ على مأهولةٍ» كذبٌ مُرَتَّبٌ.
+ */
+const SEEDED_POISONED = {
+  dispatchEventId: "66666666-6666-4666-8666-666666666666",
+  inventoryEventId: "77777777-7777-4777-8777-777777777777",
+  appliedEventId: "88888888-8888-4888-8888-888888888888",
+} as const;
+
 describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ فيها بياناتٌ سابقةٌ (M0-34)", () => {
   let db: pg.Client;
   let migrations: MigrationFile[];
@@ -214,6 +227,20 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
         SEEDED_OBSERVATION.lastReasonCode,
         SEEDED_OBSERVATION.occurredFor,
       ],
+    );
+    // صفوفُ الدفترَينِ اللذينِ يمسُّهما `0003`: مسمومانِ ومُطبَّقٌ.
+    await db.query(
+      `INSERT INTO delivery_relay_consumed_events
+         (event_id, event_type, aggregate_type, aggregate_id, consumed_status, attempt_count, last_error)
+       VALUES ($1, 'dispatch.job_created', 'dispatch_job', 'JOB-0034', 'poisoned', 5, 'm0-34 upgrade proof'),
+              ($2, 'dispatch.job_created', 'dispatch_job', 'JOB-0035', 'applied', 1, NULL)`,
+      [SEEDED_POISONED.dispatchEventId, SEEDED_POISONED.appliedEventId],
+    );
+    await db.query(
+      `INSERT INTO delivery_inventory_relay_consumed_events
+         (event_id, event_type, aggregate_type, aggregate_id, consumed_status, attempt_count, last_error)
+       VALUES ($1, 'marketplace.inventory_adjusted', 'inventory', 'INV-0034', 'poisoned', 3, 'm0-34 upgrade proof')`,
+      [SEEDED_POISONED.inventoryEventId],
     );
   });
 
@@ -291,6 +318,81 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     });
   });
 
+  it("أعمدةُ الإقرارِ تُضافُ على دفترَينِ **مأهولَينِ**: الصفوفُ تنجو بإقرارٍ عدَميٍّ", async () => {
+    const dispatch = await db.query(
+      `SELECT event_id::text AS event_id, consumed_status, attempt_count,
+              acknowledged_at, acknowledged_by, acknowledgement_reason
+       FROM delivery_relay_consumed_events ORDER BY aggregate_id`,
+    );
+    const inventory = await db.query(
+      `SELECT event_id::text AS event_id, consumed_status,
+              acknowledged_at, acknowledged_by, acknowledgement_reason
+       FROM delivery_inventory_relay_consumed_events`,
+    );
+    expect(dispatch.rows).toHaveLength(2);
+    expect(dispatch.rows[0]).toMatchObject({
+      event_id: SEEDED_POISONED.dispatchEventId,
+      consumed_status: "poisoned",
+      attempt_count: 5,
+      acknowledged_at: null,
+      acknowledged_by: null,
+      acknowledgement_reason: null,
+    });
+    expect(inventory.rows).toHaveLength(1);
+    expect(inventory.rows[0]).toMatchObject({
+      event_id: SEEDED_POISONED.inventoryEventId,
+      consumed_status: "poisoned",
+      acknowledged_at: null,
+    });
+  });
+
+  it("القيدانِ الجديدانِ نافذانِ على صفٍّ حيٍّ بعدَ الترقيةِ لا في الكتالوجِ وحدَهِ", async () => {
+    // (أ) إقرارٌ على صفٍّ غيرِ مسمومٍ يُرفَضُ بـ`23514`.
+    await expect(
+      db.query(
+        `UPDATE delivery_relay_consumed_events
+            SET acknowledged_at = now(), acknowledged_by = 'ops', acknowledgement_reason = 'upgrade proof reason'
+          WHERE event_id = $1`,
+        [SEEDED_POISONED.appliedEventId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    // (ب) إقرارٌ مبتورٌ (طابعٌ بلا مُقِرٍّ ولا سببٍ) يُرفَضُ كذلك.
+    await expect(
+      db.query(
+        `UPDATE delivery_relay_consumed_events SET acknowledged_at = now() WHERE event_id = $1`,
+        [SEEDED_POISONED.dispatchEventId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    // (ج) الثلاثيُّ على مسمومٍ يمرُّ — ثمَّ إعادتُهُ إلى `pending` بلا محوِ الإقرارِ تُرفَضُ.
+    await db.query(
+      `UPDATE delivery_relay_consumed_events
+          SET acknowledged_at = now(), acknowledged_by = 'ops', acknowledgement_reason = 'upgrade proof reason'
+        WHERE event_id = $1`,
+      [SEEDED_POISONED.dispatchEventId],
+    );
+    await expect(
+      db.query(
+        `UPDATE delivery_relay_consumed_events SET consumed_status = 'pending' WHERE event_id = $1`,
+        [SEEDED_POISONED.dispatchEventId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    // وإعادةٌ تمحو الإقرارَ معَها تمرُّ — ثمَّ يُعادُ الصفُّ إلى حالِهِ لأجلِ حالةِ الترجعِ.
+    await db.query(
+      `UPDATE delivery_relay_consumed_events
+          SET consumed_status = 'pending', acknowledged_at = NULL,
+              acknowledged_by = NULL, acknowledgement_reason = NULL
+        WHERE event_id = $1`,
+      [SEEDED_POISONED.dispatchEventId],
+    );
+    await db.query(
+      `UPDATE delivery_relay_consumed_events SET consumed_status = 'poisoned' WHERE event_id = $1`,
+      [SEEDED_POISONED.dispatchEventId],
+    );
+  });
+
   it("الترجعُ طريقُ خروجٍ لا مِحرقةُ بياناتٍ: الصفوفُ تنجو بعدَ التراجعِ خطوةً", async () => {
     const last = upgrades[upgrades.length - 1];
     await applySqlFile(db, last.down);
@@ -303,6 +405,16 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     );
     expect(keys.rows.map((r) => r.idempotency_key)).toEqual([SEEDED_KEY.idempotencyKey]);
     expect(observations.rows.map((r) => r.store_id)).toEqual([SEEDED_OBSERVATION.storeId]);
+
+    // والصفّانِ المسمومانِ ينجوانِ بعدَ ترجعِ `0003`: المفقودُ تمييزٌ لا دليلٌ.
+    const poisoned = await db.query(
+      `SELECT count(*)::int AS n FROM delivery_relay_consumed_events WHERE consumed_status = 'poisoned'`,
+    );
+    const poisonedInventory = await db.query(
+      `SELECT count(*)::int AS n FROM delivery_inventory_relay_consumed_events WHERE consumed_status = 'poisoned'`,
+    );
+    expect(poisoned.rows[0].n).toBe(1);
+    expect(poisonedInventory.rows[0].n).toBe(1);
 
     // وإعادةُ التطبيقِ بعدَ التراجعِ تمرُّ أيضاً على القاعدةِ المأهولةِ.
     await applySqlFile(db, last.up);

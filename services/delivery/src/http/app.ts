@@ -94,6 +94,7 @@ import type {
   InventoryConflictAcknowledgementPort,
   RelayDeadLetterReadPort,
   RelayRequeuePort,
+  RelayDeadLetterAcknowledgementPort,
   InventoryConflictReadPort,
   InventoryReservationPort,
   InventoryReservationStore,
@@ -135,6 +136,11 @@ import {
   type RelayDeadLetterLedger,
 } from "../domain/relay-dead-letters.js";
 import { RELAY_REQUEUE_TARGET_STATUS } from "../domain/relay-reprocess.js";
+import {
+  RELAY_ACKNOWLEDGEMENT_REASON_MAX_LENGTH,
+  RELAY_ACKNOWLEDGEMENT_REASON_MIN_LENGTH,
+  normalizeRelayAcknowledgementReason,
+} from "../domain/relay-acknowledgement.js";
 import { placeStoreOrder } from "../use-cases/place-store-order.js";
 import { cancelStoreOrder } from "../use-cases/cancel-store-order.js";
 import { mirrorPayment } from "../use-cases/mirror-payment.js";
@@ -207,6 +213,16 @@ export interface DeliveryHttpDeps {
    * يجعلُ مُشغِّلاً يُغلِقُ حادثةً على فقدٍ ما زالَ قائماً.
    */
   readonly relayRequeuePort?: RelayRequeuePort;
+  /**
+   * إقرارُ صفٍّ مسمومٍ (المراجعةُ 24/N · M5-13 · ADR-026 §4.27).
+   *
+   * **منفذٌ ثالثٌ اختياريٌّ مستقلٌّ** — تركيبةٌ تملِكُ عيناً ويداً ولا تريدُ
+   * أن يُسكَتَ تنبيهٌ في بيئتِها أصلاً تترُكُ هذا فارغاً. وغيابُهُ ⇒ المسارُ
+   * يُجيبُ 500 `DELIVERY_INTERNAL_ERROR` **ولا 200 «أُقِرَّ»**: إقرارٌ مُدّعى لمّا
+   * يُكتَبْ يُغلِقُ حادثةً في ذهنِ مُشغِّلٍ ويُبقي التنبيهَ يرنُّ بلا أثرٍ في
+   * القاعدةِ يُراجَعُ — وهوَ أسوأُ من رفضٍ صريحٍ.
+   */
+  readonly relayDeadLetterAcknowledgementPort?: RelayDeadLetterAcknowledgementPort;
   /**
    * فرضُ هويّةِ الخدمةِ على هذا الحدِّ (`M1-04`، الموجةُ السادسةُ · المراجعةُ
    * 17/N). **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**: قيمةٌ افتراضيّةٌ «بلا فرضٍ»
@@ -480,6 +496,58 @@ function assertNoAcknowledgementBody(body: unknown, traceId: string): void {
     "لا جسمَ لهذا المسارِ — المُقِرُّ يُؤخَذُ من الهويّةِ المُثبَتةِ لا من الجسمِ (ADR-026 §4.20)",
     { traceId, details: { field: "body" } },
   );
+}
+
+/**
+ * جسمُ الإقرارِ: **مفتاحٌ واحدٌ وهوَ `reason`** (المراجعةُ 24/N · §4.27).
+ *
+ * ## ولمَ جسمٌ هنا ولا جسمَ هناكَ (§4.20 · §4.25)؟
+ *
+ * الفرقُ ليسَ تفضيلاً: هناكَ كانَ الجسمُ يُحاوِلُ أن يقولَ **مَن** — وهذا
+ * مملوكٌ للرمزِ المُثبَتِ وحدَهُ، فرُدَّ الجسمُ كلُّهُ. وهنا يقولُ **لماذا**
+ * — وهذا مما لا يعرِفُهُ رمزٌ ولا قاعدةٌ: قرارُ إنسانٍ بأنَّ هذا الفقدَ
+ * بعينِهِ متروكٌ بقصدٍ. فـ«مَن» يُثبَتُ من الرمزِ، و«لماذا» تُسأَلُ من المُقِرِّ.
+ *
+ * ## ومفتاحٌ زائدٌ يُرَدُّ ولا يُتجاهَلُ
+ *
+ * منادٍ يبعثُ `{"reason":"…","acknowledged_by":"فريقُ العملياتِ"}` **يظنُّ أنَّهُ
+ * سمّى المُقِرَّ**؛ وقبولُ الطلبِ معَ تجاهُلِ الحقلِ يجعلُ الصفَّ يحمِلُ اسماً
+ * آخرَ غيرَ الذي أرسلَهُ وهوَ لا يدري — سابقةُ `assertNoAcknowledgementBody` حرفاً.
+ *
+ * ## والحدّانِ في الرسالةِ لا في `details` وحدَها
+ *
+ * `http/errors.ts` **لا يَنشُرُ `details`**؛ فرقمٌ يُوضَعُ هناكَ وحدَهُ دعوى
+ * خضراءُ على حقلٍ لا يَصِلُ السلكَ. ومُشغِّلٌ رُدَّ سببُهُ يحتاجُ أن يعلمَ
+ * الحدَّ لا أن يُخمِّنَهُ.
+ */
+function parseAcknowledgementReasonBody(body: unknown, traceId: string): string {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    throw new DeliveryError(
+      "DELIVERY_VALIDATION_FAILED",
+      "جسمٌ كائنٌ فيهِ `reason` وحدَهُ — ولا إقرارَ بلا سببٍ (ADR-026 §4.27)",
+      { traceId, details: { field: "body" } },
+    );
+  }
+
+  const keys = Object.keys(body as Record<string, unknown>);
+  const extra = keys.filter((key) => key !== "reason");
+  if (extra.length > 0) {
+    throw new DeliveryError(
+      "DELIVERY_VALIDATION_FAILED",
+      `مفاتيحُ لا تُقبَلُ في جسمِ الإقرارِ (${extra.join(" · ")}) — المُقِرُّ من الهويّةِ المُثبَتةِ لا من الجسمِ`,
+      { traceId, details: { field: "body", actual: extra.join(",") } },
+    );
+  }
+
+  const normalized = normalizeRelayAcknowledgementReason((body as Record<string, unknown>)["reason"]);
+  if (normalized.reason === "rejected") {
+    throw new DeliveryError(
+      "DELIVERY_VALIDATION_FAILED",
+      `\`reason\` نصٌّ بينَ ${RELAY_ACKNOWLEDGEMENT_REASON_MIN_LENGTH} و${RELAY_ACKNOWLEDGEMENT_REASON_MAX_LENGTH} حرفاً بعدَ التقليمِ (${normalized.because})`,
+      { traceId, details: { field: "reason", actual: normalized.because } },
+    );
+  }
+  return normalized.value;
 }
 
 export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
@@ -1046,10 +1114,22 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         applied_filter: { event_type_limit: eventTypeLimit },
         measured_at: metric.measuredAt,
         total_poisoned: metric.totalPoisoned,
+        /*
+         * **والمقسومُ منشورٌ لا مطويٌ** (المراجعةُ 24/N · §4.27): `total_poisoned`
+         * هوَ الواقعُ، و`total_unacknowledged_poisoned` هوَ ما يُحاكَمُ عليهِ.
+         * ونشرُ الاثنينِ شرطٌ لا تزيُّدٌ: مُشغِّلٌ يرى `severity: ok`
+         * و`total_poisoned: 40` ولا يرى المقسومَ يقرأُ المقياسَ معطوباً — أو
+         * أسوأَ: يصدِّقُهُ وينسى أربعينَ صفًّا.
+         */
+        total_acknowledged_poisoned: metric.totalAcknowledgedPoisoned,
+        total_unacknowledged_poisoned: metric.totalUnacknowledgedPoisoned,
         ledgers: metric.ledgers.map((ledger) => ({
           ledger: ledger.ledger,
           poisoned: ledger.poisoned,
+          acknowledged_poisoned: ledger.acknowledgedPoisoned,
+          unacknowledged_poisoned: ledger.unacknowledgedPoisoned,
           oldest_poisoned_at: ledger.oldestPoisonedAt,
+          oldest_unacknowledged_poisoned_at: ledger.oldestUnacknowledgedPoisonedAt,
           newest_poisoned_at: ledger.newestPoisonedAt,
           by_event_type: ledger.byEventType.map((entry) => ({
             event_type: entry.eventType,
@@ -1060,6 +1140,14 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
           severity: verdict.severity,
           because: verdict.because,
           oldest_poisoned_age_seconds: verdict.oldestPoisonedAgeSeconds,
+          /*
+           * وعمرانِ لا واحدٌ: الأوّلُ يقولُ منذُ متى فُقِدَ حدثٌ في هذا
+           * النظامِ، والثاني هوَ **مناطُ الحكمِ**. وإخفاءُ الأوّلِ بعدَ
+           * الإقرارِ كانَ سيجعلُ الإقرارَ يُصغِّرُ رقماً منشوراً — وهوَ عينُ
+           * محوِ الدليلِ الذي يمنعُهُ العقدُ.
+           */
+          oldest_unacknowledged_poisoned_age_seconds:
+            verdict.oldestUnacknowledgedPoisonedAgeSeconds,
           thresholds: {
             warning_poisoned: RELAY_DEAD_LETTER_THRESHOLDS.warningPoisoned,
             critical_poisoned: RELAY_DEAD_LETTER_THRESHOLDS.criticalPoisoned,
@@ -1159,6 +1247,146 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         checkpoint_rewound: true,
         rewind_cost: "full_rescan_from_zero",
         gates_readiness: false,
+      });
+    },
+  );
+
+  /*
+   * ── إقرارُ صفٍّ مسمومٍ (المراجعةُ 24/N · `M5-13` · §4.27) ───────────
+   *
+   * `POST /delivery/relay/dead-letters/{ledger}/{eventId}/acknowledge`
+   *
+   * ## البابُ الثالثُ: ما لا يُعادُ ولا يُنسى
+   *
+   * §4.23 عينٌ، و§4.24 يدٌ، وهذا **محضرُ حكمٍ**: صفٌّ سببُ سُمِّهِ قائمٌ
+   * فإعادتُهُ تُسَمِّمُهُ ثانيةً، وتركُهُ يُبقي `warning` قائماً إلى الأبدِ حتّى
+   * يُصمَّتَ التنبيهُ — وبعدَ التصميتِ لا يُرى المسمومُ **الجديدُ** أيضاً.
+   *
+   * ## و200 لا 202 ولا 204
+   *
+   * الفعلُ **تمَّ كاملاً** عندَ الجوابِ: الثلاثيُّ مكتوبٌ ومُرتَهَنٌ — ولا
+   * دورةَ مُرحِّلٍ تنتظِرُهُ كما في §4.24، فـ202 كانَ سيكذِبُ بالتأجيلِ. و204
+   * كانَ سيمنعُ المُشغِّلَ من رؤيةِ **الاسمِ المُركَّبِ الذي كُتِبَ عنهُ**، وهوَ
+   * أولُ ما يُراجَعُ في تحقيقٍ.
+   *
+   * ## ومسارُ تشغيلٍ سادسٌ خارجَ العقدِ المنشورِ
+   *
+   * على سابقةِ §4.15 · §4.18 · §4.20 · §4.23 · §4.24 حرفاً: موثَّقٌ في
+   * `docs/04-api/DELIVERY_HTTP.md` لا في `contracts/api.openapi.yml`.
+   *
+   * ## ونداءٌ ثانٍ لا يكتُبُ فوقَ الأوّلِ — 200 `already_acknowledged`
+   *
+   * سابقةُ §4.20 حرفاً، ولا 409: المُشغِّلُ لم يُخطِئْ، والحالةُ التي
+   * أرادَها **قائمةٌ**. والجوابُ يحمِلُ إقرارَ الأوّلِ كما هوَ فيرى الثاني
+   * اسمَ مَن سبقَهُ وسببَهُ ولا يظنُّ الواقعةَ لهُ.
+   *
+   * ## ولا يمسُّ الجاهزيّةَ ولا يُنقِصُ `total_poisoned`
+   *
+   * الصفُّ يبقى `poisoned` ومعدوداً؛ والمُستثنى من **الحكمِ** وحدَهُ
+   * (`total_unacknowledged_poisoned`). و`gates_readiness: false` منشورٌ في جوابِ
+   * المقياسِ لا مدفونٌ في ADR — سابقةُ §4.17-2.
+   */
+  app.post(
+    "/delivery/relay/dead-letters/:ledger/:eventId/acknowledge",
+    { config: scoped(DELIVERY_SCOPES.relayDeadLettersAcknowledge) },
+    async (request, reply) => {
+      const traceId = String(request.id);
+      if (deps.relayDeadLetterAcknowledgementPort === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا منفذَ إقرارٍ مُركَّبٌ — لا يُدَّعى إقرارٌ لم يُكتَبْ (ADR-026 §4.27)",
+          { traceId },
+        );
+      }
+
+      /*
+       * نفسُ مُحلِّلِ مُعامِلَيْ الإعادةِ لا نسخةٌ منهُ: الشكلُ والقائمةُ المُصرَّحةُ
+       * واحدةٌ، ونسخةٌ ثانيةٌ كانت ستنحرِفُ أوّلَ مرّةٍ يُضافُ دفترٌ.
+       */
+      const { ledger, eventId } = parseRequeueParams(request.params, traceId);
+      const reason = parseAcknowledgementReasonBody(request.body, traceId);
+
+      const caller = request.serviceCaller;
+      if (caller === undefined) {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          "لا هويّةَ مُثبَتةً على مسارٍ مُغلَقٍ — لا يُكتَبُ إقرارٌ بلا مُقِرٍّ",
+          { traceId },
+        );
+      }
+
+      /*
+       * والمُقِرُّ يُركَّبُ بـ`composeConflictAcknowledger` نفسِها لا بمُركِّبٍ ثانٍ:
+       * الصيغةُ `service:<name>[/on-behalf-of:<publicId>]` تُقرَأُ في تحقيقٍ واحدٍ
+       * عبرَ دفترَيْ مسؤوليّةٍ (راياتُ المخزونِ والمسمومُ)، ومُركِّبانِ ينحرِفانِ
+       * يجعلانِ جدولَينِ لا يُوصَلُ أحدُهما بالآخرِ. والاسمُ مقيسٌ بـ128 في
+       * المُركِّبِ وفي قيدِ القاعدةِ معاً.
+       */
+      const composed = composeConflictAcknowledger({
+        serviceName: caller.serviceName,
+        onBehalfOfPublicId: caller.onBehalfOfPublicId,
+      });
+      if (composed.acknowledger === "rejected") {
+        throw new DeliveryError(
+          "DELIVERY_INTERNAL_ERROR",
+          `تعذَّرَ تركيبُ اسمِ المُقِرِّ من الهويّةِ المُثبَتةِ (${composed.because})`,
+          { traceId },
+        );
+      }
+
+      const acknowledgedAt = now();
+      const decision = await deps.relayDeadLetterAcknowledgementPort.acknowledgePoisonedEvent({
+        ledger,
+        eventId,
+        acknowledgedBy: composed.value,
+        reason,
+        acknowledgedAt,
+      });
+
+      if (decision.outcome === "rejected") {
+        if (decision.reason === "not_found") {
+          throw new DeliveryError(
+            "DELIVERY_RELAY_DEAD_LETTER_NOT_FOUND",
+            "لا صفَّ بهذا المُعرِّفِ في هذا الدفترِ",
+            { traceId, details: { field: "eventId", actual: eventId } },
+          );
+        }
+        /*
+         * وكودٌ مُعادٌ من §4.24 لا ثالثٌ جديدٌ: «الصفُّ موجودٌ وحالتُهُ
+         * ليست `poisoned`» هيَ الواقعةُ نفسُها بالمعنى نفسِهِ، وكودٌ رابعٌ
+         * لمسارٍ مجاورٍ كانَ سيجعلُ مُشغِّلاً يتعلَّمُ قاموسينِ لمعنىً واحدٍ.
+         * والحالةُ المقروءةُ في **نصِّ الرسالةِ** لا في `details` لأنَّ عقدَ
+         * الخطأِ المنشورَ ثلاثةُ حقولٍ ولا ينشُرُ `details` — سابقةُ §4.24.
+         */
+        throw new DeliveryError(
+          "DELIVERY_RELAY_DEAD_LETTER_NOT_POISONED",
+          `الصفُّ موجودٌ وحالتُهُ «${decision.observedStatus ?? "unknown"}» لا «poisoned» — لا يُقرَّ بهِ`,
+          { traceId },
+        );
+      }
+
+      const acknowledgement =
+        decision.outcome === "already_acknowledged"
+          ? {
+              acknowledged_at: decision.acknowledgedAt,
+              acknowledged_by: decision.acknowledgedBy,
+              reason: decision.acknowledgementReason,
+            }
+          : { acknowledged_at: acknowledgedAt, acknowledged_by: composed.value, reason };
+
+      return reply.status(200).send({
+        outcome: decision.outcome,
+        ledger,
+        event_id: eventId,
+        /*
+         * منشورٌ صريحاً: الإقرارُ **لا يُخرِجُ الصفَّ من العدِّ**. ومُشغِّلٌ
+         * يقرأُ `acknowledged` ثمَّ يرى `total_poisoned` لم ينقُصْ في المقياسِ كانَ
+         * سيفتحُ حادثةً على مسارٍ سليمٍ؛ وقولُ ذلكَ في ADR وحدَهُ لا يقرأُهُ
+         * مَن هوَ في حادثةٍ — سابقةُ §4.17-2 حرفاً.
+         */
+        still_counted_in_total_poisoned: true,
+        excluded_from_severity: true,
+        acknowledgement,
       });
     },
   );

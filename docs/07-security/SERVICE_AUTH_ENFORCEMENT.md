@@ -291,6 +291,7 @@
   | `delivery:ops:inventory-conflicts:acknowledge` | `POST /delivery/inventory-conflicts/:adjustmentId/acknowledgement` | 18/N (ADR-026 §4.20) |
   | `delivery:ops:relay-dead-letters:read` | `GET /delivery/relay/dead-letters` | 21/N (ADR-026 §4.23) |
   | `delivery:ops:relay-dead-letters:requeue` | `POST /delivery/relay/dead-letters/:ledger/:eventId/requeue` | 22/N (ADR-026 §4.24) |
+  | `delivery:ops:relay-dead-letters:acknowledge` | `POST /delivery/relay/dead-letters/:ledger/:eventId/acknowledge` | 24/N (ADR-026 §4.27) |
 
   <!-- delivery-scopes:end -->
 
@@ -949,7 +950,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 | الحدُّ | مساراتٌ مفروضةٌ | منشورةٌ في العقدِ | صلاحيّاتٌ | العقدُ | البوّابةُ المالكةُ |
 | --- | --- | --- | --- | --- | --- |
-| `delivery` | 12 | 7 | 12 | `services/delivery/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
+| `delivery` | 13 | 7 | 13 | `services/delivery/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
 | `dispatch` | 8 | 8 | 7 | `services/dispatch/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
 | `geography` | 9 | 9 | 4 | `services/geography/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
 | `identity` | 5 | 5 | 5 | `services/identity/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
@@ -960,9 +961,10 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 <!-- contract-auth-debt:end -->
 
-**فرقُ العمودَينِ الأوّلَينِ يُقالُ ولا يُسوّى:** الخمسةُ الفارقةُ في `delivery`
+**فرقُ العمودَينِ الأوّلَينِ يُقالُ ولا يُسوّى:** السّتّةُ الفارقةُ في `delivery`
 مساراتُ تشغيلٍ **خارجَ العقدِ المنشورِ بقصدٍ** (مِكنسةُ مفاتيحِ التماثُلِ ·
-تعارضاتُ المخزونِ وإقرارُها · الرسائلُ الميتةُ وإعادةُ صفِّها)، وسابقتُها
+تعارضاتُ المخزونِ وإقرارُها · الرسائلُ الميتةُ وإعادةُ صفِّها وإقرارُ مسمومِها
+— المراجعةُ 24/N · §4.27)، وسابقتُها
 مكتوبةٌ في [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md);
 و`/health` في `geography` و`identity` غيرُ منشورٍ أصلاً. فالبابُ 9 يقيسُ
 **إعلانَ العقدِ عن المُصادقةِ**، ولا يدَّعي أنّهُ يقيسُ تطابقَ جردِ المساراتِ

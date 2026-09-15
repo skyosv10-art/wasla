@@ -182,7 +182,23 @@ PY
 t "نقصُ صفِّ تصنيفٍ يُخالِفُ رقمَ الوثيقةِ فيُسقِطُ الفحصَ" fail bash "$AZ"
 _az_restore
 
-sed -i 's/ENFORCED_OPERATIONS = 80/ENFORCED_OPERATIONS = 107/' "$AZ_DOC"
+# تصحيحٌ **بالإضافةِ** (المراجعةُ 24/N · `CLM-0181`): كانَ هنا
+# `sed 's/ENFORCED_OPERATIONS = 80/…/'` وكانَ صادقاً يومَ `M1-05`. ولمّا صارَ
+# الرقمُ 81 (صلاحيّةُ الإقرارِ · [ADR-026 §4.27]) صارَ الاستبدالُ **طفرةً
+# صامتةً تمرُّ بلا أن تُغيِّرَ حرفاً** فيُقرأُ نجاحُ الفحصِ حراسةً وهوَ غيابُها.
+# فالرقمُ لا يُكتَبُ حرفيّاً بعدَ اليومِ بل يُقرأُ من الوثيقةِ، و**يُثبَتُ أنَّ
+# الطفرةَ طفرتْ فعلاً** قبلَ أن تُقاسَ — كما في طفرةِ `TOKEN_BOUND` أدناهُ.
+python3 - "$AZ_DOC" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+m = re.search(r"ENFORCED_OPERATIONS = (\d+)", s)
+assert m, "لم يُوجَدْ قياسُ العملياتِ المفروضةِ في الوثيقةِ — لا طفرةَ على غيابٍ"
+inflated = int(m.group(1)) + 26
+out = s[: m.start()] + f"ENFORCED_OPERATIONS = {inflated}" + s[m.end() :]
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً — الحالةُ تقيسُ لا شيءَ"
+open(p, "w", encoding="utf-8").write(out)
+MUT
 t "رقمٌ في الوثيقةِ يُخالِفُ القياسَ يُسقِطُ الفحصَ" fail bash "$AZ"
 _az_restore
 

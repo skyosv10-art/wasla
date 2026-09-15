@@ -29,15 +29,31 @@ import {
 const NOW = new Date("2026-09-13T02:00:00.000Z");
 const minutesAgo = (n: number) => new Date(NOW.getTime() - n * 60_000).toISOString();
 
+/**
+ * والافتراضُ في هذا الباني **لا إقرارَ** (المراجعةُ 24/N · §4.27): كلُّ مسمومٍ
+ * غيرُ مُقَرٍّ بهِ، فكلُّ دعوى كُتِبَت قبلَ الإقرارِ تبقى تقيسُ ما كانت تقيسُهُ
+ * حرفاً. ولو جُعِلَ الافتراضُ «مُقَرٌّ بهِ» لصارَ كلُّ اختبارٍ سابقٍ يمرُّ
+ * لأنَّ الحكمَ لا يرى شيئاً — وهوَ تخفيفٌ صامتٌ بثوبِ باني بياناتٍ.
+ */
 function ledger(
   name: RelayDeadLetterLedgerMetric["ledger"],
   poisoned: number,
   oldest: string | null = null,
+  acknowledged = 0,
+  oldestUnacknowledged: string | null | undefined = undefined,
 ): RelayDeadLetterLedgerMetric {
   return {
     ledger: name,
     poisoned,
+    acknowledgedPoisoned: acknowledged,
+    unacknowledgedPoisoned: poisoned - acknowledged,
     oldestPoisonedAt: oldest,
+    oldestUnacknowledgedPoisonedAt:
+      oldestUnacknowledged === undefined
+        ? acknowledged >= poisoned
+          ? null
+          : oldest
+        : oldestUnacknowledged,
     newestPoisonedAt: oldest,
     byEventType: [],
   };
@@ -47,6 +63,8 @@ function metric(ledgers: readonly RelayDeadLetterLedgerMetric[]): RelayDeadLette
   return {
     measuredAt: NOW.toISOString(),
     totalPoisoned: ledgers.reduce((sum, l) => sum + l.poisoned, 0),
+    totalAcknowledgedPoisoned: ledgers.reduce((sum, l) => sum + l.acknowledgedPoisoned, 0),
+    totalUnacknowledgedPoisoned: ledgers.reduce((sum, l) => sum + l.unacknowledgedPoisoned, 0),
     ledgers,
   };
 }
@@ -77,10 +95,14 @@ describe("classifyRelayDeadLetterSeverity", () => {
       NOW,
     );
 
+    // دعوى **شكلٍ تامٍّ** لا حقلٍ واحدٍ: حقلٌ يُضافُ إلى الحكمِ يجبُ أن يُسقِطَ
+    // هذا الاختبارَ كي يُقرَأَ ويُوثَّقَ، لا أن يعبُرَ لأنَّ الدعوى جزئيّةٌ
+    // (وقد وقعَ ذلكَ حرفاً في المراجعةِ 24/N · §4.27 فأُضيفَ العمرُ الثاني هنا).
     expect(verdict).toEqual({
       severity: "ok",
       because: "no_poisoned_rows",
       oldestPoisonedAgeSeconds: null,
+      oldestUnacknowledgedPoisonedAgeSeconds: null,
     });
   });
 
@@ -177,5 +199,120 @@ describe("oldestPoisonedAgeSeconds — أقدمُ عبرَ الدفترَينِ"
         NOW,
       ),
     ).toBeNull();
+  });
+});
+
+/**
+ * الإقرارُ والحكمُ (المراجعةُ 24/N · §4.27).
+ *
+ * والدعوى الجامعةُ لهذا الوصفِ: **الإقرارُ يرفعُ الحكمَ ولا يمحو العددَ**. وكلُّ
+ * اختبارٍ هنا يقيسُ الاثنَينِ معاً في نداءٍ واحدٍ — لأنَّ العطبَ الذي يُخشى ليسَ
+ * «الحكمُ لم يهدأْ» بل «الحكمُ هدأَ **والعددُ اختفى معهُ**».
+ */
+describe("الإقرارُ — يرفعُ الحكمَ ولا يمحو العددَ", () => {
+  it("كلُّ المسمومِ مُقَرٌّ بهِ ⇒ `ok` **بسببِ الإقرارِ** لا بسببِ الخلوِّ", () => {
+    const m = metric([ledger("dispatch", 3, minutesAgo(90), 3), ledger("marketplace_inventory", 0)]);
+    const verdict = classifyRelayDeadLetterSeverity(m, NOW);
+
+    expect(verdict.severity).toBe("ok");
+    // سببانِ مُفرَّقانِ بقصدٍ: «لا مسمومَ» و«مسمومٌ نظرَ فيهِ إنسانٌ» حالتانِ
+    // مختلفتانِ، ودمجُهما كانَ يجعلُ لوحةً تقولُ «نظيفٌ» على ثلاثةِ صفوفٍ مفقودةٍ.
+    expect(verdict.because).toBe("all_poisoned_acknowledged");
+    // **والعددُ باقٍ منشوراً**: هذا هوَ الحدُّ بينَ الإقرارِ ومحوِ الدليلِ.
+    expect(m.totalPoisoned).toBe(3);
+    expect(m.totalAcknowledgedPoisoned).toBe(3);
+    expect(m.totalUnacknowledgedPoisoned).toBe(0);
+  });
+
+  it("صفٌّ واحدٌ غيرُ مُقَرٍّ بهِ بينَ تسعةٍ مُقَرٍّ بها ⇒ `warning` لا `ok`", () => {
+    // إقرارُ الأكثريّةِ لا يشتري صمتاً على الباقي: العتبةُ **واحدٌ** على غيرِ
+    // المُقَرِّ بهِ حرفاً.
+    const verdict = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 10, minutesAgo(30), 9)]),
+      NOW,
+    );
+    expect(verdict.severity).toBe("warning");
+    expect(verdict.because).toBe("poisoned_present");
+  });
+
+  it("عشرةٌ مسمومةٌ كلُّها مُقَرٌّ بها ⇒ `ok`؛ ولو نُقِصَ إقرارٌ صارَ `critical`", () => {
+    // العدُّ الحرِجُ يُقاسُ على غيرِ المُقَرِّ بهِ: عشرٌ نظرَ فيها إنسانٌ ليست
+    // عيباً منهجيّاً جارياً. وهذا الاختبارُ يقيسُ **الحدَّينِ في نداءَينِ
+    // متجاورَينِ** كي لا يمرَّ تخفيفٌ في أحدِهما.
+    const allAcked = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 10, minutesAgo(30), 10)]),
+      NOW,
+    );
+    expect(allAcked.severity).toBe("ok");
+    expect(allAcked.because).toBe("all_poisoned_acknowledged");
+
+    const oneOpen = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 10, minutesAgo(30), 0)]),
+      NOW,
+    );
+    expect(oneOpen.severity).toBe("critical");
+    expect(oneOpen.because).toBe("poisoned_count_at_or_above_critical");
+  });
+
+  it("**عمرُ الحرِجِ يُقاسُ على غيرِ المُقَرِّ بهِ**: قديمٌ مُقَرٌّ بهِ لا يُصعِّدُ", () => {
+    const twoDaysAgo = new Date(NOW.getTime() - 2 * 86_400_000).toISOString();
+    const verdict = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 1, twoDaysAgo, 1)]),
+      NOW,
+    );
+
+    expect(verdict.severity).toBe("ok");
+    // **والعمرُ الخامُ يبقى منشوراً**: الإقرارُ لا يُصغِّرُ رقماً نُشِرَ سلفاً.
+    expect(verdict.oldestPoisonedAgeSeconds).toBe(2 * 86_400);
+    expect(verdict.oldestUnacknowledgedPoisonedAgeSeconds).toBeNull();
+  });
+
+  it("قديمٌ **غيرُ** مُقَرٍّ بهِ يُصعِّدُ بالعمرِ كما كانَ قبلَ الإقرارِ", () => {
+    const twoDaysAgo = new Date(NOW.getTime() - 2 * 86_400_000).toISOString();
+    const verdict = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 1, twoDaysAgo, 0)]),
+      NOW,
+    );
+
+    expect(verdict.severity).toBe("critical");
+    expect(verdict.because).toBe("oldest_poisoned_at_or_above_critical_age");
+    expect(verdict.oldestUnacknowledgedPoisonedAgeSeconds).toBe(2 * 86_400);
+  });
+
+  it("عمرُ غيرِ المُقَرِّ بهِ يُقاسُ على **أقدمِ مفتوحٍ** لا على أقدمِ صفٍّ", () => {
+    // دفترٌ فيهِ قديمٌ مُقَرٌّ بهِ وحديثٌ مفتوحٌ: العمرانِ **مختلفانِ**، ولو
+    // كانَ الحكمُ يقرأُ العمرَ الخامَ لبقيَ `critical` إلى الأبدِ بسببِ صفٍّ
+    // نظرَ فيهِ إنسانٌ — وهوَ عينُ التنبيهِ الذي يُدفَعُ نحوَ تصميتِهِ.
+    const sixDaysAgo = new Date(NOW.getTime() - 6 * 86_400_000).toISOString();
+    const verdict = classifyRelayDeadLetterSeverity(
+      metric([
+        {
+          ledger: "dispatch",
+          poisoned: 2,
+          acknowledgedPoisoned: 1,
+          unacknowledgedPoisoned: 1,
+          oldestPoisonedAt: sixDaysAgo,
+          oldestUnacknowledgedPoisonedAt: minutesAgo(10),
+          newestPoisonedAt: minutesAgo(10),
+          byEventType: [],
+        },
+      ]),
+      NOW,
+    );
+
+    expect(verdict.severity).toBe("warning");
+    expect(verdict.because).toBe("poisoned_present");
+    expect(verdict.oldestPoisonedAgeSeconds).toBe(6 * 86_400);
+    expect(verdict.oldestUnacknowledgedPoisonedAgeSeconds).toBe(600);
+  });
+
+  it("خلوٌّ تامٌّ يبقى `no_poisoned_rows` — الإقرارُ لم يُزِح السببَ الأصليَّ", () => {
+    const verdict = classifyRelayDeadLetterSeverity(
+      metric([ledger("dispatch", 0), ledger("marketplace_inventory", 0)]),
+      NOW,
+    );
+    expect(verdict.severity).toBe("ok");
+    expect(verdict.because).toBe("no_poisoned_rows");
+    expect(verdict.oldestUnacknowledgedPoisonedAgeSeconds).toBeNull();
   });
 });

@@ -409,6 +409,17 @@ export const deliveryRelayConsumedEvents = pgTable(
     lastError: text("last_error"),
     consumedAt: instant("consumed_at").notNull().defaultNow(),
     updatedAt: instant("updated_at").notNull().defaultNow(),
+    /**
+     * إقرارُ الصفِّ المسمومِ (المراجعةُ 24/N · ADR-026 §4.27).
+     *
+     * ثلاثةُ أعمدةٍ لا عمودٌ واحدٌ: طابعٌ **ومُقِرٌّ** **وسببٌ**. وإقرارٌ بلا اسمٍ
+     * لا يُحاسَبُ عليهِ أحدٌ، وإقرارٌ بلا سببٍ يُصيِّرُ الإقرارَ زرَّ إسكاتٍ —
+     * وهذا عينُ ما تمنعُهُ قواعدُ الدفعِ. والقيدُ `ack_poisoned_only` يجعلُ
+     * **القاعدةَ** تمحو الإقرارَ عندَ الإعادةِ لا الشيفرةَ وحدَها.
+     */
+    acknowledgedAt: instant("acknowledged_at"),
+    acknowledgedBy: text("acknowledged_by"),
+    acknowledgementReason: text("acknowledgement_reason"),
   },
   (table) => [
     check(
@@ -428,6 +439,25 @@ export const deliveryRelayConsumedEvents = pgTable(
       sql`${table.consumedStatus} IN ('pending','applied','skipped_stale','ignored','ignored_foreign','poisoned')`,
     ),
     check("delivery_relay_consumed_events_attempt_count_check", sql`${table.attemptCount} >= 1`),
+    check(
+      "delivery_relay_consumed_events_ack_by_check",
+      sql`${table.acknowledgedBy} IS NULL OR char_length(${table.acknowledgedBy}) BETWEEN 1 AND 128`,
+    ),
+    check(
+      "delivery_relay_consumed_events_ack_reason_check",
+      sql`${table.acknowledgementReason} IS NULL OR char_length(${table.acknowledgementReason}) BETWEEN 12 AND 512`,
+    ),
+    check(
+      "ck_delivery_relay_consumed_events_ack_triple",
+      sql`(${table.acknowledgedAt} IS NULL) = (${table.acknowledgedBy} IS NULL) AND (${table.acknowledgedAt} IS NULL) = (${table.acknowledgementReason} IS NULL)`,
+    ),
+    check(
+      "ck_delivery_relay_consumed_events_ack_poisoned_only",
+      sql`${table.acknowledgedAt} IS NULL OR ${table.consumedStatus} = 'poisoned'`,
+    ),
+    index("ix_delivery_relay_consumed_unacknowledged")
+      .on(table.updatedAt)
+      .where(sql`${table.consumedStatus} = 'poisoned' AND ${table.acknowledgedAt} IS NULL`),
   ],
 );
 
@@ -494,6 +524,10 @@ export const deliveryInventoryRelayConsumedEvents = pgTable(
     lastError: text("last_error"),
     consumedAt: instant("consumed_at").notNull().defaultNow(),
     updatedAt: instant("updated_at").notNull().defaultNow(),
+    /** نفسُ عقدِ الإقرارِ حرفاً (§4.27) — لا عقدَ ثانياً لدفترٍ ثانٍ. */
+    acknowledgedAt: instant("acknowledged_at"),
+    acknowledgedBy: text("acknowledged_by"),
+    acknowledgementReason: text("acknowledgement_reason"),
   },
   (table) => [
     check(
@@ -516,6 +550,27 @@ export const deliveryInventoryRelayConsumedEvents = pgTable(
       "delivery_inventory_relay_consumed_events_attempt_count_check",
       sql`${table.attemptCount} >= 1`,
     ),
+    check(
+      "delivery_inventory_relay_consumed_events_ack_by_check",
+      sql`${table.acknowledgedBy} IS NULL OR char_length(${table.acknowledgedBy}) BETWEEN 1 AND 128`,
+    ),
+    // الاسمُ مقطوعٌ إلى `_chk` لا `_check`: 63 حرفاً حدُّ Postgres، والقطعُ
+    // **مُعلَنٌ هنا** لا مُفاجأةٌ في الكتالوجِ (سابقةُ `delivery_inventory_reservatio_…`).
+    check(
+      "delivery_inventory_relay_consumed_events_ack_reason_chk",
+      sql`${table.acknowledgementReason} IS NULL OR char_length(${table.acknowledgementReason}) BETWEEN 12 AND 512`,
+    ),
+    check(
+      "ck_delivery_inventory_relay_consumed_events_ack_triple",
+      sql`(${table.acknowledgedAt} IS NULL) = (${table.acknowledgedBy} IS NULL) AND (${table.acknowledgedAt} IS NULL) = (${table.acknowledgementReason} IS NULL)`,
+    ),
+    check(
+      "ck_delivery_inventory_relay_consumed_ack_poisoned_only",
+      sql`${table.acknowledgedAt} IS NULL OR ${table.consumedStatus} = 'poisoned'`,
+    ),
+    index("ix_delivery_inventory_relay_consumed_unacknowledged")
+      .on(table.updatedAt)
+      .where(sql`${table.consumedStatus} = 'poisoned' AND ${table.acknowledgedAt} IS NULL`),
   ],
 );
 

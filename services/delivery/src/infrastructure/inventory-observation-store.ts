@@ -310,52 +310,75 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
     return r.rows.map(mapConflictRow);
   }
 
-  /* ── إقرارُ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20) ── */
+  /* ── إقرارُ رايةٍ (المراجعةُ 18/N · ADR-026 §4.20 · تدقيقُ CI 2026-09-15) ── */
 
   /**
-   * عبارةٌ **واحدةٌ** لا اثنتانِ، ولا معاملةٌ مُصرَّحةٌ.
+   * معاملةٌ **واحدةٌ** وعبارةٌانِ لا عبارةٌ واحدةٌ — وتصحيحٌ بيدِ CI لا بيدِ فكرٍ.
    *
-   * والسببُ ليسَ اقتصادَ نداءٍ: `UPDATE … WHERE acknowledged_at IS NULL` هوَ
-   * وحدَهُ الحاجزُ الذي يجعلُ «الأوّلُ يفوزُ» صحيحاً تحتَ التزاحُمِ — فمُشغِّلانِ
-   * يُنادِيانِ في اللحظةِ نفسِها يُصيبُ أحدُهما صفّاً واحداً ويُصيبُ الآخرُ صفراً،
-   * ولا ثالثَ. وقراءةٌ ثمَّ كتابةٌ في نداءَينِ كانت ستُتيحُ للثاني أن يمحوَ الأوّلَ
-   * بينَ النداءَينِ، وهوَ نقضٌ لـ§4.18-6 من البابِ الآخرِ.
+   * **العيبُ الذي كشفَتْهُ البوّابةُ لا المحلّيُّ (34910328958 · 2026-09-14):**
+   * التصميمُ الأوّلُ كانَ عبارةً واحدةً (`WITH upd AS (UPDATE …) … UNION ALL …
+   * NOT EXISTS`) لأنَّ لقطةَ العبارةِ الواحدةِ تُلتقطُ عندَ **بدايتِها** تحتَ Read
+   * Committed. فإذا علقَ نداءُ المُشغِّلِ الثاني على قفلِ صفِّ الرابحِ ثمَّ التزمَ
+   * الرابحُ، يعيدُ فحصُ `WHERE acknowledged_at IS NULL` صفرَ صفوفٍ — لكنَّ فرعَ
+   * `already_recorded` كانَ يقرأُ بـ**لقطةِ العبارةِ نفسِها** أي **ما قبلَ التزامِ
+   * الرابحِ**: صفٌّ مُقِرُّهُ `null` — «سبقَكَ جارُكَ» بلا اسمِ جارٍ. وهوَ على
+   * PostgreSQL 15/17.6 (نُسَخُ CI) أوقعَ مرّةً في كلِّ سباقاتِ التزامِ التوقيتِ،
+   * وعلى 18.6 لم يقعْ — **والأخضرُ المحلّيُّ ليسَ حكمَ بوّابةٍ**.
    *
-   * وشكلُ العبارةِ يحلُّ سؤالاً حقيقيّاً: `RETURNING` وحدَهُ لا يُفرِّقُ بينَ
-   * «أُقِرَّت قبلي» و«لا وجودَ لها» — كلتاهما صفرُ صفوفٍ. فالفرعُ الثاني في
-   * `UNION ALL` يقرأُ الصفَّ **حينَ لم تُصِبْهُ الكتابةُ** (`NOT EXISTS (SELECT 1
-   * FROM upd)`)، فيُعادُ إمّا صفٌّ كتبتُهُ أنا بـ`recorded = TRUE`، أو صفٌّ
-   * أقرَّهُ غيري بـ`FALSE`، أو **لا صفَّ** — وهذا وحدَهُ يعني 404. وثلاثةُ
-   * أجوبةٍ من نداءٍ واحدٍ على لقطةٍ واحدةٍ: لا نافذةَ بينَ سؤالَينِ.
+   * **والعلاجُ في الجذرِ:** العبارةُ الأولى تبقى هيَ الحاجزَ (`UPDATE … WHERE
+   * acknowledged_at IS NULL` — أوّلُ من يمسكُ الصفَّ يفوزُ ولا ثالثَ، وسقوطُ
+   * `WHERE` على الخاسرِ **بعدَ التزامِ الرابحِ** يُثبتُ أنَّ الرابحَ التزمَ)،
+   * والعبارةُ الثانيةُ — إنْ لم تُصِبِ الأولى شيئاً — تقرأُ الصفَّ بلقطةٍ
+   * **جديدةٍ** في المعاملةِ نفسِها: لقطةُ عبارةٍ جديدةٍ تحتَ Read Committed ترى
+   * كلَّ ما التُزمَ قبلَ بدايتِها، فترى إقرارَ الرابحِ **باسمِهِ**. ولا نافذةَ بينَ
+   * العبارتَينِ تُفسِدُ الجوابَ لأنَّ حالةَ الصفِّ **باتجاهٍ واحدٍ**: `acknowledged_at`
+   * إذا نُصِبَ لا يعودُ `null` أبداً، فكلُّ ما يقعُ بينَ العبارتَينِ لا يجعلُ
+   * الجوابَ كذباً بل يجعلُهُ أحدَثَ فقط.
+   *
+   * وثلاثةُ أجوبةٍ من نداءٍ واحدٍ على معاملةٍ واحدةٍ: صفٌّ كتبتُهُ أنا
+   * (`recorded`) · صفٌّ أقرَّهُ غيري بـ**اسمِهِ** (`already_recorded`) · لا صفَّ
+   * (`unknown_conflict` ⇒ 404).
    */
   async acknowledgeInventoryConflict(input: {
     readonly adjustmentId: string;
     readonly acknowledgedBy: string;
     readonly acknowledgedAt: string;
   }): Promise<InventoryConflictAcknowledgementOutcome> {
-    const r = await this.pool.query<ConflictColumnRow & { recorded: boolean }>(
-      `WITH upd AS (
-         UPDATE delivery_inventory_conflicts
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      // العبارةُ الأولى — الحاجزُ: أوّلُ من يمسكُ الصفَّ يفوزُ.
+      let r = await client.query<ConflictColumnRow & { recorded: boolean }>(
+        `UPDATE delivery_inventory_conflicts
             SET acknowledged_at = $2::timestamptz,
                 acknowledged_by = $3::text
           WHERE adjustment_id = $1::uuid
             AND acknowledged_at IS NULL
-         RETURNING ${CONFLICT_COLUMNS}, TRUE AS recorded
-       )
-       SELECT * FROM upd
-       UNION ALL
-       SELECT ${CONFLICT_COLUMNS}, FALSE AS recorded
-         FROM delivery_inventory_conflicts
-        WHERE adjustment_id = $1::uuid
-          AND NOT EXISTS (SELECT 1 FROM upd)`,
-      [input.adjustmentId, input.acknowledgedAt, input.acknowledgedBy],
-    );
+         RETURNING ${CONFLICT_COLUMNS}, TRUE AS recorded`,
+        [input.adjustmentId, input.acknowledgedAt, input.acknowledgedBy],
+      );
+      if (r.rows[0] === undefined) {
+        // العبارةُ الثانية — لقطةٌ جديدةٌ في المعاملةِ نفسِها: ترى التزامَ الرابحِ باسمِهِ.
+        r = await client.query<ConflictColumnRow & { recorded: boolean }>(
+          `SELECT ${CONFLICT_COLUMNS}, FALSE AS recorded
+             FROM delivery_inventory_conflicts
+            WHERE adjustment_id = $1::uuid`,
+          [input.adjustmentId],
+        );
+      }
+      await client.query("COMMIT");
 
-    const row = r.rows[0];
-    if (row === undefined) return { acknowledgement: "unknown_conflict" };
-    return row.recorded
-      ? { acknowledgement: "recorded", row: mapConflictRow(row) }
-      : { acknowledgement: "already_recorded", row: mapConflictRow(row) };
+      const row = r.rows[0];
+      if (row === undefined) return { acknowledgement: "unknown_conflict" };
+      return row.recorded
+        ? { acknowledgement: "recorded", row: mapConflictRow(row) }
+        : { acknowledgement: "already_recorded", row: mapConflictRow(row) };
+    } catch (err) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   /* ── replay / rebuild ── */

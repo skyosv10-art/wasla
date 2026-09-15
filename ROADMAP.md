@@ -779,6 +779,52 @@ Nothing else has been changed in this repository by the WASLA integration work.
   defect into an endless rescan loop. Nothing here was measured on PostgreSQL 15/17.6 (the
   CI versions) or against a production database, and **CI itself returned no verdict**:
   the account is billing-blocked (`RISK-0039`), so local green is not a gate verdict.
+  **Update 2026-09-15 (M5-13R · CLM-0174 · branch `fix/m5-13r-relay-advisory-lock`):** the
+  first declared limit above — **no distributed lock** — is lifted by addition, not by
+  erasing the paragraph that declared it. The consumer now holds a session-level
+  `pg_advisory_lock` for the entire batch (checkpoint read through the last checkpoint
+  write — the batch is not one transaction, so the xact lock would drop mid-batch, which
+  is exactly where the race lived), and the requeue takes `pg_advisory_xact_lock` on the
+  **same key** inside its transaction, auto-released at `COMMIT`/`ROLLBACK`. The key
+  `(RELAY_ADVISORY_LOCK_NAMESPACE, hashtext(consumerId))` is exported from **one**
+  module both sides import (the M0-15 lesson: a constant written twice drifts silently),
+  and the consumer name itself is the key, so the two ledgers cannot block each other —
+  **proven, not inferred**. `lock` is a **required** field in `RelayDeps` and
+  `InventoryRelayDeps` (an optional field would make its absence a silent green — the
+  defect species this repo has recorded twice), so forgetting it is now a compile error.
+  `replayFrom`/`replayInventoryFrom` went under the lock too — same wound, same patch.
+  **The decisive proof is choreographed, not hoped for:** a batch paused mid-flight on a
+  gated event source (it read the stale checkpoint and holds the lock) + a requeue
+  starting in that exact moment — with the lock, the requeue waits, the rewind lands
+  **after** the batch, and a third batch re-reads the requeued row (a recorded second
+  attempt) instead of the checkpoint swallowing it forever. **Both halves were mutated
+  separately and measured (2026-09-15, PostgreSQL 18.6 local):** disabling the requeue
+  lock alone fails 2 tests in under a second with the true assertion (not a silent
+  timeout — a stalling cleanup that masked failures was found and fixed along the way);
+  disabling the consumer lock alone fails the blocking test and the designed race. Both
+  halves are required together. Measured: **5 new integration tests + 4 pure ordering
+  tests · 125/125 integration · 533/533 unit · full repo typecheck clean.** Decision:
+  ADR-026 §4.25. HTTP contract note: DELIVERY_HTTP.md §2.3د (202 may wait for one
+  in-flight batch by construction — bounded, no configured timeout). Operator note:
+  RELAY_POISONED_EVENTS.md §4. Declared limits that remain: one attempt for an
+  exhausted row · no bulk requeue · only `poisoned` is requeued · no automatic
+  requeue. **No CI verdict is claimed here — it is read from the CI runs after the
+  push, and local green is not a gate verdict.**
+
+  **CI verdict read (2026-09-15, run 34910328958):** the delivery db-integration
+  job failed on PostgreSQL 15/17.6 with `already_recorded` whose `acknowledged_by`
+  is `null` — a pre-existing semantic defect in the conflict-acknowledgement path
+  that CI timing exposed and local 18.6 timing never did (local green is not a
+  gate verdict; this is the run that proves the difference). Root cause and fix
+  (ADR-026 §4.26): the single-statement design read the loser's response with the
+  statement-start snapshot, i.e. the pre-winner-commit version — a response saying
+  "you were beaten" that names nobody. The barrier is now one transaction with two
+  statements (the UPDATE stays the winner barrier; on a miss a fresh-snapshot
+  statement names the winner; the state is one-way so the inter-statement window is
+  benign), proven by a deterministic designed-race test (loser provably blocked via
+  `pg_blocking_pids` before the winner commits — fails on the old design with the
+  exact CI symptom, passes on the fix: 126/126 integration, 533/533 unit). No test
+  weakened, no skip classified.
 - M5-13R moves to `Ready for Gate`, not `Completed`. M5-13 remains `In Progress` on the
   execution board. Promotion to `Completed` is the program owner's decision alone
   (governance protocol §9).

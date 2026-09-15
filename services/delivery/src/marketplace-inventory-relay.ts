@@ -50,6 +50,7 @@ import type {
   MarketplaceInventoryEventSource,
   InventoryObservationStore,
   MirrorContext,
+  RelayConsumerLock,
 } from "./ports.js";
 import type { BatchOutcome, RelayLogEntry } from "./relay.js";
 
@@ -70,6 +71,13 @@ export const DEFAULT_INVENTORY_RELAY_CONFIG: InventoryRelayConfig = {
 export interface InventoryRelayDeps {
   readonly events: MarketplaceInventoryEventSource;
   readonly store: InventoryObservationStore;
+  /**
+   * إلزاميٌّ لا اختياريٌّ (M5-13R · §4.24-ب) — عينُ عقدِ مُرحِّلِ التوزيعِ:
+   * دفعةٌ بلا قفلٍ تكتبُ نقطتَها فوقَ إرجاعِ إعادةٍ في دفترِ المخزونِ، والإعادةُ
+   * في هذا الدفترِ من **البابِ نفسِهِ** (`relay-requeue-store.ts` يخدمُ الدفترَينِ).
+   * والتعليلُ الكاملُ في `ports.ts`.
+   */
+  readonly lock: RelayConsumerLock;
   readonly config?: Partial<InventoryRelayConfig>;
   readonly log?: (entry: RelayLogEntry) => void;
 }
@@ -85,6 +93,16 @@ function now(): string {
  */
 export async function runInventoryRelayBatch(deps: InventoryRelayDeps): Promise<BatchOutcome> {
   const cfg = { ...DEFAULT_INVENTORY_RELAY_CONFIG, ...deps.config };
+  // **الدفعةُ كلُّها داخلَ قفلِ المُستهلِكِ** (§4.24-ب) — عينُ ترتيبِ مُرحِّلِ
+  // التوزيعِ: من قراءةِ النقطةِ حتى آخرِ كتابةٍ، فلا تلتقي معاملةُ إعادةٍ مع
+  // دفعةٍ في منتصفِها.
+  return deps.lock.withConsumerLock(cfg.consumerId, () => runInventoryRelayBatchLocked(deps, cfg));
+}
+
+async function runInventoryRelayBatchLocked(
+  deps: InventoryRelayDeps,
+  cfg: InventoryRelayConfig,
+): Promise<BatchOutcome> {
   const log = deps.log ?? (() => {});
   const checkpoint = await deps.store.getInventoryCheckpoint(cfg.consumerId);
   const rows = await deps.events.readAfter(checkpoint, cfg.batchSize);
@@ -198,9 +216,15 @@ async function poison(
 /**
  * Replay: reset the checkpoint so idempotency makes already-applied events
  * no-ops. Safe to call repeatedly.
+ *
+ * **تحتَ قفلِ المُستهلِكِ** (§4.24-ب) — نفسُ الجُرحِ لا يُرقَّعُ في مُرحِّلٍ
+ * ويُترَكُ مفتوحاً في الآخرِ.
  */
 export async function replayInventoryFrom(deps: InventoryRelayDeps, checkpoint: InventoryRelayCheckpoint | null): Promise<void> {
-  await deps.store.writeInventoryCheckpoint(deps.config?.consumerId ?? DEFAULT_INVENTORY_RELAY_CONFIG.consumerId, checkpoint ?? ZERO_INVENTORY_CHECKPOINT);
+  const consumerId = deps.config?.consumerId ?? DEFAULT_INVENTORY_RELAY_CONFIG.consumerId;
+  await deps.lock.withConsumerLock(consumerId, () =>
+    deps.store.writeInventoryCheckpoint(consumerId, checkpoint ?? ZERO_INVENTORY_CHECKPOINT),
+  );
 }
 
 /**

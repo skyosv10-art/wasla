@@ -28,6 +28,7 @@ import {
 } from "./pg-harness.js";
 import { PostgresMarketplaceInventoryEventSource } from "../infrastructure/marketplace-inventory-event-source.js";
 import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import {
   runInventoryRelayBatch,
   DEFAULT_INVENTORY_RELAY_CONFIG,
@@ -61,6 +62,7 @@ function deps(pool: PgFixture["pool"]): InventoryRelayDeps {
   return {
     events: new PostgresMarketplaceInventoryEventSource(pool),
     store: new PostgresInventoryObservationStore(pool),
+    lock: new PostgresRelayConsumerLock(pool),
     config: { ...DEFAULT_INVENTORY_RELAY_CONFIG, batchSize: 10 },
   };
 }
@@ -574,10 +576,16 @@ function deps(pool: PgFixture["pool"]): InventoryRelayDeps {
   it("نداءانِ متوازيانِ: واحدٌ `recorded` وواحدٌ `already_recorded` — لا اثنانِ يفوزانِ", async () => {
     const adjustmentId = await seedOneConflict();
 
-    // وهذا ما لا يُثبِتُهُ بديلُ ذاكرةٍ: العبارةُ **واحدةٌ** (`WITH upd AS (UPDATE
-    // … WHERE acknowledged_at IS NULL) … UNION ALL SELECT … WHERE NOT EXISTS`)،
-    // فلا فُرجةَ بينَ «اقرأْ هل أُقِرَّت» و«اكتبْ» يدخلُ منها الثاني. ولو كانَ
-    // المسارُ قراءةً ثمَّ كتابةً لفازَ الاثنانِ ولكتبَ الثاني على الأوّلِ.
+    // وهذا ما لا يُثبِتُهُ بديلُ ذاكرةٍ: الحاجزُ عبارةُ `UPDATE … WHERE
+    // acknowledged_at IS NULL` وحدَهُ — فمُشغِّلانِ يُنادِيانِ في اللحظةِ نفسِها
+    // يُصيبُ أحدُهما صفّاً واحداً ويُصيبُ الآخرُ صفراً، ولا ثالثَ. ولو كانَ
+    // المسارُ قراءةً ثمَّ كتابةً في نداءَينِ لفازَ الاثنانِ ولكتبَ الثاني على الأوّلِ.
+    // [تدقيقُ CI 2026-09-15 · 34910328958: كانَ الحاجزُ عبارةً واحدةً بفرعَينِ
+    // (`WITH upd AS … UNION ALL … NOT EXISTS`) فكشفَتِ البوّابةُ أنّ لقطةَ
+    // العبارةِ الواحدةِ عندَ بدايتِها تُعمي فرعَ `already_recorded` عن التزامِ
+    // الرابحِ فيُعادُ صفٌّ مُقِرُّهُ `null`. صارَ الحاجزُ معاملةً بعبارةَينِ
+    // بلقطةٍ متجَدِّدةٍ (ADR-026 §4.26)، والاختبارُ التصميميُّ أدناه يُعيدُ
+    // هذا الترتيبَ حتميّاً.]
     const [a, b] = await Promise.all([
       store.acknowledgeInventoryConflict({
         adjustmentId,
@@ -599,6 +607,77 @@ function deps(pool: PgFixture["pool"]): InventoryRelayDeps {
       throw new Error("unreachable");
     }
     expect(a.row.acknowledgedBy).toBe(b.row.acknowledgedBy);
+  });
+
+  // ── تدقيقُ CI (2026-09-15 · 34910328958) ──────────────────────────────────────
+  // هذا الاختبارُ أدناه وُلد من حكمِ بوّابةٍ فعليٍّ لا من فكرٍ: البوّابةُ أخفقت
+  // على PostgreSQL 15/17.6 بهذا الاختبارِ المتوازيِ أعلاه بجوابٍ مُقِرُّهُ
+  // `null` — لقطةُ العبارةِ الواحدةِ عندَ بدايتِها تُعمي فرعَ `already_recorded`
+  // عن التزامِ الرابحِ (العلاجُ والقرارُ: ADR-026 §4.26).
+  it("الخاسرُ المُعلَّقُ يُسمّي الرابحَ — لا لقطةَ ما قبلَ التزامِهِ", async () => {
+    const adjustmentId = await seedOneConflict();
+
+    // الرابحُ: مُشغِّلٌ يُقرُّ الرايةَ في معاملةٍ **مفتوحةٍ** — يمسكُ قفلَ الصفِّ ولا يلتزمُ بعدُ.
+    const winner = await pool.connect();
+    try {
+      await winner.query("BEGIN");
+      await winner.query(
+        `UPDATE delivery_inventory_conflicts
+            SET acknowledged_at = $2::timestamptz,
+                acknowledged_by = $3::text
+          WHERE adjustment_id = $1::uuid
+            AND acknowledged_at IS NULL`,
+        [adjustmentId, ts(7), "service:core"],
+      );
+      const winnerPid = (
+        await winner.query<{ pid: number }>("SELECT pg_backend_pid() AS pid")
+      ).rows[0]!.pid;
+
+      // الخاسرُ: نداؤُهُ يبدأُ **والرابحُ لم يلتزمْ** — فيعلقُ على قفلِ الصفِّ بلقطةِ عبارةٍ
+      // قبلَ التزامِ الرابحِ: هذا هوَ الترتيبُ الذي أوقعَ العطبَ على CI.
+      const loserPromise = store.acknowledgeInventoryConflict({
+        adjustmentId,
+        acknowledgedBy: "service:ops-console",
+        acknowledgedAt: ts(8),
+      });
+
+      // لا تقديرَ للتوقيتِ: ننتظرُ حتى يعلقَ الخاسرُ **على الرابحِ بعينِهِ**
+      // (لا أيَّ قفلٍ آخرَ في القاعدةِ — فالاختباراتُ الأخرى تعملُ في الملفاتِ
+      // المتوازيةِ نفسِها).
+      const blockedByWinner = async (): Promise<number> => {
+        const { rows } = await winner.query<{ blocked: number }>(
+          `SELECT count(*)::int AS blocked
+             FROM pg_stat_activity
+            WHERE wait_event_type = 'Lock'
+              AND $1 = ANY(pg_blocking_pids(pid))`,
+          [winnerPid],
+        );
+        return rows[0]!.blocked;
+      };
+      const deadline = Date.now() + 5000;
+      for (;;) {
+        if ((await blockedByWinner()) > 0) break;
+        if (Date.now() > deadline) {
+          throw new Error("لم يعلق نداءُ الخاسرِ على قفلِ صفِّ الرابحِ");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      // والرابحُ يلتزمُ **والخاسرُ معلَّقٌ على قفلِهِ**.
+      await winner.query("COMMIT");
+
+      const loser = await loserPromise;
+      if (loser.acknowledgement === "unknown_conflict") {
+        throw new Error("unreachable");
+      }
+      expect(loser.acknowledgement).toBe("already_recorded");
+      // الجوابُ يُسمّي الرابحَ باسمِهِ لا صفّاً من ما قبلَ التزامِهِ (`null`).
+      expect(loser.row.acknowledgedBy).toBe("service:core");
+      expect(loser.row.acknowledgedAt).toBe(ts(7));
+    } finally {
+      await winner.query("ROLLBACK").catch(() => undefined);
+      winner.release();
+    }
   });
 
   it("مُعرِّفٌ لا رايةَ لهُ ⇒ `unknown_conflict`، ولا صفَّ يُنشَأُ", async () => {

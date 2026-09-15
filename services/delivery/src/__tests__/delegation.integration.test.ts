@@ -24,6 +24,7 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { PG_ENABLED, setupPostgres, resetData, seedTask, type PgFixture } from "./pg-harness.js";
 import { PostgresTaskMirrorStore } from "../infrastructure/task-mirror-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import { delegateToDispatch } from "../use-cases/delegate-to-dispatch.js";
 import { deriveDelegationIdempotencyKey } from "../domain/delegation.js";
 import { FakeDispatchJobRequester } from "./mirror-fakes.js";
@@ -180,6 +181,7 @@ function liveIds() {
     const relayDeps: RelayDeps = {
       events: new PostgresDispatchEventSource(pool),
       store,
+      lock: new PostgresRelayConsumerLock(pool),
       config: { ...DEFAULT_RELAY_CONFIG, batchSize: 10 },
     };
     await runRelayBatch(relayDeps);

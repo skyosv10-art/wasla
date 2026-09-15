@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-14T23:45:34Z",
+  "generated_at": "2026-09-15T00:08:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "1976b654072f9b9e80f1f34decd658c65f9aa1e7",
+    "commit": "bc5f425f6780d322df858da0908bf1bfb93b2fbb",
     "branch": "fix/m5-13r-relay-advisory-lock",
     "dirty": true,
-    "dirty_files": 24,
-    "dirty_reason": "تنفيذُ M5-13R (CLM-0174 + CLM-0175): قفلُ مُستهلِكِ المُرحِّلَينِ الاستشاريُّ — شيفرةُ delivery واختباراتُها الجديدةُ (test_files_tracked 353→354: ملفُّ اختبارٍ تكامليٍّ واحدٍ جديدٌ) وحزمةُ delivery-e2e ووثائقُ القرارِ والحدِّ والإجراءِ والسجلِّ",
-    "tracked_files": 2005
+    "dirty_files": 5,
+    "dirty_reason": "تنفيذُ M5-13R (CLM-0174 + CLM-0175): قفلُ مُستهلِكِ المُرحِّلَينِ الاستشاريُّ + تصحيحُ تدقيقِ CI في إقرارِ الراياتِ (معاملةٌ بعبارةَينِ) — شيفرةُ delivery واختباراتُها (test_files_tracked 353→354: ملفُّ اختبارٍ تكامليٍّ جديدٌ للقفلِ) وحزمةُ delivery-e2e ووثائقُ القرارِ والحدِّ والإجراءِ والسجلِّ",
+    "tracked_files": 2007
   },
   "env": {
     "node": "v20.20.1",
@@ -34,7 +34,7 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
+    "source": "/tmp/verify3.log",
     "tests_passed": 4549,
     "test_files_executed": 280,
     "governance_suite_cases": 322,

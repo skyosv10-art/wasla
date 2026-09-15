@@ -24,6 +24,10 @@ AZ_APP=services/orders/src/http/app.ts
 # لا `owner`). وحدٌّ واحدٌ في الطفراتِ كانَ سيُخفي أنَّ البابَ 7 قد يُقابِلَ
 # صفوفَ السوقِ بمساعدِ الطلبيّاتِ — فيمرُّ الحارسُ على أثرٍ غيرِ موجودٍ.
 AZ_MKT=services/marketplace/src/http/app.ts
+# الموجةُ 3 (`CLM-0180`): البابانِ 8 و9 يقرآنِ المُوقِّعَ نفسَهُ وعقدَ حزمتِهِ،
+# فلا تُقاسُ عضّتُهما بلا طفرةٍ فيهما.
+AZ_OUT=packages/service-auth/src/outbound.ts
+AZ_PKG=packages/service-auth/package.json
 
 if [[ ! -f "$AZ" ]]; then
   printf '  \033[31m✗\033[0m %s مفقودٌ — لا تُقاسُ عضّةُ حارسٍ غائبٍ\n' "$AZ"
@@ -35,11 +39,13 @@ AZ_BK=/tmp/authz_backup
 rm -rf "$AZ_BK"; mkdir -p "$AZ_BK"
 cp "$AZ_OPS" "$AZ_BK/ops"; cp "$AZ_GR" "$AZ_BK/gr"; cp "$AZ_BI" "$AZ_BK/bi"; cp "$AZ_DOC" "$AZ_BK/doc"
 cp "$AZ_APP" "$AZ_BK/app"; cp "$AZ_MKT" "$AZ_BK/mkt"
+cp "$AZ_OUT" "$AZ_BK/out"; cp "$AZ_PKG" "$AZ_BK/pkg"
 
 _az_restore() {
   cp "$AZ_BK/ops" "$AZ_OPS"; cp "$AZ_BK/gr" "$AZ_GR"
   cp "$AZ_BK/bi" "$AZ_BI"; cp "$AZ_BK/doc" "$AZ_DOC"
   cp "$AZ_BK/app" "$AZ_APP"; cp "$AZ_BK/mkt" "$AZ_MKT"
+  cp "$AZ_BK/out" "$AZ_OUT"; cp "$AZ_BK/pkg" "$AZ_PKG"
 }
 
 # الأصلُ يمرُّ — وبلا هذا لا معنى لأيِّ إخفاقٍ بعدَه.
@@ -411,6 +417,113 @@ assert 'beneficiary: "required" } }\n' not in out.split("tenantActor")[0], "ال
 open(p, "w", encoding="utf-8").write(out)
 MUT
 t 'تعشيشُ `tenantScoped` معَ تفريغِهِ من المطلبِ يُسقِطُ الفحصَ (فالجردُ يقرأُ المُعشَّشَ)' fail bash "$AZ"
+_az_restore
+
+# ── البابُ 8: جدولا الأسطولِ مُنسَدّانِ وسقفُ جمهورِهِ مقيسٌ ────────────────
+#
+# الموجةُ 3 (`CLM-0180`): الإعلانُ صارَ شرطَ توقيعٍ حيّاً، فأسهلُ هروبٍ منهُ
+# **إعلانٌ بلا معنىً**. فتُقاسُ عضّةُ البابِ من الجهاتِ الأربعِ: اسمٌ في الجردِ
+# بلا سقفٍ · سقفٌ بلا اسمٍ في الجردِ · سقفٌ بلا سببٍ مكتوبٍ · وموضعُ توقيعٍ
+# خارجَ الجمهورِ المُعلَنِ لدورِهِ.
+python3 - "$AZ_GR" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+i = s.index("export const FLEET_GRANTS")
+head, tail = s[:i], s[i:]
+pat = re.compile(r'\n  "?attacker"?:\s*\{.*?\n  \},', re.S)
+m = pat.search(tail)
+assert m, "لم يُوجَدْ سقفُ «attacker» في `FLEET_GRANTS` — لا طفرةَ على غيابٍ"
+out = head + pat.sub("", tail, count=1)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'دورُ أسطولٍ في الجردِ بلا سقفٍ في `FLEET_GRANTS` يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+python3 - "$AZ_GR" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+i = s.index("export const FLEET_GRANTS")
+anchor = s.index("{", i) + 1
+orphan = (
+    '\n  "ghost-gate": {\n'
+    '    audiences: ["orders"],\n'
+    '    scopes: "any-scope",\n'
+    '    reason: "سقفٌ يتيمٌ لا اسمَ لهُ في جردِ أدوارِ الأسطولِ — طفرةٌ مقصودةٌ",\n'
+    "  },"
+)
+out = s[:anchor] + orphan + s[anchor:]
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'سقفُ أسطولٍ بلا اسمٍ في الجردِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+python3 - "$AZ_GR" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+i = s.index("export const FLEET_GRANTS")
+head, tail = s[:i], s[i:]
+m = re.search(r'\n    reason:\s*\n?\s*"[^"]*",', tail)
+assert m, "لم يُوجَدْ سببٌ مكتوبٌ في `FLEET_GRANTS` — لا طفرةَ على غيابٍ"
+out = head + tail[: m.start()] + '\n    reason: "",' + tail[m.end() :]
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'سقفُ أسطولٍ بلا سببٍ مكتوبٍ يُسقِطُ الفحصَ — والصفُّ بلا سببٍ يُقرأُ إذناً' fail bash "$AZ"
+_az_restore
+
+python3 - "$AZ_GR" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+i = s.index("export const FLEET_GRANTS")
+head, tail = s[:i], s[i:]
+m = re.search(r'\n  "?e2e-harness"?:\s*\{\s*\n    audiences:\s*\[[^\]]*\]', tail)
+assert m, "لم يُوجَدْ سقفُ «e2e-harness» — لا طفرةَ على غيابٍ"
+narrowed = re.sub(r"audiences:\s*\[[^\]]*\]", 'audiences: ["identity"]', m.group(0), count=1)
+out = head + tail[: m.start()] + narrowed + tail[m.end() :]
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تضييقُ جمهورِ دورِ أسطولٍ يُوقِّعُ فعلاً على غيرِهِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# ── البابُ 9: الإنفاذُ حيٌّ والبدائيُّ مُسَيَّجٌ ───────────────────────────
+#
+# وهذا البابُ **مضادُّ محوٍ**: أسهلُ إسكاتٍ للحاجزِ الحيِّ حذفُ نداءٍ واحدٍ من
+# المُوقِّعِ، فيبقى الملفُّ والاختبارُ والوثيقةُ كما هيَ ويصيرُ الإنفاذُ صفراً.
+python3 - "$AZ_OUT" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+m = re.search(r"(?m)^\s*assertSignerComposition\(.*?\n\s*\}\);\n", s, re.S)
+if m is None:
+    m = re.search(r"(?m)^\s*assertSignerComposition\(.*\n", s)
+assert m, "لم يُوجَدْ نداءُ `assertSignerComposition` — لا طفرةَ على غيابٍ"
+out = s[: m.start()] + s[m.end() :]
+assert "assertSignerComposition(" not in out.split("createServiceRequestSigner")[-1], "النداءُ لم يُحذَفْ"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'حذفُ نداءِ `assertSignerComposition` من المُوقِّعِ يُسقِطُ الفحصَ (مضادُّ محوٍ)' fail bash "$AZ"
+_az_restore
+
+python3 - "$AZ_PKG" <<'MUT'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding="utf-8"))
+v = d["dependencies"].pop("@wasla/authz-policy")
+d.setdefault("devDependencies", {})["@wasla/authz-policy"] = v
+json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+MUT
+t 'نقلُ تبعيّةِ الإنفاذِ إلى `devDependencies` يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+printf '\n%s\n' 'const __mutationProbe = mintServiceToken;' >> "$AZ_APP"
+t 'ذكرُ بدائيِّ الإصدارِ في ملفٍّ إنتاجيٍّ خارجَ حزمةِ التوقيعِ يُسقِطُ الفحصَ' fail bash "$AZ"
 _az_restore
 
 # الأصلُ يمرُّ بعدَ كلِّ الطفراتِ — إثباتُ أنَّ الاستعادةَ تامّةٌ وأنَّ الحارسَ

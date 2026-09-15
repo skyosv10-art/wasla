@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@wasla/auth-sdk": "workspace:*",
+    "@wasla/authz-policy": "workspace:*",
     "@wasla/errors": "workspace:*"
   },
   "devDependencies": {

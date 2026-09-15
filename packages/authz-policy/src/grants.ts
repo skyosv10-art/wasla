@@ -220,7 +220,111 @@ export const TEST_FLEET_ROLES: Readonly<Record<string, string>> = {
   "phase02-exit-gate": "بوّابةُ خروجِ المرحلةِ الثانيةِ (الجغرافيا والهويّةُ).",
   attacker: "دورٌ سلبيٌّ: يحملُ صلاحيّةً صحيحةً بمفتاحٍ غيرِ معروفٍ ليُقاسَ رفضُ الحدِّ — لا منحَ لهُ أصلاً.",
   caller: "دورٌ في اختبارِ وحدةٍ داخلَ `packages/service-auth` — لا وجودَ لهُ خارجَ الاختبار.",
+  "driver-exit-gate":
+    "بوّابةُ خروجِ مرحلةِ السائقِ على حدِّ الطلباتِ — اسمٌ يُمرَّرُ وسيطاً إلى مصنعِ توقيعٍ، فلم يكنْ يراهُ الحارسُ الساكنُ أصلاً.",
+  "negotiation-exit-gate":
+    "بوّابةُ خروجِ مرحلةِ المفاوضاتِ على حدِّ الطلباتِ — اسمٌ يُمرَّرُ وسيطاً كذلك.",
+  "dispatch-matching-exit-gate":
+    "بوّابةُ خروجٍ تُوقِّعُ بمجموعةِ صلاحيّاتِ حدِّ المطابقةِ الواسعةِ (`GATE_MATCHING_SCOPES`) — وكانَتْ تُوقِّعُ بدورِ الإنتاجِ «dispatch» فوقَ سقفِهِ حتّى الموجةِ 3 من `M1-05B`.",
 } as const;
+
+/**
+ * سقفُ أدوارِ أسطولِ الاختبارِ — **جمهورٌ مُعلَنٌ لا صلاحيّةٌ مُعلَنةٌ** (الموجةُ 3 · `M1-05B`).
+ *
+ * ── لِمَ سقفٌ لأدوارِ اختبارٍ أصلاً ────────────────────────────────────────
+ * حينَ صارَ الإصدارُ يُنفِذُ المصفوفةَ في **زمنِ التشغيلِ** (لا في البوّابةِ
+ * وحدَها) صارَ كلُّ موضعِ توقيعٍ — إنتاجيّاً كانَ أو اختباريّاً — يمرُّ على
+ * قرارٍ واحدٍ. ودورٌ لا إعلانَ لهُ يُرفَضُ؛ فلو تُرِكَتْ أدوارُ الأسطولِ بلا
+ * سقفٍ لَسقطَتْ تسعُ حزمِ `*-e2e` عندَ أوّلِ توقيعٍ، ولَكانَ العلاجُ الكاذبُ
+ * **استثناءَ بيئةٍ أو اسمٍ** في المُوقِّعِ — وهوَ البديلُ المرفوضُ صراحةً في
+ * صفِّ `M1-05B`، إذ حاجزٌ لهُ بابٌ خلفيٌّ يُقاسُ بأوسعِ ما يسمحُ بهِ.
+ *
+ * ── ولِمَ `"any-scope"` ولا تُعَدُّ الصلاحيّاتُ ───────────────────────────
+ * لأنَّ **وظيفةَ** هذهِ الأدوارِ توقيعٌ خارجَ أيِّ منحٍ مشروعٍ: بوّابةُ خروجٍ
+ * تُوقِّعُ بكاملِ مجموعةِ صلاحيّاتِ الحدِّ لتقيسَ سلوكَ الحدِّ، ودورٌ مهاجِمٌ
+ * يُوقِّعُ بصلاحيّةِ حدٍّ آخرَ ليُقاسَ الرفضُ. فعَدُّ صلاحيّاتِها كانَ سيصيرُ
+ * نسخةً ثانيةً من مجموعاتِ الصلاحيّاتِ تشيخُ بلا أن تشتكيَ.
+ *
+ * **وما يبقى مقيساً هنا هوَ الجمهورُ**: دورُ أسطولٍ يُوقِّعُ على حدٍّ لم
+ * يُعلَنْ لهُ يُرفَضُ في زمنِ التشغيلِ. وقوّةُ الحاجزِ على الإنتاجِ لا تُستقى
+ * من هذا الجدولِ بل من أمرَينِ مقيسَينِ: (1) `PRODUCTION_GRANTS` سقفٌ مُحصىً
+ * بالصلاحيّةِ، و(2) البابُ 5 في الفحصِ 16 يرفضُ ظهورَ أيِّ اسمٍ من أسماءِ
+ * الأسطولِ في ملفٍّ إنتاجيٍّ.
+ */
+export interface FleetGrant {
+  /** الأجمهرةُ المسموحةُ — أو `"any-audience"` لدورٍ لا يخرجُ من اختبارِ وحدةٍ. */
+  readonly audiences: readonly string[] | "any-audience";
+  /** `"any-scope"`: التوقيعُ خارجَ المنحِ هوَ وظيفةُ الدورِ نفسِها. */
+  readonly scopes: readonly string[] | "any-scope";
+  /** سببٌ مكتوبٌ — لا صفَّ بلا سببٍ، والفحصُ 16 يرفضُ الفراغَ. */
+  readonly reason: string;
+}
+
+export const FLEET_GRANTS: Readonly<Record<string, FleetGrant>> = {
+  "e2e-harness": {
+    audiences: ["identity", "dispatch", "marketplace", "negotiations", "delivery", "matching"],
+    scopes: "any-scope",
+    reason:
+      "بوّابةُ خروجٍ عامّةٌ في خمسِ حزمِ `*-e2e` — تُوقِّعُ بكاملِ مجموعةِ الحدِّ، وعلى «delivery» بصلاحيّةِ سوقٍ بقصدٍ ليُقاسَ رفضُ الحدِّ.",
+  },
+  "negotiation-exit-gate": {
+    audiences: ["orders"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ المفاوضاتِ على حدِّ الطلباتِ — `Object.values(ORDER_SCOPES)`.",
+  },
+  "driver-exit-gate": {
+    audiences: ["orders"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ السائقِ على حدِّ الطلباتِ — `Object.values(ORDER_SCOPES)`.",
+  },
+  "order-exit-gate": {
+    audiences: ["orders"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ الطلباتِ — `Object.values(ORDER_SCOPES)`.",
+  },
+  "dispatch-exit-gate": {
+    audiences: ["orders"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ الإرسالِ على حدِّ الطلباتِ.",
+  },
+  "dispatch-matching-exit-gate": {
+    audiences: ["matching"],
+    scopes: "any-scope",
+    reason:
+      "بوّابةُ خروجِ الإرسالِ على حدِّ المطابقةِ — بديلُ توقيعٍ كانَ يجري بدورِ الإنتاجِ «dispatch» فوقَ سقفِهِ.",
+  },
+  "reputation-exit-gate": {
+    audiences: ["orders"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ السُّمعةِ على حدِّ الطلباتِ.",
+  },
+  "channel-exit-gate": {
+    audiences: ["identity"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ القنواتِ — `Object.values(IDENTITY_SCOPES)`.",
+  },
+  "phase02-exit-gate": {
+    audiences: ["identity", "geography"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ المرحلةِ الثانيةِ — الجغرافيا والهويّةُ.",
+  },
+  attacker: {
+    audiences: ["marketplace"],
+    scopes: "any-scope",
+    reason: "دورٌ سلبيٌّ يحملُ صلاحيّةً صحيحةً بمفتاحٍ غيرِ معروفٍ ليُقاسَ رفضُ الحدِّ.",
+  },
+  caller: {
+    audiences: "any-audience",
+    scopes: "any-scope",
+    reason:
+      "اختبارُ وحدةٍ داخلَ `packages/service-auth` يُنشِئُ حدوداً وهميّةً («alpha» · «beta») لا وجودَ لها في `AUDIENCES` — فحصرُ جمهورِهِ كانَ سيُثبِّتَ أسماءَ اختبارٍ في المصفوفةِ.",
+  },
+} as const;
+
+/** السقفُ المُعلَنُ لدورِ أسطولٍ — `undefined` إذا لم يُعلَنْ. */
+export function fleetGrantFor(role: string): FleetGrant | undefined {
+  return FLEET_GRANTS[role];
+}
 
 /** السقفُ المُعلَنُ لدورٍ على جمهورٍ — `undefined` إذا لا منحَ. */
 export function grantFor(role: Role, audience: Audience): Grant | undefined {

@@ -8,7 +8,7 @@ import {
 } from "../outbound.js";
 import { SERVICE_AUTH_HEADER } from "../http.js";
 import { MIN_SECRET_BYTES, ServiceAuthKeyRegistry } from "../keys.js";
-import { verifyServiceToken } from "../token.js";
+import { mintServiceToken, verifyServiceToken } from "../token.js";
 
 const keys = new ServiceAuthKeyRegistry({
   keys: [{ kid: "k1", secret: "s".repeat(MIN_SECRET_BYTES), status: "active" }],
@@ -66,5 +66,76 @@ describe("refusingServiceRequestSigner", () => {
   it("يرمي بسببٍ مقروءٍ عندَ أوّلِ نداءٍ", () => {
     const sign = refusingServiceRequestSigner("مفاتيحُ الهويّةِ غيرُ مُعَدّةٍ في هذه البيئة");
     expect(() => sign("GET", "/x")).toThrow(/غيرُ مُعَدّةٍ/);
+  });
+});
+
+/**
+ * الموجةُ 3 من `M1-05B` (ADR-030): المُوقِّعُ يُنفِذُ مصفوفةَ `M1-05` **في زمنِ
+ * التشغيلِ** لا في البوّابةِ وحدَها.
+ *
+ * وموضعُ الرفضِ **البناءُ** لا النداءُ: الثلاثيّةُ (دورٌ · جمهورٌ · صلاحيّاتٌ)
+ * ثابتةٌ في المُوقِّعِ، فتأخيرُ الحكمِ إلى أوّلِ نداءٍ كانَ سيُخفِي عطلَ إعدادٍ
+ * في مسارٍ باردٍ حتّى يُطرَقَ في الإنتاجِ.
+ */
+describe("إنفاذُ مصفوفةِ التفويضِ عندَ بناءِ المُوقِّعِ", () => {
+  it("تركيبٌ فوقَ سقفِ منحِ دورِهِ ⇒ يموتُ عندَ البناءِ لا عندَ النداءِ", () => {
+    expect(() =>
+      createServiceRequestSigner({
+        serviceName: "dispatch",
+        audience: "matching",
+        keys,
+        scopes: ["matching:candidates:evaluate", "matching:rulesets:read"],
+        now: () => NOW,
+      }),
+    ).toThrow(/خارجَ منحِه/);
+  });
+
+  it("دورٌ لا إعلانَ لهُ في المصفوفةِ ⇒ يُرفَضُ ولو كانتِ المفاتيحُ صحيحةً", () => {
+    expect(() =>
+      createServiceRequestSigner({
+        serviceName: "some-new-service",
+        audience: "matching",
+        keys,
+        scopes: [],
+        now: () => NOW,
+      }),
+    ).toThrow(/غيرُ مُعلَنٍ/);
+  });
+
+  it("دورٌ إنتاجيٌّ على حدٍّ لا منحَ لهُ عليهِ ⇒ يُرفَضُ — والجمهورُ يفصلُ الحدودَ", () => {
+    expect(() =>
+      createServiceRequestSigner({
+        serviceName: "dispatch",
+        audience: "marketplace",
+        keys,
+        scopes: ["marketplace:store:read"],
+        now: () => NOW,
+      }),
+    ).toThrow(/ولا منحَ لهُ على الحدِّ/);
+  });
+
+  it("وبوّابةُ خروجٍ مُعلَنةٌ تُوقِّعُ بكاملِ مجموعةِ حدِّها ⇒ تمرُّ", () => {
+    expect(() =>
+      createServiceRequestSigner({
+        serviceName: "order-exit-gate",
+        audience: "orders",
+        keys,
+        scopes: ["orders:intake:write", "orders:transition:write"],
+        now: () => NOW,
+      }),
+    ).not.toThrow();
+  });
+
+  it("والبدائيُّ يبقى حرّاً بقصدٍ: الاختبارُ السلبيُّ يحتاجُ رمزاً زائدَ الصلاحيّةِ ليُقاسَ رفضُ الحدِّ", () => {
+    const token = mintServiceToken({
+      serviceName: "dispatch",
+      audience: "matching",
+      method: "GET",
+      path: "/matching/rulesets",
+      scopes: ["matching:rulesets:read", "matching:decisions:read"],
+      keys,
+      now: NOW,
+    });
+    expect(typeof token).toBe("string");
   });
 });

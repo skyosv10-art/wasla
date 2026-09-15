@@ -7,7 +7,10 @@
  *   3. **المستأجرُ**: السؤالُ نفسُهُ على مستوى المتجرِ لا الشخصِ.
  *
  * ولا تُصدِرُ هذهِ الحزمةُ رمزاً ولا تتحقَّقُ منه؛ ولا يعتمدُ عليها الحدُّ.
- * موضعُ إنفاذِها اليومَ: **البوّابةُ** (`الفحصُ 16`) على إعدادِ جذورِ التركيبِ.
+ * وموضعُ إنفاذِها **اثنانِ** بعدَ الموجةِ 3 من `M1-05B`: **البوّابةُ**
+ * (`الفحصُ 16`) تقرأُ جذورَ التركيبِ ساكناً، و**المُوقِّعُ** يُنادي
+ * `assertSignerComposition` في زمنِ التشغيلِ فيَموتُ تركيبٌ يطلبُ ما لا
+ * يُمنَحُ — لأنَّ الساكنَ يقرأُ ما كُتِبَ لا ما يجري (ADR-030).
  *
  * المرجع: ADR-027 · docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
  */
@@ -26,11 +29,14 @@ export {
 } from "./operations.js";
 
 export {
+  FLEET_GRANTS,
   PRODUCTION_GRANTS,
   TEST_FLEET_ROLES,
+  fleetGrantFor,
   grantFor,
   grantedAudiences,
   holdersOf,
+  type FleetGrant,
   type Grant,
   type Role,
 } from "./grants.js";
@@ -55,3 +61,9 @@ export {
   type PolicyDecision,
   type ScopeRequest,
 } from "./policy.js";
+
+export {
+  assertSignerComposition,
+  evaluateSignerComposition,
+  type SignerComposition,
+} from "./signer.js";

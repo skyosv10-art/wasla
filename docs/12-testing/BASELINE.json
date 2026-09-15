@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T20:14:16Z",
+  "generated_at": "2026-09-15T21:33:53Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "49edda3272be00e475ffe6e48d3a78ff74f7b8c0",
-    "branch": "feat/m0-41-app-port-wiring-guard",
+    "commit": "29ce44efb7f40b92106e9040f59a878128ef65d3",
+    "branch": "fix/m0-41-structural-wiring-proof",
     "dirty": true,
-    "dirty_files": 11,
-    "dirty_reason": "M0-41/CLM-0182: الفحصُ 17 (تركيبُ المنافذِ) أُضيفَ وRISK-0044 أُغلِقَ — يُعادُ توليدُ الأساسِ من سجلِّ التحقّقِ نفسِهِ",
-    "tracked_files": 2033
+    "dirty_files": 10,
+    "dirty_reason": "تصحيحُ إثباتِ الفحصِ 17 بنيويّاً وإضافةُ 11 طفرةً (CLM-0184)",
+    "tracked_files": 2036
   },
   "env": {
     "node": "v20.20.1",
@@ -34,12 +34,12 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify17.log",
+    "source": "/tmp/verify18.log",
     "tests_passed": 4663,
     "test_files_executed": 284,
-    "governance_suite_cases": 371,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_cases": 383,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
   "fingerprint": "sha256:48540b9ff5044cd5d2b7c26d98e899b9bfae51e724f661a967a02ce66a1079b6",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-15T20:14:16Z
-الالتزام: 49edda3272be00e475ffe6e48d3a78ff74f7b8c0  الفرع: feat/m0-41-app-port-wiring-guard  شجرةٌ مُعدَّلةٌ (11 ملفّاً)
+التاريخ (UTC): 2026-09-15T21:33:53Z
+الالتزام: 29ce44efb7f40b92106e9040f59a878128ef65d3  الفرع: fix/m0-41-structural-wiring-proof  شجرةٌ مُعدَّلةٌ (10 ملفّاً)
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3152 سطراً · sha256 96180e66a7fb662a…
 
@@ -15,12 +15,12 @@
   governance_checks          17
   risks_not_closed           32
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify17.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify18.log):
   tests_passed               4663
   test_files_executed        284
-  governance_suite_cases     371
-  governance_suite_failed    1
-  verify_overall             failed
+  governance_suite_cases     383
+  governance_suite_failed    0
+  verify_overall             passed
 
 البصمة: sha256:48540b9ff5044cd5d2b7c26d98e899b9bfae51e724f661a967a02ce66a1079b6
 المرجع: docs/12-testing/BASELINE_FORMAT.md

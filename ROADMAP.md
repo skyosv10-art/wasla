@@ -1168,3 +1168,19 @@ still has no test of its own here.
   that calls every closed route on the real root and reads something other
   than 500.
 
+- **M0-41 wiring proof rebuilt structurally (2026-09-16 · `CLM-0184`).** The check-17 guard proved
+  wiring with a **text search for the port name across the whole `server.ts`**, so deleting the key
+  from **the object actually passed to the factory** — the exact defect `RISK-0044` was born from —
+  passed green as long as the identifier survived anywhere else in the file. The false positive was
+  **measured, not hypothetical**: `catalogPort` appears both in `buildCatalogPort()` (line 92) and in
+  the factory call object (line 246) of `services/delivery/src/http/server.ts`. The proof now comes
+  from the composition object itself (`scripts/checks/lib/app_port_wiring.py`): strings and comments
+  are masked, the literal is extracted by brace matching, only first-level keys count, conditional
+  and variable spreads are resolved, **every** call site is measured (name, `import … as`, assignment
+  alias), and anything unresolvable **fails loudly instead of reading as wired**. Eleven new
+  mutations pin the bite (383 governance cases · 0 failing), including the one that used to pass.
+  Two new published counters make the remaining honesty visible: `CONDITIONAL_WIRED_PORTS` (a port
+  wired behind a runtime condition) and `FACTORY_CALL_SITES`. `RISK-0033` closed on fresh evidence
+  (branch gone from the platform, its work ancestral to `main`), its structural gap carried to
+  `RISK-0045`, and `RISK-0015` re-measured as **still open** — the in-memory replay store is an owner
+  decision, and M0-41 never touched it.

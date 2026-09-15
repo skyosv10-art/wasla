@@ -1,6 +1,6 @@
 # فهرس ملكية العمل (Work Index)
 
-**الحالة:** إلزامي · **آخر تحديث:** `2026-09-14` (مبني على فحص فعلي لشجرة المستودع)
+**الحالة:** إلزامي · **آخر تحديث:** `2026-09-15` (مبني على فحص فعلي لشجرة المستودع · أُضيفت `authz-policy` بعدَ دمجِ `M1-05`)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) · [`README.md`](README.md)
 
 > **الغرض:** جواب فوري لسؤال «هل هذا مبني أصلًا، ومن يملكه؟» قبل أن يفتح أحد عملًا مكررًا.
@@ -96,6 +96,7 @@
 | نواة | `config` · `contracts` · `errors` · `events` · `telemetry` · `date-time` · `i18n` · `ui` | **مشتركة عالية الخطورة** — أي تعديل يحتاج حجزًا صريحًا للمسار الفرعي |
 | قنوات | `channel-core` · `channel-postgres` · `telegram-adapter` · `bot-runtime` | M0-23 (موجة 2b-2) |
 | أمن | `auth-sdk` | **Implemented (M1-01)** — نموذجُ `Principal` الموحَّدُ وقراءتُه وقراراتُ التفويضِ وتمثيلُه الآمن ([ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md)). نقطةُ الفرضِ الوحيدةُ لكلِّ حدٍّ؛ M1-02..M1-05 تبني عليها ولا تُنشئ نموذجاً موازياً |
+| أمن | `service-auth` · `authz-policy` | **`service-auth`: Implemented (M1-04)** — إصدارُ رمزِ الخدمةِ والتحقُّقُ منهُ وفرضُ `aud`/`scp` عندَ ثمانيةِ حدودٍ ([ADR-020](../15-decisions/ADR-020-service-to-service-identity.md) · [ADR-021](../15-decisions/ADR-021-service-token-replay-policy.md)) — **ولا تحملُ مصفوفةَ «دورٌ → صلاحيّاتٌ» بقرارٍ مقصودٍ**. · **`authz-policy`: Implemented (M1-05 · [PR #174](https://github.com/skyosv10-art/wasla/pull/174))** — مصدرُ الحقيقةِ الوحيدُ لسؤالِ التفويضِ «أيَحقُّ لهذهِ الخدمةِ ما تحملُهُ؟»: 80 عمليّةً مفروضةً · 10 أدوارِ إنتاجٍ بـ18 منحاً · 8 أدوارِ أسطولِ اختبارٍ معزولةٍ · 16 ربطَ ملكيّةٍ ومُستأجِرٍ مُصنَّفاً ([ADR-027](../15-decisions/ADR-027-authorization-policy-matrix.md) · [المصفوفةُ](../07-security/AUTHORIZATION_POLICY_MATRIX.md) · الفحصُ 16). **وحدُّ الدعوى:** إنفاذٌ **ساكنٌ** في البوّابةِ وحدَهُ — لا إنفاذَ في زمنِ التشغيلِ، و`TOKEN_BOUND_OPERATION_COUNT = 0`، و11 مساراً في السوقِ بلا فرضِ عضويّةِ مُستأجِرٍ (`RISK-0042` · `M1-05B`). **والحزمتانِ لا تعتمدُ إحداهُما على الأخرى** — المصفوفةُ بياناتٌ وقرارٌ، والتوقيعُ آلةٌ. |
 | اختبار | `test-utils` · `channel-e2e` · `customer-e2e` · `driver-e2e` · `order-e2e` · `dispatch-e2e` · `negotiation-e2e` · `reputation-e2e` · `subscription-e2e` · `search-e2e` | كل حزمة `*-e2e` مربوطة ببوابة خروج مرحلتها |
 
 > **تحذير التكرار:** `packages/contracts/` أكثر مسار يتصادم عليه العمل. احجز المسار الفرعي المحدد (مثل `packages/contracts/src/marketplace/`) لا الحزمة كاملة.

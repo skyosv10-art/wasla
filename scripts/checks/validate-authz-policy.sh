@@ -20,8 +20,11 @@
 #   4) كلُّ ثلاثيّةِ إصدارٍ (`serviceName` · `audience` · ثابتُ صلاحيّاتٍ) في
 #      جذرِ تركيبٍ **إنتاجيٍّ** داخلَ سقفِ منحِها، وثابتُها مذكورٌ في دليلِ المنحِ.
 #   5) لا دورَ إنتاجٍ بلا إعلانٍ، ولا دورَ أسطولِ اختبارٍ في ملفٍّ إنتاجيٍّ.
-#   6) حسابُ «المُصنَّفُ + غيرُ المُصنَّفِ = الجردُ» صحيحٌ، ودعوى «صفرُ عملياتٍ
-#      مربوطةٍ بالرمزِ» تُطابِقُ الشفرةَ والوثيقةَ.
+#   6) حسابُ «المُصنَّفُ + غيرُ المُصنَّفِ = الجردُ» صحيحٌ، وعددُ العملياتِ
+#      المربوطةِ بالرمزِ يُطابِقُ الشفرةَ والوثيقةَ.
+#   7) `M1-05B`: كلُّ صفٍّ `token-bound` يُقابِلُ مساراً تفرضُ شفرتُهُ المُنتَفِعَ
+#      (`beneficiary: "required"`) **وبالعكسِ**، والعددُ مُشتَقٌّ لا مكتوبٌ، ولا
+#      مسارَ مربوطٌ بمالكٍ يستقي هويّتَهُ من ترويسةٍ وحدَها.
 #
 # ولِمَ حارسٌ سادسَ عشرَ ولم يكفِ الفحصُ 12: ذاكَ يسألُ «أيُوقِّعُ كلُّ مُنادٍ،
 # وأيَفرِضُ كلُّ حدٍّ؟» — سؤالُ **مُصادَقةٍ**. وهذا يسألُ «أيَحقُّ لهُ ما يحملُ؟»
@@ -105,6 +108,9 @@ def strip_comments(src):
 
 # ── قياسُ الشفرةِ: الحدودُ وصلاحيّاتُها ومساراتُها ───────────────────────────
 code_ops = {}          # (audience, method, path) -> tuple(scopes)
+code_beneficiary_required = set()   # (audience, method, path) مُصنَّفةٌ `beneficiary: "required"`
+route_service = {}                  # (audience, method, path) -> اسمُ الخدمةِ
+beneficiary_helpers_by_service = {}  # svc -> أسماءُ المساعدينَ المُنتِجينَ للمطلبِ
 open_routes = 0
 for identity in sorted(glob.glob("services/*/src/http/service-identity.ts")):
     svc = identity.split(os.sep)[1]
@@ -123,11 +129,35 @@ for identity in sorted(glob.glob("services/*/src/http/service-identity.ts")):
         bad(f"حدٌّ بلا تطبيقٍ: {app}")
         continue
     app_src = read(app)
+
+    # ── تصنيفُ المُنتَفِعِ (`M1-05B`) ───────────────────────────────────────
+    # لا يُقرأُ `beneficiary: "required"` من إعدادِ المسارِ مباشرةً لأنّهُ يسكنُ
+    # في مساعدٍ (`ownerScoped`). فيُقاسُ **على مرحلتَينِ**: أوّلاً أيُّ المساعدينَ
+    # يُنتِجُ المطلبَ فعلاً في جسمِهِ، ثمَّ أيُّ المساراتِ يُناديهِ. ولو أُفرِغَ
+    # جسمُ المساعدِ من المطلبِ لخلا هذا الجردُ فسقطَ البابُ 7 — وهيَ الطفرةُ
+    # التي يُجرِّبُها `gov-cases-authz-policy.sh`.
+    app_clean = strip_comments(app_src)
+    beneficiary_helpers = set()
+    for helper in re.finditer(
+        r"function\s+(\w+)\s*\([^)]*\)\s*:\s*\w+\s*\{(.*?)\n\}",
+        app_clean,
+        re.S,
+    ):
+        if re.search(r'beneficiary:\s*"required"', helper.group(2)):
+            beneficiary_helpers.add(helper.group(1))
+    if beneficiary_helpers:
+        beneficiary_helpers_by_service[svc] = sorted(beneficiary_helpers)
+
     for route in re.finditer(
         r'app\.(get|post|put|patch|delete)\(\s*"([^"]+)"\s*,\s*\{\s*config:\s*([^}]*?)\}',
-        app_src,
+        app_clean,
     ):
         method, path, cfg = route.group(1).upper(), route.group(2), route.group(3)
+        _direct = re.search(r'beneficiary:\s*"required"', cfg) is not None
+        _via_helper = any(re.search(rf"\b{h}\s*\(", cfg) for h in beneficiary_helpers)
+        if _direct or _via_helper:
+            code_beneficiary_required.add((audience, method, path))
+            route_service[(audience, method, path)] = svc
         keys = re.findall(r"[A-Z_]+_SCOPES\.(\w+)", cfg)
         if not keys:
             if "OPEN" in cfg:
@@ -442,6 +472,103 @@ for key in sorted({(b[0], b[1], b[2]) for b in re.findall(
 )}):
     if key not in declared:
         bad("تصنيفُ ربطٍ لعمليّةٍ غيرِ مُعلَنةٍ في الجردِ: %s %s %s" % key)
+
+# ── البابُ 7: الربطُ بالرمزِ مُثبَتٌ في الشفرةِ لا مُدَّعىً في المصفوفةِ (`M1-05B`)
+#
+# البابُ 6 يُحصي؛ وهذا يسألُ السؤالَ الذي لا يُحصى: **أيُقابِلُ كلُّ صفٍّ
+# `token-bound` مساراً تفرضُ شفرتُهُ المُنتَفِعَ فعلاً؟** فبلا هذا يصيرُ رفعُ
+# `TOKEN_BOUND_OPERATION_COUNT` تغييرَ كلمةٍ في صفٍّ — أي مصفوفةً تُصدِّقُ
+# نفسَها. والمقابلةُ **في الاتجاهَينِ**: صفٌّ بلا شفرةٍ دعوى كاذبةٌ، وشفرةٌ
+# بلا صفٍّ إنفاذٌ غيرُ مُعلَنٍ يسقطُ من المصفوفةِ بصمتٍ.
+matrix_token_bound = {
+    (m.group(1), m.group(2), m.group(3))
+    for m in re.finditer(
+        r'audience:\s*"([^"]+)",\s*method:\s*"([^"]+)",\s*path:\s*"([^"]+)",'
+        r'\s*dimension:\s*"[^"]+",\s*strength:\s*"token-bound"',
+        bindings_src,
+    )
+}
+
+claimed_not_enforced = sorted(matrix_token_bound - code_beneficiary_required)
+enforced_not_claimed = sorted(code_beneficiary_required - matrix_token_bound)
+
+if claimed_not_enforced:
+    for key in claimed_not_enforced:
+        bad(
+            "صفٌّ `token-bound` لا تفرضُ شفرتُهُ المُنتَفِعَ — المسارُ غيرُ مُصنَّفٍ "
+            'بـ`beneficiary: "required"`: %s %s %s' % key
+        )
+if enforced_not_claimed:
+    for key in enforced_not_claimed:
+        bad(
+            'مسارٌ مُصنَّفٌ `beneficiary: "required"` في الشفرةِ ولا صفَّ '
+            "`token-bound` لهُ في المصفوفةِ — إنفاذٌ يسقطُ من الإعلانِ: %s %s %s" % key
+        )
+if not claimed_not_enforced and not enforced_not_claimed:
+    ok(
+        f"كلُّ صفٍّ `token-bound` مُثبَتٌ في الشفرةِ وبالعكسِ — {len(matrix_token_bound)} عمليّةً "
+        f"على {len({k[0] for k in matrix_token_bound})} حدٍّ"
+    )
+
+# ولا يُقرأُ الفراغُ توافقاً: مجموعتانِ فارغتانِ تتطابقانِ دائماً. فإن كانَ
+# العددُ المُعلَنُ في الوثيقةِ أكبرَ من صفرٍ ثمَّ خلَتِ الشفرةُ والمصفوفةُ
+# معاً، فذلكَ عمىً لا خضرةٌ.
+if token_bound > 0 and not matrix_token_bound:
+    bad(
+        "العددُ المُشتَقُّ يقولُ %d ولم يُقرأْ صفٌّ `token-bound` واحدٌ — عميَ البابُ 7"
+        % token_bound
+    )
+
+# والعددُ المُشتَقُّ يجبُ أن يُطابِقَ الصفوفَ المقروءةَ هنا، وإلّا فأحدُ
+# المِسبارَينِ يقرأُ ما لا يقرأُ الآخرُ.
+if token_bound != len(matrix_token_bound):
+    bad(
+        "تباعدَ مِسبارا القياسِ: `strength` أعطى %d و`(audience,method,path)` أعطى %d"
+        % (token_bound, len(matrix_token_bound))
+    )
+
+# `TOKEN_BOUND_OPERATION_COUNT` **مُشتَقٌّ لا مكتوبٌ**: رقمٌ حرفيٌّ هنا يُصدِّقُ
+# ما لا تُثبِتُهُ الصفوفُ، ويُصلِحُ الطفرةَ التي يُفترَضُ أن تُسقِطَ الفحصَ.
+_count_decl = re.search(
+    r"export const TOKEN_BOUND_OPERATION_COUNT\s*:\s*number\s*=(.*?);", bindings_src, re.S
+)
+if _count_decl is None:
+    bad("لم يُوجَدْ إعلانُ `TOKEN_BOUND_OPERATION_COUNT` — عميَ القياسُ")
+elif re.search(r"=\s*\d+\s*$", _count_decl.group(0).replace(";", "").strip()):
+    bad("`TOKEN_BOUND_OPERATION_COUNT` رقمٌ مكتوبٌ باليدِ — والمكتوبُ لا يُقاسُ")
+elif 'strength === "token-bound"' not in _count_decl.group(1):
+    bad("`TOKEN_BOUND_OPERATION_COUNT` لا يُشتَقُّ من `strength === \"token-bound\"`")
+else:
+    ok("`TOKEN_BOUND_OPERATION_COUNT` مُشتَقٌّ من الصفوفِ لا مكتوبٌ باليدِ")
+
+# ولا مسارَ مربوطٌ بمالكٍ يستقي هويّتَهُ من ترويسةٍ وحدَها: مُعالِجُ كلِّ مسارٍ
+# مُصنَّفٍ يجبُ أن يُنادِيَ قارئَ الرمزِ (`ownerPublicIdOf`) عبرَ مساعدٍ، فلا
+# يكفي أن يُقارِنَ ترويسةً بمَورِدٍ.
+for key in sorted(code_beneficiary_required):
+    svc = route_service.get(key)
+    if svc is None:
+        bad("مسارٌ مُصنَّفٌ بلا خدمةٍ مقروءةٍ: %s %s %s" % key)
+        continue
+    app_clean = strip_comments(read(f"services/{svc}/src/http/app.ts"))
+    if "ownerPublicIdOf" not in app_clean:
+        bad(
+            "خدمةٌ فيها مسارٌ مربوطٌ بالرمزِ ولا تقرأُ `ownerPublicIdOf` — الهويّةُ "
+            "من ترويسةٍ وحدَها: %s (%s %s %s)" % ((svc,) + key)
+        )
+if code_beneficiary_required:
+    ok(
+        f"كلُّ خدمةٍ فيها مسارٌ مربوطٌ بالرمزِ تقرأُ المالكَ من الرمزِ — "
+        f"{len({route_service[k] for k in code_beneficiary_required if k in route_service})} خدمةً"
+    )
+
+# والمساعدُ الذي يُنتِجُ المطلبَ يجبُ أن يُوجَدَ حيثُ تُوجَدُ مساراتٌ مُصنَّفةٌ،
+# وإلّا فالتصنيفُ حرفيٌّ في كلِّ مسارٍ — مصدرا حقيقةٍ لا مصدرٌ واحدٌ.
+for svc in sorted({route_service[k] for k in code_beneficiary_required if k in route_service}):
+    if svc not in beneficiary_helpers_by_service:
+        bad(
+            f"مساراتٌ مُصنَّفةٌ في «{svc}» بلا مساعدٍ واحدٍ يُنتِجُ المطلبَ — "
+            "التصنيفُ مُكرَّرٌ حرفيّاً فيَشيخُ متفرِّقاً"
+        )
 
 print("\n".join(out))
 PY

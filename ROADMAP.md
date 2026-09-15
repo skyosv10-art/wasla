@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-15 (M1-05 — authorization has a single source of truth for the first time: who *deserves* a scope was a declared-but-absent decision referenced by name in four source files, and measuring it surfaced two unrelated gaps nobody had written down)
+**Last updated:** 2026-09-15 (M1-05B wave 1 — ownership on the two order read routes is now read from a signature instead of a caller-written header; and the estimate that justified deferring it was itself wrong)
 **Last milestone (M1-05 — the authorization policy matrix):** `M1-04` answers *is this request from a service the system knows?* Nothing in the repository answered *is this service entitled to what it carries?* — and the vacuum was a **correct decision half-implemented**: `packages/service-auth/src/{enforce,index,token}.ts` and `services/orders/src/http/service-identity.ts` each state in prose that the gateway must not hold a role→scope matrix, and each names `M1-05` as its owner. So the matrix had a declared home and no existence, and `mintServiceToken` passed `scp` through without asking about entitlement. Added: `packages/authz-policy` as the single source (80 enforced operations, 10 production roles with 18 grants, 8 isolated test-fleet roles, 16 classified owner/tenant bindings, pure decision functions), 27 rejection-heavy tests across all three dimensions (`owner`/`role`/`tenant`), and governance check 16 wired into the single entry point — drift-proof in **both** directions, with 16 mutation cases proving the guard bites.
 **The board's number was never measured, and it is corrected by addition, not erasure:** the `M1-05` row said *inventory of 107 operations*. The live measurement is **8 boundaries · 89 registered routes · 80 enforced operations · 9 `OPEN` routes · 64 enforced scopes · 0 routes with neither a scope nor `OPEN`**. The `107` stays written on the board because it is the prior evidence; the measurement is written beside it with the guard that reproduces it.
 **Two gaps the measurement surfaced that were not on anyone's list — `RISK-0042`:** (1) **ownership is caller-asserted.** `assertOwner()` compares `order.customerPublicId` against the `X-Customer-Public-Id` header, whose **shape** is validated and whose truth is not — and the token carries `sub`/`aud`/`scp` with **no beneficiary identity at all**, so `TOKEN_BOUND_OPERATION_COUNT = 0` out of 80. (2) **tenant membership is never checked.** `storeSlug` is read from the path and handed to the repository in **eleven** marketplace routes, so a holder of `marketplace:staffWrite` can write staff into *any* store. Both are recorded by addition; `RISK-0026` (resource identity in the query string) is **not** claimed closed.
@@ -103,6 +103,71 @@ today is not a claim of ownership.
 Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
+
+- **M1-05B (runtime authorization + token-bound beneficiary) — wave 1 of 3, claim `CLM-0178`.**
+  The two order read routes (`GET /orders/:orderId`, `GET /orders/:orderId/history`) no longer
+  decide ownership from a header the caller writes. They are classified
+  `beneficiary: "required"`, and the `service-auth` middleware rejects any token without a
+  beneficiary claim with **403 before the handler runs** — on the same wire code and message as
+  insufficient scope, differing only in `logReason`, so the rejection code cannot be used as a
+  probe for which routes are bound. Ownership is then read from the token
+  (`ownerPublicIdOf`), and `X-Customer-Public-Id` stays required **by the contract** but is
+  demoted from judge to a value that must *match* the signed beneficiary; a mismatch returns
+  `ORDER_NOT_FOUND`, not 403, because 403 would disclose that the order exists and belongs to
+  someone other than the identity named in the header. `TOKEN_BOUND_OPERATION_COUNT` went from
+  **0 to 2**, derived from the matrix rows and rejected by the guard if hand-written. Decision:
+  [ADR-028](docs/15-decisions/ADR-028-token-bound-owner-binding.md).
+
+- **The estimate that justified deferring this was wrong, and it is corrected by addition.**
+  `M1-05` and `RISK-0042` both said the fix required **adding a beneficiary claim to the token
+  contract** (`ADR-020`/`ADR-021`) — a change touching eight boundaries and twenty signing
+  sites. Re-measurement showed the claim **already existed**, optionally: `ServiceTokenPayload.obo`
+  in `packages/service-auth/src/token.ts`, minted via `onBehalfOfPublicId`, validated in
+  `decodePayload` (empty or wrong-typed ⇒ `invalid_claims`), surfaced as
+  `ServicePrincipal.onBehalfOfPublicId`, with a ready reader `ownerPublicIdOf()` in
+  `packages/auth-sdk` and exactly one prior consumer (inventory-conflict audit attribution in
+  `services/delivery`). The real gap was **"an optional claim nobody required, and an
+  `assertOwner` that preferred a caller-written header over it."** The wrong estimate stays
+  written wherever it appears, because it is what the deferral was argued from — erasing it
+  would make the deferral look like a decision without a reason.
+
+- **The enforcement point is the receiver, not the signer — measured, not preferred.** The
+  signer gained an **optional** third argument (`onBehalfOfPublicId`), passed as a per-call
+  argument rather than a builder argument because the service is one and the beneficiary changes
+  per request. Requiring it at the signer would be a promise, not enforcement: whoever signs can
+  decline to pass it, and only the receiver can refuse. So the effect of this wave is measured by
+  **how many routes reject a token without a beneficiary**, not by how many callers pass one.
+
+- **One deliberate exception, written because it looks like the opposite of closed-by-default.**
+  The middleware computes `identity === undefined ? false : identity.beneficiary === "required"`.
+  `undefined` can only occur on an **unregistered** route, because the `onRoute` boot guard kills
+  the app for any *registered* route that is unclassified. An unregistered route guards no
+  resource, and requiring a beneficiary there replaces an honest **404 with a lying 403**,
+  merging path typos with security refusals in operator logs. This surfaced as a **real
+  regression**: the first draft defaulted to `true` and broke a pre-existing test that says in
+  as many words that an unknown route must not be dressed up as a missing order. The root cause
+  was fixed; the test was not weakened. The closed-by-default **scope** gate above it was not
+  touched.
+
+- **What this wave does not close, stated where it cannot be missed.** `RISK-0042` remains
+  **open** with two of three findings untouched: marketplace tenant membership is still never
+  checked (`storeSlug` flows from path to repository across **eleven** routes), and
+  `actorPublicId` on product publish/archive is still read from the **request body**. Both
+  **2** token-bound rows are in the **ownership** dimension; the **tenant dimension has zero**
+  bindings (fourteen `none` rows, eleven of them in marketplace), and an explicit test asserts
+  no tenant row is token-bound so the number 2 cannot be read as wider than it is. **78 of 80**
+  enforced operations remain unbound. The published contracts still say nothing about this
+  requirement — that is `RISK-0041` and belongs to `M1-06`. And the orders contract tests are
+  **blind to this barrier by design** (their signing wrapper derives `obo` from the test's own
+  header, stated in prose in `support.ts`); barrier proof lives in the `service-identity` tests
+  and in the guard's five mutation cases.
+
+- **A mutation case went silent the moment the number it asserted changed.** The existing case
+  mutating `TOKEN_BOUND_OPERATION_COUNT = 0` → `12` in the matrix document became a **no-op**
+  once the document said `2` — a mutation that changes nothing reads as a guard that bites. It
+  now reads the number from the document, inflates it, and **asserts the file actually changed**
+  before measuring. Every one of the five new mutation cases does the same, because in `M1-05`
+  three mutations passed silently and one genuine guard blindness was caught exactly this way.
 
 - **M1-05 (authorization policy matrix) — wave 1, claim `CLM-0177`.** Authorization now has
   one place it is asked from. Added: `packages/authz-policy` (`@wasla/authz-policy`), which

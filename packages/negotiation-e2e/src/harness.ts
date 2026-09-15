@@ -676,9 +676,14 @@ export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResul
     ...init,
     headers: {
       // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
+      // المُنتَفِعُ يُحمَلُ في الرمزِ لا في الترويسةِ وحدَها (`M1-05B`): مساراتُ
+      // قراءةِ الطلبِ صارتْ `beneficiary: "required"`، فالسندُ يوقِّعُ نيابةً
+      // عن العميلِ الذي يُصرِّحُ بهِ في `customerScope` نفسِهِ — مصدرٌ واحدٌ
+      // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
       ...ordersSigner("negotiation-exit-gate", Object.values(ORDER_SCOPES))(
         init.method,
         init.path.split("?")[0] ?? init.path,
+        init.customerScope,
       ),
       ...(init.headers ?? {}),
     },

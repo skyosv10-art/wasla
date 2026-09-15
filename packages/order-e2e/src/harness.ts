@@ -170,7 +170,12 @@ export interface GateContext {
    * every scope the boundary declares — the point proven here is the chain
    * working **signed**, not scope granting, which is M1-05 at the issuer.
    */
-  readonly signEngine: (method: string, path: string) => Record<string, string>;
+  readonly signEngine: (
+    method: string,
+    path: string,
+    /** المُنتَفِعُ داخلَ الرمزِ (`obo` · `M1-05B`). */
+    onBehalfOfPublicId?: string,
+  ) => Record<string, string>;
   /** Everything the engine appended, whichever store is in play. */
   engineEvents(): Promise<OrderDomainEvent[]>;
   close(): Promise<void>;
@@ -395,7 +400,11 @@ export async function callEngine(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
-      ...gate.signEngine(init.method, signedPath),
+      // المُنتَفِعُ يُحمَلُ في الرمزِ لا في الترويسةِ وحدَها (`M1-05B`): مساراتُ
+      // قراءةِ الطلبِ صارتْ `beneficiary: "required"`، فالسندُ يوقِّعُ نيابةً
+      // عن العميلِ الذي يُصرِّحُ بهِ في `customerScope` نفسِهِ — مصدرٌ واحدٌ
+      // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
+      ...gate.signEngine(init.method, signedPath, init.customerScope),
       ...(init.idempotencyKey === undefined
         ? {}
         : { "idempotency-key": init.idempotencyKey }),

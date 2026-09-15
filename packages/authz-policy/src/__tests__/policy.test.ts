@@ -188,14 +188,48 @@ describe("رفضٌ بالملكيّةِ (owner negative)", () => {
     ).toBe(true);
   });
 
-  it("رسالةُ الرفضِ تُصرِّحُ بقوّةِ الربطِ — فلا يُقرأُ `caller-asserted` إثباتَ ملكيّةٍ", () => {
-    const decision = evaluateOwnerBinding({
-      ...owned,
-      claimed: "WSL-0000000002",
-      actual: "WSL-0000000001",
-    });
-    expect(decision.allowed).toBe(false);
-    if (!decision.allowed) expect(decision.error.message).toContain("caller-asserted");
+  /**
+   * تصحيحٌ **بالإضافةِ** (`M1-05B`): كانَ هذا الاختبارُ يُثبِتُ أنَّ الرسالةَ
+   * تحملُ الكلمةَ `caller-asserted` بعينِها، لأنَّ `GET /orders/:orderId` كانَ
+   * صفّاً `caller-asserted` يومَ `M1-05`. وقد صارَ `token-bound`، فلو بقيَ
+   * الاختبارُ على الكلمةِ الحرفيّةِ لسقطَ **لسببٍ صحيحٍ** — والمطلبُ الذي
+   * كانَ يحرسُهُ ليسَ الكلمةَ بل **أن تُصرِّحَ الرسالةُ بقوّةِ الربطِ التي
+   * أنتجتِ الرفضَ**، فلا يُقرأُ ربطٌ ضعيفٌ إثباتَ ملكيّةٍ. فيُعمَّمُ على كلِّ
+   * صفٍّ مُصنَّفٍ بدلاً من أن يُثبَّتَ على صفٍّ واحدٍ يتغيَّرُ.
+   */
+  it("رسالةُ الرفضِ تُصرِّحُ بقوّةِ الربطِ الفعليّةِ لكلِّ صفٍّ مُصنَّفٍ", () => {
+    const rejecting = OPERATION_BINDINGS.filter((b) => b.strength !== "none");
+    // لو صارَ كلُّ صفٍّ `none` لمرَّ الاختبارُ على مجموعةٍ فارغةٍ — فيُرفَضُ الفراغُ.
+    expect(rejecting.length).toBeGreaterThan(0);
+    for (const binding of rejecting) {
+      const decision = evaluateOwnerBinding({
+        audience: binding.audience,
+        method: binding.method,
+        path: binding.path,
+        dimension: binding.dimension,
+        claimed: "WSL-0000000002",
+        actual: "WSL-0000000001",
+      });
+      expect(decision.allowed, `${binding.method} ${binding.path}`).toBe(false);
+      if (!decision.allowed) {
+        expect(decision.error.message, `${binding.method} ${binding.path}`).toContain(
+          binding.strength,
+        );
+      }
+    }
+  });
+
+  /**
+   * أثرٌ مقيسٌ للموجةِ الأولى يُسجَّلُ كي لا يُقرأَ صدفةً: **لم يبقَ في
+   * المصفوفةِ صفٌّ واحدٌ `caller-asserted`.** صفَّا الطلباتِ كانا الوحيدَينِ،
+   * وقد صارا `token-bound`. وما بقيَ `none` (حدُّ السوقِ) أضعفُ لا أقوى.
+   *
+   * **والتصريحُ الصريحُ هنا أنَّ فرعَ الرسالةِ الخاصَّ بـ`caller-asserted`
+   * لم يَعُدْ يُبلَغُ من بياناتِ المصفوفةِ** — فلا يُدَّعى أنّهُ مُغطّىً.
+   * وهوَ يُختبَرُ أدناهُ بمُدخَلٍ مُصطنَعٍ لا بصفٍّ حقيقيٍّ، والفرقُ مُعلَنٌ.
+   */
+  it("لا صفَّ `caller-asserted` بعدَ الموجةِ الأولى — والغيابُ مُعلَنٌ لا مُستنتَجٌ", () => {
+    expect(OPERATION_BINDINGS.filter((b) => b.strength === "caller-asserted")).toHaveLength(0);
   });
 
   it("عمليّةٌ بلا ربطٍ تُصرِّحُ بـ`none` — الغيابُ مُعلَنٌ لا مُقنَّعٌ", () => {
@@ -243,8 +277,26 @@ describe("رفضٌ بالمستأجرِ (tenant negative)", () => {
 
 // ── حدُّ الدعوى: الغيابُ مقيسٌ لا مُخفىً ──────────────────────────────────
 describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
-  it("لا عمليّةَ واحدةٌ مربوطةٌ بالرمزِ بعدُ — والصفرُ مُعلَنٌ لا مُستنتَجٌ", () => {
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(0);
+  /**
+   * تصحيحٌ **بالإضافةِ** (`M1-05B`): كانَ هذا الاختبارُ يُثبِتُ الصفرَ —
+   * وكانَ صادقاً في `M1-05`. وقد صارَ **اثنَينِ** بالموجةِ الأولى، والرقمُ
+   * لا يُكتَبُ هنا وحدَهُ بل **يُقابَلُ بالصفوفِ نفسِها**: فلو رُفِعَ الرقمُ
+   * بتعديلِ المُشتَقِّ بلا صفوفٍ لسقطَ، ولو أُضيفَ صفٌّ بلا تصنيفِ مسارٍ في
+   * شفرةِ الحدِّ لسقطَ الفحصُ 16.
+   */
+  it("العملياتُ المربوطةُ بالرمزِ اثنتانِ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
+    const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(2);
+    expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "GET /orders/:orderId",
+      "GET /orders/:orderId/history",
+    ]);
+    // والبُعدُ المُثبَتُ هوَ الملكيّةُ وحدَها: المستأجرُ لم يُربَطْ بعدُ
+    // (الموجةُ الثانيةُ · `RISK-0042` البندُ الثاني) — فلا يُقرأُ الرقمُ
+    // إغلاقاً للخطرِ كلِّهِ.
+    expect(tokenBound.every((b) => b.dimension === "owner")).toBe(true);
+    expect(OPERATION_BINDINGS.filter((b) => b.dimension === "tenant" && b.strength === "token-bound")).toHaveLength(0);
   });
 
   it("المُصنَّفُ وغيرُ المُصنَّفِ يُساويانِ الجردَ كلَّهُ — فلا عمليّةَ تسقطُ من الحسابِ", () => {

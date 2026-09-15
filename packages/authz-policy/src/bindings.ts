@@ -26,7 +26,30 @@
  * عمليّةٍ مفحوصةٍ، وعددٌ صريحٌ لغيرِ المفحوصِ، وفحصٌ يرفضُ أن يزيدَ غيرُ
  * المفحوصِ بصمتٍ أو أن يدَّعيَ التصنيفُ ما لا تُثبِتُهُ الشفرة.
  *
- * المرجع: ADR-027 · RISK-0042 · docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
+ * ── تصحيحٌ بالإضافةِ · مقيسٌ في 2026-09-15 · `M1-05B` ─────────────────────
+ * **الجملةُ أعلاهُ «والرمزُ نفسُهُ لا يحملُ اسمَ الشخصِ الذي نُودِيَ نيابةً عنه…
+ * ولا مطلبَ فيهِ لهويّةِ الطرفِ المُنتَفِعِ» خاطئةٌ، وتُتركُ مكتوبةً ولا تُمحى.**
+ * القياسُ المُعادُ أظهرَ أنَّ `packages/service-auth/src/token.ts` يحملُ مطلباً
+ * **اختياريّاً** اسمُهُ `obo` (`ServiceTokenPayload.obo?: string`)، يُصدَرُ
+ * بـ`MintServiceTokenOptions.onBehalfOfPublicId`، ويُفحَصُ في `decodePayload`
+ * (فراغُهُ أو نوعُهُ الخاطئُ ⇒ `invalid_claims`)، ويظهرُ في
+ * `ServicePrincipal.onBehalfOfPublicId`، ولهُ قارئٌ جاهزٌ
+ * `ownerPublicIdOf()` في `packages/auth-sdk/src/authorize.ts`. وكانَ لهُ
+ * مستهلِكٌ واحدٌ يومَها: نسبةُ تدقيقِ تعارضِ المخزونِ في `services/delivery`.
+ *
+ * **فالفجوةُ الحقيقيّةُ لم تكنْ «لا مطلبَ في الرمزِ» بل «المطلبُ موجودٌ
+ * اختياريّاً ولا أحدَ يُلزِمُهُ، و`assertOwner` تجاهلَهُ وفضَّلَ ترويسةً
+ * يكتبُها المُنادي».** وهذا فرقٌ يُغيِّرُ حجمَ الإصلاحِ لا اتّجاهَهُ: فلم يلزمْ
+ * تغييرُ عقدِ الرمزِ (`ADR-020` · `ADR-021`) كما قُدِّرَ هنا، بل إلزامُ المطلبِ
+ * الموجودِ عندَ المساراتِ المربوطةِ بمالكٍ. ولذلكَ صارَ ما قيلَ إنّهُ «تغييرُ
+ * عقدٍ» موجةً واحدةً من ثلاثٍ في `M1-05B`.
+ *
+ * **ولماذا يُصحَّحُ بالإضافةِ لا بالحذفِ:** التقديرُ الخاطئُ هوَ ما بُرِّرَ بهِ
+ * تأجيلُ الإصلاحِ في `M1-05`. فمحوُهُ يجعلُ التأجيلَ يبدو قراراً بلا سببٍ،
+ * ويُخفي أنَّ سببَهُ كانَ قياساً ناقصاً — وهوَ الدرسُ الوحيدُ الذي يستحقُّ
+ * البقاءَ هنا.
+ *
+ * المرجع: ADR-027 · ADR-028 · RISK-0042 · docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
  */
 
 import { ENFORCED_OPERATIONS, type Audience, type HttpMethod } from "./operations.js";
@@ -71,18 +94,18 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     method: "GET",
     path: "/orders/:orderId",
     dimension: "owner",
-    strength: "caller-asserted",
-    evidence: "services/orders/src/http/app.ts:assertOwner",
-    note: "تُقارَنُ ترويسةُ `X-Customer-Public-Id` بـ`order.customerPublicId`، والترويسةُ يكتبُها المُنادي — فالرفضُ `ORDER_NOT_FOUND` لا 403 بقصدٍ (لا يُفصَحُ عن وجودِ طلبٍ لغيرِ صاحبِه).",
+    strength: "token-bound",
+    evidence: "services/orders/src/http/app.ts:requireBeneficiary",
+    note: "`M1-05B`: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ. والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf`، والترويسةُ `X-Customer-Public-Id` بقيتْ مطلوبةً بالعقدِ ولكنَّها صارتْ **مُطالَبةً بالمطابقةِ** لا حَكَماً: مخالفتُها تُرَدُّ `ORDER_NOT_FOUND`. وسابقاً كانَ هذا الصفُّ `caller-asserted` بدليلِ `assertOwner` — يُذكَرُ ولا يُمحى.",
   },
   {
     audience: "orders",
     method: "GET",
     path: "/orders/:orderId/history",
     dimension: "owner",
-    strength: "caller-asserted",
-    evidence: "services/orders/src/http/app.ts:assertOwner",
-    note: "المقارنةُ نفسُها على سجلِّ الحالاتِ — وتسريبُ التاريخِ أخطرُ من تسريبِ لقطةٍ لأنّهُ يكشفُ نمطَ سلوكٍ.",
+    strength: "token-bound",
+    evidence: "services/orders/src/http/app.ts:requireBeneficiary",
+    note: "`M1-05B`: الربطُ نفسُهُ على سجلِّ الحالاتِ — وهوَ الأَوْلى بهِ لأنَّ تسريبَ التاريخِ يكشفُ نمطَ سلوكٍ لا لقطةً واحدةً. وسابقاً `caller-asserted` بدليلِ `assertOwner`.",
   },
   {
     audience: "orders",
@@ -238,7 +261,15 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
 export const UNCLASSIFIED_OPERATION_COUNT: number =
   ENFORCED_OPERATIONS.length - OPERATION_BINDINGS.length;
 
-/** عددُ العملياتِ التي يُثبِتُ الرمزُ مالكَها أو مستأجرَها — **صفرٌ** في 2026-09-15. */
+/**
+ * عددُ العملياتِ التي يُثبِتُ **الرمزُ** مالكَها أو مستأجرَها.
+ *
+ * كانَ **صفراً** في `M1-05`، وصارَ **اثنتَينِ** في `M1-05B` (الموجةُ الأولى:
+ * قراءةُ الطلبِ وسجلُّهُ). وهوَ **مُشتَقٌّ لا مكتوبٌ** كي لا يصيرَ رقماً
+ * يُحدَّثُ باليدِ فيُصدِّقُ ما لا تُثبِتُهُ الصفوفُ. والفحصُ 16 يُطابِقُهُ
+ * بعددِ الصفوفِ ويُطابِقُ كلَّ صفٍّ `token-bound` بتصنيفِ مسارِهِ في شفرةِ
+ * الحدِّ — فلا يكفي تغييرُ كلمةٍ هنا لرفعِ الرقمِ.
+ */
 export const TOKEN_BOUND_OPERATION_COUNT: number = OPERATION_BINDINGS.filter(
   (b) => b.strength === "token-bound",
 ).length;

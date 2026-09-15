@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T05:39:57Z",
+  "generated_at": "2026-09-15T08:01:24Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a63b1de58175cbbbd0da56d8ebe816203eda8520",
-    "branch": "feat/m1-05-authorization-policy-matrix",
-    "dirty": true,
-    "dirty_files": 15,
-    "dirty_reason": "تنفيذُ M1-05 (CLM-0177): مصفوفةُ سياساتِ التفويضِ — حزمةٌ جديدةٌ packages/authz-policy (packages 49→50 وpackages_with_typecheck وpackages_with_test مثلَها، وtest_files_tracked 354→355 لملفِّ اختبارِها، وبصمةُ pnpm-lock.yaml تغيَّرت لإضافةِ الحزمةِ إلى الشجرةِ) + الفحصُ السادسَ عشرَ validate-authz-policy.sh في المدخلِ الموحَّدِ (governance_checks 15→16) + RISK-0042 (risks_not_closed 30→31) + governance_suite_cases 322→342 للحالاتِ الجديدةِ المقيسةِ. الأساسُ مولَّدٌ بـscripts/baseline.sh لا بيدٍ.",
-    "tracked_files": 2007
+    "commit": "71a659a761317d6af9f6636ef6b85f140fd3cacf",
+    "branch": "feat/m1-05b-owner-binding-in-token",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "M1-05B الموجةُ 1 (CLM-0178): ربطُ المُنتَفِعِ بالرمزِ — عددُ اختباراتِ orders/authz-policy وحالاتِ الحوكمةِ يرتفعُ",
+    "tracked_files": 2021
   },
   "env": {
     "node": "v20.20.1",
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m1-05-pass2.log",
-    "tests_passed": 4576,
+    "source": "/tmp/verify_m105b.log",
+    "tests_passed": 4579,
     "test_files_executed": 281,
-    "governance_suite_cases": 342,
+    "governance_suite_cases": 347,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

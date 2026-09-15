@@ -28,7 +28,7 @@
  * مُعلَنٌ في سجلِّ التغطيةِ** لا مُقدَّرٌ.
  */
 
-import { AuthErrorCode, hasAllScopes } from "@wasla/auth-sdk";
+import { AuthErrorCode, hasAllScopes, ownerPublicIdOf } from "@wasla/auth-sdk";
 import type { AuthErrorCodeValue, ServicePrincipal } from "@wasla/auth-sdk";
 
 import type { ServiceAuthRejection } from "./errors.js";
@@ -60,6 +60,21 @@ export interface ServiceIdentityEnforcementOptions {
    * وهي حالٌ مشروعةٌ **إن كُتِبت صراحةً** لا سهواً.
    */
   readonly requiredScopes: readonly string[];
+  /**
+   * هل يُطالَبُ هذا المسارُ بهويّةِ **الطرفِ المُنتَفِعِ** داخلَ الرمزِ؟ (`M1-05B`)
+   *
+   * تُكتَبُ `true` على كلِّ مسارٍ يقرأُ أو يكتبُ مَورِداً **مملوكاً لإنسانٍ
+   * بعينِه**. والقيمةُ الافتراضيّةُ `false` **ليست تسامحاً بل صدقاً**: أكثرُ
+   * المسارَاتِ بينَ الخدماتِ لا مُنتَفِعَ لها (مسحُ صفٍّ · مُهِمّةٌ دوريّةٌ ·
+   * فحصُ صحّةٍ)، ومطالبتُها بمُنتَفِعٍ كانتْ ستُنتِجُ مُنادينَ يكتبونَ معرّفاً
+   * وهميّاً لإسكاتِ الحاجزِ — فيصيرُ المطلبُ حقلاً مُعبَّأً لا هويّةً مُثبَتةً.
+   *
+   * وما يُثبَتُ هنا هوَ **الحضورُ** لا المُطابقةُ: أنَّ الرمزَ يحملُ اسمَ مَن
+   * نُودِيَ نيابةً عنهُ. ومُطابقتُهُ بمالكِ المَورِدِ قرارُ الحدِّ نفسِهِ لأنَّهُ
+   * وحدَهُ يعرفُ مَن يملكُ ماذا — وهذا الفصلُ مقصودٌ: نقطةُ الفرضِ لا تقرأُ
+   * قاعدةَ بياناتٍ ولا تعرفُ مَورِداً.
+   */
+  readonly requireBeneficiary?: boolean;
   /** اللحظةُ الحاضرةُ — تُمرَّر ولا تُقرأ من الساعةِ العامّة. */
   readonly now: () => Date;
   readonly maxTtlSeconds?: number;
@@ -79,7 +94,11 @@ export type ServiceIdentityDecision =
       /** رسالةٌ عامّةٌ لا تُسمّي البابَ الذي أخفقَ عليه المُنادي. */
       readonly message: string;
       /** السببُ التشخيصيُّ — **للسجلِّ الداخليِّ فقط**، لا يُرَدُّ على السلك. */
-      readonly logReason: ServiceAuthRejection | "insufficient_scope" | "replay_store_unavailable";
+      readonly logReason:
+        | ServiceAuthRejection
+        | "insufficient_scope"
+        | "missing_beneficiary"
+        | "replay_store_unavailable";
       /** الصلاحيّاتُ الناقصةُ — تُسجَّل داخليّاً وتُعين المُشغِّلَ على الإعداد. */
       readonly missingScopes?: readonly string[];
     };
@@ -94,7 +113,14 @@ export async function enforceServiceIdentity(
   request: EnforcedRequest,
   options: ServiceIdentityEnforcementOptions,
 ): Promise<ServiceIdentityDecision> {
-  const { audience, keys, replayGuard, requiredScopes, now } = options;
+  const {
+    audience,
+    keys,
+    replayGuard,
+    requiredScopes,
+    now,
+    requireBeneficiary = false,
+  } = options;
 
   const authenticated = authenticateServiceRequestDetailed(request.headers, {
     audience,
@@ -150,6 +176,27 @@ export async function enforceServiceIdentity(
       logReason: "insufficient_scope",
       missingScopes: missing,
     };
+  }
+
+  // ── هويّةُ الطرفِ المُنتَفِعِ (M1-05B) — بعدَ الصلاحيّةِ لا قبلَها ──
+  //
+  // والترتيبُ أمنيٌّ كسابقِيهِ: مَن لا يملكُ الصلاحيّةَ لا يستحقُّ أن يعرفَ أنَّ
+  // المسارَ يطالبُ بمُنتَفِعٍ — وإلّا صارَ الردُّ خريطةَ المسارَاتِ المملوكةِ.
+  //
+  // والردُّ **مُطابقٌ حرفاً** لردِّ نقصِ الصلاحيّةِ: 403 بالكودِ نفسِهِ
+  // والرسالةِ نفسِها. والفرقُ في `logReason` وحدَهُ — أي في السجلِّ الداخليِّ
+  // الذي يقرأُهُ المُشغِّلُ، لا في السلكِ الذي يقرأُهُ المُنادي.
+  if (requireBeneficiary) {
+    const beneficiary = ownerPublicIdOf(authenticated.principal);
+    if (beneficiary === undefined || beneficiary.trim() === "") {
+      return {
+        outcome: "denied",
+        status: 403,
+        code: AuthErrorCode.FORBIDDEN,
+        message: "الصلاحيّةُ المطلوبةُ غيرُ ممنوحة.",
+        logReason: "missing_beneficiary",
+      };
+    }
   }
 
   return { outcome: "allowed", principal: authenticated.principal };

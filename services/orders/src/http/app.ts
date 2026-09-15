@@ -56,7 +56,9 @@
  *    with a check that only looks like authentication.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 
 import { OrderError } from "../domain/errors.js";
 import type { OrderDetail } from "../domain/model.js";
@@ -143,6 +145,17 @@ function scoped(...scopes: readonly string[]): OrderRouteConfig {
   return { serviceIdentity: { scopes } };
 }
 
+/**
+ * مسارٌ يقرأُ مَورِداً **مملوكاً لإنسانٍ بعينِه** (`M1-05B` · `RISK-0042`).
+ *
+ * يُضيفُ `beneficiary: "required"` فيرفضُ الوسيطُ المركزيُّ كلَّ رمزٍ لا يحملُ
+ * هويّةَ المُنتَفِعِ **قبلَ أن يَبلُغَ المسارُ مسٌّ قاعدةَ البياناتِ** — والترتيبُ
+ * مقصودٌ: رمزٌ بلا مُنتَفِعٍ لا يستحقُّ قراءةً ثمَّ رفضاً.
+ */
+function ownerScoped(...scopes: readonly string[]): OrderRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
 const DEFAULT_HEALTH: OrderHealthDescriptor = { persistence: "memory" };
 
 /**
@@ -190,6 +203,54 @@ function assertOwner(detail: OrderDetail, scope: string, traceId: string): void 
       traceId,
     });
   }
+}
+
+/**
+ * المُنتَفِعُ كما **يُثبِتُهُ الرمزُ** — لا كما تدّعيهِ الترويسةُ (`M1-05B`).
+ *
+ * ── ما كانَ ولِمَ تغيَّرَ ──────────────────────────────────────────
+ * كانَ `assertOwner` يقارنُ `order.customerPublicId` بترويسةِ
+ * `X-Customer-Public-Id` التي **يكتبُها المُنادي**، ويُتحقَّقُ من شكلِها لا من
+ * صدقِها. فحاملُ `orders:order:read` كانَ يكتبُ أيَّ معرّفِ عميلٍ فيقرأُ طلبَهُ
+ * — وهوَ الوجهُ الأوّلُ من `RISK-0042` كما قُيسَ في `M1-05`.
+ *
+ * والآنَ **الرمزُ هوَ السلطةُ**: المُنتَفِعُ يُقرأُ من `obo` المُوَقَّعِ
+ * (`ownerPublicIdOf`)، والوسيطُ رفضَ أصلاً كلَّ رمزٍ لا يحملُهُ.
+ *
+ * ── ولِمَ بقيتِ الترويسةُ إلزاميّةً ──────────────────────────────────
+ * حذفُها كانَ **تغييرَ عقدٍ** على مُنادٍ لم يُستشار، وإبقاءُها حَكَماً كانَ
+ * العطبَ نفسَهُ. فصارتْ **مُتَحَقَّقاً من تناسقِها معَ الرمزِ**: إن خالفتِ
+ * `obo` رُفِضَ الطلبُ. وهذا يمنعُ **النائبَ المُرتبكَ**: بوّابةٌ تُوَقِّعُ
+ * لإنسانٍ ثمَّ تُمرِّرُ ترويسةَ إنسانٍ آخرَ لم تكنْ تُكشَفُ قبلَ اليومِ.
+ *
+ * والرفضُ `ORDER_NOT_FOUND` لا 403: المُنادي أعلَنَ مُنتَفِعَينِ مختلفَينِ فلا
+ * يُفصَحُ لهُ أيُّهما وجدَ لهُ طلباً — وهيَ سياسةُ `assertOwner` نفسُها.
+ */
+function requireBeneficiary(
+  request: FastifyRequest,
+  traceId: string,
+): string {
+  const caller = request.serviceCaller;
+  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  // لا يُبلَغُ هذا الفرعُ من مسارٍ مُصنَّفٍ بـ`ownerScoped`: الوسيطُ رفضَ قبلَهُ.
+  // وهوَ مكتوبٌ **حارساً للتركيبِ** لا تكراراً: مَن نسِيَ `ownerScoped` على
+  // مسارٍ جديدٍ يرى 503 في الاختبارِ لا 200 بملكيّةٍ غيرِ مفحوصةٍ.
+  if (beneficiary === undefined || beneficiary.trim() === "") {
+    throw new Error(
+      "مسارٌ يقرأُ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: \"required\" — راجِعِ ownerScoped().",
+    );
+  }
+
+  // الترويسةُ تبقى إلزاميّةً بالعقدِ، ولكنَّها لم تَعُدْ حَكَماً.
+  const asserted = requireCustomerScope(request.headers, traceId);
+  if (asserted !== beneficiary) {
+    throw new OrderError("ORDER_NOT_FOUND", `الطلب ${asserted} غير موجود`, {
+      traceId,
+    });
+  }
+
+  return beneficiary;
 }
 
 /** Build the Order Engine Fastify app without starting to listen. */
@@ -296,22 +357,29 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply.status(200).send(orderSummaryToWire(order));
   });
 
-  app.get("/orders/:orderId", { config: scoped(ORDER_SCOPES.orderRead) }, async (request, reply) => {
+  app.get(
+    "/orders/:orderId",
+    { config: ownerScoped(ORDER_SCOPES.orderRead) },
+    async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
-    const scope = requireCustomerScope(request.headers, traceId);
+    const scope = requireBeneficiary(request, traceId);
     const ref = toOrderRef((request.params as { orderId?: unknown }).orderId, traceId);
 
     const detail = await runner.read((deps) => readDetail(deps, ref, traceId));
     assertOwner(detail, scope, traceId);
 
     return reply.status(200).send(orderToWire(detail.order, detail.activeAssignment));
-  });
+    },
+  );
 
-  app.get("/orders/:orderId/history", { config: scoped(ORDER_SCOPES.historyRead) }, async (request, reply) => {
+  app.get(
+    "/orders/:orderId/history",
+    { config: ownerScoped(ORDER_SCOPES.historyRead) },
+    async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
-    const scope = requireCustomerScope(request.headers, traceId);
+    const scope = requireBeneficiary(request, traceId);
     const ref = toOrderRef((request.params as { orderId?: unknown }).orderId, traceId);
 
     const detail = await runner.read((deps) => readDetail(deps, ref, traceId));
@@ -322,7 +390,8 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply
       .status(200)
       .send({ items: detail.statusHistory.map(statusHistoryEntryToWire) });
-  });
+    },
+  );
 
   // --- transitions ---------------------------------------------------------
 

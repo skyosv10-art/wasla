@@ -56,7 +56,19 @@ import type { ServiceTokenReplayGuard } from "./replay.js";
  */
 export type ServiceIdentityRouteIdentity =
   | "open"
-  | { readonly scopes: readonly string[] };
+  | {
+      readonly scopes: readonly string[];
+      /**
+       * `"required"` تعني أنَّ الرمزَ يجبُ أن يحملَ **هويّةَ الطرفِ
+       * المُنتَفِعِ** (`obo`) وإلّا رُفِضَ الطلبُ 403 قبلَ أن يَبلُغَ المسارَ
+       * (`M1-05B` · `RISK-0042`). وتُكتَبُ على كلِّ مسارٍ يمسُّ مَورِداً مملوكاً
+       * لإنسانٍ بعينِهِ.
+       *
+       * **وغيابُها لا يُقرَأُ «لا مالكَ لهذا المَورِدِ» بل «لم يُسأَل»**
+       * — والفرقُ مقيسٌ في `@wasla/authz-policy` لا متروكٌ للقراءةِ.
+       */
+      readonly beneficiary?: "required";
+    };
 
 /** الشكلُ الذي يقرأُه الوسيطُ من `config` المسارِ. */
 export interface ServiceIdentityRouteConfig {
@@ -147,6 +159,16 @@ export function registerServiceIdentityOnFastify(
     // مغلقٌ افتراضيّاً: مسارٌ غيرُ معروفٍ أو غيرُ مصنَّفٍ يُطالَبُ بهويّةٍ مثبتةٍ
     // بلا صلاحيّةٍ مُعلَنةٍ، فلا يصيرُ غيابُ التصنيفِ بابَ تجاوزٍ.
     const requiredScopes = identity === undefined ? [] : identity.scopes;
+    // ومطلبُ المُنتَفِعِ **لا يُعمَّمُ على المسارِ المجهولِ** — والسببُ مقيسٌ
+    // لا ذوقٌ: `identity === undefined` **لا تقعُ إلّا على مسارٍ غيرِ مُسجَّلٍ**،
+    // لأنَّ حاجزَ الإقلاعِ (`onRoute`) يُسقِطُ التطبيقَ على أيِّ مسارٍ مُسجَّلٍ بلا
+    // تصنيفٍ. ففرضُ المُنتَفِعِ هنا **لا يحمي مَورِداً واحداً** ويُبدِلُ 404
+    // الصادقَ بـ403 كاذبٍ — فيصيرُ خطأُ مطبعيٌّ في مسارٍ ورفضٌ أمنيٌّ حدثاً
+    // واحداً في سجلِّ المُشغِّلِ. وهذا هوَ الفرقُ بينَ «مغلقٌ افتراضيّاً» و«مغلقٌ
+    // حيثُ لا بابَ»: الأوّلُ أمنٌ، والثاني تعميةُ تشخيصٍ تلبسُ ثوبَ الأمنِ.
+    // (وحاجزُ الصلاحيّةِ المغلقُ افتراضيّاً أعلاهُ سابقٌ لهذهِ الدفعةِ ولم يُمَسْ.)
+    const requireBeneficiary =
+      identity === undefined ? false : identity.beneficiary === "required";
 
     const decision = await enforceServiceIdentity(
       { method: request.method, path: pathOf(request), headers: request.headers },
@@ -155,6 +177,7 @@ export function registerServiceIdentityOnFastify(
         keys: options.keys,
         replayGuard: options.replayGuard,
         requiredScopes,
+        requireBeneficiary,
         now,
         ...(options.clockSkewSeconds === undefined
           ? {}

@@ -18,6 +18,8 @@ AZ_OPS=packages/authz-policy/src/operations.ts
 AZ_GR=packages/authz-policy/src/grants.ts
 AZ_BI=packages/authz-policy/src/bindings.ts
 AZ_DOC=docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
+# `M1-05B`: البابُ 7 يقرأُ شفرةَ الحدِّ نفسِها، فلا تُقاسُ عضّتُهُ بلا طفرةٍ فيها.
+AZ_APP=services/orders/src/http/app.ts
 
 if [[ ! -f "$AZ" ]]; then
   printf '  \033[31m✗\033[0m %s مفقودٌ — لا تُقاسُ عضّةُ حارسٍ غائبٍ\n' "$AZ"
@@ -28,10 +30,12 @@ fi
 AZ_BK=/tmp/authz_backup
 rm -rf "$AZ_BK"; mkdir -p "$AZ_BK"
 cp "$AZ_OPS" "$AZ_BK/ops"; cp "$AZ_GR" "$AZ_BK/gr"; cp "$AZ_BI" "$AZ_BK/bi"; cp "$AZ_DOC" "$AZ_BK/doc"
+cp "$AZ_APP" "$AZ_BK/app"
 
 _az_restore() {
   cp "$AZ_BK/ops" "$AZ_OPS"; cp "$AZ_BK/gr" "$AZ_GR"
   cp "$AZ_BK/bi" "$AZ_BI"; cp "$AZ_BK/doc" "$AZ_DOC"
+  cp "$AZ_BK/app" "$AZ_APP"
 }
 
 # الأصلُ يمرُّ — وبلا هذا لا معنى لأيِّ إخفاقٍ بعدَه.
@@ -172,7 +176,22 @@ sed -i 's/ENFORCED_OPERATIONS = 80/ENFORCED_OPERATIONS = 107/' "$AZ_DOC"
 t "رقمٌ في الوثيقةِ يُخالِفُ القياسَ يُسقِطُ الفحصَ" fail bash "$AZ"
 _az_restore
 
-sed -i 's/TOKEN_BOUND_OPERATION_COUNT = 0/TOKEN_BOUND_OPERATION_COUNT = 12/' "$AZ_DOC"
+# تصحيحٌ **بالإضافةِ** (`M1-05B`): كانَ هنا `sed` يستبدلُ
+# `TOKEN_BOUND_OPERATION_COUNT = 0` — وكانَ صادقاً يومَ `M1-05`. ولمّا صارَ
+# الرقمُ 2 صارَ الاستبدالُ **طفرةً صامتةً تمرُّ بلا أن تُغيِّرَ حرفاً**، فيُقرأُ
+# إخفاقُها المفقودُ حراسةً. ولذلكَ لا يُكتَبُ الرقمُ حرفيّاً بعدَ اليومِ بل
+# يُقرأُ من الوثيقةِ، و**يُثبَتُ أنَّ الطفرةَ طفرتْ فعلاً** قبلَ أن تُقاسَ.
+python3 - "$AZ_DOC" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+m = re.search(r"TOKEN_BOUND_OPERATION_COUNT = (\d+)", s)
+assert m, "لم يُوجَدْ قياسُ الربطِ بالرمزِ في الوثيقةِ — لا طفرةَ على غيابٍ"
+inflated = int(m.group(1)) + 10
+out = s.replace(m.group(0), f"TOKEN_BOUND_OPERATION_COUNT = {inflated}")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً — والصامتةُ تُقرأُ حراسةً كاذبةً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
 t "تضخيمُ دعوى الربطِ بالرمزِ في الوثيقةِ يُسقِطُ الفحصَ" fail bash "$AZ"
 _az_restore
 
@@ -197,6 +216,81 @@ s = s.replace("export const PRODUCTION_GRANTS", "export const PRODUCTION_GRANTS_
 open(p, "w", encoding="utf-8").write(s)
 PY2
 t "إعادةُ تسميةٍ بلاحقةٍ لا تُخدِعُ مِرساةَ القياسِ" fail bash "$AZ"
+_az_restore
+
+# ── البابُ 7: الربطُ بالرمزِ مُثبَتٌ في الشفرةِ لا مُدَّعىً (`M1-05B`) ──────
+#
+# كلُّ طفرةٍ هنا **تُثبِتُ أنَّها طفرتْ** بـ`assert` قبلَ أن تُقاسَ. وهذا ليسَ
+# احتياطاً نظريّاً: في `M1-05` مرَّتْ ثلاثُ طفراتٍ صامتةً وكُشِفَ عمىً حقيقيٌّ
+# واحدٌ بهذهِ الطريقةِ بعينِها.
+
+# (1) تفريغُ جسمِ المساعدِ من المطلبِ: الصفوفُ تُدَّعي الربطَ والشفرةُ لا تفرضُهُ.
+python3 - "$AZ_APP" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = '{ serviceIdentity: { scopes, beneficiary: "required" } }'
+assert old in s, "لم يُوجَدْ مطلبُ المُنتَفِعِ في `ownerScoped` — لا طفرةَ على غيابٍ"
+out = s.replace(old, "{ serviceIdentity: { scopes } }")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تفريغُ `ownerScoped` من مطلبِ المُنتَفِعِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (2) نزعُ التصنيفِ عن مسارٍ واحدٍ بإرجاعِهِ إلى `scoped`: دعوى بلا إنفاذٍ.
+python3 - "$AZ_APP" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "ownerScoped(ORDER_SCOPES.historyRead)"
+assert old in s, "لم يُوجَدْ مسارُ السجلِّ مُصنَّفاً — لا طفرةَ على غيابٍ"
+out = s.replace(old, "scoped(ORDER_SCOPES.historyRead)")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إرجاعُ مسارِ السجلِّ إلى `scoped` (دعوى بلا إنفاذٍ) يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (3) الاتجاهُ المعاكسُ: الشفرةُ تفرضُ والمصفوفةُ تُخفي — إنفاذٌ يسقطُ من الإعلانِ.
+python3 - "$AZ_BI" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = 'strength: "token-bound"'
+assert s.count(old) >= 1, "لا صفَّ مربوطاً بالرمزِ — لا طفرةَ على غيابٍ"
+out = s.replace(old, 'strength: "caller-asserted"', 1)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إخفاءُ إنفاذٍ قائمٍ بإرجاعِ صفٍّ إلى `caller-asserted` يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (4) تحويلُ العددِ المُشتَقِّ إلى رقمٍ مكتوبٍ باليدِ: مصفوفةٌ تُصدِّقُ نفسَها.
+python3 - "$AZ_BI" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(r"export const TOKEN_BOUND_OPERATION_COUNT\s*:\s*number\s*=.*?;", re.S)
+assert pat.search(s), "لم يُوجَدْ إعلانُ العددِ — لا طفرةَ على غيابٍ"
+out = pat.sub("export const TOKEN_BOUND_OPERATION_COUNT: number = 2;", s)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تحويلُ عددِ الربطِ بالرمزِ إلى رقمٍ مكتوبٍ باليدِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (5) الهويّةُ من ترويسةٍ وحدَها: يُنزَعُ قارئُ الرمزِ ويُترَكُ التصنيفُ قائماً.
+python3 - "$AZ_APP" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+assert "ownerPublicIdOf" in s, "لم يُوجَدْ قارئُ المالكِ من الرمزِ — لا طفرةَ على غيابٍ"
+out = s.replace("ownerPublicIdOf", "callerAssertedOwnerOf")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'نزعُ قارئِ المالكِ من الرمزِ مع بقاءِ التصنيفِ يُسقِطُ الفحصَ' fail bash "$AZ"
 _az_restore
 
 # الأصلُ يمرُّ بعدَ كلِّ الطفراتِ — إثباتُ أنَّ الاستعادةَ تامّةٌ وأنَّ الحارسَ

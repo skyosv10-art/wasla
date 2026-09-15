@@ -1152,3 +1152,19 @@ still has no test of its own here.
   change made here is published on `main`.
 - GitHub Actions runs normally in this repository; the roadmap gate and the
   WASLA CI workflow both passed on commit `da569d3e3b`.
+- M0-41 (governance check 17, `RISK-0044` closed): a guard now matches every
+  service app factory's optional ports against what the production root
+  (`services/*/src/http/server.ts`) and the exit-gate harness actually mount.
+  It exists because measurement, not fear: delivery route 14 was declared live
+  in three documents while answering 500 to every operator for ~24 hours, with
+  35 green tests that could not see it — each test builds its own dependencies,
+  and `tsc` cannot object because the port is optional by definition. Live
+  measurement: 13 services, 11 optional ports, 10 harnesses, 0 exemptions. Its
+  first run found a second live instance of the same defect
+  (`idempotencySweepPort` mounted in the root, missing from the delivery
+  exit-gate harness) which is fixed in the same batch. Declared limit: the
+  guard reads key presence, not the passed object's behaviour, and follows an
+  imported contract only one hop — what closes the gap fully is an exit gate
+  that calls every closed route on the real root and reads something other
+  than 500.
+

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T19:19:18Z",
+  "generated_at": "2026-09-15T20:14:16Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b67d144df5a113daab47ae4d7e4f560aecfe36ed",
-    "branch": "feat/m5-13-dead-letter-acknowledgement",
+    "commit": "49edda3272be00e475ffe6e48d3a78ff74f7b8c0",
+    "branch": "feat/m0-41-app-port-wiring-guard",
     "dirty": true,
-    "dirty_files": 41,
-    "dirty_reason": "المراجعةُ 24/N · CLM-0181 · إقرارُ الصفِّ المسمومِ — الأساسُ يُولَّدُ على شجرةٍ عاملةٍ قبلَ الالتزامِ، والفحصُ 11 يبقى أحمرَ حتّى يُلتزَمَ هذا الملفُّ نفسُهُ",
-    "tracked_files": 2025
+    "dirty_files": 11,
+    "dirty_reason": "M0-41/CLM-0182: الفحصُ 17 (تركيبُ المنافذِ) أُضيفَ وRISK-0044 أُغلِقَ — يُعادُ توليدُ الأساسِ من سجلِّ التحقّقِ نفسِهِ",
+    "tracked_files": 2033
   },
   "env": {
     "node": "v20.20.1",
@@ -29,18 +29,18 @@
     "test_files_tracked": 359,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 16,
-    "risks_not_closed": 33
+    "governance_checks": 17,
+    "risks_not_closed": 32
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify24b.log",
+    "source": "/tmp/verify17.log",
     "tests_passed": 4663,
     "test_files_executed": 284,
-    "governance_suite_cases": 359,
+    "governance_suite_cases": 371,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:7c1725fa2f40b0e9f611c54d0a730d55cbc2b7975bdc29089ed9ad3f3a7789ac",
+  "fingerprint": "sha256:48540b9ff5044cd5d2b7c26d98e899b9bfae51e724f661a967a02ce66a1079b6",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

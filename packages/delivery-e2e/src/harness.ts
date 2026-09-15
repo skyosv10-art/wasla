@@ -338,6 +338,10 @@ export async function startGate(): Promise<GateContext> {
     readPort: store,
     writePort: store,
     readinessPort: new PostgresReadinessProbe(pool),
+    // مُكنسةُ مفاتيحِ التعويذِ — رُكِّبَت بقياسِ الفحصِ 17 (M0-41 · RISK-0044):
+    // كانَ الجذرُ الإنتاجيُّ يُركِّبُها والمعوانُ لا، فبوّابةُ الخروجِ كانت
+    // تُجيزُ تركيباً لا يُشبِهُ الإنتاجَ، ومسارُ المسحِ يُجيبُ 500 عليها وحدَها.
+    idempotencySweepPort: store,
     // المحوّلُ الحقيقيُّ على أصلِ السوقِ الحقيقيِّ — ولا `fetchImpl` مزروعٌ.
     catalogPort: new HttpMarketplaceCatalogPort({
       baseUrl: marketplaceBaseUrl,

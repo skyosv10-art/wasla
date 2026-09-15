@@ -1,0 +1,22 @@
+{
+  "name": "@wasla/authz-policy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA authorization policy matrix (M1-05) — the single declared source of truth for which role may hold which scope at which boundary. Enforced at the token issuer, never at the enforcement point (ADR-027).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

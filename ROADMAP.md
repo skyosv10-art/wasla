@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-15 (M1-05B wave 1 — ownership on the two order read routes is now read from a signature instead of a caller-written header; and the estimate that justified deferring it was itself wrong)
+**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine)
 **Last milestone (M1-05 — the authorization policy matrix):** `M1-04` answers *is this request from a service the system knows?* Nothing in the repository answered *is this service entitled to what it carries?* — and the vacuum was a **correct decision half-implemented**: `packages/service-auth/src/{enforce,index,token}.ts` and `services/orders/src/http/service-identity.ts` each state in prose that the gateway must not hold a role→scope matrix, and each names `M1-05` as its owner. So the matrix had a declared home and no existence, and `mintServiceToken` passed `scp` through without asking about entitlement. Added: `packages/authz-policy` as the single source (80 enforced operations, 10 production roles with 18 grants, 8 isolated test-fleet roles, 16 classified owner/tenant bindings, pure decision functions), 27 rejection-heavy tests across all three dimensions (`owner`/`role`/`tenant`), and governance check 16 wired into the single entry point — drift-proof in **both** directions, with 16 mutation cases proving the guard bites.
 **The board's number was never measured, and it is corrected by addition, not erasure:** the `M1-05` row said *inventory of 107 operations*. The live measurement is **8 boundaries · 89 registered routes · 80 enforced operations · 9 `OPEN` routes · 64 enforced scopes · 0 routes with neither a scope nor `OPEN`**. The `107` stays written on the board because it is the prior evidence; the measurement is written beside it with the guard that reproduces it.
 **Two gaps the measurement surfaced that were not on anyone's list — `RISK-0042`:** (1) **ownership is caller-asserted.** `assertOwner()` compares `order.customerPublicId` against the `X-Customer-Public-Id` header, whose **shape** is validated and whose truth is not — and the token carries `sub`/`aud`/`scp` with **no beneficiary identity at all**, so `TOKEN_BOUND_OPERATION_COUNT = 0` out of 80. (2) **tenant membership is never checked.** `storeSlug` is read from the path and handed to the repository in **eleven** marketplace routes, so a holder of `marketplace:staffWrite` can write staff into *any* store. Both are recorded by addition; `RISK-0026` (resource identity in the query string) is **not** claimed closed.
@@ -117,6 +117,56 @@ Nothing else has been changed in this repository by the WASLA integration work.
   someone other than the identity named in the header. `TOKEN_BOUND_OPERATION_COUNT` went from
   **0 to 2**, derived from the matrix rows and rejected by the guard if hand-written. Decision:
   [ADR-028](docs/15-decisions/ADR-028-token-bound-owner-binding.md).
+
+- **M1-05B — wave 2 of 3, claim `CLM-0179`.** Five of the eleven `:storeSlug` marketplace
+  routes now prove **store membership**, in two layers because neither layer answers the
+  other's question. At the edge, `tenantScoped(...)` marks the route
+  `beneficiary: "required"`, so a token carrying the full marketplace scope set but no `obo`
+  is rejected **403 before the store is touched**. Inside the transaction,
+  `assertActiveMembership` (and `assertActiveOwnership` for a review request, because the
+  ledger writes the owner's `actorType` unconditionally) runs **inside the same `uow` that
+  will write** — not in an earlier read — because membership is revoked between a check and a
+  write. Rejection is `STORE_NOT_FOUND` (404), an error code already in the published
+  contract, so no contract changes; 403 was rejected because the difference between 403 and
+  404 turns the boundary into an oracle for which stores exist.
+  `TOKEN_BOUND_OPERATION_COUNT` went **2 → 7**, and a *second* derived count
+  (`TENANT_BOUND_OPERATION_COUNT = 5`) was added because one number hides that one of the two
+  dimensions is zero. Decision:
+  [ADR-029](docs/15-decisions/ADR-029-tenant-membership-binding.md).
+
+  **The most valuable evidence in this wave was red, not green.** The first version of the
+  membership guard consulted the `store_staff` table alone and passed **every in-memory
+  test**. Run against a real Postgres, the integration suite produced **45 failures, all
+  `STORE_NOT_FOUND` on the store's own owner**: `registerStore` writes
+  `stores.owner_public_id` and **never inserts a staff row with role `owner`** — so
+  `store_staff` is the table of "who was added", not "who owns", and some fixtures had been
+  inserting the owner row by hand, which made the table look as if it carried owners. Had it
+  shipped, every store owner would have been locked out of their own store in production
+  **with all gates green**. Both guards now take the owner from the store row, and the
+  membership assertion returns `void` rather than a row, because returning a row for a staff
+  member and nothing for the owner invites reading absence as non-membership.
+
+  **The static guard was fixed in the guard, not in the code it reads.** Gate 7's helper
+  inventory required the closing brace at column zero, so a helper nested inside the app
+  factory was invisible to it. The first fix was to constrain the *code's* shape — which is
+  moving the problem. Instead the anchor now captures indentation and requires the closing
+  brace at the declaration's own depth, with **two** mutation cases: nesting alone **passes**,
+  nesting plus emptying the requirement **fails** — so the pass is a reading, not a blindness.
+  The guard now has **31** mutation cases (was 25) and the governance suite **353** (was 347).
+
+  **What this wave does not claim.** The first half of `M1-05B`'s exit criterion — a live
+  rejection of an over-privileged token at mint time — is **untouched**. The wave enforces
+  **membership, not intra-store rank**: a member with role `staff` can add a member to their
+  own store; rank needs a third error code and a contract change, and was recorded as a named
+  debt rather than half-implemented. `RISK-0042`'s third item is also untouched, and its size
+  was **understated**: there are **eight** body actor fields in `requests.ts`, not two.
+  And the attacker was **hypothetical on the day of binding**: the only production role with
+  any marketplace grant is `delivery`, which holds none of the five bound scopes — so green
+  here means "no measured caller was broken", not "this held under real load". `RISK-0042`
+  stays **open**; closing it needs three independent measured evidences and is the programme
+  owner's decision alone. `RISK-0043` was opened for a defect this batch exposed that no guard
+  catches: production source importing a package declared only in `devDependencies`, which a
+  `--prod` install would crash on while every gate stays green.
 
 - **The estimate that justified deferring this was wrong, and it is corrected by addition.**
   `M1-05` and `RISK-0042` both said the fix required **adding a beneficiary claim to the token

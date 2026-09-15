@@ -15,7 +15,11 @@ import { describe, expect, it } from "vitest";
 
 import { MARKETPLACE_SERVICE_PORT } from "@wasla/contracts-marketplace";
 
-import { createSignedMarketplaceApp } from "./service-identity-support.js";
+import {
+  buildSignedMarketplaceApp,
+  createSignedMarketplaceApp,
+  signFor,
+} from "./service-identity-support.js";
 
 const OWNER = "WS-1000000001";
 const MEMBER = "WS-1000000003";
@@ -52,11 +56,22 @@ describe("مسارُ الصحّةِ يبقى ناطقاً", () => {
 });
 
 describe("كلُّ عمليّةٍ سوى الصحّةِ تُجيب 503", () => {
+  /**
+   * العنصرُ الخامسُ **مُنتَفِعٌ يُوقَّعُ بهِ صراحةً** — ولا يُكتبُ إلّا لعمليّةٍ
+   * مربوطةٍ بمُستأجِرٍ **بلا جسمٍ** (`M1-05B` الموجةُ 2).
+   *
+   * فسائرُ العمليّاتِ المربوطةِ تُسمّي فاعلَها في الجسمِ، ولافُّ التوقيعِ
+   * يشتقُّهُ منهُ. أمّا `GET .../staff` فلا جسمَ لها، ولو بقيَ رمزُها بلا `obo`
+   * لأجابَ الحدُّ `403` **قبلَ** أن يُقالَ العجزُ — وهوَ جوابٌ صادقٌ لكنَّهُ
+   * ليسَ ما تُثبتُهُ هذهِ المجموعةُ. والمكتوبُ هنا **لا يُخفّفُ** الحاجزَ: يمرُّ
+   * بهِ لِيُقاسَ ما بعدَهُ، وإثباتُ الحاجزِ نفسِهِ في `service-identity.test.ts`.
+   */
   const operations: readonly (readonly [
     string,
     "GET" | "POST" | "DELETE",
     string,
     Record<string, unknown>?,
+    string?,
   ])[] = [
     ["شجرةُ التصنيفات", "GET", "/categories"],
     [
@@ -85,7 +100,7 @@ describe("كلُّ عمليّةٍ سوى الصحّةِ تُجيب 503", () => {
       { decision: "approved", actor_type: "moderator", actor_public_id: MODERATOR },
     ],
     ["دفترُ قراراتِ متجر", "GET", `/stores/${SLUG}/reviews`],
-    ["طاقمُ المتجر", "GET", `/stores/${SLUG}/staff`],
+    ["طاقمُ المتجر", "GET", `/stores/${SLUG}/staff`, undefined, OWNER],
     [
       "إضافةُ عضوٍ",
       "POST",
@@ -130,14 +145,20 @@ describe("كلُّ عمليّةٍ سوى الصحّةِ تُجيب 503", () => {
     ],
   ];
 
-  for (const [label, method, url, payload] of operations) {
+  for (const [label, method, url, payload, beneficiary] of operations) {
     it(`${label}: MARKETPLACE_UNAVAILABLE بلا استثناء`, async () => {
-      const app = degradedApp();
+      const { app, keys } = buildSignedMarketplaceApp();
+      const signed =
+        beneficiary === undefined
+          ? {}
+          : signFor(method, url, { keys, onBehalfOfPublicId: beneficiary });
       const response = await app.inject({
         method,
         url,
         // ترويسةٌ غائبةٌ لا `undefined` مُمرّرةٌ: `inject` يميّز الأمرَين في أنواعِه.
-        ...(method === "GET" ? {} : { headers: writeHeaders }),
+        ...(method === "GET" && beneficiary === undefined
+          ? {}
+          : { headers: { ...(method === "GET" ? {} : writeHeaders), ...signed } }),
         ...(payload === undefined ? {} : { payload }),
       });
       await app.close();

@@ -240,7 +240,45 @@ export interface HttpResult {
   readonly body: Record<string, unknown>;
 }
 
-/** نداءٌ عبرَ الشبكةِ على المُستمعِ — لا `app.inject` في هذه الحزمةِ بحال. */
+/**
+ * حقولُ الفاعلِ في أجسامِ حدِّ السوقِ، مسطَّحةً لا مُشتقّةً — نظيرُ القائمةِ في
+ * `services/marketplace/src/__tests__/service-identity-support.ts`.
+ *
+ * وتكرارُها هنا **مقصودٌ**: هذهِ الحزمةُ بوّابةُ خروجٍ تُنادي عبرَ الشبكةِ ولا
+ * تستوردُ سندَ اختباراتِ الخدمةِ؛ وربطُها بهِ كانَ سيجعلُ تغييراً في سندِ
+ * اختبارٍ يُغيِّرُ ما تُثبِتُهُ البوّابةُ.
+ */
+const GATE_BODY_ACTOR_FIELDS: readonly string[] = [
+  "added_by_public_id",
+  "removed_by_public_id",
+  "created_by_public_id",
+  "requested_by_public_id",
+  "actor_public_id",
+];
+
+function gateBeneficiary(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const record = body as Record<string, unknown>;
+  for (const field of GATE_BODY_ACTOR_FIELDS) {
+    const value = record[field];
+    if (typeof value === "string" && value.trim() !== "") return value;
+  }
+  return undefined;
+}
+
+/**
+ * نداءٌ عبرَ الشبكةِ على المُستمعِ — لا `app.inject` في هذه الحزمةِ بحال.
+ *
+ * ── المُنتَفِعُ في الرمزِ (`M1-05B` الموجةُ 2 · `CLM-0179`) ──────────────────
+ * خمسةُ مساراتٍ على هذا الحدِّ صارت تقتضي `obo` في الرمزِ، فالبوّابةُ تُنيبُ
+ * عن إنسانٍ كما تفعلُ بوّابةٌ حقيقيّةٌ: `onBehalfOfPublicId` صريحاً إن مُرِّرَ،
+ * وإلّا يُشتَقُّ من حقلِ الفاعلِ في الجسمِ.
+ *
+ * **وهذا يُريحُ البوّابةَ ويُعميها عنِ الحاجزِ** — يُقالُ ولا يُدّعى خلافُهُ:
+ * إثباتُ الرفضِ مكانُهُ `services/marketplace/src/__tests__/service-identity.test.ts`
+ * (رمزٌ بلا `obo`) و`http.integration.test.ts` (`obo` لغيرِ عضوٍ)، لا هنا.
+ * ووظيفةُ هذهِ البوّابةِ أن تُثبِتَ أنَّ **الرحلةَ الشرعيّةَ تمرُّ**.
+ */
 export async function call(
   gate: GateContext,
   init: {
@@ -249,15 +287,17 @@ export async function call(
     readonly body?: unknown;
     readonly idempotencyKey?: string;
     readonly traceId?: string;
+    readonly onBehalfOfPublicId?: string;
   },
 ): Promise<HttpResult> {
   const queryAt = init.path.indexOf("?");
   const signedPath = queryAt < 0 ? init.path : init.path.slice(0, queryAt);
+  const beneficiary = init.onBehalfOfPublicId ?? gateBeneficiary(init.body);
   const response = await fetch(`${gate.baseUrl}${init.path}`, {
     method: init.method,
     headers: {
       "content-type": "application/json",
-      ...signGateRequest(init.method.toUpperCase(), signedPath),
+      ...signGateRequest(init.method.toUpperCase(), signedPath, beneficiary),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },

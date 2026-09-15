@@ -61,7 +61,13 @@ import {
   storeStaffAddedEvent,
   storeStaffRemovedEvent,
 } from "../domain/events.js";
-import { assertStaffAddition, assertStaffRemoval, sealStaffRemoval } from "../domain/staff.js";
+import {
+  assertActiveMembership,
+  assertActiveOwnership,
+  assertStaffAddition,
+  assertStaffRemoval,
+  sealStaffRemoval,
+} from "../domain/staff.js";
 import { deriveStoreState } from "../domain/state.js";
 import { assertStoreDecision } from "../domain/transitions.js";
 
@@ -217,6 +223,14 @@ export class MarketplaceStoreService {
    * وطلبٌ ثانٍ على متجرٍ في `pending_review` يُرفض برمزِه الخاصِّ
    * (`STORE_REVIEW_ALREADY_PENDING`) لا برمزِ الانتقالِ العامّ: المُتَّصلُ الذي أعاد الطلبَ
    * يحتاج أن يقرأ «مراجعتُك قائمةٌ» لا «انتقالٌ غيرُ مسموح».
+   *
+   * ── **والطالبُ مالكُ المتجرِ الفعّالُ لا أيُّ حاملِ رمزٍ** (`M1-05B` الموجةُ 2)
+   *
+   * ولمَ المالكُ بالتحديدِ دونَ مُجرَّدِ العضويّةِ؟ لأنَّ السطرَ المكتوبَ في
+   * الدفترِ أدناهُ يقولُ `actorType: "owner"` **بلا شرطٍ**، وقد كانَ يقولُهُ ولو
+   * كانَ المُرسِلُ غريباً عنِ المتجرِ أصلاً — **فكانَ الدفترُ يكتبُ دعوىً لا
+   * يفحصُها أحدٌ**. وفرضُ الملكيّةِ هنا **يُصدِّقُ سطراً قائماً** لا يستحدِثُ
+   * سياسةً: القبولُ بعضوٍ غيرِ المالكِ كانَ سيُبقي الوصفَ كاذباً.
    */
   async requestStoreReview(
     storeSlug: string,
@@ -234,6 +248,7 @@ export class MarketplaceStoreService {
       (derived) => {
         if (derived.state === "pending_review") throw storeReviewAlreadyPending(storeSlug);
       },
+      { requireActiveOwner: requestedByPublicId },
     );
   }
 
@@ -246,16 +261,31 @@ export class MarketplaceStoreService {
     return await this.decide(storeSlug, input, envelope);
   }
 
+  /**
+   * و`tenant` هنا **اختياريٌّ عن قرارٍ لا عن سهوٍ**: الطريقُ واحدٌ
+   * لفعلينِ مختلفينِ في السلطةِ: **طلبُ المراجعةِ** يأتي من داخلِ
+   * المتجرِ فيُربَطُ بمالكِهِ، **والبتُّ فيها** يأتي من المنصّةِ فربطُهُ
+   * بعضويّةِ المتجرِ **قلبٌ للسياسةِ**: متجرٌ يعتمدُ نفسَهُ. ولذلكَ لا
+   * يُمرَّرُ من `decideStore` بحال، واختبارٌ يحرسُ ذلكَ صراحةً.
+   */
   private async decide(
     storeSlug: string,
     input: StoreDecisionInput,
     envelope: IdempotencyEnvelope<StoreDecisionOutcome>,
     guard?: (derived: { readonly state: StoreState }) => void,
+    tenant?: { readonly requireActiveOwner: string },
   ): Promise<StoreDecisionOutcome> {
     const { value } = await this.deps.uow.write(async ({ stores, probe }) => {
       await replayGuard(stores.idempotency, envelope);
 
       const store = await loadStoreBySlug(stores, storeSlug);
+      if (tenant !== undefined) {
+        assertActiveOwnership({
+          storeSlug,
+          actorPublicId: tenant.requireActiveOwner,
+          storeOwnerPublicId: store.ownerPublicId,
+        });
+      }
       const ledger = await stores.ledger.listStoreReviews(store.storeId);
       const derived = deriveStoreState(ledger);
       guard?.(derived);
@@ -342,10 +372,20 @@ export class MarketplaceStoreService {
    * والعقدُ يُعيد مصفوفةً بلا `next_cursor` قصداً: طاقمُ متجرٍ عشراتٌ لا آلاف، وتصفيحُ قائمةٍ
    * لا تنمو يُعقّد العميلَ بلا مقابل. ولو نمت، فالتغييرُ إضافةُ `next_cursor` لا كسرُ شكل.
    */
-  async listStaff(storeSlug: string): Promise<ReadonlyArray<StoreStaffRecord>> {
+  async listStaff(
+    storeSlug: string,
+    actorPublicId: string,
+  ): Promise<ReadonlyArray<StoreStaffRecord>> {
     return await this.deps.uow.read(async ({ stores }) => {
       const store = await loadStoreBySlug(stores, storeSlug);
-      return await stores.staff.listStaff(store.storeId);
+      const staff = await stores.staff.listStaff(store.storeId);
+      assertActiveMembership({
+        storeSlug,
+        actorPublicId,
+        storeOwnerPublicId: store.ownerPublicId,
+        existing: staff,
+      });
+      return staff;
     });
   }
 
@@ -354,12 +394,19 @@ export class MarketplaceStoreService {
     storeSlug: string,
     input: AddStaffInput,
     envelope: IdempotencyEnvelope<StoreStaffRecord>,
+    actorPublicId: string,
   ): Promise<StoreStaffRecord> {
     const { value } = await this.deps.uow.write(async ({ stores }) => {
       await replayGuard(stores.idempotency, envelope);
 
       const store = await loadStoreBySlug(stores, storeSlug);
       const existing = await stores.staff.listStaff(store.storeId);
+      assertActiveMembership({
+        storeSlug,
+        actorPublicId,
+        storeOwnerPublicId: store.ownerPublicId,
+        existing,
+      });
       const role = assertStaffAddition({
         role: input.role,
         memberPublicId: input.memberPublicId,
@@ -405,6 +452,18 @@ export class MarketplaceStoreService {
       await replayGuard(stores.idempotency, envelope);
 
       const store = await loadStoreBySlug(stores, storeSlug);
+      /**
+       * عضويّةُ **المُزيلِ** تُفحَصُ قبلَ وجودِ **المُزالِ**، والترتيبُ
+       * مقصودٌ: عكسُهُ كانَ يُجيبُ غريباً عنِ المتجرِ `STORE_STAFF_NOT_FOUND`
+       * أو `200`، فيصيرُ المسارُ **كاشفاً لعضويّاتِ متجرٍ لا ينتسبُ
+       * إليهِ** بفرقِ الرمزينِ.
+       */
+      assertActiveMembership({
+        storeSlug,
+        actorPublicId: removedByPublicId,
+        storeOwnerPublicId: store.ownerPublicId,
+        existing: await stores.staff.listStaff(store.storeId),
+      });
       const member = await stores.staff.findActiveMember(store.storeId, memberPublicId);
       if (member === undefined) throw storeStaffNotFound(memberPublicId);
       assertStaffRemoval(member);

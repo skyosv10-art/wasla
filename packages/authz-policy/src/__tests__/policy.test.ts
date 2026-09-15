@@ -15,6 +15,7 @@ import {
   OPERATION_BINDINGS,
   PRODUCTION_GRANTS,
   TEST_FLEET_ROLES,
+  TENANT_BOUND_OPERATION_COUNT,
   TOKEN_BOUND_OPERATION_COUNT,
   UNCLASSIFIED_OPERATION_COUNT,
   allEnforcedScopes,
@@ -279,24 +280,83 @@ describe("رفضٌ بالمستأجرِ (tenant negative)", () => {
 describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
   /**
    * تصحيحٌ **بالإضافةِ** (`M1-05B`): كانَ هذا الاختبارُ يُثبِتُ الصفرَ —
-   * وكانَ صادقاً في `M1-05`. وقد صارَ **اثنَينِ** بالموجةِ الأولى، والرقمُ
-   * لا يُكتَبُ هنا وحدَهُ بل **يُقابَلُ بالصفوفِ نفسِها**: فلو رُفِعَ الرقمُ
-   * بتعديلِ المُشتَقِّ بلا صفوفٍ لسقطَ، ولو أُضيفَ صفٌّ بلا تصنيفِ مسارٍ في
-   * شفرةِ الحدِّ لسقطَ الفحصُ 16.
+   * وكانَ صادقاً في `M1-05`. وقد صارَ **اثنَينِ** بالموجةِ الأولى، ثمَّ
+   * **سبعاً** بالموجةِ الثانيةِ (`CLM-0179`). والرقمُ لا يُكتَبُ هنا وحدَهُ بل
+   * **يُقابَلُ بالصفوفِ نفسِها**: فلو رُفِعَ الرقمُ بتعديلِ المُشتَقِّ بلا
+   * صفوفٍ لسقطَ، ولو أُضيفَ صفٌّ بلا تصنيفِ مسارٍ في شفرةِ الحدِّ لسقطَ
+   * الفحصُ 16.
    */
-  it("العملياتُ المربوطةُ بالرمزِ اثنتانِ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
+  it("العملياتُ المربوطةُ بالرمزِ سبعٌ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(2);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(7);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "DELETE /stores/:storeSlug/staff/:memberPublicId",
       "GET /orders/:orderId",
       "GET /orders/:orderId/history",
+      "GET /stores/:storeSlug/staff",
+      "POST /stores/:storeSlug/products",
+      "POST /stores/:storeSlug/review-requests",
+      "POST /stores/:storeSlug/staff",
     ]);
-    // والبُعدُ المُثبَتُ هوَ الملكيّةُ وحدَها: المستأجرُ لم يُربَطْ بعدُ
-    // (الموجةُ الثانيةُ · `RISK-0042` البندُ الثاني) — فلا يُقرأُ الرقمُ
-    // إغلاقاً للخطرِ كلِّهِ.
-    expect(tokenBound.every((b) => b.dimension === "owner")).toBe(true);
-    expect(OPERATION_BINDINGS.filter((b) => b.dimension === "tenant" && b.strength === "token-bound")).toHaveLength(0);
+  });
+
+  /**
+   * **الاختبارُ المقلوبُ لا المحذوفُ** (`CLM-0179`).
+   *
+   * كانَ هنا سطرٌ يُثبِتُ أنَّ **لا صفَّ مُستأجِرٍ مربوطٌ بالرمزِ**، وكانَ
+   * صادقاً ومقيساً. وحذفُهُ عندَ تغيُّرِ الواقعِ كانَ سيمحو دليلاً؛ فقُلِبَ
+   * إلى دعوىً **أقوى** تُثبِتُ العددَ الجديدَ وأسماءَ صفوفِهِ — فلو رُدَّ
+   * الربطُ إلى `none` صامتاً لسقطَ هذا السطرُ بعينِهِ.
+   */
+  it("وبُعدُ المستأجرِ صارَ مربوطاً في خمسٍ بأسمائها — والقديمُ مقلوبٌ لا ممحوٌّ", () => {
+    const tenantBound = OPERATION_BINDINGS.filter(
+      (b) => b.dimension === "tenant" && b.strength === "token-bound",
+    );
+    expect(TENANT_BOUND_OPERATION_COUNT).toBe(tenantBound.length);
+    expect(TENANT_BOUND_OPERATION_COUNT).toBe(5);
+    expect(tenantBound.every((b) => b.audience === "marketplace")).toBe(true);
+    expect(tenantBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "DELETE /stores/:storeSlug/staff/:memberPublicId",
+      "GET /stores/:storeSlug/staff",
+      "POST /stores/:storeSlug/products",
+      "POST /stores/:storeSlug/review-requests",
+      "POST /stores/:storeSlug/staff",
+    ]);
+    // وبُعدُ الملكيّةِ يبقى اثنَينِ: الموجةُ الثانيةُ **أضافَتْ** ولم تُبدِّلْ.
+    expect(
+      OPERATION_BINDINGS.filter(
+        (b) => b.dimension === "owner" && b.strength === "token-bound",
+      ),
+    ).toHaveLength(2);
+  });
+
+  /**
+   * وما **لم** يُربَطْ يبقى مقيساً بأسمائِهِ: ستُّ عملياتٍ على حدِّ السوقِ
+   * تبقى `none` **بأسبابٍ مكتوبةٍ** في `note` كلِّ صفٍّ (مُنادٍ خدميٌّ بلا
+   * مُنتَفِعٍ · كتالوجٌ عامٌّ · وعكسُ سياسةٍ في `POST .../decisions`).
+   *
+   * ولمَ يُكتَبُ هذا اختباراً: بلا سطرٍ كهذا يصيرُ تركُ مسارٍ بلا ربطٍ
+   * **غيابَ قرارٍ** لا قراراً؛ فمن أرادَ فكَّ ربطٍ لاحقاً يجبُ أن يُبدِّلَ
+   * رقماً هنا فيُقرأَ قصدُهُ.
+   */
+  it("وستُّ عملياتٍ سوقيّةٍ تبقى بلا ربطٍ بأسبابٍ مكتوبةٍ لا بإغفالٍ", () => {
+    const unbound = OPERATION_BINDINGS.filter(
+      (b) => b.audience === "marketplace" && b.dimension === "tenant" && b.strength === "none",
+    );
+    expect(unbound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "GET /stores/:storeSlug",
+      "GET /stores/:storeSlug/products",
+      "GET /stores/:storeSlug/reviews",
+      "POST /stores/:storeSlug/decisions",
+      "POST /stores/:storeSlug/inventory/release",
+      "POST /stores/:storeSlug/inventory/reserve",
+    ]);
+    // ولا صفَّ منها بلا سببٍ مكتوبٍ: `note` فارغةٌ تُقرأُ إغفالاً.
+    for (const binding of unbound) {
+      expect(binding.note.length).toBeGreaterThan(40);
+      expect(binding.note).toContain("`none`");
+    }
   });
 
   it("المُصنَّفُ وغيرُ المُصنَّفِ يُساويانِ الجردَ كلَّهُ — فلا عمليّةَ تسقطُ من الحسابِ", () => {

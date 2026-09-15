@@ -1007,6 +1007,9 @@ importers:
 
   services/marketplace:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace
@@ -1115,6 +1118,9 @@ importers:
 
   services/orders:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/contracts-order':
         specifier: workspace:*
         version: link:../../packages/contracts/order
@@ -1137,9 +1143,6 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
-      '@wasla/auth-sdk':
-        specifier: workspace:*
-        version: link:../../packages/auth-sdk
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

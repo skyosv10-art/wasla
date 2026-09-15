@@ -482,3 +482,225 @@ describe("حد السوق — الحاجزُ نفسُه يعمل", () => {
     }
   });
 });
+
+// ── الحاجزُ الثاني: المُستأجِرُ (`M1-05B` الموجةُ 2 · `CLM-0179`) ─────────────
+/**
+ * **لماذا هنا وحدَهُ:** سندُ اختباراتِ العقدِ صارَ يشتقُّ `obo` من جسمِ الطلبِ
+ * (`attachSigningInject`)، فهوَ **يُمرِّرُ الحاجزَ دائماً ويعميها عنهُ**. وهذا
+ * قِيلَ صراحةً في ترويسةِ السندِ ولم يُخفَ. فإثباتُ الحاجزِ لا يصحُّ إلّا
+ * بتوقيعٍ يكتبُهُ الاختبارُ بيدِهِ — وهوَ ما يلي.
+ *
+ * **ونمطُ الذاكرةِ يكفي للدعوى الأولى ولا يكفي للثانيةِ:** رفضُ «رمزٍ بلا
+ * مُنتَفِعٍ» يقعُ في الوسيطِ **قبلَ** المُعالِجِ، فيُقاسُ `403` هنا. أمّا رفضُ
+ * «`obo` لغيرِ عضوٍ» فيقعُ داخلَ المعاملةِ ويحتاجُ قاعدةً — ومكانُهُ
+ * `staff.integration.test.ts`، ولا يُدّعى أنَّهُ مُثبَتٌ هنا.
+ */
+describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمسُّ مُستأجِراً", () => {
+  /** الخمسةُ المربوطةُ: طريقةٌ · مسارٌ · صلاحيّةٌ · جسمٌ صالحٌ. */
+  const BOUND = [
+    {
+      name: "POST /stores/:slug/review-requests",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/review-requests`,
+      scope: MARKETPLACE_SCOPES.storeReviewRequest,
+      payload: { requested_by_public_id: "WS-1000000001" },
+      bodyActor: "WS-1000000001",
+    },
+    {
+      name: "GET /stores/:slug/staff",
+      method: "GET" as const,
+      url: `${STORES}/${SLUG}/staff`,
+      scope: MARKETPLACE_SCOPES.staffRead,
+      payload: undefined,
+      bodyActor: undefined,
+    },
+    {
+      name: "POST /stores/:slug/staff",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/staff`,
+      scope: MARKETPLACE_SCOPES.staffWrite,
+      payload: {
+        member_public_id: "WS-1000000003",
+        role: "staff",
+        added_by_public_id: "WS-1000000001",
+      },
+      bodyActor: "WS-1000000001",
+    },
+    {
+      name: "DELETE /stores/:slug/staff/:memberPublicId",
+      method: "DELETE" as const,
+      url: `${STORES}/${SLUG}/staff/WS-1000000003`,
+      scope: MARKETPLACE_SCOPES.staffWrite,
+      payload: { removed_by_public_id: "WS-1000000001" },
+      bodyActor: "WS-1000000001",
+    },
+    {
+      name: "POST /stores/:slug/products",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/products`,
+      scope: MARKETPLACE_SCOPES.productWrite,
+      payload: {
+        sku: "SKU-TENANT-001",
+        title_ar: "هاتفٌ",
+        category_slug: "electronics-phones",
+        price_minor_units: 249900,
+        currency_code: "SAR",
+        created_by_public_id: "WS-1000000001",
+      },
+      bodyActor: "WS-1000000001",
+    },
+  ];
+
+  for (const route of BOUND) {
+    it(`${route.name} — رمزٌ كاملُ الصلاحيّاتِ بلا \`obo\` يُرَدُّ 403 لا 503`, async () => {
+      // **الفرقُ بينَ 403 و503 هوَ كلُّ الدعوى**: 503 يعني أنَّ النداءَ عبرَ
+      // الحاجزَ وبلغَ المجالَ فوجدَهُ بلا قاعدةٍ، و403 يعني أنَّ الحاجزَ ردَّهُ
+      // **قبلَ** أن يُمَسَّ المتجرُ. ولو كُتِبَتْ `not.toBe(201)` لمرَّتْ
+      // بإزالةِ `beneficiary: "required"` كاملةً.
+      const { app, rawInject, keys } = harnessApp();
+      const response = await rawInject({
+        method: route.method,
+        url: route.url,
+        headers: {
+          ...idempotency(),
+          ...signFor(route.method, route.url, { keys, scopes: ALL_MARKETPLACE_SCOPES }),
+        },
+        ...(route.payload === undefined ? {} : { payload: route.payload }),
+      });
+      expect(response.statusCode, response.body).toBe(403);
+      expect(response.json().error.code).toBe(FORBIDDEN);
+      await app.close();
+    });
+
+    it(`${route.name} — وبصلاحيّتِهِ وحدَها معَ \`obo\` يعبُرُ الحاجزَ إلى المجالِ`, async () => {
+      // الوجهُ الموجبُ: بلا هذهِ الدعوى يُقرأُ `403` أعلاهُ «رفضاً دائماً»
+      // ويُرضي حارساً مكسوراً يردُّ كلَّ شيءٍ. والعبورُ يُقاسُ بـ`503` من
+      // المجالِ بلا قاعدةٍ — وهوَ **دليلُ عبورٍ** لا نجاحُ عمليّةٍ.
+      const { app, rawInject, keys } = harnessApp();
+      const response = await rawInject({
+        method: route.method,
+        url: route.url,
+        headers: {
+          ...idempotency(),
+          ...signFor(route.method, route.url, {
+            keys,
+            scopes: [route.scope],
+            onBehalfOfPublicId: "WS-1000000001",
+          }),
+        },
+        ...(route.payload === undefined ? {} : { payload: route.payload }),
+      });
+      expect(response.statusCode, response.body).toBe(503);
+      expect(response.json().error.code).toBe("MARKETPLACE_UNAVAILABLE");
+      await app.close();
+    });
+  }
+
+  for (const route of BOUND.filter((r) => r.bodyActor !== undefined)) {
+    it(`${route.name} — \`obo\` يخالفُ فاعلَ الجسمِ يُرَدُّ 404 لا يُنفَّذُ باسمِ الجسمِ`, async () => {
+      // **النائبُ المُرتبِكُ**: بوّابةٌ تُوقِّعُ لإنسانٍ ثمَّ تُمرِّرُ جسماً
+      // يُسمّي إنساناً آخرَ. ويُقاسُ في نمطِ الذاكرةِ لأنَّ `tenantActor`
+      // يسبقُ سؤالَ المجالِ — فالفرقُ عن `503` هوَ نفسُهُ الدليلُ.
+      const { app, rawInject, keys } = harnessApp();
+      const response = await rawInject({
+        method: route.method,
+        url: route.url,
+        headers: {
+          ...idempotency(),
+          ...signFor(route.method, route.url, {
+            keys,
+            scopes: [route.scope],
+            onBehalfOfPublicId: "WS-1000000009",
+          }),
+        },
+        payload: route.payload,
+      });
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
+      await app.close();
+    });
+  }
+});
+
+/**
+ * **وما لم يُربَطْ يُقاسُ أيضاً** — وإلّا صارَ الحارسُ يُثبِتُ الشدَّةَ ولا
+ * يُثبِتُ **دقّتَها**. فربطٌ زائدٌ على مسارٍ يُنادِيهِ التوصيلُ كخدمةٍ يُسقِطُ
+ * مسارَ طلبٍ حقيقيٍّ في الإنتاجِ، ويُنسَبُ العطبُ إلى «الفرضِ» فيُطالَبُ
+ * بتعطيلِهِ — وهوَ أسوأُ ما قد ينتجَ عن دفعةٍ أمنيّةٍ.
+ */
+describe("حد السوق — لا ربطَ زائداً على ما لا مُنتَفِعَ لهُ", () => {
+  const UNBOUND = [
+    {
+      name: "GET /stores/:slug",
+      method: "GET" as const,
+      url: `${STORES}/${SLUG}`,
+      scope: MARKETPLACE_SCOPES.storeRead,
+      payload: undefined,
+    },
+    {
+      name: "GET /stores/:slug/reviews",
+      method: "GET" as const,
+      url: `${STORES}/${SLUG}/reviews`,
+      scope: MARKETPLACE_SCOPES.storeReviewRead,
+      payload: undefined,
+    },
+    {
+      name: "GET /stores/:slug/products",
+      method: "GET" as const,
+      url: `${STORES}/${SLUG}/products`,
+      scope: MARKETPLACE_SCOPES.productRead,
+      payload: undefined,
+    },
+    {
+      name: "POST /stores/:slug/decisions",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/decisions`,
+      scope: MARKETPLACE_SCOPES.storeReviewDecide,
+      payload: {
+        decision: "approved",
+        actor_type: "moderator",
+        actor_public_id: "WS-1000000002",
+      },
+    },
+    {
+      name: "POST /stores/:slug/inventory/reserve",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/inventory/reserve`,
+      scope: MARKETPLACE_SCOPES.inventoryReserve,
+      payload: {
+        order_public_id: "ORDER-TENANT-001",
+        items: [{ product_id: PRODUCT, quantity: 1 }],
+        idempotency_key: "reserve-tenant-001",
+      },
+    },
+    {
+      name: "POST /stores/:slug/inventory/release",
+      method: "POST" as const,
+      url: `${STORES}/${SLUG}/inventory/release`,
+      scope: MARKETPLACE_SCOPES.inventoryRelease,
+      payload: {
+        order_public_id: "ORDER-TENANT-001",
+        items: [{ product_id: PRODUCT, quantity: 1 }],
+        idempotency_key: "release-tenant-001",
+      },
+    },
+  ];
+
+  for (const route of UNBOUND) {
+    it(`${route.name} — يعبُرُ بلا \`obo\`: مُنادِيهِ خدمةٌ لا إنسانٌ`, async () => {
+      const { app, rawInject, keys } = harnessApp();
+      const response = await rawInject({
+        method: route.method,
+        url: route.url,
+        headers: {
+          ...idempotency(),
+          ...signFor(route.method, route.url, { keys, scopes: [route.scope] }),
+        },
+        ...(route.payload === undefined ? {} : { payload: route.payload }),
+      });
+      expect(response.statusCode, response.body).not.toBe(403);
+      expect(response.statusCode, response.body).toBe(503);
+      await app.close();
+    });
+  }
+});

@@ -27,7 +27,9 @@
  * دفتر، و`200` لنشرٍ وأرشفةٍ وإزالةِ عضوٍ — ثلاثُ عمليّاتٍ تُغيّر موجوداً ولا تُنشئ مورِداً.
  */
 
-import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
+
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 
 import {
   MARKETPLACE_ROUTE_KEYS,
@@ -39,7 +41,7 @@ import {
   type ReservationOutcome,
   type StoredIdempotentResponse,
 } from "../app/index.js";
-import { marketplaceUnavailable } from "../domain/errors.js";
+import { marketplaceUnavailable, storeNotFound } from "../domain/errors.js";
 import { sendMarketplaceError } from "./errors.js";
 import {
   MARKETPLACE_SCOPES,
@@ -103,6 +105,79 @@ export interface MarketplaceAppOptions {
    * موضعِه (`ADR-020` · `ADR-022`).
    */
   readonly serviceIdentity: MarketplaceServiceIdentityOptions;
+}
+
+/**
+ * مسارٌ يمسُّ مُستأجِراً بعينِهِ (`M1-05B` الموجةُ 2 · `RISK-0042` البندُ 2).
+ *
+ * يُضيفُ `beneficiary: "required"` فيرفضُ الوسيطُ المركزيُّ كلَّ رمزٍ لا يحملُ
+ * هويّةَ فاعلٍ إنسانٍ **قبلَ أن يُمسَّ المتجرُ**. والفرقُ عن `scoped` ليسَ
+ * أنَّ هذا «أشدُّ حمايةً» بل أنَّ **الصلاحيّةَ وحدَها لا تقولُ أيُّ متجرٍ**:
+ * حاملُ `marketplace:staff:write` كانَ يكتبُ في طاقمِ كلِّ متجرٍ بتبديلِ
+ * حرفٍ في المسارِ.
+ *
+ * **وُكتبَ `function` لا سهماً عن قصدٍ**: حارسُ المصفوفةِ (البابُ 7 في
+ * `scripts/checks/validate-authz-policy.sh`) يجردُ المساعدينَ المُنتِجينَ
+ * للمطلبِ بمسحِ إعلاناتِ `function`، وسهمٌ مُسندٌ إلى `const` لا يُرى.
+ * والعمى هنا **لا يمرُّ صامتاً**: المقابلةُ في الاتجاهَينِ، فمصفوفةٌ
+ * تُعلِنُ سبعةً وشفرةٌ تُقاسُ اثنتَينِ تُسقِطُ البابَ لا تُخفيهِ. ومعَ ذلكَ
+ * فالموافقةُ أصدقُ من الاعتمادِ على إسقاطٍ لاحقٍ — وهيَ نفسُ صيغةِ
+ * `ownerScoped` في حدِّ الطلباتِ.
+ *
+ * **وفي نطاقِ الوَحدةِ لا داخلَ المصنعِ** — وهذا سببُهُ تغيّرَ، فيُصحَّحُ
+ * بالإضافةِ لا بالمحوِ. كانَ مكتوباً هنا:
+ *
+ * > مِرساةُ الحارسِ تُغلِقُ جسمَ الدالّةِ بقوسٍ في أوّلِ العمودِ، فدالّةٌ
+ * > مُعشَّشةٌ قوسُها مُزاحٌ لا تُرى. وهذا **قِيسَ** بإخفاقٍ حقيقيٍّ في
+ * > البابِ 7 لا افتُرِضَ.
+ *
+ * وذاكَ صادقٌ في تاريخِهِ: البابُ 7 كانَ **يعمى عنِ المُعشَّشِ فعلاً**. لكنَّ
+ * ذلكَ عطبُ الحارسِ لا قاعدةَ تنسيقٍ، وترضيةُ مِرساةٍ قاصرةٍ بتقييدِ شكلِ
+ * الشفرةِ نقلٌ للمشكلةِ. فعُولِجَ **في الحارسِ**: مِرساتُهُ تلتقطُ العمقَ
+ * وتطلبُ القوسَ الخاتمَ على عمقِ الإعلانِ نفسِهِ، ومعَها طفرتانِ (تعشيشٌ
+ * وحدَهُ **يمرُّ** · تعشيشٌ معَ تفريغِ المطلبِ **يسقطُ**) تُثبِتانِ أنَّ المرورَ
+ * قراءةٌ لا عمىً. فالبقاءُ في نطاقِ الوَحدةِ اليومَ **اختيارُ وضوحٍ** — مساعدٌ
+ * لا يقرأُ حالةَ المصنعِ يُقرأُ مرّةً ويُستعملُ في خمسةِ مواضعَ — لا اضطرارٌ.
+ */
+function tenantScoped(...scopes: readonly string[]): MarketplaceRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * الفاعلُ كما **يُثبِتُهُ الرمزُ** — لا كما يدّعيهِ الجسمُ (`M1-05B`).
+ *
+ * ── ما كانَ ─────────────────────────────────────────────────────────
+ * كلُّ كتابةٍ في هذا الحدِّ تقرأُ الفاعلَ من **جسمِ الطلبِ**
+ * (`added_by_public_id` · `removed_by_public_id` · `created_by_public_id` ·
+ * `requested_by_public_id` · `actor_public_id`) — **ثمانيةُ حقولٍ مقيسةٌ** لا
+ * الحقلانِ اللذانِ سمّاهما `RISK-0042` البندُ 3. فكانَ مَن يكتبُ يُسمّي
+ * نفسَهُ، والدفترُ يُوقِّعُ على تلكَ التسميةِ.
+ *
+ * ── ولمَ بقيَ الحقلُ إلزاميّاً ──────────────────────────────────
+ * حذفُهُ من العقدِ تغييرُ عقدٍ على مُنادٍ لم يُستشار، وإبقاءُهُ حَكَماً هوَ
+ * العطبُ نفسُهُ. فصارَ **مُتحَقَّقاً من تناسقِهِ معَ `obo`**، وهوَ عينُ ما فُعِلَ
+ * بترويسةِ `X-Customer-Public-Id` في الموجةِ الأولى (`ADR-028`).
+ *
+ * والرفضُ `STORE_NOT_FOUND`: المُنادي أعلنَ فاعلَينِ مختلفَينِ فلا يُفصَحُ لهُ
+ * أيُّهما عضوٌ في المتجرِ — وهوَ ما يمنعُ **النائبَ المُرتبِكَ**: بوّابةٌ
+ * تُوَقِّعُ لإنسانٍ ثمَّ تُمرِّرُ جسماً يُسمّي إنساناً آخرَ.
+ */
+function tenantActor(request: FastifyRequest, claimedInBody?: string): string {
+  const caller = request.serviceCaller;
+  const actor = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  // لا يُبلَغُ من مسارٍ مُصنَّفٍ بـ`tenantScoped`: الوسيطُ رفضَ قبلَهُ.
+  // وهوَ حارسُ تركيبٍ: مَن نسِيَ `tenantScoped` على مسارٍ جديدٍ يرى
+  // انكساراً في الاختبارِ لا `201` بمُستأجِرٍ غيرِ مفحوصٍ.
+  if (actor === undefined || actor.trim() === "") {
+    throw new Error(
+      "مسارٌ يمسُّ مُستأجِراً مُسجَّلٌ بلا beneficiary: \"required\" — راجِعِ tenantScoped().",
+    );
+  }
+  if (claimedInBody !== undefined && claimedInBody !== actor) {
+    throw storeNotFound(pathParam(request.params, "storeSlug"));
+  }
+  return actor;
 }
 
 /**
@@ -272,13 +347,14 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     return reply.status(200).send(toStoreResource(store, index));
   });
 
-  app.post("/stores/:storeSlug/review-requests", { config: scoped(MARKETPLACE_SCOPES.storeReviewRequest) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/review-requests", { config: tenantScoped(MARKETPLACE_SCOPES.storeReviewRequest) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseReviewRequest(request.body);
+    const actorPublicId = tenantActor(request, input.requestedByPublicId);
     const { stores } = deps();
     const outcome = await stores.requestStoreReview(
       storeSlug,
-      input.requestedByPublicId,
+      actorPublicId,
       envelope(request.headers, MARKETPLACE_ROUTE_KEYS.storeReviewRequest, input, (result) => ({
         responseStatus: 201,
         responseBody: toStoreReviewResource(result.review, storeSlug),
@@ -318,16 +394,18 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
 
   // --- الطاقم ---------------------------------------------------------------
 
-  app.get("/stores/:storeSlug/staff", { config: scoped(MARKETPLACE_SCOPES.staffRead) }, async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores/:storeSlug/staff", { config: tenantScoped(MARKETPLACE_SCOPES.staffRead) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
+    const actorPublicId = tenantActor(request);
     const { stores } = deps();
-    const staff = await stores.listStaff(storeSlug);
+    const staff = await stores.listStaff(storeSlug, actorPublicId);
     return reply.status(200).send({ staff: staff.map(toStoreStaffResource) });
   });
 
-  app.post("/stores/:storeSlug/staff", { config: scoped(MARKETPLACE_SCOPES.staffWrite) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/staff", { config: tenantScoped(MARKETPLACE_SCOPES.staffWrite) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseAddStaff(request.body);
+    const actorPublicId = tenantActor(request, input.addedByPublicId);
     const { stores } = deps();
     const member = await stores.addStaff(
       storeSlug,
@@ -336,22 +414,24 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
         responseStatus: 201,
         responseBody: toStoreStaffResource(outcome),
       })),
+      actorPublicId,
     );
     return reply.status(201).send(toStoreStaffResource(member));
   });
 
   app.delete(
     "/stores/:storeSlug/staff/:memberPublicId",
-    { config: scoped(MARKETPLACE_SCOPES.staffWrite) },
+    { config: tenantScoped(MARKETPLACE_SCOPES.staffWrite) },
     async (request, reply): Promise<FastifyReply> => {
       const storeSlug = pathParam(request.params, "storeSlug");
       const memberPublicId = pathParam(request.params, "memberPublicId");
       const input = parseRemoveStaff(request.body);
+      const actorPublicId = tenantActor(request, input.removedByPublicId);
       const { stores } = deps();
       const removed = await stores.removeStaff(
         storeSlug,
         memberPublicId,
-        input.removedByPublicId,
+        actorPublicId,
         envelope(request.headers, MARKETPLACE_ROUTE_KEYS.storeStaffRemove, input, (outcome) => ({
           responseStatus: 200,
           responseBody: toStoreStaffResource(outcome),
@@ -375,9 +455,10 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     });
   });
 
-  app.post("/stores/:storeSlug/products", { config: scoped(MARKETPLACE_SCOPES.productWrite) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores/:storeSlug/products", { config: tenantScoped(MARKETPLACE_SCOPES.productWrite) }, async (request, reply): Promise<FastifyReply> => {
     const storeSlug = pathParam(request.params, "storeSlug");
     const input = parseCreateProduct(request.body);
+    const actorPublicId = tenantActor(request, input.createdByPublicId);
     const { products, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const view = await products.createProduct(
@@ -387,6 +468,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
         responseStatus: 201,
         responseBody: toProductResource(outcome, index),
       })),
+      actorPublicId,
     );
     return reply.status(201).send(toProductResource(view, index));
   });

@@ -20,6 +20,10 @@ AZ_BI=packages/authz-policy/src/bindings.ts
 AZ_DOC=docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
 # `M1-05B`: البابُ 7 يقرأُ شفرةَ الحدِّ نفسِها، فلا تُقاسُ عضّتُهُ بلا طفرةٍ فيها.
 AZ_APP=services/orders/src/http/app.ts
+# الموجةُ 2 (`CLM-0179`): حدٌّ ثانٍ يفرضُ المُنتَفِعَ، وببُعدٍ آخرَ (`tenant`
+# لا `owner`). وحدٌّ واحدٌ في الطفراتِ كانَ سيُخفي أنَّ البابَ 7 قد يُقابِلَ
+# صفوفَ السوقِ بمساعدِ الطلبيّاتِ — فيمرُّ الحارسُ على أثرٍ غيرِ موجودٍ.
+AZ_MKT=services/marketplace/src/http/app.ts
 
 if [[ ! -f "$AZ" ]]; then
   printf '  \033[31m✗\033[0m %s مفقودٌ — لا تُقاسُ عضّةُ حارسٍ غائبٍ\n' "$AZ"
@@ -30,12 +34,12 @@ fi
 AZ_BK=/tmp/authz_backup
 rm -rf "$AZ_BK"; mkdir -p "$AZ_BK"
 cp "$AZ_OPS" "$AZ_BK/ops"; cp "$AZ_GR" "$AZ_BK/gr"; cp "$AZ_BI" "$AZ_BK/bi"; cp "$AZ_DOC" "$AZ_BK/doc"
-cp "$AZ_APP" "$AZ_BK/app"
+cp "$AZ_APP" "$AZ_BK/app"; cp "$AZ_MKT" "$AZ_BK/mkt"
 
 _az_restore() {
   cp "$AZ_BK/ops" "$AZ_OPS"; cp "$AZ_BK/gr" "$AZ_GR"
   cp "$AZ_BK/bi" "$AZ_BI"; cp "$AZ_BK/doc" "$AZ_DOC"
-  cp "$AZ_BK/app" "$AZ_APP"
+  cp "$AZ_BK/app" "$AZ_APP"; cp "$AZ_BK/mkt" "$AZ_MKT"
 }
 
 # الأصلُ يمرُّ — وبلا هذا لا معنى لأيِّ إخفاقٍ بعدَه.
@@ -291,6 +295,122 @@ assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
 open(p, "w", encoding="utf-8").write(out)
 MUT
 t 'نزعُ قارئِ المالكِ من الرمزِ مع بقاءِ التصنيفِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# ── طفراتُ الموجةِ 2: ربطُ المُستأجِرِ على حدِّ السوقِ (`CLM-0179`) ──────────
+#
+# الطفراتُ (1)–(5) كلُّها على حدِّ الطلبيّاتِ وببُعدِ المالكِ. ولو وقفَ الجردُ
+# عندَها لبقيَ سؤالٌ بلا جوابٍ مقيسٍ: **هل يعضُّ البابُ 7 حدّاً ثانياً؟** فالمساعدُ
+# هنا اسمُهُ `tenantScoped` لا `ownerScoped`، وخمسةُ صفوفٍ تتعلّقُ بهِ. وطفرةٌ
+# تُسقِطُ الحارسَ على الطلبيّاتِ لا تقولُ شيئاً عنِ السوقِ.
+
+# (6) تفريغُ `tenantScoped` منِ المطلبِ: خمسةُ صفوفٍ تُدَّعي الربطَ بلا شفرةٍ.
+python3 - "$AZ_MKT" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = '{ serviceIdentity: { scopes, beneficiary: "required" } }'
+assert old in s, "لم يُوجَدْ مطلبُ المُنتَفِعِ في `tenantScoped` — لا طفرةَ على غيابٍ"
+out = s.replace(old, "{ serviceIdentity: { scopes } }")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تفريغُ `tenantScoped` من مطلبِ المُنتَفِعِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (7) نزعُ التصنيفِ عن مسارِ قراءةِ الطاقمِ وحدَهُ: أربعةٌ مربوطةٌ وواحدٌ عارٍ —
+# فالجردُ لا يُقنَعُ بأغلبيّةٍ.
+python3 - "$AZ_MKT" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "tenantScoped(MARKETPLACE_SCOPES.staffRead)"
+assert old in s, "لم يُوجَدْ مسارُ قراءةِ الطاقمِ مُصنَّفاً — لا طفرةَ على غيابٍ"
+out = s.replace(old, "scoped(MARKETPLACE_SCOPES.staffRead)")
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إرجاعُ مسارِ قراءةِ الطاقمِ إلى `scoped` (دعوى بلا إنفاذٍ) يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (8) الاتجاهُ المعاكسُ على حدِّ السوقِ: الشفرةُ تفرضُ والمصفوفةُ تُخفي. ويُقصَدُ
+# صفُّ مسارٍ بعينِهِ لا أوّلُ `token-bound` عابرٍ، كي تُقاسَ المقابلةُ في بُعدِ
+# المُستأجِرِ لا في بُعدِ المالكِ.
+python3 - "$AZ_BI" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(
+    r'(audience: "marketplace",\s*method: "POST",\s*'
+    r'path: "/stores/:storeSlug/products",\s*dimension: "[^"]+",\s*strength: )"token-bound"'
+)
+assert pat.search(s), "لم يُوجَدْ صفُّ إنشاءِ المنتجِ مربوطاً بالرمزِ — لا طفرةَ على غيابٍ"
+out = pat.sub(lambda m: m.group(1) + '"caller-asserted"', s, count=1)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إخفاءُ ربطِ إنشاءِ المنتجِ من المصفوفةِ مع بقائِهِ في الشفرةِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (9) عددُ ربطِ المُستأجِرِ المُشتَقُّ يُستبدَلُ برقمٍ مكتوبٍ باليدِ — نظيرُ (4)
+# على العددِ الذي أدخلَتْهُ هذهِ الموجةُ، فعددٌ جديدٌ بلا طفرةٍ عددٌ بلا حارسٍ.
+python3 - "$AZ_BI" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(r"export const TENANT_BOUND_OPERATION_COUNT\s*:\s*number\s*=.*?;", re.S)
+assert pat.search(s), "لم يُوجَدْ إعلانُ عددِ ربطِ المُستأجِرِ — لا طفرةَ على غيابٍ"
+out = pat.sub("export const TENANT_BOUND_OPERATION_COUNT: number = 0;", s)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تحويلُ عددِ ربطِ المُستأجِرِ إلى رقمٍ مكتوبٍ باليدِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (10) تعشيشُ المساعدِ **وحدَهُ** يجبُ أن يمرَّ: المسافةُ البادئةُ صيغةٌ لا
+# دلالةٌ، ومساعدٌ مُعشَّشٌ يفرضُ المُنتَفِعَ إنفاذٌ قائمٌ. وصيغةٌ سابقةٌ للبابِ 7
+# طلبَتِ القوسَ الخاتمَ في العمودِ صفرٍ فكانتْ تُسقِطُ الفحصَ على شفرةٍ سليمةٍ
+# وتُعمى عن مساعدٍ مُعشَّشٍ — وهذهِ الحالةُ تُثبِتُ أنَّ العمقَ صارَ مقروءاً.
+python3 - "$AZ_MKT" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(r"(?m)^function tenantScoped\((.*?)\n\}\n", re.S)
+m = pat.search(s)
+assert m, "لم يُوجَدْ `tenantScoped` دالّةً في المستوى الأعلى — لا طفرةَ على غيابٍ"
+block = m.group(0)
+nested = "".join(("  " + ln if ln.strip() else ln) for ln in block.splitlines(keepends=True))
+out = s.replace(block, nested, 1)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+assert "\n  function tenantScoped(" in out, "التعشيشُ لم يُزِحْ إعلانَ المساعدِ"
+assert "\n  }" in out, "التعشيشُ لم يُزِحْ قوسَ الخِتامِ"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تعشيشُ `tenantScoped` وحدَهُ **يمرُّ** — العمقُ صيغةٌ لا دلالةٌ' pass bash "$AZ"
+_az_restore
+
+# (11) والتعشيشُ معَ تفريغِ المطلبِ يجبُ أن يسقطَ — وهذهِ هيَ الحالةُ التي
+# تُثبِتُ أنَّ (10) مرَّتْ **قراءةً** لا **عمىً**: لو كانَ الجردُ أعمى عنِ
+# المُعشَّشِ لمرَّتِ الحالتانِ كلتاهما، فصارَ الأخضرُ لا يُميِّزُ إنفاذاً من غيابِهِ.
+python3 - "$AZ_MKT" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(r"(?m)^function tenantScoped\((.*?)\n\}\n", re.S)
+m = pat.search(s)
+assert m, "لم يُوجَدْ `tenantScoped` دالّةً في المستوى الأعلى — لا طفرةَ على غيابٍ"
+block = m.group(0)
+nested = "".join(("  " + ln if ln.strip() else ln) for ln in block.splitlines(keepends=True))
+old = '{ serviceIdentity: { scopes, beneficiary: "required" } }'
+assert old in nested, "لم يُوجَدْ مطلبُ المُنتَفِعِ في جسمِ المساعدِ"
+nested = nested.replace(old, "{ serviceIdentity: { scopes } }")
+out = s.replace(block, nested, 1)
+assert out != s, "الطفرةُ لم تُغيِّرْ حرفاً"
+assert "\n  function tenantScoped(" in out, "التعشيشُ لم يُزِحْ إعلانَ المساعدِ"
+assert 'beneficiary: "required" } }\n' not in out.split("tenantActor")[0], "المطلبُ لم يُفرَّغْ"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'تعشيشُ `tenantScoped` معَ تفريغِهِ من المطلبِ يُسقِطُ الفحصَ (فالجردُ يقرأُ المُعشَّشَ)' fail bash "$AZ"
 _az_restore
 
 # الأصلُ يمرُّ بعدَ كلِّ الطفراتِ — إثباتُ أنَّ الاستعادةَ تامّةٌ وأنَّ الحارسَ

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T17:21:04Z",
+  "generated_at": "2026-09-15T19:19:18Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "aab501e729a5e89b2ec288d02ca6a7c817becb60",
-    "branch": "feat/m1-05b-signer-scope-enforcement",
+    "commit": "b67d144df5a113daab47ae4d7e4f560aecfe36ed",
+    "branch": "feat/m5-13-dead-letter-acknowledgement",
     "dirty": true,
-    "dirty_files": 20,
-    "dirty_reason": "دفعةُ CLM-0180 (M1-05B الموجةُ 3): الأساسُ يُولَّدُ من شجرةِ العملِ قبلَ الالتزامِ لأنَّ الأرقامَ الحركيّةَ تُقرأُ من سجلِّ التشغيلِ نفسِهِ",
-    "tracked_files": 2022
+    "dirty_files": 41,
+    "dirty_reason": "المراجعةُ 24/N · CLM-0181 · إقرارُ الصفِّ المسمومِ — الأساسُ يُولَّدُ على شجرةٍ عاملةٍ قبلَ الالتزامِ، والفحصُ 11 يبقى أحمرَ حتّى يُلتزَمَ هذا الملفُّ نفسُهُ",
+    "tracked_files": 2025
   },
   "env": {
     "node": "v20.20.1",
@@ -26,21 +26,21 @@
     "packages": 50,
     "packages_with_typecheck": 50,
     "packages_with_test": 50,
-    "test_files_tracked": 356,
+    "test_files_tracked": 359,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 16,
-    "risks_not_closed": 32
+    "risks_not_closed": 33
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify2.log",
-    "tests_passed": 4625,
-    "test_files_executed": 282,
+    "source": "/tmp/verify24b.log",
+    "tests_passed": 4663,
+    "test_files_executed": 284,
     "governance_suite_cases": 359,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:31f2e92cad12ed486b5c70f6deca5253b4c01bb0da23c9021a03af9e2a2b4fc2",
+  "fingerprint": "sha256:7c1725fa2f40b0e9f611c54d0a730d55cbc2b7975bdc29089ed9ad3f3a7789ac",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -260,8 +260,30 @@ CREATE TABLE IF NOT EXISTS delivery_relay_consumed_events (
     attempt_count  INTEGER     NOT NULL CHECK (attempt_count >= 1),
     last_error     TEXT,
     consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- إقرارُ المسمومِ (المراجعةُ 24/N · ADR-026 §4.27): ثلاثيٌّ معاً أو لا شيءَ،
+    -- ولا إقرارَ إلّا على 'poisoned'. والقيدُ الأخيرُ هو ما يجعلُ إعادةَ الصفِّ
+    -- إلى 'pending' **تمحو الإقرارَ حتماً** — القاعدةُ ترفضُ صفّاً مُعاداً يحملُ
+    -- إقراراً، فلا يبقى «عُولِجَ» على صفٍّ صارَ حيّاً.
+    acknowledged_at        TIMESTAMPTZ,
+    acknowledged_by        TEXT,
+    acknowledgement_reason TEXT,
+    CONSTRAINT delivery_relay_consumed_events_ack_by_check
+        CHECK (acknowledged_by IS NULL OR char_length(acknowledged_by) BETWEEN 1 AND 128),
+    CONSTRAINT delivery_relay_consumed_events_ack_reason_check
+        CHECK (acknowledgement_reason IS NULL OR char_length(acknowledgement_reason) BETWEEN 12 AND 512),
+    CONSTRAINT ck_delivery_relay_consumed_events_ack_triple
+        CHECK ((acknowledged_at IS NULL) = (acknowledged_by IS NULL)
+           AND (acknowledged_at IS NULL) = (acknowledgement_reason IS NULL)),
+    CONSTRAINT ck_delivery_relay_consumed_events_ack_poisoned_only
+        CHECK (acknowledged_at IS NULL OR consumed_status = 'poisoned')
 );
+
+-- فهرسٌ جزئيٌّ على **غيرِ المُقَرِّ بهِ** وحدَهُ: هذا هو ما يُقرأُ في الحادثةِ،
+-- والمُقَرُّ بهِ يبقى صفّاً للتدقيقِ لا صفّاً يُنبَّهُ عليهِ.
+CREATE INDEX IF NOT EXISTS ix_delivery_relay_consumed_unacknowledged
+    ON delivery_relay_consumed_events (updated_at)
+    WHERE consumed_status = 'poisoned' AND acknowledged_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────
 -- 8) delivery_relay_checkpoint — نقطةُ تقدّمِ المستهلكِ (المراجعة 3/N):
@@ -313,8 +335,26 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_relay_consumed_events (
     attempt_count  INTEGER     NOT NULL CHECK (attempt_count >= 1),
     last_error     TEXT,
     consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- إقرارُ المسمومِ (المراجعةُ 24/N · ADR-026 §4.27) — نفسُ العقدِ حرفاً في
+    -- الدفترَينِ: دفترانِ بعقدَي إقرارٍ مختلفَينِ يجعلانِ المقياسَ الموحَّدَ كذباً.
+    acknowledged_at        TIMESTAMPTZ,
+    acknowledged_by        TEXT,
+    acknowledgement_reason TEXT,
+    CONSTRAINT delivery_inventory_relay_consumed_events_ack_by_check
+        CHECK (acknowledged_by IS NULL OR char_length(acknowledged_by) BETWEEN 1 AND 128),
+    CONSTRAINT delivery_inventory_relay_consumed_events_ack_reason_chk
+        CHECK (acknowledgement_reason IS NULL OR char_length(acknowledgement_reason) BETWEEN 12 AND 512),
+    CONSTRAINT ck_delivery_inventory_relay_consumed_events_ack_triple
+        CHECK ((acknowledged_at IS NULL) = (acknowledged_by IS NULL)
+           AND (acknowledged_at IS NULL) = (acknowledgement_reason IS NULL)),
+    CONSTRAINT ck_delivery_inventory_relay_consumed_ack_poisoned_only
+        CHECK (acknowledged_at IS NULL OR consumed_status = 'poisoned')
 );
+
+CREATE INDEX IF NOT EXISTS ix_delivery_inventory_relay_consumed_unacknowledged
+    ON delivery_inventory_relay_consumed_events (updated_at)
+    WHERE consumed_status = 'poisoned' AND acknowledged_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────
 -- 11) delivery_inventory_relay_checkpoint — نقطةُ تقدّمِ مستهلكِ المخزونِ:

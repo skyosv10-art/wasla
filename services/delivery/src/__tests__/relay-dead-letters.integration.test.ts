@@ -115,19 +115,31 @@ describe.skipIf(!PG_ENABLED)("PostgresRelayDeadLetterStore — على قاعدة
     const metric = await store.readRelayDeadLetters({ eventTypeLimit: 10 });
 
     expect(metric.totalPoisoned).toBe(0);
+    // تحديثٌ (المراجعةُ 24/N · ADR-026 §4.27): المقياسُ صارَ ينشرُ المقسومَ
+    // (المُقَرَّ بهِ وغيرَهُ) وأقدمَ غيرِ مُقَرٍّ بهِ. والمقارنةُ تبقى **حرفيّةً
+    // كاملةً** لا جزئيّةً: حقلٌ يُضافُ صامتاً إلى جوابٍ منشورٍ يجبُ أن يُسقِطَ
+    // هذا الاختبارَ — وهذا ما فعلَهُ حكمُ CI في هذهِ الدفعةِ بالضبطِ.
+    expect(metric.totalAcknowledgedPoisoned).toBe(0);
+    expect(metric.totalUnacknowledgedPoisoned).toBe(0);
     expect(metric.ledgers).toEqual([
       {
         ledger: "dispatch",
         poisoned: 0,
+        acknowledgedPoisoned: 0,
+        unacknowledgedPoisoned: 0,
         oldestPoisonedAt: null,
         newestPoisonedAt: null,
+        oldestUnacknowledgedPoisonedAt: null,
         byEventType: [],
       },
       {
         ledger: "marketplace_inventory",
         poisoned: 0,
+        acknowledgedPoisoned: 0,
+        unacknowledgedPoisoned: 0,
         oldestPoisonedAt: null,
         newestPoisonedAt: null,
+        oldestUnacknowledgedPoisonedAt: null,
         byEventType: [],
       },
     ]);

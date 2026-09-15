@@ -980,6 +980,80 @@ Nothing else has been changed in this repository by the WASLA integration work.
   `pg_blocking_pids` before the winner commits — fails on the old design with the
   exact CI symptom, passes on the fix: 126/126 integration, 533/533 unit). No test
   weakened, no skip classified.
+- **M5-13 (poisoned-row acknowledgement) — review 24/N, claim `CLM-0181`.** The metric
+  from review 21/N could say *warning* forever about a row that **is never coming back**:
+  the producer was deleted, or the payload was corrupt at the source, so the requeue path
+  of review 22/N re-poisons it on every attempt. One option was left to the operator in
+  practice — **learn to ignore the alarm** — and that is a measurement defect, not a
+  comfort defect. Route **fifteen**,
+  `POST /delivery/relay/dead-letters/{ledger}/{eventId}/acknowledge`, sits behind a
+  **thirteenth scope**, `delivery:ops:relay-dead-letters:acknowledge`, **separate from
+  both `…:read` and `…:requeue`**: acknowledgement silences a **judgement**, so a stolen
+  dashboard token would otherwise mute a real loss alarm with no hand repairing anything,
+  and a token trusted to *retry* is not thereby trusted to declare a loss acceptable.
+  Rejection happens **before the port is called**, and that is asserted, not assumed.
+  **It adds, it does not erase.** `consumed_status` stays `poisoned`, `attempt_count`,
+  `last_error` and `updated_at` are **untouched** (measured on four columns after the
+  write), and `total_poisoned` is still published alongside its split
+  (`total_acknowledged_poisoned` + `total_unacknowledged_poisoned`). Only **severity**
+  excludes acknowledged rows, and the return to `ok` carries a **named** reason,
+  `all_poisoned_acknowledged`, never `no_poisoned_rows` — a dashboard can tell *nothing
+  broke* from *everything broke and was signed off*. Both ages are published, the alert
+  age counting **unacknowledged** rows only.
+  **The reason is mandatory and the bound rejects rather than truncates.** Trimmed, 12..512
+  characters, enforced in the pure decision **and** by a database `CHECK`, because a
+  silently truncated reason is a forged audit line. The acknowledger comes from the proven
+  identity alone — never from the body, whose only accepted key is `reason` (an extra key
+  is a 400, not a shrug).
+  **Read-then-write under `FOR UPDATE`, deliberately.** A single
+  `UPDATE … WHERE poisoned AND acknowledged_at IS NULL` returns **zero rows for three
+  different situations** (absent row · not poisoned · already acknowledged), and an
+  operator inside an incident needs three answers, not one. The second call is a **200
+  `already_acknowledged` carrying the first acknowledger** (the §4.20 precedent), the
+  transaction rolls back, and no overwrite happens. **Requeue after acknowledgement clears
+  the acknowledgement triple** — a row judged *handled* does not carry that judgement into
+  a second life. Constraints do the enforcing: all-or-none triple · acknowledgement only on
+  `poisoned` · reason bounds · a partial index on unacknowledged rows.
+  Measured: **46 cases in four layers** — 13 decision · 7 verdict · 18 on the wire · 8 on
+  real PostgreSQL (four untouched columns · three direct writes rejected with `23514` ·
+  the ledger fingerprint unchanged by a rejection and by the second call · requeue clearing
+  the triple) · plus 2 migration-with-data cases across `0003` up and down. Service suite:
+  **571 passed / 0 failed in 37 files** on the default path (integration runs in CI only —
+  no local `DATABASE_URL`). Decision: ADR-026 **§4.27** (`§4.26` was already taken by the
+  review-23/N CI-audit correction, and every file first written as §4.26 was corrected in
+  this batch). Contract: DELIVERY_HTTP.md §2.3هـ. Metric contract §3 (the verdict table was
+  corrected **by addition** — the old line is still readable). Operator procedure:
+  RELAY_POISONED_EVENTS.md §4.1.
+  **The batch's discovery is a production defect in review 22/N, not in this item —
+  `RISK-0044` (high):** `relayRequeuePort` was **never wired** into the production root
+  (`services/delivery/src/http/server.ts`) or into the exit-gate harness
+  (`packages/delivery-e2e/src/harness.ts`). Route fourteen — declared *live* — answered
+  **500 to every operator** for roughly 24 hours while **35 tests were green**, because
+  every test builds the app with its own dependencies and therefore witnesses nothing about
+  the root's composition. Both ports are now wired in both places and the boot log names
+  them. **The risk does not close with the fix:** no guard matches the optional ports
+  `createApp` accepts against what the root actually mounts, so the defect returns with the
+  first port anyone forgets. **The 24-hour silence is part of the evidence and is not
+  erased.**
+  Declared limits that remain: no bulk acknowledgement · no un-acknowledgement without a
+  requeue · no acknowledgement history (a column, not a log table: the first acknowledger
+  stays) · no alarm rings in this repository. **No CI verdict is claimed here — it is read
+  from the CI runs after the push, and local green is not a gate verdict.**
+
+  **CI verdict read (2026-09-15, run 35013133735): 30 checks pass, two fail** —
+  `db-integration (delivery)` and `db-integration-shared`, on one assertion:
+  `relay-dead-letters.integration.test.ts` (review 21/N) compares `metric.ledgers`
+  **literally and completely** with `toEqual`, and the metric now publishes three new
+  fields (`acknowledgedPoisoned`, `unacknowledgedPoisoned`,
+  `oldestUnacknowledgedPoisonedAt`). The **expectation** was corrected with those three
+  fields plus the two new totals, and the comparison **stayed `toEqual` — it was not
+  softened to `toMatchObject`**: a field added silently to a published response *must*
+  fail this test, and that is exactly what it did. Softening the comparison would have
+  switched off the guard that worked. **That file does not run locally** (`describe.skipIf`,
+  no `DATABASE_URL`), making this the **second case in two days** where the CI verdict
+  proved something local green cannot — the first was `already_recorded` in review 23/N.
+  Local green is not a gate verdict, written twice now from measurement rather than
+  advice.
 - M5-13R moves to `Ready for Gate`, not `Completed`. M5-13 remains `In Progress` on the
   execution board. Promotion to `Completed` is the program owner's decision alone
   (governance protocol §9).

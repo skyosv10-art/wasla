@@ -56,7 +56,7 @@ export interface EnforcedOperation {
 }
 
 /**
- * ثمانونَ عمليّةً مفروضةً على ثمانيةِ حدودٍ — القياسُ في 2026-09-15.
+ * إحدى وثمانونَ عمليّةً مفروضةً على ثمانيةِ حدودٍ — القياسُ في 2026-09-15.
  * ومسارات الفحصِ الصحّيِّ التسعةُ (`OPEN`) **ليستْ هنا** لأنّها لا تفرضُ صلاحيّةً؛
  * والفحصُ 16 يُثبِتُ أنَّ عددَ المفروضِ في الشفرةِ يُساوي طولَ هذهِ القائمةِ.
  */
@@ -74,6 +74,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "delivery", method: "POST", path: "/delivery/inventory-conflicts/:adjustmentId/acknowledgement", scopes: ["delivery:ops:inventory-conflicts:acknowledge"] },
   { audience: "delivery", method: "GET", path: "/delivery/relay/dead-letters", scopes: ["delivery:ops:relay-dead-letters:read"] },
   { audience: "delivery", method: "POST", path: "/delivery/relay/dead-letters/:ledger/:eventId/requeue", scopes: ["delivery:ops:relay-dead-letters:requeue"] },
+  { audience: "delivery", method: "POST", path: "/delivery/relay/dead-letters/:ledger/:eventId/acknowledge", scopes: ["delivery:ops:relay-dead-letters:acknowledge"] },
   // ── dispatch ──────────────────────────────────────────────────
   { audience: "dispatch", method: "POST", path: "/dispatch/jobs", scopes: ["dispatch:job:write"] },
   { audience: "dispatch", method: "GET", path: "/dispatch/jobs/:job_id", scopes: ["dispatch:job:read"] },

@@ -61,6 +61,9 @@ interface LedgerAggregateRow {
    */
   oldest_poisoned_at: string | null;
   newest_poisoned_at: string | null;
+  /** عدّادا الإقرارِ وأقدمُ غيرِ مُقَرٍّ بهِ (§4.27) — من **اللقطةِ نفسِها**. */
+  acknowledged_poisoned: string;
+  oldest_unacknowledged_poisoned_at: string | null;
 }
 
 interface EventTypeRow {
@@ -116,7 +119,9 @@ export class PostgresRelayDeadLetterStore implements RelayDeadLetterReadPort {
         SELECT '${ledger}'::text AS ledger,
                count(*)::text AS poisoned,
                to_char(min(updated_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS oldest_poisoned_at,
-               to_char(max(updated_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS newest_poisoned_at
+               to_char(max(updated_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS newest_poisoned_at,
+               count(*) FILTER (WHERE acknowledged_at IS NOT NULL)::text AS acknowledged_poisoned,
+               to_char(min(updated_at) FILTER (WHERE acknowledged_at IS NULL) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS oldest_unacknowledged_poisoned_at
           FROM ${LEDGER_TABLES[ledger]}
          WHERE consumed_status = $1`,
     ).join("\n        UNION ALL\n");
@@ -174,11 +179,20 @@ export class PostgresRelayDeadLetterStore implements RelayDeadLetterReadPort {
     const ledgers: readonly RelayDeadLetterLedgerMetric[] = RELAY_DEAD_LETTER_LEDGERS.map(
       (ledger) => {
         const aggregate = aggregates.get(ledger);
+        const poisoned = aggregate === undefined ? 0 : toCount(aggregate.poisoned);
+        const acknowledgedPoisoned =
+          aggregate === undefined ? 0 : toCount(aggregate.acknowledged_poisoned);
         return {
           ledger,
-          poisoned: aggregate === undefined ? 0 : toCount(aggregate.poisoned),
+          poisoned,
+          acknowledgedPoisoned,
+          // الطرحُ من **نفسِ اللقطةِ** لا بعدٍّ ثالثٍ: عدّانِ مستقلّانِ
+          // قد لا يجمعانِ إلى `poisoned` فيقرأُ المُشغِّلُ ثلاثةَ أرقامٍ لا تتّسقُ.
+          unacknowledgedPoisoned: poisoned - acknowledgedPoisoned,
           oldestPoisonedAt: aggregate === undefined ? null : toIso(aggregate.oldest_poisoned_at),
           newestPoisonedAt: aggregate === undefined ? null : toIso(aggregate.newest_poisoned_at),
+          oldestUnacknowledgedPoisonedAt:
+            aggregate === undefined ? null : toIso(aggregate.oldest_unacknowledged_poisoned_at),
           byEventType: eventTypes.get(ledger) ?? [],
         };
       },
@@ -189,6 +203,14 @@ export class PostgresRelayDeadLetterStore implements RelayDeadLetterReadPort {
       // المجموعُ **مُشتَقٌّ من نفسِ اللقطةِ** لا مقيسٌ باستعلامٍ ثالثٍ: مجموعٌ
       // يُسألُ وحدَهُ قد لا يوافقُ الجمعَ المنشورَ، فيقرأُ المُشغِّلُ رقمَينِ.
       totalPoisoned: ledgers.reduce((sum, ledger) => sum + ledger.poisoned, 0),
+      totalAcknowledgedPoisoned: ledgers.reduce(
+        (sum, ledger) => sum + ledger.acknowledgedPoisoned,
+        0,
+      ),
+      totalUnacknowledgedPoisoned: ledgers.reduce(
+        (sum, ledger) => sum + ledger.unacknowledgedPoisoned,
+        0,
+      ),
       ledgers,
     };
   }

@@ -65,12 +65,18 @@ GET /delivery/relay/dead-letters?event_type_limit=10
   "applied_filter": { "event_type_limit": 10 },
   "measured_at": "2026-09-13T02:00:00.000Z",
   "total_poisoned": 3,
+  "total_acknowledged_poisoned": 1,
+  "total_unacknowledged_poisoned": 2,
   "ledgers": [
     { "ledger": "dispatch", "poisoned": 1,
+      "acknowledged_poisoned": 1, "unacknowledged_poisoned": 0,
+      "oldest_unacknowledged_poisoned_at": null,
       "oldest_poisoned_at": "2026-09-13T00:10:00.000Z",
       "newest_poisoned_at": "2026-09-13T00:10:00.000Z",
       "by_event_type": [{ "event_type": "dispatch.job_assigned", "poisoned": 1 }] },
     { "ledger": "marketplace_inventory", "poisoned": 2,
+      "acknowledged_poisoned": 0, "unacknowledged_poisoned": 2,
+      "oldest_unacknowledged_poisoned_at": "2026-09-13T01:30:00.000Z",
       "oldest_poisoned_at": "2026-09-13T01:30:00.000Z",
       "newest_poisoned_at": "2026-09-13T01:31:00.000Z",
       "by_event_type": [{ "event_type": "marketplace.inventory_adjusted", "poisoned": 2 }] }
@@ -79,6 +85,7 @@ GET /delivery/relay/dead-letters?event_type_limit=10
     "severity": "warning",
     "because": "poisoned_present",
     "oldest_poisoned_age_seconds": 6600,
+    "oldest_unacknowledged_poisoned_age_seconds": 1800,
     "thresholds": { "warning_poisoned": 1, "critical_poisoned": 10, "critical_age_seconds": 86400 },
     "gates_readiness": false
   }
@@ -110,6 +117,19 @@ GET /delivery/relay/dead-letters?event_type_limit=10
    10). ومجموعٌ مقصوصٌ بسقفِ **عرضٍ** كانَ سيُخفي فقداً بقرارِ واجهةٍ.
 8. **الحالةُ المقيسةُ واحدةٌ: `poisoned`.** لا `pending` ولا `skipped_stale` —
    وضمُّ إحداهما يجعلُ التنبيهَ ضجيجاً يُصمَّتُ في أوّلِ أسبوعٍ.
+9. **والإقرارُ يُسكِتُ الحكمَ ولا يمحو العدَّ** (المراجعةُ 24/N ·
+   [ADR-026 §4.27](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md)):
+   `total_poisoned` **يبقى كما هوَ** بعدَ إقرارِ صفٍّ، ويُنشَرُ معَهُ مقسومُهُ
+   (`total_acknowledged_poisoned` + `total_unacknowledged_poisoned` =
+   `total_poisoned` حتماً، وعلى كلِّ دفترٍ كذلكَ). **والمُستثنى من الحكمِ
+   وحدَهُ** هوَ المُقَرُّ بهِ — عدداً وعمراً. وإخراجُ الصفِّ من العدِّ بالإقرارِ
+   كانَ سيجعلُ «صفرَ مسمومٍ» دعوى كاذبةً، وهوَ عينُ الصفرِ الكاذبِ في القرارِ
+   الأوّلِ أعلاهُ.
+10. **والعمرانِ منشورانِ لا واحدٌ:** `oldest_poisoned_at` (عمرُ الفقدِ
+   الحقيقيِّ · **لا يتحرَّكُ بالإقرارِ** لأنَّ `updated_at` لا يُمَسُّ) و
+   `oldest_unacknowledged_poisoned_at` معَ
+   `alert.oldest_unacknowledged_poisoned_age_seconds` (المُستحِقُّ للعملِ). ومَن
+   نشرَ الثانيَ وحدَهُ أخفى أنَّ الفقدَ قائمٌ.
 
 ---
 
@@ -118,9 +138,16 @@ GET /delivery/relay/dead-letters?event_type_limit=10
 | الحكمُ | الشرطُ | `because` |
 |---|---|---|
 | `ok` | `total_poisoned = 0` | `no_poisoned_rows` |
-| `warning` | `total_poisoned ≥ 1` | `poisoned_present` |
-| `critical` | `total_poisoned ≥ 10` | `poisoned_count_at_or_above_critical` |
-| `critical` | أقدمُ مسمومٍ عمرُهُ `≥ 86400` ثانيةً (يومٌ) | `oldest_poisoned_at_or_above_critical_age` |
+| `ok` | مسمومٌ موجودٌ **وكلُّهُ مُقَرٌّ بهِ** (24/N) | `all_poisoned_acknowledged` |
+| `warning` | غيرُ المُقَرِّ بهِ `≥ 1` | `poisoned_present` |
+| `critical` | غيرُ المُقَرِّ بهِ `≥ 10` | `poisoned_count_at_or_above_critical` |
+| `critical` | أقدمُ **غيرِ مُقَرٍّ بهِ** عمرُهُ `≥ 86400` ثانيةً (يومٌ) | `oldest_poisoned_at_or_above_critical_age` |
+
+**وتصحيحٌ بالإضافةِ (24/N):** الصفوفُ الثلاثةُ الأخيرةُ كانت تقولُ
+`total_poisoned` وصارتْ تقولُ **غيرَ المُقَرِّ بهِ** — والسطرُ السابقُ يُقرأُ هنا
+ولا يُمحى لأنَّهُ كانَ الحكمَ الصادقَ قبلَ أن يوجدَ إقرارٌ أصلاً. والسببُ
+`all_poisoned_acknowledged` **مُسمَّى ولا يُدمَجُ** في `no_poisoned_rows`: الفرقُ
+بينَ «لا فقدَ» و«فقدٌ مُقَرٌّ بهِ» يبقى مقروءاً في الجسمِ.
 
 - **عتبةُ التحذيرِ واحدٌ لا أكثرُ.** صفٌّ مسمومٌ واحدٌ **حدثٌ مفقودٌ حقيقيٌّ**،
   وعتبةٌ أعلى تعني فقداً مسكوتاً عنهُ بقرارٍ مكتوبٍ — وهوَ ما لا يُقبَلُ في دفترٍ

@@ -25,7 +25,10 @@ import {
 } from "./service-identity-support.js";
 import { DELIVERY_SCOPES } from "../http/service-identity.js";
 import type { RelayDeadLetterReadPort } from "../ports.js";
-import type { RelayDeadLetterMetric } from "../domain/relay-dead-letters.js";
+import type {
+  RelayDeadLetterLedgerMetric,
+  RelayDeadLetterMetric,
+} from "../domain/relay-dead-letters.js";
 import {
   FakeCatalog,
   FakeReadinessProbe,
@@ -37,6 +40,42 @@ import {
 
 const NOW = "2026-09-13T02:00:00.000Z";
 const minutesAgo = (n: number) => new Date(Date.parse(NOW) - n * 60_000).toISOString();
+
+/**
+ * بانِي صفِّ دفترٍ (المراجعةُ 24/N · §4.27). **والافتراضُ لا إقرارَ**: كلُّ
+ * مسمومٍ غيرُ مُقَرٍّ بهِ، فالدعاوى الأربعُ المكتوبةُ في 21/N تبقى تقيسُ نفسَ
+ * الحكمِ حرفاً. ولو صارَ الافتراضُ «مُقَرٌّ بهِ» لصارَ كلُّ `critical` في هذا
+ * الملفِّ `ok` — أي تخفيفَ بوّابةٍ في ثوبِ بانٍ.
+ */
+function ldg(
+  ledgerName: RelayDeadLetterLedgerMetric["ledger"],
+  poisoned: number,
+  oldest: string | null,
+  newest: string | null,
+  byEventType: { eventType: string; poisoned: number }[] = [],
+  acknowledged = 0,
+): RelayDeadLetterLedgerMetric {
+  return {
+    ledger: ledgerName,
+    poisoned,
+    acknowledgedPoisoned: acknowledged,
+    unacknowledgedPoisoned: poisoned - acknowledged,
+    oldestPoisonedAt: oldest,
+    oldestUnacknowledgedPoisonedAt: acknowledged >= poisoned ? null : oldest,
+    newestPoisonedAt: newest,
+    byEventType,
+  };
+}
+
+function metricOf(ledgers: readonly RelayDeadLetterLedgerMetric[]): RelayDeadLetterMetric {
+  return {
+    measuredAt: NOW,
+    totalPoisoned: ledgers.reduce((sum, l) => sum + l.poisoned, 0),
+    totalAcknowledgedPoisoned: ledgers.reduce((sum, l) => sum + l.acknowledgedPoisoned, 0),
+    totalUnacknowledgedPoisoned: ledgers.reduce((sum, l) => sum + l.unacknowledgedPoisoned, 0),
+    ledgers,
+  };
+}
 
 /** منفذُ قياسٍ يُملي الاختبارُ جوابَهُ ويسجِّلُ ما وصلَهُ من مُعامِلاتٍ. */
 class FakeRelayDeadLetterReadPort implements RelayDeadLetterReadPort {
@@ -53,20 +92,7 @@ class FakeRelayDeadLetterReadPort implements RelayDeadLetterReadPort {
 }
 
 function emptyMetric(): RelayDeadLetterMetric {
-  return {
-    measuredAt: NOW,
-    totalPoisoned: 0,
-    ledgers: [
-      { ledger: "dispatch", poisoned: 0, oldestPoisonedAt: null, newestPoisonedAt: null, byEventType: [] },
-      {
-        ledger: "marketplace_inventory",
-        poisoned: 0,
-        oldestPoisonedAt: null,
-        newestPoisonedAt: null,
-        byEventType: [],
-      },
-    ],
-  };
+  return metricOf([ldg("dispatch", 0, null, null), ldg("marketplace_inventory", 0, null, null)]);
 }
 
 function buildApp(port?: RelayDeadLetterReadPort) {
@@ -229,10 +255,14 @@ describe("GET /delivery/relay/dead-letters — الجسمُ والحكمُ", () 
       expect(body.total_poisoned).toBe(0);
       // دفترٌ يغيبُ حينَ يخلو لا يُفرَّقُ عن دفترٍ نُسِيَ من الاستعلامِ.
       expect(body.ledgers.map((l) => l.ledger)).toEqual(["dispatch", "marketplace_inventory"]);
+      // دعوى **شكلٍ تامٍّ** على جسمِ التنبيهِ: حقلٌ يُضافُ يجبُ أن يُسقِطَ هذا
+      // الاختبارَ كي يُقرَأَ ويُوثَّقَ (وقد وقعَ ذلكَ في 24/N · §4.27 فأُضيفَ
+      // عمرُ غيرِ المُقَرِّ بهِ هنا).
       expect(body.alert).toEqual({
         severity: "ok",
         because: "no_poisoned_rows",
         oldest_poisoned_age_seconds: null,
+        oldest_unacknowledged_poisoned_age_seconds: null,
         thresholds: {
           warning_poisoned: 1,
           critical_poisoned: 10,
@@ -246,20 +276,14 @@ describe("GET /delivery/relay/dead-letters — الجسمُ والحكمُ", () 
   });
 
   it("صفٌّ واحدٌ ⇒ `warning` **مع العتبةِ منشورةً** وتفصيلِ النوعِ", async () => {
-    const port = new FakeRelayDeadLetterReadPort({
-      measuredAt: NOW,
-      totalPoisoned: 1,
-      ledgers: [
-        { ledger: "dispatch", poisoned: 0, oldestPoisonedAt: null, newestPoisonedAt: null, byEventType: [] },
-        {
-          ledger: "marketplace_inventory",
-          poisoned: 1,
-          oldestPoisonedAt: minutesAgo(5),
-          newestPoisonedAt: minutesAgo(5),
-          byEventType: [{ eventType: "marketplace.inventory_adjusted", poisoned: 1 }],
-        },
-      ],
-    });
+    const port = new FakeRelayDeadLetterReadPort(
+      metricOf([
+        ldg("dispatch", 0, null, null),
+        ldg("marketplace_inventory", 1, minutesAgo(5), minutesAgo(5), [
+          { eventType: "marketplace.inventory_adjusted", poisoned: 1 },
+        ]),
+      ]),
+    );
     const { fastify, close } = buildApp(port);
     try {
       const res = await fastify.inject({ method: "GET", url: "/delivery/relay/dead-letters" });
@@ -293,26 +317,14 @@ describe("GET /delivery/relay/dead-letters — الجسمُ والحكمُ", () 
   });
 
   it("`critical` يُجابُ **200** لا 5xx — القياسُ نجحَ وإن ساءَ مقيسُهُ", async () => {
-    const port = new FakeRelayDeadLetterReadPort({
-      measuredAt: NOW,
-      totalPoisoned: 12,
-      ledgers: [
-        {
-          ledger: "dispatch",
-          poisoned: 12,
-          oldestPoisonedAt: minutesAgo(30),
-          newestPoisonedAt: minutesAgo(1),
-          byEventType: [{ eventType: "dispatch.job_assigned", poisoned: 12 }],
-        },
-        {
-          ledger: "marketplace_inventory",
-          poisoned: 0,
-          oldestPoisonedAt: null,
-          newestPoisonedAt: null,
-          byEventType: [],
-        },
-      ],
-    });
+    const port = new FakeRelayDeadLetterReadPort(
+      metricOf([
+        ldg("dispatch", 12, minutesAgo(30), minutesAgo(1), [
+          { eventType: "dispatch.job_assigned", poisoned: 12 },
+        ]),
+        ldg("marketplace_inventory", 0, null, null),
+      ]),
+    );
     const { fastify, close } = buildApp(port);
     try {
       const res = await fastify.inject({ method: "GET", url: "/delivery/relay/dead-letters" });
@@ -329,26 +341,12 @@ describe("GET /delivery/relay/dead-letters — الجسمُ والحكمُ", () 
   });
 
   it("`critical` لا يُغيِّرُ `GET /delivery/ready` — مُعلِمٌ لا حاكمٌ، مقيسٌ لا مُدَّعىً", async () => {
-    const port = new FakeRelayDeadLetterReadPort({
-      measuredAt: NOW,
-      totalPoisoned: 99,
-      ledgers: [
-        {
-          ledger: "dispatch",
-          poisoned: 99,
-          oldestPoisonedAt: minutesAgo(10_000),
-          newestPoisonedAt: minutesAgo(1),
-          byEventType: [],
-        },
-        {
-          ledger: "marketplace_inventory",
-          poisoned: 0,
-          oldestPoisonedAt: null,
-          newestPoisonedAt: null,
-          byEventType: [],
-        },
-      ],
-    });
+    const port = new FakeRelayDeadLetterReadPort(
+      metricOf([
+        ldg("dispatch", 99, minutesAgo(10_000), minutesAgo(1)),
+        ldg("marketplace_inventory", 0, null, null),
+      ]),
+    );
     const { fastify, close } = buildApp(port);
     try {
       const metricRes = await fastify.inject({ method: "GET", url: "/delivery/relay/dead-letters" });

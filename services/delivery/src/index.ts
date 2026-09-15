@@ -362,4 +362,22 @@ export type {
 export { PostgresRelayRequeueStore } from "./infrastructure/relay-requeue-store.js";
 export type { RelayRequeueEffect } from "./infrastructure/relay-requeue-store.js";
 export type { RelayRequeuePort } from "./ports.js";
+/* ── المراجعةُ 24/N · M5-13 · §4.27: إقرارٌ يُضيفُ ولا يمحو ── */
+export {
+  RELAY_ACKNOWLEDGEMENT_REASON_MAX_LENGTH,
+  RELAY_ACKNOWLEDGEMENT_REASON_MIN_LENGTH,
+  decideRelayAcknowledgement,
+  normalizeRelayAcknowledgementReason,
+} from "./domain/relay-acknowledgement.js";
+export type {
+  RelayAcknowledgementAccepted,
+  RelayAcknowledgementAlready,
+  RelayAcknowledgementDecision,
+  RelayAcknowledgementReasonRejection,
+  RelayAcknowledgementReasonResult,
+  RelayAcknowledgementRejected,
+  RelayAcknowledgementRejectionReason,
+} from "./domain/relay-acknowledgement.js";
+export { PostgresRelayAcknowledgementStore } from "./infrastructure/relay-dead-letter-acknowledgement-store.js";
+export type { RelayDeadLetterAcknowledgementPort } from "./ports.js";
 /* ── M5-13R · §4.24-ب: إعادةُ السمِّ تحتَ قفلِ المُستهلِكِ ── */

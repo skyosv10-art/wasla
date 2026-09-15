@@ -163,6 +163,13 @@ export class PostgresRelayRequeueStore implements RelayRequeuePort {
        * `domain/relay-reprocess.ts`). و`updated_at` وحدَهُ يتقدَّمُ لأنَّهُ
        * مقياسُ §4.23 لعمرِ الفقدِ.
        *
+       * **ومحوُ الإقرارِ هنا ليسَ تنظيفاً اختياريّاً** (§4.27): قيدُ
+       * `ck_…_ack_poisoned_only` في القاعدةِ يرفضُ صفّاً `pending` يحملُ إقراراً،
+       * فحذفُ هذهِ الأسطرِ يُسقِطُ المعاملةَ بـ`23514` لا يمرُّ صامتاً. والمعنى
+       * مقصودٌ: شهادةُ «عُولِجَ» تخصُّ حياةً ماضيةً للصفِّ، وصفٌّ عادَ إلى
+       * الطابورِ يُسألُ من جديدٍ. والدليلُ لا يُمحى من العالَمِ: `attempt_count`
+       * و`last_error` باقيانِ كما هُما، والإقرارُ محضرُ حكمٍ على حالةٍ انتهت.
+       *
        * والشرطُ `consumed_status = 'poisoned'` مُكرَّرٌ هنا فوقَ القرارِ عمداً:
        * حزامٌ ثانٍ لو تسرَّبَ نداءٌ لا يمرُّ بالقرارِ. والقرارُ يبقى مصدرَ
        * **الجوابِ** كي يُفرَّقَ «لا صفَّ» من «صفٌّ ليسَ مسموماً» — وهوَ ما لا
@@ -170,7 +177,11 @@ export class PostgresRelayRequeueStore implements RelayRequeuePort {
        */
       const updated = await client.query(
         `UPDATE ${tables.consumed}
-            SET consumed_status = $2, updated_at = now()
+            SET consumed_status = $2,
+                acknowledged_at = NULL,
+                acknowledged_by = NULL,
+                acknowledgement_reason = NULL,
+                updated_at = now()
           WHERE event_id = $1 AND consumed_status = 'poisoned'`,
         [cmd.eventId, RELAY_REQUEUE_TARGET_STATUS],
       );

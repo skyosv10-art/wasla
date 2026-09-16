@@ -1,0 +1,22 @@
+{
+  "name": "@wasla/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA configuration reading (M2-04) — القراءةُ الواحدةُ لمتغيّراتِ البيئةِ: تُسمّي المتغيّرَ وتُلقي ولا تُخرِجُ NaN، وسجلُّ المتغيّراتِ المرجعيُّ يُولِّدُ .env.example ونوعَ الأسماءِ (ADR-032).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

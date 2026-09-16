@@ -26,7 +26,8 @@
     "@wasla/contracts-customer": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "@wasla/config": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

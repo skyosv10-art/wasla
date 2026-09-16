@@ -20,6 +20,7 @@
  * استيرادَ الحزمة لقراءة نوعٍ منها كان سيرفع خادماً.
  */
 
+import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { REPUTATION_SERVICE_PORT } from "@wasla/contracts-reputation";
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
   }
   try {
     await app.listen({
-      port: Number(process.env.PORT ?? REPUTATION_SERVICE_PORT),
+      port: readPortEnv(process.env, "PORT", REPUTATION_SERVICE_PORT),
       host: "0.0.0.0",
     });
   } catch (error) {

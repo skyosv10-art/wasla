@@ -37,6 +37,7 @@
 
 import { Pool } from "pg";
 
+import { readLenientIntEnv, readPortEnv } from "@wasla/config";
 import {
   InMemoryServiceTokenReplayGuard,
   createServiceRequestSigner,
@@ -73,7 +74,7 @@ import type { DependencyObservationPort } from "../domain/dependency-probe.js";
 import type { InventoryReservationPort, StoreOrderCatalogPort } from "../ports.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-const PORT = Number(process.env.PORT ?? 8097);
+const PORT = readPortEnv(process.env, "PORT", 8097);
 
 /**
  * لا منفذَ كتالوجٍ بلا عنوانِ سوقٍ — والصمتُ هنا فشلٌ مُغلَقٌ مُعلَنٌ.
@@ -86,8 +87,9 @@ function buildCatalogPort(): { catalogPort?: StoreOrderCatalogPort; label: strin
   const baseUrl = process.env.MARKETPLACE_SERVICE_URL;
   if (!baseUrl) return { label: "unwired (MARKETPLACE_SERVICE_URL absent)" };
 
-  const timeoutRaw = Number(process.env.MARKETPLACE_TIMEOUT_MS);
-  const timeoutMs = Number.isFinite(timeoutRaw) && timeoutRaw > 0 ? timeoutRaw : undefined;
+  // قراءةٌ متسامحةٌ بقصدٍ (M2-04 · ADR-020): القرارُ أعلاهُ مكتوبٌ، والتسامحُ الآنَ
+  // مُسمّىً في اسمِ الدالّةِ بدلَ أن يكونَ أثراً جانبيّاً لـ`Number(...)`.
+  const timeoutMs = readLenientIntEnv(process.env, "MARKETPLACE_TIMEOUT_MS", { min: 1 });
   return {
     catalogPort: new HttpMarketplaceCatalogPort({
       baseUrl,

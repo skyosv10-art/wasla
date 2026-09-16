@@ -14,12 +14,13 @@
 
 import { Pool } from "pg";
 
+import { readPortEnv } from "@wasla/config";
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-const PORT = Number(process.env.PORT ?? 8012);
+const PORT = readPortEnv(process.env, "PORT", 8012);
 
 async function main(): Promise<void> {
   if (!DATABASE_URL) {

@@ -3468,3 +3468,11 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **What:** وسيطُ `service-auth` على المساراتِ الداخليّةِ الثلاثةِ (`POST /channel/messages` · `GET /channel/:bot/mini-app` · `POST /channel/:bot/deep-links`) عبرَ `registerServiceIdentity` من `@wasla/service-auth`. الـwebhook محميٌّ بسرِّ Telegram (ADR-007) و`/health` مفتوحٌ. برهانُ الدخولِ في `service-identity.test.ts` (10 اختبارات: 401 بلا رمز · 403 بصلاحية خاطئة · 200 بالصلاحية الصحيحة · 401 بجمهور خاطئ · webhook بسرِّ Telegram · `/health` مفتوح). العقدُ المنشورُ يُعلِنُ `securitySchemes.ServiceAuth` و`security:` و`401`/`403`. الجمهورُ `channel` مُسجَّلٌ في `AUDIENCES` و`ENFORCED_OPERATIONS` (3 عمليات · 3 صلاحيّات). حارسُ المصفوفةِ وُسِّعَ لقراءةِ `packages/bot-runtime/`.
 - **حدودُ الدعوى:** `RISK-0027` (الحارسُ لا يرى `packages/` و`bots/`) — تمَ التوسيعُ لـ`packages/bot-runtime/` فقط، لا لـ`bots/`. و`RISK-0015` (متجرُ الإعادةِ في الذاكرة) دَينٌ معلنٌ. و`pnpm-lock.yaml` تغيَّرَ لإضافةِ `@wasla/service-auth` إلى `partner-bot` (devDependency).
 - **الحكمُ:** يُقرأُ على هذهِ الدفعةِ من وظائفِ CI بعدَ الدفعِ.
+
+
+### [2026-09-16] 81/N — تحرير CLM-0191 · ختام دورة الإقفال (§8.1)
+
+- **Work Item(s):** M1-07 · **التحرير:** `CLM-0191`
+- **Why:** §8.1 — تحرير الحجز في دفعة سجل خالصة بعد دمج [PR #199](https://github.com/skyosv10-art/wasla/pull/199) (squash [`729370b`](https://github.com/skyosv10-art/wasla/commit/729370b)).
+- **What:** صف الحجز نُقل إلى «المحررة» ولوحة الإطلاق رُقِّي فيها M1-07 إلى `Completed`. جولة الدفعة خضراء 33/33 من أول مرة (CI run [35071501277](https://github.com/skyosv10-art/wasla/actions/runs/35071501277)) — verify ✓ · governance-guard ✓ · doc-coverage ✓ · typecheck ✓ · test ✓ · 15 × db-integration ✓ · 9 × exit-gate-e2e ✓ · Devin Review ✓ · roadmap ✓ · repo-structure ✓.
+- **الحكم:** يُقرأ على هذه الدفعة من وظائف CI بعد الدفع.

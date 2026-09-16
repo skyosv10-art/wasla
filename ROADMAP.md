@@ -104,6 +104,32 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
+- **M2-04 — claim `CLM-0194`: config schema, env registry and generated env examples — IN PROGRESS.**
+  Measured before any edit (2026-09-16, repo-wide text scan): **17** raw numeric env reads in
+  production code with no validator, **4** duplicated strict readers in four unrelated files,
+  **no `.env.example` at all**, and `packages/config` holding only a `.gitkeep`. The board's own
+  estimate ("جرد 20 variables") was low by ~3x — the real inventory is **59 variables / 157
+  declared readers**; the estimate is corrected additively, not erased. Operational impact is
+  named, not hypothesised: `Number("٣") ⇒ NaN`, so `DISPATCH_WAVE_SIZE=٣` yields
+  `waveSize = NaN` — an assignment wave with zero drivers while `GET /dispatch/health` still
+  answers **200** (`RISK-0046`, sev:high, mitigating). Delivered: one source of truth
+  (`packages/config/env-registry.json`) with two **generated** artifacts (`.env.example`, 301
+  lines — the first in this repo's history — and `src/registry.generated.ts`, 697 lines) that are
+  never hand-edited; ten strict readers throwing a named `ConfigError` (33 tests); all 17 raw
+  reads converted, with the four dispatch rules moved to
+  `services/dispatch/src/config/runtime-config.ts` with a floor of 1 each (7 tests); 11 services
+  consuming the package for real; and **check 18** in the single entry point with eight gates and
+  eleven mutation cases. Two defects in the guard itself were found by measurement and are kept
+  on record: gate 7 originally **imported** the secret placeholder from the generator, so a
+  mutation writing a real secret into `.env.example` passed both gate 3 and gate 7 (a guard
+  validating the generator with the generator) — fixed with an independent literal; and after the
+  migration the scanner no longer saw the migrated reads, so gate 1 would have measured a shrinking
+  inventory as the code improved — fixed with a `reader` mode. Docs: `ADR-032`,
+  `docs/08-infrastructure/CONFIG_SCHEMA.md`, `docs/12-testing/M2-04_GATE.md`. Not claimed: the guard
+  is textual/pattern-based, `packages/config/` is excluded from measurement for a written reason,
+  reader *choice* is unguarded, and no boot-with-broken-env exit gate exists yet — that is what
+  would close `RISK-0046`. Promotion to `Completed` is the program owner's authority alone (§9).
+
 - **M1-08 — claim `CLM-0192`: edge abuse/error/audit controls — COMPLETED.** A shared edge-controls
   layer in `packages/service-auth/src/edge-controls.ts` provides three mechanisms:
   `EdgeRateLimiter` (token bucket on an injected clock, returns 429 + Retry-After, never

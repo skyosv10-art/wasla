@@ -30,6 +30,7 @@
  * Port via PORT (default 8087 — identity 8080, geography 8081, customers 8086).
  */
 
+import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { ORDER_SERVICE_PORT } from "@wasla/contracts-order";
@@ -115,7 +116,7 @@ async function main(): Promise<void> {
     });
   }
 
-  const port = Number(process.env.PORT ?? ORDER_SERVICE_PORT);
+  const port = readPortEnv(process.env, "PORT", ORDER_SERVICE_PORT);
 
   // SIGTERM is how a container is asked to stop: close the server (and with it
   // the pool) instead of letting the process die with connections open.

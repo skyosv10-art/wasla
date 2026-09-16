@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 
-import { DISPATCH_SERVICE_PORT } from "@wasla/contracts-dispatch";
 import {
   createServiceRequestSigner,
   InMemoryServiceTokenReplayGuard,
@@ -11,6 +10,7 @@ import {
 
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
 
+import { resolveDispatchPort, resolveDispatchRules } from "../config/runtime-config.js";
 import { createDispatchDb } from "../infrastructure/drizzle/db.js";
 import {
   createInMemoryStores,
@@ -59,13 +59,7 @@ interface Wiring {
 }
 
 function rules(): StaticRulesProvider {
-  return new StaticRulesProvider({
-    rulesetVersion: 1,
-    waveSize: Number(process.env.DISPATCH_WAVE_SIZE ?? 2),
-    offerTimeoutSeconds: Number(process.env.DISPATCH_OFFER_TIMEOUT_SECONDS ?? 30),
-    maxWaves: Number(process.env.DISPATCH_MAX_WAVES ?? 3),
-    escalationTimeoutSeconds: Number(process.env.DISPATCH_ESCALATION_TIMEOUT_SECONDS ?? 120),
-  });
+  return new StaticRulesProvider(resolveDispatchRules(process.env));
 }
 
 /**
@@ -159,7 +153,7 @@ async function main(): Promise<void> {
     process.once(signal, () => { void app.close().then(() => process.exit(0)); });
   }
   try {
-    await app.listen({ port: Number(process.env.PORT ?? DISPATCH_SERVICE_PORT), host: "0.0.0.0" });
+    await app.listen({ port: resolveDispatchPort(process.env), host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);
     await app.close();

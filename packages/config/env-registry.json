@@ -1,0 +1,1519 @@
+{
+  "schema": "wasla.env-registry/v1",
+  "reference": "docs/08-infrastructure/CONFIG_SCHEMA.md",
+  "decision": "docs/15-decisions/ADR-032-config-schema-single-source.md",
+  "owner_item": "M2-04",
+  "generated_artifacts": [
+    ".env.example",
+    "packages/config/src/registry.generated.ts"
+  ],
+  "note_ar": "هذا الملفُّ **مصدرُ الحقيقةِ الوحيدُ** لمتغيّراتِ البيئةِ: `.env.example` و`registry.generated.ts` مُشتَقّانِ منهُ بايتاً بايتاً، والفحصُ 18 يُعيدُ توليدَهما ويقارنُ. زيادةُ متغيّرٍ = سطرٌ هنا ثمَّ إعادةُ توليدٍ.",
+  "variables": [
+    {
+      "name": "COMMUNITY_GROUP_CHAT_IDS",
+      "type": "csv",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مُعرِّفاتُ مجموعاتِ المجتمعِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "قالبُ الرابطِ العميقِ لبوتِ العميلِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_DEEP_LINK_TEMPLATE"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_BOT_MINI_APP_LABEL",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "نصُّ زرِّ التطبيقِ المُصغَّرِ لبوتِ العميلِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_LABEL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_BOT_MINI_APP_URL",
+      "type": "http_url",
+      "required": "always",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ التطبيقِ المُصغَّرِ لبوتِ العميلِ — https إلزاماً.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_URL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_BOT_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8083",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ بوتِ العميلِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_PORT"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_BOT_TOKEN",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "رمزُ بوتِ العميلِ من Telegram — لا يُسجَّلُ ولا يُلتزَمُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_TOKEN"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_BOT_WEBHOOK_SECRET",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "سرُّ ترويسةِ خطّافِ بوتِ العميلِ (16 محرفاً على الأقلِّ).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_WEBHOOK_SECRET"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "CUSTOMER_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "وصلةُ Postgres لجداولِ بوتِ العميلِ وحزمةِ تكاملِهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/customer-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime",
+        "test",
+        "tooling"
+      ],
+      "description_ar": "وصلةُ Postgres للخدمةِ الجاريةِ — كلُّ خدمةٍ تقرأُ الاسمَ نفسَهُ في نشرتِها.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/channel-e2e/src/__tests__/m1-02-session-gate.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/channel-e2e/src/__tests__/phase03-exit-gate.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/channel-postgres/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/channel-postgres/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/channel-postgres/src/__tests__/port-conformance.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/channel-postgres/src/__tests__/stores.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/delivery-e2e/src/harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/marketplace-e2e/src/harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/search-e2e/src/harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/subscription-e2e/src/harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/customers/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/customers/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/customers/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/__tests__/migration-upgrade-with-data.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/delivery/src/ops/idempotency-sweep-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/dispatch/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/dispatch/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/dispatch/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/dispatch/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/drivers/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/drivers/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/drivers/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/drivers/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/__tests__/phase02-exit-gate.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/__tests__/postgres-repository.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/src/__tests__/exit-gate.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/src/__tests__/postgres-repository.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/marketplace/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/marketplace/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/marketplace/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/marketplace/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/marketplace/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/matching/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/matching/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/matching/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/matching/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/negotiations/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/negotiations/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/negotiations/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/negotiations/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/orders/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/orders/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/orders/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/orders/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/reputation/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/reputation/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/reputation/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/reputation/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/search/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/search/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/search/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/search/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/search/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/src/__tests__/migrations.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/src/http/server.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
+    },
+    {
+      "name": "DISPATCH_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "وصلةُ Postgres لحزمةِ تكاملِ الإرسالِ (اختبارٌ فقط).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/dispatch-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "DISPATCH_ESCALATION_TIMEOUT_SECONDS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "120",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ التصعيدِ الكلّيّةُ للمهمّةِ بالثواني.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/config/runtime-config.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
+      "name": "DISPATCH_MAX_WAVES",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "3",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "أقصى عددِ موجاتٍ قبلَ التصعيدِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/config/runtime-config.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
+      "name": "DISPATCH_OFFER_TIMEOUT_SECONDS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "30",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ ردِّ الكابتنِ على العرضِ الواحدِ بالثواني.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/config/runtime-config.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
+      "name": "DISPATCH_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ الإرسالِ كما تُناديها المفاوضاتُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/negotiations/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "DISPATCH_WAVE_SIZE",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "2",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عددُ الكباتنِ في موجةِ العرضِ الواحدةِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/config/runtime-config.ts",
+          "mode": "reader"
+        }
+      ],
+      "note_ar": "قيمةٌ غيرُ رقميّةٍ كانت تُنتِجُ `NaN` صامتاً قبلَ M2-04 (`RISK-0046`) — الآنَ تُسقِطُ الإقلاعَ باسمِ المتغيّرِ."
+    },
+    {
+      "name": "DRIVER_BOT_DEEP_LINK_TEMPLATE",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "قالبُ الرابطِ العميقِ لبوتِ الكابتنِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_DEEP_LINK_TEMPLATE"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_BOT_MINI_APP_LABEL",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "نصُّ زرِّ التطبيقِ المُصغَّرِ لبوتِ الكابتنِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_LABEL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_BOT_MINI_APP_URL",
+      "type": "http_url",
+      "required": "always",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ التطبيقِ المُصغَّرِ لبوتِ الكابتنِ — https إلزاماً.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_URL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_BOT_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8084",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ بوتِ الكابتنِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_PORT"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_BOT_TOKEN",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "رمزُ بوتِ الكابتنِ من Telegram — لا يُسجَّلُ ولا يُلتزَمُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_TOKEN"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_BOT_WEBHOOK_SECRET",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "سرُّ ترويسةِ خطّافِ بوتِ الكابتنِ (16 محرفاً على الأقلِّ).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_WEBHOOK_SECRET"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "DRIVER_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "وصلةُ Postgres لجداولِ بوتِ الكابتنِ وحزمةِ تكاملِهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/driver-bot/src/driver-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/driver-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "DRIVER_DEV_ZONE_IDS",
+      "type": "csv",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مناطقُ تطويرٍ تُمنَحُ للكابتنِ بلا تحقُّقٍ جغرافيٍّ — للتطويرِ المحلّيِّ وحدَهُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/drivers/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "حضورُها في نشرةِ إنتاجٍ خطرٌ مُعلَنٌ: تُقرأُ في `outbound-wiring` بلا سلطةٍ جغرافيّةٍ."
+    },
+    {
+      "name": "ESCALATION_GROUP_CHAT_IDS",
+      "type": "csv",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مُعرِّفاتُ مجموعاتِ التصعيدِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "EXIT_GATE_REQUIRE_DB",
+      "type": "flag",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "يُحوِّلُ تخطّيَ بوّابةِ الخروجِ عندَ غيابِ قاعدةِ البياناتِ إلى إخفاقٍ باسمِهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/delivery-e2e/src/__tests__/phase13-exit-gate.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/search-e2e/src/__tests__/phase12-exit-gate.e2e.test.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "قيمتُهُ الفاعلةُ `1` حرفاً — أيُّ قيمةٍ أخرى تُقرأُ «غيرَ مضبوطٍ»."
+    },
+    {
+      "name": "GEOGRAPHY_BASE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": "http://localhost:8081",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ الجغرافيا كما تُناديها المطابقةُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/matching/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "GEOGRAPHY_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ الجغرافيا كما يُناديها العملاءُ والكباتنُ وبوتُ العميلِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/drivers/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "غيابُهُ يُنتِجُ منفذاً مُعلَنَ العطبِ لا سقوطاً صامتاً."
+    },
+    {
+      "name": "IDEMPOTENCY_KEY_TTL_SECONDS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "86400",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عمرُ مفتاحِ عدمِ التكرارِ بالثواني قبلَ استحقاقِ الكنسِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/domain/idempotency.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "لهُ أرضيّةٌ في الشيفرةِ: أقلُّ من 3600 ثانيةً مرفوضٌ."
+    },
+    {
+      "name": "IDEMPOTENCY_SWEEP_BATCH_SIZE",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "500",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "حجمُ دُفعةِ كنسِ مفاتيحِ عدمِ التكرارِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/ops/idempotency-sweep-runner.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "IDEMPOTENCY_SWEEP_MAX_BATCHES",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "20",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "أقصى عددِ دُفعاتٍ في جولةِ كنسٍ واحدةٍ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/ops/idempotency-sweep-runner.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "IDENTITY_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ الهويّةِ لتهيئةِ الجلساتِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/http/server.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "غيابُهُ يعني «لا تهيئةَ هويّةٍ موصولةٌ»؛ وحضورُهُ بلا `WASLA_SERVICE_AUTH_KEYS` إخفاقٌ عندَ الإقلاعِ بقصدٍ."
+    },
+    {
+      "name": "IDENTITY_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ نداءِ خدمةِ الهويّةِ من زمنِ تشغيلِ البوتاتِ بالمللي ثانية.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_PROBE_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "1000",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ مسبارِ السوقِ بالمللي ثانية — لا تُقبَلُ صفراً: مسبارٌ بمهلةِ صفرٍ لا يسبرُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/domain/dependency-probe.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_PROBE_TTL_MS",
+      "type": "non_negative_int",
+      "required": "optional",
+      "default": "15000",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "صلاحيّةُ نتيجةِ مسبارِ السوقِ بالمللي ثانية (0 يعني «لا تخزينَ»).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/domain/dependency-probe.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_SERVICE_HOST",
+      "type": "string",
+      "required": "optional",
+      "default": "0.0.0.0",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ ربطِ خدمةِ السوقِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/marketplace/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_SERVICE_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8094",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ خدمةِ السوقِ — من حزمةِ العقدِ لا من رقمٍ مكتوبٍ في الجذرِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/marketplace/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ السوقِ كما يُناديها التوصيلُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "MARKETPLACE_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ نداءِ السوقِ من التوصيلِ بالمللي ثانية.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/delivery/src/http/server.ts",
+          "mode": "reader"
+        }
+      ],
+      "note_ar": "قيمةٌ غيرُ مقروءةٍ تسقطُ إلى الافتراضِ بقرارٍ مكتوبٍ في الجذرِ (ADR-020)."
+    },
+    {
+      "name": "MATCHING_BASE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": "http://localhost:8093",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ المطابقةِ كما يُناديها الإرسالُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "MATCHING_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ المطابقةِ كما يُناديها الكباتنُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/drivers/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "NEGOTIATIONS_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ المفاوضاتِ كما يُناديها بوتا العميلِ والكابتنِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "bots/driver-bot/src/driver-core.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "NEGOTIATION_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "وصلةُ Postgres لحزمةِ تكاملِ المفاوضاتِ (اختبارٌ فقط).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/negotiation-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "ORDERS_BASE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": "http://localhost:8087",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ محرِّكِ الطلباتِ كما يُناديهِ الإرسالُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/dispatch/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "ORDERS_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ محرِّكِ الطلباتِ كما تُناديهِ المفاوضاتُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/negotiations/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "ORDER_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "وصلةُ Postgres لحزمةِ تكاملِ الطلباتِ (اختبارٌ فقط).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/order-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "ORDER_SERVICE_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ نداءِ محرِّكِ الطلباتِ من العملاءِ بالمللي ثانية.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "reader"
+        }
+      ],
+      "note_ar": "قيمةٌ غيرُ مقروءةٍ تسقطُ إلى مهلةِ المنفذِ الافتراضيّةِ بقرارٍ مكتوبٍ في الجذرِ — لا تُوقِفُ الإقلاعَ على حقلٍ ثانويٍّ."
+    },
+    {
+      "name": "ORDER_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ محرِّكِ الطلباتِ كما يُناديهِ العملاءُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "PARTNER_BOT_DEEP_LINK_TEMPLATE",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "قالبُ الرابطِ العميقِ لبوتِ الشريكِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_DEEP_LINK_TEMPLATE"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PARTNER_BOT_MINI_APP_LABEL",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "نصُّ زرِّ التطبيقِ المُصغَّرِ لبوتِ الشريكِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_LABEL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PARTNER_BOT_MINI_APP_URL",
+      "type": "http_url",
+      "required": "always",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ التطبيقِ المُصغَّرِ لبوتِ الشريكِ — https إلزاماً.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_MINI_APP_URL"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PARTNER_BOT_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8085",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ بوتِ الشريكِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_PORT"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PARTNER_BOT_TOKEN",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "رمزُ بوتِ الشريكِ من Telegram — لا يُسجَّلُ ولا يُلتزَمُ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_TOKEN"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PARTNER_BOT_WEBHOOK_SECRET",
+      "type": "secret_material",
+      "required": "always",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "سرُّ ترويسةِ خطّافِ بوتِ الشريكِ (16 محرفاً على الأقلِّ).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "template",
+          "template": "${p}_WEBHOOK_SECRET"
+        }
+      ],
+      "note_ar": "الاسمُ مُشتَقٌّ في `envNames(bot)` من بادئةِ البوتِ — لا يُقرأُ حرفاً في الشيفرةِ، فنمطُهُ `template` والبابُ 2 يحرسُ حضورَ القالبِ."
+    },
+    {
+      "name": "PORT",
+      "type": "port",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ الاستماعِ للخدمةِ الجاريةِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "services/customers/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/delivery/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/dispatch/src/config/runtime-config.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/drivers/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/geography/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/identity/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/matching/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/negotiations/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/orders/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/reputation/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/search/src/http/server.ts",
+          "mode": "reader"
+        }
+      ],
+      "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."
+    },
+    {
+      "name": "SUBSCRIPTION_SERVICE_HOST",
+      "type": "string",
+      "required": "optional",
+      "default": "0.0.0.0",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ ربطِ خدمةِ الاشتراكاتِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/subscriptions/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "SUBSCRIPTION_SERVICE_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8095",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ خدمةِ الاشتراكاتِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "services/subscriptions/src/http/server.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "SUPPORT_GROUP_CHAT_IDS",
+      "type": "csv",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مُعرِّفاتُ مجموعاتِ الدعمِ التي يعملُ فيها البوتُ (ADR-008).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "helper"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "type": "string",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مُعرِّفُ المفتاحِ النشطِ الذي يُوقَّعُ بهِ الآنَ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "bots/driver-bot/src/driver-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/service-auth/src/keys.ts",
+          "mode": "default_literal"
+        },
+        {
+          "file": "services/negotiations/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_SERVICE_AUTH_KEYS",
+      "type": "secret_material",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مادّةُ مفاتيحِ هويّةِ الخدمةِ بصيغةِ `kid:status:secret,…` (M1-04).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/customer-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "bots/driver-bot/src/driver-core.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/bot-runtime/src/config.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "packages/service-auth/src/keys.ts",
+          "mode": "default_literal"
+        },
+        {
+          "file": "services/negotiations/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "تُقرأُ في `keyRegistryFromEnv` من **قيمةٍ افتراضيّةٍ في دالّةٍ** لا من `process.env.X` — ولذلكَ نمطُها `default_literal` والبابُ 8 يحرسُ رابطَها. ولا تُسجَّلُ في سجلٍّ أبداً."
+    }
+  ],
+  "numeric_parse_exceptions": []
+}

@@ -257,6 +257,15 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
 
+  packages/config:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)
+
   packages/contracts/channel:
     devDependencies:
       '@types/node':
@@ -788,6 +797,9 @@ importers:
 
   services/customers:
     dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-customer':
         specifier: workspace:*
         version: link:../../packages/contracts/customer
@@ -822,6 +834,9 @@ importers:
 
   services/delivery:
     dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-delivery':
         specifier: workspace:*
         version: link:../../packages/contracts/delivery
@@ -862,6 +877,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-dispatch':
         specifier: workspace:*
         version: link:../../packages/contracts/dispatch
@@ -902,6 +920,9 @@ importers:
 
   services/drivers:
     dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-driver':
         specifier: workspace:*
         version: link:../../packages/contracts/driver
@@ -939,6 +960,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-geography':
         specifier: workspace:*
         version: link:../../packages/contracts/geography
@@ -979,6 +1003,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-identity':
         specifier: workspace:*
         version: link:../../packages/contracts/identity
@@ -1053,6 +1080,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-matching':
         specifier: workspace:*
         version: link:../../packages/contracts/matching
@@ -1090,6 +1120,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-negotiation':
         specifier: workspace:*
         version: link:../../packages/contracts/negotiation
@@ -1127,6 +1160,9 @@ importers:
       '@wasla/auth-sdk':
         specifier: workspace:*
         version: link:../../packages/auth-sdk
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-order':
         specifier: workspace:*
         version: link:../../packages/contracts/order
@@ -1161,6 +1197,9 @@ importers:
 
   services/reputation:
     dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-reputation':
         specifier: workspace:*
         version: link:../../packages/contracts/reputation
@@ -1192,6 +1231,9 @@ importers:
 
   services/search:
     dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace

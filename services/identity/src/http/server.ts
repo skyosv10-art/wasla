@@ -12,6 +12,8 @@
 
 import { InMemoryServiceTokenReplayGuard, keyRegistryFromEnv } from "@wasla/service-auth";
 
+import { readPortEnv } from "@wasla/config";
+
 import { createIdentityApp } from "./app.js";
 import {
   SystemClock,
@@ -85,7 +87,7 @@ async function main(): Promise<void> {
     logger: true,
     serviceIdentity: serviceIdentityWiring(),
   });
-  const port = Number(process.env.PORT ?? 8080);
+  const port = readPortEnv(process.env, "PORT", 8080);
 
   try {
     await app.listen({ port, host: "0.0.0.0" });

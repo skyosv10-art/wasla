@@ -18,6 +18,7 @@
  * guessing `localhost` would turn a missing variable into someone else's outage.
  */
 
+import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { DRIVER_SERVICE_PORT } from "@wasla/contracts-driver";
@@ -105,7 +106,7 @@ async function main(): Promise<void> {
     });
   }
   try {
-    await app.listen({ port: Number(process.env.PORT ?? DRIVER_SERVICE_PORT), host: "0.0.0.0" });
+    await app.listen({ port: readPortEnv(process.env, "PORT", DRIVER_SERVICE_PORT), host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);
     await app.close();

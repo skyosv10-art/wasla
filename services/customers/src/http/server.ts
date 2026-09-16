@@ -41,6 +41,7 @@ import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-a
 
 import type { Pool } from "pg";
 
+import { readLenientIntEnv, readPortEnv } from "@wasla/config";
 import {
   CryptoIdGenerator,
   FakeGeography,
@@ -109,8 +110,9 @@ function buildOrderIntake(): {
     // Explicit fail-closed default (ADR-009 §3): no silent success, no silent drop.
     return { orderIntake: new UnavailableOrderIntake(), label: "unconfigured" };
   }
-  const timeoutRaw = Number(process.env.ORDER_SERVICE_TIMEOUT_MS);
-  const timeoutMs = Number.isFinite(timeoutRaw) && timeoutRaw > 0 ? timeoutRaw : undefined;
+  // قراءةٌ متسامحةٌ بقصدٍ (M2-04): مهلةٌ ثانويّةٌ غيرُ مقروءةٍ تسقطُ إلى افتراضِ
+  // المنفذِ بدلَ إسقاطِ الإقلاعِ — والتسامحُ مُسمّىً في اسمِ الدالّةِ لا صمتاً.
+  const timeoutMs = readLenientIntEnv(process.env, "ORDER_SERVICE_TIMEOUT_MS", { min: 1 });
   return {
     orderIntake: new HttpOrderIntakePort({
       baseUrl,
@@ -205,7 +207,7 @@ async function main(): Promise<void> {
     });
   }
 
-  const port = Number(process.env.PORT ?? 8086);
+  const port = readPortEnv(process.env, "PORT", 8086);
 
   // SIGTERM is how a container is asked to stop: close the server (and with it
   // the pool) instead of letting the process die with connections open.

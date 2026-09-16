@@ -8,6 +8,7 @@
 
 import { randomUUID } from "node:crypto";
 
+import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
@@ -114,7 +115,7 @@ async function main(): Promise<void> {
     });
   }
 
-  const port = Number(process.env.PORT ?? MATCHING_SERVICE_PORT);
+  const port = readPortEnv(process.env, "PORT", MATCHING_SERVICE_PORT);
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
     process.once(signal, () => {
       void app.close().then(() => process.exit(0));

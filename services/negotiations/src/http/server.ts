@@ -25,6 +25,7 @@
  * الحزمة لقراءة نوعٍ منها كان سيرفع خادماً.
  */
 
+import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { NEGOTIATION_SERVICE_PORT } from "@wasla/contracts-negotiation";
@@ -118,7 +119,7 @@ async function main(): Promise<void> {
   }
   try {
     await app.listen({
-      port: Number(process.env.PORT ?? NEGOTIATION_SERVICE_PORT),
+      port: readPortEnv(process.env, "PORT", NEGOTIATION_SERVICE_PORT),
       host: "0.0.0.0",
     });
   } catch (error) {

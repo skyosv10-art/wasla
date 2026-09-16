@@ -18,6 +18,8 @@ import {
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
 
+import { readPortEnv } from "@wasla/config";
+
 import { createGeographyApp } from "./app.js";
 import {
   SystemClock,
@@ -95,7 +97,7 @@ async function main(): Promise<void> {
       replayGuard: new InMemoryServiceTokenReplayGuard(),
     },
   });
-  const port = Number(process.env.PORT ?? 8081);
+  const port = readPortEnv(process.env, "PORT", 8081);
 
   try {
     await app.listen({ port, host: "0.0.0.0" });

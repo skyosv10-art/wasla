@@ -171,7 +171,7 @@ function bodyKeys(operationId: string): string[] {
   expect(start, operationId).toBeGreaterThan(-1);
   const responsesAt = contract.indexOf("\n      responses:", start);
   const block = contract.slice(start, responsesAt);
-  const named = /schema: \{ \$ref: '#\/components\/schemas\/(\w+)' \}/.exec(block);
+  const named = /schema: \{\s*\$ref: '#\/components\/schemas\/(\w+)'\s*\}/.exec(block);
   if (named?.[1]) return propertyKeys(named[1]);
   const propertiesAt = block.indexOf("\n              properties:\n");
   if (propertiesAt === -1) return [];

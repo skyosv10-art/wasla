@@ -374,7 +374,7 @@ export const MARKETPLACE_API_PATHS = [
 export const MARKETPLACE_API_OPERATION_COUNT = 21;
 
 /** لا `502`: انظر §القاعدة في `services/marketplace/contracts/errors.md`. */
-export const MARKETPLACE_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+export const MARKETPLACE_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * منفذ خدمة السوق (CONTAINERS §4.7).

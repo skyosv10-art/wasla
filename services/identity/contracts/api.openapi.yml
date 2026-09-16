@@ -41,6 +41,9 @@ paths:
         يُرجَع ذلك المستخدم دون إنشاء جديد. تغيير `telegram_username` لا يُنشئ مستخدمًا جديدًا —
         يُسجَّل في Identity History بدل ذلك.
       operationId: resolveIdentity
+      security:
+        - ServiceAuth:
+            - identity:resolve:write
       requestBody:
         required: true
         content:
@@ -60,16 +63,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResolveIdentityResponse'
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /identity/users/{waslaPublicId}:
     get:
       tags: [Users]
       summary: قراءة مستخدم Wasla عبر Wasla Public ID
       operationId: getUser
+      security:
+        - ServiceAuth:
+            - identity:user:read
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       responses:
@@ -77,29 +87,40 @@ paths:
           description: المستخدم
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/User' }
-        '404': { $ref: '#/components/responses/NotFound' }
+              schema: {$ref: '#/components/schemas/User'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
 
   /identity/users/{waslaPublicId}/links:
     post:
       tags: [IdentityLinks]
       summary: إضافة رابط هوية خارجي للمستخدم (Phone/Telegram جديد/...)
       operationId: addIdentityLink
+      security:
+        - ServiceAuth:
+            - identity:link:write
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AddIdentityLinkRequest' }
+            schema: {$ref: '#/components/schemas/AddIdentityLinkRequest'}
       responses:
         '200':
           description: الرابط أُضيف
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/IdentityLink' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
+              schema: {$ref: '#/components/schemas/IdentityLink'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
 
   /identity/users/{waslaPublicId}/recovery:
     post:
@@ -109,32 +130,42 @@ paths:
         Recovery لا يتجاوز الهوية — يبدأ خطوات تحقق وفق مستوى الحساب والمخاطر.
         يجب أن تكون وسيلة التحقق مناسبة (لا تعتمد على Telegram كمصدر وحيد).
       operationId: startRecovery
+      security:
+        - ServiceAuth:
+            - identity:recovery:write
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/StartRecoveryRequest' }
+            schema: {$ref: '#/components/schemas/StartRecoveryRequest'}
       responses:
         '202':
           description: بدأت خطوات التحقق
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/RecoveryStarted' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
+              schema: {$ref: '#/components/schemas/RecoveryStarted'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
 
   /identity/users/{waslaPublicId}/history:
     get:
       tags: [History]
       summary: سجل تغييرات الهوية (Username/روابط)
       operationId: getIdentityHistory
+      security:
+        - ServiceAuth:
+            - identity:history:read
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - in: query
           name: field
-          schema: { type: string, enum: [telegram_username, phone, link] }
+          schema: {type: string, enum: [telegram_username, phone, link]}
       responses:
         '200':
           description: السجل
@@ -142,9 +173,19 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/IdentityHistoryEntry' }
+                items: {$ref: '#/components/schemas/IdentityHistoryEntry'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا العمليّاتِ المفتوحةَ بقرارٍ مكتوبٍ (مثلُ `/health`) — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) · [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
   parameters:
     WaslaPublicId:
       name: waslaPublicId
@@ -160,27 +201,39 @@ components:
       description: طلب غير صالح
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: {$ref: '#/components/schemas/Error'}
     NotFound:
       description: غير موجود
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: {$ref: '#/components/schemas/Error'}
     Conflict:
       description: "تعارض (مثلاً: الرابط مرتبط بمستخدم آخر)"
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: {$ref: '#/components/schemas/Error'}
     Unprocessable:
       description: المدخلات صالحة شكلياً لكن غير مقبولة منطقياً
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: {$ref: '#/components/schemas/Error'}
     ServiceUnavailable:
       description: الخدمة غير متاحة (degraded mode)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: {$ref: '#/components/schemas/Error'}
+    AuthUnauthorized:
+      description: طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthForbidden:
+      description: هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
     ResolveIdentityRequest:
@@ -205,28 +258,28 @@ components:
       type: object
       required: [wasla_public_id, internal_uuid, created]
       properties:
-        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
         internal_uuid:
           type: string
           format: uuid
           description: داخلي فقط — لا يُعرض للمستخدم النهائي
-        created: { type: boolean, description: true إذا أُنشئ مستخدم جديد في هذه العملية }
+        created: {type: boolean, description: true إذا أُنشئ مستخدم جديد في هذه العملية}
         links:
           type: array
-          items: { $ref: '#/components/schemas/IdentityLink' }
+          items: {$ref: '#/components/schemas/IdentityLink'}
 
     User:
       type: object
       required: [wasla_public_id, status, created_at]
       properties:
-        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
         status:
           type: string
           enum: [active, suspended, deleted, recovery_in_progress]
-        created_at: { type: string, format: date-time }
+        created_at: {type: string, format: date-time}
         links:
           type: array
-          items: { $ref: '#/components/schemas/IdentityLink' }
+          items: {$ref: '#/components/schemas/IdentityLink'}
 
     IdentityLink:
       type: object
@@ -238,16 +291,16 @@ components:
         external_id:
           type: string
           description: المعرّف الخارجي (telegram_user_id / رقم هاتف normalyzed / ...)
-        verified: { type: boolean }
-        linked_at: { type: string, format: date-time }
+        verified: {type: boolean}
+        linked_at: {type: string, format: date-time}
 
     AddIdentityLinkRequest:
       type: object
       required: [provider, external_id]
       properties:
-        provider: { type: string, enum: [telegram, phone, email, web, mobile] }
-        external_id: { type: string }
-        verified: { type: boolean }
+        provider: {type: string, enum: [telegram, phone, email, web, mobile]}
+        external_id: {type: string}
+        verified: {type: boolean}
 
     StartRecoveryRequest:
       type: object
@@ -262,8 +315,8 @@ components:
       type: object
       required: [recovery_id, status]
       properties:
-        recovery_id: { type: string, format: uuid }
-        status: { type: string, enum: [verification_pending, completed, rejected] }
+        recovery_id: {type: string, format: uuid}
+        status: {type: string, enum: [verification_pending, completed, rejected]}
 
     IdentityHistoryEntry:
       type: object
@@ -272,9 +325,9 @@ components:
         field:
           type: string
           enum: [telegram_username, phone, link]
-        old_value: { type: string, nullable: true }
-        new_value: { type: string }
-        effective_at: { type: string, format: date-time }
+        old_value: {type: string, nullable: true}
+        new_value: {type: string}
+        effective_at: {type: string, format: date-time}
         source:
           type: string
           enum: [customer_bot, driver_bot, partner_bot, recovery, admin, system]
@@ -288,4 +341,18 @@ components:
           description: كود خطأ ثابت (راجع errors.md)
         message:
           type: string
-        trace_id: { type: string }
+        trace_id: {type: string}
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - trace_id
+      properties:
+        code:
+          type: string
+          description: كود ثابت (stable)
+        message:
+          type: string
+        trace_id:
+          type: string

@@ -968,16 +968,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 <!-- contract-auth-debt:begin -->
 
-| الحدُّ | مساراتٌ مفروضةٌ | منشورةٌ في العقدِ | صلاحيّاتٌ | العقدُ | البوّابةُ المالكةُ |
-| --- | --- | --- | --- | --- | --- |
-| `delivery` | 13 | 7 | 13 | `services/delivery/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `dispatch` | 8 | 8 | 7 | `services/dispatch/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `geography` | 9 | 9 | 4 | `services/geography/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `identity` | 5 | 5 | 5 | `services/identity/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `marketplace` | 20 | 20 | 16 | `services/marketplace/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `matching` | 6 | 6 | 5 | `services/matching/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `negotiations` | 12 | 12 | 9 | `services/negotiations/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
-| `orders` | 8 | 8 | 6 | `services/orders/contracts/api.openapi.yml` — لا `securitySchemes` ولا `401` | `M1-06` |
+_أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`) — خمسٌ وسبعون عمليّةً منشورةً مفروضةً عبرَ ثمانيةِ حدودٍ، كلُّها يُعلِنُ `securitySchemes` بترويسةِ `x-wasla-service-auth` و`security:` بصلاحيّةِ المسارِ و`401`/`403`._
 
 <!-- contract-auth-debt:end -->
 

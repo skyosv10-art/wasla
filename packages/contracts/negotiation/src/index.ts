@@ -193,7 +193,7 @@ export const NEGOTIATION_API_PATHS = [
 ] as const;
 
 /** لا `502`: انظر §القاعدة البند 3 في `services/negotiations/contracts/errors.md`. */
-export const NEGOTIATION_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+export const NEGOTIATION_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * نسخة سياسة الإطلاق المجمَّدة (`saudi-launch-v1`) كما تُزرع في `schema.sql`.

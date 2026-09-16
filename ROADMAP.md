@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine); last updated again 2026-09-16 (M1-05B wave 4 — product lifecycle publish/archive/inventory-adjust now prove the actor from the token and store membership inside the writing transaction, `RISK-0042` finding 3 measured: 6 of 8 body actor fields bound, 2 remain by written platform-authority reason); last updated again 2026-09-16 (M1-06 — published OpenAPI contracts now declare security schemes and 401/403 responses; 75 operations across 8 boundaries, `RISK-0041` → `mitigating`); last updated again 2026-09-16 (M1-07 — bot internal routes now enforce service identity)
+**Last updated:** 2026-09-16 (M2-01 — the repository's first container image, SBOM and vulnerability gate, plus check 19 and a 32nd blocking context; and two measured defects: two services that were tested yet had no start command at all, and dev dependencies that cannot leave the runtime image until the packages stop exporting TypeScript. Earlier: M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine); last updated again 2026-09-16 (M1-05B wave 4 — product lifecycle publish/archive/inventory-adjust now prove the actor from the token and store membership inside the writing transaction, `RISK-0042` finding 3 measured: 6 of 8 body actor fields bound, 2 remain by written platform-authority reason); last updated again 2026-09-16 (M1-06 — published OpenAPI contracts now declare security schemes and 401/403 responses; 75 operations across 8 boundaries, `RISK-0041` → `mitigating`); last updated again 2026-09-16 (M1-07 — bot internal routes now enforce service identity)
 **Last milestone (M1-05 — the authorization policy matrix):** `M1-04` answers *is this request from a service the system knows?* Nothing in the repository answered *is this service entitled to what it carries?* — and the vacuum was a **correct decision half-implemented**: `packages/service-auth/src/{enforce,index,token}.ts` and `services/orders/src/http/service-identity.ts` each state in prose that the gateway must not hold a role→scope matrix, and each names `M1-05` as its owner. So the matrix had a declared home and no existence, and `mintServiceToken` passed `scp` through without asking about entitlement. Added: `packages/authz-policy` as the single source (80 enforced operations, 10 production roles with 18 grants, 8 isolated test-fleet roles, 16 classified owner/tenant bindings, pure decision functions), 27 rejection-heavy tests across all three dimensions (`owner`/`role`/`tenant`), and governance check 16 wired into the single entry point — drift-proof in **both** directions, with 16 mutation cases proving the guard bites.
 **The board's number was never measured, and it is corrected by addition, not erasure:** the `M1-05` row said *inventory of 107 operations*. The live measurement is **8 boundaries · 89 registered routes · 80 enforced operations · 9 `OPEN` routes · 64 enforced scopes · 0 routes with neither a scope nor `OPEN`**. The `107` stays written on the board because it is the prior evidence; the measurement is written beside it with the guard that reproduces it.
 **Two gaps the measurement surfaced that were not on anyone's list — `RISK-0042`:** (1) **ownership is caller-asserted.** `assertOwner()` compares `order.customerPublicId` against the `X-Customer-Public-Id` header, whose **shape** is validated and whose truth is not — and the token carries `sub`/`aud`/`scp` with **no beneficiary identity at all**, so `TOKEN_BOUND_OPERATION_COUNT = 0` out of 80. (2) **tenant membership is never checked.** `storeSlug` is read from the path and handed to the repository in **eleven** marketplace routes, so a holder of `marketplace:staffWrite` can write staff into *any* store. Both are recorded by addition; `RISK-0026` (resource identity in the query string) is **not** claimed closed.
@@ -103,6 +103,41 @@ today is not a claim of ownership.
 Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
+
+- **M2-01 — claim `CLM-0195`: one container image, an SBOM and a vulnerability gate — IN PROGRESS.**
+  Measured before any edit (2026-09-16): the repository had **no Dockerfile, no SBOM and no image
+  scan** — the roadmap item was a heading with zero artifacts, and `infra/docker/` held nothing.
+  An open attempt existed (**PR #205**) and it was **not** progress: its Dockerfile copied
+  `services/*/dist` while every service's `start` command is `node --import tsx src/…` and the
+  workspace packages export `src/*.ts`, so the image **could not boot**; its SBOM script fell back
+  **silently** to a near-empty file when `syft` was absent; **no CI job built the image**, so none
+  of that could ever show; it used a claim (`CLM-0194`) owned by another item and an ADR number
+  (`ADR-032`) reserved for the config schema. It is **closed with a written reason and its evidence
+  is preserved**, and the work was redone from the root. Delivered: a single three-stage
+  `Dockerfile` on a **digest-pinned** base whose Node version **equals** `NODE_VERSION` in CI,
+  running as `USER node`, with the package chosen **at run time** (argument or `WASLA_SERVICE`) so
+  16 runnable packages share one build file; `scripts/container/` (tools installed by pinned
+  version **and sha256** from a single `tool-pins.env`, with no third-party action and no
+  `curl | sh`; contract verification **inside the image**; CycloneDX SBOM with a component floor and
+  **no silent fallback**; two builds compared by **purl set**, not bytes, because timestamps make a
+  byte comparison lie red; a `HIGH,CRITICAL --ignore-unfixed` gate with **no exceptions file**); the
+  `image-supply-chain` job in `ci.yml`, whose context was added to live branch protection and then
+  **re-measured from the API** (32 required contexts, raw response committed); and **check 19** in
+  the single entry point with nine gates and **16 mutation cases that must bite**, each proving it
+  changed bytes with `cmp`. Two defects the measurement surfaced that were on no list: **`RISK-0048`**
+  — `services/delivery` and `services/search` had a production `src/http/server.ts` and four
+  blocking CI legs **but no `start` script**: tested yet unshippable, invisible to `tsc`, to tests
+  and to every guard. Fixed, and the run contract is now guarded **in both directions**.
+  **`RISK-0047`** — because the packages export TypeScript, the runtime image necessarily carries
+  dev dependencies (`tsx` is a runtime requirement here); trimming needs a real compile path and a
+  wider scope, so it is recorded as **open debt and the image surface is not called trimmed**.
+  Docs: `ADR-033`, `docs/08-infrastructure/CONTAINER_IMAGES.md`, `docs/12-testing/M2-01_GATE.md`.
+  Not claimed: **check 19 reads configuration; it does not prove the image builds** — there is no
+  Docker in the local execution environment, so the build, the in-image contract and the
+  vulnerability verdict are CI's alone; the dry-run entry (`WASLA_ENTRYPOINT_DRYRUN=1`) loads each
+  package's entry **without binding a port** and is **not** a boot proof; and there is no registry,
+  no deployment and no `docker-compose` (that is `M2-02`). Promotion to `Completed` is the program
+  owner's authority alone (§9).
 
 - **M2-04 — claim `CLM-0194`: config schema, env registry and generated env examples — IN PROGRESS.**
   Measured before any edit (2026-09-16, repo-wide text scan): **17** raw numeric env reads in

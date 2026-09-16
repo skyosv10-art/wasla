@@ -3,9 +3,9 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-10T21:00:00Z",
+  "measured_at": "2026-09-16T19:32:52Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-10T172610Z-m5-13-exit-gate-required-check",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context",
   "protection": {
     "required_status_checks": {
       "strict": true,
@@ -40,7 +40,8 @@
         "db-integration (search, @wasla/search-service, wasla_search_test)",
         "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)",
         "db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)",
-        "exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)"
+        "exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)",
+        "image-supply-chain"
       ]
     },
     "enforce_admins": true,
@@ -69,7 +70,8 @@
     "الحمايةُ إعدادٌ خارجَ المستودعِ: من يملكُ صلاحيةَ الإدارةِ يستطيعُ تغييرَها، وهذا الحارسُ يكشفُ الانحرافَ عندَ إعادةِ القياسِ لا يمنعُه.",
     "السياقانِ الجديدانِ (search) أُضيفا إلى الحمايةِ الحيّةِ بأمرِ المالكِ الصريحِ 2026-09-08 عبرَ واجهةِ GitHub، وأُعيدَ قياسُ هذه اللقطةِ من الواجهةِ نفسِها لا بتحريرِ يدٍ: الدليلُ الخامُّ في evidence_dir.",
     "السياقُ الجديدُ «exit-gate-e2e (delivery, …)» أُضيفَ إلى الحمايةِ الحيّةِ بموافقةِ المالكِ الصريحةِ في الجلسةِ (2026-09-10) عبرَ POST …/protection/required_status_checks/contexts، ثمّ أُعيدَ قياسُ هذه اللقطةِ من الواجهةِ نفسِها لا بتحريرِ رقمٍ بيدٍ. وخضرةُ الساقِ نفسِها لم تُقَسْ في CI قبلَ أوّلِ تشغيلٍ على الفرعِ.",
-    "ولا يُدّعَى أنَّ الدمجَ ممنوعٌ اليومَ (2026-09-13): أحدَثُ قياسٍ حيٍّ في live_checks يقولُ protected=false — الأبوابُ الأربعةُ تقيسُ اتّساقَ اللقطةِ المؤرَّخةِ بخطِّ ci.yml لا سريانَ الحمايةِ (M0-29 · RISK-0036)"
+    "ولا يُدّعَى أنَّ الدمجَ ممنوعٌ اليومَ (2026-09-13): أحدَثُ قياسٍ حيٍّ في live_checks يقولُ protected=false — الأبوابُ الأربعةُ تقيسُ اتّساقَ اللقطةِ المؤرَّخةِ بخطِّ ci.yml لا سريانَ الحمايةِ (M0-29 · RISK-0036)",
+    "السياقُ الجديدُ «image-supply-chain» (M2-01 · CLM-0195) أُضيفَ إلى الحمايةِ الحيّةِ بـPOST …/protection/required_status_checks/contexts بمقتضى التفويضِ التنفيذيِّ الصريحِ (2026-09-16)، ثمَّ أُعيدَ قياسُ هذهِ اللقطةِ من الواجهةِ نفسِها لا بتحريرِ رقمٍ بيدٍ: 32 سياقاً · strict:true · enforce_admins:true. وخضرةُ الوظيفةِ نفسِها لم تُقَسْ قبلَ أوّلِ تشغيلٍ على الفرعِ — والحكمُ يُوثَّقُ في M2-01_GATE.md لا يُفترَضُ."
   ],
   "live_checks": [
     {
@@ -88,6 +90,14 @@
       "raw": "docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored/api-responses/04-protection-after.raw.json",
       "note": "الحمايةُ أُعيدت (M0-22B · CLM-0173) بعدَ زوالِ سببِ سقوطِها: المستودعُ صارَ عامًّا والحجبُ ارتفعَ. PUT ثمّ GET: strict:true · 31 سياقًا تطابقُ وظائفَ ci.yml الموسَّعةَ حرفيًا · enforce_admins:true · protected:true — والقياسُ بعدَ الكتابةِ لا نجاحُ PUT وحده (انظرِ دليلَ الأدلّةِ).",
       "evidence_dir": "docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored"
+    },
+    {
+      "measured_at": "2026-09-16T19:32:52Z",
+      "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
+      "protected": true,
+      "raw": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context/api-responses/01-protection-after.raw.json",
+      "note": "قياسٌ بعدَ إضافةِ السياقِ الثاني والثلاثينَ «image-supply-chain»: strict:true · enforce_admins:true · 32 سياقاً تُطابقُ وظائفَ ci.yml بعدَ فردِ المصفوفاتِ. القياسُ بعدَ الكتابةِ لا نجاحُ POST وحدَه.",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context"
     }
   ]
 }

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# scan-image.sh — فحصُ ثغراتِ الصورةِ، بوّابةٌ تعضُّ لا تقريرٌ يُقرأُ. (M2-01)
+#
+#   bash scripts/container/scan-image.sh wasla:local
+#
+# الحدودُ المُعلَنةُ صريحةً (لا يُقالُ «الصورةُ آمنةٌ»، بل «لا ثغرةَ عاليةً أو
+# حرِجةً **لها إصلاحٌ منشورٌ**»):
+#   • `--severity HIGH,CRITICAL` — المتوسّطُ والمنخفضُ يُسجَّلانِ ولا يَحجزانِ.
+#   • `--ignore-unfixed` — ثغرةٌ بلا إصلاحٍ منشورٍ لا تُوقِفُ الدمجَ، وإلّا
+#     عُطِّلَتِ البوّابةُ بعدَ أسبوعٍ لأنّها تكذبُ حمراءَ بلا علاجٍ.
+#   • `--exit-code 1` — الفشلُ فشلٌ. ولا ملفَّ استثناءاتٍ (`.trivyignore`)
+#     في هذهِ الدورةِ: استثناءٌ بلا سببٍ مُسجَّلٍ هوَ إسكاتٌ.
+set -euo pipefail
+
+TAG="${1:?وسمُ الصورةِ مطلوبٌ}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+
+TOOLS="${WASLA_TOOLS_DIR:-/tmp/wasla-tools}"
+bash scripts/container/install-tool.sh trivy "$TOOLS"
+
+REPORT="${WASLA_TRIVY_REPORT:-artifacts/security/trivy-image.json}"
+mkdir -p "$(dirname "$REPORT")"
+
+echo "• تقريرٌ كاملٌ (كلُّ الدرجاتِ) للأرشيفِ — لا يَحجزُ"
+"$TOOLS/trivy" image --scanners vuln --format json --output "$REPORT" --quiet "$TAG"
+
+python3 - "$REPORT" <<'PY'
+import collections, json, sys
+doc = json.load(open(sys.argv[1], encoding="utf-8"))
+counts = collections.Counter()
+for result in doc.get("Results") or []:
+    for vuln in result.get("Vulnerabilities") or []:
+        counts[vuln.get("Severity", "UNKNOWN")] += 1
+total = sum(counts.values())
+order = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"]
+line = " · ".join(f"{key}={counts.get(key, 0)}" for key in order)
+print(f"• المقيسُ: {total} ثغرةً — {line}")
+PY
+
+echo "• البوّابةُ: HIGH,CRITICAL القابلةُ للإصلاحِ"
+"$TOOLS/trivy" image \
+  --scanners vuln \
+  --severity HIGH,CRITICAL \
+  --ignore-unfixed \
+  --exit-code 1 \
+  --quiet \
+  "$TAG"
+
+echo "✓ لا ثغرةَ عاليةً أو حرِجةً لها إصلاحٌ منشورٌ في $TAG"

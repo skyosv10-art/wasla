@@ -696,3 +696,54 @@ jobs:
             exit 1
           fi
           echo "M1-02: حالةُ منعِ الإعادةِ قِيست ونجحت على Postgres حقيقيٍّ"
+
+  # ───────────────────────────────────────────────────────────────────
+  # M2-01 — image-supply-chain: بناءُ الصورةِ وعقدُها وقائمةُ موادِها وثغراتُها.
+  #
+  # هذهِ الوظيفةُ **هيَ الإثباتُ**؛ والحارسُ (الفحصُ 19) يمنعُ مَحوَها ومَحوَ
+  # اتّساقِ إعدادِها فحسبُ. ولا وجهَ محلّيَّ لها في هذا المستودعِ: لا `docker`
+  # على مكتبِ التنفيذِ، فأخضرُها حكمُ CI لا تقريرٌ يُكتَبُ.
+  #
+  # ولا إجراءَ من طرفٍ ثالثٍ فيها بقصدٍ: `validate-workflow-supply-chain.sh`
+  # يحصرُ الإجراءاتَ المُعلَنةَ، و`syft`/`trivy` تُنزَّلانِ بنسخةٍ **وبِصمةٍ**
+  # من `scripts/container/tool-pins.env` وحدَه.
+  #
+  # وبناءانِ لا بناءٌ واحدٌ: الثانيُّ بـ`--no-cache`، ثمَّ تُقارَنُ **مجموعةُ
+  # purl** للقائمتَينِ. فرقٌ واحدٌ يعني أنَّ ما فُحِصَ ليسَ ما يُشحَنُ.
+  # ───────────────────────────────────────────────────────────────────
+  image-supply-chain:
+    name: image-supply-chain
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: "بيئةُ القياسِ"
+        run: |
+          docker --version
+          python3 --version
+      - name: "بناءٌ (1)"
+        run: bash scripts/container/build-image.sh wasla:ci-pass1
+      - name: "عقدُ الصورةِ — غيرُ جِذرٍ · عقدةٌ مُثبَّتةٌ · كلُّ حزمةٍ لها مدخلٌ"
+        run: bash scripts/container/verify-image-contract.sh wasla:ci-pass1
+      - name: "قائمةُ الموادِ (1)"
+        run: bash scripts/container/generate-sbom.sh wasla:ci-pass1 artifacts/sbom/pass1.cdx.json
+      - name: "بناءٌ (2) بلا ذاكرةٍ مؤقّتةٍ"
+        run: bash scripts/container/build-image.sh wasla:ci-pass2 --no-cache
+      - name: "قائمةُ الموادِ (2)"
+        run: bash scripts/container/generate-sbom.sh wasla:ci-pass2 artifacts/sbom/pass2.cdx.json
+      - name: "إعادةُ البناءِ — الإغلاقُ نفسُهُ في بناءَينِ"
+        run: bash scripts/container/compare-sbom.sh artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json
+      - name: "ثغراتُ الصورةِ — HIGH,CRITICAL القابلةُ للإصلاحِ تحجزُ الدمجَ"
+        run: bash scripts/container/scan-image.sh wasla:ci-pass1
+      - name: "رفعُ أدلّةِ سلسلةِ التوريدِ"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-supply-chain-evidence
+          path: |
+            artifacts/sbom/
+            artifacts/security/
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,6 +1,6 @@
 # فهرس ملكية العمل (Work Index)
 
-**الحالة:** إلزامي · **آخر تحديث:** `2026-09-15` (مبني على فحص فعلي لشجرة المستودع · أُضيفت `authz-policy` بعدَ دمجِ `M1-05`)
+**الحالة:** إلزامي · **آخر تحديث:** `2026-09-16` (مبني على فحص فعلي لشجرة المستودع · أُضيفَت أرتفاكتاتُ `M2-01`: `Dockerfile` و`scripts/container/` والفحصُ 19 · وقبلَها `authz-policy` بعدَ دمجِ `M1-05`)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) · [`README.md`](README.md)
 
 > **الغرض:** جواب فوري لسؤال «هل هذا مبني أصلًا، ومن يملكه؟» قبل أن يفتح أحد عملًا مكررًا.
@@ -74,7 +74,7 @@
 |---|---|---|
 | `infra/terraform/` | Placeholder | M2 |
 | `infra/kubernetes/` | Placeholder | M2 |
-| `infra/docker/` | Placeholder | M2 |
+| `infra/docker/` | Placeholder **بقرار** — صورةُ التشغيلِ في جذرِ المستودعِ (`Dockerfile`) لأنَّ البناءَ يحتاجُ سياقَ العملِ كاملاً؛ و`infra/docker/` يُترَكُ لملفّاتِ التركيبِ والنشرِ (`M2-02`) بحكمِ [ADR-033](../15-decisions/ADR-033-container-image-supply-chain.md) | M2 |
 | `infra/environments/` | Placeholder | M2 |
 
 ---
@@ -154,3 +154,10 @@
 | `services/orders` — `ownerScoped` + `requireBeneficiary`: المالكُ من `obo` لا من ترويسةٍ (مسارانِ من 80 عمليّةً) | Implemented | M1-05B |
 | عضويّةُ المستأجرِ في السوقِ (`storeSlug`) — `RISK-0042` البندُ 2 · **5 من 11 مساراً** بطبقتَينِ (`tenantScoped` ⇒ 403 على الحدِّ · `assertActiveMembership` داخلَ `uow` الكاتبةِ ⇒ `STORE_NOT_FOUND`) · `TENANT_BOUND_OPERATION_COUNT = 5` مُشتَقٌّ ([ADR-029](../15-decisions/ADR-029-tenant-membership-binding.md) · [PR #179](https://github.com/skyosv10-art/wasla/pull/179)). **وحدُّ الدعوى:** عضويّةٌ لا رتبةٌ · والستُّ الباقيةُ لها أسبابٌ مكتوبةٌ (أربعٌ يُنادِيها `delivery` كخدمةٍ بلا مُنتَفِعٍ · واحدةٌ كتالوجٌ عامٌّ · و`POST …/decisions` بلا ربطٍ عن قصدٍ لأنَّ ربطَهُ عكسُ السياسةِ) | Implemented | M1-05B |
 | `actorPublicId` من جسمِ الطلبِ — `RISK-0042` البندُ 3 · **وتصحيحٌ بالإضافةِ: ثمانيةُ حقولٍ مقيسةٌ في `requests.ts` لا حقلانِ كما قُدِّرَ**؛ وفي المساراتِ الخمسةِ المربوطةِ يُقابَلُ الحقلُ بـ`obo` (`tenantActor`) فيَبقى في العقدِ ولا يَبقى حَكَماً، والباقي بلا مُقابلةٍ | Missing | M1-05B |
+| `Dockerfile` + `.dockerignore` — صورةُ تشغيلٍ واحدةٌ لـ**16 حزمةً** قابلةً للتشغيلِ · أساسٌ مُثبَّتٌ بالبصمةِ ونسختُهُ = `NODE_VERSION` في CI · `USER node` · الحزمةُ تُختارُ زمنَ التشغيلِ | Implemented | M2-01 |
+| `scripts/container/` — تنصيبُ أدواتٍ ببصمةِ sha256 (`tool-pins.env`) · بناءٌ · **تحقُّقُ عقدٍ داخلَ الصورةِ** (`id -u` ≠ 0 · تحميلُ مدخلِ كلِّ حزمةٍ) · قائمةُ موادٍ CycloneDX بلا بديلٍ صامتٍ · مقارنةُ بناءَينِ بمجموعةِ purl · فحصُ ثغراتٍ | Implemented | M2-01 |
+| `.github/workflows/ci.yml` — وظيفةُ `image-supply-chain` (بناءانِ · عقدٌ · قائمتا موادٍ · مقارنةٌ · فحصٌ) وسياقُها **حاجزٌ حيٌّ** (السياقُ 32) | Implemented | M2-01 |
+| `scripts/checks/validate-container-image.sh` — الفحصُ **19**: تسعةُ أبوابٍ (بصمةُ الأساسِ · نسخةُ العقدةِ = CI · غيرُ جِذرٍ ومُدخَلٌ · pnpm من `packageManager` وحدَهُ · مُدخَلاتُ `.dockerignore` · وظيفةُ CI وسكربتاتُها · السياقُ الحاجزُ · **عقدُ التشغيلِ في الاتّجاهَينِ** · تثبيتُ الأدواتِ ومنعُ البديلِ الصامتِ) · **16 طفرةً عاضّةً** في [`gov-cases-container-image.sh`](../../scripts/checks/lib/gov-cases-container-image.sh) | Implemented | M2-01 |
+| `services/delivery` و`services/search` — أمرُ تشغيلٍ (`start`/`dev`) كانَ **مفقوداً** معَ جذرِ تركيبٍ إنتاجيٍّ وسيقانٍ حاجزةٍ في CI (`RISK-0048`): أُضيفَ وحُرِسَ العقدُ آليّاً | Implemented | M2-01 |
+| تقليمُ تبعيّاتِ التطويرِ من صورةِ التشغيلِ (`RISK-0047`) — الصادراتُ تُشيرُ إلى `src/*.ts` فالصورةُ تحملُ `tsx` بالضرورةِ | Missing **بدَينٍ مُسمّىً** | M2 |
+| نشرُ الصورةِ وسجلُّ صورٍ وإقلاعُ خدمةٍ في حاويةٍ (`docker-compose`) | Missing | M2-02 |

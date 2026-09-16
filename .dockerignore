@@ -1,0 +1,20 @@
+# .dockerignore — ما لا يدخلُ سياقَ البناءِ أصلاً. (M2-01)
+#
+# ليسَ تحسيناً للحجمِ فقط: `node_modules` المحلّيّةُ تُبطِلُ معنى
+# `--frozen-lockfile`، و`.git` و`.env*` تُدخِلُ تاريخاً وأسراراً في طبقةٍ
+# تُنشَرُ. المُدخَلاتُ الأربعةُ الأولى إلزاميّةٌ ويفرضُها الفحصُ 19.
+
+.git
+node_modules
+**/node_modules
+artifacts
+.env
+.env.*
+!.env.example
+*.log
+coverage
+**/dist
+.github
+.vscode
+.idea
+tmp

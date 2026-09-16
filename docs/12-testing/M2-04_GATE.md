@@ -6,7 +6,7 @@
 >
 > **نموذجُ الحالات:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-16 · **الحالةُ المُعلَنة:** `IN PROGRESS` — **ونقلُ `M2-04` إلى `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
+> **Last Updated:** 2026-09-16 · **الحالةُ المُعلَنة:** `READY FOR GATE` — البوّابةُ نفسُها `PASSED` (بنودُها العشرةُ ✅) وحكمُ CI أخضرُ مقروءٌ — **ونقلُ `M2-04` إلى `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
 
 ---
 
@@ -22,7 +22,7 @@
 
 ```
 LOCAL      ✅ VERIFIED       — راجِعْ §2 (أرقامٌ مقيسةٌ من سجلِّ تشغيلٍ واحدٍ)
-CI         ⏳ PENDING        — يُكتَبُ حكمُ «WASLA CI» و«Roadmap freshness» هنا بعدَ الدفعِ، ولا يُقرأُ المحلّيُّ بديلاً عنهُ
+CI         ✅ VERIFIED       — «WASLA CI» 35130354603: 31 وظيفةً · 31 success · 0 فاشلةٍ · و«Roadmap freshness» 35130225555 success (PR #206 · 2026-09-16)
 PRODUCTION ⚪ NOT VERIFIED   — لا طبقةَ نشرٍ في المستودعِ (`infra/docker` بلا Dockerfile واحدٍ)، و`.env.example` عقدٌ مقروءٌ لا بيئةٌ قائمةٌ
 ```
 
@@ -43,7 +43,7 @@ PRODUCTION ⚪ NOT VERIFIED   — لا طبقةَ نشرٍ في المستودع
 | 7 | حارسٌ آليٌّ في المدخلِ الموحَّدِ | ✅ | الفحصُ **18** بثمانيةِ أبوابٍ · `validate-ci-mandatory.sh` أخضرُ (لا حارسَ يتيماً) |
 | 8 | عضَّةُ كلِّ بابٍ مُبرهَنةٌ بطفرةٍ | ✅ | 11 حالةً في [`gov-cases-config-schema.sh`](../../scripts/checks/lib/gov-cases-config-schema.sh): خطُّ أساسٍ + 8 طفراتٍ + طفرةُ الرَّبطِ غيرِ المباشرِ + استعادةٌ تُثبِتُ نفسَها بـ`cmp` |
 | 9 | الأساسُ الآليُّ مُحدَّثٌ بالقياسِ | ✅ | `BASELINE.json`: `governance_checks` 17→18 · `packages` 50→51 · `test_files_tracked` 361→364 |
-| 10 | حكمُ CI أخضرُ على الدفعةِ | ⏳ | يُكتَبُ بعدَ الدفعِ — **ولا يُملأُ بمحلّيٍّ** |
+| 10 | حكمُ CI أخضرُ على الدفعةِ | ✅ | [PR #206](https://github.com/skyosv10-art/wasla/pull/206) · «WASLA CI» [35130354603](https://github.com/skyosv10-art/wasla/actions/runs/35130354603) **31/31 success** · «Roadmap freshness» [35130225555](https://github.com/skyosv10-art/wasla/actions/runs/35130225555) success. **وهذا حكمُ بوّابةٍ على رأسِ الفرعِ لا خُضرةٌ محلّيّةٌ** |
 
 ---
 

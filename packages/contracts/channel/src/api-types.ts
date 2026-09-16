@@ -248,6 +248,24 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description رمز خدمة مفقود أو غير صالح */
+        ServiceUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description رمز الخدمة صالح لكنه يفتقد الصلاحية المطلوبة */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description البوت أو المورد غير موجود */
         NotFound: {
             headers: {
@@ -363,6 +381,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["ServiceUnauthorized"];
+            403: components["responses"]["Forbidden"];
             422: components["responses"]["Unprocessable"];
             429: components["responses"]["RateLimited"];
             503: components["responses"]["ServiceUnavailable"];
@@ -389,6 +409,8 @@ export interface operations {
                     "application/json": components["schemas"]["MiniAppLaunch"];
                 };
             };
+            401: components["responses"]["ServiceUnauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["ServiceUnavailable"];
         };
@@ -419,6 +441,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["ServiceUnauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];

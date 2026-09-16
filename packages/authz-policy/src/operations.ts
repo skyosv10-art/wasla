@@ -32,6 +32,7 @@
 
 /** الحدودُ الثمانيةُ التي تفرضُ هويّةَ خدمةٍ — مقيسةٌ لا مفترضةٌ (M0-36 · M1-03). */
 export const AUDIENCES = [
+  "channel",
   "delivery",
   "dispatch",
   "geography",
@@ -61,6 +62,10 @@ export interface EnforcedOperation {
  * والفحصُ 16 يُثبِتُ أنَّ عددَ المفروضِ في الشفرةِ يُساوي طولَ هذهِ القائمةِ.
  */
 export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
+  // ── channel (bot-runtime internal routes — M1-07) ─────────────
+  { audience: "channel", method: "POST", path: "/channel/messages", scopes: ["channel:message:send"] },
+  { audience: "channel", method: "GET", path: "/channel/:bot/mini-app", scopes: ["channel:mini-app:read"] },
+  { audience: "channel", method: "POST", path: "/channel/:bot/deep-links", scopes: ["channel:deep-link:create"] },
   // ── delivery ──────────────────────────────────────────────────
   { audience: "delivery", method: "POST", path: "/store-orders", scopes: ["delivery:store-order:write"] },
   { audience: "delivery", method: "GET", path: "/store-orders/:orderPublicId", scopes: ["delivery:store-order:read"] },

@@ -13,13 +13,13 @@
  * Mini App, and `/places` / `/orders` are not registered at all.
  */
 
-import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
+import { type BotApp, buildBotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 
 import {
-  buildCustomerFlows,
-  buildCustomerNegotiations,
   type CustomerFlowsEnv,
   type CustomerFlowsWiring,
+  buildCustomerFlows,
+  buildCustomerNegotiations,
 } from "./customer-core.js";
 
 import {
@@ -34,6 +34,10 @@ import {
 
 /** The bot this deployable serves. Nothing else in this package may vary. */
 export const BOT = "customer" as const;
+
+// Re-exported for tests: the channel scopes and audience are part of the
+// service-identity boundary this root wires.
+export { CHANNEL_SCOPES, CHANNEL_SERVICE_AUDIENCE } from "@wasla/bot-runtime";
 
 export interface CustomerBotOverrides extends BotRuntimeOverrides {
   /**

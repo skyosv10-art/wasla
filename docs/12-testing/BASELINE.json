@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-15T21:33:53Z",
+  "generated_at": "2026-09-16T08:00:39Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "29ce44efb7f40b92106e9040f59a878128ef65d3",
-    "branch": "fix/m0-41-structural-wiring-proof",
-    "dirty": true,
-    "dirty_files": 10,
-    "dirty_reason": "تصحيحُ إثباتِ الفحصِ 17 بنيويّاً وإضافةُ 11 طفرةً (CLM-0184)",
-    "tracked_files": 2036
+    "commit": "efa193b465472c874b285b69b3e07e0ad903aeaa",
+    "branch": "feat/m1-07-bot-route-protection",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "M1-07: تحديث BASELINE.json بعد إضافة service-identity.test.ts (CLM-0191)",
+    "tracked_files": 2042
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "96180e66a7fb662a4545832700743402c5e4902599b3a01623a1317a6171bee5",
-    "lines": 3152
+    "sha256": "b7f96ac22fa492f80e0749d3e5e027f97f544bd0cdfe0812d9a2c421a1aa1121",
+    "lines": 3155
   },
   "static": {
     "packages": 50,
     "packages_with_typecheck": 50,
     "packages_with_test": 50,
-    "test_files_tracked": 359,
+    "test_files_tracked": 360,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 17,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify18.log",
-    "tests_passed": 4663,
-    "test_files_executed": 284,
-    "governance_suite_cases": 383,
+    "source": "/tmp/verify_full.log",
+    "tests_passed": 4682,
+    "test_files_executed": 285,
+    "governance_suite_cases": 392,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:48540b9ff5044cd5d2b7c26d98e899b9bfae51e724f661a967a02ce66a1079b6",
+  "fingerprint": "sha256:d171ab7866b085d2a0c90a9d1b3a102d50e5ff50243e5c681927342964acb3b4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

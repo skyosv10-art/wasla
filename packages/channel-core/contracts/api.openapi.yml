@@ -73,6 +73,8 @@ paths:
         نقطة الخروج الوحيدة للرسائل. الطلب يحمل `idempotency_key` إلزامياً:
         تكرار نفس المفتاح لا يُرسل الرسالة مرتين ويُرجَع `status: duplicate`.
       operationId: sendMessage
+      security:
+        - ServiceAuth: [channel:message:send]
       requestBody:
         required: true
         content:
@@ -85,6 +87,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/DeliveryAccepted' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/ServiceUnauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '429': { $ref: '#/components/responses/RateLimited' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -97,6 +101,8 @@ paths:
         يُرجع أي Mini App يفتحها هذا البوت. هذا هو العقد الذي يتحقّق منه
         Exit Gate للمرحلة 03: كل بوت يفتح تطبيقه الصحيح.
       operationId: getMiniAppLaunch
+      security:
+        - ServiceAuth: [channel:mini-app:read]
       parameters:
         - $ref: '#/components/parameters/Bot'
       responses:
@@ -105,6 +111,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MiniAppLaunch' }
+        '401': { $ref: '#/components/responses/ServiceUnauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
@@ -113,6 +121,8 @@ paths:
       tags: [launch]
       summary: توليد Deep Link للبوت
       operationId: createDeepLink
+      security:
+        - ServiceAuth: [channel:deep-link:create]
       parameters:
         - $ref: '#/components/parameters/Bot'
       requestBody:
@@ -127,6 +137,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/DeepLinkResponse' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/ServiceUnauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -149,6 +161,16 @@ paths:
                   channel: { $ref: '#/components/schemas/ChannelName' }
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        رمزُ خدمةٍ موقعٌ (HMAC-SHA256) يحمل `aud: channel` وصلاحيّةَ المسار.
+        يُفرَضُ على المساراتِ الداخليّةِ الثلاثةِ (`POST /channel/messages` ·
+        `GET /channel/{bot}/mini-app` · `POST /channel/{bot}/deep-links`) فقط.
+        الـwebhook محميٌّ بسرِّ Telegram (ADR-007) لا برمزِ خدمة، و`/health` مفتوحٌ.
   parameters:
     Bot:
       name: bot
@@ -345,6 +367,16 @@ components:
           schema: { $ref: '#/components/schemas/Error' }
     Unauthorized:
       description: secret token غير مطابق
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnauthorized:
+      description: رمز خدمة مفقود أو غير صالح
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: رمز الخدمة صالح لكنه يفتقد الصلاحية المطلوبة
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }

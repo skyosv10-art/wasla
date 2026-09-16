@@ -52,6 +52,7 @@ import {
   postWebhook,
   readOutbox,
   resetChannelSchema,
+  signChannelRequest,
   signIdentityRequest,
   startIdentityService,
   startUpdate,
@@ -120,6 +121,7 @@ describe(`Phase 03 Exit Gate (${PERSISTENCE} stores)`, () => {
       const own = await gate.app.inject({
         method: "GET",
         url: `/channel/${gate.bot}/mini-app`,
+        headers: signChannelRequest("GET", `/channel/${gate.bot}/mini-app`),
       });
 
       expect(own.statusCode).toBe(200);
@@ -136,6 +138,7 @@ describe(`Phase 03 Exit Gate (${PERSISTENCE} stores)`, () => {
         const foreign = await gate.app.inject({
           method: "GET",
           url: `/channel/${other}/mini-app`,
+          headers: signChannelRequest("GET", `/channel/${other}/mini-app`),
         });
         expect(foreign.statusCode).toBe(404);
         expect((foreign.json() as { code: string }).code).toBe("CHANNEL_UNKNOWN_BOT");

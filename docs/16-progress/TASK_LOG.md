@@ -3459,3 +3459,12 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **Why:** §8.1 — تحريرُ الحجزَينِ في دفعةِ سجلٍّ خالصةٍ بعدَ دمجِ [PR #195](https://github.com/skyosv10-art/wasla/pull/195) (squash [`61038f0`](https://github.com/skyosv10-art/wasla/commit/61038f0)).
 - **What:** صفَّا الحجزَينِ نُقِلا إلى «المُحرَّرة» بروابطِ الأحكامِ الفعليّةِ: جولةُ الدفعةِ خضراءُ **33/33 من أوّلِ مرةٍ** ([35049454810](https://github.com/skyosv10-art/wasla/actions/runs/35049454810))، وحمراءُ `main` بعدَ الدمجِ كانتْ **بالنسبةِ المُنتظرةِ وحدَها** ([35049754210](https://github.com/skyosv10-art/wasla/actions/runs/35049754210) — بياتُ الحجزَينِ على فرعٍ محذوفٍ · البابُ 4 — وهوَ ما تُنجِزُهُ هذهِ الدفعةُ)، وكلُّ أبوابِ التنفيذِ في التشغيلِ نفسِهِ خضراءُ (الفحصُ 16 «مصفوفةُ سياساتِ التفويضِ (M1-05)» ✓ · الفحصُ 17 ✓).
 - **الحكمُ:** يُقرأُ على هذهِ الدفعةِ من وظائفِ CI بعدَ الدفعِ.
+
+
+### [2026-09-16] 80/N — M1-07: حماية مسارات البوت الداخلية بصلاحية الخدمة (CLM-0191)
+
+- **Work Item(s):** M1-07 · **الحجز:** `CLM-0191`
+- **Why:** معيار القبول «service auth + ingress proof» — حدودُ الخدماتِ الثمانيةِ فرضَتْ هويّةَ الخدمةِ في `M1-04`، وحدُّ القناة (`packages/bot-runtime/src/http/app.ts`) هوَ أوّلُ حدٍّ خارجَ `services/` يُفرَضُ عليهِ الإنفاذُ.
+- **What:** وسيطُ `service-auth` على المساراتِ الداخليّةِ الثلاثةِ (`POST /channel/messages` · `GET /channel/:bot/mini-app` · `POST /channel/:bot/deep-links`) عبرَ `registerServiceIdentity` من `@wasla/service-auth`. الـwebhook محميٌّ بسرِّ Telegram (ADR-007) و`/health` مفتوحٌ. برهانُ الدخولِ في `service-identity.test.ts` (10 اختبارات: 401 بلا رمز · 403 بصلاحية خاطئة · 200 بالصلاحية الصحيحة · 401 بجمهور خاطئ · webhook بسرِّ Telegram · `/health` مفتوح). العقدُ المنشورُ يُعلِنُ `securitySchemes.ServiceAuth` و`security:` و`401`/`403`. الجمهورُ `channel` مُسجَّلٌ في `AUDIENCES` و`ENFORCED_OPERATIONS` (3 عمليات · 3 صلاحيّات). حارسُ المصفوفةِ وُسِّعَ لقراءةِ `packages/bot-runtime/`.
+- **حدودُ الدعوى:** `RISK-0027` (الحارسُ لا يرى `packages/` و`bots/`) — تمَ التوسيعُ لـ`packages/bot-runtime/` فقط، لا لـ`bots/`. و`RISK-0015` (متجرُ الإعادةِ في الذاكرة) دَينٌ معلنٌ. و`pnpm-lock.yaml` تغيَّرَ لإضافةِ `@wasla/service-auth` إلى `partner-bot` (devDependency).
+- **الحكمُ:** يُقرأُ على هذهِ الدفعةِ من وظائفِ CI بعدَ الدفعِ.

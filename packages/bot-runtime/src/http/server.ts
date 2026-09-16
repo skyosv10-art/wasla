@@ -12,12 +12,17 @@
 import type { FastifyInstance } from "fastify";
 
 import type { BotKind } from "@wasla/contracts-channel";
+import {
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import { loadBotConfig, type BotConfig, type EnvBag } from "../config.js";
 import type { ConversationHandler } from "../conversation.js";
 import { buildBotRuntime, type BotRuntime, type BuildBotRuntimeOptions } from "../runtime.js";
 
 import { createBotApp } from "./app.js";
+import { CHANNEL_SERVICE_AUDIENCE } from "./service-identity.js";
 
 export interface StartBotOptions extends BuildBotRuntimeOptions {
   readonly env?: EnvBag;
@@ -59,6 +64,14 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
       inbound: runtime.inbound,
       outbound: runtime.outbound,
       launch: runtime.launch,
+    },
+    // M1-07: خدمة الهوية على حدود البوت الداخلية. مفاتيحُ التحقُّقِ ومخزنُ الإعادةِ
+    // من البيئةِ كما في الحدودِ الثمانيةِ. ومخزنُ الإعادةِ في الذاكرةِ دَينٌ معلنٌ
+    // (RISK-0015) يُفكُّ بـRedis.
+    serviceIdentity: {
+      keys: keyRegistryFromEnv(env),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      audience: CHANNEL_SERVICE_AUDIENCE,
     },
     webhookSecret: config.webhookSecret,
     ...(options.onConversation === undefined

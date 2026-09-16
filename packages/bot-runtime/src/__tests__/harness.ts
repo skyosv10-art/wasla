@@ -27,16 +27,60 @@ import {
   type MockSendOutcome,
 } from "@wasla/channel-core";
 import { BOT_MINI_APP, WEBHOOK_SECRET_HEADER, type BotKind } from "@wasla/contracts-channel";
+import {
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+  serviceAuthHeaders,
+} from "@wasla/service-auth";
 import { TelegramUpdateParser } from "@wasla/telegram-adapter";
 import type { FastifyInstance } from "fastify";
 
 import type { ConversationHandler } from "../conversation.js";
 import { createBotApp } from "../http/app.js";
+import { CHANNEL_SCOPES, CHANNEL_SERVICE_AUDIENCE } from "../http/service-identity.js";
+import type { ChannelServiceIdentityOptions } from "../http/service-identity.js";
 
 /** A valid secret (≥ 16 characters, per MIN_WEBHOOK_SECRET_LENGTH). */
 export const SECRET = "test-webhook-secret-value";
 
 export const BASE_URL = "https://apps.wasla.test";
+
+/** Test key registry for service-auth verification. */
+export const TEST_SERVICE_SECRET = "channel-test-secret-0123456789abcdef";
+export const TEST_ACTIVE_KID = "test-active";
+
+export function createTestKeyRegistry(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: TEST_ACTIVE_KID, secret: TEST_SERVICE_SECRET, status: "active" }],
+    activeKid: TEST_ACTIVE_KID,
+  });
+}
+
+export function createTestServiceIdentity(): ChannelServiceIdentityOptions {
+  return {
+    keys: createTestKeyRegistry(),
+    replayGuard: new InMemoryServiceTokenReplayGuard(),
+    audience: CHANNEL_SERVICE_AUDIENCE,
+  };
+}
+
+/** Sign a request for the channel boundary with the given scopes. */
+export function signFor(
+  method: string,
+  url: string,
+  options: { scopes?: readonly string[]; serviceName?: string } = {},
+): Record<string, string> {
+  const separator = url.indexOf("?");
+  return serviceAuthHeaders({
+    serviceName: options.serviceName ?? "customer-bot",
+    audience: CHANNEL_SERVICE_AUDIENCE,
+    method: method.toUpperCase(),
+    path: separator < 0 ? url : url.slice(0, separator),
+    keys: createTestKeyRegistry(),
+    scopes: options.scopes ?? Object.values(CHANNEL_SCOPES),
+    now: new Date(),
+  });
+}
 
 /** Presence of a bot, shaped exactly like the env-driven one. */
 export function presenceOf(bot: BotKind): BotPresence {
@@ -56,6 +100,8 @@ export interface Harness {
   readonly outbox: InMemoryOutbox;
   readonly deliveries: InMemoryDeliveryStore;
   readonly presence: BotPresence;
+  /** Unwrapped `app.inject` — bypasses the signed-header wrapper for ingress-proof tests. */
+  readonly rawInject: FastifyInstance["inject"];
 }
 
 export interface HarnessOptions {
@@ -111,6 +157,7 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
       },
       launch: { registry: new StaticMiniAppRegistry({ [bot]: presence }) },
     },
+    serviceIdentity: createTestServiceIdentity(),
     webhookSecret: options.withoutSecret ? undefined : SECRET,
     ...(options.withoutGroupLink ? { groupLinkAvailable: false } : {}),
     ...(options.welcomeText === undefined ? {} : { welcomeText: options.welcomeText }),
@@ -119,7 +166,25 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
       : { onConversation: options.onConversation }),
   });
 
-  return { app, channel, identity, outbox, deliveries, presence };
+  // Wrap `app.inject` so internal routes get signed service-auth headers
+  // automatically — the same pattern proven in the services' test harnesses.
+  // Webhook calls pass their own `authHeaders` which include the webhook secret;
+  // the service-auth middleware sees `serviceIdentity: "open"` on the webhook
+  // route and skips, so the extra header is harmless.
+  const rawInject = app.inject.bind(app) as typeof app.inject;
+  app.inject = ((options: Record<string, unknown>) =>
+    rawInject({
+      ...(options as object),
+      headers: {
+        ...signFor(
+          String((options as { method?: string }).method ?? "GET"),
+          String((options as { url?: string }).url ?? "/"),
+        ),
+        ...((options as { headers?: Record<string, string> }).headers ?? {}),
+      },
+    })) as typeof app.inject;
+
+  return { app, channel, identity, outbox, deliveries, presence, rawInject };
 }
 
 /** Headers of an authentic webhook call. */

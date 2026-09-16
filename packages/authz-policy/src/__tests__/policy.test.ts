@@ -30,13 +30,13 @@ import {
 } from "../index.js";
 
 describe("جردُ العملياتِ المفروضةِ", () => {
-  it("إحدى وثمانونَ عمليّةً على ثمانيةِ حدودٍ — القياسُ المُعلَنُ في ADR-027 (كانَ ثمانينَ قبلَ المراجعةِ 24/N · ADR-026 §4.27)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(81);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(8);
+  it("أربعٌ وثمانونَ عمليّةً على تسعةِ حدودٍ — إحدى وثمانونَ على ثمانيةِ خدماتٍ + ثلاثٌ على حدِّ القناةِ (M1-07)", () => {
+    expect(ENFORCED_OPERATIONS).toHaveLength(84);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(9);
   });
 
-  it("خمسٌ وستّونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت أربعاً وستّينَ قبلَ صلاحيّةِ الإقرارِ الثالثةَ عشرةَ)", () => {
-    expect(allEnforcedScopes()).toHaveLength(65);
+  it("ثمانٍ وستّونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت خمساً وستّينَ قبلَ ثلاثِ صلاحيّاتِ القناةِ)", () => {
+    expect(allEnforcedScopes()).toHaveLength(68);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -385,7 +385,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(63);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(66);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

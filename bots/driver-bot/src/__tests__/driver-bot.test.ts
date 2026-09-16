@@ -8,12 +8,34 @@
 
 import { FakeIdentityBootstrap, MockChannelAdapter } from "@wasla/channel-core";
 import { BOT_MINI_APP, WEBHOOK_SECRET_HEADER } from "@wasla/contracts-channel";
+import {
+  ServiceAuthKeyRegistry,
+  serviceAuthHeaders,
+} from "@wasla/service-auth";
 import { describe, expect, it } from "vitest";
 
-import { BOT, buildApp } from "../server.js";
+import { CHANNEL_SCOPES, CHANNEL_SERVICE_AUDIENCE, BOT, buildApp } from "../server.js";
 
 const SECRET = "driver-bot-test-webhook-secret";
 const MINI_APP_URL = "https://apps.wasla.test/driver";
+
+const TEST_KEYS = new ServiceAuthKeyRegistry({
+  keys: [{ kid: "test-active", secret: "bots-test-secret-0123456789abcdef", status: "active" }],
+  activeKid: "test-active",
+});
+
+function signFor(method: string, url: string): Record<string, string> {
+  const sep = url.indexOf("?");
+  return serviceAuthHeaders({
+    serviceName: "driver-bot",
+    audience: CHANNEL_SERVICE_AUDIENCE,
+    method: method.toUpperCase(),
+    path: sep < 0 ? url : url.slice(0, sep),
+    keys: TEST_KEYS,
+    scopes: Object.values(CHANNEL_SCOPES),
+    now: new Date(),
+  });
+}
 
 const ENV = {
   DRIVER_BOT_TOKEN: "token-value",
@@ -22,7 +44,7 @@ const ENV = {
   IDENTITY_SERVICE_URL: "http://identity:8080",
   // M1-04: عنوانُ الهويّةِ بلا مادّةِ مفاتيحَ يُرفَضُ عندَ الإقلاعِ عمداً،
   // لأنّ حدَّ الهويّةِ يفرضُ التوقيعَ. فتُسلَّمُ المادّةُ هنا كما في النشرِ.
-  WASLA_SERVICE_AUTH_KEYS: "test-active:active:bots-test-secret-0123456789ab",
+  WASLA_SERVICE_AUTH_KEYS: "test-active:active:bots-test-secret-0123456789abcdef",
   WASLA_SERVICE_AUTH_ACTIVE_KID: "test-active",
 };
 
@@ -46,7 +68,7 @@ describe("driver bot", () => {
   it("exposes its own Mini App from the environment", async () => {
     const { app } = build();
 
-    const response = await app.inject({ method: "GET", url: "/channel/driver/mini-app" });
+    const response = await app.inject({ method: "GET", url: "/channel/driver/mini-app", headers: signFor("GET", "/channel/driver/mini-app") });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({ bot: "driver", mini_app: "driver", url: MINI_APP_URL });
@@ -56,7 +78,7 @@ describe("driver bot", () => {
   it.each(["customer", "partner"])("refuses to serve the %s bot", async (other) => {
     const { app } = build();
 
-    const miniApp = await app.inject({ method: "GET", url: `/channel/${other}/mini-app` });
+    const miniApp = await app.inject({ method: "GET", url: `/channel/${other}/mini-app`, headers: signFor("GET", `/channel/${other}/mini-app`) });
     const webhook = await app.inject({
       method: "POST",
       url: `/channel/${other}/webhook`,

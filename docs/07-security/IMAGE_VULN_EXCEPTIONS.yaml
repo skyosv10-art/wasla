@@ -1,0 +1,122 @@
+# IMAGE_VULN_EXCEPTIONS.yaml — استثناءاتُ بوّابةِ ثغراتِ الصورةِ، مؤقّتةً ومملوكةً ومحروسةً. (M2-01)
+#
+# ── لماذا وُجِدَ هذا الملفُّ بعدَ أن أُعلِنَ «لا ملفَّ استثناءاتٍ» ─────────────
+# أُعلِنَ في الدورةِ الأولى أنَّ لا ملفَّ استثناءاتٍ **لأنَّ استثناءً بلا سببٍ
+# مُسجَّلٍ إسكاتٌ**. ثمَّ قاسَ الشوطُ 35151578239 حالةً لا يُصلِحُها المستودعُ:
+# ثنائيُّ `esbuild` **مُترجَمٌ مسبقاً** ومنشورٌ على npm، ومكتبةُ Go القياسيّةُ
+# داخلَهُ (v1.23.12) فيها 22 ثغرةً HIGH/CRITICAL لها إصلاحٌ **في Go لا في
+# esbuild**؛ فلا ترقيةُ حزمةٍ في هذا المستودعِ تُنتِجُ ثنائيّاً مُترجَماً بمكتبةٍ
+# أحدثَ. والخياراتُ الصادقةُ ثلاثةٌ لا أكثرَ: (أ) تعطيلُ البوّابةِ — كذبٌ،
+# (ب) إبقاؤها حمراءَ دائماً — تُعادُ حتّى تخضرَّ ثمَّ تُسكَتُ فتموتُ البوّابةُ
+# كلُّها، (ج) استثناءٌ **ضيّقُ النطاقِ · مؤقّتٌ بمهلةٍ · مربوطٌ بخطرٍ مالكٍ ·
+# محروسٌ بفحصٍ يُسقِطُ الدفعَ إن نقصَ أيُّ شرطٍ**. اختيرَ (ج).
+#
+# ── ما يُنفِذُهُ الحارسُ (البابُ 10 من الفحصِ 19) ولا يُترَكُ لحُسنِ النيّةِ ──
+#   • لكلِّ مُدخَلٍ `paths` غيرُ فارغةٍ — لا استثناءَ عامّاً يسري على الصورةِ كلِّها.
+#   • لكلِّ مُدخَلٍ `expired_at` بمهلةٍ **لا تتجاوزُ 90 يوماً** — والمنقضيَةُ تحجزُ
+#     الدمجَ من تلقاءِ نفسِها (سلوكُ `trivy` نفسِهِ)، فالنسيانُ لا يُخفي دَيناً.
+#   • لكلِّ مُدخَلٍ `statement` يُسمّي **رقمَ خطرٍ قائمٍ** في RISK_REGISTER.md؛
+#     وخطرٌ مُغلَقٌ أو غيرُ موجودٍ يُسقِطُ الفحصَ.
+#   • التقريرُ الكاملُ (كلُّ الدرجاتِ) يُولَّدُ **بلا** هذا الملفِّ ويُرفَعُ
+#     أرتفاكتاً: ما يُستثنى يبقى **مقيساً ومنشوراً**، والاستثناءُ من الحَجزِ لا
+#     من القياسِ.
+#
+# المرجع: docs/08-infrastructure/CONTAINER_IMAGES.md §6.2 · RISK-0050 · ADR-033
+
+vulnerabilities:
+  - id: CVE-2025-61726
+    paths: &esbuild_paths
+      - "app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild"
+    statement: &esbuild_statement >-
+      RISK-0050 — مكتبةُ Go القياسيّةُ داخلَ ثنائيِّ esbuild المُترجَمِ مسبقاً
+      (v1.23.12). لا مسارَ إصلاحٍ في هذا المستودعِ: الترقيعُ في Go وفي بناءِ
+      esbuild نفسِهِ لا في قفلِ الحِزَمِ. والسطحُ الحقيقيُّ: الثنائيُّ يُستدعى
+      من tsx وقتَ تحميلِ الشفرةِ ولا يفتحُ منفذاً ولا يُعالِجُ TLS ولا مُدخَلاً
+      من الشبكةِ — وأغلبُ هذهِ الثغراتِ في crypto/tls و net/url و net/http.
+      والعلاجُ الجذريُّ ترجمةُ TypeScript وإسقاطُ tsx من طبقةِ التشغيلِ
+      (RISK-0047) — نطاقُ M2-02.
+    expired_at: 2026-12-15
+  - id: CVE-2025-61729
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2025-68121
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-25679
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-27145
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-32280
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-32281
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-32283
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-33811
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-33814
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-33818
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-39820
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-39821
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-39822
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-39836
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-42499
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-42504
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-56853
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-56858
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-56859
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-56860
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-56862
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15

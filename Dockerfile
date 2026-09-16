@@ -65,6 +65,16 @@ RUN corepack install \
 # ── طبقةُ التشغيلِ ────────────────────────────────────────────────────────
 FROM base AS runtime
 ENV NODE_ENV=production
+
+# `npm` المُرفَقُ بصورةِ node يُحذَفُ من طبقةِ التشغيلِ. الشوطُ 35151578239 قاسَ
+# 20 ثغرةً HIGH/CRITICAL لها إصلاحٌ منشورٌ **كلَّها من حِزَمِ npm المُجمَّعةِ**
+# (tar · pacote · sigstore · glob · minimatch · brace-expansion · cross-spawn ·
+# ip-address)، ولا سطرَ في هذهِ الصورةِ يستدعي `npm` أو `npx` وقتَ التشغيلِ:
+# المدخلُ يُقلِعُ بـ`node` مباشرةً وقد سبقَ إخراجُ `corepack`/`pnpm` إلى طبقةِ
+# البناءِ. أداةٌ لا تُستدعى = سطحُ هجومٍ بلا مقابلٍ، وحذفُها علاجُ السببِ لا
+# إسكاتُ البوّابةِ. (طبقةُ البناءِ تُبقيها: بعضُ نصوصِ التثبيتِ تستدعيها.)
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 COPY --from=build --chown=node:node /app /app
 USER node
 ENTRYPOINT ["/app/scripts/container/entrypoint.sh"]

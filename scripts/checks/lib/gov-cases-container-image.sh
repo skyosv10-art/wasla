@@ -194,3 +194,98 @@ _ci_restore
 
 # ── والأصلُ يمرُّ بعدَ كلِّ الاستعاداتِ — وإلّا فالحزمةُ لوّثت النسخةَ ───
 t "الأصلُ يمرُّ بعدَ استعادةِ كلِّ الطفراتِ" pass bash "$CI_G"
+
+# ── البابُ 10: استثناءاتُ الثغراتِ — الشروطُ الخمسةُ تعضُّ ────────────────
+# أُضيفَ بعدَ حكمِ CI 35151578239: قُبِلَ استثناءٌ واحدٌ ضيّقٌ (RISK-0050)، وملفُّ
+# استثناءاتٍ بلا حارسٍ يكبرُ سطراً سطراً حتّى تصيرَ البوّابةُ خضراءَ على لا شيءٍ.
+CI_EXC=docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml
+CI_RISKS=docs/07-security/RISK_REGISTER.md
+CI_SCAN=scripts/container/scan-image.sh
+cp "$CI_EXC"   "$CI_BK/exceptions"
+cp "$CI_RISKS" "$CI_BK/risks"
+cp "$CI_SCAN"  "$CI_BK/scan"
+_ci_restore_10() {
+  cp "$CI_BK/exceptions" "$CI_EXC"
+  cp "$CI_BK/risks"      "$CI_RISKS"
+  cp "$CI_BK/scan"       "$CI_SCAN"
+  chmod +x scripts/container/*.sh
+}
+
+# 10أ: استثناءٌ بلا مهلةٍ — أبديٌّ، أي تعطيلُ بوّابةٍ بثوبِ استثناءٍ.
+python3 - <<'PY'
+import pathlib, re
+p = pathlib.Path("docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml")
+p.write_text(re.sub(r"\n *expired_at: \S+", "", p.read_text(encoding="utf-8"), count=1), encoding="utf-8")
+PY
+if _ci_mutated "$CI_EXC" "$CI_BK/exceptions"; then
+  t "استثناءٌ بلا مهلةٍ يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10ب: مهلةٌ أطولُ من 90 يوماً — استثناءٌ يُنسى قبلَ أن يُراجَعَ.
+sed -i '0,/expired_at:/s/expired_at: .*/expired_at: 2099-01-01/' "$CI_EXC"
+if _ci_mutated "$CI_EXC" "$CI_BK/exceptions"; then
+  t "مهلةُ استثناءٍ > 90 يوماً تُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10ج: استثناءٌ بلا مساراتٍ — يسري على الصورةِ كلِّها فيُسكِتُ ما لم يُقرأْ.
+python3 - <<'PY'
+import pathlib, re
+p = pathlib.Path("docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml")
+text = p.read_text(encoding="utf-8")
+# يُفرَّغُ المرسى نفسُهُ لا يُحذَفُ: حذفُهُ يكسرُ الإسنادَ فيُقاسُ خطأُ تحليلٍ
+# لا العيبَ المقصودَ (استثناءٌ عامٌّ يسري على الصورةِ كلِّها).
+text = re.sub(
+    r"paths: &esbuild_paths\n *- \"[^\"]+\"",
+    "paths: &esbuild_paths []",
+    text,
+    count=1,
+)
+p.write_text(text, encoding="utf-8")
+PY
+if _ci_mutated "$CI_EXC" "$CI_BK/exceptions"; then
+  t "استثناءٌ بلا مساراتٍ (عامٌّ) يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10د: سببٌ بلا رقمِ خطرٍ — استثناءٌ بلا مالكٍ ولا دَينٍ مُسجَّلٍ.
+# وتُنزَعُ **كلُّ** الإشاراتِ لا الأولى: نزعُ واحدةٍ يُبقي أخرى فتمرُّ الطفرةُ
+# خضراءَ ولا تُقاسُ عضّةٌ (وهذا ما جرى في أوّلِ صياغةٍ لهذهِ الحالةِ).
+sed -i 's/RISK-[0-9][0-9][0-9][0-9]/خطرٌ غيرُ مُرقَّمٍ/g' "$CI_EXC"
+if _ci_mutated "$CI_EXC" "$CI_BK/exceptions"; then
+  t "استثناءٌ بلا رقمِ خطرٍ في سببِهِ يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10هـ: الخطرُ المُشارُ إليهِ يُمحى من السجلِّ — إشارةٌ إلى لا شيءٍ.
+# وتُمحى **أسطرُ الإعلانِ** للرقمَينِ المذكورَينِ في السببِ معاً: بقاءُ أحدِهما
+# يُبقي الاستثناءَ مربوطاً بدَينٍ مُعلَنٍ فعلاً، فلا عيبَ يُقاسُ.
+python3 - <<'PY'
+import pathlib
+p = pathlib.Path("docs/07-security/RISK_REGISTER.md")
+lines = [line for line in p.read_text(encoding="utf-8").splitlines(keepends=True)
+         if not line.startswith(("RISK-0050 |", "RISK-0047 |"))]
+p.write_text("".join(lines), encoding="utf-8")
+PY
+if _ci_mutated "$CI_RISKS" "$CI_BK/risks"; then
+  t "استثناءٌ يُشيرُ إلى خطرٍ غيرِ موجودٍ يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10و: سكربتُ المسحِ يُسقِطُ `--ignorefile` — استثناءاتٌ مُعلَنةٌ لا تصلُ للبوّابةِ،
+# وأخطرُ منها: تقريرُ الأرتفاكتِ يُقاسُ بها فيُخفي ما قُبِلَ.
+sed -i 's|^  --ignorefile .*|  --scanners vuln \\|' "$CI_SCAN"
+if _ci_mutated "$CI_SCAN" "$CI_BK/scan"; then
+  t "سكربتُ المسحِ بلا --ignorefile يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+# 10ز: سكربتُ المسحِ يتخلّى عن التحقُّقِ من عقدِ الاستثناءاتِ قبلَ المسحِ.
+sed -i '/image_vuln_exceptions.py --report/d' "$CI_SCAN"
+if _ci_mutated "$CI_SCAN" "$CI_BK/scan"; then
+  t "سكربتُ المسحِ بلا تحقُّقٍ من عقدِ الاستثناءاتِ يُسقِطُ الفحصَ" fail bash "$CI_G"
+fi
+_ci_restore_10
+
+t "الأصلُ يمرُّ بعدَ استعادةِ طفراتِ البابِ 10" pass bash "$CI_G"

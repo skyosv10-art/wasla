@@ -25,6 +25,12 @@
 # حدُّهُ المُعلَنُ: يقرأُ نصوصاً وشجرةً. **لا يبني صورةً ولا يشغّلُ حاويةً** —
 # ذلكَ حكمُ CI في وظيفةِ `image-supply-chain`، ولا يُعوِّضُ أحدُهما الآخرَ.
 #
+#
+# ── البابُ العاشرُ (أُضيفَ بعدَ حكمِ CI 35151578239) ───────────────────────
+# 10) ملفُّ استثناءاتِ بوّابةِ الثغراتِ **محروسٌ**: مساراتٌ محدّدةٌ · مهلةٌ
+#     ≤ 90 يوماً غيرُ منقضيةٍ · رقمُ خطرٍ قائمٍ. المنطقُ في
+#     `lib/image_vuln_exceptions.py` — مصدرٌ واحدٌ يستدعيهِ الحارسُ و`scan-image.sh`.
+#
 # المرجع: docs/08-infrastructure/CONTAINER_IMAGES.md · ADR-033 · docs/12-testing/M2-01_GATE.md
 from __future__ import annotations
 
@@ -321,6 +327,42 @@ def gate_tool_pins() -> None:
             fail("generate-sbom.sh فيهِ بديلٌ صامتٌ (`|| true`) — فشلٌ يُقرأُ نجاحاً")
 
 
+# ── البابُ 10: استثناءاتُ الثغراتِ محروسةٌ لا صامتةٌ ─────────────────────
+def gate_vuln_exceptions() -> None:
+    from image_vuln_exceptions import EXCEPTIONS, summary, validate
+
+    problems_found = validate()
+    for message in problems_found:
+        fail(message)
+    if not problems_found and EXCEPTIONS.is_file():
+        note(summary().lstrip("• "))
+
+    # والبوّابةُ يجبُ أن تُمرِّرَ الملفَّ فعلاً، وأن تُولِّدَ التقريرَ الكاملَ بلا
+    # استثناءٍ: ملفٌّ موجودٌ لا يُمرَّرُ = دَينٌ مُعلَنٌ لا يُنفَّذُ، وتقريرٌ مُستثنىً
+    # منهُ = قياسٌ ناقصٌ يُخفي ما قُبِلَ.
+    scan = ROOT / "scripts/container/scan-image.sh"
+    if not scan.is_file():
+        fail("scripts/container/scan-image.sh مفقودٌ")
+        return
+    scan_text = scan.read_text(encoding="utf-8")
+    body = strip_comments(scan_text)
+    rel = str(EXCEPTIONS.relative_to(ROOT))
+    if rel not in body:
+        fail(f"scan-image.sh لا يُمرِّرُ {rel} — استثناءاتٌ مُعلَنةٌ لا تُقرأُ")
+    if "--ignorefile" not in body:
+        fail("scan-image.sh بلا `--ignorefile` — الاستثناءاتُ لا تصلُ إلى المسحِ")
+    if body.count("--ignorefile") != 1:
+        fail(
+            "`--ignorefile` مُمرَّرٌ أكثرَ من مرّةٍ في scan-image.sh — "
+            "التقريرُ الكاملُ يجبُ أن يُقاسَ بلا استثناءٍ"
+        )
+    if "image_vuln_exceptions.py" not in body:
+        fail(
+            "scan-image.sh لا يتحقّقُ من عقدِ الاستثناءاتِ قبلَ المسحِ — "
+            "CI يقبلُ ملفّاً يرفضُهُ الحارسُ المحلّيُّ"
+        )
+
+
 def main() -> int:
     text = dockerfile_text()
     gate_base_image()
@@ -331,6 +373,7 @@ def main() -> int:
     gate_merge_blocking()
     gate_contract()
     gate_tool_pins()
+    gate_vuln_exceptions()
 
     for message in notes:
         print(f"{DIM}  • {message}{RST}")

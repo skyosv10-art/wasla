@@ -8,8 +8,12 @@
 #   • `--severity HIGH,CRITICAL` — المتوسّطُ والمنخفضُ يُسجَّلانِ ولا يَحجزانِ.
 #   • `--ignore-unfixed` — ثغرةٌ بلا إصلاحٍ منشورٍ لا تُوقِفُ الدمجَ، وإلّا
 #     عُطِّلَتِ البوّابةُ بعدَ أسبوعٍ لأنّها تكذبُ حمراءَ بلا علاجٍ.
-#   • `--exit-code 1` — الفشلُ فشلٌ. ولا ملفَّ استثناءاتٍ (`.trivyignore`)
-#     في هذهِ الدورةِ: استثناءٌ بلا سببٍ مُسجَّلٍ هوَ إسكاتٌ.
+#   • `--exit-code 1` — الفشلُ فشلٌ.
+#   • ملفُّ استثناءاتٍ **واحدٌ محروسٌ**: `docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml`.
+#     استثناءٌ بلا سببٍ مُسجَّلٍ إسكاتٌ، فلذلكَ يفرضُ البابُ 10 من الفحصِ 19 على
+#     كلِّ مُدخَلٍ: مساراً محدّداً · مهلةً ≤ 90 يوماً غيرَ منقضيةٍ · رقمَ خطرٍ
+#     قائماً في RISK_REGISTER.md. والتقريرُ الكاملُ أعلاهُ يُولَّدُ **بلا** هذا
+#     الملفِّ: ما يُستثنى يبقى مقيساً ومنشوراً، والاستثناءُ من الحَجزِ لا من القياسِ.
 set -euo pipefail
 
 TAG="${1:?وسمُ الصورةِ مطلوبٌ}"
@@ -38,8 +42,13 @@ line = " · ".join(f"{key}={counts.get(key, 0)}" for key in order)
 print(f"• المقيسُ: {total} ثغرةً — {line}")
 PY
 
+IGNORES="docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml"
+[ -f "$IGNORES" ] || { echo "✗ ملفُّ الاستثناءاتِ المُعلَنُ مفقودٌ: $IGNORES" >&2; exit 1; }
+python3 scripts/checks/lib/image_vuln_exceptions.py --report
+
 echo "• البوّابةُ: HIGH,CRITICAL القابلةُ للإصلاحِ"
 "$TOOLS/trivy" image \
+  --ignorefile "$IGNORES" \
   --scanners vuln \
   --severity HIGH,CRITICAL \
   --ignore-unfixed \

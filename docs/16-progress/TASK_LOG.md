@@ -3370,3 +3370,11 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **حالةُ الدورةِ:** typecheck نظيفٌ · اختبارُ الملفِّ نفسِهِ يُقاسُ فوقَ Postgres قبلَ الدفعِ · ولا مساسَ بأيِّ نطاقٍ خارجَ الحجزِ.
 >>>>>>> origin/main
 - **الحكمُ:** يُقرأُ على هذه الدفعةِ من وظائفِ CI بعدَ الدفعِ.
+
+### [2026-09-16] 75/N — تحريرُ CLM-0185 وCLM-0186 بعدَ الدمجِ (§8.1)
+
+- **Work Item(s):** M1-05B · M5-13 · **التحريرُ:** `CLM-0185` · `CLM-0186`
+- **Why:** §8.1 — تحريرُ الحجوزَينِ في دفعةٍ منفصلةٍ بعدَ الدمجِ، وهذهِ الدفعةُ سجلٌّ خالصٌ (`WORK_CLAIMS.md` + `TASK_LOG.md` وحدَهما).
+- **What:** [PR #190](https://github.com/skyosv10-art/wasla/pull/190) · ضمٌّ squash [`82e5447`](https://github.com/skyosv10-art/wasla/commit/82e5447) — الموجةُ الرابعةُ (التفصيلُ في الإدخالِ 73/N). [PR #191](https://github.com/skyosv10-art/wasla/pull/191) · ضمٌّ squash [`dafbd8d`](https://github.com/skyosv10-art/wasla/commit/dafbd8d) — نزعُ فتيلِ قنبلةِ الوقتِ (التفصيلُ في الإدخالِ 74/N). وأحكامُ CI الحقيقيّةُ موثَّقةٌ في صفَّي الحجزَينِ بروابطِ التشغيلاتِ.
+- **حالةُ الدورةِ:** **`main` أخضرُ بعدَ الدمجَينِ:** «WASLA CI» [35041131382](https://github.com/skyosv10-art/wasla/actions/runs/35041131382) و«Roadmap freshness» [35041131344](https://github.com/skyosv10-art/wasla/actions/runs/35041131344) على `82e5447` — وذاكَ هوَ الذي أذِنَ بهذا التحريرِ.
+- **الحكمُ:** يُقرأُ على هذه الدفعةِ من وظائفِ CI بعدَ الدفعِ.

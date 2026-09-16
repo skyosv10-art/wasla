@@ -3493,3 +3493,14 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **Why:** إقفالُ دورة §8.1 بعد دمج PR #201 (squash `a9308c9`).
 - **What:** نُقل CLM-0192 إلى قسم Released في WORK_CLAIMS.md، وتحديث LAUNCH_EXECUTION_BOARD.md إلى Completed، وتحديث ROADMAP.md.
 - **الحكمُ:** يُقرأُ على هذه الدفعة من وظائف CI بعد الدفع.
+
+---
+
+## 2026-09-16 — M1-09: threat model and security testing policy
+
+- **Work Item(s):** M1-09 · **الحجز:** `CLM-0193`
+- **Branch:** `feat/m1-09-threat-model-security-testing-policy`
+- **Why:** أولُ عنصرٍ قابلٍ للتنفيذِ بعد إتمامِ M1-08 — معايِدُه (`M1-01..08`) مُستوفاةٌ تقنيّاً (M1-04 `Ready for Gate` يُقرأُ مُستوفىً تقنيّاً بموجبِ §9).
+- **What:** أُنشئ [`THREAT_MODEL.md`](../07-security/THREAT_MODEL.md) — مراجعةٌ أمنيّةٌ موقَّعةٌ تغطّي STRIDE على 5 حدودِ ثقة، تُحيلُ كلَّ تهديدٍ إلى خطرٍ قائمٍ أو قرارٍ. وأُنشئ [`SECURITY_TESTING_POLICY.md`](../12-testing/SECURITY_TESTING_POLICY.md) — سياسةُ الاختبارِ الأمنيِّ تُعرِّفُ الاختباراتِ السلبيّةَ المطلوبةَ ومتى تُضافُ وما يُثبَتُ وما لا يُثبَت.
+- **Non-claims:** لا يُدَّعى الإغلاقُ الأمنيُّ الكامل. ضوابطُ الحافةِ بدائيّاتٌ متاحةٌ لا نشرٌ إلزامي. `RISK-0042` مفتوح.
+- **الحكمُ:** يُقرأُ على هذه الدفعة من وظائف CI بعد الدفع.

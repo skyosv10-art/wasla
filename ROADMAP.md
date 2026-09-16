@@ -114,6 +114,19 @@ Nothing else has been changed in this repository by the WASLA integration work.
   error bodies, legitimate requests pass, deterministic clock-based refill. Merged via
   [PR #201](https://github.com/skyosv10-art/wasla/pull/201), squash `a9308c9`, 33/33 CI green.
 
+- **M1-09 — claim `CLM-0193`: threat model and security testing policy.** A signed security
+  review package covering M1-01..M1-08 controls, ADR-018..031, RISK_REGISTER (46 risks),
+  and INCIDENTS. `docs/07-security/THREAT_MODEL.md` catalogs threats by STRIDE category
+  (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation
+  of Privilege) across 5 trust boundaries, classifying each as covered, tracked, new-risk,
+  accepted, or out-of-scope — with every unresolved threat mapped to an existing RISK-####
+  entry or an explicit rationale. `docs/12-testing/SECURITY_TESTING_POLICY.md` defines
+  required negative tests (authn/authz/tenant/owner/replay/rate-limit/redaction),
+  when tests must be added or re-run, what CI/governance checks prove and what they do
+  not prove, and incident-triggered review rules. Non-claims are explicit: edge controls
+  are primitives available, not deployment-enforced; `RISK-0042` remains open; no coverage
+  tooling; no eslint.
+
 - **M1-07 — claim `CLM-0191`: bot internal routes now enforce service identity.** The bot-runtime
   HTTP app (`packages/bot-runtime/src/http/app.ts`) had three internal routes with no service-auth
   protection: `POST /channel/messages` (the outbound exit point), `GET /channel/:bot/mini-app`, and

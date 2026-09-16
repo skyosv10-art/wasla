@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0193 | M1-09 | @uxxxu (agent:perplexity-computer) | feat/m1-09-threat-model-security-testing-policy | docs/07-security/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-16 | 2026-09-30 | Active |
 | CLM-0181 | M5-13 | @uxxxu (agent:perplexity-computer) | feat/m5-13-dead-letter-acknowledgement | services/delivery/,packages/delivery-e2e/,packages/authz-policy/,docs/04-api/,docs/07-security/,docs/13-observability/,docs/14-runbooks/,docs/15-decisions/,docs/12-testing/,docs/16-progress/,scripts/checks/,ROADMAP.md | 2026-09-15 | 2026-09-29 | Released |
 | CLM-0182 | M0-41 | @uxxxu (agent:perplexity-computer) | feat/m0-41-app-port-wiring-guard | scripts/checks/,packages/delivery-e2e/,docs/12-testing/,docs/07-security/,docs/16-progress/,ROADMAP.md | 2026-09-15 | 2026-09-29 | Released |
 | CLM-0183 | M0-41 | @uxxxu (agent:perplexity-computer) | chore/release-claim-0182 | docs/07-security/,docs/16-progress/ | 2026-09-15 | 2026-09-29 | Released |

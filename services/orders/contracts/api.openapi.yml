@@ -53,9 +53,9 @@ paths:
                 type: object
                 required: [status, service, persistence]
                 properties:
-                  status: { type: string, enum: [ok, degraded] }
-                  service: { type: string, const: orders-service }
-                  persistence: { type: string, enum: [postgres, memory] }
+                  status: {type: string, enum: [ok, degraded]}
+                  service: {type: string, const: orders-service}
+                  persistence: {type: string, enum: [postgres, memory]}
 
   /orders/intake:
     post:
@@ -70,6 +70,9 @@ paths:
         - `400` الجسم لا يطابق العقد — يعامله المُسلِّم **كخطئه** (`UNAVAILABLE`) لا كرفض تجاري
         - `409` نفس المفتاح بحمولة مختلفة
         - `422` صالح شكلياً ومرفوض منطقياً (منطقة غير مقبولة · تناقض سعر)
+      security:
+        - ServiceAuth:
+            - orders:intake:write
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/RequestId'
@@ -77,22 +80,26 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/OrderIntakeRequest' }
+            schema: {$ref: '#/components/schemas/OrderIntakeRequest'}
       responses:
         '201':
           description: أُنشئ الطلب
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/OrderIntakeResult' }
+              schema: {$ref: '#/components/schemas/OrderIntakeResult'}
         '200':
           description: إعادة مفتاح idempotency بنفس الحمولة — نفس النتيجة
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/OrderIntakeResult' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+              schema: {$ref: '#/components/schemas/OrderIntakeResult'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /orders/agreed-prices:
     post:
@@ -104,6 +111,9 @@ paths:
         بيانات العميل ولا يثبت ملكيته، بل يسجل حقيقة مرتبطة بـ`order_public_id` الذي
         تتداوله الخدمات. لا يغيّر حالة الطلب ولا يكتب تدقيق حالة؛ `transitions` هو
         الحاكم الوحيد لدورة الحياة، وواقعة الاتفاق يملك حدثها `negotiations.agreed`.
+      security:
+        - ServiceAuth:
+            - orders:agreed-price:write
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/RequestId'
@@ -111,23 +121,27 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AgreedPriceRecord' }
+            schema: {$ref: '#/components/schemas/AgreedPriceRecord'}
       responses:
         '201':
           description: سُجل السعر للمرة الأولى
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgreedPrice' }
+              schema: {$ref: '#/components/schemas/AgreedPrice'}
         '200':
           description: إعادة التسجيل المطابقة أعادت الأثر السابق
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgreedPrice' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+              schema: {$ref: '#/components/schemas/AgreedPrice'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /orders/lookup:
     get:
@@ -139,26 +153,36 @@ paths:
         مصغّراً: لا نقاط ولا وصف شحنة ولا ملاحظات ولا عميل؛ توسيعه يفتح حد خصوصية
         بلا حاجة تشغيلية (ADR-009 §7 · ADR-010 القرار 7). ولا توجد
         `X-Customer-Public-Id` لأن هذا ليس مسار قراءة عميل.
+      security:
+        - ServiceAuth:
+            - orders:order:read
       parameters:
         - name: order_public_id
           in: query
           required: true
-          schema: { $ref: '#/components/schemas/OrderPublicId' }
+          schema: {$ref: '#/components/schemas/OrderPublicId'}
         - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
           description: ملخص المطابقة
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/OrderSummary' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
+              schema: {$ref: '#/components/schemas/OrderSummary'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
 
   /orders/{orderId}:
     get:
       tags: [orders]
       operationId: getOrder
       summary: قراءة طلب (مُقيَّدة بالمالك)
+      security:
+        - ServiceAuth:
+            - orders:order:read
       parameters:
         - $ref: '#/components/parameters/OrderId'
         - $ref: '#/components/parameters/CustomerScope'
@@ -168,9 +192,13 @@ paths:
           description: الطلب
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Order' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
+              schema: {$ref: '#/components/schemas/Order'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
 
   /orders/{orderId}/history:
     get:
@@ -178,6 +206,9 @@ paths:
       operationId: getOrderHistory
       summary: سجل تدقيق الانتقالات (مُرتَّب تصاعدياً)
       description: كل انتقال حدث للطلب، بلا استثناء — هو الدليل على أنّ الحالة لم تتغيّر صامتة.
+      security:
+        - ServiceAuth:
+            - orders:history:read
       parameters:
         - $ref: '#/components/parameters/OrderId'
         - $ref: '#/components/parameters/CustomerScope'
@@ -193,9 +224,13 @@ paths:
                 properties:
                   items:
                     type: array
-                    items: { $ref: '#/components/schemas/StatusHistoryEntry' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
+                    items: {$ref: '#/components/schemas/StatusHistoryEntry'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
 
   /orders/{orderId}/transitions:
     post:
@@ -208,6 +243,9 @@ paths:
 
         يكتب صفّ تدقيق ويُنتج حدثاً **في المعاملة نفسها**. `reason_code` إلزامي لكل حالة نهائية.
         والحالات التي تُسمّي سائقاً تستلزم إسناداً نشطاً مُسجَّلاً مسبقاً وإلّا **422**.
+      security:
+        - ServiceAuth:
+            - orders:transition:write
       parameters:
         - $ref: '#/components/parameters/OrderId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -216,17 +254,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/TransitionRequest' }
+            schema: {$ref: '#/components/schemas/TransitionRequest'}
       responses:
         '200':
           description: تمّ الانتقال (أو إعادة نفس المفتاح بنفس الحمولة)
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Order' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
+              schema: {$ref: '#/components/schemas/Order'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
 
   /orders/{orderId}/assignments:
     post:
@@ -237,6 +279,9 @@ paths:
         Phase 07 تُقرّر **من** يُعرض عليه ومتى؛ هذا المسار يسجّل ما قرّرته (§16).
         `driver_public_id` مرجع opaque — لا يتحقّق المحرّك من أهلية السائق (ADR-010 القرار 4).
         عرض الطلب نفسه على السائق نفسه مرّتين ⇒ **409**.
+      security:
+        - ServiceAuth:
+            - orders:assignment:write
       parameters:
         - $ref: '#/components/parameters/OrderId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -249,17 +294,21 @@ paths:
               type: object
               required: [driver_public_id]
               properties:
-                driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
+                driver_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
       responses:
         '201':
           description: سُجّل العرض
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Assignment' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
+              schema: {$ref: '#/components/schemas/Assignment'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
 
   /orders/{orderId}/assignments/{assignmentId}:
     patch:
@@ -269,12 +318,15 @@ paths:
       description: |
         القبول هو ما يجعل الإسناد **نشطاً** على الطلب، فيصبح الانتقال إلى الحالات التي
         تُسمّي سائقاً ممكناً. الرفض والانتهاء لا يُنهيان الطلب (ADR-010 القرار 3.5).
+      security:
+        - ServiceAuth:
+            - orders:assignment:write
       parameters:
         - $ref: '#/components/parameters/OrderId'
         - name: assignmentId
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema: {type: string, format: uuid}
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/RequestId'
       requestBody:
@@ -285,44 +337,54 @@ paths:
               type: object
               required: [assignment_state]
               properties:
-                assignment_state: { type: string, enum: [accepted, rejected, expired, cancelled] }
-                reason_code: { $ref: '#/components/schemas/ReasonCode' }
+                assignment_state: {type: string, enum: [accepted, rejected, expired, cancelled]}
+                reason_code: {$ref: '#/components/schemas/ReasonCode'}
       responses:
         '200':
           description: حُدِّثت الحالة
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Assignment' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
+              schema: {$ref: '#/components/schemas/Assignment'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا العمليّاتِ المفتوحةَ بقرارٍ مكتوبٍ (مثلُ `/health`) — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) · [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
   parameters:
     OrderId:
       name: orderId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     CustomerScope:
       name: X-Customer-Public-Id
       in: header
       required: true
       description: نطاق القراءة. طلب عميل آخر يُجيب 404 (لا نُثبت وجود ما لا يُقرأ).
-      schema: { $ref: '#/components/schemas/WaslaPublicId' }
+      schema: {$ref: '#/components/schemas/WaslaPublicId'}
     IdempotencyKey:
       name: Idempotency-Key
       in: header
       required: true
       description: إلزامي على كل كتابة (§43). مدخل النظام بوت، وضغط الزر مرّتين حالة عادية.
-      schema: { type: string, minLength: 8, maxLength: 128 }
+      schema: {type: string, minLength: 8, maxLength: 128}
     RequestId:
       name: x-request-id
       in: header
       required: false
       description: يصبح `trace_id` في الرد وفي مغلّف الحدث وفي صفّ التدقيق.
-      schema: { type: string, maxLength: 128 }
+      schema: {type: string, maxLength: 128}
 
   schemas:
     WaslaPublicId:
@@ -418,39 +480,39 @@ components:
       additionalProperties: false
       required: [order_public_id, negotiation_id, driver_public_id, amount_minor, currency, agreed_at]
       properties:
-        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
-        negotiation_id: { type: string, format: uuid }
-        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
-        amount_minor: { type: integer, format: int64, minimum: 1 }
-        currency: { type: string, pattern: '^[A-Z]{3}$' }
-        agreed_at: { type: string, format: date-time }
+        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+        negotiation_id: {type: string, format: uuid}
+        driver_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
+        amount_minor: {type: integer, format: int64, minimum: 1}
+        currency: {type: string, pattern: '^[A-Z]{3}$'}
+        agreed_at: {type: string, format: date-time}
 
     AgreedPrice:
       type: object
       required: [order_public_id, negotiation_id, driver_public_id, amount_minor, currency, agreed_at, recorded_at]
       properties:
-        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
-        negotiation_id: { type: string, format: uuid }
-        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
-        amount_minor: { type: integer, format: int64, minimum: 1 }
-        currency: { type: string, pattern: '^[A-Z]{3}$' }
-        agreed_at: { type: string, format: date-time }
-        recorded_at: { type: string, format: date-time }
+        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+        negotiation_id: {type: string, format: uuid}
+        driver_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
+        amount_minor: {type: integer, format: int64, minimum: 1}
+        currency: {type: string, pattern: '^[A-Z]{3}$'}
+        agreed_at: {type: string, format: date-time}
+        recorded_at: {type: string, format: date-time}
 
     Stop:
       type: object
       required: [kind, zone_id, source]
       properties:
-        kind: { $ref: '#/components/schemas/StopKind' }
+        kind: {$ref: '#/components/schemas/StopKind'}
         zone_id:
           type: string
           format: uuid
           description: إلزامي — نقطة بلا منطقة غير قابلة للمطابقة (ADR-009 القرار 2).
-        label: { type: string, maxLength: 60, nullable: true }
-        source: { $ref: '#/components/schemas/StopSource' }
-        saved_place_id: { type: string, format: uuid, nullable: true }
-        latitude: { type: number, nullable: true }
-        longitude: { type: number, nullable: true }
+        label: {type: string, maxLength: 60, nullable: true}
+        source: {$ref: '#/components/schemas/StopSource'}
+        saved_place_id: {type: string, format: uuid, nullable: true}
+        latitude: {type: number, nullable: true}
+        longitude: {type: number, nullable: true}
 
     ShipmentDetails:
       type: object
@@ -459,8 +521,8 @@ components:
           type: string
           enum: [parcel, documents, food, goods, other]
           nullable: true
-        description: { type: string, maxLength: 300, nullable: true }
-        weight_kg: { type: number, minimum: 0, maximum: 3000, nullable: true }
+        description: {type: string, maxLength: 300, nullable: true}
+        weight_kg: {type: number, minimum: 0, maximum: 3000, nullable: true}
 
     OrderIntakeRequest:
       type: object
@@ -475,43 +537,43 @@ components:
         الطرف الذي يستقبل من الشبكة: قبول ثلاث نقاط هنا يعني تخزين طلب لا يستطيع أحد مطابقته.
       required: [order_request_id, customer_public_id, order_type, vehicle_class, price_mode, stops, requested_at]
       properties:
-        order_request_id: { type: string, format: uuid }
-        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
-        order_type: { $ref: '#/components/schemas/OrderType' }
-        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
-        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        order_request_id: {type: string, format: uuid}
+        customer_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
+        order_type: {$ref: '#/components/schemas/OrderType'}
+        vehicle_class: {$ref: '#/components/schemas/VehicleClass'}
+        price_mode: {$ref: '#/components/schemas/PriceMode'}
         offered_price:
-          allOf: [{ $ref: '#/components/schemas/Money' }]
+          allOf: [$ref: '#/components/schemas/Money']
           nullable: true
         stops:
           type: array
           minItems: 2
           maxItems: 2
           description: نقطتان بالضبط في هذه المرحلة (ADR-009 القرار 3).
-          items: { $ref: '#/components/schemas/Stop' }
+          items: {$ref: '#/components/schemas/Stop'}
         shipment:
-          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          allOf: [$ref: '#/components/schemas/ShipmentDetails']
           nullable: true
-        notes: { type: string, maxLength: 300, nullable: true }
-        requested_at: { type: string, format: date-time }
-        idempotency_key: { type: string, minLength: 8, maxLength: 128 }
+        notes: {type: string, maxLength: 300, nullable: true}
+        requested_at: {type: string, format: date-time}
+        idempotency_key: {type: string, minLength: 8, maxLength: 128}
 
     OrderIntakeResult:
       type: object
       required: [order_public_id, accepted_at]
       properties:
-        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
-        accepted_at: { type: string, format: date-time }
+        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+        accepted_at: {type: string, format: date-time}
 
     TransitionRequest:
       type: object
       required: [to_status, actor_type]
       properties:
-        to_status: { $ref: '#/components/schemas/OrderStatus' }
-        reason_code: { $ref: '#/components/schemas/ReasonCode' }
-        actor_type: { $ref: '#/components/schemas/ActorType' }
+        to_status: {$ref: '#/components/schemas/OrderStatus'}
+        reason_code: {$ref: '#/components/schemas/ReasonCode'}
+        actor_type: {$ref: '#/components/schemas/ActorType'}
         actor_ref:
-          allOf: [{ $ref: '#/components/schemas/WaslaPublicId' }]
+          allOf: [$ref: '#/components/schemas/WaslaPublicId']
           nullable: true
           description: مُعرّف عام للفاعل البشري. إلزامي لكل `actor_type` غير `system`، وممنوع مع `system`.
 
@@ -519,127 +581,137 @@ components:
       type: object
       required: [id, order_id, driver_public_id, sequence, assignment_state, offered_at]
       properties:
-        id: { type: string, format: uuid }
-        order_id: { type: string, format: uuid }
-        driver_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
-        sequence: { type: integer, minimum: 1 }
-        assignment_state: { $ref: '#/components/schemas/AssignmentState' }
+        id: {type: string, format: uuid}
+        order_id: {type: string, format: uuid}
+        driver_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
+        sequence: {type: integer, minimum: 1}
+        assignment_state: {$ref: '#/components/schemas/AssignmentState'}
         reason_code:
-          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          allOf: [$ref: '#/components/schemas/ReasonCode']
           nullable: true
-        offered_at: { type: string, format: date-time }
-        accepted_at: { type: string, format: date-time, nullable: true }
-        rejected_at: { type: string, format: date-time, nullable: true }
-        expired_at: { type: string, format: date-time, nullable: true }
-        cancelled_at: { type: string, format: date-time, nullable: true }
+        offered_at: {type: string, format: date-time}
+        accepted_at: {type: string, format: date-time, nullable: true}
+        rejected_at: {type: string, format: date-time, nullable: true}
+        expired_at: {type: string, format: date-time, nullable: true}
+        cancelled_at: {type: string, format: date-time, nullable: true}
 
     StatusHistoryEntry:
       type: object
       required: [sequence, to_status, actor_type, occurred_at]
       properties:
-        sequence: { type: integer, minimum: 1 }
+        sequence: {type: integer, minimum: 1}
         from_status:
-          allOf: [{ $ref: '#/components/schemas/OrderStatus' }]
+          allOf: [$ref: '#/components/schemas/OrderStatus']
           nullable: true
           description: '`null` مرّة واحدة فقط: عند الإنشاء.'
-        to_status: { $ref: '#/components/schemas/OrderStatus' }
+        to_status: {$ref: '#/components/schemas/OrderStatus'}
         reason_code:
-          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          allOf: [$ref: '#/components/schemas/ReasonCode']
           nullable: true
-        actor_type: { $ref: '#/components/schemas/ActorType' }
+        actor_type: {$ref: '#/components/schemas/ActorType'}
         actor_ref:
-          allOf: [{ $ref: '#/components/schemas/WaslaPublicId' }]
+          allOf: [$ref: '#/components/schemas/WaslaPublicId']
           nullable: true
-        occurred_at: { type: string, format: date-time }
-        trace_id: { type: string, nullable: true }
+        occurred_at: {type: string, format: date-time}
+        trace_id: {type: string, nullable: true}
 
     Order:
       type: object
-      required:
-        [id, order_public_id, order_request_id, customer_public_id, order_type, vehicle_class,
-         status, price_mode, stops, requested_at, accepted_at, created_at]
+      required: [id, order_public_id, order_request_id, customer_public_id, order_type, vehicle_class, status, price_mode, stops, requested_at, accepted_at, created_at]
       properties:
-        id: { type: string, format: uuid }
-        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
-        order_request_id: { type: string, format: uuid }
-        customer_public_id: { $ref: '#/components/schemas/WaslaPublicId' }
-        order_type: { $ref: '#/components/schemas/OrderType' }
-        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
-        status: { $ref: '#/components/schemas/OrderStatus' }
+        id: {type: string, format: uuid}
+        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+        order_request_id: {type: string, format: uuid}
+        customer_public_id: {$ref: '#/components/schemas/WaslaPublicId'}
+        order_type: {$ref: '#/components/schemas/OrderType'}
+        vehicle_class: {$ref: '#/components/schemas/VehicleClass'}
+        status: {$ref: '#/components/schemas/OrderStatus'}
         status_reason_code:
-          allOf: [{ $ref: '#/components/schemas/ReasonCode' }]
+          allOf: [$ref: '#/components/schemas/ReasonCode']
           nullable: true
-        price_mode: { $ref: '#/components/schemas/PriceMode' }
+        price_mode: {$ref: '#/components/schemas/PriceMode'}
         offered_price:
-          allOf: [{ $ref: '#/components/schemas/Money' }]
+          allOf: [$ref: '#/components/schemas/Money']
           nullable: true
         agreed_price:
-          allOf: [{ $ref: '#/components/schemas/Money' }]
+          allOf: [$ref: '#/components/schemas/Money']
           nullable: true
-        agreed_at: { type: string, format: date-time, nullable: true }
-        agreed_negotiation_id: { type: string, format: uuid, nullable: true }
+        agreed_at: {type: string, format: date-time, nullable: true}
+        agreed_negotiation_id: {type: string, format: uuid, nullable: true}
         stops:
           type: array
-          items: { $ref: '#/components/schemas/Stop' }
+          items: {$ref: '#/components/schemas/Stop'}
         shipment:
-          allOf: [{ $ref: '#/components/schemas/ShipmentDetails' }]
+          allOf: [$ref: '#/components/schemas/ShipmentDetails']
           nullable: true
-        notes: { type: string, nullable: true }
+        notes: {type: string, nullable: true}
         active_assignment:
-          allOf: [{ $ref: '#/components/schemas/Assignment' }]
+          allOf: [$ref: '#/components/schemas/Assignment']
           nullable: true
-        requested_at: { type: string, format: date-time }
-        accepted_at: { type: string, format: date-time }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
+        requested_at: {type: string, format: date-time}
+        accepted_at: {type: string, format: date-time}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
 
     OrderSummary:
       type: object
       required: [order_public_id, order_id, status, price_mode, order_type, vehicle_class, agreed_price, agreed_at, agreed_negotiation_id]
       properties:
-        order_public_id: { $ref: '#/components/schemas/OrderPublicId' }
-        order_id: { type: string, format: uuid }
-        status: { $ref: '#/components/schemas/OrderStatus' }
-        price_mode: { $ref: '#/components/schemas/PriceMode' }
-        order_type: { $ref: '#/components/schemas/OrderType' }
-        vehicle_class: { $ref: '#/components/schemas/VehicleClass' }
+        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+        order_id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/OrderStatus'}
+        price_mode: {$ref: '#/components/schemas/PriceMode'}
+        order_type: {$ref: '#/components/schemas/OrderType'}
+        vehicle_class: {$ref: '#/components/schemas/VehicleClass'}
         agreed_price:
-          allOf: [{ $ref: '#/components/schemas/Money' }]
+          allOf: [$ref: '#/components/schemas/Money']
           nullable: true
-        agreed_at: { type: string, format: date-time, nullable: true }
-        agreed_negotiation_id: { type: string, format: uuid, nullable: true }
+        agreed_at: {type: string, format: date-time, nullable: true}
+        agreed_negotiation_id: {type: string, format: uuid, nullable: true}
 
     ErrorResponse:
       type: object
       required: [code, message]
       properties:
-        code: { type: string, description: 'كود ثابت (stable) — الاختبارات تتحقّق منه لا من النص' }
-        message: { type: string }
-        trace_id: { type: string }
+        code: {type: string, description: 'كود ثابت (stable) — الاختبارات تتحقّق منه لا من النص'}
+        message: {type: string}
+        trace_id: {type: string}
 
   responses:
     ValidationError:
       description: مدخلات غير صالحة شكلياً
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     NotFound:
       description: الكيان غير موجود (أو ليس مملوكاً للقارئ)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     Conflict:
       description: تعارض حالة (انتقال غير مسموح · إعادة مفتاح بحمولة مختلفة · إسناد مكرَّر)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     Unprocessable:
       description: صالح شكلياً وغير مقبول منطقياً
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     ServiceUnavailable:
       description: الخدمة في وضع متدهور
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    AuthUnauthorized:
+      description: طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthForbidden:
+      description: هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

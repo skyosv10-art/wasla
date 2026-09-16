@@ -27,6 +27,9 @@ paths:
       tags: [geography]
       summary: قائمة البلدان
       operationId: listCountries
+      security:
+        - ServiceAuth:
+            - geography:hierarchy:read
       parameters:
         - $ref: '#/components/parameters/Locale'
       responses:
@@ -36,15 +39,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Country' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/Country'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/countries/{countryId}/regions:
     get:
       tags: [geography]
       summary: مناطق/إمارات بلد
       operationId: listRegions
+      security:
+        - ServiceAuth:
+            - geography:hierarchy:read
       parameters:
         - $ref: '#/components/parameters/CountryId'
         - $ref: '#/components/parameters/Locale'
@@ -55,15 +65,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Region' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/Region'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/regions/{regionId}/cities:
     get:
       tags: [geography]
       summary: مدن منطقة
       operationId: listCities
+      security:
+        - ServiceAuth:
+            - geography:hierarchy:read
       parameters:
         - $ref: '#/components/parameters/RegionId'
         - $ref: '#/components/parameters/Locale'
@@ -74,15 +91,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/City' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/City'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/cities/{cityId}/districts:
     get:
       tags: [geography]
       summary: أحياء مدينة
       operationId: listDistricts
+      security:
+        - ServiceAuth:
+            - geography:hierarchy:read
       parameters:
         - $ref: '#/components/parameters/CityId'
         - $ref: '#/components/parameters/Locale'
@@ -93,15 +117,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/District' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/District'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/districts/{districtId}/zones:
     get:
       tags: [geography]
       summary: مناطق فرعية لحي
       operationId: listZones
+      security:
+        - ServiceAuth:
+            - geography:hierarchy:read
       parameters:
         - $ref: '#/components/parameters/DistrictId'
         - $ref: '#/components/parameters/Locale'
@@ -112,15 +143,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Zone' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/Zone'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/zones/{zoneId}:
     get:
       tags: [geography]
       summary: تفاصيل منطقة فرعية (مع المسار الكامل للوالدين)
       operationId: getZone
+      security:
+        - ServiceAuth:
+            - geography:zone:read
       parameters:
         - $ref: '#/components/parameters/ZoneId'
         - $ref: '#/components/parameters/Locale'
@@ -129,15 +167,22 @@ paths:
           description: المنطقة الفرعية مع مسار الهرم
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ZoneDetail' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+              schema: {$ref: '#/components/schemas/ZoneDetail'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/users/{waslaPublicId}/location:
     get:
       tags: [user-location]
       summary: الموقع الحالي للمستخدم
       operationId: getUserLocation
+      security:
+        - ServiceAuth:
+            - geography:location:read
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/Locale'
@@ -146,42 +191,56 @@ paths:
           description: الموقع الحالي للمستخدم
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UserLocation' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+              schema: {$ref: '#/components/schemas/UserLocation'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
     put:
       tags: [user-location]
       summary: تعيين/تحديث موقع المستخدم
       operationId: setUserLocation
+      security:
+        - ServiceAuth:
+            - geography:location:write
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SetUserLocationRequest' }
+            schema: {$ref: '#/components/schemas/SetUserLocationRequest'}
       responses:
         '200':
           description: تم تحديث الموقع (تغيير)
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UserLocation' }
+              schema: {$ref: '#/components/schemas/UserLocation'}
         '201':
           description: تم تعيين الموقع لأول مرة
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UserLocation' }
-        '400': { $ref: '#/components/responses/ValidationError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+              schema: {$ref: '#/components/schemas/UserLocation'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
   /geo/users/{waslaPublicId}/location/history:
     get:
       tags: [user-location]
       summary: سجل تغييرات موقع المستخدم
       operationId: getUserLocationHistory
+      security:
+        - ServiceAuth:
+            - geography:location:read
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/Locale'
@@ -192,11 +251,21 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/UserLocationHistoryEntry' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+                items: {$ref: '#/components/schemas/UserLocationHistoryEntry'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا العمليّاتِ المفتوحةَ بقرارٍ مكتوبٍ (مثلُ `/health`) — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) · [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
   parameters:
     Locale:
       name: locale
@@ -209,32 +278,32 @@ components:
       name: countryId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     RegionId:
       name: regionId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     CityId:
       name: cityId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     DistrictId:
       name: districtId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     ZoneId:
       name: zoneId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema: {type: string, format: uuid}
     WaslaPublicId:
       name: waslaPublicId
       in: path
       required: true
-      schema: { type: string, pattern: '^WS-[0-9]{10}$' }
+      schema: {type: string, pattern: '^WS-[0-9]{10}$'}
 
   schemas:
     Locale:
@@ -250,96 +319,96 @@ components:
       type: object
       required: [ar]
       properties:
-        ar: { type: string }
-        en: { type: string, nullable: true }
-        ur: { type: string, nullable: true }
+        ar: {type: string}
+        en: {type: string, nullable: true}
+        ur: {type: string, nullable: true}
       description: الاسم بكل اللغات. ar إلزامي (fallback).
 
     Country:
       type: object
       required: [id, code, status, name]
       properties:
-        id: { type: string, format: uuid }
-        code: { type: string, description: 'ISO 3166-1 alpha-2 (مثال: SA)' }
-        iso3: { type: string, description: 'ISO 3166-1 alpha-3 (مثال: SAU)' }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string, description: 'الاسم بالـlocale المطلوب' }
+        id: {type: string, format: uuid}
+        code: {type: string, description: 'ISO 3166-1 alpha-2 (مثال: SA)'}
+        iso3: {type: string, description: 'ISO 3166-1 alpha-3 (مثال: SAU)'}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string, description: 'الاسم بالـlocale المطلوب'}
 
     Region:
       type: object
       required: [id, country_id, code, status, name]
       properties:
-        id: { type: string, format: uuid }
-        country_id: { type: string, format: uuid }
-        code: { type: string }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string }
+        id: {type: string, format: uuid}
+        country_id: {type: string, format: uuid}
+        code: {type: string}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string}
 
     City:
       type: object
       required: [id, region_id, code, status, name]
       properties:
-        id: { type: string, format: uuid }
-        region_id: { type: string, format: uuid }
-        code: { type: string }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string }
+        id: {type: string, format: uuid}
+        region_id: {type: string, format: uuid}
+        code: {type: string}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string}
 
     District:
       type: object
       required: [id, city_id, code, status, name]
       properties:
-        id: { type: string, format: uuid }
-        city_id: { type: string, format: uuid }
-        code: { type: string }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string }
+        id: {type: string, format: uuid}
+        city_id: {type: string, format: uuid}
+        code: {type: string}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string}
 
     Zone:
       type: object
       required: [id, district_id, code, status, name]
       properties:
-        id: { type: string, format: uuid }
-        district_id: { type: string, format: uuid }
-        code: { type: string }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string }
+        id: {type: string, format: uuid}
+        district_id: {type: string, format: uuid}
+        code: {type: string}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string}
 
     ZoneDetail:
       type: object
       description: المنطقة مع مسار الهرم الكامل والاسم المترجم
       required: [id, code, status, name, path]
       properties:
-        id: { type: string, format: uuid }
-        code: { type: string }
-        status: { $ref: '#/components/schemas/GeoStatus' }
-        name: { type: string }
+        id: {type: string, format: uuid}
+        code: {type: string}
+        status: {$ref: '#/components/schemas/GeoStatus'}
+        name: {type: string}
         path:
           type: object
           required: [country, region, city, district]
           properties:
-            country: { $ref: '#/components/schemas/Country' }
-            region: { $ref: '#/components/schemas/Region' }
-            city: { $ref: '#/components/schemas/City' }
-            district: { $ref: '#/components/schemas/District' }
+            country: {$ref: '#/components/schemas/Country'}
+            region: {$ref: '#/components/schemas/Region'}
+            city: {$ref: '#/components/schemas/City'}
+            district: {$ref: '#/components/schemas/District'}
 
     UserLocation:
       type: object
       required: [wasla_public_id, zone, source, effective_at, version]
       properties:
-        wasla_public_id: { type: string, pattern: '^WS-[0-9]{10}$' }
-        zone: { $ref: '#/components/schemas/Zone' }
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
+        zone: {$ref: '#/components/schemas/Zone'}
         source:
           type: string
           enum: [customer_bot, driver_bot, partner_bot, admin, system]
-        effective_at: { type: string, format: date-time }
-        version: { type: integer, description: 'optimistic concurrency' }
+        effective_at: {type: string, format: date-time}
+        version: {type: integer, description: 'optimistic concurrency'}
 
     SetUserLocationRequest:
       type: object
       required: [zone_id, source]
       properties:
-        zone_id: { type: string, format: uuid }
+        zone_id: {type: string, format: uuid}
         source:
           type: string
           enum: [customer_bot, driver_bot, partner_bot, admin, system]
@@ -352,15 +421,15 @@ components:
           type: object
           nullable: true
           properties:
-            id: { type: string, format: uuid }
-            name: { type: string }
+            id: {type: string, format: uuid}
+            name: {type: string}
         new_zone:
           type: object
           required: [id, name]
           properties:
-            id: { type: string, format: uuid }
-            name: { type: string }
-        changed_at: { type: string, format: date-time }
+            id: {type: string, format: uuid}
+            name: {type: string}
+        changed_at: {type: string, format: date-time}
         source:
           type: string
           enum: [customer_bot, driver_bot, partner_bot, admin, system]
@@ -369,33 +438,45 @@ components:
       type: object
       required: [code, message]
       properties:
-        code: { type: string, description: 'كود ثابت (stable)' }
-        message: { type: string }
-        trace_id: { type: string }
+        code: {type: string, description: 'كود ثابت (stable)'}
+        message: {type: string}
+        trace_id: {type: string}
 
   responses:
     ValidationError:
       description: مدخلات غير صالحة
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     NotFound:
       description: الكيان غير موجود
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     Conflict:
       description: تعارض حالة
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     Unprocessable:
       description: مدخلات صالحة شكلياً لكن غير مقبولة منطقياً
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
     ServiceUnavailable:
       description: الخدمة في وضع متدهور
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    AuthUnauthorized:
+      description: طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthForbidden:
+      description: هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

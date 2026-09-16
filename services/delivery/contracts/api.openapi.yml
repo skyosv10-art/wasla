@@ -71,6 +71,9 @@ paths:
         لقطةُ الأصنافِ (كميّةٌ · سعرُ وقتِ الطلبِ) تُثبَّتُ هنا ولا تُقرأُ من الكتالوجِ
         بعدَها (ADR-026 §2.3). أهليّةُ الأصنافِ تُقرأُ من السوقِ عبرَ الحدِّ المتَّفقِ
         عليهِ لا من فهرسِ البحثِ (ADR-025 §2.2).
+      security:
+        - ServiceAuth:
+            - delivery:store-order:write
       requestBody:
         required: true
         content:
@@ -86,6 +89,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "409":
@@ -99,6 +106,9 @@ paths:
       tags: [store-orders]
       operationId: getStoreOrder
       summary: قراءةُ طلبِ متجرٍ
+      security:
+        - ServiceAuth:
+            - delivery:store-order:read
       parameters:
         - name: orderPublicId
           in: path
@@ -112,6 +122,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -123,6 +137,9 @@ paths:
       tags: [store-orders]
       operationId: cancelStoreOrder
       summary: إلغاءُ طلبِ متجرٍ (قبلَ التسليمِ للمناديبِ)
+      security:
+        - ServiceAuth:
+            - delivery:store-order:cancel
       parameters:
         - name: orderPublicId
           in: path
@@ -143,6 +160,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -164,6 +185,9 @@ paths:
         و`payment_ref` مرجعٌ opaque لا يُردُّ في أيِّ قراءةٍ (§2.6). وانتقالٌ خارجَ جدولِ
         §3.2 يُرفَضُ `409 DELIVERY_TRANSITION_NOT_ALLOWED` — المرآةُ تعكسُ تاريخاً ممكناً لا
         أيَّ تاريخٍ.
+      security:
+        - ServiceAuth:
+            - delivery:payment-mirror:write
       parameters:
         - name: orderPublicId
           in: path
@@ -184,6 +208,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -205,6 +233,9 @@ paths:
 
         ولا جسمَ للطلبِ: السببُ معروفٌ ومغلقٌ (`PAYMENT_AUTHORIZED`)، وحقلٌ حرٌّ هنا
         كانَ سيصبحُ مكانَ تخزينٍ لملاحظاتٍ لا يقرأُها أحدٌ.
+      security:
+        - ServiceAuth:
+            - delivery:store-order:confirm
       parameters:
         - name: orderPublicId
           in: path
@@ -219,6 +250,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -240,6 +275,9 @@ paths:
         حافّةُ `handed_to_courier → delivered` تتطلَّبُ إثباتَ تسليمٍ (`proof_type`
         و`proof_ref`) وتُحرِّكُ الخصمَ النهائيَّ للمخزونِ (`reserved → consumed`) في
         نفسِ المعاملةِ — لا نداءَ للسوقِ: الحجزُ خصمٌ بالفعل.
+      security:
+        - ServiceAuth:
+            - delivery:fulfillment:transition
       parameters:
         - name: orderPublicId
           in: path
@@ -273,6 +311,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StoreOrderResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -286,6 +328,9 @@ paths:
       tags: [delivery]
       operationId: getDeliveryTaskForOrder
       summary: مهمّةُ التوصيلِ لطلبِ متجرٍ
+      security:
+        - ServiceAuth:
+            - delivery:delivery-task:read
       parameters:
         - name: orderPublicId
           in: path
@@ -299,6 +344,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeliveryTaskResponse"
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -356,6 +405,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReadinessResponse"
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا العمليّاتِ المفتوحةَ بقرارٍ مكتوبٍ (مثلُ `/health`) — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) · [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -425,6 +480,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    AuthUnauthorized:
+      description: طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthForbidden:
+      description: هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     WaslaPublicId:
       type: string

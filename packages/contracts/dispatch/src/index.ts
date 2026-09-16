@@ -74,7 +74,7 @@ export const DISPATCH_API_PATHS = [
   "/dispatch/tick", "/dispatch/offers/{offer_id}", "/dispatch/offers/{offer_id}/accept", "/dispatch/offers/{offer_id}/reject",
   "/dispatch/jobs/{job_id}/cancel",
 ] as const;
-export const DISPATCH_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+export const DISPATCH_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * منفذ خدمة التوزيع (CONTAINERS §4.3).

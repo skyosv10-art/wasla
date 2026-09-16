@@ -250,28 +250,49 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     note: "يبقى `none` بسببٍ مكتوبٍ: كنظيرِهِ في الحجزِ — والإفراجُ **تعويضٌ في مسارِ فشلٍ** (`ADR-026 §2.3`)، فربطُهُ بمُنتَفِعٍ إنسانٍ يجعلُ التعويضَ يفشلُ حيثُ يُحتاجُ أكثرَ ما يُحتاجُ.",
   },
 
-  // ── الفاعلُ في دورةِ حياةِ المنتجِ: من **جسمِ** الطلبِ لا من الرمزِ ──────────
-  // `input.actorPublicId` (app.ts:409 · 425) يُتحقَّقُ من شكلِهِ ويُسجَّلُ في أثرِ
-  // التدقيقِ، ثمَّ يُستعملُ كأنَّهُ فاعلٌ مُثبَتٌ. وأثرُ تدقيقٍ يُكتَبُ بقيمةٍ
-  // يختارُها المُنادي **أثرٌ يُثبِتُ الدعوى لا الفعلَ** — وهوَ وجهٌ من `RISK-0042`
-  // أضعفُ من وجهِ الطلباتِ: هناكَ تُقارَنُ القيمةُ بمَورِدٍ، وهنا لا تُقارَنُ بشيءٍ.
+  // ── دورةُ حياةِ المنتجِ: الفاعلُ من **الرمزِ** لا من الجسمِ (`M1-05B` الموجةُ 4) ──
+  // كانَ الوصفُ هنا (قبلَ الموجةِ 4) أنَّ `input.actorPublicId` يُستعملُ كأنَّهُ
+  // فاعلٌ مُثبَتٌ ولا يُقارَنُ بشيءٍ — وهوَ وصفٌ صادقٌ **للحالةِ التي انتهتْ**.
+  // الآن: `tenantScoped` يُلزِمُ الرمزَ بمُستفيدٍ، و`productActor` في الحدِّ يُقارِنُ
+  // فاعلَ الجسمِ بـ`obo` الموقّعِ (تنافُرٌ ⇒ `PRODUCT_NOT_FOUND` لا 403)،
+  // و`transitionState` يفرضُ عضويّةَ الفاعلِ في متجرِ المنتجِ **داخلَ المعاملةِ**.
+  // الحقلُ بقيَ في الجسمِ إلزاميّاً بالعقدِ — حذفُهُ تغييرُ عقدٍ — وصارَ
+  // **مُتحقَّقاً من تناسقِهِ** لا حَكَماً.
   {
     audience: "marketplace",
     method: "POST",
     path: "/products/:productId/publish",
-    dimension: "owner",
-    strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:actorPublicId",
-    note: "`actorPublicId` يُقرأُ من جسمِ الطلبِ، يُتحقَّقُ من شكلِهِ، ويُسجَّلُ في أثرِ التدقيقِ — ولا يُقارَنُ بمالكِ المنتجِ ولا بمطلبٍ في الرمزِ.",
+    dimension: "tenant",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "(صُحِّحَ بالموجةِ 4 — كانَ owner/none.) الفاعلُ من obo الموقّعِ عبرَ productActor؛ حقلُ الجسمِ actor_public_id تناسقٌ يُقارَنُ بالرمزِ لا حَكَمٌ، وعضويّةُ الفاعلِ في متجرِ المنتجِ مفروضةٌ داخلَ معاملةِ الكتابةِ."
   },
   {
     audience: "marketplace",
     method: "POST",
     path: "/products/:productId/archive",
-    dimension: "owner",
+    dimension: "tenant",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "(صُحِّحَ بالموجةِ 4 — كانَ owner/none.) الفاعلُ من obo الموقّعِ عبرَ productActor؛ حقلُ الجسمِ actor_public_id تناسقٌ يُقارَنُ بالرمزِ لا حَكَمٌ، وعضويّةُ الفاعلِ في متجرِ المنتجِ مفروضةٌ داخلَ معاملةِ الكتابةِ."
+  },
+  {
+    audience: "marketplace",
+    method: "POST",
+    path: "/products/:productId/inventory",
+    dimension: "tenant",
+    strength: "token-bound",
+    evidence: "services/marketplace/src/http/app.ts:tenantScoped",
+    note: "(الموجةُ 4 · RISK-0042 البندُ 3.) تعديلُ المخزونِ فعلُ عضوٍ: الفاعلُ من obo الموقّعِ عبرَ productActor، والعضويّةُ مفروضةٌ داخلَ معاملةِ الكتابةِ نفسِها (adjustInventory) — لا نافذةَ بينَ فحصٍ وكتابةِ فرقٍ."
+  },
+  {
+    audience: "marketplace",
+    method: "POST",
+    path: "/products/:productId/decisions",
+    dimension: "tenant",
     strength: "none",
-    evidence: "services/marketplace/src/http/app.ts:actorPublicId",
-    note: "`actorPublicId` يُقرأُ من جسمِ الطلبِ، يُتحقَّقُ من شكلِهِ، ويُسجَّلُ في أثرِ التدقيقِ — ولا يُقارَنُ بمالكِ المنتجِ ولا بمطلبٍ في الرمزِ.",
+    evidence: "services/marketplace/src/http/app.ts:scoped",
+    note: "يبقى `none` بسببٍ مكتوبٍ: قرارُ الاعتدالِ سلطةُ منصّةٍ لا فعلَ متجرٍ — وربطُهُ بعضويّةِ متجرٍ يعكِسُ السياسةَ (متجرٌ يوافقُ على نفسِهِ)، فالفاعلُ يُوثَّقُ في الدفترِ بصفتِهِ لا بعضويّةٍ تُفرَضُ."
   },
 ];
 

@@ -620,6 +620,26 @@ const ownerScoped = (...scopes: string[]) => ({
 [`ADR-029`](../15-decisions/ADR-029-tenant-membership-binding.md) §4.
 
 
+### 3.5.6 الموجةُ الرابعةُ: دورةُ حياةِ المنتجِ (`CLM-0185` · [`ADR-031`](../15-decisions/ADR-031-product-lifecycle-actor-binding.md))
+
+**ما فوقَ صادقٌ في تاريخِهِ ولا يُمحى** — والبندُ «الثالثُ لم يُمَسَّ» في
+§3.5.5 صارَ مُتجاوَزاً بهذهِ الموجةِ. الصحيحُ اليومَ: **عشرُ عمليّاتٍ
+مربوطةٌ بالرمزِ** منها **ثمانيةٌ** في بُعدِ المستأجرِ.
+
+| المسارُ | التصنيفُ | فحصُ الحدِّ | الفحصُ داخلَ المعاملةِ |
+| --- | --- | --- | --- |
+| `POST /products/:productId/publish` | `tenantScoped(productLifecycle)` | `productActor`: `obo` يُقارَنُ بحقلِ الجسمِ، والتنافُرُ ⇒ `PRODUCT_NOT_FOUND` | `assertActiveMembership` بعدَ تحميلِ المنتجِ والمتجرِ بلاحقةٍ من `store_id` |
+| `POST /products/:productId/archive` | `tenantScoped(productLifecycle)` | نفسُهُ | نفسُهُ |
+| `POST /products/:productId/inventory` | `tenantScoped(inventoryAdjust)` | نفسُهُ | نفسُهُ في `adjustInventory` قبلَ كتابةِ فرقِ الدفترِ |
+
+وفحصُ العضويّةِ **يسبقُ** فحصَ انتقالِ الحالةِ والاعتدالِ — فغريبٌ عنِ
+المتجرِ يُرَدُّ `STORE_NOT_FOUND` حتى على منتجٍ بلا اعتدالٍ، ولا يُقرأَ سرُّ
+حالتِهِ. وحقلُ `actor_public_id` في الجسومِ الثلاثةِ بقيَ إلزاميّاً بالعقدِ
+وصارَ تناسقاً يُقارَنُ بالرمزِ لا حَكَماً. وقرارُ اعتدالِ المنتجِ
+(`POST /products/:productId/decisions`) بقيَ `none` **بسببٍ مكتوبٍ**: سلطةُ
+منصّةٍ، وربطُهُ بعضويّةِ متجرٍ عكسُ السياسةِ.
+
+
 ---
 
 ## 4. سجلُّ التغطية (يقرأه الحارس)

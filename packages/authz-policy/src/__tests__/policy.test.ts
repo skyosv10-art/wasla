@@ -286,15 +286,23 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * صفوفٍ لسقطَ، ولو أُضيفَ صفٌّ بلا تصنيفِ مسارٍ في شفرةِ الحدِّ لسقطَ
    * الفحصُ 16.
    */
-  it("العملياتُ المربوطةُ بالرمزِ سبعٌ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
+  /**
+   * (`M1-05B` الموجةُ 4) العددُ **قلَبَ** من سبعٍ إلى عشرٍ — قلبٌ لا محوٌ: الدعوى
+   * القديمةُ (سبعٌ) صدقت للدفعةِ التي كُتِبَتْ فيها، وصفوفُ الموجةِ الرابعةِ
+   * الثلاثةُ (`publish` · `archive` · `inventory`) دخلَتْ فصارَ القياسُ عشرةً.
+   */
+  it("العملياتُ المربوطةُ بالرمزِ عشرٌ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(7);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(10);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
       "GET /orders/:orderId",
       "GET /orders/:orderId/history",
       "GET /stores/:storeSlug/staff",
+      "POST /products/:productId/archive",
+      "POST /products/:productId/inventory",
+      "POST /products/:productId/publish",
       "POST /stores/:storeSlug/products",
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
@@ -309,16 +317,24 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * إلى دعوىً **أقوى** تُثبِتُ العددَ الجديدَ وأسماءَ صفوفِهِ — فلو رُدَّ
    * الربطُ إلى `none` صامتاً لسقطَ هذا السطرُ بعينِهِ.
    */
-  it("وبُعدُ المستأجرِ صارَ مربوطاً في خمسٍ بأسمائها — والقديمُ مقلوبٌ لا ممحوٌّ", () => {
+  /**
+   * (`M1-05B` الموجةُ 4) خمسٌ صارَتْ ثمانياً بقلبٍ لا بمحوٍ — ودورةُ حياةِ
+   * المنتجِ (`publish` · `archive`) انتقلَتْ من بُعدِ الملكيّةِ `owner/none`
+   * إلى بُعدِ المستأجرِ `tenant/token-bound`، وتعديلُ المخزونِ دخلَ معها.
+   */
+  it("وبُعدُ المستأجرِ صارَ مربوطاً في ثمانٍ بأسمائها — والقديمُ مقلوبٌ لا ممحوٌّ", () => {
     const tenantBound = OPERATION_BINDINGS.filter(
       (b) => b.dimension === "tenant" && b.strength === "token-bound",
     );
     expect(TENANT_BOUND_OPERATION_COUNT).toBe(tenantBound.length);
-    expect(TENANT_BOUND_OPERATION_COUNT).toBe(5);
+    expect(TENANT_BOUND_OPERATION_COUNT).toBe(8);
     expect(tenantBound.every((b) => b.audience === "marketplace")).toBe(true);
     expect(tenantBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
       "GET /stores/:storeSlug/staff",
+      "POST /products/:productId/archive",
+      "POST /products/:productId/inventory",
+      "POST /products/:productId/publish",
       "POST /stores/:storeSlug/products",
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
@@ -340,7 +356,12 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * **غيابَ قرارٍ** لا قراراً؛ فمن أرادَ فكَّ ربطٍ لاحقاً يجبُ أن يُبدِّلَ
    * رقماً هنا فيُقرأَ قصدُهُ.
    */
-  it("وستُّ عملياتٍ سوقيّةٍ تبقى بلا ربطٍ بأسبابٍ مكتوبةٍ لا بإغفالٍ", () => {
+  /**
+   * (`M1-05B` الموجةُ 4) سادسةٌ انتقلَتْ من بُعدِ الملكيّةِ إلى بُعدِ المستأجرِ
+   * مربوطةً بالرمزِ (`publish` · `archive` كانَتا owner/none)، والسابعةُ
+   * الجديدةُ قرارُ اعتدالِ المنتجِ — بقيَ سببًا مكتوبًا: سلطةُ منصّةٍ.
+   */
+  it("وسبعُ عملياتٍ سوقيّةٍ تبقى بلا ربطٍ بأسبابٍ مكتوبةٍ لا بإغفالٍ", () => {
     const unbound = OPERATION_BINDINGS.filter(
       (b) => b.audience === "marketplace" && b.dimension === "tenant" && b.strength === "none",
     );
@@ -348,6 +369,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "GET /stores/:storeSlug",
       "GET /stores/:storeSlug/products",
       "GET /stores/:storeSlug/reviews",
+      "POST /products/:productId/decisions",
       "POST /stores/:storeSlug/decisions",
       "POST /stores/:storeSlug/inventory/release",
       "POST /stores/:storeSlug/inventory/reserve",
@@ -363,7 +385,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(65);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(63);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

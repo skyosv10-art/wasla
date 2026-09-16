@@ -41,7 +41,7 @@ import {
   type ReservationOutcome,
   type StoredIdempotentResponse,
 } from "../app/index.js";
-import { marketplaceUnavailable, storeNotFound } from "../domain/errors.js";
+import { marketplaceUnavailable, productNotFound, storeNotFound } from "../domain/errors.js";
 import { sendMarketplaceError } from "./errors.js";
 import {
   MARKETPLACE_SCOPES,
@@ -176,6 +176,40 @@ function tenantActor(request: FastifyRequest, claimedInBody?: string): string {
   }
   if (claimedInBody !== undefined && claimedInBody !== actor) {
     throw storeNotFound(pathParam(request.params, "storeSlug"));
+  }
+  return actor;
+}
+
+/**
+ * فاعلُ دورةِ حياةِ المنتجِ كما **يُثبِتُهُ الرمزُ** — لا كما يُسمّيهِ الجسمُ
+ * (`M1-05B` · الموجةُ الرابعةُ · `RISK-0042` البندُ 3).
+ *
+ * ── ولمَ مساعدٌ ثانٍ لا وسيطٌ واحدٌ ──────────────────────────────────────
+ * `tenantActor` يردُّ التنافُرَ `STORE_NOT_FOUND` لأنَّ المتجرَ هو المَورِدُ
+ * المُعنوَنُ في مسارِه. وهنا المَورِدُ **المنتجُ**، فالتنافُرُ بينَ فاعلَينِ
+ * يُجابُ `PRODUCT_NOT_FOUND` (404) للسببِ نفسِهِ الذي رُفضَ فيهِ الـ403 في
+ * الموجاتِ السابقةِ: جوابٌ يُفصِحُ عن **وجودِ المنتجِ** لمن لا يملكُهُ يجعلُ
+ * الحدَّ عرّافاً، والمنادي أعلنَ فاعلَينِ فلا يُقالُ لهُ أيُّهما المقياسُ.
+ *
+ * ── والحقولُ الثلاثةُ التي يخدُمُها ──────────────────────────────────────
+ * `actor_public_id` في جسمِ النشرِ والأرشفةِ وتعديلِ المخزونِ بقيَ **إلزاميّاً**
+ * بالعقدِ (حذفُهُ تغييرُ عقدٍ على مُنادٍ لم يُستشار) وصارَ **مُتحقَّقاً من
+ * تناسقِهِ معَ `obo`** لا حَكَماً — وهو عينُ ما فُعِلَ بترويسةِ
+ * `X-Customer-Public-Id` في الموجةِ الأولى وبحقولِ الطاقمِ في الثانيةِ.
+ *
+ * وحارسُ التركيبِ نفسُهُ: من نسِيَ `tenantScoped` على مسارٍ جديدٍ من هذهِ
+ * الثلاثةِ يرى انكساراً في الاختبارِ لا `201` بفاعلٍ من الجسمِ.
+ */
+function productActor(request: FastifyRequest, productId: string, claimedInBody: string): string {
+  const caller = request.serviceCaller;
+  const actor = caller === undefined ? undefined : ownerPublicIdOf(caller);
+  if (actor === undefined || actor.trim() === "") {
+    throw new Error(
+      "مسارٌ يمسُّ منتجاً مسجّلاً بلا beneficiary: \"required\" — راجِعِ tenantScoped().",
+    );
+  }
+  if (claimedInBody !== actor) {
+    throw productNotFound(productId);
   }
   return actor;
 }
@@ -481,14 +515,15 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     return reply.status(200).send(toProductResource(view, index));
   });
 
-  app.post("/products/:productId/publish", { config: scoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/publish", { config: tenantScoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseProductAction(request.body);
+    const actorPublicId = productActor(request, productId, input.actorPublicId);
     const { products, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const view = await products.publishProduct(
       productId,
-      input.actorPublicId,
+      actorPublicId,
       envelope(request.headers, MARKETPLACE_ROUTE_KEYS.productPublish, input, (outcome) => ({
         responseStatus: 200,
         responseBody: toProductResource(outcome, index),
@@ -497,14 +532,15 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     return reply.status(200).send(toProductResource(view, index));
   });
 
-  app.post("/products/:productId/archive", { config: scoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/archive", { config: tenantScoped(MARKETPLACE_SCOPES.productLifecycle) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseProductAction(request.body);
+    const actorPublicId = productActor(request, productId, input.actorPublicId);
     const { products, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const view = await products.archiveProduct(
       productId,
-      input.actorPublicId,
+      actorPublicId,
       envelope(request.headers, MARKETPLACE_ROUTE_KEYS.productArchive, input, (outcome) => ({
         responseStatus: 200,
         responseBody: toProductResource(outcome, index),
@@ -542,13 +578,14 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     );
   });
 
-  app.post("/products/:productId/inventory", { config: scoped(MARKETPLACE_SCOPES.inventoryAdjust) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/products/:productId/inventory", { config: tenantScoped(MARKETPLACE_SCOPES.inventoryAdjust) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const input = parseAdjustInventory(request.body);
+    const actorPublicId = productActor(request, productId, input.actorPublicId);
     const { products } = deps();
     const outcome = await products.adjustInventory(
       productId,
-      input,
+      { ...input, actorPublicId },
       envelope(request.headers, MARKETPLACE_ROUTE_KEYS.inventoryAdjust, input, (result) => ({
         responseStatus: 201,
         responseBody: toInventoryAdjustmentResource(result),

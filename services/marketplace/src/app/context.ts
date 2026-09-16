@@ -58,6 +58,25 @@ export async function loadStoreBySlug(
   return store;
 }
 
+/**
+ * يحمّل متجراً بمُعرّفِهِ الداخليّ (`M1-05B` الموجةُ 4).
+ *
+ * مساراتُ دورةِ حياةِ المنتجِ تُعنوَنُ بالمُعرّفِ لا باللاحقةِ، والمنتجُ يحملُ
+ * `store_id` لا `store_slug` — فحرسُ العضويّةِ يحتاجُ صفَّ المتجرِ من مُعرّفِهِ.
+ * والمفتاحُ الأجنبيُّ `products.store_id → stores.store_id` يضمنُ الوجود،
+ * فبلوغُ الغيابِ **عطبُ قاعدةٍ** لا حالةَ مجالٍ؛ ويُجابُ بما يُجابُ بهِ كلُّ
+ * غيابِ متجرٍ (`STORE_NOT_FOUND`) بلا رمزٍ جديدٍ ولا تغييرِ عقدٍ، لأنّهُ لا
+ * يُبلَغُ في مسارٍ سليمٍ قطّ.
+ */
+export async function loadStoreById(
+  stores: MarketplaceStores,
+  storeId: string,
+): Promise<StoreRecord> {
+  const store = await stores.resources.findStoreById(storeId);
+  if (store === undefined) throw storeNotFound(storeId);
+  return store;
+}
+
 /** ومنتجاً بمُعرِّفه كذلك. */
 export async function loadProductById(
   stores: MarketplaceStores,

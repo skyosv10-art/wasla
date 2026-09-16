@@ -119,22 +119,28 @@ _assert_filter_coverage() { # <اسمُ-مصفوفةِ-المسارات> <اسم
   # ونداءُ `pnpm list` واحدٌ للشِّقِّ كلِّهِ لا نداءٌ لكلِّ حزمةٍ.
   local -n _paths="$1"; local _leg="$2"
   (( ${#_paths[@]} > 0 )) || return 0
-  local _filters=() _p _got _expected _diff
-  for _p in "${_paths[@]}"; do _filters+=("--filter=./$_p"); done
-  _expected="$(printf '%s\n' "${_paths[@]}" | sort)"
-  _got="$(pnpm -r "${_filters[@]}" list --depth -1 --parseable 2>/dev/null \
-    | sed "s|^$ROOT/||" | sort)" || true
+  local _p _got _missing
+  # جردُ `pnpm` **بلا مُرشِّحاتٍ** وبصيغةِ `--json` — هوَ الشكلُ نفسُهُ الذي
+  # اجتازَ CI مقيساً في المُصادِقِ الخارجيِّ للجردِ (`pnpm_packages`) منذُ
+  # M0-35. والمُرشِّحُ `./مسار` يُطابِقُ حزمةَ ذلكَ المسارِ **متى كانَ في
+  # جردِ pnpm** — فإثباتُ أنَّ كلَّ مسارٍ مُشتَقٍّ في الجردِ هوَ إثباتُ أنَّ
+  # المُرشِّحاتِ ستُطابِقُ كلَّ شيءٍ، وعدمُهُ هوَ الخضرةُ الصامتةُ بعينِها.
+  # (قِيسَتْ الجولةُ الأولىُ لـM0-42 على `list --parseable` مع المُرشِّحاتِ
+  # فأخرجَتْ فراغاً في بيئةِ الحارسِ — الوثيقةُ · §2 الحالةُ ج.)
+  _got="$(pnpm -r list --depth -1 --json 2>/dev/null \
+    | python3 -c 'import json,os,sys; [print(os.path.relpath(e["path"], os.getcwd())) for e in json.load(sys.stdin) if e.get("path")]' \
+    | sort)" || true
   if [[ -z "$_got" ]]; then
     printf '%s✗ الشِّقُّ %s: `pnpm list` لم يُخرِجْ شيئاً — لا يُقرأُ العُطلُ نجاحاً.%s\n' "$RED" "$_leg" "$RST" >&2
     return 1
   fi
-  _diff="$(comm -3 <(printf '%s\n' "$_expected") <(printf '%s\n' "$_got"))"
-  if [[ -n "$_diff" ]]; then
-    printf '%s✗ الشِّقُّ %s: المُرشِّحاتُ لا تُطابِقُ المُشتَقَّ من القرصِ — خضرةٌ صامتةٌ لا تُقبَلُ:%s\n' "$RED" "$_leg" "$RST" >&2
-    printf '%s%s%s\n' "$DIM" "$_diff" "$RST" >&2
+  _missing="$(comm -23 <(printf '%s\n' "${_paths[@]}" | sort) <(printf '%s\n' "$_got"))"
+  if [[ -n "$_missing" ]]; then
+    printf '%s✗ الشِّقُّ %s: مساراتٌ مُشتقَّةٌ ليست في جردِ pnpm — المُرشِّحاتُ لن تُطابِقَها وخضرةٌ صامتةٌ لا تُقبَلُ:%s\n' "$RED" "$_leg" "$RST" >&2
+    printf '%s%s%s\n' "$DIM" "$_missing" "$RST" >&2
     return 1
   fi
-  printf '  %s· مُرشِّحاتُ %s: %d حزمةً طابقتْ المُشتَقَّ بعينِهِ%s\n' "$DIM" "$_leg" "${#_paths[@]}" "$RST"
+  printf '  %s· مُرشِّحاتُ %s: %d حزمةً كلُّها في جردِ pnpm%s\n' "$DIM" "$_leg" "${#_paths[@]}" "$RST"
 }
 
 printf '%s── الاختبارات — شِقّانِ (M0-35)%s\n' "$BLD" "$RST"

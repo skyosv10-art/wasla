@@ -25,7 +25,12 @@ import { readFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
 import { resolve } from "node:path";
 
-import type { BotApp, BotRuntimeOverrides } from "@wasla/bot-runtime";
+import {
+  CHANNEL_SCOPES,
+  CHANNEL_SERVICE_AUDIENCE,
+  type BotApp,
+  BotRuntimeOverrides,
+} from "@wasla/bot-runtime";
 import {
   InMemoryOutbox as InMemoryChannelOutbox,
   MockChannelAdapter,
@@ -340,5 +345,19 @@ export function signIdentityRequest(method: string, path: string): Record<string
     audience: IDENTITY_SERVICE_AUDIENCE,
     keys: gateServiceAuthKeys(),
     scopes: Object.values(IDENTITY_SCOPES),
+  })(method, path);
+}
+
+/**
+ * M1-07: توقيعُ طلبٍ إلى مسارٍ داخليٍّ لحدِّ القناة (bot-runtime).
+ * البوّابةُ تسألُ البوتَ عن واصفِ تطبيقه. والحدُّ صارَ مُغلَقاً افتراضاً،
+ * فالسؤالُ بلا توقيعٍ يُرَدُّ 401. والمفاتيحُ هي مفاتيحُ البوتاتِ نفسُها.
+ */
+export function signChannelRequest(method: string, path: string): Record<string, string> {
+  return createServiceRequestSigner({
+    serviceName: "channel-exit-gate",
+    audience: CHANNEL_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(CHANNEL_SCOPES),
   })(method, path);
 }

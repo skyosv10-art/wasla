@@ -61,6 +61,12 @@ import {
 import { buildGroupStartReply, buildStartReply } from "../welcome.js";
 
 import { sendChannelError } from "./errors.js";
+import {
+  CHANNEL_SCOPES,
+  registerServiceIdentity,
+  type ChannelRouteConfig,
+  type ChannelServiceIdentityOptions,
+} from "./service-identity.js";
 
 /** Every dependency the routes need, assembled by the bot root. */
 export interface BotAppDeps {
@@ -73,6 +79,16 @@ export interface BotAppDeps {
 
 export interface CreateBotAppOptions {
   readonly deps: BotAppDeps;
+  /**
+   * Service-identity enforcement for the three internal routes
+   * (`POST /channel/messages`, `GET /channel/:bot/mini-app`,
+   * `POST /channel/:bot/deep-links`). The webhook stays protected by its Telegram
+   * webhook secret (ADR-007), and `/health` stays open.
+   *
+   * **Required, no default** — a bot root that omits this fails to build, so a
+   * misconfigured deployment cannot produce a server with no boundary.
+   */
+  readonly serviceIdentity: ChannelServiceIdentityOptions;
   /**
    * Expected webhook secret. Deliberately allowed to be `undefined` so a
    * misconfigured deployment fails *closed*: `assertWebhookSecret` rejects a
@@ -259,6 +275,14 @@ function readDeepLinkRequest(raw: unknown): {
   return { action: action as DeepLinkAction, ...(params === undefined ? {} : { params }) };
 }
 
+/** `serviceIdentity: "open"` — no service token required. Used for `/health` and the webhook. */
+const OPEN: ChannelRouteConfig = { serviceIdentity: "open" };
+
+/** `serviceIdentity: { scopes: [...] }` — a service token with these scopes is required. */
+function scoped(...scopes: readonly string[]): ChannelRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
+
 /** Build a bot's HTTP app without listening (the `app.inject` seam). */
 export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
   const { deps } = options;
@@ -268,9 +292,12 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
     sendChannelError(reply, error);
   });
 
+  // Before routes: so the classification guard sees every route registered after it.
+  registerServiceIdentity(app, options.serviceIdentity);
+
   // GET /health — liveness. `channel` is reported so an operator can tell which
   // channel implementation a process is running (ADR-007: the channel is a value).
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     const status = options.health?.() ?? "ok";
     return reply.status(200).send({ status, channel: IMPLEMENTED_CHANNEL });
   });
@@ -284,7 +311,10 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
   // A duplicate is a 202 with `status: "duplicate"`, never an error: Telegram
   // retries on any non-2xx, so answering 4xx to a replay would guarantee more
   // replays.
-  app.post("/channel/:bot/webhook", async (request, reply) => {
+  //
+  // `OPEN` here means service-auth does not gate this route: its authentication
+  // is the Telegram webhook secret (ADR-007 rule 1), not a service token.
+  app.post("/channel/:bot/webhook", { config: OPEN }, async (request, reply) => {
     assertWebhookSecret(request.headers, options.webhookSecret);
 
     const { bot: rawBot } = request.params as { bot: string };
@@ -334,7 +364,7 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
   // POST /channel/messages — the single exit point. `failed` is not a contract
   // status: a message the channel permanently rejected is an error to the caller,
   // reported with the code the adapter produced.
-  app.post("/channel/messages", async (request, reply) => {
+  app.post("/channel/messages", { config: scoped(CHANNEL_SCOPES.messageSend) }, async (request, reply) => {
     const message = readOutboundMessage(request.body);
     const outcome = await sendMessage(deps.outbound, { message, bot: deps.bot });
 
@@ -357,7 +387,7 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
 
   // GET /channel/:bot/mini-app — the Exit Gate's question, answered from
   // injected configuration only.
-  app.get("/channel/:bot/mini-app", async (request, reply) => {
+  app.get("/channel/:bot/mini-app", { config: scoped(CHANNEL_SCOPES.miniAppRead) }, async (request, reply) => {
     const { bot: rawBot } = request.params as { bot: string };
     const bot = assertServedBot(rawBot, deps.bot);
     const launch = getMiniAppLaunch(deps.launch, bot);
@@ -371,7 +401,7 @@ export function createBotApp(options: CreateBotAppOptions): FastifyInstance {
   });
 
   // POST /channel/:bot/deep-links
-  app.post("/channel/:bot/deep-links", async (request, reply) => {
+  app.post("/channel/:bot/deep-links", { config: scoped(CHANNEL_SCOPES.deepLinkCreate) }, async (request, reply) => {
     const { bot: rawBot } = request.params as { bot: string };
     const bot = assertServedBot(rawBot, deps.bot);
     const { action, params } = readDeepLinkRequest(request.body);

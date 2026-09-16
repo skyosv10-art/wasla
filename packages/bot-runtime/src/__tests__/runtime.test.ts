@@ -23,7 +23,7 @@ import { createBotApp } from "../http/app.js";
 import { buildBotApp } from "../http/server.js";
 import { buildBotRuntime, type ChannelStoreSet } from "../runtime.js";
 
-import { authHeaders, startUpdate } from "./harness.js";
+import { authHeaders, createTestServiceIdentity, signFor, startUpdate } from "./harness.js";
 
 const SECRET = "a-sufficiently-long-secret";
 
@@ -56,9 +56,24 @@ function appFor(
       outbound: runtime.outbound,
       launch: runtime.launch,
     },
+    serviceIdentity: createTestServiceIdentity(),
     webhookSecret: config.webhookSecret,
     health: () => (runtime.identityDegraded ? "degraded" : "ok"),
   });
+
+  // Wrap inject so internal routes get signed service-auth headers.
+  const rawInject = app.inject.bind(app) as typeof app.inject;
+  app.inject = ((options: Record<string, unknown>) =>
+    rawInject({
+      ...(options as object),
+      headers: {
+        ...signFor(
+          String((options as { method?: string }).method ?? "GET"),
+          String((options as { url?: string }).url ?? "/"),
+        ),
+        ...((options as { headers?: Record<string, string> }).headers ?? {}),
+      },
+    })) as typeof app.inject;
 
   return { app, runtime };
 }
@@ -176,7 +191,7 @@ describe("buildBotRuntime persistence", () => {
     };
 
     const { app, runtime } = buildBotApp("partner", {
-      env: envFor("partner", { DATABASE_URL: "postgres://wasla:secret@db:5432/wasla" }),
+      env: envFor("partner", { DATABASE_URL: "postgres://wasla:secret@db:5432/wasla", ...identityEnv() }),
       logger: false,
       channel: new MockChannelAdapter(),
       stores,

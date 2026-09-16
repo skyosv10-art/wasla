@@ -13,7 +13,7 @@
  * App, and `/available`, `/offline`, `/status`, `/docs` are not registered at all.
  */
 
-import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
+import { type BotApp, buildBotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 
 import {
   buildDriverFlows,
@@ -34,6 +34,10 @@ import {
 
 /** The bot this deployable serves. Nothing else in this package may vary. */
 export const BOT = "driver" as const;
+
+// Re-exported for tests: the channel scopes and audience are part of the
+// service-identity boundary this root wires.
+export { CHANNEL_SCOPES, CHANNEL_SERVICE_AUDIENCE } from "@wasla/bot-runtime";
 
 export interface DriverBotOverrides extends BotRuntimeOverrides {
   /**

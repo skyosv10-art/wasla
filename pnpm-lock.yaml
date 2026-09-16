@@ -115,6 +115,9 @@ importers:
       '@wasla/channel-core':
         specifier: workspace:*
         version: link:../../packages/channel-core
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       tsx:
         specifier: ^4.23.12
         version: 4.23.12

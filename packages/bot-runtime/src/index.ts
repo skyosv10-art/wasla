@@ -76,6 +76,15 @@ export {
   type CreateBotAppOptions,
 } from "./http/app.js";
 
+export {
+  CHANNEL_SCOPES,
+  CHANNEL_SERVICE_AUDIENCE,
+  registerServiceIdentity,
+  type ChannelRouteConfig,
+  type ChannelRouteIdentity,
+  type ChannelServiceIdentityOptions,
+} from "./http/service-identity.js";
+
 export { sendChannelError } from "./http/errors.js";
 
 export {

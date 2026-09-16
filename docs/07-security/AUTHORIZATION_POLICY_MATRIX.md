@@ -40,12 +40,12 @@
 
 | القياسُ | القيمةُ | مصدرُ القياسِ |
 | --- | --- | --- |
-| الحدودُ المفروضةُ | `8` | `services/*/src/http/service-identity.ts` |
-| المساراتُ المُسجَّلةُ | `90` | `services/*/src/http/app.ts` |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 81` | مساراتٌ تُعلِنُ `scoped(...)` |
-| المساراتُ المفتوحةُ | `OPEN_ROUTES = 9` | مساراتٌ تُعلِنُ `OPEN` |
+| الحدودُ المفروضةُ | `9` | `services/*/src/http/service-identity.ts` · `packages/bot-runtime/src/http/service-identity.ts` |
+| المساراتُ المُسجَّلةُ | `95` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 84` | مساراتٌ تُعلِنُ `scoped(...)` |
+| المساراتُ المفتوحةُ | `OPEN_ROUTES = 11` | مساراتٌ تُعلِنُ `OPEN` |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
-| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 65` | اتّحادُ صلاحيّاتِ العملياتِ |
+| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 68` | اتّحادُ صلاحيّاتِ العملياتِ |
 | صلاحيّاتٌ مُعرَّفةٌ بلا مسارٍ يفرضُها | `0` | البابُ 2 |
 | أدوارُ الإنتاجِ المُعلَنةُ | `10` | `PRODUCTION_GRANTS` |
 | مواضعُ الإصدارِ الإنتاجيّةُ | `20` | `createServiceRequestSigner` في ملفٍّ غيرِ اختباريٍّ |
@@ -53,7 +53,7 @@
 | العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 10` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 8` | `OPERATION_BINDINGS` · حدُّ السوقِ |
 | العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `18` | `OPERATION_BINDINGS` |
-| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 63` | `81 − 18` |
+| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 66` | `84 − 18` |
 
 <!-- authz-matrix:end -->
 
@@ -321,8 +321,8 @@
   لم يُمَسَّ، وستُّ مساراتٍ سوقيّةٍ بلا فرضِ عضويّةٍ لأسبابٍ مكتوبةٍ.
   **تصحيحٌ بالإضافةِ (2026-09-16 · الموجةُ 4 · `CLM-0185`):** بندُهُ الثالثُ
   **مُسَّ**: المقيسُ الآنَ `TOKEN_BOUND_OPERATION_COUNT = 10`
-  و`TENANT_BOUND_OPERATION_COUNT = 8` و`UNCLASSIFIED_OPERATION_COUNT = 63`
-  (`81 − 18`). ثلاثةُ مساراتٍ جديدةٍ رُبِطَتْ بالمستأجرِ — النشرُ والأرشفةُ
+  و`TENANT_BOUND_OPERATION_COUNT = 8` و`UNCLASSIFIED_OPERATION_COUNT = 66`
+  (`84 − 18`). ثلاثةُ مساراتٍ جديدةٍ رُبِطَتْ بالمستأجرِ — النشرُ والأرشفةُ
   (كانَتا `owner/none` فصُحِّحَتا) وتعديلُ المخزونِ — وحقلُ `actor_public_id`
   في جسومِها الثلاثةِ صارَ **تناسقاً معَ الرمزِ** لا حَكَماً، فبقيَ إلزاميّاً
   بالعقدِ ولم يَعُدْ مصدرَ الفاعلِ. وبقيَتْ حقولُ فاعلٍ جسميّةٌ **بقرارٍ

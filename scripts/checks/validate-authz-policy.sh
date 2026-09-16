@@ -113,7 +113,10 @@ code_beneficiary_required = set()   # (audience, method, path) مُصنَّفة�
 route_service = {}                  # (audience, method, path) -> اسمُ الخدمةِ
 beneficiary_helpers_by_service = {}  # svc -> أسماءُ المساعدينَ المُنتِجينَ للمطلبِ
 open_routes = 0
-for identity in sorted(glob.glob("services/*/src/http/service-identity.ts")):
+for identity in sorted(
+    glob.glob("services/*/src/http/service-identity.ts")
+    + glob.glob("packages/bot-runtime/src/http/service-identity.ts")
+):
     svc = identity.split(os.sep)[1]
     src = read(identity)
     aud_match = re.search(r'_AUDIENCE\s*=\s*"([^"]+)"', src)
@@ -125,7 +128,7 @@ for identity in sorted(glob.glob("services/*/src/http/service-identity.ts")):
     audience = aud_match.group(1)
     scope_map = dict(re.findall(r'(\w+)\s*:\s*"([^"]+)"', const_match.group(2)))
 
-    app = f"services/{svc}/src/http/app.ts"
+    app = f"services/{svc}/src/http/app.ts" if os.path.exists(f"services/{svc}/src/http/app.ts") else f"packages/{svc}/src/http/app.ts"
     if not os.path.exists(app):
         bad(f"حدٌّ بلا تطبيقٍ: {app}")
         continue
@@ -594,7 +597,8 @@ for key in sorted(code_beneficiary_required):
     if svc is None:
         bad("مسارٌ مُصنَّفٌ بلا خدمةٍ مقروءةٍ: %s %s %s" % key)
         continue
-    app_clean = strip_comments(read(f"services/{svc}/src/http/app.ts"))
+    app_path = f"services/{svc}/src/http/app.ts" if os.path.exists(f"services/{svc}/src/http/app.ts") else f"packages/{svc}/src/http/app.ts"
+    app_clean = strip_comments(read(app_path))
     if "ownerPublicIdOf" not in app_clean:
         bad(
             "خدمةٌ فيها مسارٌ مربوطٌ بالرمزِ ولا تقرأُ `ownerPublicIdOf` — الهويّةُ "

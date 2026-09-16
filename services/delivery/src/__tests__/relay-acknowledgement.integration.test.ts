@@ -30,6 +30,12 @@ import { PostgresRelayDeadLetterStore } from "../infrastructure/relay-dead-lette
 import { classifyRelayDeadLetterSeverity } from "../domain/relay-dead-letters.js";
 
 const T0 = "2026-09-15T00:00:00.000Z";
+/** لحظةُ تقييمِ الحكمِ **ثابتةٌ بالنسبةِ للبذرةِ لا لساعةِ الحائطِ** (تصحيحُ 2026-09-16):
+ *  التقييمُ بـ`new Date()` كانَ قنبلةَ وقتٍ مُكتومةٍ: البذرةُ ثابتةٌ والعتبةُ
+ *  الحرِجةُ عمرُ يومٍ، فوقعتِ الأولى بعدَ 2026-09-16T00:00Z وحدَهُ — أي أنَّ
+ *  الاختبارَ كانَ يقيسُ ساعةَ الجهازِ لا الإقرارَ. ستُّ ساعاتٍ بعدَ البذرةِ:
+ *  تحذيرٌ بلا تصعيدٍ، مهما جرَتِ الساعاتُ بعدَ ذلكَ. */
+const AT = new Date("2026-09-15T06:00:00.000Z");
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const BY = "service:ops-console/on-behalf-of:usr_01HQZX";
 const REASON = "منتِجٌ أُصلِحَ والحدثُ لا يُعادُ — RISK-0021";
@@ -262,14 +268,14 @@ describe.skipIf(!PG_ENABLED)("PostgresRelayAcknowledgementStore — على قا�
     const before = await metrics.readRelayDeadLetters({ eventTypeLimit: 10 });
     expect(before.totalPoisoned).toBe(1);
     expect(before.totalUnacknowledgedPoisoned).toBe(1);
-    expect(classifyRelayDeadLetterSeverity(before, new Date()).severity).toBe("warning");
+    expect(classifyRelayDeadLetterSeverity(before, AT).severity).toBe("warning");
 
     await new PostgresRelayAcknowledgementStore(pool).acknowledgePoisonedEvent({
       ledger: "dispatch",
       eventId,
       acknowledgedBy: BY,
       reason: REASON,
-      acknowledgedAt: new Date().toISOString(),
+      acknowledgedAt: AT.toISOString(),
     });
 
     const after = await metrics.readRelayDeadLetters({ eventTypeLimit: 10 });
@@ -278,7 +284,7 @@ describe.skipIf(!PG_ENABLED)("PostgresRelayAcknowledgementStore — على قا�
     expect(after.totalAcknowledgedPoisoned).toBe(1);
     expect(after.totalUnacknowledgedPoisoned).toBe(0);
 
-    const verdict = classifyRelayDeadLetterSeverity(after, new Date());
+    const verdict = classifyRelayDeadLetterSeverity(after, AT);
     expect(verdict.severity).toBe("ok");
     expect(verdict.because).toBe("all_poisoned_acknowledged");
   });

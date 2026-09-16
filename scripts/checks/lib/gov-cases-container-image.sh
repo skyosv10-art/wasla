@@ -96,7 +96,14 @@ _ci_restore
 
 # ── البابُ 4: لا نسخةَ pnpm مكتوبةً في Dockerfile ────────────────────────
 # مصدرانِ لنسخةِ مديرِ الحِزَمِ يفترقانِ بصمتٍ، فيُبنى بغيرِ ما يُختبَرُ بهِ.
-sed -i 's|^RUN corepack enable$|RUN corepack enable \&\& corepack prepare pnpm@9.0.0 --activate|' "$CI_DF"
+#
+# الطفرةُ **مُثبَّتةٌ على بادئةِ السطرِ لا على السطرِ كلِّهِ**: النسخةُ الأولى
+# طابقتْ `^RUN corepack enable$` حرفاً بحرفٍ، ثمَّ صارَ السطرُ في Dockerfile
+# `RUN corepack enable && mkdir -p /corepack` فلم تُطابِقْ الطفرةُ شيئاً —
+# ومرَّتْ الحالةُ محلّياً لأنَّها لم تعُدْ تُطفِّرُ أصلاً، حتّى فضحَها حاجزُ
+# «الطفرةِ الصامتةِ» في CI (الشوطُ 35145160740). العِبرةُ مُسجَّلةٌ لا مُلطَّفةٌ:
+# حاجزُ `_ci_mutated` هوَ ما منعَ تحوُّلَ الحالةِ إلى نجاحٍ كاذبٍ.
+sed -i 's|^RUN corepack enable|RUN corepack prepare pnpm@9.0.0 --activate \&\& corepack enable|' "$CI_DF"
 if _ci_mutated "$CI_DF" "$CI_BK/dockerfile"; then
   t "نسخةُ pnpm مكتوبةٌ في Dockerfile تُسقِطُ الفحصَ" fail bash "$CI_G"
 fi

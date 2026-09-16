@@ -18,8 +18,19 @@ if [ -z "$SERVICE" ]; then
   exit 64
 fi
 
+# الحلُّ بـ`node` وحدَهُ: لا مديرَ حِزَمٍ في طبقةِ التشغيلِ (انظر
+# `resolve-package.mjs` — 49 ثغرةً قابلةً للإصلاحِ كانَ مصدرُها ذاكرةَ corepack).
+RESOLVED="$(node /app/scripts/container/resolve-package.mjs "$SERVICE")" || exit $?
+DIR="$(printf '%s' "$RESOLVED" | cut -f1)"
+START="$(printf '%s' "$RESOLVED" | cut -f2-)"
+
+cd "$DIR" || exit 66
+# `.bin` الجذرُ والمحلّيُّ في المسارِ لأنَّ `pnpm run` كانَ هوَ ما يضيفُهُما.
+PATH="$DIR/node_modules/.bin:/app/node_modules/.bin:$PATH"
+export PATH
+
 if [ "${WASLA_ENTRYPOINT_DRYRUN:-0}" = "1" ]; then
-  exec pnpm --filter "$SERVICE" exec node /app/scripts/container/entry-dryrun.mjs
+  exec node /app/scripts/container/entry-dryrun.mjs
 fi
 
-exec pnpm --filter "$SERVICE" run start
+exec sh -c "$START"

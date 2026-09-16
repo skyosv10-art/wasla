@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-16T20:11:14Z",
+  "generated_at": "2026-09-16T21:16:45Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "fd5c9bbdaf57ac3272b1bf7150ffee51e0742b3a",
+    "commit": "0bc155fc92f084ba41968a59bf333957b52e34ef",
     "branch": "feat/m2-01-container-image-supply-chain",
     "dirty": true,
-    "dirty_files": 24,
-    "dirty_reason": "M2-01: صورةُ الحاويةِ وقائمةُ الموادِ وفحصُ الثغراتِ + الفحصُ 19 (CLM-0195)",
-    "tracked_files": 2063
+    "dirty_files": 10,
+    "dirty_reason": "M2-01: علاجُ أوّلِ حكمِ CI أحمرَ — حذفُ مديرِ الحِزَمِ من طبقةِ التشغيلِ و apk upgrade وفتحُ RISK-0049 (CLM-0195)",
+    "tracked_files": 2084
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 19,
-    "risks_not_closed": 35
+    "risks_not_closed": 36
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m201-2.log",
+    "source": "/tmp/verify-m201-4.log",
     "tests_passed": 4737,
     "test_files_executed": 289,
     "governance_suite_cases": 421,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:1642df258cf06a4876cfa7c7f531fefecdbd8238776a299b37c59dfac767c288",
+  "fingerprint": "sha256:44013a9b0ebacdf97556086bdbad7ba009a5c6a51eb73fe2e3a07e8fc931deeb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

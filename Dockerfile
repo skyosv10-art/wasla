@@ -16,6 +16,11 @@
 #     في `package.json` — مصدرٌ واحدٌ لا نسختانِ تفترقانِ بصمتٍ.
 #   • المستخدمُ النهائيُّ غيرُ جِذرٍ (`node`)، والطبقةُ الأخيرةُ هيَ التي
 #     تحملُ `USER`: جِذرٌ في صورةِ خدمةٍ عيبٌ أمنيٌّ لا تفصيلُ ذوقٍ.
+#   • مديرُ الحِزَمِ **لا يُشحَنُ**: `corepack`/`pnpm` في طبقةِ البناءِ وحدَها،
+#     والمدخلُ يُقلِعُ بـ`node` مباشرةً. أوّلُ مسحٍ حقيقيٍّ قاسَ 49 ثغرةً
+#     HIGH/CRITICAL قابلةً للإصلاحِ **كلُّها من ذاكرةِ `corepack`** المنسوخةِ
+#     إلى التشغيلِ (pnpm · pacote · sigstore · tar · ip-address · glob …)،
+#     ولا حاجةَ لمديرِ حِزَمٍ في صورةِ خدمةٍ: أداةٌ زائدةٌ = سطحُ هجومٍ زائدٌ.
 #   • تبعيّاتُ التطويرِ حاضرةٌ في الصورةِ **بقصدٍ مُسجَّلٍ**: `tsx` شرطُ
 #     تشغيلٍ لا أداةُ تطويرٍ في هذا المستودعِ (RISK-0043)، وتقليمُها يستلزمُ
 #     ترجمةً حقيقيّةً — دَينٌ مُسمّىً في RISK-0047، لا ادّعاءُ صورةٍ نحيفةٍ.
@@ -28,25 +33,30 @@ FROM node:20.20.1-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de0414
 # لأنَّ وسيطَ بناءٍ غيرَ مُعلَنٍ **يُتجاهَلُ بتحذيرٍ** — فيُقرأُ «مُثبَّتٌ» وهوَ مُهمَلٌ.
 ARG SOURCE_DATE_EPOCH=0
 
-ENV PNPM_HOME=/pnpm \
-    PATH=/pnpm:$PATH \
-    CI=1 \
-    COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
-    COREPACK_HOME=/corepack \
+ENV CI=1 \
     SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 WORKDIR /app
 
-# `COREPACK_HOME` مُصرَّحٌ بموضعٍ مُشتَرَكٍ بقصدٍ: تنزيلُ `corepack` يذهبُ افتراضاً
-# إلى بيتِ المستخدمِ الذي بنى (الجِذرِ)، والطبقةُ الأخيرةُ تعملُ بـ`node` — فلولا
-# هذا لاحتاجَ أوّلُ `pnpm` في التشغيلِ إلى **الشبكةِ**، وحاويةٌ تحتاجُ الشبكةَ
-# لتُقلِعَ ليست قابلةً للشحنِ.
-RUN corepack enable && mkdir -p /corepack
+# ترقيةُ حِزَمِ النظامِ فوقَ الأساسِ المُثبَّتِ بالبصمةِ. البصمةُ تُثبِّتُ **ما**
+# يُبنى عليهِ، وهيَ لا تُصلِحُ ثغرةً نُشِرَ ترقيعُها بعدَ خَتمِ الصورةِ الأساسِ:
+# أوّلُ مسحٍ حقيقيٍّ (الشوطُ 35145160740) قاسَ 17 ثغرةً HIGH/CRITICAL **لها
+# إصلاحٌ منشورٌ** في openssl (libcrypto3/libssl3) و`musl` و`zlib`. فالترقيةُ
+# هنا علاجُ السببِ، وتعطيلُ البوّابةِ كانَ سيكونُ إخفاءَهُ.
+# الحدُّ المُعلَنُ: هذا يجعلُ الصورةَ تابعةً لزمنِ البناءِ في مستودعِ alpine —
+# فالتكرارُ مضمونٌ داخلَ الشوطِ الواحدِ (وهوَ ما يقيسُهُ compare-sbom) لا بينَ
+# شهرَينِ. المقايضةُ مقصودةٌ: أمنٌ مُقاسٌ مقابلَ تكرارٍ مُطلَقٍ غيرِ مُقاسٍ.
+RUN apk upgrade --no-cache
 
 # ── طبقةُ التبعيّاتِ والمصدرِ ──────────────────────────────────────────────
 # `COPY . .` مقصودٌ: حِزَمُ العملِ تُصدِّرُ `src/*.ts`، فلا يُفيدُ نسخُ
 # البيانِ وحدَه ثمَّ المصدرِ لاحقاً — و`.dockerignore` هوَ ما يمنعُ دخولَ
 # `node_modules` و`.git` والأسرارِ إلى السياقِ.
 FROM base AS build
+ENV PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+    COREPACK_HOME=/corepack
+RUN corepack enable
 COPY . .
 RUN corepack install \
  && pnpm install --frozen-lockfile \
@@ -56,6 +66,5 @@ RUN corepack install \
 FROM base AS runtime
 ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app /app
-COPY --from=build --chown=node:node /corepack /corepack
 USER node
 ENTRYPOINT ["/app/scripts/container/entrypoint.sh"]

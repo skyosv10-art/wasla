@@ -114,7 +114,7 @@ Nothing else has been changed in this repository by the WASLA integration work.
   error bodies, legitimate requests pass, deterministic clock-based refill. Merged via
   [PR #201](https://github.com/skyosv10-art/wasla/pull/201), squash `a9308c9`, 33/33 CI green.
 
-- **M1-09 — claim `CLM-0193`: threat model and security testing policy.** A signed security
+- **M1-09 — claim `CLM-0193`: threat model and security testing policy — COMPLETED.** A signed security
   review package covering M1-01..M1-08 controls, ADR-018..031, RISK_REGISTER (46 risks),
   and INCIDENTS. `docs/07-security/THREAT_MODEL.md` catalogs threats by STRIDE category
   (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation

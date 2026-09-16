@@ -1410,3 +1410,29 @@ still has no test of its own here.
   (branch gone from the platform, its work ancestral to `main`), its structural gap carried to
   `RISK-0045`, and `RISK-0015` re-measured as **still open** — the in-memory replay store is an owner
   decision, and M0-41 never touched it.
+
+- **M1-04 wave 8 — claim `CLM-0196`: no ingress boundary exists silently (2026-09-17).** Before choosing
+  any item, `M1-06`'s claim was **re-measured instead of trusted**: the published-contract debt inventory in
+  `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` §5.9 really is empty and nine contracts really do declare
+  `securitySchemes` — the claim is true **within its scope**. The scope itself was the defect. Counting the
+  tree gives **14** ingress boundaries (`services/*/src/http/app.ts` + `packages/*/src/http/app.ts`): **9**
+  call `registerServiceIdentity` and **5 call nothing at all** — `customers` (10 routes), `drivers` (17),
+  `reputation` (11), `search` (3), `subscriptions` (12) = **53 routes with no authentication header**, and
+  none of their five OpenAPI contracts declares `securitySchemes`, `security:` or 401/403. These are not test
+  fixtures: each has `app.listen` in `src/http/server.ts` and each is in the runnable inventory shipped by the
+  `M2-01` image. Root cause: gates 1–9 of `validate-service-auth-coverage.sh` are **declaration-driven** (they
+  read `enforced: <svc>` from the ledger and then interrogate the code), so a boundary that declares nothing was
+  invisible to every gate — **silence was a valid exit**. Delivered this cycle is **measurement and enforcement
+  of the inventory, not authentication**: gate **10** in a standalone `scripts/checks/lib/ingress_boundary_gate.sh`
+  (a missing file or missing function **fails**, it is never a silent skip); a new marked inventory §5.10 with five
+  rows and `TOTAL_ROUTES: 53` where **every count is derived from the code on every run**; `RISK-0051` (sev:high,
+  open); `ADR-034`; and **14 mutation cases** covering a silent boundary, a stale row for a now-enforced boundary,
+  a boundary with no file on disk, per-row and total route-count drift, a closed risk id, a risk id with no
+  declaration line, a missing owning-gate reference, deleting the block, deleting the gate's own library, and a
+  boundary living under `packages/` — each case proving by byte comparison that it actually mutated before the
+  bite is measured. §5.9's text is **not erased**; its scope is stated additively. Not claimed: **not one of the
+  53 routes was closed**, no scopes, no `service-identity.ts`, no beneficiary binding and no contract updates for
+  those five services; green here means "the debt is measured, guarded and owned", not "the boundary is safe".
+  `RISK-0027` (the guard's blindness to outbound clients under `packages/` and `bots/`) is a separate, still-open
+  defect that gate 10 does not close. Enforcement follows wave by wave, starting with `customers`, and each row
+  leaves §5.10 only under a CI verdict. Promotion of `M1-04` to `Completed` is the program owner's authority alone (§9).

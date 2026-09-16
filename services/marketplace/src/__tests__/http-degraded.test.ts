@@ -281,11 +281,17 @@ describe("وحدُّ الطلبِ يُفحَص قبل العجز", () => {
      * المُتكامِلُ `{}` ليُسكته. والجوابُ هنا خطأُ **تحقّقٍ مُسمّىً بالحقلِ الناقص** — تعليمةٌ
      * يُنفّذها المُرسِل، لا لغزٌ من الإطار.
      */
-    const app = degradedApp();
+    /**
+     * (`M1-05B` الموجةُ 4) النشرُ صار مسارَ **فاعلٍ موقّعٍ**، فطلبٌ بلا رمزٍ يُجابُ
+     * `403` قبلَ مُحلِّلِ الجسمِ — وهذا الموضعُ يختبرُ المُحلِّلَ لا البوّابة،
+     * فيُوقَّعُ الطلبُ بفاعلٍ صريحٍ ليبلغَ المُحلِّلَ ويبقى الاختبارُ على غرضِهِ.
+     */
+    const { app, keys } = buildSignedMarketplaceApp();
+    const signed = signFor("POST", `/products/${PRODUCT}/publish`, { keys, onBehalfOfPublicId: OWNER });
     const response = await app.inject({
       method: "POST",
       url: `/products/${PRODUCT}/publish`,
-      headers: writeHeaders,
+      headers: { ...writeHeaders, ...signed },
       payload: "",
     });
     await app.close();

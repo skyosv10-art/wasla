@@ -28,6 +28,7 @@ import {
   loadCategoryFacts,
   loadCategorySlugById,
   loadProductById,
+  loadStoreById,
   loadStoreBySlug,
   type MarketplaceServiceDeps,
 } from "./context.js";
@@ -357,6 +358,24 @@ export class MarketplaceProductService {
       await replayGuard(stores.idempotency, envelope);
 
       const product = await loadProductById(stores, productId);
+      /**
+       * عضويّةُ الفاعلِ في متجرِ المنتجِ **داخلَ المعاملةِ نفسِها** التي ستكتبُ
+       * (`M1-05B` الموجةُ 4 · `RISK-0042` البندُ 3) — لا في قراءةٍ سابقةٍ عندَ
+       * الحدِّ، وللسببِ نفسِهِ المكتوبِ في `createProduct`: العضويّةُ تُزالُ بينَ
+       * فحصٍ وكتابةٍ، وفحصٌ في معاملةٍ وكتابةٌ في أُخرى يفتحُ النافذةَ.
+       *
+       * والنشرُ والأرشفةُ فعلُ عضوٍ في متجرِهِ — كالإنشاءِ الذي مُسِكَ بهذا
+       * الحرسِ نفسِهِ في الموجةِ الثانيةِ. والبتُّ في اعتدالِ المنتجِ ليسَ هنا:
+       * ذاكَ قرارُ منصّةٍ (`decideProduct`) وربطُهُ بالعضويّةِ **عكسُ السياسةِ**
+       * — متجرٌ يوافقُ على نفسِهِ.
+       */
+      const memberStore = await loadStoreById(stores, product.storeId);
+      assertActiveMembership({
+        storeSlug: memberStore.slug,
+        actorPublicId,
+        storeOwnerPublicId: memberStore.ownerPublicId,
+        existing: await stores.staff.listStaff(memberStore.storeId),
+      });
       assertProductTransition(product.state, toState);
       if (toState === "published") {
         assertProductPublishable({
@@ -559,6 +578,18 @@ export class MarketplaceProductService {
       await replayGuard(stores.idempotency, envelope);
 
       const product = await loadProductById(stores, productId);
+      /**
+       * تعديلُ المخزونِ فعلُ عضوٍ في متجرِ المنتجِ — والحرسُ داخلَ المعاملةِ
+       * نفسِها التي ستكتبُ سطرَ الدفترِ (`M1-05B` الموجةُ 4)، للسببِ عينِهِ
+       * المكتوبِ أعلاهُ: لا نافذةَ بينَ فحصِ العضويّةِ وكتابةِ الفرقِ.
+       */
+      const memberStore = await loadStoreById(stores, product.storeId);
+      assertActiveMembership({
+        storeSlug: memberStore.slug,
+        actorPublicId: input.actorPublicId,
+        storeOwnerPublicId: memberStore.ownerPublicId,
+        existing: await stores.staff.listStaff(memberStore.storeId),
+      });
       const inventory = await stores.projection.findInventory(productId);
       const entry = applyInventoryAdjustment({
         quantityOnHand: inventory?.quantityOnHand ?? INVENTORY_INITIAL_QUANTITY,

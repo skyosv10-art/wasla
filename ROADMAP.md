@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine)
+**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine); last updated again 2026-09-16 (M1-05B wave 4 — product lifecycle publish/archive/inventory-adjust now prove the actor from the token and store membership inside the writing transaction, `RISK-0042` finding 3 measured: 6 of 8 body actor fields bound, 2 remain by written platform-authority reason)
 **Last milestone (M1-05 — the authorization policy matrix):** `M1-04` answers *is this request from a service the system knows?* Nothing in the repository answered *is this service entitled to what it carries?* — and the vacuum was a **correct decision half-implemented**: `packages/service-auth/src/{enforce,index,token}.ts` and `services/orders/src/http/service-identity.ts` each state in prose that the gateway must not hold a role→scope matrix, and each names `M1-05` as its owner. So the matrix had a declared home and no existence, and `mintServiceToken` passed `scp` through without asking about entitlement. Added: `packages/authz-policy` as the single source (80 enforced operations, 10 production roles with 18 grants, 8 isolated test-fleet roles, 16 classified owner/tenant bindings, pure decision functions), 27 rejection-heavy tests across all three dimensions (`owner`/`role`/`tenant`), and governance check 16 wired into the single entry point — drift-proof in **both** directions, with 16 mutation cases proving the guard bites.
 **The board's number was never measured, and it is corrected by addition, not erasure:** the `M1-05` row said *inventory of 107 operations*. The live measurement is **8 boundaries · 89 registered routes · 80 enforced operations · 9 `OPEN` routes · 64 enforced scopes · 0 routes with neither a scope nor `OPEN`**. The `107` stays written on the board because it is the prior evidence; the measurement is written beside it with the guard that reproduces it.
 **Two gaps the measurement surfaced that were not on anyone's list — `RISK-0042`:** (1) **ownership is caller-asserted.** `assertOwner()` compares `order.customerPublicId` against the `X-Customer-Public-Id` header, whose **shape** is validated and whose truth is not — and the token carries `sub`/`aud`/`scp` with **no beneficiary identity at all**, so `TOKEN_BOUND_OPERATION_COUNT = 0` out of 80. (2) **tenant membership is never checked.** `storeSlug` is read from the path and handed to the repository in **eleven** marketplace routes, so a holder of `marketplace:staffWrite` can write staff into *any* store. Both are recorded by addition; `RISK-0026` (resource identity in the query string) is **not** claimed closed.
@@ -104,6 +104,38 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
+<<<<<<< HEAD
+- **M1-05B — wave 4, claim `CLM-0185`.** `RISK-0042`'s **third finding is finally measured**, not
+  just described: the three product-lifecycle routes — `POST /products/:productId/publish`,
+  `POST /products/:productId/archive`, `POST /products/:productId/inventory` — no longer take the
+  actor from the request body. They are classified `tenantScoped(...)` (403 before the handler for a
+  token without `obo`), and a new `productActor` edge helper reads the actor from the token and
+  compares the body's `actor_public_id` **to** it — the field stays required by the contract (deleting
+  it is a contract change owned by `M1-06`) but is demoted from judge to consistency check; a mismatch
+  returns `PRODUCT_NOT_FOUND`, not 403, because the addressed resource is the product and a 403 would
+  make the boundary an oracle. Inside the writing `uow`, `assertActiveMembership` runs **after** the
+  product and its store are loaded (via a new `loadStoreById`) and **before** the state-transition and
+  moderation checks — so a stranger to the store gets `STORE_NOT_FOUND` even on an unmoderated
+  product, and the product's state secret is not read for someone who does not own it. The moderation
+  routes (`POST /products/:productId/decisions`) stay unbound **by written reason**: platform
+  authority — binding them to store membership inverts the policy (a store approving itself).
+  Measured result: `TOKEN_BOUND_OPERATION_COUNT` **7 → 10**, `TENANT_BOUND_OPERATION_COUNT`
+  **5 → 8**, classified rows **16 → 18**, `UNCLASSIFIED_OPERATION_COUNT` **65 → 63** — all derived,
+  never hand-written. Three new gate-7 mutation cases bite in both directions (reverting publish or
+  inventory-adjust to `scoped` fails; hiding the archive row from the matrix while the code enforces
+  fails), nine new barrier tests in `service-identity.test.ts` (403 without `obo`, crossing with a
+  matching `obo`, `PRODUCT_NOT_FOUND` on mismatch — the bound-route list now carries a per-route
+  `mismatchCode`, since product-addressed routes name the product absent), and two new Postgres
+  integration tests (a stranger rejected `STORE_NOT_FOUND` before the state check, and no
+  inventory-adjustment row written). No production caller broke, measured: the only production role
+  with marketplace grants is `delivery`, holding none of the three bound scopes. Decision:
+  [ADR-031](docs/15-decisions/ADR-031-product-lifecycle-actor-binding.md). **What this wave does not
+  claim:** the two `actor_public_id` fields in the two moderation-decision bodies remain body-sourced
+  **by written platform-authority reason**; the membership-vs-rank debt (a `staff` member adding a
+  member) stays a named debt needing a third error code and a contract change; `RISK-0042` closing is
+  the programme owner's decision alone; and the published contracts still do not state the beneficiary
+  requirement — that is `RISK-0041` and belongs to `M1-06`.
+=======
 - **M5-13 — review 25/N, claim `CLM-0186`: a time bomb in a test, defused by reading CI red.** The
   first push of the `M1-05B` wave-4 batch (PR #190) failed two CI jobs — `db-integration (delivery)`
   and `db-integration-shared` — on `relay-acknowledgement.integration.test.ts`:
@@ -121,6 +153,7 @@ Nothing else has been changed in this repository by the WASLA integration work.
   tests of the same classifier were already clock-fixed (`NOW`) and are untouched; no production
   code changed, no gate was weakened, and the failure's evidence is documented here rather than
   erased.
+>>>>>>> origin/main
 
 - **M1-05B (runtime authorization + token-bound beneficiary) — wave 1 of 3, claim `CLM-0178`.**
   The two order read routes (`GET /orders/:orderId`, `GET /orders/:orderId/history`) no longer

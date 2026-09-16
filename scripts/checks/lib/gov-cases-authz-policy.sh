@@ -389,6 +389,62 @@ MUT
 t 'تحويلُ عددِ ربطِ المُستأجِرِ إلى رقمٍ مكتوبٍ باليدِ يُسقِطُ الفحصَ' fail bash "$AZ"
 _az_restore
 
+# ── الموجةُ 4 (`CLM-0185`): دورةُ حياةِ المنتجِ — طفراتُ المساراتِ الثلاثةِ ──
+#
+# ثلاثةُ مساراتٍ جديدةٍ مربوطةٍ بالمستأجرِ (نشرٌ · أرشفةٌ · تعديلُ مخزونٍ)
+# وصفٌّ نشرٍ واحدٌ يُخفي إنفاذاً فيمرُّ الحارسُ زينةً خضراء. فتُقاسُ عضّةُ
+# البابِ 7 منَ الجهتَينِ: الشفرةُ تفرضُ والمصفوفةُ تُدَّعي، والعكسُ.
+
+# (11) نزعُ التصنيفِ عن مسارِ النشرِ وحدهُ: صفُّ النشرِ في المصفوفةِ يدّعي
+# token-bound والشفرةُ لا تفرضُ مُنتفِعاً.
+python3 - "$AZ_MKT" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "tenantScoped(MARKETPLACE_SCOPES.productLifecycle)"
+assert old in s, "لم يوجد مسارُ النشرِ مصنّفاً — لا طفرةَ على غيابٍ"
+out = s.replace(old, "scoped(MARKETPLACE_SCOPES.productLifecycle)", 1)
+assert out != s, "الطفرةُ لم تغيّر حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إرجاعُ مسارِ النشرِ إلى `scoped` (صفٌّ يدّعي الربطَ بلا إنفاذٍ) يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (12) نزعُ التصنيفِ عن تعديلِ المخزونِ: الاتجاهُ نفسُه على مسارٍ ثانٍ من
+# الموجةِ — فلا يُقرأُ نجاحُ النشرِ نجاحاً للثلاثةِ.
+python3 - "$AZ_MKT" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "tenantScoped(MARKETPLACE_SCOPES.inventoryAdjust)"
+assert old in s, "لم يوجد مسارُ تعديلِ المخزونِ مصنّفاً — لا طفرةَ على غيابٍ"
+out = s.replace(old, "scoped(MARKETPLACE_SCOPES.inventoryAdjust)", 1)
+assert out != s, "الطفرةُ لم تغيّر حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إرجاعُ مسارِ تعديلِ المخزونِ إلى `scoped` يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+# (13) الاتجاهُ المعاكسُ على صفِّ الأرشفةِ: الشفرةُ تفرضُ والمصفوفةُ تُخفي —
+# ويُقصَدُ صفُّ الأرشفةِ بعينِهِ (لا أوّلَ token-bound عابرٍ) لأنَّ صحّةَ
+# المقابلةِ تُقاسُ صفّاً صفّاً في بُعدِ المستأجرِ.
+python3 - "$AZ_BI" <<'MUT'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+pat = re.compile(
+    r'(audience: "marketplace",\s*method: "POST",\s*'
+    r'path: "/products/:productId/archive",\s*dimension: "[^"]+",\s*strength: )"token-bound"'
+)
+assert pat.search(s), "لم يوجد صفُّ الأرشفةِ مربوطاً بالرمزِ — لا طفرةَ على غيابٍ"
+out = pat.sub(lambda m: m.group(1) + '"none"', s, count=1)
+assert out != s, "الطفرةُ لم تغيّر حرفاً"
+open(p, "w", encoding="utf-8").write(out)
+MUT
+t 'إخفاءُ ربطِ الأرشفةِ من المصفوفةِ مع بقائِهِ في الشفرةِ يُسقِطُ الفحصَ' fail bash "$AZ"
+_az_restore
+
+
 # (10) تعشيشُ المساعدِ **وحدَهُ** يجبُ أن يمرَّ: المسافةُ البادئةُ صيغةٌ لا
 # دلالةٌ، ومساعدٌ مُعشَّشٌ يفرضُ المُنتَفِعَ إنفاذٌ قائمٌ. وصيغةٌ سابقةٌ للبابِ 7
 # طلبَتِ القوسَ الخاتمَ في العمودِ صفرٍ فكانتْ تُسقِطُ الفحصَ على شفرةٍ سليمةٍ

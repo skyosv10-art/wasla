@@ -618,6 +618,60 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
       expect(response.json().error.code).toBe("PRODUCT_NOT_MODERATED");
     });
 
+    // ── ربطُ دورةِ حياةِ المنتجِ (`M1-05B` الموجةُ 4 · `CLM-0185`) ────────────
+    /**
+     * **نظيرُ اختبارِ الطاقمِ في الموجةِ الثانيةِ**: رفضُ «`obo` لإنسانٍ ليسَ
+     * من متجرِ المنتجِ» يقعُ **داخلَ معاملةِ الكتابةِ** بعدَ قراءةِ المنتجِ
+     * والمتجرِ وطاقمِهِ، فلا سبيلَ إلى قياسِهِ في الذاكرةِ. والجسمُ يُسمّي
+     * `OTHER_OWNER` أيضاً كي يكونَ الرفضُ عن **العضويّةِ** لا عن تنافُرِ
+     * الجسمِ معَ الرمزِ — وهما حاجزانِ مختلفانِ.
+     *
+     * **والترتيبُ نفسُهُ حجّةٌ**: المنتجُ **بلا اعتدالٍ** (يسقطُ في 422 لو
+     * نُشِرَ بمالكٍ)، فلو رُدَّ الغريبُ بـ422 لكانَ فحصُ العضويّةِ **بعدَ**
+     * فحصِ الحالةِ — وردُّهُ `STORE_NOT_FOUND` يُثبِتُ أنَّ العضويّةَ
+     * تُفحَصُ **قبلَ** الانتقالِ، فلا يُقرأَ سرُّ الحالةِ لمن لا يملكُهُ.
+     */
+    it("و`obo` لإنسانٍ ليسَ من متجرِ المنتجِ يُرَدُّ `STORE_NOT_FOUND` قبل فحص الحالة", async () => {
+      const productId = await createProduct("SKU-LIFECYCLE-STRANGER");
+      const outboxBefore = await countRows(pg.pool, "marketplace_outbox");
+      const response = await app.inject({
+        method: "POST",
+        url: `/products/${productId}/publish`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/products/${productId}/publish`, {
+            keys,
+            onBehalfOfPublicId: OTHER_OWNER,
+          }),
+        },
+        payload: { actor_public_id: OTHER_OWNER },
+      });
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
+      // **والأثرُ يُقاسُ لا يُفترَض**: رفضٌ يكتبُ حدثاً ليسَ رفضاً.
+      expect(await countRows(pg.pool, "marketplace_outbox")).toBe(outboxBefore);
+    });
+
+    it("وتعديلُ المخزونِ بيدِ غريبٍ يُرَدُّ `STORE_NOT_FOUND` ولا يُكتب فرقاً", async () => {
+      const productId = await createProduct("SKU-LIFECYCLE-STOCK-STRANGER");
+      const before = await countRows(pg.pool, "inventory_adjustments");
+      const response = await app.inject({
+        method: "POST",
+        url: `/products/${productId}/inventory`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/products/${productId}/inventory`, {
+            keys,
+            onBehalfOfPublicId: OTHER_OWNER,
+          }),
+        },
+        payload: { quantity_delta: 5, reason_code: "restock", actor_public_id: OTHER_OWNER },
+      });
+      expect(response.statusCode, response.body).toBe(404);
+      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
+      expect(await countRows(pg.pool, "inventory_adjustments")).toBe(before);
+    });
+
     it("والظهورُ يصير `true` بعد اعتدالٍ ومخزونٍ ونشرٍ — بالشروطِ الأربعةِ مجتمعةً", async () => {
       const productId = await createProduct();
 

@@ -496,7 +496,14 @@ describe("حد السوق — الحاجزُ نفسُه يعمل", () => {
  * `staff.integration.test.ts`، ولا يُدّعى أنَّهُ مُثبَتٌ هنا.
  */
 describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمسُّ مُستأجِراً", () => {
-  /** الخمسةُ المربوطةُ: طريقةٌ · مسارٌ · صلاحيّةٌ · جسمٌ صالحٌ. */
+  /**
+   * المربوطةُ: طريقةٌ · مسارٌ · صلاحيّةٌ · جسمٌ صالحٌ. خمسٌ من الموجةِ الثانيةِ
+   * (`CLM-0179`) وثلاثٌ من الموجةِ الرابعةِ (`CLM-0185`) في دورةِ حياةِ
+   * المنتجِ. و`mismatchCode` يميّزُ رمزَ الرفضِ عندَ تنافُرِ `obo` معَ فاعلِ
+   * الجسمِ: مساراتُ المتجرِ تُجيبُ `STORE_NOT_FOUND` ومساراتُ المنتجِ
+   * **`PRODUCT_NOT_FOUND`** — لأنَّ المَورِدَ المُعنوَنَ في المسارِ هوَ الذي
+   * يُسمّى غائباً، فلا يصيرُ الحدُّ عرّافاً في أيٍّ من البُعدَينِ.
+   */
   const BOUND = [
     {
       name: "POST /stores/:slug/review-requests",
@@ -505,6 +512,7 @@ describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمس
       scope: MARKETPLACE_SCOPES.storeReviewRequest,
       payload: { requested_by_public_id: "WS-1000000001" },
       bodyActor: "WS-1000000001",
+      mismatchCode: "STORE_NOT_FOUND",
     },
     {
       name: "GET /stores/:slug/staff",
@@ -525,6 +533,7 @@ describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمس
         added_by_public_id: "WS-1000000001",
       },
       bodyActor: "WS-1000000001",
+      mismatchCode: "STORE_NOT_FOUND",
     },
     {
       name: "DELETE /stores/:slug/staff/:memberPublicId",
@@ -533,6 +542,7 @@ describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمس
       scope: MARKETPLACE_SCOPES.staffWrite,
       payload: { removed_by_public_id: "WS-1000000001" },
       bodyActor: "WS-1000000001",
+      mismatchCode: "STORE_NOT_FOUND",
     },
     {
       name: "POST /stores/:slug/products",
@@ -548,6 +558,38 @@ describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمس
         created_by_public_id: "WS-1000000001",
       },
       bodyActor: "WS-1000000001",
+      mismatchCode: "STORE_NOT_FOUND",
+    },
+    {
+      name: "POST /products/:productId/publish",
+      method: "POST" as const,
+      url: `/products/${PRODUCT}/publish`,
+      scope: MARKETPLACE_SCOPES.productLifecycle,
+      payload: { actor_public_id: "WS-1000000001" },
+      bodyActor: "WS-1000000001",
+      mismatchCode: "PRODUCT_NOT_FOUND",
+    },
+    {
+      name: "POST /products/:productId/archive",
+      method: "POST" as const,
+      url: `/products/${PRODUCT}/archive`,
+      scope: MARKETPLACE_SCOPES.productLifecycle,
+      payload: { actor_public_id: "WS-1000000001" },
+      bodyActor: "WS-1000000001",
+      mismatchCode: "PRODUCT_NOT_FOUND",
+    },
+    {
+      name: "POST /products/:productId/inventory",
+      method: "POST" as const,
+      url: `/products/${PRODUCT}/inventory`,
+      scope: MARKETPLACE_SCOPES.inventoryAdjust,
+      payload: {
+        quantity_delta: 5,
+        reason_code: "restock",
+        actor_public_id: "WS-1000000001",
+      },
+      bodyActor: "WS-1000000001",
+      mismatchCode: "PRODUCT_NOT_FOUND",
     },
   ];
 
@@ -616,7 +658,9 @@ describe("حد السوق — الرمزُ بلا مُنتَفِعٍ لا يمس
         payload: route.payload,
       });
       expect(response.statusCode, response.body).toBe(404);
-      expect(response.json().error.code).toBe("STORE_NOT_FOUND");
+      // مساراتُ المنتجِ (الموجةُ 4) تُسمّي **المنتجَ** غائباً لا المتجرَ —
+      // لأنَّ مَورِدَ المسارِ هوَ الذي يُعلَنُ، فلا يُعرَفَ أيُّهما انتُقِلَ إليه.
+      expect(response.json().error.code).toBe(route.mismatchCode);
       await app.close();
     });
   }

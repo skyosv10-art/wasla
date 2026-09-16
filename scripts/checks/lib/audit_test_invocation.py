@@ -68,6 +68,7 @@ _IMPORT = re.compile(
 _RECURSIVE_TEST = re.compile(r"\bpnpm\b[^&|;]*(?:-r\b|--recursive\b)[^&|;]*\btest\b")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vitest_config_semantics as vcs  # noqa: E402  (M0-42 — دلالةُ الإعدادِ لا نصُّهُ)
 
 from workspace_packages import (  # noqa: E402
     all_packages,
@@ -109,9 +110,64 @@ _SCAN_SKIP_FILES = {
     "scripts/checks/test-governance.sh",
     "scripts/checks/lib/gov-cases-test-invocation.sh",
 }
-_INVOCATION_LINE = re.compile(
-    r"^[ \t]*(?:-[ \t]*)?(?:run:[ \t]*)?pnpm[^#]*(?:-r\b|--recursive\b)[^#]*\btest\b"
-)
+# ── صيغةُ الاستدعاءِ **بمقاطعَ** لا بأسطرٍ (M0-42) ─────────────────────────
+# قِيسَ (وثيقةُ دليلِ M0-42 · الحالةُ ب) أنَّ الاستدعاءَ الثانيَ يمرُّ إذا لم
+# يبدأِ السطرُ بـ`pnpm` حرفاً: `cd pkg && pnpm -r test` و`npx pnpm -r test`
+# ونداءُ pnpm بمسارٍ مطلقٍ — كلُّها كانت تُفلِتُ لأنَّ المعيارَ كانَ «بدايةَ
+# السطرِ» لا «بدايةَ الأمرِ». فصارَ السطرُ يُقسَّمُ إلى مقاطعَ أوامرَ
+# (بـ`&&` · `||` · `;` · `|`)، ويُحكَمُ على **أوّلِ كلمةٍ من كلِّ مقطعٍ** بعدَ
+# تجريدِ إسناداتِ البيئةِ والمُغلِّفاتِ المعروفةِ (`npx` · `corepack` ·
+# `exec` · `command` · `sudo` · `env`). فمَن يذكرُ (`echo pnpm -r test`) لا
+# يُعاقَبُ، ومَن يستدعي (`cd pkg && pnpm -r test`) يُرفَضُ.
+_SEGMENT_SPLIT = re.compile(r"&&|\|\||;|\|")
+_ENV_ASSIGN = re.compile(r"^[A-Za-z_]\w*=(?:\"[^\"]*\"|'[^']*'|[^\s]+)\s+")
+_WRAPPER = re.compile(r"^(npx|corepack|exec|command|sudo|env)\s+")
+_SHELL_C = re.compile(r"^(?:ba|z|da)?sh(?:\.[^\s]*)?$")
+# الشكلُ داخلَ `sh -c "…"` — الاستدعاءُ بنصٍّ مقتبسٍ يُحكَمُ عليهِ كذلك.
+_INNER_FORM = re.compile(r"pnpm\b[^#&|;]*\s(?:-r\b|--recursive\b)[^#&|;]*\btest\b")
+
+
+def _is_pnpm_invocation(seg: str) -> bool:
+    """أيبدأُ هذا المقطعُ باستدعاءِ `pnpm … -r … test`؟"""
+    while True:
+        m = _ENV_ASSIGN.match(seg)
+        if m:
+            seg = seg[m.end():]
+            continue
+        m = _WRAPPER.match(seg)
+        if m:
+            seg = seg[m.end():]
+            continue
+        break
+    m = re.match(r"^(\S+)", seg)
+    if not m:
+        return False
+    cmd = m.group(1)
+    rest = seg[m.end():]
+    if cmd != "pnpm" and not cmd.endswith("/pnpm"):
+        # `sh -c "pnpm -r test"` — قشرةٌ بنصٍّ محكمٍ يحملُ الشكلَ
+        if _SHELL_C.match(cmd) and re.search(r"\s-c\s", seg):
+            return bool(_INNER_FORM.search(seg))
+        return False
+    hash_at = rest.find("#")
+    if hash_at != -1:
+        rest = rest[:hash_at]
+    toks = re.findall(r"[^\s\"'=&|;]+", rest)
+    return any(t in ("-r", "--recursive") for t in toks) and "test" in toks
+
+
+def _line_has_second_invocation(line: str) -> bool:
+    work = line.lstrip()
+    if work.startswith("- "):
+        work = work[2:].lstrip()
+    if work.startswith("run:"):
+        work = work[4:].lstrip()
+        if work[:1] in ("|", ">"):
+            return False  # علامةُ كتلةٍ — الأمرُ في السطرِ التالي
+    for seg in _SEGMENT_SPLIT.split(work):
+        if seg.strip() and _is_pnpm_invocation(seg.strip()):
+            return True
+    return False
 
 
 def scan_lines(root: str) -> list[str]:
@@ -134,7 +190,7 @@ def scan_lines(root: str) -> list[str]:
             try:
                 with open(full, encoding="utf-8", errors="replace") as fh:
                     for n, line in enumerate(fh, 1):
-                        if _INVOCATION_LINE.search(line):
+                        if _line_has_second_invocation(line):
                             out.append("./%s:%d:%s" % (rel, n, line.rstrip("\n")))
             except (OSError, ValueError):
                 # وتعذُّرُ القراءةِ **يُعلَنُ** ولا يُبتلَعُ: ملفٌّ لا يُقرأُ ليسَ ملفّاً نظيفاً.
@@ -194,20 +250,28 @@ def _resolve(spec: str, from_file: str) -> str | None:
 
 
 def _default_test_files(root: str, pkg: str) -> list[str]:
-    cfg = os.path.join(root, pkg, "vitest.config.ts")
-    excludes_gate = False
-    if os.path.exists(cfg):
-        with open(cfg, encoding="utf-8") as fh:
-            excludes_gate = "{integration,e2e}" in fh.read()
+    """ملفّاتُ الاختبارِ التي يُشغِّلُها الإعدادُ الافتراضيُّ **فعلاً** (M0-42).
+
+    كانَ البابُ يستثني ملفَّ بوّابةٍ إذا وُجِدَ وسمُ `{integration,e2e}`
+    في **نصِّ** الإعدادِ — فيعتمُ عن الوسمِ في تعليقٍ، وعن وسمٍ في نمطِ
+    استثناءٍ لا يُطابِقُ موضعَ الملفِّ، فيُسقِطُ DDL من الإغلاقِ ويُخضِرُ
+    الحارسُ على مَشهدٍ يُنفِّذُهُ. فصارَ الحكمُ لدلالةِ الإعدادِ
+    (قارئُ `vitest_config_semantics`) ولأثرِها على الملفِّ بعينِهِ.
+    """
+    pkg_dir = os.path.join(root, pkg)
+    cfg = os.path.join(pkg_dir, "vitest.config.ts")
     files = []
-    for f in glob.glob(os.path.join(root, pkg, "src", "**", "*.ts"), recursive=True):
+    for f in glob.glob(os.path.join(pkg_dir, "src", "**", "*.ts"), recursive=True):
         b = os.path.basename(f)
         if not _TEST_FILE.search(b):
             continue
-        if excludes_gate and _GATE_FILE.search(b):
-            continue
         files.append(f)
-    return files
+    if not os.path.exists(cfg):
+        return files  # لا إعدادَ ⇒ مفهومُ Vitest الافتراضيُّ
+    rels = [os.path.relpath(f, pkg_dir).replace(os.sep, "/") for f in files]
+    include, exclude, has_include = vcs.default_run_globs(cfg)
+    keep = [f for f, r in zip(files, rels) if vcs.runs_file(include, exclude, r, has_include)]
+    return keep
 
 
 _EXPORT_DEF = re.compile(

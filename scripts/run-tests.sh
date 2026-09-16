@@ -99,11 +99,43 @@ if [[ "${1:-}" == "--print-groups" ]]; then
   exit 0
 fi
 
+
 if (( ${#GATE[@]} == 0 )); then
   printf '%s✗ صفرُ حزمِ بوّاباتٍ — والمستودعُ فيهِ إحدى عشرةَ: الاشتقاقُ معطوبٌ.%s\n' \
     "$RED" "$RST" >&2
   exit 1
 fi
+
+# ── بابُ المُرشِّحِ الفارغِ (M0-42) ──────────────────────────────────────────
+# قِيسَ (وثيقةُ دليلِ M0-42 · الحالةُ ج) أنَّ `pnpm -r --filter ./لا-شيء test`
+# يخرجُ **0** برسالةِ «No projects matched the filters» — أي أنَّ مُرشِّحاً لا
+# يُطابِقُ حزمةً كانَ يُنتِجُ **خضرةً صامتةً**: ينجرفُ اسمُ حزمةٍ أو يزولُ،
+# فتسقطُ من التشغيلِ والبوّابةُ خضراءُ. فصارَ كلُّ شِقٍّ يُثبِتُ **بعددٍ
+# مقيسٍ** أنَّ مُرشِّحاتِهِ طابقتْ كلَّ ما اشتُقَّ من القرصِ — وعدمُ
+# المطابقةِ إخفاقٌ صريحٌ لا سكوتًا أخضرَ.
+_assert_filter_coverage() { # <اسمُ-مصفوفةِ-المسارات> <اسمُ الشِّقِّ>
+  # مطابقةُ **مجموعتَينِ** لا عدِّ نجاحاتٍ: ما طابقتْهُ المُرشِّحاتُ يجبُ أن
+  # يكونَ المُشتَقَّ من القرصِ **بعينِهِ** — لا زائدَ عليهِ ولا ناقصَ عنهُ.
+  # ونداءُ `pnpm list` واحدٌ للشِّقِّ كلِّهِ لا نداءٌ لكلِّ حزمةٍ.
+  local -n _paths="$1"; local _leg="$2"
+  (( ${#_paths[@]} > 0 )) || return 0
+  local _filters=() _p _got _expected _diff
+  for _p in "${_paths[@]}"; do _filters+=("--filter=./$_p"); done
+  _expected="$(printf '%s\n' "${_paths[@]}" | sort)"
+  _got="$(pnpm -r "${_filters[@]}" list --depth -1 --parseable 2>/dev/null \
+    | sed "s|^$ROOT/||" | sort)" || true
+  if [[ -z "$_got" ]]; then
+    printf '%s✗ الشِّقُّ %s: `pnpm list` لم يُخرِجْ شيئاً — لا يُقرأُ العُطلُ نجاحاً.%s\n' "$RED" "$_leg" "$RST" >&2
+    return 1
+  fi
+  _diff="$(comm -3 <(printf '%s\n' "$_expected") <(printf '%s\n' "$_got"))"
+  if [[ -n "$_diff" ]]; then
+    printf '%s✗ الشِّقُّ %s: المُرشِّحاتُ لا تُطابِقُ المُشتَقَّ من القرصِ — خضرةٌ صامتةٌ لا تُقبَلُ:%s\n' "$RED" "$_leg" "$RST" >&2
+    printf '%s%s%s\n' "$DIM" "$_diff" "$RST" >&2
+    return 1
+  fi
+  printf '  %s· مُرشِّحاتُ %s: %d حزمةً طابقتْ المُشتَقَّ بعينِهِ%s\n' "$DIM" "$_leg" "${#_paths[@]}" "$RST"
+}
 
 printf '%s── الاختبارات — شِقّانِ (M0-35)%s\n' "$BLD" "$RST"
 printf '  %sالمتوازي:%s %d حزمةً · %sالمُسلسَلُ (بوّاباتٌ على قاعدةٍ واحدةٍ):%s %d حزمةً\n' \
@@ -111,9 +143,21 @@ printf '  %sالمتوازي:%s %d حزمةً · %sالمُسلسَلُ (بوّ�
 
 FAILED=0
 
+
+if [[ "${1:-}" == "--verify-filters" ]]; then
+  # نمطُ الحارسِ (M0-42): يُثبِتُ أنَّ مُرشِّحاتِ الشِّقَّينِ تُطابِقُ المُشتَقَّ
+  # من القرصِ **مجموعةً بمجموعةٍ** — بلا تشغيلِ اختبارٍ واحدٍ. ووسمُ الخِتامِ
+  # إلزاميٌّ كوسمِ `--print-groups`: خرجٌ بلا وسمٍ مقطوعٌ ولا يُقرأُ نجاحاً.
+  _assert_filter_coverage PAR 'المتوازي' || exit 1
+  _assert_filter_coverage GATE 'المُسلسَل' || exit 1
+  printf 'FILTERS\tOK\t%s\n' "$(( ${#PAR[@]} + ${#GATE[@]} ))"
+  exit 0
+fi
+
 if (( ${#PAR[@]} > 0 )); then
   printf '\n%s[1/2] الشِّقُّ المتوازي%s\n' "$BLD" "$RST"
   FILTERS=(); for p in "${PAR[@]}"; do FILTERS+=("--filter=./$p"); done
+  _assert_filter_coverage PAR 'المتوازي' || exit 1
   pnpm -r "${FILTERS[@]}" test || FAILED=1
 fi
 
@@ -121,6 +165,7 @@ fi
 # أخفقَت هيَ بوّابةٌ مُعطَّلةٌ بالتبعيّةِ — والحكمُ يُجمَعُ لا يُقصَّرُ.
 printf '\n%s[2/2] الشِّقُّ المُسلسَلُ — --workspace-concurrency=1%s\n' "$BLD" "$RST"
 FILTERS=(); for p in "${GATE[@]}"; do FILTERS+=("--filter=./$p"); done
+_assert_filter_coverage GATE 'المُسلسَل' || exit 1
 pnpm -r --workspace-concurrency=1 "${FILTERS[@]}" test || FAILED=1
 
 echo

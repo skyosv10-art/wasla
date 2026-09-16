@@ -22,7 +22,8 @@ _ti_stage() { # _ti_stage <tag> <gate_excludes:1|0> <ddl_in_closure:1|0> [drop_t
   local S="/tmp/gov_ti_$tag"
   rm -rf "$S"; mkdir -p "$S/packages/gatepkg/src/__tests__" "$S/scripts/checks/lib"
   cp "$TI_LIB/test_groups.py" "$TI_LIB/audit_test_invocation.py" \
-     "$TI_LIB/workspace_packages.py" "$S/scripts/checks/lib/"
+     "$TI_LIB/workspace_packages.py" "$TI_LIB/vitest_config_semantics.py" \
+     "$S/scripts/checks/lib/"
   # مساحةُ العملِ تُعلَنُ كما تُعلَنُ في المستودعِ الحقيقيِّ — **بنمطٍ متداخلٍ**
   # (`packages/contracts/*`) لا بنمطٍ سطحيٍّ وحدَهُ، لأنَّ العطبَ الذي كُشِفَ في
   # 2026-09-14 كانَ **جرداً يعمى عن النمطِ المتداخلِ** فتسقطُ أربعَ عشرةَ حزمةً.
@@ -295,6 +296,130 @@ MUT
   _ti "$S"
 }
 t "يرفض جرداً سطحيّاً يُسقِطُ حزمَ النمطِ المتداخلِ (طفرة)" fail _ti_shallow_inventory
+
+# ── (M0-42) حالاتُ سلامةِ الحارسِ نفسِهِ — عيوبٌ قِيسَتْ لا تُخُيِّلَتْ ──────
+# ثلاثةُ عيوبٍ في هذا الحارسِ كُشِفَتْ **بالمِجَسِّ الصناعيِّ** قبلَ هذا
+# الإصلاحِ (وثيقةُ `docs/12-testing/test-invocation-evidence/2026-09-16-m0-42.md`)
+# ومرَّتْ كلُّها خضراءَ على أوّلِ صياغةٍ. فصارَ لكلٍّ منها حالةٌ تُثبِتُ العطبَ
+# ثمَّ القتلَ:
+
+# (15) **الحالةُ أ — طفرةُ العودةِ إلى المعيارِ النصّيِّ:** مَشهدٌ يحملُ وسمَ
+# `{integration,e2e}` **في تعليقِ** الإعدادِ ونمطَ ضمٍّ يبتلِعُ ملفَّ
+# بوّابةٍ — فالمعيارُ النصّيُّ (البحثُ عن الوسمِ في النصِّ كلِّهِ) يقولُ
+# «ليست بوّابةً» فيُتوازى، والدلالةُ تقولُ «البوّابةُ تجري فعلاً». هذهِ
+# الحالةُ **تُطفِرُ** محرِّكَ الدلالةِ عمداً إلى المعيارِ النصّيِّ القديمِ —
+# فإن مرَّتِ الطفرةُ كانَ بابا الحارسِ (الاشتقاقُ والإغلاقُ) يُصادِقانِ
+# النصَّ نفسَهُ من جديدٍ. والعطبُ الأصليُّ مُقاسٌ في وثيقةِ دليلِ M0-42:
+# مرَّ أخضرَ على أوّلِ صياغةٍ.
+_ti_stage_comment_scene() {
+  local S; S="$(_ti_stage cmttag 1 0)"
+  cat > "$S/packages/gatepkg/vitest.config.ts" <<'CFG'
+// this package excludes {integration,e2e} gates from the default run
+export default { test: { include: ["src/__tests__/*"] } };
+CFG
+  cat > "$S/packages/gatepkg/src/__tests__/harness.ts" <<'H'
+import { Pool } from "pg";
+export async function reset(): Promise<void> {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  await pool.query(`DROP TABLE IF EXISTS widgets CASCADE`);
+  await pool.query(`CREATE TABLE widgets (id text primary key)`);
+}
+H
+  printf 'import { beforeAll, it } from "vitest";\nimport { reset } from "./harness.js";\nbeforeAll(reset);\nit("x", () => {});\n' \
+    > "$S/packages/gatepkg/src/__tests__/unit.test.ts"
+  printf 'import { it } from "vitest";\nit("g", () => {});\n' \
+    > "$S/packages/gatepkg/src/__tests__/gate.e2e.test.ts"
+  printf '%s' "$S"
+}
+
+_ti_comment_tag() {
+  local S; S="$(_ti_stage_comment_scene)"
+  # الطفرةُ: إعادةُ المعيارِ النصّيِّ القديمِ — الوسمُ في النصِّ كلِّهِ يُعفي
+  # من البوّابةِ ولو كانَ في تعليقٍ، والضمُّ يُهمَلُ كلِّيّاً.
+  python3 - "$S/scripts/checks/lib/vitest_config_semantics.py" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "def gate_files_in_default_run(cfg_path: str, test_files: list[str]) -> list[str]:"
+assert s.count(old) == 1, "anchor missing"
+mut = (
+    "def gate_files_in_default_run(cfg_path: str, test_files: list[str]) -> list[str]:\n"
+    "    # MUTATION (M0-42 case 15): text rule — tag anywhere in the file text\n"
+    "    with open(cfg_path, encoding='utf-8') as fh:\n"
+    "        if '{integration,e2e}' in fh.read():\n"
+    "            return []\n"
+    "    return [f for f in test_files if f.endswith(GATE_SUFFIXES)]\n"
+)
+s = s.replace(old, mut, 1)
+# and the companion door: _default_test_files uses runs_file; mutate it too
+io.open(p, "w", encoding="utf-8").write(s)
+PY
+  python3 - "$S/scripts/checks/lib/audit_test_invocation.py" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "    keep = [f for f, r in zip(files, rels) if vcs.runs_file(include, exclude, r, has_include)]"
+assert s.count(old) == 1, "anchor missing"
+s = s.replace(old, (
+    "    with open(cfg, encoding='utf-8') as _fh:\n"
+    "        _txt_rule = '{integration,e2e}' in _fh.read()\n"
+    "    keep = [] if _txt_rule else files\n"
+    "    if _txt_rule:\n"
+    "        keep = [f for f in files if not f.replace(os.sep, '/').endswith(vcs.GATE_SUFFIXES)]\n"
+), 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PY
+  _ti "$S"
+}
+t "يرفض العودةَ إلى المعيارِ النصّيِّ: وسمٌ في تعليقٍ لا يُعفي من البوّابةِ (M0-42)" fail _ti_comment_tag
+
+# (15-ج) **المَشهدُ نفسُهُ بلا طفرةٍ يُسلسَلُ ويُخضِرُ:** الدلالةَ لا وجودَ DDL
+# هوَ الحَكَمَ — فالإعدادُ يضمُّ ملفَّ بوّابةٍ ⇒ الحزمةُ تُسلسَلُ فلا سباقَ،
+# والحارسُ يقبَلُها. ولولا هذه الحالةُ لحارسٍ يرفضُ كلَّ شيءٍ.
+_ti_comment_scene_clean() { _ti "$(_ti_stage_comment_scene)"; }
+t "يسلسِلُ مَشهدَ الوسمِ-في-تعليقٍ لأنَّ الضمَّ يبتلِعُ بوّابةً (M0-42 · اتجاهٌ معاكسٌ)" pass _ti_comment_scene_clean
+
+# (15-ب) **الاستثناءُ الحقيقيُّ يُخضِرُ:** الواقفُ هنا هوَ **دلالةُ** الإعدادِ
+# لا مجرَّدُ وجودِ DDL — فمَشهدُ الحالةِ (2) نفسُهُ (استثناءٌ حقيقيٌّ في
+# `exclude` يُطابِقُ الملفَّ ⇒ متوازيةٌ) يجبَ أن يبقى مقبولاً، وإلّا كانَ
+# الحارسُ يُسلسِلُ كلَّ شيءٍ «ناجحاً» — وهيَ الحالةُ (4).
+_ti_comment_tag_fixed_shape() { _ti "$(_ti_stage cmtfix 1 0)"; }
+t "يقبل الاستثناءَ الحقيقيَّ المُطابِقَ لموضِعِ الملفِّ (M0-42 · اتجاهٌ معاكسٌ)" pass _ti_comment_tag_fixed_shape
+
+# (16) **الحالةُ ب — استدعاءٌ في مقطعٍ لا في بدايةِ سطرٍ:** `cd pkg && pnpm -r test`
+# كانَ يمرُّ لأنَّ معيارَ المسحِ كانَ «بدايةَ السطرِ» لا «بدايةَ الأمرِ».
+# و`npx pnpm -r test` بالمثلِ.
+_ti_mid_segment() {
+  local S; S="$(_ti_stage midseg 1 0)"
+  printf '#!/usr/bin/env bash\ncd packages/gatepkg && pnpm -r test\n' > "$S/scripts/legacy.sh"
+  _ti "$S"
+}
+t "يرفض استدعاءً ثانياً بعدَ cd … && (M0-42)" fail _ti_mid_segment
+
+_ti_npx_wrapper() {
+  local S; S="$(_ti_stage npxw 1 0)"
+  printf '#!/usr/bin/env bash\nnpx pnpm -r test\n' > "$S/scripts/legacy.sh"
+  _ti "$S"
+}
+t "يرفض استدعاءً ثانياً عبرَ npx (M0-42)" fail _ti_npx_wrapper
+
+# (17) **الحالةُ ج — مُرشِّحٌ لا يُطابِقُ:** مُشغِّلٌ يشتقُّ حزمةً وهميّةً
+# (اسمُها انجرفَ عن القرصِ) — و`pnpm -r --filter ./لا-شيء test` يخرجُ **0**
+# برسالةٍ لا يقرؤها أحدٌ. بابُ المُرشِّحاتِ الجديدُ يرفضُها.
+_ti_filter_drift() {
+  local S; S="$(_ti_stage fdrift 1 0)"
+  python3 - "$S/scripts/checks/lib/test_groups.py" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "        out.append((d, gate))"
+assert s.count(old) == 1, "anchor missing"
+s = s.replace(old, old + "\n        out.append(('packages/ghost', True))", 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PY
+  _ti "$S"
+}
+t "يرفض مُرشِّحاً لا يُطابِقُ شيئاً — لا خضرةَ صامتةَ (M0-42)" fail _ti_filter_drift
 
 # (12) **ثباتٌ:** 40 تشغيلاً بلا تقلّبٍ. وحارسُ سباقٍ **يتقلّبُ هوَ** أسوأُ من لا
 # حارسٍ: يُقرأُ إزعاجاً فيُسكَتُ. والعددُ 40 كما في حرّاسِ `RISK-0037`.

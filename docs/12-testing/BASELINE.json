@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-16T17:45:37Z",
+  "generated_at": "2026-09-16T22:06:51Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "46bed1ee80f4db5b601df871396f598183a4290e",
-    "branch": "feat/m2-04-config-schema-and-env-registry",
+    "commit": "cf912af94a62d520867060b84a671c43fceea536",
+    "branch": "feat/m2-01-container-image-supply-chain",
     "dirty": true,
-    "dirty_files": 46,
-    "dirty_reason": "M2-04: مخطَّطُ الإعدادِ ومصدرُ حقيقتِهِ الواحدُ + الفحصُ 18 (CLM-0194)",
-    "tracked_files": 2045
+    "dirty_files": 9,
+    "dirty_reason": "إعادةُ توليدٍ من سجلٍّ **أخضرَ كاملاً** (/tmp/verify-m201-6.log · EXIT=0) بعدَ فتحِ RISK-0050 وإضافةِ البابِ 10 وحالاتِهِ الثمانِ: risks_not_closed 36→37 · حالاتُ الحوكمةِ 421→429 · tracked_files +2. والتوليدُ السابقُ من سجلٍّ أحمرَ (انحدارُ الأساسِ نفسِهِ) استُبدِلَ بهذا لأنَّ أساساً يُعلِنُ verify_overall=failed لا يجوزُ أن يكونَ مرجعاً.",
+    "tracked_files": 2085
   },
   "env": {
     "node": "v20.20.1",
@@ -29,18 +29,18 @@
     "test_files_tracked": 364,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 18,
-    "risks_not_closed": 33
+    "governance_checks": 19,
+    "risks_not_closed": 37
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify3.log",
+    "source": "/tmp/verify-m201-6.log",
     "tests_passed": 4737,
     "test_files_executed": 289,
-    "governance_suite_cases": 403,
+    "governance_suite_cases": 429,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:aca59325ae7134784656172bf67e21912095a912e2b631cc1b16b03c9e860ac8",
+  "fingerprint": "sha256:8f8a632ac1d4eda5e6e043a48ff64ecdfe4c4613d1277b627492940c8014de28",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

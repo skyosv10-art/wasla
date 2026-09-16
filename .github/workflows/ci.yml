@@ -120,6 +120,23 @@ jobs:
           # فهذا استرجاعُ التكافؤِ لا تخفيفُ شرطٍ — والفحصُ لم يُمَسّ.
           ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
+      # (M0-42) توفيرُ السلسلةِ **قبلَ** البوّابةِ لا تخفيفُ فحصٍ: الفحصُ 14
+      # صارَ يقرأُ حكمَ بابِ المُرشِّحاتِ من المُشغِّلِ نفسِهِ (`--verify-filters`)
+      # وبابُهُ يستعملُ `pnpm list` — وقبلَها كانَ فحصُ الجردِ الخارجيُّ في
+      # `audit_test_invocation.py` يُبطَلُ صامتاً في هذهِ الوظيفةِ بلا pnpm
+      # (يُبتلَعُ خطؤُهُ فلا يُقاسُ أصلاً — قِيسَ في [35046705655]). فالبيئةُ
+      # التي يقيسُ عليها الفحصُ يجبُ أن تكونَ حاضرةً حينَ يقيسُ — وهوَ عينُ
+      # القرارِ المُوثَّقِ في الوظيفةِ `verify` أدناهُ (ADR-023 §6):
+      # إعطاءُ الفحصِ بيئتَهُ لا تعطيلُهُ.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          echo "node   $(node --version)"
+          echo "pnpm   $(pnpm --version)"
       - name: verify-governance
         run: |
           TARGET="${GITHUB_BASE_REF:-main}"

@@ -92,9 +92,16 @@ if (( RC != 0 )); then
   fail "\`$RUNNER --print-groups\` أخفقَ (rc=$RC) — ولا يُقرأُ العُطلُ نجاحاً:"
   printf '%s%s%s\n' "$DIM" "$GROUPS_OUT" "$RST" >&2
 else
+  # (M0-42) لا `|| true` هنا بعدَ اليومِ: قِيسَ في CI ([35046705655]) أنَّ
+  # عُطلَ المُدقِّقِ (بلا `pnpm`) كانَ **يُبتلَعُ** فيُمرُّ البابُ أخضرَ على
+  # لا شيءِ — فالحكمُ الأحمرُ للمُدقِّقِ **إخفاقٌ مقروءٌ** لا عُطلٌ يُهملُ.
+  AUDIT_RC=0
   REPORT="$(printf '%s\n' "$GROUPS_OUT" \
-    | python3 scripts/checks/lib/audit_test_invocation.py --audit-groups "$ROOT")" || true
-  if [[ -n "$REPORT" ]]; then
+    | python3 scripts/checks/lib/audit_test_invocation.py --audit-groups "$ROOT")" || AUDIT_RC=$?
+  if (( AUDIT_RC != 0 )); then
+    fail "المُدقِّقُ نفسُهُ أخفقَ (rc=$AUDIT_RC) — ولا يُقرأُ العُطلُ نجاحاً:"
+    printf '%s%s%s\n' "$DIM" "$REPORT" "$RST" >&2
+  elif [[ -n "$REPORT" ]]; then
     while IFS= read -r line; do [[ -n "$line" ]] && fail "$line"; done <<< "$REPORT"
   fi
 fi

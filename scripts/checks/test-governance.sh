@@ -2122,12 +2122,23 @@ SAC_SRC="$REPO_ROOT/scripts/checks/validate-service-auth-coverage.sh"
 _sac_root() { # _sac_root <tag>
   local R="/tmp/gov_sac_$1"
   rm -rf "$R"
-  mkdir -p "$R/scripts/checks" "$R/docs/07-security" \
+  mkdir -p "$R/scripts/checks/lib" "$R/docs/07-security" \
            "$R/services/matching/src/http" "$R/services/matching/src/infrastructure" \
            "$R/services/matching/contracts" \
            "$R/services/dispatch/src/infrastructure" \
            "$R/packages/service-auth/src"
   cp "$SAC_SRC" "$R/scripts/checks/"
+  # البابُ 10 منطقُهُ في مِلفٍّ مستقلٍّ يُنسَخُ معَ الحارسِ — وغيابُهُ إخفاقٌ
+  # مقصودٌ (حالةُ طفرةٍ أدناهُ تُثبِتُه)، فلا يُتخطّى بابٌ بحذفِ مِلفِّه.
+  cp "$REPO_ROOT/scripts/checks/lib/ingress_boundary_gate.sh" "$R/scripts/checks/lib/"
+  # والبابُ 10 يقرأُ سجلَّ المخاطرِ ليرفضَ دَيناً بخطرٍ مُقفَلٍ أو غيرِ قائمٍ.
+  cat > "$R/docs/07-security/RISK_REGISTER.md" <<'RR'
+# سجلُّ مخاطرَ صناعيٌّ
+```text
+RISK-9001 | sev:high | owner:@synthetic | opened:2026-09-17 | review:2026-10-17 | status:open | ref:docs/07-security/SERVICE_AUTH_ENFORCEMENT.md | خطرٌ صناعيٌّ مفتوحٌ.
+RISK-9002 | sev:low | owner:@synthetic | opened:2026-09-17 | review:2026-10-17 | status:closed | ref:docs/07-security/SERVICE_AUTH_ENFORCEMENT.md | خطرٌ صناعيٌّ مُقفَلٌ.
+```
+RR
   # البابُ 9 يقرأُ اسمَ الترويسةِ من الشفرةِ لا من نصٍّ مكتوبٍ فيه، ويقرأُ
   # العقدَ المنشورَ للحدِّ المفروضِ — فيُبنى الموضعانِ في الجذرِ الصناعيِّ.
   printf 'export const SERVICE_AUTH_HEADER = "x-wasla-service-auth";\n' \
@@ -2178,6 +2189,15 @@ enforced: matching
 | `matching` | 2 | `M1-06` |
 
 <!-- contract-auth-debt:end -->
+
+<!-- unenforced-ingress:begin -->
+
+| الحدُّ | المساراتُ (مقيسةٌ) | ملفُّ الحدِّ | العقدُ المنشورُ | الخطرُ · المالكُ |
+|---|---|---|---|---|
+
+TOTAL_ROUTES: 0
+
+<!-- unenforced-ingress:end -->
 MD
   # وجذرٌ فيهِ `package.json` بلا مكتبةِ نداءٍ — فالبابُ 8 يمرُّ بصفرٍ وصفرٍ.
   printf '{ "name": "synthetic", "dependencies": { "zod": "^3.0.0" } }\n' > "$R/package.json"
@@ -2803,6 +2823,12 @@ t "حارسُ الترحيلاتِ يقبلُ جذراً صحيحاً في 40 ت
 # حمايةٍ أو تثبيتَ أداةٍ** ثمَّ تستعيدُهُ، فخلطُها بغيرِها يجعلُ فشلَ استعادةٍ
 # واحدةٍ يُلوِّثُ سائرَ الحزمةِ بلا أن يُسمّى.
 . "$REPO_ROOT/scripts/checks/lib/gov-cases-container-image.sh"
+
+# ── [ظ] البابُ 10: إقفالُ جردِ حدودِ الدخولِ (M1-04 الموجةُ الثامنة · CLM-0196) ───
+# وحالاتُهُ مستقلّةٌ كذلكَ: كلُّها تعملُ في جذرٍ صناعيٍّ في `/tmp` (لا في
+# المستودعِ)، وتبني فيهِ **حدَّ دخولٍ لا يفرضُ هويّةً** عيّنةً بقصدٍ — وهوَ عينُ
+# ما يرفضُهُ البابُ، فخلطُها بحالاتِ السجلِّ يُشوِّشُ قراءةَ سببِ الإخفاقِ.
+. "$REPO_ROOT/scripts/checks/lib/gov-cases-ingress-boundary.sh"
 
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ

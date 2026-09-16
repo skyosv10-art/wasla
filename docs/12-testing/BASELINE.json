@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-16T22:06:51Z",
+  "generated_at": "2026-09-16T23:27:59Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cf912af94a62d520867060b84a671c43fceea536",
-    "branch": "feat/m2-01-container-image-supply-chain",
+    "commit": "f85ab2dfbb1deda30eeef5063a991683573fb158",
+    "branch": "feat/m1-04-ingress-boundary-closure",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "إعادةُ توليدٍ من سجلٍّ **أخضرَ كاملاً** (/tmp/verify-m201-6.log · EXIT=0) بعدَ فتحِ RISK-0050 وإضافةِ البابِ 10 وحالاتِهِ الثمانِ: risks_not_closed 36→37 · حالاتُ الحوكمةِ 421→429 · tracked_files +2. والتوليدُ السابقُ من سجلٍّ أحمرَ (انحدارُ الأساسِ نفسِهِ) استُبدِلَ بهذا لأنَّ أساساً يُعلِنُ verify_overall=failed لا يجوزُ أن يكونَ مرجعاً.",
-    "tracked_files": 2085
+    "dirty_files": 14,
+    "dirty_reason": "إعادةُ توليدٍ من سجلٍّ **أخضرَ كاملاً** (/tmp/verify-m104w8-green.log · 443 حالةَ حوكمةٍ · 0 فاشلٍ) في موجةِ M1-04 الثامنةِ (CLM-0196): risks_not_closed 37→38 بفتحِ RISK-0051 · حالاتُ الحوكمةِ 429→443 بأربعَ عشرةَ حالةَ طفرةٍ للبابِ 10 · tracked_files بثلاثةِ ملفّاتٍ جديدةٍ (حارسُ حدِّ الدخولِ وحالاتُهُ وADR-034). والتوليدُ الوسيطُ من سجلٍّ أحمرَ لم يُلتزَمْ نهائيّاً لأنَّ أساساً يُعلِنُ verify_overall=failed لا يجوزُ أن يكونَ مرجعاً.",
+    "tracked_files": 2090
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 19,
-    "risks_not_closed": 37
+    "risks_not_closed": 38
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m201-6.log",
+    "source": "/tmp/verify-m104w8-green.log",
     "tests_passed": 4737,
     "test_files_executed": 289,
-    "governance_suite_cases": 429,
+    "governance_suite_cases": 443,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:8f8a632ac1d4eda5e6e043a48ff64ecdfe4c4613d1277b627492940c8014de28",
+  "fingerprint": "sha256:76ba1591d5faa972cdab255ff3b20e74e2b341d9faef715c38d524bae852a846",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

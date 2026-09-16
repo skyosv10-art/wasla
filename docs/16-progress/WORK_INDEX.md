@@ -133,8 +133,9 @@
 | `scripts/checks/validate-claim-freshness.sh` | Implemented | M0-16 |
 | `scripts/checks/validate-mr-target.sh` | Implemented | M0-17 |
 | `packages/service-auth/` — توقيعُ هويّةِ الخدمةِ وإنفاذُها (`SERVICE_AUTH_HEADER`) | Implemented | M1-03 |
-| `scripts/checks/validate-service-auth-coverage.sh` — تسعةُ أبوابٍ (تغطيةٌ · صلاحيّاتٌ · مُنادٍ خامٌّ · أغلفةُ نداءٍ · **صدقُ العقدِ المنشورِ**) | Implemented | M1-03 · M0-36 |
-| `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` §5.9 — جردُ دَينِ العقدِ المنشورِ (8 حدودٍ · `RISK-0041`) | Mitigated | M0-36 (والإفراغُ مِلكُ M1-06 · `CLM-0190` 2026-09-16: أُفرِغَ إلى صفرِ صفوفٍ) |
+| `scripts/checks/validate-service-auth-coverage.sh` — **عشرةُ أبوابٍ** (تغطيةٌ · صلاحيّاتٌ · مُنادٍ خامٌّ · أغلفةُ نداءٍ · **صدقُ العقدِ المنشورِ** · **إقفالُ جردِ حدودِ الدخولِ**) | Implemented | M1-03 · M0-36 · **M1-04 الموجةُ الثامنة (`CLM-0196` 2026-09-17: أُضيفَ البابُ 10 في [`lib/ingress_boundary_gate.sh`](../../scripts/checks/lib/ingress_boundary_gate.sh) — وسطرُ «تسعةُ أبوابٍ» صُحِّحَ بالإضافةِ لا بالمَحوِ)** |
+| `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` §5.10 — جردُ حدودِ الدخولِ **غيرِ المفروضةِ** (5 حدودٍ · 53 مساراً · `RISK-0051` · [ADR-034](../15-decisions/ADR-034-ingress-boundary-inventory-closure.md)) | **Measured / Not Enforced** | M1-04 الموجةُ الثامنة · `CLM-0196` (مِقياسٌ وحراسةٌ لا إصلاحٌ: `customers` · `drivers` · `reputation` · `search` · `subscriptions` **لا تفرضُ هويّةَ خدمةٍ**، والإنفاذُ موجاتٌ تالياتٌ) |
+| `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` §5.9 — جردُ دَينِ العقدِ المنشورِ (8 حدودٍ · `RISK-0041`) | Mitigated | M0-36 (والإفراغُ مِلكُ M1-06 · `CLM-0190` 2026-09-16: أُفرِغَ إلى صفرِ صفوفٍ) · **تحديدُ مدىً بالإضافةِ (2026-09-17 · `CLM-0196`): الإفراغُ صادقٌ داخلَ الحدودِ التسعةِ المفروضةِ وحدَها ولا يعني زوالَ دَينِ المُصادقةِ من المستودعِ — انظر §5.10** |
 | `scripts/checks/validate-integration-isolation.sh` | Implemented | M0-03 |
 | `docs/00-rules/TESTING_RULES.md` §1 (عزلُ اختباراتِ التكامل) | Implemented | M0-03 |
 | `services/identity/vitest.integration.config.ts` (تسلسلُ الملفّات) | Implemented | M0-03 |

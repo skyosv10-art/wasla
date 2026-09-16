@@ -54,6 +54,7 @@
 - **لا حكمَ على اختيارِ القارئِ**: `readLenientIntEnv` في موضعِ الصارمِ يمرُّ — والتسامحُ باقٍ **بقرارٍ مكتوبٍ** لأنَّ تضييقَهُ تغييرُ عقدِ تشغيلٍ يُخالِطُ نطاقَينِ في دفعةٍ.
 - **لا يقرأُ سلوكَ إقلاعٍ**: لا يُثبِتُ أنَّ خدمةً ببيئةٍ معطوبةٍ تسقطُ مُسمّاةً بدلَ 200 صامتٍ — وذلكَ ما يُقفِلُ `RISK-0046` ولمْ يُنفَّذْ.
 - **حكمُ CI قُرِئَ بعدَ الدفعِ ولا يُمحى السطرُ السابقُ:** [PR #206](https://github.com/skyosv10-art/wasla/pull/206) · «WASLA CI» [35130354603](https://github.com/skyosv10-art/wasla/actions/runs/35130354603) **31 وظيفةً · 31 success · 0 فاشلةٍ** · «Roadmap freshness» [35130225555](https://github.com/skyosv10-art/wasla/actions/runs/35130225555) **success**. **وهذا حكمُ بوّابةٍ على رأسِ الفرعِ**، ولا يُقرأُ إقفالاً لـ`RISK-0046` ولا ترقيةً لـ`M2-04` (§9).
+- **إقفالُ الدورةِ (§8.1):** الدفعةُ دُمِجَت squash في `main` بالتزامِ [`1f2dcf0`](https://github.com/skyosv10-art/wasla/commit/1f2dcf0) وحُذِفَ الفرعُ، وحُرِّرَ `CLM-0194` إلى `Released` بدليلِهِ في دفعةٍ مستقلّةٍ لا بمرورِ مهلةٍ، وحُدِّثَ صفُّ اللوحةِ و`WORK_INDEX`. **والمتبقّي مكتوبٌ لا مطويٌّ:** `RISK-0046` باقٍ `mitigating` حتّى تُوجَدَ بوّابةُ خروجٍ تُسقِطُ الإقلاعَ ببيئةٍ معطوبةٍ بدلاً من `health 200` على موجةٍ بلا سائقٍ.
 
 **Evidence:** [`M2-04_GATE.md`](../12-testing/M2-04_GATE.md) · [`CONFIG_SCHEMA.md`](../08-infrastructure/CONFIG_SCHEMA.md) · [`ADR-032`](../15-decisions/ADR-032-config-schema-single-source.md) · `RISK-0046` · مخرَجُ `verify-governance.sh` في جسمِ الـPR.
 

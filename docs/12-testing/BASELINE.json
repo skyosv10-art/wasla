@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-16T08:00:39Z",
+  "generated_at": "2026-09-16T08:51:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "efa193b465472c874b285b69b3e07e0ad903aeaa",
-    "branch": "feat/m1-07-bot-route-protection",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "M1-07: تحديث BASELINE.json بعد إضافة service-identity.test.ts (CLM-0191)",
+    "commit": "750604bd1596eb9699c7112c8ef3086d6c1c4cc0",
+    "branch": "feat/m1-08-edge-abuse-controls",
+    "dirty": true,
+    "dirty_files": 8,
+    "dirty_reason": "M1-08: إضافة edge-controls.ts و edge-controls.test.ts (CLM-0192)",
     "tracked_files": 2042
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 50,
     "packages_with_typecheck": 50,
     "packages_with_test": 50,
-    "test_files_tracked": 360,
+    "test_files_tracked": 361,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 17,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_full.log",
-    "tests_passed": 4682,
-    "test_files_executed": 285,
+    "source": "/tmp/verify_m1_08.log",
+    "tests_passed": 4697,
+    "test_files_executed": 286,
     "governance_suite_cases": 392,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:d171ab7866b085d2a0c90a9d1b3a102d50e5ff50243e5c681927342964acb3b4",
+  "fingerprint": "sha256:e82b644318eba25d8c7bdf6c446d72eac40771239e9d6ae83c3c17b4e7d6a592",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

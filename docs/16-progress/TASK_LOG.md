@@ -3476,3 +3476,12 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **Why:** §8.1 — تحرير الحجز في دفعة سجل خالصة بعد دمج [PR #199](https://github.com/skyosv10-art/wasla/pull/199) (squash [`729370b`](https://github.com/skyosv10-art/wasla/commit/729370b)).
 - **What:** صف الحجز نُقل إلى «المحررة» ولوحة الإطلاق رُقِّي فيها M1-07 إلى `Completed`. جولة الدفعة خضراء 33/33 من أول مرة (CI run [35071501277](https://github.com/skyosv10-art/wasla/actions/runs/35071501277)) — verify ✓ · governance-guard ✓ · doc-coverage ✓ · typecheck ✓ · test ✓ · 15 × db-integration ✓ · 9 × exit-gate-e2e ✓ · Devin Review ✓ · roadmap ✓ · repo-structure ✓.
 - **الحكم:** يُقرأ على هذه الدفعة من وظائف CI بعد الدفع.
+
+
+### [2026-09-16] 82/N — M1-08: ضوابطُ الحدود: تحديدُ المعدَّلِ والتنقيحُ والتدقيق (CLM-0192)
+
+- **Work Item(s):** M1-08 · **الحجز:** `CLM-0192`
+- **Why:** معيار القبول «rate-limit and redaction tests» — سياسةُ الحدِّ لا منطقُ المجال.
+- **What:** طبقةُ ضوابطِ حدٍّ مشتركةٌ في `packages/service-auth/src/edge-controls.ts`: `EdgeRateLimiter` (دلوُ رموزٍ على ساعةٍ مُحقونةٍ · 429 + Retry-After · لا ينامُ · في العمليّةِ وحدَها) · `redactErrorBody` (نزعُ الترويساتِ الحسّاسةِ ورموزِ wsvc2 من أجسامِ الأخطاء) · `AuditEventSink` (بالوعةُ أحداثِ رفضٍ أمنيّةٍ). 22 اختباراً للقبول.
+- **حدودُ الدعوى:** المُحدِّدُ في العمليّةِ وحدَها (`RISK-0015`)، والتنقيحُ على أجسامِ الأخطاءِ لا النجاح، والتدقيقُ بالوعةٌ ضئيلةٌ لا مُستودَعُ أحداثٍ.
+- **الحكمُ:** يُقرأُ على هذه الدفعة من وظائف CI بعد الدفع.

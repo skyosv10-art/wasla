@@ -106,3 +106,20 @@ export {
   enforceServiceIdentity,
   REPLAY_STORE_UNAVAILABLE_CODE,
 } from "./enforce.js";
+
+export type {
+  AuditEvent,
+  AuditEventSink,
+  AuditEventType,
+  EdgeControlsOptions,
+  RateLimitOptions,
+  RateLimitVerdict,
+} from "./edge-controls.js";
+export {
+  EdgeRateLimiter,
+  InMemoryAuditSink,
+  RATE_LIMIT_DEFAULTS,
+  redactErrorBody,
+  recordSecurityDenial,
+  registerEdgeControls,
+} from "./edge-controls.js";

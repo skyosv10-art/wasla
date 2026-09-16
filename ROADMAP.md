@@ -104,6 +104,7 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
+<<<<<<< HEAD
 - **M1-05B — wave 4, claim `CLM-0185`.** `RISK-0042`'s **third finding is finally measured**, not
   just described: the three product-lifecycle routes — `POST /products/:productId/publish`,
   `POST /products/:productId/archive`, `POST /products/:productId/inventory` — no longer take the
@@ -134,6 +135,25 @@ Nothing else has been changed in this repository by the WASLA integration work.
   member) stays a named debt needing a third error code and a contract change; `RISK-0042` closing is
   the programme owner's decision alone; and the published contracts still do not state the beneficiary
   requirement — that is `RISK-0041` and belongs to `M1-06`.
+=======
+- **M5-13 — review 25/N, claim `CLM-0186`: a time bomb in a test, defused by reading CI red.** The
+  first push of the `M1-05B` wave-4 batch (PR #190) failed two CI jobs — `db-integration (delivery)`
+  and `db-integration-shared` — on `relay-acknowledgement.integration.test.ts`:
+  `expected 'critical' to be 'warning'`. The batch did not touch delivery at all, and the same jobs
+  were green on `main` two hours earlier — because the detonation is **calendar-gated, not
+  code-gated**: the test seeds a poisoned row at a fixed `T0 = 2026-09-15T00:00:00Z` and then
+  classifies severity with **the wall clock** (`new Date()`), while the classifier escalates to
+  `critical` at age ≥ 24 h (`criticalAgeSeconds = 86_400`). The first CI run **after 2026-09-16
+  00:00 UTC** was this one — every run before it passed, every run after it would have failed, on
+  `main` as well as on any branch. The root cause is the coupling of a fixed seed to a moving
+  clock in a test whose subject (acknowledgement changing the verdict) has nothing to do with the
+  passage of time. The fix anchors the classification instant to the seed (`AT = T0 + 6 h`, a
+  `warning` with no escalation, at any hour the suite runs) and uses it for the acknowledgement
+  timestamp too, so the test measures **the acknowledgement, not the machine's clock**. The unit
+  tests of the same classifier were already clock-fixed (`NOW`) and are untouched; no production
+  code changed, no gate was weakened, and the failure's evidence is documented here rather than
+  erased.
+>>>>>>> origin/main
 
 - **M1-05B (runtime authorization + token-bound beneficiary) — wave 1 of 3, claim `CLM-0178`.**
   The two order read routes (`GET /orders/:orderId`, `GET /orders/:orderId/history`) no longer

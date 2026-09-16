@@ -3513,3 +3513,13 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **Why:** إقفالُ دورة §8.1 بعد دمج PR #203 (squash `726cfd4`).
 - **What:** نُقل CLM-0193 إلى Released في WORK_CLAIMS.md، وتحديث LAUNCH_EXECUTION_BOARD.md إلى Completed، وتحديث ROADMAP.md.
 - **الحكمُ:** يُقرأُ على هذه الدفعة من وظائف CI بعد الدفع.
+
+---
+
+## 2026-09-16 — M2-01: images/containers/SBOM
+
+- **Work Item(s):** M2-01 · **الحجز:** `CLM-0194`
+- **Branch:** `feat/m2-01-images-containers-sbom`
+- **Why:** أولُ بندٍ في M2 (التشغيل والبيانات) — تبعيتُه M0 (Ready for Gate).
+- **What:** أُنشئ Dockerfile متعدد المراحل (deps → build → runtime) بصورةٍ أساسيّةٍ موحَّدةٍ (node:22-alpine)، وdocker-compose.yml للتطوير المحلّي، و.dockerignore، وسكربت توليد SBOM بصيغة CycloneDX، وADR-032. لا يُدَّعى تثبيتُ digest للإنتاج (قرارُ نشرٍ M2-02) ولا فحصُ صورةٍ في CI (قرارُ CI/CD).
+- **الحكمُ:** يُقرأُ على هذه الدفعة من وظائف CI بعد الدفع.

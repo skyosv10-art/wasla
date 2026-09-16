@@ -114,6 +114,15 @@ Nothing else has been changed in this repository by the WASLA integration work.
   error bodies, legitimate requests pass, deterministic clock-based refill. Merged via
   [PR #201](https://github.com/skyosv10-art/wasla/pull/201), squash `a9308c9`, 33/33 CI green.
 
+- **M2-01 — claim `CLM-0194`: images/containers/SBOM.** Standardized container build
+  for the WASLA monorepo: multi-stage `Dockerfile` (deps → build → runtime) with
+  `node:22-alpine` base image, `docker-compose.yml` for local development (6 services +
+  PostgreSQL), `.dockerignore` for reproducible context, `scripts/generate-sbom.sh` for
+  CycloneDX SBOM generation from the pnpm lockfile, and ADR-032 documenting the
+  container/SBOM/scanning decisions. Non-claims: no production digest pinning (M2-02),
+  no CI image scanning pipeline (CI/CD decision), no container registry, no runtime
+  hardening (deployment steps).
+
 - **M1-09 — claim `CLM-0193`: threat model and security testing policy — COMPLETED.** A signed security
   review package covering M1-01..M1-08 controls, ADR-018..031, RISK_REGISTER (46 risks),
   and INCIDENTS. `docs/07-security/THREAT_MODEL.md` catalogs threats by STRIDE category

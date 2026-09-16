@@ -1,0 +1,115 @@
+# WASLA — Docker Compose for local development
+#
+# ADR-032: Container images, SBOM, and vulnerability scanning (M2-01)
+#
+# Usage:
+#   docker compose build        # Build all service images
+#   docker compose up matching   # Start the matching service
+#   docker compose up            # Start all services
+#
+# Each service uses the same base image (node:22-alpine) with its
+# entrypoint overridden. PostgreSQL is included for integration testing.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: wasla_local_dev
+      POSTGRES_DB: wasla
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  matching:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/matching/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3001:3000"
+
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/dispatch/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3002:3000"
+
+  orders:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/orders/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3003:3000"
+
+  marketplace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/marketplace/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3004:3000"
+
+  delivery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/delivery/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3005:3000"
+
+  identity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "services/identity/dist/index.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:wasla_local_dev@postgres:5432/wasla
+      - NODE_ENV=production
+    ports:
+      - "3006:3000"
+
+volumes:
+  pgdata:

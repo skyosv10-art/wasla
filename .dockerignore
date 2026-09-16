@@ -1,0 +1,62 @@
+# WASLA — .dockerignore
+# Everything not needed for the build is excluded to keep the context small
+# and the build reproducible.
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Docs (not needed in runtime image)
+docs/
+*.md
+!README.md
+!package.json
+!pnpm-workspace.yaml
+!pnpm-lock.yaml
+
+# Test artifacts
+artifacts/
+coverage/
+*.lcov
+
+# Node modules (will be installed in the build stage)
+node_modules/
+**/node_modules/
+
+# Build output (will be built in the build stage)
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment files (must not be baked into images)
+.env
+.env.*
+!.env.example
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts not needed at runtime
+scripts/checks/
+scripts/baseline.sh
+scripts/verify.sh
+scripts/run-tests.sh
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db

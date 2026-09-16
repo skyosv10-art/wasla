@@ -100,7 +100,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M2-01 | images/containers/SBOM | Platform / Security | M0 | Not Started | reproducible build + scan | توحيد base images. |
+| M2-01 | images/containers/SBOM | Platform / Security | M0 | In Progress | reproducible build + scan | توحيد base images. |
 | M2-02 | IaC وبيئات وشبكات وTLS | Platform / SRE | M1 | Not Started | fresh plan/apply | اختيار platform/provider وADR. |
 | M2-03 | secrets/KMS/rotation | Security / Platform | M2-02 | Not Started | rotation drill | تعريف secret inventory. |
 | M2-04 | config schema وenv examples | DevEx / All | M0 | Not Started | config tests and docs | جرد 20 variables الحالية. |

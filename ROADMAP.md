@@ -1,7 +1,7 @@
 # WASLA MARKET — Roadmap
 
 **Repository:** `skyosv10-art/wasla` (this repository is WASLA MARKET)
-**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine); last updated again 2026-09-16 (M1-05B wave 4 — product lifecycle publish/archive/inventory-adjust now prove the actor from the token and store membership inside the writing transaction, `RISK-0042` finding 3 measured: 6 of 8 body actor fields bound, 2 remain by written platform-authority reason)
+**Last updated:** 2026-09-15 (M1-05B wave 2 — five marketplace routes now prove store membership from the token inside the writing transaction; and the first version of that guard passed every in-memory test while locking every store owner out of their own store on a real engine); last updated again 2026-09-16 (M1-05B wave 4 — product lifecycle publish/archive/inventory-adjust now prove the actor from the token and store membership inside the writing transaction, `RISK-0042` finding 3 measured: 6 of 8 body actor fields bound, 2 remain by written platform-authority reason); last updated again 2026-09-16 (M1-06 — published OpenAPI contracts now declare security schemes and 401/403 responses; 75 operations across 8 boundaries, `RISK-0041` → `mitigating`)
 **Last milestone (M1-05 — the authorization policy matrix):** `M1-04` answers *is this request from a service the system knows?* Nothing in the repository answered *is this service entitled to what it carries?* — and the vacuum was a **correct decision half-implemented**: `packages/service-auth/src/{enforce,index,token}.ts` and `services/orders/src/http/service-identity.ts` each state in prose that the gateway must not hold a role→scope matrix, and each names `M1-05` as its owner. So the matrix had a declared home and no existence, and `mintServiceToken` passed `scp` through without asking about entitlement. Added: `packages/authz-policy` as the single source (80 enforced operations, 10 production roles with 18 grants, 8 isolated test-fleet roles, 16 classified owner/tenant bindings, pure decision functions), 27 rejection-heavy tests across all three dimensions (`owner`/`role`/`tenant`), and governance check 16 wired into the single entry point — drift-proof in **both** directions, with 16 mutation cases proving the guard bites.
 **The board's number was never measured, and it is corrected by addition, not erasure:** the `M1-05` row said *inventory of 107 operations*. The live measurement is **8 boundaries · 89 registered routes · 80 enforced operations · 9 `OPEN` routes · 64 enforced scopes · 0 routes with neither a scope nor `OPEN`**. The `107` stays written on the board because it is the prior evidence; the measurement is written beside it with the guard that reproduces it.
 **Two gaps the measurement surfaced that were not on anyone's list — `RISK-0042`:** (1) **ownership is caller-asserted.** `assertOwner()` compares `order.customerPublicId` against the `X-Customer-Public-Id` header, whose **shape** is validated and whose truth is not — and the token carries `sub`/`aud`/`scp` with **no beneficiary identity at all**, so `TOKEN_BOUND_OPERATION_COUNT = 0` out of 80. (2) **tenant membership is never checked.** `storeSlug` is read from the path and handed to the repository in **eleven** marketplace routes, so a holder of `marketplace:staffWrite` can write staff into *any* store. Both are recorded by addition; `RISK-0026` (resource identity in the query string) is **not** claimed closed.
@@ -104,7 +104,45 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
-<<<<<<< HEAD
+- **M1-06 — claim `CLM-0190`: the published contracts now declare what the code enforces.** All
+  eight published OpenAPI specs (`services/{delivery,dispatch,geography,identity,marketplace,matching,negotiations,orders}/contracts/api.openapi.yml`)
+  now carry a `securitySchemes.ServiceAuth` (apiKey, header `x-wasla-service-auth`), a per-operation
+  `security:` block whose scope matches the `scoped(SCOPES.*)` in the service's `app.ts`, and `401`/`403`
+  responses via reusable `$ref` to each service's `ErrorResponse` — **75 enforced operations across 8
+  boundaries**, every scope-to-route mapping verified programmatically. The `§5.9` inventory in
+  `SERVICE_AUTH_ENFORCEMENT.md` is emptied to zero rows (markers preserved), and `RISK-0041` moves
+  from `open` to `mitigating`. Two contract drifts surfaced and were fixed at the root: four contract
+  packages (`dispatch`, `marketplace`, `matching`, `negotiation`) were missing `401`/`403` from their
+  `HTTP_STATUS_CODES` arrays, and a fragile regex in `marketplace/http-drift.test.ts` broke under
+  `ruamel.yaml`'s flow-mapping reformatting (`{ $ref: '...' }` → `{$ref: '...'}`) and was widened with
+  `\s*` toleration — matching the same reference name, not weakening the guard. All 8 service suites
+  green (2405 tests), full `verify.sh` green with no skips. Merged via [PR #197](https://github.com/skyosv10-art/wasla/pull/197)
+  (30/30 CI green). **What this does not close:** `RISK-0041`'s final closure is the owner's call;
+  the guard reads `securitySchemes`/header presence only, not per-route scope matching — that was
+  verified once manually here, and no permanent guard prevents scope drift if a contract's `security:`
+  block is edited without the code changing. And the main-branch CI run after merge caught two real
+  debts: CLM-0190 was not released (stale-claim freshness check failed), and ROADMAP.md carried
+  unresolved merge-conflict markers from an earlier squash that the PR check (comparing only
+  consecutive pushes) did not surface — both fixed in this same cycle.
+
+- **M5-13 — review 25/N, claim `CLM-0186`: a time bomb in a test, defused by reading CI red.** The
+  first push of the `M1-05B` wave-4 batch (PR #190) failed two CI jobs — `db-integration (delivery)`
+  and `db-integration-shared` — on `relay-acknowledgement.integration.test.ts`:
+  `expected 'critical' to be 'warning'`. The batch did not touch delivery at all, and the same jobs
+  were green on `main` two hours earlier — because the detonation is **calendar-gated, not
+  code-gated**: the test seeds a poisoned row at a fixed `T0 = 2026-09-15T00:00:00Z` and then
+  classifies severity with **the wall clock** (`new Date()`), while the classifier escalates to
+  `critical` at age ≥ 24 h (`criticalAgeSeconds = 86_400`). The first CI run **after 2026-09-16
+  00:00 UTC** was this one — every run before it passed, every run after it would have failed, on
+  `main` as well as on any branch. The root cause is the coupling of a fixed seed to a moving
+  clock in a test whose subject (acknowledgement changing the verdict) has nothing to do with the
+  passage of time. The fix anchors the classification instant to the seed (`AT = T0 + 6 h`, a
+  `warning` with no escalation, at any hour the suite runs) and uses it for the acknowledgement
+  timestamp too, so the test measures **the acknowledgement, not the machine's clock**. The unit
+  tests of the same classifier were already clock-fixed (`NOW`) and are untouched; no production
+  code changed, no gate was weakened, and the failure's evidence is documented here rather than
+  erased.
+
 - **M1-05B — wave 4, claim `CLM-0185`.** `RISK-0042`'s **third finding is finally measured**, not
   just described: the three product-lifecycle routes — `POST /products/:productId/publish`,
   `POST /products/:productId/archive`, `POST /products/:productId/inventory` — no longer take the
@@ -135,25 +173,6 @@ Nothing else has been changed in this repository by the WASLA integration work.
   member) stays a named debt needing a third error code and a contract change; `RISK-0042` closing is
   the programme owner's decision alone; and the published contracts still do not state the beneficiary
   requirement — that is `RISK-0041` and belongs to `M1-06`.
-=======
-- **M5-13 — review 25/N, claim `CLM-0186`: a time bomb in a test, defused by reading CI red.** The
-  first push of the `M1-05B` wave-4 batch (PR #190) failed two CI jobs — `db-integration (delivery)`
-  and `db-integration-shared` — on `relay-acknowledgement.integration.test.ts`:
-  `expected 'critical' to be 'warning'`. The batch did not touch delivery at all, and the same jobs
-  were green on `main` two hours earlier — because the detonation is **calendar-gated, not
-  code-gated**: the test seeds a poisoned row at a fixed `T0 = 2026-09-15T00:00:00Z` and then
-  classifies severity with **the wall clock** (`new Date()`), while the classifier escalates to
-  `critical` at age ≥ 24 h (`criticalAgeSeconds = 86_400`). The first CI run **after 2026-09-16
-  00:00 UTC** was this one — every run before it passed, every run after it would have failed, on
-  `main` as well as on any branch. The root cause is the coupling of a fixed seed to a moving
-  clock in a test whose subject (acknowledgement changing the verdict) has nothing to do with the
-  passage of time. The fix anchors the classification instant to the seed (`AT = T0 + 6 h`, a
-  `warning` with no escalation, at any hour the suite runs) and uses it for the acknowledgement
-  timestamp too, so the test measures **the acknowledgement, not the machine's clock**. The unit
-  tests of the same classifier were already clock-fixed (`NOW`) and are untouched; no production
-  code changed, no gate was weakened, and the failure's evidence is documented here rather than
-  erased.
->>>>>>> origin/main
 
 - **M1-05B (runtime authorization + token-bound beneficiary) — wave 1 of 3, claim `CLM-0178`.**
   The two order read routes (`GET /orders/:orderId`, `GET /orders/:orderId/history`) no longer

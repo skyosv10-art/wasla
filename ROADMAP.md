@@ -104,14 +104,15 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
-- **M1-08 — claim `CLM-0192`: edge abuse/error/audit controls.** A shared edge-controls
+- **M1-08 — claim `CLM-0192`: edge abuse/error/audit controls — COMPLETED.** A shared edge-controls
   layer in `packages/service-auth/src/edge-controls.ts` provides three mechanisms:
   `EdgeRateLimiter` (token bucket on an injected clock, returns 429 + Retry-After, never
   sleeps, in-process only), `redactErrorBody` (strips sensitive headers and `wsvc2.` tokens
   from error response bodies), and `AuditEventSink` (minimal interface for security-denial
   events: authn_denied, authz_denied, rate_limited). 22 acceptance tests in
   `edge-controls.test.ts` prove: 429 after bucket exhaustion, no token/secret leakage in
-  error bodies, legitimate requests pass, deterministic clock-based refill.
+  error bodies, legitimate requests pass, deterministic clock-based refill. Merged via
+  [PR #201](https://github.com/skyosv10-art/wasla/pull/201), squash `a9308c9`, 33/33 CI green.
 
 - **M1-07 — claim `CLM-0191`: bot internal routes now enforce service identity.** The bot-runtime
   HTTP app (`packages/bot-runtime/src/http/app.ts`) had three internal routes with no service-auth

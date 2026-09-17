@@ -262,7 +262,18 @@ export interface FleetGrant {
 
 export const FLEET_GRANTS: Readonly<Record<string, FleetGrant>> = {
   "e2e-harness": {
-    audiences: ["identity", "dispatch", "marketplace", "negotiations", "delivery", "matching"],
+    audiences: [
+      "identity",
+      "dispatch",
+      "marketplace",
+      "negotiations",
+      "delivery",
+      "matching",
+      // الموجةُ التاسعةُ من `M1-04` (`CLM-0197`): حدُّ العميلِ صارَ يفرضُ الهويّةَ،
+      // ومُنادوهُ الفعليّونَ اليومَ بوّاباتُ الخروجِ وحدَها — لا مُنادي إنتاجٍ عبرَ
+      // HTTP لهُ (بوتُ العميلِ يُنادي حالاتِ الاستعمالِ في العمليّةِ نفسِها).
+      "customers",
+    ],
     scopes: "any-scope",
     reason:
       "بوّابةُ خروجٍ عامّةٌ في خمسِ حزمِ `*-e2e` — تُوقِّعُ بكاملِ مجموعةِ الحدِّ، وعلى «delivery» بصلاحيّةِ سوقٍ بقصدٍ ليُقاسَ رفضُ الحدِّ.",

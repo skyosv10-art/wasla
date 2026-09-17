@@ -87,11 +87,21 @@ export type {
   SubmitOrderRequestResult,
 } from "./use-cases/order-requests.js";
 
-export { createCustomerApp } from "./http/app.js";
+export { createCustomerApp, CUSTOMER_ROUTE_SCOPES } from "./http/app.js";
 export type {
   CreateCustomerAppOptions,
   CustomerHealthDescriptor,
 } from "./http/app.js";
+export {
+  CUSTOMER_SCOPES,
+  CUSTOMERS_SERVICE_AUDIENCE,
+  registerServiceIdentity as registerCustomerServiceIdentity,
+} from "./http/service-identity.js";
+export type {
+  CustomerRouteConfig,
+  CustomerRouteIdentity,
+  CustomerServiceIdentityOptions,
+} from "./http/service-identity.js";
 export { sendCustomerError } from "./http/errors.js";
 export type { CustomerErrorBody } from "./http/errors.js";
 export {

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-16T23:27:59Z",
+  "generated_at": "2026-09-17T00:47:41Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f85ab2dfbb1deda30eeef5063a991683573fb158",
-    "branch": "feat/m1-04-ingress-boundary-closure",
+    "commit": "e852c976bda6fac5f1ef6f6ae5d8ea692ebd9516",
+    "branch": "feat/m1-04-customers-identity-enforcement",
     "dirty": true,
-    "dirty_files": 14,
-    "dirty_reason": "إعادةُ توليدٍ من سجلٍّ **أخضرَ كاملاً** (/tmp/verify-m104w8-green.log · 443 حالةَ حوكمةٍ · 0 فاشلٍ) في موجةِ M1-04 الثامنةِ (CLM-0196): risks_not_closed 37→38 بفتحِ RISK-0051 · حالاتُ الحوكمةِ 429→443 بأربعَ عشرةَ حالةَ طفرةٍ للبابِ 10 · tracked_files بثلاثةِ ملفّاتٍ جديدةٍ (حارسُ حدِّ الدخولِ وحالاتُهُ وADR-034). والتوليدُ الوسيطُ من سجلٍّ أحمرَ لم يُلتزَمْ نهائيّاً لأنَّ أساساً يُعلِنُ verify_overall=failed لا يجوزُ أن يكونَ مرجعاً.",
-    "tracked_files": 2090
+    "dirty_files": 1,
+    "dirty_reason": "M1-04 wave 9 (CLM-0197): +1 tracked test file (services/customers/src/__tests__/service-identity.ts) and pnpm-lock fingerprint change from the customers service dependency on @wasla/service-auth",
+    "tracked_files": 2093
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "2ce1a28ec8883625264345c9fc67f488e422436d0e7fc34805377fa7f9e27367",
-    "lines": 3197
+    "sha256": "a9fb7082dfaf07b5b680c60c91d2c09d835deb70062c73f7a13f6314e856b0a4",
+    "lines": 3200
   },
   "static": {
     "packages": 51,
     "packages_with_typecheck": 51,
     "packages_with_test": 51,
-    "test_files_tracked": 364,
+    "test_files_tracked": 365,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 19,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m104w8-green.log",
-    "tests_passed": 4737,
-    "test_files_executed": 289,
+    "source": "/tmp/verify-m104w9-pass2.log",
+    "tests_passed": 4750,
+    "test_files_executed": 290,
     "governance_suite_cases": 443,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:76ba1591d5faa972cdab255ff3b20e74e2b341d9faef715c38d524bae852a846",
+  "fingerprint": "sha256:6f0501a47c6083f17c49179ee20c627ad7f12292fa5ce8c34eef1eaabc875aed",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

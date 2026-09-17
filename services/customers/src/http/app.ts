@@ -34,9 +34,12 @@
  * comparing bodies (§43).
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 import { SAVED_PLACES_LIMIT } from "@wasla/contracts-customer";
+
+import { CustomerError } from "../domain/errors.js";
 
 import type { ZoneReference } from "../domain/model.js";
 import type { GeographyPort } from "../ports.js";
@@ -65,6 +68,12 @@ import {
 
 import { sendCustomerError } from "./errors.js";
 import {
+  CUSTOMER_SCOPES,
+  registerServiceIdentity,
+  type CustomerRouteConfig,
+  type CustomerServiceIdentityOptions,
+} from "./service-identity.js";
+import {
   requireIdempotencyKey,
   toListLimit,
   toOrderRequestDraft,
@@ -90,12 +99,79 @@ export interface CreateCustomerAppOptions {
    * handover says so instead of claiming to be healthy.
    */
   health?: CustomerHealthDescriptor;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**
+   * (سابقةُ حدِّ السوقِ وحدِّ الطلباتِ): قيمةٌ افتراضيّةٌ تجعلُ نسيانَ التركيبِ
+   * في جذرٍ ما حدَّ عميلٍ **مفتوحاً يمرُّ كلَّ اختباراتِه** — وهيَ بعينِها
+   * الثغرةُ التي قاسَتْها الموجةُ الثامنةُ (`RISK-0051`) وتسدُّها هذهِ. فمن
+   * أرادَ حدّاً بلا فرضٍ فليكتبْ ذلكَ صراحةً في جذرِ تركيبِه، ولا موضعَ في
+   * المستودعِ يكتبُه.
+   */
+  serviceIdentity: CustomerServiceIdentityOptions;
 }
 
 const DEFAULT_HEALTH: CustomerHealthDescriptor = {
   persistence: "memory",
   orderIntake: "unconfigured",
 };
+
+/** الصلاحيّاتُ المُعلَنةُ على مساراتِ العميلِ (domain:resource:action). */
+export const CUSTOMER_ROUTE_SCOPES = CUSTOMER_SCOPES;
+
+/** `/health` وحدَهُ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: CustomerRouteConfig = { serviceIdentity: "open" };
+
+/**
+ * مسارٌ يمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ** — وهوَ كلُّ مسارٍ في هذا
+ * الحدِّ ما خلا `/health`. فـ`beneficiary: "required"` يجعلُ الوسيطَ المركزيَّ
+ * يرفضُ كلَّ رمزٍ لا يحملُ هويّةَ المُنتَفِعِ **قبلَ** أن يمسَّ المسارُ قاعدةَ
+ * البياناتِ، ثمَّ يُقارِنُ `requireBeneficiary` المُنتَفِعَ المُوَقَّعَ
+ * بـ`:waslaPublicId` المكتوبِ في المسارِ.
+ */
+function ownerScoped(...scopes: readonly string[]): CustomerRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * مالكُ المَورِدِ كما **يُثبِتُهُ الرمزُ**، مُطابَقاً بما كُتِبَ في المسارِ.
+ *
+ * ── لِمَ لا يكفي المسارُ ───────────────────────────────────────────────────
+ * `:waslaPublicId` قيمةٌ **يكتبُها المُنادي**. فلو فُرِضَتِ الصلاحيّةُ وحدَها
+ * لكانَ حاملُ `customers:profile:read` يقرأُ ملفَّ كلِّ عميلٍ بتبديلِ حرفٍ في
+ * المسارِ — وهذا وجهُ `RISK-0042` نفسُهُ الذي أُغلِقَ على حدِّ الطلباتِ في
+ * `M1-05B`، ويُغلَقُ هنا في الدفعةِ التي تفرضُ الهويّةَ لا بعدَها.
+ *
+ * ── لِمَ 404 لا 403 ────────────────────────────────────────────────────────
+ * المُنادي أعلَنَ مُنتَفِعاً في الرمزِ ومُنتَفِعاً آخرَ في المسارِ، فلا يُفصَحُ
+ * لهُ أيُّهما لهُ ملفٌّ: `ADR-009` — «المساراتُ المملوكةُ تُجيبُ 404 لا 403»،
+ * وهيَ سياسةُ هذا الحدِّ المكتوبةُ أصلاً عندَ حذفِ مكانٍ ليسَ لصاحبِه.
+ *
+ * ── ولِمَ يبقى فرعُ الغيابِ مكتوباً ───────────────────────────────────────
+ * لا يُبلَغُ من مسارٍ مُصنَّفٍ بـ`ownerScoped` (الوسيطُ رفضَ قبلَهُ)، وهوَ
+ * **حارسُ تركيبٍ**: مَن سجَّلَ مساراً جديداً ونسِيَ `ownerScoped` يرى 503 في
+ * الاختبارِ لا 200 بملكيّةٍ غيرِ مفحوصةٍ.
+ */
+function requireBeneficiary(request: FastifyRequest, traceId: string): string {
+  const caller = request.serviceCaller;
+  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  if (beneficiary === undefined || beneficiary.trim() === "") {
+    throw new Error(
+      'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+    );
+  }
+
+  const { waslaPublicId } = request.params as { waslaPublicId: string };
+  if (waslaPublicId !== beneficiary) {
+    throw new CustomerError(
+      "CUSTOMER_PROFILE_NOT_FOUND",
+      `لا ملف عميل للمعرّف ${waslaPublicId}`,
+      { traceId },
+    );
+  }
+
+  return beneficiary;
+}
 
 /**
  * Resolve zone paths for display, best effort.
@@ -149,6 +225,10 @@ export function createCustomerApp(
     sendCustomerError(reply, error, request.id);
   });
 
+  // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
+  // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
+  registerServiceIdentity(app, options.serviceIdentity);
+
   // Per-request deps: the Fastify request id becomes the event `trace_id`, so an
   // outbox envelope can be traced back to the HTTP call that produced it.
   const withTrace = (traceId: string): UseCaseDeps => ({ ...deps, traceId });
@@ -158,7 +238,7 @@ export function createCustomerApp(
   // Readiness, per the contract's /health schema. `degraded` when no order-engine
   // adapter is wired: reads and writes work, but a handover cannot succeed, and
   // reporting `ok` in that state would hide the one thing Phase 04 exists to do.
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({
       status: health.orderIntake === "configured" ? "ok" : "degraded",
       service: "customers-service",
@@ -169,14 +249,21 @@ export function createCustomerApp(
 
   // --- profile -------------------------------------------------------------
 
-  app.get("/customers/:waslaPublicId/profile", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.get(
+    "/customers/:waslaPublicId/profile",
+    { config: ownerScoped(CUSTOMER_SCOPES.profileRead) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const profile = await getCustomerProfile(deps, { waslaPublicId });
     return reply.status(200).send(toCustomerProfileDto(profile));
-  });
+    },
+  );
 
-  app.put("/customers/:waslaPublicId/profile", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.put(
+    "/customers/:waslaPublicId/profile",
+    { config: ownerScoped(CUSTOMER_SCOPES.profileWrite) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const result = await upsertCustomerProfile(withTrace(request.id), {
       waslaPublicId,
       patch: toProfilePatch(request.body),
@@ -184,12 +271,16 @@ export function createCustomerApp(
     return reply
       .status(result.created ? 201 : 200)
       .send(toCustomerProfileDto(result.profile));
-  });
+    },
+  );
 
   // --- saved places --------------------------------------------------------
 
-  app.get("/customers/:waslaPublicId/places", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.get(
+    "/customers/:waslaPublicId/places",
+    { config: ownerScoped(CUSTOMER_SCOPES.placeRead) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const places = await listSavedPlaces(deps, { waslaPublicId });
     const zones = await resolveZones(
       deps.geography,
@@ -202,10 +293,14 @@ export function createCustomerApp(
       ),
       limit: SAVED_PLACES_LIMIT,
     });
-  });
+    },
+  );
 
-  app.post("/customers/:waslaPublicId/places", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.post(
+    "/customers/:waslaPublicId/places",
+    { config: ownerScoped(CUSTOMER_SCOPES.placeWrite) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const idempotencyKey = requireIdempotencyKey(
       request.headers["idempotency-key"],
     );
@@ -218,18 +313,18 @@ export function createCustomerApp(
     return reply
       .status(result.replayed ? 200 : 201)
       .send(toSavedPlaceDto(result.place, zones[0]?.path ?? null));
-  });
+    },
+  );
 
   // 204 with no body. Deleting an already-deleted place is a 404 rather than a
   // silent success: the customer asked to remove something that is not theirs or
   // no longer exists, and owner-scoped reads answer 404 not 403 (ADR-009).
   app.delete(
     "/customers/:waslaPublicId/places/:placeId",
+    { config: ownerScoped(CUSTOMER_SCOPES.placeWrite) },
     async (request, reply) => {
-      const { waslaPublicId, placeId } = request.params as {
-        waslaPublicId: string;
-        placeId: string;
-      };
+      const waslaPublicId = requireBeneficiary(request, request.id);
+      const { placeId } = request.params as { placeId: string };
       await removeSavedPlace(withTrace(request.id), { waslaPublicId, placeId });
       return reply.status(204).send();
     },
@@ -240,8 +335,9 @@ export function createCustomerApp(
   // Preview writes nothing and calls no engine: same validation, no side effect.
   app.post(
     "/customers/:waslaPublicId/order-requests/preview",
+    { config: ownerScoped(CUSTOMER_SCOPES.orderRequestPreview) },
     async (request, reply) => {
-      const { waslaPublicId } = request.params as { waslaPublicId: string };
+      const waslaPublicId = requireBeneficiary(request, request.id);
       const preview = await previewOrderRequest(deps, {
         waslaPublicId,
         draft: toOrderRequestDraft(request.body),
@@ -250,8 +346,11 @@ export function createCustomerApp(
     },
   );
 
-  app.get("/customers/:waslaPublicId/order-requests", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.get(
+    "/customers/:waslaPublicId/order-requests",
+    { config: ownerScoped(CUSTOMER_SCOPES.orderRequestRead) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const limit = toListLimit((request.query as { limit?: unknown }).limit);
     const requests = await listOrderRequests(deps, {
       waslaPublicId,
@@ -264,13 +363,17 @@ export function createCustomerApp(
     return reply.status(200).send({
       items: requests.map((item) => toOrderRequestDto(item, zones)),
     });
-  });
+    },
+  );
 
   // A failed handover throws CUSTOMER_ORDER_INTAKE_UNAVAILABLE (503) *after* the
   // request row and its failure event were written, so the customer sees an error
   // and the request is still visible in the list — fail-closed, not fail-silent.
-  app.post("/customers/:waslaPublicId/order-requests", async (request, reply) => {
-    const { waslaPublicId } = request.params as { waslaPublicId: string };
+  app.post(
+    "/customers/:waslaPublicId/order-requests",
+    { config: ownerScoped(CUSTOMER_SCOPES.orderRequestWrite) },
+    async (request, reply) => {
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const idempotencyKey = requireIdempotencyKey(
       request.headers["idempotency-key"],
     );
@@ -286,15 +389,15 @@ export function createCustomerApp(
     return reply
       .status(result.replayed ? 200 : 201)
       .send(toOrderRequestDto(result.orderRequest, zones));
-  });
+    },
+  );
 
   app.get(
     "/customers/:waslaPublicId/order-requests/:orderRequestId",
+    { config: ownerScoped(CUSTOMER_SCOPES.orderRequestRead) },
     async (request, reply) => {
-      const { waslaPublicId, orderRequestId } = request.params as {
-        waslaPublicId: string;
-        orderRequestId: string;
-      };
+      const waslaPublicId = requireBeneficiary(request, request.id);
+      const { orderRequestId } = request.params as { orderRequestId: string };
       const orderRequest = await getOrderRequest(deps, {
         waslaPublicId,
         orderRequestId,

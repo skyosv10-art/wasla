@@ -56,6 +56,8 @@ import {
   type UseCaseDeps,
   CUSTOMERS_GEOGRAPHY_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
+  CUSTOMER_SCOPES,
+  CUSTOMERS_SERVICE_AUDIENCE,
 } from "@wasla/customers-service";
 import {
   createGeographyApp,
@@ -159,6 +161,29 @@ function geoSigner(serviceName: string, scopes: readonly string[]) {
   });
 }
 
+/**
+ * `M1-04` · الموجةُ التاسعة: حدُّ العميلِ صارَ يفرضُ الهويّةَ **والمُنتَفِعَ**،
+ * فالبوّابةُ توقِّعُ كما سيوقِّعُ أيُّ مُنادٍ عبرَ HTTP — ولا تُعطِّلُ الفرضَ
+ * لتمرَّ. والمُنتَفِعُ يُقرأُ من المسارِ نفسِهِ (`/customers/:waslaPublicId/…`)
+ * لأنَّ المَورِدَ مُعنوَنٌ بمالكِهِ، فمطابقةُ الرمزِ للمسارِ هيَ الدعوى
+ * المفروضةُ في `services/customers/src/http/app.ts:requireBeneficiary`.
+ */
+function customerBeneficiaryOf(path: string): string | undefined {
+  const match = /^\/customers\/([^/?]+)/u.exec(path);
+  return match?.[1];
+}
+
+function signCustomer(method: string, path: string): Record<string, string> {
+  const sign = createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: CUSTOMERS_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(CUSTOMER_SCOPES),
+  });
+  const withoutQuery = path.split("?")[0] ?? path;
+  return sign(method, withoutQuery, customerBeneficiaryOf(path));
+}
+
 
 /** Start the gate: four listeners, one store set, one bot. */
 export async function startGate(): Promise<GateContext> {
@@ -254,6 +279,11 @@ export async function startGate(): Promise<GateContext> {
       orderIntake: "configured",
     },
     logger: false,
+    // `M1-04` · الموجةُ التاسعة: مفروضٌ في البوّابةِ كما في الإنتاجِ.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await customerApp.listen({ port: 0, host: "127.0.0.1" });
   const customerUrl = `http://127.0.0.1:${(customerApp.server.address() as AddressInfo).port}`;
@@ -390,6 +420,7 @@ export async function callCore(
     method: init.method,
     headers: {
       "content-type": "application/json",
+      ...signCustomer(init.method, init.path),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },

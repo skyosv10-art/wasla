@@ -30,13 +30,21 @@ import {
 } from "../index.js";
 
 describe("جردُ العملياتِ المفروضةِ", () => {
-  it("أربعٌ وثمانونَ عمليّةً على تسعةِ حدودٍ — إحدى وثمانونَ على ثمانيةِ خدماتٍ + ثلاثٌ على حدِّ القناةِ (M1-07)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(84);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(9);
+  /**
+   * (`M1-04` الموجةُ 9 · `CLM-0197`) العددُ **قلَبَ** من أربعٍ وثمانينَ على
+   * تسعةِ حدودٍ إلى **ثلاثٍ وتسعينَ على عَشْرِ حدودٍ** — قلبٌ لا محوٌ: الدعوى
+   * السابقةُ صدقت لدفعتِها، وتسعُ عملياتِ حدِّ العميلِ دخلَتْ في هذهِ الدفعةِ
+   * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
+   */
+  it("ثلاثٌ وتسعونَ عمليّةً على عَشْرِ حدودٍ — أربعٌ وثمانونَ قبلَ تسعِ عملياتِ حدِّ العميلِ (M1-04 · الموجةُ 9)", () => {
+    expect(ENFORCED_OPERATIONS).toHaveLength(93);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(10);
   });
 
-  it("ثمانٍ وستّونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت خمساً وستّينَ قبلَ ثلاثِ صلاحيّاتِ القناةِ)", () => {
-    expect(allEnforcedScopes()).toHaveLength(68);
+  it("خمسٌ وسبعونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وستّينَ قبلَ سبعِ صلاحيّاتِ حدِّ العميلِ · وخمساً وستّينَ قبلَ صلاحيّاتِ القناةِ)", () => {
+    // سبعُ صلاحيّاتٍ لتسعِ عملياتٍ: القراءةُ والكتابةُ في الأماكنِ يتقاسمُهما
+    // مسارانِ، وقراءةُ الطلباتِ يتقاسمُها مسارُ القائمةِ ومسارُ الواحدِ.
+    expect(allEnforcedScopes()).toHaveLength(75);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -291,21 +299,35 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * القديمةُ (سبعٌ) صدقت للدفعةِ التي كُتِبَتْ فيها، وصفوفُ الموجةِ الرابعةِ
    * الثلاثةُ (`publish` · `archive` · `inventory`) دخلَتْ فصارَ القياسُ عشرةً.
    */
-  it("العملياتُ المربوطةُ بالرمزِ عشرٌ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ", () => {
+  /**
+   * (`M1-04` الموجةُ 9) وقلَبَ العددُ ثانيةً من عشرٍ إلى **تسعَ عشرةَ**: تسعُ
+   * عملياتِ حدِّ العميلِ كلُّها مربوطةٌ بالمالكِ في الدفعةِ نفسِها التي فرضَتْ
+   * هويّةَ الخدمةِ عليها — فلم يمرَّ هذا الحدُّ بحالِ «مفروضٌ بلا ربطٍ» أصلاً.
+   */
+  it("العملياتُ المربوطةُ بالرمزِ تسعَ عشرةَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت عشراً)", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(10);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(19);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "DELETE /customers/:waslaPublicId/places/:placeId",
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
+      "GET /customers/:waslaPublicId/order-requests",
+      "GET /customers/:waslaPublicId/order-requests/:orderRequestId",
+      "GET /customers/:waslaPublicId/places",
+      "GET /customers/:waslaPublicId/profile",
       "GET /orders/:orderId",
       "GET /orders/:orderId/history",
       "GET /stores/:storeSlug/staff",
+      "POST /customers/:waslaPublicId/order-requests",
+      "POST /customers/:waslaPublicId/order-requests/preview",
+      "POST /customers/:waslaPublicId/places",
       "POST /products/:productId/archive",
       "POST /products/:productId/inventory",
       "POST /products/:productId/publish",
       "POST /stores/:storeSlug/products",
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
+      "PUT /customers/:waslaPublicId/profile",
     ]);
   });
 
@@ -339,12 +361,14 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
     ]);
-    // وبُعدُ الملكيّةِ يبقى اثنَينِ: الموجةُ الثانيةُ **أضافَتْ** ولم تُبدِّلْ.
+    // وبُعدُ الملكيّةِ كانَ اثنَينِ ثمَّ صارَ **أحدَ عشرَ** بتسعِ عملياتِ حدِّ
+    // العميلِ (`M1-04` الموجةُ 9): زيادةٌ في بُعدِ الملكيّةِ لا انتقاصٌ من بُعدِ
+    // المستأجرِ — والثمانيةُ أعلاهُ كما هيَ، فالقياسانِ مستقلّانِ.
     expect(
       OPERATION_BINDINGS.filter(
         (b) => b.dimension === "owner" && b.strength === "token-bound",
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(11);
   });
 
   /**

@@ -111,7 +111,7 @@ const DB_AWARE_FILES: readonly string[] = [
  * «شيءٍ يشبه الجواب» كان سيجعل خطأً في الترميز يظهر في التشغيل لا في `tsc`. و`http/server.ts`
  * لا يستورد الإطارَ أصلاً — يبني التطبيقَ ويستمع، فلا يدخل القائمة.
  */
-const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts"];
+const HTTP_AWARE_FILES: readonly string[] = ["http/app.ts", "http/errors.ts", "http/service-identity.ts"];
 
 /**
  * ثلاثةُ ملفاتٍ تُعدّل صفّاً — **بالأسماء، ولكلٍّ منها قرارٌ مكتوبٌ يقول لماذا.**
@@ -309,17 +309,21 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     )).toBe(true);
   });
 
-  it("التبعيّاتُ المُعلَنةُ أربعٌ: العقدُ والمُشغّلُ وORM وإطارُ HTTP", () => {
+  it("التبعيّاتُ المُعلَنةُ ستٌّ: العقدُ والمُشغّلُ وORM وإطارُ HTTP وهويّةُ الخدمة", () => {
     /**
      * القائمةُ مكتوبةٌ صريحةً حتى تسقط أوّلُ تبعيّةٍ تُضاف بلا قرارٍ موثَّق: مكتبةُ تحقّقٍ
      * أو عميلُ HTTP أو مُجدولٌ هنا يعني أنّ الخدمةَ صارت تفعل ما لم تُعلنه هذه المراجعة.
      * و`pg` و`drizzle-orm` دخلتا بقرار المراجعة 3/6 (استمراريّة)، بنفس نسختَي خدمة السمعة.
+     * و`@wasla/service-auth` و`@wasla/auth-sdk` دخلتا بالموجةِ الثالثةَ عشرةَ (`CLM-0201`):
+     * فرضُ هويّةِ الخدمةِ على حدِّ الدخولِ.
      */
     const manifest: unknown = JSON.parse(readFileSync(join(SRC, "..", "package.json"), "utf8"));
     const dependencies = (manifest as { readonly dependencies?: Record<string, string> })
       .dependencies;
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
+      "@wasla/auth-sdk",
       "@wasla/contracts-subscription",
+      "@wasla/service-auth",
       "drizzle-orm",
       "fastify",
       "pg",

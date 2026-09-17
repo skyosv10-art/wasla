@@ -45,6 +45,8 @@ paths:
       tags: [subscriptions]
       summary: قائمة نسخ الخطط
       operationId: listSubscriptionPlans
+      security:
+        - ServiceAuth: ['subscriptions:plans:read']
       description: |
         تُعاد النسخ كما خُزّنت، ولا يوجد مسار لتعديلها: خطة قابلة للتحرير تغيّر مدة مُنحت سابقاً بلا سجل.
         `frozen_only` يجعل المستهلك يطلب ما يصلح للاستعمال فعلاً بدلاً من تخمين معنى نسخة غير مجمدة.
@@ -56,6 +58,18 @@ paths:
           schema: { type: boolean }
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+    AuthUnauthorized:
+      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة أو بلا مُنتَفِعٍ
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
         '200':
           description: نسخ الخطط المطابقة مع امتيازاتها
           content:
@@ -85,6 +99,8 @@ paths:
       tags: [subscriptions]
       summary: قراءة نسخة خطة مع امتيازاتها
       operationId: getSubscriptionPlan
+      security:
+        - ServiceAuth: ['subscriptions:plans:read']
       description: |
         النسخة جزء من عنوان المورد لا معلومة اختيارية في الاستجابة فقط: من دونها قد يطلب القارئ اسماً ثابتاً
         ويأخذ مدة تغيرت سراً. الامتيازات هنا كتالوج قراءة، لا سلطة لتفعيل أو منع سائق.
@@ -93,6 +109,8 @@ paths:
         - $ref: '#/components/parameters/PlanVersion'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الخطة المجمدة أو غير المجمدة بنسختها الصريحة
           content:
@@ -123,6 +141,8 @@ paths:
       tags: [subscriptions]
       summary: بدء تجربة سائق بخطة مجمدة
       operationId: startSubscriptionTrial
+      security:
+        - ServiceAuth: ['subscriptions:subscriptions:write']
       description: |
         البداية تنشئ منحة تجربة في الدفتر ثم تبني الحالة منها، لا صف حالة يدوي يتيم. مفتاح التفرّد إلزامي
         لأن إعادة محاولة المرسل بعد انقطاع الشبكة يجب أن تعيد المنحة نفسها لا أن تضيف تجربة ثانية.
@@ -145,6 +165,8 @@ paths:
                   plan_version: 1
                   requested_at: '2026-08-23T20:58:00Z'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '201':
           description: بدأت التجربة وسجلت مدتها في الدفتر
           content:
@@ -195,6 +217,8 @@ paths:
       tags: [subscriptions]
       summary: قراءة حالة اشتراك سائق المشتقة
       operationId: getSubscriptionState
+      security:
+        - ServiceAuth: ['subscriptions:state:read']
       description: |
         `is_stale` مقصود لا عيب في الاستجابة: نهاية المدة تقارن بالوقت حتى قبل أن تعالجها النبضة،
         فيعرف القارئ أن الصف المتحقق يحتاج إعادة بناء. إخفاء ذلك خلف حالة تبدو حديثة أرخص لكنه قراءة كاذبة.
@@ -202,6 +226,8 @@ paths:
         - $ref: '#/components/parameters/DriverPublicId'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الحالة ونسخة الخطة والامتيازات المشتقة
           content:
@@ -232,6 +258,8 @@ paths:
       tags: [subscriptions]
       summary: تفعيل اشتراك بإضافة مدة مدفوعة
       operationId: activateSubscription
+      security:
+        - ServiceAuth: ['subscriptions:activate:write']
       description: |
         المرجع المدفوع opaque ولا يفسر هنا؛ وظيفته وصل تسليم موثوق بمنحة مدة واحدة لا امتلاك قرار خارجي.
         تُضاف المدة إلى الدفتر ثم تشتق الحالة، فلا يعدل هذا الفعل تاريخاً سابقاً ولا يكتب رصيداً جانبياً.
@@ -255,6 +283,8 @@ paths:
                   plan_version: 1
                   activated_at: '2026-09-06T20:58:00Z'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: أضيفت المدة وأعيد اشتقاق الحالة
           content:
@@ -298,6 +328,8 @@ paths:
       tags: [subscriptions]
       summary: إعادة بناء الحالة من دفتر المُدد
       operationId: recomputeSubscription
+      security:
+        - ServiceAuth: ['subscriptions:recompute:write']
       description: |
         هذا الطريق يثبت أن الحالة مشتقة لا أصل: حذف الصف المتحقق أو تصحيحه لا يخسر المنح، لأن الدفتر
         وحده يعيد بناءه. لا `requestBody` عمداً؛ الفعل على الحالة المخزنة، وإعلان جسم فارغ يجبر المرسل
@@ -307,6 +339,8 @@ paths:
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: أعيدت الحالة من الدفتر، سواء اختلفت أم بقيت كما كانت
           content:
@@ -339,6 +373,8 @@ paths:
       tags: [subscriptions]
       summary: قراءة دفتر مُدد سائق
       operationId: listSubscriptionPeriods
+      security:
+        - ServiceAuth: ['subscriptions:periods:read']
       description: |
         الدفتر يعرض المنح كما أضيفت ولا يحسب رصيداً موازياً. هذا أغنى من إرجاع نهاية واحدة لأن السؤال
         التشغيلي هو «أي منحة صنعت هذه النهاية؟»، والنسخة الأرخص تضيع جواب السؤال عند أول تجديد.
@@ -346,6 +382,8 @@ paths:
         - $ref: '#/components/parameters/DriverPublicId'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: مدد السائق بترتيب الإنشاء
           content:
@@ -374,6 +412,8 @@ paths:
       tags: [referrals]
       summary: المطالبة بإحالة برمز موجود
       operationId: claimReferral
+      security:
+        - ServiceAuth: ['subscriptions:referrals:write']
       description: |
         المطالبة تسجل إحالة `pending` لا مكافأة فورية: التأهيل يبنى من وقائع المُحال، لا من التسجيل.
         مكافأة التسجيل تبدو أرخص لكنها تجعل إنشاء هويات خاملة طريقاً للحصول على منحة.
@@ -395,6 +435,8 @@ paths:
                   referee_public_id: WS-9876543210
                   claimed_at: '2026-08-23T20:58:00Z'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '201':
           description: سُجلت الإحالة بانتظار التأهيل
           content:
@@ -430,6 +472,8 @@ paths:
       tags: [referrals]
       summary: قراءة الإحالات بمُرشح إلزامي
       operationId: listReferrals
+      security:
+        - ServiceAuth: ['subscriptions:referrals:read']
       description: |
         واحد على الأقل من `referrer_public_id` أو `referee_public_id` أو `state` إلزامي. القراءة بلا مرشح
         تعني عرض شبكة الإحالات كلها بطلب واحد، وهو اختصار رخيص يتوسع بلا حد ويكشف أكثر مما يحتاجه المستهلك.
@@ -451,6 +495,8 @@ paths:
             enum: [pending, qualified, rewarded, rejected]
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الإحالات المطابقة، أحدثها أولاً
           content:
@@ -479,6 +525,8 @@ paths:
       tags: [referrals]
       summary: قراءة رمز إحالة مالك
       operationId: getReferralCode
+      security:
+        - ServiceAuth: ['subscriptions:referrals:read']
       description: |
         للمالك رمز واحد ظاهر صراحة بدلاً من توليد رمز جديد عند كل قراءة؛ التوليد المتكرر يخلق هويات
         تسويق متنافسة لمالك واحد ويصير تتبع الإحالة غير حاسم.
@@ -486,6 +534,8 @@ paths:
         - $ref: '#/components/parameters/OwnerPublicId'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: رمز الإحالة وحالة صلاحيته
           content:
@@ -507,6 +557,8 @@ paths:
       tags: [ops]
       summary: نبضة الزمن للتحقق من الانقضاء ومهلة المجتمع
       operationId: tickSubscriptions
+      security:
+        - ServiceAuth: ['subscriptions:tick:run']
       description: |
         النبضة هي المكان الوحيد الذي يثبت انتقالات الانقضاء ونهاية مهلة المجتمع. لا `requestBody` عمداً:
         العمل على الساعة وعلى الدفتر المخزن، وإضافة وقت من العميل تفتح باباً لساعة ثانية تختلف عن الحقيقة.
@@ -517,6 +569,8 @@ paths:
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/RequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: اكتملت النبضة، وقد تكون جميع العدادات صفراً
           content:
@@ -558,6 +612,20 @@ paths:
                     last_tick_at: '2026-08-23T20:58:00Z'
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
+        ستَّ مساراتٍ مربوطةٌ بمُنتَفِعٍ (`on-behalf-of-public-id` في الرمزِ)،
+        وتخالفُ `:driverPublicId` أو `:ownerPublicId` → `404` لا `403`
+        ([ADR-009](../../../docs/15-decisions/ADR-009-error-code-catalog.md)).
   parameters:
     DriverPublicId:
       name: driverPublicId

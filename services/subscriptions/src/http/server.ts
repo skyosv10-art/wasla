@@ -18,6 +18,8 @@
  */
 
 import { SUBSCRIPTION_SERVICE_PORT } from "@wasla/contracts-subscription";
+import { keyRegistryFromEnv } from "@wasla/service-auth";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
 
 import { createSubscriptionDb } from "../db/client.js";
 import { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
@@ -45,7 +47,12 @@ export async function startSubscriptionServer(): Promise<void> {
   const host = process.env.SUBSCRIPTION_SERVICE_HOST ?? "0.0.0.0";
 
   if (databaseUrl === undefined || databaseUrl.trim() === "") {
-    const app = createSubscriptionApp({ mode: "memory", logger: true });
+    const keys = keyRegistryFromEnv(process.env);
+    const app = createSubscriptionApp({
+      mode: "memory",
+      logger: true,
+      ...(keys === undefined ? {} : { serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() } }),
+    });
     await app.listen({ port, host });
     return;
   }
@@ -60,7 +67,14 @@ export async function startSubscriptionServer(): Promise<void> {
     subscriptions: new SubscriptionService(uow, systemClock, uuidIdGenerator),
     referrals: new ReferralService(uow, systemClock),
   };
-  const app = createSubscriptionApp({ services, mode: "postgres", logger: true });
+  const app = createSubscriptionApp({
+    services,
+    mode: "postgres",
+    logger: true,
+    ...(keyRegistryFromEnv(process.env) === undefined
+      ? {}
+      : { serviceIdentity: { keys: keyRegistryFromEnv(process.env)!, replayGuard: new InMemoryServiceTokenReplayGuard() } }),
+  });
 
   // إغلاقٌ مُرتَّب: الحاضنةُ تُرسل `SIGTERM` ثمّ تقتل. وإسقاطُ العمليّةِ فوراً يقطع معاملةً
   // مفتوحةً في منتصفها — والقاعدةُ تتراجع عنها، لكنّ المُنادي يستلم انقطاعاً بلا رمزٍ يقرؤه.

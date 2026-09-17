@@ -37,13 +37,13 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
   it("إحدى وعشرونَ ومئةُ عمليّةٍ على ثلاثةَ عشرَ حدّاً — مئةٌ وتسعَ عشرةَ قبلَ عمليّتَي حدِّ البحث (M1-04 · الموجةُ 9·10·11·12)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(121);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(13);
+    expect(ENFORCED_OPERATIONS).toHaveLength(132);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(14);
   });
 
   it("مئةُ صلاحيّةٍ مفروضةٍ، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
     // تسعُ صلاحيّاتٍ لعشرِ عملياتٍ: قراءةُ القواعدِ يتقاسمُها مسارانِ.
-    expect(allEnforcedScopes()).toHaveLength(100);
+    expect(allEnforcedScopes()).toHaveLength(109);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -306,7 +306,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
   it("العملياتُ المربوطةُ بالرمزِ ستٌّ وثلاثونَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت أربعاً وثلاثينَ)", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(36);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(43);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       "DELETE /customers/:waslaPublicId/places/:placeId",
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
@@ -321,8 +321,11 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "GET /drivers/:waslaPublicId/zones",
       "GET /orders/:orderId",
       "GET /orders/:orderId/history",
+      "GET /referrals/codes/:ownerPublicId",
       "GET /reputation/scores/:subjectType/:subjectPublicId",
       "GET /stores/:storeSlug/staff",
+      "GET /subscriptions/:driverPublicId",
+      "GET /subscriptions/:driverPublicId/periods",
       "PATCH /drivers/:waslaPublicId",
       "PATCH /drivers/:waslaPublicId/vehicles/:vehicleId",
       "POST /customers/:waslaPublicId/order-requests",
@@ -337,10 +340,14 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "POST /products/:productId/archive",
       "POST /products/:productId/inventory",
       "POST /products/:productId/publish",
+      "POST /referrals",
       "POST /reputation/ratings",
       "POST /stores/:storeSlug/products",
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
+      "POST /subscriptions",
+      "POST /subscriptions/:driverPublicId/activate",
+      "POST /subscriptions/:driverPublicId/recompute",
       "PUT /customers/:waslaPublicId/profile",
       "PUT /drivers/:waslaPublicId/availability",
       "PUT /drivers/:waslaPublicId/zones",
@@ -382,11 +389,13 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     // المستأجرِ — والثمانيةُ أعلاهُ كما هيَ، فالقياسانِ مستقلّانِ.
     // (`M1-04` الموجةُ 10) صارَ **خمسةً وعشرينَ** بأربعَ عشرةَ عمليّةً لحدِّ
     // السائقينَ — كلُّها في بُعدِ الملكيّةِ ومربوطةٌ بالرمزِ.
+    // (`M1-04` الموجةُ 13 · `CLM-0201`) صارَ **خمسةً وثلاثينَ** بسبعِ عملياتِ
+    // حدِّ الاشتراكِ — كلُّها في بُعدِ الملكيّةِ ومربوطةٌ بالرمزِ.
     expect(
       OPERATION_BINDINGS.filter(
         (b) => b.dimension === "owner" && b.strength === "token-bound",
       ),
-    ).toHaveLength(28);
+    ).toHaveLength(35);
   });
 
   /**
@@ -427,7 +436,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(77);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(81);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

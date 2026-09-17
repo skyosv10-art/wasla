@@ -217,6 +217,7 @@ export const TEST_FLEET_ROLES: Readonly<Record<string, string>> = {
   "dispatch-exit-gate": "بوّابةُ خروجِ مرحلةِ الإرسالِ — `Object.values(ORDER_SCOPES)`.",
   "reputation-exit-gate": "بوّابةُ خروجِ مرحلةِ السُّمعةِ — `Object.values(ORDER_SCOPES)`.",
   "search-exit-gate": "بوّابةُ خروجِ مرحلةِ البحثِ — `search:ready:read` و`search:products:read`.",
+  "subscriptions-exit-gate": "بوّابةُ خروجِ مرحلةِ الاشتراكِ — `Object.values(SUBSCRIPTIONS_SCOPES)`.",
   "channel-exit-gate": "بوّابةُ خروجِ مرحلةِ القنواتِ — `Object.values(CHANNEL_SCOPES)` + `Object.values(IDENTITY_SCOPES)`.",
   "phase02-exit-gate": "بوّابةُ خروجِ المرحلةِ الثانيةِ (الجغرافيا والهويّةُ).",
   attacker: "دورٌ سلبيٌّ: يحملُ صلاحيّةً صحيحةً بمفتاحٍ غيرِ معروفٍ ليُقاسَ رفضُ الحدِّ — لا منحَ لهُ أصلاً.",
@@ -280,6 +281,9 @@ export const FLEET_GRANTS: Readonly<Record<string, FleetGrant>> = {
       // الموجةُ الحاديةَ عشرةَ من `M1-04` (`CLM-0199`): حدُّ السمعة صارَ يفرضُ الهويّةَ،
       // ومُنادوهُ الفعليّونَ اليومَ بوّابةُ خروجِ السمعةِ وحدَها.
       "reputation",
+      // الموجةُ الثالثةَ عشرةَ من `M1-04` (`CLM-0201`): حدُّ الاشتراك صارَ يفرضُ الهويّةَ،
+      // ومُنادوهُ الفعليّونَ اليومَ بوّابةُ خروجِ الاشتراكِ وحدَها.
+      "subscriptions",
     ],
     scopes: "any-scope",
     reason:
@@ -320,6 +324,11 @@ export const FLEET_GRANTS: Readonly<Record<string, FleetGrant>> = {
     audiences: ["search"],
     scopes: "any-scope",
     reason: "بوّابةُ خروجِ مرحلةِ البحثِ على حدِّه.",
+  },
+  "subscriptions-exit-gate": {
+    audiences: ["subscriptions"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ الاشتراكِ على حدِّه.",
   },
   "channel-exit-gate": {
     audiences: ["channel", "identity"],

@@ -20,6 +20,10 @@
     "./http": {
       "types": "./src/http/app.ts",
       "import": "./src/http/app.ts"
+    },
+    "./http/service-identity": {
+      "types": "./src/http/service-identity.ts",
+      "import": "./src/http/service-identity.ts"
     }
   },
   "scripts": {
@@ -36,6 +40,8 @@
   },
   "dependencies": {
     "@wasla/contracts-subscription": "workspace:*",
+    "@wasla/auth-sdk": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
     "pg": "^8.23.0"

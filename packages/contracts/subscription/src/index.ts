@@ -199,7 +199,7 @@ export const SUBSCRIPTION_API_PATHS = [
 export const SUBSCRIPTION_API_OPERATION_COUNT = 12;
 
 /** لا `502`: انظر §القاعدة البند 3 في `services/subscriptions/contracts/errors.md`. */
-export const SUBSCRIPTION_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+export const SUBSCRIPTION_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * خطّةُ الإطلاق المجمَّدة كما تُزرع في المراجعة 2/6 (`saudi-driver-monthly` v1).

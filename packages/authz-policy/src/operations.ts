@@ -58,6 +58,7 @@ export const AUDIENCES = [
   "orders",
   "reputation",
   "search",
+  "subscriptions",
 ] as const;
 
 export type Audience = (typeof AUDIENCES)[number];
@@ -225,6 +226,23 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   // الموجةُ الثانيةَ عشرةَ من `M1-04` (`CLM-0200`): حدُّ البحث صارَ يفرضُ الهويّةَ.
   { audience: "search", method: "GET", path: "/search/ready", scopes: ["search:ready:read"] },
   { audience: "search", method: "GET", path: "/search/products", scopes: ["search:products:read"] },
+
+  // ── subscriptions ─────────────────────────────────────────────
+  // الموجةُ الثالثةَ عشرةَ من `M1-04` (`CLM-0201`): حدُّ الاشتراك صارَ يفرضُ الهويّةَ.
+  // ستَّ مساراتٍ مربوطةٌ بالمُنتَفِعِ (الأربعةُ الأولى تحملُ `:driverPublicId`،
+  // والخامسُ `:ownerPublicId`، والسادسُ يقرأُ `driver_public_id` من الجسمِ،
+  // والسابعُ يقرأُ `referee_public_id` من الجسمِ). وخمسةٌ داخليّةٌ بلا مُنتَفِعٍ.
+  { audience: "subscriptions", method: "GET", path: "/subscriptions/plans", scopes: ["subscriptions:plans:read"] },
+  { audience: "subscriptions", method: "GET", path: "/subscriptions/plans/:planCode/:planVersion", scopes: ["subscriptions:plans:read"] },
+  { audience: "subscriptions", method: "POST", path: "/subscriptions", scopes: ["subscriptions:subscriptions:write"] },
+  { audience: "subscriptions", method: "GET", path: "/subscriptions/:driverPublicId", scopes: ["subscriptions:state:read"] },
+  { audience: "subscriptions", method: "POST", path: "/subscriptions/:driverPublicId/activate", scopes: ["subscriptions:activate:write"] },
+  { audience: "subscriptions", method: "POST", path: "/subscriptions/:driverPublicId/recompute", scopes: ["subscriptions:recompute:write"] },
+  { audience: "subscriptions", method: "GET", path: "/subscriptions/:driverPublicId/periods", scopes: ["subscriptions:periods:read"] },
+  { audience: "subscriptions", method: "POST", path: "/subscriptions/tick", scopes: ["subscriptions:tick:run"] },
+  { audience: "subscriptions", method: "POST", path: "/referrals", scopes: ["subscriptions:referrals:write"] },
+  { audience: "subscriptions", method: "GET", path: "/referrals", scopes: ["subscriptions:referrals:read"] },
+  { audience: "subscriptions", method: "GET", path: "/referrals/codes/:ownerPublicId", scopes: ["subscriptions:referrals:read"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */

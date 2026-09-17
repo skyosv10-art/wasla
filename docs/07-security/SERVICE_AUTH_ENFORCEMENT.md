@@ -686,7 +686,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -706,6 +706,7 @@ const ownerScoped = (...scopes: string[]) => ({
 | `bots/customer-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | **دخلَ بصرَ الحارسِ في 24/N ولم يكن مرئيّاً قبلَها** (`RISK-0027`): عميلٌ حقيقيٌّ بالتسميةِ المعتمدةِ، **لا أثرَ لموقِّعٍ في شفرتِهِ** مقيساً. والتأجيلُ بمرجعِ `M1-04`: حدُّ `negotiations` **غيرُ مفروضٍ** أصلاً (لا `registerServiceIdentity` في `services/negotiations/src/http/app.ts` مقيساً)، فتوقيعُ نداءٍ إلى حدٍّ لا يتحقَّقُ يُعطي طمأنينةً بلا فائدةٍ؛ ويُوقَّعُ يومَ يُفرَضُ الحدُّ، والحارسُ الآنَ يمنعُ نسيانَهُ. **وقد فُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ بلا قيمةٍ افتراضيّةٍ في `HttpCustomerNegotiationsOptions`، والصلاحيّاتُ المُعلَنةُ `CUSTOMER_BOT_NEGOTIATIONS_SCOPES` (قراءةُ خيطٍ · قراءةُ دورٍ · قرارُ دورٍ) لا أوسعُ، والبرهانُ `bots/customer-bot/src/__tests__/http-negotiations-signing.test.ts` يقرأُ `aud` و`svc` و`scp` و`req` من الرمزِ نفسِهِ ويُثبتُ أنَّ مُوقِّعاً يرفضُ **لا يُخرِجُ نداءً أصلاً**. والسببُ الأصليُّ للتأجيلِ محفوظٌ أعلاهُ لا ممحوٌّ. |
 | `bots/driver-bot/src/infrastructure/http-negotiations.ts` | negotiations | موقَّع | كسابقِهِ حرفاً (`RISK-0027` · `M1-04`): مرئيٌّ منذُ 24/N · بلا موقِّعٍ مقيساً · وحدُّ `negotiations` كانَ غيرَ مفروضٍ. **وفُرِضَ الحدُّ ووُقِّعَ العميلُ في 26/N (2026-09-13):** `signRequest` إلزاميٌّ، و`DRIVER_BOT_NEGOTIATIONS_SCOPES` ثلاثُ صلاحيّاتٍ لا أوسعُ، والبرهانُ `bots/driver-bot/src/__tests__/http-negotiations-signing.test.ts`. |
 | `services/negotiations/src/infrastructure/http-dispatch-offer.ts` | dispatch + orders | موقَّع | موقِّعانِ صريحانِ بجمهورَينِ: `NEGOTIATIONS_ORDER_LOOKUP_SCOPES` و`NEGOTIATIONS_DISPATCH_OFFER_SCOPES` · `services/negotiations/src/__tests__/outbound-ports.test.ts` يقرأُ `aud` و`scp` من الرمزَين |
+| `services/subscriptions/src/http/service-identity.ts` | subscriptions | موقَّع | `services/subscriptions/src/__tests__/service-identity.test.ts` · `SUBSCRIPTIONS_SCOPES` (الموجةُ 13 · `CLM-0201`) |
 
 <!-- coverage-ledger:end -->
 
@@ -1104,6 +1105,42 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 ---
 
+### 5.13 `subscriptions` — الموجةُ الثالثةَ عشرةَ (`CLM-0201`)
+
+<!-- subscriptions-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المستفيد |
+|---|---|---|
+| `GET /subscriptions/plans` | `subscriptions:plans:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /subscriptions/plans/:planCode/:planVersion` | `subscriptions:plans:read` | — (عمليّةٌ داخليّةٌ) |
+| `POST /subscriptions` | `subscriptions:subscriptions:write` | الجسمُ: `driver_public_id` |
+| `GET /subscriptions/:driverPublicId` | `subscriptions:state:read` | المسارُ: `:driverPublicId` |
+| `POST /subscriptions/:driverPublicId/activate` | `subscriptions:activate:write` | المسارُ: `:driverPublicId` |
+| `POST /subscriptions/:driverPublicId/recompute` | `subscriptions:recompute:write` | المسارُ: `:driverPublicId` |
+| `GET /subscriptions/:driverPublicId/periods` | `subscriptions:periods:read` | المسارُ: `:driverPublicId` |
+| `POST /subscriptions/tick` | `subscriptions:tick:run` | — (عمليّةٌ داخليّةٌ) |
+| `POST /referrals` | `subscriptions:referrals:write` | الجسمُ: `referee_public_id` |
+| `GET /referrals` | `subscriptions:referrals:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /referrals/codes/:ownerPublicId` | `subscriptions:referrals:read` | المسارُ: `:ownerPublicId` |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- subscriptions-scopes:end -->
+
+**والجمهورُ `subscriptions`:** الرمزُ المُوقَّعُ يحملُ `aud: subscriptions` وتسعَ
+صلاحيّاتٍ تُصدَّرُ في `services/subscriptions/src/http/service-identity.ts`
+وتُسجَّلُ في `AUDIENCES` و`ENFORCED_OPERATIONS` في
+`packages/authz-policy/src/operations.ts`، وحدُّ الاشتراكِ رابعَ عشرَ جمهوراً
+يُضافُ إلى `FLEET_GRANTS` (بوّابةُ `subscriptions-exit-gate`).
+
+**وما يُغلقُ هذا الحدُّ:** `RISK-0051` — **صفرُ حدودٍ باقيةٍ صامتةٌ، وصفرُ مساراتٍ**.
+كلُّ حدودِ الدخولِ الأربعَ عشرَ مفروضةٌ، وكلُّ عقودِ الخدمةِ الثلاثةَ عشرَ تُعلِنُ
+`securitySchemes`.
+
+**وما يخصُّ هذا الحدَّ وحدَهُ:** ستَّ مساراتٍ مربوطةٌ بمُنتَفِعٍ، وتخالفُ `:driverPublicId`
+أو `:ownerPublicId` → **`404` لا `403`** (ADR-009: لا يُكشَفُ وجودُ موردٍ
+لمن لا يملكُهُ). والقراءتانِ الداخليّتانِ (`/subscriptions/plans` و`/referrals`)
+يفرضانِ الصلاحيّةَ بلا مُنتَفِعٍ.
+
 ## 5.5 حدُّ القناة (`M1-07`)
 
 **الحدُّ التاسع:** حدودُ الخدماتِ الثمانيةِ التي فرضَتْ هويّةَ الخدمةِ في `M1-04`
@@ -1266,9 +1303,8 @@ _أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`
 
 | الحدُّ | المساراتُ (مقيسةٌ) | ملفُّ الحدِّ | العقدُ المنشورُ | الخطرُ · المالكُ |
 | --- | --- | --- | --- | --- |
-| `subscriptions` | 12 | [`services/subscriptions/src/http/app.ts`](../../services/subscriptions/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 
-TOTAL_ROUTES: 12
+TOTAL_ROUTES: 0
 
 <!-- unenforced-ingress:end -->
 

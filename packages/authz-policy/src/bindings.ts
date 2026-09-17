@@ -547,6 +547,73 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     evidence: "services/reputation/src/http/app.ts:requireBeneficiary",
     note: "`M1-04` الموجةُ الحاديةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`rater_public_id` المكتوبِ في الجسمِ، والمخالفةُ تُرَدُّ `REPUTATION_SCORE_NOT_FOUND` لا 403 (`ADR-009`). والتقييمُ باسمِ غيرِ صاحبِهِ يربطُ هوّيّةً بمن لا يملكُها.",
   },
+
+  // ── subscriptions (الموجةُ الثالثةَ عشرةَ · CLM-0201) ──────────────────────────
+  // حدُّ الاشتراك: ستَّ مساراتٍ مربوطةٌ بمُنتَفِعٍ، وخمسةٌ داخليّةٌ بلا مُنتَفِعَ. وكلُّ
+  // مخالفةٍ في المُنتَفِعِ تُرَدُّ `SUBSCRIPTION_NOT_FOUND` (404) لا 403 (`ADR-009`).
+  {
+    audience: "subscriptions",
+    method: "POST",
+    path: "/subscriptions",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`driver_public_id` المكتوبِ في الجسمِ، والمخالفةُ تُرَدُّ `SUBSCRIPTION_NOT_FOUND` لا 403 (`ADR-009`).",
+  },
+  {
+    audience: "subscriptions",
+    method: "GET",
+    path: "/subscriptions/:driverPublicId",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireDriverBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ؛ والمالكُ يُقرأُ من الرمزِ ويُقارَنُ بـ`:driverPublicId` في المسارِ، والمخالفةُ `SUBSCRIPTION_NOT_FOUND` (404) لا 403 (`ADR-009`).",
+  },
+  {
+    audience: "subscriptions",
+    method: "POST",
+    path: "/subscriptions/:driverPublicId/activate",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireDriverBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: الربطُ نفسُهُ على مسارِ التنشيطِ — وتفعيلُ اشتراكِ غيرِ صاحبِهِ تدخّلٌ في ملكيّةٍ.",
+  },
+  {
+    audience: "subscriptions",
+    method: "POST",
+    path: "/subscriptions/:driverPublicId/recompute",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireDriverBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: الربطُ نفسُهُ على مسارِ إعادةِ الحسابِ — وإعادةُ حسابِ حالةِ غيرِ صاحبِها قراءةٌ في ملكيّةٍ.",
+  },
+  {
+    audience: "subscriptions",
+    method: "GET",
+    path: "/subscriptions/:driverPublicId/periods",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireDriverBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: الربطُ نفسُهُ على مسارِ الفتراتِ — وسجلُّ فتراتِ غيرِ صاحبِها تسريبٌ زمنيّ.",
+  },
+  {
+    audience: "subscriptions",
+    method: "POST",
+    path: "/referrals",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، والمُنتَفِعُ يُقارَنُ بـ`referee_public_id` في الجسمِ، والمخالفةُ `SUBSCRIPTION_NOT_FOUND` (404) لا 403 (`ADR-009`).",
+  },
+  {
+    audience: "subscriptions",
+    method: "GET",
+    path: "/referrals/codes/:ownerPublicId",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/subscriptions/src/http/app.ts:requireOwnerBeneficiary",
+    note: "`M1-04` الموجةُ الثالثةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، والمُنتَفِعُ يُقارَنُ بـ`:ownerPublicId` في المسارِ، والمخالفةُ `SUBSCRIPTION_NOT_FOUND` (404) لا 403 (`ADR-009`).",
+  },
 ];
 
 /**

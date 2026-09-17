@@ -1,4 +1,21 @@
 
+## 2026-09-17 — M1-04: subscriptions service identity enforcement (wave 13)
+
+- **Work Item(s):** M1-04 (wave 13) · **الحجز:** `CLM-0201`
+- **الفرع:** `feat/m1-04-subscriptions-identity-enforcement`
+
+**ما جرى:** فُرِضَتْ هويّةُ الخدمةِ على حدِّ الاشتراك: 11 مساراً مفروضاً + `/health` مفتوحٌ. `registerServiceIdentity` + `requireBeneficiary`/`requireDriverBeneficiary`/`requireOwnerBeneficiary` + `SUBSCRIPTIONS_SCOPES` (9 صلاحيّاتٍ: `subscriptions:{plans:read,subscriptions:write,state:read,activate:write,recompute:write,periods:read,tick:run,referrals:write,referrals:read}`) · ستَّ مساراتٍ مربوطةٍ بمُنتَفِعٍ (أربعةٌ بـ`:driverPublicId` في المسارِ، وواحدٌ بـ`:ownerPublicId`، واثنانِ بـ`driver_public_id`/`referee_public_id` في الجسمِ) — والمخالفةُ `SUBSCRIPTION_NOT_FOUND` (404) لا 403 (ADR-009) · اختباراتُ دخولٍ 14 حالةً في `services/subscriptions/src/__tests__/service-identity.test.ts` · عقدٌ يُعلِنُ `ServiceAuth` و`401`/`403` على كلِّ عمليّةٍ · جردُ §5.10 نزلَ من 12 إلى 0 مساراً. `AUTHORIZATION_POLICY_MATRIX.md` تحدّثَ: 132 عمليّةً مفروضةً · 109 صلاحيّاتٍ · 16 مساراً مفتوحاً · 14 جمهوراً · 43 ربطاً بالرمزِ · 51 مُصنَّفاً · 81 غيرَ مُصنَّفٍ. `SERVICE_AUTH_ENFORCEMENT.md` تحدّثَ بـ§5.13 جديدٍ وتصحيحٍ بالإضافةِ: 13 عقداً تُعلِنُ المُصادقةَ و14 حدّاً مفروضاً. `RISK-0051` **أُغلِقَ**: صفرُ حدودٍ باقيةٍ · صفرُ مساراتٍ.
+
+**الاختبارات:** `pnpm --filter @wasla/subscriptions-service test` 229/229 · `pnpm --filter @wasla/subscription-e2e test` 3/3 فوقَ Postgres حقيقيٍّ · `pnpm --filter @wasla/authz-policy test` 42/42 · typecheck نظيفٌ · `validate-service-auth-coverage.sh` أخضرُ (14 مفروضٌ · 0 غيرُ مفروضٍ · 0 مساراً) · `validate-authz-policy.sh` أخضرُ · `validate-config-schema.sh` أخضرُ.
+
+**الدليل:** PR (يُرفعُ بعدَ هذه الدفعةِ).
+
+**ما لا يُدَّعى:** دمجُ هذه الدفعةِ يُغلِقُ `RISK-0051` (صفرُ حدودٍ باقيةٍ) لكنَّ ترقيةَ `M1-04` إلى «Completed» سُلطَةُ مالكِ البرنامجِ وحدَهُ (§9).
+
+**التالي:** لا موجاتٍ تالياتٍ في `M1-04` — كلُّ حدودِ الدخولِ الأربعَ عشرَ مفروضةٌ.
+
+---
+
 ## 2026-09-17 — M1-04: search service identity enforcement (wave 12)
 
 - **Work Item(s):** M1-04 (wave 12) · **الحجز:** `CLM-0200`

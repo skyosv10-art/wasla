@@ -26,7 +26,7 @@
  * ليقول `degraded` + `memory` — لأنّ مسارَ الصحّةِ الذي يسقط مع القاعدةِ لا يُشخّص شيئاً.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import {
   assertPlanCode,
@@ -35,12 +35,18 @@ import {
   assertWaslaPublicId,
 } from "../domain/identifiers.js";
 import { assertTimestamp } from "../domain/time.js";
-import { subscriptionUnavailable } from "../domain/errors.js";
+import { subscriptionNotFound, subscriptionUnavailable } from "../domain/errors.js";
 import type { ReferralFilter } from "../db/referrals.js";
 import type { ReferralService } from "../app/referrals.js";
 import type { SubscriptionService } from "../app/subscriptions.js";
 import { fingerprint, type IdempotencyEnvelope } from "../app/idempotency.js";
 import { sendSubscriptionError } from "./errors.js";
+import {
+  registerServiceIdentity,
+  SUBSCRIPTIONS_SCOPES,
+  type SubscriptionsRouteConfig,
+  type SubscriptionsServiceIdentityOptions,
+} from "./service-identity.js";
 import {
   toGrantResultWire,
   toPeriodWire,
@@ -53,6 +59,7 @@ import {
   toTickWire,
   type HealthWire,
 } from "./mappers.js";
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 import {
   assertEmptyPayload,
   assertRequestIdLength,
@@ -84,9 +91,31 @@ export interface CreateSubscriptionAppOptions {
   readonly services?: SubscriptionAppServices;
   readonly mode?: PersistenceMode;
   readonly logger?: boolean;
+  readonly serviceIdentity?: SubscriptionsServiceIdentityOptions;
 }
 
 const UNAVAILABLE_REASON = "الاستمرارية غير مهيّأة";
+
+/** `/health` وحدَهُ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: SubscriptionsRouteConfig = { serviceIdentity: "open" };
+
+/**
+ * مسارٌ يمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ** — وهوَ كلُّ مسارٍ يحملُ
+ * `:driverPublicId` أو `:ownerPublicId`، أو يقرأُ المُنتَفِعَ من الجسمِ
+ * (`driver_public_id` · `referee_public_id`). فـ`beneficiary: "required"`
+ * يجعلُ الوسيطَ المركزيَّ يرفضُ كلَّ رمزٍ لا يحملُ هويّةَ المُنتَفِعِ **قبلَ** أن
+ * يمسَّ المسارُ قاعدةَ البياناتِ.
+ */
+function ownerScoped(...scopes: readonly string[]): SubscriptionsRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * مسارُ عمليّاتٍ داخليٌّ لا مُنتَفِعَ إنسانٍ له: يفرضُ الصلاحيّةَ بلا مُنتَفِعٍ.
+ */
+function internalScoped(...scopes: readonly string[]): SubscriptionsRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
 
 /**
  * مساراتُ منعِ التكرار — عمودُ `route_key` في الجدول، لا جزءٌ من البصمة.
@@ -117,6 +146,53 @@ function replayEnvelope<T>(
   present: (outcome: T) => { readonly responseStatus: number; readonly responseBody: unknown },
 ): IdempotencyEnvelope<T> {
   return { key, routeKey, requestHash: fingerprint(input), traceId, present };
+}
+
+/**
+ * مالكُ المَورِدِ كما **يُثبِتُهُ الرمزُ**، مُطابَقاً بما كُتِبَ في المسارِ.
+ *
+ * `:driverPublicId` و`:ownerPublicId` قيمٌ **يكتبُها المُنادي**. فلو فُرِضَتِ الصلاحيّةُ
+ * وحدَها لكانَ حاملُ `subscriptions:state:read` يقرأُ حالةَ كلِّ سائقٍ بتبديلِ حرفٍ في
+ * المسارِ — وهذا وجهُ `RISK-0042` نفسُهُ الذي أُغلِقَ على حدِّ الطلباتِ في `M1-05B`،
+ * ويُغلَقُ هنا في الدفعةِ التي تفرضُ الهويّةَ لا بعدَها.
+ */
+function requireBeneficiary(request: FastifyRequest): string {
+  const caller = request.serviceCaller;
+  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  if (beneficiary === undefined || beneficiary.trim() === "") {
+    throw new Error(
+      'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+    );
+  }
+
+  return beneficiary;
+}
+
+/**
+ * مطابقةُ المُنتَفِعِ المُوَقَّعِ مع `:driverPublicId` في المسارِ.
+ * مخالفتُهُ تُرَدُّ `404` لا 403 — فلا يُفصَحُ لمن لا يملكُ عن وجودِ المعرِّفِ.
+ */
+function requireDriverBeneficiary(request: FastifyRequest): string {
+  const beneficiary = requireBeneficiary(request);
+  const driverPublicId = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
+  if (driverPublicId !== beneficiary) {
+    // `404` لا `403`: لا نكشفُ لمن لا يملكُ عن وجودِ الاشتراكِ.
+    throw subscriptionNotFound();
+  }
+  return beneficiary;
+}
+
+/**
+ * مطابقةُ المُنتَفِعِ المُوَقَّعِ مع `:ownerPublicId` في مسارِ رمزِ الإحالةِ.
+ */
+function requireOwnerBeneficiary(request: FastifyRequest): string {
+  const beneficiary = requireBeneficiary(request);
+  const ownerPublicId = assertWaslaPublicId(pathParam(request.params, "ownerPublicId"), "ownerPublicId");
+  if (ownerPublicId !== beneficiary) {
+    throw subscriptionNotFound();
+  }
+  return beneficiary;
 }
 
 export function createSubscriptionApp(
@@ -164,8 +240,14 @@ export function createSubscriptionApp(
     return services;
   }
 
+  // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
+  // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
+  if (options.serviceIdentity !== undefined) {
+    registerServiceIdentity(app, options.serviceIdentity);
+  }
+
   // 1 — GET /health
-  app.get("/health", async (_request, reply) => {
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     const wire: HealthWire = {
       // `degraded` لا `unavailable`: العمليّةُ حيّةٌ وتردّ، وعجزُها مُعلَنٌ في `mode`.
       // و`unavailable` محفوظةٌ لحالةٍ تعرفها العمليّةُ عن نفسِها ولا تستطيع خدمةَ الصحّة
@@ -178,7 +260,7 @@ export function createSubscriptionApp(
   });
 
   // 2 — GET /subscriptions/plans
-  app.get("/subscriptions/plans", async (request, reply) => {
+  app.get("/subscriptions/plans", { config: internalScoped(SUBSCRIPTIONS_SCOPES.plansRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const frozenOnly = toQueryFrozenOnly(request.query);
     // الكتالوجُ يُقرأ من القاعدةِ لا من ثابتِ `PLAN_CATALOG` (قرارُ المراجعة 3/6): الثابتُ
@@ -189,7 +271,7 @@ export function createSubscriptionApp(
   });
 
   // 3 — GET /subscriptions/plans/{planCode}/{planVersion}
-  app.get("/subscriptions/plans/:planCode/:planVersion", async (request, reply) => {
+  app.get("/subscriptions/plans/:planCode/:planVersion", { config: internalScoped(SUBSCRIPTIONS_SCOPES.plansRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     // حرّاسُ المجال تُنادى من الحدّ ولا تُنسَخ فيه: `assertPlanCode` هي نفسُها التي تخضع
     // لها طبقةُ التطبيق، فلا تصير قاعدةُ الشكلِ رأيَين على موضعين.
@@ -202,7 +284,7 @@ export function createSubscriptionApp(
   });
 
   // 4 — POST /subscriptions
-  app.post("/subscriptions", async (request, reply) => {
+  app.post("/subscriptions", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.subscriptionsWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -213,6 +295,11 @@ export function createSubscriptionApp(
       planVersion: assertPlanVersion(wire.planVersion),
       requestedAt: assertTimestamp(wire.requestedAt, "requested_at"),
     };
+    // المُنتَفِعُ من الجسمِ لا من المسارِ: مطابقةُ `driver_public_id` مع `obo` المُوَقَّعِ.
+    const beneficiary = requireBeneficiary(request);
+    if (input.driverPublicId !== beneficiary) {
+      throw subscriptionNotFound();
+    }
     const outcome = await deps().subscriptions.startTrial({
       ...input,
       trace: { traceId },
@@ -230,8 +317,9 @@ export function createSubscriptionApp(
   });
 
   // 5 — GET /subscriptions/{driverPublicId}
-  app.get("/subscriptions/:driverPublicId", async (request, reply) => {
+  app.get("/subscriptions/:driverPublicId", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.stateRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
+    requireDriverBeneficiary(request);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     // قراءةٌ لا تشتقّ ولا تكتب (القرار 2): تُعيد الصفَّ المُتحقِّقَ وتُعلن `is_stale` إن
     // تجاوز الزمنُ نهايتَه. واشتقاقٌ صامتٌ هنا كان سيجعل كلَّ قراءةٍ كتابةً محتملةً وكلَّ
@@ -241,9 +329,10 @@ export function createSubscriptionApp(
   });
 
   // 6 — POST /subscriptions/{driverPublicId}/activate
-  app.post("/subscriptions/:driverPublicId/activate", async (request, reply) => {
+  app.post("/subscriptions/:driverPublicId/activate", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.activateWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
+    requireDriverBeneficiary(request);
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     const wire = toActivateInput(request.body);
@@ -268,9 +357,10 @@ export function createSubscriptionApp(
   });
 
   // 7 — POST /subscriptions/{driverPublicId}/recompute
-  app.post("/subscriptions/:driverPublicId/recompute", async (request, reply) => {
+  app.post("/subscriptions/:driverPublicId/recompute", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.recomputeWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
+    requireDriverBeneficiary(request);
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     assertEmptyPayload(request.body);
@@ -287,15 +377,16 @@ export function createSubscriptionApp(
   });
 
   // 8 — GET /subscriptions/{driverPublicId}/periods
-  app.get("/subscriptions/:driverPublicId/periods", async (request, reply) => {
+  app.get("/subscriptions/:driverPublicId/periods", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.periodsRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
+    requireDriverBeneficiary(request);
     const driver = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
     const periods = await deps().subscriptions.listPeriods(driver);
     return reply.status(200).send({ periods: periods.map(toPeriodWire) });
   });
 
   // 9 — POST /subscriptions/tick
-  app.post("/subscriptions/tick", async (request, reply) => {
+  app.post("/subscriptions/tick", { config: internalScoped(SUBSCRIPTIONS_SCOPES.tickRun) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     requireIdempotencyKey(request.headers);
     assertEmptyPayload(request.body);
@@ -306,7 +397,7 @@ export function createSubscriptionApp(
   });
 
   // 10 — POST /referrals
-  app.post("/referrals", async (request, reply) => {
+  app.post("/referrals", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.referralsWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -316,6 +407,11 @@ export function createSubscriptionApp(
       refereePublicId: assertWaslaPublicId(wire.refereePublicId, "referee_public_id"),
       claimedAt: assertTimestamp(wire.claimedAt, "claimed_at"),
     };
+    // المُنتَفِعُ من الجسمِ لا من المسارِ: مطابقةُ `referee_public_id` مع `obo` المُوَقَّعِ.
+    const beneficiary = requireBeneficiary(request);
+    if (input.refereePublicId !== beneficiary) {
+      throw subscriptionNotFound();
+    }
     const outcome = await deps().referrals.claim({
       ...input,
       traceId,
@@ -328,7 +424,7 @@ export function createSubscriptionApp(
   });
 
   // 11 — GET /referrals
-  app.get("/referrals", async (request, reply) => {
+  app.get("/referrals", { config: internalScoped(SUBSCRIPTIONS_SCOPES.referralsRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const selected = toReferralListFilter(request.query);
     // نمطُ المُعرّفِ يفحصه المجالُ هنا أيضاً: مُرشِّحٌ بمُعرّفٍ مشوّهٍ يُعيد `[]` بصمتٍ
@@ -344,8 +440,9 @@ export function createSubscriptionApp(
   });
 
   // 12 — GET /referrals/codes/{ownerPublicId}
-  app.get("/referrals/codes/:ownerPublicId", async (request, reply) => {
+  app.get("/referrals/codes/:ownerPublicId", { config: ownerScoped(SUBSCRIPTIONS_SCOPES.referralsRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
+    requireOwnerBeneficiary(request);
     const owner = assertWaslaPublicId(pathParam(request.params, "ownerPublicId"), "ownerPublicId");
     // قراءةٌ محضة: الرمزُ يُزرع داخلَ معاملةِ بدءِ التجربة، ولا يُولَّد في `GET`.
     // و`errors.md` يمنع الإنشاءَ الضمنيَّ في قراءةٍ صراحةً، فمن لا رمزَ له يستلم `404`.

@@ -63,6 +63,7 @@ import {
   migrateSubscriptions,
 } from "@wasla/subscriptions-service/db";
 import { createSubscriptionApp } from "@wasla/subscriptions-service/http";
+import { SUBSCRIPTIONS_SCOPES, SUBSCRIPTIONS_SERVICE_AUDIENCE } from "@wasla/subscriptions-service/http/service-identity";
 import type { Pool } from "pg";
 
 /**
@@ -169,6 +170,11 @@ export async function startGate(): Promise<GateContext> {
       referrals: new ReferralService(uow, clock),
     },
     logger: false,
+    // M1-04 (wave 13): حدُّ الاشتراك يفرض هويّةَ الخدمة. البوابةُ تُوقّعُ نداءاتها.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await subscriptionsApp.listen({ port: 0, host: "127.0.0.1" });
   const subscriptionsPort = (subscriptionsApp.server.address() as AddressInfo).port;
@@ -246,10 +252,49 @@ export async function callSubscriptions(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      ...subscriptionsSigner()(init.method, init.path.split("?")[0] ?? init.path, subscriptionsBeneficiaryOf(init)),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },
   });
+}
+
+/** مُوقِّعُ نداءاتِ البوابةِ لخدمةِ الاشتراك (M1-04، الموجةُ 13). */
+function subscriptionsSigner() {
+  return createServiceRequestSigner({
+    serviceName: "subscriptions-exit-gate",
+    audience: SUBSCRIPTIONS_SERVICE_AUDIENCE,
+    keys: gateKeys(),
+    scopes: Object.values(SUBSCRIPTIONS_SCOPES),
+  });
+}
+
+/** استخراجُ المُنتَفِعِ من المسارِ أو الجسمِ لتوقيعِ الرمزِ. */
+function subscriptionsBeneficiaryOf(init: {
+  readonly method: string;
+  readonly path: string;
+  readonly body?: unknown;
+}): string | undefined {
+  // POST /subscriptions — driver_public_id comes from the body.
+  if (init.method === "POST" && init.path.split("?")[0] === "/subscriptions") {
+    const body = init.body as Record<string, unknown> | undefined;
+    return body?.driver_public_id as string | undefined;
+  }
+  // POST /referrals — referee_public_id comes from the body.
+  if (init.method === "POST" && init.path.split("?")[0] === "/referrals") {
+    const body = init.body as Record<string, unknown> | undefined;
+    return body?.referee_public_id as string | undefined;
+  }
+  // GET /subscriptions/:driverPublicId/... — driver is in the path.
+  let match = /^\/subscriptions\/([^/?]+)/u.exec(init.path);
+  let value = match?.[1];
+  if (value !== undefined && value !== "plans" && value !== "tick") {
+    return value;
+  }
+  // GET /referrals/codes/:ownerPublicId — owner is in the path.
+  match = /^\/referrals\/codes\/([^/?]+)/u.exec(init.path);
+  value = match?.[1];
+  return value;
 }
 
 /** نداءُ خدمةِ السمعةِ على مسارها المُعلَن. */

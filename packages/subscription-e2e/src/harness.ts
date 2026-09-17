@@ -252,7 +252,7 @@ export async function callSubscriptions(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
-      ...subscriptionsSigner()(init.method, init.path.split("?")[0] ?? init.path, subscriptionsBeneficiaryOf(init)),
+      ...subscriptionsSigner()(init.method, init.path, subscriptionsBeneficiaryOf(init)),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },
@@ -338,7 +338,7 @@ export async function callReputation(
     headers: {
       ...reputationSigner()(
         init.method,
-        init.path.split("?")[0] ?? init.path,
+        init.path,
         reputationBeneficiaryOf(init),
       ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),

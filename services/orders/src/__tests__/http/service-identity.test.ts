@@ -128,10 +128,13 @@ describe("حد الطلبات — المصفوفة الأربع", () => {
 
   it("الرمز نفسه مرتين → 401 في الثانية", async () => {
     const { app, rawInject, keys } = createOrderHttpHarness();
-    const headers = {
-      ...signFor("GET", LOOKUP, { keys, scopes: [ORDER_SCOPES.orderRead] }),
-    };
+    // [إضافةٌ 2026-09-17] الهدفُ يُوقَّعُ **بسلسلةِ استعلامِهِ** بعدَ `ADR-036`؛
+    // ولو وُقِّعَ المسارُ عُرياناً لصارَ الرفضُ ربطاً لا إعادةً، فقاسَ الاختبارُ
+    // غيرَ ما يُسمّي.
     const url = `${LOOKUP}?order_public_id=ORD-0000000001`;
+    const headers = {
+      ...signFor("GET", url, { keys, scopes: [ORDER_SCOPES.orderRead] }),
+    };
     const first = await rawInject({ method: "GET", url, headers });
     const second = await rawInject({ method: "GET", url, headers });
     // الأول يعبر الهوية ثم يُرَدّ من العقد (الطلب غير موجود)؛ المهم أنه ليس 401.
@@ -201,23 +204,38 @@ describe("حد الطلبات — حدود الربط والتصنيف", () => {
     }).toThrow(/بلا تصنيف هوية خدمة/u);
   });
 
-  it("سلسلة الاستعلام خارج الربط — و`/orders/lookup` أول مسار يجعل الدين مادّياً (RISK-0026)", async () => {
-    // **قياسٌ لا دعوى:** الربط يغطي الطريقة والمسار ولا يغطي سلسلة الاستعلام
-    // (ADR-021 §4). وحتى `M1-03` لم يكن في المستودع مسار مفروض يقرأ استعلاماً،
-    // فكان الأثر صفراً. و`/orders/lookup` **يقرأ `order_public_id` من الاستعلام
-    // وحده**، فرمزٌ صحيحٌ لهذا المسار يظل صحيحاً لو بُدِّل مُعرّف الطلب — وهذا
-    // ما يُثبته هذا الاختبار صراحة كي يُرى الدين لا كي يُبارَك. الحدّ الفعلي عليه
-    // اليوم: مهلة الرمز القصيرة وحارس الإعادة (استعمال واحد). والسد الحقيقي
-    // (ضم الاستعلام إلى الربط) عملُ `M1-05`، وهو مسجّل في RISK-0026.
+  it("سلسلةُ الاستعلامِ **داخلَ الربطِ** — و`/orders/lookup` أوّلُ مسارٍ جعلَ الدَّينَ مادّيّاً (RISK-0026)", async () => {
+    // **قياسٌ لا دعوى.** [إضافةٌ 2026-09-17] كانَ هذا الاختبارُ يُثبِتُ الدَّينَ
+    // لا يُبارِكُهُ: الربطُ يغطّي الطريقةَ والمسارَ ولا يغطّي الاستعلامَ
+    // (`ADR-021 §4`)، و`/orders/lookup` يقرأُ `order_public_id` من الاستعلامِ
+    // **وحدَهُ**، فرمزٌ صحيحٌ لهُ كانَ يظلُّ صحيحاً لو بُدِّلَ مُعرِّفُ الطلبِ.
+    // **وقد سُدَّ اليومَ** بضمِّ الاستعلامِ إلى الربطِ (`ADR-036`)، فانقلبَ ما
+    // يُقاسُ: الرفضُ لا القبولُ. والحدُّ القديمُ (مهلةُ الرمزِ وحارسُ الإعادةِ)
+    // باقٍ لكنَّهُ لم يعُدْ وحدَهُ.
     const { app, rawInject, keys } = createOrderHttpHarness();
-    const headers = signFor("GET", LOOKUP, { keys, scopes: [ORDER_SCOPES.orderRead] });
+    const headers = signFor("GET", `${LOOKUP}?order_public_id=ORD-0000000001`, {
+      keys,
+      scopes: [ORDER_SCOPES.orderRead],
+    });
     const response = await rawInject({
       method: "GET",
       url: `${LOOKUP}?order_public_id=ORD-0000000002`,
       headers,
     });
-    // ليس 401: الهوية عبرت رغم أن الاستعلام لم يكن جزءاً مما وُقّع عليه.
-    expect(response.statusCode).not.toBe(401);
+    // 401: مُعرِّفُ الطلبِ المُوقَّعُ عليهِ غيرُ المُرسَلِ، فالربطُ لا يُطابِقُ.
+    expect(response.statusCode).toBe(401);
+
+    const signedRight = signFor("GET", `${LOOKUP}?order_public_id=ORD-0000000002`, {
+      keys,
+      scopes: [ORDER_SCOPES.orderRead],
+    });
+    const matched = await rawInject({
+      method: "GET",
+      url: `${LOOKUP}?order_public_id=ORD-0000000002`,
+      headers: signedRight,
+    });
+    // وليسَ الرفضُ عمىً عن الاستعلامِ: الهدفُ الموقَّعُ عليهِ يعبُرُ الهويّةَ.
+    expect(matched.statusCode).not.toBe(401);
     await app.close();
   });
 });

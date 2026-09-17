@@ -85,6 +85,8 @@ function headersFor(
   audience: string,
   scopes: readonly string[],
   keys = registry(),
+  /** الهدفُ الموقَّعُ. يُمرَّر صريحاً حينَ يكونُ **فرقُ الهدفِ** هوَ ما يُقاس (`ADR-036`). */
+  target = "/thing",
 ): Record<string, string> {
   const sign = createServiceRequestSigner({
     serviceName: "caller",
@@ -92,7 +94,7 @@ function headersFor(
     keys,
     scopes,
   });
-  return sign("GET", "/thing");
+  return sign("GET", target);
 }
 
 describe("الوسيطُ المركزيُّ — المصفوفةُ الأربعُ على حدٍّ لا خدمةَ له", () => {
@@ -176,13 +178,43 @@ describe("الوسيطُ المركزيُّ — حاجزُ التصنيفِ وا
     );
   });
 
-  it("سلسلةُ الاستعلامِ ليست من الربطِ — دَينٌ مُعلَنٌ في ADR-021 §4", async () => {
+  it("سلسلةُ الاستعلامِ **من الربطِ** — رمزُ `/thing` لا يمرُّ على `/thing?x=1` (ADR-036)", async () => {
+    // [إضافةٌ 2026-09-17] كانَ هذا المقياسُ يُثبِتُ العكسَ — أنَّ الطلبَ يمرُّ —
+    // ويُسمّي ذلكَ «دَيناً مُعلَناً في ADR-021 §4». وهوَ `RISK-0026` نفسُه.
+    // فالمقياسُ انقلبَ لأنَّ الحدَّ صارَ يقرأُ الاستعلامَ في الربطِ.
     const app = boundary({ audience: "alpha" });
     const response = await app.inject({
       method: "GET",
       url: "/thing?anything=here",
       headers: headersFor("alpha", [SCOPE]),
     });
+    expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("والرمزُ المُوقَّعُ للهدفِ باستعلامِه يمرُّ — فالإقفالُ ليسَ منعاً للاستعلامِ", async () => {
+    const app = boundary({ audience: "alpha" });
+    const response = await app.inject({
+      method: "GET",
+      url: "/thing?anything=here",
+      headers: headersFor("alpha", [SCOPE], registry(), "/thing?anything=here"),
+    });
+    expect(response.statusCode).toBe(200);
+    await app.close();
+  });
+
+  it("ورمزُ استعلامٍ يُعادُ استعمالُهُ بقيمةٍ أخرى ⇒ 401: هذا هوَ ما كانَ RISK-0026", async () => {
+    const app = boundary({ audience: "alpha" });
+    const headers = headersFor("alpha", [SCOPE], registry(), "/thing?id=A");
+    const response = await app.inject({ method: "GET", url: "/thing?id=B", headers });
+    expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("وإعادةُ ترتيبِ المعاملاتِ لا تُسقِطُ طلباً صحيحاً — التطبيعُ يعملُ على السلكِ", async () => {
+    const app = boundary({ audience: "alpha" });
+    const headers = headersFor("alpha", [SCOPE], registry(), "/thing?b=2&a=1");
+    const response = await app.inject({ method: "GET", url: "/thing?a=1&b=2", headers });
     expect(response.statusCode).toBe(200);
     await app.close();
   });

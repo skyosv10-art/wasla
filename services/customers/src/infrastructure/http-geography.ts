@@ -87,15 +87,20 @@ export class HttpGeographyPort implements GeographyPort {
   }
 
   async findZone(zoneId: string): Promise<ZoneReference | null> {
-    const url = `${this.baseUrl}${ZONE_DETAIL_PATH(zoneId)}?locale=${this.locale}`;
+    // هدفُ الطلبِ يُبنى **مرّةً واحدةً** ويُستعمَل للإرسالِ وللتوقيعِ معاً
+    // (`ADR-036` · `RISK-0026`): الربطُ صارَ يشملُ سلسلةَ الاستعلامِ، فبناءُ
+    // العنوانِ مرّةً وتوقيعُ مسارٍ آخرَ مرّةً يُنتِج `request_binding_mismatch`.
+    const target = `${ZONE_DETAIL_PATH(zoneId)}?locale=${encodeURIComponent(this.locale)}`;
+    const url = `${this.baseUrl}${target}`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const response = await fetch(url, {
         method: "GET",
         signal: controller.signal,
-        // الرمز مربوطٌ بهذه الطريقةِ وهذا المسارِ ويُحرَقُ عندَ أوّلِ استعمالٍ.
-        headers: this.signRequest("GET", ZONE_DETAIL_PATH(zoneId)),
+        // الرمز مربوطٌ بهذه الطريقةِ وهذا الهدفِ **باستعلامِه** ويُحرَقُ عندَ
+        // أوّلِ استعمالٍ (`ADR-036`).
+        headers: this.signRequest("GET", target),
       });
       if (response.status === 404) return null;
       if (response.status !== 200) {

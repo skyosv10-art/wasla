@@ -290,8 +290,7 @@ export async function call(
     readonly onBehalfOfPublicId?: string;
   },
 ): Promise<HttpResult> {
-  const queryAt = init.path.indexOf("?");
-  const signedPath = queryAt < 0 ? init.path : init.path.slice(0, queryAt);
+  const signedPath = init.path;
   const beneficiary = init.onBehalfOfPublicId ?? gateBeneficiary(init.body);
   const response = await fetch(`${gate.baseUrl}${init.path}`, {
     method: init.method,

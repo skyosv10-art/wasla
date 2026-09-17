@@ -24,12 +24,11 @@ import { authHeaders, createTestKeyRegistry, harnessFor, startUpdate } from "./h
 
 /** A token signed for a different audience (not `channel`). */
 function signForWrongAudience(method: string, url: string): Record<string, string> {
-  const sep = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: "customer-bot",
     audience: "matching",
     method: method.toUpperCase(),
-    path: sep < 0 ? url : url.slice(0, sep),
+    path: url,
     keys: createTestKeyRegistry(),
     scopes: Object.values(CHANNEL_SCOPES),
     now: new Date(),
@@ -38,12 +37,11 @@ function signForWrongAudience(method: string, url: string): Record<string, strin
 
 /** A token signed with the right audience but a wrong scope. */
 function signWithWrongScope(method: string, url: string): Record<string, string> {
-  const sep = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: "customer-bot",
     audience: CHANNEL_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: sep < 0 ? url : url.slice(0, sep),
+    path: url,
     keys: createTestKeyRegistry(),
     scopes: ["channel:nonexistent:scope"],
     now: new Date(),

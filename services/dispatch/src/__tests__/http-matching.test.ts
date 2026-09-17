@@ -42,7 +42,7 @@ describe("محول المطابقة", () => {
     expect(url).toBe("http://matching.test/matching/candidates");
     expect(options.headers).toMatchObject({ "content-type": "application/json" });
     // M1-03: كل نداء صادر موقّع، ولا يُقبل هذا الاختبار بترويسة هوية غائبة.
-    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./);
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./);
     expect((options.headers as Record<string, string>)["idempotency-key"]).toBeUndefined();
     expect(JSON.parse(options.body as string)).toEqual({
       order_id: request.orderId,

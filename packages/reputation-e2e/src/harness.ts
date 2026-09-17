@@ -236,7 +236,7 @@ export async function callEngine(
       // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
       ...gate.signEngine(
         init.method,
-        init.path.split("?")[0] ?? init.path,
+        init.path,
         init.customerScope,
       ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
@@ -288,7 +288,7 @@ export async function callReputation(
     headers: {
       ...reputationSigner()(
         init.method,
-        init.path.split("?")[0] ?? init.path,
+        init.path,
         reputationBeneficiaryOf(init),
       ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),

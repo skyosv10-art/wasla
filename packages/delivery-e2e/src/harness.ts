@@ -516,13 +516,12 @@ export async function callDelivery(
     readonly keys?: ServiceAuthKeyRegistry;
   },
 ): Promise<HttpResult> {
-  const separator = init.path.indexOf("?");
   const headers = serviceAuthHeaders({
     serviceName: "core",
     audience: DELIVERY_SERVICE_AUDIENCE,
     method: init.method.toUpperCase(),
     // المسارُ الموقَّعُ بلا استعلامٍ (ADR-021 §4 · `RISK-0026` مفتوحٌ).
-    path: separator < 0 ? init.path : init.path.slice(0, separator),
+    path: init.path,
     keys: init.keys ?? gate.deliveryInboundKeys,
     now: new Date(),
     scopes: init.scopes ?? ALL_DELIVERY_SCOPES,
@@ -560,14 +559,13 @@ export async function callMarketplace(
     readonly onBehalfOfPublicId?: string;
   },
 ): Promise<HttpResult> {
-  const separator = init.path.indexOf("?");
   const beneficiary = init.onBehalfOfPublicId ?? marketplaceBodyActor(init.body);
   const headers = serviceAuthHeaders({
     serviceName: "e2e-harness",
     audience: MARKETPLACE_SERVICE_AUDIENCE,
     method: init.method.toUpperCase(),
     // المسارُ الموقَّعُ بلا استعلامٍ (ADR-021 §4 · `RISK-0026` مفتوحٌ).
-    path: separator < 0 ? init.path : init.path.slice(0, separator),
+    path: init.path,
     keys: marketplaceOutboundKeyRegistry(),
     now: new Date(),
     scopes: Object.values(MARKETPLACE_SCOPES),

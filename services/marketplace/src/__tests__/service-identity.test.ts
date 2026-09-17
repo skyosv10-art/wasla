@@ -402,8 +402,9 @@ describe("حد السوق — حدود الربط والتصنيف", () => {
   });
 
   it("رمز متجرٍ لا يقرأ متجراً آخر — المُعرّف داخل الربط لا خارجه", async () => {
-    // **الفرقُ عن `RISK-0026`:** المُعرِّفُ هنا جزءٌ من **المسارِ** لا من سلسلةِ
-    // الاستعلامِ، والربطُ يغطّي المسارَ (ADR-021 §4). وهذا يُقاسُ لا يُدَّعى.
+    // المُعرِّفُ هنا جزءٌ من **المسارِ**، والربطُ يغطّيهِ. وهذا يُقاسُ لا يُدَّعى.
+    // [إضافةٌ 2026-09-17] وكانَ هنا «الفرقُ عن `RISK-0026`»؛ وقد زالَ الفرقُ:
+    // الربطُ صارَ يغطّي الاستعلامَ أيضاً (`ADR-036`)، والبندُ التالي يقيسُهُ.
     const { app, rawInject, keys } = harnessApp();
     const headers = signFor("GET", `${STORES}/${SLUG}`, {
       keys,
@@ -414,11 +415,12 @@ describe("حد السوق — حدود الربط والتصنيف", () => {
     await app.close();
   });
 
-  it("سلسلةُ الاستعلامِ خارجَ الربطِ — `RISK-0026` مقيسٌ لا مُدَّعى", async () => {
-    // هذهِ الدعوى **تُثبِتُ عيباً مفتوحاً لا فضيلةً**: رمزٌ وُقِّعَ لـ`/stores`
-    // يُقبَلُ على `/stores?owner_public_id=…` لأنَّ الربطَ لا يشملُ الاستعلامَ
-    // (ADR-021 §4). وتوثيقُها اختباراً يجعلُ إغلاقَ الخطرِ غداً **يُكسِرُ** هذا
-    // السطرَ فيُقرأَ قصداً — بخلافِ خطرٍ يبقى سطراً في سجلٍّ لا يُقاسُ.
+  it("سلسلةُ الاستعلامِ **داخلَ الربطِ** — `RISK-0026` مُقفَلٌ (ADR-036)", async () => {
+    // [إضافةٌ 2026-09-17] كانَ هذا السطرُ يُثبِتُ **عيباً مفتوحاً لا فضيلةً**:
+    // رمزٌ وُقِّعَ لـ`/stores` يُقبَلُ على `/stores?owner_public_id=…`. وكُتِبَ
+    // صراحةً أنَّ «إغلاقَ الخطرِ غداً **يُكسِرُ** هذا السطرَ فيُقرأَ قصداً».
+    // **وقد كُسِرَ اليومَ** — وهذا هوَ الغدُ. فأُعيدت كتابتُهُ إلى ما يُقاس:
+    // الرفضُ لا القبولُ. والحاجزُ عملَ كما صُمِّمَ: أعلنَ العيبَ حتّى سُدَّ.
     const { app, rawInject, keys } = harnessApp();
     const headers = signFor("GET", STORES, { keys, scopes: [MARKETPLACE_SCOPES.storeRead] });
     const response = await rawInject({
@@ -426,7 +428,32 @@ describe("حد السوق — حدود الربط والتصنيف", () => {
       url: `${STORES}?owner_public_id=WS-1000000001`,
       headers,
     });
-    expect(response.statusCode).not.toBe(401);
+    expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("ورمزُ مالكٍ لا يقرأُ متاجرَ مالكٍ آخرَ — وهوَ عينُ ما كانَ RISK-0026", async () => {
+    const { app, rawInject, keys } = harnessApp();
+    const headers = signFor("GET", `${STORES}?owner_public_id=WS-1000000001`, {
+      keys,
+      scopes: [MARKETPLACE_SCOPES.storeRead],
+    });
+    const mine = await rawInject({
+      method: "GET",
+      url: `${STORES}?owner_public_id=WS-1000000001`,
+      headers,
+    });
+    expect(mine.statusCode).not.toBe(401);
+
+    const other = await rawInject({
+      method: "GET",
+      url: `${STORES}?owner_public_id=WS-1000000002`,
+      headers: signFor(`GET`, `${STORES}?owner_public_id=WS-1000000001`, {
+        keys,
+        scopes: [MARKETPLACE_SCOPES.storeRead],
+      }),
+    });
+    expect(other.statusCode).toBe(401);
     await app.close();
   });
 

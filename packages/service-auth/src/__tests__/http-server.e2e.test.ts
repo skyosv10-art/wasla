@@ -180,8 +180,19 @@ describe("حدُّ خدمةٍ حقيقيٌّ عبرَ HTTP", () => {
     expect(body).not.toContain("kid");
   });
 
-  it("يقبل نداءً صحيحاً بسلسلةِ استعلامٍ زائدةٍ — التطبيعُ يعمل على السلك", async () => {
+  it("يرفضُ نداءً بسلسلةِ استعلامٍ لم تُوقَّع — الربطُ يشملُها على السلكِ (ADR-036)", async () => {
+    // [إضافةٌ 2026-09-17] كانَ هذا يقيسُ **القبولَ** («التطبيعُ يعملُ على السلك»)
+    // لأنَّ الربطَ كانَ يُسقِطُ الاستعلامَ (`ADR-021 §4` · `RISK-0026`).
     const headers = mint({ path: PROTECTED_PATH });
+    const response = await fetch(`${baseUrl}${PROTECTED_PATH}?trace=abc`, {
+      method: "POST",
+      headers,
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it("ويقبلُ النداءَ نفسَهُ إذا وُقِّعَ الهدفُ باستعلامِه — على السلكِ لا في الحقنِ", async () => {
+    const headers = mint({ path: `${PROTECTED_PATH}?trace=abc` });
     const response = await fetch(`${baseUrl}${PROTECTED_PATH}?trace=abc`, {
       method: "POST",
       headers,

@@ -180,8 +180,8 @@ function signCustomer(method: string, path: string): Record<string, string> {
     keys: gateServiceAuthKeys(),
     scopes: Object.values(CUSTOMER_SCOPES),
   });
-  const withoutQuery = path.split("?")[0] ?? path;
-  return sign(method, withoutQuery, customerBeneficiaryOf(path));
+  // الهدفُ يُوقَّع **باستعلامِه** (`ADR-036` · `RISK-0026`).
+  return sign(method, path, customerBeneficiaryOf(path));
 }
 
 

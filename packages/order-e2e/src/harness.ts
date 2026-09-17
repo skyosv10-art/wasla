@@ -402,7 +402,7 @@ export async function callEngine(
   },
 ): Promise<HttpResult> {
   // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
-  const signedPath = init.path.split("?")[0] ?? init.path;
+  const signedPath = init.path;
   return call(gate.ordersUrl, {
     method: init.method,
     path: init.path,
@@ -470,7 +470,7 @@ function customerSigner() {
 }
 
 function signCustomer(method: string, path: string): Record<string, string> {
-  return customerSigner()(method, path.split("?")[0] ?? path, customerBeneficiaryOf(path));
+  return customerSigner()(method, path, customerBeneficiaryOf(path));
 }
 
 function identitySigner() {

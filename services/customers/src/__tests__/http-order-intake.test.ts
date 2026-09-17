@@ -193,7 +193,7 @@ describe("HttpOrderIntakePort — the handover on the wire", () => {
     expect(call.headers["idempotency-key"]).toBe("customer-key-9");
     // M1-04: حد الطلبات يفرض الهوية، فنداء بلا ترويسة يُرَدّ 401 في الإنتاج وحده
     // لو لم يُثبَّت هنا. والترويسة مربوطة بهذه الطريقة وهذا المسار.
-    expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
+    expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./u);
     // The body carries the same key: the engine rejects a disagreement (400), so
     // the two must come from one source.
     expect(call.body.idempotency_key).toBe("customer-key-9");

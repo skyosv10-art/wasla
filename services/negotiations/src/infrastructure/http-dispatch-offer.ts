@@ -106,8 +106,10 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
 
   async describe(dispatchOfferId: string): Promise<DispatchOfferSnapshot | null> {
     // الربطُ هنا **كامل**: مُعرِّفُ العرضِ جزءٌ من المسارِ لا من سلسلةِ
-    // الاستفسارِ، فرمزٌ وُقِّعَ لقراءةِ عرضٍ لا يصلحُ لقراءةِ غيرِه — بخلافِ
-    // `/orders/lookup` أدناه (`RISK-0026`).
+    // الاستفسارِ، فرمزٌ وُقِّعَ لقراءةِ عرضٍ لا يصلحُ لقراءةِ غيرِه.
+    // [إضافةٌ 2026-09-17] وكانَ هنا أنّ `/orders/lookup` أدناه بخلافِه
+    // (`RISK-0026`)؛ وقد زالَ الفرقُ: الربطُ صارَ يشملُ الاستعلامَ لكلِّ مسارٍ
+    // (`wsvc3` · `ADR-036`)، فالموضعانِ محميّانِ بالآلةِ لا بشكلِ المسارِ.
     const offerPath = DISPATCH_OFFER_PATH(dispatchOfferId);
     const offer = await this.readJson(
       `${this.dispatchBaseUrl}${offerPath}`,
@@ -131,14 +133,17 @@ export class HttpDispatchOfferPort implements DispatchOfferPort {
     }
 
     // ترتيبُ النداءين مقصود: لا نسأل محرّك الطلب عن طلبٍ حتى نعرف أنّ عرضاً يشير إليه.
-    // الربطُ لا يشمل سلسلةَ الاستعلامِ (ADR-021 §4)، والمعرّفُ العامُّ هنا في
-    // الاستعلامِ لا في المسارِ — فالتوقيعُ يربطُ `GET /orders/lookup` ولا يربطُ
-    // **أيَّ** طلبٍ يُسأل عنه. هذا أوّلُ موضعٍ ماديٍّ لهذا الدَّينِ المُعلَنِ،
-    // وهو مسجَّلٌ RISK-0026، ويُخفَّف اليومَ بعمرٍ قصيرٍ للرمزِ وحارسِ إعادةٍ.
+    //
+    // [إضافةٌ 2026-09-17 · `RISK-0026` مُقفَلٌ] كانَ هنا أنّ الربطَ لا يشملُ
+    // الاستعلامَ (`ADR-021 §4`)، فالتوقيعُ يربطُ `GET /orders/lookup` ولا يربطُ
+    // أيَّ طلبٍ يُسأل عنه. **وقد زالَ ذلك:** `ADR-036` ضمَّ سلسلةَ الاستعلامِ
+    // مُرتَّبةً إلى الربطِ (`wsvc3`)، فيُمرَّر هنا **المسارُ باستعلامِه كاملاً** —
+    // وهو عينُ ما يُقارنُه المُتحقِّقُ، فرمزٌ وُقِّعَ لطلبٍ لا يقرأُ طلباً آخرَ.
+    const orderLookupTarget = ORDER_LOOKUP_PATH(orderPublicId);
     const order = await this.readJson(
-      `${this.ordersBaseUrl}${ORDER_LOOKUP_PATH(orderPublicId)}`,
+      `${this.ordersBaseUrl}${orderLookupTarget}`,
       "الطلب",
-      this.signOrdersRequest("GET", "/orders/lookup"),
+      this.signOrdersRequest("GET", orderLookupTarget),
     );
     if (order === null) return null;
 

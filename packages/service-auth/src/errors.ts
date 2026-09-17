@@ -22,7 +22,7 @@ import { AuthErrorCode, AuthenticationError } from "@wasla/auth-sdk";
 export type ServiceAuthRejection =
   /** لا ترويسةَ إثباتٍ إطلاقاً — طلبٌ مجهولٌ لا طلبٌ مرفوضٌ. */
   | "missing_credentials"
-  /** البادئةُ ليست `wsvc2.` — نسخةٌ غيرُ مدعومةٍ (منها `wsvc1` المنسوخة) أو نصٌّ غريبٌ. */
+  /** البادئةُ ليست `wsvc3.` — نسخةٌ غيرُ مدعومةٍ (منها `wsvc1` و`wsvc2` المنسوختانِ) أو نصٌّ غريبٌ. */
   | "unsupported_scheme"
   /** عددُ الأقسامِ أو ترميزُها أو صيغةُ الحِمْلِ غيرُ صالحةٍ. */
   | "malformed_token"

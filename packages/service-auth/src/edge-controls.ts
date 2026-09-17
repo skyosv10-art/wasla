@@ -148,10 +148,13 @@ export function redactErrorBody(body: unknown): unknown {
   return cleaned;
 }
 
-/** يكشفُ ويستبدلُ الأنماطَ الحسّاسةَ في النصوص: رموزُ `wsvc2.` وأسرارٌ طويلة. */
+/** يكشفُ ويستبدلُ الأنماطَ الحسّاسةَ في النصوص: رموزُ `wsvc<n>.` وأسرارٌ طويلة. */
 function redactString(value: string): string {
-  // رمزُ خدمةٍ: wsvc2.<any>
-  let redacted = value.replace(/wsvc2\.[A-Za-z0-9._-]+/g, "[token]");
+  // رمزُ خدمةٍ: wsvc<n>.<any> — **بأيِّ نسخةٍ**. والنمطُ عامٌّ في النسخةِ عمداً:
+  // الحجبُ يُطبَّق على ما وصلَ لا على ما نُصدِرُه اليومَ، ورمزُ نسخةٍ منسوخةٍ
+  // (`wsvc1` · `wsvc2`) يُرفَض عندَ الحدِّ لكنَّهُ **يظهرُ في نصِّ الرفضِ** — فحجبُ
+  // النسخةِ الحاليّةِ وحدَها كانَ سيُسرِّبَ بالسجلِّ ما رفضَهُ الحدُّ.
+  let redacted = value.replace(/wsvc\d+\.[A-Za-z0-9._-]+/g, "[token]");
   // سلسلةٌ سريّةٌ طويلةٌ (≥32 محرفاً متجاورة): قد تكون سرّاً أو رمزاً
   redacted = redacted.replace(/[A-Za-z0-9+/_-]{32,}/g, "[redacted]");
   return redacted;

@@ -48,7 +48,7 @@ export function createTestKeyRegistry(
  * `/subscriptions/:driverPublicId` و`:ownerPublicId` في `/referrals/codes/:ownerPublicId`.
  */
 export function beneficiaryFromUrl(url: string): string | undefined {
-  const path = url.split("?")[0] ?? url;
+  const path = url;
   // /subscriptions/:driverPublicId/...
   let match = /^\/subscriptions\/([^/]+)/u.exec(path);
   let value = match?.[1];
@@ -76,7 +76,6 @@ export function signFor(
     onBehalfOfPublicId?: string | null;
   } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   const beneficiary =
     options.onBehalfOfPublicId === undefined
       ? beneficiaryFromUrl(url)
@@ -85,7 +84,7 @@ export function signFor(
     serviceName: options.serviceName ?? "subscriptions-ingress",
     audience: SUBSCRIPTIONS_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_SUBSCRIPTIONS_SCOPES,

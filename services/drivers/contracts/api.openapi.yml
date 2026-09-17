@@ -44,6 +44,8 @@ paths:
       tags: [drivers]
       summary: تسجيل ملف دور سائق
       operationId: registerDriver
+      security:
+        - ServiceAuth: ['drivers:profile:write']
       description: |
         إنشاء ملف دور لا إنشاء هوية. تكرار `Idempotency-Key` بالحمولة نفسها يعيد الملف نفسه بـ`200`؛
         لأن إعادة إرسال طلب التسجيل بعد انقطاع الشبكة حالة عادية لا سبب لإنشاء دورين.
@@ -66,6 +68,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -76,6 +80,8 @@ paths:
       tags: [eligibility]
       summary: نبضة إعادة فحص انتهاء الوثائق
       operationId: tickDriverEligibility
+      security:
+        - ServiceAuth: ['drivers:eligibility:tick']
       description: |
         تقرأ النبضة الاستحقاقات المخزّنة وتعيد حساب الأهليّة ثم تحاول نشر ما تغيّر إلى المطابقة.
         لا `requestBody` هنا عمداً: النبضة فعل على الساعة والحالة المخزنة، وإعلان جسم فارغ يجعل Fastify
@@ -89,6 +95,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EligibilityTickResult' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -98,6 +106,8 @@ paths:
       tags: [drivers]
       summary: ملف سائق واحد
       operationId: getDriver
+      security:
+        - ServiceAuth: ['drivers:profile:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/RequestId'
@@ -107,6 +117,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -114,6 +126,8 @@ paths:
       tags: [drivers]
       summary: تعديل حقول الملف القابلة للتغيير
       operationId: patchDriver
+      security:
+        - ServiceAuth: ['drivers:profile:write']
       description: |
         هذا تعديل ضيّق للحقول التي يملكها الملف. لا يحمل حالة الإيقاف أو التحقق أو الأهليّة، لأن إدخالها
         في نفس الجسم يسمح لعميل عادي أن يكتب نتيجة قرار إداري أو قرار مشتق.
@@ -131,6 +145,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -141,6 +157,8 @@ paths:
       tags: [zones]
       summary: استبدال مناطق الخدمة مرتّبة بالتفضيل
       operationId: replaceDriverZones
+      security:
+        - ServiceAuth: ['drivers:zone:write']
       description: |
         استبدال كامل لا دمج جزئي: ترتيب قديم مع قائمة جديدة خليط لا يقصده أحد. الرتب تبدأ من `1` وتبقى
         متتابعة وفريدة؛ لذلك يحمل الجسم القائمة المقصودة كلها بدلاً من أمر نقل مبهم.
@@ -173,6 +191,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ServiceZoneList' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -181,6 +201,8 @@ paths:
       tags: [zones]
       summary: مناطق الخدمة مرتّبة بالتفضيل
       operationId: listDriverZones
+      security:
+        - ServiceAuth: ['drivers:zone:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/RequestId'
@@ -190,6 +212,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ServiceZoneList' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -199,6 +223,8 @@ paths:
       tags: [vehicles]
       summary: إضافة مركبة
       operationId: registerDriverVehicle
+      security:
+        - ServiceAuth: ['drivers:vehicle:write']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -219,6 +245,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Vehicle' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -228,6 +256,8 @@ paths:
       tags: [vehicles]
       summary: مركبات السائق
       operationId: listDriverVehicles
+      security:
+        - ServiceAuth: ['drivers:vehicle:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/RequestId'
@@ -244,6 +274,8 @@ paths:
                   vehicles:
                     type: array
                     items: { $ref: '#/components/schemas/Vehicle' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -253,6 +285,8 @@ paths:
       tags: [vehicles]
       summary: تعديل حالة المركبة أو أولويتها
       operationId: patchDriverVehicle
+      security:
+        - ServiceAuth: ['drivers:vehicle:write']
       description: |
         التقاعد وإسناد الرئيسية يمران من عملية واحدة لأن القاعدة تمنع مركبة متقاعدة رئيسية. الفصل بينهما
         يجبر العميل على اختيار ترتيب وسيط قد يخرق القيد بلا أن يكون قصده تغييراً تشغيلياً.
@@ -271,6 +305,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Vehicle' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -281,6 +317,8 @@ paths:
       tags: [documents]
       summary: تقديم مرجع وثيقة
       operationId: submitDriverDocument
+      security:
+        - ServiceAuth: ['drivers:document:write']
       description: |
         يقدم المُنادي مرجع التخزين لا الملف ولا بياناته الحساسة. استبدال وثيقة قائمة يبقي السابقة
         للتدقيق بدلاً من حذف تاريخ القرار.
@@ -304,6 +342,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverDocument' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -313,6 +353,8 @@ paths:
       tags: [documents]
       summary: وثائق السائق
       operationId: listDriverDocuments
+      security:
+        - ServiceAuth: ['drivers:document:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/RequestId'
@@ -329,6 +371,8 @@ paths:
                   documents:
                     type: array
                     items: { $ref: '#/components/schemas/DriverDocument' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -338,6 +382,8 @@ paths:
       tags: [documents]
       summary: البت في وثيقة مقدّمة
       operationId: reviewDriverDocument
+      security:
+        - ServiceAuth: ['drivers:document:review']
       description: |
         قرار المراجعة نهائي للوثيقة نفسها؛ الطلب الثاني لا يغيّر تاريخ القرار. الرفض يحتاج كود سبب كي
         يستطيع السائق أن يصلح النقص، أما نص حر فيصير سياسة مختلفة في كل مراجعة.
@@ -356,6 +402,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverDocument' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -367,6 +415,8 @@ paths:
       tags: [drivers]
       summary: إعلان التوافر
       operationId: updateDriverAvailability
+      security:
+        - ServiceAuth: ['drivers:availability:write']
       description: |
         `busy` غير مقبول هنا لأنه أثر التزام جارٍ يملكه التوزيع. قبول السائق لكلمة `busy` يجعل
         الإعلان يتنافس مع الحقيقة التشغيلية ويخفي من صاحب القرار عند الاختلاف.
@@ -384,6 +434,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -393,6 +445,8 @@ paths:
       tags: [drivers]
       summary: إيقاف السائق
       operationId: suspendDriver
+      security:
+        - ServiceAuth: ['drivers:profile:suspend']
       description: |
         الإيقاف قرار إداري صريح له سبب؛ لا يُستبدل بتغيير حالة التحقق حتى لا يضيع الفرق بين «وثائقه
         ناقصة» و«موقوف». إيقاف موقوف أصلاً تعارض حالة لا عملية ناجحة صامتة.
@@ -410,6 +464,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -420,6 +476,8 @@ paths:
       tags: [drivers]
       summary: إعادة سائق موقوف
       operationId: reinstateDriver
+      security:
+        - ServiceAuth: ['drivers:profile:reinstate']
       description: |
         لا يحمل الطلب جسماً لأن إعادة الإيقاف تزيل قراراً قائماً ولا تقبل سبباً بديلاً. السائق النشط
         ليس حالة يمكن «إعادتها»، لذلك يجيب تعارضاً بدلاً من إخفاء خطأ المشغّل.
@@ -432,6 +490,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverProfile' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -442,6 +502,8 @@ paths:
       tags: [eligibility]
       summary: الأهليّة الحالية وسببها
       operationId: getDriverEligibility
+      security:
+        - ServiceAuth: ['drivers:eligibility:read']
       description: |
         يعيد النتيجة المشتقة مع أكواد أسبابها ونسخة السياسة ووقت التقييم؛ الحالة وحدها لا تفسر
         القرار، ولا تكفي لتدقيقه بعد أن تتغير السياسة.
@@ -454,6 +516,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EligibilityView' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -475,6 +539,23 @@ paths:
               schema: { $ref: '#/components/schemas/HealthStatus' }
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
+
+        وكلُّ مساراتِ هذا الحدِّ تمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ**، فالرمزُ
+        يجبُ أن يحملَ المُنتَفِعَ (`on_behalf_of`) **وأن يُطابِقَ**
+        `waslaPublicId` المكتوبَ في المسارِ؛ ومخالفتُهُ تُرَدُّ `404`
+        (`DRIVER_PROFILE_NOT_FOUND`) لا `403`، فلا يُفصَحُ لمن لا يملكُ عن
+        وجودِ المَورِدِ (ADR-009).
   parameters:
     WaslaPublicId:
       name: waslaPublicId
@@ -798,6 +879,16 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     Unprocessable:
       description: مدخل صالح شكلياً ومرفوض بقاعدة أعمال أو مرجع خارجي
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthUnauthorized:
+      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة أو المُنتَفِع
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }

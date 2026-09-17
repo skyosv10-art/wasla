@@ -686,7 +686,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -1003,9 +1003,56 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 فالتمييزُ بينَ `403` و`404` هنا كانَ سيُصيِّرَ البابَ **مِكشافَ وجودٍ**.
 
 **وما لا يُدَّعى:** فرضُ هذا الحدِّ **لا يُغلِقُ `RISK-0051`** ولا يُنجِزُ
-`M1-04`: أربعةُ حدودٍ باقيةٌ صامتةٌ (`drivers` · `reputation` · `search` ·
-`subscriptions`) بثلاثةٍ وأربعينَ مساراً، وجردُ §5.10 يحرسُها. ومَن يمنحُ أيَّ
+`M1-04`: ثلاثةُ حدودٍ باقيةٌ صامتةٌ (`reputation` · `search` · `subscriptions`)
+بستَّةٍ وعشرينَ مساراً، وجردُ §5.10 يحرسُها. ومَن يمنحُ أيَّ
 صلاحيّةٍ لأيِّ خدمةٍ قرارُ `M1-05` عندَ مُصدِرِ الرمزِ لا قرارُ هذا الجدولِ.
+
+---
+
+### 5.7 حدُّ السائقين (`M1-04` · الموجةُ العاشرة · `CLM-0198`)
+
+**الحدُّ العاشر:** ستَّةَ عشرَ مساراً تُغطّي ملفَّ السائقِ ومركباتِهِ ووثائقَهُ
+ومناطقَهُ وأهليّتَهُ وتوفّرَهُ، وكلُّها — ما خلا `/health` — يمسُّ مَورِداً
+مملوكاً لإنسانٍ بعينِهِ: `waslaPublicId` مكتوبٌ في المسارِ **أو في الجسمِ**
+(في `POST /drivers`). فالإنفاذُ **وربطُ المالكِ** وقعا في الدفعةِ نفسِها،
+كما في حدِّ العميلِ قبلهُ.
+
+<!-- drivers-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المالكِ |
+|---|---|---|
+| `POST /drivers` | `drivers:profile:write` | `obo` = `wasla_public_id` (من الجسمِ) |
+| `POST /drivers/eligibility/tick` | `drivers:eligibility:tick` | — (عمليّةٌ داخليّةٌ) |
+| `GET /drivers/{waslaPublicId}` | `drivers:profile:read` | `obo` = `waslaPublicId` |
+| `PATCH /drivers/{waslaPublicId}` | `drivers:profile:write` | `obo` = `waslaPublicId` |
+| `PUT /drivers/{waslaPublicId}/zones` | `drivers:zone:write` | `obo` = `waslaPublicId` |
+| `GET /drivers/{waslaPublicId}/zones` | `drivers:zone:read` | `obo` = `waslaPublicId` |
+| `POST /drivers/{waslaPublicId}/vehicles` | `drivers:vehicle:write` | `obo` = `waslaPublicId` |
+| `GET /drivers/{waslaPublicId}/vehicles` | `drivers:vehicle:read` | `obo` = `waslaPublicId` |
+| `PATCH /drivers/{waslaPublicId}/vehicles/{vehicleId}` | `drivers:vehicle:write` | `obo` = `waslaPublicId` |
+| `POST /drivers/{waslaPublicId}/documents` | `drivers:document:write` | `obo` = `waslaPublicId` |
+| `GET /drivers/{waslaPublicId}/documents` | `drivers:document:read` | `obo` = `waslaPublicId` |
+| `POST /drivers/{waslaPublicId}/documents/{documentId}/review` | `drivers:document:review` | `obo` = `waslaPublicId` |
+| `PUT /drivers/{waslaPublicId}/availability` | `drivers:availability:write` | `obo` = `waslaPublicId` |
+| `POST /drivers/{waslaPublicId}/suspend` | `drivers:profile:suspend` | `obo` = `waslaPublicId` |
+| `POST /drivers/{waslaPublicId}/reinstate` | `drivers:profile:reinstate` | `obo` = `waslaPublicId` |
+| `GET /drivers/{waslaPublicId}/eligibility` | `drivers:eligibility:read` | `obo` = `waslaPublicId` |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- drivers-scopes:end -->
+
+**والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
+مَورِدٍ، ومراجعةُ الوثيقةِ (`document:review`) صلاحيّةٌ مستقلّةٌ لأنَّها قرارٌ
+إداريٌّ لا كتابةٌ، ونبضةُ الأهليّةِ (`eligibility:tick`) صلاحيّةٌ عمليّاتيّةٌ
+بلا مُنتَفِعَ إنسانٍ.
+
+**ومخالفةُ المالكِ تُرَدُّ `404` لا `403`** (`DRIVER_NOT_FOUND`): نفسُ قاعدةِ
+حدِّ العميلِ — لا يُخبَرُ من لا يملكُ بوجودِ المَورِدِ ([`ADR-009`](../15-decisions/ADR-009-error-envelope-and-codes.md)).
+
+**وما لا يُدَّعى:** لا مُناديَ إنتاجيَّ HTTP لهذا الحدِّ اليومَ — `driver-bot`
+ينادي داخلَ العمليّةِ. فرضُ هذا الحدِّ **لا يُغلِقُ `RISK-0051`** ولا يُنجِزُ
+`M1-04`: ثلاثةُ حدودٍ باقيةٌ (`reputation` · `search` · `subscriptions`) بستَّةٍ
+وعشرينَ مساراً.
 
 ---
 
@@ -1163,12 +1210,11 @@ _أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`
 
 | الحدُّ | المساراتُ (مقيسةٌ) | ملفُّ الحدِّ | العقدُ المنشورُ | الخطرُ · المالكُ |
 | --- | --- | --- | --- | --- |
-| `drivers` | 17 | [`services/drivers/src/http/app.ts`](../../services/drivers/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `reputation` | 11 | [`services/reputation/src/http/app.ts`](../../services/reputation/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `search` | 3 | [`services/search/src/http/app.ts`](../../services/search/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `subscriptions` | 12 | [`services/subscriptions/src/http/app.ts`](../../services/subscriptions/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 
-TOTAL_ROUTES: 43
+TOTAL_ROUTES: 26
 
 <!-- unenforced-ingress:end -->
 
@@ -1179,13 +1225,13 @@ TOTAL_ROUTES: 43
 وحدّاً في `packages/` — وكلُّ حالةٍ **تُثبِتُ بمقارنةِ بايتاتٍ أنَّها طفرَت فعلاً**
 قبلَ أن تُقاسَ، فلا تُقرأُ حمراءُ من عملٍ لم يحدثْ.
 
-**تصحيحٌ بالإضافةِ · الموجةُ التاسعةُ (`CLM-0197`) · 2026-09-17.** خرجَ صفُّ
-`customers` من الجدولِ أعلاهُ **بعدَ** أن فُرِضَتْ هويّةُ الخدمةِ على مساراتِهِ
-التسعِ (و`/health` مفتوحٌ بقرارٍ مكتوبٍ)، ورُبِطَتِ التسعُ كلُّها بالمالكِ في
-الدفعةِ نفسِها، وأعلنَ عقدُهُ المنشورُ `ServiceAuth` و`401`/`403` على كلِّ
-عمليّةٍ. فنزلَ `TOTAL_ROUTES` من `53` إلى `43` — **والنزولُ لا يُقرأُ إنجازاً
-عامّاً**: أربعةُ حدودٍ باقيةٌ (`drivers` · `reputation` · `search` ·
-`subscriptions`) و`RISK-0051` **مفتوحٌ** حتّى تُفرَضَ كلُّها.
+**تصحيحٌ بالإضافةِ · الموجةُ العاشرةُ (`CLM-0198`) · 2026-09-17.** خرجَ صفُّ
+`drivers` من الجدولِ أعلاهُ **بعدَ** أن فُرِضَتْ هويّةُ الخدمةِ على مساراتِهِ
+الستَّةِ عشرَ (و`/health` مفتوحٌ بقرارٍ مكتوبٍ)، ورُبِطَتِ الستَّةَ عشرَ كلُّها
+بالمالكِ في الدفعةِ نفسِها، وأعلنَ عقدُهُ المنشورُ `ServiceAuth` و`401`/`403` على كلِّ
+عمليّةٍ. فنزلَ `TOTAL_ROUTES` من `43` إلى `26` — **والنزولُ لا يُقرأُ إنجازاً
+عامّاً**: ثلاثةُ حدودٍ باقيةٌ (`reputation` · `search` · `subscriptions`)
+و`RISK-0051` **مفتوحٌ** حتّى تُفرَضَ كلُّها.
 
 **وما لا يُدَّعى في هذا الجردِ:** لم يُغلَقْ مسارٌ واحدٌ، ولم تُفرَضْ هويّةٌ على
 حدٍّ واحدٍ من الخمسةِ، ولم ينقصْ خطرٌ. والأخضرُ بعدَ هذه الدفعةِ يعني «الدَّينُ

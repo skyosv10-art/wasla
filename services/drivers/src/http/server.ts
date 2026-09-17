@@ -22,6 +22,10 @@ import { readPortEnv } from "@wasla/config";
 import type { Pool } from "pg";
 
 import { DRIVER_SERVICE_PORT } from "@wasla/contracts-driver";
+import {
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import { createDriverDb } from "../infrastructure/drizzle/db.js";
 import type { DriverSharedDeps } from "../infrastructure/drizzle/transaction.js";
@@ -91,7 +95,14 @@ async function main(): Promise<void> {
   // Wiring warnings are printed before the app exists, because the choice of adapters is
   // made before there is a logger to attach them to.
   const { runner, health, pool } = buildWiring((message) => console.warn(message));
-  const app = createDriverApp({ runner, health, logger: true });
+  const keys = keyRegistryFromEnv(process.env);
+  const replayGuard = new InMemoryServiceTokenReplayGuard();
+  const app = createDriverApp({
+    runner,
+    health,
+    logger: true,
+    serviceIdentity: { keys, replayGuard },
+  });
   if (pool) {
     app.addHook("onClose", async () => {
       await pool.end();

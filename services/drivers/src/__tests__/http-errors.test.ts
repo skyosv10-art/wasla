@@ -9,6 +9,12 @@ import { describe, expect, it } from "vitest";
 import { driverUnavailable } from "../domain/errors.js";
 import { createDriverApp } from "../http/app.js";
 import type { DriverRunner } from "../runner.js";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+import {
+  createTestKeyRegistry,
+  attachSigningInject,
+  signFor,
+} from "./service-identity-support.js";
 import { DRIVER, httpHarness, key, registration } from "./http-harness.js";
 
 /** A runner whose every unit of work fails with a chosen error. */
@@ -88,17 +94,20 @@ describe("شكل الخطأ", () => {
   });
 
   it("يترجم الجسم غير الصالح ونوع المحتوى الخاطئ إلى رمز تحقق واحد", async () => {
-    const { app } = httpHarness();
-    const brokenJson = await app.inject({
+    const { app, rawInject, keys } = httpHarness();
+    // استعمالُ `rawInject` بلا توقيعٍ: الجسمُ معطوبٌ فلا يستطيعُ السندُ استخراجَ
+    // المُنتَفِعِ منه، ونوقّعُ صراحةً بـ`DRIVER` كي يعبُرَ الوسيطَ ويصلَ إلى تحقّقِ الجسم.
+    // توقيعانِ منفصلانِ: توقيعٌ واحدٌ يُرفَضُ في النداءِ الثاني بوصفِه إعادةً.
+    const brokenJson = await rawInject({
       method: "POST",
       url: "/drivers",
-      headers: { "idempotency-key": key(), "content-type": "application/json" },
+      headers: { ...signFor("POST", "/drivers", { keys, onBehalfOfPublicId: DRIVER }), "idempotency-key": key(), "content-type": "application/json" },
       payload: "{ليس JSON",
     });
-    const wrongType = await app.inject({
+    const wrongType = await rawInject({
       method: "POST",
       url: "/drivers",
-      headers: { "idempotency-key": key(), "content-type": "text/plain" },
+      headers: { ...signFor("POST", "/drivers", { keys, onBehalfOfPublicId: DRIVER }), "idempotency-key": key(), "content-type": "text/plain" },
       payload: "نص عادي",
     });
 
@@ -110,7 +119,10 @@ describe("شكل الخطأ", () => {
   });
 
   it("يحوّل الخطأ غير المصنَّف إلى 503 بلا تفاصيل داخلية", async () => {
-    const app = createDriverApp({ runner: failingRunner(new Error("انفجار في مكان ما")) });
+    const keys = createTestKeyRegistry();
+    const app = createDriverApp({ runner: failingRunner(new Error("انفجار في مكان ما")), serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() } });
+    // لفُّ `inject` بالتوقيعِ كي يعبُرَ الوسيطَ ويصلَ إلى الـrunner الفاشلِ.
+    attachSigningInject(app, keys);
     const response = await app.inject({ method: "GET", url: `/drivers/${DRIVER}` });
 
     expect(response.statusCode).toBe(503);
@@ -126,7 +138,9 @@ describe("شكل الخطأ", () => {
     // answer (MR 5/6). It is asserted here, at the boundary, because the alternative —
     // an unnamed throw classified by the catch-all — gives the same status for a
     // reason nobody can read afterwards.
-    const app = createDriverApp({ runner: failingRunner(driverUnavailable("دليل المناطق لا يجيب")) });
+    const keys = createTestKeyRegistry();
+    const app = createDriverApp({ runner: failingRunner(driverUnavailable("دليل المناطق لا يجيب")), serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() } });
+    attachSigningInject(app, keys);
     const response = await app.inject({ method: "GET", url: `/drivers/${DRIVER}` });
 
     expect(response.statusCode).toBe(503);

@@ -50,12 +50,13 @@
  * in-process callers.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import {
   DRIVER_DECLARED_AVAILABILITY,
   DRIVER_SERVICE_PORT,
 } from "@wasla/contracts-driver";
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 
 import {
   driverDocumentToWire,
@@ -85,6 +86,7 @@ import {
 import { readEligibility, runExpiryTick } from "../use-cases/read-eligibility.js";
 import { registerDriver } from "../use-cases/register-driver.js";
 
+import { DriverError } from "../domain/errors.js";
 import { sendDriverError } from "./errors.js";
 import { classifyReplay, payloadFingerprint, registrationKey } from "./idempotency.js";
 import {
@@ -107,6 +109,12 @@ import {
   toWaslaPublicId,
   toZonesBody,
 } from "./requests.js";
+import {
+  DRIVER_SCOPES,
+  type DriverRouteConfig,
+  type DriverServiceIdentityOptions,
+  registerServiceIdentity,
+} from "./service-identity.js";
 
 export interface DriverHealthDescriptor {
   readonly persistence: "postgres" | "memory";
@@ -129,9 +137,70 @@ export interface CreateDriverAppOptions {
   readonly health?: DriverHealthDescriptor;
   readonly tickState?: DriverTickState;
   readonly logger?: boolean;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**
+   * (سابقةُ حدِّ العميلِ): قيمةٌ افتراضيّةٌ تجعلُ نسيانَ التركيبِ في جذرٍ ما حدَّ
+   * سائقينَ **مفتوحاً يمرُّ كلَّ اختباراتِه** — وهيَ بعينِها الثغرةُ التي قاسَتْها
+   * الموجةُ الثامنةُ (`RISK-0051`) وتسدُّها هذهِ. فمن أرادَ حدّاً بلا فرضٍ فليكتبْ
+   * ذلكَ صراحةً في جذرِ تركيبِه، ولا موضعَ في المستودعِ يكتبُه.
+   */
+  readonly serviceIdentity: DriverServiceIdentityOptions;
 }
 
 const DEFAULT_HEALTH: DriverHealthDescriptor = { persistence: "memory" };
+
+/** `/health` وحدَهُ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: DriverRouteConfig = { serviceIdentity: "open" };
+
+/**
+ * مسارٌ يمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ** — وهوَ كلُّ مسارٍ يبدأُ بـ
+ * `/drivers/:waslaPublicId/…` ما خلا `/health`. فـ`beneficiary: "required"` يجعلُ
+ * الوسيطَ المركزيَّ يرفضُ كلَّ رمزٍ لا يحملُ هويّةَ المُنتَفِعِ **قبلَ** أن يمسَّ
+ * المسارُ قاعدةَ البياناتِ.
+ */
+function ownerScoped(...scopes: readonly string[]): DriverRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * مسارُ عمليّاتٍ داخليٌّ لا مُنتَفِعَ إنسانٍ له: يفرضُ الصلاحيّةَ بلا مُنتَفِعٍ.
+ * `POST /drivers/eligibility/tick` هوَ الوحيدُ من هذا الصنفِ على هذا الحدِّ.
+ */
+function internalScoped(...scopes: readonly string[]): DriverRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
+
+/**
+ * مالكُ المَورِدِ كما **يُثبِتُهُ الرمزُ**، مُطابَقاً بما كُتِبَ في المسارِ.
+ *
+ * `:waslaPublicId` قيمةٌ **يكتبُها المُنادي**. فلو فُرِضَتِ الصلاحيّةُ وحدَها لكانَ
+ * حاملُ `drivers:profile:read` يقرأُ ملفَّ كلِّ سائقٍ بتبديلِ حرفٍ في المسارِ —
+ * وهذا وجهُ `RISK-0042` نفسُهُ الذي أُغلِقَ على حدِّ الطلباتِ في `M1-05B`،
+ * ويُغلَقُ هنا في الدفعةِ التي تفرضُ الهويّةَ لا بعدَها.
+ */
+function requireBeneficiary(request: FastifyRequest, traceId: string): string {
+  const caller = request.serviceCaller;
+  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  if (beneficiary === undefined || beneficiary.trim() === "") {
+    throw new Error(
+      'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+    );
+  }
+
+  const { waslaPublicId: rawId } = request.params as { waslaPublicId: unknown };
+  // تحقّقُ الصيغةِ قبلَ المطابقةِ: قيمةٌ غيرُ صالحةٍ تُرَدُّ `400` لا `404`.
+  const waslaPublicId = toWaslaPublicId(rawId);
+  if (waslaPublicId !== beneficiary) {
+    throw new DriverError(
+      "DRIVER_NOT_FOUND",
+      `لا ملف سائق للمعرّف ${waslaPublicId}`,
+      { traceId },
+    );
+  }
+
+  return beneficiary;
+}
 
 export function createDriverApp(options: CreateDriverAppOptions): FastifyInstance {
   const health = options.health ?? DEFAULT_HEALTH;
@@ -146,7 +215,11 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     sendDriverError(reply, error, request.id);
   });
 
-  app.get("/health", async (_request, reply) => {
+  // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
+  // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send(
       healthToWire({
         // `degraded` on memory is not pessimism: a service holding driver files in RAM
@@ -158,7 +231,7 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     );
   });
 
-  app.post("/drivers", async (request, reply) => {
+  app.post("/drivers", { config: ownerScoped(DRIVER_SCOPES.profileWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -167,6 +240,23 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     // it. `registerDriver` re-validates; this is a shape check for a key, not a second
     // rule.
     const waslaPublicId = toWaslaPublicId(body.wasla_public_id);
+    // `wasla_public_id` comes from the body, not the path. The beneficiary in the
+    // token must still match it: a caller who can mint a token for one driver must
+    // not register another.
+    const caller = request.serviceCaller;
+    const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+    if (beneficiary === undefined || beneficiary.trim() === "") {
+      throw new Error(
+        'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+      );
+    }
+    if (waslaPublicId !== beneficiary) {
+      throw new DriverError(
+        "DRIVER_NOT_FOUND",
+        `لا ملف سائق للمعرّف ${waslaPublicId}`,
+        { traceId },
+      );
+    }
     const fingerprint = payloadFingerprint(body);
 
     const outcome = await runner.write(async (deps) => {
@@ -198,7 +288,7 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
       .send(driverProfileToWire(outcome.profile));
   });
 
-  app.post("/drivers/eligibility/tick", async (request, reply) => {
+  app.post("/drivers/eligibility/tick", { config: internalScoped(DRIVER_SCOPES.eligibilityTick) }, async (request, reply) => {
     // No `traceId` forwarded, unlike every other write: `runExpiryTick` fans out over
     // up to 500 drivers, and stamping one caller's request id on 500 eligibility rows
     // would claim they were all caused by that request. Each recompute keeps its own
@@ -219,21 +309,17 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(eligibilityTickToWire(result.outcome));
   });
 
-  app.get("/drivers/:waslaPublicId", async (request, reply) => {
+  app.get("/drivers/:waslaPublicId", { config: ownerScoped(DRIVER_SCOPES.profileRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const profile = await runner.read((deps) => readDriverProfile(deps, waslaPublicId));
     return reply.status(200).send(driverProfileToWire(profile));
   });
 
-  app.patch("/drivers/:waslaPublicId", async (request, reply) => {
+  app.patch("/drivers/:waslaPublicId", { config: ownerScoped(DRIVER_SCOPES.profileWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const body = toProfilePatchBody(request.body);
     // Built key by key with `in`, never spread: `updateProfile` distinguishes a field
     // that is present-and-null (clear it) from one that is absent (leave it), and a
@@ -254,12 +340,10 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(driverProfileToWire(profile));
   });
 
-  app.put("/drivers/:waslaPublicId/zones", async (request, reply) => {
+  app.put("/drivers/:waslaPublicId/zones", { config: ownerScoped(DRIVER_SCOPES.zoneWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const zones = toZonesBody(request.body);
     const replaced = await runner.write((deps) =>
       setServiceZones(deps, waslaPublicId, { zones, traceId }),
@@ -267,22 +351,18 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send({ zones: replaced.map(serviceZoneToWire) });
   });
 
-  app.get("/drivers/:waslaPublicId/zones", async (request, reply) => {
+  app.get("/drivers/:waslaPublicId/zones", { config: ownerScoped(DRIVER_SCOPES.zoneRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const zones = await runner.read((deps) => listDriverZones(deps, waslaPublicId));
     return reply.status(200).send({ zones: zones.map(serviceZoneToWire) });
   });
 
-  app.post("/drivers/:waslaPublicId/vehicles", async (request, reply) => {
+  app.post("/drivers/:waslaPublicId/vehicles", { config: ownerScoped(DRIVER_SCOPES.vehicleWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const body = toVehicleRegistrationBody(request.body);
 
     // The lookup and the write share ONE transaction, and the lookup decides ONLY the
@@ -313,20 +393,18 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(outcome.replayed ? 200 : 201).send(vehicleToWire(outcome.vehicle));
   });
 
-  app.get("/drivers/:waslaPublicId/vehicles", async (request, reply) => {
+  app.get("/drivers/:waslaPublicId/vehicles", { config: ownerScoped(DRIVER_SCOPES.vehicleRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const vehicles = await runner.read((deps) => listDriverVehicles(deps, waslaPublicId));
     return reply.status(200).send({ vehicles: vehicles.map(vehicleToWire) });
   });
 
-  app.patch("/drivers/:waslaPublicId/vehicles/:vehicleId", async (request, reply) => {
+  app.patch("/drivers/:waslaPublicId/vehicles/:vehicleId", { config: ownerScoped(DRIVER_SCOPES.vehicleWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const params = request.params as { waslaPublicId?: unknown; vehicleId?: unknown };
-    const waslaPublicId = toWaslaPublicId(params.waslaPublicId);
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const vehicleId = toPathUuid(params.vehicleId, "vehicleId");
     const body = toVehiclePatchBody(request.body);
     const input: Parameters<typeof patchVehicle>[3] = { traceId };
@@ -346,13 +424,11 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(vehicleToWire(vehicle));
   });
 
-  app.post("/drivers/:waslaPublicId/documents", async (request, reply) => {
+  app.post("/drivers/:waslaPublicId/documents", { config: ownerScoped(DRIVER_SCOPES.documentWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const body = toDocumentSubmissionBody(request.body);
 
     // As with vehicles: the lookup picks the status code, `submitDocument` decides what
@@ -377,20 +453,18 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
       .send(driverDocumentToWire(outcome.document));
   });
 
-  app.get("/drivers/:waslaPublicId/documents", async (request, reply) => {
+  app.get("/drivers/:waslaPublicId/documents", { config: ownerScoped(DRIVER_SCOPES.documentRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, request.id);
     const documents = await runner.read((deps) => listDriverDocuments(deps, waslaPublicId));
     return reply.status(200).send({ documents: documents.map(driverDocumentToWire) });
   });
 
-  app.post("/drivers/:waslaPublicId/documents/:documentId/review", async (request, reply) => {
+  app.post("/drivers/:waslaPublicId/documents/:documentId/review", { config: ownerScoped(DRIVER_SCOPES.documentReview) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const params = request.params as { waslaPublicId?: unknown; documentId?: unknown };
-    const waslaPublicId = toWaslaPublicId(params.waslaPublicId);
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const documentId = toPathUuid(params.documentId, "documentId");
     const body = toDocumentReviewBody(request.body);
     // The wire field is `decision` and the use-case field is `status`. Renaming either
@@ -412,12 +486,10 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(driverDocumentToWire(document));
   });
 
-  app.put("/drivers/:waslaPublicId/availability", async (request, reply) => {
+  app.put("/drivers/:waslaPublicId/availability", { config: ownerScoped(DRIVER_SCOPES.availabilityWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const body = toAvailabilityBody(request.body);
     // `busy` is refused here and not in the domain because the domain's parameter is
     // already typed to the two declarable values; the closed set comes from the
@@ -429,12 +501,10 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(driverProfileToWire(profile));
   });
 
-  app.post("/drivers/:waslaPublicId/suspend", async (request, reply) => {
+  app.post("/drivers/:waslaPublicId/suspend", { config: ownerScoped(DRIVER_SCOPES.profileSuspend) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const body = toSuspensionBody(request.body);
     const profile = await runner.write((deps) =>
       suspendDriver(deps, waslaPublicId, body.reason_code, traceId),
@@ -442,12 +512,10 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(driverProfileToWire(profile));
   });
 
-  app.post("/drivers/:waslaPublicId/reinstate", async (request, reply) => {
+  app.post("/drivers/:waslaPublicId/reinstate", { config: ownerScoped(DRIVER_SCOPES.profileReinstate) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     assertNoBody(request.body);
     const profile = await runner.write((deps) =>
       reinstateDriver(deps, waslaPublicId, traceId),
@@ -455,12 +523,10 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
     return reply.status(200).send(driverProfileToWire(profile));
   });
 
-  app.get("/drivers/:waslaPublicId/eligibility", async (request, reply) => {
+  app.get("/drivers/:waslaPublicId/eligibility", { config: ownerScoped(DRIVER_SCOPES.eligibilityRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
-    const waslaPublicId = toWaslaPublicId(
-      (request.params as { waslaPublicId?: unknown }).waslaPublicId,
-    );
+    const waslaPublicId = requireBeneficiary(request, traceId);
     const decision = await runner.write(async (deps) => {
       // The existence check first, in the same unit of work: `readEligibility` answers
       // `unknown` for a missing profile (fail-closed, correct for an internal caller),

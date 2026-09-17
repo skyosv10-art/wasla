@@ -3717,3 +3717,20 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 **ما لا يُدَّعى:** الدمجُ لا يُرقّي `M1-04` — الحالةُ تبقى **Ready for Gate** والنقلُ إلى `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ (§9) · و`RISK-0051` **مفتوحٌ** بأربعةِ حدودٍ صامتةٍ (`drivers` 17 · `subscriptions` 12 · `reputation` 11 · `search` 3 = 43 مساراً) · و`RISK-0027` لم يُمَسَّ · ولا قياسَ نشرٍ إنتاجيٍّ لهذا الحدِّ (الطبقةُ الثالثةُ ⚪ NOT VERIFIED).
 
 **التالي:** الموجةُ العاشرةُ — حدُّ `drivers` (17 مساراً)، وهوَ أكبرُ الحدودِ الصامتةِ الباقيةِ.
+
+---
+
+## 2026-09-17 — M1-04: drivers service identity enforcement (wave 10)
+
+- **Work Item(s):** M1-04 (wave 10) · **الحجز:** `CLM-0198`
+- **الفرع:** `feat/m1-04-drivers-identity-enforcement` · **PR:** [#214](https://github.com/skyosv10-art/wasla/pull/214)
+
+**ما جرى:** فُرِضَتْ هويّةُ الخدمةِ على حدِّ السائقين: 16 مساراً مفروضاً + `/health` مفتوحٌ. `registerServiceIdentity` + `requireBeneficiary` + `DRIVER_SCOPES` (14 صلاحيّةً) · اختباراتُ دخولٍ 12 حالةً · عقدٌ يُعلِنُ `ServiceAuth` و`401`/`403` · جردُ §5.10 نزلَ من 43 إلى 26 مساراً.
+
+**الاختبارات:** `pnpm --filter @wasla/drivers-service test` 209/209 · typecheck نظيفٌ · `validate-service-auth-coverage.sh` 11 مفروضٌ · 3 غيرُ مفروضٍ · 26 مساراً.
+
+**الدليل:** PR [#214](https://github.com/skyosv10-art/wasla/pull/214) · `validate-service-auth-coverage.sh` أخضرُ.
+
+**ما لا يُدَّعى:** الدمجُ لا يُغلِقُ `RISK-0051` — ثلاثةُ حدودٍ باقيةٌ (`reputation` · `search` · `subscriptions`) بستَّةٍ وعشرينَ مساراً. `M1-04` تبقى **Ready for Gate**.
+
+**التالي:** الموجةُ الحاديةَ عشرةَ — حدُّ `subscriptions` (12 مساراً).

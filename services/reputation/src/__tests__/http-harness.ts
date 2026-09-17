@@ -9,13 +9,16 @@
  * تُدفَع بيد — فأيُّ فرقٍ بين جواب HTTP وجواب حالةِ استخدامٍ هو فرقٌ صنعته طبقةُ HTTP.
  */
 
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from "fastify";
 
-import { createReputationApp, type ReputationTickState } from "../http/app.js";
+import type { ServiceAuthKeyRegistry, InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+
+import type { ReputationTickState } from "../http/app.js";
 import type { InMemoryReputationDependencies } from "../infrastructure/in-memory.js";
 import { createDirectReputationRunner } from "../runner.js";
 
 import { deps, T0 } from "./helpers.js";
+import { buildSignedReputationApp } from "./service-identity-support.js";
 
 export { CUSTOMER, DRIVER, OTHER_DRIVER, T0, factDraft, order } from "./helpers.js";
 
@@ -23,16 +26,27 @@ export interface HttpHarness {
   readonly deps: InMemoryReputationDependencies;
   readonly app: FastifyInstance;
   readonly tickState: ReputationTickState;
+  readonly keys: ServiceAuthKeyRegistry;
+  readonly replayGuard: InMemoryServiceTokenReplayGuard;
+  /** `inject` بلا توقيعٍ — لإثباتِ الرفضِ لا لتجاوزِهِ. */
+  readonly rawInject: (options: InjectOptions) => Promise<LightMyRequestResponse>;
 }
 
 export function httpHarness(startAt: string = T0): HttpHarness {
   const dependencies = deps(startAt);
   const tickState: ReputationTickState = { lastTickAt: null };
-  const app = createReputationApp({
+  const harness = buildSignedReputationApp({
     runner: createDirectReputationRunner(dependencies),
     tickState,
   });
-  return { deps: dependencies, app, tickState };
+  return {
+    deps: dependencies,
+    app: harness.app,
+    tickState,
+    keys: harness.keys,
+    replayGuard: harness.replayGuard,
+    rawInject: harness.rawInject,
+  };
 }
 
 /** ترويساتُ كتابةٍ كاملة: مفتاحُ معالجةٍ بطولٍ مشروع، ونوعُ محتوى JSON. */

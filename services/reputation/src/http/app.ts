@@ -56,9 +56,10 @@
  * تقول إنّ نبضةً جرت في لحظةٍ لم تجرِ فيها.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import { REPUTATION_SERVICE_PORT } from "@wasla/contracts-reputation";
+import { ownerPublicIdOf } from "@wasla/auth-sdk";
 
 import {
   factToWire,
@@ -84,6 +85,10 @@ import { runTick } from "../use-cases/run-tick.js";
 import { submitRating } from "../use-cases/submit-rating.js";
 
 import { sendReputationError } from "./errors.js";
+import { ReputationError } from "../domain/errors.js";
+import {
+  assertWaslaPublicId,
+} from "../domain/validation.js";
 import {
   assertNoBody,
   assertRequestIdLength,
@@ -97,6 +102,12 @@ import {
   toRatingListFilter,
   toRatingSubmitDraft,
 } from "./requests.js";
+import {
+  REPUTATION_SCOPES,
+  type ReputationRouteConfig,
+  type ReputationServiceIdentityOptions,
+  registerServiceIdentity,
+} from "./service-identity.js";
 
 /** المنفذُ المُعلَن، مُصدَّرٌ كي لا يقرأ `server.ts` رقماً مكتوباً بيد. */
 export { REPUTATION_SERVICE_PORT };
@@ -125,9 +136,67 @@ export interface CreateReputationAppOptions {
   readonly health?: ReputationHealthDescriptor;
   readonly tickState?: ReputationTickState;
   readonly logger?: boolean;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدِّ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**
+   * (سابقةُ حدِّ السائقين): قيمةٌ افتراضيّةٌ تجعلُ نسيانَ التركيبِ في جذرٍ ما حدَّ
+   * سمعةٍ **مفتوحاً يمرُّ كلَّ اختباراتِه** — وهيَ بعينِها الثغرةُ التي قاسَتْها
+   * الموجةُ الثامنةُ (`RISK-0051`) وتسدُّها هذهِ. فمن أرادَ حدّاً بلا فرضٍ فليكتبْ
+   * ذلكَ صراحةً في جذرِ تركيبِه، ولا موضعَ في المستودعِ يكتبُه.
+   */
+  readonly serviceIdentity: ReputationServiceIdentityOptions;
 }
 
 const DEFAULT_HEALTH: ReputationHealthDescriptor = { persistence: "memory" };
+
+/** `/health` وحدَهُ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
+const OPEN: ReputationRouteConfig = { serviceIdentity: "open" };
+
+/**
+ * مسارٌ يمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ** — وهوَ كلُّ مسارٍ يحملُ
+ * `:subjectPublicId` أو يقرأُ المُنتَفِعَ من الجسمِ. فـ`beneficiary: "required"`
+ * يجعلُ الوسيطَ المركزيَّ يرفضُ كلَّ رمزٍ لا يحملُ هويّةَ المُنتَفِعِ **قبلَ** أن
+ * يمسَّ المسارُ قاعدةَ البياناتِ.
+ */
+function ownerScoped(...scopes: readonly string[]): ReputationRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * مسارُ عمليّاتٍ داخليٌّ لا مُنتَفِعَ إنسانٍ له: يفرضُ الصلاحيّةَ بلا مُنتَفِعٍ.
+ */
+function internalScoped(...scopes: readonly string[]): ReputationRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
+
+/**
+ * مالكُ المَورِدِ كما **يُثبِتُهُ الرمزُ**، مُطابَقاً بما كُتِبَ في المسارِ.
+ *
+ * `:subjectPublicId` قيمةٌ **يكتبُها المُنادي**. فلو فُرِضَتِ الصلاحيّةُ وحدَها لكانَ
+ * حاملُ `reputation:score:read` يقرأُ نتيجةَ كلِّ شخصٍ بتبديلِ حرفٍ في المسارِ —
+ * وهذا وجهُ `RISK-0042` نفسُهُ الذي أُغلِقَ على حدِّ الطلباتِ في `M1-05B`،
+ * ويُغلَقُ هنا في الدفعةِ التي تفرضُ الهويّةَ لا بعدَها.
+ */
+function requireBeneficiary(request: FastifyRequest, traceId: string): string {
+  const caller = request.serviceCaller;
+  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+
+  if (beneficiary === undefined || beneficiary.trim() === "") {
+    throw new Error(
+      'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+    );
+  }
+
+  const subjectPublicId = toPathSubjectPublicId(request.params);
+  if (subjectPublicId !== beneficiary) {
+    throw new ReputationError(
+      "REPUTATION_SCORE_NOT_FOUND",
+      `لا نتيجة مسجّلة لهذا الشخص`,
+      { traceId },
+    );
+  }
+
+  return beneficiary;
+}
 
 /** أحدثُ أولاً وبسقف: المنافذُ تُعيد تصاعدياً، والعرضُ شأنُ هذه الطبقة. */
 function newestFirst<T>(rows: readonly T[], limit: number): T[] {
@@ -186,7 +255,11 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     sendReputationError(reply, error, request.id);
   });
 
-  app.get("/health", async (_request, reply) => {
+  // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
+  // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
+  registerServiceIdentity(app, options.serviceIdentity);
+
+  app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send(
       healthToWire({
         persistence: health.persistence,
@@ -195,7 +268,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     );
   });
 
-  app.post("/reputation/facts", async (request, reply) => {
+  app.post("/reputation/facts", { config: internalScoped(REPUTATION_SCOPES.factWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -231,7 +304,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     });
   });
 
-  app.get("/reputation/facts", async (request, reply) => {
+  app.get("/reputation/facts", { config: internalScoped(REPUTATION_SCOPES.factRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const filter = toFactListFilter(request.query);
     // `REPUTATION_FILTER_REQUIRED` يُرفع من `listFacts` لا من هنا: «قراءةٌ بلا حدّ» قاعدةُ
@@ -241,8 +314,9 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     return reply.status(200).send({ facts: newestFirst(facts, ROW_LIMIT).map(factToWire) });
   });
 
-  app.get("/reputation/scores/:subjectType/:subjectPublicId", async (request, reply) => {
+  app.get("/reputation/scores/:subjectType/:subjectPublicId", { config: ownerScoped(REPUTATION_SCOPES.scoreRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
+    requireBeneficiary(request, request.id);
     const subject = subjectOf(request.params);
     // `404` يأتي من `readScore`: المستودعُ يُجيب `null` لمن لا نتيجةَ له، ونتيجةٌ افتراضية
     // هنا كانت ستقول لمستهلكٍ «60» عن غريبٍ لم يعمل معنا شيئاً.
@@ -250,7 +324,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     return reply.status(200).send(scoreToWire(score));
   });
 
-  app.post("/reputation/scores/:subjectType/:subjectPublicId/recompute", async (request, reply) => {
+  app.post("/reputation/scores/:subjectType/:subjectPublicId/recompute", { config: internalScoped(REPUTATION_SCOPES.scoreRecompute) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
@@ -274,11 +348,29 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     return reply.status(200).send(scoreToWire(result.score));
   });
 
-  app.post("/reputation/ratings", async (request, reply) => {
+  app.post("/reputation/ratings", { config: ownerScoped(REPUTATION_SCOPES.ratingWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const draft = toRatingSubmitDraft(request.body);
+    // `rater_public_id` comes from the body, not the path. The beneficiary in the
+    // token must still match it: a caller who can mint a token for one person must
+    // not submit a rating in another's name.
+    const caller = request.serviceCaller;
+    const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+    if (beneficiary === undefined || beneficiary.trim() === "") {
+      throw new Error(
+        'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+      );
+    }
+    const raterPublicId = assertWaslaPublicId(draft.raterPublicId, "rater_public_id");
+    if (raterPublicId !== beneficiary) {
+      throw new ReputationError(
+        "REPUTATION_SCORE_NOT_FOUND",
+        `لا نتيجة مسجّلة لهذا الشخص`,
+        { traceId },
+      );
+    }
 
     const result = await runner.write((deps) =>
       submitRating(deps, {
@@ -306,7 +398,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     });
   });
 
-  app.get("/reputation/ratings", async (request, reply) => {
+  app.get("/reputation/ratings", { config: internalScoped(REPUTATION_SCOPES.ratingRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const filter = toRatingListFilter(request.query);
     const ratings = await runner.read((deps) => listRatings(deps, filter));
@@ -315,7 +407,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
       .send({ ratings: newestFirst(ratings, ROW_LIMIT).map(ratingToWire) });
   });
 
-  app.get("/reputation/fraud-signals", async (request, reply) => {
+  app.get("/reputation/fraud-signals", { config: internalScoped(REPUTATION_SCOPES.fraudSignalRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const { filter, severity } = toFraudSignalListQuery(request.query);
     const signals = await runner.read((deps) => listFraudSignals(deps, filter));
@@ -327,7 +419,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
       .send({ signals: newestFirst(matching, ROW_LIMIT).map(fraudSignalToWire) });
   });
 
-  app.get("/reputation/rulesets", async (request, reply) => {
+  app.get("/reputation/rulesets", { config: internalScoped(REPUTATION_SCOPES.rulesetRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     // بلا مُرشِّحٍ إلزاميّ، وهو الاستثناءُ الوحيد: مجموعةٌ تنمو بإصدارٍ لا بحركة مستخدمين.
     const rulesets = await runner.read((deps) => listRulesets(deps));
@@ -336,7 +428,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
       .send({ rulesets: newestFirst(rulesets, RULESET_LIMIT).map(rulesetToWire) });
   });
 
-  app.get("/reputation/rulesets/:rulesetVersion", async (request, reply) => {
+  app.get("/reputation/rulesets/:rulesetVersion", { config: internalScoped(REPUTATION_SCOPES.rulesetRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
     const rulesetVersion = toPathRulesetVersion(request.params);
     // `readRuleset` لا `readUsableRuleset`: من يقرأ نسخةً للمراجعة يحتاج أن يرى ما فيها
@@ -345,7 +437,7 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
     return reply.status(200).send(rulesetToWire(ruleset));
   });
 
-  app.post("/reputation/tick", async (request, reply) => {
+  app.post("/reputation/tick", { config: internalScoped(REPUTATION_SCOPES.tickRun) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers);
     requireIdempotencyKey(request.headers);

@@ -36,16 +36,14 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * السابقةُ صدقت لدفعتِها، وتسعُ عملياتِ حدِّ العميلِ دخلَتْ في هذهِ الدفعةِ
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
-  it("تسعٌ ومئةُ عمليّةٍ على أحدَ عشرَ حدّاً — أربعٌ وثمانونَ قبلَ تسعِ عملياتِ حدِّ العميلِ وستَّ عشرةَ عمليّةً لحدِّ السائقين (M1-04 · الموجةُ 9·10)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(109);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(11);
+  it("تسعٌ عشرةَ ومئةُ عمليّةٍ على اثنا عشرَ حدّاً — مئةُ وتسعةُ قبلَ عشرِ عملياتِ حدِّ السمعة (M1-04 · الموجةُ 9·10·11)", () => {
+    expect(ENFORCED_OPERATIONS).toHaveLength(119);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(12);
   });
 
-  it("تسعٌ وثمانونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وستّينَ قبلَ سبعِ صلاحيّاتِ حدِّ العميلِ وأربعَ عشرةَ صلاحيّةً لحدِّ السائقين)", () => {
-    // سبعُ صلاحيّاتٍ لتسعِ عملياتٍ: القراءةُ والكتابةُ في الأماكنِ يتقاسمُهما
-    // مسارانِ، وقراءةُ الطلباتِ يتقاسمُها مسارُ القائمةِ ومسارُ الواحدِ.
-    // وأربعَ عشرةَ صلاحيّةً لستَّ عشرةَ عمليّةً على حدِّ السائقين.
-    expect(allEnforcedScopes()).toHaveLength(89);
+  it("ثمانٍ وتسعونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت تسعاً وثمانينَ قبلَ تسعِ صلاحيّاتِ حدِّ السمعة)", () => {
+    // تسعُ صلاحيّاتٍ لعشرِ عملياتٍ: قراءةُ القواعدِ يتقاسمُها مسارانِ.
+    expect(allEnforcedScopes()).toHaveLength(98);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -305,10 +303,10 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * عملياتِ حدِّ العميلِ كلُّها مربوطةٌ بالمالكِ في الدفعةِ نفسِها التي فرضَتْ
    * هويّةَ الخدمةِ عليها — فلم يمرَّ هذا الحدُّ بحالِ «مفروضٌ بلا ربطٍ» أصلاً.
    */
-  it("العملياتُ المربوطةُ بالرمزِ ثلاثٌ وثلاثونَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت تسعاً وثلاثينَ)", () => {
+  it("العملياتُ المربوطةُ بالرمزِ ستٌّ وثلاثونَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت أربعاً وثلاثينَ)", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(34);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(36);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       "DELETE /customers/:waslaPublicId/places/:placeId",
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
@@ -323,6 +321,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "GET /drivers/:waslaPublicId/zones",
       "GET /orders/:orderId",
       "GET /orders/:orderId/history",
+      "GET /reputation/scores/:subjectType/:subjectPublicId",
       "GET /stores/:storeSlug/staff",
       "PATCH /drivers/:waslaPublicId",
       "PATCH /drivers/:waslaPublicId/vehicles/:vehicleId",
@@ -338,6 +337,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "POST /products/:productId/archive",
       "POST /products/:productId/inventory",
       "POST /products/:productId/publish",
+      "POST /reputation/ratings",
       "POST /stores/:storeSlug/products",
       "POST /stores/:storeSlug/review-requests",
       "POST /stores/:storeSlug/staff",
@@ -386,7 +386,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       OPERATION_BINDINGS.filter(
         (b) => b.dimension === "owner" && b.strength === "token-bound",
       ),
-    ).toHaveLength(26);
+    ).toHaveLength(28);
   });
 
   /**
@@ -427,7 +427,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(67);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(75);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

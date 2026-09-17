@@ -11,9 +11,14 @@
 import { describe, expect, it } from "vitest";
 
 import { REPUTATION_ERROR_CODES } from "@wasla/contracts-reputation";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
 
 import { createReputationApp } from "../http/app.js";
 import type { ReputationRunner } from "../runner.js";
+import {
+  createTestKeyRegistry,
+  attachSigningInject,
+} from "./service-identity-support.js";
 
 import {
   CUSTOMER,
@@ -663,7 +668,13 @@ describe("ترجمةُ ما ليس من عندنا", () => {
       write: () => Promise.reject(error),
       read: () => Promise.reject(error),
     };
-    return createReputationApp({ runner });
+    const keys = createTestKeyRegistry();
+    const app = createReputationApp({
+      runner,
+      serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() },
+    });
+    attachSigningInject(app, keys);
+    return app;
   }
 
   it("رميةٌ بلا تصنيف: 503 REPUTATION_UNAVAILABLE — لا 500 ولا 502", async () => {

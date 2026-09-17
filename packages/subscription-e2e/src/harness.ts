@@ -43,6 +43,10 @@ import {
 } from "@wasla/reputation-service";
 import { createReputationApp } from "@wasla/reputation-service/http";
 import { createDirectReputationRunner } from "@wasla/reputation-service/runner";
+import {
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { addDays, type Clock } from "@wasla/subscriptions-service";
 import {
   ReferralService,
@@ -110,6 +114,17 @@ export class MovableClock implements Clock {
   }
 }
 
+/** مادةُ مفاتيح البوابة (M1-04، الموجةُ 11). سرٌّ واحد: المُبرهَن هنا الفرضُ لا إدارةُ المفاتيح. */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 export interface GateContext {
   /** أصلُ خدمةِ الاشتراك — مُستمعٌ حقيقيٌّ على منفذٍ يمنحه النظام. */
   readonly subscriptionsUrl: string;
@@ -160,6 +175,12 @@ export async function startGate(): Promise<GateContext> {
     runner: createDirectReputationRunner(reputation),
     health: { persistence: "memory" },
     logger: false,
+    // M1-04 (wave 11): حدُّ السمعة يفرض هويّةَ الخدمة. البوابةُ (subscriptions)
+    // تُوقّع نداءاتها بدل أن يُخفَّف الحدُّ لراحتها.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await reputationApp.listen({ port: 0, host: "127.0.0.1" });
   const reputationPort = (reputationApp.server.address() as AddressInfo).port;

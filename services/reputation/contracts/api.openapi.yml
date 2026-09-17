@@ -45,6 +45,8 @@ paths:
       tags: [facts]
       summary: تسجيل واقعةٍ مُشتقّة من حدثٍ منشور
       operationId: recordReputationFact
+      security:
+        - ServiceAuth: ['reputation:fact:write']
       description: |
         المدخل الوحيد إلى الدفتر، ويستدعيه مستهلكُ أحداث محرّك الطلب (المراجعة 5/6). الحمولة
         **تحمل مصدرها**: نوع الحدث ومُعرّفه وترتيبه على الطلب (`source_sequence`). وإعادةُ نفس
@@ -73,6 +75,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/FactRecordResult' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -80,6 +84,8 @@ paths:
       tags: [facts]
       summary: قراءة الدفتر بمُرشِّح إلزامي
       operationId: listReputationFacts
+      security:
+        - ServiceAuth: ['reputation:fact:read']
       description: |
         مُرشِّح واحد على الأقل مطلوب (`subjectPublicId` أو `orderPublicId`): دفترٌ يُقرأ بلا
         مُرشِّح يعني تصديرَ سلوك كل الناس بطلبٍ واحد. والقراءة أحدثُ الوقائع أولاً لأن السؤال
@@ -109,6 +115,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationFactList' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /reputation/scores/{subjectType}/{subjectPublicId}:
@@ -116,6 +124,8 @@ paths:
       tags: [scores]
       summary: قراءة نتيجة شخصٍ ورتبته
       operationId: getReputationScore
+      security:
+        - ServiceAuth: ['reputation:score:read']
       description: |
         `404` لمن لا وقائع له، لا نتيجةٌ افتراضية: **نقاطٌ مُختلَقة لغريبٍ أسوأ من غيابها** —
         مستهلكٌ يرى 60 لا يعرف أهي حصيلةُ عملٍ أم قيمةُ بدايةٍ لمن لم يعمل. والحمولة تحمل
@@ -131,6 +141,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationScore' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
@@ -139,6 +151,8 @@ paths:
       tags: [scores]
       summary: إعادة بناء النتيجة من الدفتر وحده
       operationId: recomputeReputationScore
+      security:
+        - ServiceAuth: ['reputation:score:recompute']
       description: |
         الطريق الذي يجعل القرار 3 قابلاً للتنفيذ لا شعاراً: النتيجة **مُشتقّة**، وحذفُها بالكامل
         عملٌ بلا خسارة لأن هذا المسار يُعيدها كما كانت من الوقائع ونسخة القواعد. لا `requestBody`
@@ -157,6 +171,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationScore' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
@@ -167,6 +183,8 @@ paths:
       tags: [ratings]
       summary: تسجيل تقييمٍ على طلبٍ اكتمل
       operationId: submitReputationRating
+      security:
+        - ServiceAuth: ['reputation:rating:write']
       description: |
         التقييم **حقٌّ يُشتقّ من واقعة** لا مدخلٌ حرّ: يُرفض إن لم تكن للطلب واقعةُ اكتمالٍ في
         الدفتر (`REPUTATION_ORDER_NOT_COMPLETED`)، أو مضت نافذة `rating_window_hours`
@@ -195,6 +213,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/RatingSubmitResult' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
@@ -202,6 +222,8 @@ paths:
       tags: [ratings]
       summary: قراءة التقييمات بمُرشِّح إلزامي
       operationId: listReputationRatings
+      security:
+        - ServiceAuth: ['reputation:rating:read']
       description: |
         مُرشِّح واحد على الأقل مطلوب (`subjectPublicId` أو `orderPublicId`). والدرجات تُعاد كما
         سُجّلت بلا متوسّطٍ محسوب هنا: المتوسّط يعيش في النتيجة بقواعدها، وحسابُه في مسارٍ ثانٍ
@@ -223,6 +245,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationRatingList' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /reputation/fraud-signals:
@@ -230,6 +254,8 @@ paths:
       tags: [fraud]
       summary: قراءة إشارات الاحتيال
       operationId: listFraudSignals
+      security:
+        - ServiceAuth: ['reputation:fraud-signal:read']
       description: |
         قراءةٌ فقط: لا مسار يُنشئ إشارةً يدوياً (تُنشَأ من الوقائع في النبضة)، ولا مسار يبتّ فيها
         (مراجعةٌ بشرية لا يملكها هذا الطور — القرار 6). وكل إشارةٍ تُعيد قاعدتها ونافذتها وعددها
@@ -259,6 +285,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/FraudSignalList' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /reputation/rulesets:
@@ -266,6 +294,8 @@ paths:
       tags: [rulesets]
       summary: قائمة نسخ القواعد
       operationId: listReputationRulesets
+      security:
+        - ServiceAuth: ['reputation:ruleset:read']
       responses:
         '200':
           description: النسخ، أحدثها أولاً
@@ -273,12 +303,16 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationRulesetList' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
 
   /reputation/rulesets/{rulesetVersion}:
     get:
       tags: [rulesets]
       summary: قراءة نسخة قواعد بأوزانها وعتباتها
       operationId: getReputationRuleset
+      security:
+        - ServiceAuth: ['reputation:ruleset:read']
       description: |
         الأوزان والعتبات **مُعلَنة للقراءة** لا مخفيّة في الكود: من يريد أن يشرح لسائقٍ لماذا نقصت
         نقاطه يحتاج القاعدة نفسها، وليس وصفاً لها في وثيقة قد تتخلّف.
@@ -292,6 +326,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReputationRuleset' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /reputation/tick:
@@ -299,6 +335,8 @@ paths:
       tags: [ops]
       summary: نبضة الزمن — النوافذ وتلاشي القديم وإعادة الحساب المستحقّة
       operationId: tickReputation
+      security:
+        - ServiceAuth: ['reputation:tick:run']
       description: |
         تقرأ النبضة الاستحقاقات المخزّنة (`next_recompute_at`) والنوافذ المتحرّكة، فتُعيد حساب ما
         استحقّ وترفع إشارات القواعد التي تجاوزت عتباتها. لا `requestBody` هنا عمداً: النبضة فعلٌ
@@ -316,6 +354,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/TickResult' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /health:
@@ -335,6 +375,24 @@ paths:
               schema: { $ref: '#/components/schemas/HealthStatus' }
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
+
+        ومسارُ `GET /reputation/scores/{subjectType}/{subjectPublicId}` يمسُّ مَورِداً
+        **مملوكاً لإنسانٍ بعينِهِ**، فالرمزُ يجبُ أن يحملَ المُنتَفِعَ (`on_behalf_of`)
+        **وأن يُطابِقَ** `subjectPublicId` المكتوبَ في المسارِ؛ ومخالفتُهُ تُرَدُّ `404`
+        (`REPUTATION_SCORE_NOT_FOUND`) لا `403`، فلا يُفصَحُ لمن لا يملكُ عن
+        وجودِ المَورِدِ (ADR-009). ومسارُ `POST /reputation/ratings` يقرأُ المُنتَفِعَ
+        من `rater_public_id` في الجسمِ بنفسِ القاعدةِ.
   parameters:
     SubjectType:
       name: subjectType
@@ -751,6 +809,16 @@ components:
         trace_id: { type: string }
 
   responses:
+    AuthUnauthorized:
+      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة أو المُنتَفِع
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     ValidationError:
       description: مدخلات غير صالحة شكلياً أو `Idempotency-Key` مفقود أو مُرشِّح ناقص
       content:

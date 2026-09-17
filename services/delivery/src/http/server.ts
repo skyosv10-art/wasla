@@ -39,10 +39,10 @@ import { Pool } from "pg";
 
 import { readLenientIntEnv, readPortEnv } from "@wasla/config";
 import {
-  InMemoryServiceTokenReplayGuard,
   createServiceRequestSigner,
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { buildDeliveryHttpApp } from "./app.js";
 import { resolveIdempotencyTtlSeconds } from "../domain/idempotency.js";
@@ -222,15 +222,15 @@ async function main(): Promise<void> {
    * نفسُ الحاسمُ الذي يُستعملُ سلفاً في هذا الملفِّ للتوقيعِ **الصادرِ**، فالحدُّ
    * الآنَ يُوقِّعُ ويتحقَّقُ بمَعينِ مفاتيحَ واحدٍ.
    *
-   * ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ مُعلَنٌ (`RISK-0015`)**: نسختانِ لا
-   * تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ أن يُعادَ على الأخرى — و`Redis` هوَ
-   * السدُّ، وعقدُ `ServiceTokenReplayGuard` مكتوبٌ كي يكونَ الاستبدالُ تغييرَ
-   * سطرٍ هنا.
+   * ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+   * `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+   * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+   * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
    */
   const { fastify, close } = buildDeliveryHttpApp({
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
-      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
     readPort: store,
     writePort: store,

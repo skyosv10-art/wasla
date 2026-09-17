@@ -45,9 +45,9 @@ import {
 } from "../runner.js";
 
 import {
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createNegotiationApp, type NegotiationHealthDescriptor } from "./app.js";
 
@@ -102,7 +102,7 @@ async function main(): Promise<void> {
     logger: true,
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
-      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
   if (pool) {

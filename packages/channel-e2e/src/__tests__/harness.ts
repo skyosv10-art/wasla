@@ -190,6 +190,10 @@ export function envFor(bot: BotKind, options: BuildGateBotsOptions = {}): Record
           // لازماً في الإنتاجِ.
           WASLA_SERVICE_AUTH_KEYS: GATE_SERVICE_AUTH_KEYS_ENV,
           WASLA_SERVICE_AUTH_ACTIVE_KID: GATE_SERVICE_AUTH_KID,
+          // M1-03 (ADR-035): بوّابةُ الطورِ الثالثِ تعملُ بمخازنِ ذاكرةٍ، فنمطُ
+          // مخزنِ الآثارِ **يُطلَبُ صراحةً** ولا يُوَرَّثُ بالسكوتِ. واشتراكُ
+          // المخزنِ بينَ النسخِ لا يُقاسُ هنا بل في `db-integration`.
+          WASLA_SERVICE_TOKEN_REPLAY_MODE: "memory",
         }),
     ...(options.databaseUrl === undefined ? {} : { DATABASE_URL: options.databaseUrl }),
   };

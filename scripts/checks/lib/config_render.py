@@ -46,7 +46,18 @@ VALID_TYPES = (
 )
 VALID_REQUIRED = ("always", "conditional", "optional")
 VALID_SCOPES = ("runtime", "tooling", "test")
-VALID_MODES = ("direct", "reader", "bag", "helper", "template", "default_literal")
+# `indirect_literal`: الاسمُ مكتوبٌ حرفاً في الملفِّ لكنَّهُ **ثابتٌ مُصدَّرٌ** يُمرَّرُ
+# إلى القارئِ بدلَ أن يُكتَبَ في موضعِ النداءِ، فالماسحُ لا يراهُ قراءةً. يفترقُ عن
+# `default_literal` بأنَّ ذاكَ قيمةٌ افتراضيّةٌ في دالّةٍ — والفرقُ يُكتَبُ ولا يُطمَسُ.
+VALID_MODES = (
+    "direct",
+    "reader",
+    "bag",
+    "helper",
+    "template",
+    "default_literal",
+    "indirect_literal",
+)
 
 # نصُّ نائبٍ لكلِّ سرٍّ: لا قيمةَ سرٍّ تُلتزَمُ في المستودعِ ولو مثالاً.
 SECRET_PLACEHOLDER = "__SET_ME__"

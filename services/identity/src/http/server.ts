@@ -10,7 +10,8 @@
  * `pnpm --filter @wasla/identity-service build`. Port via PORT (default 8080).
  */
 
-import { InMemoryServiceTokenReplayGuard, keyRegistryFromEnv } from "@wasla/service-auth";
+import { keyRegistryFromEnv, type ServiceTokenReplayGuard } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { readPortEnv } from "@wasla/config";
 
@@ -66,17 +67,18 @@ async function buildDeps(): Promise<UseCaseDeps> {
  * حساب، فأثر الثغرة فيه استيلاء لا قراءة. والإخفاق عند الإقلاع برسالة تسمّي
  * المتغير أرخص من حدِّ هويّة مفتوح لا أحد يراه.
  *
- * ومخزن الآثار في الذاكرة **دين معلن (RISK-0015)**: نسختان لا تتشاركان ذاكرة،
- * فرمز التُقط يمكن أن يُعاد على النسخة الأخرى. Redis هو السد، وعقد
- * `ServiceTokenReplayGuard` مكتوب كي يكون الاستبدال تغيير سطر هنا.
+ * ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+ * `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+ * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+ * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
  */
 function serviceIdentityWiring(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
-  replayGuard: InMemoryServiceTokenReplayGuard;
+  replayGuard: ServiceTokenReplayGuard;
 } {
   return {
     keys: keyRegistryFromEnv(process.env),
-    replayGuard: new InMemoryServiceTokenReplayGuard(),
+    replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
   };
 }
 

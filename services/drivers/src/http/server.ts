@@ -23,9 +23,9 @@ import type { Pool } from "pg";
 
 import { DRIVER_SERVICE_PORT } from "@wasla/contracts-driver";
 import {
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createDriverDb } from "../infrastructure/drizzle/db.js";
 import type { DriverSharedDeps } from "../infrastructure/drizzle/transaction.js";
@@ -96,7 +96,7 @@ async function main(): Promise<void> {
   // made before there is a logger to attach them to.
   const { runner, health, pool } = buildWiring((message) => console.warn(message));
   const keys = keyRegistryFromEnv(process.env);
-  const replayGuard = new InMemoryServiceTokenReplayGuard();
+  const replayGuard = createServiceTokenReplayGuardFromEnv(process.env);
   const app = createDriverApp({
     runner,
     health,

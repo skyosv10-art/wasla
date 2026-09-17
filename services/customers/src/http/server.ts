@@ -39,9 +39,10 @@
 
 import {
   createServiceRequestSigner,
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
+  type ServiceTokenReplayGuard,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import type { Pool } from "pg";
 
@@ -206,17 +207,18 @@ function buildWiring(): Wiring {
  *
  * لا قيمةَ افتراضيّةً للمفاتيحِ: خدمةٌ بلا مفاتيحَ لا تفرّقُ مُنادياً من مزوّرٍ،
  * وإقلاعٌ يخفقُ برسالةٍ تسمّي المتغيرَ أرخصُ من حدِّ عميلٍ مفتوحٍ لا أحدَ يراه.
- * ومخزنُ الآثارِ في الذاكرةِ **دينٌ مُعلَنٌ** (`RISK-0015`): نسختانِ من الخدمةِ
- * لا تتشاركانِ ذاكرةً، فرمزٌ اُلتُقِطَ يمكنُ أن يُعادَ على الأخرى — والعقدُ
- * `ServiceTokenReplayGuard` مكتوبٌ كي يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+ * ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+ * `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+ * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+ * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
  */
 function serviceIdentityWiring(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
-  replayGuard: InMemoryServiceTokenReplayGuard;
+  replayGuard: ServiceTokenReplayGuard;
 } {
   return {
     keys: keyRegistryFromEnv(process.env),
-    replayGuard: new InMemoryServiceTokenReplayGuard(),
+    replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
   };
 }
 

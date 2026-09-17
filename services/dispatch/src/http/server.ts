@@ -3,10 +3,10 @@ import type { Pool } from "pg";
 
 import {
   createServiceRequestSigner,
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
   type ServiceRequestSigner,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
 
@@ -135,17 +135,17 @@ async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
   // M1-04 (الموجةُ الرابعةُ): الحدُّ مفروضٌ، والمفاتيحُ من البيئةِ بلا قيمةٍ
   // افتراضيّةٍ — فنشرٌ بلا `WASLA_SERVICE_AUTH_KEYS` يسقطُ عندَ الإقلاعِ لا
-  // بعدَ أوّلِ نداءٍ. ومخزنُ آثارِ الإعادةِ في الذاكرةِ **دَينٌ مُعلَنٌ
-  // (`RISK-0015`)**: نسختانِ لا تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ أن يُعادَ
-  // على الأخرى — و`Redis` هو السدُّ، وعقدُ `ServiceTokenReplayGuard` مكتوبٌ كي
-  // يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+  // ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+  // `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+  // `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+  // نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
   const app = createDispatchApp({
     runner,
     health,
     logger: true,
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
-      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
   if (pool) app.addHook("onClose", async () => { await pool.end(); });

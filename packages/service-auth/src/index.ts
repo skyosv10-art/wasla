@@ -88,6 +88,24 @@ export {
   ServiceTokenReplayStoreUnavailableError,
 } from "./replay.js";
 
+/**
+ * المخزنُ المشترَكُ فوقَ PostgreSQL (ADR-035 · إغلاقُ `RISK-0015`). يُصدَّرُ من
+ * الجذرِ لأنَّهُ **بلا تبعيّةِ قاعدةِ بياناتٍ**: منفذُ `ReplaySqlExecutor` وحدَهُ.
+ * وأمّا بناؤهُ من البيئةِ فيحتاجُ `pg` فيعيشُ في التصديرِ الفرعيِّ
+ * `@wasla/service-auth/replay-store` ولا يُصدَّرُ هنا بقصدٍ — كما فُعِلَ بـFastify.
+ */
+export type {
+  PostgresReplayGuardOptions,
+  ReplaySqlExecutor,
+} from "./replay-postgres.js";
+export {
+  DEFAULT_REPLAY_SWEEP_INTERVAL_MS,
+  ensureServiceTokenReplaySchema,
+  PostgresServiceTokenReplayGuard,
+  SERVICE_TOKEN_REPLAY_DDL,
+  SERVICE_TOKEN_REPLAY_TABLE,
+} from "./replay-postgres.js";
+
 export type {
   ServiceRequestSigner,
   ServiceRequestSignerOptions,

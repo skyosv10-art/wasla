@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 59 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 62 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "COMMUNITY_GROUP_CHAT_IDS",
@@ -121,7 +121,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: true,
     default: null,
     scopes: ["runtime", "test", "tooling"],
-    readerCount: 71,
+    readerCount: 73,
     ownerItem: "M2-04",
   },
   {
@@ -455,6 +455,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-04",
   },
   {
+    name: "NODE_ENV",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M1-03",
+  },
+  {
     name: "ORDERS_BASE_URL",
     type: "http_url",
     required: "optional",
@@ -624,6 +634,26 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     readerCount: 5,
     ownerItem: "M2-04",
   },
+  {
+    name: "WASLA_SERVICE_TOKEN_REPLAY_MODE",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: "postgres",
+    scopes: ["runtime", "test"],
+    readerCount: 1,
+    ownerItem: "M1-03",
+  },
+  {
+    name: "WASLA_SERVICE_TOKEN_REPLAY_URL",
+    type: "postgres_url",
+    required: "conditional",
+    secret: true,
+    default: null,
+    scopes: ["runtime", "test"],
+    readerCount: 1,
+    ownerItem: "M1-03",
+  },
 ] as const;
 
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
@@ -670,6 +700,7 @@ export const ENV_VAR_NAMES = [
   "MATCHING_SERVICE_URL",
   "NEGOTIATIONS_SERVICE_URL",
   "NEGOTIATION_DATABASE_URL",
+  "NODE_ENV",
   "ORDERS_BASE_URL",
   "ORDERS_SERVICE_URL",
   "ORDER_DATABASE_URL",
@@ -687,6 +718,8 @@ export const ENV_VAR_NAMES = [
   "SUPPORT_GROUP_CHAT_IDS",
   "WASLA_SERVICE_AUTH_ACTIVE_KID",
   "WASLA_SERVICE_AUTH_KEYS",
+  "WASLA_SERVICE_TOKEN_REPLAY_MODE",
+  "WASLA_SERVICE_TOKEN_REPLAY_URL",
 ] as const;
 
 export type EnvVarName = (typeof ENV_VAR_NAMES)[number];

@@ -13,9 +13,9 @@ import type { FastifyInstance } from "fastify";
 
 import type { BotKind } from "@wasla/contracts-channel";
 import {
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { loadBotConfig, type BotConfig, type EnvBag } from "../config.js";
 import type { ConversationHandler } from "../conversation.js";
@@ -66,11 +66,13 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
       launch: runtime.launch,
     },
     // M1-07: خدمة الهوية على حدود البوت الداخلية. مفاتيحُ التحقُّقِ ومخزنُ الإعادةِ
-    // من البيئةِ كما في الحدودِ الثمانيةِ. ومخزنُ الإعادةِ في الذاكرةِ دَينٌ معلنٌ
-    // (RISK-0015) يُفكُّ بـRedis.
+    // ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+    // `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+    // `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+    // نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
     serviceIdentity: {
       keys: keyRegistryFromEnv(env),
-      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      replayGuard: createServiceTokenReplayGuardFromEnv(env),
       audience: CHANNEL_SERVICE_AUDIENCE,
     },
     webhookSecret: config.webhookSecret,

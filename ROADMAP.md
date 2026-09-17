@@ -1515,3 +1515,40 @@ still has no test of its own here.
   `requireBeneficiary` helper returns `undefined` when `serviceIdentity` is not configured, so integration
   tests that call `createSubscriptionApp` without a key registry pass without signing. Promotion of `M1-04`
   to `Completed` remains the program owner's authority alone (§9).
+
+- **M1-03 — claim `CLM-0202`: the service-token replay store is shared across instances (2026-09-17).**
+  Chosen by re-reading the risk register rather than trusting a report: `RISK-0015` was the last
+  `high` risk filed under `M1-03` with status `mitigating`, and its own line declared the blocker
+  verbatim — "the root fix is an owner decision, not an agent decision". That blocker was lifted by
+  an explicit executive authorization from the program owner (2026-09-17).
+  **The measurement corrected the register**: the line said "at least four production roots"; the
+  actual count is **fourteen** — thirteen `services/*/src/http/server.ts` plus
+  `packages/bot-runtime/src/http/server.ts` — each constructing
+  `new InMemoryServiceTokenReplayGuard()` for itself. The defect was never the `InMemory` class,
+  which is correct within its scope; it was that **the decision was distributed across fourteen
+  sites**, so a captured signed token was accepted once per instance, and fixing all fourteen once
+  would not have prevented the fifteenth: `tsc` cannot see it (the type is fine) and every test is
+  green because each test builds its own dependencies and never boots a production root.
+  The fix (`ADR-035`): a **single wrapper** decides
+  (`createServiceTokenReplayGuardFromEnv`), defaulting to **PostgreSQL** — not the Redis the old
+  comments promised, which exists nowhere in the repository as package, config, or CI service —
+  with acceptance as one atomic statement
+  (`INSERT … ON CONFLICT (kid,jti) DO UPDATE … WHERE retain_until <= $4`) on
+  `wasla_service_token_replay`, and `memory` mode rejected outright under `NODE_ENV=production`.
+  The factory is **synchronous by design**: config resolves at boot, the socket opens lazily on
+  first `remember()`, and open failures are **not cached**, so recovery needs no redeploy; an async
+  factory would have propagated `async` through `buildBotApp` into three bots and their test
+  harnesses — dozens of files unrelated to the risk. Check **20**
+  (`validate-replay-store.sh`, four gates, seven mutation cases including the worst bypass: flipping
+  the wrapper's default without touching any root) guards the direction. Proof runs against real
+  PostgreSQL in a new `db-integration` leg whose context was **registered as blocking on `main`**
+  (32 → 33 contexts, re-measured from the API, raw evidence committed): idempotent DDL,
+  cross-instance sharing, kid-scoped keys, **ten concurrent attempts ⇒ exactly one acceptance**,
+  expiry reclaim, sweep, env factory. The config registry gained three variables (59 → 62) and a new
+  reader mode `indirect_literal`, distinguishing a literal present for an **indirect binding** from
+  one present as a **default value** — conflating them would have blinded gate 8 to its own purpose.
+  `RISK-0015` stays **`mitigating`** until the leg's verdict is read green by run id: code, tests and
+  docs existing is not production proof, and local green is not a CI verdict. What is **not** claimed:
+  check 20 proves the decision has not returned to the roots, not that the store works; the rate
+  limiter in §7.1 is still per-process; and promoting `M1-03` or closing a milestone remains the
+  program owner's authority alone (§9).

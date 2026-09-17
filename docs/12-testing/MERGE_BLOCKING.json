@@ -3,9 +3,9 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-16T19:32:52Z",
+  "measured_at": "2026-09-17T14:42:04Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-17T144500Z-risk-0015-replay-store-context",
   "protection": {
     "required_status_checks": {
       "strict": true,
@@ -41,7 +41,8 @@
         "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)",
         "db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)",
         "exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)",
-        "image-supply-chain"
+        "image-supply-chain",
+        "db-integration (service-auth, @wasla/service-auth, wasla_replay_test)"
       ]
     },
     "enforce_admins": true,
@@ -98,6 +99,14 @@
       "raw": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context/api-responses/01-protection-after.raw.json",
       "note": "قياسٌ بعدَ إضافةِ السياقِ الثاني والثلاثينَ «image-supply-chain»: strict:true · enforce_admins:true · 32 سياقاً تُطابقُ وظائفَ ci.yml بعدَ فردِ المصفوفاتِ. القياسُ بعدَ الكتابةِ لا نجاحُ POST وحدَه.",
       "evidence_dir": "docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context"
+    },
+    {
+      "measured_at": "2026-09-17T14:45:00Z",
+      "measured_from": "POST /repos/skyosv10-art/wasla/branches/main/protection/required_status_checks/contexts ثمَّ GET /repos/skyosv10-art/wasla/branches/main/protection",
+      "protected": true,
+      "raw": "docs/12-testing/ci-evidence/2026-09-17T144500Z-risk-0015-replay-store-context/api-responses/01-protection-after.raw.json",
+      "note": "أُضيفَ سياقُ `db-integration (service-auth, @wasla/service-auth, wasla_replay_test)` حاجزاً (M1-03 · CLM-0202 · RISK-0015) بإذنٍ صريحٍ من مالكِ البرنامجِ (2026-09-17). 33 سياقاً (كانت 32) · strict:true · enforce_admins:true · protected:true. والقياسُ من الواجهةِ بعدَ الكتابةِ لا من ردِّ الكتابةِ. ولا يُدَّعى أنَّ الوظيفةَ خضراءُ: حكمُها الأوّلُ يُقرأُ برقمِ تشغيلٍ.",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-17T144500Z-risk-0015-replay-store-context"
     }
   ]
 }

@@ -77,7 +77,15 @@ Number(" 12 ")  ⇒ 12         // الفراغاتُ تُقتَطَعُ بصمت
 [+ `template`]) · `note_ar` (اختياريٌّ).
 
 وأنماطُ القراءةِ المعتمدةُ (`VALID_MODES`): `direct` · `reader` · `bag` ·
-`helper` · `template` · `default_literal`.
+`helper` · `template` · `default_literal` · `indirect_literal`.
+
+**و`indirect_literal` أُضيفَ 2026-09-17 (`CLM-0202` · `M1-03`)**، والفرقُ بينَهُ
+وبينَ `default_literal` فرقُ معنىً لا فرقُ صيغةٍ: `default_literal` يعني «الاسمُ
+حاضرٌ حرفاً لأنَّهُ **قيمةٌ افتراضيّةٌ** مكتوبةٌ»، و`indirect_literal` يعني
+«الاسمُ حاضرٌ حرفاً لأنَّ الملفَّ **يقرأُ المتغيّرَ بربطٍ لا يراهُ الماسحُ**» —
+كأن يُمرَّرَ اسمُ المتغيّرِ إلى دالّةٍ، أو يُبنى الاسمُ في ثابتٍ ثمَّ يُقرأَ بهِ.
+وخلطُهُما كانَ سيجعلُ قراءةً حقيقيّةً تُقرأُ «افتراضاً»، فيَعمى البابُ 8 عن
+مسؤوليّتِهِ الأولى.
 
 ---
 
@@ -143,10 +151,14 @@ secret_material`، فأسقطَ كلَّ سرٍّ من نوعِ `postgres_url` �
   يراها البابُ 6.
 - **الحارسُ يقرأُ نصّاً ونمطاً لا تدفُّقاً**: قراءةٌ تُبنى باسمٍ مُحتَسَبٍ زمنَ
   التشغيلِ لا يراها البابُ 1، **ولا يُدَّعى خلافُ ذلكَ**.
-- **الرَّبطُ غيرُ المباشرِ مُصرَّحٌ في جدولٍ** (`INDIRECT_BINDINGS`): اليومَ
-  صفٌّ واحدٌ ([`packages/service-auth/src/keys.ts`](../../packages/service-auth/src/keys.ts)
-  ⇒ `WASLA_SERVICE_AUTH_KEYS` · `WASLA_SERVICE_AUTH_ACTIVE_KID`)، فكلُّ ربطٍ
-  جديدٍ من هذا الصنفِ **يُكتَبُ صفّاً** أو يُسقِطُ البابَ 8.
+- **الرَّبطُ غيرُ المباشرِ مُصرَّحٌ في جدولٍ** (`INDIRECT_BINDINGS`): صفّانِ
+  اليومَ — ([`packages/service-auth/src/keys.ts`](../../packages/service-auth/src/keys.ts)
+  ⇒ `WASLA_SERVICE_AUTH_KEYS` · `WASLA_SERVICE_AUTH_ACTIVE_KID`)، و**[أُضيفَ
+  2026-09-17 · `CLM-0202`]** ([`packages/service-auth/src/replay-store.ts`](../../packages/service-auth/src/replay-store.ts)
+  ⇒ `WASLA_SERVICE_TOKEN_REPLAY_MODE` · `WASLA_SERVICE_TOKEN_REPLAY_URL`) — فكلُّ
+  ربطٍ جديدٍ من هذا الصنفِ **يُكتَبُ صفّاً** أو يُسقِطُ البابَ 8. والبابُ
+  يفحصُ الحضورَ الحرفيَّ في الملفِّ المُصرَّحِ، فصفٌّ يُكتَبُ لملفٍّ لا يذكرُ
+  الاسمَ يُسقِطُهُ كذلكَ.
 - **البابُ 6 يمنعُ نمطاً لا يُثبِتُ صوابَ قارئٍ**: استعمالُ
   `readLenientIntEnv` حيثُ يجبُ `readIntEnv` لا يراهُ حارسٌ — يراهُ مُراجِعٌ.
 

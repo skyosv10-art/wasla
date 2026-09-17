@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T02:16:17Z",
+  "generated_at": "2026-09-17T02:25:10Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "893458171d91cbf2619c6855527a606b8bb789ed",
+    "commit": "ed17c7b450d3ed52ad62551e067305469fe007b3",
     "branch": "feat/m1-04-drivers-identity-enforcement",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "CLM-0198: M1-04 wave 10 — drivers service identity enforcement. Added 2 test files (service-identity.test.ts, service-identity-support.ts) and 1 source file (service-identity.ts). Updated pnpm-lock.yaml for @wasla/auth-sdk dependency.",
+    "dirty_files": 6,
+    "dirty_reason": "CLM-0198: M1-04 wave 10 — drivers service identity enforcement. Added test files, source files, authz-policy operations, and e2e harness updates.",
     "tracked_files": 2096
   },
   "env": {

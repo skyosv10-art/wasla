@@ -37,10 +37,10 @@
  * «الحدودُ الثمانيةُ» والقائمةُ تسعةٌ — والعددُ في العنوانِ لم يُقَسْ يوماً، بل
  * شاخَ حينَ أُضيفَ `channel` في `M1-07`. فلا يُمحى العنوانُ السابقُ ليبدوَ
  * الجردُ معصوماً: يُقالُ إنَّهُ كانَ خطأً ويُستبدَلُ بعددٍ **يُقرأُ من طولِ
- * القائمةِ نفسِها**. وقد صارَتِ اليومَ **عَشْرَ** حدودٍ بإضافةِ `customers`،
+ * القائمةِ نفسِها**. وقد صارَتِ اليومَ **أحدَ عشرَ** حدّاً بإضافةِ `drivers`،
  * وهيَ أوّلُ الخمسةِ التي قاسَتْها الموجةُ الثامنةُ حدوداً إنتاجيّةً لا تفرضُ
  * شيئاً ([`ADR-034`](../../../docs/15-decisions/ADR-034-ingress-boundary-inventory-closure.md) ·
- * `RISK-0051`). والباقي أربعةٌ: `drivers` · `reputation` · `search` ·
+ * `RISK-0051`). والباقي ثلاثةٌ: `reputation` · `search` ·
  * `subscriptions` — لا تُضافُ هنا حتّى تُفرَضَ فعلاً، فإضافتُها قبلَ الفرضِ
  * إعلانٌ كاذبٌ يُسقِطُهُ البابانِ 2 و3 من الفحصِ 16.
  */
@@ -49,6 +49,7 @@ export const AUDIENCES = [
   "customers",
   "delivery",
   "dispatch",
+  "drivers",
   "geography",
   "identity",
   "marketplace",
@@ -96,6 +97,26 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:read"] },
   { audience: "customers", method: "POST", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:write"] },
   { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests/:orderRequestId", scopes: ["customers:order-request:read"] },
+  // ── drivers (M1-04 · الموجةُ العاشرةُ · CLM-0198) ──────────────
+  // ستَّ عشرةَ عمليّةً كلُّها مربوطةٌ بالمُنتَفِعِ: المَورِدُ مملوكٌ لسائقٍ مُعنوَنٍ
+  // في المسارِ (أو في الجسمِ لـ POST /drivers)، فالصلاحيّةُ وحدَها لا تقولُ **أيَّ سائقٍ**.
+  // و`/health` مفتوحٌ، و`POST /drivers/eligibility/tick` داخليٌّ بلا مُنتَفِعٍ.
+  { audience: "drivers", method: "POST", path: "/drivers", scopes: ["drivers:profile:write"] },
+  { audience: "drivers", method: "GET", path: "/drivers/:waslaPublicId", scopes: ["drivers:profile:read"] },
+  { audience: "drivers", method: "PATCH", path: "/drivers/:waslaPublicId", scopes: ["drivers:profile:write"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/availability", scopes: ["drivers:availability:write"] },
+  { audience: "drivers", method: "GET", path: "/drivers/:waslaPublicId/eligibility", scopes: ["drivers:eligibility:read"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/documents", scopes: ["drivers:document:write"] },
+  { audience: "drivers", method: "GET", path: "/drivers/:waslaPublicId/documents", scopes: ["drivers:document:read"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/documents/:documentId/review", scopes: ["drivers:document:review"] },
+  { audience: "drivers", method: "GET", path: "/drivers/:waslaPublicId/vehicles", scopes: ["drivers:vehicle:read"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/vehicles", scopes: ["drivers:vehicle:write"] },
+  { audience: "drivers", method: "PATCH", path: "/drivers/:waslaPublicId/vehicles/:vehicleId", scopes: ["drivers:vehicle:write"] },
+  { audience: "drivers", method: "GET", path: "/drivers/:waslaPublicId/zones", scopes: ["drivers:zone:read"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/zones", scopes: ["drivers:zone:write"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/suspend", scopes: ["drivers:profile:suspend"] },
+  { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/reinstate", scopes: ["drivers:profile:reinstate"] },
+  { audience: "drivers", method: "POST", path: "/drivers/eligibility/tick", scopes: ["drivers:eligibility:tick"] },
   // ── delivery ──────────────────────────────────────────────────
   { audience: "delivery", method: "POST", path: "/store-orders", scopes: ["delivery:store-order:write"] },
   { audience: "delivery", method: "GET", path: "/store-orders/:orderPublicId", scopes: ["delivery:store-order:read"] },

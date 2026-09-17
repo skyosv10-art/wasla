@@ -129,6 +129,8 @@ import {
   createInMemoryEnvironment,
   DRIVERS_MATCHING_SCOPES,
   DRIVERS_GEOGRAPHY_SCOPES,
+  DRIVER_SCOPES,
+  DRIVERS_SERVICE_AUDIENCE,
   HttpCandidacyPort,
   HttpZoneCatalogPort,
   PostgresDriverOutbox,
@@ -250,6 +252,19 @@ function geoSigner(serviceName: string, scopes: readonly string[]) {
  * والطلباتِ، وجمهورُه ثالثٌ مستقلٌّ — فرمزُ المطابقةِ لا يفتحُه ولا العكس.
  * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً.
  */
+/**
+ * `M1-04` · الموجةُ العاشرة: حدُّ السائقين مفروضٌ، وكلُّ عميلٍ يوقِّعُ
+ * بصلاحيّاتِهِ المعلنةِ لجمهورِ `drivers` — لا رمزَ مشترَكاً بينَ الحدودِ.
+ */
+function driversSigner(serviceName: string, scopes: readonly string[]) {
+  return createServiceRequestSigner({
+    serviceName,
+    audience: DRIVERS_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes,
+  });
+}
+
 function dispatchSigner() {
   return createServiceRequestSigner({
     serviceName: "e2e-harness",
@@ -559,6 +574,10 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     health: { persistence: DRIVER_DATABASE_URL ? "postgres" : "memory" },
     tickState,
     logger: false,
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await driversApp.listen({ port: 0, host: "127.0.0.1" });
   const driversUrl = `http://127.0.0.1:${(driversApp.server.address() as AddressInfo).port}`;
@@ -756,8 +775,32 @@ export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpRes
       ...(init.headers ?? {}),
     },
   });
+/**
+ * `M1-04` · الموجةُ العاشرة: المُنتَفِعُ يُقرأُ من المسارِ (`/drivers/:waslaPublicId/…`)
+ * أو من جسمِ `POST /drivers` (حقلُ `wasla_public_id`)، كما يفرضُ `requireBeneficiary`
+ * في `services/drivers/src/http/app.ts`.
+ */
+function driverBeneficiaryOf(init: CallInit): string | undefined {
+  if (init.method === "POST" && init.path === "/drivers") {
+    const body = init.body as Record<string, unknown> | undefined;
+    return body?.wasla_public_id as string | undefined;
+  }
+  const match = /^\/drivers\/([^/?]+)/u.exec(init.path);
+  return match?.[1];
+}
+
 export const callDrivers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.driversUrl, init);
+  call(gate.driversUrl, {
+    ...init,
+    headers: {
+      ...driversSigner("e2e-harness", Object.values(DRIVER_SCOPES))(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+        driverBeneficiaryOf(init),
+      ),
+      ...(init.headers ?? {}),
+    },
+  });
 
 let keyCounter = 0;
 

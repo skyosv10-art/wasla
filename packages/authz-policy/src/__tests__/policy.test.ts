@@ -36,15 +36,16 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * السابقةُ صدقت لدفعتِها، وتسعُ عملياتِ حدِّ العميلِ دخلَتْ في هذهِ الدفعةِ
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
-  it("ثلاثٌ وتسعونَ عمليّةً على عَشْرِ حدودٍ — أربعٌ وثمانونَ قبلَ تسعِ عملياتِ حدِّ العميلِ (M1-04 · الموجةُ 9)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(93);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(10);
+  it("تسعٌ ومئةُ عمليّةٍ على أحدَ عشرَ حدّاً — أربعٌ وثمانونَ قبلَ تسعِ عملياتِ حدِّ العميلِ وستَّ عشرةَ عمليّةً لحدِّ السائقين (M1-04 · الموجةُ 9·10)", () => {
+    expect(ENFORCED_OPERATIONS).toHaveLength(109);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(11);
   });
 
-  it("خمسٌ وسبعونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وستّينَ قبلَ سبعِ صلاحيّاتِ حدِّ العميلِ · وخمساً وستّينَ قبلَ صلاحيّاتِ القناةِ)", () => {
+  it("تسعٌ وثمانونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وستّينَ قبلَ سبعِ صلاحيّاتِ حدِّ العميلِ وأربعَ عشرةَ صلاحيّةً لحدِّ السائقين)", () => {
     // سبعُ صلاحيّاتٍ لتسعِ عملياتٍ: القراءةُ والكتابةُ في الأماكنِ يتقاسمُهما
     // مسارانِ، وقراءةُ الطلباتِ يتقاسمُها مسارُ القائمةِ ومسارُ الواحدِ.
-    expect(allEnforcedScopes()).toHaveLength(75);
+    // وأربعَ عشرةَ صلاحيّةً لستَّ عشرةَ عمليّةً على حدِّ السائقين.
+    expect(allEnforcedScopes()).toHaveLength(89);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -409,7 +410,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(66);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(82);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

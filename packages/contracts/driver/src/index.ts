@@ -130,7 +130,7 @@ export const DRIVER_API_PATHS = [
 ] as const;
 
 /** لا `502`: انظر §«الرمز المتقاعد» في `services/drivers/contracts/errors.md`. */
-export const DRIVER_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+export const DRIVER_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * القيَم التي تنشرها نواة السائق في إسقاط ترشيح المطابقة (ADR-012 القرار 3).

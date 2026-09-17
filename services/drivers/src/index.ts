@@ -140,3 +140,4 @@ export * from "./use-cases/read-driver.js";
 export * from "./http/app.js";
 export { sendDriverError } from "./http/errors.js";
 export type { DriverErrorBody } from "./http/errors.js";
+export { DRIVER_SCOPES, DRIVERS_SERVICE_AUDIENCE } from "./http/service-identity.js";

@@ -36,14 +36,14 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * السابقةُ صدقت لدفعتِها، وتسعُ عملياتِ حدِّ العميلِ دخلَتْ في هذهِ الدفعةِ
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
-  it("تسعٌ عشرةَ ومئةُ عمليّةٍ على اثنا عشرَ حدّاً — مئةُ وتسعةُ قبلَ عشرِ عملياتِ حدِّ السمعة (M1-04 · الموجةُ 9·10·11)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(119);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(12);
+  it("إحدى وعشرونَ ومئةُ عمليّةٍ على ثلاثةَ عشرَ حدّاً — مئةٌ وتسعَ عشرةَ قبلَ عمليّتَي حدِّ البحث (M1-04 · الموجةُ 9·10·11·12)", () => {
+    expect(ENFORCED_OPERATIONS).toHaveLength(121);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(13);
   });
 
-  it("ثمانٍ وتسعونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت تسعاً وثمانينَ قبلَ تسعِ صلاحيّاتِ حدِّ السمعة)", () => {
+  it("مئةُ صلاحيّةٍ مفروضةٍ، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
     // تسعُ صلاحيّاتٍ لعشرِ عملياتٍ: قراءةُ القواعدِ يتقاسمُها مسارانِ.
-    expect(allEnforcedScopes()).toHaveLength(98);
+    expect(allEnforcedScopes()).toHaveLength(100);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -427,7 +427,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(75);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(77);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

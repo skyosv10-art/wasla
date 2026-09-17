@@ -40,6 +40,14 @@ export * from "./http/errors.js";
 export * from "./http/requests.js";
 export * from "./http/mappers.js";
 export * from "./http/app.js";
+export {
+  SEARCH_SERVICE_AUDIENCE,
+  SEARCH_SCOPES,
+  registerServiceIdentity,
+  type SearchServiceIdentityOptions,
+  type SearchRouteConfig,
+  type SearchRouteIdentity,
+} from "./http/service-identity.js";
 export * from "./infrastructure/search-index-reader.js";
 export * from "./infrastructure/search-index-health-probe.js";
 

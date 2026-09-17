@@ -40,9 +40,9 @@
  * القائمةِ نفسِها**. وقد صارَتِ اليومَ **أحدَ عشرَ** حدّاً بإضافةِ `drivers`،
  * وهيَ أوّلُ الخمسةِ التي قاسَتْها الموجةُ الثامنةُ حدوداً إنتاجيّةً لا تفرضُ
  * شيئاً ([`ADR-034`](../../../docs/15-decisions/ADR-034-ingress-boundary-inventory-closure.md) ·
- * `RISK-0051`). والباقي ثلاثةٌ: `reputation` · `search` ·
- * `subscriptions` — لا تُضافُ هنا حتّى تُفرَضَ فعلاً، فإضافتُها قبلَ الفرضِ
- * إعلانٌ كاذبٌ يُسقِطُهُ البابانِ 2 و3 من الفحصِ 16.
+ * `RISK-0051`). والباقي اثنانِ: `search` · `subscriptions` — لا تُضافُ هنا
+ * حتّى تُفرَضَ فعلاً، فإضافتُها قبلَ الفرضِ إعلانٌ كاذبٌ يُسقِطُهُ البابانِ 2 و3
+ * من الفحصِ 16.
  */
 export const AUDIENCES = [
   "channel",
@@ -57,6 +57,7 @@ export const AUDIENCES = [
   "negotiations",
   "orders",
   "reputation",
+  "search",
 ] as const;
 
 export type Audience = (typeof AUDIENCES)[number];
@@ -218,7 +219,13 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "reputation", method: "GET", path: "/reputation/fraud-signals", scopes: ["reputation:fraud-signal:read"] },
   { audience: "reputation", method: "GET", path: "/reputation/rulesets", scopes: ["reputation:ruleset:read"] },
   { audience: "reputation", method: "GET", path: "/reputation/rulesets/:rulesetVersion", scopes: ["reputation:ruleset:read"] },
-  { audience: "reputation", method: "POST", path: "/reputation/tick", scopes: ["reputation:tick:run"] },];
+  { audience: "reputation", method: "POST", path: "/reputation/tick", scopes: ["reputation:tick:run"] },
+
+  // ── search ────────────────────────────────────────────────────
+  // الموجةُ الثانيةَ عشرةَ من `M1-04` (`CLM-0200`): حدُّ البحث صارَ يفرضُ الهويّةَ.
+  { audience: "search", method: "GET", path: "/search/ready", scopes: ["search:ready:read"] },
+  { audience: "search", method: "GET", path: "/search/products", scopes: ["search:products:read"] },
+];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */
 export function enforcedScopesAt(audience: Audience): readonly string[] {

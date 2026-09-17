@@ -39,6 +39,12 @@ import type { SearchIndexHealthPort, SearchProductsReadPort } from "../ports.js"
 import { SearchUnavailableError, sendSearchError } from "./errors.js";
 import { parseSearchRequest } from "./requests.js";
 import { toSearchPage } from "./mappers.js";
+import {
+  registerServiceIdentity,
+  type SearchServiceIdentityOptions,
+  type SearchRouteConfig,
+  SEARCH_SCOPES,
+} from "./service-identity.js";
 
 export interface SearchHttpDeps {
   readonly searchReadPort: SearchProductsReadPort;
@@ -48,11 +54,25 @@ export interface SearchHttpDeps {
    * prove it reaches its index must not be declared ready by default.
    */
   readonly indexHealthPort?: SearchIndexHealthPort;
+  /**
+   * فرضُ هويّةِ الخدمةِ على هذا الحدّ. **إلزاميٌّ بلا قيمةٍ افتراضيّةٍ بقصدٍ**
+   * (سابقةُ حدِّ السمعة): قيمةٌ افتراضيّةٌ تجعلُ نسيانَ التركيبِ في جذرٍ ما حدَّ
+   * بحثٍ **مفتوحاً يمرُّ كلَّ اختباراتِه** — وهيَ بعينُها الثغرةُ التي قاسَتْها
+   * الموجةُ الثامنةُ (`RISK-0051`) وتسدُّها هذهِ. فمن أرادَ حدّاً بلا فرضٍ فليكتبْ
+   * ذلكَ صراحةً في جذرِ تركيبِه، ولا موضعَ في المستودعِ يكتبُه.
+   */
+  readonly serviceIdentity: SearchServiceIdentityOptions;
 }
 
 export interface SearchHttpApp {
   readonly fastify: FastifyInstance;
   readonly close: () => Promise<void>;
+}
+
+const OPEN: SearchRouteConfig = { serviceIdentity: "open" };
+
+function internalScoped(...scopes: readonly string[]): SearchRouteConfig {
+  return { serviceIdentity: { scopes } };
 }
 
 export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
@@ -66,14 +86,18 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
     return sendSearchError(reply, error, traceId);
   });
 
+  // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
+  // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
+  registerServiceIdentity(app, deps.serviceIdentity);
+
   // Liveness: no dependency, no DB. Never fails while the process runs.
-  app.get("/search/health", async () => {
+  app.get("/search/health", { config: OPEN }, async () => {
     return { status: "ok" as const };
   });
 
   // Readiness: queries the read model. No try/catch — a throwing probe is a
   // degraded probe, and the single error handler already maps that to 503.
-  app.get("/search/ready", async (_request, reply) => {
+  app.get("/search/ready", { config: internalScoped(SEARCH_SCOPES.readyRead) }, async (_request, reply) => {
     if (deps.indexHealthPort === undefined) {
       throw new SearchUnavailableError(
         "SEARCH_INDEX_DEGRADED",
@@ -94,7 +118,7 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
     });
   });
 
-  app.get("/search/products", async (request, reply) => {
+  app.get("/search/products", { config: internalScoped(SEARCH_SCOPES.productsRead) }, async (request, reply) => {
     const parsed = parseSearchRequest(
       request.query as Record<string, unknown>,
     );

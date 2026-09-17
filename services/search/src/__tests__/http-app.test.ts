@@ -9,7 +9,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildSearchHttpApp } from "../http/app.js";
+import {
+  buildEnforcedApp,
+  inject,
+  type buildEnforcedApp as _buildEnforcedApp,
+} from "./service-identity-support.js";
 import type {
   SearchIndexHealth,
   SearchIndexHealthPort,
@@ -76,11 +80,11 @@ function samplePage(): SearchPage {
 
 describe("search HTTP app", () => {
   it("GET /search/health returns 200 {status:'ok'}", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
     });
     try {
-      const res = await fastify.inject({ method: "GET", url: "/search/health" });
+      const res = await inject(fastify, { method: "GET", url: "/search/health" });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toEqual({ status: "ok" });
     } finally {
@@ -96,7 +100,7 @@ describe("search HTTP app", () => {
    * they should have disagreed.
    */
   it("GET /search/ready returns 200 {status:'ready'} when the probe reaches the index", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
       indexHealthPort: fakeHealthPort({
         index_reachable: true,
@@ -104,7 +108,7 @@ describe("search HTTP app", () => {
       }),
     });
     try {
-      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      const res = await inject(fastify, { method: "GET", url: "/search/ready" });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toEqual({
         status: "ready",
@@ -117,7 +121,7 @@ describe("search HTTP app", () => {
   });
 
   it("GET /search/ready returns 503 SEARCH_INDEX_DEGRADED while /search/health stays 200", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort({
         throw: new SearchUnavailableError("SEARCH_INDEX_DEGRADED", "degraded"),
       }),
@@ -127,13 +131,13 @@ describe("search HTTP app", () => {
       }),
     });
     try {
-      const ready = await fastify.inject({ method: "GET", url: "/search/ready" });
+      const ready = await inject(fastify, { method: "GET", url: "/search/ready" });
       expect(ready.statusCode).toBe(503);
       expect(ready.json().code).toBe("SEARCH_INDEX_DEGRADED");
 
       // Liveness must NOT follow readiness: the process is alive and must not
       // be restarted just because its read model is unreachable.
-      const health = await fastify.inject({
+      const health = await inject(fastify, {
         method: "GET",
         url: "/search/health",
       });
@@ -145,11 +149,11 @@ describe("search HTTP app", () => {
   });
 
   it("GET /search/ready returns 503 when no probe is wired (never ready by default)", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
     });
     try {
-      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      const res = await inject(fastify, { method: "GET", url: "/search/ready" });
       expect(res.statusCode).toBe(503);
       expect(res.json().code).toBe("SEARCH_INDEX_DEGRADED");
     } finally {
@@ -158,7 +162,7 @@ describe("search HTTP app", () => {
   });
 
   it("an empty index is READY, not degraded (cold start must not deadlock)", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
       indexHealthPort: fakeHealthPort({
         index_reachable: true,
@@ -166,7 +170,7 @@ describe("search HTTP app", () => {
       }),
     });
     try {
-      const res = await fastify.inject({ method: "GET", url: "/search/ready" });
+      const res = await inject(fastify, { method: "GET", url: "/search/ready" });
       expect(res.statusCode).toBe(200);
       expect(res.json().indexed_documents).toBe(0);
     } finally {
@@ -175,11 +179,11 @@ describe("search HTTP app", () => {
   });
 
   it("GET /search/products returns 200 with a mapped page", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort({ page: samplePage() }),
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products",
         query: {
@@ -218,7 +222,7 @@ describe("search HTTP app", () => {
 
   it("passes parsed query params to the read port", async () => {
     let captured: SearchProductsQuery | null = null;
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort({
         page: samplePage(),
         captureQuery: (q) => {
@@ -227,7 +231,7 @@ describe("search HTTP app", () => {
       }),
     });
     try {
-      await fastify.inject({
+      await inject(fastify, {
         method: "GET",
         url: "/search/products",
         query: {
@@ -253,11 +257,11 @@ describe("search HTTP app", () => {
   });
 
   it("returns 400 with the flat error shape for an empty query", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products?q=",
       });
@@ -272,11 +276,11 @@ describe("search HTTP app", () => {
   });
 
   it("returns 400 for repeated query keys (array value)", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products",
         query: { q: ["a", "b"] },
@@ -288,11 +292,11 @@ describe("search HTTP app", () => {
   });
 
   it("returns 400 for an unknown sort", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort(),
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products?q=x&sort=popular",
       });
@@ -304,7 +308,7 @@ describe("search HTTP app", () => {
   });
 
   it("returns 503 with SEARCH_INDEX_DEGRADED when the read port is unavailable", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: fakeReadPort({
         throw: new SearchUnavailableError(
           "SEARCH_INDEX_DEGRADED",
@@ -313,7 +317,7 @@ describe("search HTTP app", () => {
       }),
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products?q=سماعة",
       });
@@ -328,7 +332,7 @@ describe("search HTTP app", () => {
   });
 
   it("never returns 500 — an unexpected error becomes 503 SEARCH_INTERNAL_ERROR", async () => {
-    const { fastify, close } = buildSearchHttpApp({
+    const { fastify, close } = buildEnforcedApp({
       searchReadPort: {
         async search() {
           throw new Error("boom");
@@ -336,7 +340,7 @@ describe("search HTTP app", () => {
       },
     });
     try {
-      const res = await fastify.inject({
+      const res = await inject(fastify, {
         method: "GET",
         url: "/search/products?q=سماعة",
       });

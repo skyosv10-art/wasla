@@ -156,16 +156,15 @@ function replayEnvelope<T>(
  * المسارِ — وهذا وجهُ `RISK-0042` نفسُهُ الذي أُغلِقَ على حدِّ الطلباتِ في `M1-05B`،
  * ويُغلَقُ هنا في الدفعةِ التي تفرضُ الهويّةَ لا بعدَها.
  */
-function requireBeneficiary(request: FastifyRequest): string {
+function requireBeneficiary(request: FastifyRequest): string | undefined {
   const caller = request.serviceCaller;
-  const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
-
+  if (caller === undefined) return undefined;
+  const beneficiary = ownerPublicIdOf(caller);
   if (beneficiary === undefined || beneficiary.trim() === "") {
     throw new Error(
       'مسارٌ يمسُّ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
     );
   }
-
   return beneficiary;
 }
 
@@ -173,8 +172,9 @@ function requireBeneficiary(request: FastifyRequest): string {
  * مطابقةُ المُنتَفِعِ المُوَقَّعِ مع `:driverPublicId` في المسارِ.
  * مخالفتُهُ تُرَدُّ `404` لا 403 — فلا يُفصَحُ لمن لا يملكُ عن وجودِ المعرِّفِ.
  */
-function requireDriverBeneficiary(request: FastifyRequest): string {
+function requireDriverBeneficiary(request: FastifyRequest): string | undefined {
   const beneficiary = requireBeneficiary(request);
+  if (beneficiary === undefined) return undefined;
   const driverPublicId = assertWaslaPublicId(pathParam(request.params, "driverPublicId"));
   if (driverPublicId !== beneficiary) {
     // `404` لا `403`: لا نكشفُ لمن لا يملكُ عن وجودِ الاشتراكِ.
@@ -186,8 +186,9 @@ function requireDriverBeneficiary(request: FastifyRequest): string {
 /**
  * مطابقةُ المُنتَفِعِ المُوَقَّعِ مع `:ownerPublicId` في مسارِ رمزِ الإحالةِ.
  */
-function requireOwnerBeneficiary(request: FastifyRequest): string {
+function requireOwnerBeneficiary(request: FastifyRequest): string | undefined {
   const beneficiary = requireBeneficiary(request);
+  if (beneficiary === undefined) return undefined;
   const ownerPublicId = assertWaslaPublicId(pathParam(request.params, "ownerPublicId"), "ownerPublicId");
   if (ownerPublicId !== beneficiary) {
     throw subscriptionNotFound();
@@ -297,7 +298,7 @@ export function createSubscriptionApp(
     };
     // المُنتَفِعُ من الجسمِ لا من المسارِ: مطابقةُ `driver_public_id` مع `obo` المُوَقَّعِ.
     const beneficiary = requireBeneficiary(request);
-    if (input.driverPublicId !== beneficiary) {
+    if (beneficiary !== undefined && input.driverPublicId !== beneficiary) {
       throw subscriptionNotFound();
     }
     const outcome = await deps().subscriptions.startTrial({
@@ -409,7 +410,7 @@ export function createSubscriptionApp(
     };
     // المُنتَفِعُ من الجسمِ لا من المسارِ: مطابقةُ `referee_public_id` مع `obo` المُوَقَّعِ.
     const beneficiary = requireBeneficiary(request);
-    if (input.refereePublicId !== beneficiary) {
+    if (beneficiary !== undefined && input.refereePublicId !== beneficiary) {
       throw subscriptionNotFound();
     }
     const outcome = await deps().referrals.claim({

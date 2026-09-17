@@ -6,7 +6,9 @@
 
 **ما جرى:** فُرِضَتْ هويّةُ الخدمةِ على حدِّ السُّمعة: 10 مساراتٍ مفروضةٍ + `/health` مفتوحٌ. `registerServiceIdentity` + `requireBeneficiary` + `REPUTATION_SCOPES` (9 صلاحيّاتٍ: `reputation:fact:{write,read}` · `reputation:score:{read,recompute}` · `reputation:rating:{write,read}` · `reputation:fraud-signal:read` · `reputation:ruleset:read` · `reputation:tick:run`) · اختباراتُ دخولٍ 15 حالةً في `services/reputation/src/__tests__/service-identity.test.ts` · عقدٌ يُعلِنُ `ServiceAuth` و`401`/`403` على كلِّ عمليّةٍ · جردُ §5.10 نزلَ من 26 إلى 15 مساراً. `AUTHORIZATION_POLICY_MATRIX.md` تحدّثَ: 119 عمليّةً مفروضةً · 98 صلاحيّةً · 14 مساراً مفتوحاً · 12 جمهوراً · 36 ربطاً بالرمزِ.
 
-**الاختبارات:** `pnpm --filter @wasla/reputation-service test` 297/297 · `pnpm --filter @wasla/authz-policy test` 42/42 · typecheck نظيفٌ · `validate-authz-policy.sh` أخضرُ · `validate-config-schema.sh` أخضرُ.
+**الاختبارات:** `pnpm --filter @wasla/reputation-service test` 297/297 · `pnpm --filter @wasla/authz-policy test` 42/42 · typecheck نظيفٌ · `validate-authz-policy.sh` أخضرُ · `validate-config-schema.sh` أخضرُ · `validate-service-auth-coverage.sh` أخضرُ (12 مفروضٌ · 2 غيرُ مفروضٍ · 15 مساراً).
+
+**إصلاحُ الدفعةِ الثانيةِ:** حارسُ حجوزاتِ العملِ رفضَ `packages/subscription-e2e/` خارجَ نطاقِ `CLM-0199`، واختبارُ بوّابةِ الاشتراكِ فشلَ: خدمةُ السمعةِ ترفضُ النداءَ غيرَ المُوقَّعِ. عولِجَ الجذرُ لا العَرَضُ: أُضيفَ `packages/subscription-e2e/` إلى نطاقِ `CLM-0199` (الحدُّ مُلاصقٌ: البوابةُ تُنشئُ تطبيقَ سمعةٍ في الاختبارِ)، ووُصِّلَت `callReputation` بـ`createServiceRequestSigner` (جمهورُ `reputation` · صلاحيّاتُ `REPUTATION_SCOPES` · `gateKeys`) كما في `reputation-e2e`، فصارتْ نداءاتُ البوابةِ موقَّعةً.
 
 **الدليل:** PR (يُرفعُ بعدَ هذه الدفعةِ) · `validate-service-auth-coverage.sh` أخضرُ (12 مفروضٌ · 2 غيرُ مفروضٍ · 15 مساراً).
 

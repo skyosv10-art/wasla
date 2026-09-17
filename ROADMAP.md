@@ -1486,6 +1486,7 @@ still has no test of its own here.
   by explicit classification. `requireBeneficiary` enforces ownership on 2 owner-scoped routes (`GET /reputation/scores/:subjectType/:subjectPublicId` and `POST /reputation/ratings`). The OpenAPI contract declares
   `securitySchemes` and `security:` on all 10 operations. The authz-policy matrix gains `reputation` as its
   12th audience with 10 enforced operations and 9 scopes; `TOKEN_BOUND_OPERATION_COUNT` moves 34 → 36 and
-  `UNCLASSIFIED_OPERATION_COUNT` moves 67 → 75. The e2e harness signs its calls. `RISK-0051` stays **open**:
-  two silent boundaries remain (`search` 3, `subscriptions` 12 = 15 routes). Promotion of `M1-04` to
-  `Completed` remains the program owner's authority alone (§9).
+  `UNCLASSIFIED_OPERATION_COUNT` moves 67 → 75. Both e2e harnesses (`reputation-e2e` and `subscription-e2e`)
+  sign their calls to the reputation service. `RISK-0051` stays **open**: two silent boundaries remain
+  (`search` 3, `subscriptions` 12 = 15 routes). Promotion of `M1-04` to `Completed` remains the program owner's
+  authority alone (§9).

@@ -1468,3 +1468,13 @@ still has no test of its own here.
   `search` 3, `subscriptions` 12 = 43 routes), and the drop in `TOTAL_ROUTES` must not be read as general progress.
   `RISK-0027` is untouched. The two declared `M1-05B` exceptions were neither widened nor touched. Promotion of
   `M1-04` to `Completed` remains the program owner's authority alone (§9).
+
+- **M1-04 wave 10 — claim `CLM-0198`: the drivers ingress boundary is enforced (2026-09-17).** This is the
+  second of the five boundaries measured by wave 8 to be enforced. All 16 operational routes now require
+  a signed service identity token with the correct audience (`drivers`), scope, and beneficiary; `/health`
+  remains open by explicit classification. `requireBeneficiary` enforces ownership on 14 owner-scoped routes
+  (ADR-009: 404 not 403 on mismatch). The OpenAPI contract declares `securitySchemes` and `security:` on all
+  16 operations. The authz-policy matrix gains `drivers` as its 11th audience with 16 enforced operations
+  and 14 scopes. `RISK-0051` stays **open**: three silent boundaries remain (`reputation` 11, `search` 3,
+  `subscriptions` 12 = 26 routes). Promotion of `M1-04` to `Completed` remains the program owner's authority
+  alone (§9).

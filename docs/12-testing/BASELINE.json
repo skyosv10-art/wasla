@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T17:31:13Z",
+  "generated_at": "2026-09-17T20:57:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a14fa399edf304e478a929e0e686da1954cd81ff",
-    "branch": "feat/m1-03-bind-query-string",
+    "commit": "84af4dd0704a01e36ccf2a39f27289744a9a1aa1",
+    "branch": "chore/m0-42-risk-0040-closeout",
     "dirty": true,
-    "dirty_files": 70,
-    "dirty_reason": "فرعُ feat/m1-03-bind-query-string — ضمُّ سلسلةِ الاستعلامِ إلى ربطِ الطلبِ (CLM-0206): فحوصُ الحوكمةِ 20⇒21 وحزمةُ الطفرةِ 451⇒464 وعددُ الاختباراتِ",
-    "tracked_files": 2118
+    "dirty_files": 4,
+    "dirty_reason": "فرعُ chore/m0-42-risk-0040-closeout — إقفالُ RISK-0040 حوكميًّا (CLM-0207): عدَّادُ risks_not_closed 36⇒35 بإقفالِ خطرٍ لا بتغييرِ شفرةٍ — السجلاتُ فقط تغيَّرت",
+    "tracked_files": 2121
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 21,
-    "risks_not_closed": 36
+    "risks_not_closed": 35
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify5.log",
+    "source": "/tmp/verify-main-baseline.log",
     "tests_passed": 4838,
     "test_files_executed": 296,
     "governance_suite_cases": 464,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:9a66d5c44883b199ae2bdacc915c17c52712e9224741988ab6a346e68c7ab3e3",
+  "fingerprint": "sha256:c75baab5282427da99167afd855e1f4081db914d474a66a1a41ca8f3cfb80f88",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

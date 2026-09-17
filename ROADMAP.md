@@ -1477,4 +1477,5 @@ still has no test of its own here.
   16 operations. The authz-policy matrix gains `drivers` as its 11th audience with 16 enforced operations
   and 14 scopes. `RISK-0051` stays **open**: three silent boundaries remain (`reputation` 11, `search` 3,
   `subscriptions` 12 = 26 routes). Promotion of `M1-04` to `Completed` remains the program owner's authority
-  alone (§9).
+  alone (§9). The server reads `WASLA_SERVICE_AUTH_KEYS` via the standard `keyRegistryFromEnv(process.env)`
+  pattern (not a custom `SERVICE_AUTH_SECRET` env var), matching all other enforced services.

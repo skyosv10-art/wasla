@@ -24,7 +24,7 @@ import type { Pool } from "pg";
 import { DRIVER_SERVICE_PORT } from "@wasla/contracts-driver";
 import {
   InMemoryServiceTokenReplayGuard,
-  ServiceAuthKeyRegistry,
+  keyRegistryFromEnv,
 } from "@wasla/service-auth";
 
 import { createDriverDb } from "../infrastructure/drizzle/db.js";
@@ -95,15 +95,7 @@ async function main(): Promise<void> {
   // Wiring warnings are printed before the app exists, because the choice of adapters is
   // made before there is a logger to attach them to.
   const { runner, health, pool } = buildWiring((message) => console.warn(message));
-  const serviceSecret = process.env.SERVICE_AUTH_SECRET;
-  if (!serviceSecret) {
-    console.error("SERVICE_AUTH_SECRET is required — service identity cannot be enforced without it.");
-    process.exit(1);
-  }
-  const keys = new ServiceAuthKeyRegistry({
-    keys: [{ kid: "default", secret: serviceSecret, status: "active" }],
-    activeKid: "default",
-  });
+  const keys = keyRegistryFromEnv(process.env);
   const replayGuard = new InMemoryServiceTokenReplayGuard();
   const app = createDriverApp({
     runner,

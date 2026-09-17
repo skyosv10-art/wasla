@@ -19,6 +19,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { createDriverApp } from "../http/app.js";
+import { createTestKeyRegistry } from "./service-identity-support.js";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
 import {
   AVAILABILITY_UPDATE_KEYS,
   DOCUMENT_REVIEW_KEYS,
@@ -91,7 +93,8 @@ function contractOperations(): Set<string> {
  * automatically and no contract declares it.
  */
 async function registeredOperations(): Promise<Set<string>> {
-  const app = createDriverApp({ runner: createDirectRunner(environment()) });
+  const keys = createTestKeyRegistry();
+  const app = createDriverApp({ runner: createDirectRunner(environment()), serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() } });
   await app.ready();
   const tree = app.printRoutes({ commonPrefix: false });
   await app.close();

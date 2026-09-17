@@ -11,26 +11,37 @@
  * HTTP result and a use-case result is a difference the HTTP layer created.
  */
 
-import { createDriverApp } from "../http/app.js";
 import { createDirectRunner } from "../runner.js";
 import { environment } from "./helpers.js";
 import type { InMemoryDriverEnvironment } from "../infrastructure/in-memory.js";
-import type { FastifyInstance } from "fastify";
 import type { DriverTickState } from "../http/app.js";
+import {
+  buildSignedDriverApp,
+  type DriverAppHarness,
+} from "./service-identity-support.js";
 
 export { DRIVER, NOW, ZONE_A, ZONE_B } from "./helpers.js";
 
-export interface HttpHarness {
+export interface HttpHarness extends DriverAppHarness {
   readonly env: InMemoryDriverEnvironment;
-  readonly app: FastifyInstance;
   readonly tickState: DriverTickState;
 }
 
 export function httpHarness(now?: string): HttpHarness {
   const env = environment(now);
   const tickState: DriverTickState = { lastTickAt: null };
-  const app = createDriverApp({ runner: createDirectRunner(env), tickState });
-  return { env, app, tickState };
+  const harness = buildSignedDriverApp({
+    runner: createDirectRunner(env),
+    tickState,
+  });
+  return {
+    env,
+    app: harness.app,
+    keys: harness.keys,
+    replayGuard: harness.replayGuard,
+    rawInject: harness.rawInject,
+    tickState,
+  };
 }
 
 /** A distinct key per call; a shared one would be testing replay by accident. */

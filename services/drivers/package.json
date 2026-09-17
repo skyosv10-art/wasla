@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@wasla/service-auth": "workspace:*",
+    "@wasla/auth-sdk": "workspace:*",
     "@wasla/contracts-driver": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.23.0",

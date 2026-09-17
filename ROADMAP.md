@@ -1479,3 +1479,14 @@ still has no test of its own here.
   `subscriptions` 12 = 26 routes). Promotion of `M1-04` to `Completed` remains the program owner's authority
   alone (§9). The server reads `WASLA_SERVICE_AUTH_KEYS` via the standard `keyRegistryFromEnv(process.env)`
   pattern (not a custom `SERVICE_AUTH_SECRET` env var), matching all other enforced services.
+
+- **M1-04 wave 11 — claim `CLM-0199`: the reputation ingress boundary is enforced (2026-09-17).** This is the
+  third of the five boundaries measured by wave 8 to be enforced. All 10 operational routes now require a
+  signed service identity token with the correct audience (`reputation`) and scope; `/health` remains open
+  by explicit classification. `requireBeneficiary` enforces ownership on 2 owner-scoped routes (`GET /reputation/scores/:subjectType/:subjectPublicId` and `POST /reputation/ratings`). The OpenAPI contract declares
+  `securitySchemes` and `security:` on all 10 operations. The authz-policy matrix gains `reputation` as its
+  12th audience with 10 enforced operations and 9 scopes; `TOKEN_BOUND_OPERATION_COUNT` moves 34 → 36 and
+  `UNCLASSIFIED_OPERATION_COUNT` moves 67 → 75. Both e2e harnesses (`reputation-e2e` and `subscription-e2e`)
+  sign their calls to the reputation service. `RISK-0051` stays **open**: two silent boundaries remain
+  (`search` 3, `subscriptions` 12 = 15 routes). Promotion of `M1-04` to `Completed` remains the program owner's
+  authority alone (§9).

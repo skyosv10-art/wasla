@@ -61,3 +61,11 @@ export * from "./outbound/drain-outbox.js";
 // المُهيئات — الذاكرةُ وحدها هنا، وقيودُها بأسماء قيود القاعدة نفسِها.
 export * from "./infrastructure/constraints.js";
 export * from "./infrastructure/in-memory.js";
+
+// ---------------------------------------------------------------------------
+// HTTP layer (المراجعة 4/6). `createReputationApp` is exported and `server.js` is NOT.
+// ---------------------------------------------------------------------------
+export * from "./http/app.js";
+export { sendReputationError } from "./http/errors.js";
+export type { ReputationErrorBody } from "./http/errors.js";
+export { REPUTATION_SCOPES, REPUTATION_SERVICE_AUDIENCE } from "./http/service-identity.js";

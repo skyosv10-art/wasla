@@ -527,6 +527,26 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     evidence: "services/marketplace/src/http/app.ts:scoped",
     note: "يبقى `none` بسببٍ مكتوبٍ: قرارُ الاعتدالِ سلطةُ منصّةٍ لا فعلَ متجرٍ — وربطُهُ بعضويّةِ متجرٍ يعكِسُ السياسةَ (متجرٌ يوافقُ على نفسِهِ)، فالفاعلُ يُوثَّقُ في الدفترِ بصفتِهِ لا بعضويّةٍ تُفرَضُ."
   },
+  // ── reputation (الموجةُ الحاديةَ عشرةَ · CLM-0199) ────────────────────────────
+  // حدُّ السمعة: مسارانِ مملوكانِ لمُنتَفِعٍ، وبقيّةُ المساراتِ داخليّةٌ لا مُنتَفِعَ لها.
+  {
+    audience: "reputation",
+    method: "GET",
+    path: "/reputation/scores/:subjectType/:subjectPublicId",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/reputation/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ الحاديةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:subjectPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `REPUTATION_SCORE_NOT_FOUND` لا 403 (`ADR-009`). وقراءةُ نتيجةِ غيرِ صاحبِها تسريبٌ.",
+  },
+  {
+    audience: "reputation",
+    method: "POST",
+    path: "/reputation/ratings",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/reputation/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ الحاديةَ عشرةَ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`rater_public_id` المكتوبِ في الجسمِ، والمخالفةُ تُرَدُّ `REPUTATION_SCORE_NOT_FOUND` لا 403 (`ADR-009`). والتقييمُ باسمِ غيرِ صاحبِهِ يربطُ هوّيّةً بمن لا يملكُها.",
+  },
 ];
 
 /**

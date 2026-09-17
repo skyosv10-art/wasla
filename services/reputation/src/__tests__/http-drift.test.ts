@@ -21,6 +21,7 @@ import {
   REPUTATION_ERROR_CODES,
   REPUTATION_HTTP_STATUS_CODES,
 } from "@wasla/contracts-reputation";
+import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
 
 import { REPUTATION_INTERNAL_ERROR_CODE } from "../http/errors.js";
 import {
@@ -30,8 +31,10 @@ import {
   RATING_LIST_QUERY_KEYS,
   RATING_SUBMIT_KEYS,
 } from "../http/requests.js";
-
-import { httpHarness } from "./http-harness.js";
+import { createReputationApp } from "../http/app.js";
+import { createDirectReputationRunner } from "../runner.js";
+import { createTestKeyRegistry } from "./service-identity-support.js";
+import { deps } from "./helpers.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contract = readFileSync(resolve(here, "../../contracts/api.openapi.yml"), "utf8");
@@ -90,7 +93,11 @@ function contractOperations(): Set<string> {
  * Fastify يستنبطه من `GET` تلقائياً ولا يُعلنه أيُّ عقد.
  */
 async function registeredOperations(): Promise<Set<string>> {
-  const { app } = httpHarness();
+  const keys = createTestKeyRegistry();
+  const app = createReputationApp({
+    runner: createDirectReputationRunner(deps()),
+    serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() },
+  });
   await app.ready();
   const tree = app.printRoutes({ commonPrefix: false });
   await app.close();

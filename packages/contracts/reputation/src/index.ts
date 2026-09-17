@@ -184,8 +184,11 @@ export const REPUTATION_API_PATHS = [
   "/reputation/tick",
 ] as const;
 
-/** لا `502`: انظر §القاعدة البند 3 في `services/reputation/contracts/errors.md`. */
-export const REPUTATION_HTTP_STATUS_CODES = [200, 201, 400, 404, 409, 422, 503] as const;
+/**
+ * لا `502`: انظر §القاعدة البند 3 في `services/reputation/contracts/errors.md`.
+ * `401`/`403` من فرضِ هويّةِ الخدمةِ (الموجةُ 11 · `CLM-0199`)، لا من المجالِ.
+ */
+export const REPUTATION_HTTP_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 422, 503] as const;
 
 /**
  * نسخة قواعد الإطلاق المجمَّدة (`saudi-launch-v1`) كما تُزرع في `schema.sql`.

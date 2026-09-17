@@ -40,9 +40,16 @@ import type { AddressInfo } from "node:net";
 import {
   createInMemoryReputationDependencies,
   type InMemoryReputationDependencies,
+  REPUTATION_SCOPES,
+  REPUTATION_SERVICE_AUDIENCE,
 } from "@wasla/reputation-service";
 import { createReputationApp } from "@wasla/reputation-service/http";
 import { createDirectReputationRunner } from "@wasla/reputation-service/runner";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import { addDays, type Clock } from "@wasla/subscriptions-service";
 import {
   ReferralService,
@@ -110,6 +117,17 @@ export class MovableClock implements Clock {
   }
 }
 
+/** مادةُ مفاتيح البوابة (M1-04، الموجةُ 11). سرٌّ واحد: المُبرهَن هنا الفرضُ لا إدارةُ المفاتيح. */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
 export interface GateContext {
   /** أصلُ خدمةِ الاشتراك — مُستمعٌ حقيقيٌّ على منفذٍ يمنحه النظام. */
   readonly subscriptionsUrl: string;
@@ -160,6 +178,12 @@ export async function startGate(): Promise<GateContext> {
     runner: createDirectReputationRunner(reputation),
     health: { persistence: "memory" },
     logger: false,
+    // M1-04 (wave 11): حدُّ السمعة يفرض هويّةَ الخدمة. البوابةُ (subscriptions)
+    // تُوقّع نداءاتها بدل أن يُخفَّف الحدُّ لراحتها.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await reputationApp.listen({ port: 0, host: "127.0.0.1" });
   const reputationPort = (reputationApp.server.address() as AddressInfo).port;
@@ -229,6 +253,30 @@ export async function callSubscriptions(
 }
 
 /** نداءُ خدمةِ السمعةِ على مسارها المُعلَن. */
+function reputationSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: REPUTATION_SERVICE_AUDIENCE,
+    keys: gateKeys(),
+    scopes: Object.values(REPUTATION_SCOPES),
+  });
+}
+
+function reputationBeneficiaryOf(init: {
+  readonly method: string;
+  readonly path: string;
+  readonly body?: unknown;
+}): string | undefined {
+  // POST /reputation/ratings — the rater's identity comes from the body.
+  if (init.method === "POST" && init.path === "/reputation/ratings") {
+    const body = init.body as Record<string, unknown> | undefined;
+    return body?.rater_public_id as string | undefined;
+  }
+  // GET /reputation/scores/:subjectType/:subjectPublicId — the subject is in the path.
+  const match = /^\/reputation\/scores\/[^/?]+\/([^/?]+)/u.exec(init.path);
+  return match?.[1];
+}
+
 export async function callReputation(
   gate: GateContext,
   init: {
@@ -243,6 +291,11 @@ export async function callReputation(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      ...reputationSigner()(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+        reputationBeneficiaryOf(init),
+      ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
     },
   });

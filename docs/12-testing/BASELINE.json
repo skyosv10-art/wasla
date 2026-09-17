@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T02:25:10Z",
+  "generated_at": "2026-09-17T04:45:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ed17c7b450d3ed52ad62551e067305469fe007b3",
-    "branch": "feat/m1-04-drivers-identity-enforcement",
+    "commit": "38010a1bfd06c45d275769e3941c5e79a7fc988f",
+    "branch": "feat/m1-04-reputation-identity-enforcement",
     "dirty": true,
-    "dirty_files": 6,
-    "dirty_reason": "CLM-0198: M1-04 wave 10 — drivers service identity enforcement. Added test files, source files, authz-policy operations, and e2e harness updates.",
-    "tracked_files": 2096
+    "dirty_files": 5,
+    "dirty_reason": "M1-04 wave 11: reputation service identity enforcement — subscription-e2e harness wired with signer, claim scope expanded, governance docs updated",
+    "tracked_files": 2099
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "77f952d812b3c1bd95898efbaacadd9888d5f2f701ee3a5fd4ca75d56d594f8c",
-    "lines": 3203
+    "sha256": "efbf72a5440d52164c310a773c8538c051c63ddd8fa18cb47484fdf07ee8eae3",
+    "lines": 3212
   },
   "static": {
     "packages": 51,
     "packages_with_typecheck": 51,
     "packages_with_test": 51,
-    "test_files_tracked": 366,
+    "test_files_tracked": 367,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 19,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m104w9-pass2.log",
-    "tests_passed": 4750,
-    "test_files_executed": 290,
-    "governance_suite_cases": 443,
-    "governance_suite_failed": 0,
+    "source": "/tmp/final_verify.log",
+    "tests_passed": 4778,
+    "test_files_executed": 292,
+    "governance_suite_cases": 442,
+    "governance_suite_failed": 1,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:4c45787027a9e0916ec735c1786ae2d5785fc8f1072c8262f7936ca5a77afb9d",
+  "fingerprint": "sha256:ec216d2d2b7b82b7c96f881b4e95b526da873cfb32f6fc963fb51b45cbb26cb6",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

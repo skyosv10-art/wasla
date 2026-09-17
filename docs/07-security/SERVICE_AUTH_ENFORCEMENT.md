@@ -686,7 +686,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -1041,6 +1041,24 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 <!-- drivers-scopes:end -->
 
+<!-- reputation-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المستفيد |
+|---|---|---|
+| `POST /reputation/facts` | `reputation:fact:write` | — (عمليّةٌ داخليّةٌ) |
+| `GET /reputation/facts` | `reputation:fact:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /reputation/scores/:subjectType/:subjectPublicId` | `reputation:score:read` | `obo` = `subjectPublicId` (من المسار) |
+| `POST /reputation/scores/:subjectType/:subjectPublicId/recompute` | `reputation:score:recompute` | — (عمليّةٌ داخليّةٌ) |
+| `POST /reputation/ratings` | `reputation:rating:write` | `obo` = `rater_public_id` (من الجسم) |
+| `GET /reputation/ratings` | `reputation:rating:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /reputation/fraud-signals` | `reputation:fraud-signal:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /reputation/rulesets` | `reputation:ruleset:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /reputation/rulesets/:rulesetVersion` | `reputation:ruleset:read` | — (عمليّةٌ داخليّةٌ) |
+| `POST /reputation/tick` | `reputation:tick:run` | — (عمليّةٌ عمليّاتيّةٌ) |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- reputation-scopes:end -->
+
 **والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
 مَورِدٍ، ومراجعةُ الوثيقةِ (`document:review`) صلاحيّةٌ مستقلّةٌ لأنَّها قرارٌ
 إداريٌّ لا كتابةٌ، ونبضةُ الأهليّةِ (`eligibility:tick`) صلاحيّةٌ عمليّاتيّةٌ
@@ -1210,11 +1228,10 @@ _أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`
 
 | الحدُّ | المساراتُ (مقيسةٌ) | ملفُّ الحدِّ | العقدُ المنشورُ | الخطرُ · المالكُ |
 | --- | --- | --- | --- | --- |
-| `reputation` | 11 | [`services/reputation/src/http/app.ts`](../../services/reputation/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `search` | 3 | [`services/search/src/http/app.ts`](../../services/search/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `subscriptions` | 12 | [`services/subscriptions/src/http/app.ts`](../../services/subscriptions/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 
-TOTAL_ROUTES: 26
+TOTAL_ROUTES: 15
 
 <!-- unenforced-ingress:end -->
 
@@ -1239,6 +1256,13 @@ TOTAL_ROUTES: 26
 لكلِّ حدٍّ صلاحيّاتٌ مُصدَّرةٌ وملفُّ هويّةٍ في موضعِهِ واختباراتُ دخولٍ تُثبِتُ
 `401` بلا توقيعٍ، وعقدٌ يُعلِنُ ما يُفرَضُ، ثمَّ يُخرَجُ صفُّهُ من هذا الجدولِ
 بحكمِ CI. والخطرُ مسجَّلٌ **`RISK-0051`**.
+
+**تصحيحٌ بالإضافةِ · الموجةُ الحاديةَ عشرةَ (`CLM-0199`) · 2026-09-17.** خرجَ صفُّ
+`reputation` من الجدولِ أعلاهُ **بعدَ** أن فُرِضَتْ هويّةُ الخدمةِ على مساراتِهِ
+العشرةِ (و`/health` مفتوحٌ بقرارٍ مكتوبٍ)، ورُبِطَ اثنانِ منها بالمستفيدِ في الدفعةِ نفسِها،
+وأعلنَ عقدُهُ المنشورُ `ServiceAuth` و`401`/`403` على كلِّ عمليّةٍ. فنزلَ `TOTAL_ROUTES` من
+`26` إلى `15` — **والنزولُ لا يُقرأُ إنجازاً عامّاً**: حدّانِ باقيانِ (`search` · `subscriptions`)
+و`RISK-0051` **مفتوحٌ** حتّى تُفرَضَ كلُّها.
 
 ---
 

@@ -63,6 +63,10 @@ import {
 } from "@wasla/reputation-service";
 import { createReputationApp } from "@wasla/reputation-service/http";
 import {
+  REPUTATION_SCOPES,
+  REPUTATION_SERVICE_AUDIENCE,
+} from "@wasla/reputation-service";
+import {
   createDirectReputationRunner,
   type ReputationRunner,
 } from "@wasla/reputation-service/runner";
@@ -154,6 +158,10 @@ export async function startGate(): Promise<GateContext> {
     runner: reputationRunner,
     health: { persistence: "memory" },
     logger: false,
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await reputationApp.listen({ port: 0, host: "127.0.0.1" });
   const reputationUrl = `http://127.0.0.1:${(reputationApp.server.address() as AddressInfo).port}`;
@@ -239,6 +247,30 @@ export async function callEngine(
 }
 
 /** نداءُ خدمةِ السمعة على مسارها المُعلَن. */
+function reputationSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: REPUTATION_SERVICE_AUDIENCE,
+    keys: gateKeys(),
+    scopes: Object.values(REPUTATION_SCOPES),
+  });
+}
+
+function reputationBeneficiaryOf(init: {
+  readonly method: string;
+  readonly path: string;
+  readonly body?: unknown;
+}): string | undefined {
+  // POST /reputation/ratings — the rater's identity comes from the body.
+  if (init.method === "POST" && init.path === "/reputation/ratings") {
+    const body = init.body as Record<string, unknown> | undefined;
+    return body?.rater_public_id as string | undefined;
+  }
+  // GET /reputation/scores/:subjectType/:subjectPublicId — the subject is in the path.
+  const match = /^\/reputation\/scores\/[^/?]+\/([^/?]+)/u.exec(init.path);
+  return match?.[1];
+}
+
 export async function callReputation(
   gate: GateContext,
   init: {
@@ -254,6 +286,11 @@ export async function callReputation(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      ...reputationSigner()(
+        init.method,
+        init.path.split("?")[0] ?? init.path,
+        reputationBeneficiaryOf(init),
+      ),
       ...(init.idempotencyKey === undefined ? {} : { "idempotency-key": init.idempotencyKey }),
       ...(init.traceId === undefined ? {} : { "x-request-id": init.traceId }),
     },

@@ -30,6 +30,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@wasla/service-auth": "workspace:*",
+    "@wasla/auth-sdk": "workspace:*",
     "@wasla/contracts-reputation": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",

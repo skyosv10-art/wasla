@@ -13,6 +13,7 @@
     "@types/pg": "^8.23.1",
     "@wasla/contracts-subscription": "workspace:*",
     "@wasla/reputation-service": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
     "@wasla/subscriptions-service": "workspace:*",
     "pg": "^8.23.0",
     "vitest": "^2.1.0"

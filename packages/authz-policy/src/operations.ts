@@ -56,6 +56,7 @@ export const AUDIENCES = [
   "matching",
   "negotiations",
   "orders",
+  "reputation",
 ] as const;
 
 export type Audience = (typeof AUDIENCES)[number];
@@ -205,7 +206,19 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "orders", method: "GET", path: "/orders/:orderId/history", scopes: ["orders:history:read"] },
   { audience: "orders", method: "POST", path: "/orders/:orderId/transitions", scopes: ["orders:transition:write"] },
   { audience: "orders", method: "POST", path: "/orders/:orderId/assignments", scopes: ["orders:assignment:write"] },
-  { audience: "orders", method: "PATCH", path: "/orders/:orderId/assignments/:assignmentId", scopes: ["orders:assignment:write"] },];
+  { audience: "orders", method: "PATCH", path: "/orders/:orderId/assignments/:assignmentId", scopes: ["orders:assignment:write"] },
+  // ── reputation ───────────────────────────────────────────────
+  // الموجةُ الحاديةَ عشرةَ من `M1-04` (`CLM-0199`): حدُّ السمعة صارَ يفرضُ الهويّةَ.
+  { audience: "reputation", method: "POST", path: "/reputation/facts", scopes: ["reputation:fact:write"] },
+  { audience: "reputation", method: "GET", path: "/reputation/facts", scopes: ["reputation:fact:read"] },
+  { audience: "reputation", method: "GET", path: "/reputation/scores/:subjectType/:subjectPublicId", scopes: ["reputation:score:read"] },
+  { audience: "reputation", method: "POST", path: "/reputation/scores/:subjectType/:subjectPublicId/recompute", scopes: ["reputation:score:recompute"] },
+  { audience: "reputation", method: "POST", path: "/reputation/ratings", scopes: ["reputation:rating:write"] },
+  { audience: "reputation", method: "GET", path: "/reputation/ratings", scopes: ["reputation:rating:read"] },
+  { audience: "reputation", method: "GET", path: "/reputation/fraud-signals", scopes: ["reputation:fraud-signal:read"] },
+  { audience: "reputation", method: "GET", path: "/reputation/rulesets", scopes: ["reputation:ruleset:read"] },
+  { audience: "reputation", method: "GET", path: "/reputation/rulesets/:rulesetVersion", scopes: ["reputation:ruleset:read"] },
+  { audience: "reputation", method: "POST", path: "/reputation/tick", scopes: ["reputation:tick:run"] },];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */
 export function enforcedScopesAt(audience: Audience): readonly string[] {

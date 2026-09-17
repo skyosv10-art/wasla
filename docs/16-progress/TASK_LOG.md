@@ -1,3 +1,22 @@
+
+## 2026-09-17 — M1-04: reputation service identity enforcement (wave 11)
+
+- **Work Item(s):** M1-04 (wave 11) · **الحجز:** `CLM-0199`
+- **الفرع:** `feat/m1-04-reputation-identity-enforcement`
+
+**ما جرى:** فُرِضَتْ هويّةُ الخدمةِ على حدِّ السُّمعة: 10 مساراتٍ مفروضةٍ + `/health` مفتوحٌ. `registerServiceIdentity` + `requireBeneficiary` + `REPUTATION_SCOPES` (9 صلاحيّاتٍ: `reputation:fact:{write,read}` · `reputation:score:{read,recompute}` · `reputation:rating:{write,read}` · `reputation:fraud-signal:read` · `reputation:ruleset:read` · `reputation:tick:run`) · اختباراتُ دخولٍ 15 حالةً في `services/reputation/src/__tests__/service-identity.test.ts` · عقدٌ يُعلِنُ `ServiceAuth` و`401`/`403` على كلِّ عمليّةٍ · جردُ §5.10 نزلَ من 26 إلى 15 مساراً. `AUTHORIZATION_POLICY_MATRIX.md` تحدّثَ: 119 عمليّةً مفروضةً · 98 صلاحيّةً · 14 مساراً مفتوحاً · 12 جمهوراً · 36 ربطاً بالرمزِ.
+
+**الاختبارات:** `pnpm --filter @wasla/reputation-service test` 297/297 · `pnpm --filter @wasla/authz-policy test` 42/42 · typecheck نظيفٌ · `validate-authz-policy.sh` أخضرُ · `validate-config-schema.sh` أخضرُ · `validate-service-auth-coverage.sh` أخضرُ (12 مفروضٌ · 2 غيرُ مفروضٍ · 15 مساراً).
+
+**إصلاحُ الدفعةِ الثانيةِ:** حارسُ حجوزاتِ العملِ رفضَ `packages/subscription-e2e/` خارجَ نطاقِ `CLM-0199`، واختبارُ بوّابةِ الاشتراكِ فشلَ: خدمةُ السمعةِ ترفضُ النداءَ غيرَ المُوقَّعِ. عولِجَ الجذرُ لا العَرَضُ: أُضيفَ `packages/subscription-e2e/` إلى نطاقِ `CLM-0199` (الحدُّ مُلاصقٌ: البوابةُ تُنشئُ تطبيقَ سمعةٍ في الاختبارِ)، ووُصِّلَت `callReputation` بـ`createServiceRequestSigner` (جمهورُ `reputation` · صلاحيّاتُ `REPUTATION_SCOPES` · `gateKeys`) كما في `reputation-e2e`، فصارتْ نداءاتُ البوابةِ موقَّعةً.
+
+**الدليل:** PR (يُرفعُ بعدَ هذه الدفعةِ) · `validate-service-auth-coverage.sh` أخضرُ (12 مفروضٌ · 2 غيرُ مفروضٍ · 15 مساراً).
+
+**ما لا يُدَّعى:** الدمجُ لا يُغلِقُ `RISK-0051` — حدّانِ باقيانِ (`search` · `subscriptions`) بخمسةَ عشرَ مساراً. `M1-04` تبقى **Ready for Gate**.
+
+**التالي:** الموجةُ الثانيةَ عشرةَ — حدُّ `search` (3 مساراتٍ).
+
+---
 # TASK_LOG — سجل المهام بكل دفع (ملزم)
 
 ## 69/N — مخطَّطُ الإعدادِ ومصدرُ حقيقتِهِ الواحدُ: من `Number(process.env.X)` إلى سجلٍّ مُشتَقٍّ محروسٍ (M2-04 · `CLM-0194`)

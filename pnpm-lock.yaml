@@ -766,6 +766,9 @@ importers:
       '@wasla/reputation-service':
         specifier: workspace:*
         version: link:../../services/reputation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
       '@wasla/subscriptions-service':
         specifier: workspace:*
         version: link:../../services/subscriptions
@@ -1203,12 +1206,18 @@ importers:
 
   services/reputation:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@wasla/contracts-reputation':
         specifier: workspace:*
         version: link:../../packages/contracts/reputation
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../../packages/service-auth
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(pg@8.23.0)

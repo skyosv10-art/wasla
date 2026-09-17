@@ -70,6 +70,11 @@ import {
   type CatalogProduct,
   type CatalogReadPort,
 } from "@wasla/search-service";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  ServiceAuthKeyRegistry,
+} from "@wasla/service-auth";
 import type { Pool } from "pg";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -182,6 +187,27 @@ type SearchApp = ReturnType<typeof buildSearchHttpApp>;
 
 let app: SearchApp | null = null;
 
+/** مادةُ مفاتيح البوابة (M1-04). سرٌّ واحد: المُبرهَن هنا الفرضُ لا إدارةُ المفاتيح. */
+const GATE_SERVICE_AUTH_KID = "gate-active";
+const GATE_SERVICE_AUTH_SECRET = "gate-service-auth-secret-0123456789";
+
+function gateKeys(): ServiceAuthKeyRegistry {
+  return new ServiceAuthKeyRegistry({
+    keys: [{ kid: GATE_SERVICE_AUTH_KID, secret: GATE_SERVICE_AUTH_SECRET, status: "active" }],
+    activeKid: GATE_SERVICE_AUTH_KID,
+  });
+}
+
+/** موقِّعٌ لنداءاتِ البوابةِ على حدِّ البحث — بكاملِ مجموعةِ صلاحيّاتِه. */
+function searchSigner() {
+  return createServiceRequestSigner({
+    serviceName: "search-exit-gate",
+    audience: "search",
+    keys: gateKeys(),
+    scopes: ["search:ready:read", "search:products:read"],
+  });
+}
+
 /**
  * يرفعُ الخدمةَ بتركيبِها الإنتاجيِّ: `buildSearchHttpApp` بقارئِ `SearchIndexReader` على حوضٍ
  * حقيقيٍّ، ومُستمعٍ على منفذٍ يمنحُهُ النظام. ولا منفذَ وهميٌّ ولا `app.inject` في هذه الحزمةِ بحال.
@@ -201,6 +227,12 @@ export async function startGate(): Promise<GateContext> {
     // وحدَها لا يُثبتُ شيئاً عن `server.ts`. وكاتمُ السجلِّ لئلّا يمتلئَ مخرجُ البوّابةِ
     // بأثرِ إخفاقٍ **مقصودٍ** في اختبارِ التدهورِ.
     indexHealthPort: new SearchIndexHealthProbe(pool, { error: () => {} }),
+    // M1-04 · الموجةُ الثانيةَ عشرةَ (CLM-0200): حدُّ البحث يفرضُ هويّةَ الخدمةِ،
+    // والبوّابةُ تُوقّعُ نداءاتِها بدلَ أن يُخفَّفَ الحدُّ لراحتِها.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   app = built;
   await built.fastify.listen({ port: 0, host: "127.0.0.1" });
@@ -514,10 +546,13 @@ export interface HttpResult {
   readonly ms: number;
 }
 
-/** نداءٌ عبرَ الشبكةِ على المُستمعِ. */
+/** نداءٌ عبرَ الشبكةِ على المُستمعِ — موقَّعٌ بهويّةِ خدمةٍ (M1-04 · الموجةُ 12). */
 export async function get(gate: GateContext, path: string): Promise<HttpResult> {
   const startedAt = performance.now();
-  const response = await fetch(`${gate.baseUrl}${path}`);
+  const pathOnly = path.split("?")[0] ?? path;
+  const headers =
+    pathOnly === "/search/health" ? {} : searchSigner()("GET", pathOnly);
+  const response = await fetch(`${gate.baseUrl}${path}`, { headers });
   const text = await response.text();
   const ms = performance.now() - startedAt;
   return {

@@ -1,4 +1,21 @@
 
+## 2026-09-17 — M1-04: search service identity enforcement (wave 12)
+
+- **Work Item(s):** M1-04 (wave 12) · **الحجز:** `CLM-0200`
+- **الفرع:** `feat/m1-04-search-identity-enforcement`
+
+**ما جرى:** فُرِضَتْ هويّةُ الخدمةِ على حدِّ البحث: مساران مفروضانِ (`GET /search/ready` · `GET /search/products`) + `/health` مفتوحٌ بقرارٍ مكتوبٍ. `registerServiceIdentity` + `SEARCH_SCOPES` (`search:ready:read` · `search:products:read`) — لا مساراتٍ مملوكةً في هذا الحدِّ فلا ربطَ مستفيدٍ. اختباراتُ دخولٍ 11 حالةً في `services/search/src/__tests__/service-identity.test.ts` · عقدٌ يُعلِنُ `ServiceAuth` و`401`/`403` على العمليّتَينِ المفروضتَينِ · جردُ §5.10 نزلَ من 15 إلى 12 مساراً. `AUTHORIZATION_POLICY_MATRIX.md` تحدّثَ: 121 عمليّةً مفروضةً · 100 صلاحيّةً · 15 مساراً مفتوحاً · 13 جمهوراً · 36 ربطاً بالرمزِ. `SERVICE_AUTH_ENFORCEMENT.md` تحدّثَ بـ§5.8 جديدٍ وتصحيحٍ بالإضافةِ لـ§5.9 (12 عقداً تُعلِنُ المُصادقةَ) و§5.10 (حدٌّ واحدٌ باقٍ/12 مساراً). `RISK-0051` تحدّثَ: حدٌّ واحدٌ باقٍ (`subscriptions`) باثني عشرَ مساراً.
+
+**الاختبارات:** `pnpm --filter @wasla/search-service test` 97/97 · `pnpm --filter @wasla/search-e2e test` 22/22 فوقَ Postgres حقيقيٍّ · `pnpm --filter @wasla/authz-policy test` 42/42 · `pnpm -r test` 4789/4789 عبرَ 293 ملفّاً · typecheck نظيفٌ · `validate-service-auth-coverage.sh` أخضرُ (13 مفروضٌ · 1 غيرُ مفروضٍ · 12 مساراً) · `validate-authz-policy.sh` أخضرُ · `validate-config-schema.sh` أخضرُ.
+
+**الدليل:** PR (يُرفعُ بعدَ هذه الدفعةِ).
+
+**ما لا يُدَّعى:** الدمجُ لا يُغلِقُ `RISK-0051` — حدٌّ واحدٌ باقٍ (`subscriptions`) باثني عشرَ مساراً. `M1-04` تبقى **Ready for Gate**.
+
+**التالي:** الموجةُ الثالثةَ عشرةَ — حدُّ `subscriptions` (12 مساراً).
+
+---
+
 ## 2026-09-17 — M1-04: reputation service identity enforcement (wave 11)
 
 - **Work Item(s):** M1-04 (wave 11) · **الحجز:** `CLM-0199`

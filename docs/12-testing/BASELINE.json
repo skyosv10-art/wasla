@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T04:45:00Z",
+  "generated_at": "2026-09-17T06:01:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "38010a1bfd06c45d275769e3941c5e79a7fc988f",
-    "branch": "feat/m1-04-reputation-identity-enforcement",
+    "commit": "a5a763b8d97a47d0563f067f2f119b79e3c5f58e",
+    "branch": "feat/m1-04-search-identity-enforcement",
     "dirty": true,
-    "dirty_files": 5,
-    "dirty_reason": "M1-04 wave 11: reputation service identity enforcement — subscription-e2e harness wired with signer, claim scope expanded, governance docs updated",
+    "dirty_files": 22,
+    "dirty_reason": "wave 12 — search boundary enforced (2 enforced ops + 2 scopes, 121 ops / 100 scopes / 13 audiences; 13 enforced boundaries, 1 unenforced subscriptions 12 routes)",
     "tracked_files": 2099
   },
   "env": {
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "efbf72a5440d52164c310a773c8538c051c63ddd8fa18cb47484fdf07ee8eae3",
-    "lines": 3212
+    "sha256": "cfc05fd4bde96967f206051046c5235edcf16d6242430efd4d4a20c53ad18ecd",
+    "lines": 3218
   },
   "static": {
     "packages": 51,
     "packages_with_typecheck": 51,
     "packages_with_test": 51,
-    "test_files_tracked": 367,
+    "test_files_tracked": 368,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 19,
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/final_verify.log",
-    "tests_passed": 4778,
-    "test_files_executed": 292,
+    "tests_passed": 4789,
+    "test_files_executed": 293,
     "governance_suite_cases": 442,
     "governance_suite_failed": 1,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:ec216d2d2b7b82b7c96f881b4e95b526da873cfb32f6fc963fb51b45cbb26cb6",
+  "fingerprint": "sha256:37d95ce0ac29d4ac9751790c04e97b23b4397332192d30b992a195c66df37cc4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -216,6 +216,7 @@ export const TEST_FLEET_ROLES: Readonly<Record<string, string>> = {
   "order-exit-gate": "بوّابةُ خروجِ مرحلةِ الطلباتِ — `Object.values(ORDER_SCOPES)`.",
   "dispatch-exit-gate": "بوّابةُ خروجِ مرحلةِ الإرسالِ — `Object.values(ORDER_SCOPES)`.",
   "reputation-exit-gate": "بوّابةُ خروجِ مرحلةِ السُّمعةِ — `Object.values(ORDER_SCOPES)`.",
+  "search-exit-gate": "بوّابةُ خروجِ مرحلةِ البحثِ — `search:ready:read` و`search:products:read`.",
   "channel-exit-gate": "بوّابةُ خروجِ مرحلةِ القنواتِ — `Object.values(CHANNEL_SCOPES)` + `Object.values(IDENTITY_SCOPES)`.",
   "phase02-exit-gate": "بوّابةُ خروجِ المرحلةِ الثانيةِ (الجغرافيا والهويّةُ).",
   attacker: "دورٌ سلبيٌّ: يحملُ صلاحيّةً صحيحةً بمفتاحٍ غيرِ معروفٍ ليُقاسَ رفضُ الحدِّ — لا منحَ لهُ أصلاً.",
@@ -314,6 +315,11 @@ export const FLEET_GRANTS: Readonly<Record<string, FleetGrant>> = {
     audiences: ["orders"],
     scopes: "any-scope",
     reason: "بوّابةُ خروجِ مرحلةِ السُّمعةِ على حدِّ الطلباتِ.",
+  },
+  "search-exit-gate": {
+    audiences: ["search"],
+    scopes: "any-scope",
+    reason: "بوّابةُ خروجِ مرحلةِ البحثِ على حدِّه.",
   },
   "channel-exit-gate": {
     audiences: ["channel", "identity"],

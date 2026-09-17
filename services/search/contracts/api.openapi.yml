@@ -28,6 +28,8 @@ paths:
       tags: [search]
       summary: البحث في المنتجات
       operationId: searchProducts
+      security:
+        - ServiceAuth: ['search:products:read']
       parameters:
         - name: q
           in: query
@@ -58,6 +60,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SearchPage' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /search/health:
@@ -90,6 +94,8 @@ paths:
         **فهرسٌ فارغٌ جاهزٌ** (`indexed_documents: 0`) — نشرٌ باردٌ قبلَ أوّلِ تشغيلٍ
         للناقلِ لا يجوزُ أن يَقفِلَ على نفسِه. والمسبارُ يقيسُ **الوصولَ لا الحداثةَ**.
       operationId: ready
+      security:
+        - ServiceAuth: ['search:ready:read']
       responses:
         '200':
           description: الخدمةُ قادرةٌ على خدمةِ بحثٍ
@@ -105,9 +111,24 @@ paths:
                     type: integer
                     minimum: 0
                     description: عددُ الوثائقِ في عيّنةٍ محدودةٍ (لا عدٌّ كاملٌ — المسبارُ يجري كلَّ نبضةٍ).
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/search/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
+        والبحثُ خدمةٌ داخليّةٌ بلا مُنتَفِعَ إنسانٍ، فلا مسارَ فيهِ يَمُسُّ مَورِداً
+        مملوكاً ولا يطلبُ ربطَ مستفيدٍ.
   parameters:
     Locale:
       name: locale
@@ -186,6 +207,16 @@ components:
         trace_id: { type: string }
 
   responses:
+    AuthUnauthorized:
+      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     ValidationError:
       description: مدخلات غير صالحة
       content:

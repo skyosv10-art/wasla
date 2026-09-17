@@ -15,6 +15,7 @@
 import { Pool } from "pg";
 
 import { readPortEnv } from "@wasla/config";
+import { keyRegistryFromEnv, InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
@@ -33,9 +34,18 @@ async function main(): Promise<void> {
   // Readiness shares the pool on purpose: a probe on its own connection would
   // report "ready" while the pool the searches use is exhausted (RISK-0030).
   const indexHealthPort = new SearchIndexHealthProbe(pool);
+  const keys = keyRegistryFromEnv(process.env);
+  if (keys === undefined) {
+    console.error("WASLA_SERVICE_AUTH_KEYS is required");
+    process.exit(1);
+  }
   const { fastify, close } = buildSearchHttpApp({
     searchReadPort: readPort,
     indexHealthPort,
+    serviceIdentity: {
+      keys,
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
 
   try {

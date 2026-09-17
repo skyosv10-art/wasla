@@ -1490,3 +1490,15 @@ still has no test of its own here.
   sign their calls to the reputation service. `RISK-0051` stays **open**: two silent boundaries remain
   (`search` 3, `subscriptions` 12 = 15 routes). Promotion of `M1-04` to `Completed` remains the program owner's
   authority alone (§9).
+
+- **M1-04 wave 12 — claim `CLM-0200`: the search ingress boundary is enforced (2026-09-17).** This is the
+  fourth of the five boundaries measured by wave 8 to be enforced. Both operational routes
+  (`GET /search/ready` and `GET /search/products`) now require a signed service identity token with the
+  correct audience (`search`) and scope; `/health` remains open by explicit classification. Search has no
+  owner-scoped routes, so no beneficiary binding is added. The OpenAPI contract declares `securitySchemes`
+  and `security:` on both enforced operations with `401`/`403` responses. The authz-policy matrix gains
+  `search` as its 13th audience with 2 enforced operations and 2 scopes; `ENFORCED_OPERATIONS` moves 119 → 121
+  and `ENFORCED_SCOPES` moves 98 → 100. `search-e2e` signs its calls to the search service (97 unit tests,
+  22 e2e tests over a real database, both green). `RISK-0051` narrows to **one** silent boundary remaining
+  (`subscriptions` 12 routes = 12 total). Promotion of `M1-04` to `Completed` remains the program owner's
+  authority alone (§9).

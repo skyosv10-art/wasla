@@ -105,6 +105,8 @@ import {
   type UseCaseDeps,
   CUSTOMERS_ORDERS_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
+  CUSTOMER_SCOPES,
+  CUSTOMERS_SERVICE_AUDIENCE,
 } from "@wasla/customers-service";
 import {
   createDispatchApp,
@@ -481,6 +483,11 @@ export async function startGate(options: StartGateOptions = {}): Promise<GateCon
     } satisfies UseCaseDeps,
     health: { persistence: "memory", orderIntake: "configured" },
     logger: false,
+    // `M1-04` · الموجةُ التاسعة: مفروضٌ في البوّابةِ كما في الإنتاجِ.
+    serviceIdentity: {
+      keys: gateServiceAuthKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await customerApp.listen({ port: 0, host: "127.0.0.1" });
   const customerUrl = `http://127.0.0.1:${(customerApp.server.address() as AddressInfo).port}`;
@@ -656,6 +663,31 @@ async function call(baseUrl: string, init: CallInit): Promise<HttpResult> {
  * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً، لا خدمةً
  * واحدةً بصلاحيّةٍ ضيّقةٍ.
  */
+/**
+ * `M1-04` · الموجةُ التاسعة: حدُّ العميلِ صارَ يفرضُ الهويّةَ **والمُنتَفِعَ**،
+ * فالبوّابةُ توقِّعُ كما سيوقِّعُ أيُّ مُنادٍ عبرَ HTTP ولا تُعطِّلُ الفرضَ
+ * لتمرَّ. والمُنتَفِعُ يُقرأُ من المسارِ نفسِهِ (`/customers/:waslaPublicId/…`)
+ * لأنَّ كلَّ مَورِدٍ هنا مُعنوَنٌ بمالكِهِ، وهيَ الدعوى المفروضةُ في
+ * `services/customers/src/http/app.ts:requireBeneficiary`.
+ */
+function customerBeneficiaryOf(path: string): string | undefined {
+  const match = /^\/customers\/([^/?]+)/u.exec(path);
+  return match?.[1];
+}
+
+function customerSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: CUSTOMERS_SERVICE_AUDIENCE,
+    keys: gateServiceAuthKeys(),
+    scopes: Object.values(CUSTOMER_SCOPES),
+  });
+}
+
+function signCustomer(method: string, path: string): Record<string, string> {
+  return customerSigner()(method, path.split("?")[0] ?? path, customerBeneficiaryOf(path));
+}
+
 function identitySigner() {
   return createServiceRequestSigner({
     serviceName: "e2e-harness",
@@ -676,7 +708,13 @@ export const callIdentity = (gate: GateContext, init: CallInit): Promise<HttpRes
 export const callGeography = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.geographyUrl, init);
 export const callCustomers = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
-  call(gate.customerUrl, init);
+  call(gate.customerUrl, {
+    ...init,
+    headers: {
+      ...signCustomer(init.method, init.path),
+      ...(init.headers ?? {}),
+    },
+  });
 /** Direct engine calls are signed too (M1-04) — same reason as matching below. */
 export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResult> =>
   call(gate.ordersUrl, {

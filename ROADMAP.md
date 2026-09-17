@@ -1436,3 +1436,35 @@ still has no test of its own here.
   `RISK-0027` (the guard's blindness to outbound clients under `packages/` and `bots/`) is a separate, still-open
   defect that gate 10 does not close. Enforcement follows wave by wave, starting with `customers`, and each row
   leaves §5.10 only under a CI verdict. Promotion of `M1-04` to `Completed` is the program owner's authority alone (§9).
+
+- **M1-04 wave 9 — claim `CLM-0197`: the customers ingress boundary is closed, identity **and** ownership in one
+  batch (2026-09-17).** This is the first of the five boundaries measured by wave 8 to actually be enforced, and the
+  first `M1-04` wave to enforce **both dimensions at once**: who is calling (`aud`/`scp`) and **whom the resource
+  belongs to** (`obo`). The reason is the boundary itself — every route except `GET /health` carries
+  `waslaPublicId` in its path, i.e. it touches a resource owned by one specific human (profile, saved places, order
+  requests). Enforcing identity without ownership here would have closed one door and left a wider one open: any
+  service holding a customers scope could have read any customer's profile. Delivered: a new
+  `services/customers/src/http/service-identity.ts` (audience `customers`, **7 exported scopes**, **9 enforced
+  operations**, `GET /health` open by explicit classification); **13 ingress cases** in
+  `services/customers/src/__tests__/service-identity.test.ts` (no header ⇒ 401; forged ⇒ 401; expired ⇒ 401
+  `AUTHN_EXPIRED`; wrong audience ⇒ 401 `AUTHN_AUDIENCE_MISMATCH`; token signed for another path ⇒ 401; correct token
+  crosses; missing scope ⇒ 403; **no `obo` ⇒ 403**; `obo` not matching the path owner ⇒ **404**
+  `CUSTOMER_PROFILE_NOT_FOUND` per `ADR-009`, so the boundary is not an existence oracle; replay ⇒ 401; replay store
+  unavailable ⇒ 503; unknown route ⇒ 401 **before** 404; `/health` ⇒ 200); all **9** operations registered
+  `dimension: "owner"` / `strength: "token-bound"` in `packages/authz-policy/src/bindings.ts`, so the derived
+  counters move `TOKEN_BOUND_OPERATION_COUNT` **10 ⇒ 19** while `TENANT_BOUND` stays 8; the policy matrix
+  re-measured (boundaries **9 ⇒ 10**, `ENFORCED_OPERATIONS` **84 ⇒ 93**, `ENFORCED_SCOPES` **68 ⇒ 75**); the
+  published contract now declares what is enforced (`securitySchemes.ServiceAuth` on
+  `x-wasla-service-auth`, per-operation `security:` and 401/403 on all 9 operations), so the boundary never spent a
+  moment in the "enforced but contract silent" state gate 9 guards; and the `customers` row **left §5.10** with
+  `TOTAL_ROUTES` **53 ⇒ 43**, a number derived from the tree so deleting a row without enforcing is rejected. Five
+  e2e harnesses (`customer-e2e`, `order-e2e`, `driver-e2e`, `dispatch-e2e`, `negotiation-e2e`) now sign their calls;
+  the only grant widened is the **test** fleet role `e2e-harness`, and `assertSignerComposition` was not relaxed.
+  Not claimed: there is **no production HTTP caller** for this boundary today — `bots/customer-bot` calls the use
+  cases in-process and no `CUSTOMERS_*_URL` exists in `packages/config/env-registry.json` — so this batch is measured
+  by "the boundary rejects the unsigned", not by a signed production call over the wire; this is a deliberate
+  departure from the §2.0 ordering rule, written down in ledger §5.6 (a door onto an owned resource is not held open
+  waiting for a caller). `RISK-0051` stays **open**: four silent boundaries remain (`drivers` 17, `reputation` 11,
+  `search` 3, `subscriptions` 12 = 43 routes), and the drop in `TOTAL_ROUTES` must not be read as general progress.
+  `RISK-0027` is untouched. The two declared `M1-05B` exceptions were neither widened nor touched. Promotion of
+  `M1-04` to `Completed` remains the program owner's authority alone (§9).

@@ -60,6 +60,8 @@ import {
   CUSTOMERS_GEOGRAPHY_SCOPES,
   CUSTOMERS_ORDERS_SCOPES,
   CUSTOMERS_IDENTITY_SCOPES,
+  CUSTOMER_SCOPES,
+  CUSTOMERS_SERVICE_AUDIENCE,
 } from "@wasla/customers-service";
 import {
   createGeographyApp,
@@ -305,6 +307,11 @@ export async function startGate(): Promise<GateContext> {
     // real is what makes this honest here and dishonest anywhere else.
     health: { persistence: "memory", orderIntake: "configured" },
     logger: false,
+    // `M1-04` · الموجةُ التاسعة: مفروضٌ في البوّابةِ كما في الإنتاجِ.
+    serviceIdentity: {
+      keys: gateKeys(),
+      replayGuard: new InMemoryServiceTokenReplayGuard(),
+    },
   });
   await customerApp.listen({ port: 0, host: "127.0.0.1" });
   const customerUrl = `http://127.0.0.1:${(customerApp.server.address() as AddressInfo).port}`;
@@ -373,6 +380,7 @@ export async function callCustomers(
     path: init.path,
     ...(init.body === undefined ? {} : { body: init.body }),
     headers: {
+      ...signCustomer(init.method, init.path),
       ...(init.idempotencyKey === undefined
         ? {}
         : { "idempotency-key": init.idempotencyKey }),
@@ -440,6 +448,31 @@ let channelUserCounter = 900_000;
  * والصلاحيّاتُ كلُّها هنا لأنّ البوّابةَ تُمثّلُ سلسلةَ النداءِ كاملةً، لا خدمةً
  * واحدةً بصلاحيّةٍ ضيّقةٍ.
  */
+/**
+ * `M1-04` · الموجةُ التاسعة: حدُّ العميلِ صارَ يفرضُ الهويّةَ **والمُنتَفِعَ**،
+ * فالبوّابةُ توقِّعُ كما سيوقِّعُ أيُّ مُنادٍ عبرَ HTTP ولا تُعطِّلُ الفرضَ
+ * لتمرَّ. والمُنتَفِعُ يُقرأُ من المسارِ نفسِهِ (`/customers/:waslaPublicId/…`)
+ * لأنَّ كلَّ مَورِدٍ هنا مُعنوَنٌ بمالكِهِ، وهيَ الدعوى المفروضةُ في
+ * `services/customers/src/http/app.ts:requireBeneficiary`.
+ */
+function customerBeneficiaryOf(path: string): string | undefined {
+  const match = /^\/customers\/([^/?]+)/u.exec(path);
+  return match?.[1];
+}
+
+function customerSigner() {
+  return createServiceRequestSigner({
+    serviceName: "e2e-harness",
+    audience: CUSTOMERS_SERVICE_AUDIENCE,
+    keys: gateKeys(),
+    scopes: Object.values(CUSTOMER_SCOPES),
+  });
+}
+
+function signCustomer(method: string, path: string): Record<string, string> {
+  return customerSigner()(method, path.split("?")[0] ?? path, customerBeneficiaryOf(path));
+}
+
 function identitySigner() {
   return createServiceRequestSigner({
     serviceName: "e2e-harness",

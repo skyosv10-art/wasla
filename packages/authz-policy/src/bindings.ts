@@ -117,6 +117,96 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     note: "مسارٌ بينَ الخدماتِ بقصدٍ: هويّةُ المَورِدِ في سلسلةِ الاستعلامِ، ولا ترويسةَ مالكٍ ولا مقارنةَ. وربطُ الرمزِ لا يشملُ الاستعلامَ (`ADR-021` · `RISK-0026`) فرمزٌ لطلبٍ صالحٌ لكلِّ طلبٍ — `RISK-0026` مفتوحٌ ولم يُغلَقْ هنا.",
   },
 
+  // ── حدُّ العميلِ: تسعُ عملياتٍ مربوطةٌ بالمالكِ (`M1-04` · الموجةُ 9) ────
+  //
+  // ولِمَ تُربَطُ كلُّها دفعةً واحدةً لا على موجاتٍ كما جرى في حدِّ الطلباتِ:
+  // هناكَ كانَ الفرضُ قائماً والربطُ وحدَهُ ناقصاً، فكانَ كلُّ مسارٍ يُربَطُ
+  // **تغييرَ عقدٍ على مُنادٍ قائمٍ**. وهنا لا مُنادي إنتاجٍ عبرَ HTTP أصلاً
+  // (بوتُ العميلِ يُنادي حالاتَ الاستعمالِ في العمليّةِ نفسِها)، فالفرضُ والربطُ
+  // دفعةٌ واحدةٌ لا تكسرُ مُنادياً. والمساراتُ مبسوطةٌ لا مُولَّدةٌ بـ`map`
+  // للسببِ المكتوبِ أعلاهُ: الفحصُ 16 يقرأُ هذا الملفَ ساكناً.
+  {
+    audience: "customers",
+    method: "GET",
+    path: "/customers/:waslaPublicId/profile",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). وملفُّ العميلِ أولى ما يُربَطُ: فيهِ اسمٌ وهاتفٌ.",
+  },
+  {
+    audience: "customers",
+    method: "PUT",
+    path: "/customers/:waslaPublicId/profile",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). والكتابةُ أولى من القراءةِ: مَن كتبَ ملفَّ غيرِهِ أفسدَ بياناً لا قرأَهُ.",
+  },
+  {
+    audience: "customers",
+    method: "GET",
+    path: "/customers/:waslaPublicId/places",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). والأماكنُ المحفوزةُ تكشفُ سكناً وعملاً — تسريبُها أخطرُ من تسريبِ اسمٍ.",
+  },
+  {
+    audience: "customers",
+    method: "POST",
+    path: "/customers/:waslaPublicId/places",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). وإضافةُ مكانٍ لعميلٍ آخرَ تزرعُ عنواناً في دفترِ غيرِ صاحبِه.",
+  },
+  {
+    audience: "customers",
+    method: "DELETE",
+    path: "/customers/:waslaPublicId/places/:placeId",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). والحذفُ كانَ أصلاً يُجيبُ 404 لما ليسَ للعميلِ، فالربطُ يُقَدِّمُ الحكمَ إلى الوسيطِ قبلَ مسِّ المخزنِ.",
+  },
+  {
+    audience: "customers",
+    method: "POST",
+    path: "/customers/:waslaPublicId/order-requests/preview",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). والمعاينةُ لا تكتبُ شيئاً، ولكنَّها تقرأُ أماكنَ العميلِ وحدودَهُ — فلا تُترَكُ مفتوحةً لأنَّها «لا تُعدِّلُ».",
+  },
+  {
+    audience: "customers",
+    method: "GET",
+    path: "/customers/:waslaPublicId/order-requests",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). وقائمةُ الطلباتِ تكشفُ نمطَ تنقُّلٍ لا لقطةً واحدةً.",
+  },
+  {
+    audience: "customers",
+    method: "POST",
+    path: "/customers/:waslaPublicId/order-requests",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). وإيداعُ طلبٍ باسمِ عميلٍ آخرَ يُلزِمُهُ مالاً ومشواراً لم يطلبْهُ.",
+  },
+  {
+    audience: "customers",
+    method: "GET",
+    path: "/customers/:waslaPublicId/order-requests/:orderRequestId",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/customers/src/http/app.ts:requireBeneficiary",
+    note: "`M1-04` الموجةُ التاسعةُ: المسارُ مُصنَّفٌ `beneficiary: \"required\"`، فرمزٌ بلا `obo` يُرَدُّ 403 عندَ الوسيطِ قبلَ المسارِ؛ والمالكُ يُقرأُ من الرمزِ بـ`ownerPublicIdOf` ويُقارَنُ بـ`:waslaPublicId` المكتوبِ في المسارِ، والمخالفةُ تُرَدُّ `CUSTOMER_PROFILE_NOT_FOUND` لا 403 (`ADR-009`). وقراءةُ طلبٍ واحدٍ بمُعرِّفِهِ: مُعرِّفٌ مُخمَّنٌ لا يكفي لقراءةِ مَورِدٍ مملوكٍ.",
+  },
+
   // ── حدُّ السوقِ: المستأجرُ مُعنوَنٌ ولا مُتحقَّقٌ منه (مقيسٌ 2026-09-15) ──────
   // `storeSlug` يُقرأُ من المسارِ بـ`pathParam` ثمَّ يُسلَّمُ إلى المُستودَعِ
   // مباشرةً في كلِّ مسارٍ من الأحدَ عشرَ أدناه. ولا موضعَ واحدٌ في

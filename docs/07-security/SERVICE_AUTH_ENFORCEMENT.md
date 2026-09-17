@@ -474,6 +474,41 @@
 
 ---
 
+### 2.9 برهانُ حدِّ العميلِ (`M1-04` · الموجةُ التاسعة · `CLM-0197`)
+
+- **الحدُّ نفسُهُ:** [`services/customers/src/http/service-identity.ts`](../../services/customers/src/http/service-identity.ts)
+  — جمهورٌ `customers`، وسبعُ صلاحيّاتٍ مُصدَّرةٌ، وتسعُ عمليّاتٍ مفروضةٍ
+  (§5.6)، و`GET /health` مفتوحٌ **بتصنيفٍ صريحٍ** لا بسهوٍ.
+- **البُعدُ الثاني في الدفعةِ نفسِها — ربطُ المالكِ:** تسعُ العمليّاتِ كلُّها
+  مُسجَّلةٌ `dimension: "owner"` و`strength: "token-bound"` في
+  [`packages/authz-policy/src/bindings.ts`](../../packages/authz-policy/src/bindings.ts)،
+  فالرمزُ يجبُ أن يحملَ `obo` **وأن يُطابِقَ** `waslaPublicId` المكتوبَ في
+  المسارِ. ولمَ معاً لا موجتَينِ: هويّةٌ بلا ملكيّةٍ على هذا الحدِّ تعني أنَّ
+  **أيَّ** خدمةٍ تحملُ صلاحيّةً تقرأُ ملفَّ **أيِّ** عميلٍ — وهو تحسينُ
+  حراسةٍ يُخفي ثغرةً أوسعَ من التي أغلقَها.
+- **الاختباراتُ:** [`services/customers/src/__tests__/service-identity.test.ts`](../../services/customers/src/__tests__/service-identity.test.ts)
+  — **13 حالةً مقيسةً**: بلا ترويسةٍ ⇒ `401` · مزوَّرةٌ بسرٍّ آخرَ ⇒ `401` ·
+  منتهيةٌ ⇒ `401` (`AUTHN_EXPIRED`) · جمهورٌ آخرُ ⇒ `401`
+  (`AUTHN_AUDIENCE_MISMATCH`) · رمزُ مسارٍ آخرَ ⇒ `401` · الصلاحيّةُ الصحيحةُ
+  ⇒ **تعبرُ الحدَّ** · صلاحيّةٌ ناقصةٌ ⇒ `403` (`AUTHZ_FORBIDDEN`) · رمزٌ بلا
+  `obo` ⇒ `403` · `obo` لغيرِ صاحبِ المسارِ ⇒ **`404`** (ADR-009) · إعادةُ
+  الرمزِ نفسِهِ ⇒ `401` · تعذُّرُ مخزنِ آثارِ الإعادةِ ⇒ `503` · مسارٌ مجهولٌ
+  ⇒ `401` **قبلَ** `404` فلا يُكشَفُ جردُ المساراتِ لمن لا هويّةَ لهُ ·
+  `/health` ⇒ `200`.
+- **العقدُ المنشورُ يُعلِنُ ما يُفرَضُ:** `securitySchemes.ServiceAuth`
+  بترويسةِ `x-wasla-service-auth`، و`security:` بصلاحيّةِ المسارِ على تسعِ
+  العمليّاتِ، و`401`/`403` على كلٍّ منها في
+  [`services/customers/contracts/api.openapi.yml`](../../services/customers/contracts/api.openapi.yml)
+  — فخرجَ صفُّ `customers` من جردِ §5.10 **بعدَ** الإنفاذِ لا قبلَهُ.
+- **وما لا يُدَّعى:** لا مُناديَ إنتاجيَّ HTTP لهذا الحدِّ اليومَ (§5.6)، فلا
+  تُقاسُ هذهِ الدفعةُ بـ«نداءٌ موقَّعٌ عبرَ الشبكةِ» بل بـ«الحدُّ يردُّ غيرَ
+  الموقَّعِ». وخمسُ حِزَمِ الاختبارِ الطرفيِّ
+  (`customer-e2e` · `order-e2e` · `driver-e2e` · `dispatch-e2e` ·
+  `negotiation-e2e`) وُقِّعَتْ نداءاتُها في الدفعةِ نفسِها، وهي **مُنادونَ
+  اختباريّونَ** لا إنتاجيّونَ.
+
+---
+
 ## 3. ما لم يُفرَض بعدُ (إعلانٌ لا اعتذار)
 
 **بقيّةُ حدودِ النظامِ لا تفرضُ هويّةَ خدمةٍ اليوم.** والحدودُ المفروضةُ سبعةٌ
@@ -651,7 +686,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -923,6 +958,57 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 
 ---
 
+### 5.6 حدُّ العميلِ (`M1-04` · الموجةُ التاسعة · `CLM-0197`)
+
+**ولماذا هذا الحدُّ في هذهِ الموجةِ:** جردُ §5.10 قاسَ خمسةَ حدودٍ صامتةٍ، وهذا
+أصغرُها مساراً (عشرةٌ) **وأثقلُها ملكيّةً**: كلُّ مسارٍ فيهِ — ما خلا
+`/health` — يحملُ `waslaPublicId` في مسارِهِ، أي **يمسُّ مَورِداً مملوكاً
+لإنسانٍ بعينِهِ**: ملفُّهُ الشخصيُّ، وعناوينُهُ المحفوظةُ، وطلباتُهُ. فحدٌّ
+كهذا لا يكفي فيهِ سؤالُ «مَن يُنادي» بل يُسألُ **«لِمَن هذا المَورِدُ»**،
+ولذلكَ فُرِضَتِ الهويّةُ **وربطُ المالكِ في الدفعةِ نفسِها** لا في موجتَينِ.
+
+**والحقيقةُ التي تُقالُ ولا تُلطَّفُ:** لا مُناديَ إنتاجيَّ HTTP لهذا الحدِّ
+اليومَ — `bots/customer-bot` ينادي حالاتِ الاستعمالِ **داخلَ العمليّةِ**، ولا
+`CUSTOMERS_*_URL` في `packages/config/env-registry.json`. فالإنفاذُ هنا
+**سبقَ المنادي** بخلافِ شرطِ §2.0، وهذا مقصودٌ: بابٌ مفتوحٌ على مَورِدٍ مملوكٍ
+لا يُنتظَرُ لهُ منادٍ ليُغلَقَ، والإغلاقُ قبلَ أوّلِ منادٍ **أرخصُ** من فتحِهِ
+ثمَّ إغلاقِهِ على منادينَ أحياءٍ.
+
+<!-- customers-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المالكِ | المُنادي اليوم |
+|---|---|---|---|
+| `GET /customers/{waslaPublicId}/profile` | `customers:profile:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `PUT /customers/{waslaPublicId}/profile` | `customers:profile:write` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `GET /customers/{waslaPublicId}/places` | `customers:place:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `POST /customers/{waslaPublicId}/places` | `customers:place:write` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `DELETE /customers/{waslaPublicId}/places/{placeId}` | `customers:place:write` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `POST /customers/{waslaPublicId}/order-requests/preview` | `customers:order-request:preview` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `GET /customers/{waslaPublicId}/order-requests` | `customers:order-request:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `POST /customers/{waslaPublicId}/order-requests` | `customers:order-request:write` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `GET /customers/{waslaPublicId}/order-requests/{orderRequestId}` | `customers:order-request:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — | — |
+
+<!-- customers-scopes:end -->
+
+**والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
+مَورِدٍ، و**المعاينةُ** (`order-request:preview`) صلاحيّةٌ ثالثةٌ مستقلّةٌ لأنَّها
+تحسبُ سعراً ولا تُنشِئُ طلباً — فرمزٌ مُنِحَ للمعاينةِ **لا يبلغُ الإنشاءَ**،
+وحالةُ الرفضِ `403` مقيسةٌ في
+[`services/customers/src/__tests__/service-identity.test.ts`](../../services/customers/src/__tests__/service-identity.test.ts).
+
+**ومخالفةُ المالكِ تُرَدُّ `404` لا `403`** (`CUSTOMER_PROFILE_NOT_FOUND`):
+رمزٌ صحيحٌ بصلاحيّةٍ صحيحةٍ لكنَّ `obo` فيهِ لغيرِ صاحبِ المسارِ **لا يُخبَرُ
+بوجودِ المَورِدِ أصلاً** ([`ADR-009`](../15-decisions/ADR-009-error-envelope-and-codes.md)) —
+فالتمييزُ بينَ `403` و`404` هنا كانَ سيُصيِّرَ البابَ **مِكشافَ وجودٍ**.
+
+**وما لا يُدَّعى:** فرضُ هذا الحدِّ **لا يُغلِقُ `RISK-0051`** ولا يُنجِزُ
+`M1-04`: أربعةُ حدودٍ باقيةٌ صامتةٌ (`drivers` · `reputation` · `search` ·
+`subscriptions`) بثلاثةٍ وأربعينَ مساراً، وجردُ §5.10 يحرسُها. ومَن يمنحُ أيَّ
+صلاحيّةٍ لأيِّ خدمةٍ قرارُ `M1-05` عندَ مُصدِرِ الرمزِ لا قرارُ هذا الجدولِ.
+
+---
+
 ## 5.5 حدُّ القناة (`M1-07`)
 
 **الحدُّ التاسع:** حدودُ الخدماتِ الثمانيةِ التي فرضَتْ هويّةَ الخدمةِ في `M1-04`
@@ -1017,7 +1103,16 @@ _أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`
 تعارضاتُ المخزونِ وإقرارُها · الرسائلُ الميتةُ وإعادةُ صفِّها وإقرارُ مسمومِها
 — المراجعةُ 24/N · §4.27)، وسابقتُها
 مكتوبةٌ في [ADR-026](../15-decisions/ADR-026-store-orders-and-delivery-boundary.md);
-و`/health` في `geography` و`identity` غيرُ منشورٍ أصلاً. فالبابُ 9 يقيسُ
+و`/health` في `geography` و`identity` غيرُ منشورٍ أصلاً.
+
+**تصحيحٌ بالإضافةِ · 2026-09-17 (`CLM-0197`):** الأعدادُ أعلاهُ مقيسةٌ
+**2026-09-16** وتُقرأُ تاريخاً لا حالةً راهنةً. وبعدَ الموجةِ التاسعةِ صارَ
+**عشرةَ حدودٍ** تفرضُ هويّةَ الخدمةِ، و**عشرةٌ** من العقودِ الأربعةَ عشرَ
+تُعلِنُ `securitySchemes` و`security:` و`401`/`403` — لأنَّ حدَّ العميلِ
+**أُنفِذَ وأُعلِنَ عقدُهُ في الدفعةِ نفسِها**، فلم يمرَّ لحظةً واحدةً بحالةِ
+«مفروضٌ وعقدُهُ ساكتٌ» التي يحرسُها البابُ 9. والجردُ أدناهُ باقٍ **صِفرَ
+صفوفٍ**، ودَينُ `M1-06` باقٍ مُغلَقاً كما كانَ، و`RISK-0041` بحالتِهِ. ولم
+يُمحَ سطرٌ أعلاهُ: الأعدادُ القديمةُ دليلٌ على متى قِيسَ ماذا. فالبابُ 9 يقيسُ
 **إعلانَ العقدِ عن المُصادقةِ**، ولا يدَّعي أنّهُ يقيسُ تطابقَ جردِ المساراتِ
 بينَ الشفرةِ والعقدِ — وذاكَ بابٌ آخرُ لم يُكتَبْ، وغيابُهُ يُقالُ هنا لا
 يُسكَتُ عنه.
@@ -1068,13 +1163,12 @@ _أُفرِغَ الجردُ إلى صفرِ صفوفٍ في `M1-06` (`CLM-0190`
 
 | الحدُّ | المساراتُ (مقيسةٌ) | ملفُّ الحدِّ | العقدُ المنشورُ | الخطرُ · المالكُ |
 | --- | --- | --- | --- | --- |
-| `customers` | 10 | [`services/customers/src/http/app.ts`](../../services/customers/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `drivers` | 17 | [`services/drivers/src/http/app.ts`](../../services/drivers/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `reputation` | 11 | [`services/reputation/src/http/app.ts`](../../services/reputation/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `search` | 3 | [`services/search/src/http/app.ts`](../../services/search/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 | `subscriptions` | 12 | [`services/subscriptions/src/http/app.ts`](../../services/subscriptions/src/http/app.ts) | ساكتٌ (لا `securitySchemes`) | `RISK-0051` · `M1-04` |
 
-TOTAL_ROUTES: 53
+TOTAL_ROUTES: 43
 
 <!-- unenforced-ingress:end -->
 
@@ -1084,6 +1178,14 @@ TOTAL_ROUTES: 53
 تُغطّي الاتّجاهاتِ الأربعةَ أعلاهُ وحذفَ الكتلةِ وحذفَ مِلفِّ منطقِ البابِ نفسِهِ
 وحدّاً في `packages/` — وكلُّ حالةٍ **تُثبِتُ بمقارنةِ بايتاتٍ أنَّها طفرَت فعلاً**
 قبلَ أن تُقاسَ، فلا تُقرأُ حمراءُ من عملٍ لم يحدثْ.
+
+**تصحيحٌ بالإضافةِ · الموجةُ التاسعةُ (`CLM-0197`) · 2026-09-17.** خرجَ صفُّ
+`customers` من الجدولِ أعلاهُ **بعدَ** أن فُرِضَتْ هويّةُ الخدمةِ على مساراتِهِ
+التسعِ (و`/health` مفتوحٌ بقرارٍ مكتوبٍ)، ورُبِطَتِ التسعُ كلُّها بالمالكِ في
+الدفعةِ نفسِها، وأعلنَ عقدُهُ المنشورُ `ServiceAuth` و`401`/`403` على كلِّ
+عمليّةٍ. فنزلَ `TOTAL_ROUTES` من `53` إلى `43` — **والنزولُ لا يُقرأُ إنجازاً
+عامّاً**: أربعةُ حدودٍ باقيةٌ (`drivers` · `reputation` · `search` ·
+`subscriptions`) و`RISK-0051` **مفتوحٌ** حتّى تُفرَضَ كلُّها.
 
 **وما لا يُدَّعى في هذا الجردِ:** لم يُغلَقْ مسارٌ واحدٌ، ولم تُفرَضْ هويّةٌ على
 حدٍّ واحدٍ من الخمسةِ، ولم ينقصْ خطرٌ. والأخضرُ بعدَ هذه الدفعةِ يعني «الدَّينُ

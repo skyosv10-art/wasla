@@ -797,6 +797,9 @@ importers:
 
   services/customers:
     dependencies:
+      '@wasla/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@wasla/config':
         specifier: workspace:*
         version: link:../../packages/config

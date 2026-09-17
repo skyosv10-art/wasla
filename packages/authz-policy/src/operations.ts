@@ -30,9 +30,23 @@
  * المرجع: ADR-027 · docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
  */
 
-/** الحدودُ الثمانيةُ التي تفرضُ هويّةَ خدمةٍ — مقيسةٌ لا مفترضةٌ (M0-36 · M1-03). */
+/**
+ * الحدودُ التي تفرضُ هويّةَ خدمةٍ — مقيسةٌ لا مفترضةٌ (M0-36 · M1-03).
+ *
+ * **تصحيحٌ بالإضافةِ (`M1-04` · الموجةُ التاسعةُ · `CLM-0197`):** كانَ العنوانُ
+ * «الحدودُ الثمانيةُ» والقائمةُ تسعةٌ — والعددُ في العنوانِ لم يُقَسْ يوماً، بل
+ * شاخَ حينَ أُضيفَ `channel` في `M1-07`. فلا يُمحى العنوانُ السابقُ ليبدوَ
+ * الجردُ معصوماً: يُقالُ إنَّهُ كانَ خطأً ويُستبدَلُ بعددٍ **يُقرأُ من طولِ
+ * القائمةِ نفسِها**. وقد صارَتِ اليومَ **عَشْرَ** حدودٍ بإضافةِ `customers`،
+ * وهيَ أوّلُ الخمسةِ التي قاسَتْها الموجةُ الثامنةُ حدوداً إنتاجيّةً لا تفرضُ
+ * شيئاً ([`ADR-034`](../../../docs/15-decisions/ADR-034-ingress-boundary-inventory-closure.md) ·
+ * `RISK-0051`). والباقي أربعةٌ: `drivers` · `reputation` · `search` ·
+ * `subscriptions` — لا تُضافُ هنا حتّى تُفرَضَ فعلاً، فإضافتُها قبلَ الفرضِ
+ * إعلانٌ كاذبٌ يُسقِطُهُ البابانِ 2 و3 من الفحصِ 16.
+ */
 export const AUDIENCES = [
   "channel",
+  "customers",
   "delivery",
   "dispatch",
   "geography",
@@ -58,6 +72,10 @@ export interface EnforcedOperation {
 
 /**
  * إحدى وثمانونَ عمليّةً مفروضةً على ثمانيةِ حدودٍ — القياسُ في 2026-09-15.
+ * و**تسعونَ على عَشْرِ حدودٍ** بعدَ الموجةِ التاسعةِ (`CLM-0197`) التي فرضَتْ
+ * حدَّ العميلِ — والرقمُ الأوّلُ يبقى مكتوباً بتاريخِهِ لأنَّ محوَهُ يُخفي أنَّ
+ * الجردَ ينمو بالفرضِ لا بالكتابةِ. والحاكمُ في الحالتَينِ طولُ هذهِ القائمةِ
+ * كما يقيسُهُ الفحصُ 16، لا عددٌ في تعليقٍ.
  * ومسارات الفحصِ الصحّيِّ التسعةُ (`OPEN`) **ليستْ هنا** لأنّها لا تفرضُ صلاحيّةً؛
  * والفحصُ 16 يُثبِتُ أنَّ عددَ المفروضِ في الشفرةِ يُساوي طولَ هذهِ القائمةِ.
  */
@@ -66,6 +84,18 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "channel", method: "POST", path: "/channel/messages", scopes: ["channel:message:send"] },
   { audience: "channel", method: "GET", path: "/channel/:bot/mini-app", scopes: ["channel:mini-app:read"] },
   { audience: "channel", method: "POST", path: "/channel/:bot/deep-links", scopes: ["channel:deep-link:create"] },
+  // ── customers (M1-04 · الموجةُ التاسعةُ · CLM-0197) ────────────
+  // تسعُ عملياتٍ كلُّها مربوطةٌ بالمُنتَفِعِ: المَورِدُ مملوكٌ لإنسانٍ مُعنوَنٍ
+  // في المسارِ، فالصلاحيّةُ وحدَها لا تقولُ **أيَّ عميلٍ**. و`/health` مفتوحٌ.
+  { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/profile", scopes: ["customers:profile:read"] },
+  { audience: "customers", method: "PUT", path: "/customers/:waslaPublicId/profile", scopes: ["customers:profile:write"] },
+  { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/places", scopes: ["customers:place:read"] },
+  { audience: "customers", method: "POST", path: "/customers/:waslaPublicId/places", scopes: ["customers:place:write"] },
+  { audience: "customers", method: "DELETE", path: "/customers/:waslaPublicId/places/:placeId", scopes: ["customers:place:write"] },
+  { audience: "customers", method: "POST", path: "/customers/:waslaPublicId/order-requests/preview", scopes: ["customers:order-request:preview"] },
+  { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:read"] },
+  { audience: "customers", method: "POST", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:write"] },
+  { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests/:orderRequestId", scopes: ["customers:order-request:read"] },
   // ── delivery ──────────────────────────────────────────────────
   { audience: "delivery", method: "POST", path: "/store-orders", scopes: ["delivery:store-order:write"] },
   { audience: "delivery", method: "GET", path: "/store-orders/:orderPublicId", scopes: ["delivery:store-order:read"] },

@@ -32,9 +32,13 @@ paths:
       tags: [profile]
       summary: ملف العميل
       operationId: getCustomerProfile
+      security:
+        - ServiceAuth: ['customers:profile:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: ملف العميل
           content:
@@ -47,6 +51,8 @@ paths:
       tags: [profile]
       summary: إنشاء/تحديث ملف العميل (idempotent بطبيعته)
       operationId: upsertCustomerProfile
+      security:
+        - ServiceAuth: ['customers:profile:write']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       requestBody:
@@ -55,6 +61,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/UpsertCustomerProfileRequest' }
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: حُدّث ملف قائم
           content:
@@ -76,9 +84,13 @@ paths:
       tags: [saved-places]
       summary: قائمة الأماكن المحفوظة
       operationId: listSavedPlaces
+      security:
+        - ServiceAuth: ['customers:place:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الأماكن المحفوظة مرتّبة بالأحدث استعمالاً ثم بالإنشاء
           content:
@@ -100,6 +112,8 @@ paths:
       tags: [saved-places]
       summary: إضافة مكان محفوظ
       operationId: createSavedPlace
+      security:
+        - ServiceAuth: ['customers:place:write']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -109,6 +123,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CreateSavedPlaceRequest' }
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: نفس Idempotency-Key سُجّل سابقاً — يُعاد المكان نفسه بلا إنشاء ثانٍ
           content:
@@ -130,10 +146,14 @@ paths:
       tags: [saved-places]
       summary: حذف مكان محفوظ
       operationId: deleteSavedPlace
+      security:
+        - ServiceAuth: ['customers:place:write']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/PlaceId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '204': { description: حُذف المكان (أو كان محذوفاً — العملية idempotent) }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -144,6 +164,8 @@ paths:
       tags: [order-requests]
       summary: معاينة الطلب — تحقّق كامل بلا أي كتابة وبلا تسليم
       operationId: previewOrderRequest
+      security:
+        - ServiceAuth: ['customers:order-request:preview']
       description: |
         نفس تحقّق الإنشاء بالضبط (نفس الأكواد)، لكن بلا صفّ في قاعدة البيانات وبلا نداء للمحرّك.
         المعاينة **لا تُقدّر سعراً ولا مسافة** (ADR-009 §6): تُعيد ما أدخله العميل مُطبَّعاً ومُسمّى.
@@ -155,6 +177,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/OrderRequestInput' }
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الطلب صالح — هذه صورته قبل الإنشاء
           content:
@@ -170,6 +194,8 @@ paths:
       tags: [order-requests]
       summary: طلبات العميل التي أنشأها من هذه الخدمة
       operationId: listOrderRequests
+      security:
+        - ServiceAuth: ['customers:order-request:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - name: limit
@@ -177,6 +203,8 @@ paths:
           required: false
           schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الطلبات مرتّبة بالأحدث
           content:
@@ -195,6 +223,8 @@ paths:
       tags: [order-requests]
       summary: إنشاء طلب وتسليمه إلى محرّك الطلبات
       operationId: createOrderRequest
+      security:
+        - ServiceAuth: ['customers:order-request:write']
       description: |
         يُتحقّق من الطلب، يُسجَّل محلياً، ثم يُسلَّم إلى محرّك الطلبات عبر `OrderIntakePort`.
         إن تعذّر التسليم يبقى الطلب بحالة `submission_failed` ويُرجَع 503 — لا طلب صامت بلا مالك.
@@ -207,6 +237,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/OrderRequestInput' }
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: نفس Idempotency-Key سُجّل سابقاً — يُعاد الطلب نفسه بلا تسليم ثانٍ
           content:
@@ -228,10 +260,14 @@ paths:
       tags: [order-requests]
       summary: طلب واحد
       operationId: getOrderRequest
+      security:
+        - ServiceAuth: ['customers:order-request:read']
       parameters:
         - $ref: '#/components/parameters/WaslaPublicId'
         - $ref: '#/components/parameters/OrderRequestId'
       responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
         '200':
           description: الطلب
           content:
@@ -261,6 +297,23 @@ paths:
                   order_intake: { type: string, enum: [configured, unconfigured] }
 
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [ADR-021](../../../docs/15-decisions/ADR-021-service-token-replay-policy.md)).
+
+        وكلُّ مساراتِ هذا الحدِّ تمسُّ مَورِداً **مملوكاً لإنسانٍ بعينِهِ**، فالرمزُ
+        يجبُ أن يحملَ المُنتَفِعَ (`on_behalf_of`) **وأن يُطابِقَ**
+        `waslaPublicId` المكتوبَ في المسارِ؛ ومخالفتُهُ تُرَدُّ `404`
+        (`CUSTOMER_PROFILE_NOT_FOUND`) لا `403`، فلا يُفصَحُ لمن لا يملكُ عن
+        وجودِ المَورِدِ (ADR-009).
   parameters:
     WaslaPublicId:
       name: waslaPublicId
@@ -585,6 +638,16 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     ServiceUnavailable:
       description: الخدمة أو تابعٌ لها في وضع متدهور
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthUnauthorized:
+      description: طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو الرمزُ بلا مُنتَفِعٍ على مسارٍ يمسُّ مَورِداً مملوكاً.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }

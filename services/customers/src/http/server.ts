@@ -37,7 +37,11 @@
  * Port via PORT (default 8086 — identity 8080, geography 8081; see ports table).
  */
 
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  InMemoryServiceTokenReplayGuard,
+  keyRegistryFromEnv,
+} from "@wasla/service-auth";
 
 import type { Pool } from "pg";
 
@@ -197,9 +201,33 @@ function buildWiring(): Wiring {
   };
 }
 
+/**
+ * تركيبُ فرضِ الهويّةِ على حدِّ الدُّخولِ (`M1-04` · الموجةُ التاسعةُ).
+ *
+ * لا قيمةَ افتراضيّةً للمفاتيحِ: خدمةٌ بلا مفاتيحَ لا تفرّقُ مُنادياً من مزوّرٍ،
+ * وإقلاعٌ يخفقُ برسالةٍ تسمّي المتغيرَ أرخصُ من حدِّ عميلٍ مفتوحٍ لا أحدَ يراه.
+ * ومخزنُ الآثارِ في الذاكرةِ **دينٌ مُعلَنٌ** (`RISK-0015`): نسختانِ من الخدمةِ
+ * لا تتشاركانِ ذاكرةً، فرمزٌ اُلتُقِطَ يمكنُ أن يُعادَ على الأخرى — والعقدُ
+ * `ServiceTokenReplayGuard` مكتوبٌ كي يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+ */
+function serviceIdentityWiring(): {
+  keys: ReturnType<typeof keyRegistryFromEnv>;
+  replayGuard: InMemoryServiceTokenReplayGuard;
+} {
+  return {
+    keys: keyRegistryFromEnv(process.env),
+    replayGuard: new InMemoryServiceTokenReplayGuard(),
+  };
+}
+
 async function main(): Promise<void> {
   const { deps, health, pool } = buildWiring();
-  const app = createCustomerApp({ deps, health, logger: true });
+  const app = createCustomerApp({
+    deps,
+    health,
+    logger: true,
+    serviceIdentity: serviceIdentityWiring(),
+  });
 
   if (pool) {
     app.addHook("onClose", async () => {

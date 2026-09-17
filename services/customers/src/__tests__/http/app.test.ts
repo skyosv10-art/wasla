@@ -28,6 +28,7 @@ import {
   seedProfile,
   type TestContext,
 } from "../helpers.js";
+import { buildSignedCustomerApp } from "../service-identity-support.js";
 
 const KEY = "idem-key-0001";
 
@@ -61,10 +62,13 @@ async function harness(
   const { seed = true, health, ...contextOptions } = options;
   const ctx = makeContext(contextOptions);
   if (seed) await seedProfile(ctx);
-  const app = createCustomerApp({
+  // هويّةُ الخدمةِ مفروضةٌ على هذا الحدِّ (`M1-04` · الموجةُ 9)، والتوقيعُ
+  // يُلَفُّ حولَ `inject` لمُنتَفِعٍ يُشتَقُّ من المسارِ — فما يقيسُهُ هذا
+  // الملفُّ يبقى العقدَ، وإثباتُ الفرضِ في `service-identity.test.ts`.
+  const app = buildSignedCustomerApp({
     deps: ctx,
     ...(health === undefined ? {} : { health }),
-  });
+  }).app;
   return { ctx, app };
 }
 

@@ -56,12 +56,11 @@ export function signFor(
     now?: Date;
   } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: options.serviceName ?? "customer-bot",
     audience: NEGOTIATIONS_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_NEGOTIATIONS_SCOPES,

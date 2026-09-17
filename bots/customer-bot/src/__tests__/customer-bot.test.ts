@@ -25,12 +25,11 @@ const TEST_KEYS = new ServiceAuthKeyRegistry({
 });
 
 function signFor(method: string, url: string): Record<string, string> {
-  const sep = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: "customer-bot",
     audience: CHANNEL_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: sep < 0 ? url : url.slice(0, sep),
+    path: url,
     keys: TEST_KEYS,
     scopes: Object.values(CHANNEL_SCOPES),
     now: new Date(),

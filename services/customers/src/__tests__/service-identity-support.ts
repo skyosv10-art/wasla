@@ -63,7 +63,7 @@ export function createTestKeyRegistry(
  * وُقِّعَ ذلكَ النداءُ ولَصارَ جوابُهُ 401 — أي لَتَبدَّلَ ما يقيسُهُ الاختبارُ.
  */
 export function beneficiaryFromUrl(url: string): string | undefined {
-  const path = url.split("?")[0] ?? url;
+  const path = url;
   const match = /^\/customers\/([^/]+)/u.exec(path);
   const value = match?.[1];
   return value === undefined || value === "" ? undefined : decodeURIComponent(value);
@@ -88,7 +88,6 @@ export function signFor(
     onBehalfOfPublicId?: string | null;
   } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   const beneficiary =
     options.onBehalfOfPublicId === undefined
       ? beneficiaryFromUrl(url)
@@ -97,7 +96,7 @@ export function signFor(
     serviceName: options.serviceName ?? "customer-bot",
     audience: CUSTOMERS_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_CUSTOMER_SCOPES,

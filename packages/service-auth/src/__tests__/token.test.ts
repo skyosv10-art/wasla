@@ -91,19 +91,52 @@ function retamper(
 }
 
 describe("canonicalRequestBinding", () => {
-  it("يُكبِّر الطريقةَ ويُسقِط سلسلةَ الاستعلامِ والشرطةَ الأخيرة", () => {
-    expect(canonicalRequestBinding("get", "/a/b/?x=1")).toBe("GET /a/b");
+  it("يُكبِّر الطريقةَ ويحذفُ الشرطةَ الأخيرةَ **ويضمُّ سلسلةَ الاستعلامِ** (ADR-036)", () => {
+    // [إضافةٌ 2026-09-17] كانَ هذا المقياسُ يُثبِتُ **إسقاطَ** السلسلةِ
+    // (`ADR-021 §4`)، وهوَ عينُ ما سجَّلَهُ `RISK-0026` خطراً. فالمقياسُ انقلبَ
+    // لأنَّ الحكمَ انقلبَ بقرارٍ مكتوبٍ، لا لأنَّ اختباراً لُيِّنَ.
+    expect(canonicalRequestBinding("get", "/a/b/?x=1")).toBe("GET /a/b?x=1");
     expect(canonicalRequestBinding("post", "/a/b")).toBe("POST /a/b");
   });
 
   it("يُبقي الجذرَ شرطةً واحدةً ولا يُفرِّغه", () => {
     expect(canonicalRequestBinding("GET", "/")).toBe("GET /");
     expect(canonicalRequestBinding("GET", "")).toBe("GET /");
-    expect(canonicalRequestBinding("GET", "?q=1")).toBe("GET /");
+    expect(canonicalRequestBinding("GET", "?q=1")).toBe("GET /?q=1");
   });
 
   it("لا يُطبِّع حالةَ أحرفِ المسار — المساراتُ حسّاسةٌ للحالةِ في HTTP", () => {
     expect(canonicalRequestBinding("GET", "/Users")).not.toBe("GET /users");
+  });
+
+  it("قيمةٌ مختلفةٌ في الاستعلامِ تُنتِج ربطاً مختلفاً — وهذا هوَ إقفالُ RISK-0026", () => {
+    expect(canonicalRequestBinding("GET", "/orders/lookup?order_public_id=ORD-0000000001")).not.toBe(
+      canonicalRequestBinding("GET", "/orders/lookup?order_public_id=ORD-0000009999"),
+    );
+  });
+
+  it("إعادةُ ترتيبِ المعاملاتِ **لا** تُغيِّر الربطَ — فسببُ استثناءِ ADR-021 §4 مُعالَجٌ", () => {
+    expect(canonicalRequestBinding("GET", "/x?b=2&a=1")).toBe(
+      canonicalRequestBinding("GET", "/x?a=1&b=2"),
+    );
+    expect(canonicalRequestBinding("GET", "/x?b=2&a=1")).toBe("GET /x?a=1&b=2");
+  });
+
+  it("مفتاحٌ مُكرَّرٌ يبقى مُكرَّراً ومُرتَّباً بالقيمةِ — ابتلاعُ التكرارِ بابُ التفافٍ", () => {
+    expect(canonicalRequestBinding("GET", "/x?id=2&id=1")).toBe("GET /x?id=1&id=2");
+    expect(canonicalRequestBinding("GET", "/x?id=1")).not.toBe(
+      canonicalRequestBinding("GET", "/x?id=1&id=2"),
+    );
+  });
+
+  it("قيمةٌ فارغةٌ مُعلَنةٌ لا تُساوي غيابَ المفتاحِ، والاستعلامُ الفارغُ لا يُضيف علامةً", () => {
+    expect(canonicalRequestBinding("GET", "/x?flag=")).toBe("GET /x?flag=");
+    expect(canonicalRequestBinding("GET", "/x?flag=")).not.toBe(canonicalRequestBinding("GET", "/x"));
+    expect(canonicalRequestBinding("GET", "/x?")).toBe("GET /x");
+  });
+
+  it("يُوحِّد الترميزَ فلا يُنتِج ربطَينِ لهدفٍ واحدٍ اختلفَ ترميزُه", () => {
+    expect(canonicalRequestBinding("GET", "/x?q=a%20b")).toBe(canonicalRequestBinding("GET", "/x?q=a+b"));
   });
 });
 
@@ -210,14 +243,35 @@ describe("verifyServiceToken — المسلكُ المُثبَت", () => {
     );
   });
 
-  it("يُطبِّع الربطَ فيقبل الطريقةَ بحالةٍ مختلفةٍ وسلسلةَ استعلامٍ زائدةً", () => {
+  it("يُطبِّع الطريقةَ فيقبلُ حالةَ أحرفٍ مختلفةً", () => {
     const token = mintServiceToken(mintDefaults);
     expect(() =>
-      verifyServiceToken(token, {
-        ...verifyDefaults,
-        method: "get",
-        path: "/identity/users/pub_123?trace=1",
-      }),
+      verifyServiceToken(token, { ...verifyDefaults, method: "get" }),
+    ).not.toThrow();
+  });
+
+  it("ويرفضُ سلسلةَ استعلامٍ لم تكن في الرمزِ (ADR-036 · إقفالُ RISK-0026)", () => {
+    // [إضافةٌ 2026-09-17] كانَ هذا المقياسُ مضموماً إلى الذي فوقَهُ ويُثبِتُ
+    // **قبولَ** «سلسلةِ استعلامٍ زائدةٍ». فالزيادةُ لم تكن زائدةً: كانت هويّةَ
+    // المَورِدِ في مساراتٍ حقيقيّةٍ.
+    const token = mintServiceToken(mintDefaults);
+    expect(
+      reject(() =>
+        verifyServiceToken(token, {
+          ...verifyDefaults,
+          path: "/identity/users/pub_123?trace=1",
+        }),
+      ).reason,
+    ).toBe("request_binding_mismatch");
+  });
+
+  it("ويقبلُ الهدفَ الموقَّعَ باستعلامِه ولو أُعيدَ ترتيبُ معاملاتِه", () => {
+    const token = mintServiceToken({
+      ...mintDefaults,
+      path: "/identity/users?a=1&b=2",
+    });
+    expect(() =>
+      verifyServiceToken(token, { ...verifyDefaults, path: "/identity/users?b=2&a=1" }),
     ).not.toThrow();
   });
 });
@@ -522,7 +576,7 @@ describe("wsvc1 — الصيغةُ المنسوخةُ تُرفَض باسمِه�
     ).toBe("unsupported_scheme");
   });
 
-  it("وحِمْلٌ بلا `jti` يُرفَض حتّى ببادئةِ wsvc2 وتوقيعٍ مُطابقٍ", () => {
+  it("وحِمْلٌ بلا `jti` يُرفَض حتّى ببادئةِ wsvc3 وتوقيعٍ مُطابقٍ", () => {
     // البابُ الثاني: لو غُيِّرت البادئةُ فقط، يجب أن يقع الرفضُ على الحقلِ
     // نفسِه — فالحارسُ لا يعتمد على بادئةٍ وحدَها.
     const token = mintServiceToken(mintDefaults);
@@ -532,6 +586,38 @@ describe("wsvc1 — الصيغةُ المنسوخةُ تُرفَض باسمِه�
     expect(reject(() => verifyServiceToken(tampered, verifyDefaults)).reason).toBe(
       "invalid_claims",
     );
+  });
+});
+
+describe("wsvc2 — الصيغةُ المنسوخةُ الثانيةُ تُرفَض باسمِها (ADR-036)", () => {
+  it("رمزٌ ببادئةِ wsvc2 يُرفَض ولو كانَ كاملَ الحقولِ وصحيحَ التوقيعِ لتلك الصيغة", () => {
+    // يُبنى رمزُ wsvc2 كما كانَ يُبنى بالضبط: كلُّ الحقولِ حاضرةٌ **ومنها `jti`**،
+    // والربطُ بلا سلسلةِ استعلامٍ، وتوقيعٌ على `wsvc2.<payload>` بالسرِّ الصحيح.
+    // فالرفضُ هنا ليسَ رفضَ حقلٍ ناقصٍ بل رفضُ **نسخةٍ** — وهوَ ما يمنعُ أن يبقى
+    // بابُ `RISK-0026` مفتوحاً بمجرَّدِ الاستمرارِ في إصدارِ الصيغةِ القديمةِ.
+    const legacyPayload = Buffer.from(
+      JSON.stringify({
+        kid: "k1",
+        svc: "customers",
+        aud: "identity",
+        scp: [],
+        iat: Math.floor(NOW.getTime() / 1000),
+        exp: Math.floor(NOW.getTime() / 1000) + 60,
+        req: "GET /identity/users",
+        jti: "11111111-1111-4111-8111-111111111111",
+      }),
+      "utf8",
+    ).toString("base64url");
+    const legacySignature = createHmac("sha256", SECRET)
+      .update(`wsvc2.${legacyPayload}`)
+      .digest("base64url");
+
+    expect(SUPERSEDED_TOKEN_SCHEMES).toContain("wsvc2");
+    expect(
+      reject(() =>
+        verifyServiceToken(`wsvc2.${legacyPayload}.${legacySignature}`, verifyDefaults),
+      ).reason,
+    ).toBe("unsupported_scheme");
   });
 });
 

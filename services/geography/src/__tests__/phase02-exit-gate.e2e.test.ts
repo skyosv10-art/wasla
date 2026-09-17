@@ -119,13 +119,12 @@ function signIdentity(method: string, path: string): Record<string, string> {
  * يعيشُ في `service-identity.test.ts` و`packages/driver-e2e`، لا هنا.
  */
 function signGeo(method: string, path: string): Record<string, string> {
-  const separator = path.indexOf("?");
   return createServiceRequestSigner({
     serviceName: "phase02-exit-gate",
     audience: "geography",
     keys: gateServiceAuthKeys(),
     scopes: ["geography:hierarchy:read", "geography:zone:read", "geography:location:read", "geography:location:write"],
-  })(method, separator < 0 ? path : path.slice(0, separator));
+  })(method, path);
 }
 
 describe.skipIf(!ENABLED)("Phase 02 Exit Gate E2E (identity + geography)", () => {

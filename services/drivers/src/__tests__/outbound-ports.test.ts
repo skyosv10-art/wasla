@@ -199,7 +199,7 @@ describe("منفذ الترشيح عبر HTTP", () => {
     await port.read(DRIVER);
     await port.publish(PROJECTION);
     for (const call of calls) {
-      expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./);
+      expect(call.headers[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./);
     }
     // ورمزان مختلفان: الرمز مربوط بالمسار ويُحرق عند أول استعمال.
     expect(calls[0]?.headers[SERVICE_AUTH_HEADER]).not.toBe(calls[1]?.headers[SERVICE_AUTH_HEADER]);

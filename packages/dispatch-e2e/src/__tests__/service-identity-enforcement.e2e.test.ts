@@ -59,7 +59,7 @@ describe("M1-03 · حدُّ المطابقة يفرض هوية الخدمة عل
 
   it("هويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة", async () => {
     const forged = gate.serviceIdentity.sign("GET", READ_PATH, { forged: true });
-    expect(forged[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./);
+    expect(forged[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./);
     const result = await callMatchingUnsigned(gate, {
       method: "GET",
       path: READ_PATH,

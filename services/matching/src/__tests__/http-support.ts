@@ -41,12 +41,11 @@ export function signFor(
     now?: Date;
   } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: options.serviceName ?? "dispatch",
     audience: "matching",
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_MATCHING_SCOPES,

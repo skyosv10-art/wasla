@@ -187,16 +187,32 @@ describe("فرض هوية الخدمة — حدود الربط والتصنيف"
     }).toThrow(/بلا تصنيف هوية خدمة/);
   });
 
-  it("سلسلة الاستعلام ليست جزءاً من الربط — دين معلن في ADR-021 §4", async () => {
-    // **قياس لا دعوى:** الربط يغطي الطريقة والمسار، ولا يغطي سلسلة الاستعلام ولا
-    // الجسم. ولا يوجد اليوم مسار في هذه الخدمة يقرأ سلسلة استعلام، فالأثر صفر؛
-    // ولو أُضيف مسار كذلك قبل توسيع الربط لصار الدين ثغرة. لذلك يُثبَّت الحد
-    // باختبار كي يُرى عند التغيير لا بعده.
+  it("سلسلة الاستعلام **جزءٌ من الربط** — الدين المعلن في ADR-021 §4 سُدَّ (ADR-036)", async () => {
+    // **قياس لا دعوى.** [إضافة 2026-09-17] كان هذا الاختبار يُثبت العكس: أن
+    // تغيير الاستعلام لا يُبطل الرمز. وقد نصَّت ADR-021 §4 حرفياً على أنه «إن
+    // قُرِّرَ ربطُه لاحقاً سقطَ ذلك الاختبارُ وأُعيدت كتابتُه بوعيٍ» — وهذا هو
+    // ما جرى: الربط وُسِّع في ADR-036 لإقفال RISK-0026، فسقط الاختبار وأُعيدت
+    // كتابته إلى ما يُقاس اليوم. ولم يُحذف شيء: البند الثالث أدناه يُثبت أن
+    // التوقيع للهدف نفسِه ما زال يمرّ، فالفرق مقيسٌ لا مُدَّعى.
     const { app, rawInject, keys } = createHttpHarness();
     const response = await rawInject({
       method: "GET",
       url: "/matching/rulesets?unsigned=1",
       headers: signFor("GET", "/matching/rulesets", { keys, scopes: ALL_MATCHING_SCOPES }),
+    });
+    expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("والتوقيع للهدف نفسِه باستعلامه يمرّ — الإقفال ليس منعاً للاستعلام", async () => {
+    const { app, rawInject, keys } = createHttpHarness();
+    const response = await rawInject({
+      method: "GET",
+      url: "/matching/rulesets?unsigned=1",
+      headers: signFor("GET", "/matching/rulesets?unsigned=1", {
+        keys,
+        scopes: ALL_MATCHING_SCOPES,
+      }),
     });
     expect(response.statusCode).toBe(200);
     await app.close();

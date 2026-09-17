@@ -37,7 +37,7 @@ describe("محول محرّك الطلبات لتسجيل العرض", () => {
     const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(`http://orders.test/orders/${orderId}/assignments`);
     // نداء بلا ترويسة هوية يُرَدّ 401 من حد الطلبات؛ فغيابها هنا عطلٌ لا تفصيل.
-    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./u);
   });
 
   it("يعيد applied عند إنشاء تسجيل العرض", async () => {

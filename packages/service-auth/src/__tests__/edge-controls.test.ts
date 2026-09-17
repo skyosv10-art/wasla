@@ -95,7 +95,7 @@ describe("redactErrorBody", () => {
     const body = {
       error: {
         code: "AUTHN_UNAUTHENTICATED",
-        x_wasla_service_auth: "wsvc2.abc123",
+        x_wasla_service_auth: "wsvc3.abc123",
         authorization: "Bearer some-token",
       },
     };
@@ -104,12 +104,12 @@ describe("redactErrorBody", () => {
     expect(redacted.error.authorization).toBe("[redacted]");
   });
 
-  it("يستبدلُ رموزَ wsvc2 في النصوص", () => {
+  it("يستبدلُ رموزَ wsvc3 في النصوص", () => {
     const body = {
-      message: "Token wsvc2.eyJhbGciOiJIUzI1NiJ9.payload.sig was rejected",
+      message: "Token wsvc3.eyJhbGciOiJIUzI1NiJ9.payload.sig was rejected",
     };
     const redacted = redactErrorBody(body) as Record<string, Record<string, unknown>>;
-    expect(String(redacted.message)).not.toContain("wsvc2.");
+    expect(String(redacted.message)).not.toContain("wsvc3.");
     expect(String(redacted.message)).toContain("[token]");
   });
 
@@ -137,7 +137,7 @@ describe("redactErrorBody", () => {
     const body = {
       outer: {
         inner: {
-          x_wasla_service_auth: "wsvc2.secret",
+          x_wasla_service_auth: "wsvc3.secret",
           safe: "ok",
         },
       },

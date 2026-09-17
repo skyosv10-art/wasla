@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T15:57:28Z",
+  "generated_at": "2026-09-17T17:31:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7eef81561540b8055c244be6204014d8c35e1553",
-    "branch": "docs/m1-03-close-risk-0015",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "M1-03 · CLM-0205: إقفالُ RISK-0015 — سجلُّ الإقفالِ ووثائقُهُ غيرُ مدفوعةٍ بعدُ",
+    "commit": "a14fa399edf304e478a929e0e686da1954cd81ff",
+    "branch": "feat/m1-03-bind-query-string",
+    "dirty": true,
+    "dirty_files": 70,
+    "dirty_reason": "فرعُ feat/m1-03-bind-query-string — ضمُّ سلسلةِ الاستعلامِ إلى ربطِ الطلبِ (CLM-0206): فحوصُ الحوكمةِ 20⇒21 وحزمةُ الطفرةِ 451⇒464 وعددُ الاختباراتِ",
     "tracked_files": 2118
   },
   "env": {
@@ -29,18 +29,18 @@
     "test_files_tracked": 372,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 20,
+    "governance_checks": 21,
     "risks_not_closed": 36
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify3.log",
-    "tests_passed": 4824,
+    "source": "/tmp/verify5.log",
+    "tests_passed": 4838,
     "test_files_executed": 296,
-    "governance_suite_cases": 451,
+    "governance_suite_cases": 464,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:d07c42f3003bf5b6e6cf26a34d393e589d3b13512799aa195d49c3671da36154",
+  "fingerprint": "sha256:9a66d5c44883b199ae2bdacc915c17c52712e9224741988ab6a346e68c7ab3e3",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

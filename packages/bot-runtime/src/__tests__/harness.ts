@@ -70,12 +70,11 @@ export function signFor(
   url: string,
   options: { scopes?: readonly string[]; serviceName?: string } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: options.serviceName ?? "customer-bot",
     audience: CHANNEL_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: createTestKeyRegistry(),
     scopes: options.scopes ?? Object.values(CHANNEL_SCOPES),
     now: new Date(),

@@ -645,7 +645,12 @@ Nothing else has been changed in this repository by the WASLA integration work.
   for every boundary at once rather than a second convention invented here.
   `services/marketplace` is still not enforced (declared, not fixed). `RISK-0026` (the query
   string is not bound into the signature — it affects `GET /delivery/inventory-conflicts`) and
-  `RISK-0015` (the replay guard is in-memory, so it is per-process) remain open. Role-to-scope
+  `RISK-0015` (the replay guard is in-memory, so it is per-process) remain open.
+  **[Added 2026-09-17 · `CLM-0206` — corrected by addition, not deletion]** Both are no longer
+  true: the query string is now normalized (sorted) into the request binding
+  (`docs/15-decisions/ADR-036-request-binding-includes-query.md`, `RISK-0026` → `mitigating`,
+  scheme `wsvc2` → `wsvc3`) and the replay store is now shared on PostgreSQL (`ADR-035`,
+  `RISK-0015` closed). Read the sentences above with their dates. Role-to-scope
   granting is `M1-05`: this boundary declares what each route *requires*; who deserves a scope
   is the token issuer's decision. `docs/12-testing/M1-04_GATE.md` still describes five
   enforced boundaries and needs a sixth-wave update — a declared debt. **(Paid in review 22/N
@@ -833,7 +838,11 @@ Nothing else has been changed in this repository by the WASLA integration work.
   the item to `Completed` and closing `RISK-0027` remain the program owner's authority alone, the
   query string is still outside the request binding so a token signed to list one order's threads
   can list another's (`RISK-0026`, same shape as `GET /orders/lookup`, root fix at `M1-05`), the
-  replay guard is still in-process (`RISK-0015`), `api.openapi.yml` still documents no security
+  replay guard is still in-process (`RISK-0015`),
+  **[Added 2026-09-17 · `CLM-0206`: the query-string clause and the replay clause are both
+  obsolete — `ADR-036` binds the sorted query string, `ADR-035` shares the replay store. The
+  prediction that the root fix would wait for `M1-05` was wrong: the mechanism was fixable at the
+  binding itself, and `M1-05` remains only for authorization.]** `api.openapi.yml` still documents no security
   scheme, and **there is still no CI verdict**: every run continues to fail with zero steps
   started, so the green reported here is local only.
 - **M5-13 (Store Orders & Delivery) — review 18/N, claim `CLM-0139`.** The acknowledgement

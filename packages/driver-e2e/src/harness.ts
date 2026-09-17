@@ -704,7 +704,7 @@ function customerSigner() {
 }
 
 function signCustomer(method: string, path: string): Record<string, string> {
-  return customerSigner()(method, path.split("?")[0] ?? path, customerBeneficiaryOf(path));
+  return customerSigner()(method, path, customerBeneficiaryOf(path));
 }
 
 function identitySigner() {
@@ -720,7 +720,7 @@ export const callIdentity = (gate: GateContext, init: CallInit): Promise<HttpRes
   call(gate.identityUrl, {
     ...init,
     headers: {
-      ...identitySigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...identitySigner()(init.method, init.path),
       ...(init.headers ?? {}),
     },
   });
@@ -746,7 +746,7 @@ export const callEngine = (gate: GateContext, init: CallInit): Promise<HttpResul
       // للحقيقةِ، فلا يستطيعُ السندُ أن يُعلِنَ عميلاً ويُوقِّعَ لآخرَ.
       ...ordersSigner("driver-exit-gate", Object.values(ORDER_SCOPES))(
         init.method,
-        init.path.split("?")[0] ?? init.path,
+        init.path,
         init.customerScope,
       ),
       ...(init.headers ?? {}),
@@ -771,7 +771,7 @@ export const callDispatch = (gate: GateContext, init: CallInit): Promise<HttpRes
     ...init,
     headers: {
       // الربط لا يشمل سلسلة الاستعلام (ADR-021 §4)، فيُوقَّع المسار وحده.
-      ...dispatchSigner()(init.method, init.path.split("?")[0] ?? init.path),
+      ...dispatchSigner()(init.method, init.path),
       ...(init.headers ?? {}),
     },
   });
@@ -795,7 +795,7 @@ export const callDrivers = (gate: GateContext, init: CallInit): Promise<HttpResu
     headers: {
       ...driversSigner("e2e-harness", Object.values(DRIVER_SCOPES))(
         init.method,
-        init.path.split("?")[0] ?? init.path,
+        init.path,
         driverBeneficiaryOf(init),
       ),
       ...(init.headers ?? {}),

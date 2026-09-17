@@ -111,8 +111,26 @@ declare module "fastify" {
   }
 }
 
-/** المسارُ بلا سلسلةِ استعلامٍ: هو نفسُه ما وقَّعَه المنادي في الربطِ بالطلبِ. */
-function pathOf(request: FastifyRequest): string {
+/**
+ * هدفُ الربطِ: **المسارُ مع سلسلةِ الاستعلامِ كما وصلَا** (`RISK-0026`).
+ *
+ * ولا يُقتَطع الاستعلامُ هنا لأنّ `canonicalRequestBinding` هي **الموضعُ الواحدُ**
+ * الذي يُطبِّع الهدفَ عندَ المُوقِّعِ وعندَ المُتحقِّقِ معاً. فأيُّ اقتطاعٍ أو تطبيعٍ
+ * في الحدِّ يصنعُ مصدرَ حقيقةٍ ثانياً — وأوّلُ اختلافٍ بينَ المصدرَينِ بابُ التفافٍ
+ * أو رفضٌ كاذبٌ، وكلاهما يظهرُ في الإنتاجِ لا في المراجعةِ.
+ */
+function bindingTargetOf(request: FastifyRequest): string {
+  return request.url;
+}
+
+/**
+ * تسميةُ المسارِ **للسجلِّ** — بلا سلسلةِ استعلامٍ، وهذا مقصودٌ ولا يُخالِفُ
+ * `bindingTargetOf`: الربطُ يحتاجُ الاستعلامَ كي يُقارَنَ، والسجلُّ لا يحتاجُه
+ * كي يُحصى. وضمُّهُ هنا كانَ سيَسكُبَ معرِّفاتِ مَوارِدَ (`order_public_id`) في
+ * سجلِّ الرفضِ ويُفجِّرَ عددَ التسمياتِ فيصيرَ العدُّ بلا معنىً — وكلاهما ضررٌ
+ * بلا مقابلٍ أمنيٍّ.
+ */
+function routeLabelOf(request: FastifyRequest): string {
   const url = request.url;
   const separator = url.indexOf("?");
   return separator < 0 ? url : url.slice(0, separator);
@@ -171,7 +189,7 @@ export function registerServiceIdentityOnFastify(
       identity === undefined ? false : identity.beneficiary === "required";
 
     const decision = await enforceServiceIdentity(
-      { method: request.method, path: pathOf(request), headers: request.headers },
+      { method: request.method, path: bindingTargetOf(request), headers: request.headers },
       {
         audience,
         keys: options.keys,
@@ -199,7 +217,7 @@ export function registerServiceIdentityOnFastify(
     const logged = {
       reason: decision.logReason,
       status: decision.status,
-      route: `${request.method} ${pathOf(request)}`,
+      route: `${request.method} ${routeLabelOf(request)}`,
       ...(decision.missingScopes === undefined
         ? {}
         : { missing_scopes: decision.missingScopes }),

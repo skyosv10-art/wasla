@@ -549,7 +549,7 @@ export interface HttpResult {
 /** نداءٌ عبرَ الشبكةِ على المُستمعِ — موقَّعٌ بهويّةِ خدمةٍ (M1-04 · الموجةُ 12). */
 export async function get(gate: GateContext, path: string): Promise<HttpResult> {
   const startedAt = performance.now();
-  const pathOnly = path.split("?")[0] ?? path;
+  const pathOnly = path;
   const headers =
     pathOnly === "/search/health" ? {} : searchSigner()("GET", pathOnly);
   const response = await fetch(`${gate.baseUrl}${path}`, { headers });

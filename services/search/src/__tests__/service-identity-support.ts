@@ -49,12 +49,11 @@ export function signFor(
     now?: Date;
   } = {},
 ): Record<string, string> {
-  const separator = url.indexOf("?");
   return serviceAuthHeaders({
     serviceName: options.serviceName ?? "search-ingress",
     audience: SEARCH_SERVICE_AUDIENCE,
     method: method.toUpperCase(),
-    path: separator < 0 ? url : url.slice(0, separator),
+    path: url,
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_SEARCH_SCOPES,
@@ -94,13 +93,39 @@ export async function inject(
   const method = (options.method ?? "GET").toUpperCase();
   const rawUrl = options.url ?? "/";
   const url = typeof rawUrl === "string" ? rawUrl : (rawUrl.pathname ?? "/");
+  // [إضافةٌ 2026-09-17] الربطُ صارَ يشملُ سلسلةَ الاستعلامِ (`ADR-036`)، وهذا
+  // السندُ يُمرِّرُ المعاملاتِ في `options.query` لا في `url` — فلو وُقِّعَ
+  // `url` وحدَهُ لوقَّعَ **هدفاً غيرَ الذي يُرسِلُهُ**، فيُرَدُّ كلُّ نداءٍ 401
+  // ويُقرأُ عيباً في الحدِّ لا في السندِ. فيُركَّبُ الهدفُ هنا كما سيصلُ.
+  const target = `${url}${queryStringOf(options.query)}`;
   return fastify.inject({
     ...options,
     headers: {
-      ...signFor(method, url),
+      ...signFor(method, target),
       ...(options.headers ?? {}),
     },
   });
+}
+
+
+/**
+ * يُركِّبُ سلسلةَ الاستعلامِ كما يُركِّبُها `light-my-request` من `options.query`:
+ * المصفوفةُ تصيرُ مفتاحاً مُكرَّراً، ولا مفتاحَ يُبتَلَعُ. ولا تطبيعَ هنا بقصدٍ —
+ * التطبيعُ مِلكُ `canonicalRequestBinding` وحدَها، ومُطبِّعٌ ثانٍ مصدرُ حقيقةٍ ثانٍ.
+ */
+function queryStringOf(query: InjectOptions["query"]): string {
+  if (query === undefined || query === null) return "";
+  if (typeof query === "string") return query === "" ? "" : `?${query}`;
+  const params = new URLSearchParams();
+  for (const [name, value] of Object.entries(query as Record<string, unknown>)) {
+    if (Array.isArray(value)) {
+      for (const item of value) params.append(name, String(item));
+    } else if (value !== undefined) {
+      params.append(name, String(value));
+    }
+  }
+  const encoded = params.toString();
+  return encoded === "" ? "" : `?${encoded}`;
 }
 
 /** `inject` بلا توقيعٍ — يُثبتُ أنَّ الحدَّ يرفضُ النداءَ الأعزلَ. */

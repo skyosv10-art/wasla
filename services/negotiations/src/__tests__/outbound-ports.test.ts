@@ -154,8 +154,8 @@ describe("منفذ عروض التوزيع الحقيقي", () => {
     const [, orderInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     const orderToken = (orderInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER];
     const offerToken = (offerInit.headers as Record<string, string>)[SERVICE_AUTH_HEADER];
-    expect(orderToken).toMatch(/^wsvc2\./u);
-    expect(offerToken).toMatch(/^wsvc2\./u);
+    expect(orderToken).toMatch(/^wsvc3\./u);
+    expect(offerToken).toMatch(/^wsvc3\./u);
     expect(tokenClaims(orderToken)).toMatchObject({ aud: "orders", scp: ["orders:order:read"] });
     expect(tokenClaims(offerToken)).toMatchObject({
       aud: "dispatch",
@@ -315,7 +315,7 @@ describe("منفذ تسليم السعر الحقيقي", () => {
       "x-request-id": "trace-1",
     });
     // M1-04: حد الطلبات يفرض الهوية، فنداء بلا ترويسة يُرَدّ 401.
-    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc2\./u);
+    expect((options.headers as Record<string, string>)[SERVICE_AUTH_HEADER]).toMatch(/^wsvc3\./u);
     expect(JSON.parse(options.body as string)).toEqual({
       order_public_id: "ORD-0000000001",
       negotiation_id: THREAD_ID,

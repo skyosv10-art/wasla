@@ -8,9 +8,12 @@
  * وما يُقاسُ هنا ثلاثةٌ لا واحدٌ:
  * 1. أنَّ الرمزَ يُرسَلُ فعلاً، وجمهورُهُ `negotiations`، وصلاحيّاتُهُ **هيَ
  *    المُعلَنةُ للعميلِ** لا أوسعُ.
- * 2. أنَّ **الربطَ لا يحملُ سلسلةَ الاستفسارِ** مع أنَّ النداءَ يحملُها —
- *    فالقطعُ مركزيٌّ في `canonicalRequestBinding` والفاحصُ يقطعُ بالدالّةِ
- *    نفسِها (ADR-021 §4)، وهذا يُقاسُ لا يُفترضُ.
+ * 2. أنَّ **الربطَ يحملُ سلسلةَ الاستفسارِ** كما يحملُها النداءُ — فالضمُّ
+ *    مركزيٌّ في `canonicalRequestBinding` والفاحصُ يضمُّ بالدالّةِ نفسِها
+ *    (`ADR-036` · `wsvc3`)، وهذا يُقاسُ لا يُفترضُ.
+ *    [إضافةٌ 2026-09-17] وكانَ هذا البندُ يقيسُ العكسَ (`ADR-021 §4`: الربطُ بلا
+ *    استعلامٍ)، وهوَ ما سجَّلَهُ `RISK-0026`: رمزُ قراءةِ خيطٍ كانَ يُعادُ استعمالُهُ
+ *    لسردِ خيوطِ غيرِ صاحبِهِ. فالمقياسُ انقلبَ لأنَّ الحكمَ انقلبَ، لا لأنَّهُ لُيِّنَ.
  * 3. أنَّ مُوقِّعاً يرفضُ يُخرِجُ **عطلَ تركيبٍ** لا `DEPENDENCY_UNAVAILABLE`،
  *    كي لا يُقرأَ نسيانُ المفاتيحِ عندَنا بوصفِهِ خدمةَ مفاوضاتٍ ساقطةً.
  */
@@ -72,7 +75,7 @@ afterEach(() => {
 });
 
 describe("HttpDriverNegotiations — التوقيع", () => {
-  it("يوقّع سرد الخيوط بالمسار بلا سلسلة استفسار", async () => {
+  it("يوقّع سرد الخيوط بالمسار مع سلسلة الاستفسار مضمومةً إلى الربط", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ threads: [] }), { status: 200 }));
@@ -80,11 +83,11 @@ describe("HttpDriverNegotiations — التوقيع", () => {
 
     await client().listThreads({ driverPublicId: DRIVER_ID, traceId: "t-1" });
 
-    // النداءُ نفسُهُ يحملُ السلسلةَ — والرمزُ لا.
+    // النداءُ يحملُ السلسلةَ — والرمزُ يحملُها معهُ (`ADR-036`).
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/negotiations?driverPublicId=${DRIVER_ID}`);
     const claims = claimsOf(fetchMock);
     expect(claims.aud).toBe("negotiations");
-    expect(claims.req).toBe("GET /negotiations");
+    expect(claims.req).toBe(`GET /negotiations?driverPublicId=${DRIVER_ID}`);
     expect(claims.svc).toBe("driver-bot");
     expect(claims.scp).toEqual([...DRIVER_BOT_NEGOTIATIONS_SCOPES]);
   });

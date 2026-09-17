@@ -1502,3 +1502,16 @@ still has no test of its own here.
   22 e2e tests over a real database, both green). `RISK-0051` narrows to **one** silent boundary remaining
   (`subscriptions` 12 routes = 12 total). Promotion of `M1-04` to `Completed` remains the program owner's
   authority alone (§9).
+- **M1-04 wave 13 — claim `CLM-0201`: the subscriptions ingress boundary is enforced (2026-09-17).** This is the
+  fifth and final boundary measured by wave 8 to be enforced. All 11 operational routes now require a signed
+  service identity token with the correct audience (`subscriptions`) and scope; `/health` remains open by
+  explicit classification. `requireBeneficiary` enforces ownership on 6 owner-scoped routes (4 `:driverPublicId`,
+  1 `:ownerPublicId`, 2 body-extracted: `driver_public_id` and `referee_public_id`); beneficiary mismatch
+  returns 404 not 403 (ADR-009). The OpenAPI contract declares `securitySchemes` and `security:` on all 11
+  enforced operations with `401`/`403` responses. The authz-policy matrix gains `subscriptions` as its 14th
+  audience with 11 enforced operations and 9 scopes; `ENFORCED_OPERATIONS` moves 121 → 132, `ENFORCED_SCOPES`
+  100 → 109, `TOKEN_BOUND_OPERATION_COUNT` 36 → 43. `subscription-e2e` signs its calls to the subscriptions
+  service. **`RISK-0051` is closed**: zero silent boundaries remain, zero unenforced routes. The
+  `requireBeneficiary` helper returns `undefined` when `serviceIdentity` is not configured, so integration
+  tests that call `createSubscriptionApp` without a key registry pass without signing. Promotion of `M1-04`
+  to `Completed` remains the program owner's authority alone (§9).

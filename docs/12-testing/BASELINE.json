@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T15:02:45Z",
+  "generated_at": "2026-09-17T15:57:28Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "0f92b9c9541ea9d2dc8e08d662ce7a56a560eac2",
-    "branch": "feat/m1-03-distributed-replay-store",
-    "dirty": true,
-    "dirty_files": 53,
-    "dirty_reason": "M1-03 · CLM-0202: مخزنُ آثارِ رموزِ الخدمةِ الموزَّعُ (ADR-035 · RISK-0015) — شفرةٌ واختباراتٌ وحارسٌ عشرونَ ووثائقُ غيرُ مدفوعةٍ بعدُ",
-    "tracked_files": 2105
+    "commit": "7eef81561540b8055c244be6204014d8c35e1553",
+    "branch": "docs/m1-03-close-risk-0015",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "M1-03 · CLM-0205: إقفالُ RISK-0015 — سجلُّ الإقفالِ ووثائقُهُ غيرُ مدفوعةٍ بعدُ",
+    "tracked_files": 2118
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 20,
-    "risks_not_closed": 37
+    "risks_not_closed": 36
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify.log",
+    "source": "/tmp/verify3.log",
     "tests_passed": 4824,
     "test_files_executed": 296,
-    "governance_suite_cases": 450,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_cases": 451,
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
-  "fingerprint": "sha256:adebb89df1c4453416d9320f351bdaf6ca78adb6417e9deb95265ed27ad101c7",
+  "fingerprint": "sha256:d07c42f3003bf5b6e6cf26a34d393e589d3b13512799aa195d49c3671da36154",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

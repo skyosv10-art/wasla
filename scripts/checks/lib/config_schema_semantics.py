@@ -138,7 +138,17 @@ INDIRECT_BINDINGS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "packages/service-auth/src/keys.ts",
         ("WASLA_SERVICE_AUTH_KEYS", "WASLA_SERVICE_AUTH_ACTIVE_KID"),
     ),
+    # M1-03 (ADR-035): الاسمانِ ثابتانِ مُصدَّرانِ يُمرَّرانِ إلى `readRawEnv`
+    # و`readPostgresUrlEnv`، فالماسحُ لا يقرأُهُما قراءةً. والرابطُ هنا يجعلُ حذفَ
+    # الثابتِ أو إعادةَ تسميتِهِ **إخفاقاً مقروءاً** لا انفكاكاً صامتاً.
+    (
+        "packages/service-auth/src/replay-store.ts",
+        ("WASLA_SERVICE_TOKEN_REPLAY_MODE", "WASLA_SERVICE_TOKEN_REPLAY_URL"),
+    ),
 )
+
+# البابُ 8: الأنماطُ التي تصحُّ لقارئٍ غيرِ مباشرٍ — وما عداها انفكاكٌ في الوصفِ.
+INDIRECT_MODES = ("default_literal", "indirect_literal")
 
 # نائبُ السرِّ **مكتوباً هنا حرفاً**، ولا يُستوردُ من المُولِّدِ بقصدٍ.
 #
@@ -423,10 +433,10 @@ def run_gates(root: Path) -> list[Gate]:
             reader = declared.get((name, rel))
             if reader is None:
                 g8.fail(f"{name}: قراءتُهُ في {rel} غيرُ مُعلَنةٍ في السجلِّ")
-            elif str(reader.get("mode")) != "default_literal":
+            elif str(reader.get("mode")) not in INDIRECT_MODES:
                 g8.fail(
                     f"{name} في {rel}: النمطُ المُعلَنُ {reader.get('mode')!r}"
-                    " والمقيسُ قيمةٌ افتراضيّةٌ في دالّةٍ (default_literal)"
+                    f" والمقبولُ لقارئٍ غيرِ مباشرٍ: {' أو '.join(INDIRECT_MODES)}"
                 )
     gates.append(g8)
 

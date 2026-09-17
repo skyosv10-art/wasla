@@ -304,6 +304,10 @@ export async function startGate(): Promise<GateContext> {
       // المنشورةِ نفسِها «kid:status:secret».
       WASLA_SERVICE_AUTH_KEYS: `${GATE_SERVICE_AUTH_KID}:active:${GATE_SERVICE_AUTH_SECRET}`,
       WASLA_SERVICE_AUTH_ACTIVE_KID: GATE_SERVICE_AUTH_KID,
+      // M1-03 (ADR-035): البوّابةُ تعملُ بلا قاعدةٍ في وضعِها الافتراضيِّ، فنمطُ
+      // الذاكرةِ **يُطلَبُ صراحةً** كما تطلبُهُ أيُّ آلةِ تطويرٍ. ولا يُقاسُ في
+      // هذه البوّابةِ اشتراكُ المخزنِ بينَ النسخِ — ذاكَ برهانُ `db-integration`.
+      WASLA_SERVICE_TOKEN_REPLAY_MODE: "memory",
     },
     channel,
     customerFlows: new UseCaseCustomerFlows(deps),

@@ -225,6 +225,14 @@
           "mode": "direct"
         },
         {
+          "file": "packages/service-auth/src/__tests__/replay-postgres.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/service-auth/src/replay-store.ts",
+          "mode": "reader"
+        },
+        {
           "file": "packages/subscription-e2e/src/harness.ts",
           "mode": "direct"
         },
@@ -1118,6 +1126,25 @@
       ]
     },
     {
+      "name": "NODE_ENV",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "بيئةُ التشغيلِ. تُقرأُ لغرضٍ واحدٍ: رفضُ نمطِ الذاكرةِ لمخزنِ آثارِ الرموزِ في `production`.",
+      "owner_item": "M1-03",
+      "readers": [
+        {
+          "file": "packages/service-auth/src/replay-store.ts",
+          "mode": "reader"
+        }
+      ],
+      "note_ar": "لا يُشتَقُّ منها سلوكٌ آخرُ في هذا المستودعِ: قيمتُها لا تُبدِّلُ مخازنَ ولا تُخفِّفُ فرضاً، وإنّما تمنعُ اختياراً خطراً طُلِبَ صراحةً (ADR-035 · RISK-0015)."
+    },
+    {
       "name": "ORDERS_BASE_URL",
       "type": "http_url",
       "required": "optional",
@@ -1513,6 +1540,46 @@
         }
       ],
       "note_ar": "تُقرأُ في `keyRegistryFromEnv` من **قيمةٍ افتراضيّةٍ في دالّةٍ** لا من `process.env.X` — ولذلكَ نمطُها `default_literal` والبابُ 8 يحرسُ رابطَها. ولا تُسجَّلُ في سجلٍّ أبداً."
+    },
+    {
+      "name": "WASLA_SERVICE_TOKEN_REPLAY_MODE",
+      "type": "string",
+      "required": "optional",
+      "default": "postgres",
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "نمطُ مخزنِ آثارِ رموزِ الخدمةِ: `postgres` (الافتراضُ) أو `memory` بطلبٍ صريحٍ خارجَ الإنتاجِ.",
+      "owner_item": "M1-03",
+      "readers": [
+        {
+          "file": "packages/service-auth/src/replay-store.ts",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ الثابتِ المُصدَّرِ `REPLAY_STORE_MODE_ENV`، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ."
+    },
+    {
+      "name": "WASLA_SERVICE_TOKEN_REPLAY_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "وصلةُ قاعدةِ مخزنِ آثارِ الرموزِ. غيابُها يعني استعمالَ `DATABASE_URL` نفسِها.",
+      "owner_item": "M1-03",
+      "readers": [
+        {
+          "file": "packages/service-auth/src/replay-store.ts",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "شرطيّةٌ لا دائمةٌ: في نمطِ `postgres` يجبُ أن تُوجَدَ هيَ أو `DATABASE_URL`، وغيابُهُما معاً يُسقِطُ الإقلاعَ بقصدٍ. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
     }
   ],
   "numeric_parse_exceptions": []

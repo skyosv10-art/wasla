@@ -14,9 +14,10 @@ import type { Pool } from "pg";
 import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
 import {
   createServiceRequestSigner,
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
+  type ServiceTokenReplayGuard,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createMatchingDb } from "../infrastructure/drizzle/db.js";
 import { PostgresMatchingUnitOfWork } from "../infrastructure/drizzle/transaction.js";
@@ -89,15 +90,16 @@ function buildWiring(): Wiring {
  * مزوّر، فتشغيلها «مؤقتاً بلا فرض» هو تشغيل الثغرة التي تسدها هذه الدفعة.
  * فالإخفاق عند الإقلاع برسالة تسمّي المتغير أرخص من نشرٍ مفتوح لا أحد يراه.
  *
- * ومخزن الآثار في الذاكرة **دين معلن (RISK-0015)**: نسختان من الخدمة لا تتشاركان
- * ذاكرة، فرمز التقُط يمكن أن يُعاد على النسخة الأخرى. Redis هو السد، وعقد
- * `ServiceTokenReplayGuard` مكتوب كي يكون الاستبدال تغيير سطر في هذا الملف.
+ * ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+ * `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+ * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+ * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
  */
 function serviceIdentityWiring(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
-  replayGuard: InMemoryServiceTokenReplayGuard;
+  replayGuard: ServiceTokenReplayGuard;
 } {
-  return { keys: keyRegistryFromEnv(process.env), replayGuard: new InMemoryServiceTokenReplayGuard() };
+  return { keys: keyRegistryFromEnv(process.env), replayGuard: createServiceTokenReplayGuardFromEnv(process.env) };
 }
 
 async function main(): Promise<void> {

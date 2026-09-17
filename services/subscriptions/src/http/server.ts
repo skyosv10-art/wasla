@@ -19,7 +19,7 @@
 
 import { SUBSCRIPTION_SERVICE_PORT } from "@wasla/contracts-subscription";
 import { keyRegistryFromEnv } from "@wasla/service-auth";
-import { InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createSubscriptionDb } from "../db/client.js";
 import { SubscriptionUnitOfWork } from "../db/unit-of-work.js";
@@ -51,7 +51,7 @@ export async function startSubscriptionServer(): Promise<void> {
     const app = createSubscriptionApp({
       mode: "memory",
       logger: true,
-      ...(keys === undefined ? {} : { serviceIdentity: { keys, replayGuard: new InMemoryServiceTokenReplayGuard() } }),
+      ...(keys === undefined ? {} : { serviceIdentity: { keys, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
     });
     await app.listen({ port, host });
     return;
@@ -73,7 +73,7 @@ export async function startSubscriptionServer(): Promise<void> {
     logger: true,
     ...(keyRegistryFromEnv(process.env) === undefined
       ? {}
-      : { serviceIdentity: { keys: keyRegistryFromEnv(process.env)!, replayGuard: new InMemoryServiceTokenReplayGuard() } }),
+      : { serviceIdentity: { keys: keyRegistryFromEnv(process.env)!, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
   });
 
   // إغلاقٌ مُرتَّب: الحاضنةُ تُرسل `SIGTERM` ثمّ تقتل. وإسقاطُ العمليّةِ فوراً يقطع معاملةً

@@ -12,28 +12,40 @@
     "./fastify": {
       "types": "./src/fastify.ts",
       "import": "./src/fastify.ts"
+    },
+    "./replay-store": {
+      "types": "./src/replay-store.ts",
+      "import": "./src/replay-store.ts"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@wasla/auth-sdk": "workspace:*",
     "@wasla/authz-policy": "workspace:*",
-    "@wasla/errors": "workspace:*"
+    "@wasla/errors": "workspace:*",
+    "@wasla/config": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "vitest": "^2.1.0",
-    "fastify": "^5.12.1"
+    "fastify": "^5.12.1",
+    "pg": "^8.23.0",
+    "@types/pg": "^8.23.1"
   },
   "peerDependencies": {
-    "fastify": "^5.12.1"
+    "fastify": "^5.12.1",
+    "pg": "^8.23.0"
   },
   "peerDependenciesMeta": {
     "fastify": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     }
   }

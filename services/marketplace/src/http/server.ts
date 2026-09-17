@@ -18,9 +18,10 @@
  */
 
 import {
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
+  type ServiceTokenReplayGuard,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { MARKETPLACE_SERVICE_PORT } from "../domain/contract-sets.js";
 import { MarketplaceCatalogService } from "../app/catalog.js";
@@ -57,17 +58,18 @@ function readPort(): number {
  *   ولا أحدَ يقرأُ شيئاً حتّى يقعَ ما يقعُ. **والصمتُ هنا هوَ العطبُ**، فيُفضَّلُ
  *   وعاءٌ لا يقومُ على حدٍّ يقومُ بلا بوّابٍ (`ADR-020` · `ADR-022`).
  *
- * ومخزنُ آثارِ الإعادةِ في الذاكرةِ — نسخةٌ لكلِّ وعاءٍ، فالإعادةُ تُمنَعُ داخلَ
- * الوعاءِ لا عبرَ الأسطولِ. وهذا **`RISK-0015` مُسجَّلاً لا مُخبَّأً**، وحلُّهُ
- * مخزنٌ مشتركٌ لا تعليقٌ أطولُ.
+ * ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ
+ * `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
+ * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
+ * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
  */
 function serviceIdentityFromEnv(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
-  replayGuard: InMemoryServiceTokenReplayGuard;
+  replayGuard: ServiceTokenReplayGuard;
 } {
   return {
     keys: keyRegistryFromEnv(process.env),
-    replayGuard: new InMemoryServiceTokenReplayGuard(),
+    replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
   };
 }
 

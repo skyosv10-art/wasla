@@ -56,6 +56,10 @@ const ENV = {
   // لأنّ حدَّ الهويّةِ يفرضُ التوقيعَ. فتُسلَّمُ المادّةُ هنا كما في النشرِ.
   WASLA_SERVICE_AUTH_KEYS: "test-active:active:bots-test-secret-0123456789abcdef",
   WASLA_SERVICE_AUTH_ACTIVE_KID: "test-active",
+  // M1-03 (ADR-035): مخزنُ الآثارِ صارَ مشترَكاً افتراضاً، فبناءٌ بلا وصلةٍ يسقطُ
+  // عندَ الإقلاعِ بالقصدِ. ونمطُ الذاكرةِ يُطلَبُ هنا **صراحةً** — وهذا عينُ ما
+  // يُقاسُ: أنَّ الاختيارَ مكتوبٌ لا موروثٌ بالسكوتِ.
+  WASLA_SERVICE_TOKEN_REPLAY_MODE: "memory",
 };
 
 const ELIGIBLE: DriverStatusView = {

@@ -15,7 +15,8 @@
 import { Pool } from "pg";
 
 import { readPortEnv } from "@wasla/config";
-import { keyRegistryFromEnv, InMemoryServiceTokenReplayGuard } from "@wasla/service-auth";
+import { keyRegistryFromEnv } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
@@ -44,7 +45,7 @@ async function main(): Promise<void> {
     indexHealthPort,
     serviceIdentity: {
       keys,
-      replayGuard: new InMemoryServiceTokenReplayGuard(),
+      replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
 

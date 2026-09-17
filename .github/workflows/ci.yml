@@ -336,6 +336,13 @@ jobs:
           - leg: geography
             pkg: "@wasla/geography-service"
             db: wasla_geo_test
+          # `M1-03` · إغلاقُ `RISK-0015` (ADR-035): المخزنُ المشترَكُ لآثارِ رموزِ
+          # الخدمةِ. وثلاثةُ أسئلةٍ لا يُجيبُ عنها اختبارُ وحدةٍ إطلاقاً — الاشتراكُ
+          # بينَ نسختَينِ، والذَّرِّيّةُ تحتَ التوازي، واستعادةُ الصفِّ المنتهي — فهذه
+          # الساقُ هيَ **الموضعُ الوحيدُ** الذي يُصدِّقُ إغلاقَ الخطرِ أو يُكذِّبُهُ.
+          - leg: service-auth
+            pkg: "@wasla/service-auth"
+            db: wasla_replay_test
           - leg: channel
             pkg: "@wasla/channel-postgres"
             db: wasla_channel_test

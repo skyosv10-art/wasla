@@ -741,6 +741,9 @@ importers:
       '@wasla/authz-policy':
         specifier: workspace:*
         version: link:../authz-policy
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../config
       '@wasla/errors':
         specifier: workspace:*
         version: link:../errors
@@ -748,9 +751,15 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       fastify:
         specifier: ^5.12.1
         version: 5.12.1
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(tsx@4.23.12)

@@ -25,9 +25,9 @@ import type { Pool } from "pg";
 
 import { REPUTATION_SERVICE_PORT } from "@wasla/contracts-reputation";
 import {
-  InMemoryServiceTokenReplayGuard,
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createReputationDb } from "../infrastructure/drizzle/db.js";
 import { createInMemoryReputationDependencies } from "../infrastructure/in-memory.js";
@@ -72,7 +72,7 @@ function buildWiring(): Wiring {
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
   const keys = keyRegistryFromEnv(process.env);
-  const replayGuard = new InMemoryServiceTokenReplayGuard();
+  const replayGuard = createServiceTokenReplayGuardFromEnv(process.env);
   const app = createReputationApp({
     runner,
     health,

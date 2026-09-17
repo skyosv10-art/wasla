@@ -183,7 +183,7 @@ describe("تركيبُ الجذر — مصادرُ اللاحَتميّةِ مح
 describe("وضعُ الذاكرةِ يبقى بلا خدمات — الصحّةُ ناطقةٌ والعملياتُ 503", () => {
   it("مسارُ غيابِ `DATABASE_URL` لا يُمرِّر خدمةً ولا يبني مخزناً", () => {
     const code = readCode(SERVER);
-    const memoryCall = code.match(/createSubscriptionApp\s*\(\s*\{\s*mode:\s*"memory"[^}]*\}\s*\)/);
+    const memoryCall = code.match(/createSubscriptionApp\s*\(\s*\{\s*mode:\s*"memory"[\s\S]*?\}\s*\)/);
     expect(memoryCall).not.toBeNull();
     expect(memoryCall?.[0]).not.toContain("services");
   });

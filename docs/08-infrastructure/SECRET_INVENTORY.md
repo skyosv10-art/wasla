@@ -10,7 +10,7 @@ This inventory catalogs every secret used across the WASLA system. It is the fir
 
 ## Secret Categories
 
-### 1. Database URLs (5 secrets)
+### 1. Database URLs (7 secrets)
 
 | Secret | Consumers | Environments | Storage | Rotation | Status |
 |---|---|---|---|---|---|

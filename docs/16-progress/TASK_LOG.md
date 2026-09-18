@@ -1,5 +1,17 @@
 
 
+## 2026-09-18 — M2-03: Secret inventory gap fixes (CLM-0228)
+
+- **Work Item(s):** M2-03 · **الحجز:** `CLM-0228`
+- **What changed:** ثلاثةُ تصحيحاتٍ على جردِ الأسرار (M2-03A):
+  1. **مصدرٌ واحدٌ لقائمةِ M2-03 المعلّقة:** `validate-environments.sh` صارَ يقرأُ الأسرارَ المحجوبةَ من `infra/secrets/secret-inventory.json` بدلاً من مصفوفةٍ ثابتةٍ (hardcoded). `validate-secret-inventory.sh` صارَ يتحقّقُ من وجودِ أسرارٍ محجوبةٍ في الجردِ نفسِه.
+  2. **تصحيحُ عددِ أسرارِ قواعدِ البيانات:** العنوانُ في `SECRET_INVENTORY.md` كانَ يقولُ «5 أسرارٍ» بينما الجدولُ يحوي 7 — صُحِّحَ.
+  3. **تصحيحُ نطاقِ حجزِ CLM-0227:** `.gitignore` لم يكنْ مُدرَجاً في مساراتِ النطاقِ — أُضيفَ مع توثيقٍ أنّه تصحيحُ نطاقٍ لا تمويه.
+- **Why:** Reviewer identified three gaps in M2-03A proof.
+- **Status:** Claim released.
+
+---
+
 ## 2026-09-18 — M2-03: Secret inventory definition (CLM-0227)
 
 - **Work Item(s):** M2-03 · **الحجز:** `CLM-0227`

@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0217 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02b-terraform-scaffold | infra/terraform/,scripts/checks/,docs/16-progress/,.github/workflows/ | 2026-09-18 | 2026-10-02 | Active |
+| CLM-0217 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02b-terraform-scaffold | infra/terraform/,scripts/checks/,docs/16-progress/,.github/workflows/,scripts/,docs/00-rules/ | 2026-09-18 | 2026-10-02 | Active |
 | CLM-0216 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02-platform-adr | docs/15-decisions/,docs/16-progress/,docs/08-infrastructure/ | 2026-09-18 | 2026-10-02 | Released (PR [#237](https://github.com/skyosv10-art/wasla/pull/237) · squash · 35/35 CI green) |
 | CLM-0215 | M0-08 | @uxxxu (agent:perplexity-computer) | fix/close-risk-0037 | docs/12-testing/ | 2026-09-18 | 2026-10-02 | Released (PR [#235](https://github.com/skyosv10-art/wasla/pull/235) · squash · 35/35 CI green) |
 | CLM-0214 | M0-30 | @uxxxu (agent:perplexity-computer) | fix/close-risk-0037 | docs/07-security/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#235](https://github.com/skyosv10-art/wasla/pull/235) · squash · 35/35 CI green) |

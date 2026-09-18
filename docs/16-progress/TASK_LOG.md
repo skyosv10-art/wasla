@@ -1,5 +1,15 @@
 
 
+## 2026-09-18 — M2-05: Migration owner inventory (CLM-0229)
+
+- **Work Item(s):** M2-05 · **الحجز:** `CLM-0229`
+- **What changed:** تعريفُ جردِ ملكيّةِ الترحيلاتِ للنظام. ملفٌّ قابلٌ للقراءة آليًّا `infra/migrations/migration-owners.json` يُغطّي 13 خدمةً بـ`schema.sql`. وثيقةٌ بشريّةٌ `docs/08-infrastructure/MIGRATION_OWNERS.md`. حارسٌ `validate-migration-owners.sh` يتحقّقُ من: صحّةِ JSON · تغطيةِ كلِّ `contracts/schema.sql` · وجودِ الخدمةِ والملفّ · وجودِ الحقولِ المطلوبةِ · مطابقةِ `has_migrate_runner` مع `src/db/migrate.ts` · مطابقةِ `has_journal` مع `drizzle/meta/_journal.json`. الحارسُ مُسجَّلٌ في `verify.sh` و`VERIFY_COMMAND.md`.
+- **Why:** M2-05 next step per execution board — assign migration owner per schema. First executable step of M2-05.
+- **Findings:** 13 services with schema.sql, all with journal (3 entries each). 4 have migrate.ts (delivery, marketplace, search, subscriptions). 9 services need migrate.ts runner.
+- **Status:** M2-05 In Progress (owner inventory done, runner unification + upgrade/repair drill remain).
+
+---
+
 ## 2026-09-18 — M2-03: Secret inventory gap fixes (CLM-0228)
 
 - **Work Item(s):** M2-03 · **الحجز:** `CLM-0228`

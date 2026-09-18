@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0231 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-outbox-tick-inventory | docs/08-infrastructure/,docs/16-progress/ | 2026-09-19 | 2026-10-03 | Active |
+| CLM-0231 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-outbox-tick-inventory | docs/08-infrastructure/,docs/16-progress/ | 2026-09-19 | 2026-10-03 | Released (PR [#267](https://github.com/skyosv10-art/wasla/pull/267) · squash · 35/35 CI green) |
 | CLM-0230 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05b-runner-unification | services/customers/,services/dispatch/,services/drivers/,services/geography/,services/identity/,services/matching/,services/negotiations/,services/orders/,services/reputation/,services/reputation/src/__tests__/,infra/migrations/,docs/08-infrastructure/,docs/16-progress/,packages/config/,packages/config/src/,ROADMAP.md,.env.example | 2026-09-18 | 2026-10-02 | Released (PR [#265](https://github.com/skyosv10-art/wasla/pull/265) · squash · 35/35 CI green) |
 | CLM-0229 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05-migration-owners | infra/migrations/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#263](https://github.com/skyosv10-art/wasla/pull/263) · squash · 35/35 CI green) |
 | CLM-0228 | M2-03 | @uxxxu (agent:perplexity-computer) | fix/m2-03a-inventory-gaps | scripts/checks/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#261](https://github.com/skyosv10-art/wasla/pull/261) · squash · 35/35 CI green) |

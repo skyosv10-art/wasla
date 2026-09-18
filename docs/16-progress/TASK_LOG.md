@@ -4032,3 +4032,10 @@ Roadmap freshness — عطبُ حسابٍ قائمٌ على `main` نفسِهِ 
 - **القياسُ المحليُّ (2026-09-18):** بوّابةُ الحوكمةِ 22 باباً كلُّها خضراءُ (`EXIT=0`، البابُ 8 تخطّي بيئيٌّ — لا شبكة). `verify.sh` الكامل `EXIT=0`: 474 ناجح · 0 فاشل · `tests_passed: 4838` · `test_files_executed: 296` · `verify_overall: passed`. `BASELINE.json` مُولَّدٌ من سجلّ التشغيلِ الكامل: `governance_suite_cases: 474` · `governance_suite_failed: 0` · `verify_overall: passed`. يُولَّدُ بـ`baseline.sh --log <السجلّ>` لا يُكتبُ يدوياً.
 - **ما لا يُدَّعى:** لا يُثبِتُ اكتمالَ التبعيّاتِ ولا يُغطّي استيرادَ الأنواعِ السلبيَّةَ ولا تحقّقَ زمنِ التشغيلِ. والترقيةُ إلى `Completed` للمالكِ (§9).
 - **الحكمُ (2026-09-18):** [PR #227](https://github.com/skyosv10-art/wasla/pull/227) · التشغيلُ [35304325360](https://github.com/skyosv10-art/wasla/actions/runs/35304325360) — **35 فحصاً أخضرَ · 0 فاشلٍ** (فشلٌ عابرٌ واحدٌ في `db-integration-shared` بسببِ خطأِ شبكةٍ في تنزيلِ pnpm عبرَ corepack أُعيدَ تشغيلُهُ فأخضرَّ). ضمٌّ squash [`229f7f0`](https://github.com/skyosv10-art/wasla/commit/229f7f0) في `main`. `CLM-0208` مُحرَّرٌ (§8.1). `RISK-0043` مُغلَقٌ. والترقيةُ إلى `Completed` للمالكِ (§9).
+
+## 2026-09-18 — حارسُ نضارةِ الفروعِ على المنصّةِ · إقفالُ `RISK-0045` (`M0-44` · `CLM-0209`)
+
+- **Work Item(s):** M0-44 · **الحجز:** `CLM-0209` · **الفرع:** `fix/m0-44-platform-branch-freshness-guard`
+- **العطبُ المقيسُ:** الفحصُ 4 (بياتُ الحجوزاتِ) يقيسُ الحجوزاتِ لا الفروعَ، فقياسُ 2026-09-18 يُظهِرُ 13 فرعاً متباعداً عن `main` بلا حجزٍ نشطٍ ولا PR مفتوحٍ. ولا حارسَ يقرأُ فروعَ المنصّةِ.
+- **المُنفَّذُ:** الفحصُ **23** في المدخلِ الموحَّدِ [`scripts/checks/validate-platform-branch-freshness.sh`](../../scripts/checks/validate-platform-branch-freshness.sh) يقرأُ فروعَ المنصّةِ عبرَ `gh api` ويُصنِّفُ كلَّ فرعٍ: نشطٌ (حجزٌ في WORK_CLAIMS.md) · مفتوحٌ (PR مفتوح) · محفوظٌ (في [`BRANCH_EVIDENCE.md`](BRANCH_EVIDENCE.md)) · بائتٌ. وسبعُ حالاتِ طفرةٍ في [`lib/gov-cases-branch-freshness.sh`](../../scripts/checks/lib/gov-cases-branch-freshness.sh) تُثبِتُ عضّتَهُ. `RISK-0045` ⇒ `closed`.
+- **حكمُ CI:** يُقرأُ من CI بعدَ الدفعِ.

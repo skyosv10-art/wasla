@@ -1590,3 +1590,23 @@ still has no test of its own here.
   · `verify_overall: passed`. CI verdict on the PR (`WASLA CI` 35304325360 success, 35/35 checks
   pass — one transient corepack/npm network failure on `db-integration-shared` rerun green).
   Promotion of `M0-43` to `Completed` is the program owner's authority alone (§9).
+
+- **M0-44 — claim `CLM-0209`: a guard that reads platform branches and requires every
+  branch to have either an active claim, an open PR, or a declared evidence row with a
+  written reason (2026-09-18).**
+
+  The measured defect (`RISK-0045`): check 4 (stale claims) measures **claims**, not
+  **branches**. The 2026-09-18 measurement shows 13 branches diverged from `main` with
+  no active claim: 8 merged-PR branches not deleted, 2 closed-PR branches, and 3 `probe/*`
+  branches that are deliberate evidence. No guard reads platform branches.
+
+  **Implemented:** check **23** in the unified gateway
+  [`scripts/checks/validate-platform-branch-freshness.sh`](scripts/checks/validate-platform-branch-freshness.sh)
+  reads platform branches via `gh api` and classifies every branch: active (claim in
+  WORK_CLAIMS.md) · open (open PR) · preserved (in
+  [`BRANCH_EVIDENCE.md`](docs/16-progress/BRANCH_EVIDENCE.md)) · stale (none of the
+  above). Stale branches fail the gate. Seven mutation cases in
+  [`lib/gov-cases-branch-freshness.sh`](scripts/checks/lib/gov-cases-branch-freshness.sh)
+  prove the guard's bite. `RISK-0045` ⇒ `closed` with a declared closure limit: the
+  guard does not delete branches but requires every branch to be owned or declared.
+  Promotion of `M0-44` to `Completed` is the program owner's authority alone (§9).

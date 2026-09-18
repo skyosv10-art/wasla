@@ -23,6 +23,12 @@ ALWAYS AS IDENTITY` in each contract SQL file (idempotent). Generated drizzle mi
 **ما لا يُدَّعى:** RISK-0012 is mitigated, not closed — closing requires CI proof on real
 PostgreSQL. RISK-0013 (JSONB byte-identical replay) remains open and unrelated.
 
+**الدمج:** PR [#231](https://github.com/skyosv10-art/wasla/pull/231) — دُمج بـsquash في `main`
+بتفويض المالك «كلُّ أخضرَ يُدمَجُ». CI الأخير (commit `e9a2ace`): **35/35 فحوصاً pass**
+(بما فيها `governance-guard` · `verify` · `test` · `typecheck` · 16 `db-integration` · 10
+`exit-gate-e2e` · `roadmap` · `doc-coverage` · `image-supply-chain` · `repo-structure` ·
+`Devin Review`). `CLM-0211` و`CLM-0212` مُحرَّران.
+
 
 ## 2026-09-17 — M0-42: تحريرُ `CLM-0207` بعدَ دمجِ إقفالِ `RISK-0040`
 

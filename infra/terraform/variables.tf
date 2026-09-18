@@ -27,16 +27,9 @@ variable "supabase_service_role_key" {
 }
 
 # ── Render variables (non-secret) ──────────────────────────────────────
-# RENDER_API_KEY is read from environment by the provider directly.
-# RENDER_OWNER_ID is also read from environment by the provider directly.
-# We declare render_owner_id as a variable only for use in resource
-# owner_id fields — the provider reads RENDER_OWNER_ID from env.
-
-variable "render_owner_id" {
-  description = "Render owner ID. Read from RENDER_OWNER_ID env var. Not sensitive — it appears in dashboard URLs."
-  type        = string
-  default     = ""
-}
+# RENDER_API_KEY and RENDER_OWNER_ID are read from environment by the
+# provider directly — not passed as Terraform variables.
+# See ADR-039.
 
 variable "render_region" {
   description = "Render region for services. Oregon (oregon) is the default."

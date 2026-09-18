@@ -1,13 +1,23 @@
 
 
+## 2026-09-18 — M2-02: Render compatibility fixes (CLM-0225)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0225`
+- **الفرع:** `fix/m2-02d-render-compatibility`
+- **المرجع:** [ADR-039](../15-decisions/ADR-039-render-experimental-compute.md)
+- **النطاق:** تصحيحُ توافقِ تكوينِ Render مع شفرةِ المستودعِ الفعليّةِ.
+- **ما أُنجِزَ:** `WASLA_SERVICE` (لا `SERVICE_NAME`) بصيغةِ `@wasla/<name>` · إزالةُ `PORT` المُصلَبِ (Render يُحدِّدُهُ تلقائيّاً) · توثيقُ توافقِ المنفذِ: 11 خدمةً تقرأُ `PORT` (متوافقةٌ) و5 وحداتٍ تقرأُ متغيّراتٍ مخصّصةً (محجوبةٌ) · تصحيحُ ادّعاءِ `terraform plan` (محليٌّ ببياناتٍ اختباريّةٍ، لا ضدَّ حسابِ Render الحقيقيِّ) · إزالةُ `render_owner_id` variable غيرِ المستخدمَ · استخدامُ صيغةِ `BLOCKED — EXTERNAL/PAID FEATURE REQUIRED` الحرفيّةِ.
+- **ما لا يُدَّعى:** `terraform plan`/`apply` الحقيقيُّ يتوقّفُ على بياناتِ اعتمادٍ خارجيةٍ · 5 وحداتٍ تحتاجُ تغييرَ شفرةٍ لتوافقِ المنفذِ.
+- **التحقّقُ:** حكمُ CI هو الفصلُ.
+
 ## 2026-09-18 — M2-02: Render Free experimental compute (CLM-0224)
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0224`
 - **الفرع:** `feat/m2-02d-render-provider` · **PR:** [#253](https://github.com/skyosv10-art/wasla/pull/253)
 - **المرجع:** [ADR-039](../15-decisions/ADR-039-render-experimental-compute.md)
 - **النطاق:** إضافةُ موفِّرِ Render Terraform الرسمي (`render-oss/render` v1.9.1) وتعريفُ 16 موردَ `render_web_service` (13 خدمةً + 3 بوتاتٍ) وتعيينُ كلِّ وحدةٍ لنوعِ Render المناسبِ، وحارسٌ بنيويٌّ يمنعُ الأسرارَ في الملفّاتِ ويُثبتُ تغطيةَ الخدماتِ.
-- **ما أُنجِزَ:** `terraform init`/`validate`/`plan` ناجحةٌ · جردُ الخدماتِ بتعيينِ كلِّ وحدةٍ · حارسُ `validate-render-config.sh` مُوصَلٌ من `verify.sh` · ADR-039 · `RENDER_SERVICE_INVENTORY.md`.
-- **ما لا يُدَّعى:** `terraform apply` يتوقّفُ على `RENDER_API_KEY`/`RENDER_OWNER_ID` من البيئةِ · Free لا يستقبلُ private traffic · 16 خدمةً تتجاوزُ حصّةَ 750 ساعةً/شهرٍ · هذا إثباتُ قابليةٍ لا إنتاجٌ.
+- **ما أُنجِزَ:** `terraform init`/`validate` ناجحةٌ · `terraform plan` أثبتَ شكلَ الخطةِ محليّاً ببياناتٍ اختباريّةٍ فقط · جردُ الخدماتِ بتعيينِ كلِّ وحدةٍ · حارسُ `validate-render-config.sh` مُوصَلٌ من `verify.sh` · ADR-039 · `RENDER_SERVICE_INVENTORY.md`.
+- **ما لا يُدَّعى:** `terraform plan`/`apply` الحقيقيُّ يتوقّفُ على `RENDER_API_KEY`/`RENDER_OWNER_ID` من البيئةِ · 5 وحداتٍ (marketplace، subscriptions، 3 بوتاتٍ) تقرأُ متغيّراتِ منفذٍ مخصّصةٍ لا `PORT` — تحتاجُ تغييرَ شفرةٍ · Free لا يستقبلُ private traffic · 16 خدمةً تتجاوزُ حصّةَ 750 ساعةً/شهرٍ · هذا إثباتُ قابليةٍ لا إنتاجٌ.
 - **التحقّقُ:** حكمُ CI هو الفصلُ.
 
 ## 2026-09-18 — M2-04: stale text cleanup (CLM-0223)

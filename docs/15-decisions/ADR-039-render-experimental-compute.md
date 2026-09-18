@@ -25,11 +25,16 @@ Use Render as the compute platform for WASLA services, starting with the Free ti
 
 ### What is proven on Free
 
-- Terraform provider configuration and validation
+- Terraform provider configuration and validation (`terraform init`, `terraform validate`)
+- `terraform plan` shape verified locally with test credentials — NOT against real Render account
 - Service inventory mapping (13 HTTP services + 3 HTTP bots = 16 Web Services)
-- Docker compatibility (monorepo Dockerfile with `SERVICE_NAME` env var)
-- `terraform init` and `terraform validate` (no credentials needed)
-- `terraform plan` (requires `RENDER_API_KEY` + `RENDER_OWNER_ID`)
+- Docker compatibility: monorepo Dockerfile with `WASLA_SERVICE` env var selects entry point
+- PORT compatibility measured from source: 11 services read `PORT` (compatible), 5 units use custom port vars (BLOCKED)
+
+### BLOCKED — EXTERNAL CREDENTIAL REQUIRED
+
+- `terraform plan` against real Render account: requires `RENDER_API_KEY` and `RENDER_OWNER_ID` from environment
+- `terraform apply`: same credential requirement
 
 ### What requires Render Paid
 

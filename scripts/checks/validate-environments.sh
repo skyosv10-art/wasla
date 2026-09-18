@@ -27,8 +27,22 @@ REQUIRED_FIELDS=("name" "purpose" "tier" "database_mode" "allow_in_memory_fallba
 ALLOWED_DB_MODES=("local_postgres" "in_memory" "supabase_managed")
 ALLOWED_TLS=("none" "required_blocked")
 ALLOWED_DNS=("none" "required_blocked")
-# M2-03 pending secret names not in env-registry.json
-M2_03_PENDING_SECRETS=("KMS_KEY_ID" "KMS_KEY_ARN" "TLS_CERTIFICATE_ARN" "TLS_PRIVATE_KEY_ARN" "DNS_API_TOKEN")
+# M2-03 pending secret names — read from secret-inventory.json (single source)
+INVENTORY="$ROOT/infra/secrets/secret-inventory.json"
+M2_03_PENDING_SECRETS=()
+if [ -f "$INVENTORY" ]; then
+  while IFS= read -r name; do
+    M2_03_PENDING_SECRETS+=("$name")
+  done < <(python3 -c "
+import json
+with open('$INVENTORY') as f:
+    inv = json.load(f)
+for s in inv.get('secrets', []):
+    status = s.get('status', '')
+    if 'BLOCKED' in status:
+        print(s['name'])
+" 2>/dev/null || echo "")
+fi
 
 # ── 1. التحققُ من وجودِ البيئاتِ ─────────────────────────────────────────
 for env in "${REQUIRED_ENVS[@]}"; do

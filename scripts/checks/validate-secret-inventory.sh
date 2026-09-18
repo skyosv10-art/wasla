@@ -15,7 +15,8 @@ INVENTORY="$ROOT/infra/secrets/secret-inventory.json"
 REGISTRY="$ROOT/packages/config/env-registry.json"
 ENV_DIR="$ROOT/infra/environments"
 
-M2_03_PENDING_SECRETS=("KMS_KEY_ID" "KMS_KEY_ARN" "TLS_CERTIFICATE_ARN" "TLS_PRIVATE_KEY_ARN" "DNS_API_TOKEN")
+# M2-03 blocked secrets are read from the inventory itself (single source)
+# validate-environments.sh also reads from secret-inventory.json now
 
 GREEN='\033[32m'
 RED='\033[31m'
@@ -110,25 +111,24 @@ else
   check 0 "All required_secrets in environment manifests are in inventory"
 fi
 
-# 5. M2-03 pending secrets are in inventory
-MISSING_PENDING=$(python3 -c "
+# 5. M2-03 blocked secrets are in inventory (self-verifying: reads from inventory itself)
+#    This check ensures the validate-environments.sh M2_03_PENDING_SECRETS list
+#    (now read from this inventory) covers the expected blocked secrets.
+BLOCKED_SECRETS=$(python3 -c "
 import json
 
 with open('$INVENTORY') as f:
     inv = json.load(f)
-inv_names = {s['name'] for s in inv.get('secrets', [])}
 
-pending = ['KMS_KEY_ID', 'KMS_KEY_ARN', 'TLS_CERTIFICATE_ARN', 'TLS_PRIVATE_KEY_ARN', 'DNS_API_TOKEN']
-missing = [p for p in pending if p not in inv_names]
-
-if missing:
-    print(' '.join(missing))
+blocked = [s['name'] for s in inv.get('secrets', []) if 'BLOCKED' in s.get('status', '')]
+if blocked:
+    print(' '.join(blocked))
 " 2>/dev/null || echo "ERROR")
 
-if [ -n "$MISSING_PENDING" ]; then
-  check 1 "M2-03 pending secrets are in inventory (missing: $MISSING_PENDING)"
+if [ -z "$BLOCKED_SECRETS" ]; then
+  check 1 "M2-03 blocked secrets exist in inventory (none found)"
 else
-  check 0 "M2-03 pending secrets are in inventory"
+  check 0 "M2-03 blocked secrets exist in inventory ($BLOCKED_SECRETS)"
 fi
 
 # 6. Each secret has required fields

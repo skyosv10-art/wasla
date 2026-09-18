@@ -1609,4 +1609,6 @@ still has no test of its own here.
   [`lib/gov-cases-branch-freshness.sh`](scripts/checks/lib/gov-cases-branch-freshness.sh)
   prove the guard's bite. `RISK-0045` ⇒ `closed` with a declared closure limit: the
   guard does not delete branches but requires every branch to be owned or declared.
+  CI verdict on the PR (`WASLA CI` 35312389585 success, 35/35 checks pass).
+  Squash `0d65f14` merged into `main`. `CLM-0209`/`CLM-0210` released (§8.1).
   Promotion of `M0-44` to `Completed` is the program owner's authority alone (§9).

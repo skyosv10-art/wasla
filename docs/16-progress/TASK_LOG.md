@@ -1,5 +1,17 @@
 
 
+## 2026-09-18 — M2-02: ADR-038 — platform/provider/IaC toolchain decision
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0216`
+- **الفرع:** `feat/m2-02-platform-adr`
+
+**ما جرى:** بدءُ M2-02 بقرارِ المنصةِ والأداةِ. [ADR-038](../15-decisions/ADR-038-platform-provider-iac-toolchain.md)
+يقرّرُ: Terraform للأداةِ (المستودعُ لديهِ `infra/terraform/`)، Supabase managed PostgreSQL للاستضافةِ (قدّمَ مالكُ البرنامجِ بياناتِ الاعتماد)،
+وتأجيلُ منصةِ الحوسبةِ (Kubernetes) إلى ADR لاحقٍ وفقَ مسارِ التوسّعِ في SCALING.md (Stage D).
+
+**النطاق:** هذا القرارُ وثائقيٌّ فقط — لا `terraform apply` حيَّ. الخطوةُ التاليةُ: بناءُ هيكلِ Terraform و`terraform plan` في PR تالٍ (M2-02B).
+
+
 ## 2026-09-18 — M0-30: إغلاقُ RISK-0037 — حتميّةُ الحرّاسِ بلا سباقِ إشارةٍ
 
 - **Work Item(s):** M0-30 · **الحجز:** `CLM-0214`

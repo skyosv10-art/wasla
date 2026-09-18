@@ -1,5 +1,14 @@
 
 
+## 2026-09-18 — M2-05: Migration runner unification (CLM-0230)
+
+- **Work Item(s):** M2-05 · **الحجز:** `CLM-0230`
+- **What changed:** توحيدُ migration runner للخدماتِ التسعِ الناقصة. أُضيف `migrate.ts` و`migrate-cli.ts` لكلٍّ من: customers · dispatch · drivers · geography · identity · matching · negotiations · orders · reputation. النمطُ يتبعُ الخدماتِ الأربعَ الموجودةَ (delivery · marketplace · search · subscriptions): `pool.query(readSchemaContract())` عبر `pg` مباشرةً · `SCHEMA_CONTRACT_PATH` مشتقٌّ من موقعِ الملفِّ · `migrate-cli.ts` هو القارئُ الوحيدُ للبيئة. أُضيف `db:migrate` script لكلِّ package.json. حارسُ `validate-migration-owners.sh` يتأكّدُ من المطابقة.
+- **Why:** M2-05B next step — close the measured gap of 9 services without migration runners.
+- **Status:** M2-05 In Progress (runner unification done, upgrade/repair drill remains).
+
+---
+
 ## 2026-09-18 — M2-05: Migration owner inventory (CLM-0229)
 
 - **Work Item(s):** M2-05 · **الحجز:** `CLM-0229`

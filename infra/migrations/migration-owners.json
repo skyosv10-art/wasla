@@ -16,11 +16,11 @@
       "migration_owner": "@wasla/customers",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "delivery",
@@ -42,11 +42,11 @@
       "migration_owner": "@wasla/dispatch",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "drivers",
@@ -55,11 +55,11 @@
       "migration_owner": "@wasla/drivers",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "geography",
@@ -68,11 +68,11 @@
       "migration_owner": "@wasla/geography",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "identity",
@@ -81,11 +81,11 @@
       "migration_owner": "@wasla/identity",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "marketplace",
@@ -107,11 +107,11 @@
       "migration_owner": "@wasla/matching",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "negotiations",
@@ -120,11 +120,11 @@
       "migration_owner": "@wasla/negotiations",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "orders",
@@ -133,11 +133,11 @@
       "migration_owner": "@wasla/orders",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "reputation",
@@ -146,11 +146,11 @@
       "migration_owner": "@wasla/reputation",
       "has_journal": true,
       "journal_entries": 3,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "schema.sql contract (drizzle-kit generate pending)",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_MISSING",
-      "notes": "3 journal entries. Runner missing — needs migrate.ts."
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
       "service": "search",

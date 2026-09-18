@@ -320,7 +320,7 @@ describe.skipIf(!PG_ENABLED)("صندوقُ الصادرِ فوق Postgres", () =
       ]);
       // عدَّادان متزايدان: هذا هو البرهانُ التامُّ لا طابعٌ بدقّةِ الميكروثانية.
       // `sequence_number` متزايدٌ بلا استثناءٍ حتى داخلَ المعاملةِ الواحدة (ADR-037).
-      expect(raw.rows[0].sequence_number).toBeLessThan(raw.rows[1].sequence_number);
+      expect(Number(raw.rows[0].sequence_number)).toBeLessThan(Number(raw.rows[1].sequence_number));
     });
 
     it("ومنتجٌ بلا مخزونٍ أوّليٍّ لا يكتب حدثَ فرقٍ — لا فرقَ صفريٌّ يُنشَر", async () => {

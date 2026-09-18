@@ -120,7 +120,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
       [
         SEEDED_EVENT_ID,
         "negotiation.proposal_created",
-        "negotiation",
+        "negotiation_thread",
         SEEDED_AGGREGATE_ID,
         JSON.stringify({ type: "negotiation.proposal_created" }),
       ],
@@ -157,7 +157,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     expect(rows).toHaveLength(1);
     expect(rows[0].id).toBe(SEEDED_EVENT_ID);
     expect(rows[0].event_type).toBe("negotiation.proposal_created");
-    expect(rows[0].sequence_number).toBeGreaterThan(0);
+    expect(Number(rows[0].sequence_number)).toBeGreaterThan(0);
   });
 
   it("التراجعُ لا يُبيدُ البياناتِ — والعمودُ يُحذَفُ", async () => {

@@ -465,9 +465,11 @@ describe.skipIf(!PG_ENABLED)("Postgres dispatch repositories", () => {
         data: { dispatch_job_id: job.id },
       };
 
-      // Appended out of order to prove the ORDER BY, not the insertion order.
-      await pg.outbox.append(second as never);
+      // Appended in order to prove sequence_number ordering (ADR-037).
+      // With the old occurred_at ordering, both events had the same timestamp
+      // and fell to event_id for ordering — a fragile guarantee.
       await pg.outbox.append(first as never);
+      await pg.outbox.append(second as never);
 
       const unread = await pg.outbox.unread();
       expect(unread.map((event) => event.event_id)).toEqual([first.event_id, second.event_id]);

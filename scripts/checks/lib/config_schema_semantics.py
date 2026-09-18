@@ -216,7 +216,10 @@ def measure(root: Path) -> tuple[dict[tuple[str, str], set[str]], list[tuple[str
     numeric: list[tuple[str, int, str]] = []
     for path in scan_files(root):
         rel = path.relative_to(root).as_posix()
-        if rel.startswith(CONFIG_PACKAGE_PREFIX):
+        # استثناءٌ ضيّقٌ: اختباراتُ الحزمةِ فقط، لا شفرَتُها الإنتاجيّةُ (RISK-0046 · CLM-0221).
+        # القارئُ البدائيُّ `readRawEnv` يقرأُ `env[name]` باسمٍ متغيّرٍ لا حرفيٍّ،
+        # فلا يُطابِقُهُ الماسحُ — أمّا قراءةٌ خامٌّ باسمٍ حرفيٍّ في الإنتاجِ فتُمسَكُ.
+        if rel.startswith(CONFIG_PACKAGE_PREFIX) and ("/__tests__/" in rel or rel.endswith(".test.ts")):
             continue
         source = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
         for pattern in DIRECT_PATTERNS:
@@ -380,7 +383,7 @@ def run_gates(root: Path) -> list[Gate]:
             g6.fail(f"استثناءٌ بلا سببٍ مكتوبٍ أو بندٍ: {entry.get('file')}")
     live_numeric_files: set[str] = set()
     for rel, lineno, text in numeric:
-        if rel.startswith(CONFIG_PACKAGE_PREFIX):
+        if rel.startswith(CONFIG_PACKAGE_PREFIX) and ("/__tests__/" in rel or rel.endswith(".test.ts")):
             continue
         if "/__tests__/" in rel or rel.endswith(".test.ts"):
             continue

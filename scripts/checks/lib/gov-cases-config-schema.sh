@@ -22,6 +22,7 @@ CS_ENV=.env.example
 CS_GEN=packages/config/src/registry.generated.ts
 CS_DISPATCH=services/dispatch/src/config/runtime-config.ts
 CS_KEYS=packages/service-auth/src/keys.ts
+CS_CONFIG=packages/config/src/index.ts
 
 if [[ ! -f "$CS" ]]; then
   printf '  \033[31m✗\033[0m %s مفقودٌ — لا تُقاسُ عضّةُ حارسٍ غائبٍ\n' "$CS"
@@ -36,6 +37,7 @@ cp "$CS_ENV" "$CS_BK/env"
 cp "$CS_GEN" "$CS_BK/generated"
 cp "$CS_DISPATCH" "$CS_BK/dispatch"
 cp "$CS_KEYS" "$CS_BK/keys"
+cp "$CS_CONFIG" "$CS_BK/config"
 cp scripts/checks/lib/config_render.py "$CS_BK/render"
 
 _cs_restore() {
@@ -44,6 +46,7 @@ _cs_restore() {
   cp "$CS_BK/generated" "$CS_GEN"
   cp "$CS_BK/dispatch" "$CS_DISPATCH"
   cp "$CS_BK/keys" "$CS_KEYS"
+  cp "$CS_BK/config" "$CS_CONFIG"
   cp "$CS_BK/render" scripts/checks/lib/config_render.py
 }
 
@@ -182,6 +185,43 @@ _cs_restore
 _cs_drop_var WASLA_SERVICE_AUTH_KEYS
 if _cs_mutated "$CS_REG" "$CS_BK/registry"; then
   t 'سقوطُ مادّةِ مفاتيحِ الخدمةِ من السجلِّ يُسقِطُ الفحصَ' fail bash "$CS"
+fi
+_cs_restore
+
+# ── البابُ 9: استثناءُ packages/config ضيّقٌ لا عامٌّ (RISK-0046 · CLM-0221) ──
+# كانَ الاستثناءُ يُغطّي الحزمةَ كلَّها — إنتاجاً واختباراً. صارَ يُغطّي الاختبارَ
+# وحدَهُ. فقراءةٌ خامٌّ باسمٍ حرفيٍّ في شفرةِ الإنتاجِ للحزمةِ يُمسِكُها الحارسُ الآن.
+python3 - "$CS_CONFIG" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+# طفرةٌ: قراءةٌ خامٌّ بـprocess.env في شفرةِ الإنتاجِ للحزمةِ
+s = s.replace(
+    'export function readRawEnv(env: EnvBag, name: string): string | undefined {',
+    'export function _guardTest(): string { return process.env.UNREGISTERED_VAR ?? ""; }\nexport function readRawEnv(env: EnvBag, name: string): string | undefined {',
+    1,
+)
+open(p, "w", encoding="utf-8").write(s)
+MUT
+if _cs_mutated "$CS_CONFIG" "$CS_BK/config"; then
+  t 'قراءةٌ خامٌّ بـprocess.env في packages/config/src تُسقِطُ الفحصَ' fail bash "$CS"
+fi
+_cs_restore
+
+python3 - "$CS_CONFIG" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+# طفرةٌ: قراءةٌ خامٌّ بـenv["..."] في شفرةِ الإنتاجِ للحزمةِ
+s = s.replace(
+    'export function readRawEnv(env: EnvBag, name: string): string | undefined {',
+    'export function _guardTest2(env: EnvBag): string { return env["UNREGISTERED_VAR"] ?? ""; }\nexport function readRawEnv(env: EnvBag, name: string): string | undefined {',
+    1,
+)
+open(p, "w", encoding="utf-8").write(s)
+MUT
+if _cs_mutated "$CS_CONFIG" "$CS_BK/config"; then
+  t 'قراءةٌ خامٌّ بـenv["..."] في packages/config/src تُسقِطُ الفحصَ' fail bash "$CS"
 fi
 _cs_restore
 

@@ -9,7 +9,7 @@
   packages                   51
   packages_with_typecheck    51
   packages_with_test         51
-  test_files_tracked         379
+  test_files_tracked         380
   ci_jobs                    30
   ci_allow_failure           1
   governance_checks          23

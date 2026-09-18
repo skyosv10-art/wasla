@@ -77,6 +77,8 @@
 | `infra/docker/` | Placeholder **بقرار** — صورةُ التشغيلِ في جذرِ المستودعِ (`Dockerfile`) لأنَّ البناءَ يحتاجُ سياقَ العملِ كاملاً؛ و`infra/docker/` يُترَكُ لملفّاتِ التركيبِ والنشرِ (`M2-02`) بحكمِ [ADR-033](../15-decisions/ADR-033-container-image-supply-chain.md) | M2 |
 | `infra/environments/` | Implemented | M2 | 5 بيئاتٍ · `environment.json` لكلٍّ منها · [`validate-environments.sh`](../../scripts/checks/validate-environments.sh) |
 | `infra/secrets/` | Implemented | M2-03 | `secret-inventory.json` · 22 سرًّا عبر خمسِ فئاتٍ · [`validate-secret-inventory.sh`](../../scripts/checks/validate-secret-inventory.sh) · [`SECRET_INVENTORY.md`](../08-infrastructure/SECRET_INVENTORY.md) |
+| `infra/migrations/` | Implemented | M2-05 | `migration-owners.json` · 13 خدمةً · [`validate-migration-owners.sh`](../../scripts/checks/validate-migration-owners.sh) · [`MIGRATION_OWNERS.md`](../08-infrastructure/MIGRATION_OWNERS.md) |
+| `docs/08-infrastructure/MIGRATION_OWNERS.md` | Implemented | M2-05 | الجردُ البشريُّ لملكيّةِ الترحيلاتِ |
 | `docs/08-infrastructure/SECRET_INVENTORY.md` | Implemented | M2-03 | الجردُ البشريُّ للأسرارِ |
 
 ---

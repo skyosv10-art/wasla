@@ -72,6 +72,10 @@ run_step "إعدادُ Render (M2-02D · ADR-039)" \
 run_step "جردُ الأسرار (M2-03A)" \
   bash scripts/checks/validate-secret-inventory.sh
 
+# ── 1-و) ملكيّةُ الترحيلاتِ (M2-05A) ────────────────────────────────────
+run_step "ملكيّةُ الترحيلاتِ (M2-05A)" \
+  bash scripts/checks/validate-migration-owners.sh
+
 # ── 2) اتّساقُ إعدادِ CI («مانعٌ لا مُجمِّل») ───────────────────────────────
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh

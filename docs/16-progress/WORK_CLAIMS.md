@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0214 | M0-30 | @uxxxu (agent:perplexity-computer) | fix/close-risk-0037 | docs/07-security/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Active |
 | CLM-0213 | M0-42 | @uxxxu (agent:perplexity-computer) | fix/roadmap-status-correction | docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#233](https://github.com/skyosv10-art/wasla/pull/233) · squash · 35/35 CI green) |
 | CLM-0211 | M5-13 | @uxxxu (agent:perplexity-computer) | fix/risk-0012-outbox-sequence-number | services/marketplace/,services/subscriptions/,services/dispatch/,services/matching/,services/negotiations/,services/orders/,services/reputation/,packages/marketplace-e2e/,docs/15-decisions/,docs/07-security/,docs/16-progress/,docs/02-architecture/ | 2026-09-18 | 2026-10-02 | Released |
 | CLM-0212 | M0-08 | @uxxxu (agent:perplexity-computer) | fix/risk-0012-outbox-sequence-number | docs/12-testing/ | 2026-09-18 | 2026-10-02 | Released |

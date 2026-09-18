@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0221 | M2-04 | @uxxxu (agent:perplexity-computer) | feat/m2-04-risk-0046-config-exemption | scripts/checks/lib/,scripts/checks/,docs/07-security/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Active |
+| CLM-0221 | M2-04 | @uxxxu (agent:perplexity-computer) | feat/m2-04-risk-0046-config-exemption | scripts/checks/lib/,scripts/checks/,docs/07-security/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#247](https://github.com/skyosv10-art/wasla/pull/247) · squash · 35/35 CI green) |
 | CLM-0220 | M2-04 | @uxxxu (agent:perplexity-computer) | feat/m2-04-risk-0046-exit-gate | services/dispatch/src/__tests__/,docs/07-security/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#245](https://github.com/skyosv10-art/wasla/pull/245) · squash · 35/35 CI green) |
 | CLM-0219 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02c-environment-catalogue | infra/environments/,scripts/checks/,scripts/,docs/00-rules/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#243](https://github.com/skyosv10-art/wasla/pull/243) · squash · 35/35 CI green) |
 | CLM-0218 | M2-02 | @uxxxu (agent:perplexity-computer) | fix/m2-02b-terraform-guard-fixes | scripts/checks/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#241](https://github.com/skyosv10-art/wasla/pull/241) · squash · 35/35 CI green) |

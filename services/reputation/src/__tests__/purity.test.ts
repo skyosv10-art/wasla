@@ -98,6 +98,8 @@ const DB_DRIVER_FILES: readonly string[] = [
   // المراجعة 4/6: `http/server.ts` يستورد نوعَ `Pool` وحدَه ليُغلقه عند الإطفاء — لا استعلامَ
   // فيه ولا جدول. وأُدرج هنا لا في القائمة الأوسع لأنّ الاختبارَ الموجَبَ أدناه يُحسب من
   // المصدر: مَن يذكر `pg` يظهر فيه سواءٌ استورد نوعاً أو قيمةً، وإخفاؤه كان سيلزم تعمية الحارس.
+  "db/migrate-cli.ts",
+  "db/migrate.ts",
   "http/server.ts",
   "infrastructure/drizzle/db.ts",
   "infrastructure/drizzle/repository.ts",
@@ -137,7 +139,17 @@ const REAL_CLOCK_FILES: readonly string[] = ["infrastructure/runtime.ts"];
  * دخل منه يصير وسائطَ صريحةً لدوالٍّ نقيّة. وقراءةُ البيئة في `app.ts` أو في المحوّلات
  * كانت ستجعل اختباراً واحداً يتصرّف تصرّفين حسب صدفةِ متغيّرٍ في الطرفيّة.
  */
-const ENV_READING_FILES: readonly string[] = ["http/server.ts"];
+const ENV_READING_FILES: readonly string[] = ["db/migrate-cli.ts", "http/server.ts"];
+
+/**
+ * الملفّاتُ التي تستوردُ `node:fs` — `migrate.ts` يقرأُ ملفَّ العقدِ (`readFileSync`)،
+ * و`migrate-cli.ts` يقرأُ `DATABASE_URL`. القائمتان مفصولتان لأنّ اختباراً موجَباً يُثبتُ
+ * أنّ قارئي `process.env` هم `ENV_READING_FILES` وحدهم.
+ */
+const FS_READING_FILES: readonly string[] = ["db/migrate.ts", "db/migrate-cli.ts"];
+
+/** المجموعُ المستثنى من فحصِ الشبكةِ ونظامِ الملفّاتِ — اتّحادُ القائمتين. */
+const FS_ENV_EXEMPT = new Set([...ENV_READING_FILES, ...FS_READING_FILES]);
 
 /** يُحسب الواقعُ من المصدر لا من القائمة — هذا ما يجعل الاستثناءَ شدّاً لا تخفيفاً. */
 function filesMatching(pattern: RegExp): readonly string[] {
@@ -212,7 +224,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
         ["node:fs", /from\s+["']node:fs["']/],
         ["node:child_process", /from\s+["']node:child_process["']/],
         ["process.env", /\bprocess\s*\.\s*env\b/],
-      ], new Set(ENV_READING_FILES)),
+      ], FS_ENV_EXEMPT),
     ).toEqual([]);
   });
 

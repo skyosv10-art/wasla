@@ -19,7 +19,8 @@
     "start": "node --import tsx src/http/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "tsx src/db/migrate-cli.ts"
   },
   "dependencies": {
     "@wasla/service-auth": "workspace:*",

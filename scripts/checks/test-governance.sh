@@ -2887,6 +2887,48 @@ printf 'environment = "test"' > "$TF_DIR_T/test_mutation.tfvars"
 t "terraform-scaffold يرفضُ ملفَّ .tfvars" fail bash scripts/checks/validate-terraform-scaffold.sh
 rm -f "$TF_DIR_T/test_mutation.tfvars"
 
+printf '\n\033[1m[ح] حارسُ كتالوجِ البيئاتِ (M2-02C)\033[0m\n'
+# حارسُ validate-environments.sh يفحصُ خمسَ بيئاتٍ ويمنعُ in-memory fallback
+# في staging/production.
+ENV_DIR_T="$T/infra/environments"
+
+# حالةٌ موجبةٌ: الحارسُ ناجحٌ على المستودعِ المنسوخِ.
+t "environments ناجحٌ على المستودعِ" pass bash scripts/checks/validate-environments.sh
+
+# طفرةٌ: حذفُ بيئةِ production — يجبُ أن يُرفَض.
+rm -rf "$ENV_DIR_T/production"
+t "environments يرفضُ غيابَ production" fail bash scripts/checks/validate-environments.sh
+mkdir -p "$ENV_DIR_T/production"
+cp "$REPO_ROOT/infra/environments/production/environment.json" "$ENV_DIR_T/production/environment.json"
+
+# طفرةٌ: production يسمحُ بـ in-memory fallback — يجبُ أن يُرفَض.
+python3 -c "
+import json
+p = '$ENV_DIR_T/production/environment.json'
+d = json.load(open(p))
+d['allow_in_memory_fallback'] = True
+json.dump(d, open(p, 'w'))
+"
+t "environments يرفضُ in-memory fallback في production" fail bash scripts/checks/validate-environments.sh
+# استعادةٌ
+cp "$REPO_ROOT/infra/environments/production/environment.json" "$ENV_DIR_T/production/environment.json"
+
+# طفرةٌ: ملفُّ .env حقيقيٌّ — يجبُ أن يُرفَض.
+echo 'DATABASE_URL=postgresql://secret@db' > "$ENV_DIR_T/production/.env"
+t "environments يرفضُ ملفَّ .env" fail bash scripts/checks/validate-environments.sh
+rm -f "$ENV_DIR_T/production/.env"
+
+# طفرةٌ: required_secret غيرُ موجودٍ في السجلِّ — يجبُ أن يُرفَض.
+python3 -c "
+import json
+p = '$ENV_DIR_T/production/environment.json'
+d = json.load(open(p))
+d['required_secrets'].append('NONEXISTENT_SECRET')
+json.dump(d, open(p, 'w'))
+"
+t "environments يرفضُ متغيّراً غيرَ موجودٍ في السجلِّ" fail bash scripts/checks/validate-environments.sh
+cp "$REPO_ROOT/infra/environments/production/environment.json" "$ENV_DIR_T/production/environment.json"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

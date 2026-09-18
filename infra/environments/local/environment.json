@@ -1,0 +1,12 @@
+{
+  "name": "local",
+  "purpose": "Developer machine — Docker dependencies, in-memory fallback allowed",
+  "tier": "local",
+  "database_mode": "local_postgres",
+  "terraform_environment": "infra/terraform/environments/development/",
+  "tls_status": "none",
+  "dns_status": "none",
+  "allow_in_memory_fallback": true,
+  "required_secrets": ["DATABASE_URL"],
+  "notes": "Local development. Docker-compose for PostgreSQL. In-memory fallback for services without a database."
+}

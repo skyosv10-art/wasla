@@ -1,0 +1,12 @@
+{
+  "name": "ci",
+  "purpose": "GitHub Actions — ephemeral, in-memory, no external services",
+  "tier": "ci",
+  "database_mode": "in_memory",
+  "terraform_environment": null,
+  "tls_status": "none",
+  "dns_status": "none",
+  "allow_in_memory_fallback": true,
+  "required_secrets": [],
+  "notes": "CI runners. Ephemeral PostgreSQL via test containers. No TLS/DNS needed."
+}

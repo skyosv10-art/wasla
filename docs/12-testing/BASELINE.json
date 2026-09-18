@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-17T20:57:00Z",
+  "generated_at": "2026-09-18T03:41:31Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "84af4dd0704a01e36ccf2a39f27289744a9a1aa1",
-    "branch": "chore/m0-42-risk-0040-closeout",
+    "commit": "ac783e2abe375626772678deae6c9dce1e05d0fe",
+    "branch": "fix/m0-43-production-dependency-guard",
     "dirty": true,
-    "dirty_files": 4,
-    "dirty_reason": "فرعُ chore/m0-42-risk-0040-closeout — إقفالُ RISK-0040 حوكميًّا (CLM-0207): عدَّادُ risks_not_closed 36⇒35 بإقفالِ خطرٍ لا بتغييرِ شفرةٍ — السجلاتُ فقط تغيَّرت",
+    "dirty_files": 11,
+    "dirty_reason": "فرعُ fix/m0-43-production-dependency-guard — حارسُ استيرادِ الإنتاجِ من devDependencies (CLM-0208): الفحصُ 22 جديدٌ · risks_not_closed 35⇒34 بإقفالِ RISK-0043 · governance_checks 21⇒22 · governance_suite_cases 464⇒474",
     "tracked_files": 2121
   },
   "env": {
@@ -29,18 +29,18 @@
     "test_files_tracked": 372,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 21,
-    "risks_not_closed": 35
+    "governance_checks": 22,
+    "risks_not_closed": 34
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-main-baseline.log",
+    "source": "/tmp/verify-m0-43-final.log",
     "tests_passed": 4838,
     "test_files_executed": 296,
-    "governance_suite_cases": 464,
+    "governance_suite_cases": 474,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:c75baab5282427da99167afd855e1f4081db914d474a66a1a41ca8f3cfb80f88",
+  "fingerprint": "sha256:dafacd28f4baa23ecdf3c8455885327b095a08aacd602d6365c763b7bbe8e579",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

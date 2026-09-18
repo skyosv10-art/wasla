@@ -457,6 +457,24 @@ else
   SKIPPED+=("21) ربطُ الطلبِ بسلسلةِ الاستعلامِ — السكربت غير موجود")
 fi
 
+# ── 22) استيرادُ الإنتاجِ من devDependencies (M0-43 · RISK-0043) ──────────
+# ولِمَ فحصٌ اثنانِ وعشرونَ: الفحصُ 16 بابُهُ التاسعُ يحرسُ حزمةً واحدةً
+# (``service-auth`` ← ``authz-policy`` في ``dependencies``). **ولكن لا حارسَ عامَّ**
+# يُطابِقُ استيراداتِ الإنتاجِ (``src/**`` بلا ``__tests__``) بـ``dependencies``
+# في كلِّ ``package.json``. فأيُّ حزمةٍ أو خدمةٍ تُضيفُ استيرادًا إنتاجيًّا من
+# حزمةٍ في ``devDependencies`` فقط تمرُّ خضراءَ، ولا يُكشَفُ ذلكَ إلّا عندَ
+# التشغيلِ لا عندَ البناءِ.
+#
+# ولا يُدَّعى أنَّهُ يُثبِتُ اكتمالَ التبعيّاتِ: ذاكَ شأنُ ``tsc``. وهذا الحارسُ
+# يمنعُ صنفاً واحداً: ``import`` (قيمةً، لا نوعاً) من ``devDependencies`` في
+# ملفٍّ إنتاجيٍّ. و``import type`` من ``peerDependencies`` الاختياريّةِ صحيحٌ.
+if [[ -f scripts/checks/validate-production-dependency-guard.sh ]]; then
+  run_check "22) استيرادُ الإنتاجِ من devDependencies (M0-43)" \
+    bash scripts/checks/validate-production-dependency-guard.sh
+else
+  SKIPPED+=("22) استيرادُ الإنتاجِ من devDependencies — السكربت غير موجود")
+fi
+
 # ── الخلاصة ──────────────────────────────────────────────────
 printf '\n%s╔══════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$RST"
 printf '%s║  الخلاصة                                                  ║%s\n' "$BOLD" "$RST"

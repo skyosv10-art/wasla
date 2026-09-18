@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS subscription_outbox (
     last_error              TEXT,
     trace_id                TEXT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
-    sequence_number         BIGINT      GENERATED ALWAYS AS IDENTITY
+    sequence_number         BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY
 );
 
 -- ADR-037: sequence_number added to existing tables for monotonic ordering

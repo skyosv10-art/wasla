@@ -385,7 +385,7 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
     occurred_at             TIMESTAMPTZ NOT NULL,
     published_at            TIMESTAMPTZ,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
-    sequence_number         BIGINT      GENERATED ALWAYS AS IDENTITY
+    sequence_number         BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY
 );
 
 -- ADR-037: sequence_number added to existing tables for monotonic ordering

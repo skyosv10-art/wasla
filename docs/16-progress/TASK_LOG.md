@@ -2,7 +2,7 @@
 
 ## 2026-09-18 — M5-13: RISK-0012 mitigation — outbox monotonic sequence_number (ADR-037)
 
-- **Work Item(s):** M5-13 · **الحجز:** `CLM-0211`
+- **Work Item(s):** M5-13 · M0-08 · **الحجز:** `CLM-0211` · `CLM-0212`
 - **الفرع:** `fix/risk-0012-outbox-sequence-number`
 
 **ما جرى:** RISK-0012 (sev:medium, open since 2026-08-29) — seven outbox tables lacked

@@ -2859,6 +2859,34 @@ t "حارسُ الترحيلاتِ يقبلُ جذراً صحيحاً في 40 ت
 # وحذفُ السجلِّ يُسقِطُ.
 . "$REPO_ROOT/scripts/checks/lib/gov-cases-branch-freshness.sh"
 
+printf '\n\033[1m[ز] حارسُ هيكلِ Terraform (M2-02B)\033[0m\n'
+# حارسُ validate-terraform-scaffold.sh يفحصُ البنيةَ ويمنعُ الأسرارَ.
+# حالاتُ الطفرةِ تُثبِتُ أنّه يرفضُ سرًّا في ملفِّ .tf — وهو عيبُ أسبقيةِ find
+# الذي كانَ يمنعُ الفحصَ من قراءةِ ملفّاتِ .tf إطلاقاً.
+# ملاحظةٌ على العملية: CLM-0217 وُسِّعَ نطاقُه بعدَ الكتابةِ لتشملَ scripts/
+# وdocs/00-rules/ — ولو أُضيفت هذه المسارات قبلَ الالتزامِ الأولى لما
+# فشلَ CI. لا يُمحى هذا بل يُسجَّل: النطاقُ يُحدَّد قبلَ الكتابةِ لا بعدها.
+TF_DIR_T="$T/infra/terraform"
+
+# حالةٌ موجبةٌ: الحارسُ ناجحٌ على المستودعِ المنسوخِ.
+t "terraform-scaffold ناجحٌ على المستودعِ" pass bash scripts/checks/validate-terraform-scaffold.sh
+
+# طفرةٌ: سرُّ postgresql:// في ملفِّ .tf — يجبُ أن يُرفَض.
+printf 'variable "x" { default = "postgresql://postgres:secret@db.example.com:5432/postgres" }' > "$TF_DIR_T/test_mutation.tf"
+t "terraform-scaffold يرفضُ سرَّ postgresql:// في .tf" fail bash scripts/checks/validate-terraform-scaffold.sh
+rm -f "$TF_DIR_T/test_mutation.tf"
+
+# طفرةٌ: رمزُ Supabase service-role في ملفِّ .tf — يجبُ أن يُرفَض.
+# استخدامُ حروفٍ غيرِ سداسيّةٍ عشريةٍ (z) لتفادي حمايةِ الدفعِ في GitHub.
+printf 'variable "k" { default = "sbp_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" }' > "$TF_DIR_T/test_mutation.tf"
+t "terraform-scaffold يرفضُ رمزَ Supabase في .tf" fail bash scripts/checks/validate-terraform-scaffold.sh
+rm -f "$TF_DIR_T/test_mutation.tf"
+
+# طفرةٌ: ملفُّ .tfvars حقيقيٌّ — يجبُ أن يُرفَض.
+printf 'environment = "test"' > "$TF_DIR_T/test_mutation.tfvars"
+t "terraform-scaffold يرفضُ ملفَّ .tfvars" fail bash scripts/checks/validate-terraform-scaffold.sh
+rm -f "$TF_DIR_T/test_mutation.tfvars"
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

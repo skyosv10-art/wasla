@@ -586,7 +586,7 @@ export const marketplaceOutbox = pgTable(
     occurredAt: instant("occurred_at").notNull(),
     publishedAt: instant("published_at"),
     createdAt: instant("created_at").notNull().defaultNow(),
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(

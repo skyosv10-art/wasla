@@ -404,7 +404,7 @@ export const orderOutbox = pgTable(
       .notNull()
       .default(sql`now()`),
     publishedAt: timestamp("published_at", { withTimezone: true }),
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(

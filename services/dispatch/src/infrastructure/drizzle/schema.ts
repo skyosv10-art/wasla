@@ -319,7 +319,7 @@ export const dispatchOutbox = pgTable(
       .default(sql`now()`),
     /** NULL = not published yet. */
     publishedAt: timestamp("published_at", { withTimezone: true }),
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(

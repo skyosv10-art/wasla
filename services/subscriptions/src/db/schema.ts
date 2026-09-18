@@ -470,7 +470,7 @@ export const subscriptionOutbox = pgTable(
     lastError: text("last_error"),
     traceId: text("trace_id"),
     createdAt: instant("created_at").notNull().defaultNow(),
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(

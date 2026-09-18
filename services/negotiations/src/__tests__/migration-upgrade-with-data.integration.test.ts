@@ -23,8 +23,7 @@ import { resolve } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const DATABASE_URL = process.env.DATABASE_URL;
-const PG_ENABLED = Boolean(DATABASE_URL);
+import { DATABASE_URL, PG_ENABLED } from "./pg-harness.js";
 
 interface MigrationFile {
   readonly idx: number;

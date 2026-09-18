@@ -114,9 +114,9 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     // 2) بياناتٌ حيّةٌ بقيمٍ معلومةٍ — قبلَ أيِّ ترحيلٍ لاحقٍ.
     await db.query(
       `INSERT INTO subscription_outbox
-         (event_id, event_type, event_version, aggregate_type, aggregate_id,
+         (event_id, event_type, aggregate_type, aggregate_id,
           payload, occurred_at, attempts, last_error, trace_id)
-       VALUES ($1, $2, 'v1', $3, $4, $5::jsonb, NOW(), 0, NULL, 'trace-upgrade-proof')`,
+       VALUES ($1, $2, $3, $4, $5::jsonb, NOW()::timestamptz, 0, NULL, 'trace-upgrade-proof')`,
       [
         SEEDED_EVENT_ID,
         "subscription.created",

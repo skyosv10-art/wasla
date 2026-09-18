@@ -689,7 +689,7 @@ export const negotiationOutbox = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .default(sql`now()`),
-    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (t) => [
     check(

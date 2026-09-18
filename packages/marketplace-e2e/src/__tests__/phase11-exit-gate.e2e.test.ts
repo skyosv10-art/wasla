@@ -303,7 +303,7 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 11 · السوقُ �
       `SELECT sequence_number::text AS sequence_number
          FROM marketplace_outbox
         WHERE outbox_id = ANY($1::uuid[])
-        ORDER BY sequence_number ASC`,
+        ORDER BY marketplace_outbox.sequence_number ASC`,
       [[zeroed?.outboxId, archivedEvent?.outboxId]],
     );
     expect(stamps.rows).toHaveLength(2);

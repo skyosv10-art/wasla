@@ -5,57 +5,66 @@
 
 ## Overview
 
-13 HTTP services + 3 HTTP bots = 16 deployable units. All are Web Services on Render. The monorepo Dockerfile builds a single image; `SERVICE_NAME` env var selects the entry point.
+13 HTTP services + 3 HTTP bots = 16 deployable units. All are Web Services on Render. The monorepo Dockerfile builds a single image; `WASLA_SERVICE` env var (format: `@wasla/<name>`) selects the entry point via `scripts/container/entrypoint.sh`.
 
-## Service Mapping
+## Proven on Render Free
 
-| # | Service | Start Command | Port Env | Render Type | Free? | Inter-service Dependencies | Notes |
-|---|---|---|---|---|---|---|---|
-| 1 | customers | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | → geography, identity, orders | Calls 3 services |
-| 2 | delivery | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | → marketplace | Calls 1 service |
-| 3 | dispatch | `node --import tsx src/http/server.ts` | DISPATCH_SERVICE_PORT | Web Service | Yes | → matching, orders | Calls 2 services |
-| 4 | drivers | `node --import tsx src/http/server.ts` | DRIVER_SERVICE_PORT | Web Service | Yes | — | No inter-service calls |
-| 5 | geography | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | → identity | Receives calls from customers, matching |
-| 6 | identity | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | — | Receives calls from customers, geography |
-| 7 | marketplace | `node --import tsx src/http/server.ts` | MARKETPLACE_SERVICE_PORT | Web Service | Yes | — | Receives calls from delivery |
-| 8 | matching | `node --import tsx src/http/server.ts` | MATCHING_SERVICE_PORT | Web Service | Yes | → geography | Receives calls from dispatch |
-| 9 | negotiations | `node --import tsx src/http/server.ts` | NEGOTIATION_SERVICE_PORT | Web Service | Yes | — | No inter-service calls |
-| 10 | orders | `node --import tsx src/http/server.ts` | ORDER_SERVICE_PORT | Web Service | Yes | — | Receives calls from customers, dispatch |
-| 11 | reputation | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | — | No inter-service calls |
-| 12 | search | `node --import tsx src/http/server.ts` | PORT | Web Service | Yes | — | No inter-service calls |
-| 13 | subscriptions | `node --import tsx src/http/server.ts` | SUBSCRIPTION_SERVICE_PORT | Web Service | Yes | — | No inter-service calls |
-| 14 | customer-bot | `node --import tsx src/main.ts` | CUSTOMER_BOT_PORT (8083) | Web Service | Yes | — | Needs BOT_TOKEN (secret) |
-| 15 | driver-bot | `node --import tsx src/main.ts` | DRIVER_BOT_PORT (8084) | Web Service | Yes | — | Needs BOT_TOKEN (secret) |
-| 16 | partner-bot | `node --import tsx src/main.ts` | PARTNER_BOT_PORT (8085) | Web Service | Yes | — | Needs BOT_TOKEN (secret) |
+- `terraform init`: provider installed successfully
+- `terraform validate`: configuration is valid
+- `terraform plan` (local, test credentials): 16 resources to create — shape verified, not applied
 
-## Render Free Tier Limitations
+## BLOCKED — EXTERNAL CREDENTIAL REQUIRED
 
-| Limitation | Impact on WASLA |
-|---|---|
-| Free Web Services cannot receive private network traffic | Inter-service calls use public URLs (security concern for PoC) |
-| Sleep after 15 min idle | First request after idle takes ~1 min |
-| 750 instance hours/month | 16 services × ~47 hours each = 752 — exceeds Free quota |
-| Single instance | No horizontal scaling |
-| No persistent disks | Stateless only |
-| No SSH/shell access | Debugging via logs only |
-| No outbound SMTP (25, 465, 587) | Bots cannot send email directly |
-| Render may restart at any time | Services must be stateless and handle restarts |
+- `terraform plan` against real Render account: requires `RENDER_API_KEY` and `RENDER_OWNER_ID` from environment — not available in sandbox
+- `terraform apply`: same credential requirement
 
-## Topology Analysis
+## BLOCKED — CODE CHANGE REQUIRED (Port Compatibility)
 
-### What works on Render Free
-- All 16 services as Web Services
-- Supabase PostgreSQL as external database (via DATABASE_URL)
-- Docker image build from monorepo
-- Public HTTP endpoints for all services
+Render Web Services automatically set `PORT`. Services must listen on `$PORT`.
 
-### What requires Render Paid
-- **Private networking:** Services that receive inter-service calls (geography, identity, marketplace, matching, orders) should be Private Services on paid plans
-- **750 hour limit:** 16 Free services exceed the monthly Free instance hour quota
-- **No idle sleep:** Production services need to stay warm (Starter plan $7/month)
-- **Persistent disks:** If any service needs local state (none currently do)
+| # | Service | Port env var | Reads `PORT`? | Render-compatible? |
+|---|---|---|---|---|
+| 1 | customers | `PORT` (default 8086) | Yes | Yes |
+| 2 | delivery | `PORT` | Yes | Yes |
+| 3 | dispatch | `PORT` (via resolveDispatchPort) | Yes | Yes |
+| 4 | drivers | `PORT` (default DRIVER_SERVICE_PORT) | Yes | Yes |
+| 5 | geography | `PORT` (default 8081) | Yes | Yes |
+| 6 | identity | `PORT` (default 8080) | Yes | Yes |
+| 7 | marketplace | `MARKETPLACE_SERVICE_PORT` | No | **BLOCKED** |
+| 8 | matching | `PORT` (default MATCHING_SERVICE_PORT) | Yes | Yes |
+| 9 | negotiations | `PORT` (default NEGOTIATION_SERVICE_PORT) | Yes | Yes |
+| 10 | orders | `PORT` (default ORDER_SERVICE_PORT) | Yes | Yes |
+| 11 | reputation | `PORT` (default REPUTATION_SERVICE_PORT) | Yes | Yes |
+| 12 | search | `PORT` | Yes | Yes |
+| 13 | subscriptions | `SUBSCRIPTION_SERVICE_PORT` | No | **BLOCKED** |
+| 14 | customer-bot | `CUSTOMER_BOT_PORT` (8083) | No | **BLOCKED** |
+| 15 | driver-bot | `DRIVER_BOT_PORT` (8084) | No | **BLOCKED** |
+| 16 | partner-bot | `PARTNER_BOT_PORT` (8085) | No | **BLOCKED** |
 
-### What can be simulated locally
-- Docker Compose with all 16 services
-- Inter-service communication via Docker network
-- CI pipeline builds and tests
+**5 of 16 units need code changes** to read `PORT` as the primary env var before they work on Render.
+
+## Inter-service Dependencies
+
+| Caller | Calls | Via |
+|---|---|---|
+| customers | geography, identity, orders | public URLs (Free) |
+| delivery | marketplace | public URL (Free) |
+| dispatch | matching, orders | public URLs (Free) |
+| geography | identity | public URL (Free) |
+| matching | geography | public URL (Free) |
+
+## BLOCKED — PAID FEATURE REQUIRED
+
+| Feature | Why | Render Paid Alternative |
+|---|---|---|
+| Private networking | Free Web Services cannot receive private network traffic | Private Services (Starter+) |
+| 750 instance hours/month | 16 services running continuously far exceed Free quota | Starter plan ($7/month/service) |
+| No idle sleep | Free Web Services sleep after 15 min | Starter plan |
+| Single instance | Free Web Services cannot scale | Standard plan |
+| Persistent disks | Not supported on Free | Starter plan |
+
+## What can be simulated locally
+
+- Docker build and run (via `docker build` / `docker run`)
+- Inter-service communication (via `docker network` or `docker-compose`)
+- CI pipeline (via GitHub Actions)

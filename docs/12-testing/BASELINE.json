@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-18T07:37:08Z",
+  "generated_at": "2026-09-18T11:46:44Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "84b567be6ad8cde5c9fcdebd201d84c62e209395",
-    "branch": "fix/risk-0012-outbox-sequence-number",
+    "commit": "98296281d891a11cc827e641b5a01d6a48d28be9",
+    "branch": "feat/m2-04-risk-0046-exit-gate",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2149
+    "tracked_files": 2170
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "9.15.9",
+    "pnpm": "unknown",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"
@@ -33,14 +33,14 @@
     "risks_not_closed": 32
   },
   "dynamic": {
-    "measured": true,
-    "source": "/tmp/verify-m0-44-v3.log",
-    "tests_passed": 4838,
-    "test_files_executed": 296,
-    "governance_suite_cases": 481,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "measured": false,
+    "source": null,
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:72e54edd9811ebfd2a7c2da1fa094d234ca54e92da8886f29b7200a1fcb4b2f5",
+  "fingerprint": "sha256:539d4c8c7a55721182d0ab17e7faf7a9d90fce694ae4c8f3b79dcb674fcb6958",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

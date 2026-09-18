@@ -1,8 +1,8 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-18T07:37:08Z
-الالتزام: 84b567be6ad8cde5c9fcdebd201d84c62e209395  الفرع: fix/risk-0012-outbox-sequence-number  شجرةٌ نظيفة
-البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
+التاريخ (UTC): 2026-09-18T11:46:44Z
+الالتزام: 98296281d891a11cc827e641b5a01d6a48d28be9  الفرع: feat/m2-04-risk-0046-exit-gate  شجرةٌ نظيفةٌ
+البيئة: node v20.20.1 · pnpm unknown · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3233 سطراً · sha256 887089400e853ace…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
@@ -15,12 +15,12 @@
   governance_checks          23
   risks_not_closed           32
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify5.log):
-  tests_passed               4838
-  test_files_executed        296
-  governance_suite_cases     464
-  governance_suite_failed    0
-  verify_overall             passed
+العدَّاداتُ الحركيّةُ (غيرُ مقيسةٍ — لم يُمرَّر سجلُّ تحقّقٍ):
+  tests_passed               —
+  test_files_executed        —
+  governance_suite_cases     —
+  governance_suite_failed    —
+  verify_overall             —
 
-البصمة: sha256:72e54edd9811ebfd2a7c2da1fa094d234ca54e92da8886f29b7200a1fcb4b2f5
+البصمة: sha256:539d4c8c7a55721182d0ab17e7faf7a9d90fce694ae4c8f3b79dcb674fcb6958
 المرجع: docs/12-testing/BASELINE_FORMAT.md

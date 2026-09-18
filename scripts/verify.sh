@@ -56,6 +56,10 @@ printf '%s╚══════════════════════�
 run_step "بنيةُ المستودعِ والوثائقُ الحاكمة" \
   bash scripts/checks/validate-repo-structure.sh
 
+# ── 1-ب) هيكلُ Terraform البنيويُّ (M2-02B) ──────────────────────────────
+run_step "هيكلُ Terraform البنيويُّ (M2-02B)" \
+  bash scripts/checks/validate-terraform-scaffold.sh
+
 # ── 2) اتّساقُ إعدادِ CI («مانعٌ لا مُجمِّل») ───────────────────────────────
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh

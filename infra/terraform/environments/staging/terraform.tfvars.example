@@ -1,0 +1,5 @@
+# Staging environment variables — placeholder values only.
+# Real values are provided via TF_VAR_* environment variables.
+# NEVER commit real secrets to this file.
+
+environment = "staging"

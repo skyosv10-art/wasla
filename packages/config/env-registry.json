@@ -1414,6 +1414,14 @@
         {
           "file": "services/search/src/http/server.ts",
           "mode": "reader"
+        },
+        {
+          "file": "services/marketplace/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/subscriptions/src/http/server.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."

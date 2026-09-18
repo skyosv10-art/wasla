@@ -29,7 +29,7 @@ Use Render as the compute platform for WASLA services, starting with the Free ti
 - `terraform plan` shape verified locally with test credentials — NOT against real Render account
 - Service inventory mapping (13 HTTP services + 3 HTTP bots = 16 Web Services)
 - Docker compatibility: monorepo Dockerfile with `WASLA_SERVICE` env var selects entry point
-- PORT compatibility measured from source: 11 services read `PORT` (compatible), 5 units use custom port vars (BLOCKED)
+- PORT compatibility: all 16 units now read `PORT` (11 natively, 2 fixed in CLM-0226, 3 bots had fallback)
 
 ### BLOCKED — EXTERNAL CREDENTIAL REQUIRED
 

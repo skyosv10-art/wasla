@@ -198,10 +198,9 @@ resource "render_web_service" "wasla_search" {
   })
 }
 
-# ── Web Services: PORT-incompatible (2 services + 3 bots) ──────────────
-# These units read custom port env vars instead of PORT.
-# Render sets PORT automatically — these won't bind to the correct port.
-# BLOCKED — CODE CHANGE REQUIRED: read PORT as primary env var.
+# ── Web Services: previously PORT-incompatible (2 services + 3 bots) ──
+# marketplace and subscriptions now read PORT (fixed in CLM-0226).
+# Bots already had PORT fallback via bot-runtime config.
 
 resource "render_web_service" "wasla_marketplace" {
   name   = "wasla-marketplace"
@@ -213,8 +212,7 @@ resource "render_web_service" "wasla_marketplace" {
   env_vars = merge(local.common_env, {
     DATABASE_URL  = { value = var.supabase_database_url }
     WASLA_SERVICE = { value = "@wasla/marketplace-service" }
-    # BLOCKED: marketplace reads MARKETPLACE_SERVICE_PORT, not PORT.
-    # Code change required to read PORT as primary.
+    # PORT-compatible (CLM-0226): reads PORT first, then MARKETPLACE_SERVICE_PORT.
   })
 }
 
@@ -228,8 +226,7 @@ resource "render_web_service" "wasla_subscriptions" {
   env_vars = merge(local.common_env, {
     DATABASE_URL  = { value = var.supabase_database_url }
     WASLA_SERVICE = { value = "@wasla/subscriptions-service" }
-    # BLOCKED: subscriptions reads SUBSCRIPTION_SERVICE_PORT, not PORT.
-    # Code change required to read PORT as primary.
+    # PORT-compatible (CLM-0226): reads PORT first, then SUBSCRIPTION_SERVICE_PORT.
   })
 }
 
@@ -243,8 +240,7 @@ resource "render_web_service" "wasla_customer_bot" {
   env_vars = merge(local.common_env, {
     WASLA_SERVICE         = { value = "@wasla/customer-bot" }
     CUSTOMER_DATABASE_URL = { value = var.supabase_database_url }
-    # BLOCKED: customer-bot reads CUSTOMER_BOT_PORT, not PORT.
-    # Code change required to read PORT as primary.
+    # PORT-compatible: bot-runtime reads CUSTOMER_BOT_PORT then PORT fallback.
     # CUSTOMER_BOT_TOKEN, CUSTOMER_BOT_WEBHOOK_SECRET, CUSTOMER_BOT_MINI_APP_URL
     # are set via Render dashboard env vars (sensitive) — not in Terraform.
   })
@@ -259,8 +255,7 @@ resource "render_web_service" "wasla_driver_bot" {
 
   env_vars = merge(local.common_env, {
     WASLA_SERVICE = { value = "@wasla/driver-bot" }
-    # BLOCKED: driver-bot reads DRIVER_BOT_PORT, not PORT.
-    # Code change required to read PORT as primary.
+    # PORT-compatible: bot-runtime reads DRIVER_BOT_PORT then PORT fallback.
   })
 }
 
@@ -273,7 +268,6 @@ resource "render_web_service" "wasla_partner_bot" {
 
   env_vars = merge(local.common_env, {
     WASLA_SERVICE = { value = "@wasla/partner-bot" }
-    # BLOCKED: partner-bot reads PARTNER_BOT_PORT, not PORT.
-    # Code change required to read PORT as primary.
+    # PORT-compatible: bot-runtime reads PARTNER_BOT_PORT then PORT fallback.
   })
 }

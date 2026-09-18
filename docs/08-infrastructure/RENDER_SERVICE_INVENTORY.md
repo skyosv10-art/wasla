@@ -30,18 +30,18 @@ Render Web Services automatically set `PORT`. Services must listen on `$PORT`.
 | 4 | drivers | `PORT` (default DRIVER_SERVICE_PORT) | Yes | Yes |
 | 5 | geography | `PORT` (default 8081) | Yes | Yes |
 | 6 | identity | `PORT` (default 8080) | Yes | Yes |
-| 7 | marketplace | `MARKETPLACE_SERVICE_PORT` | No | **BLOCKED** |
+| 7 | marketplace | `PORT` (was `MARKETPLACE_SERVICE_PORT`) | Yes (fixed) | Yes |
 | 8 | matching | `PORT` (default MATCHING_SERVICE_PORT) | Yes | Yes |
 | 9 | negotiations | `PORT` (default NEGOTIATION_SERVICE_PORT) | Yes | Yes |
 | 10 | orders | `PORT` (default ORDER_SERVICE_PORT) | Yes | Yes |
 | 11 | reputation | `PORT` (default REPUTATION_SERVICE_PORT) | Yes | Yes |
 | 12 | search | `PORT` | Yes | Yes |
-| 13 | subscriptions | `SUBSCRIPTION_SERVICE_PORT` | No | **BLOCKED** |
-| 14 | customer-bot | `CUSTOMER_BOT_PORT` (8083) | No | **BLOCKED** |
-| 15 | driver-bot | `DRIVER_BOT_PORT` (8084) | No | **BLOCKED** |
-| 16 | partner-bot | `PARTNER_BOT_PORT` (8085) | No | **BLOCKED** |
+| 13 | subscriptions | `PORT` (was `SUBSCRIPTION_SERVICE_PORT`) | Yes (fixed) | Yes |
+| 14 | customer-bot | `CUSTOMER_BOT_PORT` → `PORT` → default | Yes (fallback) | Yes |
+| 15 | driver-bot | `DRIVER_BOT_PORT` → `PORT` → default | Yes (fallback) | Yes |
+| 16 | partner-bot | `PARTNER_BOT_PORT` → `PORT` → default | Yes (fallback) | Yes |
 
-**5 of 16 units need code changes** to read `PORT` as the primary env var before they work on Render.
+**All 16 units are now PORT-compatible** (2 fixed in CLM-0226, 3 bots already had PORT fallback).
 
 ## Inter-service Dependencies
 

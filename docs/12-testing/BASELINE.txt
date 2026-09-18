@@ -13,7 +13,7 @@
   ci_jobs                    30
   ci_allow_failure           1
   governance_checks          23
-  risks_not_closed           33
+  risks_not_closed           32
 
 العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify5.log):
   tests_passed               4838
@@ -22,5 +22,5 @@
   governance_suite_failed    0
   verify_overall             passed
 
-البصمة: sha256:9a1c8db503827e799c2456ee39be8d2a25678d0a97e9653efabf5c26ec28d83a
+البصمة: sha256:72e54edd9811ebfd2a7c2da1fa094d234ca54e92da8886f29b7200a1fcb4b2f5
 المرجع: docs/12-testing/BASELINE_FORMAT.md

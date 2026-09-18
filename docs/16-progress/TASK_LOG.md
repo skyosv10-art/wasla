@@ -1,5 +1,24 @@
 
 
+## 2026-09-19 — M2-07: Outbox/tick/DLQ inventory + M2-05C blocked (CLM-0231)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0231`
+- **Branch:** `docs/m2-07-outbox-tick-inventory`
+- **Scope:** `docs/08-infrastructure/`, `docs/16-progress/`
+- **What was done:**
+  - M2-05C upgrade/repair drill: attempted Supabase DB connection. Direct host (`db.snlpxywskyqrjattbpgn.supabase.co`) has no DNS A record. Pooler (`aws-0-eu-central-1.pooler.supabase.com`) accepts SSL+SNI but returns `ENOIDENTIFIER` or `ENOTFOUND` for all user/tenant combinations tried. REST API key rejected. **Marked BLOCKED — EXTERNAL DATABASE ACCESS REQUIRED.**
+  - M2-07 inventory: read-only code analysis of all 13 services + packages. Produced [`M2-07_OUTBOX_TICK_DLQ_INVENTORY.md`](../08-infrastructure/M2-07_OUTBOX_TICK_DLQ_INVENTORY.md) covering:
+    - 13 outbox tables (schema consistency gaps: 6 without `sequence_number`, 5 without `attempts`/`last_error`, 5 without `trace_id`)
+    - 3 relay consumers (search, delivery×2) with uniform reliability contract (idempotency, ordering, retry, dead-letter, checkpoint, replay, version compat, observability)
+    - 3 tick use cases (dispatch, negotiations, reputation) — all idempotent by construction, no internal schedulers
+    - DLQ lifecycle: full in delivery (acknowledge → reprocess → requeue with DB-enforced atomicity), in-table only in search
+    - 8 idempotency tables (5 fingerprint-only, 3 with cached response)
+    - 8 services with outbox but no drain/publisher (declared debt)
+    - 3 checkpoint tables, 2 consumed-events services, 1 channel-postgres outbox (no drain)
+    - 8 gaps catalogued with severity
+- **What was NOT done (by design):** No code changes. No tests added. This is a read-only inventory deliverable.
+- **Next executable:** crash/retry/dedupe proof (blocked pending M2-05C unblock — needs live PostgreSQL).
+
 ## 2026-09-18 — M2-05: Migration runner unification (CLM-0230)
 
 - **Work Item(s):** M2-05 · **الحجز:** `CLM-0230`

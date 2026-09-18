@@ -41,6 +41,8 @@ build/
 secrets.*
 secrets/
 *.secret
+!infra/secrets/
+!infra/secrets/secret-inventory.json
 credentials.json
 service-account*.json
 

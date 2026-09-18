@@ -62,6 +62,7 @@ export interface OutboxRecord {
   /** `undefined` تعني «لم يُنشَر» — ولا ناشرَ في هذه المراجعة، فكلُّها كذلك. */
   readonly publishedAt?: string;
   readonly createdAt: string;
+  readonly sequenceNumber: number;
 }
 
 interface OutboxRow {
@@ -74,6 +75,7 @@ interface OutboxRow {
   readonly occurredAt: Date;
   readonly publishedAt: Date | null;
   readonly createdAt: Date;
+  readonly sequenceNumber: number;
 }
 
 const AGGREGATE_TYPES: readonly MarketplaceAggregateType[] = Object.freeze([
@@ -114,6 +116,7 @@ function toOutboxRecord(row: OutboxRow): OutboxRecord {
     occurredAt: row.occurredAt.toISOString(),
     ...(row.publishedAt === null ? {} : { publishedAt: row.publishedAt.toISOString() }),
     createdAt: row.createdAt.toISOString(),
+    sequenceNumber: row.sequenceNumber,
   };
 }
 
@@ -161,26 +164,12 @@ export class PostgresOutboxStore implements OutboxStore {
           payload: draft.payload,
           occurredAt: new Date(draft.occurredAt),
           /**
-           * `clock_timestamp()` لا `now()` — والفرقُ ليس تجميليّاً، بل **عيبٌ حقيقيٌّ
-           * أسقطته بوّابةُ خروجِ الطورِ على محرّكٍ حقيقيّ** (2026-08-29):
-           *
-           * `created_at` كان يُملأ بـ`DEFAULT now()`، و`now()` في Postgres هي لحظةُ
-           * **بدءِ المعاملةِ** فتتساوى حرفيّاً في كلِّ صفوفِ المعاملةِ الواحدة. فحدثانِ
-           * يُلحَقانِ في قرارٍ واحدٍ — `product_created` ثمّ `inventory_adjusted` مثلاً —
-           * يحملانِ الطابعَ عينَه، فيسقط الترتيبُ على الفاصلِ الثاني `outbox_id` وهو
-           * **مُعرِّفٌ عشوائيٌّ**. والنتيجةُ أنّ المستهلكَ قد يقرأ فرقَ مخزونٍ لمنتجٍ
-           * لم يُنشَأ بعدُ في نظرِه — وهو ما كان يحدث فعلاً: أسقطَ التشغيلُ على Postgres
-           * تأكيدَ الترتيبِ في `outbox.integration.test.ts`، وكان تأكيدُ ترتيبِ الأرشفةِ
-           * ينجح **بحظِّ مقارنةِ مُعرِّفَينِ** لا بضمانٍ.
-           *
-           * و`clock_timestamp()` تُقرأ من ساعةِ الحائطِ عندَ تنفيذِ الجملةِ نفسِها فتتقدّم
-           * داخلَ المعاملة، فيصير ترتيبُ القراءةِ هو ترتيبُ الكتابةِ — وهو عينُ ما يعنيه
-           * اسمُ العمودِ أصلاً. ودقّتُها ميكروثانيةٌ وجملتا إدراجٍ متتاليتانِ أبطأُ من ذلك،
-           * لكن **البرهانَ التامَّ** يلزمه عدَّادٌ متزايدٌ (`IDENTITY`) في شكلِ الصندوقِ،
-           * وشكلُ الصندوقِ مُوحَّدٌ بينَ الأطوارِ 06 و07 و09 و10 و11 **بقرارٍ مُعلَنٍ**،
-           * فتغييرُه قرارُ مالكٍ لا قرارُ عاملٍ في نطاقِ الطورِ 11 — سُجِّل في سجلِّ المخاطر.
+           * `created_at` يُملأ بـ`DEFAULT now()` — والحدثُ يُرتَّبُ بـ`sequence_number`
+           * لا بـ`created_at` (ADR-037). `now()` ثابتةٌ داخلَ المعاملةِ، لكنّ `sequence_number`
+           * متزايدٌ بلا استثناء: `BIGINT GENERATED ALWAYS AS IDENTITY` يضمنُ ترتيباً
+           * مطابقاً لترتيبِ الإدراجِ حتى داخلَ المعاملةِ الواحدة.
            */
-          createdAt: sql`clock_timestamp()`,
+          createdAt: sql`now()`,
         })
         .returning();
       const row = rows[0];
@@ -194,17 +183,13 @@ export class PostgresOutboxStore implements OutboxStore {
   }
 
   /**
-   * يقرأ غيرَ المنشورِ بترتيبِ `created_at` — نفسُ عمودِ الفهرسِ الجزئيِّ في العقدِ
-   * (`ix_marketplace_outbox_unpublished`)، فالقراءةُ تستعمل الفهرسَ ولا تمسح الجدولَ كلَّه.
+   * يقرأ غيرَ المنشورِ بترتيبِ `sequence_number` — عدَّادٌ متزايدٌ (`BIGINT GENERATED
+   * ALWAYS AS IDENTITY`) يضمنُ ترتيبَ القراءةِ مطابقاً لترتيبِ الكتابةِ، حتى داخلَ
+   * المعاملةِ الواحدة. انظر ADR-037.
    *
-   * والترتيبُ بـ`created_at` لا بـ`occurred_at`: الثاني لحظةُ الواقعةِ كما رآها الطلبُ، وقد
-   * تسبق واقعةٌ أُدرجت لاحقاً واقعةً أُدرجت قبلها لو تأخّرت معاملةٌ — والناقلُ يحتاج ترتيبَ
-   * **الاستقرارِ** لا ترتيبَ الحدوث.
-   *
-   * وحدُّ الضمانِ يُقال كما هو: الترتيبُ **بينَ المعاملاتِ** تامٌّ، و**داخلَ المعاملةِ**
-   * صحيحٌ لأنّ `appendEvent` يكتب `clock_timestamp()` المتقدِّمةَ لا `now()` الثابتةَ
-   * (انظر التعليقَ هناك) — وليس مُبرهَناً على تساوٍ في الميكروثانية. فالمستهلكُ يبني على
-   * الترتيبِ ولا يبني على **وحدانيّتِه**: الضمانُ at-least-once وإزالةُ التكرارِ واجبُه.
+   * والترتيبُ بـ`sequence_number` لا بـ`occurred_at`: الثاني لحظةُ الواقعةِ كما رآها الطلبُ،
+   * وقد تسبق واقعةٌ أُدرجت لاحقاً واقعةً أُدرجت قبلها لو تأخّرت معاملةٌ — والناقلُ يحتاج
+   * ترتيبَ **الاستقرارِ** لا ترتيبَ الحدوث. و`sequence_number` هو ترتيبُ الاستقرارِ.
    */
   async listUnpublished(limit: number = OUTBOX_BATCH_LIMIT_DEFAULT): Promise<readonly OutboxRecord[]> {
     if (!Number.isInteger(limit) || limit < 1 || limit > OUTBOX_BATCH_LIMIT_MAX) {
@@ -214,7 +199,7 @@ export class PostgresOutboxStore implements OutboxStore {
       .select()
       .from(marketplaceOutbox)
       .where(isNull(marketplaceOutbox.publishedAt))
-      .orderBy(asc(marketplaceOutbox.createdAt), asc(marketplaceOutbox.outboxId))
+      .orderBy(asc(marketplaceOutbox.sequenceNumber))
       .limit(limit);
     return rows.map((row) => toOutboxRecord(row as OutboxRow));
   }

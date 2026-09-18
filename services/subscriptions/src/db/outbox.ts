@@ -74,6 +74,7 @@ export interface OutboxRow {
   readonly attempts: number;
   readonly lastError: string | null;
   readonly traceId: string | null;
+  readonly sequenceNumber: number;
 }
 
 interface RawOutboxRow {
@@ -87,6 +88,7 @@ interface RawOutboxRow {
   readonly attempts: number;
   readonly lastError: string | null;
   readonly traceId: string | null;
+  readonly sequenceNumber: number;
 }
 
 function toRow(row: RawOutboxRow): OutboxRow {
@@ -101,6 +103,7 @@ function toRow(row: RawOutboxRow): OutboxRow {
     attempts: row.attempts,
     lastError: row.lastError,
     traceId: row.traceId,
+    sequenceNumber: row.sequenceNumber,
   };
 }
 
@@ -143,10 +146,8 @@ export class PostgresOutboxStore {
   }
 
   /**
-   * يحجز غيرَ المنشورِ بترتيبِ حدوثِه — أقدمُ أوّلاً، وبقفلٍ يتخطّاه ناشرٌ آخر.
-   *
-   * والترتيبُ `occurred_at` ثمّ `event_id`: لحظتان متساويتان تحدثان فعلاً في نفس المعاملة
-   * (تأهيلٌ ومكافأةٌ معاً)، وترتيبٌ غيرُ حاسمٍ كان سيجعل مستهلكاً يرى المكافأةَ قبل التأهيل.
+   * يحجز غيرَ المنشورِ بترتيبِ `sequence_number` — عدَّادٌ متزايدٌ يضمنُ ترتيبَ القراءةِ
+   * مطابقاً لترتيبِ الكتابةِ حتى داخلَ المعاملةِ الواحدة (ADR-037).
    */
   async claimUnpublished(limit: number): Promise<ReadonlyArray<OutboxRow>> {
     if (!Number.isSafeInteger(limit) || limit < 1) {
@@ -156,7 +157,7 @@ export class PostgresOutboxStore {
       .select()
       .from(subscriptionOutbox)
       .where(isNull(subscriptionOutbox.publishedAt))
-      .orderBy(asc(subscriptionOutbox.occurredAt), asc(subscriptionOutbox.eventId))
+      .orderBy(asc(subscriptionOutbox.sequenceNumber))
       .limit(limit)
       .for("update", { skipLocked: true });
     return rows.map(toRow);

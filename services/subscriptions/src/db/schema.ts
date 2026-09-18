@@ -470,6 +470,7 @@ export const subscriptionOutbox = pgTable(
     lastError: text("last_error"),
     traceId: text("trace_id"),
     createdAt: instant("created_at").notNull().defaultNow(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
   },
   (table) => [
     check(
@@ -482,7 +483,7 @@ export const subscriptionOutbox = pgTable(
     ),
     check("subscription_outbox_attempts_check", sql`${table.attempts} >= 0`),
     index("ix_subscription_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

@@ -689,6 +689,7 @@ export const negotiationOutbox = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .default(sql`now()`),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
   },
   (t) => [
     check(
@@ -707,7 +708,7 @@ export const negotiationOutbox = pgTable(
     ),
     check("negotiation_outbox_attempts_check", sql`${t.attempts} >= 0`),
     index("ix_negotiation_outbox_unpublished")
-      .on(t.occurredAt)
+      .on(t.sequenceNumber)
       .where(sql`${t.publishedAt} IS NULL`),
   ],
 );

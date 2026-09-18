@@ -35,6 +35,7 @@
 export interface OutboxRecord {
   /** المفتاحُ الأساسيّ، وهو `event_id` نفسُه (انظر `PostgresReputationOutbox`). */
   readonly id: string;
+  readonly sequenceNumber: number;
   readonly aggregateType: string;
   readonly aggregateId: string;
   readonly eventType: string;

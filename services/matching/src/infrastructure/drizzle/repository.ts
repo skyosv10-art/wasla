@@ -612,18 +612,17 @@ export class PostgresMatchingOutbox implements Outbox {
   /**
    * Appended-but-unpublished events, in append order.
    *
-   * `occurred_at` alone is not an order: two events of one operation share the
-   * clock reading of that operation, and the ranking of a candidacy update
-   * against its own availability change would then be arbitrary. `event_id` is
-   * the tie-break, which the deterministic generator makes monotonic in tests
-   * and which is at least stable in production.
+   * `sequence_number` is the database-assigned append order. `occurred_at`
+   * alone is not an order: two events of one operation share the clock reading
+   * of that operation, and the ranking of a candidacy update against its own
+   * availability change would then be arbitrary.
    */
   async unread(): Promise<MatchingDomainEvent[]> {
     const rows = await this.db
       .select()
       .from(matchingOutbox)
       .where(sql`${matchingOutbox.publishedAt} IS NULL`)
-      .orderBy(asc(matchingOutbox.occurredAt), asc(matchingOutbox.eventId));
+      .orderBy(asc(matchingOutbox.sequenceNumber));
     return rows.map((row) => row.payload as unknown as MatchingDomainEvent);
   }
 

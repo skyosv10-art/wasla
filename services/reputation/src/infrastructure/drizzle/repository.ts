@@ -888,6 +888,7 @@ export class PostgresOutboxDrainStore implements OutboxDrainStore {
      */
     const claimed = await this.tx.execute(sql`
       SELECT id,
+             sequence_number,
              aggregate_type,
              aggregate_id,
              event_type,
@@ -898,12 +899,13 @@ export class PostgresOutboxDrainStore implements OutboxDrainStore {
              trace_id
         FROM reputation_outbox
        WHERE published_at IS NULL
-       ORDER BY occurred_at ASC, id ASC
+       ORDER BY sequence_number ASC
        LIMIT ${limit}
          FOR UPDATE SKIP LOCKED
     `);
     return rowsOf(claimed).map((row) => ({
       id: String(row["id"]),
+      sequenceNumber: Number(row["sequence_number"]),
       aggregateType: String(row["aggregate_type"]),
       aggregateId: String(row["aggregate_id"]),
       eventType: String(row["event_type"]),

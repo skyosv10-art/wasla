@@ -40,6 +40,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  bigint,
   check,
   foreignKey,
   index,
@@ -382,6 +383,7 @@ export const matchingOutbox = pgTable(
       .default(sql`now()`),
     /** NULL = not published yet. */
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
   },
   (table) => [
     check(
@@ -397,7 +399,7 @@ export const matchingOutbox = pgTable(
       sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_matching_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

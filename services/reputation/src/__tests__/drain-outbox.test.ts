@@ -299,6 +299,7 @@ describe("إعادةُ المحاولة لا تُنتج نشرتين", () => {
             occurredAt: "2026-03-01T09:00:00.000Z",
             attempts: 0,
             traceId: "trace-drain",
+            sequenceNumber: 1,
           },
         ];
       },
@@ -348,6 +349,7 @@ describe("منفذٌ غيرُ مُهيَّأ", () => {
         occurredAt: "2026-03-01T09:00:00.000Z",
         attempts: 0,
         traceId: null,
+        sequenceNumber: 1,
       }),
     ).rejects.toBeInstanceOf(EventSinkUnconfiguredError);
   });

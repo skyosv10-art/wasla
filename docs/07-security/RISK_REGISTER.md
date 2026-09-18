@@ -80,7 +80,7 @@ RISK-0034 | sev:medium | owner:@uxxxu | opened:2026-09-09 | review:2026-10-09 | 
 RISK-0037 | sev:high | owner:@uxxxu (agent:perplexity-computer) | opened:2026-09-13 | review:2026-09-20 | status:open | ref:scripts/checks/validate-service-auth-coverage.sh | البابُ السادسُ من الفحصِ 12 يرفضُ عملاً صحيحاً باحتمالٍ: `printf … | grep -qxF` تحتَ `set -o pipefail` — يخرجُ grep عندَ أوّلِ تطابقٍ فيموتُ printf بـSIGPIPE فتصيرُ حالةُ الأنبوبِ 141 فتُقرأُ «لا تطابق»؛ مقيسٌ 9 رفضاتٍ كاذبةٍ من 300 للمقارنةِ الواحدةِ و0/300 بعدَ herestring، وبـ54 مقارنةً في التشغيلِ الواحدِ يصيرُ احتمالُ إخفاقٍ كاذبٍ ≈81% — وقد أخفقَ فعلاً مرّتَينِ متتاليتَينِ بأسماءِ صلاحيّاتٍ مختلفةٍ (marketplace:store:review:read ثمَّ أربعُ صلاحيّاتٍ في أربعِ خدماتٍ). العلاجُ الجذريُّ في scripts/checks/ خارجُ نطاقِ CLM-0150 فيُنفَّذُ بحجزٍ مستقلٍّ CLM-0151 (WORK_CLAIM_RULE §6)
 RISK-0010 | sev:medium | owner:@uxxxu | opened:2026-08-27 | review:2026-09-27 | status:mitigating | ref:scripts/checks/validate-dependency-audit.sh | نظافةُ التدقيقِ رهنُ مُسجَّلِ npm يومَ التشغيل: صفرُ اليومِ ليس ضماناً للغد
 RISK-0011 | sev:medium | owner:@uxxxu | opened:2026-08-28 | review:2026-09-28 | status:mitigating | ref:docs/12-testing/BASELINE_FORMAT.md | الأساسُ المرجعيُّ يُحدَّث بيدٍ: عدَّاداتُه الحركيّةُ تبيت بلا تشغيلٍ دوريٍّ مُجدوَل
-RISK-0012 | sev:medium | owner:@uxxxu | opened:2026-08-29 | review:2026-09-29 | status:open | ref:docs/02-architecture/MARKETPLACE_EVENTS.md | صناديقُ الصادرِ الخمسةُ بلا عدَّادٍ متزايدٍ: ترتيبُ حدثَينِ في معاملةٍ واحدةٍ يسقط على مُعرِّفٍ عشوائيّ
+RISK-0012 | sev:medium | owner:@uxxxu | opened:2026-08-29 | review:2026-09-29 | status:mitigating | ref:docs/15-decisions/ADR-037-outbox-monotonic-sequence-number.md | صناديقُ الصادرِ السبعةُ بلا عدَّادٍ متزايدٍ: ترتيبُ حدثَينِ في معاملةٍ واحدةٍ يسقط على مُعرِّفٍ عشوائيّ — ADR-037 يُضيفُ `sequence_number BIGINT GENERATED ALWAYS AS IDENTITY` لكلِّ صناديقِ الصادرِ السبعة
 RISK-0013 | sev:low | owner:@uxxxu | opened:2026-08-29 | review:2026-09-29 | status:open | ref:services/marketplace/src/app/idempotency.ts | إعادةُ الطلبِ تُعيد الحقولَ لا البايتات: `response_body JSONB` يُعيد ترتيبَ المفاتيح
 RISK-0014 | sev:medium | owner:@uxxxu | opened:2026-08-30 | review:2026-09-30 | status:closed | ref:docs/12-testing/M0-18_GATE.md | مجموعةُ تكاملِ المطابقةِ تُخفِق إذا شاركت قاعدةً: توكيدُ جداولِ العقدِ يقرأ جداولَ الجميع — عُولج بجذرِه وقِيسَ خضراءَ في تشغيلَينِ (33722078269 · 33723162624)، والحدُّ المتبقّي انتقلَ إلى RISK-0017
 RISK-0017 | sev:low | owner:@uxxxu | opened:2026-09-03 | review:2026-10-15 | status:open | ref:docs/12-testing/M0-18_GATE.md | حراسةُ الاشتراكِ تُثبِّتُ ترتيباً واحداً: db-integration-shared تُشغِّلُ ترتيبَ المصفوفةِ حرفاً، والمجموعاتُ الإحدى عشرةَ لم تُفحَص عن توكيداتٍ شاملةٍ أسعفَها الترتيبُ
@@ -528,7 +528,7 @@ npm يومَ التشغيلِ — فآخرُ خطٍّ أخضرَ على `main` (
 
 ---
 
-### RISK-0012 · صناديقُ الصادرِ بلا عدَّادٍ متزايد (`medium` · مفتوحٌ · رُصد 2026-08-29)
+### RISK-0012 · صناديقُ الصادرِ بلا عدَّادٍ متزايد (`medium` · **مُتخفّفٌ 2026-09-18 بـADR-037** · رُصد 2026-08-29)
 
 **كيف رُصد:** لا بقراءةٍ بل بأوّلِ تشغيلٍ لمجموعةِ تكاملِ خدمةِ السوقِ على PostgreSQL 17 حقيقيٍّ. أسقطَ التشغيلُ تأكيدَ ترتيبٍ كان مكتوباً بالترتيبِ الصحيح: جاءَ `marketplace.inventory_adjusted` **قبلَ** `marketplace.product_created` رغمَ أنّ الكودَ يُلحِقهما بهذا الترتيبِ نصّاً.
 
@@ -541,6 +541,8 @@ npm يومَ التشغيلِ — فآخرُ خطٍّ أخضرَ على `main` (
 **ولمَ لم يُصلَح إصلاحاً تامّاً هنا:** البرهانُ التامُّ عدَّادٌ متزايدٌ (`BIGINT GENERATED ALWAYS AS IDENTITY`) يُرتَّب به بدلَ الطابع. وذلك **يُغيّر شكلَ صندوقٍ مُوحَّدٍ بينَ خمسِ خدماتٍ** ويمسّ ناقلاً لم يُبنَ بعد (دَينُ الطورِ 09) — فهو قرارُ مالكِ البرنامجِ لا قرارُ عاملٍ في نطاقِ الطورِ 11، ولا يُتَّخذ بلا ADR. والخطرُ يبقى `open` حتّى ذلك.
 
 **ما لم يُقَس:** الخدماتُ الأربعُ الأخرى لم تُشغَّل مجموعاتُها للتحقّقِ من أنّ العيبَ يظهر فيها فعلاً — نطاقُها ليس نطاقَ هذا الحجز، والدعوى هنا **تشابهُ شكلٍ مقروءٌ في العقود** لا إخفاقٌ مقيسٌ فيها.
+
+**التخفيفُ التامُّ (ADR-037 · CLM-0211 · 2026-09-18):** أُضيفَ عمودُ `sequence_number BIGINT GENERATED ALWAYS AS IDENTITY` إلى صناديقِ الصادرِ السبعةِ كلِّها (marketplace وsubscriptions وdispatch وmatching وnegotiations وorders وreputation). وصار ترتيبُ القراءةِ بـ`sequence_number` وحدَه لا بـ`occurred_at` ولا بـ`created_at` ولا بالمُعرِّفِ العشوائيّ. وفهارسُ `ix_*_outbox_unpublished` نُقلَت إلى `sequence_number`. و`clock_timestamp()` عاد إلى `now()` لأنّ `sequence_number` هو البرهانُ لا الطابع. والقرارُ في [`ADR-037`](../15-decisions/ADR-037-outbox-monotonic-sequence-number.md). الحالةُ: `mitigating` حتى يُقاسَ على PostgreSQL حقيقيّ في CI.
 
 ---
 

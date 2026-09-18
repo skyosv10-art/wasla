@@ -295,20 +295,19 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 11 · السوقُ �
     /**
      * والدليلُ على **سببِ** الصحّةِ لا على نتيجتِها.
      *
-     * `now()` لحظةُ بدءِ المعاملةِ فتتساوى في صفوفِها، وقد أخفقت هذه البوّابةُ بها فعلاً
-     * (`RISK-0012`). فيُقرأ `created_at::text` خاماً — لأنّ `OutboxRecord.createdAt` بدقّةِ
-     * الميلي فتُخفي فرقَ الميكروثانية — ويُوكَّد **تمايزُ** الطابعَينِ وأنّ أيَّهما لا يساوي
-     * لحظةَ بدءِ المعاملة. ولو رجعَ العمودُ إلى `DEFAULT now()` سقطَ هذا التوكيدُ باسمِه.
+     * `sequence_number` عدَّادٌ متزايدٌ (`BIGINT GENERATED ALWAYS AS IDENTITY`) يضمنُ
+     * ترتيبَ القراءةِ مطابقاً لترتيبِ الكتابةِ حتى داخلَ المعاملةِ الواحدة (ADR-037).
+     * ويُوكَّد أنّ `sequence_number` للحدثِ الأول أقلُّ من `sequence_number` للحدثِ الثاني.
      */
-    const stamps = await gate.pool.query<{ readonly stamp: string; readonly same: boolean }>(
-      `SELECT created_at::text AS stamp, created_at = now() AS same
+    const stamps = await gate.pool.query<{ readonly sequence_number: string }>(
+      `SELECT sequence_number::text AS sequence_number
          FROM marketplace_outbox
-        WHERE outbox_id = ANY($1::uuid[])`,
+        WHERE outbox_id = ANY($1::uuid[])
+        ORDER BY sequence_number ASC`,
       [[zeroed?.outboxId, archivedEvent?.outboxId]],
     );
     expect(stamps.rows).toHaveLength(2);
-    expect(new Set(stamps.rows.map((row) => row.stamp)).size).toBe(2);
-    expect(stamps.rows.every((row) => row.same === false)).toBe(true);
+    expect(Number(stamps.rows[0]?.sequence_number)).toBeLessThan(Number(stamps.rows[1]?.sequence_number));
   });
 
   it("ولا ناقلَ: كلُّ صفٍّ يبقى غيرَ منشورٍ، ولا دالّةَ ختمٍ على سطحِ المخزن", async () => {

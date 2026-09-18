@@ -703,18 +703,15 @@ export class PostgresDispatchOutbox implements Outbox {
   /**
    * Appended-but-unpublished events, in append order.
    *
-   * `occurred_at` alone is not an order: every event of one tick shares that
-   * tick's clock reading, so `dispatch.wave_opened` and the `dispatch.offer_sent`
-   * events of the same wave would rank arbitrarily. `event_id` is the tie-break,
-   * which the deterministic generator makes monotonic in tests and which is at
-   * least stable in production.
+   * `sequence_number` is the database-assigned append order. `occurred_at` alone
+   * is not an order because every event of one tick shares that clock reading.
    */
   async unread(): Promise<AnyDispatchEvent[]> {
     const rows = await this.db
       .select()
       .from(dispatchOutbox)
       .where(sql`${dispatchOutbox.publishedAt} IS NULL`)
-      .orderBy(asc(dispatchOutbox.occurredAt), asc(dispatchOutbox.eventId));
+      .orderBy(asc(dispatchOutbox.sequenceNumber));
     return rows.map((row) => row.payload as unknown as AnyDispatchEvent);
   }
 

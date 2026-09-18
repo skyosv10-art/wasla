@@ -387,11 +387,12 @@ CREATE TABLE IF NOT EXISTS negotiation_outbox (
     attempts              INTEGER     NOT NULL DEFAULT 0 CHECK (attempts >= 0),
     last_error            TEXT,
     trace_id              TEXT,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sequence_number       BIGINT      GENERATED ALWAYS AS IDENTITY
 );
 
 CREATE INDEX IF NOT EXISTS ix_negotiation_outbox_unpublished
-    ON negotiation_outbox (occurred_at) WHERE published_at IS NULL;
+    ON negotiation_outbox (sequence_number) WHERE published_at IS NULL;
 
 COMMIT;
 

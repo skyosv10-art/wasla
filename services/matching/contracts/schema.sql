@@ -237,11 +237,12 @@ CREATE TABLE IF NOT EXISTS matching_outbox (
     payload        JSONB       NOT NULL,
     trace_id       TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
     occurred_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at   TIMESTAMPTZ                                  -- NULL = لم يُنشر بعد
+    published_at   TIMESTAMPTZ,
+    sequence_number BIGINT     GENERATED ALWAYS AS IDENTITY
 );
 
 CREATE INDEX IF NOT EXISTS ix_matching_outbox_unpublished
-    ON matching_outbox (occurred_at)
+    ON matching_outbox (sequence_number)
     WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────

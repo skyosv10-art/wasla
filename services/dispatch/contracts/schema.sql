@@ -165,11 +165,12 @@ CREATE TABLE IF NOT EXISTS dispatch_outbox (
     payload        JSONB       NOT NULL,
     trace_id       TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
     occurred_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at   TIMESTAMPTZ
+    published_at   TIMESTAMPTZ,
+    sequence_number BIGINT     GENERATED ALWAYS AS IDENTITY
 );
 
 CREATE INDEX IF NOT EXISTS ix_dispatch_outbox_unpublished
-    ON dispatch_outbox (occurred_at) WHERE published_at IS NULL;
+    ON dispatch_outbox (sequence_number) WHERE published_at IS NULL;
 CREATE INDEX IF NOT EXISTS ix_dispatch_outbox_aggregate
     ON dispatch_outbox (aggregate_type, aggregate_id, occurred_at);
 

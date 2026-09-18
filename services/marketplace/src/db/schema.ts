@@ -56,6 +56,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   foreignKey,
@@ -585,6 +586,7 @@ export const marketplaceOutbox = pgTable(
     occurredAt: instant("occurred_at").notNull(),
     publishedAt: instant("published_at"),
     createdAt: instant("created_at").notNull().defaultNow(),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull(),
   },
   (table) => [
     check(
@@ -597,7 +599,7 @@ export const marketplaceOutbox = pgTable(
       sql`${table.aggregateType} IN ('store', 'product', 'inventory')`,
     ),
     index("ix_marketplace_outbox_unpublished")
-      .on(table.createdAt)
+      .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

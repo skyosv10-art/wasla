@@ -1,5 +1,15 @@
 
 
+## 2026-09-18 — M2-02: Render Free experimental compute (CLM-0224)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0224`
+- **الفرع:** `feat/m2-02d-render-provider` · **PR:** [#253](https://github.com/skyosv10-art/wasla/pull/253)
+- **المرجع:** [ADR-039](../15-decisions/ADR-039-render-experimental-compute.md)
+- **النطاق:** إضافةُ موفِّرِ Render Terraform الرسمي (`render-oss/render` v1.9.1) وتعريفُ 16 موردَ `render_web_service` (13 خدمةً + 3 بوتاتٍ) وتعيينُ كلِّ وحدةٍ لنوعِ Render المناسبِ، وحارسٌ بنيويٌّ يمنعُ الأسرارَ في الملفّاتِ ويُثبتُ تغطيةَ الخدماتِ.
+- **ما أُنجِزَ:** `terraform init`/`validate`/`plan` ناجحةٌ · جردُ الخدماتِ بتعيينِ كلِّ وحدةٍ · حارسُ `validate-render-config.sh` مُوصَلٌ من `verify.sh` · ADR-039 · `RENDER_SERVICE_INVENTORY.md`.
+- **ما لا يُدَّعى:** `terraform apply` يتوقّفُ على `RENDER_API_KEY`/`RENDER_OWNER_ID` من البيئةِ · Free لا يستقبلُ private traffic · 16 خدمةً تتجاوزُ حصّةَ 750 ساعةً/شهرٍ · هذا إثباتُ قابليةٍ لا إنتاجٌ.
+- **التحقّقُ:** حكمُ CI هو الفصلُ.
+
 ## 2026-09-18 — M2-04: stale text cleanup (CLM-0223)
 
 - **Work Item(s):** M2-04 · **الحجز:** `CLM-0223`

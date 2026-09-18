@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0224 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02d-render-provider | infra/terraform/,infra/environments/,docs/00-rules/,docs/08-infrastructure/,docs/12-testing/,docs/15-decisions/,docs/16-progress/,docs/07-security/,scripts/checks/,scripts/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Active |
 | CLM-0223 | M2-04 | @uxxxu (agent:perplexity-computer) | chore/m2-04-stale-text-cleanup | docs/16-progress/,docs/12-testing/,docs/07-security/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#251](https://github.com/skyosv10-art/wasla/pull/251) · squash · 35/35 CI green) |
 | CLM-0222 | M2-04 | @uxxxu (agent:perplexity-computer) | chore/risk-0046-docs-cleanup | docs/07-security/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#249](https://github.com/skyosv10-art/wasla/pull/249) · squash · 35/35 CI green) |
 | CLM-0221 | M2-04 | @uxxxu (agent:perplexity-computer) | feat/m2-04-risk-0046-config-exemption | scripts/checks/lib/,scripts/checks/,docs/07-security/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#247](https://github.com/skyosv10-art/wasla/pull/247) · squash · 35/35 CI green) |

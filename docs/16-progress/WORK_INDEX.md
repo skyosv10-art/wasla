@@ -68,14 +68,14 @@
 
 ---
 
-## 3. البنية التحتية (`infra/`) — كلها Placeholder
+## 3. البنية التحتية (`infra/`)
 
 | منطقة الكود | الحالة | العنصر المالك |
 |---|---|---|
-| `infra/terraform/` | Placeholder | M2 |
+| `infra/terraform/` | Implemented | M2 | `versions.tf` + `variables.tf` + `outputs.tf` + `backend.tf` + `render.tf` · `render-oss/render` v1.9.1 · 16 `render_web_service` · [`ADR-038`](../15-decisions/ADR-038-platform-provider-iac-toolchain.md) + [`ADR-039`](../15-decisions/ADR-039-render-experimental-compute.md) |
 | `infra/kubernetes/` | Placeholder | M2 |
 | `infra/docker/` | Placeholder **بقرار** — صورةُ التشغيلِ في جذرِ المستودعِ (`Dockerfile`) لأنَّ البناءَ يحتاجُ سياقَ العملِ كاملاً؛ و`infra/docker/` يُترَكُ لملفّاتِ التركيبِ والنشرِ (`M2-02`) بحكمِ [ADR-033](../15-decisions/ADR-033-container-image-supply-chain.md) | M2 |
-| `infra/environments/` | Placeholder | M2 |
+| `infra/environments/` | Implemented | M2 | 5 بيئاتٍ · `environment.json` لكلٍّ منها · [`validate-environments.sh`](../../scripts/checks/validate-environments.sh) |
 
 ---
 

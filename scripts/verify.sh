@@ -64,6 +64,10 @@ run_step "هيكلُ Terraform البنيويُّ (M2-02B)" \
 run_step "كتالوجُ البيئاتِ (M2-02C)" \
   bash scripts/checks/validate-environments.sh
 
+# ── 1-د) إعدادُ Render (M2-02D · ADR-039) ──────────────────────────────
+run_step "إعدادُ Render (M2-02D · ADR-039)" \
+  bash scripts/checks/validate-render-config.sh
+
 # ── 2) اتّساقُ إعدادِ CI («مانعٌ لا مُجمِّل») ───────────────────────────────
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh

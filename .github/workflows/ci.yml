@@ -74,6 +74,8 @@ jobs:
         run: bash scripts/checks/validate-work-claims.sh
       - name: scan-secrets
         run: bash scripts/checks/scan-secrets.sh
+      - name: validate-terraform-scaffold
+        run: bash scripts/checks/validate-terraform-scaffold.sh
 
   # ───────────────────────────────────────────────────────────────────
   # 2) doc-coverage — نظيرُ `.gitlab-ci.yml : doc-coverage`

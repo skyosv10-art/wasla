@@ -1,5 +1,15 @@
 
 
+## 2026-09-18 — M2-02B: Terraform scaffolding and structural guard (CLM-0217)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0217`
+- **الفرع:** `feat/m2-02b-terraform-scaffold`
+
+**ما جرى:** بناءُ هيكلِ Terraform في `infra/terraform/` — `versions.tf` · `variables.tf` · `outputs.tf` · `backend.tf` · ثلاثُ بيئاتٍ (development/staging/production) لكلٍّ منها `main.tf` و`terraform.tfvars.example`. وحارسٌ بنيويٌّ `validate-terraform-scaffold.sh` يفحصُ: وجودَ الملفّاتِ الإلزاميّةِ · وجودَ البيئاتِ · غيابَ ملفّاتِ `.tfvars` حقيقيّةٍ · غيابَ أنماطِ السرِّ في ملفّاتِ `.tf` · و`terraform fmt -check` و`validate` إن وُجدَ binary. الحارسُ مُضافٌ إلى CI في وظيفةِ `repo-structure`.
+
+**محجوبٌ:** `terraform plan/apply` الحيُّ يتوقّفُ على بياناتِ اعتمادِ مزوّدِ السحابةِ وADR منصةِ الحوسبةِ. هذا تحقّقٌ بنيويٌّ فقط — لا يُثبتُ fresh plan/apply.
+
+
 ## 2026-09-18 — M2-02: ADR-038 — platform/provider/IaC toolchain decision
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0216`

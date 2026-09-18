@@ -1,5 +1,17 @@
 
 
+## 2026-09-18 — M2-03: Secret inventory definition (CLM-0227)
+
+- **Work Item(s):** M2-03 · **الحجز:** `CLM-0227`
+- **What changed:** تعريفُ جردِ الأسرار للنظام. ملفٌّ قابلٌ للقراءة آليًّا `infra/secrets/secret-inventory.json` يُغطّي 22 سرًّا عبر خمسِ فئاتٍ (روابطُ قواعدِ البياناتِ · رموزُ Telegram · أسرارُ webhook · مفاتيحُ هويّةِ الخدمة · اعتماداتُ البنيةِ التحتية). وثيقةٌ بشريّةٌ `docs/08-infrastructure/SECRET_INVENTORY.md`. حارسٌ `validate-secret-inventory.sh` يتحقّقُ من: صحّةِ JSON · عدمِ وجودِ قيمٍ أسرارٍ فعليةٍ · تغطيةِ كلِّ متغيّرٍ سريٍّ في `env-registry.json` · تغطيةِ كلِّ `required_secret` في manifests البيئاتِ · تغطيةِ قائمةِ M2-03 المعلّقةِ · وجودِ الحقولِ المطلوبةِ لكلِّ سرٍّ. الحارسُ مُسجَّلٌ في `verify.sh` و`VERIFY_COMMAND.md`.
+- **Why:** M2-03 next step per execution board — define secret inventory. First executable step after M2-02. Rotation drill remains BLOCKED pending cloud KMS/compute platform decisions.
+- **Status:** M2-03 In Progress (inventory step done, rotation drill BLOCKED). Claim released.
+- **Risks:**
+  - قد لا تكون الأسرارُ المُحجوبة (KMS/TLS/DNS) مُتاحةً على Render Free
+  - سياسةُ الدورانِ الفعليةِ تتطلّبُ منصّةَ أسرارٍ سحابيةً
+
+---
+
 ## 2026-09-18 — M2-02: Port compatibility fix (CLM-0226)
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0226`

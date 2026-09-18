@@ -68,6 +68,10 @@ run_step "كتالوجُ البيئاتِ (M2-02C)" \
 run_step "إعدادُ Render (M2-02D · ADR-039)" \
   bash scripts/checks/validate-render-config.sh
 
+# ── 1-ه) جردُ الأسرار (M2-03A) ──────────────────────────────────────────
+run_step "جردُ الأسرار (M2-03A)" \
+  bash scripts/checks/validate-secret-inventory.sh
+
 # ── 2) اتّساقُ إعدادِ CI («مانعٌ لا مُجمِّل») ───────────────────────────────
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh

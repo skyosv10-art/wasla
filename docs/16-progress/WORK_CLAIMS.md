@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0227 | M2-03 | @uxxxu (agent:perplexity-computer) | feat/m2-03-secret-inventory | infra/secrets/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Active |
 | CLM-0226 | M2-02 | @uxxxu (agent:perplexity-computer) | fix/m2-02d-port-compat | services/marketplace/src/,services/subscriptions/src/,packages/config/,infra/terraform/,docs/08-infrastructure/,docs/15-decisions/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#257](https://github.com/skyosv10-art/wasla/pull/257) · squash · 35/35 CI green) |
 | CLM-0225 | M2-02 | @uxxxu (agent:perplexity-computer) | fix/m2-02d-render-compatibility | infra/terraform/,docs/08-infrastructure/,docs/15-decisions/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#255](https://github.com/skyosv10-art/wasla/pull/255) · squash · 35/35 CI green) |
 | CLM-0224 | M2-02 | @uxxxu (agent:perplexity-computer) | feat/m2-02d-render-provider | infra/terraform/,infra/environments/,docs/00-rules/,docs/08-infrastructure/,docs/12-testing/,docs/15-decisions/,docs/16-progress/,docs/07-security/,scripts/checks/,scripts/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#253](https://github.com/skyosv10-art/wasla/pull/253) · squash · 35/35 CI green) |

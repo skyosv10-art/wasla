@@ -32,15 +32,13 @@ import { createMarketplaceDb } from "../db/client.js";
 import { MarketplaceUnitOfWork } from "../db/unit-of-work.js";
 import { createMarketplaceApp, type MarketplaceServices } from "./app.js";
 
-/** المنفذُ من حزمةِ العقدِ لا من رقمٍ مكتوبٍ هنا (`MARKETPLACE_SERVICE_PORT` = 8094). */
+/** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `MARKETPLACE_SERVICE_PORT` (= 8094). */
 function readPort(): number {
-  const raw = process.env.MARKETPLACE_SERVICE_PORT;
+  const raw = process.env.PORT ?? process.env.MARKETPLACE_SERVICE_PORT;
   if (raw === undefined || raw.trim() === "") return MARKETPLACE_SERVICE_PORT;
   const port = Number(raw);
-  // منفذٌ غيرُ صالحٍ يُسقط الإقلاعَ صراحةً: الاستماعُ على منفذٍ آخرَ بصمتٍ يجعل بوّابةً تقول
-  // «الخدمةُ ساقطة» والخدمةُ حيّةٌ على عنوانٍ لا يعرفه أحد.
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("MARKETPLACE_SERVICE_PORT غير صالح");
+    throw new Error("PORT / MARKETPLACE_SERVICE_PORT غير صالح");
   }
   return port;
 }

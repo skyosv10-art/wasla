@@ -28,15 +28,13 @@ import { SubscriptionService } from "../app/subscriptions.js";
 import { systemClock, uuidIdGenerator } from "../app/runtime.js";
 import { createSubscriptionApp, type SubscriptionAppServices } from "./app.js";
 
-/** المنفذُ من حزمةِ العقد لا من رقمٍ مكتوبٍ هنا (`SUBSCRIPTION_SERVICE_PORT` = 8093). */
+/** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `SUBSCRIPTION_SERVICE_PORT` (= 8093). */
 function readPort(): number {
-  const raw = process.env.SUBSCRIPTION_SERVICE_PORT;
+  const raw = process.env.PORT ?? process.env.SUBSCRIPTION_SERVICE_PORT;
   if (raw === undefined || raw.trim() === "") return SUBSCRIPTION_SERVICE_PORT;
   const port = Number(raw);
-  // منفذٌ غيرُ صالحٍ يُسقط الإقلاعَ صراحةً: الاستماعُ على منفذٍ آخرَ بصمتٍ يجعل بوّابةً
-  // تقول «الخدمةُ ساقطة» والخدمةُ حيّةٌ على عنوانٍ لا يعرفه أحد.
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("SUBSCRIPTION_SERVICE_PORT غير صالح");
+    throw new Error("PORT / SUBSCRIPTION_SERVICE_PORT غير صالح");
   }
   return port;
 }

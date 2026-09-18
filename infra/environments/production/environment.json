@@ -1,0 +1,12 @@
+{
+  "name": "production",
+  "purpose": "Live production environment, separate Supabase project, protected",
+  "tier": "production",
+  "database_mode": "supabase_managed",
+  "terraform_environment": "infra/terraform/environments/production/",
+  "tls_status": "required_blocked",
+  "dns_status": "required_blocked",
+  "allow_in_memory_fallback": false,
+  "required_secrets": ["DATABASE_URL", "WASLA_SERVICE_AUTH_KEYS", "WASLA_SERVICE_AUTH_ACTIVE_KID"],
+  "notes": "Production environment. Separate Supabase project. TLS/DNS blocked pending compute platform ADR."
+}

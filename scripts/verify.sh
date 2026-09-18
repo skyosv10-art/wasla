@@ -60,6 +60,10 @@ run_step "بنيةُ المستودعِ والوثائقُ الحاكمة" \
 run_step "هيكلُ Terraform البنيويُّ (M2-02B)" \
   bash scripts/checks/validate-terraform-scaffold.sh
 
+# ── 1-ج) كتالوجُ البيئاتِ (M2-02C) ─────────────────────────────────────
+run_step "كتالوجُ البيئاتِ (M2-02C)" \
+  bash scripts/checks/validate-environments.sh
+
 # ── 2) اتّساقُ إعدادِ CI («مانعٌ لا مُجمِّل») ───────────────────────────────
 run_step "اتّساقُ إعدادِ CI (مانعٌ لا مُجمِّل)" \
   bash scripts/checks/validate-ci-mandatory.sh

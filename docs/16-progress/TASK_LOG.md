@@ -1,5 +1,15 @@
 
 
+## 2026-09-18 — M2-02C: Environment catalogue + guard (CLM-0219)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0219`
+- **الفرع:** `feat/m2-02c-environment-catalogue`
+
+**ما جرى:** بناءُ كتالوجِ البيئاتِ في `infra/environments/` — خمسُ بيئاتٍ (local/ci/development/staging/production) لكلٍّ منها `environment.json` يُعرّفُ الحقائقَ غيرَ السرّيّةِ فقط. حارسٌ `validate-environments.sh` يفحصُ: وجودَ البيئاتِ · صحةَ JSON · مطابقةَ الاسمِ · منعَ in-memory fallback في staging/production · منعَ local_postgres/in_memory في staging/production · وجودَ required_secrets في `env-registry.json` (M2-04) أو في قائمةِ M2-03 · منعَ ملفّاتِ `.env` وأنماطِ السرِّ. الحارسُ مُسجَّلٌ في `verify.sh` و`VERIFY_COMMAND.md`. خمسُ حالاتِ طفرةٍ في `test-governance.sh` [ح].
+
+**محجوبٌ:** `terraform plan/apply` الحيُّ يتوقّفُ على بياناتِ اعتمادِ مزوّدِ السحابةِ وADR منصةِ الحوسبةِ.
+
+
 ## 2026-09-18 — M2-02B fix: Terraform guard blind spots + regression tests (CLM-0218)
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0218`

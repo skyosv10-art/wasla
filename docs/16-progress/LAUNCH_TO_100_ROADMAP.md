@@ -2053,10 +2053,10 @@ All Release Gates
 | المجال | الوضع الحالي | الهدف |
 |---|---:|---:|
 | Core domains | مرتفع | 100% |
-| Phase 10 | ~83.3% | 100% |
-| Marketplace | 0% | 100% |
-| Search | 0% | 100% |
-| Store/Delivery | 0% | 100% |
+| Phase 10 | مكتملة 6/6 (الرقم التاريخي ~83.3% قديم — راجع [WORK_INDEX](WORK_INDEX.md)) | 100% |
+| Marketplace | Implemented / M5-11 مُغلَق (الرقم التاريخي 0% قديم) | 100% |
+| Search | Implemented / M5-12 مُغلَق (الرقم التاريخي 0% قديم) | 100% |
+| Store/Delivery | In Progress / M5-13 (13/N مراجعات) (الرقم التاريخي 0% قديم) | 100% |
 | Partner/Enterprise | 0% | 100% |
 | Admin | 0% | 100% |
 | Support | 0% | 100% |
@@ -2290,9 +2290,9 @@ ROADMAP STATUS: ACTIVE
 PROJECT STATE: CORE IMPLEMENTED / PLATFORM INCOMPLETE
 PRODUCTION READY: NO
 ENTERPRISE READY: NO
-CURRENT ROADMAP-WEIGHTED COMPLETION: ~43.3%
-CURRENT CRITICAL BLOCKER: AUTHENTICATION / AUTHORIZATION / PRODUCTION PLATFORM
-NEXT MANDATORY GATE: PHASE 10 EXIT GATE
+CURRENT ROADMAP-WEIGHTED COMPLETION: ~43.3% (stale — see section 60 for measured status)
+CURRENT CRITICAL BLOCKER: PRODUCTION PLATFORM (M1-04/M1-05 identity enforcement done; M2 infrastructure pending)
+NEXT MANDATORY GATE: M2 INFRASTRUCTURE
 ```
 
 ---

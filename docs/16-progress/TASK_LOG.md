@@ -1,5 +1,20 @@
 
 
+## 2026-09-18 — M0-42: تصحيحُ أرقامِ خارطةِ الطريق — section 60 + section 69
+
+- **Work Item(s):** M0-42 · **الحجز:** `CLM-0213`
+- **الفرع:** `fix/roadmap-status-correction`
+
+**ما جرى:** الأرقامُ في `LAUNCH_TO_100_ROADMAP.md` القسم 60 كانت قديمةً: Marketplace 0%
+وSearch 0% وStore/Delivery 0% وPhase 10 ~83.3% و43.3% إجمالي. لكنّ `WORK_INDEX.md` يُظهِرُ
+أنّ Marketplace وSearch صارا `Implemented` (M5-11 وM5-12 مُغلَقَين) وأنّ Store/Delivery `In Progress`
+(M5-13 عند المراجعة 13/N) وأنّ Phase 10 مكتملة 6/6. صُحِّحَ بالإضافةِ لا بالمحوِ: الأرقامُ التاريخيّةُ
+بقيت مُتوقِّفةً بجانبها الحالةُ المقيسةُ من WORK_INDEX.
+
+كذلك صُحِّحَ القسم 69: «NEXT MANDATORY GATE: PHASE 10 EXIT GATE» → «M2 INFRASTRUCTURE»،
+و«CURRENT CRITICAL BLOCKER» حُدِّث ليعكسَ أنّ M1-04/M1-05 أُنجزا.
+
+
 ## 2026-09-18 — M5-13: RISK-0012 mitigation — outbox monotonic sequence_number (ADR-037)
 
 - **Work Item(s):** M5-13 · M0-08 · **الحجز:** `CLM-0211` · `CLM-0212`

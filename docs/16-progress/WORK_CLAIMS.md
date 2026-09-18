@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0229 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05-migration-owners | infra/migrations/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Active |
+| CLM-0229 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05-migration-owners | infra/migrations/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#263](https://github.com/skyosv10-art/wasla/pull/263) · squash · 35/35 CI green) |
 | CLM-0228 | M2-03 | @uxxxu (agent:perplexity-computer) | fix/m2-03a-inventory-gaps | scripts/checks/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#261](https://github.com/skyosv10-art/wasla/pull/261) · squash · 35/35 CI green) |
 | CLM-0227 | M2-03 | @uxxxu (agent:perplexity-computer) | feat/m2-03-secret-inventory | .gitignore,infra/secrets/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#259](https://github.com/skyosv10-art/wasla/pull/259) · squash · 35/35 CI green · scope correction: .gitignore added in CLM-0228) |
 | CLM-0226 | M2-02 | @uxxxu (agent:perplexity-computer) | fix/m2-02d-port-compat | services/marketplace/src/,services/subscriptions/src/,packages/config/,infra/terraform/,docs/08-infrastructure/,docs/15-decisions/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#257](https://github.com/skyosv10-art/wasla/pull/257) · squash · 35/35 CI green) |

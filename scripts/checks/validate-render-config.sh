@@ -27,17 +27,19 @@ printf '\033[1m[Render Config Guard · ADR-039]\033[0m\n'
 # ── 1) No Render secrets in tracked files ──────────────────────────────
 # RENDER_API_KEY starts with "rnd_" (32+ chars). RENDER_OWNER_ID starts
 # with "usr-" or "tea-".
-if grep -rn --include='*.tf' --include='*.sh' --include='*.json' --include='*.yaml' --include='*.yml' \
+RENDER_SECRETS=$(grep -rn --include='*.tf' --include='*.sh' --include='*.json' --include='*.yaml' --include='*.yml' \
     -E '(rnd_[a-zA-Z0-9]{30,}|RENDER_API_KEY\s*=\s*["\x27][^"\x27]{10,})' \
-    infra/ scripts/ 2>/dev/null | grep -v '\.gitkeep' | grep -q .; then
+    infra/ scripts/ 2>/dev/null | grep -v '\.gitkeep' || true)
+if [ -n "$RENDER_SECRETS" ]; then
   fail 'Render API key value found in tracked files'
 else
   pass 'No Render API key values in tracked files'
 fi
 
-if grep -rn --include='*.tf' --include='*.sh' --include='*.json' \
+RENDER_OWNERS=$(grep -rn --include='*.tf' --include='*.sh' --include='*.json' \
     -E '(RENDER_OWNER_ID\s*=\s*["\x27](usr-|tea-)[a-zA-Z0-9]+)' \
-    infra/ 2>/dev/null | grep -q .; then
+    infra/ 2>/dev/null || true)
+if [ -n "$RENDER_OWNERS" ]; then
   fail 'Render owner ID value found in tracked files'
 else
   pass 'No Render owner ID values in tracked files'

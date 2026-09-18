@@ -303,23 +303,24 @@ describe.skipIf(!PG_ENABLED)("صندوقُ الصادرِ فوق Postgres", () =
         readonly event_type: string;
         readonly created_at: string;
         readonly same_as_txn_start: boolean;
+        readonly sequence_number: number;
       }>(
         `SELECT event_type,
                 created_at::text AS created_at,
-                created_at = now() AS same_as_txn_start
+                created_at = now() AS same_as_txn_start,
+                sequence_number
            FROM marketplace_outbox
           WHERE event_type IN ('marketplace.product_created', 'marketplace.inventory_adjusted')
-          ORDER BY created_at ASC`,
+          ORDER BY sequence_number ASC`,
       );
 
       expect(raw.rows.map((row) => row.event_type)).toEqual([
         "marketplace.product_created",
         "marketplace.inventory_adjusted",
       ]);
-      // طابعانِ متمايزانِ: هذا هو الضمانُ، لا مجرّدُ ترتيبٍ عادَ صحيحاً هذه المرّة.
-      expect(new Set(raw.rows.map((row) => row.created_at)).size).toBe(2);
-      // ولا واحدٌ منهما يساوي لحظةَ بدءِ معاملةِ هذا الاستعلامِ — أي ليس `now()` مُجمَّدةً.
-      expect(raw.rows.every((row) => row.same_as_txn_start === false)).toBe(true);
+      // عدَّادان متزايدان: هذا هو البرهانُ التامُّ لا طابعٌ بدقّةِ الميكروثانية.
+      // `sequence_number` متزايدٌ بلا استثناءٍ حتى داخلَ المعاملةِ الواحدة (ADR-037).
+      expect(Number(raw.rows[0].sequence_number)).toBeLessThan(Number(raw.rows[1].sequence_number));
     });
 
     it("ومنتجٌ بلا مخزونٍ أوّليٍّ لا يكتب حدثَ فرقٍ — لا فرقَ صفريٌّ يُنشَر", async () => {

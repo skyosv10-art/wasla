@@ -36,6 +36,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   check,
   foreignKey,
   index,
@@ -318,6 +319,7 @@ export const dispatchOutbox = pgTable(
       .default(sql`now()`),
     /** NULL = not published yet. */
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(
@@ -333,7 +335,7 @@ export const dispatchOutbox = pgTable(
       sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_dispatch_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
     index("ix_dispatch_outbox_aggregate").on(
       table.aggregateType,

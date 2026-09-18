@@ -760,7 +760,7 @@ export class PostgresNegotiationOutbox implements Outbox {
         .select()
         .from(negotiationOutbox)
         .where(isNull(negotiationOutbox.publishedAt))
-        .orderBy(asc(negotiationOutbox.occurredAt), asc(negotiationOutbox.id))
+        .orderBy(asc(negotiationOutbox.sequenceNumber))
     ).map((r) => r.payload as unknown as NegotiationDomainEvent);
   }
 }

@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-17T17:31:13Z
-الالتزام: a14fa399edf304e478a929e0e686da1954cd81ff  الفرع: feat/m1-03-bind-query-string  شجرةٌ مُعدَّلةٌ (70 ملفّاً)
+التاريخ (UTC): 2026-09-18T07:37:08Z
+الالتزام: 84b567be6ad8cde5c9fcdebd201d84c62e209395  الفرع: fix/risk-0012-outbox-sequence-number  شجرةٌ نظيفة
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 3233 سطراً · sha256 887089400e853ace…
 
@@ -9,11 +9,11 @@
   packages                   51
   packages_with_typecheck    51
   packages_with_test         51
-  test_files_tracked         372
+  test_files_tracked         379
   ci_jobs                    30
   ci_allow_failure           1
-  governance_checks          21
-  risks_not_closed           36
+  governance_checks          23
+  risks_not_closed           33
 
 العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify5.log):
   tests_passed               4838
@@ -22,5 +22,5 @@
   governance_suite_failed    0
   verify_overall             passed
 
-البصمة: sha256:9a66d5c44883b199ae2bdacc915c17c52712e9224741988ab6a346e68c7ab3e3
+البصمة: sha256:9a1c8db503827e799c2456ee39be8d2a25678d0a97e9653efabf5c26ec28d83a
 المرجع: docs/12-testing/BASELINE_FORMAT.md

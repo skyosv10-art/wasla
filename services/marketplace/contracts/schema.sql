@@ -384,10 +384,15 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
     payload                 JSONB       NOT NULL,
     occurred_at             TIMESTAMPTZ NOT NULL,
     published_at            TIMESTAMPTZ,
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sequence_number         BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE marketplace_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_marketplace_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_marketplace_outbox_unpublished
-    ON marketplace_outbox (created_at) WHERE published_at IS NULL;
+    ON marketplace_outbox (sequence_number) WHERE published_at IS NULL;
 
 COMMIT;

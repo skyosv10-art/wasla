@@ -1,5 +1,29 @@
 
 
+## 2026-09-18 — M5-13: RISK-0012 mitigation — outbox monotonic sequence_number (ADR-037)
+
+- **Work Item(s):** M5-13 · M0-08 · **الحجز:** `CLM-0211` · `CLM-0212`
+- **الفرع:** `fix/risk-0012-outbox-sequence-number`
+
+**ما جرى:** RISK-0012 (sev:medium, open since 2026-08-29) — seven outbox tables lacked
+a monotonic counter. Two events written in the same transaction tied on `created_at`
+(`now()` is transaction-constant) and fell to a random UUID for ordering. A relay
+consumer could then read `inventory_adjusted` before `product_created`.
+
+ADR-037 adds `sequence_number BIGINT GENERATED ALWAYS AS IDENTITY` to each of the seven
+outbox tables (marketplace, subscriptions, dispatch, matching, negotiations, orders,
+reputation). The unpublished-claim query now orders by `sequence_number ASC` as the
+sole sort key. The `clock_timestamp()` workaround in marketplace is reverted to `now()`
+because `sequence_number` is the proof, not a timestamp.
+
+**Migration:** `ALTER TABLE ... ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED
+ALWAYS AS IDENTITY` in each contract SQL file (idempotent). Generated drizzle migrations
+(`0001_outbox_sequence_number.sql` + `.down.sql`) created for all 7 services.
+
+**ما لا يُدَّعى:** RISK-0012 is mitigated, not closed — closing requires CI proof on real
+PostgreSQL. RISK-0013 (JSONB byte-identical replay) remains open and unrelated.
+
+
 ## 2026-09-17 — M0-42: تحريرُ `CLM-0207` بعدَ دمجِ إقفالِ `RISK-0040`
 
 - **Work Item(s):** M0-42 · **الحجز:** `CLM-0207` (مُحرَّرٌ)

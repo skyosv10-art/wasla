@@ -41,6 +41,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   foreignKey,
@@ -510,6 +511,7 @@ export const reputationOutbox = pgTable(
     lastError: text("last_error"),
     traceId: text("trace_id"),
     createdAt: instant("created_at").notNull().default(sql`now()`),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (t) => [
     check(
@@ -526,7 +528,7 @@ export const reputationOutbox = pgTable(
     ),
     check("reputation_outbox_attempts_check", sql`${t.attempts} >= 0`),
     index("ix_reputation_outbox_unpublished")
-      .on(t.occurredAt)
+      .on(t.sequenceNumber)
       .where(sql`${t.publishedAt} IS NULL`),
   ],
 );

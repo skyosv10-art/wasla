@@ -139,11 +139,11 @@ describe("الدفعةُ الناجحة", () => {
 });
 
 describe("الترتيبُ والحدّ", () => {
-  it("الأقدمُ وقوعاً أوّلاً — لا الأقدمُ كتابةً", async () => {
+  it("الترتيبُ بـsequence_number — رتيبٌ عبر المعاملات", async () => {
     /**
-     * حدثان يُكتبان في لحظةٍ واحدة (نفس المعاملة) ويقعان في لحظتين مختلفتين. والترتيبُ
-     * بلحظة الكتابة كان سيبدو صحيحاً هنا بالمصادفة، ولذلك يُكتب الأحدثُ وقوعاً **أوّلاً**
-     * في الصندوق: لو كان الترتيبُ بالإدراج لَخرج معكوساً.
+     * بعد RISK-0012/ADR-037: الترتيبُ بـ`sequence_number` (هويّةٌ رتيبةٌ مولَّدةٌ آليّاً)
+     * لا بـ`occurred_at`. حدثانِ يُكتبانِ في معاملةٍ واحدةِ يأخذانِ أرقامَ تسلسلٍ
+     * بترتيبِ الإدراجِ، والبثُّ يتبعُ هذا الترتيبَ الرتيبَ.
      */
     const { outbox, runner, clock } = setup();
     await outbox.append(
@@ -157,10 +157,8 @@ describe("الترتيبُ والحدّ", () => {
 
     await drainOutbox(runner, sink, { limit: 10, clock });
 
-    expect(sink.delivered.map((record) => record.occurredAt)).toEqual([
-      "2026-03-01T09:00:00.000Z",
-      "2026-03-01T10:30:00.000Z",
-    ]);
+    // sequence_number is assigned in insertion order: 06 first (seq=1), 05 second (seq=2)
+    expect(sink.delivered.map((record) => record.id)).toEqual([uuid("06"), uuid("05")]);
   });
 
   it("و`limit` يُحترَم: البقيةُ تبقى غيرَ منشورةٍ للدورة التالية", async () => {
@@ -299,6 +297,7 @@ describe("إعادةُ المحاولة لا تُنتج نشرتين", () => {
             occurredAt: "2026-03-01T09:00:00.000Z",
             attempts: 0,
             traceId: "trace-drain",
+            sequenceNumber: 1,
           },
         ];
       },
@@ -348,6 +347,7 @@ describe("منفذٌ غيرُ مُهيَّأ", () => {
         occurredAt: "2026-03-01T09:00:00.000Z",
         attempts: 0,
         traceId: null,
+        sequenceNumber: 1,
       }),
     ).rejects.toBeInstanceOf(EventSinkUnconfiguredError);
   });

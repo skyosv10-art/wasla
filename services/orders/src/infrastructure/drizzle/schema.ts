@@ -404,6 +404,7 @@ export const orderOutbox = pgTable(
       .notNull()
       .default(sql`now()`),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [
     check(
@@ -419,7 +420,7 @@ export const orderOutbox = pgTable(
       sql`${table.traceId} IS NULL OR char_length(${table.traceId}) <= 128`,
     ),
     index("ix_order_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
     index("ix_order_outbox_aggregate").on(
       table.aggregateType,

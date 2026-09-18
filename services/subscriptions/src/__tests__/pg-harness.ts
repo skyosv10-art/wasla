@@ -122,9 +122,9 @@ export async function outboxSnapshot(pool: Pool): Promise<
   const result = await pool.query(
     `SELECT event_id, event_type, aggregate_type, payload,
             to_char(published_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS published_at,
-            attempts, last_error, trace_id
+            attempts, last_error, trace_id, sequence_number
        FROM subscription_outbox
-      ORDER BY occurred_at, event_id`,
+      ORDER BY sequence_number`,
   );
   return result.rows.map((row) => ({
     eventId: row.event_id as string,
@@ -135,6 +135,7 @@ export async function outboxSnapshot(pool: Pool): Promise<
     attempts: Number(row.attempts),
     lastError: (row.last_error as string | null) ?? null,
     traceId: (row.trace_id as string | null) ?? null,
+    sequenceNumber: Number(row.sequence_number),
   }));
 }
 

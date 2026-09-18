@@ -412,6 +412,7 @@ export class InMemoryIdempotencyRepository implements IdempotencyRepository {
  * له، والتظاهرُ بأنّ الاحتجازَ مجّانيٌّ كان سيُخفي بعينه ما وُجدت حزمةُ المطابقة لقياسه.
  */
 interface InMemoryOutboxRow {
+  readonly sequenceNumber: number;
   readonly event: ReputationDomainEvent;
   readonly appendedAt: string;
   publishedAt: string | null;
@@ -429,6 +430,7 @@ interface InMemoryOutboxRow {
  */
 export class InMemoryOutbox implements OutboxPort, OutboxDrainStore {
   private readonly rows: InMemoryOutboxRow[] = [];
+  private nextSequenceNumber = 1;
 
   /**
    * القراءةُ التاريخيّةُ التي تعتمدها اختباراتُ المراجعات 1/6..4/6 — تبقى كما كانت.
@@ -450,6 +452,7 @@ export class InMemoryOutbox implements OutboxPort, OutboxDrainStore {
        */
       if (this.rows.some((row) => row.event.event_id === event.event_id)) continue;
       this.rows.push({
+        sequenceNumber: this.nextSequenceNumber++,
         event,
         appendedAt: at,
         publishedAt: null,
@@ -473,16 +476,12 @@ export class InMemoryOutbox implements OutboxPort, OutboxDrainStore {
   async claimUnpublished(limit: number): Promise<readonly OutboxRecord[]> {
     const claimed = this.rows
       .filter((row) => row.publishedAt === null && !row.locked)
-      .sort((left, right) => {
-        const byInstant =
-          toEpochMillis(left.event.occurred_at, "occurredAt") -
-          toEpochMillis(right.event.occurred_at, "occurredAt");
-        return byInstant !== 0 ? byInstant : left.event.event_id.localeCompare(right.event.event_id);
-      })
+      .sort((left, right) => left.sequenceNumber - right.sequenceNumber)
       .slice(0, limit);
     for (const row of claimed) row.locked = true;
     return claimed.map((row) => ({
       id: row.event.event_id,
+      sequenceNumber: row.sequenceNumber,
       aggregateType: row.event.aggregate.type,
       aggregateId: row.event.aggregate.id,
       eventType: row.event.event_type,

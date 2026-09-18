@@ -847,7 +847,7 @@ export class PostgresOrderOutbox implements Outbox {
       .select()
       .from(orderOutbox)
       .where(sql`${orderOutbox.publishedAt} IS NULL`)
-      .orderBy(asc(orderOutbox.eventId));
+      .orderBy(asc(orderOutbox.sequenceNumber));
     return rows.map(
       (row) => row.payload as unknown as OrderDomainEvent,
     );

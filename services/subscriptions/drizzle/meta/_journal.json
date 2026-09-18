@@ -8,6 +8,13 @@
       "when": 1788830960897,
       "tag": "0000_supreme_dorian_gray",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789718400000,
+      "tag": "0001_outbox_sequence_number",
+      "breakpoints": true
     }
   ]
 }

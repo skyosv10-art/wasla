@@ -363,11 +363,16 @@ CREATE TABLE IF NOT EXISTS reputation_outbox (
     attempts                INTEGER     NOT NULL DEFAULT 0 CHECK (attempts >= 0),
     last_error              TEXT,
     trace_id                TEXT,
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sequence_number         BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE reputation_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_reputation_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_reputation_outbox_unpublished
-    ON reputation_outbox (occurred_at) WHERE published_at IS NULL;
+    ON reputation_outbox (sequence_number) WHERE published_at IS NULL;
 
 COMMIT;
 

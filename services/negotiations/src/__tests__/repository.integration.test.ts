@@ -674,11 +674,14 @@ describe.skipIf(!PG_ENABLED)("مستودعات تفاوض PostgreSQL", () => {
     });
   });
 
-  it("يحفظ JSONB في الصادر ويعيد غير المنشور بترتيب occurred_at ثم id", async () => {
+  it("يحفظ JSONB في الصادر ويعيد غير المنشور بترتيب sequence_number", async () => {
     await pg.outbox.append(event(uuid(42), "2026-08-23T00:01:00.000Z"));
     await pg.outbox.append(event(uuid(41), START));
     const unread = await pg.outbox.unread();
-    expect(unread.map((item) => item.event_id)).toEqual([uuid(41), uuid(42)]);
+    // ADR-037: sequence_number guarantees insertion order even when
+    // occurred_at would sort differently (uuid 42 has later occurred_at
+    // but was inserted first, so it comes first by sequence_number).
+    expect(unread.map((item) => item.event_id)).toEqual([uuid(42), uuid(41)]);
     expect(unread[0]?.data).toMatchObject({ order_public_id: ORDER_ID });
     expect(unread[0]?.trace_id).toBe("trace-123");
   });

@@ -353,6 +353,10 @@ CREATE TABLE IF NOT EXISTS subscription_outbox (
     sequence_number         BIGINT      GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE subscription_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_subscription_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_subscription_outbox_unpublished
     ON subscription_outbox (sequence_number) WHERE published_at IS NULL;
 

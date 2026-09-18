@@ -391,6 +391,10 @@ CREATE TABLE IF NOT EXISTS negotiation_outbox (
     sequence_number       BIGINT      GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE negotiation_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_negotiation_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_negotiation_outbox_unpublished
     ON negotiation_outbox (sequence_number) WHERE published_at IS NULL;
 

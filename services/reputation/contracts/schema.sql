@@ -367,6 +367,10 @@ CREATE TABLE IF NOT EXISTS reputation_outbox (
     sequence_number         BIGINT      GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE reputation_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_reputation_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_reputation_outbox_unpublished
     ON reputation_outbox (sequence_number) WHERE published_at IS NULL;
 

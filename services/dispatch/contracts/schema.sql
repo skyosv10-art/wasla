@@ -169,6 +169,10 @@ CREATE TABLE IF NOT EXISTS dispatch_outbox (
     sequence_number BIGINT     GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE dispatch_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_dispatch_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_dispatch_outbox_unpublished
     ON dispatch_outbox (sequence_number) WHERE published_at IS NULL;
 CREATE INDEX IF NOT EXISTS ix_dispatch_outbox_aggregate

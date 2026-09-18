@@ -388,6 +388,10 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
     sequence_number         BIGINT      GENERATED ALWAYS AS IDENTITY
 );
 
+-- ADR-037: sequence_number added to existing tables for monotonic ordering
+ALTER TABLE marketplace_outbox ADD COLUMN IF NOT EXISTS sequence_number BIGINT GENERATED ALWAYS AS IDENTITY;
+
+DROP INDEX IF EXISTS ix_marketplace_outbox_unpublished;
 CREATE INDEX IF NOT EXISTS ix_marketplace_outbox_unpublished
     ON marketplace_outbox (sequence_number) WHERE published_at IS NULL;
 

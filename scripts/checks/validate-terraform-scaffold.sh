@@ -59,12 +59,15 @@ while IFS= read -r -d '' f; do
   ERRORS+=("ملفُّ .tfvars ملتزَمٌ — استخدم .tfvars.example فقط: ${f#$ROOT/}")
 done < <(find "$TF_DIR" -name "*.tfvars" -not -name "*.tfvars.example" -print0 2>/dev/null)
 
-# ── 4. لا أسرارٍ في ملفّاتِ .tf ────────────────────────────────────────────
+# ── 4. لا أسرارٍ في ملفّاتِ .tf و .tfvars.example ─────────────────────────
 # ابحث عن أنماطِ سرٍّ شائعةٍ في ملفّاتِ .tf و .tfvars.example
+# ملاحظة: أسبقيةُ find تتطلّبُ أقواساً — `-name A -o -name B -print0`
+# تُطبّقُ `-print0` على الفرعِ الثاني فقط. الأقواسُ تُصلحُ ذلك.
 SECRET_PATTERNS=(
-  "sbp_[a-f0-9]{40}"           # Supabase service-role token
-  "postgres://[^[:space:]]*@"  # Postgres connection string with credentials
-  "BEGIN.*PRIVATE KEY"         # Private key blocks
+  "sbp_[a-z0-9]{40}"               # Supabase service-role token (pattern: sbp_ + 40 alphanum)
+  "postgres://[^[:space:]]*@"    # Postgres connection string with credentials
+  "postgresql://[^[:space:]]*@"   # PostgreSQL connection string (Supabase form)
+  "BEGIN.*PRIVATE KEY"            # Private key blocks
 )
 
 while IFS= read -r -d '' f; do
@@ -73,7 +76,7 @@ while IFS= read -r -d '' f; do
       ERRORS+=("نمطُ سرٍّ مشتبهٌ به في ${f#$ROOT/}")
     fi
   done
-done < <(find "$TF_DIR" -name "*.tf" -o -name "*.tfvars.example" -print0 2>/dev/null)
+done < <(find "$TF_DIR" \( -name "*.tf" -o -name "*.tfvars.example" \) -print0 2>/dev/null)
 
 # ── 5. terraform fmt -check و validate (إن وُجدَ binary) ─────────────────
 if command -v terraform &>/dev/null; then

@@ -1,5 +1,19 @@
 
 
+## 2026-09-18 — M2-02B fix: Terraform guard blind spots + regression tests (CLM-0218)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0218`
+- **الفرع:** `fix/m2-02b-terraform-guard-fixes`
+
+**ما جرى:** إصلاحُ عيبَين في `validate-terraform-scaffold.sh`:
+1. **أسبقيةُ find:** `-name "*.tf" -o -name "*.tfvars.example" -print0` كانت تُطبّقُ `-print0` على الفرعِ الثاني فقط، فلم يكن الحارسُ يقرأُ ملفّاتِ `.tf` إطلاقاً عندَ فحصِ الأسرار. أُصلِحَ بالأقواسِ: `\( -name "*.tf" -o -name "*.tfvars.example" \) -print0`.
+2. **نمطُ postgresql://:** أُضيفَ `postgresql://` (صيغةُ Supabase) إلى جانبِ `postgres://`.
+
+**حالاتُ الطفرةِ:** أُضيفَ قسمٌ [ز] في `test-governance.sh` بأربعِ حالاتٍ: حالةٌ موجبةٌ + ثلاثُ طفراتٍ (سرُّ postgresql:// · رمزُ Supabase · ملفُّ .tfvars).
+
+**عيبُ العملية:** CLM-0217 وُسِّعَ نطاقُه بعدَ الكتابةِ لتشملَ `scripts/` و`docs/00-rules/` بعدَ فشلِ CI. لا يُمحى بل يُسجَّل: النطاقُ يُحدَّد قبلَ الكتابةِ.
+
+
 ## 2026-09-18 — M2-02B: Terraform scaffolding and structural guard (CLM-0217)
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0217`

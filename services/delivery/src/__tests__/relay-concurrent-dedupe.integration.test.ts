@@ -38,7 +38,7 @@ import {
 } from "./pg-harness.js";
 import { PostgresDispatchEventSource } from "../infrastructure/dispatch-event-source.js";
 import { PostgresTaskMirrorStore } from "../infrastructure/task-mirror-store.js";
-import { PostgresConsumedEventsStore } from "../infrastructure/consumed-events-store.js";
+import { PostgresRelayConsumerLock } from "../infrastructure/relay-advisory-lock.js";
 import {
   DEFAULT_RELAY_CONFIG,
   runRelayBatch,
@@ -46,7 +46,6 @@ import {
   type RelayLogEntry,
 } from "../relay.js";
 import type { Pool } from "pg";
-import type { DispatchOutboxRow, RelayCheckpoint } from "../domain/consumed-events.js";
 
 describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual-instance relay", () => {
   let pool: Pool;
@@ -59,26 +58,24 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
   });
 
   afterEach(async () => {
-    await fixture.teardown();
+    await fixture.close();
   });
 
   it("two concurrent relay instances claim disjoint event sets — no double-processing", async () => {
     // Seed one task and 4 independent offer_accepted events for it.
     await seedTask(pool, {
-      jobId: "job-concurrent",
       taskId: "task-concurrent",
       publicId: "WS-CONCURRENT01",
-      status: "pending_acceptance",
-      createdAt: T0,
+      state: "pending_acceptance",
     });
 
     for (let i = 0; i < 4; i++) {
       await seedDispatchEvent(pool, {
-        eventId: `evt-concurrent-${i}`,
-        eventType: "offer_accepted",
-        aggregateType: "dispatch_offer",
-        aggregateId: `offer-concurrent-${i}`,
-        occurredAt: T0,
+        event_id: `evt-concurrent-${i}`,
+        event_type: "offer_accepted",
+        aggregate_type: "dispatch_offer",
+        aggregate_id: `offer-concurrent-${i}`,
+        occurred_at: T0,
         payload: {
           taskId: "task-concurrent",
           offerId: `offer-concurrent-${i}`,
@@ -89,47 +86,45 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     }
 
     // Two independent relay instances, each with its own deps.
-    const eventSourceA = new PostgresDispatchEventSource(pool);
-    const taskStoreA = new PostgresTaskMirrorStore(pool);
-    const consumedStoreA = new PostgresConsumedEventsStore(pool);
+    const eventsA = new PostgresDispatchEventSource(pool);
+    const storeA = new PostgresTaskMirrorStore(pool);
+    const lockA = new PostgresRelayConsumerLock(pool);
     const logA: RelayLogEntry[] = [];
     const depsA: RelayDeps = {
-      eventSource: eventSourceA,
-      taskStore: taskStoreA,
-      consumedEvents: consumedStoreA,
+      events: eventsA,
+      store: storeA,
+      lock: lockA,
       log: (entry) => logA.push(entry),
-      clock: () => T0,
       config: DEFAULT_RELAY_CONFIG,
     };
 
-    const eventSourceB = new PostgresDispatchEventSource(pool);
-    const taskStoreB = new PostgresTaskMirrorStore(pool);
-    const consumedStoreB = new PostgresConsumedEventsStore(pool);
+    const eventsB = new PostgresDispatchEventSource(pool);
+    const storeB = new PostgresTaskMirrorStore(pool);
+    const lockB = new PostgresRelayConsumerLock(pool);
     const logB: RelayLogEntry[] = [];
     const depsB: RelayDeps = {
-      eventSource: eventSourceB,
-      taskStore: taskStoreB,
-      consumedEvents: consumedStoreB,
+      events: eventsB,
+      store: storeB,
+      lock: lockB,
       log: (entry) => logB.push(entry),
-      clock: () => T0,
       config: DEFAULT_RELAY_CONFIG,
     };
 
     // Run both batches "concurrently" (Promise.all — the pool serializes
     // the actual SQL, and SKIP LOCKED ensures disjoint claim sets).
-    const [outcomeA, outcomeB] = await Promise.all([
+    await Promise.all([
       runRelayBatch(depsA),
       runRelayBatch(depsB),
     ]);
 
     // Each instance should have claimed some events (not necessarily 2+2,
     // but the union must be exactly 4 and the intersection must be empty).
-    const aApplied = logA.filter((e) => e.kind === "applied").length;
-    const bApplied = logB.filter((e) => e.kind === "applied").length;
+    const aApplied = logA.filter((e) => e.status === "applied").length;
+    const bApplied = logB.filter((e) => e.status === "applied").length;
 
     // No event should appear in both logs.
-    const aEventIds = new Set(logA.filter((e) => e.eventId).map((e) => e.eventId!));
-    const bEventIds = new Set(logB.filter((e) => e.eventId).map((e) => e.eventId!));
+    const aEventIds = new Set(logA.map((e) => e.event_id));
+    const bEventIds = new Set(logB.map((e) => e.event_id));
     const intersection = [...aEventIds].filter((id) => bEventIds.has(id));
 
     expect(intersection, "no event processed by both instances").toEqual([]);
@@ -154,19 +149,17 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
   it("crash mid-batch: a relay that fails after claiming leaves events in pending — next poll retries", async () => {
     // Seed a task and 2 events.
     await seedTask(pool, {
-      jobId: "job-crash",
       taskId: "task-crash",
       publicId: "WS-CRASH00001",
-      status: "pending_acceptance",
-      createdAt: T0,
+      state: "pending_acceptance",
     });
 
     await seedDispatchEvent(pool, {
-      eventId: "evt-crash-0",
-      eventType: "offer_accepted",
-      aggregateType: "dispatch_offer",
-      aggregateId: "offer-crash-0",
-      occurredAt: T0,
+      event_id: "evt-crash-0",
+      event_type: "offer_accepted",
+      aggregate_type: "dispatch_offer",
+      aggregate_id: "offer-crash-0",
+      occurred_at: T0,
       payload: {
         taskId: "task-crash",
         offerId: "offer-crash-0",
@@ -176,11 +169,11 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     });
 
     await seedDispatchEvent(pool, {
-      eventId: "evt-crash-1",
-      eventType: "offer_accepted",
-      aggregateType: "dispatch_offer",
-      aggregateId: "offer-crash-1",
-      occurredAt: T0,
+      event_id: "evt-crash-1",
+      event_type: "offer_accepted",
+      aggregate_type: "dispatch_offer",
+      aggregate_id: "offer-crash-1",
+      occurred_at: T0,
       payload: {
         taskId: "task-crash",
         offerId: "offer-crash-1",
@@ -193,16 +186,15 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     // claiming but before committing. We simulate this by running a batch
     // that will process events, then we manually reset the consumed-events
     // to pending (simulating a crash that left them uncommitted).
-    const eventSource = new PostgresDispatchEventSource(pool);
-    const taskStore = new PostgresTaskMirrorStore(pool);
-    const consumedStore = new PostgresConsumedEventsStore(pool);
+    const events = new PostgresDispatchEventSource(pool);
+    const store = new PostgresTaskMirrorStore(pool);
+    const lock = new PostgresRelayConsumerLock(pool);
     const log: RelayLogEntry[] = [];
     const deps: RelayDeps = {
-      eventSource,
-      taskStore,
-      consumedEvents: consumedStore,
+      events,
+      store,
+      lock,
       log: (entry) => log.push(entry),
-      clock: () => T0,
       config: DEFAULT_RELAY_CONFIG,
     };
 
@@ -240,19 +232,17 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
 
   it("dedupe: event_id uniqueness is enforced — duplicate insert is rejected", async () => {
     await seedTask(pool, {
-      jobId: "job-dedupe",
       taskId: "task-dedupe",
       publicId: "WS-DEDUPE0001",
-      status: "pending_acceptance",
-      createdAt: T0,
+      state: "pending_acceptance",
     });
 
     await seedDispatchEvent(pool, {
-      eventId: "evt-dedupe-0",
-      eventType: "offer_accepted",
-      aggregateType: "dispatch_offer",
-      aggregateId: "offer-dedupe-0",
-      occurredAt: T0,
+      event_id: "evt-dedupe-0",
+      event_type: "offer_accepted",
+      aggregate_type: "dispatch_offer",
+      aggregate_id: "offer-dedupe-0",
+      occurred_at: T0,
       payload: {
         taskId: "task-dedupe",
         offerId: "offer-dedupe-0",
@@ -261,16 +251,15 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
       },
     });
 
-    const eventSource = new PostgresDispatchEventSource(pool);
-    const taskStore = new PostgresTaskMirrorStore(pool);
-    const consumedStore = new PostgresConsumedEventsStore(pool);
+    const events = new PostgresDispatchEventSource(pool);
+    const store = new PostgresTaskMirrorStore(pool);
+    const lock = new PostgresRelayConsumerLock(pool);
     const log: RelayLogEntry[] = [];
     const deps: RelayDeps = {
-      eventSource,
-      taskStore,
-      consumedEvents: consumedStore,
+      events,
+      store,
+      lock,
       log: (entry) => log.push(entry),
-      clock: () => T0,
       config: DEFAULT_RELAY_CONFIG,
     };
 

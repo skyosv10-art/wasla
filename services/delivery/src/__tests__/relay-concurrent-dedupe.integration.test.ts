@@ -65,7 +65,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     // Seed one task and 4 independent offer_accepted events for it.
     await seedTask(pool, {
       taskId: "task-concurrent",
-      publicId: "WS-CONCURRENT01",
+      publicId: "WS-0000000001",
       state: "pending_acceptance",
     });
 
@@ -150,7 +150,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     // Seed a task and 2 events.
     await seedTask(pool, {
       taskId: "task-crash",
-      publicId: "WS-CRASH00001",
+      publicId: "WS-0000000002",
       state: "pending_acceptance",
     });
 
@@ -215,7 +215,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     // Second relay instance (recovery): should re-process all events.
     // Idempotency means `applied` status is a no-op for terminal rows,
     // but since we reset to `pending`, the relay will re-apply them.
-    const outcome2 = await runRelayBatch(deps);
+    await runRelayBatch(deps);
 
     // The key proof: no double-processing. The task should still have
     // exactly 2 transitions (the relay's idempotency guard prevents
@@ -233,7 +233,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
   it("dedupe: event_id uniqueness is enforced — duplicate insert is rejected", async () => {
     await seedTask(pool, {
       taskId: "task-dedupe",
-      publicId: "WS-DEDUPE0001",
+      publicId: "WS-0000000003",
       state: "pending_acceptance",
     });
 

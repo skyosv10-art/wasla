@@ -3,8 +3,8 @@
   "generated_at": "2026-09-18T07:37:08Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "84b567be6ad8cde5c9fcdebd201d84c62e209395",
-    "branch": "fix/risk-0012-outbox-sequence-number",
+    "commit": "306abbc1d9c95954065c426ba6de3991c73b3134",
+    "branch": "feat/m2-07-crash-retry-dedupe-proof",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
@@ -26,7 +26,7 @@
     "packages": 51,
     "packages_with_typecheck": 51,
     "packages_with_test": 51,
-    "test_files_tracked": 380,
+    "test_files_tracked": 381,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:539d4c8c7a55721182d0ab17e7faf7a9d90fce694ae4c8f3b79dcb674fcb6958",
+  "fingerprint": "sha256:9d233ef5c5895d35fda4e8850d9d4912d4498718bb557b7e541313db8528761a",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

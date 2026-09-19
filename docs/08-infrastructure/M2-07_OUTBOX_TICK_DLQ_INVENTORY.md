@@ -190,16 +190,42 @@ exists for channel events — this is a **package-level outbox with no drain**.
 
 ## 10. Summary of Gaps
 
+> **Re-measured 2026-09-19 (`CLM-0238`).** The counts and affected-service lists
+> below were re-derived directly from the 13 `services/*/contracts/schema.sql`
+> files and from a repository-wide scan for exported drain functions and relay
+> consumers. Four rows as originally published did not match the code; the
+> corrected values are given here and the original claim is kept beside each one
+> so the correction is by addition, not erasure. **G2 is closed;** the remaining
+> seven rows are open debt.
+
 | # | Gap | Affected | Severity |
 | --- | --- | --- | --- |
-| G1 | 8 services have outbox but no drain/publisher | customers, drivers, geography, identity, marketplace, matching, orders, subscriptions | High — events written but never delivered |
-| G2 | 6 outbox tables lack `sequence_number` | customers, delivery, drivers, geography, identity, search | Medium — same-transaction ordering not monotonic |
-| G3 | 5 outbox tables lack `attempts` / `last_error` | customers, delivery, drivers, geography, identity, marketplace, matching, orders, search | Medium — no in-table retry tracking |
-| G4 | 5 outbox tables lack `trace_id` | customers, drivers, geography, marketplace, search | Low — observability gap |
+| G1 | **9 of 13 outbox tables have no delivery mechanism at all** — neither an own drain/publisher nor a relay consumer (originally published as "8 services": that list wrongly included `marketplace` and `subscriptions`, and omitted `negotiations`, `search` and `delivery`) | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | High — events written but never delivered |
+| ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
+| G3 | **10 outbox tables lack `attempts` / `last_error`** (originally published as "5"; the affected list also omitted `dispatch`) | customers, delivery, dispatch, drivers, geography, identity, marketplace, matching, orders, search | Medium — no in-table retry tracking |
+| G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
 | G5 | Search has no DLQ lifecycle (no acknowledgement, no reprocess) | search | Medium — poisoned events are permanently terminal |
-| G6 | 5 idempotency tables store fingerprint only, not response | dispatch, drivers, matching (3 of 8) | Low — replay reprocesses instead of returning cached response |
+| G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
+
+### How the corrected values were measured
+
+| Claim | Command / evidence |
+| --- | --- |
+| Drain functions | `rg "export (async )?function drain\w*" services --glob '!**/__tests__/**'` → exactly two hits: `services/reputation/src/outbound/drain-outbox.ts:140`, `services/subscriptions/src/app/events.ts:278` |
+| Relay consumers | `services/search/src/relay.ts` reads `marketplace_outbox`; `services/delivery/src/relay.ts` reads `dispatch_outbox`; `services/delivery/src/marketplace-inventory-relay.ts` reads `marketplace_outbox` |
+| `attempts` / `last_error` / `trace_id` | per-table `CREATE TABLE …_outbox` block of each `services/*/contracts/schema.sql`; present only on `negotiation_outbox`, `reputation_outbox`, `subscription_outbox` for `attempts`/`last_error` |
+
+**The four delivery mechanisms that do exist**, so the 9 in G1 are the complement
+of this set, not of the drain list alone:
+
+| Outbox table | Mechanism | Location |
+| --- | --- | --- |
+| `reputation_outbox` | own drain | `services/reputation/src/outbound/drain-outbox.ts:140` |
+| `subscription_outbox` | own drain | `services/subscriptions/src/app/events.ts:278` |
+| `dispatch_outbox` | relay consumer | `services/delivery/src/relay.ts` |
+| `marketplace_outbox` | relay consumer ×2 | `services/search/src/relay.ts` · `services/delivery/src/marketplace-inventory-relay.ts` |
 
 ## 11. What M2-07's crash/retry/dedupe proof must cover
 
@@ -221,13 +247,30 @@ demonstrate:
 
 ### What is NOT yet proven
 
-- No integration test runs a relay crash → recovery → verify-no-double-processing
-  cycle against a real PostgreSQL (the upgrade drill from M2-05C is blocked).
-- No test demonstrates concurrent relay instances with `SKIP LOCKED`.
-- No test demonstrates the DLQ acknowledgement → requeue → reprocess cycle
-  end-to-end (unit tests exist, but no integration proof).
-- No tick has a crash-mid-tick recovery test (the tick is idempotent, but
-  the proof is in the tests, not in a live crash scenario).
+> **Superseded 2026-09-19 (`CLM-0238`).** This section was written while M2-05C
+> was still blocked. Three of its four bullets were discharged by `CLM-0233`
+> ([`M2-07_CRASH_RETRY_DEDUPE_PROOF.md`](../12-testing/M2-07_CRASH_RETRY_DEDUPE_PROOF.md)),
+> whose three integration tests live in
+> `services/delivery/src/__tests__/relay-concurrent-dedupe.integration.test.ts`
+> and run under the `db-integration (delivery)` CI job. The original text is kept
+> struck through so the correction is by addition.
 
-These are the next executable items once M2-05C (PostgreSQL upgrade drill) is
-unblocked.
+- ~~No integration test runs a relay crash → recovery → verify-no-double-processing
+  cycle against a real PostgreSQL (the upgrade drill from M2-05C is blocked).~~
+  **Discharged** — `crash mid-batch: a relay that fails after claiming leaves
+  events in pending — next poll retries` (test 2 of 3).
+- ~~No test demonstrates concurrent relay instances with `SKIP LOCKED`.~~
+  **Discharged** — `two concurrent relay instances claim disjoint event sets —
+  no double-processing` (test 1 of 3).
+- ~~No test demonstrates the DLQ acknowledgement → requeue → reprocess cycle
+  end-to-end (unit tests exist, but no integration proof).~~ **Partly open** —
+  dedupe is proven by `dedupe: event_id uniqueness is enforced — duplicate
+  insert is rejected` (test 3 of 3), but the full acknowledge → requeue →
+  reprocess cycle still has no end-to-end integration proof. Tracked as part of
+  G5 for `search`; `delivery` has the lifecycle but not the integration proof.
+- **Still open** — no tick has a crash-mid-tick recovery test (the tick is
+  idempotent by construction, but the proof is in unit tests, not in a live
+  crash scenario). Relates to G8.
+
+M2-05C is no longer blocking: the upgrade/repair drill was completed under
+`CLM-0232` against Supabase pooler PostgreSQL 17.6.

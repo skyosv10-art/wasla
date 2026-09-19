@@ -13,6 +13,9 @@
   - Rejected alternatives: 9 independent drains (violates ADR-017 least-duplicated-truth), relay-per-service (wrong pattern — relay consumes another service's outbox), waiting for M2-02 (gap is logical not operational), unifying tables first (breaks reversible migrations).
 - **What was NOT done:** No code implementation yet — this is ADR only. G1 engineering work (package + adapters + tests) starts in a separate claim after this ADR is merged. M2-02 dependency blocker remains open (external). M2-07 not promoted.
 - **Next executable:** Merge this ADR (CI green), then open a new claim for wave 1 implementation (`packages/outbox/` + `customers` adapter + integration test).
+- **CI verdict (PR branch):** WASLA CI [35472855885](https://github.com/skyosv10-art/wasla/actions/runs/35472855885) — **success · 35/35**.
+- **CI verdict (main post-merge):** WASLA CI [35472946725](https://github.com/skyosv10-art/wasla/actions/runs/35472946725) — **FAILURE** · `verify` + `governance-guard` failed check 4 (branch deleted while claim Active). Same pattern as CLM-0237/0239. This release PR fixes it.
+- **Lesson confirmed (3rd occurrence):** squash-merge with `--delete-branch` removes the branch before the claim can be released, so check 4 fails on main. Every PR merge must be followed immediately by a claim-release commit in the same batch. Going forward, the claim-release edit should be staged on the PR branch BEFORE merging so no separate release PR is needed.
 
 ## 2026-09-20 — M2-07: Exit gate document (CLM-0239)
 

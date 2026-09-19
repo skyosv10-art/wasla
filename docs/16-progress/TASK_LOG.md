@@ -1,5 +1,23 @@
 
 
+## 2026-09-19 — M2-08: Observability stack (CLM-0235)
+
+- **Work Item(s):** M2-08 · **الحجز:** `CLM-0235`
+- **Branch:** `feat/m2-08-logs-metrics-traces-alerts`
+- **Scope:** `packages/observability/`, `scripts/`, `docs/12-testing/`, `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`
+- **What was done:**
+  - [ADR-041](../15-decisions/ADR-041-observability-stack.md): Observability stack decision — Prometheus metrics, OpenTelemetry tracing, pino logs.
+  - `@wasla/observability` package created with:
+    - `metrics.ts` — Prometheus metrics (request count, latency histogram, in-progress gauge)
+    - `middleware.ts` — Fastify instrumentation (`instrumentApp` + `addMetricsEndpoint`)
+    - `tracing.ts` — OpenTelemetry tracing (opt-in via `OTEL_EXPORTER_OTLP_ENDPOINT`)
+  - 10 tests (6 unit + 4 integration): all pass.
+  - SLI baseline defined: Availability ≥ 99%, Latency p95 ≤ 500ms, Error rate ≤ 5%, Throughput ≥ 100 req/s.
+  - Synthetic trace test generates 55 requests and verifies metrics recording.
+  - BASELINE.json updated: packages 51→52, test_files_tracked 381→383.
+- **What was NOT done:** Package not yet wired into the 13 services. Alert manager and OTLP collector deployment deferred to Stage B.
+- **Next executable:** M2-09 staging parity/deploy/rollback (depends on M2-01..08).
+
 ## 2026-09-19 — M2-06: Backup/restore/RPO-RTO drill (CLM-0234)
 
 - **Work Item(s):** M2-06 · **الحجز:** `CLM-0234`

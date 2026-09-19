@@ -1,6 +1,6 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-18T07:37:08Z",
+  "generated_at": "2026-09-19T04:58:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
     "commit": "306abbc1d9c95954065c426ba6de3991c73b3134",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "887089400e853aced11ab1501ba6a16c48f9cc7389269e6dd1aac30d84e19272",
+    "sha256": "1628839467472ea0511019318e2fa424f02c0c0b15d4dcd7013676971fd209f7",
     "lines": 3233
   },
   "static": {
-    "packages": 51,
-    "packages_with_typecheck": 51,
-    "packages_with_test": 51,
-    "test_files_tracked": 381,
+    "packages": 52,
+    "packages_with_typecheck": 52,
+    "packages_with_test": 52,
+    "test_files_tracked": 383,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:9d233ef5c5895d35fda4e8850d9d4912d4498718bb557b7e541313db8528761a",
+  "fingerprint": "sha256:8a10afa765dc7ee51361e9b0b249039d97ff9a69e3514b40020db0ebf54f5c9f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

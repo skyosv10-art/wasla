@@ -2,7 +2,7 @@
 
 ## 2026-09-19 — M2-05C: Upgrade/repair drill against Supabase pooler (CLM-0232)
 
-- **Work Item(s):** M2-05C · **الحجز:** `CLM-0232`
+- **Work Item(s):** M2-05 · **الحجز:** `CLM-0232`
 - **Branch:** `feat/m2-05c-upgrade-repair-drill`
 - **Scope:** `scripts/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
 - **What was done:**

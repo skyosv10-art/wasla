@@ -14,7 +14,19 @@
   - Full test suites pass: customers 133/133, drivers 209/209, search 97/97.
   - Evidence: [docs/12-testing/upgrade-proof-evidence/2026-09-19-m2-07-outbox-sequence-parity.md](../12-testing/upgrade-proof-evidence/2026-09-19-m2-07-outbox-sequence-parity.md).
 - **What was NOT done:** No `sequence_number` column added (BIGSERIAL `id` is already monotonic per ADR-037). No new tests added for deterministic ordering (existing schema-drift tests verify index alignment).
-- **Next executable:** Continue M2-07 debt gaps (G1, G3) or next roadmap item.
+- **Next executable:** Merge PR #279 when CI is green.
+
+## 2026-09-19 — M2-07: Outbox sequence parity CI fixes (CLM-0237 continued)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0237`
+- **Branch:** `feat/m2-07-outbox-sequence-parity`
+- **What was done:**
+  - Fixed upgrade-proof tests: each service's outbox table has different columns (identity/search lack `aggregate_type`; identity uses UUID `aggregate_id`). Updated INSERT statements accordingly.
+  - Fixed index name in `pg_indexes` queries: was `ix_customer_unpublished` instead of `ix_customer_outbox_unpublished`.
+  - Registered `DATABASE_URL` readers in `env-registry.json` for geography and identity test files.
+  - Regenerated derived artifacts (`.env.example`, `registry.generated.ts`).
+  - Expanded work claim scope to include `packages/config/` and `.env.example`.
+- **Next executable:** Merge PR #279 when CI is green.
 
 ## 2026-09-19 — M2-08: Observability service wiring (CLM-0236)
 

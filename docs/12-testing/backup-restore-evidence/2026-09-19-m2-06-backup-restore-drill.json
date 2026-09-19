@@ -1,0 +1,712 @@
+{
+  "drill": "M2-06 Backup/Restore Drill",
+  "claim": "CLM-0234",
+  "date": "2026-09-19T04:28:40.419Z",
+  "pooler": "aws-0-ap-northeast-2.pooler.supabase.com:5432",
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "rpoTarget": "1 hour (production, via PITR) / 24 hours (staging/development, via daily backups)",
+  "rtoTarget": "15 minutes (production) / 30 minutes (staging) / 60 minutes (development)",
+  "results": [
+    {
+      "service": "customers",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16122,
+      "restoreMs": 11860,
+      "totalMs": 27982,
+      "tableCount": 5,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "customer_order_request_stops": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "customer_order_requests": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "customer_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "customer_profiles": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "customer_saved_places": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "delivery",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 18013,
+      "restoreMs": 22910,
+      "totalMs": 40923,
+      "tableCount": 14,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "delivery_idempotency_keys": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_inventory_conflicts": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_inventory_observations": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_inventory_relay_checkpoint": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_inventory_relay_consumed_events": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_inventory_reservations": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_relay_checkpoint": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_relay_consumed_events": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_task_transitions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "delivery_tasks": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_order_items": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_order_transitions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_orders": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "dispatch",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16134,
+      "restoreMs": 12765,
+      "totalMs": 28899,
+      "tableCount": 5,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "dispatch_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "dispatch_jobs": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "dispatch_offers": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "dispatch_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "dispatch_waves": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "drivers",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 17319,
+      "restoreMs": 18394,
+      "totalMs": 35713,
+      "tableCount": 9,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "driver_candidacy_publications": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_documents": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_eligibility_log": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_eligibility_policies": {
+          "source": "1",
+          "restored": "1",
+          "match": true
+        },
+        "driver_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_profiles": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_service_zones": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "driver_vehicles": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "geography",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 17310,
+      "restoreMs": 21262,
+      "totalMs": 38572,
+      "tableCount": 13,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "geo_cities": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_city_names": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_countries": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_country_names": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_district_names": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_districts": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_region_names": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_regions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_user_location_history": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_user_locations": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_zone_names": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "geo_zones": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "identity",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 15801,
+      "restoreMs": 14801,
+      "totalMs": 30602,
+      "tableCount": 6,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "identity_history": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "identity_links": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "identity_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "identity_recovery_requests": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "identity_sessions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "identity_users": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "marketplace",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16394,
+      "restoreMs": 17472,
+      "totalMs": 33866,
+      "tableCount": 10,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "inventory_adjustments": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "marketplace_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "marketplace_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "product_inventory": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "product_reviews": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "products": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_categories": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_reviews": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "store_staff": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "stores": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "matching",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 15544,
+      "restoreMs": 12327,
+      "totalMs": 27871,
+      "tableCount": 6,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "driver_candidacy": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "matching_decision_candidates": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "matching_decisions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "matching_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "matching_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "matching_rulesets": {
+          "source": "1",
+          "restored": "1",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "negotiations",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 15624,
+      "restoreMs": 15872,
+      "totalMs": 31496,
+      "tableCount": 8,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "negotiation_agreements": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_messages": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_policies": {
+          "source": "1",
+          "restored": "1",
+          "match": true
+        },
+        "negotiation_price_handoffs": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_rounds": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "negotiation_threads": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "orders",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16807,
+      "restoreMs": 13814,
+      "totalMs": 30621,
+      "tableCount": 5,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "order_assignments": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "order_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "order_status_history": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "order_stops": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "orders": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "reputation",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16636,
+      "restoreMs": 15267,
+      "totalMs": 31903,
+      "tableCount": 9,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "fraud_signals": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "reputation_facts": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "reputation_fraud_thresholds": {
+          "source": "5",
+          "restored": "5",
+          "match": true
+        },
+        "reputation_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "reputation_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "reputation_ratings": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "reputation_rule_weights": {
+          "source": "9",
+          "restored": "9",
+          "match": true
+        },
+        "reputation_rulesets": {
+          "source": "1",
+          "restored": "1",
+          "match": true
+        },
+        "reputation_scores": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "search",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16518,
+      "restoreMs": 13615,
+      "totalMs": 30133,
+      "tableCount": 6,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "search_marketplace_product_state": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "search_marketplace_store_state": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "search_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "search_product_index": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "search_relay_checkpoint": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "search_relay_consumed_events": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    },
+    {
+      "service": "subscriptions",
+      "status": "PASS",
+      "reason": null,
+      "backupMs": 16843,
+      "restoreMs": 16184,
+      "totalMs": 33027,
+      "tableCount": 10,
+      "catalogMatch": true,
+      "tablesMatch": true,
+      "rowCounts": {
+        "referral_codes": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "referral_rewards": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "referrals": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_idempotency": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_outbox": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_periods": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_plan_entitlements": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_plans": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscription_transitions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        },
+        "subscriptions": {
+          "source": "0",
+          "restored": "0",
+          "match": true
+        }
+      }
+    }
+  ]
+}

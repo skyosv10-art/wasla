@@ -67,7 +67,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     await seedTask(pool, {
       taskId: TASK_ID,
       publicId: "WS-0000000001",
-      state: "pending_acceptance",
+      state: "dispatch_requested",
     });
 
     for (let i = 0; i < 4; i++) {
@@ -153,7 +153,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     await seedTask(pool, {
       taskId: TASK_ID,
       publicId: "WS-0000000002",
-      state: "pending_acceptance",
+      state: "dispatch_requested",
     });
 
     await seedDispatchEvent(pool, {
@@ -236,7 +236,7 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     await seedTask(pool, {
       taskId: TASK_ID,
       publicId: "WS-0000000003",
-      state: "pending_acceptance",
+      state: "dispatch_requested",
     });
 
     const eventId = await seedDispatchEvent(pool, {

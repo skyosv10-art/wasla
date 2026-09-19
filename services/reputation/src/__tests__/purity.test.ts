@@ -310,6 +310,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
       "@wasla/auth-sdk",
       "@wasla/config",
       "@wasla/contracts-reputation",
+      "@wasla/observability",
       "@wasla/service-auth",
       "drizzle-orm",
       "fastify",

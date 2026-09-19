@@ -323,6 +323,7 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
     expect(Object.keys(dependencies ?? {}).sort()).toEqual([
       "@wasla/auth-sdk",
       "@wasla/contracts-subscription",
+      "@wasla/observability",
       "@wasla/service-auth",
       "drizzle-orm",
       "fastify",

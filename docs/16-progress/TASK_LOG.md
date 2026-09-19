@@ -1,5 +1,19 @@
 
 
+## 2026-09-19 — M2-07: Crash/retry/dedupe proof (CLM-0233)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0233`
+- **Branch:** `feat/m2-07-crash-retry-dedupe-proof`
+- **Scope:** `services/delivery/src/__tests__/`, `docs/08-infrastructure/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+- **What was done:**
+  - 3 new integration tests in `relay-concurrent-dedupe.integration.test.ts`:
+    1. Concurrent dual-instance relay: two relay instances with `FOR UPDATE SKIP LOCKED` claim disjoint event sets — no double-processing (4 events → 4 applied rows, 4 transitions not 8).
+    2. Crash mid-batch recovery: events reset to `pending` (simulating uncommitted crash), recovery batch re-processes, no duplicate transitions.
+    3. Dedupe enforcement: direct INSERT of duplicate `event_id` rejected by UNIQUE constraint.
+  - Proof document [`M2-07_CRASH_RETRY_DEDUPE_PROOF.md`](../12-testing/M2-07_CRASH_RETRY_DEDUPE_PROOF.md) maps 5 proof requirements to all existing tests (51 relay tests + 73 tick tests).
+- **What was NOT done:** 8 platform gaps remain as declared debt (8 services without drain, 6 tables without sequence_number, search without DLQ lifecycle). Search relay crash/retry integration test not added (delivery-only proof). M2-07 not promoted to Completed — gaps remain.
+- **Next executable:** M2-06 backup/restore/RPO-RTO (depends on M2-05, which is mostly done).
+
 ## 2026-09-19 — M2-05C: Upgrade/repair drill against Supabase pooler (CLM-0232)
 
 - **Work Item(s):** M2-05 · **الحجز:** `CLM-0232`

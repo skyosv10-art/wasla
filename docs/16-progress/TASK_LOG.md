@@ -1,5 +1,19 @@
 
 
+## 2026-09-19 — M2-06: Backup/restore/RPO-RTO drill (CLM-0234)
+
+- **Work Item(s):** M2-06 · **الحجز:** `CLM-0234`
+- **Branch:** `feat/m2-06-backup-restore-rpo-rto`
+- **Scope:** `scripts/`, `docs/12-testing/`, `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`
+- **What was done:**
+  - [ADR-040](../15-decisions/ADR-040-backup-restore-policy.md): Backup and Restore Policy defining RPO/RTO targets (Production RPO ≤ 1h via PITR · RTO ≤ 15min · Staging/Dev RPO ≤ 24h via daily backups).
+  - Drill script (`scripts/m2-06-backup-restore-drill.mjs`): pg_dump ← pg_restore ← 7-dimension catalog verification ← row-count verification for each service.
+  - 13/13 services passed full backup/restore cycle against Supabase pooler (PostgreSQL 17.6).
+  - Average backup time: 16.5s · Average restore time: 15.7s · Max cycle: 41s (delivery, 14 tables).
+  - Environmental discovery: `DROP DATABASE ... WITH (FORCE)` required for cleanup (Supabase pooler keeps connections alive, same as M2-05C).
+- **What was NOT done:** Production PITR not tested (requires Supabase Pro plan). Retention policy beyond 7 days not configured (Stage B concern). M2-05 not promoted to Completed.
+- **Next executable:** M2-08 logs/metrics/traces/alerts (depends on M2-01..07).
+
 ## 2026-09-19 — M2-07: Crash/retry/dedupe proof (CLM-0233)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0233`

@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (حجزُ `CLM-0233` لـ`M2-07` — crash/retry/dedupe proof)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (حجزُ `CLM-0234` لـ`M2-06` — backup/restore/RPO-RTO)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0234 | M2-06 | @uxxxu (agent:perplexity-computer) | feat/m2-06-backup-restore-rpo-rto | scripts/,docs/12-testing/,docs/15-decisions/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Active |
 | CLM-0233 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-crash-retry-dedupe-proof | services/delivery/src/__tests__/,docs/08-infrastructure/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #271 merged, squash `f1f1365`, 35/35 CI green) |
 | CLM-0232 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05c-upgrade-repair-drill | scripts/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (PR [#269](https://github.com/skyosv10-art/wasla/pull/269) · squash · 35/35 CI green · M2-05C upgrade/repair drill: 13/13 services passed full migration cycle against Supabase pooler PostgreSQL 17.6) |
 | CLM-0230 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05b-runner-unification | services/customers/,services/dispatch/,services/drivers/,services/geography/,services/identity/,services/matching/,services/negotiations/,services/orders/,services/reputation/,services/reputation/src/__tests__/,infra/migrations/,docs/08-infrastructure/,docs/16-progress/,packages/config/,packages/config/src/,ROADMAP.md,.env.example | 2026-09-18 | 2026-10-02 | Released (PR [#265](https://github.com/skyosv10-art/wasla/pull/265) · squash · 35/35 CI green) |

@@ -63,21 +63,21 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
 
   it("two concurrent relay instances claim disjoint event sets — no double-processing", async () => {
     // Seed one task and 4 independent offer_accepted events for it.
+    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000010";
     await seedTask(pool, {
-      taskId: "task-concurrent",
+      taskId: TASK_ID,
       publicId: "WS-0000000001",
       state: "pending_acceptance",
     });
 
     for (let i = 0; i < 4; i++) {
       await seedDispatchEvent(pool, {
-        event_id: `evt-concurrent-${i}`,
         event_type: "offer_accepted",
         aggregate_type: "dispatch_offer",
         aggregate_id: `offer-concurrent-${i}`,
         occurred_at: T0,
         payload: {
-          taskId: "task-concurrent",
+          taskId: TASK_ID,
           offerId: `offer-concurrent-${i}`,
           driverId: `driver-${i}`,
           vehicleKind: "car",
@@ -141,27 +141,28 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
 
     // The task should have exactly 4 transitions (one per event, no duplicates).
     const transitions = await pool.query(
-      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = 'task-concurrent'`
+      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = $1::uuid`,
+      [TASK_ID]
     );
     expect(transitions.rows[0].count, "exactly 4 transitions, no duplicates").toBe(4);
   });
 
   it("crash mid-batch: a relay that fails after claiming leaves events in pending — next poll retries", async () => {
     // Seed a task and 2 events.
+    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000020";
     await seedTask(pool, {
-      taskId: "task-crash",
+      taskId: TASK_ID,
       publicId: "WS-0000000002",
       state: "pending_acceptance",
     });
 
     await seedDispatchEvent(pool, {
-      event_id: "evt-crash-0",
       event_type: "offer_accepted",
       aggregate_type: "dispatch_offer",
       aggregate_id: "offer-crash-0",
       occurred_at: T0,
       payload: {
-        taskId: "task-crash",
+        taskId: TASK_ID,
         offerId: "offer-crash-0",
         driverId: "driver-0",
         vehicleKind: "car",
@@ -169,13 +170,12 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     });
 
     await seedDispatchEvent(pool, {
-      event_id: "evt-crash-1",
       event_type: "offer_accepted",
       aggregate_type: "dispatch_offer",
       aggregate_id: "offer-crash-1",
       occurred_at: T0,
       payload: {
-        taskId: "task-crash",
+        taskId: TASK_ID,
         offerId: "offer-crash-1",
         driverId: "driver-1",
         vehicleKind: "car",
@@ -221,7 +221,8 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     // exactly 2 transitions (the relay's idempotency guard prevents
     // duplicate transitions).
     const transitions = await pool.query(
-      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = 'task-crash'`
+      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = $1::uuid`,
+      [TASK_ID]
     );
 
     // The relay may or may not re-apply the events (depends on whether
@@ -231,20 +232,20 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
   });
 
   it("dedupe: event_id uniqueness is enforced — duplicate insert is rejected", async () => {
+    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000030";
     await seedTask(pool, {
-      taskId: "task-dedupe",
+      taskId: TASK_ID,
       publicId: "WS-0000000003",
       state: "pending_acceptance",
     });
 
-    await seedDispatchEvent(pool, {
-      event_id: "evt-dedupe-0",
+    const eventId = await seedDispatchEvent(pool, {
       event_type: "offer_accepted",
       aggregate_type: "dispatch_offer",
       aggregate_id: "offer-dedupe-0",
       occurred_at: T0,
       payload: {
-        taskId: "task-dedupe",
+        taskId: TASK_ID,
         offerId: "offer-dedupe-0",
         driverId: "driver-0",
         vehicleKind: "car",
@@ -271,8 +272,8 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
       pool.query(
         `INSERT INTO delivery_relay_consumed_events
          (event_id, ledger, consumer_id, status, source_occurred_at, payload_hash, first_seen_at, updated_at, attempt_count)
-         VALUES ('evt-dedupe-0', 'dispatch', 'delivery', 'pending', $1, 'hash', now(), now(), 0)`,
-        [T0]
+         VALUES ($1::uuid, 'dispatch', 'delivery', 'pending', $2, 'hash', now(), now(), 0)`,
+        [eventId, T0]
       )
     ).rejects.toThrow(); // UNIQUE constraint violation
   });

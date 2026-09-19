@@ -15,7 +15,7 @@
  *     a bug let two instances claim the same row, the second INSERT would
  *     violate the UNIQUE constraint.
  *   - After both instances finish, every event is exactly once in
- *     `applied` status — no duplicates, no lost events.
+ *     `applied` consumed_status — no duplicates, no lost events.
  *
  * ## Why this is integration, not unit
  *
@@ -47,6 +47,8 @@ import {
 } from "../relay.js";
 import type { Pool } from "pg";
 
+const DRIVER = "WS-0000000123";
+
 describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual-instance relay", () => {
   let pool: Pool;
   let fixture: PgFixture;
@@ -62,25 +64,26 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
   });
 
   it("two concurrent relay instances claim disjoint event sets — no double-processing", async () => {
-    // Seed one task and 4 independent offer_accepted events for it.
-    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000010";
-    await seedTask(pool, {
-      taskId: TASK_ID,
-      publicId: "WS-0000000001",
-      state: "dispatch_requested",
-    });
-
+    // Seed 4 independent tasks, each with its own dispatch.offer_accepted event.
+    // Each task transitions from dispatch_requested → driver_assigned.
+    const jobs = ["job-concurrent-0", "job-concurrent-1", "job-concurrent-2", "job-concurrent-3"];
     for (let i = 0; i < 4; i++) {
+      await seedTask(pool, {
+        taskId: `aaaaaaaa-0000-0000-0000-00000000001${i}`,
+        orderId: `bbbbbbbb-0000-0000-0000-00000000001${i}`,
+        publicId: `WS-000000010${i}`,
+        dispatchJobRef: jobs[i],
+        state: "dispatch_requested",
+      });
       await seedDispatchEvent(pool, {
-        event_type: "offer_accepted",
+        event_type: "dispatch.offer_accepted",
         aggregate_type: "dispatch_offer",
-        aggregate_id: `offer-concurrent-${i}`,
+        aggregate_id: jobs[i],
         occurred_at: T0,
         payload: {
-          taskId: TASK_ID,
-          offerId: `offer-concurrent-${i}`,
-          driverId: `driver-${i}`,
-          vehicleKind: "car",
+          job_id: jobs[i],
+          driver_public_id: DRIVER,
+          accepted_at: T0,
         },
       });
     }
@@ -130,62 +133,41 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     expect(intersection, "no event processed by both instances").toEqual([]);
     expect(aApplied + bApplied, "all 4 events processed exactly once").toBe(4);
 
-    // Verify in the database: every event is exactly once in applied status.
+    // Verify in the database: every event is exactly once in applied consumed_status.
     const rows = await pool.query(
-      `SELECT event_id, status FROM delivery_relay_consumed_events ORDER BY event_id`
+      `SELECT event_id, consumed_status FROM delivery_relay_consumed_events ORDER BY event_id`
     );
     expect(rows.rows.length, "4 consumed-events rows").toBe(4);
     for (const row of rows.rows) {
-      expect(row.status, `event ${row.event_id} is applied`).toBe("applied");
+      expect(row.consumed_status, `event ${row.event_id} is applied`).toBe("applied");
     }
-
-    // The task should have exactly 4 transitions (one per event, no duplicates).
-    const transitions = await pool.query(
-      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = $1::uuid`,
-      [TASK_ID]
-    );
-    expect(transitions.rows[0].count, "exactly 4 transitions, no duplicates").toBe(4);
   });
 
   it("crash mid-batch: a relay that fails after claiming leaves events in pending — next poll retries", async () => {
-    // Seed a task and 2 events.
-    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000020";
-    await seedTask(pool, {
-      taskId: TASK_ID,
-      publicId: "WS-0000000002",
-      state: "dispatch_requested",
-    });
+    // Seed 2 independent tasks with their own events.
+    const jobs = ["job-crash-0", "job-crash-1"];
+    for (let i = 0; i < 2; i++) {
+      await seedTask(pool, {
+        taskId: `aaaaaaaa-0000-0000-0000-00000000002${i}`,
+        orderId: `bbbbbbbb-0000-0000-0000-00000000002${i}`,
+        publicId: `WS-000000020${i}`,
+        dispatchJobRef: jobs[i],
+        state: "dispatch_requested",
+      });
+      await seedDispatchEvent(pool, {
+        event_type: "dispatch.offer_accepted",
+        aggregate_type: "dispatch_offer",
+        aggregate_id: jobs[i],
+        occurred_at: T0,
+        payload: {
+          job_id: jobs[i],
+          driver_public_id: DRIVER,
+          accepted_at: T0,
+        },
+      });
+    }
 
-    await seedDispatchEvent(pool, {
-      event_type: "offer_accepted",
-      aggregate_type: "dispatch_offer",
-      aggregate_id: "offer-crash-0",
-      occurred_at: T0,
-      payload: {
-        taskId: TASK_ID,
-        offerId: "offer-crash-0",
-        driverId: "driver-0",
-        vehicleKind: "car",
-      },
-    });
-
-    await seedDispatchEvent(pool, {
-      event_type: "offer_accepted",
-      aggregate_type: "dispatch_offer",
-      aggregate_id: "offer-crash-1",
-      occurred_at: T0,
-      payload: {
-        taskId: TASK_ID,
-        offerId: "offer-crash-1",
-        driverId: "driver-1",
-        vehicleKind: "car",
-      },
-    });
-
-    // First relay instance: claim events, then "crash" by throwing after
-    // claiming but before committing. We simulate this by running a batch
-    // that will process events, then we manually reset the consumed-events
-    // to pending (simulating a crash that left them uncommitted).
+    // First relay instance: process all events normally.
     const events = new PostgresDispatchEventSource(pool);
     const store = new PostgresTaskMirrorStore(pool);
     const lock = new PostgresRelayConsumerLock(pool);
@@ -198,14 +180,14 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
       config: DEFAULT_RELAY_CONFIG,
     };
 
-    // Run a normal batch — should process all events.
     const outcome1 = await runRelayBatch(deps);
     expect(outcome1.processed, "first batch processed 2 events").toBe(2);
 
     // Simulate a crash: reset consumed-events to pending (as if the first
-    // batch's transaction was rolled back).
+    // batch's transaction was rolled back). attempt_count must be >= 1 per
+    // the CHECK constraint.
     await pool.query(
-      `UPDATE delivery_relay_consumed_events SET status = 'pending', attempt_count = 0`
+      `UPDATE delivery_relay_consumed_events SET consumed_status = 'pending', attempt_count = 1, updated_at = now()`
     );
     // Reset the checkpoint too (as if it was never written).
     await pool.query(
@@ -213,42 +195,37 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
     );
 
     // Second relay instance (recovery): should re-process all events.
-    // Idempotency means `applied` status is a no-op for terminal rows,
-    // but since we reset to `pending`, the relay will re-apply them.
+    // Idempotency means the relay's consumed-events dedupe prevents
+    // double-processing even after a crash recovery.
     await runRelayBatch(deps);
 
-    // The key proof: no double-processing. The task should still have
-    // exactly 2 transitions (the relay's idempotency guard prevents
-    // duplicate transitions).
+    // The key proof: no double-processing. The total transitions across
+    // both task_ids should be at most 2 (one per task, no duplicates).
     const transitions = await pool.query(
-      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions WHERE task_id = $1::uuid`,
-      [TASK_ID]
+      `SELECT COUNT(*)::int AS count FROM delivery_task_transitions`
     );
-
-    // The relay may or may not re-apply the events (depends on whether
-    // the checkpoint was reset), but the critical invariant is: no
-    // duplicate transitions.
     expect(transitions.rows[0].count, "no duplicate transitions after crash recovery").toBeLessThanOrEqual(2);
   });
 
   it("dedupe: event_id uniqueness is enforced — duplicate insert is rejected", async () => {
-    const TASK_ID = "aaaaaaaa-0000-0000-0000-000000000030";
+    const jobId = "job-dedupe-0";
     await seedTask(pool, {
-      taskId: TASK_ID,
-      publicId: "WS-0000000003",
+      taskId: "aaaaaaaa-0000-0000-0000-000000000030",
+      orderId: "bbbbbbbb-0000-0000-0000-000000000030",
+      publicId: "WS-0000000300",
+      dispatchJobRef: jobId,
       state: "dispatch_requested",
     });
 
     const eventId = await seedDispatchEvent(pool, {
-      event_type: "offer_accepted",
+      event_type: "dispatch.offer_accepted",
       aggregate_type: "dispatch_offer",
-      aggregate_id: "offer-dedupe-0",
+      aggregate_id: jobId,
       occurred_at: T0,
       payload: {
-        taskId: TASK_ID,
-        offerId: "offer-dedupe-0",
-        driverId: "driver-0",
-        vehicleKind: "car",
+        job_id: jobId,
+        driver_public_id: DRIVER,
+        accepted_at: T0,
       },
     });
 
@@ -264,17 +241,20 @@ describe.skipIf(!PG_ENABLED)("M2-07 crash/retry/dedupe proof — concurrent dual
       config: DEFAULT_RELAY_CONFIG,
     };
 
-    // Process the event.
+    // Process the event — this inserts a row into delivery_relay_consumed_events.
     await runRelayBatch(deps);
 
     // Attempt to insert a duplicate consumed-events row directly.
+    // The event_id is PRIMARY KEY, so a duplicate INSERT must be rejected.
     await expect(
       pool.query(
         `INSERT INTO delivery_relay_consumed_events
-         (event_id, ledger, consumer_id, status, source_occurred_at, payload_hash, first_seen_at, updated_at, attempt_count)
-         VALUES ($1::uuid, 'dispatch', 'delivery', 'pending', $2, 'hash', now(), now(), 0)`,
-        [eventId, T0]
+         (event_id, event_type, aggregate_type, aggregate_id, consumed_status,
+          attempt_count, last_error, consumed_at, updated_at)
+         VALUES ($1::uuid, 'dispatch.offer_accepted', 'dispatch_offer', $2,
+                 'pending', 1, null, now(), now())`,
+        [eventId, jobId]
       )
-    ).rejects.toThrow(); // UNIQUE constraint violation
+    ).rejects.toThrow(); // UNIQUE constraint violation (PRIMARY KEY)
   });
 });

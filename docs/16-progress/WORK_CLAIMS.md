@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-20` (حجزُ `CLM-0239` لـ`M2-07`: إنشاءُ بوّابةِ `M2-07_GATE.md` — سدُّ الحاجزِ الثالثِ الموثَّقِ في تدقيقِ `CLM-0238`. النطاقُ توثيقيٌّ محضٌ: `docs/12-testing/` و`docs/16-progress/`)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-20` (حجزُ `CLM-0240` لـ`M2-07`: كتابةُ ADR لمعماريّةِ آليّةِ توصيلِ الصادرِ (G1) — 9 خدماتٍ بلا drain/relay. النطاقُ توثيقيٌّ: `docs/15-decisions/` و`docs/08-infrastructure/` و`docs/16-progress/`)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0240 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-g1-outbox-delivery-adr | docs/15-decisions/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Active |
 | CLM-0239 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-gate-status | docs/12-testing/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #283 merged, squash `1209337`, 35/35 CI green on PR branch + main CI 35470505015 green) |
 | CLM-0238 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-inventory-accuracy-audit | docs/08-infrastructure/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #281 merged, squash `60b91ed`, 35/35 CI green) |
 | CLM-0237 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-outbox-sequence-parity | services/customers/,services/drivers/,services/geography/,services/identity/,services/search/,packages/config/env-registry.json,packages/config/src/registry.generated.ts,.env.example,docs/08-infrastructure/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #279 merged, squash `a08645f`, 35/35 CI green) |

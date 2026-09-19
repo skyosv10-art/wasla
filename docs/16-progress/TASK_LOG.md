@@ -1,5 +1,19 @@
 
 
+## 2026-09-20 — M2-07: Exit gate document (CLM-0239)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0239`
+- **Branch:** `docs/m2-07-gate-status`
+- **Scope:** `docs/12-testing/`, `docs/16-progress/`
+- **What was done:**
+  - Created [`docs/12-testing/M2-07_GATE.md`](../12-testing/M2-07_GATE.md) — the third documented blocker from the `CLM-0238` audit ("no M2-07_GATE.md exists"). M2-01 and M2-04 already had gate docs; M2-07 did not.
+  - Verdict: `NOT PASSED`. The gate documents what was measured vs what remains, and does not declare M2-07 complete.
+  - Ten gate items: crash/retry/dedupe proof (✅ CLM-0233), G2 sequence parity (✅ CLM-0237), inventory accuracy re-measured (✅ CLM-0238), gate document exists (✅ this PR), CI green on main (✅ b3a6bc3 / 35432001351), M2-02 dependency complete (⛔ blocked on RENDER creds), G1 delivery-mechanism gap (⛔ High, 9/13 tables), DLQ lifecycle completeness (⚠️ delivery only, search has none).
+  - Three blockers from CLM-0238 updated: (1) M2-02 dependency — still open, external; (2) G1 High — still open, next substantive engineering candidate requiring its own ADR/claim; (3) no gate doc — **closed by this PR**.
+  - Three-layer state: LOCAL ✅ VERIFIED (re-measured from main at b3a6bc3), CI ✅ VERIFIED (35432001351 success 35/35), PRODUCTION ⚪ NOT VERIFIED.
+- **What was NOT done:** M2-07 not promoted to `Ready for Gate` or `Completed` — two blockers remain open and §9 forbids automated agents from setting Completed. G1 engineering work not started — requires its own ADR, design, and claim because it spans 9 services. M2-02 external credential dependency not addressed (out of scope, owner-controlled).
+- **Next executable:** Owner decision on M2-07 status (Ready for Gate despite open blockers, or remain In Progress); otherwise, G1 remediation via a new ADR + claim (outbox delivery mechanism for 9 services).
+
 ## 2026-09-19 — M2-07: Outbox sequence parity for BIGSERIAL tables (CLM-0237)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0237`

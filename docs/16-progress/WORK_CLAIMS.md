@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (تحريرُ `CLM-0231` بعدَ دمجِ PR #267 · `M2-07` · `§8.1` · إصلاحُ فشلِ `governance-guard`/`verify` على `main` بسببِ بياتِ الحجز)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (حجزُ `CLM-0232` لـ`M2-05C` — تدريبُ الترقية/الإصلاح ضد Supabase pooler)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0232 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05c-upgrade-repair-drill | scripts/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Active |
 | CLM-0230 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05b-runner-unification | services/customers/,services/dispatch/,services/drivers/,services/geography/,services/identity/,services/matching/,services/negotiations/,services/orders/,services/reputation/,services/reputation/src/__tests__/,infra/migrations/,docs/08-infrastructure/,docs/16-progress/,packages/config/,packages/config/src/,ROADMAP.md,.env.example | 2026-09-18 | 2026-10-02 | Released (PR [#265](https://github.com/skyosv10-art/wasla/pull/265) · squash · 35/35 CI green) |
 | CLM-0229 | M2-05 | @uxxxu (agent:perplexity-computer) | feat/m2-05-migration-owners | infra/migrations/,docs/08-infrastructure/,docs/00-rules/,scripts/checks/,scripts/,docs/16-progress/,ROADMAP.md | 2026-09-18 | 2026-10-02 | Released (PR [#263](https://github.com/skyosv10-art/wasla/pull/263) · squash · 35/35 CI green) |
 | CLM-0228 | M2-03 | @uxxxu (agent:perplexity-computer) | fix/m2-03a-inventory-gaps | scripts/checks/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-18 | 2026-10-02 | Released (PR [#261](https://github.com/skyosv10-art/wasla/pull/261) · squash · 35/35 CI green) |

@@ -1,5 +1,19 @@
 
 
+## 2026-09-19 — M2-05C: Upgrade/repair drill against Supabase pooler (CLM-0232)
+
+- **Work Item(s):** M2-05 · **الحجز:** `CLM-0232`
+- **Branch:** `feat/m2-05c-upgrade-repair-drill`
+- **Scope:** `scripts/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+- **What was done:**
+  - Supabase DB connection: direct DNS (`db.snlpxywskyqrjattbpgn.supabase.co`) fails; pooler (`aws-0-ap-northeast-2.pooler.supabase.com`) succeeds — PostgreSQL 17.6, `createdb=true`, `is_superuser=false`.
+  - Drill script (`scripts/m2-05c-upgrade-repair-drill.mjs`): creates isolated databases per service, applies forward migrations, verifies 7-dimension catalog equivalence with `schema.sql` contract, applies rollback, verifies clean database, re-applies forward migrations.
+  - 13/13 services passed full cycle: customers, delivery, dispatch, drivers, geography, identity, marketplace, matching, negotiations, orders, reputation, search, subscriptions.
+  - Environmental findings: (1) migrations use `"public"."table"` explicitly — schema isolation not possible; isolated databases used instead. (2) Pooler keeps connections alive after `pool.end()` — `pg_terminate_backend` workaround added before `DROP DATABASE`.
+  - Evidence: [`2026-09-19-m2-05c-supabase-pooler.md`](../12-testing/upgrade-proof-evidence/2026-09-19-m2-05c-supabase-pooler.md)
+- **What was NOT done:** No code changes to services or migrations. No CI check added (drill is external — requires Supabase DB access not available in CI). M2-05 not promoted to Completed (M2-06 backup/restore not started).
+- **Next executable:** M2-07 crash/retry/dedupe proof (now unblocked — was blocked on M2-05C).
+
 ## 2026-09-19 — M2-07: Outbox/tick/DLQ inventory + M2-05C blocked (CLM-0231)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0231`

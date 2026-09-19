@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS search_outbox (
 );
 
 CREATE INDEX IF NOT EXISTS ix_search_outbox_unpublished
-    ON search_outbox (occurred_at)
+    ON search_outbox (id)
     WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────

@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS customer_outbox (
 );
 
 CREATE INDEX IF NOT EXISTS ix_customer_outbox_unpublished
-    ON customer_outbox (occurred_at) WHERE published_at IS NULL;
+    ON customer_outbox (id) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- updated_at triggers

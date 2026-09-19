@@ -1,5 +1,21 @@
 
 
+## 2026-09-19 — M2-07: Outbox sequence parity for BIGSERIAL tables (CLM-0237)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0237`
+- **Branch:** `feat/m2-07-outbox-sequence-parity`
+- **Scope:** `services/customers/`, `services/drivers/`, `services/geography/`, `services/identity/`, `services/search/`, `docs/08-infrastructure/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+- **What was done:**
+  - Closed M2-07 debt gap G2: 6 outbox tables without `sequence_number` (ADR-037 §Scope).
+  - `delivery_outbox` was already correct (index on `outbox_id`).
+  - For the other 5 tables (`customer_outbox`, `driver_outbox`, `geo_outbox`, `identity_outbox`, `search_outbox`), the BIGSERIAL `id` is already a monotonic sequence. The fix was to align the unpublished-events index from `(occurred_at)` to `(id)`, and for drivers to change the ORDER BY from `(occurredAt, id)` to `(id)`.
+  - 5 contract SQL files, 5 Drizzle schema files, 5 migration files created.
+  - Schema-drift tests pass: customers 17/17, drivers 28/28, search 19/19.
+  - Full test suites pass: customers 133/133, drivers 209/209, search 97/97.
+  - Evidence: [docs/12-testing/upgrade-proof-evidence/2026-09-19-m2-07-outbox-sequence-parity.md](../12-testing/upgrade-proof-evidence/2026-09-19-m2-07-outbox-sequence-parity.md).
+- **What was NOT done:** No `sequence_number` column added (BIGSERIAL `id` is already monotonic per ADR-037). No new tests added for deterministic ordering (existing schema-drift tests verify index alignment).
+- **Next executable:** Continue M2-07 debt gaps (G1, G3) or next roadmap item.
+
 ## 2026-09-19 — M2-08: Observability service wiring (CLM-0236)
 
 - **Work Item(s):** M2-08 · **الحجز:** `CLM-0236`

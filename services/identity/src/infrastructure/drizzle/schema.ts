@@ -173,7 +173,7 @@ export const identityOutbox = pgTable(
     // occurred_at كان خطأً كامناً يمنعُ حدثَينِ بنفسِ الطابعِ الزمنيِّ — والعقدُ
     // (contracts/schema.sql) جزئيٌّ غيرُ فريدٍ، فصُحِّحَ الإسقاطُ ليتطابقَ.
     index("ix_identity_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.id)
       .where(sql`"identity_outbox"."published_at" IS NULL`),
   ],
 );

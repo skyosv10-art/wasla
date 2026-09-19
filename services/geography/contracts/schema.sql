@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS geo_outbox (
     published_at  TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS ix_geo_outbox_unpublished ON geo_outbox (occurred_at) WHERE published_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_geo_outbox_unpublished ON geo_outbox (id) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- updated_at triggers (لكل جدول له updated_at)

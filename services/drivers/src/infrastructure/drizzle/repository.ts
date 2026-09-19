@@ -982,7 +982,7 @@ export class PostgresDriverOutbox implements Outbox {
       // Production order, with `id` as the tiebreak: several events of one operation
       // share `occurred_at` down to the millisecond, and a consumer that reads
       // "eligibility changed" before "document reviewed" cannot explain the change.
-      .orderBy(asc(driverOutbox.occurredAt), asc(driverOutbox.id));
+      .orderBy(asc(driverOutbox.id));
     return rows.map((row) => row.payload as unknown as DriverDomainEvent);
   }
 

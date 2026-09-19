@@ -288,7 +288,7 @@ export const geoOutbox = pgTable(
   },
   (table) => [
     index("ix_geo_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.id)
       .where(sql`"geo_outbox"."published_at" IS NULL`),
   ],
 );

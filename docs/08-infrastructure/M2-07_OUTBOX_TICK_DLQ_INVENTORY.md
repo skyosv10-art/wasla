@@ -15,26 +15,29 @@ service — applied verbatim by `db:migrate` (CLM-0230).
 
 | Service | Table | PK type | Sort key | `published_at` | `sequence_number` | `attempts` | `last_error` | `trace_id` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| customers | `customer_outbox` | `BIGSERIAL id` | `occurred_at` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| customers | `customer_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
 | delivery | `delivery_outbox` | `BIGSERIAL outbox_id` | `outbox_id` | ✓ | ✗ | ✗ | ✗ | ✓ |
 | dispatch | `dispatch_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
-| drivers | `driver_outbox` | `BIGSERIAL id` | `occurred_at` | ✓ | ✗ | ✗ | ✗ | ✗ |
-| geography | `geo_outbox` | `BIGSERIAL id` | `occurred_at` | ✓ | ✗ | ✗ | ✗ | ✗ |
-| identity | `identity_outbox` | `BIGSERIAL id` | `occurred_at` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| drivers | `driver_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| geography | `geo_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| identity | `identity_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
 | marketplace | `marketplace_outbox` | `UUID outbox_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✗ |
 | matching | `matching_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
 | negotiations | `negotiation_outbox` | `UUID id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
 | orders | `order_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
 | reputation | `reputation_outbox` | `UUID id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
-| search | `search_outbox` | `BIGSERIAL id` | `occurred_at` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| search | `search_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
 | subscriptions | `subscription_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
 
 ### Schema consistency gaps
 
-1. **`sequence_number` missing on 6 tables** — `customer_outbox`, `delivery_outbox`,
-   `driver_outbox`, `geo_outbox`, `identity_outbox`, `search_outbox`. These predate
-   ADR-037. The three relays (search, delivery ×2) sort by `occurred_at` or
-   `outbox_id` — not monotonic across a same-transaction batch.
+1. **~~`sequence_number` missing on 6 tables~~** — **RESOLVED (CLM-0237, 2026-09-19).**
+   `delivery_outbox` was already correct (index on `outbox_id`). For the other 5
+   tables (`customer_outbox`, `driver_outbox`, `geo_outbox`, `identity_outbox`,
+   `search_outbox`), the BIGSERIAL `id` is already a monotonic sequence
+   (ADR-037 §Scope). The fix was to align the unpublished-events index and
+   ORDER BY from `occurred_at` to `id`, so the query planner can use the index
+   for the drain/replay path. No redundant `sequence_number` column was added.
 2. **`attempts` / `last_error` present on 3 tables only** — `negotiation_outbox`,
    `reputation_outbox`, `subscription_outbox`. The other 10 have no in-table retry
    counter.

@@ -349,7 +349,7 @@ export const customerOutbox = pgTable(
       sql`${table.aggregateType} IN ('customer','customer_order_request')`,
     ),
     index("ix_customer_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.id)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

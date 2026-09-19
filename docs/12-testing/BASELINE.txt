@@ -1,15 +1,26 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-19T04:58:00Z
-الالتزام: 306abbc1d9c95954065c426ba6de3991c73b3134  الفرع: feat/m2-07-crash-retry-dedupe-proof  ملفاتٌ متعقَّبةٌ: 2149
-البيئةُ: Node v20.20.1 · pnpm 9.15.9 · Linux/x86_64
-القفلُ: c654a762c4c173f0…  (3233 سطراً)
+التاريخ (UTC): 2026-09-19T23:03:50Z
+الالتزام: a2ed228ef2e418d714c20551958ae09948f0a17d  الفرع: feat/m2-07-g1-wave1-outbox-package  شجرةٌ مُعدَّلةٌ (7 ملفّاً)
+البيئة: node v20.20.1 · pnpm unknown · Linux/x86_64 · python 3.14.3
+القفل: pnpm-lock.yaml · 3317 سطراً · sha256 9fa09cab2c05445f…
 
-العدَّاداتُ الساكنةُ (تُبصَّم):
-  الحزمُ: 52  (typecheck: 52, test: 52)
-  ملفّاتُ الاختباراتِ المتعقَّبةُ: 383
-  وظائفُ CI: 30  (allow_failure: 1)
-  فحوصُ الحوكمةِ: 23  أخطارٌ مفتوحةٌ: 32
+العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
+  packages                   53
+  packages_with_typecheck    53
+  packages_with_test         53
+  test_files_tracked         390
+  ci_jobs                    30
+  ci_allow_failure           1
+  governance_checks          23
+  risks_not_closed           32
 
-البصمةُ: sha256:10d554e118a3ed34356c35f6f7ee762e64cda26ba034f6d8e8f2898fafb78be0
-المرجعُ: docs/12-testing/BASELINE_FORMAT.md
+العدَّاداتُ الحركيّةُ (غيرُ مقيسةٍ — لم يُمرَّر سجلُّ تحقّقٍ):
+  tests_passed               —
+  test_files_executed        —
+  governance_suite_cases     —
+  governance_suite_failed    —
+  verify_overall             —
+
+البصمة: sha256:8c47989243daf7f4461608d30a95b2eaa01642458b0498a1ad46d4b169bf10eb
+المرجع: docs/12-testing/BASELINE_FORMAT.md

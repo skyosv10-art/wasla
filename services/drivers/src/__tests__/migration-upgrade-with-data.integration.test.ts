@@ -3,7 +3,7 @@
  *
  * ## ما يقيسُهُ هذا الاختبارُ
  *
- *  ترحيلُ `0001_outbox_index_pk` يُغيِّرُ فهرسَ `ix_driver_unpublished`
+ *  ترحيلُ `0001_outbox_index_pk` يُغيِّرُ فهرسَ `ix_driver_outbox_unpublished`
  *  من `(occurred_at)` إلى `(id)` — فالأخيرُ مُتتابِعٌ رتيبٌ
  *  (BIGSERIAL)، فترتيبُ الصادرِ يصيرُ حتميًّا داخلَ الدفعةِ الواحدةِ
  *  (ADR-037 §Scope). وهذا الاختبارُ يُثبِتُ أنَّ الترقيةَ
@@ -155,7 +155,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     // Verify the index now uses the PK column
     const idx = await db.query(
       `SELECT indexname, indexdef FROM pg_indexes
-       WHERE tablename = 'driver_outbox' AND indexname = 'ix_driver_unpublished'`,
+       WHERE tablename = 'driver_outbox' AND indexname = 'ix_driver_outbox_unpublished'`,
     );
     expect(idx.rows).toHaveLength(1);
     expect(idx.rows[0].indexdef).toContain("(id)");
@@ -172,7 +172,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     // Index should still exist (reverted to occurred_at)
     const idx = await db.query(
       `SELECT indexname FROM pg_indexes
-       WHERE tablename = 'driver_outbox' AND indexname = 'ix_driver_unpublished'`,
+       WHERE tablename = 'driver_outbox' AND indexname = 'ix_driver_outbox_unpublished'`,
     );
     expect(idx.rows).toHaveLength(1);
   });

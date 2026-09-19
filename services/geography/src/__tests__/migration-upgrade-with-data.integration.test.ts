@@ -3,7 +3,7 @@
  *
  * ## ما يقيسُهُ هذا الاختبارُ
  *
- *  ترحيلُ `0001_outbox_index_pk` يُغيِّرُ فهرسَ `ix_geo_unpublished`
+ *  ترحيلُ `0001_outbox_index_pk` يُغيِّرُ فهرسَ `ix_geo_outbox_unpublished`
  *  من `(occurred_at)` إلى `(id)` — فالأخيرُ مُتتابِعٌ رتيبٌ
  *  (BIGSERIAL)، فترتيبُ الصادرِ يصيرُ حتميًّا داخلَ الدفعةِ الواحدةِ
  *  (ADR-037 §Scope). وهذا الاختبارُ يُثبِتُ أنَّ الترقيةَ
@@ -113,8 +113,8 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
 
     // 2) بياناتٌ حيّةٌ بقيمٍ معلومةٍ — قبلَ أيِّ ترحيلٍ لاحقٍ.
     await db.query(
-      `INSERT INTO geo_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload, occurred_at)
-       VALUES ($1, $2, 'v1', 'geo', $3, $4::jsonb, NOW())`,
+      `INSERT INTO geo_outbox (event_id, event_type, event_version, aggregate_id, payload, occurred_at)
+       VALUES ($1, $2, 'v1', $3, $4::jsonb, NOW())`,
       [
         SEEDED_EVENT_ID,
         "geo.location_set",
@@ -156,7 +156,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     // Verify the index now uses the PK column
     const idx = await db.query(
       `SELECT indexname, indexdef FROM pg_indexes
-       WHERE tablename = 'geo_outbox' AND indexname = 'ix_geo_unpublished'`,
+       WHERE tablename = 'geo_outbox' AND indexname = 'ix_geo_outbox_unpublished'`,
     );
     expect(idx.rows).toHaveLength(1);
     expect(idx.rows[0].indexdef).toContain("(id)");
@@ -173,7 +173,7 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     // Index should still exist (reverted to occurred_at)
     const idx = await db.query(
       `SELECT indexname FROM pg_indexes
-       WHERE tablename = 'geo_outbox' AND indexname = 'ix_geo_unpublished'`,
+       WHERE tablename = 'geo_outbox' AND indexname = 'ix_geo_outbox_unpublished'`,
     );
     expect(idx.rows).toHaveLength(1);
   });

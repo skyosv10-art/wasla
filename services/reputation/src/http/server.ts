@@ -37,6 +37,7 @@ import {
   PostgresReputationRunner,
   type ReputationRunner,
 } from "../runner.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 import { createReputationApp, type ReputationHealthDescriptor } from "./app.js";
 
@@ -73,14 +74,25 @@ async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
   const keys = keyRegistryFromEnv(process.env);
   const replayGuard = createServiceTokenReplayGuardFromEnv(process.env);
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("reputation");
+
   const app = createReputationApp({
     runner,
     health,
     logger: true,
     serviceIdentity: { keys, replayGuard },
   });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("reputation");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

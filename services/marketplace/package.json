@@ -37,6 +37,7 @@
   "dependencies": {
     "@wasla/auth-sdk": "workspace:*",
     "@wasla/contracts-marketplace": "workspace:*",
+    "@wasla/observability": "workspace:*",
     "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",

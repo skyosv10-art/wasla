@@ -35,6 +35,7 @@ import {
 } from "../index.js";
 import type { IdentityLookupPort } from "../ports.js";
 import type { UseCaseDeps } from "../use-cases/deps.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 function buildIdentityLookup(): IdentityLookupPort {
   const baseUrl = process.env.IDENTITY_SERVICE_URL;
@@ -89,6 +90,9 @@ async function main(): Promise<void> {
   // `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
   // `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
   // نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("geography");
+
   const app = createGeographyApp({
     deps,
     logger: true,
@@ -97,11 +101,24 @@ async function main(): Promise<void> {
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("geography");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
   const port = readPortEnv(process.env, "PORT", 8081);
+
+  for (const signal of ["SIGTERM", "SIGINT"] as const) {
+    process.once(signal, () => {
+      stopTracing();
+      void app.close().then(() => process.exit(0));
+    });
+  }
 
   try {
     await app.listen({ port, host: "0.0.0.0" });
   } catch (err) {
+    stopTracing();
     app.log.error(err);
     process.exit(1);
   }

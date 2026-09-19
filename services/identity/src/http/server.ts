@@ -29,6 +29,7 @@ import {
   ensurePublicIdSequence,
 } from "../index.js";
 import type { UseCaseDeps } from "../use-cases/resolve-telegram-identity.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 async function buildDeps(): Promise<UseCaseDeps> {
   const clock = new SystemClock();
@@ -84,16 +85,32 @@ function serviceIdentityWiring(): {
 
 async function main(): Promise<void> {
   const deps = await buildDeps();
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("identity");
+
   const app = createIdentityApp({
     deps,
     logger: true,
     serviceIdentity: serviceIdentityWiring(),
   });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("identity");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
   const port = readPortEnv(process.env, "PORT", 8080);
+
+  for (const signal of ["SIGTERM", "SIGINT"] as const) {
+    process.once(signal, () => {
+      stopTracing();
+      void app.close().then(() => process.exit(0));
+    });
+  }
 
   try {
     await app.listen({ port, host: "0.0.0.0" });
   } catch (err) {
+    stopTracing();
     app.log.error(err);
     process.exit(1);
   }

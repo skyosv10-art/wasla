@@ -72,6 +72,7 @@ import {
 } from "../domain/dependency-probe.js";
 import type { DependencyObservationPort } from "../domain/dependency-probe.js";
 import type { InventoryReservationPort, StoreOrderCatalogPort } from "../ports.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = readPortEnv(process.env, "PORT", 8097);
@@ -227,6 +228,9 @@ async function main(): Promise<void> {
    * `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
    * نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
    */
+  // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("delivery");
+
   const { fastify, close } = buildDeliveryHttpApp({
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
@@ -251,6 +255,11 @@ async function main(): Promise<void> {
       : { marketplaceObservationPort: observation.observationPort }),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("delivery");
+  instrumentApp(fastify, metrics);
+  addMetricsEndpoint(fastify, metrics);
+
   try {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
@@ -259,6 +268,7 @@ async function main(): Promise<void> {
   } catch (err) {
     console.error("delivery service failed to start", err);
     await close();
+    stopTracing();
     await pool.end();
     process.exit(1);
   }

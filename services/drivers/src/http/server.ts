@@ -44,6 +44,7 @@ import {
 import { createDirectRunner, PostgresDriverRunner, type DriverRunner } from "../runner.js";
 
 import { createDriverApp, type DriverHealthDescriptor } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 interface Wiring {
   runner: DriverRunner;
@@ -97,14 +98,25 @@ async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring((message) => console.warn(message));
   const keys = keyRegistryFromEnv(process.env);
   const replayGuard = createServiceTokenReplayGuardFromEnv(process.env);
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("drivers");
+
   const app = createDriverApp({
     runner,
     health,
     logger: true,
     serviceIdentity: { keys, replayGuard },
   });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("drivers");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

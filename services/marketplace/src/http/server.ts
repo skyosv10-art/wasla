@@ -31,6 +31,7 @@ import { MarketplaceStoreService } from "../app/stores.js";
 import { createMarketplaceDb } from "../db/client.js";
 import { MarketplaceUnitOfWork } from "../db/unit-of-work.js";
 import { createMarketplaceApp, type MarketplaceServices } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 /** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `MARKETPLACE_SERVICE_PORT` (= 8094). */
 function readPort(): number {
@@ -76,12 +77,26 @@ export async function startMarketplaceServer(): Promise<void> {
   const port = readPort();
   const host = process.env.MARKETPLACE_SERVICE_HOST ?? "0.0.0.0";
 
+  // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("marketplace");
+
   if (databaseUrl === undefined || databaseUrl.trim() === "") {
-    const app = createMarketplaceApp({
+  const app = createMarketplaceApp({
       mode: "memory",
       logger: true,
       serviceIdentity: serviceIdentityFromEnv(),
     });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("marketplace");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+    for (const signal of ["SIGTERM", "SIGINT"] as const) {
+      process.once(signal, () => {
+        stopTracing();
+        void app.close().then(() => process.exit(0));
+      });
+    }
     await app.listen({ port, host });
     return;
   }
@@ -105,9 +120,15 @@ export async function startMarketplaceServer(): Promise<void> {
     serviceIdentity: serviceIdentityFromEnv(),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("marketplace");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
   // إغلاقٌ مُرتَّب: الحاضنةُ تُرسل `SIGTERM` ثمّ تقتل. وإسقاطُ العمليّةِ فوراً يقطع معاملةً
   // مفتوحةً في منتصفها — والقاعدةُ تتراجع عنها، لكنّ المُنادي يستلم انقطاعاً بلا رمزٍ يقرؤه.
   app.addHook("onClose", async () => {
+    stopTracing();
     await pool.end();
   });
   for (const signal of ["SIGTERM", "SIGINT"] as const) {

@@ -837,6 +837,9 @@ importers:
       '@wasla/contracts-customer':
         specifier: workspace:*
         version: link:../../packages/contracts/customer
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -877,6 +880,9 @@ importers:
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -920,6 +926,9 @@ importers:
       '@wasla/contracts-matching':
         specifier: workspace:*
         version: link:../../packages/contracts/matching
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -963,6 +972,9 @@ importers:
       '@wasla/contracts-driver':
         specifier: workspace:*
         version: link:../../packages/contracts/driver
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1003,6 +1015,9 @@ importers:
       '@wasla/contracts-geography':
         specifier: workspace:*
         version: link:../../packages/contracts/geography
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1046,6 +1061,9 @@ importers:
       '@wasla/contracts-identity':
         specifier: workspace:*
         version: link:../../packages/contracts/identity
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1083,6 +1101,9 @@ importers:
       '@wasla/contracts-marketplace':
         specifier: workspace:*
         version: link:../../packages/contracts/marketplace
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1123,6 +1144,9 @@ importers:
       '@wasla/contracts-matching':
         specifier: workspace:*
         version: link:../../packages/contracts/matching
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1163,6 +1187,9 @@ importers:
       '@wasla/contracts-negotiation':
         specifier: workspace:*
         version: link:../../packages/contracts/negotiation
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1203,6 +1230,9 @@ importers:
       '@wasla/contracts-order':
         specifier: workspace:*
         version: link:../../packages/contracts/order
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1243,6 +1273,9 @@ importers:
       '@wasla/contracts-reputation':
         specifier: workspace:*
         version: link:../../packages/contracts/reputation
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1283,6 +1316,9 @@ importers:
       '@wasla/contracts-search':
         specifier: workspace:*
         version: link:../../packages/contracts/search
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1320,6 +1356,9 @@ importers:
       '@wasla/contracts-subscription':
         specifier: workspace:*
         version: link:../../packages/contracts/subscription
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth

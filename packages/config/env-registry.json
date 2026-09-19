@@ -1272,6 +1272,24 @@
       ]
     },
     {
+      "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "نقطةُ نهايةِ مُصدِّرِ OpenTelemetry OTLP لتتبُّعِ الطلباتِ. إن لم يُضبَطْ، فالتتبُّعُ عمليةٌ عديمةُ الأثرِ.",
+      "owner_item": "M2-08",
+      "readers": [
+        {
+          "file": "packages/observability/src/tracing.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
       "name": "PARTNER_BOT_DEEP_LINK_TEMPLATE",
       "type": "string",
       "required": "optional",
@@ -1626,5 +1644,6 @@
       "note_ar": "شرطيّةٌ لا دائمةٌ: في نمطِ `postgres` يجبُ أن تُوجَدَ هيَ أو `DATABASE_URL`، وغيابُهُما معاً يُسقِطُ الإقلاعَ بقصدٍ. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
     }
   ],
-  "numeric_parse_exceptions": []
+  "numeric_parse_exceptions": [],
+  "total": 63
 }

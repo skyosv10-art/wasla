@@ -13,11 +13,14 @@ import type { ServiceMetrics } from "./metrics.js";
 
 /**
  * Get a normalized route pattern from a request.
- * Uses the router path if available, falls back to the URL pathname.
+ * Uses the route options URL if available (Fastify 4/5), falls back to the
+ * deprecated routerPath (Fastify 4 only), then the URL pathname.
  */
 function getRoute(request: FastifyRequest): string {
-  const route = (request as unknown as { routerPath?: string }).routerPath;
-  if (route) return route;
+  const routeOptionsUrl = (request as unknown as { routeOptions?: { url?: string } }).routeOptions?.url;
+  if (routeOptionsUrl) return routeOptionsUrl;
+  const legacyRoute = (request as unknown as { routerPath?: string }).routerPath;
+  if (legacyRoute) return legacyRoute;
   const url = request.url.split("?")[0];
   return url || "/";
 }

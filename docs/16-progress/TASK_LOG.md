@@ -13,6 +13,9 @@
   - Three-layer state: LOCAL ✅ VERIFIED (re-measured from main at b3a6bc3), CI ✅ VERIFIED (35432001351 success 35/35), PRODUCTION ⚪ NOT VERIFIED.
 - **What was NOT done:** M2-07 not promoted to `Ready for Gate` or `Completed` — two blockers remain open and §9 forbids automated agents from setting Completed. G1 engineering work not started — requires its own ADR, design, and claim because it spans 9 services. M2-02 external credential dependency not addressed (out of scope, owner-controlled).
 - **Next executable:** Owner decision on M2-07 status (Ready for Gate despite open blockers, or remain In Progress); otherwise, G1 remediation via a new ADR + claim (outbox delivery mechanism for 9 services).
+- **CI verdict (PR branch):** WASLA CI [35469762971](https://github.com/skyosv10-art/wasla/actions/runs/35469762971) — **success · 35/35** · Roadmap freshness [35469707474](https://github.com/skyosv10-art/wasla/actions/runs/35469707474) success.
+- **CI verdict (main post-merge):** WASLA CI [35470505015](https://github.com/skyosv10-art/wasla/actions/runs/35470505015) — **success** · Roadmap freshness [35470505004](https://github.com/skyosv10-art/wasla/actions/runs/35470505004) success. PR #283 merged (squash `1209337`), branch deleted, claim CLM-0239 released.
+- **Lesson applied:** CLM-0237 failed check 4 on main because the branch was deleted while the claim was still Active. This PR released CLM-0239 in the same commit batch as the post-merge update, so check 4 stays green on main.
 
 ## 2026-09-19 — M2-07: Outbox sequence parity for BIGSERIAL tables (CLM-0237)
 

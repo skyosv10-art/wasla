@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 62 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 63 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "COMMUNITY_GROUP_CHAT_IDS",
@@ -515,6 +515,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-04",
   },
   {
+    name: "OTEL_EXPORTER_OTLP_ENDPOINT",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-08",
+  },
+  {
     name: "PARTNER_BOT_DEEP_LINK_TEMPLATE",
     type: "string",
     required: "optional",
@@ -706,6 +716,7 @@ export const ENV_VAR_NAMES = [
   "ORDER_DATABASE_URL",
   "ORDER_SERVICE_TIMEOUT_MS",
   "ORDER_SERVICE_URL",
+  "OTEL_EXPORTER_OTLP_ENDPOINT",
   "PARTNER_BOT_DEEP_LINK_TEMPLATE",
   "PARTNER_BOT_MINI_APP_LABEL",
   "PARTNER_BOT_MINI_APP_URL",

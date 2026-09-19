@@ -1,26 +1,15 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-19T05:33:00Z
-الالتزام: 306abbc1d9c95954065c426ba6de3991c73b3134  الفرع: feat/m2-07-crash-retry-dedupe-proof  شجرةٌ نظيفة
-البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
-القفل: pnpm-lock.yaml · 3233 سطراً · sha256 887089400e853ace…
+التاريخ (UTC): 2026-09-19T04:58:00Z
+الالتزام: 306abbc1d9c95954065c426ba6de3991c73b3134  الفرع: feat/m2-07-crash-retry-dedupe-proof  ملفاتٌ متعقَّبةٌ: 2149
+البيئةُ: Node v20.20.1 · pnpm 9.15.9 · Linux/x86_64
+القفلُ: c654a762c4c173f0…  (3233 سطراً)
 
-العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
-  packages                   51
-  packages_with_typecheck    51
-  packages_with_test         51
-  test_files_tracked         381
-  ci_jobs                    30
-  ci_allow_failure           1
-  governance_checks          23
-  risks_not_closed           32
+العدَّاداتُ الساكنةُ (تُبصَّم):
+  الحزمُ: 52  (typecheck: 52, test: 52)
+  ملفّاتُ الاختباراتِ المتعقَّبةُ: 383
+  وظائفُ CI: 30  (allow_failure: 1)
+  فحوصُ الحوكمةِ: 23  أخطارٌ مفتوحةٌ: 32
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify5.log):
-  tests_passed               4838
-  test_files_executed        296
-  governance_suite_cases     464
-  governance_suite_failed    0
-  verify_overall             passed
-
-البصمة: sha256:9d233ef5c5895d35fda4e8850d9d4912d4498718bb557b7e541313db8528761a
-المرجع: docs/12-testing/BASELINE_FORMAT.md
+البصمةُ: sha256:10d554e118a3ed34356c35f6f7ee762e64cda26ba034f6d8e8f2898fafb78be0
+المرجعُ: docs/12-testing/BASELINE_FORMAT.md

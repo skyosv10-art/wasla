@@ -43,6 +43,7 @@ import {
   PostgresNegotiationRunner,
   type NegotiationRunner,
 } from "../runner.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 import {
   keyRegistryFromEnv,
@@ -96,6 +97,9 @@ async function main(): Promise<void> {
   // مُعلَنٌ (`RISK-0015`)**: نسختانِ لا تتشاركانِ ذاكرةً، فرمزٌ التُقِطَ يمكنُ
   // أن يُعادَ على الأخرى — و`Redis` هوَ السدُّ، وعقدُ `ServiceTokenReplayGuard`
   // مكتوبٌ كي يكونَ الاستبدالُ تغييرَ سطرٍ هنا.
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("negotiations");
+
   const app = createNegotiationApp({
     runner,
     health,
@@ -105,8 +109,16 @@ async function main(): Promise<void> {
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("negotiations");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

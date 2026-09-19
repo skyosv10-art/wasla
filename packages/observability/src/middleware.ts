@@ -65,9 +65,14 @@ export function instrumentApp(app: FastifyInstance, metrics: ServiceMetrics): vo
 /**
  * Add a /metrics endpoint to a Fastify app.
  * Returns Prometheus text format metrics.
+ *
+ * The route is registered with `serviceIdentity: "open"` so the central
+ * service-auth middleware (M1-04) allows unauthenticated access — the
+ * `/metrics` endpoint exposes aggregate counters/histograms only, never
+ * request bodies or user data.
  */
 export function addMetricsEndpoint(app: FastifyInstance, metrics: ServiceMetrics): void {
-  app.get("/metrics", async (_request, reply) => {
+  app.get("/metrics", { config: { serviceIdentity: "open" } }, async (_request, reply) => {
     const output = await metrics.registry.metrics();
     reply
       .header("Content-Type", metrics.registry.contentType)

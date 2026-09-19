@@ -39,8 +39,9 @@
     "start": "node --import tsx src/http/server.ts"
   },
   "dependencies": {
-    "@wasla/contracts-subscription": "workspace:*",
     "@wasla/auth-sdk": "workspace:*",
+    "@wasla/contracts-subscription": "workspace:*",
+    "@wasla/observability": "workspace:*",
     "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",

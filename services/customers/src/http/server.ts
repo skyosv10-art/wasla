@@ -70,6 +70,7 @@ import type { GeographyPort, IdentityLookupPort, OrderIntakePort } from "../port
 import type { UseCaseDeps } from "../use-cases/deps.js";
 
 import { createCustomerApp, type CustomerHealthDescriptor } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 /**
  * A permissive identity fake for dev runs: every format-valid public id is
@@ -224,6 +225,9 @@ function serviceIdentityWiring(): {
 
 async function main(): Promise<void> {
   const { deps, health, pool } = buildWiring();
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("customers");
+
   const app = createCustomerApp({
     deps,
     health,
@@ -231,8 +235,16 @@ async function main(): Promise<void> {
     serviceIdentity: serviceIdentityWiring(),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("customers");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

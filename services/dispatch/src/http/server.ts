@@ -24,6 +24,7 @@ import { PostgresDispatchUnitOfWork } from "../infrastructure/drizzle/transactio
 import { createDirectRunner, PostgresDispatchRunner, type DispatchRunner } from "../runner.js";
 
 import { createDispatchApp, type DispatchHealthDescriptor } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 class SystemClock implements Clock {
   now(): string {
@@ -139,6 +140,9 @@ async function main(): Promise<void> {
   // `RISK-0015`): يُبنى من البيئةِ فوقَ Postgres في
   // `createServiceTokenReplayGuardFromEnv`، ولا هبوطَ إلى الذاكرةِ بالسكوتِ —
   // نمطُ الذاكرةِ يُطلَبُ صراحةً ويُرفَضُ في `NODE_ENV=production`.
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("dispatch");
+
   const app = createDispatchApp({
     runner,
     health,
@@ -148,7 +152,15 @@ async function main(): Promise<void> {
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
   });
-  if (pool) app.addHook("onClose", async () => { await pool.end(); });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("dispatch");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+  app.addHook("onClose", async () => { stopTracing(); });
+  
+  if (pool) app.addHook("onClose", async () => {
+    stopTracing(); await pool.end(); });
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
     process.once(signal, () => { void app.close().then(() => process.exit(0)); });
   }

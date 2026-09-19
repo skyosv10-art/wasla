@@ -27,6 +27,7 @@ import { ReferralService } from "../app/referrals.js";
 import { SubscriptionService } from "../app/subscriptions.js";
 import { systemClock, uuidIdGenerator } from "../app/runtime.js";
 import { createSubscriptionApp, type SubscriptionAppServices } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 /** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `SUBSCRIPTION_SERVICE_PORT` (= 8093). */
 function readPort(): number {
@@ -44,13 +45,27 @@ export async function startSubscriptionServer(): Promise<void> {
   const port = readPort();
   const host = process.env.SUBSCRIPTION_SERVICE_HOST ?? "0.0.0.0";
 
+  // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("subscriptions");
+
   if (databaseUrl === undefined || databaseUrl.trim() === "") {
     const keys = keyRegistryFromEnv(process.env);
-    const app = createSubscriptionApp({
+  const app = createSubscriptionApp({
       mode: "memory",
       logger: true,
       ...(keys === undefined ? {} : { serviceIdentity: { keys, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
     });
+
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("subscriptions");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+    for (const signal of ["SIGTERM", "SIGINT"] as const) {
+      process.once(signal, () => {
+        stopTracing();
+        void app.close().then(() => process.exit(0));
+      });
+    }
     await app.listen({ port, host });
     return;
   }
@@ -74,9 +89,15 @@ export async function startSubscriptionServer(): Promise<void> {
       : { serviceIdentity: { keys: keyRegistryFromEnv(process.env)!, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("subscriptions");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
   // إغلاقٌ مُرتَّب: الحاضنةُ تُرسل `SIGTERM` ثمّ تقتل. وإسقاطُ العمليّةِ فوراً يقطع معاملةً
   // مفتوحةً في منتصفها — والقاعدةُ تتراجع عنها، لكنّ المُنادي يستلم انقطاعاً بلا رمزٍ يقرؤه.
   app.addHook("onClose", async () => {
+    stopTracing();
     await pool.end();
   });
   for (const signal of ["SIGTERM", "SIGINT"] as const) {

@@ -52,6 +52,7 @@ import {
 import { createDirectRunner, type OrderRunner } from "../runner.js";
 
 import { createOrderApp, type OrderHealthDescriptor } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 /**
  * مفاتيح هوية الخدمة ومخزن آثار الإعادة لحد الطلبات.
@@ -108,6 +109,9 @@ function buildWiring(): Wiring {
 
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("orders");
+
   const app = createOrderApp({
     runner,
     health,
@@ -115,8 +119,16 @@ async function main(): Promise<void> {
     serviceIdentity: serviceIdentityWiring(),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("orders");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

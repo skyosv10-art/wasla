@@ -20,6 +20,7 @@ import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = readPortEnv(process.env, "PORT", 8012);
@@ -40,6 +41,9 @@ async function main(): Promise<void> {
     console.error("WASLA_SERVICE_AUTH_KEYS is required");
     process.exit(1);
   }
+  // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("search");
+
   const { fastify, close } = buildSearchHttpApp({
     searchReadPort: readPort,
     indexHealthPort,
@@ -49,12 +53,18 @@ async function main(): Promise<void> {
     },
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("search");
+  instrumentApp(fastify, metrics);
+  addMetricsEndpoint(fastify, metrics);
+
   try {
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`search service listening on :${PORT}`);
   } catch (err) {
     console.error("search service failed to start", err);
     await close();
+    stopTracing();
     await pool.end();
     process.exit(1);
   }

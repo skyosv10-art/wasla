@@ -30,6 +30,7 @@ import type { Clock, IdGenerator } from "../ports.js";
 import { createDirectRunner, PostgresMatchingRunner, type MatchingRunner } from "../runner.js";
 
 import { createMatchingApp, type MatchingHealthDescriptor } from "./app.js";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 class SystemClock implements Clock {
   now(): string {
@@ -104,6 +105,9 @@ function serviceIdentityWiring(): {
 
 async function main(): Promise<void> {
   const { runner, health, pool } = buildWiring();
+    // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
+  const stopTracing = startTracing("matching");
+
   const app = createMatchingApp({
     runner,
     health,
@@ -111,8 +115,16 @@ async function main(): Promise<void> {
     serviceIdentity: serviceIdentityWiring(),
   });
 
+  // M2-08b: Wire observability — metrics middleware + /metrics endpoint
+  const metrics = registerMetrics("matching");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
+  app.addHook("onClose", async () => { stopTracing(); });
+  
   if (pool) {
     app.addHook("onClose", async () => {
+    stopTracing();
       await pool.end();
     });
   }

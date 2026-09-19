@@ -566,7 +566,7 @@ export const driverOutbox = pgTable(
       sql`${table.aggregateType} IN ('driver','driver_document','driver_vehicle')`,
     ),
     index("ix_driver_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.id)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS identity_outbox (
     published_at       TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS ix_identity_outbox_unpublished ON identity_outbox (occurred_at) WHERE published_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_identity_outbox_unpublished ON identity_outbox (id) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 6) identity_sessions — جلساتُ البشرِ (M1-02 · ADR-019)

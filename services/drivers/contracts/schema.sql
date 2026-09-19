@@ -360,7 +360,7 @@ CREATE TABLE IF NOT EXISTS driver_outbox (
 );
 
 CREATE INDEX IF NOT EXISTS ix_driver_outbox_unpublished
-    ON driver_outbox (occurred_at) WHERE published_at IS NULL;
+    ON driver_outbox (id) WHERE published_at IS NULL;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 9) driver_idempotency — ذاكرة مفاتيح منع التكرار

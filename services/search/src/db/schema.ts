@@ -212,7 +212,7 @@ export const searchOutbox = pgTable(
   (table) => [
     unique("search_outbox_event_id_key").on(table.eventId),
     index("ix_search_outbox_unpublished")
-      .on(table.occurredAt)
+      .on(table.id)
       .where(sql`${table.publishedAt} IS NULL`),
   ],
 );

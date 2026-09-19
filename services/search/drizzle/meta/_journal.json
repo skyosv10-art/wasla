@@ -8,6 +8,13 @@
       "when": 1789395683676,
       "tag": "0000_married_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789718400000,
+      "tag": "0001_outbox_index_pk",
+      "breakpoints": true
     }
   ]
 }

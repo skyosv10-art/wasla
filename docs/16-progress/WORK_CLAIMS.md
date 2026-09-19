@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (إفراجُ `CLM-0236` بعدَ دمجِ PR #277 — وصلُ المراقبةِ بالخدماتِ الثلاث عشرةَ)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-19` (حجزُ `CLM-0237` لتسويةِ تسلسلِ الصادرِ في 5 خدماتٍ بلا `sequence_number`)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0237 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-outbox-sequence-parity | services/customers/,services/drivers/,services/geography/,services/identity/,services/search/,packages/config/env-registry.json,packages/config/src/registry.generated.ts,.env.example,docs/08-infrastructure/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Active |
 | CLM-0236 | M2-08 | @uxxxu (agent:perplexity-computer) | feat/m2-08b-observability-service-wiring | services/customers/,services/delivery/,services/dispatch/,services/drivers/,services/geography/,services/identity/,services/marketplace/,services/matching/,services/negotiations/,services/orders/,services/reputation/,services/search/,services/subscriptions/,packages/observability/src/middleware.ts,docs/12-testing/,docs/16-progress/,ROADMAP.md,pnpm-lock.yaml | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #277 merged, squash `7d66030`, 35/35 CI green) |
 | CLM-0235 | M2-08 | @uxxxu (agent:perplexity-computer) | feat/m2-08-logs-metrics-traces-alerts | packages/observability/,packages/config/env-registry.json,packages/config/src/registry.generated.ts,scripts/,docs/12-testing/,docs/15-decisions/,docs/16-progress/,ROADMAP.md,pnpm-lock.yaml,.env.example | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #275 merged, squash `e1cd42b`, 35/35 CI green) |
 | CLM-0234 | M2-06 | @uxxxu (agent:perplexity-computer) | feat/m2-06-backup-restore-rpo-rto | scripts/,docs/12-testing/,docs/15-decisions/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #273 merged, squash `410eef3`, 35/35 CI green) |

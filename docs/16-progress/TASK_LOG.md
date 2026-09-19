@@ -1,5 +1,19 @@
 
 
+## 2026-09-20 — M2-07: ADR for outbox delivery mechanism (CLM-0240)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0240`
+- **Branch:** `docs/m2-07-g1-outbox-delivery-adr`
+- **Scope:** `docs/15-decisions/`, `docs/08-infrastructure/`, `docs/16-progress/`
+- **What was done:**
+  - Created [`ADR-042`](../15-decisions/ADR-042-outbox-delivery-mechanism.md) — architecture decision for closing G1 (9/13 outbox tables with no delivery mechanism).
+  - Decision: shared outbox contract (`packages/outbox/`) + thin per-service adapters, not 9 independent drains. Measured the 9 tables and found they are NOT uniform: `delivery` uses `outbox_id`, `matching` uses `event_id` as PK, `geo` lacks `aggregate_type`, `identity` uses UUID `aggregate_id`. Adapters isolate these differences without touching tables.
+  - Three implementation waves: (1) `customers` as proof-of-pattern, (2) `drivers`+`geography`+`identity` for schema variants, (3) remaining 5.
+  - Future automated guard: a check in `verify-governance.sh` proving every `_outbox` table has a matching adapter.
+  - Rejected alternatives: 9 independent drains (violates ADR-017 least-duplicated-truth), relay-per-service (wrong pattern — relay consumes another service's outbox), waiting for M2-02 (gap is logical not operational), unifying tables first (breaks reversible migrations).
+- **What was NOT done:** No code implementation yet — this is ADR only. G1 engineering work (package + adapters + tests) starts in a separate claim after this ADR is merged. M2-02 dependency blocker remains open (external). M2-07 not promoted.
+- **Next executable:** Merge this ADR (CI green), then open a new claim for wave 1 implementation (`packages/outbox/` + `customers` adapter + integration test).
+
 ## 2026-09-20 — M2-07: Exit gate document (CLM-0239)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0239`

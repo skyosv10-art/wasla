@@ -16,6 +16,46 @@
 - **What was NOT done:** No `sequence_number` column added (BIGSERIAL `id` is already monotonic per ADR-037). No new tests added for deterministic ordering (existing schema-drift tests verify index alignment).
 - **Next executable:** Merge PR #279 when CI is green.
 
+## 2026-09-19 — M2-07: status audit against actual evidence in main (CLM-0238)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0238`
+- **Branch:** `docs/m2-07-inventory-accuracy-audit`
+- **Why:** an explicit instruction not to treat "G2 closed" as "M2-07 complete", and
+  not to accept prior agent reports as evidence. Every M2-07 condition was
+  re-derived from `main` at `596d415`.
+- **Verdict: M2-07 stays `In Progress`.** Not `Completed`, not `Ready for Gate`.
+  - Declared exit criterion "crash/retry/dedupe proof" **is met** — `CLM-0233`,
+    3 integration tests in `services/delivery/src/__tests__/relay-concurrent-dedupe.integration.test.ts`.
+  - G2 **is genuinely closed** — verified in `main`: all 5 BIGSERIAL tables index
+    on `(id)`, `delivery_outbox` on `(outbox_id)`. PR #279, squash `a08645f`.
+  - **Blocker 1:** dependency M2-02 is `BLOCKED — EXTERNAL CREDENTIAL REQUIRED`
+    (`RENDER_API_KEY`/`RENDER_OWNER_ID`). Operating protocol §18 forbids completing
+    an item whose dependency is not `Completed`.
+  - **Blocker 2:** G1 is High severity and open — 9 of 13 outbox tables have no
+    delivery mechanism at all.
+  - **Blocker 3:** no `M2-07_GATE.md` exists (only M2-01 and M2-04 have gate docs).
+  - Operating protocol line 118 forbids an automated agent from setting `Completed`.
+- **CI finding (not previously recorded):** the post-merge run of `a08645f` on `main`
+  was **RED**, not 35/35 — `verify` and `governance-guard` failed on check 4
+  («بياتُ الحجوزات: فرعٌ محذوفٌ وحجزٌ نشط») because the branch was deleted at merge
+  while `CLM-0237` was still `Active`. It self-healed at `596d415` (34/34 green) when
+  the claim was released. **Process lesson:** release the claim in the same PR, or
+  before branch deletion, to avoid a red commit on `main`.
+- **Four measurement defects corrected in the inventory** (by addition, not erasure):
+  | Gap | Published | Measured in `main` |
+  | --- | --- | --- |
+  | G1 | 8 services, incl. `marketplace`+`subscriptions` | 9 of 13 tables; `marketplace` has 2 relay consumers and `subscriptions` has `drainSubscriptionOutbox`; `negotiations`/`search`/`delivery` were omitted |
+  | G3 | "5 tables lack `attempts`/`last_error`" | **10**; list omitted `dispatch` |
+  | G4 | "5 tables lack `trace_id`" | **6**; list omitted `identity` |
+  | G6 | "5 … (3 of 8)" — self-contradictory | **3 of 8** (dispatch, drivers, matching) |
+- **Also corrected:** §11 "What is NOT yet proven" was stale — it claimed no
+  concurrent-`SKIP LOCKED` test and no crash-recovery test existed, both added by
+  `CLM-0233`; and it claimed M2-05C was blocking, resolved by `CLM-0232`.
+- **What was NOT done:** no new feature work; G2 was not re-implemented; the 7 open
+  gaps were not closed — they are debt with an owner decision pending.
+- **Next executable:** Owner decision on M2-07 status; otherwise the next unblocked
+  roadmap item.
+
 ## 2026-09-19 — M2-07: Outbox sequence parity CI fixes (CLM-0237 continued)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0237`

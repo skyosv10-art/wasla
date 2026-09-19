@@ -1,5 +1,21 @@
 
 
+## 2026-09-19 — M2-08: Observability service wiring (CLM-0236)
+
+- **Work Item(s):** M2-08 · **الحجز:** `CLM-0236`
+- **Branch:** `feat/m2-08b-observability-service-wiring`
+- **Scope:** `services/customers/`, `services/delivery/`, `services/dispatch/`, `services/drivers/`, `services/geography/`, `services/identity/`, `services/marketplace/`, `services/matching/`, `services/negotiations/`, `services/orders/`, `services/reputation/`, `services/search/`, `services/subscriptions/`, `packages/observability/src/middleware.ts`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`, `pnpm-lock.yaml`
+- **What was done:**
+  - Wired `@wasla/observability` into all 13 Fastify services: each `server.ts` now calls `startTracing`/`registerMetrics`/`instrumentApp`/`addMetricsEndpoint` and `stopTracing` in its shutdown path.
+  - Fixed `addMetricsEndpoint` bug: the `/metrics` route was registered without `config.serviceIdentity`, which the M1-04 central service-auth guard rejects at route-registration time — every service would have failed to boot. Fixed by adding `{ config: { serviceIdentity: "open" } }`.
+  - Added `@wasla/observability` as `workspace:*` dependency to all 13 service `package.json` files.
+  - Added SIGTERM/SIGINT handler to geography and identity (previously had none).
+  - New integration test `services/customers/src/__tests__/observability-wiring.test.ts`: 3/3 pass — `/metrics` endpoint returns Prometheus text, request metrics recorded, tracing cleanup returns a function.
+  - Evidence: [docs/12-testing/observability-evidence/2026-09-19-m2-08b-service-wiring.md](../12-testing/observability-evidence/2026-09-19-m2-08b-service-wiring.md).
+  - Closes the declared gap from M2-08/CLM-0235: "package not wired into 13 services".
+- **What was NOT done:** Alert manager not deployed (Stage B per ADR-041). OTLP collector not deployed (Stage B per ADR-041). No deployed Prometheus instance yet (RISK-0053).
+- **Next executable:** M2-09 staging parity/deploy/rollback (depends on M2-01..08 — still blocked on external Render credentials and cloud KMS).
+
 ## 2026-09-19 — M2-08: Observability stack (CLM-0235)
 
 - **Work Item(s):** M2-08 · **الحجز:** `CLM-0235`

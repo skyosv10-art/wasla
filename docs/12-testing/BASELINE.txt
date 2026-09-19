@@ -1,15 +1,15 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-19T23:03:50Z
-الالتزام: a2ed228ef2e418d714c20551958ae09948f0a17d  الفرع: feat/m2-07-g1-wave1-outbox-package  شجرةٌ مُعدَّلةٌ (7 ملفّاً)
-البيئة: node v20.20.1 · pnpm unknown · Linux/x86_64 · python 3.14.3
-القفل: pnpm-lock.yaml · 3317 سطراً · sha256 9fa09cab2c05445f…
+التاريخ (UTC): 2026-09-19T23:33:15Z
+الالتزام: 62bbe0bfa2ab681e2d6f253f2f35ee35a20cd899  الفرع: feat/m2-07-g1-wave1-outbox-package  شجرةٌ مُعدَّلةٌ (8 ملفّاً)
+البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
+القفل: pnpm-lock.yaml · 3329 سطراً · sha256 30408c669afd6ebc…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
   packages                   53
   packages_with_typecheck    53
   packages_with_test         53
-  test_files_tracked         390
+  test_files_tracked         391
   ci_jobs                    30
   ci_allow_failure           1
   governance_checks          23
@@ -22,5 +22,5 @@
   governance_suite_failed    —
   verify_overall             —
 
-البصمة: sha256:8c47989243daf7f4461608d30a95b2eaa01642458b0498a1ad46d4b169bf10eb
+البصمة: sha256:367dc903ba90a8baec4ca91566bfd5129d4e659748621edfbb4a72e51baaaa01
 المرجع: docs/12-testing/BASELINE_FORMAT.md

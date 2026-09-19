@@ -59,7 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0241 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g1-wave1-outbox-package | packages/outbox/,services/customers/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Active |
+| CLM-0241 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g1-wave1-outbox-package | packages/outbox/,services/customers/,docs/16-progress/,docs/12-testing/,pnpm-lock.yaml | 2026-09-20 | 2026-10-04 | Active |
 | CLM-0240 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-g1-outbox-delivery-adr | docs/15-decisions/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #285 merged, squash `59f8dc0`, 35/35 CI green on PR branch; main CI 35472946725 RED — verify+governance-guard failed check 4: branch deleted while claim Active — this release fixes it) |
 | CLM-0239 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-gate-status | docs/12-testing/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #283 merged, squash `1209337`, 35/35 CI green on PR branch + main CI 35470505015 green) |
 | CLM-0238 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-inventory-accuracy-audit | docs/08-infrastructure/,docs/16-progress/,ROADMAP.md | 2026-09-19 | 2026-10-03 | Released (2026-09-19 — PR #281 merged, squash `60b91ed`, 35/35 CI green) |

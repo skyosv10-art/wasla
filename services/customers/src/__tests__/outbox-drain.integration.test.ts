@@ -158,7 +158,7 @@ describe("CustomerOutboxDrainStore integration", () => {
     const clock = { now: () => new Date().toISOString() };
 
     // ادَّعِ الصفَّ (تجاوز القفل) ثم حاول تعليمه
-    const result = await fixture.db.transaction(async (tx) => {
+    await fixture.db.transaction(async (tx) => {
       // اقرأ الصفَّ يدويًّا (محاكاةُ مُصرّفٍ آخر علّمه بين ادّعائنا وتعلينا)
       const rows = await tx.execute(sql`
         SELECT id, event_id, event_type, event_version, aggregate_type, aggregate_id, payload, occurred_at
@@ -166,7 +166,8 @@ describe("CustomerOutboxDrainStore integration", () => {
          WHERE published_at IS NULL
       `);
       // لا يوجد صفوف غير منشورة
-      return { claimed: (rows as unknown[]).length };
+      const claimedCount = Array.isArray(rows) ? rows.length : (rows as { rows?: unknown[] }).rows?.length ?? 0;
+      expect(claimedCount).toBe(0);
     });
 
     // لا صفوفَ غيرُ منشورةٍ — التصريفُ لا يجد شيئًا

@@ -18,11 +18,14 @@ export type {
 } from "./types.js";
 
 export {
+  createDirectOutboxDrainRunner,
+  drainOutbox,
+} from "./drain.js";
+
+export type {
   Clock,
   OutboxDrainStore,
   OutboxDrainRunner,
-  createDirectOutboxDrainRunner,
-  drainOutbox,
 } from "./drain.js";
 
 export {

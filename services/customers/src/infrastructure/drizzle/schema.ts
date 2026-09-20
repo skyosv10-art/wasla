@@ -342,6 +342,8 @@ export const customerOutbox = pgTable(
       .notNull()
       .default(sql`now()`),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+  attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     check(

@@ -7,7 +7,7 @@
  * ## ما لا يملكه هذا الجدول
  *
  * `customer_outbox` بلا `sequence_number` (G2 أُغلق بـ`id` كتسلسل) ·
- * بلا `attempts`/`last_error` (G3) · بلا `trace_id` (G4). المحوّلُ يعزلُ
+ * بـ`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245) · بلا `trace_id` (G4). المحوّلُ يعزلُ
  * هذه الفروقَ: `traceId` يُرجعُ `null` · `attempts` يُرجعُ `0` ·
  * `recordDeliveryFailure` لا يُنفَّذ (اختياريّ في العقد).
  *
@@ -53,7 +53,8 @@ export class CustomerOutboxDrainStore implements OutboxDrainStore {
              aggregate_type,
              aggregate_id,
              payload,
-             occurred_at
+             occurred_at,
+             attempts
         FROM customer_outbox
        WHERE published_at IS NULL
        ORDER BY id ASC
@@ -70,14 +71,16 @@ export class CustomerOutboxDrainStore implements OutboxDrainStore {
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
       traceId: null,
-      attempts: 0,
+      attempts: Number(row["attempts"]) || 0,
     }));
   }
 
   async markPublished(id: string, publishedAt: string): Promise<boolean> {
     const updated = await this.tx.execute(sql`
       UPDATE customer_outbox
-         SET published_at = ${publishedAt}
+         SET published_at = ${publishedAt},
+             attempts = attempts + 1,
+             last_error = NULL
        WHERE id = ${id}
          AND published_at IS NULL
       RETURNING id
@@ -85,6 +88,17 @@ export class CustomerOutboxDrainStore implements OutboxDrainStore {
     return rowsOf(updated).length === 1;
   }
 
-  // recordDeliveryFailure غيرُ مُنفَّذ: customer_outbox بلا attempts/last_error (G3).
-  // الفشلُ يُسجَّلُ في DrainReport.failed فقط.
+  /**
+   * G3 مُغلقٌ لهذا الجدول: الفشلُ يُكتبُ في الصفِّ نفسِه، فلا يعودُ الحدثُ
+   * المسمومُ يبدو كحدثٍ طازجٍ في كلِّ مرورٍ.
+   */
+  async recordDeliveryFailure(id: string, error: string): Promise<void> {
+    await this.tx.execute(sql`
+      UPDATE customer_outbox
+         SET attempts = attempts + 1,
+             last_error = ${error}
+       WHERE id = ${id}
+         AND published_at IS NULL
+    `);
+  }
 }

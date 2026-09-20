@@ -89,7 +89,9 @@ CREATE TABLE IF NOT EXISTS identity_outbox (
     aggregate_id       UUID         NOT NULL,                    -- internal_uuid
     payload            JSONB        NOT NULL,
     occurred_at        TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    published_at       TIMESTAMPTZ
+    published_at       TIMESTAMPTZ,
+    attempts           INTEGER     NOT NULL DEFAULT 0,  -- G3: عدّادُ محاولاتِ التسليم
+    last_error         TEXT                             -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
 );
 
 CREATE INDEX IF NOT EXISTS ix_identity_outbox_unpublished ON identity_outbox (id) WHERE published_at IS NULL;

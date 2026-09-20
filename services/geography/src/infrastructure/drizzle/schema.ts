@@ -285,6 +285,8 @@ export const geoOutbox = pgTable(
     payload: jsonb("payload").notNull(),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().default(sql`now()`),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+  attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     index("ix_geo_outbox_unpublished")

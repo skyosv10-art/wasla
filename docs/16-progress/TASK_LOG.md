@@ -4899,9 +4899,9 @@ state (8 by migration, 2 by consumer-owned design).
 **Remaining M2-07 gaps:** G7 (Low, package-level) and G8 (Expected, deployment
 concern). M2-07 remains blocked on M2-02 (external credentials).
 
-## 2026-09-20 — M2-07: G7 channel outbox drain (CLM-0254)
+## 2026-09-20 — M2-07: G7 channel outbox drain (CLM-0254, CLM-0255)
 
-- **Work Item(s):** M2-07 · **الحجز:** `CLM-0254` · **الفرع:** `feat/m2-07-g7-channel-outbox-drain`
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0254` `CLM-0255` · **الفرع:** `feat/m2-07-g7-channel-outbox-drain`
 
 **Scope:** Close G7 gap — channel outbox has no drain adapter.
 

@@ -16,7 +16,8 @@
 import type { MarketplaceOutboxRow, RelayCheckpoint, CatalogProduct, ConsumedStatus } from "./domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "./domain/projector.js";
 import type { SearchPage } from "./domain/model.js";
-import type { SearchDeadLetterMetric } from "./domain/relay-dead-letters.js";
+import type { SearchDeadLetterLedger, SearchDeadLetterMetric } from "./domain/relay-dead-letters.js";
+import type { SearchRequeueDecision } from "./domain/relay-requeue.js";
 
 export interface MarketplaceEventSource {
   /** Read up to `limit` outbox rows strictly after the checkpoint (or from zero). */
@@ -121,4 +122,23 @@ export interface SearchIndexHealthPort {
  */
 export interface SearchDeadLetterReadPort {
   readSearchDeadLetters(query: { readonly eventTypeLimit: number }): Promise<SearchDeadLetterMetric>;
+}
+
+/**
+ * إعادةُ صفٍّ مسمومٍ إلى الطابورِ (فجوةُ `G5` · موجةُ **اليدِ** · `CLM-0248`).
+ *
+ * منفذٌ **مستقلٌّ** عن `SearchDeadLetterReadPort` لا توسيعٌ لهُ: مسارُ القياسِ
+ * يقرأُ ولا يكتبُ، وجمعُهما كانَ سيُعطي مسارَ قراءةٍ صلاحيّةَ تعديلٍ لا
+ * يحتاجُها — ويجعلُ كلَّ مُنفِّذِ قراءةٍ (اختباراً كانَ أو معواناً) مُلزَماً
+ * بكتابةٍ لا يملكُها.
+ *
+ * ويُعيدُ **قراراً** لا `boolean`: «لا صفَّ» و«صفٌّ ليسَ مسموماً» حكمانِ
+ * مختلفانِ، وطيُّهما في `false` كانَ يجعلُ المُشغِّلَ يظنُّ مُعرِّفَهُ خطأً وهوَ
+ * صحيحٌ.
+ */
+export interface SearchRelayRequeuePort {
+  requeuePoisonedEvent(cmd: {
+    readonly ledger: SearchDeadLetterLedger;
+    readonly outboxId: string;
+  }): Promise<SearchRequeueDecision>;
 }

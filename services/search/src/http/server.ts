@@ -20,6 +20,7 @@ import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { PostgresSearchDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
+import { PostgresSearchRequeueStore } from "../infrastructure/relay-requeue-store.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
@@ -44,6 +45,12 @@ async function main(): Promise<void> {
    * حادثةٍ. ويُشاركُ نفسَ المسبحِ لنفسِ سببِ مسبارِ الجاهزيّةِ.
    */
   const deadLetterReadPort = new PostgresSearchDeadLetterStore(pool);
+  /*
+   * يدُ الإعادةِ (`G5` موجةُ اليدِ · `CLM-0248`) — **مُركَّبةٌ هنا لا اختياريّةٌ
+   * في الإنتاجِ**: عينٌ تُنبِّهُ ولا يدَ تُعالِجُ هيَ الحالةُ التي يُصمَّتُ فيها
+   * التنبيهُ. ويُشاركُ نفسَ المسبحِ لأنَّ المعاملةَ تُؤخَذُ على اتّصالٍ منهُ.
+   */
+  const relayRequeuePort = new PostgresSearchRequeueStore(pool);
   const keys = keyRegistryFromEnv(process.env);
   if (keys === undefined) {
     console.error("WASLA_SERVICE_AUTH_KEYS is required");
@@ -56,6 +63,7 @@ async function main(): Promise<void> {
     searchReadPort: readPort,
     indexHealthPort,
     deadLetterReadPort,
+    relayRequeuePort,
     serviceIdentity: {
       keys,
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),

@@ -37,14 +37,26 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import type {
   SearchDeadLetterReadPort,
+  SearchRelayRequeuePort,
   SearchIndexHealthPort,
   SearchProductsReadPort,
 } from "../ports.js";
 import {
+  SEARCH_DEAD_LETTER_LEDGERS,
   SEARCH_DEAD_LETTER_THRESHOLDS,
   classifySearchDeadLetterSeverity,
+  type SearchDeadLetterLedger,
 } from "../domain/relay-dead-letters.js";
-import { SearchUnavailableError, SearchValidationError, sendSearchError } from "./errors.js";
+import {
+  SEARCH_REQUEUE_TARGET_STATUS,
+} from "../domain/relay-requeue.js";
+import {
+  SearchConflictError,
+  SearchNotFoundError,
+  SearchUnavailableError,
+  SearchValidationError,
+  sendSearchError,
+} from "./errors.js";
 import { parseSearchRequest } from "./requests.js";
 import { toSearchPage } from "./mappers.js";
 import {
@@ -70,6 +82,13 @@ export interface SearchHttpDeps {
    * نظافةً — وهوَ أخطرُ من عطبٍ ظاهرٍ.
    */
   readonly deadLetterReadPort?: SearchDeadLetterReadPort;
+  /**
+   * منفذُ إعادةِ المسمومِ إلى الطابورِ لـ`POST …/requeue` (`G5` موجةُ اليدِ ·
+   * `CLM-0248`). اختياريٌّ **في الشكلِ** كي لا يُلزَمَ كلُّ معوانِ اختبارٍ بهِ،
+   * ومسارُهُ يُجيبُ 503 حينَ يغيبُ ولا يُجيبُ نجاحاً — لا يُدَّعى أنَّ صفّاً
+   * أُعيدَ ولم يُعَدْ.
+   */
+  readonly relayRequeuePort?: SearchRelayRequeuePort;
   /**
    * ساعةُ حكمِ التنبيهِ — تُحقَنُ في الاختبارِ كي يُقاسَ حكمُ العمرِ بلا انتظارِ
    * يومٍ حقيقيٍّ. والافتراضُ ساعةُ النظامِ.
@@ -129,6 +148,43 @@ function parseDeadLetterEventTypeLimit(query: unknown): number {
     );
   }
   return parsed;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * مُحلِّلُ مُعامِلاتِ مسارِ الإعادةِ — رفضٌ **قبلَ** لمسِ القاعدةِ
+ *
+ * اسمُ الدفترِ يُطابَقُ بالقائمةِ المُصرَّحةِ لا بـ`string`: هوَ ما يُركَّبُ في
+ * نصِّ استعلامِ المُحوِّلِ، فحصرُهُ هنا هوَ الحدُّ الذي يجعلُ ذلكَ التركيبَ بلا
+ * سطحِ حَقنٍ أصلاً.
+ *
+ * و`outbox_id` يُطابَقُ شكلَ UUID هنا لا في القاعدةِ: `$1::uuid` على نصٍّ مُشوَّهٍ
+ * يرفعُ `22P02` فيُترجَمُ 503 — أي **حكمٌ كاذبٌ على الخدمةِ** بسببِ خطأِ منادٍ.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+
+function parseRequeueParams(params: unknown): {
+  readonly ledger: SearchDeadLetterLedger;
+  readonly outboxId: string;
+} {
+  const raw = (params ?? {}) as Record<string, unknown>;
+  const ledger = String(raw["ledger"] ?? "");
+  const outboxId = String(raw["outboxId"] ?? "");
+
+  if (!(SEARCH_DEAD_LETTER_LEDGERS as readonly string[]).includes(ledger)) {
+    throw new SearchValidationError(
+      "SEARCH_RELAY_LEDGER_UNKNOWN",
+      `دفترٌ غيرُ مُصرَّحٍ «${ledger}» — المُصرَّحُ: ${SEARCH_DEAD_LETTER_LEDGERS.join(", ")}`,
+    );
+  }
+  if (!UUID_PATTERN.test(outboxId)) {
+    throw new SearchValidationError(
+      "SEARCH_RELAY_OUTBOX_ID_INVALID",
+      "`outbox_id` يجبُ أن يكونَ UUID",
+    );
+  }
+  return { ledger: ledger as SearchDeadLetterLedger, outboxId };
 }
 
 export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
@@ -251,6 +307,93 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
           },
           gates_readiness: false,
         },
+      });
+    },
+  );
+
+  /*
+   * ── إعادةُ صفٍّ مسمومٍ إلى الطابورِ (`G5` موجةُ **اليدِ** · `CLM-0248`) ──
+   *
+   * `POST /search/relay/dead-letters/:ledger/:outboxId/requeue`
+   *
+   * موجةُ العينِ أعطَت أن يُعرَفَ، وهذهِ تُعطي أن يُفعَلَ. والفعلُ **حركتانِ في
+   * معاملةٍ واحدةٍ** (رفعُ النهائيّةِ ثمَّ إرجاعُ نقطةِ التقدُّمِ) والتعليلُ
+   * كاملاً في `domain/relay-requeue.ts` — ونصفُ الفعلِ يجعلُ الفقدَ أخفى ممّا كانَ.
+   *
+   * ## 202 لا 200
+   *
+   * الجوابُ يقولُ «قُبِلَ» لا «تمَّ»: ما تمَّ عندَ الجوابِ هوَ **الإعادةُ إلى
+   * الطابورِ**، والتطبيقُ نفسُهُ يقعُ في دورةِ مُرحِّلٍ لاحقةٍ — وقد يُسَمُّ
+   * الصفُّ ثانيةً إن كانَ سببُ سُمِّهِ قائماً. و200 كانَ يُقرأُ «عولِجَ» فيُغلِقُ
+   * المُشغِّلُ الحادثةَ.
+   *
+   * ## ولا مفتاحَ تماثُليّةٍ
+   *
+   * الإعادةُ **تماثُليّةٌ بطبيعتِها**: نداءٌ ثانٍ على الصفِّ نفسِهِ يجدُهُ
+   * `pending` فيُرَدُّ 409 — لا يُضاعِفُ أثراً. فمفتاحُ تماثُليّةٍ هنا آلةٌ بلا
+   * عملٍ، وسجلٌّ ثانٍ يُصانُ بلا مُقابِلٍ.
+   *
+   * **ولا يمسُّ الجاهزيّةَ**: `gates_readiness: false` منشورٌ في الجسمِ.
+   */
+  app.post(
+    "/search/relay/dead-letters/:ledger/:outboxId/requeue",
+    { config: internalScoped(SEARCH_SCOPES.relayDeadLettersRequeue) },
+    async (request, reply) => {
+      if (deps.relayRequeuePort === undefined) {
+        // 503 لا 404 ولا نجاحٌ صامتٌ: «لا يدَ لي» ليسَ «أُعيدَ».
+        throw new SearchUnavailableError(
+          "SEARCH_INTERNAL_ERROR",
+          "لا منفذَ إعادةٍ مُركَّبٌ — لا يُدَّعى أنَّ صفّاً أُعيدَ ولم يُعَدْ (G5)",
+        );
+      }
+
+      const { ledger, outboxId } = parseRequeueParams(request.params);
+      const decision = await deps.relayRequeuePort.requeuePoisonedEvent({ ledger, outboxId });
+
+      if (decision.outcome === "rejected") {
+        if (decision.reason === "not_found") {
+          throw new SearchNotFoundError(
+            "SEARCH_RELAY_DEAD_LETTER_NOT_FOUND",
+            "لا صفَّ بهذا المُعرِّفِ في هذا الدفترِ",
+          );
+        }
+        /*
+         * الحالةُ المقروءةُ **في نصِّ الرسالةِ** لا في حقلٍ ثانٍ: عقدُ خطأِ هذا
+         * الحدِّ ثلاثةُ حقولٍ (`code` · `message` · `trace_id`) و`errors.ts` لا
+         * يَنشُرُ غيرَها — فحقلٌ رابعٌ كانَ يمرُّ في اختبارٍ على كائنٍ في
+         * الذاكرةِ **ولا يصلُ السلكَ**. والمُشغِّلُ يحتاجُ الحالةَ فعلاً
+         * (`applied` ⇒ لا شيءَ ليُعادَ · `pending` ⇒ زميلُهُ سبقَهُ)، فتُقالُ لهُ
+         * حيثُ يقرأُ.
+         */
+        throw new SearchConflictError(
+          "SEARCH_RELAY_DEAD_LETTER_NOT_POISONED",
+          `الصفُّ موجودٌ وحالتُهُ «${decision.observedStatus ?? "unknown"}» لا «poisoned» — لا يُعادُ`,
+        );
+      }
+
+      return reply.status(202).send({
+        outcome: "requeued",
+        ledger,
+        outbox_id: outboxId,
+        previous_status: decision.previousStatus,
+        new_status: SEARCH_REQUEUE_TARGET_STATUS,
+        /*
+         * **كلفةُ الإعادةِ منشورةٌ لا مخفيّةٌ.** الإرجاعُ بحذفِ صفِّ النقطةِ،
+         * وغيابُهُ معناهُ القراءةُ من أوّلِ الصندوقِ الصادرِ — مسحٌ على دفعاتٍ
+         * حتّى تعودَ النقطةُ. ومُشغِّلٌ لا يعلمُ ذلكَ يُصعِّدُ حادثةً لأنَّ
+         * الصفَّ لم يُطبَّقْ في ثانيةٍ.
+         */
+        checkpoint_rewound: true,
+        rewind_method: "checkpoint_row_deleted",
+        rewind_cost: "full_rescan_from_zero",
+        /*
+         * الدليلُ **لا يُمحى**: `attempt_count` و`last_error` و`consumed_at`
+         * تبقى كما هيَ، فالإعادةُ لا تُفقِدُ سببَ العطبِ ولا تُصفِّرُ عمرَ فقدٍ
+         * قائمٍ. والثمنُ المُعلَنُ: صفٌّ استنفدَ محاولاتِهِ يُسَمُّ ثانيةً في
+         * أوّلِ دورةٍ بسببٍ جديدٍ.
+         */
+        evidence_preserved: ["attempt_count", "last_error", "consumed_at"],
+        gates_readiness: false,
       });
     },
   );

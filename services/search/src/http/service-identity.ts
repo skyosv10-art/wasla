@@ -60,6 +60,15 @@ export const SEARCH_SCOPES = {
    * الفهرسةِ، وجمعُهما كانَ سيُعطي كلَّ مُنادٍ بحثٍ عيناً على الدفترِ الداخليِّ.
    */
   relayDeadLettersRead: "search:relay-dead-letters:read",
+  /**
+   * إعادةُ صفٍّ مسمومٍ إلى الطابورِ (`G5` موجةُ اليدِ · `CLM-0248`) — صلاحيّةٌ
+   * **ثالثةٌ مستقلّةٌ** لا `relayDeadLettersRead`: القراءةُ لا أثرَ لها، والإعادةُ
+   * تُغيِّرُ حالةَ صفٍّ **وتُرجِعُ نقطةَ تقدُّمِ مُرحِّلٍ** فتُحدِثُ مسحاً من
+   * أوّلِ الصندوقِ الصادرِ. فمَن يُؤذَنُ لهُ أن يُراقِبَ ليسَ بالضرورةِ مَن
+   * يُؤذَنُ لهُ أن يُحدِثَ ذلكَ العملَ، وجمعُهما كانَ يجعلُ لوحةَ مراقبةٍ تملكُ
+   * يداً على التيّارِ.
+   */
+  relayDeadLettersRequeue: "search:relay-dead-letters:requeue",
 } as const;
 
 export type SearchRouteConfig = ServiceIdentityRouteConfig;

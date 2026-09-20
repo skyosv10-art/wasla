@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-20` (إطلاقُ `CLM-0242` لـ`M2-07` بعد دمجِ موجة 2 من ADR-042 — محوّلاتُ `drivers` + `geography` + `identity` + 12 اختبارًا)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-20` (حجزُ `CLM-0243` لـ`M2-07`: تنفيذُ موجة 3 من ADR-042 — محوّلاتُ `delivery` + `matching` + `negotiations` + `orders` + `search`)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -59,6 +59,7 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
+| CLM-0243 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g1-wave3-outbox-adapters | services/delivery/,services/matching/,services/negotiations/,services/orders/,services/search/,docs/16-progress/,docs/12-testing/,packages/config/,pnpm-lock.yaml,.env.example,ROADMAP.md | 2026-09-20 | 2026-10-04 | Active |
 | CLM-0242 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g1-wave2-outbox-adapters | services/drivers/,services/geography/,services/identity/,docs/16-progress/,docs/12-testing/,packages/config/,pnpm-lock.yaml,.env.example,ROADMAP.md | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #289 merged, squash `99e7172`, 35/35 CI green on PR branch + main CI 35480771119 green; branch NOT deleted until this release lands) |
 | CLM-0241 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g1-wave1-outbox-package | packages/outbox/,services/customers/,docs/16-progress/,docs/12-testing/,pnpm-lock.yaml | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #287 merged, squash `50d2cc4`, 35/35 CI green on PR branch + main CI 35477822803 green; branch NOT deleted to keep check 4 green until this release lands) |
 | CLM-0240 | M2-07 | @uxxxu (agent:perplexity-computer) | docs/m2-07-g1-outbox-delivery-adr | docs/15-decisions/,docs/08-infrastructure/,docs/16-progress/ | 2026-09-20 | 2026-10-04 | Released (2026-09-20 — PR #285 merged, squash `59f8dc0`, 35/35 CI green on PR branch; main CI 35472946725 RED — verify+governance-guard failed check 4: branch deleted while claim Active — this release fixes it) |

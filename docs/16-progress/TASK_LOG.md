@@ -1,5 +1,22 @@
 
 
+## 2026-09-20 — M2-07: Wave 3 outbox adapters — delivery, matching, negotiations, orders, search (CLM-0243)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0243`
+- **Scope:** `services/delivery/`, `services/matching/`, `services/negotiations/`, `services/orders/`, `services/search/`, `docs/16-progress/`, `docs/12-testing/`, `packages/config/`, `pnpm-lock.yaml`, `.env.example`, `ROADMAP.md`
+- **Branch:** `feat/m2-07-g1-wave3-outbox-adapters`
+- **What was done:**
+  - Created `DeliveryOutboxDrainStore` — PK is `outbox_id` (not `id`), has `trace_id` (G4 closed for this table).
+  - Created `MatchingOutboxDrainStore` — PK is `event_id` UUID (no `id` column), has `trace_id` + `sequence_number`.
+  - Created `NegotiationOutboxDrainStore` — richest table: has `attempts`/`last_error` (G3 closed), `trace_id` (G4), `sequence_number`. Implements `recordDeliveryFailure`.
+  - Created `OrderOutboxDrainStore` — PK is `event_id` UUID (no `id` column), has `trace_id` + `sequence_number`.
+  - Created `SearchOutboxDrainStore` — like `geo_outbox`, no `aggregate_type`, returns `"search"` as constant.
+  - Added `@wasla/outbox` dependency to all five service `package.json` files.
+  - Created 5 integration test files (4 tests each = 20 tests).
+  - Updated `pnpm-lock.yaml`, `env-registry.json` (5 new readers), `BASELINE.json` (test_files 394→399).
+- **What was NOT done:** G1 wave 3 is the final wave. All 13 outbox tables now have drain adapters. No `EventSinkPort` wired to a real message broker. G3/G4/G5 gaps partially addressed (negotiations has G3+G4, delivery has G4).
+- **Next executable:** Merge wave 3 (CI green), then release CLM-0243. G1 (High severity) will be closed after all 3 waves merge.
+
 ## 2026-09-20 — M2-07: Wave 2 outbox adapters — drivers, geography, identity (CLM-0242)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0242`

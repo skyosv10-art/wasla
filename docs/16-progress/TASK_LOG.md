@@ -4868,7 +4868,9 @@ search_outbox). `delivery_outbox` كان لديه العمودُ مسبقًا. *
 **Why:** الفجوة G6 مفتوحة Low severity — 3 من 8 جداول idempotency تخزن بصمة فقط
   لا الاستجابة، فإعادة الطلب تُعالج بدل إرجاع الاستجابة المخزنة.
 
-## CLM-0253 — G3 closure by ADR (2026-09-20)
+## 2026-09-20 — M2-07: G3 closure by ADR-043 — relay-consumed outbox retry state (CLM-0253)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0253` · **الفرع:** `feat/m2-07-g3-close-relay-consumed-outbox-adr`
 
 **Scope:** Close remaining G3 gap (dispatch_outbox, marketplace_outbox) by design
 decision (ADR-043), not migration.

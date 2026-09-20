@@ -4832,3 +4832,17 @@ search_outbox). `delivery_outbox` كان لديه العمودُ مسبقًا. *
 - `marketplace_outbox` و`dispatch_outbox` بلا مُصرّفٍ في الخدمةِ المُنتِجةِ (كما في G3).
 - الحوكمةُ محليًّا خضراءُ · typecheck خضراءُ لكلِّ الحزمِ السبعِ · 995 اختبارَ وحدةٍ
   خضراءُ (135 في search · 133 في customers · 209 في drivers · 54 في geography · 66 في identity · 399 في marketplace).
+
+---
+
+**Work Item(s):** CLM-0251 · **Date:** 2026-09-20 · **Agent:** Perplexity Computer
+**Branch:** `feat/m2-07-g4-outbox-trace-id`
+**Scope:** `packages/search-e2e/`
+**Action:** إضافة `trace_id TEXT` إلى `OUTBOX_DDL` في `harness.ts` — بوّابةُ الخروجِ
+  للبحثِ (Phase 12 e2e) تُنشئ `marketplace_outbox` في قاعدةِ الاختبارِ، والمنفذُ
+  `PostgresMarketplaceEventSource.readAfter()` يقرأُ `trace_id::text` بعدَ تغييراتِ
+  G4، فصارَ العمودُ مطلوبًا في DDL الاختبارِ ليُطابقَ عقدَ السوقِ.
+**Why separate claim:** `packages/search-e2e/` خارجَ نطاقِ CLM-0250 (الذي لا يشملُ
+  إلا `services/` و`packages/outbox/`). قاعدةُ الحجزِ تمنعُ توسيعَ سطرٍ قائمٍ بعدَ
+  بدءِ الكتابةِ (§6)، فأُنشِئَ حجزٌ ثانٍ — والقارئُ يقرأُ الحجزَينِ معًا على الفرعِ.
+**Verification:** typecheck `@wasla/search-e2e` خضراءُ.

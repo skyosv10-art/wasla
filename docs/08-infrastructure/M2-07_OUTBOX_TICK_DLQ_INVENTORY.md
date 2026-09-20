@@ -205,7 +205,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | --- | --- | --- | --- |
 | ~~G1~~ | ~~**9 of 13 outbox tables have no delivery mechanism at all**~~ — **RESOLVED (`CLM-0241`+`CLM-0242`+`CLM-0243`; PRs #287 / #289 / #291; squashes `50d2cc4` / `99e7172` / `674e743`).** All 13 outbox tables now have a delivery mechanism: 9 thin drain adapters against the shared `packages/outbox/` contract (ADR-042) plus the 4 mechanisms that already existed. Re-measured 2026-09-20 on `main` at `fac0c66`, from the tree — not from reports | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | — closed; see §10.1 |
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
-| G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
+| G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ — **CLOSED by design (ADR-043, CLM-0253): 8 of 10 closed by migration (waves 1–2); the remaining 2 (`dispatch_outbox` and `marketplace_outbox`) are relay-consumed outboxes with no producer-side drain. Retry state lives in the consumer's relay ledger (`delivery_relay_consumed_events`, `search_relay_consumed_events`, `delivery_inventory_relay_consumed_events`), each with `attempt_count`, `last_error`, `consumed_status` including `poisoned`. Producer columns would have no writer and would duplicate consumer truth.** | ~~all~~ | — closed; see §10.10 |
 | ~~G4~~ | ~~**6 outbox tables lack `trace_id`**~~ — **RESOLVED (`CLM-0250`): `trace_id TEXT` added to all 6 tables (customer_outbox, driver_outbox, geo_outbox, identity_outbox, marketplace_outbox, search_outbox) via per-service migrations. Drain adapters now `SELECT trace_id` and return it via `OutboxRecord.traceId`. Marketplace relay path (`PostgresMarketplaceEventSource` → `relay.ts`) selects and propagates `trace_id` in every `RelayLogEntry`.** | ~~customers, drivers, geography, identity, marketplace, search~~ | — closed; see §10.8 |
 | G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **closed for the eye, the hand and the record (`CLM-0247` · `CLM-0248` · `CLM-0249`).** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST …/requeue` (the hand, §10.6); wave 3 shipped `POST …/acknowledgement` (the record, §10.7), which writes an all-or-none triple in migration `0003` and splits the metric into `total_poisoned` (reality) and `total_unacknowledged_poisoned` (what the verdict judges). **What is still NOT claimed:** no tick scheduler runs any of this on a timer — that is `G8`, a pre-declared gap, so every wave here is operator-driven. | search | Low — a poisoned row is measured, alerted, recoverable **and** dispositionable with a named acknowledger and a written reason; the residual risk is that nothing polls on a schedule (`G8`) |
 | ~~G6~~ | ~~**3 of 8 idempotency tables store fingerprint only, not response**~~ — **RESOLVED (`CLM-0252`): `response_status` (nullable INTEGER) and `response_body` (nullable JSONB) added to `dispatch_idempotency`, `driver_idempotency`, and `matching_idempotency` via per-service migrations. CHECK constraint enforces both-or-neither. Port `IdempotencyStore.find()` returns `IdempotencyRecord` with `payloadFingerprint` + `recordedResponse` (nullable for legacy rows). `remember()` now stores the response. `classifyIdempotency`/`classifyReplay` return `{ kind: "replay", response }` on cache hit. Legacy rows (pre-G6) fall back to reprocessing.** | ~~dispatch, drivers, matching~~ | — closed; see §10.9 |
@@ -567,3 +567,23 @@ demonstrate:
 
 M2-05C is no longer blocking: the upgrade/repair drill was completed under
 `CLM-0232` against Supabase pooler PostgreSQL 17.6.
+
+### 10.10 G3 closure — relay-consumed outbox retry state (ADR-043, CLM-0253)
+
+G3 is closed by design, not by migration. The two remaining outbox tables —
+`dispatch_outbox` and `marketplace_outbox` — have no producer-side drain. Their
+rows are pulled by relay consumers in other service boundaries, and retry/error
+state lives in the consumer's relay ledger.
+
+**ADR-043** documents the decision: producer retry columns are not applicable
+for relay-consumed outboxes. Measured from the tree on `main` at `218a812`:
+
+| Producer table | Consumer | Consumer ledger | `attempt_count` | `last_error` | `poisoned` |
+|---|---|---|---|---|---|
+| `dispatch_outbox` | delivery | `delivery_relay_consumed_events` | ✅ | ✅ | ✅ |
+| `marketplace_outbox` | search | `search_relay_consumed_events` | ✅ | ✅ | ✅ |
+| `marketplace_outbox` | delivery | `delivery_inventory_relay_consumed_events` | ✅ | ✅ | ✅ |
+
+All three consumer ledgers have `attempt_count`, `last_error`, and
+`consumed_status` (including `poisoned`). The retry/error lifecycle is complete
+and owned by the consumer.

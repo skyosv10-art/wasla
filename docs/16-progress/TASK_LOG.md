@@ -4867,3 +4867,32 @@ search_outbox). `delivery_outbox` كان لديه العمودُ مسبقًا. *
   الاستجابة الآن.
 **Why:** الفجوة G6 مفتوحة Low severity — 3 من 8 جداول idempotency تخزن بصمة فقط
   لا الاستجابة، فإعادة الطلب تُعالج بدل إرجاع الاستجابة المخزنة.
+
+## CLM-0253 — G3 closure by ADR (2026-09-20)
+
+**Scope:** Close remaining G3 gap (dispatch_outbox, marketplace_outbox) by design
+decision (ADR-043), not migration.
+
+**What was done:**
+- Wrote ADR-043: relay-consumed outbox retry state belongs in the consumer, not
+  the producer. No producer-side drain exists for dispatch_outbox or
+  marketplace_outbox; their rows are pulled by relay consumers in delivery and
+  search. All three consumer ledgers (delivery_relay_consumed_events,
+  search_relay_consumed_events, delivery_inventory_relay_consumed_events) have
+  attempt_count, last_error, and consumed_status (including poisoned).
+- Updated M2-07_OUTBOX_TICK_DLQ_INVENTORY.md: G3 row marked CLOSED by design,
+  added §10.10 documenting the decision with evidence table.
+- Updated LAUNCH_EXECUTION_BOARD.md: added CLM-0253 entry documenting G3
+  closure.
+- Updated ROADMAP.md: "Last updated" line now includes G3 closure.
+- Updated WORK_CLAIMS.md: CLM-0253 registered as Active.
+
+**Why:** G3 had 2 remaining outbox tables (dispatch_outbox,
+marketplace_outbox) with no producer-side drain. Adding producer retry columns
+would create columns with no writer and duplicate consumer truth. The user's
+execution directive requires least duplicated truth sources. ADR-043 documents
+this decision. G3 is now CLOSED: 10 of 10 outbox tables have durable retry/error
+state (8 by migration, 2 by consumer-owned design).
+
+**Remaining M2-07 gaps:** G7 (Low, package-level) and G8 (Expected, deployment
+concern). M2-07 remains blocked on M2-02 (external credentials).

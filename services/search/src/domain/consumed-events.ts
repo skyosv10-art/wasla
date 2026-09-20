@@ -33,6 +33,8 @@ export interface MarketplaceOutboxRow {
   readonly aggregate_id: string;
   readonly occurred_at: string;
   readonly created_at: string;
+  /** M2-07 G4: trace correlation from the producer, propagated through the relay. */
+  readonly trace_id: string | null;
   /** Flat scalars only (ADR-016 decision 1) — no nested objects/arrays. */
   readonly data: Record<string, unknown>;
 }

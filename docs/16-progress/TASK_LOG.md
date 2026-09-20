@@ -4796,3 +4796,53 @@ geography · identity · matching · negotiations · orders · search) — وه�
 مدًى لا يطابقُ `origin/main..HEAD` الذي تستعملُهُ CI، فمرَّ أخضرَ. الدرسُ مُسجَّلٌ:
 `bash scripts/checks/require-doc-update.sh origin/main HEAD` يُشغَّلُ صريحًا قبلَ الدفعِ،
 ولا يُقرأُ الأخضرُ المحلّيُّ بديلًا عن حكمِ CI.
+
+---
+
+## 2026-09-20 — M2-07: Outbox trace_id on 6 tables — gap G4 closed (CLM-0250)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0250` · **الفرع:** `feat/m2-07-g4-outbox-trace-id` · **التاريخ:** 2026-09-20
+
+### ما أُنجِزَ
+
+أُغلِقَت فجوةُ `G4` بالكامل: `trace_id TEXT` أُضيفَ إلى 6 جداولَ صادرةٍ كانت تفتقرُ
+إليه (customer_outbox · driver_outbox · geo_outbox · identity_outbox · marketplace_outbox ·
+search_outbox). `delivery_outbox` كان لديه العمودُ مسبقًا. **13 من 13** جدولَ صادرٍ
+لديها `trace_id` الآن.
+
+| الطبقةُ | ما تغيّر |
+| --- | --- |
+| `services/*/contracts/schema.sql` | 6 ملفّاتٍ: العمودُ `trace_id TEXT` أُضيفَ إلى كلِّ جدولٍ |
+| `services/*/src/infrastructure/drizzle/schema.ts` و`src/db/schema.ts` | 6 ملفّاتٍ: `traceId: text("trace_id")` في تعريفِ Drizzle |
+| `services/*/drizzle/*_outbox_trace_id.sql` + `.down.sql` | 6 ترحيلاتٍ + 6 عكسيّاتٍ (customers/drivers/geography/identity: `0003` · marketplace: `0002` · search: `0004`) |
+| `services/*/src/outbox/*-outbox-store.ts` | 5 محوّلاتِ تصريفٍ: `trace_id` في `SELECT` · `traceId: row["trace_id"] ? String(...) : null` في `OutboxRecord` |
+| `services/search/src/domain/consumed-events.ts` | `MarketplaceOutboxRow.trace_id: string \| null` |
+| `services/search/src/infrastructure/marketplace-event-source.ts` | `SELECT trace_id::text` · `trace_id: r.trace_id` في الخريطة |
+| `services/search/src/relay.ts` | `RelayLogEntry.trace_id?: string \| null` · `trace_id: row.trace_id` في كلِّ استدعاءِ سجلٍّ (6 مواضع) |
+| `packages/outbox/src/types.ts` | التعليقُ يُحدَّث: G4 أُغلقَ للجداول الستّة |
+| `services/search/src/__tests__/relay.test.ts` | اختبارُ وحدةٍ: `trace_id` يصلُ إلى `RelayLogEntry` · `deps` تُوصِلُ `log` |
+| `services/search/src/__tests__/event-coverage.test.ts` | `sampleRow` تُضيفُ `trace_id: null` |
+| `services/*/src/__tests__/outbox-drain.integration.test.ts` | 5 ملفّاتٍ: اختبارانِ لكلٍّ (قراءةُ `trace_id` · `null` حينَ العمودُ `NULL`) |
+
+### ما لم يُدَّعَ
+
+- **لا كودَ مُنتِجٍ تغيّرَ.** العمودُ قابلٌ للقيمةِ الفارغةِ ويُبدأُ بـ`NULL`. الخدماتُ
+  التي تكتبُ سياقَ الأثرِ مسبقًا (delivery) تستمرُّ. التي لا تكتبُه تُخزّنُ `NULL`
+  حتى تُحدَّث — وهذا شأنٌ خاصٌّ بكلِّ خدمةٍ خارجَ نطاقِ M2-07.
+- `marketplace_outbox` و`dispatch_outbox` بلا مُصرّفٍ في الخدمةِ المُنتِجةِ (كما في G3).
+- الحوكمةُ محليًّا خضراءُ · typecheck خضراءُ لكلِّ الحزمِ السبعِ · 995 اختبارَ وحدةٍ
+  خضراءُ (135 في search · 133 في customers · 209 في drivers · 54 في geography · 66 في identity · 399 في marketplace).
+
+---
+
+**Work Item(s):** CLM-0251 · **Date:** 2026-09-20 · **Agent:** Perplexity Computer
+**Branch:** `feat/m2-07-g4-outbox-trace-id`
+**Scope:** `packages/search-e2e/`
+**Action:** إضافة `trace_id TEXT` إلى `OUTBOX_DDL` في `harness.ts` — بوّابةُ الخروجِ
+  للبحثِ (Phase 12 e2e) تُنشئ `marketplace_outbox` في قاعدةِ الاختبارِ، والمنفذُ
+  `PostgresMarketplaceEventSource.readAfter()` يقرأُ `trace_id::text` بعدَ تغييراتِ
+  G4، فصارَ العمودُ مطلوبًا في DDL الاختبارِ ليُطابقَ عقدَ السوقِ.
+**Why separate claim:** `packages/search-e2e/` خارجَ نطاقِ CLM-0250 (الذي لا يشملُ
+  إلا `services/` و`packages/outbox/`). قاعدةُ الحجزِ تمنعُ توسيعَ سطرٍ قائمٍ بعدَ
+  بدءِ الكتابةِ (§6)، فأُنشِئَ حجزٌ ثانٍ — والقارئُ يقرأُ الحجزَينِ معًا على الفرعِ.
+**Verification:** typecheck `@wasla/search-e2e` خضراءُ.

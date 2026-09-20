@@ -7,8 +7,8 @@
  * ## ما لا يملكه هذا الجدول
  *
  * `customer_outbox` بلا `sequence_number` (G2 أُغلق بـ`id` كتسلسل) ·
- * بـ`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245) · بلا `trace_id` (G4). المحوّلُ يعزلُ
- * هذه الفروقَ: `traceId` يُرجعُ `null` · `attempts` يُرجعُ `0` ·
+ * بـ`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245) · معَ `trace_id` (G4 مُغلقٌ). المحوّلُ يعزلُ
+ * هذه الفروقَ: `traceId` يُرجعُ القيمةَ الفعليّةَ · `attempts` يُرجعُ `0` ·
  * `recordDeliveryFailure` لا يُنفَّذ (اختياريّ في العقد).
  *
  * Scope: خدمة العملاء · محوّلُ صندوقِ الصادر
@@ -54,7 +54,8 @@ export class CustomerOutboxDrainStore implements OutboxDrainStore {
              aggregate_id,
              payload,
              occurred_at,
-             attempts
+             attempts,
+             trace_id
         FROM customer_outbox
        WHERE published_at IS NULL
        ORDER BY id ASC
@@ -70,7 +71,7 @@ export class CustomerOutboxDrainStore implements OutboxDrainStore {
       aggregateId: String(row["aggregate_id"]),
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
-      traceId: null,
+      traceId: row["trace_id"] ? String(row["trace_id"]) : null,
       attempts: Number(row["attempts"]) || 0,
     }));
   }

@@ -15,18 +15,18 @@ service — applied verbatim by `db:migrate` (CLM-0230).
 
 | Service | Table | PK type | Sort key | `published_at` | `sequence_number` | `attempts` | `last_error` | `trace_id` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| customers | `customer_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| customers | `customer_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✓ (G4) |
 | delivery | `delivery_outbox` | `BIGSERIAL outbox_id` | `outbox_id` | ✓ | ✗ | ✗ | ✗ | ✓ |
 | dispatch | `dispatch_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
-| drivers | `driver_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
-| geography | `geo_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
-| identity | `identity_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
-| marketplace | `marketplace_outbox` | `UUID outbox_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✗ |
+| drivers | `driver_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✓ (G4) |
+| geography | `geo_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✓ (G4) |
+| identity | `identity_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✓ (G4) |
+| marketplace | `marketplace_outbox` | `UUID outbox_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ (G4) |
 | matching | `matching_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
 | negotiations | `negotiation_outbox` | `UUID id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
 | orders | `order_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✗ | ✗ | ✓ |
 | reputation | `reputation_outbox` | `UUID id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
-| search | `search_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| search | `search_outbox` | `BIGSERIAL id` | `id` | ✓ | ✗ | ✗ | ✗ | ✓ (G4) |
 | subscriptions | `subscription_outbox` | `UUID event_id` | `sequence_number` | ✓ | ✓ (ADR-037) | ✓ | ✓ | ✓ |
 
 ### Schema consistency gaps
@@ -41,8 +41,11 @@ service — applied verbatim by `db:migrate` (CLM-0230).
 2. **`attempts` / `last_error` present on 3 tables only** — `negotiation_outbox`,
    `reputation_outbox`, `subscription_outbox`. The other 10 have no in-table retry
    counter.
-3. **`trace_id` missing on 5 tables** — `customer_outbox`, `driver_outbox`,
-   `geo_outbox`, `marketplace_outbox`, `search_outbox`.
+3. **~~`trace_id` missing on 5 tables~~** — **RESOLVED (CLM-0250, 2026-09-20).**
+   `trace_id TEXT` added to all 6 tables that lacked it: `customer_outbox`,
+   `driver_outbox`, `geo_outbox`, `identity_outbox`, `marketplace_outbox`,
+   `search_outbox`. (Originally published as "5"; `identity_outbox` was also
+   missing.) All 13 outbox tables now have `trace_id`. See §10.8.
 
 ## 2. Relay Consumers — 3 services, 4 consumers
 
@@ -203,7 +206,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | ~~G1~~ | ~~**9 of 13 outbox tables have no delivery mechanism at all**~~ — **RESOLVED (`CLM-0241`+`CLM-0242`+`CLM-0243`; PRs #287 / #289 / #291; squashes `50d2cc4` / `99e7172` / `674e743`).** All 13 outbox tables now have a delivery mechanism: 9 thin drain adapters against the shared `packages/outbox/` contract (ADR-042) plus the 4 mechanisms that already existed. Re-measured 2026-09-20 on `main` at `fac0c66`, from the tree — not from reports | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | — closed; see §10.1 |
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
 | G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
-| G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
+| ~~G4~~ | ~~**6 outbox tables lack `trace_id`**~~ — **RESOLVED (`CLM-0250`): `trace_id TEXT` added to all 6 tables (customer_outbox, driver_outbox, geo_outbox, identity_outbox, marketplace_outbox, search_outbox) via per-service migrations. Drain adapters now `SELECT trace_id` and return it via `OutboxRecord.traceId`. Marketplace relay path (`PostgresMarketplaceEventSource` → `relay.ts`) selects and propagates `trace_id` in every `RelayLogEntry`.** | ~~customers, drivers, geography, identity, marketplace, search~~ | — closed; see §10.8 |
 | G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **closed for the eye, the hand and the record (`CLM-0247` · `CLM-0248` · `CLM-0249`).** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST …/requeue` (the hand, §10.6); wave 3 shipped `POST …/acknowledgement` (the record, §10.7), which writes an all-or-none triple in migration `0003` and splits the metric into `total_poisoned` (reality) and `total_unacknowledged_poisoned` (what the verdict judges). **What is still NOT claimed:** no tick scheduler runs any of this on a timer — that is `G8`, a pre-declared gap, so every wave here is operator-driven. | search | Low — a poisoned row is measured, alerted, recoverable **and** dispositionable with a named acknowledger and a written reason; the residual risk is that nothing polls on a schedule (`G8`) |
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
@@ -482,6 +485,40 @@ the consumer side (`*_relay_checkpoint`, `*_relay_consumed_events`, and in
 needs a decision about **where the record belongs** — producer row vs consumer
 checkpoint — not another mechanical migration, so it stays open and is stated
 here rather than silently dropped.
+
+### 10.8 G4 closure — `trace_id` on all 6 remaining outbox tables (`CLM-0250`)
+
+**Measured from the tree** on 2026-09-20. The 6 outbox tables that lacked
+`trace_id` now have it:
+
+| Service | Table | Migration | Adapter SELECT | `OutboxRecord.traceId` |
+| --- | --- | --- | --- | --- |
+| customers | `customer_outbox` | `0003_outbox_trace_id.sql` | ✓ | row value or `null` |
+| drivers | `driver_outbox` | `0003_outbox_trace_id.sql` | ✓ | row value or `null` |
+| geography | `geo_outbox` | `0003_outbox_trace_id.sql` | ✓ | row value or `null` |
+| identity | `identity_outbox` | `0003_outbox_trace_id.sql` | ✓ | row value or `null` |
+| search | `search_outbox` | `0004_outbox_trace_id.sql` | ✓ | row value or `null` |
+| marketplace | `marketplace_outbox` | `0002_outbox_trace_id.sql` | n/a — relay-consumed | see below |
+
+`delivery_outbox` already had `trace_id` (it was the reference pattern). The
+remaining 6 are now aligned.
+
+**Marketplace relay path:** `marketplace_outbox` has no producer-side drain
+(same as G3 — see §10.4), but it is relay-consumed by the search service.
+`PostgresMarketplaceEventSource.readAfter()` now `SELECT trace_id` and the
+`MarketplaceOutboxRow` type carries it. The relay propagates it into every
+`RelayLogEntry` — so the trace context written by the marketplace producer
+survives the relay hop and appears in search's structured logs.
+
+**What this does NOT claim:**
+- No producer-side code was changed to write `trace_id` values. The column is
+  nullable and defaults to `NULL`. Producers that already write trace context
+  (e.g. delivery) continue to do so; producers that don't yet write it will
+  store `NULL` until they are updated — which is a separate, per-service
+  concern outside M2-07's scope.
+- `marketplace_outbox` and `dispatch_outbox` still have no producer-side drain
+  (G3 §10.4) — this is about the column existing and the relay reading it, not
+  about a drain being added.
 
 ## 11. What M2-07's crash/retry/dedupe proof must cover
 

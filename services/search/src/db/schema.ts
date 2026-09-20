@@ -211,6 +211,8 @@ export const searchOutbox = pgTable(
     /** M2-07 G3 (wave 2): delivery attempts recorded in the row, not in memory. */
     attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
+    /** M2-07 G4: trace correlation across services. */
+    traceId: text("trace_id"),
   },
   (table) => [
     unique("search_outbox_event_id_key").on(table.eventId),

@@ -169,6 +169,7 @@ export const identityOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
+    traceId: text("trace_id"),
   },
   (table) => [
     // فهرسٌ جزئيٌّ غيرُ فريدٍ — يلتقطُ الأحداثَ غيرَ المنشورةِ فقط. الفريدُ على

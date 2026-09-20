@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
     payload        JSONB       NOT NULL,
     occurred_at    TIMESTAMPTZ NOT NULL,
     published_at   TIMESTAMPTZ,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    trace_id       TEXT
 );
 `;
 

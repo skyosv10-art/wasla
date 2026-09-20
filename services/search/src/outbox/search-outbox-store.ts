@@ -2,7 +2,7 @@
  * محوّلُ صندوقِ صادرِ البحث — يربطُ `search_outbox` بالعقد المشترك (ADR-042 · موجة 3).
  *
  * مثلُ `geo_outbox`: بلا `aggregate_type`. المحوّلُ يُرجعُ `"search"` كقيمةٍ ثابتة.
- * بلا `trace_id` (G4) · ومعَ `attempts`/`last_error` (G3 مُغلقٌ — CLM-0246).
+ * معَ `trace_id` (G4 مُغلقٌ) · ومعَ `attempts`/`last_error` (G3 مُغلقٌ — CLM-0246).
  *
  * Scope: خدمة البحث · محوّلُ صندوقِ الصادر
  * Last Updated: 2026-09-20
@@ -37,7 +37,8 @@ export class SearchOutboxDrainStore implements OutboxDrainStore {
              aggregate_id,
              payload,
              occurred_at,
-             attempts
+             attempts,
+             trace_id
         FROM search_outbox
        WHERE published_at IS NULL
        ORDER BY id ASC
@@ -53,7 +54,7 @@ export class SearchOutboxDrainStore implements OutboxDrainStore {
       aggregateId: String(row["aggregate_id"]),
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
-      traceId: null,
+      traceId: row["trace_id"] ? String(row["trace_id"]) : null,
       attempts: Number(row["attempts"]) || 0,
     }));
   }

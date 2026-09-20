@@ -155,7 +155,8 @@ CREATE TABLE IF NOT EXISTS search_outbox (
     occurred_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
     published_at  TIMESTAMPTZ,
     attempts      INTEGER      NOT NULL DEFAULT 0,
-    last_error    TEXT
+    last_error    TEXT,
+    trace_id      TEXT                              -- G4: مُعرِّفُ التتبّعِ للربطِ بينَ الخدمات
 );
 
 CREATE INDEX IF NOT EXISTS ix_search_outbox_unpublished

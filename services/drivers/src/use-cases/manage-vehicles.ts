@@ -97,7 +97,11 @@ export async function registerVehicle(
     // Same key, same payload → the retry succeeds and returns the same row.
     // Same key, different payload → 409, because silently overwriting is how one
     // driver's registration lands on another driver's car.
-    if (remembered !== null && remembered !== fingerprint) throw idempotencyKeyReused();
+    if (remembered !== null && remembered.payloadFingerprint !== fingerprint) throw idempotencyKeyReused();
+    if (remembered !== null && remembered.recordedResponse !== null) {
+      const body = remembered.recordedResponse.body as { replayed: boolean };
+      return { ...body, replayed: true } as never;
+    }
     return existing;
   }
 
@@ -128,7 +132,7 @@ export async function registerVehicle(
     createdAt: now,
   });
 
-  await deps.idempotency.remember(memoryKey, fingerprint);
+  await deps.idempotency.remember(memoryKey, fingerprint, { status: 201, body: vehicle });
   await deps.outbox.append(
     driverVehicleRegistered(vehicle, {
       eventId: deps.ids.uuid(),

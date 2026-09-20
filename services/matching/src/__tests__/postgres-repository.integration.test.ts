@@ -353,7 +353,7 @@ describe.skipIf(!PG_ENABLED)("matching Postgres adapters", () => {
   });
 
   it("rejects an idempotency key shorter than the domain validator accepts", async () => {
-    await expect(pg.idempotency.remember("short", "fingerprint")).rejects.toMatchObject({
+    await expect(pg.idempotency.remember("short", "fingerprint", { status: 200, body: {} })).rejects.toMatchObject({
       code: "MATCHING_VALIDATION_FAILED",
     });
   });

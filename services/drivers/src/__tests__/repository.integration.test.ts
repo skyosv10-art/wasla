@@ -761,35 +761,27 @@ describe.skipIf(!PG_ENABLED)("Postgres adapters", () => {
 
   describe("idempotency", () => {
     it("remembers a fingerprint and returns it for the same key", async () => {
-      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a");
-      expect(await pg.idempotency.find("vehicle:WS-1000000001:veh-000001")).toBe("fingerprint-a");
+      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a", { status: 201, body: {} });
+      const found = await pg.idempotency.find("vehicle:WS-1000000001:veh-000001");
+      expect(found?.payloadFingerprint).toBe("fingerprint-a");
       expect(await pg.idempotency.find("vehicle:WS-1000000001:veh-000002")).toBeNull();
     });
 
     it("accepts the namespaced key length the domain validator allows at its maximum", async () => {
-      // The reason §9 of the DDL widened this column to 192: the key stored here is
-      // `vehicle:<wasla id>:<caller key>`, so a caller-legal 128-character key produces
-      // a 150-character row — `"vehicle:"` is 8, `WS-1000000001` is 13, the separator
-      // is 1, and the caller key is 128. At 128 the column would have rejected a key
-      // the caller could never have anticipated or explained.
-      //
-      // The previous 151 was arithmetic no run had ever checked: the whole file is
-      // skipped without DATABASE_URL, so the expectation could stay wrong indefinitely
-      // on any machine — and every machine was such a machine. It says nothing about
-      // the column, which is correct at 192, and everything about the cost of an
-      // assertion no green run ever executed.
       const key = `vehicle:${DRIVER}:${"k".repeat(128)}`;
       expect(key.length).toBe(150);
-      await pg.idempotency.remember(key, "fingerprint-a");
-      expect(await pg.idempotency.find(key)).toBe("fingerprint-a");
+      await pg.idempotency.remember(key, "fingerprint-a", { status: 201, body: {} });
+      const found = await pg.idempotency.find(key);
+      expect(found?.payloadFingerprint).toBe("fingerprint-a");
     });
 
     it("is idempotent about being remembered twice", async () => {
       // A retry of the same request must not turn into a 23505: the store's job is to
       // recognise the repeat, not to punish it.
-      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a");
-      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a");
-      expect(await pg.idempotency.find("vehicle:WS-1000000001:veh-000001")).toBe("fingerprint-a");
+      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a", { status: 201, body: {} });
+      await pg.idempotency.remember("vehicle:WS-1000000001:veh-000001", "fingerprint-a", { status: 201, body: {} });
+      const found = await pg.idempotency.find("vehicle:WS-1000000001:veh-000001");
+      expect(found?.payloadFingerprint).toBe("fingerprint-a");
     });
   });
 });

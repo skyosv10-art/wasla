@@ -90,6 +90,8 @@ import {
 } from "../../domain/state-machine.js";
 import type {
   IdempotencyStore,
+  IdempotencyRecord,
+  RecordedResponse,
   InsertJobInput,
   InsertOfferInput,
   InsertWaveInput,
@@ -743,23 +745,48 @@ export class PostgresDispatchOutbox implements Outbox {
 export class PostgresDispatchIdempotencyStore implements IdempotencyStore {
   constructor(private readonly db: DbOrTx) {}
 
-  async find(key: string): Promise<string | null> {
+  async find(key: string): Promise<IdempotencyRecord | null> {
     const rows = await this.db
-      .select({ fingerprint: dispatchIdempotency.payloadFingerprint })
+      .select({
+        fingerprint: dispatchIdempotency.payloadFingerprint,
+        responseStatus: dispatchIdempotency.responseStatus,
+        responseBody: dispatchIdempotency.responseBody,
+      })
       .from(dispatchIdempotency)
       .where(eq(dispatchIdempotency.idempotencyKey, key))
       .limit(1);
-    return rows[0]?.fingerprint ?? null;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      payloadFingerprint: row.fingerprint,
+      recordedResponse:
+        row.responseStatus !== null && row.responseBody !== null
+          ? { status: row.responseStatus, body: row.responseBody }
+          : null,
+    };
   }
 
-  async remember(key: string, payloadFingerprint: string): Promise<void> {
+  async remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void> {
     try {
       await this.db
         .insert(dispatchIdempotency)
-        .values({ idempotencyKey: key, payloadFingerprint })
+        .values({
+          idempotencyKey: key,
+          payloadFingerprint,
+          responseStatus: response.status,
+          responseBody: response.body as never,
+        })
         .onConflictDoUpdate({
           target: dispatchIdempotency.idempotencyKey,
-          set: { payloadFingerprint },
+          set: {
+            payloadFingerprint,
+            responseStatus: response.status,
+            responseBody: response.body as never,
+          },
         });
     } catch (error) {
       if (sqlState(error) === CHECK_VIOLATION) {

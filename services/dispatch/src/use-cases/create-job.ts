@@ -85,7 +85,12 @@ export async function createDispatchJob(
 
   const remembered = await deps.idempotency.find(idempotencyKey);
   if (remembered !== null) {
-    if (remembered !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.payloadFingerprint !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.recordedResponse !== null) {
+      const body = remembered.recordedResponse.body as { replayed: boolean };
+      return { ...body, replayed: true } as never;
+    }
+    // Legacy row (pre-G6): reprocess
     const existing = await deps.jobs.findByIdempotencyKey(idempotencyKey);
     // The key is remembered but the job is gone only if someone deleted a row by
     // hand; treating that as a fresh create would violate the unique index anyway.
@@ -152,7 +157,11 @@ export async function createDispatchJob(
 
   // Remembered last: a key remembered before a failed write would turn the retry
   // into a replay of a job that does not exist.
-  await deps.idempotency.remember(idempotencyKey, payloadFingerprint);
+  const result = { job, replayed: false };
+  await deps.idempotency.remember(idempotencyKey, payloadFingerprint, {
+    status: 200,
+    body: result,
+  });
 
-  return { job, replayed: false };
+  return result;
 }

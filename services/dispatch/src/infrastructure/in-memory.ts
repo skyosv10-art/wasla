@@ -49,6 +49,7 @@ import {
 import type {
   Clock,
   IdGenerator,
+  IdempotencyRecord,
   IdempotencyStore,
   InsertJobInput,
   InsertOfferInput,
@@ -56,6 +57,7 @@ import type {
   JobRepository,
   OfferRepository,
   Outbox,
+  RecordedResponse,
   ResolveOfferInput,
   RulesProvider,
   WaveRepository,
@@ -124,14 +126,26 @@ export class SequentialIdGenerator implements IdGenerator {
 }
 
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private readonly entries = new Map<string, string>();
+  private readonly entries = new Map<
+    string,
+    { fingerprint: string; response: RecordedResponse | null }
+  >();
 
-  async find(key: string): Promise<string | null> {
-    return this.entries.get(key) ?? null;
+  async find(key: string): Promise<IdempotencyRecord | null> {
+    const entry = this.entries.get(key);
+    if (!entry) return null;
+    return {
+      payloadFingerprint: entry.fingerprint,
+      recordedResponse: entry.response,
+    };
   }
 
-  async remember(key: string, payloadFingerprint: string): Promise<void> {
-    this.entries.set(key, payloadFingerprint);
+  async remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void> {
+    this.entries.set(key, { fingerprint: payloadFingerprint, response });
   }
 }
 

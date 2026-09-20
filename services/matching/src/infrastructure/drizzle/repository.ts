@@ -73,8 +73,10 @@ import { candidacyNotFound } from "../../domain/errors.js";
 import type {
   CandidacyRepository,
   DecisionRepository,
+  IdempotencyRecord,
   IdempotencyStore,
   Outbox,
+  RecordedResponse,
   RulesetRepository,
   UpsertCandidacyInput,
 } from "../../ports.js";
@@ -657,23 +659,48 @@ export class PostgresMatchingOutbox implements Outbox {
 export class PostgresIdempotencyStore implements IdempotencyStore {
   constructor(private readonly db: DbOrTx) {}
 
-  async find(key: string): Promise<string | null> {
+  async find(key: string): Promise<IdempotencyRecord | null> {
     const rows = await this.db
-      .select({ fingerprint: matchingIdempotency.payloadFingerprint })
+      .select({
+        fingerprint: matchingIdempotency.payloadFingerprint,
+        responseStatus: matchingIdempotency.responseStatus,
+        responseBody: matchingIdempotency.responseBody,
+      })
       .from(matchingIdempotency)
       .where(eq(matchingIdempotency.idempotencyKey, key))
       .limit(1);
-    return rows[0]?.fingerprint ?? null;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      payloadFingerprint: row.fingerprint,
+      recordedResponse:
+        row.responseStatus !== null && row.responseBody !== null
+          ? { status: row.responseStatus, body: row.responseBody }
+          : null,
+    };
   }
 
-  async remember(key: string, payloadFingerprint: string): Promise<void> {
+  async remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void> {
     try {
       await this.db
         .insert(matchingIdempotency)
-        .values({ idempotencyKey: key, payloadFingerprint })
+        .values({
+          idempotencyKey: key,
+          payloadFingerprint,
+          responseStatus: response.status,
+          responseBody: response.body as never,
+        })
         .onConflictDoUpdate({
           target: matchingIdempotency.idempotencyKey,
-          set: { payloadFingerprint },
+          set: {
+            payloadFingerprint,
+            responseStatus: response.status,
+            responseBody: response.body as never,
+          },
         });
     } catch (error) {
       return translateCheck("Idempotency-Key", "8..128 characters", error);

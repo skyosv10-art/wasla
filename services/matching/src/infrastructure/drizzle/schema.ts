@@ -416,6 +416,8 @@ export const matchingIdempotency = pgTable(
   {
     idempotencyKey: text("idempotency_key").primaryKey(),
     payloadFingerprint: text("payload_fingerprint").notNull(),
+    responseStatus: integer("response_status"),
+    responseBody: jsonb("response_body"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .default(sql`now()`),
@@ -428,6 +430,14 @@ export const matchingIdempotency = pgTable(
     check(
       "matching_idempotency_payload_fingerprint_check",
       sql`char_length(${table.payloadFingerprint}) BETWEEN 1 AND 4096`,
+    ),
+    check(
+      "matching_idempotency_response_status_check",
+      sql`${table.responseStatus} IS NULL OR ${table.responseStatus} BETWEEN 100 AND 599`,
+    ),
+    check(
+      "ck_matching_idempotency_response_pair",
+      sql`(${table.responseStatus} IS NULL) = (${table.responseBody} IS NULL)`,
     ),
   ],
 );

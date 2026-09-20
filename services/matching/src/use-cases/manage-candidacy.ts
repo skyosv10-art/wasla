@@ -111,7 +111,9 @@ export async function upsertCandidacy(
   });
   const remembered = await deps.idempotency.find(key);
   if (remembered !== null) {
-    if (remembered !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.payloadFingerprint !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.recordedResponse !== null) return remembered.recordedResponse.body as never;
+    // Legacy row (pre-G6): reprocess
     const existing = await deps.candidacy.find(driverPublicId);
     // A retry returns the stored row and appends NO second event.
     if (existing !== null) return existing;
@@ -129,7 +131,7 @@ export async function upsertCandidacy(
     updatedBy: writerFromActor(actorType),
     updatedAt,
   });
-  await deps.idempotency.remember(key, payloadFingerprint);
+  await deps.idempotency.remember(key, payloadFingerprint, { status: 200, body: stored });
   await deps.outbox.append(
     driverCandidacyUpdated(stored, {
       eventId: deps.ids.uuid(),
@@ -177,13 +179,14 @@ export async function changeAvailability(
   const payloadFingerprint = fingerprint({ driverPublicId, toState, actorType });
   const remembered = await deps.idempotency.find(key);
   if (remembered !== null) {
-    if (remembered !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.payloadFingerprint !== payloadFingerprint) throw idempotencyKeyReused(traceId);
+    if (remembered.recordedResponse !== null) return remembered.recordedResponse.body as never;
     return existing;
   }
 
   const changedAt = deps.clock.now();
   const stored = await deps.candidacy.setAvailability(driverPublicId, toState, changedAt);
-  await deps.idempotency.remember(key, payloadFingerprint);
+  await deps.idempotency.remember(key, payloadFingerprint, { status: 200, body: stored });
   if (existing.availabilityState !== toState) {
     await deps.outbox.append(
       driverAvailabilityChanged(

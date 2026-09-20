@@ -205,7 +205,12 @@ CREATE TABLE IF NOT EXISTS dispatch_idempotency (
     -- ولا مُعرّف سائق في جدول تدقيق تقني.
     payload_fingerprint TEXT        NOT NULL
                         CHECK (char_length(payload_fingerprint) BETWEEN 1 AND 4096),
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+    -- G6: الاستجابة المخزنة — كلاهما أو لا شيء (CHECK) للتوافق مع الصفوف القائمة.
+    response_status     INTEGER     CHECK (response_status BETWEEN 100 AND 599),
+    response_body       JSONB,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT ck_dispatch_idempotency_response_pair
+        CHECK ((response_status IS NULL) = (response_body IS NULL))
 );
 
 -- ─────────────────────────────────────────────────────────────────────

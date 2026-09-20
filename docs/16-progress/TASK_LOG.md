@@ -4846,3 +4846,24 @@ search_outbox). `delivery_outbox` كان لديه العمودُ مسبقًا. *
   إلا `services/` و`packages/outbox/`). قاعدةُ الحجزِ تمنعُ توسيعَ سطرٍ قائمٍ بعدَ
   بدءِ الكتابةِ (§6)، فأُنشِئَ حجزٌ ثانٍ — والقارئُ يقرأُ الحجزَينِ معًا على الفرعِ.
 **Verification:** typecheck `@wasla/search-e2e` خضراءُ.
+
+---
+
+**Work Item(s):** CLM-0252 · **Date:** 2026-09-20 · **Agent:** Perplexity Computer
+**Branch:** `feat/m2-07-g6-idempotency-response-storage`
+**Scope:** `services/dispatch/`, `services/drivers/`, `services/matching/`,
+  `docs/08-infrastructure/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+**Action:** إغلاق فجوة G6 — إضافة `response_status` (nullable INTEGER) و`response_body` (nullable JSONB)
+  إلى 3 جداول idempotency (dispatch_idempotency migration 0002, driver_idempotency
+  migration 0004, matching_idempotency migration 0003). الأعمدة nullable مع قيد CHECK
+  (كلاهما أو لا شيء) للتوافق مع الصفوف القائمة. تحديث منفذ IdempotencyStore في
+  الخدمات الثلاث: `find()` يُرجع `IdempotencyRecord` بـ`payloadFingerprint` +
+  `recordedResponse` (nullable للصفوف القديمة)؛ `remember()` يخزّن الاستجابة.
+  `classifyIdempotency`/`classifyReplay` تُرجع `{ kind: "replay", response }` عند
+  وجود الاستجابة المخزنة، و`{ kind: "legacy-replay" }` لصفوف ما قبل G6. تحديث
+  معالجات HTTP لحفظ الاستجابة بعد المعالجة وإرجاعها عند إعادة الطلب. اختبارات
+  repository مُحدّثة. typecheck خضراء لكل الخدمات. 645 اختبارًا خضراء
+  (dispatch 263 · drivers 209 · matching 173). 8 من 8 جداول idempotency تُخزّن
+  الاستجابة الآن.
+**Why:** الفجوة G6 مفتوحة Low severity — 3 من 8 جداول idempotency تخزن بصمة فقط
+  لا الاستجابة، فإعادة الطلب تُعالج بدل إرجاع الاستجابة المخزنة.

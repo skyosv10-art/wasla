@@ -586,6 +586,8 @@ export const marketplaceOutbox = pgTable(
     occurredAt: instant("occurred_at").notNull(),
     publishedAt: instant("published_at"),
     createdAt: instant("created_at").notNull().defaultNow(),
+    /** M2-07 G4: trace correlation across services. */
+    traceId: text("trace_id"),
     sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
   },
   (table) => [

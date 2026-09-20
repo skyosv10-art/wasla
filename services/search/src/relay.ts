@@ -67,6 +67,8 @@ export interface RelayLogEntry {
   readonly status: ConsumedStatus;
   readonly attempt: number;
   readonly detail?: string;
+  /** M2-07 G4: trace correlation from the producer, propagated for observability. */
+  readonly trace_id?: string | null;
   readonly ts: string;
 }
 
@@ -129,7 +131,7 @@ async function processRow(
   // 1. Idempotency: a terminal consumed row is a no-op (duplicate delivery).
   const existing = await deps.store.getConsumed(row.outbox_id);
   if (existing && isTerminal(existing.status)) {
-    log({ outbox_id: row.outbox_id, event_type: row.event_type, status: existing.status, attempt: existing.attempt_count, detail: "duplicate delivery — already terminal", ts: now() });
+    log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: existing.status, attempt: existing.attempt_count, detail: "duplicate delivery — already terminal", ts: now() });
     return existing.status === "poisoned" ? "poisoned" : "skipped";
   }
 
@@ -137,7 +139,7 @@ async function processRow(
   if (row.event_version !== SUPPORTED_EVENT_VERSION) {
     const attempt = (existing?.attempt_count ?? 0) + 1;
     await deps.store.markConsumed(row.outbox_id, row, "poisoned", attempt, `unsupported event_version: ${row.event_version}`);
-    log({ outbox_id: row.outbox_id, event_type: row.event_type, status: "poisoned", attempt, detail: `unsupported event_version: ${row.event_version}`, ts: now() });
+    log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: "poisoned", attempt, detail: `unsupported event_version: ${row.event_version}`, ts: now() });
     return "poisoned";
   }
 
@@ -145,7 +147,7 @@ async function processRow(
   const classification = classifyEvent(row);
   if (classification.kind === "ignored") {
     await deps.store.markConsumed(row.outbox_id, row, "ignored", 1, classification.reason);
-    log({ outbox_id: row.outbox_id, event_type: row.event_type, status: "ignored", attempt: 1, detail: classification.reason, ts: now() });
+    log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: "ignored", attempt: 1, detail: classification.reason, ts: now() });
     return "skipped";
   }
 
@@ -155,18 +157,18 @@ async function processRow(
   try {
     const result = await applyEvent(deps, row, classification.event);
     await deps.store.markConsumed(row.outbox_id, row, result, attempt, null);
-    log({ outbox_id: row.outbox_id, event_type: row.event_type, status: result, attempt, ts: now() });
+    log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: result, attempt, ts: now() });
     return result === "skipped_stale" ? "skipped" : "applied";
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (attempt > cfg.maxAttempts) {
       await deps.store.markConsumed(row.outbox_id, row, "poisoned", attempt, msg);
-      log({ outbox_id: row.outbox_id, event_type: row.event_type, status: "poisoned", attempt, detail: msg, ts: now() });
+      log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: "poisoned", attempt, detail: msg, ts: now() });
       return "poisoned";
     }
     // Leave pending: checkpoint does NOT advance — retry next poll.
     await deps.store.markConsumed(row.outbox_id, row, "pending", attempt, msg);
-    log({ outbox_id: row.outbox_id, event_type: row.event_type, status: "pending", attempt, detail: "retryable failure", ts: now() });
+    log({ outbox_id: row.outbox_id, event_type: row.event_type, trace_id: row.trace_id, status: "pending", attempt, detail: "retryable failure", ts: now() });
     return "pending";
   }
 }

@@ -77,7 +77,7 @@ class FakeStore implements ProjectionStore {
 }
 
 function deps(rows: MarketplaceOutboxRow[], catalog: FakeCatalog, store: FakeStore): RelayDeps {
-  return { events: new FakeEventSource(rows), catalog, store, config: { ...DEFAULT_RELAY_CONFIG, maxAttempts: 2 } };
+  return { events: new FakeEventSource(rows), catalog, store, config: { ...DEFAULT_RELAY_CONFIG, maxAttempts: 2 }, log: (e) => store.logs.push(e) };
 }
 
 // ── Fixtures ─────────────────────────────────────────────────────────
@@ -91,6 +91,7 @@ function row(n: number, eventType: string, data: Record<string, unknown>, aggreg
     outbox_id: OID(n), event_type: eventType as MarketplaceOutboxRow["event_type"],
     event_version: "v1", aggregate_type: aggregateType, aggregate_id: STORE_ID,
     occurred_at: `2026-01-0${n}T00:00:00.000Z`, created_at: `2026-01-0${n}T00:00:00.000Z`,
+    trace_id: null,
     data,
   };
 }
@@ -206,5 +207,15 @@ describe("relay — store state change hides visible products (req: visibility d
     const suspended: MarketplaceOutboxRow = row(6, "marketplace.store_suspended", { store_id: STORE_ID, store_slug: "acme", owner_public_id: "WS-0000000001", category_slug: "electronics", from_state: "approved", to_state: "suspended", state_sequence: 3, actor_type: "moderator", occurred_for: "2026-01-06T00:00:00Z" });
     await runRelayBatch(deps([...happyPath, suspended], catalog, store));
     expect(store.docs.get(PRODUCT_ID)?.storeState).toBe("suspended");
+  });
+
+  // ── G4 (CLM-0250): trace_id يُمرَّرُ في سجلِّ المرحل ────────────────────────
+  it("propagates trace_id from marketplace row into relay log entries (G4)", async () => {
+    const catalog = new FakeCatalog(); catalog.set(catalogProduct);
+    const store = new FakeStore();
+    const traced = { ...row(7, "marketplace.product_created", { product_id: PRODUCT_ID, title_ar: "منتج", price: 10, currency: "SAR", store_id: STORE_ID, store_slug: "acme", owner_public_id: "WS-0000000001", category_slug: "electronics", to_state: "approved", state_sequence: 1, actor_type: "owner", occurred_for: "2026-01-07T00:00:00Z" }), trace_id: "trace-relay-g4-0001" };
+    await runRelayBatch(deps([traced], catalog, store));
+    expect(store.logs.length).toBeGreaterThan(0);
+    expect(store.logs.every((l) => l.trace_id === "trace-relay-g4-0001")).toBe(true);
   });
 });

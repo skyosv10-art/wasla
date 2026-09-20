@@ -185,7 +185,8 @@ CREATE TABLE IF NOT EXISTS geo_outbox (
     occurred_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
     published_at  TIMESTAMPTZ,
     attempts      INTEGER     NOT NULL DEFAULT 0,  -- G3: عدّادُ محاولاتِ التسليم
-    last_error    TEXT                             -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
+    last_error    TEXT,                             -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
+    trace_id      TEXT                              -- G4: مُعرِّفُ التتبّعِ للربطِ بينَ الخدمات
 );
 
 CREATE INDEX IF NOT EXISTS ix_geo_outbox_unpublished ON geo_outbox (id) WHERE published_at IS NULL;

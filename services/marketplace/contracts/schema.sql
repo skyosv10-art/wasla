@@ -385,6 +385,7 @@ CREATE TABLE IF NOT EXISTS marketplace_outbox (
     occurred_at             TIMESTAMPTZ NOT NULL,
     published_at            TIMESTAMPTZ,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    trace_id                TEXT,                        -- G4: مُعرِّفُ التتبّعِ للربطِ بينَ الخدمات
     sequence_number         BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY
 );
 

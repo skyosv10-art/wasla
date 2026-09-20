@@ -10,6 +10,7 @@
  *
  * `aggregateType` و`traceId` و`sequenceNumber` قد تكونُ غائبةً في بعضِ
  * الجداول (G2/G4، واختلافُ المخطط). المحوّلُ يُرجعُ `null` لا يُفترِضُ.
+ * G4 أُغلقَ للجداول الستّة الباقية (CLM-0250).
  *
  * Scope: مشترك · صندوقُ الصادر
  * Last Updated: 2026-09-20
@@ -36,7 +37,7 @@ export interface OutboxRecord {
   readonly aggregateId: string;
   readonly payload: unknown;
   readonly occurredAt: string;
-  /** قد يكونُ `null` في جداولٍ بلا `trace_id` (G4). */
+  /** قد يكونُ `null` في جداولٍ بلا `trace_id` (G4 — أُغلقَ للجداول الستّة). */
   readonly traceId: string | null;
   /**
    * عددُ محاولاتِ التسليم السابقة — يُرجعُ `0` إن لم يكن العمودُ موجودًا (G3).

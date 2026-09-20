@@ -559,6 +559,7 @@ export const driverOutbox = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
   attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
+    traceId: text("trace_id"),
   },
   (table) => [
     // Canonical name of the contract's inline `event_id UUID NOT NULL UNIQUE`.

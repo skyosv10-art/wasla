@@ -7,7 +7,7 @@
  * ## ما لا يملكه هذا الجدول
  *
  * `geo_outbox` بلا `aggregate_type` · بلا `sequence_number` (G2) ·
- * بـ`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245) · بلا `trace_id` (G4).
+ * بـ`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245) · معَ `trace_id` (G4 مُغلقٌ).
  *
  * Scope: خدمة الجغرافيا · محوّلُ صندوقِ الصادر
  * Last Updated: 2026-09-20
@@ -42,7 +42,8 @@ export class GeographyOutboxDrainStore implements OutboxDrainStore {
              aggregate_id,
              payload,
              occurred_at,
-             attempts
+             attempts,
+             trace_id
         FROM geo_outbox
        WHERE published_at IS NULL
        ORDER BY id ASC
@@ -58,7 +59,7 @@ export class GeographyOutboxDrainStore implements OutboxDrainStore {
       aggregateId: String(row["aggregate_id"]),
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
-      traceId: null,
+      traceId: row["trace_id"] ? String(row["trace_id"]) : null,
       attempts: Number(row["attempts"]) || 0,
     }));
   }

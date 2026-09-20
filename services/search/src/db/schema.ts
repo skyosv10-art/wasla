@@ -235,6 +235,10 @@ export const searchRelayConsumedEvents = pgTable(
     attemptCount: integer("attempt_count").notNull().default(0),
     lastError: text("last_error"),
     consumedAt: instant("consumed_at").notNull().defaultNow(),
+    // إقرارُ المسمومِ (`CLM-0249`) — سابقةُ `delivery_relay_consumed_events` حرفاً.
+    acknowledgedAt: instant("acknowledged_at"),
+    acknowledgedBy: text("acknowledged_by"),
+    acknowledgementReason: text("acknowledgement_reason"),
   },
   (table) => [
     check(
@@ -242,6 +246,26 @@ export const searchRelayConsumedEvents = pgTable(
       sql`${table.status} IN (${sql.raw(CONSUMED_STATES)})`,
     ),
     check("search_relay_consumed_events_attempt_count_check", sql`${table.attemptCount} >= 0`),
+    check(
+      "search_relay_consumed_events_ack_by_check",
+      sql`${table.acknowledgedBy} IS NULL OR char_length(${table.acknowledgedBy}) BETWEEN 1 AND 128`,
+    ),
+    check(
+      "search_relay_consumed_events_ack_reason_check",
+      sql`${table.acknowledgementReason} IS NULL OR char_length(${table.acknowledgementReason}) BETWEEN 12 AND 512`,
+    ),
+    check(
+      "ck_search_relay_consumed_events_ack_triple",
+      sql`(${table.acknowledgedAt} IS NULL) = (${table.acknowledgedBy} IS NULL) AND (${table.acknowledgedAt} IS NULL) = (${table.acknowledgementReason} IS NULL)`,
+    ),
+    // القيدُ الذي يُلزِمُ **اليدَ** بمحوِ الثلاثيِّ عندَ الإعادةِ: لا إقرارَ على صفٍّ حيٍّ.
+    check(
+      "ck_search_relay_consumed_events_ack_poisoned_only",
+      sql`${table.acknowledgedAt} IS NULL OR ${table.status} = 'poisoned'`,
+    ),
+    index("ix_search_relay_consumed_unacknowledged")
+      .on(table.consumedAt)
+      .where(sql`${table.status} = 'poisoned' AND ${table.acknowledgedAt} IS NULL`),
     // الفهرسُ الجزئيُّ يحملُ **نفيَ** الحالاتِ النهائيّةِ: صفوفُ العملِ الباقيةِ وحدَها.
     index("ix_search_consumed_status")
       .on(table.status)

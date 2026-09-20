@@ -181,8 +181,33 @@ CREATE TABLE IF NOT EXISTS search_relay_consumed_events (
         CHECK (status IN ('pending','applied','skipped','skipped_stale','ignored','poisoned')),
     attempt_count  INTEGER     NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
     last_error     TEXT,
-    consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    consumed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- إقرارُ المسمومِ (فجوةُ `G5` · موجةُ المحضرِ · `CLM-0249`): ثلاثيٌّ معاً أو
+    -- لا شيءَ، ولا إقرارَ إلّا على 'poisoned'. والقيدُ الأخيرُ هوَ ما يجعلُ
+    -- إعادةَ الصفِّ إلى 'pending' **تمحو الإقرارَ حتماً** — القاعدةُ ترفضُ صفّاً
+    -- مُعاداً يحملُ إقراراً، فلا يبقى «عُولِجَ» على صفٍّ صارَ حيّاً.
+    -- (سابقةُ `delivery_relay_consumed_events` حرفاً — ADR-026 §4.27.)
+    acknowledged_at        TIMESTAMPTZ,
+    acknowledged_by        TEXT,
+    acknowledgement_reason TEXT,
+    CONSTRAINT search_relay_consumed_events_ack_by_check
+        CHECK (acknowledged_by IS NULL OR char_length(acknowledged_by) BETWEEN 1 AND 128),
+    CONSTRAINT search_relay_consumed_events_ack_reason_check
+        CHECK (acknowledgement_reason IS NULL OR char_length(acknowledgement_reason) BETWEEN 12 AND 512),
+    CONSTRAINT ck_search_relay_consumed_events_ack_triple
+        CHECK ((acknowledged_at IS NULL) = (acknowledged_by IS NULL)
+           AND (acknowledged_at IS NULL) = (acknowledgement_reason IS NULL)),
+    CONSTRAINT ck_search_relay_consumed_events_ack_poisoned_only
+        CHECK (acknowledged_at IS NULL OR status = 'poisoned')
 );
+
+-- فهرسٌ جزئيٌّ على **غيرِ المُقَرِّ بهِ** وحدَهُ: هذا هوَ ما يُقرأُ في الحادثةِ،
+-- والمُقَرُّ بهِ يبقى صفّاً للتدقيقِ لا صفّاً يُنبَّهُ عليهِ. والعمودُ
+-- `consumed_at` لا `updated_at`: دفترُ البحثِ لا يملكُ الثانيَ، والحدُّ مُعلَنٌ
+-- في `domain/relay-dead-letters.ts` ومنشورٌ في جوابِ المقياسِ.
+CREATE INDEX IF NOT EXISTS ix_search_relay_consumed_unacknowledged
+    ON search_relay_consumed_events (consumed_at)
+    WHERE status = 'poisoned' AND acknowledged_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS ix_search_consumed_status
     ON search_relay_consumed_events (status)

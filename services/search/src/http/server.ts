@@ -21,6 +21,7 @@ import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
 import { PostgresSearchDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
 import { PostgresSearchRequeueStore } from "../infrastructure/relay-requeue-store.js";
+import { PostgresSearchAcknowledgementStore } from "../infrastructure/relay-acknowledgement-store.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
@@ -51,6 +52,9 @@ async function main(): Promise<void> {
    * التنبيهُ. ويُشاركُ نفسَ المسبحِ لأنَّ المعاملةَ تُؤخَذُ على اتّصالٍ منهُ.
    */
   const relayRequeuePort = new PostgresSearchRequeueStore(pool);
+  // نفسُ المسبحِ: الإقرارُ معاملةٌ قصيرةٌ على صفٍّ واحدٍ، ومسبحٌ ثانٍ كانَ
+  // سيُضاعِفُ اتّصالاتِ الخدمةِ لأجلِ مسارٍ نادرٍ.
+  const relayAcknowledgementPort = new PostgresSearchAcknowledgementStore(pool);
   const keys = keyRegistryFromEnv(process.env);
   if (keys === undefined) {
     console.error("WASLA_SERVICE_AUTH_KEYS is required");
@@ -64,6 +68,7 @@ async function main(): Promise<void> {
     indexHealthPort,
     deadLetterReadPort,
     relayRequeuePort,
+    relayAcknowledgementPort,
     serviceIdentity: {
       keys,
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),

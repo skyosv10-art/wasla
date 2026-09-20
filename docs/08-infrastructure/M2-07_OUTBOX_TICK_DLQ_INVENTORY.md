@@ -204,7 +204,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
 | G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
 | G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
-| G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **still partially closed: measurement (`CLM-0247`) and requeue (`CLM-0248`) exist, acknowledgement does not.** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST /search/relay/dead-letters/{ledger}/{outbox_id}/requeue` (the hand, §10.6), which lifts the row out of terminality **and** rewinds the relay checkpoint in one transaction. Still missing, and named rather than left implicit: **acknowledgement** (the record) — wave 3, mirroring delivery's own order (ADR-026 §4.27), which needs a migration adding `acknowledged_at`/`acknowledged_by`/`acknowledgement_reason` with an all-or-none CHECK | search | Low–Medium — a poisoned row is now **measured, alerted and recoverable by an operator**; what is still missing is a way to record «judged, will not be retried», so a permanently-poisoned row keeps a `warning` alight (see §10.6) |
+| G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **closed for the eye, the hand and the record (`CLM-0247` · `CLM-0248` · `CLM-0249`).** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST …/requeue` (the hand, §10.6); wave 3 shipped `POST …/acknowledgement` (the record, §10.7), which writes an all-or-none triple in migration `0003` and splits the metric into `total_poisoned` (reality) and `total_unacknowledged_poisoned` (what the verdict judges). **What is still NOT claimed:** no tick scheduler runs any of this on a timer — that is `G8`, a pre-declared gap, so every wave here is operator-driven. | search | Low — a poisoned row is measured, alerted, recoverable **and** dispositionable with a named acknowledger and a written reason; the residual risk is that nothing polls on a schedule (`G8`) |
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
@@ -285,6 +285,46 @@ Limits **published, not hidden** — each one is in the response body, not only 
 
 There is deliberately **no idempotency key**: the action is naturally
 idempotent, because a second call finds the row `pending` and is answered `409`.
+
+### 10.7 G5 wave 3 — the poisoned rows can be acknowledged (`CLM-0249`)
+
+> Measured from the tree and from a real PostgreSQL run, per this inventory's own
+> truth rule. This closes `G5` **as written** (eye + hand + record). It does not
+> close `G8`: nothing here runs on a timer.
+
+Wave 1 gave an eye, wave 2 a hand. Both leave one state unhandled: a row whose
+cause still stands. Requeueing it re-poisons it; leaving it keeps `warning`
+alight forever, and the only remaining operator move is to silence the signal —
+after which the **next** loss is invisible too. That is how a measurement becomes
+worse than no measurement.
+
+The disposition is therefore **an added witness, never a deleted row**.
+
+| Shipped | Where |
+| --- | --- |
+| Triple columns + four CHECKs + partial index, forward and down | `services/search/drizzle/0003_relay_acknowledgement{,.down}.sql` · `contracts/schema.sql` §5 · `src/db/schema.ts` |
+| Pure normalisation (trim-then-measure), acknowledger composition, and the three-way decision | `services/search/src/domain/relay-acknowledgement.ts` |
+| `SELECT … FOR UPDATE` + write, rollback on every non-write outcome | `services/search/src/infrastructure/relay-acknowledgement-store.ts` |
+| Requeue now **clears** the triple in the same statement | `services/search/src/infrastructure/relay-requeue-store.ts` |
+| Metric split + new verdict reason `all_poisoned_acknowledged` | `services/search/src/domain/relay-dead-letters.ts` · `infrastructure/relay-dead-letter-store.ts` |
+| `POST /search/relay/dead-letters/{ledger}/{outbox_id}/acknowledgement`, scope `search:relay-dead-letters:acknowledge` | `services/search/src/http/app.ts` · documented in [`SEARCH_HTTP.md` §8](../04-api/SEARCH_HTTP.md) |
+| Wired in the production composition root, sharing the pool | `services/search/src/http/server.ts` · `packages/search-e2e/src/harness.ts` |
+| 14 unit + 7 real-PostgreSQL integration cases | `services/search/src/__tests__/relay-acknowledgement{,.integration}.test.ts` |
+
+Decisions that are **not** copies of delivery's wave, each measured first:
+
+| Decision | Why |
+| --- | --- |
+| Age is measured from `consumed_at`, so `oldest_unacknowledged_poisoned_at` is a `min(consumed_at) FILTER (…)` | The search ledger has **no `updated_at`** (delivery's has one). Adding one for this wave would have been a second source of truth for a timestamp nobody else reads. The limit is published in the response as `age_measured_from`. |
+| No advisory lock (same as wave 2) | Same reason: the search relay holds no session lock, so a lock here would be decorative. The row is locked `FOR UPDATE`. |
+| `already_acknowledged` answers `200`, not `409` | The caller did not err and the state they wanted holds. The response carries the **first** record, so the second caller sees who preceded them instead of assuming the disposition is theirs. |
+| The row keeps `status = 'poisoned'` — no sixth status | A new status would drop the row out of every query that counts poisoned rows, which is the hiding this wave exists to prevent. |
+| `ck_…_ack_poisoned_only` exists so that **requeue must clear the triple** | Without it, a requeued row could carry "handled" into a live state, be re-poisoned later, and read as already-dispositioned — invisible in the verdict forever. The database refuses that shape, and the integration test proves the refusal with a direct `UPDATE` (`23514`), i.e. bypassing the adapter. |
+
+Limits **declared, not implied**: an acknowledgement never expires (no `snooze`
+was implemented, and its absence is written rather than left to be assumed), it
+fixes nothing by itself, and no notification leaves the service when one is
+written — there is no notifier in this boundary at all (`G8`).
 
 ### 10.1 G1 closure — re-measured 2026-09-20 on `main` at `fac0c66`
 

@@ -1111,6 +1111,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /search/products` | `search:products:read` | — (عمليّةٌ داخليّةٌ) |
 | `GET /search/relay/dead-letters` | `search:relay-dead-letters:read` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ) |
 | `POST /search/relay/dead-letters/{ledger}/{outbox_id}/requeue` | `search:relay-dead-letters:requeue` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ · نطاقٌ مستقلٌّ عن نطاقِ القراءةِ: قراءةُ مقياسٍ ليست تغييرَ حالةِ صفٍّ) |
+| `POST /search/relay/dead-letters/{ledger}/{outbox_id}/acknowledgement` | `search:relay-dead-letters:acknowledge` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ · **صلاحيّةٌ رابعةٌ مستقلّةٌ**: الإقرارُ يُخرِجُ صفّاً من حكمِ التنبيهِ، وجمعُهُ بصلاحيّةِ الإعادةِ كانَ يُعطي لوحةَ إنقاذٍ قدرةَ إسكاتِ ما لا تُصلِحُهُ) |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- search-scopes:end -->

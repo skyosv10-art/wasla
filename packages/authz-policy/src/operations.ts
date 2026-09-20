@@ -232,6 +232,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   // `G5` موجةُ 2 (`CLM-0248`): يدُ الإعادةِ — صلاحيّةٌ ثالثةٌ مستقلّةٌ، فمَن
   // يُراقِبُ الدفترَ ليسَ بالضرورةِ مَن يُرجِعُ نقطةَ تقدُّمِ مُرحِّلٍ.
   { audience: "search", method: "POST", path: "/search/relay/dead-letters/:ledger/:outboxId/requeue", scopes: ["search:relay-dead-letters:requeue"] },
+  { audience: "search", method: "POST", path: "/search/relay/dead-letters/:ledger/:outboxId/acknowledgement", scopes: ["search:relay-dead-letters:acknowledge"] },
 
   // ── subscriptions ─────────────────────────────────────────────
   // الموجةُ الثالثةَ عشرةَ من `M1-04` (`CLM-0201`): حدُّ الاشتراك صارَ يفرضُ الهويّةَ.

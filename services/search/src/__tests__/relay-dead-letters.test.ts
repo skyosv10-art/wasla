@@ -25,12 +25,17 @@ function metric(overrides: Partial<SearchDeadLetterMetric> = {}): SearchDeadLett
   return {
     measuredAt: AT.toISOString(),
     totalPoisoned: 0,
+    totalAcknowledgedPoisoned: 0,
+    totalUnacknowledgedPoisoned: 0,
     ledgers: [
       {
         ledger: "marketplace",
         poisoned: 0,
+        acknowledgedPoisoned: 0,
+        unacknowledgedPoisoned: 0,
         oldestPoisonedAt: null,
         newestPoisonedAt: null,
+        oldestUnacknowledgedPoisonedAt: null,
         byEventType: [],
       },
     ],
@@ -39,14 +44,24 @@ function metric(overrides: Partial<SearchDeadLetterMetric> = {}): SearchDeadLett
 }
 
 function poisonedMetric(count: number, oldestIso: string | null): SearchDeadLetterMetric {
+  /*
+   * لا إقرارَ في هذا المعوانِ بقصدٍ: هوَ معوانُ موجةِ العينِ، ومعناهُ «فقدٌ
+   * مفتوحٌ» — وإضافةُ إقرارٍ إليهِ كانت ستُغيِّرُ ما تقيسُهُ اختباراتٌ قائمةٌ.
+   * وحالةُ المُقَرِّ بهِ لها معوانُها في `relay-acknowledgement.test.ts`.
+   */
   return metric({
     totalPoisoned: count,
+    totalAcknowledgedPoisoned: 0,
+    totalUnacknowledgedPoisoned: count,
     ledgers: [
       {
         ledger: "marketplace",
         poisoned: count,
+        acknowledgedPoisoned: 0,
+        unacknowledgedPoisoned: count,
         oldestPoisonedAt: oldestIso,
         newestPoisonedAt: oldestIso,
+        oldestUnacknowledgedPoisonedAt: oldestIso,
         byEventType: [{ eventType: "marketplace.product_published", poisoned: count }],
       },
     ],
@@ -78,6 +93,9 @@ describe("search dead-letter verdict (G5)", () => {
       severity: "ok",
       because: "no_poisoned_rows",
       oldestPoisonedAgeSeconds: null,
+      // مضافٌ في موجةِ المحضرِ (`CLM-0249`) — والمساواةُ الكاملةُ مقصودةٌ: حقلٌ
+      // يُضافُ لحكمٍ منشورٍ يجبُ أن يُسقِطَ هذا الاختبارَ لا أن يمرَّ صامتاً.
+      oldestUnacknowledgedPoisonedAgeSeconds: null,
     });
   });
 
@@ -165,7 +183,10 @@ describe("GET /search/relay/dead-letters (G5)", () => {
       {
         ledger: "marketplace",
         poisoned: 0,
+        acknowledged_poisoned: 0,
+        unacknowledged_poisoned: 0,
         oldest_poisoned_at: null,
+        oldest_unacknowledged_poisoned_at: null,
         newest_poisoned_at: null,
         by_event_type: [],
       },

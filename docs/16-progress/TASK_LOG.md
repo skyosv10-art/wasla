@@ -3,6 +3,15 @@
 
 
 
+
+## 2026-09-20 — M2-07: تحريرُ حجزِ G3 موجةِ 2 (CLM-0246)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0246` · **الفرع:** `chore/release-clm-0246`
+- **Scope:** `docs/16-progress/`
+- **What was done:** `CLM-0246` نُقِلَ إلى `Released` بعدَ دمجِ PR #297 (squash `2557cb9`) بحكمِ CI **35/35 أخضر**، وخُضرةِ `main` في التشغيلِ [35491914305](https://github.com/skyosv10-art/wasla/actions/runs/35491914305) (`completed success`). الفرعُ لم يُحذَف.
+- **What was NOT done:** لا كودَ ولا بوّابةَ. `M2-07` يبقى `In Progress`.
+- **Next executable:** G5 — `search` بلا دورةِ حياةِ DLQ.
+
 ## 2026-09-20 — M2-07: G3 wave 2 — matching, orders, search (CLM-0246)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0246` · **الفرع:** `feat/m2-07-g3-wave2-retry-tracking`

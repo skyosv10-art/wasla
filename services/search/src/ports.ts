@@ -16,6 +16,7 @@
 import type { MarketplaceOutboxRow, RelayCheckpoint, CatalogProduct, ConsumedStatus } from "./domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "./domain/projector.js";
 import type { SearchPage } from "./domain/model.js";
+import type { SearchDeadLetterMetric } from "./domain/relay-dead-letters.js";
 
 export interface MarketplaceEventSource {
   /** Read up to `limit` outbox rows strictly after the checkpoint (or from zero). */
@@ -106,4 +107,18 @@ export interface SearchIndexHealth {
 
 export interface SearchIndexHealthPort {
   probe(): Promise<SearchIndexHealth>;
+}
+
+/**
+ * قراءةُ مقياسِ المسمومِ في دفترِ استهلاكِ المُرحِّلِ (فجوةُ `G5` · `CLM-0247`).
+ *
+ * منفذٌ **للقراءةِ وحدَها** بقصدٍ: مسارُ المقياسِ لا يُغيِّرُ صفّاً، وجمعُ
+ * الكتابةِ إليهِ كانَ سيجعلُ مسارَ قراءةٍ يملكُ صلاحيّةَ تعديلٍ لا يحتاجُها.
+ * وموجتا «اليدِ» و«الإقرارِ» تُضيفانِ منفذَيهما، ولا تُوسِّعانِ هذا.
+ *
+ * **ولا قيمةَ افتراضيّةَ ولا منفذٌ صامتٌ**: حدُّ HTTP يُجيبُ خطأً حينَ لا منفذَ
+ * مُركَّبٌ ولا يُجيبُ صفراً — «لا أدري» ليسَ «لا مسمومَ».
+ */
+export interface SearchDeadLetterReadPort {
+  readSearchDeadLetters(query: { readonly eventTypeLimit: number }): Promise<SearchDeadLetterMetric>;
 }

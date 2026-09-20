@@ -63,6 +63,7 @@ import {
   DEFAULT_RELAY_CONFIG,
   PostgresMarketplaceEventSource,
   PostgresProjectionStore,
+  PostgresSearchDeadLetterStore,
   SearchIndexHealthProbe,
   SearchIndexReader,
   buildSearchHttpApp,
@@ -227,6 +228,9 @@ export async function startGate(): Promise<GateContext> {
     // وحدَها لا يُثبتُ شيئاً عن `server.ts`. وكاتمُ السجلِّ لئلّا يمتلئَ مخرجُ البوّابةِ
     // بأثرِ إخفاقٍ **مقصودٍ** في اختبارِ التدهورِ.
     indexHealthPort: new SearchIndexHealthProbe(pool, { error: () => {} }),
+    // `G5` موجةُ 1 (`CLM-0247`): يُمرَّرُ هنا لأنَّ الجذرَ الإنتاجيَّ يُمرِّرُهُ —
+    // بوّابةُ خروجٍ تُجيزُ تركيباً أفقرَ من الإنتاجِ تُجيزُ ما لا يعملُ.
+    deadLetterReadPort: new PostgresSearchDeadLetterStore(pool),
     // M1-04 · الموجةُ الثانيةَ عشرةَ (CLM-0200): حدُّ البحث يفرضُ هويّةَ الخدمةِ،
     // والبوّابةُ تُوقّعُ نداءاتِها بدلَ أن يُخفَّفَ الحدُّ لراحتِها.
     serviceIdentity: {

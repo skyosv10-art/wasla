@@ -54,6 +54,12 @@ export type SearchRouteIdentity = ServiceIdentityRouteIdentity;
 export const SEARCH_SCOPES = {
   readyRead: "search:ready:read",
   productsRead: "search:products:read",
+  /**
+   * قراءةُ مقياسِ المسمومِ (`G5` · `CLM-0247`) — صلاحيّةٌ **مستقلّةٌ** لا
+   * `productsRead`: مَن يقرأُ نتائجَ بحثٍ ليسَ بالضرورةِ مَن يقرأُ دفترَ فقدِ
+   * الفهرسةِ، وجمعُهما كانَ سيُعطي كلَّ مُنادٍ بحثٍ عيناً على الدفترِ الداخليِّ.
+   */
+  relayDeadLettersRead: "search:relay-dead-letters:read",
 } as const;
 
 export type SearchRouteConfig = ServiceIdentityRouteConfig;

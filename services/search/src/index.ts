@@ -34,6 +34,7 @@ export * from "./domain/visibility.js";
 export * from "./domain/ranking.js";
 export * from "./domain/consumed-events.js";
 export * from "./domain/projector.js";
+export * from "./domain/relay-dead-letters.js";
 export * from "./ports.js";
 export * from "./relay.js";
 export * from "./http/errors.js";
@@ -50,6 +51,7 @@ export {
 } from "./http/service-identity.js";
 export * from "./infrastructure/search-index-reader.js";
 export * from "./infrastructure/search-index-health-probe.js";
+export * from "./infrastructure/relay-dead-letter-store.js";
 
 /*
  * محوّلاتُ الناقلِ الإنتاجيّةُ — تُصدَّرُ كي تستعملَها بوّابةُ الخروجِ (`@wasla/search-e2e`)

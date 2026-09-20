@@ -1,5 +1,14 @@
 
 
+## 2026-09-20 — M2-07: تحريرُ حجزِ G5 موجةِ 2 (CLM-0248)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0248` · **الفرع:** `chore/release-clm-0248`
+- **What was done:** `CLM-0248` نُقِلَ إلى `Released` بعدَ دمجِ [PR #301](https://github.com/skyosv10-art/wasla/pull/301) (squash `5eee4bf`) بحكمِ CI **35/35 أخضر**. الفرعُ لم يُحذَف.
+- **حكمُ main مقروءٌ لا مُفترَضٌ:** الشوطانِ [35499789800](https://github.com/skyosv10-art/wasla/actions/runs/35499789800) و[35499789864](https://github.com/skyosv10-art/wasla/actions/runs/35499789864) على `5eee4bf` كِلاهُما `success`.
+- **الحالةُ المُعلَنةُ لم تتغيَّرْ:** `M2-07` `In Progress` وبوّابتُهُ `NOT PASSED` · `G5` **جزئيّةٌ** (الإقرارُ — موجةُ 3 — مفقودٌ).
+
+---
+
 ## 2026-09-20 — M2-07: G5 wave 2 — the hand that puts a poisoned row back (CLM-0248)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0248` · **الفرع:** `feat/m2-07-g5-search-requeue`

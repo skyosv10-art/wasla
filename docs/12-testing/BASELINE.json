@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-20T14:36:56Z",
+  "generated_at": "2026-09-20T14:42:42Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "af64f098e5e59ac498be0b3efd029b61e98dad33",
+    "commit": "1824e74e9f9773db4e57e7822af33de5fa53bf37",
     "branch": "feat/m2-07-g7-channel-outbox-drain",
     "dirty": false,
     "dirty_files": 0,
@@ -26,7 +26,7 @@
     "packages": 53,
     "packages_with_typecheck": 53,
     "packages_with_test": 53,
-    "test_files_tracked": 408,
+    "test_files_tracked": 406,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:61c083754d6c01d10c0afbe2834c7360104dc41c4b150ae410bde3e812e60c5c",
+  "fingerprint": "sha256:975612007fda4917a9e4171a9dddd764a08e3ea88cc817fbdca523129d0afff4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

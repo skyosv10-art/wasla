@@ -2,6 +2,18 @@
 
 
 
+
+## 2026-09-20 — M2-07: G3 wave 2 — matching, orders, search (CLM-0246)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0246` · **الفرع:** `feat/m2-07-g3-wave2-retry-tracking`
+- **Scope:** `services/matching/`, `services/orders/`, `services/search/`, `docs/08-infrastructure/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+- **Baseline before the change:** `main` at `ceb4ff4` (after CLM-0245 release). G3 measured: 5 of 10 tables closed by wave 1; `matching_outbox`, `order_outbox`, `search_outbox`, `dispatch_outbox`, `marketplace_outbox` still without `attempts`/`last_error`.
+- **What was done:** wave 1's pattern applied verbatim to `matching_outbox`, `order_outbox` and `search_outbox` — two columns in contract SQL and Drizzle schema, `0002_outbox_retry_tracking.sql` + `.down.sql` per service with `@wasla-upgrade-proof: all-non-baseline` and the journal entry, `recordDeliveryFailure` implemented in the three adapters, `markPublished` doing `attempts + 1, last_error = NULL`, `claimUnpublished` selecting and returning the real `attempts`, stale docblocks corrected.
+- **Evidence measured, not asserted:** `outbox-drain` + `migrations` + `migration-upgrade-with-data` green per service (matching 13/13, orders 9 passed + 3 skipped, search 13/13); `schema-drift` 19/19 per service; per-service `tsc --noEmit` clean; governance and `require-doc-update.sh` green locally before the push.
+- **The decision NOT to touch the last two tables, and its measurement.** `dispatch_outbox` and `marketplace_outbox` have **no drain adapter in the producing service** — `services/dispatch/src/outbox/` and `services/marketplace/src/outbox/` do not exist, and `rg -ln "dispatch_outbox|marketplace_outbox" services` outside contracts/tests shows only *consumers* (`services/delivery/src/relay.ts`, `services/delivery/src/marketplace-inventory-relay.ts`, `services/search/src/relay.ts`) plus the producers' own schema files. Nothing in the producing service marks one of their rows published or failed, so `attempts`/`last_error` there would be two columns with no writer — existence without use, which the rules forbid counting as progress. Their retry state already lives on the consumer side (`*_relay_checkpoint`, `*_relay_consumed_events`, and in `delivery` a full DLQ lifecycle). G3 for these two therefore stays **open** and the reason is written in the inventory §10.4, the gate item 11 and the board row, rather than being quietly dropped.
+- **What was NOT done / NOT claimed:** still no retry scheduler, no backoff, no quarantine after N failures. `EventSinkPort` still has no production implementation. G3 is **8 of 10** closed, not closed. `M2-07` stays `In Progress`; gate stays `NOT PASSED` (item 7 blocked on `RENDER_API_KEY`/`RENDER_OWNER_ID`).
+- **Next executable:** G5 — `search` has no DLQ lifecycle (no acknowledgement, no reprocess).
+
 ## 2026-09-20 — M2-07: تحريرُ حجزِ G3 موجةِ 1 (CLM-0245)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0245` · **الفرع:** `chore/release-clm-0245`

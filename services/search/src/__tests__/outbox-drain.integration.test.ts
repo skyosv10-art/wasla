@@ -170,4 +170,72 @@ describe.skipIf(!PG_ENABLED)("SearchOutboxDrainStore integration", () => {
     expect(r1.claimed + r2.claimed).toBe(5);
     expect(sink1.delivered.length + sink2.delivered.length).toBe(5);
   });
+
+  // ── G3 (CLM-0246 · موجةُ 2): تسجيلُ الفشلِ في الصفِّ نفسِه ────────────────
+  //
+  // قبلَ هذه الدفعةِ كان الفشلُ يبقى في الذاكرةِ (`DrainReport.failed`) ويُفقَدُ
+  // بانتهاءِ العمليّة، فيبدو الحدثُ المسمومُ طازجًا في كلِّ مرورٍ. الآن
+  // `attempts`/`last_error` عمودانِ في الجدولِ و`recordDeliveryFailure` مُنفَّذٌ.
+
+  it("persists attempts and last_error on delivery failure (G3)", async () => {
+    if (!PG_ENABLED) return;
+
+    await fixture.pool.query(
+      `INSERT INTO search_outbox (event_id, event_type, event_version, aggregate_id, payload)
+       VALUES ($1, 'search.index_built', 'v1', 'IDX-001', '{}'::jsonb)`,
+      [TEST_EVENT_ID],
+    );
+
+    const rowId = String(
+      (await fixture.pool.query(`SELECT id FROM search_outbox WHERE event_id = $1`, [TEST_EVENT_ID]))
+        .rows[0].id,
+    );
+
+    const clock = { now: () => new Date().toISOString() };
+
+    // مرورٌ أوّلُ يفشل
+    const failing = await db.transaction(async (tx) => {
+      const store = new SearchOutboxDrainStore(tx);
+      const runner = createDirectOutboxDrainRunner(store);
+      return drainOutbox(runner, new RecordingSink([rowId]), { limit: 10, clock });
+    });
+
+    expect(failing.published).toBe(0);
+    expect(failing.failed).toHaveLength(1);
+
+    const afterFailure = await fixture.pool.query(
+      `SELECT attempts, last_error, published_at FROM search_outbox WHERE id = $1`,
+      [rowId],
+    );
+    expect(Number(afterFailure.rows[0].attempts)).toBe(1);
+    expect(String(afterFailure.rows[0].last_error)).toContain("simulated delivery failure");
+    expect(afterFailure.rows[0].published_at).toBeNull();
+
+    // مرورٌ ثانٍ ينجح: العدّادُ يتقدّمُ والخطأُ يُمحى
+    const succeeding = await db.transaction(async (tx) => {
+      const store = new SearchOutboxDrainStore(tx);
+      const runner = createDirectOutboxDrainRunner(store);
+      return drainOutbox(runner, new RecordingSink(), { limit: 10, clock });
+    });
+
+    expect(succeeding.published).toBe(1);
+
+    const afterSuccess = await fixture.pool.query(
+      `SELECT attempts, last_error, published_at FROM search_outbox WHERE id = $1`,
+      [rowId],
+    );
+    expect(Number(afterSuccess.rows[0].attempts)).toBe(2);
+    expect(afterSuccess.rows[0].last_error).toBeNull();
+    expect(afterSuccess.rows[0].published_at).not.toBeNull();
+
+    // المحاولةُ المقروءةُ تصلُ العقدَ المشترك: claimUnpublished يُرجعُ attempts الحقيقيَّ
+    await fixture.pool.query(`UPDATE search_outbox SET published_at = NULL WHERE id = $1`, [rowId]);
+    const claimedAttempts = await db.transaction(async (tx) => {
+      const store = new SearchOutboxDrainStore(tx);
+      const records = await store.claimUnpublished(10);
+      return records[0]?.attempts;
+    });
+    expect(claimedAttempts).toBe(2);
+  });
+
 });

@@ -238,7 +238,9 @@ CREATE TABLE IF NOT EXISTS matching_outbox (
     trace_id       TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
     occurred_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     published_at   TIMESTAMPTZ,
-    sequence_number BIGINT     NOT NULL GENERATED ALWAYS AS IDENTITY
+    sequence_number BIGINT     NOT NULL GENERATED ALWAYS AS IDENTITY,
+    attempts       INTEGER     NOT NULL DEFAULT 0,
+    last_error     TEXT
 );
 
 -- ADR-037: sequence_number added to existing tables for monotonic ordering

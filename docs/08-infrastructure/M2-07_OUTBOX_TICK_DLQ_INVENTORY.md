@@ -202,7 +202,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | --- | --- | --- | --- |
 | ~~G1~~ | ~~**9 of 13 outbox tables have no delivery mechanism at all**~~ — **RESOLVED (`CLM-0241`+`CLM-0242`+`CLM-0243`; PRs #287 / #289 / #291; squashes `50d2cc4` / `99e7172` / `674e743`).** All 13 outbox tables now have a delivery mechanism: 9 thin drain adapters against the shared `packages/outbox/` contract (ADR-042) plus the 4 mechanisms that already existed. Re-measured 2026-09-20 on `main` at `fac0c66`, from the tree — not from reports | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | — closed; see §10.1 |
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
-| G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **partially closed: 5 of 10 (`CLM-0245`, wave 1)**. Remaining: dispatch, marketplace, matching, orders, search. Closed in wave 1: customers, delivery, drivers, geography, identity | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace, matching, orders, search | Medium — no in-table retry tracking on the 5 remaining tables; see §10.3 |
+| G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
 | G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
 | G5 | Search has no DLQ lifecycle (no acknowledgement, no reprocess) | search | Medium — poisoned events are permanently terminal |
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
@@ -322,6 +322,49 @@ drain, then `attempts = 2` + `last_error IS NULL` + `published_at` set after a
 successful one, and that `claimUnpublished` returns the real `attempts` value.
 25 tests green (5 × 5) plus the migration reversibility and upgrade-with-data
 suites for all five services.
+
+
+### 10.4 G3 wave 2 — three more tables, and why the last two are different (`CLM-0246`)
+
+Wave 2 closes `matching_outbox`, `order_outbox` and `search_outbox` exactly as
+wave 1 closed the first five: two columns in the contract SQL and the Drizzle
+schema, one reversible migration per service (`0002_outbox_retry_tracking`,
+`@wasla-upgrade-proof: all-non-baseline`), `recordDeliveryFailure` implemented,
+`markPublished` incrementing `attempts` and clearing `last_error`, and one
+integration test per service against real PostgreSQL. Measured after the change:
+**11 of 13 outbox tables now record delivery attempts in the row.**
+
+```
+rg -n "attempts" services/*/contracts/schema.sql
+rg -n "recordDeliveryFailure" services/*/src/outbox/*-outbox-store.ts
+```
+
+| Outbox table | Migration | `recordDeliveryFailure` | Wave |
+| --- | --- | --- | --- |
+| `matching_outbox` | `services/matching/drizzle/0002_outbox_retry_tracking.sql` | implemented | 2 (`CLM-0246`) |
+| `order_outbox` | `services/orders/drizzle/0002_outbox_retry_tracking.sql` | implemented | 2 (`CLM-0246`) |
+| `search_outbox` | `services/search/drizzle/0002_outbox_retry_tracking.sql` | implemented | 2 (`CLM-0246`) |
+
+**Why `dispatch_outbox` and `marketplace_outbox` are NOT in this wave** —
+measured, not assumed:
+
+```
+rg -ln "dispatch_outbox|marketplace_outbox" services --glob '!**/__tests__/**' --glob '!**/contracts/**'
+ls services/dispatch/src/outbox/ services/marketplace/src/outbox/   # neither exists
+```
+
+Neither table has a producer-side drain adapter. They are **pulled** by relay
+consumers in other services (`services/delivery/src/relay.ts`,
+`services/delivery/src/marketplace-inventory-relay.ts`,
+`services/search/src/relay.ts`), and nothing in the producing service ever marks
+one of their rows published or failed. Adding `attempts`/`last_error` there would
+ship two columns with **no writer** — code whose existence is not use, which the
+governance rules forbid reading as progress. Their retry state already lives on
+the consumer side (`*_relay_checkpoint`, `*_relay_consumed_events`, and in
+`delivery` a full DLQ lifecycle, §4.23–4.27). Closing G3 for these two therefore
+needs a decision about **where the record belongs** — producer row vs consumer
+checkpoint — not another mechanical migration, so it stays open and is stated
+here rather than silently dropped.
 
 ## 11. What M2-07's crash/retry/dedupe proof must cover
 

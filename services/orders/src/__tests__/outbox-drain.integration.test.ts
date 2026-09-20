@@ -9,7 +9,6 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createOrderDb } from "../infrastructure/drizzle/db.js";
 import { OrderOutboxDrainStore } from "../outbox/order-outbox-store.js";
 import {
   createDirectOutboxDrainRunner,
@@ -18,7 +17,6 @@ import {
   type OutboxRecord,
 } from "@wasla/outbox";
 import {
-  DATABASE_URL,
   PG_ENABLED,
   setupPostgres,
   type PgFixture,

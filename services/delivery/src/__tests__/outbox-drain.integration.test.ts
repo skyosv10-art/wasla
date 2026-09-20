@@ -11,8 +11,6 @@
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { Pool } from "pg";
-
 import { DeliveryOutboxDrainStore } from "../outbox/delivery-outbox-store.js";
 import {
   createDirectOutboxDrainRunner,
@@ -21,7 +19,6 @@ import {
   type OutboxRecord,
 } from "@wasla/outbox";
 import {
-  DATABASE_URL,
   PG_ENABLED,
   setupPostgres,
   resetData,

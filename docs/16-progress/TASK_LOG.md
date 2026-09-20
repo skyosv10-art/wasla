@@ -17,6 +17,30 @@
 - **What was NOT done:** G1 wave 3 is the final wave. All 13 outbox tables now have drain adapters. No `EventSinkPort` wired to a real message broker. G3/G4/G5 gaps partially addressed (negotiations has G3+G4, delivery has G4).
 - **Next executable:** Merge wave 3 (CI green), then release CLM-0243. G1 (High severity) will be closed after all 3 waves merge.
 
+### تصحيحُ حكمِ CI الأحمر على الفرع (نفسُ الحجز CLM-0243)
+
+الدفعةُ الأولى أخفقت على ثلاثِ بوابات: `typecheck`، `db-integration (negotiations)`،
+`db-integration-shared`. عُولجَ السببُ الجذريُّ لا العَرَض، ولم تُخفَّفْ بوابةٌ ولا اختبار:
+
+1. **السببُ الأوّلُ — عمودٌ إلزاميٌّ بلا قيمةٍ افتراضيّةٍ.** `negotiation_outbox.occurred_at`
+   مُعرَّفٌ `TIMESTAMPTZ NOT NULL` **بلا** `DEFAULT now()` (`services/negotiations/contracts/schema.sql:385`)،
+   على خلافِ `customer_outbox` و`order_outbox` اللذَين يملكانِ القيمةَ الافتراضيّة. فإدخالاتُ
+   اختبارِ المفاوضاتِ الأربعةُ أسقطت العمودَ فأخفقت بـ`23502`. **الإصلاح:** الاختبارُ يُمدُّ
+   `occurred_at` صريحاً كما يفعلُ كلُّ كاتبٍ إنتاجيٍّ. **العقدُ لم يُلمَسْ** — تخفيفُ المخطَّطِ
+   بإضافةِ قيمةٍ افتراضيّةٍ كان سيُخفي الشرطَ لا يُحقِّقَهُ.
+2. **السببُ الثاني — استيراداتٌ ميتةٌ تحتَ `noUnusedLocals`.** ثمانيةُ استيراداتٍ غيرِ مقروءةٍ في
+   ملفّاتِ الاختبارِ الخمسة (`Pool` في delivery/search، `DATABASE_URL` في الخمسة،
+   `createMatchingDb`/`createNegotiationDb`/`createOrderDb`). حكمُ CI أظهرَ delivery وحدَها لأنَّ
+   `pnpm -r` يتوقّفُ عندَ أوّلِ إخفاق؛ الثلاثةُ الباقيةُ كُشفت بالقياسِ المحلّيِّ لا بالتخمين.
+3. **تصحيحُ سجلِّ البيئةِ (دليلٌ كاذبٌ يُمحى بالتصحيحِ لا بالإخفاء).** أعلنَ `env-registry.json`
+   ملفّاتِ الاختبارِ الخمسةَ قارئاتٍ `direct` لـ`DATABASE_URL` (179→184)، وهي لا تقرأُ
+   `process.env` إطلاقاً — القارئُ الحقيقيُّ هو `pg-harness.ts` وهو مُسجَّلٌ أصلاً. أُعيدَ العددُ
+   إلى 179 وأُعيدَ توليدُ `.env.example` و`registry.generated.ts` من السجلِّ.
+
+- **القياسُ بعدَ الإصلاح:** `tsc --noEmit` أخضرُ على الخدماتِ الخمس. 20/20 اختبارَ تكاملٍ أخضرُ
+  على PostgreSQL حقيقيٍّ (4 لكلِّ خدمة). `verify-governance.sh` أخضرُ (23 فحصاً، تخطٍّ واحدٌ
+  مُعلَنٌ سابقاً للبابِ 8). **الأخضرُ المحلّيُّ ليسَ حكماً** — حكمُ CI بعدَ الدفعِ هو المُوثَّقُ أدناه.
+
 ## 2026-09-20 — M2-07: Wave 2 outbox adapters — drivers, geography, identity (CLM-0242)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0242`

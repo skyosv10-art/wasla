@@ -10,7 +10,6 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createNegotiationDb } from "../infrastructure/drizzle/db.js";
 import { NegotiationOutboxDrainStore } from "../outbox/negotiation-outbox-store.js";
 import {
   createDirectOutboxDrainRunner,
@@ -19,7 +18,6 @@ import {
   type OutboxRecord,
 } from "@wasla/outbox";
 import {
-  DATABASE_URL,
   PG_ENABLED,
   setupPostgres,
   resetData,
@@ -63,8 +61,8 @@ describe.skipIf(!PG_ENABLED)("NegotiationOutboxDrainStore integration", () => {
 
   it("claims, delivers, and marks published", async () => {
     await fixture.pool.query(
-      `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload)
-       VALUES ($1::uuid, 'negotiation_thread', 'NT-001', 'negotiation.started', 'v1', '{"status":"started"}'::jsonb)`,
+      `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload, occurred_at)
+       VALUES ($1::uuid, 'negotiation_thread', 'NT-001', 'negotiation.started', 'v1', '{"status":"started"}'::jsonb, now())`,
       [TEST_EVENT_ID],
     );
 
@@ -93,8 +91,8 @@ describe.skipIf(!PG_ENABLED)("NegotiationOutboxDrainStore integration", () => {
   it("does not stop on delivery failure and records attempts", async () => {
     for (const [i, eventId] of [TEST_EVENT_ID, TEST_EVENT_ID_2, TEST_EVENT_ID_3].entries()) {
       await fixture.pool.query(
-        `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload)
-         VALUES ($1::uuid, 'negotiation_thread', $2, 'negotiation.event', 'v1', '{}'::jsonb)`,
+        `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload, occurred_at)
+         VALUES ($1::uuid, 'negotiation_thread', $2, 'negotiation.event', 'v1', '{}'::jsonb, now())`,
         [eventId, `NT-${i + 1}`],
       );
     }
@@ -126,8 +124,8 @@ describe.skipIf(!PG_ENABLED)("NegotiationOutboxDrainStore integration", () => {
 
   it("detects already-published rows", async () => {
     await fixture.pool.query(
-      `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload, published_at)
-       VALUES ($1::uuid, 'negotiation_thread', 'NT-001', 'negotiation.event', 'v1', '{}'::jsonb, now())`,
+      `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload, occurred_at, published_at)
+       VALUES ($1::uuid, 'negotiation_thread', 'NT-001', 'negotiation.event', 'v1', '{}'::jsonb, now(), now())`,
       [TEST_EVENT_ID],
     );
 
@@ -148,8 +146,8 @@ describe.skipIf(!PG_ENABLED)("NegotiationOutboxDrainStore integration", () => {
   it("respects SKIP LOCKED — two drains do not overlap", async () => {
     for (let i = 0; i < 5; i++) {
       await fixture.pool.query(
-        `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload)
-         VALUES ($1::uuid, 'negotiation_thread', $2, 'negotiation.event', 'v1', '{}'::jsonb)`,
+        `INSERT INTO negotiation_outbox (id, aggregate_type, aggregate_id, event_type, event_version, payload, occurred_at)
+         VALUES ($1::uuid, 'negotiation_thread', $2, 'negotiation.event', 'v1', '{}'::jsonb, now())`,
         [`dddddddd-dddd-4ddd-8ddd-dddddddddd0${i}`, `NT-${i + 1}`],
       );
     }

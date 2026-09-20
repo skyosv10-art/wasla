@@ -531,26 +531,6 @@
         {
           "file": "services/identity/src/__tests__/outbox-drain.integration.test.ts",
           "mode": "direct"
-        },
-        {
-          "file": "services/delivery/src/__tests__/outbox-drain.integration.test.ts",
-          "mode": "direct"
-        },
-        {
-          "file": "services/matching/src/__tests__/outbox-drain.integration.test.ts",
-          "mode": "direct"
-        },
-        {
-          "file": "services/negotiations/src/__tests__/outbox-drain.integration.test.ts",
-          "mode": "direct"
-        },
-        {
-          "file": "services/orders/src/__tests__/outbox-drain.integration.test.ts",
-          "mode": "direct"
-        },
-        {
-          "file": "services/search/src/__tests__/outbox-drain.integration.test.ts",
-          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
@@ -1685,5 +1665,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 184
+  "total": 179
 }

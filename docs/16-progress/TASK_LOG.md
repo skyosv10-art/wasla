@@ -1,5 +1,27 @@
 
 
+## 2026-09-20 — M2-07: Wave 1 outbox delivery implementation (CLM-0241)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0241`
+- **Branch:** `feat/m2-07-g1-wave1-outbox-package`
+- **Scope:** `packages/outbox/`, `services/customers/`, `docs/16-progress/`
+- **What was done:**
+  - Created `packages/outbox/` — shared outbox delivery contract per ADR-042:
+    - `src/types.ts` — `OutboxRecord`, `EventSinkPort`, `DrainFailure`, `DrainReport`
+    - `src/drain.ts` — `OutboxDrainStore` (with optional `recordDeliveryFailure` for G3 tables), `OutboxDrainRunner`, `createDirectOutboxDrainRunner`, `drainOutbox()`, `Clock`
+    - `src/sink.ts` — `EventSinkUnconfiguredError`, `unconfiguredEventSink()`
+    - `src/index.ts` — barrel exports
+  - Created `services/customers/src/outbox/customer-outbox-store.ts` — thin adapter mapping `customer_outbox` table to `OutboxRecord`. Returns `traceId: null` (G4), `attempts: 0` (G3), no `recordDeliveryFailure` (G3).
+  - Created `services/customers/src/__tests__/outbox-drain.integration.test.ts` — 4 integration tests on PostgreSQL:
+    1. claim → deliver → markPublished
+    2. delivery failure doesn't stop batch
+    3. alreadyPublished detection (conditional mark)
+    4. SKIP LOCKED — two concurrent drains don't overlap
+  - Added `@wasla/outbox` to `services/customers/package.json` dependencies.
+  - Added `outbox` to WORK_INDEX.md core packages section.
+- **What was NOT done:** Waves 2 and 3 (8 remaining services). No `EventSinkPort` wired to a real message broker. G3/G4/G5 gaps not addressed. No automated guard in `verify-governance.sh` yet.
+- **Next executable:** Merge wave 1 (CI green), then open claim for wave 2 (`drivers` + `geography` + `identity`).
+
 ## 2026-09-20 — M2-07: ADR for outbox delivery mechanism (CLM-0240)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0240`

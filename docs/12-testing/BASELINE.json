@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-20T14:31:52Z",
+  "generated_at": "2026-09-20T14:36:56Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cc1d7222555927f2e8ebbff02c0fcadef6f6251c",
+    "commit": "af64f098e5e59ac498be0b3efd029b61e98dad33",
     "branch": "feat/m2-07-g7-channel-outbox-drain",
-    "dirty": true,
-    "dirty_files": 16,
-    "dirty_reason": "G7 channel outbox drain implementation — new files and doc updates",
-    "tracked_files": 2314
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 2317
   },
   "env": {
     "node": "v20.20.1",

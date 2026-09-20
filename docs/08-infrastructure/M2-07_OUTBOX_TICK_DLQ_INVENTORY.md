@@ -204,10 +204,39 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
 | G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
 | G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
-| G5 | Search has no DLQ lifecycle (no acknowledgement, no reprocess) | search | Medium — poisoned events are permanently terminal |
+| G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **partially closed: the measurement exists (`CLM-0247`), the lifecycle does not.** Wave 1 shipped `GET /search/relay/dead-letters` (the eye), so poisoned rows are no longer silent. Still missing, and named rather than left implicit: **requeue** (the hand) and **acknowledgement** (the record) — waves 2 and 3, mirroring delivery's own order (ADR-026 §4.24 / §4.27) | search | Medium — poisoned events are still terminal, but they are now **measured and alerted**; see §10.5 |
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
+
+### 10.5 G5 wave 1 — the poisoned rows are measured (`CLM-0247`)
+
+> Measured from the tree and from a real PostgreSQL run, per this inventory's
+> own truth rule. **This is not a lifecycle claim.**
+
+`services/search/src/relay.ts` marks an event `status = 'poisoned'` after
+`maxAttempts` and **advances the checkpoint past it** — correct, because one bad
+event must not stop the whole catalogue from indexing, but it meant the loss was
+*silent*: the row sat in `search_relay_consumed_events` and nothing ever asked.
+
+Wave 1 closes the measurement half only:
+
+| Shipped | Where |
+| --- | --- |
+| Verdict domain (thresholds `1` / `10` / `86400s` — the same numbers delivery publishes) | `services/search/src/domain/relay-dead-letters.ts` |
+| Single-snapshot read-only query over the ledger | `services/search/src/infrastructure/relay-dead-letter-store.ts` |
+| `GET /search/relay/dead-letters`, scope `search:relay-dead-letters:read` | `services/search/src/http/app.ts` · documented in [`SEARCH_HTTP.md` §6](../04-api/SEARCH_HTTP.md) |
+| Wired in the production composition root (not an optional port) | `services/search/src/http/server.ts` |
+| 7 unit + 6 real-PostgreSQL integration cases | `services/search/src/__tests__/relay-dead-letters{,.integration}.test.ts` |
+
+Two limits are **published, not hidden**: the verdict's age is measured from
+`consumed_at` (the search ledger has no `updated_at`, so it is the age of the
+*first attempt*, and the response says so in `alert.age_measured_from`), and
+`alert.gates_readiness` is `false` — a poisoned row pages a human, it does not
+pull search replicas out of routing.
+
+The read is proven side-effect free by fingerprinting the ledger before and
+after the call, rather than asserting it in a comment.
 
 ### 10.1 G1 closure — re-measured 2026-09-20 on `main` at `fac0c66`
 

@@ -27,6 +27,7 @@
 | `SEARCH_PAGE_SIZE_INVALID` | `validation_error` | حجم الصفحة غير صالح | `page_size` < 1 أو > 50 |
 | `SEARCH_UNSUPPORTED_LOCALE` | `validation_error` | locale غير مدعوم | locale ليس ضمن `ar`/`en` |
 | `SEARCH_SORT_INVALID` | `validation_error` | ترتيب غير معروف | `sort` ليس ضمن القيم المسموحة |
+| `SEARCH_DEAD_LETTER_LIMIT_INVALID` | `validation_error` | حدُّ تفصيلِ نوعِ الحدثِ غيرُ صالحٍ | `event_type_limit` على مسارِ التشغيلِ `GET /search/relay/dead-letters` ليسَ عدداً عشريّاً صحيحاً بينَ 1 و100. **مسارُ تشغيلٍ لا مسارُ عميلٍ** (`G5` · `CLM-0247`): مذكورٌ هنا كي لا يظهرَ كودٌ في جوابٍ ولا إعلانَ لهُ، ولا يُنشَرُ في `api.openapi.yml` لأنَّهُ ليسَ وعداً لعميلٍ خارجيٍّ |
 | `SEARCH_INDEX_DEGRADED` | `service_unavailable` | الفهرس في وضع متدهور | تأخّر الاستهلاك أو فشل إعادة البناء |
 | `SEARCH_INTERNAL_ERROR` | `service_unavailable` | خطأ داخلي غير متوقع | خطأ غير مُصنّف (degraded) |
 

@@ -1109,6 +1109,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 |---|---|---|
 | `GET /search/ready` | `search:ready:read` | — (عمليّةٌ داخليّةٌ) |
 | `GET /search/products` | `search:products:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /search/relay/dead-letters` | `search:relay-dead-letters:read` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ) |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- search-scopes:end -->

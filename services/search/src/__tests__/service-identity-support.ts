@@ -16,7 +16,11 @@ import {
 
 import { buildSearchHttpApp } from "../http/app.js";
 import { SEARCH_SCOPES, SEARCH_SERVICE_AUDIENCE } from "../http/service-identity.js";
-import type { SearchProductsReadPort, SearchIndexHealthPort } from "../ports.js";
+import type {
+  SearchProductsReadPort,
+  SearchIndexHealthPort,
+  SearchDeadLetterReadPort,
+} from "../ports.js";
 
 /** سرٌّ اختباريٌّ بطولٍ مقبولٍ؛ لا صلةَ لهُ بأيِّ سرٍّ تشغيليٍّ. */
 export const TEST_SERVICE_SECRET = "search-test-secret-0123456789abcdef";
@@ -66,6 +70,10 @@ export function signFor(
 export function buildEnforcedApp(options: {
   readonly searchReadPort: SearchProductsReadPort;
   readonly indexHealthPort?: SearchIndexHealthPort;
+  /** منفذُ قياسِ المسمومِ (`G5` · `CLM-0247`) — يُحقَنُ وهميّاً بلا قاعدةٍ. */
+  readonly deadLetterReadPort?: SearchDeadLetterReadPort;
+  /** ساعةٌ مُحقونةٌ لقياسِ حكمِ العمرِ بلا انتظارِ يومٍ. */
+  readonly now?: () => Date;
   readonly keys?: ServiceAuthKeyRegistry;
 } = {
   searchReadPort: fakeEmptyReadPort(),
@@ -74,6 +82,10 @@ export function buildEnforcedApp(options: {
   const { fastify, close } = buildSearchHttpApp({
     searchReadPort: options.searchReadPort,
     ...(options.indexHealthPort === undefined ? {} : { indexHealthPort: options.indexHealthPort }),
+    ...(options.deadLetterReadPort === undefined
+      ? {}
+      : { deadLetterReadPort: options.deadLetterReadPort }),
+    ...(options.now === undefined ? {} : { now: options.now }),
     serviceIdentity: {
       keys,
       replayGuard: new InMemoryServiceTokenReplayGuard(),

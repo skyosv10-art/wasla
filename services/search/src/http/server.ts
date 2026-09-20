@@ -19,6 +19,7 @@ import { keyRegistryFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
+import { PostgresSearchDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
@@ -36,6 +37,13 @@ async function main(): Promise<void> {
   // Readiness shares the pool on purpose: a probe on its own connection would
   // report "ready" while the pool the searches use is exhausted (RISK-0030).
   const indexHealthPort = new SearchIndexHealthProbe(pool);
+  /*
+   * مقياسُ المسمومِ (`G5` · `CLM-0247`) — **مُركَّبٌ هنا لا اختياريٌّ في
+   * الإنتاجِ**: منفذٌ مكتوبٌ ولا يُركَّبُ في جذرِ التركيبِ شيفرةٌ موجودةٌ غيرُ
+   * مستعملةٍ، ومسارُهُ كانَ سيُجيبُ 503 في الإنتاجِ وحدَهُ فلا يُكشَفُ إلّا في
+   * حادثةٍ. ويُشاركُ نفسَ المسبحِ لنفسِ سببِ مسبارِ الجاهزيّةِ.
+   */
+  const deadLetterReadPort = new PostgresSearchDeadLetterStore(pool);
   const keys = keyRegistryFromEnv(process.env);
   if (keys === undefined) {
     console.error("WASLA_SERVICE_AUTH_KEYS is required");
@@ -47,6 +55,7 @@ async function main(): Promise<void> {
   const { fastify, close } = buildSearchHttpApp({
     searchReadPort: readPort,
     indexHealthPort,
+    deadLetterReadPort,
     serviceIdentity: {
       keys,
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),

@@ -36,6 +36,42 @@ export class SearchValidationError extends Error {
   }
 }
 
+/**
+ * مطلوبٌ غيرُ موجودٍ (404) — `G5` موجةُ اليدِ (`CLM-0248`).
+ *
+ * ولمَ صنفٌ جديدٌ لا `SearchValidationError`؟ لأنَّ 400 يقولُ «طلبُكَ مُشوَّهٌ»
+ * و404 يقولُ «طلبُكَ سليمٌ ولا صفَّ بهِ». ومُشغِّلٌ في حادثةٍ يقرأُ 400 فيُراجِعُ
+ * شكلَ نداءِهِ ساعةً، والعيبُ أنَّ المُعرِّفَ من دفترٍ آخرَ. وهذانِ صنفانِ
+ * **حدّيّانِ** لا مجاليّانِ: القرارُ كلُّهُ في `domain/relay-requeue.ts`، وهذا
+ * نقلُهُ إلى لغةِ HTTP في الموضعِ الوحيدِ الذي يعرِفُ الأكوادَ.
+ */
+export class SearchNotFoundError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "SearchNotFoundError";
+  }
+}
+
+/**
+ * تنازعُ حالةٍ (409) — الصفُّ موجودٌ وحالتُهُ تمنعُ الفعلَ.
+ *
+ * و409 لا 200 صامتٌ: إعادةُ صفٍّ `applied` تعني إعادةَ تطبيقِ أثرٍ وقعَ؛
+ * والتماثُليّةُ تحميهِ فعلاً، لكنَّ **قبولَ النداءِ** يجعلُ خطأَ مُشغِّلٍ في نسخِ
+ * مُعرِّفٍ مقبولاً بلا أثرٍ مرئيٍّ فلا يتعلَّمُ أنَّهُ أخطأَ.
+ */
+export class SearchConflictError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "SearchConflictError";
+  }
+}
+
 /** A degraded/unavailable read-model failure (503). Code is a `service_unavailable` code. */
 export class SearchUnavailableError extends Error {
   constructor(
@@ -60,8 +96,13 @@ function body(code: string, message: string, traceId: string): SearchErrorBody {
 
 /**
  * The single error translator. Branch order is intentional and tested:
- * validation first (client mistake, 400), then unavailable (degraded, 503),
- * then the fallback (503). No `500` is ever returned.
+ * validation first (client mistake, 400), then not-found (404), then conflict
+ * (409), then unavailable (degraded, 503), then the fallback (503). No `500` is
+ * ever returned.
+ *
+ * وترتيبُ 404 و409 قبلَ 503 ليسَ ذوقاً: الفرعُ الأخيرُ يبتلعُ كلَّ ما لم
+ * يُصنَّفْ، فصنفٌ يُضافُ ولا فرعَ لهُ يُقرأُ «خدمةٌ متعطّلةٌ» — أي حكمٌ كاذبٌ
+ * على الخدمةِ بسببِ خطأِ منادٍ.
  */
 export function sendSearchError(
   reply: FastifyReply,
@@ -70,6 +111,12 @@ export function sendSearchError(
 ): FastifyReply {
   if (error instanceof SearchValidationError) {
     return reply.status(400).send(body(error.code, error.message, traceId));
+  }
+  if (error instanceof SearchNotFoundError) {
+    return reply.status(404).send(body(error.code, error.message, traceId));
+  }
+  if (error instanceof SearchConflictError) {
+    return reply.status(409).send(body(error.code, error.message, traceId));
   }
   if (error instanceof SearchUnavailableError) {
     return reply.status(503).send(body(error.code, error.message, traceId));

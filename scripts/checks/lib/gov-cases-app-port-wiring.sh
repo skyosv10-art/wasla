@@ -92,7 +92,7 @@ row = (
 )
 s = s.replace("<!-- app-port-exemptions:start -->\n```\n", "<!-- app-port-exemptions:start -->\n```\n" + row, 1)
 s = s.replace("EXEMPTIONS = 0", "EXEMPTIONS = 1", 1)
-s = s.replace("ROOT_WIRED_PORTS = 12", "ROOT_WIRED_PORTS = 11", 1)
+s = s.replace("ROOT_WIRED_PORTS = 13", "ROOT_WIRED_PORTS = 12", 1)
 s = s.replace("HARNESSES_SCANNED = 10", "HARNESSES_SCANNED = 10", 1)
 open(p, "w", encoding="utf-8").write(s)
 MUT
@@ -136,7 +136,7 @@ fi
 _pw_restore
 
 # ── البابُ 5: الأرقامُ المنشورةُ تُطابِقُ القياسَ ───────────────────────────
-sed -i 's/OPTIONAL_PORTS = 12/OPTIONAL_PORTS = 9/' "$PW_DOC"
+sed -i 's/OPTIONAL_PORTS = 13/OPTIONAL_PORTS = 9/' "$PW_DOC"
 if _pw_mutated "$PW_DOC" "$PW_BK/doc"; then
   t 'رقمٌ منشورٌ يُخالِفُ القياسَ يُسقِطُ الفحصَ' fail bash "$PW"
 fi

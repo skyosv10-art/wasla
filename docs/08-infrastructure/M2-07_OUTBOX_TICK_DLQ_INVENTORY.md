@@ -204,7 +204,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
 | G3 | ~~**10 outbox tables lack `attempts` / `last_error`**~~ (originally published as "5"; the affected list also omitted `dispatch`) — **8 of 10 closed: wave 1 `CLM-0245` (customers, delivery, drivers, geography, identity) + wave 2 `CLM-0246` (matching, orders, search)**. Remaining: `dispatch_outbox` and `marketplace_outbox`, which have **no producer-side drain** — see §10.4 | ~~customers, delivery,~~ dispatch, ~~drivers, geography, identity,~~ marketplace ~~, matching, orders, search~~ | Medium — 2 tables left, both relay-consumed; see §10.3 / §10.4 |
 | G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
-| G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **partially closed: the measurement exists (`CLM-0247`), the lifecycle does not.** Wave 1 shipped `GET /search/relay/dead-letters` (the eye), so poisoned rows are no longer silent. Still missing, and named rather than left implicit: **requeue** (the hand) and **acknowledgement** (the record) — waves 2 and 3, mirroring delivery's own order (ADR-026 §4.24 / §4.27) | search | Medium — poisoned events are still terminal, but they are now **measured and alerted**; see §10.5 |
+| G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **still partially closed: measurement (`CLM-0247`) and requeue (`CLM-0248`) exist, acknowledgement does not.** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST /search/relay/dead-letters/{ledger}/{outbox_id}/requeue` (the hand, §10.6), which lifts the row out of terminality **and** rewinds the relay checkpoint in one transaction. Still missing, and named rather than left implicit: **acknowledgement** (the record) — wave 3, mirroring delivery's own order (ADR-026 §4.27), which needs a migration adding `acknowledged_at`/`acknowledged_by`/`acknowledgement_reason` with an all-or-none CHECK | search | Low–Medium — a poisoned row is now **measured, alerted and recoverable by an operator**; what is still missing is a way to record «judged, will not be retried», so a permanently-poisoned row keeps a `warning` alight (see §10.6) |
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
@@ -237,6 +237,54 @@ pull search replicas out of routing.
 
 The read is proven side-effect free by fingerprinting the ledger before and
 after the call, rather than asserting it in a comment.
+
+### 10.6 G5 wave 2 — the poisoned rows can be requeued (`CLM-0248`)
+
+> Measured from the tree and from a real PostgreSQL run, per this inventory's
+> own truth rule. **This is still not a full lifecycle claim** — see the limits
+> below and wave 3.
+
+Wave 1 gave the operator an eye. An eye without a hand is the worst operational
+state there is: an alert that rings on something nobody can act on gets silenced,
+and after it is silenced the *new* poisoned rows are invisible too.
+
+Two things were measured in `services/search/src/relay.ts` before a line was
+written, and they are why the route has the shape it has:
+
+1. **`poisoned` is terminal, so the existing `replayFrom` does not requeue these
+   rows.** `isTerminal(status)` is literally `status !== "pending"`, and step 1
+   short-circuits a terminal row (*"duplicate delivery — already terminal"*)
+   without a single attempt. Rewinding the checkpoint alone re-reads the row and
+   re-reports `poisoned`.
+2. **Lifting the row alone requeues nothing either**, because the checkpoint was
+   deliberately advanced past it when it was poisoned. A row lifted to `pending`
+   with the checkpoint still ahead of it is never read *and* drops out of wave
+   1's measurement — the loss becomes **more hidden than before**.
+
+So the action is two moves in one transaction, or nothing.
+
+| Shipped | Where |
+| --- | --- |
+| Pure decision (`not_found` vs `not_poisoned` vs `requeued`) | `services/search/src/domain/relay-requeue.ts` |
+| Both moves in one transaction, ledger row locked `FOR UPDATE` | `services/search/src/infrastructure/relay-requeue-store.ts` |
+| `POST /search/relay/dead-letters/{ledger}/{outbox_id}/requeue`, scope `search:relay-dead-letters:requeue` | `services/search/src/http/app.ts` · documented in [`SEARCH_HTTP.md` §7](../04-api/SEARCH_HTTP.md) |
+| Wired in the production composition root (not an optional port) | `services/search/src/http/server.ts` |
+| 10 unit + 6 real-PostgreSQL integration cases | `services/search/src/__tests__/relay-requeue{,.integration}.test.ts` |
+
+Limits **published, not hidden** — each one is in the response body, not only here:
+
+| Limit | Published as | Why it is a limit and not a defect |
+| --- | --- | --- |
+| The rewind is to zero | `rewind_cost: "full_rescan_from_zero"` | The ledger has no `occurred_at`, so there is no *precise* rewind without copying a third field that becomes a duplicated source of truth. The rescan is reads only — idempotency makes every terminal row a no-op. |
+| The rewind is a **row deletion**, not a written zero | `rewind_method: "checkpoint_row_deleted"` | `getCheckpoint` returns `null` when the row is absent and `readAfter(null)` already reads from the beginning, so deletion *is* the rewind — with one source of truth instead of a second copy of the zero sentinel. |
+| It does not promise success | HTTP `202`, `outcome: "requeued"` | A row poisoned for a fixed reason will be poisoned again. The word is «requeued», never «reprocessed» or «recovered»: a caller who reads «fixed» closes the incident. |
+| A row that exhausted its attempts gets **one** attempt | `evidence_preserved` | `attempt_count` and `last_error` are the only record of *why* it was poisoned, and the ledger keeps no history, so they are not reset — the relay computes `attempt = attempt_count + 1` and will re-poison with a *new* reason. Clearing them would make every rescue attempt erase the evidence. |
+| `consumed_at` is not refreshed | `evidence_preserved` | It is what wave 1 measures the age of the loss from; touching it would **zero the age of a still-unresolved loss** and lift a week-old broken row out of the critical-age threshold without fixing anything. |
+| No advisory lock, unlike delivery's requeue | §10.6 (here) | The search relay has no session lock of its own. Inventing a key here would produce a **decorative** lock the other side never takes — reassuring and unenforcing, which is worse than no lock. The ledger row itself is locked `FOR UPDATE`; racing a live relay cycle is a declared limit. |
+| Does not gate readiness | `gates_readiness: false` | One bad event must not become a search outage. |
+
+There is deliberately **no idempotency key**: the action is naturally
+idempotent, because a second call finds the row `pending` and is answered `409`.
 
 ### 10.1 G1 closure — re-measured 2026-09-20 on `main` at `fac0c66`
 

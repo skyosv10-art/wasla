@@ -1,5 +1,14 @@
 
 
+## 2026-09-20 — M2-07: تحريرُ حجزِ G5 موجةِ 3 (CLM-0249)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0249` · **الفرع:** `chore/release-clm-0249`
+- **What was done:** `CLM-0249` نُقِلَ إلى `Released` بعدَ دمجِ [PR #303](https://github.com/skyosv10-art/wasla/pull/303) (squash `e13bbca`) بحكمِ CI **35/35 أخضر**. الفرعُ لم يُحذَف.
+- **حكمُ main مقروءٌ لا مُفترَضٌ:** الشوطانِ [35504130599](https://github.com/skyosv10-art/wasla/actions/runs/35504130599) و[35504130706](https://github.com/skyosv10-art/wasla/actions/runs/35504130706) على `e13bbca` كِلاهُما `success`.
+- **الحالةُ المُعلَنةُ لم تتغيَّرْ:** `M2-07` `In Progress` وبوّابتُهُ `NOT PASSED` (البندُ 7 محجوبٌ خارجيًّا) · `G5` **مُغلَقٌ كما كُتِبَ** (عينًا ويدًا وسجلًّا) · و`G8` يبقى مفتوحًا مُعلَنًا: لا مُجدوِلَ نبضةٍ يُشغِّلُ الدورةَ على وقتٍ.
+
+---
+
 ## 2026-09-20 — M2-07: G5 wave 3 — the record that dispositions a poisoned row (CLM-0249)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0249` · **الفرع:** `feat/m2-07-g5-search-acknowledgement`

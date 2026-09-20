@@ -1,5 +1,29 @@
 
 
+
+## 2026-09-20 — M2-07: G3 wave 1 — in-row retry tracking for 5 outbox tables (CLM-0245)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0245` · **الفرع:** `feat/m2-07-g3-wave1-retry-tracking`
+- **Scope:** `services/customers/`, `services/delivery/`, `services/drivers/`, `services/geography/`, `services/identity/`, `packages/outbox/`, `docs/08-infrastructure/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+- **Baseline before the change:** `main` at `d68b1ba` (after CLM-0244 release). Gap G3 measured in the inventory: 10 of 13 outbox tables lack `attempts`/`last_error`; only `negotiation_outbox`, `reputation_outbox` and `subscription_outbox` had them, and `NegotiationOutboxDrainStore` was the single adapter implementing `recordDeliveryFailure`.
+- **What was done:**
+  - `attempts INTEGER NOT NULL DEFAULT 0` and `last_error TEXT` added to `customer_outbox`, `driver_outbox`, `geo_outbox`, `identity_outbox`, `delivery_outbox` in each `services/<svc>/contracts/schema.sql` and in each service's Drizzle schema.
+  - One reversible migration per service — `drizzle/0002_outbox_retry_tracking.sql` (+ `.down.sql`), `0004_` in delivery — each carrying `@wasla-upgrade-proof: all-non-baseline`, with the journal entry appended.
+  - `recordDeliveryFailure` — optional in the `packages/outbox/` contract — implemented in all five drain adapters (`attempts + 1`, `last_error = <reason>`); `markPublished` now also does `attempts + 1, last_error = NULL`; `claimUnpublished` selects and returns the real `attempts`.
+  - Stale docblocks corrected in the five adapters and in `packages/outbox/src/drain.ts` (G3 is now 5 of 13, not 10 of 13).
+  - Truth documents updated by addition, not erasure: inventory row G3 struck through with the partial closure recorded, new §10.3 with the measurement commands, mechanism table and an explicit "what is NOT claimed"; gate item 11; execution board M2-07 row; ROADMAP line 4.
+- **Evidence measured, not asserted:**
+  - New integration test per service — `persists attempts and last_error on delivery failure (G3)` — against real PostgreSQL (Supabase pooler): `attempts = 1` + `last_error` containing the reason + `published_at IS NULL` after a failed drain, then `attempts = 2` + `last_error IS NULL` + `published_at` set after a successful one, then `claimUnpublished` returning `attempts = 2`.
+  - `outbox-drain.integration.test.ts`: **25/25 green** (5 per service × 5 services) — no pre-existing test in those files changed.
+  - `migrations.integration.test.ts` + `migration-upgrade-with-data.integration.test.ts` green for all five services; these suites read the migration directory, so the new files are covered without a bespoke test.
+  - Per-service `tsc --noEmit` clean for all five services.
+- **Two environmental findings, recorded so the next agent does not read them as defects:**
+  1. `wasla_customers_test`, `wasla_drivers_test`, `wasla_geography_test` and `wasla_identity_test` did not exist on the pooler and were created; the first run failed with `database ... does not exist`, not with a code error.
+  2. The five original delivery tests failed locally with `column "attempts" does not exist` because `wasla_delivery_test` still held the pre-change table and the harness uses `CREATE TABLE IF NOT EXISTS`, which cannot alter an existing table. Dropping and recreating the local schema made all five pass. CI creates a fresh database per matrix job, so this is a local-state artifact — it is exactly why the change ships with a migration and not with contract SQL alone.
+  3. `migrations.integration.test.ts` hit vitest's 5s per-test timeout for customers and identity against the **remote** pooler (~1s round trip per statement, and the suite now applies three migration files). Verified as latency, not logic: the same suites pass with `--testTimeout=120000` (a CLI flag; **no test file, timeout config or gate was changed**). CI runs a local PostgreSQL service container.
+- **What was NOT done / NOT claimed:** no retry scheduler, no exponential backoff, no quarantine after N failures — G3 is the record, not the policy (policy remains G8/G5). The 5 remaining tables (dispatch, marketplace, matching, orders, search) are untouched and keep losing the failure at process exit. `EventSinkPort` still has no production implementation. `M2-07` stays `In Progress`; the gate stays `NOT PASSED` (item 7 blocked on `RENDER_API_KEY`/`RENDER_OWNER_ID`).
+- **Next executable:** G3 wave 2 — dispatch, marketplace, matching, orders, search.
+
 ## 2026-09-20 — M2-07: Wave 3 outbox adapters — delivery, matching, negotiations, orders, search (CLM-0243)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0243`

@@ -13,7 +13,8 @@
  *
  * ## `recordDeliveryFailure` اختياريّ (G3)
  *
- * الجداولُ بلا `attempts`/`last_error` (G3 — 10 من 13) لا تستطيعُ تسجيلَ الفشلِ
+ * الجداولُ بلا `attempts`/`last_error` (G3 — 5 من 13 بعدَ CLM-0245: dispatch ·
+ * marketplace · matching · orders · search) لا تستطيعُ تسجيلَ الفشلِ
  * بشكلٍ دائم. `OutboxDrainStore.recordDeliveryFailure` منفذٌ اختياريّ: إن لم
  * يُنفّذْه المحوّلُ، يظلُّ الفشلُ في `DrainReport.failed` (في الذاكرة) ولا
  * يُكتب في القاعدة. وهذا لا يُسكتُ الفشلَ بل يُؤجّلُ ثباتَه إلى G3.

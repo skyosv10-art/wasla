@@ -8,7 +8,7 @@
 >
 > **نموذجُ الحالاتِ:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-20 (تحديثُ `CLM-0244`: البندُ 8 / فجوةُ G1 أُغلِقَ بقياسٍ مُعادٍ؛ البندُ 7 يبقى محجوبًا) · **الحالةُ المُعلَنة:** `NOT PASSED` — البوّابةُ تُوثِّقُ ما قِيسَ وما يبقى، ولا تُعلنُ `M2-07` مُكتمَلًا. **ونقلُ `M2-07` إلى `Ready for Gate` أو `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
+> **Last Updated:** 2026-09-20 (تحديثُ `CLM-0245`: البندُ 11 — موجةُ G3 الأولى: `attempts`/`last_error` لخمسةِ جداولٍ و`recordDeliveryFailure` مُنفَّذٌ؛ البندُ 7 يبقى محجوبًا) · **الحالةُ المُعلَنة:** `NOT PASSED` — البوّابةُ تُوثِّقُ ما قِيسَ وما يبقى، ولا تُعلنُ `M2-07` مُكتمَلًا. **ونقلُ `M2-07` إلى `Ready for Gate` أو `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
 
 ---
 
@@ -54,6 +54,7 @@ PRODUCTION ⚪ NOT VERIFIED   — لا نشرَ ولا تشغيلَ في الإ�
 | 7 | اعتمادُ M2-02 مُكتملٌ | ⛔ | **محجوبٌ** — `M2-02` `In Progress` بحاجزِ `RENDER_API_KEY`/`RENDER_OWNER_ID` خارجيٍّ · بروتوكولُ التشغيلِ §4 يمنعُ إكمالَ تابعٍ اعتمادُهُ غيرُ `Completed` |
 | 8 | فجوةُ G1 — آليةُ توصيلٍ لكلِّ جدولِ صادرٍ | ✅ | **أُغلِقَت 2026-09-20** — `ADR-042` + ثلاثُ موجاتٍ: `CLM-0241` (PR #287، squash `50d2cc4`) أنشأت عقدَ `packages/outbox/` ومحوّلَ `customers` · `CLM-0242` (PR #289، `99e7172`) محوّلاتُ drivers+geography+identity · `CLM-0243` (PR #291، `674e743`) محوّلاتُ delivery+matching+negotiations+orders+search. **13 من 13** جدولَ صادرٍ لديها آليةُ توصيلٍ، بقياسٍ مُعادٍ من الشجرةِ في [الجرد §10.1](../08-infrastructure/M2-07_OUTBOX_TICK_DLQ_INVENTORY.md). 36 اختبارَ تكاملٍ + 6 اختباراتِ وحدةٍ. **ولا يُقرأُ هذا إثباتًا إنتاجيًّا:** `EventSinkPort` بلا تنفيذٍ إنتاجيٍّ ولا وسيطِ رسائلَ موصول ([الجرد §10.2](../08-infrastructure/M2-07_OUTBOX_TICK_DLQ_INVENTORY.md)) |
 | 9 | دورةُ حياةِ DLQ كاملةٌ لكلِّ مستهلِكِ relay | ⚠️ | `delivery` لديها الدورةُ كاملةً (§4.23–4.27) لكن بلا إثباتِ تكاملٍ نهايةً إلى نهايةٍ · `search` بلا دورةِ حياةٍ إطلاقًا (G5) |
+| 11 | تتبُّعُ إعادةِ المحاولةِ في الصفِّ — فجوةُ G3 (موجةٌ أولى) | ⚠️ | **جزئيٌّ: 5 من 10** — `CLM-0245`: `attempts INTEGER NOT NULL DEFAULT 0` و`last_error TEXT` أُضيفا إلى `customer_outbox` · `driver_outbox` · `geo_outbox` · `identity_outbox` · `delivery_outbox`، و`recordDeliveryFailure` (اختياريٌّ في عقدِ `packages/outbox/`) صارَ **مُنفَّذًا** في المحوّلاتِ الخمسِ، فالفشلُ يُكتبُ في الصفِّ لا في الذاكرةِ وحدَها. 5 ترحيلاتٍ + 5 عكسيّاتٍ · 5 اختباراتِ تكاملٍ جديدةٍ على PostgreSQL حقيقيّة (25 اختبارًا خضراء في الملفاتِ الخمسةِ). **وما لا يُدَّعى:** لا مُجدوِلَ إعادةِ محاولةٍ ولا تراجعًا أُسِّيًّا ولا حجرًا بعدَ N فشلاتٍ — G3 سجلٌّ لا سياسةٌ. الخمسةُ الباقيةُ (dispatch · marketplace · matching · orders · search) على حالِها. التفصيلُ في [الجرد §10.3](../08-infrastructure/M2-07_OUTBOX_TICK_DLQ_INVENTORY.md) |
 | 10 | حكمُ CI أخضرُ على الدفعةِ | ✅ | main `b3a6bc3`: [WASLA CI 35432001351](https://github.com/skyosv10-art/wasla/actions/runs/35432001351) success · 35/35 |
 
 ---

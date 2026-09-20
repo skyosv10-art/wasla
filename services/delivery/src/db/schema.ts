@@ -375,6 +375,8 @@ export const deliveryOutbox = pgTable(
     occurredAt: instant("occurred_at").notNull().defaultNow(),
     createdAt: instant("created_at").notNull().defaultNow(),
     publishedAt: instant("published_at"),
+  attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     check("delivery_outbox_event_type_check", sql`char_length(${table.eventType}) BETWEEN 3 AND 96`),

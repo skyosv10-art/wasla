@@ -236,7 +236,9 @@ CREATE TABLE IF NOT EXISTS delivery_outbox (
     -- والبحثِ — بلا هذا العمودِ يضيعُ occurred_at من المظروفِ عندَ الكتابةِ.
     occurred_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at       TIMESTAMPTZ
+    published_at       TIMESTAMPTZ,
+    attempts           INTEGER     NOT NULL DEFAULT 0,  -- G3: عدّادُ محاولاتِ التسليم
+    last_error         TEXT                             -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
 );
 
 CREATE INDEX IF NOT EXISTS ix_delivery_outbox_unpublished

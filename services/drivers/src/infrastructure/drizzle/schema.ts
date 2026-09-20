@@ -557,6 +557,8 @@ export const driverOutbox = pgTable(
       .default(sql`now()`),
     /** NULL = not published yet. */
     publishedAt: timestamp("published_at", { withTimezone: true }),
+  attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     // Canonical name of the contract's inline `event_id UUID NOT NULL UNIQUE`.

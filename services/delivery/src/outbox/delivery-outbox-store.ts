@@ -2,7 +2,7 @@
  * محوّلُ صندوقِ صادرِ التوصيل — يربطُ `delivery_outbox` بالعقد المشترك (ADR-042 · موجة 3).
  *
  * الاختلافُ الأبرز: المفتاحُ الأساسيُّ هو `outbox_id` لا `id`. هذا الجدولُ يملكُ
- * `trace_id` (G4 مُغلقٌ هنا) لكن بلا `attempts`/`last_error` (G3).
+ * `trace_id` (G4 مُغلقٌ هنا) و`attempts`/`last_error` (G3 مُغلقٌ — CLM-0245).
  *
  * Scope: خدمة التوصيل · محوّلُ صندوقِ الصادر
  * Last Updated: 2026-09-20
@@ -38,7 +38,8 @@ export class DeliveryOutboxDrainStore implements OutboxDrainStore {
              aggregate_id,
              payload,
              occurred_at,
-             trace_id
+             trace_id,
+             attempts
         FROM delivery_outbox
        WHERE published_at IS NULL
        ORDER BY outbox_id ASC
@@ -55,18 +56,35 @@ export class DeliveryOutboxDrainStore implements OutboxDrainStore {
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
       traceId: row["trace_id"] ? String(row["trace_id"]) : null,
-      attempts: 0,
+      attempts: Number(row["attempts"]) || 0,
     }));
   }
 
   async markPublished(id: string, publishedAt: string): Promise<boolean> {
     const updated = await this.tx.execute(sql`
       UPDATE delivery_outbox
-         SET published_at = ${publishedAt}
+         SET published_at = ${publishedAt},
+             attempts = attempts + 1,
+             last_error = NULL
        WHERE outbox_id = ${id}
          AND published_at IS NULL
       RETURNING outbox_id
     `);
     return rowsOf(updated).length === 1;
   }
+
+  /**
+   * G3 مُغلقٌ لهذا الجدول: الفشلُ يُكتبُ في الصفِّ نفسِه، فلا يعودُ الحدثُ
+   * المسمومُ يبدو كحدثٍ طازجٍ في كلِّ مرورٍ.
+   */
+  async recordDeliveryFailure(id: string, error: string): Promise<void> {
+    await this.tx.execute(sql`
+      UPDATE delivery_outbox
+         SET attempts = attempts + 1,
+             last_error = ${error}
+       WHERE outbox_id = ${id}
+         AND published_at IS NULL
+    `);
+  }
+
 }

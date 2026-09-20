@@ -1,5 +1,21 @@
 
 
+## 2026-09-20 — M0-23: Status Reconciliation — قياس معاد من الشجرة (CLM-0257)
+
+- **Work Item(s):** M0-23 · M0-34 · RISK-0020 · M2-04 · M2-05 · M2-06 · M2-07 · M2-10 · **الحجز:** `CLM-0257` · **الفرع:** `docs/m0-23-m0-34-status-reconciliation`
+- **ما نُفِّذَ:** Status Reconciliation موثَّق من `main@07ba94c` — لا عمل برمجي جديد، قياس معاد من الشجرة الحالية.
+- **M0-23:** 13 خدمة بـ `schema.sql` + 14 `_journal.json` + 13 `migrate.ts` + 63 ملف برهان ترقية + `validate-migrations.sh` أخضر. الأدلة الثلاثة مجتمعة (Implementation + Verification + Gate-CI). لكن لا `M0-23_GATE.md` ⇒ الحالة الصحيحة: `Ready for Gate` (نُقلت من `In Progress`).
+- **M0-34:** 13 ملف `migration-upgrade-with-data.integration.test.ts` + الباب 4-ج في `validate-migrations.sh` + CI أخضر. نفس الوضع ⇒ الحالة الصحيحة: `Ready for Gate` (نُقلت من `In Progress`).
+- **RISK-0020:** السبب المسجَّل لبقائه مفتوحاً («لا حكمَ CI») لم يعد صادقاً. CI أخضر اليوم على `07ba94c` — Run [35525855417](https://github.com/skyosv10-art/wasla/actions/runs/35525855417) `success` (33 وظيفة) + Roadmap freshness [35525855396](https://github.com/skyosv10-art/wasla/actions/runs/35525855396) `success`. RISK-0039 ارتفع حجبه في 2026-09-14. أُضيف تحديث مقيس إلى سطر RISK-0020. إقفاله قرار المالك.
+- **M2-04:** العمل مكتمل + `M2-04_GATE.md` موجودة — Status drift: `In Progress` → الصحيح `Ready for Gate`.
+- **M2-05 ↔ M2-06:** تناقض دائري مُشخَّص: M2-05 يقول «أبقى In Progress لأن M2-06 غير منجز» وM2-06 يقول «أبقى In Progress لأن M2-05 In Progress» — وكلاهما منجز فعلاً (drills 13/13). الحالة الصحيحة لكليهما: `Ready for Gate`.
+- **M2-07:** لا status drift — الحالة صادقة (`In Progress`، اعتماد محجوب على M2-02/`RENDER_API_KEY`).
+- **M2-10:** لا status drift — الحالة صادقة (`Ready for Gate`، بانتظار مراجعة المالك).
+- **حكم CI المرتبط:** Run [35525855417](https://github.com/skyosv10-art/wasla/actions/runs/35525855417) `success` على `07ba94c` — 33 وظيفة كلها `success`.
+- **الوثيقة:** [`2026-09-20-status-reconciliation.md`](../12-testing/2026-09-20-status-reconciliation.md).
+
+---
+
 ## 2026-09-20 — M2-07: تحريرُ حجزِ مُزامَنةِ حقيقةِ البوّابةِ (CLM-0256)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0256` · **الفرع:** `chore/release-clm-0256`

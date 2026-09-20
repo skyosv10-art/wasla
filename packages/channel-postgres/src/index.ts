@@ -24,4 +24,6 @@ export {
 export { PostgresProcessedUpdateStore } from "./processed-update-store.js";
 export { PostgresDeliveryStore } from "./delivery-store.js";
 export { PostgresChannelOutbox } from "./outbox.js";
+export { ChannelOutboxDrainStore } from "./outbox-drain-store.js";
+export { PostgresChannelOutboxDrainRunner } from "./outbox-drain-runner.js";
 export { createChannelStores, type ChannelStores } from "./stores.js";

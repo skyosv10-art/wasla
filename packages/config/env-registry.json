@@ -213,6 +213,10 @@
           "mode": "direct"
         },
         {
+          "file": "packages/channel-postgres/src/__tests__/outbox-drain.integration.test.ts",
+          "mode": "direct"
+        },
+        {
           "file": "packages/delivery-e2e/src/harness.ts",
           "mode": "direct"
         },

@@ -209,7 +209,7 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | ~~G4~~ | ~~**6 outbox tables lack `trace_id`**~~ — **RESOLVED (`CLM-0250`): `trace_id TEXT` added to all 6 tables (customer_outbox, driver_outbox, geo_outbox, identity_outbox, marketplace_outbox, search_outbox) via per-service migrations. Drain adapters now `SELECT trace_id` and return it via `OutboxRecord.traceId`. Marketplace relay path (`PostgresMarketplaceEventSource` → `relay.ts`) selects and propagates `trace_id` in every `RelayLogEntry`.** | ~~customers, drivers, geography, identity, marketplace, search~~ | — closed; see §10.8 |
 | G5 | ~~Search has no DLQ lifecycle (no acknowledgement, no reprocess)~~ — **closed for the eye, the hand and the record (`CLM-0247` · `CLM-0248` · `CLM-0249`).** Wave 1 shipped `GET /search/relay/dead-letters` (the eye, §10.5); wave 2 shipped `POST …/requeue` (the hand, §10.6); wave 3 shipped `POST …/acknowledgement` (the record, §10.7), which writes an all-or-none triple in migration `0003` and splits the metric into `total_poisoned` (reality) and `total_unacknowledged_poisoned` (what the verdict judges). **What is still NOT claimed:** no tick scheduler runs any of this on a timer — that is `G8`, a pre-declared gap, so every wave here is operator-driven. | search | Low — a poisoned row is measured, alerted, recoverable **and** dispositionable with a named acknowledger and a written reason; the residual risk is that nothing polls on a schedule (`G8`) |
 | ~~G6~~ | ~~**3 of 8 idempotency tables store fingerprint only, not response**~~ — **RESOLVED (`CLM-0252`): `response_status` (nullable INTEGER) and `response_body` (nullable JSONB) added to `dispatch_idempotency`, `driver_idempotency`, and `matching_idempotency` via per-service migrations. CHECK constraint enforces both-or-neither. Port `IdempotencyStore.find()` returns `IdempotencyRecord` with `payloadFingerprint` + `recordedResponse` (nullable for legacy rows). `remember()` now stores the response. `classifyIdempotency`/`classifyReplay` return `{ kind: "replay", response }` on cache hit. Legacy rows (pre-G6) fall back to reprocessing.** | ~~dispatch, drivers, matching~~ | — closed; see §10.9 |
-| G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
+| G7 | ~~Channel outbox has no drain~~ — **CLOSED (`CLM-0254`): `ChannelOutboxDrainStore` implements `OutboxDrainStore` from `@wasla/outbox` for `channel_outbox`. `PostgresChannelOutboxDrainRunner` wraps the Drizzle transaction. `claimUnpublished` uses `FOR UPDATE SKIP LOCKED`, `markPublished` is conditional. `recordDeliveryFailure` is not implemented (no `attempts`/`last_error` columns). 5 integration tests on PostgreSQL: claim oldest-first, conditional mark, drainOutbox deliver+mark, failed delivery stays claimable, SKIP LOCKED no overlap.** | ~~packages/channel-postgres~~ | — closed; see §10.11 |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
 
 ### 10.5 G5 wave 1 — the poisoned rows are measured (`CLM-0247`)
@@ -587,3 +587,25 @@ for relay-consumed outboxes. Measured from the tree on `main` at `218a812`:
 All three consumer ledgers have `attempt_count`, `last_error`, and
 `consumed_status` (including `poisoned`). The retry/error lifecycle is complete
 and owned by the consumer.
+
+### 10.11 G7 closure — channel outbox drain (CLM-0254)
+
+The `channel_outbox` table in `packages/channel-postgres` now has a drain
+adapter following the ADR-042 shared contract pattern:
+
+- `ChannelOutboxDrainStore` implements `OutboxDrainStore` from `@wasla/outbox`
+- `claimUnpublished(limit)` — `SELECT ... FOR UPDATE SKIP LOCKED`, oldest-first
+- `markPublished(id, publishedAt)` — conditional `UPDATE ... WHERE published_at IS NULL`
+- `recordDeliveryFailure` — not implemented (no `attempts`/`last_error` columns;
+  failed deliveries stay in `DrainReport.failed` and the row is re-claimed)
+- `PostgresChannelOutboxDrainRunner` wraps `ChannelDb.transaction()` so claim +
+  deliver + mark-published run in one transaction
+- `ChannelStores` interface gains optional `outboxDrain?: OutboxDrainRunner`
+- `@wasla/outbox` added as dependency to `packages/channel-postgres`
+
+5 integration tests on PostgreSQL (Supabase pooler, PostgreSQL 17):
+1. Claims unpublished events oldest-first
+2. Marks published conditionally — no double-publish
+3. Delivers to a sink and marks published via `drainOutbox`
+4. Does not mark published on delivery failure — row stays claimable
+5. SKIP LOCKED — claimed rows are not re-claimed after marking published

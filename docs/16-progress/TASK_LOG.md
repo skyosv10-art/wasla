@@ -21,6 +21,9 @@
   - Added `outbox` to WORK_INDEX.md core packages section.
 - **What was NOT done:** Waves 2 and 3 (8 remaining services). No `EventSinkPort` wired to a real message broker. G3/G4/G5 gaps not addressed. No automated guard in `verify-governance.sh` yet.
 - **Next executable:** Merge wave 1 (CI green), then open claim for wave 2 (`drivers` + `geography` + `identity`).
+- **CI verdict (PR branch):** WASLA CI [35476812860](https://github.com/skyosv10-art/wasla/actions/runs/35476812860) — **success · 35/35**.
+- **CI verdict (main post-merge):** WASLA CI [35477822803](https://github.com/skyosv10-art/wasla/actions/runs/35477822803) — **success** · Roadmap freshness [35477822806](https://github.com/skyosv10-art/wasla/actions/runs/35477822806) success. PR #287 merged (squash `50d2cc4`). Branch kept (not deleted) to keep check 4 green until this release commit lands.
+- **Lesson applied (4th occurrence):** Merged PR #287 WITHOUT `--delete-branch` to avoid the check-4 failure pattern. The release commit (this PR) marks CLM-0241 as Released, after which the work branch can be safely deleted.
 
 ## 2026-09-20 — M2-07: ADR for outbox delivery mechanism (CLM-0240)
 

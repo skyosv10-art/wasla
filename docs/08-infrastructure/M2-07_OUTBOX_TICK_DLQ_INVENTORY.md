@@ -195,12 +195,12 @@ exists for channel events — this is a **package-level outbox with no drain**.
 > files and from a repository-wide scan for exported drain functions and relay
 > consumers. Four rows as originally published did not match the code; the
 > corrected values are given here and the original claim is kept beside each one
-> so the correction is by addition, not erasure. **G2 is closed;** the remaining
-> seven rows are open debt.
+> so the correction is by addition, not erasure. **G2 is closed, and G1 was closed on 2026-09-20** (see §10.1); the remaining
+> six rows are open debt.
 
 | # | Gap | Affected | Severity |
 | --- | --- | --- | --- |
-| G1 | **9 of 13 outbox tables have no delivery mechanism at all** — neither an own drain/publisher nor a relay consumer (originally published as "8 services": that list wrongly included `marketplace` and `subscriptions`, and omitted `negotiations`, `search` and `delivery`) | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | High — events written but never delivered |
+| ~~G1~~ | ~~**9 of 13 outbox tables have no delivery mechanism at all**~~ — **RESOLVED (`CLM-0241`+`CLM-0242`+`CLM-0243`; PRs #287 / #289 / #291; squashes `50d2cc4` / `99e7172` / `674e743`).** All 13 outbox tables now have a delivery mechanism: 9 thin drain adapters against the shared `packages/outbox/` contract (ADR-042) plus the 4 mechanisms that already existed. Re-measured 2026-09-20 on `main` at `fac0c66`, from the tree — not from reports | customers, delivery, drivers, geography, identity, matching, negotiations, orders, search | — closed; see §10.1 |
 | ~~G2~~ | ~~6 outbox tables lack `sequence_number`~~ — **RESOLVED (`CLM-0237`, PR #279, squash `a08645f`)** | customers, delivery, drivers, geography, identity, search | — closed; see §1 item 1 |
 | G3 | **10 outbox tables lack `attempts` / `last_error`** (originally published as "5"; the affected list also omitted `dispatch`) | customers, delivery, dispatch, drivers, geography, identity, marketplace, matching, orders, search | Medium — no in-table retry tracking |
 | G4 | **6 outbox tables lack `trace_id`** (originally published as "5"; the affected list omitted `identity`) | customers, drivers, geography, identity, marketplace, search | Low — observability gap |
@@ -208,6 +208,50 @@ exists for channel events — this is a **package-level outbox with no drain**.
 | G6 | **3 of 8 idempotency tables store fingerprint only, not response** (originally published as "5 ... (3 of 8)", which contradicted itself) | dispatch, drivers, matching | Low — replay reprocesses instead of returning cached response |
 | G7 | Channel outbox has no drain | packages/channel-postgres | Low — package-level, not service-level |
 | G8 | No tick scheduler exists in code | dispatch, negotiations, reputation | Expected — external scheduler is a deployment concern |
+
+### 10.1 G1 closure — re-measured 2026-09-20 on `main` at `fac0c66`
+
+> Measured from the tree, per the inventory's own truth rule. Neither this
+> section nor the adapters it lists are a production proof: the adapters are
+> exercised by integration tests against real PostgreSQL, and `EventSinkPort`
+> is **not** yet wired to a real message broker. G1 as written ("no delivery
+> mechanism at all") is closed; delivery to an external broker is separate debt
+> and is tracked in §10.2.
+
+```
+rg -n "export class \\w*OutboxStore|export (async )?function drain\\w*" services --glob '!**/__tests__/**'
+ls services/*/src/outbox/*outbox-store.ts
+```
+
+| Outbox table | Mechanism | Location | Wave |
+| --- | --- | --- | --- |
+| `customer_outbox` | drain adapter | `services/customers/src/outbox/customer-outbox-store.ts` | 1 (`CLM-0241`) |
+| `driver_outbox` | drain adapter | `services/drivers/src/outbox/driver-outbox-store.ts` | 2 (`CLM-0242`) |
+| `geo_outbox` | drain adapter | `services/geography/src/outbox/geo-outbox-store.ts` | 2 (`CLM-0242`) |
+| `identity_outbox` | drain adapter | `services/identity/src/outbox/identity-outbox-store.ts` | 2 (`CLM-0242`) |
+| `delivery_outbox` | drain adapter | `services/delivery/src/outbox/delivery-outbox-store.ts` | 3 (`CLM-0243`) |
+| `matching_outbox` | drain adapter | `services/matching/src/outbox/matching-outbox-store.ts` | 3 (`CLM-0243`) |
+| `negotiation_outbox` | drain adapter (implements `recordDeliveryFailure`) | `services/negotiations/src/outbox/negotiation-outbox-store.ts` | 3 (`CLM-0243`) |
+| `order_outbox` | drain adapter | `services/orders/src/outbox/order-outbox-store.ts` | 3 (`CLM-0243`) |
+| `search_outbox` | drain adapter | `services/search/src/outbox/search-outbox-store.ts` | 3 (`CLM-0243`) |
+| `reputation_outbox` | own drain (pre-existing) | `services/reputation/src/outbound/drain-outbox.ts:140` | — |
+| `subscription_outbox` | own drain (pre-existing) | `services/subscriptions/src/app/events.ts:278` | — |
+| `dispatch_outbox` | relay consumer (pre-existing) | `services/delivery/src/relay.ts` | — |
+| `marketplace_outbox` | relay consumer ×2 (pre-existing) | `services/search/src/relay.ts` · `services/delivery/src/marketplace-inventory-relay.ts` | — |
+
+**13 of 13.** Test evidence: 4 integration tests per adapter against real
+PostgreSQL (wave 1: 4 + 6 unit · wave 2: 12 · wave 3: 20), all green under the
+`db-integration` matrix and under `db-integration-shared` (all suites on one
+database, so cross-suite isolation is checked too).
+
+### 10.2 What G1's closure does **not** claim
+
+| Claim | Status |
+| --- | --- |
+| Every outbox table can be drained through one audited contract | ✅ measured above |
+| Drain semantics (ordering, locking, failure recording) are test-proven on real PostgreSQL | ✅ 36 integration tests + 6 unit tests |
+| Events actually reach a message broker in a deployed environment | ⚪ **NOT VERIFIED** — `EventSinkPort` has no production implementation; see ADR-042 §"ما بعد الموجات" |
+| A scheduler invokes the drains periodically | ⚪ **NOT VERIFIED** — G8; external scheduler is a deployment concern (M2-02 / M2-09) |
 
 ### How the corrected values were measured
 

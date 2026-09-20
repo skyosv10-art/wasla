@@ -237,6 +237,9 @@ importers:
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../contracts/channel
+      '@wasla/outbox':
+        specifier: workspace:*
+        version: link:../outbox
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.0)

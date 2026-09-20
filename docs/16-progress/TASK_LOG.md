@@ -4898,3 +4898,38 @@ state (8 by migration, 2 by consumer-owned design).
 
 **Remaining M2-07 gaps:** G7 (Low, package-level) and G8 (Expected, deployment
 concern). M2-07 remains blocked on M2-02 (external credentials).
+
+## 2026-09-20 — M2-07: G7 channel outbox drain (CLM-0254)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0254` · **الفرع:** `feat/m2-07-g7-channel-outbox-drain`
+
+**Scope:** Close G7 gap — channel outbox has no drain adapter.
+
+**What was done:**
+- Created `ChannelOutboxDrainStore` in `packages/channel-postgres/src/outbox-drain-store.ts`:
+  implements `OutboxDrainStore` from `@wasla/outbox` for `channel_outbox`.
+  - `claimUnpublished(limit)`: SELECT with `FOR UPDATE SKIP LOCKED`, oldest-first
+  - `markPublished(id, publishedAt)`: conditional UPDATE (no double-publish)
+  - `recordDeliveryFailure`: not implemented (no `attempts`/`last_error` columns)
+- Created `PostgresChannelOutboxDrainRunner` in `outbox-drain-runner.ts`: wraps
+  `ChannelDb.transaction()` so claim + deliver + mark-published run in one tx.
+- Updated `ChannelStores` interface: added optional `outboxDrain?: OutboxDrainRunner`.
+- Updated `createChannelStores()` factory to wire the drain runner.
+- Added `@wasla/outbox` as dependency to `packages/channel-postgres`.
+- Created 5 integration tests on PostgreSQL (Supabase pooler, PostgreSQL 17):
+  1. Claims unpublished events oldest-first
+  2. Marks published conditionally — no double-publish
+  3. Delivers to a sink and marks published via `drainOutbox`
+  4. Does not mark published on delivery failure — row stays claimable
+  5. SKIP LOCKED — claimed rows are not re-claimed after marking published
+- Updated docs: M2-07 inventory (G7 closed, §10.11 added), ROADMAP, execution
+  board, WORK_CLAIMS (CLM-0254 Active), TASK_LOG.
+
+**Why:** G7 was the last code-implementable M2-07 gap (Low, package-level).
+The channel outbox had an append-only `OutboxPort` and an `unpublished()` read
+method, but no drain adapter using the shared `@wasla/outbox` contract. The
+drain follows the ADR-042 pattern established by the G1 drain adapters. G8
+(Expected — external scheduler) remains as a deployment concern, not code work.
+
+**Result:** G7 is CLOSED. Only G8 (Expected) remains in the M2-07 gap inventory.
+M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER_ID).

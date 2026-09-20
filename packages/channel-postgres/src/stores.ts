@@ -8,16 +8,20 @@
  */
 
 import type { OutboxPort, ProcessedUpdateStorePort, DeliveryStorePort } from "@wasla/channel-core";
+import type { OutboxDrainRunner } from "@wasla/outbox";
 
 import { createChannelDb, type ChannelDbConfig } from "./db.js";
 import { PostgresDeliveryStore } from "./delivery-store.js";
 import { PostgresChannelOutbox } from "./outbox.js";
 import { PostgresProcessedUpdateStore } from "./processed-update-store.js";
+import { PostgresChannelOutboxDrainRunner } from "./outbox-drain-runner.js";
 
 export interface ChannelStores {
   readonly processedUpdates: ProcessedUpdateStorePort;
   readonly deliveries: DeliveryStorePort;
   readonly outbox: OutboxPort;
+  /** Drain runner for the channel outbox (G7). Operator-driven, not part of the bot request path. */
+  readonly outboxDrain?: OutboxDrainRunner;
   /** Release the connection pool (call once, on shutdown). */
   close(): Promise<void>;
 }
@@ -30,6 +34,7 @@ export function createChannelStores(config: ChannelDbConfig): ChannelStores {
     processedUpdates: new PostgresProcessedUpdateStore(db),
     deliveries: new PostgresDeliveryStore(db),
     outbox: new PostgresChannelOutbox(db),
+    outboxDrain: new PostgresChannelOutboxDrainRunner(db),
     close: async () => {
       await pool.end();
     },

@@ -59,8 +59,8 @@ docs/16-progress/MASTER_PROGRESS.md
 
 | Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |
 | --- | --- | --- | --- | --- |
-| CLM-0255 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g7-channel-outbox-drain | packages/config/,docs/12-testing/,pnpm-lock.yaml,.env.example | 2026-09-20 | 2026-10-04 | Active |
-| CLM-0254 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g7-channel-outbox-drain | packages/channel-postgres/,docs/08-infrastructure/,docs/16-progress/,ROADMAP.md | 2026-09-20 | 2026-10-04 | Active |
+| CLM-0255 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g7-channel-outbox-drain | packages/config/,docs/12-testing/,pnpm-lock.yaml,.env.example | 2026-09-20 | 2026-10-04 | Released (PR #311 merged, squash `db06126`, 35/35 CI green) |
+| CLM-0254 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g7-channel-outbox-drain | packages/channel-postgres/,docs/08-infrastructure/,docs/16-progress/,ROADMAP.md | 2026-09-20 | 2026-10-04 | Released (PR #311 merged, squash `db06126`, 35/35 CI green) |
 | CLM-0253 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g3-close-relay-consumed-outbox-adr | docs/15-decisions/,docs/08-infrastructure/,docs/16-progress/,ROADMAP.md | 2026-09-20 | 2026-10-04 | Released (PR #309 merged, squash `30adb06`, 35/35 CI green) |
 | CLM-0252 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g6-idempotency-response-storage | services/dispatch/,services/drivers/,services/matching/,docs/08-infrastructure/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-20 | 2026-10-04 | Released (PR #307 merged, squash `1e06021`, 35/35 CI green) |
 | CLM-0245 | M2-07 | @uxxxu (agent:perplexity-computer) | feat/m2-07-g3-wave1-retry-tracking | services/customers/,services/delivery/,services/drivers/,services/geography/,services/identity/,packages/outbox/,docs/08-infrastructure/,docs/12-testing/,docs/16-progress/,packages/config/,.env.example,ROADMAP.md | 2026-09-20 | 2026-10-04 | Released (PR #295 merged, squash `b6bc741`, 35/35 CI green, main run 35490169673 green) |

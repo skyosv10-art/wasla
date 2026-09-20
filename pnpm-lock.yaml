@@ -987,6 +987,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/outbox':
+        specifier: workspace:*
+        version: link:../../packages/outbox
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1030,6 +1033,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/outbox':
+        specifier: workspace:*
+        version: link:../../packages/outbox
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1076,6 +1082,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/outbox':
+        specifier: workspace:*
+        version: link:../../packages/outbox
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth

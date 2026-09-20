@@ -519,6 +519,18 @@
         {
           "file": "services/identity/src/__tests__/migration-upgrade-with-data.integration.test.ts",
           "mode": "direct"
+        },
+        {
+          "file": "services/drivers/src/__tests__/outbox-drain.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/geography/src/__tests__/outbox-drain.integration.test.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/identity/src/__tests__/outbox-drain.integration.test.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
@@ -1653,5 +1665,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 63
+  "total": 179
 }

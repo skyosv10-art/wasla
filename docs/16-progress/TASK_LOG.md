@@ -1,5 +1,21 @@
 
 
+## 2026-09-20 — M2-07: Wave 2 outbox adapters — drivers, geography, identity (CLM-0242)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0242`
+- **Scope:** `services/drivers/`, `services/geography/`, `services/identity/`, `docs/16-progress/`, `docs/12-testing/`
+- **Branch:** `feat/m2-07-g1-wave2-outbox-adapters`
+- **What was done:**
+  - Created `DriverOutboxDrainStore` in `services/drivers/src/outbox/` — same pattern as customers (has `aggregate_type`, `aggregate_id` TEXT).
+  - Created `GeographyOutboxDrainStore` in `services/geography/src/outbox/` — handles missing `aggregate_type` column by returning `"geography"` as constant.
+  - Created `IdentityOutboxDrainStore` in `services/identity/src/outbox/` — handles UUID `aggregate_id` (no `aggregate_type`), returns `"identity"` as constant, `aggregateId` as string.
+  - Added `@wasla/outbox` dependency to all three service `package.json` files.
+  - Created 3 integration test files (4 tests each = 12 tests): claim→deliver→markPublished, delivery failure doesn't stop batch, alreadyPublished detection, SKIP LOCKED concurrency.
+  - Updated `pnpm-lock.yaml` with 3 new `@wasla/outbox` importers.
+  - Updated `BASELINE.json`: `test_files_tracked` 391→394, lock SHA + fingerprint recomputed.
+- **What was NOT done:** Wave 3 (delivery, matching, negotiations, orders, search — 5 remaining services). No `EventSinkPort` wired to a real message broker. G3/G4/G5 gaps not addressed.
+- **Next executable:** Merge wave 2 (CI green), then open claim for wave 3.
+
 ## 2026-09-20 — M2-07: Wave 1 outbox delivery implementation (CLM-0241)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0241`

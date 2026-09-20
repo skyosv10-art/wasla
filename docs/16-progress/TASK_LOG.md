@@ -1,6 +1,15 @@
 
 
 
+
+## 2026-09-20 — M2-07: تحريرُ حجزِ G3 موجةِ 1 (CLM-0245)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0245` · **الفرع:** `chore/release-clm-0245`
+- **Scope:** `docs/16-progress/`
+- **What was done:** `CLM-0245` نُقِلَ إلى `Released` بعدَ دمجِ PR #295 (squash `b6bc741`) بحكمِ CI **35/35 أخضر** على الفرعِ، وخُضرةِ `main` في التشغيلِ [35490169673](https://github.com/skyosv10-art/wasla/actions/runs/35490169673) (`completed success`). الفرعُ لم يُحذَف.
+- **What was NOT done:** لا تغييرَ في كودٍ ولا في بوّابةٍ. `M2-07` يبقى `In Progress`.
+- **Next executable:** موجةُ G3 الثانيةُ — dispatch · marketplace · matching · orders · search.
+
 ## 2026-09-20 — M2-07: G3 wave 1 — in-row retry tracking for 5 outbox tables (CLM-0245)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0245` · **الفرع:** `feat/m2-07-g3-wave1-retry-tracking`

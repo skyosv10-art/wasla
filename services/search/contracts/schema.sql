@@ -153,7 +153,9 @@ CREATE TABLE IF NOT EXISTS search_outbox (
     aggregate_id  TEXT         NOT NULL,
     payload       JSONB        NOT NULL,
     occurred_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    published_at  TIMESTAMPTZ
+    published_at  TIMESTAMPTZ,
+    attempts      INTEGER      NOT NULL DEFAULT 0,
+    last_error    TEXT
 );
 
 CREATE INDEX IF NOT EXISTS ix_search_outbox_unpublished

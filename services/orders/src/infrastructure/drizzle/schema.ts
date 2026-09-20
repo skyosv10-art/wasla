@@ -405,6 +405,9 @@ export const orderOutbox = pgTable(
       .default(sql`now()`),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
+    /** M2-07 G3 (wave 2): delivery attempts recorded in the row, not in memory. */
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     check(

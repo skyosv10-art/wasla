@@ -3,12 +3,12 @@
  *
  * الاختلافُ الأبرز: المفتاحُ الأساسيُّ هو `event_id` UUID لا BIGSERIAL `id`.
  * لا يوجد عمود `id` — نستخدم `event_id` كمُعرِّفٍ للصفّ. هذا الجدولُ يملكُ
- * `trace_id` (G4) و`sequence_number` لكن بلا `attempts`/`last_error` (G3).
+ * `trace_id` (G4) و`sequence_number` و`attempts`/`last_error` (G3 مُغلقٌ — CLM-0246).
  *
  * Scope: خدمة المطابقة · محوّلُ صندوقِ الصادر
  * Last Updated: 2026-09-20
  * Status: Active
- * Related Code: @wasla/outbox · ADR-042 · CLM-0243
+ * Related Code: @wasla/outbox · ADR-042 · CLM-0243 · CLM-0246 (G3 موجةُ 2)
  */
 
 import { sql } from "drizzle-orm";
@@ -38,7 +38,8 @@ export class MatchingOutboxDrainStore implements OutboxDrainStore {
              aggregate_id,
              payload,
              occurred_at,
-             trace_id
+             trace_id,
+             attempts
         FROM matching_outbox
        WHERE published_at IS NULL
        ORDER BY sequence_number ASC
@@ -55,18 +56,34 @@ export class MatchingOutboxDrainStore implements OutboxDrainStore {
       payload: row["payload"],
       occurredAt: String(row["occurred_at"]),
       traceId: row["trace_id"] ? String(row["trace_id"]) : null,
-      attempts: 0,
+      attempts: Number(row["attempts"]) || 0,
     }));
   }
 
   async markPublished(id: string, publishedAt: string): Promise<boolean> {
     const updated = await this.tx.execute(sql`
       UPDATE matching_outbox
-         SET published_at = ${publishedAt}
+         SET published_at = ${publishedAt},
+             attempts = attempts + 1,
+             last_error = NULL
        WHERE event_id = ${id}
          AND published_at IS NULL
       RETURNING event_id
     `);
     return rowsOf(updated).length === 1;
+  }
+
+  /**
+   * G3 مُغلقٌ لهذا الجدول (موجةُ 2 · `CLM-0246`): الفشلُ يُكتبُ في الصفِّ نفسِه،
+   * فلا يعودُ الحدثُ المسمومُ يبدو كحدثٍ طازجٍ في كلِّ مرورٍ.
+   */
+  async recordDeliveryFailure(id: string, error: string): Promise<void> {
+    await this.tx.execute(sql`
+      UPDATE matching_outbox
+         SET attempts = attempts + 1,
+             last_error = ${error}
+       WHERE event_id = ${id}
+         AND published_at IS NULL
+    `);
   }
 }

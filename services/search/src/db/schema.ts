@@ -208,6 +208,9 @@ export const searchOutbox = pgTable(
     payload: jsonb("payload").notNull(),
     occurredAt: instant("occurred_at").notNull().defaultNow(),
     publishedAt: instant("published_at"),
+    /** M2-07 G3 (wave 2): delivery attempts recorded in the row, not in memory. */
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
   },
   (table) => [
     unique("search_outbox_event_id_key").on(table.eventId),

@@ -4583,3 +4583,16 @@ geography · identity · matching · negotiations · orders · search) — وه�
 
 `G3` (10 جداولَ بلا `attempts`/`last_error`) · `G4` (6 بلا `trace_id`) · `G5` (`search` بلا
 دورةِ حياةِ DLQ) · `G6` (3 من 8) · `G7` · `G8` (متوقّعٌ).
+
+### تصحيحُ حكمِ CI الأحمرِ على هذه الدفعةِ (نفسُ الحجزِ `CLM-0244`)
+
+الدفعةُ الأولى أخفقت على ثلاثِ بواباتٍ (`verify` · `governance-guard` · `doc-coverage`)
+بسببٍ **واحدٍ مشترك**: قاعدةُ «التوثيق مع الدفع» تُلزِمُ أنَّ أيَّ تغييرٍ ذي معنى في
+`docs/08-infrastructure/` أو `docs/12-testing/` يقابلُهُ تغييرٌ في
+`docs/16-progress/LAUNCH_EXECUTION_BOARD.md` في النطاقِ نفسِه، ولم يكن صفُّ `M2-07` قد
+حُدِّث. أُضيفَ إلى الصفِّ نصُّ التصحيحِ والديونُ الباقيةُ الستُّ.
+
+**ولماذا لم يكشفْهُ القياسُ المحلّيُّ:** `verify-governance.sh` محليًّا قاسَ الفحصَ 3 على
+مدًى لا يطابقُ `origin/main..HEAD` الذي تستعملُهُ CI، فمرَّ أخضرَ. الدرسُ مُسجَّلٌ:
+`bash scripts/checks/require-doc-update.sh origin/main HEAD` يُشغَّلُ صريحًا قبلَ الدفعِ،
+ولا يُقرأُ الأخضرُ المحلّيُّ بديلًا عن حكمِ CI.

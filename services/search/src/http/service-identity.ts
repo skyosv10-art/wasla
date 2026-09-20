@@ -69,6 +69,13 @@ export const SEARCH_SCOPES = {
    * يداً على التيّارِ.
    */
   relayDeadLettersRequeue: "search:relay-dead-letters:requeue",
+  /**
+   * إقرارُ صفٍّ مسمومٍ (`G5` موجةُ المحضرِ · `CLM-0249`) — صلاحيّةٌ **رابعةٌ
+   * مستقلّةٌ**: الإقرارُ يُخرِجُ صفّاً من **حكمِ** التنبيهِ، وهيَ سلطةٌ تُمنَحُ
+   * لمَن يُحاسَبُ على الفقدِ لا لكلِّ مَن يُعيدُ صفّاً ولا لكلِّ مَن يُراقِبُ.
+   * وجمعُها بالإعادةِ كانَ سيُعطي لوحةَ إنقاذٍ قدرةَ **إسكاتِ** ما لا تُصلِحُهُ.
+   */
+  relayDeadLettersAcknowledge: "search:relay-dead-letters:acknowledge",
 } as const;
 
 export type SearchRouteConfig = ServiceIdentityRouteConfig;

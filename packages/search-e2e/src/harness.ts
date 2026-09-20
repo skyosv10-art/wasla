@@ -64,6 +64,7 @@ import {
   PostgresMarketplaceEventSource,
   PostgresProjectionStore,
   PostgresSearchDeadLetterStore,
+  PostgresSearchAcknowledgementStore,
   PostgresSearchRequeueStore,
   SearchIndexHealthProbe,
   SearchIndexReader,
@@ -233,6 +234,7 @@ export async function startGate(): Promise<GateContext> {
     // بوّابةُ خروجٍ تُجيزُ تركيباً أفقرَ من الإنتاجِ تُجيزُ ما لا يعملُ.
     deadLetterReadPort: new PostgresSearchDeadLetterStore(pool),
     relayRequeuePort: new PostgresSearchRequeueStore(pool),
+    relayAcknowledgementPort: new PostgresSearchAcknowledgementStore(pool),
     // M1-04 · الموجةُ الثانيةَ عشرةَ (CLM-0200): حدُّ البحث يفرضُ هويّةَ الخدمةِ،
     // والبوّابةُ تُوقّعُ نداءاتِها بدلَ أن يُخفَّفَ الحدُّ لراحتِها.
     serviceIdentity: {

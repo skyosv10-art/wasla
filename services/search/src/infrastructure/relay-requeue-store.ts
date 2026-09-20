@@ -162,10 +162,21 @@ export class PostgresSearchRequeueStore implements SearchRelayRequeuePort {
        * نداءٌ لا يمرُّ بالقرارِ. والقرارُ يبقى مصدرَ **الجوابِ** كي يُفرَّقَ «لا
        * صفَّ» من «صفٌّ ليسَ مسموماً» — وهوَ ما لا يستطيعُهُ عددُ الصفوفِ
        * المُعدَّلةِ وحدَهُ.
+       *
+       * **وثلاثيُّ الإقرارِ يُمحى معَ رفعِ النهائيّةِ** (موجةُ المحضرِ ·
+       * `CLM-0249`): القيدُ `ck_search_relay_consumed_events_ack_poisoned_only`
+       * يرفضُ صفّاً غيرَ مسمومٍ يحملُ إقراراً، فلولا هذا المحوُ لسقطَت المعاملةُ
+       * بـ`23514` على كلِّ صفٍّ أُقِرَّ بهِ ثمَّ أُعيدَ. والمحوُ **صوابٌ في
+       * المعنى** لا إرضاءٌ لقيدٍ: «عُولِجَ» حكمٌ على فقدٍ قائمٍ، وصفٌّ عادَ حيّاً
+       * لم يُعالَجْ بعدُ — وبقاءُ الإقرارِ عليهِ كانَ سيُخرِجُهُ من الحكمِ ثانيةً
+       * لو سُمَّ من جديدٍ، أي يُسكِتُ فقداً **جديداً** بإقرارٍ قديمٍ.
        */
       const updated = await client.query(
         `UPDATE ${tables.consumed}
-            SET status = $2
+            SET status = $2,
+                acknowledged_at = NULL,
+                acknowledged_by = NULL,
+                acknowledgement_reason = NULL
           WHERE outbox_id = $1::uuid AND status = $3`,
         [cmd.outboxId, SEARCH_REQUEUE_TARGET_STATUS, SEARCH_POISONED_STATUS],
       );

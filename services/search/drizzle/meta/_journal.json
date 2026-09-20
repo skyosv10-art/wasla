@@ -22,6 +22,13 @@
       "when": 1789891200000,
       "tag": "0002_outbox_retry_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789894800000,
+      "tag": "0003_relay_acknowledgement",
+      "breakpoints": true
     }
   ]
 }

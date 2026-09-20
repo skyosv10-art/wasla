@@ -20,6 +20,7 @@ import type {
   SearchProductsReadPort,
   SearchIndexHealthPort,
   SearchDeadLetterReadPort,
+  SearchRelayAcknowledgementPort,
   SearchRelayRequeuePort,
 } from "../ports.js";
 
@@ -75,6 +76,7 @@ export function buildEnforcedApp(options: {
   readonly deadLetterReadPort?: SearchDeadLetterReadPort;
   /** منفذُ إعادةِ المسمومِ (`G5` موجةُ اليدِ · `CLM-0248`) — يُحقَنُ وهميّاً بلا قاعدةٍ. */
   readonly relayRequeuePort?: SearchRelayRequeuePort;
+  readonly relayAcknowledgementPort?: SearchRelayAcknowledgementPort;
   /** ساعةٌ مُحقونةٌ لقياسِ حكمِ العمرِ بلا انتظارِ يومٍ. */
   readonly now?: () => Date;
   readonly keys?: ServiceAuthKeyRegistry;
@@ -88,6 +90,9 @@ export function buildEnforcedApp(options: {
     ...(options.deadLetterReadPort === undefined
       ? {}
       : { deadLetterReadPort: options.deadLetterReadPort }),
+    ...(options.relayAcknowledgementPort === undefined
+      ? {}
+      : { relayAcknowledgementPort: options.relayAcknowledgementPort }),
     ...(options.relayRequeuePort === undefined
       ? {}
       : { relayRequeuePort: options.relayRequeuePort }),

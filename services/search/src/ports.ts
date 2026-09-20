@@ -18,6 +18,7 @@ import type { StoreProjection, ProductProjection } from "./domain/projector.js";
 import type { SearchPage } from "./domain/model.js";
 import type { SearchDeadLetterLedger, SearchDeadLetterMetric } from "./domain/relay-dead-letters.js";
 import type { SearchRequeueDecision } from "./domain/relay-requeue.js";
+import type { SearchAcknowledgementDecision } from "./domain/relay-acknowledgement.js";
 
 export interface MarketplaceEventSource {
   /** Read up to `limit` outbox rows strictly after the checkpoint (or from zero). */
@@ -141,4 +142,25 @@ export interface SearchRelayRequeuePort {
     readonly ledger: SearchDeadLetterLedger;
     readonly outboxId: string;
   }): Promise<SearchRequeueDecision>;
+}
+
+/**
+ * إقرارُ صفٍّ مسمومٍ (فجوةُ `G5` · موجةُ **المحضرِ** · `CLM-0249`).
+ *
+ * منفذٌ **رابعٌ مستقلٌّ** لا توسيعٌ لمنفذِ الإعادةِ: الإعادةُ تُغيِّرُ حالةَ
+ * صفٍّ وتُرجِعُ نقطةَ تقدُّمٍ، والإقرارُ لا يمسُّ واحدةً منهما بل يُضيفُ شهادةً.
+ * وجمعُهما كانَ يجعلُ كلَّ مَن يُؤذَنُ لهُ أن يُقِرَّ يملكُ يداً على التيّارِ.
+ *
+ * و`acknowledgedBy` **يُمرَّرُ مُركَّباً** من الحدِّ HTTP لا يُقرأُ هنا من جسمٍ:
+ * مصدرُهُ الهويّةُ المُثبَتةُ وحدَها، والمنفذُ لا يعرِفُ عن HTTP شيئاً فلا يستطيعُ
+ * تركيبَهُ بنفسِهِ.
+ */
+export interface SearchRelayAcknowledgementPort {
+  acknowledgePoisonedEvent(cmd: {
+    readonly ledger: SearchDeadLetterLedger;
+    readonly outboxId: string;
+    readonly acknowledgedBy: string;
+    readonly reason: string;
+    readonly acknowledgedAt: Date;
+  }): Promise<SearchAcknowledgementDecision>;
 }

@@ -37,6 +37,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import type {
   SearchDeadLetterReadPort,
+  SearchRelayAcknowledgementPort,
   SearchRelayRequeuePort,
   SearchIndexHealthPort,
   SearchProductsReadPort,
@@ -50,6 +51,12 @@ import {
 import {
   SEARCH_REQUEUE_TARGET_STATUS,
 } from "../domain/relay-requeue.js";
+import {
+  SEARCH_ACKNOWLEDGEMENT_REASON_MAX_LENGTH,
+  SEARCH_ACKNOWLEDGEMENT_REASON_MIN_LENGTH,
+  composeSearchAcknowledger,
+  normalizeSearchAcknowledgementReason,
+} from "../domain/relay-acknowledgement.js";
 import {
   SearchConflictError,
   SearchNotFoundError,
@@ -89,6 +96,12 @@ export interface SearchHttpDeps {
    * أُعيدَ ولم يُعَدْ.
    */
   readonly relayRequeuePort?: SearchRelayRequeuePort;
+  /**
+   * منفذُ إقرارِ المسمومِ لـ`POST …/acknowledgement` (`G5` موجةُ المحضرِ ·
+   * `CLM-0249`). اختياريٌّ **في الشكلِ** على سابقةِ أخيهِ حرفاً، ومسارُهُ يُجيبُ
+   * 503 حينَ يغيبُ: لا يُدَّعى إقرارٌ لم يُكتَبْ في دفترِ مسؤوليّةٍ.
+   */
+  readonly relayAcknowledgementPort?: SearchRelayAcknowledgementPort;
   /**
    * ساعةُ حكمِ التنبيهِ — تُحقَنُ في الاختبارِ كي يُقاسَ حكمُ العمرِ بلا انتظارِ
    * يومٍ حقيقيٍّ. والافتراضُ ساعةُ النظامِ.
@@ -187,6 +200,43 @@ function parseRequeueParams(params: unknown): {
   return { ledger: ledger as SearchDeadLetterLedger, outboxId };
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+ * جسمُ الإقرارِ — `reason` وحدَهُ، ولا مفتاحَ سِواهُ
+ *
+ * والمفاتيحُ الزائدةُ **تُرفَضُ ولا تُهمَلُ صمتاً**: مُنادٍ يُرسِلُ
+ * `acknowledged_by` ويُهمَلُ حقلُهُ بلا خبرٍ يظنُّ أنَّهُ وقَّعَ باسمٍ اختارَهُ،
+ * وهوَ ظنٌّ عن **دفترِ مسؤوليّةٍ** — فالرفضُ الصريحُ يُعلِّمُهُ أنَّ المُقِرَّ
+ * من الهويّةِ المُثبَتةِ وحدَها.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+function parseAcknowledgementReasonBody(body: unknown): string {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    throw new SearchValidationError(
+      "SEARCH_RELAY_ACKNOWLEDGEMENT_BODY_INVALID",
+      "جسمٌ كائنٌ فيهِ `reason` وحدَهُ — ولا إقرارَ بلا سببٍ",
+    );
+  }
+
+  const extra = Object.keys(body as Record<string, unknown>).filter((key) => key !== "reason");
+  if (extra.length > 0) {
+    throw new SearchValidationError(
+      "SEARCH_RELAY_ACKNOWLEDGEMENT_BODY_INVALID",
+      `مفاتيحُ لا تُقبَلُ في جسمِ الإقرارِ (${extra.join(" · ")}) — المُقِرُّ من الهويّةِ المُثبَتةِ لا من الجسمِ`,
+    );
+  }
+
+  const normalized = normalizeSearchAcknowledgementReason(
+    (body as Record<string, unknown>)["reason"],
+  );
+  if (normalized.reason === "rejected") {
+    throw new SearchValidationError(
+      "SEARCH_RELAY_ACKNOWLEDGEMENT_REASON_INVALID",
+      `\`reason\` نصٌّ بينَ ${SEARCH_ACKNOWLEDGEMENT_REASON_MIN_LENGTH} و${SEARCH_ACKNOWLEDGEMENT_REASON_MAX_LENGTH} حرفاً بعدَ التقليمِ (${normalized.because})`,
+    );
+  }
+  return normalized.value;
+}
+
 export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
   const app = Fastify({
     // request.id is used as trace_id in error bodies.
@@ -280,10 +330,22 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
         applied_filter: { event_type_limit: eventTypeLimit },
         measured_at: metric.measuredAt,
         total_poisoned: metric.totalPoisoned,
+        /*
+         * **والمقسومُ منشورٌ لا مطويٌّ** (موجةُ المحضرِ · `CLM-0249`):
+         * `total_poisoned` هوَ الواقعُ، و`total_unacknowledged_poisoned` هوَ ما
+         * يُحاكَمُ عليهِ. ونشرُ الاثنينِ شرطٌ لا تزيُّدٌ: مُشغِّلٌ يرى
+         * `severity: ok` و`total_poisoned: 40` ولا يرى المقسومَ يقرأُ المقياسَ
+         * معطوباً — أو أسوأَ: يصدِّقُهُ وينسى أربعينَ صفّاً.
+         */
+        total_acknowledged_poisoned: metric.totalAcknowledgedPoisoned,
+        total_unacknowledged_poisoned: metric.totalUnacknowledgedPoisoned,
         ledgers: metric.ledgers.map((ledger) => ({
           ledger: ledger.ledger,
           poisoned: ledger.poisoned,
+          acknowledged_poisoned: ledger.acknowledgedPoisoned,
+          unacknowledged_poisoned: ledger.unacknowledgedPoisoned,
           oldest_poisoned_at: ledger.oldestPoisonedAt,
+          oldest_unacknowledged_poisoned_at: ledger.oldestUnacknowledgedPoisonedAt,
           newest_poisoned_at: ledger.newestPoisonedAt,
           by_event_type: ledger.byEventType.map((entry) => ({
             event_type: entry.eventType,
@@ -294,6 +356,8 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
           severity: verdict.severity,
           because: verdict.because,
           oldest_poisoned_age_seconds: verdict.oldestPoisonedAgeSeconds,
+          oldest_unacknowledged_poisoned_age_seconds:
+            verdict.oldestUnacknowledgedPoisonedAgeSeconds,
           /*
            * الحدُّ منشورٌ في الجسمِ لا في وثيقةٍ وحدَها: العمرُ مقيسٌ من
            * `consumed_at` — أوّلِ محاولةٍ لا لحظةِ الفقدِ (دفترُ البحثِ لا يملكُ
@@ -393,6 +457,145 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
          * أوّلِ دورةٍ بسببٍ جديدٍ.
          */
         evidence_preserved: ["attempt_count", "last_error", "consumed_at"],
+        gates_readiness: false,
+      });
+    },
+  );
+
+  /*
+   * ── إقرارُ صفٍّ مسمومٍ (`G5` موجةُ **المحضرِ** · `CLM-0249`) ───────────────
+   *
+   * `POST /search/relay/dead-letters/:ledger/:outboxId/acknowledgement`
+   *
+   * موجةُ العينِ أعطَت أن يُعرَفَ، وموجةُ اليدِ أن يُعادَ، وهذهِ **محضرُ حكمٍ**:
+   * صفٌّ سببُ سُمِّهِ قائمٌ فإعادتُهُ تُسَمِّمُهُ ثانيةً، وتركُهُ يُبقي `warning`
+   * قائماً إلى الأبدِ حتّى يُصمَّتَ التنبيهُ — وبعدَ التصميتِ لا يُرى المسمومُ
+   * **الجديدُ** أيضاً.
+   *
+   * ## و200 لا 202 ولا 204
+   *
+   * الفعلُ **تمَّ كاملاً** عندَ الجوابِ: الثلاثيُّ مكتوبٌ ومُرتَهَنٌ — ولا دورةَ
+   * مُرحِّلٍ تنتظِرُهُ كما في مسارِ الإعادةِ، فـ202 كانَ سيكذِبُ بالتأجيلِ. و204
+   * كانَ سيمنعُ المُشغِّلَ من رؤيةِ **الاسمِ المُركَّبِ الذي كُتِبَ عنهُ**، وهوَ
+   * أوّلُ ما يُراجَعُ في تحقيقٍ.
+   *
+   * ## ونداءٌ ثانٍ لا يكتُبُ فوقَ الأوّلِ — 200 `already_acknowledged`
+   *
+   * ولا 409: المُنادي لم يُخطِئْ، والحالةُ التي أرادَها **قائمةٌ**. والجوابُ
+   * يحمِلُ إقرارَ الأوّلِ كما هوَ فيرى الثاني اسمَ مَن سبقَهُ وسببَهُ ولا يظنُّ
+   * الواقعةَ لهُ.
+   *
+   * ## ومسارُ تشغيلٍ موثَّقٌ خارجَ العقدِ المنشورِ
+   *
+   * سابقةُ موجتَي العينِ واليدِ حرفاً: موثَّقٌ في `docs/04-api/SEARCH_HTTP.md` لا
+   * في `contracts/api.openapi.yml`.
+   *
+   * ## ولا يمسُّ الجاهزيّةَ ولا يُنقِصُ `total_poisoned`
+   *
+   * الصفُّ يبقى `poisoned` ومعدوداً؛ والمُستثنى من **الحكمِ** وحدَهُ
+   * (`total_unacknowledged_poisoned`). و`gates_readiness: false` منشورٌ في الجسمِ.
+   */
+  app.post(
+    "/search/relay/dead-letters/:ledger/:outboxId/acknowledgement",
+    { config: internalScoped(SEARCH_SCOPES.relayDeadLettersAcknowledge) },
+    async (request, reply) => {
+      if (deps.relayAcknowledgementPort === undefined) {
+        // 503 لا نجاحٌ صامتٌ: لا يُدَّعى إقرارٌ لم يُكتَبْ.
+        throw new SearchUnavailableError(
+          "SEARCH_INTERNAL_ERROR",
+          "لا منفذَ إقرارٍ مُركَّبٌ — لا يُدَّعى إقرارٌ لم يُكتَبْ (G5)",
+        );
+      }
+
+      /*
+       * نفسُ مُحلِّلِ مُعامِلَي الإعادةِ لا نسخةٌ منهُ: الشكلُ والقائمةُ
+       * المُصرَّحةُ واحدةٌ، ونسخةٌ ثانيةٌ كانت ستنحرِفُ أوّلَ مرّةٍ يُضافُ دفترٌ.
+       */
+      const { ledger, outboxId } = parseRequeueParams(request.params);
+      const reason = parseAcknowledgementReasonBody(request.body);
+
+      const caller = request.serviceCaller;
+      if (caller === undefined) {
+        /*
+         * مسارٌ مُغلَقٌ بصلاحيّةٍ، فغيابُ الهويّةِ هنا عطبُ تركيبٍ لا خطأُ مُنادٍ:
+         * 503 ولا إقرارٌ بلا مُقِرٍّ.
+         */
+        throw new SearchUnavailableError(
+          "SEARCH_INTERNAL_ERROR",
+          "لا هويّةَ مُثبَتةً على مسارٍ مُغلَقٍ — لا يُكتَبُ إقرارٌ بلا مُقِرٍّ",
+        );
+      }
+
+      const composed = composeSearchAcknowledger({
+        serviceName: caller.serviceName,
+        onBehalfOfPublicId: caller.onBehalfOfPublicId,
+      });
+      if (composed.acknowledger === "rejected") {
+        throw new SearchUnavailableError(
+          "SEARCH_INTERNAL_ERROR",
+          `تعذَّرَ تركيبُ اسمِ المُقِرِّ من الهويّةِ المُثبَتةِ (${composed.because})`,
+        );
+      }
+
+      const acknowledgedAt = (deps.now ?? (() => new Date()))();
+      const decision = await deps.relayAcknowledgementPort.acknowledgePoisonedEvent({
+        ledger,
+        outboxId,
+        acknowledgedBy: composed.value,
+        reason,
+        acknowledgedAt,
+      });
+
+      if (decision.outcome === "rejected") {
+        if (decision.reason === "not_found") {
+          throw new SearchNotFoundError(
+            "SEARCH_RELAY_DEAD_LETTER_NOT_FOUND",
+            "لا صفَّ بهذا المُعرِّفِ في هذا الدفترِ",
+          );
+        }
+        /*
+         * وكودٌ **مُعادٌ** من مسارِ الإعادةِ لا ثالثٌ جديدٌ: «الصفُّ موجودٌ
+         * وحالتُهُ ليست `poisoned`» هيَ الواقعةُ نفسُها بالمعنى نفسِهِ، وكودٌ
+         * جديدٌ لمسارٍ مجاورٍ كانَ سيجعلُ مُشغِّلاً يتعلَّمُ قاموسَينِ لمعنىً واحدٍ.
+         */
+        throw new SearchConflictError(
+          "SEARCH_RELAY_DEAD_LETTER_NOT_POISONED",
+          `الصفُّ موجودٌ وحالتُهُ «${decision.observedStatus ?? "unknown"}» لا «poisoned» — لا يُقرَّ بهِ`,
+        );
+      }
+
+      const acknowledgement =
+        decision.outcome === "already_acknowledged"
+          ? {
+              acknowledged_at: decision.acknowledgedAt,
+              acknowledged_by: decision.acknowledgedBy,
+              reason: decision.acknowledgementReason,
+            }
+          : {
+              acknowledged_at: acknowledgedAt.toISOString(),
+              acknowledged_by: composed.value,
+              reason,
+            };
+
+      return reply.status(200).send({
+        outcome: decision.outcome,
+        ledger,
+        outbox_id: outboxId,
+        /*
+         * منشورٌ صريحاً: الإقرارُ **لا يُخرِجُ الصفَّ من العدِّ**. ومُشغِّلٌ
+         * يقرأُ `acknowledged` ثمَّ يرى `total_poisoned` لم ينقُصْ في المقياسِ
+         * كانَ سيفتحُ حادثةً على مسارٍ سليمٍ؛ وقولُ ذلكَ في وثيقةٍ وحدَها لا
+         * يقرأُهُ مَن هوَ في حادثةٍ.
+         */
+        still_counted_in_total_poisoned: true,
+        excluded_from_severity: true,
+        /*
+         * والدليلُ لا يُمحى ولا يُحرَّكُ: `consumed_at` خاصّةً هوَ مقياسُ عمرِ
+         * الفقدِ في هذا الدفترِ، وتحريكُهُ عندَ الإقرارِ كانَ يُقصِّرُ عمرَ فقدٍ
+         * لم يُحَلَّ.
+         */
+        evidence_preserved: ["status", "attempt_count", "last_error", "consumed_at"],
+        acknowledgement,
         gates_readiness: false,
       });
     },

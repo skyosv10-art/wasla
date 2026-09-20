@@ -106,9 +106,11 @@ import type {
   DriverProfileRepository,
   EligibilityLogRepository,
   EligibilityPolicyRepository,
+  IdempotencyRecord,
   IdempotencyStore,
   Outbox,
   ProfileMutation,
+  RecordedResponse,
   ServiceZoneRepository,
   VehicleRepository,
 } from "../../ports.js";
@@ -1007,27 +1009,51 @@ export class PostgresDriverOutbox implements Outbox {
 export class PostgresDriverIdempotencyStore implements IdempotencyStore {
   constructor(private readonly db: DbOrTx) {}
 
-  async find(key: string): Promise<string | null> {
+  async find(key: string): Promise<IdempotencyRecord | null> {
     const rows = await this.db
-      .select({ fingerprint: driverIdempotency.payloadFingerprint })
+      .select({
+        fingerprint: driverIdempotency.payloadFingerprint,
+        responseStatus: driverIdempotency.responseStatus,
+        responseBody: driverIdempotency.responseBody,
+      })
       .from(driverIdempotency)
       .where(eq(driverIdempotency.idempotencyKey, key))
       .limit(1);
     const row = rows[0];
-    return row === undefined ? null : row.fingerprint;
+    if (row === undefined) return null;
+    return {
+      payloadFingerprint: row.fingerprint,
+      recordedResponse:
+        row.responseStatus !== null && row.responseBody !== null
+          ? { status: row.responseStatus, body: row.responseBody }
+          : null,
+    };
   }
 
-  async remember(key: string, payloadFingerprint: string): Promise<void> {
+  async remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void> {
     // Upsert, not insert: `remember` is called on a path a client is allowed to
     // retry, and a primary-key violation on the second attempt would turn a
     // successful retry into a 500. Detecting a REUSED key is the use case's job (it
     // compares the stored fingerprint before writing); this method only records.
     await this.db
       .insert(driverIdempotency)
-      .values({ idempotencyKey: key, payloadFingerprint })
+      .values({
+        idempotencyKey: key,
+        payloadFingerprint,
+        responseStatus: response.status,
+        responseBody: response.body as never,
+      })
       .onConflictDoUpdate({
         target: driverIdempotency.idempotencyKey,
-        set: { payloadFingerprint },
+        set: {
+          payloadFingerprint,
+          responseStatus: response.status,
+          responseBody: response.body as never,
+        },
       });
   }
 }

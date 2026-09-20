@@ -60,7 +60,13 @@ export async function cancelDispatchJob(
 
   const job = await deps.jobs.find(jobId);
   if (job === null) throw jobNotFound(traceId);
-  if (decision === "replay") return { job, cancelledOffers: 0, replayed: true };
+  if (decision.kind === "replay") {
+    const body = decision.response.body as { replayed: boolean };
+    return { ...body, replayed: true } as never;
+  }
+  if (decision.kind === "legacy-replay") {
+    // Pre-G6 row: reprocess (same as fresh, but key exists)
+  }
   if (isTerminalJobStatus(job.status)) throw jobNotCancellable(job.status, traceId);
 
   const now = deps.clock.now();
@@ -110,7 +116,11 @@ export async function cancelDispatchJob(
     ),
   );
 
-  await deps.idempotency.remember(idempotencyKey, payloadFingerprint);
+  const result = { job: cancelled, cancelledOffers, replayed: false };
+  await deps.idempotency.remember(idempotencyKey, payloadFingerprint, {
+    status: 200,
+    body: result,
+  });
 
-  return { job: cancelled, cancelledOffers, replayed: false };
+  return result;
 }

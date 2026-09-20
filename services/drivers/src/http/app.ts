@@ -265,13 +265,11 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
         registrationKey(waslaPublicId, idempotencyKey),
         fingerprint,
       );
-      if (verdict === "replay") {
-        const existing = await deps.profiles.find(waslaPublicId);
-        // A remembered key whose driver is gone means the registration was rolled back
-        // (or the row was removed). Registering again is the honest repair: the caller
-        // asked for a driver and there is none.
-        if (existing !== null) return { profile: existing, replayed: true };
+      if (verdict.kind === "replay") {
+        const body = verdict.response.body as { replayed: boolean };
+        return { ...body, replayed: true } as never;
       }
+      // legacy-replay falls through to reprocessing (pre-G6 row)
       const profile = await registerDriver(deps, {
         waslaPublicId,
         displayName: nullableString(body, "display_name"),
@@ -280,7 +278,13 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
         serviceKinds: body.service_kinds,
         traceId,
       });
-      return { profile, replayed: false };
+      const result = { profile, replayed: false };
+      await deps.idempotency.remember(
+        registrationKey(waslaPublicId, idempotencyKey),
+        fingerprint,
+        { status: 201, body: result },
+      );
+      return result;
     });
 
     return reply

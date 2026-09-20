@@ -86,7 +86,11 @@ export async function submitDocument(
   const existing = await deps.documents.findByIdempotencyKey(waslaPublicId, idempotencyKey);
   if (existing !== null) {
     const remembered = await deps.idempotency.find(memoryKey);
-    if (remembered !== null && remembered !== fingerprint) throw idempotencyKeyReused();
+    if (remembered !== null && remembered.payloadFingerprint !== fingerprint) throw idempotencyKeyReused();
+    if (remembered !== null && remembered.recordedResponse !== null) {
+      const body = remembered.recordedResponse.body as { replayed: boolean };
+      return { ...body, replayed: true } as never;
+    }
     return existing;
   }
 
@@ -112,7 +116,7 @@ export async function submitDocument(
     createdAt: now,
   });
 
-  await deps.idempotency.remember(memoryKey, fingerprint);
+  await deps.idempotency.remember(memoryKey, fingerprint, { status: 201, body: document });
   await syncVerificationStatus(deps, waslaPublicId, now);
   await deps.outbox.append(
     driverDocumentSubmitted(document, {

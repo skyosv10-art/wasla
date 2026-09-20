@@ -106,8 +106,12 @@ export async function acceptOffer(
   const job = await deps.jobs.find(offer.jobId);
   if (job === null) throw jobNotFound(traceId);
 
-  if (decision === "replay") {
-    return { offer, job, availabilitySynced: true, replayed: true };
+  if (decision.kind === "replay") {
+    const body = decision.response.body as { replayed: boolean };
+    return { ...body, replayed: true } as never;
+  }
+  if (decision.kind === "legacy-replay") {
+    // Pre-G6 row: reprocess (same as fresh, but key exists)
   }
 
   if (offer.status !== "offered") throw offerAlreadyResolved(offer.status, traceId);
@@ -217,7 +221,11 @@ export async function acceptOffer(
     availabilitySynced = false;
   }
 
-  await deps.idempotency.remember(idempotencyKey, payloadFingerprint);
+  const result = { offer: accepted, job: assigned, availabilitySynced, replayed: false };
+  await deps.idempotency.remember(idempotencyKey, payloadFingerprint, {
+    status: 200,
+    body: result,
+  });
 
-  return { offer: accepted, job: assigned, availabilitySynced, replayed: false };
+  return result;
 }

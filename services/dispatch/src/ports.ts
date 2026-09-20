@@ -183,9 +183,31 @@ export interface Outbox {
  * payload) succeed while a caller bug (same key, different payload) is refused with
  * 409 instead of silently overwriting a different order's job.
  */
+/**
+ * The stored response for an idempotent write — returned verbatim on replay.
+ *
+ * G6 (CLM-0252): `response_status` and `response_body` are nullable in the
+ * database for backfill safety. A null `recordedResponse` means the row predates
+ * G6 and the response was never captured; callers fall back to reprocessing.
+ */
+export interface RecordedResponse {
+  readonly status: number;
+  readonly body: unknown;
+}
+
+/** What `find` returns: the fingerprint plus the captured response (if any). */
+export interface IdempotencyRecord {
+  readonly payloadFingerprint: string;
+  readonly recordedResponse: RecordedResponse | null;
+}
+
 export interface IdempotencyStore {
-  find(key: string): Promise<string | null>;
-  remember(key: string, payloadFingerprint: string): Promise<void>;
+  find(key: string): Promise<IdempotencyRecord | null>;
+  remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void>;
 }
 
 /**

@@ -31,9 +31,11 @@ import type {
   Clock,
   DecisionRepository,
   IdGenerator,
+  IdempotencyRecord,
   IdempotencyStore,
   MatchingDependencies,
   Outbox,
+  RecordedResponse,
   RulesetRepository,
   UpsertCandidacyInput,
   ZoneHierarchyPort,
@@ -184,14 +186,26 @@ export class InMemoryOutbox implements Outbox {
 }
 
 export class InMemoryIdempotencyStore implements IdempotencyStore {
-  private readonly keys = new Map<string, string>();
+  private readonly keys = new Map<
+    string,
+    { fingerprint: string; response: RecordedResponse | null }
+  >();
 
-  async find(key: string): Promise<string | null> {
-    return this.keys.get(key) ?? null;
+  async find(key: string): Promise<IdempotencyRecord | null> {
+    const entry = this.keys.get(key);
+    if (!entry) return null;
+    return {
+      payloadFingerprint: entry.fingerprint,
+      recordedResponse: entry.response,
+    };
   }
 
-  async remember(key: string, payloadFingerprint: string): Promise<void> {
-    this.keys.set(key, payloadFingerprint);
+  async remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void> {
+    this.keys.set(key, { fingerprint: payloadFingerprint, response });
   }
 }
 

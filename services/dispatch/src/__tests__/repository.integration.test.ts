@@ -503,22 +503,24 @@ describe.skipIf(!PG_ENABLED)("Postgres dispatch repositories", () => {
 
   describe("dispatch_idempotency", () => {
     it("remembers a fingerprint and answers null for an unknown key", async () => {
-      await pg.idempotency.remember("accept-offer-key-1", "b".repeat(64));
-      expect(await pg.idempotency.find("accept-offer-key-1")).toBe("b".repeat(64));
+      await pg.idempotency.remember("accept-offer-key-1", "b".repeat(64), { status: 200, body: { ok: true } });
+      const found = await pg.idempotency.find("accept-offer-key-1");
+      expect(found?.payloadFingerprint).toBe("b".repeat(64));
+      expect(found?.recordedResponse).toEqual({ status: 200, body: { ok: true } });
       expect(await pg.idempotency.find("never-seen-key-1")).toBeNull();
     });
 
     it("treats a repeat of the same key as a retry, not a conflict", async () => {
       // The upsert. A primary-key violation here would turn a network retry into a
       // 500 AFTER the use case had already decided the call was a replay.
-      await pg.idempotency.remember("accept-offer-key-2", "c".repeat(64));
+      await pg.idempotency.remember("accept-offer-key-2", "c".repeat(64), { status: 200, body: {} });
       await expect(
-        pg.idempotency.remember("accept-offer-key-2", "c".repeat(64)),
+        pg.idempotency.remember("accept-offer-key-2", "c".repeat(64), { status: 200, body: {} }),
       ).resolves.toBeUndefined();
     });
 
     it("refuses a key outside the 8..128 the domain validator enforces", async () => {
-      expect(await errorCodeOf(pg.idempotency.remember("short", "d".repeat(64)))).toBe(
+      expect(await errorCodeOf(pg.idempotency.remember("short", "d".repeat(64), { status: 200, body: {} }))).toBe(
         "DISPATCH_VALIDATION_FAILED",
       );
     });

@@ -273,9 +273,23 @@ export interface Outbox {
  * lets a retry (same key, same payload) succeed while a caller bug (same key,
  * different payload) is refused with 409 instead of silently overwriting.
  */
+export interface RecordedResponse {
+  readonly status: number;
+  readonly body: unknown;
+}
+
+export interface IdempotencyRecord {
+  readonly payloadFingerprint: string;
+  readonly recordedResponse: RecordedResponse | null;
+}
+
 export interface IdempotencyStore {
-  find(key: string): Promise<string | null>;
-  remember(key: string, payloadFingerprint: string): Promise<void>;
+  find(key: string): Promise<IdempotencyRecord | null>;
+  remember(
+    key: string,
+    payloadFingerprint: string,
+    response: RecordedResponse,
+  ): Promise<void>;
 }
 
 /** Everything a use case needs, passed explicitly rather than imported. */

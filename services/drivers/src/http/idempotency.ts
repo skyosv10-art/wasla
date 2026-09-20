@@ -35,12 +35,18 @@
  * every registered driver's name into a table nobody thinks of as personal data, and
  * that is precisely the copy the privacy rule exists to prevent. A SHA-256 of the
  * canonical form compares equal for equal payloads and carries nothing back.
+ *
+ * ## G6 (CLM-0252): response caching
+ *
+ * The store now records the HTTP response alongside the fingerprint. On replay, the
+ * cached response is returned instead of reprocessing. Legacy rows (pre-G6) have a
+ * null `recordedResponse`; the caller reprocesses, preserving pre-G6 behaviour.
  */
 
 import { createHash } from "node:crypto";
 
 import { idempotencyKeyReused } from "../domain/errors.js";
-import type { DriverDependencies } from "../ports.js";
+import type { DriverDependencies, RecordedResponse } from "../ports.js";
 
 /** Namespaced so a key reused across operations is not a collision between them. */
 export function registrationKey(waslaPublicId: string, idempotencyKey: string): string {
@@ -63,7 +69,10 @@ export function payloadFingerprint(body: Record<string, unknown>): string {
   return createHash("sha256").update(canonical).digest("hex");
 }
 
-export type ReplayVerdict = "fresh" | "replay";
+export type ReplayVerdict =
+  | { kind: "fresh" }
+  | { kind: "replay"; response: RecordedResponse }
+  | { kind: "legacy-replay" };
 
 /**
  * Compare this key against what was remembered, and remember it when it is new.
@@ -79,10 +88,9 @@ export async function classifyReplay(
   fingerprint: string,
 ): Promise<ReplayVerdict> {
   const remembered = await deps.idempotency.find(key);
-  if (remembered === null) {
-    await deps.idempotency.remember(key, fingerprint);
-    return "fresh";
-  }
-  if (remembered !== fingerprint) throw idempotencyKeyReused();
-  return "replay";
+  if (remembered === null) return { kind: "fresh" };
+  if (remembered.payloadFingerprint !== fingerprint) throw idempotencyKeyReused();
+  if (remembered.recordedResponse !== null)
+    return { kind: "replay", response: remembered.recordedResponse };
+  return { kind: "legacy-replay" };
 }

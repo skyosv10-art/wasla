@@ -67,7 +67,13 @@ export async function rejectOffer(
   if (offer === null) throw offerNotFound(traceId);
   const job = await deps.jobs.find(offer.jobId);
   if (job === null) throw jobNotFound(traceId);
-  if (decision === "replay") return { offer, job, replayed: true };
+  if (decision.kind === "replay") {
+    const body = decision.response.body as { replayed: boolean };
+    return { ...body, replayed: true } as never;
+  }
+  if (decision.kind === "legacy-replay") {
+    // Pre-G6 row: reprocess (same as fresh, but key exists)
+  }
 
   if (offer.status !== "offered") throw offerAlreadyResolved(offer.status, traceId);
   const now = deps.clock.now();
@@ -109,7 +115,11 @@ export async function rejectOffer(
     ),
   );
 
-  await deps.idempotency.remember(idempotencyKey, payloadFingerprint);
+  const result = { offer: rejected, job, replayed: false };
+  await deps.idempotency.remember(idempotencyKey, payloadFingerprint, {
+    status: 200,
+    body: result,
+  });
 
-  return { offer: rejected, job, replayed: false };
+  return result;
 }

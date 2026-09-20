@@ -259,20 +259,18 @@ describe.skipIf(!ENABLED)("DriverOutboxDrainStore integration", () => {
     expect(claimedAttempts).toBe(2);
   });
 
-});
-
   // ── G4 (CLM-0250): trace_id يُقرأ من الصف ويصل العقد المشترك ────────────────
   it("reads trace_id from the row into OutboxRecord (G4)", async () => {
-    if (!PG_ENABLED) return;
+    if (!ENABLED) return;
 
     const TRACE = "trace-driver-g4-0001";
-    await fixture.pool.query(
+    await pool.query(
       `INSERT INTO driver_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload, trace_id)
        VALUES ($1, 'driver.registered', 'v1', 'driver', 'WS-DRI-0001', '{}'::jsonb, $2)`,
       [TEST_EVENT_ID, TRACE],
     );
 
-    const claimed = await fixture.db.transaction(async (tx) => {
+    const claimed = await db.transaction(async (tx) => {
       const store = new DriverOutboxDrainStore(tx);
       return store.claimUnpublished(10);
     });
@@ -282,15 +280,15 @@ describe.skipIf(!ENABLED)("DriverOutboxDrainStore integration", () => {
   });
 
   it("returns null trace_id when the column is null (G4)", async () => {
-    if (!PG_ENABLED) return;
+    if (!ENABLED) return;
 
-    await fixture.pool.query(
+    await pool.query(
       `INSERT INTO driver_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload)
        VALUES ($1, 'driver.registered', 'v1', 'driver', 'WS-DRI-0002', '{}'::jsonb)`,
       [TEST_EVENT_ID_2],
     );
 
-    const claimed = await fixture.db.transaction(async (tx) => {
+    const claimed = await db.transaction(async (tx) => {
       const store = new DriverOutboxDrainStore(tx);
       return store.claimUnpublished(10);
     });
@@ -298,3 +296,5 @@ describe.skipIf(!ENABLED)("DriverOutboxDrainStore integration", () => {
     expect(claimed).toHaveLength(1);
     expect(claimed[0].traceId).toBeNull();
   });
+
+});

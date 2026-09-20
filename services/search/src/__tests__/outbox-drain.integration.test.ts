@@ -238,8 +238,6 @@ describe.skipIf(!PG_ENABLED)("SearchOutboxDrainStore integration", () => {
     expect(claimedAttempts).toBe(2);
   });
 
-});
-
   // ── G4 (CLM-0250): trace_id يُقرأ من الصف ويصل العقد المشترك ────────────────
   it("reads trace_id from the row into OutboxRecord (G4)", async () => {
     if (!PG_ENABLED) return;
@@ -251,7 +249,7 @@ describe.skipIf(!PG_ENABLED)("SearchOutboxDrainStore integration", () => {
       [TEST_EVENT_ID, TRACE],
     );
 
-    const claimed = await fixture.db.transaction(async (tx) => {
+    const claimed = await db.transaction(async (tx) => {
       const store = new SearchOutboxDrainStore(tx);
       return store.claimUnpublished(10);
     });
@@ -269,7 +267,7 @@ describe.skipIf(!PG_ENABLED)("SearchOutboxDrainStore integration", () => {
       [TEST_EVENT_ID_2],
     );
 
-    const claimed = await fixture.db.transaction(async (tx) => {
+    const claimed = await db.transaction(async (tx) => {
       const store = new SearchOutboxDrainStore(tx);
       return store.claimUnpublished(10);
     });
@@ -277,3 +275,5 @@ describe.skipIf(!PG_ENABLED)("SearchOutboxDrainStore integration", () => {
     expect(claimed).toHaveLength(1);
     expect(claimed[0].traceId).toBeNull();
   });
+
+});

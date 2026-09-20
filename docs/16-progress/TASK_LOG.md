@@ -1,5 +1,14 @@
 
 
+## 2026-09-20 — M2-07: تحريرُ حجزِ G5 موجةِ 1 (CLM-0247)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0247` · **الفرع:** `chore/release-clm-0247`
+- **Scope:** `docs/16-progress/`
+- **What was done:** `CLM-0247` نُقِلَ إلى `Released` بعدَ دمجِ [PR #299](https://github.com/skyosv10-art/wasla/pull/299) (squash `7308177`) بحكمِ CI **35/35 أخضر**. الفرعُ لم يُحذَف.
+- **حكمُ `main` مقروءٌ لا مُفترَضٌ، وأوّلُ قراءةٍ كانت حمراءَ:** التشغيلُ [35496136292](https://github.com/skyosv10-art/wasla/actions/runs/35496136292) أعطى `failure` في وظيفةِ `typecheck` وحدَها، والسببُ **بيئيٌّ لا شفريٌّ ومقروءٌ من السجلِّ**: `corepack` أخفقَ في سحبِ `pnpm-9.15.9.tgz` من `registry.npmjs.org` (`Internal Error ... when performing the request`) قبلَ أن يُنفَّذَ فحصُ أنواعٍ واحدٌ. أُعيدَ تشغيلُ الوظيفةِ الفاشلةِ وحدَها على **نفسِ الالتزامِ** `7308177` فصارَ التشغيلُ `completed success` و`typecheck` `success` و**صفرَ** وظيفةٍ غيرِ ناجحةٍ. ولم تُمَسَّ شفرةٌ ولا وثيقةٌ لهذا الإخفاقِ — ولم يُصنَّفْ «تخطياً» بل قُرِئَ سببُهُ ثمَّ أُعيدَ القياسُ.
+- **What was NOT done:** لا كودَ ولا بوّابةَ. `M2-07` يبقى `In Progress` وبوّابتُهُ `NOT PASSED`، و`G5` **مُغلَقٌ جزئيّاً** (العينُ لا اليدُ ولا الإقرارُ).
+- **Next executable:** G5 موجةُ 2 — مسارُ إعادةِ الصفِّ المسمومِ إلى الطابورِ (اليدُ).
+
 ## 2026-09-20 — M2-07: G5 wave 1 — the eye on the search relay's dead letters (CLM-0247)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0247` · **الفرع:** `feat/m2-07-g5-search-dead-letters`

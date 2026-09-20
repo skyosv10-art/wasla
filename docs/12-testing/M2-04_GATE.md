@@ -6,7 +6,7 @@
 >
 > **نموذجُ الحالات:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-18 · **الحالةُ المُعلَنة:** `READY FOR GATE` — البوّابةُ نفسُها `PASSED` (بنودُها العشرةُ ✅) وحكمُ CI أخضرُ مقروءٌ — **ونقلُ `M2-04` إلى `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
+> **Last Updated:** 2026-09-21 · **الحالةُ المُعلَنة:** `COMPLETED` — قررَ مالكُ البرنامجِ نقلَ `M2-04` إلى `Completed` وفقَ نطاقِهِ الحاليِّ (`CLM-0258` · [TASK_LOG](../16-progress/TASK_LOG.md)). البوّابةُ `PASSED` ببنودِها العشرةِ ✅ وحكمُ CI أخضرُ مقروءٌ. النشرُ الإنتاجيُّ خارجُ نطاقِ `M2-04` (هو نطاقُ `M2-01`/`M2-02`). **ولا يُقفلُ `RISK-0046` بهذا القرار.**
 
 > **بوّابةُ الخروجِ (RISK-0046 · `CLM-0220`):** [`config-boot-fail.test.ts`](../../services/dispatch/src/__tests__/config-boot-fail.test.ts) تُقلِعُ الخدمةَ ببيئةٍ معطوبةٍ (`DISPATCH_WAVE_SIZE=٣` و`abc` و`0` و`DISPATCH_MAX_WAVES=لا رقمَ`) فتقرأُ سقوطاً مُسمّىً بـ`ConfigError` قبلَ الاستماعِ على منفذٍ — لا 200 صامتاً.
 >

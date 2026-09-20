@@ -1,5 +1,17 @@
 
 
+## 2026-09-21 — M2-04: قرار مالك بنقل الحالة إلى Completed (CLM-0258)
+
+- **Work Item(s):** M2-04 · **الحجز:** `CLM-0258` · **الفرع:** `docs/m2-04-owner-completed`
+- **القرار:** قررَ مالكُ البرنامجِ نقلَ `M2-04` إلى `Completed` وفقَ نطاقِهِ الحاليِّ.
+- **الأساسُ القانوني:** [`M2-04_GATE.md`](../12-testing/M2-04_GATE.md) — البوّابةُ `PASSED` بـ10 بنود ✅ · الأدلةُ الثلاثةُ المستقلةُ مجتمعةٌ (Implementation + Verification + Gate-CI) · [`STATUS_MODEL`](../00-rules/STATUS_MODEL.md) §2.8 · [`ROADMAP_OPERATING_PROTOCOL`](ROADMAP_OPERATING_PROTOCOL.md) §9 — نقلُ `Completed` سلطةُ مالكِ البرنامجِ وحدَه.
+- **نطاقُ القرار:** `M2-04` نطاقُهُ نظامُ الإعدادِ داخلَ المستودعِ (سجلٌّ + مشتقاتٌ آليةٌ + قُرّاءٌ صارمون + حارس). النشرُ الإنتاجيُّ خارجُ نطاقِ `M2-04` — هو نطاقُ `M2-01`/`M2-02`. والبوّابةُ تصرحُ صادقةً: `PRODUCTION ⚪ NOT VERIFIED`.
+- **مراجعةُ المالكِ بنداً بنداً:** راجعَ المالكُ البنودَ العشرةَ جميعاً وأقرَّ كلَّ بندٍ مقنعاً. واعتبرَ اكتشافَي self-validation وblind spot أثناءَ الهجرةِ نقاطِ قوةٍ في الدليلِ، لا نقاطَ ضعفٍ.
+- **ما لا يُدَّعى:** لا يعني `Completed` أنَّ النظامَ جاهزٌ إنتاجياً — يعني أنَّ متطلباتِ `M2-04` الداخليةَ اجتازت بوّابتها. ولا يُقفلُ `RISK-0046` بهذا القرار.
+- **حكمُ CI:** WASLA CI [35538774758](https://github.com/skyosv10-art/wasla/actions/runs/35538774758) `success` (33 وظيفة) + Roadmap freshness [35538774757](https://github.com/skyosv10-art/wasla/actions/runs/35538774757) `success` على `main@87578ef`.
+
+---
+
 ## 2026-09-20 — M0-23: Status Reconciliation — قياس معاد من الشجرة (CLM-0257)
 
 - **Work Item(s):** M0-23 · M0-34 · RISK-0020 · M2-04 · M2-05 · M2-06 · M2-07 · M2-10 · **الحجز:** `CLM-0257` · **الفرع:** `docs/m0-23-m0-34-status-reconciliation`

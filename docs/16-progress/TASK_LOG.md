@@ -1,4 +1,17 @@
 
+
+## 2026-09-21 — Final SVG/PNG refresh: 7 of 10 M2 items Ready for Gate (CLM-0274)
+
+- **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0274` · **الفرع:** `docs/svg-final-refresh`
+- **القياس من:** main@63def6d · 2026-09-21
+- **ما نُفِّذَ:** تحديث SVG/PNG نهائي لتعكس:
+  - M2-03: Ready for Gate (rotation drill v2 PASSED)
+  - M2-07: gate item 7 closed (M2-02 Ready for Gate), G8 documented as M2-09 scope
+  - 7 من 10 بنود M2 في Ready for Gate (M2-01/02/03/05/06/10 + M2-04 Completed)
+- **الحالة:** 7 of 10 M2 items Ready for Gate. M2-07 In Progress (G8 expected). M2-08 In Progress (Stage B). M2-09 Not Started.
+
+---
+
 ## 2026-09-21 — M2-07 gate: item 7 closed, G8 documented as M2-09 scope (CLM-0273)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0273` · **الفرع:** `docs/m2-07-gate-update`

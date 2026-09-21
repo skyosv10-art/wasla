@@ -82,10 +82,12 @@ Three new integration tests in `relay-concurrent-dedupe.integration.test.ts`:
 
 ## 3. What is NOT proven (declared debt)
 
-- **Search relay crash/retry** — search has no integration test for
+- **~~Search relay crash/retry~~** — ~~search has no integration test for
   crash recovery (only delivery does). Search's relay has the same design
-  contract but the proof is delivery-only. (G5 from inventory)
-- **Concurrent relay instances for search** — same as above.
+  contract but the proof is delivery-only.~~ **CLOSED 2026-09-22** — search
+  relay crash/retry/dedupe integration test added (CLM-0280, see §5 below).
+- **~~Concurrent relay instances for search~~** — same as above. **CLOSED 2026-09-22**
+  (CLM-0280, see §5 below).
 - **8 services without drain/publisher** (G1) — events are written to
   outbox but never delivered. This is a platform gap, not a proof gap.
 - **6 tables without `sequence_number`** (G2) — ordering is not monotonic
@@ -97,8 +99,44 @@ Three new integration tests in `relay-concurrent-dedupe.integration.test.ts`:
 
 ## 4. Verdict
 
-The crash/retry/dedupe proof is **delivered for delivery** — the service
-with the full DLQ lifecycle. The search relay's crash/retry/dedupe is
-proven by design contract (uniform relay reliability contract, §2 of the
-inventory) but not by an integration test. The 8 drain/publisher gaps and
-6 sequence_number gaps are declared debt, not proof gaps.
+The crash/retry/dedupe proof is **delivered for both delivery and search**.
+Delivery has the full DLQ lifecycle proof (§1.1–1.5). Search's crash/retry/dedupe
+is now proven by integration test (§5 below, CLM-0280) — concurrent dual-instance
+relay, crash mid-batch recovery, and PRIMARY KEY dedupe enforcement. The 8
+drain/publisher gaps and 6 sequence_number gaps are declared debt, not proof gaps.
+
+## 5. Search relay crash/retry/dedupe proof (CLM-0280)
+
+**Date:** 2026-09-22 · **Claim:** CLM-0280 · **Test file:**
+`services/search/src/__tests__/relay-concurrent-dedupe.integration.test.ts`
+
+The search relay does NOT use `FOR UPDATE SKIP LOCKED` like delivery. It relies
+on terminal idempotency: `getConsumed` + `ON CONFLICT DO UPDATE` + the `outbox_id`
+PRIMARY KEY on `search_relay_consumed_events`. These tests prove those mechanisms
+produce no duplicate durable effects.
+
+### 5.1 Concurrent dual-instance relay
+
+| Test | What it proves |
+|---|---|
+| "two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state" | Two relay instances processing the same outbox events concurrently leave exactly one consumed-events row per `outbox_id` and correct final projection state (one index doc) — no duplicates |
+
+### 5.2 Crash mid-batch recovery
+
+| Test | What it proves |
+|---|---|
+| "crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent" | After a simulated crash (consumed-events reset to `pending`, checkpoint deleted), the relay re-reads, re-processes, and idempotent projections produce the same state — no duplicate index docs or consumed-events rows |
+
+### 5.3 Dedupe (PRIMARY KEY enforcement)
+
+| Test | What it proves |
+|---|---|
+| "dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row" | A direct INSERT of a duplicate `outbox_id` into `search_relay_consumed_events` is rejected by the PRIMARY KEY constraint |
+
+### 5.4 Test execution
+
+- **3/3 tests pass** against local PostgreSQL (2026-09-22)
+- **Typecheck clean** (0 errors)
+- Tests SKIP when `DATABASE_URL` is unset (same pattern as all search integration tests)
+- Production behavior unchanged — this is evidence/proof work closing declared
+dept, not new functional scope.

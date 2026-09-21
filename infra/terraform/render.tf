@@ -32,7 +32,9 @@
 
 locals {
   common_env = {
-    NODE_ENV = { value = "production" }
+    NODE_ENV                   = { value = var.environment == "staging" ? "staging" : "production" }
+    WASLA_SERVICE_AUTH_KEYS    = { value = var.wasla_service_auth_keys }
+    WASLA_SERVICE_AUTH_ACTIVE_KID = { value = var.wasla_service_auth_active_kid }
   }
 
   docker_source = {

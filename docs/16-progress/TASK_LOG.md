@@ -5336,3 +5336,36 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Rollback drill PASSED (deploy → rollback → verify → roll-forward → verify).
 - Bot services blocked on Telegram tokens (documented as exception).
 - Evidence: `docs/12-testing/ci-evidence/2026-09-21T190000Z-m2-09-deploy-rollback-drill/`
+
+---
+
+## 2026-09-21 — M2-09 bots live: 16/16 services operational (CLM-0278)
+
+- **Work Item(s):** M2-09 · **الحجز:** `CLM-0278` · **الفرع:** `fix/m2-09-bots-live`
+
+**What:**
+- Owner provided Telegram bot tokens for the 3 bot services.
+- Set `CUSTOMER_BOT_TOKEN`, `DRIVER_BOT_TOKEN`, `PARTNER_BOT_TOKEN` on respective
+  Render services via Render REST API (GET → modify → PUT full env var set).
+- Generated webhook secrets via `openssl rand -hex 24` (48 chars each).
+- Set `CUSTOMER_BOT_MINI_APP_URL` / `DRIVER_BOT_MINI_APP_URL` / `PARTNER_BOT_MINI_APP_URL`
+  to service URLs for staging.
+- Discovered additional missing env var: `DATABASE_URL` (pooler) — needed by
+  `createServiceTokenReplayStore` in `@wasla/service-auth` for the token replay
+  guard. Bot services only had `CUSTOMER_DATABASE_URL` (customer-bot) or no
+  database URL at all (driver-bot, partner-bot). Added `DATABASE_URL` to all 3.
+- Triggered deploys on all 3 bot services → all 3 went `live`.
+- Smoke probes: all 3 bots respond 200 on `/health`.
+- Final status: **16/16 services live** (13 HTTP + 3 bots).
+
+**Why:**
+- Bots call `loadBotConfig` at startup which requires `BOT_TOKEN`,
+  `BOT_WEBHOOK_SECRET`, and `BOT_MINI_APP_URL` (fail-fast).
+- Bots also call `createServiceTokenReplayStore` which requires
+  `WASLA_SERVICE_TOKEN_REPLAY_URL` or `DATABASE_URL` — without it, the service
+  crashes at startup (no silent fallback to memory in production).
+
+**Result:**
+- M2-09: all 16 services live and responding on staging.
+- Deploy/rollback drill completed (on wasla-identity).
+- Evidence updated in `docs/12-testing/ci-evidence/2026-09-21T190000Z-m2-09-deploy-rollback-drill/`.

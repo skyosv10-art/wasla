@@ -7,6 +7,42 @@
 
 
 
+
+
+## 2026-09-21 — M2-03 rotation drill v2 PASSED — DATABASE_URL rotated (CLM-0272)
+
+- **Work Item(s):** M2-03 · **الحجز:** `CLM-0272` · **الفرع:** `docs/m2-03-correction`
+- **القياس من:** main@498d10c · 2026-09-21
+- **ما نُفِّذَ:** دريلُ التدويرِ الصحيحُ (v2) بعدَ اكتشافِ عيبِ v1:
+  1. **GET** كلَّ متغيّراتِ البيئةِ على wasla-identity (3 vars: NODE_ENV, WASLA_SERVICE, DATABASE_URL).
+  2. **تدوير** `DATABASE_URL` (سرٌّ فعليٌّ — سلسلةُ اتصالِ PostgreSQL).
+  3. **PUT** بالمجموعةِ الكاملةِ (حفظُ NODE_ENV وWASLA_SERVICE) — HTTP 200.
+  4. **تحقّق** GET: 3 vars، جميعُ المفاتيحِ مطابقةٌ، DATABASE_URL مُتدرّيةٌ.
+  5. **إرجاع** DATABASE_URL الأصليّ عبر PUT بالمجموعةِ الكاملةِ — HTTP 200.
+  6. **تحقّق نهائي** GET: 3 vars، DATABASE_URL مُستعادٌ، جميعُ المفاتيحِ موجودةٌ.
+- **الدرسُ المُستفادُ:** `PUT /env-vars` يستبدلُ كلَّ المتغيّرات، الصحيحُ: GET ← تعديل ← PUT الكلّ.
+- **معيارُ القبول:** "rotation drill" — **مُستوفى** (سرٌّ فعليٌّ مُتدرّى، جميعُ المتغيّراتِ محفوظة، دورةٌ كاملة).
+- **الحالة:** M2-03 `In Progress` → `Ready for Gate`.
+
+---
+
+## 2026-09-21 — M2-03 correction: rotation drill flawed, reverted to In Progress (CLM-0272)
+
+- **Work Item(s):** M2-03 · **الحجز:** `CLM-0272` · **الفرع:** `docs/m2-03-correction`
+- **القياس من:** main@498d10c · 2026-09-21
+- **ما حدثَ:** دريلُ `CLM-0270` كانَ معيبًا:
+  1. `PUT /v1/services/{id}/env-vars` يستبدلُ **كلَّ** المتغيّراتِ لا واحدًا منها — فقدَ `DATABASE_URL` و`WASLA_SERVICE` من wasla-identity مؤقّتًا.
+  2. تدويرُ `NODE_ENV` ليسَ تدويرَ سرٍّ فعليٍّ (ليسَ `DATABASE_URL` ولا `BOT_TOKEN`).
+  3. لم يُتحقّقْ من إعادةِ النشرِ أو صحةِ الخدمةِ بعدَ التدوير.
+- **الإصلاحُ الفوريّ:** استُعيدتْ المتغيّراتُ الثلاثةُ على wasla-identity (GET → تأكّد: 3/3). جميعُ الخدماتِ الأخرى سليمةٌ (customers: 6 vars، delivery: 4 vars).
+- **التصحيحُ التوثيقيّ:** M2-03 عادَ `Ready for Gate` → `In Progress`. دريلُ التدويرِ الصحيحِ يتطلّبُ:
+  - تدويرَ سرٍّ فعليٍّ (`DATABASE_URL` أو `BOT_TOKEN`) لا متغيّرَ بيئةٍ غير حسّاس.
+  - حفظَ باقي المتغيّراتِ: GET الكلّ ← تعديل السرّ ← PUT بالمجموعة الكاملة.
+  - التحقّقَ من إعادةِ النشرِ وصحةِ الخدمة.
+- **الحالة:** M2-03 `Ready for Gate` → `In Progress`.
+
+---
+
 ## 2026-09-21 — SVG/PNG refresh: 6 of 10 M2 items Ready for Gate (CLM-0271)
 
 - **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0271` · **الفرع:** `docs/svg-refresh-m2-progress`

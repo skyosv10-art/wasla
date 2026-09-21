@@ -61,17 +61,25 @@ were updated directly via Render REST API instead (GET → modify → PUT full s
 | wasla-search | live | 401 (expected) |
 | wasla-marketplace | live | 401 (expected) |
 | wasla-subscriptions | live | 401 (expected) |
-| wasla-customer-bot | update_failed | n/a (missing Telegram tokens) |
-| wasla-driver-bot | update_failed | n/a (missing Telegram tokens) |
-| wasla-partner-bot | update_failed | n/a (missing Telegram tokens) |
+| wasla-customer-bot | live | 200 (health check) |
+| wasla-driver-bot | live | 200 (health check) |
+| wasla-partner-bot | live | 200 (health check) |
 
-**13/16 services live.** The 3 bot services require `CUSTOMER_BOT_TOKEN`,
-`DRIVER_BOT_TOKEN`, `PARTNER_BOT_TOKEN` and their webhook secrets — these are
-Telegram bot tokens that must be provisioned separately via Render dashboard.
+**16/16 services live.** Bot services were brought online after the owner provided
+Telegram bot tokens. The bots also required `DATABASE_URL` (pooler) for the
+service-auth token replay store, which was added to all 3 bot services.
 
-**401 response is expected**: services require `x-wasla-service-auth` header for
-service-to-service authentication. A 401 proves the service is running and enforcing
-auth, not that it is broken.
+Bot env vars set via Render API:
+- `CUSTOMER_BOT_TOKEN` / `DRIVER_BOT_TOKEN` / `PARTNER_BOT_TOKEN` (owner-provided)
+- `CUSTOMER_BOT_WEBHOOK_SECRET` / `DRIVER_BOT_WEBHOOK_SECRET` / `PARTNER_BOT_WEBHOOK_SECRET`
+  (48-char hex secrets generated via `openssl rand -hex 24`)
+- `CUSTOMER_BOT_MINI_APP_URL` / `DRIVER_BOT_MINI_APP_URL` / `PARTNER_BOT_MINI_APP_URL`
+  (set to service URL for staging)
+- `DATABASE_URL` (pooler) — needed by `createServiceTokenReplayStore` for replay guard
+
+**401 response for HTTP services is expected**: services require `x-wasla-service-auth`
+header for service-to-service authentication. A 401 proves the service is running and
+enforcing auth, not that it is broken. Bot services respond 200 on `/health`.
 
 ## Rollback Drill (wasla-identity)
 
@@ -89,4 +97,5 @@ Rollback/roll-forward drill: **PASSED**.
 - Deploy `dep-daoohadbedkc73b2vqng`: wasla-identity rollback to 12ff405 → live
 - Deploy `dep-daooi9p42hec7392o9tg`: wasla-identity roll-forward to 4894f39 → live
 - All 13 HTTP services respond with 401 (auth required) — service is alive
-- Bot services require Telegram tokens (out of M2-09 scope)
+- All 3 bot services respond with 200 on /health — service is alive
+- Bot services required additional `DATABASE_URL` for service-auth replay store

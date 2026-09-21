@@ -26,6 +26,18 @@ variable "supabase_service_role_key" {
   sensitive   = true
 }
 
+variable "wasla_service_auth_keys" {
+  description = "Comma-separated kid:status:secret entries for service-to-service auth. Provided via TF_VAR_wasla_service_auth_keys — never committed."
+  type        = string
+  sensitive   = true
+}
+
+variable "wasla_service_auth_active_kid" {
+  description = "Active key ID for service auth signing. Provided via TF_VAR_wasla_service_auth_active_kid."
+  type        = string
+  sensitive   = true
+}
+
 # ── Render variables (non-secret) ──────────────────────────────────────
 # RENDER_API_KEY and RENDER_OWNER_ID are read from environment by the
 # provider directly — not passed as Terraform variables.

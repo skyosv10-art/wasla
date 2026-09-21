@@ -5290,3 +5290,49 @@ drain follows the ADR-042 pattern established by the G1 drain adapters. G8
 
 **Result:** G7 is CLOSED. Only G8 (Expected) remains in the M2-07 gap inventory.
 M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER_ID).
+
+---
+
+## 2026-09-21 — M2-09 staging deploy/rollback drill: root cause fixed, 13/16 live (CLM-0277)
+
+- **Work Item(s):** M2-09 · **الحجز:** `CLM-0277` · **الفرع:** `fix/m2-09-staging-env-vars`
+
+**Owner:** @skyosv10-art
+**Work claim:** CLM-0277
+
+**What:**
+- Root cause analysis: all 16 Render services had `update_failed` status. Docker
+  build succeeds (~15s) but runtime startup fails (~20s) for two reasons:
+  1. `DATABASE_URL` uses Supabase direct URL (DNS does not resolve from Render).
+     Fixed: replaced with Supabase pooler URL.
+  2. `WASLA_SERVICE_AUTH_KEYS` completely missing — every service (except bots)
+     calls `keyRegistryFromEnv(process.env)` at startup and crashes without it
+     (fail-fast by design, per ADR-022).
+- Fixed env vars on all 16 services via Render REST API (Terraform apply failed
+  due to provider bug with Free tier maintenance_mode).
+- Added `WASLA_SERVICE_AUTH_KEYS` and `WASLA_SERVICE_AUTH_ACTIVE_KID` to Terraform
+  `common_env` in `render.tf`. Changed `NODE_ENV` from hardcoded `"production"`
+  to `var.environment == "staging" ? "staging" : "production"`.
+- Deployed all 16 services. 13/16 are `live` (identity, geography, orders,
+  customers, delivery, dispatch, drivers, matching, negotiations, reputation,
+  search, marketplace, subscriptions). All respond with 401 (expected — service
+  auth required).
+- 3 bot services (customer-bot, driver-bot, partner-bot) still `update_failed`
+  — require Telegram bot tokens (CUSTOMER_BOT_TOKEN, etc.) which must be
+  provisioned via Render dashboard. Outside M2-09 scope.
+- Rollback drill on wasla-identity: deploy 4894f39 → live → rollback to
+  12ff405 → live → smoke probe 401 → roll-forward to 4894f39 → live → smoke
+  probe 401. PASSED.
+
+**Why:**
+- M2-09 acceptance criteria: "successful staged deploy/rollback" — the deploy
+  must succeed, a rollback must be demonstrated, and the service must respond.
+- Root cause was configuration, not code — the Dockerfile and entrypoint work
+  correctly. The missing env vars were a deployment gap from M2-02 (Terraform
+  created services without WASLA_SERVICE_AUTH_KEYS or correct DATABASE_URL).
+
+**Result:**
+- M2-09: Not Started → In Progress. 13/16 services live and responding.
+- Rollback drill PASSED (deploy → rollback → verify → roll-forward → verify).
+- Bot services blocked on Telegram tokens (documented as exception).
+- Evidence: `docs/12-testing/ci-evidence/2026-09-21T190000Z-m2-09-deploy-rollback-drill/`

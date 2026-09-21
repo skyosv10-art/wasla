@@ -6,7 +6,7 @@
 >
 > **نموذجُ الحالات:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-21 · **الحالةُ المُعلَنة:** `READY FOR GATE` — المُخرَجاتُ موجودةٌ وحكمُ CI أخضرُ مقروءٌ — **ومراجعةُ المالكِ معيارُ القبولِ الصريحُ ولم تُسجَّلْ بعدُ.**
+> **Last Updated:** 2026-09-21 (artifact refresh: SVG/PNG updated to reflect YELLOW state, RISK-0020 closed, M0-23 Completed) · **الحالةُ المُعلَنة:** `READY FOR GATE` — المُخرَجاتُ موجودةٌ وحكمُ CI أخضرُ مقروءٌ — **ومراجعةُ المالكِ معيارُ القبولِ الصريحُ ولم تُسجَّلْ بعدُ.**
 
 ---
 

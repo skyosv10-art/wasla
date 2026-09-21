@@ -1,6 +1,21 @@
 
 
 
+
+## 2026-09-21 — Status Reconciliation: M1-01..04 + M2-01 gates PASSED + M2-10 artifact refresh (CLM-0266)
+
+- **Work Item(s):** M1-01 · M1-02 · M1-03 · M1-04 · M2-01 · M2-10 · **الحجز:** `CLM-0266` · **الفرع:** `docs/status-reconciliation-m1-m2-gated`
+- **القياس من:** main@c9b03a4 · 2026-09-21 · CI: 30 check runs all success on main@c9b03a4 (GitHub Actions: completed success ×2)
+- **الاكتشافُ:** بوّاباتُ M1-01/M1-02/M1-03/M1-04/M2-01 كلُّها PASSED في ملفاتِها، والـboard يُظهرُها `Ready for Gate`. لكنّ `validate-launch-board.sh` لا يقبلُ `GATED` كحالةٍ — حالاتُه المسموحُ بها: `Not Started|In Progress|Blocked|Ready for Gate|Completed|Cancelled`. فالـboard يستخدمُ نموذجَ حالاتٍ أبسطَ من STATUS_MODEL (الذي يُميِّزُ GATED كحالةٍ مستقلةٍ). لذا البنودُ صحيحةٌ في `Ready for Gate` في الـboard، وملفاتُ البوّابةِ تُوثِّقُ حكمَ GATED.
+- **ما نُفِّذَ:**
+  1. **تحديثُ M2-10 artifact:** SVG وPNG كانا يحتويان على مراجعَ قديمةٍ (2026-09-06 · main@7b0992e · RED NO-GO · M0-23 Not Started). حُدِّثَ النصُّ إلى الحالةِ الحاليّةِ (YELLOW · 2026-09-21 · main@c9b03a4 · M0-23 ✅) وأُعيدَ توليدُ PNG.
+  2. **تحديثُ M2-10_GATE.md:** ملاحظةُ تحديثِ الـartifact freshness.
+  3. **توثيقُ أنّ M1-01..04 وM2-01 جاهزةٌ لقرارِ المالكِ بالنقلِ إلى `Completed`** (§9): البوّاباتُ PASSED · CI أخضرُ 33/33 · الأدلةُ الثلاثةُ مستقلّةٌ متوفّرةٌ (Implementation + Verification + Gate).
+- **دليلُ CI الحديث:** main@c9b03a4 — GitHub Actions: completed success ×2 · 30 check runs all success.
+- **الحاجزُ الفعليُّ:** M2-02 يحتاج RENDER_API_KEY/RENDER_OWNER_ID (يحجبُ M2-03/05/06/07). M2-10 يحتاجُ مراجعةَ مالكٍ. M1-01..04 وM2-01 تحتاجُ قرارَ مالكٍ للنقلِ إلى Completed.
+
+---
+
 ## 2026-09-21 — M2-10: بوّابةُ الخريطةِ التنفيذيّةِ + تحديثُ P0 (CLM-0265)
 
 - **Work Item(s):** M2-10 · **الحجز:** `CLM-0265` · **الفرع:** `docs/m2-10-gate-and-p0-refresh`

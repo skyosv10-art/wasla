@@ -561,6 +561,12 @@ demonstrate:
   insert is rejected` (test 3 of 3), but the full acknowledge → requeue →
   reprocess cycle still has no end-to-end integration proof. Tracked as part of
   G5 for `search`; `delivery` has the lifecycle but not the integration proof.
+  ~~**Still open**~~ — **CLOSED (CLM-0281, 2026-09-22):** `relay-full-lifecycle.integration.test.ts`
+  in `services/delivery/src/__tests__/` walks the full operator journey
+  (poison → read dead letters → requeue → reprocess → poison again →
+  acknowledge) plus requeue-after-acknowledgement-clears-triple and
+  acknowledgement-on-non-poisoned-refused. 3/3 pass on PostgreSQL. Delivery
+  E2E proof gap is closed. Item 9 remains ⚠️ only for G8 (no tick scheduler.
 - **Still open** — no tick has a crash-mid-tick recovery test (the tick is
   idempotent by construction, but the proof is in unit tests, not in a live
   crash scenario). Relates to G8.

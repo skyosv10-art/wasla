@@ -5339,9 +5339,9 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 ---
 
-## 2026-09-21 — M2-09 bots live: 16/16 services operational (CLM-0277 update)
+## 2026-09-21 — M2-09 bots live: 16/16 services operational (CLM-0278)
 
-- **Work Item(s):** M2-09 · **الحجز:** `CLM-0277` · **الفرع:** `fix/m2-09-staging-env-vars`
+- **Work Item(s):** M2-09 · **الحجز:** `CLM-0278` · **الفرع:** `fix/m2-09-bots-live`
 
 **What:**
 - Owner provided Telegram bot tokens for the 3 bot services.

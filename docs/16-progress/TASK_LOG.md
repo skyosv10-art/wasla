@@ -1,5 +1,25 @@
 
 
+
+## 2026-09-21 — Owner Decision: M2-01..06 + M2-10 → Completed (CLM-0275)
+
+- **Work Item(s):** M2-01 · M2-02 · M2-03 · M2-04 · M2-05 · M2-06 · M2-10 · **الحجز:** `CLM-0275` · **الفرع:** `docs/m2-completed-promotion`
+- **القياس من:** main@c6584d3 · 2026-09-21
+- **القرار:** قرارُ مالكِ البرنامجِ بنقلِ M2-01 وM2-02 وM2-03 وM2-04 وM2-05 وM2-06 وM2-10 إلى `Completed`.
+- **السلطة:** STATUS_MODEL §2.8 (قاعدةُ الأدلةِ الثلاثةِ المستقلة) · البروتوكول §9 (سلطةُ المالك).
+- **الأدلة الثلاثة لكل عنصر:**
+  - M2-01: Dockerfile + image-supply-chain (Implementation) · بناءان متطابقان 548 مكوّناً (Verification) · بوابة 16 بندًا ✅ (Gate)
+  - M2-02: render.tf + متغيّرات (Implementation) · terraform apply 16 خدمة (Verification) · CI 35/35 (Gate)
+  - M2-03: secret-inventory.json + 22 سرًّا (Implementation) · rotation drill v2 DATABASE_URL (Verification) · CI 35/35 (Gate)
+  - M2-04: packages/config + env-registry (Implementation) · config tests (Verification) · بوابة M2-04 (Gate) — كان Completed فعلًا
+  - M2-05: عقد SQL موحّد + Drizzle (Implementation) · upgrade/repair drill 13/13 (Verification) · CI 35/35 (Gate)
+  - M2-06: m2-06 drill + ADR-040 (Implementation) · backup/restore drill 13/13 (Verification) · CI 35/35 (Gate)
+  - M2-10: SVG/PNG/P0_EXECUTIVE_ROADMAP (Implementation) · تحديث نهائي 7/10 (Verification) · CI 35/35 (Gate)
+- **القيود المُعلَنة:** M2-01 (22 ثغرة esbuild) · M2-02 (Render Free) · M2-03 (Render API ليس KMS) · M2-05/06 (Supabase pooler) · M2-10 (YELLOW مشروط)
+- **وثيقة القرار:** [`OWNER_DECISION_M2_COMPLETED.md`](../12-testing/OWNER_DECISION_M2_COMPLETED.md)
+
+---
+
 ## 2026-09-21 — Final SVG/PNG refresh: 7 of 10 M2 items Ready for Gate (CLM-0274)
 
 - **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0274` · **الفرع:** `docs/svg-final-refresh`

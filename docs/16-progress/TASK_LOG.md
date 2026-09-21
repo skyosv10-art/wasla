@@ -6,6 +6,20 @@
 
 
 
+
+## 2026-09-21 — SVG/PNG refresh: 6 of 10 M2 items Ready for Gate (CLM-0271)
+
+- **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0271` · **الفرع:** `docs/svg-refresh-m2-progress`
+- **القياس من:** main@77d3384 · 2026-09-21
+- **ما نُفِّذَ:** تحديث SVG/PNG لتعكس الوضع الحالي:
+  - G7 (M2-05/06): In Progress → Ready for Gate (أخضر)
+  - G8 (M2-01/02): Ready for Gate (أخضر)
+  - G9 (M2-03): Ready for Gate، M2-08 still In Progress
+  - التاريخ/الالتزام محدّث إلى 77d3384
+- **الحالة:** 6 من 10 بنود M2 في Ready for Gate (M2-01/02/03/05/06/10).
+
+---
+
 ## 2026-09-21 — M2-03: rotation drill PASSED via Render API + M2-06 Ready for Gate (CLM-0270)
 
 - **Work Item(s):** M2-03 · M2-06 · **الحجز:** `CLM-0270` · **الفرع:** `docs/m2-06-m2-03-status-update`

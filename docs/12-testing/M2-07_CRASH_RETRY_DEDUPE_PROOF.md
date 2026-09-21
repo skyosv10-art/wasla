@@ -140,3 +140,38 @@ produce no duplicate durable effects.
 - Tests SKIP when `DATABASE_URL` is unset (same pattern as all search integration tests)
 - Production behavior unchanged — this is evidence/proof work closing declared
 dept, not new functional scope.
+
+## 6. Delivery relay full DLQ lifecycle E2E proof (CLM-0281)
+
+The inventory (§10.7) and the gate (item 9) both recorded the same gap:
+delivery has the full DLQ lifecycle (§4.23–4.27) but no single integration
+test proves the complete cycle end-to-end. The individual pieces are proven
+(concurrent-dedupe, requeue, acknowledgement, dead-letter read), but no test
+walks the full operator journey.
+
+### 6.1 Full operator journey
+
+| Test | What it proves |
+|---|---|
+| "walks the full operator journey: poison → requeue → reprocess → poison again → acknowledge" | Seeds a poisoned event, reads the dead-letter aggregate, requeues it (poisoned→pending), simulates reprocessing failure (re-poison with attempt_count=7), acknowledges it (triple written, status stays poisoned, evidence preserved), and verifies the aggregate reflects the acknowledgement |
+
+### 6.2 Requeue after acknowledgement clears the triple
+
+| Test | What it proves |
+|---|---|
+| "requeue after acknowledgement clears the triple" | After acknowledging a poisoned event, requeuing it clears the `acknowledged_at`/`acknowledged_by`/`acknowledgement_reason` triple (enforced by CHECK constraint `ck_…_ack_poisoned_only`, not application code) and preserves `attempt_count`/`last_error` |
+
+### 6.3 Acknowledgement on non-poisoned row refused
+
+| Test | What it proves |
+|---|---|
+| "acknowledgement on a non-poisoned row is refused by the database" | The CHECK constraint `ck_…_ack_poisoned_only` refuses an acknowledgement on a `pending` row at the database level, not in application code |
+
+### 6.4 Test execution
+
+- **3/3 tests pass** against local PostgreSQL (2026-09-22)
+- **Typecheck clean** (0 errors)
+- Tests SKIP when `DATABASE_URL` is unset (same pattern as all delivery integration tests)
+- This closes the last remaining gap in gate item 9: the delivery E2E proof.
+  Item 9 now remains ⚠️ only for G8 (no tick scheduler, expected, M2-09 scope).
+- Production behavior unchanged — this is evidence/proof work, not new functional scope.

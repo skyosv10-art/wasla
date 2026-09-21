@@ -2,6 +2,26 @@
 
 
 
+## 2026-09-22 — Delivery relay full DLQ lifecycle E2E proof (CLM-0281)
+
+- **Work Item:** M2-07 (item 9 — delivery E2E proof)
+- **Claim:** CLM-0281 — Active
+- **Branch:** `feat/m2-07-delivery-dlq-lifecycle-e2e-proof`
+- **What:** Closes the last remaining gap in gate item 9: the delivery E2E
+  integration proof. The inventory (§10.7) recorded: "delivery has the
+  lifecycle but not the integration proof." Added
+  `relay-full-lifecycle.integration.test.ts` (3 integration tests on
+  PostgreSQL):
+  1. Full operator journey: poison → read dead letters → requeue → reprocess
+     → poison again → acknowledge
+  2. Requeue after acknowledgement clears the triple (CHECK constraint)
+  3. Acknowledgement on non-poisoned row refused by database (CHECK)
+- **Verification:** Typecheck clean, 3/3 tests pass, governance verify passes
+- **Gate impact:** Item 9 remains ⚠️ but now only for G8 (no tick scheduler,
+  expected, M2-09 scope). The delivery E2E proof gap is closed.
+- **What is NOT claimed:** M2-07 remains In Progress (gate NOT PASSED). G8 is
+  a deployment concern, not a code change. No production verification.
+
 ## 2026-09-22 — Search relay crash/retry/dedupe proof (CLM-0280)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0280` · **الفرع:** `feat/m2-07-search-crash-retry-dedupe-proof`

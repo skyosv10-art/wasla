@@ -5295,6 +5295,8 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 ## 2026-09-21 — M2-09 staging deploy/rollback drill: root cause fixed, 13/16 live (CLM-0277)
 
+- **Work Item(s):** M2-09 · **الحجز:** `CLM-0277` · **الفرع:** `fix/m2-09-staging-env-vars`
+
 **Owner:** @skyosv10-art
 **Work claim:** CLM-0277
 

@@ -1,5 +1,19 @@
 
 
+
+## 2026-09-21 — M2-10: بوّابةُ الخريطةِ التنفيذيّةِ + تحديثُ P0 (CLM-0265)
+
+- **Work Item(s):** M2-10 · **الحجز:** `CLM-0265` · **الفرع:** `docs/m2-10-gate-and-p0-refresh`
+- **القياس من:** main@7d572ac · 2026-09-21
+- **ما نُفِّذَ:**
+  1. **إنشاءُ [`M2-10_GATE.md`](../12-testing/M2-10_GATE.md):** المُخرَجاتُ الثلاثةُ موجودةٌ (`P0_EXECUTIVE_ROADMAP.md` + `.svg` + `.png`) · CI أخضرُ (33/33 + Roadmap freshness) · معيارُ «owner review» مُعلَّقٌ · الحكمُ: NOT PASSED.
+  2. **تحديثُ المراجعِ القديمةِ في [`P0_EXECUTIVE_ROADMAP.md`](../16-progress/P0_EXECUTIVE_ROADMAP.md):** M0-23/M0-34 Completed · RISK-0020 closed · M2-01/M2-04 Completed · M2-02/03/05/06/07/08 In Progress · CI 33/33 · P0-4 مُستوفى.
+  3. **تحديثُ لوحةِ التنفيذِ:** إشارةٌ إلى بوّابةِ M2-10.
+- **حكمُ CI:** WASLA CI 35557571003 (33/33 success) · Roadmap freshness 35557570955 (success) على main@5428a7c.
+- **الحاجزُ الفعليُّ:** معظمُ بنودِ M2 محجوبةٌ على M2-02 (RENDER_API_KEY/RENDER_OWNER_ID). وM2-10 يحتاجُ مراجعةَ مالكٍ.
+
+---
+
 ## 2026-09-21 — RISK-0020: إغلاق الخطر بقرار المالك + Status Reconciliation لـ M2-04..M2-10 (CLM-0264)
 
 - **Work Item(s):** M0-23 · **الحجز:** `CLM-0264` · **الفرع:** `docs/risk-0020-closure-status-reconciliation`

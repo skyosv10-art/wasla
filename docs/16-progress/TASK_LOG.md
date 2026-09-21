@@ -1,5 +1,15 @@
 
 
+## 2026-09-21 — M0-34: قرار مالك بنقل الحالة إلى Completed (CLM-0262)
+
+- **Work Item(s):** M0-34 · **الحجز:** `CLM-0262` · **الفرع:** `docs/m0-34-owner-completed`
+- **القرار:** قررَ مالكُ البرنامجِ نقلَ `M0-34` إلى `Completed` بعدَ مراجعةِ [`M0-34_GATE.md`](../12-testing/M0-34_GATE.md) (10 بنود ✅).
+- **STATUS_MODEL:** Implementation ✅ + Verification ✅ + Gate-CI ✅ → `COMPLETED` ([§2.8](../00-rules/STATUS_MODEL.md)) · سلطةُ المالكِ ([§9](../16-progress/ROADMAP_OPERATING_PROTOCOL.md)).
+- **النطاق:** برهانُ الترقيةِ على قاعدةٍ مأهولةٍ داخل المستودعِ — 13 اختبارَ ترقيةٍ · حارسٌ بثلاثةِ فحوصٍ فرعيّةٍ (4-أ/4-ب/4-ج) في CI.
+- **ما لا يُدَّعى:** `PRODUCTION NOT VERIFIED` صادقةٌ · `RISK-0020` لا يُقفَلُ بهذا القرار.
+
+---
+
 ## 2026-09-21 — M0-34: إنشاء بوّابة رسمية (CLM-0261)
 
 - **Work Item(s):** M0-34 · **الحجز:** `CLM-0261` · **الفرع:** `docs/m0-34-gate`

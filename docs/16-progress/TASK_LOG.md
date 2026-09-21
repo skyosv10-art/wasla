@@ -2,6 +2,19 @@
 
 
 
+## 2026-09-22 — Search relay crash/retry/dedupe proof (CLM-0280)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0280` · **الفرع:** `feat/m2-07-search-crash-retry-dedupe-proof`
+- **ما تغيّر:** أُضيف ملف اختبار تكامل جديد `services/search/src/__tests__/relay-concurrent-dedupe.integration.test.ts` (3 اختبارات) يُثبت أنَّ relay البحث يتحمّل التعطُّل/إعادةَ المحاولة/إزالةَ التكرار: (1) مثيلانِ متزامنانِ لا يُنتِجانِ أثرًا مُكرَّرًا، (2) التعافي بعد التعطُّل (تصفيرٌ إلى pending + حذف نقطة التقدُّم) مُتَكَرِّر، (3) PRIMARY KEY على outbox_id يرفض الإدراج المُكرَّر.
+- **لماذا الآن:** دليل تعطُّل/إعادة محاولة/إزالة تكرار relay البحث كان دينًا مُعلَنًا في `M2-07_CRASH_RETRY_DEDUPE_PROOF.md` §3 — موجودٌ في delivery وحدَه. هذا العمل يُغلق ذلك الدين.
+- **Changed:** `services/search/src/__tests__/relay-concurrent-dedupe.integration.test.ts` (جديد)، `docs/12-testing/M2-07_CRASH_RETRY_DEDUPE_PROOF.md` (§5 + تحديث §3/§4)، `docs/12-testing/M2-07_GATE.md` (البند 9: إضافة دليل CLM-0280، الحالة تبقى ⚠️)، `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` (تحديث M2-07)، `docs/16-progress/WORK_CLAIMS.md` (CLM-0280 نشط)، `ROADMAP.md` (نضارة).
+- **Verification:** typecheck نظيف (0 أخطاء) · 3/3 اختباراتِ تكاملٍ ناجحةٌ على PostgreSQL محلي (DATABASE_URL=postgresql://wasla_test:test@localhost:5432/wasla_test) · `pnpm run governance:verify` ناجح.
+- **Security / Data / Deployment:** لا أثر — عمل إثبات/دليل فقط، لا تغيير في سلوك الإنتاج.
+- **Known Issue / Blocker:** البند 9 يبقى ⚠️ لأنَّ G8 (لا مُجدوِلَ نبضةٍ) متوقّعٌ، ولأنَّ دورةَ delivery ما زالت بلا إثباتِ تكاملٍ نهايةً إلى نهايةٍ.
+- **Evidence:** PR قادم · `M2-07_CRASH_RETRY_DEDUPE_PROOF.md` §5.
+- **Next:** البند التنفيذي التالي بعد هذا PR.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-21 — SVG/PNG refresh: 7 of 10 M2 items Completed (CLM-0276)
 
 - **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0276` · **الفرع:** `docs/svg-completed-refresh`

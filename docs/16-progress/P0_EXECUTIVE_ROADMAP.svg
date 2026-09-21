@@ -31,11 +31,11 @@
 
   <!-- Title -->
   <text x="740" y="38" text-anchor="middle" class="title">WASLA — P0 Executive Visual Roadmap: NO-GO → GO</text>
-  <text x="740" y="62" text-anchor="middle" class="sub">Current state: RED (NO-GO) · 2026-09-06 · main@7b0992e · Program owner: @uxxxu · Source of truth: repo + LAUNCH_TO_100_ROADMAP.md §0.15</text>
+  <text x="740" y="62" text-anchor="middle" class="sub">Current state: YELLOW (conditionally ready) · 2026-09-21 · main@c9b03a4 · Program owner: @uxxxu · Source of truth: repo + LAUNCH_TO_100_ROADMAP.md §0.15</text>
 
-  <!-- RED banner -->
+  <!-- YELLOW banner (updated from RED 2026-09-21) -->
   <rect x="40" y="80" width="1400" height="42" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
-  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: NO-GO — 4 P0 blockers open: P0-1 User Auth/Authz · P0-2 Service-to-Service Boundary · P0-3 Production Deployment · P0-4 Database Migration</text>
+  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: YELLOW — 2 of 4 P0 blockers resolved: P0-1 ✅ Auth/Authz (M1 completed) · P0-4 ✅ Migrations (M0-23/M0-34/RISK-0020 closed) · P0-2 ⏳ Service Boundary (M1-04 GATED) · P0-3 ⏳ Production Deploy (M2 in progress)</text>
 
   <!-- ============ SWIM LANES ============ -->
   <!-- Lane A: Security/Trust -->
@@ -100,7 +100,7 @@
   <!-- Lane C nodes (cy=415) -->
   <g>
     <rect x="330" y="383" width="140" height="64" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
-    <text x="400" y="407" text-anchor="middle" class="node-id" fill="#5b21b6">G6 · M0-23</text>
+    <text x="400" y="407" text-anchor="middle" class="node-id" fill="#15803d">G6 · M0-23 ✅</text>
     <text x="400" y="425" text-anchor="middle" class="node-desc" fill="#4c1d95">Migration system</text>
     <text x="400" y="438" text-anchor="middle" class="node-desc" fill="#4c1d95">owner decision req.</text>
     <text x="400" y="369" text-anchor="middle" class="p0">P0-4 · OWNER BLOCK</text>
@@ -206,7 +206,7 @@
 
   <!-- ============ TERMINAL STATES ============ -->
   <rect x="80" y="940" width="420" height="74" rx="8" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
-  <text x="290" y="966" text-anchor="middle" class="term-t">🔴 RED — NO-GO  (CURRENT)</text>
+  <text x="290" y="966" text-anchor="middle" class="term-t">🟡 YELLOW — CONDITIONALLY READY  (CURRENT)</text>
   <text x="290" y="986" text-anchor="middle" class="term-d">Any P0 blocker open. Now: all 4 open</text>
   <text x="290" y="1002" text-anchor="middle" class="term-d">Auth · S2S · Deployment · Migration</text>
 

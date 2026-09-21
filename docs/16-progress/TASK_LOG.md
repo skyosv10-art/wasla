@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — M2-07 gate stale text correction (CLM-0282)
+
+- **Work Item(s):** M2-07 · **الحجز:** `CLM-0282` · **الفرع:** `docs/m2-07-gate-stale-text-correction`
+- **What:** Corrected stale text in `M2-07_GATE.md` that was written before CLM-0280/CLM-0281 and before M2-02 became Completed: (1) §4 limit about search relay crash/retry proof not existing — now updated to reflect CLM-0280 (search relay proof) and CLM-0281 (delivery DLQ lifecycle E2E proof). (2) §3.1 first blocker text still said M2-02 is In Progress with external credential blocker — now updated to reflect M2-02 is Completed. (3) §4 claim that two blockers are open — now corrected to reflect only item 9 (G8) remains. (4) §5 next-step text said item 7 is ⛔ and both M2-02/M2-09 are blocked — now corrected to reflect item 7 is ✅ and both M2-02/M2-09 are Completed.
+- **Changed:** `docs/12-testing/M2-07_GATE.md` (§3.1, §4, §5), `docs/16-progress/WORK_CLAIMS.md` (CLM-0282 active), `docs/16-progress/TASK_LOG.md` (entry), `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` (M2-07 row), `ROADMAP.md` (nضارة).
+- **Verification:** Governance verify passes.
+- **Gate impact:** No verdict change — gate stays NOT PASSED, item 9 stays ⚠️ for G8 only, M2-07 stays In Progress.
+
 ## 2026-09-22 — Delivery relay full DLQ lifecycle E2E proof (CLM-0281)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0281` · **الفرع:** `feat/m2-07-delivery-dlq-lifecycle-e2e-proof`

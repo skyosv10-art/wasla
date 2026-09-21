@@ -5369,3 +5369,26 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - M2-09: all 16 services live and responding on staging.
 - Deploy/rollback drill completed (on wasla-identity).
 - Evidence updated in `docs/12-testing/ci-evidence/2026-09-21T190000Z-m2-09-deploy-rollback-drill/`.
+
+---
+
+## 2026-09-22 — M2-09 promoted to Completed by owner decision (CLM-0279)
+
+- **Work Item(s):** M2-09 · **الحجز:** `CLM-0279` · **الفرع:** `docs/m2-09-completed`
+
+**What:**
+- Owner decision: "انقل M2-09 إلى Completed" (2026-09-22T00:23+03).
+- Updated LAUNCH_EXECUTION_BOARD.md: M2-09 `In Progress` → `Completed`.
+- Acceptance criteria met: "successful staged deploy/rollback" — 16/16 services
+  live on Render staging, rollback drill PASSED (deploy → rollback → roll-forward).
+- Evidence: `docs/12-testing/ci-evidence/2026-09-21T190000Z-m2-09-deploy-rollback-drill/`
+- PRs: #352 (env vars fix + rollback drill), #354 (bots live 16/16).
+
+**Why:**
+- M2-09 acceptance criteria fully met. All 16 services operational on staging.
+- Owner reviewed evidence and authorized promotion to Completed.
+
+**Result:**
+- M2-09: In Progress → **Completed**.
+- M2 items now Completed: M2-01, M2-02, M2-03, M2-04, M2-05, M2-06, M2-09, M2-10
+  (8 of 10). M2-07 and M2-08 remain In Progress.

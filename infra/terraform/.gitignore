@@ -1,0 +1,5 @@
+tfplan
+tfplan-output.txt
+tfapply-output.txt
+terraform.tfstate
+terraform.tfstate.backup

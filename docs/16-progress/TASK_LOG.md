@@ -2,6 +2,38 @@
 
 
 
+
+## 2026-09-21 — M2-02: terraform plan + apply ناجحٌ بمفاتيح Render حقيقيّة (CLM-0267)
+
+- **Work Item(s):** M2-02 · **الحجز:** `CLM-0267` · **الفرع:** `docs/m2-02-terraform-apply-evidence`
+- **القياس من:** main@56016a0 · 2026-09-21
+- **ما نُفِّذَ:**
+  1. **`terraform init`:** نجح · provider `render-oss/render` v1.9.1 مُثبَّت · `.terraform.lock.hcl` مُولَّد.
+  2. **`terraform plan`:** نجح بمفاتيح Render حقيقيّة · 16 موردًا للإنشاء · 0 للتغيير · 0 للدمج.
+  3. **`terraform apply`:** نجح · **16 خدمة Render Free أُنشئت فعليّاً** بمعرّفات و URLs:
+     - wasla-customers (srv-daodbe3m8hqs73e8b5ag) → https://wasla-customers.onrender.com
+     - wasla-delivery (srv-daodbc3m8hqs73e8atvg) → https://wasla-delivery.onrender.com
+     - wasla-dispatch (srv-daodbfmk1f9s73bknib0) → https://wasla-dispatch.onrender.com
+     - wasla-drivers (srv-daodb6740ujc73esa7v0) → https://wasla-drivers.onrender.com
+     - wasla-geography (srv-daodbbn40ujc73esarsg) → https://wasla-geography.onrender.com
+     - wasla-identity (srv-daodb63m8hqs73e8a900) → https://wasla-identity.onrender.com
+     - wasla-matching (srv-daodbdrtqb8s73et2sl0) → https://wasla-matching.onrender.com
+     - wasla-negotiations (srv-daodb6ek1f9s73bkmcr0) → https://wasla-negotiations.onrender.com
+     - wasla-orders (srv-daodb63m8hqs73e8a9fg) → https://wasla-orders.onrender.com
+     - wasla-reputation (srv-daodb63tqb8s73et1tlg) → https://wasla-reputation.onrender.com
+     - wasla-search (srv-daodbbbtqb8s73et2i0g) → https://wasla-search.onrender.com
+     - wasla-marketplace (srv-daodb60ae00c73c2utjg) → https://wasla-marketplace.onrender.com
+     - wasla-subscriptions (srv-daodb66gekts73br8q9g) → https://wasla-subscriptions.onrender.com
+     - wasla-customer-bot (srv-daodb6bm8hqs73e8aa50) → https://wasla-customer-bot.onrender.com
+     - wasla-driver-bot (srv-daodb6740ujc73esa79g) → https://wasla-driver-bot.onrender.com
+     - wasla-partner-bot (srv-daodb6f40ujc73esa8bg) → https://wasla-partner-bot.onrender.com
+  4. **الدليل:** [`ci-evidence/2026-09-21T095800Z-m2-02-terraform-apply/`](../12-testing/ci-evidence/2026-09-21T095800Z-m2-02-terraform-apply/README.md)
+- **معيارُ القبول:** "fresh plan/apply" — **مُستوفى** (plan + apply ناجحان بمفاتيح حقيقيّة).
+- **قيود Render Free المُعلَنة:** لا شبكةٌ خاصّة · سكونٌ بعد 15 دقيقة · حدّ 750 ساعة/شهر. لا تمنعُ معيار القبول.
+- **الحالة:** M2-02 `In Progress` → `Ready for Gate`.
+
+---
+
 ## 2026-09-21 — Status Reconciliation: M1-01..04 + M2-01 gates PASSED + M2-10 artifact refresh (CLM-0266)
 
 - **Work Item(s):** M1-01 · M1-02 · M1-03 · M1-04 · M2-01 · M2-10 · **الحجز:** `CLM-0266` · **الفرع:** `docs/status-reconciliation-m1-m2-gated`

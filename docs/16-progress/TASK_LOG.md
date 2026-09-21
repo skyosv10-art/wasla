@@ -5,6 +5,22 @@
 
 
 
+
+## 2026-09-21 — M2-03: rotation drill PASSED via Render API + M2-06 Ready for Gate (CLM-0270)
+
+- **Work Item(s):** M2-03 · M2-06 · **الحجز:** `CLM-0270` · **الفرع:** `docs/m2-06-m2-03-status-update`
+- **القياس من:** main@3451ad4 · 2026-09-21
+- **ما نُفِّذَ:**
+  1. **M2-03 rotation drill:** استخدام Render API لتدوير متغيّر بيئة (NODE_ENV) على wasla-identity:
+     - GET env-vars (قبل) → PUT (تدوير) → GET (تحقّق) → PUT (إرجاع) → GET (تحقّق نهائي)
+     - جميع الخطوات نجحت (HTTP 200)
+     - الدليل: [`ci-evidence/2026-09-21T100500Z-m2-03-rotation-drill/`](../12-testing/ci-evidence/2026-09-21T100500Z-m2-03-rotation-drill/README.md)
+  2. **M2-06 → Ready for Gate:** دريل backup/restore منجز مسبقًا (13/13)، كان محجوبًا على M2-05 فقط.
+- **معاييرُ القبول:** "rotation drill" (M2-03) — **مُستوفى**. "timed restore evidence" (M2-06) — **مُستوفى**.
+- **الحالة:** M2-03 `In Progress` → `Ready for Gate`. M2-06 `In Progress` → `Ready for Gate`.
+
+---
+
 ## 2026-09-21 — M2-06: Ready for Gate — drill منجز مسبقًا (CLM-0269)
 
 - **Work Item(s):** M2-06 · **الحجز:** `CLM-0269` · **الفرع:** `docs/m2-06-m2-03-status-update`

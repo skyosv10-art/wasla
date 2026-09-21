@@ -6,7 +6,7 @@
 >
 > **نموذجُ الحالات:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-21 · **الحالةُ المُعلَنة:** `READY FOR GATE` — البوّابةُ `PASSED` ببنودِها العشرةِ ✅ وحكمُ CI أخضرُ مقروءٌ — **ونقلُ `M0-23` إلى `Completed` سلطةُ مالكِ البرنامجِ وحدَهُ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
+> **Last Updated:** 2026-09-21 · **الحالةُ المُعلَنة:** `COMPLETED` — البوّابةُ `PASSED` ببنودِها العشرةِ ✅ وحكمُ CI أخضرُ مقروءٌ — **ونقلُ `M0-23` إلى `Completed` بقرارِ مالكِ البرنامجِ** ([ROADMAP_OPERATING_PROTOCOL](../16-progress/ROADMAP_OPERATING_PROTOCOL.md) §9).
 
 ---
 

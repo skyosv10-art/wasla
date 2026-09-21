@@ -35,7 +35,7 @@
 
   <!-- YELLOW banner (updated from RED 2026-09-21) -->
   <rect x="40" y="80" width="1400" height="42" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
-  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: YELLOW — 7 of 10 M2 items Ready for Gate: P0-1 ✅ Auth/Authz (M1 completed) · P0-4 ✅ Migrations (M0-23/M0-34/RISK-0020 closed) · P0-2 ⏳ Service Boundary (M1-04 GATED) · P0-3 ⏳ Production Deploy (M2 in progress)</text>
+  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: YELLOW — 7 of 10 M2 items Completed: P0-1 ✅ Auth/Authz (M1 completed) · P0-4 ✅ Migrations (M0-23/M0-34/RISK-0020 closed) · P0-2 ⏳ Service Boundary (M1-04 GATED) · P0-3 ⏳ Production Deploy (M2 in progress)</text>
 
   <!-- ============ SWIM LANES ============ -->
   <!-- Lane A: Security/Trust -->

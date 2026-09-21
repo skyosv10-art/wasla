@@ -1,6 +1,16 @@
 
 
 
+
+## 2026-09-21 — SVG/PNG refresh: 7 of 10 M2 items Completed (CLM-0276)
+
+- **Work Item(s):** M2-10 (visual) · **الحجز:** `CLM-0276` · **الفرع:** `docs/svg-completed-refresh`
+- **القياس من:** main@ed7e7a1 · 2026-09-21
+- **ما نُفِّذَ:** تحديث SVG/PNG لتعكس: M2-01..06 + M2-10 = Completed.
+- **الحالة:** 7 من 10 بنود M2 مكتملة. M2-07 In Progress (G8). M2-08 In Progress (Stage B). M2-09 Not Started.
+
+---
+
 ## 2026-09-21 — Owner Decision: M2-01..06 + M2-10 → Completed (CLM-0275)
 
 - **Work Item(s):** M2-01 · M2-02 · M2-03 · M2-04 · M2-05 · M2-06 · M2-10 · **الحجز:** `CLM-0275` · **الفرع:** `docs/m2-completed-promotion`

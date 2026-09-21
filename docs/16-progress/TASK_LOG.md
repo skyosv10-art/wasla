@@ -4,6 +4,17 @@
 
 
 
+
+## 2026-09-21 — M2-06: Ready for Gate — drill منجز مسبقًا (CLM-0269)
+
+- **Work Item(s):** M2-06 · **الحجز:** `CLM-0269` · **الفرع:** `docs/m2-06-m2-03-status-update`
+- **القياس من:** main@3451ad4 · 2026-09-21
+- **ما نُفِّذَ:** M2-06 drill كان منجزًا مسبقًا (`CLM-0234` · 2026-09-19): 13/13 خدمةً نجحتْ ضد Supabase pooler. RPO/RTO targets مُعرَّفة. كان `In Progress` فقط لأنّ M2-05 كان `In Progress`. الآن M2-05 أصبح `Ready for Gate`، فـM2-06 لم يعد محجوبًا.
+- **معيارُ القبول:** "timed restore evidence" — **مُستوفى** (متوسطُ زمن الاسترجاع: 15.7s · أطول دورة: 41s).
+- **الحالة:** M2-06 `In Progress` → `Ready for Gate`.
+
+---
+
 ## 2026-09-21 — M2-05: upgrade/repair drill 13/13 PASSED (CLM-0268)
 
 - **Work Item(s):** M2-05 · **الحجز:** `CLM-0268` · **الفرع:** `docs/m2-05-drill-passed`

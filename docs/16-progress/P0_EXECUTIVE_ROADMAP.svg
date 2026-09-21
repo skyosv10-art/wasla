@@ -35,7 +35,7 @@
 
   <!-- YELLOW banner (updated from RED 2026-09-21) -->
   <rect x="40" y="80" width="1400" height="42" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
-  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: YELLOW — 7 of 10 M2 items Completed: P0-1 ✅ Auth/Authz (M1 completed) · P0-4 ✅ Migrations (M0-23/M0-34/RISK-0020 closed) · P0-2 ⏳ Service Boundary (M1-04 GATED) · P0-3 ⏳ Production Deploy (M2 in progress)</text>
+  <text x="740" y="106" text-anchor="middle" class="p0" font-size="14">CURRENT STATE: YELLOW — 8 of 10 M2 items Completed: P0-1 ✅ Auth/Authz (M1 completed) · P0-4 ✅ Migrations (M0-23/M0-34/RISK-0020 closed) · P0-2 ⏳ Service Boundary (M1-04 GATED) · P0-3 ⏳ Production Deploy (M2 in progress)</text>
 
   <!-- ============ SWIM LANES ============ -->
   <!-- Lane A: Security/Trust -->
@@ -127,10 +127,10 @@
     <text x="720" y="623" text-anchor="middle" class="node-desc" fill="#78350f">logs/metrics/SLI</text>
   </g>
   <g>
-    <rect x="810" y="568" width="140" height="64" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2.5"/>
-    <text x="880" y="592" text-anchor="middle" class="node-id" fill="#991b1b">G10 · M2-09</text>
-    <text x="880" y="610" text-anchor="middle" class="node-desc" fill="#7f1d1d">Staging parity +</text>
-    <text x="880" y="623" text-anchor="middle" class="node-desc" fill="#7f1d1d">deploy / rollback</text>
+    <rect x="810" y="568" width="140" height="64" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="880" y="592" text-anchor="middle" class="node-id" fill="#16a34a">G10 · M2-09</text>
+    <text x="880" y="610" text-anchor="middle" class="node-desc" fill="#15803d">Staging parity +</text>
+    <text x="880" y="623" text-anchor="middle" class="node-desc" fill="#15803d">deploy / rollback</text>
     <text x="880" y="554" text-anchor="middle" class="p0">P0-3 · FIELD (staging)</text>
   </g>
 

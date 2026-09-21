@@ -64,7 +64,7 @@
 
 - **المشكلةُ:** لا توجدُ بنيةٌ تحتويّةٌ قابلةٌ للإعادةِ (`infra/` = `.gitkeep` فقط): لا حاوياتٌ ولا `IaC` ولا أسرارٌ/`KMS` ولا بيئةُ staging ولا نسخٌ احتياطيٌّ/استعادةٌ ولا مراقبةٌ. ولا يوجدُ سطحُ منتجٍ قابلٌ للنشر (`apps/` كلُّها `placeholder`).
 - **لماذا يمنعُ الإطلاقَ:** لا يوجدُ ما يُنشرُ أصلاً. حتى لو أُغلِقَ الأمنُ والبياناتُ، يبقى الإطلاقُ مستحيلًا بلا بيئةٍ قابلةٍ لإعادةِ الإنتاجِ وخطِّ نشرٍ/استرجاعٍ موثَّق.
-- **الدليلُ والمصدرُ:** [`WORK_INDEX.md`](WORK_INDEX.md) (`infra/{terraform,kubernetes,docker,environments}`). [`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md) `M2-01` (صورٌ/حاوياتٌ/`SBOM`) = `Completed` · `M2-02` (`IaC` وبيئاتٌ و`TLS`) = `In Progress` (محجوبٌ على `RENDER_API_KEY`/`RENDER_OWNER_ID`) · `M2-03` (أسرارٌ/`KMS`/دوران) = `In Progress` · `M2-04` (مخطَّطُ الإعداد) = `Completed` · `M2-08` (سجلّاتٌ/مقاييسٌ/آثارٌ) = `In Progress` (Stage A مُنجَزٌ) · `M2-09` (تكافؤُ staging ونشرٌ/استرجاع) = `Not Started`.
+- **الدليلُ والمصدرُ:** [`WORK_INDEX.md`](WORK_INDEX.md) (`infra/{terraform,kubernetes,docker,environments}`). [`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md) `M2-01` (صورٌ/حاوياتٌ/`SBOM`) = `Completed` · `M2-02` (`IaC` وبيئاتٌ و`TLS`) = `In Progress` (محجوبٌ على `RENDER_API_KEY`/`RENDER_OWNER_ID`) · `M2-03` (أسرارٌ/`KMS`/دوران) = `In Progress` · `M2-04` (مخطَّطُ الإعداد) = `Completed` · `M2-08` (سجلّاتٌ/مقاييسٌ/آثارٌ) = `In Progress` (Stage A مُنجَزٌ) · `M2-09` (تكافؤُ staging ونشرٌ/استرجاع) = `Completed`.
 - **العاقبةُ إن لم يُغلق:** لا يمكنُ تشغيلُ WASLA في الإنتاجِ إطلاقًا. وأيُّ محاولةِ نشرٍ يدويٍّ ستكونُ غيرَ قابلةٍ للتكرارِ وللاسترجاع.
 
 ### P0-4 · أمانُ ترحيلِ قاعدةِ البياناتِ (Database Migration Safety)

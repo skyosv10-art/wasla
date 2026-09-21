@@ -3,6 +3,26 @@
 
 
 
+
+## 2026-09-21 — M2-05: upgrade/repair drill 13/13 PASSED (CLM-0268)
+
+- **Work Item(s):** M2-05 · **الحجز:** `CLM-0268` · **الفرع:** `docs/m2-05-drill-passed`
+- **القياس من:** main@f1e4e13 · 2026-09-21
+- **ما نُفِّذَ:**
+  1. **`scripts/m2-05c-upgrade-repair-drill.mjs`** شُغِّل ضد Supabase pooler (PostgreSQL 17.6).
+  2. **13/13 خدمة PASSED** بكلِّ مراحلها الستّ:
+     - apply_forward: تطبيقُ كلّ الترحيلاتِ للأمام → PASS
+     - catalog_equivalence: مطابقةُ المخطّطِ للكتالوج → PASS
+     - rollback: ترجيعُ كلّ الترحيلات → PASS
+     - clean_after_rollback: نظافةُ قاعدةِ البياناتِ بعدَ الترجيع → PASS
+     - reapply: إعادةُ تطبيقِ الترحيلات → PASS
+     - final_catalog: مطابقةُ المخطّطِ النهائي للكتالوج → PASS
+  3. **الدليل:** [`upgrade-proof-evidence/2026-09-21-m2-05-drill/`](../12-testing/upgrade-proof-evidence/2026-09-21-m2-05-drill/README.md)
+- **معيارُ القبول:** "upgrade/repair drill" — **مُستوفى** (13/13 نجاح).
+- **الحالة:** M2-05 `In Progress` → `Ready for Gate`. M2-06 (يعتمد على M2-05) لم يعد محجوبًا.
+
+---
+
 ## 2026-09-21 — M2-02: terraform plan + apply ناجحٌ بمفاتيح Render حقيقيّة (CLM-0267)
 
 - **Work Item(s):** M2-02 · **الحجز:** `CLM-0267` · **الفرع:** `docs/m2-02-terraform-apply-evidence`

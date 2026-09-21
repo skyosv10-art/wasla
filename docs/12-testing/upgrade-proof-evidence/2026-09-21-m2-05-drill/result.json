@@ -1,0 +1,274 @@
+M2-05C Upgrade/Repair Drill
+===========================
+Database: Supabase pooler (PostgreSQL)
+Services: 13
+Timestamp: 20260921074421
+
+customers... ✓ PASS
+delivery... ✓ PASS
+dispatch... ✓ PASS
+drivers... ✓ PASS
+geography... ✓ PASS
+identity... ✓ PASS
+marketplace... ✓ PASS
+matching... ✓ PASS
+negotiations... ✓ PASS
+orders... ✓ PASS
+reputation... ✓ PASS
+search... ✓ PASS
+subscriptions... ✓ PASS
+
+===========================
+Results: 13 passed, 0 failed, 13 total
+
+{
+  "drill": "M2-05C Upgrade/Repair Drill",
+  "timestamp": "2026-09-21T07:52:55.698Z",
+  "database": "Supabase pooler (PostgreSQL 17.6)",
+  "connection": "aws-0-ap-northeast-2.pooler.supabase.com",
+  "direct_dns": "failed (db.snlpxywskyqrjattbpgn.supabase.co does not resolve)",
+  "pooler_dns": "succeeded (aws-0-ap-northeast-2.pooler.supabase.com → 15.164.120.176)",
+  "createdb": true,
+  "schema_qualification": "public (explicit in migrations — schema isolation not attempted; isolated databases used instead)",
+  "services": [
+    {
+      "service": "customers",
+      "database": "wasla_m205c_customers_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 4,
+          "down": 4
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "delivery",
+      "database": "wasla_m205c_delivery_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 5,
+          "down": 5
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "dispatch",
+      "database": "wasla_m205c_dispatch_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 3,
+          "down": 3
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "drivers",
+      "database": "wasla_m205c_drivers_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 5,
+          "down": 5
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "geography",
+      "database": "wasla_m205c_geography_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 4,
+          "down": 4
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "identity",
+      "database": "wasla_m205c_identity_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 4,
+          "down": 4
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "marketplace",
+      "database": "wasla_m205c_marketplace_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 3,
+          "down": 3
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "matching",
+      "database": "wasla_m205c_matching_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 4,
+          "down": 4
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "negotiations",
+      "database": "wasla_m205c_negotiations_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 2,
+          "down": 2
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "orders",
+      "database": "wasla_m205c_orders_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 3,
+          "down": 3
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "reputation",
+      "database": "wasla_m205c_reputation_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 2,
+          "down": 2
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "search",
+      "database": "wasla_m205c_search_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 5,
+          "down": 5
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    },
+    {
+      "service": "subscriptions",
+      "database": "wasla_m205c_subscriptions_20260921074421",
+      "status": "pass",
+      "phases": {
+        "migrations": {
+          "forward": 2,
+          "down": 2
+        },
+        "apply_forward": "pass",
+        "catalog_equivalence": "pass",
+        "rollback": "pass",
+        "clean_after_rollback": "pass",
+        "reapply": "pass",
+        "final_catalog": "pass"
+      },
+      "findings": []
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13
+  }
+}

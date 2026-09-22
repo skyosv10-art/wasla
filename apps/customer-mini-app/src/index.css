@@ -1,0 +1,72 @@
+:root {
+  --wasla-primary: #0066cc;
+  --wasla-bg: #ffffff;
+  --wasla-text: #1a1a1a;
+  --wasla-border: #e0e0e0;
+  --wasla-radius: 8px;
+  --wasla-font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--wasla-font-size);
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  background: var(--wasla-bg);
+  color: var(--wasla-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app,
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.home h1 {
+  padding: 1rem;
+  text-align: center;
+  color: var(--wasla-primary);
+  font-size: 1.5rem;
+}
+
+.home nav ul {
+  list-style: none;
+  padding: 0 1rem;
+}
+
+.home nav li {
+  margin-bottom: 0.5rem;
+}
+
+.home nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--wasla-text);
+  border: 1px solid var(--wasla-border);
+  border-radius: var(--wasla-radius);
+  min-height: 48px;
+}
+
+.home nav a:active {
+  background: #f0f0f0;
+}
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}

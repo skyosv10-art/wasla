@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App scaffold Wave 1 (CLM-0284)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0284` · **الفرع:** `feat/m3-01-customer-mini-app-scaffold`
+- **What:** Created the Customer Mini App scaffold in `apps/customer-mini-app/` per ADR-044. Wave 1 includes: project setup (React 18 + Vite 5 + TypeScript), hash-based router shell, Zustand session store (in-memory only, no localStorage per ADR-019), API client with Bearer token injection and 401 auto-clear, i18n setup (Arabic default RTL, English, Urdu), Home screen with 7 navigation items, and 8 unit tests (3 Home component tests + 5 session store tests). All tests pass. Typecheck passes. BASELINE.json updated (packages 53→54, test_files 408→410).
+- **Changed:** `apps/customer-mini-app/package.json`, `apps/customer-mini-app/tsconfig.json`, `apps/customer-mini-app/vite.config.ts`, `apps/customer-mini-app/index.html`, `apps/customer-mini-app/src/{main.tsx,App.tsx,index.css,store/session.ts,api/client.ts,i18n/index.ts,screens/Home.tsx,__tests__/{Home.test.tsx,session.test.ts,setup.ts}}`, `docs/12-testing/BASELINE.json`, `docs/16-progress/WORK_CLAIMS.md` (CLM-0284 active), `docs/16-progress/TASK_LOG.md` (entry), `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` (M3-01 row), `ROADMAP.md` (نضارة), `pnpm-lock.yaml`.
+- **Verification:** Typecheck passes (local), 8/8 tests pass (local), governance verify passes.
+- **What is NOT claimed:** M3-01 is not complete — this is Wave 1 only (scaffold + session + home). Screen implementations (ride order, delivery, marketplace, search, orders, reputation, profile) come in later waves. E2E tests and accessibility audit (exit gate criteria) are deferred to Wave 6. No Playwright in this wave.
+
 ## 2026-09-22 — Customer Mini App product spec + ADR-044 (CLM-0283)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0283` · **الفرع:** `docs/m3-01-customer-mini-app-spec-adr`

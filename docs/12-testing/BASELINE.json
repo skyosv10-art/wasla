@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T01:29:09Z",
+  "generated_at": "2026-09-22T02:05:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3346bd1dfa434720ca6be825fecdb6db269ce2c8",
-    "branch": "main",
+    "commit": "435b8b79e41211362cd285c5e20a67a7ae139130",
+    "branch": "feat/m3-01-wave3-delivery-places",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2347
+    "tracked_files": 2353
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 54,
     "packages_with_typecheck": 54,
     "packages_with_test": 54,
-    "test_files_tracked": 412,
+    "test_files_tracked": 414,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify.log",
-    "tests_passed": 4928,
+    "tests_passed": 4939,
     "test_files_executed": 308,
     "governance_suite_cases": 22,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:c2b952d7537d5cba85dcbce171fcc0200bd08f3f19022f6891f11c87fb227e58",
+  "fingerprint": "sha256:60f42b5316765a932783875fd10cd808e0661a8b5cbc3c44230dbfca6a3f9c76",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -5642,3 +5642,16 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Marked CLM-0302 as Released (PR #393 merged, branch deleted).
 
 **Scope:** `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`
+
+
+## 2026-09-22 — M3-04 Admin MVP Spec + ADR-047 (CLM-0304)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0304`
+- **الفرع:** `docs/m3-04-admin-mvp-spec`
+
+**What:**
+- Created ADMIN_MVP_SPEC.md: 5 screens (Dashboard, Users, Drivers, Orders, Audit Log), 2 RBAC roles (operator, admin), audit service design, 8 UAT scenarios, 4-wave breakdown.
+- Created ADR-047: Admin MVP architecture — React + Vite + new Audit service (Fastify, port 8090), reuse M3-01/M3-02 patterns, Tailwind CSS.
+
+**Scope:** `docs/01-product/`, `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`

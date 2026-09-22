@@ -6,8 +6,9 @@
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0290` · **الفرع:** `docs/release-clm-0289`
 - **What:** Released CLM-0289 (M3-01 Wave 6 merged via PR #376, squash `c35feab`, CI green 36/36). Corrected MERGE_BLOCKING.json context names to match actual CI workflow job names (singular: negotiation, order, subscription; removed non-existent matching/reputation/roadmap contexts). Updated GitHub branch protection rules accordingly. Updated BASELINE.json for post-merge state. M3-01 exit gate met.
-- **Changed:** `docs/16-progress/WORK_CLAIMS.md` (CLM-0289 released, CLM-0290 active), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `docs/12-testing/MERGE_BLOCKING.json`, `docs/12-testing/BASELINE.json`, `ROADMAP.md`.
-- **Verification:** Governance verify passes (0 failures, 1 skip).
+- **Changed:** `docs/16-progress/WORK_CLAIMS.md` (CLM-0289 released, CLM-0290 released), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `docs/12-testing/MERGE_BLOCKING.json`, `docs/12-testing/BASELINE.json`, `ROADMAP.md` (restored from c35feab, prefix updated).
+- **Verification:** Governance verify passes (0 failures, 1 skip). CI green.
+- **Release:** PR #377 merged (squash `0eb0a19`).
 
 ## 2026-09-22 — Customer Mini App E2E + accessibility Wave 6 (CLM-0289)
 

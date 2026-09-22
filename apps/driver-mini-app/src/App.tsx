@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSessionStore } from "./store/session";
 import { Home } from "./screens/Home";
+import { Offers } from "./screens/Offers";
+import { JobDetail } from "./screens/JobDetail";
 
 // ADR-045 Decision 2 (reuses ADR-044): Hash-based routing (no router framework).
 // Telegram WebView does not support history API reliably.
@@ -18,6 +20,8 @@ type Route =
 
 function parseHash(): Route {
   const hash = window.location.hash.replace(/^#\/?/, "");
+  // Strip query string (e.g., #offers?job_id=xxx → offers)
+  const route = hash.split("?")[0];
   const validRoutes: Route[] = [
     "home",
     "offers",
@@ -28,7 +32,7 @@ function parseHash(): Route {
     "documents",
     "profile",
   ];
-  return validRoutes.includes(hash as Route) ? (hash as Route) : "home";
+  return validRoutes.includes(route as Route) ? (route as Route) : "home";
 }
 
 export function App() {
@@ -53,9 +57,8 @@ export function App() {
   return (
     <div className="app">
       {route === "home" && <Home />}
-      {/* Other screens will be added in subsequent waves */}
-      {route === "offers" && <div className="placeholder">{t("common.loading")}</div>}
-      {route === "job" && <div className="placeholder">{t("common.loading")}</div>}
+      {route === "offers" && <Offers />}
+      {route === "job" && <JobDetail />}
       {route === "earnings" && <div className="placeholder">{t("common.loading")}</div>}
       {route === "vehicles" && <div className="placeholder">{t("common.loading")}</div>}
       {route === "zones" && <div className="placeholder">{t("common.loading")}</div>}

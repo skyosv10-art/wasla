@@ -2,6 +2,28 @@
 
 
 
+## 2026-09-22 — M3-02 Wave 2 Offer Feed + Job Detail (CLM-0293)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0293` · **الفرع:** `feat/m3-02-wave2-offers-jobdetail`
+
+**What:**
+- Wave 2 of M3-02 Driver Mini App per ADR-045.
+- Dispatch types (`src/types/dispatch.ts`): `DispatchJobStatus`, `DispatchOfferStatus`, `OrderType`, `VehicleClass`, `DispatchJob`, `DispatchOffer`, `DispatchRulesSnapshot`.
+- Orders types (`src/types/orders.ts`): `OrderStatus`, `ActorType`, `TransitionRequest`, `Order`, `OrderTransition`.
+- Zustand dispatch store (`src/store/dispatch.ts`): `fetchOffers`, `startPolling` (10s interval), `stopPolling`, `fetchJobDetail`, `acceptOffer` (Idempotency-Key), `rejectOffer`, `transitionOrder` (actor_type="driver"), `cancelJob`, `clearErrors`.
+- Offers screen (`src/screens/Offers.tsx`): Offer Feed with polling, countdown timer, accept/reject buttons, reject reason form.
+- JobDetail screen (`src/screens/JobDetail.tsx`): state-machine-aware transitions (assigned→driver_en_route, driver_en_route→arrived, arrived→in_progress, in_progress→completed), cancel job form.
+- App.tsx updated to wire Offers + JobDetail routes, parseHash strips query params.
+- 33 unit tests (8 dispatch store, 7 Offers, 12 JobDetail, 4 session, 3 Home — 26 new in this wave).
+
+**Why:**
+- ADR-045 Wave 2: Offer Feed + Job Detail are core driver-facing screens for the delivery flow.
+- Provides the primary value-add of the driver mini app: receiving and acting on job offers.
+
+**Result:**
+- Wave 2 implementation complete. 33 unit tests pass, typecheck clean.
+- Next: Wave 3 (Vehicles + Zones), Wave 4 (Documents + Profile), Wave 5 (Job History/Earnings), Wave 6 (E2E + Accessibility).
+
 ## 2026-09-22 — CLM-0292 release (M3-02 Wave 1 merged)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0292` · **الفرع:** `feat/m3-02-wave1-scaffold`

@@ -2,6 +2,13 @@
 
 
 
+## 2026-09-22 — CLM-0291 release (M3-02 spec + ADR merged)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0291` · **الفرع:** `feat/m3-02-driver-mini-app-spec-adr`
+- **What:** Released CLM-0291 (M3-02 Driver Mini App product spec + ADR-045 merged via PR #379, squash `1ba229a`, CI green). Product spec defines 9 screens, 19 API endpoints, state machine rules. ADR-045 reuses M3-01 architecture.
+- **Changed:** `docs/16-progress/WORK_CLAIMS.md` (CLM-0291 released).
+- **Release:** PR #379 merged (squash `1ba229a`).
+
 ## 2026-09-22 — M3-02 Driver Mini App product spec + ADR-045 (CLM-0291)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0291` · **الفرع:** `feat/m3-02-driver-mini-app-spec-adr`

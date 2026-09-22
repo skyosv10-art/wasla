@@ -2,6 +2,15 @@
 
 
 
+## 2026-09-22 — Customer Mini App product spec + ADR-044 (CLM-0283)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0283` · **الفرع:** `docs/m3-01-customer-mini-app-spec-adr`
+- **What:** Created the product specification and architecture decision record for the Customer Mini App (M3-01). The product spec (`CUSTOMER_MINI_APP_SPEC.md`) defines 8 screens (Home, Ride order, Delivery order, Marketplace browse, Search, My Orders, Reputation, Profile), the auth flow (initData → identity session token → Bearer auth), acceptance criteria (secure UI, accessibility, UX, E2E tests), and dependencies on existing backend APIs. ADR-044 decides the technical architecture: React 18 + Vite 5, hash-based routing, Zustand state management, in-memory session token (no localStorage per ADR-019), fetch-based API client, react-i18next for i18n, Vitest + Playwright for testing.
+- **Changed:** `docs/01-product/CUSTOMER_MINI_APP_SPEC.md` (جديد)، `docs/15-decisions/ADR-044-customer-mini-app-architecture.md` (جديد)، `docs/16-progress/WORK_CLAIMS.md` (CLM-0283 نشط)، `docs/16-progress/TASK_LOG.md` (إدخال CLM-0283)، `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` (M3-01 row)، `ROADMAP.md` (نضارة).
+- **Verification:** Governance verify passes.
+- **Prerequisites:** M1 (identity, auth, session lifecycle) and M2 (all services deployed on staging) are met. Backend APIs for customer (10 routes), orders (7 routes), search, marketplace, geography, and reputation are all implemented.
+- **What is NOT claimed:** M3-01 status does not change to In Progress yet — this PR creates the spec and ADR only. Implementation of the Mini App code is the next step. The exit gate (secure UI E2E + accessibility) requires actual code.
+
 ## 2026-09-22 — M2-07 gate stale text correction (CLM-0282)
 
 - **Work Item(s):** M2-07 · **الحجز:** `CLM-0282` · **الفرع:** `docs/m2-07-gate-stale-text-correction`

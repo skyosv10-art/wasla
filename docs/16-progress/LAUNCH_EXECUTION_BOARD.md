@@ -118,7 +118,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M3-01 | Customer Mini App | Product/Customer / UI | M1,M2 | Not Started | secure UI E2E + accessibility | product spec and ADR. |
+| M3-01 | Customer Mini App | Product/Customer / UI | M1,M2 | Not Started | secure UI E2E + accessibility | **`CLM-0283` (2026-09-22):** Product spec + ADR-044 created. [`CUSTOMER_MINI_APP_SPEC.md`](../01-product/CUSTOMER_MINI_APP_SPEC.md) defines 8 screens (Home, Ride/Delivery order forms, Marketplace, Search, My Orders, Reputation, Profile), auth flow (initData → session token → Bearer), acceptance criteria. [`ADR-044`](../15-decisions/ADR-044-customer-mini-app-architecture.md) decides React 18 + Vite 5, hash routing, Zustand, in-memory token (no localStorage), fetch API client, react-i18next, Vitest + Playwright. Prerequisites M1/M2 met. Implementation is next step. |
 | M3-02 | Driver Mini App | Product/Drivers / UI | M1,M2 | Not Started | secure UI E2E + accessibility | product spec and ADR. |
 | M3-03 | Partner surface أو ADR تأجيل | Product/Partners / UI | M1,M2 | Not Started | scope evidence | قرار product. |
 | M3-04 | Admin MVP | Ops / UI | M1,M2 | Not Started | RBAC + audit + UAT | operations workflow spec. |

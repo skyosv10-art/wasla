@@ -5587,3 +5587,19 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0295` · **الفرع:** `feat/m3-02-wave4-documents-profile`
 - **What:** Released CLM-0295 (M3-02 Wave 4 Documents + Profile merged via PR #387, squash `2f0cc1b`, CI green 34/34). Document types (DocumentType, DocumentStatus, DriverDocument, DocumentSubmission), Zustand documents store (fetchDocuments, submitDocument with Idempotency-Key), Documents screen (list, add form with 5 doc types, rejection reasons, expiry dates), Profile types (DriverProfile, ProfilePatch, VerificationStatus, ServiceKind), Zustand profile store (fetchProfile, updateProfile with PATCH), Profile screen (status/verification/availability display, editable display_name/locale/zone/service_kinds), i18n (ar/en/ur), 34 unit tests (107 total).
+
+## 2026-09-22 — M3-02 Wave 5 Job History/Earnings (CLM-0298)
+
+- **Work Item(s):** M3-02
+- **الحجز:** `CLM-0298`
+- **الفرع:** `feat/m3-02-wave5-job-history-earnings`
+
+**What:**
+- Wave 5 of M3-02 Driver Mini App per ADR-045.
+- Earnings types (EarningsPeriod, EarningsSummary, JobHistoryEntry) with OrderStatus/OrderType/VehicleClass/Money.
+- Zustand earnings store: fetchEarnings (GET /drivers/:id/jobs?status=completed&period=...), setPeriod, clearErrors, computeSummary.
+- Earnings screen: period buttons (today/week/month), summary card (job_count + total_amount), job list (order_public_id, type, amount, status, date), empty state.
+- i18n: ar/en/ur for earnings periods, job types, statuses.
+- 18 new unit tests (125 total in driver-mini-app).
+
+**Scope:** `apps/driver-mini-app/src/` (types, store, screens, tests, i18n)

@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T10:57:13Z",
+  "generated_at": "2026-09-22T11:25:05Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2f0cc1bcaa582b5d8556b6e777df0c20b48bde87",
-    "branch": "docs/release-clm-0295",
+    "commit": "4f7ce05a9973e6c12756f8fb4b77b5373982dd10",
+    "branch": "feat/m3-02-wave5-job-history-earnings",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "Release docs only — governance ledger update, no code changes",
+    "dirty_files": 10,
+    "dirty_reason": "Wave 5 added 2 new test files (earnings.test.ts, Earnings.test.tsx) — test_files_tracked 437→439",
     "tracked_files": 2419
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 55,
     "packages_with_typecheck": 55,
     "packages_with_test": 55,
-    "test_files_tracked": 437,
+    "test_files_tracked": 439,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_wave4.log",
-    "tests_passed": 5071,
-    "test_files_executed": 328,
+    "source": "/tmp/verify_wave5.log",
+    "tests_passed": 5089,
+    "test_files_executed": 330,
     "governance_suite_cases": 491,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:b6e75a13c5e245e2c43cb713368907e58606d42fab32e5ff16d64c69169443eb",
+  "fingerprint": "sha256:d0d2f75065bf54d6775f375fc84d555fae9665b78109d29a45625084a8b1c1be",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

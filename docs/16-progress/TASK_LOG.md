@@ -5776,3 +5776,10 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Defined abuse scenarios: unsupported commands, command injection, rate abuse, admin access attempts, unconfigured groups.
 - Defined user journeys for each bot.
 - Exit gate: spec published + journey tests + abuse tests + CI green.
+
+### Result
+- BOT_ROLE_SPEC.md created with 6 sections: allowed commands per bot, prohibited actions, abuse scenarios, user journeys, exit gate criteria, published limits.
+- 73 new tests added (20 journey + 53 abuse), all passing.
+- PR #404 merged (squash), CI 38/38 green.
+- M3-05 exit gate met: journey and abuse tests exist, allowed commands defined in published spec.
+- **M3-05 COMPLETE.**

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T15:13:26Z",
+  "generated_at": "2026-09-22T18:32:36Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "c123b4a783dac83ad7e9aebe6ff1f88f95613f8b",
-    "branch": "feat/m3-04-wave1-scaffold-audit",
-    "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "M3-04 Wave 1: admin portal scaffold added (new package + test files)",
-    "tracked_files": 2433
+    "commit": "2452d93fe8505077df673db70dc6b6d5e8f24c7e",
+    "branch": "feat/m3-04-wave2-users-drivers",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 2456
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 56,
     "packages_with_typecheck": 56,
     "packages_with_test": 56,
-    "test_files_tracked": 445,
+    "test_files_tracked": 449,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:9670f4493679c770fcd9ebe3afce6c743f622a44b988bf2be9877ae29c1bbaa0",
+  "fingerprint": "sha256:1366195c1ba48de966eb7dbf56ad4146a67b33a076a5be48c96b270d3dc4a5f1",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

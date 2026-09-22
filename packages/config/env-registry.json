@@ -1605,6 +1605,26 @@
       "note_ar": "تُمرَّرُ عبرَ سطرِ الأوامرِ في webServer في Playwright، ويُقرأُها main.tsx عبرَ import.meta.env. تُزالُ بالكاملِ من حزمةِ الإنتاجِ عندَ غيابِها."
     },
     {
+      "name": "VITE_API_BASE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "عنوانُ الأساسِ لواجهةِ برمجةِ التطبيقاتِ للبوّابةِ الإداريّةِ — يُقرَأُ في api/client.ts عبر import.meta.env.",
+      "owner_item": "M3-04",
+      "readers": [
+        {
+          "file": "apps/admin-portal/src/api/client.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "يُمرَّرُ عبرَ سطرِ الأوامرِ في webServer في Playwright، ويُقرَأُ في client.ts عبر import.meta.env."
+    },
+    {
       "name": "WASLA_SERVICE_AUTH_ACTIVE_KID",
       "type": "string",
       "required": "conditional",

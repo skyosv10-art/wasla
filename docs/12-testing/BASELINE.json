@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T12:26:48Z",
+  "generated_at": "2026-09-22T15:13:26Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d3ab41f12c0b69af5d9390abe3da0b7c90862aeb",
-    "branch": "feat/m3-02-wave6-e2e-accessibility",
+    "commit": "c123b4a783dac83ad7e9aebe6ff1f88f95613f8b",
+    "branch": "feat/m3-04-wave1-scaffold-audit",
     "dirty": true,
-    "dirty_files": 6,
-    "dirty_reason": "Wave 6 added E2E test files (Playwright not counted in vitest baseline) and CI workflow change — no new vitest test files",
-    "tracked_files": 2424
+    "dirty_files": 9,
+    "dirty_reason": "M3-04 Wave 1: admin portal scaffold added (new package + test files)",
+    "tracked_files": 2433
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "07276a853622eabb2836a327464ae3e8bd0c2884564cff1b108f2efcb74cc23c",
-    "lines": 4619
+    "sha256": "da3b3106781bd19128f7c1e9e58525c63d8c80f311595212554b9b32867d5724",
+    "lines": 4708
   },
   "static": {
-    "packages": 55,
-    "packages_with_typecheck": 55,
-    "packages_with_test": 55,
-    "test_files_tracked": 443,
+    "packages": 56,
+    "packages_with_typecheck": 56,
+    "packages_with_test": 56,
+    "test_files_tracked": 445,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_wave6.log",
-    "tests_passed": 5089,
-    "test_files_executed": 330,
-    "governance_suite_cases": 489,
-    "governance_suite_failed": 3,
+    "source": "/tmp/verify_real.log",
+    "tests_passed": 5037,
+    "test_files_executed": 324,
+    "governance_suite_cases": 491,
+    "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:9b8435cd6dc191d5d3371a587272f73ff1dbc7af588c4126f0475d63c0d06213",
+  "fingerprint": "sha256:9670f4493679c770fcd9ebe3afce6c743f622a44b988bf2be9877ae29c1bbaa0",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

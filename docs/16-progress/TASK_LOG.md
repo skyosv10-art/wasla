@@ -5655,3 +5655,17 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Created ADR-047: Admin MVP architecture — React + Vite + new Audit service (Fastify, port 8090), reuse M3-01/M3-02 patterns, Tailwind CSS.
 
 **Scope:** `docs/01-product/`, `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`
+
+## 2026-09-22 — M3-04 Wave 1 Admin Portal Scaffold (CLM-0305)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0305`
+- **الفرع:** `feat/m3-04-wave1-scaffold`
+
+**What:**
+- Admin portal scaffold (apps/admin-portal/): React 18 + Vite 5, hash router (5 routes: dashboard, users, drivers, orders, audit), Zustand session store (in-memory, no localStorage), API client with Bearer, i18n (ar/en/ur), Dashboard screen with stat cards + alert cards, 7 unit tests (3 dashboard + 4 session store).
+- Audit service deferred to Wave 3 (paired with Audit Log UI) to avoid governance overhead of new service registration.
+- VITE_API_BASE_URL registered in env-registry.json (type: http_url, scopes: runtime+test).
+- Baseline regenerated (packages 56, test_files 445).
+
+**Scope:** `apps/admin-portal/`, `packages/config/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`

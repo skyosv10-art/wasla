@@ -24,6 +24,10 @@
         {
           "file": "apps/customer-mini-app/playwright.config.ts",
           "mode": "direct"
+        },
+        {
+          "file": "apps/driver-mini-app/playwright.config.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "متغيّرٌ قياسيٌّ تُضبطُهُ منصّاتُ CI تلقائيّاً. لا يُقرأُ في الشيفرةِ الإنتاجيّةِ — يُستعملُ في إعداداتِ Playwright فقط."

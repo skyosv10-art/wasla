@@ -3,7 +3,7 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-22T03:45:00Z",
+  "measured_at": "2026-09-22T12:30:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
   "evidence_dir": "docs/12-testing/ci-evidence/2026-09-22T034500Z-corrected-contexts",
   "protection": {
@@ -43,7 +43,8 @@
         "exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)",
         "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
         "image-supply-chain",
-        "customer-mini-app-e2e"
+        "customer-mini-app-e2e",
+        "driver-mini-app-e2e"
       ]
     },
     "enforce_admins": true,

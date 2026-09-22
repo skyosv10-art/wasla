@@ -5608,3 +5608,22 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0298` · **الفرع:** `feat/m3-02-wave5-job-history-earnings`
 - **What:** Released CLM-0298 (M3-02 Wave 5 Job History/Earnings merged via PR #389, CI green 34/34). Earnings types (EarningsPeriod, EarningsSummary, JobHistoryEntry), Zustand earnings store (fetchEarnings with period filtering), Earnings screen (period buttons, summary, job list), i18n (ar/en/ur), 18 unit tests (125 total).
+
+## 2026-09-22 — M3-02 Wave 6 E2E + Accessibility (CLM-0300)
+
+- **Work Item(s):** M3-02
+- **الحجز:** `CLM-0300`
+- **الفرع:** `feat/m3-02-wave6-e2e-accessibility`
+
+**What:**
+- Wave 6 (final) of M3-02 Driver Mini App per ADR-045.
+- Playwright config (playwright.config.ts): Pixel 5 viewport, RTL Arabic, Asia/Riyadh timezone, vite preview on port 4174.
+- E2E helpers (helpers.ts): seedSession, gotoRoute, mockDriverApis (dispatch, documents, profile, vehicles, zones, jobs).
+- Navigation smoke tests (9 tests): all 8 screens reachable, menu item click navigation.
+- Offer flow tests (8 tests): offers empty state, job detail empty state, earnings period buttons, period switch, documents/profile/vehicles/zones render.
+- Session security tests (6 tests): loading state, no API calls without session, no localStorage/sessionStorage token, authenticated session shows app, Authorization Bearer header.
+- Accessibility axe-core audits (8 screens): home, offers, job detail, earnings, vehicles, zones, documents, profile — WCAG 2.0 A/AA 0 violations.
+- CI job driver-mini-app-e2e added to .github/workflows/ci.yml.
+- M3-02 exit gate met: secure UI E2E + accessibility evidence exists.
+
+**Scope:** `apps/driver-mini-app/e2e/`, `.github/workflows/ci.yml`, `docs/16-progress/`

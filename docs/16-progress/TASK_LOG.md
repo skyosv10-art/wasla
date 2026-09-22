@@ -5718,3 +5718,16 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Orders list endpoint (GET /orders) deferred — search by public ID is available via lookup.
 
 **Scope:** `apps/admin-portal/src/` (types, store, screens, tests, i18n, App.tsx), `docs/12-testing/` (BASELINE), `docs/16-progress/`, `ROADMAP.md`
+
+## 2026-09-22 — Release CLM-0308 (CLM-0309)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0309`
+- **الفرع:** `docs/release-clm-0308`
+
+**What:**
+- Released CLM-0308 (Wave 3 Orders + Audit Log UI) after PR #400 merged (squash, CI 35/35 green).
+- Post-merge BASELINE.json regenerated (453 test files tracked, clean tree, dirty=false).
+- WORK_CLAIMS.md: CLM-0308 released, CLM-0309 active for release docs.
+
+**Scope:** `docs/12-testing/`, `docs/16-progress/`

@@ -1,10 +1,10 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T19:22:23Z",
+  "generated_at": "2026-09-22T19:30:21Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "99543e299947965177eadeacf3fbf028f42cc9e4",
-    "branch": "feat/m3-04-wave3-orders-audit",
+    "commit": "731d64129a66c3e8a5ce50232d769238502fb9f3",
+    "branch": "docs/release-clm-0308",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",

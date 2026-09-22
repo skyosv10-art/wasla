@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App E2E + accessibility Wave 6 (CLM-0289)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0289` · **الفرع:** `feat/m3-01-wave6-e2e-a11y`
+- **What:** Implemented Wave 6 (final) of M3-01 Customer Mini App. Wired all 9 screens into App.tsx router (was placeholder showing Home for all routes). Added Playwright E2E test suite (32 tests: 5 session security, 11 navigation smoke, 4 order flow with Bearer + Idempotency-Key assertions, 4 places CRUD, 9 axe-core accessibility). Added @axe-core/playwright for WCAG 2.0 A/AA audits — 0 violations across all 9 screens. Fixed viewport meta tag accessibility issue (removed user-scalable=no). Added compile-time gated E2E session seeding hook (VITE_E2E=true, tree-shaken in production). Added CI job customer-mini-app-e2e to ci.yml. Updated ADR-044 with implementation note. All 65 unit tests pass, 32 E2E tests pass.
+- **Changed:** `apps/customer-mini-app/src/App.tsx` (screen wiring + places route), `apps/customer-mini-app/src/main.tsx` (E2E session hook), `apps/customer-mini-app/src/screens/Home.tsx` (places menu item), `apps/customer-mini-app/index.html` (viewport fix), `apps/customer-mini-app/package.json` (Playwright + axe-core deps), `apps/customer-mini-app/tsconfig.json` (vite/client types), `apps/customer-mini-app/playwright.config.ts` (new), `apps/customer-mini-app/e2e/` (5 test files + helpers, new), `.github/workflows/ci.yml` (customer-mini-app-e2e job), `docs/12-testing/M3-01_CUSTOMER_MINI_APP_E2E_ACCESSIBILITY.md` (new evidence), `docs/15-decisions/ADR-044-customer-mini-app-architecture.md` (implementation note), `docs/16-progress/WORK_CLAIMS.md` (CLM-0289), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`.
+- **Verification:** Typecheck passes, 65/65 unit tests pass, 32/32 E2E tests pass (local), governance verify passes.
+- **M3-01 Exit Gate:** secure UI E2E + accessibility evidence now exists. M3-01 exit gate criterion is met.
+
 ## 2026-09-22 — Customer Mini App orders + reputation + profile Wave 5 (CLM-0288)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0288` · **الفرع:** `feat/m3-01-wave5-orders-reputation-profile`

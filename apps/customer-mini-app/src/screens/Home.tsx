@@ -9,6 +9,7 @@ export function Home() {
   const menuItems = [
     { key: "ride", label: t("home.ride"), emoji: "🚗", hash: "#/ride" },
     { key: "delivery", label: t("home.delivery"), emoji: "📦", hash: "#/delivery" },
+    { key: "places", label: t("places.title"), emoji: "📍", hash: "#/places" },
     { key: "marketplace", label: t("home.marketplace"), emoji: "🛍", hash: "#/marketplace" },
     { key: "search", label: t("home.search"), emoji: "🔎", hash: "#/search" },
     { key: "myOrders", label: t("home.myOrders"), emoji: "📋", hash: "#/orders" },

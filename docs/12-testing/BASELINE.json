@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T17:49:33Z",
+  "generated_at": "2026-09-22T18:32:36Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "334a956",
+    "commit": "2452d93fe8505077df673db70dc6b6d5e8f24c7e",
     "branch": "feat/m3-04-wave2-users-drivers",
     "dirty": false,
     "dirty_files": 0,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:c63d8acdd34d320243640e1569ff37b3e7dda6c69ae78ad6f88cb95e922aa73b",
+  "fingerprint": "sha256:1366195c1ba48de966eb7dbf56ad4146a67b33a076a5be48c96b270d3dc4a5f1",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

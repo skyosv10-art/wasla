@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-22T17:49:33Z
-الالتزام: d1bd10ad7bec62ed9f82690f6eed404421a2d9f7  الفرع: feat/m3-04-wave2-users-drivers  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-09-22T18:32:36Z
+الالتزام: 2452d93fe8505077df673db70dc6b6d5e8f24c7e  الفرع: feat/m3-04-wave2-users-drivers  شجرةٌ نظيفةٌ
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 4708 سطراً · sha256 da3b3106781bd191…
 

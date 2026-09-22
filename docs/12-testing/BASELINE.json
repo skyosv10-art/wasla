@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T02:35:00Z",
+  "generated_at": "2026-09-22T02:55:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "28997c474940eab09ed54b68b5712632ec5df3e9",
-    "branch": "feat/m3-01-wave4-marketplace-search",
+    "commit": "e4c36447f7377472b970be90e0254550d10ac2b9",
+    "branch": "feat/m3-01-wave5-orders-reputation-profile",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2355
+    "tracked_files": 2358
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 54,
     "packages_with_typecheck": 54,
     "packages_with_test": 54,
-    "test_files_tracked": 416,
+    "test_files_tracked": 419,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify.log",
-    "tests_passed": 4950,
+    "tests_passed": 4964,
     "test_files_executed": 308,
     "governance_suite_cases": 22,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:0665e83dd614780c16d41dbb2d2d138f3e66c3203b793c3015337dbc7d8fcb43",
+  "fingerprint": "sha256:31f8dad571fb1d59238731bd7f407d88ddd8b1a8e10ba896307c893edb463cac",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

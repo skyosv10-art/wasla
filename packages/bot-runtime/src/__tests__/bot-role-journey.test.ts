@@ -2,41 +2,26 @@
  * M3-05 Bot role journey tests — prove each bot answers its declared commands.
  *
  * BOT_ROLE_SPEC.md defines the allowed command set per bot. This file proves
- * that every declared command is accepted (not rejected as unsupported) and
- * that the bot's supportedCommands list matches the spec exactly.
+ * that every declared command is accepted by the channel core (not rejected as
+ * unsupported). Whether the shipped bots register exactly these lists is measured
+ * in each bot package against the real composition root.
  */
 
 import { describe, expect, it } from "vitest";
 
-import { BOT_KINDS } from "@wasla/contracts-channel";
+import { BOT_ALLOWED_COMMANDS, BOT_KINDS } from "@wasla/contracts-channel";
 
 import { authHeaders, harnessFor, type HarnessOptions } from "./harness.js";
 
 /**
- * The allowed command sets per BOT_ROLE_SPEC.md.
- * These mirror CUSTOMER_SUPPORTED_COMMANDS and DRIVER_SUPPORTED_COMMANDS
- * in the bot packages, but are duplicated here because bot-runtime does
- * not depend on the individual bot packages.
+ * The allowed command sets per BOT_ROLE_SPEC.md §2, read from the one code-side
+ * source (`BOT_ALLOWED_COMMANDS`). CLM-0312 replaced two local copies that were
+ * compared with themselves; the spec ⇔ constant binding now lives in
+ * packages/contracts/channel/src/__tests__/bot-role-spec.test.ts, and the real
+ * bots are measured in bots/<bot>/src/__tests__/bot-role.test.ts.
  */
-const CUSTOMER_COMMANDS = [
-  "start",
-  "places",
-  "orders",
-  "negotiations",
-  "accept",
-  "reject",
-] as const;
-
-const DRIVER_COMMANDS = [
-  "start",
-  "available",
-  "offline",
-  "status",
-  "docs",
-  "negotiations",
-  "accept",
-  "reject",
-] as const;
+const CUSTOMER_COMMANDS = BOT_ALLOWED_COMMANDS.customer;
+const DRIVER_COMMANDS = BOT_ALLOWED_COMMANDS.driver;
 
 /** Build a Telegram command update for any /command. */
 function commandUpdate(
@@ -88,16 +73,6 @@ describe("M3-05: Bot role — journey tests", () => {
       });
     }
 
-    it("customer bot supportedCommands matches BOT_ROLE_SPEC", () => {
-      expect([...CUSTOMER_COMMANDS]).toEqual([
-        "start",
-        "places",
-        "orders",
-        "negotiations",
-        "accept",
-        "reject",
-      ]);
-    });
   });
 
   describe("Driver bot accepts all declared commands", () => {
@@ -120,18 +95,6 @@ describe("M3-05: Bot role — journey tests", () => {
       });
     }
 
-    it("driver bot supportedCommands matches BOT_ROLE_SPEC", () => {
-      expect([...DRIVER_COMMANDS]).toEqual([
-        "start",
-        "available",
-        "offline",
-        "status",
-        "docs",
-        "negotiations",
-        "accept",
-        "reject",
-      ]);
-    });
   });
 
   describe("Partner bot accepts only /start", () => {

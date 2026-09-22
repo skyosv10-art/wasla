@@ -54,6 +54,7 @@ export {
 } from "./welcome.js";
 
 export {
+  assertCommandsWithinRole,
   buildBotRuntime,
   type BotRuntime,
   type BuildBotRuntimeOptions,

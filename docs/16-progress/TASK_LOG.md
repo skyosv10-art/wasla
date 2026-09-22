@@ -5776,3 +5776,29 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Defined abuse scenarios: unsupported commands, command injection, rate abuse, admin access attempts, unconfigured groups.
 - Defined user journeys for each bot.
 - Exit gate: spec published + journey tests + abuse tests + CI green.
+
+## 2026-09-23 — M3-05 تدقيقٌ وإنفاذ: الأوامرُ خارج المواصفة لا تُقلع (CLM-0312)
+
+- **Work Item(s):** M3-05
+- **Status:** In Progress → Ready for Gate (محلّيًّا)؛ CI يُسجَّل في [`M3-05_GATE.md`](../12-testing/M3-05_GATE.md) §5
+- **الحجز:** `CLM-0312` (يخلُف `CLM-0311` المحرَّر بسجلٍّ تدقيقي)
+- **الفرع:** `feat/m3-05-bot-role-enforcement`
+
+**ماذا ولماذا:** إعادةُ قراءة `main` قبل دمج PR #405 (نقل M3-05 إلى Completed) كشفت أنّ بند القبول الرابع في `BOT_ROLE_SPEC.md` §6 غيرُ منفَّذ: اختبارا «matches BOT_ROLE_SPEC» قارنا قائمةً محلّيةً بنفسها، والأداةُ تتجاوز `buildBotRuntime`. **الطفرةُ على `main` @ `a33a7ad`:** إضافة `"help"` إلى `CUSTOMER_SUPPORTED_COMMANDS` تُبقي bot-runtime 178/178 وcustomer-bot 36/36 خضراء. لذا لم يُدمَج #405 (بقي مفتوحًا، لم يُغلق ولم يُحذف فرعه — قرار الإغلاق للمالك)، وبقي M3-05 `In Progress`.
+
+**أين:**
+- `packages/contracts/channel/src/index.ts` — `BOT_ALLOWED_COMMANDS` (مصدرٌ واحد في الشفرة).
+- `packages/contracts/channel/src/__tests__/bot-role-spec.test.ts` — يقرأ جداول §2 من المواصفة ويطلب التطابق في الاتجاهين (9 اختبارات).
+- `packages/bot-runtime/src/runtime.ts` + `index.ts` — `assertCommandsWithinRole` داخل `buildBotRuntime`: fail-closed برمز `BOT_COMMAND_OUTSIDE_ROLE_SPEC`.
+- `packages/bot-runtime/src/__tests__/bot-role-runtime.test.ts` — 26 اختبارًا.
+- `bots/{customer,driver,partner}-bot/src/__tests__/bot-role.test.ts` — عبر جذر التركيب الحقيقي (15 · 17 · 10).
+- `bot-role-journey.test.ts` · `bot-role-abuse.test.ts` — القوائمُ من `BOT_ALLOWED_COMMANDS`؛ حُذف اختباران تكراريّان.
+- `docs/01-product/BOT_ROLE_SPEC.md` §6/§6.1 · `docs/12-testing/M3-05_GATE.md` (جديد).
+
+**API/Event/Schema:** لا تغيير في OpenAPI أو الأحداث أو القاعدة. تغييرٌ سلوكيّ واحد: بوتٌ يسجّل أمرًا خارج قائمته **يرفض الإقلاع** (لم يكن أيُّ بوتٍ حاليٍّ كذلك — مقيس).
+
+**الاختبار:** contracts-channel 34→43 · bot-runtime 178→202 · customer-bot 36→51 · driver-bot 43→60 · partner-bot 6→16. `pnpm -r typecheck` exit 0. طفرات M1–M4 كلُّها تعضّ (تفاصيل في البوابة §4).
+
+**مشاكل وحلّها:** أوّل تشغيلٍ لطفرة M4 جرى فوق طفرة M3 غير مستعادة (خطأ مسار في سكربت الاستعادة) — أُعيدت الملفّات يدويًّا وأُعيد القياس نظيفًا؛ مُسجَّل في البوابة §4 ولم يُمحَ.
+
+**لم يكتمل:** حكمُ CI على الفرع ثم على `main`؛ ثم طلبُ نقل M3-05 إلى Completed. **Migration/Deploy/Config:** لا. **مخاطر:** إضافةُ أمرٍ مستقبلًا تتطلّب ثلاثة تعديلات في PR واحد (المواصفة + الثابت + التدفق) — مقصود. **التالي:** M3-06 (i18n/accessibility/error/offline UX) ثم M3-07. **يتابعه:** @uxxxu (agent:perplexity-computer).

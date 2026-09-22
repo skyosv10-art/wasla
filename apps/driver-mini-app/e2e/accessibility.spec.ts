@@ -14,6 +14,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("home screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "home");
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -24,7 +25,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("offers screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "offers");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -35,7 +36,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("job detail screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "job");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -46,7 +47,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("earnings screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "earnings");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -57,7 +58,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("vehicles screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "vehicles");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -68,7 +69,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("zones screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "zones");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -79,7 +80,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("documents screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "documents");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
@@ -90,7 +91,7 @@ test.describe("Accessibility — axe-core audit", () => {
 
   test("profile screen has no WCAG A/AA violations", async ({ page }) => {
     await gotoRoute(page, "profile");
-    await page.waitForTimeout(500);
+    await page.waitForLoadState("networkidle");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])

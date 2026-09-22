@@ -59,7 +59,7 @@ export function Users() {
   if (loading && users.length === 0) {
     return (
       <div className="screen users-screen">
-        <p className="loading-text">{t("common.loading")}</p>
+        <p className="loading-text" role="status">{t("common.loading")}</p>
       </div>
     );
   }
@@ -67,7 +67,7 @@ export function Users() {
   if (error) {
     return (
       <div className="screen users-screen">
-        <p className="error-text">{t("common.error")}: {error}</p>
+        <p className="error-text" role="alert">{t("common.error")}: {error}</p>
         <button onClick={() => { clearErrors(); fetchUsers(); }}>{t("common.retry")}</button>
       </div>
     );

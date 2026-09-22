@@ -71,9 +71,9 @@ export function Orders() {
           </h2>
         </div>
 
-        {detailLoading && <p className="loading">{t("common.loading")}</p>}
+        {detailLoading && <p className="loading" role="status">{t("common.loading")}</p>}
         {detailError && (
-          <p className="error">
+          <p className="error" role="alert">
             {t("common.error")}: {detailError}
           </p>
         )}
@@ -182,9 +182,9 @@ export function Orders() {
 
         <div className="detail-card">
           <h3>{t("admin.orders.history", "Status History")}</h3>
-          {historyLoading && <p className="loading">{t("common.loading")}</p>}
+          {historyLoading && <p className="loading" role="status">{t("common.loading")}</p>}
           {historyError && (
-            <p className="error">
+            <p className="error" role="alert">
               {t("common.error")}: {historyError}
             </p>
           )}
@@ -232,6 +232,7 @@ export function Orders() {
       <form className="filter-bar" onSubmit={handleSearch}>
         <input
           type="text"
+          aria-label="Search by Order ID"
           placeholder={t("admin.orders.searchPlaceholder", "Search by Order ID (ORD-XXXXXXXXXX)")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -255,7 +256,7 @@ export function Orders() {
       </form>
 
       {searchError && (
-        <p className="error">
+        <p className="error" role="alert">
           {t("common.error")}: {searchError}
         </p>
       )}

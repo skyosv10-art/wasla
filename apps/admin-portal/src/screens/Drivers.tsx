@@ -77,7 +77,7 @@ export function Drivers() {
   if (loading && drivers.length === 0) {
     return (
       <div className="screen drivers-screen">
-        <p className="loading-text">{t("common.loading")}</p>
+        <p className="loading-text" role="status">{t("common.loading")}</p>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export function Drivers() {
   if (error) {
     return (
       <div className="screen drivers-screen">
-        <p className="error-text">{t("common.error")}: {error}</p>
+        <p className="error-text" role="alert">{t("common.error")}: {error}</p>
         <button onClick={() => { clearErrors(); fetchDrivers(); }}>{t("common.retry")}</button>
       </div>
     );

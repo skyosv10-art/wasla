@@ -3,9 +3,9 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-17T14:42:04Z",
+  "measured_at": "2026-09-22T03:31:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-17T144500Z-risk-0015-replay-store-context",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-22T033100Z-customer-mini-app-e2e-required",
   "protection": {
     "required_status_checks": {
       "strict": true,
@@ -42,7 +42,8 @@
         "db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)",
         "exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)",
         "image-supply-chain",
-        "db-integration (service-auth, @wasla/service-auth, wasla_replay_test)"
+        "db-integration (service-auth, @wasla/service-auth, wasla_replay_test)",
+        "customer-mini-app-e2e"
       ]
     },
     "enforce_admins": true,

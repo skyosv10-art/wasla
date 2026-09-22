@@ -67,6 +67,8 @@ A single `apiClient` module that:
 - **Playwright** for E2E tests (cross-browser, can drive Telegram WebView in headed mode).
 - **axe-core** via `@axe-core/playwright` for accessibility audits.
 
+> **Implementation note (CLM-0289, 2026-09-22):** Playwright and axe-core are no longer deferred. Wave 6 delivers 32 E2E tests (session security, navigation smoke, order flow, places CRUD) and 9 axe-core accessibility audits (WCAG 2.0 A/AA, 0 violations). A dedicated CI job `customer-mini-app-e2e` runs in the WASLA CI workflow. See [M3-01_CUSTOMER_MINI_APP_E2E_ACCESSIBILITY.md](../12-testing/M3-01_CUSTOMER_MINI_APP_E2E_ACCESSIBILITY.md) for full evidence.
+
 ### Decision 8 — Build output is static files served by Render
 
 The Vite build produces static files in `apps/customer-mini-app/dist/`. These are served:

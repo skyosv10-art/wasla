@@ -707,6 +707,47 @@ jobs:
           echo "M1-02: حالةُ منعِ الإعادةِ قِيست ونجحت على Postgres حقيقيٍّ"
 
   # ───────────────────────────────────────────────────────────────────
+  # M3-01 — customer-mini-app-e2e: Playwright E2E + accessibility gate.
+  #
+  # يُشغِّلُ اختباراتِ Playwright ضدَّ حزمةِ الإنتاجِ المبنيةِ (vite build +
+  # vite preview). يُحاكي الـ API على مستوى route layer — لا اعتمادَ على
+  # خادمٍ خلفيٍّ. يتضمّنُ فحصَ axe-core لـ WCAG 2.0 A/AA.
+  #
+  # ADR-044: Playwright لم يعد مؤجَّلاً بعد CLM-0289.
+  # ───────────────────────────────────────────────────────────────────
+  customer-mini-app-e2e:
+    name: customer-mini-app-e2e
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.20.1"
+      - name: تفعيل pnpm المثبَّت
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+      - name: install
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/customer-mini-app
+      - name: Run E2E + accessibility tests
+        run: pnpm --filter @wasla/customer-mini-app exec playwright test
+      - name: Upload E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-mini-app-e2e-report
+          path: apps/customer-mini-app/playwright-report/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────────
   # M2-01 — image-supply-chain: بناءُ الصورةِ وعقدُها وقائمةُ موادِها وثغراتُها.
   #
   # هذهِ الوظيفةُ **هيَ الإثباتُ**؛ والحارسُ (الفحصُ 19) يمنعُ مَحوَها ومَحوَ

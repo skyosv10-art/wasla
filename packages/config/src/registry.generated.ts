@@ -32,8 +32,18 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 63 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 65 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
+  {
+    name: "CI",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["test"],
+    readerCount: 1,
+    ownerItem: "M3-01",
+  },
   {
     name: "COMMUNITY_GROUP_CHAT_IDS",
     type: "csv",
@@ -625,6 +635,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-04",
   },
   {
+    name: "VITE_E2E",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["test"],
+    readerCount: 2,
+    ownerItem: "M3-01",
+  },
+  {
     name: "WASLA_SERVICE_AUTH_ACTIVE_KID",
     type: "string",
     required: "conditional",
@@ -668,6 +688,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
 
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
 export const ENV_VAR_NAMES = [
+  "CI",
   "COMMUNITY_GROUP_CHAT_IDS",
   "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",
   "CUSTOMER_BOT_MINI_APP_LABEL",
@@ -727,6 +748,7 @@ export const ENV_VAR_NAMES = [
   "SUBSCRIPTION_SERVICE_HOST",
   "SUBSCRIPTION_SERVICE_PORT",
   "SUPPORT_GROUP_CHAT_IDS",
+  "VITE_E2E",
   "WASLA_SERVICE_AUTH_ACTIVE_KID",
   "WASLA_SERVICE_AUTH_KEYS",
   "WASLA_SERVICE_TOKEN_REPLAY_MODE",

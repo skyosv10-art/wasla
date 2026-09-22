@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSessionStore } from "./store/session";
 import { Home } from "./screens/Home";
+import { RideOrder } from "./screens/RideOrder";
+import { DeliveryOrder } from "./screens/DeliveryOrder";
+import { SavedPlaces } from "./screens/SavedPlaces";
+import { Marketplace } from "./screens/Marketplace";
+import { Search } from "./screens/Search";
+import { MyOrders } from "./screens/MyOrders";
+import { Reputation } from "./screens/Reputation";
+import { Profile } from "./screens/Profile";
 
 // ADR-044 Decision 2: Hash-based routing (no router framework).
 // Telegram WebView does not support history API reliably.
@@ -10,6 +18,7 @@ type Route =
   | "home"
   | "ride"
   | "delivery"
+  | "places"
   | "marketplace"
   | "search"
   | "orders"
@@ -22,6 +31,7 @@ function parseHash(): Route {
     "home",
     "ride",
     "delivery",
+    "places",
     "marketplace",
     "search",
     "orders",
@@ -42,8 +52,8 @@ export function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  // ADR-044: All routes show Home for now (placeholder).
-  // Screen implementations come in later waves.
+  // ADR-044 Decision 4: Session token in memory only. Unauthenticated users
+  // see a loading state until the session is initialized from Telegram initData.
   if (!isAuthenticated()) {
     return (
       <div className="app-loading">
@@ -55,11 +65,14 @@ export function App() {
   return (
     <div className="app">
       {route === "home" && <Home />}
-      {route !== "home" && (
-        <div className="placeholder">
-          <Home />
-        </div>
-      )}
+      {route === "ride" && <RideOrder />}
+      {route === "delivery" && <DeliveryOrder />}
+      {route === "places" && <SavedPlaces />}
+      {route === "marketplace" && <Marketplace />}
+      {route === "search" && <Search />}
+      {route === "orders" && <MyOrders />}
+      {route === "reputation" && <Reputation />}
+      {route === "profile" && <Profile />}
     </div>
   );
 }

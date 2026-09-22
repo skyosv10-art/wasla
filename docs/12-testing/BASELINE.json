@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T03:20:00Z",
+  "generated_at": "2026-09-22T03:30:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "be51f75c162c2fd6202aeeeaa61d2d55d71ffa2e",
+    "commit": "16dc9dcdfe6367a678aa81b584d1c74be981f765",
     "branch": "feat/m3-01-wave6-e2e-a11y",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2372
+    "tracked_files": 2374
   },
   "env": {
     "node": "v20.20.1",
@@ -19,15 +19,15 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "51bf884943f2a7b8a495ee63b5da895a99e5e5bfce82805d5bd66b83313bb0b0",
-    "lines": 4528
+    "sha256": "fd866a22a3bcec5d32d383dc9eff8767885c759c5127d4c6d060d063775750d6",
+    "lines": 4570
   },
   "static": {
     "packages": 54,
     "packages_with_typecheck": 54,
     "packages_with_test": 54,
-    "test_files_tracked": 425,
-    "ci_jobs": 31,
+    "test_files_tracked": 424,
+    "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
     "risks_not_closed": 31

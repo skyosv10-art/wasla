@@ -180,6 +180,7 @@ export function Drivers() {
               <h2>{t("drivers.reject_document")}</h2>
               <input
                 type="text"
+                aria-label="Rejection reason code"
                 placeholder={t("drivers.reason_code")}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -232,6 +233,7 @@ export function Drivers() {
               <h2>{t("drivers.suspend")}</h2>
               <input
                 type="text"
+                aria-label="Suspend reason code"
                 placeholder={t("drivers.reason_code")}
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
@@ -266,6 +268,7 @@ export function Drivers() {
       <form className="filter-bar" onSubmit={handleSearch}>
         <input
           type="text"
+          aria-label="Search drivers"
           placeholder={t("common.search")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -285,6 +288,7 @@ export function Drivers() {
           value={verificationFilter}
           onChange={(e) => setVerificationFilter(e.target.value)}
           data-testid="select-verification"
+          aria-label="Filter by verification status"
         >
           <option value="all">{t("common.all")}</option>
           <option value="unverified">{t("drivers.verif_unverified")}</option>

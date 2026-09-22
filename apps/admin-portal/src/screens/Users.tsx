@@ -133,6 +133,7 @@ export function Users() {
               <h2>{t("users.suspend")}</h2>
               <input
                 type="text"
+                aria-label="Suspend reason code"
                 placeholder={t("users.reason_code")}
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
@@ -167,6 +168,7 @@ export function Users() {
       <form className="filter-bar" onSubmit={handleSearch}>
         <input
           type="text"
+          aria-label="Search users"
           placeholder={t("common.search")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

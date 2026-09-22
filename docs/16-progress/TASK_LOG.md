@@ -2,6 +2,12 @@
 
 
 
+## 2026-09-22 — CLM-0292 release (M3-02 Wave 1 merged)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0292` · **الفرع:** `feat/m3-02-wave1-scaffold`
+- **What:** Released CLM-0292 (M3-02 Wave 1 scaffold merged via PR #381, squash `536d85c`, CI green). React 18 + Vite 5, hash router (8 routes), Zustand session store, API client, i18n, Home screen, 7 unit tests.
+- **Release:** PR #381 merged (squash `536d85c`).
+
 ## 2026-09-22 — M3-02 Wave 1 scaffold (CLM-0292)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0292` · **الفرع:** `feat/m3-02-wave1-scaffold`

@@ -5627,3 +5627,18 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - M3-02 exit gate met: secure UI E2E + accessibility evidence exists.
 
 **Scope:** `apps/driver-mini-app/e2e/`, `.github/workflows/ci.yml`, `docs/16-progress/`
+
+## 2026-09-22 — M3-01 Completed, M3-03 Completed via ADR-046 (CLM-0303)
+
+- **Work Item(s):** M3-03
+- **الحجز:** `CLM-0303`
+- **الفرع:** `docs/m3-01-complete-and-m3-03-adr`
+
+**What:**
+- Marked M3-01 (Customer Mini App) as Completed — exit gate met (secure UI E2E + accessibility evidence exists per board text).
+- Created ADR-046: Defer Partner Mini App — bot-first partner surface. Partners interact via Telegram bot (M3-05 future scope) and Admin MVP (M3-04). Revisit when 50+ active partners or bot insufficiency.
+- Marked M3-03 (Partner surface أو ADR تأجيل) as Completed via ADR-046 scope evidence.
+- Fixed stale CLM-0298 text (Active → Released) in execution board.
+- Marked CLM-0302 as Released (PR #393 merged, branch deleted).
+
+**Scope:** `docs/15-decisions/`, `docs/16-progress/`, `ROADMAP.md`

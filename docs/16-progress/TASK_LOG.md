@@ -5761,3 +5761,18 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Work claim scope covers all modified paths
 - ROADMAP.md updated alongside implementation
 - No gate weakened
+
+## 2026-09-23 — M3-05 Bot Role Spec (CLM-0311)
+
+- **Work Item(s):** M3-05
+- **الحجز:** `CLM-0311`
+- **الفرع:** `feat/m3-05-bot-role-spec`
+
+**What:**
+- Created `docs/01-product/BOT_ROLE_SPEC.md` — product spec defining allowed commands per bot.
+- Customer bot: 6 commands (start, places, orders, negotiations, accept, reject).
+- Driver bot: 8 commands (start, available, offline, status, docs, negotiations, accept, reject).
+- Partner bot: 1 command (start).
+- Defined abuse scenarios: unsupported commands, command injection, rate abuse, admin access attempts, unconfigured groups.
+- Defined user journeys for each bot.
+- Exit gate: spec published + journey tests + abuse tests + CI green.

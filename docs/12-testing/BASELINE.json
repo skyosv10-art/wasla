@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T05:32:12Z",
+  "generated_at": "2026-09-22T07:29:20Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8a359bc0644346371ddfe8d3e12c4742fcc6004e",
+    "commit": "ab79b51e72746546b8e386a24eeb1ee73c4d6cc8",
     "branch": "feat/m3-02-wave2-offers-jobdetail",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "dirty": true,
+    "dirty_files": 1,
+    "dirty_reason": "regenerating BASELINE.json with measured dynamic test counts from full verify run",
     "tracked_files": 2398
   },
   "env": {
@@ -33,13 +33,13 @@
     "risks_not_closed": 31
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "/tmp/verify_real.log",
+    "tests_passed": 4997,
+    "test_files_executed": 320,
+    "governance_suite_cases": 491,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:822e7ee0c02cf160d2d9abfbb00c6207bb5ee18c1bdd328660c784839104763c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

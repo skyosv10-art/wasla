@@ -5751,4 +5751,13 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - MERGE_BLOCKING.json: admin-portal-e2e context added (36 contexts).
 - M3-04 exit gate evidence: RBAC (operator role tests), audit immutability (no edit/delete), UAT scenarios covered.
 
-**Scope:** `apps/admin-portal/` (e2e/, playwright.config.ts), `docs/12-testing/`, `docs/16-progress/`, `.github/workflows/ci.yml`
+**Scope:** `apps/admin-portal/` (e2e/, playwright.config.ts), `docs/12-testing/`, `docs/16-progress/`, `.github/workflows/ci.yml`, `packages/config/`, `.env.example`, `ROADMAP.md`
+
+**Result:** PR #402 merged (squash `8b3468a`). CI 36/36 green. All 25 Playwright E2E tests pass (8 UAT scenarios), all 5 axe-core WCAG 2.0 A/AA accessibility audits pass (0 violations). M3-04 exit gate met: RBAC enforcement tests, audit immutability tests, UAT evidence. M3-04 Admin MVP COMPLETE.
+
+**Verification of constraints:**
+- No test disabled (gate tests kept green)
+- Root cause fixed (mock data field names, correct API URL patterns, correct test selectors, aria-labels added)
+- Work claim scope covers all modified paths
+- ROADMAP.md updated alongside implementation
+- No gate weakened

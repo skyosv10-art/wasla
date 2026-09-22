@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App marketplace + search Wave 4 (CLM-0287)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0287` · **الفرع:** `feat/m3-01-wave4-marketplace-search`
+- **What:** Implemented Wave 4 of M3-01 Customer Mini App. Created Marketplace browse screen with stores list, click-to-view products per store, empty/error/loading states. Created Search screen with query input, search API call with locale/page/sort params, results list, empty/error states. Added i18n translations for marketplace and search strings in Arabic, English, and Urdu. 11 new tests (5 Marketplace + 6 Search). All 51 tests pass. BASELINE.json updated (test_files 414→416).
+- **Changed:** `apps/customer-mini-app/src/screens/Marketplace.tsx`, `apps/customer-mini-app/src/screens/Search.tsx`, `apps/customer-mini-app/src/i18n/index.ts`, `apps/customer-mini-app/src/__tests__/Marketplace.test.tsx`, `apps/customer-mini-app/src/__tests__/Search.test.tsx`, `docs/12-testing/BASELINE.json`, `docs/16-progress/WORK_CLAIMS.md` (CLM-0287 active), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`.
+- **Verification:** Typecheck passes (local), 51/51 tests pass (local), governance verify passes.
+- **What is NOT claimed:** M3-01 is not complete — this is Wave 4 only (marketplace + search). Orders, reputation, profile screens come in Wave 5. E2E tests and accessibility audit deferred to Wave 6.
+
 ## 2026-09-22 — Customer Mini App delivery order + saved places Wave 3 (CLM-0286)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0286` · **الفرع:** `feat/m3-01-wave3-delivery-places`

@@ -94,6 +94,18 @@ const resources = {
         delete: "حذف",
         delete_aria: "حذف {{label}}",
       },
+      marketplace: {
+        title: "المتاجر",
+        back_to_stores: "العودة للمتاجر",
+        no_stores: "لا توجد متاجر",
+        no_products: "لا توجد منتجات في هذا المتجر",
+      },
+      search: {
+        title: "البحث",
+        placeholder: "ابحث عن منتج...",
+        button: "بحث",
+        no_results: "لا توجد نتائج",
+      },
     },
   },
   en: {
@@ -185,6 +197,18 @@ const resources = {
         delete: "Delete",
         delete_aria: "Delete {{label}}",
       },
+      marketplace: {
+        title: "Marketplace",
+        back_to_stores: "Back to Stores",
+        no_stores: "No stores found",
+        no_products: "No products in this store",
+      },
+      search: {
+        title: "Search",
+        placeholder: "Search for a product...",
+        button: "Search",
+        no_results: "No results found",
+      },
     },
   },
   ur: {
@@ -275,6 +299,18 @@ const resources = {
         empty: "کوئی محفوظ مقامات نہیں",
         delete: "حذف کریں",
         delete_aria: "حذف کریں {{label}}",
+      },
+      marketplace: {
+        title: "مارکیٹ پلیس",
+        back_to_stores: "دکانوں پر واپس",
+        no_stores: "کوئی دکانیں نہیں ملیں",
+        no_products: "اس دکان میں کوئی مصنوعات نہیں",
+      },
+      search: {
+        title: "تلاش",
+        placeholder: "مصنوعات تلاش کریں...",
+        button: "تلاش",
+        no_results: "کوئی نتائج نہیں ملے",
       },
     },
   },

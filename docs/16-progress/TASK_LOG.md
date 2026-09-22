@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App delivery order + saved places Wave 3 (CLM-0286)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0286` · **الفرع:** `feat/m3-01-wave3-delivery-places`
+- **What:** Implemented Wave 3 of M3-01 Customer Mini App. Created DeliveryOrder screen extending the ride order form with shipment details (shipment_type, description, weight_kg). Reuses the order-form Zustand store and adds shipment fields to the API request body. Created SavedPlaces screen with GET/POST/DELETE places API integration using the customer HTTP API. Created places Zustand store. Added i18n translations for delivery order and saved places strings in Arabic, English, and Urdu. 11 new tests (5 DeliveryOrder + 6 SavedPlaces). All 40 tests pass. BASELINE.json updated (test_files 412→414).
+- **Changed:** `apps/customer-mini-app/src/screens/DeliveryOrder.tsx`, `apps/customer-mini-app/src/screens/SavedPlaces.tsx`, `apps/customer-mini-app/src/store/places.ts`, `apps/customer-mini-app/src/i18n/index.ts`, `apps/customer-mini-app/src/__tests__/DeliveryOrder.test.tsx`, `apps/customer-mini-app/src/__tests__/SavedPlaces.test.tsx`, `docs/12-testing/BASELINE.json`, `docs/16-progress/WORK_CLAIMS.md` (CLM-0286 active), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`.
+- **Verification:** Typecheck passes (local), 40/40 tests pass (local), governance verify passes.
+- **What is NOT claimed:** M3-01 is not complete — this is Wave 3 only (delivery order + saved places). Marketplace, search, orders, reputation, profile screens come in later waves. E2E tests and accessibility audit deferred to Wave 6.
+
 ## 2026-09-22 — Customer Mini App ride order form Wave 2 (CLM-0285)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0285` · **الفرع:** `feat/m3-01-ride-order-form`

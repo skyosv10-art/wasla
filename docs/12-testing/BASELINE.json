@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T10:27:08Z",
+  "generated_at": "2026-09-22T10:57:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b9fad2a9da730ee32a98ec6fc065eaa6064263d3",
-    "branch": "feat/m3-02-wave4-documents-profile",
+    "commit": "2f0cc1bcaa582b5d8556b6e777df0c20b48bde87",
+    "branch": "docs/release-clm-0295",
     "dirty": true,
-    "dirty_files": 15,
-    "dirty_reason": "Wave 4 added 4 new test files (documents.test.ts, profile.test.ts, Documents.test.tsx, Profile.test.tsx) — test_files_tracked 433→437",
-    "tracked_files": 2409
+    "dirty_files": 3,
+    "dirty_reason": "Release docs only — governance ledger update, no code changes",
+    "tracked_files": 2419
   },
   "env": {
     "node": "v20.20.1",

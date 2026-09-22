@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T09:40:28Z",
+  "generated_at": "2026-09-22T09:58:42Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "bf08146b16ca6f25db9727b5d5b661ff4e223674",
-    "branch": "feat/m3-02-wave3-vehicles-zones",
+    "commit": "b9fad2a9da730ee32a98ec6fc065eaa6064263d3",
+    "branch": "docs/release-clm-0294",
     "dirty": true,
-    "dirty_files": 16,
-    "dirty_reason": "Wave 3 added 4 new test files (vehicles.test.ts, zones.test.ts, Vehicles.test.tsx, Zones.test.tsx) — test_files_tracked 429→433",
-    "tracked_files": 2398
+    "dirty_files": 3,
+    "dirty_reason": "Post-merge CLM-0294 release docs only — baseline unchanged from squash b9fad2a",
+    "tracked_files": 2409
   },
   "env": {
     "node": "v20.20.1",

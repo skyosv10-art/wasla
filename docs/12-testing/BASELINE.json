@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T18:32:36Z",
+  "generated_at": "2026-09-22T19:22:23Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2452d93fe8505077df673db70dc6b6d5e8f24c7e",
-    "branch": "feat/m3-04-wave2-users-drivers",
+    "commit": "99543e299947965177eadeacf3fbf028f42cc9e4",
+    "branch": "feat/m3-04-wave3-orders-audit",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2456
+    "tracked_files": 2466
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 56,
     "packages_with_typecheck": 56,
     "packages_with_test": 56,
-    "test_files_tracked": 449,
+    "test_files_tracked": 453,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:1366195c1ba48de966eb7dbf56ad4146a67b33a076a5be48c96b270d3dc4a5f1",
+  "fingerprint": "sha256:65c3c8e48adc595ff9c407463d6d8718993abb146029809f0a175d009d8b35cb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

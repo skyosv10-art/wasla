@@ -5696,3 +5696,25 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - CLM-0306 released (scope too narrow for baseline files), CLM-0307 created with broader scope including `docs/12-testing/`.
 - BASELINE.json updated: test_files_tracked 449 (was 445), tests_passed 5071 (was 5037), test_files_executed 328 (was 324).
 - Local: 41/41 admin-portal tests pass, typecheck clean.
+
+## 2026-09-22 — M3-04 Wave 3 Orders + Audit Log UI (CLM-0308)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0308`
+- **الفرع:** `feat/m3-04-wave3-orders-audit`
+
+**What:**
+- Wave 3 of M3-04 Admin MVP per ADR-047 and ADMIN_MVP_SPEC.md.
+- Order types (OrderSummary, OrderDetail, StatusHistoryEntry) mirroring orders-service wire format (orderToWire, orderSummaryToWire, statusHistoryEntryToWire).
+- Audit types (AuditEvent, AuditAction, ResourceType) mirroring ADMIN_MVP_SPEC.md §6 audit event schema.
+- Zustand orders store: searchByPublicId (GET /orders/lookup), fetchDetail (GET /orders/:id), fetchHistory (GET /orders/:id/history).
+- Zustand audit store: fetchEvents (GET /audit/events with date/actor/action/resource_type filters), setFilter, clearFilters.
+- Orders screen: search by public ID, detail view with stops, assignment, status history table.
+- Audit Log screen: filter bar (date range, actor, action, resource type), events table.
+- i18n: ar/en/ur for all new screen labels, statuses, actions, resource types.
+- App.tsx wired to Orders and AuditLog screens (replacing placeholders).
+- 31 new unit tests (10 orders store + 7 audit store + 7 orders screen + 7 audit screen), 72 total in admin-portal.
+- Audit service backend (services/audit/) deferred — frontend built ahead per ADR-047 pattern.
+- Orders list endpoint (GET /orders) deferred — search by public ID is available via lookup.
+
+**Scope:** `apps/admin-portal/src/` (types, store, screens, tests, i18n, App.tsx), `docs/12-testing/` (BASELINE), `docs/16-progress/`, `ROADMAP.md`

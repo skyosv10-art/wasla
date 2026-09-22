@@ -4,6 +4,8 @@ import { useSessionStore } from "./store/session";
 import { Dashboard } from "./screens/Dashboard";
 import { Users } from "./screens/Users";
 import { Drivers } from "./screens/Drivers";
+import { Orders } from "./screens/Orders";
+import { AuditLog } from "./screens/AuditLog";
 
 type Route = "dashboard" | "users" | "drivers" | "orders" | "audit";
 
@@ -45,8 +47,8 @@ export function App() {
         {route === "dashboard" && <Dashboard />}
         {route === "users" && <Users />}
         {route === "drivers" && <Drivers />}
-        {route === "orders" && <div className="placeholder">{t("nav.orders")}</div>}
-        {route === "audit" && <div className="placeholder">{t("nav.audit")}</div>}
+        {route === "orders" && <Orders />}
+        {route === "audit" && <AuditLog />}
       </main>
     </div>
   );

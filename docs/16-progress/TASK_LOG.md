@@ -5669,3 +5669,25 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - Baseline regenerated (packages 56, test_files 445).
 
 **Scope:** `apps/admin-portal/`, `packages/config/`, `docs/12-testing/`, `docs/16-progress/`, `ROADMAP.md`
+
+## 2026-09-22 — M3-04 Wave 2 Users + Drivers Management (CLM-0306)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0306`
+- **الفرع:** `feat/m3-04-wave2-users-drivers`
+
+**What:**
+- Wave 2 of M3-04 Admin MVP per ADR-047 and ADMIN_MVP_SPEC.md.
+- User types (UserSummary, UserDetail, UserStatus, SuspendUserRequest) mirroring customers-service API contract.
+- Driver types (DriverSummary, DriverDetail, DriverDocument, DocumentStatus, ReviewDocumentRequest) mirroring drivers-service API contract.
+- Zustand users store: fetchUsers (GET /customers with search+filter params), fetchUserDetail (GET /customers/:id), suspendUser (POST /customers/:id/suspend), reinstateUser (POST /customers/:id/reinstate).
+- Zustand drivers store: fetchDrivers (GET /drivers with search+status+verification params), fetchDriverDetail (GET /drivers/:id), fetchDocuments (GET /drivers/:id/documents), reviewDocument (POST /drivers/:id/documents/:docId/review with decision + rejection_reason_code), suspendDriver, reinstateDriver.
+- Users screen: list table (public_id, name, status, order_count), search input, status filter, view detail with suspend/reinstate actions.
+- Drivers screen: list table (public_id, name, status, verification, availability), search+filters, view detail with document review (approve/reject), suspend/reinstate actions.
+- i18n: ar/en/ur for all new screen labels, statuses, actions.
+- CSS: filter bar, data table, detail cards, action buttons, dialog overlays.
+- App.tsx updated to wire Users and Drivers screens (replacing placeholders).
+- 34 new unit tests (9 users store + 11 drivers store + 7 users screen + 7 drivers screen), 41 total in admin-portal.
+- Backend admin routes for customers service (GET /customers, suspend, reinstate) deferred — frontend built ahead per ADR-047 pattern.
+
+**Scope:** `apps/admin-portal/src/` (types, store, screens, tests, i18n, styles, App.tsx), `docs/16-progress/`, `ROADMAP.md`

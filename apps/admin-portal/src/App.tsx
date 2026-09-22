@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSessionStore } from "./store/session";
 import { Dashboard } from "./screens/Dashboard";
+import { Users } from "./screens/Users";
+import { Drivers } from "./screens/Drivers";
 
 type Route = "dashboard" | "users" | "drivers" | "orders" | "audit";
 
@@ -41,8 +43,8 @@ export function App() {
       </nav>
       <main className="content">
         {route === "dashboard" && <Dashboard />}
-        {route === "users" && <div className="placeholder">{t("nav.users")}</div>}
-        {route === "drivers" && <div className="placeholder">{t("nav.drivers")}</div>}
+        {route === "users" && <Users />}
+        {route === "drivers" && <Drivers />}
         {route === "orders" && <div className="placeholder">{t("nav.orders")}</div>}
         {route === "audit" && <div className="placeholder">{t("nav.audit")}</div>}
       </main>

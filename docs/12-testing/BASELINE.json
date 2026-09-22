@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T11:25:05Z",
+  "generated_at": "2026-09-22T11:51:18Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "4f7ce05a9973e6c12756f8fb4b77b5373982dd10",
-    "branch": "feat/m3-02-wave5-job-history-earnings",
+    "commit": "1e06a4e5e1947fd596a613b9dbed7cd537ee5255",
+    "branch": "docs/release-clm-0298",
     "dirty": true,
-    "dirty_files": 10,
-    "dirty_reason": "Wave 5 added 2 new test files (earnings.test.ts, Earnings.test.tsx) — test_files_tracked 437→439",
-    "tracked_files": 2419
+    "dirty_files": 3,
+    "dirty_reason": "Release docs only — governance ledger update, no code changes",
+    "tracked_files": 2424
   },
   "env": {
     "node": "v20.20.1",

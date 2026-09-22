@@ -5603,3 +5603,8 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - 18 new unit tests (125 total in driver-mini-app).
 
 **Scope:** `apps/driver-mini-app/src/` (types, store, screens, tests, i18n)
+
+## 2026-09-22 — CLM-0298 release (M3-02 Wave 5 merged)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0298` · **الفرع:** `feat/m3-02-wave5-job-history-earnings`
+- **What:** Released CLM-0298 (M3-02 Wave 5 Job History/Earnings merged via PR #389, CI green 34/34). Earnings types (EarningsPeriod, EarningsSummary, JobHistoryEntry), Zustand earnings store (fetchEarnings with period filtering), Earnings screen (period buttons, summary, job list), i18n (ar/en/ur), 18 unit tests (125 total).

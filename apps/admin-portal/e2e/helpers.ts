@@ -27,16 +27,33 @@ export async function gotoRoute(page: Page, route: string): Promise<void> {
 
 /** Mock all admin API endpoints to prevent network errors. */
 export async function mockAdminApi(page: Page): Promise<void> {
-  // Users endpoints
-  await page.route("**/api/users**", (route) => {
+  // Users (customers) endpoints — response format: { customers: [...] }
+  await page.route("**/customers**", (route) => {
     const method = route.request().method();
-    if (method === "GET") {
+    const url = route.request().url();
+    if (method === "GET" && url.includes("/customers/")) {
+      // User detail
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ items: [], limit: 50, offset: 0 }),
+        body: JSON.stringify({
+          id: 1,
+          wasla_public_id: "WS-1234567890",
+          full_name: "Ahmed Ali",
+          phone_number: "+966501234567",
+          status: "active",
+          order_count: 15,
+          preferred_locale: "ar",
+          created_at: "2026-01-01T00:00:00Z",
+        }),
       });
-    } else if (method === "PATCH") {
+    } else if (method === "GET") {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ customers: [], limit: 50, offset: 0 }),
+      });
+    } else if (method === "POST") {
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -47,16 +64,48 @@ export async function mockAdminApi(page: Page): Promise<void> {
     }
   });
 
-  // Drivers endpoints
-  await page.route("**/api/drivers**", (route) => {
+  // Drivers endpoints — response format: { drivers: [...] }
+  await page.route("**/drivers**", (route) => {
     const method = route.request().method();
-    if (method === "GET") {
+    const url = route.request().url();
+    if (method === "GET" && url.includes("/drivers/") && url.includes("/documents")) {
+      // Driver documents
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ items: [], limit: 50, offset: 0 }),
+        body: JSON.stringify({
+          documents: [
+            { id: "doc-1", type: "driving_license", status: "pending", submitted_at: "2026-01-01T00:00:00Z" },
+          ],
+        }),
       });
-    } else if (method === "PATCH") {
+    } else if (method === "GET" && url.includes("/drivers/")) {
+      // Driver detail
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 1,
+          wasla_public_id: "DRV-1234567890",
+          full_name: "Khaled Omar",
+          phone_number: "+966509876543",
+          status: "active",
+          vehicle_class: "sedan",
+          rating_avg: 4.5,
+          verification_status: "verified",
+          availability_status: "online",
+          zone_id: "zone-1",
+          service_kinds: ["ride"],
+          created_at: "2026-01-01T00:00:00Z",
+        }),
+      });
+    } else if (method === "GET") {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ drivers: [], limit: 50, offset: 0 }),
+      });
+    } else if (method === "POST") {
       route.fulfill({
         status: 200,
         contentType: "application/json",

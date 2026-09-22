@@ -1666,6 +1666,48 @@
         }
       ],
       "note_ar": "شرطيّةٌ لا دائمةٌ: في نمطِ `postgres` يجبُ أن تُوجَدَ هيَ أو `DATABASE_URL`، وغيابُهُما معاً يُسقِطُ الإقلاعَ بقصدٍ. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
+    },
+    {
+      "name": "CI",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "علامةُ بيئةِ التكاملِ المستمرِّ — تُستعملُ في Playwright لتمييزِ بيئةِ CI عن المحليِّ.",
+      "owner_item": "M3-01",
+      "readers": [
+        {
+          "file": "apps/customer-mini-app/playwright.config.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "متغيّرٌ قياسيٌّ تُضبطُهُ منصّاتُ CI تلقائيّاً. لا يُقرأُ في الشيفرةِ الإنتاجيّةِ — يُستعملُ في إعداداتِ Playwright فقط."
+    },
+    {
+      "name": "VITE_E2E",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "علّامةُ بيئةِ اختبارِ E2E — تُفعِّلُ hook جلسةِ الاختبارِ في main.tsx (tree-shaken في الإنتاج).",
+      "owner_item": "M3-01",
+      "readers": [
+        {
+          "file": "apps/customer-mini-app/playwright.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "apps/customer-mini-app/src/main.tsx",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "تُمرَّرُ عبرَ سطرِ الأوامرِ في webServer في Playwright، ويُقرأُها main.tsx عبرَ import.meta.env. تُزالُ بالكاملِ من حزمةِ الإنتاجِ عندَ غيابِها."
     }
   ],
   "numeric_parse_exceptions": [],

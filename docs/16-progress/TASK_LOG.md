@@ -2,6 +2,13 @@
 
 
 
+## 2026-09-22 — M3-02 Wave 1 scaffold (CLM-0292)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0292` · **الفرع:** `feat/m3-02-wave1-scaffold`
+- **What:** Created Driver Mini App scaffold. React 18 + Vite 5 project setup, hash router shell (8 routes: home, offers, job, earnings, vehicles, zones, documents, profile), Zustand session store (in-memory, no localStorage, driverId), API client with Bearer auth + 401 handling + patch method, i18n (ar/en/ur) with driver-specific translations (offers, job status, earnings, vehicles, zones, documents, profile), Home screen with 6 navigation items, E2E test support (compile-time gated via VITE_E2E). 7 unit tests (4 session store + 3 home screen).
+- **Changed:** `apps/driver-mini-app/` (new: package.json, tsconfig.json, vite.config.ts, index.html, src/main.tsx, src/App.tsx, src/index.css, src/store/session.ts, src/api/client.ts, src/i18n/index.ts, src/screens/Home.tsx, src/__tests__/setup.ts, src/__tests__/session.test.ts, src/__tests__/Home.test.tsx), `docs/16-progress/WORK_CLAIMS.md` (CLM-0292), `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `docs/16-progress/TASK_LOG.md`, `ROADMAP.md`.
+- **Verification:** 7/7 unit tests pass, typecheck passes.
+
 ## 2026-09-22 — CLM-0291 release (M3-02 spec + ADR merged)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0291` · **الفرع:** `feat/m3-02-driver-mini-app-spec-adr`

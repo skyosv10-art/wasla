@@ -7,20 +7,22 @@ import { create } from "zustand";
 
 interface SessionState {
   token: string | null;
+  customerId: string | null;
   expiresAt: number | null;
-  setSession: (token: string, expiresAt: number) => void;
+  setSession: (token: string, customerId: string, expiresAt: number) => void;
   clearSession: () => void;
   isAuthenticated: () => boolean;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   token: null,
+  customerId: null,
   expiresAt: null,
-  setSession: (token: string, expiresAt: number) => {
-    set({ token, expiresAt });
+  setSession: (token: string, customerId: string, expiresAt: number) => {
+    set({ token, customerId, expiresAt });
   },
   clearSession: () => {
-    set({ token: null, expiresAt: null });
+    set({ token: null, customerId: null, expiresAt: null });
   },
   isAuthenticated: () => {
     const { token, expiresAt } = get();

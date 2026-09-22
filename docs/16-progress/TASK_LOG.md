@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App ride order form Wave 2 (CLM-0285)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0285` · **الفرع:** `feat/m3-01-ride-order-form`
+- **What:** Implemented the ride order form screen (Wave 2 of M3-01). Created Zustand order form store (`store/order-form.ts`) with typed state matching the Customer HTTP API contract (OrderRequestInput schema): order_type, vehicle_class, price_mode, offered_price, stops, notes. Created RideOrder screen component with form fields for pickup/dropoff zone IDs and labels, vehicle class selector (6 options), price mode selector (negotiable/customer_offer), conditional offered price field, notes textarea (max 500 chars). Preview button calls POST `/customers/{id}/order-requests/preview`. Submit button calls POST `/customers/{id}/order-requests` with Idempotency-Key header. Loading states, error handling, and form validation (missing zones, same zone, invalid price, notes too long). Updated API client to support custom headers for Idempotency-Key. Updated session store to include customerId. Added i18n translations for all ride order strings in Arabic, English, and Urdu. 21 new tests (13 order-form store + 8 RideOrder screen component). All 29 tests pass. BASELINE.json updated (test_files 410→412, tests_passed 4907→4928).
+- **Changed:** `apps/customer-mini-app/src/screens/RideOrder.tsx`, `apps/customer-mini-app/src/store/order-form.ts`, `apps/customer-mini-app/src/store/session.ts`, `apps/customer-mini-app/src/api/client.ts`, `apps/customer-mini-app/src/i18n/index.ts`, `apps/customer-mini-app/src/__tests__/{order-form.test.ts,RideOrder.test.tsx,session.test.ts}`, `docs/12-testing/BASELINE.json`, `docs/16-progress/WORK_CLAIMS.md` (CLM-0285 active), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`.
+- **Verification:** Typecheck passes (local), 29/29 tests pass (local), governance verify passes.
+- **What is NOT claimed:** M3-01 is not complete — this is Wave 2 only (ride order form). Delivery order form, marketplace, search, orders, reputation, profile screens come in later waves. E2E tests and accessibility audit deferred to Wave 6.
+
 ## 2026-09-22 — Customer Mini App scaffold Wave 1 (CLM-0284)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0284` · **الفرع:** `feat/m3-01-customer-mini-app-scaffold`

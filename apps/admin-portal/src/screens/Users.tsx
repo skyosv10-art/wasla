@@ -59,7 +59,7 @@ export function Users() {
   if (loading && users.length === 0) {
     return (
       <div className="screen users-screen">
-        <p className="loading-text">{t("common.loading")}</p>
+        <p className="loading-text" role="status">{t("common.loading")}</p>
       </div>
     );
   }
@@ -67,7 +67,7 @@ export function Users() {
   if (error) {
     return (
       <div className="screen users-screen">
-        <p className="error-text">{t("common.error")}: {error}</p>
+        <p className="error-text" role="alert">{t("common.error")}: {error}</p>
         <button onClick={() => { clearErrors(); fetchUsers(); }}>{t("common.retry")}</button>
       </div>
     );
@@ -133,6 +133,7 @@ export function Users() {
               <h2>{t("users.suspend")}</h2>
               <input
                 type="text"
+                aria-label="Suspend reason code"
                 placeholder={t("users.reason_code")}
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
@@ -167,6 +168,7 @@ export function Users() {
       <form className="filter-bar" onSubmit={handleSearch}>
         <input
           type="text"
+          aria-label="Search users"
           placeholder={t("common.search")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,6 +178,7 @@ export function Users() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           data-testid="select-status"
+          aria-label="Filter by status"
         >
           <option value="all">{t("common.all")}</option>
           <option value="active">{t("users.status_active")}</option>

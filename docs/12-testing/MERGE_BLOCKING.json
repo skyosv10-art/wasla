@@ -44,7 +44,8 @@
         "exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)",
         "image-supply-chain",
         "customer-mini-app-e2e",
-        "driver-mini-app-e2e"
+        "driver-mini-app-e2e",
+        "admin-portal-e2e"
       ]
     },
     "enforce_admins": true,

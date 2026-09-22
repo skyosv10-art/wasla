@@ -5731,3 +5731,24 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - WORK_CLAIMS.md: CLM-0308 released, CLM-0309 active for release docs.
 
 **Scope:** `docs/12-testing/`, `docs/16-progress/`
+
+## 2026-09-22 — M3-04 Wave 4 UAT + Exit Gate (CLM-0310)
+
+- **Work Item(s):** M3-04
+- **الحجز:** `CLM-0310`
+- **الفرع:** `feat/m3-04-wave4-uat-exit-gate`
+
+**What:**
+- Wave 4 (final) of M3-04 Admin MVP per ADR-047 and ADMIN_MVP_SPEC.md §9.
+- Playwright config: desktop viewport, RTL Arabic, vite build + preview, @axe-core/playwright.
+- E2E helpers: seedAdminSession (admin/operator role), gotoRoute, mockAdminApi.
+- Navigation tests (UAT-01): 6 tests — login renders dashboard, all 5 screens reachable, sidebar has all nav links.
+- Users/Drivers flow tests (UAT-02, UAT-04): 4 tests — search bar visible, table renders with results, suspend button present.
+- Orders flow tests (UAT-03, UAT-05): 2 tests — search by public ID, order detail after search.
+- Audit/RBAC tests (UAT-06, UAT-07, UAT-08): 8 tests — filter bar, events table, action/resource type filters, operator role access, no edit/delete buttons on audit events.
+- Accessibility audits: 5 tests — axe-core WCAG 2.0 A/AA on all 5 admin screens (dashboard, users, drivers, orders, audit).
+- CI job: admin-portal-e2e added to .github/workflows/ci.yml (36 total jobs).
+- MERGE_BLOCKING.json: admin-portal-e2e context added (36 contexts).
+- M3-04 exit gate evidence: RBAC (operator role tests), audit immutability (no edit/delete), UAT scenarios covered.
+
+**Scope:** `apps/admin-portal/` (e2e/, playwright.config.ts), `docs/12-testing/`, `docs/16-progress/`, `.github/workflows/ci.yml`

@@ -97,12 +97,12 @@ export function AuditLog() {
       </form>
 
       {error && (
-        <p className="error">
+        <p className="error" role="alert">
           {t("common.error")}: {error}
         </p>
       )}
 
-      {loading && <p className="loading">{t("common.loading")}</p>}
+      {loading && <p className="loading" role="status">{t("common.loading")}</p>}
 
       {!loading && events.length > 0 && (
         <>

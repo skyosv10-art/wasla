@@ -2,6 +2,11 @@
 
 
 
+## 2026-09-22 — CLM-0294 release (M3-02 Wave 3 merged)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0294` · **الفرع:** `feat/m3-02-wave3-vehicles-zones`
+- **What:** Released CLM-0294 (M3-02 Wave 3 Vehicles + Zones merged via PR #385, squash `b9fad2a`, CI green 34/34). Vehicle types, Zustand vehicles store (fetch/add/patch with Idempotency-Key), Vehicles screen (list, add form, retire/set-primary), Zones types, Zustand zones store (fetch/save with PUT replace), Zones screen (checkbox list, preference_rank ordering), i18n (ar/en/ur), router helper, 40 unit tests.
+
 ## 2026-09-22 — M3-02 Wave 3 Vehicles + Zones (CLM-0294)
 
 - **Work Item(s):** M3-02

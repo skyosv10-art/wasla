@@ -110,6 +110,23 @@ export const BOT_MINI_APP: Record<BotKind, MiniAppKind> = {
   partner: "partner",
 };
 
+/**
+ * M3-05 — the commands each bot is allowed to answer, per
+ * docs/01-product/BOT_ROLE_SPEC.md §2. A bot is a launch/notify/route surface
+ * with a few small actions; heavy work lives in the Mini App.
+ *
+ * This constant is the code-side source of truth. Two guards bind it:
+ *  - a contract test parses the §2 tables of BOT_ROLE_SPEC.md and requires the
+ *    exact same sets (the published spec cannot drift from the code);
+ *  - `buildBotRuntime` refuses to boot a bot whose registered commands are not
+ *    a subset of its entry here (no command can ship outside the spec).
+ */
+export const BOT_ALLOWED_COMMANDS: Readonly<Record<BotKind, readonly string[]>> = {
+  customer: ["start", "places", "orders", "negotiations", "accept", "reject"],
+  driver: ["start", "available", "offline", "status", "docs", "negotiations", "accept", "reject"],
+  partner: ["start"],
+};
+
 /** Channel-imposed maximum length of an encoded Deep Link payload. */
 export const DEEP_LINK_MAX_PAYLOAD_LENGTH = 64;
 

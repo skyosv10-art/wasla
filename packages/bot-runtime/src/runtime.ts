@@ -39,6 +39,7 @@ import {
   type ProcessedUpdateStorePort,
 } from "@wasla/channel-core";
 import { createChannelStores } from "@wasla/channel-postgres";
+import { BOT_ALLOWED_COMMANDS, type BotKind } from "@wasla/contracts-channel";
 import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
 import { TelegramChannelAdapter, TelegramUpdateParser } from "@wasla/telegram-adapter";
 
@@ -105,11 +106,36 @@ class UnconfiguredIdentityBootstrap implements IdentityBootstrapPort {
   }
 }
 
+/**
+ * M3-05 — refuse to boot a bot that would answer a command outside its role.
+ *
+ * `BOT_ALLOWED_COMMANDS` mirrors docs/01-product/BOT_ROLE_SPEC.md §2 (a contract
+ * test binds the two). A composition root that registers anything else — a new
+ * flow, a typo, an admin verb — fails here at startup, loudly, instead of
+ * shipping a chat surface the product never agreed to. Omitted commands mean
+ * the channel-core default (`/start` only), which every bot is allowed.
+ */
+export function assertCommandsWithinRole(bot: BotKind, commands: readonly string[] | undefined): void {
+  if (commands === undefined) return;
+  const allowed = BOT_ALLOWED_COMMANDS[bot];
+  const outside = commands.filter((command) => !allowed.includes(command));
+  if (outside.length > 0) {
+    throw new Error(
+      `BOT_COMMAND_OUTSIDE_ROLE_SPEC: ${bot} bot registers ${outside
+        .map((c) => `/${c}`)
+        .join(", ")} which BOT_ROLE_SPEC.md §2 does not allow (allowed: ${allowed
+        .map((c) => `/${c}`)
+        .join(", ")})`,
+    );
+  }
+}
+
 /** Wire one bot from its validated configuration. */
 export function buildBotRuntime(
   config: BotConfig,
   options: BuildBotRuntimeOptions = {},
 ): BotRuntime {
+  assertCommandsWithinRole(config.bot, options.supportedCommands);
   const clock = new SystemClock();
   const ids = new CryptoIdGenerator();
   const registry = new SingleBotRegistry(config.presence);

@@ -10,35 +10,18 @@
  *  4.5 Unconfigured group → update recorded but no reply
  */
 
+import { BOT_ALLOWED_COMMANDS } from "@wasla/contracts-channel";
 import { describe, expect, it } from "vitest";
 
 import { authHeaders, harnessFor, type HarnessOptions, groupStartUpdate } from "./harness.js";
 
 /**
- * The allowed command sets per BOT_ROLE_SPEC.md.
- * These mirror CUSTOMER_SUPPORTED_COMMANDS and DRIVER_SUPPORTED_COMMANDS
- * in the bot packages, but are duplicated here because bot-runtime does
- * not depend on the individual bot packages.
+ * The allowed command sets per BOT_ROLE_SPEC.md §2, from the one code-side
+ * source (`BOT_ALLOWED_COMMANDS`, bound to the spec by a contract test).
+ * CLM-0312 removed the local copies that used to live here.
  */
-const CUSTOMER_COMMANDS = [
-  "start",
-  "places",
-  "orders",
-  "negotiations",
-  "accept",
-  "reject",
-] as const;
-
-const DRIVER_COMMANDS = [
-  "start",
-  "available",
-  "offline",
-  "status",
-  "docs",
-  "negotiations",
-  "accept",
-  "reject",
-] as const;
+const CUSTOMER_COMMANDS = BOT_ALLOWED_COMMANDS.customer;
+const DRIVER_COMMANDS = BOT_ALLOWED_COMMANDS.driver;
 
 /** Build a Telegram command update for any /command. */
 function commandUpdate(

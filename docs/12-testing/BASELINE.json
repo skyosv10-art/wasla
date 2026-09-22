@@ -3,7 +3,7 @@
   "generated_at": "2026-09-22T17:49:33Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d1bd10ad7bec62ed9f82690f6eed404421a2d9f7",
+    "commit": "334a956",
     "branch": "feat/m3-04-wave2-users-drivers",
     "dirty": false,
     "dirty_files": 0,
@@ -33,14 +33,14 @@
     "risks_not_closed": 31
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "/tmp/verify_real.log",
+    "tests_passed": 5037,
+    "test_files_executed": 324,
+    "governance_suite_cases": 491,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:1366195c1ba48de966eb7dbf56ad4146a67b33a076a5be48c96b270d3dc4a5f1",
+  "fingerprint": "sha256:c63d8acdd34d320243640e1569ff37b3e7dda6c69ae78ad6f88cb95e922aa73b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

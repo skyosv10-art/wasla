@@ -5690,4 +5690,9 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - 34 new unit tests (9 users store + 11 drivers store + 7 users screen + 7 drivers screen), 41 total in admin-portal.
 - Backend admin routes for customers service (GET /customers, suspend, reinstate) deferred — frontend built ahead per ADR-047 pattern.
 
-**Scope:** `apps/admin-portal/src/` (types, store, screens, tests, i18n, styles, App.tsx), `docs/16-progress/`, `ROADMAP.md`
+**Scope:** `apps/admin-portal/src/` (types, store, screens, tests, i18n, styles, App.tsx), `docs/12-testing/` (BASELINE update), `docs/16-progress/`, `ROADMAP.md`
+
+**Governance:**
+- CLM-0306 released (scope too narrow for baseline files), CLM-0307 created with broader scope including `docs/12-testing/`.
+- BASELINE.json updated: test_files_tracked 449 (was 445), tests_passed 5071 (was 5037), test_files_executed 328 (was 324).
+- Local: 41/41 admin-portal tests pass, typecheck clean.

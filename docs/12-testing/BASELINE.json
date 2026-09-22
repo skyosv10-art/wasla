@@ -7,7 +7,7 @@
     "branch": "feat/m3-05-bot-role-spec",
     "dirty": true,
     "dirty_files": 7,
-    "dirty_reason": "",
+    "dirty_reason": "M3-05: added bot-role-journey.test.ts and bot-role-abuse.test.ts to packages/bot-runtime/src/__tests__/",
     "tracked_files": 2473
   },
   "env": {
@@ -33,13 +33,13 @@
     "risks_not_closed": 31
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "/tmp/verify_real.log",
+    "tests_passed": 5037,
+    "test_files_executed": 324,
+    "governance_suite_cases": 491,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:f1b0e46b4d362c400ae1e58e6477c64eaf43444111dbc6f91b30729ba693d554",
   "reference": "docs/12-testing/BASELINE_FORMAT.md",

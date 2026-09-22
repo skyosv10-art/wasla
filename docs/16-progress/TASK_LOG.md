@@ -2,6 +2,12 @@
 
 
 
+## 2026-09-22 — M3-02 Driver Mini App product spec + ADR-045 (CLM-0291)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0291` · **الفرع:** `feat/m3-02-driver-mini-app-spec-adr`
+- **What:** Created product specification for Driver Mini App ([DRIVER_MINI_APP_SPEC.md](../01-product/DRIVER_MINI_APP_SPEC.md)) defining 9 screens (session/loading, home, offer feed, job detail, job history/earnings, vehicles, zones, documents, profile), API contract matrix mapping 19 endpoints across drivers/dispatch/orders services, state machine rules (assigned → driver_en_route → arrived → in_progress → completed), failure/offline states, i18n (ar/en/ur), accessibility (WCAG 2.0 A/AA), acceptance criteria, and test plan. Created [ADR-045](../15-decisions/ADR-045-driver-mini-app-architecture.md) deciding to reuse M3-01 architecture (React 18 + Vite 5, hash routing, Zustand, in-memory token, fetch API client, react-i18next, Vitest + Playwright), defer shared UI package extraction until a third Mini App arrives, use polling for offer feed (no WebSocket), and document 6 implementation waves.
+- **Changed:** `docs/01-product/DRIVER_MINI_APP_SPEC.md` (new), `docs/15-decisions/ADR-045-driver-mini-app-architecture.md` (new), `docs/16-progress/WORK_CLAIMS.md` (CLM-0291 active), `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `docs/16-progress/TASK_LOG.md`, `ROADMAP.md`.
+
 ## 2026-09-22 — CLM-0289 release + MERGE_BLOCKING.json correction (CLM-0290)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0290` · **الفرع:** `docs/release-clm-0289`

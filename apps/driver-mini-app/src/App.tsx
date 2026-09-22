@@ -4,6 +4,8 @@ import { useSessionStore } from "./store/session";
 import { Home } from "./screens/Home";
 import { Offers } from "./screens/Offers";
 import { JobDetail } from "./screens/JobDetail";
+import { Vehicles } from "./screens/Vehicles";
+import { Zones } from "./screens/Zones";
 
 // ADR-045 Decision 2 (reuses ADR-044): Hash-based routing (no router framework).
 // Telegram WebView does not support history API reliably.
@@ -60,8 +62,8 @@ export function App() {
       {route === "offers" && <Offers />}
       {route === "job" && <JobDetail />}
       {route === "earnings" && <div className="placeholder">{t("common.loading")}</div>}
-      {route === "vehicles" && <div className="placeholder">{t("common.loading")}</div>}
-      {route === "zones" && <div className="placeholder">{t("common.loading")}</div>}
+      {route === "vehicles" && <Vehicles />}
+      {route === "zones" && <Zones />}
       {route === "documents" && <div className="placeholder">{t("common.loading")}</div>}
       {route === "profile" && <div className="placeholder">{t("common.loading")}</div>}
     </div>

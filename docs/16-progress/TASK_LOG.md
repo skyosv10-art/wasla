@@ -2,6 +2,22 @@
 
 
 
+## 2026-09-22 — M3-02 Wave 3 Vehicles + Zones (CLM-0294)
+
+- **Work Item(s):** M3-02
+- **الحجز:** `CLM-0294`
+- **الفرع:** `feat/m3-02-wave3-vehicles-zones`
+
+**What:**
+- Wave 3 of M3-02 Driver Mini App per ADR-045.
+- Vehicles: types (VehicleClass, VehicleStatus, Vehicle, VehicleRegistration, VehiclePatch), Zustand store (fetchVehicles, addVehicle with Idempotency-Key, patchVehicle for retire/set-primary), Vehicles screen (list, add form with 6 fields, retire/set-primary buttons).
+- Zones: types (ServiceZone, ServiceZoneList, ServiceZoneUpdate, Zone), Zustand store (fetchZones, saveZones with PUT full replace), Zones screen (checkbox list, preference_rank ordering on save).
+- i18n: ar/en/ur translations for all vehicle classes, actions, and zone labels.
+- Router helper for programmatic navigation.
+- 40 new unit tests (73 total in driver-mini-app).
+
+**Scope:** `apps/driver-mini-app/src/` (types, store, screens, tests, i18n, router)
+
 ## 2026-09-22 — CLM-0293 release (M3-02 Wave 2 merged)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0293` · **الفرع:** `feat/m3-02-wave2-offers-jobdetail`

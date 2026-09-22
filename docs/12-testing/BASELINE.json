@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T07:29:20Z",
+  "generated_at": "2026-09-22T09:40:28Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ab79b51e72746546b8e386a24eeb1ee73c4d6cc8",
-    "branch": "feat/m3-02-wave2-offers-jobdetail",
+    "commit": "bf08146b16ca6f25db9727b5d5b661ff4e223674",
+    "branch": "feat/m3-02-wave3-vehicles-zones",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "regenerating BASELINE.json with measured dynamic test counts from full verify run",
+    "dirty_files": 16,
+    "dirty_reason": "Wave 3 added 4 new test files (vehicles.test.ts, zones.test.ts, Vehicles.test.tsx, Zones.test.tsx) — test_files_tracked 429→433",
     "tracked_files": 2398
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 55,
     "packages_with_typecheck": 55,
     "packages_with_test": 55,
-    "test_files_tracked": 429,
+    "test_files_tracked": 433,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -35,12 +35,12 @@
   "dynamic": {
     "measured": true,
     "source": "/tmp/verify_real.log",
-    "tests_passed": 4997,
-    "test_files_executed": 320,
+    "tests_passed": 5037,
+    "test_files_executed": 324,
     "governance_suite_cases": 491,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:822e7ee0c02cf160d2d9abfbb00c6207bb5ee18c1bdd328660c784839104763c",
+  "fingerprint": "sha256:8c08d6f74c94c1b4431a560a3a953893c42229e6903f6924aea971b3fda03b34",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

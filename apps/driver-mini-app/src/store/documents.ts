@@ -29,7 +29,7 @@ export const useDocumentsStore = create<DocumentsState>((set) => ({
       const result = await apiClient.get<{ documents: DriverDocument[] }>(
         `/drivers/${driverId}/documents`,
       );
-      set({ documents: result.documents, loading: false });
+      set({ documents: result.documents ?? [], loading: false });
     } catch {
       set({ error: "fetch_documents_failed", loading: false });
     }

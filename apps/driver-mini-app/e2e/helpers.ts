@@ -69,7 +69,7 @@ export async function mockDriverApis(page: Page): Promise<void> {
   });
 
   // Mock driver documents (GET/POST /drivers/:id/documents)
-  await page.route("**/drivers/**/documents**", (route) => {
+  await page.route("**/documents**", (route) => {
     const method = route.request().method();
     if (method === "GET") {
       return route.fulfill({

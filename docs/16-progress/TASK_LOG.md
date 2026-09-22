@@ -2,6 +2,12 @@
 
 
 
+## 2026-09-22 — CLM-0293 release (M3-02 Wave 2 merged)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0293` · **الفرع:** `feat/m3-02-wave2-offers-jobdetail`
+- **What:** Released CLM-0293 (M3-02 Wave 2 Offer Feed + Job Detail merged via PR #383, squash `8ab50bb`, CI green 34/34). Dispatch types, Zustand dispatch store (polling, accept/reject/transition/cancel), Offers screen (countdown, reject reason form), JobDetail screen (state-machine transitions, cancel form), 33 unit tests.
+- **Release:** PR #383 merged (squash `8ab50bb`).
+
 ## 2026-09-22 — M3-02 Wave 2 Offer Feed + Job Detail (CLM-0293)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0293` · **الفرع:** `feat/m3-02-wave2-offers-jobdetail`

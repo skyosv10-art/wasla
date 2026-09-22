@@ -176,6 +176,7 @@ export function Users() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           data-testid="select-status"
+          aria-label="Filter by status"
         >
           <option value="all">{t("common.all")}</option>
           <option value="active">{t("users.status_active")}</option>

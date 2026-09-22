@@ -275,6 +275,7 @@ export function Drivers() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           data-testid="select-driver-status"
+          aria-label="Filter by driver status"
         >
           <option value="all">{t("common.all")}</option>
           <option value="active">{t("drivers.status_active")}</option>

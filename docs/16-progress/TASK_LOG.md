@@ -7,6 +7,21 @@
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0294` · **الفرع:** `feat/m3-02-wave3-vehicles-zones`
 - **What:** Released CLM-0294 (M3-02 Wave 3 Vehicles + Zones merged via PR #385, squash `b9fad2a`, CI green 34/34). Vehicle types, Zustand vehicles store (fetch/add/patch with Idempotency-Key), Vehicles screen (list, add form, retire/set-primary), Zones types, Zustand zones store (fetch/save with PUT replace), Zones screen (checkbox list, preference_rank ordering), i18n (ar/en/ur), router helper, 40 unit tests.
 
+## 2026-09-22 — M3-02 Wave 4 Documents + Profile (CLM-0295)
+
+- **Work Item(s):** M3-02
+- **الحجز:** `CLM-0295`
+- **الفرع:** `feat/m3-02-wave4-documents-profile`
+
+**What:**
+- Wave 4 of M3-02 Driver Mini App per ADR-045.
+- Documents: types (DocumentType, DocumentStatus, DriverDocument, DocumentSubmission), Zustand store (fetchDocuments, submitDocument with Idempotency-Key), Documents screen (list with status badges, add form with 5 document types, rejection reasons, expiry dates).
+- Profile: types (DriverProfile, ProfilePatch, VerificationStatus, ServiceKind, DeclaredAvailability), Zustand store (fetchProfile, updateProfile with PATCH), Profile screen (status/verification/availability display, editable display_name/locale/work_zone/service_kinds with toggle).
+- i18n: ar/en/ur translations for document types, statuses, rejection reasons, profile fields.
+- 34 new unit tests (107 total in driver-mini-app).
+
+**Scope:** `apps/driver-mini-app/src/` (types, store, screens, tests, i18n)
+
 ## 2026-09-22 — M3-02 Wave 3 Vehicles + Zones (CLM-0294)
 
 - **Work Item(s):** M3-02

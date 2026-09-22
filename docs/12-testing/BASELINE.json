@@ -1,13 +1,13 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T09:58:42Z",
+  "generated_at": "2026-09-22T10:27:08Z",
   "generator": "scripts/baseline.sh",
   "repo": {
     "commit": "b9fad2a9da730ee32a98ec6fc065eaa6064263d3",
-    "branch": "docs/release-clm-0294",
+    "branch": "feat/m3-02-wave4-documents-profile",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "Post-merge CLM-0294 release docs only — baseline unchanged from squash b9fad2a",
+    "dirty_files": 15,
+    "dirty_reason": "Wave 4 added 4 new test files (documents.test.ts, profile.test.ts, Documents.test.tsx, Profile.test.tsx) — test_files_tracked 433→437",
     "tracked_files": 2409
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 55,
     "packages_with_typecheck": 55,
     "packages_with_test": 55,
-    "test_files_tracked": 433,
+    "test_files_tracked": 437,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_real.log",
-    "tests_passed": 5037,
-    "test_files_executed": 324,
+    "source": "/tmp/verify_wave4.log",
+    "tests_passed": 5071,
+    "test_files_executed": 328,
     "governance_suite_cases": 491,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:8c08d6f74c94c1b4431a560a3a953893c42229e6903f6924aea971b3fda03b34",
+  "fingerprint": "sha256:b6e75a13c5e245e2c43cb713368907e58606d42fab32e5ff16d64c69169443eb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

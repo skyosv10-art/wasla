@@ -2,6 +2,14 @@
 
 
 
+## 2026-09-22 — Customer Mini App orders + reputation + profile Wave 5 (CLM-0288)
+
+- **Work Item(s):** M3-01 · **الحجز:** `CLM-0288` · **الفرع:** `feat/m3-01-wave5-orders-reputation-profile`
+- **What:** Implemented Wave 5 of M3-01 Customer Mini App. Created MyOrders screen with status filter dropdown, orders list with order type/status/date. Created Reputation screen with score card and ratings list. Created Profile screen with display name, phone, email, preferred language fields and PUT save. Added i18n translations for orders, reputation, and profile strings in Arabic, English, and Urdu. 14 new tests (5 MyOrders + 4 Reputation + 5 Profile). All 65 tests pass. BASELINE.json updated (test_files 416→419).
+- **Changed:** `apps/customer-mini-app/src/screens/MyOrders.tsx`, `apps/customer-mini-app/src/screens/Reputation.tsx`, `apps/customer-mini-app/src/screens/Profile.tsx`, `apps/customer-mini-app/src/i18n/index.ts`, `apps/customer-mini-app/src/__tests__/MyOrders.test.tsx`, `apps/customer-mini-app/src/__tests__/Reputation.test.tsx`, `apps/customer-mini-app/src/__tests__/Profile.test.tsx`, `docs/12-testing/BASELINE.json`, `docs/16-progress/WORK_CLAIMS.md` (CLM-0288 active), `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`.
+- **Verification:** Typecheck passes (local), 65/65 tests pass (local), governance verify passes.
+- **What is NOT claimed:** M3-01 is not complete — this is Wave 5 only (orders + reputation + profile). E2E tests and accessibility audit deferred to Wave 6.
+
 ## 2026-09-22 — Customer Mini App marketplace + search Wave 4 (CLM-0287)
 
 - **Work Item(s):** M3-01 · **الحجز:** `CLM-0287` · **الفرع:** `feat/m3-01-wave4-marketplace-search`

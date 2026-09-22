@@ -5804,3 +5804,5 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 **لم يكتمل:** حكمُ CI على الفرع ثم على `main`؛ ثم طلبُ نقل M3-05 إلى Completed. **Migration/Deploy/Config:** لا. **مخاطر:** إضافةُ أمرٍ مستقبلًا تتطلّب ثلاثة تعديلات في PR واحد (المواصفة + الثابت + التدفق) — مقصود. **التالي:** M3-06 (i18n/accessibility/error/offline UX) ثم M3-07. **يتابعه:** @uxxxu (agent:perplexity-computer).
 
 **اكتشافٌ مسجَّل (قاعدة §0.9):** `M3-08` أُضيف إلى اللوحة `Not Started` — ملفّاتُ بوّابةٍ غائبة لـM3-01..04 المعلَّمة Completed. لم يُخفَض شيءٌ في هذه الدفعة؛ القياسُ أوّلًا.
+
+**الأساس (`M0-08`):** أُعيد توليد `BASELINE.json`/`.txt` بـ`scripts/baseline.sh --log` من تشغيل `verify.sh` حقيقي: `test_files_tracked` 460→465 (خمسة ملفّات اختبار جديدة) · `tests_passed` 5309 · `governance_suite_failed` 1 = الفحص 11 نفسه قبل إعادة التوليد (BASELINE_FORMAT §6.5). لم يُحرَّر رقمٌ بيد.

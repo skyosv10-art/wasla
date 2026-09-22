@@ -59,7 +59,9 @@ PRODUCTION ⚪ NOT VERIFIED   — لا بوتَ منشورٌ على Telegram ف�
 | `@wasla/driver-bot` | 43 | **60** (+17) |
 | `@wasla/partner-bot` | 6 | **16** (+10) |
 
-`pnpm -r typecheck` → exit 0. والتشغيلُ الكاملُ `pnpm test` مُسجَّلٌ في [`TASK_LOG.md`](../16-progress/TASK_LOG.md).
+`pnpm -r typecheck` → exit 0. `pnpm test` الكامل (الشِّقّان: 43 متوازيةً · 12 مُسلسَلةً) → exit 0.
+
+`bash scripts/verify.sh` على الالتزام `c95fc58`: الأنواع ✅ · الاختبارات ✅ (**5309** اختبارًا في 347 ملفًّا، مقابل 5037 في الأساس السابق) · حزمة الحوكمة 491 حالة، **1 فاشلة** — وهي الفحص 11 نفسه لأنّ `test_files_tracked` صار 465 والأساس المُلتزَم 460. أي أنّ `verify_overall: failed` في [`BASELINE.json`](BASELINE.json) هو **الحلقة المفرغة المُعلَنة** في [`BASELINE_FORMAT.md`](BASELINE_FORMAT.md) §6.5، مُسجَّلةً لا مُلفَّقة. بعد إعادة التوليد: `validate-baseline.sh` أخضر بأبوابه الأربعة.
 
 ---
 

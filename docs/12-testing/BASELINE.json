@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-22T21:42:30Z",
+  "generated_at": "2026-09-22T23:18:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d20c695fb68eb4d0ed62d021a45d307d5142e17c",
-    "branch": "feat/m3-05-bot-role-spec",
-    "dirty": true,
-    "dirty_files": 7,
-    "dirty_reason": "M3-05: added bot-role-journey.test.ts and bot-role-abuse.test.ts to packages/bot-runtime/src/__tests__/",
-    "tracked_files": 2473
+    "commit": "c6059a6a70bf0a3a761b561954234b600ef07796",
+    "branch": "feat/m3-05-bot-role-enforcement",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 2482
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 56,
     "packages_with_typecheck": 56,
     "packages_with_test": 56,
-    "test_files_tracked": 460,
+    "test_files_tracked": 465,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 23,
@@ -34,20 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify_real.log",
-    "tests_passed": 5037,
-    "test_files_executed": 324,
+    "source": "/tmp/verify-m3-05.log",
+    "tests_passed": 5309,
+    "test_files_executed": 347,
     "governance_suite_cases": 491,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f1b0e46b4d362c400ae1e58e6477c64eaf43444111dbc6f91b30729ba693d554",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md",
-  "tests_passed": 5037,
-  "test_files_executed": 324,
-  "governance_suite_cases": 491,
-  "governance_suite_failed": 1,
-  "verify_overall": "failed",
-  "measured": true,
-  "source": "/tmp/verify_real.log"
+  "fingerprint": "sha256:c4a511772a6b472b111fa4d41abce99c494c3021a4772823ad1ed11c139d3ceb",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

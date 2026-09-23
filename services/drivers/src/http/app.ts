@@ -243,8 +243,9 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
 
   app.get("/drivers", { config: adminScoped(DRIVER_SCOPES.adminRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
-    const limit = Math.min(Math.max(parseInt(request.query.limit as string) || 50, 1), 200);
-    const offset = Math.max(parseInt(request.query.offset as string) || 0, 0);
+    const query = request.query as { limit?: unknown; offset?: unknown };
+    const limit = Math.min(Math.max(parseInt(query.limit as string) || 50, 1), 200);
+    const offset = Math.max(parseInt(query.offset as string) || 0, 0);
     const profiles = await runner.read((deps) => deps.profiles.list(limit, offset));
     return reply.status(200).send({
       drivers: profiles.map(driverProfileToWire),

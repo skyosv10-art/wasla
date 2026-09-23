@@ -15,6 +15,7 @@ import type { CustomerEvent } from "@wasla/contracts-customer";
 import type {
   CustomerOrderRequest,
   CustomerProfile,
+  CustomerStatus,
   IntakeFailureReason,
   Money,
   OrderRequestStatus,
@@ -95,6 +96,13 @@ export interface CustomerRepository {
   // --- profile ---
   findProfile(waslaPublicId: string): Promise<CustomerProfile | null>;
   saveProfile(profile: CustomerProfile): Promise<CustomerProfile>;
+  /** List profiles for admin portal (paginated). */
+  listProfiles(options?: {
+    readonly q?: string;
+    readonly status?: CustomerStatus;
+    readonly limit?: number;
+    readonly offset?: number;
+  }): Promise<CustomerProfile[]>;
 
   // --- saved places ---
   /** Places of a customer, most recently used first, then newest first. */

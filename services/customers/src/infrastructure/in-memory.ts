@@ -116,6 +116,30 @@ export class InMemoryCustomerRepository implements CustomerRepository {
     return profile;
   }
 
+  async listProfiles(options?: {
+    readonly q?: string;
+    readonly status?: import("../domain/model.js").CustomerStatus;
+    readonly limit?: number;
+    readonly offset?: number;
+  }): Promise<CustomerProfile[]> {
+    let rows = [...this.profiles.values()];
+    if (options?.status) {
+      rows = rows.filter((p) => p.status === options.status);
+    }
+    if (options?.q) {
+      const needle = options.q.toLowerCase();
+      rows = rows.filter(
+        (p) =>
+          p.waslaPublicId.toLowerCase().includes(needle) ||
+          (p.displayName?.toLowerCase().includes(needle) ?? false),
+      );
+    }
+    rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 50;
+    return rows.slice(offset, offset + limit);
+  }
+
   // --- saved places ---
 
   private placesOf(waslaPublicId: string): SavedPlace[] {

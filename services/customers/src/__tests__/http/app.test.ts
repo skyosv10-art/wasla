@@ -634,7 +634,7 @@ describe("error envelope", () => {
 
   it("leaves an unknown route as a transport 404, not a customer code", async () => {
     const { app } = await harness({ seed: false });
-    const response = await app.inject({ method: "GET", url: "/customers/unknown" });
+    const response = await app.inject({ method: "GET", url: "/totally-unknown-route" });
 
     expect(response.statusCode).toBe(404);
     expect(response.json().code).toBeUndefined();

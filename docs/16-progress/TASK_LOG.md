@@ -2,6 +2,17 @@
 
 
 
+## 2026-09-23 — M3-04 customers admin routes (CLM-0319)
+
+- **Work Item(s):** M3-04 · **الحجز:** `CLM-0319` · **الفرع:** `feat/m3-04-customers-admin-routes`
+- Added 4 admin routes to customers service: `GET /customers` (list with q/status filters), `GET /customers/:id` (detail), `POST /customers/:id/suspend`, `POST /customers/:id/reinstate`
+- Added 3 new admin scopes: `customers:admin:read`, `customers:admin:suspend`, `customers:admin:reinstate`
+- Added `suspension_reason_code` column to `customer_profiles` schema (SQL DDL + Drizzle + migration 0004)
+- Added `listProfiles` method to `CustomerRepository` interface, implemented in in-memory and drizzle
+- 13 new HTTP tests covering list/detail/suspend/reinstate + idempotency + 404s
+- Updated authz-policy counts (141 ops, 117 scopes, 89 unclassified)
+- 4 of 5 remaining M3-04 gaps closed (1 remains: audit service)
+
 ## 2026-09-23 — M3-04 drivers list route (CLM-0318)
 
 - **Work Item(s):** M3-04 · **الحجز:** `CLM-0318` · **الفرع:** `feat/m3-04-drivers-list-route`

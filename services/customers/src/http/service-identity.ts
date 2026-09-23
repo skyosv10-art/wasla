@@ -72,6 +72,9 @@ export const CUSTOMER_SCOPES = {
   orderRequestRead: "customers:order-request:read",
   orderRequestWrite: "customers:order-request:write",
   orderRequestPreview: "customers:order-request:preview",
+  adminRead: "customers:admin:read",
+  adminSuspend: "customers:admin:suspend",
+  adminReinstate: "customers:admin:reinstate",
 } as const;
 
 export type CustomerRouteConfig = ServiceIdentityRouteConfig;

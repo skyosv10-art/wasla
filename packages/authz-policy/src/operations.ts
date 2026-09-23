@@ -100,6 +100,11 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:read"] },
   { audience: "customers", method: "POST", path: "/customers/:waslaPublicId/order-requests", scopes: ["customers:order-request:write"] },
   { audience: "customers", method: "GET", path: "/customers/:waslaPublicId/order-requests/:orderRequestId", scopes: ["customers:order-request:read"] },
+  // --- admin routes (M3-04) ---
+  { audience: "customers", method: "GET", path: "/customers", scopes: ["customers:admin:read"] },
+  { audience: "customers", method: "GET", path: "/customers/:id", scopes: ["customers:admin:read"] },
+  { audience: "customers", method: "POST", path: "/customers/:id/suspend", scopes: ["customers:admin:suspend"] },
+  { audience: "customers", method: "POST", path: "/customers/:id/reinstate", scopes: ["customers:admin:reinstate"] },
   // ── drivers (M1-04 · الموجةُ العاشرةُ · CLM-0198) ──────────────
   // ستَّ عشرةَ عمليّةً كلُّها مربوطةٌ بالمُنتَفِعِ: المَورِدُ مملوكٌ لسائقٍ مُعنوَنٍ
   // في المسارِ (أو في الجسمِ لـ POST /drivers)، فالصلاحيّةُ وحدَها لا تقولُ **أيَّ سائقٍ**.

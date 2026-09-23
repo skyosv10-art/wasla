@@ -48,10 +48,6 @@
 | التطبيق | الطريقة | المسار | البند المالك | السبب |
 |---|---|---|---|---|
 | admin-portal | GET | /audit/events | M3-04 | `services/audit/` غيرُ موجودة (ADMIN_MVP_SPEC §6.2) |
-| admin-portal | GET | /customers | M3-04 | لا مسارَ لقائمة العملاء في `customers` (ADMIN_MVP_SPEC §7: «يحتاج مسارات إدارية») |
-| admin-portal | GET | /customers/:id | M3-04 | لا مسارَ لتفاصيل العميل للمشغّل؛ الموجودُ `/customers/:id/profile` بنطاق المالك |
-| admin-portal | POST | /customers/:id/suspend | M3-04 | لا مسارَ لتعليق العميل |
-| admin-portal | POST | /customers/:id/reinstate | M3-04 | لا مسارَ لإعادة تفعيل العميل |
 <!-- app-api-gaps:end -->
 
 ## 5. الأرقامُ المقيسة — تُقاس ولا تُكتب
@@ -59,11 +55,11 @@
 <!-- app-api-counts:start -->
 ```
 APPS_SCANNED = 3
-SERVICE_ROUTES = 138
+SERVICE_ROUTES = 142
 APP_CALL_SITES = 46
 DISTINCT_APP_CALLS = 43
-MATCHED_CALL_SITES = 41
-REGISTERED_GAPS = 5
+MATCHED_CALL_SITES = 45
+REGISTERED_GAPS = 1
 ```
 <!-- app-api-counts:end -->
 

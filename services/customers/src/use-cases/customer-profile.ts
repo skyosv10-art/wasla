@@ -90,6 +90,7 @@ export async function upsertCustomerProfile(
       preferredLocale: patch.preferredLocale ?? "ar",
       defaultZoneId: patch.defaultZoneId ?? null,
       status: "active",
+      suspensionReasonCode: null,
       createdAt: now,
       updatedAt: now,
     };

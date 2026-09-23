@@ -41,7 +41,7 @@ import { SAVED_PLACES_LIMIT } from "@wasla/contracts-customer";
 
 import { CustomerError } from "../domain/errors.js";
 
-import type { ZoneReference } from "../domain/model.js";
+import type { CustomerProfile, CustomerStatus, ZoneReference } from "../domain/model.js";
 import type { GeographyPort } from "../ports.js";
 import type { UseCaseDeps } from "../use-cases/deps.js";
 import {
@@ -130,6 +130,46 @@ const OPEN: CustomerRouteConfig = { serviceIdentity: "open" };
  */
 function ownerScoped(...scopes: readonly string[]): CustomerRouteConfig {
   return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * مسارٌ إداريٌّ بلا مُنتَفِعٍ: القائمةُ والتفاصيلُ والتعليقُ والإعادةُ التي
+ * يناديها admin portal. لا يملكُ مَورِداً لإنسانٍ بعينِهِ، فلا `beneficiary`.
+ * الصلاحيّاتُ منفصلةٌ عن `ownerScoped` لأنّها نطاقٌ مختلف: مُشغِّلٌ لا مالك.
+ */
+function adminScoped(...scopes: readonly string[]): CustomerRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
+
+/** 
+ * تعويلُ الـ admin portal لملخّصِ العميلِ: الحقولُ التي تملكُها خدمةُ العملاء
+ * حقيقيّاً، وما لا تملكُهُ تُعادُ فيهِ `null` أو `0` صراحةً — لا تُخفى.
+ */
+function toAdminUserSummary(profile: CustomerProfile): Record<string, unknown> {
+  return {
+    wasla_public_id: profile.waslaPublicId,
+    display_name: profile.displayName,
+    phone_number: null, // identity service owns phone numbers
+    preferred_locale: profile.preferredLocale,
+    status: profile.status,
+    suspension_reason_code: profile.suspensionReasonCode,
+    order_count: 0, // orders service owns order count
+    created_at: profile.createdAt,
+    updated_at: profile.updatedAt,
+  };
+}
+
+/** 
+ * تعويلُ الـ admin portal لتفاصيلِ العميلِ: نفسُ ملخّصِ العميلِ + حقولُ
+ * السمعةِ والطلباتِ الحديثةِ التي تملكُها خدماتٌ أخرى.
+ */
+function toAdminUserDetail(profile: CustomerProfile): Record<string, unknown> {
+  return {
+    ...toAdminUserSummary(profile),
+    rating_avg: null, // reputation service owns ratings
+    rating_count: 0,
+    recent_orders: [], // orders service owns order history
+  };
 }
 
 /**
@@ -245,6 +285,81 @@ export function createCustomerApp(
       persistence: health.persistence,
       order_intake: health.orderIntake,
     });
+  });
+
+  // --- admin routes (M3-04) ------------------------------------------------
+  // No beneficiary: admin portal uses user-session auth, not service-owner tokens.
+  // The mapping between RBAC roles (ADMIN_MVP_SPEC §7) and these service-auth
+  // scopes is built at the gateway (M3-09), not here.
+
+  app.get("/customers", { config: adminScoped(CUSTOMER_SCOPES.adminRead) }, async (request, reply) => {
+    const query = request.query as { q?: unknown; status?: unknown; limit?: unknown; offset?: unknown };
+    const limit = Math.min(Math.max(parseInt(query.limit as string) || 50, 1), 200);
+    const offset = Math.max(parseInt(query.offset as string) || 0, 0);
+    const status = typeof query.status === "string" && query.status !== "all" ? query.status : undefined;
+    const profiles = await deps.repo.listProfiles({
+      q: typeof query.q === "string" && query.q.trim() ? query.q.trim() : undefined,
+      status: status as CustomerStatus | undefined,
+      limit,
+      offset,
+    });
+    return reply.status(200).send({
+      customers: profiles.map(toAdminUserSummary),
+      limit,
+      offset,
+    });
+  });
+
+  app.get("/customers/:id", { config: adminScoped(CUSTOMER_SCOPES.adminRead) }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const profile = await deps.repo.findProfile(id);
+    if (profile === null) {
+      throw new CustomerError("CUSTOMER_PROFILE_NOT_FOUND", `لا ملف عميل للمعرّف ${id}`, { traceId: request.id });
+    }
+    return reply.status(200).send(toAdminUserDetail(profile));
+  });
+
+  app.post("/customers/:id/suspend", { config: adminScoped(CUSTOMER_SCOPES.adminSuspend) }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { reason_code?: unknown };
+    const reasonCode = typeof body?.reason_code === "string" ? body.reason_code.trim() : "";
+    if (!reasonCode || reasonCode.length < 1 || reasonCode.length > 128) {
+      throw new CustomerError("CUSTOMER_INVALID_REQUEST_BODY", "reason_code مطلوب (1–128 حرفًا)", { traceId: request.id });
+    }
+    const profile = await deps.repo.findProfile(id);
+    if (profile === null) {
+      throw new CustomerError("CUSTOMER_PROFILE_NOT_FOUND", `لا ملف عميل للمعرّف ${id}`, { traceId: request.id });
+    }
+    // Idempotent: suspending an already-suspended customer returns current state.
+    if (profile.status === "suspended" && profile.suspensionReasonCode === reasonCode) {
+      return reply.status(200).send(toAdminUserDetail(profile));
+    }
+    const updated = await deps.repo.saveProfile({
+      ...profile,
+      status: "suspended",
+      suspensionReasonCode: reasonCode,
+      updatedAt: new Date().toISOString(),
+    });
+    return reply.status(200).send(toAdminUserDetail(updated));
+  });
+
+  app.post("/customers/:id/reinstate", { config: adminScoped(CUSTOMER_SCOPES.adminReinstate) }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const profile = await deps.repo.findProfile(id);
+    if (profile === null) {
+      throw new CustomerError("CUSTOMER_PROFILE_NOT_FOUND", `لا ملف عميل للمعرّف ${id}`, { traceId: request.id });
+    }
+    // Idempotent: reinstating an already-active customer returns current state.
+    if (profile.status === "active") {
+      return reply.status(200).send(toAdminUserDetail(profile));
+    }
+    const updated = await deps.repo.saveProfile({
+      ...profile,
+      status: "active",
+      suspensionReasonCode: null,
+      updatedAt: new Date().toISOString(),
+    });
+    return reply.status(200).send(toAdminUserDetail(updated));
   });
 
   // --- profile -------------------------------------------------------------

@@ -42,6 +42,7 @@ function profile(overrides: Partial<CustomerProfile> = {}): CustomerProfile {
     preferredLocale: "ar",
     defaultZoneId: null,
     status: "active",
+    suspensionReasonCode: null,
     createdAt: T0,
     updatedAt: T0,
     ...overrides,

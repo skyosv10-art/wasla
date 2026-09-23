@@ -1008,6 +1008,10 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /customers/{waslaPublicId}/order-requests` | `customers:order-request:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
 | `POST /customers/{waslaPublicId}/order-requests` | `customers:order-request:write` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
 | `GET /customers/{waslaPublicId}/order-requests/{orderRequestId}` | `customers:order-request:read` | `obo` = `waslaPublicId` | customer-bot (مؤجَّلٌ · داخلَ العمليّةِ) |
+| `GET /customers` | `customers:admin:read` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
+| `GET /customers/{id}` | `customers:admin:read` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
+| `POST /customers/{id}/suspend` | `customers:admin:suspend` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
+| `POST /customers/{id}/reinstate` | `customers:admin:reinstate` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — | — |
 
 <!-- customers-scopes:end -->

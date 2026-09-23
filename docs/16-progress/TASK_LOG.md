@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 corrective hardening verified in PRODUCTION (CLM-0324)
+
+- **Work Item(s):** M3-06 (تصحيحٌ تعزيزيٌّ)
+- **Status:** Completed (الحجزُ يُصدَّرُ في فرعِ الإصدارِ التالي وفقَ النمطِ المعتمد)
+- **What / Why:** إثباتُ إغلاقِ عيبِ تخطيطِ لافتِ الأوفلاين إنتاجيًّا.
+- **Verification:** نشرُ 6bf5df3 (يدويًّا بتفويضِ المالكِ: dep-daq4fiegekts73bhu1ug · dep-daq4finlk1mc73bo52g0 · dep-daq4fimgekts73bhu2f0) ثم قياسٌ في متصفّحٍ حقيقيٍّ على العناوينِ العامةِ الثلاثة: اللافتُ top=0 · عرضُهُ كاملُ viewport (1905/1920 — الفرقُ شريطُ تمرير) · نصُّ التحميلِ أسفلَهُ (~489px) — 3/3 (M3-06_GATE.md §7). E2E المقوّاةُ (الهندسةُ لا الوجود) خضراءُ في CI (run 35911468975 على PR #426).
+- **Changed:** هذا الفرع: تحديثُ §7 بإعادةِ القياسِ + حقلُ فرعِ الحجز.
+- **Security / Data / Deployment:** نشرُ staging يدويٌّ بتفويضٍ صريحٍ (2026-09-23).
+- **Next:** فرعُ الإصدار (CLM-0324 → Released) ثم M3-07 (runbook drill — آخرُ بنودِ M3).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 corrective hardening: offline banner layout (CLM-0324)
 
 - **Work Item(s):** M3-06 (تصحيحٌ تعزيزيٌّ بعدَ الإغلاق)

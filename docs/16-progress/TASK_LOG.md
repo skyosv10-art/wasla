@@ -1,6 +1,12 @@
 
 
 
+
+## 2026-09-23 — M3-04 drivers list route (CLM-0318)
+
+- **Work Item(s):** M3-04 · **الحجز:** `CLM-0318` · **الفرع:** `feat/m3-04-drivers-list-route`
+- **What:** Added `GET /drivers` admin list route to drivers service. New `adminScoped` config (no beneficiary, requires `drivers:admin:read` scope). Added `list(limit, offset)` to DriverProfileRepository interface, implemented in in-memory and drizzle repositories. 3 new HTTP tests (empty list, registered drivers, pagination). OpenAPI contract updated. Authz-policy counts updated (137 ops, 114 scopes, 85 unclassified). SERVICE_AUTH_ENFORCEMENT.md updated. APP_API_ROUTES.md gap count 6→5.
+
 ## 2026-09-23 — M3-04 orders prefix fix (CLM-0317)
 
 - **Work Item(s):** M3-04 · **الحجز:** `CLM-0317` · **الفرع:** `feat/m3-04-orders-prefix-fix`

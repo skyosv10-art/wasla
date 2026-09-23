@@ -40,6 +40,42 @@ tags:
 
 paths:
   /drivers:
+    get:
+      tags: [drivers]
+      summary: قائمة السائقين (إداري)
+      operationId: listDrivers
+      security:
+        - ServiceAuth: ['drivers:admin:read']
+      description: |
+        قائمة بكل ملفات السائقين مع ترقيم الصفحات. مخصّص للوحة الإدارة.
+        الربط بين صلاحيّة RBAC في الواجهة (`drivers:read`) وصلاحيّة الخدمة هنا
+        (`drivers:admin:read`) يُبنَى عند البوّابة (M3-09).
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: offset
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: قائمة السائقين
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: array
+                    items: { $ref: '#/components/schemas/DriverProfile' }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
     post:
       tags: [drivers]
       summary: تسجيل ملف دور سائق

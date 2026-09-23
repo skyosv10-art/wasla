@@ -120,6 +120,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/suspend", scopes: ["drivers:profile:suspend"] },
   { audience: "drivers", method: "POST", path: "/drivers/:waslaPublicId/reinstate", scopes: ["drivers:profile:reinstate"] },
   { audience: "drivers", method: "POST", path: "/drivers/eligibility/tick", scopes: ["drivers:eligibility:tick"] },
+  { audience: "drivers", method: "GET", path: "/drivers", scopes: ["drivers:admin:read"] },
   // ── delivery ──────────────────────────────────────────────────
   { audience: "delivery", method: "POST", path: "/store-orders", scopes: ["delivery:store-order:write"] },
   { audience: "delivery", method: "GET", path: "/store-orders/:orderPublicId", scopes: ["delivery:store-order:read"] },

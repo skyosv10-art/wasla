@@ -171,6 +171,16 @@ function internalScoped(...scopes: readonly string[]): DriverRouteConfig {
 }
 
 /**
+ * مسارٌ إداريٌّ: يفرضُ الصلاحيّةَ بلا مُنتَفِعٍ، مثلُ `internalScoped`،
+ * لكنّهُ يُعلِنُ أنّ هذا المسارَ مُخصَّصٌ للوحةِ الإدارةِ لا للعمليّاتِ الداخليّةِ.
+ * الربطُ بينَ صلاحيّةِ `RBAC` في الواجهةِ (`drivers:read`) وصلاحيّةِ الخدمةِ هنا
+ * (`drivers:admin:read`) يُبنَى عندَ البوّابةِ (`M3-09`).
+ */
+function adminScoped(...scopes: readonly string[]): DriverRouteConfig {
+  return { serviceIdentity: { scopes } };
+}
+
+/**
  * مالكُ المَورِدِ كما **يُثبِتُهُ الرمزُ**، مُطابَقاً بما كُتِبَ في المسارِ.
  *
  * `:waslaPublicId` قيمةٌ **يكتبُها المُنادي**. فلو فُرِضَتِ الصلاحيّةُ وحدَها لكانَ
@@ -229,6 +239,19 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
         lastTickAt: tickState.lastTickAt,
       }),
     );
+  });
+
+  app.get("/drivers", { config: adminScoped(DRIVER_SCOPES.adminRead) }, async (request, reply) => {
+    assertRequestIdLength(request.headers);
+    const query = request.query as { limit?: unknown; offset?: unknown };
+    const limit = Math.min(Math.max(parseInt(query.limit as string) || 50, 1), 200);
+    const offset = Math.max(parseInt(query.offset as string) || 0, 0);
+    const profiles = await runner.read((deps) => deps.profiles.list(limit, offset));
+    return reply.status(200).send({
+      drivers: profiles.map(driverProfileToWire),
+      limit,
+      offset,
+    });
   });
 
   app.post("/drivers", { config: ownerScoped(DRIVER_SCOPES.profileWrite) }, async (request, reply) => {

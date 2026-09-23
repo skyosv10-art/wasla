@@ -1043,6 +1043,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | المسار | الصلاحيّةُ المطلوبة | ربطُ المالكِ |
 |---|---|---|
 | `POST /drivers` | `drivers:profile:write` | `obo` = `wasla_public_id` (من الجسمِ) |
+| `GET /drivers` | `drivers:admin:read` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) |
 | `POST /drivers/eligibility/tick` | `drivers:eligibility:tick` | — (عمليّةٌ داخليّةٌ) |
 | `GET /drivers/{waslaPublicId}` | `drivers:profile:read` | `obo` = `waslaPublicId` |
 | `PATCH /drivers/{waslaPublicId}` | `drivers:profile:write` | `obo` = `waslaPublicId` |

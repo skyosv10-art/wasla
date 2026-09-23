@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 baseline regeneration (CLM-0323)
+
+- **Work Item(s):** M3-06
+- **Status:** In Progress
+- **What / Why:** فشلُ CI على PR #423 في الفحصِ 11 (الأساسُ الآلي): `test_files_tracked` الأساسُ 469 والحيُّ 475 — M3-06 أضافَ 6 ملفاتِ اختبارٍ (3 وحدةٍ + 3 E2E لجودةِ الواجهات). الطريقُ الوحيدُ لتصحيحِ الأساسِ هو `scripts/baseline.sh` (تحريرُ الرقمِ يدويًّا يُسقِطُ البوّابةَ — BASELINE_FORMAT.md §5).
+- **Changed:** `docs/12-testing/BASELINE.json` + `BASELINE.txt` — أُعيد التوليدُ من تشغيلِ `scripts/verify.sh` حقيقيٍّ كاملٍ (`/tmp/verify.log`، شجرةٌ نظيفةٌ على f39d279): `test_files_tracked` 469→475 · `tests_passed` 5309→5367 · `test_files_executed` 347→354 · بصمةٌ جديدةٌ sha256:55f1ab7e… · `verify_overall: failed` بسببِ الفحصِ 11 نفسِه (حالةُ الدجاجةِ والبيضةِ المعروفةُ عندَ إعادةِ التوليدِ — سابقةُ M3-08 سجّلتِ المثل).
+- **Verification:** `validate-baseline.sh` ✓ (صيغةٌ متّسقةٌ · لا انحدارَ · تكرارٌ مُبرهَنٌ).
+- **Security / Data / Deployment:** لا شيء.
+- **Next:** دفعُ الأساسِ المُعادِ إلى PR #423 ثم حكمُ CI.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 implementation complete locally (CLM-0323)
 
 - **Work Item(s):** M3-06

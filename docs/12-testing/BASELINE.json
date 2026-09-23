@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-23T09:02:05Z",
+  "generated_at": "2026-09-23T13:49:04Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "914bb125331847f26d3c0cba9d03c3127458f754",
-    "branch": "feat/m3-08-app-route-audit",
+    "commit": "f39d27909a1571d2cf057f54edb705bc1e8cbbae",
+    "branch": "feat/m3-06-frontend-ux-quality",
     "dirty": false,
-    "dirty_files": 15,
+    "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2497
+    "tracked_files": 2541
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 57,
     "packages_with_typecheck": 57,
     "packages_with_test": 57,
-    "test_files_tracked": 469,
+    "test_files_tracked": 475,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 24,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify-m3-08.log",
-    "tests_passed": 5309,
-    "test_files_executed": 347,
-    "governance_suite_cases": 506,
+    "source": "/tmp/verify.log",
+    "tests_passed": 5367,
+    "test_files_executed": 354,
+    "governance_suite_cases": 512,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2265a65494d4b7638549bf52a0cd407bd26739a7b45fbd8c18d4ab56e8d7e3ec",
+  "fingerprint": "sha256:55f1ab7eedb74ef612a525c1c50f802a177d813cb5875e4aa6650e3fd639b5f4",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

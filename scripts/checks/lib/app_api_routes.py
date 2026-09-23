@@ -33,6 +33,7 @@
 from __future__ import annotations
 
 import glob
+import json
 import os
 import re
 import sys
@@ -324,6 +325,20 @@ def main(doc_path: str) -> int:
     if bad4 == 0:
         ok("البابُ 4: كلُّ فجوةٍ مملوكةٌ لبندٍ قائمٍ غيرِ مكتملٍ")
 
+    # ── جدولُ التوجيهِ (يُقرأُ قبلَ البابِ 5 لأنَّ عدّادَه يُنشرُ مع الأرقامِ) ──
+    rewrite_files = [r[0] for r in table_rows(doc_block(doc, "app-api-rewrites")) if r]
+    rewrites: dict[str, str] = {}
+    for rf in rewrite_files:
+        if not os.path.isfile(rf):
+            continue
+        try:
+            loaded = json.load(open(rf, encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        raw = loaded.get("prefixes") if isinstance(loaded, dict) else None
+        if isinstance(raw, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in raw.items()):
+            rewrites.update(raw)
+
     # ── البابُ 5: الأرقامُ المنشورة ──
     published = {m.group(1): int(m.group(2)) for m in re.finditer(r"(\w+)\s*=\s*(\d+)", doc_block(doc, "app-api-counts"))}
     expected = {
@@ -333,6 +348,7 @@ def main(doc_path: str) -> int:
         "DISTINCT_APP_CALLS": len(distinct),
         "MATCHED_CALL_SITES": matched,
         "REGISTERED_GAPS": len(gaps),
+        "REWRITE_PREFIXES": len(rewrites),
     }
     bad5 = 0
     for key, value in expected.items():
@@ -344,6 +360,68 @@ def main(doc_path: str) -> int:
             bad(f"البابُ 5: `{key}` منشورٌ {published[key]} والقياسُ {value}")
     if bad5 == 0:
         ok("البابُ 5: كلُّ رقمٍ منشورٍ يطابق القياسَ")
+
+    # ── البابُ 6 (M3-09): جدولُ التوجيهِ — من المسارِ المُنادى إلى الخدمةِ ──
+    # كلُّ بادئةٍ يناديها تطبيقٌ يجب أن يكونَ لها صفٌّ في جدولِ إعادةِ الكتابةِ،
+    # يوجِّهُ إلى الخدمةِ نفسِها التي يطابقُ النداءُ مسارَها في البابِ الثاني،
+    # وكلُّ صفٍّ في الجدولِ يجب أن تملكَهُ خدمةٌ فعلًا في الشفرةِ.
+    bad6 = 0
+    if not rewrite_files:
+        bad6 += 1
+        bad("البابُ 6: لا جدولَ توجيهٍ مُعلَنًا في `app-api-rewrites` — لا يُقاسُ مسارُ الوصولِ")
+    for rf in rewrite_files:
+        if not os.path.isfile(rf):
+            bad6 += 1
+            bad(f"البابُ 6: جدولُ التوجيهِ المُعلَنُ غيرُ موجودٍ: {rf}")
+            continue
+        try:
+            loaded = json.load(open(rf, encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            bad6 += 1
+            bad(f"البابُ 6: جدولُ التوجيهِ {rf} ليس JSON مقروءًا — {exc}")
+            continue
+        raw = loaded.get("prefixes") if isinstance(loaded, dict) else None
+        if not isinstance(raw, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in raw.items()
+        ):
+            bad6 += 1
+            bad(f"البابُ 6: جدولُ التوجيهِ {rf} بلا خريطةِ `prefixes` من نصٍّ إلى نصٍّ")
+    for prefix, svc in rewrites.items():
+        if not re.fullmatch(r"/[A-Za-z0-9_-]+", prefix):
+            bad6 += 1
+            bad(f"البابُ 6: بادئةُ توجيهٍ ليست قطعةً واحدةً تبدأ بـ`/`: {prefix}")
+    # 6-أ و6-ب: كلُّ نداءٍ له بادئةٌ موجودةٌ توجِّهُ إلى خدمتِه المطابِقةِ.
+    call_owners: dict[tuple[str, str, tuple[str, ...]], set[str]] = {}
+    for c in calls:
+        key = (c["app"], c["method"], c["path"])
+        call_owners.setdefault(key, set()).update(
+            svc for (m, p), svcs in services.items() if m == c["method"] and matches(c["path"], p) for svc in svcs
+        )
+    for (app, method, path), owners in sorted(call_owners.items(), key=lambda kv: fmt(kv[0][2])):
+        if not path:
+            bad6 += 1
+            bad(f"البابُ 6: نداءٌ بلا قطعةِ بادئةٍ: {app} {method} {fmt(path)}")
+            continue
+        prefix = "/" + path[0]
+        mapped = rewrites.get(prefix)
+        if mapped is None:
+            bad6 += 1
+            bad(f"البابُ 6-أ: {app} ينادي {method} {fmt(path)} وبادئتُه {prefix} ليست في جدولِ التوجيهِ — النداءُ لا يعرفُ طريقَه إلى أيِّ خدمةٍ")
+        elif owners and mapped not in owners:
+            bad6 += 1
+            bad(
+                f"البابُ 6-ب: {app} ينادي {method} {fmt(path)} والجدولُ يوجِّهُ {prefix} إلى `{mapped}` "
+                f"بينما الخدماتُ المطابِقةُ للنداءِ هي {sorted(owners)} — التوجيهُ والنداءُ يفترقان"
+            )
+    # 6-ج: كلُّ صفٍّ في الجدولِ تملكُهُ خدمةٌ فعلًا (بادئةٌ ميّتةٌ = صفٌّ يوجِّهُ إلى لا شيءٍ).
+    for prefix, svc in sorted(rewrites.items()):
+        seg = prefix[1:]
+        owns = any(p and p[0] == seg for (m, p), svcs in services.items() if svc in svcs)
+        if not owns:
+            bad6 += 1
+            bad(f"البابُ 6-ج: الجدولُ يوجِّهُ {prefix} إلى `{svc}` ولا مسارَ لهذهِ الخدمةِ يبدأُ بهذهِ البادئةِ — بادئةٌ ميّتةٌ")
+    if bad6 == 0 and rewrites:
+        ok(f"البابُ 6: كلُّ نداءٍ ({len(call_owners)}) له بادئةُ توجيهٍ تصلُ خدمتَه · {len(rewrites)} بادئةً كلُّها مملوكةً لخدمةٍ")
 
     print(
         f"  {DIM}تطبيقات {expected['APPS_SCANNED']} · مسارات خدمات {expected['SERVICE_ROUTES']} · "

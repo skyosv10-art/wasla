@@ -72,7 +72,9 @@
 
 | منطقة الكود | الحالة | العنصر المالك |
 |---|---|---|
-| `infra/terraform/` | Implemented | M2 | `versions.tf` + `variables.tf` + `outputs.tf` + `backend.tf` + `render.tf` · `render-oss/render` v1.9.1 · 16 `render_web_service` · [`ADR-038`](../15-decisions/ADR-038-platform-provider-iac-toolchain.md) + [`ADR-039`](../15-decisions/ADR-039-render-experimental-compute.md) |
+| `infra/terraform/` | Implemented | M2 |
+| `infra/terraform/apps/` | Implemented | M3-09 | جذرُ terraform مستقلٌّ للمواقعِ الثابتةِ الثلاثةِ · يقرأُ جدولَ التوجيهِ بـ`jsondecode` · [`ADR-048`](../15-decisions/ADR-048-app-access-path-static-sites-rewrites.md) |
+| `infra/render/` | Implemented | M3-09 | `app-rewrites.json` — جدولُ البادئة→الخدمةِ الوحيدُ · يحرسُهُ الفحصُ 24 (البابُ السادسُ) وتقرؤهُ terraform · [`ADR-048`](../15-decisions/ADR-048-app-access-path-static-sites-rewrites.md) | `versions.tf` + `variables.tf` + `outputs.tf` + `backend.tf` + `render.tf` · `render-oss/render` v1.9.1 · 16 `render_web_service` · [`ADR-038`](../15-decisions/ADR-038-platform-provider-iac-toolchain.md) + [`ADR-039`](../15-decisions/ADR-039-render-experimental-compute.md) |
 | `infra/kubernetes/` | Placeholder | M2 |
 | `infra/docker/` | Placeholder **بقرار** — صورةُ التشغيلِ في جذرِ المستودعِ (`Dockerfile`) لأنَّ البناءَ يحتاجُ سياقَ العملِ كاملاً؛ و`infra/docker/` يُترَكُ لملفّاتِ التركيبِ والنشرِ (`M2-02`) بحكمِ [ADR-033](../15-decisions/ADR-033-container-image-supply-chain.md) | M2 |
 | `infra/environments/` | Implemented | M2 | 5 بيئاتٍ · `environment.json` لكلٍّ منها · [`validate-environments.sh`](../../scripts/checks/validate-environments.sh) |

@@ -133,6 +133,55 @@ if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'رقمٌ منشورٌ يُخالِفُ القياسَ يُسقِطُ البابَ 5' 'البابُ 5'
 fi
 _ar_restore
+_ar_edit_doc '__import__("re").sub(r"REWRITE_PREFIXES = \d+", "REWRITE_PREFIXES = 999", s, count=1)'
+if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
+  tg 'عددُ بادئاتِ التوجيهِ المنشورُ يُخالِفُ القياسَ يُسقِطُ البابَ 5' 'البابُ 5'
+fi
+_ar_restore
+
+# ── البابُ 6: جدولُ التوجيهِ (M3-09) ─────────────────────────────────────
+AR_JSON=infra/render/app-rewrites.json
+cp "$AR_JSON" "$AR_BK/json"
+
+_ar_edit_json() { # _ar_edit_json <python: عباراتٌ تُنفَّذُ على d في مكانِها>
+  python3 - "$AR_JSON" "$1" <<'MUTJ'
+import json, sys
+p, expr = sys.argv[1], sys.argv[2]
+d = json.load(open(p, encoding="utf-8"))
+exec(expr, {"d": d})
+json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+MUTJ
+}
+
+_ar_edit_json 'd["prefixes"].pop("/search")'
+if _ar_mutated "$AR_JSON" "$AR_BK/json"; then
+  tg 'بادئةٌ يناديها تطبيقٌ حُذِفَت من جدولِ التوجيهِ تُسقِطُ البابَ 6-أ' 'البابُ 6-أ'
+fi
+cp "$AR_BK/json" "$AR_JSON"
+
+_ar_edit_json 'd["prefixes"]["/customers"] = "orders"'
+if _ar_mutated "$AR_JSON" "$AR_BK/json"; then
+  tg 'بادئةٌ تُوجَّهُ إلى خدمةٍ غيرِ الخدمةِ المطابِقةِ للنداءِ تُسقِطُ البابَ 6-ب' 'البابُ 6-ب'
+fi
+cp "$AR_BK/json" "$AR_JSON"
+
+_ar_edit_json 'd["prefixes"]["/ghost-prefix"] = "customers"'
+if _ar_mutated "$AR_JSON" "$AR_BK/json"; then
+  tg 'بادئةٌ في الجدولِ لا تملكُها خدمةٌ تُسقِطُ البابَ 6-ج' 'البابُ 6-ج'
+fi
+cp "$AR_BK/json" "$AR_JSON"
+
+printf '{ "prefixes": "not a map" }' > "$AR_JSON"
+if _ar_mutated "$AR_JSON" "$AR_BK/json"; then
+  tg 'جدولُ توجيهٍ بلا خريطةِ prefixes من نصٍّ إلى نصٍّ يُسقِطُ البابَ 6' 'البابُ 6: جدولُ التوجيهِ'
+fi
+cp "$AR_BK/json" "$AR_JSON"
+
+_ar_edit_doc '__import__("re").sub(r"app-api-rewrites:start.*?app-api-rewrites:end", "app-api-rewrites:star", s, count=1, flags=16)'
+if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
+  tg 'إزالةُ إعلانِ جدولِ التوجيهِ من الوثيقةِ تُسقِطُ البابَ 6' 'لا جدولَ توجيهٍ'
+fi
+_ar_restore
 
 t "الأصلُ يمرُّ بعدَ كلِّ الطفراتِ (الاستعادةُ سليمةٌ)" pass bash "$AR"
 rm -rf "$AR_BK"

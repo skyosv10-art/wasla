@@ -1,0 +1,31 @@
+{
+  "$comment": [
+    "ADR-048 — جدول التوجيه الوحيد لمسار وصول التطبيقات إلى الخدمات (M3-09).",
+    "يقرؤه جذر terraform المستقل infra/terraform/apps/ (عبر jsondecode) لتوليد قواعد إعادة الكتابة على المواقع الثابتة الثلاثة،",
+    "ويقرؤه الفحص 24 (scripts/checks/lib/app_api_routes.py — الباب السادس) لإثبات أن كل بادئة يناديها تطبيق لها صف هنا",
+    "يوجه إلى الخدمة نفسها التي يطابقها النداء، وأن كل بادئة هنا تملكها خدمة فعلًا في services/*/src.",
+    "قاعدة البادئة: أول قطعة من مسار الخدمة. /health مستثناة عمدًا (مشتركة بين الخدمات وملتبسة التوجيه).",
+    "قيمة كل بادئة = اسم مجلد الخدمة في services/، ومضيف Render يستنتج بالاصطلاح: https://wasla-<الخدمة>.onrender.com."
+  ],
+  "prefixes": {
+    "/audit": "audit",
+    "/candidacy": "matching",
+    "/categories": "marketplace",
+    "/customers": "customers",
+    "/delivery": "delivery",
+    "/dispatch": "dispatch",
+    "/drivers": "drivers",
+    "/geo": "geography",
+    "/identity": "identity",
+    "/matching": "matching",
+    "/negotiations": "negotiations",
+    "/orders": "orders",
+    "/products": "marketplace",
+    "/referrals": "subscriptions",
+    "/reputation": "reputation",
+    "/search": "search",
+    "/store-orders": "delivery",
+    "/stores": "marketplace",
+    "/subscriptions": "subscriptions"
+  }
+}

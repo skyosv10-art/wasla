@@ -70,3 +70,26 @@ body {
   justify-content: center;
   min-height: 100vh;
 }
+
+/* M3-06: offline banner + responsive safety net (no horizontal overflow at 375px). */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #b3261e;
+  color: #ffffff;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+@media (max-width: 375px) {
+  html {
+    font-size: 15px;
+  }
+}

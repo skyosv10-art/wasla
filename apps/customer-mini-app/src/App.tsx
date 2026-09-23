@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSessionStore } from "./store/session";
+import { OfflineBanner } from "./components/OfflineBanner";
 import { Home } from "./screens/Home";
 import { RideOrder } from "./screens/RideOrder";
 import { DeliveryOrder } from "./screens/DeliveryOrder";
@@ -57,6 +58,7 @@ export function App() {
   if (!isAuthenticated()) {
     return (
       <div className="app-loading">
+        <OfflineBanner />
         <p>{t("common.loading")}</p>
       </div>
     );
@@ -64,6 +66,7 @@ export function App() {
 
   return (
     <div className="app">
+      <OfflineBanner />
       {route === "home" && <Home />}
       {route === "ride" && <RideOrder />}
       {route === "delivery" && <DeliveryOrder />}

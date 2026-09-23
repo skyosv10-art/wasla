@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSessionStore } from "./store/session";
+import { OfflineBanner } from "./components/OfflineBanner";
 import { Dashboard } from "./screens/Dashboard";
 import { Users } from "./screens/Users";
 import { Drivers } from "./screens/Drivers";
@@ -29,6 +30,7 @@ export function App() {
   if (!isAuthenticated()) {
     return (
       <div className="app-loading">
+        <OfflineBanner />
         <p>{t("common.loading")}</p>
       </div>
     );
@@ -36,6 +38,7 @@ export function App() {
 
   return (
     <div className="app">
+      <OfflineBanner />
       <nav className="sidebar">
         <a href="#/dashboard" data-testid="nav-dashboard">{t("nav.dashboard")}</a>
         <a href="#/users" data-testid="nav-users">{t("nav.users")}</a>

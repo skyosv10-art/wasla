@@ -2,6 +2,17 @@
 
 
 
+## 2026-09-23 — M3-08 gate evidence update (CLM-0321)
+
+- **Work Item(s):** M3-08 · **الحجز:** `CLM-0321` · **الفرع:** `feat/m3-08-gate-evidence-update`
+- Updated all four M3-0x_GATE.md files with post-CLM-0317..0320 evidence
+- CI on main now verified green (run 35844148744, `29bf3f8`, 38/38)
+- M3-01: Completed stays — CI on main now green
+- M3-02: Completed restored — `/drivers/:id/jobs` gap closed (CLM-0316, PR #408)
+- M3-03: Completed stays — CI on main now green
+- M3-04: In Progress stays — all four conditions met except condition 3 (M3-09 scope: gateway/baseUrl)
+- M3-08 board text updated to reflect gate files exist and are current
+
 ## 2026-09-23 — M3-04 audit service (CLM-0320)
 
 - **Work Item(s):** M3-04 · **الحجز:** `CLM-0320` · **الفرع:** `feat/m3-04-audit-service`

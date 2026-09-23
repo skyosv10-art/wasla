@@ -29,16 +29,19 @@ export function App() {
 
   if (!isAuthenticated()) {
     return (
-      <div className="app-loading">
+      <>
         <OfflineBanner />
-        <p>{t("common.loading")}</p>
-      </div>
+        <div className="app-loading">
+          <p>{t("common.loading")}</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="app">
+    <>
       <OfflineBanner />
+      <div className="app">
       <nav className="sidebar">
         <a href="#/dashboard" data-testid="nav-dashboard">{t("nav.dashboard")}</a>
         <a href="#/users" data-testid="nav-users">{t("nav.users")}</a>
@@ -54,5 +57,6 @@ export function App() {
         {route === "audit" && <AuditLog />}
       </main>
     </div>
+    </>
   );
 }

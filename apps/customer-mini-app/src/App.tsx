@@ -57,16 +57,19 @@ export function App() {
   // see a loading state until the session is initialized from Telegram initData.
   if (!isAuthenticated()) {
     return (
-      <div className="app-loading">
+      <>
         <OfflineBanner />
-        <p>{t("common.loading")}</p>
-      </div>
+        <div className="app-loading">
+          <p>{t("common.loading")}</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="app">
+    <>
       <OfflineBanner />
+      <div className="app">
       {route === "home" && <Home />}
       {route === "ride" && <RideOrder />}
       {route === "delivery" && <DeliveryOrder />}
@@ -77,5 +80,6 @@ export function App() {
       {route === "reputation" && <Reputation />}
       {route === "profile" && <Profile />}
     </div>
+    </>
   );
 }

@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 corrective hardening: offline banner layout (CLM-0324)
+
+- **Work Item(s):** M3-06 (تصحيحٌ تعزيزيٌّ بعدَ الإغلاق)
+- **Status:** In Progress
+- **What / Why:** لقطةُ قياسِ PRODUCTION كشفت عيبَ تخطيطٍ: لافتُ الأوفلاين عنصرٌ مرنٌ **جانبيٌّ** داخل `.app-loading`/`.app` (flex row) — يظهرُ بجوارِ «جارٍ التحميل...» لا كشريطٍ علويٍّ. الاختباراتُ الأصليةُ قاستِ الوجودَ والنصَّ لا الهندسةَ، فلم تلتقطْه (كشفَه تفتيشٌ بشريٌّ للقطة).
+- **Changed:** `App.tsx`×3: اللافتُ في مستوى الجذرِ فوقَ الغلافِ (fragment) · CSS×3: `width:100%; box-sizing:border-box` · E2E×3: قياسُ هندسةِ اللافتِ (top ≤ 1px · عرض ≈ viewport) · سجلُّ تدقيقٍ M3-06_GATE.md §7 · حجز CLM-0324.
+- **Verification:** E2E جودة 3/3×3 (بالهندسةِ المقوّاة) · وحدةٌ 72/132/79 · typecheck نظيف×3. يتبقّى: CI + إعادة نشرٍ وقياسِ PRODUCTION (§7).
+- **Security / Data / Deployment:** لا شيءَ جديدًا.
+- **Next:** PR ← CI ← نشر ← إعادة قياس PRODUCTION ← إغلاقُ الحجز. ثم M3-07.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 evidence: PRODUCTION measured, item Completed (CLM-0323)
 
 - **Work Item(s):** M3-06

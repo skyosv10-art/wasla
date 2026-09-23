@@ -54,16 +54,19 @@ export function App() {
 
   if (!isAuthenticated()) {
     return (
-      <div className="app-loading">
+      <>
         <OfflineBanner />
-        <p>{t("common.loading")}</p>
-      </div>
+        <div className="app-loading">
+          <p>{t("common.loading")}</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="app">
+    <>
       <OfflineBanner />
+      <div className="app">
       {route === "home" && <Home />}
       {route === "offers" && <Offers />}
       {route === "job" && <JobDetail />}
@@ -73,5 +76,6 @@ export function App() {
       {route === "documents" && <Documents />}
       {route === "profile" && <Profile />}
     </div>
+    </>
   );
 }

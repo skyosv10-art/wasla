@@ -53,7 +53,7 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     set({ searchLoading: true, searchError: null });
     try {
       const res = await fetch(
-        `/api/orders/orders/lookup?order_public_id=${encodeURIComponent(publicId)}`,
+        `/orders/lookup?order_public_id=${encodeURIComponent(publicId)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -83,7 +83,7 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     }
     set({ detailLoading: true, detailError: null });
     try {
-      const res = await fetch(`/api/orders/orders/${orderId}`, {
+      const res = await fetch(`/orders/${orderId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "X-Request-Id": crypto.randomUUID(),
@@ -111,7 +111,7 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     }
     set({ historyLoading: true, historyError: null });
     try {
-      const res = await fetch(`/api/orders/orders/${orderId}/history`, {
+      const res = await fetch(`/orders/${orderId}/history`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "X-Request-Id": crypto.randomUUID(),

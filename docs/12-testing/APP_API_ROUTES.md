@@ -47,10 +47,7 @@
 <!-- app-api-gaps:start -->
 | التطبيق | الطريقة | المسار | البند المالك | السبب |
 |---|---|---|---|---|
-| admin-portal | GET | /api/audit/audit/events | M3-04 | `services/audit/` غيرُ موجودة (ADMIN_MVP_SPEC §6.2)؛ ولا بوّابةَ تحذف البادئة `/api/audit` |
-| admin-portal | GET | /api/orders/orders/lookup | M3-04 | المسارُ `GET /orders/lookup` قائمٌ في `orders`، لكنّ البادئة `/api/orders` لا تُحذف في أيِّ طبقة |
-| admin-portal | GET | /api/orders/orders/:orderId | M3-04 | كالسابق: `GET /orders/:orderId` قائمٌ والبادئة لا تُحذف |
-| admin-portal | GET | /api/orders/orders/:orderId/history | M3-04 | كالسابق: `GET /orders/:orderId/history` قائمٌ والبادئة لا تُحذف |
+| admin-portal | GET | /audit/events | M3-04 | `services/audit/` غيرُ موجودة (ADMIN_MVP_SPEC §6.2) |
 | admin-portal | GET | /customers | M3-04 | لا مسارَ لقائمة العملاء في `customers` (ADMIN_MVP_SPEC §7: «يحتاج مسارات إدارية») |
 | admin-portal | GET | /customers/:id | M3-04 | لا مسارَ لتفاصيل العميل للمشغّل؛ الموجودُ `/customers/:id/profile` بنطاق المالك |
 | admin-portal | POST | /customers/:id/suspend | M3-04 | لا مسارَ لتعليق العميل |
@@ -66,8 +63,8 @@ APPS_SCANNED = 3
 SERVICE_ROUTES = 137
 APP_CALL_SITES = 46
 DISTINCT_APP_CALLS = 43
-MATCHED_CALL_SITES = 37
-REGISTERED_GAPS = 9
+MATCHED_CALL_SITES = 40
+REGISTERED_GAPS = 6
 ```
 <!-- app-api-counts:end -->
 

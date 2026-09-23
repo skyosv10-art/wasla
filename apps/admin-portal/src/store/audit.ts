@@ -55,7 +55,7 @@ export const useAuditStore = create<AuditState>((set, get) => ({
       if (filters.limit) params.set("limit", String(filters.limit));
       if (filters.offset) params.set("offset", String(filters.offset));
 
-      const res = await fetch(`/api/audit/audit/events?${params}`, {
+      const res = await fetch(`/audit/events?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "X-Request-Id": crypto.randomUUID(),

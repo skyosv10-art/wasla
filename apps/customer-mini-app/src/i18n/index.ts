@@ -58,7 +58,12 @@ const resources = {
         price_mode_customer_offer: "سعر مقترح",
         price_mode_negotiable: "قابل للتفاوض",
       },
+      offline: {
+        banner: "أنت غير متصل بالشبكة — ستُستأنف العملية عند عودة الاتصال",
+      },
       errors: {
+        network_error: "تعذّر الاتصال بالشبكة — تحقّق من اتصالك وأعد المحاولة",
+        timeout: "انتهت مهلة الطلب — أعد المحاولة",
         pickup_zone_required: "نقطة الالتقاط مطلوبة",
         dropoff_zone_required: "نقطة الوصول مطلوبة",
         same_zone: "نقطة الالتقاط والوصول لا يمكن أن تكونا نفس المنطقة",
@@ -193,7 +198,12 @@ const resources = {
         price_mode_customer_offer: "Customer Offer",
         price_mode_negotiable: "Negotiable",
       },
+      offline: {
+        banner: "You are offline — operations resume when the connection returns",
+      },
       errors: {
+        network_error: "Network connection failed — check your connection and retry",
+        timeout: "Request timed out — please retry",
         pickup_zone_required: "Pickup zone is required",
         dropoff_zone_required: "Dropoff zone is required",
         same_zone: "Pickup and dropoff cannot be the same zone",
@@ -328,7 +338,12 @@ const resources = {
         price_mode_customer_offer: "گاہک کی پیشکش",
         price_mode_negotiable: "قابلِ بحث",
       },
+      offline: {
+        banner: "آپ آف لائن ہیں — کنکشن واپس آنے پر کام جاری رہے گا",
+      },
       errors: {
+        network_error: "نیٹ ورک کنکشن ناکام — اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں",
+        timeout: "درخواست کا وقت ختم ہو گیا — دوبارہ کوشش کریں",
         pickup_zone_required: "پک اپ زون ضروری ہے",
         dropoff_zone_required: "ڈراپ آف زون ضروری ہے",
         same_zone: "پک اپ اور ڈراپ آف ایک ہی زون نہیں ہو سکتے",
@@ -412,13 +427,32 @@ const resources = {
   },
 };
 
+// M3-06: locale selection. Arabic (RTL) is the default; `?locale=ar|en|ur`
+// selects the locale for UAT and review — document lang/dir follow it.
+const SUPPORTED_LOCALES = ["ar", "en", "ur"] as const;
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
+
+export function initialLocale(): Locale {
+  const requested = new URLSearchParams(window.location.search).get("locale");
+  return (SUPPORTED_LOCALES as readonly string[]).includes(requested ?? "")
+    ? (requested as Locale)
+    : "ar";
+}
+
+export function applyLocale(locale: Locale): void {
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === "en" ? "ltr" : "rtl";
+}
+
+const locale = initialLocale();
+applyLocale(locale);
+
 i18n.use(initReactI18next).init({
   resources,
-  lng: "ar",
+  lng: locale,
   fallbackLng: "ar",
-  interpolation: {
-    escapeValue: false,
-  },
+  interpolation: { escapeValue: false },
 });
 
 export default i18n;
+

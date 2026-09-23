@@ -60,6 +60,14 @@ function createApiClient(options: ApiClientOptions = {}) {
       }
 
       return response.json() as Promise<T>;
+    } catch (err) {
+      // M3-06: distinguish network failures and timeouts from HTTP errors.
+      if (err instanceof ApiError) throw err;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new ApiError(408, "timeout");
+      }
+      // fetch rejects with TypeError when the request never reaches the network.
+      throw new ApiError(0, "network_error");
     } finally {
       clearTimeout(timeoutId);
     }

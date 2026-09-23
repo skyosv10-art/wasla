@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 implementation complete locally (CLM-0323)
+
+- **Work Item(s):** M3-06
+- **Status:** In Progress (تنفيذٌ محليٌّ مكتمل — يتبقّى CI ثم PRODUCTION)
+- **What / Why:** إغلاقُ الفجواتِ الأربعِ المقيسةِ في مصفوفةِ القبولِ (المواصفةِ الجديدةِ `FRONTEND_UX_QUALITY_SPEC.md`).
+- **Changed:** عملاءُ النداءِ الثلاثةُ (تمييزُ `network_error`/`timeout` عن أخطاءِ HTTP) · `useNetworkStatus` + `OfflineBanner` مترجَمٌ في التطبيقاتِ الثلاثة (يظهرُ في حالةِ ما قبلَ الجلسةِ أيضًا) · `?locale=ar|en|ur` مع تحديثِ `lang/dir` ديناميكيًّا · مفاتيحُ ترجمةٍ جديدةٌ باللغاتِ الثلاث (110/121/139 لكلِّ تطبيق) · CSS تجاوبٍ (صفرُ فائضٍ أفقيٍّ 375px · التفافُ لوحةِ الإدارةِ ≤768px) · 7 اختباراتِ وحدةٍ + 3 اختباراتِ E2E لكلِّ تطبيق · بوّابةُ `M3-06_GATE.md` (LOCAL ✅).
+- **Verification:** وحدة 7/7×3 · E2E كاملةٌ 35/34/30 كلُّها خضراء · typecheck نظيف×3 · تكافؤُ المفاتيحِ مقيسٌ (ar=en=ur حرفيًّا).
+- **Security / Data / Deployment:** لا تغييرَ خلفيًّا ولا أسرار. النشرُ عبرَ autoDeploy من main بعدَ الدمج.
+- **Next:** PR ثم CI ثم قياسُ PRODUCTION (?locale/لافت/تجاوب على العناوينِ العامة) ثم إغلاقُ البوّابة.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 frontend UX quality — start (CLM-0323)
 
 - **Work Item(s):** M3-06

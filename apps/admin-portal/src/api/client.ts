@@ -66,7 +66,11 @@ function createApiClient(options: ApiClientOptions = {}) {
       clearTimeout(timeoutId);
       if (err instanceof ApiError) throw err;
       if (err instanceof DOMException && err.name === "AbortError") {
-        throw new ApiError(408, "Request timeout");
+        throw new ApiError(408, "timeout");
+      }
+      // M3-06: fetch rejects with TypeError when the request never reaches the network.
+      if (err instanceof TypeError) {
+        throw new ApiError(0, "network_error");
       }
       throw err;
     }

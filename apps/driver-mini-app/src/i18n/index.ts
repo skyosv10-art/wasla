@@ -18,6 +18,13 @@ const resources = {
         documents: "وثائقي",
         profile: "حسابي",
       },
+      offline: {
+        banner: "أنت غير متصل بالشبكة — ستُستأنف العملية عند عودة الاتصال",
+      },
+      errors: {
+        network_error: "تعذّر الاتصال بالشبكة — تحقّق من اتصالك وأعد المحاولة",
+        timeout: "انتهت مهلة الطلب — أعد المحاولة",
+      },
       common: {
         loading: "جارٍ التحميل...",
         submitting: "جارٍ الإرسال...",
@@ -171,6 +178,13 @@ const resources = {
         zones: "My Zones",
         documents: "My Documents",
         profile: "My Profile",
+      },
+      offline: {
+        banner: "You are offline — operations resume when the connection returns",
+      },
+      errors: {
+        network_error: "Network connection failed — check your connection and retry",
+        timeout: "Request timed out — please retry",
       },
       common: {
         loading: "Loading...",
@@ -326,6 +340,13 @@ const resources = {
         documents: "میرے دستاویزات",
         profile: "میری پروفائل",
       },
+      offline: {
+        banner: "آپ آف لائن ہیں — کنکشن واپس آنے پر کام جاری رہے گا",
+      },
+      errors: {
+        network_error: "نیٹ ورک کنکشن ناکام — اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں",
+        timeout: "درخواست کا وقت ختم ہو گیا — دوبارہ کوشش کریں",
+      },
       common: {
         loading: "لوڈ ہو رہا ہے...",
         submitting: "جمع کر رہا ہے...",
@@ -469,13 +490,31 @@ const resources = {
   },
 };
 
+// M3-06: locale selection. Arabic (RTL) is the default; `?locale=ar|en|ur`
+// selects the locale for UAT and review — document lang/dir follow it.
+const SUPPORTED_LOCALES = ["ar", "en", "ur"] as const;
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
+
+export function initialLocale(): Locale {
+  const requested = new URLSearchParams(window.location.search).get("locale");
+  return (SUPPORTED_LOCALES as readonly string[]).includes(requested ?? "")
+    ? (requested as Locale)
+    : "ar";
+}
+
+export function applyLocale(locale: Locale): void {
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === "en" ? "ltr" : "rtl";
+}
+
+const locale = initialLocale();
+applyLocale(locale);
+
 i18n.use(initReactI18next).init({
   resources,
-  lng: "ar",
+  lng: locale,
   fallbackLng: "ar",
-  interpolation: {
-    escapeValue: false,
-  },
+  interpolation: { escapeValue: false },
 });
 
 export default i18n;

@@ -1,6 +1,11 @@
 
 
 
+## 2026-09-23 — M3-04 orders prefix fix (CLM-0317)
+
+- **Work Item(s):** M3-04 · **الحجز:** `CLM-0317` · **الفرع:** `feat/m3-04-orders-prefix-fix`
+- **What:** Fixed 3 of 9 M3-04 app-route gaps by removing `/api/orders` and `/api/audit` prefixes from admin portal store paths. Orders store now calls `/orders/lookup`, `/orders/:orderId`, `/orders/:orderId/history` directly — matching orders service routes. Audit store path updated to `/audit/events` (gap remains until audit service is created). APP_API_ROUTES.md gap count 9→6, matched call sites 37→40.
+
 ## 2026-09-23 — M3-02 gap closure: driver-jobs route (CLM-0314)
 
 - **Work Item(s):** M3-02 · **الحجز:** `CLM-0314` · **الفرع:** `feat/m3-02-driver-jobs-route`

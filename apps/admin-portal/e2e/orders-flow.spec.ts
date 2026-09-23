@@ -100,8 +100,8 @@ test.describe("UAT-05: View order detail", () => {
   });
 
   test("orders screen shows order detail after search", async ({ page }) => {
-    // Mock order lookup — the orders store uses raw fetch with /api/orders/orders/lookup
-    await page.route("**/api/orders/orders/lookup**", (route) => {
+    // Mock order lookup — the orders store uses fetch with /orders/lookup
+    await page.route("**/orders/lookup**", (route) => {
       route.fulfill({
         status: 200,
         contentType: "application/json",

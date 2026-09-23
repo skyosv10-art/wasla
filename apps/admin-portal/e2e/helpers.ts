@@ -117,7 +117,7 @@ export async function mockAdminApi(page: Page): Promise<void> {
   });
 
   // Orders endpoints
-  await page.route("**/api/orders/**", (route) => {
+  await page.route("**/orders/**", (route) => {
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -126,7 +126,7 @@ export async function mockAdminApi(page: Page): Promise<void> {
   });
 
   // Audit endpoints
-  await page.route("**/api/audit/**", (route) => {
+  await page.route("**/audit/**", (route) => {
     route.fulfill({
       status: 200,
       contentType: "application/json",

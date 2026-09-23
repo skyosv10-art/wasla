@@ -35,7 +35,7 @@
  * an exact timestamp.
  */
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 import type { CustomerEvent } from "@wasla/contracts-customer";
 
@@ -139,6 +139,7 @@ function mapProfile(row: typeof customerProfiles.$inferSelect): CustomerProfile 
     preferredLocale: row.preferredLocale as Locale,
     defaultZoneId: row.defaultZoneId,
     status: row.status as CustomerStatus,
+    suspensionReasonCode: row.suspensionReasonCode,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -253,6 +254,7 @@ export class PostgresCustomerRepository implements CustomerRepository {
         preferredLocale: profile.preferredLocale,
         defaultZoneId: profile.defaultZoneId,
         status: profile.status,
+        suspensionReasonCode: profile.suspensionReasonCode,
         createdAt: new Date(profile.createdAt),
         updatedAt: new Date(profile.updatedAt),
       })
@@ -263,11 +265,41 @@ export class PostgresCustomerRepository implements CustomerRepository {
           preferredLocale: profile.preferredLocale,
           defaultZoneId: profile.defaultZoneId,
           status: profile.status,
+          suspensionReasonCode: profile.suspensionReasonCode,
           updatedAt: new Date(profile.updatedAt),
         },
       })
       .returning();
     return mapProfile(rows[0]!);
+  }
+
+  async listProfiles(options?: {
+    readonly q?: string;
+    readonly status?: CustomerStatus;
+    readonly limit?: number;
+    readonly offset?: number;
+  }): Promise<CustomerProfile[]> {
+    const conditions = [];
+    if (options?.status) {
+      conditions.push(eq(customerProfiles.status, options.status));
+    }
+    if (options?.q) {
+      const needle = `%${options.q}%`;
+      conditions.push(
+        or(
+          ilike(customerProfiles.waslaPublicId, needle),
+          ilike(customerProfiles.displayName, needle),
+        )!,
+      );
+    }
+    const rows = await this.db
+      .select()
+      .from(customerProfiles)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(customerProfiles.createdAt))
+      .limit(options?.limit ?? 50)
+      .offset(options?.offset ?? 0);
+    return rows.map(mapProfile);
   }
 
   // --- saved places ---

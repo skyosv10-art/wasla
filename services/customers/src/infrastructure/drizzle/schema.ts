@@ -48,6 +48,7 @@ export const customerProfiles = pgTable(
     preferredLocale: text("preferred_locale").notNull().default("ar"),
     defaultZoneId: uuid("default_zone_id"),
     status: text("status").notNull().default("active"),
+    suspensionReasonCode: text("suspension_reason_code"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .default(sql`now()`),

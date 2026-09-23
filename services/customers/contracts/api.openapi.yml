@@ -25,8 +25,138 @@ tags:
     description: طلبات العميل (معاينة + إنشاء + استعلام)
   - name: ops
     description: تشغيل
+  - name: admin
+    description: مسارات إدارية (M3-04)
 
 paths:
+  /customers:
+    get:
+      tags: [admin]
+      summary: قائمة العملاء (إداري)
+      operationId: listCustomers
+      security:
+        - ServiceAuth: ['customers:admin:read']
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+          description: بحث في wasla_public_id وdisplay_name
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, suspended] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '200':
+          description: قائمة العملاء
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customers:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminUserSummary' }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{id}:
+    get:
+      tags: [admin]
+      summary: تفاصيل العميل (إداري)
+      operationId: getCustomerDetail
+      security:
+        - ServiceAuth: ['customers:admin:read']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+          description: wasla_public_id للعميل
+      responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '200':
+          description: تفاصيل العميل
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{id}/suspend:
+    post:
+      tags: [admin]
+      summary: تعليق العميل
+      operationId: suspendCustomer
+      security:
+        - ServiceAuth: ['customers:admin:suspend']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason_code]
+              properties:
+                reason_code:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+      responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '200':
+          description: العميل المعلَّق
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserDetail' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /customers/{id}/reinstate:
+    post:
+      tags: [admin]
+      summary: إعادة تفعيل العميل
+      operationId: reinstateCustomer
+      security:
+        - ServiceAuth: ['customers:admin:reinstate']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '200':
+          description: العميل المُعاد تفعيله
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
   /customers/{waslaPublicId}/profile:
     get:
       tags: [profile]
@@ -338,6 +468,31 @@ components:
       schema: { type: string, minLength: 8, maxLength: 128 }
 
   schemas:
+    AdminUserSummary:
+      type: object
+      properties:
+        wasla_public_id: { type: string }
+        display_name: { type: string, nullable: true }
+        phone_number: { type: string, nullable: true, description: 'null — identity service owns phone numbers' }
+        preferred_locale: { type: string }
+        status: { type: string, enum: [active, suspended] }
+        suspension_reason_code: { type: string, nullable: true }
+        order_count: { type: integer, description: '0 — orders service owns order count' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    AdminUserDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminUserSummary'
+        - type: object
+          properties:
+            rating_avg: { type: number, nullable: true, description: 'null — reputation service owns ratings' }
+            rating_count: { type: integer }
+            recent_orders:
+              type: array
+              items: { type: object }
+              description: '[] — orders service owns order history'
+
     Locale:
       type: string
       enum: [ar, en, ur]

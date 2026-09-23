@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-23T05:15:52Z",
+  "generated_at": "2026-09-23T07:34:14Z",
   "generator": "scripts/baseline.sh",
   "repo": {
     "commit": "914bb125331847f26d3c0cba9d03c3127458f754",
     "branch": "feat/m3-08-app-route-audit",
     "dirty": false,
-    "dirty_files": 1,
+    "dirty_files": 22,
     "dirty_reason": "",
     "tracked_files": 2493
   },
@@ -26,7 +26,7 @@
     "packages": 56,
     "packages_with_typecheck": 56,
     "packages_with_test": 56,
-    "test_files_tracked": 467,
+    "test_files_tracked": 468,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 24,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:717ce1e063e06812be8226c4c5197cf178c0c1928d9d763c4274b9da55fc265b",
+  "fingerprint": "sha256:5db7830e03642961b6b2652768398576da85ccd934379f18c9d7284b19d9ffdf",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

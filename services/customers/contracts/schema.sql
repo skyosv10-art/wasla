@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS customer_profiles (
     default_zone_id   UUID,                                   -- مرجع opaque إلى الجغرافيا (بلا FK)
     status            TEXT        NOT NULL DEFAULT 'active'
                       CHECK (status IN ('active','suspended')),
+    suspension_reason_code TEXT,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );

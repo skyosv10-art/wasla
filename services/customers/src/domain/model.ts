@@ -89,6 +89,7 @@ export interface CustomerProfile {
   readonly preferredLocale: Locale;
   readonly defaultZoneId: string | null;
   readonly status: CustomerStatus;
+  readonly suspensionReasonCode: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

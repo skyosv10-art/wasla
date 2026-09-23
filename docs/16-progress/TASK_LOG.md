@@ -5809,7 +5809,7 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 ## 2026-09-23 — M3-08 تدقيقٌ رجعيٌّ لبوّابات M3-01..04 + الفحص 24 (عقد المسار بين التطبيق والخدمة) · إفراج CLM-0312 (CLM-0313)
 
-**Work Item:** `M3-08` (واكتشافٌ جديد `M3-09`) · **Claim:** `CLM-0313` · **Branch:** `feat/m3-08-app-route-audit`
+**Work Item(s):** M3-08 (واكتشافٌ جديد `M3-09`) · **Claim:** `CLM-0313` · **Branch:** `feat/m3-08-app-route-audit`
 
 **السبب:** عُلِّمت M3-01..04 `Completed` بلا ملفّات بوّابة (STATUS_MODEL §1). وكلُّ اختبارات الواجهات تحاكي النداءات، فلا شيءَ يشهد أنّ المسار الذي تناديه الواجهةُ موجودٌ في أيِّ خدمة.
 

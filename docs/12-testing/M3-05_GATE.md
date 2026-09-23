@@ -4,7 +4,7 @@
 >
 > **نموذجُ الحالات:** [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md)
 >
-> **Last Updated:** 2026-09-23 · **الحالةُ المُعلَنة:** `READY FOR GATE` — التنفيذُ والتحقّقُ المحلّيُّ مكتملان؛ حكمُ CI يُسجَّلُ في §5 بعدَ قراءتِه فعلاً لا قبلَه.
+> **Last Updated:** 2026-09-23 · **الحالةُ المُعلَنة:** `COMPLETED` (2026-09-23 · `CLM-0313`). البنودُ الستّة ✅، وحكما CI على الفرع وعلى `main` مقروءان في §5. والنقلُ إلى Completed بتفويضِ المالك المكتوب في الجلسة: تفويضٌ تنفيذيٌّ كامل، ودمجُ كلِّ PR أخضر. هذا قرارٌ مُسنَد إلى صاحبه، وليس حكمًا ذاتيًّا من الوكيل.
 
 ---
 
@@ -30,7 +30,7 @@
 
 ```
 LOCAL      ✅ VERIFIED       — §3 (أرقامٌ من تشغيلٍ واحدٍ) + §4 (طفراتٌ تعضّ)
-CI         ⏳ PENDING        — يُملأ في §5 من حكمِ GitHub Actions المقروء
+CI         ✅ GATED          — PR #406: WASLA CI run 35796867741 success (38/38 checks) · main a9e028f: run 35797579171 success (36/36 jobs)
 PRODUCTION ⚪ NOT VERIFIED   — لا بوتَ منشورٌ على Telegram في هذا النطاق؛ الإقلاعُ fail-closed مُثبَتٌ في الاختبار فقط
 ```
 
@@ -89,8 +89,8 @@ PRODUCTION ⚪ NOT VERIFIED   — لا بوتَ منشورٌ على Telegram ف�
 | 2 | رحلةٌ لكلّ بوت تغطي كلَّ أمرٍ مسموح عبر جذر التركيب الحقيقي | ✅ | `bots/*/src/__tests__/bot-role.test.ts` |
 | 3 | إساءة: غيرُ مدعوم · حقن · مجموعةٌ غيرُ مُعلَنة · أوامرُ إدارة | ✅ | `bot-role-abuse.test.ts` (PR #404) + المحظوراتُ في `bot-role.test.ts` |
 | 4 | لا أمرَ خارج المواصفة — منفَّذٌ آليًّا | ✅ | §2 + طفرات M1–M4 |
-| 5 | حكمُ CI أخضرُ على الفرع | ⏳ | يُملأ بعد قراءة الحكم |
-| 6 | حكمُ CI أخضرُ على `main` بعد الدمج | ⏳ | يُملأ بعد الدمج |
+| 5 | حكمُ CI أخضرُ على الفرع | ✅ | PR [#406](https://github.com/skyosv10-art/wasla/pull/406) · head `575a403` · [WASLA CI 35796867741](https://github.com/skyosv10-art/wasla/actions/runs/35796867741) success · [Roadmap freshness 35796862867](https://github.com/skyosv10-art/wasla/actions/runs/35796862867) success — 38/38 checks |
+| 6 | حكمُ CI أخضرُ على `main` بعد الدمج | ✅ | squash [`a9e028f`](https://github.com/skyosv10-art/wasla/commit/a9e028fc6f9dbc77584cea42c9765e7f87acb433) · [WASLA CI 35797579171](https://github.com/skyosv10-art/wasla/actions/runs/35797579171) success (36/36 jobs) · [Roadmap freshness 35797579161](https://github.com/skyosv10-art/wasla/actions/runs/35797579161) success. **وهذا أوّلُ حكمٍ على `main` منذ 2026-09-22T08:54Z**، لأنّ تشغيلًا عالقًا (`35707402954`) كان يحتجز مجموعةَ التزامن فأُلغي؛ التفصيلُ في [`M3-01_GATE.md`](M3-01_GATE.md) §1 |
 
 ---
 

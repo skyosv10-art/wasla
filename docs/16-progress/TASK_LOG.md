@@ -1,3 +1,13 @@
+## 2026-09-24 — M3-07 runbook drill started (CLM-0325)
+
+- **Work Item(s):** M3-07
+- **Status:** In Progress
+- **What / Why:** «Supportable operations without DB edits» — دليلُ الإغلاقِ تمرينٌ تشغيليٌّ (runbook drill) على الأدلةِ القائمة. بيئةُ staging قائمةٌ منذُ M3-09 فيُنفَّذُ التمرينُ فعليًّا: (1) مسحُ صحةٍ لكلِّ الخدماتِ المنشورةِ (2) عمليةٌ تشغيليّةٌ حقيقيّةٌ عبرَ الواجهةِ: إلحاقُ حدثِ تدقيقٍ وقراءتُهُ (`POST/GET /audit/events` بمفتاحِ stg-audit-k1) بلا أيِّ تعديلٍ على القاعدةِ (3) تنفيذُ دليلِ [`SERVICE_AUTH_KEY_ROTATION.md`](../14-runbooks/SERVICE_AUTH_KEY_ROTATION.md) بحالاتِهِ الثلاثِ على خدمةِ wasla-audit المنشورةِ (يحتاجُ تعديلَ متغيراتِ بيئةٍ على Render — بتفويضِ المالكِ) (4) مصفوفةُ الإجراءاتِ التشغيليةِ: كلُّ إجراءٍ مسارُهُ وهل يحتاجُ تعديلَ قاعدةٍ وحالةُ قياسِه.
+- **Verification:** يُوثَّقُ كلُّ шагٍ بأمرِهِ ومخرجِهِ ووقتِهِ في بوّابةِ `M3-07_GATE.md`.
+- **Security / Data / Deployment:** لا أسرارَ في المستودعِ (مفاتيحُ staging خارجَ الشجرةِ). تعديلاتُ بيئةِ Render بتفويضٍ صريحٍ فقط.
+- **Next:** تنفيذُ التمرينِ ثم البوّابةُ والبواباتُ الحوكميّةُ.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 corrective hardening verified in PRODUCTION (CLM-0324)
 
 - **Work Item(s):** M3-06 (تصحيحٌ تعزيزيٌّ)

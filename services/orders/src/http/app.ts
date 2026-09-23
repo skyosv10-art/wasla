@@ -65,6 +65,7 @@ import type { OrderDetail } from "../domain/model.js";
 import {
   agreedPriceToWire,
   assignmentToWire,
+  driverJobHistoryEntryToWire,
   intakeCommandFromWire,
   orderSummaryToWire,
   orderToWire,
@@ -83,6 +84,7 @@ import {
   getOrderDetail,
   getOrderDetailByPublicId,
 } from "../use-cases/read-order.js";
+import { readDriverJobs } from "../use-cases/read-driver-jobs.js";
 import { transitionOrder } from "../use-cases/transition-order.js";
 import { recordAgreedPrice } from "../use-cases/record-agreed-price.js";
 
@@ -390,6 +392,74 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     return reply
       .status(200)
       .send({ items: detail.statusHistory.map(statusHistoryEntryToWire) });
+    },
+  );
+
+  // --- driver job history (M3-02 gap closure) -----------------------------
+
+  // The earnings screen's `GET /drivers/:id/jobs` is served here because the
+  // orders service owns commercial orders and their assignments — the drivers
+  // service explicitly does not read orders (ports.ts). The route is
+  // beneficiary-scoped: the `obo` claim in the service token must name the same
+  // driver as the path parameter, so a holder of `orders:driver-jobs:read` can
+  // only read their own history, not another driver's.
+  app.get(
+    "/orders/drivers/:driverPublicId/jobs",
+    { config: ownerScoped(ORDER_SCOPES.driverJobsRead) },
+    async (request, reply) => {
+      const traceId = request.id;
+      assertRequestIdLength(request.headers, traceId);
+
+      // The beneficiary IS the driver — read from the signed `obo` claim, not
+      // from a caller-written header. The `ownerScoped` config already rejected
+      // any token without an `obo` at the middleware, so `serviceCaller` is
+      // present and carries the beneficiary. We compare it to the path parameter
+      // so a driver cannot read another driver's history.
+      const caller = request.serviceCaller;
+      const beneficiary = caller === undefined ? undefined : ownerPublicIdOf(caller);
+      if (beneficiary === undefined || beneficiary.trim() === "") {
+        // This branch is unreachable for a classified route (the middleware
+        // rejected the token), but kept as a composition guard: a route that
+        // forgets `ownerScoped` sees a 503 in tests, not a silent pass.
+        throw new Error(
+          'مسارٌ يقرأُ مَورِداً مملوكاً مُسجَّلٌ بلا beneficiary: "required" — راجِعِ ownerScoped().',
+        );
+      }
+      const params = request.params as { driverPublicId?: unknown };
+      const driverPublicId = params.driverPublicId;
+      if (typeof driverPublicId !== "string" || !/^WS-[0-9]{10}$/.test(driverPublicId)) {
+        throw new OrderError(
+          "ORDER_VALIDATION_FAILED",
+          "driver_public_id يجب أن يكون WS-##########",
+          { traceId, details: { field: "driver_public_id" } },
+        );
+      }
+      // A driver cannot read another driver's job history — same 404-not-403
+      // rule as `assertOwner`, so the route is not an existence oracle.
+      if (driverPublicId !== beneficiary) {
+        throw new OrderError(
+          "ORDER_NOT_FOUND",
+          `لا توجد مهام للسائق ${driverPublicId}`,
+          { traceId },
+        );
+      }
+
+      const query = request.query as { status?: unknown; period?: unknown };
+      const period = typeof query.period === "string" ? query.period : "today";
+      const now = new Date();
+      const since =
+        period === "month"
+          ? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          : period === "week"
+            ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+            : new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+      const jobs = await runner.read((deps) =>
+        readDriverJobs(deps, { driverPublicId, since, traceId }),
+      );
+      return reply
+        .status(200)
+        .send({ jobs: jobs.map(driverJobHistoryEntryToWire) });
     },
   );
 

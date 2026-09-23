@@ -4,7 +4,7 @@
  * Fetches completed jobs for the current driver with period filtering.
  * The API contract follows the orders service wire format.
  *
- * GET /drivers/:id/jobs?status=completed&period=... → { jobs: JobHistoryEntry[] }
+ * GET /orders/drivers/:driverPublicId/jobs?status=completed&period=... → { jobs: JobHistoryEntry[] }
  *
  * Period filtering:
  * - today: jobs completed today
@@ -70,7 +70,7 @@ export const useEarningsStore = create<EarningsState>((set, get) => ({
 
     try {
       const data = await apiClient.get<{ jobs: JobHistoryEntry[] }>(
-        `/drivers/${driverId}/jobs?status=completed&period=${currentPeriod}`,
+        `/orders/drivers/${driverId}/jobs?status=completed&period=${currentPeriod}`,
       );
       const jobs = data.jobs ?? [];
       const summary = computeSummary(jobs, currentPeriod);

@@ -45,6 +45,7 @@ import { OrderError } from "../../domain/errors.js";
 import type {
   Assignment,
   Coordinates,
+  DriverJobHistoryEntry,
   Money,
   Order,
   ShipmentDetails,
@@ -457,6 +458,76 @@ export class PostgresOrderRepository implements OrderRepository {
       )
       .limit(1);
     return row[0] ? toAssignment(row[0]) : null;
+  }
+
+  async listJobsByDriver(
+    driverPublicId: string,
+    since: string,
+  ): Promise<DriverJobHistoryEntry[]> {
+    // Join orders + assignments: the driver must have an ACCEPTED assignment,
+    // and the order must be in a terminal status the earnings screen shows.
+    // `inArray` keeps the query to one round trip for the order rows.
+    const terminal = ["completed", "driver_cancelled", "customer_cancelled"];
+
+    const assignmentRows = await this.db
+      .select({ orderId: orderAssignments.orderId })
+      .from(orderAssignments)
+      .where(
+        and(
+          eq(orderAssignments.driverPublicId, driverPublicId),
+          eq(orderAssignments.assignmentState, "accepted"),
+        ),
+      );
+
+    if (assignmentRows.length === 0) return [];
+
+    const orderIds = assignmentRows.map((r) => r.orderId);
+    const orderRows = await this.db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          inArray(orders.id, orderIds),
+          inArray(orders.status, terminal),
+        ),
+      );
+
+    // Load stops and history per order. A JOIN would be fewer round trips but
+    // would return a Cartesian product; the per-order fetch keeps the mapping
+    // honest and matches the pattern every other read in this file uses.
+    const results: DriverJobHistoryEntry[] = [];
+    for (const row of orderRows) {
+      const stops = await this.loadStops(row.id);
+      const history = await this.listStatusHistory(row.id);
+
+      // The audit row that moved the order INTO its terminal status — not
+      // `updatedAt`, which a later write (payment dispute, etc.) would move.
+      const completedEntry = [...history]
+        .reverse()
+        .find((h) => h.toStatus === row.status);
+      const completedAt = completedEntry?.occurredAt ?? row.updatedAt.toISOString();
+      if (Date.parse(completedAt) < Date.parse(since)) continue;
+
+      const pickup = stops.find((s) => s.kind === "pickup");
+      const dropoff = stops.find((s) => s.kind === "dropoff");
+      const agreedPrice = toMoney(row.agreedAmountMinor, row.agreedCurrency);
+
+      results.push({
+        orderPublicId: row.orderPublicId,
+        orderType: row.orderType as DriverJobHistoryEntry["orderType"],
+        vehicleClass: row.vehicleClass as DriverJobHistoryEntry["vehicleClass"],
+        status: row.status as DriverJobHistoryEntry["status"],
+        agreedPrice,
+        agreedAt: row.agreedAt?.toISOString() ?? null,
+        completedAt,
+        pickupLabel: pickup?.label ?? pickup?.zoneId ?? "",
+        dropoffLabel: dropoff?.label ?? dropoff?.zoneId ?? "",
+      });
+    }
+
+    // Newest first — the screen shows the most recent earnings at the top.
+    results.sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt));
+    return results;
   }
 
   async insertOrder(input: InsertOrderInput): Promise<{

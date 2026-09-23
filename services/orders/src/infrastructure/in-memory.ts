@@ -20,6 +20,7 @@ import { ORDER_INITIAL_STATUS, type OrderDomainEvent } from "@wasla/contracts-or
 import { OrderError } from "../domain/errors.js";
 import type {
   Assignment,
+  DriverJobHistoryEntry,
   Order,
   StatusHistoryEntry,
   Stop,
@@ -178,6 +179,53 @@ export class InMemoryOrderRepository implements OrderRepository {
     return (
       this.stored(orderId).assignments.find((a) => a.driverPublicId === driverPublicId) ?? null
     );
+  }
+
+  async listJobsByDriver(
+    driverPublicId: string,
+    since: string,
+  ): Promise<DriverJobHistoryEntry[]> {
+    // Terminal statuses the earnings screen shows. Any other status means the
+    // job is still in flight and has no earnings row yet.
+    const terminal = new Set(["completed", "driver_cancelled", "customer_cancelled"]);
+    const sinceMs = Date.parse(since);
+    const results: DriverJobHistoryEntry[] = [];
+
+    for (const stored of this.orders.values()) {
+      const assignment = stored.assignments.find(
+        (a) => a.driverPublicId === driverPublicId && a.state === "accepted",
+      );
+      if (assignment === undefined) continue;
+      const order = stored.order;
+      if (!terminal.has(order.status)) continue;
+
+      // `completedAt` is the audit row that moved the order INTO the terminal
+      // status — not `updatedAt`, which a later write (e.g. a payment dispute)
+      // would move without the job being re-completed.
+      const completedEntry = [...stored.history]
+        .reverse()
+        .find((h) => h.toStatus === order.status);
+      const completedAt = completedEntry?.occurredAt ?? order.updatedAt;
+      if (Date.parse(completedAt) < sinceMs) continue;
+
+      const pickup = order.stops.find((s) => s.kind === "pickup");
+      const dropoff = order.stops.find((s) => s.kind === "dropoff");
+      results.push({
+        orderPublicId: order.orderPublicId,
+        orderType: order.orderType,
+        vehicleClass: order.vehicleClass,
+        status: order.status,
+        agreedPrice: order.agreedPrice,
+        agreedAt: order.agreedAt,
+        completedAt,
+        pickupLabel: pickup?.label ?? pickup?.zoneId ?? "",
+        dropoffLabel: dropoff?.label ?? dropoff?.zoneId ?? "",
+      });
+    }
+
+    // Newest first — the screen shows the most recent earnings at the top.
+    results.sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt));
+    return results;
   }
 
   async insertOrder(input: InsertOrderInput): Promise<{

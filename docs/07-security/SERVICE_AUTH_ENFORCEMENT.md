@@ -858,6 +858,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `POST /orders/{id}/transitions` | `orders:transition:write` | dispatch |
 | `POST /orders/{id}/assignments` | `orders:assignment:write` | dispatch |
 | `POST /orders/{id}/assignments/{assignmentId}/resolution` | `orders:assignment:write` | dispatch |
+| `GET /orders/drivers/{driverPublicId}/jobs` | `orders:driver-jobs:read` | driver-mini-app |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- orders-scopes:end -->

@@ -25,6 +25,7 @@ import type {
 
 import type {
   Assignment,
+  DriverJobHistoryEntry,
   Coordinates,
   Money,
   Order,
@@ -274,5 +275,36 @@ export function orderToWire(
     accepted_at: order.acceptedAt,
     created_at: order.createdAt,
     updated_at: order.updatedAt,
+  };
+}
+
+/** A driver's job-history entry becomes the wire shape the earnings screen reads. */
+export function driverJobHistoryEntryToWire(entry: DriverJobHistoryEntry): {
+  order_public_id: string;
+  order_type: string;
+  vehicle_class: string;
+  status: string;
+  agreed_price: { amount_minor: number; currency: string } | null;
+  agreed_at: string | null;
+  completed_at: string;
+  pickup_label: string;
+  dropoff_label: string;
+} {
+  return {
+    order_public_id: entry.orderPublicId,
+    order_type: entry.orderType,
+    vehicle_class: entry.vehicleClass,
+    status: entry.status,
+    agreed_price:
+      entry.agreedPrice === null
+        ? null
+        : {
+            amount_minor: entry.agreedPrice.amountMinor,
+            currency: entry.agreedPrice.currency,
+          },
+    agreed_at: entry.agreedAt,
+    completed_at: entry.completedAt,
+    pickup_label: entry.pickupLabel,
+    dropoff_label: entry.dropoffLabel,
   };
 }

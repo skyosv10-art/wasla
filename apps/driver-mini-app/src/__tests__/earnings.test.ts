@@ -111,7 +111,7 @@ describe("Earnings store", () => {
     await useEarningsStore.getState().fetchEarnings("week");
 
     expect(mockApi.get).toHaveBeenCalledWith(
-      "/drivers/drv_test_123/jobs?status=completed&period=week",
+      "/orders/drivers/drv_test_123/jobs?status=completed&period=week",
     );
   });
 

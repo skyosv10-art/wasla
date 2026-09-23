@@ -102,12 +102,12 @@ fi
 _ar_restore
 
 # ── البابُ 3: لا فجوةَ ميتةً ──────────────────────────────────────────────
-_ar_edit_doc 's.replace("| admin-portal | GET | /drivers |", "| customer-mini-app | GET | /stores | M3-04 | طفرة |\n| admin-portal | GET | /drivers |", 1)'
+_ar_edit_doc 's.replace("| admin-portal | GET | /customers |", "| customer-mini-app | GET | /stores | M3-04 | طفرة |\n| admin-portal | GET | /customers |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'فجوةٌ مُسجَّلةٌ لمسارٍ قائمٍ في خدمةٍ يُسقِطُ البابَ 3' 'البابُ 3'
 fi
 _ar_restore
-_ar_edit_doc 's.replace("| admin-portal | GET | /drivers |", "| admin-portal | GET | /drivers/ghost | M3-04 | طفرة |\n| admin-portal | GET | /drivers |", 1)'
+_ar_edit_doc 's.replace("| admin-portal | GET | /customers |", "| admin-portal | GET | /customers/ghost | M3-04 | طفرة |\n| admin-portal | GET | /customers |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'فجوةٌ مُسجَّلةٌ لمسارٍ لا يناديهِ أحدٌ يُسقِطُ البابَ 3' 'البابُ 3'
 fi
@@ -115,12 +115,12 @@ _ar_restore
 
 # ── البابُ 4: مالكُ الفجوةِ غيرُ مكتملٍ ──────────────────────────────────
 M_DONE="$(grep -oE '^\| M[0-9]+-[0-9]+ \|[^|]*\|[^|]*\|[^|]*\| Completed \|' docs/16-progress/LAUNCH_EXECUTION_BOARD.md | head -1 | grep -oE 'M[0-9]+-[0-9]+' | head -1)"
-_ar_edit_doc "s.replace('| /drivers | M3-04 |', '| /drivers | ${M_DONE} |', 1)"
+_ar_edit_doc "s.replace('| /customers | M3-04 |', '| /customers | ${M_DONE} |', 1)"
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg "فجوةٌ يملكُها بندٌ Completed (${M_DONE}) تُسقِطُ البابَ 4" 'البابُ 4'
 fi
 _ar_restore
-_ar_edit_doc 's.replace("| /drivers | M3-04 |", "| /drivers | M9-99 |", 1)'
+_ar_edit_doc 's.replace("| /customers | M3-04 |", "| /customers | M9-99 |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'فجوةٌ يملكُها بندٌ لا وجودَ لهُ في اللوحةِ تُسقِطُ البابَ 4' 'البابُ 4'
 fi

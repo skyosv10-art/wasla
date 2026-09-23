@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 frontend UX quality — start (CLM-0323)
+
+- **Work Item(s):** M3-06
+- **Status:** In Progress
+- **What / Why:** دليلُ الإغلاقِ «UAT result» والخطوةُ «acceptance matrix». القياسُ الأوليُّ: تكافؤُ مفاتيحِ ar/en/ur كاملٌ، RTL قائمٌ، axe صفرُ مخالفاتٍ، حالاتُ خطأ/تحميلٍ موصولة — والفجواتُ: لا أوفلاين/متدهورة، لا مسارِ لغةٍ `?locale=`، صفرُ @media queries.
+- **Changed (planned):** مصفوفةُ القبولِ (`docs/01-product/FRONTEND_UX_QUALITY_SPEC.md`) · عملاءُ النداء (تمييزُ NetworkError/TimeoutError) · `useNetworkStatus` + لافتُ أوفلاين مترجَمة في التطبيقاتِ الثلاثة · `?locale=ar|en|ur` مع تحديثِ lang/dir · CSS تجاوبٍ مقيسٌ عند 375px · اختباراتُ وحدةٍ وE2E للأوفلاين والتجاوب.
+- **Security / Data / Deployment:** لا تغييرَ خلفيًّا ولا أسرار — كلهُ طبقةُ واجهة.
+- **Evidence:** الحجزُ `CLM-0323` في `WORK_CLAIMS.md`.
+- **Next:** التنفيذُ ثم القياسُ وبوّابةُ الخروج.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-09 complete: نشرٌ فعليّ + إثباتٌ حيّ + نقلُ M3-04/M3-08 (CLM-0322)
 
 - **Work Item(s):** M3-09 (ونقلٌ تبعيّ: M3-04 · M3-08 ← Completed)

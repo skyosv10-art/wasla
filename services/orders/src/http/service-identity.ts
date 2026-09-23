@@ -60,6 +60,7 @@ export const ORDER_SCOPES = {
   agreedPriceWrite: "orders:agreed-price:write",
   orderRead: "orders:order:read",
   historyRead: "orders:history:read",
+  driverJobsRead: "orders:driver-jobs:read",
   transitionWrite: "orders:transition:write",
   assignmentWrite: "orders:assignment:write",
 } as const;

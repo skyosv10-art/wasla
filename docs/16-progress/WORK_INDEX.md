@@ -28,7 +28,7 @@
 | `services/geography/` | Implemented | M0-23 (موجة 2a) | Phase 02 | **M0-23 (موجة 2a · [PR #50](https://github.com/skyosv10-art/wasla/pull/50)):** انتظمَ في الترحيلاتِ المولَّدةِ العكوسةِ (`drizzle/0000_*.sql` + `down.sql` + اختبارُ الدورةِ) |
 | `services/customers/` | Implemented | — | Phase 04 | |
 | `services/drivers/` | Implemented | — | Phase 05 | |
-| `services/orders/` | Implemented | M0-23 (موجة 2b-1) | Phase 06 | **M0-23 (موجة 2b-1 · [PR #52](https://github.com/skyosv10-art/wasla/pull/52)):** انتظمَ في الترحيلاتِ المولَّدةِ العكوسةِ بعدَ مصالحةٍ كاملةٍ لـ`schema.ts` مع العقدِ (إعادةُ تسميةِ القيودِ إلى أسماءِ PG الافتراضيّةِ + إلحاقُ القيودِ المفقودةِ + تحويلُ `uniqueIndex` إلى قيودِ `UNIQUE` + أسماءُ FK + FK النشطُ المتبادلُ) |
+| `services/orders/` | Implemented | M0-23 (موجة 2b-1) · M3-02 (CLM-0314) | Phase 06 | **M0-23 (موجة 2b-1 · [PR #52](https://github.com/skyosv10-art/wasla/pull/52)):** انتظمَ في الترحيلاتِ المولَّدةِ العكوسةِ بعدَ مصالحةٍ كاملةٍ لـ`schema.ts` مع العقدِ (إعادةُ تسميةِ القيودِ إلى أسماءِ PG الافتراضيّةِ + إلحاقُ القيودِ المفقودةِ + تحويلُ `uniqueIndex` إلى قيودِ `UNIQUE` + أسماءُ FK + FK النشطُ المتبادلُ). **M3-02 (CLM-0314):** أُضيفَ مسارُ `GET /orders/drivers/:driverPublicId/jobs` لشاشة الأرباح في تطبيق السائق. |
 | `services/matching/` | Implemented | — | Phase 07 | |
 | `services/dispatch/` | Implemented | — | Phase 07 | |
 | `services/negotiations/` | Implemented | — | Phase 08 | |

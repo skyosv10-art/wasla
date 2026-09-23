@@ -206,6 +206,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "orders", method: "GET", path: "/orders/lookup", scopes: ["orders:order:read"] },
   { audience: "orders", method: "GET", path: "/orders/:orderId", scopes: ["orders:order:read"] },
   { audience: "orders", method: "GET", path: "/orders/:orderId/history", scopes: ["orders:history:read"] },
+  { audience: "orders", method: "GET", path: "/orders/drivers/:driverPublicId/jobs", scopes: ["orders:driver-jobs:read"] },
   { audience: "orders", method: "POST", path: "/orders/:orderId/transitions", scopes: ["orders:transition:write"] },
   { audience: "orders", method: "POST", path: "/orders/:orderId/assignments", scopes: ["orders:assignment:write"] },
   { audience: "orders", method: "PATCH", path: "/orders/:orderId/assignments/:assignmentId", scopes: ["orders:assignment:write"] },

@@ -16,6 +16,7 @@ import type { OrderDomainEvent } from "@wasla/contracts-order";
 
 import type {
   Assignment,
+  DriverJobHistoryEntry,
   Money,
   Order,
   OrderActorType,
@@ -148,6 +149,19 @@ export interface OrderRepository {
   listAssignments(orderId: string): Promise<Assignment[]>;
   findAssignment(orderId: string, assignmentId: string): Promise<Assignment | null>;
   findAssignmentByDriver(orderId: string, driverPublicId: string): Promise<Assignment | null>;
+  /**
+   * Orders a driver was assigned to (accepted assignment) whose status is in the
+   * terminal set the earnings screen shows, completed within `[since, now]`.
+   *
+   * A read-only projection across orders + assignments + stops + history: the
+   * repository answers it because those four tables share one transaction
+   * boundary, and a separate query service would only re-read the same rows.
+   *
+   * `since` is an ISO-8601 timestamp; the caller computes it from the period.
+   * Returns newest-first by `completedAt`, because the screen shows the most
+   * recent earnings at the top.
+   */
+  listJobsByDriver(driverPublicId: string, since: string): Promise<DriverJobHistoryEntry[]>;
 
   // --- writes ---
   /**

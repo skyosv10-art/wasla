@@ -17,7 +17,7 @@
 اختباراتُ الواجهاتِ الثلاث (Vitest وPlaywright) تعترض **كلَّ** نداءٍ بمحاكاة (`page.route()` و`vi.fn()`). لذلك لا يوجد اختبارٌ واحد يثبت أنّ المسارَ **موجودٌ** في الخدمة. والقياسُ الأوّل لهذا المحرِّك وجد **10 نداءاتٍ مختلفة** بلا مسار، مع أنّ CI كلَّه أخضر:
 
 - **لوحةُ الإدارة (`M3-04`، وكانت Completed):** تسعةُ نداءاتٍ بلا مسار، منها `GET /customers` و`POST /customers/:id/suspend` و`GET /drivers` (قائمة). ومنها أيضًا أربعةُ نداءاتٍ بالبادئة `/api/audit/…` و`/api/orders/…`، ولا بوّابةَ في المستودع تحذف هذه البادئة. وخدمةُ `services/audit/` التي تشترطها [`ADMIN_MVP_SPEC.md`](../01-product/ADMIN_MVP_SPEC.md) §6.2 **محذوفةٌ** (`96928bd`).
-- **تطبيقُ السائق (`M3-02`، وكان Completed):** `GET /drivers/:id/jobs` هو ما تقوم عليه شاشةُ الأرباح وسجلِّ المهام (معيارُ القبول 8 في [`DRIVER_MINI_APP_SPEC.md`](../01-product/DRIVER_MINI_APP_SPEC.md) §10)، ولا مسارَ له.
+- **تطبيقُ السائق (`M3-02`):** أُغلقَت الفجوةُ — أُضيفَ المسارُ `GET /orders/drivers/:driverPublicId/jobs` إلى خدمة الطلبات (لا إلى خدمة السائقين، لأنّ الأخيرة لا تقرأ الطلبات)، ومسارُ `apps/driver-mini-app` يُحدّث. انظر `services/orders/src/http/app.ts`.
 - **تطبيقُ العميل (`M3-01`):** كلُّ نداءاته الـ13 المختلفة تطابق مسارًا قائمًا.
 
 ## 3. الأبوابُ الخمسة
@@ -56,7 +56,6 @@
 | admin-portal | POST | /customers/:id/suspend | M3-04 | لا مسارَ لتعليق العميل |
 | admin-portal | POST | /customers/:id/reinstate | M3-04 | لا مسارَ لإعادة تفعيل العميل |
 | admin-portal | GET | /drivers | M3-04 | `drivers` تعرّف `POST /drivers` فقط، ولا قائمةَ للمشغّل |
-| driver-mini-app | GET | /drivers/:id/jobs | M3-02 | شاشةُ الأرباح وسجلِّ المهام (معيارُ القبول 8) بلا مسار في `drivers` ولا في `dispatch` |
 <!-- app-api-gaps:end -->
 
 ## 5. الأرقامُ المقيسة — تُقاس ولا تُكتب
@@ -64,11 +63,11 @@
 <!-- app-api-counts:start -->
 ```
 APPS_SCANNED = 3
-SERVICE_ROUTES = 136
+SERVICE_ROUTES = 137
 APP_CALL_SITES = 46
 DISTINCT_APP_CALLS = 43
-MATCHED_CALL_SITES = 36
-REGISTERED_GAPS = 10
+MATCHED_CALL_SITES = 37
+REGISTERED_GAPS = 9
 ```
 <!-- app-api-counts:end -->
 

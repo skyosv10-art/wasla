@@ -175,6 +175,70 @@ paths:
         '400': {$ref: '#/components/responses/ValidationError'}
         '404': {$ref: '#/components/responses/NotFound'}
 
+  /orders/drivers/{driverPublicId}/jobs:
+    get:
+      tags: [orders]
+      operationId: listDriverJobs
+      summary: قائمة مهام السائق (مُقيَّدة بالمالك)
+      description: |
+        مسار شاشة الأرباح وسجل المهام في تطبيق السائق (M3-02). يُعيد الطلبات التي أُسنِدت
+        إلى السائق ووصلت إلى حالة نهائية (مُكتمل أو ملغى) ضمن الفترة المطلوبة.
+
+        المسار في خدمة الطلبات لا في خدمة السائقين، لأن خدمة السائقين لا تقرأ الطلبات
+        (§37 في ADR-010). المُنتَفِع (obo) في الرمز يجب أن يطابق `driverPublicId` في المسار،
+        وإلا يُجاب **404** (لا نُثبت وجود ما لا يُقرأ).
+      security:
+        - ServiceAuth:
+            - orders:driver-jobs:read
+      parameters:
+        - name: driverPublicId
+          in: path
+          required: true
+          schema: {$ref: '#/components/schemas/WaslaPublicId'}
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [today, week, month]
+        - $ref: '#/components/parameters/CustomerScope'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: قائمة المهام
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [jobs]
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - order_public_id
+                        - order_type
+                        - vehicle_class
+                        - status
+                        - pickup_label
+                        - dropoff_label
+                        - completed_at
+                      properties:
+                        order_public_id: {$ref: '#/components/schemas/OrderPublicId'}
+                        order_type: {$ref: '#/components/schemas/OrderType'}
+                        vehicle_class: {$ref: '#/components/schemas/VehicleClass'}
+                        status: {$ref: '#/components/schemas/OrderStatus'}
+                        pickup_label: {type: string, nullable: true}
+                        dropoff_label: {type: string, nullable: true}
+                        completed_at: {type: string, format: date-time}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
   /orders/{orderId}:
     get:
       tags: [orders]

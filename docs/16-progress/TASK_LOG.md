@@ -1,6 +1,10 @@
 
 
 
+## 2026-09-23 — M3-02 gap closure: driver-jobs route (CLM-0314)
+
+- **Work Item(s):** M3-02 · **الحجز:** `CLM-0314` · **الفرع:** `feat/m3-02-driver-jobs-route`
+- **What:** Closed the M3-02 app-route gap identified by governance check 24 (M3-08). Added `GET /orders/drivers/:driverPublicId/jobs` to the orders service (not drivers service, which cannot read orders per ADR-010 §37). Route is `ownerScoped` with `orders:driver-jobs:read` scope. Added `listJobsByDriver` to `OrderRepository` interface, implemented in both in-memory and drizzle repositories. New use case `readDriverJobs`. New mapper `driverJobHistoryEntryToWire`. Updated driver mini-app earnings store to call new route. Added `orders:driver-jobs:read` scope to `authz-policy` operations + grants (drivers role). 5 new HTTP tests. OpenAPI contract updated.
 
 ## 2026-09-22 — CLM-0294 release (M3-02 Wave 3 merged)
 

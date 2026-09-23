@@ -217,3 +217,27 @@ export interface OrderDetail {
   readonly assignments: readonly Assignment[];
   readonly activeAssignment: Assignment | null;
 }
+
+/**
+ * A completed (or cancelled) job in a driver's history.
+ *
+ * A projection of an order the driver was assigned to, carrying only the
+ * fields the earnings screen needs. The driver is identified by an accepted
+ * assignment on the order; the order's own customer is not exposed here,
+ * because the driver's view of a job is not the customer's view of an order.
+ *
+ * `completedAt` is the timestamp of the status transition that ended the
+ * job (to `completed`, `driver_cancelled`, or `customer_cancelled`), read from
+ * the audit trail — not `updatedAt`, which any later write would move.
+ */
+export interface DriverJobHistoryEntry {
+  readonly orderPublicId: string;
+  readonly orderType: OrderType;
+  readonly vehicleClass: VehicleClass;
+  readonly status: OrderStatus;
+  readonly agreedPrice: Money | null;
+  readonly agreedAt: string | null;
+  readonly completedAt: string;
+  readonly pickupLabel: string;
+  readonly dropoffLabel: string;
+}

@@ -110,6 +110,15 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
   {
     audience: "orders",
     method: "GET",
+    path: "/orders/drivers/:driverPublicId/jobs",
+    dimension: "owner",
+    strength: "token-bound",
+    evidence: "services/orders/src/http/app.ts:ownerScoped /orders/drivers/:driverPublicId/jobs",
+    note: "`M3-02` (CLM-0314): مسار شاشة الأرباح في تطبيق السائق. المالكُ من `obo` في الرمز، ويُطابَقُ مع `driverPublicId` في المسار. المخالفةُ تُرَدُّ `ORDER_NOT_FOUND` (لا 403).",
+  },
+  {
+    audience: "orders",
+    method: "GET",
     path: "/orders/lookup",
     dimension: "owner",
     strength: "none",

@@ -123,6 +123,12 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
       reason: "قراءةُ فهرسِ النطاقاتِ لعرضِ ما يخدمُهُ السائقُ.",
       evidence: ["DRIVERS_GEOGRAPHY_SCOPES"],
     },
+    {
+      audience: "orders",
+      scopes: ["orders:driver-jobs:read"],
+      reason: "قراءةُ سجلِّ مهامِ السائقِ المُكتملةِ لشاشةِ الأرباحِ (M3-02).",
+      evidence: ["DRIVERS_ORDER_JOBS_SCOPES"],
+    },
   ],
   geography: [
     {

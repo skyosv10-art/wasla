@@ -6,7 +6,7 @@
     "services/*/src/db/migrate.ts",
     "services/*/src/db/migrate-cli.ts"
   ],
-  "_last_updated": "2026-09-18",
+  "_last_updated": "2026-09-23",
   "_owner_item": "M2-05",
   "services": [
     {
@@ -177,6 +177,19 @@
       "migration_approach": "drizzle-kit generate + manual schema.sql application",
       "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
       "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
+    },
+    {
+      "service": "audit",
+      "schema_path": "services/audit/contracts/schema.sql",
+      "schema_owner": "@wasla/audit",
+      "migration_owner": "@wasla/audit",
+      "has_journal": true,
+      "journal_entries": 1,
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "1 journal entry (baseline). Has migrate.ts + migrate-cli.ts."
     }
   ]
 }

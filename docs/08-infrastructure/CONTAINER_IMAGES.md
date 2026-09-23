@@ -57,13 +57,14 @@ docker run --rm -e DATABASE_URL=… -p 8080:8080 wasla:local @wasla/orders-servi
 
 ## 3. عقدُ التشغيلِ — الحِزَمُ القابلةُ للتشغيلِ
 
-`RUNNABLE_PACKAGE_COUNT: 16` — **مقيسٌ** من الشجرةِ بـ
+`RUNNABLE_PACKAGE_COUNT: 17` — **مقيسٌ** من الشجرةِ بـ
 `python3 scripts/checks/lib/container_image.py runnable`، لا مكتوبٌ بيدٍ. والفحصُ
 19 يقارنُ هذا الجدولَ بالشجرةِ **في الاتّجاهَينِ**: حزمةٌ جديدةٌ بلا صفٍّ تُسقِطُ
 الدفعَ، وصفٌّ ميتٌ لا يُطابقُ الشجرةَ يُسقِطُهُ كذلكَ.
 
 | الحزمةُ | الدليلُ | ملفُّ المدخلِ |
 | --- | --- | --- |
+| `@wasla/audit-service` | `services/audit` | `src/http/server.ts` |
 | `@wasla/customers-service` | `services/customers` | `src/http/server.ts` |
 | `@wasla/delivery-service` | `services/delivery` | `src/http/server.ts` |
 | `@wasla/dispatch-service` | `services/dispatch` | `src/http/server.ts` |

@@ -47,7 +47,6 @@
 <!-- app-api-gaps:start -->
 | التطبيق | الطريقة | المسار | البند المالك | السبب |
 |---|---|---|---|---|
-| admin-portal | GET | /audit/events | M3-04 | `services/audit/` غيرُ موجودة (ADMIN_MVP_SPEC §6.2) |
 <!-- app-api-gaps:end -->
 
 ## 5. الأرقامُ المقيسة — تُقاس ولا تُكتب
@@ -55,11 +54,11 @@
 <!-- app-api-counts:start -->
 ```
 APPS_SCANNED = 3
-SERVICE_ROUTES = 142
+SERVICE_ROUTES = 144
 APP_CALL_SITES = 46
 DISTINCT_APP_CALLS = 43
-MATCHED_CALL_SITES = 45
-REGISTERED_GAPS = 1
+MATCHED_CALL_SITES = 46
+REGISTERED_GAPS = 0
 ```
 <!-- app-api-counts:end -->
 

@@ -19,6 +19,15 @@ test.describe("Frontend quality (M3-06)", () => {
     await expect(page.getByTestId("offline-banner")).toBeVisible();
     await expect(page.getByTestId("offline-banner")).toContainText("غير متصل");
 
+    // corrective hardening (CLM-0324): the banner must be a full-width top bar,
+    // never a side-by-side flex child of the loading/shell container.
+    const bannerGeo = await page.getByTestId("offline-banner").evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { top: r.top, width: r.width, viewport: window.innerWidth };
+    });
+    expect(bannerGeo.top).toBeLessThanOrEqual(1);
+    expect(bannerGeo.viewport - bannerGeo.width).toBeLessThanOrEqual(1);
+
     await page.context().setOffline(false);
     await expect(page.getByTestId("offline-banner")).toHaveCount(0);
   });

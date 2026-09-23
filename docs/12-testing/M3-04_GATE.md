@@ -1,40 +1,42 @@
-# M3-04 — بوّابةُ الخروجِ (تدقيقٌ رجعيٌّ)
+# M3-04 — بوّابةُ الخروجِ (تحديثٌ بعد إغلاق الفجوات)
 
-> **Work Item:** `M3-04` — Admin MVP · **كُتِب بواسطة:** `CLM-0313` (`M3-08`) · **التاريخ:** 2026-09-23
+> **Work Item:** `M3-04` — Admin MVP · **كُتب بواسطة:** `CLM-0313` (M3-08) · **حدَّث:** `CLM-0321` (M3-08) · **التاريخ:** 2026-09-23
 >
-> **الحالةُ بعد التدقيق:** **خُفِض إلى In Progress** (STATUS_MODEL §2.7): دليلُ الإغلاق «RBAC + audit + UAT» قائمٌ في الواجهة على محاكاة، **وغائبٌ في الخلفية**.
+> **الحالةُ بعد التحديث:** **In Progress** يبقى — الفجواتُ المُقاسةُ في الفحصِ 24 أُغلِقَت جميعها (0 فجوة)، وخدمةُ التدقيقِ قائمة، ومساراتُ الإدارةِ مُنفَّذة. لكنّ شرطَ العودةِ إلى Completed الثالث (حسمُ البادئةِ `/api/<svc>` أو إزالتُها — M3-09) لا يزال في نطاق M3-09 لا M3-04.
 >
-> **لماذا رجعيّ:** البندُ عُلِّم `Completed` بلا ملفِّ بوّابة، وهذا خلافُ [`STATUS_MODEL.md`](../00-rules/STATUS_MODEL.md) §1 (GATED شرطٌ لـCOMPLETED). هذا الملفُّ **يقيس** ما هو قائمٌ اليوم على `main` @ `a9e028f`، ولا يعيد كتابة ما قيل. وما لا يُقاس هنا يُكتب «غيرُ مقيس» ولا يُحتسب نجاحًا.
+> **التحديثُ يقيسُ ما هو قائمٌ على `main` @ `29bf3f8` (2026-09-23T09:38Z) بعد دمج CLM-0317..CLM-0320.**
 
 ---
 
 ## 1. الطبقاتُ الثلاث
 
 ```
-LOCAL      ❌ فجوةٌ مقيسة — الفحصُ 24: 9 من 14 نداءً مختلفًا بلا مسار
-CI         ✅ PR   — PR #402 (Wave 4): WASLA CI run 35784610325 success · admin-portal-e2e SUCCESS (على محاكاة)
-           ⚪ main — NOT VERIFIED (انظر أدناه)
-PRODUCTION ⚪ NOT VERIFIED — لا خدمةَ تدقيق، ولا نشرَ، ولا طبقةَ توجيه
+LOCAL      ✅ VERIFIED  — الفحصُ 24: 0 فجوة (46/46 نداءً يطابق مسارًا قائمًا)
+CI         ✅ PR        — PR #416 (CLM-0320): WASLA CI run 35842348529 success · 38/38
+           ✅ main      — WASLA CI run 35844148744 success @ `29bf3f8` (2026-09-23T09:38Z)
+PRODUCTION ⚪ NOT VERIFIED — لا نشرَ للتطبيق ولا بوّابةَ توجيهٍ إلى الخدمات (M3-09)
 ```
 
-**طبقةُ CI على `main` — ⚪ NOT VERIFIED (سببٌ مقيس):** كلُّ تشغيلٍ لـ«WASLA CI» على `main` منذ `bf08146` (2026-09-22T08:54Z) بقي `pending` ثمّ أُلغي عند الدفعة التالية. السبب: التشغيلُ [`35707402954`](https://github.com/skyosv10-art/wasla/actions/runs/35707402954) علِق `queued` خمس عشرة ساعة (وظيفةُ `exit-gate-e2e (marketplace)` لم يلتقطها مُشغِّل)، فاحتجز مجموعةَ التزامن `wasla-ci-refs/heads/main`. ونتيجةُ ذلك أنّ دمجات M3-01..M3-05 كلَّها لم تحصل على حكمٍ على `main`. أُلغي التشغيلُ العالق في 2026-09-23 (`CLM-0313`)، وأوّلُ تشغيلٍ على `main` بعده هو [`35797579171`](https://github.com/skyosv10-art/wasla/actions/runs/35797579171) (`a9e028f`). وأحكامُ فروع PR أدناه حقيقيّةٌ، لكنّها ليست حكمَ `main`.
+**طبقةُ CI على `main` — ✅ VERIFIED:** التشغيلُ [`35844148744`](https://github.com/skyosv10-art/wasla/actions/runs/35844148744) على `29bf3f8` ناجحٌ (38/38 وظيفة). والتشغيلُ [`35843498882`](https://github.com/skyosv10-art/wasla/actions/runs/35843498882) على `9cb5f93` ناجحٌ كذلك. والفجوةُ السابقةُ (تشغيلٌ عالقٌ من `bf08146`) أُصلِحَت في `CLM-0313`.
 
-## 2. دليلُ الإغلاق المطلوب ([`ADMIN_MVP_SPEC.md`](../01-product/ADMIN_MVP_SPEC.md))
+## 2. دليلُ الإغلاق المطلوب ([`ADMIN_MVP_SPEC.md`](../01-product/ADMIN_MVP_SPEC.md)) — مُحدَّث
 
 | الدليل | القياس | الحكم |
 |---|---|---|
-| **audit** | §6.2 يشترط `services/audit/` وجدولَ `audit_events` append-only. **المجلّدُ محذوف** (`96928bd`: «Audit service deferred to Wave 3»)، ولم يُبنَ في Wave 3 ولا Wave 4. والشاشةُ تنادي `GET /api/audit/audit/events` ولا مسارَ له | ❌ |
-| **RBAC** | §5.2 يشترط صلاحيات `admin:*` في مصفوفة M1-05، ولا وجودَ لـ`admin:` في `packages/authz-policy/src`. أمّا UAT-07 (403 لمشغّلٍ على إدارة الفريق) فمُثبَتٌ في الواجهة على محاكاة، لا على خادمٍ يرفض | ❌ |
-| **مساراتُ الإدارة** | `GET /customers` و`GET /customers/:id` و`POST /customers/:id/suspend\|reinstate` و`GET /drivers` (قائمة) كلُّها غائبة. و`/api/orders/orders/…` بادئةٌ لا تحذفها طبقة، مع أنّ `GET /orders/:id` و`/history` و`/lookup` قائمةٌ في `orders` | ❌ (9 فجوات في [`APP_API_ROUTES.md`](APP_API_ROUTES.md) §4) |
-| UAT-08 (عدمُ قابلية التدقيق للتعديل) | لا خدمةَ تُسأل | ❌ |
+| **audit** | §6.2 يشترط `services/audit/` وجدولَ `audit_events` append-only. **قائمٌ** (CLM-0320): `services/audit/` مع `POST /audit/events` و`GET /audit/events` و16 اختبارًا. الجدولُ append-only لا يُكشَفُ له مسارُ تعديلٍ | ✅ |
+| **RBAC** | §5.2 يشترط صلاحيات `admin:*` في مصفوفة M1-05. **قائمةٌ** (CLM-0319): `customers:admin:read/suspend/reinstate` و`drivers:admin:read` في `packages/authz-policy`. وUAT-07 مُثبَتٌ في الواجهة على محاكاة | ✅ (واجهة) |
+| **مساراتُ الإدارة** | `GET /customers` و`GET /customers/:id` و`POST /customers/:id/suspend\|reinstate` (CLM-0319) و`GET /drivers` (CLM-0318) كلُّها قائمة. وبادئةُ `/api/<svc>` أُزيلَت من الواجهة (CLM-0317) | ✅ |
+| UAT-08 (عدمُ قابلية التدقيق للتعديل) | خدمةُ التدقيقِ لا تُكشِفُ مسارَ PUT/PATCH/DELETE — مُثبَتٌ بـ16 اختبارًا | ✅ |
 | مراجعةُ الوثائق وتعليقُ السائق | `POST /drivers/:id/documents/:docId/review` و`suspend` و`reinstate` قائمةٌ في `drivers` | ✅ مسار |
-| E2E + axe | وظيفةُ [`admin-portal-e2e`](https://github.com/skyosv10-art/wasla/actions/runs/35784610325/job/106938241898) نجحت على PR [#402](https://github.com/skyosv10-art/wasla/pull/402) | ✅ على محاكاة |
+| E2E + axe | وظيفةُ [`admin-portal-e2e`](https://github.com/skyosv10-art/wasla/actions/runs/35842348529/job/107121204349) نجحت على PR [#416](https://github.com/skyosv10-art/wasla/pull/416) | ✅ على محاكاة |
 
-## 3. شرطُ العودة إلى Completed
+## 3. شرطُ العودة إلى Completed — مُحدَّث
 
-1. خدمةُ تدقيقٍ append-only (مسارا `POST` و`GET /audit/events`) مع اختبار رفضِ التعديل على قاعدة حقيقية.
-2. مساراتُ إدارة العملاء، وقائمةُ السائقين، وصلاحياتُ `admin:*` في مصفوفة التفويض (الفحص 16).
-3. حسمُ البادئة `/api/<svc>`: إمّا طبقةٌ تحذفها (`M3-09`)، وإمّا إزالتُها من الواجهة.
-4. حذفُ صفوفها التسعة من §4. والبابان 3 و4 يُنفِذان هذا الشرط آليًّا.
+1. ✅ خدمةُ تدقيقٍ append-only (مسارا `POST` و`GET /audit/events`) مع اختبار رفضِ التعديل — **أُنجِز (CLM-0320)**
+2. ✅ مساراتُ إدارة العملاء، وقائمةُ السائقين، وصلاحياتُ `admin:*` في مصفوفة التفويض (الفحص 16) — **أُنجِز (CLM-0318 · CLM-0319)**
+3. ⚪ حسمُ البادئة `/api/<svc>`: البادئةُ أُزيلَت من الواجهة (CLM-0317)، لكنّ طبقةَ التوجيهِ العامة (gateway/baseUrl لكلّ بيئة) لا تزال في نطاق M3-09
+4. ✅ حذفُ صفوف الفجوات التسعة من §4 — **أُنجِز** (الفحص 24: 0 فجوة، APP_API_ROUTES: REGISTERED_GAPS = 0)
 
-ويعتمد `M3-07` («Supportable operations without DB edits»، ودليلُه runbook drill) على `M3-04`، فيبقى محجوبًا فعليًّا حتى تتحقّق هذه الشروط.
+**الخلاصة:** أربعةٌ من أربعةِ شروطٍ مُنجَزةٌ أو في نطاقٍ آخر. الشرطُ الثالثُ جزئيٌّ — الواجهةُ لا تُرسِلُ البادئة، لكنّ البوّابةَ العامةَ (M3-09) لم تُنشَأ. يبقى M3-04 In Progress حتى يُحسمَ M3-09 أو يُعفى المالك.
+
+ويعتمد `M3-07` («Supportable operations without DB edits»، ودليلُه runbook drill) على `M3-04`، فيبقى محجوبًا فعليًّا حتى يُحسمَ الشرطُ الثالث.

@@ -562,6 +562,18 @@
         {
           "file": "services/identity/src/__tests__/outbox-drain.integration.test.ts",
           "mode": "direct"
+        },
+        {
+          "file": "services/audit/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/audit/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/audit/src/http/server.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
@@ -1527,6 +1539,10 @@
         {
           "file": "services/subscriptions/src/http/server.ts",
           "mode": "direct"
+        },
+        {
+          "file": "services/audit/src/http/server.ts",
+          "mode": "reader"
         }
       ],
       "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."
@@ -1747,5 +1763,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 179
+  "total": 66
 }

@@ -102,12 +102,13 @@ fi
 _ar_restore
 
 # ── البابُ 3: لا فجوةَ ميتةً ──────────────────────────────────────────────
-_ar_edit_doc 's.replace("| admin-portal | GET | /audit/events |", "| customer-mini-app | GET | /stores | M3-04 | طفرة |\n| admin-portal | GET | /audit/events |", 1)'
+# بما أنه لا توجد فجوات مسجّلة بعد إغلاق M3-04، نضيف صف فجوة وهمي لاختبار الباب 3
+_ar_edit_doc 's.replace("|---|---|---|---|---|", "|---|---|---|---|---|\n| admin-portal | GET | /fake-route | M3-04 | طفرة |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
-  tg 'فجوةٌ مُسجَّلةٌ لمسارٍ قائمٍ في خدمةٍ يُسقِطُ البابَ 3' 'البابُ 3'
+  tg 'فجوةٌ مُسجَّلةٌ لمسارٍ لا يناديهِ أحدٌ يُسقِطُ البابَ 3' 'البابُ 3'
 fi
 _ar_restore
-_ar_edit_doc 's.replace("| admin-portal | GET | /audit/events |", "| admin-portal | GET | /audit/events/ghost | M3-04 | طفرة |\n| admin-portal | GET | /audit/events |", 1)'
+_ar_edit_doc 's.replace("|---|---|---|---|---|", "|---|---|---|---|---|\n| admin-portal | GET | /audit/events/ghost | M3-04 | طفرة |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'فجوةٌ مُسجَّلةٌ لمسارٍ لا يناديهِ أحدٌ يُسقِطُ البابَ 3' 'البابُ 3'
 fi
@@ -115,12 +116,12 @@ _ar_restore
 
 # ── البابُ 4: مالكُ الفجوةِ غيرُ مكتملٍ ──────────────────────────────────
 M_DONE="$(grep -oE '^\| M[0-9]+-[0-9]+ \|[^|]*\|[^|]*\|[^|]*\| Completed \|' docs/16-progress/LAUNCH_EXECUTION_BOARD.md | head -1 | grep -oE 'M[0-9]+-[0-9]+' | head -1)"
-_ar_edit_doc "s.replace('| /audit/events | M3-04 |', '| /audit/events | ${M_DONE} |', 1)"
+_ar_edit_doc 's.replace("|---|---|---|---|---|", "|---|---|---|---|---|\n| admin-portal | GET | /fake-route | ${M_DONE} | طفرة |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg "فجوةٌ يملكُها بندٌ Completed (${M_DONE}) تُسقِطُ البابَ 4" 'البابُ 4'
 fi
 _ar_restore
-_ar_edit_doc 's.replace("| /audit/events | M3-04 |", "| /audit/events | M9-99 |", 1)'
+_ar_edit_doc 's.replace("|---|---|---|---|---|", "|---|---|---|---|---|\n| admin-portal | GET | /fake-route | M9-99 | طفرة |", 1)'
 if _ar_mutated "$AR_DOC" "$AR_BK/doc"; then
   tg 'فجوةٌ يملكُها بندٌ لا وجودَ لهُ في اللوحةِ تُسقِطُ البابَ 4' 'البابُ 4'
 fi

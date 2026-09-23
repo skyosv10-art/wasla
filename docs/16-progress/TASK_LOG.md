@@ -2,6 +2,17 @@
 
 
 
+## 2026-09-23 — M3-04 audit service (CLM-0320)
+
+- **Work Item(s):** M3-04 · **الحجز:** `CLM-0320` · **الفرع:** `feat/m3-04-audit-service`
+- Created new `services/audit/` service with Fastify app, domain model, ports, in-memory + Drizzle repositories
+- Added `POST /audit/events` (append-only, requires `audit:write` scope) and `GET /audit/events` (list with filters, requires `audit:read` scope)
+- Added `audit_events` table (id, actor_id, actor_role, action, resource_type, resource_id, metadata JSONB, created_at)
+- Drizzle migration 0000 (baseline) with down companion
+- 16 HTTP tests covering create, list, filters, validation, immutability (no PUT/DELETE/PATCH), authz
+- Added `audit` audience to authz-policy, 2 new operations, 2 new scopes
+- APP_API_ROUTES gap count 1→0 — all M3-04 gaps closed
+
 ## 2026-09-23 — M3-04 customers admin routes (CLM-0319)
 
 - **Work Item(s):** M3-04 · **الحجز:** `CLM-0319` · **الفرع:** `feat/m3-04-customers-admin-routes`

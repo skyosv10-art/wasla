@@ -45,6 +45,7 @@
  * من الفحصِ 16.
  */
 export const AUDIENCES = [
+  "audit",
   "channel",
   "customers",
   "delivery",
@@ -257,6 +258,11 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "subscriptions", method: "POST", path: "/referrals", scopes: ["subscriptions:referrals:write"] },
   { audience: "subscriptions", method: "GET", path: "/referrals", scopes: ["subscriptions:referrals:read"] },
   { audience: "subscriptions", method: "GET", path: "/referrals/codes/:ownerPublicId", scopes: ["subscriptions:referrals:read"] },
+  // ── audit (M3-04 · ADMIN_MVP_SPEC §6.2 · CLM-0320) ──────────────
+  // خدمة سجل التدقيق: append-only، مساران فقط.
+  // POST /audit/events يتطلب audit:write، GET /audit/events يتطلب audit:read.
+  { audience: "audit", method: "POST", path: "/audit/events", scopes: ["audit:write"] },
+  { audience: "audit", method: "GET", path: "/audit/events", scopes: ["audit:read"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */

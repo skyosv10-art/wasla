@@ -1,0 +1,160 @@
+openapi: 3.1.0
+info:
+  title: WASLA Audit Service API
+  version: 0.1.0
+  description: >
+    سجل التدقيق — خدمة append-only لتسجيل الأحداث الإدارية.
+    M3-04 ADMIN_MVP_SPEC §6.2.
+servers:
+  - url: http://localhost:8092
+    description: Local development
+tags:
+  - name: audit
+    description: عمليات سجل التدقيق
+paths:
+  /health:
+    get:
+      tags: [audit]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+  /audit/events:
+    post:
+      tags: [audit]
+      summary: Append an audit event
+      description: >
+        يسجّل حدثاً في سجل التدقيق. السجل append-only: لا يمكن تعديل أو حذف الأحداث.
+      security:
+        - ServiceAuth: [audit:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuditEvent'
+      responses:
+        '201':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEvent'
+        '400':
+          $ref: '#/components/responses/Error'
+    get:
+      tags: [audit]
+      summary: List audit events with filtering
+      description: >
+        يعرض الأحداث مرتبة من الأحدث إلى الأقدم مع الفلترة.
+      security:
+        - ServiceAuth: [audit:read]
+      parameters:
+        - name: actor_id
+          in: query
+          schema: { type: string }
+        - name: actor_role
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: resource_type
+          in: query
+          schema: { type: string }
+        - name: resource_id
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0, minimum: 0 }
+      responses:
+        '200':
+          description: List of audit events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventList'
+        '400':
+          $ref: '#/components/responses/Error'
+components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: |
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`.
+  schemas:
+    CreateAuditEvent:
+      type: object
+      required: [actor_id, actor_role, action, resource_type, resource_id]
+      properties:
+        actor_id:
+          type: string
+        actor_role:
+          type: string
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        metadata:
+          type: object
+          default: {}
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        actor_id:
+          type: string
+        actor_role:
+          type: string
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    AuditEventList:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        limit:
+          type: integer
+        offset:
+          type: integer
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              trace_id:
+                type: string

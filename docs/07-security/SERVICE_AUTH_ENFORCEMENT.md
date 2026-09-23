@@ -698,7 +698,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions` · `enforced: audit`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -1015,6 +1015,16 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — | — |
 
 <!-- customers-scopes:end -->
+
+<!-- audit-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المالكِ | المُنادي اليوم |
+|---|---|---|---|
+| `POST /audit/events` | `audit:write` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
+| `GET /audit/events` | `audit:read` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — | — |
+
+<!-- audit-scopes:end -->
 
 **والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
 مَورِدٍ، و**المعاينةُ** (`order-request:preview`) صلاحيّةٌ ثالثةٌ مستقلّةٌ لأنَّها

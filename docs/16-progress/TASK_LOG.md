@@ -1,3 +1,14 @@
+## 2026-09-23 — M3-06 evidence: PRODUCTION measured, item Completed (CLM-0323)
+
+- **Work Item(s):** M3-06
+- **Status:** Completed (اللوحةُ والخارطةُ حُدِّثَتا في هذا الفرع؛ الحجزُ يبقى Active حتى فرعِ الإصدارِ وفقَ النمطِ المعتمد)
+- **What / Why:** دليلُ إغلاقِ M3-06 (نتيجةُ UAT على مصفوفةِ القبول) — إكمالُ طبقةِ PRODUCTION في البوّابة.
+- **Changed:** بوّابةُ `M3-06_GATE.md` §5 (القياسُ الإنتاجي) و§6 (الحكم: مكتمل) · لوحةُ التنفيذ (M3-06 → Completed بدليلِ الإغلاق) · `ROADMAP.md` · حقلُ فرعِ الحجز CLM-0323 ← هذا الفرع.
+- **Verification:** بعدَ نشرِ ac336a5 يدويًّا بتفويضِ المالك (dep-daq25rm7bikc73babqig · dep-daq25rp7lnhs739in4gg · dep-daq25s60tbcc73dadtig — autoDeploy عبرَ push لم يُطلِقْ نشرًا، مسجَّلٌ كملاحظةِ تشغيل): متصفّحٌ حقيقيٌّ على العناوينِ العامةِ الثلاثة: الافتراضيُّ lang=ar dir=rtl · `?locale=en` → lang=en dir=ltr مع نصٍّ إنجليزيٍّ مرئيٍّ · لافتُ الأوفلاين يظهرُ بنصٍّ عربيٍّ كاملٍ (role=status) ويختفي عندَ العودة · فائضٌ أفقيٌّ **0px** عندَ 375px — 3/3 تطبيقات. حدُّ صدقٍ مُعلَن: initData داخلَ Telegram لم يُقَس (نفسُ حدِّ M3-09) والأوفلاين قِيسَ بمحاكاةِ المتصفّحِ القياسية.
+- **Security / Data / Deployment:** نشرُ staging يدويٌّ بتفويضٍ صريحٍ منَ المالك (2026-09-23) — لا أسرارَ ولا تغييراتِ قواعد.
+- **Next:** CI على هذا الفرع ثم الدمج ثم فرعُ الإصدار (CLM-0323 → Released) ثم M3-07 (runbook drill).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-06 baseline regeneration (CLM-0323)
 
 - **Work Item(s):** M3-06

@@ -19,7 +19,7 @@ test.describe("UAT-06: Audit log viewing", () => {
   });
 
   test("audit log renders events table when events exist", async ({ page }) => {
-    await page.route("**/api/audit/**", (route) => {
+    await page.route("**/audit/**", (route) => {
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -91,7 +91,7 @@ test.describe("UAT-08: Audit immutability", () => {
   });
 
   test("audit log has no edit/delete buttons on events", async ({ page }) => {
-    await page.route("**/api/audit/**", (route) => {
+    await page.route("**/audit/**", (route) => {
       route.fulfill({
         status: 200,
         contentType: "application/json",

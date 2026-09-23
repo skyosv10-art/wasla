@@ -87,6 +87,7 @@ export const DRIVER_SCOPES = {
   profileReinstate: "drivers:profile:reinstate",
   eligibilityRead: "drivers:eligibility:read",
   eligibilityTick: "drivers:eligibility:tick",
+  adminRead: "drivers:admin:read",
 } as const;
 
 export type DriverRouteConfig = ServiceIdentityRouteConfig;

@@ -184,6 +184,10 @@ export class InMemoryDriverProfileRepository implements DriverProfileRepository 
       .sort((left, right) => (left.eligibilityRecheckAt ?? "").localeCompare(right.eligibilityRecheckAt ?? ""))
       .slice(0, limit);
   }
+
+  async list(limit: number, offset: number): Promise<DriverProfile[]> {
+    return [...this.rows.values()].slice(offset, offset + limit);
+  }
 }
 
 export class InMemoryServiceZoneRepository implements ServiceZoneRepository {

@@ -94,6 +94,11 @@ export interface DriverProfileRepository {
    * platform has fifty thousand drivers.
    */
   listDueForRecheck(now: string, limit: number): Promise<DriverProfile[]>;
+  /**
+   * List all driver profiles with pagination — for admin portal.
+   * Not owner-scoped: returns all drivers, not just one.
+   */
+  list(limit: number, offset: number): Promise<DriverProfile[]>;
 }
 
 export interface ServiceZoneRepository {

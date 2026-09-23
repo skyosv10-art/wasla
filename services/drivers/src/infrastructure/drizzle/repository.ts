@@ -475,6 +475,16 @@ export class PostgresDriverProfileRepository implements DriverProfileRepository 
     return rows.map(toProfile);
   }
 
+  async list(limit: number, offset: number): Promise<DriverProfile[]> {
+    const rows = await this.db
+      .select()
+      .from(driverProfiles)
+      .orderBy(asc(driverProfiles.waslaPublicId))
+      .limit(limit)
+      .offset(offset);
+    return rows.map(toProfile);
+  }
+
   /** `SELECT … FOR UPDATE`, raising the same 404 the in-memory store raises. */
   private async lock(waslaPublicId: string): Promise<void> {
     const rows = await this.db

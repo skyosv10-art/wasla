@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-23T00:08:24Z",
+  "generated_at": "2026-09-23T00:09:26Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a9e028fc6f9dbc77584cea42c9765e7f87acb433",
+    "commit": "914bb125331847f26d3c0cba9d03c3127458f754",
     "branch": "feat/m3-08-app-route-audit",
-    "dirty": true,
-    "dirty_files": 16,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
     "tracked_files": 2490
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "unknown",
+    "pnpm": "9.15.9",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"

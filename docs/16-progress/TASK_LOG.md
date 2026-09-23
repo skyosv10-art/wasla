@@ -1,5 +1,15 @@
+## 2026-09-23 — M3-09 app→service access path — start (CLM-0322)
 
-
+- **Work Item(s):** M3-09
+- **Status:** In Progress
+- **What / Why:** التطبيقاتُ الثلاثةُ تُنشئ عميلَها بـ`baseUrl` فارغٍ والخدماتُ مضيفاتٌ منفصلةٌ على Render، ولا بوّابةَ ولا نشرَ للتطبيقات — فمسارٌ «يطابق» في الفحصِ 24 قد لا يُبلَغ في أيِّ بيئة. البندُ يُنشئ مسارَ الوصولِ الفعليَّ: نشرُ التطبيقاتِ على staging مع توجيهٍ محروس.
+- **Changed (planned):** `infra/render/app-rewrites.json` (جدولُ البادئة→الخدمة، مصدرٌ واحدٌ) · `infra/terraform/apps/` (جذرُ terraform مستقلٌّ للمواقعِ الثابتةِ) · البابُ السادسُ في الفحصِ 24 (`scripts/checks/lib/app_api_routes.py`) · `ADR-048` · وثائقُ العقدِ والبوّابة.
+- **Verification:** يُقاسُ لاحقًا — الفحوصُ المحليةُ ثم CI ثم نداءٌ حقيقيٌّ من التطبيقِ المنشورِ.
+- **Security / Data / Deployment:** لا أسرارَ في المستودع — كلُّ بياناتِ الاعتمادِ عبر متغيراتِ بيئةٍ على Render.
+- **Known Issue / Blocker:** لا يوجد.
+- **Evidence:** الحجزُ `CLM-0322` في `WORK_CLAIMS.md` · القرارُ المعماريُّ `ADR-048`.
+- **Next:** تنفيذُ الجذرِ والجدولِ والحارسِ ثم النشرُ والإثباتُ الحيُّ.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
 
 
 ## 2026-09-23 — M3-08 gate evidence update (CLM-0321)

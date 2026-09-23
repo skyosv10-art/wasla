@@ -13,6 +13,7 @@
 | Compute | Deferred (Kubernetes at Stage D per SCALING.md) | Not yet decided |
 | TLS | Edge-terminated at ingress/gateway | Decided (ADR-038) |
 | Environments | local, ci, development, staging, production | Decided (ADR-038) |
+| App hosting | Render static sites + same-origin rewrites (prefix table `infra/render/app-rewrites.json`) | Decided (ADR-048, M3-09) |
 
 ## Directory Structure (planned)
 

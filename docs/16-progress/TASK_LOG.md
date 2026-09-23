@@ -1,3 +1,16 @@
+## 2026-09-23 — M3-09 complete: نشرٌ فعليّ + إثباتٌ حيّ + نقلُ M3-04/M3-08 (CLM-0322)
+
+- **Work Item(s):** M3-09 (ونقلٌ تبعيّ: M3-04 · M3-08 ← Completed)
+- **Status:** Completed
+- **What / Why:** معيارُ قبولِ M3-09 هو «نداءٌ حقيقيٌّ من تطبيقٍ منشورٍ على staging يبلغُ خدمتَه». نُفِّذَ النشرُ الفعليُّ ثم قِيسَ المعيارُ مباشرةً.
+- **Changed:** `docs/12-testing/M3-09_GATE.md` (جديد — البوّابةُ بالطبقاتِ الثلاث) · تحديثُ `M3-04_GATE.md` (الشرطُ الثالثُ منجَزٌ) · `LAUNCH_EXECUTION_BOARD.md` (M3-04 · M3-08 · M3-09 ← Completed) · `ROADMAP.md` · `WORK_CLAIMS.md` (إفراجُ CLM-0322) · هذا السجلّ.
+- **النشرُ الفعليّ (قياسٌ عبر Render API ‏2026-09-23):** المواقعُ الثابتةُ الثلاثةُ من `infra/terraform/apps/` (apply: 3 to add — `wasla-customer-app` · `wasla-driver-app` · `wasla-admin-app`، كلُّها live بجدولِ التوجيهِ الـ19) · خدمةُ `wasla-audit` منشورةٌ عبر Render API (srv-daprrq0u01pc73do9npg) بمطابقةِ إعلانِها في `render.tf`، بمفتاحِ staging مُستحدَثٍ (kid=stg-audit-k1 — انحرافُ مفاتيحَ staging مسجَّلٌ في البوّابة) · ترحيلُ `audit_events` مُطبَّقٌ على قاعدةِ staging · روابطُ `*_BOT_MINI_APP_URL` الثلاثةُ حُدِّثَت إلى عناوينِ التطبيقات.
+- **الإثباتُ الحيّ (بوّابةُ M3-09 §3):** متصفّحٌ حقيقيٌّ يُحمّلُ كلَّ تطبيقٍ ثمّ `fetch()` من منشأِ التطبيقِ نفسِه: customer-app → `/customers`·`/search`·`/stores` كلُّها 401 من الخدمات؛ driver-app → `/dispatch`·`/drivers`·`/orders` كلُّها 401؛ admin-app → `/audit/events`·`/customers` كلتاهما 401 — بآثارٍ فريدةٍ من الخدماتِ نفسِها، و`wasla-audit/health` مباشرةً 200. **ما لم يُدَّعَ:** رحلةُ مصادقةِ Telegram initData كاملةً لم تُقَس (التطبيقاتُ تنتظرُ سياقَ Telegram — شاشةُ «جارٍ التحميل» خارجَه).
+- **CI:** الفرعُ PR #420: WASLA CI run 35855206395 success (38/38) + roadmap freshness 35855160705. بعدَ الدمجِ (squash `2e79737`): WASLA CI run 35856358621 success + roadmap freshness 35856358794 على `main`.
+- **Merge/Deploy:** PR #420 مُدمَجٌ (تفويضُ المالكِ المكتوبِ — دمجُ كلِّ أخضر). النشرُ بتفويضٍ صريحٍ من المالك في الجلسة (terraform apply + إنشاءُ الخدمة + تحديثُ روابطِ البوتات).
+- **Next:** M3-06 (i18n/accessibility/error/offline UX) وM3-07 (runbook drill) صارَا قابلَينِ للبدء.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-23 — M3-09 app→service access path — start (CLM-0322)
 
 - **Work Item(s):** M3-09

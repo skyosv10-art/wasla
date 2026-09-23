@@ -13,7 +13,7 @@
 | Compute | Deferred (Kubernetes at Stage D per SCALING.md) | Not yet decided |
 | TLS | Edge-terminated at ingress/gateway | Decided (ADR-038) |
 | Environments | local, ci, development, staging, production | Decided (ADR-038) |
-| App hosting | Render static sites + same-origin rewrites (prefix table `infra/render/app-rewrites.json`) | Decided (ADR-048, M3-09) |
+| App hosting | Render static sites + same-origin rewrites (prefix table `infra/render/app-rewrites.json`) | Deployed to staging 2026-09-23 (M3-09 · `CLM-0322`): `wasla-customer-app` · `wasla-driver-app` · `wasla-admin-app` — live، مع 19 بادئةَ توجيهٍ · الدليلُ في [`M3-09_GATE.md`](../12-testing/M3-09_GATE.md) |
 
 ## Directory Structure (planned)
 

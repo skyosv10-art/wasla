@@ -1,0 +1,61 @@
+# WASLA Alert Rules — PromQL expressions from SLI_BASELINE.md (ADR-041)
+# Stage A targets: development-grade, not production SLAs.
+
+groups:
+  - name: wasla-sli
+    interval: 30s
+    rules:
+      # ── Availability: ≥ 99% (2xx+3xx / total) ──────────────────────────
+      - alert: WASLAAvailabilityBelow99
+        expr: |
+          1 - (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_requests_total[5m])), 1)
+          ) < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          sli: availability
+        annotations:
+          summary: "WASLA availability below 99%"
+          description: "Availability is {{ $value | humanizePercentage }} (target: ≥ 99%)"
+
+      # ── Latency p95: ≤ 500ms ───────────────────────────────────────────
+      - alert: WASLALatencyP95Above500ms
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          sli: latency
+        annotations:
+          summary: "WASLA p95 latency above 500ms"
+          description: "p95 latency is {{ $value | humanizeDuration }} (target: ≤ 500ms)"
+
+      # ── Error rate: ≤ 5% (4xx+5xx / total) ────────────────────────────
+      - alert: WASLAErrorRateAbove5Percent
+        expr: |
+          sum(rate(http_requests_total{status=~"4..|5.."}[5m]))
+          /
+          clamp_min(sum(rate(http_requests_total[5m])), 1) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          sli: error-rate
+        annotations:
+          summary: "WASLA error rate above 5%"
+          description: "Error rate is {{ $value | humanizePercentage }} (target: ≤ 5%)"
+
+      # ── Service down: no metrics scraped in 2 min ─────────────────────
+      - alert: WASLAServiceDown
+        expr: up{job="wasla-services"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          sli: availability
+        annotations:
+          summary: "WASLA service {{ $labels.instance }} is down"
+          description: "No metrics received from {{ $labels.instance }} for 2 minutes"

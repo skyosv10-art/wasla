@@ -1,0 +1,10 @@
+# WASLA OTLP Collector — M2-08 Stage B
+# Render sets PORT automatically — collector must listen on it.
+# The config uses ${env:PORT} substitution via the env extension.
+FROM otel/opentelemetry-collector-contrib:0.108.0
+
+COPY otel-collector.yml /etc/otelcol/config.yaml
+
+# The collector reads PORT from env and binds to it.
+# Default to 4318 for local runs.
+CMD ["--config=/etc/otelcol/config.yaml"]

@@ -1,3 +1,11 @@
+## 2026-09-24 — M2-07/M2-09A gate and board update (CLM-0329)
+
+- **Work Item(s):** M2-07 (gate update) + M2-09A (board update)
+- **Status:** Active
+- **What / Why:** تحديثُ بوّابةِ M2-07 ولوحةِ التنفيذِ بعدَ إغلاقِ G8 بـCLM-0328. كلُّ بنودِ البوّابةِ الأربعةَ عشرَ `✅`، والحالةُ المُعلَنةُ صارَت `PASSED`. نُقلَ M2-07 وM2-09A إلى `Ready for Gate` في اللوحة. النقلُ إلى `Completed` سلطةُ مالكِ البرنامجِ (§9).
+- **Dependencies:** CLM-0328 (G8 closure), CLM-0327 (M2-09A discovery)
+- **Not claimed:** النشرُ الفعليُّ لوظائفِ cron على Render يبقى خطوةً تشغيليّةً مستقلّةً. Stage B (M2-08) يبقى مفتوحًا في RISK-0053.
+
 ## 2026-09-24 — M2-09A G8 tick scheduler (CLM-0328)
 
 - **Work Item(s):** M2-09A (G8 closure)

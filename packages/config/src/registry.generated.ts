@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 74 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 77 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "CI",
@@ -313,6 +313,36 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     scopes: ["runtime"],
     readerCount: 3,
     ownerItem: "M2-04",
+  },
+  {
+    name: "GOLDEN_SERVICE_AUTH_KEY",
+    type: "string",
+    required: "optional",
+    secret: true,
+    default: null,
+    scopes: ["test"],
+    readerCount: 1,
+    ownerItem: "M4-02",
+  },
+  {
+    name: "GOLDEN_SERVICE_AUTH_KID",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["test"],
+    readerCount: 1,
+    ownerItem: "M4-02",
+  },
+  {
+    name: "GOLDEN_STAGING_BASE",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["test"],
+    readerCount: 1,
+    ownerItem: "M4-02",
   },
   {
     name: "IDEMPOTENCY_KEY_TTL_SECONDS",
@@ -806,6 +836,9 @@ export const ENV_VAR_NAMES = [
   "EXIT_GATE_REQUIRE_DB",
   "GEOGRAPHY_BASE_URL",
   "GEOGRAPHY_SERVICE_URL",
+  "GOLDEN_SERVICE_AUTH_KEY",
+  "GOLDEN_SERVICE_AUTH_KID",
+  "GOLDEN_STAGING_BASE",
   "IDEMPOTENCY_KEY_TTL_SECONDS",
   "IDEMPOTENCY_SWEEP_BATCH_SIZE",
   "IDEMPOTENCY_SWEEP_MAX_BATCHES",

@@ -6042,3 +6042,26 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 **لم يكتمل:** سدُّ الفجوات العشر (مِلك M3-02/M3-04) · M3-09 · حارسٌ يرفض الاستشهاد بحكم `main` غير موجود (RISK-0052). **Migration/Deploy/Config:** لا. **التالي:** M3-06 إن سمحت اعتماديّاته، وإلّا فسدُّ فجوة M3-02. **يتابعه:** @uxxxu (agent:perplexity-computer).
 
 **الأساس (`M0-08`):** أُعيد التوليد من تشغيل `verify.sh` حقيقي: `governance_checks` 23→24 (الفحص 24) · `risks_not_closed` 31→32 (`RISK-0052`) · `governance_suite_cases` 491→506 (+15 حالة طفرة) · `tests_passed` 5309 بلا تغيير · `governance_suite_failed` 1 = الفحص 11 نفسه قبل إعادة التوليد (BASELINE_FORMAT §6.5).
+
+## 2026-09-24 — M2-07 وM2-09A: نقل إلى Completed بتفويض المالك التنفيذي (CLM-0331)
+
+- **Work Item(s):** M2-07
+- **Status:** Ready for Gate → Completed
+- **Claim:** CLM-0331
+- **Branch:** chore/m2-07-m2-09a-complete
+
+**What / Why:** نقل M2-07 وM2-09A إلى `Completed` بتفويض مالك البرنامج التنفيذي الكامل. بوّابة M2-07 `PASSED` بكل بنودها الأربعة عشر `✅` (G1–G8 مُغلَقة)، واعتماداه M2-02 وM2-05 `Completed`. M2-09A معايير قبولها مستوفاة (discovery doc + RISK-0053 + G8 closed بـCLM-0328/CLM-0330). PR #439 مدموج بـCI أخضر 38/38. Stage B (M2-08) يبقى مفتوحًا كخطر مستقل في RISK-0053.
+
+**Changed:** docs/16-progress/LAUNCH_EXECUTION_BOARD.md (M2-07 وM2-09A ← Completed + evidence), docs/16-progress/WORK_CLAIMS.md (CLM-0331 active, CLM-0330 released), docs/16-progress/TASK_LOG.md (this entry).
+
+**Verification:** CI أخضر على فرع PR #439 (run 35984849609, 38/38). CI على main بعد الدمج: Roadmap freshness success (run 35986338542), WASLA CI قيد التشغيل.
+
+**Security / Data / Deployment:** لا أثر — تغيير توثيقي/حوكمة فقط.
+
+**Known Issue / Blocker:** لا يوجد. Stage B (M2-08) يبقى In Progress كخطر مستقل في RISK-0053.
+
+**Evidence:** PR #439 merged (squash ddcc97d) · CLM-0331.
+
+**Next:** M2-08 Stage B (alert manager + OTLP collector) — البند التالي القابل للتنفيذ في خارطة P1.
+
+**Primary / Secondary:** @uxxxu (agent:perplexity-computer).

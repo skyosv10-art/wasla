@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-05 Privacy/Compliance Review (CLM-0346)
+
+- **Work Item(s):** M4-05
+- **Status:** Active (PR pending)
+- **What / Why:** Created `packages/compliance-review/` with PDPL (Saudi Arabia) compliance review. 10 data elements inventoried (4 sensitive, 5 personal, 1 non-personal). 12 PDPL requirements (2 compliant, 6 partial, 4 not implemented). 5 data subject rights mapped. Compliance score: 42%. 15 tests.
+
 ## 2026-09-24 — M4-04 Released + Completed (CLM-0344)
 
 - **Work Item(s):** M4-04

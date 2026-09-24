@@ -1,3 +1,12 @@
+## 2026-09-24 — Release CLM-0339 + M4-01 Completed
+
+- **Work Item(s):** M4-01
+- **Status:** Completed
+- **What / Why:** PR #450 merged (squash) with CI 38/38 green. M4-01 moved to Completed with full executive delegation. Beta charter defines pilot scope, constraints, success/stop metrics, and 5 golden journeys for M4-02.
+- **Verification:** CI 38/38 green on PR #450. Launch board validated.
+- **Next:** M4-02 (golden cross-service E2E journeys).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M4-01 Beta Charter (CLM-0339)
 
 - **Work Item(s):** M4-01

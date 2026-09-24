@@ -936,6 +936,60 @@
       "note_ar": "غيابُهُ يُنتِجُ منفذاً مُعلَنَ العطبِ لا سقوطاً صامتاً."
     },
     {
+      "name": "GOLDEN_SERVICE_AUTH_KEY",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "مفتاحُ مصادقةِ الخدمةِ لاختباراتِ الرحلاتِ الذهبيّةِ.",
+      "owner_item": "M4-02",
+      "readers": [
+        {
+          "file": "packages/golden-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "GOLDEN_SERVICE_AUTH_KID",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "معرِّفُ مفتاحِ مصادقةِ الخدمةِ لاختباراتِ الرحلاتِ الذهبيّةِ.",
+      "owner_item": "M4-02",
+      "readers": [
+        {
+          "file": "packages/golden-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
+      "name": "GOLDEN_STAGING_BASE",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "test"
+      ],
+      "description_ar": "تُفعّلُ اختباراتِ الرحلاتِ الذهبيّةِ ضدَّ staging (أيُّ قيمةٍ غيرِ فارغةٍ).",
+      "owner_item": "M4-02",
+      "readers": [
+        {
+          "file": "packages/golden-e2e/src/harness.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
       "name": "IDEMPOTENCY_KEY_TTL_SECONDS",
       "type": "positive_int",
       "required": "optional",
@@ -1293,60 +1347,6 @@
       "readers": [
         {
           "file": "packages/order-e2e/src/harness.ts",
-          "mode": "direct"
-        }
-      ]
-    },
-    {
-      "name": "GOLDEN_STAGING_BASE",
-      "type": "string",
-      "required": "optional",
-      "default": null,
-      "secret": false,
-      "scopes": [
-        "test"
-      ],
-      "description_ar": "تُفعّلُ اختباراتِ الرحلاتِ الذهبيّةِ ضدَّ staging (أيُّ قيمةٍ غيرِ فارغةٍ).",
-      "owner_item": "M4-02",
-      "readers": [
-        {
-          "file": "packages/golden-e2e/src/harness.ts",
-          "mode": "direct"
-        }
-      ]
-    },
-    {
-      "name": "GOLDEN_SERVICE_AUTH_KEY",
-      "type": "string",
-      "required": "optional",
-      "default": null,
-      "secret": true,
-      "scopes": [
-        "test"
-      ],
-      "description_ar": "مفتاحُ مصادقةِ الخدمةِ لاختباراتِ الرحلاتِ الذهبيّةِ.",
-      "owner_item": "M4-02",
-      "readers": [
-        {
-          "file": "packages/golden-e2e/src/harness.ts",
-          "mode": "direct"
-        }
-      ]
-    },
-    {
-      "name": "GOLDEN_SERVICE_AUTH_KID",
-      "type": "string",
-      "required": "optional",
-      "default": null,
-      "secret": false,
-      "scopes": [
-        "test"
-      ],
-      "description_ar": "معرِّفُ مفتاحِ مصادقةِ الخدمةِ لاختباراتِ الرحلاتِ الذهبيّةِ.",
-      "owner_item": "M4-02",
-      "readers": [
-        {
-          "file": "packages/golden-e2e/src/harness.ts",
           "mode": "direct"
         }
       ]

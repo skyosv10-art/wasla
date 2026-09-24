@@ -1,0 +1,205 @@
+=== wasla-audit ===
+# HELP process_cpu_user_seconds_total Total user CPU time spent in seconds.
+# TYPE process_cpu_user_seconds_total counter
+process_cpu_user_seconds_total{service="audit"} 0.697481
+
+# HELP process_cpu_system_seconds_total Total system CPU time spent in seconds.
+# TYPE process_cpu_system_seconds_total counter
+process_cpu_system_seconds_total{service="audit"} 0.250993
+
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total{service="audit"} 0.948474
+
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds{service="audit"} 1790251501
+
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes{service="audit"} 86536192
+
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes{service="audit"} 44236390400
+
+# HELP process_heap_bytes Process heap size in bytes.
+# TYPE process_heap_bytes gauge
+process_heap_bytes{service="audit"} 119795712
+
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds{service="audit"} 27
+
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds{service="audit"} 1048576
+
+# HELP nodejs_eventloop_lag_seconds Lag of event loop in seconds.
+# TYPE nodejs_eventloop_lag_seconds gauge
+nodejs_eventloop_lag_seconds{service="audit"} 0.005761993
+
+# HELP nodejs_eventloop_lag_min_seconds The minimum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_min_seconds gauge
+nodejs_eventloop_lag_min_seconds{service="audit"} 0.009076736
+
+# HELP nodejs_eventloop_lag_max_seconds The maximum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_max_seconds gauge
+nodejs_eventloop_lag_max_seconds{service="audit"} 0.021643263
+
+# HELP nodejs_eventloop_lag_mean_seconds The mean of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_mean_seconds gauge
+nodejs_eventloop_lag_mean_seconds{service="audit"} 0.010129437559586502
+
+# HELP nodejs_eventloop_lag_stddev_seconds The standard deviation of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_stddev_seconds gauge
+nodejs_eventloop_lag_stddev_seconds{service="audit"} 0.0003107577474598222
+
+# HELP nodejs_eventloop_lag_p50_seconds The 50th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p50_seconds gauge
+nodejs_eventloop_lag_p50_seconds{service="audit"} 0.010092543
+
+# HELP nodejs_eventloop_lag_p90_seconds The 90th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p90_seconds gauge
+nodejs_eventloop_lag_p90_seconds{service="audit"} 0.010117119
+
+# HELP nodejs_eventloop_lag_p99_seconds The 99th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p99_seconds gauge
+nodejs_eventloop_lag_p99_seconds{service="audit"} 0.011337727
+
+# HELP nodejs_active_resources Number of active resources that are currently keeping the event loop alive, grouped by async resource type.
+# TYPE nodejs_active_resources gauge
+nodejs_active_resources{type="FSReqCallback",service="audit"} 1
+nodejs_active_resources{type="PipeWrap",service="audit"} 2
+nodejs_active_resources{type="TCPServerWrap",service="audit"} 1
+nodejs_active_resources{type="TCPSocketWrap",service="audit"} 1
+nodejs_active_resources{type="Immediate",service="audit"} 1
+
+# HELP nodejs_active_resources_total Total number of active resources.
+# TYPE nodejs_active_resources_total gauge
+nodejs_active_resources_total{service="audit"} 6
+
+# HELP nodejs_active_handles Number of active libuv handles grouped by handle type. Every handle type is C++ class name.
+# TYPE nodejs_active_handles gauge
+nodejs_active_handles{type="Socket",service="audit"} 3
+nodejs_active_handles{type="Server",service="audit"} 1
+
+# HELP nodejs_active_handles_total Total number of active handles.
+# TYPE nodejs_active_handles_total gauge
+nodejs_active_handles_total{service="audit"} 4
+
+# HELP nodejs_active_requests Number of active libuv requests grouped by request type. Every request type is C++ class name.
+# TYPE nodejs_active_requests gauge
+nodejs_active_requests{type="FSReqCallback",service="audit"} 1
+
+# HELP nodejs_active_requests_total Total number of active requests.
+# TYPE nodejs_active_requests_total gauge
+nodejs_active_requests_total{service="audit"} 1
+
+# HELP nodejs_heap_size_total_bytes Process heap size from Node.js in bytes.
+# TYPE nodejs_heap_size_total_bytes gauge
+nodejs_heap_size_total_bytes{service="audit"} 18841600
+
+# HELP nodejs_heap_size_used_bytes Process heap size used from Node.js in bytes.
+# TYPE nodejs_heap_size_used_bytes gauge
+nodejs_heap_size_used_bytes{service="audit"} 17525184
+
+# HELP nodejs_external_memory_bytes Node.js external memory size in bytes.
+# TYPE nodejs_external_memory_bytes gauge
+nodejs_external_memory_bytes{service="audit"} 4002163
+
+# HELP nodejs_heap_space_size_total_bytes Process heap space size total from Node.js in bytes.
+# TYPE nodejs_heap_space_size_total_bytes gauge
+nodejs_heap_space_size_total_bytes{space="read_only",service="audit"} 0
+nodejs_heap_space_size_total_bytes{space="new",service="audit"} 1048576
+nodejs_heap_space_size_total_bytes{space="old",service="audit"} 16482304
+nodejs_heap_space_size_total_bytes{space="code",service="audit"} 1310720
+nodejs_heap_space_size_total_bytes{space="shared",service="audit"} 0
+nodejs_heap_space_size_total_bytes{space="new_large_object",service="audit"} 0
+nodejs_heap_space_size_total_bytes{space="large_object",service="audit"} 0
+nodejs_heap_space_size_total_bytes{space="code_large_object",service="audit"} 0
+nodejs_heap_space_size_total_bytes{space="shared_large_object",service="audit"} 0
+
+# HELP nodejs_heap_space_size_used_bytes Process heap space size used from Node.js in bytes.
+# TYPE nodejs_heap_space_size_used_bytes gauge
+nodejs_heap_space_size_used_bytes{space="read_only",service="audit"} 0
+nodejs_heap_space_size_used_bytes{space="new",service="audit"} 804056
+nodejs_heap_space_size_used_bytes{space="old",service="audit"} 15541984
+nodejs_heap_space_size_used_bytes{space="code",service="audit"} 1182992
+nodejs_heap_space_size_used_bytes{space="shared",service="audit"} 0
+nodejs_heap_space_size_used_bytes{space="new_large_object",service="audit"} 0
+nodejs_heap_space_size_used_bytes{space="large_object",service="audit"} 0
+nodejs_heap_space_size_used_bytes{space="code_large_object",service="audit"} 0
+nodejs_heap_space_size_used_bytes{space="shared_large_object",service="audit"} 0
+
+# HELP nodejs_heap_space_size_available_bytes Process heap space size available from Node.js in bytes.
+# TYPE nodejs_heap_space_size_available_bytes gauge
+nodejs_heap_space_size_available_bytes{space="read_only",service="audit"} 0
+nodejs_heap_space_size_available_bytes{space="new",service="audit"} 226824
+nodejs_heap_space_size_available_bytes{space="old",service="audit"} 630592
+nodejs_heap_space_size_available_bytes{space="code",service="audit"} 45552
+nodejs_heap_space_size_available_bytes{space="shared",service="audit"} 0
+nodejs_heap_space_size_available_bytes{space="new_large_object",service="audit"} 1048576
+nodejs_heap_space_size_available_bytes{space="large_object",service="audit"} 0
+nodejs_heap_space_size_available_bytes{space="code_large_object",service="audit"} 0
+nodejs_heap_space_size_available_bytes{space="shared_large_object",service="audit"} 0
+
+# HELP nodejs_version_info Node.js version info.
+# TYPE nodejs_version_info gauge
+nodejs_version_info{version="v20.20.1",major="20",minor="20",patch="1",service="audit"} 1
+
+# HELP nodejs_gc_duration_seconds Garbage collection duration by kind, one of major, minor, incremental or weakcb.
+# TYPE nodejs_gc_duration_seconds histogram
+nodejs_gc_duration_seconds_bucket{le="0.001",service="audit",kind="minor"} 4
+nodejs_gc_duration_seconds_bucket{le="0.01",service="audit",kind="minor"} 4
+nodejs_gc_duration_seconds_bucket{le="0.1",service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_bucket{le="1",service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_bucket{le="2",service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_bucket{le="5",service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_bucket{le="+Inf",service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_sum{service="audit",kind="minor"} 0.08629775398969651
+nodejs_gc_duration_seconds_count{service="audit",kind="minor"} 5
+nodejs_gc_duration_seconds_bucket{le="0.001",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="0.01",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="0.1",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="1",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="2",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="5",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="+Inf",service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_sum{service="audit",kind="incremental"} 0.0008982660174369811
+nodejs_gc_duration_seconds_count{service="audit",kind="incremental"} 2
+nodejs_gc_duration_seconds_bucket{le="0.001",service="audit",kind="major"} 0
+nodejs_gc_duration_seconds_bucket{le="0.01",service="audit",kind="major"} 0
+nodejs_gc_duration_seconds_bucket{le="0.1",service="audit",kind="major"} 0
+nodejs_gc_duration_seconds_bucket{le="1",service="audit",kind="major"} 2
+nodejs_gc_duration_seconds_bucket{le="2",service="audit",kind="major"} 2
+nodejs_gc_duration_seconds_bucket{le="5",service="audit",kind="major"} 2
+nodejs_gc_duration_seconds_bucket{le="+Inf",service="audit",kind="major"} 2
+nodejs_gc_duration_seconds_sum{service="audit",kind="major"} 0.3070933340191841
+nodejs_gc_duration_seconds_count{service="audit",kind="major"} 2
+
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",route="/health",status="200",service="audit"} 50
+
+# HELP http_request_duration_seconds Duration of HTTP requests in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{le="0.001",service="audit",method="GET",route="/health",status="200"} 47
+http_request_duration_seconds_bucket{le="0.005",service="audit",method="GET",route="/health",status="200"} 49
+http_request_duration_seconds_bucket{le="0.01",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="0.025",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="0.05",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="0.1",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="0.25",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="0.5",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="1",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="2.5",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="5",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="10",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_bucket{le="+Inf",service="audit",method="GET",route="/health",status="200"} 50
+http_request_duration_seconds_sum{service="audit",method="GET",route="/health",status="200"} 0.03423369100007768
+http_request_duration_seconds_count{service="audit",method="GET",route="/health",status="200"} 50
+
+# HELP http_requests_in_progress Number of HTTP requests currently in progress
+# TYPE http_requests_in_progress gauge
+http_requests_in_progress{method="GET",service="audit"} 0

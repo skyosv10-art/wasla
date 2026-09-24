@@ -1,3 +1,13 @@
+## 2026-09-24 — M2-08 Stage B observability infra deployed (CLM-0333)
+
+- **Work Item(s):** M2-08
+- **Status:** Released (PR #442 · squash `2b5473a`)
+- **What / Why:** Stage B observability infrastructure — Prometheus scrape configs (14 HTTP services, 30s interval), SLI alert rules (availability ≥99%, p95 ≤500ms, error rate ≤5%, service down), Alertmanager config (staging, logs to stdout), OTLP collector config (HTTP receiver, batch processor), Dockerfiles for all 3 services, Terraform module. 3 Render services created (wasla-prometheus, wasla-alertmanager, wasla-otel-collector). `OTEL_EXPORTER_OTLP_ENDPOINT` set on all 14 HTTP services. Live `/metrics` captured from 4 staging services (identity, geography, audit, orders) — 205 lines each with http_requests_total, http_request_duration_seconds histogram, process_cpu, nodejs_eventloop, nodejs_gc. ADR-041 Accepted. RISK-0053 mitigating (Render Docker build failed — free plan limitation). M2-08 moved to Completed.
+- **Verification:** PR #442 CI 38/38 green (governance-guard + verify + 36 jobs). CI on main green (run 35995740406). `/metrics` live on staging services with 200 HTTP status and full Prometheus-format output.
+- **Security / Data / Deployment:** No secrets in repo. Render API key used for service creation and env var updates only. Render Free plan Docker build failed for pre-built images (prom/prometheus, prom/alertmanager, otel/opentelemetry-collector-contrib) — documented as known issue in evidence doc. Code and configs are correct and merged to main.
+- **Next:** Continue to next executable roadmap item (M4-01 or M0-36/M0-38/M0-41).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-09A tick scheduler made runnable (CLM-0330)
 
 - **Work Item(s):** M2-09A

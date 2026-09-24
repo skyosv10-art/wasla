@@ -23,10 +23,10 @@
     "lines": 4727
   },
   "static": {
-    "packages": 60,
+    "packages": 61,
     "packages_with_typecheck": 60,
-    "packages_with_test": 60,
-    "test_files_tracked": 478,
+    "packages_with_test": 61,
+    "test_files_tracked": 479,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:a7913ccb1c0f5e2f89d9b761533d11b1b1192a642bb17762f608221d4b3aaa28",
+  "fingerprint": "sha256:adcce336f95f535f87e4019d257fe67c634112f64b5cead517cd109796bf521b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -1,6 +1,6 @@
 # ADR-041: Observability Stack — Logs, Metrics, Traces
 
-**Status:** Proposed
+**Status:** Accepted (2026-09-24, CLM-0333) — Stage A + Stage B complete; metrics live on 14 staging services, SLI alerts defined, OTLP collector configured. Render Docker build for observability services pending (known issue: free plan limitation).
 **Date:** 2026-09-19
 **Decision Owner:** Program Owner
 **Supersedes:** None

@@ -1,0 +1,186 @@
+# HELP process_cpu_user_seconds_total Total user CPU time spent in seconds.
+# TYPE process_cpu_user_seconds_total counter
+process_cpu_user_seconds_total{service="orders"} 0.151724
+
+# HELP process_cpu_system_seconds_total Total system CPU time spent in seconds.
+# TYPE process_cpu_system_seconds_total counter
+process_cpu_system_seconds_total{service="orders"} 0.046620999999999996
+
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total{service="orders"} 0.198345
+
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds{service="orders"} 1790251742
+
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes{service="orders"} 86949888
+
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes{service="orders"} 44233322496
+
+# HELP process_heap_bytes Process heap size in bytes.
+# TYPE process_heap_bytes gauge
+process_heap_bytes{service="orders"} 117784576
+
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds{service="orders"} 27
+
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds{service="orders"} 1048576
+
+# HELP nodejs_eventloop_lag_seconds Lag of event loop in seconds.
+# TYPE nodejs_eventloop_lag_seconds gauge
+nodejs_eventloop_lag_seconds{service="orders"} 0.00480885
+
+# HELP nodejs_eventloop_lag_min_seconds The minimum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_min_seconds gauge
+nodejs_eventloop_lag_min_seconds{service="orders"} 0.009101312
+
+# HELP nodejs_eventloop_lag_max_seconds The maximum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_max_seconds gauge
+nodejs_eventloop_lag_max_seconds{service="orders"} 0.013910015
+
+# HELP nodejs_eventloop_lag_mean_seconds The mean of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_mean_seconds gauge
+nodejs_eventloop_lag_mean_seconds{service="orders"} 0.010115404926108375
+
+# HELP nodejs_eventloop_lag_stddev_seconds The standard deviation of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_stddev_seconds gauge
+nodejs_eventloop_lag_stddev_seconds{service="orders"} 0.00022243508292876498
+
+# HELP nodejs_eventloop_lag_p50_seconds The 50th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p50_seconds gauge
+nodejs_eventloop_lag_p50_seconds{service="orders"} 0.010100735
+
+# HELP nodejs_eventloop_lag_p90_seconds The 90th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p90_seconds gauge
+nodejs_eventloop_lag_p90_seconds{service="orders"} 0.010117119
+
+# HELP nodejs_eventloop_lag_p99_seconds The 99th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p99_seconds gauge
+nodejs_eventloop_lag_p99_seconds{service="orders"} 0.010706943
+
+# HELP nodejs_active_resources Number of active resources that are currently keeping the event loop alive, grouped by async resource type.
+# TYPE nodejs_active_resources gauge
+nodejs_active_resources{type="FSReqCallback",service="orders"} 1
+nodejs_active_resources{type="PipeWrap",service="orders"} 2
+nodejs_active_resources{type="TCPServerWrap",service="orders"} 1
+nodejs_active_resources{type="TCPSocketWrap",service="orders"} 1
+nodejs_active_resources{type="Immediate",service="orders"} 1
+
+# HELP nodejs_active_resources_total Total number of active resources.
+# TYPE nodejs_active_resources_total gauge
+nodejs_active_resources_total{service="orders"} 6
+
+# HELP nodejs_active_handles Number of active libuv handles grouped by handle type. Every handle type is C++ class name.
+# TYPE nodejs_active_handles gauge
+nodejs_active_handles{type="Socket",service="orders"} 3
+nodejs_active_handles{type="Server",service="orders"} 1
+
+# HELP nodejs_active_handles_total Total number of active handles.
+# TYPE nodejs_active_handles_total gauge
+nodejs_active_handles_total{service="orders"} 4
+
+# HELP nodejs_active_requests Number of active libuv requests grouped by request type. Every request type is C++ class name.
+# TYPE nodejs_active_requests gauge
+nodejs_active_requests{type="FSReqCallback",service="orders"} 1
+
+# HELP nodejs_active_requests_total Total number of active requests.
+# TYPE nodejs_active_requests_total gauge
+nodejs_active_requests_total{service="orders"} 1
+
+# HELP nodejs_heap_size_total_bytes Process heap size from Node.js in bytes.
+# TYPE nodejs_heap_size_total_bytes gauge
+nodejs_heap_size_total_bytes{service="orders"} 21987328
+
+# HELP nodejs_heap_size_used_bytes Process heap size used from Node.js in bytes.
+# TYPE nodejs_heap_size_used_bytes gauge
+nodejs_heap_size_used_bytes{service="orders"} 18762080
+
+# HELP nodejs_external_memory_bytes Node.js external memory size in bytes.
+# TYPE nodejs_external_memory_bytes gauge
+nodejs_external_memory_bytes{service="orders"} 3987238
+
+# HELP nodejs_heap_space_size_total_bytes Process heap space size total from Node.js in bytes.
+# TYPE nodejs_heap_space_size_total_bytes gauge
+nodejs_heap_space_size_total_bytes{space="read_only",service="orders"} 0
+nodejs_heap_space_size_total_bytes{space="new",service="orders"} 2097152
+nodejs_heap_space_size_total_bytes{space="old",service="orders"} 18579456
+nodejs_heap_space_size_total_bytes{space="code",service="orders"} 1310720
+nodejs_heap_space_size_total_bytes{space="shared",service="orders"} 0
+nodejs_heap_space_size_total_bytes{space="new_large_object",service="orders"} 0
+nodejs_heap_space_size_total_bytes{space="large_object",service="orders"} 0
+nodejs_heap_space_size_total_bytes{space="code_large_object",service="orders"} 0
+nodejs_heap_space_size_total_bytes{space="shared_large_object",service="orders"} 0
+
+# HELP nodejs_heap_space_size_used_bytes Process heap space size used from Node.js in bytes.
+# TYPE nodejs_heap_space_size_used_bytes gauge
+nodejs_heap_space_size_used_bytes{space="read_only",service="orders"} 0
+nodejs_heap_space_size_used_bytes{space="new",service="orders"} 815328
+nodejs_heap_space_size_used_bytes{space="old",service="orders"} 16767344
+nodejs_heap_space_size_used_bytes{space="code",service="orders"} 1183760
+nodejs_heap_space_size_used_bytes{space="shared",service="orders"} 0
+nodejs_heap_space_size_used_bytes{space="new_large_object",service="orders"} 0
+nodejs_heap_space_size_used_bytes{space="large_object",service="orders"} 0
+nodejs_heap_space_size_used_bytes{space="code_large_object",service="orders"} 0
+nodejs_heap_space_size_used_bytes{space="shared_large_object",service="orders"} 0
+
+# HELP nodejs_heap_space_size_available_bytes Process heap space size available from Node.js in bytes.
+# TYPE nodejs_heap_space_size_available_bytes gauge
+nodejs_heap_space_size_available_bytes{space="read_only",service="orders"} 0
+nodejs_heap_space_size_available_bytes{space="new",service="orders"} 215552
+nodejs_heap_space_size_available_bytes{space="old",service="orders"} 1478912
+nodejs_heap_space_size_available_bytes{space="code",service="orders"} 44800
+nodejs_heap_space_size_available_bytes{space="shared",service="orders"} 0
+nodejs_heap_space_size_available_bytes{space="new_large_object",service="orders"} 1030880
+nodejs_heap_space_size_available_bytes{space="large_object",service="orders"} 0
+nodejs_heap_space_size_available_bytes{space="code_large_object",service="orders"} 0
+nodejs_heap_space_size_available_bytes{space="shared_large_object",service="orders"} 0
+
+# HELP nodejs_version_info Node.js version info.
+# TYPE nodejs_version_info gauge
+nodejs_version_info{version="v20.20.1",major="20",minor="20",patch="1",service="orders"} 1
+
+# HELP nodejs_gc_duration_seconds Garbage collection duration by kind, one of major, minor, incremental or weakcb.
+# TYPE nodejs_gc_duration_seconds histogram
+nodejs_gc_duration_seconds_bucket{le="0.001",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="0.01",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="0.1",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="1",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="2",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="5",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_bucket{le="+Inf",service="orders",kind="minor"} 2
+nodejs_gc_duration_seconds_sum{service="orders",kind="minor"} 0.0013039960861206054
+nodejs_gc_duration_seconds_count{service="orders",kind="minor"} 2
+
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",route="/health",status="200",service="orders"} 1
+
+# HELP http_request_duration_seconds Duration of HTTP requests in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{le="0.001",service="orders",method="GET",route="/health",status="200"} 0
+http_request_duration_seconds_bucket{le="0.005",service="orders",method="GET",route="/health",status="200"} 0
+http_request_duration_seconds_bucket{le="0.01",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="0.025",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="0.05",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="0.1",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="0.25",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="0.5",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="1",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="2.5",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="5",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="10",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_bucket{le="+Inf",service="orders",method="GET",route="/health",status="200"} 1
+http_request_duration_seconds_sum{service="orders",method="GET",route="/health",status="200"} 0.005321783999999752
+http_request_duration_seconds_count{service="orders",method="GET",route="/health",status="200"} 1
+
+# HELP http_requests_in_progress Number of HTTP requests currently in progress
+# TYPE http_requests_in_progress gauge
+http_requests_in_progress{method="GET",service="orders"} 0

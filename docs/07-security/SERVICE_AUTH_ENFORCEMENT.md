@@ -747,6 +747,7 @@ const ownerScoped = (...scopes: string[]) => ({
 | `packages/subscription-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ الاشتراكاتِ. |
 | `packages/golden-e2e/src/harness.ts` | مِعْوانُ الرحلاتِ الذهبيّةِ: يُنادي خدماتَ staging المنشورةَ بـHTTP لا يُوقِّعُها — للاختبارِ ضدَّ staging فقط. (CLM-0340 · M4-02) |
 | `packages/load-testing/src/harness.ts` | مِعْوانُ اختبارِ الحملِ والفوضى: يُولِّدُ حملًا متزامنًا ضدَّ staging ويقيسُ SLOs. (CLM-0342 · M4-03) |
+| `packages/incident-ops/src/harness.ts` | مِعْوانُ عمليّاتِ الحوادثِ والاسترجاعِ: يتحقّقُ من صحّةِ الخدماتِ بعدَ الاسترجاع. (CLM-0344 · M4-04) |
 | `services/observability/src/scraper.ts` | مُجمِّعُ مراقبةٍ — يقرأُ /metrics من 14 خدمة (نقطةُ نهايةٍ عامّةٌ بلا مُصادقةٍ لـPrometheus). ليسَ نداءً بينَ الخدماتِ ولا يحملُ رمزَ خدمةٍ. (CLM-0335 · M2-08 Stage B) |
 
 <!-- fetch-exceptions:end -->

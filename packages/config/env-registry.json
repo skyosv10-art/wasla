@@ -998,6 +998,10 @@
         {
           "file": "packages/load-testing/src/harness.ts",
           "mode": "direct"
+        },
+        {
+          "file": "packages/incident-ops/src/harness.ts",
+          "mode": "direct"
         }
       ]
     },

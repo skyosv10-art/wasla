@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 66 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 74 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "CI",
@@ -694,6 +694,86 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     readerCount: 1,
     ownerItem: "M1-03",
   },
+  {
+    name: "WASLA_TICK_BASE_URL_DISPATCH",
+    type: "http_url",
+    required: "conditional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_BASE_URL_DRIVERS",
+    type: "http_url",
+    required: "conditional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_BASE_URL_NEGOTIATIONS",
+    type: "http_url",
+    required: "conditional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_BASE_URL_REPUTATION",
+    type: "http_url",
+    required: "conditional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_BASE_URL_SUBSCRIPTIONS",
+    type: "http_url",
+    required: "conditional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_LOCK_DIR",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: "/tmp",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_SERVICES",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
+  {
+    name: "WASLA_TICK_TIMEOUT_MS",
+    type: "positive_int",
+    required: "optional",
+    secret: false,
+    default: "30000",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-09A",
+  },
 ] as const;
 
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
@@ -764,6 +844,14 @@ export const ENV_VAR_NAMES = [
   "WASLA_SERVICE_AUTH_KEYS",
   "WASLA_SERVICE_TOKEN_REPLAY_MODE",
   "WASLA_SERVICE_TOKEN_REPLAY_URL",
+  "WASLA_TICK_BASE_URL_DISPATCH",
+  "WASLA_TICK_BASE_URL_DRIVERS",
+  "WASLA_TICK_BASE_URL_NEGOTIATIONS",
+  "WASLA_TICK_BASE_URL_REPUTATION",
+  "WASLA_TICK_BASE_URL_SUBSCRIPTIONS",
+  "WASLA_TICK_LOCK_DIR",
+  "WASLA_TICK_SERVICES",
+  "WASLA_TICK_TIMEOUT_MS",
 ] as const;
 
 export type EnvVarName = (typeof ENV_VAR_NAMES)[number];

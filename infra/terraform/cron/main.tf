@@ -1,16 +1,19 @@
 # ── WASLA tick scheduler — Render Cron Jobs (G8 · CLM-0328) ─────────────
 #
-# ينشرُ خمسَ وظائفَ مجدوَلةٍ (Render Cron Jobs) تشغّلُ `scripts/tick-scheduler.mjs`
-# على فتراتٍ منتظمةٍ. كلُّ وظيفةٍ تنفِّذُ دورةَ نبضةٍ واحدةٍ لخدمةٍ واحدةٍ.
+# ينشرُ خمسَ وظائفَ مجدوَلةٍ (Render Cron Jobs) تشغّلُ حزمةَ `@wasla/tick-scheduler`
+# (packages/tick-scheduler) على فتراتٍ منتظمةٍ. كلُّ وظيفةٍ تنفِّذُ دورةَ نبضةٍ
+# واحدةٍ لخدمةٍ واحدةٍ. الإقلاعُ عبرَ مدخلِ الصورةِ نفسِهِ (`WASLA_SERVICE`) لا
+# بأمرٍ يطغى عليه — CLM-0330.
 #
 # لماذا جذرٌ مستقلٌّ (مثل apps/)؟ لأنَّ حالةَ terraform للجذرِ الأصليِّ
 # (`infra/terraform/render.tf`) كانت محليّةً ولم تُحفَظ (انظر apps/main.tf).
 # إضافةُ مواردٍ جديدةٍ إلى `render.tf` ستُحاول إنشاءَ الخدماتِ الـ16 الموجودةِ
 # أصلًا. فبدلَ ذلك، هذا الجذرُ ينشرُ وظائفِ cron الجديدةَ وحدَها.
 #
-# Render Cron Jobs (Free tier):
-#   - الحدُّ الأدنى للفاصلِ: ساعةٌ واحدةٌ
-#   - تُحسَبُ ضمنَ ساعاتِ المثيلِ المجانيّةِ (750 ساعة/شهر)
+# Render Cron Jobs — **تصحيحٌ مقيسٌ (CLM-0330):** كتبَ CLM-0328 هنا أنَّها على
+# الخطّةِ المجانيّةِ بحدٍّ أدنى ساعةٍ؛ وأوّلُ `terraform apply` حقيقيٍّ (2026-09-24)
+# ردَّتْهُ واجهةُ Render: `invalid plan: free. valid PaidPlans are [starter, ...]`.
+# فوظائفُ cron **مدفوعةٌ فقط**؛ الخطّةُ `starter` بموافقةِ المالكِ صراحةً.
 #   - تُشغَّلُ من نفسِ صورةِ Docker المستخدَمةِ للخدماتِ
 #
 # المفاتيحُ من البيئةِ فقط (RENDER_API_KEY · RENDER_OWNER_ID) — لا تُكتب هنا أبدًا.
@@ -34,11 +37,11 @@ locals {
 
   # كلُّ النبضاتِ الـ5 — مقيسٌ من packages/authz-policy/src/operations.ts
   ticks = [
-    { service = "dispatch",      schedule = "*/5 * * * *", command = "node scripts/tick-scheduler.mjs" },
-    { service = "negotiations",  schedule = "*/5 * * * *", command = "node scripts/tick-scheduler.mjs" },
-    { service = "reputation",    schedule = "*/10 * * * *", command = "node scripts/tick-scheduler.mjs" },
-    { service = "subscriptions", schedule = "*/10 * * * *", command = "node scripts/tick-scheduler.mjs" },
-    { service = "drivers",       schedule = "*/5 * * * *", command = "node scripts/tick-scheduler.mjs" },
+    { service = "dispatch", schedule = "*/5 * * * *" },
+    { service = "negotiations", schedule = "*/5 * * * *" },
+    { service = "reputation", schedule = "*/10 * * * *" },
+    { service = "subscriptions", schedule = "*/10 * * * *" },
+    { service = "drivers", schedule = "*/5 * * * *" },
   ]
 }
 
@@ -62,21 +65,22 @@ resource "render_cron_job" "tick_scheduler" {
     }
   }
 
-  # ينفِّذُ مُجدوِلَ النبضاتِ لخدمةٍ واحدةٍ في كلِّ مرّةٍ
-  docker_command = each.value.command
+  # لا `start_command`: مدخلُ الصورةِ يحلُّ `WASLA_SERVICE` إلى `scripts.start` في
+  # الحزمةِ. أمرٌ يطغى عليه كانَ سيُمرَّرُ وسيطًا أوّلَ إلى `entrypoint.sh` فيُقرأُ
+  # اسمَ حزمةٍ ويسقطُ (rc=66) — يفرضُ غيابَهُ `validate-tick-scheduler.sh`.
 
   env_vars = {
     NODE_ENV                          = { value = var.environment == "staging" ? "staging" : "production" }
     WASLA_SERVICE                     = { value = "@wasla/tick-scheduler" }
     WASLA_SERVICE_AUTH_KEYS           = { value = var.wasla_service_auth_keys }
-    WASLA_SERVICE_AUTH_ACTIVE_KID    = { value = var.wasla_service_auth_active_kid }
+    WASLA_SERVICE_AUTH_ACTIVE_KID     = { value = var.wasla_service_auth_active_kid }
     WASLA_TICK_SERVICES               = { value = each.value.service }
     WASLA_TICK_BASE_URL_DISPATCH      = { value = "https://wasla-dispatch.onrender.com" }
     WASLA_TICK_BASE_URL_NEGOTIATIONS  = { value = "https://wasla-negotiations.onrender.com" }
     WASLA_TICK_BASE_URL_REPUTATION    = { value = "https://wasla-reputation.onrender.com" }
     WASLA_TICK_BASE_URL_SUBSCRIPTIONS = { value = "https://wasla-subscriptions.onrender.com" }
     WASLA_TICK_BASE_URL_DRIVERS       = { value = "https://wasla-drivers.onrender.com" }
-    WASLA_TICK_TIMEOUT_MS             = { value = "30000" }
+    WASLA_TICK_TIMEOUT_MS             = { value = "90000" } # خدماتُ staging المجانيّةُ تنامُ؛ الإيقاظُ يبلغُ ~60s
     WASLA_TICK_LOG_LEVEL              = { value = "info" }
   }
 }
@@ -88,7 +92,7 @@ variable "render_region" {
 
 variable "render_plan" {
   type    = string
-  default = "free"
+  default = "starter"
 }
 
 variable "environment" {

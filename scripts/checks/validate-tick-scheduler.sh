@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-# validate-tick-scheduler.sh — حارسُ مُجدوِلِ النبضاتِ (G8 · CLM-0328)
+# validate-tick-scheduler.sh — حارسُ مُجدوِلِ النبضاتِ (G8 · CLM-0328 · أُعيدَ بناؤهُ CLM-0330)
 #
-# يُثبِتُ أنَّ:
-#   1. سكربتُ المُجدوِلِ موجودٌ (scripts/tick-scheduler.mjs)
-#   2. إعدادُ Terraform لـ Render Cron Jobs موجودٌ (infra/terraform/cron/main.tf)
-#   3. كلُّ مساراتِ النبضةِ الـ5 مغطّاةٌ في الإعدادِ
-#   4. متغيّراتُ البيئةِ اللازمةُ مُعرَّفةٌ
+# ── لماذا أُعيدَ بناؤهُ ──────────────────────────────────────────────────────
+# النسخةُ الأولى (CLM-0328) فحصتْ **وجودَ نصوصٍ** (`grep mintServiceToken`
+# · `grep 503` · `grep AbortController`) في `scripts/tick-scheduler.mjs` فمرّتْ
+# 14/14 بينما الملفُّ لا يُقلِعُ أصلًا (`SyntaxError: Unexpected identifier 'as'`).
+# وجودُ الكلمةِ ليسَ إثباتًا. فصارَ الحارسُ يقيسُ ما يُنفَّذُ فعلًا:
+#   1. الحزمةُ `@wasla/tick-scheduler` يحلُّها مدخلُ الصورةِ نفسُهُ
+#      (`scripts/container/resolve-package.mjs`) إلى أمرِ `start` — لا مسارَ مكتوبًا.
+#   2. Terraform يُقلِعُها بـ`WASLA_SERVICE` وحدَهُ ولا يطغى على المدخلِ بـ
+#      `start_command` (الطغيانُ يُسقِطُ الحلَّ ويُعيدُ عيبَ السلفِ).
+#   3. كلُّ مساراتِ النبضةِ الخمسةِ مغطّاةٌ في Terraform بمتغيّراتِها.
+#   4. لا بقايا للسلفِ غيرِ القابلِ للتشغيلِ.
+# واختبارُ السلوكِ (الرمزُ · 503 · المهلةُ · القفلُ) في اختباراتِ الحزمةِ نفسِها
+# التي تستوردُ الشيفرةَ وتتحقّقُ من الرمزِ بـ`verifyServiceToken` — لا هنا.
 #
 # المرجع: docs/08-infrastructure/M2-07_OUTBOX_TICK_DLQ_INVENTORY.md §4 (G8)
 #          docs/12-testing/M2-07_GATE.md البندُ 9
@@ -16,7 +24,9 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 cd "$ROOT" || exit 1
 
-BOLD=$'\033[1m'; RED=$'\033[31m'; GRN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
+BOLD=$'\033[1m'; RED=$'\033[31m'; GRN=$'\033[32m'; RST=$'\033[0m'
+TF="infra/terraform/cron/main.tf"
+PKG="packages/tick-scheduler"
 
 fail=0
 check() {
@@ -29,59 +39,50 @@ check() {
   fi
 }
 
-printf '%s── حارسُ مُجدوِلِ النبضاتِ (G8 · CLM-0328) ──%s\n' "$BOLD" "$RST"
+printf '%s── حارسُ مُجدوِلِ النبضاتِ (G8 · CLM-0330) ──%s\n' "$BOLD" "$RST"
 
-# 1) السكربتُ موجودٌ
-[ -f scripts/tick-scheduler.mjs ]
-check "سكربتُ المُجدوِلِ موجودٌ (scripts/tick-scheduler.mjs)" "$?"
+# 1) مدخلُ الصورةِ يحلُّ الحزمةَ إلى أمرِ start
+RESOLVED="$(node scripts/container/resolve-package.mjs @wasla/tick-scheduler 2>&1)"
+rc=$?
+[ "$rc" = "0" ] && [ "${RESOLVED%%$'\t'*}" = "$ROOT/$PKG" ]
+check "مدخلُ الصورةِ يحلُّ @wasla/tick-scheduler إلى $PKG (rc=$rc)" "$?"
 
-# 2) إعدادُ Terraform موجودٌ
-[ -f infra/terraform/cron/main.tf ]
-check "إعدادُ Terraform موجودٌ (infra/terraform/cron/main.tf)" "$?"
+START="${RESOLVED#*$'\t'}"
+[ "$START" = "node --import tsx src/main.ts" ]
+check "أمرُ start هوَ «node --import tsx src/main.ts» (وُجِد: ${START})" "$?"
 
-# 3) كلُّ مساراتِ النبضةِ مغطّاةٌ
-# لا نستخدمُ أنبوبًا إلى grep (RISK-0037: سباقُ SIGPIPE) — نطابقُ مباشرةً
+[ -f "$PKG/src/main.ts" ] && [ -f "$PKG/src/scheduler.ts" ]
+check "ملفّا المدخلِ والمنطقِ موجودانِ" "$?"
+
+ls "$PKG"/src/__tests__/*.test.ts >/dev/null 2>&1
+check "للحزمةِ اختباراتٌ داخلَها (يجريها pnpm -r test)" "$?"
+
+# 2) Terraform يُقلِعُ بالمدخلِ لا بطغيانٍ عليه
+[ -f "$TF" ]
+check "إعدادُ Terraform موجودٌ ($TF)" "$?"
+
+grep -Eq 'WASLA_SERVICE[[:space:]]*=[[:space:]]*\{[[:space:]]*value[[:space:]]*=[[:space:]]*"@wasla/tick-scheduler"' "$TF"
+check "Terraform يضبطُ WASLA_SERVICE=@wasla/tick-scheduler" "$?"
+
+! grep -Eq '^[[:space:]]*(start_command|docker_command)[[:space:]]*=' "$TF"
+check "Terraform لا يطغى على مدخلِ الصورةِ (لا start_command/docker_command)" "$?"
+
+# 3) كلُّ مساراتِ النبضةِ مغطّاةٌ بمتغيّراتِها
 EXPECTED_SERVICES="dispatch negotiations reputation subscriptions drivers"
-COVERED=$(grep -oE 'service\s*=\s*"[^"]+"' infra/terraform/cron/main.tf 2>/dev/null | sed 's/service\s*=\s*"//;s/"//' | sort -u)
-MISSING=""
 for svc in $EXPECTED_SERVICES; do
-  case "$COVERED" in
-    *"$svc"*) ;; # موجودٌ
-    *) MISSING="$MISSING $svc" ;;
-  esac
-done
-[ -z "$MISSING" ]
-check "كلُّ مساراتِ النبضةِ الـ5 مغطّاةٌ في Terraform${MISSING:+ (ناقصٌ:$MISSING)}" "$?"
-
-# 4) متغيّراتُ البيئةِ اللازمةُ مُعرَّفةٌ في Terraform
-grep -q "WASLA_SERVICE_AUTH_KEYS" infra/terraform/cron/main.tf
-check "WASLA_SERVICE_AUTH_KEYS مُعرَّفٌ في Terraform" "$?"
-
-grep -q "WASLA_SERVICE_AUTH_ACTIVE_KID" infra/terraform/cron/main.tf
-check "WASLA_SERVICE_AUTH_ACTIVE_KID مُعرَّفٌ في Terraform" "$?"
-
-# 5) كلُّ خدمةٍ لها WASLA_TICK_BASE_URL_<SERVICE>
-for svc in $EXPECTED_SERVICES; do
-  upper=$(echo "$svc" | tr '[:lower:]' '[:upper:]')
-  grep -q "WASLA_TICK_BASE_URL_${upper}" infra/terraform/cron/main.tf
-  check "WASLA_TICK_BASE_URL_${upper} مُعرَّفٌ في Terraform" "$?"
+  grep -Eq "service[[:space:]]*=[[:space:]]*\"${svc}\"" "$TF"
+  check "وظيفةُ cron لـ${svc} مُعرَّفةٌ" "$?"
+  upper=$(printf '%s' "$svc" | tr '[:lower:]' '[:upper:]')
+  grep -q "WASLA_TICK_BASE_URL_${upper}" "$TF"
+  check "WASLA_TICK_BASE_URL_${upper} مُعرَّفٌ" "$?"
 done
 
-# 6) السكربتُ يستخدمُ mintServiceToken لا ترويسةً ثابتةً
-grep -q "mintServiceToken" scripts/tick-scheduler.mjs
-check "السكربتُ يستخدمُ mintServiceToken للتوقيعِ" "$?"
+grep -q "WASLA_SERVICE_AUTH_KEYS" "$TF" && grep -q "WASLA_SERVICE_AUTH_ACTIVE_KID" "$TF"
+check "مفاتيحُ هويّةِ الخدمةِ مُمرَّرةٌ" "$?"
 
-# 7) السكربتُ ينظّفُ ملفَّ القفلِ عندَ الخروجِ
-grep -q "releaseLock" scripts/tick-scheduler.mjs
-check "السكربتُ ينظّفُ ملفَّ القفلِ عندَ الخروجِ" "$?"
-
-# 8) السكربتُ يعالجُ المهلةَ (timeout) ولا يُعلِّقُ
-grep -q "AbortController" scripts/tick-scheduler.mjs
-check "السكربتُ يعالجُ المهلةَ (AbortController)" "$?"
-
-# 9) السكربتُ يعالجُ 503 كحالةِ «المنفذُ غيرُ جاهزٍ» لا كخطأٍ
-grep -q "503" scripts/tick-scheduler.mjs
-check "السكربتُ يعالجُ 503 كحالةِ «غيرُ جاهزٍ»" "$?"
+# 4) لا بقايا للسلفِ
+[ ! -e scripts/tick-scheduler.mjs ] && [ ! -e scripts/__tests__/tick-scheduler.test.ts ]
+check "لا بقايا لـscripts/tick-scheduler.mjs واختباراتِه غيرِ المُشغَّلةِ" "$?"
 
 printf '%s── الخلاصة: %s%d فحصاً فاشلاً.%s\n' "$BOLD" "$([ "$fail" -eq 0 ] && echo "$GRN" || echo "$RED")" "$fail" "$RST"
 

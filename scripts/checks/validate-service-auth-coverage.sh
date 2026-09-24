@@ -122,7 +122,11 @@ LEDGER_BODY="$(awk '/<!-- coverage-ledger:start -->/{f=1;next}/<!-- coverage-led
 # موقِّعاً من أحدَ عشرَ عميلاً — لا مؤجَّلَ» كانت صادقةً في `services/` ومُضلِّلةً
 # إذا قُرئت دعوى مستودعٍ. والبابُ 7 أدناهُ يُغلِقُ الباقيَ: كلُّ مُنادٍ خامٍ
 # أينَما كانَ يُقابَلُ بالسّجلِّ أو باستثناءٍ مُعلَنٍ بسببِه.
-mapfile -t CLIENTS < <(ls services/*/src/infrastructure/http-*.ts bots/*/src/infrastructure/http-*.ts 2>/dev/null | sort)
+# و`packages/*/src/infrastructure/http-*.ts` (CLM-0330): أوّلُ عميلٍ إنتاجيٍّ في
+# `packages/` هوَ مُجدوِلُ النبضاتِ (`packages/tick-scheduler`)، ويُنادي بـ`fetchImpl(`
+# المحقونِ فلا يراهُ نمطُ البابِ 7 (`\bfetch\(`) — فبدونِ هذا التوسيعِ كانَ عميلٌ
+# موقَّعٌ يعيشُ خارجَ بصرِ السّجلِّ كلِّهِ. التوسيعُ يُحاسِبُهُ كما يُحاسَبُ غيرُهُ.
+mapfile -t CLIENTS < <(ls services/*/src/infrastructure/http-*.ts bots/*/src/infrastructure/http-*.ts packages/*/src/infrastructure/http-*.ts 2>/dev/null | sort)
 if (( ${#CLIENTS[@]} == 0 )); then
   bad "لم يُعثَر على أيِّ عميلٍ صادرٍ — تغيَّرَ التّرتيبُ، والحارسُ يفحصُ موضعاً لا وجودَ له"
 fi

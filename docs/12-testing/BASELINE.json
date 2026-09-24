@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T06:43:42Z",
+  "generated_at": "2026-09-24T10:01:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "aeeaa4c423e4ea5883615d92eb0e5fe0f08a782c",
-    "branch": "feat/m2-09a-g8-tick-scheduler",
+    "commit": "3b639be512ab621f2f5120e1ad0ff1ea704ba1b8",
+    "branch": "fix/m2-09a-tick-scheduler-package",
     "dirty": true,
-    "dirty_files": 9,
-    "dirty_reason": "G8 closure: new test file scripts/__tests__/tick-scheduler.test.ts (+1 test_files_tracked 475→476) (CLM-0328)",
-    "tracked_files": 2552
+    "dirty_files": 31,
+    "dirty_reason": "CLM-0330: tick scheduler moved to workspace package @wasla/tick-scheduler (+1 package, +1 with typecheck, +1 with test); scripts/__tests__/tick-scheduler.test.ts removed and packages/tick-scheduler/src/__tests__/scheduler.test.ts added (test_files_tracked unchanged)",
+    "tracked_files": 2558
   },
   "env": {
     "node": "v20.20.1",
@@ -19,13 +19,13 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "da3b3106781bd19128f7c1e9e58525c63d8c80f311595212554b9b32867d5724",
-    "lines": 4708
+    "sha256": "7b212b68c76d25b67e3212a70345555f9226201ec08ce26a617fb04acc06dd9d",
+    "lines": 4727
   },
   "static": {
-    "packages": 57,
-    "packages_with_typecheck": 57,
-    "packages_with_test": 57,
+    "packages": 58,
+    "packages_with_typecheck": 58,
+    "packages_with_test": 58,
     "test_files_tracked": 476,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify5.log",
-    "tests_passed": 5367,
-    "test_files_executed": 354,
-    "governance_suite_cases": 516,
+    "source": "/home/user/workspace/verify330.log",
+    "tests_passed": 5382,
+    "test_files_executed": 355,
+    "governance_suite_cases": 518,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:cdcf5cb1ca7940a378582be169afc5e12f302c1d924112b179014e933cb81853",
+  "fingerprint": "sha256:741ab50fa721c0eaa55a358a4da49cdb6905a35bdf7096c0144741fd9d955e01",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

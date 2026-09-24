@@ -226,6 +226,13 @@
 | `driver-bot` | `identity` | `identity:resolve:write` | `CHANNEL_IDENTITY_SCOPES` |
 | `driver-bot` | `negotiations` | `negotiations:thread:read`, `negotiations:round:read`, `negotiations:round:decide` | `DRIVER_BOT_NEGOTIATIONS_SCOPES` |
 | `partner-bot` | `identity` | `identity:resolve:write` | `CHANNEL_IDENTITY_SCOPES` |
+| `tick-scheduler` | `dispatch` | `dispatch:tick:write` | `TICK_SCHEDULER_DISPATCH_SCOPES` |
+| `tick-scheduler` | `negotiations` | `negotiations:tick:run` | `TICK_SCHEDULER_NEGOTIATIONS_SCOPES` |
+| `tick-scheduler` | `reputation` | `reputation:tick:run` | `TICK_SCHEDULER_REPUTATION_SCOPES` |
+| `tick-scheduler` | `subscriptions` | `subscriptions:tick:run` | `TICK_SCHEDULER_SUBSCRIPTIONS_SCOPES` |
+| `tick-scheduler` | `drivers` | `drivers:eligibility:tick` | `TICK_SCHEDULER_DRIVERS_SCOPES` |
+
+**`tick-scheduler` (`CLM-0330` · G8):** دورُ وظيفةِ Render Cron الخارجيّةِ (`packages/tick-scheduler`). سقفُهُ صلاحيّةُ النبضةِ وحدَها على كلِّ جمهورٍ من الخمسةِ، وكانتْ هذهِ الصلاحيّاتُ قبلَهُ مفروضةً بلا حاملٍ إنتاجيٍّ — فلم يكن لأيِّ دورٍ مشروعٍ أن يُشغِّلَ نبضةً. حالتا طفرةٍ في `gov-cases-authz-policy.sh` تُسقِطانِ توسيعَهُ وحذفَهُ.
 
 وما لا يُقرأُ في الجدولِ يُقرأُ في غيابِه: لا منحَ لخدمةٍ على `delivery` غيرَ ما
 ذُكِرَ؛ ولا منحَ لأيِّ دورٍ على `orders:history:read` — فهيَ صلاحيّةٌ مفروضةٌ في

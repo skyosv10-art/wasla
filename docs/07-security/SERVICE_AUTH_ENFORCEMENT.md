@@ -702,6 +702,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
+| `packages/tick-scheduler/src/infrastructure/http-tick.ts` | dispatch · negotiations · reputation · subscriptions · drivers | موقَّع | `packages/tick-scheduler/src/__tests__/scheduler.test.ts` يتحقّقُ من كلِّ رمزٍ بـ`verifyServiceToken` على خادمٍ حقيقيٍّ ويُثبِتُ رفضَهُ لمسارٍ آخرَ · `TICK_SCHEDULER_DISPATCH_SCOPES` · `TICK_SCHEDULER_NEGOTIATIONS_SCOPES` · `TICK_SCHEDULER_REPUTATION_SCOPES` · `TICK_SCHEDULER_SUBSCRIPTIONS_SCOPES` · `TICK_SCHEDULER_DRIVERS_SCOPES` (G8 · `CLM-0330`) |
 | `services/dispatch/src/infrastructure/http-matching.ts` | matching | موقَّع | `service-identity-enforcement.e2e.test.ts` · `DISPATCH_MATCHING_SCOPES` |
 | `services/drivers/src/infrastructure/http-candidacy.ts` | matching | موقَّع | `services/drivers/src/__tests__/outbound-ports.test.ts` · `DRIVERS_MATCHING_SCOPES` |
 | `services/delivery/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-catalog.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` · **حدُّ السوقِ نفسُهُ غيرُ مفروضٍ بعدُ** (المراجعةُ 8/N · `CLM-0127`): التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى، فلا يُؤجَّلُ إلى أن يُفرَضَ الحدُّ. **⟵ وقد فُرِضَ الحدُّ في 29/N (`CLM-0150` · §2.8): هذا التوقيعُ صارَ مفحوصاً.** ويُقرأُ السطرُ الأصليُّ كما هوَ لأنَّ محوَهُ كانَ سيُخفي أنَّ التوقيعَ بقيَ بلا فحصٍ 21 مراجعةً. |

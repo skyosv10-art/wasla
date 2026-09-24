@@ -66,9 +66,9 @@ locals {
 # ── المواقعُ الثابتةُ الثلاثة ─────────────────────────────────────────────
 
 resource "render_static_site" "wasla_customer_app" {
-  name       = "wasla-customer-app"
-  repo_url   = local.docker_source_repo
-  branch     = "main"
+  name        = "wasla-customer-app"
+  repo_url    = local.docker_source_repo
+  branch      = "main"
   auto_deploy = true
 
   build_command = "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/customer-mini-app build"
@@ -89,9 +89,9 @@ resource "render_static_site" "wasla_customer_app" {
 }
 
 resource "render_static_site" "wasla_driver_app" {
-  name       = "wasla-driver-app"
-  repo_url   = local.docker_source_repo
-  branch     = "main"
+  name        = "wasla-driver-app"
+  repo_url    = local.docker_source_repo
+  branch      = "main"
   auto_deploy = true
 
   build_command = "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/driver-mini-app build"
@@ -112,9 +112,9 @@ resource "render_static_site" "wasla_driver_app" {
 }
 
 resource "render_static_site" "wasla_admin_app" {
-  name       = "wasla-admin-app"
-  repo_url   = local.docker_source_repo
-  branch     = "main"
+  name        = "wasla-admin-app"
+  repo_url    = local.docker_source_repo
+  branch      = "main"
   auto_deploy = true
 
   build_command = "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/admin-portal build"
@@ -143,6 +143,6 @@ output "app_urls" {
 }
 
 output "rewrite_prefix_count" {
-  value = length(local.api_rewrites) / 2
+  value       = length(local.api_rewrites) / 2
   description = "عددُ بادئاتِ التوجيهِ في infra/render/app-rewrites.json — يجب أن يطابق ما ينشرهُ الفحصُ 24."
 }

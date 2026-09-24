@@ -1760,8 +1760,152 @@
         }
       ],
       "note_ar": "شرطيّةٌ لا دائمةٌ: في نمطِ `postgres` يجبُ أن تُوجَدَ هيَ أو `DATABASE_URL`، وغيابُهُما معاً يُسقِطُ الإقلاعَ بقصدٍ. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
+    },
+    {
+      "name": "WASLA_TICK_BASE_URL_DISPATCH",
+      "type": "http_url",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "العنوانُ الأساسيُّ لخدمةِ التوزيعِ الذي يُرسِلُ إليه مُجدوِلُ النبضاتِ نبضتَها؛ إلزاميٌّ حينَ تكونُ الخدمةُ ضمنَ WASLA_TICK_SERVICES.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_BASE_URL_DRIVERS",
+      "type": "http_url",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "العنوانُ الأساسيُّ لخدمةِ السائقينَ الذي يُرسِلُ إليه مُجدوِلُ النبضاتِ نبضتَها؛ إلزاميٌّ حينَ تكونُ الخدمةُ ضمنَ WASLA_TICK_SERVICES.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_BASE_URL_NEGOTIATIONS",
+      "type": "http_url",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "العنوانُ الأساسيُّ لخدمةِ المفاوضاتِ الذي يُرسِلُ إليه مُجدوِلُ النبضاتِ نبضتَها؛ إلزاميٌّ حينَ تكونُ الخدمةُ ضمنَ WASLA_TICK_SERVICES.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_BASE_URL_REPUTATION",
+      "type": "http_url",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "العنوانُ الأساسيُّ لخدمةِ السمعةِ الذي يُرسِلُ إليه مُجدوِلُ النبضاتِ نبضتَها؛ إلزاميٌّ حينَ تكونُ الخدمةُ ضمنَ WASLA_TICK_SERVICES.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_BASE_URL_SUBSCRIPTIONS",
+      "type": "http_url",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "العنوانُ الأساسيُّ لخدمةِ الاشتراكاتِ الذي يُرسِلُ إليه مُجدوِلُ النبضاتِ نبضتَها؛ إلزاميٌّ حينَ تكونُ الخدمةُ ضمنَ WASLA_TICK_SERVICES.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_LOCK_DIR",
+      "type": "string",
+      "required": "optional",
+      "default": "/tmp",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "دليلُ ملفِّ قفلِ التداخلِ لمُجدوِلِ النبضاتِ (يمنعُ التداخلَ داخلَ حاويةٍ واحدةٍ فقط).",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_SERVICES",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "قائمةُ الخدماتِ التي تُشغَّلُ نبضتُها في هذا التشغيلِ مفصولةً بفواصلَ؛ الغيابُ يعني الخمسَ كلَّها، والاسمُ المجهولُ خطأُ تهيئةٍ.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "WASLA_TICK_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "30000",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مهلةُ نداءِ النبضةِ الواحدِ بالمللي ثانية — قيمةٌ غيرُ صالحةٍ خطأُ تهيئةٍ (خروجٌ 2) لا سقوطٌ إلى الافتراضِ.",
+      "owner_item": "M2-09A",
+      "readers": [
+        {
+          "file": "packages/tick-scheduler/src/scheduler.ts",
+          "mode": "bag"
+        }
+      ]
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 66
+  "total": 74
 }

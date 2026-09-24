@@ -205,6 +205,40 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
       evidence: ["CHANNEL_IDENTITY_SCOPES"],
     },
   ],
+  // مُجدوِلُ النبضاتِ الخارجيُّ (G8 · M2-09A · CLM-0330): وظيفةُ Render Cron تُشغِّلُ
+  // نبضةَ خدمةٍ واحدةٍ. صلاحيّةُ النبضةِ وحدَها على كلِّ جمهورٍ — لا قراءةَ ولا كتابةَ.
+  "tick-scheduler": [
+    {
+      audience: "dispatch",
+      scopes: ["dispatch:tick:write"],
+      reason: "تشغيلُ نبضةِ التوزيعِ على وقتٍ (انتهاءُ العروضِ والموجاتِ) من وظيفةِ cron — لا قراءةَ لمهمّةٍ ولا إسنادَ.",
+      evidence: ["TICK_SCHEDULER_DISPATCH_SCOPES"],
+    },
+    {
+      audience: "negotiations",
+      scopes: ["negotiations:tick:run"],
+      reason: "تشغيلُ نبضةِ المفاوضاتِ على وقتٍ (انتهاءُ الجولاتِ) — لا فتحَ خيطٍ ولا قرارَ جولةٍ.",
+      evidence: ["TICK_SCHEDULER_NEGOTIATIONS_SCOPES"],
+    },
+    {
+      audience: "reputation",
+      scopes: ["reputation:tick:run"],
+      reason: "تشغيلُ نبضةِ السمعةِ على وقتٍ (الاستهلاكُ والتجميعُ) — لا قراءةَ لتقييمٍ ولا كتابةَ.",
+      evidence: ["TICK_SCHEDULER_REPUTATION_SCOPES"],
+    },
+    {
+      audience: "subscriptions",
+      scopes: ["subscriptions:tick:run"],
+      reason: "تشغيلُ نبضةِ الاشتراكاتِ على وقتٍ (التجديدُ والانقضاءُ) — لا إنشاءَ اشتراكٍ ولا تعديلَ.",
+      evidence: ["TICK_SCHEDULER_SUBSCRIPTIONS_SCOPES"],
+    },
+    {
+      audience: "drivers",
+      scopes: ["drivers:eligibility:tick"],
+      reason: "تشغيلُ نبضةِ أهليّةِ السائقينَ على وقتٍ — لا قراءةَ لملفِّ سائقٍ ولا تعديلَ.",
+      evidence: ["TICK_SCHEDULER_DRIVERS_SCOPES"],
+    },
+  ],
 } as const;
 
 /**

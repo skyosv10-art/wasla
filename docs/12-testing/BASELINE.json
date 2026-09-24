@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-23T13:49:04Z",
+  "generated_at": "2026-09-24T01:41:50Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f39d27909a1571d2cf057f54edb705bc1e8cbbae",
-    "branch": "feat/m3-06-frontend-ux-quality",
+    "commit": "aa385cc7f9c12fb92c56fb3b80aeb13945111c72",
+    "branch": "chore/m3-07-key-rotation",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2541
+    "tracked_files": 2547
   },
   "env": {
     "node": "v20.20.1",
@@ -29,7 +29,7 @@
     "test_files_tracked": 475,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
-    "governance_checks": 24,
+    "governance_checks": 25,
     "risks_not_closed": 32
   },
   "dynamic": {
@@ -37,10 +37,10 @@
     "source": "/tmp/verify.log",
     "tests_passed": 5367,
     "test_files_executed": 354,
-    "governance_suite_cases": 512,
+    "governance_suite_cases": 516,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:55f1ab7eedb74ef612a525c1c50f802a177d813cb5875e4aa6650e3fd639b5f4",
+  "fingerprint": "sha256:870d230d7cdd7f49c1a1c2a52f49b5ac159560060787cedb295db7a35b473564",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

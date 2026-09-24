@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-09-23T13:49:04Z
-الالتزام: f39d27909a1571d2cf057f54edb705bc1e8cbbae  الفرع: feat/m3-06-frontend-ux-quality  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-09-24T01:41:50Z
+الالتزام: aa385cc7f9c12fb92c56fb3b80aeb13945111c72  الفرع: chore/m3-07-key-rotation  شجرةٌ نظيفةٌ
 البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 4708 سطراً · sha256 da3b3106781bd191…
 
@@ -12,15 +12,15 @@
   test_files_tracked         475
   ci_jobs                    30
   ci_allow_failure           1
-  governance_checks          24
+  governance_checks          25
   risks_not_closed           32
 
 العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify.log):
   tests_passed               5367
   test_files_executed        354
-  governance_suite_cases     512
+  governance_suite_cases     516
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:55f1ab7eedb74ef612a525c1c50f802a177d813cb5875e4aa6650e3fd639b5f4
+البصمة: sha256:870d230d7cdd7f49c1a1c2a52f49b5ac159560060787cedb295db7a35b473564
 المرجع: docs/12-testing/BASELINE_FORMAT.md

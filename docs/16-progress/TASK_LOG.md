@@ -1,3 +1,13 @@
+## 2026-09-24 — M3-07 key rotation completed on live deploy + runbook guard (CLM-0326)
+
+- **Work Item(s):** M3-07
+- **Status:** In Progress → (Completed بعد حكم CI)
+- **What / Why:** إكمالُ محورِ التدويرِ بتفويضِ المالكِ الصريح. **سجلُّ التدوير (الدليل §2.2 خطوة 6):** القديم `stg-audit-k5` · الجديد `stg-audit-k6` · الخدمة wasla-audit · s1 (k5 active + k6 verify_only) live 01:08:54Z · القلب s2 live 01:09:28Z · نافذة تداخل 360s · السحب s3 (k5 revoked) live 01:16:01Z · المنفِّذ @uxxxu (agent:perplexity-computer). **تصحيحٌ بالإضافة:** فشلُ النشرَين في CLM-0325 سببُه معرِّفٌ مكرَّرٌ صنعَه سكربتُ التمرينِ (`ServiceAuthKeyError … مكرَّر` في سجلِّ الإقلاع) لا توقيتُ Render؛ و`PUT /env-vars` لا يُعيد النشر فكان المخزَّن (k5) يتباعدُ عن الحيِّ (k3) — قيسَ 401/`unknown_key`. **اكتشاف:** الدليلُ يكتبُ «unknown_kid» والشفرةُ `unknown_key` — صُحِّح، وأُضيف الفحصُ 25 مع طفرتين.
+- **Verification:** s1: k5 201 · k6 201 · s2: 201 · 201 · s3: k5 401 (`revoked_key` في السجلّ) · k6 201 — [`M3-07_GATE.md`](../12-testing/M3-07_GATE.md) §7. الفحصُ 25 أحمرُ على الدليلِ القديمِ وأخضرُ بعد التصحيح.
+- **Security / Data / Deployment:** لا أسرارَ في المستودع (ملفٌّ محليٌّ 600 خارج الشجرة). الحالةُ النهائيّة: المخزَّن = الحيّ = `k6:active, k5:revoked`؛ `k5` يُحذَف بعد 30 يومًا (الدليل §3.6). حُذِف سكربتا التمرينِ المعيبان v2/v3 لصالحِ سكربتٍ موحَّد.
+- **Next:** حكمُ CI → دمج → Completed وإفراجُ CLM-0326 → M4.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M3-07 runbook drill partial (CLM-0325)
 
 - **Work Item(s):** M3-07

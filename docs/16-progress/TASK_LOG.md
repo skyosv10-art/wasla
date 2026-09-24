@@ -1,3 +1,13 @@
+## 2026-09-24 — M2-09A G8 tick scheduler (CLM-0328)
+
+- **Work Item(s):** M2-09A (G8 closure)
+- **Status:** In Progress
+- **What / Why:** إغلاقُ فجوةِ G8 — مُجدوِلُ نبضاتٍ خارجيٌّ `scripts/tick-scheduler.mjs` يُنتِجُ رمزَ هويّةِ خدمةٍ ويستدعي مساراتِ النبضةِ الـ5 (dispatch · negotiations · reputation · subscriptions · drivers/eligibility). إعدادُ Render Cron Jobs في `infra/terraform/cron/main.tf`. حارسُ حوكمةٍ `validate-tick-scheduler.sh` (14 بابًا). 9 اختباراتٍ تُثبِتُ قفلَ التداخلِ والمهلةَ ومعالجةَ 503 وأكوادَ الخروجِ.
+- **Verification:** `bash scripts/checks/validate-tick-scheduler.sh` (14/14 ✅) · `pnpm vitest run scripts/__tests__/tick-scheduler.test.ts` (9/9 ✅).
+- **Security / Data / Deployment:** لا تغييرَ شفرةٍ في الخدماتِ. السكربتُ يُنتِجُ رمزًا موقّعًا لا يحملُ أسرارًا. متغيّراتُ البيئةِ (RENDER_API_KEY) تُستخدمُ للنشرِ فقط ولا تُكتبُ في المستودعِ.
+- **Next:** Stage B (M2-08) — نشرُ alert manager + OTLP collector.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-09A discovery (CLM-0327)
 
 - **Work Item(s):** M2-09A

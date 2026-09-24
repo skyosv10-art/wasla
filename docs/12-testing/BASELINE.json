@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T05:53:57Z",
+  "generated_at": "2026-09-24T06:43:42Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "98e2659407b839a8b47327bf52b3870d548ae322",
-    "branch": "docs/m2-09-deferred-gaps-discovery",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "regeneration of risks_not_closed 32→33 due to opening RISK-0053 (CLM-0327)",
-    "tracked_files": 2548
+    "commit": "aeeaa4c423e4ea5883615d92eb0e5fe0f08a782c",
+    "branch": "feat/m2-09a-g8-tick-scheduler",
+    "dirty": true,
+    "dirty_files": 9,
+    "dirty_reason": "G8 closure: new test file scripts/__tests__/tick-scheduler.test.ts (+1 test_files_tracked 475→476) (CLM-0328)",
+    "tracked_files": 2552
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 57,
     "packages_with_typecheck": 57,
     "packages_with_test": 57,
-    "test_files_tracked": 475,
+    "test_files_tracked": 476,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify4.log",
+    "source": "/tmp/verify5.log",
     "tests_passed": 5367,
     "test_files_executed": 354,
     "governance_suite_cases": 516,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:09339114b0892d0eeb1f73763718e13694745c66d964a8eb00f65c6c7d2a1515",
+  "fingerprint": "sha256:cdcf5cb1ca7940a378582be169afc5e12f302c1d924112b179014e933cb81853",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

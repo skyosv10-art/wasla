@@ -68,6 +68,10 @@ run_step "كتالوجُ البيئاتِ (M2-02C)" \
 run_step "إعدادُ Render (M2-02D · ADR-039)" \
   bash scripts/checks/validate-render-config.sh
 
+# ── 1-د2) مُجدوِلُ النبضاتِ (G8 · CLM-0328) ──────────────────────────────
+run_step "مُجدوِلُ النبضاتِ (G8 · CLM-0328)" \
+  bash scripts/checks/validate-tick-scheduler.sh
+
 # ── 1-ه) جردُ الأسرار (M2-03A) ──────────────────────────────────────────
 run_step "جردُ الأسرار (M2-03A)" \
   bash scripts/checks/validate-secret-inventory.sh

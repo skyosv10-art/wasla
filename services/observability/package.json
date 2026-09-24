@@ -1,0 +1,21 @@
+{
+  "name": "@wasla/observability-collector",
+  "version": "0.1.0",
+  "description": "WASLA observability collector: scrapes /metrics from 14 services, evaluates SLI alert rules, receives OTLP traces, exposes dashboard.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "node --import tsx src/index.ts",
+    "dev": "node --import tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wasla/config": "workspace:*",
+    "@wasla/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}

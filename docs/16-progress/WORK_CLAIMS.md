@@ -447,3 +447,9 @@ docs/16-progress/MASTER_PROGRESS.md
 | CLM-0308 | M3-04 | @uxxxu (agent:perplexity-computer) | feat/m3-04-wave3-orders-audit | apps/admin-portal/src/,docs/12-testing/,docs/16-progress/,ROADMAP.md | 2026-09-22 | 2026-10-06 | Released | M3-04 Wave 3: Orders + Audit Log screens (types, stores, screens, i18n, unit tests). Frontend built ahead — audit service backend deferred. PR #400 merged (squash 105af2f, CI 35/35 green). |
 | CLM-0309 | M3-04 | @uxxxu (agent:perplexity-computer) | docs/release-clm-0308 | docs/12-testing/,docs/16-progress/ | 2026-09-22 | 2026-10-06 | Released | Release docs for CLM-0308 (Wave 3 merged PR #400). WORK_CLAIMS released, BASELINE post-merge. PR #401 merged. |
 | CLM-0311 | M3-05 | @uxxxu (agent:perplexity-computer) | feat/m3-05-bot-role-spec | docs/01-product/,docs/12-testing/,docs/16-progress/,packages/bot-runtime/src/__tests__/,ROADMAP.md | 2026-09-23 | 2026-10-07 | Released | M3-05: Bot role spec — BOT_ROLE_SPEC.md created. Journey tests (20) + abuse tests (53) added. PR #404 merged (squash `a33a7ad`). **Released by CLM-0312 audit (2026-09-23): M3-05 NOT complete** — the "matches spec" tests compared local copies with themselves; enforcement continues under CLM-0312. |
+
+## 3. الحجوزات المنتهية (Released)
+
+| Claim ID | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CLM-0335 | M2-08 | @uxxxu (agent:perplexity-computer) | feat/m2-08-node-collector | services/observability/,scripts/test-observability-collector.sh,docs/12-testing/observability-evidence/,docs/15-decisions/,docs/07-security/,docs/16-progress/,ROADMAP.md | 2026-09-24 | 2026-10-08 | Active | مُجمِّعُ المراقبةِ بلغة Node.js — بديلٌ لصورِ Docker الجاهزةِ (prom/prometheus، alertmanager، otel) التي فشلَ بناؤها على Render. يقومُ بكشطِ /metrics من 14 خدمة، وتقييمِ قواعدِ SLI، واستقبالِ آثارِ OTLP، وعرضِ لوحةِ معلومات. |

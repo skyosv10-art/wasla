@@ -1,0 +1,17 @@
+# Render deployment config for WASLA Observability Collector (M2-08 Stage B)
+# Replaces 3 Docker-based services with a single Node.js service.
+# Uses the root Dockerfile and existing build pipeline.
+services:
+  - type: web
+    name: wasla-observability
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: WASLA_SERVICE
+        value: "@wasla/observability-collector"
+      - key: NODE_ENV
+        value: production
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: https://wasla-observability.onrender.com/v1/traces

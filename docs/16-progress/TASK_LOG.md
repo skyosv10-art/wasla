@@ -1,3 +1,13 @@
+## 2026-09-24 — M2-08 Completed: observability collector live evidence (CLM-0337)
+
+- **Work Item(s):** M2-08
+- **Status:** Active (PR #447)
+- **What / Why:** Documentation release for M2-08 completion. Captured live evidence from wasla-observability service on Render Free. All endpoints verified: /healthz, /api/v1/targets (14 targets), /api/v1/alerts (4 SLI rules), /metrics (Prometheus format), POST /v1/traces (OTLP accepted), / (HTML dashboard). Released CLM-0336, moved M2-08 to Completed, closed RISK-0053.
+- **Verification:** Live HTTP 200 responses from all endpoints on https://wasla-observability.onrender.com. Render deploy dep-daql0qfavr4c738p2d30 status: live.
+- **Security / Data / Deployment:** No secrets in repo. Render API key used for service management only.
+- **Next:** Merge PR #447, continue to next executable roadmap item (M4-01).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-08 observability tsx devDependency fix (CLM-0336)
 
 - **Work Item(s):** M2-08

@@ -1,3 +1,13 @@
+## 2026-09-24 — M3-07 Completed (CLM-0326)
+
+- **Work Item(s):** M3-07
+- **Status:** Completed
+- **What / Why:** PR #430 مدموجٌ (squash `a1e6d20`) بعد حكمِ CI أخضرَ 38/38 (run 35944237610) على رأسِ الفرع `472eaf2`. المحاورُ الأربعةُ مُقاسةٌ على staging الحيّ (البوّابة §2 و§7). النقلُ بتفويضِ المالكِ التنفيذيِّ المكتوبِ في الجلسة.
+- **Verification:** [`M3-07_GATE.md`](../12-testing/M3-07_GATE.md) §8.
+- **Security / Data / Deployment:** لا تغييرَ شفرةٍ في هذا الإفراج.
+- **Next:** M4 — فحصُ التبعيّاتِ والحجوزاتِ ثم أوّلُ بندٍ قابلٍ للتنفيذ.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M3-07 key rotation completed on live deploy + runbook guard (CLM-0326)
 
 - **Work Item(s):** M3-07

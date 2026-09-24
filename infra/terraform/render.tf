@@ -286,3 +286,20 @@ resource "render_web_service" "wasla_partner_bot" {
     # PORT-compatible: bot-runtime reads PARTNER_BOT_PORT then PORT fallback.
   })
 }
+
+# ── Observability Collector (M2-08 Stage B — ADR-041) ────────────────────
+# Node.js replacement for 3 Docker-based services (Prometheus, Alertmanager,
+# OTLP collector) that failed to build on Render Free.
+# Uses the root Dockerfile with WASLA_SERVICE=@wasla/observability-collector.
+
+resource "render_web_service" "wasla_observability" {
+  name   = "wasla-observability"
+  region = var.render_region
+  plan   = var.render_plan
+
+  runtime_source = { docker = local.docker_source }
+
+  env_vars = merge(local.common_env, {
+    WASLA_SERVICE = { value = "@wasla/observability-collector" }
+  })
+}

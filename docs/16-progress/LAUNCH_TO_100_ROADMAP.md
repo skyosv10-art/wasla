@@ -2523,6 +2523,17 @@ PASS / BLOCKED
 - Added `services/observability/tsconfig.json` and test file `src/__tests__/config.test.ts`
 - Fixed type errors in `src/otlp.ts` (getAttrValue call signature)
 
+## CLM-0336 — M2-08 Completed: Observability Collector Live (2026-09-24)
+
+- PR #446 merged (squash `b94747a`, CI 38/38 green) — added `tsx@^4.23.12` to devDependencies
+- Root cause: start script `node --import tsx src/index.ts` requires tsx in package's node_modules
+- Render events confirmed: build succeeded, deploy failed with exit code 1 (nonZeroExit)
+- After fix: `wasla-observability` service is LIVE on Render Free
+- All endpoints verified: `/healthz` (200), `/api/v1/targets` (14 targets), `/api/v1/alerts` (4 SLI rules), `/metrics` (Prometheus format), `POST /v1/traces` (OTLP accepted), `/` (HTML dashboard)
+- RISK-0053 closed — Node.js collector builds and runs on Render Free
+- M2-08 moved to Completed
+- Evidence: [`docs/12-testing/observability-evidence/2026-09-24-m2-08-node-collector-live.md`](../12-testing/observability-evidence/2026-09-24-m2-08-node-collector-live.md)
+
 ---
 
 ## الوثيقة الحاكمة

@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-02 Released + Completed (CLM-0340)
+
+- **Work Item(s):** M4-02
+- **Status:** Released — PR #452 merged (squash), 38/38 CI green
+- **What / Why:** PR #452 merged after fixing governance issues (claim scope, fetch-exceptions, baseline regeneration, secret inventory, roadmap freshness). Golden E2E journeys package with 39 staging tests, 5 journey mappings, observability verification. M4-02 → Completed.
+
 ## 2026-09-24 — M4-02 Golden Journeys (CLM-0340)
 
 - **Work Item(s):** M4-02

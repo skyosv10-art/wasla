@@ -1,3 +1,13 @@
+## 2026-09-24 — Close RISK-0053 in risk register (CLM-0338)
+
+- **Work Item(s):** M2-08
+- **Status:** Active (PR #449)
+- **What / Why:** RISK-0053 was claimed closed in CLM-0337 docs but was not actually updated in RISK_REGISTER.md. Changed status from mitigating to closed. Node.js observability collector (CLM-0335/CLM-0336) resolves the risk. Baseline regenerated: risks_not_closed 33→32.
+- **Verification:** baseline.sh fingerprint matches docs/12-testing/BASELINE.json.
+- **Security / Data / Deployment:** No secrets in repo.
+- **Next:** Merge PR #449, proceed to M4-01 (beta charter).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — Release CLM-0337 (M2-08 observability live evidence)
 
 - **Work Item(s):** M2-08

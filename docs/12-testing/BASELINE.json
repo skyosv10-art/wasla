@@ -30,7 +30,7 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 33
+    "risks_not_closed": 32
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:a4b4a35f320bb4678727dff571e7b64910a812963faf61e4553342c16391e7a0",
+  "fingerprint": "sha256:8c2140d2208c21dcc4adc0e1c17b702677f945d348f526a0f7061222f48f69e5",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

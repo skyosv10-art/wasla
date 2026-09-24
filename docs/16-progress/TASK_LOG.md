@@ -1,3 +1,13 @@
+## 2026-09-24 — M2-09A discovery (CLM-0327)
+
+- **Work Item(s):** M2-09A
+- **Status:** In Progress (discovery)
+- **What / Why:** اكتشافٌ — M2-09 نُقلَ إلى Completed بينما فجوتانِ مؤجَّلتانِ إليها لم تُغلَقا: (1) M2-07 G8 — لا مُجدوِلَ نبضةٍ يُشغِّلُ قراءة/إعادة/إقرارَ DLQ آليًّا (بوّابةُ M2-07 البندُ 9 يبقى `⚠️`)؛ (2) M2-08 Stage B — alert manager وOTLP collector غيرُ منشورَين (ADR-041 يُؤجِّلُهُما إلى M2-09 staging). والمرجعُ `RISK-0053` المذكورُ في أدلّةِ M2-08 كانَ ميتًا — فُتِحَ رسميًّا في [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) كتطبيقٍ لقاعدةِ الإضافةِ لا الإحالةِ على فراغٍ. [`دليل الاكتشاف`](../12-testing/2026-09-24-m2-09-deferred-gaps-discovery.md).
+- **Verification:** `bash scripts/checks/find-existing-work.sh "alert manager"` — صفرُ حجزٍ نشطٍ، صفرُ عملٍ سابقٍ.
+- **Security / Data / Deployment:** لا تغييرَ شفرةٍ — تسجيلُ اكتشافٍ وفتحُ خطرٍ رسميٍّ فقط.
+- **Next:** أولُ فجوةٍ تنفيذيّةٍ (G8 أو Stage B) بعدَ دمجِ هذا الاكتشافِ وخُضرتهِ.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M3-07 Completed (CLM-0326)
 
 - **Work Item(s):** M3-07

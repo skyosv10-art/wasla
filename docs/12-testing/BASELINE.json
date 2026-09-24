@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T01:41:50Z",
+  "generated_at": "2026-09-24T05:53:57Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "aa385cc7f9c12fb92c56fb3b80aeb13945111c72",
-    "branch": "chore/m3-07-key-rotation",
+    "commit": "98e2659407b839a8b47327bf52b3870d548ae322",
+    "branch": "docs/m2-09-deferred-gaps-discovery",
     "dirty": false,
     "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 2547
+    "dirty_reason": "regeneration of risks_not_closed 32→33 due to opening RISK-0053 (CLM-0327)",
+    "tracked_files": 2548
   },
   "env": {
     "node": "v20.20.1",
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32
+    "risks_not_closed": 33
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify.log",
+    "source": "/tmp/verify4.log",
     "tests_passed": 5367,
     "test_files_executed": 354,
     "governance_suite_cases": 516,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:870d230d7cdd7f49c1a1c2a52f49b5ac159560060787cedb295db7a35b473564",
+  "fingerprint": "sha256:09339114b0892d0eeb1f73763718e13694745c66d964a8eb00f65c6c7d2a1515",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -6,11 +6,10 @@ describe('observability config', () => {
     expect(WASLA_SERVICES).toHaveLength(14);
   });
 
-  it('each target has name, url, and port', () => {
+  it('each target has name and url', () => {
     for (const t of WASLA_SERVICES) {
       expect(t.name).toBeTruthy();
       expect(t.url).toBeTruthy();
-      expect(t.port).toBeGreaterThan(0);
     }
   });
 

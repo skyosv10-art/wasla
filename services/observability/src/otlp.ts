@@ -44,7 +44,8 @@ class OtlpReceiver {
 
           // Extract span attributes
           for (const attr of span.attributes || []) {
-            traceSpan.attributes[attr.key] = this.getAttrValue([attr]);
+            const val = attr.value?.stringValue || String(attr.value?.intValue || attr.value?.doubleValue || '');
+            traceSpan.attributes[attr.key] = val;
           }
 
           this.traces.push(traceSpan);

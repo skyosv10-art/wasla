@@ -2520,6 +2520,8 @@ PASS / BLOCKED
 - Node.js observability collector replaces 3 Docker-based services that failed to build on Render Free
 - Uses root Dockerfile with `WASLA_SERVICE=@wasla/observability-collector`
 - Updated `pnpm-lock.yaml` for new `services/observability` workspace package
+- Added `services/observability/tsconfig.json` and test file `src/__tests__/config.test.ts`
+- Fixed type errors in `src/otlp.ts` (getAttrValue call signature)
 
 ---
 

@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T12:24:36Z",
+  "generated_at": "2026-09-24T10:01:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a7e2436c242b4c3b271df0ff9dd2c18eb8290725",
-    "branch": "chore/m2-08-stage-b-evidence",
+    "commit": "3b639be512ab621f2f5120e1ad0ff1ea704ba1b8",
+    "branch": "fix/m2-09a-tick-scheduler-package",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "",
-    "tracked_files": 2572
+    "dirty_files": 31,
+    "dirty_reason": "CLM-0330: tick scheduler moved to workspace package @wasla/tick-scheduler (+1 package, +1 with typecheck, +1 with test); scripts/__tests__/tick-scheduler.test.ts removed and packages/tick-scheduler/src/__tests__/scheduler.test.ts added (test_files_tracked unchanged)",
+    "tracked_files": 2558
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "unknown",
+    "pnpm": "9.15.9",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"
@@ -30,17 +30,17 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32
+    "risks_not_closed": 33
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "/home/user/workspace/verify330.log",
+    "tests_passed": 5382,
+    "test_files_executed": 355,
+    "governance_suite_cases": 518,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:80cf622daa2576862c55322ef738da68be6930b788eaf2602c286a72c8aaa79a",
+  "fingerprint": "sha256:741ab50fa721c0eaa55a358a4da49cdb6905a35bdf7096c0144741fd9d955e01",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

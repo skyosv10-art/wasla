@@ -6065,3 +6065,24 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 **Next:** M2-08 Stage B (alert manager + OTLP collector) — البند التالي القابل للتنفيذ في خارطة P1.
 
 **Primary / Secondary:** @uxxxu (agent:perplexity-computer).
+
+## 2026-09-24 — إفراج CLM-0331: إصلاح الفحص 4 على main (CLM-0332)
+
+- **Work Item(s):** M2-07
+- **Status:** Released
+- **Claim:** CLM-0332
+- **Branch:** chore/release-clm-0331
+
+**What / Why:** إفراج CLM-0331 بعد دمج PR #440 مع حذف الفرع. حذف الفرع `chore/m2-07-m2-09a-complete` جعل الحجز نشطًا بلا فرع — أسقط الفحص 4 (بيانات الحجوزات: فرع محذوف وحجز نشط) على main في كل من `governance-guard` و`verify`. الدرس المقاس من CLM-0326: الإفراج يسبق حذف الفرع.
+
+**Changed:** docs/16-progress/WORK_CLAIMS.md (CLM-0331 ← Released, CLM-0332 ← Active), docs/16-progress/TASK_LOG.md (this entry).
+
+**Verification:** CI على الفرع (سيُقاس). الفرع لن يُحذف مع الدمج.
+
+**Known Issue / Blocker:** لا يوجد — إصلاح معروف للنمط المتكرر.
+
+**Evidence:** PR #440 merged (squash `119feee`) · CLM-0332.
+
+**Next:** M2-08 Stage B أو البند التالي القابل للتنفيذ في خارطة P1.
+
+**Primary / Secondary:** @uxxxu (agent:perplexity-computer).

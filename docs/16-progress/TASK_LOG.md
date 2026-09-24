@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-06 Released + Completed (CLM-0348)
+
+- **Work Item(s):** M4-06
+- **Status:** Released — PR #460 merged (squash), 38/38 CI green
+- **What / Why:** Controlled pilot and feedback triage package created. 6 success metrics, 7 stop conditions, 8 feedback categories, beta decision gate (go/conditional_go/no_go). M4-06 → Completed.
+
 ## 2026-09-24 — M4-06 Controlled Pilot and Feedback Triage (CLM-0348)
 
 - **Work Item(s):** M4-06

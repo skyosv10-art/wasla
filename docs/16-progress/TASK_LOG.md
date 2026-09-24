@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-06 Controlled Pilot and Feedback Triage (CLM-0348)
+
+- **Work Item(s):** M4-06
+- **Status:** Active (PR pending)
+- **What / Why:** Created `packages/pilot-feedback/` with controlled pilot and feedback triage framework. 6 success metrics, 7 stop conditions, 8 feedback categories, beta decision gate (go/conditional_go/no_go). Participant management (customer/driver/partner). 16 tests.
+
 ## 2026-09-24 — M4-05 Released + Completed (CLM-0346)
 
 - **Work Item(s):** M4-05

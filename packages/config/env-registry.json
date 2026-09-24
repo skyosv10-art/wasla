@@ -950,6 +950,10 @@
         {
           "file": "packages/golden-e2e/src/harness.ts",
           "mode": "direct"
+        },
+        {
+          "file": "packages/load-testing/src/harness.ts",
+          "mode": "direct"
         }
       ]
     },
@@ -968,6 +972,10 @@
         {
           "file": "packages/golden-e2e/src/harness.ts",
           "mode": "direct"
+        },
+        {
+          "file": "packages/load-testing/src/harness.ts",
+          "mode": "direct"
         }
       ]
     },
@@ -985,6 +993,10 @@
       "readers": [
         {
           "file": "packages/golden-e2e/src/harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/load-testing/src/harness.ts",
           "mode": "direct"
         }
       ]

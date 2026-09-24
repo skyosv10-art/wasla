@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-03 Load/Capacity/Chaos Testing (CLM-0342)
+
+- **Work Item(s):** M4-03
+- **Status:** Active (PR pending)
+- **What / Why:** Created `packages/load-testing/` with staging-targeted load, capacity, and chaos tests. 5 workloads (health burst, geography, search, orders, observability). 3 chaos scenarios (service isolation, observability failover, network degradation). 4 SLOs (availability >=99%, p95 <=500ms, error <=5%, uptime 100%). 20 tests (skip without GOLDEN_STAGING_BASE). SLO comparison framework.
+
 ## 2026-09-24 — M4-02 Released + Completed (CLM-0340)
 
 - **Work Item(s):** M4-02

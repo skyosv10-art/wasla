@@ -321,7 +321,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: true,
     default: null,
     scopes: ["test"],
-    readerCount: 1,
+    readerCount: 2,
     ownerItem: "M4-02",
   },
   {
@@ -331,7 +331,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["test"],
-    readerCount: 1,
+    readerCount: 2,
     ownerItem: "M4-02",
   },
   {
@@ -341,7 +341,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["test"],
-    readerCount: 1,
+    readerCount: 2,
     ownerItem: "M4-02",
   },
   {

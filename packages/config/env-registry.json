@@ -1543,6 +1543,10 @@
         {
           "file": "services/audit/src/http/server.ts",
           "mode": "reader"
+        },
+        {
+          "file": "services/observability/src/index.ts",
+          "mode": "reader"
         }
       ],
       "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."

@@ -6129,15 +6129,12 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 
 ## CLM-0335 — مُجمِّعُ المراقبةِ بلغة Node.js (M2-08 Stage B fix)
 
-**التاريخ:** 2026-09-24
-**النوع:** تنفيذ (Implementation)
-**العنصر:** M2-08
-**الفرع:** feat/m2-08-node-collector
-
-### السياق
+- **Work Item(s):** M2-08
+- **Status:** Active (PR #445)
+- **What / Why:**
 بناءُ Docker للخدماتِ الثلاثِ (Prometheus · Alertmanager · OTLP collector) فشلَ على Render Free — صورٌ جاهزةٌ (prom/prometheus · alertmanager/alertmanager · otel/opentelemetry-collector) لا تُبنى. النشرُ المُعاد بـ`clearCache` فشلَ أيضًا.
 
-### الإجراء
+### السياق
 إنشاءُ مُجمِّعِ مراقبةٍ بلغة Node.js (`services/observability/`) يستخدمُ خطَّ بناءِ wasla الموجود (Dockerfile الجذر). المُجمِّعُ:
 - يكشطُ /metrics من 14 خدمة كلَّ 30 ثانية
 - يُقيِّمُ قواعدَ SLI (availability ≥99% · p95 ≤500ms · error rate ≤5% · service down ≤2min)

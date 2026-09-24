@@ -1,11 +1,21 @@
+## 2026-09-24 — M2-08 Completed: observability collector live evidence (CLM-0337)
+
+- **Work Item(s):** M2-08
+- **Status:** Active (PR #447)
+- **What / Why:** Documentation release for M2-08 completion. Captured live evidence from wasla-observability service on Render Free. All endpoints verified: /healthz, /api/v1/targets (14 targets), /api/v1/alerts (4 SLI rules), /metrics (Prometheus format), POST /v1/traces (OTLP accepted), / (HTML dashboard). Released CLM-0336, moved M2-08 to Completed, closed RISK-0053.
+- **Verification:** Live HTTP 200 responses from all endpoints on https://wasla-observability.onrender.com. Render deploy dep-daql0qfavr4c738p2d30 status: live.
+- **Security / Data / Deployment:** No secrets in repo. Render API key used for service management only.
+- **Next:** Merge PR #447, continue to next executable roadmap item (M4-01).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-08 observability tsx devDependency fix (CLM-0336)
 
 - **Work Item(s):** M2-08
-- **Status:** Active (PR #446)
+- **Status:** Released (PR #446 merged · squash `b94747a` · CI 38/38 green)
 - **What / Why:** The observability service start script `node --import tsx src/index.ts` requires tsx in the package's node_modules. Other services declare tsx as a devDependency — the observability package was missing it, causing the Render container to exit with code 1 (build succeeded, deploy failed with nonZeroExit:1). Added tsx@^4.23.12 to services/observability/devDependencies. Updated pnpm-lock.yaml, BASELINE.json lockfile hash, ROADMAP.md. Also released CLM-0335 (PR #445 merged) and created CLM-0336 for this fix.
 - **Verification:** Render events confirmed build succeeded but deploy failed with exit code 1. Root cause: tsx not in observability package's devDependencies.
 - **Security / Data / Deployment:** No secrets in repo. Render API key used for service management only.
-- **Next:** Merge PR #446, trigger Render deploy, verify observability service is live, capture evidence, create documentation PR.
+- **Next:** M2-08 Completed. Continue to next executable roadmap item (M4-01).
 - **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
 
 ## 2026-09-24 — M2-08 Stage B observability infra deployed (CLM-0333)

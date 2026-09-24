@@ -1,0 +1,28 @@
+{
+  "name": "@wasla/tick-scheduler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA external tick scheduler (G8 · M2-09A) — one Render Cron Job run mints a service-identity token and POSTs one tick route. Resolved by the image entrypoint via WASLA_SERVICE=@wasla/tick-scheduler.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node --import tsx src/main.ts"
+  },
+  "dependencies": {
+    "@wasla/service-auth": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@wasla/authz-policy": "workspace:*",
+    "tsx": "^4.23.12",
+    "vitest": "^2.1.0"
+  }
+}

@@ -53,7 +53,7 @@ scripts/checks/lib/required-artifacts.sh
 | هيكلُ Terraform البنيويُّ | `validate-terraform-scaffold.sh` | إلزاميّةٌ · تُسقِط (`M2-02B`) · تحقّقٌ بنيويٌّ لا يُثبتُ `plan/apply` |
 | كتالوجُ البيئاتِ | `validate-environments.sh` | إلزاميّةٌ · تُسقِط (`M2-02C`) · تحقّقٌ بنيويٌّ من البيئاتِ الخمسِ |
 | إعدادُ Render | `validate-render-config.sh` | إلزاميّةٌ · تُسقِط (`M2-02D` · ADR-039) · لا أسرارَ في الملفّاتِ · كلُّ الخدماتِ لها مواردُ · لا Render Postgres |
-| مُجدوِلُ النبضاتِ | `validate-tick-scheduler.sh` | إلزاميّةٌ · تُسقِط (G8 · `CLM-0328`) · سكربتُ المُجدوِلِ موجودٌ · إعدادُ Terraform موجودٌ · كلُّ مساراتِ النبضةِ الـ5 مغطّاةٌ · متغيّراتُ البيئةِ مُعرَّفةٌ |
+| مُجدوِلُ النبضاتِ | `validate-tick-scheduler.sh` | إلزاميّةٌ · تُسقِط (G8 · `CLM-0328` · أُعيدَ بناؤهُ `CLM-0330`) · مدخلُ الصورةِ يحلُّ `@wasla/tick-scheduler` إلى أمرِ `start` · Terraform يُقلِعُ بـ`WASLA_SERVICE` بلا `start_command` · كلُّ مساراتِ النبضةِ الـ5 مغطّاةٌ بمتغيّراتِها · لا بقايا للسلفِ غيرِ القابلِ للتشغيلِ |
 | جردُ الأسرار | `validate-secret-inventory.sh` | إلزاميّةٌ · تُسقِط (`M2-03A`) · لا قيمَ أسرارٍ · تغطيةٌ كاملةٌ من السجلِّ والبيئاتِ وقائمةِ M2-03 |
 | ملكيّةُ الترحيلاتِ | `validate-migration-owners.sh` | إلزاميّةٌ · تُسقِط (`M2-05A`) · كلُّ schema له مالكٌ · حالةُ الـrunner تطابقُ القرصَ |
 | الحوكمة (12 فحصاً) | `verify-governance.sh` | إلزاميّةٌ · تُسقِط |

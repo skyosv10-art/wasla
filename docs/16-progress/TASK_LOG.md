@@ -1,7 +1,17 @@
+## 2026-09-24 — M2-09A tick scheduler made runnable (CLM-0330)
+
+- **Work Item(s):** M2-09A
+- **Status:** Active
+- **What / Why:** أوّلُ محاولةِ نشرٍ حقيقيّةٍ لوظائفِ cron (بموافقةِ المالكِ) كشفتْ أنَّ مُجدوِلَ CLM-0328 **لم يكن قابلًا للتشغيلِ**، وأنَّ أدلّتَهُ الخضراءَ لم تقِسْهُ: (1) `scripts/tick-scheduler.mjs` بصياغةِ TypeScript ← `node --check`: `SyntaxError: Unexpected identifier 'as'`؛ (2) يستوردُ `@wasla/service-auth/keys.js` — مسارٌ غيرُ مُصدَّرٍ، والجذرُ لا يعتمدُ على الحزمةِ، والحزمةُ تشحنُ `.ts`؛ (3) الاختباراتُ التسعةُ لا تستوردُ السكربتَ، وملفُّها خارجَ كلِّ حزمةٍ فلم يُشغِّلْهُ CI قطُّ؛ (4) الحارسُ فحصَ وجودَ كلماتٍ فمرَّ 14/14؛ (5) Terraform طغى على مدخلِ الصورةِ بـ`docker_command` (وسيطٌ غيرُ موجودٍ في المزوِّدِ 1.9.1) فكانَ الأمرُ سيُقرأُ اسمَ حزمةٍ (rc=66)؛ (6) المساراتُ الخمسةُ ترفضُ أيَّ جسمٍ، والسلفُ أرسلَ `content-type: application/json` بلا جسمٍ (400 من Fastify)؛ (7) 503 عُدَّ نجاحًا فتخضرُّ الوظيفةُ ولا نبضةَ تجري؛ (8) خطّةُ `free` مرفوضةٌ لوظائفِ cron (`invalid plan: free`)؛ (9) **لا دورَ إنتاجيٌّ يحملُ صلاحيّةَ نبضةٍ** في مصفوفةِ التفويضِ، والسلفُ كانَ سيتخطّاها بالإصدارِ الخامِ (محظورٌ خارجَ `service-auth` — كشفَهُ الفحصُ 16)؛ (10) سجلُّ تغطيةِ هويّةِ الخدمةِ لا يرى عملاءَ `packages/`، فوُسِّعَ؛ (11) متغيّراتُ `WASLA_TICK_*` غيرُ مُسجَّلةٍ في مخطَّطِ الإعدادِ، فسُجِّلتِ الثمانيةُ؛ (12) **اكتشافٌ مفتوحٌ:** وظيفةُ CI `validate-terraform-scaffold` تجري بلا Terraform فبابُ `fmt`/`validate` لم يُنفَذْ قطُّ — ثلاثةُ ملفّاتٍ على `main` غيرُ مُنسَّقةٍ نُسِّقتْ هنا، وتثبيتُ Terraform في CI عنصرٌ لاحقٌ. العلاجُ: حزمةُ فضاءِ عملٍ `@wasla/tick-scheduler` (منطقٌ نقيٌّ بتبعيّاتٍ محقونةٍ + مدخلٌ رقيقٌ) يحلُّها `resolve-package.mjs`؛ دورٌ إنتاجيٌّ `tick-scheduler` بخمسةِ منوحٍ ضيّقةٍ (صلاحيّةُ النبضةِ وحدَها) يُوقِّعُ عبرَ `createServiceRequestSigner` + صفوفُ المصفوفةِ + حالتا طفرةٍ؛ 503 نتيجةٌ `unavailable` تُسقِطُ الخروجَ؛ نداءٌ بلا جسمٍ؛ Terraform بلا طغيانٍ وبخطّةِ `starter` (موافقةُ المالكِ) ومهلةِ 90s لإيقاظِ خدماتِ staging؛ حُذِفَ السلفُ واختبارُهُ.
+- **Verification:** `pnpm --filter @wasla/tick-scheduler test` (15/15 — تستوردُ الشيفرةَ، خادمُ HTTP حقيقيٌّ، الرمزُ يُتحقَّقُ منهُ بـ`verifyServiceToken`، ومساراتُ النبضةِ تُطابَقُ مع `ENFORCED_OPERATIONS`) · `typecheck` نظيفٌ · `bash scripts/checks/validate-tick-scheduler.sh` (19/19، ويسقطُ بطفرةِ `start_command`) · `terraform validate` ناجحٌ · الأدلّةُ: [`docs/12-testing/ci-evidence/2026-09-24T091500Z-m2-09a-tick-scheduler-package/README.md`](../12-testing/ci-evidence/2026-09-24T091500Z-m2-09a-tick-scheduler-package/README.md).
+- **Security / Data / Deployment:** لا تغييرَ في الخدماتِ. لا أسرارَ في المستودعِ (المفاتيحُ متغيّراتُ Terraform حسّاسةٌ من البيئةِ). **النشرُ على Render لم يتمَّ بعدُ**: المحاولتانِ رُدَّتا قبلَ إنشاءِ أيِّ موردٍ (لا حالةَ ولا وظيفةَ على Render)، والنشرُ ينتظرُ دمجَ هذا الإصلاحِ في `main` لأنَّ الوظائفَ تبني من `main`.
+- **Next:** دمجٌ ← `terraform apply` ← تشغيلٌ يدويٌّ لكلِّ وظيفةٍ وقراءةُ سجلِّها ← تسجيلُ الدليلِ.
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-07/M2-09A gate and board update (CLM-0329)
 
 - **Work Item(s):** M2-07 (gate update) + M2-09A (board update)
-- **Status:** Active
+- **Status:** Released (PR #437 · PR #438)
 - **What / Why:** تحديثُ بوّابةِ M2-07 ولوحةِ التنفيذِ بعدَ إغلاقِ G8 بـCLM-0328. كلُّ بنودِ البوّابةِ الأربعةَ عشرَ `✅`، والحالةُ المُعلَنةُ صارَت `PASSED`. نُقلَ M2-07 وM2-09A إلى `Ready for Gate` في اللوحة. النقلُ إلى `Completed` سلطةُ مالكِ البرنامجِ (§9).
 - **Dependencies:** CLM-0328 (G8 closure), CLM-0327 (M2-09A discovery)
 - **Not claimed:** النشرُ الفعليُّ لوظائفِ cron على Render يبقى خطوةً تشغيليّةً مستقلّةً. Stage B (M2-08) يبقى مفتوحًا في RISK-0053.

@@ -985,6 +985,25 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
 
+  packages/tick-scheduler:
+    dependencies:
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@wasla/authz-policy':
+        specifier: workspace:*
+        version: link:../authz-policy
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
   services/audit:
     dependencies:
       '@wasla/auth-sdk':

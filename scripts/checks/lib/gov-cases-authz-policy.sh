@@ -598,6 +598,34 @@ printf '\n%s\n' 'const __mutationProbe = mintServiceToken;' >> "$AZ_APP"
 t 'ذكرُ بدائيِّ الإصدارِ في ملفٍّ إنتاجيٍّ خارجَ حزمةِ التوقيعِ يُسقِطُ الفحصَ' fail bash "$AZ"
 _az_restore
 
+# ── مُجدوِلُ النبضاتِ (CLM-0330): دورٌ إنتاجيٌّ جديدٌ بسقفٍ ضيّقٍ ─────────────
+# صلاحيّةُ النبضةِ وحدَها على كلِّ جمهورٍ؛ طلبُ صلاحيّةٍ أخرى من جذرِ تركيبِهِ
+# يجبُ أن يُسقِطَ الفحصَ، وحذفُ منحِهِ كذلكَ — وإلّا صارَ الدورُ بابًا واسعًا.
+AZ_TS=packages/tick-scheduler/src/scheduler.ts
+cp "$AZ_TS" "$AZ_BK/ts"
+python3 - "$AZ_TS" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = 'TICK_SCHEDULER_DISPATCH_SCOPES: readonly string[] = ["dispatch:tick:write"];'
+assert old in s
+s = s.replace(old, 'TICK_SCHEDULER_DISPATCH_SCOPES: readonly string[] = ["dispatch:tick:write", "dispatch:offer:read"];', 1)
+open(p, "w", encoding="utf-8").write(s)
+MUT
+t "مُجدوِلُ النبضاتِ يطلبُ صلاحيّةً خارجَ النبضةِ يُسقِطُ الفحصَ" fail bash "$AZ"
+cp "$AZ_BK/ts" "$AZ_TS"
+
+python3 - "$AZ_GR" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+i = s.index('  "tick-scheduler": [')
+j = s.index("\n  ],\n", i) + 5
+open(p, "w", encoding="utf-8").write(s[:i] + s[j:])
+MUT
+t "حذفُ منحِ مُجدوِلِ النبضاتِ من المصفوفةِ يُسقِطُ الفحصَ" fail bash "$AZ"
+_az_restore
+
 # الأصلُ يمرُّ بعدَ كلِّ الطفراتِ — إثباتُ أنَّ الاستعادةَ تامّةٌ وأنَّ الحارسَ
 # عاضٌّ لا ساقطٌ دائماً.
 t "الأصلُ يمرُّ بعدَ كلِّ الطفراتِ (اكتمالُ الاستعادةِ)" pass bash "$AZ"

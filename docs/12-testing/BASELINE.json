@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:741ab50fa721c0eaa55a358a4da49cdb6905a35bdf7096c0144741fd9d955e01",
+  "fingerprint": "sha256:f21082adc8eaa4a148d2f084b17c1e2e63315c6fecbd4227becbea1455b02827",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

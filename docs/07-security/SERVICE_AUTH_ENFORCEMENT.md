@@ -745,6 +745,7 @@ const ownerScoped = (...scopes: string[]) => ({
 | `packages/reputation-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ السُّمعةِ. |
 | `packages/search-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ البحثِ. |
 | `packages/subscription-e2e/src/harness.ts` | مِعْوانُ بوّابةِ خروجِ الاشتراكاتِ. |
+| `packages/golden-e2e/src/harness.ts` | مِعْوانُ الرحلاتِ الذهبيّةِ: يُنادي خدماتَ staging المنشورةَ بـHTTP لا يُوقِّعُها — للاختبارِ ضدَّ staging فقط. (CLM-0340 · M4-02) |
 | `services/observability/src/scraper.ts` | مُجمِّعُ مراقبةٍ — يقرأُ /metrics من 14 خدمة (نقطةُ نهايةٍ عامّةٌ بلا مُصادقةٍ لـPrometheus). ليسَ نداءً بينَ الخدماتِ ولا يحملُ رمزَ خدمةٍ. (CLM-0335 · M2-08 Stage B) |
 
 <!-- fetch-exceptions:end -->

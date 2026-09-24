@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-03 Released + Completed (CLM-0342)
+
+- **Work Item(s):** M4-03
+- **Status:** Released — PR #454 merged (squash), 38/38 CI green
+- **What / Why:** Load/capacity/chaos testing package created with 5 workloads, 3 chaos scenarios, 4 SLOs, and 20 tests. SLO comparison framework with percentile calculation. M4-03 → Completed.
+
 ## 2026-09-24 — M4-03 Load/Capacity/Chaos Testing (CLM-0342)
 
 - **Work Item(s):** M4-03

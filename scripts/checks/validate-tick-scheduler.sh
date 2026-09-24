@@ -40,13 +40,15 @@ check "سكربتُ المُجدوِلِ موجودٌ (scripts/tick-scheduler.mj
 check "إعدادُ Terraform موجودٌ (infra/terraform/cron/main.tf)" "$?"
 
 # 3) كلُّ مساراتِ النبضةِ مغطّاةٌ
+# لا نستخدمُ أنبوبًا إلى grep (RISK-0037: سباقُ SIGPIPE) — نطابقُ مباشرةً
 EXPECTED_SERVICES="dispatch negotiations reputation subscriptions drivers"
 COVERED=$(grep -oE 'service\s*=\s*"[^"]+"' infra/terraform/cron/main.tf 2>/dev/null | sed 's/service\s*=\s*"//;s/"//' | sort -u)
 MISSING=""
 for svc in $EXPECTED_SERVICES; do
-  if ! echo "$COVERED" | grep -qw "$svc"; then
-    MISSING="$MISSING $svc"
-  fi
+  case "$COVERED" in
+    *"$svc"*) ;; # موجودٌ
+    *) MISSING="$MISSING $svc" ;;
+  esac
 done
 [ -z "$MISSING" ]
 check "كلُّ مساراتِ النبضةِ الـ5 مغطّاةٌ في Terraform${MISSING:+ (ناقصٌ:$MISSING)}" "$?"

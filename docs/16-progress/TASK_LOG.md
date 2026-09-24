@@ -6086,3 +6086,31 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 **Next:** M2-08 Stage B أو البند التالي القابل للتنفيذ في خارطة P1.
 
 **Primary / Secondary:** @uxxxu (agent:perplexity-computer).
+
+## 2026-09-24 — M2-08 Stage B: نشر بنية المراقبة القابلة للرصد (CLM-0333)
+
+- **Work Item(s):** M2-08
+- **Status:** In Progress (Stage B code + IaC)
+- **Claim:** CLM-0333
+- **Branch:** feat/m2-08-stage-b-observability
+
+**What / Why:** نشرُ بنيةِ المراقبةِ القابلةِ للرصدِ (Stage B) لإكمالِ M2-08. ينشرُ ثلاثَ خدماتٍ جديدةٍ على Render:
+1. **Prometheus** (`wasla-prometheus`) — يجمعُ /metrics من 14 خدمةً HTTP، يُقيِّمُ قواعدَ الإنذارِ (SLI: availability ≥99%, latency p95 ≤500ms, error rate ≤5%).
+2. **Alertmanager** (`wasla-alertmanager`) — يستقبلُ الإنذاراتِ من Prometheus ويعرضُها.
+3. **OTLP Collector** (`wasla-otel-collector`) — يستقبلُ آثارَ OpenTelemetry من الخدماتِ.
+
+**النشرُ الفعليُّ:** ثلاثُ خدماتٍ Render أُنشئت (srv-daqgfn6gekts739b08fg, srv-daqgfrad0e5s73agd5jg, srv-daqgfs0jo6nc73ec60t0). `OTEL_EXPORTER_OTLP_ENDPOINT` ضُبِطَ على 14 خدمةً HTTP. ستبني Renderُ الصورَ بعدَ دمجِ الكودِ على main.
+
+**Changed:** infra/observability/ (Dockerfiles + config), infra/terraform/observability/main.tf (Terraform module), docs/16-progress/ (claims + log).
+
+**Verification:** CI سيُقاسُ على الفرع. النشرُ الفعليُّ سيتمُّ بعدَ الدمج. القياسُ التركيبيُّ (synthetic trace/dashboard) سيُلتقطُ كدليلٍ بعدَ النشر.
+
+**Security / Data / Deployment:** ثلاثُ خدماتِ Docker جديدة على Render Free (لا أسرارَ في الكود). OTEL_EXPORTER_OTLP_ENDPOINT يُفعِّلُ التتبّعَ المُختارَ (opt-in) في الحزمَةِ الموجودةِ.
+
+**Known Issue / Blocker:** Render Free: لا قرصٌ ثابتٌ (المقاييسُ تُفقدُ عندَ إعادةِ التشغيلِ)، ينامُ بعدَ 15 دقيقةِ خمولٍ. مقبولٌ للقياسِ التركيبيِّ.
+
+**Evidence:** Render service IDs · CLM-0333.
+
+**Next:** بعدَ الدمج والنشر: توليدُ حركةٍ تركيبيةٍ، التقاطُ المقاييسِ والآثارِ، إنشاءُ دليلٍ، نقلُ M2-08 إلى Completed.
+
+**Primary / Secondary:** @uxxxu (agent:perplexity-computer).

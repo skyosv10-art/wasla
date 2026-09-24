@@ -1,0 +1,7 @@
+# WASLA Alertmanager — M2-08 Stage B
+# Render sets PORT automatically — Alertmanager must listen on it.
+FROM prom/alertmanager:v0.27.1
+
+COPY alertmanager.yml /etc/alertmanager/alertmanager.yml
+
+CMD ["sh", "-c", "alertmanager --web.listen-address=:${PORT:-9093} --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/alertmanager"]

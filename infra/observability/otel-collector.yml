@@ -1,0 +1,43 @@
+# WASLA OTLP Collector config (M2-08 Stage B)
+# ADR-041: Receives OpenTelemetry traces from WASLA services.
+#
+# The collector runs as a standalone Render web service.
+# Services set OTEL_EXPORTER_OTLP_ENDPOINT to the collector's URL.
+# Traces are logged to stdout for staging verification.
+# Production should export to Jaeger/Tempo (deferred).
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: "0.0.0.0:${env:PORT:-4318}"
+
+extensions:
+  env:
+    # Enables ${env:VAR} substitution in config (Render sets PORT)
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 256
+
+exporters:
+  # Log traces to stdout for staging verification
+  debug:
+    verbosity: detailed
+  # Production exporter (commented — requires backend)
+  # otlp/jaeger:
+  #   endpoint: "jaeger:4317"
+  #   tls:
+  #     insecure: true
+
+service:
+  extensions: [env]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+  telemetry:
+    logs:
+      level: info

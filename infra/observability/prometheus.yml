@@ -1,0 +1,52 @@
+# WASLA Observability — Prometheus scrape config (M2-08 Stage B)
+# ADR-041: Scrape /metrics from all 14 HTTP services on Render staging
+#
+# Services sleep after 15 min idle (Render Free/Starter). Scrape interval
+# is 30s to catch metrics during active periods. honor_labels: true so
+# service-set labels (service, method, route, status) are preserved.
+
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+
+rule_files:
+  - "alert-rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "localhost:9093"
+
+scrape_configs:
+  # ── WASLA HTTP Services (14) ──────────────────────────────────────────
+  - job_name: "wasla-services"
+    metrics_path: /metrics
+    scrape_interval: 30s
+    honor_labels: true
+    static_configs:
+      - targets:
+          - "wasla-customers.onrender.com"
+          - "wasla-delivery.onrender.com"
+          - "wasla-dispatch.onrender.com"
+          - "wasla-drivers.onrender.com"
+          - "wasla-geography.onrender.com"
+          - "wasla-identity.onrender.com"
+          - "wasla-matching.onrender.com"
+          - "wasla-negotiations.onrender.com"
+          - "wasla-orders.onrender.com"
+          - "wasla-reputation.onrender.com"
+          - "wasla-search.onrender.com"
+          - "wasla-marketplace.onrender.com"
+          - "wasla-subscriptions.onrender.com"
+          - "wasla-audit.onrender.com"
+        labels:
+          environment: staging
+          platform: render
+
+  # ── Prometheus self-monitoring ─────────────────────────────────────────
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090"

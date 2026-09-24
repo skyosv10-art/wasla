@@ -1,0 +1,18 @@
+# WASLA Alertmanager config (M2-08 Stage B)
+# Minimal config — logs alerts to stdout for staging.
+# Production should route to PagerDuty/Slack (deferred).
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: "default"
+  group_by: ["alertname", "service", "severity"]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 4h
+
+receivers:
+  - name: "default"
+    # No external notification channel for staging — alerts are visible
+    # in the Alertmanager UI and Prometheus UI only.

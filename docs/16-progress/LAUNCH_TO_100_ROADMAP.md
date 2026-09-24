@@ -2514,6 +2514,15 @@ PASS / BLOCKED
 
 ---
 
+## CLM-0335 — M2-08 Stage B Node.js Collector Update (2026-09-24)
+
+- Added `render_web_service.wasla_observability` to `infra/terraform/render.tf`
+- Node.js observability collector replaces 3 Docker-based services that failed to build on Render Free
+- Uses root Dockerfile with `WASLA_SERVICE=@wasla/observability-collector`
+- Updated `pnpm-lock.yaml` for new `services/observability` workspace package
+
+---
+
 ## الوثيقة الحاكمة
 
 هذه الخارطة تصبح **مرجع التنفيذ الموحد**، ويجب ألا توجد خارطة محلية مختلفة للفريق إلا إذا كانت مشتقة منها وتحمل روابط إلى `Task IDs`.

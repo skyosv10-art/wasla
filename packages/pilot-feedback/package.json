@@ -1,0 +1,12 @@
+{
+  "name": "@wasla/pilot-feedback",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.1"
+  }
+}

@@ -133,7 +133,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M4-01 | beta scope and success/stop metrics | Product/Ops / Program | M3 | Not Started | signed beta charter | choose pilot constraints. |
+| M4-01 | beta scope and success/stop metrics | Product/Ops / Program | M3 | Ready for Gate | signed beta charter | **(`CLM-0339` · 2026-09-24):** [`BETA_CHARTER.md`](BETA_CHARTER.md) مكتوبةٌ — نطاقُ التجربةِ (40 مشاركاً: 25 عميلاً + 10 سائقين + 5 شركاء)، قيودُ التجربةِ (14 يوماً · staging · Jeddah)، مقاييسُ النجاحِ (80% golden journeys · 99% availability · p95≤500ms · error≤5% · 70% bot completion · 100% audit), مقاييسُ التوقّفِ (security incident · data corruption · unauthorized access · service-down>30min · p95>2000ms · error>20% · rollback failure), 5 golden journeys مُعدَّةٌ لـM4-02. |
 | M4-02 | golden cross-service E2E journeys | QA / All | M1..M3 | Not Started | staging artifacts | enumerate critical paths. |
 | M4-03 | load/capacity/chaos testing | SRE/QA / Platform | M2 | Not Started | SLO comparison | define workloads. |
 | M4-04 | incident/on-call/rollback operations | SRE/Ops / Platform | M2 | Not Started | tabletop and live rollback | assign rotations. |

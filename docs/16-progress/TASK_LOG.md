@@ -1,3 +1,13 @@
+## 2026-09-24 — M4-01 Beta Charter (CLM-0339)
+
+- **Work Item(s):** M4-01
+- **Status:** Active (PR pending)
+- **What / Why:** Created `docs/16-progress/BETA_CHARTER.md` defining pilot scope (40 participants: 25 customers + 10 drivers + 5 partners, Jeddah only), pilot constraints (14 days, staging, max 10 concurrent orders), success metrics (80% golden journeys, 99% availability, p95≤500ms, error≤5%, 70% bot completion, 100% audit), stop metrics (security incident, data corruption, unauthorized access, service-down>30min, p95>2000ms, error>20%, rollback failure), 5 golden journeys enumerated for M4-02.
+- **Verification:** Charter document exists with all required sections. Gate criteria checklist complete.
+- **Security / Data / Deployment:** No secrets in repo. Staging-only data environment.
+- **Next:** Merge PR, proceed to M4-02 (golden cross-service E2E journeys).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — Close RISK-0053 in risk register (CLM-0338)
 
 - **Work Item(s):** M2-08

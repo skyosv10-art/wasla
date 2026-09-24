@@ -1,3 +1,11 @@
+## 2026-09-24 — Release CLM-0337 (M2-08 observability live evidence)
+
+- **Work Item(s):** M2-08
+- **Status:** Active (PR #448)
+- **What / Why:** Release CLM-0337 after PR #447 merged (squash, CI 38/38 green). Branch deleted on merge — this release fixes check 4 on main.
+- **Next:** Continue to next executable roadmap item (M4-01).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — M2-08 Completed: observability collector live evidence (CLM-0337)
 
 - **Work Item(s):** M2-08

@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-04 Released + Completed (CLM-0344)
+
+- **Work Item(s):** M4-04
+- **Status:** Released — PR #456 merged (squash), 38/38 CI green
+- **What / Why:** Incident/on-call/rollback operations package created with 4 severity levels, 3 on-call roles, 5 rollback runbooks, 4 tabletop scenarios, and 15 tests. M4-04 → Completed.
+
 ## 2026-09-24 — M4-04 Incident/On-Call/Rollback Ops (CLM-0344)
 
 - **Work Item(s):** M4-04

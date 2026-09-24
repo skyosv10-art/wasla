@@ -1458,6 +1458,22 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
 
+  services/observability:
+    dependencies:
+      '@wasla/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@wasla/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
   services/orders:
     dependencies:
       '@wasla/auth-sdk':

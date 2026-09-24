@@ -57,7 +57,7 @@ docker run --rm -e DATABASE_URL=… -p 8080:8080 wasla:local @wasla/orders-servi
 
 ## 3. عقدُ التشغيلِ — الحِزَمُ القابلةُ للتشغيلِ
 
-`RUNNABLE_PACKAGE_COUNT: 17` — **مقيسٌ** من الشجرةِ بـ
+`RUNNABLE_PACKAGE_COUNT: 18` — **مقيسٌ** من الشجرةِ بـ
 `python3 scripts/checks/lib/container_image.py runnable`، لا مكتوبٌ بيدٍ. والفحصُ
 19 يقارنُ هذا الجدولَ بالشجرةِ **في الاتّجاهَينِ**: حزمةٌ جديدةٌ بلا صفٍّ تُسقِطُ
 الدفعَ، وصفٌّ ميتٌ لا يُطابقُ الشجرةَ يُسقِطُهُ كذلكَ.
@@ -81,6 +81,7 @@ docker run --rm -e DATABASE_URL=… -p 8080:8080 wasla:local @wasla/orders-servi
 | `@wasla/customer-bot` | `bots/customer-bot` | `src/main.ts` |
 | `@wasla/driver-bot` | `bots/driver-bot` | `src/main.ts` |
 | `@wasla/partner-bot` | `bots/partner-bot` | `src/main.ts` |
+| `@wasla/observability-collector` | `services/observability` | `src/index.ts` |
 
 ويُثبَتُ العقدُ **داخلَ الصورةِ** لا في هذا الجدولِ: وظيفةُ CI تُشغِّلُ لكلِّ
 حزمةٍ `WASLA_ENTRYPOINT_DRYRUN=1`، فيُحَلُّ اسمُ الحزمةِ في فضاءِ العملِ داخلَ

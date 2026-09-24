@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-05 Released + Completed (CLM-0346)
+
+- **Work Item(s):** M4-05
+- **Status:** Released — PR #458 merged (squash), 38/38 CI green
+- **What / Why:** Privacy/compliance review package created with PDPL (Saudi Arabia) compliance review. 10 data elements inventoried, 12 PDPL requirements, 5 data subject rights. Compliance score: 42%. M4-05 → Completed.
+
 ## 2026-09-24 — M4-05 Privacy/Compliance Review (CLM-0346)
 
 - **Work Item(s):** M4-05

@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T10:01:17Z",
+  "generated_at": "2026-09-24T13:44:24Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3b639be512ab621f2f5120e1ad0ff1ea704ba1b8",
-    "branch": "fix/m2-09a-tick-scheduler-package",
+    "commit": "c38af8effff9a983a593e2ca00659306b72d67a7",
+    "branch": "feat/m2-08-node-collector",
     "dirty": true,
-    "dirty_files": 31,
-    "dirty_reason": "CLM-0330: tick scheduler moved to workspace package @wasla/tick-scheduler (+1 package, +1 with typecheck, +1 with test); scripts/__tests__/tick-scheduler.test.ts removed and packages/tick-scheduler/src/__tests__/scheduler.test.ts added (test_files_tracked unchanged)",
-    "tracked_files": 2558
+    "dirty_files": 2,
+    "dirty_reason": "",
+    "tracked_files": 2581
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "9.15.9",
+    "pnpm": "unknown",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"
@@ -23,9 +23,9 @@
     "lines": 4727
   },
   "static": {
-    "packages": 58,
-    "packages_with_typecheck": 58,
-    "packages_with_test": 58,
+    "packages": 59,
+    "packages_with_typecheck": 59,
+    "packages_with_test": 59,
     "test_files_tracked": 476,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
@@ -33,14 +33,14 @@
     "risks_not_closed": 33
   },
   "dynamic": {
-    "measured": true,
-    "source": "/home/user/workspace/verify330.log",
-    "tests_passed": 5382,
-    "test_files_executed": 355,
-    "governance_suite_cases": 518,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "measured": false,
+    "source": null,
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:741ab50fa721c0eaa55a358a4da49cdb6905a35bdf7096c0144741fd9d955e01",
+  "fingerprint": "sha256:f21082adc8eaa4a148d2f084b17c1e2e63315c6fecbd4227becbea1455b02827",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -12,13 +12,14 @@
 //   POST /v1/traces       — OTLP HTTP/JSON trace receiver
 
 import http from 'node:http';
+import { readPortEnv } from '@wasla/config';
 import { scraper } from './scraper.js';
 import { alertEvaluator } from './alerts.js';
 import { otlpReceiver } from './otlp.js';
 import { renderDashboard } from './dashboard.js';
 import { WASLA_SERVICES } from './config.js';
 
-const PORT = parseInt(process.env.PORT || '3000');
+const PORT = readPortEnv(process.env, 'PORT', 3000);
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://localhost:${PORT}`);

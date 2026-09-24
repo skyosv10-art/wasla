@@ -1,3 +1,9 @@
+## 2026-09-24 — M4-04 Incident/On-Call/Rollback Ops (CLM-0344)
+
+- **Work Item(s):** M4-04
+- **Status:** Active (PR pending)
+- **What / Why:** Created `packages/incident-ops/` with incident severity levels, on-call roles, rollback runbooks, and tabletop exercise scenarios. 4 severity levels (SEV-1 to SEV-4), 3 on-call roles, 5 rollback runbooks, 4 tabletop scenarios. 15 tests (skip without GOLDEN_STAGING_BASE).
+
 ## 2026-09-24 — M4-03 Released + Completed (CLM-0342)
 
 - **Work Item(s):** M4-03

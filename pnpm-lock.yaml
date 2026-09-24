@@ -733,6 +733,15 @@ importers:
 
   packages/errors: {}
 
+  packages/golden-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
   packages/marketplace-e2e:
     devDependencies:
       '@types/node':

@@ -1,3 +1,13 @@
+## 2026-09-24 — M4-02 Golden Journeys (CLM-0340)
+
+- **Work Item(s):** M4-02
+- **Status:** Active (PR pending)
+- **What / Why:** Created `packages/golden-e2e/` with staging-targeted E2E tests driving deployed Render URLs. Five golden journeys mapped to services/endpoints in `docs/12-testing/M4-02_GOLDEN_JOURNEYS.md`. Staging health checks runnable (14 services + observability). Full authenticated journeys blocked on service auth key.
+- **Verification:** Tests skip gracefully without GOLDEN_STAGING_BASE. Observability coverage verified (metrics, targets, alerts, OTLP).
+- **Security / Data / Deployment:** No secrets in repo. Staging-only.
+- **Next:** Merge PR, proceed to M4-03 (load/capacity/chaos testing).
+- **Primary / Secondary:** @uxxxu (agent:perplexity-computer) / —
+
 ## 2026-09-24 — Release CLM-0339 + M4-01 Completed
 
 - **Work Item(s):** M4-01

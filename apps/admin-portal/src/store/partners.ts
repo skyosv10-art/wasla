@@ -51,7 +51,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await apiClient.get<{ state: string; slaTier: string; suspendedAt: string | null; offboardedAt: string | null; createdAt: string; updatedAt: string }>(
-        `/api/partners/lifecycle?storeId=${storeId}`,
+        `/partners/lifecycle?storeId=${storeId}`,
       );
       set({
         lifecycles: [
@@ -79,7 +79,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await apiClient.get<{ credentials: PartnerCredential[] }>(
-        `/api/partners/credentials?storeId=${storeId}`,
+        `/partners/credentials?storeId=${storeId}`,
       );
       set({ credentials: data.credentials, loading: false });
     } catch (err) {
@@ -94,7 +94,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await apiClient.get<PartnerUsage>(
-        `/api/partners/usage?storeId=${storeId}`,
+        `/partners/usage?storeId=${storeId}`,
       );
       set({ usage: data, loading: false });
     } catch (err) {
@@ -109,7 +109,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await apiClient.get<{ entries: PartnerAuditEntry[] }>(
-        `/api/partners/audit?storeId=${storeId}`,
+        `/partners/audit?storeId=${storeId}`,
       );
       set({ auditEntries: data.entries, loading: false });
     } catch (err) {
@@ -123,7 +123,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
   suspendTenant: async (storeId: string, reason: string) => {
     set({ loading: true, error: null });
     try {
-      await apiClient.post(`/api/partners/lifecycle/suspend`, { storeId, reason });
+      await apiClient.post(`/partners/lifecycle/suspend`, { storeId, reason });
       await get().fetchLifecycles(storeId);
       set({ loading: false });
     } catch (err) {
@@ -137,7 +137,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
   reinstateTenant: async (storeId: string) => {
     set({ loading: true, error: null });
     try {
-      await apiClient.post(`/api/partners/lifecycle/reinstate`, { storeId });
+      await apiClient.post(`/partners/lifecycle/reinstate`, { storeId });
       await get().fetchLifecycles(storeId);
       set({ loading: false });
     } catch (err) {
@@ -152,7 +152,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await apiClient.post<{ plaintextKey: string; keyPrefix: string }>(
-        `/api/partners/credentials`,
+        `/partners/credentials`,
         { storeId, scopes },
       );
       await get().fetchCredentials(storeId);
@@ -170,7 +170,7 @@ export const usePartnersStore = create<PartnersState>((set, get) => ({
   revokeCredential: async (storeId: string, credentialId: string) => {
     set({ loading: true, error: null });
     try {
-      await apiClient.del(`/api/partners/credentials/${credentialId}`);
+      await apiClient.del(`/partners/credentials/${credentialId}`);
       await get().fetchCredentials(storeId);
       set({ loading: false });
     } catch (err) {

@@ -6476,3 +6476,16 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 5. Gate 4: Lifecycle enforcement — Suspended tenant visible
 6. Gate 5: Usage counter — Per-tenant usage tracking
 7. CI workflow: Added `partners` leg to exit-gate-e2e matrix
+
+### Merged
+- **PR:** [#466](https://github.com/skyosv10-art/wasla/pull/466) — squash-merged 2026-09-25T14:59:22Z
+- **CI:** 39/39 checks green
+- **Additional fixes during CI iteration:**
+  - E2E imports: Use @wasla/partners-service workspace package (exports field added)
+  - Config schema: Register DATABASE_URL reader for E2E test, fix reader format (string → object)
+  - CI protection: Add partners E2E job to MERGE_BLOCKING.json required contexts
+  - Baseline: Update fingerprint, packages_with_test (66), packages_with_typecheck (62), lock hash
+  - Error handler: Map TenantAccessDeniedError → 403, TenantRoleError → 403
+  - Usage timestamp: Fix windowStart computation (double-colon bug in slice approach)
+  - E2E seedLifecycle: Set suspended_at/offboarded_at to satisfy check constraints
+  - pnpm-lock.yaml: Updated for new @wasla/partners-e2e package

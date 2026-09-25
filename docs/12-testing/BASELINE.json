@@ -3,12 +3,12 @@
   "generated_at": "2026-09-24T10:01:17Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3b639be512ab621f2f5120e1ad0ff1ea704ba1b8",
-    "branch": "fix/m2-09a-tick-scheduler-package",
+    "commit": "c04496032255cca4b8d1b3dd125f9f50b3450ea7",
+    "branch": "feat/m5-14-partner-enterprise",
     "dirty": true,
-    "dirty_files": 31,
-    "dirty_reason": "CLM-0330: tick scheduler moved to workspace package @wasla/tick-scheduler (+1 package, +1 with typecheck, +1 with test); scripts/__tests__/tick-scheduler.test.ts removed and packages/tick-scheduler/src/__tests__/scheduler.test.ts added (test_files_tracked unchanged)",
-    "tracked_files": 2558
+    "dirty_files": 37,
+    "dirty_reason": "CLM-0351: M5-14 Partner/Enterprise — partners service added (+1 package, +1 with typecheck, +1 with test, +4 test files); ADR-048, env-registry, migration-owners, service auth enforcement, port wiring, config schema updated",
+    "tracked_files": 2595
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "a40ab31ab48e4e216536cd90b6d3c760685aa5214319436f5c523545350ac30e",
-    "lines": 4727
+    "sha256": "ac928ec0e5b30379b9ae9619b6a83316ca33d802b274fea77a29bae700d79c51",
+    "lines": 4848
   },
   "static": {
-    "packages": 64,
-    "packages_with_typecheck": 60,
-    "packages_with_test": 64,
-    "test_files_tracked": 482,
+    "packages": 65,
+    "packages_with_typecheck": 61,
+    "packages_with_test": 65,
+    "test_files_tracked": 486,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -34,19 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/home/user/workspace/verify330.log",
-    "tests_passed": 5382,
-    "test_files_executed": 355,
+    "source": "CI verify log",
+    "tests_passed": 5414,
+    "test_files_executed": 359,
     "governance_suite_cases": 518,
-    "governance_suite_failed": 1,
-    "verify_overall": "failed"
+    "governance_suite_failed": 0,
+    "verify_overall": "passed"
   },
   "fingerprint": "sha256:a358f7a91a8a72a4e4c182365628f5852c994df82c02b6a7fb78928975d63fca",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md",
-  "lock_sha256": "ac928ec0e5b30379b9ae9619b6a83316ca33d802b274fea77a29bae700d79c51",
-  "packages": 65,
-  "test_files": 486,
-  "packages_with_test": 65,
-  "packages_with_typecheck": 61,
-  "test_files_tracked": 486
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

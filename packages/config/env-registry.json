@@ -1423,6 +1423,42 @@
       ]
     },
     {
+      "name": "PARTNERS_SERVICE_HOST",
+      "type": "string",
+      "required": "optional",
+      "default": "0.0.0.0",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مضيفُ خدمةِ الشركاءِ.",
+      "owner_item": "M5-14",
+      "readers": [
+        {
+          "file": "services/partners/src/http/server.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
+      "name": "PARTNERS_SERVICE_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8098",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ خدمةِ الشركاءِ في بيئةِ الإنتاج.",
+      "owner_item": "M5-14",
+      "readers": [
+        {
+          "file": "services/partners/src/http/server.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
       "name": "PARTNER_BOT_DEEP_LINK_TEMPLATE",
       "type": "string",
       "required": "optional",
@@ -1980,42 +2016,6 @@
         {
           "file": "packages/tick-scheduler/src/scheduler.ts",
           "mode": "bag"
-        }
-      ]
-    },
-    {
-      "name": "PARTNERS_SERVICE_PORT",
-      "type": "port",
-      "required": "optional",
-      "default": 8098,
-      "secret": false,
-      "scopes": [
-        "runtime"
-      ],
-      "description_ar": "منفذُ خدمةِ الشركاءِ في بيئةِ الإنتاج.",
-      "owner_item": "M5-14",
-      "readers": [
-        {
-          "file": "services/partners/src/http/server.ts",
-          "mode": "reader"
-        }
-      ]
-    },
-    {
-      "name": "PARTNERS_SERVICE_HOST",
-      "type": "string",
-      "required": "optional",
-      "default": "0.0.0.0",
-      "secret": false,
-      "scopes": [
-        "runtime"
-      ],
-      "description_ar": "مضيفُ خدمةِ الشركاءِ.",
-      "owner_item": "M5-14",
-      "readers": [
-        {
-          "file": "services/partners/src/http/server.ts",
-          "mode": "reader"
         }
       ]
     }

@@ -43,7 +43,7 @@ async function applySchema() {
   const { fileURLToPath } = await import("node:url");
   const schemaPath = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
-    "../../../services/partners/contracts/schema.sql",
+    "../../../../services/partners/contracts/schema.sql",
   );
   const schema = fs.readFileSync(schemaPath, "utf-8");
   await pool.query(schema);

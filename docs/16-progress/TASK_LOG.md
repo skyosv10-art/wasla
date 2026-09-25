@@ -6403,3 +6403,37 @@ PR #463 merged to main (squash, branch deleted). All 38 CI checks green:
 
 ### Next: Review 2/N
 PostgreSQL infrastructure (Drizzle ORM stores), integration tests, exit gate, webhook delivery engine, usage counter enforcement, drizzle migrations.
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 2/N (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **Branch:** `feat/m5-14-partner-infra`
+
+### Summary
+Review 2/N implements the PostgreSQL infrastructure layer for the partners service:
+
+1. **Infrastructure adapters** (6 files):
+   - `infrastructure/pg.ts` — Pool factory, UUID/timestamp helpers
+   - `infrastructure/credential-store.ts` — PgCredentialStore (create, list, revoke, findByHash)
+   - `infrastructure/webhook-store.ts` — PgWebhookStore (create, list, delete, pause)
+   - `infrastructure/usage-store.ts` — PgUsageStore (increment api calls, webhook deliveries, get)
+   - `infrastructure/audit-store.ts` — PgAuditStore (append, listByTenant)
+   - `infrastructure/lifecycle-store.ts` — PgLifecycleStore (get, create, transition)
+   - `infrastructure/store-staff-port.ts` — PgStoreStaffPort (isStoreStaff)
+
+2. **Server wiring**: `http/server.ts` updated to use real PostgreSQL adapters instead of stubs. Pool created once, shared across all stores, closed on shutdown.
+
+3. **Integration tests** (3 files, 17 tests):
+   - `credential-store.integration.test.ts` — 6 tests (create, list by tenant, revoke, findByHash, isolation)
+   - `lifecycle-store.integration.test.ts` — 6 tests (create, get, transition pending→approved→active→suspended→offboarded)
+   - `audit-store.integration.test.ts` — 5 tests (append, list by tenant, limit, tenant isolation)
+   - All tests skip when DATABASE_URL is not set
+
+4. **Domain update**: Added `secretHash` field to PartnerWebhook interface (was missing from domain model but present in schema)
+
+5. **Config**: Added PARTNERS_DATABASE_URL to env-registry.json with Arabic description, registered readers for pg.ts and pg-harness.ts
+
+### Governance
+- Typecheck: clean
+- Unit tests: 32/32 pass
+- Config schema: all 8 gates pass
+- Baseline: all 4 gates pass

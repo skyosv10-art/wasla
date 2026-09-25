@@ -110,6 +110,7 @@ export interface PartnerWebhook {
   readonly webhookId: string;
   readonly tenantStoreId: string;
   readonly url: string;
+  readonly secretHash: string;
   readonly eventTypes: readonly string[];
   readonly state: "active" | "paused" | "deleted";
   readonly createdAt: string;

@@ -134,7 +134,8 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
 
   app.get("/partners/usage", async (request) => {
     const query = request.query as { storeId: string };
-    const windowStart = new Date().toISOString().slice(0, 14) + ":00:00.000Z";
+    const now = new Date();
+    const windowStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())).toISOString();
     const usage = await options.usageStore.get(query.storeId, windowStart);
     return usage ?? { tenantStoreId: query.storeId, windowStart, apiCalls: 0, webhookDeliveries: 0 };
   });

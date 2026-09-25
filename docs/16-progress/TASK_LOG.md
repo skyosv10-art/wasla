@@ -6381,3 +6381,25 @@ Started M5-14 (Partner / Enterprise) — the first review (1/N) establishes:
 - WORK_CLAIMS.md: CLM-0351 registered
 - LAUNCH_EXECUTION_BOARD.md: M5-14 → In Progress
 - ROADMAP.md: Updated
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 1/N Merged (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **PR:** [#463](https://github.com/skyosv10-art/wasla/pull/463)
+
+### Merged
+PR #463 merged to main (squash, branch deleted). All 38 CI checks green:
+- governance-guard, verify, test, typecheck, roadmap, doc-coverage, image-supply-chain, repo-structure
+- 16 db-integration jobs, 10 exit-gate-e2e jobs, 2 mini-app e2e jobs
+
+### What was delivered in review 1/N
+1. ADR-048 (partner identity, tenant=model store, enterprise boundary)
+2. Partners service: schema.sql (5 tables), domain (lifecycle, credentials, tenant-guard), ports, 4 use cases, HTTP (10 routes, 11 scopes), 32 unit tests
+3. Governance: migration-owners, env-registry (PORT + HOST), service auth enforcement, port wiring (createPartnersApp factory), config schema, baseline, BRANCH_EVIDENCE, WORK_CLAIMS
+
+### Governance fixes applied (3 commits)
+1. Port wiring: createApp → createPartnersApp factory pattern, removed extends PartnerPorts
+2. Config schema: added PARTNERS_SERVICE_PORT/HOST to env-registry.json, regenerated artifacts
+3. Baseline: reconstructed BASELINE.json with proper dynamic/env/repo fields, correct static counts (65 packages, 486 test files)
+
+### Next: Review 2/N
+PostgreSQL infrastructure (Drizzle ORM stores), integration tests, exit gate, webhook delivery engine, usage counter enforcement, drizzle migrations.

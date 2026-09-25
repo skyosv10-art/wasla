@@ -6463,3 +6463,16 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 1. Webhook delivery engine (`domain/webhook-delivery.ts`): HMAC-SHA256 signing, exponential backoff (1s/2s/4s/8s/16s), 5 max retries, dead-letter on exhaustion
 2. Usage enforcement (`domain/usage-enforcement.ts`): Per-tenant rate limiting, hourly windows, default limits (1000 API calls/hr, 100 webhook deliveries/hr)
 3. Unit tests: 21 new tests (12 webhook delivery + 9 usage enforcement) — total 53 unit tests
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 4/N (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **Branch:** `feat/m5-14-review-4`
+
+### Delivered
+1. E2E exit gate package (`packages/partners-e2e/`): Phase 14 exit gate with 5 gates
+2. Gate 1: Tenant isolation — Store A staff cannot issue credentials for Store B
+3. Gate 2: Audit trail — Every credential operation recorded in audit log
+4. Gate 3: SLA proof — API responses within declared SLA tier limits
+5. Gate 4: Lifecycle enforcement — Suspended tenant visible
+6. Gate 5: Usage counter — Per-tenant usage tracking
+7. CI workflow: Added `partners` leg to exit-gate-e2e matrix

@@ -45,7 +45,8 @@
         "image-supply-chain",
         "customer-mini-app-e2e",
         "driver-mini-app-e2e",
-        "admin-portal-e2e"
+        "admin-portal-e2e",
+        "exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)"
       ]
     },
     "enforce_admins": true,

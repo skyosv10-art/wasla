@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/http/app.ts",
+      "import": "./src/http/app.ts"
+    },
+    "./infrastructure/*": {
+      "types": "./src/infrastructure/*.ts",
+      "import": "./src/infrastructure/*.ts"
+    }
+  },
   "scripts": {
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",

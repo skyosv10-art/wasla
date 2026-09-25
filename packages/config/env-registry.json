@@ -582,6 +582,10 @@
         {
           "file": "services/partners/src/db/migrate-cli.ts",
           "mode": "direct"
+        },
+        {
+          "file": "packages/partners-e2e/src/__tests__/phase14-exit-gate.e2e.test.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"

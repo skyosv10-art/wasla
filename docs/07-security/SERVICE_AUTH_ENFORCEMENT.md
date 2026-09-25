@@ -1209,6 +1209,24 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح |
 
 <!-- channel-scopes:end -->
+<!-- partners-scopes:begin -->
+
+| الصلاحيّة | المسارُ الذي تفتحُه | أُضيفت في |
+|---|---|---|
+| `partners:credential:issue` | `POST /partners/credentials` | M5-14 (1/N) |
+| `partners:credential:read` | `GET /partners/credentials` | M5-14 (1/N) |
+| `partners:credential:revoke` | `DELETE /partners/credentials/:id` | M5-14 (1/N) |
+| `partners:webhook:create` | (مؤجّل) | M5-14 (1/N) |
+| `partners:webhook:read` | (مؤجّل) | M5-14 (1/N) |
+| `partners:webhook:delete` | (مؤجّل) | M5-14 (1/N) |
+| `partners:usage:read` | `GET /partners/usage` | M5-14 (1/N) |
+| `partners:audit:read` | `GET /partners/audit` | M5-14 (1/N) |
+| `partners:lifecycle:read` | `GET /partners/lifecycle` | M5-14 (1/N) |
+| `partners:lifecycle:suspend` | `POST /partners/lifecycle/suspend` | M5-14 (1/N) |
+| `partners:lifecycle:reinstate` | `POST /partners/lifecycle/reinstate` | M5-14 (1/N) |
+
+<!-- partners-scopes:end -->
+
 
 **والجمهورُ `channel` لا `bots`:** الرمزُ المُوقَّعُ يحملُ `aud: channel` لا اسمَ
 بوتٍ محدَّدٍ، لأنَّ المساراتِ الداخليّةَ مشتركةٌ بينَ البوتاتِ الثلاثةِ — فلا

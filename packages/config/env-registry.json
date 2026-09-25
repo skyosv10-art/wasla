@@ -1559,6 +1559,10 @@
           "mode": "bag"
         },
         {
+          "file": "services/audit/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
           "file": "services/customers/src/http/server.ts",
           "mode": "reader"
         },
@@ -1583,6 +1587,10 @@
           "mode": "reader"
         },
         {
+          "file": "services/marketplace/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
           "file": "services/matching/src/http/server.ts",
           "mode": "reader"
         },
@@ -1591,7 +1599,15 @@
           "mode": "reader"
         },
         {
+          "file": "services/observability/src/index.ts",
+          "mode": "reader"
+        },
+        {
           "file": "services/orders/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/partners/src/http/server.ts",
           "mode": "reader"
         },
         {
@@ -1603,20 +1619,8 @@
           "mode": "reader"
         },
         {
-          "file": "services/marketplace/src/http/server.ts",
-          "mode": "direct"
-        },
-        {
           "file": "services/subscriptions/src/http/server.ts",
           "mode": "direct"
-        },
-        {
-          "file": "services/audit/src/http/server.ts",
-          "mode": "reader"
-        },
-        {
-          "file": "services/observability/src/index.ts",
-          "mode": "reader"
         }
       ],
       "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."
@@ -1976,6 +1980,42 @@
         {
           "file": "packages/tick-scheduler/src/scheduler.ts",
           "mode": "bag"
+        }
+      ]
+    },
+    {
+      "name": "PARTNERS_SERVICE_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": 8098,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ خدمةِ الشركاءِ في بيئةِ الإنتاج.",
+      "owner_item": "M5-14",
+      "readers": [
+        {
+          "file": "services/partners/src/http/server.ts",
+          "mode": "reader"
+        }
+      ]
+    },
+    {
+      "name": "PARTNERS_SERVICE_HOST",
+      "type": "string",
+      "required": "optional",
+      "default": "0.0.0.0",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "مضيفُ خدمةِ الشركاءِ.",
+      "owner_item": "M5-14",
+      "readers": [
+        {
+          "file": "services/partners/src/http/server.ts",
+          "mode": "reader"
         }
       ]
     }

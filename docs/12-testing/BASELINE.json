@@ -41,9 +41,12 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:1ab7505e2b4333d938c2e0b0d99a9ed361566c8eabdcd709affcb54ab32140be",
+  "fingerprint": "sha256:a358f7a91a8a72a4e4c182365628f5852c994df82c02b6a7fb78928975d63fca",
   "reference": "docs/12-testing/BASELINE_FORMAT.md",
-  "lock_sha256": "8bb19eb2c7ec861a8e89f80fadca572a0a33ef152a9f6ff8a1ddbf714ef9f2d5",
+  "lock_sha256": "ac928ec0e5b30379b9ae9619b6a83316ca33d802b274fea77a29bae700d79c51",
   "packages": 65,
-  "test_files": 486
+  "test_files": 486,
+  "packages_with_test": 65,
+  "packages_with_typecheck": 61,
+  "test_files_tracked": 486
 }

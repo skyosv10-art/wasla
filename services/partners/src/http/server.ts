@@ -1,20 +1,45 @@
 /**
  * Partners service — production root.
  * (ADR-048 §6)
+ *
+ * The second and last file that reads `process.env` (with `db/migrate-cli.ts`).
+ * Env purity is enforced by `__tests__/purity.test.ts`.
  */
 
-import Fastify from "fastify";
-import { readPortEnv } from "@wasla/config";
-import { createApp } from "./app";
+import { keyRegistryFromEnv, type ServiceTokenReplayGuard } from "@wasla/service-auth";
+import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
+import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { createPartnersApp } from "./app";
 import type { PartnerPorts } from "../ports";
 
-const PORT = readPortEnv(process.env, "PORT", 8098);
+const PARTNERS_SERVICE_PORT = 8098;
 
-async function main(): Promise<void> {
-  const app = Fastify({ logger: true });
+function readPort(): number {
+  const raw = process.env.PORT ?? process.env.PARTNERS_SERVICE_PORT;
+  if (raw === undefined || raw.trim() === "") return PARTNERS_SERVICE_PORT;
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("PORT / PARTNERS_SERVICE_PORT غير صالح");
+  }
+  return port;
+}
 
-  // In production, these ports would be wired to real infrastructure.
-  // For now, this is a scaffold that starts and responds to health checks.
+function serviceIdentityFromEnv(): {
+  keys: ReturnType<typeof keyRegistryFromEnv>;
+  replayGuard: ServiceTokenReplayGuard;
+} {
+  return {
+    keys: keyRegistryFromEnv(process.env),
+    replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
+  };
+}
+
+export async function startPartnersServer(): Promise<void> {
+  const port = readPort();
+  const host = process.env.PARTNERS_SERVICE_HOST ?? "0.0.0.0";
+
+  const stopTracing = startTracing("partners");
+
   const ports: PartnerPorts = {
     staffPort: {
       async isStoreStaff() { return null; },
@@ -47,13 +72,33 @@ async function main(): Promise<void> {
     },
   };
 
-  createApp(app, ports);
+  const app = createPartnersApp({
+    ...ports,
+    logger: true,
+    serviceIdentity: serviceIdentityFromEnv(),
+  });
 
-  await app.listen({ port: PORT, host: "0.0.0.0" });
-  console.log(JSON.stringify({ service: "partners", port: PORT, status: "listening" }));
+  const metrics = registerMetrics("partners");
+  instrumentApp(app, metrics);
+  addMetricsEndpoint(app, metrics);
+
+  app.addHook("onClose", async () => {
+    stopTracing();
+  });
+
+  for (const signal of ["SIGTERM", "SIGINT"] as const) {
+    process.once(signal, () => {
+      void app.close().then(() => process.exit(0));
+    });
+  }
+
+  try {
+    await app.listen({ port, host });
+  } catch (error) {
+    app.log.error(error);
+    await app.close();
+    process.exit(1);
+  }
 }
 
-main().catch((err) => {
-  console.error(JSON.stringify({ service: "partners", error: String(err) }));
-  process.exit(1);
-});
+await startPartnersServer();

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-24T10:01:17Z",
+  "generated_at": "2026-09-25T11:25:20Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "c04496032255cca4b8d1b3dd125f9f50b3450ea7",
-    "branch": "feat/m5-14-partner-enterprise",
+    "commit": "779e1fc4db49a75e61d7ea2ca03b10d52211c63c",
+    "branch": "feat/m5-14-partner-infra",
     "dirty": true,
-    "dirty_files": 37,
-    "dirty_reason": "CLM-0351: M5-14 Partner/Enterprise — partners service added (+1 package, +1 with typecheck, +1 with test, +4 test files); ADR-048, env-registry, migration-owners, service auth enforcement, port wiring, config schema updated",
-    "tracked_files": 2595
+    "dirty_files": 8,
+    "dirty_reason": "CLM-0351: M5-14 review 2/N — infrastructure adapters (credential, webhook, usage, audit, lifecycle, store-staff), integration tests (3 files), PARTNERS_DATABASE_URL env var",
+    "tracked_files": 2637
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 65,
     "packages_with_typecheck": 61,
     "packages_with_test": 65,
-    "test_files_tracked": 486,
+    "test_files_tracked": 489,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:a358f7a91a8a72a4e4c182365628f5852c994df82c02b6a7fb78928975d63fca",
+  "fingerprint": "sha256:5ef661ea84d1279eef6361f9fe2578ac654a76e4e50c0916a5196f74996067ad",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

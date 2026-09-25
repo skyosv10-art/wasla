@@ -6381,3 +6381,59 @@ Started M5-14 (Partner / Enterprise) — the first review (1/N) establishes:
 - WORK_CLAIMS.md: CLM-0351 registered
 - LAUNCH_EXECUTION_BOARD.md: M5-14 → In Progress
 - ROADMAP.md: Updated
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 1/N Merged (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **PR:** [#463](https://github.com/skyosv10-art/wasla/pull/463)
+
+### Merged
+PR #463 merged to main (squash, branch deleted). All 38 CI checks green:
+- governance-guard, verify, test, typecheck, roadmap, doc-coverage, image-supply-chain, repo-structure
+- 16 db-integration jobs, 10 exit-gate-e2e jobs, 2 mini-app e2e jobs
+
+### What was delivered in review 1/N
+1. ADR-048 (partner identity, tenant=model store, enterprise boundary)
+2. Partners service: schema.sql (5 tables), domain (lifecycle, credentials, tenant-guard), ports, 4 use cases, HTTP (10 routes, 11 scopes), 32 unit tests
+3. Governance: migration-owners, env-registry (PORT + HOST), service auth enforcement, port wiring (createPartnersApp factory), config schema, baseline, BRANCH_EVIDENCE, WORK_CLAIMS
+
+### Governance fixes applied (3 commits)
+1. Port wiring: createApp → createPartnersApp factory pattern, removed extends PartnerPorts
+2. Config schema: added PARTNERS_SERVICE_PORT/HOST to env-registry.json, regenerated artifacts
+3. Baseline: reconstructed BASELINE.json with proper dynamic/env/repo fields, correct static counts (65 packages, 486 test files)
+
+### Next: Review 2/N
+PostgreSQL infrastructure (Drizzle ORM stores), integration tests, exit gate, webhook delivery engine, usage counter enforcement, drizzle migrations.
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 2/N (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **Branch:** `feat/m5-14-partner-infra`
+
+### Summary
+Review 2/N implements the PostgreSQL infrastructure layer for the partners service:
+
+1. **Infrastructure adapters** (6 files):
+   - `infrastructure/pg.ts` — Pool factory, UUID/timestamp helpers
+   - `infrastructure/credential-store.ts` — PgCredentialStore (create, list, revoke, findByHash)
+   - `infrastructure/webhook-store.ts` — PgWebhookStore (create, list, delete, pause)
+   - `infrastructure/usage-store.ts` — PgUsageStore (increment api calls, webhook deliveries, get)
+   - `infrastructure/audit-store.ts` — PgAuditStore (append, listByTenant)
+   - `infrastructure/lifecycle-store.ts` — PgLifecycleStore (get, create, transition)
+   - `infrastructure/store-staff-port.ts` — PgStoreStaffPort (isStoreStaff)
+
+2. **Server wiring**: `http/server.ts` updated to use real PostgreSQL adapters instead of stubs. Pool created once, shared across all stores, closed on shutdown.
+
+3. **Integration tests** (3 files, 17 tests):
+   - `credential-store.integration.test.ts` — 6 tests (create, list by tenant, revoke, findByHash, isolation)
+   - `lifecycle-store.integration.test.ts` — 6 tests (create, get, transition pending→approved→active→suspended→offboarded)
+   - `audit-store.integration.test.ts` — 5 tests (append, list by tenant, limit, tenant isolation)
+   - All tests skip when DATABASE_URL is not set
+
+4. **Domain update**: Added `secretHash` field to PartnerWebhook interface (was missing from domain model but present in schema)
+
+5. **Config**: Added PARTNERS_DATABASE_URL to env-registry.json with Arabic description, registered readers for pg.ts and pg-harness.ts
+
+### Governance
+- Typecheck: clean
+- Unit tests: 32/32 pass
+- Config schema: all 8 gates pass
+- Baseline: all 4 gates pass

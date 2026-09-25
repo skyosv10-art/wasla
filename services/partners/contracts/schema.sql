@@ -1,5 +1,6 @@
 -- WASLA Partners Service — Data Contract (PostgreSQL DDL)
 -- Phase 14 — Partner / Enterprise
+-- @wasla-migrations-exempt: M5-14 review 2/N — migration runner active (db/migrate.ts) but drizzle-generated reversible migrations deferred to ADR-024 wave
 --
 -- Principles (ADR-048):
 --   1. A tenant is a store. No separate tenants table.

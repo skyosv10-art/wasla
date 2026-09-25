@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 79 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 80 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "CI",
@@ -131,7 +131,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: true,
     default: null,
     scopes: ["runtime", "test", "tooling"],
-    readerCount: 91,
+    readerCount: 93,
     ownerItem: "M2-04",
   },
   {
@@ -565,6 +565,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-08",
   },
   {
+    name: "PARTNERS_DATABASE_URL",
+    type: "postgres_url",
+    required: "conditional",
+    secret: true,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 2,
+    ownerItem: "M5-14",
+  },
+  {
     name: "PARTNERS_SERVICE_HOST",
     type: "string",
     required: "optional",
@@ -881,6 +891,7 @@ export const ENV_VAR_NAMES = [
   "ORDER_SERVICE_TIMEOUT_MS",
   "ORDER_SERVICE_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
+  "PARTNERS_DATABASE_URL",
   "PARTNERS_SERVICE_HOST",
   "PARTNERS_SERVICE_PORT",
   "PARTNER_BOT_DEEP_LINK_TEMPLATE",

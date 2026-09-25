@@ -574,6 +574,14 @@
         {
           "file": "services/audit/src/http/server.ts",
           "mode": "direct"
+        },
+        {
+          "file": "services/partners/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/partners/src/db/migrate-cli.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
@@ -1421,6 +1429,28 @@
           "mode": "direct"
         }
       ]
+    },
+    {
+      "name": "PARTNERS_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "conditional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "readers": [
+        {
+          "file": "services/partners/src/infrastructure/pg.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/partners/src/__tests__/pg-harness.ts",
+          "mode": "direct"
+        }
+      ],
+      "owner_item": "M5-14",
+      "description_ar": "سلسلةُ اتصالِ PostgreSQL لخدمةِ الشركاءِ (إلزاميّةٌ عند تشغيل الخدمة)"
     },
     {
       "name": "PARTNERS_SERVICE_HOST",

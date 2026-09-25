@@ -10,6 +10,13 @@ import { keyRegistryFromEnv, type ServiceTokenReplayGuard } from "@wasla/service
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 import { createPartnersApp } from "./app";
+import { createPartnersPool } from "../infrastructure/pg";
+import { PgCredentialStore } from "../infrastructure/credential-store";
+import { PgWebhookStore } from "../infrastructure/webhook-store";
+import { PgUsageStore } from "../infrastructure/usage-store";
+import { PgAuditStore } from "../infrastructure/audit-store";
+import { PgLifecycleStore } from "../infrastructure/lifecycle-store";
+import { PgStoreStaffPort } from "../infrastructure/store-staff-port";
 import type { PartnerPorts } from "../ports";
 
 const PARTNERS_SERVICE_PORT = 8098;
@@ -40,36 +47,15 @@ export async function startPartnersServer(): Promise<void> {
 
   const stopTracing = startTracing("partners");
 
+  const pool = createPartnersPool();
+
   const ports: PartnerPorts = {
-    staffPort: {
-      async isStoreStaff() { return null; },
-    },
-    credentialStore: {
-      async create() { throw new Error("Not implemented"); },
-      async listByTenant() { return []; },
-      async revoke() { return null; },
-      async findByHash() { return null; },
-    },
-    webhookStore: {
-      async create() { throw new Error("Not implemented"); },
-      async listByTenant() { return []; },
-      async delete() { return null; },
-      async pause() { return null; },
-    },
-    usageStore: {
-      async incrementApiCalls() { throw new Error("Not implemented"); },
-      async incrementWebhookDeliveries() { throw new Error("Not implemented"); },
-      async get() { return null; },
-    },
-    auditStore: {
-      async append() { throw new Error("Not implemented"); },
-      async listByTenant() { return []; },
-    },
-    lifecycleStore: {
-      async get() { return null; },
-      async create() { throw new Error("Not implemented"); },
-      async transition() { throw new Error("Not implemented"); },
-    },
+    staffPort: new PgStoreStaffPort(pool),
+    credentialStore: new PgCredentialStore(pool),
+    webhookStore: new PgWebhookStore(pool),
+    usageStore: new PgUsageStore(pool),
+    auditStore: new PgAuditStore(pool),
+    lifecycleStore: new PgLifecycleStore(pool),
   };
 
   const app = createPartnersApp({
@@ -83,6 +69,7 @@ export async function startPartnersServer(): Promise<void> {
   addMetricsEndpoint(app, metrics);
 
   app.addHook("onClose", async () => {
+    await pool.end();
     stopTracing();
   });
 

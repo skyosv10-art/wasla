@@ -6454,3 +6454,12 @@ PR #464 merged to main (squash, branch deleted). All 38 CI checks green.
 
 ### Next: Review 3/N
 Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter enforcement, drizzle-generated reversible migrations.
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 3/N (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **Branch:** `feat/m5-14-review-3`
+
+### Delivered
+1. Webhook delivery engine (`domain/webhook-delivery.ts`): HMAC-SHA256 signing, exponential backoff (1s/2s/4s/8s/16s), 5 max retries, dead-letter on exhaustion
+2. Usage enforcement (`domain/usage-enforcement.ts`): Per-tenant rate limiting, hourly windows, default limits (1000 API calls/hr, 100 webhook deliveries/hr)
+3. Unit tests: 21 new tests (12 webhook delivery + 9 usage enforcement) — total 53 unit tests

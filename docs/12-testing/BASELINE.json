@@ -30,7 +30,10 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32
+    "risks_not_closed": 32,
+    "test_files": 491,
+    "with_tests": 65,
+    "with_typecheck": 61
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +44,7 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:5ef661ea84d1279eef6361f9fe2578ac654a76e4e50c0916a5196f74996067ad",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md"
+  "fingerprint": "a0f4099523c6f65799c4b70dd9e72862d55d5a5cbbb35ee2ea80fcd7e4ccdd83",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md",
+  "baseline_fingerprint": "a0f4099523c6f65799c4b70dd9e72862d55d5a5cbbb35ee2ea80fcd7e4ccdd83"
 }

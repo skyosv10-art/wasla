@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 77 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 79 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "CI",
@@ -565,6 +565,26 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-08",
   },
   {
+    name: "PARTNERS_SERVICE_HOST",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: "0.0.0.0",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M5-14",
+  },
+  {
+    name: "PARTNERS_SERVICE_PORT",
+    type: "port",
+    required: "optional",
+    secret: false,
+    default: "8098",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M5-14",
+  },
+  {
     name: "PARTNER_BOT_DEEP_LINK_TEMPLATE",
     type: "string",
     required: "optional",
@@ -631,7 +651,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 16,
+    readerCount: 17,
     ownerItem: "M2-04",
   },
   {
@@ -861,6 +881,8 @@ export const ENV_VAR_NAMES = [
   "ORDER_SERVICE_TIMEOUT_MS",
   "ORDER_SERVICE_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
+  "PARTNERS_SERVICE_HOST",
+  "PARTNERS_SERVICE_PORT",
   "PARTNER_BOT_DEEP_LINK_TEMPLATE",
   "PARTNER_BOT_MINI_APP_LABEL",
   "PARTNER_BOT_MINI_APP_URL",

@@ -6333,3 +6333,51 @@ each adding measured capability:
 - WORK_CLAIMS.md: CLM-0350 registered
 - LAUNCH_EXECUTION_BOARD.md: M5-13 → Completed
 - ROADMAP.md: Updated with closure summary
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 1/N (CLM-0351)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0351` · **Branch:** `feat/m5-14-partner-enterprise`
+
+### Summary
+Started M5-14 (Partner / Enterprise) — the first review (1/N) establishes:
+
+1. **ADR-048** — Partner identity, tenant model, and enterprise boundary:
+   - A tenant is a store (no separate tenants table)
+   - Tenant isolation enforced at the partners service boundary
+   - API credentials scoped to a single store, hashed at rest (SHA-256)
+   - Webhooks are event-driven with exponential backoff
+   - Usage limits per-tenant, not per-user
+   - Onboarding lifecycle: pending → approved → active → suspended → offboarded
+   - Audit trail is append-only
+   - SLA model is declarative (standard/enterprise tiers)
+
+2. **Services/partners/** service scaffolded:
+   - `contracts/schema.sql` — 5 tables: api_credentials, webhooks, usage_counters, audit_log, lifecycle
+   - `src/domain/lifecycle.ts` — State machine (5 states, 7 transitions)
+   - `src/domain/credentials.ts` — API key generation, SHA-256 hashing, verification
+   - `src/domain/tenant-guard.ts` — Tenant membership guard, role enforcement
+   - `src/ports.ts` — Infrastructure interfaces
+   - `src/use-cases/` — issue-credential, revoke-credential, suspend-tenant, reinstate-tenant
+   - `src/http/app.ts` — Fastify HTTP boundary (10 routes)
+   - `src/http/service-identity.ts` — Service identity enforcement (11 scopes)
+   - `src/http/server.ts` — Production root (port 8098)
+
+3. **Unit tests** — 33 tests:
+   - Lifecycle state machine (12 tests)
+   - API credential generation (9 tests)
+   - Tenant guard (6 tests)
+   - Issue credential use case (4 tests)
+   - Audit entry verification (2 tests)
+
+### What is deferred
+- PostgreSQL infrastructure (Drizzle ORM stores)
+- Integration tests on real PostgreSQL
+- Exit gate (tenant isolation + SLA proof)
+- Webhook delivery engine
+- Usage counter enforcement
+- Migrations (drizzle generate)
+
+### Governance
+- WORK_CLAIMS.md: CLM-0351 registered
+- LAUNCH_EXECUTION_BOARD.md: M5-14 → In Progress
+- ROADMAP.md: Updated

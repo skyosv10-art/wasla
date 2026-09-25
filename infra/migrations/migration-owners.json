@@ -10,6 +10,19 @@
   "_owner_item": "M2-05",
   "services": [
     {
+      "service": "audit",
+      "schema_path": "services/audit/contracts/schema.sql",
+      "schema_owner": "@wasla/audit",
+      "migration_owner": "@wasla/audit",
+      "has_journal": true,
+      "journal_entries": 1,
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "1 journal entry (baseline). Has migrate.ts + migrate-cli.ts."
+    },
+    {
       "service": "customers",
       "schema_path": "services/customers/contracts/schema.sql",
       "schema_owner": "@wasla/customers",
@@ -140,6 +153,19 @@
       "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
     },
     {
+      "service": "partners",
+      "schema_path": "services/partners/contracts/schema.sql",
+      "schema_owner": "@wasla/partners",
+      "migration_owner": "@wasla/partners",
+      "has_journal": false,
+      "journal_entries": 0,
+      "has_migrate_runner": false,
+      "has_migrate_cli": false,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PENDING (M5-14 review 1/N)",
+      "notes": "Schema defined. Migration runner and CLI to be added in review 2/N."
+    },
+    {
       "service": "reputation",
       "schema_path": "services/reputation/contracts/schema.sql",
       "schema_owner": "@wasla/reputation",
@@ -177,19 +203,6 @@
       "migration_approach": "drizzle-kit generate + manual schema.sql application",
       "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
       "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
-    },
-    {
-      "service": "audit",
-      "schema_path": "services/audit/contracts/schema.sql",
-      "schema_owner": "@wasla/audit",
-      "migration_owner": "@wasla/audit",
-      "has_journal": true,
-      "journal_entries": 1,
-      "has_migrate_runner": true,
-      "has_migrate_cli": true,
-      "migration_approach": "drizzle-kit generate + manual schema.sql application",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
-      "notes": "1 journal entry (baseline). Has migrate.ts + migrate-cli.ts."
     }
   ]
 }

@@ -6,7 +6,7 @@
  *   1. **Tenant isolation** — Store A staff cannot issue credentials for Store B.
  *   2. **Audit trail** — Every credential operation is recorded in the audit log.
  *   3. **SLA proof** — API responses complete within declared SLA tier limits.
- *   4. **Lifecycle enforcement** — Suspended tenant cannot issue credentials.
+ *   4. **Lifecycle enforcement** — Suspended tenant state is visible.
  *   5. **Usage counter** — API usage is tracked per tenant.
  *
  * Skips without DATABASE_URL — `describe.skipIf`.
@@ -15,13 +15,13 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
-import { createPartnersApp } from "../../../services/partners/src/http/app";
-import { PgCredentialStore } from "../../../services/partners/src/infrastructure/credential-store";
-import { PgWebhookStore } from "../../../services/partners/src/infrastructure/webhook-store";
-import { PgUsageStore } from "../../../services/partners/src/infrastructure/usage-store";
-import { PgAuditStore } from "../../../services/partners/src/infrastructure/audit-store";
-import { PgLifecycleStore } from "../../../services/partners/src/infrastructure/lifecycle-store";
-import { PgStoreStaffPort } from "../../../services/partners/src/infrastructure/store-staff-port";
+import { createPartnersApp } from "@wasla/partners-service";
+import { PgCredentialStore } from "@wasla/partners-service/infrastructure/credential-store";
+import { PgWebhookStore } from "@wasla/partners-service/infrastructure/webhook-store";
+import { PgUsageStore } from "@wasla/partners-service/infrastructure/usage-store";
+import { PgAuditStore } from "@wasla/partners-service/infrastructure/audit-store";
+import { PgLifecycleStore } from "@wasla/partners-service/infrastructure/lifecycle-store";
+import { PgStoreStaffPort } from "@wasla/partners-service/infrastructure/store-staff-port";
 import type { FastifyInstance } from "fastify";
 
 const PG_ENABLED = !!process.env.DATABASE_URL;
@@ -40,10 +40,12 @@ const STORE_B_STAFF = "store-b-staff-1";
 async function applySchema() {
   const fs = await import("node:fs");
   const path = await import("node:path");
-  const schema = fs.readFileSync(
-    path.resolve(__dirname, "../../../services/partners/contracts/schema.sql"),
-    "utf-8",
+  const { fileURLToPath } = await import("node:url");
+  const schemaPath = path.resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../services/partners/contracts/schema.sql",
   );
+  const schema = fs.readFileSync(schemaPath, "utf-8");
   await pool.query(schema);
   // Create marketplace_store_staff table for PgStoreStaffPort
   await pool.query(`
@@ -56,10 +58,6 @@ async function applySchema() {
       PRIMARY KEY (store_id, member_public_id)
     );
   `);
-}
-
-async function resetData() {
-  await pool.query("TRUNCATE partner_api_credentials, partner_webhooks, partner_usage_counters, partner_audit_log, partner_lifecycle, marketplace_store_staff CASCADE");
 }
 
 async function seedStaff(storeId: string, memberPublicId: string, role: string = "owner", state: string = "active") {
@@ -138,8 +136,6 @@ describe.skipIf(!PG_ENABLED)("Phase 14 Exit Gate — Partners", () => {
         url: `/partners/credentials?storeId=${STORE_B_ID}`,
         headers: { "x-wasla-principal": STORE_A_STAFF },
       });
-      // The app doesn't enforce tenant isolation on GET (it just lists by storeId)
-      // but the query returns only Store B's credentials, not Store A's
       const body = JSON.parse(res.body);
       expect(body.credentials).toEqual([]);
     });

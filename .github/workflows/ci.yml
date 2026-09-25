@@ -582,6 +582,11 @@ jobs:
             pkg: "@wasla/delivery-e2e"
             db: wasla_delivery_e2e
             var: DATABASE_URL
+          # `M5-14` · بوّابةُ خروجِ الطورِ 14 — عزلُ المستأجِرِ وإثباتُ SLA.
+          - leg: partners
+            pkg: "@wasla/partners-e2e"
+            db: wasla_partners_e2e
+            var: DATABASE_URL
     services:
       postgres:
         image: postgres:15

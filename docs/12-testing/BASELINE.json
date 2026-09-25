@@ -26,11 +26,14 @@
     "packages": 65,
     "packages_with_typecheck": 61,
     "packages_with_test": 65,
-    "test_files_tracked": 489,
+    "test_files_tracked": 491,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32
+    "risks_not_closed": 32,
+    "test_files": null,
+    "with_tests": null,
+    "with_typecheck": null
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +44,7 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:5ef661ea84d1279eef6361f9fe2578ac654a76e4e50c0916a5196f74996067ad",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md"
+  "fingerprint": "sha256:ffd15093985c1eb6d61bc67d912587844beaccee98d9e513e8808d90ff71035a",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md",
+  "baseline_fingerprint": "sha256:ffd15093985c1eb6d61bc67d912587844beaccee98d9e513e8808d90ff71035a"
 }

@@ -172,3 +172,5 @@
 | `scripts/checks/validate-platform-branch-freshness.sh` — الفحصُ **23**: حارسُ نضارةِ الفروعِ على المنصّةِ (يقرأُ فروعَ GitHub ويُصنِّفُها: نشطٌ · مفتوحٌ · محفوظٌ · بائتٌ) · سبعُ حالاتِ طفرةٍ في [`lib/gov-cases-branch-freshness.sh`](../../scripts/checks/lib/gov-cases-branch-freshness.sh) · [`BRANCH_EVIDENCE.md`](../16-progress/BRANCH_EVIDENCE.md) سجلُّ الأدلّةِ · `RISK-0045` مُغلَقٌ · `governance_suite_cases: 474⇒481` | Implemented | M0-44 · `CLM-0209`+`CLM-0210` |
 | تقليمُ تبعيّاتِ التطويرِ من صورةِ التشغيلِ (`RISK-0047`) — الصادراتُ تُشيرُ إلى `src/*.ts` فالصورةُ تحملُ `tsx` بالضرورةِ | Missing **بدَينٍ مُسمّىً** | M2 |
 | نشرُ الصورةِ وسجلُّ صورٍ وإقلاعُ خدمةٍ في حاويةٍ (`docker-compose`) | Missing | M2-02 |
+
+| `apps/admin-portal/` | In Progress | M5-15 (review 1/N) | Phase 15 | Partners management screen: lifecycle, credentials, usage, audit |

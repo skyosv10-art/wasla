@@ -100,3 +100,32 @@ video {
     padding: 1rem;
   }
 }
+
+/* M5-15: Partners screen styles */
+.search-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.search-bar input { flex: 1; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; }
+.search-bar button { background: #4a4a8a; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+.search-bar button:hover { background: #3a3a7a; }
+
+.card { background: white; padding: 1.25rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+.card h3 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #1a1a2e; }
+
+.empty-state { color: #999; text-align: center; padding: 1.5rem; font-size: 0.9rem; }
+
+.danger-btn { background: #c44 !important; }
+.danger-btn:hover { background: #a33 !important; }
+
+.success-message { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.success-message code { display: block; background: #f8f9fa; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; word-break: break-all; }
+
+.error-message { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+.error-message button { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #721c24; }
+
+.actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+.actions button { background: #4a4a8a; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+.actions button:hover { background: #3a3a7a; }
+
+.partner-details { margin-top: 1rem; }
+.partner-details table { width: 100%; border-collapse: collapse; }
+.partner-details td { padding: 0.5rem; border-bottom: 1px solid #eee; }
+.partner-details td:first-child { font-weight: 600; color: #555; width: 40%; }

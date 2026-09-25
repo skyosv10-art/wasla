@@ -6499,3 +6499,16 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 2. CI: Added partners leg to db-integration matrix (3 integration test files, 17 tests)
 3. MERGE_BLOCKING.json: Added `db-integration (partners, ...)` to required contexts
 4. M5-14 marked as Completed in execution board
+
+## 2026-09-25 — M5-15: Admin Operations full — Review 1/N (CLM-0353)
+
+- **Work Item(s):** M5-15 · **Claim:** `CLM-0353` · **Branch:** `feat/m5-15-review-1`
+
+### Delivered
+1. Partners types (`apps/admin-portal/src/types/partners.ts`): PartnerLifecycle, PartnerCredential, PartnerUsage, PartnerAuditEntry
+2. Partners store (`apps/admin-portal/src/store/partners.ts`): Zustand store with lifecycle/credentials/usage/audit state and actions
+3. Partners screen (`apps/admin-portal/src/screens/Partners.tsx`): Full admin UI with lifecycle management (suspend/reinstate), credentials (issue/revoke), usage display, audit trail
+4. App routing: Added `partners` route to App.tsx with nav link
+5. i18n: Added Arabic, English, Urdu translations for all partner UI strings
+6. CSS: Added partner-specific styles (search-bar, card, dialog, error/success messages)
+7. Tests: 8 unit tests covering access control, search, lifecycle display, suspend dialog, credential issuance, error handling

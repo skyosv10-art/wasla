@@ -1,4 +1,9 @@
 import { defineConfig } from "vitest/config";
 export default defineConfig({
-  test: { include: ["src/**/*.unit.test.ts"], pool: "threads", environment: "node" },
+  test: {
+    include: ["src/**/*.unit.test.ts"],
+    exclude: ["src/**/*.integration.test.ts"],
+    pool: "threads",
+    environment: "node",
+  },
 });

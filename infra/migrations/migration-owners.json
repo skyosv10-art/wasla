@@ -159,11 +159,11 @@
       "migration_owner": "@wasla/partners",
       "has_journal": false,
       "journal_entries": 0,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
       "migration_approach": "drizzle-kit generate + manual schema.sql application",
-      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PENDING (M5-14 review 1/N)",
-      "notes": "Schema defined. Migration runner and CLI to be added in review 2/N."
+      "status": "MIGRATION_RUNNER_ACTIVE (M5-14 review 2/N)",
+      "notes": "Schema applied via db/migrate.ts and db/migrate-cli.ts. Drizzle-generated migrations deferred to a later review (ADR-024 wave)."
     },
     {
       "service": "reputation",

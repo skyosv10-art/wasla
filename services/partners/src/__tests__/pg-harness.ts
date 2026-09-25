@@ -9,11 +9,7 @@
 
 import type { Pool } from "pg";
 import { Pool as PgPool } from "pg";
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { applyPartnersSchema } from "../db/migrate.js";
 
 export const DATABASE_URL = process.env.DATABASE_URL || process.env.PARTNERS_DATABASE_URL;
 export const PG_ENABLED = Boolean(DATABASE_URL);
@@ -31,16 +27,9 @@ export interface PgFixture {
   readonly close: () => Promise<void>;
 }
 
-export function readSchemaSql(): string {
-  return readFileSync(
-    join(__dirname, "..", "..", "contracts", "schema.sql"),
-    "utf-8",
-  );
-}
-
 export async function resetSchema(pool: Pool): Promise<void> {
   await pool.query(`DROP TABLE IF EXISTS ${TABLES.join(", ")} CASCADE`);
-  await pool.query(readSchemaSql());
+  await applyPartnersSchema(pool);
 }
 
 export async function resetData(pool: Pool): Promise<void> {

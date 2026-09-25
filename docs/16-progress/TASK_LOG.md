@@ -6489,3 +6489,13 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
   - Usage timestamp: Fix windowStart computation (double-colon bug in slice approach)
   - E2E seedLifecycle: Set suspended_at/offboarded_at to satisfy check constraints
   - pnpm-lock.yaml: Updated for new @wasla/partners-e2e package
+
+## 2026-09-25 — M5-14: Partner/Enterprise — Review 5/N (CLM-0352)
+
+- **Work Item(s):** M5-14 · **Claim:** `CLM-0352` · **Branch:** `feat/m5-14-complete`
+
+### Delivered
+1. Render Terraform: Added `wasla-partners` service to `infra/terraform/render.tf`
+2. CI: Added partners leg to db-integration matrix (3 integration test files, 17 tests)
+3. MERGE_BLOCKING.json: Added `db-integration (partners, ...)` to required contexts
+4. M5-14 marked as Completed in execution board

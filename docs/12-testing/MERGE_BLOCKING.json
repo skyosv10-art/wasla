@@ -19,6 +19,7 @@
         "db-integration (channel, @wasla/channel-postgres, wasla_channel_test)",
         "db-integration (customer, @wasla/customers-service, wasla_customer_test)",
         "db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)",
+        "db-integration (partners, @wasla/partners-service, wasla_partners_test)",
         "db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)",
         "db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)",
         "db-integration (geography, @wasla/geography-service, wasla_geo_test)",

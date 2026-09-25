@@ -245,6 +245,19 @@ resource "render_web_service" "wasla_audit" {
   })
 }
 
+resource "render_web_service" "wasla_partners" {
+  name   = "wasla-partners"
+  region = var.render_region
+  plan   = var.render_plan
+
+  runtime_source = { docker = local.docker_source }
+
+  env_vars = merge(local.common_env, {
+    DATABASE_URL  = { value = var.supabase_database_url }
+    WASLA_SERVICE = { value = "@wasla/partners-service" }
+  })
+}
+
 resource "render_web_service" "wasla_customer_bot" {
   name   = "wasla-customer-bot"
   region = var.render_region

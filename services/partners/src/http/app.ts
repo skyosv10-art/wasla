@@ -4,6 +4,7 @@
  */
 
 import Fastify, { type FastifyInstance } from "fastify";
+import { TenantAccessDeniedError, TenantRoleError } from "../domain/tenant-guard";
 import { registerServiceIdentity, type MarketplaceServiceIdentityOptions } from "./service-identity";
 import { issueCredential } from "../use-cases/issue-credential";
 import { revokeCredential } from "../use-cases/revoke-credential";
@@ -24,6 +25,17 @@ export interface PartnerAppOptions {
 
 export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
   const app = Fastify({ logger: options.logger ?? false });
+
+  // Map domain errors to HTTP status codes
+  app.setErrorHandler((err, _request, reply) => {
+    if (err instanceof TenantAccessDeniedError) {
+      return reply.status(403).send({ error: { code: "TENANT_ACCESS_DENIED", message: err.message } });
+    }
+    if (err instanceof TenantRoleError) {
+      return reply.status(403).send({ error: { code: "TENANT_ROLE_DENIED", message: err.message } });
+    }
+    return reply.send(err);
+  });
 
   registerServiceIdentity(app, options.serviceIdentity ?? {});
 

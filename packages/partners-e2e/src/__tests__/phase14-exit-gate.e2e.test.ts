@@ -68,8 +68,13 @@ async function seedStaff(storeId: string, memberPublicId: string, role: string =
 }
 
 async function seedLifecycle(storeId: string, state: string) {
+  // Set suspended_at/offboarded_at to satisfy check constraints
+  const suspendedAt = state === "suspended" ? "NOW()" : "NULL";
+  const offboardedAt = state === "offboarded" ? "NOW()" : "NULL";
   await pool.query(
-    "INSERT INTO partner_lifecycle (tenant_store_id, state, sla_tier, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) ON CONFLICT (tenant_store_id) DO UPDATE SET state = EXCLUDED.state, updated_at = NOW()",
+    `INSERT INTO partner_lifecycle (tenant_store_id, state, sla_tier, suspended_at, offboarded_at, created_at, updated_at)
+     VALUES ($1, $2, $3, ${suspendedAt}, ${offboardedAt}, NOW(), NOW())
+     ON CONFLICT (tenant_store_id) DO UPDATE SET state = EXCLUDED.state, suspended_at = EXCLUDED.suspended_at, offboarded_at = EXCLUDED.offboarded_at, updated_at = NOW()`,
     [storeId, state, "standard"],
   );
 }

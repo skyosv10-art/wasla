@@ -389,6 +389,12 @@ jobs:
           - leg: delivery
             pkg: "@wasla/delivery-service"
             db: wasla_delivery_test
+          # `M5-14` · Partner/Enterprise — PostgreSQL adapters (6 stores):
+          # credential-store, webhook-store, usage-store, audit-store,
+          # lifecycle-store, store-staff-port. 3 integration test files (17 tests).
+          - leg: partners
+            pkg: "@wasla/partners-service"
+            db: wasla_partners_test
     services:
       postgres:
         image: postgres:15

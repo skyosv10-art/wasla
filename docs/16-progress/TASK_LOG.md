@@ -6273,3 +6273,63 @@ M2-07 remains blocked on M2-02 (external credentials RENDER_API_KEY/RENDER_OWNER
 - `services/observability/src/dashboard.ts` — لوحةُ معلوماتَ HTML
 - `services/observability/render.yaml` — إعدادُ نشرِ Render
 - `scripts/test-observability-collector.sh` — اختبارُ دخانٍ
+
+## 2026-09-25 — M5-13: Store Orders & Delivery → Completed (CLM-0350)
+
+- **Work Item(s):** M5-13 · **Claim:** `CLM-0350` · **Branch:** `chore/release-m5-13-completed`
+
+### Summary
+M5-13 (Store Orders & Delivery) moved to **Completed** by program owner executive
+delegation. The delivery service has been through 25 reviews (1/N through 25/N),
+each adding measured capability:
+
+- **Reviews 1-5:** Contracts, domain model, state machine, dispatch relay consumer,
+  marketplace inventory consumer, PostgreSQL infrastructure
+- **Reviews 6-8:** HTTP boundary (Fastify), idempotency, readiness probe, marketplace
+  catalog connector (store_slug resolution)
+- **Review 9:** Payment mirror + Phase 13 exit gate (inventory/payment E2E) — 7/7
+- **Review 10:** Inventory reservation at order placement, confirmation gate
+  (payment=authorized AND inventory=reserved)
+- **Review 11:** Fulfillment transition path, final inventory deduction
+  (reserved → consumed at delivery)
+- **Review 12:** Generated reversible migrations (drizzle, ADR-024 Wave 4)
+- **Reviews 13-14:** Idempotency key TTL + sweep runner
+- **Review 15:** Marketplace readiness probe
+- **Review 16:** Active inventory conflict detection (flag, not gate)
+- **Review 17:** Inbound service identity enforcement (9 scopes, 11 routes)
+- **Review 18:** Inventory conflict acknowledgement write path
+- **Reviews 19-20:** Inflight Retry-After, dead letter observability
+- **Reviews 21-24:** Dead letter requeue, advisory lock, acknowledgement,
+  app port wiring guard (RISK-0044)
+- **Review 25:** Time bomb defusal in poisoned acknowledgement test
+
+### Closing evidence
+- Exit gate (`packages/delivery-e2e/src/__tests__/phase13-exit-gate.e2e.test.ts`):
+  19 test cases covering price snapshot from real marketplace, placed→confirmed
+  transition, outbox contract conformance, inventory event relay, idempotency,
+  readiness probe, auth enforcement, and poisoned letter acknowledgement —
+  passing in CI on PostgreSQL.
+- All 5 originally deferred items (ADR-026 §4) raised: relay consumers, HTTP
+  boundary, integration/CI, exit gate, generated migrations.
+
+### Risk status at closure
+- RISK-0035: **Closed** (poisoned event relay — all limits raised)
+- RISK-0044: **Closed** (app port wiring guard implemented)
+- RISK-0020: **Closed** (migration conformance proven)
+- RISK-0012: **Mitigating** (ADR-037 — outbox monotonic sequence_number added
+  to 7 outbox tables)
+- RISK-0041: **Mitigating** (M1-06 — securitySchemes declared in all 8 contracts)
+- RISK-0034: **Open** (ORD-/WS- bridge — architectural decision, not a code gap)
+
+### What is not claimed
+- RISK-0034 (dispatch bridge) remains open by architectural decision — the
+  delegation wire is tested on a mock bridge.
+- No production deployment claim — deployment is a separate milestone.
+- Alerting on poisoned events: observability infrastructure (Prometheus +
+  Alertmanager) deployed in M2-08, but delivery-specific alert rules are
+  not yet configured in the collector.
+
+### Governance
+- WORK_CLAIMS.md: CLM-0350 registered
+- LAUNCH_EXECUTION_BOARD.md: M5-13 → Completed
+- ROADMAP.md: Updated with closure summary

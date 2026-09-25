@@ -26,14 +26,14 @@
     "packages": 65,
     "packages_with_typecheck": 61,
     "packages_with_test": 65,
-    "test_files_tracked": 489,
+    "test_files_tracked": 491,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
     "risks_not_closed": 32,
-    "test_files": 491,
-    "with_tests": 65,
-    "with_typecheck": 61
+    "test_files": null,
+    "with_tests": null,
+    "with_typecheck": null
   },
   "dynamic": {
     "measured": true,

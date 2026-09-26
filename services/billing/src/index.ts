@@ -8,4 +8,15 @@
 
 export * from "./domain/model.js";
 export * from "./domain/errors.js";
+export {
+  type OrderOutboxRow,
+  type RelayCheckpoint,
+  type ConsumedStatus,
+  classifyOrderEvent,
+  SETTLEMENT_TRIGGER_STATES,
+  ZERO_CHECKPOINT,
+  isBefore,
+  isTerminal as isConsumedTerminal,
+} from "./domain/consumed-events.js";
 export * from "./ports.js";
+export * from "./relay.js";

@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0358 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-16 (review 3/N)
+- **Status:** Released — PR #479 merged (squash `f262ed5`); claim CLM-0358 released
+- **What / Why:** PR #479 merged the M5-16 review 3/N (PostgreSQL Store adapter) and deleted branch `feat/m5-16-review-3`, but claim CLM-0358 was left `Active`. Releasing CLM-0358 per §8.1. M5-16 remains In Progress.
+
 ## 2026-09-26 — M5-16 Review 3/N: PostgreSQL Store Adapter (CLM-0358)
 
 - **Work Item(s):** M5-16 (review 3/N)

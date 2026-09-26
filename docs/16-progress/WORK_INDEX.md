@@ -173,4 +173,4 @@
 | تقليمُ تبعيّاتِ التطويرِ من صورةِ التشغيلِ (`RISK-0047`) — الصادراتُ تُشيرُ إلى `src/*.ts` فالصورةُ تحملُ `tsx` بالضرورةِ | Missing **بدَينٍ مُسمّىً** | M2 |
 | نشرُ الصورةِ وسجلُّ صورٍ وإقلاعُ خدمةٍ في حاويةٍ (`docker-compose`) | Missing | M2-02 |
 
-| `apps/admin-portal/` | In Progress | M5-15 (review 2/N) | Phase 15 | Reviews 1-2/N: Partners management screen (lifecycle, credentials, usage, audit) + Moderation screen (store/product review decisions, product publish/archive). 15 unit tests total. |
+| `apps/admin-portal/` | Completed | M5-15 | Phase 15 | 7 admin screens: Dashboard, Users, Drivers, Orders, AuditLog, Partners (review 1/N), Moderation (review 2/N). 15 unit tests. Privileged workflow gate met. |

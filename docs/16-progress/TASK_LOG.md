@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-15 Closeout: Admin Operations Completed (CLM-0355)
+
+- **Work Item(s):** M5-15
+- **Status:** Completed
+- **What / Why:** M5-15 (Admin Operations full) closed out after 2 reviews. Evidence: (1) PR [#469](https://github.com/skyosv10-art/wasla/pull/469) merged — Partners management screen (review 1/N, 8 unit tests, CLM-0353 released); (2) PR [#471](https://github.com/skyosv10-art/wasla/pull/471) merged — Moderation screen (review 2/N, 7 unit tests, CLM-0354 released); (3) main CI green 40/40 at `23dbf83` after PR #472 (CLM-0354 release). Admin portal now has 7 screens (Dashboard, Users, Drivers, Orders, AuditLog, Partners, Moderation) covering all admin-facing privileged workflows across M5-11..14 services. Privileged workflow gate met: all admin actions route through scope-enforced marketplace/partners endpoints. No remaining admin-only endpoint uncovered. Next: M5-16 (Support & Escalation) — first item is the ticket-model ADR that the board names as blocker.
+
 ## 2026-09-26 — CLM-0354 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-15 (review 2/N)

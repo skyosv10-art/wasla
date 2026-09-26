@@ -1,3 +1,9 @@
+## 2026-09-25 — CLM-0353 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-15 (review 1/N)
+- **Status:** Released — PR #469 merged (squash `34ddb46`); claim CLM-0353 released
+- **What / Why:** PR #469 merged the Partners management screen (M5-15 review 1/N) and deleted branch `feat/m5-15-review-1`, but the work claim CLM-0353 was left `Active`. The stale-claim freshness guard (check 4 in `verify` and `governance-guard`) then rejected `main` because an `Active` claim pointed at a deleted branch. This entry releases CLM-0353 per §8.1 — the root-cause fix, not a guard weakening. M5-15 remains In Progress (review 1/N of N).
+
 ## 2026-09-24 — M4-06 Released + Completed (CLM-0348)
 
 - **Work Item(s):** M4-06

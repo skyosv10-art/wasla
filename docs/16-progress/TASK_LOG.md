@@ -1,3 +1,14 @@
+## 2026-09-27 — CLM-0370 Released (PR #499 merged)
+
+- **Work Item(s):** M5-17 (review 5/N)
+- **Status:** Released — PR #499 merged (squash `da7b7d1`); claim CLM-0370 released
+
+Billing relay consumer merged. Consumes order.status_changed from order_outbox.
+On completed order state: creates fee settlement (store_variable: 250bps = 2.5%)
++ draft invoice + publishes billing.fee_settled event. 14 relay tests (94 total).
+
+---
+
 ## 2026-09-27 — CLM-0370 · M5-17 review 5/N
 
 - **Work Item(s):** M5-17

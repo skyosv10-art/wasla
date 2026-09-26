@@ -1,0 +1,25 @@
+{
+  "name": "@wasla/support-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Support & Escalation service (Phase 16, ADR-049)",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wasla/contracts-support": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wasla.local/support/events/v1",
+  "title": "WASLA Support & Escalation Domain Events v1",
+  "description": "أحداث خدمة الدعم والتصعيد (Phase 16 · ADR-049). القاعدة الحاكمة: التذكرةُ لها دورةُ حياةٍ مُقفلة، والدليلُ شرطٌ قبل التحقيق، والتصعيدُ ثلاثيّ، والقرارُ يحمل سبباً مغلقاً. وقاعدة الخصوصية (ADR-049 §8): لا اسم ولا هاتف ولا إحداثيّات ولا مُعرّف قناة ولا نصٌّ حرّ في أي حمولة. ولا حدث يعاقب (ADR-049 §1 — كـ ADR-014 §7): لا subject_suspended ولا subject_blocked. وكل حدثٍ يُكتب في المعاملة نفسها عبر support_outbox، فلا تغيير صامت.",
+  "$defs": {
+    "EventEnvelope": {
+      "type": "object",
+      "description": "مغلّف موحّد لكل أحداث الدعم.",
+      "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "aggregate"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string", "enum": ["support.ticket_opened", "support.ticket_escalated", "support.ticket_resolved"] },
+        "event_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "producer": { "const": "support-service" },
+        "aggregate": {
+          "type": "object",
+          "required": ["type", "id"],
+          "properties": {
+            "type": { "const": "support_ticket" },
+            "id": { "type": "string" }
+          }
+        },
+        "trace_id": { "type": ["string", "null"] }
+      }
+    },
+    "TicketOpenedPayload": {
+      "type": "object",
+      "required": ["ticket_id", "ticket_type", "reporter_public_id", "opened_at"],
+      "properties": {
+        "ticket_id": { "type": "string", "format": "uuid" },
+        "ticket_type": { "type": "string", "enum": ["order_issue", "behavior_complaint", "payment_dispute", "service_quality"] },
+        "reporter_public_id": { "type": "string", "pattern": "^WS-[0-9]{10}$" },
+        "subject_public_id": { "type": ["string", "null"], "pattern": "^WS-[0-9]{10}$" },
+        "order_public_id": { "type": ["string", "null"], "pattern": "^ORD-[0-9]{10}$" },
+        "opened_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "TicketEscalatedPayload": {
+      "type": "object",
+      "required": ["ticket_id", "escalation_level", "escalated_at"],
+      "properties": {
+        "ticket_id": { "type": "string", "format": "uuid" },
+        "escalation_level": { "type": "string", "enum": ["support_agent", "support_supervisor", "admin"] },
+        "escalated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "TicketResolvedPayload": {
+      "type": "object",
+      "required": ["ticket_id", "resolution_reason", "evidence_id", "resolved_at"],
+      "properties": {
+        "ticket_id": { "type": "string", "format": "uuid" },
+        "resolution_reason": { "type": "string", "enum": ["refund_issued", "warning_sent", "no_action_needed", "escalated_to_admin"] },
+        "evidence_id": { "type": "string", "format": "uuid" },
+        "resolved_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

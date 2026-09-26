@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: WASLA Support & Escalation API
+  version: 0.1.0
+  description: >
+    Support & Escalation service contracts (Phase 16 · ADR-049).
+    Ticket lifecycle, evidence, escalation, and resolution.
+    The service does NOT punish (ADR-049 §1) — no suspension, no block.
+    No PII in any contract (ADR-049 §8).
+servers:
+  - url: http://localhost:8095
+    description: Local development
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status, service, port]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+          const: support-service
+        port:
+          type: integer
+          const: 8095
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - SUPPORT_VALIDATION_FAILED
+                - SUPPORT_TICKET_NOT_FOUND
+                - SUPPORT_EVIDENCE_REQUIRED
+                - SUPPORT_RESOLUTION_REASON_REQUIRED
+                - SUPPORT_INVALID_STATE_TRANSITION
+                - SUPPORT_TICKET_ALREADY_CLOSED
+                - SUPPORT_EVIDENCE_NOT_FOUND
+            message:
+              type: string
+            trace_id:
+              type: [string, null]

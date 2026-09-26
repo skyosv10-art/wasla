@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 2/N: Support Service Scaffold (CLM-0357)
+
+- **Work Item(s):** M5-16 (review 2/N)
+- **Status:** Active (PR pending)
+- **What / Why:** Support service scaffold + contracts package created. @wasla/contracts-support: frozen arrays (5 ticket states, 4 types, 4 resolution reasons, 3 evidence types, 3 escalation levels, 3 event types, 7 error codes, port 8095, httpStatusForSupportError). services/support: domain model (SUPPORT_TICKET_TRANSITIONS, canTransition, SupportTicket, SupportEvidence, drafts), errors (SupportError class, 7 factory functions, isSupportError), ports (SupportTicketStore, SupportEscalationPort, SupportEventPublisher, SupportTickPort). Contracts: api.openapi.yml (health + error catalog), events.json (3 events with envelope), errors.md (7 codes), schema.sql (support_tickets, support_evidence, support_outbox — evidence gate and resolution gate CHECK constraints). 44 tests (13 contracts + 24 domain + 7 boundary). BASELINE: test_files_tracked 494→497, tests 5496→5540. HTTP, PostgreSQL adapters, relay consumer, admin Support screen, reputation bridge (dispute_resolved fact kind) all deferred to later reviews.
+
 ## 2026-09-26 — CLM-0356 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-16 (review 1/N)

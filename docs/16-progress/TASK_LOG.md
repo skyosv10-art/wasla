@@ -1,3 +1,11 @@
+## 2026-09-26 — CLM-0368 + CLM-0369 Released (PR #497 merged)
+
+- **Work Item(s):** M5-17 (review 4/N)
+- **Status:** Released — PR #497 merged (squash `31ab223`); claims CLM-0368 + CLM-0369 released
+- **What / Why:** PR #497 merged M5-17 review 4/N (HTTP layer + service identity) and the companion governance mutation test fix. Branch `feat/m5-17-review-4` deleted on merge. Releasing both claims per §8.1. M5-17 remains In Progress (review 4/N of N — relay consumer and admin screen deferred).
+
+---
+
 ## 2026-09-26 — M5-16 Review 6/N: Reputation Bridge (CLM-0361)
 
 - **Work Item(s):** M5-16 (review 6/N)

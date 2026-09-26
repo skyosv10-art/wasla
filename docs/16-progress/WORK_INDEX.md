@@ -174,4 +174,4 @@
 | نشرُ الصورةِ وسجلُّ صورٍ وإقلاعُ خدمةٍ في حاويةٍ (`docker-compose`) | Missing | M2-02 |
 
 | `apps/admin-portal/` | Completed | M5-15 | Phase 15 | 7 admin screens: Dashboard, Users, Drivers, Orders, AuditLog, Partners (review 1/N), Moderation (review 2/N). 15 unit tests. Privileged workflow gate met. |
-| `services/support/` | In Progress | M5-16 (review 2/N) | Phase 16 | ADR-049 + scaffold: @wasla/contracts-support (frozen arrays), services/support (domain model, errors, ports, contracts). 44 tests. HTTP/Postgres/relay/screen/bridge deferred. |
+| `services/support/` | In Progress | M5-16 (review 3/N) | Phase 16 | ADR-049 + scaffold + PostgreSQL Store. Drizzle schema, repository, in-memory store, constraints, migrate runner. 60 tests. HTTP/relay/screen/bridge deferred. |

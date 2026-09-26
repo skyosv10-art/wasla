@@ -49,3 +49,44 @@ export type {
   SupportEventPublisher,
   SupportTickPort,
 } from "./ports.js";
+
+export {
+  InMemorySupportTicketStore,
+  InMemorySupportEventPublisher,
+} from "./infrastructure/in-memory.js";
+
+export {
+  PostgresSupportTicketStore,
+  PostgresSupportEventPublisher,
+  createPostgresSupportAdapters,
+} from "./infrastructure/drizzle/repository.js";
+
+export {
+  createSupportDb,
+  type SupportDbConfig,
+  type Db,
+  type DbOrTx,
+} from "./infrastructure/drizzle/db.js";
+
+export {
+  supportTickets,
+  supportEvidence,
+  supportOutbox,
+  type SupportTicketRow,
+  type SupportTicketInsert,
+  type SupportEvidenceRow,
+  type SupportEvidenceInsert,
+  type SupportOutboxRow,
+  type SupportOutboxInsert,
+} from "./infrastructure/drizzle/schema.js";
+
+export {
+  ENFORCED_CONSTRAINTS,
+  isEnforcedConstraint,
+} from "./infrastructure/constraints.js";
+
+export {
+  applySupportSchema,
+  readSchemaContract,
+  SCHEMA_CONTRACT_PATH,
+} from "./db/migrate.js";

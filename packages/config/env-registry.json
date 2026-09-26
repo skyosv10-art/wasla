@@ -586,6 +586,10 @@
         {
           "file": "packages/partners-e2e/src/__tests__/phase14-exit-gate.e2e.test.ts",
           "mode": "direct"
+        },
+        {
+          "file": "services/support/src/db/migrate-cli.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها. الصيغةُ: postgresql://USER:PASSWORD@HOST:5432/DB"
@@ -1750,6 +1754,24 @@
       ]
     },
     {
+      "name": "SUPPORT_SERVICE_PORT",
+      "type": "port",
+      "required": "optional",
+      "default": "8095",
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "منفذُ استماعِ خدمةِ الدعمِ والتصعيد (ADR-049).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "packages/contracts/support/src/index.ts",
+          "mode": "direct"
+        }
+      ]
+    },
+    {
       "name": "VITE_API_BASE_URL",
       "type": "http_url",
       "required": "optional",
@@ -2055,5 +2077,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 74
+  "total": 81
 }

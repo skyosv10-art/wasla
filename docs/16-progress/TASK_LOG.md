@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0354 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-15 (review 2/N)
+- **Status:** Released — PR #471 merged (squash `392f910`); claim CLM-0354 released
+- **What / Why:** PR #471 merged the Moderation screen (M5-15 review 2/N) and deleted branch `feat/m5-15-review-2`, but the work claim CLM-0354 was left `Active`. The stale-claim freshness guard (check 4) then rejected `main` because an `Active` claim pointed at a deleted branch. This entry releases CLM-0354 per §8.1 — the root-cause fix, not a guard weakening. M5-15 remains In Progress (review 2/N of N).
+
 ## 2026-09-26 — M5-15 Review 2/N: Moderation Screen (CLM-0354)
 
 - **Work Item(s):** M5-15 (review 2/N)

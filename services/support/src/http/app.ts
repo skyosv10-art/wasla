@@ -26,7 +26,7 @@ import {
 export interface SupportHttpDeps {
   readonly store: SupportTicketStore;
   readonly publisher?: SupportEventPublisher;
-  readonly reputationBridge?: ReputationBridgePort;
+  readonly reputationBridge: ReputationBridgePort;
   readonly serviceIdentity?: SupportServiceIdentityOptions;
 }
 
@@ -182,7 +182,7 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
 
       // ADR-049 §7: record dispute_resolved fact to reputation service.
       // Best-effort: if the bridge is unavailable, the ticket is still resolved.
-      if (deps.reputationBridge && ticket.subject_public_id) {
+      if (ticket.subject_public_id) {
         try {
           await deps.reputationBridge.recordDisputeResolved({
             ticketId,

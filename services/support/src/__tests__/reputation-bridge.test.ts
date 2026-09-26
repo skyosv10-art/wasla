@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createSupportApp } from "../http/app.js";
 import type { SupportHttpDeps } from "../http/app.js";
+import type { ReputationBridgePort } from "../ports.js";
 import { InMemorySupportTicketStore } from "../infrastructure/in-memory.js";
 import { InMemorySupportEventPublisher } from "../infrastructure/in-memory.js";
 import { InMemoryReputationBridge } from "../infrastructure/reputation-bridge.js";
@@ -168,10 +169,13 @@ describe("reputation bridge", () => {
       expect(resolved.state).toBe("resolved");
     });
 
-    it("does not record when bridge is not provided", async () => {
+    it("does not record when subject_public_id is absent", async () => {
       const store = new InMemorySupportTicketStore();
       const publisher = new InMemorySupportEventPublisher();
-      const deps: SupportHttpDeps = { store, publisher };
+      const noOpBridge: ReputationBridgePort = {
+        async recordDisputeResolved() {},
+      };
+      const deps: SupportHttpDeps = { store, publisher, reputationBridge: noOpBridge };
       const app = createSupportApp(deps);
 
       const ticket = await createTicketWithSubject(app);

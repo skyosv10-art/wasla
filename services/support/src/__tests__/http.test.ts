@@ -12,6 +12,7 @@ import {
   InMemorySupportTicketStore,
   InMemorySupportEventPublisher,
 } from "../infrastructure/in-memory.js";
+import { InMemoryReputationBridge } from "../infrastructure/reputation-bridge.js";
 
 describe("Support HTTP layer", () => {
   let app: FastifyInstance;
@@ -21,7 +22,7 @@ describe("Support HTTP layer", () => {
   beforeEach(() => {
     store = new InMemorySupportTicketStore();
     publisher = new InMemorySupportEventPublisher();
-    app = createSupportApp({ store, publisher });
+    app = createSupportApp({ store, publisher, reputationBridge: new InMemoryReputationBridge() });
   });
 
   afterEach(async () => {

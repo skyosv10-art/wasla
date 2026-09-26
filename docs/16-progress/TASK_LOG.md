@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 1/N: ADR-049 Ticket Model (CLM-0356)
+
+- **Work Item(s):** M5-16 (review 1/N)
+- **Status:** Active (PR pending)
+- **What / Why:** ADR-049 created — Support & Escalation ticket model and service boundary. Defines `services/support` (port 8095), 5-state ticket lifecycle (open→investigating→escalated→resolved→closed), 4 ticket types (order_issue, behavior_complaint, payment_dispute, service_quality), dispute evidence gate (no resolution without evidence — the M5-16 exit gate), 3-tier escalation (agent→supervisor→admin), event catalog (ticket_opened/escalated/resolved), reputation bridge (dispute_resolved fact kind in @wasla/contracts-reputation), privacy rules (no PII in events). ADR-014 explicitly deferred free-text moderation to Phase 16 — this ADR is its owner. No code yet — ADR only. M5-16 remains In Progress.
+
 ## 2026-09-26 — CLM-0355 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-15

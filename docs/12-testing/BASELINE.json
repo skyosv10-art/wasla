@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-26T06:25:50Z",
+  "generated_at": "2026-09-26T07:21:58Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "47263e3808684b893f777f7abc5d10b649dbf780",
-    "branch": "feat/m5-16-review-4",
+    "commit": "c9c6e684163f0c6f9106d746fb0619828b8c0b0f",
+    "branch": "feat/m5-16-review-5",
     "dirty": true,
-    "dirty_files": 21,
-    "dirty_reason": "M5-16 review 4/N: HTTP layer + service identity for support service (CLM-0359)",
-    "tracked_files": 2698
+    "dirty_files": 12,
+    "dirty_reason": "M5-16 review 5/N: relay consumer for support service (CLM-0360)",
+    "tracked_files": 2704
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 68,
     "packages_with_typecheck": 64,
     "packages_with_test": 68,
-    "test_files_tracked": 500,
+    "test_files_tracked": 501,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/verify.log",
-    "tests_passed": 5585,
-    "test_files_executed": 373,
+    "source": "/tmp/combined-full.log",
+    "tests_passed": 5615,
+    "test_files_executed": 374,
     "governance_suite_cases": 518,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:9749558d94f4ea76e2deb7256e4b4c7f002147b1793ea4c23508f88141e23600",
+  "fingerprint": "sha256:a092586fbeaf80c40631d3b3efa850de491838930c2371b0bd74a2d76b1f7062",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

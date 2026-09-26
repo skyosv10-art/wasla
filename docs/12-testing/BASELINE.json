@@ -3,8 +3,8 @@
   "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ddfab439a9cda24d704ea55b950420313fba55f1",
-    "branch": "feat/m5-16-review-7",
+    "commit": "46e6080e74e19926a74968825db1eecf24fb1de8",
+    "branch": "feat/m5-17-review-2",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
@@ -26,7 +26,7 @@
     "packages": 68,
     "packages_with_typecheck": 64,
     "packages_with_test": 68,
-    "test_files_tracked": 503,
+    "test_files_tracked": 505,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:1fdd93192a05339be22fc98e95c5b6db9af3a45029ca5ad3410a53893bfb993c",
+  "fingerprint": "sha256:2f2dda40dd6b9862efc08ae97cdca9a6eb164c3022c4f53600ab06c72a2410b1",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

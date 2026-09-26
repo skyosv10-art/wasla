@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: WASLA Billing & Fees Service API
+  version: 0.1.0
+  description: |
+    Billing & Fees service (ADR-050).
+    Invoice lifecycle, fee settlement, Tap payment gateway integration.
+    Contract First (ADR-004) — defined, not implemented in review 1/N-2/N.
+servers:
+  - url: http://localhost:8096
+    description: Local development
+security:
+  - ServiceAuth: []
+components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: Service identity token (M1-03)
+  schemas:
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: INV-000000001
+        store_public_id:
+          type: string
+          example: WS-000000001
+        period:
+          type: string
+          example: "2026-09"
+        state:
+          type: string
+          enum: [draft, issued, paid, partially_paid, closed, void]
+        fee_type:
+          type: string
+          enum: [store_fixed, store_variable, subscription, payout]
+        amount_cents:
+          type: integer
+          example: 50000
+        paid_amount_cents:
+          type: integer
+          example: 0
+        payment_ref:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, store_public_id, period, state, fee_type, amount_cents, paid_amount_cents, created_at, updated_at]
+    CreateInvoiceRequest:
+      type: object
+      properties:
+        store_public_id:
+          type: string
+        period:
+          type: string
+        fee_type:
+          type: string
+          enum: [store_fixed, store_variable, subscription, payout]
+        amount_cents:
+          type: integer
+      required: [store_public_id, period, fee_type, amount_cents]
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        trace_id:
+          type: string
+      required: [error_code, message]
+paths:
+  /billing/health:
+    get:
+      tags: [billing]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service healthy
+  /billing/invoices:
+    post:
+      tags: [billing]
+      summary: Create invoice (ADR-050 §2)
+      security:
+        - ServiceAuth: [billing:invoice:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceRequest"
+      responses:
+        "201":
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

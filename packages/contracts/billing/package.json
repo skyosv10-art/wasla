@@ -1,0 +1,24 @@
+{
+  "name": "@wasla/contracts-billing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA Billing & Fees contracts (Phase 17, ADR-050)",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../../services/billing/contracts/api.openapi.yml -o src/api-types.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.4",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

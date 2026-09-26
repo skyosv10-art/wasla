@@ -422,6 +422,18 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
 
+  packages/contracts/billing:
+    devDependencies:
+      openapi-typescript:
+        specifier: ^7.4.4
+        version: 7.13.0(typescript@5.9.3)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
   packages/contracts/channel:
     devDependencies:
       '@types/node':
@@ -1114,6 +1126,19 @@ importers:
       tsx:
         specifier: ^4.23.12
         version: 4.23.12
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
+  services/billing:
+    dependencies:
+      '@wasla/contracts-billing':
+        specifier: workspace:*
+        version: link:../../packages/contracts/billing
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)

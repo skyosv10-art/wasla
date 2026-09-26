@@ -643,6 +643,26 @@
 
 ---
 
+## 2026-09-26 — CLM-0366 · M5-17 review 2/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing & Fees scaffold + contracts (review 2/N):
+- @wasla/contracts-billing: 6 invoice states, 9 transitions, 4 fee types,
+  3 settlement states, 4 payment intent states, 3 payment operations,
+  3 event types, 5 forbidden event types, 10 forbidden fields, 9 error codes.
+- services/billing: domain model (invoice state machine, createInvoice,
+  transitionInvoice, recordPayment), errors (BillingError + 9 factories),
+  ports (InvoiceStore, PaymentGatewayPort, BillingEventPublisher,
+  SettlementPort, in-memory stubs).
+- OpenAPI contract: 3 paths (health, create invoice), ServiceAuth security.
+- 62 tests (15 contracts + 47 domain). All passing.
+- BASELINE: test_files 503→505.
+
+---
+
 ## 2026-09-26 — CLM-0365 · M5-17 review 1/N
 
 - **Work Item(s):** M5-17

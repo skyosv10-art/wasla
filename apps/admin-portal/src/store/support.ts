@@ -53,13 +53,9 @@ export const useSupportStore = create<SupportState>((set, get) => ({
     const filter = state ?? get().stateFilter;
     set({ loading: true, error: null });
     try {
-      const params = new URLSearchParams();
-      if (filter) params.set("state", filter);
-      const qs = params.toString();
-      const data = await apiClient.get<TicketListResponse>(
-        qs ? `/support/tickets?${qs}` : "/support/tickets",
-      );
-      set({ tickets: data.tickets, nextCursor: data.nextCursor, loading: false });
+      const data = await apiClient.get<TicketListResponse>("/support/tickets");
+      const tickets = filter ? data.tickets.filter((t) => t.state === filter) : data.tickets;
+      set({ tickets, nextCursor: data.nextCursor, loading: false });
     } catch (err) {
       set({
         loading: false,
@@ -73,13 +69,7 @@ export const useSupportStore = create<SupportState>((set, get) => ({
     if (!nextCursor) return;
     set({ loading: true, error: null });
     try {
-      const params = new URLSearchParams();
-      const { stateFilter } = get();
-      if (stateFilter) params.set("state", stateFilter);
-      params.set("cursor", nextCursor);
-      const data = await apiClient.get<TicketListResponse>(
-        `/support/tickets?${params.toString()}`,
-      );
+      const data = await apiClient.get<TicketListResponse>("/support/tickets");
       set({ tickets: [...tickets, ...data.tickets] as TicketList, nextCursor: data.nextCursor, loading: false });
     } catch (err) {
       set({

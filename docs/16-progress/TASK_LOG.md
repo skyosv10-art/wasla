@@ -643,6 +643,20 @@
 
 ---
 
+## 2026-09-26 — CLM-0365 · M5-17 review 1/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing & Fees ADR-050: money boundary for services/billing on port 8096.
+Invoice lifecycle (draft→issued→paid→partially_paid→closed/void). Fee types
+(store_fixed, store_variable, subscription, payout). Tap payment gateway
+integration (create_charge, capture, refund). Financial events
+(invoice_issued, fee_settled, payout_requested). No PII in events.
+
+---
+
 ## 2026-09-26 — CLM-0364 · M5-16 closeout
 
 - **Work Item(s):** M5-16

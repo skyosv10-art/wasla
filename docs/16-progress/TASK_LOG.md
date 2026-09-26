@@ -1,3 +1,21 @@
+## 2026-09-27 — CLM-0371 · M5-17 review 6/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing admin screen (ADR-050 §4):
+- `GET /billing/settlements` endpoint: list settlements with state filter +
+  cursor pagination. `SettlementPort.listSettlements()` added to interface
+  and in-memory implementation.
+- Admin portal: Billing screen with two tabs (invoices + settlements),
+  billing store (zustand), billing types, i18n translations (ar/en/ur).
+- Invoice detail view: issue, void, record payment actions.
+- 98 billing tests (4 new HTTP). 101 admin-portal tests.
+- Postgres adapters for settlements deferred.
+
+---
+
 ## 2026-09-27 — CLM-0370 Released (PR #499 merged)
 
 - **Work Item(s):** M5-17 (review 5/N)

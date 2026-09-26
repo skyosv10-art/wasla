@@ -10,12 +10,13 @@ import { AuditLog } from "./screens/AuditLog";
 import { Partners } from "./screens/Partners";
 import { Moderation } from "./screens/Moderation";
 import { Support } from "./screens/Support";
+import { Billing } from "./screens/Billing";
 
-type Route = "dashboard" | "users" | "drivers" | "orders" | "audit" | "partners" | "moderation" | "support";
+type Route = "dashboard" | "users" | "drivers" | "orders" | "audit" | "partners" | "moderation" | "support" | "billing";
 
 function parseHash(): Route {
   const hash = window.location.hash.replace(/^#\/?/, "");
-  const valid: Route[] = ["dashboard", "users", "drivers", "orders", "audit", "partners", "moderation", "support"];
+  const valid: Route[] = ["dashboard", "users", "drivers", "orders", "audit", "partners", "moderation", "support", "billing"];
   return valid.includes(hash as Route) ? (hash as Route) : "dashboard";
 }
 
@@ -54,6 +55,7 @@ export function App() {
         <a href="#/partners" data-testid="nav-partners">{t("nav.partners")}</a>
         <a href="#/moderation" data-testid="nav-moderation">{t("nav.moderation")}</a>
         <a href="#/support" data-testid="nav-support">{t("nav.support")}</a>
+        <a href="#/billing" data-testid="nav-billing">{t("nav.billing")}</a>
       </nav>
       <main className="content">
         {route === "dashboard" && <Dashboard />}
@@ -64,6 +66,7 @@ export function App() {
         {route === "partners" && <Partners />}
         {route === "moderation" && <Moderation />}
         {route === "support" && <Support />}
+        {route === "billing" && <Billing />}
       </main>
     </div>
     </>

@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 5/N: Relay Consumer (CLM-0360)
+
+- **Work Item(s):** M5-16 (review 5/N)
+- **Status:** Active (PR pending)
+- **What / Why:** Relay consumer for order.status_changed events. Consumes order_outbox events, classifies them (suggest/ignored/ignored_foreign/poisoned), creates suggested support tickets (type: order_issue) on terminal order states (completed, customer_cancelled, driver_cancelled, partner_cancelled, failed, payment_disputed). Idempotent checkpoint (occurred_at, event_id). Dead-letter store for poisoned events. In-memory event source, checkpoint store, dead-letter store, consumer lock. 106 support tests (30 relay new). Postgres adapters deferred to integration review.
+
 ## 2026-09-26 — CLM-0359 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-16 (review 4/N)

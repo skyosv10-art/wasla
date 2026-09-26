@@ -13,6 +13,10 @@ import type {
   SupportResolutionDraft,
   SupportEscalationLevel,
 } from "./domain/model.js";
+import type {
+  OrderOutboxRow,
+  RelayCheckpoint,
+} from "./domain/consumed-events.js";
 
 /** Write port — persists tickets and evidence. */
 export interface SupportTicketStore {
@@ -43,4 +47,59 @@ export interface SupportEventPublisher {
 /** Tick port — time moves by tick not by timer (ADR-049 sub-decision 3). */
 export interface SupportTickPort {
   processExpiredTickets(): Promise<{ processed: number }>;
+}
+
+/* ── Relay consumer ports (ADR-049 §6 — order.status_changed) ── */
+
+/**
+ * Reads `order_outbox` rows strictly after a checkpoint (or from zero).
+ * Read-only: the relay NEVER writes to `order_outbox` (no `published_at`)
+ * — progress is support-owned.
+ */
+export interface OrderEventSource {
+  readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]>;
+}
+
+/**
+ * Stores the relay's checkpoint — (occurred_at, event_id) of the last
+ * terminally-consumed row. Support-owned; one row per consumer.
+ */
+export interface RelayCheckpointStore {
+  getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null>;
+  writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void>;
+}
+
+/**
+ * Dead-letter store for poisoned events (invalid payload, unknown version,
+ * unmappable outcome). A poison event never blocks the stream.
+ */
+export interface RelayDeadLetterStore {
+  writeDeadLetter(
+    consumerId: string,
+    event: OrderOutboxRow,
+    reason: string,
+    attempts: number,
+  ): Promise<void>;
+}
+
+/**
+ * Consumer lock — prevents concurrent relay batches for the same consumer.
+ * The lock is held for the duration of `fn` and released always.
+ */
+export interface RelayConsumerLock {
+  withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T>;
+}
+
+/**
+ * Relay dependencies — all ports the relay needs to function.
+ * The relay is a pure orchestrator: it reads events, classifies them,
+ * suggests tickets, and writes the checkpoint. All I/O is through ports.
+ */
+export interface RelayDeps {
+  readonly events: OrderEventSource;
+  readonly tickets: SupportTicketStore;
+  readonly checkpoint: RelayCheckpointStore;
+  readonly deadLetter: RelayDeadLetterStore;
+  readonly lock: RelayConsumerLock;
+  readonly publisher: SupportEventPublisher;
 }

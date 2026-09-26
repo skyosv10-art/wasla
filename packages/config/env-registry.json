@@ -10,6 +10,29 @@
   "note_ar": "هذا الملفُّ **مصدرُ الحقيقةِ الوحيدُ** لمتغيّراتِ البيئةِ: `.env.example` و`registry.generated.ts` مُشتَقّانِ منهُ بايتاً بايتاً، والفحصُ 18 يُعيدُ توليدَهما ويقارنُ. زيادةُ متغيّرٍ = سطرٌ هنا ثمَّ إعادةُ توليدٍ.",
   "variables": [
     {
+      "name": "BILLING_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "optional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "PostgreSQL connection string for billing service (M5-17). Format: postgresql://USER:PASSWORD@HOST:5432/DB",
+      "owner_item": "M5-17",
+      "readers": [
+        {
+          "file": "services/billing/src/db/migrate-cli.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/billing/drizzle.config.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها."
+    },
+    {
       "name": "CI",
       "type": "string",
       "required": "optional",
@@ -2085,5 +2108,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 81
+  "total": 82
 }

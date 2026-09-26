@@ -643,6 +643,25 @@
 
 ---
 
+## 2026-09-26 — CLM-0367 · M5-17 review 3/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing & Fees PostgreSQL Store adapter (review 3/N):
+- Drizzle schema (3 tables: billing_invoices, billing_settlements, billing_outbox)
+  mirroring schema.sql contract.
+- PostgresInvoiceStore (save with upsert, findById, findByStore with cursor
+  pagination).
+- Constraints validators (state transition, payment gate, void gate).
+- Migration 0000_baseline.sql + 0000_baseline.down.sql.
+- Schema-drift test (5 cases, bidirectional).
+- 63 tests total (47 domain + 11 infra + 5 schema-drift).
+- BASELINE: test_files 505→507.
+
+---
+
 ## 2026-09-26 — CLM-0366 · M5-17 review 2/N
 
 - **Work Item(s):** M5-17

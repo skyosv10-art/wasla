@@ -267,6 +267,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
 
   // ── support (M5-16 · ADR-049 · CLM-0359) ──────────────────────
   { audience: "support", method: "POST", path: "/support/tickets", scopes: ["support:ticket:write"] },
+  { audience: "support", method: "GET", path: "/support/tickets", scopes: ["support:ticket:read"] },
   { audience: "support", method: "GET", path: "/support/tickets/:ticketId", scopes: ["support:ticket:read"] },
   { audience: "support", method: "POST", path: "/support/tickets/:ticketId/evidence", scopes: ["support:evidence:write"] },
   { audience: "support", method: "POST", path: "/support/tickets/:ticketId/escalate", scopes: ["support:ticket:write"] },

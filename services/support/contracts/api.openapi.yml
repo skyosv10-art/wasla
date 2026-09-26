@@ -24,6 +24,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthStatus'
   /support/tickets:
+    get:
+      tags: [tickets]
+      summary: List support tickets
+      operationId: listTickets
+      security:
+        - ServiceAuth: ['support:ticket:read']
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, investigating, escalated, resolved, closed]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ticket list with pagination cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketListResponse'
     post:
       tags: [tickets]
       summary: Create a support ticket
@@ -204,6 +237,17 @@ components:
         port:
           type: integer
           const: 8095
+    TicketListResponse:
+      type: object
+      required: [tickets, nextCursor]
+      properties:
+        tickets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ticket'
+        nextCursor:
+          type: string
+          nullable: true
     Ticket:
       type: object
       required:

@@ -643,6 +643,21 @@
 
 ---
 
+## 2026-09-26 — CLM-0363 · M5-16 review 7/N
+
+- **Work Item(s):** M5-16
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Support admin screen. Added GET /support/tickets list endpoint (state
+filter + cursor pagination). Added listTickets to SupportTicketStore
+port, InMemorySupportTicketStore, and PostgresSupportTicketStore.
+Created admin-portal Support screen (ticket list, detail view,
+escalate/resolve/close actions), store, types, i18n entries (ar/en/ur).
+7 unit tests. Nav link added to App.tsx.
+
+---
+
 ## 2026-09-26 — CLM-0362 · M5-16 review 6/N companion
 
 - **Work Item(s):** M5-16

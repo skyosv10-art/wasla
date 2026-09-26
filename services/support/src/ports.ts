@@ -22,6 +22,11 @@ import type {
 export interface SupportTicketStore {
   createTicket(draft: SupportTicketDraft): Promise<SupportTicket>;
   getTicket(ticketId: string): Promise<SupportTicket | null>;
+  listTickets(opts?: {
+    readonly state?: SupportTicket["state"];
+    readonly limit?: number;
+    readonly cursor?: string | null;
+  }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }>;
   updateState(
     ticketId: string,
     state: SupportTicket["state"],

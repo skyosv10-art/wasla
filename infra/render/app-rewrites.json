@@ -27,6 +27,7 @@
     "/store-orders": "delivery",
     "/stores": "marketplace",
     "/subscriptions": "subscriptions",
-    "/partners": "partners"
+    "/partners": "partners",
+    "/support": "support"
   }
 }

@@ -12,7 +12,7 @@
  * واسمٌ غيرُ معروفٍ لا يُترجَم بل يُعاد كما هو.
  */
 
-import { eq } from "drizzle-orm";
+import { eq, lt, and, desc } from "drizzle-orm";
 
 import { supportErrors } from "../../domain/errors.js";
 import type {
@@ -140,6 +140,28 @@ export class PostgresSupportTicketStore implements SupportTicketStore {
 
     if (row.length === 0) return null;
     return rowToTicket(row[0]);
+  }
+
+  async listTickets(opts?: {
+    readonly state?: SupportTicket["state"];
+    readonly limit?: number;
+    readonly cursor?: string | null;
+  }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }> {
+    const limit = Math.min(opts?.limit ?? 20, 100);
+    const conds = [];
+    if (opts?.state) conds.push(eq(supportTickets.state, opts.state));
+    if (opts?.cursor) conds.push(lt(supportTickets.ticketId, opts.cursor));
+
+    const rows = await this.db
+      .select()
+      .from(supportTickets)
+      .where(conds.length > 0 ? and(...conds) : undefined)
+      .orderBy(desc(supportTickets.openedAt))
+      .limit(limit + 1);
+
+    const page = rows.slice(0, limit).map(rowToTicket);
+    const nextCursor = rows.length > limit ? (page[page.length - 1]?.ticket_id ?? null) : null;
+    return { tickets: page, nextCursor };
   }
 
   async updateState(

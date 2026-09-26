@@ -52,7 +52,8 @@
         "assignment_accepted",
         "assignment_rejected",
         "assignment_timed_out",
-        "rating_received"
+        "rating_received",
+        "dispute_resolved"
       ],
       "description": "قائمة مُقفلة. كل نوعٍ منها يُشتقّ من حدثٍ منشور موجود اليوم (`order.status_changed` · `order.assignment_resolved`) أو من تقييمٍ مسجَّل. نوعٌ لا مصدر له لا يُضاف."
     },

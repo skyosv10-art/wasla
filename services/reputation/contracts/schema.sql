@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS reputation_rule_weights (
     fact_kind               TEXT        NOT NULL CHECK (fact_kind IN (
                                 'order_completed','order_cancelled_by_customer',
                                 'order_cancelled_by_driver','assignment_accepted',
-                                'assignment_rejected','assignment_timed_out','rating_received'
+                                'assignment_rejected','assignment_timed_out','rating_received','dispute_resolved'
                             )),
     -- الوزن قد يكون سالباً: الإلغاء يخصم. عددٌ صحيح لا عاشر — النقاط تُجمَع وتُقارَن.
     weight_points           INTEGER     NOT NULL CHECK (weight_points BETWEEN -50 AND 50),
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS reputation_facts (
     fact_kind               TEXT        NOT NULL CHECK (fact_kind IN (
                                 'order_completed','order_cancelled_by_customer',
                                 'order_cancelled_by_driver','assignment_accepted',
-                                'assignment_rejected','assignment_timed_out','rating_received'
+                                'assignment_rejected','assignment_timed_out','rating_received','dispute_resolved'
                             )),
     order_public_id         TEXT        NOT NULL CHECK (order_public_id ~ '^ORD-[0-9]{10}$'),
 

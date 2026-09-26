@@ -303,11 +303,17 @@ export class PostgresSupportEventPublisher implements SupportEventPublisher {
 }
 
 /** تهيئةُ كلِّ المنافذ على PostgreSQL. */
+import { InMemoryReputationBridge } from "../reputation-bridge.js";
+import type { ReputationBridgePort } from "../../ports.js";
+
 export function createPostgresSupportAdapters(db: DbOrTx): {
   store: PostgresSupportTicketStore;
   publisher: PostgresSupportEventPublisher;
+  reputationBridge: ReputationBridgePort;
 } {
   const publisher = new PostgresSupportEventPublisher(db);
   const store = new PostgresSupportTicketStore(db, publisher);
-  return { store, publisher };
+  // In-memory bridge as placeholder — HTTP adapter deferred to integration review.
+  const reputationBridge = new InMemoryReputationBridge();
+  return { store, publisher, reputationBridge };
 }

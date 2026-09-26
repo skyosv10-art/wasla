@@ -103,3 +103,25 @@ export interface RelayDeps {
   readonly lock: RelayConsumerLock;
   readonly publisher: SupportEventPublisher;
 }
+
+/* ── Reputation bridge port (ADR-049 §7 — dispute_resolved fact) ── */
+
+/**
+ * Bridge to the reputation service: records a `dispute_resolved` fact
+ * when a support ticket is resolved. The fact contains the subject_public_id
+ * (the party whose reputation is affected), the order_public_id (context),
+ * and the source event reference (ticket_id).
+ *
+ * This port is called from the HTTP resolve handler after the ticket is
+ * resolved and the ticket_resolved event is published. It is a best-effort
+ * call: if the reputation service is unavailable, the ticket is still
+ * resolved (the fact can be backfilled later).
+ */
+export interface ReputationBridgePort {
+  recordDisputeResolved(params: {
+    readonly ticketId: string;
+    readonly subjectPublicId: string;
+    readonly orderPublicId: string | null;
+    readonly resolutionReason: string;
+  }): Promise<void>;
+}

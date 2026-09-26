@@ -2082,8 +2082,27 @@
           "mode": "bag"
         }
       ]
+    },
+    {
+      "name": "BILLING_DATABASE_URL",
+      "type": "string",
+      "required": false,
+      "default": "",
+      "secret": true,
+      "scopes": [
+        "billing"
+      ],
+      "description_ar": "PostgreSQL connection string for billing service (M5-17). Format: postgresql://USER:PASSWORD@HOST:5432/DB",
+      "owner_item": "M5-17",
+      "readers": [
+        {
+          "file": "services/billing/src/db/migrate-cli.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها."
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 81
+  "total": 82
 }

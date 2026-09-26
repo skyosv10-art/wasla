@@ -3,7 +3,7 @@
   "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7ea0507940f0b80fadec0c9a58ee527d06862fa0",
+    "commit": "5eac88ff879771927500bbc21268c6a2f0ea3940",
     "branch": "feat/m5-17-review-2",
     "dirty": false,
     "dirty_files": 0,
@@ -19,13 +19,13 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "e46a78572dd872646881643538af677b57f0926f82ad98b8a4654ac76009178e",
-    "lines": 4913
+    "sha256": "sha256:94852693883392a3eab5b27e3b2225908a8cc13cb00deccd5674ca09628a7cc0",
+    "lines": 4938
   },
   "static": {
-    "packages": 68,
-    "packages_with_typecheck": 64,
-    "packages_with_test": 68,
+    "packages": 70,
+    "packages_with_typecheck": 66,
+    "packages_with_test": 70,
     "test_files_tracked": 505,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2f2dda40dd6b9862efc08ae97cdca9a6eb164c3022c4f53600ab06c72a2410b1",
+  "fingerprint": "sha256:b8f23806ffed3df945ef1ef76d015804bb6d3eaa8461e7130ddc1fdca7f6968f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -643,6 +643,17 @@
 
 ---
 
+## 2026-09-26 — CLM-0362 · M5-16 review 6/N companion
+
+- **Work Item(s):** M5-16
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Companion claim for http.test.ts: updated test fixture to pass
+`reputationBridge` (now a required port in `SupportHttpDeps`).
+
+---
+
 ## 2026-09-21 — Owner Decision: M2-01..06 + M2-10 → Completed (CLM-0275)
 
 - **Work Item(s):** M2-01 · M2-02 · M2-03 · M2-04 · M2-05 · M2-06 · M2-10 · **الحجز:** `CLM-0275` · **الفرع:** `docs/m2-completed-promotion`

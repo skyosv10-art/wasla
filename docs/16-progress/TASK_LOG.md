@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 3/N: PostgreSQL Store Adapter (CLM-0358)
+
+- **Work Item(s):** M5-16 (review 3/N)
+- **Status:** Active (PR pending)
+- **What / Why:** PostgreSQL Store adapter + in-memory store + schema-drift test created. Drizzle schema (mirror of schema.sql, 3 tables: support_tickets, support_evidence, support_outbox with all constraints). db.ts (createSupportDb, DbOrTx). repository.ts (PostgresSupportTicketStore: createTicket, getTicket, updateState, attachEvidence, getEvidence, resolve; PostgresSupportEventPublisher: 3 event types). in-memory.ts (InMemorySupportTicketStore with evidence gate enforcement, InMemorySupportEventPublisher). constraints.ts (ENFORCED_CONSTRAINTS). migrate.ts + migrate-cli.ts (apply schema.sql verbatim). drizzle/ baseline migration. 60 tests total (24 domain + 7 boundary + 24 infrastructure + 5 schema-drift). BASELINE: test_files_tracked 497→499, tests 5540→5569. HTTP layer, relay consumer, admin screen, reputation bridge deferred.
+
 ## 2026-09-26 — CLM-0357 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-16 (review 2/N)

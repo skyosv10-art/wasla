@@ -13,13 +13,17 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "node --loader tsx src/db/migrate-cli.ts"
   },
   "dependencies": {
-    "@wasla/contracts-support": "workspace:*"
+    "@wasla/contracts-support": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "@types/pg": "^8.11.0"
   }
 }

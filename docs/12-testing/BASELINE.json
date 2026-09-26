@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-26T03:34:47Z",
+  "generated_at": "2026-09-26T04:43:38Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "a2c11b540ed1c410dd01674dcb6137518718f023",
-    "branch": "feat/m5-16-review-2",
+    "commit": "0a9b27c0bdf8615c01f6689b18039036908bb24a",
+    "branch": "feat/m5-16-review-3",
     "dirty": true,
     "dirty_files": 8,
-    "dirty_reason": "M5-16 review 2/N: support service scaffold + contracts package",
-    "tracked_files": 2667
+    "dirty_reason": "M5-16 review 3/N: PostgreSQL Store adapter + in-memory store + schema-drift test",
+    "tracked_files": 2686
   },
   "env": {
     "node": "v20.20.1",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "2d3abcd23f7c4b4d4bfcbf9f128206551fa031c8fc62c37d5e98fbd18b96bd72",
-    "lines": 4895
+    "sha256": "1df8ae8b6c38cae88114924ae7a633d3793a8290ab29a1c411d1fcfed0eb608c",
+    "lines": 5004
   },
   "static": {
     "packages": 68,
     "packages_with_typecheck": 64,
     "packages_with_test": 68,
-    "test_files_tracked": 497,
+    "test_files_tracked": 499,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/test-summary.txt",
-    "tests_passed": 5540,
-    "test_files_executed": 370,
+    "source": "/tmp/test-summary-r3.txt",
+    "tests_passed": 5569,
+    "test_files_executed": 372,
     "governance_suite_cases": 519,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:32fd24c3bd708527f15edd894314abdafa27c7a953539e9ca80f4bbba752bee1",
+  "fingerprint": "sha256:33a44cea6bea5f54121269235c3a2c652da4f9f18a9aaacad8ef50360c962537",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

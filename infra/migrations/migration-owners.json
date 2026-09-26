@@ -209,13 +209,13 @@
       "schema_path": "services/support/contracts/schema.sql",
       "schema_owner": "@wasla/support",
       "migration_owner": "@wasla/support",
-      "has_journal": false,
-      "journal_entries": 0,
-      "has_migrate_runner": false,
-      "has_migrate_cli": false,
-      "migration_approach": "manual schema.sql (ADR-049) — drizzle migration deferred to later review",
-      "status": "OWNER_ASSIGNED — SCHEMA_ONLY (M5-16 review 2/N)",
-      "notes": "Schema.sql exists (3 tables: support_tickets, support_evidence, support_outbox). No drizzle journal yet — migration runner deferred."
+      "has_journal": true,
+      "journal_entries": 1,
+      "has_migrate_runner": true,
+      "has_migrate_cli": true,
+      "migration_approach": "drizzle-kit generate + manual schema.sql application",
+      "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
+      "notes": "1 journal entry (baseline). Has migrate.ts + migrate-cli.ts. Schema applied verbatim from contracts/schema.sql."
     }
   ]
 }

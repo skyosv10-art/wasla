@@ -7,6 +7,7 @@
 
 import type { BillingFeeType, BillingSettlementState } from "@wasla/contracts-billing";
 import type { Invoice } from "./domain/model.js";
+import type { OrderOutboxRow, RelayCheckpoint } from "./domain/consumed-events.js";
 
 // ── Invoice Store ────────────────────────────────────────────────────────────
 
@@ -77,6 +78,63 @@ export interface IdGenerator {
   newInvoiceId(): string;
   newSettlementId(): string;
   newPayoutId(): string;
+}
+
+// ── Relay ports (ADR-050 §3 — fee settlement from order_completed) ──────────
+
+/**
+ * Reads events from `order_outbox` for the billing relay.
+ * Same contract as support/delivery/search relays (ADR-025 §2.3).
+ */
+export interface OrderEventSource {
+  readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]>;
+}
+
+/**
+ * Stores the relay's checkpoint — (occurred_at, event_id) of the last
+ * terminally-consumed row. Billing-owned; one row per consumer.
+ */
+export interface RelayCheckpointStore {
+  getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null>;
+  writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void>;
+}
+
+/**
+ * Dead-letter store for poisoned events (invalid payload, unknown version,
+ * unmappable outcome). A poison event never blocks the stream.
+ */
+export interface RelayDeadLetterStore {
+  writeDeadLetter(
+    consumerId: string,
+    event: OrderOutboxRow,
+    reason: string,
+    attempts: number,
+  ): Promise<void>;
+}
+
+/**
+ * Consumer lock — prevents concurrent relay batches for the same consumer.
+ * The lock is held for the duration of `fn` and released always.
+ */
+export interface RelayConsumerLock {
+  withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T>;
+}
+
+/**
+ * Relay dependencies — all ports the relay needs to function.
+ * The relay is a pure orchestrator: it reads events, classifies them,
+ * creates fee settlements, and writes the checkpoint. All I/O is through ports.
+ */
+export interface RelayDeps {
+  readonly events: OrderEventSource;
+  readonly settlements: SettlementPort;
+  readonly invoices: InvoiceStore;
+  readonly publisher: BillingEventPublisher;
+  readonly checkpoint: RelayCheckpointStore;
+  readonly deadLetter: RelayDeadLetterStore;
+  readonly lock: RelayConsumerLock;
+  readonly idGen: IdGenerator;
+  readonly clock: Clock;
 }
 
 // ── In-memory stubs (for tests) ──────────────────────────────────────────────
@@ -162,5 +220,55 @@ export class InMemorySettlement implements SettlementPort {
 
   async findById(settlementId: string): Promise<{ settlement_id: string; state: BillingSettlementState } | null> {
     return this.settlements.get(settlementId) ?? null;
+  }
+}
+
+// ── In-memory relay stubs (for tests) ────────────────────────────────────────
+
+export class InMemoryOrderEventSource implements OrderEventSource {
+  private readonly rows: OrderOutboxRow[];
+
+  constructor(rows: OrderOutboxRow[]) {
+    this.rows = [...rows].sort((a, b) => {
+      if (a.occurred_at < b.occurred_at) return -1;
+      if (a.occurred_at > b.occurred_at) return 1;
+      return a.event_id < b.event_id ? -1 : 1;
+    });
+  }
+
+  async readAfter(_checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]> {
+    // Returns all rows up to limit — stale detection is the relay's job.
+    return this.rows.slice(0, limit);
+  }
+}
+
+export class InMemoryRelayCheckpointStore implements RelayCheckpointStore {
+  private readonly checkpoints = new Map<string, RelayCheckpoint>();
+
+  async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
+    return this.checkpoints.get(consumerId) ?? null;
+  }
+
+  async writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void> {
+    this.checkpoints.set(consumerId, { ...checkpoint });
+  }
+}
+
+export class InMemoryRelayDeadLetterStore implements RelayDeadLetterStore {
+  readonly deadLetters: Array<{ consumerId: string; event: OrderOutboxRow; reason: string; attempts: number }> = [];
+
+  async writeDeadLetter(
+    consumerId: string,
+    event: OrderOutboxRow,
+    reason: string,
+    attempts: number,
+  ): Promise<void> {
+    this.deadLetters.push({ consumerId, event, reason, attempts });
+  }
+}
+
+export class InMemoryRelayConsumerLock implements RelayConsumerLock {
+  async withConsumerLock<T>(_consumerId: string, fn: () => Promise<T>): Promise<T> {
+    return fn();
   }
 }

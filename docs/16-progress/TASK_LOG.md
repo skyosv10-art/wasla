@@ -1,3 +1,21 @@
+## 2026-09-27 — CLM-0370 · M5-17 review 5/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing relay consumer (ADR-050 §3):
+- Consumes `order.status_changed` from `order_outbox`.
+- On `completed` order state: creates fee settlement (store_variable:
+  250bps = 2.5%) + draft invoice + publishes `billing.fee_settled` event.
+- Non-completed states: ignored. Foreign event types: ignored_foreign.
+- Idempotent checkpoint (occurred_at, event_id). Dead-letter store for
+  poisoned events. In-memory event source + stores.
+- 14 relay tests (94 total in billing service). BASELINE: 509→510 test_files.
+- Postgres adapters deferred to integration review.
+
+---
+
 ## 2026-09-26 — CLM-0368 + CLM-0369 Released (PR #497 merged)
 
 - **Work Item(s):** M5-17 (review 4/N)

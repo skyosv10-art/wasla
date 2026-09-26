@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0355 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-15
+- **Status:** Released — PR #473 merged (squash `281ce26`); claim CLM-0355 released
+- **What / Why:** PR #473 merged the M5-15 closeout and deleted branch `chore/m5-15-closeout`, but claim CLM-0355 was left `Active`. The stale-claim freshness guard (check 4) then rejected `main` because an Active claim pointed at a deleted branch. This entry releases CLM-0355 per §8.1 — the root-cause fix, not a guard weakening. M5-15 is now Completed.
+
 ## 2026-09-26 — M5-15 Closeout: Admin Operations Completed (CLM-0355)
 
 - **Work Item(s):** M5-15

@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-15 Review 2/N: Moderation Screen (CLM-0354)
+
+- **Work Item(s):** M5-15 (review 2/N)
+- **Status:** Active (PR #471 open)
+- **What / Why:** Moderation screen added to admin portal — store review ledger (GET /stores/:slug/reviews), store decisions (POST /stores/:slug/decisions: approve/reject/suspend/reinstate/archive with closed-list reason codes), product moderation (POST /products/:id/decisions, /publish, /archive). New types/store/screen/i18n (ar+en+ur)/7 unit tests. APP_API_ROUTES counts updated (call sites 54→60, distinct 51→56). BASELINE regenerated (test_files_tracked 493→494, tests 5414→5496, governance 518→519). Self-contained: all routes already exist in the marketplace service (ADR-016); no new backend. M5-15 remains In Progress.
+
 ## 2026-09-25 — CLM-0353 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-15 (review 1/N)

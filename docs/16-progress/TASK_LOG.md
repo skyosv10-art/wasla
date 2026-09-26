@@ -643,6 +643,45 @@
 
 ---
 
+## 2026-09-26 — CLM-0369 · M5-17 review 4/N (companion claim)
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Companion claim to CLM-0368 (same work item M5-17, same branch feat/m5-17-review-4).
+Governance mutation test fix for port-wiring check:
+- `scripts/checks/lib/gov-cases-app-port-wiring.sh` line 139: updated
+  `OPTIONAL_PORTS = 14` → `OPTIONAL_PORTS = 15` in the mutation to
+  match the new port wiring doc counts introduced by billing service
+  (SERVICES_SCANNED 16→17, OPTIONAL_PORTS 14→15, ROOT_WIRED_PORTS
+  14→15, FACTORY_CALL_SITES 29→31).
+- ROOT_WIRED_PORTS mutation at line 95 was already updated (15→14)
+  in a prior commit, but OPTIONAL_PORTS was missed.
+- Per WORK_CLAIM_RULE.md §6, scope cannot be expanded on an existing
+  claim after writing — a second claim for the same work item on the
+  same branch is legitimate stacked work (M0-20).
+
+---
+
+## 2026-09-26 — CLM-0368 · M5-17 review 4/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing & Fees HTTP layer + service identity (review 4/N):
+- Fastify app with 7 routes: health, createInvoice, getInvoice,
+  listInvoices, issueInvoice, recordPayment, voidInvoice.
+- Service identity enforcement via @wasla/service-auth (4 scopes).
+- OpenAPI v0.2.0 with ServiceAuth (x-wasla-service-auth header).
+- Authz-policy: 6 billing operations (150→156 enforced, 98→104
+  unclassified, 122→124 scopes, 16→17 audiences).
+- app-rewrites: /billing prefix (21→22).
+- 80 tests (47 domain + 11 infra + 5 schema-drift + 12 HTTP + 5 boundary).
+
+---
+
 ## 2026-09-26 — CLM-0367 · M5-17 review 3/N
 
 - **Work Item(s):** M5-17

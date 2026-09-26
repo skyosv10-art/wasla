@@ -46,6 +46,7 @@
  */
 export const AUDIENCES = [
   "audit",
+  "billing",
   "channel",
   "customers",
   "delivery",
@@ -273,6 +274,13 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "support", method: "POST", path: "/support/tickets/:ticketId/escalate", scopes: ["support:ticket:write"] },
   { audience: "support", method: "POST", path: "/support/tickets/:ticketId/resolve", scopes: ["support:ticket:write"] },
   { audience: "support", method: "POST", path: "/support/tickets/:ticketId/close", scopes: ["support:ticket:write"] },
+  // ── billing (Phase 17 · ADR-050) ────────────────────────────────────────────
+  { audience: "billing", method: "POST", path: "/billing/invoices", scopes: ["billing:invoice:write"] },
+  { audience: "billing", method: "GET", path: "/billing/invoices", scopes: ["billing:invoice:read"] },
+  { audience: "billing", method: "GET", path: "/billing/invoices/:id", scopes: ["billing:invoice:read"] },
+  { audience: "billing", method: "POST", path: "/billing/invoices/:id/issue", scopes: ["billing:invoice:write"] },
+  { audience: "billing", method: "POST", path: "/billing/invoices/:id/payment", scopes: ["billing:invoice:write"] },
+  { audience: "billing", method: "POST", path: "/billing/invoices/:id/void", scopes: ["billing:invoice:write"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */

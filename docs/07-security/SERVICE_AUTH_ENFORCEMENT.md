@@ -698,7 +698,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions` · `enforced: audit` · `enforced: support`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions` · `enforced: audit` · `enforced: support` · `enforced: billing`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -1113,6 +1113,23 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- support-scopes:end -->
+
+<!-- billing-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المستفيد |
+|---|---|---|
+| `POST /billing/invoices` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
+| `GET /billing/invoices` | `billing:invoice:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /billing/invoices/:id` | `billing:invoice:read` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/invoices/:id/issue` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/invoices/:id/payment` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/invoices/:id/void` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/settlements/:id/settle` | `billing:fee:settle` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/payouts` | `billing:payout:request` | — (عمليّةٌ داخليّةٌ) |
+| `GET /billing/health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- billing-scopes:end -->
+
 
 **والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
 مَورِدٍ، ومراجعةُ الوثيقةِ (`document:review`) صلاحيّةٌ مستقلّةٌ لأنَّها قرارٌ

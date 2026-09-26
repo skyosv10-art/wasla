@@ -6,7 +6,7 @@
     "services/*/src/db/migrate.ts",
     "services/*/src/db/migrate-cli.ts"
   ],
-  "_last_updated": "2026-09-23",
+  "_last_updated": "2026-09-26",
   "_owner_item": "M2-05",
   "services": [
     {
@@ -203,6 +203,19 @@
       "migration_approach": "drizzle-kit generate + manual schema.sql application",
       "status": "OWNER_ASSIGNED — MIGRATION_RUNNER_PRESENT",
       "notes": "3 journal entries. Has migrate.ts + migrate-cli.ts."
+    },
+    {
+      "service": "support",
+      "schema_path": "services/support/contracts/schema.sql",
+      "schema_owner": "@wasla/support",
+      "migration_owner": "@wasla/support",
+      "has_journal": false,
+      "journal_entries": 0,
+      "has_migrate_runner": false,
+      "has_migrate_cli": false,
+      "migration_approach": "manual schema.sql (ADR-049) — drizzle migration deferred to later review",
+      "status": "OWNER_ASSIGNED — SCHEMA_ONLY (M5-16 review 2/N)",
+      "notes": "Schema.sql exists (3 tables: support_tickets, support_evidence, support_outbox). No drizzle journal yet — migration runner deferred."
     }
   ]
 }

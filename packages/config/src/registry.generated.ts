@@ -32,8 +32,18 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 81 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 82 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
+  {
+    name: "BILLING_DATABASE_URL",
+    type: "postgres_url",
+    required: false,
+    secret: true,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M5-17",
+  },
   {
     name: "CI",
     type: "string",
@@ -848,6 +858,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
 
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
 export const ENV_VAR_NAMES = [
+  "BILLING_DATABASE_URL",
   "CI",
   "COMMUNITY_GROUP_CHAT_IDS",
   "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",

@@ -5,7 +5,7 @@
  * Implementation lands in later reviews (3/N → N/N).
  */
 
-import type { BillingInvoiceState, BillingFeeType, BillingSettlementState } from "@wasla/contracts-billing";
+import type { BillingFeeType, BillingSettlementState } from "@wasla/contracts-billing";
 import type { Invoice } from "./domain/model.js";
 
 // ── Invoice Store ────────────────────────────────────────────────────────────
@@ -98,11 +98,13 @@ export class InMemoryInvoiceStore implements InvoiceStore {
     limit: number,
     cursor?: string,
   ): Promise<{ items: Invoice[]; nextCursor: string | null }> {
-    const items = [...this.invoices.values()]
+    const all = [...this.invoices.values()]
       .filter((i) => i.store_public_id === storePublicId)
-      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-      .slice(0, limit);
-    return { items, nextCursor: null };
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+    const startIdx = cursor ? all.findIndex((i) => i.id === cursor) + 1 : 0;
+    const items = all.slice(startIdx, startIdx + limit);
+    const nextCursor = items.length === limit ? items[items.length - 1].id : null;
+    return { items, nextCursor };
   }
 }
 

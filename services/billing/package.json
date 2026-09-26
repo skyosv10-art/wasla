@@ -16,11 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@wasla/contracts-billing": "workspace:*",
-    "@wasla/service-auth": "workspace:*",
-    "@wasla/outbox": "workspace:*",
-    "fastify": "^4.28.1",
-    "zod": "^3.24.1"
+    "@wasla/contracts-billing": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

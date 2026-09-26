@@ -3,7 +3,7 @@
   "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "46e6080e74e19926a74968825db1eecf24fb1de8",
+    "commit": "e87af6a56985a3a2f90ebda3f4d491337140ab25",
     "branch": "feat/m5-17-review-2",
     "dirty": false,
     "dirty_files": 0,

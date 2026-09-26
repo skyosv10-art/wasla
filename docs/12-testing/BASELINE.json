@@ -3,11 +3,11 @@
   "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "1c75588d1683ae55877286035813ad326b967b28",
-    "branch": "feat/m5-16-review-6",
-    "dirty": true,
-    "dirty_files": 14,
-    "dirty_reason": "M5-16 review 6/N: reputation bridge for support service (CLM-0361)",
+    "commit": "e8d4cb2",
+    "branch": "feat/m5-16-review-7",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
     "tracked_files": 2709
   },
   "env": {
@@ -26,7 +26,7 @@
     "packages": 68,
     "packages_with_typecheck": 64,
     "packages_with_test": 68,
-    "test_files_tracked": 502,
+    "test_files_tracked": 503,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,

@@ -12,7 +12,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { SUPPORT_SERVICE_PORT } from "@wasla/contracts-support";
 import { registerServiceIdentityOnFastify } from "@wasla/service-auth/fastify";
 import { supportErrors } from "../domain/errors.js";
-import type { SupportTicketStore, SupportEventPublisher } from "../ports.js";
+import type { SupportTicketStore, SupportEventPublisher, ReputationBridgePort } from "../ports.js";
 import { registerErrorHandler } from "./errors.js";
 import {
   SUPPORT_SERVICE_AUDIENCE,
@@ -26,6 +26,7 @@ import {
 export interface SupportHttpDeps {
   readonly store: SupportTicketStore;
   readonly publisher?: SupportEventPublisher;
+  readonly reputationBridge: ReputationBridgePort;
   readonly serviceIdentity?: SupportServiceIdentityOptions;
 }
 
@@ -177,6 +178,21 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
           body.resolution_reason as never,
           body.evidence_id,
         );
+      }
+
+      // ADR-049 §7: record dispute_resolved fact to reputation service.
+      // Best-effort: if the bridge is unavailable, the ticket is still resolved.
+      if (ticket.subject_public_id) {
+        try {
+          await deps.reputationBridge.recordDisputeResolved({
+            ticketId,
+            subjectPublicId: ticket.subject_public_id,
+            orderPublicId: ticket.order_public_id,
+            resolutionReason: body.resolution_reason,
+          });
+        } catch {
+          // Best-effort: the fact can be backfilled later.
+        }
       }
 
       return reply.status(200).send(ticket);

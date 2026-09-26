@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-26T07:21:58Z",
+  "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "c9c6e684163f0c6f9106d746fb0619828b8c0b0f",
-    "branch": "feat/m5-16-review-5",
+    "commit": "1c75588d1683ae55877286035813ad326b967b28",
+    "branch": "feat/m5-16-review-6",
     "dirty": true,
-    "dirty_files": 12,
-    "dirty_reason": "M5-16 review 5/N: relay consumer for support service (CLM-0360)",
-    "tracked_files": 2704
+    "dirty_files": 14,
+    "dirty_reason": "M5-16 review 6/N: reputation bridge for support service (CLM-0361)",
+    "tracked_files": 2709
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 68,
     "packages_with_typecheck": 64,
     "packages_with_test": 68,
-    "test_files_tracked": 501,
+    "test_files_tracked": 502,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/combined-full.log",
-    "tests_passed": 5615,
-    "test_files_executed": 374,
-    "governance_suite_cases": 518,
-    "governance_suite_failed": 1,
+    "source": "/tmp/combined2.log",
+    "tests_passed": 5622,
+    "test_files_executed": 375,
+    "governance_suite_cases": 512,
+    "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:a092586fbeaf80c40631d3b3efa850de491838930c2371b0bd74a2d76b1f7062",
+  "fingerprint": "sha256:2764a96619208bf113eb9562facd94c481ccbc5e34bee5f60c8acaa6d718f78e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

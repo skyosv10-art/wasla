@@ -124,6 +124,7 @@ export const REPUTATION_FACT_KINDS = [
   "assignment_rejected",
   "assignment_timed_out",
   "rating_received",
+  "dispute_resolved",
 ] as const;
 
 /** رتبةٌ مُشتقّة. `under_watch` تسميةٌ تُقرأ ولا تُنفَّذ (ADR-014 القرار 7). */

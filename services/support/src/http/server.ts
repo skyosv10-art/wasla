@@ -20,6 +20,7 @@ import {
   InMemorySupportTicketStore,
   InMemorySupportEventPublisher,
 } from "../infrastructure/in-memory.js";
+import { InMemoryReputationBridge } from "../infrastructure/reputation-bridge.js";
 import { createSupportApp } from "./app.js";
 
 export async function buildSupportServer(): Promise<{
@@ -41,6 +42,7 @@ export async function buildSupportServer(): Promise<{
     const app = createSupportApp({
       store: adapters.store,
       publisher: adapters.publisher,
+      reputationBridge: adapters.reputationBridge,
       serviceIdentity: { keys, replayGuard },
     });
     await app.listen({ port, host: "0.0.0.0" });
@@ -50,6 +52,7 @@ export async function buildSupportServer(): Promise<{
   const app = createSupportApp({
     store: new InMemorySupportTicketStore(),
     publisher: new InMemorySupportEventPublisher(),
+    reputationBridge: new InMemoryReputationBridge(),
     serviceIdentity: { keys, replayGuard },
   });
   await app.listen({ port, host: "0.0.0.0" });

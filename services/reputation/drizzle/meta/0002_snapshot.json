@@ -1,0 +1,1354 @@
+{
+  "id": "48e84bee-ef88-407e-ab02-a4933b773b56",
+  "prevId": "1d8d2c63-d3a2-4683-9696-eef59b64ac4f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.fraud_signals": {
+      "name": "fraud_signals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_public_id": {
+          "name": "subject_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rule_code": {
+          "name": "rule_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "window_started_at": {
+          "name": "window_started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "window_ended_at": {
+          "name": "window_ended_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observed_count": {
+          "name": "observed_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "threshold_count": {
+          "name": "threshold_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raised_at": {
+          "name": "raised_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_fraud_signals_subject": {
+          "name": "ix_fraud_signals_subject",
+          "columns": [
+            {
+              "expression": "subject_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subject_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"raised_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_fraud_signals_rule": {
+          "name": "ix_fraud_signals_rule",
+          "columns": [
+            {
+              "expression": "rule_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"raised_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fraud_signals_ruleset_version_fkey": {
+          "name": "fraud_signals_ruleset_version_fkey",
+          "tableFrom": "fraud_signals",
+          "tableTo": "reputation_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "ruleset_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_fraud_signals_rule_window": {
+          "name": "ux_fraud_signals_rule_window",
+          "nullsNotDistinct": false,
+          "columns": [
+            "subject_type",
+            "subject_public_id",
+            "rule_code",
+            "window_ended_at"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "fraud_signals_subject_type_check": {
+          "name": "fraud_signals_subject_type_check",
+          "value": "\"fraud_signals\".\"subject_type\" IN ('customer','driver')"
+        },
+        "fraud_signals_subject_public_id_check": {
+          "name": "fraud_signals_subject_public_id_check",
+          "value": "\"fraud_signals\".\"subject_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "fraud_signals_rule_code_check": {
+          "name": "fraud_signals_rule_code_check",
+          "value": "\"fraud_signals\".\"rule_code\" IN ('repeated_customer_cancellation','repeated_driver_cancellation','accept_then_abandon','offer_timeout_streak','rating_extremity_burst')"
+        },
+        "fraud_signals_severity_check": {
+          "name": "fraud_signals_severity_check",
+          "value": "\"fraud_signals\".\"severity\" IN ('low','medium','high')"
+        },
+        "fraud_signals_observed_count_check": {
+          "name": "fraud_signals_observed_count_check",
+          "value": "\"fraud_signals\".\"observed_count\" >= 0"
+        },
+        "fraud_signals_threshold_count_check": {
+          "name": "fraud_signals_threshold_count_check",
+          "value": "\"fraud_signals\".\"threshold_count\" >= 2"
+        },
+        "ck_fraud_signals_window_order": {
+          "name": "ck_fraud_signals_window_order",
+          "value": "\"fraud_signals\".\"window_ended_at\" > \"fraud_signals\".\"window_started_at\""
+        },
+        "ck_fraud_signals_over_threshold": {
+          "name": "ck_fraud_signals_over_threshold",
+          "value": "\"fraud_signals\".\"observed_count\" >= \"fraud_signals\".\"threshold_count\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_facts": {
+      "name": "reputation_facts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_public_id": {
+          "name": "subject_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fact_kind": {
+          "name": "fact_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_event_type": {
+          "name": "source_event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_event_id": {
+          "name": "source_event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_sequence": {
+          "name": "source_sequence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_type": {
+          "name": "actor_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_reputation_facts_subject": {
+          "name": "ix_reputation_facts_subject",
+          "columns": [
+            {
+              "expression": "subject_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subject_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"occurred_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_reputation_facts_order": {
+          "name": "ix_reputation_facts_order",
+          "columns": [
+            {
+              "expression": "order_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_reputation_facts_kind_window": {
+          "name": "ix_reputation_facts_kind_window",
+          "columns": [
+            {
+              "expression": "subject_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subject_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fact_kind",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"occurred_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_reputation_facts_source": {
+          "name": "ux_reputation_facts_source",
+          "nullsNotDistinct": false,
+          "columns": [
+            "subject_type",
+            "subject_public_id",
+            "fact_kind",
+            "order_public_id",
+            "source_sequence"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "reputation_facts_subject_type_check": {
+          "name": "reputation_facts_subject_type_check",
+          "value": "\"reputation_facts\".\"subject_type\" IN ('customer','driver')"
+        },
+        "reputation_facts_subject_public_id_check": {
+          "name": "reputation_facts_subject_public_id_check",
+          "value": "\"reputation_facts\".\"subject_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "reputation_facts_fact_kind_check": {
+          "name": "reputation_facts_fact_kind_check",
+          "value": "\"reputation_facts\".\"fact_kind\" IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received','dispute_resolved')"
+        },
+        "reputation_facts_order_public_id_check": {
+          "name": "reputation_facts_order_public_id_check",
+          "value": "\"reputation_facts\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "reputation_facts_source_event_type_check": {
+          "name": "reputation_facts_source_event_type_check",
+          "value": "char_length(\"reputation_facts\".\"source_event_type\") >= 3"
+        },
+        "reputation_facts_source_sequence_check": {
+          "name": "reputation_facts_source_sequence_check",
+          "value": "\"reputation_facts\".\"source_sequence\" >= 1"
+        },
+        "reputation_facts_actor_type_check": {
+          "name": "reputation_facts_actor_type_check",
+          "value": "\"reputation_facts\".\"actor_type\" IN ('system','customer','driver','partner','admin')"
+        },
+        "reputation_facts_reason_code_check": {
+          "name": "reputation_facts_reason_code_check",
+          "value": "\"reputation_facts\".\"reason_code\" IS NULL OR char_length(\"reputation_facts\".\"reason_code\") BETWEEN 2 AND 64"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_fraud_thresholds": {
+      "name": "reputation_fraud_thresholds",
+      "schema": "",
+      "columns": {
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rule_code": {
+          "name": "rule_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "threshold_count": {
+          "name": "threshold_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "reputation_fraud_thresholds_ruleset_version_fkey": {
+          "name": "reputation_fraud_thresholds_ruleset_version_fkey",
+          "tableFrom": "reputation_fraud_thresholds",
+          "tableTo": "reputation_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "ruleset_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_reputation_fraud_thresholds": {
+          "name": "pk_reputation_fraud_thresholds",
+          "columns": [
+            "ruleset_version",
+            "rule_code"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_fraud_thresholds_rule_code_check": {
+          "name": "reputation_fraud_thresholds_rule_code_check",
+          "value": "\"reputation_fraud_thresholds\".\"rule_code\" IN ('repeated_customer_cancellation','repeated_driver_cancellation','accept_then_abandon','offer_timeout_streak','rating_extremity_burst')"
+        },
+        "reputation_fraud_thresholds_subject_type_check": {
+          "name": "reputation_fraud_thresholds_subject_type_check",
+          "value": "\"reputation_fraud_thresholds\".\"subject_type\" IN ('customer','driver')"
+        },
+        "reputation_fraud_thresholds_threshold_count_check": {
+          "name": "reputation_fraud_thresholds_threshold_count_check",
+          "value": "\"reputation_fraud_thresholds\".\"threshold_count\" BETWEEN 2 AND 100"
+        },
+        "reputation_fraud_thresholds_severity_check": {
+          "name": "reputation_fraud_thresholds_severity_check",
+          "value": "\"reputation_fraud_thresholds\".\"severity\" IN ('low','medium','high')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_idempotency": {
+      "name": "reputation_idempotency",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_public_id": {
+          "name": "subject_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_body": {
+          "name": "response_body",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ix_reputation_idempotency_subject": {
+          "name": "ix_reputation_idempotency_subject",
+          "columns": [
+            {
+              "expression": "subject_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_idempotency_idempotency_key_check": {
+          "name": "reputation_idempotency_idempotency_key_check",
+          "value": "char_length(\"reputation_idempotency\".\"idempotency_key\") BETWEEN 8 AND 128"
+        },
+        "reputation_idempotency_scope_check": {
+          "name": "reputation_idempotency_scope_check",
+          "value": "\"reputation_idempotency\".\"scope\" IN ('record_fact','submit_rating','recompute_score','tick')"
+        },
+        "reputation_idempotency_subject_public_id_check": {
+          "name": "reputation_idempotency_subject_public_id_check",
+          "value": "\"reputation_idempotency\".\"subject_public_id\" IS NULL OR \"reputation_idempotency\".\"subject_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "reputation_idempotency_payload_fingerprint_check": {
+          "name": "reputation_idempotency_payload_fingerprint_check",
+          "value": "char_length(\"reputation_idempotency\".\"payload_fingerprint\") = 64"
+        },
+        "reputation_idempotency_response_status_check": {
+          "name": "reputation_idempotency_response_status_check",
+          "value": "\"reputation_idempotency\".\"response_status\" BETWEEN 100 AND 599"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_outbox": {
+      "name": "reputation_outbox",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_version": {
+          "name": "event_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "sequence_number": {
+          "name": "sequence_number",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "reputation_outbox_sequence_number_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        }
+      },
+      "indexes": {
+        "ix_reputation_outbox_unpublished": {
+          "name": "ix_reputation_outbox_unpublished",
+          "columns": [
+            {
+              "expression": "sequence_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"reputation_outbox\".\"published_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_outbox_aggregate_type_check": {
+          "name": "reputation_outbox_aggregate_type_check",
+          "value": "\"reputation_outbox\".\"aggregate_type\" IN ('reputation_fact','reputation_score','reputation_rating','fraud_signal')"
+        },
+        "reputation_outbox_event_type_check": {
+          "name": "reputation_outbox_event_type_check",
+          "value": "char_length(\"reputation_outbox\".\"event_type\") >= 3"
+        },
+        "reputation_outbox_event_version_check": {
+          "name": "reputation_outbox_event_version_check",
+          "value": "\"reputation_outbox\".\"event_version\" ~ '^v[0-9]+$'"
+        },
+        "reputation_outbox_attempts_check": {
+          "name": "reputation_outbox_attempts_check",
+          "value": "\"reputation_outbox\".\"attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_ratings": {
+      "name": "reputation_ratings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order_public_id": {
+          "name": "order_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rater_type": {
+          "name": "rater_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rater_public_id": {
+          "name": "rater_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_public_id": {
+          "name": "subject_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stars": {
+          "name": "stars",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_reputation_ratings_subject": {
+          "name": "ix_reputation_ratings_subject",
+          "columns": [
+            {
+              "expression": "subject_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subject_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"submitted_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_reputation_ratings_order": {
+          "name": "ix_reputation_ratings_order",
+          "columns": [
+            {
+              "expression": "order_public_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reputation_ratings_ruleset_version_fkey": {
+          "name": "reputation_ratings_ruleset_version_fkey",
+          "tableFrom": "reputation_ratings",
+          "tableTo": "reputation_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "ruleset_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ux_reputation_ratings_order_pair": {
+          "name": "ux_reputation_ratings_order_pair",
+          "nullsNotDistinct": false,
+          "columns": [
+            "order_public_id",
+            "rater_public_id",
+            "subject_public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "reputation_ratings_order_public_id_check": {
+          "name": "reputation_ratings_order_public_id_check",
+          "value": "\"reputation_ratings\".\"order_public_id\" ~ '^ORD-[0-9]{10}$'"
+        },
+        "reputation_ratings_rater_type_check": {
+          "name": "reputation_ratings_rater_type_check",
+          "value": "\"reputation_ratings\".\"rater_type\" IN ('customer','driver')"
+        },
+        "reputation_ratings_rater_public_id_check": {
+          "name": "reputation_ratings_rater_public_id_check",
+          "value": "\"reputation_ratings\".\"rater_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "reputation_ratings_subject_type_check": {
+          "name": "reputation_ratings_subject_type_check",
+          "value": "\"reputation_ratings\".\"subject_type\" IN ('customer','driver')"
+        },
+        "reputation_ratings_subject_public_id_check": {
+          "name": "reputation_ratings_subject_public_id_check",
+          "value": "\"reputation_ratings\".\"subject_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "reputation_ratings_stars_check": {
+          "name": "reputation_ratings_stars_check",
+          "value": "\"reputation_ratings\".\"stars\" BETWEEN 1 AND 5"
+        },
+        "reputation_ratings_reason_code_check": {
+          "name": "reputation_ratings_reason_code_check",
+          "value": "\"reputation_ratings\".\"reason_code\" IS NULL OR \"reputation_ratings\".\"reason_code\" IN ('on_time','late_arrival','courteous','poor_conduct','unsafe_driving','vehicle_condition','route_deviation','no_show')"
+        },
+        "ck_reputation_ratings_no_self": {
+          "name": "ck_reputation_ratings_no_self",
+          "value": "\"reputation_ratings\".\"rater_public_id\" <> \"reputation_ratings\".\"subject_public_id\""
+        },
+        "ck_reputation_ratings_cross_side": {
+          "name": "ck_reputation_ratings_cross_side",
+          "value": "\"reputation_ratings\".\"rater_type\" <> \"reputation_ratings\".\"subject_type\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_rule_weights": {
+      "name": "reputation_rule_weights",
+      "schema": "",
+      "columns": {
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fact_kind": {
+          "name": "fact_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "weight_points": {
+          "name": "weight_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "reputation_rule_weights_ruleset_version_fkey": {
+          "name": "reputation_rule_weights_ruleset_version_fkey",
+          "tableFrom": "reputation_rule_weights",
+          "tableTo": "reputation_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "ruleset_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_reputation_rule_weights": {
+          "name": "pk_reputation_rule_weights",
+          "columns": [
+            "ruleset_version",
+            "subject_type",
+            "fact_kind"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_rule_weights_subject_type_check": {
+          "name": "reputation_rule_weights_subject_type_check",
+          "value": "\"reputation_rule_weights\".\"subject_type\" IN ('customer','driver')"
+        },
+        "reputation_rule_weights_fact_kind_check": {
+          "name": "reputation_rule_weights_fact_kind_check",
+          "value": "\"reputation_rule_weights\".\"fact_kind\" IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received','dispute_resolved')"
+        },
+        "reputation_rule_weights_weight_points_check": {
+          "name": "reputation_rule_weights_weight_points_check",
+          "value": "\"reputation_rule_weights\".\"weight_points\" BETWEEN -50 AND 50"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_rulesets": {
+      "name": "reputation_rulesets",
+      "schema": "",
+      "columns": {
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_floor": {
+          "name": "score_floor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_ceiling": {
+          "name": "score_ceiling",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starting_score": {
+          "name": "starting_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "min_facts_for_score": {
+          "name": "min_facts_for_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decay_half_life_days": {
+          "name": "decay_half_life_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier_standard_at": {
+          "name": "tier_standard_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier_trusted_at": {
+          "name": "tier_trusted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier_under_watch_below": {
+          "name": "tier_under_watch_below",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating_window_hours": {
+          "name": "rating_window_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fraud_window_days": {
+          "name": "fraud_window_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recompute_interval_hours": {
+          "name": "recompute_interval_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_rulesets_ruleset_version_check": {
+          "name": "reputation_rulesets_ruleset_version_check",
+          "value": "\"reputation_rulesets\".\"ruleset_version\" >= 1"
+        },
+        "reputation_rulesets_label_check": {
+          "name": "reputation_rulesets_label_check",
+          "value": "char_length(\"reputation_rulesets\".\"label\") BETWEEN 3 AND 64"
+        },
+        "reputation_rulesets_score_floor_check": {
+          "name": "reputation_rulesets_score_floor_check",
+          "value": "\"reputation_rulesets\".\"score_floor\" >= 0"
+        },
+        "reputation_rulesets_score_ceiling_check": {
+          "name": "reputation_rulesets_score_ceiling_check",
+          "value": "\"reputation_rulesets\".\"score_ceiling\" > 0"
+        },
+        "reputation_rulesets_starting_score_check": {
+          "name": "reputation_rulesets_starting_score_check",
+          "value": "\"reputation_rulesets\".\"starting_score\" >= 0"
+        },
+        "reputation_rulesets_min_facts_for_score_check": {
+          "name": "reputation_rulesets_min_facts_for_score_check",
+          "value": "\"reputation_rulesets\".\"min_facts_for_score\" BETWEEN 1 AND 100"
+        },
+        "reputation_rulesets_decay_half_life_days_check": {
+          "name": "reputation_rulesets_decay_half_life_days_check",
+          "value": "\"reputation_rulesets\".\"decay_half_life_days\" BETWEEN 7 AND 720"
+        },
+        "reputation_rulesets_tier_standard_at_check": {
+          "name": "reputation_rulesets_tier_standard_at_check",
+          "value": "\"reputation_rulesets\".\"tier_standard_at\" >= 0"
+        },
+        "reputation_rulesets_tier_trusted_at_check": {
+          "name": "reputation_rulesets_tier_trusted_at_check",
+          "value": "\"reputation_rulesets\".\"tier_trusted_at\" >= 0"
+        },
+        "reputation_rulesets_tier_under_watch_below_check": {
+          "name": "reputation_rulesets_tier_under_watch_below_check",
+          "value": "\"reputation_rulesets\".\"tier_under_watch_below\" >= 0"
+        },
+        "reputation_rulesets_rating_window_hours_check": {
+          "name": "reputation_rulesets_rating_window_hours_check",
+          "value": "\"reputation_rulesets\".\"rating_window_hours\" BETWEEN 1 AND 720"
+        },
+        "reputation_rulesets_fraud_window_days_check": {
+          "name": "reputation_rulesets_fraud_window_days_check",
+          "value": "\"reputation_rulesets\".\"fraud_window_days\" BETWEEN 1 AND 90"
+        },
+        "reputation_rulesets_recompute_interval_hours_check": {
+          "name": "reputation_rulesets_recompute_interval_hours_check",
+          "value": "\"reputation_rulesets\".\"recompute_interval_hours\" BETWEEN 1 AND 168"
+        },
+        "ck_reputation_rulesets_score_bounds": {
+          "name": "ck_reputation_rulesets_score_bounds",
+          "value": "\"reputation_rulesets\".\"score_ceiling\" > \"reputation_rulesets\".\"score_floor\""
+        },
+        "ck_reputation_rulesets_start_in_bounds": {
+          "name": "ck_reputation_rulesets_start_in_bounds",
+          "value": "\"reputation_rulesets\".\"starting_score\" >= \"reputation_rulesets\".\"score_floor\" AND \"reputation_rulesets\".\"starting_score\" <= \"reputation_rulesets\".\"score_ceiling\""
+        },
+        "ck_reputation_rulesets_tier_order": {
+          "name": "ck_reputation_rulesets_tier_order",
+          "value": "\"reputation_rulesets\".\"tier_trusted_at\" > \"reputation_rulesets\".\"tier_standard_at\" AND \"reputation_rulesets\".\"tier_under_watch_below\" <= \"reputation_rulesets\".\"tier_standard_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reputation_scores": {
+      "name": "reputation_scores",
+      "schema": "",
+      "columns": {
+        "subject_type": {
+          "name": "subject_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_public_id": {
+          "name": "subject_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_points": {
+          "name": "score_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fact_count": {
+          "name": "fact_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "computed_through_fact_id": {
+          "name": "computed_through_fact_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "next_recompute_at": {
+          "name": "next_recompute_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ix_reputation_scores_tier": {
+          "name": "ix_reputation_scores_tier",
+          "columns": [
+            {
+              "expression": "subject_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"score_points\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_reputation_scores_recompute_due": {
+          "name": "ix_reputation_scores_recompute_due",
+          "columns": [
+            {
+              "expression": "next_recompute_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reputation_scores_ruleset_version_fkey": {
+          "name": "reputation_scores_ruleset_version_fkey",
+          "tableFrom": "reputation_scores",
+          "tableTo": "reputation_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "ruleset_version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_reputation_scores": {
+          "name": "pk_reputation_scores",
+          "columns": [
+            "subject_type",
+            "subject_public_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reputation_scores_subject_type_check": {
+          "name": "reputation_scores_subject_type_check",
+          "value": "\"reputation_scores\".\"subject_type\" IN ('customer','driver')"
+        },
+        "reputation_scores_subject_public_id_check": {
+          "name": "reputation_scores_subject_public_id_check",
+          "value": "\"reputation_scores\".\"subject_public_id\" ~ '^WS-[0-9]{10}$'"
+        },
+        "reputation_scores_tier_check": {
+          "name": "reputation_scores_tier_check",
+          "value": "\"reputation_scores\".\"tier\" IN ('new','standard','trusted','under_watch')"
+        },
+        "reputation_scores_fact_count_check": {
+          "name": "reputation_scores_fact_count_check",
+          "value": "\"reputation_scores\".\"fact_count\" >= 0"
+        },
+        "ck_reputation_scores_non_negative": {
+          "name": "ck_reputation_scores_non_negative",
+          "value": "\"reputation_scores\".\"score_points\" >= 0"
+        },
+        "ck_reputation_scores_new_has_no_history": {
+          "name": "ck_reputation_scores_new_has_no_history",
+          "value": "\"reputation_scores\".\"tier\" <> 'new' OR \"reputation_scores\".\"fact_count\" = 0 OR \"reputation_scores\".\"computed_through_fact_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

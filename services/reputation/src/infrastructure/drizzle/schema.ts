@@ -151,7 +151,7 @@ export const reputationRuleWeights = pgTable(
     ),
     check(
       "reputation_rule_weights_fact_kind_check",
-      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received')`,
+      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received','dispute_resolved')`,
     ),
     check(
       "reputation_rule_weights_weight_points_check",
@@ -232,7 +232,7 @@ export const reputationFacts = pgTable(
     ),
     check(
       "reputation_facts_fact_kind_check",
-      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received')`,
+      sql`${t.factKind} IN ('order_completed','order_cancelled_by_customer','order_cancelled_by_driver','assignment_accepted','assignment_rejected','assignment_timed_out','rating_received','dispute_resolved')`,
     ),
     check(
       "reputation_facts_order_public_id_check",

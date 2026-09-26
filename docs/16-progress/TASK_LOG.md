@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 6/N: Reputation Bridge (CLM-0361)
+
+- **Work Item(s):** M5-16 (review 6/N)
+- **Status:** Active (PR pending)
+- **What / Why:** Reputation bridge (ADR-049 §7). Added `dispute_resolved` to REPUTATION_FACT_KINDS in @wasla/contracts-reputation (events.json FactKind enum, events-types.ts, index.ts, schema.sql CHECK constraints). ReputationBridgePort in support service ports. InMemoryReputationBridge implementation. Wired into HTTP resolve handler: when ticket is resolved with subject_public_id, records dispute_resolved fact (best-effort: if bridge throws, ticket is still resolved). 113 support tests (7 bridge new). 81 reputation contracts tests pass.
+
 ## 2026-09-26 — CLM-0360 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-16 (review 5/N)
@@ -634,6 +640,17 @@
 - **القياس من:** main@ed7e7a1 · 2026-09-21
 - **ما نُفِّذَ:** تحديث SVG/PNG لتعكس: M2-01..06 + M2-10 = Completed.
 - **الحالة:** 7 من 10 بنود M2 مكتملة. M2-07 In Progress (G8). M2-08 In Progress (Stage B). M2-09 Not Started.
+
+---
+
+## 2026-09-26 — CLM-0362 · M5-16 review 6/N companion
+
+- **Work Item(s):** M5-16
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Companion claim for http.test.ts: updated test fixture to pass
+`reputationBridge` (now a required port in `SupportHttpDeps`).
 
 ---
 

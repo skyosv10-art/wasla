@@ -174,4 +174,4 @@
 | نشرُ الصورةِ وسجلُّ صورٍ وإقلاعُ خدمةٍ في حاويةٍ (`docker-compose`) | Missing | M2-02 |
 
 | `apps/admin-portal/` | Completed | M5-15 | Phase 15 | 7 admin screens: Dashboard, Users, Drivers, Orders, AuditLog, Partners (review 1/N), Moderation (review 2/N). 15 unit tests. Privileged workflow gate met. |
-| `services/support/` | In Progress | M5-16 (review 5/N) | Phase 16 | ADR-049 + scaffold + Store + HTTP + service identity + relay consumer. Fastify app (7 routes), ServiceAuth (3 scopes), authz-policy ops registered, OpenAPI v0.2.0, relay consumer (order.status_changed, 6 trigger states, checkpoint, dead-letter). 106 support tests. Admin screen, reputation bridge deferred. |
+| `services/support/` | In Progress | M5-16 (review 6/N) | Phase 16 | ADR-049 + scaffold + Store + HTTP + service identity + relay consumer + reputation bridge. Fastify app (7 routes), ServiceAuth (3 scopes), authz-policy ops, OpenAPI v0.2.0, relay consumer (6 trigger states, checkpoint), reputation bridge (dispute_resolved fact). 113 support tests. Admin screen deferred. |

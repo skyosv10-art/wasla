@@ -34,7 +34,8 @@ export type ReputationFactKind =
   | "assignment_accepted"
   | "assignment_rejected"
   | "assignment_timed_out"
-  | "rating_received";
+  | "rating_received"
+  | "dispute_resolved";
 
 /** بمفردات محرّك الطلب كما وصلت في الحدث. مرجعٌ لا حُكم. */
 export type ReputationActorType = "system" | "customer" | "driver" | "partner" | "admin";

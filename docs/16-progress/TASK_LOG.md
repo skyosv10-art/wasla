@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0357 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-16 (review 2/N)
+- **Status:** Released — PR #477 merged (squash `d5deb71`); claim CLM-0357 released
+- **What / Why:** PR #477 merged the M5-16 review 2/N (support service scaffold) and deleted branch `feat/m5-16-review-2`, but claim CLM-0357 was left `Active`. The stale-claim freshness guard (check 4) then rejected `main` because an Active claim pointed at a deleted branch. This entry releases CLM-0357 per §8.1 — the root-cause fix, not a guard weakening. M5-16 remains In Progress.
+
 ## 2026-09-26 — M5-16 Review 2/N: Support Service Scaffold (CLM-0357)
 
 - **Work Item(s):** M5-16 (review 2/N)

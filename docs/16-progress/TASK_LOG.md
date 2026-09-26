@@ -647,9 +647,9 @@
 
 - **Work Item(s):** M5-16
 - **Author:** @uxxxu (agent:perplexity-computer)
-- **Status:** In Progress
+- **Status:** Released
 
-Companion claim for http.test.ts: updated test fixture to pass
+Released 2026-09-26: PR [#485](https://github.com/skyosv10-art/wasla/pull/485) merged. Companion claim for http.test.ts.: updated test fixture to pass
 `reputationBridge` (now a required port in `SupportHttpDeps`).
 
 ---

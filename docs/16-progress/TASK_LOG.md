@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0356 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-16 (review 1/N)
+- **Status:** Released — PR #475 merged (squash `aa77798`); claim CLM-0356 released
+- **What / Why:** PR #475 merged the M5-16 review 1/N (ADR-049) and deleted branch `feat/m5-16-review-1`, but claim CLM-0356 was left `Active`. The stale-claim freshness guard (check 4) then rejected `main` because an Active claim pointed at a deleted branch. This entry releases CLM-0356 per §8.1 — the root-cause fix, not a guard weakening. M5-16 remains In Progress.
+
 ## 2026-09-26 — M5-16 Review 1/N: ADR-049 Ticket Model (CLM-0356)
 
 - **Work Item(s):** M5-16 (review 1/N)

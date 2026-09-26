@@ -12,6 +12,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { SUPPORT_SERVICE_PORT } from "@wasla/contracts-support";
 import { registerServiceIdentityOnFastify } from "@wasla/service-auth/fastify";
 import { supportErrors } from "../domain/errors.js";
+import type { SupportTicket } from "../domain/model.js";
 import type { SupportTicketStore, SupportEventPublisher, ReputationBridgePort } from "../ports.js";
 import { registerErrorHandler } from "./errors.js";
 import {
@@ -81,6 +82,21 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
     }
 
     return reply.status(201).send(ticket);
+  });
+
+  // ── GET /support/tickets — list with optional state filter + cursor ──
+  app.get("/support/tickets", { config: internalScoped(SUPPORT_SCOPES.ticketRead) }, async (request, reply) => {
+    const query = request.query as {
+      state?: SupportTicket["state"];
+      limit?: string;
+      cursor?: string;
+    };
+    const { tickets, nextCursor } = await deps.store.listTickets({
+      state: query.state,
+      limit: query.limit ? Math.min(parseInt(query.limit, 10), 100) : undefined,
+      cursor: query.cursor || null,
+    });
+    return reply.status(200).send({ tickets, nextCursor });
   });
 
   // ── GET /support/tickets/:ticketId ─────────────────────────────────────

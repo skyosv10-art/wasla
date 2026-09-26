@@ -36,6 +36,7 @@ const resources = {
         audit: "سجل التدقيق",
         partners: "الشركاء",
         moderation: "الاعتدال",
+        support: "الدعم",
       },
       dashboard: {
         title: "لوحة التحكم",
@@ -199,7 +200,51 @@ const resources = {
         timestamp: "الطابع الزمني",
         noAuditEntries: "لا توجد سجلات تدقيق",
       },
-      moderation: {
+      
+      support: {
+        title: "تذاكر الدعم",
+        ticket: "تذكرة",
+        ticketId: "المعرّف",
+        state: "الحالة",
+        type: "النوع",
+        states: {
+          open: "مفتوحة",
+          investigating: "قيد التحقيق",
+          escalated: "متصاعدة",
+          resolved: "محلولة",
+          closed: "مغلقة",
+        },
+        types: {
+          order_issue: "مشكلة طلب",
+          behavior_complaint: "شكوى سلوك",
+          payment_dispute: "نزاع دفع",
+          service_quality: "جودة الخدمة",
+        },
+        escalationLevel: "مستوى التصعيد",
+        escalationLevels: {
+          agent: "وكيل",
+          supervisor: "مشرف",
+          admin: "مدير",
+        },
+        reporter: "المُبلّغ",
+        subject: "الموضوع",
+        order: "الطلب",
+        openedAt: "تاريخ الفتح",
+        escalate: "تصعيد",
+        resolve: "حل",
+        close: "إغلاق",
+        evidenceId: "معرّف الدليل",
+        resolutionReasons: {
+          resolved: "محلول",
+          unfounded: "لا أساس له",
+          duplicate: "مكرر",
+          wont_fix: "لن يُصلح",
+        },
+        allStates: "الكل",
+        noTickets: "لا توجد تذاكر",
+        backToList: "العودة للقائمة",
+      },
+moderation: {
         title: "إدارة الاعتدال",
         accessDenied: "هذه الصفحة متاحة للمسؤولين فقط",
         storeSlugPlaceholder: "معرّف المتجر (slug)",
@@ -259,6 +304,7 @@ const resources = {
         audit: "Audit Log",
         partners: "Partners",
         moderation: "Moderation",
+        support: "Support",
       },
       dashboard: {
         title: "Dashboard",
@@ -482,6 +528,7 @@ const resources = {
         audit: "آڈٹ لاگ",
         partners: "پارٹنرز",
         moderation: "اعتدال",
+        support: "سپورٹ",
       },
       dashboard: {
         title: "ڈیش بورڈ",

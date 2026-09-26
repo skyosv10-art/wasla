@@ -81,6 +81,25 @@ export class InMemorySupportTicketStore implements SupportTicketStore {
     return ticket ? { ...ticket } : null;
   }
 
+  async listTickets(opts?: {
+    readonly state?: SupportTicket["state"];
+    readonly limit?: number;
+    readonly cursor?: string | null;
+  }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }> {
+    const limit = Math.min(opts?.limit ?? 20, 100);
+    let items = Array.from(this.tickets.values()).reverse();
+    if (opts?.state) {
+      items = items.filter((t) => t.state === opts.state);
+    }
+    if (opts?.cursor) {
+      const idx = items.findIndex((t) => t.ticket_id === opts.cursor);
+      if (idx >= 0) items = items.slice(idx + 1);
+    }
+    const page = items.slice(0, limit);
+    const nextCursor = items.length > limit ? (page[page.length - 1]?.ticket_id ?? null) : null;
+    return { tickets: page, nextCursor };
+  }
+
   async updateState(
     ticketId: string,
     state: SupportTicket["state"],

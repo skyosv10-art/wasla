@@ -643,6 +643,20 @@
 
 ---
 
+## 2026-09-26 — CLM-0364 · M5-16 closeout
+
+- **Work Item(s):** M5-16
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+M5-16 (Support & Escalation) closeout: milestone marked Completed.
+Evidence: PRs #475/#477/#479/#481/#483/#485/#487 merged, main CI green
+40/40 at fa62e1a. 7 reviews completed covering ADR-049, scaffold+contracts,
+PostgreSQL Store, HTTP+identity, relay consumer, reputation bridge, admin
+screen. 120 support tests. Exit criterion (dispute evidence gate) met.
+
+---
+
 ## 2026-09-26 — CLM-0363 · M5-16 review 7/N
 
 - **Work Item(s):** M5-16

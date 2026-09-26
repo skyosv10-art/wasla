@@ -22,7 +22,6 @@ import type {
   InvoiceStore,
   PaymentGatewayPort,
   BillingEventPublisher,
-  SettlementPort,
 } from "../ports.js";
 import { registerErrorHandler } from "./errors.js";
 import {
@@ -38,7 +37,6 @@ export interface BillingHttpDeps {
   readonly store: InvoiceStore;
   readonly paymentGateway?: PaymentGatewayPort;
   readonly publisher?: BillingEventPublisher;
-  readonly settlement?: SettlementPort;
   readonly serviceIdentity?: BillingServiceIdentityOptions;
 }
 

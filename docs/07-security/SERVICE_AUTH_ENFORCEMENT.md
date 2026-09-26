@@ -1124,6 +1124,8 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `POST /billing/invoices/:id/issue` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
 | `POST /billing/invoices/:id/payment` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
 | `POST /billing/invoices/:id/void` | `billing:invoice:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/settlements/:id/settle` | `billing:fee:settle` | — (عمليّةٌ داخليّةٌ) |
+| `POST /billing/payouts` | `billing:payout:request` | — (عمليّةٌ داخليّةٌ) |
 | `GET /billing/health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- billing-scopes:end -->

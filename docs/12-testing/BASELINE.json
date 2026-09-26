@@ -3,7 +3,7 @@
   "generated_at": "2026-09-26T08:09:01Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "e8d4cb2",
+    "commit": "ddfab439a9cda24d704ea55b950420313fba55f1",
     "branch": "feat/m5-16-review-7",
     "dirty": false,
     "dirty_files": 0,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2764a96619208bf113eb9562facd94c481ccbc5e34bee5f60c8acaa6d718f78e",
+  "fingerprint": "sha256:1fdd93192a05339be22fc98e95c5b6db9af3a45029ca5ad3410a53893bfb993c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

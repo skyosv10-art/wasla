@@ -6,17 +6,17 @@
 
 import { Pool } from "pg";
 
-import { applySupportSchema } from "./migrate.js";
+import { applyBillingSchema } from "./migrate.js";
 
 export async function main(): Promise<void> {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = process.env.BILLING_DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL is required to run the billing migration");
+    throw new Error("BILLING_DATABASE_URL is required to run the billing migration");
   }
 
   const pool = new Pool({ connectionString, max: 1 });
   try {
-    await applySupportSchema(pool);
+    await applyBillingSchema(pool);
     process.stdout.write("billing schema applied · contracts/schema.sql executed verbatim\n");
   } finally {
     await pool.end();

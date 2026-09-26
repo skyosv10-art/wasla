@@ -37,7 +37,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "BILLING_DATABASE_URL",
     type: "postgres_url",
-    required: false,
+    required: "optional",
     secret: true,
     default: null,
     scopes: ["runtime"],

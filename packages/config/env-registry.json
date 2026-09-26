@@ -12,7 +12,7 @@
     {
       "name": "BILLING_DATABASE_URL",
       "type": "postgres_url",
-      "required": false,
+      "required": "optional",
       "default": null,
       "secret": true,
       "scopes": [

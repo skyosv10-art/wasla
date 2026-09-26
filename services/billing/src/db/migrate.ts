@@ -31,6 +31,6 @@ export function readSchemaContract(): string {
  *
  * لا `BEGIN` هنا: النصُّ يحملُ معاملتَهُ بنفسِهِ.
  */
-export async function applySupportSchema(pool: Pool): Promise<void> {
+export async function applyBillingSchema(pool: Pool): Promise<void> {
   await pool.query(readSchemaContract());
 }

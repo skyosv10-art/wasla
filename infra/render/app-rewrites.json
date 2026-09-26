@@ -28,6 +28,7 @@
     "/stores": "marketplace",
     "/subscriptions": "subscriptions",
     "/partners": "partners",
-    "/support": "support"
+    "/support": "support",
+    "/billing": "billing"
   }
 }

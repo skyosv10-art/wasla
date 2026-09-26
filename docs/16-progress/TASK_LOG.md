@@ -643,6 +643,24 @@
 
 ---
 
+## 2026-09-26 — CLM-0368 · M5-17 review 4/N
+
+- **Work Item(s):** M5-17
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Billing & Fees HTTP layer + service identity (review 4/N):
+- Fastify app with 7 routes: health, createInvoice, getInvoice,
+  listInvoices, issueInvoice, recordPayment, voidInvoice.
+- Service identity enforcement via @wasla/service-auth (4 scopes).
+- OpenAPI v0.2.0 with ServiceAuth (x-wasla-service-auth header).
+- Authz-policy: 6 billing operations (150→156 enforced, 98→104
+  unclassified, 122→124 scopes, 16→17 audiences).
+- app-rewrites: /billing prefix (21→22).
+- 80 tests (47 domain + 11 infra + 5 schema-drift + 12 HTTP + 5 boundary).
+
+---
+
 ## 2026-09-26 — CLM-0367 · M5-17 review 3/N
 
 - **Work Item(s):** M5-17

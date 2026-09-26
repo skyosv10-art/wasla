@@ -22,11 +22,15 @@
       "owner_item": "M5-17",
       "readers": [
         {
+          "file": "services/billing/drizzle.config.ts",
+          "mode": "direct"
+        },
+        {
           "file": "services/billing/src/db/migrate-cli.ts",
           "mode": "direct"
         },
         {
-          "file": "services/billing/drizzle.config.ts",
+          "file": "services/billing/src/http/server.ts",
           "mode": "direct"
         }
       ],
@@ -1661,6 +1665,10 @@
         },
         {
           "file": "services/audit/src/http/server.ts",
+          "mode": "reader"
+        },
+        {
+          "file": "services/billing/src/http/server.ts",
           "mode": "reader"
         },
         {

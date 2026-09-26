@@ -1,3 +1,9 @@
+## 2026-09-26 — M5-16 Review 4/N: HTTP Layer + Service Identity (CLM-0359)
+
+- **Work Item(s):** M5-16 (review 4/N)
+- **Status:** Active (PR pending)
+- **What / Why:** HTTP layer + service identity enforcement created. Fastify app with 7 routes: POST /support/tickets (create), GET /support/tickets/:id (read), POST /support/tickets/:id/evidence (attach), POST /support/tickets/:id/escalate, POST /support/tickets/:id/resolve, POST /support/tickets/:id/close, GET /health. Service identity enforcement via @wasla/service-auth (3 scopes: support:ticket:write, support:ticket:read, support:evidence:write; /health OPEN). Authz-policy operations registered (6 ops in ENFORCED_OPERATIONS, 3 scopes). SERVICE_AUTH_ENFORCEMENT.md: support-scopes block + enforced:support. OpenAPI spec: ServiceAuth (x-wasla-service-auth apiKey header), per-operation security with scopes. Error mapping (SupportError → HTTP status, unknown → 503). Server setup (Postgres or in-memory fallback, key registry, replay guard). 76 support tests (16 HTTP new) + 42 authz-policy tests (updated counts: 149 ops, 122 scopes, 16 audiences). BASELINE: fingerprint 9749558d, tests 5585, governance 518. Relay consumer, admin screen, reputation bridge deferred.
+
 ## 2026-09-26 — CLM-0358 Released (stale-claim freshness fix)
 
 - **Work Item(s):** M5-16 (review 3/N)

@@ -698,7 +698,7 @@ const ownerScoped = (...scopes: string[]) => ({
 
 <!-- coverage-ledger:start -->
 
-**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions` · `enforced: audit`
+**الحدودُ المفروضة:** `enforced: matching` · `enforced: orders` · `enforced: identity` · `enforced: dispatch` · `enforced: geography` · `enforced: delivery` · `enforced: negotiations` · `enforced: marketplace` · `enforced: customers` · `enforced: drivers` · `enforced: reputation` · `enforced: search` · `enforced: subscriptions` · `enforced: audit` · `enforced: support`
 
 | العميلُ الصادر | إلى | الحالة | البرهان أو المرجع |
 |---|---|---|---|
@@ -1099,6 +1099,20 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- reputation-scopes:end -->
+
+<!-- support-scopes:begin -->
+
+| المسار | الصلاحيّةُ المطلوبة | ربطُ المستفيد |
+|---|---|---|
+| `POST /support/tickets` | `support:ticket:write` | — (عمليّةٌ داخليّةٌ) |
+| `GET /support/tickets/:ticketId` | `support:ticket:read` | — (عمليّةٌ داخليّةٌ) |
+| `POST /support/tickets/:ticketId/evidence` | `support:evidence:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /support/tickets/:ticketId/escalate` | `support:ticket:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /support/tickets/:ticketId/resolve` | `support:ticket:write` | — (عمليّةٌ داخليّةٌ) |
+| `POST /support/tickets/:ticketId/close` | `support:ticket:write` | — (عمليّةٌ داخليّةٌ) |
+| `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
+
+<!-- support-scopes:end -->
 
 **والتقسيمُ يتبعُ الأثرَ لا الجدولَ:** القراءةُ والكتابةُ مفصولتانِ في كلِّ
 مَورِدٍ، ومراجعةُ الوثيقةِ (`document:review`) صلاحيّةٌ مستقلّةٌ لأنَّها قرارٌ

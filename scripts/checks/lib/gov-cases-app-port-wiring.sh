@@ -92,7 +92,7 @@ row = (
 )
 s = s.replace("<!-- app-port-exemptions:start -->\n```\n", "<!-- app-port-exemptions:start -->\n```\n" + row, 1)
 s = s.replace("EXEMPTIONS = 0", "EXEMPTIONS = 1", 1)
-s = s.replace("ROOT_WIRED_PORTS = 15", "ROOT_WIRED_PORTS = 14", 1)
+s = s.replace("ROOT_WIRED_PORTS = 14", "ROOT_WIRED_PORTS = 13", 1)
 s = s.replace("HARNESSES_SCANNED = 10", "HARNESSES_SCANNED = 10", 1)
 open(p, "w", encoding="utf-8").write(s)
 MUT

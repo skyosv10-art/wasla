@@ -57,7 +57,7 @@ export const useSupportStore = create<SupportState>((set, get) => ({
       if (filter) params.set("state", filter);
       const qs = params.toString();
       const data = await apiClient.get<TicketListResponse>(
-        `/support/tickets${qs ? `?${qs}` : ""}`,
+        qs ? `/support/tickets?${qs}` : "/support/tickets",
       );
       set({ tickets: data.tickets, nextCursor: data.nextCursor, loading: false });
     } catch (err) {

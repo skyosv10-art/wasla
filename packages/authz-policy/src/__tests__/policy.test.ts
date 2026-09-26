@@ -37,7 +37,7 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
   it("تسعٌ وأربعونَ ومئةُ عمليّةٍ على أربعةَ عشرَ حدّاً — مئةٌ وتسعَ عشرةَ قبلَ عمليّتَي حدِّ البحث (M1-04 · الموجةُ 9·10·11·12)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(149);
+    expect(ENFORCED_OPERATIONS).toHaveLength(150);
     expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(16);
   });
 
@@ -437,7 +437,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(97);
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(98);
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

@@ -60,6 +60,7 @@ export const AUDIENCES = [
   "reputation",
   "search",
   "subscriptions",
+  "support",
 ] as const;
 
 export type Audience = (typeof AUDIENCES)[number];
@@ -263,6 +264,14 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   // POST /audit/events يتطلب audit:write، GET /audit/events يتطلب audit:read.
   { audience: "audit", method: "POST", path: "/audit/events", scopes: ["audit:write"] },
   { audience: "audit", method: "GET", path: "/audit/events", scopes: ["audit:read"] },
+
+  // ── support (M5-16 · ADR-049 · CLM-0359) ──────────────────────
+  { audience: "support", method: "POST", path: "/support/tickets", scopes: ["support:ticket:write"] },
+  { audience: "support", method: "GET", path: "/support/tickets/:ticketId", scopes: ["support:ticket:read"] },
+  { audience: "support", method: "POST", path: "/support/tickets/:ticketId/evidence", scopes: ["support:evidence:write"] },
+  { audience: "support", method: "POST", path: "/support/tickets/:ticketId/escalate", scopes: ["support:ticket:write"] },
+  { audience: "support", method: "POST", path: "/support/tickets/:ticketId/resolve", scopes: ["support:ticket:write"] },
+  { audience: "support", method: "POST", path: "/support/tickets/:ticketId/close", scopes: ["support:ticket:write"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */
@@ -276,7 +285,7 @@ export function enforcedScopesAt(audience: Audience): readonly string[] {
   return [...out].sort();
 }
 
-/** كلُّ صلاحيّةٍ مفروضةٍ في المستودعِ كلِّهِ — 64 صلاحيّةً في قياسِ 2026-09-15. */
+/** كلُّ صلاحيّةٍ مفروضةٍ في المستودعِ كلِّهِ — 122 صلاحيّةً في قياسِ 2026-09-26. */
 export function allEnforcedScopes(): readonly string[] {
   const out = new Set<string>();
   for (const op of ENFORCED_OPERATIONS) for (const s of op.scopes) out.add(s);

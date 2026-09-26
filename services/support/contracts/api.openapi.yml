@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: WASLA Support & Escalation API
-  version: 0.1.0
+  version: 0.2.0
   description: >
     Support & Escalation service contracts (Phase 16 · ADR-049).
     Ticket lifecycle, evidence, escalation, and resolution.
@@ -23,7 +23,173 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthStatus'
+  /support/tickets:
+    post:
+      tags: [tickets]
+      summary: Create a support ticket
+      operationId: createTicket
+      security:
+        - ServiceAuth: ['support:ticket:write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /support/tickets/{ticketId}:
+    get:
+      tags: [tickets]
+      summary: Get a ticket by ID
+      operationId: getTicket
+      security:
+        - ServiceAuth: ['support:ticket:read']
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /support/tickets/{ticketId}/evidence:
+    post:
+      tags: [evidence]
+      summary: Attach evidence to a ticket
+      operationId: attachEvidence
+      security:
+        - ServiceAuth: ['support:evidence:write']
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachEvidenceRequest'
+      responses:
+        '201':
+          description: Evidence attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /support/tickets/{ticketId}/escalate:
+    post:
+      tags: [tickets]
+      summary: Escalate a ticket
+      operationId: escalateTicket
+      security:
+        - ServiceAuth: ['support:ticket:write']
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscalateRequest'
+      responses:
+        '200':
+          description: Ticket escalated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /support/tickets/{ticketId}/resolve:
+    post:
+      tags: [tickets]
+      summary: Resolve a ticket
+      operationId: resolveTicket
+      security:
+        - ServiceAuth: ['support:ticket:write']
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequest'
+      responses:
+        '200':
+          description: Ticket resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /support/tickets/{ticketId}/close:
+    post:
+      tags: [tickets]
+      summary: Close a resolved ticket
+      operationId: closeTicket
+      security:
+        - ServiceAuth: ['support:ticket:write']
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
 components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: >
+        توقيعُ هويّةِ الخدمةِ الصادرُ عن `packages/service-auth`. كلُّ عمليّةٍ في
+        هذا العقدِ تحملُ `security:` بصلاحيّةِ مسارِها — ما خلا `/health` المفتوحَ
+        بقرارٍ مكتوبٍ — فلا يُقبَلُ نداءٌ بلا ترويسةٍ صحيحةٍ
+        ([ADR-020](../../../docs/15-decisions/ADR-020-service-to-service-identity.md) ·
+        [SERVICE_AUTH_ENFORCEMENT](../../../docs/07-security/SERVICE_AUTH_ENFORCEMENT.md)).
   schemas:
     HealthStatus:
       type: object
@@ -31,32 +197,161 @@ components:
       properties:
         status:
           type: string
-          enum: [ok]
+          enum: [ok, degraded]
         service:
           type: string
           const: support-service
         port:
           type: integer
           const: 8095
-    ErrorResponse:
+    Ticket:
       type: object
-      required: [error]
+      required:
+        - ticket_id
+        - ticket_type
+        - state
+        - escalation_level
+        - reporter_public_id
+        - subject_public_id
+        - order_public_id
+        - resolution_reason
+        - evidence_id
+        - opened_at
+        - investigating_at
+        - escalated_at
+        - resolved_at
+        - closed_at
       properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              enum:
-                - SUPPORT_VALIDATION_FAILED
-                - SUPPORT_TICKET_NOT_FOUND
-                - SUPPORT_EVIDENCE_REQUIRED
-                - SUPPORT_RESOLUTION_REASON_REQUIRED
-                - SUPPORT_INVALID_STATE_TRANSITION
-                - SUPPORT_TICKET_ALREADY_CLOSED
-                - SUPPORT_EVIDENCE_NOT_FOUND
-            message:
-              type: string
-            trace_id:
-              type: [string, null]
+        ticket_id:
+          type: string
+          format: uuid
+        ticket_type:
+          type: string
+          enum: [order_issue, behavior_complaint, payment_dispute, service_quality]
+        state:
+          type: string
+          enum: [open, investigating, escalated, resolved, closed]
+        escalation_level:
+          type: [string, null]
+          enum: [support_agent, support_supervisor, admin, null]
+        reporter_public_id:
+          type: string
+        subject_public_id:
+          type: [string, null]
+        order_public_id:
+          type: [string, null]
+        resolution_reason:
+          type: [string, null]
+          enum: [refund_issued, warning_sent, no_action_needed, escalated_to_admin, null]
+        evidence_id:
+          type: [string, null]
+          format: uuid
+        opened_at:
+          type: string
+          format: date-time
+        investigating_at:
+          type: [string, null]
+          format: date-time
+        escalated_at:
+          type: [string, null]
+          format: date-time
+        resolved_at:
+          type: [string, null]
+          format: date-time
+        closed_at:
+          type: [string, null]
+          format: date-time
+    Evidence:
+      type: object
+      required:
+        - evidence_id
+        - ticket_id
+        - evidence_type
+        - content_hash
+        - storage_ref
+        - attached_at
+      properties:
+        evidence_id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+        evidence_type:
+          type: string
+          enum: [photo, message, order_log]
+        content_hash:
+          type: string
+        storage_ref:
+          type: string
+        attached_at:
+          type: string
+          format: date-time
+    CreateTicketRequest:
+      type: object
+      required: [ticket_type, reporter_public_id, subject_public_id, order_public_id]
+      properties:
+        ticket_type:
+          type: string
+          enum: [order_issue, behavior_complaint, payment_dispute, service_quality]
+        reporter_public_id:
+          type: string
+        subject_public_id:
+          type: [string, null]
+        order_public_id:
+          type: [string, null]
+    AttachEvidenceRequest:
+      type: object
+      required: [evidence_type, content_hash, storage_ref]
+      properties:
+        evidence_type:
+          type: string
+          enum: [photo, message, order_log]
+        content_hash:
+          type: string
+        storage_ref:
+          type: string
+    EscalateRequest:
+      type: object
+      required: [escalation_level]
+      properties:
+        escalation_level:
+          type: string
+          enum: [support_agent, support_supervisor, admin]
+    ResolveRequest:
+      type: object
+      required: [resolution_reason, evidence_id]
+      properties:
+        resolution_reason:
+          type: string
+          enum: [refund_issued, warning_sent, no_action_needed, escalated_to_admin]
+        evidence_id:
+          type: string
+          format: uuid
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - SUPPORT_VALIDATION_FAILED
+                      - SUPPORT_TICKET_NOT_FOUND
+                      - SUPPORT_EVIDENCE_REQUIRED
+                      - SUPPORT_RESOLUTION_REASON_REQUIRED
+                      - SUPPORT_INVALID_STATE_TRANSITION
+                      - SUPPORT_TICKET_ALREADY_CLOSED
+                      - SUPPORT_EVIDENCE_NOT_FOUND
+                  message:
+                    type: string
+                  trace_id:
+                    type: [string, null]

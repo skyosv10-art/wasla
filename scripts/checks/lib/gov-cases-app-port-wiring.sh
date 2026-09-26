@@ -136,7 +136,7 @@ fi
 _pw_restore
 
 # ── البابُ 5: الأرقامُ المنشورةُ تُطابِقُ القياسَ ───────────────────────────
-sed -i 's/OPTIONAL_PORTS = 15/OPTIONAL_PORTS = 9/' "$PW_DOC"
+sed -i 's/OPTIONAL_PORTS = 16/OPTIONAL_PORTS = 9/' "$PW_DOC"
 if _pw_mutated "$PW_DOC" "$PW_BK/doc"; then
   t 'رقمٌ منشورٌ يُخالِفُ القياسَ يُسقِطُ الفحصَ' fail bash "$PW"
 fi

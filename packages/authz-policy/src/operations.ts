@@ -281,6 +281,7 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "billing", method: "POST", path: "/billing/invoices/:id/issue", scopes: ["billing:invoice:write"] },
   { audience: "billing", method: "POST", path: "/billing/invoices/:id/payment", scopes: ["billing:invoice:write"] },
   { audience: "billing", method: "POST", path: "/billing/invoices/:id/void", scopes: ["billing:invoice:write"] },
+  { audience: "billing", method: "GET", path: "/billing/settlements", scopes: ["billing:invoice:read"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */

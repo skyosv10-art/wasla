@@ -20,6 +20,7 @@ import {
   InMemoryInvoiceStore,
   InMemoryPaymentGateway,
   InMemoryEventPublisher,
+  InMemorySettlement,
 } from "../ports.js";
 import { createBillingApp } from "./app.js";
 
@@ -40,6 +41,7 @@ export async function buildBillingServer(): Promise<{
 
     const app = createBillingApp({
       store: new PostgresInvoiceStore(db),
+      settlements: new InMemorySettlement(),
       paymentGateway: new InMemoryPaymentGateway(),
       publisher: new InMemoryEventPublisher(),
       serviceIdentity: { keys, replayGuard },
@@ -50,6 +52,7 @@ export async function buildBillingServer(): Promise<{
 
   const app = createBillingApp({
     store: new InMemoryInvoiceStore(),
+    settlements: new InMemorySettlement(),
     paymentGateway: new InMemoryPaymentGateway(),
     publisher: new InMemoryEventPublisher(),
     serviceIdentity: { keys, replayGuard },

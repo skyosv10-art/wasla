@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | الحدودُ المفروضةُ | `15` | `services/*/src/http/service-identity.ts` · `packages/bot-runtime/src/http/service-identity.ts` |
 | المساراتُ المُسجَّلةُ | `135` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 156` | مساراتٌ تُعلِنُ `scoped(...)` |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 157` | مساراتٌ تُعلِنُ `scoped(...)` |
 | المساراتُ المفتوحةُ | `OPEN_ROUTES = 19` | مساراتٌ تُعلِنُ `OPEN` |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
 | الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 124` | اتّحادُ صلاحيّاتِ العملياتِ |

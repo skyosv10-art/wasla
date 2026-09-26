@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | الحدودُ المفروضةُ | `15` | `services/*/src/http/service-identity.ts` · `packages/bot-runtime/src/http/service-identity.ts` |
 | المساراتُ المُسجَّلةُ | `135` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 150` | مساراتٌ تُعلِنُ `scoped(...)` |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 156` | مساراتٌ تُعلِنُ `scoped(...)` |
 | المساراتُ المفتوحةُ | `OPEN_ROUTES = 18` | مساراتٌ تُعلِنُ `OPEN` |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
 | الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 122` | اتّحادُ صلاحيّاتِ العملياتِ |
@@ -53,7 +53,7 @@
 | العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 44` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 8` | `OPERATION_BINDINGS` · حدُّ السوقِ |
 | العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `52` | `OPERATION_BINDINGS` |
-| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 98` | `150 − 52` |
+| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 104` | `150 − 52` |
 | الجماهيرُ المُعلَنةُ | `AUDIENCES = 15` | `packages/authz-policy/src/operations.ts` |
 
 <!-- authz-matrix:end -->

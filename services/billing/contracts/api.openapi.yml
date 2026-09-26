@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: WASLA Billing & Fees Service API
+  version: 0.2.0
+  description: |
+    Billing & Fees service (ADR-050).
+    Invoice lifecycle, fee settlement, Tap payment gateway integration.
+servers:
+  - url: http://localhost:8096
+    description: Local development
+security:
+  - ServiceAuth: []
+components:
+  securitySchemes:
+    ServiceAuth:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+      description: Service identity token (M1-03)
+  schemas:
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        store_public_id:
+          type: string
+        period:
+          type: string
+        state:
+          type: string
+          enum: [draft, issued, paid, partially_paid, closed, void]
+        fee_type:
+          type: string
+          enum: [store_fixed, store_variable, subscription, payout]
+        amount_cents:
+          type: integer
+        paid_amount_cents:
+          type: integer
+        payment_ref:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CreateInvoiceRequest:
+      type: object
+      properties:
+        store_public_id:
+          type: string
+        period:
+          type: string
+        fee_type:
+          type: string
+          enum: [store_fixed, store_variable, subscription, payout]
+        amount_cents:
+          type: integer
+      required: [store_public_id, period, fee_type, amount_cents]
+    RecordPaymentRequest:
+      type: object
+      properties:
+        amount_cents:
+          type: integer
+        payment_ref:
+          type: string
+      required: [amount_cents, payment_ref]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+      required: [error]
+paths:
+  /billing/health:
+    get:
+      tags: [billing]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service healthy
+  /billing/invoices:
+    post:
+      tags: [billing]
+      summary: Create invoice (ADR-050 §2)
+      security:
+        - ServiceAuth: [billing:invoice:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceRequest"
+      responses:
+        "201":
+          description: Invoice created
+        "422":
+          description: Validation failed
+    get:
+      tags: [billing]
+      summary: List invoices by store
+      security:
+        - ServiceAuth: [billing:invoice:read]
+      parameters:
+        - name: store_public_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoice list
+        "422":
+          description: Validation failed
+  /billing/invoices/{id}:
+    get:
+      tags: [billing]
+      summary: Get invoice by ID
+      security:
+        - ServiceAuth: [billing:invoice:read]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoice found
+        "404":
+          description: Invoice not found
+  /billing/invoices/{id}/issue:
+    post:
+      tags: [billing]
+      summary: Issue invoice (draft → issued)
+      security:
+        - ServiceAuth: [billing:invoice:write]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoice issued
+        "404":
+          description: Invoice not found
+        "409":
+          description: Invalid state transition
+  /billing/invoices/{id}/payment:
+    post:
+      tags: [billing]
+      summary: Record payment
+      security:
+        - ServiceAuth: [billing:invoice:write]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordPaymentRequest"
+      responses:
+        "200":
+          description: Payment recorded
+        "404":
+          description: Invoice not found
+        "409":
+          description: Payment not allowed
+  /billing/invoices/{id}/void:
+    post:
+      tags: [billing]
+      summary: Void invoice
+      security:
+        - ServiceAuth: [billing:invoice:write]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoice voided
+        "404":
+          description: Invoice not found
+        "409":
+          description: Void not allowed

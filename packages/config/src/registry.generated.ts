@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 80 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 81 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "CI",
@@ -131,7 +131,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: true,
     default: null,
     scopes: ["runtime", "test", "tooling"],
-    readerCount: 94,
+    readerCount: 95,
     ownerItem: "M2-04",
   },
   {
@@ -695,6 +695,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-04",
   },
   {
+    name: "SUPPORT_SERVICE_PORT",
+    type: "port",
+    required: "optional",
+    secret: false,
+    default: "8095",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-04",
+  },
+  {
     name: "VITE_API_BASE_URL",
     type: "http_url",
     required: "optional",
@@ -904,6 +914,7 @@ export const ENV_VAR_NAMES = [
   "SUBSCRIPTION_SERVICE_HOST",
   "SUBSCRIPTION_SERVICE_PORT",
   "SUPPORT_GROUP_CHAT_IDS",
+  "SUPPORT_SERVICE_PORT",
   "VITE_API_BASE_URL",
   "VITE_E2E",
   "WASLA_SERVICE_AUTH_ACTIVE_KID",

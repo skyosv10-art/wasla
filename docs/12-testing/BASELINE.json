@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-26T04:43:38Z",
+  "generated_at": "2026-09-26T05:05:50Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "0a9b27c0bdf8615c01f6689b18039036908bb24a",
+    "commit": "0b54d89706bc295f6f5dd093239e6bf7466ffd01",
     "branch": "feat/m5-16-review-3",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "M5-16 review 3/N: PostgreSQL Store adapter + in-memory store + schema-drift test",
-    "tracked_files": 2686
+    "dirty_files": 7,
+    "dirty_reason": "M5-16 review 3/N: PostgreSQL Store adapter + env-registry + derived artifacts",
+    "tracked_files": 2698
   },
   "env": {
     "node": "v20.20.1",
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "1df8ae8b6c38cae88114924ae7a633d3793a8290ab29a1c411d1fcfed0eb608c",
-    "lines": 5004
+    "sha256": "d65214aef64bc82b9f8cd22ab7b45113f66dcb748fd7381cb23d39248cfd019d",
+    "lines": 4904
   },
   "static": {
     "packages": 68,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "/tmp/test-summary-r3.txt",
+    "source": "/tmp/test-final2.txt",
     "tests_passed": 5569,
     "test_files_executed": 372,
     "governance_suite_cases": 519,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:33a44cea6bea5f54121269235c3a2c652da4f9f18a9aaacad8ef50360c962537",
+  "fingerprint": "sha256:2d67830b1a3ad95091490b418df6de448f7aca82d8e674926bc20006c64fc835",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

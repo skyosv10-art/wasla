@@ -1,3 +1,9 @@
+## 2026-09-26 — CLM-0359 Released (stale-claim freshness fix)
+
+- **Work Item(s):** M5-16 (review 4/N)
+- **Status:** Released — PR #481 merged (squash `fa05ea3`); claim CLM-0359 released
+- **What / Why:** PR #481 merged the M5-16 review 4/N (HTTP layer + service identity) and deleted branch `feat/m5-16-review-4`, but claim CLM-0359 was left `Active`. Releasing CLM-0359 per §8.1. M5-16 remains In Progress.
+
 ## 2026-09-26 — M5-16 Review 4/N: HTTP Layer + Service Identity (CLM-0359)
 
 - **Work Item(s):** M5-16 (review 4/N)

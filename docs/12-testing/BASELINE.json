@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-25T11:25:20Z",
+  "generated_at": "2026-09-26T01:57:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "779e1fc4db49a75e61d7ea2ca03b10d52211c63c",
-    "branch": "feat/m5-14-partner-infra",
+    "commit": "8e4593eb87b2781ef0ea566d233fd492a69effd1",
+    "branch": "feat/m5-15-review-2",
     "dirty": true,
-    "dirty_files": 8,
-    "dirty_reason": "CLM-0351: M5-14 review 2/N — infrastructure adapters (credential, webhook, usage, audit, lifecycle, store-staff), integration tests (3 files), PARTNERS_DATABASE_URL env var",
-    "tracked_files": 2637
+    "dirty_files": 9,
+    "dirty_reason": "M5-15 review 2/N: Moderation screen — new test file moderation-screen.test.tsx (test_files_tracked 493->494, tests 5414->5496, files 359->367, governance 518->519)",
+    "tracked_files": 2666
   },
   "env": {
     "node": "v20.20.1",
@@ -20,31 +20,27 @@
   "lock": {
     "path": "pnpm-lock.yaml",
     "sha256": "b168357917207f7d5ce1abc0ef128b9d508ffa30ab6bd528f0fc53834bf2a93c",
-    "lines": 4848
+    "lines": 4870
   },
   "static": {
     "packages": 66,
     "packages_with_typecheck": 62,
     "packages_with_test": 66,
-    "test_files_tracked": 493,
+    "test_files_tracked": 494,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32,
-    "test_files": null,
-    "with_tests": null,
-    "with_typecheck": null
+    "risks_not_closed": 32
   },
   "dynamic": {
     "measured": true,
-    "source": "CI verify log",
-    "tests_passed": 5414,
-    "test_files_executed": 359,
-    "governance_suite_cases": 518,
+    "source": "/tmp/verify-baseline.log",
+    "tests_passed": 5496,
+    "test_files_executed": 367,
+    "governance_suite_cases": 519,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:259aaacf03124d048d3cc127c9dad99a96a4c6f1c19b73e4e8fc2bab708409f7",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md",
-  "baseline_fingerprint": "sha256:259aaacf03124d048d3cc127c9dad99a96a4c6f1c19b73e4e8fc2bab708409f7"
+  "fingerprint": "sha256:0f2a98feb36c78b27ac98a63fe4c2cb5654601004a11a31e65a70f4cadea93a7",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

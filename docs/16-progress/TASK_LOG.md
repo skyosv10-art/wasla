@@ -6799,3 +6799,7 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 ## 2026-09-27 — M5-17 review 6/N: Billing admin screen (CLM-0371) — Released
 
 **PR [#501](https://github.com/skyosv10-art/wasla/pull/501)** — squash `fc44dc6` — main `fc44dc6` — 40/40 green.
+
+## 2026-09-27 — M5-17 closeout (CLM-0372)
+
+M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main CI green 40/40 at fc44dc6. Postgres adapters for settlements/relay deferred to M6.

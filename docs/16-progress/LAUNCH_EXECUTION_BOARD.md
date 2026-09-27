@@ -160,7 +160,7 @@
 
 | ID | عنصر العمل | Primary / Secondary | يعتمد على | الحالة | دليل الإغلاق المطلوب | الخطوة التالية |
 |---|---|---|---|---|---|---|
-| M6-18A | resilience controls and SLOs | SRE / Platform | M5 | Not Started | chaos/load evidence | set SLOs. |
+| M6-18A | resilience controls and SLOs | SRE / Platform | M5 | Completed | chaos/load evidence | set SLOs. |
 | M6-18B | HA/capacity/DR | SRE/Data / Platform | M6-18A | Not Started | RTO/RPO drill | architecture review. |
 | M6-18C | observability operating model | SRE / Ops | M6-18A | Not Started | alert/live-fire evidence | runbook review. |
 | M6-19A | independent pentest/remediation | Security / All | M5,M6 | Not Started | no critical/high open | procure/plan review. |

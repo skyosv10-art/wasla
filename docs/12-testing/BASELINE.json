@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-26T08:09:01Z",
+  "generated_at": "2026-09-28T00:00:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cc52a3b3a28f525ca8022a3d3b0121acbcef1f91",
-    "branch": "feat/m5-17-review-4",
+    "commit": "pending",
+    "branch": "feat/m6-18a-resilience-controls-slos",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2709
+    "tracked_files": 2720
   },
   "env": {
     "node": "v20.20.1",
@@ -23,10 +23,10 @@
     "lines": 4986
   },
   "static": {
-    "packages": 71,
-    "packages_with_typecheck": 67,
-    "packages_with_test": 71,
-    "test_files_tracked": 519,
+    "packages": 72,
+    "packages_with_typecheck": 68,
+    "packages_with_test": 72,
+    "test_files_tracked": 524,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,

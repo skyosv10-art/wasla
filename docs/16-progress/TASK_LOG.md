@@ -6931,3 +6931,41 @@ Items promoted:
 - M5-17BP (Not Started → Completed: branch protection updated)
 
 **Next:** M6-18A (resilience controls and SLOs) is now unblocked — M5 fully Completed.
+
+---
+
+## CLM-0380 · M6-18A — Resilience Controls and SLOs
+
+**Branch:** `feat/m6-18a-resilience-controls-slos`  
+**Date:** 2026-09-28  
+**Status:** Completed (pending CI gate + merge)
+
+### What was done
+
+Created `@wasla/resilience` package with four composable resilience primitives:
+- **CircuitBreaker** — state machine (closed → open → half_open → closed), trips after N consecutive failures, half-open probe after cooldown
+- **Bulkhead** — bounded concurrency limiter with optional queue, rejects when full
+- **withTimeout** — wraps a promise with a deadline via Promise.race, timer unref'd
+- **withRetry** — generic retry with exponential backoff and optional jitter
+
+### Evidence
+
+- **Implementation:** 5 source files in `packages/resilience/src/` (circuit-breaker.ts, bulkhead.ts, timeout.ts, retry.ts, index.ts)
+- **Local verification:** 35 tests pass (7 circuit-breaker, 6 bulkhead, 6 timeout, 6 retry, 10 chaos scenarios) via `pnpm --filter @wasla/resilience test`
+- **CI:** pending — will run on push
+- **SLOs:** `docs/08-infrastructure/SLO.md` defines T1/T2/T3 targets for availability, latency, error budgets
+- **ADR:** [ADR-051](../15-decisions/ADR-051-resilience-patterns.md) documents the decision
+- **Chaos evidence:** `docs/12-testing/M6-18A_RESILIENCE_GATE.md` maps 12 failure scenarios to controls
+- **Chaos tests:** `packages/resilience/src/__tests__/chaos-scenarios.test.ts` covers DB unavailable, DB slow, service unavailable, duplicate request, process restart, partial success, node failure, combined pipeline
+
+### Acceptance criteria
+
+All 12 requirements met (see M6-18A_RESILIENCE_GATE.md checklist):
+timeouts, retries, exponential backoff, jitter, circuit breakers, bounded
+concurrency, bulkheads, dependency failure behavior, outbox recovery
+(existing from M5-17P), duplicate event tolerance (existing from M5-17Q),
+SLOs, chaos/load evidence.
+
+### Next
+
+M6-18B (HA/capacity/DR) is now unblocked — depends on M6-18A.

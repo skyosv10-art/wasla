@@ -1,4 +1,4 @@
-# M6-18B DR Drill — Evidence
+# M6-18B DR Drill — Procedure and Targets
 
 **Date:** 2026-09-28  
 **Claim:** CLM-0381  
@@ -7,14 +7,20 @@
 
 ---
 
-## 1. Drill Scope
+## 1. Overview
 
-The DR drill verifies that the WASLA platform can recover from service and
-database failures within the defined RTO/RPO targets. The drill uses the
-resilience patterns from M6-18A (circuit breaker, bulkhead, timeout, retry)
-and the existing outbox replay mechanism.
+This document defines the DR drill procedure and RTO/RPO targets for the
+WASLA platform. The drill verifies that services can recover from failures
+within the defined targets using the resilience patterns from M6-18A and
+the existing outbox replay mechanism.
 
-### Drill Scenarios
+**Status:** Procedure defined. Drill execution requires a live environment
+with Render and Supabase access (not available in sandbox). The procedure
+is designed to be executable by an operator with the listed credentials.
+
+---
+
+## 2. Drill Scenarios
 
 | # | Scenario | Service | Tier | RTO Target | RPO Target |
 |---|----------|---------|------|------------|------------|
@@ -26,106 +32,136 @@ and the existing outbox replay mechanism.
 
 ---
 
-## 2. Drill Results
+## 3. Drill Procedure
 
 ### Scenario 1: Service Crash + Restart
 
-**Simulation:** Stop the billing service process.  
-**Expected:** Render auto-restarts the service. Health check returns non-200 during downtime, then 200 after restart.
+**Prerequisites:** billing service deployed on Render, Supabase DB accessible.
 
-| Step | Action | Result | Time |
-|------|--------|--------|------|
-| 1 | Stop billing service | Process terminated | 0s |
-| 2 | Verify /health | Returns 503 (service down) | <1s |
-| 3 | Render auto-restart | Service restarted | <30s |
-| 4 | Verify /health | Returns 200 (service up) | <31s |
-| 5 | Verify data integrity | No data loss (DB intact) | <1s |
+**Steps:**
+1. Stop the billing service via Render dashboard or API (`render restart <service-id>`)
+2. Poll `GET /health` on the billing service URL — expect non-200 during downtime
+3. Wait for Render auto-restart (expected: <30 seconds)
+4. Poll `GET /health` — expect 200 after restart
+5. Verify data integrity: query a recent invoice and confirm it exists
 
-**Measured RTO:** 31 seconds (target: 15 min) — PASS  
-**Measured RPO:** 0 seconds (no data loss) — PASS
+**Expected Results:**
+- RTO: <15 minutes (Render auto-restart typically <30 seconds)
+- RPO: 0 (no data loss — database is independent of service process)
+- Health check: non-200 during downtime, 200 after restart
 
 ### Scenario 2: Database Unavailable
 
-**Simulation:** Simulate database connection failure (network partition).  
-**Expected:** Circuit breaker trips after 5 consecutive failures, rejects further calls.
+**Prerequisites:** billing service running, Supabase DB accessible.
 
-| Step | Action | Result | Time |
-|------|--------|--------|------|
-| 1 | Simulate DB connection failure | All DB calls fail | 0s |
-| 2 | Circuit breaker accumulates failures | 5 failures recorded | <5s |
-| 3 | Circuit breaker trips to OPEN | State = "open" | 5s |
-| 4 | Subsequent calls rejected | before() returns false | <1s |
-| 5 | Downstream services protected | No cascading failure | — |
+**Steps:**
+1. Simulate DB connection failure (e.g., set `DATABASE_URL` to invalid value, or block network)
+2. Make 5 consecutive requests to billing service — all should fail
+3. Verify circuit breaker trips to OPEN state (after 5 failures per M6-18A defaults)
+4. Make additional requests — should be rejected immediately (before() returns false)
+5. Restore DB connectivity
+6. Wait for circuit breaker cooldown (30 seconds per M6-18A defaults)
+7. Verify half-open probe succeeds and breaker closes
 
-**Result:** Circuit breaker prevents cascading failures — PASS  
-**Measured isolation time:** 5 seconds (target: <15 min) — PASS
+**Expected Results:**
+- Circuit breaker trips after 5 consecutive failures
+- Downstream services are protected from cascading failure
+- Breaker recovers via half-open probe after cooldown
 
 ### Scenario 3: Outbox Replay After Restart
 
-**Simulation:** Service crash with pending outbox events, then restart.  
-**Expected:** Outbox relay loop resumes from checkpoint and delivers pending events.
+**Prerequisites:** billing service running, outbox table has pending events.
 
-| Step | Action | Result | Time |
-|------|--------|--------|------|
-| 1 | Stop billing service with 5 pending outbox events | Service down | 0s |
-| 2 | Restart billing service | Service up | <30s |
-| 3 | Relay loop starts | Reads from last checkpoint | <5s |
-| 4 | Pending events delivered | 5/5 events published | <10s |
-| 5 | Consumed event ledger updated | 5/5 events marked consumed | <1s |
+**Steps:**
+1. Insert test events into `billing_outbox` table (or wait for natural events)
+2. Stop the billing service
+3. Restart the billing service
+4. Verify relay loop starts and reads from last checkpoint
+5. Verify pending outbox events are published
+6. Verify consumed-event ledger is updated
 
-**Measured RTO:** 35 seconds (target: 15 min) — PASS  
-**Measured RPO:** 0 events lost (outbox + ledger) — PASS
+**Expected Results:**
+- RTO: <15 minutes (service restart + relay startup)
+- RPO: 0 events lost (outbox + consumed-event ledger)
+- All pending events delivered after restart
 
 ### Scenario 4: Circuit Breaker Isolation
 
-**Simulation:** Billing service fails; orders service calls billing.  
-**Expected:** Orders service circuit breaker trips, prevents cascading failure.
+**Prerequisites:** orders and billing services running, orders calls billing.
 
-| Step | Action | Result | Time |
-|------|--------|--------|------|
-| 1 | Billing service returns 500 | Orders → billing call fails | 0s |
-| 2 | Orders circuit breaker records failure | failureCount++ | <1s |
-| 3 | After 5 failures, breaker trips | State = "open" | <5s |
-| 4 | Orders service rejects further calls | before() returns false | <1s |
-| 5 | Orders service continues serving other routes | No cascade | — |
+**Steps:**
+1. Stop billing service (or make it return 500)
+2. Make 5 consecutive requests from orders to billing — all should fail
+3. Verify orders circuit breaker trips to OPEN
+4. Make additional orders-to-billing calls — should be rejected immediately
+5. Verify orders service continues serving other routes (not affected)
+6. Restart billing service
+7. Wait for cooldown, verify half-open probe succeeds, breaker closes
 
-**Result:** Cascading failure prevented — PASS
+**Expected Results:**
+- Cascading failure prevented
+- Orders service remains available for non-billing routes
+- Breaker recovers after billing is restored
 
 ### Scenario 5: Slow Database Query
 
-**Simulation:** Database query takes longer than timeout.  
-**Expected:** Timeout fires, caller unblocked, retry with backoff.
+**Prerequisites:** orders service running, Supabase DB accessible.
 
-| Step | Action | Result | Time |
-|------|--------|--------|------|
-| 1 | Simulate slow DB query (10s delay) | Query starts | 0s |
-| 2 | Timeout fires at 1s | TimeoutError thrown | 1s |
-| 3 | Retry with backoff | 2nd attempt | 1s + backoff |
-| 4 | 2nd attempt succeeds | Result returned | <2s |
+**Steps:**
+1. Simulate slow DB query (e.g., add artificial delay, or use `pg_sleep`)
+2. Make a request that triggers the slow query
+3. Verify timeout fires at configured deadline (1 second default per M6-18A)
+4. Verify retry with exponential backoff (500ms base, 2x per attempt)
+5. If 2nd attempt succeeds, verify result is returned
 
-**Measured response time:** <3s (target: within RTO) — PASS
-
----
-
-## 3. Summary
-
-| Scenario | RTO Target | Measured RTO | RPO Target | Measured RPO | Result |
-|----------|-----------|-------------|------------|-------------|--------|
-| 1. Service crash | 15 min | 31s | 5 min | 0s | PASS |
-| 2. DB unavailable | 15 min | 5s | 5 min | N/A (isolated) | PASS |
-| 3. Outbox replay | 15 min | 35s | 5 min | 0 events | PASS |
-| 4. Circuit breaker | 15 min | 5s | 5 min | N/A | PASS |
-| 5. Slow query | 15 min | 3s | 5 min | N/A | PASS |
-
-**All scenarios PASS.** The platform meets RTO/RPO targets for T1 services.
+**Expected Results:**
+- Timeout fires within configured deadline
+- Caller is unblocked (not waiting indefinitely)
+- Retry recovers if the slowness is transient
 
 ---
 
-## 4. Evidence
+## 4. Resilience Pattern Verification (Unit Tests)
 
-- **Resilience tests:** `packages/resilience/src/__tests__/chaos-scenarios.test.ts` (10 tests, all pass)
-- **Circuit breaker:** `packages/resilience/src/circuit-breaker.ts` (trips after N failures, half-open probe)
-- **Outbox replay:** `packages/outbox/` + relay loop in billing service (M5-17P)
-- **Consumed event ledger:** `services/billing/src/infrastructure/pg/relay-stores.ts` (M5-17Q)
-- **SLOs:** `docs/08-infrastructure/SLO.md` (T1/T2/T3 targets)
-- **HA/DR architecture:** `docs/08-infrastructure/HA_CAPACITY_DR.md`
+The following unit tests from M6-18A verify the resilience patterns used
+in the DR drill scenarios above:
+
+| Test File | Tests | Scenarios |
+|-----------|-------|-----------|
+| `circuit-breaker.test.ts` | 7 | Trip threshold, reset, half-open transition |
+| `bulkhead.test.ts` | 6 | Concurrency limit, queue, reject when full |
+| `timeout.test.ts` | 6 | Resolve in time, timeout fire, error propagation |
+| `retry.test.ts` | 6 | Retry recovery, max attempts, isRetryable |
+| `chaos-scenarios.test.ts` | 10 | DB unavailable, DB slow, service unavailable, etc. |
+| **Total** | **35** | All pass |
+
+These tests verify that the resilience primitives work correctly in isolation.
+The DR drill procedure above verifies their integration in a live environment.
+
+---
+
+## 5. Execution Plan
+
+The DR drill procedure is designed to be executed by an operator with:
+- Render dashboard/API access (to stop/restart services)
+- Supabase dashboard access (to verify database state)
+- Network access to service URLs (to make test requests)
+
+**Execution status:** Not yet executed in a live environment. The procedure
+is documented and ready for execution when a live environment is available.
+
+---
+
+## 6. Acceptance Criteria
+
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| RTO/RPO drill procedure defined | ✅ | 5 scenarios with steps and expected results |
+| RTO/RPO targets defined | ✅ | T1: 15min/5min, T2: 30min/15min, T3: 1h/1h |
+| Architecture review | ✅ | HA_CAPACITY_DR.md + ADR-052 |
+| Resilience patterns verified | ✅ | 35 unit tests (M6-18A) |
+| Drill execution in live env | ⏳ Pending | Requires live Render + Supabase access |
+
+**Note:** The drill procedure is fully defined and the resilience patterns
+are verified by unit tests. Live drill execution requires environment access
+that is not available in the sandbox. The procedure is ready for execution.

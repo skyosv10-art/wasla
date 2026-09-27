@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-27T21:58:47Z",
+  "generated_at": "2026-09-27T22:28:46Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ee04aeed6759e456597647df1415e2055f7f5bc4",
+    "commit": "7e84299bfed7b8fe6b2ff232b7f64b7c5c390c74",
     "branch": "feat/m6-18a-resilience-controls-slos",
-    "dirty": true,
-    "dirty_files": 2,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
     "tracked_files": 2801
   },

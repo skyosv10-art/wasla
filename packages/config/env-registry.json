@@ -37,6 +37,25 @@
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها."
     },
     {
+      "name": "BILLING_ORDER_EVENTS_DATABASE_URL",
+      "type": "postgres_url",
+      "required": "optional",
+      "default": null,
+      "secret": true,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "اتصالٌ للقراءةِ فقط بقاعدةٍ تحوي `order_outbox` — مصدرُ أحداثِ مُرحِّلِ الفوترة (M5-17P). Format: postgresql://USER:PASSWORD@HOST:5432/DB",
+      "owner_item": "M5-17P",
+      "readers": [
+        {
+          "file": "services/billing/src/http/server.ts",
+          "mode": "direct"
+        }
+      ],
+      "note_ar": "غيابُها ليسَ إخفاقاً: الخادمُ يُقلِعُ بلا حلقةِ مُرحِّلٍ ويُعلِنُ ذلكَ في السجلّ. وحضورُها بلا `BILLING_DATABASE_URL` لا يُشغِّلُ المُرحِّلَ (لا مُرحِّلَ على مخازنِ الذاكرة)."
+    },
+    {
       "name": "CI",
       "type": "string",
       "required": "optional",
@@ -600,6 +619,10 @@
         },
         {
           "file": "services/audit/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "services/billing/src/__tests__/pg-harness.ts",
           "mode": "direct"
         },
         {
@@ -2116,5 +2139,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 82
+  "total": 83
 }

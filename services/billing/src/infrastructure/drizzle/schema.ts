@@ -20,6 +20,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -131,5 +132,51 @@ export const billingOutbox = pgTable(
       sql`${table.eventType} IN ('billing.invoice_issued', 'billing.fee_settled', 'billing.payout_requested')`,
     ),
     index("idx_billing_outbox_unpublished").on(table.publishedAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// billing_relay_checkpoint — نقطةُ تفتيشِ المُرحِّل (M5-17P · CLM-0375)
+// ---------------------------------------------------------------------------
+
+export const billingRelayCheckpoint = pgTable(
+  "billing_relay_checkpoint",
+  {
+    consumerId: text("consumer_id").primaryKey(),
+    lastOccurredAt: timestamptz("last_occurred_at").notNull(),
+    lastEventId: uuid("last_event_id").notNull(),
+    updatedAt: timestamptz("updated_at").notNull().default(sql`now()`),
+  },
+  (table) => [
+    check("billing_relay_checkpoint_consumer_id_check", sql`char_length(${table.consumerId}) BETWEEN 1 AND 64`),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// billing_relay_consumed_events — دفترُ الاستهلاك (منعُ التسويةِ المكرَّرة)
+// ---------------------------------------------------------------------------
+
+export const billingRelayConsumedEvents = pgTable(
+  "billing_relay_consumed_events",
+  {
+    consumerId: text("consumer_id").notNull(),
+    eventId: uuid("event_id").notNull(),
+    status: text("status").notNull(),
+    reason: text("reason"),
+    settlementId: uuid("settlement_id").references(() => billingSettlements.settlementId),
+    consumedAt: timestamptz("consumed_at").notNull().default(sql`now()`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.consumerId, table.eventId] }),
+    check("billing_relay_consumed_events_consumer_id_check", sql`char_length(${table.consumerId}) BETWEEN 1 AND 64`),
+    check(
+      "billing_relay_consumed_events_status_check",
+      sql`${table.status} IN ('settled', 'ignored', 'ignored_foreign', 'poisoned')`,
+    ),
+    check(
+      "billing_relay_settled_has_settlement",
+      sql`(${table.status} = 'settled') = (${table.settlementId} IS NOT NULL)`,
+    ),
+    index("idx_billing_relay_consumed_poisoned").on(table.consumerId, table.consumedAt).where(sql`${table.status} = 'poisoned'`),
   ],
 );

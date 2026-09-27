@@ -106,7 +106,9 @@ export function createBillingApp(deps: BillingHttpDeps): FastifyInstance {
 
       const now = new Date();
       const invoice = createInvoice({
-        id: `INV-${randomUUID().slice(0, 12).toUpperCase()}`,
+        // UUID: `billing_invoices.invoice_id` عمودُ UUID — الصيغةُ السابقة `INV-…` كانت
+        // تُرفَضُ من Postgres فلا تُنشأُ فاتورةٌ عبرَ HTTP على المسارِ الدائم (M5-17P).
+        id: randomUUID(),
         store_public_id: body.store_public_id,
         period: body.period,
         fee_type: body.fee_type,

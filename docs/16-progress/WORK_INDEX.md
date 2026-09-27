@@ -40,7 +40,7 @@
 | `services/partners/` | Implemented | M5-14 | Phase 14 | Reviews 1-5/N merged (PRs #463-#467). Partners service: ADR-048, 6 PostgreSQL adapters, webhook engine, usage enforcement, E2E exit gate (5 gates), Render deployment config, db-integration CI. · **Ready for Gate** (CLM-0374) — prior Completed transition lacked a written owner decision (§9). |
 | `services/rides/` | Placeholder | M5-15 | Phase 15 | |
 | `services/referrals/` | Placeholder | M5-16 | Phase 16 | |
-| `services/billing/` | In Progress | M5-17 | Phase 17 | ADR-050 · scaffold+contracts (CLM-0366) · PostgreSQL Store (CLM-0367) · HTTP+identity (CLM-0368) · governance fix (CLM-0369) · relay consumer (CLM-0370) · admin screen (CLM-0371) · **Ready for Gate** (CLM-0373) — settlements/gateway/publisher still InMemory in `server.ts`; gap tracked in `M5-17P` |
+| `services/billing/` | In Progress | M5-17 | Phase 17 | ADR-050 · scaffold+contracts (CLM-0366) · PostgreSQL Store (CLM-0367) · HTTP+identity (CLM-0368) · governance fix (CLM-0369) · relay consumer (CLM-0370) · admin screen (CLM-0371) · **Ready for Gate** (CLM-0373) — settlements/gateway/publisher still InMemory in `server.ts`; gap tracked in `M5-17P` · **M5-17P In Progress (CLM-0375)**: PostgresSettlement + outbox publisher + durable relay checkpoint/ledger wired; gateway still InMemory (Tap out of scope) |
 | `services/auth/` | Placeholder **بقرار** | — | — | **حُسم في [ADR-018](../15-decisions/ADR-018-unified-principal-model-and-user-service-boundary.md) (M1-01): لا خدمةَ `auth` مستقلّة.** الإصدارُ يتبع `identity` والفرضُ مكتبةُ `auth-sdk`. المجلَّدُ فارغٌ **بقرارٍ لا بإغفال** — لا يُملأ بلا ADR ناقض |
 | `services/notifications/` | Placeholder | M3 | — | |
 | `services/chat/` | Placeholder | M5 | Phase 08 | جزء من التفاوض حاليًا |

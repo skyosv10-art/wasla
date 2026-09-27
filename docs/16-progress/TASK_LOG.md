@@ -7007,3 +7007,33 @@ Created HA/capacity/DR architecture documentation:
 
 M6-18C (observability operating model) is now unblocked — depends on M6-18A.
 M6-19A (independent pentest) is blocked on M5+M6 completion.
+
+---
+
+## CLM-0382 · M6-18C — Observability Operating Model
+
+- **Work Item(s):** M6-18C · **Claim:** `CLM-0382` · **Branch:** `feat/m6-18c-observability-operating-model` · **Status:** Not Started → Ready for Gate
+
+**Branch:** `feat/m6-18c-observability-operating-model`  
+**Date:** 2026-09-28  
+**Status:** Ready for Gate (alert rules + runbooks defined; live-fire pending Prometheus deployment)
+
+### What was done
+
+Created observability operating model documentation:
+- **OBSERVABILITY_OPERATING_MODEL.md:** 10 alert rules (error rate, latency, availability, resource, SLO burn), 5 runbooks (RB-01 through RB-05), on-call rotation, escalation path, dashboards
+- **ADR-053:** Operating model decision
+- **M6-18C_GATE.md:** Gate evidence with checklist
+
+### Acceptance criteria
+
+- ✅ Alert rules — 10 rules defined as Prometheus YAML
+- ✅ Runbooks — 5 runbooks covering common incidents
+- ✅ On-call procedures — weekly rotation, escalation via Telegram
+- ✅ Dashboards — service health + SLO dashboard defined
+- ⏳ Live-fire evidence — pending Prometheus + Alertmanager deployment
+
+### Next
+
+M6-19A (independent pentest) is blocked on M5+M6 completion.
+M7-01 (release candidate) is blocked on M6 completion.

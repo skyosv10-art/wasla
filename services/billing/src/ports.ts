@@ -7,7 +7,7 @@
 
 import type { BillingFeeType, BillingSettlementState } from "@wasla/contracts-billing";
 import type { Invoice } from "./domain/model.js";
-import type { OrderOutboxRow, RelayCheckpoint } from "./domain/consumed-events.js";
+import type { DeliveryOutboxRow, RelayCheckpoint, StoreOrderSnapshot } from "./domain/consumed-events.js";
 
 // ── Invoice Store ────────────────────────────────────────────────────────────
 
@@ -90,14 +90,37 @@ export interface IdGenerator {
   newPayoutId(): string;
 }
 
-// ── Relay ports (ADR-050 §3 — fee settlement from order_completed) ──────────
+// ── Relay ports (ADR-050 §3 — fee settlement from delivered store orders) ──
 
 /**
- * Reads events from `order_outbox` for the billing relay.
- * Same contract as support/delivery/search relays (ADR-025 §2.3).
+ * Reads events from `delivery_outbox` for the billing relay (M5-17Q) —
+ * read-only, ordered by (occurred_at, event_id). Same contract as the
+ * support/delivery/search relays (ADR-025 §2.3).
  */
-export interface OrderEventSource {
-  readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]>;
+export interface DeliveryEventSource {
+  readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly DeliveryOutboxRow[]>;
+}
+
+/** A recorded store-order money snapshot plus its settlement link. */
+export interface StoredOrderSnapshot extends StoreOrderSnapshot {
+  readonly source_event_id: string;
+  readonly settlement_id: string | null;
+}
+
+/**
+ * Billing-owned projection of each store order's money snapshot (M5-17Q):
+ * filled from `store_order.created`, adjusted by `store_order.item_substituted`,
+ * and linked to its settlement when the order is delivered — which makes
+ * settlement once PER ORDER. Billing is the only writer; delivery is never
+ * written and `services/orders` carries no financial field (ADR-050 Consequence 3).
+ */
+export interface StoreOrderSnapshotStore {
+  /** Reads the snapshot; inside a transaction the row is locked (FOR UPDATE). */
+  find(orderId: string): Promise<StoredOrderSnapshot | null>;
+  /** Inserts the snapshot. Returns false when the order already has one. */
+  insert(snapshot: StoreOrderSnapshot, sourceEventId: string): Promise<boolean>;
+  setItemsTotal(orderId: string, itemsTotalMinorUnits: number): Promise<void>;
+  markSettled(orderId: string, settlementId: string): Promise<void>;
 }
 
 /**
@@ -113,7 +136,7 @@ export interface RelayCheckpointStore {
  * Terminal status recorded in the consumed-events ledger. `pending` is never
  * recorded: a retryable failure leaves no row, so the event is read again.
  */
-export type LedgerStatus = "settled" | "ignored" | "ignored_foreign" | "poisoned";
+export type LedgerStatus = "settled" | "recorded" | "ignored" | "ignored_foreign" | "poisoned";
 
 export interface LedgerEntry {
   readonly consumerId: string;
@@ -142,6 +165,7 @@ export interface RelayTxPorts {
   readonly settlements: SettlementPort;
   readonly publisher: BillingEventPublisher;
   readonly ledger: ConsumedEventLedger;
+  readonly snapshots: StoreOrderSnapshotStore;
 }
 
 /**
@@ -168,7 +192,7 @@ export interface RelayConsumerLock {
  * ledger is the idempotency guarantee.
  */
 export interface RelayDeps {
-  readonly events: OrderEventSource;
+  readonly events: DeliveryEventSource;
   readonly transaction: RelayTransactionRunner;
   /** Read-side view of the ledger (outside any transaction). */
   readonly ledger: ConsumedEventLedger;
@@ -296,10 +320,10 @@ export class InMemorySettlement implements SettlementPort {
 
 // ── In-memory relay stubs (for tests) ────────────────────────────────────────
 
-export class InMemoryOrderEventSource implements OrderEventSource {
-  private readonly rows: OrderOutboxRow[];
+export class InMemoryDeliveryEventSource implements DeliveryEventSource {
+  private readonly rows: DeliveryOutboxRow[];
 
-  constructor(rows: OrderOutboxRow[]) {
+  constructor(rows: DeliveryOutboxRow[]) {
     this.rows = [...rows].sort((a, b) => {
       if (a.occurred_at < b.occurred_at) return -1;
       if (a.occurred_at > b.occurred_at) return 1;
@@ -307,9 +331,36 @@ export class InMemoryOrderEventSource implements OrderEventSource {
     });
   }
 
-  async readAfter(_checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]> {
+  async readAfter(_checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly DeliveryOutboxRow[]> {
     // Returns all rows up to limit — stale detection is the relay's job.
     return this.rows.slice(0, limit);
+  }
+}
+
+export class InMemoryStoreOrderSnapshotStore implements StoreOrderSnapshotStore {
+  readonly rows = new Map<string, StoredOrderSnapshot>();
+
+  async find(orderId: string): Promise<StoredOrderSnapshot | null> {
+    const row = this.rows.get(orderId);
+    return row ? { ...row } : null;
+  }
+
+  async insert(snapshot: StoreOrderSnapshot, sourceEventId: string): Promise<boolean> {
+    if (this.rows.has(snapshot.order_id)) return false;
+    this.rows.set(snapshot.order_id, { ...snapshot, source_event_id: sourceEventId, settlement_id: null });
+    return true;
+  }
+
+  async setItemsTotal(orderId: string, itemsTotalMinorUnits: number): Promise<void> {
+    const row = this.rows.get(orderId);
+    if (!row) throw new Error(`no snapshot for order ${orderId}`);
+    this.rows.set(orderId, { ...row, items_total_minor_units: itemsTotalMinorUnits });
+  }
+
+  async markSettled(orderId: string, settlementId: string): Promise<void> {
+    const row = this.rows.get(orderId);
+    if (!row) throw new Error(`no snapshot for order ${orderId}`);
+    this.rows.set(orderId, { ...row, settlement_id: settlementId });
   }
 }
 

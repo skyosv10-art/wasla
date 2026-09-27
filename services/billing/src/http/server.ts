@@ -6,8 +6,9 @@
  *
  * M5-17P (CLM-0375): على المسارِ الدائمِ التسوياتُ `PostgresSettlement` والناشرُ
  * `PostgresOutboxPublisher` (صفوفٌ في `billing_outbox`). وحلقةُ المُرحِّلِ تعملُ داخلَ
- * العمليةِ حينَ يُضبَطُ `BILLING_ORDER_EVENTS_DATABASE_URL` (قراءةٌ فقط من `order_outbox`)
- * — نقطةُ التفتيشِ ودفترُ الاستهلاكِ في قاعدةِ الفوترةِ نفسِها. بوّابةُ الدفعِ ما زالت
+ * العمليةِ حينَ يُضبَطُ `BILLING_DELIVERY_EVENTS_DATABASE_URL` — M5-17Q (CLM-0376):
+ * قراءةٌ فقط من `delivery_outbox` (`store_order.*`، المنتِجُ الحقيقيُّ للقطةِ المالِ)،
+ * ونقطةُ التفتيشِ ودفترُ الاستهلاكِ ولقطاتُ الطلباتِ في قاعدةِ الفوترةِ نفسِها. بوّابةُ الدفعِ ما زالت
  * `InMemoryPaymentGateway`: محوِّلُ Tap خارجَ نطاقِ M5-17P بقرارِ المالك.
  *
  * لا `await main()` مُصدَّر: هذا الملفُّ ليس في `src/index.ts`.
@@ -26,7 +27,7 @@ import { PostgresInvoiceStore } from "../infrastructure/drizzle/repository.js";
 import { PostgresOutboxPublisher } from "../infrastructure/pg/outbox-publisher.js";
 import {
   PostgresConsumedEventLedger,
-  PostgresOrderEventSource,
+  PostgresDeliveryEventSource,
   PostgresRelayCheckpointStore,
   PostgresRelayConsumerLock,
   PostgresRelayTransactionRunner,
@@ -71,12 +72,12 @@ export async function buildBillingServer(): Promise<{
     await app.listen({ port, host: "0.0.0.0" });
 
     let relay: { loop: RelayLoopHandle; sourcePool: Pool } | null = null;
-    const sourceUrl = process.env.BILLING_ORDER_EVENTS_DATABASE_URL;
+    const sourceUrl = process.env.BILLING_DELIVERY_EVENTS_DATABASE_URL;
     if (sourceUrl) {
       const sourcePool = new pg.Pool({ connectionString: sourceUrl, max: 2 });
       const loop = startRelayLoop({
         deps: {
-          events: new PostgresOrderEventSource(sourcePool),
+          events: new PostgresDeliveryEventSource(sourcePool),
           transaction: new PostgresRelayTransactionRunner(pgPool),
           ledger: new PostgresConsumedEventLedger(pgPool),
           checkpoint: new PostgresRelayCheckpointStore(pgPool),
@@ -97,7 +98,7 @@ export async function buildBillingServer(): Promise<{
       });
       relay = { loop, sourcePool };
     } else {
-      app.log.warn("BILLING_ORDER_EVENTS_DATABASE_URL غيرُ مضبوط — حلقةُ المُرحِّلِ لا تعمل");
+      app.log.warn("BILLING_DELIVERY_EVENTS_DATABASE_URL غيرُ مضبوط — حلقةُ المُرحِّلِ لا تعمل");
     }
     return { app, pool, relay };
   }

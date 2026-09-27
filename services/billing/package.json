@@ -8,6 +8,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./pg": {
+      "types": "./src/pg.ts",
+      "import": "./src/pg.ts"
     }
   },
   "scripts": {

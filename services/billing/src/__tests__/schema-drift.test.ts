@@ -16,6 +16,7 @@ import {
   billingOutbox,
   billingRelayCheckpoint,
   billingRelayConsumedEvents,
+  billingStoreOrderSnapshots,
 } from "../infrastructure/drizzle/schema.js";
 
 const SERVICE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -107,6 +108,8 @@ describe("Schema drift — Drizzle mirror vs schema.sql contract", () => {
   for (const [name, table] of [
     ["billing_relay_checkpoint", billingRelayCheckpoint],
     ["billing_relay_consumed_events", billingRelayConsumedEvents],
+    // M5-17Q (CLM-0376) — لقطةُ مالِ طلبِ المتجرِ من delivery_outbox.
+    ["billing_store_order_snapshots", billingStoreOrderSnapshots],
   ] as const) {
     it(`${name} mirrors the contract columns exactly (both directions)`, () => {
       expect(contractTables.has(name)).toBe(true);

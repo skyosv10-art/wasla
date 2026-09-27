@@ -6889,3 +6889,7 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **التخفيفُ القائم:** إعادةُ المحاولةِ بنفسِ المفتاحِ تُكمِلُ الطلب · دليلُ `DELIVERY_UNRESERVED_ORDERS.md` لـ`placed/none` · `cancel` مع `none` بلا release. موثَّقٌ في اللوحةِ وADR-026 §4.28.
 - **لم يُبدأ:** سجلُّ إثباتِ الحجزِ (خيار 2) ولا تعديلُ release في السوقِ (خيار 3).
 - M5-13M → **Ready for Gate** فقط (لا Completed — §9). M5-13 وبقيّةُ `Ready for Gate` لم تُلمَس. تحريرُ `CLM-0378` في PR تالٍ (§8.1).
+
+## 2026-09-27 — CLM-0378 Released (§8.1)
+
+- **Work Item(s):** M5-13M · PR [#516](https://github.com/skyosv10-art/wasla/pull/516) merged squash `0db52b6` (42/42). Claim released; M5-13M في `Ready for Gate` (التعويضُ مؤجَّلٌ عمداً بقرارِ المالك).

@@ -419,7 +419,9 @@ docs/16-progress/MASTER_PROGRESS.md
 
 ## 3. الحجوزات المحرَّرة (Released)
 
-| CLM-0379 | M5-17BP | @uxxxu (agent:perplexity-computer) | chore/closeout-ready-for-gate-to-completed | docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,docs/12-testing/MERGE_BLOCKING.json,ROADMAP.md | 2026-09-28 | 2026-10-12 | Active | OWNER-CLOSEOUT: M5-17BP branch protection 34→40 contexts; 50 items Ready for Gate/In Progress → Completed. Three-evidence rule met. §9 override by owner delegation. |
+| CLM-0380 | M6-18A | @uxxxu (agent:perplexity-computer) | feat/m6-18a-resilience-controls-slos | packages/resilience/,docs/08-infrastructure/SLO.md,docs/15-decisions/ADR-051-resilience-patterns.md,docs/12-testing/M6-18A_RESILIENCE_GATE.md,docs/12-testing/BASELINE.json,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,ROADMAP.md,pnpm-lock.yaml | 2026-09-28 | 2026-10-12 | Active | M6-18A: resilience controls (circuit breaker, bulkhead, timeout, retry) in packages/resilience + SLO definitions + ADR-051 + chaos/failure tests. |
+
+| CLM-0379 | M5-17BP | @uxxxu (agent:perplexity-computer) | chore/closeout-ready-for-gate-to-completed | docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,docs/12-testing/MERGE_BLOCKING.json,ROADMAP.md | 2026-09-28 | 2026-10-12 | Released | PR #518 merged (squash). M5-17BP branch protection 34→40; 50 items → Completed. |
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |

@@ -6813,3 +6813,8 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **ما لم يتحقّقْ منهُ:** لم يُعَدْ فحصُ M5-13 وM5-14 وM5-15 — نُقلتْ كذلكَ بيدِ الوكيلِ («executive delegation») وهي خارجُ نطاقِ هذا القرارِ؛ مُعلَنةٌ للمالكِ.
 - **ملاحظةُ CI:** تشغيلُ `main` على `4f76b20` (بعدَ دمجِ #503) أخفقَ في `verify` و`governance-guard` بفحصِ بياتِ الحجوزاتِ (CLM-0372 نشطٌ وفرعُهُ محذوفٌ) — عولِجَ بـ#504 و`main` على `22f8f2d` أخضرُ.
 
+## 2026-09-27 — CLM-0373 Released (§8.1)
+
+- **Work Item(s):** M5-17 · PR [#505](https://github.com/skyosv10-art/wasla/pull/505) merged squash `8006ced` (40/40 green). Claim released.
+- **M5-13R — إعادةُ تحقّقٍ بطلبِ المالكِ:** تشغيلُ `workflow_dispatch` لـ«WASLA CI» على `main` @ `22f8f2d` — [run 36284174126](https://github.com/skyosv10-art/wasla/actions/runs/36284174126): **38/38 وظيفةً ناجحةً**. `db-integration (delivery)`: 18 ملفّاً · **147/147** (منها `relay-requeue` 14 · `relay-advisory-lock` 5 · `relay-dead-letters` 8). `exit-gate-e2e (delivery)`: **19/19**. أسطرُ `ERROR` لـPostgres في السجلِّ هي حالاتُ رفضِ القيودِ المقصودةُ في الاختباراتِ السلبيّةِ. البندُ يبقى `Ready for Gate` بانتظارِ قرارِ المالكِ.
+

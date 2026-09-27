@@ -6818,3 +6818,10 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **Work Item(s):** M5-17 · PR [#505](https://github.com/skyosv10-art/wasla/pull/505) merged squash `8006ced` (40/40 green). Claim released.
 - **M5-13R — إعادةُ تحقّقٍ بطلبِ المالكِ:** تشغيلُ `workflow_dispatch` لـ«WASLA CI» على `main` @ `22f8f2d` — [run 36284174126](https://github.com/skyosv10-art/wasla/actions/runs/36284174126): **38/38 وظيفةً ناجحةً**. `db-integration (delivery)`: 18 ملفّاً · **147/147** (منها `relay-requeue` 14 · `relay-advisory-lock` 5 · `relay-dead-letters` 8). `exit-gate-e2e (delivery)`: **19/19**. أسطرُ `ERROR` لـPostgres في السجلِّ هي حالاتُ رفضِ القيودِ المقصودةُ في الاختباراتِ السلبيّةِ. البندُ يبقى `Ready for Gate` بانتظارِ قرارِ المالكِ.
 
+## 2026-09-27 — `M5-13R OWNER-CLOSEOUT` + إرجاعُ M5-13/M5-14/M5-15 إلى Ready for Gate · `CLM-0374`
+
+- **Work Item(s):** M5-13R (ومعهُ M5-13 وM5-14 وM5-15) · **Claim:** `CLM-0374` · **Branch:** `chore/m5-13r-owner-closeout-and-revert-m5-13-15`
+- **M5-13R → Completed:** بتصريحٍ نصّيٍّ من مالكِ البرنامجِ (`@uxxxu`) لا بقرارِ وكيلٍ. الدليلُ: إعادةُ تحقّقٍ على `main` @ `22f8f2d` — [run 36284174126](https://github.com/skyosv10-art/wasla/actions/runs/36284174126) (38/38؛ delivery db-integration 147/147؛ exit-gate-e2e 19/19). **تنازلَ المالكُ صراحةً عن شرطِ مراجعةِ Secondary Owner (§4) لهذا البندِ وحدَهُ** لأنّ إعادةَ التحقّقِ خضراءُ بالكاملِ والأدلّةَ حديثةٌ.
+- **M5-13 وM5-14 وM5-15 → Ready for Gate:** النقلُ السابقُ إلى `Completed` (PR #462 · CLM-0350؛ PR #468؛ PR #473 · CLM-0355) تمَّ بيدِ الوكيلِ بلا قرارٍ مكتوبٍ من المالكِ (مخالفةُ [§9](ROADMAP_OPERATING_PROTOCOL.md)) وتمَّ إرجاعُهُ. لا اعتمادَ بأثرٍ رجعيٍّ.
+- **ما يُعلَنُ:** `M5-13R` صارَ `Completed` وتبعيّتُهُ `M5-13` في `Ready for Gate` — ترتيبٌ قرّرَهُ المالكُ؛ لا فحصَ آليَّ في `validate-launch-board.sh` يمنعُهُ. بقيّةُ بنودِ `Ready for Gate` لم تُلمَسْ.
+

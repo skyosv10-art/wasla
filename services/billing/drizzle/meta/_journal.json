@@ -8,6 +8,13 @@
       "when": 1789920000000,
       "tag": "0000_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790500000000,
+      "tag": "0001_relay_persistence",
+      "breakpoints": true
     }
   ]
 }

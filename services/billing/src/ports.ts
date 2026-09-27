@@ -110,16 +110,46 @@ export interface RelayCheckpointStore {
 }
 
 /**
- * Dead-letter store for poisoned events (invalid payload, unknown version,
- * unmappable outcome). A poison event never blocks the stream.
+ * Terminal status recorded in the consumed-events ledger. `pending` is never
+ * recorded: a retryable failure leaves no row, so the event is read again.
  */
-export interface RelayDeadLetterStore {
-  writeDeadLetter(
-    consumerId: string,
-    event: OrderOutboxRow,
-    reason: string,
-    attempts: number,
-  ): Promise<void>;
+export type LedgerStatus = "settled" | "ignored" | "ignored_foreign" | "poisoned";
+
+export interface LedgerEntry {
+  readonly consumerId: string;
+  readonly eventId: string;
+  readonly status: LedgerStatus;
+  readonly reason?: string;
+  readonly settlementId?: string;
+}
+
+/**
+ * Consumed-events ledger (M5-17P). Keyed by (consumer_id, event_id): the
+ * idempotency proof that does NOT depend on the checkpoint. A redelivered
+ * event after checkpoint loss finds its row and is a no-op, not a second
+ * settlement. Poisoned events are recorded here with their reason — the
+ * ledger is the dead-letter record.
+ */
+export interface ConsumedEventLedger {
+  has(consumerId: string, eventId: string): Promise<boolean>;
+  /** Records a terminal outcome. Returns false when the row already exists. */
+  record(entry: LedgerEntry): Promise<boolean>;
+}
+
+/** Ports bound to one atomic unit of work. */
+export interface RelayTxPorts {
+  readonly invoices: InvoiceStore;
+  readonly settlements: SettlementPort;
+  readonly publisher: BillingEventPublisher;
+  readonly ledger: ConsumedEventLedger;
+}
+
+/**
+ * Runs `fn` so that every write through `tx` commits together or not at all.
+ * Postgres: one transaction on one connection. A throw rolls back.
+ */
+export interface RelayTransactionRunner {
+  run<T>(fn: (tx: RelayTxPorts) => Promise<T>): Promise<T>;
 }
 
 /**
@@ -132,16 +162,17 @@ export interface RelayConsumerLock {
 
 /**
  * Relay dependencies — all ports the relay needs to function.
- * The relay is a pure orchestrator: it reads events, classifies them,
- * creates fee settlements, and writes the checkpoint. All I/O is through ports.
+ * The relay is a pure orchestrator: it reads events, classifies them, and
+ * settles each one inside a single transaction (invoice + settlement +
+ * outbox event + ledger row). The checkpoint is an optimisation; the
+ * ledger is the idempotency guarantee.
  */
 export interface RelayDeps {
   readonly events: OrderEventSource;
-  readonly settlements: SettlementPort;
-  readonly invoices: InvoiceStore;
-  readonly publisher: BillingEventPublisher;
+  readonly transaction: RelayTransactionRunner;
+  /** Read-side view of the ledger (outside any transaction). */
+  readonly ledger: ConsumedEventLedger;
   readonly checkpoint: RelayCheckpointStore;
-  readonly deadLetter: RelayDeadLetterStore;
   readonly lock: RelayConsumerLock;
   readonly idGen: IdGenerator;
   readonly clock: Clock;
@@ -294,16 +325,40 @@ export class InMemoryRelayCheckpointStore implements RelayCheckpointStore {
   }
 }
 
-export class InMemoryRelayDeadLetterStore implements RelayDeadLetterStore {
-  readonly deadLetters: Array<{ consumerId: string; event: OrderOutboxRow; reason: string; attempts: number }> = [];
+export class InMemoryConsumedEventLedger implements ConsumedEventLedger {
+  readonly entries = new Map<string, LedgerEntry>();
 
-  async writeDeadLetter(
-    consumerId: string,
-    event: OrderOutboxRow,
-    reason: string,
-    attempts: number,
-  ): Promise<void> {
-    this.deadLetters.push({ consumerId, event, reason, attempts });
+  private key(consumerId: string, eventId: string): string {
+    return `${consumerId}\u0000${eventId}`;
+  }
+
+  async has(consumerId: string, eventId: string): Promise<boolean> {
+    return this.entries.has(this.key(consumerId, eventId));
+  }
+
+  async record(entry: LedgerEntry): Promise<boolean> {
+    const k = this.key(entry.consumerId, entry.eventId);
+    if (this.entries.has(k)) return false;
+    this.entries.set(k, { ...entry });
+    return true;
+  }
+
+  /** Test helper — poisoned entries (the dead-letter view). */
+  poisoned(): LedgerEntry[] {
+    return [...this.entries.values()].filter((e) => e.status === "poisoned");
+  }
+}
+
+/**
+ * In-memory transaction runner. It does NOT roll back — atomicity is a
+ * property of the Postgres runner and is proven by the integration suite
+ * (`relay-reconciliation.integration.test.ts`), not claimed here.
+ */
+export class InMemoryRelayTransactionRunner implements RelayTransactionRunner {
+  constructor(private readonly ports: RelayTxPorts) {}
+
+  async run<T>(fn: (tx: RelayTxPorts) => Promise<T>): Promise<T> {
+    return fn(this.ports);
   }
 }
 

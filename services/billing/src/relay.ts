@@ -11,7 +11,12 @@
  *
  * Reliability guarantees (same contract as support/delivery/search relays):
  *  - Idempotency: a consumed `event_id` with a terminal status is never
- *    re-processed. Duplicate delivery is a no-op (skipped_stale).
+ *    re-processed. The consumed-events ledger (keyed by consumer_id, event_id)
+ *    is written in the SAME transaction as the settlement, so duplicate
+ *    delivery — even after checkpoint loss — is a no-op (skipped_stale).
+ *  - Atomicity (M5-17P): invoice + settlement + outbox row + ledger row
+ *    commit together or not at all; a retryable failure stops the batch
+ *    without advancing the checkpoint.
  *  - Ordering: per-stream watermark (occurred_at, event_id) — an older
  *    redelivered event is `skipped_stale` and cannot regress.
  *  - Foreign events: non-`order.status_changed` events are `ignored_foreign`.
@@ -73,6 +78,8 @@ export interface RelayBatchResult {
   readonly ignored: number;
   readonly poisoned: number;
   readonly skipped_stale: number;
+  /** 1 when the batch stopped on a retryable failure (rolled back, retried next batch). */
+  readonly pending: number;
   readonly checkpoint: RelayCheckpoint;
 }
 
@@ -102,39 +109,96 @@ async function runRelayBatchLocked(
 
   const rows = await deps.events.readAfter(currentCheckpoint, cfg.batchSize);
 
+  let processed = 0;
   let settled = 0;
   let ignored = 0;
   let poisoned = 0;
   let skippedStale = 0;
+  let pending = 0;
   let lastTerminal: RelayCheckpoint = currentCheckpoint;
 
   for (const row of rows) {
-    const result = await processEvent(deps, cfg, row, lastTerminal);
+    const result = await processEvent(deps, cfg, row, currentCheckpoint);
+    processed++;
 
     if (result.status === "settled") settled++;
     else if (result.status === "ignored" || result.status === "ignored_foreign") ignored++;
     else if (result.status === "poisoned") poisoned++;
     else if (result.status === "skipped_stale") skippedStale++;
 
-    if (isTerminal(result.status)) {
-      lastTerminal = {
-        last_occurred_at: row.occurred_at,
-        last_event_id: row.event_id,
-      };
+    if (!isTerminal(result.status)) {
+      // Retryable failure: the transaction rolled back, no ledger row exists.
+      // Stop here so the checkpoint never passes an unconsumed event.
+      pending++;
+      break;
+    }
+
+    const position: RelayCheckpoint = {
+      last_occurred_at: row.occurred_at,
+      last_event_id: row.event_id,
+    };
+    // Monotonic: an older (stale) row never moves the checkpoint backwards.
+    if (isBefore(lastTerminal, position)) {
+      lastTerminal = position;
     }
   }
 
-  if (rows.length > 0) {
+  if (
+    lastTerminal.last_occurred_at !== currentCheckpoint.last_occurred_at ||
+    lastTerminal.last_event_id !== currentCheckpoint.last_event_id
+  ) {
     await deps.checkpoint.writeCheckpoint(cfg.consumerId, lastTerminal);
   }
 
   return {
-    processed: rows.length,
+    processed,
     settled,
     ignored,
     poisoned,
     skipped_stale: skippedStale,
+    pending,
     checkpoint: lastTerminal,
+  };
+}
+
+/** Thrown inside a transaction when the ledger row already exists — rolls back. */
+class AlreadyConsumed extends Error {
+  constructor() {
+    super("event already recorded in the consumed-events ledger");
+  }
+}
+
+async function recordTerminal(
+  deps: RelayDeps,
+  cfg: RelayConfig,
+  row: OrderOutboxRow,
+  status: "ignored" | "ignored_foreign" | "poisoned",
+  reason: string,
+): Promise<ConsumedEventResult> {
+  try {
+    await deps.transaction.run(async (tx) => {
+      const fresh = await tx.ledger.record({
+        consumerId: cfg.consumerId,
+        eventId: row.event_id,
+        status,
+        reason,
+      });
+      if (!fresh) throw new AlreadyConsumed();
+    });
+  } catch (err) {
+    if (err instanceof AlreadyConsumed) {
+      return { event_id: row.event_id, status: "skipped_stale", reason: "already consumed (ledger)" };
+    }
+    return pendingResult(row, err);
+  }
+  return { event_id: row.event_id, status, reason };
+}
+
+function pendingResult(row: OrderOutboxRow, err: unknown): ConsumedEventResult {
+  return {
+    event_id: row.event_id,
+    status: "pending",
+    reason: err instanceof Error ? err.message : "unknown error",
   };
 }
 
@@ -144,18 +208,7 @@ async function processEvent(
   row: OrderOutboxRow,
   checkpoint: RelayCheckpoint,
 ): Promise<ConsumedEventResult> {
-  // Version check — unknown versions are poisoned.
-  if (row.event_version !== SUPPORTED_EVENT_VERSION) {
-    await deps.deadLetter.writeDeadLetter(
-      cfg.consumerId,
-      row,
-      `unsupported event_version: ${row.event_version} (expected ${SUPPORTED_EVENT_VERSION})`,
-      1,
-    );
-    return { event_id: row.event_id, status: "poisoned", reason: "unsupported version" };
-  }
-
-  // Stale check — an older redelivered event is skipped.
+  // Stale check — at or before the checkpoint is already consumed.
   const rowCheckpoint: RelayCheckpoint = {
     last_occurred_at: row.occurred_at,
     last_event_id: row.event_id,
@@ -167,63 +220,94 @@ async function processEvent(
     return { event_id: row.event_id, status: "skipped_stale", reason: "already consumed" };
   }
 
+  // Ledger check — survives checkpoint loss (the idempotency guarantee).
+  try {
+    if (await deps.ledger.has(cfg.consumerId, row.event_id)) {
+      return { event_id: row.event_id, status: "skipped_stale", reason: "already consumed (ledger)" };
+    }
+  } catch (err) {
+    return pendingResult(row, err);
+  }
+
+  // Version check — unknown versions are poisoned.
+  if (row.event_version !== SUPPORTED_EVENT_VERSION) {
+    return recordTerminal(
+      deps,
+      cfg,
+      row,
+      "poisoned",
+      `unsupported event_version: ${row.event_version} (expected ${SUPPORTED_EVENT_VERSION})`,
+    );
+  }
+
   // Classify — validates payload and determines action.
   let classification;
   try {
     classification = classifyOrderEvent(row);
   } catch (err) {
     const reason = err instanceof Error ? err.message : "unknown classification error";
-    await deps.deadLetter.writeDeadLetter(cfg.consumerId, row, reason, 1);
-    return { event_id: row.event_id, status: "poisoned", reason };
+    return recordTerminal(deps, cfg, row, "poisoned", reason);
   }
 
   if (classification.kind === "ignored") {
-    return {
-      event_id: row.event_id,
-      status: classification.reason.includes("foreign") ? "ignored_foreign" : "ignored",
-      reason: classification.reason,
-    };
+    const status = classification.reason.includes("foreign") ? "ignored_foreign" : "ignored";
+    return recordTerminal(deps, cfg, row, status, classification.reason);
   }
 
-  // Settle — create fee settlement + draft invoice for the completed order.
+  // Settle — invoice + settlement + fee_settled outbox row + ledger row,
+  // all in ONE transaction: either the order is billed exactly once or not at all.
   const event = classification.event;
   const now = deps.clock.now();
-  const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const period = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
 
   // Calculate fee: store_variable = order_total * fee_bps / 10000
   const feeAmount = Math.max(1, Math.floor(event.order_total_cents * STORE_VARIABLE_FEE_BPS / 10000));
 
-  // Create draft invoice first (the settlement references it)
-  const invoiceId = deps.idGen.newInvoiceId();
-  const invoice = createInvoice({
-    id: invoiceId,
-    store_public_id: event.store_public_id,
-    period,
-    fee_type: "store_variable",
-    amount_cents: feeAmount,
-    now,
-  });
-  await deps.invoices.save(invoice);
+  try {
+    return await deps.transaction.run(async (tx) => {
+      const invoiceId = deps.idGen.newInvoiceId();
+      const invoice = createInvoice({
+        id: invoiceId,
+        store_public_id: event.store_public_id,
+        period,
+        fee_type: "store_variable",
+        amount_cents: feeAmount,
+        now,
+      });
+      await tx.invoices.save(invoice);
 
-  // Create settlement
-  const settlement = await deps.settlements.settle({
-    invoice_id: invoiceId,
-    fee_type: "store_variable",
-    amount_cents: feeAmount,
-    period,
-  });
+      const settlement = await tx.settlements.settle({
+        invoice_id: invoiceId,
+        fee_type: "store_variable",
+        amount_cents: feeAmount,
+        period,
+      });
 
-  // Publish fee_settled event
-  await deps.publisher.publishFeeSettled({
-    settlement_id: settlement.settlement_id,
-    fee_type: "store_variable",
-    period,
-  });
+      await tx.publisher.publishFeeSettled({
+        settlement_id: settlement.settlement_id,
+        fee_type: "store_variable",
+        period,
+      });
 
-  return {
-    event_id: row.event_id,
-    status: "settled",
-    settlement_id: settlement.settlement_id,
-    invoice_id: invoiceId,
-  };
+      const fresh = await tx.ledger.record({
+        consumerId: cfg.consumerId,
+        eventId: row.event_id,
+        status: "settled",
+        settlementId: settlement.settlement_id,
+      });
+      if (!fresh) throw new AlreadyConsumed();
+
+      return {
+        event_id: row.event_id,
+        status: "settled" as const,
+        settlement_id: settlement.settlement_id,
+        invoice_id: invoiceId,
+      };
+    });
+  } catch (err) {
+    if (err instanceof AlreadyConsumed) {
+      return { event_id: row.event_id, status: "skipped_stale", reason: "already consumed (ledger)" };
+    }
+    return pendingResult(row, err);
+  }
 }

@@ -10,6 +10,7 @@ import type { InvoiceStore } from "../../ports.js";
 import type { Invoice } from "../../domain/model.js";
 import type { DbOrTx } from "./db.js";
 import { billingInvoices } from "./schema.js";
+import { isUuid } from "../pg/queryable.js";
 
 type InvoiceRow = typeof billingInvoices.$inferSelect;
 
@@ -58,6 +59,8 @@ export class PostgresInvoiceStore implements InvoiceStore {
   }
 
   async findById(id: string): Promise<Invoice | null> {
+    // `invoice_id` عمودُ UUID: معرِّفٌ بصيغةٍ أخرى غيرُ موجودٍ بالتعريف، لا خطأُ 22P02 (M5-17P).
+    if (!isUuid(id)) return null;
     const rows = await this.db
       .select()
       .from(billingInvoices)
@@ -73,7 +76,7 @@ export class PostgresInvoiceStore implements InvoiceStore {
     cursor?: string,
   ): Promise<{ items: Invoice[]; nextCursor: string | null }> {
     const conditions = [eq(billingInvoices.storePublicId, storePublicId)];
-    if (cursor) {
+    if (cursor && isUuid(cursor)) {
       const cursorRow = await this.db
         .select({ createdAt: billingInvoices.createdAt })
         .from(billingInvoices)

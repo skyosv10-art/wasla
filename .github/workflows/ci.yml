@@ -395,6 +395,12 @@ jobs:
           - leg: partners
             pkg: "@wasla/partners-service"
             db: wasla_partners_test
+          # `M5-17P` · Billing — PostgresSettlement · outbox publisher · relay
+          # checkpoint + consumed-events ledger; reconciliation gate on real
+          # Postgres + migration upgrade proof. 2 integration test files.
+          - leg: billing
+            pkg: "@wasla/billing-service"
+            db: wasla_billing_test
     services:
       postgres:
         image: postgres:15

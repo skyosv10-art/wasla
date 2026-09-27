@@ -4,18 +4,36 @@
  * العمليّة: توصيلٌ ولا شيءَ غيره. `BILLING_DATABASE_URL` موجود → Postgres،
  * و`/health` يقول `ok`. غائب → مخازنُ ذاكرية و`degraded`.
  *
+ * M5-17P (CLM-0375): على المسارِ الدائمِ التسوياتُ `PostgresSettlement` والناشرُ
+ * `PostgresOutboxPublisher` (صفوفٌ في `billing_outbox`). وحلقةُ المُرحِّلِ تعملُ داخلَ
+ * العمليةِ حينَ يُضبَطُ `BILLING_ORDER_EVENTS_DATABASE_URL` (قراءةٌ فقط من `order_outbox`)
+ * — نقطةُ التفتيشِ ودفترُ الاستهلاكِ في قاعدةِ الفوترةِ نفسِها. بوّابةُ الدفعِ ما زالت
+ * `InMemoryPaymentGateway`: محوِّلُ Tap خارجَ نطاقِ M5-17P بقرارِ المالك.
+ *
  * لا `await main()` مُصدَّر: هذا الملفُّ ليس في `src/index.ts`.
  */
 
 import { readPortEnv } from "@wasla/config";
 import { keyRegistryFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
-import type { Pool } from "pg";
+import { randomUUID } from "node:crypto";
+import pg, { type Pool } from "pg";
 
 import { BILLING_SERVICE_PORT } from "@wasla/contracts-billing";
 
 import { createBillingDb } from "../infrastructure/drizzle/db.js";
 import { PostgresInvoiceStore } from "../infrastructure/drizzle/repository.js";
+import { PostgresOutboxPublisher } from "../infrastructure/pg/outbox-publisher.js";
+import {
+  PostgresConsumedEventLedger,
+  PostgresOrderEventSource,
+  PostgresRelayCheckpointStore,
+  PostgresRelayConsumerLock,
+  PostgresRelayTransactionRunner,
+} from "../infrastructure/pg/relay-stores.js";
+import { PostgresSettlement } from "../infrastructure/pg/settlement-store.js";
+import { DEFAULT_RELAY_CONFIG } from "../relay.js";
+import { startRelayLoop, type RelayLoopHandle } from "../relay-loop.js";
 import {
   InMemoryInvoiceStore,
   InMemoryPaymentGateway,
@@ -24,9 +42,13 @@ import {
 } from "../ports.js";
 import { createBillingApp } from "./app.js";
 
+/** مهلةُ ما بينَ دفعتَينِ للمُرحِّل — ثابتٌ لا متغيّرُ بيئة (لا ضبطَ يُحتاجُ الآن). */
+export const BILLING_RELAY_INTERVAL_MS = 5_000;
+
 export async function buildBillingServer(): Promise<{
   app: ReturnType<typeof createBillingApp>;
   pool: Pool | null;
+  relay: { loop: RelayLoopHandle; sourcePool: Pool } | null;
 }> {
   const port = readPortEnv(process.env, "PORT", BILLING_SERVICE_PORT);
   const connectionString = process.env.BILLING_DATABASE_URL;
@@ -41,13 +63,43 @@ export async function buildBillingServer(): Promise<{
 
     const app = createBillingApp({
       store: new PostgresInvoiceStore(db),
-      settlements: new InMemorySettlement(),
+      settlements: new PostgresSettlement(pgPool),
       paymentGateway: new InMemoryPaymentGateway(),
-      publisher: new InMemoryEventPublisher(),
+      publisher: new PostgresOutboxPublisher(pgPool),
       serviceIdentity: { keys, replayGuard },
     });
     await app.listen({ port, host: "0.0.0.0" });
-    return { app, pool };
+
+    let relay: { loop: RelayLoopHandle; sourcePool: Pool } | null = null;
+    const sourceUrl = process.env.BILLING_ORDER_EVENTS_DATABASE_URL;
+    if (sourceUrl) {
+      const sourcePool = new pg.Pool({ connectionString: sourceUrl, max: 2 });
+      const loop = startRelayLoop({
+        deps: {
+          events: new PostgresOrderEventSource(sourcePool),
+          transaction: new PostgresRelayTransactionRunner(pgPool),
+          ledger: new PostgresConsumedEventLedger(pgPool),
+          checkpoint: new PostgresRelayCheckpointStore(pgPool),
+          lock: new PostgresRelayConsumerLock(pgPool),
+          idGen: {
+            newInvoiceId: () => randomUUID(),
+            newSettlementId: () => randomUUID(),
+            newPayoutId: () => randomUUID(),
+          },
+          clock: { now: () => new Date() },
+        },
+        config: DEFAULT_RELAY_CONFIG,
+        intervalMs: BILLING_RELAY_INTERVAL_MS,
+        onBatch: (r) => {
+          if (r.processed > 0) app.log.info({ relay: r }, "billing relay batch");
+        },
+        onError: (err) => app.log.error({ err }, "billing relay batch failed"),
+      });
+      relay = { loop, sourcePool };
+    } else {
+      app.log.warn("BILLING_ORDER_EVENTS_DATABASE_URL غيرُ مضبوط — حلقةُ المُرحِّلِ لا تعمل");
+    }
+    return { app, pool, relay };
   }
 
   const app = createBillingApp({
@@ -58,13 +110,17 @@ export async function buildBillingServer(): Promise<{
     serviceIdentity: { keys, replayGuard },
   });
   await app.listen({ port, host: "0.0.0.0" });
-  return { app, pool };
+  return { app, pool, relay: null };
 }
 
 export async function main(): Promise<void> {
-  const { pool } = await buildBillingServer();
+  const { app, pool, relay } = await buildBillingServer();
 
   process.on("SIGTERM", async () => {
+    // الدفعةُ الجاريةُ تنتهي أوّلاً، ثمَّ الخادمُ، ثمَّ المسابح.
+    if (relay) await relay.loop.stop();
+    await app.close();
+    if (relay) await relay.sourcePool.end();
     if (pool) await pool.end();
     process.exit(0);
   });

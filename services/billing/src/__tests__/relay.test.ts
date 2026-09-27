@@ -32,7 +32,8 @@ import {
   InMemorySettlement,
   InMemoryOrderEventSource,
   InMemoryRelayCheckpointStore,
-  InMemoryRelayDeadLetterStore,
+  InMemoryConsumedEventLedger,
+  InMemoryRelayTransactionRunner,
   InMemoryRelayConsumerLock,
 } from "../ports.js";
 import { runRelayBatch, DEFAULT_RELAY_CONFIG, STORE_VARIABLE_FEE_BPS } from "../relay.js";
@@ -58,14 +59,26 @@ function makeRow(overrides: Partial<OrderOutboxRow> = {}): OrderOutboxRow {
   };
 }
 
-function makeDeps(rows: OrderOutboxRow[] = []): RelayDeps {
+type TestDeps = RelayDeps & {
+  readonly publisher: InMemoryEventPublisher;
+  readonly settlements: InMemorySettlement;
+  readonly invoices: InMemoryInvoiceStore;
+  readonly ledger: InMemoryConsumedEventLedger;
+};
+
+function makeDeps(rows: OrderOutboxRow[] = []): TestDeps {
+  const publisher = new InMemoryEventPublisher();
+  const settlements = new InMemorySettlement();
+  const invoices = new InMemoryInvoiceStore();
+  const ledger = new InMemoryConsumedEventLedger();
   return {
     events: new InMemoryOrderEventSource(rows),
-    settlements: new InMemorySettlement(),
-    invoices: new InMemoryInvoiceStore(),
-    publisher: new InMemoryEventPublisher(),
+    transaction: new InMemoryRelayTransactionRunner({ invoices, settlements, publisher, ledger }),
+    ledger,
+    publisher,
+    settlements,
+    invoices,
     checkpoint: new InMemoryRelayCheckpointStore(),
-    deadLetter: new InMemoryRelayDeadLetterStore(),
     lock: new InMemoryRelayConsumerLock(),
     idGen: {
       newInvoiceId: () => crypto.randomUUID(),
@@ -101,7 +114,7 @@ describe("billing relay — settle", () => {
     expect(result.checkpoint.last_event_id).toBe(row.event_id);
 
     // Check invoice was created
-    const events = (deps.publisher as InMemoryEventPublisher).events;
+    const events = deps.publisher.events;
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe("billing.fee_settled");
     expect(events[0].payload).toHaveProperty("settlement_id");
@@ -167,7 +180,7 @@ describe("billing relay — poisoned", () => {
 
     expect(result.poisoned).toBe(1);
     expect(result.settled).toBe(0);
-    expect((deps.deadLetter as InMemoryRelayDeadLetterStore).deadLetters).toHaveLength(1);
+    expect(deps.ledger.poisoned()).toHaveLength(1);
   });
 
   it("missing order_public_id → poisoned", async () => {
@@ -184,7 +197,7 @@ describe("billing relay — poisoned", () => {
     const result = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
 
     expect(result.poisoned).toBe(1);
-    expect((deps.deadLetter as InMemoryRelayDeadLetterStore).deadLetters).toHaveLength(1);
+    expect(deps.ledger.poisoned()).toHaveLength(1);
   });
 
   it("missing store_public_id → poisoned", async () => {
@@ -327,5 +340,106 @@ describe("billing relay — batch", () => {
     expect(result.settled).toBe(1);
     expect(result.ignored).toBe(1);
     expect(result.poisoned).toBe(1);
+  });
+});
+
+describe("billing relay — ledger idempotency (M5-17P)", () => {
+  it("redelivery after checkpoint loss → skipped_stale, no second settlement", async () => {
+    const row = makeRow({ occurred_at: "2026-09-01T00:00:00Z" });
+    const deps = makeDeps([row]);
+
+    const first = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+    expect(first.settled).toBe(1);
+
+    // Checkpoint lost (e.g. restored from an old backup) — the ledger still knows.
+    const lost: TestDeps = { ...deps, checkpoint: new InMemoryRelayCheckpointStore() };
+    const second = await runRelayBatch(lost, DEFAULT_RELAY_CONFIG);
+
+    expect(second.settled).toBe(0);
+    expect(second.skipped_stale).toBe(1);
+    const listed = await deps.settlements.listSettlements({ limit: 100 });
+    expect(listed.items).toHaveLength(1);
+    expect(deps.publisher.events).toHaveLength(1);
+  });
+
+  it("ignored and foreign events are recorded in the ledger", async () => {
+    const cancelled = makeRow({
+      occurred_at: "2026-09-01T00:00:00Z",
+      data: { ...makeRow().data, to_status: "customer_cancelled" },
+    });
+    const foreign = makeRow({ occurred_at: "2026-09-02T00:00:00Z", event_type: "order.created" });
+    const deps = makeDeps([cancelled, foreign]);
+    await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+
+    const statuses = [...deps.ledger.entries.values()].map((e) => e.status).sort();
+    expect(statuses).toEqual(["ignored", "ignored_foreign"]);
+  });
+
+  it("settled ledger row carries the settlement id", async () => {
+    const row = makeRow();
+    const deps = makeDeps([row]);
+    await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+
+    const entry = [...deps.ledger.entries.values()][0];
+    expect(entry.status).toBe("settled");
+    const listed = await deps.settlements.listSettlements({ limit: 10 });
+    expect(entry.settlementId).toBe(listed.items[0].settlement_id);
+  });
+});
+
+describe("billing relay — retryable failure (M5-17P)", () => {
+  it("publisher failure → pending, checkpoint not advanced, no ledger row", async () => {
+    const row = makeRow({ occurred_at: "2026-09-01T00:00:00Z" });
+    const deps = makeDeps([row]);
+    let fail = true;
+    const original = deps.publisher.publishFeeSettled.bind(deps.publisher);
+    deps.publisher.publishFeeSettled = async (e) => {
+      if (fail) throw new Error("outbox unavailable");
+      return original(e);
+    };
+
+    const first = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+    expect(first.pending).toBe(1);
+    expect(first.settled).toBe(0);
+    expect(first.checkpoint).toEqual(ZERO_CHECKPOINT);
+    expect(await deps.checkpoint.getCheckpoint(DEFAULT_RELAY_CONFIG.consumerId)).toBeNull();
+    expect(deps.ledger.entries.size).toBe(0);
+
+    fail = false;
+    const second = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+    expect(second.settled).toBe(1);
+    expect(second.checkpoint.last_event_id).toBe(row.event_id);
+  });
+
+  it("batch stops at the first pending event — later events wait", async () => {
+    const r1 = makeRow({ event_id: "00000000-0000-0000-0000-000000000001", occurred_at: "2026-09-01T00:00:00Z" });
+    const r2 = makeRow({ event_id: "00000000-0000-0000-0000-000000000002", occurred_at: "2026-09-02T00:00:00Z" });
+    const r3 = makeRow({ event_id: "00000000-0000-0000-0000-000000000003", occurred_at: "2026-09-03T00:00:00Z" });
+    const deps = makeDeps([r1, r2, r3]);
+    let calls = 0;
+    const original = deps.settlements.settle.bind(deps.settlements);
+    deps.settlements.settle = async (p) => {
+      calls++;
+      if (calls === 2) throw new Error("transient");
+      return original(p);
+    };
+
+    const result = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+    expect(result.settled).toBe(1);
+    expect(result.pending).toBe(1);
+    expect(result.processed).toBe(2);
+    expect(result.checkpoint.last_event_id).toBe(r1.event_id);
+  });
+
+  it("a stale older row never moves the checkpoint backwards", async () => {
+    const older = makeRow({ event_id: "00000000-0000-0000-0000-000000000001", occurred_at: "2026-09-01T00:00:00Z" });
+    const deps = makeDeps([older]);
+    const ahead = { last_occurred_at: "2026-09-05T00:00:00Z", last_event_id: "00000000-0000-0000-0000-000000000009" };
+    await deps.checkpoint.writeCheckpoint(DEFAULT_RELAY_CONFIG.consumerId, ahead);
+
+    const result = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
+    expect(result.skipped_stale).toBe(1);
+    expect(result.checkpoint).toEqual(ahead);
+    expect(await deps.checkpoint.getCheckpoint(DEFAULT_RELAY_CONFIG.consumerId)).toEqual(ahead);
   });
 });

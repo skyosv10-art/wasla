@@ -64,3 +64,29 @@ CREATE INDEX IF NOT EXISTS idx_billing_invoices_store ON billing_invoices (store
 CREATE INDEX IF NOT EXISTS idx_billing_invoices_state ON billing_invoices (state);
 CREATE INDEX IF NOT EXISTS idx_billing_settlements_invoice ON billing_settlements (invoice_id);
 CREATE INDEX IF NOT EXISTS idx_billing_outbox_unpublished ON billing_outbox (published_at) WHERE published_at IS NULL;
+
+-- ─────────────────────────────────────────────────────────────
+-- M5-17P (CLM-0375) — استدامةُ المُرحِّل: نقطةُ التفتيشِ ودفترُ الاستهلاك.
+-- الدفترُ مفتاحُهُ (consumer_id, event_id): إعادةُ التسليمِ بعدَ فقدِ نقطةِ
+-- التفتيشِ no-op لا تسويةٌ ثانية. ويُكتَبُ في معاملةِ التسويةِ نفسِها.
+-- ─────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS billing_relay_checkpoint (
+  consumer_id        TEXT PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 1 AND 64),
+  last_occurred_at   TIMESTAMPTZ NOT NULL,
+  last_event_id      UUID NOT NULL,
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS billing_relay_consumed_events (
+  consumer_id        TEXT NOT NULL CHECK (char_length(consumer_id) BETWEEN 1 AND 64),
+  event_id           UUID NOT NULL,
+  status             TEXT NOT NULL CHECK (status IN ('settled', 'ignored', 'ignored_foreign', 'poisoned')),
+  reason             TEXT,
+  settlement_id      UUID REFERENCES billing_settlements(settlement_id),
+  consumed_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (consumer_id, event_id),
+  CONSTRAINT billing_relay_settled_has_settlement CHECK ((status = 'settled') = (settlement_id IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS idx_billing_relay_consumed_poisoned ON billing_relay_consumed_events (consumer_id, consumed_at) WHERE status = 'poisoned';

@@ -6828,3 +6828,14 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 ## 2026-09-27 — CLM-0374 Released (§8.1)
 
 - **Work Item(s):** M5-13R · PR [#507](https://github.com/skyosv10-art/wasla/pull/507) merged squash `3f010f1` (40/40 green). Claim released.
+
+## 2026-09-27 — M5-17P · سدُّ فجوةِ Postgres في الفوترة · `CLM-0375`
+
+- **Work Item(s):** M5-17P · **Claim:** `CLM-0375` · **Branch:** `feat/m5-17p-billing-postgres` · **Status:** Not Started → In Progress
+- **القرار:** قرارُ المالكِ 2026-09-27 «ابدأ M5-17P الآن». محوّلُ Tap خارجَ النطاق.
+- **ما بُني:** `PostgresSettlement` (إدراجُ التسويةِ وربطُ `billing_invoices.settlement_id` في عبارةٍ واحدة) · `PostgresOutboxPublisher` (صفوفُ `billing_outbox`) · جدولا `billing_relay_checkpoint` و`billing_relay_consumed_events` (عقدٌ + مرآةُ Drizzle + ترحيلُ `0001` + `.down.sql`) · المُرحِّلُ صارَ يُسوّي كلَّ حدثٍ في معاملةٍ واحدةٍ عبرَ `RelayTransactionRunner` ويتوقّفُ عندَ أوّلِ فشلٍ قابلٍ للإعادةِ دونَ تقديمِ نقطةِ التفتيش، ولا يُرجِعُ النقطةَ إلى الوراءِ أمامَ صفٍّ قديم · قفلٌ استشاريٌّ للجلسةِ طوالَ الدفعة · طوابعُ بدقّةِ الميكروثانية · حلقةٌ داخلَ العمليّةِ (`relay-loop.ts`) تبدأُ حينَ يُضبَطُ `BILLING_ORDER_EVENTS_DATABASE_URL` (مُسجَّلٌ في `env-registry.json` وجردِ الأسرار) وتتوقّفُ بأمانٍ عندَ SIGTERM.
+- **عيبٌ أُصلِح:** مسارُ HTTP كانَ يولِّدُ `INV-…` لعمودِ UUID فيسقطُ على Postgres؛ صارَ UUID، و`findById` لمعرِّفٍ غيرِ UUID يعودُ «غيرَ موجود» لا 500.
+- **الاختبارات:** وحدة 109/109 (منها 6 جديدةٌ للدفترِ والفشلِ القابلِ للإعادة و3 للحلقة). تكاملٌ على Postgres حقيقيٍّ (محليٌّ 18): `relay-reconciliation.integration.test.ts` 8/8 — مجموعُ الرسومِ = مجموعُ الفواتيرِ = مجموعُ التسويات، صفُّ صادرٍ واحدٌ لكلِّ تسوية، لا تكرارَ بعدَ حذفِ نقطةِ التفتيش، فشلُ القاعدةِ في منتصفِ المعاملةِ (trigger) يرتدُّ بكلِّ شيء، دفعتانِ متزامنتانِ تُسوّيانِ 20 طلباً مرّةً واحدة؛ و`migration-upgrade-with-data.integration.test.ts` 2/2 (`@wasla-upgrade-proof: all-non-baseline`). وظيفةُ CI جديدة: `db-integration (billing, @wasla/billing-service, wasla_billing_test)`.
+- **فجوةٌ مُعلَنةٌ (قرارُ مالك):** مُصنِّفُ المُرحِّلِ يطلبُ `store_public_id` و`order_total_cents` في `order.status_changed`، وعقدُ `OrderStatusChangedV1` لا يحملُهما (`additionalProperties: false`)، وADR-050 «العواقب» (3) يرفضُ الحقولَ الماليّةَ في `services/orders`. اختبارُ البوّابةِ يزرعُ حمولةَ المُصنِّفِ لا حمولةَ المنتِجِ الحقيقي — فهوَ يُثبِتُ الاستدامةَ والتسويةَ لا توافقَ المصدر. ملحقُ ADR-050 يُفصِّل.
+- **ما لا يُدَّعى:** حمايةُ الفرعِ الحيّةُ على GitHub لم تُحدَّث (34 سياقاً، لا partners ولا billing) — `MERGE_BLOCKING.json` يتبعُ نمطَ المستودع. لا نشرَ ولا تشغيلَ على قاعدةِ الإنتاج. M5-17P لا يُنقَلُ إلى Ready for Gate قبلَ CI أخضرَ على `main`، ولا إلى Completed إلّا بقرارِ المالك.
+

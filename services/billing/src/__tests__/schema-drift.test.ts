@@ -10,7 +10,13 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { billingInvoices, billingSettlements, billingOutbox } from "../infrastructure/drizzle/schema.js";
+import {
+  billingInvoices,
+  billingSettlements,
+  billingOutbox,
+  billingRelayCheckpoint,
+  billingRelayConsumedEvents,
+} from "../infrastructure/drizzle/schema.js";
 
 const SERVICE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SCHEMA_SQL = readFileSync(join(SERVICE_ROOT, "contracts", "schema.sql"), "utf8");
@@ -96,4 +102,18 @@ describe("Schema drift — Drizzle mirror vs schema.sql contract", () => {
       expect(contractInvoices.has(col), `Column "${col}" in Drizzle mirror but not in contract`).toBe(true);
     }
   });
+
+  // M5-17P (CLM-0375) — جدولا استدامةِ المُرحِّل، في الاتجاهَين.
+  for (const [name, table] of [
+    ["billing_relay_checkpoint", billingRelayCheckpoint],
+    ["billing_relay_consumed_events", billingRelayConsumedEvents],
+  ] as const) {
+    it(`${name} mirrors the contract columns exactly (both directions)`, () => {
+      expect(contractTables.has(name)).toBe(true);
+      const contractCols = extractColumnNames(SCHEMA_SQL, name);
+      const mirrorCols = drizzleColumnNames(table as unknown as Record<string, unknown>);
+      expect(contractCols.size).toBeGreaterThan(0);
+      expect([...mirrorCols].sort()).toEqual([...contractCols].sort());
+    });
+  }
 });

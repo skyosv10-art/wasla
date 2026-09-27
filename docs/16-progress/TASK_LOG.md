@@ -6867,3 +6867,7 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **Ready for Gate → Completed** بتصريحٍ نصّيٍّ من مالكِ البرنامجِ (`@uxxxu`) لا بقرارِ وكيل (§9). الدليل: PR [#511](https://github.com/skyosv10-art/wasla/pull/511) (42/42 · `exit-gate-e2e (billing)` 3/3) + PR [#512](https://github.com/skyosv10-art/wasla/pull/512) + `main` @ `b70a01a` — [run 36309069142](https://github.com/skyosv10-art/wasla/actions/runs/36309069142) (40/40). M5-17P: شرطُ Postgres (PR #509) ومصدرُ الحدثِ (M5-17Q) أُغلِقا.
 - **حدودٌ معلنةٌ قبِلَها المالكُ لـM5-17:** رسمُ 2.5% من مجموعِ الأصنافِ فقط (بلا التوصيل) افتراضٌ تجاريٌّ · مرجعُ المتجرِ = UUID السوق · Tap خارجَ النطاق · عيبُ الطلبِ متعدِّدِ الأصنافِ عيبُ Delivery (بندٌ مستقلٌّ `M5-13M`) · ذرّيّةُ HTTP للفاتورةِ + `invoice_issued` محدوديّةٌ مؤقّتة · `M5-17BP` بندٌ تشغيليٌّ، إعدادُ حمايةِ GitHub لم يُغيَّر.
 - **ما يُعلَن:** تبعيّاتُ M5-17 (M5-13..16) في `Ready for Gate` — ترتيبٌ قرّرَهُ المالك. بقيّةُ بنودِ `Ready for Gate` لم تُلمَس.
+
+## 2026-09-27 — CLM-0377 Released (§8.1)
+
+- **Work Item(s):** M5-17 · M5-17P · M5-17Q · PR [#513](https://github.com/skyosv10-art/wasla/pull/513) merged squash `ade191a` (42/42). Claim released; الحالاتُ الثلاثُ `Completed` بقرارِ المالك.

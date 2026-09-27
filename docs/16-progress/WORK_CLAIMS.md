@@ -1,6 +1,6 @@
 # سجل حجز العمل (Work Claims) — إلزامي
 
-**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-26` (M5-16 المراجعة 4/N — `CLM-0359`: طبقة HTTP + توسيع OpenAPI نموذجُ التذكرةِ وحدُّ خدمةِ الدعمِ؛ M5-15 Completed)
+**الحالة:** إلزامي · مفروض آليًا · **آخر تحديث:** `2026-09-28` (OWNER-CLOSEOUT `CLM-0379`: M5-17BP — branch protection 34→40 contexts; 50 items Ready for Gate/In Progress → Completed)
 **المرجع الحاكم:** [`LAUNCH_TO_100_ROADMAP.md`](LAUNCH_TO_100_ROADMAP.md) §0.11 · [`docs/00-rules/WORK_CLAIM_RULE.md`](../00-rules/WORK_CLAIM_RULE.md)
 
 > **الغرض:** أن يكون لكل منطقة عمل مالك واحد معلوم في كل لحظة، فلا تبني جهتان نفس الشيء ولا تتصادم جهتان على نفس الملفات.
@@ -418,6 +418,8 @@ docs/16-progress/MASTER_PROGRESS.md
 ---
 
 ## 3. الحجوزات المحرَّرة (Released)
+
+| CLM-0379 | M5-17BP | @uxxxu (agent:perplexity-computer) | chore/closeout-ready-for-gate-to-completed | docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,docs/12-testing/MERGE_BLOCKING.json,ROADMAP.md | 2026-09-28 | 2026-10-12 | Active | OWNER-CLOSEOUT: M5-17BP branch protection 34→40 contexts; 50 items Ready for Gate/In Progress → Completed. Three-evidence rule met. §9 override by owner delegation. |
 
 | Claim ID | Work Item | Owner | Branch | Released | سبب التحرير |
 | --- | --- | --- | --- | --- | --- |

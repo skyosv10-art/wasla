@@ -6976,11 +6976,11 @@ M6-18B (HA/capacity/DR) is now unblocked — depends on M6-18A.
 
 ## CLM-0381 · M6-18B — HA, Capacity, and Disaster Recovery
 
-- **Work Item(s):** M6-18B · **Claim:** `CLM-0381` · **Branch:** `feat/m6-18b-ha-capacity-dr` · **Status:** Not Started → Completed
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0381` · **Branch:** `feat/m6-18b-ha-capacity-dr` · **Status:** Not Started → Ready for Gate
 
 **Branch:** `feat/m6-18b-ha-capacity-dr`  
 **Date:** 2026-09-28  
-**Status:** Completed (pending CI gate + merge)
+**Status:** Ready for Gate (drill procedure defined; live execution pending environment access)
 
 ### What was done
 

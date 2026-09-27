@@ -5,11 +5,13 @@ import {
   InMemoryInvoiceStore,
   InMemoryPaymentGateway,
   InMemoryEventPublisher,
+  InMemorySettlement,
 } from "../ports.js";
 
 function buildApp(): FastifyInstance {
   return createBillingApp({
     store: new InMemoryInvoiceStore(),
+    settlements: new InMemorySettlement(),
     paymentGateway: new InMemoryPaymentGateway(),
     publisher: new InMemoryEventPublisher(),
   });
@@ -243,5 +245,90 @@ describe("billing HTTP — void invoice", () => {
     });
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body).state).toBe("void");
+  });
+});
+
+describe("billing HTTP — list settlements", () => {
+  it("returns 200 with empty list when no settlements", async () => {
+    const app = buildApp();
+    const response = await app.inject({
+      method: "GET",
+      url: "/billing/settlements",
+    });
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.items).toEqual([]);
+    expect(body.next_cursor).toBeNull();
+  });
+
+  it("returns settlements after they are created", async () => {
+    const settlements = new InMemorySettlement();
+    await settlements.settle({
+      invoice_id: "inv_001",
+      fee_type: "store_variable",
+      amount_cents: 2500,
+      period: "2026-09",
+    });
+    // Rebuild app with the populated settlements
+    const app2 = createBillingApp({
+      store: new InMemoryInvoiceStore(),
+      settlements,
+      paymentGateway: new InMemoryPaymentGateway(),
+      publisher: new InMemoryEventPublisher(),
+    });
+    const response = await app2.inject({
+      method: "GET",
+      url: "/billing/settlements",
+    });
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].invoice_id).toBe("inv_001");
+    expect(body.items[0].fee_type).toBe("store_variable");
+    expect(body.items[0].amount_cents).toBe(2500);
+    expect(body.items[0].state).toBe("settled");
+  });
+
+  it("filters by state", async () => {
+    const settlements = new InMemorySettlement();
+    await settlements.settle({
+      invoice_id: "inv_001",
+      fee_type: "store_variable",
+      amount_cents: 2500,
+      period: "2026-09",
+    });
+    await settlements.settle({
+      invoice_id: "inv_002",
+      fee_type: "store_fixed",
+      amount_cents: 5000,
+      period: "2026-09",
+    });
+    const app = createBillingApp({
+      store: new InMemoryInvoiceStore(),
+      settlements,
+      paymentGateway: new InMemoryPaymentGateway(),
+      publisher: new InMemoryEventPublisher(),
+    });
+    const response = await app.inject({
+      method: "GET",
+      url: "/billing/settlements?state=settled",
+    });
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.items).toHaveLength(2);
+    expect(body.items.every((s: { state: string }) => s.state === "settled")).toBe(true);
+  });
+
+  it("returns 422 when settlements not configured", async () => {
+    const app = createBillingApp({
+      store: new InMemoryInvoiceStore(),
+      paymentGateway: new InMemoryPaymentGateway(),
+      publisher: new InMemoryEventPublisher(),
+    });
+    const response = await app.inject({
+      method: "GET",
+      url: "/billing/settlements",
+    });
+    expect(response.statusCode).toBe(422);
   });
 });

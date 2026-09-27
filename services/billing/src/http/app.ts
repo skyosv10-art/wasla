@@ -8,7 +8,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 
-import { BILLING_SERVICE_PORT } from "@wasla/contracts-billing";
+import { BILLING_SERVICE_PORT, type BillingSettlementState } from "@wasla/contracts-billing";
 import { registerServiceIdentityOnFastify } from "@wasla/service-auth/fastify";
 import { BillingError } from "../domain/errors.js";
 import {
@@ -22,6 +22,7 @@ import type {
   InvoiceStore,
   PaymentGatewayPort,
   BillingEventPublisher,
+  SettlementPort,
 } from "../ports.js";
 import { registerErrorHandler } from "./errors.js";
 import {
@@ -35,6 +36,7 @@ import {
 
 export interface BillingHttpDeps {
   readonly store: InvoiceStore;
+  readonly settlements?: SettlementPort;
   readonly paymentGateway?: PaymentGatewayPort;
   readonly publisher?: BillingEventPublisher;
   readonly serviceIdentity?: BillingServiceIdentityOptions;
@@ -254,6 +256,34 @@ export function createBillingApp(deps: BillingHttpDeps): FastifyInstance {
       const voided = transitionInvoice(invoice, "void", new Date());
       await deps.store.save(voided);
       reply.send(serializeInvoice(voided));
+    },
+  );
+
+  // GET /billing/settlements — list settlements with optional state filter + cursor
+  app.get(
+    "/billing/settlements",
+    { config: internalScoped(BILLING_SCOPES.invoiceRead) },
+    async (request, reply) => {
+      if (!deps.settlements) {
+        throw BillingError.validationFailed("Settlement service not configured");
+      }
+
+      const query = request.query as {
+        state?: string;
+        limit?: string;
+        cursor?: string;
+      };
+
+      const result = await deps.settlements.listSettlements({
+        state: query.state as BillingSettlementState | undefined,
+        limit: query.limit ? parseInt(query.limit, 10) : 20,
+        cursor: query.cursor,
+      });
+
+      reply.send({
+        items: result.items,
+        next_cursor: result.nextCursor,
+      });
     },
   );
 

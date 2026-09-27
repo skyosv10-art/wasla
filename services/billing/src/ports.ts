@@ -64,6 +64,16 @@ export interface SettlementPort {
   }): Promise<{ settlement_id: string; state: BillingSettlementState }>;
 
   findById(settlementId: string): Promise<{ settlement_id: string; state: BillingSettlementState } | null>;
+
+  /** List settlements with optional state filter and cursor pagination. */
+  listSettlements(params: {
+    state?: BillingSettlementState;
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
+    items: { settlement_id: string; state: BillingSettlementState; invoice_id: string; fee_type: BillingFeeType; amount_cents: number; period: string }[];
+    nextCursor: string | null;
+  }>;
 }
 
 // ── Clock ────────────────────────────────────────────────────────────────────
@@ -204,7 +214,7 @@ export class InMemoryEventPublisher implements BillingEventPublisher {
 }
 
 export class InMemorySettlement implements SettlementPort {
-  private readonly settlements = new Map<string, { settlement_id: string; state: BillingSettlementState }>();
+  private readonly settlements = new Map<string, { settlement_id: string; state: BillingSettlementState; invoice_id: string; fee_type: BillingFeeType; amount_cents: number; period: string }>();
 
   async settle(params: {
     invoice_id: string;
@@ -213,13 +223,43 @@ export class InMemorySettlement implements SettlementPort {
     period: string;
   }): Promise<{ settlement_id: string; state: BillingSettlementState }> {
     const settlement_id = `set_${params.invoice_id}_${Date.now()}`;
-    const result = { settlement_id, state: "settled" as BillingSettlementState };
+    const result = { settlement_id, state: "settled" as BillingSettlementState, invoice_id: params.invoice_id, fee_type: params.fee_type, amount_cents: params.amount_cents, period: params.period };
     this.settlements.set(settlement_id, result);
     return result;
   }
 
   async findById(settlementId: string): Promise<{ settlement_id: string; state: BillingSettlementState } | null> {
-    return this.settlements.get(settlementId) ?? null;
+    const s = this.settlements.get(settlementId);
+    return s ? { settlement_id: s.settlement_id, state: s.state } : null;
+  }
+
+  async listSettlements(params: {
+    state?: BillingSettlementState;
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
+    items: { settlement_id: string; state: BillingSettlementState; invoice_id: string; fee_type: BillingFeeType; amount_cents: number; period: string }[];
+    nextCursor: string | null;
+  }> {
+    let all = [...this.settlements.values()];
+    if (params.state) {
+      all = all.filter((s) => s.state === params.state);
+    }
+    // Sort by settlement_id for stable ordering
+    all.sort((a, b) => a.settlement_id.localeCompare(b.settlement_id));
+
+    // Cursor-based pagination
+    let startIdx = 0;
+    if (params.cursor) {
+      startIdx = all.findIndex((s) => s.settlement_id > params.cursor!);
+      if (startIdx < 0) startIdx = all.length;
+    }
+
+    const limit = params.limit ?? 20;
+    const items = all.slice(startIdx, startIdx + limit);
+    const nextCursor = startIdx + limit < all.length ? items[items.length - 1]?.settlement_id ?? null : null;
+
+    return { items, nextCursor };
   }
 }
 

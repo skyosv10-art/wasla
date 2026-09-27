@@ -155,6 +155,7 @@
 | `packages/search-e2e/` — بوّابةُ خروجِ الطورِ 12 (22/22 محلّيّاً · [تفصيل](../12-testing/PHASE12_EXIT_GATE_E2E.md)) | Implemented | M5-12 |
 | `.gitlab-ci.yml` — `marketplace-exit-gate-e2e` (قاعدةٌ مستقلّةٌ `wasla_marketplace_e2e` · لم تركض على المُشغِّل: `RISK-0001`) | Implemented | M5-11 |
 | `packages/resilience/` — circuit breaker + bulkhead + timeout + retry (35 tests incl. 10 chaos scenarios · [ADR-051](../15-decisions/ADR-051-resilience-patterns.md) · [SLOs](../08-infrastructure/SLO.md) · [gate](../12-testing/M6-18A_RESILIENCE_GATE.md)) | Implemented | M6-18A |
+| `docs/08-infrastructure/HA_CAPACITY_DR.md` — RTO/RPO targets, capacity planning, backup strategy, failover, dependency failure behavior ([ADR-052](../15-decisions/ADR-052-ha-capacity-dr.md) · [drill](../12-testing/M6-18B_DRILL.md)) | Implemented | M6-18B |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |
 | `scripts/checks/audit-ci-verdicts.sh` — تدقيقُ أحكامِ CI حيّاً (الفحصُ 15 · [سجلٌّ](../12-testing/CI_VERDICT_AUDIT.md)) | Implemented | M0-40 |
 | `scripts/checks/validate-authz-policy.sh` الأبوابُ 7 و8 و9 — ربطُ المُنتَفِعِ والمُستأجِرِ مُثبَتٌ في الشفرةِ لا مُدَّعىً، وعدَّادانِ مُشتَقّانِ يُرفَضُ كتابةُ أيٍّ منهُما بيدٍ، والمساعدونَ يُقرَأونَ **على أيِّ عمقٍ** (**38** حالةَ طفرةٍ · كانت 5 ثمَّ 25 ثمَّ 31 · وبالموجةِ 3 بابانِ جديدانِ: جردُ الأسطولِ مُنسَدٌّ على سقفِهِ وبابٌ **مضادُّ محوٍ** يُسقِطُ الدفعةَ إن غابَ نداءُ الإنفاذِ من المُوقِّعِ · [ADR-028](../15-decisions/ADR-028-token-bound-owner-binding.md)) | Implemented | M1-05B |

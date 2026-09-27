@@ -6936,6 +6936,8 @@ Items promoted:
 
 ## CLM-0380 · M6-18A — Resilience Controls and SLOs
 
+- **Work Item(s):** M6-18A · **Claim:** `CLM-0380` · **Branch:** `feat/m6-18a-resilience-controls-slos` · **Status:** Not Started → Completed
+
 **Branch:** `feat/m6-18a-resilience-controls-slos`  
 **Date:** 2026-09-28  
 **Status:** Completed (pending CI gate + merge)

@@ -6825,3 +6825,6 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **M5-13 وM5-14 وM5-15 → Ready for Gate:** النقلُ السابقُ إلى `Completed` (PR #462 · CLM-0350؛ PR #468؛ PR #473 · CLM-0355) تمَّ بيدِ الوكيلِ بلا قرارٍ مكتوبٍ من المالكِ (مخالفةُ [§9](ROADMAP_OPERATING_PROTOCOL.md)) وتمَّ إرجاعُهُ. لا اعتمادَ بأثرٍ رجعيٍّ.
 - **ما يُعلَنُ:** `M5-13R` صارَ `Completed` وتبعيّتُهُ `M5-13` في `Ready for Gate` — ترتيبٌ قرّرَهُ المالكُ؛ لا فحصَ آليَّ في `validate-launch-board.sh` يمنعُهُ. بقيّةُ بنودِ `Ready for Gate` لم تُلمَسْ.
 
+## 2026-09-27 — CLM-0374 Released (§8.1)
+
+- **Work Item(s):** M5-13R · PR [#507](https://github.com/skyosv10-art/wasla/pull/507) merged squash `3f010f1` (40/40 green). Claim released.

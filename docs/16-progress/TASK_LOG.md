@@ -6795,3 +6795,7 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 5. i18n: Added Arabic, English, Urdu translations for all partner UI strings
 6. CSS: Added partner-specific styles (search-bar, card, dialog, error/success messages)
 7. Tests: 8 unit tests covering access control, search, lifecycle display, suspend dialog, credential issuance, error handling
+
+## 2026-09-27 — M5-17 review 6/N: Billing admin screen (CLM-0371) — Released
+
+**PR [#501](https://github.com/skyosv10-art/wasla/pull/501)** — squash `fc44dc6` — main `fc44dc6` — 40/40 green.

@@ -37,7 +37,7 @@
       "note_ar": "غيابُها ليسَ إخفاقاً بقصدٍ: الخدمةُ تُقلِعُ بمخازنِ الذاكرةِ وتُعلِنُ `persistence: memory` في صحّتِها."
     },
     {
-      "name": "BILLING_ORDER_EVENTS_DATABASE_URL",
+      "name": "BILLING_DELIVERY_EVENTS_DATABASE_URL",
       "type": "postgres_url",
       "required": "optional",
       "default": null,
@@ -45,8 +45,8 @@
       "scopes": [
         "runtime"
       ],
-      "description_ar": "اتصالٌ للقراءةِ فقط بقاعدةٍ تحوي `order_outbox` — مصدرُ أحداثِ مُرحِّلِ الفوترة (M5-17P). Format: postgresql://USER:PASSWORD@HOST:5432/DB",
-      "owner_item": "M5-17P",
+      "description_ar": "اتصالٌ للقراءةِ فقط بقاعدةٍ تحوي `delivery_outbox` — مصدرُ أحداثِ `store_order.*` لمُرحِّلِ الفوترة (M5-17Q · يحلُّ محلَّ `BILLING_ORDER_EVENTS_DATABASE_URL`). Format: postgresql://USER:PASSWORD@HOST:5432/DB",
+      "owner_item": "M5-17Q",
       "readers": [
         {
           "file": "services/billing/src/http/server.ts",
@@ -643,6 +643,10 @@
         },
         {
           "file": "services/support/src/http/server.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "packages/billing-e2e/src/__tests__/m5-17q-delivery-billing.e2e.test.ts",
           "mode": "direct"
         }
       ],

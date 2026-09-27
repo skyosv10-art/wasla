@@ -171,12 +171,40 @@ export const billingRelayConsumedEvents = pgTable(
     check("billing_relay_consumed_events_consumer_id_check", sql`char_length(${table.consumerId}) BETWEEN 1 AND 64`),
     check(
       "billing_relay_consumed_events_status_check",
-      sql`${table.status} IN ('settled', 'ignored', 'ignored_foreign', 'poisoned')`,
+      sql`${table.status} IN ('settled', 'recorded', 'ignored', 'ignored_foreign', 'poisoned')`,
     ),
     check(
       "billing_relay_settled_has_settlement",
       sql`(${table.status} = 'settled') = (${table.settlementId} IS NOT NULL)`,
     ),
     index("idx_billing_relay_consumed_poisoned").on(table.consumerId, table.consumedAt).where(sql`${table.status} = 'poisoned'`),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// billing_store_order_snapshots — لقطةُ مالِ طلبِ المتجرِ من delivery_outbox (M5-17Q · CLM-0376)
+// ---------------------------------------------------------------------------
+
+export const billingStoreOrderSnapshots = pgTable(
+  "billing_store_order_snapshots",
+  {
+    orderId: uuid("order_id").primaryKey(),
+    orderPublicId: text("order_public_id").notNull(),
+    storeId: uuid("store_id").notNull(),
+    storeSlug: text("store_slug").notNull(),
+    currencyCode: text("currency_code").notNull(),
+    itemsTotalMinorUnits: bigint("items_total_minor_units", { mode: "number" }).notNull(),
+    deliveryFeeMinorUnits: bigint("delivery_fee_minor_units", { mode: "number" }).notNull(),
+    sourceEventId: uuid("source_event_id").notNull(),
+    settlementId: uuid("settlement_id")
+      .unique("billing_store_order_snapshots_settlement_id_unique")
+      .references(() => billingSettlements.settlementId),
+    createdAt: timestamptz("created_at").notNull().default(sql`now()`),
+    updatedAt: timestamptz("updated_at").notNull().default(sql`now()`),
+  },
+  (table) => [
+    check("billing_store_order_snapshots_currency_check", sql`${table.currencyCode} = 'SAR'`),
+    check("billing_store_order_snapshots_items_total_check", sql`${table.itemsTotalMinorUnits} >= 0`),
+    check("billing_store_order_snapshots_delivery_fee_check", sql`${table.deliveryFeeMinorUnits} >= 0`),
   ],
 );

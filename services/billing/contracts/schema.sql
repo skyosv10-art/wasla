@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS billing_relay_checkpoint (
 CREATE TABLE IF NOT EXISTS billing_relay_consumed_events (
   consumer_id        TEXT NOT NULL CHECK (char_length(consumer_id) BETWEEN 1 AND 64),
   event_id           UUID NOT NULL,
-  status             TEXT NOT NULL CHECK (status IN ('settled', 'ignored', 'ignored_foreign', 'poisoned')),
+  status             TEXT NOT NULL CHECK (status IN ('settled', 'recorded', 'ignored', 'ignored_foreign', 'poisoned')),
   reason             TEXT,
   settlement_id      UUID REFERENCES billing_settlements(settlement_id),
   consumed_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -90,3 +90,25 @@ CREATE TABLE IF NOT EXISTS billing_relay_consumed_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_billing_relay_consumed_poisoned ON billing_relay_consumed_events (consumer_id, consumed_at) WHERE status = 'poisoned';
+
+-- ─────────────────────────────────────────────────────────────
+-- M5-17Q (CLM-0376) — مصدرُ الحدثِ الحقيقيُّ: `store_order.*` من `delivery_outbox`.
+-- لقطةُ مالِ الطلبِ من `store_order.created` (ADR-026 §2.6) في إسقاطٍ تملكُهُ
+-- الفوترةُ وحدَها؛ `settlement_id` الفريدُ يجعلُ التسويةَ مرّةً واحدةً لكلِّ طلب.
+-- `store_id` هوَ مرجعُ المتجرِ على الفاتورةِ (UUID السوقِ كما يحملُهُ الحدث).
+-- لا حقلَ ماليَّ في `services/orders` (ADR-050 عواقب 3).
+-- ─────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS billing_store_order_snapshots (
+  order_id                  UUID PRIMARY KEY,
+  order_public_id           TEXT NOT NULL,
+  store_id                  UUID NOT NULL,
+  store_slug                TEXT NOT NULL,
+  currency_code             TEXT NOT NULL CHECK (currency_code = 'SAR'),
+  items_total_minor_units   BIGINT NOT NULL CHECK (items_total_minor_units >= 0),
+  delivery_fee_minor_units  BIGINT NOT NULL CHECK (delivery_fee_minor_units >= 0),
+  source_event_id           UUID NOT NULL,
+  settlement_id             UUID UNIQUE REFERENCES billing_settlements(settlement_id),
+  created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);

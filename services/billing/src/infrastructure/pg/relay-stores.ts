@@ -10,8 +10,11 @@
  *    والتسويةُ وصفُّ الصادرِ وصفُّ الدفترِ تُلتزَمُ معاً أو ترتدُّ معاً.
  *  - `PostgresRelayConsumerLock` — قفلٌ استشاريٌّ على مستوى الجلسةِ طوالَ الدفعة
  *    (النمطُ نفسُهُ في `services/delivery/src/infrastructure/relay-advisory-lock.ts`).
- *  - `PostgresOrderEventSource` — قراءةٌ فقط من `order_outbox` بترتيبِ
- *    `(occurred_at, event_id)`؛ المُرحِّلُ لا يكتبُ `order_outbox` أبداً.
+ *  - `PostgresDeliveryEventSource` (M5-17Q · CLM-0376) — قراءةٌ فقط من
+ *    `delivery_outbox` بترتيبِ `(occurred_at, event_id)`؛ المُرحِّلُ لا يكتبُ
+ *    صندوقَ التوصيلِ أبداً (حدُّ التوصيلِ: هوَ المنتِجُ الوحيدُ لـ`store_order.*`).
+ *  - `PostgresStoreOrderSnapshotStore` (M5-17Q) — إسقاطُ لقطةِ مالِ الطلبِ في
+ *    `billing_store_order_snapshots`، مملوكٌ للفوترةِ وحدَها.
  *
  * الطوابعُ تُقرأُ نصّاً بدقّةِ الميكروثانية (`to_char ... US`) لا عبرَ `Date` في JS:
  * `Date` تقطعُ إلى الملّي ثانية فتصيرُ نقطةُ التفتيشِ أقدمَ من الصفِّ الذي مثّلتْهُ،
@@ -22,15 +25,17 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import type { Pool, PoolClient } from "pg";
 
-import type { OrderOutboxRow, RelayCheckpoint } from "../../domain/consumed-events.js";
+import type { DeliveryOutboxRow, RelayCheckpoint, StoreOrderSnapshot } from "../../domain/consumed-events.js";
 import type {
   ConsumedEventLedger,
   LedgerEntry,
-  OrderEventSource,
+  DeliveryEventSource,
   RelayCheckpointStore,
   RelayConsumerLock,
   RelayTransactionRunner,
   RelayTxPorts,
+  StoredOrderSnapshot,
+  StoreOrderSnapshotStore,
 } from "../../ports.js";
 import { PostgresInvoiceStore } from "../drizzle/repository.js";
 import * as schema from "../drizzle/schema.js";
@@ -104,6 +109,7 @@ export class PostgresRelayTransactionRunner implements RelayTransactionRunner {
         settlements: new PostgresSettlement(client),
         publisher: new PostgresOutboxPublisher(client),
         ledger: new PostgresConsumedEventLedger(client),
+        snapshots: new PostgresStoreOrderSnapshotStore(client),
       };
       const value = await fn(ports);
       await client.query("COMMIT");
@@ -144,10 +150,89 @@ export class PostgresRelayConsumerLock implements RelayConsumerLock {
   }
 }
 
-export class PostgresOrderEventSource implements OrderEventSource {
+export class PostgresStoreOrderSnapshotStore implements StoreOrderSnapshotStore {
+  constructor(private readonly db: Queryable) {}
+
+  async find(orderId: string): Promise<StoredOrderSnapshot | null> {
+    const result = await this.db.query<{
+      order_id: string;
+      order_public_id: string;
+      store_id: string;
+      store_slug: string;
+      currency_code: "SAR";
+      items_total_minor_units: string;
+      delivery_fee_minor_units: string;
+      source_event_id: string;
+      settlement_id: string | null;
+    }>(
+      `SELECT order_id::text AS order_id, order_public_id, store_id::text AS store_id, store_slug,
+              currency_code, items_total_minor_units::text AS items_total_minor_units,
+              delivery_fee_minor_units::text AS delivery_fee_minor_units,
+              source_event_id::text AS source_event_id, settlement_id::text AS settlement_id
+         FROM billing_store_order_snapshots
+        WHERE order_id = $1::uuid
+        FOR UPDATE`,
+      [orderId],
+    );
+    const r = result.rows[0];
+    if (!r) return null;
+    return {
+      ...r,
+      items_total_minor_units: Number(r.items_total_minor_units),
+      delivery_fee_minor_units: Number(r.delivery_fee_minor_units),
+    };
+  }
+
+  async insert(snapshot: StoreOrderSnapshot, sourceEventId: string): Promise<boolean> {
+    const result = await this.db.query(
+      `INSERT INTO billing_store_order_snapshots (
+         order_id, order_public_id, store_id, store_slug, currency_code,
+         items_total_minor_units, delivery_fee_minor_units, source_event_id
+       ) VALUES ($1::uuid, $2, $3::uuid, $4, $5, $6, $7, $8::uuid)
+       ON CONFLICT (order_id) DO NOTHING`,
+      [
+        snapshot.order_id,
+        snapshot.order_public_id,
+        snapshot.store_id,
+        snapshot.store_slug,
+        snapshot.currency_code,
+        snapshot.items_total_minor_units,
+        snapshot.delivery_fee_minor_units,
+        sourceEventId,
+      ],
+    );
+    return (result.rowCount ?? 0) === 1;
+  }
+
+  async setItemsTotal(orderId: string, itemsTotalMinorUnits: number): Promise<void> {
+    const result = await this.db.query(
+      `UPDATE billing_store_order_snapshots
+          SET items_total_minor_units = $2, updated_at = now()
+        WHERE order_id = $1::uuid AND settlement_id IS NULL`,
+      [orderId, itemsTotalMinorUnits],
+    );
+    if ((result.rowCount ?? 0) !== 1) throw new Error(`snapshot not adjustable for order ${orderId}`);
+  }
+
+  async markSettled(orderId: string, settlementId: string): Promise<void> {
+    const result = await this.db.query(
+      `UPDATE billing_store_order_snapshots
+          SET settlement_id = $2::uuid, updated_at = now()
+        WHERE order_id = $1::uuid AND settlement_id IS NULL`,
+      [orderId, settlementId],
+    );
+    if ((result.rowCount ?? 0) !== 1) throw new Error(`snapshot already settled for order ${orderId}`);
+  }
+}
+
+/**
+ * قراءةٌ فقط من `delivery_outbox` (عقدُ التوصيلِ: `services/delivery/contracts/schema.sql`).
+ * الأعمدةُ المقروءةُ هيَ ما يكتبُهُ `appendOutbox` في مخزنِ طلباتِ التوصيلِ حرفيّاً.
+ */
+export class PostgresDeliveryEventSource implements DeliveryEventSource {
   constructor(private readonly pool: Pool) {}
 
-  async readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly OrderOutboxRow[]> {
+  async readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly DeliveryOutboxRow[]> {
     const cpAt = checkpoint?.last_occurred_at ?? new Date(0).toISOString();
     const cpId = checkpoint?.last_event_id ?? ZERO_EVENT_ID;
     const result = await this.pool.query<{
@@ -162,7 +247,7 @@ export class PostgresOrderEventSource implements OrderEventSource {
     }>(
       `SELECT event_id::text AS event_id, event_type, event_version, aggregate_type, aggregate_id,
               to_char(occurred_at AT TIME ZONE 'UTC', ${ISO_US}) AS occurred_at, trace_id, payload
-         FROM order_outbox
+         FROM delivery_outbox
         WHERE (occurred_at, event_id) > ($1::timestamptz, $2::uuid)
         ORDER BY occurred_at ASC, event_id ASC
         LIMIT $3`,
@@ -176,7 +261,7 @@ export class PostgresOrderEventSource implements OrderEventSource {
       aggregate_id: r.aggregate_id,
       occurred_at: r.occurred_at,
       trace_id: r.trace_id,
-      data: (r.payload ?? {}) as Record<string, unknown>,
+      payload: (r.payload ?? {}) as Record<string, unknown>,
     }));
   }
 }

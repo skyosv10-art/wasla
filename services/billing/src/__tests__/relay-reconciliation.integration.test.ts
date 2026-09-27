@@ -1,16 +1,15 @@
 /**
- * بوّابةُ تسويةِ الفوترةِ على PostgreSQL حقيقي (M5-17P · CLM-0375 · ADR-050 §3).
+ * بوّابةُ تسويةِ الفوترةِ على PostgreSQL حقيقي (M5-17P · M5-17Q · ADR-050 §3).
  *
- * الدعوى: كلُّ حدثِ «طلبٍ مكتمل» في `order_outbox` يصيرُ **فاتورةً واحدةً وتسويةً واحدةً
- * وصفَّ صادرٍ واحداً** — لا أقلَّ ولا أكثر — ومجموعُ الرسومِ المُسوّاةِ يساوي مجموعَ
- * الفواتيرِ ويساوي ما يُحسَبُ من الأحداثِ نفسِها. وتُقاسُ الدعوى تحتَ ما يكسرُها في
- * الإنتاج: فقدُ نقطةِ التفتيش (إعادةُ تسليم)، وفشلُ قاعدةِ البياناتِ في منتصفِ المعاملة،
- * ودفعتانِ متزامنتان، وحدثٌ مسموم.
+ * الدعوى: كلُّ طلبِ متجرٍ **مُسلَّمٍ** في `delivery_outbox` (`store_order.created` ثمَّ
+ * `store_order.fulfillment_state_changed → delivered`) يصيرُ **فاتورةً واحدةً وتسويةً
+ * واحدةً وصفَّ صادرٍ واحداً** — لا أقلَّ ولا أكثر — ومجموعُ الرسومِ يساوي مجموعَ الفواتيرِ
+ * ويساوي ما يُحسَبُ من لقطاتِ المالِ نفسِها. وتُقاسُ الدعوى تحتَ ما يكسرُها في الإنتاج:
+ * فقدُ نقطةِ التفتيش، وفشلُ القاعدةِ في منتصفِ المعاملة، ودفعتانِ متزامنتان، وحدثٌ مسموم.
  *
- * الحدُّ المُعلَن: حمولةُ الأحداثِ هنا هيَ ما يطلبُهُ مُصنِّفُ المُرحِّل
- * (`store_public_id` · `order_total_cents`). عقدُ الطلباتِ الحاليُّ
- * (`OrderStatusChangedV1`) لا يحملُ هذينِ الحقلَين — فهذا الاختبارُ يُثبِتُ صحّةَ
- * الاستدامةِ والتسوية، لا توافقَ المنتِجِ الحقيقي. والفجوةُ مُعلَنةٌ في TASK_LOG.
+ * `delivery_outbox` هنا بنصِّ DDL عقدِ التوصيل (`pg-harness.ts`)، والحمولاتُ بشكلِ
+ * عقدِ الأحداثِ (`delivery-contract.test.ts`). والإثباتُ بالمنتِجِ الحقيقيِّ — مخزنُ طلباتِ
+ * التوصيلِ نفسُهُ يكتبُ الصفوفَ — في `packages/billing-e2e`.
  */
 
 import type { Pool } from "pg";
@@ -19,14 +18,23 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PostgresInvoiceStore } from "../infrastructure/drizzle/repository.js";
 import { createBillingDb } from "../infrastructure/drizzle/db.js";
 import { PostgresSettlement } from "../infrastructure/pg/settlement-store.js";
-import { DEFAULT_RELAY_CONFIG, STORE_VARIABLE_FEE_BPS, runRelayBatch } from "../relay.js";
+import { DEFAULT_RELAY_CONFIG, runRelayBatch, storeVariableFee } from "../relay.js";
+import {
+  STORE_ID,
+  createdRow,
+  deliveredRow,
+  deliveryCompletedRow,
+  orderRef,
+  substitutedRow,
+  ticker,
+  transitionRow,
+} from "./delivery-events.js";
 import {
   PG_ENABLED,
   DATABASE_URL,
   PostgresOutboxPublisher,
-  completedOrder,
   count,
-  insertOrderEvent,
+  insertDeliveryEvent,
   newPool,
   postgresRelayDeps,
   resetData,
@@ -35,11 +43,7 @@ import {
 
 const CONSUMER = DEFAULT_RELAY_CONFIG.consumerId;
 
-function fee(total: number): number {
-  return Math.max(1, Math.floor((total * STORE_VARIABLE_FEE_BPS) / 10000));
-}
-
-describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Postgres", () => {
+describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Postgres (delivery_outbox)", () => {
   let billing: Pool;
   let source: Pool;
 
@@ -58,40 +62,49 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
     await resetData(billing);
   });
 
-  /** الأحداثُ المختلطة: 5 مكتملة · 2 ملغاة · 1 مسموم · 1 غريب. */
-  async function seedMixed(): Promise<{ totals: number[]; lastEventId: string }> {
-    const totals = [10000, 4000, 12345, 99, 250000];
-    let minute = 0;
-    const at = () => `2026-09-27T10:${String(minute++).padStart(2, "0")}:00.123456Z`;
-    for (let i = 0; i < totals.length; i++) {
-      await insertOrderEvent(source, { occurredAt: at(), data: completedOrder(i + 1, totals[i]) });
+  /**
+   * خمسةُ طلباتٍ مُسلَّمةٍ (أحدُها باستبدالٍ) · طلبٌ ملغى · طلبٌ عالقٌ في picking ·
+   * حدثٌ مسمومٌ (إنشاءٌ بلا totals) · حدثُ مهمّةِ توصيلٍ غريب.
+   */
+  async function seedMixed(): Promise<{ bases: number[]; lastEventId: string; events: number }> {
+    const tick = ticker();
+    const items = [10000, 4000, 12345, 99, 250000];
+    let events = 0;
+    const put = async (row: Parameters<typeof insertDeliveryEvent>[1]) => {
+      events++;
+      return insertDeliveryEvent(source, row);
+    };
+    for (let i = 0; i < items.length; i++) {
+      const o = orderRef(i + 1);
+      await put(createdRow(o, items[i], 1500, { occurredAt: tick() }));
+      await put(transitionRow(o, "confirmed", "picking", { occurredAt: tick() }));
     }
-    await insertOrderEvent(source, {
-      occurredAt: at(),
-      data: { ...completedOrder(10, 5000), to_status: "customer_cancelled" },
-    });
-    await insertOrderEvent(source, {
-      occurredAt: at(),
-      data: { ...completedOrder(11, 5000), to_status: "failed" },
-    });
-    const { store_public_id: _drop, ...noStore } = completedOrder(12, 7000);
-    await insertOrderEvent(source, { occurredAt: at(), data: noStore });
-    const lastEventId = await insertOrderEvent(source, {
-      occurredAt: at(),
-      eventType: "order.assignment_changed",
-      data: completedOrder(13, 1),
-    });
-    return { totals, lastEventId };
+    await put(substitutedRow(orderRef(3), -2345, { occurredAt: tick() }));
+    for (let i = 0; i < items.length; i++) await put(deliveredRow(orderRef(i + 1), { occurredAt: tick() }));
+
+    const cancelled = orderRef(10);
+    await put(createdRow(cancelled, 5000, 0, { occurredAt: tick() }));
+    await put(transitionRow(cancelled, "placed", "cancelled", { occurredAt: tick() }));
+    await put(createdRow(orderRef(11), 7000, 0, { occurredAt: tick() }));
+
+    const bad = createdRow(orderRef(12), 7000, 0, { occurredAt: tick() });
+    const { totals: _drop, ...noTotals } = bad.payload;
+    await put({ ...bad, payload: noTotals });
+    const lastEventId = await put(deliveryCompletedRow(orderRef(1), { occurredAt: tick() }));
+    const bases = [10000, 4000, 12345 - 2345, 99, 250000];
+    return { bases, lastEventId, events };
   }
 
-  it("fees = invoices = settlements = outbox rows, exactly one per completed order", async () => {
-    const { totals, lastEventId } = await seedMixed();
+  it("fees = invoices = settlements = outbox rows, exactly one per delivered order", async () => {
+    const { bases, lastEventId, events } = await seedMixed();
     const result = await runRelayBatch(postgresRelayDeps(billing, source), DEFAULT_RELAY_CONFIG);
 
-    expect(result).toMatchObject({ processed: 9, settled: 5, ignored: 3, poisoned: 1, pending: 0 });
+    // 5 created+5 picking+1 sub+5 delivered+2 cancelled-order+1 created+1 poisoned+1 foreign = 21
+    expect(events).toBe(21);
+    expect(result).toMatchObject({ processed: 21, settled: 5, recorded: 8, ignored: 7, poisoned: 1, pending: 0 });
     expect(result.checkpoint.last_event_id).toBe(lastEventId);
 
-    const expected = totals.reduce((s, t) => s + fee(t), 0);
+    const expected = bases.reduce((s, b) => s + storeVariableFee(b), 0);
     const sums = await billing.query<{ inv: string; stl: string; n_inv: string; n_stl: string }>(
       `SELECT (SELECT coalesce(sum(amount_cents),0) FROM billing_invoices)::text    AS inv,
               (SELECT coalesce(sum(amount_cents),0) FROM billing_settlements)::text AS stl,
@@ -103,17 +116,20 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
     expect(Number(sums.rows[0].n_inv)).toBe(5);
     expect(Number(sums.rows[0].n_stl)).toBe(5);
 
-    // كلُّ فاتورةٍ مربوطةٌ بتسويتِها، والمبلغانِ متساويان.
+    // كلُّ فاتورةٍ مربوطةٌ بتسويتِها وبلقطةِ طلبِها، والمرجعُ UUID المتجر.
     expect(
       await count(
         billing,
         `SELECT count(*)::text AS n FROM billing_invoices i
            JOIN billing_settlements s ON s.settlement_id = i.settlement_id AND s.invoice_id = i.invoice_id
-          WHERE s.amount_cents = i.amount_cents AND s.state = 'settled' AND i.state = 'draft'`,
+           JOIN billing_store_order_snapshots o ON o.settlement_id = s.settlement_id
+          WHERE s.amount_cents = i.amount_cents AND s.state = 'settled' AND i.state = 'draft'
+            AND i.store_public_id = $1 AND o.store_id::text = $1`,
+        [STORE_ID],
       ),
     ).toBe(5);
 
-    // صفُّ صادرٍ واحدٌ لكلِّ تسوية، ومفتاحُهُ التسويةُ نفسُها.
+    // صفُّ صادرٍ واحدٌ لكلِّ تسوية.
     expect(
       await count(
         billing,
@@ -124,81 +140,85 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
     ).toBe(5);
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_outbox`)).toBe(5);
 
-    // الدفترُ: كلُّ حدثٍ نهائيٌّ مسجَّلٌ مرّةً، والمسمومُ بسببِهِ.
+    // اللقطات: 7 طلباتٍ مُنشأة، 5 مُسوّاة، والملغى والعالقُ بلا تسوية.
+    expect(await count(billing, `SELECT count(*)::text AS n FROM billing_store_order_snapshots`)).toBe(7);
+    expect(
+      await count(billing, `SELECT count(*)::text AS n FROM billing_store_order_snapshots WHERE settlement_id IS NOT NULL`),
+    ).toBe(5);
+
     const ledger = await billing.query<{ status: string; n: string }>(
       `SELECT status, count(*)::text AS n FROM billing_relay_consumed_events
         WHERE consumer_id = $1 GROUP BY status ORDER BY status`,
       [CONSUMER],
     );
     expect(Object.fromEntries(ledger.rows.map((r) => [r.status, Number(r.n)]))).toEqual({
-      ignored: 2,
+      ignored: 6,
       ignored_foreign: 1,
       poisoned: 1,
+      recorded: 8,
       settled: 5,
     });
     const poisoned = await billing.query<{ reason: string }>(
       `SELECT reason FROM billing_relay_consumed_events WHERE status = 'poisoned'`,
     );
-    expect(poisoned.rows[0].reason).toMatch(/store_public_id/);
+    expect(poisoned.rows[0].reason).toMatch(/totals/);
   });
 
   it("checkpoint lost → full redelivery settles nothing twice", async () => {
-    await seedMixed();
+    const { events } = await seedMixed();
     const deps = postgresRelayDeps(billing, source);
     await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
 
     await billing.query(`DELETE FROM billing_relay_checkpoint`);
     const again = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
 
-    expect(again.settled).toBe(0);
-    expect(again.poisoned).toBe(0);
-    expect(again.skipped_stale).toBe(9);
+    expect(again).toMatchObject({ settled: 0, recorded: 0, poisoned: 0, skipped_stale: events });
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_settlements`)).toBe(5);
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_invoices`)).toBe(5);
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_outbox`)).toBe(5);
-    // والنقطةُ أُعيدَ بناؤُها إلى آخرِ حدث.
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_relay_checkpoint`)).toBe(1);
   });
 
-  it("database failure mid-transaction rolls back invoice + settlement + ledger; retry settles once", async () => {
-    const eventId = await insertOrderEvent(source, {
-      occurredAt: "2026-09-27T11:00:00.000001Z",
-      data: completedOrder(1, 10000),
-    });
-    // فشلٌ حقيقيٌّ من القاعدة: الإدراجُ في الصادرِ يُرفَضُ بعدَ أن كُتبت الفاتورةُ والتسوية.
+  it("database failure mid-transaction rolls back invoice + settlement + snapshot link + ledger; retry settles once", async () => {
+    const o = orderRef(1);
+    await insertDeliveryEvent(source, createdRow(o, 10000, 0, { occurredAt: "2026-09-27T11:00:00.000001Z" }));
+    const deliveredId = await insertDeliveryEvent(source, deliveredRow(o, { occurredAt: "2026-09-27T11:00:01.000001Z" }));
     await billing.query(`
-      CREATE OR REPLACE FUNCTION m5_17p_fail_outbox() RETURNS trigger AS $$
-      BEGIN RAISE EXCEPTION 'm5-17p injected outbox failure'; END $$ LANGUAGE plpgsql`);
+      CREATE OR REPLACE FUNCTION m5_17q_fail_outbox() RETURNS trigger AS $$
+      BEGIN RAISE EXCEPTION 'm5-17q injected outbox failure'; END $$ LANGUAGE plpgsql`);
     await billing.query(`
-      CREATE TRIGGER m5_17p_fail_outbox BEFORE INSERT ON billing_outbox
-      FOR EACH ROW EXECUTE FUNCTION m5_17p_fail_outbox()`);
+      CREATE TRIGGER m5_17q_fail_outbox BEFORE INSERT ON billing_outbox
+      FOR EACH ROW EXECUTE FUNCTION m5_17q_fail_outbox()`);
     const deps = postgresRelayDeps(billing, source);
     try {
       const failed = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
-      expect(failed.pending).toBe(1);
-      expect(failed.settled).toBe(0);
+      expect(failed).toMatchObject({ recorded: 1, pending: 1, settled: 0 });
       expect(await count(billing, `SELECT count(*)::text AS n FROM billing_invoices`)).toBe(0);
       expect(await count(billing, `SELECT count(*)::text AS n FROM billing_settlements`)).toBe(0);
-      expect(await count(billing, `SELECT count(*)::text AS n FROM billing_relay_consumed_events`)).toBe(0);
-      expect(await count(billing, `SELECT count(*)::text AS n FROM billing_relay_checkpoint`)).toBe(0);
+      expect(
+        await count(billing, `SELECT count(*)::text AS n FROM billing_store_order_snapshots WHERE settlement_id IS NOT NULL`),
+      ).toBe(0);
+      expect(
+        await count(billing, `SELECT count(*)::text AS n FROM billing_relay_consumed_events WHERE status = 'settled'`),
+      ).toBe(0);
     } finally {
-      await billing.query(`DROP TRIGGER IF EXISTS m5_17p_fail_outbox ON billing_outbox`);
-      await billing.query(`DROP FUNCTION IF EXISTS m5_17p_fail_outbox()`);
+      await billing.query(`DROP TRIGGER IF EXISTS m5_17q_fail_outbox ON billing_outbox`);
+      await billing.query(`DROP FUNCTION IF EXISTS m5_17q_fail_outbox()`);
     }
 
     const retried = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
     expect(retried.settled).toBe(1);
-    expect(retried.checkpoint.last_event_id).toBe(eventId);
+    expect(retried.checkpoint.last_event_id).toBe(deliveredId);
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_settlements`)).toBe(1);
     expect(await count(billing, `SELECT count(*)::text AS n FROM billing_outbox`)).toBe(1);
   });
 
-  it("two concurrent relay processes settle each completed order exactly once", async () => {
+  it("two concurrent relay processes settle each delivered order exactly once", async () => {
+    const tick = ticker("2026-09-27T12:00:00.000000Z");
     for (let i = 0; i < 20; i++) {
-      await insertOrderEvent(source, {
-        occurredAt: `2026-09-27T12:00:${String(i).padStart(2, "0")}.000000Z`,
-        data: completedOrder(i + 1, 1000 + i),
-      });
+      const o = orderRef(i + 1);
+      await insertDeliveryEvent(source, createdRow(o, 1000 + i, 0, { occurredAt: tick() }));
+      await insertDeliveryEvent(source, deliveredRow(o, { occurredAt: tick() }));
     }
     const otherBilling = newPool();
     try {
@@ -217,10 +237,10 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
   });
 
   it("checkpoint keeps microsecond precision — the last row is not re-read", async () => {
-    const id = await insertOrderEvent(source, {
-      occurredAt: "2026-09-27T13:00:00.654321Z",
-      data: completedOrder(1, 5000),
-    });
+    const id = await insertDeliveryEvent(
+      source,
+      createdRow(orderRef(1), 5000, 0, { occurredAt: "2026-09-27T13:00:00.654321Z" }),
+    );
     const deps = postgresRelayDeps(billing, source);
     const first = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
     expect(first.checkpoint).toEqual({ last_occurred_at: "2026-09-27T13:00:00.654321Z", last_event_id: id });
@@ -236,6 +256,23 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
          VALUES ('c', gen_random_uuid(), 'settled')`,
       ),
     ).rejects.toThrow(/billing_relay_settled_has_settlement/);
+  });
+
+  it("snapshots reject a non-SAR currency and a negative total (DB constraints)", async () => {
+    await expect(
+      billing.query(
+        `INSERT INTO billing_store_order_snapshots
+           (order_id, order_public_id, store_id, store_slug, currency_code, items_total_minor_units, delivery_fee_minor_units, source_event_id)
+         VALUES (gen_random_uuid(), 'WS-0000000001', gen_random_uuid(), 's-x', 'USD', 1, 0, gen_random_uuid())`,
+      ),
+    ).rejects.toThrow(/currency/);
+    await expect(
+      billing.query(
+        `INSERT INTO billing_store_order_snapshots
+           (order_id, order_public_id, store_id, store_slug, currency_code, items_total_minor_units, delivery_fee_minor_units, source_event_id)
+         VALUES (gen_random_uuid(), 'WS-0000000001', gen_random_uuid(), 's-x', 'SAR', -1, 0, gen_random_uuid())`,
+      ),
+    ).rejects.toThrow(/items_total/);
   });
 });
 

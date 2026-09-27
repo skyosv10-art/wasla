@@ -287,6 +287,30 @@ importers:
         specifier: 3.2.7
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
 
+  packages/billing-e2e:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@wasla/billing-service':
+        specifier: workspace:*
+        version: link:../../services/billing
+      '@wasla/delivery-service':
+        specifier: workspace:*
+        version: link:../../services/delivery
+      '@wasla/service-auth':
+        specifier: workspace:*
+        version: link:../service-auth
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
+
   packages/bot-runtime:
     dependencies:
       '@wasla/channel-core':

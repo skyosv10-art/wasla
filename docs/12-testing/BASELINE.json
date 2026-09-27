@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "f34f79a1860a05d4a7a9be4249a734cdd3bb026f9436d6d85ec2fd07b3b5f038",
-    "lines": 4962
+    "sha256": "1ecd859bd6cb39644d43a7a91cdb73ac062caa2f6aa752126a09100fe33ff12b",
+    "lines": 4986
   },
   "static": {
-    "packages": 70,
-    "packages_with_typecheck": 66,
-    "packages_with_test": 70,
-    "test_files_tracked": 513,
+    "packages": 71,
+    "packages_with_typecheck": 67,
+    "packages_with_test": 71,
+    "test_files_tracked": 515,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:71423c7ce69c42f5fd88dffc75adf2cdfc62a310e061d42168a5e35c19676945",
+  "fingerprint": "sha256:bdaf6aea65b197d950c901fd20327c48b266c7a01ec8f0fd9571677fbe3d487c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

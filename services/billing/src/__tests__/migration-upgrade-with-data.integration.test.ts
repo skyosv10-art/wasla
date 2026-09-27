@@ -147,9 +147,38 @@ describe.skipIf(!PG_ENABLED)("billing migrations — upgrade with existing data"
       ),
     ).rejects.toThrow(/foreign key/);
 
-    // 5) التراجعُ عن الأخير.
-    const last = migrations[migrations.length - 1];
-    await applySqlFile(client, last.down);
+    // M5-17Q (0002): لقطةُ طلبٍ مربوطةٌ بالتسويةِ وصفُّ دفترٍ بحالةِ `recorded`.
+    await client.query(
+      `INSERT INTO billing_store_order_snapshots
+         (order_id, order_public_id, store_id, store_slug, currency_code,
+          items_total_minor_units, delivery_fee_minor_units, source_event_id, settlement_id)
+       VALUES (gen_random_uuid(), 'WS-3000000001', gen_random_uuid(), 'madinah-electronics', 'SAR',
+               10000, 1500, gen_random_uuid(), $1)`,
+      [SEED.settlementId],
+    );
+    await client.query(
+      `INSERT INTO billing_relay_consumed_events (consumer_id, event_id, status)
+       VALUES ('billing-relay', gen_random_uuid(), 'recorded')`,
+    );
+    await expect(
+      client.query(
+        `INSERT INTO billing_store_order_snapshots
+           (order_id, order_public_id, store_id, store_slug, currency_code,
+            items_total_minor_units, delivery_fee_minor_units, source_event_id, settlement_id)
+         VALUES (gen_random_uuid(), 'WS-3000000002', gen_random_uuid(), 'madinah-electronics', 'SAR',
+                 1, 0, gen_random_uuid(), $1)`,
+        [SEED.settlementId],
+      ),
+    ).rejects.toThrow(/settlement_id_unique/);
+
+    // 5) التراجعُ عن كلِّ ما بعدَ الأساسِ بترتيبٍ عكسيٍّ — كلُّ `.down.sql` يُنفَّذُ على بياناتٍ حيّة.
+    const later = migrations.filter((m) => m.idx >= 1).sort((a, b) => b.idx - a.idx);
+    await applySqlFile(client, later[0].down);
+    const afterLast = await client.query<{ status: string }>(
+      `SELECT status FROM billing_relay_consumed_events ORDER BY status`,
+    );
+    expect(afterLast.rows.map((r) => r.status)).toEqual(["settled"]);
+    for (const m of later.slice(1)) await applySqlFile(client, m.down);
     const tables = await client.query<{ tablename: string }>(
       `SELECT tablename FROM pg_tables WHERE schemaname = $1 ORDER BY tablename`,
       ["public"],

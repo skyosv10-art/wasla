@@ -15,6 +15,13 @@
       "when": 1790500000000,
       "tag": "0001_relay_persistence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0002_delivery_order_snapshots",
+      "breakpoints": true
     }
   ]
 }

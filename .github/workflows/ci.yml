@@ -599,6 +599,11 @@ jobs:
             pkg: "@wasla/partners-e2e"
             db: wasla_partners_e2e
             var: DATABASE_URL
+          # `M5-17Q` · حدثُ اكتمالٍ حقيقيٌّ من حدِّ التوصيلِ → فاتورةٌ + تسويةٌ مرّةً واحدةً.
+          - leg: billing
+            pkg: "@wasla/billing-e2e"
+            db: wasla_billing_e2e
+            var: DATABASE_URL
     services:
       postgres:
         image: postgres:15

@@ -9,44 +9,34 @@ import {
   InMemoryConsumedEventLedger,
   InMemoryEventPublisher,
   InMemoryInvoiceStore,
-  InMemoryOrderEventSource,
+  InMemoryDeliveryEventSource,
   InMemoryRelayCheckpointStore,
   InMemoryRelayConsumerLock,
   InMemoryRelayTransactionRunner,
   InMemorySettlement,
+  InMemoryStoreOrderSnapshotStore,
   type RelayDeps,
 } from "../ports.js";
 import { DEFAULT_RELAY_CONFIG, type RelayBatchResult } from "../relay.js";
 import { startRelayLoop } from "../relay-loop.js";
+import { createdRow, deliveredRow, orderRef } from "./delivery-events.js";
+
+const ORDER = orderRef(1);
 
 function deps(): RelayDeps & { settlements: InMemorySettlement } {
   const settlements = new InMemorySettlement();
   const ledger = new InMemoryConsumedEventLedger();
   return {
-    events: new InMemoryOrderEventSource([
-      {
-        event_id: "00000000-0000-0000-0000-000000000001",
-        event_type: "order.status_changed",
-        event_version: "v1",
-        aggregate_type: "order",
-        aggregate_id: "o1",
-        occurred_at: "2026-09-01T00:00:00Z",
-        trace_id: null,
-        data: {
-          order_public_id: "ORD-0000000001",
-          store_public_id: "WS-0000000001",
-          customer_public_id: "CUST-0000000001",
-          from_status: "assigned",
-          to_status: "completed",
-          order_total_cents: 10000,
-        },
-      },
+    events: new InMemoryDeliveryEventSource([
+      createdRow(ORDER, 10000, 0, { occurredAt: "2026-09-01T00:00:00.000000Z" }),
+      deliveredRow(ORDER, { occurredAt: "2026-09-01T00:00:01.000000Z" }),
     ]),
     transaction: new InMemoryRelayTransactionRunner({
       invoices: new InMemoryInvoiceStore(),
       settlements,
       publisher: new InMemoryEventPublisher(),
       ledger,
+      snapshots: new InMemoryStoreOrderSnapshotStore(),
     }),
     ledger,
     settlements,

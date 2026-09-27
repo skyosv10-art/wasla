@@ -9,10 +9,11 @@
 export * from "./domain/model.js";
 export * from "./domain/errors.js";
 export {
-  type OrderOutboxRow,
+  type DeliveryOutboxRow,
   type RelayCheckpoint,
   type ConsumedStatus,
-  classifyOrderEvent,
+  type StoreOrderSnapshot,
+  classifyDeliveryEvent,
   SETTLEMENT_TRIGGER_STATES,
   ZERO_CHECKPOINT,
   isBefore,

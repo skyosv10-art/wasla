@@ -1,0 +1,20 @@
+{
+  "name": "@wasla/billing-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WASLA M5-17Q exit gate — مُرحِّلُ الفوترةِ على صفوفٍ يكتبُها منتِجُ التوصيلِ الحقيقيُّ: طلبٌ يُوضَعُ ويُؤكَّدُ ويُسلَّمُ عبرَ حدِّ التوصيلِ (HTTP) ومخزنِ طلباتِهِ على PostgreSQL، ثمَّ يُسوّيهِ المُرحِّلُ فاتورةً وتسويةً مرّةً واحدةً بلا تسميم.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "@wasla/billing-service": "workspace:*",
+    "@wasla/delivery-service": "workspace:*",
+    "@wasla/service-auth": "workspace:*",
+    "pg": "^8.23.0",
+    "vitest": "^2.1.0"
+  }
+}

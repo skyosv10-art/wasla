@@ -45,14 +45,14 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M5-17",
   },
   {
-    name: "BILLING_ORDER_EVENTS_DATABASE_URL",
+    name: "BILLING_DELIVERY_EVENTS_DATABASE_URL",
     type: "postgres_url",
     required: "optional",
     secret: true,
     default: null,
     scopes: ["runtime"],
     readerCount: 1,
-    ownerItem: "M5-17P",
+    ownerItem: "M5-17Q",
   },
   {
     name: "CI",
@@ -151,7 +151,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: true,
     default: null,
     scopes: ["runtime", "test", "tooling"],
-    readerCount: 97,
+    readerCount: 98,
     ownerItem: "M2-04",
   },
   {
@@ -869,7 +869,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
 export const ENV_VAR_NAMES = [
   "BILLING_DATABASE_URL",
-  "BILLING_ORDER_EVENTS_DATABASE_URL",
+  "BILLING_DELIVERY_EVENTS_DATABASE_URL",
   "CI",
   "COMMUNITY_GROUP_CHAT_IDS",
   "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",

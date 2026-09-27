@@ -6839,3 +6839,9 @@ M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main
 - **فجوةٌ مُعلَنةٌ (قرارُ مالك):** مُصنِّفُ المُرحِّلِ يطلبُ `store_public_id` و`order_total_cents` في `order.status_changed`، وعقدُ `OrderStatusChangedV1` لا يحملُهما (`additionalProperties: false`)، وADR-050 «العواقب» (3) يرفضُ الحقولَ الماليّةَ في `services/orders`. اختبارُ البوّابةِ يزرعُ حمولةَ المُصنِّفِ لا حمولةَ المنتِجِ الحقيقي — فهوَ يُثبِتُ الاستدامةَ والتسويةَ لا توافقَ المصدر. ملحقُ ADR-050 يُفصِّل.
 - **ما لا يُدَّعى:** حمايةُ الفرعِ الحيّةُ على GitHub لم تُحدَّث (34 سياقاً، لا partners ولا billing) — `MERGE_BLOCKING.json` يتبعُ نمطَ المستودع. لا نشرَ ولا تشغيلَ على قاعدةِ الإنتاج. M5-17P لا يُنقَلُ إلى Ready for Gate قبلَ CI أخضرَ على `main`، ولا إلى Completed إلّا بقرارِ المالك.
 
+## 2026-09-27 — CLM-0375 Released (§8.1) · M5-17P → Ready for Gate
+
+- **Work Item(s):** M5-17P · PR [#509](https://github.com/skyosv10-art/wasla/pull/509) merged squash `3552ad3` — 41/41 على الـPR، ومنها `db-integration (billing)` على Postgres 15: 2 ملفّانِ · 10/10.
+- **main @ `3552ad3`:** [run 36303678800](https://github.com/skyosv10-art/wasla/actions/runs/36303678800) — 37 ناجحةً؛ `verify` و`governance-guard` أخفقا بفحصِ «بياتِ الحجوزات» وحدَهُ (CLM-0375 نشطٌ وفرعُهُ محذوفٌ بعدَ الدمج) — يُعالِجُهُ هذا الإطلاق.
+- **Status:** In Progress → Ready for Gate. لا `Completed` — قرارُ المالكِ وحدَهُ، وفجوةُ مصدرِ الحدثِ (`OrderStatusChangedV1` بلا `store_public_id`/`order_total_cents`) مفتوحةٌ للقرار.
+

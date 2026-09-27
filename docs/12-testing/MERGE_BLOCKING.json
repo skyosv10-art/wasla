@@ -3,9 +3,9 @@
   "provider": "github",
   "repository": "skyosv10-art/wasla",
   "branch": "main",
-  "measured_at": "2026-09-22T12:30:00Z",
+  "measured_at": "2026-09-27T23:55:00Z",
   "measured_from": "GET /repos/skyosv10-art/wasla/branches/main/protection",
-  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-22T034500Z-corrected-contexts",
+  "evidence_dir": "docs/12-testing/ci-evidence/2026-09-27T235500Z-m5-17bp-billing-contexts-added",
   "protection": {
     "required_status_checks": {
       "strict": true,

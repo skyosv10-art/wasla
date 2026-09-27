@@ -16,7 +16,7 @@
  *   if (!breaker.before()) throw new Error("circuit open");
  *   try {
  *     const result = await bulkhead.execute(() =>
- *       withTimeout(fetch(url), { timeoutMs: 5_000 })
+ *       withTimeout(someAsyncOp(), { timeoutMs: 5_000 })
  *     );
  *     breaker.onSuccess();
  *   } catch (err) {

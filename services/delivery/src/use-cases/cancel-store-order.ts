@@ -162,8 +162,13 @@ export async function cancelStoreOrder(
         });
         await deps.reservationStore.releaseReservations(order.orderId);
 
-        // Mirror the inventory state to released
-        await deps.writePort.mirrorInventoryState({
+        // Mirror the inventory state to released. M5-13M (CLM-0378): the
+        // mirror bumps the version AND rewrites every stored idempotency
+        // response for this order, so the caller must receive the SAME
+        // post-release order a retry would replay — returning the pre-release
+        // `result` made the first answer (vN) differ from its replay (vN+1).
+        // Hidden until the reservation fake started storing rows.
+        const mirrored = await deps.writePort.mirrorInventoryState({
           orderId: order.orderId,
           expectedVersion: order.version + 1,
           fromInventoryState: "reserved",
@@ -179,6 +184,7 @@ export async function cancelStoreOrder(
           ],
           traceId,
         });
+        if (mirrored.kind === "applied") return { kind: "applied" as const, order: mirrored.order };
       }
     }
 

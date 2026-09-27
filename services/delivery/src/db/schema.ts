@@ -682,9 +682,7 @@ export const deliveryInventoryReservations = pgTable(
       table.orderId,
       table.productId,
     ),
-    unique("delivery_inventory_reservations_marketplace_reservation_ref_key").on(
-      table.marketplaceReservationRef,
-    ),
+    // M5-13M (`0005`): لا تفرّدَ على `marketplace_reservation_ref` — مرجعُ طلبٍ يتكرّرُ على أصنافِهِ.
     check(
       "delivery_inventory_reservations_store_slug_check",
       sql`${table.storeSlug} ~ '^[a-z][a-z0-9-]{2,47}$'`,

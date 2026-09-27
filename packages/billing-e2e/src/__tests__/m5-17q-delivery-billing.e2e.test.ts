@@ -224,12 +224,16 @@ describe.skipIf(!ENABLED)("M5-17Q — delivery (real producer) → billing relay
   }
 
   it("a real delivered store order → exactly one invoice + one settlement + one fee_settled, zero poisoned", async () => {
-    // سطرٌ واحدٌ عن قصد: الطلبُ متعدِّدُ الأسطرِ يصطدمُ اليومَ بقيدِ
-    // `delivery_inventory_reservations.marketplace_reservation_ref UNIQUE` (مرجعُ حجزٍ واحدٌ
-    // لكلِّ الأسطر) — عيبٌ في حدِّ التوصيلِ خارجَ هذا البند، مُسجَّلٌ في ملحقِ ADR-050.
-    const order = await placeAndConfirm([{ product_id: PRODUCT_A, quantity: 3 }]);
+    // سطرانِ (M5-13M · CLM-0378): قبلَ ترحيلِ التوصيلِ `0005` كانَ الطلبُ متعدِّدُ الأسطرِ يسقطُ
+    // بـ500 على `UNIQUE (marketplace_reservation_ref)` فاقتصرَ هذا الاختبارُ على سطرٍ واحد.
+    // والرسمُ يُقاسُ على مجموعِ الأصنافِ **كلِّها** (بلا توصيل) — لا على السطرِ الأوّل.
+    const order = await placeAndConfirm([
+      { product_id: PRODUCT_A, quantity: 3 },
+      { product_id: PRODUCT_B, quantity: 2 },
+    ]);
     const publicId = order.public_id as string;
-    const itemsTotal = PRICES[PRODUCT_A] * 3;
+    const itemsTotal = PRICES[PRODUCT_A] * 3 + PRICES[PRODUCT_B] * 2;
+    expect((order.items as unknown[]).length).toBe(2);
     expect(order.items_total_minor_units).toBe(itemsTotal);
     await deliver(publicId);
 
@@ -273,7 +277,10 @@ describe.skipIf(!ENABLED)("M5-17Q — delivery (real producer) → billing relay
       await deliver(o.public_id as string);
       delivered.push(PRICES[PRODUCT_A] * q);
     }
-    const cancelled = await placeAndConfirm([{ product_id: PRODUCT_B, quantity: 5 }]);
+    const cancelled = await placeAndConfirm([
+      { product_id: PRODUCT_B, quantity: 5 },
+      { product_id: PRODUCT_A, quantity: 1 },
+    ]);
     const c = await call(app, "POST", `/store-orders/${cancelled.public_id as string}/cancellation`, {
       reason_code: "CUSTOMER_CHANGED_MIND",
     }, nextKey("cancel"));

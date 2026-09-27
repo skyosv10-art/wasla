@@ -419,7 +419,9 @@ docs/16-progress/MASTER_PROGRESS.md
 
 ## 3. الحجوزات المحرَّرة (Released)
 
-| CLM-0382 | M6-18C | @uxxxu (agent:perplexity-computer) | feat/m6-18c-observability-operating-model | docs/08-infrastructure/OBSERVABILITY_OPERATING_MODEL.md,docs/15-decisions/ADR-053-observability-operating-model.md,docs/12-testing/M6-18C_GATE.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,ROADMAP.md | 2026-09-28 | 2026-10-12 | Active | M6-18C: observability operating model — alert rules, runbooks, live-fire evidence, on-call rotation. |
+| CLM-0383 | M6-19A | @uxxxu (agent:perplexity-computer) | feat/m6-19a-pentest-plan | docs/07-security/PENTEST_PLAN.md,docs/15-decisions/ADR-054-pentest-scope.md,docs/12-testing/M6-19A_GATE.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,ROADMAP.md | 2026-09-28 | 2026-10-12 | Active | M6-19A: independent pentest plan — scope, methodology, procurement requirements, remediation tracking. |
+
+| CLM-0382 | M6-18C | @uxxxu (agent:perplexity-computer) | feat/m6-18c-observability-operating-model | docs/08-infrastructure/OBSERVABILITY_OPERATING_MODEL.md,docs/15-decisions/ADR-053-observability-operating-model.md,docs/12-testing/M6-18C_GATE.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,ROADMAP.md | 2026-09-28 | 2026-10-12 | Released | PR #521 merged (squash). M6-18C Ready for Gate: 10 alert rules, 5 runbooks, on-call, dashboards. |
 
 | CLM-0381 | M6-18B | @uxxxu (agent:perplexity-computer) | feat/m6-18b-ha-capacity-dr | docs/08-infrastructure/HA_CAPACITY_DR.md,docs/15-decisions/ADR-052-ha-capacity-dr.md,docs/12-testing/M6-18B_DRILL.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md,docs/16-progress/TASK_LOG.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/WORK_INDEX.md,ROADMAP.md | 2026-09-28 | 2026-10-12 | Released | PR #520 merged (squash). M6-18B Ready for Gate: HA/DR architecture, RTO/RPO targets, DR drill procedure. |
 

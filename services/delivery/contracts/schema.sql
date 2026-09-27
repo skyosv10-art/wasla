@@ -441,7 +441,7 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_reservations (
     quantity_reserved  INTEGER     NOT NULL CHECK (quantity_reserved >= 1),
     unit_price_minor_units  INTEGER NOT NULL CHECK (unit_price_minor_units >= 0),
 
-    -- مرجعُ الحجزِ في السوقِ (idempotency key مشتقٌّ من order_public_id)
+    -- مرجعُ الحجزِ في السوقِ (idempotency key مشتقٌّ من order_public_id) — واحدٌ للطلبِ كلِّهِ
     marketplace_reservation_ref TEXT NOT NULL CHECK (char_length(marketplace_reservation_ref) BETWEEN 1 AND 128),
 
     status             TEXT        NOT NULL DEFAULT 'active' CHECK (status IN (
@@ -450,8 +450,9 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_reservations (
     released_at        TIMESTAMPTZ,
     trace_id           TEXT,
 
-    UNIQUE (order_id, product_id) DEFERRABLE INITIALLY DEFERRED,
-    UNIQUE (marketplace_reservation_ref)
+    -- M5-13M: لا `UNIQUE (marketplace_reservation_ref)` — المرجعُ مرجعُ طلبٍ يتكرّرُ على أصنافِهِ
+    -- (ترحيلُ `0005`). التفرّدُ هوَ الصنفُ داخلَ الطلب.
+    UNIQUE (order_id, product_id) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX IF NOT EXISTS ix_delivery_inventory_reservations_order

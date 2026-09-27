@@ -26,7 +26,7 @@
     "packages": 71,
     "packages_with_typecheck": 67,
     "packages_with_test": 71,
-    "test_files_tracked": 515,
+    "test_files_tracked": 519,
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 7,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:bdaf6aea65b197d950c901fd20327c48b266c7a01ec8f0fd9571677fbe3d487c",
+  "fingerprint": "sha256:9f8a4c06589d56fd5d6c4ba2c29323d2890582ad7076e340d6ffca0a44d93c8b",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

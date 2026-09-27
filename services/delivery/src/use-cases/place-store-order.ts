@@ -51,7 +51,7 @@
  * retry differs.
  */
 
-import type { StoreSlug } from "@wasla/contracts-delivery";
+import type { StoreSlug, WaslaPublicId } from "@wasla/contracts-delivery";
 
 import { DeliveryError } from "../domain/errors.js";
 import { buildReservationCommand } from "../domain/inventory-reservation.js";
@@ -145,14 +145,45 @@ export async function placeStoreOrder(
 
   const outcome = await deps.writePort.placeOrder(write);
   if (outcome.kind === "replayed") {
-    const storedOrder = await deps.readPort.getOrderByPublicId(publicId);
+    // M5-13M (CLM-0378): the replayed order is the one named in the STORED
+    // response, not `publicId` — that was freshly drawn from the sequence for
+    // THIS attempt and belongs to no order, so the old lookup always missed and
+    // a placed-but-unreserved order was never healed by its own retry.
+    const replayedPublicId = (outcome.body as { public_id?: unknown } | null)?.public_id;
+    const storedOrder =
+      typeof replayedPublicId === "string"
+        ? await deps.readPort.getOrderByPublicId(replayedPublicId as WaslaPublicId)
+        : null;
     if (storedOrder && storedOrder.inventoryState === "none") {
-      return await completeReservation(deps, storedOrder, occurredAt, traceId);
+      try {
+        return await completeReservation(deps, storedOrder, occurredAt, traceId);
+      } catch (error) {
+        // A retry that races the FIRST attempt (still between placement and
+        // mirror) finds the same order unreserved and completes it too: the
+        // marketplace answers both from one idempotency key, but only one can
+        // write the rows (`UNIQUE (order_id, product_id)` → 23505) or win the
+        // mirror (`DELIVERY_CONCURRENT_UPDATE`). The loser is not a failure of
+        // the order — the original request is still in flight, and the answer
+        // it already has for that case is the retryable in-flight refusal.
+        if (isRacingCompletion(error)) {
+          throw new DeliveryError(
+            "DELIVERY_IDEMPOTENT_REQUEST_IN_FLIGHT",
+            "طلبٌ بالمفتاحِ نفسِهِ يُعالَجُ الآنَ — أعِد بالمفتاحِ نفسِهِ بعدَ لحظةٍ",
+            { traceId: traceId ?? undefined, details: { field: "Idempotency-Key" } },
+          );
+        }
+        throw error;
+      }
     }
     return outcome;
   }
 
   return await completeReservation(deps, order, occurredAt, traceId);
+}
+
+function isRacingCompletion(error: unknown): boolean {
+  if (error instanceof DeliveryError) return error.code === "DELIVERY_CONCURRENT_UPDATE";
+  return (error as { code?: string } | null)?.code === "23505";
 }
 
 /**
@@ -194,7 +225,14 @@ async function completeReservation(
     reservedAt: occurredAt,
     traceId,
   }));
-  await deps.reservationStore.saveReservations(order.orderId, reservations);
+  // M5-13M: a retry after "rows saved, mirror failed" must not insert the
+  // lines again — `UNIQUE (order_id, product_id)` would refuse them and the
+  // order would stay unreserved forever. The rows already there are the
+  // marketplace's single reservation for this order (same ref), so reuse them.
+  const existing = await deps.reservationStore.loadActiveReservations(order.orderId);
+  if (existing.length === 0) {
+    await deps.reservationStore.saveReservations(order.orderId, reservations);
+  }
 
   const mirrored = await deps.writePort.mirrorInventoryState({
     orderId: order.orderId,

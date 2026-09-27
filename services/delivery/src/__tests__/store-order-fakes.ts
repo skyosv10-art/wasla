@@ -37,6 +37,7 @@ import type {
   IdempotencyIntent,
   PlaceOrderOutcome,
   PlacementWrite,
+  ReservationRecord,
   ReadinessCheckResult,
   ReadinessProbePort,
   StoreOrderCatalogPort,
@@ -337,22 +338,82 @@ export class FakeReservationPort implements InventoryReservationPort {
 }
 
 /**
- * A fake `InventoryReservationStore` (review 10/N) — a no-op store.
+ * A fake `InventoryReservationStore` that enforces the SAME row constraints as
+ * `delivery_inventory_reservations` (M5-13M · CLM-0378).
  *
- * `saveReservations()` stores nothing, `loadActiveReservations()` returns `[]`,
- * `releaseReservations()` and `consumeReservations()` return `0`.
+ * Before M5-13M this fake stored nothing, so every multi-line order test passed
+ * while the real table rejected the second line (`UNIQUE (marketplace_reservation_ref)`
+ * — one marketplace ref per ORDER written on every line). A fake that accepts what
+ * the database refuses is a test that proves nothing; this one refuses what the
+ * contract refuses:
+ *  - `UNIQUE (order_id, product_id)` — a product once per order;
+ *  - `UNIQUE (reservation_id)` (primary key);
+ *  - `char_length(marketplace_reservation_ref) BETWEEN 1 AND 128`;
+ *  - `quantity_reserved >= 1`, `unit_price_minor_units >= 0`.
+ * The marketplace ref is deliberately NOT unique: it is shared by the order's lines.
+ *
+ * Reads mirror the SQL adapter: only `active` rows are loaded; release/consume
+ * flip `active` rows and return the count. `saveReservations` is all-or-nothing
+ * like the adapter's transaction.
  */
 export class FakeReservationStore implements InventoryReservationStore {
-  async saveReservations(): Promise<void> {}
-  async loadActiveReservations(): Promise<readonly never[]> {
-    return [];
+  readonly rows = new Map<string, ReservationRecord>();
+
+  async saveReservations(_orderId: string, reservations: readonly ReservationRecord[]): Promise<void> {
+    const staged = new Map(this.rows);
+    const pairs = new Set([...staged.values()].map((r) => `${r.orderId}|${r.productId}`));
+    for (const r of reservations) {
+      if (staged.has(r.reservationId)) throw uniqueViolation("delivery_inventory_reservations_pkey");
+      const pair = `${r.orderId}|${r.productId}`;
+      if (pairs.has(pair)) throw uniqueViolation("delivery_inventory_reservations_order_id_product_id_key");
+      if (r.marketplaceReservationRef.length < 1 || r.marketplaceReservationRef.length > 128) {
+        throw checkViolation("delivery_inventory_reservatio_marketplace_reservation_ref_check");
+      }
+      if (r.quantityReserved < 1) throw checkViolation("delivery_inventory_reservations_quantity_reserved_check");
+      if (r.unitPriceMinorUnits < 0) throw checkViolation("delivery_inventory_reservations_unit_price_minor_units_check");
+      pairs.add(pair);
+      staged.set(r.reservationId, { ...r, status: "active" });
+    }
+    this.rows.clear();
+    for (const [k, v] of staged) this.rows.set(k, v);
   }
-  async releaseReservations(): Promise<number> {
-    return 0;
+
+  async loadActiveReservations(orderId: string): Promise<readonly ReservationRecord[]> {
+    return [...this.rows.values()].filter((r) => r.orderId === orderId && r.status === "active");
   }
-  async consumeReservations(): Promise<number> {
-    return 0;
+
+  async releaseReservations(orderId: string): Promise<number> {
+    return this.flip(orderId, "released");
   }
+
+  async consumeReservations(orderId: string): Promise<number> {
+    return this.flip(orderId, "consumed");
+  }
+
+  private flip(orderId: string, status: "released" | "consumed"): number {
+    let n = 0;
+    for (const [k, r] of this.rows) {
+      if (r.orderId === orderId && r.status === "active") {
+        this.rows.set(k, { ...r, status });
+        n += 1;
+      }
+    }
+    return n;
+  }
+}
+
+function uniqueViolation(constraint: string): Error {
+  return Object.assign(new Error(`duplicate key value violates unique constraint "${constraint}"`), {
+    code: "23505",
+    constraint,
+  });
+}
+
+function checkViolation(constraint: string): Error {
+  return Object.assign(new Error(`new row violates check constraint "${constraint}"`), {
+    code: "23514",
+    constraint,
+  });
 }
 
 export function fixedOrder(overrides: Partial<StoreOrder> = {}): StoreOrder {

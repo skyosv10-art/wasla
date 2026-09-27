@@ -112,8 +112,12 @@ export class HttpMarketplaceReservationPort implements InventoryReservationPort 
     const idempotencyKey = releaseIdempotencyKey(req.orderPublicId);
     const path = releasePath(req.storeSlug);
     const body = JSON.stringify({
+      // M5-13M (CLM-0378): no `reservation_ref` — the marketplace's release body
+      // is `ReservationRequest` (`additionalProperties: false`: order_public_id,
+      // items, idempotency_key). Sending the ref made EVERY real release a 400,
+      // which this adapter reported as 503, so no reserved order could be
+      // cancelled. The order key is what identifies the reservation there.
       order_public_id: req.orderPublicId,
-      reservation_ref: req.reservationRef,
       items: req.items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
       idempotency_key: idempotencyKey,
     });

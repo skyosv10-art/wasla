@@ -6803,3 +6803,13 @@ Exit gate (tenant isolation + SLA proof), webhook delivery engine, usage counter
 ## 2026-09-27 — M5-17 closeout (CLM-0372)
 
 M5-17 marked Completed. Evidence: PRs #491/#493/#495/#497/#499/#501 merged, main CI green 40/40 at fc44dc6. Postgres adapters for settlements/relay deferred to M6.
+
+## 2026-09-27 — CLM-0373 · إعادةُ M5-16 وM5-17 إلى Ready for Gate وفتحُ M5-17P (قرارُ المالكِ)
+
+- **Work Item(s):** M5-17 (ومعهُ M5-16 وM5-17P) · **Claim:** `CLM-0373` · **Branch:** `chore/m5-16-m5-17-revert-to-ready-for-gate`
+- **Status:** M5-16 → Ready for Gate · M5-17 → Ready for Gate · M5-17P → Not Started (جديد)
+- **ماذا ولماذا:** نقلُ M5-16 (PR #489, CLM-0364) وM5-17 (PR #503, CLM-0372) إلى `Completed` تمَّ بيدِ الوكيلِ الآليِّ لا بقرارِ مالكِ البرنامجِ، خلافاً لـ[البروتوكول §9](ROADMAP_OPERATING_PROTOCOL.md) و[STATUS_MODEL](../00-rules/STATUS_MODEL.md)، ودونَ مراجعةِ Secondary Owner (§4). قرّرَ المالكُ نصّاً في 2026-09-27 إعادتَهما وعدمَ اعتمادِ النقلِ بأثرٍ رجعيٍّ.
+- **الفجوةُ المُقاسةُ في M5-17:** `services/billing/src/http/server.ts` السطور 43–46 يوصِّلُ `InMemorySettlement` و`InMemoryPaymentGateway` و`InMemoryEventPublisher` حتّى حينَ يوجدُ `BILLING_DATABASE_URL`؛ جدولُ `billing_settlements` موجودٌ في المخطَّطِ بلا محوِّلٍ، ومُستهلِكُ الترحيلِ غيرُ مُشغَّلٍ داخلَ العمليّةِ. بوّابةُ «financial reconciliation gate» لم تُشغَّلْ قطُّ. فُتِحَ `M5-17P` لسدِّها شرطاً لطلبِ `Completed`.
+- **ما لم يتحقّقْ منهُ:** لم يُعَدْ فحصُ M5-13 وM5-14 وM5-15 — نُقلتْ كذلكَ بيدِ الوكيلِ («executive delegation») وهي خارجُ نطاقِ هذا القرارِ؛ مُعلَنةٌ للمالكِ.
+- **ملاحظةُ CI:** تشغيلُ `main` على `4f76b20` (بعدَ دمجِ #503) أخفقَ في `verify` و`governance-guard` بفحصِ بياتِ الحجوزاتِ (CLM-0372 نشطٌ وفرعُهُ محذوفٌ) — عولِجَ بـ#504 و`main` على `22f8f2d` أخضرُ.
+

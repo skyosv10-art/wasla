@@ -7037,3 +7037,33 @@ Created observability operating model documentation:
 
 M6-19A (independent pentest) is blocked on M5+M6 completion.
 M7-01 (release candidate) is blocked on M6 completion.
+
+---
+
+## CLM-0383 · M6-19A — Independent Pentest Plan
+
+- **Work Item(s):** M6-19A · **Claim:** `CLM-0383` · **Branch:** `feat/m6-19a-pentest-plan` · **Status:** Not Started → Ready for Gate
+
+**Branch:** `feat/m6-19a-pentest-plan`  
+**Date:** 2026-09-28  
+**Status:** Ready for Gate (plan defined; execution requires external procurement)
+
+### What was done
+
+Created independent pentest plan and procurement document:
+- **PENTEST_PLAN.md:** Scope (16 services + Supabase + Render + CI/CD), methodology (OWASP Top 10 + API Top 10), procurement requirements (2 weeks, 2 testers, $8K–$15K), remediation process (critical/high block launch), exit criteria
+- **ADR-054:** Pentest scope and procurement decision
+- **M6-19A_GATE.md:** Gate evidence with checklist
+
+### Acceptance criteria
+
+- ✅ Pentest plan — scope, methodology, procurement, remediation
+- ✅ Exit criteria — no critical/high open
+- ⏳ Pentest execution — requires external procurement (owner action)
+- ⏳ Remediation — after pentest execution
+
+### Next
+
+M6-19B and M6-19C are blocked on M6-19A completion.
+M7 items are blocked on M6 completion.
+**Barrier:** External procurement required for pentest execution. Owner action needed.

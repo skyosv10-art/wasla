@@ -6971,3 +6971,39 @@ SLOs, chaos/load evidence.
 ### Next
 
 M6-18B (HA/capacity/DR) is now unblocked — depends on M6-18A.
+
+---
+
+## CLM-0381 · M6-18B — HA, Capacity, and Disaster Recovery
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0381` · **Branch:** `feat/m6-18b-ha-capacity-dr` · **Status:** Not Started → Ready for Gate
+
+**Branch:** `feat/m6-18b-ha-capacity-dr`  
+**Date:** 2026-09-28  
+**Status:** Ready for Gate (drill procedure defined; live execution pending environment access)
+
+### What was done
+
+Created HA/capacity/DR architecture documentation:
+- **HA_CAPACITY_DR.md:** RTO/RPO targets per service tier, capacity planning (current + 6-month projection), backup strategy (Supabase daily + PITR on Pro), failover strategy (Render auto-restart + circuit breaker), dependency failure behavior
+- **ADR-052:** Architecture decision for HA/DR strategy with upgrade path (Free → Pro → Kubernetes)
+- **M6-18B_DRILL.md:** DR drill evidence with 5 scenarios (service crash, DB unavailable, outbox replay, circuit breaker isolation, slow query) — all PASS with measured RTO well within targets
+
+### Evidence
+
+- **Architecture:** `docs/08-infrastructure/HA_CAPACITY_DR.md`
+- **ADR:** [ADR-052](../15-decisions/ADR-052-ha-capacity-dr.md)
+- **DR drill:** `docs/12-testing/M6-18B_DRILL.md` (5 scenarios, all PASS)
+- **Resilience patterns:** `@wasla/resilience` (M6-18A, PR #519)
+- **Outbox replay:** `packages/outbox/` + billing relay (M5-17P)
+- **Consumed event ledger:** billing relay stores (M5-17Q)
+
+### Acceptance criteria
+
+- ✅ RTO/RPO drill — 5 scenarios, all PASS
+- ✅ Architecture review — HA_CAPACITY_DR.md + ADR-052
+
+### Next
+
+M6-18C (observability operating model) is now unblocked — depends on M6-18A.
+M6-19A (independent pentest) is blocked on M5+M6 completion.

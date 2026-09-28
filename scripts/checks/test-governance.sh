@@ -2981,7 +2981,10 @@ cp /tmp/CL.fixture "$CL"
 printf '\n### [2026-01-01] حالة اختبار — المدخل الموحّد\n\n- **Work Item(s):** %s\n- **Why:** حالة موجبة كاملة\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
 printf '\n<!-- حالة اختبار -->\n' >> "$BOARD"
 git add -A >/dev/null; git commit -qm "valid full state" >/dev/null
-t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD
+# (CLM-0392) الفحصُ 23 يقرأُ فروعَ المنصّةِ عبر gh — وفي /tmp لا يصلُ إلى GitHub.
+# نُعطيهِ ملفَّ فروعٍ وهميًّا يحتوي main وحدَهُ حتى يمرَّ الخطُّ الأساسيُّ.
+printf 'main\n' > /tmp/bfg_baseline_branches.txt
+t "verify-governance يعمل في سياق git" pass env WASLA_BRANCHES_FILE=/tmp/bfg_baseline_branches.txt bash scripts/checks/verify-governance.sh origin/main HEAD
 
 printf '\n\033[1m═══ النتيجة: %d ناجح · %d فاشل ═══\033[0m\n\n' "$PASS" "$FAIL"
 (( FAIL == 0 )) || exit 1

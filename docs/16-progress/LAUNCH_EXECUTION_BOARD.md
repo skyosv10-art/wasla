@@ -165,7 +165,7 @@
 | M6-18B | HA/capacity/DR | SRE/Data / Platform | M6-18A | Ready for Gate | RTO/RPO drill | architecture review. |
 | M6-18C | observability operating model | SRE / Ops | M6-18A | Ready for Gate | alert/live-fire evidence | runbook review. |
 | M6-19A | independent pentest/remediation | Security / All | M5,M6 | Ready for Gate | no critical/high open | procure/plan review. |
-| M6-19B | access/secret/audit review | Security / Platform | M6-19A | Not Started | periodic evidence | schedule controls. |
+| M6-19B | access/secret/audit review | Security / Platform | M6-19A | Ready for Gate | periodic evidence | schedule controls. **Implemented (CLM-0389):** [`ACCESS_SECRET_AUDIT_REVIEW.md`](../07-security/ACCESS_SECRET_AUDIT_REVIEW.md) — comprehensive review document covering repository access, service identity, database access, secret rotation (26 secrets), audit log integrity, and evidence collection schedule. [`validate-secret-rotation.sh`](../../scripts/checks/validate-secret-rotation.sh) — Check 24 (8/8 gates pass). Baseline evidence collected: collaborators, branch protection, CODEOWNERS, secret inventory, rotation check output. All exit criteria met. Status: Ready for Gate (§9). |
 | M6-19C | supply-chain hardening | DevEx/Security / Platform | M6-19A | Not Started | provenance/SBOM attestations | pipeline design. |
 | M7-01 | tagged release candidate and dossier | Program / DevEx | M6 | Not Started | release dossier | assemble evidence. |
 | M7-02 | final pre-prod validation | QA/SRE/Security / All | M7-01 | Not Started | full artifacts | execute gates. |

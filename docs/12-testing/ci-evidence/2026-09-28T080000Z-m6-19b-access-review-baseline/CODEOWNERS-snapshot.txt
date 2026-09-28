@@ -1,0 +1,154 @@
+# CODEOWNERS — ملكية المجلدات حسب الفرق
+#
+# ملاحظة: الأسماء مؤقتة (@uxxxu) وستُحدد لاحقًا بأسماء مبرمجي الفرق الـ12
+# عند اكتمال تعيين الفريق. كل مجلد يجب أن يُحدّث هنا بمجرد تخصيص المالك الفعلي.
+#
+# القاعدة: لا يتم دمج MR لمسار إلا بعد موافقة المالك (CODEOWNERS approval).
+
+# ───────────────────────────────────────────────────────────
+# Root / Repo-wide rules
+# ───────────────────────────────────────────────────────────
+/README.md                       @uxxxu
+/CONTRIBUTING.md                 @uxxxu
+/SECURITY.md                     @uxxxu
+/.gitlab-ci.yml                  @uxxxu
+/.gitignore                      @uxxxu
+/docs/00-rules/                  @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 01 — Identity & Auth
+# مسؤول: User, IdentityLink, Wasla Public ID, Phone, Session, RBAC, Recovery, Identity History
+# ───────────────────────────────────────────────────────────
+/services/identity/              @uxxxu
+/services/auth/                  @uxxxu
+/packages/auth-sdk/              @uxxxu
+/packages/contracts/             @uxxxu   # مشاركة مع جميع الفرق (identity-contracts)
+/docs/03-domain/                 @uxxxu   # identity.md
+/docs/04-api/auth.md              @uxxxu
+/docs/15-decisions/              @uxxxu   # ADR-identity
+
+# ───────────────────────────────────────────────────────────
+# Team 02 — Customer
+# مسؤول: Customer Profile, Mini App flows, Create order contract, Saved places, History
+# ───────────────────────────────────────────────────────────
+/apps/customer-mini-app/         @uxxxu
+/bots/customer-bot/              @uxxxu
+/docs/09-apps/                   @uxxxu   # customer flows
+
+# ───────────────────────────────────────────────────────────
+# Team 03 — Driver
+# مسؤول: Driver Profile, Documents, Vehicle, Subscription, Mini App, State, Community fallback
+# ───────────────────────────────────────────────────────────
+/apps/driver-mini-app/           @uxxxu
+/bots/driver-bot/               @uxxxu
+/services/drivers/               @uxxxu
+/services/subscriptions/         @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 04 — Matching
+# مسؤول: Candidate search, Hard constraints, Ranking, Fairness, Reputation inputs, ETA, Eligibility
+# ───────────────────────────────────────────────────────────
+/services/matching/              @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 05 — Dispatch
+# مسؤول: DispatchJob, Offer waves, Timeouts, Assignment, Reassignment, Community fallback, Duplicate prevention
+# ───────────────────────────────────────────────────────────
+/services/dispatch/              @uxxxu
+/services/rides/                 @uxxxu   # ride order lifecycle (مشاركة مع Team 02)
+/services/delivery/              @uxxxu   # delivery lifecycle (مشاركة)
+/services/orders/                @uxxxu   # Order Engine state machine (مشاركة مع Team 02)
+
+# ───────────────────────────────────────────────────────────
+# Team 06 — Marketplace
+# مسؤول: Store, Catalog, Product, Inventory, Staff, Search indexing, Moderation, Billing contracts
+# ───────────────────────────────────────────────────────────
+/services/marketplace/           @uxxxu
+/services/search/                @uxxxu
+/docs/11-partners/               @uxxxu   # marketplace model
+
+# ───────────────────────────────────────────────────────────
+# Team 07 — Partner / Enterprise
+# مسؤول: Partner onboarding, Enterprise, Partner API, Webhooks, Contract config, B2B SLA, Fleet, Portal
+# ───────────────────────────────────────────────────────────
+/apps/partner-mini-app/          @uxxxu
+/bots/partner-bot/               @uxxxu
+/services/partners/              @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 08 — Admin
+# مسؤول: Admin Portal, Dashboards, City/Zone controls, Moderation, Broadcasts, Manual dispatch, Config UI
+# ───────────────────────────────────────────────────────────
+/apps/admin-web/                 @uxxxu
+/docs/10-admin/                  @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 09 — Data
+# مسؤول: PostgreSQL schemas, Redis, Event schema registry, Outbox, Search pipelines, Analytics, Retention, Warehouse
+# ───────────────────────────────────────────────────────────
+/services/analytics/             @uxxxu
+/services/audit/                 @uxxxu
+/docs/06-database/               @uxxxu
+/docs/05-events/                 @uxxxu
+/packages/events/                @uxxxu
+/services/translation/           @uxxxu   # i18n data (مشاركة)
+
+# ───────────────────────────────────────────────────────────
+# Team 10 — DevOps
+# مسؤول: GitLab CI/CD, Containers, Environments, IaC, Secrets, Backups, Monitoring, Deployment, Scaling, DR
+# ───────────────────────────────────────────────────────────
+/infra/                           @uxxxu
+/scripts/                         @uxxxu
+/docs/08-infrastructure/          @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 11 — Security / QA
+# مسؤول: Test strategy, Security standards, Threat model, SAST/DAST, Contract/E2E/Load/Abuse tests, Release gates
+# ───────────────────────────────────────────────────────────
+/docs/07-security/               @uxxxu
+/docs/12-testing/                @uxxxu
+/packages/test-utils/            @uxxxu
+/docs/13-observability/          @uxxxu   # مراقبة (مشاركة مع Team 10)
+/packages/telemetry/             @uxxxu
+/packages/errors/                @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Team 12 — Integration
+# مسؤول: Telegram Adapter, Maps, Tap, SMS/Email, Translation, KYC/Compliance adapters, Webhooks
+# ───────────────────────────────────────────────────────────
+/services/notifications/          @uxxxu
+/services/chat/                  @uxxxu
+/services/compliance/            @uxxxu
+/services/billing/               @uxxxu   # Payment Abstraction / Tap (مشاركة مع Team 09)
+/packages/i18n/                   @uxxxu
+/packages/config/                @uxxxu
+/packages/date-time/              @uxxxu
+
+# ───────────────────────────────────────────────────────────
+# Shared packages — تعديل جماعي (يستلزم موافقة المالك المرتبط + مراجعة عبر الفرق)
+# ───────────────────────────────────────────────────────────
+/packages/ui/                    @uxxxu   # Team 02/03/07 (واجهات)
+
+# ───────────────────────────────────────────────────────────
+# Shared services — ملكية مشتركة (يستلزم ADR عند التغيير الجذري)
+# ───────────────────────────────────────────────────────────
+/services/reputation/            @uxxxu   # Team 04/05/11 (Reputation Engine — Core)
+/services/fraud/                 @uxxxu   # Team 11/04/05
+/services/referrals/             @uxxxu   # Team 03/01
+/services/geography/             @uxxxu   # Team 01/02/03 (Geo hierarchy)
+/services/support/               @uxxxu   # Team 08/11 (Support & Escalation)
+
+# ───────────────────────────────────────────────────────────
+# Progress / Decisions / Launch
+# ───────────────────────────────────────────────────────────
+/docs/16-progress/               @uxxxu   # جميع الفرق تحدّث حالة مرحلتها
+/docs/15-decisions/               @uxxxu   # ADRs — Team 01 افتراضيًا، يُحوّل حسب الموضوع
+/docs/17-launch/                 @uxxxu   # Team 10/11
+
+# ───────────────────────────────────────────────────────────
+# Docs — أقسام مشتركة
+# ───────────────────────────────────────────────────────────
+/docs/01-product/                @uxxxu
+/docs/02-architecture/           @uxxxu
+/docs/14-runbooks/               @uxxxu
+/docs/99-reference/              @uxxxu

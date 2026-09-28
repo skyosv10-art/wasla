@@ -84,7 +84,7 @@ Pass condition — the diff between `before-*` and `after-*` is exactly one fiel
 ## 5. Usability probe (proves "active **and** usable")
 
 1. Open a docs-only PR. Measure `gh pr view N --json reviewDecision,mergeStateStatus` → expect `REVIEW_REQUIRED` / `BLOCKED` before approval.
-2. Attempt `gh pr merge N --squash` (no `--admin`) before approval → **must be refused** (this also closes the open question in `RISK-0054`).
+2. ~~Attempt `gh pr merge N --squash` (no `--admin`) before approval → **must be refused**~~ **— WITHDRAWN by §8.2 (live merge attempt; see replacement probe below).** Replacement (read-only): on a docs-only PR with 0 approvals, `reviewDecision=REVIEW_REQUIRED` and `mergeStateStatus=BLOCKED` must be observed.
 3. CODEOWNER approves → `reviewDecision=APPROVED` → merge succeeds.
 4. Save all outputs to `$D/`.
 
@@ -92,7 +92,7 @@ Verdict wording (exactly one):
 
 - `PASS CODEOWNER enforcement active and usable` — steps 1–5 all hold.
 - `BLOCKED … Owner action required: assign a valid collaborator/team as CODEOWNER` — step 1 fails.
-- If step 5.2 is **not** refused: GOV-002 = FAIL (enforcement configured but not effective), NO-GO remains, `RISK-0054` stays open.
+- If step 5.2 replacement probe shows `mergeStateStatus` ≠ `BLOCKED`: GOV-002 = FAIL (enforcement configured but not effective), NO-GO remains, `RISK-0054` stays open.
 
 ## 6. Records to update after execution
 
@@ -108,7 +108,7 @@ Verdict wording (exactly one):
    `CLEAN`. A PATCH to that same endpoint (§4) is therefore **not proven** to turn on enforcement. Authoritative before/after
    readings are GraphQL `branchProtectionRules{requiresApprovingReviews requiredApprovingReviewCount requiresCodeOwnerReviews
    isAdminEnforced}` and `pullRequest{reviewDecision mergeStateStatus}`.
-2. **§6 step 2 is withdrawn.** "Attempt `gh pr merge` before approval" is a live merge attempt: with the rule as measured it
+2. **§5 step 2 is withdrawn.** "Attempt `gh pr merge` before approval" is a live merge attempt: with the rule as measured it
    would *merge*. Replacement (read-only): on a docs-only PR with 0 approvals, `reviewDecision=REVIEW_REQUIRED` and
    `mergeStateStatus=BLOCKED` must be observed. No self-approval, no test approval, no merge used as a probe.
 3. **Owner dependency (unchanged in substance, restated):**

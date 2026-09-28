@@ -1,7 +1,7 @@
 /**
  * Tenant membership guard.
  *
- * (ADR-048 §2): Tenant isolation is enforced at the partners service boundary.
+ * (ADR-055 §2): Tenant isolation is enforced at the partners service boundary.
  * A principal must be an active member of the store (tenant) to perform any
  * partner operation. Membership is verified via HTTP to the marketplace service
  * (ADR-026 §2.3 — no JOIN across service boundaries).

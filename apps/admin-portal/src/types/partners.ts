@@ -1,7 +1,7 @@
 /**
  * Partner lifecycle types for admin portal.
  *
- * Mirrors the partners service schema from ADR-048.
+ * Mirrors the partners service schema from ADR-055.
  * Partners service runs at services/partners/ (Fastify, port 8098).
  */
 

@@ -1,6 +1,6 @@
 /**
  * Use case: Issue an API credential for a tenant.
- * (ADR-048 §4)
+ * (ADR-055 §4)
  */
 
 import type { CredentialStore, AuditStore, StoreStaffPort } from "../ports";

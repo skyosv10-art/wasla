@@ -5,7 +5,7 @@
  * ADR-026 §2.3: cross-service reads are via HTTP only, but the staff
  * membership check is a shared concern that reads from a shared table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - A tenant is a store. Store staff membership = tenant membership.
  * - Roles: owner, manager, staff.
  * - The query joins `marketplace_store_staff` (or equivalent) to verify

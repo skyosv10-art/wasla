@@ -1,7 +1,7 @@
 /**
  * Partner domain — lifecycle state machine.
  *
- * (ADR-048 §7):
+ * (ADR-055 §7):
  *   pending → approved → active → suspended → offboarded
  *                  ↑         ↓
  *                  ←── reinstated ←

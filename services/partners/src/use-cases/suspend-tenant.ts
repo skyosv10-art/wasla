@@ -1,6 +1,6 @@
 /**
  * Use case: Suspend a tenant (lifecycle transition).
- * (ADR-048 §7)
+ * (ADR-055 §7)
  */
 
 import type { LifecycleStore, AuditStore } from "../ports";

@@ -1,6 +1,6 @@
 /**
  * Use case: Revoke an API credential.
- * (ADR-048 §4)
+ * (ADR-055 §4)
  */
 
 import type { CredentialStore, AuditStore, StoreStaffPort } from "../ports";

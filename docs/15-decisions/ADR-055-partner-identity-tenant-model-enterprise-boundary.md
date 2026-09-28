@@ -1,4 +1,4 @@
-# ADR-048: Partner Identity, Tenant Model, and Enterprise Boundary
+# ADR-055: Partner Identity, Tenant Model, and Enterprise Boundary
 
 | | |
 |---|---|

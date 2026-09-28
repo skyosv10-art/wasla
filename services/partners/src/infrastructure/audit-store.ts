@@ -3,7 +3,7 @@
  *
  * Implements AuditStore using the `partner_audit_log` table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - Append-only: no UPDATE or DELETE operations.
  * - `entry_id` is a database-generated identity column (BIGINT).
  * - `metadata` is JSONB for flexible structured data.

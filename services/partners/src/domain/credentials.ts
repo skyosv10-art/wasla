@@ -1,7 +1,7 @@
 /**
  * API credential domain — issuance and revocation.
  *
- * (ADR-048 §4): API credentials are scoped to a single store, hashed at rest
+ * (ADR-055 §4): API credentials are scoped to a single store, hashed at rest
  * (SHA-256), and revocable independently of the user account.
  */
 

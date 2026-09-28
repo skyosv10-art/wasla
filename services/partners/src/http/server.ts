@@ -1,6 +1,6 @@
 /**
  * Partners service — production root.
- * (ADR-048 §6)
+ * (ADR-055 §6)
  *
  * The second and last file that reads `process.env` (with `db/migrate-cli.ts`).
  * Env purity is enforced by `__tests__/purity.test.ts`.

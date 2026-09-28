@@ -1,3 +1,33 @@
+## 2026-09-28 — CLM-0391 · GOV-002 owner dependency · M6-19B/M6-19C gate readiness audit
+
+- **Work Item(s):** M0-45 (GOV-002) · M6-19B · M6-19C (audit only)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress — PR open; not merged by the agent while RISK-0054 is open
+
+Owner decision applied: GOV-002 result accepted as BLOCKED; branch protection not changed; no bypass, no admin merge, no
+lowering of requirements, no CODEOWNER exception.
+
+1. **GOV-002 owner dependency** re-measured 2026-09-28T05:45:35Z (read-only): `@uxxxu` valid user (id 24187768), not a
+   collaborator (404), no pending invitation, 68 CODEOWNERS "Unknown owner" errors, `require_code_owner_reviews=false`,
+   `enforce_admins=true`. Owner action A or B required. Evidence: `docs/12-testing/ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/`.
+2. **Activation prepared, not executed:** `docs/12-testing/GOV-002_ACTIVATION_RUNBOOK.md` — precondition proofs, before/after
+   measurement, the single permitted change `require_code_owner_reviews false→true`, usability probe, verdict wording.
+3. **New blocker RISK-0054:** PRs #524–#529 merged with 0 reviews while `required_approving_review_count=1`. The PR #526 row
+   "review count PASS" was configuration, not enforcement — corrected by addition.
+4. **M6-19B audit → Blocked:** guard rewritten fail-closed (errors were swallowed by `2>/dev/null`; count gate only warned);
+   8 mutation cases added; "Check 24" label collision fixed; service-identity "measured" values withdrawn (copied);
+   DB/audit baselines unmeasured; rotation age unmeasurable. `M6-19B_GATE.md` (was a dead link).
+5. **M6-19C audit → Blocked:** no attestation produced; SLSA corrected to Build L0; Source L2 not met; RISK-0052 mis-citation
+   corrected. `M6-19C_GATE.md`.
+6. **M6 dependency matrix:** none of M6-18B/18C/19A/19B/19C can enter gate or be completed; 18B/18C/19A labels overstate their
+   exit evidence (not changed — outside mandate).
+7. **CI record:** `main` Roadmap freshness failed on `0f2c848` (PR #528 omitted ROADMAP.md); green again at `751b60e`.
+   ROADMAP.md updated in this cycle.
+8. **Timestamp correction:** evidence dirs `…T064800Z`, `…T074500Z`, `…T080000Z` are local-time labels; not renamed.
+9. **CLM-0386:** already `Released` (PR #525 merged `814706a`); branch `fix/roadmap-freshness-tier1` still exists. No change.
+
+---
+
 ## 2026-09-28 — CLM-0390 · M6-19C Supply Chain Hardening
 
 - **Work Item(s):** M6-19C (supply-chain hardening)

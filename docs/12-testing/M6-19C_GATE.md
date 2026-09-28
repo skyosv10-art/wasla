@@ -1,0 +1,36 @@
+# M6-19C Gate Readiness Audit — supply-chain hardening
+
+- **Audited at (UTC):** 2026-09-28T05:55Z · **Claim:** CLM-0391 (audit) · implementation claim CLM-0390
+- **Main at audit:** `751b60e` (PR #529)
+- **Board exit criterion:** "provenance/SBOM attestations"
+- **Verdict:** **BLOCKED — not ready for gate.** Board status corrected `Ready for Gate → Blocked` by addition.
+- This audit does **not** move anything to `Completed`.
+
+## 1. Audit matrix
+
+| Dimension | Result | Evidence / reason |
+|-----------|--------|-------------------|
+| IMPLEMENTATION | **FAIL** | PR #529 added a document only. No provenance or SBOM **attestation** is produced anywhere: `.github/workflows/*.yml` contains no `attest`, `id-token`, `cosign` or provenance step (measured by `grep`). The `image-supply-chain` job produces two SBOMs, compares them and scans the image — that is M2-01, not M6-19C. |
+| LOCAL VERIFICATION | **NOT VERIFIED** | No executable deliverable to verify. `docker` is not available on the execution desk (as recorded for M2-01). |
+| DOCUMENTATION | **FAIL → corrected by addendum** | [`SUPPLY_CHAIN_HARDENING.md`](../07-security/SUPPLY_CHAIN_HARDENING.md) §9 addendum: (a) SLSA Build L1/L2 "Met" was wrong — SLSA Build L1 requires a provenance document and L2 a signed, platform-generated provenance; neither exists → **Build L0**. (b) Source L2 "Met (CODEOWNERS)" was wrong — CODEOWNER review is not enforced (GOV-002 BLOCKED) and approvals are not effective (RISK-0054) → **not met**. (c) `RISK-0052` was mis-cited for "single-owner repo"; RISK-0052 is the stuck-`main`-CI risk. (d) The "Exit Criteria — all met" table is withdrawn. |
+| CI EVIDENCE | **PASS** (docs PR only) | PR #529: 42/42 green; `main` `751b60e` Roadmap freshness success. CI green on a docs PR is not evidence of attestations. |
+| SECURITY EVIDENCE | **PARTIAL** | Existing, measured in CI (M2-01): `image-supply-chain` job success on `main` `751b60e`; artifact `image-supply-chain-evidence` uploaded (SBOM pass1/pass2 + scan). Missing: any signed statement binding the SBOM/image digest to the build. |
+| OWNER AUTHORIZATION | **NOT VERIFIED** | No owner gate decision. |
+| GATE REQUIREMENTS | **FAIL** | "provenance/SBOM attestations" not produced. |
+| DEPENDENCIES | **FAIL** | Depends on M6-19A (`Ready for Gate`, pentest not executed). |
+
+## 2. What unblocks the gate (next implementation, not started in this cycle)
+
+The repository is **public** (`GET /repos/skyosv10-art/wasla` → `visibility: public`), so GitHub artifact attestations are
+available. The implementation needs:
+
+1. An ADR: adding a first-party attestation action to the `image-supply-chain` job requires changing the action allowlist
+   enforced by `validate-workflow-supply-chain.sh` and granting job-level `id-token: write` + `attestations: write`
+   (the workflow is `contents: read` today). That is a policy change to a guarded file and must be decided, not slipped in.
+2. Attest the SBOM files (subject = file digest) and the image digest; verify in the same job with `gh attestation verify`.
+3. Mutation cases proving the guard rejects removal of the attestation step.
+4. CI verdict on `main` with the attestation visible; M6-19A completed; owner gate decision.
+
+## 3. Not claimed
+
+No SLSA level above Build L0 is claimed. No image signing, SBOM signing or binary authorization exists.

@@ -277,3 +277,24 @@ The exit criteria for M6-19B is **periodic evidence** — meaning:
 - [THREAT_MODEL.md](THREAT_MODEL.md) — Threat model
 - [SECRET_INVENTORY.md](../08-infrastructure/SECRET_INVENTORY.md) — Secret inventory (M2-03A)
 - [CI_VERDICT_AUDIT.md](../12-testing/CI_VERDICT_AUDIT.md) — CI verdict audit (M0-40)
+
+---
+
+## 9. Audit addendum — 2026-09-28T05:50Z (CLM-0391)
+
+Added by the gate readiness audit ([`M6-19B_GATE.md`](../12-testing/M6-19B_GATE.md)). Nothing above is deleted; the
+statements below **override** the ones they name.
+
+1. **§2.2 "Current State (Measured 2026-09-28)" is withdrawn as a measurement.** The values (`TOKEN_BOUND_OPERATION_COUNT`
+   10, `TENANT_BOUND_OPERATION_COUNT` 8, unclassified 63, 4 unenforced boundaries) were copied from existing documentation;
+   no command produced them on 2026-09-28. "Replay store: PostgreSQL (active)" has no deployment evidence. Status: **NOT VERIFIED**.
+2. **§2.1 "Measured 2026-09-28"** stands (raw files in `ci-evidence/2026-09-28T080000Z-m6-19b-access-review-baseline/`), but the
+   directory label is local time (+03:00), not UTC — actual ≈ 05:00Z. The owner dependency was re-measured at 05:45:35Z
+   (`ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/`). The reviewer role `@uxxxu` cannot currently review (GOV-002 BLOCKED).
+3. **§3 "No secret has exceeded its rotation period"** cannot be checked: the inventory has no `last_rotated` field. The guard
+   verifies declared policy only and prints `NOT VERIFIED: rotation age` on every run.
+4. **"Check 24"** (the label used for the guard in PR #528) collided with governance check 24 (M3-08 route contract). The guard
+   is now labelled "M6-19B secret rotation policy guard". It was also rewritten fail-closed: the first version discarded
+   interpreter errors (`2>/dev/null`), so a malformed entry printed PASS, and its count gate only warned.
+5. **§7 "Current Status — all Yes"** is withdrawn. Database access, service identity and audit integrity have no measured
+   baseline; periodicity has no second cycle. Gate verdict: **BLOCKED**.

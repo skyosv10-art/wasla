@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
-# validate-secret-rotation.sh — Check 24: Secret rotation verification (M6-19B)
+# validate-secret-rotation.sh — M6-19B: secret rotation *policy* guard.
 #
-# Verifies that every secret in the inventory has a rotation policy,
-# no secret has exceeded its rotation period, and BLOCKED secrets have
-# a documented reason.
+# What it enforces (fail-closed, structural, offline):
+#   every secret in infra/secrets/secret-inventory.json declares a rotation
+#   frequency from the allowed set, a status from the allowed vocabulary, at
+#   least one consumer and one environment, a unique name; every BLOCKED secret
+#   carries a written reason.
 #
-# Exit codes:
-#   0 — all secrets have valid rotation policies
-#   1 — one or more secrets have missing or expired rotation
+# What it does NOT claim: that any secret was actually rotated on time. The
+#   inventory has no `last_rotated` field, so rotation *age* cannot be measured
+#   here. That is printed as NOT VERIFIED on every run (M6-19B_GATE.md).
+#
+# History: the first version (PR #528) swallowed interpreter errors with
+#   `2>/dev/null`, so a malformed entry (e.g. a missing `name`) made a gate print
+#   PASS. Corrected under CLM-0391; mutation cases live in test-governance.sh.
+#
+# Exit: 0 = all gates pass · 1 = a gate failed or the inventory is unreadable.
 
 set -euo pipefail
 
@@ -15,139 +23,71 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 INVENTORY="$REPO_ROOT/infra/secrets/secret-inventory.json"
 
-if [ ! -f "$INVENTORY" ]; then
-  echo "ERROR: Secret inventory not found at $INVENTORY"
+echo "=== M6-19B: secret rotation policy guard ==="
+
+if [[ ! -f "$INVENTORY" ]]; then
+  echo "FAIL: secret inventory not found at $INVENTORY"
   exit 1
 fi
 
-echo "=== Check 24: Secret Rotation Verification (M6-19B) ==="
-echo ""
+python3 - "$INVENTORY" <<'PY'
+import json, sys
 
-# Check 1: Inventory file exists and is valid JSON
-if ! python3 -c "import json; json.load(open('$INVENTORY'))" 2>/dev/null; then
-  echo "FAIL: Secret inventory is not valid JSON"
-  exit 1
-fi
-echo "PASS: Secret inventory is valid JSON"
+path = sys.argv[1]
+try:
+    data = json.load(open(path, encoding="utf-8"))
+except Exception as e:  # unreadable inventory is a failure, never a pass
+    print(f"FAIL: inventory is not valid JSON: {e}")
+    sys.exit(1)
 
-# Check 2: Every secret has a rotation_frequency
-MISSING_ROTATION=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-missing = [s['name'] for s in secrets if not s.get('rotation_frequency')]
-if missing:
-    print(', '.join(missing))
-" 2>/dev/null)
+secrets = data.get("secrets") if isinstance(data, dict) else None
+if not isinstance(secrets, list) or not secrets:
+    print("FAIL: inventory has no non-empty `secrets` list")
+    sys.exit(1)
 
-if [ -n "$MISSING_ROTATION" ]; then
-  echo "FAIL: Secrets missing rotation_frequency: $MISSING_ROTATION"
-  exit 1
-fi
-echo "PASS: All secrets have rotation_frequency"
+ALLOWED_FREQ = {
+    "quarterly", "semi-annually", "annual",
+    "on compromise or quarterly", "on compromise or semi-annually",
+    "on key rotation", "auto", "N/A",
+}
 
-# Check 3: Every secret has a status
-MISSING_STATUS=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-missing = [s['name'] for s in secrets if not s.get('status')]
-if missing:
-    print(', '.join(missing))
-" 2>/dev/null)
+failures = []
+def gate(label, bad):
+    if bad:
+        failures.append(f"FAIL: {label}: {', '.join(bad)}")
+    else:
+        print(f"PASS: {label}")
 
-if [ -n "$MISSING_STATUS" ]; then
-  echo "FAIL: Secrets missing status: $MISSING_STATUS"
-  exit 1
-fi
-echo "PASS: All secrets have status"
+def name(i, s):
+    n = s.get("name") if isinstance(s, dict) else None
+    return n if isinstance(n, str) and n else f"<entry #{i}>"
 
-# Check 4: BLOCKED secrets have a notes field with reason
-BLOCKED_WITHOUT_REASON=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-blocked = [s['name'] for s in secrets if s.get('status','').startswith('BLOCKED') and not s.get('notes')]
-if blocked:
-    print(', '.join(blocked))
-" 2>/dev/null)
+entries = list(enumerate(secrets))
+gate("every entry is an object with a name",
+     [name(i, s) for i, s in entries if not isinstance(s, dict) or not isinstance(s.get("name"), str) or not s.get("name")])
+dicts = [(i, s) for i, s in entries if isinstance(s, dict)]
+names = [name(i, s) for i, s in dicts]
+gate("names are unique", sorted({n for n in names if names.count(n) > 1}))
+gate("rotation_frequency present and allowed",
+     [f"{name(i, s)}={s.get('rotation_frequency')!r}" for i, s in dicts if s.get("rotation_frequency") not in ALLOWED_FREQ])
+gate("status is `active` or `BLOCKED — …`",
+     [f"{name(i, s)}={s.get('status')!r}" for i, s in dicts
+      if not (s.get("status") == "active" or (isinstance(s.get("status"), str) and s["status"].startswith("BLOCKED")))])
+gate("every BLOCKED secret has a written reason (notes)",
+     [name(i, s) for i, s in dicts
+      if isinstance(s.get("status"), str) and s["status"].startswith("BLOCKED")
+      and not (isinstance(s.get("notes"), str) and s["notes"].strip())])
+gate("every secret has at least one consumer",
+     [name(i, s) for i, s in dicts if not (isinstance(s.get("consumers"), list) and s["consumers"])])
+gate("every secret has at least one environment",
+     [name(i, s) for i, s in dicts if not (isinstance(s.get("environments"), list) and s["environments"])])
 
-if [ -n "$BLOCKED_WITHOUT_REASON" ]; then
-  echo "FAIL: BLOCKED secrets without documented reason: $BLOCKED_WITHOUT_REASON"
-  exit 1
-fi
-echo "PASS: All BLOCKED secrets have documented reasons"
+print(f"INFO: {len(secrets)} secrets · "
+      f"{sum(1 for _, s in dicts if s.get('status') == 'active')} active · "
+      f"{sum(1 for _, s in dicts if str(s.get('status','')).startswith('BLOCKED'))} BLOCKED")
+print("NOT VERIFIED: rotation age — the inventory has no `last_rotated` field (M6-19B_GATE.md).")
 
-# Check 5: Every secret has a consumers field (who uses it)
-MISSING_CONSUMERS=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-missing = [s['name'] for s in secrets if not s.get('consumers')]
-if missing:
-    print(', '.join(missing))
-" 2>/dev/null)
-
-if [ -n "$MISSING_CONSUMERS" ]; then
-  echo "FAIL: Secrets missing consumers: $MISSING_CONSUMERS"
-  exit 1
-fi
-echo "PASS: All secrets have consumers"
-
-# Check 6: Every secret has an environments field
-MISSING_ENVS=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-missing = [s['name'] for s in secrets if not s.get('environments')]
-if missing:
-    print(', '.join(missing))
-" 2>/dev/null)
-
-if [ -n "$MISSING_ENVS" ]; then
-  echo "FAIL: Secrets missing environments: $MISSING_ENVS"
-  exit 1
-fi
-echo "PASS: All secrets have environments"
-
-# Check 7: Secret count matches expected (26 as of 2026-09-28)
-SECRET_COUNT=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-print(len(d.get('secrets', [])))
-" 2>/dev/null)
-
-if [ "$SECRET_COUNT" -lt 20 ]; then
-  echo "WARN: Secret count ($SECRET_COUNT) is below expected minimum (20)"
-else
-  echo "PASS: Secret count ($SECRET_COUNT) is within expected range"
-fi
-
-# Check 8: Rotation frequencies are from the allowed set
-INVALID_ROTATION=$(python3 -c "
-import json
-with open('$INVENTORY') as f:
-    d = json.load(f)
-secrets = d.get('secrets', [])
-valid = ['quarterly', 'semi-annually', 'annual', 'on compromise or quarterly',
-         'on compromise or semi-annually', 'on key rotation', 'auto', 'N/A']
-invalid = [f\"{s['name']}: {s.get('rotation_frequency','?')}\" for s in secrets
-           if s.get('rotation_frequency') not in valid]
-if invalid:
-    print('; '.join(invalid))
-" 2>/dev/null)
-
-if [ -n "$INVALID_ROTATION" ]; then
-  echo "FAIL: Invalid rotation_frequency values: $INVALID_ROTATION"
-  exit 1
-fi
-echo "PASS: All rotation frequencies are from allowed set"
-
-echo ""
-echo "=== Summary: 8/8 checks passed ==="
+if failures:
+    print("\n".join(failures))
+    sys.exit(1)
+PY

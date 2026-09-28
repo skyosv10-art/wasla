@@ -2938,6 +2938,33 @@ json.dump(d, open(p, 'w'))
 t "environments يرفضُ متغيّراً غيرَ موجودٍ في السجلِّ" fail bash scripts/checks/validate-environments.sh
 cp "$REPO_ROOT/infra/environments/production/environment.json" "$ENV_DIR_T/production/environment.json"
 
+printf '\n\033[1m[هـ-M6-19B] حارسُ سياسةِ تدويرِ الأسرارِ — يرفضُ فعلاً\033[0m\n'
+# CLM-0391: النسخةُ الأولى ابتلعت أخطاءَ المُفسِّرِ بـ2>/dev/null فمرَّ مدخلٌ بلا اسمٍ PASS.
+INV_T="infra/secrets/secret-inventory.json"
+_inv_restore() { cp "$REPO_ROOT/$INV_T" "$INV_T"; }
+_inv_mut() { python3 -c "
+import json,sys
+p='$INV_T'; d=json.load(open(p)); s=d['secrets']
+m=sys.argv[1]
+if m=='noname': del s[0]['name']
+elif m=='freq': s[0]['rotation_frequency']='never'
+elif m=='blocked': b=[x for x in s if x['status'].startswith('BLOCKED')][0]; b['notes']=''
+elif m=='consumers': s[0]['consumers']=[]
+elif m=='dup': s[1]['name']=s[0]['name']
+elif m=='status': s[0]['status']='maybe'
+json.dump(d,open(p,'w'))
+" "$1"; }
+_inv_restore
+t "تدويرُ الأسرارِ يمرُّ على السجلِّ الحقيقيِّ" pass bash scripts/checks/validate-secret-rotation.sh
+for m in noname freq blocked consumers dup status; do
+  _inv_mut "$m"
+  t "تدويرُ الأسرارِ يرفضُ طفرةَ «$m»" fail bash scripts/checks/validate-secret-rotation.sh
+  _inv_restore
+done
+printf '{ not json' > "$INV_T"
+t "تدويرُ الأسرارِ يرفضُ سجلّاً غيرَ JSON" fail bash scripts/checks/validate-secret-rotation.sh
+_inv_restore
+
 printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # حالةٌ موجبةٌ كاملة: فرعٌ محجوز، وتغييرٌ داخل النطاق، وإدخالٌ في السجلِّ
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.

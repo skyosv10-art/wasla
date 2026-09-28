@@ -142,6 +142,39 @@
     "enforce_admins_unchanged": true,
     "require_code_owner_reviews_enabled": false,
     "gov_002_status": "BLOCKED",
-    "no_go_remains": true
+    "no_go_remains": true,
+    "owner_dependency": {
+      "remeasured_at": "2026-09-28T05:45:35Z",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency",
+      "blocker": "CODEOWNER eligibility",
+      "current": {
+        "uxxxu_valid_user": true,
+        "uxxxu_collaborator": false,
+        "pending_invitation": false,
+        "codeowners_errors": 68,
+        "require_code_owner_reviews": false,
+        "enforce_admins": true
+      },
+      "owner_action_required": [
+        "A) add @uxxxu as collaborator with Write+ and accept",
+        "B) update CODEOWNERS to a valid collaborator/team"
+      ],
+      "activation_runbook": "docs/12-testing/GOV-002_ACTIVATION_RUNBOOK.md",
+      "permitted_change_after_owner_action": {
+        "require_code_owner_reviews": "false -> true",
+        "unchanged": {
+          "required_approving_review_count": 1,
+          "enforce_admins": true,
+          "dismiss_stale_reviews": false
+        }
+      },
+      "executed": false,
+      "gov_002_status": "BLOCKED"
+    },
+    "review_enforcement_contradiction": {
+      "risk": "RISK-0054",
+      "finding": "PRs #524-#529 merged with 0 reviews while required_approving_review_count=1 and enforce_admins=true",
+      "root_cause": "NOT VERIFIED"
+    }
   }
 }

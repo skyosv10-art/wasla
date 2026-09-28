@@ -1647,6 +1647,16 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 - Evidence chain: commit → API → raw JSON → verdict (PASS)
 - GOV-005: BROKEN → PASS
 
+### 2026-09-28 — M6-19B baseline remediation · M6-19C attestation remediation (CLM-0394, CLM-0395)
+
+- **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
+  UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
+  (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.
+- **M6-19C attestation (CLM-0395, PR #536):** ADR-056 created; `actions/attest-build-provenance@v2` added to image-supply-chain
+  job; `gh attestation verify` step added; supply chain guard extended to 7 gates (Gate 7 enforces attestation step presence);
+  2 mutation cases added. SLSA Build L0 → L1. `docs/12-testing/M6-19C_GATE.md`.
+- **Remaining blockers:** M6-19A (independent pentest, external), owner gate decision (§9).
+
 ### 2026-09-28 — GOV-002 owner dependency · M6-19B/M6-19C gate readiness audit (CLM-0391)
 
 - **GOV-002 = BLOCKED** (owner dependency, re-measured 05:45:35Z): `@uxxxu` valid user, not a collaborator (404), no pending

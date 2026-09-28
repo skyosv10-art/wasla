@@ -21,11 +21,21 @@
 
 ## 2. What unblocks the gate
 
-1. Measured baseline for service identity: `TOKEN_BOUND_OPERATION_COUNT` / `TENANT_BOUND_OPERATION_COUNT` / unclassified count derived from `packages/authz-policy` in CI (not copied).
-2. Measured baseline for database access (roles/grants per environment) and audit-log integrity — requires a live environment (owner-provisioned).
-3. `last_rotated` (date, no value) per secret in `infra/secrets/secret-inventory.json`, and the guard extended to fail on overdue rotation.
-4. M6-19A completed by the owner.
+1. **DONE (CLM-0394):** Measured baseline for service identity: TOKEN_BOUND_OPERATION_COUNT=44, TENANT_BOUND_OPERATION_COUNT=8, UNCLASSIFIED_OPERATION_COUNT=105 — derived from `packages/authz-policy/src/bindings.ts` source code, not copied. Evidence: [`ci-evidence/2026-09-28T130000Z-m6-19b-baseline-remediation/`](ci-evidence/2026-09-28T130000Z-m6-19b-baseline-remediation/README.md).
+2. **DONE (CLM-0394):** Measured baseline for database access (30 roles, 394 grants, 44 tables, RLS enabled on 25) and audit-log integrity (wasla-audit deployed, service identity enforced). Evidence: same directory.
+3. **DONE (CLM-0394):** `last_rotated` (date) per secret in `infra/secrets/secret-inventory.json` (19 active secrets with dates), and the guard extended to fail on overdue rotation (9 gates, all pass).
+4. M6-19A completed by the owner (external blocker — independent pentest procurement).
 5. Owner gate decision (§9).
+
+### Remediation status (CLM-0394)
+
+| Dimension | Before (CLM-0391 audit) | After (CLM-0394) |
+|-----------|------------------------|-------------------|
+| Service identity | Copied from docs | **Measured** from source code (TOKEN_BOUND=44, TENANT_BOUND=8, UNCLASSIFIED=105) |
+| Database access | Unmeasured | **Measured** against live Supabase (30 roles, 394 grants, 25/44 RLS) |
+| Audit integrity | Unmeasured | **Measured** (wasla-audit deployed, service identity enforced) |
+| Rotation age | Unmeasurable (no last_rotated) | **Measurable** (19 secrets with last_rotated, 9 gates pass, 0 overdue) |
+| Remaining blockers | — | M6-19A (external), owner gate decision |
 
 ## 3. Not claimed
 

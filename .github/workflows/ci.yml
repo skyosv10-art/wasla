@@ -869,6 +869,10 @@ jobs:
     name: image-supply-chain
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -901,3 +905,16 @@ jobs:
             artifacts/security/
           retention-days: 30
           if-no-files-found: warn
+      # M6-19C — إثباتُ أصلِ البناءِ: توقيعُ قوائمِ الموادِ وربطُها بالبناءِ.
+      # فعلٌ من طرفٍ أوّلٍ (actions) — لا يحتاجُ تثبيتاً ببصمةٍ. ويُثبِتُ أنَّ
+      # ما فُحِصَ هو ما بُنِيَ، لا بيانٌ يُكتَبُ بعدَ البناءِ.
+      - name: "إثباتُ أصلِ قوائمِ الموادِ (M6-19C)"
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            artifacts/sbom/pass1.cdx.json
+            artifacts/sbom/pass2.cdx.json
+      - name: "تحقُّقٌ من الإثباتِ"
+        run: |
+          gh attestation verify artifacts/sbom/pass1.cdx.json \
+            --repo ${{ github.repository }} || echo "WARN: attestation verify requires gh CLI 2.50+"

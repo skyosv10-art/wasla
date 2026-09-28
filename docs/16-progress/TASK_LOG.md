@@ -1,11 +1,32 @@
-# 2026-09-28 — CLM-0393 — GOV-002 bootstrap · independent CODEOWNER
-
-- **Work Item:** M0-45 (GOV-002)
+# 2026-09-28 — CLM-0396 — GOV-002 bootstrap · independent CODEOWNER
+- **Work Item(s):** M0-45
 - **Author/Owner:** @xuuux-voox
 - **Status:** Active
 - **Scope:** CODEOWNERS, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
-
 GOV-002 bootstrap: the current CODEOWNER is also the author of all PRs, so an independent CODEOWNER is required for governance review. This claim establishes @xuuux-voox as CODEOWNER for `/scripts/`, `/docs/07-security/`, `/docs/12-testing/`, and `/docs/16-progress/`. No branch-protection setting, review requirement, enforce-admins setting, RISK-0054, PR #532, or PR #531 was changed.
+
+# 2026-09-28 — CLM-0395 — M6-19C attestation remediation
+
+- **Work Item(s):** M6-19C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** .github/workflows/ci.yml,scripts/checks/validate-workflow-supply-chain.sh,scripts/checks/test-governance.sh,docs/15-decisions/ADR-056-build-provenance-attestation.md,docs/12-testing/M6-19C_GATE.md,docs/07-security/SUPPLY_CHAIN_HARDENING.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+- **Tests:** supply chain guard (7 gates), 2 new mutation cases (attestation step removal, verification step removal)
+- **Evidence:** CI verdict on PR (image-supply-chain job with attestation step)
+- **Next step:** Wait for CI verdict, then release claim and proceed to M7-01
+
+---
+
+# 2026-09-28 — CLM-0394 — M6-19B baseline remediation
+
+- **Work Item(s):** M6-19B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** infra/secrets/secret-inventory.json, scripts/checks/validate-secret-rotation.sh, scripts/checks/test-governance.sh, docs/12-testing/M6-19B_GATE.md, docs/07-security/ACCESS_SECRET_AUDIT_REVIEW.md, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md, ROADMAP.md
+
+M6-19B baseline remediation per M6-19B_GATE.md §2: (1) add `last_rotated` date field to each secret in `infra/secrets/secret-inventory.json` and extend `validate-secret-rotation.sh` to fail on overdue rotation; (2) derive service identity baseline (TOKEN_BOUND_OPERATION_COUNT, TENANT_BOUND_OPERATION_COUNT, unclassified count) from `packages/authz-policy` source code — not copied from documentation; (3) measure database access baseline (roles/grants) against live Supabase staging environment.
+
+CLM-0389 released: PR #528 merged, audit (CLM-0391) found baseline incomplete. Remediation continues under this claim.
 
 ## 2026-09-28 — CLM-0391 · R54 RISK-0054 classification (read-only)
 

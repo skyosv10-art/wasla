@@ -128,5 +128,20 @@
       "note": "Phase 2 Governance Remediation live measurement (GOV-002/GOV-005). 40 contexts · strict:true · enforce_admins:true · required_approving_review_count:1 · require_code_owner_reviews:false (FAIL — policy requires true). Rulesets: empty. Evidence chain: commit 814706a → 4 API calls → raw JSON in evidence_dir → verdict.",
       "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T064800Z-gov-002-live-protection-measurement"
     }
-  ]
+  ],
+  "gov_002_codeowner_eligibility": {
+    "measured_at": "2026-09-28T07:45:00Z",
+    "verdict": "BLOCKED",
+    "codeowner": "@uxxxu",
+    "codeowner_valid_user": true,
+    "codeowner_collaborator": false,
+    "codeowner_review_eligible": false,
+    "blocking_condition": "@uxxxu is not a collaborator on skyosv10-art/wasla",
+    "required_owner_action": "Add @uxxxu as collaborator with Write+ permission, or update CODEOWNERS to a valid collaborator/team",
+    "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T074500Z-gov-002-codeowner-eligibility",
+    "enforce_admins_unchanged": true,
+    "require_code_owner_reviews_enabled": false,
+    "gov_002_status": "BLOCKED",
+    "no_go_remains": true
+  }
 }

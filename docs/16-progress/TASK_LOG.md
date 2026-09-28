@@ -1,3 +1,42 @@
+## 2026-09-28 — CLM-0388 · M0-45 GOV-002 CODEOWNER Eligibility Report
+
+- **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+GOV-002 CODEOWNER eligibility investigation per owner directive:
+
+```text
+CURRENT CODEOWNER:      @uxxxu
+GITHUB ID/TYPE:         User (id: 24187768) — valid GitHub user account
+COLLABORATOR STATUS:    NOT a collaborator on skyosv10-art/wasla (HTTP 404)
+TEAM STATUS:            N/A — skyosv10-art is a User account (not Organization). No teams exist.
+CODEOWNER REVIEW ELIGIBILITY: NOT ELIGIBLE — @uxxxu cannot submit reviews on this repository
+BLOCKING CONDITION:     @uxxxu is not a collaborator; GitHub requires Write+ permission to review PRs
+REQUIRED OWNER ACTION:  Add @uxxxu as collaborator with Write+ permission (and accept invitation),
+                       OR update CODEOWNERS to a valid collaborator/team
+```
+
+API evidence (4 endpoints, raw JSON in evidence dir):
+1. GET /users/uxxxu → 200 (valid user)
+2. GET /repos/skyosv10-art/wasla/collaborators → 200 (only skyosv10-art)
+3. GET /repos/skyosv10-art/wasla/collaborators/uxxxu → 404 (not a collaborator)
+4. GET /repos/skyosv10-art/wasla/branches/main/protection/required_pull_request_reviews → 200 (count=1, code_owner=false)
+
+Verdict: **BLOCKED** — Policy can be enabled, but current CODEOWNER is not eligible.
+
+Actions taken:
+- enforce_admins: unchanged (true) — per owner directive
+- require_code_owner_reviews: NOT enabled (would block all PRs — no eligible code owner)
+- No admin bypass created
+- No policy changes to fit the permissions problem
+- Evidence saved: docs/12-testing/ci-evidence/2026-09-28T074500Z-gov-002-codeowner-eligibility/
+- MERGE_BLOCKING.json updated with gov_002_codeowner_eligibility block
+
+GOV-002 = BLOCKED. NO-GO remains in force. enforce_admins = true.
+
+---
+
 ## 2026-09-28 — CLM-0387 · M0-45 GOV-002/005 Live Protection Measurement
 
 - **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)

@@ -98,15 +98,15 @@
 # مسؤول: GitLab CI/CD, Containers, Environments, IaC, Secrets, Backups, Monitoring, Deployment, Scaling, DR
 # ───────────────────────────────────────────────────────────
 /infra/                          @skyosv10-art
-/scripts/                        @skyosv10-art
+/scripts/                        @skyosv10-art @xuuux-voox
 /docs/08-infrastructure/         @skyosv10-art
 
 # ───────────────────────────────────────────────────────────
 # Team 11 — Security / QA
 # مسؤول: Test strategy, Security standards, Threat model, SAST/DAST, Contract/E2E/Load/Abuse tests, Release gates
 # ───────────────────────────────────────────────────────────
-/docs/07-security/               @skyosv10-art
-/docs/12-testing/                @skyosv10-art
+/docs/07-security/               @skyosv10-art @xuuux-voox
+/docs/12-testing/                @skyosv10-art @xuuux-voox
 /packages/test-utils/            @skyosv10-art
 /docs/13-observability/          @skyosv10-art   # مراقبة (مشاركة مع Team 10)
 /packages/telemetry/             @skyosv10-art
@@ -141,7 +141,7 @@
 # ───────────────────────────────────────────────────────────
 # Progress / Decisions / Launch
 # ───────────────────────────────────────────────────────────
-/docs/16-progress/               @skyosv10-art   # جميع الفرق تحدّث حالة مرحلتها
+/docs/16-progress/               @skyosv10-art @xuuux-voox   # جميع الفرق تحدّث حالة مرحلتها
 /docs/15-decisions/              @skyosv10-art   # ADRs — Team 01 افتراضيًا، يُحوّل حسب الموضوع
 /docs/17-launch/                 @skyosv10-art   # Team 10/11
 

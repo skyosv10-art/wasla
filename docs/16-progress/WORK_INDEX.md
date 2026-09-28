@@ -160,6 +160,7 @@
 | `docs/07-security/PENTEST_PLAN.md` — independent pentest scope, methodology, procurement, remediation ([ADR-054](../15-decisions/ADR-054-pentest-scope.md) · [gate](../12-testing/M6-19A_GATE.md)) | Implemented | M6-19A |
 | `docs/07-security/ACCESS_SECRET_AUDIT_REVIEW.md` — periodic access review, secret rotation verification, audit log integrity ([M6-19B_GATE](../12-testing/M6-19B_GATE.md)) | Implemented | M6-19B |
 | `scripts/checks/validate-secret-rotation.sh` — Check 24: secret rotation verification (8 gates: JSON validity, rotation_frequency, status, BLOCKED reasons, consumers, environments, count, allowed frequencies) | Implemented | M6-19B |
+| `docs/07-security/SUPPLY_CHAIN_HARDENING.md` — supply chain pipeline design, provenance attestation, SLSA alignment, SBOM management, vulnerability exception process | Implemented | M6-19C |
 | CI: Load / Chaos / DR / DAST | Missing | M6 |
 | `scripts/checks/audit-ci-verdicts.sh` — تدقيقُ أحكامِ CI حيّاً (الفحصُ 15 · [سجلٌّ](../12-testing/CI_VERDICT_AUDIT.md)) | Implemented | M0-40 |
 | `scripts/checks/validate-authz-policy.sh` الأبوابُ 7 و8 و9 — ربطُ المُنتَفِعِ والمُستأجِرِ مُثبَتٌ في الشفرةِ لا مُدَّعىً، وعدَّادانِ مُشتَقّانِ يُرفَضُ كتابةُ أيٍّ منهُما بيدٍ، والمساعدونَ يُقرَأونَ **على أيِّ عمقٍ** (**38** حالةَ طفرةٍ · كانت 5 ثمَّ 25 ثمَّ 31 · وبالموجةِ 3 بابانِ جديدانِ: جردُ الأسطولِ مُنسَدٌّ على سقفِهِ وبابٌ **مضادُّ محوٍ** يُسقِطُ الدفعةَ إن غابَ نداءُ الإنفاذِ من المُوقِّعِ · [ADR-028](../15-decisions/ADR-028-token-bound-owner-binding.md)) | Implemented | M1-05B |

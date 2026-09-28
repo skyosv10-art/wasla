@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-27T22:28:46Z",
+  "generated_at": "2026-09-28T06:10:14Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7e84299bfed7b8fe6b2ff232b7f64b7c5c390c74",
-    "branch": "feat/m6-18a-resilience-controls-slos",
+    "commit": "54d2bf544baee203985d6d1f9a31fde00be4abc3",
+    "branch": "fix/gov-002-owner-dependency-gate-audit",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2801
+    "tracked_files": 2845
   },
   "env": {
     "node": "v20.20.1",
@@ -30,7 +30,7 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 32
+    "risks_not_closed": 33
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:42266f76f8d5413c6acc0b43a3d301e8be6c68949cb003796870fbfbedcb2989",
+  "fingerprint": "sha256:7d63d48bc7232348222fa5df8c9bb6a45ec12ea3e1bfe1559d25ff653f91c19c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

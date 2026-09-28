@@ -182,6 +182,11 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-24.04
+    # (CLM-0392) الفحصُ 23 يُشغَّلُ عبر verify.sh أيضاً، فيحتاجُ GH_TOKEN لقراءةِ الفروعِ.
+    # بلا رمزٍ كانَ يتخطّى (تعذُّرَ القراءة) في كلِّ تشغيلٍ — فصارَ تعذُّرُ القراءةِ إخفاقاً.
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       VERIFY_SKIP_NODE: "1"
     steps:
@@ -212,6 +217,8 @@ jobs:
           echo "node   $(node --version)"
           echo "pnpm   $(pnpm --version)"
       - name: verify.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/verify.sh
       - name: رفع أرتفاكت التحقق
         if: always()

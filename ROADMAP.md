@@ -1663,3 +1663,4 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
   ROADMAP.md for `scripts/` changes) — recorded; this entry covers the script change in this cycle.
 - Evidence directories `…T064800Z`, `…T074500Z`, `…T080000Z` are local-time labels with a `Z` suffix (≈3h ahead of UTC); not
   renamed, corrected by record.
+- **Owner PR #530 (CODEOWNERS → `@skyosv10-art`)** re-measured 06:12:07Z: CODEOWNER valid (0 errors, admin) but not usable — sole PR author, cannot self-approve → activation not executed; GOV-002 stays BLOCKED (`docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/`).

@@ -24,6 +24,7 @@ lowering of requirements, no CODEOWNER exception.
 7. **CI record:** `main` Roadmap freshness failed on `0f2c848` (PR #528 omitted ROADMAP.md); green again at `751b60e`.
    ROADMAP.md updated in this cycle.
 8. **Timestamp correction:** evidence dirs `…T064800Z`, `…T074500Z`, `…T080000Z` are local-time labels; not renamed.
+10. **Owner PR #530 (06:09:09Z)** changed CODEOWNERS `@uxxxu` → `@skyosv10-art`. Re-measured 06:12:07Z: 0 CODEOWNERS errors, collaborator (204), admin. Activation **not** executed: the sole CODEOWNER is the author of every PR (100/100, and the agent's identity) and cannot approve its own PR, so `require_code_owner_reviews=true` would make all PRs unmergeable. A self-approval probe was deliberately not run. GOV-002 stays BLOCKED with a new owner action (second reviewer, or a distinct PR-author account). `docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/`.
 9. **CLM-0386:** already `Released` (PR #525 merged `814706a`); branch `fix/roadmap-freshness-tier1` still exists. No change.
 
 ---

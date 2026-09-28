@@ -2,6 +2,7 @@
 
 - **Status:** PREPARED · **NOT EXECUTED** · GOV-002 = **BLOCKED**
 - **Claim:** CLM-0391 · **Item:** M0-45
+- **Update 06:12:07Z:** owner merged PR #530 (CODEOWNERS → `@skyosv10-art`). §1 now passes on validity (0 errors, collaborator, admin) but **fails on usability**: the sole CODEOWNER authors every PR and cannot approve its own. Activation stays NOT EXECUTED. Record: [`2026-09-28T061207Z-gov-002-post-codeowners-change`](ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/README.md).
 - **Blocker record:** [`2026-09-28T054535Z-gov-002-owner-dependency`](ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/README.md) · [`RISK-0054`](../07-security/RISK_REGISTER.md)
 
 This runbook exists so that, once the owner completes the CODEOWNER action, GOV-002 can be executed with a clear live
@@ -21,6 +22,8 @@ One of the two owner actions must be **measured**, not asserted:
 |--------|--------------|--------------------------------|
 | A | Add `@uxxxu` as collaborator with Write+ and `@uxxxu` accepts | `GET /repos/skyosv10-art/wasla/collaborators/uxxxu` → `204` · `GET .../collaborators/uxxxu/permission` → `permission` ∈ {`write`,`maintain`,`admin`} · `GET .../invitations` → no pending invite for `uxxxu` |
 | B | Change `CODEOWNERS` to a valid collaborator/team (via a normal PR) | the new owner passes the same collaborator/permission check (or team has Write+) · the CODEOWNERS PR merged through normal review |
+
+For both, additionally: **at least one CODEOWNER for the changed paths must be a different account from the PR author** (GitHub ignores an author's approval of their own PR). If the only CODEOWNER is the account that opens the PRs, §1 fails.
 
 For both: `GET /repos/skyosv10-art/wasla/codeowners/errors` → `{"errors":[]}` on `main`.
 If any check fails → stop; GOV-002 stays BLOCKED; record the measurement.

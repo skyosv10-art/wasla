@@ -24,6 +24,8 @@ OWNER ACTION REQUIRED (one of):
 GOV-002 is **not closed** by this record. It can only close after the owner action is proven by a new live measurement
 (see [`GOV-002_ACTIVATION_RUNBOOK.md`](../../GOV-002_ACTIVATION_RUNBOOK.md)).
 
+> **Superseded in part at 06:12:07Z:** the owner merged PR #530 (CODEOWNERS → `@skyosv10-art`). See [`2026-09-28T061207Z-gov-002-post-codeowners-change`](../2026-09-28T061207Z-gov-002-post-codeowners-change/README.md). This record stays as the 05:45:35Z measurement.
+
 ## Raw measurements
 
 | File | Call | Result |

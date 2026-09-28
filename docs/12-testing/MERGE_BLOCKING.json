@@ -175,6 +175,29 @@
       "risk": "RISK-0054",
       "finding": "PRs #524-#529 merged with 0 reviews while required_approving_review_count=1 and enforce_admins=true",
       "root_cause": "NOT VERIFIED"
+    },
+    "post_codeowners_change": {
+      "measured_at": "2026-09-28T06:12:07Z",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change",
+      "owner_pr": 530,
+      "owner_pr_merge_sha": "ae5646e",
+      "owner_pr_reviews": 0,
+      "codeowner": "@skyosv10-art",
+      "codeowner_collaborator": true,
+      "codeowner_permission": "admin",
+      "codeowners_errors": 0,
+      "codeowner_is_sole_pr_author": true,
+      "pr_authors_last100": {
+        "skyosv10-art": 100
+      },
+      "self_approval_probe": "NOT EXECUTED (would itself fabricate a CODEOWNER approval)",
+      "activation_executed": false,
+      "reason": "enabling require_code_owner_reviews would make every PR unmergeable: the only CODEOWNER authors every PR and cannot approve its own",
+      "owner_action_required": [
+        "A) add a second collaborator (Write+, accepted) and list them/their team in CODEOWNERS",
+        "B) PRs authored by an account other than the CODEOWNER"
+      ],
+      "gov_002_status": "BLOCKED"
     }
   }
 }

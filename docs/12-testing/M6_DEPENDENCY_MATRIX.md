@@ -17,7 +17,7 @@
 
 | Blocker | Affects | Record |
 |---------|---------|--------|
-| GOV-002 CODEOWNER eligibility (`@uxxxu` not a collaborator) | every gate that requires an owner/CODEOWNER review | [`2026-09-28T054535Z-gov-002-owner-dependency`](ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/README.md) |
+| GOV-002 CODEOWNER eligibility (`@uxxxu` not a collaborator → after PR #530: `@skyosv10-art` valid but is the sole PR author, cannot self-approve) | every gate that requires an owner/CODEOWNER review | [`2026-09-28T054535Z-gov-002-owner-dependency`](ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/README.md) |
 | RISK-0054 approvals not effective (0-review merges succeed) | the meaning of "merged" for every item | [`RISK_REGISTER.md`](../07-security/RISK_REGISTER.md) |
 | M6-19A not completed | M6-19B, M6-19C | board |
 | M6 not completed | M7-01…M7-06 (not started; not to be started) | board |

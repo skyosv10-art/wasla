@@ -1,7 +1,18 @@
+# 2026-09-29 — Stale claim release + branch cleanup
+
+- **Work Item(s):** M0-45 (governance maintenance)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+
+Released 6 stale active claims whose branches were deleted (merged PRs): CLM-0396 (PR #534), CLM-0351 (PR #466), CLM-0177 (PR #174), CLM-0115 (PR #79), CLM-0114 (PR #77), CLM-0113 (PR #77). Deleted 10 stale remote branches from merged PRs. No code changes.
+
+---
+
 # 2026-09-28 — CLM-0396 — GOV-002 bootstrap · independent CODEOWNER
 - **Work Item(s):** M0-45
 - **Author/Owner:** @xuuux-voox
-- **Status:** Active
+- **Status:** Released
 - **Scope:** CODEOWNERS, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
 GOV-002 bootstrap: the current CODEOWNER is also the author of all PRs, so an independent CODEOWNER is required for governance review. This claim establishes @xuuux-voox as CODEOWNER for `/scripts/`, `/docs/07-security/`, `/docs/12-testing/`, and `/docs/16-progress/`. No branch-protection setting, review requirement, enforce-admins setting, RISK-0054, PR #532, or PR #531 was changed.
 

@@ -142,6 +142,75 @@
     "enforce_admins_unchanged": true,
     "require_code_owner_reviews_enabled": false,
     "gov_002_status": "BLOCKED",
-    "no_go_remains": true
+    "no_go_remains": true,
+    "owner_dependency": {
+      "remeasured_at": "2026-09-28T05:45:35Z",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency",
+      "blocker": "CODEOWNER eligibility",
+      "current": {
+        "uxxxu_valid_user": true,
+        "uxxxu_collaborator": false,
+        "pending_invitation": false,
+        "codeowners_errors": 68,
+        "require_code_owner_reviews": false,
+        "enforce_admins": true
+      },
+      "owner_action_required": [
+        "A) add @uxxxu as collaborator with Write+ and accept",
+        "B) update CODEOWNERS to a valid collaborator/team"
+      ],
+      "activation_runbook": "docs/12-testing/GOV-002_ACTIVATION_RUNBOOK.md",
+      "permitted_change_after_owner_action": {
+        "require_code_owner_reviews": "false -> true",
+        "unchanged": {
+          "required_approving_review_count": 1,
+          "enforce_admins": true,
+          "dismiss_stale_reviews": false
+        }
+      },
+      "executed": false,
+      "gov_002_status": "BLOCKED"
+    },
+    "review_enforcement_contradiction": {
+      "risk": "RISK-0054",
+      "finding": "PRs #524-#529 merged with 0 reviews while required_approving_review_count=1 and enforce_admins=true",
+      "root_cause": "NOT VERIFIED"
+    },
+    "post_codeowners_change": {
+      "measured_at": "2026-09-28T06:12:07Z",
+      "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change",
+      "owner_pr": 530,
+      "owner_pr_merge_sha": "ae5646e",
+      "owner_pr_reviews": 0,
+      "codeowner": "@skyosv10-art",
+      "codeowner_collaborator": true,
+      "codeowner_permission": "admin",
+      "codeowners_errors": 0,
+      "codeowner_is_sole_pr_author": true,
+      "pr_authors_last100": {
+        "skyosv10-art": 100
+      },
+      "self_approval_probe": "NOT EXECUTED (would itself fabricate a CODEOWNER approval)",
+      "activation_executed": false,
+      "reason": "enabling require_code_owner_reviews would make every PR unmergeable: the only CODEOWNER authors every PR and cannot approve its own",
+      "owner_action_required": [
+        "A) add a second collaborator (Write+, accepted) and list them/their team in CODEOWNERS",
+        "B) PRs authored by an account other than the CODEOWNER"
+      ],
+      "gov_002_status": "BLOCKED"
+    }
+  },
+  "review_requirement_effective": {
+    "measured_at": "2026-09-28T06:30:26Z",
+    "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement",
+    "graphql_requiresApprovingReviews": false,
+    "graphql_requiredApprovingReviewCount": null,
+    "rest_protection_has_required_pull_request_reviews": false,
+    "rest_subendpoint_required_approving_review_count": 1,
+    "open_pr_0_reviews_mergeStateStatus": "CLEAN",
+    "approvals_required": false,
+    "root_cause": "CONFIGURATION DEFECT",
+    "cause_of_api_discrepancy": "NOT VERIFIED",
+    "note": "protection.required_pull_request_reviews above is the REST sub-endpoint reading; it is not enforcement (RISK-0054)."
   }
 }

@@ -1,0 +1,1 @@
+(merged/closed PRs, per_page=100, first page; GET /pulls?state=closed)

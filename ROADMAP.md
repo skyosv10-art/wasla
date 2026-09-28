@@ -1646,3 +1646,27 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 - Rulesets: empty
 - Evidence chain: commit → API → raw JSON → verdict (PASS)
 - GOV-005: BROKEN → PASS
+
+### 2026-09-28 — GOV-002 owner dependency · M6-19B/M6-19C gate readiness audit (CLM-0391)
+
+- **GOV-002 = BLOCKED** (owner dependency, re-measured 05:45:35Z): `@uxxxu` valid user, not a collaborator (404), no pending
+  invitation, 68 CODEOWNERS "Unknown owner" errors; `require_code_owner_reviews=false`, `enforce_admins=true`. Branch protection
+  not changed. Activation prepared, not executed: `docs/12-testing/GOV-002_ACTIVATION_RUNBOOK.md`.
+- **New blocker RISK-0054:** PRs #524–#529 merged with 0 reviews while `required_approving_review_count=1`. The earlier
+  "review count PASS" was a configuration reading, not enforcement. Agent merging paused while open.
+- **M6-19B → Blocked** (was Ready for Gate): guard `validate-secret-rotation.sh` rewritten fail-closed (errors were swallowed)
+  + 8 mutation cases; service-identity "measured" values withdrawn (copied); DB/audit baselines unmeasured; rotation age
+  unmeasurable. `docs/12-testing/M6-19B_GATE.md`.
+- **M6-19C → Blocked** (was Ready for Gate): no attestation produced; SLSA claims corrected to Build L0; RISK-0052 mis-citation
+  corrected. `docs/12-testing/M6-19C_GATE.md`.
+- M6 dependency matrix: `docs/12-testing/M6_DEPENDENCY_MATRIX.md`. `main` Roadmap freshness failed on `0f2c848` (PR #528 omitted
+  ROADMAP.md for `scripts/` changes) — recorded; this entry covers the script change in this cycle.
+- Evidence directories `…T064800Z`, `…T074500Z`, `…T080000Z` are local-time labels with a `Z` suffix (≈3h ahead of UTC); not
+  renamed, corrected by record.
+- **Owner PR #530 (CODEOWNERS → `@skyosv10-art`)** re-measured 06:12:07Z: CODEOWNER valid (0 errors, admin) but not usable — sole PR author, cannot self-approve → activation not executed; GOV-002 stays BLOCKED (`docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/`).
+
+### 2026-09-28 — R54: RISK-0054 classified (CLM-0391)
+
+- Read-only: approvals are **not** required on `main` (GraphQL `requiresApprovingReviews:false`; 0-review PR `CLEAN`); the
+  REST sub-endpoint's `count=1` is not enforcement. ROOT CAUSE: CONFIGURATION DEFECT · API discrepancy: NOT VERIFIED.
+- GOV-002 ON HOLD; owner dependency A (independent reviewer/team valid as CODEOWNER) or B (CODEOWNERS redesign). NO-GO active.

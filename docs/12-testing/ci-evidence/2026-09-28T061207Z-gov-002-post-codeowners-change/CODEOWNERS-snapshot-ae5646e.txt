@@ -1,0 +1,154 @@
+# CODEOWNERS — ملكية المجلدات حسب الفرق
+#
+# ملاحظة: الاسم مؤقت (@skyosv10-art) وسيُحدد لاحقًا بأسماء مبرمجي الفرق الـ12
+# عند اكتمال تعيين الفريق. كل مجلد يجب أن يُحدّث هنا بمجرد تخصيص المالك الفعلي.
+#
+# القاعدة: لا يتم دمج MR لمسار إلا بعد موافقة المالك (CODEOWNERS approval).
+
+# ───────────────────────────────────────────────────────────
+# Root / Repo-wide rules
+# ───────────────────────────────────────────────────────────
+/README.md                       @skyosv10-art
+/CONTRIBUTING.md                 @skyosv10-art
+/SECURITY.md                     @skyosv10-art
+/.gitlab-ci.yml                  @skyosv10-art
+/.gitignore                      @skyosv10-art
+/docs/00-rules/                  @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 01 — Identity & Auth
+# مسؤول: User, IdentityLink, Wasla Public ID, Phone, Session, RBAC, Recovery, Identity History
+# ───────────────────────────────────────────────────────────
+/services/identity/              @skyosv10-art
+/services/auth/                  @skyosv10-art
+/packages/auth-sdk/              @skyosv10-art
+/packages/contracts/             @skyosv10-art   # مشاركة مع جميع الفرق (identity-contracts)
+/docs/03-domain/                 @skyosv10-art   # identity.md
+/docs/04-api/auth.md             @skyosv10-art
+/docs/15-decisions/              @skyosv10-art   # ADR-identity
+
+# ───────────────────────────────────────────────────────────
+# Team 02 — Customer
+# مسؤول: Customer Profile, Mini App flows, Create order contract, Saved places, History
+# ───────────────────────────────────────────────────────────
+/apps/customer-mini-app/         @skyosv10-art
+/bots/customer-bot/              @skyosv10-art
+/docs/09-apps/                   @skyosv10-art   # customer flows
+
+# ───────────────────────────────────────────────────────────
+# Team 03 — Driver
+# مسؤول: Driver Profile, Documents, Vehicle, Subscription, Mini App, State, Community fallback
+# ───────────────────────────────────────────────────────────
+/apps/driver-mini-app/           @skyosv10-art
+/bots/driver-bot/                @skyosv10-art
+/services/drivers/               @skyosv10-art
+/services/subscriptions/         @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 04 — Matching
+# مسؤول: Candidate search, Hard constraints, Ranking, Fairness, Reputation inputs, ETA, Eligibility
+# ───────────────────────────────────────────────────────────
+/services/matching/              @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 05 — Dispatch
+# مسؤول: DispatchJob, Offer waves, Timeouts, Assignment, Reassignment, Community fallback, Duplicate prevention
+# ───────────────────────────────────────────────────────────
+/services/dispatch/              @skyosv10-art
+/services/rides/                 @skyosv10-art   # ride order lifecycle (مشاركة مع Team 02)
+/services/delivery/              @skyosv10-art   # delivery lifecycle (مشاركة)
+/services/orders/                @skyosv10-art   # Order Engine state machine (مشاركة مع Team 02)
+
+# ───────────────────────────────────────────────────────────
+# Team 06 — Marketplace
+# مسؤول: Store, Catalog, Product, Inventory, Staff, Search indexing, Moderation, Billing contracts
+# ───────────────────────────────────────────────────────────
+/services/marketplace/           @skyosv10-art
+/services/search/                @skyosv10-art
+/docs/11-partners/               @skyosv10-art   # marketplace model
+
+# ───────────────────────────────────────────────────────────
+# Team 07 — Partner / Enterprise
+# مسؤول: Partner onboarding, Enterprise, Partner API, Webhooks, Contract config, B2B SLA, Fleet, Portal
+# ───────────────────────────────────────────────────────────
+/apps/partner-mini-app/          @skyosv10-art
+/bots/partner-bot/               @skyosv10-art
+/services/partners/              @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 08 — Admin
+# مسؤول: Admin Portal, Dashboards, City/Zone controls, Moderation, Broadcasts, Manual dispatch, Config UI
+# ───────────────────────────────────────────────────────────
+/apps/admin-web/                 @skyosv10-art
+/docs/10-admin/                  @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 09 — Data
+# مسؤول: PostgreSQL schemas, Redis, Event schema registry, Outbox, Search pipelines, Analytics, Retention, Warehouse
+# ───────────────────────────────────────────────────────────
+/services/analytics/             @skyosv10-art
+/services/audit/                 @skyosv10-art
+/docs/06-database/               @skyosv10-art
+/docs/05-events/                 @skyosv10-art
+/packages/events/                @skyosv10-art
+/services/translation/           @skyosv10-art   # i18n data (مشاركة)
+
+# ───────────────────────────────────────────────────────────
+# Team 10 — DevOps
+# مسؤول: GitLab CI/CD, Containers, Environments, IaC, Secrets, Backups, Monitoring, Deployment, Scaling, DR
+# ───────────────────────────────────────────────────────────
+/infra/                          @skyosv10-art
+/scripts/                        @skyosv10-art
+/docs/08-infrastructure/         @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 11 — Security / QA
+# مسؤول: Test strategy, Security standards, Threat model, SAST/DAST, Contract/E2E/Load/Abuse tests, Release gates
+# ───────────────────────────────────────────────────────────
+/docs/07-security/               @skyosv10-art
+/docs/12-testing/                @skyosv10-art
+/packages/test-utils/            @skyosv10-art
+/docs/13-observability/          @skyosv10-art   # مراقبة (مشاركة مع Team 10)
+/packages/telemetry/             @skyosv10-art
+/packages/errors/                @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Team 12 — Integration
+# مسؤول: Telegram Adapter, Maps, Tap, SMS/Email, Translation, KYC/Compliance adapters, Webhooks
+# ───────────────────────────────────────────────────────────
+/services/notifications/         @skyosv10-art
+/services/chat/                  @skyosv10-art
+/services/compliance/            @skyosv10-art
+/services/billing/               @skyosv10-art   # Payment Abstraction / Tap (مشاركة مع Team 09)
+/packages/i18n/                  @skyosv10-art
+/packages/config/                @skyosv10-art
+/packages/date-time/             @skyosv10-art
+
+# ───────────────────────────────────────────────────────────
+# Shared packages — تعديل جماعي (يستلزم موافقة المالك المرتبط + مراجعة عبر الفرق)
+# ───────────────────────────────────────────────────────────
+/packages/ui/                    @skyosv10-art   # Team 02/03/07 (واجهات)
+
+# ───────────────────────────────────────────────────────────
+# Shared services — ملكية مشتركة (يستلزم ADR عند التغيير الجذري)
+# ───────────────────────────────────────────────────────────
+/services/reputation/            @skyosv10-art   # Team 04/05/11 (Reputation Engine — Core)
+/services/fraud/                 @skyosv10-art   # Team 11/04/05
+/services/referrals/             @skyosv10-art   # Team 03/01
+/services/geography/             @skyosv10-art   # Team 01/02/03 (Geo hierarchy)
+/services/support/               @skyosv10-art   # Team 08/11 (Support & Escalation)
+
+# ───────────────────────────────────────────────────────────
+# Progress / Decisions / Launch
+# ───────────────────────────────────────────────────────────
+/docs/16-progress/               @skyosv10-art   # جميع الفرق تحدّث حالة مرحلتها
+/docs/15-decisions/              @skyosv10-art   # ADRs — Team 01 افتراضيًا، يُحوّل حسب الموضوع
+/docs/17-launch/                 @skyosv10-art   # Team 10/11
+
+# ───────────────────────────────────────────────────────────
+# Docs — أقسام مشتركة
+# ───────────────────────────────────────────────────────────
+/docs/01-product/                @skyosv10-art
+/docs/02-architecture/           @skyosv10-art
+/docs/14-runbooks/               @skyosv10-art
+/docs/99-reference/              @skyosv10-art

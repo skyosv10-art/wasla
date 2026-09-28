@@ -1,0 +1,30 @@
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning
+Cache-Control: private, max-age=60, s-maxage=60
+Content-Length: 2
+Content-Security-Policy: default-src 'none'
+Content-Type: application/json; charset=utf-8
+Date: Mon, 28 Sep 2026 05:45:37 GMT
+Etag: "54d72452a35539693e705e71922800a9bfd6500ff41fae0ddc82f5f94ed432a0"
+Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
+Server: github.com
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+Vary: Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With
+X-Accepted-Oauth-Scopes: 
+X-Content-Type-Options: nosniff
+X-Frame-Options: deny
+X-Github-Api-Version-Selected: 2022-11-28
+X-Github-Edge-Region: iad
+X-Github-Media-Type: github.v3; format=json
+X-Github-Request-Id: 25BB:38AC25:2003406:690C622:6AB9FEF9
+X-Oauth-Client-Id: Ov23lisFSzTZajRDJDwO
+X-Oauth-Scopes: codespace, gist, notifications, project, read:org, repo, user, workflow
+X-Ratelimit-Limit: 5000
+X-Ratelimit-Remaining: 4971
+X-Ratelimit-Reset: 1790574350
+X-Ratelimit-Resource: core
+X-Ratelimit-Used: 29
+X-Xss-Protection: 0
+
+[]

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-28T06:41:26Z",
+  "generated_at": "2026-09-28T11:03:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "565600c7f0e8b0525e1944cbfefa4dd866f5de21",
+    "commit": "2d6be598b7e63189aea5f6ef11448ee5c26139da",
     "branch": "fix/m0-44-branch-freshness-guard",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2837
+    "tracked_files": 2905
   },
   "env": {
     "node": "v20.20.1",
@@ -30,7 +30,7 @@
     "ci_jobs": 30,
     "ci_allow_failure": 1,
     "governance_checks": 25,
-    "risks_not_closed": 33
+    "risks_not_closed": 34
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:7d63d48bc7232348222fa5df8c9bb6a45ec12ea3e1bfe1559d25ff653f91c19c",
+  "fingerprint": "sha256:495f39c2e754202bd4cf4df16b7216482ce7360ac3392ea372dda48738db0af0",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

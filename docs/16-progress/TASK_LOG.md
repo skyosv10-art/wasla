@@ -1,3 +1,49 @@
+## 2026-09-28 — CLM-0390 · M6-19C Supply Chain Hardening
+
+- **Work Item(s):** M6-19C (supply-chain hardening)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+M6-19C implementation: supply chain hardening documentation covering provenance
+attestation, SBOM management, and SLSA alignment.
+
+Deliverables:
+1. **`docs/07-security/SUPPLY_CHAIN_HARDENING.md`** — Comprehensive document covering:
+   - Supply chain pipeline design (build → verify → SBOM → compare → scan)
+   - Build provenance evidence collection
+   - Base image integrity (SHA256 digest pinning)
+   - SBOM management (CycloneDX generation, comparison, storage)
+   - Provenance attestation procedure (SLSA alignment assessment)
+   - Vulnerability management (scanning, exception process)
+   - Future hardening roadmap (image signing, SLSA L3, binary authorization)
+   - Exit criteria checklist (all met)
+
+Existing supply chain controls (M2-01):
+- Container image build with pinned base (Dockerfile, build-image.sh)
+- Tool pinning with SHA256 (tool-pins.env)
+- SBOM generation CycloneDX (generate-sbom.sh)
+- SBOM comparison (compare-sbom.sh)
+- Vulnerability scanning trivy (scan-image.sh)
+- Image contract verification (verify-image-contract.sh)
+- CI supply chain job (image-supply-chain)
+- Production dependency guard (M0-43, check 22)
+- Dependency audit (M0-06, check 9)
+- Non-root user (USER node)
+- pnpm from packageManager (no global install)
+
+SLSA alignment:
+- Build L1: Met (build provenance documented)
+- Build L2: Met (hosted build platform — GitHub Actions)
+- Build L3: Partial (GitHub Actions with OIDC available)
+- Source L1: Met (Git, GitHub)
+- Source L2: Met (branch protection, CODEOWNERS)
+- Source L3: Not met (single-owner repo — RISK-0052)
+
+Exit criteria: provenance/SBOM attestations — all met.
+Status: Ready for Gate (§9 — owner decision to Completed).
+
+---
+
 ## 2026-09-28 — CLM-0389 · M6-19B Access/Secret/Audit Review
 
 - **Work Item(s):** M6-19B (access/secret/audit review)

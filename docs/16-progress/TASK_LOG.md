@@ -1,6 +1,6 @@
 # 2026-09-28 — CLM-0394 — M6-19B baseline remediation
 
-- **Work Item:** M6-19B
+- **Work Item(s):** M6-19B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Active
 - **Scope:** infra/secrets/secret-inventory.json, scripts/checks/validate-secret-rotation.sh, scripts/checks/test-governance.sh, docs/12-testing/M6-19B_GATE.md, docs/07-security/ACCESS_SECRET_AUDIT_REVIEW.md, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md, ROADMAP.md

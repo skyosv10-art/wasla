@@ -1653,3 +1653,4 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
   and claim status was read from the Expires column. Repaired: canonical claims reader, CI-mode unreadable = FAIL,
   least-privilege token, regression cases ج1–ج9. RISK-0055 opened; RISK-0045 / M0-44 statuses not changed (owner decision).
 - Expected red until 5 stale merged branches are resolved by the owner; not declared as evidence to force green.
+- `GH_TOKEN` added to `verify` job: the guard runs through `verify.sh` too, so the verify job needed the same read token as governance-guard. Without it, verify failed on "unreadable platform" instead of detecting stale branches.

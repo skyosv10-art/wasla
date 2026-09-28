@@ -76,6 +76,10 @@ run_step "مُجدوِلُ النبضاتِ (G8 · CLM-0328)" \
 run_step "جردُ الأسرار (M2-03A)" \
   bash scripts/checks/validate-secret-inventory.sh
 
+# ── 1-ه2) تدويرُ الأسرار (M6-19B) ─────────────────────────────────────────
+run_step "تدويرُ الأسرار (M6-19B)" \
+  bash scripts/checks/validate-secret-rotation.sh
+
 # ── 1-و) ملكيّةُ الترحيلاتِ (M2-05A) ────────────────────────────────────
 run_step "ملكيّةُ الترحيلاتِ (M2-05A)" \
   bash scripts/checks/validate-migration-owners.sh

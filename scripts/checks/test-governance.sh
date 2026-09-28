@@ -1580,12 +1580,19 @@ t "جلبٌ من الشبكةِ يُنفَّذُ مباشرةً يُرفَض" fa
 # وكتابةٌ في سيرٍ مُعلَنٍ بلا كتابةٍ. فالجردُ ليس وصفاً بل قياساً يُطابَق.
 t "سرٌّ غيرُ مُعلَنٍ في الجردِ يُرفَض" fail \
   _wf_sed 's|          BASE_SHA: ${{ github.event.before }}|          K: ${{ secrets.GEMINI_API_KEY }}|' roadmap.yml
-t "صلاحيّةُ كتابةٍ غيرُ مُعلَنةٍ تُرفَض" fail _wf_sed 's|^  contents: read|  contents: write|' ci.yml
+t "صلاحيّةُ كتابةٍ غيرُ مُعلَنةٍ تُرفَض" fail _wf_sed 's|^  contents: read|  contents: write|' roadmap.yml
 
 # (14) والتعليلُ المكتوبُ يمرُّ: منعُ **ذكرِ** النمطِ يمحو الدليلَ الذي يمنعُ عودتَه.
 t "ذكرُ النمطِ في تعليقٍ يمرُّ" pass _wf_append roadmap.yml '
 # تعليلٌ: pull_request_target ممنوعٌ هنا، ولا يُمرَّرُ سرٌّ إلى هذا السيرِ.
 '
+
+# (15) و(16) إثباتُ أصلِ البناءِ (M6-19C · ADR-056): حذفُ خطوةِ الإثباتِ عطلٌ.
+# فالحارسُ يُلزِمُ وجودَها في ci.yml، وحذفُها يُكشَفُ لا يُمرَّرُ.
+t "حذفُ خطوةِ إثباتِ أصلِ البناءِ يُرفَض" fail \
+  _wf_sed '/actions\/attest-build-provenance/d' ci.yml
+t "حذفُ خطوةِ تحقُّقِ الإثباتِ يُرفَض" fail \
+  _wf_sed '/gh attestation verify/d' ci.yml
 
 printf '\n\033[1m[ي] تدقيقُ الاعتمادياتِ والثغرات (M0-06)\033[0m\n'
 # الحارسُ يسأل مُسجَّلَ npm عبرَ الشبكةِ، ويقرأ `package.json` و`SECURITY_RULES.md`.

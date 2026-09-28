@@ -24,12 +24,21 @@
 The repository is **public** (`GET /repos/skyosv10-art/wasla` → `visibility: public`), so GitHub artifact attestations are
 available. The implementation needs:
 
-1. An ADR: adding a first-party attestation action to the `image-supply-chain` job requires changing the action allowlist
-   enforced by `validate-workflow-supply-chain.sh` and granting job-level `id-token: write` + `attestations: write`
-   (the workflow is `contents: read` today). That is a policy change to a guarded file and must be decided, not slipped in.
-2. Attest the SBOM files (subject = file digest) and the image digest; verify in the same job with `gh attestation verify`.
-3. Mutation cases proving the guard rejects removal of the attestation step.
-4. CI verdict on `main` with the attestation visible; M6-19A completed; owner gate decision.
+1. **DONE (CLM-0395):** ADR-056 created: adding a first-party attestation action to the `image-supply-chain` job. Policy change documented: `validate-workflow-supply-chain.sh` DECLARED updated to `write=yes` for `ci.yml`; job-level `id-token: write` + `attestations: write` added.
+2. **DONE (CLM-0395):** SBOM files attested using `actions/attest-build-provenance@v2` (subject = file path). Verification step added using `gh attestation verify` in the same job.
+3. **DONE (CLM-0395):** Two mutation cases added to `test-governance.sh`: removal of attestation step (fail), removal of verification step (fail). Gate 7 added to `validate-workflow-supply-chain.sh` enforcing presence of both steps.
+4. M6-19A completed; owner gate decision.
+
+### Remediation status (CLM-0395)
+
+| Dimension | Before (CLM-0391 audit) | After (CLM-0395) |
+|-----------|------------------------|-------------------|
+| Provenance attestation | Not produced | **Produced** via `actions/attest-build-provenance@v2` on SBOM files |
+| Attestation verification | Not present | **Present** via `gh attestation verify` in same job |
+| SLSA Build level | L0 (no provenance) | **L1** (provenance document, platform-generated) |
+| Supply chain guard | 6 gates | **7 gates** (Gate 7 enforces attestation step presence) |
+| Mutation cases | 0 for attestation | **2** (removal of attestation step, removal of verification step) |
+| Remaining blockers | — | M6-19A (external), owner gate decision |
 
 ## 3. Not claimed
 

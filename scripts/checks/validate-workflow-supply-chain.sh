@@ -45,7 +45,7 @@ WF_DIR="$ROOT/.github/workflows"
 # استخدامٌ غيرُ مُعلَنٍ رفضٌ (تسلُّلُ صلاحيّةٍ)، وإعلانٌ غيرُ مستخدَمٍ رفضٌ
 # (صلاحيّةٌ مُعلَنةٌ بلا حاجةٍ تُطبِّعُ التوسيعَ).
 DECLARED=(
-  "ci.yml|no|no|خطُّ CI المانعُ — الوظائفُ الواحدةُ والثلاثونَ المُلزِمةُ (MERGE_BLOCKING.json · ADR-023)."
+  "ci.yml|no|yes|خطُّ CI المانعُ — الوظائفُ الواحدةُ والثلاثونَ المُلزِمةُ (MERGE_BLOCKING.json · ADR-023). وظيفةُ image-supply-chain تملكُ id-token: write و attestations: write لإثباتِ أصلِ البناءِ (M6-19C · ADR-056)."
   "roadmap.yml|no|no|طرافةُ ROADMAP.md مع كلِّ دفعةٍ — مستقلٌّ عن خطِّ CI بقصدٍ."
 )
 #
@@ -151,6 +151,16 @@ for f in "${ON_DISK[@]}"; do
     [[ "$want_wr" == "$got_wr" ]] \
       || fail "$f: إعلانُ صلاحيّةِ الكتابةِ غيرُ مطابقٍ للمقيسِ (مُعلَنٌ write=$want_wr · مقيسٌ $got_wr)."
   done
+
+  # ── البابُ 7: إثباتُ أصلِ البناءِ في وظيفةِ image-supply-chain (M6-19C · ADR-056) ──
+  # لا يُكتَبُ البيانُ بعدَ البناءِ. يُوقَّعُ أصلُ البناءِ ويُربَطُ بقوائمِ الموادِ.
+  # حذفُ خطوةِ الإثباتِ من ci.yml عطلٌ يُكشَفُ لا توسُّعٌ يُمرَّرُ.
+  if [[ "$f" == "ci.yml" ]]; then
+    grep -Eq 'actions/attest-build-provenance' <<< "$LIVE" \
+      || fail "$f: خطوةُ إثباتِ أصلِ البناءِ (actions/attest-build-provenance) مفقودةٌ — M6-19C يتطلّبُ توقيعَ قوائمِ الموادِ."
+    grep -Eq 'gh attestation verify' <<< "$LIVE" \
+      || fail "$f: خطوةُ تحقُّقِ الإثباتِ (gh attestation verify) مفقودةٌ — الإثباتُ بلا تحقُّقٍ بيانٌ لا ضمانٌ."
+  fi
 done
 
 if (( RC == 0 )); then

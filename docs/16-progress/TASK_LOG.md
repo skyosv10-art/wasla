@@ -1,3 +1,15 @@
+# 2026-09-28 — CLM-0395 — M6-19C attestation remediation
+
+- **Work Item(s):** M6-19C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** .github/workflows/ci.yml,scripts/checks/validate-workflow-supply-chain.sh,scripts/checks/test-governance.sh,docs/15-decisions/ADR-056-build-provenance-attestation.md,docs/12-testing/M6-19C_GATE.md,docs/07-security/SUPPLY_CHAIN_HARDENING.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+- **Tests:** supply chain guard (7 gates), 2 new mutation cases (attestation step removal, verification step removal)
+- **Evidence:** CI verdict on PR (image-supply-chain job with attestation step)
+- **Next step:** Wait for CI verdict, then release claim and proceed to M7-01
+
+---
+
 # 2026-09-28 — CLM-0394 — M6-19B baseline remediation
 
 - **Work Item(s):** M6-19B

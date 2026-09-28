@@ -3,7 +3,7 @@
  *
  * Implements LifecycleStore using the `partner_lifecycle` table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - One row per store (tenant_store_id is PRIMARY KEY).
  * - State transitions are validated by CHECK constraints.
  * - `suspended_at` and `offboarded_at` are paired with state via CHECK.

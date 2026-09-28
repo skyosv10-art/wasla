@@ -3,7 +3,7 @@
  *
  * Implements CredentialStore using the `partner_api_credentials` table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - Credentials are hashed (SHA-256) and stored as `key_hash`.
  * - `key_prefix` is stored in plaintext for identification.
  * - Scopes are stored as TEXT[] array.

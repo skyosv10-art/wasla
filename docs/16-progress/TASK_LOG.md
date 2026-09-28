@@ -1,3 +1,18 @@
+## 2026-09-28 — CLM-0385 · M0-45 Tier 1 Governance Remediation
+
+- **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Tier 1 internal governance fixes:
+- **GOV-004 (ADR-048 duplicate):** Renumbered partner-identity ADR-048 → ADR-055. Updated all references in services/partners/ (18 files), apps/admin-portal, WORK_INDEX, WORK_CLAIMS, LAUNCH_EXECUTION_BOARD. ADR-048-app-access-path remains ADR-048.
+- **GOV-003 (M5-13M contradiction):** Status column changed from Completed → Ready for Gate to match the §9 text in the same row.
+- **CI-001 (roadmap.yml node version):** Changed node-version from "20" to "20.20.1" to match ADR-023 baseline.
+- **GOV-005 (MERGE_BLOCKING.json):** Pending — requires live branch protection measurement via GitHub API.
+- Released CLM-0384 (PR #523 merged, branch deleted).
+
+---
+
 ## 2026-09-28 — CLM-0384 · M0-45 Tier 0 Remediation
 
 - **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)

@@ -1,6 +1,6 @@
 /**
  * Partners service — HTTP app factory.
- * (ADR-048 §6)
+ * (ADR-055 §6)
  */
 
 import Fastify, { type FastifyInstance } from "fastify";

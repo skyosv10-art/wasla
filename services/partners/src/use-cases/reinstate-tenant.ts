@@ -1,6 +1,6 @@
 /**
  * Use case: Reinstate a suspended tenant.
- * (ADR-048 §7)
+ * (ADR-055 §7)
  */
 
 import type { LifecycleStore, AuditStore } from "../ports";

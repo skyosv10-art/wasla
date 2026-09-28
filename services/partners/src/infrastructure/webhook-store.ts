@@ -3,7 +3,7 @@
  *
  * Implements WebhookStore using the `partner_webhooks` table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - Webhooks are event-driven, not polled.
  * - Soft delete: `state = 'deleted'` + `deleted_at` timestamp.
  * - Pause: `state = 'paused'` without deletion.

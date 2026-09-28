@@ -1,7 +1,7 @@
 /**
  * Webhook delivery engine — HMAC-SHA256 signed event delivery.
  *
- * (ADR-048 §4):
+ * (ADR-055 §4):
  * - Webhooks are event-driven via outbox, not polled.
  * - HMAC-SHA256 signature with `X-Wasla-Signature` header.
  * - Exponential backoff on failure (1s, 2s, 4s, 8s, 16s, max 5 attempts).

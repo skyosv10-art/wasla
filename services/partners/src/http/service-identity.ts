@@ -1,6 +1,6 @@
 /**
  * Service identity for the partners boundary.
- * (ADR-048 §2, ADR-018 §2)
+ * (ADR-055 §2, ADR-018 §2)
  */
 
 import type { FastifyInstance } from "fastify";

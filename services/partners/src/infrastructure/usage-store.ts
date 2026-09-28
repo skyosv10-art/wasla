@@ -3,7 +3,7 @@
  *
  * Implements UsageStore using the `partner_usage_counters` table.
  *
- * Key design decisions (ADR-048):
+ * Key design decisions (ADR-055):
  * - Counters are per-tenant, per-window (hourly).
  * - Upsert with increment: `ON CONFLICT DO UPDATE SET api_calls = api_calls + 1`.
  * - This is not a distributed rate limiter — it's a usage meter for SLA reporting.

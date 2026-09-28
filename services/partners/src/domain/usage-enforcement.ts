@@ -1,7 +1,7 @@
 /**
  * Usage counter enforcement — rate limiting per tenant.
  *
- * (ADR-048 §5):
+ * (ADR-055 §5):
  * - Usage limits are per-tenant, not per-user.
  * - Default limits: 1000 API calls/hour, 100 webhook deliveries/hour.
  * - Enforcement is advisory: it counts and warns, does not hard-block.

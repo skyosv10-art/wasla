@@ -2,7 +2,7 @@
 -- Phase 14 — Partner / Enterprise
 -- @wasla-migrations-exempt: M5-14 review 2/N — migration runner active (db/migrate.ts) but drizzle-generated reversible migrations deferred to ADR-024 wave
 --
--- Principles (ADR-048):
+-- Principles (ADR-055):
 --   1. A tenant is a store. No separate tenants table.
 --   2. Tenant isolation is enforced at this service boundary.
 --   3. API credentials are scoped to a single store.

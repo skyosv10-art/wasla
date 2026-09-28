@@ -1,3 +1,10 @@
+# 2026-09-28 — CLM-0396 — GOV-002 bootstrap · independent CODEOWNER
+- **Work Item(s):** M0-45
+- **Author/Owner:** @xuuux-voox
+- **Status:** Active
+- **Scope:** CODEOWNERS, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
+GOV-002 bootstrap: the current CODEOWNER is also the author of all PRs, so an independent CODEOWNER is required for governance review. This claim establishes @xuuux-voox as CODEOWNER for `/scripts/`, `/docs/07-security/`, `/docs/12-testing/`, and `/docs/16-progress/`. No branch-protection setting, review requirement, enforce-admins setting, RISK-0054, PR #532, or PR #531 was changed.
+
 # 2026-09-28 — CLM-0395 — M6-19C attestation remediation
 
 - **Work Item(s):** M6-19C

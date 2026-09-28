@@ -1580,7 +1580,7 @@ t "جلبٌ من الشبكةِ يُنفَّذُ مباشرةً يُرفَض" fa
 # وكتابةٌ في سيرٍ مُعلَنٍ بلا كتابةٍ. فالجردُ ليس وصفاً بل قياساً يُطابَق.
 t "سرٌّ غيرُ مُعلَنٍ في الجردِ يُرفَض" fail \
   _wf_sed 's|          BASE_SHA: ${{ github.event.before }}|          K: ${{ secrets.GEMINI_API_KEY }}|' roadmap.yml
-t "صلاحيّةُ كتابةٍ غيرُ مُعلَنةٍ تُرفَض" fail _wf_sed 's|^  contents: read|  contents: write|' ci.yml
+t "صلاحيّةُ كتابةٍ غيرُ مُعلَنةٍ تُرفَض" fail _wf_sed 's|^  contents: read|  contents: write|' roadmap.yml
 
 # (14) والتعليلُ المكتوبُ يمرُّ: منعُ **ذكرِ** النمطِ يمحو الدليلَ الذي يمنعُ عودتَه.
 t "ذكرُ النمطِ في تعليقٍ يمرُّ" pass _wf_append roadmap.yml '

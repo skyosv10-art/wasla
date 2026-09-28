@@ -1,3 +1,15 @@
+## 2026-09-28 — CLM-0386 · M0-45 Roadmap Freshness
+
+- **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Roadmap freshness fix: ROADMAP.md was not updated alongside implementation
+changes in PR #524 (services/partners/ ADR-048→055 renumbering, roadmap.yml
+node pin). Adding Phase 2 remediation summary to ROADMAP.md.
+
+---
+
 ## 2026-09-28 — CLM-0385 · M0-45 Tier 1 Governance Remediation
 
 - **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)

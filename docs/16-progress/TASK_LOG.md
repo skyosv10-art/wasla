@@ -18,6 +18,7 @@ Repair: canonical reader; CI-mode unreadable = FAIL (branches and open PRs); loc
 Consequence recorded, not hidden: the repaired guard fails on 5 stale merged branches (#524 #525 #526 #527 #530 heads) until
 the owner resolves them; they are not declared as evidence to force green. RISK-0055 opened; RISK-0045 addendum; M0-44 status
 not changed. Evidence: `docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/`.
+- **Main merge (2026-09-28T11:27Z):** `main` `b4dcf2f` (PR #531, merged by `xuuux-voox` with 0 reviews) merged into #532 as `2d6be59`; 6 governance files reconciled by hand (both sides kept), BASELINE static regenerated (`risks_not_closed` 34). Local governance:verify/typecheck/test/verify rc=0. Record: `…/MAIN_MERGE_RECONCILIATION.md`. #532 not merged.
 
 ## 2026-09-28 — CLM-0390 · M6-19C Supply Chain Hardening
 

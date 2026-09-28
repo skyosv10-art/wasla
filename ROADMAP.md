@@ -1636,3 +1636,13 @@ duplicate, M5-13M contradiction, historical §9 violations, RISK-0042/47/50 open
   updated across services/partners/ and apps/admin-portal.
 - GOV-003: M5-13M status Completed → Ready for Gate (matching §9 text).
 - CI-001: roadmap.yml node-version "20" → "20.20.1" (ADR-023 baseline).
+
+### 2026-09-28 — GOV-002/005 Live Protection Measurement (PR #526)
+
+Live measurement via 4 GitHub API endpoints at commit `814706a`:
+- `required_approving_review_count: 1` (was 0 — owner updated after Phase 1 audit)
+- `require_code_owner_reviews: false` (FAIL — policy requires true)
+- 40 status check contexts, strict=true, enforce_admins=true
+- Rulesets: empty
+- Evidence chain: commit → API → raw JSON → verdict (PASS)
+- GOV-005: BROKEN → PASS

@@ -1,3 +1,25 @@
+## 2026-09-28 — CLM-0387 · M0-45 GOV-002/005 Live Protection Measurement
+
+- **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Live branch protection measurement via 4 GitHub API endpoints:
+1. GET /branches/main → protected: true
+2. GET /branches/main/protection → full config (40 contexts, strict, enforce_admins)
+3. GET /branches/main/protection/required_pull_request_reviews → count=1, code_owner=false
+4. GET /rulesets → [] (empty)
+
+Key finding: `required_approving_review_count` is now 1 (was 0/empty in Phase 1 audit).
+Owner updated branch protection between Phase 1 audit and this measurement.
+`require_code_owner_reviews` remains false (FAIL — policy requires true).
+
+Evidence chain: commit 814706a → 4 API calls → raw JSON in evidence dir → verdict.
+GOV-005 evidence chain: PASS (was BROKEN, now complete).
+GOV-002: PARTIAL PASS — FAIL on CODEOWNERS enforcement only.
+
+---
+
 ## 2026-09-28 — CLM-0386 · M0-45 Roadmap Freshness
 
 - **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)

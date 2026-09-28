@@ -111,6 +111,12 @@ jobs:
   governance-guard:
     name: governance-guard
     runs-on: ubuntu-24.04
+    # (CLM-0392) الفحصُ 23 يقرأُ فروعَ المنصّةِ وطلباتِ الدمجِ المفتوحةَ. وبلا رمزٍ
+    # كانَ يتخطّى في كلِّ تشغيلٍ — فصارَ تعذُّرُ القراءةِ في CI إخفاقاً، ويُعطى هنا
+    # **أقلَّ صلاحيّةِ قراءةٍ** تلزمُهُ لا أكثر: إعطاءُ الفحصِ بيئتَهُ لا تعطيلُهُ.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -140,6 +146,8 @@ jobs:
           echo "node   $(node --version)"
           echo "pnpm   $(pnpm --version)"
       - name: verify-governance
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           TARGET="${GITHUB_BASE_REF:-main}"
           git fetch origin "$TARGET:refs/remotes/origin/$TARGET" --depth=50 2>/dev/null || true

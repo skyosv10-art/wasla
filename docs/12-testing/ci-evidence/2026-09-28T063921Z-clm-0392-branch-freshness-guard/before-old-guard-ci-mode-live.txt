@@ -1,0 +1,23 @@
+  ✓ ملفُّ أدلّةِ الفروعِ موجودٌ: docs/16-progress/BRANCH_EVIDENCE.md
+
+  الفروعُ المُعلَنةُ كأدلّةٍ: 20
+  الفروعُ ذاتُ الحجوزاتِ النشطةِ: 0
+  الفروعُ ذاتُ الحجوزاتِ النشطةِ: 0
+  طلباتُ الدمجِ المفتوحةُ: 1
+  الفروعُ على المنصّةِ: 29
+
+  ✗ فرعٌ بائتٌ: feat/m6-19b-access-secret-audit-review
+  ✗ فرعٌ بائتٌ: feat/m6-19c-supply-chain-hardening
+  ✗ فرعٌ بائتٌ: fix/gov-002-codeowner-eligibility-report
+  ✗ فرعٌ بائتٌ: fix/gov-005-live-protection-measurement
+  ✗ فرعٌ بائتٌ: fix/roadmap-freshness-tier1
+  ✗ فرعٌ بائتٌ: fix/tier1-governance-remediation
+  ✗ فرعٌ بائتٌ: skyosv10-art-patch-1
+
+  الفروعُ المُفحوصةُ: 28
+  البائتةُ: 7
+
+  ✗ 7 فرعٌ بائتٌ — لا حجزَ ولا PR ولا إعلانُ دليلٍ.
+  اقرأ: docs/16-progress/BRANCH_EVIDENCE.md · docs/16-progress/WORK_CLAIMS.md
+
+exit=1

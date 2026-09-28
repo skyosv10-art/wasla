@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-28T06:14:34Z",
+  "generated_at": "2026-09-28T06:41:26Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8f9f7523632f85dd34ab2e5e3ffb43ef245868ab",
-    "branch": "fix/gov-002-owner-dependency-gate-audit",
+    "commit": "565600c7f0e8b0525e1944cbfefa4dd866f5de21",
+    "branch": "fix/m0-44-branch-freshness-guard",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2858
+    "tracked_files": 2837
   },
   "env": {
     "node": "v20.20.1",

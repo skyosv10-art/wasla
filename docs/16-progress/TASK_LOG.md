@@ -1,88 +1,23 @@
-# 2026-09-29 — Stale claim release + branch cleanup
+## 2026-09-28 — CLM-0392 · Branch Freshness Guard (check 23) repair
 
-- **Work Item(s):** M0-45 (governance maintenance)
-- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active
-- **Scope:** docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md
-
-Released 6 stale active claims whose branches were deleted (merged PRs): CLM-0396 (PR #534), CLM-0351 (PR #466), CLM-0177 (PR #174), CLM-0115 (PR #79), CLM-0114 (PR #77), CLM-0113 (PR #77). Deleted 10 stale remote branches from merged PRs. No code changes.
-
----
-
-# 2026-09-28 — CLM-0396 — GOV-002 bootstrap · independent CODEOWNER
-- **Work Item(s):** M0-45
-- **Author/Owner:** @xuuux-voox
-- **Status:** Released
-- **Scope:** CODEOWNERS, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
-GOV-002 bootstrap: the current CODEOWNER is also the author of all PRs, so an independent CODEOWNER is required for governance review. This claim establishes @xuuux-voox as CODEOWNER for `/scripts/`, `/docs/07-security/`, `/docs/12-testing/`, and `/docs/16-progress/`. No branch-protection setting, review requirement, enforce-admins setting, RISK-0054, PR #532, or PR #531 was changed.
-
-# 2026-09-28 — CLM-0395 — M6-19C attestation remediation
-
-- **Work Item(s):** M6-19C
-- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active
-- **Scope:** .github/workflows/ci.yml,scripts/checks/validate-workflow-supply-chain.sh,scripts/checks/test-governance.sh,docs/15-decisions/ADR-056-build-provenance-attestation.md,docs/12-testing/M6-19C_GATE.md,docs/07-security/SUPPLY_CHAIN_HARDENING.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md,docs/16-progress/LAUNCH_EXECUTION_BOARD.md
-- **Tests:** supply chain guard (7 gates), 2 new mutation cases (attestation step removal, verification step removal)
-- **Evidence:** CI verdict on PR (image-supply-chain job with attestation step)
-- **Next step:** Wait for CI verdict, then release claim and proceed to M7-01
-
----
-
-# 2026-09-28 — CLM-0394 — M6-19B baseline remediation
-
-- **Work Item(s):** M6-19B
-- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active
-- **Scope:** infra/secrets/secret-inventory.json, scripts/checks/validate-secret-rotation.sh, scripts/checks/test-governance.sh, docs/12-testing/M6-19B_GATE.md, docs/07-security/ACCESS_SECRET_AUDIT_REVIEW.md, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md, ROADMAP.md
-
-M6-19B baseline remediation per M6-19B_GATE.md §2: (1) add `last_rotated` date field to each secret in `infra/secrets/secret-inventory.json` and extend `validate-secret-rotation.sh` to fail on overdue rotation; (2) derive service identity baseline (TOKEN_BOUND_OPERATION_COUNT, TENANT_BOUND_OPERATION_COUNT, unclassified count) from `packages/authz-policy` source code — not copied from documentation; (3) measure database access baseline (roles/grants) against live Supabase staging environment.
-
-CLM-0389 released: PR #528 merged, audit (CLM-0391) found baseline incomplete. Remediation continues under this claim.
-
-## 2026-09-28 — CLM-0391 · R54 RISK-0054 classification (read-only)
-
-- **Work Item(s):** M0-45
+- **Work Item(s):** M0-45 (governance remediation) — guard defined by M0-44
 - **Author:** @uxxxu (agent:perplexity-computer)
-- **Status:** In Progress — owner decision: GOV-002 ON HOLD · NO-GO ACTIVE · no external GitHub change
+- **Status:** In Progress (prepared locally; not pushed — owner hold on external GitHub changes)
 
-R54 (GET/GraphQL only, 06:30:26Z): REST sub-endpoint reports `required_approving_review_count=1`; `/protection` has no
-review block; GraphQL rule `requiresApprovingReviews:false`; 0-review PR #531 is `CLEAN`. Rulesets, admin exemption and
-merge-path difference ruled out. **ROOT CAUSE: CONFIGURATION DEFECT · CAUSE OF API DISCREPANCY: NOT VERIFIED** (kept separate).
-Corrections by addition: RISK-0054 classification + superseded closure condition (no live merge probe);
-`MERGE_BLOCKING.json.review_requirement_effective`; runbook §8 (sub-endpoint not authoritative, §6 step 2 withdrawn,
-owner dependency A/B); `…T064800Z…/CORRECTION.md`; M6-19B gate addendum. Evidence:
-`docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement/`. Prepared locally; not pushed.
+Two measured defects in `scripts/checks/validate-platform-branch-freshness.sh` on `main` (`ae5646e`):
+1. Claim status read from `parts[7]` (= Expires), so no Active claim ever owned its branch — a second reader of
+   WORK_CLAIMS.md beside the canonical `lib/claims_rows.sh` (M0-38).
+2. Unreadable platform ⇒ declared skip, exit 0, **in CI too**; the CI job had no `GH_TOKEN`, so check 23 skipped on every
+   run (run 36385042314: `⊘ … تخطّيٌ مُعلَنٌ` → `✓ نجح 23)`).
 
-## 2026-09-28 — CLM-0391 · GOV-002 owner dependency · M6-19B/M6-19C gate readiness audit
+Repair: canonical reader; CI-mode unreadable = FAIL (branches and open PRs); local = declared skip; test injection
+(`WASLA_BRANCHES_FILE`/`WASLA_PRS_FILE`/`WASLA_CLAIMS_FILE`/`WASLA_GH_BIN`); governance-guard job gets
+`permissions: contents: read, pull-requests: read` and `GH_TOKEN`. No `continue-on-error`. Regression cases ج1–ج9
+(active stale branch → FAIL · valid branch → PASS · no active claims → PASS · CI unreadable → FAIL …): new 16/16, old guard 4 wrong.
 
-- **Work Item(s):** M0-45 (GOV-002) · M6-19B · M6-19C (audit only)
-- **Author:** @uxxxu (agent:perplexity-computer)
-- **Status:** In Progress — PR open; not merged by the agent while RISK-0054 is open
-
-Owner decision applied: GOV-002 result accepted as BLOCKED; branch protection not changed; no bypass, no admin merge, no
-lowering of requirements, no CODEOWNER exception.
-
-1. **GOV-002 owner dependency** re-measured 2026-09-28T05:45:35Z (read-only): `@uxxxu` valid user (id 24187768), not a
-   collaborator (404), no pending invitation, 68 CODEOWNERS "Unknown owner" errors, `require_code_owner_reviews=false`,
-   `enforce_admins=true`. Owner action A or B required. Evidence: `docs/12-testing/ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/`.
-2. **Activation prepared, not executed:** `docs/12-testing/GOV-002_ACTIVATION_RUNBOOK.md` — precondition proofs, before/after
-   measurement, the single permitted change `require_code_owner_reviews false→true`, usability probe, verdict wording.
-3. **New blocker RISK-0054:** PRs #524–#529 merged with 0 reviews while `required_approving_review_count=1`. The PR #526 row
-   "review count PASS" was configuration, not enforcement — corrected by addition.
-4. **M6-19B audit → Blocked:** guard rewritten fail-closed (errors were swallowed by `2>/dev/null`; count gate only warned);
-   8 mutation cases added; "Check 24" label collision fixed; service-identity "measured" values withdrawn (copied);
-   DB/audit baselines unmeasured; rotation age unmeasurable. `M6-19B_GATE.md` (was a dead link).
-5. **M6-19C audit → Blocked:** no attestation produced; SLSA corrected to Build L0; Source L2 not met; RISK-0052 mis-citation
-   corrected. `M6-19C_GATE.md`.
-6. **M6 dependency matrix:** none of M6-18B/18C/19A/19B/19C can enter gate or be completed; 18B/18C/19A labels overstate their
-   exit evidence (not changed — outside mandate).
-7. **CI record:** `main` Roadmap freshness failed on `0f2c848` (PR #528 omitted ROADMAP.md); green again at `751b60e`.
-   ROADMAP.md updated in this cycle.
-8. **Timestamp correction:** evidence dirs `…T064800Z`, `…T074500Z`, `…T080000Z` are local-time labels; not renamed.
-10. **Owner PR #530 (06:09:09Z)** changed CODEOWNERS `@uxxxu` → `@skyosv10-art`. Re-measured 06:12:07Z: 0 CODEOWNERS errors, collaborator (204), admin. Activation **not** executed: the sole CODEOWNER is the author of every PR (100/100, and the agent's identity) and cannot approve its own PR, so `require_code_owner_reviews=true` would make all PRs unmergeable. A self-approval probe was deliberately not run. GOV-002 stays BLOCKED with a new owner action (second reviewer, or a distinct PR-author account). `docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/`.
-9. **CLM-0386:** already `Released` (PR #525 merged `814706a`); branch `fix/roadmap-freshness-tier1` still exists. No change.
-
----
+Consequence recorded, not hidden: the repaired guard fails on 5 stale merged branches (#524 #525 #526 #527 #530 heads) until
+the owner resolves them; they are not declared as evidence to force green. RISK-0055 opened; RISK-0045 addendum; M0-44 status
+not changed. Evidence: `docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/`.
 
 ## 2026-09-28 — CLM-0390 · M6-19C Supply Chain Hardening
 

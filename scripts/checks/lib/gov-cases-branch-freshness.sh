@@ -119,5 +119,59 @@ echo "main" > /tmp/bfg_main_only2.txt
 t "فرعٌ مُعلَنٌ في الأدلّةِ غيرُ موجودٍ على المنصّةِ لا يُسقِطُ الحارسَ" pass \
   env WASLA_BRANCHES_FILE=/tmp/bfg_main_only2.txt bash "$BFG"
 
+# ── CLM-0392: حالاتُ انحدارٍ لعطبَينِ مقيسَينِ ────────────────────────────────
+# العطبُ (أ): قارئُ الحجوزاتِ كانَ يقرأُ الحالةَ من عمودِ الانتهاءِ (parts[7])
+#   فلا يُعَدُّ أيُّ حجزٍ نشطٍ مالكاً. الحالةُ ج1 تسقطُ على الشفرةِ القديمةِ،
+#   والحالةُ ج3 تمرُّ عليها خطأً (عمودُ الانتهاءِ فيها نصُّ «Active» والحالةُ Released).
+# العطبُ (ب): تعذُّرُ قراءةِ المنصّةِ كانَ تخطّياً يخرجُ 0 حتّى في CI.
+#   الحالةُ ج6 تمرُّ على الشفرةِ القديمةِ خطأً، ويجبُ أن تسقطَ.
+# لكلٍّ منها ملفُّ حجوزاتٍ مستقلٌّ (``WASLA_CLAIMS_FILE``) فلا يُمَسُّ سجلُّ النسخةِ.
+BFG_CL=/tmp/bfg_claims.md
+BFG_BR=/tmp/bfg_br.txt
+BFG_PR=/tmp/bfg_pr.txt
+_bfg_claims() {  # $1 = الحالة · $2 = نصُّ عمودِ الانتهاءِ
+  {
+    echo '| Claim | Work Item | Owner | Branch | Scope Paths | Started | Expires | Status |'
+    echo '|---|---|---|---|---|---|---|---|'
+    printf '| CLM-9001 | M0-44 | @uxxxu | feat/bfg-owned | `scripts/` | 2026-09-28 | %s | %s |\n' "$2" "$1"
+  } > "$BFG_CL"
+}
+printf 'main\nfeat/bfg-owned\n' > "$BFG_BR"
+
+_bfg_claims Active 2026-10-05
+t "ج1: فرعٌ له حجزٌ Active يمرُّ (valid branch → PASS)" pass \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE="$BFG_BR" bash "$BFG"
+
+_bfg_claims Paused 2026-10-05
+t "ج2: فرعٌ له حجزٌ Paused يمرُّ (الحجزُ ما زالَ يُقفِلُ النطاقَ)" pass \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE="$BFG_BR" bash "$BFG"
+
+_bfg_claims Released Active
+t "ج3: حجزٌ Released وعمودُ الانتهاءِ «Active» — فرعٌ بائتٌ يُسقِطُ (قراءةُ العمودِ الصحيحِ)" fail \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE="$BFG_BR" bash "$BFG"
+
+_bfg_claims Released 2026-10-05
+t "ج4: فرعٌ قائمٌ على المنصّةِ بلا حجزٍ نشطٍ ولا PR ولا دليلٍ يُسقِطُ (active stale branch → FAIL)" fail \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE="$BFG_BR" bash "$BFG"
+
+printf 'feat/bfg-owned\n' > "$BFG_PR"
+t "ج5: الفرعُ نفسُهُ برأسِ PR مفتوحٍ يمرُّ" pass \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE="$BFG_BR" WASLA_PRS_FILE="$BFG_PR" bash "$BFG"
+
+echo main > /tmp/bfg_main_only3.txt
+t "ج6: لا حجوزاتِ نشطةً ولا فروعَ غيرَ main يمرُّ (no active claims → PASS)" pass \
+  env WASLA_CLAIMS_FILE="$BFG_CL" WASLA_BRANCHES_FILE=/tmp/bfg_main_only3.txt bash "$BFG"
+
+t "ج7: في CI تعذُّرُ قراءةِ المنصّةِ يُسقِطُ — لا تخطٍّ (fail-closed)" fail \
+  env -u WASLA_BRANCHES_FILE CI=true WASLA_GH_BIN=/nonexistent/gh WASLA_CLAIMS_FILE="$BFG_CL" bash "$BFG"
+
+t "ج8: خارجَ CI تعذُّرُ القراءةِ تخطٍّ مُعلَنٌ (الحكمُ لـCI لا للمحلّيِّ)" pass \
+  env -u WASLA_BRANCHES_FILE -u CI -u GITHUB_ACTIONS WASLA_GH_BIN=/nonexistent/gh WASLA_CLAIMS_FILE="$BFG_CL" bash "$BFG"
+
+t "ج9: سجلُّ حجوزاتٍ مفقودٌ يُسقِطُ" fail \
+  env WASLA_CLAIMS_FILE=/tmp/bfg_no_such_claims.md WASLA_BRANCHES_FILE="$BFG_BR" bash "$BFG"
+
+rm -f "$BFG_CL" "$BFG_BR" "$BFG_PR" /tmp/bfg_main_only3.txt
+
 # التنظيفُ
 rm -f "$BFG_BRANCHES_FILE" /tmp/bfg_main_only.txt /tmp/bfg_main_only2.txt

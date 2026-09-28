@@ -1,0 +1,20 @@
+  ✓ ملفُّ أدلّةِ الفروعِ موجودٌ: docs/16-progress/BRANCH_EVIDENCE.md
+
+  الفروعُ المُعلَنةُ كأدلّةٍ: 20
+  الفروعُ ذاتُ الحجوزاتِ النشطةِ: 2
+  طلباتُ الدمجِ المفتوحةُ: 1
+  الفروعُ على المنصّةِ: 29
+
+  ✗ فرعٌ بائتٌ: fix/gov-002-codeowner-eligibility-report
+  ✗ فرعٌ بائتٌ: fix/gov-005-live-protection-measurement
+  ✗ فرعٌ بائتٌ: fix/roadmap-freshness-tier1
+  ✗ فرعٌ بائتٌ: fix/tier1-governance-remediation
+  ✗ فرعٌ بائتٌ: skyosv10-art-patch-1
+
+  الفروعُ المُفحوصةُ: 28
+  البائتةُ: 5
+
+  ✗ 5 فرعٌ بائتٌ — لا حجزَ ولا PR ولا إعلانُ دليلٍ.
+  اقرأ: docs/16-progress/BRANCH_EVIDENCE.md · docs/16-progress/WORK_CLAIMS.md
+
+exit=1

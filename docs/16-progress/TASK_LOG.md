@@ -1,3 +1,48 @@
+## 2026-09-28 — CLM-0389 · M6-19B Access/Secret/Audit Review
+
+- **Work Item(s):** M6-19B (access/secret/audit review)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+M6-19B implementation: periodic access review, secret rotation verification, and
+audit log integrity procedures.
+
+Deliverables:
+1. **`docs/07-security/ACCESS_SECRET_AUDIT_REVIEW.md`** — Comprehensive review document covering:
+   - Repository access review procedure (quarterly, GitHub collaborator audit)
+   - Service identity review (quarterly, token-bound operation count tracking)
+   - Database access review (quarterly, connection string rotation)
+   - Secret rotation verification (26 secrets, 5 categories, rotation schedule)
+   - Audit log integrity verification (monthly, append-only, gap detection)
+   - Evidence collection schedule (quarterly, monthly, continuous)
+   - Exit criteria checklist (all met)
+
+2. **`scripts/checks/validate-secret-rotation.sh`** — Check 24 in governance suite:
+   - 8 gates: JSON validity, rotation_frequency present, status present,
+     BLOCKED reasons documented, consumers present, environments present,
+     secret count within range, rotation frequencies from allowed set
+   - 8/8 PASS on initial run
+
+3. **Baseline evidence** in `docs/12-testing/ci-evidence/2026-09-28T080000Z-m6-19b-access-review-baseline/`:
+   - `raw-collaborators.json` — GitHub collaborators (1: skyosv10-art)
+   - `raw-branch-protection.json` — Branch protection config (40 contexts, strict, enforce_admins)
+   - `CODEOWNERS-snapshot.txt` — CODEOWNERS file snapshot
+   - `secret-inventory-snapshot.json` — Secret inventory (26 secrets)
+   - `secret-rotation-check-output.txt` — Rotation verification output (8/8 pass)
+
+Current security posture measured:
+- 1 GitHub collaborator (skyosv10-art, admin)
+- 40 required status checks (strict, enforce_admins=true)
+- 26 secrets in inventory (all with rotation policies)
+- TOKEN_BOUND_OPERATION_COUNT=10, TENANT_BOUND_OPERATION_COUNT=8
+- 4 unenforced ingress boundaries (43 routes, RISK-0051 open)
+- Audit service: append-only, PostgreSQL-backed
+
+Exit criteria for M6-19B: periodic evidence — all met.
+Status: Ready for Gate (§9 — owner decision to Completed).
+
+---
+
 ## 2026-09-28 — CLM-0388 · M0-45 GOV-002 CODEOWNER Eligibility Report
 
 - **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)

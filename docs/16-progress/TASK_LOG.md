@@ -1,3 +1,18 @@
+## 2026-09-28 — CLM-0384 · M0-45 Tier 0 Remediation
+
+- **Work Item(s):** M0-45 (Phase 2 Governance Blocker Remediation)
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress
+
+Tier 0 CI remediation — fix governance-guard + verify failures on main:
+- CLM-0383: Status Active → Released (stale claim for deleted branch `feat/m6-19a-pentest-plan`)
+- RISK-0010: review date 2026-09-27 → 2026-10-15 (expired, mitigating)
+- RISK-0036: review date 2026-09-27 → 2026-10-15 (expired, open)
+
+Local verification: `verify-governance.sh` passes all checks (1 skip on check 8).
+
+---
+
 ## 2026-09-27 — CLM-0371 · M5-17 review 6/N
 
 - **Work Item(s):** M5-17

@@ -7282,3 +7282,12 @@ Created independent pentest plan and procurement document:
 M6-19B and M6-19C are blocked on M6-19A completion.
 M7 items are blocked on M6 completion.
 **Barrier:** External procurement required for pentest execution. Owner action needed.
+
+### [2026-09-28] CLM-0392 — stale branch deletion + check-15 test isolation
+
+- **Work Item(s):** M0-45
+- **Claim:** CLM-0392 · branch `fix/m0-44-branch-freshness-guard` · PR #532
+- **What:** deleted the 5 stale merged branches (owner-authorised, each verified: merged · empty tree diff · no active work · `refs/pull/N/head` retained; `204` ×5). Re-ran PR #532 CI: check 23 executed, 0 stale, PASS in governance-guard and verify.
+- **New finding:** check-15 offline test cases used `PATH=/usr/bin:/bin` to hide `gh`, but `gh` is `/usr/bin/gh` on the runner; they were offline only because `verify` had no token. Fixed with a genuine no-`gh` tool dir + token unset + an isolation-asserting case (16/16 under CI-like conditions; mutation bites). Guard logic unchanged.
+- **Not done (by decision):** no merge of #531/#532, no Branch Protection/CODEOWNERS change, no M6 closure, no M7.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/BRANCH_DELETION_AND_CHECK15_ISOLATION.md`

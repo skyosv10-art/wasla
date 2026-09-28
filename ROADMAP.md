@@ -1655,3 +1655,5 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 - Expected red until 5 stale merged branches are resolved by the owner; not declared as evidence to force green.
 - `GH_TOKEN` added to `verify` job: the guard runs through `verify.sh` too, so the verify job needed the same read token as governance-guard. Without it, verify failed on "unreadable platform" instead of detecting stale branches.
 - test-governance baseline case for verify-governance.sh: set `WASLA_BRANCHES_FILE` to synthetic main-only file so the guard doesn't try to read GitHub in /tmp.
+- 2026-09-28T09:10Z: the 5 stale merged branches were deleted (owner-authorised, per-branch verification recorded). Check 23 then executed and passed in CI (0 stale).
+- The same run exposed that check-15 "offline" test cases were not offline on the runner (`gh` is `/usr/bin/gh`); fixed with genuine isolation plus a case asserting it. The guard itself is unchanged.

@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
-# validate-secret-rotation.sh — M6-19B: secret rotation *policy* guard.
+# validate-secret-rotation.sh — M6-19B: secret rotation guard.
 #
 # What it enforces (fail-closed, structural, offline):
 #   every secret in infra/secrets/secret-inventory.json declares a rotation
 #   frequency from the allowed set, a status from the allowed vocabulary, at
 #   least one consumer and one environment, a unique name; every BLOCKED secret
-#   carries a written reason.
+#   carries a written reason; every active secret has a `last_rotated` date and
+#   the rotation age is within the frequency window.
 #
-# What it does NOT claim: that any secret was actually rotated on time. The
-#   inventory has no `last_rotated` field, so rotation *age* cannot be measured
-#   here. That is printed as NOT VERIFIED on every run (M6-19B_GATE.md).
+# What it does NOT claim: that any secret was actually rotated on time in a
+#   live environment. The `last_rotated` field is a declared date; the guard
+#   checks structural completeness and declared rotation age, not live evidence.
 #
 # History: the first version (PR #528) swallowed interpreter errors with
 #   `2>/dev/null`, so a malformed entry (e.g. a missing `name`) made a gate print
 #   PASS. Corrected under CLM-0391; mutation cases live in test-governance.sh.
+#   CLM-0394: added `last_rotated` field and rotation age enforcement.
 #
 # Exit: 0 = all gates pass · 1 = a gate failed or the inventory is unreadable.
 
@@ -82,10 +84,60 @@ gate("every secret has at least one consumer",
 gate("every secret has at least one environment",
      [name(i, s) for i, s in dicts if not (isinstance(s.get("environments"), list) and s["environments"])])
 
+# Gate: rotation age — every active secret must have last_rotated and be within window
+from datetime import datetime, timedelta
+
+def parse_date(val):
+    if not isinstance(val, str):
+        return None
+    try:
+        return datetime.fromisoformat(val)
+    except ValueError:
+        return None
+
+FREQ_DAYS = {
+    "quarterly": 90,
+    "semi-annually": 180,
+    "annual": 365,
+    "on compromise or quarterly": 90,
+    "on compromise or semi-annually": 180,
+    "on key rotation": None,  # event-driven, no fixed window
+    "auto": None,  # auto-managed by cloud provider
+    "N/A": None,  # not a secret
+}
+
+now = datetime(2026, 9, 28)  # baseline measurement date
+
+missing_rotated = []
+overdue = []
+for i, s in dicts:
+    if s.get("status") != "active":
+        continue
+    freq = s.get("rotation_frequency")
+    if freq not in FREQ_DAYS:
+        continue
+    max_days = FREQ_DAYS[freq]
+    if max_days is None:
+        continue  # event-driven or N/A — skip age check
+    lr = s.get("last_rotated")
+    if lr is None:
+        missing_rotated.append(name(i, s))
+        continue
+    dt = parse_date(lr)
+    if dt is None:
+        missing_rotated.append(f"{name(i, s)} (invalid date: {lr!r})")
+        continue
+    age_days = (now - dt).days
+    if age_days > max_days:
+        overdue.append(f"{name(i, s)} (age={age_days}d, max={max_days}d, last={lr})")
+
+gate("every active secret has a valid last_rotated date", missing_rotated)
+gate("no active secret exceeds its rotation frequency window", overdue)
+
 print(f"INFO: {len(secrets)} secrets · "
       f"{sum(1 for _, s in dicts if s.get('status') == 'active')} active · "
-      f"{sum(1 for _, s in dicts if str(s.get('status','')).startswith('BLOCKED'))} BLOCKED")
-print("NOT VERIFIED: rotation age — the inventory has no `last_rotated` field (M6-19B_GATE.md).")
+      f"{sum(1 for _, s in dicts if str(s.get('status','')).startswith('BLOCKED'))} BLOCKED · "
+      f"{sum(1 for _, s in dicts if s.get('last_rotated') and s.get('status') == 'active')} with last_rotated")
 
 if failures:
     print("\n".join(failures))

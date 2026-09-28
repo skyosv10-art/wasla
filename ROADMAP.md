@@ -1615,3 +1615,24 @@ still has no test of its own here.
   CI verdict on the PR (`WASLA CI` 35312389585 success, 35/35 checks pass).
   Squash `0d65f14` merged into `main`. `CLM-0209`/`CLM-0210` released (§8.1).
   Promotion of `M0-44` to `Completed` is the program owner's authority alone (§9).
+
+---
+
+## 2026-09-28 — Phase 2 Governance Blocker Remediation (M0-45)
+
+**Phase 1 audit (READ ONLY):** Completed. Verdict: NO-GO. 3 Primary CI Blockers
+(CLM-0383 stale claim, RISK-0010/RISK-0036 expired reviews) + 7 Additional
+Governance/Integrity Blockers (no PR review, broken evidence chain, ADR-048
+duplicate, M5-13M contradiction, historical §9 violations, RISK-0042/47/50 open).
+
+**Phase 2 Tier 0 (PR #523 merged `cf75fc8`):**
+- CLM-0383 released (Active → Released, branch deleted after PR #522 merge)
+- RISK-0010 review extended 2026-09-27 → 2026-10-15
+- RISK-0036 review extended 2026-09-27 → 2026-10-15
+- CI green 42/42. `governance-guard` + `verify` pass on main.
+
+**Phase 2 Tier 1 (PR #524 merged `1d0adf5`):**
+- GOV-004: ADR-048 (partner-identity) renumbered → ADR-055. 18 references
+  updated across services/partners/ and apps/admin-portal.
+- GOV-003: M5-13M status Completed → Ready for Gate (matching §9 text).
+- CI-001: roadmap.yml node-version "20" → "20.20.1" (ADR-023 baseline).

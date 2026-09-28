@@ -7291,3 +7291,4 @@ M7 items are blocked on M6 completion.
 - **New finding:** check-15 offline test cases used `PATH=/usr/bin:/bin` to hide `gh`, but `gh` is `/usr/bin/gh` on the runner; they were offline only because `verify` had no token. Fixed with a genuine no-`gh` tool dir + token unset + an isolation-asserting case (16/16 under CI-like conditions; mutation bites). Guard logic unchanged.
 - **Not done (by decision):** no merge of #531/#532, no Branch Protection/CODEOWNERS change, no M6 closure, no M7.
 - **Evidence:** `docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/BRANCH_DELETION_AND_CHECK15_ISOLATION.md`
+- **CI verdict (2026-09-28T09:45Z):** run 36404639360 on `fbf058f` = 42/42 success; check 23 executed with 0 stale in governance-guard and verify; governance suite 529/0 in both. PR #532 → READY FOR INDEPENDENT REVIEW; not merged.

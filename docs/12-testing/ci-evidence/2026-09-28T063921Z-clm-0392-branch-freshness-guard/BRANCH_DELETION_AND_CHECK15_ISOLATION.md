@@ -47,3 +47,13 @@ Measured: new harness under the same CI-like conditions = 16 pass / 0 fail. Muta
 
 Rejected alternatives: removing the token from `verify` (check 23 would then fail-closed as "unreadable"); unsetting the token only
 around check 23 (would move the problem, and hide that three cases were environment-dependent); loosening case expectations.
+
+## 4. CI verdict after the fix (measured 2026-09-28T09:45Z)
+
+Run [36404639360](https://github.com/skyosv10-art/wasla/actions/runs/36404639360) on head `fbf058f` — **42/42 success**
+(plus Roadmap freshness run 36404633450 = success).
+- `governance-guard`: check 23 executed · `البائتةُ: 0` · suite **529 pass · 0 fail** · isolation case (٠) pass.
+- `verify`: check 23 executed · `البائتةُ: 0` · suite **529 pass · 0 fail** · isolation case (٠) pass.
+- PR #532 `mergeStateStatus=CLEAN` with **0 reviews** — the same condition recorded in RISK-0054; green CI is not review.
+
+State: READY FOR INDEPENDENT REVIEW · MERGE NOT AUTHORISED · NO-GO ACTIVE.

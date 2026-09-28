@@ -199,5 +199,18 @@
       ],
       "gov_002_status": "BLOCKED"
     }
+  },
+  "review_requirement_effective": {
+    "measured_at": "2026-09-28T06:30:26Z",
+    "evidence_dir": "docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement",
+    "graphql_requiresApprovingReviews": false,
+    "graphql_requiredApprovingReviewCount": null,
+    "rest_protection_has_required_pull_request_reviews": false,
+    "rest_subendpoint_required_approving_review_count": 1,
+    "open_pr_0_reviews_mergeStateStatus": "CLEAN",
+    "approvals_required": false,
+    "root_cause": "CONFIGURATION DEFECT",
+    "cause_of_api_discrepancy": "NOT VERIFIED",
+    "note": "protection.required_pull_request_reviews above is the REST sub-endpoint reading; it is not enforcement (RISK-0054)."
   }
 }

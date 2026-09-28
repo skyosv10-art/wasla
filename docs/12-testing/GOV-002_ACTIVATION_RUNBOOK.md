@@ -98,3 +98,23 @@ Verdict wording (exactly one):
 
 `MERGE_BLOCKING.json` (`gov_002_codeowner_eligibility` + `protection` snapshot) · evidence README in `$D` · board M0-45 row ·
 `TASK_LOG.md` · `RISK-0054` status · CI must stay green (`validate-merge-blocking.sh` compares the snapshot to the live object).
+
+## 8. Addendum 2026-09-28 — R54 findings (supersedes parts of §4–§6; nothing above deleted)
+
+**Status: ON HOLD** (owner decision). Nothing in this runbook is to be executed now.
+
+1. **The sub-endpoint is not authoritative.** R54 measured `required_approving_review_count=1` on
+   `/protection/required_pull_request_reviews` while GraphQL reports `requiresApprovingReviews:false` and a 0-review PR is
+   `CLEAN`. A PATCH to that same endpoint (§4) is therefore **not proven** to turn on enforcement. Authoritative before/after
+   readings are GraphQL `branchProtectionRules{requiresApprovingReviews requiredApprovingReviewCount requiresCodeOwnerReviews
+   isAdminEnforced}` and `pullRequest{reviewDecision mergeStateStatus}`.
+2. **§6 step 2 is withdrawn.** "Attempt `gh pr merge` before approval" is a live merge attempt: with the rule as measured it
+   would *merge*. Replacement (read-only): on a docs-only PR with 0 approvals, `reviewDecision=REVIEW_REQUIRED` and
+   `mergeStateStatus=BLOCKED` must be observed. No self-approval, no test approval, no merge used as a probe.
+3. **Owner dependency (unchanged in substance, restated):**
+   - **A)** provide a reviewer or team **independent of the PR author** with Write+ that is valid as CODEOWNER; **or**
+   - **B)** redesign `CODEOWNERS` so it names an identity/team that can actually submit a CODEOWNER approval on agent PRs.
+   The PR author's own account is never used as its reviewer.
+4. Enabling "Require a pull request before merging → Require approvals" in the rule is itself an owner action, and has the same
+   precondition as CODEOWNER enforcement: without A or B every PR becomes unmergeable. Order: A/B → enable approvals →
+   measure (item 1–2) → then `require_code_owner_reviews`. Evidence: `docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement/`.

@@ -1,3 +1,17 @@
+## 2026-09-28 — CLM-0391 · R54 RISK-0054 classification (read-only)
+
+- **Work Item(s):** M0-45
+- **Author:** @uxxxu (agent:perplexity-computer)
+- **Status:** In Progress — owner decision: GOV-002 ON HOLD · NO-GO ACTIVE · no external GitHub change
+
+R54 (GET/GraphQL only, 06:30:26Z): REST sub-endpoint reports `required_approving_review_count=1`; `/protection` has no
+review block; GraphQL rule `requiresApprovingReviews:false`; 0-review PR #531 is `CLEAN`. Rulesets, admin exemption and
+merge-path difference ruled out. **ROOT CAUSE: CONFIGURATION DEFECT · CAUSE OF API DISCREPANCY: NOT VERIFIED** (kept separate).
+Corrections by addition: RISK-0054 classification + superseded closure condition (no live merge probe);
+`MERGE_BLOCKING.json.review_requirement_effective`; runbook §8 (sub-endpoint not authoritative, §6 step 2 withdrawn,
+owner dependency A/B); `…T064800Z…/CORRECTION.md`; M6-19B gate addendum. Evidence:
+`docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement/`. Prepared locally; not pushed.
+
 ## 2026-09-28 — CLM-0391 · GOV-002 owner dependency · M6-19B/M6-19C gate readiness audit
 
 - **Work Item(s):** M0-45 (GOV-002) · M6-19B · M6-19C (audit only)

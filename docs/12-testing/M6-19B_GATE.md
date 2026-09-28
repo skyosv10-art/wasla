@@ -31,3 +31,11 @@
 
 No claim that any secret was rotated, that any production role was reviewed, or that audit logs are intact. The guard proves
 declared policy completeness only.
+
+## Addendum 2026-09-28 (R54 · after PR #530)
+
+- "Reviewer column names `@uxxxu`" is superseded: CODEOWNERS now names `@skyosv10-art` (PR #530), the sole PR author, who
+  cannot review their own PRs. OWNER AUTHORIZATION stays **NOT VERIFIED**.
+- The access baseline row "PR reviews required (count=1)" is a REST sub-endpoint reading; R54 measured that approvals are
+  **not** required (RISK-0054, root cause CONFIGURATION DEFECT). That row is not evidence of review enforcement.
+- Verdict unchanged: **BLOCKED**.

@@ -1,0 +1,2 @@
+HTTP/1.1 404 Not Found
+{"message":"Push restrictions not enabled","documentation_url":"https://docs.github.com/rest/branches/branch-protection#get-access-restrictions","status":"404"}gh: Push restrictions not enabled (HTTP 404)

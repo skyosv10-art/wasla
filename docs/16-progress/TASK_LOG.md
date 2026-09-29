@@ -1,3 +1,14 @@
+# 2026-09-29 — CLM-0399 — Test-governance fix + ROADMAP update
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/checks/test-governance.sh,ROADMAP.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Fix for test-governance test case: inject empty WASLA_BRANCHES_FILE and WASLA_PRS_FILE for the "verify-governance works in git context" test case, since check 23 is now fail-closed in CI. Also update ROADMAP.md for roadmap freshness check.
+
+---
+
 # 2026-09-29 — CLM-0398 — Risk review date extension
 
 - **Work Item(s):** M0-45 (governance maintenance)

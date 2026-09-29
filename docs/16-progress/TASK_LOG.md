@@ -1,3 +1,14 @@
+# 2026-09-29 — CLM-0398 — Risk review date extension
+
+- **Work Item(s):** M0-45 (governance maintenance)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** docs/07-security/RISK_REGISTER.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Extended risk review dates for RISK-0011, RISK-0038, RISK-0039, RISK-0041 from 2026-09-28 to 2026-10-12 (14-day extension per governance rules).
+
+---
+
 # 2026-09-29 — CLM-0397 — Branch freshness guard repair (clean PR)
 
 - **Work Item(s):** M0-45

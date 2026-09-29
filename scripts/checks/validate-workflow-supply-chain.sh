@@ -48,6 +48,7 @@ DECLARED=(
   "ci.yml|no|yes|خطُّ CI المانعُ — الوظائفُ الواحدةُ والثلاثونَ المُلزِمةُ (MERGE_BLOCKING.json · ADR-023). وظيفةُ image-supply-chain تملكُ id-token: write و attestations: write لإثباتِ أصلِ البناءِ (M6-19C · ADR-056)."
   "roadmap.yml|no|no|طرافةُ ROADMAP.md مع كلِّ دفعةٍ — مستقلٌّ عن خطِّ CI بقصدٍ."
   "render-deploy.yml|yes|no|نشرُ الالتزامِ المدفوعِ إلى main على خدماتِ Render والتحقّقُ من الالتزامِ الحيِّ لكلِّ خدمةٍ (M6-18B · CLM-0401). سرٌّ واحدٌ: RENDER_API_KEY. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — push إلى main وworkflow_dispatch."
+  "db-backup.yml|yes|no|نسخٌ احتياطيٌّ مجدولٌ لقاعدةِ بياناتِ Supabase — كلَّ 6 ساعاتٍ + تشغيلٌ يدويٌّ. تخفيفُ RISK-0055 (CLM-0405 · M6-18B). سرّانِ: SUPABASE_DB_URL وBACKUP_PASSPHRASE. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — schedule وworkflow_dispatch."
 )
 #
 # ── سجلٌّ تدقيقيٌّ: سيرُ عملٍ وُلدَ ومات في يومٍ واحدٍ (2026-09-13/14) ─────────

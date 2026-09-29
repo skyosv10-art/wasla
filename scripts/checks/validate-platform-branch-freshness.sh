@@ -127,9 +127,14 @@ if [[ -n "${WASLA_BRANCHES_FILE:-}" ]]; then
   fi
 else
   command -v "$GH_BIN" &>/dev/null || _unreadable "\`gh\` غيرُ متاحٍ"
+  # Try gh api first (uses GH_TOKEN), fall back to git ls-remote (uses git credentials)
   if ! BRANCHES_JSON=$("$GH_BIN" api "repos/$REPO_SLUG/branches" --paginate --jq '.[].name' 2>/dev/null) \
      || [[ -z "$BRANCHES_JSON" ]]; then
-    _unreadable "تعذّرَ قراءةُ الفروعِ من المنصّةِ"
+    # Fall back to git ls-remote (works in CI with checkout credentials)
+    BRANCHES_JSON=$(git ls-remote --heads origin 2>/dev/null | awk '{sub("refs/heads/","",$2); print $2}')
+    if [[ -z "$BRANCHES_JSON" ]]; then
+      _unreadable "تعذّرَ قراءةُ الفروعِ من المنصّةِ"
+    fi
   fi
   # ── 5) طلباتُ الدمجِ المفتوحةُ — تعذُّرُها كانَ يُبتلَعُ صامتاً؛ صارَ كتعذُّرِ الفروعِ.
   if ! OPEN_PR_HEADS=$("$GH_BIN" api "repos/$REPO_SLUG/pulls?state=open&per_page=100" --paginate --jq '.[].head.ref' 2>/dev/null); then

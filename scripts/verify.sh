@@ -96,8 +96,13 @@ else
 fi
 
 # ── 4) إثباتُ أنّ الحوكمةَ ترفض فعلاً ────────────────────────────────────
+# (CLM-0397) test-governance.sh must run WITHOUT GH_TOKEN: the CI-audit
+# test cases use it to query live CI status, which causes false failures
+# when GH_TOKEN is available (the audit log says "blackout" but live says "real").
+# The governance-guard job sets GH_TOKEN only for verify-governance, not for
+# test-governance — verify.sh must do the same.
 run_step "حزمةُ اختبارِ الحوكمة (ترفض فعلاً لا شكلاً)" \
-  bash scripts/checks/test-governance.sh
+  env -u GH_TOKEN bash scripts/checks/test-governance.sh
 
 # ── 4-مكرر) إثباتُ أنّ مستخرِجَ دليلِ CI لا يكذبُ (M0-22D) ──────────────
 # ويُوصَلُ من هنا لا من إعلانِ استثناءٍ: البابُ الرابعُ من `validate-ci-mandatory.sh`

@@ -1,3 +1,14 @@
+# 2026-09-29 — CLM-0400 — Unset GH_TOKEN for test-governance in verify.sh
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/verify.sh,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+The verify job runs verify.sh which runs both verify-governance.sh (needs GH_TOKEN for check 23) and test-governance.sh (must NOT have GH_TOKEN because CI-audit test cases use it to query live CI status, causing false failures). The governance-guard job sets GH_TOKEN only for verify-governance, not for test-governance. verify.sh must do the same by unsetting GH_TOKEN before running test-governance.sh.
+
+---
+
 # 2026-09-29 — CLM-0399 — Test-governance fix + ROADMAP update
 
 - **Work Item(s):** M0-45

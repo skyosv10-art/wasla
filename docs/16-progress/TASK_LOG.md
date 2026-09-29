@@ -7483,3 +7483,18 @@ Created GitHub Actions workflow `db-backup.yml` to mitigate RISK-0055:
 - Document results in evidence README
 - Update RISK-0055 to Mitigated/Partially Mitigated
 - Do NOT close M6-18B
+
+---
+
+## CLM-0406 · M6-18B — RISK-0055 pg_dump version fix
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0406` · **Branch:** `fix/risk-0055-db-backup-pg-version` · **Status:** In Progress
+
+**Date:** 2026-09-29  
+**Status:** In Progress — fixing pg_dump version mismatch
+
+### What was done
+
+First manual run of db-backup.yml failed: pg_dump 16.15 installed on runner, but Supabase server is 17.6. pg_dump 16 cannot dump a PG 17 server.
+
+Fix: added version verification after apt install — fails-closed if pg_dump major version doesn't match PG_VERSION (17). Removed -qq flag so install errors are visible.

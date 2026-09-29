@@ -15,14 +15,22 @@ rule_files:
 
 alerting:
   alertmanagers:
-    - static_configs:
+    # Alertmanager is a separate Render service; "localhost:9093" never reached it.
+    - scheme: https
+      api_version: v2
+      basic_auth:
+        username: wasla-prometheus
+        password_file: /tmp/prometheus/am_password
+      static_configs:
         - targets:
-            - "localhost:9093"
+            - "wasla-alertmanager.onrender.com"
 
 scrape_configs:
   # ── WASLA HTTP Services (14) ──────────────────────────────────────────
   - job_name: "wasla-services"
     metrics_path: /metrics
+    # Render serves HTTPS on 443; the default http scheme reached port 80.
+    scheme: https
     scrape_interval: 30s
     honor_labels: true
     static_configs:
@@ -49,4 +57,5 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets:
-          - "localhost:9090"
+          # Rendered by prometheus-entrypoint.sh to the port Render assigns.
+          - "localhost:__PORT__"

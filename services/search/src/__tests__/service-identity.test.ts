@@ -59,6 +59,13 @@ describe("M1-04 · حدُّ البحث يفرض هويّة الخدمة", () => 
     expect(res.statusCode).toBe(200);
   });
 
+  it("/health (مسبارُ المنصّة) مفتوحٌ — لا 401 (CLM-0401)", async () => {
+    const res = await rawInject(app.fastify, { method: "GET", url: "/health" });
+    expect(res.statusCode).not.toBe(401);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ status: "ok" });
+  });
+
   // ── /search/ready ────────────────────────────────────────────────────
   it("/search/ready بلا توقيعٍ ⇒ 401", async () => {
     const res = await rawInject(app.fastify, {

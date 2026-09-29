@@ -1,7 +1,11 @@
-# WASLA Alertmanager — M2-08 Stage B
-# Render sets PORT automatically — Alertmanager must listen on it.
-FROM prom/alertmanager:v0.27.1
+# WASLA Alertmanager — M6-18C (CLM-0403)
+# v0.27.1 does not exist on Docker Hub; that tag made every build fail
+# (build_failed, 2026-09-24). v0.27.0 is the published release.
+# The image ENTRYPOINT is /bin/alertmanager, so a CMD of ["sh","-c",…] reached it as
+# arguments. The entrypoint is replaced explicitly instead.
+FROM prom/alertmanager:v0.27.0
 
 COPY alertmanager.yml /etc/alertmanager/alertmanager.yml
+COPY alertmanager-entrypoint.sh /etc/alertmanager/entrypoint.sh
 
-CMD ["sh", "-c", "alertmanager --web.listen-address=:${PORT:-9093} --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/alertmanager"]
+ENTRYPOINT ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]

@@ -257,6 +257,13 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
     return { status: "ok" as const };
   });
 
+  // Platform liveness alias (CLM-0401 · M6-18B): the orchestrator probes bare
+  // `/health`; without this route the unmatched path fell into the identity
+  // hook and Render saw 401. Same dependency-free body — widens nothing.
+  app.get("/health", { config: OPEN }, async () => {
+    return { status: "ok" as const };
+  });
+
   // Readiness: queries the read model. No try/catch — a throwing probe is a
   // degraded probe, and the single error handler already maps that to 503.
   app.get("/search/ready", { config: internalScoped(SEARCH_SCOPES.readyRead) }, async (_request, reply) => {

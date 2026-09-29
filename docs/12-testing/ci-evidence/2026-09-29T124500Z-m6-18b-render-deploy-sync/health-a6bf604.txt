@@ -1,0 +1,17 @@
+orders         /health=200
+identity       /health=200
+marketplace    /health=200
+delivery       /health=401
+customers      /health=200
+geography      /health=200
+drivers        /health=200
+dispatch       /health=200
+matching       /health=200
+negotiations   /health=200
+reputation     /health=200
+search         /health=401
+subscriptions  /health=200
+audit          /health=200
+customer-bot   /health=200
+driver-bot     /health=200
+partner-bot    /health=200

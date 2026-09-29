@@ -1,0 +1,1 @@
+{"status":"unavailable","checks":[{"name":"database","ok":false,"detail":"schema_missing"}],"not_claimed":[],"dependencies":[{"name":"marketplace_catalog","ok":false,"detail":"marketplace_degraded","observed_at":"2026-09-29T13:09:02.094Z","age_ms":0,"gates_readiness":false}]}

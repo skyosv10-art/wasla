@@ -70,6 +70,8 @@
 
 ## 5. Live-Fire Plan
 
+**Update 2026-09-29 (CLM-0403):** the stack had never run. Alertmanager `build_failed` (non-existent tag), Prometheus/collector `update_failed`, alerts pointed at `localhost`, and the receiver had no integration. Root causes, fix and local proof: [`ci-evidence/2026-09-29T132000Z-m6-18c-observability-stack-fix/`](ci-evidence/2026-09-29T132000Z-m6-18c-observability-stack-fix/README.md). Live-fire is still **pending**.
+
 **Status:** Alert rules and runbooks are defined. Live-fire testing requires
 a deployed Prometheus + Alertmanager stack.
 

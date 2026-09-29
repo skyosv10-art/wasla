@@ -10,11 +10,10 @@ receivers:
   otlp:
     protocols:
       http:
-        endpoint: "0.0.0.0:${env:PORT:-4318}"
-
-extensions:
-  env:
-    # Enables ${env:VAR} substitution in config (Render sets PORT)
+        # The collector has no ${env:VAR:-default} syntax: "PORT:-4318" was parsed
+        # as a variable name and the config was rejected (update_failed 2026-09-24).
+        # Render always sets PORT. For local runs, export PORT=4318.
+        endpoint: "0.0.0.0:${env:PORT}"
 
 processors:
   batch:
@@ -32,7 +31,6 @@ exporters:
   #     insecure: true
 
 service:
-  extensions: [env]
   pipelines:
     traces:
       receivers: [otlp]

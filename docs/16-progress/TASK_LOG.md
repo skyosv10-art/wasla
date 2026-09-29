@@ -1,3 +1,34 @@
+# 2026-09-29 — CLM-0403 — M6-18C observability stack repair (pre-live-fire)
+
+- **Work Item(s):** M6-18C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+
+Root causes from the Render logs: alertmanager image tag v0.27.1 does not exist; the prometheus CMD was passed as args to the ENTRYPOINT; the collector used invalid `${env:PORT:-4318}`. Also fixed: alerting target `localhost:9093` → the Render Alertmanager URL over HTTPS with basic auth; scrape scheme https; Telegram receiver (fail closed without token/chat id); `--web.enable-lifecycle` removed; HA gossip disabled. Proven locally with the same versions. Live-fire pending: the owner must provide the chat id.
+
+---
+
+# 2026-09-29 — CLM-0401/0402 — M6-18B live DR drill (first execution)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+
+Live drill on `a6bf604`: restart 0 s observed downtime (147 probes); orders suspend/resume RTO 37.6 s (outage 47.6 s); marketplace isolation — delivery kept serving, RTO 36.2 s; process RPO 0 (5 tables SHA-256 identical). DB RPO not met: Supabase PITR off, no backups (RISK-0055). Domain schemas not applied on live DB (RISK-0056). Scenarios 2/3/5 not executed with reasons. M6-18B Ready for Gate → Blocked. Workflow render-deploy.yml declared in the workflow supply-chain guard (secrets=yes, write=no). CLM-0402 opened for RISK_REGISTER.md.
+
+---
+
+# 2026-09-29 — CLM-0401 — M6-18B: Render deploy drift root cause + /health 401
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** services/delivery/src/,services/search/src/,.github/workflows/,scripts/deploy/,docs/07-security/AUTHORIZATION_POLICY_MATRIX.md,docs/12-testing/,ROADMAP.md
+
+Measured: Render live 4894f39 = 195 commits behind main a6bf604; 0 commit-triggered deploys across 24 services; Render build log "we don't have access to your repo". Root cause: public-URL linking ⇒ Render auto-deploy unsupported. Fix: commit-pinned deploy workflow + render-sync.py with per-service live-commit verification (fail-closed on missing RENDER_API_KEY). Pre-flight: 20/20 live on a6bf604. delivery+search answered 401 on bare /health (prefixed liveness routes); added OPEN /health alias + tests (mutation-checked); OPEN_ROUTES 19⇒21 in the matrix. Claim scope was amended before first push to add services/search/src/ and AUTHORIZATION_POLICY_MATRIX.md (search showed the same 401 at measurement). M6-18B status unchanged (drill not yet run).
+
+---
+
 # 2026-09-29 — CLM-0397/0398/0399/0400 — M0-45 Completed
 
 - **Work Item(s):** M0-45

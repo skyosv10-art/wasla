@@ -1,0 +1,208 @@
+{
+  "target_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+  "started_at": "2026-09-29T12:54:56.909555+00:00",
+  "finished_at": "2026-09-29T12:55:00.601934+00:00",
+  "verdict": "PASS",
+  "services": [
+    {
+      "service": "wasla-admin-app",
+      "id": "srv-daprqr8u01pc73do6edg",
+      "type": "static_site",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:48:34.697642Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-audit",
+      "id": "srv-daprrq0u01pc73do9npg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:26.279442Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-customer-app",
+      "id": "srv-daprqr8u01pc73do6eb0",
+      "type": "static_site",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:48:35.384097Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-customer-bot",
+      "id": "srv-daodb6bm8hqs73e8aa50",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:24.937733Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-customers",
+      "id": "srv-daodbe3m8hqs73e8b5ag",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:46.599298Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-delivery",
+      "id": "srv-daodbc3m8hqs73e8atvg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:17.93418Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-dispatch",
+      "id": "srv-daodbfmk1f9s73bknib0",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:23.327797Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-driver-app",
+      "id": "srv-daprqr8u01pc73do6ef0",
+      "type": "static_site",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:48:39.37699Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-driver-bot",
+      "id": "srv-daodb6740ujc73esa79g",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:32.817383Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-drivers",
+      "id": "srv-daodb6740ujc73esa7v0",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:35.889179Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-geography",
+      "id": "srv-daodbbn40ujc73esarsg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:39.663153Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-identity",
+      "id": "srv-daodb63m8hqs73e8a900",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:39.664986Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-marketplace",
+      "id": "srv-daodb60ae00c73c2utjg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:39.741466Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-matching",
+      "id": "srv-daodbdrtqb8s73et2sl0",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:38.504989Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-negotiations",
+      "id": "srv-daodb6ek1f9s73bkmcr0",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:43.633167Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-orders",
+      "id": "srv-daodb63m8hqs73e8a9fg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:44.138241Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-partner-bot",
+      "id": "srv-daodb6f40ujc73esa8bg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:40.610131Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-reputation",
+      "id": "srv-daodb63tqb8s73et1tlg",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:49:42.548974Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-search",
+      "id": "srv-daodbbbtqb8s73et2i0g",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:53:44.736415Z",
+      "matches_target": true
+    },
+    {
+      "service": "wasla-subscriptions",
+      "id": "srv-daodb66gekts73br8q9g",
+      "type": "web_service",
+      "triggered_deploy": null,
+      "triggered_status": null,
+      "live_commit": "a6bf604ed25248f4f371aa03efc8591f5dadfa66",
+      "live_finished_at": "2026-09-29T12:54:26.480425Z",
+      "matches_target": true
+    }
+  ]
+}

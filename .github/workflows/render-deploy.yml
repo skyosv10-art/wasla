@@ -1,0 +1,64 @@
+name: Render deploy (main → Render, commit-pinned)
+
+# CLM-0401 · M6-18B — replaces the inert `autoDeploy: yes` on Render.
+#
+# Root cause measured 2026-09-29: every Render service is linked by public
+# repository URL, without a connected Git provider. Render's build log states
+# "It looks like we don't have access to your repo" and Render does not
+# support auto-deploys for such services, so no push to main ever triggered a
+# deploy (every recorded trigger is `api`/`manual`; live commit 4894f39 was
+# 195 commits behind main).
+#
+# This workflow deploys the exact pushed commit and fails unless every service
+# reports that commit as live. It is NOT a required check on pull requests;
+# it runs only after a merge to main.
+#
+# Requires repository secret RENDER_API_KEY. If the secret is absent the job
+# FAILS (visible red), it does not skip silently.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit to deploy (defaults to the workflow commit)"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      TARGET_SHA: ${{ github.event.inputs.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Require RENDER_API_KEY (fail-closed)
+        run: |
+          if [ -z "${RENDER_API_KEY}" ]; then
+            echo "::error::RENDER_API_KEY secret is missing — main cannot reach Render. Owner action: add the secret or connect Render's GitHub integration."
+            exit 1
+          fi
+      - name: Deploy commit and verify live commit per service
+        run: python3 scripts/deploy/render-sync.py "$TARGET_SHA" --out render-sync.json
+      - name: Upload deploy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-sync-${{ github.sha }}
+          path: render-sync.json
+          if-no-files-found: warn
+          retention-days: 90

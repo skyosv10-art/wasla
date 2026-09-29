@@ -1,0 +1,9 @@
+# pg_tables per schema, Supabase project snlpxywskyqrjattbpgn, read-only session, 2026-09-29
+auth 27
+information_schema 4
+pg_catalog 64
+public 5
+realtime 3
+storage 8
+vault 1
+# public tables: audit_events, channel_deliveries, channel_outbox, channel_updates, wasla_service_token_replay

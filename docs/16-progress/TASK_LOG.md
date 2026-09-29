@@ -1,3 +1,47 @@
+# 2026-09-29 — CLM-0400 — Unset GH_TOKEN for test-governance in verify.sh
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/verify.sh,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+The verify job runs verify.sh which runs both verify-governance.sh (needs GH_TOKEN for check 23) and test-governance.sh (must NOT have GH_TOKEN because CI-audit test cases use it to query live CI status, causing false failures). The governance-guard job sets GH_TOKEN only for verify-governance, not for test-governance. verify.sh must do the same by unsetting GH_TOKEN before running test-governance.sh.
+
+---
+
+# 2026-09-29 — CLM-0399 — Test-governance fix + ROADMAP update
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/checks/test-governance.sh,ROADMAP.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Fix for test-governance test case: inject empty WASLA_BRANCHES_FILE and WASLA_PRS_FILE for the "verify-governance works in git context" test case, since check 23 is now fail-closed in CI. Also update ROADMAP.md for roadmap freshness check.
+
+---
+
+# 2026-09-29 — CLM-0398 — Risk review date extension
+
+- **Work Item(s):** M0-45 (governance maintenance)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** docs/07-security/RISK_REGISTER.md,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Extended risk review dates for RISK-0011, RISK-0038, RISK-0039, RISK-0041 from 2026-09-28 to 2026-10-12 (14-day extension per governance rules).
+
+---
+
+# 2026-09-29 — CLM-0397 — Branch freshness guard repair (clean PR)
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/checks/validate-platform-branch-freshness.sh,scripts/checks/lib/gov-cases-branch-freshness.sh,.github/workflows/ci.yml,docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Clean PR replacing closed PR #532. Code-only changes: GH_TOKEN for verify job (guard was fail-closed on unreadable platform in CI), CI fail-closed behavior (unreadable branches or open PRs in CI → FAIL), regression cases. Shared ledgers kept at main version — no conflicts.
+
+---
+
 # 2026-09-29 — Stale claim release + branch cleanup
 
 - **Work Item(s):** M0-45 (governance maintenance)

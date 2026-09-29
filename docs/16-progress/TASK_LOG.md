@@ -7446,3 +7446,40 @@ Created independent pentest plan and procurement document:
 M6-19B and M6-19C are blocked on M6-19A completion.
 M7 items are blocked on M6 completion.
 **Barrier:** External procurement required for pentest execution. Owner action needed.
+
+---
+
+## CLM-0405 · M6-18B — RISK-0055 DB Backup Workflow
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0405` · **Branch:** `fix/risk-0055-db-backup-workflow` · **Status:** In Progress
+
+**Date:** 2026-09-29  
+**Status:** In Progress — workflow created, manual run pending
+
+### What was done
+
+Created GitHub Actions workflow `db-backup.yml` to mitigate RISK-0055:
+- **Schedule:** every 6 hours + `workflow_dispatch`
+- **Secrets:** `SUPABASE_DB_URL` (pooler connection), `BACKUP_PASSPHRASE` (GPG AES-256)
+- **Process:** pg_dump (custom format, compressed) → GPG symmetric encryption → artifact upload (30-day retention)
+- **Validation:** empty dump check, pg_restore --list readability check, GPG round-trip decryption verification
+- **Restore test:** local Docker PostgreSQL restore with table count + row count comparison
+- **Security:** no secrets in git/logs, unencrypted dump removed from runner, only encrypted artifact uploaded
+
+### Pre-execution measurements
+
+- Database size: 12 MB (12,881,043 bytes)
+- Public tables: 5 (audit_events, channel_deliveries, channel_outbox, channel_updates, wasla_service_token_replay)
+- Total rows: 15
+- PostgreSQL version: 17.6
+- Expected pg_dump time: <5 seconds (12 MB database)
+- 6-hour interval: practical (dump + encrypt + restore < 1 minute)
+
+### Next
+
+- Run workflow manually via `workflow_dispatch`
+- Verify encrypted artifact created
+- Run restore test
+- Document results in evidence README
+- Update RISK-0055 to Mitigated/Partially Mitigated
+- Do NOT close M6-18B

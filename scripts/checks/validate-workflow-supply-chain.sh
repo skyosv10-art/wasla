@@ -47,6 +47,7 @@ WF_DIR="$ROOT/.github/workflows"
 DECLARED=(
   "ci.yml|no|yes|خطُّ CI المانعُ — الوظائفُ الواحدةُ والثلاثونَ المُلزِمةُ (MERGE_BLOCKING.json · ADR-023). وظيفةُ image-supply-chain تملكُ id-token: write و attestations: write لإثباتِ أصلِ البناءِ (M6-19C · ADR-056)."
   "roadmap.yml|no|no|طرافةُ ROADMAP.md مع كلِّ دفعةٍ — مستقلٌّ عن خطِّ CI بقصدٍ."
+  "render-deploy.yml|yes|no|نشرُ الالتزامِ المدفوعِ إلى main على خدماتِ Render والتحقّقُ من الالتزامِ الحيِّ لكلِّ خدمةٍ (M6-18B · CLM-0401). سرٌّ واحدٌ: RENDER_API_KEY. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — push إلى main وworkflow_dispatch."
 )
 #
 # ── سجلٌّ تدقيقيٌّ: سيرُ عملٍ وُلدَ ومات في يومٍ واحدٍ (2026-09-13/14) ─────────

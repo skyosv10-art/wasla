@@ -1,3 +1,13 @@
+# 2026-09-29 — CLM-0401/0402 — M6-18B live DR drill (first execution)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+
+Live drill on `a6bf604`: restart 0 s observed downtime (147 probes); orders suspend/resume RTO 37.6 s (outage 47.6 s); marketplace isolation — delivery kept serving, RTO 36.2 s; process RPO 0 (5 tables SHA-256 identical). DB RPO not met: Supabase PITR off, no backups (RISK-0055). Domain schemas not applied on live DB (RISK-0056). Scenarios 2/3/5 not executed with reasons. M6-18B Ready for Gate → Blocked. Workflow render-deploy.yml declared in the workflow supply-chain guard (secrets=yes, write=no). CLM-0402 opened for RISK_REGISTER.md.
+
+---
+
 # 2026-09-29 — CLM-0401 — M6-18B: Render deploy drift root cause + /health 401
 
 - **Work Item(s):** M6-18B

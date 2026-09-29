@@ -1,0 +1,10 @@
+{"t": "2026-09-29T13:03:38.374110+00:00", "event": "baseline", "code": 200}
+{"t": "2026-09-29T13:03:38.881704+00:00", "event": "suspend_requested"}
+{"t": "2026-09-29T13:03:39.051516+00:00", "probe": "await_down", "url": "https://wasla-orders.onrender.com/health", "code": 503, "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width"}
+{"t": "2026-09-29T13:03:39.051622+00:00", "event": "down_confirmed", "at": "2026-09-29T13:03:39.051618+00:00"}
+{"t": "2026-09-29T13:03:49.299200+00:00", "event": "resume_requested"}
+{"t": "2026-09-29T13:03:59.323830+00:00", "probe": "await_up", "url": "https://wasla-orders.onrender.com/health", "code": 0, "body": "TimeoutError"}
+{"t": "2026-09-29T13:04:10.340287+00:00", "probe": "await_up", "url": "https://wasla-orders.onrender.com/health", "code": 0, "body": "TimeoutError"}
+{"t": "2026-09-29T13:04:21.362307+00:00", "probe": "await_up", "url": "https://wasla-orders.onrender.com/health", "code": 0, "body": "TimeoutError"}
+{"t": "2026-09-29T13:04:26.680683+00:00", "probe": "await_up", "url": "https://wasla-orders.onrender.com/health", "code": 200, "body": "{\"status\":\"ok\",\"service\":\"orders-service\",\"persistence\":\"postgres\"}"}
+{"t": "2026-09-29T13:04:26.680788+00:00", "event": "result", "scenario": "outage", "suspend_at": "2026-09-29T13:03:38.374237+00:00", "down_confirmed_at": "2026-09-29T13:03:39.051618+00:00", "resume_at": "2026-09-29T13:03:49.051712+00:00", "recovered_at": "2026-09-29T13:04:26.680769+00:00", "rto_from_resume_s": 37.6, "total_outage_s": 47.6}

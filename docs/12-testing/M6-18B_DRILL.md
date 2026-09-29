@@ -150,6 +150,12 @@ The DR drill procedure is designed to be executed by an operator with:
 **Execution status:** Not yet executed in a live environment. The procedure
 is documented and ready for execution when a live environment is available.
 
+**Update 2026-09-29 (CLM-0401) — first live execution:** see
+[`ci-evidence/2026-09-29T130000Z-m6-18b-dr-drill-live/`](ci-evidence/2026-09-29T130000Z-m6-18b-dr-drill-live/README.md).
+RTO met (0 s restart · 37.6 s outage); process RPO 0; DB RPO not met (no PITR/backups);
+scenarios 2/3/5 not executed (domain schemas absent on the live DB; fault injection
+requires owner decision). `billing` is not deployed on Render — `orders` drilled as T1.
+
 ---
 
 ## 6. Acceptance Criteria

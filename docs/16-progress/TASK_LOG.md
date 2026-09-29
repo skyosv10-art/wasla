@@ -1,3 +1,14 @@
+# 2026-09-29 — CLM-0397 — Branch freshness guard repair (clean PR)
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** scripts/checks/validate-platform-branch-freshness.sh,scripts/checks/lib/gov-cases-branch-freshness.sh,.github/workflows/ci.yml,docs/12-testing/ci-evidence/2026-09-28T063921Z-clm-0392-branch-freshness-guard/,docs/16-progress/WORK_CLAIMS.md,docs/16-progress/TASK_LOG.md
+
+Clean PR replacing closed PR #532. Code-only changes: GH_TOKEN for verify job (guard was fail-closed on unreadable platform in CI), CI fail-closed behavior (unreadable branches or open PRs in CI → FAIL), regression cases. Shared ledgers kept at main version — no conflicts.
+
+---
+
 # 2026-09-29 — Stale claim release + branch cleanup
 
 - **Work Item(s):** M0-45 (governance maintenance)

@@ -75,3 +75,10 @@ evidence, owned by M6-18C.
 
 The post-merge sync to the merge commit and the `/health` re-measurement are appended
 below. They are not claimed before they are measured.
+
+### 6.1 Measured 2026-09-29T13:39Z–14:05Z — merge commit `871a3b77cadb274809bef7fe6ef2e3852550de82` (PR #541)
+
+- **Sync:** 23 selected services = 20 app/bot/static + prometheus, alertmanager and otel-collector. All 23 triggered and live at `871a3b7`, verdict PASS ([`sync-871a3b7.json`](sync-871a3b7.json)). `wasla-observability` (root Dockerfile, previously `b94747a`) was synced separately, PASS ([`sync-observability-871a3b7.json`](sync-observability-871a3b7.json)).
+- **Verify-only across all 24 `wasla-*` services:** every latest live deploy = `871a3b7`, verdict PASS ([`verify-all-871a3b7.json`](verify-all-871a3b7.json)).
+- **/health after sync:** 20/20 app services **200, including `wasla-delivery` and `wasla-search`** (401 before the fix). Alertmanager: no credentials → 401, with credentials → 200. Prometheus and the collector have no `/health` (404 by design). Prometheus `/-/ready` → 200 ([`health-871a3b7.txt`](health-871a3b7.txt)).
+- **The pipeline is no longer manual.** The repo secret `RENDER_API_KEY` was set on 2026-09-29. Documented reason: it is the only missing input of `render-deploy.yml`, and without it every main push leaves Render drifting again (the root cause of this item). The `render-deploy.yml` run on the merge push (`36576647803`) failed closed on attempt 1 (no secret), as designed. Attempt 2, re-run after the secret was set, went **success: 24 services PASS from GitHub Actions** ([`gha-render-deploy-run-36576647803-attempt2.txt`](gha-render-deploy-run-36576647803-attempt2.txt)). From now on every push to main that touches code deploys that exact commit and fails red on any mismatch.

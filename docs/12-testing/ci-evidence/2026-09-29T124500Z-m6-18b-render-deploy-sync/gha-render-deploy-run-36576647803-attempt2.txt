@@ -1,0 +1,32 @@
+  RENDER_API_KEY: ***
+﻿2026-09-29T13:59:15.4469084Z ##[group]Run if [ -z "${RENDER_API_KEY}" ]; then
+^[[36;1mif [ -z "${RENDER_API_KEY}" ]; then^[[0m
+^[[36;1m  echo "::error::RENDER_API_KEY secret is missing — main cannot reach Render. Owner action: add the secret or connect Render's GitHub integration."^[[0m
+  RENDER_API_KEY: ***
+  RENDER_API_KEY: ***
+✓ wasla-admin-app          live=871a3b7 triggered=live
+✓ wasla-alertmanager       live=871a3b7 triggered=live
+✓ wasla-audit              live=871a3b7 triggered=live
+✓ wasla-customer-app       live=871a3b7 triggered=live
+✓ wasla-customer-bot       live=871a3b7 triggered=live
+✓ wasla-customers          live=871a3b7 triggered=live
+✓ wasla-delivery           live=871a3b7 triggered=live
+✓ wasla-dispatch           live=871a3b7 triggered=live
+✓ wasla-driver-app         live=871a3b7 triggered=live
+✓ wasla-driver-bot         live=871a3b7 triggered=live
+✓ wasla-drivers            live=871a3b7 triggered=live
+✓ wasla-geography          live=871a3b7 triggered=live
+✓ wasla-identity           live=871a3b7 triggered=live
+✓ wasla-marketplace        live=871a3b7 triggered=live
+✓ wasla-matching           live=871a3b7 triggered=live
+✓ wasla-negotiations       live=871a3b7 triggered=live
+✓ wasla-observability      live=871a3b7 triggered=live
+✓ wasla-orders             live=871a3b7 triggered=live
+✓ wasla-otel-collector     live=871a3b7 triggered=live
+✓ wasla-partner-bot        live=871a3b7 triggered=live
+✓ wasla-prometheus         live=871a3b7 triggered=live
+✓ wasla-reputation         live=871a3b7 triggered=live
+✓ wasla-search             live=871a3b7 triggered=live
+✓ wasla-subscriptions      live=871a3b7 triggered=live
+verdict: PASS
+  RENDER_API_KEY: ***

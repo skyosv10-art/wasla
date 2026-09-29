@@ -35,7 +35,7 @@
 | Runbooks | ✅ | 5 runbooks (RB-01 through RB-05) |
 | On-call procedures | ✅ | Weekly rotation, escalation path, severity levels |
 | Dashboards | ✅ | Service health + SLO dashboard defined |
-| Live-fire evidence | ⏳ Pending | Requires deployed Prometheus + Alertmanager |
+| Live-fire evidence | ◐ Partial | Service-down path live-fired 2026-09-29 → Telegram delivered (firing + resolved) — [`ci-evidence/2026-09-29T134600Z-m6-18c-live-fire/`](ci-evidence/2026-09-29T134600Z-m6-18c-live-fire/README.md). Other alert classes not exercised. |
 
 ---
 

@@ -1,3 +1,14 @@
+# 2026-09-29 — CLM-0401 — M6-18B: Render deploy drift root cause + /health 401
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+- **Scope:** services/delivery/src/,services/search/src/,.github/workflows/,scripts/deploy/,docs/07-security/AUTHORIZATION_POLICY_MATRIX.md,docs/12-testing/,ROADMAP.md
+
+Measured: Render live 4894f39 = 195 commits behind main a6bf604; 0 commit-triggered deploys across 24 services; Render build log "we don't have access to your repo". Root cause: public-URL linking ⇒ Render auto-deploy unsupported. Fix: commit-pinned deploy workflow + render-sync.py with per-service live-commit verification (fail-closed on missing RENDER_API_KEY). Pre-flight: 20/20 live on a6bf604. delivery+search answered 401 on bare /health (prefixed liveness routes); added OPEN /health alias + tests (mutation-checked); OPEN_ROUTES 19⇒21 in the matrix. Claim scope was amended before first push to add services/search/src/ and AUTHORIZATION_POLICY_MATRIX.md (search showed the same 401 at measurement). M6-18B status unchanged (drill not yet run).
+
+---
+
 # 2026-09-29 — CLM-0397/0398/0399/0400 — M0-45 Completed
 
 - **Work Item(s):** M0-45

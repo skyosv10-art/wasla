@@ -7526,3 +7526,18 @@ Fix: add `sudo apt-get remove -y postgresql-client-16` after installing postgres
 ### What was done
 
 Third manual run failed: removing pg16 caused pg_wrapper to fail with "PostgreSQL version 16 is not installed". Instead of removing pg16, prepend /usr/lib/postgresql/17/bin to PATH via GITHUB_PATH so all subsequent steps use PG17 binaries directly.
+
+---
+
+## CLM-0409 · M6-18B — Restore test fix for supabase_vault extension
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0409` · **Branch:** `fix/risk-0055-db-backup-restore-fix` · **Status:** In Progress
+
+**Date:** 2026-09-30  
+**Status:** In Progress — fixing restore test
+
+### What was done
+
+Successful workflow run 36643974571 produced encrypted artifact but restore test showed 0/5 tables due to `supabase_vault` extension not available in vanilla Docker PostgreSQL 17.
+
+Fix: create `vault` schema before restore, remove `--exit-on-error` so pg_restore continues past extension errors. Updated evidence README with actual measured results.

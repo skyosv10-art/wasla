@@ -242,14 +242,17 @@ jobs:
             sleep 1
           done
 
+          # Create the vault schema that Supabase uses (extension not available in vanilla PG)
+          docker exec wasla-restore-test psql -U postgres -d restore_test \
+            -c "CREATE SCHEMA IF NOT EXISTS vault;" 2>/dev/null || true
+
           RESTORE_START=$(date +%s)
 
-          # Restore the dump to the temp database
+          # Restore the dump to the temp database (without --exit-on-error so extension errors don't abort)
           pg_restore \
             --no-owner \
             --no-privileges \
             --dbname="postgresql://postgres:test@localhost:15432/restore_test" \
-            --exit-on-error \
             "${{ steps.dump.outputs.dump_file }}" 2>&1 || true
 
           RESTORE_END=$(date +%s)

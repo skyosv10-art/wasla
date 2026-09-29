@@ -85,8 +85,8 @@ jobs:
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-${PG_VERSION}
-          # Remove any pre-installed older version that shadows our pg_dump in PATH
-          sudo apt-get remove -y postgresql-client-16 2>/dev/null || true
+          # Use the full path to avoid pg_wrapper defaulting to a different version
+          export PATH="/usr/lib/postgresql/${PG_VERSION}/bin:${PATH}"
           # Verify the installed pg_dump version matches the server
           INSTALLED_VERSION=$(pg_dump --version | grep -oP 'pg_dump \(PostgreSQL\) \K[0-9]+')
           echo "Installed pg_dump major version: ${INSTALLED_VERSION}"
@@ -98,6 +98,7 @@ jobs:
           fi
           pg_dump --version
           pg_restore --version
+          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
 
       - name: Measure database size before dump
         id: db_size

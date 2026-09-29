@@ -182,8 +182,12 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       VERIFY_SKIP_NODE: "1"
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:

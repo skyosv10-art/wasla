@@ -7498,3 +7498,18 @@ Created GitHub Actions workflow `db-backup.yml` to mitigate RISK-0055:
 First manual run of db-backup.yml failed: pg_dump 16.15 installed on runner, but Supabase server is 17.6. pg_dump 16 cannot dump a PG 17 server.
 
 Fix: added version verification after apt install — fails-closed if pg_dump major version doesn't match PG_VERSION (17). Removed -qq flag so install errors are visible.
+
+---
+
+## CLM-0407 · M6-18B — Remove pre-installed pg16 shadowing pg_dump 17
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0407` · **Branch:** `fix/risk-0055-db-backup-remove-pg16` · **Status:** In Progress
+
+**Date:** 2026-09-30  
+**Status:** In Progress — fixing pg_dump PATH shadowing
+
+### What was done
+
+Second manual run of db-backup.yml failed: postgresql-client-17 was installed correctly but pg_dump still resolved to version 16 because postgresql-client-16 was pre-installed on the runner and its binary path came first in PATH.
+
+Fix: add `sudo apt-get remove -y postgresql-client-16` after installing postgresql-client-17, with improved error diagnostics.

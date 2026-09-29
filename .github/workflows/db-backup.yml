@@ -85,12 +85,15 @@ jobs:
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-${PG_VERSION}
+          # Remove any pre-installed older version that shadows our pg_dump in PATH
+          sudo apt-get remove -y postgresql-client-16 2>/dev/null || true
           # Verify the installed pg_dump version matches the server
           INSTALLED_VERSION=$(pg_dump --version | grep -oP 'pg_dump \(PostgreSQL\) \K[0-9]+')
           echo "Installed pg_dump major version: ${INSTALLED_VERSION}"
           if [ "${INSTALLED_VERSION}" != "${PG_VERSION}" ]; then
-            echo "::error::pg_dump version ${INSTALLED_VERSION} does not match required ${PG_VERSION}. apt may have installed a different version."
-            apt list --installed 2>/dev/null | grep postgresql-client || true
+            echo "::error::pg_dump version ${INSTALLED_VERSION} does not match required ${PG_VERSION}."
+            which pg_dump
+            ls -la /usr/lib/postgresql/*/bin/pg_dump 2>/dev/null || true
             exit 1
           fi
           pg_dump --version

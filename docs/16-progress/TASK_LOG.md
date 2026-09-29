@@ -7513,3 +7513,16 @@ Fix: added version verification after apt install — fails-closed if pg_dump ma
 Second manual run of db-backup.yml failed: postgresql-client-17 was installed correctly but pg_dump still resolved to version 16 because postgresql-client-16 was pre-installed on the runner and its binary path came first in PATH.
 
 Fix: add `sudo apt-get remove -y postgresql-client-16` after installing postgresql-client-17, with improved error diagnostics.
+
+---
+
+## CLM-0408 · M6-18B — Use full PG17 bin path instead of removing pg16
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0408` · **Branch:** `fix/risk-0055-db-backup-pg-path` · **Status:** In Progress
+
+**Date:** 2026-09-30  
+**Status:** In Progress — fixing pg_dump PATH resolution
+
+### What was done
+
+Third manual run failed: removing pg16 caused pg_wrapper to fail with "PostgreSQL version 16 is not installed". Instead of removing pg16, prepend /usr/lib/postgresql/17/bin to PATH via GITHUB_PATH so all subsequent steps use PG17 binaries directly.

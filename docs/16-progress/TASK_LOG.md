@@ -1,3 +1,17 @@
+# 2026-09-29 — CLM-0397/0398/0399/0400 — M0-45 Completed
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released
+
+PR #539 merged (squash) as df7c894. All 42 CI checks green. Review approved by @xuuux-voox (independent CODEOWNER).
+
+GOV-002 is ACTIVE: require_code_owner_reviews=true on main branch protection. @xuuux-voox serves as independent CODEOWNER for /scripts/, /docs/07-security/, /docs/12-testing/, /docs/16-progress/.
+
+M0-45 marked as Completed on the launch execution board. All claims released.
+
+---
+
 # 2026-09-29 — CLM-0400 — Unset GH_TOKEN for test-governance in verify.sh
 
 - **Work Item(s):** M0-45

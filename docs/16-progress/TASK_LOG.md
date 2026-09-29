@@ -1,3 +1,13 @@
+# 2026-09-29 — CLM-0404 — M6-18 post-merge live evidence (sync, /health, live-fire)
+
+- **Work Item(s):** M6-18C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+
+After PR #541 (871a3b7): 24/24 Render services live on 871a3b7 (verify-only PASS). /health 200 on 20/20 app services, including delivery and search. Repo secret RENDER_API_KEY set; render-deploy.yml re-run on the merge push → success, 24 PASS from Actions. Alertmanager env set (Telegram token + on-call chat id + basic auth). M6-18C live-fire: WASLAServiceDown fired +2m32s, Telegram Notify success +2m43s, resolved delivered, 0 failures. CLM-0401/0402/0403 Released; CLM-0404 opened. M6-18B stays Blocked, M6-18C stays Ready for Gate.
+
+---
+
 # 2026-09-29 — CLM-0403 — M6-18C observability stack repair (pre-live-fire)
 
 - **Work Item(s):** M6-18C

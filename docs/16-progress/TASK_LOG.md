@@ -1,3 +1,13 @@
+# 2026-09-29 — CLM-0403 — M6-18C observability stack repair (pre-live-fire)
+
+- **Work Item(s):** M6-18C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active
+
+Root causes from the Render logs: alertmanager image tag v0.27.1 does not exist; the prometheus CMD was passed as args to the ENTRYPOINT; the collector used invalid `${env:PORT:-4318}`. Also fixed: alerting target `localhost:9093` → the Render Alertmanager URL over HTTPS with basic auth; scrape scheme https; Telegram receiver (fail closed without token/chat id); `--web.enable-lifecycle` removed; HA gossip disabled. Proven locally with the same versions. Live-fire pending: the owner must provide the chat id.
+
+---
+
 # 2026-09-29 — CLM-0401/0402 — M6-18B live DR drill (first execution)
 
 - **Work Item(s):** M6-18B

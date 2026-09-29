@@ -1,0 +1,14 @@
+2026-09-24T13:19:40 ==> Deploying...
+2026-09-24T13:19:40 ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-09-24T13:19:43 Error parsing command line arguments: unexpected sh
+2026-09-24T13:19:43 prometheus: error: unexpected sh
+2026-09-24T13:19:48 Error parsing command line arguments: unexpected sh
+2026-09-24T13:19:48 prometheus: error: unexpected sh
+2026-09-24T13:19:50 Error parsing command line arguments: unexpected sh
+2026-09-24T13:19:50 prometheus: error: unexpected sh
+2026-09-24T13:19:50 ==> Exited with status 1
+2026-09-24T13:19:50 ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-09-24T13:20:04 Error parsing command line arguments: unexpected sh
+2026-09-24T13:20:04 prometheus: error: unexpected sh
+2026-09-24T13:34:45 ==> Port scan timeout reached, no open ports detected. Bind your service to at least one port. If you don't need to receive traffic on any port, create a background worker instead.
+2026-09-24T13:34:46 ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding

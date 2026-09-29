@@ -1,0 +1,12 @@
+2026-09-24T13:19:23 #9 sending cache export 3.2s done
+2026-09-24T13:19:23 #9 DONE 3.2s
+2026-09-24T13:19:24 ==> Deploying...
+2026-09-24T13:19:24 ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-09-24T13:19:29 Error: failed to get config: cannot resolve the configuration: environment variable "PORT:-4318" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$
+2026-09-24T13:19:29 2026/09/24 13:19:29 collector server run finished with error: failed to get config: cannot resolve the configuration: environment variable "PORT:-4318" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$
+2026-09-24T13:19:31 ==> Exited with status 1
+2026-09-24T13:19:31 ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-09-24T13:19:31 Error: failed to get config: cannot resolve the configuration: environment variable "PORT:-4318" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$
+2026-09-24T13:19:31 2026/09/24 13:19:31 collector server run finished with error: failed to get config: cannot resolve the configuration: environment variable "PORT:-4318" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$
+2026-09-24T13:34:31 ==> Port scan timeout reached, no open ports detected. Bind your service to at least one port. If you don't need to receive traffic on any port, create a background worker instead.
+2026-09-24T13:34:31 ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding

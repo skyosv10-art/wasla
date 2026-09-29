@@ -28,6 +28,30 @@ terraform {
 
 provider "render" {}
 
+# ── M6-18C (CLM-0403): alert destination + Alertmanager authentication ──────
+# The containers now fail closed without these values (see the entrypoints in
+# infra/observability/). They are passed in at apply time and never written here.
+variable "telegram_bot_token" {
+  description = "Telegram bot token of the primary on-call bot (driver bot)."
+  type        = string
+  sensitive   = true
+}
+variable "telegram_chat_id" {
+  description = "Telegram chat id of the primary on-call recipient (integer)."
+  type        = string
+  sensitive   = true
+}
+variable "am_basic_auth_password" {
+  description = "Password Prometheus uses to reach Alertmanager (user wasla-prometheus)."
+  type        = string
+  sensitive   = true
+}
+variable "am_basic_auth_hash" {
+  description = "bcrypt hash of am_basic_auth_password for Alertmanager web.yml."
+  type        = string
+  sensitive   = true
+}
+
 locals {
   source_repo = "https://github.com/skyosv10-art/wasla"
   branch      = "main"
@@ -67,8 +91,10 @@ resource "render_web_service" "wasla_prometheus" {
     }
   }
 
-  # Render sets PORT automatically — Prometheus reads it via --web.listen-address
-  env_vars = {}
+  # Render sets PORT automatically — prometheus-entrypoint.sh passes it to --web.listen-address
+  env_vars = {
+    AM_BASIC_AUTH_PASSWORD = { value = var.am_basic_auth_password }
+  }
 }
 
 # ── 2) Alertmanager — يُقيِّمُ قواعدَ الإنذارِ ويوجِّهُها ─────────────────────
@@ -90,8 +116,13 @@ resource "render_web_service" "wasla_alertmanager" {
     }
   }
 
-  # Render sets PORT automatically — Alertmanager reads it via --web.listen-address
-  env_vars = {}
+  # Render sets PORT automatically — alertmanager-entrypoint.sh passes it to --web.listen-address
+  env_vars = {
+    TELEGRAM_BOT_TOKEN = { value = var.telegram_bot_token }
+    TELEGRAM_CHAT_ID   = { value = var.telegram_chat_id }
+    AM_BASIC_AUTH_USER = { value = "wasla-prometheus" }
+    AM_BASIC_AUTH_HASH = { value = var.am_basic_auth_hash }
+  }
 }
 
 # ── 3) OTLP Collector — يستقبلُ آثارَ OpenTelemetry ────────────────────────
@@ -113,7 +144,7 @@ resource "render_web_service" "wasla_otel_collector" {
     }
   }
 
-  # Render sets PORT automatically — collector reads it via ${env:PORT} extension
+  # Render sets PORT automatically — the collector expands ${env:PORT} natively
   env_vars = {}
 }
 

@@ -853,6 +853,15 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return { status: "ok" as const };
   });
 
+  // Platform liveness alias (CLM-0401 · M6-18B): every other deployed unit
+  // answers the orchestrator's probe on bare `/health`; delivery alone did
+  // not, so the unmatched path fell into the identity hook and answered 401
+  // on Render. Same dependency-free body as `/delivery/health` — no data,
+  // no store, no order — so opening it widens nothing that was closed.
+  app.get("/health", { config: OPEN }, async () => {
+    return { status: "ok" as const };
+  });
+
   // Readiness: a real probe. 503 carries the readiness body, not an error body
   // (contracts/api.openapi.yml · errors.md rule 6).
   app.get("/delivery/ready", { config: OPEN }, async (_request, reply) => {

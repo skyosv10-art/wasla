@@ -1,0 +1,35 @@
+# Render build log, wasla-alertmanager, deploy of d97f005 (2026-09-24T13:19Z)
+2026-09-24T13:19:20.987151332Z error: exit status 1
+2026-09-24T13:19:20.977151254Z error: failed to solve: prom/alertmanager:v0.27.1: failed to resolve source metadata for docker.io/prom/alertmanager:v0.27.1: docker.io/prom/alertmanager:v0.27.1: not found
+2026-09-24T13:19:20.977149319Z --------------------
+2026-09-24T13:19:20.977147939Z    5 |     COPY alertmanager.yml /etc/alertmanager/alertmanager.yml
+2026-09-24T13:19:20.977146474Z    4 |     
+2026-09-24T13:19:20.977144801Z    3 | >>> FROM prom/alertmanager:v0.27.1
+2026-09-24T13:19:20.977143005Z    2 |     # Render sets PORT automatically — Alertmanager must listen on it.
+2026-09-24T13:19:20.97714093Z    1 |     # WASLA Alertmanager — M2-08 Stage B
+2026-09-24T13:19:20.977138545Z --------------------
+2026-09-24T13:19:20.977129355Z Dockerfile.alertmanager:3
+2026-09-24T13:19:20.975370711Z ------
+2026-09-24T13:19:20.975369071Z  > [internal] load metadata for docker.io/prom/alertmanager:v0.27.1:
+2026-09-24T13:19:20.975355841Z ------
+2026-09-24T13:19:20.963449536Z #2 ERROR: docker.io/prom/alertmanager:v0.27.1: not found
+2026-09-24T13:19:20.963447568Z #2 [internal] load metadata for docker.io/prom/alertmanager:v0.27.1
+2026-09-24T13:19:20.963429699Z 
+2026-09-24T13:19:20.9050773Z #4 DONE 0.0s
+2026-09-24T13:19:20.905075039Z #4 [auth] prom/alertmanager:pull token for registry-1.docker.io
+2026-09-24T13:19:20.905071585Z 
+2026-09-24T13:19:20.905042438Z #2 ...
+2026-09-24T13:19:20.257230014Z #2 [internal] load metadata for docker.io/prom/alertmanager:v0.27.1
+2026-09-24T13:19:20.257206859Z 
+2026-09-24T13:19:20.108075736Z #3 DONE 0.0s
+2026-09-24T13:19:20.108071436Z #3 [auth] prom/alertmanager:pull render-prod/docker-mirror-repository/prom/alertmanager:pull token for us-west1-docker.pkg.dev
+2026-09-24T13:19:20.108069274Z 
+2026-09-24T13:19:20.108048253Z #2 ...
+2026-09-24T13:19:19.886574769Z #2 [internal] load metadata for docker.io/prom/alertmanager:v0.27.1
+2026-09-24T13:19:19.88657269Z 
+2026-09-24T13:19:19.88657128Z #1 DONE 0.0s
+2026-09-24T13:19:19.886569326Z #1 transferring dockerfile: 397B done
+2026-09-24T13:19:19.886544152Z #1 [internal] load build definition from Dockerfile.alertmanager
+2026-09-24T13:19:17.807471002Z [34m[1m==>(B[m [1mChecking out commit d97f005c2ced166e0926cbbdabb78926f49e0984 in branch main(B[m
+2026-09-24T13:19:10.503963677Z [34m[1m==>(B[m [1mCloning from https://github.com/skyosv10-art/wasla(B[m
+2026-09-24T13:19:10.503948009Z [34m[1m==>(B[m [1mIt looks like we don't have access to your repo, but we'll try to clone it anyway.(B[m

@@ -387,6 +387,15 @@ describe("حد التوصيل — حدود الربط والتصنيف", () => {
     await app.close();
   });
 
+  it("`/health` (مسبارُ المنصّة) مفتوحٌ — لا هويّة ولا 401 (CLM-0401)", async () => {
+    const { app, rawInject } = harnessApp();
+    const response = await rawInject({ method: "GET", url: "/health" });
+    expect(response.statusCode).not.toBe(401);
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ status: "ok" });
+    await app.close();
+  });
+
   it("`/delivery/ready` مفتوح بقصد معلن — منادِيه مُنسّقُ النشر ولا مفتاح له", async () => {
     // إغلاقُهُ يوقفُ النشرَ لا المهاجمَ، وجسمُهُ لا يحملُ طلباً ولا متجراً ولا
     // مبلغاً — أسماءَ تابعينَ وحالاتِهم. والقرارُ مكتوبٌ في السجلِّ §5 لا مُستنتَجٌ.

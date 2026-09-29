@@ -2983,7 +2983,10 @@ printf '\n<!-- حالة اختبار -->\n' >> "$BOARD"
 git add -A >/dev/null; git commit -qm "valid full state" >/dev/null
 # (CLM-0397) Check 23 is fail-closed in CI — inject empty branch/PR files
 # so the guard sees no branches to check (the test repo has no remote).
-WASLA_BRANCHES_FILE=/dev/null WASLA_PRS_FILE=/dev/null \
+# /dev/null is a char device, not a regular file — the guard's -f test
+# rejects it, so we create a real empty file.
+: > /tmp/wasla-empty-branches.txt
+WASLA_BRANCHES_FILE=/tmp/wasla-empty-branches.txt WASLA_PRS_FILE=/tmp/wasla-empty-branches.txt \
   t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD
 
 printf '\n\033[1m═══ النتيجة: %d ناجح · %d فاشل ═══\033[0m\n\n' "$PASS" "$FAIL"

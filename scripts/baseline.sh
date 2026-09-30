@@ -113,15 +113,22 @@ test_files = [
 ]
 
 ci_jobs = ci_af = 0
-if os.path.exists(".gitlab-ci.yml"):
-    ci_text = open(".gitlab-ci.yml", encoding="utf-8", errors="replace").read()
-    reserved = ("stages", "variables", "default", "include", "workflow")
-    ci_jobs = sum(
-        1 for l in ci_text.splitlines()
-        if re.match(r"^[A-Za-z0-9_.-]+:\s*$", l) and not l.split(":")[0] in reserved
-        and not l.startswith(".")
-    )
-    ci_af = len(re.findall(r"allow_failure:\s*true", ci_text))
+# RISK-0016 (CLM-0414, 2026-09-30): count the pipeline that actually runs,
+# `.github/workflows/ci.yml`, not the abandoned `.gitlab-ci.yml`.
+# ci_jobs = top-level keys under `jobs:`; ci_allow_failure = `continue-on-error: true`.
+_gh_ci = ".github/workflows/ci.yml"
+if os.path.exists(_gh_ci):
+    ci_text = open(_gh_ci, encoding="utf-8", errors="replace").read()
+    in_jobs = False
+    for l in ci_text.splitlines():
+        if re.match(r"^jobs:\s*$", l):
+            in_jobs = True
+            continue
+        if in_jobs and re.match(r"^[A-Za-z]", l):
+            in_jobs = False
+        if in_jobs and re.match(r"^  [A-Za-z0-9_-]+:\s*$", l):
+            ci_jobs += 1
+    ci_af = len(re.findall(r"^\s*continue-on-error:\s*true\b", ci_text, re.M))
 
 gov_checks = 0
 gov_path = "scripts/checks/verify-governance.sh"

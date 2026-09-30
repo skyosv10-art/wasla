@@ -1,0 +1,36 @@
+{
+ "measured_at": "2026-09-30",
+ "RISK-0036": {
+  "GET /repos/.../branches/main .protected": true,
+  "repo.visibility": "public",
+  "required_status_checks.contexts": 40,
+  "strict": true,
+  "enforce_admins": true,
+  "required_approving_review_count": 1,
+  "require_code_owner_reviews": true
+ },
+ "RISK-0039": {
+  "run": 36645750718,
+  "head_sha": "bc5de79e8901523ae400187f95c1824a3c7a013d",
+  "jobs_total": 40,
+  "jobs_started_with_steps": 40,
+  "conclusions": {
+   "success": 37,
+   "failure": 3
+  }
+ },
+ "RISK-0038": {
+  "workflows_on_main": [
+   ".github/workflows/ci.yml",
+   ".github/workflows/db-backup-proof.yml",
+   ".github/workflows/db-backup.yml",
+   ".github/workflows/render-deploy.yml",
+   ".github/workflows/risk-0056-pgtrgm-readonly.yml",
+   ".github/workflows/risk-0056-prod-preflight.yml",
+   ".github/workflows/risk-0056-readiness-proof.yml",
+   ".github/workflows/risk-0056-test-db.yml",
+   ".github/workflows/roadmap.yml"
+  ],
+  "gemini-review.yml_deleted_by": "b700236"
+ }
+}

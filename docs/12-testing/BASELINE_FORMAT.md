@@ -59,8 +59,8 @@
 | `packages_with_typecheck` | منها ما فيه سكربتُ `typecheck` | 40 |
 | `packages_with_test` | منها ما فيه سكربتُ `test` | 40 |
 | `test_files_tracked` | ملفّاتُ `*.test.*`/`*.spec.*` في الشجرةِ | 243 |
-| `ci_jobs` | وظائفُ `.gitlab-ci.yml` (بلا القوالبِ والمفاتيحِ المحجوزةِ) | 25 |
-| `ci_allow_failure` | استثناءاتُ `allow_failure: true` | 1 |
+| `ci_jobs` | وظائفُ `.github/workflows/ci.yml` (مفاتيحُ `jobs:` في المستوى الأوّل) — صُحِّح بـRISK-0016 (CLM-0414)؛ كان يقرأ `.gitlab-ci.yml` المهجور | 13 |
+| `ci_allow_failure` | `continue-on-error: true` في `.github/workflows/ci.yml` | 0 |
 | `governance_checks` | فحوصُ بوّابةِ الحوكمةِ (1..10) | 10 |
 | `risks_not_closed` | أسطرُ `RISK_REGISTER` غيرُ `closed` | 10 |
 

@@ -53,7 +53,7 @@
 
 **ملاحظة:** الوظيفتان الأخيرتان تُوسِّعان نفس القاعدة وإن كان هدفهما **حزمة** لا خدمة — القناة طبقة توصيل لا خدمة ([ADR-007](../15-decisions/ADR-007-telegram-channel-adapter-isolation-and-stack.md))، فجداولها لا يملكها خادم واحد بل تتشاركها البوتات الثلاثة عبر `@wasla/channel-postgres`. تفاصيل الحزمة في [CHANNEL_PERSISTENCE.md](../02-architecture/CHANNEL_PERSISTENCE.md).
 
-**لماذا قاعدة بيانات مستقلّة لكل خدمة؟** كل خدمة تُطبّق `contracts/schema.sql` الخاص بها وتُفرغ جداولها في `beforeAll`؛ فصل القواعد يجعل الفشل مُنسَباً لخدمة واحدة، ويمنع أي تداخل أو ترتيب ضمني بين الخدمتين، ويحترم قاعدة أن كل خدمة تملك جداولها وحدها (Geography تُخزّن `wasla_public_id` كمرجع opaque بلا FK إلى `identity_users` وفق ADR-006). خدمة `postgres:15` تعمل داخل كل وظيفة عبر `services:` ويُشار إليها بـ`alias: postgres`.
+**لماذا قاعدة بيانات مستقلّة لكل خدمة؟** كل خدمة تُطبّق `contracts/schema.sql` الخاص بها وتُفرغ جداولها في `beforeAll`؛ فصل القواعد يجعل الفشل مُنسَباً لخدمة واحدة، ويمنع أي تداخل أو ترتيب ضمني بين الخدمتين، ويحترم قاعدة أن كل خدمة تملك جداولها وحدها (Geography تُخزّن `wasla_public_id` كمرجع opaque بلا FK إلى `identity_users` وفق ADR-006). خدمة `postgres:17` (كانت `postgres:15` حتى CLM-0414، 2026-09-30) تعمل داخل كل وظيفة عبر `services:` ويُشار إليها بـ`alias: postgres`.
 
 ---
 
@@ -117,3 +117,10 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/wasla_drivers_test \
 - **اختبارات E2E متعدّدة الخدمات قائمة الآن — والحدّ الذي كان مكتوباً هنا سقط:** كانت هذه النقطة تقول «لا توجد بعد بوابة تجمع أكثر من خدمتين في عملية واحدة». **هذا لم يبقَ صحيحاً:** بوابة الطور 07 ترفع **ستّ** خدمات مُنصتة في عملية واحدة، وبوابة الطور 05 ترفع **سبعاً**. والمكسب أنّ الجمع في **عملية واحدة** بمنافذ عشوائيّة على `127.0.0.1` جعل تشغيل خدمتين في حاويتين منفصلتين داخل CI غير لازم أصلاً، فبقي مؤجَّلاً حتّى تُوجد حاجة فعليّة له. **وشرط الصدق في كل بوابة من هذه: ساعة واحدة مُحقونة في الخدمات كلّها** — ساعتان تجعلان الاختبار يقيس فرقهما لا الأثر الذي يدّعي قياسه.
 - **بوابةٌ لا يجوز أن تعتمد على بوابة أخرى:** بذْر بوابة الطور 07 يبقى `eligibility_source: "claimed"` بعد إغلاق الطور 05 **بقصد**، لأنّ ربطها بنواة السائق يجعلها تفشل حين تعطب نواة السائق فتخسر قدرتها على الفشل وحدها — وهي القدرة التي تجعل الفشل منسوباً إلى مرحلة. إثبات `driver_core` محلّه [بوابة الطور 05](PHASE05_EXIT_GATE_E2E.md) §5.2.
 - **لا تقارير تغطية:** لا يوجد حدّ تغطية مفروض في CI؛ الحراسة الفعلية هي اختبارات الحراسة المعمارية وبوابات الخروج.
+
+
+## PostgreSQL 17 in CI (CLM-0414, 2026-09-30)
+
+- **Change:** every `postgres:` service in `.github/workflows/ci.yml` moved from `postgres:15` to `postgres:17`. That covers `db-integration`, `db-integration-shared` and `exit-gate-e2e`. The reason is that production (Supabase) runs PostgreSQL 17.
+- **Measured before the change:** all 17 `db-integration` legs, the 12 `exit-gate-e2e` legs and `db-integration-shared` were run locally on PostgreSQL 17.11. Evidence: `docs/12-testing/ci-evidence/2026-09-30T050000Z-clm-0414-unblock-main/pg17-local-run.txt`.
+- **Local runner:** `scripts/ci/run-integration-local.sh` (RISK-0007) reads the leg matrix from `ci.yml` itself, so the local run and CI cannot drift apart.

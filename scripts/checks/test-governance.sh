@@ -2005,7 +2005,11 @@ _base_root() { # _base_root <tag> [orphan:yes|no]
            "$R/docs/07-security" "$R/scripts/checks/lib"
   cp "$REPO_ROOT/scripts/checks/lib/baseline_canon.py" "$R/scripts/checks/lib/"
   printf 'lockfileVersion: 9.0\nimporters:\n  .: {}\n' > "$R/pnpm-lock.yaml"
-  printf '{"name":"synthetic","scripts":{"typecheck":"tsc","test":"vitest"}}\n' > "$R/package.json"
+  # RISK-0024 (CLM-0414): the synthetic root pins the repository's own
+  # `packageManager`, so `pnpm -v` in it answers the pinned version instead of
+  # whatever corepack would download for an unpinned root (exit 1 on Node 20).
+  local PM; PM="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("packageManager",""))' "$REPO_ROOT/package.json")"
+  printf '{"name":"synthetic","packageManager":"%s","scripts":{"typecheck":"tsc","test":"vitest"}}\n' "$PM" > "$R/package.json"
   printf 'stages:\n  - test\nunit:\n  script: echo 1\n' > "$R/.gitlab-ci.yml"
   printf '# بوّابةٌ صناعيّةٌ\n# ── 1) أوّلُ فحصٍ ───\n# ── 2) ثانيها ───\n' > "$R/scripts/checks/verify-governance.sh"
   printf 'RISK-0001 | sev:low | owner:@u | opened:2026-08-28 | review:2026-09-28 | status:open | ref:package.json | خطرٌ صناعيٌّ\n' > "$R/docs/07-security/RISK_REGISTER.md"
@@ -2020,13 +2024,16 @@ _base_root() { # _base_root <tag> [orphan:yes|no]
     printf '| M0-08 | أساسٌ آليٌّ | لا إحالةَ |\n' > "$R/docs/16-progress/LAUNCH_EXECUTION_BOARD.md"
     printf 'مجموعةُ الأدوات: لا إحالةَ\n' > "$R/docs/00-rules/VERIFY_COMMAND.md"
   fi
+  # RISK-0028 (CLM-0414): the verify log that feeds `dynamic` lives INSIDE the
+  # tree and is committed, so `dynamic.source` is a path that can be re-read.
+  mkdir -p "$R/docs/12-testing/baseline-sources"
+  printf 'Test Files  7 passed (7)\nTests  99 passed (99)\nالنتيجة: 12 ناجح · 0 فاشل\n' > "$R/docs/12-testing/baseline-sources/verify.log"
+  printf 'التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' >> "$R/docs/12-testing/baseline-sources/verify.log"
   ( cd "$R" && git init -q . && git add -A >/dev/null 2>&1 \
     && git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
   # السجلُّ **خارجَ** الجذرِ: ملفٌّ غيرُ مُتتبَّعٍ داخلَه يجعل الشجرةَ «مُعدَّلةً»
   # فيُسقِطها البابُ الرابعُ بلا سببٍ مكتوبٍ — وهو عيبٌ وقعَ في أوّلِ تشغيلٍ.
-  local LOGF="/tmp/gov_base_${tag}.log"
-  printf 'Test Files  7 passed (7)\nTests  99 passed (99)\nالنتيجة: 12 ناجح · 0 فاشل\n' > "$LOGF"
-  printf 'التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' >> "$LOGF"
+  local LOGF="docs/12-testing/baseline-sources/verify.log"
   PYTHONDONTWRITEBYTECODE=1 BASELINE_ROOT="$R" BASELINE_STAMP="2026-08-28T00:00:00Z" \
     bash "$BASE_GEN" --log "$LOGF" --stdout > "/tmp/gov_base_${tag}.json" 2>/dev/null
   cp "/tmp/gov_base_${tag}.json" "$R/docs/12-testing/BASELINE.json"
@@ -2045,6 +2052,13 @@ PYX
 
 B_OK="$(_base_root ok)"
 t "أساسٌ مُولَّدٌ من الشجرةِ نفسِها يمرّ" pass bash "$BASE_SRC" "$B_OK"
+
+# RISK-0028 (CLM-0414): a dynamic source outside the tree, and a commit that does
+# not resolve, are each rejected.
+B_SRCOUT="$(_base_root srcout)"; _base_mut "$B_SRCOUT" 'd["dynamic"]["source"]="/tmp/verify_gone.log"'
+t "مصدرُ الأرقامِ الحركيّةِ خارجَ الشجرةِ يُسقِط (RISK-0028)" fail bash "$BASE_SRC" "$B_SRCOUT"
+B_NOCOMMIT="$(_base_root nocommit)"; _base_mut "$B_NOCOMMIT" 'd["repo"]["commit"]="297a9148edf536de7324df47168119aa46186646"'
+t "التزامُ الأساسِ الذي لا يُحَلُّ يُسقِط (RISK-0028)" fail bash "$BASE_SRC" "$B_NOCOMMIT"
 
 # ── البابُ 1: الصيغةُ والاتّساقُ الذاتيُّ ──────────────────────────────────
 B_NOFILE="$(_base_root nofile)"; rm -f "$B_NOFILE/docs/12-testing/BASELINE.json"

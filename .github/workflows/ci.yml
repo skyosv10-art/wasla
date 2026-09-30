@@ -38,8 +38,10 @@ name: WASLA CI
 on:
   push:
     branches: [main]
+  # RISK-0025 (CLM-0414, 2026-09-30): no base-branch filter, so a stacked PR
+  # (base = another PR's branch) gets the same checks instead of zero checks.
+  # The repository is public, so Actions minutes are free.
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -312,7 +314,7 @@ jobs:
   # M0-22B — الوظائفُ العشرون الباقيةُ من `.gitlab-ci.yml`.
   #
   # كلُّ وظيفةٍ من العشرين في GitLab كانت `extends: .db-integration-base`
-  # بالبنيةِ نفسِها حرفاً: `node:20-alpine` · corepack · خدمةُ `postgres:15`
+  # بالبنيةِ نفسِها حرفاً: `node:20-alpine` · corepack · خدمةُ `postgres:17` (كانت `postgres:15` حتى CLM-0414)
   # واحدةٌ باسمِ قاعدةٍ مستقلٍّ · متغيّرُ وصلٍ واحدٌ · ثمّ أمرانِ:
   #   pnpm install --frozen-lockfile
   #   pnpm --filter <pkg> <script>
@@ -415,7 +417,7 @@ jobs:
             db: wasla_billing_test
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17  # CLM-0414: production (Supabase) is PostgreSQL 17 — CI measures the same major
         env:
           POSTGRES_DB: ${{ matrix.db }}
           POSTGRES_USER: postgres
@@ -498,7 +500,7 @@ jobs:
     container: node:20-alpine
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17  # CLM-0414: production (Supabase) is PostgreSQL 17 — CI measures the same major
         env:
           POSTGRES_DB: wasla_shared_test
           POSTGRES_USER: postgres
@@ -618,7 +620,7 @@ jobs:
             var: DATABASE_URL
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17  # CLM-0414: production (Supabase) is PostgreSQL 17 — CI measures the same major
         env:
           POSTGRES_DB: ${{ matrix.db }}
           POSTGRES_USER: postgres

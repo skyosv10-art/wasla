@@ -242,9 +242,10 @@ for f in "$BOARD" "$VC"; do
   [[ -f "$f" ]] || continue
   grep -q "BASELINE" "$f" || { PROBLEMS+=("البابُ 4: لا إحالةَ إلى الأساسِ في ${f#$ROOT/} — أساسٌ لا يُحال إليه لا يُحدَّث."); ((D4++)); }
 done
-DOOR4="$(python3 - "$BASE" <<'PY'
-import json, sys
+DOOR4="$(python3 - "$BASE" "$ROOT" <<'PY'
+import json, os, subprocess, sys
 doc = json.load(open(sys.argv[1], encoding="utf-8"))
+root = sys.argv[2]
 dyn = doc.get("dynamic") or {}
 repo = doc.get("repo") or {}
 problems = []
@@ -264,6 +265,31 @@ if not isinstance(gsf, int) or isinstance(gsf, bool) or gsf < 0:
     problems.append("البابُ 4: `dynamic.governance_suite_failed` غيرُ مُسجَّلٍ («%r») — عددُ الإخفاقاتِ يُكتب ولو كان صفراً." % gsf)
 if dyn.get("verify_overall") not in ("passed", "failed"):
     problems.append("البابُ 4: `dynamic.verify_overall` = %r — حكمُ التحقّقِ يُسجَّل (passed أو failed) ولا يُترك مجهولاً." % dyn.get("verify_overall"))
+# RISK-0028 (CLM-0414, 2026-09-30): the dynamic numbers must be traceable.
+# (a) `dynamic.source` must be a file inside the tree, not a temporary path or a
+#     bare run id that nobody can re-read, and it must contain the recorded
+#     `tests_passed` number.
+src = str(dyn.get("source", "")).strip()
+src_path = os.path.join(root, src) if src and not os.path.isabs(src) else ""
+if not src_path or not os.path.isfile(src_path):
+    problems.append("البابُ 4: `dynamic.source` = %r ليس ملفّاً داخلَ الشجرةِ — رقمٌ حركيٌّ بلا مصدرٍ يُعاد قراءتُه (RISK-0028)." % src)
+elif str(dyn.get("tests_passed")) not in open(src_path, encoding="utf-8", errors="replace").read():
+    problems.append("البابُ 4: `dynamic.source` لا يحوي `tests_passed`=%r — المصدرُ المُعلَنُ لا يُثبِتُ الرقمَ (RISK-0028)." % dyn.get("tests_passed"))
+# (b) `repo.commit` must resolve when the checkout has full history
+#     (governance-guard uses fetch-depth: 0). A shallow or non-git root is
+#     reported, not silently passed.
+commit = str(repo.get("commit", ""))
+try:
+    shallow = subprocess.run(["git", "-C", root, "rev-parse", "--is-shallow-repository"],
+                             capture_output=True, text=True).stdout.strip()
+except Exception:
+    shallow = ""
+if shallow == "false":
+    if subprocess.run(["git", "-C", root, "cat-file", "-e", commit + "^{commit}"],
+                      capture_output=True).returncode != 0:
+        problems.append("البابُ 4: `repo.commit` = %s لا يُحَلُّ في المستودعِ — أساسٌ لا يُرجَعُ إلى التزامٍ قائمٍ (RISK-0028)." % commit[:12])
+elif shallow == "true":
+    print("N|البابُ 4: نسخةٌ ضحلةٌ — حلُّ `repo.commit` غيرُ مقيسٍ هنا (يُقاس في governance-guard بـfetch-depth: 0).")
 if repo.get("dirty") and not str(repo.get("dirty_reason", "")).strip():
     problems.append("البابُ 4: الأساسُ وُلِّد من شجرةٍ مُعدَّلةٍ بلا `repo.dirty_reason` — شجرةٌ مُعدَّلةٌ بلا سببٍ مكتوبٍ تجعل الأساسَ غيرَ قابلٍ للإرجاع.")
 for p in problems:
@@ -272,6 +298,7 @@ PY
 )"
 while IFS= read -r line; do
   if [[ "$line" == P\|* ]]; then PROBLEMS+=("${line#P|}"); ((D4++)); fi
+  [[ "$line" == N\|* ]] && printf '  ⊘ %s\n' "${line#N|}"
 done <<< "$DOOR4"
 (( D4 == 0 )) && printf '  %s✓ البابُ 4:%s الصيغةُ موثَّقةٌ · الأساسُ مُحالٌ إليه · أرقامُه الحركيّةُ مقيسةٌ · شجرتُه مُعلَنةٌ.\n' "$GRN" "$RST"
 

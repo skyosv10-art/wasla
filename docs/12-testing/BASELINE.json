@@ -3,7 +3,7 @@
   "generated_at": "2026-09-30T08:55:43Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "56f779adcb1692bd91e13bc6808ca51c2c07dfdf",
+    "commit": "63289db2ee48956643e2b79d5b5064ff7344ee8b",
     "branch": "fix/clm-0418-api-types-drift",
     "dirty": true,
     "dirty_files": 1,

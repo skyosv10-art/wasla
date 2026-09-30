@@ -1,0 +1,38 @@
+# RISK-0056 · CLM-0413 r2 — excerpt of run 36665158123 (TEST DB only)
+# Filtered: only project ref, commit, stage status and non-secret measurements. No URL, user or password appears.
+# https://github.com/skyosv10-art/wasla/actions/runs/36665158123
+test project ref: obeptvwpvqbduwkahorq
+host class: session-pooler · port: 5432 · database: postgres
+pooler mode check: port 5432 (session) — ok
+checked-out commit: 60deac73e19f9fc2200afb23713f743a7e83cd15
+schema.sql sha256: 14/14 identical to run 36652155317 (383eb8ee364c89995259c2084dfe5e49274883af)
+{"stage":"negative-lock-test","table":"public.search_product_index","baseline_fresh_session_lock_timeout":"0","role_or_db_settings_mentioning_lock_timeout":1,"holder_pid":37320,"migration_elapsed_ms":4842,"migration_exit_code":1,"migration_session_pid":37322,"migration_session_lock_timeout":"2s","observed_while_blocked":{"wait_event_type":"Lock","state":"active","after_ms":1906},"sqlstate_55P03_reported":true,"indexes_before":6,"indexes_after":6,"pass":true}
+{"service": "audit", "exit": 0, "ms": 1657, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "customers", "exit": 0, "ms": 1861, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "delivery", "exit": 0, "ms": 1927, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "dispatch", "exit": 0, "ms": 1917, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "drivers", "exit": 0, "ms": 1966, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "geography", "exit": 0, "ms": 1891, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "identity", "exit": 0, "ms": 1772, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "marketplace", "exit": 0, "ms": 1981, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "matching", "exit": 0, "ms": 1875, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "negotiations", "exit": 0, "ms": 1843, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "orders", "exit": 0, "ms": 1908, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "reputation", "exit": 0, "ms": 1868, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "search", "exit": 0, "ms": 2015, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+{"service": "subscriptions", "exit": 0, "ms": 2603, "sessions_opened": 1, "lock_timeout_start": "2s", "lock_timeout_end": "2s", "same_pid_start_end": true, "pass": true}
+B2: 14/14 services PASS
+stage 1 snapshot-dump: ok · public tables=107 · public extensions=1
+BACKUP-GUARD PASS stage=nonempty · size>0
+BACKUP-GUARD PASS stage=list · toc lists all 107 public tables
+BACKUP-GUARD PASS stage=gpg · AES256 round-trip byte-identical
+BACKUP-GUARD PASS stage=restore · decrypted dump restored with --exit-on-error --single-transaction
+BACKUP-GUARD PASS stage=compare · 107/107 tables · every row count equal
+BACKUP-GUARD RESULT PASS
+fault empty-dump: FAILED CLOSED as expected — BACKUP-GUARD FAIL stage=nonempty · dump is 0 bytes
+fault truncated-dump: FAILED CLOSED as expected — BACKUP-GUARD FAIL stage=list · pg_restore --list failed
+fault empty-passphrase: FAILED CLOSED as expected — BACKUP-GUARD FAIL stage=gpg · BACKUP_PASSPHRASE empty
+fault row-count-mismatch: FAILED CLOSED as expected — BACKUP-GUARD FAIL stage=compare · 1 table(s) with row-count mismatch
+fault table-missing-from-dump: FAILED CLOSED as expected — BACKUP-GUARD FAIL stage=list · 1 public table(s) absent from the dump TOC
+C2: all injected faults failed closed
+commit 60deac73e19f9fc2200afb23713f743a7e83cd15 · TEST project ref obeptvwpvqbduwkahorq

@@ -1,0 +1,79 @@
+# Filtered excerpt of GitHub Actions run 36652155317 (workflow risk-0056-test-db.yml, commit 383eb8e).
+# Target: TEST project only. No connection string, user or password appears below (verified by grep).
+test project ref: obeptvwpvqbduwkahorq
+host class: session-pooler · port: 5432 · database: postgres
+production refs denied: 1 · match: none
+reference schema applied for: audit customers delivery dispatch drivers geography identity marketplace matching negotiations orders reputation search subscriptions
+server=17.6 public_tables=0 schemas=auth:27,information_schema:4,pg_catalog:64,realtime:3,storage:8,vault:1
+[audit] booted=yes health=200 {"status":"ok"} ready=n/a
+[customers] booted=yes health=200 {"status":"ok","service":"customers-service","persistence":"postgres","order_intake":"configured"} ready=n/a
+[delivery] booted=yes health=200 {"status":"ok"} ready=503 {"status":"unavailable","checks":[{"name":"database","ok":false,"detail":"schema_missing"}],"not_claimed":[],"dependencies":[{"name":"marketplace_catalog","ok":false,"detail":"marketplace_unreachable","observed_at":"2026-09-30T00:50:06.465Z","age_ms":0,"ga
+[dispatch] booted=yes health=200 {"status":"ok","service":"dispatch-service","persistence":"postgres","last_tick_at":null} ready=n/a
+[drivers] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[geography] booted=yes health=200 {"status":"ok"} ready=n/a
+[identity] booted=yes health=200 {"status":"ok"} ready=n/a
+[marketplace] booted=yes health=200 {"status":"degraded","mode":"postgres"} ready=n/a
+[matching] booted=yes health=200 {"status":"degraded","service":"matching-service","persistence":"postgres","active_ruleset_version":null} ready=n/a
+[negotiations] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[orders] booted=yes health=200 {"status":"ok","service":"orders-service","persistence":"postgres"} ready=n/a
+[reputation] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[search] booted=yes health=200 {"status":"ok"} ready=n/a
+[subscriptions] booted=yes health=200 {"status":"ok","mode":"postgres","last_tick_at":null} ready=n/a
+pass 1 · audit · exit=0 · 1372 ms · Schema applied successfully.
+pass 1 · customers · exit=0 · 1484 ms · customers schema applied · contracts/schema.sql executed verbatim
+pass 1 · delivery · exit=0 · 1542 ms · delivery schema applied · contracts/schema.sql executed verbatim
+pass 1 · dispatch · exit=0 · 1491 ms · dispatch schema applied · contracts/schema.sql executed verbatim
+pass 1 · drivers · exit=0 · 1474 ms · drivers schema applied · contracts/schema.sql executed verbatim
+pass 1 · geography · exit=0 · 1474 ms · geography schema applied · contracts/schema.sql executed verbatim
+pass 1 · identity · exit=0 · 1342 ms · identity schema applied · contracts/schema.sql executed verbatim
+pass 1 · marketplace · exit=0 · 1604 ms · category seed · inserted=0 existing=0 declared=0
+pass 1 · matching · exit=0 · 1502 ms · matching schema applied · contracts/schema.sql executed verbatim
+pass 1 · negotiations · exit=0 · 1505 ms · negotiations schema applied · contracts/schema.sql executed verbatim
+pass 1 · orders · exit=0 · 1490 ms · orders schema applied · contracts/schema.sql executed verbatim
+pass 1 · reputation · exit=0 · 1479 ms · reputation schema applied · contracts/schema.sql executed verbatim
+pass 1 · search · exit=0 · 1955 ms · search schema applied · contracts/schema.sql executed verbatim
+pass 1 · subscriptions · exit=0 · 2314 ms · subscriptions schema applied · plan versions seeded: 1
+pass 2 · audit · exit=0 · 1367 ms · Schema applied successfully.
+pass 2 · customers · exit=0 · 1566 ms · customers schema applied · contracts/schema.sql executed verbatim
+pass 2 · delivery · exit=0 · 1647 ms · delivery schema applied · contracts/schema.sql executed verbatim
+pass 2 · dispatch · exit=0 · 1611 ms · dispatch schema applied · contracts/schema.sql executed verbatim
+pass 2 · drivers · exit=0 · 1566 ms · drivers schema applied · contracts/schema.sql executed verbatim
+pass 2 · geography · exit=0 · 1658 ms · geography schema applied · contracts/schema.sql executed verbatim
+pass 2 · identity · exit=0 · 1531 ms · identity schema applied · contracts/schema.sql executed verbatim
+pass 2 · marketplace · exit=0 · 1714 ms · category seed · inserted=0 existing=0 declared=0
+pass 2 · matching · exit=0 · 1576 ms · matching schema applied · contracts/schema.sql executed verbatim
+pass 2 · negotiations · exit=0 · 1592 ms · negotiations schema applied · contracts/schema.sql executed verbatim
+pass 2 · orders · exit=0 · 1591 ms · orders schema applied · contracts/schema.sql executed verbatim
+pass 2 · reputation · exit=0 · 1648 ms · reputation schema applied · contracts/schema.sql executed verbatim
+pass 2 · search · exit=0 · 1678 ms · search schema applied · contracts/schema.sql executed verbatim
+pass 2 · subscriptions · exit=0 · 2310 ms · subscriptions schema applied · plan versions seeded: 1
+server=17.6 public_tables=107 schemas=auth:27,information_schema:4,pg_catalog:64,public:107,realtime:3,storage:8,vault:1
+[audit] tables=1 schema_ok=true read_ok=true write_ok=true
+[customers] tables=5 schema_ok=true read_ok=true write_ok=true
+[delivery] tables=14 schema_ok=true read_ok=true write_ok=true
+[dispatch] tables=5 schema_ok=true read_ok=true write_ok=true
+[drivers] tables=9 schema_ok=true read_ok=true write_ok=true
+[geography] tables=13 schema_ok=true read_ok=true write_ok=true
+[identity] tables=6 schema_ok=true read_ok=true write_ok=true
+[marketplace] tables=10 schema_ok=true read_ok=true write_ok=true
+[matching] tables=6 schema_ok=true read_ok=true write_ok=true
+[negotiations] tables=8 schema_ok=true read_ok=true write_ok=true
+[orders] tables=5 schema_ok=true read_ok=true write_ok=true
+[reputation] tables=9 schema_ok=true read_ok=true write_ok=true
+[search] tables=6 schema_ok=true read_ok=true write_ok=true
+[subscriptions] tables=10 schema_ok=true read_ok=true write_ok=true
+[audit] booted=yes health=200 {"status":"ok"} ready=n/a
+[customers] booted=yes health=200 {"status":"ok","service":"customers-service","persistence":"postgres","order_intake":"configured"} ready=n/a
+[delivery] booted=yes health=200 {"status":"ok"} ready=200 {"status":"ready","checks":[{"name":"database","ok":true}],"not_claimed":[],"dependencies":[{"name":"marketplace_catalog","ok":false,"detail":"marketplace_unreachable","observed_at":"2026-09-30T00:52:07.029Z","age_ms":0,"gates_readiness":false}]}
+[dispatch] booted=yes health=200 {"status":"ok","service":"dispatch-service","persistence":"postgres","last_tick_at":null} ready=n/a
+[drivers] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[geography] booted=yes health=200 {"status":"ok"} ready=n/a
+[identity] booted=yes health=200 {"status":"ok"} ready=n/a
+[marketplace] booted=yes health=200 {"status":"ok","mode":"postgres"} ready=n/a
+[matching] booted=yes health=200 {"status":"ok","service":"matching-service","persistence":"postgres","active_ruleset_version":1} ready=n/a
+[negotiations] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[orders] booted=yes health=200 {"status":"ok","service":"orders-service","persistence":"postgres"} ready=n/a
+[reputation] booted=yes health=200 {"status":"ok","persistence":"postgres","last_tick_at":null} ready=n/a
+[search] booted=yes health=200 {"status":"ok"} ready=n/a
+[subscriptions] booted=yes health=200 {"status":"ok","mode":"postgres","last_tick_at":null} ready=n/a
+services failing after migration: none

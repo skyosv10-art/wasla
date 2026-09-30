@@ -7541,3 +7541,26 @@ Third manual run failed: removing pg16 caused pg_wrapper to fail with "PostgreSQ
 Successful workflow run 36643974571 produced encrypted artifact but restore test showed 0/5 tables due to `supabase_vault` extension not available in vanilla Docker PostgreSQL 17.
 
 Fix: create `vault` schema before restore, remove `--exit-on-error` so pg_restore continues past extension errors. Updated evidence README with actual measured results.
+
+---
+
+## CLM-0410 · M6-18B — RISK-0056 inventory + test-database proof (production untouched)
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0410` · **Branch:** `ops/risk-0056-test-db` · **Status:** Stopped at owner checkpoint
+
+**Date:** 2026-09-30
+
+### What was done
+
+1. Read-only inventory: only `delivery` reports the literal `schema_missing`; `marketplace` and `matching` report `degraded`; 11 other deployed services report `ok` because their `/health` does not touch a table. Migration runner = `contracts/schema.sql` verbatim; all 14 files idempotent, no cross-service FKs, no name collisions. Existing migrations are sufficient — no new migration written.
+2. New workflow `risk-0056-test-db.yml` (declared in the supply-chain guard) runs against secret `SUPABASE_TEST_DB_URL` only; `guard-test-db.py` refuses the production ref and prints only the test project ref (`obeptvwpvqbduwkahorq`).
+3. Run 36652155317: before = production-identical symptoms; migrations pass 1 + pass 2 exit 0 (14 × 2); public 0 → 107 tables; 14/14 column parity with postgres:17 reference; reads OK; rolled-back writes OK (0 rows left); after = all 14 `/health` ok, `/delivery/ready` 200 database ok.
+4. Evidence: `docs/12-testing/ci-evidence/2026-09-30T004500Z-risk-0056-test-db/`. RISK-0056 updated by addition (status stays open). M6-18B stays Blocked.
+
+### Audit note — branch-protection relaxations (RISK-0055 merges)
+
+For PRs #546, #547 and #548 the `main` review rule was temporarily set to `require_code_owner_reviews:false, required_approving_review_count:0`, the PR was merged with `--admin` after green CI and the owner's explicit per-PR approval, and the rule was restored immediately to `require_code_owner_reviews:true, required_approving_review_count:1` (restoration response recorded each time). Recorded here as the audit trail; RISK-0054 (review enforcement) remains open.
+
+### Not done (mandatory stop)
+
+No production migration. Production application awaits the owner's explicit approval.

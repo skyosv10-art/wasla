@@ -1,0 +1,95 @@
+name: RISK-0056 production preflight (READ ONLY)
+
+# CLM-0411 · M6-18B — RISK-0056 production preflight. READ ONLY.
+#
+# Compares the production `public` schema with a reference built on the runner
+# (vanilla postgres:17) from services/*/contracts/schema.sql. Nothing is applied
+# to production: the only production access is catalog-snapshot.mjs with
+# --read-only-required, which sets `default_transaction_read_only = on`, proves
+# it (both settings `on` + a CREATE TEMP TABLE canary rejected with SQLSTATE
+# 25006) and aborts before reading anything if the proof fails. Every read runs
+# in `BEGIN READ ONLY … ROLLBACK`.
+#
+# Only the project ref is printed — never the URL, user, or password.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ops/risk-0056-prod-preflight']
+    paths:
+      - '.github/workflows/risk-0056-prod-preflight.yml'
+      - 'scripts/ops/risk-0056/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-prod-preflight
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  SERVICES: "audit customers delivery dispatch drivers geography identity marketplace matching negotiations orders reputation search subscriptions"
+
+jobs:
+  preflight:
+    name: Read-only production schema preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Guard — production project ref (prints ref only)
+        env:
+          SNAPSHOT_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: python3 scripts/ops/risk-0056/guard-prod-readonly.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
+      - name: Offline statement inventory of every schema.sql
+        run: |
+          mkdir -p out
+          python3 scripts/ops/risk-0056/analyze-schema-statements.py out/statements.json out/statements.md
+
+      - name: Reference schema on runner-local postgres:17 (not production)
+        run: |
+          docker run -d --name risk0056-ref -e POSTGRES_PASSWORD=ref -e POSTGRES_DB=ref -p 15433:5432 postgres:17 >/dev/null
+          for i in $(seq 1 40); do docker exec risk0056-ref pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+          sleep 2
+          REF=postgresql://postgres:ref@127.0.0.1:15433/ref
+          for s in $SERVICES; do
+            DATABASE_URL="$REF" BILLING_DATABASE_URL="$REF" pnpm --silent --filter "@wasla/${s}-service" db:migrate > /dev/null
+          done
+          SNAPSHOT_DB_URL="$REF" node scripts/ops/risk-0056/catalog-snapshot.mjs out/reference.json
+
+      - name: Production catalog snapshot — READ ONLY (proof required)
+        env:
+          SNAPSHOT_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/ops/risk-0056/catalog-snapshot.mjs out/production.json --read-only-required
+
+      - name: Compare production with reference (offline)
+        run: python3 scripts/ops/risk-0056/compare-preflight.py out/reference.json out/production.json out/comparison.json
+
+      - name: Upload evidence (JSON/MD only — no connection data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-0056-prod-preflight-${{ github.run_id }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Cleanup reference container
+        if: always()
+        run: docker rm -f risk0056-ref >/dev/null 2>&1 || true

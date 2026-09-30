@@ -1649,6 +1649,7 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 
 ### 2026-09-28 — M6-19B baseline remediation · M6-19C attestation remediation (CLM-0394, CLM-0395)
 
+- **M0-45 unblock main (CLM-0414, Draft PR, not merged):** `fast-uri` 3.1.8/4.1.5 and `brace-expansion` 2.1.7 via `pnpm.overrides` (production audit 3 → 0; codegen byte-identical); RISK-0013 accepted to 2026-12-29; RISK-0042 re-measured and kept open to 2026-10-30 (blocks public launch, not the schema migration); RISK-0012 **not** closed (three consumers still order by timestamp + UUID); CLM-0409 released; two RISK-0056 evidence branches declared.
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

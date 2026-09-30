@@ -1,3 +1,13 @@
+# 2026-09-30 — CLM-0421 — M0-49 fix: BASELINE.json repo.commit points at the real branch head
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — stacked on the CLM-0419 branch to unblock its CI
+
+The BASELINE regeneration commit `61ed8f9b` recorded `repo.commit = 1829a2ab` — the tree snapshot taken **before** that commit itself existed. On the GitHub PR checkout (fetch-depth: 0) `git cat-file -e 1829a2ab^{commit}` fails, so governance check 11 (M0-08, gate 4: no orphan baseline) failed and `verify` + `governance-guard` were red on PR #556. Fix: `repo.commit` now points at the real branch head `61ed8f9b`. Fingerprint unchanged (`repo` is fingerprint-excluded). Local `validate-baseline.sh`: all four gates pass. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0419 (rebase) — M0-49 RISK-0042 debt 1: rebase on main after #557
 
 - **Work Item(s):** M0-49

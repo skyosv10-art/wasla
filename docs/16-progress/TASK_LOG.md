@@ -8,6 +8,8 @@
 
 
 **Addendum (MASTER REPAIR & MERGE):** §24-E failure issue, §24-F 90-day pre-migration retention, `workflow_call` + `expect_project_ref` for RISK-0056, §24-G `service-health.yml` (14/14 HTTP 200 on a local probe), and the supply-chain inventory completed. The RISK-0055 row has a correction by addition: production RTO is not measured and RPO is about 6 h.
+
+**CI range fix:** the `verify` job now gets `origin/$GITHUB_BASE_REF HEAD`, as governance-guard already did. Stacked PR #553 had failed claim-scope on files from its base PR (run 36687220288). No check is changed.
 ---
 
 # 2026-09-30 — CLM-0417 — M0-47 RISK-0013 byte-identical idempotent replay

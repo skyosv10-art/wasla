@@ -1,0 +1,111 @@
+name: RISK-0056 pg_trgm resolution (READ ONLY)
+
+# CLM-0412 · M6-18B — resolve RISK-0056 blocker B1 (pg_trgm) by READING ONLY.
+#
+# 1. Production (secret SUPABASE_DB_URL, session pooler): pgtrgm-probe.mjs —
+#    session proven read-only before any read (default_transaction_read_only=on,
+#    transaction_read_only=on, CREATE TEMP TABLE canary rejected 25006); reads
+#    search_path, schema `extensions`, pg_trgm control data, role privileges,
+#    supautils settings. No CREATE EXTENSION, no DDL, no DML.
+# 2. Test project (secret SUPABASE_TEST_DB_URL), same probe, same proof — shows
+#    where the UNCHANGED statement placed pg_trgm on a Supabase project (CLM-0410).
+# 3. Runner-local postgres:17 container (not Supabase, not production): replays
+#    the unchanged search migration with the production search_path to show
+#    PostgreSQL's placement rule and that gin_trgm_ops / `%` resolve.
+#
+# Only project refs are printed — never URLs, users' passwords, or secrets.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ops/risk-0056-pgtrgm-readonly']
+    paths:
+      - '.github/workflows/risk-0056-pgtrgm-readonly.yml'
+      - 'scripts/ops/risk-0056/pgtrgm-probe.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-pgtrgm-readonly
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+
+jobs:
+  probe:
+    name: pg_trgm read-only probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Exact pg_trgm statements in services/search/contracts/schema.sql
+        run: |
+          grep -nE 'pg_trgm|gin_trgm_ops|^BEGIN;|^COMMIT;|search_path|SCHEMA ' services/search/contracts/schema.sql | grep -v -- '^[0-9]*:--'
+          echo "runtime use (search-index-reader.ts):"
+          grep -n '% \$1' services/search/src/infrastructure/search-index-reader.ts
+
+      - name: Guard — production project ref (prints ref only)
+        env:
+          SNAPSHOT_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: python3 scripts/ops/risk-0056/guard-prod-readonly.py
+
+      - name: Guard — test project ref (refuses production)
+        env:
+          RISK0056_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+        run: python3 scripts/ops/risk-0056/guard-test-db.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
+      - name: Production probe — READ ONLY (proof required)
+        env:
+          SNAPSHOT_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p out
+          node scripts/ops/risk-0056/pgtrgm-probe.mjs production out/pgtrgm-production.json
+
+      - name: Test-project probe — READ ONLY (proof required)
+        env:
+          SNAPSHOT_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+        run: node scripts/ops/risk-0056/pgtrgm-probe.mjs test out/pgtrgm-test.json
+
+      - name: Runner-local replay with the production search_path (postgres:17, not production)
+        run: |
+          SP=$(python3 -c "import json;print(json.load(open('out/pgtrgm-production.json'))['search_path'])")
+          HAS_EXT=$(python3 -c "import json;print('yes' if json.load(open('out/pgtrgm-production.json'))['extensions_schema'] else 'no')")
+          echo "replaying with production search_path: $SP · extensions schema in production: $HAS_EXT"
+          echo "$SP" | grep -qE '^[A-Za-z0-9_$", ]+$' || { echo "::error::unexpected search_path characters"; exit 1; }
+          docker run -d --name risk0056-trgm -e POSTGRES_PASSWORD=ref -e POSTGRES_DB=ref -p 15434:5432 postgres:17 >/dev/null
+          for i in $(seq 1 40); do docker exec risk0056-trgm pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+          sleep 2
+          P="docker exec -i risk0056-trgm psql -U postgres -d ref -v ON_ERROR_STOP=1 -tA"
+          [ "$HAS_EXT" = yes ] && $P -c "CREATE SCHEMA IF NOT EXISTS extensions"
+          $P -c "ALTER ROLE postgres IN DATABASE ref SET search_path = $SP"
+          DATABASE_URL=postgresql://postgres:ref@127.0.0.1:15434/ref pnpm --silent --filter @wasla/search-service db:migrate
+          echo "replay · pg_trgm placed in: $($P -c "SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace WHERE extname='pg_trgm'")"
+          echo "replay · gin_trgm_ops schema: $($P -c "SELECT opcnamespace::regnamespace FROM pg_opclass WHERE opcname='gin_trgm_ops'")"
+          echo "replay · index: $($P -c "SELECT indexdef FROM pg_indexes WHERE indexname='ix_search_products_trgm_ar'")"
+          echo "replay · new session search_path: $($P -c 'SHOW search_path') · 'abc' % 'abd' → $($P -c "SELECT 'abc' % 'abd'") · similarity → $($P -c "SELECT similarity('abc','abd')")"
+          docker rm -f risk0056-trgm >/dev/null
+
+      - name: Upload evidence (JSON only — no connection data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-0056-pgtrgm-${{ github.run_id }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn

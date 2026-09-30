@@ -147,6 +147,7 @@ import { mirrorPayment } from "../use-cases/mirror-payment.js";
 import { confirmStoreOrder } from "../use-cases/confirm-store-order.js";
 import { fulfillmentTransition } from "../use-cases/fulfillment-transition.js";
 import { sweepExpiredIdempotencyKeys } from "../use-cases/sweep-expired-idempotency-keys.js";
+import { canonicalJson } from "./canonical-json.js";
 
 export interface DeliveryHttpDeps {
   readonly readPort: StoreOrderReadPort;
@@ -555,6 +556,10 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     // request.id becomes `trace_id` in every error body and every event.
     genReqId: () => crypto.randomUUID(),
   });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   const newUuid = deps.newUuid ?? (() => crypto.randomUUID());
   const now = deps.now ?? (() => new Date().toISOString());

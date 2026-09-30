@@ -25,6 +25,7 @@ import {
   toPathId,
   toRejectOfferRequest,
 } from "./requests.js";
+import { canonicalJson } from "./canonical-json.js";
 
 export interface DispatchHealthDescriptor {
   persistence: "postgres" | "memory";
@@ -60,6 +61,10 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
   const health = options.health ?? DEFAULT_HEALTH;
   const tickState = options.tickState ?? { lastTickAt: null };
   const app = Fastify({ logger: options.logger ?? false, requestIdHeader: "x-request-id" });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   app.setErrorHandler((error, request, reply) => {
     sendDispatchError(reply, error, request.id);

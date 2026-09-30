@@ -41,6 +41,7 @@ import {
   type ReservationOutcome,
   type StoredIdempotentResponse,
 } from "../app/index.js";
+import { canonicalJson } from "../app/idempotency.js";
 import { marketplaceUnavailable, productNotFound, storeNotFound } from "../domain/errors.js";
 import { sendMarketplaceError } from "./errors.js";
 import {
@@ -227,6 +228,10 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     requestIdHeader: "x-request-id",
   });
   const mode = options.mode ?? (options.services === undefined ? "memory" : "postgres");
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   /**
    * مُحلِّلُ جسمٍ صريحٌ: جسمٌ فارغٌ `undefined` لا خطأٌ، وجسمٌ مُشوَّهٌ `400` لا `500`.

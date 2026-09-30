@@ -258,6 +258,9 @@ describe.skipIf(!PG_ENABLED)("بوّابةُ خروج Phase 11 · السوقُ �
     expect(replay.status).toBe(first.status);
     expect(replay.body).toEqual(first.body);
     expect(canonicalJson(replay.body)).toBe(canonicalJson(first.body));
+    // RISK-0013 closed (CLM-0417): the service now serializes every reply canonically,
+    // so the text over the wire is the same bytes — the assertion that failed here first.
+    expect(replay.text).toBe(first.text);
 
     expect(await countRows(gate.pool, "stores")).toBe(1);
     expect(await countRows(gate.pool, "marketplace_outbox")).toBe(1);

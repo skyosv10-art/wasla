@@ -215,6 +215,8 @@ describe("مرآةُ الدفعِ والتأكيدُ — عبرَ HTTP", () => {
     expect(second.statusCode).toBe(200);
     expect(second.headers["idempotent-replay"]).toBe("true");
     expect(second.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(second.body).toBe(first.body);
     // الحدثُ مرّةً واحدةً: هذا هو كلُّ ما يشتريهِ المفتاحُ.
     expect(store.outbox).toHaveLength(1);
     await app.close();

@@ -72,6 +72,7 @@ import {
   toReferralListFilter,
   toStartTrialInput,
 } from "./requests.js";
+import { canonicalJson } from "./canonical-json.js";
 
 /**
  * وضعُ الاستمرارية — يُحسب في `server.ts` من البيئةِ ويُمرَّر هنا معطىً لا يُكتشف.
@@ -205,6 +206,10 @@ export function createSubscriptionApp(
   // واحدٌ في سجلّاته وسجلّاتنا وفي `trace_id` من كلّ جواب. ويُولّد Fastify واحداً حين تغيب
   // الترويسة، فلا يكون `trace_id` فارغاً أبداً.
   const app = Fastify({ logger: options.logger ?? false, requestIdHeader: "x-request-id" });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   /**
    * حمولةٌ فارغةٌ مع `content-type: application/json` **ليست** خطأً في هذه الخدمة.

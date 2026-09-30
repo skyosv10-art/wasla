@@ -174,6 +174,8 @@ describe.skipIf(!PG_ENABLED)("إعادةُ الإرسالِ فوق Postgres — 
     const replay = await write(method, input.url, input.key, input.payload);
     expect(replay.statusCode, replay.body).toBe(input.expectedStatus);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
     expect(await snapshot()).toEqual(afterFirst);
 
     const reused = await write(method, input.url, input.key, input.otherPayload);

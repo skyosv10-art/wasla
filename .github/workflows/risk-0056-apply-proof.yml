@@ -102,8 +102,8 @@ jobs:
           out=$(RISK0056_OUT=out/n2 bash scripts/ops/risk-0056/apply.sh 2>&1); rc=$?
           git checkout -- services/audit/contracts/schema.sql
           printf '%s\n' "$out" | tail -5
-          [ "$rc" -ne 0 ] && ! [ -f out/n2/apply.jsonl ] && printf '%s' "$out" | grep -q "== 2. source guard" \
-            && ! printf '%s' "$out" | grep -q "== 3." && echo "N2: refused at the manifest step, nothing applied" || { echo "::error::N2 not refused as expected"; exit 1; }
+          [ "$rc" -ne 0 ] && ! [ -f out/n2/apply.jsonl ] && grep -q "== 2. source guard" <<< "$out" \
+            && ! grep -q "== 3." <<< "$out" && echo "N2: refused at the manifest step, nothing applied" || { echo "::error::N2 not refused as expected"; exit 1; }
       - name: Summary
         if: always()
         run: for f in out/p1a/apply.jsonl out/p1b/apply.jsonl; do [ -f "$f" ] && { echo "$f"; cat "$f"; }; done; true
@@ -145,7 +145,7 @@ jobs:
           set +e
           out=$(RISK0056_TARGET=production RISK0056_OUT=out/n1 bash scripts/ops/risk-0056/apply.sh 2>&1); rc=$?
           printf '%s\n' "$out" | grep -E "^::error::|== " | head -5
-          [ "$rc" -ne 0 ] && ! printf '%s' "$out" | grep -q "== 2." && echo "N1: refused at the target guard" || { echo "::error::N1 not refused"; exit 1; }
+          [ "$rc" -ne 0 ] && ! grep -q "== 2." <<< "$out" && echo "N1: refused at the target guard" || { echo "::error::N1 not refused"; exit 1; }
       - name: P2 — preflight (read-only)
         run: RISK0056_TARGET=test RISK0056_MODE=preflight RISK0056_OUT=out/p2pre bash scripts/ops/risk-0056/apply.sh
       - name: P2 — apply

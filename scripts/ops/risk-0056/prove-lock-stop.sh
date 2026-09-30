@@ -43,7 +43,7 @@ kill $HOLDER 2>/dev/null || true
 last="$(tail -1 "$OUT/run/apply.jsonl" 2>/dev/null || true)"
 echo "apply.sh rc=$rc after ${elapsed}s · last record: $last"
 [ "$rc" -ne 0 ] && [ "$rc" -ne 124 ] || { echo "::error::apply.sh did not fail (rc=$rc) — or waited until timeout"; exit 1; }
-printf '%s' "$last" | grep -q '"service": "search"' && printf '%s' "$last" | grep -q '"pass": false' \
+grep -q '"service": "search"' <<< "$last" && grep -q '"pass": false' <<< "$last" \
   || { echo "::error::apply did not stop at search"; exit 1; }
 python3 -c "import json,sys; r=json.loads(sys.argv[1]); sys.exit(0 if r['ms'] < 20000 else 1)" "$last" \
   || { echo "::error::the search migration waited too long behind the lock"; exit 1; }

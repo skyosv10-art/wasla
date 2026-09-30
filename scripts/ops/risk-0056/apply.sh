@@ -82,7 +82,8 @@ print(json.dumps({"service": svc, "exit": rc, "ms": ms, "sessions_opened": len(r
                   "same_pid_start_end": bool(ready and final and ready[0]["pid"] == final[0]["pid"]),
                   "pass": ok}))
 PY
-  if ! tail -1 "$OUT/apply.jsonl" | grep -q '"pass": true'; then
+  last_rec="$(tail -1 "$OUT/apply.jsonl")"
+  if ! grep -q '"pass": true' <<< "$last_rec"; then
     echo "::error::migration for ${s} failed or its session evidence is incomplete — stopping; later services NOT attempted"
     grep -viE 'postgres(ql)?://' "$OUT/m-${s}.log" | tail -15 || true
     exit 1

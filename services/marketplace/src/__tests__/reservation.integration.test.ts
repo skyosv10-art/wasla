@@ -204,6 +204,8 @@ describe.skipIf(!PG_ENABLED)("مسارُ الحجزِ والإفراجِ فوق 
     // الإعادةُ تُعيد نفسَ الجوابِ المحفوظِ بحالته (201)
     expect(second.statusCode).toBe(201);
     expect(second.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(second.body).toBe(first.body);
 
     // لم يُكتب صفٌّ ثانٍ
     const ledger = await app.inject({

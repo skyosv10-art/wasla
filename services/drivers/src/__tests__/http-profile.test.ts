@@ -27,6 +27,8 @@ describe("تسجيل السائق", () => {
     expect(replay.statusCode).toBe(200);
     expect(first.json().wasla_public_id).toBe(DRIVER);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
     await app.close();
   });
 

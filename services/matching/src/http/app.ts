@@ -37,6 +37,7 @@ import {
   toChangeAvailabilityRequest,
   toUpsertCandidacyRequest,
 } from "./requests.js";
+import { canonicalJson } from "./canonical-json.js";
 
 /** حالة التخزين التي يعلنها جذر التركيب صراحة. */
 export interface MatchingHealthDescriptor {
@@ -75,6 +76,10 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     logger: options.logger ?? false,
     requestIdHeader: "x-request-id",
   });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   app.setErrorHandler((error, request, reply) => {
     sendMatchingError(reply, error, request.id);

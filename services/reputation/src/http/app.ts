@@ -108,6 +108,7 @@ import {
   type ReputationServiceIdentityOptions,
   registerServiceIdentity,
 } from "./service-identity.js";
+import { canonicalJson } from "./canonical-json.js";
 
 /** المنفذُ المُعلَن، مُصدَّرٌ كي لا يقرأ `server.ts` رقماً مكتوباً بيد. */
 export { REPUTATION_SERVICE_PORT };
@@ -221,6 +222,10 @@ export function createReputationApp(options: CreateReputationAppOptions): Fastif
   // مُعرّفٌ واحد في سجلّاته وسجلّاتنا و`trace_id` في الجواب. ويُولّد Fastify واحداً حين
   // تغيب الترويسة، فلا يكون `trace_id` فارغاً أبداً.
   const app = Fastify({ logger: options.logger ?? false, requestIdHeader: "x-request-id" });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   // جسمٌ فارغ مع `content-type: application/json` **ليس** خطأً في هذه الخدمة.
   //

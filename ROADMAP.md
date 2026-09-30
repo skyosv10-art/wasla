@@ -1657,6 +1657,7 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
   - Environment `production-migration` created: reviewer xuuux-voox, prevent_self_review, `main` only.
   - test-governance imports the BASELINE `repo.commit` into its synthetic repository, so RISK-0028 gate 4(b) is exercised rather than skipped (542/0 locally).
 - **M0-46 RISK-0012 closed (CLM-0416, PR #553):** `commit_sequence` is assigned at COMMIT by a deferred constraint trigger under a per-table advisory lock. The consumers (delivery ×2, search, billing) read in commit order, qualified with the table name, and stop at the first pending row. Evidence: CI 36676903603 (38/38 test jobs) and relay-commit-order integration tests. ADR-057.
+- **M0-47 RISK-0013 closed (CLM-0417, PR #554):** replies go through one canonical serializer in the 8 services that keep idempotent answers in JSONB, so a replay returns the same bytes. Without the serializer 8/11 byte assertions fail; with it, 11/11 pass. No schema or contract change.
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

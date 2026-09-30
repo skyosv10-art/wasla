@@ -1,3 +1,15 @@
+# 2026-09-30 — CLM-0415 — M6-18B db-backup.yml fail-closed (RISK-0055) · PR, not merged
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR open, not merged; proven on the TEST DB only
+
+`db-backup.yml` defects (a)–(g) measured in CLM-0413 r2 §3.1 are replaced by one script, `scripts/ops/db-backup/backup.sh`: snapshot-consistent dump + exact counts (`snapshot-dump.mjs`), AES256 encrypt, decrypt of the uploaded ciphertext byte-compared, restore of those bytes into postgres:17 with `--exit-on-error --single-transaction`, exact table-set and row-count compare (`verify-backup.sh`). No warning outcome, no `skip_restore_test`. The manifest is written only on PASS. `db-backup-proof.yml` runs the same script on `SUPABASE_TEST_DB_URL` (push to this branch only): P1 must pass, P2 injects faults that must each fail closed. RISK-0055 register text is **not** edited; the proposed correction is in the PR description (owner approval pending). Evidence: `docs/12-testing/ci-evidence/2026-09-30T060000Z-clm-0415-db-backup-gate/`.
+
+
+**Addendum (MASTER REPAIR & MERGE):** §24-E failure issue, §24-F 90-day pre-migration retention, `workflow_call` + `expect_project_ref` for RISK-0056, §24-G `service-health.yml` (14/14 HTTP 200 on a local probe), and the supply-chain inventory completed. The RISK-0055 row has a correction by addition: production RTO is not measured and RPO is about 6 h.
+---
+
 # 2026-09-30 — CLM-0417 — M0-47 RISK-0013 byte-identical idempotent replay
 
 - **Work Item(s):** M0-47

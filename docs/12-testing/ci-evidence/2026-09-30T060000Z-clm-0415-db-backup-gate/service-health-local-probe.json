@@ -1,0 +1,119 @@
+{
+  "checked_at": "2026-09-30T06:59:53Z",
+  "healthy": 14,
+  "total": 14,
+  "results": [
+    {
+      "service": "audit",
+      "url": "https://wasla-audit.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 21.4,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "service": "customers",
+      "url": "https://wasla-customers.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.3,
+      "body": "{\"status\":\"ok\",\"service\":\"customers-service\",\"persistence\":\"postgres\",\"order_intake\":\"configured\"}"
+    },
+    {
+      "service": "delivery",
+      "url": "https://wasla-delivery.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 21.3,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "service": "dispatch",
+      "url": "https://wasla-dispatch.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.3,
+      "body": "{\"status\":\"ok\",\"service\":\"dispatch-service\",\"persistence\":\"postgres\",\"last_tick_at\":null}"
+    },
+    {
+      "service": "drivers",
+      "url": "https://wasla-drivers.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.3,
+      "body": "{\"status\":\"ok\",\"persistence\":\"postgres\",\"last_tick_at\":null}"
+    },
+    {
+      "service": "geography",
+      "url": "https://wasla-geography.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.4,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "service": "identity",
+      "url": "https://wasla-identity.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 32.3,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "service": "marketplace",
+      "url": "https://wasla-marketplace.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.9,
+      "body": "{\"status\":\"degraded\",\"mode\":\"postgres\"}"
+    },
+    {
+      "service": "matching",
+      "url": "https://wasla-matching.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.9,
+      "body": "{\"status\":\"degraded\",\"service\":\"matching-service\",\"persistence\":\"postgres\",\"active_ruleset_version\":null}"
+    },
+    {
+      "service": "negotiations",
+      "url": "https://wasla-negotiations.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.4,
+      "body": "{\"status\":\"ok\",\"persistence\":\"postgres\",\"last_tick_at\":null}"
+    },
+    {
+      "service": "orders",
+      "url": "https://wasla-orders.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 32.2,
+      "body": "{\"status\":\"ok\",\"service\":\"orders-service\",\"persistence\":\"postgres\"}"
+    },
+    {
+      "service": "reputation",
+      "url": "https://wasla-reputation.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.3,
+      "body": "{\"status\":\"ok\",\"persistence\":\"postgres\",\"last_tick_at\":null}"
+    },
+    {
+      "service": "search",
+      "url": "https://wasla-search.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 22.3,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "service": "subscriptions",
+      "url": "https://wasla-subscriptions.onrender.com/health",
+      "http_status": 200,
+      "attempt": 1,
+      "elapsed_s": 31.4,
+      "body": "{\"status\":\"ok\",\"mode\":\"postgres\",\"last_tick_at\":null}"
+    }
+  ]
+}

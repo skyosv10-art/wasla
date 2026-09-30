@@ -1,0 +1,170 @@
+name: db-backup proof (TEST DB only)
+
+# CLM-0415 · RISK-0055 — proves scripts/ops/db-backup/backup.sh, the exact
+# script the scheduled db-backup.yml runs, against SUPABASE_TEST_DB_URL only.
+#
+#   P1  a real backup of the TEST database must PASS end to end and write a
+#       manifest whose restore_all_match is true.
+#   P2  injected faults must each FAIL, write no manifest, and leave no
+#       unencrypted dump behind.
+#
+# Safety:
+#   - Trigger: push to this branch only, path-filtered. No schedule, no
+#     workflow_dispatch, never runs on main.
+#   - guard-test-db.py refuses the production project ref before any step
+#     touches a database; the only secret read is SUPABASE_TEST_DB_URL.
+#   - The proof passphrase is a public constant, so NOTHING is uploaded:
+#     an artifact encrypted with a public string would expose TEST data.
+#   - Source access is read only (REPEATABLE READ READ ONLY + pg_dump).
+on:
+  push:
+    branches: ['fix/clm-0415-db-backup-gate']
+    paths:
+      - '.github/workflows/db-backup-proof.yml'
+      - '.github/workflows/db-backup.yml'
+      - 'scripts/ops/db-backup/**'
+      - 'scripts/ops/risk-0056/snapshot-dump.mjs'
+      - 'scripts/ops/risk-0056/verify-backup.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-test-db
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  PG_VERSION: "17"
+
+jobs:
+  proof:
+    name: backup.sh on TEST — pass once, fail closed on every fault
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RISK0056_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+      BACKUP_SOURCE_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+      BACKUP_PASSPHRASE: clm0415-proof-only-not-a-secret
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Guard — TEST project only (prints project ref only)
+        run: python3 scripts/ops/risk-0056/guard-test-db.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
+      - name: Install PostgreSQL ${{ env.PG_VERSION }} client tools
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: P1 — real backup of the TEST DB must PASS
+        run: |
+          bash scripts/ops/db-backup/backup.sh out-p1
+          test -f out-p1/backup-manifest.json
+          test ! -e out-p1/work || { echo "::error::work dir (unencrypted dump) left behind"; exit 1; }
+          ls out-p1/*.dump.gpg >/dev/null
+          python3 - <<'PY'
+          import json, sys
+          m = json.load(open("out-p1/backup-manifest.json"))
+          ok = (m["restore_all_match"] is True and m["snapshot_consistent"] is True
+                and m["public_tables"] > 0 and m["guard"].startswith("PASS"))
+          print(json.dumps({k: m[k] for k in ("public_tables", "public_rows_total", "public_extensions",
+                  "restore_all_match", "dump_size_bytes", "encrypted_size_bytes",
+                  "dump_seconds", "encrypt_seconds", "verify_restore_seconds")}, indent=1))
+          sys.exit(0 if ok else 1)
+          PY
+          echo "P1 PASS"
+
+      - name: P2 — injected faults (each must FAIL, no manifest, no plaintext left)
+        run: |
+          set +e
+          # expect_fail <name> <out_dir> <expected stage regex> command...
+          # The fault must fail at the stage it targets — failing earlier for
+          # another reason would prove nothing about that stage (run 36670339832:
+          # F5/F6 failed at `list` because the shim broke --list; corrected here).
+          expect_fail() {
+            local name="$1" out="$2" stage="$3"; shift 3
+            log=$("$@" 2>&1); rc=$?
+            first=$(printf '%s\n' "$log" | grep -E 'BACKUP(-GUARD)? FAIL|::error::|stage 1 snapshot-dump: FAILED|pg_dump exit=|Error' | head -1)
+            if ! printf '%s' "$first" | grep -Eq "$stage"; then
+              echo "::error::fault ${name}: first failure was «${first}», expected stage /${stage}/"; exit 1
+            fi
+            printf '%s\n' "$log" | grep -E 'BACKUP(-GUARD)? (FAIL|PASS)|stage 1|::error::' | sed "s/^/  [$name] /"
+            if [ "$rc" -eq 0 ]; then echo "::error::fault ${name}: backup.sh exited 0"; exit 1; fi
+            if [ -e "$out/backup-manifest.json" ]; then echo "::error::fault ${name}: manifest written"; exit 1; fi
+            if [ -e "$out/work" ]; then echo "::error::fault ${name}: unencrypted work dir left behind"; exit 1; fi
+            echo "fault ${name}: FAILED CLOSED (rc=${rc}) · no manifest · no plaintext"
+          }
+          mkdir -p shim
+          # F1 — empty passphrase
+          expect_fail empty-passphrase out-f1 'BACKUP_PASSPHRASE is empty' env BACKUP_PASSPHRASE= bash scripts/ops/db-backup/backup.sh out-f1
+          # F2 — unreachable source (stage 1 must fail; no dump)
+          expect_fail unreachable-source out-f2 'ECONNREFUSED|Error|FAILED' env BACKUP_SOURCE_DB_URL=postgresql://nobody:x@127.0.0.1:1/none \
+            bash scripts/ops/db-backup/backup.sh out-f2
+          # F3 — dump silently missing one table the snapshot counted (dump/count divergence)
+          FIRST=$(psql "$BACKUP_SOURCE_DB_URL" -At -v ON_ERROR_STOP=1 -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY 1 LIMIT 1")
+          [ -n "$FIRST" ] || { echo "::error::TEST DB has no public table — proof inconclusive"; exit 1; }
+          printf '#!/usr/bin/env bash\nexec /usr/lib/postgresql/17/bin/pg_dump --exclude-table=public.%s "$@"\n' "$FIRST" > shim/pg_dump
+          chmod +x shim/pg_dump
+          expect_fail dump-missing-table out-f3 'stage=list .*absent from the dump TOC' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f3
+          rm -f shim/pg_dump
+          # F4 — restore tool fails (pg_restore exits 1)
+          printf '#!/usr/bin/env bash\nexit 1\n' > shim/pg_restore; chmod +x shim/pg_restore
+          expect_fail restore-tool-fails out-f4 'stage=list' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f4
+          # F5 — restore succeeds, then one row disappears from the scratch copy before compare
+          #      (the scratch postgres:17 on the runner — never the TEST DB)
+          cat > shim/pg_restore <<'SH'
+          #!/usr/bin/env bash
+          /usr/lib/postgresql/17/bin/pg_restore "$@" || exit $?
+          for a in "$@"; do case "$a" in --dbname=*) DB="${a#--dbname=}";; esac; done
+          [ -n "${DB:-}" ] || exit 0   # `pg_restore --list` (stage 3) passes through untouched
+          case "${DB:-}" in postgresql://postgres:verify@127.0.0.1:*) ;; *) echo "shim: refusing non-scratch target"; exit 1;; esac
+          psql "$DB" -v ON_ERROR_STOP=1 -q <<'SQL'
+          DO $$
+          DECLARE t text; n bigint;
+          BEGIN
+            FOR t IN SELECT table_name FROM information_schema.tables
+                      WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY 1 LOOP
+              EXECUTE format('SELECT count(*) FROM public.%I', t) INTO n;
+              IF n > 0 THEN
+                EXECUTE format('ALTER TABLE public.%I DISABLE TRIGGER ALL', t);
+                EXECUTE format('DELETE FROM public.%I WHERE ctid = (SELECT ctid FROM public.%I LIMIT 1)', t, t);
+                RAISE NOTICE 'fault: deleted 1 row from %', t;
+                RETURN;
+              END IF;
+            END LOOP;
+            RAISE EXCEPTION 'no non-empty public table — fault not injectable';
+          END $$;
+          SQL
+          SH
+          chmod +x shim/pg_restore
+          expect_fail restored-row-missing out-f5 'stage=compare .*row-count mismatch' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f5
+          # F6 — restore succeeds, then an extra table appears (table-set mismatch)
+          cat > shim/pg_restore <<'SH'
+          #!/usr/bin/env bash
+          /usr/lib/postgresql/17/bin/pg_restore "$@" || exit $?
+          for a in "$@"; do case "$a" in --dbname=*) DB="${a#--dbname=}";; esac; done
+          [ -n "${DB:-}" ] || exit 0   # `pg_restore --list` (stage 3) passes through untouched
+          case "${DB:-}" in postgresql://postgres:verify@127.0.0.1:*) ;; *) echo "shim: refusing non-scratch target"; exit 1;; esac
+          psql "$DB" -v ON_ERROR_STOP=1 -q -c "CREATE TABLE public.zz_clm0415_fault (x int)"
+          SH
+          chmod +x shim/pg_restore
+          expect_fail restored-extra-table out-f6 'stage=compare .*table set differs' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f6
+          rm -rf shim
+          echo "P2 PASS — 6/6 faults failed closed"

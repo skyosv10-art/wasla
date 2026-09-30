@@ -60,16 +60,6 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/AuthUnauthorized' }
         '403': { $ref: '#/components/responses/AuthForbidden' }
-    AuthUnauthorized:
-      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-    AuthForbidden:
-      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة أو بلا مُنتَفِعٍ
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
         '200':
           description: نسخ الخطط المطابقة مع امتيازاتها
           content:
@@ -1043,6 +1033,16 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     ServiceUnavailable:
       description: الخدمة أو طبقة الاستمرارية غير متاحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthUnauthorized:
+      description: لا ترويسة هويّة خدمة أو ترويسة غير صالحة
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحيّة المطلوبة أو بلا مُنتَفِعٍ
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }

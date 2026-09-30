@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "generate": "openapi-typescript ../../../services/search/contracts/api.openapi.yml -o src/api-types.ts",
+    "generate": "node -e \"console.error('src/api-types.ts in @wasla/contracts-search is hand-authored (see its header); running openapi-typescript here would overwrite it. Reconcile by hand and let __tests__/contracts.test.ts check it.'); process.exit(1)\"",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

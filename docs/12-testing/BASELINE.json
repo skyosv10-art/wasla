@@ -3,10 +3,10 @@
   "generated_at": "2026-09-30T08:55:43Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "63289db2ee48956643e2b79d5b5064ff7344ee8b",
-    "branch": "fix/clm-0418-api-types-drift",
-    "dirty": true,
-    "dirty_files": 1,
+    "commit": "1829a2ab36e358f9f833b4101b5b7cd34bfc4e5b",
+    "branch": "fix/clm-0419-risk-0042-staff-rank",
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "CLM-0418: in-tree verify log docs/12-testing/baseline-sources/2026-09-30T085540Z-verify.txt added for this baseline",
     "tracked_files": 2993
   },
@@ -26,7 +26,7 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 541,
+    "test_files_tracked": 542,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:64a3012772c504e15737f13d06b42c1500e7eda4c28d237056aa817080a388a0",
+  "fingerprint": "sha256:c574f74858ba8f96f198b4fa3b21b05f2e35ed686e423d656ead6ebe3a28f9e0",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

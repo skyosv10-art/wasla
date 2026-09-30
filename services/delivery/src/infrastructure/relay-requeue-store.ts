@@ -203,10 +203,11 @@ export class PostgresRelayRequeueStore implements RelayRequeuePort {
        * كانَ سيُنتِجُ «أُعيدَ» بلا إرجاعٍ.
        */
       const rewound = await client.query<{ last_occurred_at: Date; last_event_id: string }>(
-        `INSERT INTO ${tables.checkpoint} (consumer_id, last_occurred_at, last_event_id, updated_at)
-              VALUES ($1, $2, $3, now())
+        `INSERT INTO ${tables.checkpoint} (consumer_id, last_commit_sequence, last_occurred_at, last_event_id, updated_at)
+              VALUES ($1, 0, $2, $3, now())
          ON CONFLICT (consumer_id) DO UPDATE
-              SET last_occurred_at = EXCLUDED.last_occurred_at,
+              SET last_commit_sequence = 0,  -- RISK-0012: the cursor itself rewinds
+                  last_occurred_at = EXCLUDED.last_occurred_at,
                   last_event_id = EXCLUDED.last_event_id,
                   updated_at = now()
            RETURNING last_occurred_at, last_event_id`,

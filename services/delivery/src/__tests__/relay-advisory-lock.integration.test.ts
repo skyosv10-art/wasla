@@ -90,14 +90,16 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** نقطةُ التقدُّمِ الحاليةُ كما هيَ في الدفترِ — قراءةٌ صريحةٌ لا استنتاجاً. */
 async function checkpoint(pool: Pool): Promise<RelayCheckpoint> {
-  const row = await pool.query<{ last_occurred_at: string; last_event_id: string }>(
-    `SELECT last_occurred_at::text, last_event_id::text FROM delivery_relay_checkpoint WHERE consumer_id = $1`,
+  const row = await pool.query<{ last_commit_sequence: string; last_occurred_at: string; last_event_id: string }>(
+    `SELECT last_commit_sequence::text AS last_commit_sequence, last_occurred_at::text, last_event_id::text
+       FROM delivery_relay_checkpoint WHERE consumer_id = $1`,
     [DEFAULT_RELAY_CONFIG.consumerId],
   );
   if (row.rows.length === 0) return ZERO_CHECKPOINT;
   // `::text` يعطي «2026-09-09 10:00:00+00» والمُخزِنُ يقرأُ ISO — نُوحّدُ إلى
   // ISO حتّى تُقارَنَ النقطةُ بالصيغةِ التي تمرُّها الدفعةُ إلى المصدرِ.
   return {
+    last_commit_sequence: row.rows[0]!.last_commit_sequence,
     last_occurred_at: new Date(row.rows[0]!.last_occurred_at).toISOString(),
     last_event_id: row.rows[0]!.last_event_id,
   };

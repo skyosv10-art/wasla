@@ -217,16 +217,19 @@ CREATE INDEX IF NOT EXISTS ix_search_consumed_status
 -- ─────────────────────────────────────────────────────────────────────
 -- 6) search_relay_checkpoint — تقدُّمُ الاستهلاكِ (offset يملكُهُ البحثُ)
 --    صفٌّ واحدٌ لكلِّ مُستهلكٍ. `last_outbox_id`/`last_created_at` هو آخرُ
---    حدثٍ وصلَ لحالةٍ نهائيّةٍ. القراءةُ التاليةُ: الأحداثُ التي
---    (created_at, outbox_id) > (last_created_at, last_outbox_id).
+--    حدثٍ وصلَ لحالةٍ نهائيّةٍ. القراءةُ التاليةُ (RISK-0012 · ADR-057): الأحداثُ التي
+--    commit_sequence > last_commit_sequence — لا (created_at, outbox_id) الذي يتعادلُ في المعاملةِ.
 --    لا يكتبُ البحثُ في `marketplace_outbox.published_at` — التقدُّمُ ملكُهُ.
 -- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS search_relay_checkpoint (
     consumer_id      TEXT        PRIMARY KEY,
     last_outbox_id   UUID        NOT NULL,
     last_created_at  TIMESTAMPTZ NOT NULL,
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- RISK-0012 (ADR-057): المؤشِّرُ الحاكمُ؛ last_outbox_id/last_created_at للتشخيصِ فقط.
+    last_commit_sequence BIGINT  NOT NULL DEFAULT 0
 );
+ALTER TABLE search_relay_checkpoint ADD COLUMN IF NOT EXISTS last_commit_sequence BIGINT NOT NULL DEFAULT 0;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- updated_at / archived_at triggers

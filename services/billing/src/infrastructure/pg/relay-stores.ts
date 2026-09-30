@@ -18,8 +18,8 @@
  *
  * الطوابعُ تُقرأُ نصّاً بدقّةِ الميكروثانية (`to_char ... US`) لا عبرَ `Date` في JS:
  * `Date` تقطعُ إلى الملّي ثانية فتصيرُ نقطةُ التفتيشِ أقدمَ من الصفِّ الذي مثّلتْهُ،
- * ويُعادُ قراءتُهُ في كلِّ دفعة. والصيغةُ واحدةٌ في المصدرِ ونقطةِ التفتيش لأنَّ
- * المُحرِّكَ يقارنُها معجميّاً (`isBefore`).
+ * ويُعادُ قراءتُهُ في كلِّ دفعة. أمّا الترتيبُ والمقارنةُ (`isBefore`) فعلى
+ * `commit_sequence` وحدَهُ منذُ RISK-0012 (ADR-057)؛ والطوابعُ للتشخيصِ.
  */
 
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -46,14 +46,13 @@ import { PostgresSettlement } from "./settlement-store.js";
 /** ISO-8601 UTC بدقّةِ الميكروثانية — الصيغةُ الوحيدةُ لطوابعِ المُرحِّل. */
 const ISO_US = `'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`;
 
-const ZERO_EVENT_ID = "00000000-0000-0000-0000-000000000000";
-
 export class PostgresRelayCheckpointStore implements RelayCheckpointStore {
   constructor(private readonly db: Queryable) {}
 
   async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
-    const result = await this.db.query<{ last_occurred_at: string; last_event_id: string }>(
-      `SELECT to_char(last_occurred_at AT TIME ZONE 'UTC', ${ISO_US}) AS last_occurred_at,
+    const result = await this.db.query<{ last_commit_sequence: string; last_occurred_at: string; last_event_id: string }>(
+      `SELECT last_commit_sequence::text AS last_commit_sequence,
+              to_char(last_occurred_at AT TIME ZONE 'UTC', ${ISO_US}) AS last_occurred_at,
               last_event_id::text AS last_event_id
          FROM billing_relay_checkpoint
         WHERE consumer_id = $1`,
@@ -64,13 +63,14 @@ export class PostgresRelayCheckpointStore implements RelayCheckpointStore {
 
   async writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void> {
     await this.db.query(
-      `INSERT INTO billing_relay_checkpoint (consumer_id, last_occurred_at, last_event_id, updated_at)
-       VALUES ($1, $2::timestamptz, $3::uuid, now())
+      `INSERT INTO billing_relay_checkpoint (consumer_id, last_commit_sequence, last_occurred_at, last_event_id, updated_at)
+       VALUES ($1, $2::bigint, $3::timestamptz, $4::uuid, now())
        ON CONFLICT (consumer_id) DO UPDATE
-         SET last_occurred_at = EXCLUDED.last_occurred_at,
+         SET last_commit_sequence = EXCLUDED.last_commit_sequence,
+             last_occurred_at = EXCLUDED.last_occurred_at,
              last_event_id    = EXCLUDED.last_event_id,
              updated_at       = now()`,
-      [consumerId, checkpoint.last_occurred_at, checkpoint.last_event_id],
+      [consumerId, checkpoint.last_commit_sequence, checkpoint.last_occurred_at, checkpoint.last_event_id],
     );
   }
 }
@@ -233,8 +233,11 @@ export class PostgresDeliveryEventSource implements DeliveryEventSource {
   constructor(private readonly pool: Pool) {}
 
   async readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly DeliveryOutboxRow[]> {
-    const cpAt = checkpoint?.last_occurred_at ?? new Date(0).toISOString();
-    const cpId = checkpoint?.last_event_id ?? ZERO_EVENT_ID;
+    // RISK-0012 (CLM-0416, ADR-057): the cursor is `commit_sequence` alone.
+    const cpSeq = checkpoint?.last_commit_sequence ?? "0";
+    // ORDER BY is table-qualified on purpose: the bare name would bind to the
+    // `::text` output alias and sort lexicographically ('10' < '2') — measured
+    // in the search leg before this fix (RISK-0012 · CLM-0416).
     const result = await this.pool.query<{
       event_id: string;
       event_type: string;
@@ -242,16 +245,18 @@ export class PostgresDeliveryEventSource implements DeliveryEventSource {
       aggregate_type: string;
       aggregate_id: string;
       occurred_at: string;
+      commit_sequence: string;
       trace_id: string | null;
       payload: unknown;
     }>(
       `SELECT event_id::text AS event_id, event_type, event_version, aggregate_type, aggregate_id,
-              to_char(occurred_at AT TIME ZONE 'UTC', ${ISO_US}) AS occurred_at, trace_id, payload
+              to_char(occurred_at AT TIME ZONE 'UTC', ${ISO_US}) AS occurred_at,
+              commit_sequence::text AS commit_sequence, trace_id, payload
          FROM delivery_outbox
-        WHERE (occurred_at, event_id) > ($1::timestamptz, $2::uuid)
-        ORDER BY occurred_at ASC, event_id ASC
-        LIMIT $3`,
-      [cpAt, cpId, limit],
+        WHERE commit_sequence > $1::bigint
+        ORDER BY delivery_outbox.commit_sequence ASC
+        LIMIT $2`,
+      [cpSeq, limit],
     );
     return result.rows.map((r) => ({
       event_id: r.event_id,
@@ -260,6 +265,7 @@ export class PostgresDeliveryEventSource implements DeliveryEventSource {
       aggregate_type: r.aggregate_type,
       aggregate_id: r.aggregate_id,
       occurred_at: r.occurred_at,
+      commit_sequence: r.commit_sequence,
       trace_id: r.trace_id,
       payload: (r.payload ?? {}) as Record<string, unknown>,
     }));

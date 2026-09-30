@@ -106,26 +106,31 @@ export class PostgresInventoryObservationStore implements InventoryObservationSt
   /* ── checkpoint (delivery-owned) ── */
 
   async getInventoryCheckpoint(consumerId: string): Promise<InventoryRelayCheckpoint | null> {
-    const r = await this.pool.query<{ last_occurred_at: Date; last_event_id: string }>(
-      `SELECT last_occurred_at, last_event_id::text
+    const r = await this.pool.query<{ last_commit_sequence: string; last_occurred_at: Date; last_event_id: string }>(
+      `SELECT last_commit_sequence::text AS last_commit_sequence, last_occurred_at, last_event_id::text
          FROM delivery_inventory_relay_checkpoint WHERE consumer_id = $1`,
       [consumerId],
     );
     // ISO دائماً — المحرّكُ يقارنُ معجميّاً (relay.isAfter) وصيغةُ `::text` تنكسر أمامَها.
     return r.rows.length
-      ? { last_occurred_at: r.rows[0].last_occurred_at.toISOString(), last_event_id: r.rows[0].last_event_id }
+      ? {
+          last_commit_sequence: r.rows[0].last_commit_sequence,
+          last_occurred_at: r.rows[0].last_occurred_at.toISOString(),
+          last_event_id: r.rows[0].last_event_id,
+        }
       : null;
   }
 
   async writeInventoryCheckpoint(consumerId: string, checkpoint: InventoryRelayCheckpoint): Promise<void> {
     await this.pool.query(
-      `INSERT INTO delivery_inventory_relay_checkpoint (consumer_id, last_occurred_at, last_event_id)
-       VALUES ($1, $2::timestamptz, $3::uuid)
+      `INSERT INTO delivery_inventory_relay_checkpoint (consumer_id, last_commit_sequence, last_occurred_at, last_event_id)
+       VALUES ($1, $2::bigint, $3::timestamptz, $4::uuid)
        ON CONFLICT (consumer_id)
-       DO UPDATE SET last_occurred_at = EXCLUDED.last_occurred_at,
+       DO UPDATE SET last_commit_sequence = EXCLUDED.last_commit_sequence,
+                     last_occurred_at = EXCLUDED.last_occurred_at,
                      last_event_id = EXCLUDED.last_event_id,
                      updated_at = now()`,
-      [consumerId, checkpoint.last_occurred_at, checkpoint.last_event_id],
+      [consumerId, checkpoint.last_commit_sequence, checkpoint.last_occurred_at, checkpoint.last_event_id],
     );
   }
 

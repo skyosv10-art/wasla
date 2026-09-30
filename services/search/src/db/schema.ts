@@ -45,6 +45,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   bigserial,
   check,
   index,
@@ -286,6 +287,8 @@ export const searchRelayCheckpoint = pgTable("search_relay_checkpoint", {
   lastOutboxId: uuid("last_outbox_id").notNull(),
   lastCreatedAt: instant("last_created_at").notNull(),
   updatedAt: instant("updated_at").notNull().defaultNow(),
+  // RISK-0012 (ADR-057): the governing cursor; last_outbox_id/last_created_at are diagnostics.
+  lastCommitSequence: bigint("last_commit_sequence", { mode: "number" }).notNull().default(0),
 });
 
 /**

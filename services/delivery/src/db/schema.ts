@@ -53,6 +53,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   bigserial,
   boolean,
   check,
@@ -67,6 +68,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -271,6 +273,8 @@ export const deliveryTasks = pgTable(
     version: integer("version").notNull().default(1),
     createdAt: instant("created_at").notNull().defaultNow(),
     updatedAt: instant("updated_at").notNull().defaultNow(),
+    // RISK-0012 (ADR-057): the per-task watermark — commit_sequence of the last applied dispatch event.
+    dispatchLastCommitSequence: bigint("dispatch_last_commit_sequence", { mode: "number" }),
   },
   (table) => [
     foreignKey({
@@ -377,6 +381,8 @@ export const deliveryOutbox = pgTable(
     publishedAt: instant("published_at"),
   attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
+    // RISK-0012 (ADR-057): commit-ordered cursor — assigned by the deferred trigger at COMMIT.
+    commitSequence: bigint("commit_sequence", { mode: "number" }).notNull().default(sql`nextval('delivery_outbox_commit_seq')`),
   },
   (table) => [
     check("delivery_outbox_event_type_check", sql`char_length(${table.eventType}) BETWEEN 3 AND 96`),
@@ -392,6 +398,7 @@ export const deliveryOutbox = pgTable(
     index("ix_delivery_outbox_unpublished")
       .on(table.outboxId)
       .where(sql`${table.publishedAt} IS NULL`),
+    uniqueIndex("ux_delivery_outbox_commit_sequence").on(table.commitSequence),
   ],
 );
 
@@ -474,6 +481,8 @@ export const deliveryRelayCheckpoint = pgTable(
     lastOccurredAt: instant("last_occurred_at").notNull(),
     lastEventId: uuid("last_event_id").notNull(),
     updatedAt: instant("updated_at").notNull().defaultNow(),
+    // RISK-0012 (ADR-057): the governing cursor; the two fields above are diagnostics.
+    lastCommitSequence: bigint("last_commit_sequence", { mode: "number" }).notNull().default(0),
   },
   (table) => [
     check(
@@ -587,6 +596,8 @@ export const deliveryInventoryRelayCheckpoint = pgTable(
     lastOccurredAt: instant("last_occurred_at").notNull(),
     lastEventId: uuid("last_event_id").notNull(),
     updatedAt: instant("updated_at").notNull().defaultNow(),
+    // RISK-0012 (ADR-057): the governing cursor; the two fields above are diagnostics.
+    lastCommitSequence: bigint("last_commit_sequence", { mode: "number" }).notNull().default(0),
   },
   (table) => [
     check(

@@ -75,8 +75,11 @@ CREATE TABLE IF NOT EXISTS billing_relay_checkpoint (
   consumer_id        TEXT PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 1 AND 64),
   last_occurred_at   TIMESTAMPTZ NOT NULL,
   last_event_id      UUID NOT NULL,
-  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- RISK-0012 (ADR-057): المؤشِّرُ الحاكمُ؛ الطابعُ والمعرِّفُ للتشخيصِ فقط.
+  last_commit_sequence BIGINT NOT NULL DEFAULT 0
 );
+ALTER TABLE billing_relay_checkpoint ADD COLUMN IF NOT EXISTS last_commit_sequence BIGINT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS billing_relay_consumed_events (
   consumer_id        TEXT NOT NULL CHECK (char_length(consumer_id) BETWEEN 1 AND 64),

@@ -13,7 +13,7 @@
  *    checkpoint advances past it — a poison event never blocks the stream.
  *  - Poison / dead-letter (req 8): unknown event versions and unrecoverable
  *    failures are `poisoned` (terminal) and logged with `last_error`.
- *  - Checkpoint (req 9): progress is the last (created_at, outbox_id) that
+ *  - Checkpoint (req 9): progress is the last `commit_sequence` (RISK-0012 · ADR-057) that
  *    reached a terminal status. The relay owns it; it never writes to
  *    `marketplace_outbox.published_at`.
  *  - Replay (req 10): `replayFrom(checkpoint=null)` resets the checkpoint so
@@ -105,10 +105,14 @@ export async function runRelayBatch(deps: RelayDeps): Promise<BatchOutcome> {
     if (outcome === "applied") applied += 1;
     else if (outcome === "poisoned") poisoned += 1;
     else if (outcome === "skipped") skipped += 1;
-    if (outcome !== "pending") {
-      advancedTo = { last_outbox_id: row.outbox_id, last_created_at: row.created_at };
-      await deps.store.writeCheckpoint(cfg.consumerId, advancedTo);
+    if (outcome === "pending") {
+      // RISK-0012 (CLM-0416): stop at the first retryable row. Continuing would
+      // write a checkpoint PAST it (the next terminal row advanced it), so the
+      // pending row was never read again. The next poll resumes exactly here.
+      break;
     }
+    advancedTo = { last_commit_sequence: row.commit_sequence, last_outbox_id: row.outbox_id, last_created_at: row.created_at };
+    await deps.store.writeCheckpoint(cfg.consumerId, advancedTo);
   }
 
   return {
@@ -255,7 +259,7 @@ function isTerminal(status: ConsumedStatus): boolean {
  * events no-ops. Safe to call repeatedly.
  */
 export async function replayFrom(deps: RelayDeps, checkpoint: RelayCheckpoint | null): Promise<void> {
-  await deps.store.writeCheckpoint(deps.config?.consumerId ?? DEFAULT_RELAY_CONFIG.consumerId, checkpoint ?? { last_outbox_id: "00000000-0000-0000-0000-000000000000", last_created_at: new Date(0).toISOString() });
+  await deps.store.writeCheckpoint(deps.config?.consumerId ?? DEFAULT_RELAY_CONFIG.consumerId, checkpoint ?? { last_commit_sequence: "0", last_outbox_id: "00000000-0000-0000-0000-000000000000", last_created_at: new Date(0).toISOString() });
 }
 
 /**

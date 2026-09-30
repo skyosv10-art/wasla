@@ -1,3 +1,13 @@
+# 2026-10-01 — CLM-0423 — M0-45: RISK-0025 closed — stacked PRs get full checks
+
+- **Work Item(s):** M0-45
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+RISK-0025 said a stacked PR (base ≠ main) produces zero checks because `ci.yml` filtered `pull_request: branches: [main]`. The filter is gone (removed in CLM-0414), and the risk is now closed by measurement, not by reading: PR #559 with base = `fix/clm-0419-risk-0042-staff-rank` produced **42/42 green contexts** and merged. Register index row and detail section updated by addition (the old text stays as history). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0421 close-out — PR #556 + #559 merged to main; evidence branch archived
 
 - **Work Item(s):** M0-49

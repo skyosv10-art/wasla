@@ -217,8 +217,19 @@ jobs:
           corepack prepare "pnpm@${PNPM_VERSION}" --activate
           echo "node   $(node --version)"
           echo "pnpm   $(pnpm --version)"
+      # CLM-0415: judge the PR's own diff, as governance-guard already does
+      # (`GITHUB_BASE_REF`). Without the range, verify.sh compared origin/main..HEAD,
+      # so a PR stacked on another open PR failed the claim-scope check on files
+      # from the base PR (measured on #553, run 36687220288). The checks are unchanged;
+      # only the range they are given is fixed. A push to main keeps the default range.
       - name: verify.sh
-        run: bash scripts/verify.sh
+        run: |
+          if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+            git fetch origin "$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF" --depth=50 2>/dev/null || true
+            bash scripts/verify.sh "origin/$GITHUB_BASE_REF" HEAD
+          else
+            bash scripts/verify.sh
+          fi
       - name: رفع أرتفاكت التحقق
         if: always()
         uses: actions/upload-artifact@v4

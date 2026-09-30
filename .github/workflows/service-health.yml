@@ -1,0 +1,62 @@
+name: Service health (14 services, read-only)
+
+# §24-G · CLM-0415 — periodic GET /health of the 14 DB-backed Render services.
+# Free: GitHub-hosted runner on a public repository; no Render API key, no
+# Render change, no secret. A failed probe opens (or comments on) one issue.
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: service-health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: GET /health on 14 services
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Probe
+        run: python3 scripts/ops/health/check-health.py health-report.json
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-health-${{ github.run_id }}
+          path: health-report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  alert-on-failure:
+    name: Open an issue when a service is unhealthy
+    needs: probe
+    if: ${{ failure() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update the service-health issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="service-health: /health failed"
+          body="At least one of the 14 services did not answer 200 on /health: ${RUN_URL} (report artifact attached to the run)."
+          n="$(gh issue list -R "$REPO" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" -R "$REPO" --body "$body"
+          else
+            gh issue create -R "$REPO" --title "$title" --body "$body"
+          fi

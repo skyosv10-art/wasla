@@ -3,7 +3,7 @@
   "generated_at": "2026-09-30T08:21:38Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "68f9f7589eae438ee31d49a44d880e28f4e017a6",
+    "commit": "b3580c4e73be7d49d2ee7306d6e987ffb7ae8eb5",
     "branch": "fix/clm-0417-risk-0013-canonical-replay",
     "dirty": true,
     "dirty_files": 1,

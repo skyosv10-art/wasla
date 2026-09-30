@@ -48,7 +48,9 @@ DECLARED=(
   "ci.yml|no|yes|خطُّ CI المانعُ — الوظائفُ الواحدةُ والثلاثونَ المُلزِمةُ (MERGE_BLOCKING.json · ADR-023). وظيفةُ image-supply-chain تملكُ id-token: write و attestations: write لإثباتِ أصلِ البناءِ (M6-19C · ADR-056)."
   "roadmap.yml|no|no|طرافةُ ROADMAP.md مع كلِّ دفعةٍ — مستقلٌّ عن خطِّ CI بقصدٍ."
   "render-deploy.yml|yes|no|نشرُ الالتزامِ المدفوعِ إلى main على خدماتِ Render والتحقّقُ من الالتزامِ الحيِّ لكلِّ خدمةٍ (M6-18B · CLM-0401). سرٌّ واحدٌ: RENDER_API_KEY. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — push إلى main وworkflow_dispatch."
-  "db-backup.yml|yes|no|نسخٌ احتياطيٌّ مجدولٌ لقاعدةِ بياناتِ Supabase — كلَّ 6 ساعاتٍ + تشغيلٌ يدويٌّ. تخفيفُ RISK-0055 (CLM-0405 · M6-18B). سرّانِ: SUPABASE_DB_URL وBACKUP_PASSPHRASE. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — schedule وworkflow_dispatch."
+  "db-backup.yml|yes|yes|نسخٌ احتياطيٌّ مجدولٌ لقاعدةِ بياناتِ Supabase — كلَّ 6 ساعاتٍ + تشغيلٌ يدويٌّ. تخفيفُ RISK-0055 (CLM-0405 · M6-18B). سرّانِ: SUPABASE_DB_URL وBACKUP_PASSPHRASE. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — schedule وworkflow_dispatch. CLM-0415: كتابةٌ واحدةٌ فقط — issues: write في وظيفةِ التنبيهِ عندَ الفشلِ (§24-E)، بلا سرٍّ فيها؛ ويُستدعى بـworkflow_call من سيرِ ترحيلِ RISK-0056."
+  "db-backup-proof.yml|yes|no|برهانُ بوّابةِ النسخِ الاحتياطيِّ على قاعدةِ الاختبارِ وحدَها (CLM-0415): SUPABASE_TEST_DB_URL فقط، وعبارةُ تشفيرٍ للبرهانِ ليست سرّاً. يجري على push إلى فرعِ CLM-0415 وحدَهُ. contents: read."
+  "service-health.yml|no|yes|§24-G · CLM-0415: GET /health على الخدماتِ الأربعَ عشرةَ كلَّ 6 ساعاتٍ — بلا سرٍّ ولا Render API ولا تغييرٍ؛ كتابةٌ واحدةٌ: issues: write في وظيفةِ التنبيهِ عندَ الفشلِ. schedule وworkflow_dispatch."
 )
 #
 # ── سجلٌّ تدقيقيٌّ: سيرُ عملٍ وُلدَ ومات في يومٍ واحدٍ (2026-09-13/14) ─────────

@@ -1,0 +1,65 @@
+# Filtered log excerpt — run 36658728822 (RISK-0056 B1 pg_trgm, READ ONLY). Leak scan: 0 connection strings, 0 pooler hosts, 0 tokens.
+36:BEGIN;
+39:CREATE EXTENSION IF NOT EXISTS pg_trgm;
+86:    USING gin (title_ar gin_trgm_ops);
+264:COMMIT;
+runtime use (search-index-reader.ts):
+88:  "title_ar % $1",
+production project ref: snlpxywskyqrjattbpgn
+host class: session-pooler · port: 5432
+test project ref: obeptvwpvqbduwkahorq
+host class: session-pooler · port: 5432 · database: postgres
+production refs denied: 1 · match: none
+[production] read-only proof: default_transaction_read_only=on transaction_read_only=on canary=rejected_25006 → PROVEN
+[production] server_version: 17.6
+[production] current_user / session_user / database: postgres / postgres / postgres
+[production] SHOW search_path: "\$user", public, extensions
+[production] current_schema(): public
+[production] current_schemas(true): {pg_catalog,public,extensions}
+[production] current_schemas(false): {public,extensions}
+[production] schema named after current_user exists: false
+[production] pg_db_role_setting (this role/db): [{"role":"postgres","database":"(all databases)","config":"search_path=\"\\$user\", public, extensions"},{"role":"unknown (OID=0)","database":"postgres","config":"app.settings.jwt_exp=3600"}]
+[production] schema extensions: {"name":"extensions","owner":"postgres","acl":"{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres,dashboard_user=UC/postgres}","comment":null}
+[production] extensions installed in schema extensions: ["pg_stat_statements","pgcrypto","uuid-ossp"]
+[production] pg_trgm available: [{"name":"pg_trgm","default_version":"1.6","installed_version":null,"comment":"text similarity measurement and index searching based on trigrams"}]
+[production] pg_trgm versions (control): [{"version":"1.3","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.4","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.5","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.6","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null}]
+[production] pg_trgm installed: null
+[production] role attributes: {"rolsuper":false,"rolcreatedb":true,"rolcreaterole":true,"rolinherit":true,"rolbypassrls":true,"rolreplication":true}
+[production] role memberships: ["anon","authenticated","authenticator","pg_create_subscription","pg_monitor","pg_read_all_data","pg_signal_backend","service_role","supabase_privileged_role"]
+[production] privileges: {"db_create":true,"public_usage":true,"public_create":true,"extensions_usage":true,"extensions_create":true}
+[production] supautils settings: {"supautils.privileged_extensions":"address_standardizer, address_standardizer_data_us, amcheck, autoinc, bloom, btree_gin, btree_gist, citext, cube, dblink, dict_int, dict_xsyn, earthdistance, fuzzystrmatch, hstore, http, hypopg, index_advisor, insert_username, intarray, isn, ltree, moddatetime, orioledb, pg_buffercache, pg_cron, pg_graphql, pg_hashids, pg_jsonschema, pg_net, pg_prewarm, pg_repack, pg_stat_monitor, pg_stat_statements, pg_tle, pg_trgm, pg_walinspect, pgaudit, pgcrypto, pgjwt, pgroonga, pgroonga_database, pgrouting, pgrowlocks, pgsodium, pgstattuple, pgtap, plcoffee, pljava, plls, plpgsql_check, plv8, postgis, postgis_raster, postgis_sfcgal, postgis_tiger_geocoder, postgis_topology, postgres_fdw, refint, rum, seg, sslinfo, supabase_vault, supautils, tablefunc, tcn, timescaledb, tsm_system_rows, tsm_system_time, unaccent, uuid-ossp, vector, wrappers","supautils.privileged_extensions_superuser":"supabase_admin","supautils.superuser":"supabase_admin","supautils.privileged_role":"supabase_privileged_role","supautils.extension_custom_scripts_path":"/etc/postgresql-custom/extension-custom-scripts","supautils.reserved_roles":"supabase_admin, supabase_auth_admin, supabase_storage_admin, supabase_read_only_user, supabase_realtime_admin, supabase_replication_admin, supabase_etl_admin, dashboard_user, pgbouncer, service_role*, authenticator*, authenticated*, anon*, supabase_privileged_role"}
+[production] preload libraries: {"shared_preload_libraries":"pg_stat_statements, pgaudit, plpgsql, plpgsql_check, pg_cron, pg_net, pgsodium, auto_explain, pg_tle, plan_filter, supabase_vault","session_preload_libraries":"supautils"}
+[production] gin_trgm_ops opclass: []
+[production] operator % (text,text): []
+[production] similarity/show_trgm functions: []
+[production] all installed extensions: pg_stat_statements@1.11:extensions, pgcrypto@1.3:extensions, plpgsql@1.0:pg_catalog, supabase_vault@0.3.1:vault, uuid-ossp@1.1:extensions
+[test] read-only proof: default_transaction_read_only=on transaction_read_only=on canary=rejected_25006 → PROVEN
+[test] server_version: 17.6
+[test] current_user / session_user / database: postgres / postgres / postgres
+[test] SHOW search_path: "\$user", public, extensions
+[test] current_schema(): public
+[test] current_schemas(true): {pg_catalog,public,extensions}
+[test] current_schemas(false): {public,extensions}
+[test] schema named after current_user exists: false
+[test] pg_db_role_setting (this role/db): [{"role":"postgres","database":"(all databases)","config":"search_path=\"\\$user\", public, extensions"},{"role":"unknown (OID=0)","database":"postgres","config":"app.settings.jwt_exp=3600"}]
+[test] schema extensions: {"name":"extensions","owner":"postgres","acl":"{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres,dashboard_user=UC/postgres}","comment":null}
+[test] extensions installed in schema extensions: ["pg_stat_statements","pgcrypto","uuid-ossp"]
+[test] pg_trgm available: [{"name":"pg_trgm","default_version":"1.6","installed_version":"1.6","comment":"text similarity measurement and index searching based on trigrams"}]
+[test] pg_trgm versions (control): [{"version":"1.3","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.4","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.5","installed":false,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null},{"version":"1.6","installed":true,"superuser":true,"trusted":true,"relocatable":true,"schema":null,"requires":null}]
+[test] pg_trgm installed: {"version":"1.6","schema":"public"}
+[test] role attributes: {"rolsuper":false,"rolcreatedb":true,"rolcreaterole":true,"rolinherit":true,"rolbypassrls":true,"rolreplication":true}
+[test] role memberships: ["anon","authenticated","authenticator","pg_create_subscription","pg_monitor","pg_read_all_data","pg_signal_backend","service_role","supabase_privileged_role"]
+[test] privileges: {"db_create":true,"public_usage":true,"public_create":true,"extensions_usage":true,"extensions_create":true}
+[test] supautils settings: {"supautils.privileged_extensions":"address_standardizer, address_standardizer_data_us, amcheck, autoinc, bloom, btree_gin, btree_gist, citext, cube, dblink, dict_int, dict_xsyn, earthdistance, fuzzystrmatch, hstore, http, hypopg, index_advisor, insert_username, intarray, isn, ltree, moddatetime, orioledb, pg_buffercache, pg_cron, pg_graphql, pg_hashids, pg_jsonschema, pg_net, pg_prewarm, pg_repack, pg_stat_monitor, pg_stat_statements, pg_tle, pg_trgm, pg_walinspect, pgaudit, pgcrypto, pgjwt, pgroonga, pgroonga_database, pgrouting, pgrowlocks, pgsodium, pgstattuple, pgtap, plcoffee, pljava, plls, plpgsql_check, plv8, postgis, postgis_raster, postgis_sfcgal, postgis_tiger_geocoder, postgis_topology, postgres_fdw, refint, rum, seg, sslinfo, supabase_vault, supautils, tablefunc, tcn, timescaledb, tsm_system_rows, tsm_system_time, unaccent, uuid-ossp, vector, wrappers","supautils.privileged_extensions_superuser":"supabase_admin","supautils.superuser":"supabase_admin","supautils.privileged_role":"supabase_privileged_role","supautils.extension_custom_scripts_path":"/etc/postgresql-custom/extension-custom-scripts","supautils.reserved_roles":"supabase_admin, supabase_auth_admin, supabase_storage_admin, supabase_read_only_user, supabase_realtime_admin, supabase_replication_admin, supabase_etl_admin, dashboard_user, pgbouncer, service_role*, authenticator*, authenticated*, anon*, supabase_privileged_role"}
+[test] preload libraries: {"shared_preload_libraries":"pg_stat_statements, pgaudit, plpgsql, plpgsql_check, pg_cron, pg_net, pgsodium, auto_explain, pg_tle, plan_filter, supabase_vault","session_preload_libraries":"supautils"}
+[test] gin_trgm_ops opclass: [{"schema":"public","am":"gin"}]
+[test] operator % (text,text): [{"schema":"public","function":"similarity_op"}]
+[test] similarity/show_trgm functions: [{"schema":"public","name":"gin_extract_value_trgm"},{"schema":"public","name":"show_trgm"},{"schema":"public","name":"similarity"},{"schema":"public","name":"similarity_op"}]
+[test] all installed extensions: pg_stat_statements@1.11:extensions, pg_trgm@1.6:public, pgcrypto@1.3:extensions, plpgsql@1.0:pg_catalog, supabase_vault@0.3.1:vault, uuid-ossp@1.1:extensions
+replaying with production search_path: "\$user", public, extensions · extensions schema in production: yes
+17: Pulling from library/postgres
+search schema applied · contracts/schema.sql executed verbatim
+replay · pg_trgm placed in: public
+replay · gin_trgm_ops schema: public
+replay · index: CREATE INDEX ix_search_products_trgm_ar ON public.search_product_index USING gin (title_ar gin_trgm_ops)
+replay · new session search_path: "\$user", public, extensions · 'abc' % 'abd' → t · similarity → 0.33333334

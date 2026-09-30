@@ -7581,3 +7581,19 @@ No production migration. Production application awaits the owner's explicit appr
 ### Not done (mandatory stop)
 
 No production migration, DDL, DML, extension, secret or Render change; PR #549 not merged; governance-guard not bypassed.
+
+## CLM-0412 · M6-18B — RISK-0056 B1 pg_trgm resolution (READ ONLY)
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0412` · **Branch:** `ops/risk-0056-pgtrgm-readonly` · **Status:** Stopped at owner checkpoint
+
+**Date:** 2026-09-30
+
+### What was done
+
+1. New read-only workflow `risk-0056-pgtrgm-readonly.yml` (declared in the supply-chain guard) + `pgtrgm-probe.mjs`: production and test sessions proven read-only (both settings `on`, canary rejected 25006) before any read.
+2. Run 36658728822 (36658467944 stopped at its own replay input guard; fixed): production search_path `"\$user", public, extensions`, current_schema `public`, schema `extensions` owned by postgres; pg_trgm 1.6 available, not installed, trusted, relocatable, in supautils privileged list; role has DB CREATE and USAGE/CREATE on public/extensions. Test project (identical config) has pg_trgm in `public`. Runner replay: placed in `public`, index created, `%` resolves.
+3. Recommendation: keep the current statement. Evidence: `docs/12-testing/ci-evidence/2026-09-30T021000Z-risk-0056-pgtrgm-readonly/`.
+
+### Not done (mandatory stop)
+
+No CREATE EXTENSION or DDL on production; schema.sql untouched; no Render change; nothing merged.

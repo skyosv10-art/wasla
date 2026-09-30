@@ -40,6 +40,7 @@ function row(overrides: Partial<MarketplaceOutboxRow> = {}): MarketplaceOutboxRo
     aggregate_type: "inventory",
     aggregate_id: STORE_ID,
     occurred_at: "2026-09-09T10:00:00.000Z",
+    commit_sequence: "1",
     trace_id: null,
     data: validData(),
     ...overrides,

@@ -17,7 +17,7 @@
  *  - Poison: unknown event versions, invalid payloads
  *    (MarketplacePayloadError) are dead-lettered — a wrong snapshot must
  *    never advance quietly.
- *  - Checkpoint: (occurred_at, event_id) of the last terminally-consumed
+ *  - Checkpoint: `commit_sequence` (RISK-0012 · ADR-057) of the last terminally-consumed
  *    row. Delivery-owned; the relay never writes `marketplace_outbox`.
  *  - Replay: `replayInventoryFrom(null)` resets the checkpoint — idempotency
  *    makes already-applied events no-ops; `rebuildInventoryObservations()`
@@ -117,10 +117,13 @@ async function runInventoryRelayBatchLocked(
     if (outcome === "applied") applied += 1;
     else if (outcome === "poisoned") poisoned += 1;
     else if (outcome === "skipped") skipped += 1;
-    if (outcome !== "pending") {
-      advancedTo = { last_occurred_at: row.occurred_at, last_event_id: row.event_id };
-      await deps.store.writeInventoryCheckpoint(cfg.consumerId, advancedTo);
+    if (outcome === "pending") {
+      // RISK-0012 (CLM-0416): stop at the first retryable row. Continuing would
+      // write a checkpoint PAST it, and it would never be read again.
+      break;
     }
+    advancedTo = { last_commit_sequence: row.commit_sequence, last_occurred_at: row.occurred_at, last_event_id: row.event_id };
+    await deps.store.writeInventoryCheckpoint(cfg.consumerId, advancedTo);
   }
 
   return { processed: rows.length, applied, skipped, poisoned, advancedTo };
@@ -162,7 +165,7 @@ async function processRow(
   // 4. Observe — upsert the snapshot, guarded by sequence. Retryable
   //    failures keep the row pending (checkpoint does NOT advance) so the
   //    next poll retries; after maxAttempts → poison.
-  const context: MirrorContext = { eventId: row.event_id, occurredAt: row.occurred_at, traceId: row.trace_id };
+  const context: MirrorContext = { eventId: row.event_id, commitSequence: row.commit_sequence, occurredAt: row.occurred_at, traceId: row.trace_id };
   try {
     const result = await deps.store.observeInventoryAdjustment(classification.event, context);
     if (result.observation === "skipped_stale") {

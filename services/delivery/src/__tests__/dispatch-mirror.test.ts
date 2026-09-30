@@ -181,6 +181,7 @@ describe("payload validation — invalid payloads throw, they never slip through
     aggregate_type: "dispatch_offer",
     aggregate_id: "o-1",
     occurred_at: "2026-09-09T10:00:00.000Z",
+    commit_sequence: "1",
     trace_id: null,
     data: { job_id: "j-1", offer_id: "of-1", driver_public_id: "WS-0123456789", reason_code: "OFFER_ACCEPTED", accepted_at: "2026-09-09T10:00:00.000Z" },
   };

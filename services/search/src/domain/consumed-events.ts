@@ -33,14 +33,24 @@ export interface MarketplaceOutboxRow {
   readonly aggregate_id: string;
   readonly occurred_at: string;
   readonly created_at: string;
+  /** `marketplace_outbox.commit_sequence` (decimal string) — the stream order (RISK-0012 · ADR-057). */
+  readonly commit_sequence: string;
   /** M2-07 G4: trace correlation from the producer, propagated through the relay. */
   readonly trace_id: string | null;
   /** Flat scalars only (ADR-016 decision 1) — no nested objects/arrays. */
   readonly data: Record<string, unknown>;
 }
 
-/** The checkpoint offset the relay owns (ADR-025 §2.3, GAP-3). */
+/**
+ * The checkpoint offset the relay owns (ADR-025 §2.3, GAP-3).
+ *
+ * RISK-0012 (CLM-0416, ADR-057): the cursor is `last_commit_sequence` alone —
+ * the producer's commit-ordered sequence. `(created_at, outbox_id)` tied inside
+ * one transaction (`now()` is the transaction start) and fell to a random UUID;
+ * those two fields stay for diagnostics and are not compared.
+ */
 export interface RelayCheckpoint {
+  readonly last_commit_sequence: string;
   readonly last_outbox_id: string;
   readonly last_created_at: string;
 }

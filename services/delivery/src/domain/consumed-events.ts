@@ -26,6 +26,8 @@ export interface DispatchOutboxRow {
   readonly aggregate_type: "dispatch_job" | "dispatch_offer";
   readonly aggregate_id: string;
   readonly occurred_at: string;
+  /** `dispatch_outbox.commit_sequence` (decimal string) — the stream order (RISK-0012). */
+  readonly commit_sequence: string;
   readonly trace_id: string | null;
   /** Flat scalars only — enforced by the dispatch events contract. */
   readonly data: Record<string, unknown>;
@@ -57,15 +59,26 @@ export const DISPATCH_EVENT_TYPES: readonly DispatchEventType[] = [
 
 /**
  * The checkpoint offset the relay owns (same decision as ADR-025 §2.3 GAP-3):
- * progress is (occurred_at, event_id) of the last terminally-consumed row.
+ * progress is the `commit_sequence` of the last terminally-consumed row.
  * The relay NEVER writes `dispatch_outbox.published_at`.
+ *
+ * RISK-0012 (CLM-0416, ADR-057): the stream order is the producer's
+ * `commit_sequence` alone. The producer's DEFERRED constraint trigger assigns
+ * it at COMMIT time under a per-table advisory lock, so its order is the
+ * commit order (and insertion order inside one transaction). Reading
+ * `commit_sequence > last_commit_sequence` can therefore neither reorder two
+ * events of one transaction nor skip an event whose transaction committed late.
+ * `last_occurred_at`/`last_event_id` stay for diagnostics and are not compared.
+ * Numbers travel as decimal strings: BIGINT exceeds 2^53.
  */
 export interface RelayCheckpoint {
+  readonly last_commit_sequence: string;
   readonly last_occurred_at: string;
   readonly last_event_id: string;
 }
 
 export const ZERO_CHECKPOINT: RelayCheckpoint = {
+  last_commit_sequence: "0",
   last_occurred_at: new Date(0).toISOString(),
   last_event_id: "00000000-0000-0000-0000-000000000000",
 };

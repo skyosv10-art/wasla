@@ -3,8 +3,8 @@
  *
  * The relay reads `dispatch_outbox` (dispatch schema, read-only) and writes
  * the task mirror (delivery schema). For integration tests we need BOTH in
- * one test DB: a minimal `dispatch_outbox` table matching the dispatch
- * contract **verbatim** (no FKs), plus the full delivery schema.
+ * one test DB: the `dispatch_outbox` table read from the dispatch contract
+ * **verbatim** (with its RISK-0012 commit-order trigger), plus the full delivery schema.
  *
  * Verbatim matters (the M0-18 lesson, paid for on 2026-09-08): a softer
  * stand-in succeeds on a clean DB and fails on the shared-DB CI leg, and —
@@ -13,6 +13,10 @@
  * Tests SKIP when `DATABASE_URL` is not set (see
  * `docs/14-runbooks/LOCAL_POSTGRES_FOR_TESTS.md`).
  */
+
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { Pool } from "pg";
 
@@ -29,41 +33,28 @@ export const PG_ENABLED = Boolean(DATABASE_URL);
 
 export const T0 = "2026-09-09T10:00:00.000Z";
 
-/**
- * Minimal `dispatch_outbox` DDL — **يُطابقُ عقدَ التوزيعِ حرفاً** بلا مفاتيحَ
- * أجنبيّةٍ (`services/dispatch/contracts/schema.sql`).
+/*
+ * The producers' outbox tables, read FROM their contracts at runtime (RISK-0012 ·
+ * CLM-0416). The hand-copied DDL that stood here had drifted: it lacked
+ * `sequence_number`, so these tests ran against a table the producers never
+ * create. Reading the contract keeps the harness verbatim by construction, and it
+ * brings the commit-order trigger with it, so the relay tests exercise the real
+ * ordering guarantee (ADR-057).
  */
-const DISPATCH_OUTBOX_DDL = `
-CREATE TABLE IF NOT EXISTS dispatch_outbox (
-    event_id       UUID        PRIMARY KEY,
-    event_type     TEXT        NOT NULL,
-    event_version  TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
-    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('dispatch_job','dispatch_offer')),
-    aggregate_id   TEXT        NOT NULL,
-    payload        JSONB       NOT NULL,
-    trace_id       TEXT        CHECK (trace_id IS NULL OR char_length(trace_id) <= 128),
-    occurred_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at   TIMESTAMPTZ
-);
-`;
+const SERVICES_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
-/**
- * Minimal `marketplace_outbox` DDL — **يُطابقُ عقدَ السوقِ حرفاً** بلا مفاتيحَ
- * أجنبيّةٍ (`services/marketplace/contracts/schema.sql`).
- */
-const MARKETPLACE_OUTBOX_DDL = `
-CREATE TABLE IF NOT EXISTS marketplace_outbox (
-    outbox_id               UUID        PRIMARY KEY,
-    event_type              TEXT        NOT NULL CHECK (event_type ~ '^marketplace\\.[a-z_]+$'),
-    event_version           TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
-    aggregate_type          TEXT        NOT NULL CHECK (aggregate_type IN ('store', 'product', 'inventory')),
-    aggregate_id            TEXT        NOT NULL,
-    payload                 JSONB       NOT NULL,
-    occurred_at             TIMESTAMPTZ NOT NULL,
-    published_at            TIMESTAMPTZ,
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-`;
+function producerOutboxDdl(service: string, table: string): string {
+  const sql = readFileSync(resolve(SERVICES_ROOT, service, "contracts", "schema.sql"), "utf8");
+  const create = new RegExp(`CREATE TABLE IF NOT EXISTS ${table} \\([\\s\\S]*?\\n\\);`).exec(sql);
+  const order = new RegExp(`-- >>> RISK-0012 commit_sequence \\(${table}\\)[\\s\\S]*?-- <<< RISK-0012 commit_sequence \\(${table}\\)`).exec(sql);
+  if (!create || !order) throw new Error(`${service}/contracts/schema.sql: ${table} DDL or its RISK-0012 block not found`);
+  // `sequence_number` is added by ALTER in the contract for pre-ADR-037 tables; the
+  // CREATE already declares it, so the ALTER is not needed here.
+  return `${create[0]}\n${order[0]}\n`;
+}
+
+const DISPATCH_OUTBOX_DDL = producerOutboxDdl("dispatch", "dispatch_outbox");
+const MARKETPLACE_OUTBOX_DDL = producerOutboxDdl("marketplace", "marketplace_outbox");
 
 /** Tables the delivery contract owns — extracted FROM the contract at runtime (M0-18). */
 export const CONTRACT_TABLES = [...deliverySchemaSql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
@@ -149,24 +140,52 @@ export async function seedDispatchEvent(
     payload: Record<string, unknown>;
     occurred_at?: string;
     trace_id?: string | null;
+    /**
+     * A row the commit-order trigger never ordered — a pre-migration row, or one
+     * written with triggers bypassed — placed at this `commit_sequence`. It is the
+     * only way a never-consumed event can sit behind the checkpoint once
+     * RISK-0012 is fixed, which is exactly what the per-task watermark guards.
+     */
+    legacy_commit_sequence?: number;
   },
 ): Promise<string> {
-  const result = await pool.query<{ event_id: string }>(
-    `INSERT INTO dispatch_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload, trace_id, occurred_at)
-     VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6::jsonb, $7, $8::timestamptz)
-     RETURNING event_id::text`,
-    [
-      event.event_id ?? null,
-      event.event_type,
-      event.event_version ?? "v1",
-      event.aggregate_type ?? "dispatch_job",
-      event.aggregate_id,
-      JSON.stringify(event.payload),
-      event.trace_id ?? null,
-      event.occurred_at ?? new Date().toISOString(),
-    ],
-  );
-  return result.rows[0].event_id;
+  const params = [
+    event.event_id ?? null,
+    event.event_type,
+    event.event_version ?? "v1",
+    event.aggregate_type ?? "dispatch_job",
+    event.aggregate_id,
+    JSON.stringify(event.payload),
+    event.trace_id ?? null,
+    event.occurred_at ?? new Date().toISOString(),
+  ];
+  if (event.legacy_commit_sequence === undefined) {
+    const result = await pool.query<{ event_id: string }>(
+      `INSERT INTO dispatch_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload, trace_id, occurred_at)
+       VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6::jsonb, $7, $8::timestamptz)
+       RETURNING event_id::text`,
+      params,
+    );
+    return result.rows[0].event_id;
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SET LOCAL session_replication_role = replica");
+    const result = await client.query<{ event_id: string }>(
+      `INSERT INTO dispatch_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload, trace_id, occurred_at, commit_sequence)
+       VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6::jsonb, $7, $8::timestamptz, $9::bigint)
+       RETURNING event_id::text`,
+      [...params, event.legacy_commit_sequence],
+    );
+    await client.query("COMMIT");
+    return result.rows[0].event_id;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 /** Seed a marketplace outbox row (inventory_adjusted) and return its outbox_id. */
@@ -197,4 +216,22 @@ export async function seedMarketplaceEvent(
     ],
   );
   return result.rows[0].outbox_id;
+}
+
+/**
+ * The `commit_sequence` the producer's deferred trigger assigned to one row —
+ * read back, never predicted: its value is the trigger's to choose (RISK-0012).
+ */
+export async function commitSequenceOf(
+  pool: Pool,
+  table: "dispatch_outbox" | "marketplace_outbox" | "delivery_outbox",
+  idColumn: "event_id" | "outbox_id",
+  id: string,
+): Promise<string> {
+  const r = await pool.query<{ s: string }>(
+    `SELECT commit_sequence::text AS s FROM ${table} WHERE ${idColumn}::text = $1`,
+    [id],
+  );
+  if (r.rows.length !== 1) throw new Error(`${table}: no row ${id}`);
+  return r.rows[0]!.s;
 }

@@ -5,7 +5,7 @@
  * Reliability guarantees (same contract as the search relay, ADR-025 §2.3):
  *  - Idempotency: a consumed `event_id` with a terminal status is never
  *    re-processed. Duplicate delivery is a no-op.
- *  - Ordering: per-task watermark (occurred_at, event_id) — an older
+ *  - Ordering: per-task watermark `commit_sequence` (RISK-0012 · ADR-057) — an older
  *    redelivered event is `skipped_stale` and cannot regress the mirror.
  *    Terminal-consumed events of EVERY kind (applied or ignored) advance the
  *    bound task's watermark; a terminal task state refuses every further
@@ -21,7 +21,7 @@
  *    DispatchPayloadError), and UNMAPPABLE OUTCOMES (a bound dispatch
  *    result with no legal edge from the current task state) are
  *    dead-lettered — a wrong mirror must never advance quietly.
- *  - Checkpoint: (occurred_at, event_id) of the last terminally-consumed
+ *  - Checkpoint: `commit_sequence` of the last terminally-consumed
  *    row. Delivery-owned; the relay never writes `dispatch_outbox`.
  *  - Replay: `replayFrom(null)` resets the checkpoint — idempotency makes
  *    already-applied events no-ops; `rebuildAll()` additionally clears the
@@ -102,11 +102,18 @@ function now(): string {
   return new Date().toISOString();
 }
 
-/** Lexicographic (occurred_at, event_id) comparison — the stream's order. */
+/**
+ * Stream order is `commit_sequence` alone (RISK-0012 · ADR-057), compared as
+ * BIGINT, never the (occurred_at, random UUID) tuple, which tied inside one
+ * transaction and fell to the UUID.
+ */
 function isAfter(a: RelayCheckpoint, b: RelayCheckpoint | null): boolean {
   if (!b) return true;
-  if (a.last_occurred_at !== b.last_occurred_at) return a.last_occurred_at > b.last_occurred_at;
-  return a.last_event_id > b.last_event_id;
+  return BigInt(a.last_commit_sequence) > BigInt(b.last_commit_sequence);
+}
+
+function cursorOf(row: DispatchOutboxRow): RelayCheckpoint {
+  return { last_commit_sequence: row.commit_sequence, last_occurred_at: row.occurred_at, last_event_id: row.event_id };
 }
 
 /** Routing key of any dispatch event — validated for every kind. */
@@ -151,10 +158,15 @@ async function runRelayBatchLocked(
     if (outcome === "applied") applied += 1;
     else if (outcome === "poisoned") poisoned += 1;
     else if (outcome === "skipped") skipped += 1;
-    if (outcome !== "pending") {
-      advancedTo = { last_occurred_at: row.occurred_at, last_event_id: row.event_id };
-      await deps.store.writeCheckpoint(cfg.consumerId, advancedTo);
+    if (outcome === "pending") {
+      // RISK-0012 (CLM-0416): stop at the first retryable row. Continuing would
+      // write a checkpoint PAST it (the next terminal row advanced it), so the
+      // pending row was never read again, and later events of the same task
+      // overtook it. The next poll resumes exactly here.
+      break;
     }
+    advancedTo = cursorOf(row);
+    await deps.store.writeCheckpoint(cfg.consumerId, advancedTo);
   }
 
   return { processed: rows.length, applied, skipped, poisoned, advancedTo };
@@ -206,7 +218,7 @@ async function processRow(
 
   // 6. Per-task watermark: an older redelivered event cannot regress state —
   //    checked for every bound event, ignored kinds included.
-  const watermark: RelayCheckpoint = { last_occurred_at: row.occurred_at, last_event_id: row.event_id };
+  const watermark: RelayCheckpoint = cursorOf(row);
   if (!isAfter(watermark, task.lastDispatchEvent)) {
     return finish(deps, row, "skipped_stale", attempt, "older than the task's dispatch watermark — no regression", log, "skipped");
   }
@@ -222,13 +234,13 @@ async function processRow(
   if (classification.kind === "ignored") {
     // Terminal no-op for a bound task: the watermark advances so a LATER
     // redelivered outcome can still be caught as stale (guarantee: ordering).
-    await deps.store.recordConsumedNoOp(task.taskId, { eventId: row.event_id, occurredAt: row.occurred_at, traceId: row.trace_id });
+    await deps.store.recordConsumedNoOp(task.taskId, { eventId: row.event_id, commitSequence: row.commit_sequence, occurredAt: row.occurred_at, traceId: row.trace_id });
     return finish(deps, row, "ignored", attempt, classification.reason, log, "skipped");
   }
 
   // 8. Project + apply. Retryable failures keep the row pending (checkpoint
   //    does NOT advance) so the next poll retries; after maxAttempts → poison.
-  const context: MirrorContext = { eventId: row.event_id, occurredAt: row.occurred_at, traceId: row.trace_id };
+  const context: MirrorContext = { eventId: row.event_id, commitSequence: row.commit_sequence, occurredAt: row.occurred_at, traceId: row.trace_id };
   try {
     const decision = projectDispatchEvent({ state: task.state as DeliveryTaskState }, classification.event);
     if (decision.kind === "ignored") {

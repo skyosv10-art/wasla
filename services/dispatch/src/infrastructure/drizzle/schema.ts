@@ -320,6 +320,8 @@ export const dispatchOutbox = pgTable(
     /** NULL = not published yet. */
     publishedAt: timestamp("published_at", { withTimezone: true }),
     sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
+    // RISK-0012 (ADR-057): commit-ordered cursor — assigned by the deferred trigger at COMMIT.
+    commitSequence: bigint("commit_sequence", { mode: "number" }).notNull().default(sql`nextval('dispatch_outbox_commit_seq')`),
   },
   (table) => [
     check(
@@ -337,6 +339,7 @@ export const dispatchOutbox = pgTable(
     index("ix_dispatch_outbox_unpublished")
       .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
+    uniqueIndex("ux_dispatch_outbox_commit_sequence").on(table.commitSequence),
     index("ix_dispatch_outbox_aggregate").on(
       table.aggregateType,
       table.aggregateId,

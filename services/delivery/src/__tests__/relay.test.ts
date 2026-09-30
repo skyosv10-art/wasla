@@ -50,7 +50,7 @@ describe("happy path — the coarse mirror lands a real transition", () => {
     const evt = store.outbox[0] as unknown as { event_type: string; payload: Record<string, unknown> };
     expect(evt.event_type).toBe("delivery.driver_assigned");
     expect(evt.payload).toMatchObject({ to_state: "driver_assigned", courier_ref: "WS-0123456789", reason_code: "dispatch_offer_accepted" });
-    expect(store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_occurred_at: T(1), last_event_id: "e-1" });
+    expect(store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_commit_sequence: String(Date.parse(T(1))), last_occurred_at: T(1), last_event_id: "e-1" });
   });
 
   it("the reassignment cycle: timed_out → wave_opened → reassigned → offer_accepted", async () => {
@@ -100,7 +100,7 @@ describe("foreign jobs — dispatch serves the whole platform", () => {
     expect(out).toMatchObject({ skipped: 1, applied: 0 });
     expect(store.consumed.get("e-9")!.status).toBe("ignored_foreign");
     expect(store.tasks.get("t-1")!.state).toBe("dispatch_requested"); // untouched
-    expect(store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_occurred_at: T(1), last_event_id: "e-9" });
+    expect(store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_commit_sequence: String(Date.parse(T(1))), last_occurred_at: T(1), last_event_id: "e-9" });
     expect(logs[0]).toMatchObject({ status: "ignored_foreign" });
   });
 });
@@ -198,7 +198,7 @@ describe("poison — a wrong mirror must never advance quietly", () => {
     const out = await runRelayBatch(deps);
     expect(out.poisoned).toBe(1);
     expect(out.applied).toBe(1); // e-2 still processed
-    expect(deps.store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_occurred_at: T(2), last_event_id: "e-2" });
+    expect(deps.store.checkpoints.get("delivery-dispatch-relay-v1")).toEqual({ last_commit_sequence: String(Date.parse(T(2))), last_occurred_at: T(2), last_event_id: "e-2" });
   });
 });
 
@@ -231,7 +231,7 @@ describe("retry — pending failures do not advance the checkpoint", () => {
     const third = await runRelayBatch(deps); // attempt 3 → poison
     expect(third.poisoned).toBe(1);
     expect(store.consumed.get("e-1")).toMatchObject({ status: "poisoned", attemptCount: 3 });
-    expect(third.advancedTo).toEqual({ last_occurred_at: T(1), last_event_id: "e-1" });
+    expect(third.advancedTo).toEqual({ last_commit_sequence: String(Date.parse(T(1))), last_occurred_at: T(1), last_event_id: "e-1" });
   });
 });
 
@@ -353,3 +353,28 @@ describe("consumer lock — the batch owns the checkpoint exclusively (§4.24-ب
     expect(lock.balanced).toBe(true);
   });
 });
+
+describe("RISK-0012 — a retryable row stops the batch (the checkpoint never passes it)", () => {
+  it("a pending row is retried before anything after it, and nothing after it is consumed first", async () => {
+    const store = makeStore();
+    store.failApplyNTimes = 1;
+    const deps = makeDeps([
+      dispatchRow({ event_id: "e-1", event_type: "dispatch.offer_accepted", occurred_at: T(1), data: { job_id: JOB, driver_public_id: "WS-0123456789", accepted_at: T(1) } }),
+      dispatchRow({ event_id: "e-2", event_type: "dispatch.offer_timed_out", occurred_at: T(2), data: { job_id: JOB, driver_public_id: "WS-0123456789", timed_out_at: T(2) } }),
+    ], store);
+
+    const first = await runRelayBatch(deps);
+    expect(first.applied).toBe(0);
+    expect(store.consumed.get("e-1")!.status).toBe("pending");
+    // Before the fix e-2 was applied here and the checkpoint moved to it, so e-1
+    // was never read again and e-2 (timed_out) overtook e-1 (accepted).
+    expect(store.consumed.get("e-2")).toBeUndefined();
+    expect(store.checkpoints.get("delivery-dispatch-relay-v1")).toBeUndefined();
+
+    const second = await runRelayBatch(deps);
+    expect(second.applied).toBe(2);
+    expect(store.transitions.map((t) => t.to)).toEqual(["driver_assigned", "timed_out"]);
+    expect(store.checkpoints.get("delivery-dispatch-relay-v1")?.last_event_id).toBe("e-2");
+  });
+});
+

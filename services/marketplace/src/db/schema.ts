@@ -589,6 +589,8 @@ export const marketplaceOutbox = pgTable(
     /** M2-07 G4: trace correlation across services. */
     traceId: text("trace_id"),
     sequenceNumber: bigint("sequence_number", { mode: "number" }).notNull().generatedAlwaysAsIdentity(),
+    // RISK-0012 (ADR-057): commit-ordered cursor — assigned by the deferred trigger at COMMIT.
+    commitSequence: bigint("commit_sequence", { mode: "number" }).notNull().default(sql`nextval('marketplace_outbox_commit_seq')`),
   },
   (table) => [
     check(
@@ -603,6 +605,7 @@ export const marketplaceOutbox = pgTable(
     index("ix_marketplace_outbox_unpublished")
       .on(table.sequenceNumber)
       .where(sql`${table.publishedAt} IS NULL`),
+    uniqueIndex("ux_marketplace_outbox_commit_sequence").on(table.commitSequence),
   ],
 );
 

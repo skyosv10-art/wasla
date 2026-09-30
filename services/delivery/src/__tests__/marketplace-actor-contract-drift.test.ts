@@ -72,6 +72,7 @@ function row(actor: string): MarketplaceOutboxRow {
     aggregate_type: "inventory",
     aggregate_id: "aaaaaaaa-0000-0000-0000-000000000001",
     occurred_at: "2026-09-12T10:00:00.000Z",
+    commit_sequence: "1",
     trace_id: null,
     data: {
       adjustment_id: "cccccccc-0000-0000-0000-000000000003",

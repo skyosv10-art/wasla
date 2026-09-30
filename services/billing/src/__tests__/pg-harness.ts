@@ -46,12 +46,17 @@ const DELIVERY_SCHEMA_PATH = join(
   "..", "..", "..", "delivery", "contracts", "schema.sql",
 );
 
-/** `CREATE TABLE ... delivery_outbox (...)` حرفيّاً من عقدِ التوصيل. */
+/**
+ * `CREATE TABLE ... delivery_outbox (...)` حرفيّاً من عقدِ التوصيل، ومعه كتلةُ
+ * RISK-0012 (ADR-057) التي تُرتِّبُ الصفوفَ بترتيبِ الالتزامِ — فالمُرحِّلُ يُختبَرُ
+ * على الضمانِ الحقيقيِّ لا على جدولٍ بلا مُشغِّل.
+ */
 export function deliveryOutboxDdl(): string {
   const sql = readFileSync(DELIVERY_SCHEMA_PATH, "utf8");
   const m = /CREATE TABLE IF NOT EXISTS delivery_outbox \([\s\S]*?\n\);/.exec(sql);
-  if (!m) throw new Error("delivery_outbox DDL not found in the delivery contract");
-  return m[0];
+  const order = /-- >>> RISK-0012 commit_sequence \(delivery_outbox\)[\s\S]*?-- <<< RISK-0012 commit_sequence \(delivery_outbox\)/.exec(sql);
+  if (!m || !order) throw new Error("delivery_outbox DDL or its RISK-0012 block not found in the delivery contract");
+  return `${m[0]}\n${order[0]}\n`;
 }
 
 export function newPool(max = 6): Pool {

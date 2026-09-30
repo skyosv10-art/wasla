@@ -121,7 +121,12 @@ describe.skipIf(!PG_ENABLED)("billing migrations — upgrade with existing data"
     );
 
     // 3) الترقيةُ على المأهولة.
-    for (const m of migrations.filter((m) => m.idx >= 1)) await applySqlFile(client, m.up);
+    // RISK-0012 (0003) is applied below, AFTER a checkpoint row exists, so its
+    // column is proven against a populated cursor table, not an empty one.
+    const R12 = "0003_relay_commit_sequence";
+    const r12 = migrations.find((m) => m.tag === R12);
+    expect(r12, `${R12} in the journal`).toBeDefined();
+    for (const m of migrations.filter((m) => m.idx >= 1 && m.tag !== R12)) await applySqlFile(client, m.up);
 
     // 4) البقاءُ بالقيم.
     const inv = await client.query(`SELECT store_public_id, state, amount_cents::int AS a FROM billing_invoices`);
@@ -135,6 +140,11 @@ describe.skipIf(!PG_ENABLED)("billing migrations — upgrade with existing data"
       `INSERT INTO billing_relay_checkpoint (consumer_id, last_occurred_at, last_event_id)
        VALUES ('billing-relay', '2026-09-01T00:00:00Z', gen_random_uuid())`,
     );
+    await applySqlFile(client, r12!.up);
+    // The existing cursor is kept and starts at 0: one re-read, deduplicated by the ledger.
+    expect(
+      (await client.query(`SELECT consumer_id, last_commit_sequence::text AS s FROM billing_relay_checkpoint`)).rows,
+    ).toEqual([{ consumer_id: "billing-relay", s: "0" }]);
     await client.query(
       `INSERT INTO billing_relay_consumed_events (consumer_id, event_id, status, settlement_id)
        VALUES ('billing-relay', gen_random_uuid(), 'settled', $1)`,
@@ -173,12 +183,19 @@ describe.skipIf(!PG_ENABLED)("billing migrations — upgrade with existing data"
 
     // 5) التراجعُ عن كلِّ ما بعدَ الأساسِ بترتيبٍ عكسيٍّ — كلُّ `.down.sql` يُنفَّذُ على بياناتٍ حيّة.
     const later = migrations.filter((m) => m.idx >= 1).sort((a, b) => b.idx - a.idx);
-    await applySqlFile(client, later[0].down);
+    expect(later[0]!.tag).toBe(R12);
+    await applySqlFile(client, later[0]!.down);
+    const cursorCols = await client.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'billing_relay_checkpoint' AND column_name = 'last_commit_sequence'`,
+    );
+    expect(cursorCols.rowCount).toBe(0);
+    expect((await client.query(`SELECT count(*)::int AS n FROM billing_relay_checkpoint`)).rows[0].n).toBe(1);
+    await applySqlFile(client, later[1]!.down);
     const afterLast = await client.query<{ status: string }>(
       `SELECT status FROM billing_relay_consumed_events ORDER BY status`,
     );
     expect(afterLast.rows.map((r) => r.status)).toEqual(["settled"]);
-    for (const m of later.slice(1)) await applySqlFile(client, m.down);
+    for (const m of later.slice(2)) await applySqlFile(client, m.down);
     const tables = await client.query<{ tablename: string }>(
       `SELECT tablename FROM pg_tables WHERE schemaname = $1 ORDER BY tablename`,
       ["public"],

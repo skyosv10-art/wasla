@@ -60,26 +60,31 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
   /* ── checkpoint (delivery-owned) ── */
 
   async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
-    const r = await this.pool.query<{ last_occurred_at: Date; last_event_id: string }>(
-      `SELECT last_occurred_at, last_event_id::text
+    const r = await this.pool.query<{ last_commit_sequence: string; last_occurred_at: Date; last_event_id: string }>(
+      `SELECT last_commit_sequence::text AS last_commit_sequence, last_occurred_at, last_event_id::text
          FROM delivery_relay_checkpoint WHERE consumer_id = $1`,
       [consumerId],
     );
-    // ISO دائماً — المحرّكُ يقارنُ معجميّاً (relay.isAfter) وصيغةُ `::text` تنكسر أمامَها.
+    // RISK-0012: the cursor is `last_commit_sequence` (BIGINT as text).
     return r.rows.length
-      ? { last_occurred_at: r.rows[0].last_occurred_at.toISOString(), last_event_id: r.rows[0].last_event_id }
+      ? {
+          last_commit_sequence: r.rows[0].last_commit_sequence,
+          last_occurred_at: r.rows[0].last_occurred_at.toISOString(),
+          last_event_id: r.rows[0].last_event_id,
+        }
       : null;
   }
 
   async writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void> {
     await this.pool.query(
-      `INSERT INTO delivery_relay_checkpoint (consumer_id, last_occurred_at, last_event_id)
-       VALUES ($1, $2::timestamptz, $3::uuid)
+      `INSERT INTO delivery_relay_checkpoint (consumer_id, last_commit_sequence, last_occurred_at, last_event_id)
+       VALUES ($1, $2::bigint, $3::timestamptz, $4::uuid)
        ON CONFLICT (consumer_id)
-       DO UPDATE SET last_occurred_at = EXCLUDED.last_occurred_at,
+       DO UPDATE SET last_commit_sequence = EXCLUDED.last_commit_sequence,
+                     last_occurred_at = EXCLUDED.last_occurred_at,
                      last_event_id = EXCLUDED.last_event_id,
                      updated_at = now()`,
-      [consumerId, checkpoint.last_occurred_at, checkpoint.last_event_id],
+      [consumerId, checkpoint.last_commit_sequence, checkpoint.last_occurred_at, checkpoint.last_event_id],
     );
   }
 
@@ -189,10 +194,12 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
     const r = await this.pool.query<{
       task_id: string;
       state: string;
+      dispatch_last_commit_sequence: string | null;
       dispatch_last_occurred_at: Date | null;
       dispatch_last_event_id: string | null;
     }>(
-      `SELECT task_id::text, state, dispatch_last_occurred_at, dispatch_last_event_id::text
+      `SELECT task_id::text, state, dispatch_last_commit_sequence::text AS dispatch_last_commit_sequence,
+              dispatch_last_occurred_at, dispatch_last_event_id::text
          FROM delivery_tasks
         WHERE dispatch_job_ref = $1`,
       [jobId],
@@ -201,8 +208,12 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
       taskId: row.task_id,
       state: row.state,
       lastDispatchEvent:
-        row.dispatch_last_occurred_at !== null && row.dispatch_last_event_id !== null
-          ? { last_occurred_at: row.dispatch_last_occurred_at.toISOString(), last_event_id: row.dispatch_last_event_id }
+        row.dispatch_last_commit_sequence !== null && row.dispatch_last_occurred_at !== null && row.dispatch_last_event_id !== null
+          ? {
+              last_commit_sequence: row.dispatch_last_commit_sequence,
+              last_occurred_at: row.dispatch_last_occurred_at.toISOString(),
+              last_event_id: row.dispatch_last_event_id,
+            }
           : null,
     }));
   }
@@ -232,10 +243,11 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
                 assigned_at = COALESCE($4::timestamptz, assigned_at),
                 dispatch_last_occurred_at = $5::timestamptz,
                 dispatch_last_event_id = $6::uuid,
+                dispatch_last_commit_sequence = $7::bigint,
                 version = version + 1,
                 updated_at = now()
           WHERE task_id = $1::uuid`,
-        [taskId, newState, courierRef, transition.assignedAt ?? null, context.occurredAt, context.eventId],
+        [taskId, newState, courierRef, transition.assignedAt ?? null, context.occurredAt, context.eventId, context.commitSequence],
       );
 
       // 2. Transition ledger — append-only, actor is dispatch.
@@ -270,17 +282,18 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
 
   async recordConsumedNoOp(taskId: string, context: MirrorContext): Promise<void> {
     // Guarded update: the watermark advances only forward — an older
-    // redelivered no-op cannot drag it back (row comparison is lexicographic
-    // on (occurred_at, event_id), the same order readAfter uses).
+    // redelivered no-op cannot drag it back. The comparison is on
+    // `commit_sequence`, the same order readAfter uses (RISK-0012 · ADR-057).
     await this.pool.query(
       `UPDATE delivery_tasks
           SET dispatch_last_occurred_at = $2::timestamptz,
               dispatch_last_event_id = $3::uuid,
+              dispatch_last_commit_sequence = $4::bigint,
               updated_at = now()
         WHERE task_id = $1::uuid
-          AND (dispatch_last_occurred_at IS NULL
-               OR (dispatch_last_occurred_at, dispatch_last_event_id) < ($2::timestamptz, $3::uuid))`,
-      [taskId, context.occurredAt, context.eventId],
+          AND (dispatch_last_commit_sequence IS NULL
+               OR dispatch_last_commit_sequence < $4::bigint)`,
+      [taskId, context.occurredAt, context.eventId, context.commitSequence],
     );
   }
 
@@ -335,6 +348,7 @@ export class PostgresTaskMirrorStore implements TaskMirrorStore, TaskDelegationS
                 proof_ref = NULL,
                 dispatch_last_occurred_at = NULL,
                 dispatch_last_event_id = NULL,
+                dispatch_last_commit_sequence = NULL,
                 updated_at = now()
           WHERE dispatch_job_ref IS NOT NULL`,
       );

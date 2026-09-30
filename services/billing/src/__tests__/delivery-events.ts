@@ -31,6 +31,8 @@ export function orderRef(n: number): OrderRef {
 interface RowInit {
   readonly eventId?: string;
   readonly occurredAt: string;
+  /** Defaults to `occurredAt` in epoch ms — a unit script reads in timestamp order (RISK-0012). */
+  readonly commitSequence?: string;
   readonly eventVersion?: string;
 }
 
@@ -48,6 +50,7 @@ function envelope(
     aggregate_type: aggregateType,
     aggregate_id: aggregateId,
     occurred_at: init.occurredAt,
+    commit_sequence: init.commitSequence ?? String(Date.parse(init.occurredAt)),
     trace_id: null,
     payload,
   };

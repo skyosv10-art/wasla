@@ -20,8 +20,8 @@ class FakeEventSource implements MarketplaceEventSource {
   constructor(rows: MarketplaceOutboxRow[]) { this.rows = [...rows]; }
   async readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly MarketplaceOutboxRow[]> {
     if (!checkpoint) return this.rows.slice(0, limit);
-    const idx = this.rows.findIndex((r) => r.outbox_id === checkpoint!.last_outbox_id);
-    return this.rows.slice(idx + 1, idx + 1 + limit);
+    // Stream order = commit_sequence, as the Postgres source (RISK-0012 · ADR-057).
+    return this.rows.filter((r) => BigInt(r.commit_sequence) > BigInt(checkpoint!.last_commit_sequence)).slice(0, limit);
   }
 }
 
@@ -90,7 +90,7 @@ function row(n: number, eventType: string, data: Record<string, unknown>, aggreg
   return {
     outbox_id: OID(n), event_type: eventType as MarketplaceOutboxRow["event_type"],
     event_version: "v1", aggregate_type: aggregateType, aggregate_id: STORE_ID,
-    occurred_at: `2026-01-0${n}T00:00:00.000Z`, created_at: `2026-01-0${n}T00:00:00.000Z`,
+    occurred_at: `2026-01-0${n}T00:00:00.000Z`, created_at: `2026-01-0${n}T00:00:00.000Z`, commit_sequence: String(n),
     trace_id: null,
     data,
   };
@@ -184,6 +184,26 @@ describe("relay — retry + poison (req 6,7,8)", () => {
     // Keep retrying until poisoned.
     for (let i = 0; i < 5; i++) await runRelayBatch(d);
     expect(store.consumed.get(OID(5))?.status).toBe("poisoned");
+  });
+});
+
+describe("RISK-0012 — a retryable row stops the batch (the checkpoint never passes it)", () => {
+  it("rows after a pending row wait for it; before the fix the checkpoint jumped past it", async () => {
+    const catalog = new FakeCatalog(); catalog.set(catalogProduct); catalog.failNTimes = 1;
+    const store = new FakeStore();
+    // A terminal row AFTER the one that will fail (a stale re-send of store_approved).
+    const tail = row(6, "marketplace.store_approved", { store_id: STORE_ID, store_slug: "acme", owner_public_id: "WS-0000000001", category_slug: "electronics", from_state: "pending_review", to_state: "approved", state_sequence: 2, actor_type: "moderator", occurred_for: "2026-01-06T00:00:00Z" });
+    const rows = [...happyPath, tail];
+
+    await runRelayBatch(deps(rows, catalog, store));
+    expect(store.consumed.get(OID(5))?.status).toBe("pending");
+    expect(store.consumed.get(OID(6))).toBeUndefined();
+    expect(store.checkpoint?.last_commit_sequence).toBe("4");
+
+    await runRelayBatch(deps(rows, catalog, store));
+    expect(store.consumed.get(OID(5))?.status).toBe("applied");
+    expect(store.consumed.get(OID(6))?.status).toBe("skipped_stale");
+    expect(store.checkpoint?.last_commit_sequence).toBe("6");
   });
 });
 

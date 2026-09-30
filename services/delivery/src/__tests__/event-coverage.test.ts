@@ -61,6 +61,7 @@ function sampleRow(eventType: string): DispatchOutboxRow {
     aggregate_type: "dispatch_job",
     aggregate_id: "00000000-0000-0000-0000-000000000000",
     occurred_at: "2026-01-01T00:00:00.000Z",
+    commit_sequence: "1",
     trace_id: null,
     // job_id is required by every dispatch payload — the routing key; the
     // remaining fields satisfy every event kind's validators.

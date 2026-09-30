@@ -25,6 +25,14 @@ name: Database backup (RISK-0055 mitigation)
 #   - Empty or invalid dump fails the workflow
 #   - pg_restore --list verifies the dump is readable
 #
+# Correction by addition (CLM-0415, 2026-09-30): the "restore-tested" claim
+# above was not a gate at bc5de79 — mismatches only warned, pg_restore errors
+# were swallowed (`|| true`), the manifest always wrote restore_all_match=false
+# (case-mismatched env keys), source rows were counted from the live DB after
+# the dump, and `skip_restore_test` could skip verification. All steps below
+# now run scripts/ops/db-backup/backup.sh, which fails closed at every stage
+# (see its header). No skip input remains. A failed run is a failed backup.
+#
 # Not claimed:
 #   - This is NOT PITR (no WAL replay, no point-in-time granularity)
 #   - RPO is 6h, not the 5min target of ADR-052 T1
@@ -35,13 +43,8 @@ on:
   schedule:
     # Every 6 hours at :00 — 00:00, 06:00, 12:00, 18:00 UTC
     - cron: '0 0/6 * * *'
+  # CLM-0415: no inputs — the `skip_restore_test` switch is removed (defect g).
   workflow_dispatch:
-    inputs:
-      skip_restore_test:
-        description: 'Skip the local restore validation step'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -52,16 +55,17 @@ concurrency:
 
 env:
   PG_VERSION: '17'
+  NODE_VERSION: '20.20.1'
+  PNPM_VERSION: '9.15.9'
 
 jobs:
   backup:
-    name: Encrypted database backup
+    name: Encrypted database backup (fail-closed)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-      SKIP_RESTORE_TEST: ${{ github.event.inputs.skip_restore_test || 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,263 +83,42 @@ jobs:
           fi
           echo "Secrets present (values not printed)."
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install (snapshot-dump.mjs needs `pg`)
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
       - name: Install PostgreSQL client tools
         run: |
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
           sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client-${PG_VERSION}
-          # Use the full path to avoid pg_wrapper defaulting to a different version
-          export PATH="/usr/lib/postgresql/${PG_VERSION}/bin:${PATH}"
-          # Verify the installed pg_dump version matches the server
-          INSTALLED_VERSION=$(pg_dump --version | grep -oP 'pg_dump \(PostgreSQL\) \K[0-9]+')
-          echo "Installed pg_dump major version: ${INSTALLED_VERSION}"
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+          INSTALLED_VERSION=$("${BIN}/pg_dump" --version | grep -oP 'pg_dump \(PostgreSQL\) \K[0-9]+')
           if [ "${INSTALLED_VERSION}" != "${PG_VERSION}" ]; then
             echo "::error::pg_dump version ${INSTALLED_VERSION} does not match required ${PG_VERSION}."
-            which pg_dump
-            ls -la /usr/lib/postgresql/*/bin/pg_dump 2>/dev/null || true
             exit 1
           fi
-          pg_dump --version
-          pg_restore --version
-          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
+          echo "${BIN}" >> "$GITHUB_PATH"
 
-      - name: Measure database size before dump
-        id: db_size
-        run: |
-          DB_SIZE=$(psql "${SUPABASE_DB_URL}" -t -A -c "SELECT pg_size_pretty(pg_database_size(current_database()));" 2>/dev/null)
-          DB_SIZE_BYTES=$(psql "${SUPABASE_DB_URL}" -t -A -c "SELECT pg_database_size(current_database());" 2>/dev/null)
-          TABLE_COUNT=$(psql "${SUPABASE_DB_URL}" -t -A -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';" 2>/dev/null)
-          echo "db_size=${DB_SIZE:-unknown}" >> "$GITHUB_OUTPUT"
-          echo "db_size_bytes=${DB_SIZE_BYTES:-0}" >> "$GITHUB_OUTPUT"
-          echo "table_count=${TABLE_COUNT:-0}" >> "$GITHUB_OUTPUT"
-          echo "::notice::Database size: ${DB_SIZE:-unknown} (${DB_SIZE_BYTES:-0} bytes), ${TABLE_COUNT:-0} public tables"
-
-      - name: Create compressed pg_dump
-        id: dump
-        run: |
-          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
-          DUMP_FILE="wasla-db-${TIMESTAMP}.dump"
-          DUMP_START=$(date +%s)
-
-          # pg_dump with custom format (compressed), including all schemas
-          # --no-owner and --no-privileges for portable restore
-          PGPASSWORD="" pg_dump \
-            --format=custom \
-            --no-owner \
-            --no-privileges \
-            --file="${DUMP_FILE}" \
-            "${SUPABASE_DB_URL}" 2>&1
-
-          DUMP_EXIT=$?
-          DUMP_END=$(date +%s)
-          DUMP_DURATION=$((DUMP_END - DUMP_START))
-
-          if [ $DUMP_EXIT -ne 0 ]; then
-            echo "::error::pg_dump failed with exit code ${DUMP_EXIT}"
-            exit 1
-          fi
-
-          # Validate dump is not empty
-          DUMP_SIZE=$(stat -c%s "${DUMP_FILE}" 2>/dev/null || echo 0)
-          if [ "${DUMP_SIZE}" -eq 0 ]; then
-            echo "::error::Dump file is empty (0 bytes) — backup failed."
-            exit 1
-          fi
-
-          # Validate dump is readable by pg_restore
-          pg_restore --list "${DUMP_FILE}" > /dev/null 2>&1
-          RESTORE_LIST_EXIT=$?
-          if [ $RESTORE_LIST_EXIT -ne 0 ]; then
-            echo "::error::pg_restore --list failed — dump is invalid or corrupted."
-            exit 1
-          fi
-
-          DUMP_SIZE_PRETTY=$(numfmt --to=iec --suffix=B "${DUMP_SIZE}")
-          echo "dump_file=${DUMP_FILE}" >> "$GITHUB_OUTPUT"
-          echo "dump_size=${DUMP_SIZE}" >> "$GITHUB_OUTPUT"
-          echo "dump_size_pretty=${DUMP_SIZE_PRETTY}" >> "$GITHUB_OUTPUT"
-          echo "dump_duration=${DUMP_DURATION}" >> "$GITHUB_OUTPUT"
-          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
-
-          echo "::notice::Dump created: ${DUMP_FILE} (${DUMP_SIZE_PRETTY}, ${DUMP_DURATION}s)"
-
-      - name: Encrypt dump with GPG
-        id: encrypt
-        run: |
-          ENCRYPTED_FILE="${{ steps.dump.outputs.dump_file }}.gpg"
-          ENCRYPT_START=$(date +%s)
-
-          # GPG symmetric encryption with AES-256
-          # --batch and --passphrase-fd to avoid interactive prompt
-          echo "${BACKUP_PASSPHRASE}" | gpg \
-            --batch \
-            --yes \
-            --passphrase-fd 0 \
-            --cipher-algo AES256 \
-            --compress-algo none \
-            --output "${ENCRYPTED_FILE}" \
-            --symmetric \
-            "${{ steps.dump.outputs.dump_file }}"
-
-          ENCRYPT_EXIT=$?
-          ENCRYPT_END=$(date +%s)
-          ENCRYPT_DURATION=$((ENCRYPT_END - ENCRYPT_START))
-
-          if [ $ENCRYPT_EXIT -ne 0 ]; then
-            echo "::error::GPG encryption failed with exit code ${ENCRYPT_EXIT}"
-            exit 1
-          fi
-
-          ENCRYPTED_SIZE=$(stat -c%s "${ENCRYPTED_FILE}" 2>/dev/null || echo 0)
-          ENCRYPTED_SIZE_PRETTY=$(numfmt --to=iec --suffix=B "${ENCRYPTED_SIZE}")
-
-          echo "encrypted_file=${ENCRYPTED_FILE}" >> "$GITHUB_OUTPUT"
-          echo "encrypted_size=${ENCRYPTED_SIZE}" >> "$GITHUB_OUTPUT"
-          echo "encrypted_size_pretty=${ENCRYPTED_SIZE_PRETTY}" >> "$GITHUB_OUTPUT"
-          echo "encrypt_duration=${ENCRYPT_DURATION}" >> "$GITHUB_OUTPUT"
-
-          echo "::notice::Encrypted: ${ENCRYPTED_FILE} (${ENCRYPTED_SIZE_PRETTY}, ${ENCRYPT_DURATION}s)"
-
-      - name: Verify decryption round-trip
-        run: |
-          DECRYPTED_FILE="verify-${{ steps.dump.outputs.dump_file }}"
-          echo "${BACKUP_PASSPHRASE}" | gpg \
-            --batch \
-            --yes \
-            --passphrase-fd 0 \
-            --output "${DECRYPTED_FILE}" \
-            --decrypt \
-            "${{ steps.encrypt.outputs.encrypted_file }}"
-
-          DECRYPT_EXIT=$?
-          if [ $DECRYPT_EXIT -ne 0 ]; then
-            echo "::error::GPG decryption verification failed — the encrypted backup cannot be restored."
-            exit 1
-          fi
-
-          # Verify decrypted dump matches original
-          if ! cmp -s "${{ steps.dump.outputs.dump_file }}" "${DECRYPTED_FILE}"; then
-            echo "::error::Decrypted dump does not match original — encryption/decryption round-trip failed."
-            exit 1
-          fi
-
-          echo "::notice::Decryption round-trip verified — encrypted backup is restorable."
-
-      - name: Local restore test (to temp Postgres)
-        if: env.SKIP_RESTORE_TEST != 'true'
-        run: |
-          # Start a local PostgreSQL in Docker for restore test
-          # This does NOT touch production data
-          docker run -d \
-            --name wasla-restore-test \
-            -e POSTGRES_PASSWORD=test \
-            -e POSTGRES_DB=restore_test \
-            -p 15432:5432 \
-            postgres:17
-
-          # Wait for it to be ready
-          for i in $(seq 1 30); do
-            if docker exec wasla-restore-test pg_isready -U postgres > /dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
-
-          # Create the vault schema that Supabase uses (extension not available in vanilla PG)
-          docker exec wasla-restore-test psql -U postgres -d restore_test \
-            -c "CREATE SCHEMA IF NOT EXISTS vault;" 2>/dev/null || true
-
-          RESTORE_START=$(date +%s)
-
-          # Restore the dump to the temp database (without --exit-on-error so extension errors don't abort)
-          pg_restore \
-            --no-owner \
-            --no-privileges \
-            --dbname="postgresql://postgres:test@localhost:15432/restore_test" \
-            "${{ steps.dump.outputs.dump_file }}" 2>&1 || true
-
-          RESTORE_END=$(date +%s)
-          RESTORE_DURATION=$((RESTORE_END - RESTORE_START))
-
-          # Verify restored tables match source
-          RESTORED_TABLES=$(psql "postgresql://postgres:test@localhost:15432/restore_test" -t -A -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';" 2>/dev/null || echo 0)
-          SOURCE_TABLES="${{ steps.db_size.outputs.table_count }}"
-
-          echo "::notice::Restore test: ${RESTORED_TABLES}/${SOURCE_TABLES} tables restored in ${RESTORE_DURATION}s"
-
-          if [ "${RESTORED_TABLES}" -ne "${SOURCE_TABLES}" ]; then
-            echo "::warning::Restored table count (${RESTORED_TABLES}) differs from source (${SOURCE_TABLES}). This may indicate schema-only tables or dependency ordering."
-          fi
-
-          # Verify row counts match for each table
-          TABLES=$(psql "${SUPABASE_DB_URL}" -t -A -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name;" 2>/dev/null)
-          ALL_MATCH=true
-          for TABLE in $TABLES; do
-            SOURCE_COUNT=$(psql "${SUPABASE_DB_URL}" -t -A -c "SELECT count(*) FROM public.\"${TABLE}\";" 2>/dev/null || echo "ERROR")
-            RESTORED_COUNT=$(psql "postgresql://postgres:test@localhost:15432/restore_test" -t -A -c "SELECT count(*) FROM public.\"${TABLE}\";" 2>/dev/null || echo "ERROR")
-
-            if [ "${SOURCE_COUNT}" != "${RESTORED_COUNT}" ]; then
-              echo "::warning::Table ${TABLE}: source=${SOURCE_COUNT}, restored=${RESTORED_COUNT} — MISMATCH"
-              ALL_MATCH=false
-            else
-              echo "::notice::Table ${TABLE}: ${SOURCE_COUNT} rows — match"
-            fi
-          done
-
-          # Record restore metrics
-          echo "restore_duration=${RESTORE_DURATION}" >> "$GITHUB_ENV"
-          echo "restored_tables=${RESTORED_TABLES}" >> "$GITHUB_ENV"
-          echo "restore_all_match=${ALL_MATCH}" >> "$GITHUB_ENV"
-
-          if [ "${ALL_MATCH}" = "false" ]; then
-            echo "::warning::Some table row counts do not match. Review the warnings above."
-          fi
-
-          # Cleanup
-          docker stop wasla-restore-test > /dev/null 2>&1
-          docker rm wasla-restore-test > /dev/null 2>&1
-
-      - name: Generate backup manifest
-        run: |
-          cat > backup-manifest.json << EOF
-          {
-            "timestamp": "${{ steps.dump.outputs.timestamp }}",
-            "database_size": "${{ steps.db_size.outputs.db_size }}",
-            "database_size_bytes": ${{ steps.db_size.outputs.db_size_bytes }},
-            "table_count": ${{ steps.db_size.outputs.table_count }},
-            "dump_file": "${{ steps.dump.outputs.dump_file }}",
-            "dump_size_bytes": ${{ steps.dump.outputs.dump_size }},
-            "dump_size_pretty": "${{ steps.dump.outputs.dump_size_pretty }}",
-            "dump_duration_seconds": ${{ steps.dump.outputs.dump_duration }},
-            "encrypted_file": "${{ steps.encrypt.outputs.encrypted_file }}",
-            "encrypted_size_bytes": ${{ steps.encrypt.outputs.encrypted_size }},
-            "encrypted_size_pretty": "${{ steps.encrypt.outputs.encrypted_size_pretty }}",
-            "encrypt_duration_seconds": ${{ steps.encrypt.outputs.encrypt_duration }},
-            "restore_duration_seconds": ${RESTORE_DURATION:-0},
-            "restored_tables": ${RESTORED_TABLES:-0},
-            "restore_all_match": ${RESTORE_ALL_MATCH:-false},
-            "pg_version": "${PG_VERSION}",
-            "rpo_theoretical_hours": 6,
-            "rpo_note": "Maximum 6 hours of data loss (cron interval). Not PITR.",
-            "rto_note": "Restore time measured per run. Not a managed restore."
-          }
-          EOF
-          cat backup-manifest.json
+      - name: Snapshot dump → encrypt → decrypt artifact → restore → exact compare
+        id: backup
+        env:
+          BACKUP_SOURCE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash scripts/ops/db-backup/backup.sh out
 
       - name: Upload encrypted backup artifact
         uses: actions/upload-artifact@v4
         with:
-          name: db-backup-${{ steps.dump.outputs.timestamp }}
+          name: db-backup-${{ steps.backup.outputs.timestamp }}
           path: |
-            ${{ steps.encrypt.outputs.encrypted_file }}
-            backup-manifest.json
+            ${{ steps.backup.outputs.encrypted_file }}
+            out/backup-manifest.json
           if-no-files-found: error
           retention-days: 30
-
-      - name: Cleanup unencrypted dump
-        if: always()
-        run: |
-          # Remove the unencrypted dump — only the encrypted version is uploaded
-          rm -f "${{ steps.dump.outputs.dump_file }}" "verify-${{ steps.dump.outputs.dump_file }}" 2>/dev/null || true
-          echo "Unencrypted dump files removed from runner."

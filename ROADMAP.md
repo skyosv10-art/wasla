@@ -1649,6 +1649,7 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 
 ### 2026-09-28 — M6-19B baseline remediation · M6-19C attestation remediation (CLM-0394, CLM-0395)
 
+- **M6-18B db-backup fail-closed (CLM-0415, PR, not merged):** `db-backup.yml` now runs `scripts/ops/db-backup/backup.sh` (snapshot-consistent dump and counts, decrypt of the uploaded ciphertext, `--exit-on-error` restore, exact compare; no warnings, no skip input); proven on the TEST DB by `db-backup-proof.yml`. RISK-0055 wording correction proposed in the PR only.
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

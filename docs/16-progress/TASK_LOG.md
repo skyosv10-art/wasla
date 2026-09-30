@@ -1,3 +1,13 @@
+# 2026-09-30 — CLM-0415 — M6-18B db-backup.yml fail-closed (RISK-0055) · PR, not merged
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR open, not merged; proven on the TEST DB only
+
+`db-backup.yml` defects (a)–(g) measured in CLM-0413 r2 §3.1 are replaced by one script, `scripts/ops/db-backup/backup.sh`: snapshot-consistent dump + exact counts (`snapshot-dump.mjs`), AES256 encrypt, decrypt of the uploaded ciphertext byte-compared, restore of those bytes into postgres:17 with `--exit-on-error --single-transaction`, exact table-set and row-count compare (`verify-backup.sh`). No warning outcome, no `skip_restore_test`. The manifest is written only on PASS. `db-backup-proof.yml` runs the same script on `SUPABASE_TEST_DB_URL` (push to this branch only): P1 must pass, P2 injects faults that must each fail closed. RISK-0055 register text is **not** edited; the proposed correction is in the PR description (owner approval pending). Evidence: `docs/12-testing/ci-evidence/2026-09-30T060000Z-clm-0415-db-backup-gate/`.
+
+---
+
 # 2026-09-29 — CLM-0404 — M6-18 post-merge live evidence (sync, /health, live-fire)
 
 - **Work Item(s):** M6-18C

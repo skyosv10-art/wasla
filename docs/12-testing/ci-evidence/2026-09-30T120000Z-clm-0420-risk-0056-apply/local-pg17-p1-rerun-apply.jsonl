@@ -1,0 +1,14 @@
+{"service": "audit", "exit": 0, "ms": 823, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "customers", "exit": 0, "ms": 858, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "delivery", "exit": 0, "ms": 815, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "dispatch", "exit": 0, "ms": 855, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "drivers", "exit": 0, "ms": 886, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "geography", "exit": 0, "ms": 1193, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "identity", "exit": 0, "ms": 1143, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "marketplace", "exit": 0, "ms": 1256, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "matching", "exit": 0, "ms": 825, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "negotiations", "exit": 0, "ms": 854, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "orders", "exit": 0, "ms": 836, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "reputation", "exit": 0, "ms": 824, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "search", "exit": 0, "ms": 1052, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}
+{"service": "subscriptions", "exit": 0, "ms": 1075, "sessions_opened": 1, "lock_timeout_start": "5s", "lock_timeout_end": "5s", "same_pid_start_end": true, "pass": true}

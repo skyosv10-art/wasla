@@ -51,6 +51,8 @@ DECLARED=(
   "db-backup.yml|yes|yes|نسخٌ احتياطيٌّ مجدولٌ لقاعدةِ بياناتِ Supabase — كلَّ 6 ساعاتٍ + تشغيلٌ يدويٌّ. تخفيفُ RISK-0055 (CLM-0405 · M6-18B). سرّانِ: SUPABASE_DB_URL وBACKUP_PASSPHRASE. صلاحيّةُ المستودعِ contents: read فقط. لا يجري على طلباتِ الدمجِ — schedule وworkflow_dispatch. CLM-0415: كتابةٌ واحدةٌ فقط — issues: write في وظيفةِ التنبيهِ عندَ الفشلِ (§24-E)، بلا سرٍّ فيها؛ ويُستدعى بـworkflow_call من سيرِ ترحيلِ RISK-0056."
   "db-backup-proof.yml|yes|no|برهانُ بوّابةِ النسخِ الاحتياطيِّ على قاعدةِ الاختبارِ وحدَها (CLM-0415): SUPABASE_TEST_DB_URL فقط، وعبارةُ تشفيرٍ للبرهانِ ليست سرّاً. يجري على push إلى فرعِ CLM-0415 وحدَهُ. contents: read."
   "service-health.yml|no|yes|§24-G · CLM-0415: GET /health على الخدماتِ الأربعَ عشرةَ كلَّ 6 ساعاتٍ — بلا سرٍّ ولا Render API ولا تغييرٍ؛ كتابةٌ واحدةٌ: issues: write في وظيفةِ التنبيهِ عندَ الفشلِ. schedule وworkflow_dispatch."
+  "risk-0056-apply.yml|yes|yes|§24-A · CLM-0420: تطبيقُ مخطّطاتِ RISK-0056 على الإنتاجِ — workflow_dispatch فقط، وconfirm_sha كاملٌ وsha256 للبيان، ونسخةٌ فاشلةٌ-مُغلَقاً في needs (db-backup.yml، احتفاظ 90 يوماً)، ووظيفةُ التطبيقِ في Environment production-migration (مراجِعٌ مطلوبٌ، main فقط) بسرِّها PRODUCTION_MIGRATION_DB_URL. كتابةٌ واحدةٌ: issues: write لتنبيهِ فشلِ النسخ. لم يُشغَّل على الإنتاج."
+  "risk-0056-apply-proof.yml|yes|yes|برهانُ risk-0056-apply.yml (CLM-0420) على قاعدةِ الاختبارِ وPostgreSQL 17 نظيفٍ وحدَهما — SUPABASE_TEST_DB_URL وBACKUP_PASSPHRASE؛ كتابةٌ واحدةٌ: issues: write المورَّثةُ لـdb-backup.yml المُنادى. يعمل على دفعِ فرعِهِ فقط."
 )
 #
 # ── سجلٌّ تدقيقيٌّ: سيرُ عملٍ وُلدَ ومات في يومٍ واحدٍ (2026-09-13/14) ─────────

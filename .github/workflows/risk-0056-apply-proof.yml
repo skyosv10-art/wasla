@@ -1,0 +1,155 @@
+name: RISK-0056 apply proof (TEST DB + fresh PG17 — never production)
+
+# CLM-0420 · §24-A — proves scripts/ops/risk-0056/apply.sh, the implementation
+# risk-0056-apply.yml runs in production, WITHOUT production:
+#   P1  fresh PostgreSQL 17: apply 14/14, then apply AGAIN (re-run is safe) → postflight;
+#   P2  TEST project (SUPABASE_TEST_DB_URL): backup via db-backup.yml in `needs`
+#       (same reusable workflow, expect_project_ref = TEST) → apply 14/14 → postflight;
+#   N1  target=production with the TEST URL → refused at the guard;
+#   N2  a tampered schema.sql → refused at the manifest step, nothing applied;
+#   N3  a held ACCESS EXCLUSIVE lock → the migration stops with 55P03 (no wait) and
+#       later services are not attempted;
+#   S   static: risk-0056-apply.yml is workflow_dispatch-only, uses Environment
+#       production-migration, has the backup in `needs`, and references no TEST secret.
+# Trigger: push to the CLM-0420 branch only. Never references SUPABASE_DB_URL.
+
+on:
+  push:
+    branches: ['ops/clm-0420-risk-0056-apply']
+    paths:
+      - '.github/workflows/risk-0056-apply*.yml'
+      - '.github/workflows/db-backup.yml'
+      - 'scripts/ops/risk-0056/**'
+      - 'scripts/ops/db-backup/**'
+      - 'services/*/contracts/schema.sql'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-test-db
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+
+jobs:
+  static:
+    name: S — production workflow shape
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: S — the real workflow passes
+        run: python3 scripts/ops/risk-0056/check-apply-workflow.py .github/workflows/risk-0056-apply.yml
+      - name: S — each mutation of it fails
+        run: |
+          set -u
+          W=.github/workflows/risk-0056-apply.yml
+          mut() { # name sed-expression
+            sed -E "$2" "$W" > /tmp/mut.yml
+            if python3 scripts/ops/risk-0056/check-apply-workflow.py /tmp/mut.yml >/dev/null 2>&1; then
+              echo "::error::mutation '$1' was NOT caught"; exit 1; fi
+            echo "mutation '$1': caught"
+          }
+          mut backup-not-in-needs 's/needs: \[guard, backup\]/needs: [guard]/'
+          mut no-environment 's/environment: production-migration/environment: staging/'
+          mut push-trigger 's/^on:$/on:\n  push:/'
+          mut backup-not-required-in-if "s/needs.backup.result == 'success'/true/"
+          mut test-secret 's/secrets.PRODUCTION_MIGRATION_DB_URL/secrets.SUPABASE_TEST_DB_URL/'
+          mut short-retention 's/pre_migration: true/pre_migration: false/'
+
+  fresh:
+    name: P1/N2/N3 — fresh PostgreSQL 17
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      RISK0056_DB_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      RISK0056_TARGET: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+      - name: P1 — apply on an empty database
+        run: RISK0056_OUT=out/p1a bash scripts/ops/risk-0056/apply.sh
+      - name: P1 — apply again on the migrated database (re-run)
+        run: RISK0056_OUT=out/p1b bash scripts/ops/risk-0056/apply.sh
+      - name: N3 — held lock ⇒ 55P03, stop, later services not attempted
+        run: bash scripts/ops/risk-0056/prove-lock-stop.sh
+      - name: N2 — tampered schema.sql ⇒ refused before any migration
+        run: |
+          set +e
+          echo "-- tamper" >> services/audit/contracts/schema.sql
+          out=$(RISK0056_OUT=out/n2 bash scripts/ops/risk-0056/apply.sh 2>&1); rc=$?
+          git checkout -- services/audit/contracts/schema.sql
+          printf '%s\n' "$out" | tail -5
+          [ "$rc" -ne 0 ] && ! [ -f out/n2/apply.jsonl ] && printf '%s' "$out" | grep -q "== 2. source guard" \
+            && ! printf '%s' "$out" | grep -q "== 3." && echo "N2: refused at the manifest step, nothing applied" || { echo "::error::N2 not refused as expected"; exit 1; }
+      - name: Summary
+        if: always()
+        run: for f in out/p1a/apply.jsonl out/p1b/apply.jsonl; do [ -f "$f" ] && { echo "$f"; cat "$f"; }; done; true
+
+  test-backup:
+    name: P2 — backup in needs (TEST project)
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/db-backup.yml
+    with:
+      pre_migration: false
+      expect_project_ref: obeptvwpvqbduwkahorq
+    secrets:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+
+  test-apply:
+    name: P2/N1 — apply on the TEST project
+    needs: test-backup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RISK0056_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+      - name: N1 — target=production with the TEST URL ⇒ refused at the guard
+        run: |
+          set +e
+          out=$(RISK0056_TARGET=production RISK0056_OUT=out/n1 bash scripts/ops/risk-0056/apply.sh 2>&1); rc=$?
+          printf '%s\n' "$out" | grep -E "^::error::|== " | head -5
+          [ "$rc" -ne 0 ] && ! printf '%s' "$out" | grep -q "== 2." && echo "N1: refused at the target guard" || { echo "::error::N1 not refused"; exit 1; }
+      - name: P2 — preflight (read-only)
+        run: RISK0056_TARGET=test RISK0056_MODE=preflight RISK0056_OUT=out/p2pre bash scripts/ops/risk-0056/apply.sh
+      - name: P2 — apply
+        run: RISK0056_TARGET=test RISK0056_OUT=out/p2 bash scripts/ops/risk-0056/apply.sh
+      - name: Summary
+        if: always()
+        run: '[ -f out/p2/apply.jsonl ] && cat out/p2/apply.jsonl; [ -f out/p2/postflight-check.json ] && cat out/p2/postflight-check.json; true'

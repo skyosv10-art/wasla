@@ -1,0 +1,55 @@
+# Filtered log excerpt — run 36654335923 (RISK-0056 production preflight, READ ONLY)
+# Only lines emitted by the preflight scripts; connection data never printed (leak scan: 0 connection strings).
+production project ref: snlpxywskyqrjattbpgn
+host class: session-pooler · port: 5432
+services=14 statements=340
+snapshot: server=17.11 (Debian 17.11-1.pgdg13+2) public_tables=107 functions=39 sequences=23
+read-only proof: default_transaction_read_only=on transaction_read_only=on canary=rejected_25006 → PROVEN
+snapshot: server=17.6 public_tables=5 functions=0 sequences=2
+expected=107 identical=1 different=0 missing=106
+production-only public tables: ['channel_deliveries', 'channel_outbox', 'channel_updates', 'wasla_service_token_replay']
+rows in pre-existing expected tables: {'audit_events': 10}
+function collisions: []
+index-name collisions: []
+sequence collisions: [] · type collisions: []
+pg_trgm installed: None · available: [{'name': 'pg_trgm', 'default_version': '1.6', 'installed_version': None}]
+can CREATE in public: True
+default ACL in public: []
+activity: [{"state": "active", "n": 1}, {"state": "idle", "n": 5}, {"state": "n/a", "n": 1}]
+default ACL (all): [{"owner_role": "postgres", "schema": "storage", "objtype": "S", "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"}, {"owner_role": "postgres", "schema": "storage", "objtype": "f", "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"}, {"owner_role": "postgres", "schema": "storage", "objtype": "r", "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"}, {"owner_role": "supabase_admin", "schema": "extensions", "objtype": "S", "acl": "{postgres=r*w*U*/supabase_admin}"}, {"owner_role": "supabase_admin", "schema": "extensions", "objtype": "f", "acl": "{postgres=X*/supabase_admin}"}, {"owner_role": "supabase_admin", "schema": "extensions", "objtype": "r", "acl": "{postgres=a*r*w*d*D*x*t*m*/supabase_admin}"}, {
+API roles on schema public: [{"role": "anon", "public_usage": false, "public_create": false}, {"role": "authenticated", "public_usage": false, "public_create": false}, {"role": "service_role", "public_usage": false, "public_create": false}]
+existing public table audit_events: rows=10 rls=False policies=0 acl=None
+existing public table channel_deliveries: rows=1 rls=False policies=0 acl=None
+existing public table channel_outbox: rows=2 rls=False policies=0 acl=None
+existing public table channel_updates: rows=1 rls=False policies=0 acl=None
+existing public table wasla_service_token_replay: rows=1 rls=False policies=0 acl=None
+audit_events column (production): id | bigint | not_null=True | default=nextval('audit_events_id_seq'::regclass) | identity=-
+audit_events column (production): actor_id | text | not_null=True | default=None | identity=-
+audit_events column (production): actor_role | text | not_null=True | default=None | identity=-
+audit_events column (production): action | text | not_null=True | default=None | identity=-
+audit_events column (production): resource_type | text | not_null=True | default=None | identity=-
+audit_events column (production): resource_id | text | not_null=True | default=None | identity=-
+audit_events column (production): metadata | jsonb | not_null=True | default='{}'::jsonb | identity=-
+audit_events column (production): created_at | timestamp with time zone | not_null=True | default=now() | identity=-
+audit_events constraint (production): audit_events_pkey | p | PRIMARY KEY (id)
+audit_events index (production): CREATE UNIQUE INDEX audit_events_pkey ON public.audit_events USING btree (id)
+audit_events index (production): CREATE INDEX ix_audit_events_action ON public.audit_events USING btree (action)
+audit_events index (production): CREATE INDEX ix_audit_events_actor_id ON public.audit_events USING btree (actor_id)
+audit_events index (production): CREATE INDEX ix_audit_events_created_at ON public.audit_events USING btree (created_at DESC)
+audit_events triggers (production): 0 · reference: 0
+
+# Per-service lines from run 36654049665 (same code path, first run)
+  audit: expected=1 present=1 identical=1 different=[] missing=0
+  customers: expected=5 present=0 identical=0 different=[] missing=5
+  delivery: expected=14 present=0 identical=0 different=[] missing=14
+  dispatch: expected=5 present=0 identical=0 different=[] missing=5
+  drivers: expected=9 present=0 identical=0 different=[] missing=9
+  geography: expected=13 present=0 identical=0 different=[] missing=13
+  identity: expected=6 present=0 identical=0 different=[] missing=6
+  marketplace: expected=10 present=0 identical=0 different=[] missing=10
+  matching: expected=6 present=0 identical=0 different=[] missing=6
+  negotiations: expected=8 present=0 identical=0 different=[] missing=8
+  orders: expected=5 present=0 identical=0 different=[] missing=5
+  reputation: expected=9 present=0 identical=0 different=[] missing=9
+  search: expected=6 present=0 identical=0 different=[] missing=6
+  subscriptions: expected=10 present=0 identical=0 different=[] missing=10

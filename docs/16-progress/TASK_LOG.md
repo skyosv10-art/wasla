@@ -7564,3 +7564,20 @@ For PRs #546, #547 and #548 the `main` review rule was temporarily set to `requi
 ### Not done (mandatory stop)
 
 No production migration. Production application awaits the owner's explicit approval.
+
+## CLM-0411 · M6-18B — RISK-0056 Production Preflight (READ ONLY)
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0411` · **Branch:** `ops/risk-0056-prod-preflight` · **Status:** Stopped at owner checkpoint
+
+**Date:** 2026-09-30
+
+### What was done
+
+1. New workflow `risk-0056-prod-preflight.yml` (declared in the supply-chain guard; `contents: read`; push to its own branch + dispatch). Uses the existing secret `SUPABASE_DB_URL`; `guard-prod-readonly.py` prints only the ref `snlpxywskyqrjattbpgn`.
+2. `catalog-snapshot.mjs --read-only-required`: `SET default_transaction_read_only = on`, proof (`on`/`on` + CREATE TEMP TABLE canary rejected 25006) before any read, all reads in `BEGIN READ ONLY … ROLLBACK`. Runs 36654049665 and 36654335923: PROVEN.
+3. Findings: production PG 17.6, 5 public tables; `audit_events` identical to contract; 106/107 missing, 0 different; no object collisions; 23 config seed rows (new tables only); `pg_trgm` missing (blocker B1, not created); API roles have no USAGE on `public`.
+4. Evidence: `docs/12-testing/ci-evidence/2026-09-30T011500Z-risk-0056-prod-preflight/`. RISK-0056 updated by addition (open). M6-18B stays Blocked.
+
+### Not done (mandatory stop)
+
+No production migration, DDL, DML, extension, secret or Render change; PR #549 not merged; governance-guard not bypassed.

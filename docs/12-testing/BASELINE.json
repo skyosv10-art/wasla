@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-28T06:14:34Z",
+  "generated_at": "2026-09-30T04:37:28Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8f9f7523632f85dd34ab2e5e3ffb43ef245868ab",
-    "branch": "fix/gov-002-owner-dependency-gate-audit",
+    "commit": "5cc85b8754f03016db689c7c2e534ed75c7424eb",
+    "branch": "gov/clm-0414-unblock-main",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 2858
+    "tracked_files": 2936
   },
   "env": {
     "node": "v20.20.1",
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "9417f36833def647925e57fb35bb556c5a93566d7e61d61a13ab88b3cec09d74",
-    "lines": 4995
+    "sha256": "68d2ea8d917c09aa8409905a6e91b58029a2e4cd931de36083a3ebe7937d3b24",
+    "lines": 4996
   },
   "static": {
     "packages": 72,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:28e1f1637b02745dc3487895a876b542b8b1e03d14c4375de901e08c05686e4d",
+  "fingerprint": "sha256:0e94f07db378d554e1ff72bc8f999d91667d07e902e03622f26c80c5927d7f73",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

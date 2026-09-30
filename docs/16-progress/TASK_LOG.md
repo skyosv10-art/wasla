@@ -1,3 +1,15 @@
+# 2026-09-30 — CLM-0417 — M0-47 RISK-0013 byte-identical idempotent replay
+
+- **Work Item(s):** M0-47
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR #554 (stacked on #553; targets main)
+
+One canonical reply serializer in the eight services that store idempotent answers in JSONB; replay is byte-identical by construction. Marketplace byte assertion: 8/11 fail without the fix, 11/11 pass with it. All eight services' integration and e2e legs green on local PG17 ([evidence](../12-testing/ci-evidence/2026-09-30T100000Z-clm-0417-risk-0013-canonical-replay/README.md)). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+
+**Closure (MASTER REPAIR & MERGE, 2026-09-30):** RISK-0013 `accepted` → `closed` by the fix (8/11 byte assertions fail without the serializer, 11/11 pass with it). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+---
+
 # 2026-09-30 — CLM-0416 — M0-46 RISK-0012 commit-ordered outbox consumption
 
 - **Work Item(s):** M0-46

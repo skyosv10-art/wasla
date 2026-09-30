@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-30T07:59:14Z",
+  "generated_at": "2026-09-30T08:21:38Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f4e92db9c7353df0928226f1de55bb6219f04d03",
-    "branch": "fix/clm-0416-risk-0012-relay-sequence",
+    "commit": "68f9f7589eae438ee31d49a44d880e28f4e017a6",
+    "branch": "fix/clm-0417-risk-0013-canonical-replay",
     "dirty": true,
     "dirty_files": 1,
-    "dirty_reason": "CLM-0416: in-tree verify log docs/12-testing/baseline-sources/2026-09-30T075911Z-verify.txt added for this baseline",
-    "tracked_files": 2958
+    "dirty_reason": "CLM-0417: in-tree verify log docs/12-testing/baseline-sources/2026-09-30T082135Z-verify.txt added for this baseline",
+    "tracked_files": 2969
   },
   "env": {
     "node": "v20.20.1",
@@ -26,21 +26,21 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 527,
+    "test_files_tracked": 528,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 23
+    "risks_not_closed": 22
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/baseline-sources/2026-09-30T075911Z-verify.txt",
-    "tests_passed": 5808,
-    "test_files_executed": 392,
+    "source": "docs/12-testing/baseline-sources/2026-09-30T082135Z-verify.txt",
+    "tests_passed": 5811,
+    "test_files_executed": 393,
     "governance_suite_cases": 541,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:ca3f8590341c88b8351b1afb2d9872a64b293ee50c2213aed0a1e47e096d51d0",
+  "fingerprint": "sha256:3a619ce73a7cda485085a5d6304ba848ab36a6f91c30953b9786d28e221d452c",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

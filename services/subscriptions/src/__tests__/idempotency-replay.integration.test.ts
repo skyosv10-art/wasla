@@ -121,6 +121,8 @@ describe.skipIf(!PG_ENABLED)("إعادةُ الإرسالِ فوق Postgres — 
     // للمُتَّصل «كان موجوداً» وهو نفسُه من أنشأه.
     expect(replay.statusCode).toBe(201);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
     expect(await countRows(pg.pool, "subscription_periods")).toBe(periodsAfterFirst);
     expect(await countRows(pg.pool, "subscription_outbox")).toBe(outboxAfterFirst);
     expect(await countRows(pg.pool, "subscription_transitions")).toBe(1);
@@ -171,6 +173,8 @@ describe.skipIf(!PG_ENABLED)("إعادةُ الإرسالِ فوق Postgres — 
     const replay = await post(`/subscriptions/${DRIVER}/activate`, key, body);
     expect(replay.statusCode).toBe(200);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
     expect(await countRows(pg.pool, "subscription_periods")).toBe(periods);
     expect(await countRows(pg.pool, "subscription_outbox")).toBe(outbox);
   });
@@ -184,6 +188,8 @@ describe.skipIf(!PG_ENABLED)("إعادةُ الإرسالِ فوق Postgres — 
     const replay = await post(`/subscriptions/${DRIVER}/recompute`, key);
     expect(replay.statusCode).toBe(200);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
 
     // ونداءٌ ثالثٌ بمفتاحٍ جديدٍ يُعيد الحسابَ فعلاً ويبقى الجوابُ متساوياً في الحالة:
     // إعادةُ البناءِ من الدفترِ لا تُغيّر شيئاً حين لا يكون الدفترُ قد تغيّر.
@@ -210,6 +216,8 @@ describe.skipIf(!PG_ENABLED)("إعادةُ الإرسالِ فوق Postgres — 
     // الرمزِ لنفسِ المُحال، وهو حالةٌ أخرى لها معناها.
     expect(replay.statusCode).toBe(201);
     expect(replay.json()).toEqual(first.json());
+    // RISK-0013: the same BYTES, not only the same fields.
+    expect(replay.body).toBe(first.body);
     expect(await countRows(pg.pool, "referrals")).toBe(1);
   });
 

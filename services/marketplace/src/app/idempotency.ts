@@ -50,6 +50,35 @@ function canonical(value: unknown): string {
   return `{${entries.join(",")}}`;
 }
 
+/**
+ * RISK-0013 (CLM-0417): the wire serializer for every JSON reply of this service.
+ *
+ * The first answer to a write is serialized from the JS object the route built; the
+ * replay is serialized from the same object after a JSONB round-trip, which does not
+ * keep key order. Serializing BOTH through one canonical form (keys sorted at every
+ * depth) makes the replay byte-identical to the first answer by construction, not by
+ * luck of insertion order. Unlike `canonical` above (the request fingerprint — whose
+ * output is persisted and must never change), this one honours `toJSON` (e.g. `Date`)
+ * exactly as `JSON.stringify` does.
+ */
+export function canonicalJson(value: unknown): string {
+  return serializeCanonical(value) ?? "null";
+}
+
+function serializeCanonical(value: unknown): string | undefined {
+  if (value !== null && typeof value === "object" && typeof (value as { toJSON?: unknown }).toJSON === "function") {
+    value = (value as { toJSON: () => unknown }).toJSON();
+  }
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((item) => serializeCanonical(item) ?? "null").join(",")}]`;
+  const entries: string[] = [];
+  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+    const item = serializeCanonical((value as Record<string, unknown>)[key]);
+    if (item !== undefined) entries.push(`${JSON.stringify(key)}:${item}`);
+  }
+  return `{${entries.join(",")}}`;
+}
+
 /** بصمةُ sha256 بالسدس‌عشري، بطولٍ مؤكَّدٍ لأنّ العقدَ يفحصه في القاعدة. */
 export function fingerprint(value: unknown): string {
   const digest = createHash("sha256").update(canonical(value), "utf8").digest("hex");

@@ -437,6 +437,8 @@ describe.skipIf(!PG_ENABLED)("صندوقُ الصادرِ فوق Postgres", () =
       const replay = await post("/stores", payload, headers);
       expect(replay.statusCode).toBe(201);
       expect(replay.json()).toEqual(first.json());
+      // RISK-0013: the same BYTES, not only the same fields.
+      expect(replay.body).toBe(first.body);
       expect(await countRows(pg.pool, "marketplace_outbox")).toBe(afterFirst);
     });
   });

@@ -84,6 +84,7 @@ import {
   toThreadListQuery,
   toThreadOpenBody,
 } from "./requests.js";
+import { canonicalJson } from "./canonical-json.js";
 
 /** المنفذ المُعلَن، مُصدَّر كي لا يقرأ `server.ts` رقماً مكتوباً بيد. */
 export { NEGOTIATION_SERVICE_PORT };
@@ -144,6 +145,10 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
   // واحد في سجلّاته وسجلّاتنا و`trace_id` في الجواب. ويُولّد Fastify واحداً حين تغيب
   // الترويسة، فلا يكون `trace_id` فارغاً أبداً.
   const app = Fastify({ logger: options.logger ?? false, requestIdHeader: "x-request-id" });
+
+  // RISK-0013 (CLM-0417): one canonical serializer for every reply, so an idempotent
+  // replay (read back from JSONB) is byte-identical to the first answer.
+  app.setReplySerializer((payload) => canonicalJson(payload));
 
   app.setErrorHandler((error, request, reply) => {
     sendNegotiationError(reply, error, request.id);

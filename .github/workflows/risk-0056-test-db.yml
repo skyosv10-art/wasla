@@ -1,0 +1,158 @@
+name: RISK-0056 test-database schema proof
+
+# CLM-0410 · M6-18B — RISK-0056 (domain schemas absent on the live DB).
+#
+# Applies the EXISTING per-service migrations (`pnpm --filter <svc> db:migrate`,
+# which executes services/<svc>/contracts/schema.sql verbatim) to a SEPARATE
+# TEST database, twice (idempotency), and proves per service:
+#   - every table in its contracts/schema.sql exists with the same columns
+#     (name, type, nullability) as a vanilla postgres:17 reference,
+#   - every table is readable,
+#   - a write + read-back inside a transaction that is ROLLED BACK (marker
+#     `risk0056-smoke`; zero rows remain),
+#   - the service boots against the test DB and its open /health (and
+#     /delivery/ready) no longer reports schema_missing / degraded.
+#
+# Production is never touched:
+#   - the only DB secret used is SUPABASE_TEST_DB_URL;
+#   - guard-test-db.py refuses the run if the URL carries the production ref;
+#   - only the project ref is printed — never the URL, user, or password.
+#
+# Not claimed: this does not apply anything to production and does not close
+# RISK-0056. Production application needs the owner's explicit approval.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ops/risk-0056-test-db']
+    paths:
+      - '.github/workflows/risk-0056-test-db.yml'
+      - 'scripts/ops/risk-0056/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-test-db
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  SERVICES: "audit customers delivery dispatch drivers geography identity marketplace matching negotiations orders reputation search subscriptions"
+
+jobs:
+  test-db-schema:
+    name: Apply existing migrations to TEST DB and verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      RISK0056_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Guard — target must be the TEST project (prints project ref only)
+        id: guard
+        run: python3 scripts/ops/risk-0056/guard-test-db.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
+      - name: Reference database (vanilla postgres:17, local to the runner)
+        run: |
+          docker run -d --name risk0056-ref -e POSTGRES_PASSWORD=ref -e POSTGRES_DB=ref -p 15433:5432 postgres:17 >/dev/null
+          for i in $(seq 1 40); do docker exec risk0056-ref pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+          sleep 2
+          REF=postgresql://postgres:ref@127.0.0.1:15433/ref
+          for s in $SERVICES; do
+            DATABASE_URL="$REF" BILLING_DATABASE_URL="$REF" pnpm --silent --filter "@wasla/${s}-service" db:migrate > /dev/null
+          done
+          echo "RISK0056_REF_DB_URL=$REF" >> "$GITHUB_ENV"
+          echo "reference schema applied for: $SERVICES"
+
+      - name: BEFORE — read-only inventory of the TEST DB
+        run: |
+          mkdir -p out
+          node scripts/ops/risk-0056/inventory.mjs out/inventory-before.json
+
+      - name: BEFORE — boot services against TEST DB and probe open health routes
+        run: RISK0056_OUT=out/before bash scripts/ops/risk-0056/boot-health.sh
+
+      - name: Apply existing migrations to TEST DB — pass 1 and pass 2 (idempotency)
+        run: |
+          set -o pipefail
+          : > out/migrate.jsonl
+          for pass in 1 2; do
+            for s in $SERVICES; do
+              start=$(date +%s%3N)
+              if DATABASE_URL="$RISK0056_DB_URL" BILLING_DATABASE_URL="$RISK0056_DB_URL" \
+                   pnpm --silent --filter "@wasla/${s}-service" db:migrate > "out/migrate-${s}-${pass}.log" 2>&1; then rc=0; else rc=$?; fi
+              ms=$(( $(date +%s%3N) - start ))
+              last=$(grep -viE 'postgres(ql)?://' "out/migrate-${s}-${pass}.log" | tail -1 | tr '"' "'" | cut -c1-200)
+              echo "{\"pass\":${pass},\"service\":\"${s}\",\"exit\":${rc},\"ms\":${ms},\"last_line\":\"${last}\"}" >> out/migrate.jsonl
+              echo "pass ${pass} · ${s} · exit=${rc} · ${ms} ms · ${last}"
+              if [ "$rc" -ne 0 ]; then
+                grep -viE 'postgres(ql)?://' "out/migrate-${s}-${pass}.log" | tail -20
+                exit 1
+              fi
+            done
+          done
+          rm -f out/migrate-*.log
+
+      - name: AFTER — inventory, schema parity, read + rolled-back write smoke
+        run: |
+          node scripts/ops/risk-0056/inventory.mjs out/inventory-after.json
+          node scripts/ops/risk-0056/schema-rw-smoke.mjs out/schema-rw-smoke.json
+
+      - name: AFTER — boot services against TEST DB and probe open health routes
+        run: |
+          RISK0056_OUT=out/after bash scripts/ops/risk-0056/boot-health.sh
+          python3 - <<'PY'
+          import json, sys
+          bad = []
+          for line in open("out/after/health.jsonl", encoding="utf-8"):
+              r = json.loads(line)
+              h = (r.get("health") or {}).get("body")
+              rd = (r.get("ready") or {}).get("body")
+              text = json.dumps([h, rd])
+              if not r["booted"] or "schema_missing" in text or (isinstance(h, dict) and h.get("status") != "ok"):
+                  bad.append(r["service"])
+              if isinstance(rd, dict) and not all(c.get("ok") for c in rd.get("checks", [])):
+                  bad.append(r["service"] + ":ready")
+          print("services failing after migration:", bad or "none")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### RISK-0056 test-DB proof"
+            echo "- test project ref: \`${{ steps.guard.outputs.project_ref }}\` (${{ steps.guard.outputs.host_class }})"
+            [ -f out/inventory-before.json ] && echo "- public tables before: $(python3 -c "import json;print(len(json.load(open('out/inventory-before.json'))['public_tables']))")"
+            [ -f out/inventory-after.json ] && echo "- public tables after: $(python3 -c "import json;print(len(json.load(open('out/inventory-after.json'))['public_tables']))")"
+            [ -f out/schema-rw-smoke.json ] && echo "- schema/read/write smoke all_ok: $(python3 -c "import json;print(json.load(open('out/schema-rw-smoke.json'))['all_ok'])")"
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm -rf out/before/logs out/after/logs
+
+      - name: Upload evidence (JSON only — no logs, no connection data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-0056-test-db-${{ github.run_id }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Cleanup reference container
+        if: always()
+        run: docker rm -f risk0056-ref >/dev/null 2>&1 || true

@@ -1,3 +1,19 @@
+# 2026-09-30 — CLM-0420 — M0-50 RISK-0056 production apply workflow (§24-A/K)
+
+- **Work Item(s):** M0-50
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR open; proven on TEST and a fresh PG17 only, **never run on production**
+
+`risk-0056-apply.yml` runs on `workflow_dispatch` only, with `mode` = preflight|apply. Its jobs run in this order:
+
+1. **guard.** `confirm_sha` must equal the full dispatched SHA. `schema_manifest_sha256` must match the committed manifest, and the manifest must match all 14 `schema.sql` files.
+2. **backup.** Mode `apply` calls `db-backup.yml` through `workflow_call` (`pre_migration: true`, `expect_project_ref` = prod). The backup is fail-closed and restore-verified.
+3. **apply.** It runs in Environment `production-migration` (required reviewer, `main` only), with `needs: [guard, backup]` and success required. Each migration runs in one session with `lock_timeout` set on that same connection (the preload records the pid at start and at end), and the run stops at the first failure. A postflight step checks that all 107 declared tables are present.
+
+The workflow reads its secret `PRODUCTION_MIGRATION_DB_URL` from the environment only. Mode `preflight` is the read-only inventory with the target guard (§24-K). This supersedes #549/#550: their scripts and evidence are carried here, and their heads are tagged `evidence/ops-risk-0056-*`. `schema-sha256.txt` was regenerated, because CLM-0416 changed 4 schemas. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0419 — M0-49 RISK-0042 debt 1: staff rank enforced
 
 - **Work Item(s):** M0-49

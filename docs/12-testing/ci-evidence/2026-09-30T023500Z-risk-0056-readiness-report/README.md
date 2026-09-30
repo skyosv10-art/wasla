@@ -1,5 +1,7 @@
 # RISK-0056 Production Migration Readiness Report
 
+> **تصحيح بالإضافة (r2، 2026-09-30):** مراجعة المالك كشفت أخطاء في هذا التقرير، ولا يُحذف منه شيء. الحكم لـ [r2](../2026-09-30T033000Z-risk-0056-readiness-r2/README.md) في: §1.1 (SHA كامل)، و§1.7 (lock_timeout عبر psql منفصل أو PGOPTIONS كان خطأ)، و§2.2 البند 5 (`restore_all_match` في الـmanifest دائماً false)، و§3 (الاختبارات)، و§5.4 (RPO/RTO)، و§6.1–6.5 (workflow_dispatch لا يعمل لملف غير موجود على main)، و§10.
+
 - **Claim:** `CLM-0413` · **Work item:** M6-18B (stays **Blocked**) · **Risk:** RISK-0056 (stays **open**)
 - **Branch:** `ops/risk-0056-readiness-report` · **Date:** 2026-09-30
 - **Production project ref:** `snlpxywskyqrjattbpgn` (only identifier; no URL, user, or password printed)

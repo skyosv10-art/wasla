@@ -7575,3 +7575,18 @@ READY — awaiting owner's explicit approval to proceed with production applicat
 
 Evidence: docs/12-testing/ci-evidence/2026-09-30T023500Z-risk-0056-readiness-report/README.md
 
+
+## 2026-09-30 · CLM-0413 r2 · M6-18B — owner review closed on the TEST DB (production untouched)
+
+**Work Item(s):** M6-18B
+**Risk:** RISK-0056 (stays open) · **Branch:** ops/risk-0056-readiness-report · **PR:** #550 (not merged)
+**Target SHA:** bc5de79e8901523ae400187f95c1824a3c7a013d · **TEST project ref:** obeptvwpvqbduwkahorq
+**Run:** 36665158123 (push to this branch, TEST DB only, owner-authorised 2026-09-30 06:36 +03) — success
+
+Correction by addition of the r1 entry above: r1 said "SET lock_timeout in-session; verified with SHOW" through a separate psql / PGOPTIONS — that was wrong (a separate session does not affect db:migrate's pool). Also r1 had "no DDL, no DDL" (meant: no DDL, no DML), RPO≈0 / RTO<1 min (wrong wording), and "workflow_dispatch can run from a branch" (wrong per GitHub docs).
+
+- Tests: A schema.sql sha256 14/14 = run 36652155317 (383eb8e); B1 held ACCESS EXCLUSIVE lock → REAL search migrate-cli failed 55P03, blocked session pid = preload session with lock_timeout 2s, baseline fresh session 0, indexes 6→6; B2 14/14 REAL migrate-cli with preload: one session each, 2s at start and end, same pid; C1 snapshot-consistent backup guard PASS (107/107 tables, every row count equal); C2 five injected faults each FAILED CLOSED at the expected stage.
+- Evidence: docs/12-testing/ci-evidence/2026-09-30T033000Z-risk-0056-readiness-r2/ (README + run excerpt).
+- Confirmed db-backup.yml defects at bc5de79 (restore_all_match/RESTORE_ALL_MATCH case mismatch; mismatches are warnings; `|| true` on pg_restore; ERROR==ERROR counts as match; live counts after dump; skip_restore_test) — not modified (RISK-0055 scope).
+- CI attribution: doc-coverage failure was caused by PR #550 (fixed by this entry); image-supply-chain (brace-expansion CVE-2026-102276/102278) and governance-guard (RISK-0012/0013/0042 review expired, stale CLM-0409, two stale branches) reproduce on main rerun 36645750718 attempt 2.
+- Next step: owner decisions on governance blockers, then an apply workflow PR (design in r2 §1–§6), proven on TEST first. No production action without the owner's explicit order.

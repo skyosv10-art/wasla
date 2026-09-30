@@ -12,7 +12,7 @@ Rebased CLM-0419 on main (which now includes CLM-0420 from #557). Governance ent
 
 - **Work Item(s):** M0-50
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR open; proven on TEST and a fresh PG17 only, **never run on production**
+- **Status:** Released — PR #557 merged; proven on TEST and a fresh PG17 only, **never run on production**
 
 `risk-0056-apply.yml` runs on `workflow_dispatch` only, with `mode` = preflight|apply. Its jobs run in this order:
 

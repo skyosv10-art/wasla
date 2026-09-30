@@ -273,8 +273,16 @@ src = str(dyn.get("source", "")).strip()
 src_path = os.path.join(root, src) if src and not os.path.isabs(src) else ""
 if not src_path or not os.path.isfile(src_path):
     problems.append("البابُ 4: `dynamic.source` = %r ليس ملفّاً داخلَ الشجرةِ — رقمٌ حركيٌّ بلا مصدرٍ يُعاد قراءتُه (RISK-0028)." % src)
-elif str(dyn.get("tests_passed")) not in open(src_path, encoding="utf-8", errors="replace").read():
-    problems.append("البابُ 4: `dynamic.source` لا يحوي `tests_passed`=%r — المصدرُ المُعلَنُ لا يُثبِتُ الرقمَ (RISK-0028)." % dyn.get("tests_passed"))
+else:
+    # Recompute from the source with the generator's own rule (scripts/baseline.sh:
+    # the sum of every vitest "Tests N passed" line) and require equality. The first
+    # version of this gate looked for the literal total in the log; the total is a
+    # sum and never appears literally, so the gate rejected every honest baseline.
+    import re as _re
+    _text = open(src_path, encoding="utf-8", errors="replace").read()
+    _tp = [int(m) for m in _re.findall(r"Tests\s+(\d+) passed", _text)]
+    if not _tp or sum(_tp) != dyn.get("tests_passed"):
+        problems.append("البابُ 4: `dynamic.source` لا يُثبِتُ `tests_passed`=%r — مجموعُ «Tests N passed» فيه %r (RISK-0028)." % (dyn.get("tests_passed"), sum(_tp) if _tp else None))
 # (b) `repo.commit` must resolve when the checkout has full history
 #     (governance-guard uses fetch-depth: 0). A shallow or non-git root is
 #     reported, not silently passed.

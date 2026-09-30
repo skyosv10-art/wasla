@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-30T04:37:28Z",
+  "generated_at": "2026-09-30T06:36:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "5cc85b8754f03016db689c7c2e534ed75c7424eb",
+    "commit": "576aa9c6fb3dc92d2164ecd03e10fec377c8cd7c",
     "branch": "gov/clm-0414-unblock-main",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 2936
+    "dirty": true,
+    "dirty_files": 1,
+    "dirty_reason": "the verify log is added to the tree in the same commit (RISK-0028: dynamic.source must be an in-tree file)",
+    "tracked_files": 2940
   },
   "env": {
     "node": "v20.20.1",
@@ -27,20 +27,20 @@
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
     "test_files_tracked": 524,
-    "ci_jobs": 30,
-    "ci_allow_failure": 1,
+    "ci_jobs": 13,
+    "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 35
+    "risks_not_closed": 24
   },
   "dynamic": {
     "measured": true,
-    "source": "CI run 36354119025 (verify job)",
-    "tests_passed": 5804,
-    "test_files_executed": 65,
-    "governance_suite_cases": 519,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "docs/12-testing/baseline-sources/2026-09-30T062144Z-verify.txt",
+    "tests_passed": 5806,
+    "test_files_executed": 392,
+    "governance_suite_cases": 539,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:0e94f07db378d554e1ff72bc8f999d91667d07e902e03622f26c80c5927d7f73",
+  "fingerprint": "sha256:40f4a286fd47305331b1acf0461946f712b3584171530bd0f88e175d58f73c16",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

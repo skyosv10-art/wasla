@@ -2057,6 +2057,16 @@ t "أساسٌ مُولَّدٌ من الشجرةِ نفسِها يمرّ" pass b
 # not resolve, are each rejected.
 B_SRCOUT="$(_base_root srcout)"; _base_mut "$B_SRCOUT" 'd["dynamic"]["source"]="/tmp/verify_gone.log"'
 t "مصدرُ الأرقامِ الحركيّةِ خارجَ الشجرةِ يُسقِط (RISK-0028)" fail bash "$BASE_SRC" "$B_SRCOUT"
+# RISK-0028 (CLM-0414, correction by addition): `tests_passed` is a SUM over
+# packages and never appears literally in a real verify log. The source must
+# prove the number by recomputation — a two-package log passes, a tampered
+# number fails.
+B_SUM="$(_base_root sum)"
+printf 'Test Files  3 passed (3)\nTests  40 passed (40)\nTest Files  4 passed (4)\nTests  59 passed (59)\nالنتيجة: 12 ناجح · 0 فاشل\nالتحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' > "$B_SUM/docs/12-testing/baseline-sources/verify.log"
+( cd "$B_SUM" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -q -m sum >/dev/null 2>&1 ) || true
+t "مجموعُ الحزمِ غيرُ المكتوبِ حرفاً يُثبَتُ بإعادةِ الحسابِ (RISK-0028)" pass bash "$BASE_SRC" "$B_SUM"
+B_TAMPER="$(_base_root tamper)"; _base_mut "$B_TAMPER" 'd["dynamic"]["tests_passed"]=98'
+t "رقمُ اختباراتٍ لا يُطابقُ مجموعَ المصدرِ يُسقِط (RISK-0028)" fail bash "$BASE_SRC" "$B_TAMPER"
 B_NOCOMMIT="$(_base_root nocommit)"; _base_mut "$B_NOCOMMIT" 'd["repo"]["commit"]="297a9148edf536de7324df47168119aa46186646"'
 t "التزامُ الأساسِ الذي لا يُحَلُّ يُسقِط (RISK-0028)" fail bash "$BASE_SRC" "$B_NOCOMMIT"
 

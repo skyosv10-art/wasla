@@ -123,6 +123,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/drivers/{driverPublicId}/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * قائمة مهام السائق (مُقيَّدة بالمالك)
+         * @description مسار شاشة الأرباح وسجل المهام في تطبيق السائق (M3-02). يُعيد الطلبات التي أُسنِدت
+         *     إلى السائق ووصلت إلى حالة نهائية (مُكتمل أو ملغى) ضمن الفترة المطلوبة.
+         *
+         *     المسار في خدمة الطلبات لا في خدمة السائقين، لأن خدمة السائقين لا تقرأ الطلبات
+         *     (§37 في ADR-010). المُنتَفِع (obo) في الرمز يجب أن يطابق `driverPublicId` في المسار،
+         *     وإلا يُجاب **404** (لا نُثبت وجود ما لا يُقرأ).
+         */
+        get: operations["listDriverJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -483,6 +508,24 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ. */
+        AuthUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ. */
+        AuthForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
     };
     parameters: {
         OrderId: string;
@@ -536,6 +579,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
@@ -578,6 +623,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
@@ -608,6 +655,52 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listDriverJobs: {
+        parameters: {
+            query: {
+                period: "today" | "week" | "month";
+            };
+            header: {
+                /** @description نطاق القراءة. طلب عميل آخر يُجيب 404 (لا نُثبت وجود ما لا يُقرأ). */
+                "X-Customer-Public-Id": components["parameters"]["CustomerScope"];
+                /** @description يصبح `trace_id` في الرد وفي مغلّف الحدث وفي صفّ التدقيق. */
+                "x-request-id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                driverPublicId: components["schemas"]["WaslaPublicId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description قائمة المهام */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        jobs: {
+                            order_public_id: components["schemas"]["OrderPublicId"];
+                            order_type: components["schemas"]["OrderType"];
+                            vehicle_class: components["schemas"]["VehicleClass"];
+                            status: components["schemas"]["OrderStatus"];
+                            pickup_label: string | null;
+                            dropoff_label: string | null;
+                            /** Format: date-time */
+                            completed_at: string;
+                        }[];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -637,6 +730,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -668,6 +763,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -701,6 +798,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
@@ -738,6 +837,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
@@ -778,6 +879,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];

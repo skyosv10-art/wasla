@@ -28,7 +28,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List support tickets */
+        get: operations["listTickets"];
         put?: never;
         /** Create a support ticket */
         post: operations["createTicket"];
@@ -135,6 +136,10 @@ export interface components {
             /** @constant */
             port: 8095;
         };
+        TicketListResponse: {
+            tickets: components["schemas"]["Ticket"][];
+            nextCursor: string | null;
+        };
         Ticket: {
             /** Format: uuid */
             ticket_id: string;
@@ -239,6 +244,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    listTickets: {
+        parameters: {
+            query?: {
+                state?: "open" | "investigating" | "escalated" | "resolved" | "closed";
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ticket list with pagination cursor */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketListResponse"];
                 };
             };
         };

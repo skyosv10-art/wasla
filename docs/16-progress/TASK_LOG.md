@@ -1,3 +1,15 @@
+# 2026-09-30 — CLM-0418 — M0-48 api-types.ts drift (§24-H)
+
+- **Work Item(s):** M0-48
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR open
+
+Measured on main `bc5de79`: 11 of 13 generated `api-types.ts` files had drifted from their OpenAPI source (customer, dispatch, driver, geography, identity, marketplace, matching, negotiation, order, subscription, support). Two generator defects were found. The identity `generate` path pointed outside the repository. The subscriptions OpenAPI had `AuthUnauthorized`/`AuthForbidden` pasted inside a path's responses, so 22 `$ref`s did not resolve.
+
+The fix repairs both generator defects and regenerates the files. A drift guard in each of the 13 generated packages regenerates the file and requires byte equality; it fails when a file is reverted. `generate` now refuses to run in the two hand-authored packages (delivery, search), which it used to overwrite. The whole repository typechecks and all contract suites are green. This is not a contract change: the subscriptions responses are moved to where they were always referenced. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0415 — M6-18B db-backup.yml fail-closed (RISK-0055) · PR, not merged
 
 - **Work Item(s):** M6-18B

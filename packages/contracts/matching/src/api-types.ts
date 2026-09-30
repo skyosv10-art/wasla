@@ -103,6 +103,8 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /**
                  * @description صالح شكلياً ومرفوض منطقياً: منطقة غير موجودة في هرم الجغرافيا، أو نسخة قواعد
                  *     مطلوبة غير مُقفَلة. لا نُرتّب بقواعد قابلة للتحرير.
@@ -156,6 +158,8 @@ export interface paths {
                         "application/json": components["schemas"]["Candidacy"];
                     };
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 404: components["responses"]["NotFound"];
                 503: components["responses"]["ServiceUnavailable"];
             };
@@ -199,6 +203,8 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description نفس `Idempotency-Key` بحمولة مختلفة */
                 409: {
                     headers: {
@@ -282,6 +288,8 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 404: components["responses"]["NotFound"];
                 /** @description نفس `Idempotency-Key` بحمولة مختلفة */
                 409: {
@@ -334,6 +342,8 @@ export interface paths {
                         };
                     };
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 503: components["responses"]["ServiceUnavailable"];
             };
         };
@@ -378,6 +388,8 @@ export interface paths {
                         "application/json": components["schemas"]["Decision"];
                     };
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 404: components["responses"]["NotFound"];
                 503: components["responses"]["ServiceUnavailable"];
             };
@@ -621,6 +633,24 @@ export interface components {
         };
         /** @description الخدمة في وضع متدهور */
         ServiceUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description طلبٌ بلا ترويسةِ هويّةِ خدمةٍ، أو بتوقيعٍ غيرِ صحيحٍ، أو برمزٍ منتهي الصلاحيّةِ أو مُستعمَلٍ ثانيةً. الردُّ لا يُفصِحُ عن السببِ الدقيقِ. */
+        AuthUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description هويّةُ خدمةٍ صحيحةٌ ولكنّ الصلاحيّةَ المطلوبةَ غيرُ ممنوحةٍ لهذهِ الخدمةِ، أو المُنتَفِعُ الموقَّعُ في الرمزِ لا يملكُ الموردَ المطلوبَ. */
+        AuthForbidden: {
             headers: {
                 [name: string]: unknown;
             };

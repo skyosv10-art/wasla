@@ -1,3 +1,13 @@
+# 2026-09-30 — CLM-0419 (rebase) — M0-49 RISK-0042 debt 1: rebase on main after #557
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR rebased on main after #557 merge; unit tests moved to scoped staff-rank.test.ts
+
+Rebased CLM-0419 on main (which now includes CLM-0420 from #557). Governance entries for CLM-0419 were already on main from the stacked #557 merge, so the rebase only needed to restore CLM-0420 entries that the conflict resolution dropped. Unit tests moved from staff.test.ts (outside scope) to staff-rank.test.ts (in scope). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0420 — M0-50 RISK-0056 production apply workflow (§24-A/K)
 
 - **Work Item(s):** M0-50

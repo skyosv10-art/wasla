@@ -2,10 +2,12 @@
 
 - **Work Item(s):** M0-46
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR stacked on `gov/clm-0414-unblock-main`
+- **Status:** Active — PR #553 (rebased on CLM-0414; targets main after #551)
 
 ADR-057: `commit_sequence` assigned at COMMIT by a deferred constraint trigger under one advisory lock per table (dispatch, marketplace, delivery outboxes); the four cursor consumers read `commit_sequence > $1 ORDER BY <table>.commit_sequence`; the three relays stop at the first `pending` row. Measured on local PG17: late-commit, intra-transaction, replay and duplicate tests; all CI legs green locally ([evidence](../12-testing/ci-evidence/2026-09-30T090000Z-clm-0416-risk-0012-commit-order/README.md)). CI verdict pending. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 
+
+**Closure (MASTER REPAIR & MERGE, 2026-09-30):** RISK-0012 → `closed` in the register with ADR-057 and CI run 36676903603 as evidence. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 ---
 
 # 2026-09-30 — CLM-0414 — M0-45 unblock main (governance + dependencies) · Draft PR

@@ -1656,6 +1656,7 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
   - RISK-0012 set to `mitigating` pending #553 (the fix). RISK-0013 pending #554 (the fix).
   - Environment `production-migration` created: reviewer xuuux-voox, prevent_self_review, `main` only.
   - test-governance imports the BASELINE `repo.commit` into its synthetic repository, so RISK-0028 gate 4(b) is exercised rather than skipped (542/0 locally).
+- **M0-46 RISK-0012 closed (CLM-0416, PR #553):** `commit_sequence` is assigned at COMMIT by a deferred constraint trigger under a per-table advisory lock. The consumers (delivery ×2, search, billing) read in commit order, qualified with the table name, and stop at the first pending row. Evidence: CI 36676903603 (38/38 test jobs) and relay-commit-order integration tests. ADR-057.
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

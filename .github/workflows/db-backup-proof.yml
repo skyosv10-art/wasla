@@ -94,9 +94,17 @@ jobs:
       - name: P2 — injected faults (each must FAIL, no manifest, no plaintext left)
         run: |
           set +e
-          expect_fail() {  # name out_dir command...
-            local name="$1" out="$2"; shift 2
+          # expect_fail <name> <out_dir> <expected stage regex> command...
+          # The fault must fail at the stage it targets — failing earlier for
+          # another reason would prove nothing about that stage (run 36670339832:
+          # F5/F6 failed at `list` because the shim broke --list; corrected here).
+          expect_fail() {
+            local name="$1" out="$2" stage="$3"; shift 3
             log=$("$@" 2>&1); rc=$?
+            first=$(printf '%s\n' "$log" | grep -E 'BACKUP(-GUARD)? FAIL|::error::|stage 1 snapshot-dump: FAILED|pg_dump exit=|Error' | head -1)
+            if ! printf '%s' "$first" | grep -Eq "$stage"; then
+              echo "::error::fault ${name}: first failure was «${first}», expected stage /${stage}/"; exit 1
+            fi
             printf '%s\n' "$log" | grep -E 'BACKUP(-GUARD)? (FAIL|PASS)|stage 1|::error::' | sed "s/^/  [$name] /"
             if [ "$rc" -eq 0 ]; then echo "::error::fault ${name}: backup.sh exited 0"; exit 1; fi
             if [ -e "$out/backup-manifest.json" ]; then echo "::error::fault ${name}: manifest written"; exit 1; fi
@@ -105,26 +113,27 @@ jobs:
           }
           mkdir -p shim
           # F1 — empty passphrase
-          expect_fail empty-passphrase out-f1 env BACKUP_PASSPHRASE= bash scripts/ops/db-backup/backup.sh out-f1
+          expect_fail empty-passphrase out-f1 'BACKUP_PASSPHRASE is empty' env BACKUP_PASSPHRASE= bash scripts/ops/db-backup/backup.sh out-f1
           # F2 — unreachable source (stage 1 must fail; no dump)
-          expect_fail unreachable-source out-f2 env BACKUP_SOURCE_DB_URL=postgresql://nobody:x@127.0.0.1:1/none \
+          expect_fail unreachable-source out-f2 'ECONNREFUSED|Error|FAILED' env BACKUP_SOURCE_DB_URL=postgresql://nobody:x@127.0.0.1:1/none \
             bash scripts/ops/db-backup/backup.sh out-f2
           # F3 — dump silently missing one table the snapshot counted (dump/count divergence)
           FIRST=$(psql "$BACKUP_SOURCE_DB_URL" -At -v ON_ERROR_STOP=1 -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY 1 LIMIT 1")
           [ -n "$FIRST" ] || { echo "::error::TEST DB has no public table — proof inconclusive"; exit 1; }
           printf '#!/usr/bin/env bash\nexec /usr/lib/postgresql/17/bin/pg_dump --exclude-table=public.%s "$@"\n' "$FIRST" > shim/pg_dump
           chmod +x shim/pg_dump
-          expect_fail dump-missing-table out-f3 env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f3
+          expect_fail dump-missing-table out-f3 'stage=list .*absent from the dump TOC' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f3
           rm -f shim/pg_dump
           # F4 — restore tool fails (pg_restore exits 1)
           printf '#!/usr/bin/env bash\nexit 1\n' > shim/pg_restore; chmod +x shim/pg_restore
-          expect_fail restore-tool-fails out-f4 env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f4
+          expect_fail restore-tool-fails out-f4 'stage=list' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f4
           # F5 — restore succeeds, then one row disappears from the scratch copy before compare
           #      (the scratch postgres:17 on the runner — never the TEST DB)
           cat > shim/pg_restore <<'SH'
           #!/usr/bin/env bash
           /usr/lib/postgresql/17/bin/pg_restore "$@" || exit $?
           for a in "$@"; do case "$a" in --dbname=*) DB="${a#--dbname=}";; esac; done
+          [ -n "${DB:-}" ] || exit 0   # `pg_restore --list` (stage 3) passes through untouched
           case "${DB:-}" in postgresql://postgres:verify@127.0.0.1:*) ;; *) echo "shim: refusing non-scratch target"; exit 1;; esac
           psql "$DB" -v ON_ERROR_STOP=1 -q <<'SQL'
           DO $$
@@ -145,16 +154,17 @@ jobs:
           SQL
           SH
           chmod +x shim/pg_restore
-          expect_fail restored-row-missing out-f5 env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f5
+          expect_fail restored-row-missing out-f5 'stage=compare .*row-count mismatch' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f5
           # F6 — restore succeeds, then an extra table appears (table-set mismatch)
           cat > shim/pg_restore <<'SH'
           #!/usr/bin/env bash
           /usr/lib/postgresql/17/bin/pg_restore "$@" || exit $?
           for a in "$@"; do case "$a" in --dbname=*) DB="${a#--dbname=}";; esac; done
+          [ -n "${DB:-}" ] || exit 0   # `pg_restore --list` (stage 3) passes through untouched
           case "${DB:-}" in postgresql://postgres:verify@127.0.0.1:*) ;; *) echo "shim: refusing non-scratch target"; exit 1;; esac
           psql "$DB" -v ON_ERROR_STOP=1 -q -c "CREATE TABLE public.zz_clm0415_fault (x int)"
           SH
           chmod +x shim/pg_restore
-          expect_fail restored-extra-table out-f6 env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f6
+          expect_fail restored-extra-table out-f6 'stage=compare .*table set differs' env PATH="$PWD/shim:$PATH" bash scripts/ops/db-backup/backup.sh out-f6
           rm -rf shim
           echo "P2 PASS — 6/6 faults failed closed"

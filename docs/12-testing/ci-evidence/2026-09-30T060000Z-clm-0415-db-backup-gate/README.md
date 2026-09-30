@@ -28,3 +28,14 @@ The scripts `snapshot-dump.mjs`, `verify-backup.sh` and `guard-test-db.py` are b
 ## 3. Proof run (TEST DB)
 
 The result is added below by addition after the run.
+
+### 3.1 Run 36670339832 (`2febffa`): P1 PASS; P2 harness defect found and corrected by addition
+
+- **Guard:** TEST project ref `obeptvwpvqbduwkahorq`, not production.
+- **P1 (real TEST backup):**
+  - Snapshot: 107 `public` tables, 1 `public` extension, 23 rows in total.
+  - Uploaded `.gpg` decrypted and byte-identical.
+  - nonempty, list (107/107 in the TOC), gpg, restore (`--exit-on-error --single-transaction`) and compare (107/107 tables, every row count equal): all PASS.
+  - Manifest: `restore_all_match: true`, dump 667 697 B, `.gpg` 667 800 B, dump 62.6 s, encrypt 0.8 s, runner-local restore and compare 15.1 s.
+- **P2:** the job reported 6/6 faults failed closed, with no manifest and no plaintext left. **But F5 (row removed) and F6 (extra table) failed at `stage=list`, not at `compare`.** The test shim passed `pg_restore --list` through and then exited 1 because no `--dbname` was given. So those two faults proved nothing about the compare stage. F1 to F4 failed at their intended stages: empty passphrase, unreachable source, `stage=list` (1 table absent from the TOC), and `stage=list` (`pg_restore` failure).
+- **Correction:** the shim now exits 0 when there is no `--dbname`. `expect_fail` now also requires that the **first** failure matches the stage the fault targets, so failing earlier for another reason is itself a proof failure. The result of the re-run is recorded below.

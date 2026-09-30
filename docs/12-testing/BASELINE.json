@@ -3,7 +3,7 @@
   "generated_at": "2026-09-30T07:59:14Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8fb00e6cf3140da66747a25482bf5081bbbf7fb4",
+    "commit": "f4e92db9c7353df0928226f1de55bb6219f04d03",
     "branch": "fix/clm-0416-risk-0012-relay-sequence",
     "dirty": true,
     "dirty_files": 1,

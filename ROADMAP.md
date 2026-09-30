@@ -1650,6 +1650,11 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 ### 2026-09-28 — M6-19B baseline remediation · M6-19C attestation remediation (CLM-0394, CLM-0395)
 
 - **M0-45 unblock main (CLM-0414, Draft PR, not merged):** `fast-uri` 3.1.8/4.1.5 and `brace-expansion` 2.1.7 via `pnpm.overrides` (production audit 3 → 0; codegen byte-identical); RISK-0013 accepted to 2026-12-29; RISK-0042 re-measured and kept open to 2026-10-30 (blocks public launch, not the schema migration); RISK-0012 **not** closed (three consumers still order by timestamp + UUID); CLM-0409 released; two RISK-0056 evidence branches declared.
+- **M0-45 addendum (CLM-0414, MASTER REPAIR & MERGE, 2026-09-30):**
+  - BASELINE regenerated from the in-tree verify log `docs/12-testing/baseline-sources/2026-09-30T062144Z-verify.txt`.
+  - `validate-baseline.sh` now recomputes the `tests_passed` sum (the RISK-0028 gate used to look for a literal that never appears), with 2 new mutation cases in `test-governance.sh`.
+  - RISK-0012 set to `mitigating` pending #553 (the fix). RISK-0013 pending #554 (the fix).
+  - Environment `production-migration` created: reviewer xuuux-voox, prevent_self_review, `main` only.
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

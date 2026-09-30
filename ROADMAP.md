@@ -1655,6 +1655,7 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
   - `validate-baseline.sh` now recomputes the `tests_passed` sum (the RISK-0028 gate used to look for a literal that never appears), with 2 new mutation cases in `test-governance.sh`.
   - RISK-0012 set to `mitigating` pending #553 (the fix). RISK-0013 pending #554 (the fix).
   - Environment `production-migration` created: reviewer xuuux-voox, prevent_self_review, `main` only.
+  - test-governance imports the BASELINE `repo.commit` into its synthetic repository, so RISK-0028 gate 4(b) is exercised rather than skipped (542/0 locally).
 - **M6-19B remediation (CLM-0394, PR #535 merged):** service identity measured from source (TOKEN_BOUND=44, TENANT_BOUND=8,
   UNCLASSIFIED=105); DB access measured against live Supabase (30 roles, 394 grants, 25/44 RLS); rotation age measurable
   (19 secrets with last_rotated, 9 gates pass). `docs/12-testing/M6-19B_GATE.md`.

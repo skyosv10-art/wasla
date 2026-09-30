@@ -28,6 +28,7 @@ import { isReplayedResponse } from "../app/idempotency.js";
 import { constraintOf } from "../db/constraints.js";
 import { httpStatusForMarketplaceError, type ErrorResponse } from "../domain/contract-sets.js";
 import { isMarketplaceError, type MarketplaceErrorDetails } from "../domain/errors.js";
+import { StaffRankForbidden } from "../domain/staff.js";
 
 /** رمزٌ داخليٌّ خارجَ فهرسِ العقد — لا يُوعَد به مُتَّصلٌ ولا يُبنى عليه. */
 export const MARKETPLACE_INTERNAL_ERROR_CODE = "MARKETPLACE_INTERNAL_DEFECT";
@@ -71,6 +72,15 @@ export function sendMarketplaceError(
     return reply
       .status(httpStatusForMarketplaceError(error.code))
       .send(body(error.code, error.message, traceId, error.details));
+  }
+
+  // RISK-0042 · CLM-0419: an active member without the rank to manage staff.
+  // 403 `AUTHZ_FORBIDDEN` is the response the contract already declares on the
+  // staff routes (`components/responses/AuthForbidden`), so no new code exists.
+  if (error instanceof StaffRankForbidden) {
+    return reply
+      .status(403)
+      .send(body("AUTHZ_FORBIDDEN", "staff management requires the store owner or an active manager", traceId));
   }
 
   const constraint = constraintOf(error);

@@ -63,6 +63,7 @@ import {
 } from "../domain/events.js";
 import {
   assertActiveMembership,
+  assertStaffManager,
   assertActiveOwnership,
   assertStaffAddition,
   assertStaffRemoval,
@@ -407,6 +408,7 @@ export class MarketplaceStoreService {
         storeOwnerPublicId: store.ownerPublicId,
         existing,
       });
+      assertStaffManager({ actorPublicId, storeOwnerPublicId: store.ownerPublicId, existing });
       const role = assertStaffAddition({
         role: input.role,
         memberPublicId: input.memberPublicId,
@@ -458,11 +460,17 @@ export class MarketplaceStoreService {
        * أو `200`، فيصيرُ المسارُ **كاشفاً لعضويّاتِ متجرٍ لا ينتسبُ
        * إليهِ** بفرقِ الرمزينِ.
        */
+      const staffBefore = await stores.staff.listStaff(store.storeId);
       assertActiveMembership({
         storeSlug,
         actorPublicId: removedByPublicId,
         storeOwnerPublicId: store.ownerPublicId,
-        existing: await stores.staff.listStaff(store.storeId),
+        existing: staffBefore,
+      });
+      assertStaffManager({
+        actorPublicId: removedByPublicId,
+        storeOwnerPublicId: store.ownerPublicId,
+        existing: staffBefore,
       });
       const member = await stores.staff.findActiveMember(store.storeId, memberPublicId);
       if (member === undefined) throw storeStaffNotFound(memberPublicId);

@@ -152,6 +152,39 @@ export function assertActiveMembership(input: {
 }
 
 /**
+ * **رتبةُ الفاعلِ في إدارةِ الطاقمِ** — `RISK-0042` الدَّينُ 1 · CLM-0419.
+ *
+ * `assertActiveMembership` يفرضُ الانتسابَ وحدَهُ، فكانَ عضوٌ بدورِ `staff` يُضيفُ
+ * مديراً أو يُزيلُ زميلاً. والقرارُ 8 في ADR-016 يقولُ إنَّ `manager` «يفعلُ كلَّ
+ * شيءٍ إلّا أن يكونَ المرجعَ» — فإدارةُ الطاقمِ للمالكِ (عمودُ المتجرِ) ولمديرٍ نشِطٍ،
+ * ولا شيءَ منها لدورِ `staff`.
+ *
+ * والرفضُ **403** `AUTHZ_FORBIDDEN` لا `STORE_NOT_FOUND`: الفاعلُ هنا عضوٌ نشِطٌ
+ * يعرفُ المتجرَ، فإخفاءُ وجودِهِ عنهُ لا يحمي شيئاً، والـ403 مُعلَنٌ في العقدِ على
+ * هذينِ المسارينِ بمعنى «المُنتَفِعُ لا يملكُ الموردَ» — فلا رمزَ جديدٌ ولا تغييرَ عقدٍ.
+ * ويُستدعى **بعدَ** `assertActiveMembership` دائماً، فغيرُ العضوِ يبقى `STORE_NOT_FOUND`.
+ */
+export class StaffRankForbidden extends Error {
+  constructor(readonly actorPublicId: string) {
+    super("staff management requires the store owner or an active manager");
+    this.name = "StaffRankForbidden";
+  }
+}
+
+export function assertStaffManager(input: {
+  actorPublicId: string;
+  storeOwnerPublicId: string;
+  existing: readonly StoreStaffEntry[];
+}): void {
+  if (input.actorPublicId === input.storeOwnerPublicId) return;
+  const member = activeStaff(input.existing).find(
+    (entry) => entry.memberPublicId === input.actorPublicId,
+  );
+  if (member?.role === "manager" || member?.role === "owner") return;
+  throw new StaffRankForbidden(input.actorPublicId);
+}
+
+/**
  * ملكيّةُ الفاعلِ لا مُجرَّدُ عضويّتِهِ — حيثُ يكتبُ الدفترُ `actorType` مالكاً.
  *
  * والغيابُ يُجابُ `STORE_NOT_FOUND` للسببِ عينِهِ المكتوبِ في

@@ -1,8 +1,28 @@
+# 2026-09-30 — CLM-0421 — M0-49 fix: BASELINE.json repo.commit points at the real branch head
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — stacked on the CLM-0419 branch to unblock its CI
+
+The BASELINE regeneration commit `61ed8f9b` recorded `repo.commit = 1829a2ab` — the tree snapshot taken **before** that commit itself existed. On the GitHub PR checkout (fetch-depth: 0) `git cat-file -e 1829a2ab^{commit}` fails, so governance check 11 (M0-08, gate 4: no orphan baseline) failed and `verify` + `governance-guard` were red on PR #556. Fix: `repo.commit` now points at the real branch head `61ed8f9b`. Fingerprint unchanged (`repo` is fingerprint-excluded). Local `validate-baseline.sh`: all four gates pass. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+# 2026-09-30 — CLM-0419 (rebase) — M0-49 RISK-0042 debt 1: rebase on main after #557
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Active — PR rebased on main after #557 merge; unit tests moved to scoped staff-rank.test.ts
+
+Rebased CLM-0419 on main (which now includes CLM-0420 from #557). Governance entries for CLM-0419 were already on main from the stacked #557 merge, so the rebase only needed to restore CLM-0420 entries that the conflict resolution dropped. Unit tests moved from staff.test.ts (outside scope) to staff-rank.test.ts (in scope). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0420 — M0-50 RISK-0056 production apply workflow (§24-A/K)
 
 - **Work Item(s):** M0-50
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR open; proven on TEST and a fresh PG17 only, **never run on production**
+- **Status:** Released — PR #557 merged; proven on TEST and a fresh PG17 only, **never run on production**
 
 `risk-0056-apply.yml` runs on `workflow_dispatch` only, with `mode` = preflight|apply. Its jobs run in this order:
 
@@ -18,7 +38,7 @@ The workflow reads its secret `PRODUCTION_MIGRATION_DB_URL` from the environment
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR open
+- **Status:** Active — PR open, rebased on main after #557 merge; unit tests moved to scoped staff-rank.test.ts
 
 `addStaff`/`removeStaff` in `services/marketplace/src/app/stores.ts` checked membership only, so an active `staff` member could add a manager or remove a colleague. `assertStaffManager` (domain) now requires the store owner (`stores.owner_public_id`) or an active manager, and the error handler answers `403 AUTHZ_FORBIDDEN`, the response already declared on both routes. That makes this neither a new error code nor a contract change. Three PostgreSQL integration cases and four unit cases were added. Without the fix, 2 of the 3 integration cases fail: the `staff` actor gets 201/200 where 403 is expected. RISK-0042 stays `open`, because 105 enforced operations are still unclassified. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 
@@ -28,7 +48,7 @@ The workflow reads its secret `PRODUCTION_MIGRATION_DB_URL` from the environment
 
 - **Work Item(s):** M0-48
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR open
+- **Status:** Active — PR open, rebased on main after #557 merge; unit tests moved to scoped staff-rank.test.ts
 
 Measured on main `bc5de79`: 11 of 13 generated `api-types.ts` files had drifted from their OpenAPI source (customer, dispatch, driver, geography, identity, marketplace, matching, negotiation, order, subscription, support). Two generator defects were found. The identity `generate` path pointed outside the repository. The subscriptions OpenAPI had `AuthUnauthorized`/`AuthForbidden` pasted inside a path's responses, so 22 `$ref`s did not resolve.
 
@@ -40,7 +60,7 @@ The fix repairs both generator defects and regenerates the files. A drift guard 
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — PR open, not merged; proven on the TEST DB only
+- **Status:** Active — PR open, rebased on main after #557 merge; unit tests moved to scoped staff-rank.test.ts, not merged; proven on the TEST DB only
 
 `db-backup.yml` defects (a)–(g) measured in CLM-0413 r2 §3.1 are replaced by one script, `scripts/ops/db-backup/backup.sh`: snapshot-consistent dump + exact counts (`snapshot-dump.mjs`), AES256 encrypt, decrypt of the uploaded ciphertext byte-compared, restore of those bytes into postgres:17 with `--exit-on-error --single-transaction`, exact table-set and row-count compare (`verify-backup.sh`). No warning outcome, no `skip_restore_test`. The manifest is written only on PASS. `db-backup-proof.yml` runs the same script on `SUPABASE_TEST_DB_URL` (push to this branch only): P1 must pass, P2 injects faults that must each fail closed. RISK-0055 register text is **not** edited; the proposed correction is in the PR description (owner approval pending). Evidence: `docs/12-testing/ci-evidence/2026-09-30T060000Z-clm-0415-db-backup-gate/`.
 

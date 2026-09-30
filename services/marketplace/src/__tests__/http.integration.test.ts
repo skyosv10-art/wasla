@@ -518,6 +518,8 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
     it("وعضوٌ نشِطٌ ليسَ مالكاً يقرأُ الطاقمَ — فالفرضُ عضويّةٌ لا مِلكيّةٌ", async () => {
       // الوجهُ الموجبُ للدعوى أعلاهُ. وهوَ **أيضاً** الدَّينُ المُسمّى في
       // `RISK-0042`: العضويّةُ تكفي، والرتبةُ داخلَ المتجرِ لا تُفرَضُ بعدُ.
+      // تصحيحٌ بالإضافةِ (CLM-0419): الرتبةُ تُفرَضُ الآنَ على **الكتابةِ** —
+      // انظرِ الحالاتِ الثلاثَ التاليةَ؛ والقراءةُ تبقى للعضويّةِ قصداً.
       await app.inject({
         method: "POST",
         url: `/stores/${SLUG}/staff`,
@@ -531,6 +533,89 @@ describe.skipIf(!PG_ENABLED)("التسعَ عشرةَ عمليّةً فوق Post
       });
       expect(listed.statusCode, listed.body).toBe(200);
       expect(listed.json().staff).toHaveLength(1);
+    });
+
+    /**
+     * RISK-0042 الدَّينُ 1 · CLM-0419 — **الرتبةُ** لا الانتسابُ وحدَهُ. كانَ عضوٌ
+     * بدورِ `staff` يُضيفُ مديراً ويُزيلُ زميلاً لأنَّ الحارسَ سألَ «أأنتَ منهُ؟»
+     * ولم يسألْ «أبرتبةٍ تُدير؟». والأثرُ يُقاسُ: لا صفَّ يُكتَبُ ولا ختمَ.
+     */
+    it("وعضوٌ بدورِ `staff` لا يُضيفُ عضواً — `403` والصفُّ لا يُكتَب", async () => {
+      await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: write(),
+        payload: { member_public_id: MEMBER, role: "staff", added_by_public_id: OWNER },
+      });
+      const before = await countRows(pg.pool, "store_staff");
+      const response = await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/stores/${SLUG}/staff`, { keys, onBehalfOfPublicId: MEMBER }),
+        },
+        payload: { member_public_id: "WS-1000000077", role: "manager", added_by_public_id: MEMBER },
+      });
+      expect(response.statusCode, response.body).toBe(403);
+      expect(response.json().error.code).toBe("AUTHZ_FORBIDDEN");
+      expect(await countRows(pg.pool, "store_staff")).toBe(before);
+    });
+
+    it("وعضوٌ بدورِ `staff` لا يُزيلُ زميلاً — `403` والزميلُ يبقى نشِطاً", async () => {
+      for (const member of [MEMBER, "WS-1000000078"]) {
+        await app.inject({
+          method: "POST",
+          url: `/stores/${SLUG}/staff`,
+          headers: write(),
+          payload: { member_public_id: member, role: "staff", added_by_public_id: OWNER },
+        });
+      }
+      const response = await app.inject({
+        method: "DELETE",
+        url: `/stores/${SLUG}/staff/WS-1000000078`,
+        headers: {
+          ...write(),
+          ...signFor("DELETE", `/stores/${SLUG}/staff/WS-1000000078`, { keys, onBehalfOfPublicId: MEMBER }),
+        },
+        payload: { removed_by_public_id: MEMBER },
+      });
+      expect(response.statusCode, response.body).toBe(403);
+      expect(response.json().error.code).toBe("AUTHZ_FORBIDDEN");
+      const sealed = await pg.pool.query(
+        "SELECT count(*)::int AS n FROM store_staff WHERE member_public_id = $1 AND removed_at IS NOT NULL",
+        ["WS-1000000078"],
+      );
+      expect(sealed.rows[0].n).toBe(0);
+    });
+
+    it("ومديرٌ نشِطٌ يُديرُ الطاقمَ — يُضيفُ ويُزيلُ (القرار 8: كلُّ شيءٍ إلّا المرجع)", async () => {
+      await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: write(),
+        payload: { member_public_id: MEMBER, role: "manager", added_by_public_id: OWNER },
+      });
+      const added = await app.inject({
+        method: "POST",
+        url: `/stores/${SLUG}/staff`,
+        headers: {
+          ...write(),
+          ...signFor("POST", `/stores/${SLUG}/staff`, { keys, onBehalfOfPublicId: MEMBER }),
+        },
+        payload: { member_public_id: "WS-1000000079", role: "staff", added_by_public_id: MEMBER },
+      });
+      expect(added.statusCode, added.body).toBe(201);
+      const removed = await app.inject({
+        method: "DELETE",
+        url: `/stores/${SLUG}/staff/WS-1000000079`,
+        headers: {
+          ...write(),
+          ...signFor("DELETE", `/stores/${SLUG}/staff/WS-1000000079`, { keys, onBehalfOfPublicId: MEMBER }),
+        },
+        payload: { removed_by_public_id: MEMBER },
+      });
+      expect(removed.statusCode, removed.body).toBe(200);
     });
 
     it("والمُزالُ يفقدُ القراءةَ فوراً — الختمُ يُقرأُ إزالةً في المعاملةِ نفسِها", async () => {

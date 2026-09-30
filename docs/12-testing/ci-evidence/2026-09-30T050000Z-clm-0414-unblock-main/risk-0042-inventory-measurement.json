@@ -1,0 +1,47 @@
+{
+ "ENFORCED_OPERATIONS": 157,
+ "AUDIENCES": 17,
+ "OPERATION_BINDINGS": 52,
+ "TOKEN_BOUND_OPERATION_COUNT": 44,
+ "TENANT_BOUND_OPERATION_COUNT": 8,
+ "UNCLASSIFIED_OPERATION_COUNT": 105,
+ "by_strength": {
+  "token-bound": 44,
+  "none": 8
+ },
+ "by_dimension_strength": {
+  "owner:token-bound": 36,
+  "owner:none": 1,
+  "tenant:none": 7,
+  "tenant:token-bound": 8
+ },
+ "none_or_caller": [
+  "orders GET /orders/lookup owner:none",
+  "marketplace GET /stores/:storeSlug tenant:none",
+  "marketplace POST /stores/:storeSlug/decisions tenant:none",
+  "marketplace GET /stores/:storeSlug/reviews tenant:none",
+  "marketplace GET /stores/:storeSlug/products tenant:none",
+  "marketplace POST /stores/:storeSlug/inventory/reserve tenant:none",
+  "marketplace POST /stores/:storeSlug/inventory/release tenant:none",
+  "marketplace POST /products/:productId/decisions tenant:none"
+ ],
+ "unclassified_by_audience": {
+  "channel": 3,
+  "customers": 4,
+  "drivers": 2,
+  "delivery": 13,
+  "dispatch": 8,
+  "geography": 9,
+  "identity": 5,
+  "marketplace": 5,
+  "matching": 6,
+  "negotiations": 12,
+  "orders": 5,
+  "reputation": 8,
+  "search": 5,
+  "subscriptions": 4,
+  "audit": 2,
+  "support": 7,
+  "billing": 7
+ }
+}

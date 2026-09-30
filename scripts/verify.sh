@@ -130,6 +130,16 @@ else
   run_step "الاختبارات (scripts/run-tests.sh)" bash scripts/run-tests.sh
 fi
 
+# ── 6) مجموعاتُ التكاملِ على PostgreSQL (RISK-0007 · CLM-0414) ───────────────
+# In CI these are required jobs. Locally they run when a disposable PostgreSQL
+# server is named in WASLA_LOCAL_PG_URL; otherwise the skip is declared, never
+# counted as a pass. The legs come from ci.yml itself (scripts/ci/run-integration-local.sh).
+if [[ -n "${WASLA_LOCAL_PG_URL:-}" && "$SKIP_NODE" != "1" && -d node_modules ]]; then
+  run_step "مجموعاتُ التكاملِ على PostgreSQL (مصفوفةُ ci.yml)" bash scripts/ci/run-integration-local.sh
+else
+  skip_step "مجموعاتُ التكاملِ على PostgreSQL (مصفوفةُ ci.yml)" "WASLA_LOCAL_PG_URL غيرُ مضبوطٍ — غيرُ مقيسةٍ محلّيّاً هنا؛ تُقاس في CI وظائفَ مطلوبةً"
+fi
+
 # ── الأرتفاكت ────────────────────────────────────────────────────────────
 mkdir -p "$OUT_DIR"
 SHA="$(git rev-parse HEAD 2>/dev/null || echo unknown)"

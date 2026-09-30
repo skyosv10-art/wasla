@@ -7541,3 +7541,37 @@ Third manual run failed: removing pg16 caused pg_wrapper to fail with "PostgreSQ
 Successful workflow run 36643974571 produced encrypted artifact but restore test showed 0/5 tables due to `supabase_vault` extension not available in vanilla Docker PostgreSQL 17.
 
 Fix: create `vault` schema before restore, remove `--exit-on-error` so pg_restore continues past extension errors. Updated evidence README with actual measured results.
+
+
+---
+
+## 2026-09-30 · CLM-0413 · M6-18B — RISK-0056 production migration readiness report
+
+**Operator:** @skyosv10-art (agent:perplexity-computer)
+**Branch:** ops/risk-0056-readiness-report
+**Commit:** bc5de79 (tip of main)
+**Production project ref:** snlpxywskyqrjattbpgn (only identifier printed)
+
+### What was prepared
+
+Comprehensive readiness report for RISK-0056 production migration, covering:
+
+1. **Migration workflow:** target commit bc5de79; 14 schema.sql files; order proven from file content (audit → 12 services → search last); search last because it is the only file with CREATE EXTENSION pg_trgm (B1 resolved by CLM-0412).
+2. **Backup:** db-backup.yml (RISK-0055) triggered manually before migration; verification of dump non-empty + pg_restore --list + GPG round-trip + local restore test.
+3. **lock_timeout:** SET lock_timeout = '2s' in-session; verified with SHOW before any DDL.
+4. **PASS/STOP criteria:** all 14 /health = ok; delivery/ready = 200 database ok; tagged write/read-back/cleanup; pg_trgm + % operator + index verified.
+5. **Recovery plan:** pre-data rollback (commented DROP IF EXISTS per service, idempotent re-run); post-data restore from RISK-0055 backup (RPO ~0, RTO <1 min). No automatic DROP/TRUNCATE.
+6. **Governance:** workflow does not need merge to main (can run from branch via workflow_dispatch); PR #549 not required; governance-guard failing on main (stale claim + expired RISK-0012/0013/0042 reviews) — not bypassed, owner decision.
+7. **Duration:** ~4-5 minutes total. Recommended quiet window: 02:00-05:00 UTC.
+8. **Monitoring:** workflow exit codes + M6-18C Telegram alerts + operator oversight.
+
+### What was NOT done
+
+No production changes. No DDL, no DDL, no extension, no Render change, no schema.sql change. PR #549 not merged. governance-guard not bypassed. RISK-0012/0013/0042 not modified.
+
+### Status
+
+READY — awaiting owner's explicit approval to proceed with production application.
+
+Evidence: docs/12-testing/ci-evidence/2026-09-30T023500Z-risk-0056-readiness-report/README.md
+

@@ -39,3 +39,21 @@ The result is added below by addition after the run.
   - Manifest: `restore_all_match: true`, dump 667 697 B, `.gpg` 667 800 B, dump 62.6 s, encrypt 0.8 s, runner-local restore and compare 15.1 s.
 - **P2:** the job reported 6/6 faults failed closed, with no manifest and no plaintext left. **But F5 (row removed) and F6 (extra table) failed at `stage=list`, not at `compare`.** The test shim passed `pg_restore --list` through and then exited 1 because no `--dbname` was given. So those two faults proved nothing about the compare stage. F1 to F4 failed at their intended stages: empty passphrase, unreachable source, `stage=list` (1 table absent from the TOC), and `stage=list` (`pg_restore` failure).
 - **Correction:** the shim now exits 0 when there is no `--dbname`. `expect_fail` now also requires that the **first** failure matches the stage the fault targets, so failing earlier for another reason is itself a proof failure. The result of the re-run is recorded below.
+
+### 3.2 Run 36670872501 (`436ad9d`): P1 PASS, P2 6/6 at their target stages
+
+- **P1:** 107/107 `public` tables, 23 rows, `restore_all_match: true`. Dump 58.2 s; runner-local restore and compare 14.9 s.
+- **P2**, first failure per fault:
+
+| Fault | First failure |
+|---|---|
+| F1 empty passphrase | refused before any dump |
+| F2 unreachable source | stage 1 (no dump) |
+| F3 dump missing one table | `stage=list` (1 public table absent from the TOC) |
+| F4 `pg_restore` exits 1 | `stage=list` |
+| F5 one row removed after restore | list, gpg and restore PASS, then `stage=compare` (1 table with a row-count mismatch) |
+| F6 extra table after restore | list, gpg and restore PASS, then `stage=compare` (restored table set differs) |
+
+In all six: exit 1, no manifest, and no unencrypted work directory left behind.
+
+**`WASLA CI` on this PR (run 36670876187)** fails `governance-guard` (checks 4, 9, 10, 23), `verify` and `image-supply-chain`. These are the same failures as on `main` (brace-expansion, fast-uri, expired risks, CLM-0409, stale branches). This PR adds none of them.

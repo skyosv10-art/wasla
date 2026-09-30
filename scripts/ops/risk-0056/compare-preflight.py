@@ -122,6 +122,20 @@ def main():
     print("default ACL in public:", json.dumps(result["default_acl_public"], ensure_ascii=False))
     print("event triggers:", json.dumps(result["event_triggers"], ensure_ascii=False))
     print("activity:", json.dumps(result["activity"]))
+    print("default ACL (all):", json.dumps(prod.get("default_acl_all"), ensure_ascii=False))
+    print("API roles on schema public:", json.dumps(prod.get("api_roles"), ensure_ascii=False))
+    for t in sorted(prod["tables"]):
+        v = prod["tables"][t]
+        print(f"existing public table {t}: rows={v['rows']} rls={v['rls']} policies={len(v['policies'])} acl={v['acl']}")
+    if "audit_events" in prod["tables"]:
+        a, r = prod["tables"]["audit_events"], ref["tables"]["audit_events"]
+        for c in a["columns"]:
+            print(f"audit_events column (production): {c['name']} | {c['type']} | not_null={c['not_null']} | default={c['default']} | identity={c['identity'] or '-'}")
+        for c in a["constraints"]:
+            print(f"audit_events constraint (production): {c['name']} | {c['type']} | {c['def']}")
+        for i in a["indexes"]:
+            print(f"audit_events index (production): {i['def']}")
+        print(f"audit_events triggers (production): {len(a['triggers'])} · reference: {len(r['triggers'])}")
 
 
 if __name__ == "__main__":

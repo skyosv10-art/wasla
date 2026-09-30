@@ -71,6 +71,17 @@ snap.default_acl_public = await q(
      FROM pg_default_acl d JOIN pg_namespace n ON n.oid = d.defaclnamespace
     WHERE n.nspname = 'public' ORDER BY 1, 2`,
 );
+snap.default_acl_all = await q(
+  `SELECT pg_get_userbyid(d.defaclrole) AS owner_role, coalesce(n.nspname, '(all schemas)') AS schema,
+          d.defaclobjtype AS objtype, d.defaclacl::text AS acl
+     FROM pg_default_acl d LEFT JOIN pg_namespace n ON n.oid = d.defaclnamespace ORDER BY 1, 2, 3`,
+);
+snap.api_roles = await q(
+  `SELECT r.rolname AS role,
+          has_schema_privilege(r.rolname, 'public', 'USAGE') AS public_usage,
+          has_schema_privilege(r.rolname, 'public', 'CREATE') AS public_create
+     FROM pg_roles r WHERE r.rolname IN ('anon','authenticated','service_role') ORDER BY 1`,
+);
 snap.event_triggers = await q("SELECT evtname AS name, evtevent AS event, evtenabled AS enabled, evtfoid::regproc::text AS function FROM pg_event_trigger ORDER BY 1");
 snap.activity = await q(
   "SELECT coalesce(state, 'n/a') AS state, count(*)::int AS n FROM pg_stat_activity WHERE datname = current_database() GROUP BY 1 ORDER BY 1",

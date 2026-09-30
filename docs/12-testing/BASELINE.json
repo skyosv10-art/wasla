@@ -3,11 +3,9 @@
   "generated_at": "2026-09-30T08:55:43Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "1829a2ab36e358f9f833b4101b5b7cd34bfc4e5b",
+    "commit": "61ed8f9b91978d0ceb59674c98c609821ddcebad",
     "branch": "fix/clm-0419-risk-0042-staff-rank",
     "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "CLM-0418: in-tree verify log docs/12-testing/baseline-sources/2026-09-30T085540Z-verify.txt added for this baseline",
     "tracked_files": 2993
   },
   "env": {

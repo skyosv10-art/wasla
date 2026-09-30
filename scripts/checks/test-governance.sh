@@ -36,6 +36,15 @@ git add -A >/dev/null 2>&1
 git commit -qm "baseline" >/dev/null 2>&1
 git update-ref refs/remotes/origin/main HEAD
 git branch -f origin-main >/dev/null 2>&1
+# RISK-0028 gate 4(b) requires `repo.commit` in BASELINE.json to resolve. This
+# synthetic repository has a fresh history, so the recorded commit is imported
+# from the real repository (object only, under a private ref). The gate is not
+# relaxed: if the real checkout lacks the commit, the git-context case fails.
+_BASE_COMMIT="$(python3 -c "import json;print((json.load(open('docs/12-testing/BASELINE.json')).get('repo') or {}).get('commit',''))" 2>/dev/null)"
+if [[ -n "$_BASE_COMMIT" ]]; then
+  git fetch -q "$REPO_ROOT" "$_BASE_COMMIT:refs/baseline/recorded" >/dev/null 2>&1 \
+    || printf '  (repo.commit %s not importable from the real checkout — the git-context case will report it)\n' "${_BASE_COMMIT:0:12}"
+fi
 
 PASS=0; FAIL=0
 t() { # t <وصف> <متوقع: pass|fail> <أمر...>

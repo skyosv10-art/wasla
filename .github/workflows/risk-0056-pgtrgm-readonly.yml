@@ -87,7 +87,7 @@ jobs:
           SP=$(python3 -c "import json;print(json.load(open('out/pgtrgm-production.json'))['search_path'])")
           HAS_EXT=$(python3 -c "import json;print('yes' if json.load(open('out/pgtrgm-production.json'))['extensions_schema'] else 'no')")
           echo "replaying with production search_path: $SP · extensions schema in production: $HAS_EXT"
-          echo "$SP" | grep -qE '^[A-Za-z0-9_$", ]+$' || { echo "::error::unexpected search_path characters"; exit 1; }
+          echo "$SP" | grep -qE '^[A-Za-z0-9_$\\", ]+$' || { echo "::error::unexpected search_path characters"; exit 1; }
           docker run -d --name risk0056-trgm -e POSTGRES_PASSWORD=ref -e POSTGRES_DB=ref -p 15434:5432 postgres:17 >/dev/null
           for i in $(seq 1 40); do docker exec risk0056-trgm pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
           sleep 2

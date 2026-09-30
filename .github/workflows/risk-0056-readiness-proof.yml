@@ -1,0 +1,186 @@
+name: RISK-0056 readiness proof (TEST DB only)
+
+# CLM-0413 · M6-18B — closes the owner's review points on the readiness report
+# WITHOUT touching production. The only database secret referenced is
+# SUPABASE_TEST_DB_URL; guard-test-db.py refuses the run if it carries the
+# production project ref. SUPABASE_DB_URL is NOT referenced anywhere here.
+#
+# Proves, on the TEST database:
+#   A. source: the 14 contracts/schema.sql files hash exactly as the files
+#      applied in run 36652155317 (schema-sha256.txt) — stop on any difference;
+#   B. lock_timeout lives in the SAME session that executes the DDL:
+#      baseline 0 → preload sets 2s on the migration's only session → a held
+#      ACCESS EXCLUSIVE lock makes the REAL search migration fail with 55P03
+#      instead of waiting; then all 14 REAL migrate-cli.ts run with the preload
+#      and each stays on one session whose lock_timeout reads 2s at start and end;
+#   C. backup guard: snapshot-consistent dump + counts, then verify-backup.sh
+#      (non-empty · pg_restore --list · GPG round-trip · restore with
+#      --exit-on-error · exact table/row equality) PASSES, and four injected
+#      faults each make it FAIL at the expected stage.
+#
+# Trigger: push to this branch only. workflow_dispatch is not usable for a
+# workflow that is not on the default branch (GitHub docs), and this file must
+# not reach main as an apply mechanism — it applies nothing to production.
+# It is NOT the production apply workflow; none exists.
+
+on:
+  push:
+    branches: ['ops/risk-0056-readiness-report']
+    paths:
+      - '.github/workflows/risk-0056-readiness-proof.yml'
+      - 'scripts/ops/risk-0056/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-test-db
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  PG_VERSION: "17"
+  SERVICES: "audit customers delivery dispatch drivers geography identity marketplace matching negotiations orders reputation search subscriptions"
+
+jobs:
+  proof:
+    name: Source hashes · lock_timeout in-session · fail-closed backup guard (TEST DB)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      RISK0056_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Guard — TEST project only, session pooler (prints project ref only)
+        id: guard
+        run: |
+          python3 scripts/ops/risk-0056/guard-test-db.py
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import urlsplit
+          p = urlsplit(os.environ["RISK0056_DB_URL"])
+          port = p.port or 5432
+          if port == 6543:
+              print("::error::transaction pooler (6543) — session-level SET is not pinned there; refusing")
+              sys.exit(1)
+          print(f"pooler mode check: port {port} (session) — ok")
+          PY
+
+      - name: A — source commit and schema.sql hashes
+        run: |
+          echo "checked-out commit: $(git rev-parse HEAD)"
+          grep -v '^#' scripts/ops/risk-0056/schema-sha256.txt | sha256sum -c --quiet \
+            && echo "schema.sql sha256: 14/14 identical to run 36652155317 (383eb8ee364c89995259c2084dfe5e49274883af)"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+
+      - name: Install PostgreSQL ${{ env.PG_VERSION }} client tools
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: B1 — negative test — held lock ⇒ REAL search migration fails 55P03 (no wait)
+        run: |
+          mkdir -p out
+          node scripts/ops/risk-0056/lock-timeout-proof.mjs out/lock-timeout-proof.json
+
+      - name: B2 — all 14 REAL migrate-cli.ts with the preload — one session each, 2s at start and end
+        run: |
+          set -o pipefail
+          : > out/lt-positive.jsonl
+          for s in $SERVICES; do
+            ev="$PWD/out/lt-${s}.jsonl"; rm -f "$ev"
+            start=$(date +%s%3N)
+            if DATABASE_URL="$RISK0056_DB_URL" RISK0056_LOCK_TIMEOUT=2s RISK0056_LT_EVIDENCE="$ev" RISK0056_SERVICE="$s" \
+                 pnpm --silent --filter "@wasla/${s}-service" exec \
+                   node --import "$PWD/scripts/ops/risk-0056/lock-timeout-preload.mjs" --import tsx src/db/migrate-cli.ts \
+                 > "out/m-${s}.log" 2>&1; then rc=0; else rc=$?; fi
+            ms=$(( $(date +%s%3N) - start ))
+            python3 - "$ev" "$s" "$rc" "$ms" <<'PY' | tee -a out/lt-positive.jsonl
+          import json, sys
+          ev, svc, rc, ms = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+          import os
+          e = [json.loads(l) for l in open(ev)] if os.path.exists(ev) else []
+          ready = [x for x in e if x["event"] == "session_ready"]
+          final = [x for x in e if x["event"] == "session_final"]
+          pools = [x for x in e if x["event"] == "pool_created"]
+          ok = (rc == 0 and len(ready) == 1 and len(final) == 1 and len(pools) >= 1
+                and ready[0]["lock_timeout"] == "2s" and final[0]["lock_timeout"] == "2s"
+                and ready[0]["pid"] == final[0]["pid"])
+          print(json.dumps({"service": svc, "exit": rc, "ms": ms, "sessions_opened": len(ready),
+                            "lock_timeout_start": ready[0]["lock_timeout"] if ready else None,
+                            "lock_timeout_end": final[0]["lock_timeout"] if final else None,
+                            "same_pid_start_end": bool(ready and final and ready[0]["pid"] == final[0]["pid"]),
+                            "pass": ok}))
+          PY
+            if [ "$rc" -ne 0 ]; then grep -viE 'postgres(ql)?://' "out/m-${s}.log" | tail -15; exit 1; fi
+          done
+          python3 -c "import json,sys; r=[json.loads(l) for l in open('out/lt-positive.jsonl')]; bad=[x['service'] for x in r if not x['pass']]; print(f'B2: {len(r)-len(bad)}/{len(r)} services PASS'); sys.exit(1 if bad or len(r)!=14 else 0)"
+          rm -f out/m-*.log
+
+      - name: C1 — backup guard on the TEST DB (must PASS)
+        env:
+          BACKUP_SOURCE_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+          BACKUP_PASSPHRASE: risk0056-proof-only-not-a-secret
+        run: |
+          node scripts/ops/risk-0056/snapshot-dump.mjs out/test.dump out/counts.json
+          bash scripts/ops/risk-0056/verify-backup.sh out/test.dump out/counts.json out/verify-ok
+
+      - name: C2 — injected faults (each must FAIL at its stage)
+        env:
+          BACKUP_PASSPHRASE: risk0056-proof-only-not-a-secret
+        run: |
+          set +e
+          expect_fail() {  # name expected_stage command...
+            local name="$1" stage="$2"; shift 2
+            out=$("$@" 2>&1); rc=$?
+            line=$(printf '%s\n' "$out" | grep 'BACKUP-GUARD FAIL' | head -1)
+            if [ "$rc" -ne 0 ] && printf '%s' "$line" | grep -Eq "stage=(${stage}) "; then
+              echo "fault ${name}: FAILED CLOSED as expected — ${line}"
+            else
+              echo "::error::fault ${name}: guard did not fail at stage ${stage} (rc=${rc})"; exit 1
+            fi
+          }
+          : > out/empty.dump
+          expect_fail empty-dump nonempty bash scripts/ops/risk-0056/verify-backup.sh out/empty.dump out/counts.json out/f1
+          head -c $(( $(stat -c%s out/test.dump) / 2 )) out/test.dump > out/truncated.dump
+          expect_fail truncated-dump 'list|restore' bash scripts/ops/risk-0056/verify-backup.sh out/truncated.dump out/counts.json out/f2
+          expect_fail empty-passphrase gpg env BACKUP_PASSPHRASE= bash scripts/ops/risk-0056/verify-backup.sh out/test.dump out/counts.json out/f3
+          python3 - <<'PY'
+          import json
+          c = json.load(open("out/counts.json"))
+          t = sorted(c["tables"])[0]
+          c["tables"][t] = str(int(c["tables"][t]) + 1)
+          json.dump(c, open("out/counts-tampered.json", "w"))
+          PY
+          expect_fail row-count-mismatch compare bash scripts/ops/risk-0056/verify-backup.sh out/test.dump out/counts-tampered.json out/f4
+          python3 - <<'PY'
+          import json
+          c = json.load(open("out/counts.json"))
+          c["tables"]["risk0056_absent_table"] = "0"
+          json.dump(c, open("out/counts-extra.json", "w"))
+          PY
+          expect_fail table-missing-from-dump list bash scripts/ops/risk-0056/verify-backup.sh out/test.dump out/counts-extra.json out/f5
+          echo "C2: all injected faults failed closed"
+          rm -f out/*.dump
+
+      - name: Summary (no URLs, no secrets)
+        if: always()
+        run: |
+          echo "commit $(git rev-parse HEAD) · TEST project ref ${{ steps.guard.outputs.project_ref }}"
+          [ -f out/lock-timeout-proof.json ] && cat out/lock-timeout-proof.json || true

@@ -324,10 +324,10 @@ export class InMemoryDeliveryEventSource implements DeliveryEventSource {
   private readonly rows: DeliveryOutboxRow[];
 
   constructor(rows: DeliveryOutboxRow[]) {
+    // Stream order = commit_sequence, as the Postgres source (RISK-0012 · ADR-057).
     this.rows = [...rows].sort((a, b) => {
-      if (a.occurred_at < b.occurred_at) return -1;
-      if (a.occurred_at > b.occurred_at) return 1;
-      return a.event_id < b.event_id ? -1 : 1;
+      const d = BigInt(a.commit_sequence) - BigInt(b.commit_sequence);
+      return d < 0n ? -1 : d > 0n ? 1 : 0;
     });
   }
 

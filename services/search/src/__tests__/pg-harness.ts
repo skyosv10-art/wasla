@@ -3,8 +3,8 @@
  *
  * The relay reads `marketplace_outbox` (marketplace schema) and writes the
  * search projection (search schema). For integration tests we need BOTH in
- * one test DB: a minimal `marketplace_outbox` table (matching the marketplace
- * contract — no FKs) to seed events, plus the full search schema.
+ * one test DB: the `marketplace_outbox` table read from the marketplace
+ * contract (with its RISK-0012 commit-order trigger) to seed events, plus the full search schema.
  *
  * Tests SKIP when `DATABASE_URL` is not set (see `docs/14-runbooks/`).
  */
@@ -47,20 +47,26 @@ export const SEARCH_TABLES = [
  * 2026-09-08: `null value in column "outbox_id"`. والأسوأُ أنّها كانت تسمحُ ببذرِ حدثٍ
  * لا يستطيعُ السوقُ إصدارَه أصلاً، فتُقاسُ حالةٌ لا وجودَ لها.
  */
-const OUTBOX_DDL = `
-CREATE TABLE IF NOT EXISTS marketplace_outbox (
-    outbox_id      UUID        PRIMARY KEY,
-    event_type     TEXT        NOT NULL CHECK (event_type ~ '^marketplace\\.[a-z_]+$'),
-    event_version  TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
-    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('store', 'product', 'inventory')),
-    aggregate_id   TEXT        NOT NULL,
-    payload        JSONB       NOT NULL,
-    occurred_at    TIMESTAMPTZ NOT NULL,
-    published_at   TIMESTAMPTZ,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    trace_id       TEXT
+const MARKETPLACE_CONTRACT = readFileSync(
+  resolve(__dirname, "../../../marketplace/contracts/schema.sql"),
+  "utf8",
 );
-`;
+
+/*
+ * RISK-0012 (CLM-0416 · ADR-057): the table AND its commit-order trigger are read
+ * from the marketplace contract at runtime, so "verbatim" holds by construction.
+ * The hand copy that stood here had already drifted (no `sequence_number`).
+ */
+function marketplaceOutboxDdl(): string {
+  const create = /CREATE TABLE IF NOT EXISTS marketplace_outbox \([\s\S]*?\n\);/.exec(MARKETPLACE_CONTRACT);
+  const order = /-- >>> RISK-0012 commit_sequence \(marketplace_outbox\)[\s\S]*?-- <<< RISK-0012 commit_sequence \(marketplace_outbox\)/.exec(
+    MARKETPLACE_CONTRACT,
+  );
+  if (!create || !order) throw new Error("marketplace/contracts/schema.sql: marketplace_outbox DDL or its RISK-0012 block not found");
+  return `${create[0]}\n${order[0]}\n`;
+}
+
+const OUTBOX_DDL = marketplaceOutboxDdl();
 
 export interface PgFixture {
   readonly pool: Pool;

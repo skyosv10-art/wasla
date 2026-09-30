@@ -25,6 +25,7 @@ import {
   seedTask,
   seedDispatchEvent,
   CONTRACT_TABLES,
+  commitSequenceOf,
   type PgFixture,
 } from "./pg-harness.js";
 import { PostgresDispatchEventSource } from "../infrastructure/dispatch-event-source.js";
@@ -117,7 +118,11 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<RelayDeps> {
     expect(ob[0]).toMatchObject({ event_type: "delivery.driver_assigned", aggregate_type: "delivery_task", aggregate_id: taskId, courier: DRIVER });
 
     expect((await store.getConsumed(eventId))?.status).toBe("applied");
-    expect((await store.getCheckpoint(DEFAULT_RELAY_CONFIG.consumerId))).toEqual({ last_occurred_at: ts(0), last_event_id: eventId });
+    expect((await store.getCheckpoint(DEFAULT_RELAY_CONFIG.consumerId))).toEqual({
+      last_commit_sequence: await commitSequenceOf(pool, "dispatch_outbox", "event_id", eventId),
+      last_occurred_at: ts(0),
+      last_event_id: eventId,
+    });
   });
 
   /* ── atomicity: what memory tests CANNOT prove ── */
@@ -203,11 +208,17 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<RelayDeps> {
     // is a legal edge) lands behind the checkpoint. It is only ever read
     // again on replay — and there, only the task's watermark can stop it from
     // regressing state. Checkpoint loss is exactly that scenario.
+    //
+    // RISK-0012 (ADR-057): with commit-ordered reads, a never-consumed event can
+    // only sit behind the checkpoint if the trigger never ordered it (a
+    // pre-migration row). That row is seeded here explicitly, at commit_sequence 1:
+    // the trigger's first committed value is 2 (the insert-time default took 1).
     const olderId = await seedDispatchEvent(pool, {
       event_type: "dispatch.offer_timed_out",
       aggregate_id: JOB,
       occurred_at: ts(1),
       payload: { job_id: JOB, driver_public_id: DRIVER, timed_out_at: ts(1) },
+      legacy_commit_sequence: 1,
     });
 
     const deps = await makeDeps(pool);
@@ -307,11 +318,14 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<RelayDeps> {
     // An OLDER outcome arriving behind the watermark is only ever read again
     // on replay — and is caught as stale BY the ignored wave's watermark.
     // This is exactly why `ignored` still advances the watermark.
+    // RISK-0012 (ADR-057): "behind the watermark" now means a row the trigger
+    // never ordered (pre-migration) — seeded at commit_sequence 1, see above.
     const olderId = await seedDispatchEvent(pool, {
       event_type: "dispatch.offer_accepted",
       aggregate_id: JOB,
       occurred_at: ts(0),
       payload: { job_id: JOB, driver_public_id: DRIVER, accepted_at: ts(0) },
+      legacy_commit_sequence: 1,
     });
 
     const deps = await makeDeps(pool);

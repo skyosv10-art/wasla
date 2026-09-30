@@ -19,8 +19,9 @@ export class PostgresProjectionStore implements ProjectionStore {
   constructor(private readonly pool: Pool) {}
 
   async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
-    const r = await this.pool.query<{ last_outbox_id: string; last_created_at: string }>(
-      `SELECT last_outbox_id::text, last_created_at::text FROM search_relay_checkpoint WHERE consumer_id = $1`,
+    const r = await this.pool.query<{ last_commit_sequence: string; last_outbox_id: string; last_created_at: string }>(
+      `SELECT last_commit_sequence::text AS last_commit_sequence, last_outbox_id::text, last_created_at::text
+         FROM search_relay_checkpoint WHERE consumer_id = $1`,
       [consumerId],
     );
     return r.rows.length ? r.rows[0] : null;
@@ -28,12 +29,13 @@ export class PostgresProjectionStore implements ProjectionStore {
 
   async writeCheckpoint(consumerId: string, cp: RelayCheckpoint): Promise<void> {
     await this.pool.query(
-      `INSERT INTO search_relay_checkpoint (consumer_id, last_outbox_id, last_created_at)
-       VALUES ($1, $2::uuid, $3::timestamptz)
+      `INSERT INTO search_relay_checkpoint (consumer_id, last_commit_sequence, last_outbox_id, last_created_at)
+       VALUES ($1, $2::bigint, $3::uuid, $4::timestamptz)
        ON CONFLICT (consumer_id)
-       DO UPDATE SET last_outbox_id = EXCLUDED.last_outbox_id,
+       DO UPDATE SET last_commit_sequence = EXCLUDED.last_commit_sequence,
+                     last_outbox_id = EXCLUDED.last_outbox_id,
                      last_created_at = EXCLUDED.last_created_at`,
-      [consumerId, cp.last_outbox_id, cp.last_created_at],
+      [consumerId, cp.last_commit_sequence, cp.last_outbox_id, cp.last_created_at],
     );
   }
 

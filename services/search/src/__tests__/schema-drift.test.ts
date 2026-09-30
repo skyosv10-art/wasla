@@ -226,7 +226,10 @@ function ddlConstraintNames(table: string): ReadonlyArray<string> {
 /** نوعُ Postgres المُقابلُ لعمودِ Drizzle. */
 function sqlTypeOf(columnType: string, sqlName: string): string {
   if (sqlName === "timestamp with time zone") return "TIMESTAMPTZ";
-  if (columnType === "PgBigInt53" || columnType === "PgBigSerial53") return "BIGSERIAL";
+  // BIGSERIAL and BIGINT are distinct in the contract (RISK-0012 added the first
+  // plain BIGINT column here), so the mapping must not fold one into the other.
+  if (columnType === "PgBigSerial53") return "BIGSERIAL";
+  if (columnType === "PgBigInt53") return "BIGINT";
   return sqlName.toUpperCase();
 }
 

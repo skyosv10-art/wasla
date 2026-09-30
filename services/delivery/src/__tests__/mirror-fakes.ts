@@ -109,13 +109,14 @@ export class InMemoryMirrorStore implements TaskMirrorStore {
     });
 
     this.outbox.push(this.buildEvent(updated, from, transition, context));
-    this.watermarks.set(taskId, { last_occurred_at: context.occurredAt, last_event_id: context.eventId });
+    this.watermarks.set(taskId, { last_commit_sequence: context.commitSequence, last_occurred_at: context.occurredAt, last_event_id: context.eventId });
   }
 
   async recordConsumedNoOp(taskId: string, context: MirrorContext): Promise<void> {
     const prev = this.watermarks.get(taskId) ?? null;
-    const next = { last_occurred_at: context.occurredAt, last_event_id: context.eventId };
-    if (!prev || next.last_occurred_at > prev.last_occurred_at) {
+    const next = { last_commit_sequence: context.commitSequence, last_occurred_at: context.occurredAt, last_event_id: context.eventId };
+    // Same guard as the Postgres adapter: forward-only on commit_sequence (RISK-0012).
+    if (!prev || BigInt(next.last_commit_sequence) > BigInt(prev.last_commit_sequence)) {
       this.watermarks.set(taskId, next);
     }
   }
@@ -183,25 +184,33 @@ export class ScriptedEventSource implements DispatchEventSource {
   constructor(readonly rows: readonly DispatchOutboxRow[]) {}
 
   async readAfter(checkpoint: RelayCheckpoint | null, limit: number): Promise<readonly DispatchOutboxRow[]> {
-    const sorted = [...this.rows].sort((a, b) =>
-      a.occurred_at === b.occurred_at ? a.event_id.localeCompare(b.event_id) : a.occurred_at.localeCompare(b.occurred_at),
-    );
-    const after = sorted.filter((r) => {
-      if (!checkpoint) return true;
-      if (r.occurred_at !== checkpoint.last_occurred_at) return r.occurred_at > checkpoint.last_occurred_at;
-      return r.event_id > checkpoint.last_event_id;
+    // Stream order = commit_sequence, exactly as the Postgres source (RISK-0012 · ADR-057).
+    const sorted = [...this.rows].sort((a, b) => {
+      const d = BigInt(a.commit_sequence) - BigInt(b.commit_sequence);
+      return d < 0n ? -1 : d > 0n ? 1 : 0;
     });
+    const after = sorted.filter((r) => !checkpoint || BigInt(r.commit_sequence) > BigInt(checkpoint.last_commit_sequence));
     return after.slice(0, limit);
   }
 }
 
-/** Convenience builder for a dispatch outbox row. */
+/**
+ * Convenience builder for a dispatch outbox row.
+ *
+ * `commit_sequence` defaults to the scripted `occurred_at` in epoch ms, so a
+ * unit script reads in the order its timestamps state. A test that needs commit
+ * order to DIFFER from `occurred_at` passes `commit_sequence` explicitly. The
+ * real trigger-assigned order is proven against PostgreSQL in
+ * `relay-commit-order.integration.test.ts`.
+ */
 export function dispatchRow(overrides: Partial<DispatchOutboxRow> & { event_id: string; event_type: DispatchOutboxRow["event_type"]; data: Record<string, unknown> }): DispatchOutboxRow {
+  const occurredAt = overrides.occurred_at ?? "2026-09-09T10:00:00.000Z";
   return {
     event_version: "v1",
     aggregate_type: "dispatch_job",
     aggregate_id: "job-agg-1",
-    occurred_at: "2026-09-09T10:00:00.000Z",
+    occurred_at: occurredAt,
+    commit_sequence: String(Date.parse(occurredAt)),
     trace_id: null,
     ...overrides,
   };

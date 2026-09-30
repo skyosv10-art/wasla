@@ -31,6 +31,8 @@ export interface DispatchEventSource {
 /** Context of the dispatch row that caused a mirror transition. */
 export interface MirrorContext {
   readonly eventId: string;
+  /** The dispatch event's `commit_sequence` — the per-task watermark (RISK-0012). */
+  readonly commitSequence: string;
   readonly occurredAt: string;
   readonly traceId: string | null;
 }

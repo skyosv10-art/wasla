@@ -99,3 +99,30 @@ So the risk cannot be closed on the current evidence on any PostgreSQL version. 
 - No CI verdict here. See the PR run.
 - Nothing about the nine other risks with review dates of 2026-09-30 and 2026-10-05. Their rows are **untouched**, and proposals are in the PR description only.
 - No production, Supabase, Render, secret or branch-protection change.
+
+## 7. Addendum (2026-09-30, after the "MASTER REPAIR & MERGE" mandate)
+
+This section adds to §§4–6 and does not replace them. Those sections describe the state before the mandate.
+
+- **RISK-0012.**
+  - The fix is PR #553 (CLM-0416, ADR-057), stacked on this PR.
+  - CI run 36676903603 passed 38/38 test jobs.
+  - The register row is `mitigating`, with review set to 2026-10-03. That date covers only the merge order: #553 merges to main after this PR and closes the row there. The paragraph in the register records this as a correction by addition.
+- **RISK-0013.**
+  - The fix is PR #554 (CLM-0417), stacked on this PR.
+  - The `accepted` row stays until #554 merges and closes it.
+- **BASELINE.**
+  - Regenerated from `docs/12-testing/baseline-sources/2026-09-30T062144Z-verify.txt`, an in-tree log (RISK-0028).
+  - That log records `verify_overall: failed`. The only failing checks were the stale baseline itself: governance check 11 and the one test-governance case that runs it. This is the documented loop in BASELINE_FORMAT §6.5.
+  - After regeneration, `verify-governance.sh origin/main HEAD` returns 0.
+- **RISK-0028 gate correction.**
+  - The first version of the gate looked for the literal `tests_passed` total in the log.
+  - That total is a sum across packages and never appears literally, so the gate rejected an honest baseline.
+  - The gate now recomputes the sum the way the generator does and requires equality.
+  - Two new mutation cases: a two-package sum passes, and a tampered number fails. test-governance: 541 pass and 1 fail before the commit (that case was the uncommitted baseline); after the commit, `verify-governance` in git context passes.
+- **Environment `production-migration` (§24-B).**
+  - Created through the API; the measured state is in `environment-production-migration.json`.
+  - Reviewer: `xuuux-voox` (id 334893315).
+  - `prevent_self_review: true`.
+  - Deployment branches: custom policy `main` only.
+  - Secrets: 0. The production secret is added by the owner.

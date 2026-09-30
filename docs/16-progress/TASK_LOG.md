@@ -2,10 +2,12 @@
 
 - **Work Item(s):** M0-45
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active — Draft PR, not merged; owner review pending
+- **Status:** Active — ready for review (MASTER REPAIR & MERGE, 2026-09-30)
 
 Owner decisions applied (2026-09-30): RISK-0013 `accepted` until 2026-12-29; RISK-0042 re-measured read-only (157 enforced · 52 classified · TOKEN_BOUND 44 · TENANT_BOUND 8 · none 8 · unclassified 105) and kept `open`, review 2026-10-30, blocks public launch and not the schema migration; ownership of RISK-0012/0013/0042 moved to @skyosv10-art. **RISK-0012 not closed:** three consumers (`delivery` ×2, `search`) still order by timestamp + random UUID, so the close condition is not met on any PG version. Its review decision stays with the owner. CLM-0409 released (PR #548). `ops/risk-0056-prod-preflight` and `ops/risk-0056-pgtrgm-readonly` declared in BRANCH_EVIDENCE. Dependencies: `pnpm audit --prod` 3 → 0 (fast-uri 3.1.8 / 4.1.5); full tree: 6 undeclared → 0 undeclared (brace-expansion 2.1.7), 2 declared (GHSA-82fw, unchanged). Codegen with brace-expansion 2.1.4 vs 2.1.7: 16/16 byte-identical. Nine other risks (0003, 0007, 0016, 0028, 0023–0027) were **not** edited; proposals are in the PR description. Evidence: `docs/12-testing/ci-evidence/2026-09-30T050000Z-clm-0414-unblock-main/`.
 
+
+**Addendum (MASTER REPAIR & MERGE):** RISK-0012 fixed in #553 (CI 36676903603, 38/38 test jobs) and row set to `mitigating` for merge order only; RISK-0013 fixed in #554; BASELINE regenerated from an in-tree verify log; RISK-0028 gate corrected (recompute, 2 mutation cases); Environment `production-migration` created (reviewer xuuux-voox, prevent_self_review, main only, 0 secrets). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 ---
 
 # 2026-09-29 — CLM-0404 — M6-18 post-merge live evidence (sync, /health, live-fire)

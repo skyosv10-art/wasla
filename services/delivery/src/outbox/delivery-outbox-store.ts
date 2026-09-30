@@ -42,7 +42,8 @@ export class DeliveryOutboxDrainStore implements OutboxDrainStore {
              attempts
         FROM delivery_outbox
        WHERE published_at IS NULL
-       ORDER BY outbox_id ASC
+       -- RISK-0012 (ADR-057): publish in commit order, not insert order.
+       ORDER BY delivery_outbox.commit_sequence ASC
        LIMIT ${limit}
          FOR UPDATE SKIP LOCKED
     `);

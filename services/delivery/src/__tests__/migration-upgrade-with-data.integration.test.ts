@@ -242,6 +242,18 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
        VALUES ($1, 'marketplace.inventory_adjusted', 'inventory', 'INV-0034', 'poisoned', 3, 'm0-34 upgrade proof')`,
       [SEEDED_POISONED.inventoryEventId],
     );
+    // RISK-0012 (0006): two outbox rows and a live relay cursor, BEFORE the
+    // migration that adds `commit_sequence` and the cursor column — so the
+    // backfill and the defaults are measured on rows that already exist.
+    await db.query(
+      `INSERT INTO delivery_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload)
+       VALUES ('99999999-0000-4000-8000-000000000001', 'store_order.created', 'v1', 'store_order', 'SO-1', '{}'::jsonb),
+              ('99999999-0000-4000-8000-000000000002', 'store_order.created', 'v1', 'store_order', 'SO-2', '{}'::jsonb)`,
+    );
+    await db.query(
+      `INSERT INTO delivery_relay_checkpoint (consumer_id, last_occurred_at, last_event_id)
+       VALUES ('delivery-dispatch-relay-v1', '2026-01-02T03:04:05Z', '99999999-0000-4000-8000-000000000003')`,
+    );
   });
 
   afterAll(async () => {
@@ -393,6 +405,28 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     );
   });
 
+  it("RISK-0012 (0006): commit_sequence is backfilled in append order, the cursor starts at 0, and the trigger orders new rows", async () => {
+    const outbox = await db.query<{ event_id: string; s: string }>(
+      `SELECT event_id::text AS event_id, commit_sequence::text AS s FROM delivery_outbox ORDER BY outbox_id`,
+    );
+    expect(outbox.rows).toEqual([
+      { event_id: "99999999-0000-4000-8000-000000000001", s: "1" },
+      { event_id: "99999999-0000-4000-8000-000000000002", s: "2" },
+    ]);
+    const cursor = await db.query(`SELECT last_commit_sequence::text AS s FROM delivery_relay_checkpoint`);
+    expect(cursor.rows).toEqual([{ s: "0" }]);
+    // A row inserted after the upgrade is ordered by the live trigger, after the backfill.
+    await db.query(
+      `INSERT INTO delivery_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload)
+       VALUES ('99999999-0000-4000-8000-000000000004', 'store_order.created', 'v1', 'store_order', 'SO-4', '{}'::jsonb)`,
+    );
+    const fresh = await db.query<{ s: string }>(
+      `SELECT commit_sequence::text AS s FROM delivery_outbox WHERE event_id = '99999999-0000-4000-8000-000000000004'`,
+    );
+    expect(BigInt(fresh.rows[0]!.s)).toBeGreaterThan(2n);
+    await db.query(`DELETE FROM delivery_outbox WHERE event_id = '99999999-0000-4000-8000-000000000004'`);
+  });
+
   it("الترجعُ طريقُ خروجٍ لا مِحرقةُ بياناتٍ: الصفوفُ تنجو بعدَ التراجعِ خطوةً", async () => {
     const last = upgrades[upgrades.length - 1];
     await applySqlFile(db, last.down);
@@ -415,6 +449,14 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     );
     expect(poisoned.rows[0].n).toBe(1);
     expect(poisonedInventory.rows[0].n).toBe(1);
+
+    // RISK-0012: the rollback of 0006 removes the column and keeps the outbox rows.
+    const outboxAfter = await db.query(`SELECT count(*)::int AS n FROM delivery_outbox`);
+    expect(outboxAfter.rows[0].n).toBe(2);
+    const seqCol = await db.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'delivery_outbox' AND column_name = 'commit_sequence'`,
+    );
+    expect(seqCol.rowCount).toBe(0);
 
     // وإعادةُ التطبيقِ بعدَ التراجعِ تمرُّ أيضاً على القاعدةِ المأهولةِ.
     await applySqlFile(db, last.up);

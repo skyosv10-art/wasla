@@ -159,6 +159,20 @@ describe.skipIf(!PG_ENABLED)("برهانُ الترقيةِ على قاعدةٍ 
     expect(Number(rows[0].sequence_number)).toBeGreaterThan(0);
   });
 
+  it("RISK-0012 (0003): commit_sequence is backfilled on the existing row and the trigger orders a new one after it", async () => {
+    const before = await db.query<{ s: string }>(`SELECT commit_sequence::text AS s FROM dispatch_outbox`);
+    expect(before.rows).toEqual([{ s: "1" }]);
+    await db.query(
+      `INSERT INTO dispatch_outbox (event_id, event_type, event_version, aggregate_type, aggregate_id, payload)
+       VALUES ('99999999-0000-4000-8000-00000000000d', 'dispatch.job_created', 'v1', 'dispatch_job', 'JOB-R12', '{}'::jsonb)`,
+    );
+    const fresh = await db.query<{ s: string }>(
+      `SELECT commit_sequence::text AS s FROM dispatch_outbox WHERE event_id = '99999999-0000-4000-8000-00000000000d'`,
+    );
+    expect(BigInt(fresh.rows[0]!.s)).toBeGreaterThan(1n);
+    await db.query(`DELETE FROM dispatch_outbox WHERE event_id = '99999999-0000-4000-8000-00000000000d'`);
+  });
+
   it("التراجعُ لا يُبيدُ البياناتِ — والعمودُ يُحذَفُ", async () => {
     for (const m of [...upgrades].reverse()) {
       await applySqlFile(db, m.down);

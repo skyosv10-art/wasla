@@ -142,20 +142,28 @@ export const TABLES = [
  * سطحُ التلامسِ الوحيدُ صفُّ صادرٍ. واستيرادُ المخطّطِ كلِّهِ كان سيجعلُ بوّابةَ البحثِ تسقطُ
  * بتغييرٍ في جدولِ مراجعاتِ المتاجرِ — وهو تزاوجٌ تمنعُهُ الوثيقةُ نفسُها.
  */
-const OUTBOX_DDL = `
-CREATE TABLE IF NOT EXISTS marketplace_outbox (
-    outbox_id      UUID        PRIMARY KEY,
-    event_type     TEXT        NOT NULL CHECK (event_type ~ '^marketplace\\.[a-z_]+$'),
-    event_version  TEXT        NOT NULL CHECK (event_version ~ '^v[0-9]+$'),
-    aggregate_type TEXT        NOT NULL CHECK (aggregate_type IN ('store', 'product', 'inventory')),
-    aggregate_id   TEXT        NOT NULL,
-    payload        JSONB       NOT NULL,
-    occurred_at    TIMESTAMPTZ NOT NULL,
-    published_at   TIMESTAMPTZ,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    trace_id       TEXT
+const MARKETPLACE_CONTRACT = readFileSync(
+  resolve(__dirname, "../../../services/marketplace/contracts/schema.sql"),
+  "utf8",
 );
-`;
+
+/*
+ * RISK-0012 (CLM-0416 · ADR-057): the outbox table and its commit-order trigger are
+ * cut from the marketplace contract at runtime — the table only, never the rest of
+ * the marketplace schema, so the ADR-025 boundary above still holds. The hand copy
+ * that stood here had no `sequence_number` and no `commit_sequence`; the search relay
+ * now reads `commit_sequence`, so the copy failed with 42703 on the first batch.
+ */
+function marketplaceOutboxDdl(): string {
+  const create = /CREATE TABLE IF NOT EXISTS marketplace_outbox \([\s\S]*?\n\);/.exec(MARKETPLACE_CONTRACT);
+  const order = /-- >>> RISK-0012 commit_sequence \(marketplace_outbox\)[\s\S]*?-- <<< RISK-0012 commit_sequence \(marketplace_outbox\)/.exec(
+    MARKETPLACE_CONTRACT,
+  );
+  if (!create || !order) throw new Error("marketplace/contracts/schema.sql: marketplace_outbox DDL or its RISK-0012 block not found");
+  return `${create[0]}\n${order[0]}\n`;
+}
+
+const OUTBOX_DDL = marketplaceOutboxDdl();
 
 /**
  * منفذُ الكتالوجِ في البوّابةِ — مُضاعِفٌ **مُعلَنٌ**، وهو الحدُّ الوحيدُ المقبولُ هنا.

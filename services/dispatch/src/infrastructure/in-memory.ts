@@ -77,6 +77,9 @@ export const DISPATCH_INDEX_NAMES: readonly string[] = [
   "ux_dispatch_waves_one_open_job",
   "ux_dispatch_offers_job_driver",
   "ux_dispatch_offers_one_accepted_job",
+  // RISK-0012 (ADR-057): the in-memory outbox is one array appended in process
+  // order, so its commit order IS its append order — uniqueness is by construction.
+  "ux_dispatch_outbox_commit_sequence",
 ];
 
 /**

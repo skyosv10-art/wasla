@@ -146,6 +146,7 @@ async function runRelayBatchLocked(
     }
 
     const position: RelayCheckpoint = {
+      last_commit_sequence: row.commit_sequence,
       last_occurred_at: row.occurred_at,
       last_event_id: row.event_id,
     };
@@ -155,10 +156,7 @@ async function runRelayBatchLocked(
     }
   }
 
-  if (
-    lastTerminal.last_occurred_at !== currentCheckpoint.last_occurred_at ||
-    lastTerminal.last_event_id !== currentCheckpoint.last_event_id
-  ) {
+  if (lastTerminal.last_commit_sequence !== currentCheckpoint.last_commit_sequence) {
     await deps.checkpoint.writeCheckpoint(cfg.consumerId, lastTerminal);
   }
 
@@ -223,13 +221,11 @@ async function processEvent(
 ): Promise<ConsumedEventResult> {
   // Stale check — at or before the checkpoint is already consumed.
   const rowCheckpoint: RelayCheckpoint = {
+    last_commit_sequence: row.commit_sequence,
     last_occurred_at: row.occurred_at,
     last_event_id: row.event_id,
   };
-  if (isBefore(rowCheckpoint, checkpoint) || (
-    rowCheckpoint.last_occurred_at === checkpoint.last_occurred_at &&
-    rowCheckpoint.last_event_id === checkpoint.last_event_id
-  )) {
+  if (!isBefore(checkpoint, rowCheckpoint)) {
     return { event_id: row.event_id, status: "skipped_stale", reason: "already consumed" };
   }
 

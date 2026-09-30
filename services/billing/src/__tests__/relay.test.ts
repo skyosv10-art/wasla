@@ -244,7 +244,7 @@ describe("billing relay — stale, ledger idempotency, checkpoint", () => {
     const rows = [createdRow(o, 1000, 0, { occurredAt: tick() }), deliveredRow(o, { occurredAt: tick() })];
     const deps = makeDeps(rows);
     const first = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
-    expect(first.checkpoint).toEqual({ last_occurred_at: rows[1].occurred_at, last_event_id: rows[1].event_id });
+    expect(first.checkpoint).toEqual({ last_commit_sequence: rows[1].commit_sequence, last_occurred_at: rows[1].occurred_at, last_event_id: rows[1].event_id });
     const second = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
     expect(second).toMatchObject({ settled: 0, skipped_stale: 2 });
   });

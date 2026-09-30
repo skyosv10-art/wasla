@@ -243,7 +243,8 @@ describe.skipIf(!PG_ENABLED)("billing relay — reconciliation gate on real Post
     );
     const deps = postgresRelayDeps(billing, source);
     const first = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
-    expect(first.checkpoint).toEqual({ last_occurred_at: "2026-09-27T13:00:00.654321Z", last_event_id: id });
+    const seq = (await source.query<{ s: string }>(`SELECT commit_sequence::text AS s FROM delivery_outbox WHERE event_id = $1::uuid`, [id])).rows[0]!.s;
+    expect(first.checkpoint).toEqual({ last_commit_sequence: seq, last_occurred_at: "2026-09-27T13:00:00.654321Z", last_event_id: id });
 
     const second = await runRelayBatch(deps, DEFAULT_RELAY_CONFIG);
     expect(second.processed).toBe(0);

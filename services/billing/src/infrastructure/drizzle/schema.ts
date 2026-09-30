@@ -146,6 +146,8 @@ export const billingRelayCheckpoint = pgTable(
     lastOccurredAt: timestamptz("last_occurred_at").notNull(),
     lastEventId: uuid("last_event_id").notNull(),
     updatedAt: timestamptz("updated_at").notNull().default(sql`now()`),
+    // RISK-0012 (ADR-057): the governing cursor; the two fields above are diagnostics.
+    lastCommitSequence: bigint("last_commit_sequence", { mode: "number" }).notNull().default(0),
   },
   (table) => [
     check("billing_relay_checkpoint_consumer_id_check", sql`char_length(${table.consumerId}) BETWEEN 1 AND 64`),

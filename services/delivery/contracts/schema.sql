@@ -193,7 +193,9 @@ CREATE TABLE IF NOT EXISTS delivery_tasks (
     -- لا تسليمَ بلا إثباتٍ ولا إثباتَ قبلَ التسليمِ (ADR-026 §2.4)
     CONSTRAINT ck_delivery_proof CHECK (
       (state = 'delivered') = (proof_type IS NOT NULL AND proof_ref IS NOT NULL)
-    )
+    ),
+    -- RISK-0012 (ADR-057): العلامةُ المائيّةُ الحاكمةُ — commit_sequence لآخرِ حدثِ dispatch طُبِّقَ.
+    dispatch_last_commit_sequence BIGINT
 );
 
 CREATE INDEX IF NOT EXISTS ix_delivery_tasks_active
@@ -238,7 +240,9 @@ CREATE TABLE IF NOT EXISTS delivery_outbox (
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     published_at       TIMESTAMPTZ,
     attempts           INTEGER     NOT NULL DEFAULT 0,  -- G3: عدّادُ محاولاتِ التسليم
-    last_error         TEXT                             -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
+    last_error         TEXT,                            -- G3: آخرُ خطأِ تسليمٍ مُسجَّل
+    -- RISK-0012 (ADR-057): ترتيبُ الالتزامِ؛ DEFAULT و NOT NULL والمُشغِّلُ المؤجَّلُ في كتلةِ RISK-0012 أدناه.
+    commit_sequence    BIGINT      NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS ix_delivery_outbox_unpublished
@@ -296,7 +300,9 @@ CREATE TABLE IF NOT EXISTS delivery_relay_checkpoint (
     consumer_id      TEXT        PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 3 AND 96),
     last_occurred_at TIMESTAMPTZ NOT NULL,
     last_event_id    UUID        NOT NULL,
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- RISK-0012 (ADR-057): المؤشِّرُ الحاكمُ؛ الطابعُ والمعرِّفُ للتشخيصِ فقط.
+    last_commit_sequence BIGINT  NOT NULL DEFAULT 0
 );
 
 -- ─────────────────────────────────────────────────────────────
@@ -367,7 +373,9 @@ CREATE TABLE IF NOT EXISTS delivery_inventory_relay_checkpoint (
     consumer_id      TEXT        PRIMARY KEY CHECK (char_length(consumer_id) BETWEEN 3 AND 96),
     last_occurred_at TIMESTAMPTZ NOT NULL,
     last_event_id    UUID        NOT NULL,
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- RISK-0012 (ADR-057): المؤشِّرُ الحاكمُ؛ الطابعُ والمعرِّفُ للتشخيصِ فقط.
+    last_commit_sequence BIGINT  NOT NULL DEFAULT 0
 );
 
 -- ───────────────────────────────────────────────────
@@ -537,5 +545,68 @@ CREATE INDEX IF NOT EXISTS ix_delivery_inventory_conflicts_unacknowledged
 
 CREATE INDEX IF NOT EXISTS ix_delivery_inventory_conflicts_product
     ON delivery_inventory_conflicts (store_id, product_id);
+
+COMMIT;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- RISK-0012 (CLM-0416 · ADR-057): ترتيبُ الالتزامِ للمُنتِجِ والمستهلكِ.
+--   الأعمدةُ أعلاهُ تُضافُ لقواعدَ قائمةٍ هنا (IF NOT EXISTS). والمستهلكُ الذي
+--   صارَ مؤشِّرُهُ 0 يُعيدُ القراءةَ من البدايةِ مرّةً، ودفترُ الاستهلاكِ يجعلُها no-op.
+-- ─────────────────────────────────────────────────────────────────────
+BEGIN;
+
+ALTER TABLE delivery_tasks ADD COLUMN IF NOT EXISTS dispatch_last_commit_sequence BIGINT;
+ALTER TABLE delivery_relay_checkpoint ADD COLUMN IF NOT EXISTS last_commit_sequence BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE delivery_inventory_relay_checkpoint ADD COLUMN IF NOT EXISTS last_commit_sequence BIGINT NOT NULL DEFAULT 0;
+
+-- >>> RISK-0012 commit_sequence (delivery_outbox) — ADR-057 · CLM-0416
+-- الترتيبُ الذي يقرؤه المستهلكونَ هو ترتيبُ الالتزامِ (COMMIT) لا ترتيبُ الإدراجِ:
+-- `outbox_id` يُخصَّصُ عندَ الإدراجِ، فمعاملةٌ بدأتْ أوّلاً والتزمتْ أخيراً تُظهِرُ
+-- رقماً أصغرَ من رقمٍ قرأه المستهلكُ وتجاوزَه — فيضيعُ حدثُها. المُشغِّلُ المؤجَّلُ
+-- (DEFERRABLE INITIALLY DEFERRED) يعملُ لحظةَ COMMIT تحتَ قفلٍ استشاريٍّ واحدٍ لكلِّ
+-- جدولٍ، فيُعيدُ تخصيصَ `commit_sequence` بترتيبِ الالتزامِ، وبترتيبِ الإدراجِ داخلَ
+-- المعاملةِ الواحدةِ. ولا يُمسَكُ القفلُ إلا في مرحلةِ ما قبلَ الالتزامِ، بعدَ كلِّ أقفالِ
+-- الصفوفِ، فلا يدخلُ في دورةِ جمودٍ (deadlock).
+CREATE SEQUENCE IF NOT EXISTS delivery_outbox_commit_seq AS BIGINT;
+ALTER TABLE delivery_outbox ADD COLUMN IF NOT EXISTS commit_sequence BIGINT;
+
+DO $risk0012$
+DECLARE m BIGINT;
+BEGIN
+    PERFORM pg_advisory_xact_lock(10012, hashtext('delivery_outbox'));
+    IF EXISTS (SELECT 1 FROM delivery_outbox WHERE commit_sequence IS NULL) THEN
+        SELECT COALESCE(max(commit_sequence), 0) INTO m FROM delivery_outbox;
+        UPDATE delivery_outbox t
+           SET commit_sequence = s.n
+          FROM (SELECT outbox_id, m + row_number() OVER (ORDER BY outbox_id) AS n
+                  FROM delivery_outbox WHERE commit_sequence IS NULL) s
+         WHERE t.outbox_id = s.outbox_id;
+    END IF;
+    SELECT COALESCE(max(commit_sequence), 0) INTO m FROM delivery_outbox;
+    IF m > 0 THEN
+        PERFORM setval('delivery_outbox_commit_seq', GREATEST(m, (SELECT last_value FROM delivery_outbox_commit_seq)));
+    END IF;
+END
+$risk0012$;
+
+ALTER TABLE delivery_outbox ALTER COLUMN commit_sequence SET DEFAULT nextval('delivery_outbox_commit_seq');
+ALTER TABLE delivery_outbox ALTER COLUMN commit_sequence SET NOT NULL;
+ALTER SEQUENCE delivery_outbox_commit_seq OWNED BY delivery_outbox.commit_sequence;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_delivery_outbox_commit_sequence ON delivery_outbox (commit_sequence);
+
+CREATE OR REPLACE FUNCTION delivery_outbox_assign_commit_sequence() RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_advisory_xact_lock(10012, hashtext('delivery_outbox'));
+    UPDATE delivery_outbox SET commit_sequence = nextval('delivery_outbox_commit_seq') WHERE outbox_id = NEW.outbox_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_delivery_outbox_commit_sequence ON delivery_outbox;
+CREATE CONSTRAINT TRIGGER trg_delivery_outbox_commit_sequence
+    AFTER INSERT ON delivery_outbox
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION delivery_outbox_assign_commit_sequence();
+-- <<< RISK-0012 commit_sequence (delivery_outbox)
 
 COMMIT;

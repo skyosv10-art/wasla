@@ -22,6 +22,7 @@ import {
   resetData,
   seedMarketplaceEvent,
   type PgFixture,
+  commitSequenceOf,
 } from "./pg-harness.js";
 import { PostgresMarketplaceInventoryEventSource } from "../infrastructure/marketplace-inventory-event-source.js";
 import { PostgresInventoryObservationStore } from "../infrastructure/inventory-observation-store.js";
@@ -111,6 +112,7 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<InventoryRelayDeps> {
 
     expect((await store.getInventoryConsumed(eventId))?.status).toBe("applied");
     expect((await store.getInventoryCheckpoint(DEFAULT_INVENTORY_RELAY_CONFIG.consumerId))).toEqual({
+      last_commit_sequence: await commitSequenceOf(pool, "marketplace_outbox", "outbox_id", eventId),
       last_occurred_at: ts(0),
       last_event_id: eventId,
     });
@@ -264,7 +266,11 @@ async function makeDeps(pool: PgFixture["pool"]): Promise<InventoryRelayDeps> {
     expect(
       await store.getInventoryCheckpoint(DEFAULT_INVENTORY_RELAY_CONFIG.consumerId),
       "تقدَّمَت نقطةُ التقدُّمِ فوقَ الحدثِ لا إليهِ",
-    ).toEqual({ last_occurred_at: ts(0), last_event_id: eventId });
+    ).toEqual({
+      last_commit_sequence: await commitSequenceOf(pool, "marketplace_outbox", "outbox_id", eventId),
+      last_occurred_at: ts(0),
+      last_event_id: eventId,
+    });
   });
 
   /* ── event for a different product doesn't affect other observations ── */

@@ -23,7 +23,7 @@
  *  - Idempotency: a consumed `event_id` with a terminal status is never
  *    re-processed; the snapshot row additionally makes settlement once PER
  *    ORDER, not only once per event.
- *  - Ordering: per-stream watermark (occurred_at, event_id).
+ *  - Ordering: per-stream watermark `commit_sequence` (RISK-0012 · ADR-057).
  *  - Poison: invalid payloads, unknown versions → dead-lettered in the ledger.
  *  - Version: only `event_version === "v1"` is consumed.
  *
@@ -38,6 +38,8 @@ export interface DeliveryOutboxRow {
   readonly aggregate_type: string;
   readonly aggregate_id: string;
   readonly occurred_at: string;
+  /** `delivery_outbox.commit_sequence` (decimal string) — the stream order (RISK-0012 · ADR-057). */
+  readonly commit_sequence: string;
   readonly trace_id: string | null;
   /** The event `payload` exactly as delivery wrote it (JSONB). */
   readonly payload: Record<string, unknown>;
@@ -60,24 +62,30 @@ export function isSettlementTrigger(toState: string): boolean {
 
 /**
  * The checkpoint offset the relay owns (same decision as ADR-025 §2.3 GAP-3):
- * progress is (occurred_at, event_id) of the last terminally-consumed row.
+ * progress is the `commit_sequence` of the last terminally-consumed row.
  * The relay NEVER writes `delivery_outbox`.
+ *
+ * RISK-0012 (CLM-0416, ADR-057): `commit_sequence` is assigned by delivery's
+ * DEFERRED trigger at COMMIT under a per-table advisory lock, so it follows
+ * commit order (and insertion order inside one transaction). The old
+ * (occurred_at, event_id) tuple tied inside one transaction and fell to a
+ * random UUID. `last_occurred_at`/`last_event_id` stay for diagnostics only.
  */
 export interface RelayCheckpoint {
+  readonly last_commit_sequence: string;
   readonly last_occurred_at: string;
   readonly last_event_id: string;
 }
 
 export const ZERO_CHECKPOINT: RelayCheckpoint = {
+  last_commit_sequence: "0",
   last_occurred_at: new Date(0).toISOString(),
   last_event_id: "00000000-0000-0000-0000-000000000000",
 };
 
-/** Lexicographic (occurred_at, event_id) comparison — the stream's order. */
+/** Stream order: `commit_sequence` compared as BIGINT (RISK-0012 · ADR-057). */
 export function isBefore(a: RelayCheckpoint, b: RelayCheckpoint): boolean {
-  if (a.last_occurred_at < b.last_occurred_at) return true;
-  if (a.last_occurred_at > b.last_occurred_at) return false;
-  return a.last_event_id < b.last_event_id;
+  return BigInt(a.last_commit_sequence) < BigInt(b.last_commit_sequence);
 }
 
 /** Terminal/non-terminal status of a consumed delivery outbox event. */

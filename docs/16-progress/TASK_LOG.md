@@ -81,7 +81,7 @@ Rebased CLM-0419 on main (which now includes CLM-0420 from #557). Governance ent
 
 # 2026-09-30 — CLM-0420 — M0-50 RISK-0056 production apply workflow (§24-A/K)
 
-- - **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `fix/clm-0429-risk-0056-new-production` · **Status:** In Progress
+- - **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `feat/clm-0429-risk-0056-cutover` · **Status:** In Progress
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Released — PR #557 merged; proven on TEST and a fresh PG17 only, **never run on production**
 

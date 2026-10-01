@@ -7729,3 +7729,25 @@ This PR releases CLM-0425 and updates BASELINE.json `repo.commit` from `7dab01f5
 Root cause: squash merge deletes the branch but WORK_CLAIMS.md still has Active status — same pattern as CLM-0422/CLM-0423 in PR #565.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
+
+---
+
+## CLM-0427 · M0-45 — Release CLM-0426 + break stale-claim cycle
+
+- **Work Item(s):** M0-45 · **Claim:** `CLM-0427` · **Branch:** `docs/clm-0427-release-claim` · **Status:** Released
+
+**Date:** 2026-10-01
+**Status:** Released — self-releasing claim to break stale-claim cycle
+
+### What was done
+
+PR #566 was squash-merged, deleting branch `docs/clm-0426-release-claim`. CLM-0426 remained Active, triggering governance-guard check 4 again.
+
+This PR breaks the cycle by:
+1. Releasing CLM-0426 (branch deleted on merge of PR #566)
+2. Self-releasing CLM-0427 (this claim) — set to Released in the PR itself so that when the squash merge deletes the branch, the claim is already Released
+3. Updating BASELINE.json repo.commit to 49dde79 (current main HEAD)
+
+Root cause: squash merge deletes the branch but WORK_CLAIMS.md still has Active status. Previous PRs (#565, #566) each created a new Active claim that became stale on merge. This PR breaks the cycle by self-releasing.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"

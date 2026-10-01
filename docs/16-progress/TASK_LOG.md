@@ -7807,3 +7807,9 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - Addendum 16:40 UTC: credential not present in any pipeline channel (repo secret unchanged since 13:34 UTC; env secrets empty; vault empty). Added `risk-0056-cutover.yml` + `render-cutover.py` so the cutover runs inside Actions without anyone reading the password. `plan` measured locally: 18 pairs / 17 services → retired ref.
 
+
+### 2026-10-01 · CLM-0429 — RISK-0056 cutover workflow
+- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `feat/clm-0429-risk-0056-cutover` · **Status:** In Progress
+- PR #572 merged (d24abd4); main CI, roadmap and Render deploy green on it. The cutover workflow commit missed #572 and is carried here.
+- Adds `risk-0056-cutover.yml` + `render-cutover.py` (see evidence §K). RISK-0056 stays `open` until the workflow's apply run passes on `ppixaauyqoykrogwdxtv`.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

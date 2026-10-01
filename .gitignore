@@ -114,3 +114,7 @@ tmp/
 
 # أرتفاكتُ الأمرِ الموحَّد (M0-04) — يُولَّد ولا يُلتزَم.
 artifacts/
+
+# Agent workspace artifacts
+package-lock.json
+risk0056-apply-out/

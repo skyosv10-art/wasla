@@ -7768,3 +7768,30 @@ PR #567 was squash-merged without --delete-branch. Branch `docs/clm-0427-release
 This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be deleted on merge — it will remain with an Active claim to avoid triggering check 4 again.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
+
+---
+
+## CLM-0429 · M0-50 — RISK-0056 production migration + backup fix
+
+- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `docs/clm-0429-risk-0056-production-migration` · **Status:** In Progress
+
+**Date:** 2026-10-01
+**Status:** In Progress — RISK-0056 closed, governance PR pending
+
+### What was done
+
+1. **Backup failure root cause fixed:** The scheduled `db-backup.yml` workflow (run 36859874667) failed with `ENETUNREACH` on IPv6 address. Root cause: `SUPABASE_DB_URL` GitHub secret used the direct connection (`db.snlpxywskyqrjattbpgn.supabase.co`) which resolves to IPv6 — unreachable from GitHub Actions runners. Fixed by updating `SUPABASE_DB_URL` and `SUPABASE_TEST_DB_URL` to use the session pooler (IPv4: `aws-0-ap-northeast-2.pooler.supabase.com:5432`). Backup re-run succeeded (run 36869786393, 1m53s).
+
+2. **RISK-0056 production migration executed:** 14/14 Drizzle migrations applied to production database `snlpxywskyqrjattbpgn` using `scripts/ops/risk-0056/apply.sh` (the recorded procedure from CLM-0420). Target guard: production (project ref verified). Schema source guard: 14/14 sha256 matched. All 14 services migrated successfully (lock_timeout=5s, one session each, same PID). Postflight: 107/107 declared tables present, 0 missing. Database now has 111 public tables (was 5).
+
+3. **Service health verified:** All 14 DB-dependent Render services respond `/health` → HTTP 200 with postgres mode. `wasla-delivery /delivery/ready` now reports `database: ok: true` (was `schema_missing`).
+
+4. **Post-migration backup:** Run 36870868925 — PASS, pre_migration=true (90-day retention), 3m6s, 111 tables.
+
+5. **GitHub secrets updated:** `SUPABASE_DB_URL`, `SUPABASE_TEST_DB_URL` (IPv4 pooler), `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_ANON_KEY` (pointed to snlpxywskyqrjattbpgn).
+
+6. **RISK-0056 closed** in RISK_REGISTER.md with evidence.
+
+7. **BASELINE.json** updated: risks_not_closed 20→19, repo.commit updated.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"

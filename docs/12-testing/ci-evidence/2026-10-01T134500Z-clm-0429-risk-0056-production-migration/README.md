@@ -109,8 +109,26 @@ All 24 Render services verified. Backend services (14) already had `DATABASE_URL
 **PASS** — All closure conditions met:
 
 1. ✓ Migrations applied by owner-approved, recorded procedure (`apply.sh`, user delegation)
-2. ✓ Each service's readiness reports database check `ok` (14/14 services healthy, delivery `/delivery/ready` → `database: ok: true`)
+2. ✓ Each service's readiness reports database check `ok` (14/14 DB-dependent services healthy, delivery `/delivery/ready` → `database: ok: true`)
 3. ✓ Schema validation PASS (107/107 tables, 0 missing)
-4. ✓ Post-migration backup PASS
+4. ✓ Post-migration backup PASS (workflow run 36870868925 succeeded; manifest artifact not downloaded due to GitHub Actions artifact auth limitation)
+5. ✓ Read/write/read-after-write probe PASS (see below)
+
+### Read/Write/Read-After-Write Probe (§28)
+
+Direct database probe via session pooler (IPv4):
+
+1. **READ:** `SELECT count(*) FROM audit_events` → 10 rows
+2. **WRITE:** `INSERT INTO audit_events (actor_id, actor_role, action, ...) VALUES ('probe-clm-0429', 'system', 'PROBE_WRITE_TEST', ...)` → inserted id=11
+3. **READ-AFTER-WRITE:** `SELECT id, actor_id, action, metadata FROM audit_events WHERE id=11` → id=11, actor=probe-clm-0429, action=PROBE_WRITE_TEST, metadata.source=agent-probe
+4. **CLEANUP:** `DELETE FROM audit_events WHERE id=11` → count back to 10 (same as before)
+
+**Verdict:** Database accepts writes and reads them back correctly. Probe record was inserted, verified, and cleaned up.
+
+### Scope Clarification
+
+- This is **schema initialization** (applying Drizzle migrations to a database that had no domain schema), not a data migration from a separate old database. Only one Supabase project exists (snlpxywskyqrjattbpgn).
+- **14 DB-dependent Render services** were health-checked (not all 24 — 3 are observability, 3 are static sites, 3 are bots, 1 is audit). All 14 returned 200 with postgres mode.
+- **Backup manifest** was not downloaded due to GitHub Actions artifact authentication limitation. The workflow run succeeded (status: success, 3m6s), which includes the fail-closed restore verification per `backup.sh`.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

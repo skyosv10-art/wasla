@@ -1,4 +1,0 @@
-{"service":"customers","t":1790861987601,"event":"preload_active","want":"5s"}
-{"service":"customers","t":1790861987751,"event":"pool_created","pool_max":1,"requested_max":1}
-{"service":"customers","t":1790861988865,"event":"session_ready","pid":2114760,"lock_timeout":"5s"}
-{"service":"customers","t":1790861989539,"event":"session_final","pid":2114760,"lock_timeout":"5s"}

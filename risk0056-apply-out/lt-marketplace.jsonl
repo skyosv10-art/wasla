@@ -1,4 +1,0 @@
-{"service":"marketplace","t":1790862003757,"event":"preload_active","want":"5s"}
-{"service":"marketplace","t":1790862004067,"event":"pool_created","pool_max":1,"requested_max":1}
-{"service":"marketplace","t":1790862005231,"event":"session_ready","pid":2114760,"lock_timeout":"5s"}
-{"service":"marketplace","t":1790862005879,"event":"session_final","pid":2114760,"lock_timeout":"5s"}

@@ -109,3 +109,10 @@ To run C/D/E/F without the `postgres` password, a temporary login role `wasla_op
 - Local guard matrix: 10/10 cases as expected (new→production 0; old→production 1; 6543 refused; new/old→test 1; test ref→test 0; direct host new→production 0).
 
 ## RISK-0056 verdict: **OPEN**
+
+## K. Addendum 2026-10-01 16:40 UTC — credential channel and cutover workflow
+- Owner stated the new `postgres` credential is available via the approved secure channel. Measured at 16:30 UTC: repo secret `SUPABASE_DB_URL` last updated 13:34 UTC (still the retired project), Environment `production-migration` has **no** secrets, the agent credential vault is empty, Render variables 18/18 still on the retired ref. The credential is therefore not yet in any channel the pipeline can read.
+- Because the password must never pass through a person or the agent, the cutover runs **inside GitHub Actions**: new workflow `.github/workflows/risk-0056-cutover.yml` + `scripts/ops/risk-0056/render-cutover.py`.
+  - `plan` (read-only, run locally with the Render key): 18 (service, variable) pairs on 17 services, all → `snlpxywskyqrjattbpgn`.
+  - `apply`: guard both DB secrets (`guard-target.py production`) → official `apply.sh` preflight → per-service write/read-back/ROLLBACK smoke (`schema-rw-smoke.mjs`) → PUT new URL on each Render variable → redeploy → wait `live` → verify (no retired ref anywhere; live deploy is the post-cutover deploy; `/health` 200; delivery readiness `status: ready` + `database ok`) → `db-backup.yml` with `expect_project_ref: ppixaauyqoykrogwdxtv` (dump → encrypt → decrypt-compare → restore → exact compare, fail-closed).
+- Owner action required (values never shown to anyone): set repo secret `SUPABASE_DB_URL` **and** Environment `production-migration` secret `PRODUCTION_MIGRATION_DB_URL` to the session-pooler URL of `ppixaauyqoykrogwdxtv` (user `postgres.ppixaauyqoykrogwdxtv`, host `aws-0-ap-south-1.pooler.supabase.com`, port `5432`).

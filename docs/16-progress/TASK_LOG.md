@@ -7805,3 +7805,5 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - Code: guards repointed to the new ref; retired ref refused for production and test; `<role>.<ref>` Supavisor form parsed. Local guard matrix 10/10.
 - Evidence: docs/12-testing/ci-evidence/2026-10-01T153000Z-clm-0429-risk-0056-new-production/README.md
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- Addendum 16:40 UTC: credential not present in any pipeline channel (repo secret unchanged since 13:34 UTC; env secrets empty; vault empty). Added `risk-0056-cutover.yml` + `render-cutover.py` so the cutover runs inside Actions without anyone reading the password. `plan` measured locally: 18 pairs / 17 services → retired ref.
+

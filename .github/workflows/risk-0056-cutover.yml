@@ -1,0 +1,165 @@
+name: RISK-0056 cutover (PRODUCTION → ppixaauyqoykrogwdxtv — manual, gated)
+
+# CLM-0429 · 2026-10-01 — the owner moved production to Supabase project
+# ppixaauyqoykrogwdxtv. The database password exists ONLY as GitHub secrets
+# (repo SUPABASE_DB_URL and Environment production-migration
+# PRODUCTION_MIGRATION_DB_URL); no person or agent reads it. This workflow is
+# the only path that writes it to Render.
+#
+#   guard     main only · typed full SHA == run commit.
+#   preflight Environment production-migration (required reviewer):
+#             guard-target.py production on BOTH DB secrets (ref must be the new
+#             one, retired ref refused, 6543 refused) · apply.sh mode=preflight
+#             (read-only inventory, 14/14 schema sha256) · per-service
+#             write → read-back → ROLLBACK smoke (schema-rw-smoke.mjs).
+#   cutover   mode=apply only, needs preflight success: render-cutover.py apply —
+#             PUT the new URL on every Render variable that still points at the
+#             retired ref, redeploy each affected service, wait for `live`, then
+#             verify (no retired ref anywhere, live deploy == post-cutover deploy,
+#             /health 200, delivery readiness database ok).
+#   backup    needs cutover success: db-backup.yml with expect_project_ref =
+#             the new ref (dump → encrypt → decrypt-compare → restore → exact
+#             compare, fail-closed), 90-day retention.
+# mode=plan runs guard + preflight + a read-only Render mapping and writes nothing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan (read-only) or apply"
+        type: choice
+        options: [plan, apply]
+        default: plan
+      confirm_sha:
+        description: "Full 40-character SHA of the main commit (must equal the run's commit)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-0056-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  NEW_REF: ppixaauyqoykrogwdxtv
+  OLD_REFS: snlpxywskyqrjattbpgn
+
+jobs:
+  guard:
+    name: Guard — main, exact SHA
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Refuse anything but the typed commit on main
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::ref $GITHUB_REF is not refs/heads/main"; exit 1; }
+          [[ "$CONFIRM_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::confirm_sha must be a full 40-character lowercase SHA"; exit 1; }
+          [ "$CONFIRM_SHA" = "$GITHUB_SHA" ] || { echo "::error::confirm_sha $CONFIRM_SHA != run commit $GITHUB_SHA"; exit 1; }
+          echo "guard: main @ $GITHUB_SHA"
+
+  preflight:
+    name: Preflight on the new production (read-only + rolled-back smoke)
+    needs: guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production-migration
+    env:
+      PRODUCTION_MIGRATION_DB_URL: ${{ secrets.PRODUCTION_MIGRATION_DB_URL }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Require secrets (fail-closed)
+        run: |
+          set -euo pipefail
+          [ -n "$PRODUCTION_MIGRATION_DB_URL" ] || { echo "::error::PRODUCTION_MIGRATION_DB_URL is not set in Environment production-migration"; exit 1; }
+          [ -n "$SUPABASE_DB_URL" ] || { echo "::error::SUPABASE_DB_URL is not set"; exit 1; }
+          [ -n "$RENDER_API_KEY" ] || { echo "::error::RENDER_API_KEY is not set"; exit 1; }
+          echo "secrets present (values not printed)"
+      - name: Both DB secrets point at the new production ref
+        run: |
+          set -euo pipefail
+          RISK0056_DB_URL="$PRODUCTION_MIGRATION_DB_URL" python3 scripts/ops/risk-0056/guard-target.py production
+          RISK0056_DB_URL="$SUPABASE_DB_URL" python3 scripts/ops/risk-0056/guard-target.py production
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+      - name: apply.sh mode=preflight (guard → manifest → read-only inventory)
+        env:
+          RISK0056_DB_URL: ${{ secrets.PRODUCTION_MIGRATION_DB_URL }}
+          RISK0056_TARGET: production
+          RISK0056_MODE: preflight
+          RISK0056_OUT: out
+        run: bash scripts/ops/risk-0056/apply.sh
+      - name: Per-service write → read-back → ROLLBACK smoke
+        env:
+          RISK0056_DB_URL: ${{ secrets.PRODUCTION_MIGRATION_DB_URL }}
+        run: node scripts/ops/risk-0056/schema-rw-smoke.mjs out/rw-smoke.json
+      - name: Render mapping (read-only)
+        run: python3 scripts/ops/risk-0056/render-cutover.py plan --out out/render-plan.json
+      - name: Upload evidence (no URLs, no secrets)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-0056-cutover-preflight-${{ github.run_id }}
+          path: out/*.json*
+          if-no-files-found: warn
+          retention-days: 90
+
+  cutover:
+    name: Render cutover → redeploy → live verification
+    needs: [guard, preflight]
+    if: ${{ inputs.mode == 'apply' && needs.preflight.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: production-migration
+    env:
+      NEW_DB_URL: ${{ secrets.PRODUCTION_MIGRATION_DB_URL }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Re-check the target (fail-closed)
+        run: RISK0056_DB_URL="$NEW_DB_URL" python3 scripts/ops/risk-0056/guard-target.py production
+      - name: render-cutover.py apply
+        run: |
+          mkdir -p out
+          python3 scripts/ops/risk-0056/render-cutover.py apply --out out/render-cutover.json
+      - name: Upload evidence (no URLs, no secrets)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-0056-cutover-${{ github.run_id }}
+          path: out/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  backup:
+    name: Post-cutover backup of the new production (fail-closed, restore-verified)
+    needs: cutover
+    if: ${{ needs.cutover.result == 'success' }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/db-backup.yml
+    with:
+      pre_migration: true
+      expect_project_ref: ppixaauyqoykrogwdxtv
+    secrets:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}

@@ -7795,3 +7795,12 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 7. **BASELINE.json** updated: risks_not_closed 20→19, repo.commit updated.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
+
+### 2026-10-01 · CLM-0429 (addendum) — production is `ppixaauyqoykrogwdxtv`
+- Owner statement: new production = `ppixaauyqoykrogwdxtv` (not `snlpxywskyqrjattbpgn`). RISK-0056 `closed` ⇒ `open` by addition; prior evidence kept, banner added (it concerns the retired project).
+- Old project: final 90-day restore-verified backup run 36884804585 PASS; not deleted.
+- New project: official preflight PASS; postflight 107/107; structural parity vs apply.sh schema 0 missing; data integrity 103 identical + 8 seed tables differing only in timestamps; RW/read-after-write PASS; REST 200.
+- GitHub secrets SUPABASE_URL / SERVICE_ROLE_KEY / ANON_KEY / PUBLISHABLE_KEY → new project. SUPABASE_DB_URL, PRODUCTION_MIGRATION_DB_URL and Render DATABASE_URL (17 services) NOT changed: need the new project's `postgres` password (SQL rotation refused by Supabase; non-owner role cannot run services' start-up DDL nor a full pg_dump).
+- Code: guards repointed to the new ref; retired ref refused for production and test; `<role>.<ref>` Supavisor form parsed. Local guard matrix 10/10.
+- Evidence: docs/12-testing/ci-evidence/2026-10-01T153000Z-clm-0429-risk-0056-new-production/README.md
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

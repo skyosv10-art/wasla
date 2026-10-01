@@ -46,7 +46,7 @@ if b.get("uses") != "./.github/workflows/db-backup.yml":
     problems.append("backup job must call ./.github/workflows/db-backup.yml")
 if (b.get("with") or {}).get("pre_migration") is not True:
     problems.append("backup must be pre_migration: true (90-day retention)")
-if (b.get("with") or {}).get("expect_project_ref") != "snlpxywskyqrjattbpgn":
+if (b.get("with") or {}).get("expect_project_ref") != "ppixaauyqoykrogwdxtv":
     problems.append("backup must expect the production project ref")
 if "SUPABASE_TEST_DB_URL" in text:
     problems.append("the production workflow must not reference SUPABASE_TEST_DB_URL")

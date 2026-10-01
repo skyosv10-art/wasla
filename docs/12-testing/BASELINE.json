@@ -3,11 +3,11 @@
   "generated_at": "2026-10-01T09:27:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "11b6dd2c502aab10b30cf408f57aefc67fd5f28e",
-    "branch": "docs/clm-0428-release-claim",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "commit": "e8819ee6211f3a7359ec30caed042c8130d78cd1",
+    "branch": "docs/clm-0429-risk-0056-production-migration",
+    "dirty": true,
+    "dirty_files": 7,
+    "dirty_reason": "governance docs + baseline updated",
     "tracked_files": 3016
   },
   "env": {
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 20
+    "risks_not_closed": 19
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:cf3e94940fc5f2b1dd0351cba5f102869aeb2d53014987343a2655654f40a08d",
+  "fingerprint": "sha256:59b2a830cb862376cc81551ee2f4b8a119799d876a9f87c148f54b07e8b1d544",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

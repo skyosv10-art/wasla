@@ -1,3 +1,13 @@
+# 2026-09-30 — CLM-0421 close-out — PR #556 + #559 merged to main; evidence branch archived
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released — main at `93461680`, CI green
+
+PR #559 (stacked BASELINE fix) merged into the CLM-0419 branch (`bb03d4e6`), its CI rerun green; PR #556 then merged to main (`93461680`) — WASLA CI 30/30 success on main, Roadmap freshness success, Render deploy success. CLM-0419/CLM-0421/CLM-0404 released in WORK_CLAIMS. The `docs/m6-18-live-evidence` evidence branch is fully mirrored on main; preserved as tag `archive/docs/m6-18-live-evidence` (`3a8859f0`) and recorded in BRANCH_EVIDENCE.md before deletion. Merged feature branches deleted. Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0421 — M0-49 fix: BASELINE.json repo.commit points at the real branch head
 
 - **Work Item(s):** M0-49

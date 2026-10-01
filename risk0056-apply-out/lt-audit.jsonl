@@ -1,4 +1,0 @@
-{"service":"audit","t":1790861985062,"event":"preload_active","want":"5s"}
-{"service":"audit","t":1790861985220,"event":"pool_created","pool_max":1,"requested_max":null}
-{"service":"audit","t":1790861986386,"event":"session_ready","pid":2114760,"lock_timeout":"5s"}
-{"service":"audit","t":1790861986800,"event":"session_final","pid":2114760,"lock_timeout":"5s"}

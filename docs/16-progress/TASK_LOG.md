@@ -7815,10 +7815,10 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
 ### 2026-10-01 · CLM-0429 — RISK-0056 cutover executed and closed
-- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `docs/clm-0429-risk-0056-close` · **Status:** Released
+- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `docs/clm-0429-risk-0056-close` · **Status:** In Progress
 - main `09d8889` (PR #573). plan run 36927089959 PASS; apply run 36927646063 PASS (guard → preflight → Render cutover 18 vars / 17 services → 17/17 live + health 200 + delivery database ok → backup + restore 120/120 tables PASS).
 - Independent checks: 0 Render variables on the retired ref; 0 client sessions on the old project; RW probe PASS on the new project.
 - Known, unrelated: the 3 bots report `degraded` because `IDENTITY_SERVICE_URL` is missing (configuration gap that predates the cutover).
-- Evidence: docs/12-testing/ci-evidence/2026-10-01T212000Z-clm-0429-risk-0056-cutover/README.md · claim self-released in this PR.
+- Evidence: docs/12-testing/ci-evidence/2026-10-01T212000Z-clm-0429-risk-0056-cutover/README.md · the claim is released by a follow-up ledger-only PR.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 

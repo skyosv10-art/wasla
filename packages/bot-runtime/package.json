@@ -21,7 +21,7 @@
     "@wasla/contracts-channel": "workspace:*",
     "@wasla/service-auth": "workspace:*",
     "@wasla/telegram-adapter": "workspace:*",
-    "fastify": "^5.12.1"
+    "fastify": "^5.12.5"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

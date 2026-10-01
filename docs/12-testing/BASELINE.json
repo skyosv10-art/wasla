@@ -1,12 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-09-30T08:55:43Z",
+  "generated_at": "2026-10-01T04:26:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "61ed8f9b91978d0ceb59674c98c609821ddcebad",
-    "branch": "fix/clm-0419-risk-0042-staff-rank",
-    "dirty": false,
-    "tracked_files": 2993
+    "commit": "2be59ba11f58abd164e5817ffb39a35b095a2b20",
+    "branch": "fix/clm-0424-fastify-security",
+    "dirty": true,
+    "dirty_files": 27,
+    "dirty_reason": "fastify 5.12.1→5.12.5 security upgrade (CLM-0424) — lock sha256 changed; risks_not_closed unchanged at 22. Decision under MASTER REPAIR & MERGE authorisation 2026-09-30.",
+    "tracked_files": 3015
   },
   "env": {
     "node": "v20.20.1",
@@ -17,7 +19,7 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "68d2ea8d917c09aa8409905a6e91b58029a2e4cd931de36083a3ebe7937d3b24",
+    "sha256": "ee787a6f62eb02faff0393c282c158569c44c58a32a8be1d929adf27d0a23a89",
     "lines": 4996
   },
   "static": {
@@ -32,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/baseline-sources/2026-09-30T085540Z-verify.txt",
-    "tests_passed": 5824,
-    "test_files_executed": 406,
+    "source": "docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt",
+    "tests_passed": 5828,
+    "test_files_executed": 407,
     "governance_suite_cases": 541,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:c574f74858ba8f96f198b4fa3b21b05f2e35ed686e423d656ead6ebe3a28f9e0",
+  "fingerprint": "sha256:4903a068ccc4173fb9af146ca186168dfd56e3fa824df4e9b48e70fb4e4b1f2e",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

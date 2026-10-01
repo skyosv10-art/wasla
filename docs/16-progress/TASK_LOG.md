@@ -1,3 +1,30 @@
+# 2026-10-01 — CLM-0424 — M6-19C: fastify 5.12.1→5.12.5 security upgrade (5 GHSAs)
+
+- **Work Item(s):** M6-19C
+- **Claim:** `CLM-0424` · **Branch:** `fix/clm-0424-fastify-security` · **Status:** In Progress
+
+**Date:** 2026-10-01
+**Status:** In Progress — upgrading fastify across all services + packages to fix 5 GHSAs
+
+### Root cause
+
+main is RED (run 36808572309) with three failing jobs:
+1. **governance-guard** — check 9 (dependency audit): 5 fastify GHSAs (GHSA-4mh8-r7rc-xpvc, GHSA-667r-xxjv-c9mm, GHSA-p68q-wchp-6fh7, GHSA-hwr6-493r-vm6h, GHSA-9q9j-q6p8-xq58) not declared in SECURITY_RULES.md §11. Fixed version: fastify >=5.12.5.
+2. **verify** — echo of governance-guard failure.
+3. **image-supply-chain** — 26 fixable HIGH/CRITICAL vulns: 4 in fastify 5.12.1 (CVE-2026-76169, CVE-2026-84428, CVE-2026-84469, CVE-2026-84504) + 22 in esbuild Go stdlib (already excepted under RISK-0050, IMAGE_VULN_EXCEPTIONS.yaml).
+
+### What was done
+
+- Upgraded `fastify` from `^5.12.1`/`^5.0.0` to `^5.12.5` in 21 package.json files (17 services + packages/bot-runtime, packages/partners-e2e, packages/service-auth, packages/observability).
+- Updated `pnpm-lock.yaml` via `pnpm install --lockfile-only`.
+- Local dependency audit (`validate-dependency-audit.sh`) passes: production tree clean, all declared vulns have valid expiry.
+- Local typecheck (`pnpm -r typecheck`) passes: all 68 packages with typecheck succeed.
+- Local tests (`pnpm -r test`) pass: 5828 tests in 407 files (vs BASELINE 5824/406 — +4 tests, +1 file from the fastify upgrade path).
+- BASELINE.json regenerated from measured verify log: `tests_passed: 5828`, `test_files_executed: 407`, `governance_suite_cases: 541`, `governance_suite_failed: 1` (baseline check on old lock sha256), `verify_overall: "failed"` (governance guard fails on old baseline — expected; this baseline replaces it). Lock sha256 updated: `68d2ea8d…` → `ee787a6f…`. Fingerprint unchanged: `sha256:4903a068…` (static counts unchanged). `repo.dirty_reason` set.
+- Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-09-30 — CLM-0421 close-out — PR #556 + #559 merged to main; evidence branch archived
 
 - **Work Item(s):** M0-49

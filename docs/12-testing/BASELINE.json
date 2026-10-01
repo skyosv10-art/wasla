@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-01T04:26:37Z",
+  "generated_at": "2026-10-01T05:17:04Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2be59ba11f58abd164e5817ffb39a35b095a2b20",
-    "branch": "fix/clm-0424-fastify-security",
+    "commit": "3e4b7b8c562493224d4ddd9ad299290d1ea2c56c",
+    "branch": "docs/clm-0423-risk-0025-close-v2",
     "dirty": true,
-    "dirty_files": 27,
-    "dirty_reason": "fastify 5.12.1→5.12.5 security upgrade (CLM-0424) — lock sha256 changed; risks_not_closed unchanged at 22. Decision under MASTER REPAIR & MERGE authorisation 2026-09-30.",
-    "tracked_files": 3015
+    "dirty_files": 5,
+    "dirty_reason": "RISK-0025 closed (CLM-0423) — risks_not_closed 22→21. Decision under MASTER REPAIR & MERGE authorisation 2026-09-30.",
+    "tracked_files": 3020
   },
   "env": {
     "node": "v20.20.1",
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 22
+    "risks_not_closed": 21
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:4903a068ccc4173fb9af146ca186168dfd56e3fa824df4e9b48e70fb4e4b1f2e",
+  "fingerprint": "sha256:586897aaa6af997a55a69564197c4c4ec9f9ce0d56fcd9b0c8e341e9f99f5b22",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

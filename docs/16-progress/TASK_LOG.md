@@ -7710,3 +7710,22 @@ Third manual run failed: removing pg16 caused pg_wrapper to fail with "PostgreSQ
 Successful workflow run 36643974571 produced encrypted artifact but restore test showed 0/5 tables due to `supabase_vault` extension not available in vanilla Docker PostgreSQL 17.
 
 Fix: create `vault` schema before restore, remove `--exit-on-error` so pg_restore continues past extension errors. Updated evidence README with actual measured results.
+
+---
+
+## CLM-0426 · M0-45 — Release CLM-0425 + update BASELINE repo.commit
+
+- **Work Item(s):** M0-45 · **Claim:** `CLM-0426` · **Branch:** `docs/clm-0426-release-claim` · **Status:** In Progress
+
+**Date:** 2026-10-01
+**Status:** In Progress — releasing CLM-0425 after PR #565 merge
+
+### What was done
+
+PR #565 was squash-merged (commit 9f3a108), deleting branch `docs/clm-0425-release-stale-claims`. CLM-0425 remained Active in WORK_CLAIMS.md, triggering governance-guard check 4 (stale claim: active claim pointing at deleted branch).
+
+This PR releases CLM-0425 and updates BASELINE.json `repo.commit` from `7dab01f5c307` to `9f3a108147cb` (current main HEAD). Fingerprint recomputed using `baseline_canon.fingerprint()`. `risks_not_closed` remains 20 (no risk register changes).
+
+Root cause: squash merge deletes the branch but WORK_CLAIMS.md still has Active status — same pattern as CLM-0422/CLM-0423 in PR #565.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"

@@ -1,10 +1,10 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-01T07:51:12Z",
+  "generated_at": "2026-10-01T08:20:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7dab01f5c307abc73edb09a50efd30c636551173",
-    "branch": "docs/clm-0425-release-stale-claims",
+    "commit": "9f3a108147cb1099e74696fe9751187e7d95024f",
+    "branch": "docs/clm-0426-release-claim",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",

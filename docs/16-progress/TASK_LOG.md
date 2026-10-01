@@ -1,10 +1,12 @@
-# 2026-10-01 — CLM-0425 — M0-45: release stale claims (CLM-0422, CLM-0423)
+# 2026-10-01 — CLM-0425 — M0-45: release stale claims + close RISK-0054
 
 - **Work Item(s):** M0-45
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** In Progress
 
 CLM-0422 (branch `docs/clm-0421-closeout`, PR #560 merged) and CLM-0423 (branch `docs/clm-0423-risk-0025-close-v2`, PR #564 merged) remained `Active` in WORK_CLAIMS.md after their branches were deleted on merge. The stale-claim freshness guard (check 4) rejects main because the branches no longer exist. This PR releases both claims per §8.1 — same root-cause fix applied for CLM-0201, CLM-0177, CLM-0220, CLM-0424.
+
+**RISK-0054 closed:** Live probe on 2026-10-01 confirms the review gate is enforced: `required_approving_review_count:1`, `require_code_owner_reviews:true`, `enforce_admins:true`. PR #565 (0 approvals) reads `reviewDecision:REVIEW_REQUIRED` and `mergeStateStatus:BLOCKED`. Closure condition met.
 
 Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 

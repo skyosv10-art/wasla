@@ -123,7 +123,7 @@ jobs:
           from urllib.parse import urlsplit, unquote
           p = urlsplit(os.environ["SUPABASE_DB_URL"])
           user, host = unquote(p.username or ""), (p.hostname or "").lower()
-          ref = user.split(".", 1)[1] if user.startswith("postgres.") else (host[3:-12] if host.startswith("db.") and host.endswith(".supabase.co") else None)
+          ref = user.rsplit(".", 1)[1] if ("." in user and host.endswith(".pooler.supabase.com")) else (host[3:-12] if host.startswith("db.") and host.endswith(".supabase.co") else None)
           if ref != os.environ["EXPECT_REF"]:
               print(f"::error::backup source project ref {ref!r} != expected {os.environ['EXPECT_REF']!r} — refusing")
               sys.exit(1)

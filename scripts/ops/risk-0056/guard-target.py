@@ -13,7 +13,11 @@ import os
 import sys
 from urllib.parse import unquote, urlsplit
 
-PRODUCTION_REF = "snlpxywskyqrjattbpgn"  # already public in this repository
+# CLM-0429 (2026-10-01): production moved to project ppixaauyqoykrogwdxtv (owner
+# statement 2026-10-01). The former production ref is RETIRED: refused as a
+# production target AND as a test target (it still holds the pre-move data).
+PRODUCTION_REF = "ppixaauyqoykrogwdxtv"
+RETIRED_PRODUCTION_REFS = {"snlpxywskyqrjattbpgn"}
 TEST_REF = "obeptvwpvqbduwkahorq"
 
 target = sys.argv[1] if len(sys.argv) > 1 else ""
@@ -29,7 +33,9 @@ port = p.port or 5432
 if port == 6543:
     print("::error::transaction pooler (6543) — session-level SET is not pinned there; refusing"); sys.exit(1)
 ref = None
-if user.startswith("postgres.") and len(user) > 9:
+if "." in user and host.endswith(".pooler.supabase.com"):
+    ref = user.rsplit(".", 1)[1] or None  # Supavisor user form: <role>.<project_ref>
+elif user.startswith("postgres.") and len(user) > 9:
     ref = user.split(".", 1)[1]
 elif host.startswith("db.") and host.endswith(".supabase.co"):
     ref = host[3:-len(".supabase.co")]
@@ -39,10 +45,12 @@ if target == "local":
         print("::error::target=local requires a loopback PostgreSQL"); sys.exit(1)
     print(f"target local · port {port}")
 elif target == "test":
-    if ref is None or ref == PRODUCTION_REF or PRODUCTION_REF in url.lower():
+    if ref is None or ref == PRODUCTION_REF or ref in RETIRED_PRODUCTION_REFS or any(r in url.lower() for r in {PRODUCTION_REF, *RETIRED_PRODUCTION_REFS}):
         print("::error::target=test refused (no ref, or production ref)"); sys.exit(1)
     print(f"target test · project ref {ref} · port {port}")
 elif target == "production":
+    if ref in RETIRED_PRODUCTION_REFS:
+        print(f"::error::target=production but project ref {ref!r} is the RETIRED production — refusing"); sys.exit(1)
     if ref != PRODUCTION_REF:
         print(f"::error::target=production but project ref is {ref!r} — refusing (wrong secret in the environment?)"); sys.exit(1)
     print(f"target production · project ref {ref} · port {port}")

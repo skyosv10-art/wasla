@@ -1,3 +1,5 @@
+> **CORRECTION (added 2026-10-01, CLM-0429):** the owner stated that production is `ppixaauyqoykrogwdxtv`. Everything below was measured on `snlpxywskyqrjattbpgn` (now retired). It stays as evidence for that project and is **not** RISK-0056 closure evidence. See [new-production evidence](../2026-10-01T153000Z-clm-0429-risk-0056-new-production/README.md).
+
 # RISK-0056 Production Schema Initialization — CLM-0429
 
 **Note:** This is schema initialization (applying Drizzle migrations to a fresh database), not a data migration from an old database. There is only one Supabase project (`snlpxywskyqrjattbpgn`) — no separate old production database was found via the Supabase management API. The database had 5 runtime tables (audit + channel) and no domain schema; now it has 111 tables with the full domain schema.

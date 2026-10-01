@@ -13,7 +13,7 @@ import os
 import sys
 from urllib.parse import urlsplit, unquote
 
-PRODUCTION_REFS = {"snlpxywskyqrjattbpgn"}  # already public in this repository
+PRODUCTION_REFS = {"ppixaauyqoykrogwdxtv", "snlpxywskyqrjattbpgn"}  # current + retired production (CLM-0429)
 
 url = os.environ.get("RISK0056_DB_URL", "")
 if not url:
@@ -35,7 +35,9 @@ for ref in PRODUCTION_REFS:
 user = unquote(parts.username or "")
 host = (parts.hostname or "").lower()
 ref = None
-if user.startswith("postgres.") and len(user) > len("postgres."):
+if "." in user and host.endswith(".pooler.supabase.com"):
+    ref = user.rsplit(".", 1)[1] or None  # Supavisor user form: <role>.<project_ref>
+elif user.startswith("postgres.") and len(user) > len("postgres."):
     ref = user.split(".", 1)[1]
 elif host.startswith("db.") and host.endswith(".supabase.co"):
     ref = host[3:-len(".supabase.co")]

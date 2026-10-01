@@ -76,7 +76,7 @@ jobs:
     uses: ./.github/workflows/db-backup.yml
     with:
       pre_migration: true
-      expect_project_ref: snlpxywskyqrjattbpgn
+      expect_project_ref: ppixaauyqoykrogwdxtv
     secrets:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}

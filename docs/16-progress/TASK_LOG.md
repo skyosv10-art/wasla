@@ -81,7 +81,7 @@ Rebased CLM-0419 on main (which now includes CLM-0420 from #557). Governance ent
 
 # 2026-09-30 — CLM-0420 — M0-50 RISK-0056 production apply workflow (§24-A/K)
 
-- - **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `fix/clm-0429-risk-0056-new-production` · **Status:** In Progress
+- - **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `feat/clm-0429-risk-0056-cutover` · **Status:** In Progress
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Released — PR #557 merged; proven on TEST and a fresh PG17 only, **never run on production**
 
@@ -7804,4 +7804,12 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - GitHub secrets SUPABASE_URL / SERVICE_ROLE_KEY / ANON_KEY / PUBLISHABLE_KEY → new project. SUPABASE_DB_URL, PRODUCTION_MIGRATION_DB_URL and Render DATABASE_URL (17 services) NOT changed: need the new project's `postgres` password (SQL rotation refused by Supabase; non-owner role cannot run services' start-up DDL nor a full pg_dump).
 - Code: guards repointed to the new ref; retired ref refused for production and test; `<role>.<ref>` Supavisor form parsed. Local guard matrix 10/10.
 - Evidence: docs/12-testing/ci-evidence/2026-10-01T153000Z-clm-0429-risk-0056-new-production/README.md
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- Addendum 16:40 UTC: credential not present in any pipeline channel (repo secret unchanged since 13:34 UTC; env secrets empty; vault empty). Added `risk-0056-cutover.yml` + `render-cutover.py` so the cutover runs inside Actions without anyone reading the password. `plan` measured locally: 18 pairs / 17 services → retired ref.
+
+
+### 2026-10-01 · CLM-0429 — RISK-0056 cutover workflow
+- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `feat/clm-0429-risk-0056-cutover` · **Status:** In Progress
+- PR #572 merged (d24abd4); main CI, roadmap and Render deploy green on it. The cutover workflow commit missed #572 and is carried here.
+- Adds `risk-0056-cutover.yml` + `render-cutover.py` (see evidence §K). RISK-0056 stays `open` until the workflow's apply run passes on `ppixaauyqoykrogwdxtv`.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

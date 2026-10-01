@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-01T05:17:04Z",
+  "generated_at": "2026-10-01T07:51:12Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3e4b7b8c562493224d4ddd9ad299290d1ea2c56c",
-    "branch": "docs/clm-0423-risk-0025-close-v2",
-    "dirty": true,
-    "dirty_files": 5,
-    "dirty_reason": "RISK-0025 closed (CLM-0423) — risks_not_closed 22→21. Decision under MASTER REPAIR & MERGE authorisation 2026-09-30.",
-    "tracked_files": 3020
+    "commit": "7dab01f5c307abc73edb09a50efd30c636551173",
+    "branch": "docs/clm-0425-release-stale-claims",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 3016
   },
   "env": {
     "node": "v20.20.1",
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 21
+    "risks_not_closed": 20
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:586897aaa6af997a55a69564197c4c4ec9f9ce0d56fcd9b0c8e341e9f99f5b22",
+  "fingerprint": "sha256:cf3e94940fc5f2b1dd0351cba5f102869aeb2d53014987343a2655654f40a08d",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

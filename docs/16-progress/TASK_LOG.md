@@ -7797,6 +7797,7 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
 
 ### 2026-10-01 · CLM-0429 (addendum) — production is `ppixaauyqoykrogwdxtv`
+**Work Item(s):** M0-50
 - Owner statement: new production = `ppixaauyqoykrogwdxtv` (not `snlpxywskyqrjattbpgn`). RISK-0056 `closed` ⇒ `open` by addition; prior evidence kept, banner added (it concerns the retired project).
 - Old project: final 90-day restore-verified backup run 36884804585 PASS; not deleted.
 - New project: official preflight PASS; postflight 107/107; structural parity vs apply.sh schema 0 missing; data integrity 103 identical + 8 seed tables differing only in timestamps; RW/read-after-write PASS; REST 200.

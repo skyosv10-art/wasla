@@ -1,4 +1,6 @@
-# RISK-0056 Production Migration — CLM-0429
+# RISK-0056 Production Schema Initialization — CLM-0429
+
+**Note:** This is schema initialization (applying Drizzle migrations to a fresh database), not a data migration from an old database. There is only one Supabase project (`snlpxywskyqrjattbpgn`) — no separate old production database was found via the Supabase management API. The database had 5 runtime tables (audit + channel) and no domain schema; now it has 111 tables with the full domain schema.
 
 **Date:** 2026-10-01
 **Claim:** CLM-0429
@@ -93,7 +95,7 @@ Previously reported `database: schema_missing` — now reports `database: ok: tr
 ## G. GitHub Secrets Updated
 
 - `SUPABASE_DB_URL`: IPv4 pooler (was IPv6 direct — caused backup failure)
-- `SUPABASE_TEST_DB_URL`: IPv4 pooler (same fix)
+- `SUPABASE_TEST_DB_URL`: DELETED (fail-closed — was accidentally set to production database; needs owner to restore with a separate TEST database URL)
 - `SUPABASE_URL`: https://snlpxywskyqrjattbpgn.supabase.co
 - `SUPABASE_PUBLISHABLE_KEY`: sb_publishable_... (masked)
 - `SUPABASE_ANON_KEY`: sb_publishable_... (masked)

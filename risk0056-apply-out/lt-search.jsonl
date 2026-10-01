@@ -1,0 +1,4 @@
+{"service":"search","t":1790862017532,"event":"preload_active","want":"5s"}
+{"service":"search","t":1790862017692,"event":"pool_created","pool_max":1,"requested_max":1}
+{"service":"search","t":1790862018846,"event":"session_ready","pid":2114760,"lock_timeout":"5s"}
+{"service":"search","t":1790862019643,"event":"session_final","pid":2114760,"lock_timeout":"5s"}

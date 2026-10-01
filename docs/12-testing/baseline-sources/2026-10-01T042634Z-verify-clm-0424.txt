@@ -1,0 +1,1103 @@
+[1m═══ النتيجة: 541 ناجح · 1 فاشل ═══[0m
+التحقّقُ الموحَّد: 2 فحصاً أخفق
+
+=== اختبارات الوحدة ===
+Scope: 71 of 72 workspace projects
+apps/admin-portal test$ vitest run
+apps/customer-mini-app test$ vitest run
+apps/driver-mini-app test$ vitest run
+packages/authz-policy test$ vitest run
+packages/authz-policy test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/authz-policy
+apps/driver-mini-app test:  RUN  v3.2.7 /home/user/workspace/wasla/apps/driver-mini-app
+apps/customer-mini-app test:  RUN  v3.2.7 /home/user/workspace/wasla/apps/customer-mini-app
+apps/admin-portal test:  RUN  v3.2.7 /home/user/workspace/wasla/apps/admin-portal
+packages/authz-policy test:  ✓ src/__tests__/policy.test.ts (30 tests) 161ms
+packages/authz-policy test:  ✓ src/__tests__/signer.test.ts (12 tests) 85ms
+packages/authz-policy test:  Test Files  2 passed (2)
+packages/authz-policy test:       Tests  42 passed (42)
+packages/authz-policy test:    Start at  04:20:19
+packages/authz-policy test:    Duration  4.01s (transform 715ms, setup 0ms, collect 919ms, tests 246ms, environment 28ms, prepare 938ms)
+packages/authz-policy test: Done
+packages/compliance-review test$ vitest run --config vitest.config.ts
+apps/admin-portal test:  ✓ src/__tests__/orders.test.ts (10 tests) 82ms
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > starts polling and sets up timer for the job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > does not restart polling if already polling the same job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > does not restart polling if already polling the same job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test:  ✓ src/__tests__/dispatch.test.ts (9 tests) 339ms
+apps/customer-mini-app test:  ✓ src/__tests__/RideOrder.test.tsx (8 tests) 1439ms
+apps/customer-mini-app test:    ✓ RideOrder screen > renders all form fields  432ms
+packages/compliance-review test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/compliance-review
+packages/compliance-review test: stdout | src/__tests__/compliance-review.test.ts > M4-05 PDPL Compliance Requirements > should have a compliance score above 30%
+packages/compliance-review test:   Compliance score: 50% (3/12 fully compliant)
+packages/compliance-review test: stdout | src/__tests__/compliance-review.test.ts > M4-05 Compliance Summary > should generate a compliance report
+packages/compliance-review test:   === PDPL Compliance Report ===
+packages/compliance-review test:   Total requirements: 12
+packages/compliance-review test:   Fully compliant: 3
+packages/compliance-review test:   Gaps (partial + not implemented): 9
+packages/compliance-review test:   Compliance score: 50%
+packages/compliance-review test:   Sensitive data elements: 4
+packages/compliance-review test:   Data subject rights: 5
+packages/compliance-review test:  ✓ src/__tests__/compliance-review.test.ts (14 tests) 76ms
+packages/compliance-review test:  Test Files  1 passed (1)
+packages/compliance-review test:       Tests  14 passed (14)
+packages/compliance-review test:    Start at  04:20:27
+packages/compliance-review test:    Duration  1.75s (transform 339ms, setup 0ms, collect 309ms, tests 76ms, environment 17ms, prepare 414ms)
+packages/compliance-review test: Done
+packages/config test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/drivers.test.ts (11 tests) 85ms
+apps/customer-mini-app test:  ✓ src/__tests__/order-form.test.ts (13 tests) 34ms
+apps/driver-mini-app test: stderr | src/__tests__/JobDetail.test.tsx > JobDetail screen > renders empty state when no job_id provided
+apps/driver-mini-app test: react-i18next:: useTranslation: You will need to pass in an i18next instance by using initReactI18next { code: [32m'NO_I18NEXT_INSTANCE'[39m }
+apps/driver-mini-app test:  ✓ src/__tests__/JobDetail.test.tsx (10 tests) 837ms
+packages/config test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/config
+packages/config test:  ✓ src/__tests__/readers.test.ts (24 tests) 44ms
+packages/config test:  ✓ src/__tests__/registry.test.ts (9 tests) 87ms
+packages/config test:  Test Files  2 passed (2)
+packages/config test:       Tests  33 passed (33)
+packages/config test:    Start at  04:20:32
+packages/config test:    Duration  3.31s (transform 431ms, setup 0ms, collect 434ms, tests 131ms, environment 16ms, prepare 713ms)
+packages/config test: Done
+packages/contracts/billing test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/partners-screen.test.tsx (8 tests) 885ms
+apps/customer-mini-app test:  ✓ src/__tests__/DeliveryOrder.test.tsx (5 tests) 1217ms
+apps/customer-mini-app test:    ✓ DeliveryOrder screen > renders all form fields including shipment details  320ms
+apps/customer-mini-app test:    ✓ DeliveryOrder screen > calls preview API with delivery order_type and shipment  369ms
+apps/driver-mini-app test:  ✓ src/__tests__/Vehicles.test.tsx (12 tests) 952ms
+packages/contracts/billing test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/billing
+packages/contracts/billing test:  ✓ src/__tests__/contracts.test.ts (15 tests) 20ms
+packages/contracts/billing test:  Test Files  1 passed (1)
+packages/contracts/billing test:       Tests  15 passed (15)
+packages/contracts/billing test:    Start at  04:20:39
+packages/contracts/billing test:    Duration  1.63s (transform 261ms, setup 0ms, collect 209ms, tests 20ms, environment 18ms, prepare 477ms)
+packages/contracts/billing test: Done
+packages/contracts/channel test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/moderation-screen.test.tsx (7 tests) 755ms
+apps/customer-mini-app test:  ✓ src/__tests__/SavedPlaces.test.tsx (6 tests) 805ms
+packages/contracts/channel test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/channel
+apps/driver-mini-app test:  ✓ src/__tests__/Zones.test.tsx (12 tests) 723ms
+packages/contracts/channel test:  ✓ src/__tests__/events.test.ts (11 tests) 8ms
+packages/contracts/channel test:  ✓ src/__tests__/contracts.test.ts (13 tests) 25ms
+packages/contracts/channel test:  ✓ src/__tests__/errors.test.ts (10 tests) 59ms
+apps/admin-portal test:  ✓ src/__tests__/support-screen.test.tsx (7 tests) 536ms
+apps/customer-mini-app test:  ✓ src/__tests__/Profile.test.tsx (5 tests) 675ms
+apps/customer-mini-app test:    ✓ Profile screen > loads profile on mount  310ms
+packages/contracts/channel test:  ✓ src/__tests__/bot-role-spec.test.ts (9 tests) 35ms
+apps/driver-mini-app test:  ✓ src/__tests__/Profile.test.tsx (12 tests) 810ms
+apps/admin-portal test:  ✓ src/__tests__/users.test.ts (9 tests) 15ms
+apps/customer-mini-app test:  ✓ src/__tests__/Reputation.test.tsx (4 tests) 592ms
+apps/driver-mini-app test:  ✓ src/__tests__/Earnings.test.tsx (11 tests) 568ms
+packages/contracts/channel test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 5102ms
+packages/contracts/channel test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  5099ms
+packages/contracts/channel test:  Test Files  5 passed (5)
+packages/contracts/channel test:       Tests  44 passed (44)
+packages/contracts/channel test:    Start at  04:20:43
+packages/contracts/channel test:    Duration  11.67s (transform 389ms, setup 0ms, collect 583ms, tests 5.23s, environment 26ms, prepare 1.70s)
+packages/contracts/channel test: Done
+packages/contracts/customer test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/orders-screen.test.tsx (7 tests) 673ms
+apps/admin-portal test:    ✓ Orders screen > calls searchByPublicId on search submit  372ms
+packages/contracts/customer test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/customer
+apps/driver-mini-app test:  ✓ src/__tests__/vehicles.test.ts (8 tests) 16ms
+apps/customer-mini-app test:  ✓ src/__tests__/Search.test.tsx (6 tests) 383ms
+packages/contracts/customer test:  ✓ src/__tests__/contracts.test.ts (29 tests) 41ms
+packages/contracts/customer test:  ✓ src/__tests__/events.test.ts (13 tests) 37ms
+apps/admin-portal test:  ✓ src/__tests__/audit.test.ts (7 tests) 43ms
+apps/driver-mini-app test:  ✓ src/__tests__/Documents.test.tsx (10 tests) 445ms
+apps/customer-mini-app test:  ✓ src/__tests__/Marketplace.test.tsx (5 tests) 332ms
+packages/contracts/customer test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3775ms
+packages/contracts/customer test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3772ms
+packages/contracts/customer test:  Test Files  3 passed (3)
+packages/contracts/customer test:       Tests  43 passed (43)
+packages/contracts/customer test:    Start at  04:20:58
+packages/contracts/customer test:    Duration  6.75s (transform 200ms, setup 0ms, collect 298ms, tests 3.85s, environment 5ms, prepare 785ms)
+apps/admin-portal test:  ✓ src/__tests__/drivers-screen.test.tsx (7 tests) 722ms
+apps/admin-portal test:    ✓ Drivers screen > renders title  404ms
+packages/contracts/customer test: Done
+packages/contracts/delivery test$ vitest run
+apps/driver-mini-app test: stderr | src/__tests__/Offers.test.tsx > Offers screen > renders empty state when no job_id provided
+apps/driver-mini-app test: react-i18next:: useTranslation: You will need to pass in an i18next instance by using initReactI18next { code: [32m'NO_I18NEXT_INSTANCE'[39m }
+apps/customer-mini-app test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 208ms
+apps/driver-mini-app test:  ✓ src/__tests__/Offers.test.tsx (7 tests) 412ms
+packages/contracts/delivery test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/delivery
+packages/contracts/delivery test:  ✓ src/__tests__/contracts.test.ts (29 tests) 75ms
+packages/contracts/delivery test:  Test Files  1 passed (1)
+packages/contracts/delivery test:       Tests  29 passed (29)
+packages/contracts/delivery test:    Start at  04:21:07
+packages/contracts/delivery test:    Duration  1.78s (transform 288ms, setup 0ms, collect 264ms, tests 75ms, environment 16ms, prepare 437ms)
+packages/contracts/delivery test: Done
+packages/contracts/dispatch test$ vitest run
+apps/driver-mini-app test:  ✓ src/__tests__/zones.test.ts (8 tests) 41ms
+apps/admin-portal test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 250ms
+apps/customer-mini-app test:  ✓ src/__tests__/MyOrders.test.tsx (5 tests) 635ms
+packages/contracts/dispatch test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/dispatch
+packages/contracts/dispatch test:  ✓ src/__tests__/contracts.test.ts (9 tests) 59ms
+apps/driver-mini-app test:  ✓ src/__tests__/earnings.test.ts (7 tests) 56ms
+packages/contracts/dispatch test:  ✓ src/__tests__/events.test.ts (4 tests) 92ms
+apps/admin-portal test:  ✓ src/__tests__/audit-screen.test.tsx (7 tests) 1022ms
+apps/admin-portal test:    ✓ AuditLog screen > renders title and filter bar  403ms
+apps/customer-mini-app test:  ✓ src/__tests__/session.test.ts (5 tests) 14ms
+apps/driver-mini-app test:  ✓ src/__tests__/documents.test.ts (6 tests) 48ms
+apps/customer-mini-app test:  ✓ src/__tests__/Home.test.tsx (3 tests) 391ms
+apps/admin-portal test:  ✓ src/__tests__/users-screen.test.tsx (7 tests) 364ms
+apps/customer-mini-app test:  Test Files  12 passed (12)
+apps/customer-mini-app test:       Tests  72 passed (72)
+apps/customer-mini-app test:    Start at  04:20:20
+apps/customer-mini-app test:    Duration  63.24s (transform 1.12s, setup 5.86s, collect 4.64s, tests 6.72s, environment 30.93s, prepare 4.42s)
+packages/contracts/dispatch test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 5805ms
+packages/contracts/dispatch test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  5802ms
+apps/customer-mini-app test: Done
+packages/contracts/driver test$ vitest run
+packages/contracts/dispatch test:  ✓ src/__tests__/boundary.test.ts (4 tests) 13ms
+apps/driver-mini-app test:  ✓ src/__tests__/profile.test.ts (6 tests) 47ms
+packages/contracts/driver test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/driver
+packages/contracts/dispatch test:  ✓ src/__tests__/schema.test.ts (5 tests) 3ms
+packages/contracts/dispatch test:  Test Files  5 passed (5)
+packages/contracts/dispatch test:       Tests  23 passed (23)
+packages/contracts/dispatch test:    Start at  04:21:12
+packages/contracts/dispatch test:    Duration  14.15s (transform 269ms, setup 0ms, collect 438ms, tests 5.97s, environment 31ms, prepare 2.23s)
+packages/contracts/dispatch test: Done
+packages/contracts/geography test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/session.test.ts (4 tests) 34ms
+packages/contracts/driver test:  ✓ src/__tests__/contracts.test.ts (13 tests) 59ms
+packages/contracts/driver test:  ✓ src/__tests__/events.test.ts (10 tests) 95ms
+packages/contracts/geography test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/geography
+packages/contracts/driver test:  ✓ src/__tests__/schema.test.ts (29 tests) 25ms
+apps/driver-mini-app test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 201ms
+packages/contracts/geography test:  ✓ src/__tests__/contracts.test.ts (10 tests) 6ms
+packages/contracts/driver test:  ✓ src/__tests__/boundary.test.ts (7 tests) 4ms
+packages/contracts/geography test:  ✓ src/__tests__/events.test.ts (5 tests) 22ms
+apps/admin-portal test:  ✓ src/__tests__/dashboard.test.tsx (3 tests) 325ms
+apps/admin-portal test:  Test Files  14 passed (14)
+apps/admin-portal test:       Tests  101 passed (101)
+apps/admin-portal test:    Start at  04:20:20
+apps/admin-portal test:    Duration  72.08s (transform 1.13s, setup 9.51s, collect 3.79s, tests 5.79s, environment 34.53s, prepare 5.64s)
+apps/admin-portal test: Done
+packages/contracts/identity test$ vitest run
+apps/driver-mini-app test:  ✓ src/__tests__/session.test.ts (4 tests) 3ms
+packages/contracts/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/identity
+packages/contracts/identity test:  ✓ src/__tests__/events.test.ts (7 tests) 7ms
+packages/contracts/geography test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 4129ms
+packages/contracts/geography test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  4126ms
+packages/contracts/geography test:  Test Files  3 passed (3)
+packages/contracts/geography test:       Tests  16 passed (16)
+packages/contracts/geography test:    Start at  04:21:29
+packages/contracts/geography test:    Duration  7.68s (transform 131ms, setup 0ms, collect 207ms, tests 4.16s, environment 28ms, prepare 1.03s)
+packages/contracts/driver test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 4285ms
+packages/contracts/driver test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  4281ms
+packages/contracts/driver test:  Test Files  5 passed (5)
+packages/contracts/driver test:       Tests  60 passed (60)
+packages/contracts/driver test:    Start at  04:21:26
+packages/contracts/driver test:    Duration  10.54s (transform 338ms, setup 0ms, collect 501ms, tests 4.47s, environment 35ms, prepare 1.56s)
+packages/contracts/identity test:  ✓ src/__tests__/contracts.test.ts (6 tests) 24ms
+packages/contracts/driver test: Done
+packages/contracts/marketplace test$ vitest run
+packages/contracts/geography test: Done
+packages/contracts/matching test$ vitest run
+apps/driver-mini-app test:  ✓ src/__tests__/Home.test.tsx (3 tests) 264ms
+apps/driver-mini-app test:  Test Files  16 passed (16)
+apps/driver-mini-app test:       Tests  132 passed (132)
+apps/driver-mini-app test:    Start at  04:20:20
+apps/driver-mini-app test:    Duration  78.16s (transform 1.12s, setup 8.26s, collect 4.76s, tests 5.76s, environment 38.69s, prepare 6.18s)
+apps/driver-mini-app test: Done
+packages/contracts/negotiation test$ vitest run
+packages/contracts/marketplace test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/marketplace
+packages/contracts/matching test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/matching
+packages/contracts/marketplace test:  ✓ src/__tests__/schema.test.ts (12 tests) 37ms
+packages/contracts/negotiation test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/negotiation
+packages/contracts/matching test:  ✓ src/__tests__/contracts.test.ts (10 tests) 17ms
+packages/contracts/marketplace test:  ✓ src/__tests__/contracts.test.ts (16 tests) 82ms
+packages/contracts/matching test:  ✓ src/__tests__/events.test.ts (6 tests) 62ms
+packages/contracts/negotiation test:  ✓ src/__tests__/schema.test.ts (30 tests) 71ms
+packages/contracts/identity test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3985ms
+packages/contracts/identity test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3982ms
+packages/contracts/identity test:  Test Files  3 passed (3)
+packages/contracts/identity test:       Tests  14 passed (14)
+packages/contracts/identity test:    Start at  04:21:34
+packages/contracts/identity test:    Duration  7.09s (transform 159ms, setup 0ms, collect 169ms, tests 4.02s, environment 10ms, prepare 901ms)
+packages/contracts/marketplace test:  ✓ src/__tests__/boundary.test.ts (10 tests) 40ms
+packages/contracts/identity test: Done
+packages/contracts/order test$ vitest run
+packages/contracts/negotiation test:  ✓ src/__tests__/events.test.ts (13 tests) 76ms
+packages/contracts/marketplace test:  ✓ src/__tests__/events.test.ts (8 tests) 31ms
+packages/contracts/order test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/order
+packages/contracts/negotiation test:  ✓ src/__tests__/boundary.test.ts (13 tests) 54ms
+packages/contracts/negotiation test:  ✓ src/__tests__/contracts.test.ts (14 tests) 81ms
+packages/contracts/order test:  ✓ src/__tests__/contracts.test.ts (49 tests) 121ms
+packages/contracts/order test:  ✓ src/__tests__/boundary.test.ts (31 tests) 81ms
+packages/contracts/matching test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3784ms
+packages/contracts/matching test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3777ms
+packages/contracts/matching test:  ✓ src/__tests__/boundary.test.ts (3 tests) 7ms
+packages/contracts/order test:  ✓ src/__tests__/transitions-doc.test.ts (21 tests) 98ms
+packages/contracts/matching test:  ✓ src/__tests__/schema.test.ts (5 tests) 3ms
+packages/contracts/order test:  ✓ src/__tests__/events.test.ts (18 tests) 66ms
+packages/contracts/matching test:  Test Files  5 passed (5)
+packages/contracts/matching test:       Tests  25 passed (25)
+packages/contracts/matching test:    Start at  04:21:39
+packages/contracts/matching test:    Duration  9.60s (transform 234ms, setup 0ms, collect 359ms, tests 3.87s, environment 25ms, prepare 1.69s)
+packages/contracts/marketplace test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 4205ms
+packages/contracts/marketplace test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  4190ms
+packages/contracts/marketplace test:  Test Files  5 passed (5)
+packages/contracts/marketplace test:       Tests  47 passed (47)
+packages/contracts/marketplace test:    Start at  04:21:38
+packages/contracts/marketplace test:    Duration  10.08s (transform 338ms, setup 0ms, collect 486ms, tests 4.39s, environment 17ms, prepare 1.62s)
+packages/contracts/matching test: Done
+packages/contracts/reputation test$ vitest run
+packages/contracts/marketplace test: Done
+packages/contracts/search test$ vitest run
+packages/contracts/negotiation test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3703ms
+packages/contracts/negotiation test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3699ms
+packages/contracts/negotiation test:  Test Files  5 passed (5)
+packages/contracts/negotiation test:       Tests  71 passed (71)
+packages/contracts/negotiation test:    Start at  04:21:40
+packages/contracts/negotiation test:    Duration  9.44s (transform 350ms, setup 0ms, collect 475ms, tests 3.98s, environment 19ms, prepare 1.38s)
+packages/contracts/negotiation test: Done
+packages/contracts/subscription test$ vitest run
+packages/contracts/reputation test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/reputation
+packages/contracts/search test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/search
+packages/contracts/reputation test:  ✓ src/__tests__/schema.test.ts (24 tests) 32ms
+packages/contracts/subscription test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/subscription
+packages/contracts/search test:  ✓ src/__tests__/contracts.test.ts (15 tests) 24ms
+packages/contracts/search test:  Test Files  1 passed (1)
+packages/contracts/search test:       Tests  15 passed (15)
+packages/contracts/search test:    Start at  04:21:50
+packages/contracts/search test:    Duration  862ms (transform 101ms, setup 0ms, collect 71ms, tests 24ms, environment 0ms, prepare 292ms)
+packages/contracts/reputation test:  ✓ src/__tests__/events.test.ts (20 tests) 41ms
+packages/contracts/search test: Done
+packages/contracts/support test$ vitest run
+packages/contracts/subscription test:  ✓ src/__tests__/contracts.test.ts (11 tests) 28ms
+packages/contracts/reputation test:  ✓ src/__tests__/boundary.test.ts (19 tests) 35ms
+packages/contracts/order test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3321ms
+packages/contracts/order test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3318ms
+packages/contracts/order test:  Test Files  5 passed (5)
+packages/contracts/order test:       Tests  120 passed (120)
+packages/contracts/order test:    Start at  04:21:44
+packages/contracts/order test:    Duration  8.92s (transform 416ms, setup 0ms, collect 544ms, tests 3.69s, environment 40ms, prepare 1.49s)
+packages/contracts/support test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/contracts/support
+packages/contracts/subscription test:  ✓ src/__tests__/schema.test.ts (7 tests) 21ms
+packages/contracts/order test: Done
+packages/errors test$ vitest run
+packages/contracts/reputation test:  ✓ src/__tests__/contracts.test.ts (18 tests) 39ms
+packages/contracts/subscription test:  ✓ src/__tests__/boundary.test.ts (7 tests) 10ms
+packages/contracts/support test:  ✓ src/__tests__/contracts.test.ts (13 tests) 13ms
+packages/errors test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/errors
+packages/contracts/subscription test:  ✓ src/__tests__/events.test.ts (6 tests) 27ms
+packages/errors test:  ✓ src/__tests__/errors.test.ts (3 tests) 4ms
+packages/errors test:  Test Files  1 passed (1)
+packages/errors test:       Tests  3 passed (3)
+packages/errors test:    Start at  04:21:54
+packages/errors test:    Duration  720ms (transform 100ms, setup 0ms, collect 76ms, tests 4ms, environment 6ms, prepare 209ms)
+packages/errors test: Done
+packages/golden-e2e test$ vitest run
+packages/golden-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/golden-e2e
+packages/contracts/reputation test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2570ms
+packages/contracts/reputation test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  2564ms
+packages/contracts/reputation test:  Test Files  5 passed (5)
+packages/contracts/reputation test:       Tests  82 passed (82)
+packages/contracts/reputation test:    Start at  04:21:50
+packages/contracts/reputation test:    Duration  6.30s (transform 225ms, setup 0ms, collect 325ms, tests 2.72s, environment 10ms, prepare 887ms)
+packages/contracts/reputation test: Done
+packages/incident-ops test$ vitest run --config vitest.config.ts
+packages/contracts/support test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2715ms
+packages/contracts/support test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  2712ms
+packages/contracts/support test:  Test Files  2 passed (2)
+packages/contracts/support test:       Tests  14 passed (14)
+packages/contracts/support test:    Start at  04:21:53
+packages/contracts/support test:    Duration  4.10s (transform 132ms, setup 0ms, collect 107ms, tests 2.73s, environment 7ms, prepare 442ms)
+packages/golden-e2e test:  ↓ src/__tests__/golden-journeys.golden.test.ts (39 tests | 39 skipped)
+packages/golden-e2e test:  Test Files  1 skipped (1)
+packages/golden-e2e test:       Tests  39 skipped (39)
+packages/golden-e2e test:    Start at  04:21:56
+packages/golden-e2e test:    Duration  1.16s (transform 223ms, setup 0ms, collect 217ms, tests 0ms, environment 8ms, prepare 363ms)
+packages/contracts/support test: Done
+packages/observability test$ vitest run
+packages/contracts/subscription test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 3093ms
+packages/contracts/subscription test:    ✓ api-types.ts is in sync with the OpenAPI source > regenerating with the package's generate script changes nothing  3085ms
+packages/contracts/subscription test:  Test Files  5 passed (5)
+packages/contracts/subscription test:       Tests  32 passed (32)
+packages/contracts/subscription test:    Start at  04:21:51
+packages/contracts/subscription test:    Duration  6.79s (transform 255ms, setup 0ms, collect 345ms, tests 3.18s, environment 17ms, prepare 989ms)
+packages/golden-e2e test: Done
+packages/outbox test$ vitest run
+packages/contracts/subscription test: Done
+packages/pilot-feedback test$ vitest run --config vitest.config.ts
+packages/incident-ops test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/incident-ops
+packages/incident-ops test:  ✓ src/__tests__/incident-ops.test.ts (12 tests | 2 skipped) 22ms
+packages/incident-ops test:  Test Files  1 passed (1)
+packages/incident-ops test:       Tests  10 passed | 2 skipped (12)
+packages/incident-ops test:    Start at  04:21:58
+packages/incident-ops test:    Duration  1.10s (transform 210ms, setup 0ms, collect 164ms, tests 22ms, environment 0ms, prepare 275ms)
+packages/observability test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/observability
+packages/outbox test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/outbox
+packages/pilot-feedback test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/pilot-feedback
+packages/incident-ops test: Done
+packages/resilience test$ vitest run
+packages/outbox test:  ✓ src/__tests__/drain.test.ts (6 tests) 6ms
+packages/outbox test:  Test Files  1 passed (1)
+packages/outbox test:       Tests  6 passed (6)
+packages/outbox test:    Start at  04:22:00
+packages/outbox test:    Duration  1.13s (transform 140ms, setup 0ms, collect 134ms, tests 6ms, environment 10ms, prepare 315ms)
+packages/pilot-feedback test:  ✓ src/__tests__/pilot-feedback.test.ts (18 tests) 24ms
+packages/pilot-feedback test:  Test Files  1 passed (1)
+packages/pilot-feedback test:       Tests  18 passed (18)
+packages/pilot-feedback test:    Start at  04:22:00
+packages/pilot-feedback test:    Duration  1.36s (transform 201ms, setup 0ms, collect 171ms, tests 24ms, environment 6ms, prepare 329ms)
+packages/outbox test: Done
+packages/observability test:  ✓ src/__tests__/synthetic-trace.test.ts (4 tests) 692ms
+packages/pilot-feedback test: Done
+packages/resilience test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/resilience
+packages/resilience test:  ✓ src/__tests__/chaos-scenarios.test.ts (10 tests) 171ms
+packages/resilience test:  ✓ src/__tests__/retry.test.ts (6 tests) 18ms
+packages/resilience test:  ✓ src/__tests__/bulkhead.test.ts (6 tests) 152ms
+packages/resilience test:  ✓ src/__tests__/circuit-breaker.test.ts (7 tests) 1ms
+packages/resilience test:  ✓ src/__tests__/timeout.test.ts (6 tests) 155ms
+packages/resilience test:  Test Files  5 passed (5)
+packages/resilience test:       Tests  35 passed (35)
+packages/resilience test:    Start at  04:22:02
+packages/resilience test:    Duration  1.39s (transform 162ms, setup 0ms, collect 190ms, tests 497ms, environment 0ms, prepare 239ms)
+packages/resilience test: Done
+packages/observability test:  ✓ src/__tests__/metrics.test.ts (6 tests) 412ms
+packages/observability test:  Test Files  2 passed (2)
+packages/observability test:       Tests  10 passed (10)
+packages/observability test:    Start at  04:21:59
+packages/observability test:    Duration  4.40s (transform 138ms, setup 0ms, collect 884ms, tests 1.10s, environment 10ms, prepare 575ms)
+packages/observability test: Done
+packages/auth-sdk test$ vitest run
+packages/channel-core test$ vitest run
+packages/load-testing test$ vitest run --config vitest.config.ts
+services/observability test$ vitest run
+packages/auth-sdk test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/auth-sdk
+services/observability test:  RUN  v3.2.7 /home/user/workspace/wasla/services/observability
+packages/channel-core test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-core
+packages/load-testing test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/load-testing
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 23ms
+services/observability test:  ✓ src/__tests__/config.test.ts (4 tests) 5ms
+services/observability test:  Test Files  1 passed (1)
+services/observability test:       Tests  4 passed (4)
+services/observability test:    Start at  04:22:06
+services/observability test:    Duration  1.21s (transform 145ms, setup 0ms, collect 129ms, tests 5ms, environment 13ms, prepare 335ms)
+packages/load-testing test:  ↓ src/__tests__/load-capacity.test.ts (18 tests | 18 skipped)
+packages/load-testing test:  Test Files  1 skipped (1)
+packages/load-testing test:       Tests  18 skipped (18)
+packages/load-testing test:    Start at  04:22:06
+packages/load-testing test:    Duration  1.37s (transform 223ms, setup 0ms, collect 162ms, tests 0ms, environment 11ms, prepare 352ms)
+packages/channel-core test:  ✓ src/__tests__/groups.test.ts (16 tests) 57ms
+packages/load-testing test: Done
+services/observability test: Done
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 42ms
+packages/channel-core test:  ✓ src/__tests__/receive-update.test.ts (12 tests) 44ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 12ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  04:22:05
+packages/auth-sdk test:    Duration  3.49s (transform 361ms, setup 0ms, collect 430ms, tests 77ms, environment 7ms, prepare 849ms)
+packages/auth-sdk test: Done
+packages/channel-core test:  ✓ src/__tests__/send-message.test.ts (14 tests) 26ms
+packages/channel-core test:  ✓ src/__tests__/retry.test.ts (9 tests) 20ms
+packages/channel-core test:  ✓ src/__tests__/neutrality.guard.test.ts (40 tests) 31ms
+packages/channel-core test:  ✓ src/__tests__/launch-surfaces.test.ts (5 tests) 12ms
+packages/channel-core test:  ✓ src/__tests__/deep-link.test.ts (8 tests) 8ms
+packages/channel-core test:  Test Files  7 passed (7)
+packages/channel-core test:       Tests  104 passed (104)
+packages/channel-core test:    Start at  04:22:06
+packages/channel-core test:    Duration  6.25s (transform 552ms, setup 0ms, collect 863ms, tests 199ms, environment 9ms, prepare 1.44s)
+packages/channel-core test: Done
+packages/channel-postgres test$ vitest run
+packages/service-auth test$ vitest run
+packages/telegram-adapter test$ vitest run
+packages/channel-postgres test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-postgres
+packages/telegram-adapter test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/telegram-adapter
+packages/service-auth test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/service-auth
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 131ms
+packages/channel-postgres test:  ✓ src/__tests__/schema-drift.test.ts (9 tests) 27ms
+packages/channel-postgres test:  Test Files  1 passed (1)
+packages/channel-postgres test:       Tests  9 passed (9)
+packages/channel-postgres test:    Start at  04:22:14
+packages/channel-postgres test:    Duration  1.61s (transform 196ms, setup 0ms, collect 514ms, tests 27ms, environment 6ms, prepare 365ms)
+packages/service-auth test:  ✓ src/__tests__/token.test.ts (51 tests) 121ms
+packages/channel-postgres test: Done
+packages/service-auth test:  ✓ src/__tests__/enforce.test.ts (18 tests) 59ms
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 15ms
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 37ms
+packages/service-auth test:  ✓ src/__tests__/fastify.test.ts (14 tests) 386ms
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 24ms
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 27ms
+packages/service-auth test:  ✓ src/__tests__/keys.test.ts (27 tests) 21ms
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 30ms
+packages/service-auth test:  ✓ src/__tests__/http-server.e2e.test.ts (11 tests) 275ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 5ms
+packages/service-auth test:  ✓ src/__tests__/edge-controls.test.ts (15 tests) 32ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 16ms
+packages/service-auth test:  ✓ src/__tests__/replay-store.test.ts (11 tests) 18ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 16ms
+packages/telegram-adapter test:  Test Files  9 passed (9)
+packages/telegram-adapter test:       Tests  132 passed (132)
+packages/telegram-adapter test:    Start at  04:22:14
+packages/telegram-adapter test:    Duration  8.19s (transform 588ms, setup 0ms, collect 1.18s, tests 302ms, environment 25ms, prepare 2.10s)
+packages/service-auth test:  ✓ src/__tests__/http.test.ts (14 tests) 69ms
+packages/telegram-adapter test: Done
+packages/service-auth test:  ✓ src/__tests__/replay-postgres.test.ts (10 tests) 21ms
+packages/service-auth test:  ✓ src/__tests__/replay.test.ts (11 tests) 10ms
+packages/service-auth test:  ✓ src/__tests__/outbound.test.ts (9 tests) 28ms
+packages/service-auth test:  Test Files  11 passed (11)
+packages/service-auth test:       Tests  191 passed (191)
+packages/service-auth test:    Start at  04:22:14
+packages/service-auth test:    Duration  10.74s (transform 689ms, setup 0ms, collect 1.52s, tests 1.04s, environment 19ms, prepare 2.27s)
+packages/service-auth test: Done
+packages/bot-runtime test$ vitest run
+packages/tick-scheduler test$ vitest run
+services/audit test$ vitest run
+services/billing test$ vitest run
+packages/bot-runtime test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/bot-runtime
+services/billing test:  RUN  v3.2.7 /home/user/workspace/wasla/services/billing
+services/audit test:  RUN  v3.2.7 /home/user/workspace/wasla/services/audit
+packages/tick-scheduler test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/tick-scheduler
+services/billing test:  ✓ src/__tests__/relay.test.ts (19 tests) 134ms
+services/billing test:  ✓ src/__tests__/domain.test.ts (47 tests) 112ms
+packages/tick-scheduler test:  ✓ src/__tests__/scheduler.test.ts (15 tests) 757ms
+packages/tick-scheduler test:    ✓ النداءُ الفعليُّ > كلُّ الخدماتِ: رمزٌ يتحقّقُ منهُ بـverifyServiceToken، بلا جسمٍ ولا content-type، وخروجٌ 0  369ms
+packages/tick-scheduler test:  Test Files  1 passed (1)
+packages/tick-scheduler test:       Tests  15 passed (15)
+packages/tick-scheduler test:    Start at  04:22:27
+packages/tick-scheduler test:    Duration  2.85s (transform 835ms, setup 0ms, collect 1.05s, tests 757ms, environment 4ms, prepare 374ms)
+services/audit test:  ✓ src/__tests__/http/audit-routes.test.ts (16 tests) 513ms
+services/audit test:    ✓ POST /audit/events > creates an audit event and returns 201  349ms
+services/audit test:  Test Files  1 passed (1)
+services/audit test:       Tests  16 passed (16)
+services/audit test:    Start at  04:22:27
+services/audit test:    Duration  3.47s (transform 963ms, setup 0ms, collect 1.63s, tests 513ms, environment 52ms, prepare 505ms)
+packages/tick-scheduler test: Done
+services/customers test$ vitest run
+packages/bot-runtime test:  ✓ src/__tests__/conversation.test.ts (13 tests) 721ms
+packages/bot-runtime test:    ✓ conversation seam > delivers what a flow answered, with the key derived from the update  419ms
+services/audit test: Done
+services/delivery test$ vitest run
+services/billing test:  ✓ src/__tests__/http.test.ts (16 tests) 571ms
+services/customers test:  RUN  v3.2.7 /home/user/workspace/wasla/services/customers
+services/billing test:  ✓ src/__tests__/delivery-contract.test.ts (7 tests) 9ms
+services/delivery test:  RUN  v3.2.7 /home/user/workspace/wasla/services/delivery
+services/billing test:  ✓ src/__tests__/schema-drift.test.ts (8 tests) 39ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-abuse.test.ts (53 tests) 1304ms
+packages/bot-runtime test:    ✓ M3-05: Bot role — abuse tests > 4.1 Unsupported commands are rejected > customer bot rejects /admin  372ms
+services/billing test:  ✓ src/__tests__/relay-loop.test.ts (3 tests) 110ms
+services/billing test:  ✓ src/__tests__/infrastructure.test.ts (11 tests) 16ms
+packages/bot-runtime test:  ✓ src/__tests__/webhook.test.ts (14 tests) 661ms
+packages/bot-runtime test:    ✓ POST /channel/:bot/webhook — authentication > rejects a wrong secret with 401 and processes nothing  363ms
+services/billing test:  ✓ src/__tests__/boundary.test.ts (5 tests) 29ms
+services/billing test:  Test Files  8 passed (8)
+services/billing test:       Tests  116 passed (116)
+services/billing test:    Start at  04:22:27
+services/billing test:    Duration  9.91s (transform 849ms, setup 0ms, collect 1.90s, tests 1.02s, environment 1ms, prepare 2.81s)
+services/customers test:  ✓ src/__tests__/http/app.test.ts (34 tests) 1497ms
+services/customers test:    ✓ GET /health > reports degraded while no order-engine adapter is wired  382ms
+services/delivery test:  ✓ src/__tests__/store-order-http.test.ts (31 tests) 1351ms
+services/delivery test:    ✓ delivery HTTP — liveness > GET /delivery/health answers ok with no dependency  339ms
+services/billing test: Done
+services/drivers test$ vitest run
+packages/bot-runtime test:  ✓ src/__tests__/groups.test.ts (14 tests) 592ms
+packages/bot-runtime test:    ✓ POST /channel/:bot/webhook — groups > answers /start in a configured group with a link button, in the group  456ms
+services/customers test:  ✓ src/__tests__/http-order-intake.test.ts (17 tests) 673ms
+services/drivers test:  RUN  v3.2.7 /home/user/workspace/wasla/services/drivers
+services/delivery test:  ✓ src/__tests__/service-identity.test.ts (25 tests) 842ms
+services/drivers test:  ✓ src/__tests__/contract-drift.test.ts (23 tests) 161ms
+services/delivery test:  ✓ src/__tests__/relay.test.ts (21 tests) 121ms
+services/customers test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 997ms
+services/customers test:    ✓ حد العميل — مصفوفة المصادقة الداخلة > لا هوية → 401 بمغلف عقد العميل (code مسطَّح) ولا يُسمّى سبب الرفض  532ms
+packages/bot-runtime test:  ✓ src/__tests__/runtime.test.ts (6 tests) 318ms
+services/delivery test:  ✓ src/__tests__/schema-drift.test.ts (34 tests) 139ms
+services/customers test:  ✓ src/__tests__/order-request-submit.test.ts (11 tests) 60ms
+packages/bot-runtime test:  ✓ src/__tests__/identity-bootstrap.test.ts (8 tests) 34ms
+services/drivers test:  ✓ src/__tests__/outbound-ports.test.ts (30 tests) 159ms
+packages/bot-runtime test:  ✓ src/__tests__/config.test.ts (24 tests) 28ms
+services/drivers test:  ✓ src/__tests__/state-machines.test.ts (20 tests) 151ms
+services/customers test:  ✓ src/__tests__/http/admin-routes.test.ts (13 tests) 842ms
+services/customers test:    ✓ GET /customers (admin list) > returns empty list when no profiles exist  399ms
+services/delivery test:  ✓ src/__tests__/payment-mirror.test.ts (25 tests) 973ms
+services/delivery test:    ✓ مرآةُ الدفعِ والتأكيدُ — عبرَ HTTP > PUT payment-mirror يُجيبُ 200 بحالةٍ جديدةٍ ونسخةٍ مرفوعةٍ وحدثٍ واحدٍ  341ms
+packages/bot-runtime test:  ✓ src/__tests__/service-identity.test.ts (10 tests) 479ms
+packages/bot-runtime test:    ✓ M1-07 ingress proof > POST /channel/messages > rejects a request with no service token (401)  304ms
+services/customers test:  ✓ src/__tests__/order-request-preview.test.ts (13 tests) 71ms
+services/delivery test:  ✓ src/__tests__/http-marketplace-catalog.test.ts (18 tests) 1177ms
+services/delivery test:    ✓ HttpMarketplaceCatalogPort · wired into the HTTP boundary (§4.11) > places an order for a slug — the answer that was 503 for seven reviews  956ms
+services/drivers test:  ✓ src/__tests__/http-profile.test.ts (17 tests) 1187ms
+services/drivers test:    ✓ تسجيل السائق > ينشئ 201 ثم يعيد 200 للمفتاح والحمولة نفسيهما بالملف نفسه  409ms
+services/customers test:  ✓ src/__tests__/schema-drift.test.ts (17 tests) 43ms
+packages/bot-runtime test:  ✓ src/__tests__/messages.test.ts (8 tests) 562ms
+packages/bot-runtime test:    ✓ POST /channel/messages > accepts a text message and reports the delivery  448ms
+services/customers test:  ✓ src/__tests__/events-privacy.test.ts (3 tests) 26ms
+services/drivers test:  ✓ src/__tests__/eligibility.test.ts (16 tests) 110ms
+services/delivery test:  ✓ src/__tests__/relay-dead-letter-acknowledgement-http.test.ts (18 tests) 889ms
+services/delivery test:    ✓ POST …/acknowledge — التركيبُ والصلاحيّةُ > منفذٌ غيرُ مُركَّبٍ ⇒ 500 لا 200 «أُقِرَّ»  326ms
+services/customers test:  ✓ src/__tests__/saved-places.test.ts (10 tests) 41ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-journey.test.ts (18 tests) 742ms
+packages/bot-runtime test:    ✓ M3-05: Bot role — journey tests > Customer bot accepts all declared commands > accepts /start  374ms
+services/drivers test:  ✓ src/__tests__/schema-drift.test.ts (28 tests) 25ms
+services/delivery test:  ✓ src/__tests__/relay-dead-letters.unit.test.ts (21 tests) 31ms
+services/customers test:  ✓ src/__tests__/customer-profile.test.ts (8 tests) 25ms
+services/drivers test:  ✓ src/__tests__/publication.test.ts (16 tests) 139ms
+packages/bot-runtime test:  ✓ src/__tests__/launch-surfaces.test.ts (8 tests) 546ms
+packages/bot-runtime test:    ✓ GET /channel/:bot/mini-app > bot customer reports its own Mini App  387ms
+services/delivery test:  ✓ src/__tests__/relay-dead-letter-http.test.ts (10 tests) 665ms
+services/delivery test:    ✓ GET /delivery/relay/dead-letters — التركيبُ > منفذٌ غيرُ مُركَّبٍ ⇒ 500 `DELIVERY_INTERNAL_ERROR` لا 200 بصفرٍ  355ms
+services/customers test:  ✓ src/__tests__/observability-wiring.test.ts (3 tests) 479ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-runtime.test.ts (26 tests) 44ms
+services/delivery test:  ✓ src/__tests__/inventory-conflict.unit.test.ts (18 tests) 24ms
+packages/bot-runtime test:  Test Files  12 passed (12)
+packages/bot-runtime test:       Tests  202 passed (202)
+packages/bot-runtime test:    Start at  04:22:27
+packages/bot-runtime test:    Duration  27.61s (transform 1.56s, setup 0ms, collect 8.84s, tests 6.03s, environment 40ms, prepare 3.78s)
+services/customers test:  ✓ src/__tests__/mappers.test.ts (4 tests) 34ms
+services/customers test:  Test Files  12 passed (12)
+services/customers test:       Tests  146 passed (146)
+services/customers test:    Start at  04:22:32
+services/customers test:    Duration  22.50s (transform 1.37s, setup 0ms, collect 5.42s, tests 4.79s, environment 47ms, prepare 3.88s)
+services/drivers test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 1098ms
+services/drivers test:    ✓ حد السائقين — مصفوفة المصادقة الداخلة > لا هوية → 401 بمغلف عقد السائقين (error.code مسطَّح) ولا يُسمّى سبب الرفض  659ms
+packages/bot-runtime test: Done
+services/identity test$ vitest run
+services/customers test: Done
+services/marketplace test$ vitest run
+services/delivery test:  ✓ src/__tests__/inventory-conflict-acknowledgement-http.test.ts (10 tests) 671ms
+services/delivery test:    ✓ POST …/acknowledgement — التركيبُ > منفذٌ غيرُ مُركَّبٍ ⇒ 500 `DELIVERY_INTERNAL_ERROR` لا 200 «أُقِرَّت»  350ms
+services/identity test:  RUN  v3.2.7 /home/user/workspace/wasla/services/identity
+services/marketplace test:  RUN  v3.2.7 /home/user/workspace/wasla/services/marketplace
+services/drivers test:  ✓ src/__tests__/http-drift.test.ts (12 tests) 364ms
+services/delivery test:  ✓ src/__tests__/relay-requeue-http.test.ts (12 tests) 922ms
+services/delivery test:    ✓ POST …/requeue — التركيبُ والصلاحيّةُ > منفذٌ غيرُ مُركَّبٍ ⇒ 500 `DELIVERY_INTERNAL_ERROR` لا 202 «أُعيدَ»  528ms
+services/identity test:  ✓ src/__tests__/session.test.ts (28 tests) 113ms
+services/drivers test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 831ms
+services/drivers test:    ✓ شكل الخطأ > يعيد الغلاف المتداخل مع معرّف التتبّع دائماً  404ms
+services/delivery test:  ✓ src/__tests__/inventory-conflict-http.test.ts (10 tests) 689ms
+services/delivery test:    ✓ GET /delivery/inventory-conflicts — التركيبُ > منفذٌ غيرُ مُركَّبٍ ⇒ 500 `DELIVERY_INTERNAL_ERROR` لا 200 بقائمةٍ فارغةٍ  387ms
+services/identity test:  ✓ src/__tests__/http/service-identity.test.ts (14 tests) 657ms
+services/marketplace test:  ✓ src/__tests__/service-identity.test.ts (54 tests) 2096ms
+services/marketplace test:    ✓ حد السوق — مصفوفة المصادقة الداخلة > لا هوية → 401 بمغلف عقد السوق (error.code) ولا يُسمّى سبب الرفض  433ms
+services/drivers test:  ✓ src/__tests__/http-documents.test.ts (7 tests) 878ms
+services/drivers test:    ✓ وثائق السائق > ينشئ 201 ثم يعيد 200 للمفتاح نفسه، ويرفض حمولة مختلفة بـ409  423ms
+services/delivery test:  ✓ src/__tests__/idempotency-retention.test.ts (17 tests) 697ms
+services/delivery test:    ✓ POST /delivery/idempotency-keys/sweep — مسارُ الصيانةِ > مُكنسةٌ غيرُ مُركَّبةٍ ⇒ خطأٌ صريحٌ لا «مسحتُ صفراً»  478ms
+services/drivers test:  ✓ src/__tests__/privacy.test.ts (4 tests) 84ms
+services/marketplace test:  ✓ src/__tests__/purity.test.ts (21 tests) 707ms
+services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 306ms
+services/delivery test:  ✓ src/__tests__/idempotency.test.ts (23 tests) 104ms
+services/marketplace test:  ✓ src/__tests__/events.test.ts (57 tests) 32ms
+services/delivery test:  ✓ src/__tests__/dispatch-mirror.test.ts (23 tests) 45ms
+services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 27ms
+services/drivers test:  ✓ src/__tests__/http-vehicles.test.ts (7 tests) 714ms
+services/drivers test:    ✓ مركبات السائق > ينشئ 201 ثم يعيد 200 للمفتاح نفسه بالمركبة نفسها  379ms
+services/marketplace test:  ✓ src/__tests__/http-drift.test.ts (32 tests) 265ms
+services/delivery test:  ✓ src/__tests__/idempotency-sweep-runner.test.ts (21 tests) 40ms
+services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 40ms
+services/delivery test:  ✓ src/__tests__/state-machine.test.ts (10 tests) 90ms
+services/drivers test:  ✓ src/__tests__/http-eligibility.test.ts (7 tests) 420ms
+services/marketplace test:  ✓ src/__tests__/http-degraded.test.ts (30 tests) 1419ms
+services/marketplace test:    ✓ مسارُ الصحّةِ يبقى ناطقاً > `200` مع `unavailable` و`memory` — لا سقوطَ ولا `503`  359ms
+services/delivery test:  ✓ src/__tests__/dependency-probe.test.ts (20 tests) 56ms
+services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 3ms
+services/identity test:  Test Files  6 passed (6)
+services/identity test:       Tests  66 passed (66)
+services/identity test:    Start at  04:22:57
+services/identity test:    Duration  13.94s (transform 953ms, setup 0ms, collect 6.58s, tests 1.15s, environment 68ms, prepare 1.82s)
+services/drivers test:  ✓ src/__tests__/http-admin-list.test.ts (3 tests) 261ms
+services/drivers test:  Test Files  15 passed (15)
+services/drivers test:       Tests  212 passed (212)
+services/drivers test:    Start at  04:22:39
+services/drivers test:    Duration  31.99s (transform 1.25s, setup 0ms, collect 9.39s, tests 6.58s, environment 70ms, prepare 5.48s)
+services/marketplace test:  ✓ src/__tests__/composition.test.ts (19 tests) 113ms
+services/identity test: Done
+services/matching test$ vitest run
+services/delivery test:  ✓ src/__tests__/relay-acknowledgement.unit.test.ts (13 tests) 49ms
+services/drivers test: Done
+services/negotiations test$ vitest run
+services/delivery test:  ✓ src/__tests__/delegation.test.ts (11 tests) 26ms
+services/marketplace test:  ✓ src/__tests__/schema-drift.test.ts (33 tests) 77ms
+services/matching test:  RUN  v3.2.7 /home/user/workspace/wasla/services/matching
+services/negotiations test:  RUN  v3.2.7 /home/user/workspace/wasla/services/negotiations
+services/delivery test:  ✓ src/__tests__/store-order-domain.test.ts (14 tests) 46ms
+services/marketplace test:  ✓ src/__tests__/staff.test.ts (20 tests) 44ms
+services/matching test:  ✓ src/__tests__/evaluate-candidates.test.ts (26 tests) 91ms
+services/marketplace test:  ✓ src/__tests__/state.test.ts (14 tests) 72ms
+services/matching test:  ✓ src/__tests__/manage-candidacy.test.ts (23 tests) 57ms
+services/delivery test:  ✓ src/__tests__/fulfillment-transition.http.test.ts (8 tests) 881ms
+services/delivery test:    ✓ fulfillment-transition HTTP route (review 11/N) > transitions confirmed → picking (200)  447ms
+services/marketplace test:  ✓ src/__tests__/errors.test.ts (16 tests) 84ms
+services/delivery test:  ✓ src/__tests__/marketplace-inventory.test.ts (29 tests) 60ms
+services/matching test:  ✓ src/__tests__/scoring.test.ts (29 tests) 370ms
+services/matching test:    ✓ the weighted score is integer arithmetic over declared weights > stays an integer inside [0, 10000] across the whole input space  351ms
+services/marketplace test:  ✓ src/__tests__/transitions.test.ts (16 tests) 45ms
+services/negotiations test:  ✓ src/__tests__/http.test.ts (36 tests) 1597ms
+services/negotiations test:    ✓ HTTP · /health > يقول degraded على الذاكرة، وlast_tick_at يبدأ null  473ms
+services/marketplace test:  ✓ src/__tests__/inventory-sync.test.ts (13 tests) 42ms
+services/delivery test:  ✓ src/__tests__/retry-after.test.ts (10 tests) 650ms
+services/delivery test:    ✓ retry-after — على السلكِ عبرَ مُترجِمِ الأخطاءِ الوحيدِ > رفضُ التماثُلِ المتزامنِ ⇒ 409 معَ `retry-after: 1`، والجسمُ ثلاثةُ حقولٍ لا أربعةٌ  487ms
+services/negotiations test:  ✓ src/__tests__/constraints.test.ts (25 tests) 86ms
+services/marketplace test:  ✓ src/__tests__/category-seed.test.ts (13 tests) 36ms
+services/matching test:  ✓ src/__tests__/http-service-identity.test.ts (13 tests) 673ms
+services/matching test:    ✓ فرض هوية الخدمة — المصفوفة الأربع > لا هوية → 401 بمغلف العقد ولا يُسمّى الباب في الرد  411ms
+services/negotiations test:  ✓ src/__tests__/outbound-ports.test.ts (22 tests) 224ms
+services/marketplace test:  ✓ src/__tests__/catalog.test.ts (15 tests) 19ms
+services/matching test:  ✓ src/__tests__/filters.test.ts (22 tests) 33ms
+services/delivery test:  ✓ src/__tests__/readiness-observation.test.ts (12 tests) 513ms
+services/delivery test:    ✓ GET /delivery/ready — الرصدُ على السلكِ > مسبارٌ مُركَّبٌ ⇒ 200 ورصدٌ في الجسمِ وادّعاءٌ فارغٌ  372ms
+services/marketplace test:  ✓ src/__tests__/reservation.test.ts (9 tests) 54ms
+services/matching test:  ✓ src/__tests__/mappers.test.ts (9 tests) 31ms
+services/delivery test:  ✓ src/__tests__/marketplace-health-probe.test.ts (21 tests) 65ms
+services/marketplace test:  ✓ src/__tests__/identifiers.test.ts (12 tests) 70ms
+services/negotiations test:  ✓ src/__tests__/service-identity.test.ts (14 tests) 829ms
+services/negotiations test:    ✓ حد المفاوضات — المصفوفة الأربع > لا هوية → 401 بمغلف العقد ولا يُسمّى سبب الرفض في الرد  404ms
+services/delivery test:  ✓ src/__tests__/validation.test.ts (15 tests) 116ms
+services/matching test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 31ms
+services/marketplace test:  ✓ src/__tests__/inventory.test.ts (11 tests) 7ms
+services/delivery test:  ✓ src/__tests__/marketplace-actor-contract-drift.test.ts (4 tests) 21ms
+services/matching test:  ✓ src/__tests__/ruleset-drift.test.ts (8 tests) 17ms
+services/negotiations test:  ✓ src/__tests__/agreement.test.ts (14 tests) 68ms
+services/marketplace test:  ✓ src/__tests__/visibility.test.ts (7 tests) 18ms
+services/delivery test:  ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 8ms
+services/negotiations test:  ✓ src/__tests__/rounds.test.ts (16 tests) 62ms
+services/marketplace test:  ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 23ms
+services/matching test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 188ms
+services/delivery test:  ✓ src/__tests__/ops-runner-purity.test.ts (11 tests) 24ms
+services/marketplace test:  ✓ src/__tests__/staff-rank.test.ts (4 tests) 5ms
+services/negotiations test:  ✓ src/__tests__/schema-drift.test.ts (27 tests) 122ms
+services/delivery test:  ✓ src/__tests__/conflict-acknowledger.unit.test.ts (7 tests) 18ms
+services/matching test:  ✓ src/__tests__/http-geography.test.ts (4 tests) 183ms
+services/delivery test:  ✓ src/__tests__/reservation-store-fake.test.ts (6 tests) 22ms
+services/negotiations test:  ✓ src/__tests__/domain.test.ts (19 tests) 53ms
+services/marketplace test:  ✓ src/__tests__/canonical-json.test.ts (3 tests) 520ms
+services/marketplace test:    ✓ canonicalJson > is the service's reply serializer (health reply comes back key-sorted)  501ms
+services/marketplace test:  Test Files  21 passed (21)
+services/marketplace test:       Tests  406 passed (406)
+services/marketplace test:    Start at  04:22:57
+services/marketplace test:    Duration  32.94s (transform 1.29s, setup 0ms, collect 6.28s, tests 5.75s, environment 64ms, prepare 6.70s)
+services/delivery test:  ✓ src/__tests__/inventory-reservation.unit.test.ts (18 tests) 24ms
+services/matching test:  ✓ src/__tests__/http-candidacy.test.ts (5 tests) 550ms
+services/matching test:    ✓ مسارات الترشيح > يستبدل الصف كاملاً ثم يقرأه مع is_fresh  438ms
+services/marketplace test: Done
+services/orders test$ vitest run
+services/delivery test:  ✓ src/__tests__/fulfillment-transition.unit.test.ts (9 tests) 24ms
+services/negotiations test:  ✓ src/__tests__/http-drift.test.ts (14 tests) 364ms
+services/negotiations test:    ✓ حارس التباعد: المسارات المسجَّلة والعقد > كلّ عملية في العقد لها مسار مسجَّل فعلاً  318ms
+services/delivery test:  ✓ src/__tests__/marketplace-reservation-contract-drift.test.ts (3 tests) 127ms
+services/orders test:  RUN  v3.2.7 /home/user/workspace/wasla/services/orders
+services/matching test:  ✓ src/__tests__/http-candidates.test.ts (4 tests) 515ms
+services/matching test:    ✓ POST /matching/candidates > يعيد 200 وسبب الفراغ ولا يطلب Idempotency-Key  452ms
+services/negotiations test:  ✓ src/__tests__/open-thread.test.ts (15 tests) 18ms
+services/delivery test:  ✓ src/__tests__/event-coverage.test.ts (4 tests) 14ms
+services/matching test:  ✓ src/__tests__/http-health.test.ts (2 tests) 185ms
+services/matching test:  Test Files  13 passed (13)
+services/matching test:       Tests  173 passed (173)
+services/matching test:    Start at  04:23:13
+services/matching test:    Duration  20.71s (transform 1.07s, setup 0ms, collect 4.69s, tests 2.92s, environment 74ms, prepare 4.12s)
+services/delivery test:  ✓ src/__tests__/relay-reprocess.test.ts (9 tests) 4ms
+services/negotiations test:  ✓ src/__tests__/read.test.ts (12 tests) 62ms
+services/matching test: Done
+services/partners test$ vitest run
+services/delivery test:  ✓ src/__tests__/store-order-confirmation-inventory.unit.test.ts (4 tests) 6ms
+services/delivery test:  Test Files  39 passed (39)
+services/delivery test:       Tests  582 passed (582)
+services/delivery test:    Start at  04:22:33
+services/delivery test:    Duration  61.62s (transform 1.64s, setup 0ms, collect 10.78s, tests 12.22s, environment 157ms, prepare 11.77s)
+services/negotiations test:  ✓ src/__tests__/tick.test.ts (13 tests) 25ms
+services/orders test:  ✓ src/__tests__/http/app.test.ts (58 tests) 856ms
+services/delivery test: Done
+services/reputation test$ vitest run
+services/partners test:  RUN  v3.2.7 /home/user/workspace/wasla/services/partners
+services/negotiations test:  ✓ src/__tests__/privacy.test.ts (7 tests) 35ms
+services/orders test:  ✓ src/__tests__/assignments.test.ts (21 tests) 38ms
+services/reputation test:  RUN  v3.2.7 /home/user/workspace/wasla/services/reputation
+services/partners test:  ✓ src/__tests__/webhook-delivery.unit.test.ts (12 tests) 25ms
+services/negotiations test:  ✓ src/__tests__/messages.test.ts (10 tests) 33ms
+services/negotiations test:  Test Files  14 passed (14)
+services/negotiations test:       Tests  244 passed (244)
+services/negotiations test:    Start at  04:23:13
+services/negotiations test:    Duration  22.60s (transform 1.55s, setup 0ms, collect 6.09s, tests 3.58s, environment 41ms, prepare 3.71s)
+services/partners test:  ✓ src/__tests__/usage-enforcement.unit.test.ts (9 tests) 5ms
+services/orders test:  ✓ src/__tests__/transition-order.test.ts (459 tests) 311ms
+services/negotiations test: Done
+services/search test$ vitest run
+services/partners test:  ✓ src/__tests__/issue-credential.unit.test.ts (4 tests) 14ms
+services/partners test:  ✓ src/__tests__/tenant-guard.unit.test.ts (6 tests) 14ms
+services/search test:  RUN  v3.2.7 /home/user/workspace/wasla/services/search
+services/orders test:  ✓ src/__tests__/http/service-identity.test.ts (11 tests) 336ms
+services/partners test:  ✓ src/__tests__/lifecycle.unit.test.ts (13 tests) 10ms
+services/reputation test:  ✓ src/__tests__/http.test.ts (44 tests) 560ms
+services/orders test:  ✓ src/__tests__/state-machine.test.ts (28 tests) 32ms
+services/search test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 60ms
+services/partners test:  ✓ src/__tests__/credentials.unit.test.ts (9 tests) 17ms
+services/partners test:  Test Files  6 passed (6)
+services/partners test:       Tests  53 passed (53)
+services/partners test:    Start at  04:23:35
+services/partners test:    Duration  3.16s (transform 134ms, setup 0ms, collect 199ms, tests 86ms, environment 1ms, prepare 985ms)
+services/partners test: Done
+services/subscriptions test$ vitest run
+services/reputation test:  ✓ src/__tests__/purity.test.ts (15 tests) 157ms
+services/orders test:  ✓ src/__tests__/ingest-order.test.ts (27 tests) 27ms
+services/subscriptions test:  RUN  v3.2.7 /home/user/workspace/wasla/services/subscriptions
+services/reputation test:  ✓ src/__tests__/drain-outbox.test.ts (14 tests) 62ms
+services/orders test:  ✓ src/__tests__/mappers.test.ts (14 tests) 36ms
+services/search test:  ✓ src/__tests__/relay-acknowledgement.test.ts (14 tests) 233ms
+services/reputation test:  ✓ src/__tests__/inbound-translate.test.ts (22 tests) 31ms
+services/search test:  ✓ src/__tests__/relay.test.ts (9 tests) 11ms
+services/subscriptions test:  ✓ src/__tests__/purity.test.ts (24 tests) 226ms
+services/orders test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 15ms
+services/reputation test:  ✓ src/__tests__/consume-source-event.test.ts (10 tests) 33ms
+services/orders test:  ✓ src/__tests__/read-order.test.ts (11 tests) 26ms
+services/search test:  ✓ src/__tests__/relay-requeue.test.ts (10 tests) 236ms
+services/orders test:  ✓ src/__tests__/http/driver-jobs.test.ts (5 tests) 308ms
+services/subscriptions test:  ✓ src/__tests__/http-drift.test.ts (23 tests) 186ms
+services/orders test:  Test Files  10 passed (10)
+services/orders test:       Tests  653 passed (653)
+services/orders test:    Start at  04:23:32
+services/orders test:    Duration  9.41s (transform 629ms, setup 0ms, collect 2.18s, tests 1.99s, environment 34ms, prepare 1.43s)
+services/reputation test:  ✓ src/__tests__/service-identity.test.ts (15 tests) 382ms
+services/orders test: Done
+services/support test$ vitest run
+services/search test:  ✓ src/__tests__/relay-dead-letters.test.ts (13 tests) 203ms
+services/subscriptions test:  ✓ src/__tests__/events.test.ts (21 tests) 25ms
+services/reputation test:  ✓ src/__tests__/fraud.test.ts (23 tests) 16ms
+services/subscriptions test:  ✓ src/__tests__/state.test.ts (24 tests) 13ms
+services/support test:  RUN  v3.2.7 /home/user/workspace/wasla/services/support
+services/reputation test:  ✓ src/__tests__/source-events-drift.test.ts (11 tests) 22ms
+services/search test:  ✓ src/__tests__/http-app.test.ts (12 tests) 308ms
+services/reputation test:  ✓ src/__tests__/schema-drift.test.ts (30 tests) 51ms
+services/support test:  ✓ src/__tests__/infrastructure.test.ts (24 tests) 36ms
+services/subscriptions test:  ✓ src/__tests__/schema-drift.test.ts (23 tests) 48ms
+services/subscriptions test:  ✓ src/__tests__/transitions.test.ts (18 tests) 31ms
+services/search test:  ✓ src/__tests__/service-identity.test.ts (12 tests) 323ms
+services/reputation test:  ✓ src/__tests__/constraints.test.ts (18 tests) 22ms
+services/support test:  ✓ src/__tests__/relay.test.ts (30 tests) 34ms
+services/search test:  ✓ src/__tests__/projector.test.ts (9 tests) 13ms
+services/subscriptions test:  ✓ src/__tests__/composition.test.ts (10 tests) 40ms
+services/search test:  ✓ src/__tests__/http-requests.test.ts (12 tests) 19ms
+services/subscriptions test:  ✓ src/__tests__/referral.test.ts (18 tests) 18ms
+services/reputation test:  ✓ src/__tests__/http-drift.test.ts (13 tests) 159ms
+services/search test:  ✓ src/__tests__/event-coverage.test.ts (3 tests) 4ms
+services/support test:  ✓ src/__tests__/http.test.ts (16 tests) 381ms
+services/subscriptions test:  ✓ src/__tests__/plans.test.ts (13 tests) 7ms
+services/reputation test:  ✓ src/__tests__/submit-rating.test.ts (17 tests) 73ms
+services/search test:  ✓ src/__tests__/ranking.test.ts (9 tests) 4ms
+services/reputation test:  ✓ src/__tests__/score.test.ts (20 tests) 13ms
+services/support test:  ✓ src/__tests__/reputation-bridge.test.ts (7 tests) 179ms
+services/search test:  ✓ src/__tests__/query.test.ts (9 tests) 4ms
+services/subscriptions test:  ✓ src/__tests__/http-degraded.test.ts (18 tests) 295ms
+services/support test:  ✓ src/__tests__/domain.test.ts (24 tests) 14ms
+services/reputation test:  ✓ src/__tests__/reads.test.ts (18 tests) 30ms
+services/search test:  ✓ src/__tests__/visibility.test.ts (6 tests) 3ms
+services/search test:  Test Files  13 passed (13)
+services/search test:       Tests  137 passed (137)
+services/search test:    Start at  04:23:37
+services/search test:    Duration  10.35s (transform 652ms, setup 0ms, collect 2.42s, tests 1.42s, environment 30ms, prepare 2.05s)
+services/search test: Done
+services/reputation test:  ✓ src/__tests__/run-tick.test.ts (12 tests) 31ms
+services/support test:  ✓ src/__tests__/schema-drift.test.ts (5 tests) 9ms
+services/subscriptions test:  ✓ src/__tests__/service-identity.test.ts (14 tests) 208ms
+services/reputation test:  ✓ src/__tests__/record-fact.test.ts (15 tests) 14ms
+services/reputation test:  Test Files  16 passed (16)
+services/reputation test:       Tests  297 passed (297)
+services/reputation test:    Start at  04:23:36
+services/reputation test:    Duration  13.05s (transform 966ms, setup 0ms, collect 3.26s, tests 1.65s, environment 31ms, prepare 2.24s)
+services/support test:  ✓ src/__tests__/boundary.test.ts (7 tests) 9ms
+services/support test:  Test Files  7 passed (7)
+services/support test:       Tests  113 passed (113)
+services/support test:    Start at  04:23:43
+services/support test:    Duration  5.61s (transform 470ms, setup 0ms, collect 1.62s, tests 664ms, environment 13ms, prepare 1.08s)
+services/reputation test: Done
+services/subscriptions test:  ✓ src/__tests__/periods.test.ts (15 tests) 9ms
+services/support test: Done
+services/subscriptions test:  ✓ src/__tests__/referral-code.test.ts (8 tests) 5ms
+services/subscriptions test:  Test Files  13 passed (13)
+services/subscriptions test:       Tests  229 passed (229)
+services/subscriptions test:    Start at  04:23:39
+services/subscriptions test:    Duration  9.76s (transform 838ms, setup 0ms, collect 2.79s, tests 1.11s, environment 31ms, prepare 1.67s)
+services/subscriptions test: Done
+bots/customer-bot test$ vitest run
+bots/driver-bot test$ vitest run
+bots/partner-bot test$ vitest run
+packages/billing-e2e test$ vitest run
+bots/driver-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/driver-bot
+bots/customer-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/customer-bot
+bots/partner-bot test:  RUN  v3.2.7 /home/user/workspace/wasla/bots/partner-bot
+packages/billing-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/billing-e2e
+packages/billing-e2e test:  ↓ src/__tests__/m5-17q-delivery-billing.e2e.test.ts (3 tests | 3 skipped)
+packages/billing-e2e test:  Test Files  1 skipped (1)
+packages/billing-e2e test:       Tests  3 skipped (3)
+packages/billing-e2e test:    Start at  04:23:50
+packages/billing-e2e test:    Duration  2.86s (transform 1.19s, setup 0ms, collect 2.29s, tests 0ms, environment 4ms, prepare 132ms)
+bots/partner-bot test:  ✓ src/__tests__/partner-bot.test.ts (6 tests) 354ms
+packages/billing-e2e test: Done
+packages/delivery-e2e test$ vitest run
+bots/driver-bot test:  ✓ src/__tests__/driver-flows.test.ts (21 tests) 288ms
+bots/customer-bot test:  ✓ src/__tests__/customer-flows.test.ts (14 tests) 284ms
+bots/driver-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 28ms
+packages/delivery-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/delivery-e2e
+bots/customer-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 25ms
+bots/partner-bot test:  ✓ src/__tests__/bot-role.test.ts (10 tests) 157ms
+bots/partner-bot test:  Test Files  2 passed (2)
+bots/partner-bot test:       Tests  16 passed (16)
+bots/partner-bot test:    Start at  04:23:50
+bots/partner-bot test:    Duration  4.38s (transform 1.17s, setup 0ms, collect 2.69s, tests 512ms, environment 4ms, prepare 372ms)
+bots/driver-bot test:  ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 85ms
+bots/partner-bot test: Done
+packages/marketplace-e2e test$ vitest run
+bots/customer-bot test:  ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 31ms
+packages/marketplace-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/marketplace-e2e
+bots/driver-bot test:  ✓ src/__tests__/driver-bot.test.ts (6 tests) 361ms
+bots/customer-bot test:  ✓ src/__tests__/customer-bot.test.ts (6 tests) 237ms
+packages/delivery-e2e test:  ✓ src/__tests__/phase13-exit-gate.e2e.test.ts (19 tests | 18 skipped) 2ms
+packages/marketplace-e2e test:  ↓ src/__tests__/phase11-exit-gate.e2e.test.ts (6 tests | 6 skipped)
+packages/delivery-e2e test:  ↓ src/__tests__/m5-13m-multi-line.e2e.test.ts (1 test | 1 skipped)
+bots/driver-bot test:  ✓ src/__tests__/bot-role.test.ts (17 tests) 327ms
+packages/delivery-e2e test:  Test Files  1 passed | 1 skipped (2)
+packages/delivery-e2e test:       Tests  1 passed | 19 skipped (20)
+packages/delivery-e2e test:    Start at  04:23:54
+packages/delivery-e2e test:    Duration  4.09s (transform 1.28s, setup 0ms, collect 3.10s, tests 2ms, environment 1ms, prepare 303ms)
+bots/driver-bot test:  Test Files  5 passed (5)
+bots/driver-bot test:       Tests  60 passed (60)
+bots/driver-bot test:    Start at  04:23:50
+bots/driver-bot test:    Duration  8.18s (transform 1.47s, setup 0ms, collect 4.38s, tests 1.09s, environment 11ms, prepare 862ms)
+bots/customer-bot test:  ✓ src/__tests__/bot-role.test.ts (15 tests) 264ms
+packages/delivery-e2e test: Done
+packages/partners-e2e test$ vitest run
+bots/customer-bot test:  Test Files  5 passed (5)
+bots/customer-bot test:       Tests  51 passed (51)
+bots/customer-bot test:    Start at  04:23:50
+bots/customer-bot test:    Duration  8.33s (transform 1.53s, setup 0ms, collect 4.35s, tests 841ms, environment 11ms, prepare 1.01s)
+bots/driver-bot test: Done
+packages/reputation-e2e test$ vitest run
+bots/customer-bot test: Done
+packages/search-e2e test$ vitest run
+packages/marketplace-e2e test:  ↓ src/__tests__/service-identity.e2e.test.ts (6 tests | 6 skipped)
+packages/marketplace-e2e test:  Test Files  2 skipped (2)
+packages/marketplace-e2e test:       Tests  12 skipped (12)
+packages/marketplace-e2e test:    Start at  04:23:56
+packages/marketplace-e2e test:    Duration  3.31s (transform 972ms, setup 0ms, collect 2.11s, tests 0ms, environment 3ms, prepare 358ms)
+packages/partners-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/partners-e2e
+packages/marketplace-e2e test: Done
+packages/subscription-e2e test$ vitest run
+packages/search-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/search-e2e
+packages/reputation-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/reputation-e2e
+packages/partners-e2e test:  ↓ src/__tests__/phase14-exit-gate.e2e.test.ts (8 tests | 8 skipped)
+packages/partners-e2e test:  Test Files  1 skipped (1)
+packages/partners-e2e test:       Tests  8 skipped (8)
+packages/partners-e2e test:    Start at  04:23:59
+packages/partners-e2e test:    Duration  1.36s (transform 423ms, setup 0ms, collect 773ms, tests 0ms, environment 6ms, prepare 159ms)
+packages/subscription-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/subscription-e2e
+packages/partners-e2e test: Done
+services/dispatch test$ vitest run
+packages/search-e2e test:  ✓ src/__tests__/phase12-exit-gate.e2e.test.ts (22 tests | 21 skipped) 3ms
+packages/search-e2e test:  Test Files  1 passed (1)
+packages/search-e2e test:       Tests  1 passed | 21 skipped (22)
+packages/search-e2e test:    Start at  04:23:59
+packages/search-e2e test:    Duration  1.86s (transform 728ms, setup 0ms, collect 1.11s, tests 3ms, environment 4ms, prepare 298ms)
+packages/search-e2e test: Done
+services/geography test$ vitest run
+services/dispatch test:  RUN  v3.2.7 /home/user/workspace/wasla/services/dispatch
+services/geography test:  RUN  v3.2.7 /home/user/workspace/wasla/services/geography
+packages/reputation-e2e test:  ✓ src/__tests__/phase09-exit-gate.e2e.test.ts (12 tests) 1005ms
+packages/reputation-e2e test:  Test Files  1 passed (1)
+packages/reputation-e2e test:       Tests  12 passed (12)
+packages/reputation-e2e test:    Start at  04:23:59
+packages/reputation-e2e test:    Duration  3.48s (transform 1.02s, setup 0ms, collect 1.87s, tests 1.01s, environment 3ms, prepare 165ms)
+packages/reputation-e2e test: Done
+packages/subscription-e2e test:  ↓ src/__tests__/phase10-exit-gate.e2e.test.ts (3 tests | 3 skipped)
+packages/subscription-e2e test:  Test Files  1 skipped (1)
+packages/subscription-e2e test:       Tests  3 skipped (3)
+packages/subscription-e2e test:    Start at  04:24:00
+packages/subscription-e2e test:    Duration  2.83s (transform 1.28s, setup 0ms, collect 2.15s, tests 0ms, environment 1ms, prepare 177ms)
+packages/subscription-e2e test: Done
+services/dispatch test:  ✓ src/__tests__/tick.test.ts (26 tests) 34ms
+services/geography test:  ✓ src/__tests__/http/app.test.ts (16 tests) 243ms
+services/dispatch test:  ✓ src/__tests__/accept-offer.test.ts (17 tests) 25ms
+services/geography test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 180ms
+services/geography test:  ✓ src/__tests__/user-location.test.ts (11 tests) 10ms
+services/dispatch test:  ✓ src/__tests__/service-identity.test.ts (15 tests) 155ms
+services/geography test:  ✓ src/__tests__/hierarchy.test.ts (10 tests) 8ms
+services/geography test:  ✓ src/__tests__/locale.test.ts (4 tests) 3ms
+services/geography test:  Test Files  5 passed (5)
+services/geography test:       Tests  54 passed (54)
+services/geography test:    Start at  04:24:03
+services/geography test:    Duration  2.83s (transform 458ms, setup 0ms, collect 841ms, tests 445ms, environment 4ms, prepare 424ms)
+services/geography test: Done
+services/dispatch test:  ✓ src/__tests__/cancel-job.test.ts (14 tests) 23ms
+services/dispatch test:  ✓ src/__tests__/http-order-engine.test.ts (23 tests) 36ms
+services/dispatch test:  ✓ src/__tests__/contract-drift.test.ts (15 tests) 57ms
+services/dispatch test:  ✓ src/__tests__/events-contract.test.ts (8 tests) 37ms
+services/dispatch test:  ✓ src/__tests__/reject-offer.test.ts (12 tests) 24ms
+services/dispatch test:  ✓ src/__tests__/schema-drift.test.ts (18 tests) 7ms
+services/dispatch test:  ✓ src/__tests__/mappers.test.ts (10 tests) 19ms
+services/dispatch test:  ✓ src/__tests__/create-job.test.ts (13 tests) 11ms
+services/dispatch test:  ✓ src/__tests__/state-machine.test.ts (19 tests) 9ms
+services/dispatch test:  ✓ src/__tests__/http-offer-detail.test.ts (9 tests) 104ms
+services/dispatch test:  ✓ src/__tests__/http-jobs.test.ts (11 tests) 114ms
+services/dispatch test:  ✓ src/__tests__/config-boot-fail.test.ts (4 tests) 2216ms
+services/dispatch test:    ✓ RISK-0046 exit gate — boot with broken env fails closed > DISPATCH_WAVE_SIZE=٣ (Arabic-Indic) → ConfigError with variable name, not silent 200  665ms
+services/dispatch test:    ✓ RISK-0046 exit gate — boot with broken env fails closed > DISPATCH_WAVE_SIZE=abc (non-numeric) → ConfigError  514ms
+services/dispatch test:    ✓ RISK-0046 exit gate — boot with broken env fails closed > DISPATCH_WAVE_SIZE=0 (below min 1) → ConfigError  526ms
+services/dispatch test:    ✓ RISK-0046 exit gate — boot with broken env fails closed > DISPATCH_MAX_WAVES=لا رقمَ → ConfigError with its own name  509ms
+services/dispatch test:  ✓ src/__tests__/run-tick.test.ts (8 tests) 19ms
+services/dispatch test:  ✓ src/__tests__/http-matching.test.ts (7 tests) 25ms
+services/dispatch test:  ✓ src/__tests__/http-offers.test.ts (6 tests) 101ms
+services/dispatch test:  ✓ src/__tests__/http-errors.test.ts (5 tests) 83ms
+services/dispatch test:  ✓ src/__tests__/runtime-config.test.ts (7 tests) 5ms
+services/dispatch test:  ✓ src/__tests__/deadlines.test.ts (10 tests) 4ms
+services/dispatch test:  ✓ src/__tests__/http-tick.test.ts (4 tests) 100ms
+services/dispatch test:  ✓ src/__tests__/http-health.test.ts (2 tests) 61ms
+services/dispatch test:  Test Files  23 passed (23)
+services/dispatch test:       Tests  263 passed (263)
+services/dispatch test:    Start at  04:24:02
+services/dispatch test:    Duration  13.03s (transform 998ms, setup 0ms, collect 4.83s, tests 3.27s, environment 6ms, prepare 1.35s)
+services/dispatch test: Done
+packages/channel-e2e test$ vitest run
+packages/customer-e2e test$ vitest run
+packages/dispatch-e2e test$ vitest run
+packages/driver-e2e test$ vitest run
+packages/channel-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/channel-e2e
+packages/driver-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/driver-e2e
+packages/customer-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/customer-e2e
+packages/dispatch-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/dispatch-e2e
+packages/channel-e2e test:  ✓ src/__tests__/m1-02-session-gate.e2e.test.ts (17 tests | 10 skipped) 45ms
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/customer-e2e test: stdout | src/__tests__/phase04-exit-gate.e2e.test.ts
+packages/customer-e2e test: [phase04-exit-gate] persistence=memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُصعِّد إلى المجتمع بلا مرشّحين ثم يُعلن النفاد بعد نافذة التصعيد
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > موجة بعرضين: يفوز واحد ويُغلق الآخر superseded لا rejected
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > الأهليّة ليست ادّعاءً: قبل المراجعة لا عرض، وبعدها عرض
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · the run is unambiguous about what it proved > يُصرِّح بمخزنه: /health يقول postgres عند رفع البوابة و memory دونه
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  ✓ src/__tests__/phase07-exit-gate.e2e.test.ts (5 tests) 1739ms
+packages/dispatch-e2e test:    ✓ Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول  873ms
+packages/dispatch-e2e test:    ✓ Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي  393ms
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > تنتهي الرخصة، فتُخرجه نبضة واحدة، فلا يعود التوزيع يراه
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة الثانية لا تجد شيئاً ولا تنشر ثانية — سكونها من حالتها
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/channel-e2e test:  ✓ src/__tests__/phase03-exit-gate.e2e.test.ts (8 tests | 1 skipped) 430ms
+packages/channel-e2e test:  Test Files  2 passed (2)
+packages/channel-e2e test:       Tests  14 passed | 11 skipped (25)
+packages/channel-e2e test:    Start at  04:24:16
+packages/channel-e2e test:    Duration  5.73s (transform 1.84s, setup 0ms, collect 3.99s, tests 475ms, environment 2ms, prepare 451ms)
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة تُحدِّث `last_tick_at` الذي يقرأه `/health`، والتخزين مُعلَن
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > منطقة لا تعرفها الجغرافيا تُرفض، ولا يبقى للسائق منطقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > المنطقة المعروفة تُقبَل — فالرفض أعلاه ليس رفضاً لكل شيء
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > سائق مشغول يعلن «متاح» فيبقى `busy` عند المطابقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/channel-e2e test: Done
+packages/negotiation-e2e test$ vitest run
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > إعلان `offline` ينزل إلى المطابقة فوراً — الأقلّ توافراً مسموح دائماً
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > سائق معلَّق لا يصله عرض، والمطابقة تقرأ `suspended` لا `ineligible`
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > إعادة التمكين تُعيده إلى التجمّع بنفس المسار
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > المطابقة تُنشئ الصفّ بـ200 لا 201، ومفتاح منع التكرار مطلوب
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > بلا هوية ⇒ 401، وقبل أيّ منطقِ عمل
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > أحداث الأهليّة تُقيَّد في صندوق البريد — لا تغيّر صامت
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ ⇒ يمرّ الطلب إلى منطق العمل (404 لا 401)
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/negotiation-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/negotiation-e2e
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ بصلاحيةٍ خاطئة ⇒ 403: التوثيق ليس التخويل
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test: stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > سائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة
+packages/driver-e2e test: [phase05-gate] driver-core persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ يُحرَق: النداء الثاني بالرمز نفسه ⇒ 401 (سياسةُ الإعادة، ADR-021)
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ مربوطٌ بالمسار والطريقة: رمزُ مسارٍ آخر ⇒ 401
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/driver-e2e test:  ✓ src/__tests__/phase05-exit-gate.e2e.test.ts (14 tests) 2441ms
+packages/driver-e2e test:    ✓ المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله  598ms
+packages/driver-e2e test:  Test Files  1 passed (1)
+packages/driver-e2e test:       Tests  14 passed (14)
+packages/driver-e2e test:    Start at  04:24:16
+packages/driver-e2e test:    Duration  6.98s (transform 2.29s, setup 0ms, collect 3.94s, tests 2.44s, environment 3ms, prepare 227ms)
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > مسارٌ غير مصنَّفٍ يُرفَض قبل 404: الافتراضُ منعٌ لا سماح
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test: stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > ‏/health يبقى مفتوحاً: الإنفاذُ لا يُعمي المراقبة
+packages/dispatch-e2e test: [phase07-gate] matching+dispatch persistence = memory
+packages/dispatch-e2e test:  ✓ src/__tests__/service-identity-enforcement.e2e.test.ts (8 tests) 702ms
+packages/dispatch-e2e test:  Test Files  2 passed (2)
+packages/dispatch-e2e test:       Tests  13 passed (13)
+packages/dispatch-e2e test:    Start at  04:24:16
+packages/dispatch-e2e test:    Duration  7.13s (transform 1.91s, setup 0ms, collect 3.70s, tests 2.44s, environment 1ms, prepare 252ms)
+packages/customer-e2e test:  ✓ src/__tests__/phase04-exit-gate.e2e.test.ts (11 tests) 3112ms
+packages/customer-e2e test:    ✓ Phase 04 exit gate — customer → Customer Core → order engine > reports a timeout as a timeout when the engine never answers  2030ms
+packages/customer-e2e test:  Test Files  1 passed (1)
+packages/customer-e2e test:       Tests  11 passed (11)
+packages/customer-e2e test:    Start at  04:24:16
+packages/customer-e2e test:    Duration  7.22s (transform 1.90s, setup 0ms, collect 3.41s, tests 3.11s, environment 11ms, prepare 315ms)
+packages/driver-e2e test: Done
+packages/order-e2e test$ vitest run
+packages/dispatch-e2e test: Done
+packages/customer-e2e test: Done
+packages/order-e2e test:  RUN  v3.2.7 /home/user/workspace/wasla/packages/order-e2e
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > declares which store it ran against, and answers /health from it
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/order-e2e test: stdout | src/__tests__/phase06-exit-gate.e2e.test.ts
+packages/order-e2e test: [phase06-gate] engine persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1 · happy path: intake → wave → thread → accept → the engine holds the price
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1b · the negotiated number is the one both parties last saw, after a counter
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 2 · the same accept key twice: one agreement, one price, one hand-off
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 3 · the engine refuses the second agreement, and the agreement survives it
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 4 · the engine is down at accept time: pending with a retry moment, then delivered
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > refuses to open a thread on a customer_offer order, reading price_mode from the engine
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test: stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+packages/negotiation-e2e test: [phase08-gate] negotiations persistence = memory
+packages/negotiation-e2e test:  ✓ src/__tests__/phase08-exit-gate.e2e.test.ts (8 tests) 899ms
+packages/negotiation-e2e test:  Test Files  1 passed (1)
+packages/negotiation-e2e test:       Tests  8 passed (8)
+packages/negotiation-e2e test:    Start at  04:24:23
+packages/negotiation-e2e test:    Duration  3.66s (transform 1.46s, setup 0ms, collect 2.35s, tests 899ms, environment 0ms, prepare 144ms)
+packages/negotiation-e2e test: Done
+packages/order-e2e test:  ✓ src/__tests__/phase06-exit-gate.e2e.test.ts (16 tests) 2704ms
+packages/order-e2e test:    ✓ 3. the whole transition table, over HTTP (441 pairs) > accepts exactly the published edges and refuses every other pair  2313ms
+packages/order-e2e test:  Test Files  1 passed (1)
+packages/order-e2e test:       Tests  16 passed (16)
+packages/order-e2e test:    Start at  04:24:24
+packages/order-e2e test:    Duration  4.25s (transform 820ms, setup 0ms, collect 1.29s, tests 2.70s, environment 1ms, prepare 74ms)
+packages/order-e2e test: Done

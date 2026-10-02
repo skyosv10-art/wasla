@@ -207,3 +207,12 @@ Each consumer maintains a consumed-event ledger:
 - Events are idempotent (same event processed twice = same result)
 - The ledger records which events have been consumed
 - On restart, the consumer skips already-consumed events
+
+## Restore drill and measured RPO/RTO (CLM-0430, 2026-10-02)
+
+- Periodic drill: `.github/workflows/dr-restore-drill.yml` (weekly + manual). It restores the **stored** scheduled backup artifact into an isolated postgres:17 and compares it, fail-closed, with a negative control.
+- Measured RPO (db-backup history, 7 days): worst **10.21 h**, median 5.21 h. ADR-052 T1 RPO of 5 min is **not met**.
+- Measured RTO parts: data restore 7.3–7.9 s · repoint and redeploy of 17 services 97 s · service outage recovery about 37 s. An end-to-end restore into a real replacement Supabase project is not measured.
+- Owner gate: accept a longer RPO (ADR-052 amendment) or provide PITR; decide on fault-injection scenarios 2 and 5.
+- Evidence: [2026-10-02T070000Z-clm-0430-m6-18b-restore-drill](../12-testing/ci-evidence/2026-10-02T070000Z-clm-0430-m6-18b-restore-drill/README.md).
+

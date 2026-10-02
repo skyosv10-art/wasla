@@ -7902,3 +7902,17 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
 
+---
+
+## CLM-0434 · M6-18B — ADR-058 temporary RPO exception + `production-migration` protection
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0434` · **Branch:** `docs/clm-0434-rpo-temporary-exception` · **Date:** 2026-10-02
+- **Pre-checks (measured):** main `78ec7d1`: WASLA CI, Roadmap freshness, Render deploy and Service health success. CLM-0430 `Released`, with no Active claim on M6-18B before this one. M6-18B `Blocked`. RISK-0056 closed and not touched.
+- **ADR-058:** records the owner's temporary acceptance of the measured RPO (worst 10.21 h, median 5.21 h) as an **exception** to ADR-052 §1, not an amendment. The 5 min target is unchanged and unmet. PITR/WAL deferred for budget only. No 6 h RPO is guaranteed. RISK-0055 stays `mitigating`. Review 2026-10-13, hard expiry 2026-11-02. Ends early on PITR/WAL, or on a permanent ADR that amends the target.
+- **M6-18B stays `Blocked`:** under STATUS_MODEL, `Ready for Gate` = verified, with only evidence outside the executor's control missing. DR scenario 2 and a full replacement-project restore are still unexecuted verification, so this does not qualify.
+- **`production-migration`:** the secret `PRODUCTION_MIGRATION_DB_URL` exists, written once at 2026-10-01T21:10:55Z. Its target `ppixaauyqoykrogwdxtv` is shown by the fail-closed `guard-target.py production` lines in runs 36927089959 and 36927646063, both after that write. The value was not read. Protection was **off** (no rules, any branch, admin bypass) and is now **on**: required reviewer `xuuux-voox`, `prevent_self_review`, `main` only, `can_admins_bypass=false`. No migration or cutover was run. [Evidence](../12-testing/ci-evidence/2026-10-02T130800Z-clm-0434-production-migration-env/README.md).
+- **Ledger:** CLM-0433 released (PR #581 → `78ec7d1`, branch deleted). The `docs/m6-18-live-evidence` entry was corrected by addition: the branch still exists, with its head identical to the archive tag, and it is not deleted without an owner decision.
+- **BASELINE.json `repo.commit`:** left as is. `e8819ee` resolves and is on main, and it is the commit the baseline was measured at. Changing it without re-measuring would make a false claim.
+- **Tests:** governance checks are run in CI on the PR.
+- **Next:** RISK-0042 under a separate claim and PR.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

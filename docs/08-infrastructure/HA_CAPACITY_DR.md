@@ -223,3 +223,9 @@ Each consumer maintains a consumed-event ledger:
 - Owner decision: the measured RPO (worst 10.21 h, median 5.21 h) is accepted **temporarily** until PITR/WAL is provided or a permanent decision formally amends the target. ADR-052 (5 min) is unchanged and its target is not met.
 - Evidence: [2026-10-02T091300Z-clm-0432-m6-18b-dr-catastrophic-old-project](../12-testing/ci-evidence/2026-10-02T091300Z-clm-0432-m6-18b-dr-catastrophic-old-project/README.md).
 
+
+## Temporary RPO exception recorded as an ADR (CLM-0434, 2026-10-02)
+
+- [ADR-058](../15-decisions/ADR-058-temporary-rpo-exception.md) records the owner's temporary acceptance of the measured RPO: worst 10.21 h, median 5.21 h. It is an exception to ADR-052 §1, not an amendment, and the 5 min target stays unmet.
+- PITR or an equivalent WAL solution is deferred for budget reasons only. RISK-0055 stays `mitigating`. Review 2026-10-13, hard expiry 2026-11-02. The exception ends early when PITR/WAL is provided, or when a permanent ADR formally amends the target.
+- M6-18B stays `Blocked`: DR scenario 2 and a full replacement-project restore are still unexecuted.

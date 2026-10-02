@@ -589,6 +589,36 @@ else:
         f"{len(tenant_rows)} عمليّةً كلُّها داخلَ جردِ البابِ 7"
     )
 
+# ── البابُ 7-ج: دليلُ كلِّ تصنيفٍ مقروءٌ لا مُدَّعىً (RISK-0042 · CLM-0435) ──
+#
+# البابُ 7 يُقابِلُ صفوفَ `token-bound` بالشفرةِ، ولا شيءَ كانَ يقرأُ `evidence`
+# في صفوفِ `none` و`caller-asserted`. فصفٌّ يُسمّي ملفّاً محذوفاً أو مِرساةً لا
+# وجودَ لها كانَ يُخفِضُ `UNCLASSIFIED_OPERATION_COUNT` والفحصُ أخضرُ — أي تصنيفٌ
+# بلا دليلٍ. والقاعدةُ: `evidence` = `<ملفٌّ>:<مِرساةٌ> [<مِرساةٌ> …]`، والملفُّ
+# موجودٌ، وكلُّ مِرساةٍ (مفصولةٍ بمسافةٍ) موجودةٌ فيهِ حرفاً.
+_ev_rows = re.findall(
+    r'audience:\s*"([^"]+)",\s*method:\s*"([^"]+)",\s*path:\s*"([^"]+)",'
+    r'\s*dimension:\s*"[^"]+",\s*strength:\s*"[^"]+",\s*evidence:\s*"([^"]*)"',
+    bindings_src,
+)
+_ev_bad = 0
+if len(_ev_rows) != classified:
+    bad("قرأَ البابُ 7-ج %d صفّاً و`strength` %d — صفٌّ بلا `evidence` في موضعِهِ" % (len(_ev_rows), classified))
+    _ev_bad += 1
+for _a, _m, _p, _ev in _ev_rows:
+    _file, _sep, _anch = _ev.partition(":")
+    _tokens = _anch.split()
+    if not _sep or not _file or not _tokens:
+        bad("دليلُ التصنيفِ ليسَ `<ملفٌّ>:<مِرساةٌ>`: %s %s %s ← %r" % (_a, _m, _p, _ev)); _ev_bad += 1; continue
+    if not os.path.isfile(_file):
+        bad("دليلُ التصنيفِ يُسمّي ملفّاً غيرَ موجودٍ: %s %s %s ← %s" % (_a, _m, _p, _file)); _ev_bad += 1; continue
+    _src = open(_file, encoding="utf-8").read()
+    _missing = [t for t in _tokens if t not in _src]
+    if _missing:
+        bad("مِرساةُ دليلٍ غائبةٌ عن ملفِّها: %s %s %s ← %s %s" % (_a, _m, _p, _file, _missing)); _ev_bad += 1
+if not _ev_bad:
+    ok(f"كلُّ دليلِ تصنيفٍ مقروءٌ — {len(_ev_rows)} صفّاً، ملفُّهُ موجودٌ ومِرساتُهُ فيهِ حرفاً")
+
 # ولا مسارَ مربوطٌ بمالكٍ يستقي هويّتَهُ من ترويسةٍ وحدَها: مُعالِجُ كلِّ مسارٍ
 # مُصنَّفٍ يجبُ أن يُنادِيَ قارئَ الرمزِ (`ownerPublicIdOf`) عبرَ مساعدٍ، فلا
 # يكفي أن يُقارِنَ ترويسةً بمَورِدٍ.

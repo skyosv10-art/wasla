@@ -626,6 +626,21 @@ MUT
 t "حذفُ منحِ مُجدوِلِ النبضاتِ من المصفوفةِ يُسقِطُ الفحصَ" fail bash "$AZ"
 _az_restore
 
+# ── البابُ 7-ج (RISK-0042 · CLM-0435): دليلُ التصنيفِ مقروءٌ لا مُدَّعىً ──────
+# ثلاثُ طفراتٍ على صفٍّ `none` (لا `token-bound`: البابُ 7 يحرسُ ذاكَ أصلاً، والطفرةُ
+# على صفٍّ يحرسُهُ بابٌ آخرُ لا تُثبِتُ عضّةَ هذا البابِ).
+sed -i 's#evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.offerAccept) acceptOffer(deps,"#evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.offerAccept) acceptOfferNOPE(deps,"#' "$AZ_BI"
+t "مِرساةُ دليلٍ غائبةٌ عن ملفِّها في صفٍّ \`none\` تُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
+_az_restore
+
+sed -i 's#evidence: "services/geography/src/http/app.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"#evidence: "services/geography/src/http/NOPE.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"#' "$AZ_BI"
+t "دليلٌ يُسمّي ملفّاً غيرَ موجودٍ يُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
+_az_restore
+
+sed -i 's#evidence: "services/drivers/src/http/app.ts:adminScoped(DRIVER_SCOPES.adminRead) deps.profiles.list(limit,"#evidence: "services/drivers/src/http/app.ts"#' "$AZ_BI"
+t "دليلٌ بلا مِرساةٍ (ملفٌّ وحدَهُ) يُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
+_az_restore
+
 # الأصلُ يمرُّ بعدَ كلِّ الطفراتِ — إثباتُ أنَّ الاستعادةَ تامّةٌ وأنَّ الحارسَ
 # عاضٌّ لا ساقطٌ دائماً.
 t "الأصلُ يمرُّ بعدَ كلِّ الطفراتِ (اكتمالُ الاستعادةِ)" pass bash "$AZ"

@@ -7843,3 +7843,11 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - Evidence §6 lists what the free path proves and what it does not. §7 records the Owner Gate: decision 1 is A) PITR or WAL, or B) formal acceptance of a longer RPO plus an ADR-052 amendment; decision 2 is whether DR scenario 2 may run on the live DB and whether a full restore into a replacement Supabase project may run. §8 records RISK-0057 as independent.
 - Fixed RPO statement: worst 10.21 h · median 5.21 h · target 5 min → not met. M6-18B stays Blocked and RISK-0055 stays mitigating. ADR-052 is unchanged.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+### 2026-10-02 · CLM-0430 — claim released after PR #576 and PR #577
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0430` · **Branch:** `docs/clm-0430-release` · **Status:** Released
+- PR #576 was merged at `e4389b4` (approved on that head) → main `4ed351d`: WASLA CI, Roadmap and Render deploy all success. The two doc commits after it landed via PR #577 (approved on `d788861`) → main `8dd6b66`.
+- Branch `feat/clm-0430-m6-18b-restore-drill` is deleted. This change is ledger-only, so no new claim was opened.
+- M6-18B stays **Blocked** (Owner Gate, evidence §7) · RISK-0055 stays **mitigating** · ADR-052 is unchanged · RISK-0057 is independent and unchanged.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

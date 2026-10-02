@@ -53,3 +53,25 @@ export {
   type RetryOptions,
   type JitterSource,
 } from "./retry.js";
+
+export {
+  PG_GUARD_DEFAULTS,
+  DbUnavailableError,
+  isDbUnavailableError,
+  connectivityReason,
+  withPgPoolDefaults,
+  guardPgPool,
+  pgGuardOf,
+  installedPgGuards,
+  attachDatabaseHealth,
+  type PgPoolLike,
+  type PgClientLike,
+  type PgGuard,
+  type PgPoolTimeouts,
+  type GuardPgPoolOptions,
+  type DatabaseHealth,
+  type DatabaseState,
+  type HealthHookApp,
+  type HealthHookReply,
+  type AttachDatabaseHealthOptions,
+} from "./pg-guard.js";

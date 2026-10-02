@@ -98,7 +98,12 @@ async function createPgExecutor(connectionString: string): Promise<{
     );
   }
   const Pool = (pg.default ?? pg).Pool;
-  const pool = new Pool({ connectionString, max: 4 });
+  // RISK-0058 · ADR-059: the replay store sits on every authenticated request, so a lost
+  // database must fail fast here (circuit breaker) and must not crash the process.
+  const { guardPgPool, withPgPoolDefaults } = await import("@wasla/resilience");
+  const pool = guardPgPool(new Pool(withPgPoolDefaults({ connectionString, max: 4 })), {
+    name: "service-auth-replay",
+  });
   return {
     executor: {
       query: (sql, params) =>

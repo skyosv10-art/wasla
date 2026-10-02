@@ -18,6 +18,7 @@ import { PgAuditStore } from "../infrastructure/audit-store";
 import { PgLifecycleStore } from "../infrastructure/lifecycle-store";
 import { PgStoreStaffPort } from "../infrastructure/store-staff-port";
 import type { PartnerPorts } from "../ports";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 const PARTNERS_SERVICE_PORT = 8098;
 
@@ -80,6 +81,8 @@ export async function startPartnersServer(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/partners/health"], service: "partners" });
     await app.listen({ port, host });
   } catch (error) {
     app.log.error(error);

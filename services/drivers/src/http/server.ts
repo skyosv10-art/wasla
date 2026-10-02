@@ -45,6 +45,7 @@ import { createDirectRunner, PostgresDriverRunner, type DriverRunner } from "../
 
 import { createDriverApp, type DriverHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 interface Wiring {
   runner: DriverRunner;
@@ -129,6 +130,8 @@ async function main(): Promise<void> {
     });
   }
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "drivers" });
     await app.listen({ port: readPortEnv(process.env, "PORT", DRIVER_SERVICE_PORT), host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

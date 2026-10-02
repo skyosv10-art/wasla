@@ -24,6 +24,7 @@ import { PostgresSearchRequeueStore } from "../infrastructure/relay-requeue-stor
 import { PostgresSearchAcknowledgementStore } from "../infrastructure/relay-acknowledgement-store.js";
 import { SearchIndexHealthProbe } from "../infrastructure/search-index-health-probe.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth, guardPgPool, withPgPoolDefaults } from "@wasla/resilience";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = readPortEnv(process.env, "PORT", 8012);
@@ -34,7 +35,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: DATABASE_URL });
+  // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
+  const pool = guardPgPool(new Pool(withPgPoolDefaults({ connectionString: DATABASE_URL })), { name: "search" });
   const readPort = new SearchIndexReader(pool);
   // Readiness shares the pool on purpose: a probe on its own connection would
   // report "ready" while the pool the searches use is exhausted (RISK-0030).
@@ -81,6 +83,8 @@ async function main(): Promise<void> {
   addMetricsEndpoint(fastify, metrics);
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(fastify, { paths: ["/search/health", "/health"], service: "search" });
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`search service listening on :${PORT}`);
   } catch (err) {

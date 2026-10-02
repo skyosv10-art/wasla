@@ -40,6 +40,7 @@ import {
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
 import { createReputationApp, type ReputationHealthDescriptor } from "./app.js";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 interface Wiring {
   runner: ReputationRunner;
@@ -104,6 +105,8 @@ async function main(): Promise<void> {
     });
   }
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "reputation" });
     await app.listen({
       port: readPortEnv(process.env, "PORT", REPUTATION_SERVICE_PORT),
       host: "0.0.0.0",

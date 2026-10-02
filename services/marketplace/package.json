@@ -41,7 +41,8 @@
     "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.5",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "@wasla/resilience": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

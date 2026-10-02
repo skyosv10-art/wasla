@@ -71,6 +71,7 @@ import type { UseCaseDeps } from "../use-cases/deps.js";
 
 import { createCustomerApp, type CustomerHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 /**
  * A permissive identity fake for dev runs: every format-valid public id is
@@ -260,6 +261,8 @@ async function main(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "customers" });
     await app.listen({ port, host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

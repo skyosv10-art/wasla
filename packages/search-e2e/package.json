@@ -15,5 +15,8 @@
     "pg": "^8.23.0",
     "vitest": "^2.1.0",
     "@wasla/service-auth": "workspace:*"
+  },
+  "dependencies": {
+    "@wasla/resilience": "workspace:*"
   }
 }

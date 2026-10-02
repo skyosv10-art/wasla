@@ -16,12 +16,14 @@ import { createInMemoryDeps, SystemClock } from "../infrastructure/in-memory.js"
 import type { AuditDeps } from "../ports.js";
 
 import { createAuditApp } from "./app.js";
+import { attachDatabaseHealth, guardPgPool, withPgPoolDefaults } from "@wasla/resilience";
 
 const AUDIT_SERVICE_PORT = 8092;
 
 function buildDeps(): { deps: AuditDeps; pool: Pool | null } {
   if (process.env.DATABASE_URL) {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
+    const pool = guardPgPool(new Pool(withPgPoolDefaults({ connectionString: process.env.DATABASE_URL })), { name: "audit" });
     const db = createAuditDb(pool);
     return {
       deps: { repo: new DrizzleAuditRepository(db), clock: new SystemClock() },
@@ -60,6 +62,8 @@ async function main(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "audit" });
     await app.listen({ port: readPortEnv(process.env, "PORT", AUDIT_SERVICE_PORT), host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

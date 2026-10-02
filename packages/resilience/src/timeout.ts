@@ -13,8 +13,10 @@ export interface TimeoutOptions {
 }
 
 export class TimeoutError extends Error {
-  constructor(readonly timeoutMs: number) {
-    super(`Operation timed out after ${timeoutMs}ms`);
+  constructor(readonly timeoutMs: number, message?: string) {
+    // `TimeoutOptions.message` was declared and never applied (found when RISK-0058 brought
+    // this package under the services' `noUnusedLocals`); it is applied now.
+    super(message ?? `Operation timed out after ${timeoutMs}ms`);
     this.name = "TimeoutError";
   }
 }
@@ -31,7 +33,7 @@ export function withTimeout<T>(
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     const timer = setTimeout(() => {
-      reject(new TimeoutError(timeoutMs));
+      reject(new TimeoutError(timeoutMs, message));
     }, timeoutMs);
     // Unref the timer so it doesn't keep the process alive
     timer.unref?.();

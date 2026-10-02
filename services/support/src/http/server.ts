@@ -22,6 +22,7 @@ import {
 } from "../infrastructure/in-memory.js";
 import { InMemoryReputationBridge } from "../infrastructure/reputation-bridge.js";
 import { createSupportApp } from "./app.js";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 export async function buildSupportServer(): Promise<{
   app: ReturnType<typeof createSupportApp>;
@@ -45,6 +46,8 @@ export async function buildSupportServer(): Promise<{
       reputationBridge: adapters.reputationBridge,
       serviceIdentity: { keys, replayGuard },
     });
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "support" });
     await app.listen({ port, host: "0.0.0.0" });
     return { app, pool };
   }
@@ -55,6 +58,8 @@ export async function buildSupportServer(): Promise<{
     reputationBridge: new InMemoryReputationBridge(),
     serviceIdentity: { keys, replayGuard },
   });
+  // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+  attachDatabaseHealth(app, { paths: ["/health"], service: "support" });
   await app.listen({ port, host: "0.0.0.0" });
   return { app, pool };
 }

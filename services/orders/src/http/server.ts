@@ -53,6 +53,7 @@ import { createDirectRunner, type OrderRunner } from "../runner.js";
 
 import { createOrderApp, type OrderHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 /**
  * مفاتيح هوية الخدمة ومخزن آثار الإعادة لحد الطلبات.
@@ -144,6 +145,8 @@ async function main(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "orders" });
     await app.listen({ port, host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

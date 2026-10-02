@@ -2,9 +2,10 @@ name: DR scenario 2 + replacement-project restore (M6-18B)
 # M6-18B · CLM-0436. The owner approved both scopes on 2026-10-02.
 #
 # Job `scenario2`: DR scenario 2 ("database unavailable", docs/12-testing/M6-18B_DRILL.md §3)
-#   on a throwaway postgres:17 in the runner. The unchanged billing service runs behind a
-#   TCP fault proxy that injects "refused" and "partition" failures. No secret is used and
-#   nothing outside the runner is touched.
+#   on a throwaway postgres:17 in the runner. The billing service (and, since CLM-0438, every
+#   service with a pool) runs behind a TCP fault proxy that injects "refused" and "partition"
+#   failures. Since CLM-0438 the job fails closed on the ADR-059 criteria. No secret is used
+#   and nothing outside the runner is touched.
 #
 # Job `replacement`: a full restore of production's STORED backup artifact (the one
 #   db-backup.yml uploaded) into the replacement Supabase project pvyuhjadrygqqdoczmnd
@@ -24,10 +25,13 @@ on:
         required: false
         default: ""
   push:
-    branches: ['feat/clm-0436-m6-18b-dr-execution']
+    # CLM-0438 (RISK-0058 fix) added by addition: the re-run of scenario 2 is proven on its
+    # own claim branch before merge, and a change to the guard re-runs it.
+    branches: ['feat/clm-0436-m6-18b-dr-execution', 'fix/clm-0438-risk-0058-db-failure-containment']
     paths:
       - '.github/workflows/dr-replacement-restore.yml'
       - 'scripts/ops/m6-18b-dr/**'
+      - 'packages/resilience/**'
 
 permissions:
   contents: read
@@ -65,18 +69,27 @@ jobs:
           for _ in $(seq 1 60); do docker exec s2-pg pg_isready -U postgres -d billing >/dev/null 2>&1 && break; sleep 1; done
           sleep 2
           BILLING_DATABASE_URL=postgres://postgres@127.0.0.1:55432/billing ./services/audit/node_modules/.bin/tsx services/billing/src/db/migrate-cli.ts
-      - name: Run scenario 2 (measure, do not assume)
+      - name: Run scenario 2 (measure, then judge — fails closed since CLM-0438)
         run: |
           mkdir -p out
+          set +e
           DR_UPSTREAM_PORT=55432 ./services/audit/node_modules/.bin/tsx scripts/ops/m6-18b-dr/scenario2-db-unavailable.mts > out/scenario2.json
+          verdict=$?
+          set -e
           python3 - out/scenario2.json <<'PY'
           import json, sys
-          d = json.load(open(sys.argv[1]))["experiments"]
-          e1, e2, e3 = d["E1_warm_drop"], d["E2_cold_refuse"], d["E3_cold_blackhole"]
-          print(f"E1 warm drop   · process exited: {e1['process_exited']} (code {e1['exit_code']}, {e1['exit_after_drop_ms']} ms after the drop)")
-          print(f"E2 cold refuse · statuses {e2['statuses']} · first five {e2['first_five_ms']} ms · after five {e2['after_five_ms']} ms · health {e2['health_during_outage']['status']} · recovery {e2['recovery_ms_after_db_restored']} ms")
-          print(f"E3 partition   · statuses {e3['statuses']} · health {e3['health_during_partition']['status']} · recovery {e3['recovery_ms_after_db_restored']} ms")
+          r = json.load(open(sys.argv[1]))
+          d = r["experiments"]
+          e1, e2, e3, e4 = d["E1_warm_drop"], d["E2_cold_refuse"], d["E3_cold_blackhole"], d["E4_fleet"]
+          print(f"E1 warm drop   · exited: {e1['process_exited']} · during {e1['during_statuses']} (max {e1['during_max_ms']} ms) · health {e1['health_during_outage']['status']} · recovery {e1['recovery_after_db_restored']}")
+          print(f"E2 cold refuse · {e2['statuses']} · first five {e2['first_five_ms']} ms · after five {e2['after_five_ms']} ms · health {e2['health_during_outage']['status']} · cooldown-only recovery {e2['recovery_ms_after_db_restored_cooldown_only']} ms")
+          print(f"E3 partition   · {e3['statuses']} · {e3['ms']} ms · health {e3['health_during_partition']['status']} in {e3['health_during_partition']['ms']} ms · recovery {e3['recovery_after_db_restored']}")
+          print(f"E4 fleet       · started {len(e4['started'])} · excluded {[x['service'] for x in e4['excluded']]} · not started {e4['not_started']} · recovery ms {e4['health_recovery_ms_after_db_restored']}")
+          for c in r["verdict"]["checks"]:
+              print(("PASS " if c["pass"] else "FAIL ") + c["id"] + " — " + c["detail"])
+          print("VERDICT:", "PASS" if r["verdict"]["pass"] else "FAIL")
           PY
+          exit $verdict
       - name: Upload scenario 2 record (timings and statuses only)
         if: always()
         uses: actions/upload-artifact@v4

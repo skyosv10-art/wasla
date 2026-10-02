@@ -132,7 +132,7 @@ export function userAssertionSigningKey(kid: string, privateKey: KeyObject): Use
 
 /**
  * يقرأُ المفاتيحَ العامّةَ من `WASLA_USER_ASSERTION_PUBLIC_KEYS`: كائنُ JSON
- * `{ "<kid>": "<base64 لِـ SPKI DER>" }`. الغيابُ ⇒ خريطةٌ فارغةٌ (كلُّ تأكيدٍ `unknown_kid`).
+ * `{ "<kid>": "<base64 لِـ SPKI DER>" }`. الغيابُ ⇒ خريطةٌ فارغةٌ (كلُّ تأكيدٍ `assertion_unknown_kid`).
  * التدويرُ = إضافةُ `kid` جديدٍ هنا قبلَ تبديلِ مفتاحِ التوقيعِ؛ والإبطالُ = حذفُ `kid`.
  */
 export function userAssertionPublicKeysFromEnv(
@@ -226,7 +226,7 @@ export function mintUserAssertion(options: MintUserAssertionOptions): { assertio
 export type UserAssertionFailure =
   | "missing"
   | "malformed"
-  | "unknown_kid"
+  | "assertion_unknown_kid"
   | "bad_signature"
   | "bad_issuer"
   | "expired"
@@ -293,7 +293,7 @@ export function verifyUserAssertion(
   const signature = fromB64url(parts[2]!);
   if (payload === null || signature === null || signature.length !== 64) return { ok: false, reason: "malformed" };
   const key = options.publicKeys.get(payload.kid);
-  if (key === undefined) return { ok: false, reason: "unknown_kid" };
+  if (key === undefined) return { ok: false, reason: "assertion_unknown_kid" };
   const signed = Buffer.from(`${parts[0]}.${parts[1]}`, "utf8");
   let valid = false;
   try {
@@ -337,7 +337,7 @@ export function userAssertionDenialOf(reason: UserAssertionFailure): {
     case "missing":
       return { status: 401, code: "AUTHN_USER_ASSERTION_REQUIRED" };
     case "malformed":
-    case "unknown_kid":
+    case "assertion_unknown_kid":
     case "bad_signature":
     case "bad_issuer":
     case "ttl_too_long":

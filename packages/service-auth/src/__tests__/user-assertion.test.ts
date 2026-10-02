@@ -119,7 +119,7 @@ describe("wua1 — المسارُ الإيجابيُّ", () => {
     expect(verifyUserAssertion(mint({ key: nextKey }), opts({ publicKeys: both })).ok).toBe(true);
     // الإبطالُ: حذفُ الـkid القديمِ يُسقطُ كلَّ تأكيدٍ وقّعَهُ.
     const revoked = new Map([["ua-2026-11", next.publicKey]]);
-    expect(verifyUserAssertion(mint(), opts({ publicKeys: revoked }))).toEqual({ ok: false, reason: "unknown_kid" });
+    expect(verifyUserAssertion(mint(), opts({ publicKeys: revoked }))).toEqual({ ok: false, reason: "assertion_unknown_kid" });
   });
 });
 
@@ -152,9 +152,9 @@ describe("wua1 — المسارُ السلبيُّ (ADR-060 §6)", () => {
     expect(verifyUserAssertion(`${body}.${hmac}`, opts())).toEqual({ ok: false, reason: "bad_signature" });
   });
 
-  it("kid مجهولٌ ⇒ unknown_kid", () => {
+  it("kid مجهولٌ ⇒ assertion_unknown_kid", () => {
     const other = userAssertionSigningKey("ua-unknown", primary.privateKey);
-    expect(verifyUserAssertion(mint({ key: other }), opts())).toEqual({ ok: false, reason: "unknown_kid" });
+    expect(verifyUserAssertion(mint({ key: other }), opts())).toEqual({ ok: false, reason: "assertion_unknown_kid" });
   });
 
   it("منتهي الصلاحيّةِ ⇒ expired (حتّى بعدَ نافذةِ الانحرافِ لا قبلَها)", () => {

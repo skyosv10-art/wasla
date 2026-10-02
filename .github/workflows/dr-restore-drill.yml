@@ -93,6 +93,19 @@ jobs:
           DRILL_T0_MS: ${{ steps.pick.outputs.t0 }}
         run: bash scripts/ops/dr-drill/restore-drill.sh art out
 
+      - name: Negative control — a tampered artifact must be refused
+        env:
+          DRILL_T0_MS: ${{ steps.pick.outputs.t0 }}
+        run: |
+          cp -r art art-bad
+          ENC=$(find art-bad -type f -name 'wasla-db-*.dump.gpg')
+          printf 'x' >> "$ENC"
+          if bash scripts/ops/dr-drill/restore-drill.sh art-bad out-bad > neg.log 2>&1; then
+            echo "::error::tampered artifact was NOT refused"; cat neg.log; exit 1
+          fi
+          grep -q '^DRILL FAIL stage=cipher' neg.log || { echo "::error::refused at the wrong stage"; cat neg.log; exit 1; }
+          echo "NEGATIVE CONTROL PASS · tampered ciphertext refused at stage=cipher"
+
       - name: Measured RPO from db-backup history (7 days)
         run: python3 scripts/ops/dr-drill/rpo-from-history.py out/rpo.json 7
 

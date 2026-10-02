@@ -7960,3 +7960,4 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **M6-18B stays `Blocked`:** RISK-0058, the unmet RPO, and the unmeasured Render failover RTO.
 - **Next:** remediate RISK-0058 under its own claim, then re-run scenario 2.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Baseline regenerated (written decision):** `BASELINE.json` `static.risks_not_closed` goes 19 → 20 because RISK-0058 was opened, so this is a real open risk, not a regression hidden. The fingerprint was recomputed with `baseline_canon.fingerprint` (`sha256:cf3e9494…`). CI governance-guard check 11 caught the mismatch on PR #584. تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

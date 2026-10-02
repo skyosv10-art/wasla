@@ -25,6 +25,8 @@ The drill downloads the artifact that db-backup.yml uploaded; that is the input 
 | [36975622775](https://github.com/skyosv10-art/wasla/actions/runs/36975622775) | 36959972983 · `db-backup-20261002T032407Z` | PASS · 120/120 tables · 38/38 rows | download+integrity 2.0 · decrypt 0.2 · restore 4.0 · compare 1.7 · **total 7.9** |
 | [36975855980](https://github.com/skyosv10-art/wasla/actions/runs/36975855980) | same | PASS · 120/120 · 38/38 · **negative control PASS** (tampered ciphertext refused at `stage=cipher`) | 1.6 · 0.1 · 4.0 · 1.6 · **total 7.3** |
 
+| [36977068106](https://github.com/skyosv10-art/wasla/actions/runs/36977068106) | same | PASS · negative control PASS. This run uses the script after the RISK-0037 fix: the governance guard refused a `| grep -q` pipe in the first version; the fix is a here-string, with no `|| true` | — |
+
 The drill runs weekly (`30 4 * * 1`) and on manual dispatch. Its results (totals and timings only) are kept for 90 days.
 
 ## 3. RPO — measured, not assumed

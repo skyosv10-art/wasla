@@ -437,7 +437,24 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(105);
+    // كانت 105؛ الموجةُ 1 من RISK-0042 (CLM-0435) صنَّفَتْ 23 عمليّةً `none` بدليلٍ مقروءٍ.
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(82);
+  });
+
+  it("RISK-0042 الموجةُ 1: 23 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ", () => {
+    const wave1Audiences = new Set(["dispatch", "geography"]);
+    const wave1 = OPERATION_BINDINGS.filter(
+      (b) =>
+        wave1Audiences.has(b.audience) ||
+        (b.audience === "drivers" && ((b.method === "GET" && b.path === "/drivers") || b.path === "/drivers/eligibility/tick")) ||
+        (b.audience === "customers" && b.path.startsWith("/customers") && !b.path.includes(":waslaPublicId")),
+    );
+    expect(wave1).toHaveLength(23);
+    for (const binding of wave1) {
+      expect(binding.strength).toBe("none");
+      expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

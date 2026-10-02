@@ -7916,3 +7916,19 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **Tests:** governance checks are run in CI on the PR.
 - **Next:** RISK-0042 under a separate claim and PR.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0435 · M0-49 — RISK-0042 wave 1: 23 operations classified from read code
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0435` · **Branch:** `fix/clm-0435-risk-0042-wave-1` · **Date:** 2026-10-02
+- **Method:** listed the 105 unclassified operations (`ENFORCED_OPERATIONS` minus `OPERATION_BINDINGS`). For each operation in this wave, read the route config helper (`scoped`/`adminScoped`/`internalScoped`, all of which return `{ serviceIdentity: { scopes } }` with no `beneficiary`), the handler, and the use-case input type.
+- **Classified (23, all `none`):** dispatch 8 · geography 9 · drivers 2 (`GET /drivers`, eligibility tick) · customers 4 (admin). Each has file:anchor evidence.
+- **Measured gaps (classified, not fixed):**
+  - `POST /dispatch/offers/:offer_id/accept|reject`: `AcceptOfferInput`/`RejectOfferInput` have no driver.
+  - `GET|PUT /geo/users/:waslaPublicId/location` and `GET …/history`: path id with no owner comparison.
+- **Guard:** new door 7-ج in check 16. A row's `evidence` must be `<file>:<anchor…>`, the file must exist, and every anchor must appear in it. 3 mutation cases in `gov-cases-authz-policy.sh` (missing anchor, missing file, file without anchor) were each measured to fail, and the restored original passes.
+- **Tests:** `@wasla/authz-policy` 43/43 (count test 105 → 82, plus a new wave-1 test). `validate-authz-policy.sh` passes all doors.
+- **Not done:** 82 operations stay UNKNOWN (not read in this wave). RISK-0042 stays `open`. No runtime enforcement changed.
+- **Next:** wave 2 (negotiations · matching · reputation · subscriptions · marketplace reads).
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

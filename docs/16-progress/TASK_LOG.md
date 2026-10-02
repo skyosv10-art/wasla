@@ -7851,3 +7851,18 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - M6-18B stays **Blocked** (Owner Gate, evidence §7) · RISK-0055 stays **mitigating** · ADR-052 is unchanged · RISK-0057 is independent and unchanged.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+### 2026-10-02 · CLM-0431 · M0-51 — RISK-0057: IDENTITY_SERVICE_URL on the 3 bots
+- **Work Item(s):** M0-51 · **Claim:** `CLM-0431` · **Branch:** `fix/clm-0431-risk-0057-bot-identity-url` · **Status:** In Progress
+- Claim registered before the change. Value source and before/after evidence: docs/12-testing/ci-evidence/2026-10-02T090000Z-clm-0431-risk-0057-bot-identity/README.md.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"، وتفويض المالك بإصلاح RISK-0057 (2026-10-02).
+
+### 2026-10-02 · CLM-0431 · M0-51 — RISK-0057 fixed and verified
+- **Work Item(s):** M0-51 · **Claim:** `CLM-0431` · **Branch:** `fix/clm-0431-risk-0057-bot-identity-url` · **Status:** In Progress
+- Only `IDENTITY_SERVICE_URL` was added to the 3 bots, from a documented source (live config of wasla-customers and wasla-geography, plus the Render URL of wasla-identity). Redeployed on `4ed351d`; 3/3 `/health` `degraded` → `ok`. RISK-0057 closed; BASELINE `risks_not_closed` 20 → 19. An end-to-end `/start` is not proven.
+
+### 2026-10-02 · CLM-0432 · M6-18B — catastrophic DR test + temporary RPO acceptance
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0432` · **Branch:** `fix/clm-0431-risk-0057-bot-identity-url` · **Status:** In Progress
+- Retired project `snlpxywskyqrjattbpgn`: backup 09:04:37Z (verified by a restore into `dr_verify`) → `DROP SCHEMA public CASCADE` 09:13:19Z → restore → verified 09:16:35Z. RTO 195.4 s, 0 rows lost, data, schema and grants identical. The new production was not touched.
+- Owner decision recorded: temporary acceptance of the measured RPO (worst 10.21 h) until PITR/WAL or a permanent amendment. RISK-0055 stays `mitigating`, M6-18B stays `Blocked`, ADR-052 is unchanged.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

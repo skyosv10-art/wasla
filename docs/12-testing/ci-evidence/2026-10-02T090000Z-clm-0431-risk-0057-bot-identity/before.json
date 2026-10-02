@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-02T08:54:17Z",
+  "wasla-customer-bot": {
+    "env_keys": [
+      "CUSTOMER_BOT_MINI_APP_URL",
+      "CUSTOMER_BOT_TOKEN",
+      "CUSTOMER_BOT_WEBHOOK_SECRET",
+      "CUSTOMER_DATABASE_URL",
+      "DATABASE_URL",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 10,
+    "IDENTITY_SERVICE_URL": null,
+    "latest_deploy": {
+      "id": "dep-davlrgegekts73eiua6g",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T07:32:38.5245Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"degraded\",\"channel\":\"telegram\"}"
+    }
+  },
+  "wasla-driver-bot": {
+    "env_keys": [
+      "DATABASE_URL",
+      "DRIVER_BOT_MINI_APP_URL",
+      "DRIVER_BOT_TOKEN",
+      "DRIVER_BOT_WEBHOOK_SECRET",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 9,
+    "IDENTITY_SERVICE_URL": null,
+    "latest_deploy": {
+      "id": "dep-davlrie7bikc73eir8a0",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T07:32:37.218432Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"degraded\",\"channel\":\"telegram\"}"
+    }
+  },
+  "wasla-partner-bot": {
+    "env_keys": [
+      "DATABASE_URL",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "PARTNER_BOT_MINI_APP_URL",
+      "PARTNER_BOT_TOKEN",
+      "PARTNER_BOT_WEBHOOK_SECRET",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 9,
+    "IDENTITY_SERVICE_URL": null,
+    "latest_deploy": {
+      "id": "dep-davlrmlg1s2s73b0qmvg",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T07:32:55.997993Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"degraded\",\"channel\":\"telegram\"}"
+    }
+  }
+}

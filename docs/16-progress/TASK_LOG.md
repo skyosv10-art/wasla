@@ -7851,3 +7851,8 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - M6-18B stays **Blocked** (Owner Gate, evidence §7) · RISK-0055 stays **mitigating** · ADR-052 is unchanged · RISK-0057 is independent and unchanged.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+### 2026-10-02 · CLM-0431 · M0-51 — RISK-0057: IDENTITY_SERVICE_URL on the 3 bots
+- **Work Item(s):** M0-51 · **Claim:** `CLM-0431` · **Branch:** `fix/clm-0431-risk-0057-bot-identity-url` · **Status:** In Progress
+- Claim registered before the change. Value source and before/after evidence: docs/12-testing/ci-evidence/2026-10-02T090000Z-clm-0431-risk-0057-bot-identity/README.md.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"، وتفويض المالك بإصلاح RISK-0057 (2026-10-02).
+

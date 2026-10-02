@@ -7822,3 +7822,10 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - Evidence: docs/12-testing/ci-evidence/2026-10-01T212000Z-clm-0429-risk-0056-cutover/README.md · the claim is released by a follow-up ledger-only PR.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+### 2026-10-02 · CLM-0429 — claim released after PR #574
+- **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `docs/clm-0429-release` · **Status:** Released
+- PR #574 merged (main `25509ad`): RISK-0056 `status:closed` with ref → the cutover evidence; M0-50 `Completed`; BASELINE `risks_not_closed` 19. The merged branch `docs/clm-0429-risk-0056-close` is deleted.
+- This change touches only the ledger (WORK_CLAIMS + TASK_LOG), so no new claim was opened. The operational evidence is unchanged.
+- Untouched by design: RISK-0042, RISK-0055, the bots' `IDENTITY_SERVICE_URL` gap, production settings and Render DB variables.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

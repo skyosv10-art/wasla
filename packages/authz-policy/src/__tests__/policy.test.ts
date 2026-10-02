@@ -418,6 +418,9 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       (b) => b.audience === "marketplace" && b.dimension === "tenant" && b.strength === "none",
     );
     expect(unbound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      // RISK-0042 الموجةُ 2 (CLM-0437): صفّانِ أُضيفا بدليلٍ مقروءٍ — يُضافانِ ولا يُمحى ما قبلَهما.
+      "GET /products/:productId",
+      "GET /products/:productId/inventory",
       "GET /stores/:storeSlug",
       "GET /stores/:storeSlug/products",
       "GET /stores/:storeSlug/reviews",
@@ -437,8 +440,9 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(OPERATION_BINDINGS.length + UNCLASSIFIED_OPERATION_COUNT).toBe(
       ENFORCED_OPERATIONS.length,
     );
-    // كانت 105؛ الموجةُ 1 من RISK-0042 (CLM-0435) صنَّفَتْ 23 عمليّةً `none` بدليلٍ مقروءٍ.
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(82);
+    // كانت 105؛ الموجةُ 1 من RISK-0042 (CLM-0435) صنَّفَتْ 23 عمليّةً `none` بدليلٍ مقروءٍ (→ 82)،
+    // والموجةُ 2 (CLM-0437) صنَّفَتْ 35 أخرى (→ 47).
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(47);
   });
 
   it("RISK-0042 الموجةُ 1: 23 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ", () => {
@@ -451,6 +455,20 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     );
     expect(wave1).toHaveLength(23);
     for (const binding of wave1) {
+      expect(binding.strength).toBe("none");
+      expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("RISK-0042 الموجةُ 2: 35 صفّاً `none` على خمسةِ حدودٍ — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
+    const wave2 = OPERATION_BINDINGS.filter((b) => /[sS]coped\(/.test(b.evidence) && [
+      "negotiations", "matching", "reputation", "subscriptions", "marketplace",
+    ].includes(b.audience) && b.note.startsWith("`none`:"));
+    const perAudience: Record<string, number> = {};
+    for (const b of wave2) perAudience[b.audience] = (perAudience[b.audience] ?? 0) + 1;
+    expect(perAudience).toEqual({ negotiations: 12, matching: 6, reputation: 8, subscriptions: 4, marketplace: 5 });
+    for (const binding of wave2) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
       expect(binding.note.length).toBeGreaterThan(20);

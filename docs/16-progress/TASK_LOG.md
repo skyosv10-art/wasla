@@ -7961,3 +7961,23 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **Next:** remediate RISK-0058 under its own claim, then re-run scenario 2.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Baseline regenerated (written decision):** `BASELINE.json` `static.risks_not_closed` goes 19 → 20 because RISK-0058 was opened, so this is a real open risk, not a regression hidden. The fingerprint was recomputed with `baseline_canon.fingerprint` (`sha256:cf3e9494…`). CI governance-guard check 11 caught the mismatch on PR #584. تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+## CLM-0437 · M0-49 — RISK-0042 wave 2: classify 35 operations from read code
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0437` · **Branch:** `fix/clm-0437-risk-0042-wave-2` · **Date:** 2026-10-02
+- **Before:** `find-existing-work.sh RISK-0042` and `M0-49` show no Active claim. CLM-0435 was released by PR #583; this PR also releases CLM-0434 (PR #582 merged, branch deleted).
+- **Done:** read the handler and use-case input of every unclassified operation on negotiations (12), matching (6), reputation (8), subscriptions (4) and marketplace (5).
+  - All 35 are `none`. Their config is `scoped`/`internalScoped` with no `beneficiary`, and their input carries no caller identity.
+  - Each row has `<file>:<anchor> <anchor>` evidence, which door 7-ج verifies.
+  - `OPERATION_BINDINGS` 75 → 110; `UNCLASSIFIED_OPERATION_COUNT` 82 → 47.
+  - Tests: one new wave-2 test; the exact count and the marketplace tenant list were updated by addition.
+- **Newly measured gaps (not fixed):**
+  - negotiations accept/reject/propose/message: `acting_party`, `proposed_by` and `author_role` are body roles, not identities;
+  - thread reads;
+  - candidacy write/read/availability;
+  - store registration with `owner_public_id` from the body;
+  - store list by owner;
+  - inventory read with no membership check.
+- **Not done:** no service code changed. RISK-0042 stays `open`. The remaining 47 operations are UNKNOWN.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Ledger:** after PR #584 merged (main `6d417c5`), this branch merged origin/main and releases CLM-0436; branch `feat/clm-0436-m6-18b-dr-execution` deleted.

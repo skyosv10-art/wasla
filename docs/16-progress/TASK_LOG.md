@@ -7829,3 +7829,11 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - Untouched by design: RISK-0042, RISK-0055, the bots' `IDENTITY_SERVICE_URL` gap, production settings and Render DB variables.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+### 2026-10-02 · CLM-0430 · M6-18B — restore drill from the stored artifact + measured RPO/RTO
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0430` · **Branch:** `feat/clm-0430-m6-18b-restore-drill` · **Status:** In Progress
+- Before claiming: no Active claim existed; all earlier M6-18B claims are Released (CLM-0381, 0401, 0402, 0405–0409, 0415).
+- Adds `dr-restore-drill.yml` (weekly, manual, and a branch-push proof run) with `scripts/ops/dr-drill/restore-drill.sh` and `rpo-from-history.py`. It does not touch production, Render, migrations or connection settings.
+- Measured RPO from the db-backup.yml history on main (7 days): worst 10.21 h · median 5.21 h · scheduled-start delay up to 5.67 h · 4 failed runs in the window. ADR-052 T1 RPO of 5 min is not met. RISK-0055 stays `mitigating`.
+- New, separate operational debt: RISK-0057, `IDENTITY_SERVICE_URL` is absent on the 3 bots (unrelated to RISK-0056).
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

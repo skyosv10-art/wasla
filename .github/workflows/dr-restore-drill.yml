@@ -1,0 +1,106 @@
+name: DR restore drill (M6-18B)
+# M6-18B · CLM-0430 — periodic restore drill from the STORED backup artifact.
+#
+# A recovery needs the uploaded artifact, not the runner that made it. This workflow
+# therefore downloads the encrypted artifact that db-backup.yml uploaded, checks it
+# against its own manifest, decrypts, restores it into an isolated postgres:17 and
+# compares tables and rows. Every step is fail-closed; there is no warning outcome.
+# It also measures RPO from the real run history of db-backup.yml on main.
+#
+# It never connects to production. The only secret it uses is BACKUP_PASSPHRASE.
+# Write permissions: none (contents: read, actions: read).
+# Triggers: weekly schedule + manual dispatch, plus a push to its own claim branch
+# (proof before merge, same pattern as risk-0056-apply-proof.yml).
+on:
+  schedule:
+    - cron: '30 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: "db-backup.yml run id to restore (empty = latest successful run on main)"
+        required: false
+        default: ""
+  push:
+    branches: ['feat/clm-0430-m6-18b-restore-drill']
+    paths:
+      - '.github/workflows/dr-restore-drill.yml'
+      - 'scripts/ops/dr-drill/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: dr-restore-drill
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    name: Restore the stored artifact → compare → measure RPO/RTO
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PG_VERSION: '17'
+      GH_TOKEN: ${{ github.token }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Require the passphrase (fail-closed)
+        run: |
+          [ -n "$BACKUP_PASSPHRASE" ] || { echo "::error::BACKUP_PASSPHRASE is not set"; exit 1; }
+
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+          "${BIN}/pg_restore" --version | grep -q "PostgreSQL) ${PG_VERSION}\." || { echo "::error::pg_restore is not ${PG_VERSION}"; exit 1; }
+          echo "${BIN}" >> "$GITHUB_PATH"
+          docker pull -q postgres:17 >/dev/null
+
+      - name: Pick the backup run and start the RTO clock
+        id: pick
+        env:
+          INPUT_RUN: ${{ inputs.backup_run_id }}
+        run: |
+          echo "t0=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          if [ -n "$INPUT_RUN" ]; then
+            RUN="$INPUT_RUN"
+          else
+            RUN=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/db-backup.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id')
+          fi
+          [[ "$RUN" =~ ^[0-9]+$ ]] || { echo "::error::no successful db-backup run found"; exit 1; }
+          CONC=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}" --jq '.path + " " + .head_branch + " " + .conclusion')
+          [ "$CONC" = ".github/workflows/db-backup.yml main success" ] || { echo "::error::run ${RUN} is not a successful db-backup.yml run on main ($CONC)"; exit 1; }
+          NAME=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}/artifacts" --jq '[.artifacts[] | select(.name|startswith("db-backup-")) | select(.expired|not)] | if length==1 then .[0].name else "" end')
+          [ -n "$NAME" ] || { echo "::error::run ${RUN} has no single unexpired db-backup-* artifact"; exit 1; }
+          echo "run=${RUN}" >> "$GITHUB_OUTPUT"; echo "artifact=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "backup run ${RUN} · artifact ${NAME}"
+
+      - name: Download the stored artifact
+        env:
+          RUN: ${{ steps.pick.outputs.run }}
+          NAME: ${{ steps.pick.outputs.artifact }}
+        run: gh run download "$RUN" --repo "$GITHUB_REPOSITORY" --name "$NAME" --dir art
+
+      - name: Restore drill (manifest → cipher → decrypt → restore → compare)
+        env:
+          DRILL_T0_MS: ${{ steps.pick.outputs.t0 }}
+        run: bash scripts/ops/dr-drill/restore-drill.sh art out
+
+      - name: Measured RPO from db-backup history (7 days)
+        run: python3 scripts/ops/dr-drill/rpo-from-history.py out/rpo.json 7
+
+      - name: Upload drill results (no data, totals and timings only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-restore-drill-${{ github.run_id }}
+          path: out/*.json
+          if-no-files-found: warn
+          retention-days: 90

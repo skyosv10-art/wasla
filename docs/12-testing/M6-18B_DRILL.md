@@ -171,3 +171,25 @@ requires owner decision). `billing` is not deployed on Render — `orders` drill
 **Note:** The drill procedure is fully defined and the resilience patterns
 are verified by unit tests. Live drill execution requires environment access
 that is not available in the sandbox. The procedure is ready for execution.
+
+---
+
+## 7. Scenario 2 and the replacement-project restore: executed (CLM-0436, 2026-10-02)
+
+Evidence: [`ci-evidence/2026-10-02T153600Z-clm-0436-m6-18b-dr-scenario2-replacement/`](ci-evidence/2026-10-02T153600Z-clm-0436-m6-18b-dr-scenario2-replacement/README.md), run `37028089688`.
+
+**Scenario 2: executed, FAIL against §3.**
+- Warm drop: the billing process **exits 17 ms after the DB drops** (no `Pool` `'error'` listener).
+- DB down: `503` on every call, with **no circuit breaker**. No service imports `@wasla/resilience`.
+- Partition: calls **hang until the client timeout** (no `connectionTimeoutMillis`).
+- `/health` says `ok` throughout.
+- Recovery after the DB returns: ≤ 11 ms (for a process that survived).
+- Recorded as RISK-0058.
+
+**Replacement restore: PASS for `public`.**
+- Production's stored artifact was restored into the replacement project `pvyuhjadrygqqdoczmnd`: 120/120 tables, 38/38 rows.
+- Data RTO: 471.1 s. Billing on the replacement gave its first DB-backed answer after 2.6 s.
+- auth, storage and vault have **0 rows at the source**: inventoried, not exercised.
+- Render repoint: not measured.
+
+Earlier sections are unchanged. Scenario 4 (`orders → billing` breaker) is subject to the same cause: no breaker is wired anywhere.

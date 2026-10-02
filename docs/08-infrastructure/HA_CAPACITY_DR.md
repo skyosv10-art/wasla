@@ -229,3 +229,20 @@ Each consumer maintains a consumed-event ledger:
 - [ADR-058](../15-decisions/ADR-058-temporary-rpo-exception.md) records the owner's temporary acceptance of the measured RPO: worst 10.21 h, median 5.21 h. It is an exception to ADR-052 §1, not an amendment, and the 5 min target stays unmet.
 - PITR or an equivalent WAL solution is deferred for budget reasons only. RISK-0055 stays `mitigating`. Review 2026-10-13, hard expiry 2026-11-02. The exception ends early when PITR/WAL is provided, or when a permanent ADR formally amends the target.
 - M6-18B stays `Blocked`: DR scenario 2 and a full replacement-project restore are still unexecuted.
+
+---
+
+### Correction by addition: measured dependency-failure behaviour (CLM-0436, 2026-10-02)
+
+The table in §7 describes the **intended** behaviour of M6-18A. What DR scenario 2 measured on the unchanged billing service ([evidence](../12-testing/ci-evidence/2026-10-02T153600Z-clm-0436-m6-18b-dr-scenario2-replacement/README.md)) is different:
+- **DB connection drop:** the process crashes (unhandled pool `'error'`). Render restarts it, so this is not degradation.
+- **DB down:** `503` on every call, with no circuit breaker. `@wasla/resilience` is imported by no service.
+- **Partition:** calls hang without a bound (no `connectionTimeoutMillis`).
+- **Health:** `/health` reports `ok` during the outage.
+
+RISK-0058 tracks the fix.
+
+**Replacement-project restore** (`pvyuhjadrygqqdoczmnd`, $0):
+- `public` 120/120 tables, 38/38 rows; data RTO 471.1 s; first DB-backed service answer after 2.6 s.
+- auth, storage and vault: 0 rows at the source. They need separate setup: auth settings and keys, storage file bytes, and the vault root key.
+- **Still not proven:** production failover RTO including the Render repoint; RPO 5 min (ADR-058 exception).

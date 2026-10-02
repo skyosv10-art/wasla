@@ -8007,4 +8007,4 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
   - No PITR and no production test.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Ledger:** releases CLM-0437 (PR #585 merged → main `2457c55`). Its branch is deleted after this release reaches main.
-
+- **CI:** `dr-replacement-restore.yml` run 37044898119 succeeded. `scenario2` VERDICT PASS 19/19, and `replacement` PASS with a data RTO of 437.8 s and a first DB answer at 2.7 s. The env registry gained `WASLA_PG_CONNECT_TIMEOUT_MS` and `WASLA_PG_QUERY_TIMEOUT_MS` (governance check 18), and the artifacts were regenerated. Branch `fix/clm-0437-risk-0042-wave-2` was deleted (PR #585 merged; governance check 23).

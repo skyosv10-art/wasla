@@ -54,7 +54,41 @@ Verdict: **PASS, 19/19 checks** (record: `verdict.checks` in the harness output)
 
 ## CI verdict
 
-To be recorded below once the run on this branch completes. The workflow is `dr-replacement-restore.yml`: job `scenario2` (fail-closed) and job `replacement` (restore into the DR project).
+Run [`37044898119`](https://github.com/skyosv10-art/wasla/actions/runs/37044898119) of `dr-replacement-restore.yml` on head `1c37549`, triggered by a push to the claim branch. **Conclusion: success.** Every `pg-guard`, harness and wiring file is identical at the later heads of this PR; the only later changes are to the env registry and ledgers.
+
+### Job `scenario2`: VERDICT PASS, 19/19 checks
+
+| experiment | CI result |
+|---|---|
+| E1 warm drop | process alive. During the outage every call returned `503 BILLING_UNAVAILABLE`, max 5 ms. Health **503**. After the DB returned: health 200 at **1 013 ms**, first DB answer at **1 017 ms** |
+| E2 cold refuse | 503 throughout. First five calls 9/2/2/2/2 ms; **calls 6–10 1/1/1/2/1 ms (breaker open)**. Health **503**. Cooldown-only recovery **30 129 ms** |
+| E3 partition | 5 013 / 5 004 / 5 008 / 5 008 ms (connect timeout), then 2/2/1 ms (breaker). Health **503 in 2 003 ms**. Health 200 at **1 017 ms**, first DB answer at **1 021 ms** |
+| E4 fleet | 16 started; partners excluded (RISK-0059); none failed to start. All 16 health 503 during the outage, none crashed. Recovery **1 030–1 060 ms** |
+
+### Job `replacement`: PASS (second DR drill into `pvyuhjadrygqqdoczmnd`)
+
+- Restored artifact: backup `2026-10-02T17:09:21Z`, 3 279 s old at drill time.
+- Tables: 120/120. Rows: 38/38.
+- **Data RTO: 437.8 s**, broken down as:
+  - download and integrity check: 2.8 s
+  - decrypt: 0.2 s
+  - prepare: 7.5 s
+  - restore: 232.8 s
+  - compare: 194.5 s
+  
+  The previous drill (CLM-0436) took 471.1 s.
+- Billing on the replacement: listening at 2 429 ms, **first DB-backed answer at 2 672 ms**.
+- Production was not contacted, and no Render service was linked.
+
+### RTO summary (scenario 2 and the replacement)
+
+| measure | value |
+|---|---|
+| service recovery after the DB returns, with health traffic | ≈ 1.0 s (local and CI) |
+| service recovery after the DB returns, no health traffic | ≤ 30.1 s (breaker cooldown) |
+| data restore RTO into the DR project | 437.8 s |
+| first DB-backed answer on the DR project | 2.7 s |
+| failover RTO including a Render repoint | **not measured** (no cutover by owner decision) |
 
 ## DR environment `pvyuhjadrygqqdoczmnd`
 

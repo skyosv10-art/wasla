@@ -1,0 +1,160 @@
+name: DR scenario 2 + replacement-project restore (M6-18B)
+# M6-18B · CLM-0436. The owner approved both scopes on 2026-10-02.
+#
+# Job `scenario2`: DR scenario 2 ("database unavailable", docs/12-testing/M6-18B_DRILL.md §3)
+#   on a throwaway postgres:17 in the runner. The unchanged billing service runs behind a
+#   TCP fault proxy that injects "refused" and "partition" failures. No secret is used and
+#   nothing outside the runner is touched.
+#
+# Job `replacement`: a full restore of production's STORED backup artifact (the one
+#   db-backup.yml uploaded) into the replacement Supabase project pvyuhjadrygqqdoczmnd
+#   (free plan). It then runs the unchanged billing service against the replacement and
+#   measures the first DB-backed answer. It never connects to production or Render.
+#   Secrets: BACKUP_PASSPHRASE and DR_REPLACEMENT_DB_URL. guard-replacement.py refuses
+#   any other project before anything runs.
+#
+# Write permissions: none (contents: read, actions: read).
+# Triggers: manual dispatch, plus a push to its own claim branch (proof before merge,
+# the same pattern as dr-restore-drill.yml).
+on:
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: "db-backup.yml run id to restore (empty = latest successful run on main)"
+        required: false
+        default: ""
+  push:
+    branches: ['feat/clm-0436-m6-18b-dr-execution']
+    paths:
+      - '.github/workflows/dr-replacement-restore.yml'
+      - 'scripts/ops/m6-18b-dr/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: dr-replacement-restore
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20.20.1"
+  PNPM_VERSION: "9.15.9"
+  PG_VERSION: '17'
+
+jobs:
+  scenario2:
+    name: Scenario 2 — DB unavailable (local postgres + fault proxy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Activate pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+      - name: Throwaway postgres:17 + billing schema
+        run: |
+          docker run -d --name s2-pg -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=billing -p 127.0.0.1:55432:5432 postgres:17 >/dev/null
+          for _ in $(seq 1 60); do docker exec s2-pg pg_isready -U postgres -d billing >/dev/null 2>&1 && break; sleep 1; done
+          sleep 2
+          BILLING_DATABASE_URL=postgres://postgres@127.0.0.1:55432/billing ./services/audit/node_modules/.bin/tsx services/billing/src/db/migrate-cli.ts
+      - name: Run scenario 2 (measure, do not assume)
+        run: |
+          mkdir -p out
+          DR_UPSTREAM_PORT=55432 ./services/audit/node_modules/.bin/tsx scripts/ops/m6-18b-dr/scenario2-db-unavailable.mts > out/scenario2.json
+          python3 - out/scenario2.json <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))["experiments"]
+          e1, e2, e3 = d["E1_warm_drop"], d["E2_cold_refuse"], d["E3_cold_blackhole"]
+          print(f"E1 warm drop   · process exited: {e1['process_exited']} (code {e1['exit_code']}, {e1['exit_after_drop_ms']} ms after the drop)")
+          print(f"E2 cold refuse · statuses {e2['statuses']} · first five {e2['first_five_ms']} ms · after five {e2['after_five_ms']} ms · health {e2['health_during_outage']['status']} · recovery {e2['recovery_ms_after_db_restored']} ms")
+          print(f"E3 partition   · statuses {e3['statuses']} · health {e3['health_during_partition']['status']} · recovery {e3['recovery_ms_after_db_restored']} ms")
+          PY
+      - name: Upload scenario 2 record (timings and statuses only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-scenario2-${{ github.run_id }}
+          path: out/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  replacement:
+    name: Restore the stored production artifact into the replacement project
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      DR_REPLACEMENT_DB_URL: ${{ secrets.DR_REPLACEMENT_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require the secrets (fail-closed)
+        run: |
+          [ -n "$BACKUP_PASSPHRASE" ] || { echo "::error::BACKUP_PASSPHRASE is not set"; exit 1; }
+          [ -n "$DR_REPLACEMENT_DB_URL" ] || { echo "::error::DR_REPLACEMENT_DB_URL is not set"; exit 1; }
+      - name: Target guard (replacement project only)
+        run: python3 scripts/ops/m6-18b-dr/guard-replacement.py
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+          "${BIN}/pg_restore" --version | grep -q "PostgreSQL) ${PG_VERSION}\." || { echo "::error::pg_restore is not ${PG_VERSION}"; exit 1; }
+          echo "${BIN}" >> "$GITHUB_PATH"
+      - name: Pick the backup run and start the RTO clock
+        id: pick
+        env:
+          INPUT_RUN: ${{ inputs.backup_run_id }}
+        run: |
+          echo "t0=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          if [ -n "$INPUT_RUN" ]; then
+            RUN="$INPUT_RUN"
+          else
+            RUN=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/db-backup.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id')
+          fi
+          [[ "$RUN" =~ ^[0-9]+$ ]] || { echo "::error::no successful db-backup run found"; exit 1; }
+          CONC=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}" --jq '.path + " " + .head_branch + " " + .conclusion')
+          [ "$CONC" = ".github/workflows/db-backup.yml main success" ] || { echo "::error::run ${RUN} is not a successful db-backup.yml run on main ($CONC)"; exit 1; }
+          NAME=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}/artifacts" --jq '[.artifacts[] | select(.name|startswith("db-backup-")) | select(.expired|not)] | if length==1 then .[0].name else "" end')
+          [ -n "$NAME" ] || { echo "::error::run ${RUN} has no single unexpired db-backup-* artifact"; exit 1; }
+          echo "run=${RUN}" >> "$GITHUB_OUTPUT"; echo "artifact=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "backup run ${RUN} · artifact ${NAME}"
+      - name: Download the stored artifact
+        env:
+          RUN: ${{ steps.pick.outputs.run }}
+          NAME: ${{ steps.pick.outputs.artifact }}
+        run: gh run download "$RUN" --repo "$GITHUB_REPOSITORY" --name "$NAME" --dir art
+      - name: Restore into the replacement project (manifest → cipher → decrypt → target → restore → compare → platform)
+        env:
+          DRILL_T0_MS: ${{ steps.pick.outputs.t0 }}
+        run: bash scripts/ops/m6-18b-dr/replacement-restore.sh art out
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Activate pinned pnpm and install
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          pnpm install --frozen-lockfile
+      - name: Service-level check — billing answers from the replacement DB
+        run: ./services/audit/node_modules/.bin/tsx scripts/ops/m6-18b-dr/service-on-replacement.mts | tee out/service.json
+      - name: Upload replacement record (no data, totals and timings only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr-replacement-${{ github.run_id }}
+          path: out/*.json
+          if-no-files-found: warn
+          retention-days: 90

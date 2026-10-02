@@ -8008,3 +8008,22 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Ledger:** releases CLM-0437 (PR #585 merged → main `2457c55`). Its branch is deleted after this release reaches main.
 - **CI:** `dr-replacement-restore.yml` run 37044898119 succeeded. `scenario2` VERDICT PASS 19/19, and `replacement` PASS with a data RTO of 437.8 s and a first DB answer at 2.7 s. The env registry gained `WASLA_PG_CONNECT_TIMEOUT_MS` and `WASLA_PG_QUERY_TIMEOUT_MS` (governance check 18), and the artifacts were regenerated. Branch `fix/clm-0437-risk-0042-wave-2` was deleted (PR #585 merged; governance check 23).
+
+## CLM-0439 · M0-49 — ADR-060: passing the end-user identity (`obo`) as a signed assertion
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0439` · **Branch:** `docs/clm-0439-adr-060-end-user-assertion` · **Date:** 2026-10-02
+- **Before:** `find-existing-work.sh obo`, `RISK-0042` and `RISK-0059` show no Active claim. Measured: no caller in the repository sends `obo` (`signRequest(method, path)` only). The service token is HMAC with shared keys, so whoever verifies it can also mint it.
+- **Done:** wrote [ADR-060](../15-decisions/ADR-060-end-user-assertion-propagation.md), which defines:
+  - the identity source (`identity` only, from `init-data` or a webhook-authenticated link);
+  - the format (`wua1`, Ed25519, `kid` for rotation);
+  - an 11-step verification order;
+  - the trust boundaries (edge, forwarder, system);
+  - forgery prevention, with the residual risk written down;
+  - the missing/invalid handling (`off`/`observe`/`enforce`, 401/403/404);
+  - compatibility phases P1–P3;
+  - the test plan.
+- **Claims registered:** CLM-0440 (foundation), CLM-0441 (negotiations), CLM-0442 (matching), CLM-0443 (marketplace) and CLM-0444 (RISK-0059, separate). Each has its own branch from main.
+- **Not done:** no code. No change to Production, Render, migrations or cutover. RISK-0042 `open` · RISK-0059 `open` · RISK-0058 `mitigating` · RISK-0055 `mitigating` · M6-18B `Blocked`.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Ledger:** releases CLM-0438 (PR #586 merged → main `864e57b`). Its branch is deleted after this release reaches main.
+

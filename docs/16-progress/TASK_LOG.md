@@ -7932,3 +7932,24 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **Not done:** 82 operations stay UNKNOWN (not read in this wave). RISK-0042 stays `open`. No runtime enforcement changed.
 - **Next:** wave 2 (negotiations · matching · reputation · subscriptions · marketplace reads).
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0437 · M0-49 — RISK-0042 wave 2: classify 35 operations from read code
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0437` · **Branch:** `fix/clm-0437-risk-0042-wave-2` · **Date:** 2026-10-02
+- **Before:** `find-existing-work.sh RISK-0042` and `M0-49` show no Active claim. CLM-0435 was released by PR #583; this PR also releases CLM-0434 (PR #582 merged, branch deleted).
+- **Done:** read the handler and use-case input of every unclassified operation on negotiations (12), matching (6), reputation (8), subscriptions (4) and marketplace (5).
+  - All 35 are `none`. Their config is `scoped`/`internalScoped` with no `beneficiary`, and their input carries no caller identity.
+  - Each row has `<file>:<anchor> <anchor>` evidence, which door 7-ج verifies.
+  - `OPERATION_BINDINGS` 75 → 110; `UNCLASSIFIED_OPERATION_COUNT` 82 → 47.
+  - Tests: one new wave-2 test; the exact count and the marketplace tenant list were updated by addition.
+- **Newly measured gaps (not fixed):**
+  - negotiations accept/reject/propose/message: `acting_party`, `proposed_by` and `author_role` are body roles, not identities;
+  - thread reads;
+  - candidacy write/read/availability;
+  - store registration with `owner_public_id` from the body;
+  - store list by owner;
+  - inventory read with no membership check.
+- **Not done:** no service code changed. RISK-0042 stays `open`. The remaining 47 operations are UNKNOWN.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

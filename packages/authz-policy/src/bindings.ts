@@ -1163,6 +1163,16 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     evidence: "services/marketplace/src/http/app.ts:scoped(MARKETPLACE_SCOPES.inventoryRead) products.readInventory(productId,",
     note: "`none`: قراءةُ المخزونِ وسجلِّ تعديلاتِهِ بمُعرِّفِ المنتجِ بلا عضويّةِ متجرٍ، والتعديلُ الشقيقُ وحدَهُ `tenantScoped`. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يقرأُ مخزونَ أيِّ متجرٍ.",
   },
+  // ADR-060 · CLM-0440: عمليّةٌ جديدةٌ تُصنَّفُ عندَ ولادتِها — فلا يرتفعُ غيرُ المُصنَّفِ (47).
+  {
+    audience: "identity",
+    method: "POST",
+    path: "/identity/assertions",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/identity/src/use-cases/issue-user-assertion.ts:findUserByTelegramId ASSERTION_ACTOR_BY_CALLER",
+    note: "`none`: حاملُ `identity:assertion:issue` (البوتاتُ الثلاثةُ وحدَها) يطلبُ تأكيداً لأيِّ `telegram_user_id` مربوطٍ — فلا ربطَ يُثبِتُهُ الرمزُ، والثقةُ في الحدِّ الذي تحقَّقَ من سرِّ webhook Telegram. ويُقيِّدُهُ مقروءاً: نوعُ الفاعلِ يُشتقُّ من المنادي (`ASSERTION_ACTOR_BY_CALLER`) والجمهورُ من قائمةٍ مغلقةٍ، والقراءةُ لا تُنشئُ مستخدماً. وهذا مصدرُ التأكيدِ لا مُستهلِكُهُ: المُستهلِكونَ يتحقّقونَ من توقيعِ Ed25519 في P2/P3 (ADR-060).",
+  },
 ];
 
 /**

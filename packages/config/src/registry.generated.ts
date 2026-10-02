@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 85 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 88 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "BILLING_DATABASE_URL",
@@ -884,6 +884,36 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     readerCount: 1,
     ownerItem: "M2-09A",
   },
+  {
+    name: "WASLA_USER_ASSERTION_MODE",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: "off",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M0-49",
+  },
+  {
+    name: "WASLA_USER_ASSERTION_PUBLIC_KEYS",
+    type: "secret_material",
+    required: "optional",
+    secret: true,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M0-49",
+  },
+  {
+    name: "WASLA_USER_ASSERTION_SIGNING_KEY",
+    type: "secret_material",
+    required: "optional",
+    secret: true,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M0-49",
+  },
 ] as const;
 
 /** أسماءُ المتغيّراتِ وحدَها — نوعٌ مغلقٌ يُستعملُ في القراءاتِ. */
@@ -973,6 +1003,9 @@ export const ENV_VAR_NAMES = [
   "WASLA_TICK_LOCK_DIR",
   "WASLA_TICK_SERVICES",
   "WASLA_TICK_TIMEOUT_MS",
+  "WASLA_USER_ASSERTION_MODE",
+  "WASLA_USER_ASSERTION_PUBLIC_KEYS",
+  "WASLA_USER_ASSERTION_SIGNING_KEY",
 ] as const;
 
 export type EnvVarName = (typeof ENV_VAR_NAMES)[number];

@@ -98,6 +98,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/identity/assertions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * إصدار تأكيد المستخدم النهائي wua1 لهوية قناة قائمة
+         * @description ADR-060 · CLM-0440 · RISK-0042. يُصدِر تأكيداً موقَّعاً بـ Ed25519 (المفتاح الخاص عند identity وحدها)
+         *     يشهد أن مستخدم القناة `telegram_user_id` هو `wasla_public_id`. **قراءة فقط**: لا يُنشئ مستخدماً
+         *     (مستخدم غير مربوط ⇒ 404). نوع الفاعل يتبع المنادي (customer-bot → customer، driver-bot → driver،
+         *     partner-bot → store_staff) والجمهور من قائمة مغلقة لكل فاعل. بلا مفتاح توقيع مُهيّأ ⇒ 503.
+         *     البوت يُمرِّر التأكيد في ترويسة `x-wasla-user-assertion` مع `obo` مساوٍ لـ `wasla_public_id`،
+         *     ولا يصنعه ولا يعدّله.
+         */
+        post: operations["issueUserAssertion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -116,6 +141,23 @@ export interface components {
              * @enum {string}
              */
             source?: "customer_bot" | "driver_bot" | "partner_bot";
+        };
+        IssueUserAssertionRequest: {
+            /** Format: int64 */
+            telegram_user_id: number;
+            /** @enum {string} */
+            actor_type: "customer" | "driver" | "store_staff";
+            audience: string[];
+        };
+        IssueUserAssertionResponse: {
+            /** @description wua1.<payload>.<sig> — يُمرَّر كما هو ولا يُسجَّل */
+            assertion: string;
+            wasla_public_id: string;
+            /** @enum {string} */
+            actor_type: "customer" | "driver" | "store_staff";
+            audience: string[];
+            /** Format: date-time */
+            expires_at: string;
         };
         ResolveIdentityResponse: {
             wasla_public_id: string;
@@ -414,6 +456,36 @@ export interface operations {
             };
             401: components["responses"]["AuthUnauthorized"];
             403: components["responses"]["AuthForbidden"];
+        };
+    };
+    issueUserAssertion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueUserAssertionRequest"];
+            };
+        };
+        responses: {
+            /** @description تأكيد صادر */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueUserAssertionResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
 }

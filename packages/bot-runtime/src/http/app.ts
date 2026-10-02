@@ -61,6 +61,8 @@ import {
 import { buildGroupStartReply, buildStartReply } from "../welcome.js";
 
 import { sendChannelError } from "./errors.js";
+import type { UserDelegation } from "@wasla/service-auth";
+import { UserAssertionUnavailableError, type UserAssertionIssuerPort } from "../user-assertion.js";
 import {
   CHANNEL_SCOPES,
   registerServiceIdentity,
@@ -75,6 +77,8 @@ export interface BotAppDeps {
   readonly inbound: InboundDeps;
   readonly outbound: OutboundDeps;
   readonly launch: LaunchDeps;
+  /** ADR-060 · CLM-0440: مُصدِرُ تأكيدِ المستخدمِ — اختياريٌّ؛ غيابُهُ ⇒ `userAssertion` يُعيدُ `null`. */
+  readonly userAssertions?: UserAssertionIssuerPort;
 }
 
 export interface CreateBotAppOptions {
@@ -556,6 +560,27 @@ async function runConversation(
     return identityPromise;
   };
 
+  // ADR-060 · CLM-0440: أفضلُ جهدٍ — الإخفاقُ يُسجَّلُ ويُعادُ `null`، لا يُفشِلُ المحادثةَ.
+  const userAssertion = async (audience: readonly string[]): Promise<UserDelegation | null> => {
+    const issuer = deps.userAssertions;
+    const actor = result.actor;
+    if (issuer === undefined || actor === undefined) return null;
+    try {
+      return await issuer.issue({ channel: result.channel, bot: deps.bot, actor, audience, traceId });
+    } catch (error) {
+      app.log.warn(
+        {
+          event: "user_assertion_unavailable",
+          traceId,
+          reason: error instanceof UserAssertionUnavailableError ? error.reason : "unexpected",
+          audience,
+        },
+        "user assertion not obtained; continuing without it (receivers are off in P1)",
+      );
+      return null;
+    }
+  };
+
   const event: ConversationEvent = {
     bot: deps.bot,
     channel: result.channel,
@@ -573,6 +598,7 @@ async function runConversation(
     traceId,
     ...(result.identity === undefined ? {} : { identity: result.identity }),
     resolveIdentity,
+    userAssertion,
   };
 
   try {

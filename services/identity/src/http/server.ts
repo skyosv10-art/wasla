@@ -12,6 +12,7 @@
 
 import { keyRegistryFromEnv, type ServiceTokenReplayGuard } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
+import { userAssertionSigningKeyFromEnv } from "@wasla/service-auth/user-assertion";
 
 import { readPortEnv } from "@wasla/config";
 
@@ -93,6 +94,8 @@ async function main(): Promise<void> {
     deps,
     logger: true,
     serviceIdentity: serviceIdentityWiring(),
+    // ADR-060 · CLM-0440: المفتاحُ الخاصُّ يُقرأُ من سرِّ البيئةِ ولا يُطبَعُ. غيابُهُ ⇒ لا إصدارَ (503).
+    userAssertion: { signingKey: userAssertionSigningKeyFromEnv(process.env) },
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

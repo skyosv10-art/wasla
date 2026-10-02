@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **الحالة** | Proposed. يصير Accepted عند دمج طلب الدمج بعد مراجعة مستقلة ونجاح CI |
+| **الحالة** | **Accepted** (2026-10-02 · `CLM-0440`): دُمج في PR #587 (`a69dc5c`) بعد مراجعة مستقلة ونجاح CI، وهو الشرط الذي كتبه هذا السطر نفسه. والنص الأصلي يبقى للتاريخ: «Proposed. يصير Accepted عند دمج طلب الدمج بعد مراجعة مستقلة ونجاح CI». |
 | **التاريخ** | 2026-10-02 |
 | **عنصر العمل** | `M0-49` (RISK-0042) · **الحجز:** `CLM-0439` |
 | **القرار يُلزِم** | `services/identity` (المُصدِر الوحيد) · `packages/service-auth` (التحقق) · `bots/customer-bot` · `bots/driver-bot` · `services/drivers` (المُمرِّرون) · `services/negotiations` · `services/matching` · `services/marketplace` (المُستقبِلون) |
@@ -182,3 +182,31 @@ dispatch / delivery / tick-scheduler ──(wsvc3 بلا obo، صلاحية نظ
 | `CLM-0444` | RISK-0059: تصنيف مسارات partners بهوية الخدمة | مستقل |
 
 لا يُدمج أي حجز إلا بمراجعة مستقلة ونجاح CI.
+
+## 6. إضافة · P1 منفَّذ (`CLM-0440` · 2026-10-02)
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
+
+**تصحيح الحالة.** الحالة كانت «Proposed» بعد الدمج، وشرط القبول المكتوب في الجدول (دمج بعد مراجعة مستقلة ونجاح CI) تحقق في PR #587. فصُحّحت الحالة إلى Accepted، والنص الأصلي باقٍ في الخلية نفسها. ولم يتغير شيء في القرار.
+
+**ما نُفِّذ (بلا فرض):**
+
+| الطبقة | الموضع | ما يفعله |
+|---|---|---|
+| الصكّ والتحقق | `packages/service-auth/src/user-assertion.ts` (المسار الفرعي `@wasla/service-auth/user-assertion`) | `wua1` بـEd25519 من `node:crypto` بلا اعتمادية جديدة. التحقق بترتيب §2.3، والتوقيع قبل أي قراءة دلالية. كائن المفتاح يُخفي مادته. |
+| المستقبل | `packages/service-auth/src/fastify.ts` | `beneficiary: "asserted"` مع `actors`/`forwarders`، وخيار `userAssertion: { mode, publicKeys }`. `off` لا يفعل شيئًا، و`observe` يسجّل `user_assertion_outcome` ولا يرفض، و`enforce` يجيب بجدول §2.6. **لا مسار يعلن `asserted` في P1، ولا خدمة تمرّر `userAssertion`.** |
+| المُصدِر | `POST /identity/assertions` · `services/identity/src/use-cases/issue-user-assertion.ts` | قراءة فقط (`findUserByTelegramId`)، ولا يُنشئ مستخدمًا. نوع الفاعل من المنادي (`customer-bot`→`customer`، `driver-bot`→`driver`، `partner-bot`→`store_staff`)، والجمهور من قائمة مغلقة. بلا مفتاح يجيب 503 `IDENTITY_ASSERTION_UNAVAILABLE`. |
+| البوتات | `packages/bot-runtime/src/user-assertion.ts` · `bots/*/src/negotiation-flows.ts` | `event.userAssertion(aud)` يطلب التأكيد بموقّع مستقل صلاحيته `identity:assertion:issue` وحدها. البوت يمرّر `obo = sub` والرأس ولا يصنعهما. وتفويض لا يطابق هوية المرسل المحلولة يُسقط. |
+| المُمرِّر | `services/drivers/src/infrastructure/forwarded-delegation.ts` · `http-candidacy.ts` | يحفظ `obo` الوارد والرأس في سياق الطلب، ويمرّرهما إلى `matching` **حرفًا** إن كان الترشيح لصاحب التفويض. ولا يتحقق ولا يرفض. النبضة تبقى نظامية بلا `obo`. |
+| سجل البيئة | `packages/config/env-registry.json` | المتغيرات الثلاثة مسجّلة (M2-04)، والمفتاحان `secret_material` بنائب `__SET_ME__`. |
+| دورة المفتاح | [`docs/07-security/USER_ASSERTION_KEY_LIFECYCLE.md`](../07-security/USER_ASSERTION_KEY_LIFECYCLE.md) | الإنشاء والتخزين السري والتوزيع والتدوير والإبطال. |
+
+**تدقيق بالإضافة لـ§2.6 «عند تعذّر `identity`».** الإغلاق عند الإخفاق في البوت **مشروط بأن يكون المستقبل في `enforce`**. في P1 وP2 المستقبلون `off` في الإنتاج، فالبوت يطلب التأكيد بأفضل جهد: الإخفاق يُسجَّل (`user_assertion_unavailable`) ويمضي النداء كما كان. ولو أُغلق البوت الآن لصار كل عطل في `identity`، ومنه 503 لغياب المفتاح وهو حال الإنتاج، عطلًا في أفعال المفاوضة بلا أي مكسب أمني. يتحول السلوك إلى fail-closed في الحجز نفسه الذي يفعّل `enforce` لذلك المستقبل في P3.
+
+**ما لم يُنفَّذ ويبقى مكتوبًا:**
+- حد المعدّل لكل بوت (§2.5) لم يُنفَّذ، وهو دين مقروء.
+- لا مفتاح مضبوط على Render، ولا `observe` ولا `enforce`. هذا P3، ويحتاج قرارًا مكتوبًا من المالك.
+- العملية الجديدة `POST /identity/assertions` صُنّفت في مصفوفة الربط `none` عند ولادتها، فبقي غير المصنَّف 47. وجرد العمليات المفروضة صار 158 والصلاحيات 125.
+
+**الحالات بلا تغيير:** RISK-0042 `open` · RISK-0059 `open` · RISK-0058 `mitigating` · RISK-0055 `mitigating` · M6-18B `Blocked`.
+

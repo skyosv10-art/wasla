@@ -8027,3 +8027,23 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Ledger:** releases CLM-0438 (PR #586 merged → main `864e57b`). Its branch is deleted after this release reaches main.
 
+## CLM-0440 · M0-49 — ADR-060 P1: the `wua1` end-user assertion foundation, no enforcement
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0440` · **Branch:** `feat/clm-0440-end-user-assertion-foundation` · **Date:** 2026-10-02
+- **Before:** `find-existing-work.sh "user assertion"`, `wua1` and `obo` show only CLM-0439 (docs, merged in #587) and this claim. Started from main `a69dc5c`, after ADR-060 merged. Owner approval (2026-10-02) covers the non-enforcing foundation.
+- **Done:**
+  - `packages/service-auth`: `wua1` mint/verify with Ed25519 from `node:crypto` (no new dependency). The verification order follows ADR-060 §2.3. Modes are `off` (default), `observe` (logs `user_assertion_outcome`, never rejects) and `enforce`. The signing key object redacts itself. The Fastify hook supports `beneficiary: "asserted"`, but no route declares it yet.
+  - `services/identity`: `POST /identity/assertions` (scope `identity:assertion:issue`, the three channel bots only). It is read-only (`findUserByTelegramId`). The actor type is derived from the caller and the audience comes from a closed list. It writes the audit log `user_assertion_issued` and answers 503 without a key. Contract, errors and generated types are updated.
+  - `packages/bot-runtime`, `bots/customer-bot` and `bots/driver-bot`: a separate signer for the issuance scope. `event.userAssertion(aud)` is best-effort. Negotiation calls send `obo = sub` plus the header, and drop a delegation whose subject differs from the resolved sender. The bots are never an identity source.
+  - `services/drivers`: forwards the inbound `obo` and header unchanged to `matching`, only for the same driver. It does not verify or reject, and the tick stays a system call.
+  - Authz matrix: 158 operations and 125 scopes. The new operation is classified `none` at birth, so unclassified stays 47. The env registry gains three variables (two `secret_material`, placeholders only), plus gate-8 bindings.
+  - Docs: [ADR-060](../15-decisions/ADR-060-end-user-assertion-propagation.md) is corrected to Accepted (its own merge condition was met in #587; the original text is kept) and gains §6. The key lifecycle is in [USER_ASSERTION_KEY_LIFECYCLE.md](../07-security/USER_ASSERTION_KEY_LIFECYCLE.md).
+- **Tests (added):**
+  - service-auth: 26 (forged signature, tampered payload, expiry, not-yet-valid, TTL too long, `sub ≠ obo`, wrong audience, `via`/chain, actor, unknown/rotated `kid`, off/observe/enforce)
+  - identity: 8
+  - bot-runtime: 5
+  - customer-bot: 5 · driver-bot: 5
+  - drivers: 5
+- **Not done:** no key set anywhere, no `observe`/`enforce` on Render (P3 needs a separate written owner decision), no receiver route declared `asserted` (P2: CLM-0441..0443), no per-bot rate limit (written down as a debt). No change to Production, Render, migrations or cutover. RISK-0042 `open` · RISK-0059 `open` · RISK-0058 `mitigating` · RISK-0055 `mitigating` · M6-18B `Blocked`.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Ledger:** releases CLM-0439 (PR #587 merged → main `a69dc5c`). Its branch is deleted after this release reaches main.

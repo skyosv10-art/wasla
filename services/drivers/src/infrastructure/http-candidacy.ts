@@ -59,11 +59,12 @@
 
 import { createHash } from "node:crypto";
 
-import type { ServiceRequestSigner } from "@wasla/service-auth";
+import { userAssertionHeaders, type ServiceRequestSigner } from "@wasla/service-auth";
 
 import { driverUnavailable, isDriverError } from "../domain/errors.js";
 import type { ProjectedAvailability } from "../domain/model.js";
 import type { CandidacyProjection, CandidacyProjectionPort } from "../ports.js";
+import { forwardedDelegationFor } from "./forwarded-delegation.js";
 
 export interface HttpCandidacyOptions {
   /** Base URL of the matching service, e.g. `http://matching:8088`. */
@@ -141,6 +142,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     const response = await this.call(
       `/candidacy/${encodeURIComponent(waslaPublicId)}`,
       { method: "GET" },
+      waslaPublicId,
     );
     if (response.status === 404) return null;
     if (response.status !== 200) {
@@ -185,6 +187,7 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
           actor_type: "driver_core",
         }),
       },
+      projection.waslaPublicId,
     );
 
     if (response.status === 200) return { accepted: true, failureCode: null };
@@ -205,14 +208,14 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
   }
 
   /** `path` is signed as it goes on the wire, so the binding matches what matching reads. */
-  private async call(path: string, init: RequestInit): Promise<Response> {
+  private async call(path: string, init: RequestInit, subjectPublicId: string): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     const method = init.method ?? "GET";
     try {
       return await this.fetchImpl(`${this.baseUrl}${path}`, {
         ...init,
-        headers: { ...(init.headers as Record<string, string> | undefined), ...this.signRequest(method, path) },
+        headers: { ...(init.headers as Record<string, string> | undefined), ...this.signed(method, path, subjectPublicId) },
         signal: controller.signal,
       });
     } catch (error) {
@@ -221,6 +224,15 @@ export class HttpCandidacyPort implements CandidacyProjectionPort {
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  /**
+   * ADR-060 · CLM-0440: `drivers` **يُمرِّرُ** تفويضَ الطلبِ الواردِ إن كانَ لصاحبِ الترشيحِ نفسِهِ —
+   * `obo` + ترويسةُ التأكيدِ كما وصلَتْ — ولا يصنعُهُ. بلا تفويضٍ: نداءٌ نظاميٌّ كما كانَ.
+   */
+  private signed(method: string, path: string, subjectPublicId: string): Record<string, string> {
+    const delegation = forwardedDelegationFor(subjectPublicId);
+    return { ...this.signRequest(method, path, delegation?.publicId), ...userAssertionHeaders(delegation) };
   }
 
   private async json<T>(response: Response): Promise<T> {

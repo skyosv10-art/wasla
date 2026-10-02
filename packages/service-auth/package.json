@@ -16,6 +16,10 @@
     "./replay-store": {
       "types": "./src/replay-store.ts",
       "import": "./src/replay-store.ts"
+    },
+    "./user-assertion": {
+      "types": "./src/user-assertion.ts",
+      "import": "./src/user-assertion.ts"
     }
   },
   "scripts": {

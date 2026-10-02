@@ -38,7 +38,7 @@
  *   للمسارِ ولا يشتقُّ صلاحيّةً من دورٍ.
  */
 
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import type { ServicePrincipal } from "@wasla/auth-sdk";
 
@@ -49,6 +49,16 @@ import {
 } from "./enforce.js";
 import type { ServiceAuthKeyRegistry } from "./keys.js";
 import type { ServiceTokenReplayGuard } from "./replay.js";
+import {
+  userAssertionDenialOf,
+  userAssertionFromHeaders,
+  verifyUserAssertion,
+  type UserAssertionActor,
+  type UserAssertionFailure,
+  type UserAssertionMode,
+  type UserAssertionPublicKeys,
+  type UserDelegation,
+} from "./user-assertion.js";
 
 /**
  * تصنيفُ المسارِ. `"open"` تعني «لا هويّةَ خدمةٍ مطلوبةً» ولا تجوزُ إلّا لمسارٍ
@@ -67,7 +77,13 @@ export type ServiceIdentityRouteIdentity =
        * **وغيابُها لا يُقرَأُ «لا مالكَ لهذا المَورِدِ» بل «لم يُسأَل»**
        * — والفرقُ مقيسٌ في `@wasla/authz-policy` لا متروكٌ للقراءةِ.
        */
-      readonly beneficiary?: "required";
+      readonly beneficiary?: "required" | "asserted";
+      /**
+       * ADR-060: لِمَسارِ `beneficiary: "asserted"` — أنواعُ الفاعلِ المقبولةُ، والخدماتُ التي
+       * يُسمَحُ لها أن تُمرِّرَ تأكيداً لم تطلبْهُ (مثلاً `drivers` إلى `matching`).
+       */
+      readonly actors?: readonly UserAssertionActor[];
+      readonly forwarders?: readonly string[];
     };
 
 /** الشكلُ الذي يقرأُه الوسيطُ من `config` المسارِ. */
@@ -102,13 +118,47 @@ export interface FastifyServiceIdentityOptions {
   readonly now?: () => Date;
   readonly clockSkewSeconds?: number;
   readonly maxTtlSeconds?: number;
+  /**
+   * ADR-060 · CLM-0440: التحقُّقُ من تأكيدِ المستخدمِ على مساراتِ `beneficiary: "asserted"`.
+   * غيابُهُ أو `mode: "off"` ⇒ لا تحقُّقَ ولا تغيُّرَ في السلوكِ (الافتراضيُّ في الإنتاجِ).
+   */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+    readonly denialBody?: (
+      denial: { readonly status: 401 | 403; readonly code: string; readonly message: string },
+      traceId: string,
+    ) => unknown;
+  };
 }
 
 declare module "fastify" {
   interface FastifyRequest {
     /** المنادي المُثبَتُ. يُملأُ على المسارَاتِ المفروضةِ وحدَها. */
     serviceCaller?: ServicePrincipal;
+    /** المستخدمُ النهائيُّ المُتحقَّقُ منهُ (ADR-060) — على مساراتِ `asserted` في `observe`/`enforce`. */
+    endUser?: VerifiedEndUser;
   }
+}
+
+/** المستخدمُ النهائيُّ المُتحقَّقُ منهُ (ADR-060). لا يُوضَعُ إلّا بعدَ نجاحِ التحقُّقِ كاملاً. */
+export interface VerifiedEndUser {
+  readonly publicId: string;
+  readonly actorType: UserAssertionActor;
+  readonly via: string;
+}
+
+/**
+ * ما يُمرِّرُهُ مُمرِّرٌ (ADR-060 §2.4، مثلاً `drivers`): التفويضُ الواردُ كما هوَ — `obo`
+ * رمزِ الخدمةِ المُتحقَّقِ منهُ + رأسُ التأكيدِ بلا تعديلٍ. **لا تحقُّقَ هنا ولا ثقةَ**: المُستقبِلُ
+ * النهائيُّ هوَ الذي يتحقّقُ. يُعيدُ `undefined` إن نقصَ أحدُهما.
+ */
+export function incomingDelegationOf(request: FastifyRequest): UserDelegation | undefined {
+  const publicId = request.serviceCaller?.onBehalfOfPublicId;
+  const assertion = userAssertionFromHeaders(request.headers);
+  if (publicId === undefined || assertion === undefined || assertion === "") return undefined;
+  return { publicId, assertion };
 }
 
 /**
@@ -208,6 +258,9 @@ export function registerServiceIdentityOnFastify(
 
     if (decision.outcome === "allowed") {
       request.serviceCaller = decision.principal;
+      if (identity !== undefined && identity.beneficiary === "asserted") {
+        await applyUserAssertion(request, reply, identity, decision.principal, options, now);
+      }
       return;
     }
 
@@ -231,3 +284,69 @@ export function registerServiceIdentityOnFastify(
     await reply.status(decision.status).send(denialBody(decision, request.id));
   });
 }
+
+const USER_ASSERTION_PUBLIC_MESSAGE: Readonly<Record<401 | 403, string>> = {
+  401: "user assertion required or invalid",
+  403: "user assertion does not match this request",
+};
+
+/**
+ * ADR-060 §2.3/§2.6. `off` ⇒ لا شيء. `observe` ⇒ يتحقّقُ ويُسجِّلُ ولا يرفضُ أبداً.
+ * `enforce` ⇒ يرفضُ بـ401/403 ويُسجِّلُ السببَ الدقيقَ داخليّاً.
+ * السجلُّ لا يحملُ التأكيدَ نفسَهُ ولا أيَّ مفتاحٍ — المعرّفُ العامُّ وحدَهُ.
+ */
+async function applyUserAssertion(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  identity: Exclude<ServiceIdentityRouteIdentity, "open">,
+  principal: ServicePrincipal,
+  options: FastifyServiceIdentityOptions,
+  now: () => Date,
+): Promise<void> {
+  const config = options.userAssertion;
+  if (config === undefined || config.mode === "off") return;
+  const verdict = verifyUserAssertion(userAssertionFromHeaders(request.headers), {
+    publicKeys: config.publicKeys,
+    audience: options.audience,
+    onBehalfOfPublicId: principal.onBehalfOfPublicId,
+    callerService: principal.serviceName,
+    ...(identity.forwarders === undefined ? {} : { forwarders: identity.forwarders }),
+    ...(identity.actors === undefined ? {} : { actors: identity.actors }),
+    now: now(),
+    ...(config.skewSeconds === undefined ? {} : { skewSeconds: config.skewSeconds }),
+  });
+  const route = `${request.method} ${routeLabelOf(request)}`;
+  if (verdict.ok) {
+    request.endUser = { publicId: verdict.payload.sub, actorType: verdict.payload.act, via: verdict.payload.via };
+    request.log.info(
+      {
+        event: "user_assertion_outcome",
+        mode: config.mode,
+        outcome: "valid",
+        route,
+        sub: verdict.payload.sub,
+        act: verdict.payload.act,
+        via: verdict.payload.via,
+        caller: principal.serviceName,
+      },
+      "user assertion verified",
+    );
+    return;
+  }
+  const reason: UserAssertionFailure = verdict.reason;
+  request.log.warn(
+    { event: "user_assertion_outcome", mode: config.mode, outcome: "invalid", reason, route, caller: principal.serviceName },
+    config.mode === "enforce" ? "user assertion rejected" : "user assertion would be rejected (observe)",
+  );
+  if (config.mode !== "enforce") return;
+  const denial = userAssertionDenialOf(reason);
+  const body = { status: denial.status, code: denial.code, message: USER_ASSERTION_PUBLIC_MESSAGE[denial.status] };
+  await reply
+    .status(denial.status)
+    .send(
+      config.denialBody
+        ? config.denialBody(body, request.id)
+        : { error: { code: body.code, message: body.message }, trace_id: request.id },
+    );
+}
+

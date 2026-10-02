@@ -31,6 +31,7 @@ import type {
   OutboundMessageCommand,
 } from "@wasla/channel-core";
 import type { BotKind, ChannelName } from "@wasla/contracts-channel";
+import type { UserDelegation } from "@wasla/service-auth";
 
 /** The WASLA identity behind the conversation, once resolved. */
 export interface ConversationIdentity {
@@ -72,6 +73,13 @@ export interface ConversationEvent {
    * being asked for must fail, never guess.
    */
   resolveIdentity(): Promise<ConversationIdentity>;
+  /**
+   * ADR-060 · CLM-0440: تأكيدُ المستخدمِ النهائيِّ `wua1` لِمُرسِلِ هذا التحديثِ، مُصدَراً من
+   * `identity` لجمهورٍ مُسمّىً. **أفضلُ جهدٍ في P1**: يُعيدُ `null` إن تعذَّرَ (لا مُصدِرَ مُهيّأً،
+   * أو `identity` بلا مفتاحٍ، أو مستخدمٌ غيرُ مربوطٍ) ويُسجِّلُ السببَ — لأنَّ المُستقبِلينَ `off`.
+   * اختياريٌّ في النوعِ كي تبقى أحداثُ الاختبارِ القائمةُ صالحةً.
+   */
+  userAssertion?(audience: readonly string[]): Promise<UserDelegation | null>;
 }
 
 /** What a flow may answer with: text, optionally with the Mini App button. */

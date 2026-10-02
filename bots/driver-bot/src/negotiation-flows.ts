@@ -4,6 +4,7 @@
  * in the Mini App; inventing a number parser here would change the channel contract.
  */
 import type { ConversationEvent, ConversationHandler, ConversationReply } from "@wasla/bot-runtime";
+import type { UserDelegation } from "@wasla/service-auth";
 
 import type { DriverFlowsPort } from "./flows.js";
 import { DriverFlowError, DRIVER_FLOW_ERROR_TEXT, DRIVER_FLOW_FALLBACK_ERROR_TEXT } from "./flows.js";
@@ -31,10 +32,10 @@ export interface NegotiationRoundView {
   readonly state: NegotiationRoundState;
 }
 export interface DriverNegotiationsPort {
-  listThreads(input: { readonly driverPublicId: string; readonly traceId: string }): Promise<readonly NegotiationThreadView[]>;
-  listRounds(input: { readonly threadId: string; readonly traceId: string }): Promise<readonly NegotiationRoundView[]>;
-  accept(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "driver"; readonly idempotencyKey: string; readonly traceId: string }): Promise<void>;
-  reject(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "driver"; readonly closeThread: boolean; readonly idempotencyKey: string; readonly traceId: string }): Promise<void>;
+  listThreads(input: { readonly driverPublicId: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<readonly NegotiationThreadView[]>;
+  listRounds(input: { readonly threadId: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<readonly NegotiationRoundView[]>;
+  accept(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "driver"; readonly idempotencyKey: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<void>;
+  reject(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "driver"; readonly closeThread: boolean; readonly idempotencyKey: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<void>;
 }
 
 export const DRIVER_NEGOTIATION_TEXT = {
@@ -71,12 +72,24 @@ function renderThread({ thread, round }: ThreadWithRound): string {
   return lines.join("\n");
 }
 
-async function recentThreads(_flows: DriverFlowsPort, negotiations: DriverNegotiationsPort, event: ConversationEvent): Promise<ThreadWithRound[]> {
+/**
+ * ADR-060 · CLM-0440: تأكيدُ المستخدمِ من `identity` لِجمهورِ المفاوضاتِ — **يُمرَّرُ ولا يُصنَعُ**.
+ * أفضلُ جهدٍ في P1 (المُستقبِلُ `off`): غيابُهُ ⇒ نداءٌ كما كانَ. وتفويضٌ لا يطابقُ هويّةَ المُرسِلِ
+ * المحلولةَ يُسقَطُ ولا يُرسَلُ — البوتُ لا يُرسِلُ `obo` لشخصٍ غيرِ مُرسِلِ التحديثِ.
+ */
+export const NEGOTIATIONS_ASSERTION_AUDIENCE: readonly string[] = ["negotiations"];
+async function delegationOf(event: ConversationEvent): Promise<{ readonly delegation?: UserDelegation }> {
+  const delegation = (await event.userAssertion?.(NEGOTIATIONS_ASSERTION_AUDIENCE)) ?? null;
+  if (delegation === null) return {};
+  return delegation.publicId === (await event.resolveIdentity()).waslaPublicId ? { delegation } : {};
+}
+
+async function recentThreads(_flows: DriverFlowsPort, negotiations: DriverNegotiationsPort, event: ConversationEvent, delegated: { readonly delegation?: UserDelegation }): Promise<ThreadWithRound[]> {
   const identity = await event.resolveIdentity();
-  const threads = await negotiations.listThreads({ driverPublicId: identity.waslaPublicId, traceId: event.traceId });
+  const threads = await negotiations.listThreads({ driverPublicId: identity.waslaPublicId, traceId: event.traceId, ...delegated });
   return Promise.all(threads.map(async (thread) => ({
     thread,
-    round: currentRound(thread, await negotiations.listRounds({ threadId: thread.id, traceId: event.traceId })),
+    round: currentRound(thread, await negotiations.listRounds({ threadId: thread.id, traceId: event.traceId, ...delegated })),
   })));
 }
 
@@ -85,7 +98,8 @@ export function createDriverNegotiationConversationHandler(flows: DriverFlowsPor
     if (event.scope !== "private" || event.kind !== "command" || event.command === undefined) return null;
     if (![DRIVER_NEGOTIATIONS_COMMAND, DRIVER_ACCEPT_COMMAND, DRIVER_REJECT_COMMAND].includes(event.command)) return null;
     try {
-      const threads = await recentThreads(flows, negotiations, event);
+      const delegated = await delegationOf(event);
+      const threads = await recentThreads(flows, negotiations, event, delegated);
       if (event.command === DRIVER_NEGOTIATIONS_COMMAND) {
         if (threads.length === 0) return { text: DRIVER_NEGOTIATION_TEXT.noThreads, withMiniApp: true, step: "negotiations" };
         return { text: [DRIVER_NEGOTIATION_TEXT.header, ...threads.slice(0, DRIVER_NEGOTIATION_REPLY_LIMIT).map(renderThread), DRIVER_NEGOTIATION_TEXT.appHint].join("\n"), withMiniApp: true, step: "negotiations" };
@@ -96,8 +110,8 @@ export function createDriverNegotiationConversationHandler(flows: DriverFlowsPor
       const { thread, round } = selected;
       if (!round) throw new Error("pending negotiation selection without a round");
       const idempotencyKey = `bot-${event.command}-${event.channelUpdateId}`;
-      if (event.command === DRIVER_ACCEPT_COMMAND) await negotiations.accept({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "driver", idempotencyKey, traceId: event.traceId });
-      else await negotiations.reject({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "driver", closeThread: true, idempotencyKey, traceId: event.traceId });
+      if (event.command === DRIVER_ACCEPT_COMMAND) await negotiations.accept({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "driver", idempotencyKey, traceId: event.traceId, ...delegated });
+      else await negotiations.reject({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "driver", closeThread: true, idempotencyKey, traceId: event.traceId, ...delegated });
       return { text: event.command === DRIVER_ACCEPT_COMMAND ? DRIVER_NEGOTIATION_TEXT.accepted : DRIVER_NEGOTIATION_TEXT.rejected, withMiniApp: true, step: `negotiation:${event.command}` };
     } catch (error) {
       if (error instanceof DriverFlowError) return { text: DRIVER_FLOW_ERROR_TEXT[error.code] ?? DRIVER_FLOW_FALLBACK_ERROR_TEXT, step: `error:${event.command}` };

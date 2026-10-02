@@ -12,6 +12,7 @@
 /** Error classes (map to HTTP status, per errors.md). */
 export type IdentityErrorClass =
   | "validation_error" // 400
+  | "forbidden" // 403
   | "not_found" // 404
   | "conflict" // 409
   | "unprocessable" // 422
@@ -30,10 +31,15 @@ export type IdentityErrorCode =
   // جلساتُ البشر (M1-02 · ADR-019)
   | "IDENTITY_SESSION_REPLAY"
   | "IDENTITY_SESSION_NOT_FOUND"
+  // تأكيدُ المستخدمِ النهائيِّ (ADR-060 · CLM-0440)
+  | "IDENTITY_ASSERTION_INVALID_REQUEST"
+  | "IDENTITY_ASSERTION_FORBIDDEN"
+  | "IDENTITY_ASSERTION_UNAVAILABLE"
   | "IDENTITY_INTERNAL_ERROR";
 
 const HTTP_BY_CLASS: Record<IdentityErrorClass, number> = {
   validation_error: 400,
+  forbidden: 403,
   not_found: 404,
   conflict: 409,
   unprocessable: 422,
@@ -87,6 +93,11 @@ function classOf(code: IdentityErrorCode): IdentityErrorClass {
     case "IDENTITY_USERNAME_NO_CHANGE":
     case "IDENTITY_RECOVERY_METHOD_INVALID":
       return "unprocessable";
+    case "IDENTITY_ASSERTION_INVALID_REQUEST":
+      return "validation_error";
+    case "IDENTITY_ASSERTION_FORBIDDEN":
+      return "forbidden";
+    case "IDENTITY_ASSERTION_UNAVAILABLE":
     case "IDENTITY_INTERNAL_ERROR":
       return "service_unavailable";
   }

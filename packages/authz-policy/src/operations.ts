@@ -168,6 +168,8 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "identity", method: "POST", path: "/identity/users/:waslaPublicId/links", scopes: ["identity:link:write"] },
   { audience: "identity", method: "POST", path: "/identity/users/:waslaPublicId/recovery", scopes: ["identity:recovery:write"] },
   { audience: "identity", method: "GET", path: "/identity/users/:waslaPublicId/history", scopes: ["identity:history:read"] },
+  // ADR-060 · CLM-0440: إصدارُ تأكيدِ المستخدمِ النهائيِّ wua1 — للبوتاتِ الثلاثةِ وحدَها.
+  { audience: "identity", method: "POST", path: "/identity/assertions", scopes: ["identity:assertion:issue"] },
   // ── marketplace ───────────────────────────────────────────────
   { audience: "marketplace", method: "GET", path: "/categories", scopes: ["marketplace:category:read"] },
   { audience: "marketplace", method: "POST", path: "/stores", scopes: ["marketplace:store:write"] },

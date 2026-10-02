@@ -37,13 +37,15 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
   it("تسعٌ وأربعونَ ومئةُ عمليّةٍ على أربعةَ عشرَ حدّاً — مئةٌ وتسعَ عشرةَ قبلَ عمليّتَي حدِّ البحث (M1-04 · الموجةُ 9·10·11·12)", () => {
-    expect(ENFORCED_OPERATIONS).toHaveLength(157);
+    // ADR-060 · CLM-0440: +1 — `POST /identity/assertions` (كانت 157).
+    expect(ENFORCED_OPERATIONS).toHaveLength(158);
     expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(17);
   });
 
   it("مئةٌ واثنتانِ وعشرونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
     // تسعُ صلاحيّاتٍ لعشرِ عملياتٍ: قراءةُ القواعدِ يتقاسمُها مسارانِ.
-    expect(allEnforcedScopes()).toHaveLength(124);
+    // ADR-060 · CLM-0440: +1 — `identity:assertion:issue` (كانت 124).
+    expect(allEnforcedScopes()).toHaveLength(125);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -512,6 +514,8 @@ describe("قراءةُ أثرِ منحٍ قبلَ إعطائِه", () => {
 
   it("صلاحيّاتُ حدٍّ تُشتَقُّ من الجردِ لا تُكتَبُ ثانيةً", () => {
     expect(enforcedScopesAt("identity")).toEqual([
+      // ADR-060 · CLM-0440: إصدارُ تأكيدِ المستخدمِ النهائيِّ — يُضافُ ولا يُمحى ما قبلَهُ.
+      "identity:assertion:issue",
       "identity:history:read",
       "identity:link:write",
       "identity:recovery:write",

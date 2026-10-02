@@ -46,6 +46,11 @@ import { TelegramChannelAdapter, TelegramUpdateParser } from "@wasla/telegram-ad
 import type { BotConfig } from "./config.js";
 import { SingleBotRegistry } from "./config.js";
 import { CHANNEL_IDENTITY_SCOPES, HttpIdentityBootstrap } from "./identity-bootstrap.js";
+import {
+  CHANNEL_USER_ASSERTION_SCOPES,
+  HttpUserAssertionIssuer,
+  type UserAssertionIssuerPort,
+} from "./user-assertion.js";
 import { CryptoIdGenerator, SystemClock } from "./system.js";
 
 /** Assembled dependencies of one bot process, ready for `createBotApp`. */
@@ -60,6 +65,11 @@ export interface BotRuntime {
   readonly persistence: "postgres" | "memory";
   /** The groups this process operates — the same instance both bundles hold. */
   readonly groups: GroupRegistryPort;
+  /**
+   * ADR-060 · CLM-0440: مُصدِرُ تأكيدِ المستخدمِ (عبرَ `identity`). غائبٌ حينَ لا خدمةَ هويّةٍ
+   * مُهيّأةٌ — فيُعيدُ `event.userAssertion` قيمةَ `null`.
+   */
+  readonly userAssertions?: UserAssertionIssuerPort;
   /** Release owned resources (the connection pool). Safe to call twice. */
   close(): Promise<void>;
 }
@@ -77,6 +87,8 @@ export interface BuildBotRuntimeOptions {
   readonly channel?: ChannelPort;
   /** Overrides identity bootstrap (tests inject a fake). */
   readonly identity?: IdentityBootstrapPort;
+  /** Overrides the user-assertion issuer (ADR-060; tests inject a fake). */
+  readonly userAssertions?: UserAssertionIssuerPort;
   /** Overrides the group registry (tests declare rooms without the environment). */
   readonly groups?: GroupRegistryPort;
   /** Commands this bot answers; `start` is always included. */
@@ -173,6 +185,27 @@ export function buildBotRuntime(
         })
       : new UnconfiguredIdentityBootstrap());
 
+  // ADR-060 · CLM-0440: مُوقِّعٌ ثانٍ بصلاحيّةِ الإصدارِ وحدَها — لا يُوسَّعُ مُوقِّعُ `resolve`.
+  const userAssertions: UserAssertionIssuerPort | undefined =
+    options.userAssertions ??
+    (config.identityServiceUrl
+      ? new HttpUserAssertionIssuer({
+          baseUrl: config.identityServiceUrl,
+          signRequest: createServiceRequestSigner({
+            serviceName: `${config.bot}-bot`,
+            audience: "identity",
+            keys: keyRegistryFromEnv({
+              WASLA_SERVICE_AUTH_KEYS: config.serviceAuthKeys,
+              WASLA_SERVICE_AUTH_ACTIVE_KID: config.serviceAuthActiveKid,
+            }),
+            scopes: CHANNEL_USER_ASSERTION_SCOPES,
+          }),
+          ...(config.identityTimeoutMs === undefined
+            ? {}
+            : { timeoutMs: config.identityTimeoutMs }),
+        })
+      : undefined);
+
   const stores = options.stores ?? buildStoreSet(config);
 
   // One registry instance for both directions: the inbound side decides whether a
@@ -210,6 +243,7 @@ export function buildBotRuntime(
     launch: { registry },
     groups,
     identityDegraded: !identityConfigured,
+    ...(userAssertions === undefined ? {} : { userAssertions }),
     persistence: config.databaseUrl === undefined ? "memory" : "postgres",
     close: stores.close,
   };

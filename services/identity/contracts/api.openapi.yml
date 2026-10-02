@@ -30,6 +30,8 @@ tags:
     description: استرجاع الحساب عبر Wasla Public ID
   - name: History
     description: سجل تغييرات الهوية (Username/روابط)
+  - name: Assertions
+    description: تأكيد المستخدم النهائي wua1 (ADR-060 · CLM-0440)
 
 paths:
   /identity/resolve:
@@ -179,6 +181,43 @@ paths:
         '403':
           $ref: '#/components/responses/AuthForbidden'
 
+  /identity/assertions:
+    post:
+      tags: [Assertions]
+      summary: إصدار تأكيد المستخدم النهائي wua1 لهوية قناة قائمة
+      description: |
+        ADR-060 · CLM-0440 · RISK-0042. يُصدِر تأكيداً موقَّعاً بـ Ed25519 (المفتاح الخاص عند identity وحدها)
+        يشهد أن مستخدم القناة `telegram_user_id` هو `wasla_public_id`. **قراءة فقط**: لا يُنشئ مستخدماً
+        (مستخدم غير مربوط ⇒ 404). نوع الفاعل يتبع المنادي (customer-bot → customer، driver-bot → driver،
+        partner-bot → store_staff) والجمهور من قائمة مغلقة لكل فاعل. بلا مفتاح توقيع مُهيّأ ⇒ 503.
+        البوت يُمرِّر التأكيد في ترويسة `x-wasla-user-assertion` مع `obo` مساوٍ لـ `wasla_public_id`،
+        ولا يصنعه ولا يعدّله.
+      operationId: issueUserAssertion
+      security:
+        - ServiceAuth:
+            - identity:assertion:issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUserAssertionRequest'
+      responses:
+        '200':
+          description: تأكيد صادر
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueUserAssertionResponse'
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+
 components:
   securitySchemes:
     ServiceAuth:
@@ -254,6 +293,34 @@ components:
           enum: [customer_bot, driver_bot, partner_bot]
           description: مصدر الدخول (لأغراض Audit)
 
+    IssueUserAssertionRequest:
+      type: object
+      required: [telegram_user_id, actor_type, audience]
+      properties:
+        telegram_user_id: {type: integer, format: int64, minimum: 1}
+        actor_type:
+          type: string
+          enum: [customer, driver, store_staff]
+        audience:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: {type: string, pattern: '^[a-z][a-z0-9-]{1,39}$'}
+    IssueUserAssertionResponse:
+      type: object
+      required: [assertion, wasla_public_id, actor_type, audience, expires_at]
+      properties:
+        assertion:
+          type: string
+          description: "wua1.<payload>.<sig> — يُمرَّر كما هو ولا يُسجَّل"
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
+        actor_type:
+          type: string
+          enum: [customer, driver, store_staff]
+        audience:
+          type: array
+          items: {type: string}
+        expires_at: {type: string, format: date-time}
     ResolveIdentityResponse:
       type: object
       required: [wasla_public_id, internal_uuid, created]

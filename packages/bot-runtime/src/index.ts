@@ -43,6 +43,18 @@ export {
   type HttpIdentityBootstrapOptions,
 } from "./identity-bootstrap.js";
 
+// ADR-060 · CLM-0440 — طلبُ تأكيدِ المستخدمِ النهائيِّ من `identity` (البوتُ يُمرِّرُ ولا يُصدِرُ).
+export {
+  CHANNEL_USER_ASSERTION_SCOPES,
+  HttpUserAssertionIssuer,
+  USER_ASSERTION_ACTOR_BY_BOT,
+  USER_ASSERTION_ISSUE_PATH,
+  UserAssertionUnavailableError,
+  type HttpUserAssertionIssuerOptions,
+  type UserAssertionIssuerPort,
+  type UserAssertionRequest,
+} from "./user-assertion.js";
+
 export {
   DEFAULT_GROUP_LINK_LABEL,
   DEFAULT_GROUP_START_TEXT,

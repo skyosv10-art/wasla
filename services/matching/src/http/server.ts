@@ -31,6 +31,7 @@ import { createDirectRunner, PostgresMatchingRunner, type MatchingRunner } from 
 
 import { createMatchingApp, type MatchingHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 class SystemClock implements Clock {
   now(): string {
@@ -137,6 +138,8 @@ async function main(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "matching" });
     await app.listen({ port, host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

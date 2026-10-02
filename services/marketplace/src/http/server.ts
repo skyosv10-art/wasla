@@ -32,6 +32,7 @@ import { createMarketplaceDb } from "../db/client.js";
 import { MarketplaceUnitOfWork } from "../db/unit-of-work.js";
 import { createMarketplaceApp, type MarketplaceServices } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 /** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `MARKETPLACE_SERVICE_PORT` (= 8094). */
 function readPort(): number {
@@ -97,6 +98,8 @@ export async function startMarketplaceServer(): Promise<void> {
         void app.close().then(() => process.exit(0));
       });
     }
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "marketplace" });
     await app.listen({ port, host });
     return;
   }
@@ -138,6 +141,8 @@ export async function startMarketplaceServer(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "marketplace" });
     await app.listen({ port, host });
   } catch (error) {
     app.log.error(error);

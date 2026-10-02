@@ -324,6 +324,9 @@ describe("لا شبكةَ ولا قاعدةَ بيانات ولا نظامَ م�
       "@wasla/auth-sdk",
       "@wasla/contracts-subscription",
       "@wasla/observability",
+      // `@wasla/resilience` دخلت بقرارٍ موثَّقٍ (RISK-0058 · ADR-059 · CLM-0438): حارسُ الحوضِ
+      // وقاطعُ الدائرةِ وصحّةُ القاعدةِ الصادقةُ. حزمةُ ورقةٍ بلا تبعيّاتٍ، لا شبكةَ ولا ملفّات.
+      "@wasla/resilience",
       "@wasla/service-auth",
       "drizzle-orm",
       "fastify",

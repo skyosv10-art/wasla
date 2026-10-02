@@ -246,3 +246,18 @@ RISK-0058 tracks the fix.
 - `public` 120/120 tables, 38/38 rows; data RTO 471.1 s; first DB-backed service answer after 2.6 s.
 - auth, storage and vault: 0 rows at the source. They need separate setup: auth settings and keys, storage file bytes, and the vault root key.
 - **Still not proven:** production failover RTO including the Render repoint; RPO 5 min (ADR-058 exception).
+
+## Database failure containment (CLM-0438, 2026-10-02)
+
+The §7 "DB down" row is now wired as follows, per [ADR-059](../15-decisions/ADR-059-db-failure-containment.md):
+
+- **Pools:** every runtime pool is guarded, with connect 5 s, query 15 s, `error` listeners, and a breaker that opens after 5 failures with a 30 s cooldown and is reset by the probe.
+- **Health:** every health path answers 503 `x-wasla-database: down` while the database is down.
+- **Delivery:** keeps `500 DELIVERY_INTERNAL_ERROR` for a non-idempotent write. It is fast, and it does not say "retry".
+
+DR scenario 2 re-run (local): PASS 19/19, with recovery about 1 s after the DB returns ([evidence](../12-testing/ci-evidence/2026-10-02T180000Z-clm-0438-risk-0058-db-failure-containment/README.md)).
+
+DR environment: the replacement Supabase project `pvyuhjadrygqqdoczmnd` is kept for periodic DR drills only. It has no cutover, no Render link and no live use, and it is isolated from production `ppixaauyqoykrogwdxtv`.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

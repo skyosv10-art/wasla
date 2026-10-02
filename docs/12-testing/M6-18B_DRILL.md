@@ -193,3 +193,19 @@ Evidence: [`ci-evidence/2026-10-02T153600Z-clm-0436-m6-18b-dr-scenario2-replacem
 - Render repoint: not measured.
 
 Earlier sections are unchanged. Scenario 4 (`orders → billing` breaker) is subject to the same cause: no breaker is wired anywhere.
+
+## 8. Scenario 2 re-run after the RISK-0058 fix (CLM-0438, 2026-10-02)
+
+Evidence: [`ci-evidence/2026-10-02T180000Z-clm-0438-risk-0058-db-failure-containment/README.md`](ci-evidence/2026-10-02T180000Z-clm-0438-risk-0058-db-failure-containment/README.md). Decision: [ADR-059](../15-decisions/ADR-059-db-failure-containment.md). §7 stays as recorded, because it describes the code before the fix.
+
+The harness now fails closed on the §3 / ADR-059 criteria. Local result: **PASS, 19/19 checks.**
+
+- **Warm drop:** the process stays alive. Calls get 503 in ≤ 6 ms; health is 503.
+- **DB down:** the breaker opens after 5 failures, and calls 6–10 are rejected in 1–3 ms without touching the DB. Health is 503.
+- **Partition:** calls are bounded at about 5.0 s (connect timeout) and then 2 ms (breaker open). Health is 503 in 2.0 s.
+- **Recovery after the DB returns:** about 1.0 s with health traffic, and 30.2 s with none (half-open after the cooldown).
+- **Fleet:** 16/16 bootable services answer health 503 during the outage, none crash, and all are 200 again within 1.07 s.
+- **Partners:** excluded with the reason recorded (RISK-0059: it does not boot under enforced service identity).
+
+The CI verdict is recorded in the evidence README. **M6-18B stays `Blocked`:** the RPO is excepted only by ADR-058, and the failover RTO including Render is unmeasured.
+

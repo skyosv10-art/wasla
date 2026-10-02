@@ -42,6 +42,7 @@ import {
   InMemorySettlement,
 } from "../ports.js";
 import { createBillingApp } from "./app.js";
+import { attachDatabaseHealth, guardPgPool, withPgPoolDefaults } from "@wasla/resilience";
 
 /** مهلةُ ما بينَ دفعتَينِ للمُرحِّل — ثابتٌ لا متغيّرُ بيئة (لا ضبطَ يُحتاجُ الآن). */
 export const BILLING_RELAY_INTERVAL_MS = 5_000;
@@ -69,12 +70,17 @@ export async function buildBillingServer(): Promise<{
       publisher: new PostgresOutboxPublisher(pgPool),
       serviceIdentity: { keys, replayGuard },
     });
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/billing/health"], service: "billing" });
     await app.listen({ port, host: "0.0.0.0" });
 
     let relay: { loop: RelayLoopHandle; sourcePool: Pool } | null = null;
     const sourceUrl = process.env.BILLING_DELIVERY_EVENTS_DATABASE_URL;
     if (sourceUrl) {
-      const sourcePool = new pg.Pool({ connectionString: sourceUrl, max: 2 });
+      // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
+      const sourcePool = guardPgPool(new pg.Pool(withPgPoolDefaults({ connectionString: sourceUrl, max: 2 })), {
+        name: "billing-relay-source",
+      });
       const loop = startRelayLoop({
         deps: {
           events: new PostgresDeliveryEventSource(sourcePool),
@@ -110,6 +116,8 @@ export async function buildBillingServer(): Promise<{
     publisher: new InMemoryEventPublisher(),
     serviceIdentity: { keys, replayGuard },
   });
+  // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+  attachDatabaseHealth(app, { paths: ["/billing/health"], service: "billing" });
   await app.listen({ port, host: "0.0.0.0" });
   return { app, pool, relay: null };
 }

@@ -28,7 +28,8 @@
     "@wasla/auth-sdk": "workspace:*",
     "@wasla/authz-policy": "workspace:*",
     "@wasla/errors": "workspace:*",
-    "@wasla/config": "workspace:*"
+    "@wasla/config": "workspace:*",
+    "@wasla/resilience": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

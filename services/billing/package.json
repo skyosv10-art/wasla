@@ -27,7 +27,8 @@
     "fastify": "^5.12.5",
     "@wasla/service-auth": "workspace:*",
     "@wasla/outbox": "workspace:*",
-    "@wasla/config": "workspace:*"
+    "@wasla/config": "workspace:*",
+    "@wasla/resilience": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

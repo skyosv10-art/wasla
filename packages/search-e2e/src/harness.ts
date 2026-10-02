@@ -227,7 +227,9 @@ function searchSigner() {
 export async function startGate(): Promise<GateContext> {
   const connectionString = process.env.DATABASE_URL!;
   const { default: pg } = await import("pg");
-  const pool = new pg.Pool({ connectionString, max: 8 });
+  // Same composition as services/search/src/http/server.ts (RISK-0058 · ADR-059).
+  const { guardPgPool, withPgPoolDefaults } = await import("@wasla/resilience");
+  const pool = guardPgPool(new pg.Pool(withPgPoolDefaults({ connectionString, max: 8 })), { name: "search-e2e" });
 
   await pool.query(`DROP TABLE IF EXISTS ${TABLES.join(", ")} CASCADE`);
   await pool.query(OUTBOX_DDL);

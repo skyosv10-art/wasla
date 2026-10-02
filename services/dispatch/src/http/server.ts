@@ -25,6 +25,7 @@ import { createDirectRunner, PostgresDispatchRunner, type DispatchRunner } from 
 
 import { createDispatchApp, type DispatchHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 class SystemClock implements Clock {
   now(): string {
@@ -165,6 +166,8 @@ async function main(): Promise<void> {
     process.once(signal, () => { void app.close().then(() => process.exit(0)); });
   }
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "dispatch" });
     await app.listen({ port: resolveDispatchPort(process.env), host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);

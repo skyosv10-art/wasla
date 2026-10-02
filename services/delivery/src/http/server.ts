@@ -73,6 +73,7 @@ import {
 import type { DependencyObservationPort } from "../domain/dependency-probe.js";
 import type { InventoryReservationPort, StoreOrderCatalogPort } from "../ports.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth, guardPgPool, withPgPoolDefaults } from "@wasla/resilience";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PORT = readPortEnv(process.env, "PORT", 8097);
@@ -184,7 +185,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: DATABASE_URL });
+  // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
+  const pool = guardPgPool(new Pool(withPgPoolDefaults({ connectionString: DATABASE_URL })), { name: "delivery" });
   // حياةُ مفتاحِ التماثُلِ تُحلُّ هنا في جِذعِ التركيبِ لا في المخزنِ: قيمةٌ خاطئةٌ
   // تُوقِفُ الإقلاعَ برسالةٍ تُسمّي المتغيّرَ، ولا تُكتشَفُ في أوّلِ كتابةٍ
   // (`domain/idempotency.ts` يشرحُ لِمَ الفشلُ صائحٌ هنا ومُهمَلٌ في المَهَلِ).
@@ -261,6 +263,8 @@ async function main(): Promise<void> {
   addMetricsEndpoint(fastify, metrics);
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(fastify, { paths: ["/delivery/health", "/health"], service: "delivery" });
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
     // يُطبَعُ عندَ الإقلاعِ لأنَّ «أيُّ تركيبٍ يعملُ الآنَ؟» أوّلُ سؤالٍ في أيِّ
     // حادثةٍ، وقراءتُهُ من السجلِّ أسرعُ من استنتاجِهِ من سلوكِ المسارات.

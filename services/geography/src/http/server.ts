@@ -36,6 +36,7 @@ import {
 import type { IdentityLookupPort } from "../ports.js";
 import type { UseCaseDeps } from "../use-cases/deps.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 function buildIdentityLookup(): IdentityLookupPort {
   const baseUrl = process.env.IDENTITY_SERVICE_URL;
@@ -116,6 +117,8 @@ async function main(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "geography" });
     await app.listen({ port, host: "0.0.0.0" });
   } catch (err) {
     stopTracing();

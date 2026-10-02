@@ -51,6 +51,7 @@ import {
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createNegotiationApp, type NegotiationHealthDescriptor } from "./app.js";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 interface Wiring {
   runner: NegotiationRunner;
@@ -130,6 +131,8 @@ async function main(): Promise<void> {
     });
   }
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "negotiations" });
     await app.listen({
       port: readPortEnv(process.env, "PORT", NEGOTIATION_SERVICE_PORT),
       host: "0.0.0.0",

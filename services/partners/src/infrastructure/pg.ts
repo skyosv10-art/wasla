@@ -6,6 +6,7 @@
  */
 
 import { Pool } from "pg";
+import { guardPgPool, withPgPoolDefaults } from "@wasla/resilience";
 
 export type { Pool, PoolClient } from "pg";
 
@@ -14,7 +15,10 @@ export function createPartnersPool(): Pool {
   if (!connectionString) {
     throw new Error("PARTNERS_DATABASE_URL is required to start the partners service");
   }
-  return new Pool({ connectionString, max: 10, idleTimeoutMillis: 30000 });
+  // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
+  return guardPgPool(new Pool(withPgPoolDefaults({ connectionString, max: 10, idleTimeoutMillis: 30000 })), {
+    name: "partners",
+  });
 }
 
 /**

@@ -7981,3 +7981,30 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **Not done:** no service code changed. RISK-0042 stays `open`. The remaining 47 operations are UNKNOWN.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Ledger:** after PR #584 merged (main `6d417c5`), this branch merged origin/main and releases CLM-0436; branch `feat/clm-0436-m6-18b-dr-execution` deleted.
+
+## CLM-0438 · M6-18B — RISK-0058 fix: database failure containment, then scenario 2 re-run
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0438` · **Branch:** `fix/clm-0438-risk-0058-db-failure-containment` · **Date:** 2026-10-02
+- **Before:** `find-existing-work.sh RISK-0058` and `circuit breaker` show no Active claim. The owner approved this separate claim on 2026-10-02.
+- **Done:**
+  - `packages/resilience/src/pg-guard.ts`: `withPgPoolDefaults`, `guardPgPool`, `DbUnavailableError` and `attachDatabaseHealth` (ADR-059).
+  - Wired into every runtime pool: 17 services, plus `channel-postgres`, `service-auth` and `search-e2e`.
+  - Health 503 on every service health path.
+  - Tests: 18 new resilience tests and 2 billing composition tests with a real `pg.Pool`. All service suites pass.
+- **Scenario 2 re-run:** the harness now fails closed, and E4 (fleet) is new. Local result: PASS 19/19.
+  - Warm drop: no crash, 503s answered in ≤ 6 ms.
+  - Breaker: rejects in 1–3 ms after 5 failures.
+  - Partition: bounded at about 5 s.
+  - Health: 503 during the outage, 200 again about 1 s after the DB returns.
+  - Cooldown-only recovery: 30.2 s.
+  - Fleet: all 16 services recover within 1.07 s.
+- **Found, not fixed:** RISK-0059, partners does not boot under enforced service identity. It is an auth change for its own PR.
+- **DR environment:** `pvyuhjadrygqqdoczmnd` is recorded as DR-only and isolated from production.
+- **Not done:**
+  - RISK-0058 is not closed: it is `mitigating` until the CI evidence.
+  - M6-18B stays `Blocked`.
+  - ADR-052 and ADR-058 are unchanged; RISK-0055 stays `mitigating`.
+  - No PITR and no production test.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Ledger:** releases CLM-0437 (PR #585 merged → main `2457c55`). Its branch is deleted after this release reaches main.
+- **CI:** `dr-replacement-restore.yml` run 37044898119 succeeded. `scenario2` VERDICT PASS 19/19, and `replacement` PASS with a data RTO of 437.8 s and a first DB answer at 2.7 s. The env registry gained `WASLA_PG_CONNECT_TIMEOUT_MS` and `WASLA_PG_QUERY_TIMEOUT_MS` (governance check 18), and the artifacts were regenerated. Branch `fix/clm-0437-risk-0042-wave-2` was deleted (PR #585 merged; governance check 23).

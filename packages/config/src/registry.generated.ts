@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 83 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 85 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "BILLING_DATABASE_URL",
@@ -745,6 +745,26 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M3-01",
   },
   {
+    name: "WASLA_PG_CONNECT_TIMEOUT_MS",
+    type: "positive_int",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime", "test"],
+    readerCount: 2,
+    ownerItem: "M6-18B",
+  },
+  {
+    name: "WASLA_PG_QUERY_TIMEOUT_MS",
+    type: "positive_int",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime", "test"],
+    readerCount: 1,
+    ownerItem: "M6-18B",
+  },
+  {
     name: "WASLA_SERVICE_AUTH_ACTIVE_KID",
     type: "string",
     required: "conditional",
@@ -939,6 +959,8 @@ export const ENV_VAR_NAMES = [
   "SUPPORT_SERVICE_PORT",
   "VITE_API_BASE_URL",
   "VITE_E2E",
+  "WASLA_PG_CONNECT_TIMEOUT_MS",
+  "WASLA_PG_QUERY_TIMEOUT_MS",
   "WASLA_SERVICE_AUTH_ACTIVE_KID",
   "WASLA_SERVICE_AUTH_KEYS",
   "WASLA_SERVICE_TOKEN_REPLAY_MODE",

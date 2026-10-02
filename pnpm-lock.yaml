@@ -412,6 +412,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../resilience
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.0)
@@ -1008,6 +1011,10 @@ importers:
         version: 3.2.7(@types/node@20.19.43)(jsdom@25.0.1)(tsx@4.23.12)
 
   packages/search-e2e:
+    dependencies:
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../resilience
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -1042,6 +1049,9 @@ importers:
       '@wasla/errors':
         specifier: workspace:*
         version: link:../errors
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../resilience
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -1135,6 +1145,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1175,6 +1188,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1218,6 +1234,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1264,6 +1283,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1310,6 +1332,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1359,6 +1384,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1405,6 +1433,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1454,6 +1485,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1494,6 +1528,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1540,6 +1577,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1586,6 +1626,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1651,6 +1694,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1691,6 +1737,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1731,6 +1780,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1777,6 +1829,9 @@ importers:
       '@wasla/outbox':
         specifier: workspace:*
         version: link:../../packages/outbox
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1817,6 +1872,9 @@ importers:
       '@wasla/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth
@@ -1854,6 +1912,9 @@ importers:
       '@wasla/contracts-support':
         specifier: workspace:*
         version: link:../../packages/contracts/support
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../../packages/resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../../packages/service-auth

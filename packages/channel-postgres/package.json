@@ -24,7 +24,8 @@
     "@wasla/contracts-channel": "workspace:*",
     "@wasla/outbox": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "@wasla/resilience": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

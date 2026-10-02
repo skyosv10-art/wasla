@@ -1889,6 +1889,50 @@
       "note_ar": "تُمرَّرُ عبرَ سطرِ الأوامرِ في webServer في Playwright، ويُقرأُها main.tsx عبرَ import.meta.env. تُزالُ بالكاملِ من حزمةِ الإنتاجِ عندَ غيابِها."
     },
     {
+      "name": "WASLA_PG_CONNECT_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "مهلةُ إنشاءِ اتّصالٍ بقاعدةِ البياناتِ لكلِّ حوضٍ محروسٍ بالمللي ثانية (الافتراضُ 5000).",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "packages/resilience/src/pg-guard.ts",
+          "mode": "indirect_literal"
+        },
+        {
+          "file": "services/billing/src/__tests__/db-failure-containment.test.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ `envMs(env, \"<الاسم>\", …)` في `withPgPoolDefaults` (ADR-059 · RISK-0058 · CLM-0438)، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ. الافتراضُ في `PG_GUARD_DEFAULTS`، وقيمةٌ غيرُ صالحةٍ تُرفَضُ."
+    },
+    {
+      "name": "WASLA_PG_QUERY_TIMEOUT_MS",
+      "type": "positive_int",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "مهلةُ الاستعلامِ من جهةِ العميلِ لكلِّ حوضٍ محروسٍ بالمللي ثانية (الافتراضُ 15000).",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "packages/resilience/src/pg-guard.ts",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ `envMs(env, \"<الاسم>\", …)` في `withPgPoolDefaults` (ADR-059 · RISK-0058 · CLM-0438)، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ. الافتراضُ في `PG_GUARD_DEFAULTS`، وقيمةٌ غيرُ صالحةٍ تُرفَضُ."
+    },
+    {
       "name": "WASLA_SERVICE_AUTH_ACTIVE_KID",
       "type": "string",
       "required": "conditional",
@@ -2143,5 +2187,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 83
+  "total": 85
 }

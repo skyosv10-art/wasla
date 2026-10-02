@@ -28,6 +28,7 @@ import { SubscriptionService } from "../app/subscriptions.js";
 import { systemClock, uuidIdGenerator } from "../app/runtime.js";
 import { createSubscriptionApp, type SubscriptionAppServices } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
+import { attachDatabaseHealth } from "@wasla/resilience";
 
 /** المنفذُ من `PORT` أوّلاً (Render) ثمَّ `SUBSCRIPTION_SERVICE_PORT` (= 8093). */
 function readPort(): number {
@@ -66,6 +67,8 @@ export async function startSubscriptionServer(): Promise<void> {
         void app.close().then(() => process.exit(0));
       });
     }
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "subscriptions" });
     await app.listen({ port, host });
     return;
   }
@@ -107,6 +110,8 @@ export async function startSubscriptionServer(): Promise<void> {
   }
 
   try {
+    // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
+    attachDatabaseHealth(app, { paths: ["/health"], service: "subscriptions" });
     await app.listen({ port, host });
   } catch (error) {
     app.log.error(error);

@@ -61,3 +61,29 @@ The measured parts total about 105 s, against T1's 15 min. End-to-end RTO for lo
   - (b) DR scenarios 2 and 5 (fault injection on the only live DB) and an end-to-end restore into a real replacement project: both need an owner decision.
 - **RISK-0055 stays `mitigating`.** It is not closed: the RPO condition is unmet. **M6-18B stays `Blocked`.**
 - **Separate operational debt (not RISK-0056):** RISK-0057, the 3 bots have no `IDENTITY_SERVICE_URL` (`/health` `degraded`). Not changed in this work.
+
+## 6. What the free path proves, and what it does not
+| proves (measured) | does NOT prove |
+|---|---|
+| recovery from the **stored** artifact (not the runner that made it) | PITR / WAL-based recovery |
+| integrity verification: manifest + sha256 of the ciphertext and of the dump | RPO = 5 min (measured worst case **10.21 h**, median 5.21 h) |
+| fail-closed restore (`--exit-on-error --single-transaction`; any failed stage stops it) | a full restore into a real replacement Supabase project (`auth`, `storage`, `vault`, secrets, Render repoint end to end) |
+| negative-control rejection (tampered ciphertext refused at `stage=cipher`) | a guaranteed 6 h RPO: cron asks for 6 h, while measured gaps reach 10.21 h |
+| measured local data-restore RTO 7.3–7.9 s (isolated postgres:17, schema `public`) | |
+
+**RPO statement (fixed):** worst 10.21 h · median 5.21 h · ADR-052 target 5 min → **target not met**.
+
+## 7. Owner Gate — M6-18B (open, Program Owner only)
+**Decision 1 (RPO), choose one:**
+- **A.** Provide PITR, or an equivalent WAL-based solution that meets the 5 min target (paid; outside the current zero budget).
+- **B.** A formal Program Owner decision to accept a longer RPO, with an amendment to ADR-052.
+
+**Decision 2 (DR scope), independent of decision 1:**
+- Is DR scenario 2 (fault injection) allowed on the live production database `ppixaauyqoykrogwdxtv`?
+- Is a full-restore test into a real replacement Supabase project allowed?
+
+**Not done without owner approval:** live DB fault injection · full restore into a replacement project · any ADR-052 change · any RISK-0055 status or target change · closing M6-18B.
+Until then **M6-18B = Blocked** and **RISK-0055 = mitigating**.
+
+## 8. RISK-0057 (independent)
+The 3 bots (`wasla-customer-bot`, `wasla-driver-bot`, `wasla-partner-bot`) have no `IDENTITY_SERVICE_URL` on Render (measured 2026-10-02), so `/health` reports `degraded`. This is a separate operational debt: it is not linked to RISK-0056 and not changed under CLM-0430. A fix needs its own claim.

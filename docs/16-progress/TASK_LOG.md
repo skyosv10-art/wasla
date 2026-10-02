@@ -7932,3 +7932,32 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - **Not done:** 82 operations stay UNKNOWN (not read in this wave). RISK-0042 stays `open`. No runtime enforcement changed.
 - **Next:** wave 2 (negotiations · matching · reputation · subscriptions · marketplace reads).
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0436 · M6-18B — DR scenario 2 + full replacement-project restore
+
+- **Work Item(s):** M6-18B · **Claim:** `CLM-0436` · **Branch:** `feat/clm-0436-m6-18b-dr-execution` · **Date:** 2026-10-02
+- **Owner approval:** given in advance (2026-10-02) for DR scenario 2 and for a restore into a replacement Supabase project.
+- **Pre-checks:**
+  - PR #582 merged → main `e6cd264`, WASLA CI success.
+  - ADR-058 is on main: review 2026-10-13, expiry 2026-11-02.
+  - CLM-0434 and CLM-0435 are released, and their branches deleted.
+- **Scenario 2 (run `37028089688`, job `scenario2`, plus a local run): FAIL against `M6-18B_DRILL.md` §3.**
+  - Warm DB drop: billing exits after 17 ms.
+  - DB down: 503 with no breaker.
+  - Partition: calls hang until the 15 s client timeout.
+  - `/health`: 200 throughout.
+  - Cause in code: no service imports `@wasla/resilience`; pg pools in 17 services and 3 packages have no `'error'` listener and no connect timeout.
+  - Opened **RISK-0058** (high).
+- **Replacement restore (job `replacement`): PASS.**
+  - Project `pvyuhjadrygqqdoczmnd` created in the free organisation ($0).
+  - Restore role `dr_restore`; only its SCRAM verifier was sent, and the URL lives only in the secret `DR_REPLACEMENT_DB_URL`.
+  - Artifact `db-backup-20261002T114023Z` → 120/120 tables, 38/38 rows. Data RTO 471.1 s.
+  - Billing on the replacement gave its first DB-backed answer after 2.6 s.
+  - auth/storage/vault: 0 rows at the source, so the data restore was not exercised. Separate setup is documented.
+- **Not touched:** production, Render, migrations, RISK-0056, ADR-052. RISK-0055 stays `mitigating`.
+- **M6-18B stays `Blocked`:** RISK-0058, the unmet RPO, and the unmeasured Render failover RTO.
+- **Next:** remediate RISK-0058 under its own claim, then re-run scenario 2.
+- تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+- **Baseline regenerated (written decision):** `BASELINE.json` `static.risks_not_closed` goes 19 → 20 because RISK-0058 was opened, so this is a real open risk, not a regression hidden. The fingerprint was recomputed with `baseline_canon.fingerprint` (`sha256:cf3e9494…`). CI governance-guard check 11 caught the mismatch on PR #584. تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

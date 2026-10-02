@@ -4,6 +4,7 @@
  * in the Mini App; inventing a number parser here would change the channel contract.
  */
 import type { ConversationEvent, ConversationHandler, ConversationReply } from "@wasla/bot-runtime";
+import type { UserDelegation } from "@wasla/service-auth";
 
 import type { CustomerFlowsPort } from "./flows.js";
 import { CustomerFlowError, FLOW_ERROR_TEXT, FLOW_FALLBACK_ERROR_TEXT } from "./flows.js";
@@ -32,10 +33,10 @@ export interface NegotiationRoundView {
   readonly state: NegotiationRoundState;
 }
 export interface CustomerNegotiationsPort {
-  listThreads(input: { readonly orderPublicId: string; readonly traceId: string }): Promise<readonly NegotiationThreadView[]>;
-  listRounds(input: { readonly threadId: string; readonly traceId: string }): Promise<readonly NegotiationRoundView[]>;
-  accept(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "customer"; readonly idempotencyKey: string; readonly traceId: string }): Promise<void>;
-  reject(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "customer"; readonly closeThread: boolean; readonly idempotencyKey: string; readonly traceId: string }): Promise<void>;
+  listThreads(input: { readonly orderPublicId: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<readonly NegotiationThreadView[]>;
+  listRounds(input: { readonly threadId: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<readonly NegotiationRoundView[]>;
+  accept(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "customer"; readonly idempotencyKey: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<void>;
+  reject(input: { readonly threadId: string; readonly expectedRoundNo: number; readonly actingParty: "customer"; readonly closeThread: boolean; readonly idempotencyKey: string; readonly traceId: string; readonly delegation?: UserDelegation }): Promise<void>;
 }
 
 export const CUSTOMER_NEGOTIATION_TEXT = {
@@ -72,12 +73,24 @@ function renderThread({ thread, round }: ThreadWithRound): string {
   return lines.join("\n");
 }
 
-async function recentThreads(flows: CustomerFlowsPort, negotiations: CustomerNegotiationsPort, event: ConversationEvent): Promise<ThreadWithRound[]> {
+/**
+ * ADR-060 · CLM-0440: تأكيدُ المستخدمِ من `identity` لِجمهورِ المفاوضاتِ — **يُمرَّرُ ولا يُصنَعُ**.
+ * أفضلُ جهدٍ في P1 (المُستقبِلُ `off`): غيابُهُ ⇒ نداءٌ كما كانَ. وتفويضٌ لا يطابقُ هويّةَ المُرسِلِ
+ * المحلولةَ يُسقَطُ ولا يُرسَلُ — البوتُ لا يُرسِلُ `obo` لشخصٍ غيرِ مُرسِلِ التحديثِ.
+ */
+export const NEGOTIATIONS_ASSERTION_AUDIENCE: readonly string[] = ["negotiations"];
+async function delegationOf(event: ConversationEvent): Promise<{ readonly delegation?: UserDelegation }> {
+  const delegation = (await event.userAssertion?.(NEGOTIATIONS_ASSERTION_AUDIENCE)) ?? null;
+  if (delegation === null) return {};
+  return delegation.publicId === (await event.resolveIdentity()).waslaPublicId ? { delegation } : {};
+}
+
+async function recentThreads(flows: CustomerFlowsPort, negotiations: CustomerNegotiationsPort, event: ConversationEvent, delegated: { readonly delegation?: UserDelegation }): Promise<ThreadWithRound[]> {
   // Three order reads bound the fan-out: without it a chat command becomes a request storm.
   const orders = await flows.listRecentOrderRequests({ waslaPublicId: (await event.resolveIdentity()).waslaPublicId, limit: CUSTOMER_NEGOTIATION_ORDER_LIMIT });
   const orderIds = orders.flatMap((order) => order.orderPublicId === null ? [] : [order.orderPublicId]).slice(0, CUSTOMER_NEGOTIATION_ORDER_LIMIT);
-  const threads = (await Promise.all(orderIds.map((orderPublicId) => negotiations.listThreads({ orderPublicId, traceId: event.traceId })))).flat();
-  return Promise.all(threads.map(async (thread) => ({ thread, round: currentRound(thread, await negotiations.listRounds({ threadId: thread.id, traceId: event.traceId })) })));
+  const threads = (await Promise.all(orderIds.map((orderPublicId) => negotiations.listThreads({ orderPublicId, traceId: event.traceId, ...delegated })))).flat();
+  return Promise.all(threads.map(async (thread) => ({ thread, round: currentRound(thread, await negotiations.listRounds({ threadId: thread.id, traceId: event.traceId, ...delegated })) })));
 }
 
 export function createCustomerNegotiationConversationHandler(flows: CustomerFlowsPort, negotiations: CustomerNegotiationsPort): ConversationHandler {
@@ -85,7 +98,8 @@ export function createCustomerNegotiationConversationHandler(flows: CustomerFlow
     if (event.scope !== "private" || event.kind !== "command" || event.command === undefined) return null;
     if (![CUSTOMER_NEGOTIATIONS_COMMAND, CUSTOMER_ACCEPT_COMMAND, CUSTOMER_REJECT_COMMAND].includes(event.command)) return null;
     try {
-      const threads = await recentThreads(flows, negotiations, event);
+      const delegated = await delegationOf(event);
+      const threads = await recentThreads(flows, negotiations, event, delegated);
       if (event.command === CUSTOMER_NEGOTIATIONS_COMMAND) {
         if (threads.length === 0) return { text: CUSTOMER_NEGOTIATION_TEXT.noThreads, withMiniApp: true, step: "negotiations" };
         return { text: [CUSTOMER_NEGOTIATION_TEXT.header, ...threads.slice(0, CUSTOMER_NEGOTIATION_REPLY_LIMIT).map(renderThread), CUSTOMER_NEGOTIATION_TEXT.appHint].join("\n"), withMiniApp: true, step: "negotiations" };
@@ -96,8 +110,8 @@ export function createCustomerNegotiationConversationHandler(flows: CustomerFlow
       const { thread, round } = selected;
       if (!round) throw new Error("pending negotiation selection without a round");
       const idempotencyKey = `bot-${event.command}-${event.channelUpdateId}`;
-      if (event.command === CUSTOMER_ACCEPT_COMMAND) await negotiations.accept({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "customer", idempotencyKey, traceId: event.traceId });
-      else await negotiations.reject({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "customer", closeThread: true, idempotencyKey, traceId: event.traceId });
+      if (event.command === CUSTOMER_ACCEPT_COMMAND) await negotiations.accept({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "customer", idempotencyKey, traceId: event.traceId, ...delegated });
+      else await negotiations.reject({ threadId: thread.id, expectedRoundNo: round.roundNo, actingParty: "customer", closeThread: true, idempotencyKey, traceId: event.traceId, ...delegated });
       return { text: event.command === CUSTOMER_ACCEPT_COMMAND ? CUSTOMER_NEGOTIATION_TEXT.accepted : CUSTOMER_NEGOTIATION_TEXT.rejected, withMiniApp: true, step: `negotiation:${event.command}` };
     } catch (error) {
       if (error instanceof CustomerFlowError) return { text: FLOW_ERROR_TEXT[error.code] ?? FLOW_FALLBACK_ERROR_TEXT, step: `error:${event.command}` };

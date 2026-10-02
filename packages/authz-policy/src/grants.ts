@@ -164,10 +164,10 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
   "customer-bot": [
     {
       audience: "identity",
-      scopes: ["identity:resolve:write", "identity:user:read"],
+      scopes: ["identity:resolve:write", "identity:user:read", "identity:assertion:issue"],
       reason:
-        "إنشاءُ هويّةِ قناةٍ عندَ أوّلِ رسالةٍ ثمَّ قراءتُها — واتّحادُ مُوقِّعَينِ (تمهيدُ الهويّةِ في `bot-runtime` · بحثُ العميلِ في نواةِ البوت).",
-      evidence: ["CHANNEL_IDENTITY_SCOPES", "CUSTOMERS_IDENTITY_SCOPES"],
+        "إنشاءُ هويّةِ قناةٍ عندَ أوّلِ رسالةٍ ثمَّ قراءتُها — واتّحادُ مُوقِّعَينِ (تمهيدُ الهويّةِ في `bot-runtime` · بحثُ العميلِ في نواةِ البوت). وطلبُ تأكيدِ `wua1` لمستخدمِ القناةِ القائمِ (ADR-060 · CLM-0440) — يُمرَّرُ ولا يُصنَعُ.",
+      evidence: ["CHANNEL_IDENTITY_SCOPES", "CUSTOMERS_IDENTITY_SCOPES", "CHANNEL_USER_ASSERTION_SCOPES"],
     },
     {
       audience: "geography",
@@ -186,9 +186,9 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
   "driver-bot": [
     {
       audience: "identity",
-      scopes: ["identity:resolve:write"],
-      reason: "إنشاءُ هويّةِ قناةٍ للسائقِ عندَ أوّلِ رسالةٍ.",
-      evidence: ["CHANNEL_IDENTITY_SCOPES"],
+      scopes: ["identity:resolve:write", "identity:assertion:issue"],
+      reason: "إنشاءُ هويّةِ قناةٍ للسائقِ عندَ أوّلِ رسالةٍ، وطلبُ تأكيدِ `wua1` لهُ (ADR-060 · CLM-0440).",
+      evidence: ["CHANNEL_IDENTITY_SCOPES", "CHANNEL_USER_ASSERTION_SCOPES"],
     },
     {
       audience: "negotiations",
@@ -200,9 +200,9 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
   "partner-bot": [
     {
       audience: "identity",
-      scopes: ["identity:resolve:write"],
-      reason: "إنشاءُ هويّةِ قناةٍ للشريكِ عندَ أوّلِ رسالةٍ.",
-      evidence: ["CHANNEL_IDENTITY_SCOPES"],
+      scopes: ["identity:resolve:write", "identity:assertion:issue"],
+      reason: "إنشاءُ هويّةِ قناةٍ للشريكِ عندَ أوّلِ رسالةٍ، وطلبُ تأكيدِ `wua1` لهُ (ADR-060 · CLM-0440).",
+      evidence: ["CHANNEL_IDENTITY_SCOPES", "CHANNEL_USER_ASSERTION_SCOPES"],
     },
   ],
   // مُجدوِلُ النبضاتِ الخارجيُّ (G8 · M2-09A · CLM-0330): وظيفةُ Render Cron تُشغِّلُ

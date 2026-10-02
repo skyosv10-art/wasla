@@ -10,6 +10,7 @@
  * needs no port and no network.
  */
 
+import type { UserAssertionIssuerPort } from "../user-assertion.js";
 import {
   FakeIdentityBootstrap,
   FixedClock,
@@ -117,6 +118,8 @@ export interface HarnessOptions {
   readonly onConversation?: ConversationHandler;
   /** Commands this bot answers; `start` only when omitted. */
   readonly supportedCommands?: readonly string[];
+  /** ADR-060 · CLM-0440: a user-assertion issuer, as the runtime would wire one. */
+  readonly userAssertions?: UserAssertionIssuerPort;
 }
 
 /** Build a bot app serving exactly one bot. */
@@ -155,6 +158,7 @@ export function harnessFor(bot: BotKind, options: HarnessOptions = {}): Harness 
         groups,
       },
       launch: { registry: new StaticMiniAppRegistry({ [bot]: presence }) },
+      ...(options.userAssertions === undefined ? {} : { userAssertions: options.userAssertions }),
     },
     serviceIdentity: createTestServiceIdentity(),
     webhookSecret: options.withoutSecret ? undefined : SECRET,

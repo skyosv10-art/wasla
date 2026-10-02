@@ -24,6 +24,11 @@ import { getUser } from "../use-cases/get-user.js";
 import { addIdentityLink } from "../use-cases/add-identity-link.js";
 import { startRecovery } from "../use-cases/start-recovery.js";
 import { getIdentityHistory } from "../use-cases/get-identity-history.js";
+import {
+  issueUserAssertion,
+  type IssueUserAssertionRequest,
+} from "../use-cases/issue-user-assertion.js";
+import type { UserAssertionSigningKey } from "@wasla/service-auth/user-assertion";
 
 import { sendIdentityError } from "./errors.js";
 import {
@@ -43,6 +48,15 @@ export interface CreateIdentityAppOptions {
    * تطبيقٍ له بلا هويّةِ خدمةٍ **لا يُترجَمُ** — والنسيانُ لا يكونُ صامتاً.
    */
   serviceIdentity: IdentityServiceIdentityOptions;
+  /**
+   * ADR-060 · CLM-0440: مفتاحُ Ed25519 الخاصُّ لإصدارِ `wua1`. غيابُهُ ⇒ `POST /identity/assertions`
+   * يُجيبُ 503 ولا يُصدِرُ شيئاً — وهو الحالُ في الإنتاجِ حتّى قرارِ P3.
+   */
+  userAssertion?: {
+    readonly signingKey: UserAssertionSigningKey | null;
+    readonly now?: () => Date;
+    readonly ttlSeconds?: number;
+  };
 }
 
 /** مسار مفتوح بتصنيف صريح — لا استثناء صامت. */
@@ -127,6 +141,40 @@ export function createIdentityApp(
         field: query.field,
       });
       return reply.status(200).send(history);
+    },
+  );
+
+  // POST /identity/assertions — إصدارُ تأكيدِ المستخدمِ النهائيِّ (ADR-060 · CLM-0440).
+  // قراءةٌ فقط: لا إنشاءَ مستخدمٍ. والسجلُّ يحملُ المعرّفَ العامَّ وحدَهُ — لا التأكيدَ ولا معرّفَ القناةِ.
+  app.post(
+    "/identity/assertions",
+    { config: scoped(IDENTITY_SCOPES.assertionIssue) },
+    async (request, reply) => {
+      const caller = request.serviceCaller?.serviceName ?? "";
+      const { response, payload } = await issueUserAssertion(
+        {
+          repo: deps.repo,
+          signingKey: options.userAssertion?.signingKey ?? null,
+          now: options.userAssertion?.now ?? (() => new Date()),
+          ...(options.userAssertion?.ttlSeconds === undefined ? {} : { ttlSeconds: options.userAssertion.ttlSeconds }),
+        },
+        caller,
+        (request.body ?? {}) as IssueUserAssertionRequest,
+      );
+      request.log.info(
+        {
+          event: "user_assertion_issued",
+          sub: payload.sub,
+          act: payload.act,
+          via: payload.via,
+          aud: payload.aud,
+          kid: payload.kid,
+          jti: payload.jti,
+          exp: payload.exp,
+        },
+        "user assertion issued",
+      );
+      return reply.status(200).send(response);
     },
   );
 

@@ -885,6 +885,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `POST /identity/users/{waslaPublicId}/links` | `identity:link:write` | لا مُناديَ خدميٌّ اليومَ |
 | `POST /identity/users/{waslaPublicId}/recovery` | `identity:recovery:write` | لا مُناديَ خدميٌّ اليومَ |
 | `GET /identity/users/{waslaPublicId}/history` | `identity:history:read` | لا مُناديَ خدميٌّ اليومَ |
+| `POST /identity/assertions` | `identity:assertion:issue` | بوتاتُ القنواتِ الثلاثةُ عبرَ `bot-runtime` بموقّعٍ مستقلٍّ (`CHANNEL_USER_ASSERTION_SCOPES`) · ADR-060 · CLM-0440 |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- identity-scopes:end -->

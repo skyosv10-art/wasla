@@ -68,6 +68,8 @@ export const IDENTITY_SCOPES = {
   linkWrite: "identity:link:write",
   recoveryWrite: "identity:recovery:write",
   historyRead: "identity:history:read",
+  // ADR-060 · CLM-0440: إصدارُ تأكيدِ المستخدمِ النهائيِّ — للبوتاتِ الثلاثةِ وحدَها.
+  assertionIssue: "identity:assertion:issue",
 } as const;
 
 export type IdentityRouteConfig = ServiceIdentityRouteConfig;

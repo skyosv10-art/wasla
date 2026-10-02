@@ -50,6 +50,8 @@
  * in-process callers.
  */
 
+import { incomingDelegationOf } from "@wasla/service-auth/fastify";
+import { runWithForwardedDelegation } from "../infrastructure/forwarded-delegation.js";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import {
@@ -233,6 +235,19 @@ export function createDriverApp(options: CreateDriverAppOptions): FastifyInstanc
   // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
   // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
   registerServiceIdentity(app, options.serviceIdentity);
+
+  // ADR-060 · CLM-0440: التفويضُ الواردُ (`obo` المُتحقَّقُ + ترويسةُ التأكيدِ) يُحفَظُ في سياقِ الطلبِ
+  // كي يُمرِّرَهُ مُهايِئُ الترشيحِ إلى `matching` كما وصلَ. **لا تحقُّقَ ولا رفضَ هنا** — `drivers`
+  // مُمرِّرٌ لا مُستقبِلٌ نهائيٌّ، وفي P1 لا يتغيّرُ جوابٌ. `preHandler` بعدَ `onRequest` الذي يضعُ
+  // `serviceCaller`، وبصيغةِ `done` كي يجريَ المعالجُ داخلَ السياقِ.
+  app.addHook("preHandler", (request, _reply, done) => {
+    const delegation = incomingDelegationOf(request);
+    if (delegation === undefined) {
+      done();
+      return;
+    }
+    runWithForwardedDelegation(delegation, done);
+  });
 
   app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send(

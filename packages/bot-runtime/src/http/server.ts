@@ -64,6 +64,7 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
       inbound: runtime.inbound,
       outbound: runtime.outbound,
       launch: runtime.launch,
+      ...(runtime.userAssertions === undefined ? {} : { userAssertions: runtime.userAssertions }),
     },
     // M1-07: خدمة الهوية على حدود البوت الداخلية. مفاتيحُ التحقُّقِ ومخزنُ الإعادةِ
     // ومخزنُ آثارِ الإعادةِ **مشترَكٌ بينَ النسخِ** (ADR-035 · إغلاقُ

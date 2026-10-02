@@ -145,6 +145,16 @@ INDIRECT_BINDINGS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "packages/service-auth/src/replay-store.ts",
         ("WASLA_SERVICE_TOKEN_REPLAY_MODE", "WASLA_SERVICE_TOKEN_REPLAY_URL"),
     ),
+    # ADR-060 · CLM-0440: الأسماءُ الثلاثةُ ثوابتُ مُصدَّرةٌ يقرأُ بها `env[...]` قارئو
+    # تأكيدِ المستخدمِ، فالماسحُ لا يراها قراءةً. والرابطُ يجعلُ إعادةَ تسميتِها إخفاقاً مقروءاً.
+    (
+        "packages/service-auth/src/user-assertion.ts",
+        (
+            "WASLA_USER_ASSERTION_MODE",
+            "WASLA_USER_ASSERTION_PUBLIC_KEYS",
+            "WASLA_USER_ASSERTION_SIGNING_KEY",
+        ),
+    ),
 )
 
 # البابُ 8: الأنماطُ التي تصحُّ لقارئٍ غيرِ مباشرٍ — وما عداها انفكاكٌ في الوصفِ.

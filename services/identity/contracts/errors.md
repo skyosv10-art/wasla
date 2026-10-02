@@ -13,6 +13,7 @@
 | الصنف (Class) | HTTP | الوصف |
 |---|---|---|
 | `validation_error` | 400 | مدخلات غير صالحة شكلياً |
+| `forbidden` | 403 | المنادي مُثبَت الهوية لكن العملية غير مسموحة له (ADR-060 · CLM-0440) |
 | `not_found` | 404 | الكيان غير موجود |
 | `conflict` | 409 | تعارض حالة (مثلاً رابط مرتبط بمستخدم آخر) |
 | `unprocessable` | 422 | المدخلات صالحة شكلياً لكن غير مقبولة منطقياً |
@@ -34,6 +35,9 @@
 | `IDENTITY_USER_SUSPENDED` | `conflict` | المستخدم موقوف والعملية غير مسموحة | محاولة إضافة رابط لمستخدم موقوف |
 | `IDENTITY_SESSION_REPLAY` | `conflict` | رسالة init-data استُعمِلت من قبل لإصدار جلسة | إعادة إرسال نفس init-data (منع replay — M1-02) |
 | `IDENTITY_SESSION_NOT_FOUND` | `not_found` | لا جلسة بهذا المعرّف | سحب جلسة غير موجودة |
+| `IDENTITY_ASSERTION_INVALID_REQUEST` | `validation_error` | طلب إصدار تأكيد مشوَّه | POST /identity/assertions بلا `telegram_user_id` صحيح أو بفاعل/جمهور غير صالح شكلياً (ADR-060 · CLM-0440) |
+| `IDENTITY_ASSERTION_FORBIDDEN` | `forbidden` | المنادي لا يُصدَر له هذا الفاعل أو هذا الجمهور | customer-bot يطلب `driver`، أو جمهور خارج القائمة المغلقة للفاعل (ADR-060 · CLM-0440) |
+| `IDENTITY_ASSERTION_UNAVAILABLE` | `service_unavailable` | لا مفتاح توقيع Ed25519 مُهيّأ | `WASLA_USER_ASSERTION_SIGNING_KEY` غير مضبوط — حال الإنتاج حتى قرار P3 (ADR-060 · CLM-0440) |
 | `IDENTITY_INTERNAL_ERROR` | `service_unavailable` | خطأ داخلي غير متوقع | خطأ غير مُصنّف (degraded) |
 
 ---

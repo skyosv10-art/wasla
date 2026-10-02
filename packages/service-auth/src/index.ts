@@ -141,3 +141,24 @@ export {
   recordSecurityDenial,
   registerEdgeControls,
 } from "./edge-controls.js";
+
+// ADR-060 · CLM-0440 — تأكيدُ المستخدمِ النهائيِّ (Ed25519). التحقُّقُ والتمريرُ متاحانِ هنا؛
+// والصكُّ (`mintUserAssertion`) يُستورَدُ من `@wasla/service-auth/user-assertion` في `identity` وحدَها.
+export {
+  USER_ASSERTION_HEADER,
+  USER_ASSERTION_MODE_ENV,
+  USER_ASSERTION_PUBLIC_KEYS_ENV,
+  userAssertionFromHeaders,
+  userAssertionHeaders,
+  userAssertionModeFromEnv,
+  userAssertionPublicKeysFromEnv,
+  verifyUserAssertion,
+} from "./user-assertion.js";
+export type {
+  UserAssertionActor,
+  UserAssertionFailure,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
+  UserAssertionVerdict,
+  UserDelegation,
+} from "./user-assertion.js";

@@ -7,7 +7,7 @@
  * افتراضيّةَ للموقِّعِ عن قصدٍ: «بلا توقيعٍ» افتراضاً كانَ سيَجعلُ نداءً يُنسى
  * توقيعُهُ ينجحُ في كلِّ اختبارٍ ويُرَدُّ 401 في الإنتاجِ وحدَهُ.
  */
-import type { ServiceRequestSigner } from "@wasla/service-auth";
+import { userAssertionHeaders, type ServiceRequestSigner, type UserDelegation } from "@wasla/service-auth";
 
 import { DriverFlowError } from "../flows.js";
 import type { DriverNegotiationsPort, NegotiationRoundView, NegotiationThreadView } from "../negotiation-flows.js";
@@ -47,11 +47,13 @@ export class HttpDriverNegotiations implements DriverNegotiationsPort {
    * `RISK-0026`). وتمريرُ المسارِ كما هوَ لم يتغيَّر — وهوَ سببُ أنّ هذا الموضعَ
    * لم يحتَجْ تعديلاً في السلوكِ: المركزيّةُ نفسُها هيَ ما جعلَ التغييرَ مجّانيّاً هنا.
    */
-  private async request(path: string, init: RequestInit, traceId: string): Promise<unknown> {
+  private async request(path: string, init: RequestInit, traceId: string, delegation?: UserDelegation): Promise<unknown> {
     // التوقيعُ **خارجَ** `try` بقصدٍ: مُوقِّعٌ يرفضُ عطلُ تركيبٍ عندَنا لا عطلُ
     // الطرفِ الآخرِ، ولو وقعَ داخلَها لصارَ `DRIVER_DEPENDENCY_UNAVAILABLE` —
     // أي لَقُرِئَ نسيانُ المفاتيحِ عندَنا بوصفِهِ خدمةَ مفاوضاتٍ ساقطةً.
-    const signature = this.signRequest(String(init.method ?? "GET"), path);
+    // ADR-060 · CLM-0440: البوتُ يُمرِّرُ التأكيدَ الصادرَ من `identity` ولا يصنعُهُ — `obo` = `sub`.
+    // غيابُ التفويضِ (أفضلُ جهدٍ في P1) ⇒ نداءٌ كما كانَ، بلا `obo` ولا ترويسةٍ.
+    const signature = { ...this.signRequest(String(init.method ?? "GET"), path, delegation?.publicId), ...userAssertionHeaders(delegation) };
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const response = await fetch(`${this.baseUrl}${path}`, { ...init, signal: controller.signal, headers: { "content-type": "application/json", "x-request-id": traceId, ...signature, ...init.headers } });
@@ -62,10 +64,10 @@ export class HttpDriverNegotiations implements DriverNegotiationsPort {
       throw new DriverFlowError("DRIVER_DEPENDENCY_UNAVAILABLE");
     } catch (error) { if (error instanceof DriverFlowError) throw error; throw new DriverFlowError("DRIVER_DEPENDENCY_UNAVAILABLE"); } finally { clearTimeout(timer); }
   }
-  async listThreads(input: { driverPublicId: string; traceId: string }): Promise<readonly NegotiationThreadView[]> { const body = await this.request(`/negotiations?driverPublicId=${encodeURIComponent(input.driverPublicId)}`, { method: "GET" }, input.traceId) as { threads: WireThread[] }; return body.threads.map((thread) => ({ id: thread.id, serviceKind: thread.service_kind, state: thread.state, currentRoundNo: thread.current_round_no })); }
-  async listRounds(input: { threadId: string; traceId: string }): Promise<readonly NegotiationRoundView[]> { const body = await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds`, { method: "GET" }, input.traceId) as { rounds: WireRound[] }; return body.rounds.map((round) => ({ roundNo: round.round_no, proposedBy: round.proposed_by, amountMinor: round.amount_minor, currency: round.currency, state: round.state })); }
-  async accept(input: { threadId: string; expectedRoundNo: number; actingParty: "driver"; idempotencyKey: string; traceId: string }): Promise<void> { await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds/${input.expectedRoundNo}/accept`, { method: "POST", headers: { "Idempotency-Key": input.idempotencyKey }, body: JSON.stringify({ acting_party: input.actingParty }) }, input.traceId); }
-  async reject(input: { threadId: string; expectedRoundNo: number; actingParty: "driver"; closeThread: boolean; idempotencyKey: string; traceId: string }): Promise<void> { await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds/${input.expectedRoundNo}/reject`, { method: "POST", headers: { "Idempotency-Key": input.idempotencyKey }, body: JSON.stringify({ acting_party: input.actingParty, close_thread: input.closeThread }) }, input.traceId); }
+  async listThreads(input: { driverPublicId: string; traceId: string; delegation?: UserDelegation }): Promise<readonly NegotiationThreadView[]> { const body = await this.request(`/negotiations?driverPublicId=${encodeURIComponent(input.driverPublicId)}`, { method: "GET" }, input.traceId, input.delegation) as { threads: WireThread[] }; return body.threads.map((thread) => ({ id: thread.id, serviceKind: thread.service_kind, state: thread.state, currentRoundNo: thread.current_round_no })); }
+  async listRounds(input: { threadId: string; traceId: string; delegation?: UserDelegation }): Promise<readonly NegotiationRoundView[]> { const body = await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds`, { method: "GET" }, input.traceId, input.delegation) as { rounds: WireRound[] }; return body.rounds.map((round) => ({ roundNo: round.round_no, proposedBy: round.proposed_by, amountMinor: round.amount_minor, currency: round.currency, state: round.state })); }
+  async accept(input: { threadId: string; expectedRoundNo: number; actingParty: "driver"; idempotencyKey: string; traceId: string; delegation?: UserDelegation }): Promise<void> { await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds/${input.expectedRoundNo}/accept`, { method: "POST", headers: { "Idempotency-Key": input.idempotencyKey }, body: JSON.stringify({ acting_party: input.actingParty }) }, input.traceId, input.delegation); }
+  async reject(input: { threadId: string; expectedRoundNo: number; actingParty: "driver"; closeThread: boolean; idempotencyKey: string; traceId: string; delegation?: UserDelegation }): Promise<void> { await this.request(`/negotiations/${encodeURIComponent(input.threadId)}/rounds/${input.expectedRoundNo}/reject`, { method: "POST", headers: { "Idempotency-Key": input.idempotencyKey }, body: JSON.stringify({ acting_party: input.actingParty, close_thread: input.closeThread }) }, input.traceId, input.delegation); }
 }
 /** A missing URL is an outage, not evidence that a driver has no negotiations. */
 export class UnconfiguredDriverNegotiations implements DriverNegotiationsPort {

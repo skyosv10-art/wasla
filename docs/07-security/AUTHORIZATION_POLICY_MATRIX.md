@@ -42,18 +42,18 @@
 | --- | --- | --- |
 | الحدودُ المفروضةُ | `15` | `services/*/src/http/service-identity.ts` · `packages/bot-runtime/src/http/service-identity.ts` |
 | المساراتُ المُسجَّلةُ | `135` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 157` | مساراتٌ تُعلِنُ `scoped(...)` |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 158` | مساراتٌ تُعلِنُ `scoped(...)` (كانت 157؛ +1 في CLM-0440: `POST /identity/assertions` · ADR-060) |
 | المساراتُ المفتوحةُ | `OPEN_ROUTES = 21` | مساراتٌ تُعلِنُ `OPEN` (كانت 19؛ +2 في CLM-0401: `/health` لمسبارِ المنصّةِ على delivery وsearch — جسمُ حياةٍ بلا بيانات) |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
-| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 124` | اتّحادُ صلاحيّاتِ العملياتِ |
+| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 125` | اتّحادُ صلاحيّاتِ العملياتِ (كانت 124؛ +1 في CLM-0440: `identity:assertion:issue`) |
 | صلاحيّاتٌ مُعرَّفةٌ بلا مسارٍ يفرضُها | `0` | البابُ 2 |
 | أدوارُ الإنتاجِ المُعلَنةُ | `10` | `PRODUCTION_GRANTS` |
 | مواضعُ الإصدارِ الإنتاجيّةُ | `20` | `createServiceRequestSigner` في ملفٍّ غيرِ اختباريٍّ |
 | أدوارُ أسطولِ الاختبارِ | `8` | `TEST_FLEET_ROLES` |
 | العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 44` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 8` | `OPERATION_BINDINGS` · حدُّ السوقِ |
-| العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `110` | `OPERATION_BINDINGS` (كانت 52؛ +23 `none` في RISK-0042 الموجةِ 1 · CLM-0435؛ +35 `none` في الموجةِ 2 · CLM-0437) |
-| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 47` | `157 − 110` (كانت 105 ثمّ 82) |
+| العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `111` | `OPERATION_BINDINGS` (كانت 52؛ +23 `none` في RISK-0042 الموجةِ 1 · CLM-0435؛ +35 `none` في الموجةِ 2 · CLM-0437؛ +1 `none` عندَ الولادةِ في CLM-0440: `POST /identity/assertions`) |
+| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 47` | `158 − 111` (كانت 105 ثمّ 82) |
 | الجماهيرُ المُعلَنةُ | `AUDIENCES = 15` | `packages/authz-policy/src/operations.ts` |
 
 <!-- authz-matrix:end -->

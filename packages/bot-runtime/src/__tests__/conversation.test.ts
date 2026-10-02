@@ -132,6 +132,8 @@ describe("conversation seam", () => {
       "resolveIdentity",
       "scope",
       "traceId",
+      // ADR-060 · CLM-0440: دالّةٌ تطلبُ التأكيدَ من `identity` — لا معرّفَ قناةٍ ولا حمولةً خامّاً.
+      "userAssertion",
     ]);
     expect(event?.displayName).toBe("مستخدم");
     expect(event?.languageCode).toBe("ar");

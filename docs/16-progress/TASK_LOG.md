@@ -7867,7 +7867,7 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
 ### 2026-10-02 · CLM-0431 + CLM-0432 — claims released after PR #579
-- **Work Item(s):** M0-51, M6-18B · **Claim:** `CLM-0431`, `CLM-0432` · **Branch:** `docs/clm-0431-0432-release` · **Status:** Released
+- **Work Item(s):** M0-51 (ومعهُ M6-18B) · **Claim:** `CLM-0431`, `CLM-0432` · **Branch:** `docs/clm-0431-0432-release` · **Status:** Released
 - PR #579 was merged after approval on its current head `c4fbdc8` with 42/42 checks → main `fc64265`: WASLA CI and Roadmap freshness success. The 3 bots still report `/health` `ok` after the merge.
 - Branch `fix/clm-0431-risk-0057-bot-identity-url` is deleted. This change is ledger-only, so no new claim was opened.
 - RISK-0057 is **closed** · RISK-0055 stays **mitigating** (temporary acceptance of the measured RPO) · M6-18B stays **Blocked** · ADR-052 and RISK-0056 are unchanged.

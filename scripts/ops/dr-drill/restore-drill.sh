@@ -24,7 +24,10 @@ pass() { echo "DRILL PASS stage=$1 · $2"; }
 ms() { date +%s%3N; }
 [ -n "${BACKUP_PASSPHRASE:-}" ] || fail decrypt "BACKUP_PASSPHRASE empty"
 mkdir -p "$OUT"; WORK="$(mktemp -d)"
-rm_container() { if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER"; then docker rm -f "$CONTAINER" >/dev/null; fi; }
+rm_container() {
+  local names; names="$(docker ps -a --format '{{.Names}}')"
+  if grep -qx -- "$CONTAINER" <<< "$names"; then docker rm -f "$CONTAINER" >/dev/null; fi
+}
 cleanup() { rm_container; rm -rf "$WORK"; }
 trap cleanup EXIT
 

@@ -1,0 +1,48 @@
+{
+  "started": "2026-10-02T08:57:08Z",
+  "bots": {
+    "wasla-customer-bot": {
+      "env_before": 10,
+      "env_after": 11,
+      "added": [
+        "IDENTITY_SERVICE_URL"
+      ],
+      "removed": [],
+      "other_values_changed": [],
+      "only_target_changed": true,
+      "deploy": "dep-davn3pe7bikc73en8c4g",
+      "commit": "4ed351d",
+      "deploy_status": "live",
+      "deploy_finished": "2026-10-02T08:57:57.360772Z"
+    },
+    "wasla-driver-bot": {
+      "env_before": 9,
+      "env_after": 10,
+      "added": [
+        "IDENTITY_SERVICE_URL"
+      ],
+      "removed": [],
+      "other_values_changed": [],
+      "only_target_changed": true,
+      "deploy": "dep-davn3pm7bikc73en8cqg",
+      "commit": "4ed351d",
+      "deploy_status": "live",
+      "deploy_finished": "2026-10-02T08:57:57.07732Z"
+    },
+    "wasla-partner-bot": {
+      "env_before": 9,
+      "env_after": 10,
+      "added": [
+        "IDENTITY_SERVICE_URL"
+      ],
+      "removed": [],
+      "other_values_changed": [],
+      "only_target_changed": true,
+      "deploy": "dep-davn3prncjis73f16ce0",
+      "commit": "4ed351d",
+      "deploy_status": "live",
+      "deploy_finished": "2026-10-02T08:58:01.227463Z"
+    }
+  },
+  "ended": "2026-10-02T08:58:13Z"
+}

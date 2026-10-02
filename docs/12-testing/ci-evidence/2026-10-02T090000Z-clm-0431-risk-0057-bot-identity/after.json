@@ -1,0 +1,82 @@
+{
+  "at": "2026-10-02T08:58:37Z",
+  "wasla-customer-bot": {
+    "env_keys": [
+      "CUSTOMER_BOT_MINI_APP_URL",
+      "CUSTOMER_BOT_TOKEN",
+      "CUSTOMER_BOT_WEBHOOK_SECRET",
+      "CUSTOMER_DATABASE_URL",
+      "DATABASE_URL",
+      "IDENTITY_SERVICE_URL",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 11,
+    "IDENTITY_SERVICE_URL": "https://wasla-identity.onrender.com",
+    "latest_deploy": {
+      "id": "dep-davn3pe7bikc73en8c4g",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T08:57:57.360772Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"ok\",\"channel\":\"telegram\"}"
+    }
+  },
+  "wasla-driver-bot": {
+    "env_keys": [
+      "DATABASE_URL",
+      "DRIVER_BOT_MINI_APP_URL",
+      "DRIVER_BOT_TOKEN",
+      "DRIVER_BOT_WEBHOOK_SECRET",
+      "IDENTITY_SERVICE_URL",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 10,
+    "IDENTITY_SERVICE_URL": "https://wasla-identity.onrender.com",
+    "latest_deploy": {
+      "id": "dep-davn3pm7bikc73en8cqg",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T08:57:57.07732Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"ok\",\"channel\":\"telegram\"}"
+    }
+  },
+  "wasla-partner-bot": {
+    "env_keys": [
+      "DATABASE_URL",
+      "IDENTITY_SERVICE_URL",
+      "NODE_ENV",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "PARTNER_BOT_MINI_APP_URL",
+      "PARTNER_BOT_TOKEN",
+      "PARTNER_BOT_WEBHOOK_SECRET",
+      "WASLA_SERVICE",
+      "WASLA_SERVICE_AUTH_ACTIVE_KID",
+      "WASLA_SERVICE_AUTH_KEYS"
+    ],
+    "env_count": 10,
+    "IDENTITY_SERVICE_URL": "https://wasla-identity.onrender.com",
+    "latest_deploy": {
+      "id": "dep-davn3prncjis73f16ce0",
+      "status": "live",
+      "commit": "4ed351d",
+      "finishedAt": "2026-10-02T08:58:01.227463Z"
+    },
+    "health": {
+      "http": 200,
+      "body": "{\"status\":\"ok\",\"channel\":\"telegram\"}"
+    }
+  }
+}

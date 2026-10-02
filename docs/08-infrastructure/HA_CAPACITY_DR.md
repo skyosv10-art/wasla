@@ -216,3 +216,10 @@ Each consumer maintains a consumed-event ledger:
 - Owner gate: accept a longer RPO (ADR-052 amendment) or provide PITR; decide on fault-injection scenarios 2 and 5.
 - Evidence: [2026-10-02T070000Z-clm-0430-m6-18b-restore-drill](../12-testing/ci-evidence/2026-10-02T070000Z-clm-0430-m6-18b-restore-drill/README.md).
 
+## Catastrophic DR test and temporary RPO acceptance (CLM-0432, 2026-10-02)
+
+- Retired project `snlpxywskyqrjattbpgn` (least-risk choice; the TEST DB has no connection string): `DROP SCHEMA public CASCADE`, then a restore from a pre-verified encrypted backup. **RTO 195.4 s** (fault → integrity verified); detection 1.3 s; restore 182.5 s; **0 rows lost** in that window; data, schema, grants and `pg_trgm` identical.
+- Not proven: production RTO with live service failover, a new replacement project, a restore of `auth`/`storage`/`vault`, PITR, RPO 5 min, DR scenario 2.
+- Owner decision: the measured RPO (worst 10.21 h, median 5.21 h) is accepted **temporarily** until PITR/WAL is provided or a permanent decision formally amends the target. ADR-052 (5 min) is unchanged and its target is not met.
+- Evidence: [2026-10-02T091300Z-clm-0432-m6-18b-dr-catastrophic-old-project](../12-testing/ci-evidence/2026-10-02T091300Z-clm-0432-m6-18b-dr-catastrophic-old-project/README.md).
+

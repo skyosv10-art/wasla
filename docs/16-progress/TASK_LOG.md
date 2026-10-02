@@ -7873,3 +7873,32 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - RISK-0057 is **closed** · RISK-0055 stays **mitigating** (temporary acceptance of the measured RPO) · M6-18B stays **Blocked** · ADR-052 and RISK-0056 are unchanged.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+---
+
+## CLM-0433 · M0-45 — Generate missing billing api-types.ts
+
+- **Work Item(s):** M0-45 · **Claim:** `CLM-0433` · **Branch:** `fix/clm-0433-billing-api-types` · **Status:** In Progress
+
+**Date:** 2026-10-02
+**Status:** In Progress — PR #581 opened, CI pending
+
+### What was done
+
+The `@wasla/contracts-billing` package had a `generate` script (`openapi-typescript ../../../services/billing/contracts/api.openapi.yml -o src/api-types.ts`) and a complete OpenAPI spec (`services/billing/contracts/api.openapi.yml`, 210 lines, version 0.2.0) but the generated `api-types.ts` file was never committed to the repository.
+
+Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tests pass. No drift on the other 13 generated api-types.ts files (verified by regenerating all and checking git status — clean).
+
+### Acceptance criteria
+
+- ✅ api-types.ts generated from OpenAPI spec
+- ✅ 15/15 billing contract tests pass
+- ⏳ CI green on PR #581
+- ⏳ Review by xuuux-voox
+
+### Next
+
+- Wait for CI verdict on PR #581
+- If green, request review from xuuux-voox
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE"
+

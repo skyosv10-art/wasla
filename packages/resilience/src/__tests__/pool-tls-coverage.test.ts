@@ -10,6 +10,7 @@
  *
  * Exempt: test files and `*-e2e` harnesses, which run against a local CI database.
  */
+import { createHash, X509Certificate } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,5 +78,22 @@ describe("every production pool carries the TLS setting (RISK-0060)", () => {
     expect(offenders).toEqual([]);
     // Sanity: the walk found the pools it is meant to police.
     expect(pools).toBeGreaterThanOrEqual(30);
+  });
+});
+
+describe("the pinned Supabase CA ships with the checkout (RISK-0060, CLM-0455)", () => {
+  // CLM-0454 committed a CA that `.gitignore` (`*.pem`) silently dropped: the local
+  // plan run passed on an untracked file and the first workflow run failed on a
+  // clean checkout. CI runs on a clean checkout, so this fails there if it recurs.
+  const caPath = join(ROOT, "infra/tls/supabase-root-2021-ca.pem");
+  const tool = readFileSync(join(ROOT, "scripts/ops/risk-0060/render-tls-activate.py"), "utf8");
+
+  it("exists and its DER SHA-256 equals the hash pinned in render-tls-activate.py", () => {
+    const pinned = /CA_SHA256 = "([0-9a-f]{64})"/.exec(tool)?.[1];
+    expect(pinned).toBeDefined();
+    const cert = new X509Certificate(readFileSync(caPath));
+    expect(createHash("sha256").update(cert.raw).digest("hex")).toBe(pinned);
+    expect(cert.subject).toContain("CN=Supabase Root 2021 CA");
+    expect(cert.ca).toBe(true);
   });
 });

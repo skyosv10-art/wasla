@@ -1,7 +1,7 @@
 # لوحة تنفيذ الإطلاق إلى 100%
 
 **النسخة:** `v1.1`  
-**آخر تحقق:** `2026-09-29` (Stale claim cleanup + branch cleanup · CLM-0396/0351/0177/0115/0114/0113 released · 10 stale branches deleted · M6-19B/19C remediation complete (Ready for Gate, blocked on M6-19A external) · CI green on main@eb204df: WASLA CI 31/31 + Roadmap freshness success)
+**آخر تحقق:** `2026-10-02` (CLM-0440 released — PR #588 merged, 42/42 CI green, ADR-060 P1 foundation in main · RISK-0042 stays open · next: CLM-0441 negotiations asserted ownership)
 **حالة البرنامج:** `Blocked — لا إطلاق خارجي — Governance Blocker Remediation Phase 2`  
 **قاعدة التحديث:** كل دفع ذي معنى يجب أن يحدّث هذه اللوحة و`TASK_LOG.md` في نفس النطاق. لا يغير أحد حالة عنصر إلى `Completed` دون رابط دليل قابل لإعادة التشغيل.
 

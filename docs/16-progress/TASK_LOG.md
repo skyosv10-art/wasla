@@ -1,3 +1,19 @@
+# 2026-10-02 — CLM-0440 release — M0-49: ADR-060 P1 merged
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released
+
+PR [#588](https://github.com/skyosv10-art/wasla/pull/588) merged (squash `6e62de5`) with 42/42 CI green and approval by @xuuux-voox. The ADR-060 P1 foundation is in main: `identity` issues `wua1` Ed25519 assertions, `service-auth` verifies them in `off`/`observe`/`enforce` modes (production stays `off`), bots and `drivers` forward `obo` + assertion. 54 new tests.
+
+CI fix commit: renamed `unknown_kid` → `assertion_unknown_kid` in `user-assertion.ts` to avoid collision with the service-auth key-rotation reason code namespace (the runbook-reason-codes mutation test expects `unknown_kid` to be absent from `packages/service-auth/src`). Added `WASLA_USER_ASSERTION_SIGNING_KEY` and `WASLA_USER_ASSERTION_PUBLIC_KEYS` to `infra/secrets/secret-inventory.json` (both are `secret:true` in `env-registry.json`).
+
+RISK-0042 stays `open`. Next: CLM-0441 (negotiations asserted ownership).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-01 — CLM-0425 — M0-45: release stale claims + close RISK-0054
 
 - **Work Item(s):** M0-45

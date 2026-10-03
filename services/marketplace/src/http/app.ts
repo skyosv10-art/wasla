@@ -30,6 +30,7 @@
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
 
 import { ownerPublicIdOf } from "@wasla/auth-sdk";
+import type { VerifiedEndUser } from "@wasla/service-auth/fastify";
 
 import {
   MARKETPLACE_ROUTE_KEYS,
@@ -142,6 +143,44 @@ export interface MarketplaceAppOptions {
  */
 function tenantScoped(...scopes: readonly string[]): MarketplaceRouteConfig {
   return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/**
+ * ADR-060 P2 (CLM-0443): `beneficiary: "asserted"` for the store-staff routes.
+ * `partner-bot` is the only caller that can obtain a `store_staff` assertion
+ * (`ASSERTION_ACTOR_BY_CALLER`), and it calls marketplace directly, so there is
+ * no forwarder. In `off` mode (the production default) nothing is verified and
+ * `request.endUser` stays undefined, so behaviour is unchanged.
+ */
+function assertedStaff(...scopes: readonly string[]): MarketplaceRouteConfig {
+  return {
+    serviceIdentity: {
+      scopes,
+      beneficiary: "asserted",
+      actors: ["store_staff"],
+    },
+  };
+}
+
+/**
+ * ADR-060 P2 (CLM-0443): the store owner comes from the verified end user, not
+ * from `owner_public_id` in the body. The body field stays required by the
+ * contract, and it must match. Mismatch → `STORE_NOT_FOUND` (404), the same
+ * answer `tenantActor` gives when a caller names two different actors.
+ */
+function assertStoreOwner(endUser: VerifiedEndUser | undefined, ownerPublicId: string, storeSlug: string): void {
+  if (endUser === undefined) return;
+  if (ownerPublicId !== endUser.publicId) throw storeNotFound(storeSlug);
+}
+
+/**
+ * ADR-060 P2 (CLM-0443): a list filtered by owner is bound to the verified end
+ * user. Lists by state or category only are catalogue reads and are unchanged.
+ * Mismatch → 404, as in the negotiations list filter (CLM-0441).
+ */
+function assertOwnerFilter(endUser: VerifiedEndUser | undefined, ownerPublicId: string | undefined): void {
+  if (endUser === undefined || ownerPublicId === undefined) return;
+  if (ownerPublicId !== endUser.publicId) throw storeNotFound("");
 }
 
 /**
@@ -353,8 +392,9 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
 
   // --- المتاجر ---------------------------------------------------------------
 
-  app.post("/stores", { config: scoped(MARKETPLACE_SCOPES.storeWrite) }, async (request, reply): Promise<FastifyReply> => {
+  app.post("/stores", { config: assertedStaff(MARKETPLACE_SCOPES.storeWrite) }, async (request, reply): Promise<FastifyReply> => {
     const input = parseRegisterStore(request.body);
+    assertStoreOwner(request.endUser, input.ownerPublicId, input.storeSlug);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const store = await stores.registerStore(
@@ -367,8 +407,9 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     return reply.status(201).send(toStoreResource(store, index));
   });
 
-  app.get("/stores", { config: scoped(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
+  app.get("/stores", { config: assertedStaff(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
     const query = parseStoreQuery(request.query);
+    assertOwnerFilter(request.endUser, query.ownerPublicId);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const page = await stores.listStores(query);
@@ -571,11 +612,16 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
 
   // --- المخزون --------------------------------------------------------------
 
-  app.get("/products/:productId/inventory", { config: scoped(MARKETPLACE_SCOPES.inventoryRead) }, async (request, reply): Promise<FastifyReply> => {
+  app.get("/products/:productId/inventory", { config: assertedStaff(MARKETPLACE_SCOPES.inventoryRead) }, async (request, reply): Promise<FastifyReply> => {
     const productId = pathParam(request.params, "productId");
     const query = parseInventoryQuery(request.query);
     const { products } = deps();
-    const view = await products.readInventory(productId, query);
+    // ADR-060 P2 (CLM-0443): with a verified end user, the read needs active membership
+    // of the product's store; otherwise `PRODUCT_NOT_FOUND`. Without one (off mode) unchanged.
+    const view = await products.readInventory(productId, {
+      ...query,
+      ...(request.endUser === undefined ? {} : { memberPublicId: request.endUser.publicId }),
+    });
     return reply.status(200).send(
       toInventoryReadResponse(view, (adjustment) =>
         toInventoryAdjustmentResource({ adjustment, storeId: view.storeId }),

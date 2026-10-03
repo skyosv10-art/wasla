@@ -66,7 +66,7 @@ import {
   reconcileInventory,
   type InventoryReconciliation,
 } from "../domain/inventory.js";
-import { assertActiveMembership } from "../domain/staff.js";
+import { activeStaff, assertActiveMembership } from "../domain/staff.js";
 import {
   buildReleaseAdjustments,
   buildReservationAdjustments,
@@ -535,10 +535,22 @@ export class MarketplaceProductService {
       readonly includeLedger?: boolean;
       readonly cursor?: string;
       readonly limit?: number;
+      /** ADR-060 P2 (CLM-0443): verified end user; must be the owner or active staff of the product's store. */
+      readonly memberPublicId?: string;
     } = {},
   ): Promise<InventoryView> {
     return await this.deps.uow.read(async ({ stores }) => {
       const product = await loadProductById(stores, productId);
+      if (options.memberPublicId !== undefined) {
+        const memberStore = await loadStoreById(stores, product.storeId);
+        const isMember =
+          options.memberPublicId === memberStore.ownerPublicId ||
+          activeStaff(await stores.staff.listStaff(memberStore.storeId)).some(
+            (entry) => entry.memberPublicId === options.memberPublicId,
+          );
+        // Not a member: answer as if the product did not exist (ADR-060 §2.5, ADR-029).
+        if (!isMember) throw productNotFound(productId);
+      }
       const inventory = await stores.projection.findInventory(productId);
       const base = {
         productId,

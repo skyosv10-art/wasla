@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T04:52:57Z",
+  "generated_at": "2026-10-03T05:04:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f9e583da6ed87dde2012d305cf5752d80edc75ca",
-    "branch": "fix593",
+    "commit": "5d561b4f0ef3d09be17b9177061305a9e5b8acd2",
+    "branch": "feat/clm-0443-marketplace-asserted-ownership",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 3059
+    "tracked_files": 3060
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 552,
+    "test_files_tracked": 553,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:c9435cd571e6a6580776dd0f472996689e50b622e2e38f14ccd1c135091e86bb",
+  "fingerprint": "sha256:ec0881c3f30845a82a126713fe257549bf9aab2e41b81f888f2c7451c9272dc8",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

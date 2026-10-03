@@ -233,10 +233,12 @@ async function recoverViaHealth(phase: string): Promise<{
 
 // ── E4 fleet: every service that owns a pool, from its own composition root ──────────────
 /**
- * `excluded` is a measured, recorded reason — never a way to make the fleet pass: partners does
- * not boot at all under enforced service identity (its routes carry no `serviceIdentity`
- * classification; the plugin refuses the first one), with or without a database. That is
- * RISK-0059, an auth change that belongs in its own PR (RISK-0042 rule), not here.
+ * `excluded` is a measured, recorded reason — never a way to make the fleet pass.
+ *
+ * RISK-0059 closed (CLM-0445): partners was previously excluded because it did not boot under
+ * enforced service identity. CLM-0444 classified every partners route with a `serviceIdentity`
+ * config (OPEN for health/ready, scoped for the rest), so partners now boots. This entry removes
+ * the exclusion and puts partners back into the fleet.
  */
 const FLEET: ReadonlyArray<{ service: string; health: string; dbEnv: string; excluded?: string }> = [
   { service: "audit", health: "/health", dbEnv: "DATABASE_URL" },
@@ -251,12 +253,7 @@ const FLEET: ReadonlyArray<{ service: string; health: string; dbEnv: string; exc
   { service: "matching", health: "/health", dbEnv: "DATABASE_URL" },
   { service: "negotiations", health: "/health", dbEnv: "DATABASE_URL" },
   { service: "orders", health: "/health", dbEnv: "DATABASE_URL" },
-  {
-    service: "partners",
-    health: "/partners/health",
-    dbEnv: "PARTNERS_DATABASE_URL",
-    excluded: "RISK-0059: does not boot under enforced service identity (GET /partners/health has no serviceIdentity classification)",
-  },
+  { service: "partners", health: "/partners/health", dbEnv: "PARTNERS_DATABASE_URL" },
   { service: "reputation", health: "/health", dbEnv: "DATABASE_URL" },
   { service: "search", health: "/search/health", dbEnv: "DATABASE_URL" },
   { service: "subscriptions", health: "/health", dbEnv: "DATABASE_URL" },
@@ -499,7 +496,7 @@ async function main(): Promise<void> {
   await proxy.close();
   const failed = checks.filter((c) => !c.pass);
   const record = {
-    scenario: "M6-18B scenario 2 — database unavailable (re-run after RISK-0058 fix, CLM-0438)",
+    scenario: "M6-18B scenario 2 — database unavailable (re-run after RISK-0058 fix and RISK-0059 closure, CLM-0445)",
     service: "billing (E1-E3) and every service with a pool (E4), each from its own server.ts, local child processes",
     database: "local throwaway Postgres behind a TCP fault proxy (non-production)",
     client_timeout_ms: CLIENT_TIMEOUT_MS,

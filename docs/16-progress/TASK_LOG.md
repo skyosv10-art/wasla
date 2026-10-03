@@ -1,8 +1,22 @@
+# 2026-10-03 — CLM-0451 · CLM-0452 — M6-18B run 2 PASS (full DR RTO 541.7 s) · RISK-0042 observe evidence
+
+- **Work Item(s):** M6-18B · M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**M6-18B (CLM-0451):** Render → DR run 2 (CI 37122144763, `main` `1831176`) PASS. Production backup → restore into `pvyuhjadrygqqdoczmnd` 445.4 s (120/120 tables, verified) → 18 variables switched in 1.3 s → 17/17 deploys live at +73.2 s → 17/17 `/health` 200 and delivery readiness database ok on DR at +92.9 s → committed read/write on DR at +96.3 s → rollback 90.6 s (17/17 healthy on production) → fingerprint identical (24 services). **Full DR RTO 541.7 s.** This is a DR measurement on a free-plan project, not the production RTO of record. ADR-052/058 are unchanged, and M6-18B stays `Blocked` (RPO unmet: RISK-0055; RISK-0058 mitigating; RISK-0060 open; external pentest M6-19A).
+
+**RISK-0042 (CLM-0452):** observe has been live since 10:24Z on `e29619f`. Exactly 7 keys were added, and the boot lines confirm `mode=observe kid=ua-2026-10`. Window 10:23Z → 12:32Z: 0 valid, 0 invalid, 0 would_reject. No end-user request reached an asserted route, so no failing operation is identifiable yet. Never enforce. RISK-0042 stays `open`. CLM-0450 is released.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-03 — CLM-0450 — M6-18B: Render → DR run 1 recorded (FAIL, rolled back) · TLS alignment + fail-fast
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending; run 2 follows the merge
+- **Status:** Completed — PR #600 merged (`1831176`); run 2 PASS (CI 37122144763); released by CLM-0451
 
 Run 1 (CI 37117434969, `main` `0c045e2`): production backup PASS → restore into `pvyuhjadrygqqdoczmnd` PASS (data RTO 390.5 s, 120/120 tables) → 18 variables switched in 1.1 s → 15 deploys `live`, identity/audit `update_failed` → 12 of 17 services never `/health` 200 on DR (`pg_SELF_SIGNED_CERT_IN_CHAIN`) → read/write on DR PASS from the runner → rollback PASS in 91.7 s (17/17 healthy, readiness ok) → env fingerprint identical (24 services, 0 differences). DB-backed services were unavailable for about 32 min, with no end-user traffic.
 

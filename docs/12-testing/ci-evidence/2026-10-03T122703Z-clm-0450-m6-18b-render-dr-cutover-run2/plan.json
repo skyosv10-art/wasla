@@ -1,0 +1,134 @@
+{
+  "mode": "plan",
+  "prod_ref": "ppixaauyqoykrogwdxtv",
+  "dr_ref": "pvyuhjadrygqqdoczmnd",
+  "started_at": "2026-10-03T12:15:24.298605+00:00",
+  "preflight": {
+    "services": 17,
+    "variables": 18,
+    "map": [
+      {
+        "service": "wasla-audit",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-customer-bot",
+        "keys": [
+          "CUSTOMER_DATABASE_URL",
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-customers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-delivery",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-dispatch",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-driver-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-drivers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-geography",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-identity",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-marketplace",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-matching",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-negotiations",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-orders",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-partner-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-reputation",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-search",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-subscriptions",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      }
+    ],
+    "problems": []
+  },
+  "verdict": "PLAN"
+}

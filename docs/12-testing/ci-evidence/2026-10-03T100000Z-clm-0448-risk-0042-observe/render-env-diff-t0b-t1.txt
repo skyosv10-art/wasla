@@ -1,0 +1,5 @@
+wasla-identity: +['WASLA_USER_ASSERTION_SIGNING_KEY'] -[] ~[]
+wasla-marketplace: +['WASLA_USER_ASSERTION_MODE', 'WASLA_USER_ASSERTION_PUBLIC_KEYS'] -[] ~[]
+wasla-matching: +['WASLA_USER_ASSERTION_MODE', 'WASLA_USER_ASSERTION_PUBLIC_KEYS'] -[] ~[]
+wasla-negotiations: +['WASLA_USER_ASSERTION_MODE', 'WASLA_USER_ASSERTION_PUBLIC_KEYS'] -[] ~[]
+services changed: 4

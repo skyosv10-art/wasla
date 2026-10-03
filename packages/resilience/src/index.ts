@@ -68,6 +68,8 @@ export {
   type PgClientLike,
   type PgGuard,
   type PgPoolTimeouts,
+  type PgSslConfig,
+  type PgSslMode,
   type GuardPgPoolOptions,
   type DatabaseHealth,
   type DatabaseState,

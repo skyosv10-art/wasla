@@ -39,6 +39,49 @@ export const PG_GUARD_DEFAULTS = {
   probeCacheMs: 1_000,
 } as const;
 
+/** RISK-0060: TLS mode for database connections. */
+export type PgSslMode = "off" | "require" | "verify-full";
+
+/**
+ * The SSL configuration that `withPgPoolDefaults` adds to every pool. `off` leaves
+ * `ssl` unset so local development and tests behave exactly as before; `require`
+ * encrypts the connection without verifying the server certificate; `verify-full`
+ * pins the Supabase CA and refuses a connection whose certificate does not match.
+ *
+ * The CA is read from `WASLA_PG_SSL_CA` (the PEM body, not a file path) so the pool
+ * factory never touches the filesystem. A `verify-full` request with no CA is a
+ * configuration error, not a silent plaintext fallback.
+ */
+export interface PgSslConfig {
+  readonly ssl?: { readonly ca?: string; readonly rejectUnauthorized?: boolean };
+}
+
+function readSslMode(env: Readonly<Record<string, string | undefined>>): PgSslMode {
+  const raw = env["WASLA_PG_SSL_MODE"];
+  if (raw === undefined || raw.trim() === "") return "off";
+  const mode = raw.trim();
+  if (mode === "off" || mode === "require" || mode === "verify-full") return mode;
+  throw new Error(
+    `WASLA_PG_SSL_MODE must be one of "off", "require", "verify-full", got ${JSON.stringify(raw)}`,
+  );
+}
+
+function buildSslConfig(env: Readonly<Record<string, string | undefined>>): PgSslConfig {
+  const mode = readSslMode(env);
+  if (mode === "off") return {};
+  if (mode === "require") {
+    return { ssl: { rejectUnauthorized: false } };
+  }
+  // verify-full
+  const ca = env["WASLA_PG_SSL_CA"];
+  if (ca === undefined || ca.trim() === "") {
+    throw new Error(
+      'WASLA_PG_SSL_MODE=verify-full requires WASLA_PG_SSL_CA to be set to the PEM certificate body',
+    );
+  }
+  return { ssl: { ca: ca.trim(), rejectUnauthorized: true } };
+}
+
 /** Error raised instead of reaching a database that is known (or just found) to be unavailable. */
 export class DbUnavailableError extends Error {
   /** Stable machine code. Deliberately not a 5-character SQLSTATE: error mappers that walk
@@ -142,14 +185,18 @@ export interface PgPoolTimeouts {
 /**
  * Adds the bounded defaults to a pool config without overriding what the caller set.
  *   WASLA_PG_CONNECT_TIMEOUT_MS · WASLA_PG_QUERY_TIMEOUT_MS override the defaults per process.
+ *   WASLA_PG_SSL_MODE (off|require|verify-full) controls TLS; `verify-full` requires
+ *   WASLA_PG_SSL_CA to be the PEM certificate body (RISK-0060).
  */
 export function withPgPoolDefaults<T extends object>(
   config: T,
   env: Readonly<Record<string, string | undefined>> = process.env,
-): T & Required<PgPoolTimeouts> {
+): T & Required<PgPoolTimeouts> & PgSslConfig {
   const c = config as T & PgPoolTimeouts;
+  const sslConfig = buildSslConfig(env);
   return {
     ...config,
+    ...sslConfig,
     connectionTimeoutMillis:
       c.connectionTimeoutMillis ?? envMs(env, "WASLA_PG_CONNECT_TIMEOUT_MS", PG_GUARD_DEFAULTS.connectionTimeoutMillis),
     query_timeout: c.query_timeout ?? envMs(env, "WASLA_PG_QUERY_TIMEOUT_MS", PG_GUARD_DEFAULTS.queryTimeoutMillis),

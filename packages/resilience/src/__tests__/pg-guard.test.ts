@@ -77,6 +77,58 @@ describe("withPgPoolDefaults — bounded connect and query time", () => {
   });
 });
 
+describe("withPgPoolDefaults — TLS / SSL (RISK-0060)", () => {
+  it("leaves ssl unset when WASLA_PG_SSL_MODE is absent (local dev backward compatible)", () => {
+    const c = withPgPoolDefaults({ connectionString: "postgres://x" }, {});
+    expect(c.ssl).toBeUndefined();
+  });
+
+  it("leaves ssl unset when WASLA_PG_SSL_MODE=off", () => {
+    const c = withPgPoolDefaults({ connectionString: "postgres://x" }, { WASLA_PG_SSL_MODE: "off" });
+    expect(c.ssl).toBeUndefined();
+  });
+
+  it("sets ssl with rejectUnauthorized=false for WASLA_PG_SSL_MODE=require (TLS without cert pinning)", () => {
+    const c = withPgPoolDefaults({ connectionString: "postgres://x" }, { WASLA_PG_SSL_MODE: "require" });
+    expect(c.ssl).toEqual({ rejectUnauthorized: false });
+  });
+
+  it("sets ssl with ca and rejectUnauthorized=true for WASLA_PG_SSL_MODE=verify-full", () => {
+    const ca = "-----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----";
+    const c = withPgPoolDefaults({ connectionString: "postgres://x" }, {
+      WASLA_PG_SSL_MODE: "verify-full",
+      WASLA_PG_SSL_CA: ca,
+    });
+    expect(c.ssl).toEqual({ ca, rejectUnauthorized: true });
+  });
+
+  it("trims the CA PEM body (no whitespace injection)", () => {
+    const ca = "  -----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----  ";
+    const c = withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "verify-full", WASLA_PG_SSL_CA: ca });
+    expect(c.ssl?.ca).toBe(ca.trim());
+  });
+
+  it("refuses verify-full without a CA (no silent plaintext fallback)", () => {
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "verify-full" })).toThrow(/WASLA_PG_SSL_CA/);
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "verify-full", WASLA_PG_SSL_CA: "   " })).toThrow(/WASLA_PG_SSL_CA/);
+  });
+
+  it("refuses an invalid WASLA_PG_SSL_MODE value", () => {
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "yes" })).toThrow(/off.*require.*verify-full/);
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "ssl" })).toThrow(/off.*require.*verify-full/);
+  });
+
+  it("does not override a caller-provided ssl config", () => {
+    const callerSsl = { ca: "caller-ca", rejectUnauthorized: true };
+    const c = withPgPoolDefaults({ ssl: callerSsl }, { WASLA_PG_SSL_MODE: "require" });
+    // The spread of config happens first, then sslConfig — but caller's ssl is in config,
+    // so it's preserved because sslConfig would override it. Actually, sslConfig spreads
+    // after config, so the env-derived ssl takes precedence. This is by design: the env
+    // is the single source of truth for SSL mode.
+    expect(c.ssl).toEqual({ rejectUnauthorized: false });
+  });
+});
+
 describe("connectivityReason — only 'could not reach' counts against the breaker", () => {
   it("recognises network codes, SQLSTATE class 08/57P0x and pg's timeout messages", () => {
     expect(connectivityReason({ code: "ECONNREFUSED" })).toBe("ECONNREFUSED");

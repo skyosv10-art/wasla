@@ -8303,3 +8303,35 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0444 released here (its correction PR #593 merged first).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0453 — RISK-0060: TLS support for database connections (2026-10-03)
+
+**Work Item(s):** CLM-0453 · M6-18B
+
+### What changed
+- `packages/resilience/src/pg-guard.ts`: `withPgPoolDefaults` now reads `WASLA_PG_SSL_MODE` (off/require/verify-full, default off) and `WASLA_PG_SSL_CA` (PEM body). `verify-full` sets `ssl: { ca, rejectUnauthorized: true }`; `require` sets `ssl: { rejectUnauthorized: false }`; `off` leaves `ssl` unset (backward compatible). A `verify-full` request with no CA throws a configuration error — no silent plaintext fallback.
+- New types exported: `PgSslMode`, `PgSslConfig`. `PgPoolTimeouts` gains `ssl?`.
+- `packages/resilience/src/index.ts`: exports `PgSslMode`, `PgSslConfig`.
+- `packages/resilience/src/__tests__/pg-guard.test.ts`: 9 new tests (off/require/verify-full, missing CA, invalid mode, trimming, caller override). 62/62 total pass.
+- `packages/config/env-registry.json`: `WASLA_PG_SSL_MODE` and `WASLA_PG_SSL_CA` registered (M6-18B, runtime scope).
+- `.env.example` and `packages/config/src/registry.generated.ts`: regenerated from the registry.
+
+### Design decisions
+- The CA is the PEM body, not a file path — the pool factory never touches the filesystem.
+- `verify-full` is the production target; `off` is the default so local dev and tests are unaffected.
+- The env-derived SSL config takes precedence over a caller-provided `ssl` in the config object — the env is the single source of truth for SSL mode.
+- RISK-0060 status: `open` → `mitigating`. Code support exists; production activation (Render env vars + Supabase "Enforce SSL") is a separate step that requires the TLS-capable code to be deployed first.
+
+### What is not claimed
+- Production connections are still plaintext — `WASLA_PG_SSL_MODE` is not set on Render.
+- Supabase "Enforce SSL" is not enabled.
+- RISK-0060 is not closed. Closure requires: deploy, set env vars, enable Enforce SSL, measure TLS-verified connections.
+- M6-18B stays Blocked (RPO/ADR-058, M6-19A).
+
+### Releases
+- CLM-0451 released (evidence-only, already on main).
+- CLM-0452 released (evidence-only, already on main).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

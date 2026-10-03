@@ -1,0 +1,45 @@
+{
+  "target": "replacement Supabase project pvyuhjadrygqqdoczmnd (free plan)",
+  "source": "stored db-backup.yml artifact of production ppixaauyqoykrogwdxtv (no production connection)",
+  "backup_timestamp": "2026-10-03T10:48:04+00:00",
+  "drill_started_at": "2026-10-03T10:50:52.080000+00:00",
+  "backup_age_at_drill_seconds": 168,
+  "previous_drill_tables_dropped": 120,
+  "restored_public_tables": 120,
+  "restored_public_rows": 38,
+  "seconds": {
+    "download_and_integrity": 0.6,
+    "decrypt": 0.1,
+    "target_prepare": 7.0,
+    "restore": 205.2,
+    "compare": 177.6,
+    "total_data_restore_rto": 390.5
+  },
+  "platform": {
+    "dump_toc": {
+      "auth": {
+        "tables": 27,
+        "table_data_entries": 27
+      },
+      "storage": {
+        "tables": 8,
+        "table_data_entries": 8
+      },
+      "vault": {
+        "tables": 0,
+        "table_data_entries": 1
+      },
+      "public": {
+        "tables": 120,
+        "table_data_entries": 120
+      }
+    },
+    "replacement_rows": {
+      "auth.users": "not-readable",
+      "storage.buckets": "0",
+      "storage.objects": "0",
+      "vault.secrets": "0"
+    }
+  },
+  "result": "PASS"
+}

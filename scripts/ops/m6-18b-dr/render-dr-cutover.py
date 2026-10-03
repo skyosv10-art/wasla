@@ -118,7 +118,7 @@ def live_commit(sid: str) -> str | None:
     return None
 
 
-def deploy_and_wait(targets: dict[str, dict], label: str) -> None:
+def deploy_and_wait(targets: dict[str, dict], label: str, fail_fast: bool = False) -> None:
     for sid, t in targets.items():
         d = call("POST", f"/services/{sid}/deploys", {"clearCache": "do_not_clear", "commitId": t["commit"]})
         t[f"{label}_deploy"], t[f"{label}_status"] = d["id"], d.get("status")
@@ -135,6 +135,12 @@ def deploy_and_wait(targets: dict[str, dict], label: str) -> None:
                     t[f"{label}_terminal_at"] = iso()
         done = sum(t[f"{label}_status"] in TERMINAL_OK | TERMINAL_BAD for t in targets.values())
         print(f"  … {label} {done}/{len(targets)} terminal", flush=True)
+        # CLM-0450: run 1 waited 15 min for Render to give up on two health-failed
+        # deploys while the rest were already down on DR. One failed deploy is enough
+        # to know the cutover failed: stop waiting and roll back.
+        if fail_fast and any(t[f"{label}_status"] in TERMINAL_BAD for t in targets.values()):
+            print(f"  … {label}: a deploy failed — fail fast", flush=True)
+            return
 
 
 def http_get(url: str, timeout: int = 30) -> tuple[int | None, str]:
@@ -204,6 +210,23 @@ def dr_read_write(dr_url: str) -> dict:
     return {"ok": ok, "marker": marker, "written_and_read": lines[0] if lines else None,
             "public_tables": int(lines[1]) if len(lines) > 1 else None,
             "seconds": round(now() - t, 2), "error": None if ok else f"psql exit {r.returncode}"}
+
+
+def render_value(dr_url: str, prod_url: str) -> tuple[str, list[str]]:
+    """CLM-0450: the DR value Render gets has the SAME query-parameter names as production.
+
+    Run 1 (CI 37117434969) set the DR secret verbatim; it ends in `sslmode=require`,
+    which psql needs but node-postgres reads as verify-full, so 12 services failed
+    `SELF_SIGNED_CERT_IN_CHAIN` against the pooler chain. Production carries no query
+    parameter at all. The drill measures a switch of DATABASES, not of TLS settings, so
+    every parameter production does not have is dropped (names recorded, not values).
+    """
+    from urllib.parse import parse_qsl, urlencode, urlunsplit
+    d, p = urlsplit(dr_url), urlsplit(prod_url)
+    keep = {k for k, _ in parse_qsl(p.query, keep_blank_values=True)}
+    kept = [(k, v) for k, v in parse_qsl(d.query, keep_blank_values=True) if k in keep]
+    dropped = sorted({k for k, _ in parse_qsl(d.query, keep_blank_values=True)} - keep)
+    return urlunsplit((d.scheme, d.netloc, d.path, urlencode(kept), d.fragment)), dropped
 
 
 def main() -> int:
@@ -291,18 +314,28 @@ def main() -> int:
     signal.signal(signal.SIGTERM, on_term)
     signal.signal(signal.SIGINT, on_term)
     try:
+        render_dr, dropped = render_value(dr_url, next(iter(originals.values())))
+        if ref_of(render_dr) != dr_ref:
+            raise RuntimeError("aligned DR value lost its project ref")
+        if os.environ.get("GITHUB_ACTIONS"):
+            print(f"::add-mask::{render_dr}")
+        report["dr_value_params_dropped_to_match_production"] = dropped
         t0 = now()
         report["t0_cutover_start"] = iso(t0)
         for (sid, k) in originals:
-            call("PUT", f"/services/{sid}/env-vars/{k}", {"value": dr_url})
+            call("PUT", f"/services/{sid}/env-vars/{k}", {"value": render_dr})
         t_env = now()
         print(f"cutover  {len(originals)} variables now point at {dr_ref} (+{t_env - t0:.1f}s)", flush=True)
-        deploy_and_wait(targets, "cutover")
+        deploy_and_wait(targets, "cutover", fail_fast=True)
         t_live = now()
         bad = [t["service"] for t in targets.values() if t["cutover_status"] not in TERMINAL_OK]
         if bad:
             problems.append(f"cutover deploys not live: {bad}")
-        health = wait_healthy(targets, "cutover")
+        if bad:
+            raise RuntimeError(f"cutover deploys failed: {bad}")
+        # CLM-0450: 300 s on DR (run 1: the services that came up did so within 60 s of
+        # `live`, the rest never did); the rollback keeps 900 s.
+        health = wait_healthy(targets, "cutover", budget_s=300)
         t_ready = now()
         if health["health_failed"]:
             problems.append(f"on DR, /health not 200: {health['health_failed']}")

@@ -1,8 +1,22 @@
+# 2026-10-03 — CLM-0450 — M6-18B: Render → DR run 1 recorded (FAIL, rolled back) · TLS alignment + fail-fast
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending; run 2 follows the merge
+
+Run 1 (CI 37117434969, `main` `0c045e2`): production backup PASS → restore into `pvyuhjadrygqqdoczmnd` PASS (data RTO 390.5 s, 120/120 tables) → 18 variables switched in 1.1 s → 15 deploys `live`, identity/audit `update_failed` → 12 of 17 services never `/health` 200 on DR (`pg_SELF_SIGNED_CERT_IN_CHAIN`) → read/write on DR PASS from the runner → rollback PASS in 91.7 s (17/17 healthy, readiness ok) → env fingerprint identical (24 services, 0 differences). DB-backed services were unavailable for about 32 min, with no end-user traffic.
+
+Root cause: the DR secret ends in `sslmode=require`; node-postgres reads it as verify-full. Production carries no parameter and no pool sets `ssl`: production DB traffic is plaintext. That is opened as **RISK-0060** (high). Fix in `render-dr-cutover.py`: the Render value keeps only production's query-parameter names; fail fast on the first failed deploy; DR health budget 300 s. Evidence: `docs/12-testing/ci-evidence/2026-10-03T105749Z-clm-0449-m6-18b-render-dr-cutover-run1/`. No full RTO from run 1. M6-18B stays `Blocked`; ADR-052/058 unchanged.
+
+Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-03 — CLM-0449 — M6-18B: full Render → DR cutover workflow
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending; the run follows the merge
+- **Status:** Completed — PR #599 merged (`0c045e2`); run 1 executed (CI 37117434969); released by CLM-0450
 
 The owner approved a full-RTO measurement with Render on the isolated DR replacement project `pvyuhjadrygqqdoczmnd`. `dr-render-cutover.yml` (manual, `main`, typed SHA) chains: production backup (`expect_project_ref=ppixaauyqoykrogwdxtv`) → restore of that artifact into DR → `render-dr-cutover.py apply` (18 DB variables on 17 services → DR, deploys pinned to the live commit, `/health` + delivery readiness + committed read/write on DR, rollback to the original values in `finally`, env fingerprint identical). Plan mode was run read-only against Render: 17 services, 18 variables, all on production, all live on `9b80724`. Plan and limits: `docs/12-testing/M6-18B_RENDER_DR_CUTOVER_PLAN.md`. A documented DR measurement, not the production RTO of record. ADR-052/ADR-058 unchanged; M6-18B stays `Blocked`.
 

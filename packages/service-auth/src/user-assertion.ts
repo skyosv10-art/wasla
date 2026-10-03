@@ -182,6 +182,19 @@ export function userAssertionModeFromEnv(env: Readonly<Record<string, string | u
   throw new UserAssertionConfigError(`${USER_ASSERTION_MODE_ENV}: expected off | observe | enforce`);
 }
 
+/**
+ * إعدادُ تأكيدِ المستخدمِ منَ البيئةِ. في الوضعِ `off` لا تُقرأُ المفاتيحُ علنياً
+ * (الطلبُ مرفوضٌ بوصفِه نشازاً)، فيُعادُ `undefined` — ولا يُسجَّلُ أيُّ طريقٍ
+ * في طبقةِ HTTP، فلا يتغيّرُ سلوكٌ ولا يُرفَضُ طلبٌ.
+ */
+export function userAssertionConfigFromEnv(
+  env: Readonly<Record<string, string | undefined>>,
+): { mode: UserAssertionMode; publicKeys: UserAssertionPublicKeys } | undefined {
+  const mode = userAssertionModeFromEnv(env);
+  if (mode === "off") return undefined;
+  return { mode, publicKeys: userAssertionPublicKeysFromEnv(env) };
+}
+
 export interface MintUserAssertionOptions {
   readonly key: UserAssertionSigningKey;
   readonly sub: string;

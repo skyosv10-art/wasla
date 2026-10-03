@@ -464,17 +464,35 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
   });
 
   it("RISK-0042 الموجةُ 2: 35 صفّاً `none` على خمسةِ حدودٍ — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
-    const wave2 = OPERATION_BINDINGS.filter((b) => /[sS]coped\(/.test(b.evidence) && [
-      "negotiations", "matching", "reputation", "subscriptions", "marketplace",
-    ].includes(b.audience) && b.note.startsWith("`none`:"));
+    // CLM-0441 (ADR-060 P2 · 2026-10-03): 11 من 12 عمليّة مفاوضاتٍ ارتقتْ من `none` إلى `asserted`.
+    // تبقى 24 صفّاً `none` في الموجةِ 2: 1 negotiations/tick + 6 matching + 8 reputation + 4 subscriptions + 5 marketplace.
+    const wave2 = OPERATION_BINDINGS.filter((b) =>
+      ["negotiations", "matching", "reputation", "subscriptions", "marketplace"].includes(b.audience)
+      && b.note.startsWith("`none`:"),
+    );
     const perAudience: Record<string, number> = {};
     for (const b of wave2) perAudience[b.audience] = (perAudience[b.audience] ?? 0) + 1;
-    expect(perAudience).toEqual({ negotiations: 12, matching: 6, reputation: 8, subscriptions: 4, marketplace: 5 });
+    expect(perAudience).toEqual({ negotiations: 1, matching: 6, reputation: 8, subscriptions: 4, marketplace: 5 });
     for (const binding of wave2) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
       expect(binding.note.length).toBeGreaterThan(20);
     }
+  });
+
+  it("CLM-0441 (ADR-060 P2): 11 عمليّة مفاوضاتٍ `asserted` — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
+    const asserted = OPERATION_BINDINGS.filter((b) =>
+      b.audience === "negotiations" && b.strength === "asserted",
+    );
+    expect(asserted).toHaveLength(11);
+    for (const binding of asserted) {
+      expect(binding.evidence).toMatch(/^services\/negotiations\/src\/http\/app\.ts:asserted/);
+      expect(binding.note).toContain("CLM-0441");
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
+    // /tick stays `none`
+    const tick = OPERATION_BINDINGS.find((b) => b.audience === "negotiations" && b.path === "/negotiations/tick");
+    expect(tick?.strength).toBe("none");
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

@@ -63,6 +63,8 @@ export type BindingStrength =
   | "token-bound"
   /** المالكُ يُقارَنُ بقيمةٍ **يكتبُها المُنادي** (ترويسةٌ أو جسمٌ). تحقُّقُ تناسقٍ لا تفويضٍ. */
   | "caller-asserted"
+  /** المالكُ مُثبَتٌ **بتأكيدِ مستخدمٍ** مُوقَّعٍ (Ed25519 JWT · ADR-060 P2). أقوى من `caller-asserted`، وأضعفُ من `token-bound` (التأكيدُ يُعاد استخدامهُ ضمنَ نافذةِ الصلاحيّةِ). */
+  | "asserted"
   /** لا ربطَ: مَن حملَ الصلاحيّةَ قرأَ أو كتبَ أيَّ مَورِدٍ في الحدِّ. */
   | "none";
 
@@ -844,27 +846,26 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     note: "إعادةُ أيِّ عميلٍ سلطةٌ إداريّةٌ؛ ربطُهُ بالمالكِ عكسُ السياسةِ.",
   },
   // ── RISK-0042 الموجةُ 2 (CLM-0437 · 2026-10-02): 35 عمليّةً مقروءةً سطراً سطراً ──
-  // negotiations 12 · matching 6 · reputation 8 · subscriptions 4 · marketplace 5. كلُّها `none`:
-  // إعدادُ مسارِها `scoped`/`internalScoped` بلا `beneficiary`، ومُدخَلُ حالةِ الاستعمالِ لا
-  // يحملُ هويّةَ مُنادٍ (وأدوارُ التفاوضِ `acting_party`/`proposed_by`/`author_role` أدوارٌ
-  // في الجسمِ لا هويّاتٌ). وحيثُ يُقالُ «فجوةٌ مقيسةٌ» فهيَ فجوةٌ قائمةٌ — التصنيفُ ليسَ إصلاحاً.
+  // negotiations 12 · matching 6 · reputation 8 · subscriptions 4 · marketplace 5.
+  // CLM-0441 (ADR-060 P2 · 2026-10-03): 11 من 12 عمليّة مفاوضاتٍ ارتقتْ من `none` إلى `asserted` —
+  // `/negotiations/tick` يبقى `none` (نبضةٌ نظاميّةٌ بلا مُنتَفِعٍ).
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.threadWrite) openThread(deps,",
-    note: "`none`: فتحُ خيطِ تفاوضٍ من الجسمِ (`customer_public_id` · `driver_public_id` · `opened_by`) بلا مُنتَفِعٍ في الإعدادِ (`scoped` بلا `beneficiary`) ولا هويّةِ مُنادٍ تُقارَنُ بالطرفَينِ. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يفتحُ خيطاً باسمِ أيِّ عميلٍ وسائقٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) openThread(deps, endUser) assertOpenedBy(body.opened_by, endUser)",
+    note: "CLM-0441: `asserted` — يفتحُ خيطاً بتأكيدِ مستخدمٍ (`beneficiary: \"asserted\"`)، ويُقارِنُ `opened_by` بـ`endUser.actorType`. التطابقُ 200، الخلافُ 404. في الوضعِ `off` (الإنتاج) لا تأكيدَ ولا مقارنةَ — السلوكُ كما كان.",
   },
   {
     audience: "negotiations",
     method: "GET",
     path: "/negotiations",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.threadRead) listNegotiations(deps,",
-    note: "`none`: القائمةُ تُرشَّحُ بـ`order_public_id` أو `driver_public_id` من الاستفهامِ، وهما مُرشِّحا حِملٍ لا ربطُ مالكٍ. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يقرأُ خيوطَ أيِّ سائقٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) listNegotiations(deps, endUser) assertListFilter(params, endUser)",
+    note: "CLM-0441: `asserted` — القائمةُ تُرشَّحُ بـ`order_public_id` أو `driver_public_id`، ويُتحقَّقُ أنَّ المُرشِّحَ يطابقُ `endUser` (العميلُ يُرشِّحُ بطلبِهِ، السائقُ بسائقِهِ).",
   },
   {
     audience: "negotiations",
@@ -873,88 +874,88 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.tickRun) runTick(deps)",
-    note: "`none`: نبضةُ انتهاءِ الصلاحيّةِ بلا جسمٍ (`assertNoBody`) ولا مُنتَفِعٍ بالتصميمِ؛ مُنادِيها المُجدوِلُ لا إنسانٌ.",
+    note: "`none`: نبضةُ انتهاءِ الصلاحيّةِ بلا جسمٍ (`assertNoBody`) ولا مُنتَفِعٍ بالتصميمِ؛ مُنادِيها المُجدوِلُ لا إنسانٌ. يبقى `none` في CLM-0441.",
   },
   {
     audience: "negotiations",
     method: "GET",
     path: "/negotiations/:threadId",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.threadRead) readNegotiation(deps,",
-    note: "`none`: قراءةُ خيطٍ بمُعرِّفِهِ وحدَهُ؛ `readNegotiation(deps, threadId)` لا يتلقّى فاعلاً. فجوةٌ مقيسةٌ: مَن حملَ الصلاحيّةَ قرأَ أيَّ خيطٍ ومبلغَهُ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) readNegotiation(deps, threadId, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — قراءةُ خيطٍ بتأكيدِ مستخدمٍ؛ يُتحقَّقُ أنَّ `endUser` طرفٌ في الخيطِ (`customer_public_id` أو `driver_public_id`). الخلافُ 404.",
   },
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations/:threadId/cancel",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.threadWrite) cancelThread(deps,",
-    note: "`none`: الإلغاءُ يتلقّى `reason_code` وحدَهُ؛ لا طرفَ ولا هويّةَ مُنادٍ في المُدخَلِ. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يُلغي أيَّ خيطٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) cancelThread(deps, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — الإلغاءُ يتطلّبُ تأكيدَ مستخدمٍ طرفاً في الخيطِ. الخلافُ 404.",
   },
   {
     audience: "negotiations",
     method: "GET",
     path: "/negotiations/:threadId/rounds",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.roundRead) view.rounds.map(roundToWire)",
-    note: "`none`: الأدوارُ تُقرأُ من `readNegotiation(deps, threadId)` بلا فاعلٍ. فجوةٌ مقيسةٌ: قراءةُ عروضِ أسعارِ أيِّ خيطٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundRead) view.rounds.map(roundToWire) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — قراءةُ عروضِ الأسعارِ بتأكيدِ مستخدمٍ طرفاً في الخيطِ.",
   },
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations/:threadId/rounds",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.roundWrite) proposeRound(deps,",
-    note: "`none`: `proposed_by` في الجسمِ **دورٌ** (`customer` | `driver` عبرَ `assertParty`) لا هويّةٌ، ولا يُقارَنُ بمُنادٍ. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يقترحُ سعراً عن أيِّ طرفٍ في أيِّ خيطٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:assertedDriver(NEGOTIATIONS_SCOPES.roundWrite) proposeRound(deps, endUser) assertProposedBy(body.proposed_by, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — `proposed_by` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الخلافُ 404.",
   },
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations/:threadId/rounds/:roundNo/accept",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.roundDecide) acceptRound(deps,",
-    note: "`none`: `acting_party` في الجسمِ دورٌ يُتحقَّقُ من شكلِهِ فقط (`assertParty`)، ولا يُقارَنُ بهويّةِ مُنادٍ. فجوةٌ مقيسةٌ وأخطرُها: القبولُ يُنشئُ اتّفاقاً يُسلَّمُ إلى محرّكِ الطلبِ — حاملُ الصلاحيّةِ يقبلُ عن طرفٍ لم يقبلْ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundDecide) acceptRound(deps, endUser) assertActingParty(body.acting_party, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — `acting_party` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. القبولُ عن طرفٍ غيرِ المُؤكَّدِ → 404. أخطرُ الفجواتِ السابقةِ تُغلَقُ هنا.",
   },
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations/:threadId/rounds/:roundNo/reject",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.roundDecide) rejectRound(deps,",
-    note: "`none`: `acting_party` دورٌ في الجسمِ بلا مقارنةٍ بمُنادٍ. فجوةٌ مقيسةٌ: حاملُ الصلاحيّةِ يرفضُ عن أيِّ طرفٍ ويُغلِقُ الخيطَ (`close_thread`).",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundDecide) rejectRound(deps, endUser) assertActingParty(body.acting_party, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — `acting_party` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الرفضُ عن طرفٍ غيرِ المُؤكَّدِ → 404.",
   },
   {
     audience: "negotiations",
     method: "GET",
     path: "/negotiations/:threadId/messages",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.messageRead) view.messages.map(messageToWire)",
-    note: "`none`: الرسائلُ تُقرأُ من `readNegotiation(deps, threadId)` بلا فاعلٍ. فجوةٌ مقيسةٌ: قراءةُ نصوصِ رسائلِ أيِّ خيطٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageRead) view.messages.map(messageToWire) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — قراءةُ رسائلِ خيطٍ بتأكيدِ مستخدمٍ طرفاً فيه.",
   },
   {
     audience: "negotiations",
     method: "POST",
     path: "/negotiations/:threadId/messages",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.messageWrite) postMessage(deps,",
-    note: "`none`: `author_role` دورٌ في الجسمِ؛ `post-message.ts` يتحقّقُ أنَّ الدورَ طرفٌ في الخيطِ لا أنَّ المُنادِيَ هوَ ذلكَ الطرفُ. فجوةٌ مقيسةٌ: انتحالُ رسالةٍ عن أيِّ طرفٍ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageWrite) postMessage(deps, endUser) assertAuthorRole(body.author_role, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — `author_role` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الانتحالُ يُغلَقُ.",
   },
   {
     audience: "negotiations",
     method: "GET",
     path: "/negotiations/:threadId/agreement",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/negotiations/src/http/app.ts:scoped(NEGOTIATIONS_SCOPES.agreementRead) readAgreement(deps,",
-    note: "`none`: قراءةُ الاتّفاقِ بمُعرِّفِ الخيطِ وحدَهُ؛ `readAgreement(deps, threadId)` بلا فاعلٍ. فجوةٌ مقيسةٌ.",
+    strength: "asserted",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.agreementRead) readAgreement(deps, endUser) assertThreadMembership(view, endUser)",
+    note: "CLM-0441: `asserted` — قراءةُ الاتّفاقِ بتأكيدِ مستخدمٍ طرفاً في الخيطِ.",
   },
   {
     audience: "matching",

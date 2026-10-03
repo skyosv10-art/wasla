@@ -38,6 +38,8 @@ import type { FastifyInstance } from "fastify";
 import type {
   ServiceAuthKeyRegistry,
   ServiceTokenReplayGuard,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 import {
   registerServiceIdentityOnFastify,
@@ -82,6 +84,12 @@ export interface NegotiationsServiceIdentityOptions {
   readonly now?: () => Date;
   readonly clockSkewSeconds?: number;
   readonly maxTtlSeconds?: number;
+  /** ADR-060 P2 (CLM-0441): user assertion verification on `beneficiary: "asserted"` routes. */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /**
@@ -116,5 +124,18 @@ export function registerServiceIdentity(
       ? {}
       : { clockSkewSeconds: options.clockSkewSeconds }),
     ...(options.maxTtlSeconds === undefined ? {} : { maxTtlSeconds: options.maxTtlSeconds }),
+    ...(options.userAssertion === undefined
+      ? {}
+      : {
+          userAssertion: {
+            mode: options.userAssertion.mode,
+            publicKeys: options.userAssertion.publicKeys,
+            ...(options.userAssertion.skewSeconds === undefined
+              ? {}
+              : { skewSeconds: options.userAssertion.skewSeconds }),
+            denialBody: (denial: { readonly status: 401 | 403; readonly code: string; readonly message: string }, traceId: string) =>
+              denialBody({ outcome: "denied", code: denial.code, message: denial.message } as ServiceIdentityDenial, traceId),
+          },
+        }),
   });
 }

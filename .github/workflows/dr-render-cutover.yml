@@ -1,0 +1,168 @@
+name: DR full cutover — Render → replacement project, measured, rolled back (M6-18B)
+
+# M6-18B · CLM-0449. Owner approval 2026-10-03 (written): measure the FULL RTO of a
+# switch of Render to the isolated DR replacement project pvyuhjadrygqqdoczmnd, then
+# return Render to production. Production ppixaauyqoykrogwdxtv is never written:
+#
+#   guard     main only · typed full SHA == run commit · mode plan|apply.
+#   backup    db-backup.yml on PRODUCTION (expect_project_ref ppixaauyqoykrogwdxtv):
+#             dump → encrypt → decrypt-compare → restore → exact compare (read-only
+#             on production). This is the "backup before the cutover".
+#   restore   that very artifact → the DR project (guard-replacement.py: DR ref only,
+#             production/retired/TEST refused) — data RTO, 120-table compare.
+#   cutover   render-dr-cutover.py apply: preflight (every DB variable on production)
+#             → PUT the DR URL on every DB variable → deploy pinned to the live commit
+#             → /health + delivery readiness on DR → committed read/write on DR →
+#             ROLLBACK (original values, same commit) → /health + readiness on
+#             production → env fingerprint identical to before, key for key.
+# mode=plan runs guard + the read-only Render mapping only (no backup, no write).
+#
+# This is a documented DR measurement on a free-plan replacement project, NOT the
+# production RTO of record. ADR-052 and ADR-058 are unchanged.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan (read-only) or apply"
+        type: choice
+        options: [plan, apply]
+        default: plan
+      confirm_sha:
+        description: "Full 40-character SHA of the main commit (must equal the run's commit)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+env:
+  PG_VERSION: '17'
+  PROD_REF: ppixaauyqoykrogwdxtv
+  DR_REF: pvyuhjadrygqqdoczmnd
+
+jobs:
+  guard:
+    name: Guard — main, exact SHA
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Refuse anything but the typed commit on main
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::ref $GITHUB_REF is not refs/heads/main"; exit 1; }
+          [[ "$CONFIRM_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::confirm_sha must be a full 40-character lowercase SHA"; exit 1; }
+          [ "$CONFIRM_SHA" = "$GITHUB_SHA" ] || { echo "::error::confirm_sha $CONFIRM_SHA != run commit $GITHUB_SHA"; exit 1; }
+          echo "guard: main @ $GITHUB_SHA · mode ${{ inputs.mode }}"
+
+  plan:
+    name: Read-only Render mapping
+    needs: guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      DR_REPLACEMENT_DB_URL: ${{ secrets.DR_REPLACEMENT_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: DR target guard (replacement project only)
+        run: python3 scripts/ops/m6-18b-dr/guard-replacement.py
+      - name: render-dr-cutover.py plan
+        run: |
+          mkdir -p out
+          python3 scripts/ops/m6-18b-dr/render-dr-cutover.py plan --out out/plan.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dr-render-plan-${{ github.run_id }}
+          path: out/*.json
+          retention-days: 90
+
+  backup:
+    name: Production backup before the cutover (fail-closed, restore-verified)
+    needs: plan
+    if: ${{ inputs.mode == 'apply' }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/db-backup.yml
+    with:
+      pre_migration: true
+      expect_project_ref: ppixaauyqoykrogwdxtv
+    secrets:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+
+  restore:
+    name: Restore that backup into the DR project (data RTO)
+    needs: backup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      DR_REPLACEMENT_DB_URL: ${{ secrets.DR_REPLACEMENT_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: DR target guard (replacement project only)
+        run: python3 scripts/ops/m6-18b-dr/guard-replacement.py
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PG_VERSION}" >/dev/null
+          echo "/usr/lib/postgresql/${PG_VERSION}/bin" >> "$GITHUB_PATH"
+      - name: Start the data clock
+        id: t0
+        run: echo "ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.backup.outputs.artifact }}
+          path: art
+      - name: Restore (manifest → cipher → decrypt → target → restore → compare → platform)
+        env:
+          DRILL_T0_MS: ${{ steps.t0.outputs.ms }}
+        run: bash scripts/ops/m6-18b-dr/replacement-restore.sh art out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dr-render-restore-${{ github.run_id }}
+          path: out/*.json
+          retention-days: 90
+
+  cutover:
+    name: Render → DR → measure → rollback → prove
+    needs: restore
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      DR_REPLACEMENT_DB_URL: ${{ secrets.DR_REPLACEMENT_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: DR target guard (replacement project only)
+        run: python3 scripts/ops/m6-18b-dr/guard-replacement.py
+      - name: Install psql
+        run: sudo apt-get install -y -qq postgresql-client >/dev/null
+      - name: render-dr-cutover.py apply (rollback always runs inside)
+        run: |
+          mkdir -p out
+          python3 scripts/ops/m6-18b-dr/render-dr-cutover.py apply --out out/cutover.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dr-render-cutover-${{ github.run_id }}
+          path: out/*.json
+          retention-days: 90

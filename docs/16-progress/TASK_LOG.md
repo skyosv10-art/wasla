@@ -1,3 +1,15 @@
+# 2026-10-03 — CLM-0449 — M6-18B: full Render → DR cutover workflow
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending; the run follows the merge
+
+The owner approved a full-RTO measurement with Render on the isolated DR replacement project `pvyuhjadrygqqdoczmnd`. `dr-render-cutover.yml` (manual, `main`, typed SHA) chains: production backup (`expect_project_ref=ppixaauyqoykrogwdxtv`) → restore of that artifact into DR → `render-dr-cutover.py apply` (18 DB variables on 17 services → DR, deploys pinned to the live commit, `/health` + delivery readiness + committed read/write on DR, rollback to the original values in `finally`, env fingerprint identical). Plan mode was run read-only against Render: 17 services, 18 variables, all on production, all live on `9b80724`. Plan and limits: `docs/12-testing/M6-18B_RENDER_DR_CUTOVER_PLAN.md`. A documented DR measurement, not the production RTO of record. ADR-052/ADR-058 unchanged; M6-18B stays `Blocked`.
+
+Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-03 — CLM-0448 — RISK-0042 P3 prerequisite: observe never rejects
 
 - **Work Item(s):** M0-49 (RISK-0042)

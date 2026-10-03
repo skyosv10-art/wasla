@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 21
+    "risks_not_closed": 20
   },
   "dynamic": {
     "measured": true,

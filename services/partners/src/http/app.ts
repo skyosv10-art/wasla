@@ -5,7 +5,7 @@
 
 import Fastify, { type FastifyInstance } from "fastify";
 import { TenantAccessDeniedError, TenantRoleError } from "../domain/tenant-guard";
-import { registerServiceIdentity, type MarketplaceServiceIdentityOptions } from "./service-identity";
+import { registerServiceIdentity, type MarketplaceServiceIdentityOptions, type MarketplaceRouteConfig, PARTNERS_SCOPES } from "./service-identity";
 import { issueCredential } from "../use-cases/issue-credential";
 import { revokeCredential } from "../use-cases/revoke-credential";
 import { suspendTenant } from "../use-cases/suspend-tenant";
@@ -39,9 +39,14 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
 
   registerServiceIdentity(app, options.serviceIdentity ?? {});
 
-  app.get("/partners/health", async () => ({ status: "ok" }));
+  const OPEN: MarketplaceRouteConfig = { serviceIdentity: "open" };
+  function scoped(...scopes: readonly string[]): MarketplaceRouteConfig {
+    return { serviceIdentity: { scopes } };
+  }
 
-  app.get("/partners/ready", async () => {
+  app.get("/partners/health", { config: OPEN }, async () => ({ status: "ok" }));
+
+  app.get("/partners/ready", { config: OPEN }, async () => {
     try {
       await options.lifecycleStore.get("00000000-0000-0000-0000-000000000000");
       return { status: "ready" };
@@ -50,7 +55,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     }
   });
 
-  app.post("/partners/credentials", async (request, reply) => {
+  app.post("/partners/credentials", { config: scoped(PARTNERS_SCOPES.credentialIssue) }, async (request, reply) => {
     const body = request.body as { storeId: string; scopes?: string[] };
     const actor = request.headers["x-wasla-principal"] as string;
     if (!actor) {
@@ -64,7 +69,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return reply.status(201).send(result);
   });
 
-  app.get("/partners/credentials", async (request) => {
+  app.get("/partners/credentials", { config: scoped(PARTNERS_SCOPES.credentialRead) }, async (request) => {
     const query = request.query as { storeId: string };
     const actor = request.headers["x-wasla-principal"] as string;
     if (!actor) {
@@ -74,7 +79,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return { credentials: creds };
   });
 
-  app.delete("/partners/credentials/:id", async (request, reply) => {
+  app.delete("/partners/credentials/:id", { config: scoped(PARTNERS_SCOPES.credentialRevoke) }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as { storeId: string };
     const actor = request.headers["x-wasla-principal"] as string;
@@ -89,7 +94,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return reply.status(204).send();
   });
 
-  app.post("/partners/lifecycle/suspend", async (request, reply) => {
+  app.post("/partners/lifecycle/suspend", { config: scoped(PARTNERS_SCOPES.lifecycleSuspend) }, async (request, reply) => {
     const body = request.body as { storeId: string; reason: string };
     const actor = request.headers["x-wasla-principal"] as string;
     if (!actor) {
@@ -103,7 +108,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return reply.status(200).send({ status: "suspended" });
   });
 
-  app.post("/partners/lifecycle/reinstate", async (request, reply) => {
+  app.post("/partners/lifecycle/reinstate", { config: scoped(PARTNERS_SCOPES.lifecycleReinstate) }, async (request, reply) => {
     const body = request.body as { storeId: string };
     const actor = request.headers["x-wasla-principal"] as string;
     if (!actor) {
@@ -116,7 +121,7 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return reply.status(200).send({ status: "active" });
   });
 
-  app.get("/partners/lifecycle", async (request, reply) => {
+  app.get("/partners/lifecycle", { config: scoped(PARTNERS_SCOPES.lifecycleRead) }, async (request, reply) => {
     const query = request.query as { storeId: string };
     const lifecycle = await options.lifecycleStore.get(query.storeId);
     if (!lifecycle) {
@@ -125,14 +130,14 @@ export function createPartnersApp(options: PartnerAppOptions): FastifyInstance {
     return lifecycle;
   });
 
-  app.get("/partners/audit", async (request) => {
+  app.get("/partners/audit", { config: scoped(PARTNERS_SCOPES.auditRead) }, async (request) => {
     const query = request.query as { storeId: string; limit?: string };
     const limit = parseInt(query.limit ?? "50") || 50;
     const entries = await options.auditStore.listByTenant(query.storeId, limit);
     return { entries };
   });
 
-  app.get("/partners/usage", async (request) => {
+  app.get("/partners/usage", { config: scoped(PARTNERS_SCOPES.usageRead) }, async (request) => {
     const query = request.query as { storeId: string };
     const now = new Date();
     const windowStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())).toISOString();

@@ -8121,4 +8121,28 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - `@wasla/matching-service`: 186/186 pass (173 existing + 13 new)
 - `@wasla/authz-policy`: 46/46 pass (45 existing + 1 new)
 
+## CLM-0444 — RISK-0059: Partners service identity (2026-10-03)
+
+**Work Item(s):** CLM-0444
+
+### What changed
+- Partners service now boots under enforced service identity (RISK-0059 fix).
+- All 10 routes classified: `/partners/health` and `/partners/ready` as `OPEN`; 8 routes as `scoped()` with `partners:*` scopes.
+- Added `partners` to AUDIENCES (18 audiences total).
+- Added 8 partners operations to ENFORCED_OPERATIONS (166 total).
+- Added 8 partners bindings with evidence anchors.
+- `MarketplaceRouteConfig` type exported from `service-identity.ts`.
+
+### Files modified
+- `services/partners/src/http/app.ts` — route configs added to all 10 routes.
+- `services/partners/src/http/service-identity.ts` — `MarketplaceRouteConfig` export, `PARTNERS_SCOPES` import.
+- `packages/authz-policy/src/operations.ts` — `partners` audience + 8 operations.
+- `packages/authz-policy/src/bindings.ts` — 8 partners bindings with evidence.
+- `packages/authz-policy/src/__tests__/policy.test.ts` — updated counts (166 ops, 133 scopes, 18 audiences).
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md` — updated counts, added partners row.
+
+### Test results
+- `@wasla/partners-service`: 53/53 pass
+- `@wasla/authz-policy`: 45/45 pass
+
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

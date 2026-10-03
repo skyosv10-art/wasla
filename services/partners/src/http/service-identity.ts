@@ -5,7 +5,7 @@
 
 import type { FastifyInstance } from "fastify";
 import type { ServiceAuthKeyRegistry, ServiceTokenReplayGuard } from "@wasla/service-auth";
-import { registerServiceIdentityOnFastify } from "@wasla/service-auth/fastify";
+import { registerServiceIdentityOnFastify, type ServiceIdentityRouteConfig } from "@wasla/service-auth/fastify";
 
 export const PARTNERS_SERVICE_AUDIENCE = "partners";
 
@@ -32,10 +32,15 @@ export interface MarketplaceServiceIdentityOptions {
   readonly maxTtlSeconds?: number;
 }
 
+export type MarketplaceRouteConfig = ServiceIdentityRouteConfig;
+
 export function registerServiceIdentity(
   app: FastifyInstance,
   options: Partial<MarketplaceServiceIdentityOptions>,
 ): void {
+  // CLM-0444 (RISK-0059): every route is now classified in app.ts (OPEN or scoped).
+  // If keys/replayGuard are not provided, the onRoute hook would reject every route.
+  // This was the root cause of RISK-0059 — the service could not boot under service identity.
   if (!options.keys || !options.replayGuard) return;
   registerServiceIdentityOnFastify(app, {
     audience: options.audience ?? PARTNERS_SERVICE_AUDIENCE,

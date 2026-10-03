@@ -36,16 +36,17 @@ describe("جردُ العملياتِ المفروضةِ", () => {
    * السابقةُ صدقت لدفعتِها، وتسعُ عملياتِ حدِّ العميلِ دخلَتْ في هذهِ الدفعةِ
    * التي فرضَتْ ذلكَ الحدَّ فعلاً (`ADR-034` · `RISK-0051`).
    */
-  it("تسعٌ وأربعونَ ومئةُ عمليّةٍ على أربعةَ عشرَ حدّاً — مئةٌ وتسعَ عشرةَ قبلَ عمليّتَي حدِّ البحث (M1-04 · الموجةُ 9·10·11·12)", () => {
-    // ADR-060 · CLM-0440: +1 — `POST /identity/assertions` (كانت 157).
-    expect(ENFORCED_OPERATIONS).toHaveLength(158);
-    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(17);
+  it("ستٌّ وستونَ ومئةُ عمليّةٍ على سبعةَ عشرَ حدّاً (M1-04 · الموجةُ 9·10·11·12)", () => {
+    // ADR-060 · CLM-0440: +1 — `POST /identity/assertions` (was 157).
+    // CLM-0444: +8 — partners boundary (was 158). Total: 166.
+    expect(ENFORCED_OPERATIONS).toHaveLength(166);
+    expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(18);
   });
 
-  it("مئةٌ واثنتانِ وعشرونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
-    // تسعُ صلاحيّاتٍ لعشرِ عملياتٍ: قراءةُ القواعدِ يتقاسمُها مسارانِ.
-    // ADR-060 · CLM-0440: +1 — `identity:assertion:issue` (كانت 124).
-    expect(allEnforcedScopes()).toHaveLength(125);
+  it("مئةٌ وثلاثٌ وثلاثونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
+    // ADR-060 · CLM-0440: +1 — `identity:assertion:issue` (was 124).
+    // CLM-0444: +8 — partners scopes (was 125). Total: 133.
+    expect(allEnforcedScopes()).toHaveLength(133);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }

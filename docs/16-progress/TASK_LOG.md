@@ -1,6 +1,6 @@
 # 2026-10-03 — CLM-0446 — M0-46 / M0-47 / M0-48 closed; CLM-0445 released
 
-- **Work Item(s):** M0-46, M0-47, M0-48
+- **Work Item(s):** M0-46 · M0-47 · M0-48
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** In Progress — PR pending
 

@@ -58,6 +58,7 @@ export const AUDIENCES = [
   "matching",
   "negotiations",
   "orders",
+  "partners",
   "reputation",
   "search",
   "subscriptions",
@@ -284,6 +285,18 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "billing", method: "POST", path: "/billing/invoices/:id/payment", scopes: ["billing:invoice:write"] },
   { audience: "billing", method: "POST", path: "/billing/invoices/:id/void", scopes: ["billing:invoice:write"] },
   { audience: "billing", method: "GET", path: "/billing/settlements", scopes: ["billing:invoice:read"] },
+
+  // ── partners (ADR-055 · CLM-0444 · RISK-0059) ──────────────────
+  // حدُّ الشركاءِ: كلُّ مسارٍ عدا health/ready مُصنَّفٌ بصلاحيّةٍ. المسارانِ
+  // المفتوحانِ يُسجَّلانِ `OPEN` في app.ts؛ البقيّةُ `scoped`.
+  { audience: "partners", method: "POST", path: "/partners/credentials", scopes: ["partners:credential:issue"] },
+  { audience: "partners", method: "GET", path: "/partners/credentials", scopes: ["partners:credential:read"] },
+  { audience: "partners", method: "DELETE", path: "/partners/credentials/:id", scopes: ["partners:credential:revoke"] },
+  { audience: "partners", method: "POST", path: "/partners/lifecycle/suspend", scopes: ["partners:lifecycle:suspend"] },
+  { audience: "partners", method: "POST", path: "/partners/lifecycle/reinstate", scopes: ["partners:lifecycle:reinstate"] },
+  { audience: "partners", method: "GET", path: "/partners/lifecycle", scopes: ["partners:lifecycle:read"] },
+  { audience: "partners", method: "GET", path: "/partners/audit", scopes: ["partners:audit:read"] },
+  { audience: "partners", method: "GET", path: "/partners/usage", scopes: ["partners:usage:read"] },
 ];
 
 /** كلُّ صلاحيّةٍ مفروضةٍ على هذا الجمهورِ — مُشتَقّةٌ من الجردِ لا مكتوبةٌ ثانيةً. */

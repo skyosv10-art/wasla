@@ -1,10 +1,10 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T01:45:48Z",
+  "generated_at": "2026-10-03T03:03:27Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b3d4f827d3e7a741eaef255ae16e96c8fd22639b",
-    "branch": "feat/clm-0441-negotiations-asserted-ownership",
+    "commit": "5c91413b54e9d989fbd0e9404244c6669fd1ed13",
+    "branch": "fix/clm-0444-risk-0059-partners-service-identity",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",

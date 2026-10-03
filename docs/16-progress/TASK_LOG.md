@@ -8330,6 +8330,12 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - RISK-0060 is not closed. Closure requires: deploy, set env vars, enable Enforce SSL, measure TLS-verified connections.
 - M6-18B stays Blocked (RPO/ADR-058, M6-19A).
 
+### First CI verdict (PR #602, run 37128896143): RED — recorded, not hidden
+- 40/42 green; `governance-guard` failed on check 23 (M0-44 branch freshness): `docs/clm-0451-m6-18b-run2-risk-0042-observe-evidence` is a stale branch once CLM-0451/0452 are released here.
+- Measured: PR #601 merged as squash `995c2b1`; `git diff --name-only <branch> 995c2b1` = 0 files, so the branch holds nothing outside `main`.
+- Remedy per protocol §8.1: delete the merged branch, then re-run. The guard is not weakened and the release is not reverted. Deleting the remote branch waits for explicit owner authorization.
+- Test name in `pg-guard.test.ts` corrected to state what it asserts (env-derived `ssl` takes precedence).
+
 ### Releases
 - CLM-0451 released (evidence-only, already on main).
 - CLM-0452 released (evidence-only, already on main).

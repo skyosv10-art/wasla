@@ -118,13 +118,9 @@ describe("withPgPoolDefaults — TLS / SSL (RISK-0060)", () => {
     expect(() => withPgPoolDefaults({}, { WASLA_PG_SSL_MODE: "ssl" })).toThrow(/off.*require.*verify-full/);
   });
 
-  it("does not override a caller-provided ssl config", () => {
+  it("env-derived ssl takes precedence over a caller-provided ssl (env is the single source of truth)", () => {
     const callerSsl = { ca: "caller-ca", rejectUnauthorized: true };
     const c = withPgPoolDefaults({ ssl: callerSsl }, { WASLA_PG_SSL_MODE: "require" });
-    // The spread of config happens first, then sslConfig — but caller's ssl is in config,
-    // so it's preserved because sslConfig would override it. Actually, sslConfig spreads
-    // after config, so the env-derived ssl takes precedence. This is by design: the env
-    // is the single source of truth for SSL mode.
     expect(c.ssl).toEqual({ rejectUnauthorized: false });
   });
 });

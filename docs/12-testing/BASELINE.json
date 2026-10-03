@@ -3,8 +3,8 @@
   "generated_at": "2026-10-03T05:04:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "5d561b4f0ef3d09be17b9177061305a9e5b8acd2",
-    "branch": "feat/clm-0443-marketplace-asserted-ownership",
+    "commit": "05b4d2de6b9ceda5b106da4743179e1dee9f88f9",
+    "branch": "main",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
-    "risks_not_closed": 21
+    "risks_not_closed": 20
   },
   "dynamic": {
     "measured": true,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:ec0881c3f30845a82a126713fe257549bf9aab2e41b81f888f2c7451c9272dc8",
+  "fingerprint": "sha256:63f4af7ce08b63530efa5bb5c37185665038372f92278410333850200e77c480",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

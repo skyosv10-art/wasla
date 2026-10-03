@@ -27,7 +27,7 @@ on:
   push:
     # CLM-0438 (RISK-0058 fix) added by addition: the re-run of scenario 2 is proven on its
     # own claim branch before merge, and a change to the guard re-runs it.
-    branches: ['feat/clm-0436-m6-18b-dr-execution', 'fix/clm-0438-risk-0058-db-failure-containment']
+    branches: ['feat/clm-0436-m6-18b-dr-execution', 'fix/clm-0438-risk-0058-db-failure-containment', 'fix/clm-0445-risk-0059-scenario2-fleet-partners']
     paths:
       - '.github/workflows/dr-replacement-restore.yml'
       - 'scripts/ops/m6-18b-dr/**'

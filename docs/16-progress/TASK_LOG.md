@@ -1,3 +1,22 @@
+# 2026-10-03 — CLM-0445 — M6-18B: RISK-0059 scenario 2 fleet re-run with partners
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR #595 pending governance-green
+
+CLM-0444 (merged to main `b34d6a6`) classified all 10 partners routes with `serviceIdentity` config, so partners now boots under enforced service identity. The scenario 2 fleet harness still excluded partners with the old RISK-0059 reason. This claim:
+
+- Removes the `excluded` flag from partners in `scripts/ops/m6-18b-dr/scenario2-db-unavailable.mts`.
+- Updates the harness comment to record that the exclusion was lifted because CLM-0444 fixed the root cause.
+- Adds this branch to the `dr-replacement-restore.yml` push trigger so the workflow runs.
+- Closes RISK-0059 from `mitigating` to `closed` — scenario 2 fleet PASSED (17/17 services with partners, CI run 37104525069).
+- Updates BASELINE.json (risks_not_closed 21→20, fingerprint recalculated).
+- Patches `scripts/checks/test-governance.sh` to isolate the final positive case: reset the proof repo to its clean HEAD before `git add -A`, preventing leftover files from earlier test cases from changing live static counts vs BASELINE.json (check 11).
+
+Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-02 — CLM-0440 release — M0-49: ADR-060 P1 merged
 
 - **Work Item(s):** M0-49

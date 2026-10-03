@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T01:45:48Z",
+  "generated_at": "2026-10-03T02:14:26Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "b3d4f827d3e7a741eaef255ae16e96c8fd22639b",
-    "branch": "feat/clm-0441-negotiations-asserted-ownership",
-    "dirty": false,
-    "dirty_files": 0,
+    "commit": "5c91413b54e9d989fbd0e9404244c6669fd1ed13",
+    "branch": "feat/clm-0442-matching-asserted-ownership",
+    "dirty": true,
+    "dirty_files": 12,
     "dirty_reason": "",
     "tracked_files": 3058
   },
@@ -26,7 +26,7 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 551,
+    "test_files_tracked": 552,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:d017378132ada9cb2b6cf07dae39e55cb96149d1ca88045fdfac099d0709ab53",
+  "fingerprint": "sha256:c9435cd571e6a6580776dd0f472996689e50b622e2e38f14ccd1c135091e86bb",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

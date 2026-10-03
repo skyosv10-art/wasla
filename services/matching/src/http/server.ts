@@ -15,6 +15,7 @@ import { MATCHING_SERVICE_PORT } from "@wasla/contracts-matching";
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
   type ServiceTokenReplayGuard,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
@@ -100,8 +101,14 @@ function buildWiring(): Wiring {
 function serviceIdentityWiring(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
   replayGuard: ServiceTokenReplayGuard;
+  userAssertion?: { mode: import("@wasla/service-auth").UserAssertionMode; publicKeys: import("@wasla/service-auth").UserAssertionPublicKeys; skewSeconds?: number };
 } {
-  return { keys: keyRegistryFromEnv(process.env), replayGuard: createServiceTokenReplayGuardFromEnv(process.env) };
+  const userAssertion = userAssertionConfigFromEnv(process.env);
+  return {
+    keys: keyRegistryFromEnv(process.env),
+    replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
+    ...(userAssertion === undefined ? {} : { userAssertion }),
+  };
 }
 
 async function main(): Promise<void> {

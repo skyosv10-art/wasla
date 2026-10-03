@@ -3045,6 +3045,8 @@ git log --oneline -3
 printf '\n--- CLM-0445 DEBUG: PROOF_BASE_HEAD=%s ---\n' "$PROOF_BASE_HEAD"
 printf '\n--- CLM-0445 DEBUG: validate-baseline.sh output ---\n'
 bash scripts/checks/validate-baseline.sh 2>&1 | head -30
+printf '\n--- CLM-0445 DEBUG: verify-governance.sh full check 11 output ---\n'
+bash scripts/checks/verify-governance.sh origin/main HEAD 2>&1 | grep -A20 "11) الأساس" | head -25
 printf '\n--- CLM-0445 DEBUG: end ---\n'
 WASLA_BRANCHES_FILE=/tmp/wasla-empty-branches.txt WASLA_PRS_FILE=/tmp/wasla-empty-branches.txt \
   t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD

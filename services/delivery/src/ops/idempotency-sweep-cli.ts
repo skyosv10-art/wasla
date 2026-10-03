@@ -35,6 +35,7 @@
  */
 
 import { Pool } from "pg";
+import { pgSslFromEnv } from "@wasla/resilience";
 
 import { StoreOrderStore } from "../infrastructure/store-order-store.js";
 import {
@@ -61,7 +62,7 @@ export async function main(): Promise<number> {
 
   // `max: 1` لأنَّ الجَولةَ متتاليةٌ بطبعِها: دفعةٌ بعدَ دفعةٍ. وبِركةٌ أوسعُ
   // على مضيفِ جَدوَلٍ تحجزُ اتّصالاتٍ من حصّةِ القاعدةِ بلا أن تُسرِّعَ شيئاً.
-  const pool = new Pool({ connectionString, max: 1 });
+  const pool = new Pool({ connectionString, max: 1, ...pgSslFromEnv() });
   try {
     const report = await runIdempotencySweepRound({
       // المخزنُ يطلبُ مدّةً في مُنشئِهِ ولا تُستعملُ في الحذفِ: المُكنسةُ تحذفُ

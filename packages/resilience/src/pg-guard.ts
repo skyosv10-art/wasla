@@ -176,6 +176,18 @@ function envMs(env: Readonly<Record<string, string | undefined>>, key: string, f
   return value;
 }
 
+/**
+ * RISK-0060 (CLM-0454): the SSL part of the pool defaults, for the one-shot CLIs
+ * (`db:migrate`, the idempotency sweep) that must not inherit the runtime query
+ * timeout but must not connect in clear either. Same env, same rules, same errors
+ * as `withPgPoolDefaults` — one source of truth for TLS.
+ */
+export function pgSslFromEnv(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): PgSslConfig {
+  return buildSslConfig(env);
+}
+
 export interface PgPoolTimeouts {
   connectionTimeoutMillis?: number;
   query_timeout?: number;

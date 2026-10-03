@@ -14,6 +14,7 @@
  */
 
 import { Pool } from "pg";
+import { pgSslFromEnv } from "@wasla/resilience";
 
 import { applyDeliverySchema } from "./migrate.js";
 
@@ -23,7 +24,7 @@ export async function main(): Promise<void> {
     throw new Error("DATABASE_URL is required to run the delivery migration");
   }
 
-  const pool = new Pool({ connectionString, max: 1 });
+  const pool = new Pool({ connectionString, max: 1, ...pgSslFromEnv() });
   try {
     await applyDeliverySchema(pool);
     process.stdout.write("delivery schema applied · contracts/schema.sql executed verbatim\n");

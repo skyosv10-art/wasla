@@ -1,0 +1,69 @@
+name: RISK-0060 — verified TLS from Render to the production database (M6-18B)
+
+# CLM-0454. Sets WASLA_PG_SSL_MODE=verify-full and WASLA_PG_SSL_CA (Supabase Root
+# 2021 CA, pinned SHA-256, infra/tls/supabase-root-2021-ca.pem) on every DB-backed
+# wasla-* Render service, redeploys pinned to the commit already live, and proves
+# /health + delivery readiness and an env diff of exactly those two keys. Any
+# failure rolls the two keys back inside the same process.
+#
+#   plan      read-only mapping (no write).
+#   apply     set → deploy → health → fingerprint proof (rollback on failure).
+#   rollback  remove the two keys everywhere → deploy → health (escape hatch).
+#
+# This does NOT enable Supabase "Enforce SSL"; that is the last step of RISK-0060
+# and needs a Supabase token with database_ssl_config_write on production.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan (read-only), apply, or rollback"
+        type: choice
+        options: [plan, apply, rollback]
+        default: plan
+      confirm_sha:
+        description: "Full 40-character SHA of the main commit (must equal the run's commit)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+env:
+  PROD_REF: ppixaauyqoykrogwdxtv
+
+jobs:
+  tls:
+    name: Render TLS — ${{ inputs.mode }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+    steps:
+      - name: Refuse anything but the typed commit on main
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::ref $GITHUB_REF is not refs/heads/main"; exit 1; }
+          [[ "$CONFIRM_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::confirm_sha must be a full 40-character lowercase SHA"; exit 1; }
+          [ "$CONFIRM_SHA" = "$GITHUB_SHA" ] || { echo "::error::confirm_sha $CONFIRM_SHA != run commit $GITHUB_SHA"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: render-tls-activate.py
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          mkdir -p out
+          python3 scripts/ops/risk-0060/render-tls-activate.py "$MODE" --out out/risk-0060-tls.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: risk-0060-render-tls-${{ inputs.mode }}-${{ github.run_id }}
+          path: out/
+          retention-days: 90

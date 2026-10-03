@@ -7,6 +7,7 @@
 
 import { applyAuditSchema } from "./migrate.js";
 import { default as pg } from "pg";
+import { pgSslFromEnv } from "@wasla/resilience";
 
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
@@ -14,7 +15,7 @@ async function main(): Promise<void> {
     console.error("DATABASE_URL is required");
     process.exit(1);
   }
-  const pool = new pg.Pool({ connectionString });
+  const pool = new pg.Pool({ connectionString, ...pgSslFromEnv() });
   try {
     console.log("Applying audit schema...");
     await applyAuditSchema(pool);

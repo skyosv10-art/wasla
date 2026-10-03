@@ -25,6 +25,7 @@ import type { MatchingRunner } from "../runner.js";
 
 import { sendMatchingError } from "./errors.js";
 import { candidacyNotFound } from "../domain/errors.js";
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
 import {
   MATCHING_SCOPES,
   registerServiceIdentity,
@@ -65,7 +66,8 @@ function assertedDriver(...scopes: readonly string[]): MatchingRouteConfig {
 function assertDriverOwnership(request: import("fastify").FastifyRequest, driverPublicId: string): void {
   const endUser = request.endUser;
   if (endUser === undefined) return; // off mode — no assertion verified, no ownership check
-  if (endUser.publicId !== driverPublicId) {
+  // CLM-0448: rejects only in `enforce`; `observe` logs `would_reject` and passes.
+  if (endUserOwnershipDenied(request, endUser.publicId === driverPublicId, "driver_public_id")) {
     throw candidacyNotFound();
   }
 }

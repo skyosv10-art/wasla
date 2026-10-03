@@ -402,3 +402,24 @@ describe("CLM-0442 · observe mode (no rejection)", () => {
     await harness.app.close();
   });
 });
+
+// ── CLM-0448: observe never rejects, even on an ownership mismatch ─────
+// Measured before the fix: the enforce-block mismatch above answered 404 in
+// observe too, because a valid assertion sets `endUser` in observe.
+
+describe("CLM-0448 · observe mode — ownership mismatch is logged, not rejected", () => {
+  it("PUT /candidacy/:driverPublicId with a valid but mismatched assertion → 200 in observe", async () => {
+    const harness = buildAssertedApp("observe");
+    const assertion = mintDriverAssertion(harness, OTHER_DRIVER);
+    const response = await harness.rawInject(
+      signedRequest(harness, "PUT", `/candidacy/${DRIVER_ID}`, {
+        obo: OTHER_DRIVER,
+        assertion,
+        idempotencyKey: IDEMPOTENCY_KEY,
+        body: candidacyPayload(),
+      }),
+    );
+    expect(response.statusCode).toBe(200);
+    await harness.app.close();
+  });
+});

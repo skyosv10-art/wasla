@@ -1,8 +1,24 @@
+# 2026-10-03 — CLM-0448 — RISK-0042 P3 prerequisite: observe never rejects
+
+- **Work Item(s):** M0-49 (RISK-0042)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+The owner approved `WASLA_USER_ASSERTION_MODE=observe` on Render (never `enforce`, no production request rejected). Before activation, a read of the receivers showed observe **would** reject: a valid assertion sets `endUser` in observe, and the ownership helpers answered 404 on a mismatch exactly as in enforce (negotiations: opened_by, proposed_by, acting_party, author_role, thread_membership, list_filter; matching: driver_public_id; marketplace: store_owner, owner_filter, inventory_membership).
+
+Fix: one decision point `endUserOwnershipDenied` in `@wasla/service-auth/fastify`. Observe logs `user_assertion_ownership` `would_reject` and lets the request through; enforce is unchanged. New tests fail against the old behaviour (mutation-checked) and pass now. The enforce suites are unchanged and green. Boot lines `user_assertion_config` / `user_assertion_signer` make activation checkable from the logs (mode and kid only).
+
+Tools: `scripts/ops/render-env-fingerprint.py` (per-key sha256 prefix, never values) and `scripts/ops/risk-0042/observe-report.py` (what would fail under enforce). Baseline 24 h before activation: no end-user traffic on any asserted route (only uptime pings). Plan and rollback: `docs/07-security/RISK-0042_OBSERVE_ACTIVATION.md`. RISK-0042 stays `open`; CLM-0447 released.
+
+Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-03 — CLM-0447 — ledger-only release of CLM-0446
 
 - **Work Item(s):** M0-45 (governance maintenance)
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** Completed — PR #597 merged; released by CLM-0448
 
 CLM-0446 → `Released` after PR #596 merged (`9b80724`). No code change.
 

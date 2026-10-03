@@ -37,7 +37,7 @@
  * خطأً تقول للمُتَّصل «تفاوضٌ بلا أدوار» وهي أسوأ من خطأ، لأنّها جوابٌ يُصدَّق.
  */
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import { NEGOTIATION_SERVICE_PORT } from "@wasla/contracts-negotiation";
 
@@ -71,7 +71,7 @@ import {
   type NegotiationsServiceIdentityOptions,
 } from "./service-identity.js";
 import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
-import type { VerifiedEndUser } from "@wasla/service-auth/fastify";
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
 import {
   assertNoBody,
   assertRequestIdLength,
@@ -227,7 +227,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const body = toThreadOpenBody(request.body);
     // ADR-060 P2: `opened_by` must match `endUser` when assertion is verified.
-    assertOpenedBy(request.endUser, body.opened_by);
+    assertOpenedBy(request, body.opened_by);
 
     const result = await runner.write((deps) =>
       openThread(deps, body, { idempotencyKey, traceId }),
@@ -239,7 +239,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     assertRequestIdLength(request.headers);
     const filter = toThreadListQuery(request.query);
     // ADR-060 P2: the list filter must match the asserted end-user.
-    assertListFilter(request.endUser, filter);
+    assertListFilter(request, filter);
     // `NEGOTIATION_FILTER_REQUIRED` يُرفع من `listNegotiations` لا من هنا: «قراءةٌ بلا حدّ»
     // قاعدةُ حِمْلٍ على المخزن، ومَن ينادي حالةَ الاستخدام من داخل العمليّة يخضع لها أيضاً.
     const threads = await runner.read((deps) => listNegotiations(deps, filter));
@@ -264,7 +264,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     // ADR-060 P2: thread read requires party membership.
-    assertThreadMembership(request.endUser, view.thread);
+    assertThreadMembership(request, view.thread);
     return reply.status(200).send(threadToWire(view.thread));
   });
 
@@ -279,7 +279,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
       cancelThread(deps, threadId, body, { idempotencyKey, traceId }),
     );
     // ADR-060 P2: cancel requires party membership.
-    assertThreadMembership(request.endUser, result.thread);
+    assertThreadMembership(request, result.thread);
     // `200` وليس `201` على إعادة المحاولة وعلى الأصل معاً: الإلغاء لا يُنشئ مورداً، وخيطٌ
     // مُلغى مرّتين هو خيطٌ مُلغى واحد.
     return reply.status(200).send(threadToWire(result.thread));
@@ -290,7 +290,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     // ADR-060 P2: round read requires party membership.
-    assertThreadMembership(request.endUser, view.thread);
+    assertThreadMembership(request, view.thread);
     return reply.status(200).send({ rounds: view.rounds.map(roundToWire) });
   });
 
@@ -301,7 +301,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const threadId = threadIdOf(request.params);
     const body = toRoundProposalBody(request.body);
     // ADR-060 P2: `proposed_by` must match `endUser` when assertion is verified.
-    assertProposedBy(request.endUser, body.proposed_by);
+    assertProposedBy(request, body.proposed_by);
 
     const result = await runner.write((deps) =>
       proposeRound(deps, threadId, body, { idempotencyKey, traceId }),
@@ -317,7 +317,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const roundNo = roundNoOf(request.params);
     const body = toRoundDecisionBody(request.body);
     // ADR-060 P2: `acting_party` must match `endUser` when assertion is verified.
-    assertActingParty(request.endUser, body.acting_party);
+    assertActingParty(request, body.acting_party);
 
     const result = await runner.write((deps) =>
       acceptRound(deps, threadId, roundNo, body, { idempotencyKey, traceId }),
@@ -336,7 +336,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const roundNo = roundNoOf(request.params);
     const body = toRoundRejectionBody(request.body);
     // ADR-060 P2: `acting_party` must match `endUser` when assertion is verified.
-    assertActingParty(request.endUser, body.acting_party);
+    assertActingParty(request, body.acting_party);
 
     const result = await runner.write((deps) =>
       rejectRound(deps, threadId, roundNo, body, { idempotencyKey, traceId }),
@@ -351,7 +351,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const threadId = threadIdOf(request.params);
     const view = await runner.read((deps) => readNegotiation(deps, threadId));
     // ADR-060 P2: message read requires party membership.
-    assertThreadMembership(request.endUser, view.thread);
+    assertThreadMembership(request, view.thread);
     return reply.status(200).send({ messages: view.messages.map(messageToWire) });
   });
 
@@ -362,7 +362,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     const threadId = threadIdOf(request.params);
     const body = toMessageSubmissionBody(request.body);
     // ADR-060 P2: `author_role` must match `endUser` when assertion is verified.
-    assertAuthorRole(request.endUser, body.author_role);
+    assertAuthorRole(request, body.author_role);
 
     const result = await runner.write((deps) =>
       postMessage(deps, threadId, body, { idempotencyKey, traceId }),
@@ -379,7 +379,7 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
     // In `off`/`observe` mode (no endUser), the behavior is unchanged.
     if (request.endUser !== undefined) {
       const view = await runner.read((deps) => readNegotiation(deps, threadId));
-      assertThreadMembership(request.endUser, view.thread);
+      assertThreadMembership(request, view.thread);
     }
     return reply.status(200).send(agreementToWire(agreement));
   });
@@ -389,51 +389,57 @@ export function createNegotiationApp(options: CreateNegotiationAppOptions): Fast
 
 // ── ADR-060 P2 (CLM-0441): ownership comparison helpers ─────────────────────
 // These are no-ops when `endUser` is undefined (off mode, or observe without a
-// valid assertion). In `enforce` mode, the middleware populates `endUser` and
-// the handler compares the resource with the asserted identity.
+// valid assertion). With a verified `endUser` the handler compares the resource
+// with the asserted identity; `endUserOwnershipDenied` rejects only in `enforce`
+// and logs `would_reject` in `observe` (CLM-0448).
 // A mismatch returns 404 (not 403) per ADR-060 §2.6 — to avoid leaking existence.
 
 import type { NegotiationThread } from "../domain/model.js";
 import { threadNotFound as notFound } from "../domain/errors.js";
 
 /** `opened_by` is a party role (`customer` | `driver`). It must match `endUser.actorType`. */
-function assertOpenedBy(endUser: VerifiedEndUser | undefined, openedBy: unknown): void {
+function assertOpenedBy(request: FastifyRequest, openedBy: unknown): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (openedBy !== endUser.actorType) throw notFound();
+  if (endUserOwnershipDenied(request, openedBy === endUser.actorType, "opened_by")) throw notFound();
 }
 
 /** `proposed_by` is a party role. It must match `endUser.actorType`. */
-function assertProposedBy(endUser: VerifiedEndUser | undefined, proposedBy: unknown): void {
+function assertProposedBy(request: FastifyRequest, proposedBy: unknown): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (proposedBy !== endUser.actorType) throw notFound();
+  if (endUserOwnershipDenied(request, proposedBy === endUser.actorType, "proposed_by")) throw notFound();
 }
 
 /** `acting_party` is a party role in accept/reject. It must match `endUser.actorType`. */
-function assertActingParty(endUser: VerifiedEndUser | undefined, actingParty: unknown): void {
+function assertActingParty(request: FastifyRequest, actingParty: unknown): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (actingParty !== endUser.actorType) throw notFound();
+  if (endUserOwnershipDenied(request, actingParty === endUser.actorType, "acting_party")) throw notFound();
 }
 
 /** `author_role` is a party role in messages. It must match `endUser.actorType`. */
-function assertAuthorRole(endUser: VerifiedEndUser | undefined, authorRole: unknown): void {
+function assertAuthorRole(request: FastifyRequest, authorRole: unknown): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (authorRole !== endUser.actorType) throw notFound();
+  if (endUserOwnershipDenied(request, authorRole === endUser.actorType, "author_role")) throw notFound();
 }
 
 /** Thread read requires party membership: the user must be the customer or the driver. */
-function assertThreadMembership(endUser: VerifiedEndUser | undefined, thread: NegotiationThread): void {
+function assertThreadMembership(request: FastifyRequest, thread: NegotiationThread): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (thread.customerPublicId !== endUser.publicId && thread.driverPublicId !== endUser.publicId) {
-    throw notFound();
-  }
+  const member = thread.customerPublicId === endUser.publicId || thread.driverPublicId === endUser.publicId;
+  if (endUserOwnershipDenied(request, member, "thread_membership")) throw notFound();
 }
 
 /** The list filter must match the asserted end-user. */
-function assertListFilter(endUser: VerifiedEndUser | undefined, filter: { readonly order_public_id?: unknown; readonly driver_public_id?: unknown }): void {
+function assertListFilter(request: FastifyRequest, filter: { readonly order_public_id?: unknown; readonly driver_public_id?: unknown }): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
   // The filter carries `driver_public_id` (a public ID) not an actor type.
   // If the driver filter is set, it must match the asserted user.
   if (filter.driver_public_id !== undefined && filter.driver_public_id !== null) {
-    if (filter.driver_public_id !== endUser.publicId) throw notFound();
+    if (endUserOwnershipDenied(request, filter.driver_public_id === endUser.publicId, "list_filter")) throw notFound();
   }
 }

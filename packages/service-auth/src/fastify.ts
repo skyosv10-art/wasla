@@ -139,6 +139,11 @@ declare module "fastify" {
     serviceCaller?: ServicePrincipal;
     /** المستخدمُ النهائيُّ المُتحقَّقُ منهُ (ADR-060) — على مساراتِ `asserted` في `observe`/`enforce`. */
     endUser?: VerifiedEndUser;
+    /**
+     * وضعُ التأكيدِ الفعّالُ على هذا الطلبِ (CLM-0448). يُقرأُ عبرَ `endUserOwnershipDenied`
+     * فلا يرفضُ فحصُ الملكيّةِ في `observe` — يُسجِّلُ «كانَ سيُرفَض» فقط.
+     */
+    userAssertionMode?: UserAssertionMode;
   }
 }
 
@@ -203,6 +208,21 @@ export function registerServiceIdentityOnFastify(
 ): void {
   const { audience, boundaryLabel, denialBody } = options;
   const now = options.now ?? (() => new Date());
+
+  // CLM-0448: one boot line per receiver so a Render activation is checkable from the
+  // logs alone — the mode and the kid list, never key material. `off` logs too.
+  app.addHook("onReady", async () => {
+    const ua = options.userAssertion;
+    app.log.info(
+      {
+        event: "user_assertion_config",
+        audience,
+        mode: ua?.mode ?? "off",
+        kids: ua === undefined ? [] : [...ua.publicKeys.keys()].sort(),
+      },
+      "user assertion receiver config",
+    );
+  });
 
   // حاجزُ الإقلاعِ: مسارٌ بلا تصنيفٍ يُسقِطُ التطبيقَ عندَ التسجيلِ لا عندَ أوّلِ طلبٍ.
   app.addHook("onRoute", (route) => {
@@ -305,6 +325,7 @@ async function applyUserAssertion(
 ): Promise<void> {
   const config = options.userAssertion;
   if (config === undefined || config.mode === "off") return;
+  request.userAssertionMode = config.mode;
   const verdict = verifyUserAssertion(userAssertionFromHeaders(request.headers), {
     publicKeys: config.publicKeys,
     audience: options.audience,
@@ -350,3 +371,32 @@ async function applyUserAssertion(
     );
 }
 
+
+/**
+ * ADR-060 §2.3 · CLM-0448: الحكمُ الوحيدُ على فحصِ ملكيّةٍ مبنيٍّ على `endUser`.
+ *
+ * قِيسَ قبلَ التغيير: في `observe` يضعُ المُتحقِّقُ `endUser` للتأكيدِ الصالحِ، وكانت
+ * فحوصُ الملكيّةِ في الخدماتِ ترفضُ (404) على التنافُرِ — فكانَ `observe` يرفضُ طلباتٍ
+ * إنتاجيّةً، خلافاً لعقدِهِ «يتحقّقُ ويُسجِّلُ ولا يرفضُ أبداً».
+ *
+ * يُعيدُ `true` فقط إن وُجدَ `endUser` وتنافرَ والوضعُ `enforce`. وفي `observe` يُسجِّلُ
+ * `user_assertion_ownership` بنتيجةِ `would_reject` ويُعيدُ `false`. بلا `endUser` ⇒ `false`.
+ * السجلُّ لا يحملُ إلّا اسمَ الفحصِ والمسارَ والمنادي — لا تأكيدَ ولا معرّفاً مُقارَناً.
+ */
+export function endUserOwnershipDenied(request: FastifyRequest, matches: boolean, check: string): boolean {
+  if (request.endUser === undefined || matches) return false;
+  if (request.userAssertionMode === "enforce") return true;
+  request.log.warn(
+    {
+      event: "user_assertion_ownership",
+      mode: request.userAssertionMode ?? "observe",
+      outcome: "would_reject",
+      check,
+      route: `${request.method} ${routeLabelOf(request)}`,
+      caller: request.serviceCaller?.serviceName,
+      act: request.endUser.actorType,
+    },
+    "ownership mismatch would be rejected (observe)",
+  );
+  return false;
+}

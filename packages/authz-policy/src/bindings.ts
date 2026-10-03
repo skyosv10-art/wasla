@@ -855,7 +855,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) openThread(deps, endUser) assertOpenedBy(body.opened_by, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) assertOpenedBy(request.endUser, body.opened_by)",
     note: "CLM-0441: `asserted` — يفتحُ خيطاً بتأكيدِ مستخدمٍ (`beneficiary: \"asserted\"`)، ويُقارِنُ `opened_by` بـ`endUser.actorType`. التطابقُ 200، الخلافُ 404. في الوضعِ `off` (الإنتاج) لا تأكيدَ ولا مقارنةَ — السلوكُ كما كان.",
   },
   {
@@ -864,7 +864,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) listNegotiations(deps, endUser) assertListFilter(params, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) assertListFilter(request.endUser, filter)",
     note: "CLM-0441: `asserted` — القائمةُ تُرشَّحُ بـ`order_public_id` أو `driver_public_id`، ويُتحقَّقُ أنَّ المُرشِّحَ يطابقُ `endUser` (العميلُ يُرشِّحُ بطلبِهِ، السائقُ بسائقِهِ).",
   },
   {
@@ -882,7 +882,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) readNegotiation(deps, threadId, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadRead) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — قراءةُ خيطٍ بتأكيدِ مستخدمٍ؛ يُتحقَّقُ أنَّ `endUser` طرفٌ في الخيطِ (`customer_public_id` أو `driver_public_id`). الخلافُ 404.",
   },
   {
@@ -891,7 +891,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/cancel",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) cancelThread(deps, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.threadWrite) assertThreadMembership(request.endUser, result.thread)",
     note: "CLM-0441: `asserted` — الإلغاءُ يتطلّبُ تأكيدَ مستخدمٍ طرفاً في الخيطِ. الخلافُ 404.",
   },
   {
@@ -900,7 +900,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/rounds",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundRead) view.rounds.map(roundToWire) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundRead) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — قراءةُ عروضِ الأسعارِ بتأكيدِ مستخدمٍ طرفاً في الخيطِ.",
   },
   {
@@ -909,7 +909,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/rounds",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:assertedDriver(NEGOTIATIONS_SCOPES.roundWrite) proposeRound(deps, endUser) assertProposedBy(body.proposed_by, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:assertedDriver(NEGOTIATIONS_SCOPES.roundWrite) assertProposedBy(request.endUser, body.proposed_by) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — `proposed_by` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الخلافُ 404.",
   },
   {
@@ -918,7 +918,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/rounds/:roundNo/accept",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundDecide) acceptRound(deps, endUser) assertActingParty(body.acting_party, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:assertedCustomer(NEGOTIATIONS_SCOPES.roundDecide) assertActingParty(request.endUser, body.acting_party) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — `acting_party` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. القبولُ عن طرفٍ غيرِ المُؤكَّدِ → 404. أخطرُ الفجواتِ السابقةِ تُغلَقُ هنا.",
   },
   {
@@ -927,7 +927,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/rounds/:roundNo/reject",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.roundDecide) rejectRound(deps, endUser) assertActingParty(body.acting_party, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:assertedCustomer(NEGOTIATIONS_SCOPES.roundDecide) assertActingParty(request.endUser, body.acting_party) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — `acting_party` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الرفضُ عن طرفٍ غيرِ المُؤكَّدِ → 404.",
   },
   {
@@ -936,7 +936,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/messages",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageRead) view.messages.map(messageToWire) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageRead) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — قراءةُ رسائلِ خيطٍ بتأكيدِ مستخدمٍ طرفاً فيه.",
   },
   {
@@ -945,7 +945,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/messages",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageWrite) postMessage(deps, endUser) assertAuthorRole(body.author_role, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.messageWrite) assertAuthorRole(request.endUser, body.author_role) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — `author_role` يُقارَنُ بـ`endUser.actorType`، ويُتحقَّقُ عضويّةُ الخيطِ. الانتحالُ يُغلَقُ.",
   },
   {
@@ -954,7 +954,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/negotiations/:threadId/agreement",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.agreementRead) readAgreement(deps, endUser) assertThreadMembership(view, endUser)",
+    evidence: "services/negotiations/src/http/app.ts:asserted(NEGOTIATIONS_SCOPES.agreementRead) assertThreadMembership(request.endUser, view.thread)",
     note: "CLM-0441: `asserted` — قراءةُ الاتّفاقِ بتأكيدِ مستخدمٍ طرفاً في الخيطِ.",
   },
   {

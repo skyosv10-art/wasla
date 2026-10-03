@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 88 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 90 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "BILLING_DATABASE_URL",
@@ -765,6 +765,26 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M6-18B",
   },
   {
+    name: "WASLA_PG_SSL_CA",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M6-18B",
+  },
+  {
+    name: "WASLA_PG_SSL_MODE",
+    type: "string",
+    required: "optional",
+    secret: false,
+    default: "off",
+    scopes: ["runtime", "test"],
+    readerCount: 1,
+    ownerItem: "M6-18B",
+  },
+  {
     name: "WASLA_SERVICE_AUTH_ACTIVE_KID",
     type: "string",
     required: "conditional",
@@ -991,6 +1011,8 @@ export const ENV_VAR_NAMES = [
   "VITE_E2E",
   "WASLA_PG_CONNECT_TIMEOUT_MS",
   "WASLA_PG_QUERY_TIMEOUT_MS",
+  "WASLA_PG_SSL_CA",
+  "WASLA_PG_SSL_MODE",
   "WASLA_SERVICE_AUTH_ACTIVE_KID",
   "WASLA_SERVICE_AUTH_KEYS",
   "WASLA_SERVICE_TOKEN_REPLAY_MODE",

@@ -1933,6 +1933,45 @@
       "note_ar": "يُقرأُ عبرَ `envMs(env, \"<الاسم>\", …)` في `withPgPoolDefaults` (ADR-059 · RISK-0058 · CLM-0438)، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ. الافتراضُ في `PG_GUARD_DEFAULTS`، وقيمةٌ غيرُ صالحةٍ تُرفَضُ."
     },
     {
+      "name": "WASLA_PG_SSL_CA",
+      "type": "string",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "شهادةُ CA بصيغةِ PEM لتثبيتِ اتصالِ قاعدةِ البياناتِ عند `WASLA_PG_SSL_MODE=verify-full`. محتوى الشهادةِ لا مسارُ ملفٍّ.",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "packages/resilience/src/pg-guard.ts",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ `buildSslConfig` في `withPgPoolDefaults` (RISK-0060 · CLM-0453). مطلوبٌ فقط عند `WASLA_PG_SSL_MODE=verify-full`. القيمةُ هي محتوى PEM لا مسارُ ملفٍّ، فالجميعُ يصلُ للقيمةِ ولا يقرأُ من القرصِ."
+    },
+    {
+      "name": "WASLA_PG_SSL_MODE",
+      "type": "string",
+      "required": "optional",
+      "default": "off",
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "نمطُ TLS لاتّصالاتِ قاعدةِ البيانات: `off` (الافتراضيُّ، لا تشفير)، `require` (TLS بلا التحقّقِ من الشهادة)، أو `verify-full` (TLS مع تثبيتِ شهادةِ CA والتحقّقِ الكامل).",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "packages/resilience/src/pg-guard.ts",
+          "mode": "indirect_literal"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ `readSslMode` في `withPgPoolDefaults` (RISK-0060 · CLM-0453). `verify-full` يتطلّبُ `WASLA_PG_SSL_CA`. الإنتاجُ يجبُ أن يكونَ `verify-full`. لا يُفعَّلُ في الإنتاجِ إلا بعدَ نشرِ الكودِ على كلِّ خدمةٍ تصلُ إلى قاعدةِ البيانات."
+    },
+    {
       "name": "WASLA_SERVICE_AUTH_ACTIVE_KID",
       "type": "string",
       "required": "conditional",

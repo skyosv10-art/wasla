@@ -24,6 +24,7 @@ import { listRulesets, readDecision } from "../use-cases/read-audit.js";
 import type { MatchingRunner } from "../runner.js";
 
 import { sendMatchingError } from "./errors.js";
+import { candidacyNotFound } from "../domain/errors.js";
 import {
   MATCHING_SCOPES,
   registerServiceIdentity,
@@ -38,6 +39,36 @@ import {
   toUpsertCandidacyRequest,
 } from "./requests.js";
 import { canonicalJson } from "./canonical-json.js";
+
+/**
+ * ADR-060 P2 (CLM-0442): `beneficiary: "asserted"` route config for driver-scoped
+ * candidacy routes. The `:driverPublicId` path parameter must match the verified
+ * end-user's `publicId` (actor: driver). Mismatch returns 404 (not 403) to avoid
+ * leaking resource existence.
+ */
+function assertedDriver(...scopes: readonly string[]): MatchingRouteConfig {
+  return {
+    serviceIdentity: {
+      scopes,
+      beneficiary: "asserted",
+      actors: ["driver"],
+      forwarders: ["drivers"],
+    },
+  };
+}
+
+/**
+ * ADR-060 P2 (CLM-0442): Asserts that the verified end-user's `publicId` matches
+ * the `:driverPublicId` from the path. Returns 404 on mismatch (not 403) to avoid
+ * leaking resource existence. No-op in `off` mode (endUser is undefined).
+ */
+function assertDriverOwnership(request: import("fastify").FastifyRequest, driverPublicId: string): void {
+  const endUser = request.endUser;
+  if (endUser === undefined) return; // off mode — no assertion verified, no ownership check
+  if (endUser.publicId !== driverPublicId) {
+    throw candidacyNotFound();
+  }
+}
 
 /** حالة التخزين التي يعلنها جذر التركيب صراحة. */
 export interface MatchingHealthDescriptor {
@@ -117,41 +148,40 @@ export function createMatchingApp(options: CreateMatchingAppOptions): FastifyIns
     return reply.status(200).send(toCandidateResult(result));
   });
 
-  app.put("/candidacy/:driverPublicId", { config: scoped(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
+  app.put("/candidacy/:driverPublicId", { config: assertedDriver(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
     const driverPublicId = (request.params as { driverPublicId?: unknown }).driverPublicId;
     const command = toUpsertCandidacyRequest(driverPublicId, request.body, idempotencyKey, traceId);
+    assertDriverOwnership(request, command.driverPublicId);
 
     const candidacy = await runner.write(async (deps) => {
       await upsertCandidacy(deps, command);
-      // الكتابتان تعيدان Candidacy بلا isFresh؛ إعادة القراءة داخل المعاملة تمنع
-      // اختراع قيمة زمنية في HTTP وتستعمل الحساب الكنسي نفسه لمسار GET.
       return readCandidacy(deps, command.driverPublicId, traceId);
     });
     return reply.status(200).send(toCandidacy(candidacy));
   });
 
-  app.get("/candidacy/:driverPublicId", { config: scoped(MATCHING_SCOPES.candidacyRead) }, async (request, reply) => {
+  app.get("/candidacy/:driverPublicId", { config: assertedDriver(MATCHING_SCOPES.candidacyRead) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const driverPublicId = (request.params as { driverPublicId?: unknown }).driverPublicId;
+    assertDriverOwnership(request, driverPublicId as string);
     const candidacy = await runner.read((deps) => readCandidacy(deps, driverPublicId as string, traceId));
     return reply.status(200).send(toCandidacy(candidacy));
   });
 
-  app.post("/candidacy/:driverPublicId/availability", { config: scoped(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
+  app.post("/candidacy/:driverPublicId/availability", { config: assertedDriver(MATCHING_SCOPES.candidacyWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
     const driverPublicId = (request.params as { driverPublicId?: unknown }).driverPublicId;
     const command = toChangeAvailabilityRequest(driverPublicId, request.body, idempotencyKey, traceId);
+    assertDriverOwnership(request, command.driverPublicId);
 
     const candidacy = await runner.write(async (deps) => {
       await changeAvailability(deps, command);
-      // سبب القراءة اللاحقة هو نفسه في PUT: isFresh خاصية محسوبة لا يجوز للحد
-      // النقلـي تخمينها من صف لا يحملها.
       return readCandidacy(deps, command.driverPublicId, traceId);
     });
     return reply.status(200).send(toCandidacy(candidacy));

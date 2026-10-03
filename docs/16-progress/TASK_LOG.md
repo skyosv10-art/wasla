@@ -8096,6 +8096,31 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 ---
 
+## CLM-0442 — ADR-060 P2: Matching asserted ownership (2026-10-03)
+
+**Work Item(s):** CLM-0442
+
+### What changed
+- 3 matching candidacy operations elevated from `none` to `asserted`: `PUT /candidacy/:driverPublicId`, `GET /candidacy/:driverPublicId`, `POST /candidacy/:driverPublicId/availability`.
+- `:driverPublicId` path parameter must match `endUser.publicId` (actor: `driver`, forwarded by `drivers`).
+- Mismatch returns 404 (not 403) — avoids leaking resource existence.
+- System routes stay `scoped()`: `POST /matching/candidates`, `GET /matching/rulesets`, `GET /matching/decisions/:decisionId`.
+- Production default stays `off` — no assertion verification, behavior unchanged.
+
+### Files modified
+- **`services/matching/src/http/service-identity.ts`:** Added `userAssertion` to `MatchingServiceIdentityOptions`, wired through `registerServiceIdentity`.
+- **`services/matching/src/http/app.ts`:** Added `assertedDriver()` helper, `assertDriverOwnership()` check, changed 3 candidacy routes from `scoped()` to `assertedDriver()`.
+- **`services/matching/src/http/server.ts`:** Wires `userAssertionConfigFromEnv(process.env)`.
+- **`packages/authz-policy/src/bindings.ts`:** 3 matching operations updated from `strength: "none"` to `strength: "asserted"` with evidence and notes.
+- **`packages/authz-policy/src/__tests__/policy.test.ts`:** Updated wave-2 test (matching 6 → 3 `none`), added CLM-0442 asserted test.
+- **`services/matching/src/__tests__/user-assertion-ownership.test.ts`:** 13 new tests covering off/observe/enforce modes.
+- **`docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`:** Updated matching row.
+- **`docs/12-testing/BASELINE.json`:** Updated test_files_tracked.
+
+### Test results
+- `@wasla/matching-service`: 186/186 pass (173 existing + 13 new)
+- `@wasla/authz-policy`: 46/46 pass (45 existing + 1 new)
+
 ## CLM-0444 — RISK-0059: Partners service identity (2026-10-03)
 
 **Work Item(s):** CLM-0444

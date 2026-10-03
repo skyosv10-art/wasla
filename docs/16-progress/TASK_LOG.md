@@ -1,8 +1,26 @@
+# 2026-10-03 — CLM-0446 — M0-46 / M0-47 / M0-48 closed; CLM-0445 released
+
+- **Work Item(s):** M0-46 · M0-47 · M0-48
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+Re-read from the repository, not from earlier reports:
+
+- M0-46: PR #558 merged (`135d832`); RISK-0012 is `closed` in the register.
+- M0-47: PR #554 merged (`cf22161`); RISK-0013 is `closed` in the register.
+- M0-48: PR #555 merged (`4eb6b4f`) and PR #581 (CLM-0433, billing); 13 `api-types-drift.test.ts` files run in the CI `test` job, green on PR #595.
+
+All three rows move from `In Progress` to `Completed` with these evidence links. CLM-0445 is released (PR #595 → `45eabca`), and its branch is removed from the `dr-replacement-restore.yml` push trigger. No code change.
+
+Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
 # 2026-10-03 — CLM-0445 — M6-18B: RISK-0059 scenario 2 fleet re-run with partners
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR #595 pending governance-green
+- **Status:** Completed — PR #595 merged (`45eabca`), CI 42/42 green; released by CLM-0446
 
 CLM-0444 (merged to main `b34d6a6`) classified all 10 partners routes with `serviceIdentity` config, so partners now boots under enforced service identity. The scenario 2 fleet harness still excluded partners with the old RISK-0059 reason. This claim:
 

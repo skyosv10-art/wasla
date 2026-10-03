@@ -5,6 +5,7 @@
  */
 
 import { Pool } from "pg";
+import { pgSslFromEnv } from "@wasla/resilience";
 
 import { applyBillingSchema } from "./migrate.js";
 
@@ -14,7 +15,7 @@ export async function main(): Promise<void> {
     throw new Error("BILLING_DATABASE_URL is required to run the billing migration");
   }
 
-  const pool = new Pool({ connectionString, max: 1 });
+  const pool = new Pool({ connectionString, max: 1, ...pgSslFromEnv() });
   try {
     await applyBillingSchema(pool);
     process.stdout.write("billing schema applied · contracts/schema.sql executed verbatim\n");

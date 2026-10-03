@@ -20,6 +20,7 @@ import {
   pgGuardOf,
   PG_GUARD_DEFAULTS,
   withPgPoolDefaults,
+  pgSslFromEnv,
   type HealthHookApp,
   type HealthHookReply,
 } from "../pg-guard.js";
@@ -122,6 +123,22 @@ describe("withPgPoolDefaults — TLS / SSL (RISK-0060)", () => {
     const callerSsl = { ca: "caller-ca", rejectUnauthorized: true };
     const c = withPgPoolDefaults({ ssl: callerSsl }, { WASLA_PG_SSL_MODE: "require" });
     expect(c.ssl).toEqual({ rejectUnauthorized: false });
+  });
+});
+
+describe("pgSslFromEnv — the TLS part alone, for one-shot CLIs (RISK-0060, CLM-0454)", () => {
+  it("matches withPgPoolDefaults for every mode and adds no timeout", () => {
+    expect(pgSslFromEnv({})).toEqual({});
+    expect(pgSslFromEnv({ WASLA_PG_SSL_MODE: "require" })).toEqual({ ssl: { rejectUnauthorized: false } });
+    const env = { WASLA_PG_SSL_MODE: "verify-full", WASLA_PG_SSL_CA: "  PEM  " };
+    expect(pgSslFromEnv(env)).toEqual({ ssl: { ca: "PEM", rejectUnauthorized: true } });
+    expect(pgSslFromEnv(env).ssl).toEqual(withPgPoolDefaults({}, env).ssl);
+    expect(pgSslFromEnv(env)).not.toHaveProperty("query_timeout");
+  });
+
+  it("refuses verify-full without a CA and an unknown mode, like the pool factory", () => {
+    expect(() => pgSslFromEnv({ WASLA_PG_SSL_MODE: "verify-full" })).toThrow(/WASLA_PG_SSL_CA/);
+    expect(() => pgSslFromEnv({ WASLA_PG_SSL_MODE: "prefer" })).toThrow(/off.*require.*verify-full/);
   });
 });
 

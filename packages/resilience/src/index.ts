@@ -60,6 +60,7 @@ export {
   isDbUnavailableError,
   connectivityReason,
   withPgPoolDefaults,
+  pgSslFromEnv,
   guardPgPool,
   pgGuardOf,
   installedPgGuards,

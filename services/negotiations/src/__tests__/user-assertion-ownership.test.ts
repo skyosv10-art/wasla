@@ -231,6 +231,41 @@ describe("ADR-060 P2 · observe mode", () => {
 
 // ── Enforce mode: assertion required, mismatch → 404 ────────────────────
 
+// ── CLM-0448: observe never rejects, even on an ownership mismatch ─────
+// Measured before the fix: with a VALID assertion, observe set `endUser` and the
+// ownership helpers answered 404 on a mismatch — observe rejected production
+// requests. These are the same mismatches the enforce block rejects below.
+
+describe("CLM-0448 · observe mode — ownership mismatch is logged, not rejected", () => {
+  it("opened_by mismatch with a valid assertion → 201 in observe", async () => {
+    const harness = buildAssertedApp("observe");
+    const assertion = mintCustomerAssertion(harness);
+    const response = await harness.app.inject(
+      signedRequest(harness, "POST", "/negotiations", {
+        obo: CUSTOMER_ID,
+        assertion,
+        body: { ...openInput(), opened_by: "driver" },
+        idempotencyKey: "obs-open-mis01",
+      }),
+    );
+    expect(response.statusCode).toBe(201);
+  });
+
+  it("reading a thread as a non-party with a valid assertion → 200 in observe", async () => {
+    const harness = buildAssertedApp("observe");
+    const assertion = mintCustomerAssertion(harness);
+    const thread = await openThread(harness, assertion);
+    const otherAssertion = mintCustomerAssertion(harness, "WS-9999999999");
+    const response = await harness.app.inject(
+      signedRequest(harness, "GET", `/negotiations/${thread.id as string}`, {
+        obo: "WS-9999999999",
+        assertion: otherAssertion,
+      }),
+    );
+    expect(response.statusCode).toBe(200);
+  });
+});
+
 describe("ADR-060 P2 · enforce mode", () => {
   it("opens a thread with a valid customer assertion and matching opened_by", async () => {
     const harness = buildAssertedApp("enforce");

@@ -537,6 +537,12 @@ export class MarketplaceProductService {
       readonly limit?: number;
       /** ADR-060 P2 (CLM-0443): verified end user; must be the owner or active staff of the product's store. */
       readonly memberPublicId?: string;
+      /**
+       * CLM-0448: asked only when the end user is not a member; `true` ⇒ reject.
+       * The HTTP layer answers through `endUserOwnershipDenied`, so `observe` logs
+       * and passes. Absent ⇒ reject (unchanged behaviour for direct callers).
+       */
+      readonly rejectNonMember?: () => boolean;
     } = {},
   ): Promise<InventoryView> {
     return await this.deps.uow.read(async ({ stores }) => {
@@ -549,7 +555,7 @@ export class MarketplaceProductService {
             (entry) => entry.memberPublicId === options.memberPublicId,
           );
         // Not a member: answer as if the product did not exist (ADR-060 §2.5, ADR-029).
-        if (!isMember) throw productNotFound(productId);
+        if (!isMember && (options.rejectNonMember?.() ?? true)) throw productNotFound(productId);
       }
       const inventory = await stores.projection.findInventory(productId);
       const base = {

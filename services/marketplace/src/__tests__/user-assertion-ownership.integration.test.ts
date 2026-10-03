@@ -250,6 +250,27 @@ describe.skipIf(!PG_ENABLED)("CLM-0443 · marketplace asserted ownership (ADR-06
       const response = await readInventory(productId, asStaff("GET", url, OTHER_OWNER));
       expect(response.statusCode, response.body).toBe(200);
     });
+
+    // CLM-0448: with a VALID assertion, observe sets `endUser`; before the fix the
+    // three ownership checks below answered 404 in observe exactly as in enforce.
+    it("CLM-0448: POST /stores naming another owner with a valid assertion → 201 (observe logs, does not reject)", async () => {
+      const response = await registerStore(OTHER_OWNER, asStaff("POST", "/stores", OWNER, { assertionFor: OWNER }));
+      expect(response.statusCode, response.body).toBe(201);
+    });
+
+    it("CLM-0448: GET /stores?owner_public_id=<other> with a valid assertion → 200 in observe", async () => {
+      await registerStore(OWNER, asStaff("POST", "/stores", OWNER, { assertionFor: OWNER }));
+      const url = `/stores?owner_public_id=${OWNER}`;
+      const response = await app.inject({ method: "GET", url, headers: asStaff("GET", url, OTHER_OWNER, { assertionFor: OTHER_OWNER }) });
+      expect(response.statusCode, response.body).toBe(200);
+    });
+
+    it("CLM-0448: GET /products/:id/inventory by a non-member with a valid assertion → 200 in observe", async () => {
+      const productId = await seedProduct("observe");
+      const url = `/products/${productId}/inventory`;
+      const response = await readInventory(productId, asStaff("GET", url, OTHER_OWNER, { assertionFor: OTHER_OWNER }));
+      expect(response.statusCode, response.body).toBe(200);
+    });
   });
 
   // ── enforce: positive and negative ──────────────────────────────────

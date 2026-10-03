@@ -178,5 +178,10 @@ export function createIdentityApp(
     },
   );
 
+  // CLM-0448: the issuer's boot line — whether a signing key is loaded, and its kid only.
+  app.addHook("onReady", async () => {
+    const key = options.userAssertion?.signingKey ?? null;
+    app.log.info({ event: "user_assertion_signer", enabled: key !== null, kid: key?.kid ?? null }, "user assertion signer config");
+  });
   return app;
 }

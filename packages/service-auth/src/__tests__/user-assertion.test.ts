@@ -17,6 +17,7 @@ import {
   incomingDelegationOf,
   registerServiceIdentityOnFastify,
   type ServiceIdentityDenial,
+  endUserOwnershipDenied,
 } from "../fastify.js";
 import { ServiceAuthKeyRegistry } from "../keys.js";
 import { InMemoryServiceTokenReplayGuard } from "../replay.js";
@@ -312,6 +313,12 @@ function receiver(mode: UserAssertionMode | undefined, logs: unknown[] = []) {
     { config: { serviceIdentity: { scopes: [SCOPE], beneficiary: "asserted", actors: ["customer"] } } },
     async (request) => ({ endUser: request.endUser ?? null, delegation: incomingDelegationOf(request) ?? null }),
   );
+  // CLM-0448: a resource owned by someone else — the ownership check always mismatches.
+  app.post(
+    "/owned",
+    { config: { serviceIdentity: { scopes: [SCOPE], beneficiary: "asserted", actors: ["customer"] } } },
+    async (request) => ({ denied: endUserOwnershipDenied(request, false, "synthetic_owner") }),
+  );
   return app;
 }
 
@@ -401,6 +408,39 @@ describe("المُستقبِلُ — off/observe/enforce (ADR-060 §2.7)", () =>
     });
     expect(good.statusCode).toBe(200);
     expect(good.json().endUser).toMatchObject({ publicId: SUB });
+  });
+
+  it("CLM-0448: endUserOwnershipDenied — observe يُسجِّلُ would_reject ولا يرفضُ، enforce يرفضُ، off لا شيء", async () => {
+    const ownedHeaders = (): Record<string, string> => ({
+      ...serviceAuthHeaders({
+        serviceName: "customer-bot",
+        audience: "alpha",
+        method: "POST",
+        path: "/owned",
+        keys: registry(),
+        now: NOW,
+        scopes: [SCOPE],
+        onBehalfOfPublicId: SUB,
+      }),
+      [USER_ASSERTION_HEADER]: aliceAssertion(),
+    });
+    const logs: Array<Record<string, unknown>> = [];
+    const observe = await receiver("observe", logs).inject({ method: "POST", url: "/owned", headers: ownedHeaders() });
+    expect(observe.statusCode).toBe(200);
+    expect(observe.json()).toEqual({ denied: false });
+    const ownership = logs.filter((l) => l.event === "user_assertion_ownership");
+    expect(ownership).toHaveLength(1);
+    expect(ownership[0]).toMatchObject({ mode: "observe", outcome: "would_reject", check: "synthetic_owner", route: "POST /owned" });
+    // لا يحملُ السجلُّ المعرّفَ العامَّ المُقارَنَ ولا التأكيدَ.
+    expect(JSON.stringify(ownership)).not.toContain(SUB);
+
+    const enforce = await receiver("enforce").inject({ method: "POST", url: "/owned", headers: ownedHeaders() });
+    expect(enforce.json()).toEqual({ denied: true });
+
+    const offLogs: Array<Record<string, unknown>> = [];
+    const off = await receiver("off", offLogs).inject({ method: "POST", url: "/owned", headers: ownedHeaders() });
+    expect(off.json()).toEqual({ denied: false });
+    expect(offLogs.some((l) => l.event === "user_assertion_ownership")).toBe(false);
   });
 
   it("رمزُ الخدمةِ يسبقُ التأكيدَ: بلا رمزٍ ⇒ 401 بمغلَّفِ الحدِّ حتّى في enforce", async () => {

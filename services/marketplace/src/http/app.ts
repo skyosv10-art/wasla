@@ -30,7 +30,7 @@
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
 
 import { ownerPublicIdOf } from "@wasla/auth-sdk";
-import type { VerifiedEndUser } from "@wasla/service-auth/fastify";
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
 
 import {
   MARKETPLACE_ROUTE_KEYS,
@@ -168,9 +168,11 @@ function assertedStaff(...scopes: readonly string[]): MarketplaceRouteConfig {
  * contract, and it must match. Mismatch → `STORE_NOT_FOUND` (404), the same
  * answer `tenantActor` gives when a caller names two different actors.
  */
-function assertStoreOwner(endUser: VerifiedEndUser | undefined, ownerPublicId: string, storeSlug: string): void {
+function assertStoreOwner(request: FastifyRequest, ownerPublicId: string, storeSlug: string): void {
+  const endUser = request.endUser;
   if (endUser === undefined) return;
-  if (ownerPublicId !== endUser.publicId) throw storeNotFound(storeSlug);
+  // CLM-0448: rejects only in `enforce`; `observe` logs `would_reject` and passes.
+  if (endUserOwnershipDenied(request, ownerPublicId === endUser.publicId, "store_owner")) throw storeNotFound(storeSlug);
 }
 
 /**
@@ -178,9 +180,10 @@ function assertStoreOwner(endUser: VerifiedEndUser | undefined, ownerPublicId: s
  * user. Lists by state or category only are catalogue reads and are unchanged.
  * Mismatch → 404, as in the negotiations list filter (CLM-0441).
  */
-function assertOwnerFilter(endUser: VerifiedEndUser | undefined, ownerPublicId: string | undefined): void {
+function assertOwnerFilter(request: FastifyRequest, ownerPublicId: string | undefined): void {
+  const endUser = request.endUser;
   if (endUser === undefined || ownerPublicId === undefined) return;
-  if (ownerPublicId !== endUser.publicId) throw storeNotFound("");
+  if (endUserOwnershipDenied(request, ownerPublicId === endUser.publicId, "owner_filter")) throw storeNotFound("");
 }
 
 /**
@@ -394,7 +397,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
 
   app.post("/stores", { config: assertedStaff(MARKETPLACE_SCOPES.storeWrite) }, async (request, reply): Promise<FastifyReply> => {
     const input = parseRegisterStore(request.body);
-    assertStoreOwner(request.endUser, input.ownerPublicId, input.storeSlug);
+    assertStoreOwner(request, input.ownerPublicId, input.storeSlug);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const store = await stores.registerStore(
@@ -409,7 +412,7 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
 
   app.get("/stores", { config: assertedStaff(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
     const query = parseStoreQuery(request.query);
-    assertOwnerFilter(request.endUser, query.ownerPublicId);
+    assertOwnerFilter(request, query.ownerPublicId);
     const { stores, catalog } = deps();
     const index = await catalog.categorySlugIndex();
     const page = await stores.listStores(query);
@@ -620,7 +623,12 @@ export function createMarketplaceApp(options: MarketplaceAppOptions): FastifyIns
     // of the product's store; otherwise `PRODUCT_NOT_FOUND`. Without one (off mode) unchanged.
     const view = await products.readInventory(productId, {
       ...query,
-      ...(request.endUser === undefined ? {} : { memberPublicId: request.endUser.publicId }),
+      ...(request.endUser === undefined
+        ? {}
+        : {
+            memberPublicId: request.endUser.publicId,
+            rejectNonMember: () => endUserOwnershipDenied(request, false, "inventory_membership"),
+          }),
     });
     return reply.status(200).send(
       toInventoryReadResponse(view, (adjustment) =>

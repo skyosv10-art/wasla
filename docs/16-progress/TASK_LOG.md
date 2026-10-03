@@ -8350,12 +8350,12 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 ### Measured first
 - CLM-0453 on main: PR #602 → `1ba2124`, main CI run 37130067863 success, Render deploy succeeded; `render-tls-activate.py plan` (read-only) shows 17/17 DB services live on `1ba2124`, all pointing at `ppixaauyqoykrogwdxtv` through `aws-0-ap-south-1.pooler.supabase.com:5432` with no query parameter.
-- `rg "new (pg\.)?Pool\("`: 14 `db:migrate` CLIs and `idempotency-sweep-cli.ts` built pools with no `ssl`. Under Supabase Enforce SSL they would be refused, so migrations would stop. Marketplace and subscriptions migrate through the runtime factory and were already covered.
+- `rg "new (pg\.)?Pool\("`: 15 `db:migrate` CLIs and `idempotency-sweep-cli.ts` built pools with no `ssl`. Under Supabase Enforce SSL they would be refused, so migrations would stop. Marketplace and subscriptions migrate through the runtime factory and were already covered.
 - Supabase Management API with the only available token: lists the test project only; `ssl-enforcement` on production and DR → `Missing required permission(s): database_ssl_config_read`.
 
 ### What changed
 - `pgSslFromEnv(env)` exported from `@wasla/resilience`: the TLS part of the defaults without the runtime query timeout (a migration must not inherit it). Same env, rules and errors as `withPgPoolDefaults`.
-- 15 CLIs: `new Pool({ connectionString, max: 1, ...pgSslFromEnv() })`.
+- 16 CLIs (15 migrate + the sweep): `new Pool({ connectionString, max: 1, ...pgSslFromEnv() })`.
 - `pool-tls-coverage.test.ts`: walks `services/` and `packages/` (not tests, not `*-e2e`), fails on any `new Pool(` whose argument list does not call `withPgPoolDefaults(` or `pgSslFromEnv(`. Mutation check: removing it from `orders/migrate-cli.ts` fails the test at `services/orders/src/db/migrate-cli.ts:18`. 2 `pgSslFromEnv` unit tests. Resilience 66/66.
 - `infra/tls/supabase-root-2021-ca.pem`: Supabase Root 2021 CA (public), SHA-256 pinned in the activation tool.
 - `scripts/ops/risk-0060/render-tls-activate.py` (reuses the cutover tool's Render helpers) and `.github/workflows/risk-0060-render-tls.yml` (main only, typed SHA, plan/apply/rollback), declared in the workflow supply-chain guard.
@@ -8366,6 +8366,10 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - Render still runs `WASLA_PG_SSL_MODE` unset (off) until the workflow's apply run after this merge.
 - Enforce SSL is not on, and RISK-0060 is not closed.
 - M6-18B stays Blocked.
+
+### First CI verdict (PR #603, run 37131025509): RED — recorded
+- `doc-coverage` and governance check 2/3 refused 15 `migrate-cli.ts` files as outside CLM-0454: the claim row wrote them as the glob `services/*/src/db/migrate-cli.ts`, and the claim guard matches literal paths and prefixes, not globs.
+- Remedy: the same 15 files are written out by name in the CLM-0454 row (no new file, no new directory — the set the glob named). The guard is unchanged.
 
 ### Releases
 - CLM-0453 released (PR #602 merged, main green).

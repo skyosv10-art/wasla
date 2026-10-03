@@ -36,6 +36,14 @@ git add -A >/dev/null 2>&1
 git commit -qm "baseline" >/dev/null 2>&1
 git update-ref refs/remotes/origin/main HEAD
 git branch -f origin-main >/dev/null 2>&1
+# CLM-0445: capture the clean proof-repo HEAD after the initial commit so the
+# final "valid full state" positive case can reset to it. Earlier test cases
+# create files inside /tmp/gov_proof (test repos, fixtures, mutated ledgers);
+# `git add -A` in the final case would stage those leftovers and change the
+# live static counts (packages, test_files_tracked) vs BASELINE.json —
+# causing check 11 to fail spuriously. The reset guarantees the final case
+# starts from the same clean tree the baseline was generated from.
+PROOF_BASE_HEAD="$(git rev-parse HEAD)"
 # RISK-0028 gate 4(b) requires `repo.commit` in BASELINE.json to resolve. This
 # synthetic repository has a fresh history, so the recorded commit is imported
 # from the real repository (object only, under a private ref). The gate is not
@@ -3010,10 +3018,19 @@ printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # يحمل Work Item(s)، ولمسةٌ في اللوحة — يجب أن تمرَّ البوّابةُ كلُّها خضراء.
 # لا يُعاد السجلُّ الحقيقيُّ هنا: لا حجزَ فيه لفروعِ الاختبار، فتفشل الحالةُ
 # لسببٍ من صنعِ الحزمةِ لا من عيبٍ في البوّابة — وهو عينُ ما عولِج في M0-12.
+# CLM-0445: reset the proof repo to the clean baseline HEAD before applying
+# the intended positive-case edits. Earlier test cases leave files in the
+# working tree (test repos, fixtures, mutated ledgers); without a reset,
+# `git add -A` stages those leftovers and changes the live static counts
+# (packages, test_files_tracked) vs BASELINE.json — causing check 11 to
+# fail spuriously. The reset isolates the final case to its own clean tree.
+git reset --hard "$PROOF_BASE_HEAD" >/dev/null 2>&1
+git clean -fd >/dev/null 2>&1
 cp /tmp/CL.fixture "$CL"
 printf '\n### [2026-01-01] حالة اختبار — المدخل الموحّد\n\n- **Work Item(s):** %s\n- **Why:** حالة موجبة كاملة\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
 printf '\n<!-- حالة اختبار -->\n' >> "$BOARD"
-git add -A >/dev/null; git commit -qm "valid full state" >/dev/null
+git add -A >/dev/null
+git -c user.email=t@t -c user.name=t commit -qm "valid full state"
 # (CLM-0397) Check 23 is fail-closed in CI — inject empty branch/PR files
 # so the guard sees no branches to check (the test repo has no remote).
 # /dev/null is a char device, not a regular file — the guard's -f test

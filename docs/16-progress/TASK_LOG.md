@@ -6,7 +6,7 @@
 
 The owner approved a full-RTO measurement with Render on the isolated DR replacement project `pvyuhjadrygqqdoczmnd`. `dr-render-cutover.yml` (manual, `main`, typed SHA) chains: production backup (`expect_project_ref=ppixaauyqoykrogwdxtv`) → restore of that artifact into DR → `render-dr-cutover.py apply` (18 DB variables on 17 services → DR, deploys pinned to the live commit, `/health` + delivery readiness + committed read/write on DR, rollback to the original values in `finally`, env fingerprint identical). Plan mode was run read-only against Render: 17 services, 18 variables, all on production, all live on `9b80724`. Plan and limits: `docs/12-testing/M6-18B_RENDER_DR_CUTOVER_PLAN.md`. A documented DR measurement, not the production RTO of record. ADR-052/ADR-058 unchanged; M6-18B stays `Blocked`.
 
-Process note: main CI was red on `9b80724` and `5db398f` with check 4 (claim freshness) because the branch of a still-`Active` claim was deleted on merge. From CLM-0448 on, a merged branch is kept until the PR that releases its claim merges (check 23 accepts a branch with an `Active` claim), then deleted.
+Process note: main CI was red on `9b80724` and `5db398f` with check 4 (claim freshness) because the branch of a still-`Active` claim was deleted on merge. From CLM-0448 on, a merged branch is kept while its claim is `Active` and main CI runs on the merge commit (check 23 accepts a branch with an `Active` claim); it is deleted when the release PR is pushed, because there check 23 rejects a branch whose claim is `Released`. Measured: main CI on `e29619f` went green on rerun once the CLM-0448 branch was restored.
 
 Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 

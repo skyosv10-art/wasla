@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T01:35:49Z",
+  "generated_at": "2026-10-03T01:45:48Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "10f636071f8af68c049ae55ef5797c4a6b3ec1c4",
+    "commit": "b3d4f827d3e7a741eaef255ae16e96c8fd22639b",
     "branch": "feat/clm-0441-negotiations-asserted-ownership",
-    "dirty": true,
-    "dirty_files": 1,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
     "tracked_files": 3058
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "unknown",
+    "pnpm": "9.15.9",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"

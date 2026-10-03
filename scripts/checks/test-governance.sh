@@ -3036,6 +3036,16 @@ git -c user.email=t@t -c user.name=t commit -qm "valid full state"
 # /dev/null is a char device, not a regular file — the guard's -f test
 # rejects it, so we create a real empty file.
 : > /tmp/wasla-empty-branches.txt
+# CLM-0445 debug: print git status and validate-baseline output to diagnose
+# the check 11 failure in the final positive case.
+printf '\n--- CLM-0445 DEBUG: git status --porcelain ---\n'
+git status --porcelain | head -20
+printf '\n--- CLM-0445 DEBUG: git log --oneline -3 ---\n'
+git log --oneline -3
+printf '\n--- CLM-0445 DEBUG: PROOF_BASE_HEAD=%s ---\n' "$PROOF_BASE_HEAD"
+printf '\n--- CLM-0445 DEBUG: validate-baseline.sh output ---\n'
+bash scripts/checks/validate-baseline.sh 2>&1 | head -30
+printf '\n--- CLM-0445 DEBUG: end ---\n'
 WASLA_BRANCHES_FILE=/tmp/wasla-empty-branches.txt WASLA_PRS_FILE=/tmp/wasla-empty-branches.txt \
   t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD
 

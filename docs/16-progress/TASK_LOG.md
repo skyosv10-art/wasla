@@ -1,8 +1,18 @@
+# 2026-10-03 — CLM-0447 — ledger-only release of CLM-0446
+
+- **Work Item(s):** M0-45 (governance maintenance)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+CLM-0446 → `Released` after PR #596 merged (`9b80724`). No code change.
+
+---
+
 # 2026-10-03 — CLM-0446 — M0-46 / M0-47 / M0-48 closed; CLM-0445 released
 
 - **Work Item(s):** M0-46 · M0-47 · M0-48
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** Completed — PR #596 merged (`9b80724`), CI 42/42 green; released by CLM-0447
 
 Re-read from the repository, not from earlier reports:
 

@@ -8146,3 +8146,27 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - `@wasla/authz-policy`: 45/45 pass
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0444 — post-merge correction (2026-10-03)
+
+**Work Item(s):** CLM-0444
+
+### What happened
+- PR #592 (CLM-0444) merged → main `f167e8b`.
+- Post-merge check of the risk register found a defect from #592: an unanchored `sed 's|status:open |status:mitigating |'` changed eight unrelated risks from `open` to `mitigating`: RISK-0017, RISK-0031, RISK-0032, RISK-0034, RISK-0042, RISK-0047, RISK-0049, RISK-0050. No mitigation work happened for them, so the change was false.
+
+### Fix
+- The eight risks are restored to `open`. Diff of `RISK_REGISTER.md` against main before #592 (`d7fbcfd`) now changes only the RISK-0059 line (`open` → `mitigating`).
+- CLM-0444 stays Active in `WORK_CLAIMS.md` so this branch keeps a live claim (governance checks 2 and 3 failed on the first push because the claim was released in the same PR). It is released through the CLM-0443 PR after #593 merges, the same path CLM-0442 took through #592.
+
+### Tests / evidence
+- `git diff d7fbcfd -- docs/07-security/RISK_REGISTER.md`: one changed risk line (RISK-0059).
+- No code change.
+
+### Next step
+- CLM-0443 (marketplace asserted ownership) on its own branch from main.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+

@@ -1,10 +1,10 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T04:17:19Z",
+  "generated_at": "2026-10-03T04:52:57Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8d07f8887f707d3d1afb327063278293732a3413",
-    "branch": "fix/clm-0444-risk-0059-partners-service-identity",
+    "commit": "f9e583da6ed87dde2012d305cf5752d80edc75ca",
+    "branch": "fix593",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",

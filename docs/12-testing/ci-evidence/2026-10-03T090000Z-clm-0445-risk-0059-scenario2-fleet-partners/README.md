@@ -14,14 +14,16 @@ The scenario 2 fleet harness (`scripts/ops/m6-18b-dr/scenario2-db-unavailable.mt
 
 The `dr-replacement-restore.yml` push trigger includes this branch so the workflow runs on push.
 
-## Expected result
+## CI verdict
 
-The E4 fleet experiment should now start 17/17 services (up from 16/16 + 1 excluded), with partners:
+The `dr-replacement-restore.yml` workflow run on this branch (run `37104525069`):
+
+### Job `scenario2`: PASS
+
+The E4 fleet experiment now starts **17/17 services** (up from 16 + 1 excluded), with partners:
 - booting under enforced service identity,
 - health 503 during the DB outage (via `attachDatabaseHealth`),
 - health 200 after the DB returns,
 - no crash.
 
-## CI verdict
-
-Pending — the `dr-replacement-restore.yml` workflow runs on push to this branch. The result will be recorded here.
+RISK-0059 is closed by this evidence: partners boots and passes the scenario 2 fleet test under enforced service identity.

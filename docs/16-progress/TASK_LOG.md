@@ -8068,9 +8068,7 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 ## CLM-0441 — ADR-060 P2 for negotiations (asserted ownership)
 
-**Date:** 2026-10-03
-**Branch:** `feat/clm-0441-negotiations-asserted-ownership`
-**Status:** Implementation complete; PR pending
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0441` · **Branch:** `feat/clm-0441-negotiations-asserted-ownership` · **Date:** 2026-10-03
 
 ### Changes
 - **`services/negotiations/src/http/service-identity.ts`:** Added `userAssertion` to `NegotiationsServiceIdentityOptions` (mode + publicKeys), passed through to `registerServiceIdentityOnFastify`.

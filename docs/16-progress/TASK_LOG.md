@@ -8060,6 +8060,36 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
   - bot-runtime: 5
   - customer-bot: 5 · driver-bot: 5
   - drivers: 5
-- **Not done:** no key set anywhere, no `observe`/`enforce` on Render (P3 needs a separate written owner decision), no receiver route declared `asserted` (P2: CLM-0441..0443), no per-bot rate limit (written down as a debt). No change to Production, Render, migrations or cutover. RISK-0042 `open` · RISK-0059 `open` · RISK-0058 `mitigating` · RISK-0055 `mitigating` · M6-18B `Blocked`.
+- **Not done:** no key set anywhere, no `observe`/`enforce` on Render (P3 needs a separate written owner decision), no per-bot rate limit (written down as a debt). No change to Production, Render, migrations or cutover. RISK-0042 `open` · RISK-0059 `open` · RISK-0058 `mitigating` · RISK-0055 `mitigating` · M6-18B `Blocked`.
 - تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 - **Ledger:** releases CLM-0439 (PR #587 merged → main `a69dc5c`). Its branch is deleted after this release reaches main.
+
+---
+
+## CLM-0441 — ADR-060 P2 for negotiations (asserted ownership)
+
+- **Work Item(s):** M0-49 · **Claim:** `CLM-0441` · **Branch:** `feat/clm-0441-negotiations-asserted-ownership` · **Date:** 2026-10-03
+
+### Changes
+- **`services/negotiations/src/http/service-identity.ts`:** Added `userAssertion` to `NegotiationsServiceIdentityOptions` (mode + publicKeys), passed through to `registerServiceIdentityOnFastify`.
+- **`services/negotiations/src/http/app.ts`:** Added `asserted()`, `assertedCustomer()`, `assertedDriver()` helpers. 11 of 12 routes changed from `scoped()` to `asserted()`/`assertedCustomer()`/`assertedDriver()`. `/tick` stays `scoped()`. Added ownership comparison functions: `assertOpenedBy`, `assertProposedBy`, `assertActingParty`, `assertAuthorRole`, `assertThreadMembership`, `assertListFilter`.
+- **`services/negotiations/src/http/server.ts`:** Wires `userAssertionConfigFromEnv(process.env)` into `createNegotiationApp`.
+- **`packages/service-auth/src/user-assertion.ts`:** Added `userAssertionConfigFromEnv()` — returns `undefined` in `off` mode, `{ mode, publicKeys }` otherwise.
+- **`packages/service-auth/src/index.ts`:** Exports `userAssertionConfigFromEnv`.
+- **`packages/authz-policy/src/bindings.ts`:** `BindingStrength` gains `"asserted"`. 11 negotiations operations updated from `strength: "none"` to `strength: "asserted"` with updated evidence and notes. `/tick` stays `none`.
+- **`services/negotiations/src/__tests__/user-assertion-ownership.test.ts`:** 14 new tests covering `off` (compatibility), `observe` (no rejection), `enforce` (401 without assertion, 404 on mismatch, 404 on non-party read, 200 on tick). Positive and negative cases for round proposal/accept with role matching.
+- **`packages/authz-policy/src/__tests__/policy.test.ts`:** Updated wave-2 test (negotiations 12 → 1 `none`), added new test for 11 `asserted` negotiations operations.
+- **`docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`:** Updated counts and negotiations row.
+
+### Test results
+- `@wasla/negotiations-service`: 258/258 pass (244 existing + 14 new)
+- `@wasla/authz-policy`: 45/45 pass (44 existing + 1 new)
+- `@wasla/service-auth`: typecheck clean
+
+### Design decisions
+- Mismatch returns 404 (not 403) per ADR-060 §2.6 — avoids leaking resource existence.
+- Production default stays `off` — no assertion verification, behavior unchanged.
+- `assertedCustomer()` restricts to `actors: ["customer"]`; `assertedDriver()` restricts to `actors: ["driver"]`.
+- `asserted()` accepts all actor types (for routes where either party can act: read, cancel, accept, reject, agreement).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

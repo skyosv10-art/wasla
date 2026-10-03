@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-01T09:27:00Z",
+  "generated_at": "2026-10-03T01:45:48Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "e8819ee6211f3a7359ec30caed042c8130d78cd1",
-    "branch": "docs/clm-0429-risk-0056-production-migration",
-    "dirty": true,
-    "dirty_files": 7,
-    "dirty_reason": "governance docs + baseline updated",
-    "tracked_files": 3016
+    "commit": "b3d4f827d3e7a741eaef255ae16e96c8fd22639b",
+    "branch": "feat/clm-0441-negotiations-asserted-ownership",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 3058
   },
   "env": {
     "node": "v20.20.1",
@@ -26,7 +26,7 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 550,
+    "test_files_tracked": 551,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 25,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:11c067f881ddd8e23b4375ddc9abad433bf0e3e5cd31a19f057e926698306022",
+  "fingerprint": "sha256:d017378132ada9cb2b6cf07dae39e55cb96149d1ca88045fdfac099d0709ab53",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

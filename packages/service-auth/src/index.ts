@@ -151,6 +151,7 @@ export {
   userAssertionFromHeaders,
   userAssertionHeaders,
   userAssertionModeFromEnv,
+  userAssertionConfigFromEnv,
   userAssertionPublicKeysFromEnv,
   verifyUserAssertion,
 } from "./user-assertion.js";

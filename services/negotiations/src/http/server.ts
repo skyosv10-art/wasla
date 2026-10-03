@@ -45,9 +45,7 @@ import {
 } from "../runner.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 
-import {
-  keyRegistryFromEnv,
-} from "@wasla/service-auth";
+import { keyRegistryFromEnv, userAssertionConfigFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createNegotiationApp, type NegotiationHealthDescriptor } from "./app.js";
@@ -109,6 +107,7 @@ async function main(): Promise<void> {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
+    userAssertion: userAssertionConfigFromEnv(process.env),
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

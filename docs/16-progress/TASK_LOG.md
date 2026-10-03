@@ -8149,7 +8149,7 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 ---
 
-## CLM-0444 — post-merge correction and release (2026-10-03)
+## CLM-0444 — post-merge correction (2026-10-03)
 
 **Work Item(s):** CLM-0444
 
@@ -8159,7 +8159,7 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 ### Fix
 - The eight risks are restored to `open`. Diff of `RISK_REGISTER.md` against main before #592 (`d7fbcfd`) now changes only the RISK-0059 line (`open` → `mitigating`).
-- CLM-0444 → Released in `WORK_CLAIMS.md`.
+- CLM-0444 stays Active in `WORK_CLAIMS.md` so this branch keeps a live claim (governance checks 2 and 3 failed on the first push because the claim was released in the same PR). It is released through the CLM-0443 PR after #593 merges, the same path CLM-0442 took through #592.
 
 ### Tests / evidence
 - `git diff d7fbcfd -- docs/07-security/RISK_REGISTER.md`: one changed risk line (RISK-0059).

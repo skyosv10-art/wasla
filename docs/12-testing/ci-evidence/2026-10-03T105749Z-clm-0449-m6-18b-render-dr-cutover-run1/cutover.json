@@ -1,0 +1,272 @@
+{
+  "mode": "apply",
+  "prod_ref": "ppixaauyqoykrogwdxtv",
+  "dr_ref": "pvyuhjadrygqqdoczmnd",
+  "started_at": "2026-10-03T10:57:45.344247+00:00",
+  "preflight": {
+    "services": 17,
+    "variables": 18,
+    "map": [
+      {
+        "service": "wasla-audit",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-customer-bot",
+        "keys": [
+          "DATABASE_URL",
+          "CUSTOMER_DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-customers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-delivery",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-dispatch",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-driver-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-drivers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-geography",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-identity",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-marketplace",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-matching",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-negotiations",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-orders",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-partner-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-reputation",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-search",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      },
+      {
+        "service": "wasla-subscriptions",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "0c045e2388f7b022e982be9aef1bda8dd8080a1e"
+      }
+    ],
+    "problems": []
+  },
+  "t0_cutover_start": "2026-10-03T10:57:49.832260+00:00",
+  "cutover": {
+    "env_switched_s": 1.1,
+    "all_deploys_terminal_s": 920.1,
+    "healthy_and_ready_s": 1834.5,
+    "deploys": {
+      "wasla-audit": "update_failed",
+      "wasla-customer-bot": "live",
+      "wasla-customers": "live",
+      "wasla-delivery": "live",
+      "wasla-dispatch": "live",
+      "wasla-driver-bot": "live",
+      "wasla-drivers": "live",
+      "wasla-geography": "live",
+      "wasla-identity": "update_failed",
+      "wasla-marketplace": "live",
+      "wasla-matching": "live",
+      "wasla-negotiations": "live",
+      "wasla-orders": "live",
+      "wasla-partner-bot": "live",
+      "wasla-reputation": "live",
+      "wasla-search": "live",
+      "wasla-subscriptions": "live"
+    },
+    "health": {
+      "health_ok": {
+        "wasla-audit": "2026-10-03T11:13:23.916537+00:00",
+        "wasla-customer-bot": "2026-10-03T11:13:16.575830+00:00",
+        "wasla-customers": null,
+        "wasla-delivery": null,
+        "wasla-dispatch": null,
+        "wasla-driver-bot": "2026-10-03T11:13:15.347625+00:00",
+        "wasla-drivers": null,
+        "wasla-geography": null,
+        "wasla-identity": "2026-10-03T11:13:12.012288+00:00",
+        "wasla-marketplace": null,
+        "wasla-matching": null,
+        "wasla-negotiations": null,
+        "wasla-orders": null,
+        "wasla-partner-bot": "2026-10-03T11:13:17.657243+00:00",
+        "wasla-reputation": null,
+        "wasla-search": null,
+        "wasla-subscriptions": null
+      },
+      "health_failed": [
+        "wasla-customers",
+        "wasla-delivery",
+        "wasla-dispatch",
+        "wasla-drivers",
+        "wasla-geography",
+        "wasla-marketplace",
+        "wasla-matching",
+        "wasla-negotiations",
+        "wasla-orders",
+        "wasla-reputation",
+        "wasla-search",
+        "wasla-subscriptions"
+      ],
+      "delivery_ready_db_ok": false,
+      "delivery_ready_http": 503,
+      "at": "2026-10-03T11:28:24.329259+00:00"
+    },
+    "variables_on_dr": 18,
+    "read_write": {
+      "ok": true,
+      "marker": "m6-18b-cutover-1791026905",
+      "written_and_read": "1",
+      "public_tables": 121,
+      "seconds": 1.88,
+      "error": null
+    },
+    "read_write_done_s": 1838.0,
+    "dr_window_s": 1838.0
+  },
+  "full_rto_render_s": 1838.0,
+  "rollback": {
+    "reason": "after failure",
+    "started_at": "2026-10-03T11:28:27.813625+00:00",
+    "variables": 18,
+    "health": {
+      "health_ok": {
+        "wasla-audit": "2026-10-03T11:29:58.257707+00:00",
+        "wasla-customer-bot": "2026-10-03T11:29:48.473882+00:00",
+        "wasla-customers": "2026-10-03T11:29:56.603544+00:00",
+        "wasla-delivery": "2026-10-03T11:29:53.733804+00:00",
+        "wasla-dispatch": "2026-10-03T11:29:57.913283+00:00",
+        "wasla-driver-bot": "2026-10-03T11:29:47.094223+00:00",
+        "wasla-drivers": "2026-10-03T11:29:48.362840+00:00",
+        "wasla-geography": "2026-10-03T11:29:52.448326+00:00",
+        "wasla-identity": "2026-10-03T11:29:43.108888+00:00",
+        "wasla-marketplace": "2026-10-03T11:29:41.842010+00:00",
+        "wasla-matching": "2026-10-03T11:29:55.296929+00:00",
+        "wasla-negotiations": "2026-10-03T11:29:49.773025+00:00",
+        "wasla-orders": "2026-10-03T11:29:44.377130+00:00",
+        "wasla-partner-bot": "2026-10-03T11:29:49.887683+00:00",
+        "wasla-reputation": "2026-10-03T11:29:45.681718+00:00",
+        "wasla-search": "2026-10-03T11:29:51.200758+00:00",
+        "wasla-subscriptions": "2026-10-03T11:29:46.976397+00:00"
+      },
+      "health_failed": [],
+      "delivery_ready_db_ok": true,
+      "delivery_ready_http": 200,
+      "at": "2026-10-03T11:29:59.552967+00:00"
+    },
+    "finished_at": "2026-10-03T11:29:59.552985+00:00",
+    "seconds": 91.7,
+    "deploys": {
+      "wasla-audit": "live",
+      "wasla-customer-bot": "live",
+      "wasla-customers": "live",
+      "wasla-delivery": "live",
+      "wasla-dispatch": "live",
+      "wasla-driver-bot": "live",
+      "wasla-drivers": "live",
+      "wasla-geography": "live",
+      "wasla-identity": "live",
+      "wasla-marketplace": "live",
+      "wasla-matching": "live",
+      "wasla-negotiations": "live",
+      "wasla-orders": "live",
+      "wasla-partner-bot": "live",
+      "wasla-reputation": "live",
+      "wasla-search": "live",
+      "wasla-subscriptions": "live"
+    }
+  },
+  "fingerprint": {
+    "before_services": 24,
+    "after_services": 24,
+    "differences": [],
+    "identical": true
+  },
+  "problems": [
+    "cutover deploys not live: ['wasla-audit', 'wasla-identity']",
+    "on DR, /health not 200: ['wasla-customers', 'wasla-delivery', 'wasla-dispatch', 'wasla-drivers', 'wasla-geography', 'wasla-marketplace', 'wasla-matching', 'wasla-negotiations', 'wasla-orders', 'wasla-reputation', 'wasla-search', 'wasla-subscriptions']",
+    "on DR, delivery /delivery/ready does not report database ok"
+  ],
+  "verdict": "FAIL",
+  "finished_at": "2026-10-03T11:30:01.117594+00:00"
+}

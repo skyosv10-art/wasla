@@ -19,7 +19,10 @@
 
 import {
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
   type ServiceTokenReplayGuard,
+  type UserAssertionMode,
+  type UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
@@ -66,10 +69,14 @@ function readPort(): number {
 function serviceIdentityFromEnv(): {
   keys: ReturnType<typeof keyRegistryFromEnv>;
   replayGuard: ServiceTokenReplayGuard;
+  userAssertion?: { mode: UserAssertionMode; publicKeys: UserAssertionPublicKeys; skewSeconds?: number };
 } {
+  // ADR-060 P2 (CLM-0443): `undefined` in `off` mode (the production default) — behaviour unchanged.
+  const userAssertion = userAssertionConfigFromEnv(process.env);
   return {
     keys: keyRegistryFromEnv(process.env),
     replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
+    ...(userAssertion === undefined ? {} : { userAssertion }),
   };
 }
 

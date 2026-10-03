@@ -422,8 +422,8 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     );
     expect(unbound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       // RISK-0042 الموجةُ 2 (CLM-0437): صفّانِ أُضيفا بدليلٍ مقروءٍ — يُضافانِ ولا يُمحى ما قبلَهما.
+      // CLM-0443 (ADR-060 P2): `GET /products/:productId/inventory` ارتقى إلى `asserted` فخرجَ من هذهِ القائمة.
       "GET /products/:productId",
-      "GET /products/:productId/inventory",
       "GET /stores/:storeSlug",
       "GET /stores/:storeSlug/products",
       "GET /stores/:storeSlug/reviews",
@@ -467,14 +467,15 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
   it("RISK-0042 الموجةُ 2: 32 صفّاً `none` على خمسةِ حدودٍ — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
     // CLM-0441 (ADR-060 P2 · 2026-10-03): 11 من 12 عمليّة مفاوضاتٍ ارتقتْ من `none` إلى `asserted`.
     // CLM-0442 (ADR-060 P2 · 2026-10-03): 3 عمليّات مطابقةٍ ارتقتْ من `none` إلى `asserted`.
-    // تبقى 21 صفّاً `none` في الموجةِ 2: 1 negotiations/tick + 3 matching + 8 reputation + 4 subscriptions + 5 marketplace.
+    // CLM-0443 (ADR-060 P2 · 2026-10-03): 3 عمليّات سوقٍ ارتقتْ من `none` إلى `asserted` (POST/GET /stores · GET inventory).
+    // تبقى 18 صفّاً `none` في الموجةِ 2: 1 negotiations/tick + 3 matching + 8 reputation + 4 subscriptions + 2 marketplace.
     const wave2 = OPERATION_BINDINGS.filter((b) =>
       ["negotiations", "matching", "reputation", "subscriptions", "marketplace"].includes(b.audience)
       && b.note.startsWith("`none`:"),
     );
     const perAudience: Record<string, number> = {};
     for (const b of wave2) perAudience[b.audience] = (perAudience[b.audience] ?? 0) + 1;
-    expect(perAudience).toEqual({ negotiations: 1, matching: 3, reputation: 8, subscriptions: 4, marketplace: 5 });
+    expect(perAudience).toEqual({ negotiations: 1, matching: 3, reputation: 8, subscriptions: 4, marketplace: 2 });
     for (const binding of wave2) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
@@ -514,6 +515,27 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(rulesets?.strength).toBe("none");
     const decisions = OPERATION_BINDINGS.find((b) => b.audience === "matching" && b.path === "/matching/decisions/:decisionId");
     expect(decisions?.strength).toBe("none");
+  });
+
+  it("CLM-0443 (ADR-060 P2): 3 عمليّات سوقٍ `asserted` — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
+    const asserted = OPERATION_BINDINGS.filter((b) =>
+      b.audience === "marketplace" && b.strength === "asserted",
+    );
+    expect(asserted.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "GET /products/:productId/inventory",
+      "GET /stores",
+      "POST /stores",
+    ]);
+    for (const binding of asserted) {
+      expect(binding.evidence).toMatch(/^services\/marketplace\/src\/http\/app\.ts:assertedStaff/);
+      expect(binding.note).toContain("CLM-0443");
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
+    // Catalogue/system reads used by delivery stay `none` (no obo, system scope).
+    const productRead = OPERATION_BINDINGS.find((b) => b.audience === "marketplace" && b.method === "GET" && b.path === "/products/:productId");
+    expect(productRead?.strength).toBe("none");
+    const storeRead = OPERATION_BINDINGS.find((b) => b.audience === "marketplace" && b.method === "GET" && b.path === "/stores/:storeSlug");
+    expect(storeRead?.strength).toBe("none");
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

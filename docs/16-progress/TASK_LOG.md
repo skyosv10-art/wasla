@@ -8170,3 +8170,31 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
 
+---
+
+## CLM-0443 — ADR-060 P2: marketplace asserted ownership (2026-10-03)
+
+**Work Item(s):** M0-49 · CLM-0443
+
+### What changed
+- `services/marketplace/src/http/service-identity.ts` · `server.ts`: the `userAssertion` option is passed to `registerServiceIdentity`; `serviceIdentityFromEnv()` reads it with `userAssertionConfigFromEnv`. With the production default (`WASLA_USER_ASSERTION_MODE=off`) it returns nothing, so behaviour is unchanged.
+- `services/marketplace/src/http/app.ts`: `assertedStaff(...)` (`beneficiary: "asserted"`, `actors: ["store_staff"]`, no forwarder: `partner-bot` calls marketplace directly).
+  - `POST /stores`: `assertStoreOwner` — `owner_public_id` must equal `endUser.publicId`, else `STORE_NOT_FOUND` (404) and nothing is written.
+  - `GET /stores`: `assertOwnerFilter` — an `owner_public_id` filter must equal `endUser.publicId`, else 404. Lists by state or category only are catalogue reads and are unchanged.
+  - `GET /products/:productId/inventory`: passes `memberPublicId` to `readInventory`.
+- `services/marketplace/src/app/products.ts` `readInventory`: with `memberPublicId`, the caller must be the store owner or active staff (`activeStaff`), else `PRODUCT_NOT_FOUND` (404). Membership is tested explicitly, so database errors are not turned into 404.
+- Delivery separation: `GET /stores/:storeSlug`, `GET /products/:productId` and inventory reserve/release stay system `scoped` without `obo`; no change for `delivery`.
+- `packages/authz-policy`: the 3 bindings `none` → `asserted` with evidence anchors; wave-2 marketplace `none` count 5 → 2; new CLM-0443 test.
+
+### Tests / evidence
+- `services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts`: 19 tests (off ×4, observe ×3, enforce ×12: 401 missing, 403 sub≠obo, 403 wrong act, 201/200 positive, 404 mismatch, staff 200, non-member 404, delivery reads unchanged).
+- Local PostgreSQL 18.6: marketplace integration 14 files / 160 tests passed. Unit 406/406. `@wasla/authz-policy` 47/47. `validate-authz-policy.sh` passed. Typecheck clean.
+
+### What is not claimed
+- RISK-0042 stays `open`. Production `WASLA_USER_ASSERTION_MODE` stays `off`; no Render, secret, migration or cutover change. P3 (observe/enforce on Render) needs an owner decision.
+- No production grant currently gives `partner-bot` marketplace `store:write` / `inventory:read`, so the asserted path has no live caller yet.
+
+### Claims
+- CLM-0444 released here (its correction PR #593 merged first).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

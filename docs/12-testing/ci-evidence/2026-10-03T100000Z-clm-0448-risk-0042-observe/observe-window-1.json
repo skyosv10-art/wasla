@@ -1,0 +1,45 @@
+{
+  "window": {
+    "start": "2026-10-03T10:23:23Z",
+    "end": "2026-10-03T12:32:34Z"
+  },
+  "services": {
+    "wasla-negotiations": {
+      "traffic_non_health": {
+        "HEAD /": 7,
+        "GET /": 7
+      },
+      "assertion_outcomes": [],
+      "ownership_would_reject": [],
+      "issued": []
+    },
+    "wasla-matching": {
+      "traffic_non_health": {
+        "HEAD /": 7,
+        "GET /": 7
+      },
+      "assertion_outcomes": [],
+      "ownership_would_reject": [],
+      "issued": []
+    },
+    "wasla-marketplace": {
+      "traffic_non_health": {
+        "HEAD /": 7,
+        "GET /": 7
+      },
+      "assertion_outcomes": [],
+      "ownership_would_reject": [],
+      "issued": []
+    },
+    "wasla-identity": {
+      "traffic_non_health": {
+        "HEAD /": 6,
+        "GET /": 6
+      },
+      "assertion_outcomes": [],
+      "ownership_would_reject": [],
+      "issued": []
+    }
+  },
+  "would_fail_under_enforce": []
+}

@@ -1,0 +1,272 @@
+{
+  "taken_at": "2026-10-03T12:35:30Z",
+  "services": {
+    "wasla-alertmanager": {
+      "id": "srv-daqgfrad0e5s73agd5jg",
+      "fingerprint": "sha256:4c3e952d3b6ed423c3401b39e092ec4bc6d95a7d804abd2ff297e1b945901355",
+      "keys": {
+        "AM_BASIC_AUTH_HASH": "9d73f44456d13899",
+        "AM_BASIC_AUTH_USER": "b5923462fc640391",
+        "PORT": "3be426e88ba62fb2",
+        "TELEGRAM_BOT_TOKEN": "94e5c4803fdbd17b",
+        "TELEGRAM_CHAT_ID": "2964da2336a988dc"
+      }
+    },
+    "wasla-audit": {
+      "id": "srv-daprrq0u01pc73do9npg",
+      "fingerprint": "sha256:43d180a9138a5fee39c4d6ed898807c16c61ee0f22e67ae84d50b6634d4c437d",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "fa5a6ffc38acf0fa",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "ef4414ef53bd3319",
+        "WASLA_SERVICE_AUTH_KEYS": "4f8a787458d648b7"
+      }
+    },
+    "wasla-customer-bot": {
+      "id": "srv-daodb6bm8hqs73e8aa50",
+      "fingerprint": "sha256:e513ea7bb8464434ad7880d9bbea7783615859bafe078ad2e89ee88e2dcd8a0f",
+      "keys": {
+        "CUSTOMER_BOT_MINI_APP_URL": "ce8f222faf692a3b",
+        "CUSTOMER_BOT_TOKEN": "58367e58ca0f9b8a",
+        "CUSTOMER_BOT_WEBHOOK_SECRET": "835f6398806b68d4",
+        "CUSTOMER_DATABASE_URL": "77196e1c8e90909a",
+        "DATABASE_URL": "77196e1c8e90909a",
+        "IDENTITY_SERVICE_URL": "fa3fc020a1e3f838",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "8f305a9988a1caf8",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-customers": {
+      "id": "srv-daodbe3m8hqs73e8b5ag",
+      "fingerprint": "sha256:4df5c5e5c3670530290b7cb9d7932032edfe00b18516f96bb6e159427d815afe",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "GEOGRAPHY_SERVICE_URL": "d6a50604f9ef1e70",
+        "IDENTITY_SERVICE_URL": "fa3fc020a1e3f838",
+        "NODE_ENV": "e919a75364398a44",
+        "ORDER_SERVICE_URL": "366f6f8d06cfe3b9",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "ddbefe4ed748e134",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-delivery": {
+      "id": "srv-daodbc3m8hqs73e8atvg",
+      "fingerprint": "sha256:4d0fc83e99536caa81770244db31b059525a6f1dbd49b6234eea3ffefe4cbaaa",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "MARKETPLACE_SERVICE_URL": "94fb8f1cd2ac1472",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "c7d5b499ef39007b",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-dispatch": {
+      "id": "srv-daodbfmk1f9s73bknib0",
+      "fingerprint": "sha256:6a3c51b74b73601da98a516c808bd6917675c81f918e6a2c8bf615253f808ffd",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "DISPATCH_WAVE_SIZE": "d4735e3a265e16ee",
+        "MATCHING_BASE_URL": "3a5b9ff8d78531a1",
+        "NODE_ENV": "e919a75364398a44",
+        "ORDERS_BASE_URL": "366f6f8d06cfe3b9",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "55d9550e20cc16f2",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-driver-bot": {
+      "id": "srv-daodb6740ujc73esa79g",
+      "fingerprint": "sha256:e68c84d4caa42486c6737b07e13de3d29d77f5157a5f3365b4c62949e370d2ed",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "DRIVER_BOT_MINI_APP_URL": "6692c91aa502dc71",
+        "DRIVER_BOT_TOKEN": "94e5c4803fdbd17b",
+        "DRIVER_BOT_WEBHOOK_SECRET": "a9ab445983b3fa33",
+        "IDENTITY_SERVICE_URL": "fa3fc020a1e3f838",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "10545d4908dbe676",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-drivers": {
+      "id": "srv-daodb6740ujc73esa7v0",
+      "fingerprint": "sha256:cfb08a67ca8ab7a91c3d7b9c6b04ba9c810d3fe02e176b70366b959f8a013b39",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "b59d71e794577240",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-geography": {
+      "id": "srv-daodbbn40ujc73esarsg",
+      "fingerprint": "sha256:95443781523d32dc62086e304792a0db0601547588c736ecb0db49d4510e1adf",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "IDENTITY_SERVICE_URL": "fa3fc020a1e3f838",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "814f6cfc3e20cee6",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-identity": {
+      "id": "srv-daodb63m8hqs73e8a900",
+      "fingerprint": "sha256:cbe98835bd207e2e3b30c4169052fb0009842ec4606940b371fa18a8a3e781bd",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "b9da332cfb3759f5",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511",
+        "WASLA_USER_ASSERTION_SIGNING_KEY": "6813d8eb16bf2094"
+      }
+    },
+    "wasla-marketplace": {
+      "id": "srv-daodb60ae00c73c2utjg",
+      "fingerprint": "sha256:a4a00587d39c8b0264e7f0ab182433c9dc1e9ea71e537b03706976341832907e",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "e9d6eba84977e3eb",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511",
+        "WASLA_USER_ASSERTION_MODE": "74e892c91130daa5",
+        "WASLA_USER_ASSERTION_PUBLIC_KEYS": "349c9a44f390c5d8"
+      }
+    },
+    "wasla-matching": {
+      "id": "srv-daodbdrtqb8s73et2sl0",
+      "fingerprint": "sha256:18d1cd72a11300391063b907a137f8729d0b88101d1b81407fb4c0b78fddefb2",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "GEOGRAPHY_BASE_URL": "d6a50604f9ef1e70",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "465e88259982ea9b",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511",
+        "WASLA_USER_ASSERTION_MODE": "74e892c91130daa5",
+        "WASLA_USER_ASSERTION_PUBLIC_KEYS": "349c9a44f390c5d8"
+      }
+    },
+    "wasla-negotiations": {
+      "id": "srv-daodb6ek1f9s73bkmcr0",
+      "fingerprint": "sha256:81b8ab98b911a0a95b89b90052d998445353706926a2f21d0dff9eeb66f5120f",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "f158d1c457921465",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511",
+        "WASLA_USER_ASSERTION_MODE": "74e892c91130daa5",
+        "WASLA_USER_ASSERTION_PUBLIC_KEYS": "349c9a44f390c5d8"
+      }
+    },
+    "wasla-observability": {
+      "id": "srv-daqk61h42hec73a0koo0",
+      "fingerprint": "sha256:2bfd2a54e7c7963f775083dd608d4b245d343c2f74ac51228f7e49167e8cf5cc",
+      "keys": {
+        "NODE_ENV": "ab8e18ef4ebebedd",
+        "WASLA_SERVICE": "33605222113b0590"
+      }
+    },
+    "wasla-orders": {
+      "id": "srv-daodb63m8hqs73e8a9fg",
+      "fingerprint": "sha256:a99cb02b891e3cb3c63633c71a2162c56b3749f26edfb574731afdd6c60fa41d",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "53c101177274e313",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-otel-collector": {
+      "id": "srv-daqgfs0jo6nc73ec60t0",
+      "fingerprint": "sha256:f24cf152fd7b29fb033636487d9ca388583cb25b69effe277ec953d6dca45a6a",
+      "keys": {
+        "PORT": "b711ed9bc1eae835"
+      }
+    },
+    "wasla-partner-bot": {
+      "id": "srv-daodb6f40ujc73esa8bg",
+      "fingerprint": "sha256:dcfbafac9c687411b41aa5578b4858cc3ca91c41c87b4dbd7168b36ce1e96106",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "IDENTITY_SERVICE_URL": "fa3fc020a1e3f838",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "PARTNER_BOT_MINI_APP_URL": "01212bc9c179bbff",
+        "PARTNER_BOT_TOKEN": "158f6681554985f3",
+        "PARTNER_BOT_WEBHOOK_SECRET": "7bc0c23f1df24404",
+        "WASLA_SERVICE": "14356c9acb3fa745",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-prometheus": {
+      "id": "srv-daqgfn6gekts739b08fg",
+      "fingerprint": "sha256:f5202128f15be1fc31f132a16e8c59c9dea6d83067a5083c348ed9681fa2d340",
+      "keys": {
+        "AM_BASIC_AUTH_PASSWORD": "8d3a70d8a333b0b8",
+        "PORT": "c4876de490dcf38b"
+      }
+    },
+    "wasla-reputation": {
+      "id": "srv-daodb63tqb8s73et1tlg",
+      "fingerprint": "sha256:a150c4e645011400c10cab3fcc6aa05013a4151fb98156236df98fdc0dc641d8",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "11c2818fc2144c65",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-search": {
+      "id": "srv-daodbbbtqb8s73et2i0g",
+      "fingerprint": "sha256:b43852cc352f7ea090555c391aec9f7176c2dd5161273c30c56f7ae3447fa09c",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "6a3ea9ddd1dc07ae",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    },
+    "wasla-subscriptions": {
+      "id": "srv-daodb66gekts73br8q9g",
+      "fingerprint": "sha256:f938c4ccd41dc49c57d758bc9ebbbd6bb01f245896e8a7ca2fb41ed846de8981",
+      "keys": {
+        "DATABASE_URL": "77196e1c8e90909a",
+        "NODE_ENV": "e919a75364398a44",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "c31fa41355d4f561",
+        "WASLA_SERVICE": "e8efea5ec82d2ce5",
+        "WASLA_SERVICE_AUTH_ACTIVE_KID": "6ab9f1eb8f7d3388",
+        "WASLA_SERVICE_AUTH_KEYS": "80aa29d516223511"
+      }
+    }
+  }
+}

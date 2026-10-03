@@ -1,0 +1,43 @@
+{
+ "identity": [
+  {
+   "event": "user_assertion_signer",
+   "enabled": true,
+   "kid": "ua-2026-10",
+   "ts": "2026-10-03T10:24:01.296235197Z"
+  }
+ ],
+ "negotiations": [
+  {
+   "event": "user_assertion_config",
+   "audience": "negotiations",
+   "mode": "observe",
+   "kids": [
+    "ua-2026-10"
+   ],
+   "ts": "2026-10-03T10:24:02.263938Z"
+  }
+ ],
+ "matching": [
+  {
+   "event": "user_assertion_config",
+   "audience": "matching",
+   "mode": "observe",
+   "kids": [
+    "ua-2026-10"
+   ],
+   "ts": "2026-10-03T10:24:02.851009833Z"
+  }
+ ],
+ "marketplace": [
+  {
+   "event": "user_assertion_config",
+   "audience": "marketplace",
+   "mode": "observe",
+   "kids": [
+    "ua-2026-10"
+   ],
+   "ts": "2026-10-03T10:24:05.402579525Z"
+  }
+ ]
+}

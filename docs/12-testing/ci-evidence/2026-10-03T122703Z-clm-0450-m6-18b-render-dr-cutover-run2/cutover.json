@@ -1,0 +1,258 @@
+{
+  "mode": "apply",
+  "prod_ref": "ppixaauyqoykrogwdxtv",
+  "dr_ref": "pvyuhjadrygqqdoczmnd",
+  "started_at": "2026-10-03T12:26:59.012383+00:00",
+  "preflight": {
+    "services": 17,
+    "variables": 18,
+    "map": [
+      {
+        "service": "wasla-audit",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-customer-bot",
+        "keys": [
+          "CUSTOMER_DATABASE_URL",
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-customers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-delivery",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-dispatch",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-driver-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-drivers",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-geography",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-identity",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-marketplace",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-matching",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-negotiations",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-orders",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-partner-bot",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-reputation",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-search",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      },
+      {
+        "service": "wasla-subscriptions",
+        "keys": [
+          "DATABASE_URL"
+        ],
+        "live_commit": "1831176d32dfceb3f908dbe506d28e121a97e325"
+      }
+    ],
+    "problems": []
+  },
+  "dr_value_params_dropped_to_match_production": [
+    "sslmode"
+  ],
+  "t0_cutover_start": "2026-10-03T12:27:03.679191+00:00",
+  "cutover": {
+    "env_switched_s": 1.3,
+    "all_deploys_terminal_s": 73.2,
+    "healthy_and_ready_s": 92.9,
+    "deploys": {
+      "wasla-audit": "live",
+      "wasla-customer-bot": "live",
+      "wasla-customers": "live",
+      "wasla-delivery": "live",
+      "wasla-dispatch": "live",
+      "wasla-driver-bot": "live",
+      "wasla-drivers": "live",
+      "wasla-geography": "live",
+      "wasla-identity": "live",
+      "wasla-marketplace": "live",
+      "wasla-matching": "live",
+      "wasla-negotiations": "live",
+      "wasla-orders": "live",
+      "wasla-partner-bot": "live",
+      "wasla-reputation": "live",
+      "wasla-search": "live",
+      "wasla-subscriptions": "live"
+    },
+    "health": {
+      "health_ok": {
+        "wasla-audit": "2026-10-03T12:28:35.224811+00:00",
+        "wasla-customer-bot": "2026-10-03T12:28:25.179515+00:00",
+        "wasla-customers": "2026-10-03T12:28:33.510961+00:00",
+        "wasla-delivery": "2026-10-03T12:28:30.553507+00:00",
+        "wasla-dispatch": "2026-10-03T12:28:34.896310+00:00",
+        "wasla-driver-bot": "2026-10-03T12:28:23.754123+00:00",
+        "wasla-drivers": "2026-10-03T12:28:25.067849+00:00",
+        "wasla-geography": "2026-10-03T12:28:29.240576+00:00",
+        "wasla-identity": "2026-10-03T12:28:19.715573+00:00",
+        "wasla-marketplace": "2026-10-03T12:28:18.436555+00:00",
+        "wasla-matching": "2026-10-03T12:28:32.083586+00:00",
+        "wasla-negotiations": "2026-10-03T12:28:26.555100+00:00",
+        "wasla-orders": "2026-10-03T12:28:21.076460+00:00",
+        "wasla-partner-bot": "2026-10-03T12:28:26.674417+00:00",
+        "wasla-reputation": "2026-10-03T12:28:22.376724+00:00",
+        "wasla-search": "2026-10-03T12:28:27.959816+00:00",
+        "wasla-subscriptions": "2026-10-03T12:28:23.646847+00:00"
+      },
+      "health_failed": [],
+      "delivery_ready_db_ok": true,
+      "delivery_ready_http": 200,
+      "at": "2026-10-03T12:28:36.535714+00:00"
+    },
+    "variables_on_dr": 18,
+    "read_write": {
+      "ok": true,
+      "marker": "m6-18b-cutover-1791030518",
+      "written_and_read": "1",
+      "public_tables": 121,
+      "seconds": 1.64,
+      "error": null
+    },
+    "read_write_done_s": 96.3,
+    "dr_window_s": 96.3
+  },
+  "full_rto_render_s": 96.3,
+  "rollback": {
+    "reason": "planned",
+    "started_at": "2026-10-03T12:28:39.938956+00:00",
+    "variables": 18,
+    "health": {
+      "health_ok": {
+        "wasla-audit": "2026-10-03T12:30:09.285846+00:00",
+        "wasla-customer-bot": "2026-10-03T12:29:59.606678+00:00",
+        "wasla-customers": "2026-10-03T12:30:07.693903+00:00",
+        "wasla-delivery": "2026-10-03T12:30:04.810916+00:00",
+        "wasla-dispatch": "2026-10-03T12:30:08.970388+00:00",
+        "wasla-driver-bot": "2026-10-03T12:29:58.248337+00:00",
+        "wasla-drivers": "2026-10-03T12:29:59.514783+00:00",
+        "wasla-geography": "2026-10-03T12:30:03.542330+00:00",
+        "wasla-identity": "2026-10-03T12:29:54.322821+00:00",
+        "wasla-marketplace": "2026-10-03T12:29:53.064967+00:00",
+        "wasla-matching": "2026-10-03T12:30:06.321541+00:00",
+        "wasla-negotiations": "2026-10-03T12:30:00.869203+00:00",
+        "wasla-orders": "2026-10-03T12:29:55.576756+00:00",
+        "wasla-partner-bot": "2026-10-03T12:30:01.005759+00:00",
+        "wasla-reputation": "2026-10-03T12:29:56.834722+00:00",
+        "wasla-search": "2026-10-03T12:30:02.273569+00:00",
+        "wasla-subscriptions": "2026-10-03T12:29:58.184061+00:00"
+      },
+      "health_failed": [],
+      "delivery_ready_db_ok": true,
+      "delivery_ready_http": 200,
+      "at": "2026-10-03T12:30:10.583469+00:00"
+    },
+    "finished_at": "2026-10-03T12:30:10.583478+00:00",
+    "seconds": 90.6,
+    "deploys": {
+      "wasla-audit": "live",
+      "wasla-customer-bot": "live",
+      "wasla-customers": "live",
+      "wasla-delivery": "live",
+      "wasla-dispatch": "live",
+      "wasla-driver-bot": "live",
+      "wasla-drivers": "live",
+      "wasla-geography": "live",
+      "wasla-identity": "live",
+      "wasla-marketplace": "live",
+      "wasla-matching": "live",
+      "wasla-negotiations": "live",
+      "wasla-orders": "live",
+      "wasla-partner-bot": "live",
+      "wasla-reputation": "live",
+      "wasla-search": "live",
+      "wasla-subscriptions": "live"
+    }
+  },
+  "fingerprint": {
+    "before_services": 24,
+    "after_services": 24,
+    "differences": [],
+    "identical": true
+  },
+  "problems": [],
+  "verdict": "PASS",
+  "finished_at": "2026-10-03T12:30:12.274883+00:00"
+}

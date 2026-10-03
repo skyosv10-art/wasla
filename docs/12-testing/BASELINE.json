@@ -1,18 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-03T01:12:54Z",
+  "generated_at": "2026-10-03T01:35:49Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ba64aaf83ee274449d2147a0c4609b33603b64ba",
+    "commit": "10f636071f8af68c049ae55ef5797c4a6b3ec1c4",
     "branch": "feat/clm-0441-negotiations-asserted-ownership",
-    "dirty": false,
-    "dirty_files": 0,
+    "dirty": true,
+    "dirty_files": 1,
     "dirty_reason": "",
     "tracked_files": 3058
   },
   "env": {
     "node": "v20.20.1",
-    "pnpm": "9.15.9",
+    "pnpm": "unknown",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"
@@ -33,13 +33,13 @@
     "risks_not_closed": 21
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt",
+    "tests_passed": 5828,
+    "test_files_executed": 407,
+    "governance_suite_cases": 541,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:d017378132ada9cb2b6cf07dae39e55cb96149d1ca88045fdfac099d0709ab53",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

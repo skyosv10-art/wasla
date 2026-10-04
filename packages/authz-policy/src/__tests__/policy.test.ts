@@ -461,18 +461,19 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       (b) =>
         // `POST /identity/assertions` صُنِّفَ قبلَ الموجةِ (ADR-060 · CLM-0440).
         // `POST /identity/users/:waslaPublicId/links` رُفِعَ إلى `asserted` في CLM-0462.
-        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && b.path === "/identity/users/:waslaPublicId/links")) ||
+        // `GET /identity/users/:waslaPublicId`, `.../recovery`, `.../history` رُفِعَتْ في CLM-0463.
+        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history"))) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(46);
+    expect(wave3).toHaveLength(43);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 20 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
-    // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ إلى `asserted`).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(20);
+    // 17 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(17);
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 

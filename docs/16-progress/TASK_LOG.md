@@ -8541,3 +8541,28 @@ Changes:
 - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: Added CLM-0462 section, updated identity row.
 
 All 79 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck and test suites green. RISK-0042 stays `open` — P2 remediation, not closure.
+
+---
+
+# 2026-10-04 — CLM-0463 — M0-49: RISK-0042 identity user/recovery/history asserted ownership (P2)
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**CLM-0463 (ADR-060 P2):** Elevated three remaining identity `:waslaPublicId` routes from `scoped()` to `asserted()`:
+- `GET /identity/users/:waslaPublicId` (user read)
+- `POST /identity/users/:waslaPublicId/recovery` (recovery start)
+- `GET /identity/users/:waslaPublicId/history` (identity change history)
+
+All identity `:waslaPublicId` routes are now `asserted` (link in CLM-0462, these three in CLM-0463). Mismatch → 404 (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
+
+Changes:
+- `services/identity/src/http/app.ts`: Changed three routes from `scoped()` to `asserted()`, added `assertWaslaPublicId()` calls.
+- `services/identity/src/__tests__/http/user-asserted-ownership.test.ts`: 9 new tests (per-route owner success + mismatch 404, shared no-assertion 401, off backward-compatible, tampered 401).
+- `packages/authz-policy/src/bindings.ts`: Three bindings changed from `strength: "none"` to `strength: "asserted"` with updated evidence.
+- `packages/authz-policy/src/__tests__/policy.test.ts`: Wave 3 count 46 → 43, measured gaps 20 → 17.
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: Added CLM-0463 section, identity row now shows 0 gaps.
+- `docs/12-testing/BASELINE.json`: test_files_tracked 557 → 558.
+
+All 88 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck green; governance green (25/25). RISK-0042 stays `open`.

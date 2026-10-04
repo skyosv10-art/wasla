@@ -134,8 +134,12 @@ export function createIdentityApp(
   });
 
   // GET /identity/users/:waslaPublicId — read a user by Public ID.
-  app.get("/identity/users/:waslaPublicId", { config: scoped(IDENTITY_SCOPES.userRead) }, async (request, reply) => {
+  // ADR-060 P2 (CLM-0463): `asserted` — the caller's end-user assertion must
+  // name the same `wasla_public_id` as the path. Mismatch → 404
+  // (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
+  app.get("/identity/users/:waslaPublicId", { config: asserted(IDENTITY_SCOPES.userRead) }, async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
+    assertWaslaPublicId(request, waslaPublicId);
     const user = await getUser({ repo: deps.repo }, waslaPublicId);
     return reply.status(200).send(user);
   });
@@ -158,11 +162,15 @@ export function createIdentityApp(
   });
 
   // POST /identity/users/:waslaPublicId/recovery — start account recovery.
+  // ADR-060 P2 (CLM-0463): `asserted` — the caller's end-user assertion must
+  // name the same `wasla_public_id` as the path. Mismatch → 404
+  // (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
   app.post(
     "/identity/users/:waslaPublicId/recovery",
-    { config: scoped(IDENTITY_SCOPES.recoveryWrite) },
+    { config: asserted(IDENTITY_SCOPES.recoveryWrite) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
+      assertWaslaPublicId(request, waslaPublicId);
       const body = request.body as StartRecoveryRequest;
       const recovery = await startRecovery(deps, {
         waslaPublicId,
@@ -173,11 +181,15 @@ export function createIdentityApp(
   );
 
   // GET /identity/users/:waslaPublicId/history — identity change history.
+  // ADR-060 P2 (CLM-0463): `asserted` — the caller's end-user assertion must
+  // name the same `wasla_public_id` as the path. Mismatch → 404
+  // (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
   app.get(
     "/identity/users/:waslaPublicId/history",
-    { config: scoped(IDENTITY_SCOPES.historyRead) },
+    { config: asserted(IDENTITY_SCOPES.historyRead) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
+      assertWaslaPublicId(request, waslaPublicId);
       const query = request.query as { field?: string };
       const history = await getIdentityHistory({ repo: deps.repo }, {
         waslaPublicId,

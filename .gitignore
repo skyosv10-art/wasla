@@ -43,6 +43,9 @@ secrets/
 *.secret
 !infra/secrets/
 !infra/secrets/secret-inventory.json
+# RISK-0060 (CLM-0455): the PUBLIC Supabase Root 2021 CA, pinned by SHA-256 in
+# scripts/ops/risk-0060/render-tls-activate.py. A certificate, not a key.
+!infra/tls/supabase-root-2021-ca.pem
 credentials.json
 service-account*.json
 

@@ -8375,3 +8375,27 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0453 released (PR #602 merged, main green).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0455 — RISK-0060: the pinned CA never reached the repository (2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0455
+
+### Measured
+- PR #603 merged as `35a5b84` after the independent review; main CI run 37159460270 success; Render deploy run 37159460269 success.
+- `risk-0060-render-tls.yml` mode=plan on `35a5b84` (run 37160087422): FAIL, `FileNotFoundError: infra/tls/supabase-root-2021-ca.pem`. No Render call was made (the CA loads before the first API request).
+- Root cause: `.gitignore` line 36 `*.pem` (secrets section). `git add -A` skipped the file silently; the local plan run read the untracked copy. `git ls-files infra/tls` on `35a5b84` is empty.
+
+### What changed
+- `.gitignore`: one named exception, `!infra/tls/supabase-root-2021-ca.pem`, with its reason. `*.pem`, `*.key`, `*.crt` stay ignored everywhere else.
+- `infra/tls/supabase-root-2021-ca.pem` committed (public certificate, DER SHA-256 `807025ad…cafa`).
+- `pool-tls-coverage.test.ts`: the CA exists in the checkout, is a CA, is `Supabase Root 2021 CA`, and its DER SHA-256 equals `CA_SHA256` read from `render-tls-activate.py` (one pinned value, read, not copied). Mutations: file removed → ENOENT; pinned hash changed → mismatch. Resilience 67/67.
+
+### Not claimed
+- Render still runs without TLS until the apply run after this merge. Enforce SSL needs a production-scoped Supabase token. RISK-0060 `mitigating`; M6-18B Blocked.
+
+### Releases
+- CLM-0454 released (PR #603 merged, main green).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

@@ -50,7 +50,7 @@
 | أدوارُ الإنتاجِ المُعلَنةُ | `10` | `PRODUCTION_GRANTS` |
 | مواضعُ الإصدارِ الإنتاجيّةُ | `20` | `createServiceRequestSigner` في ملفٍّ غيرِ اختباريٍّ |
 | أدوارُ أسطولِ الاختبارِ | `8` | `TEST_FLEET_ROLES` |
-| العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 44` | `OPERATION_BINDINGS` · البابُ 7 |
+| العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 45` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 8` | `OPERATION_BINDINGS` · حدُّ السوقِ |
 | العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `111` | `OPERATION_BINDINGS` (كانت 52؛ +23 `none` في RISK-0042 الموجةِ 1 · CLM-0435؛ +35 `none` في الموجةِ 2 · CLM-0437؛ +1 `none` عندَ الولادةِ في CLM-0440: `POST /identity/assertions`) |
 | منها `asserted` (ADR-060 P2) | `ASSERTED_OPERATION_COUNT = 11` | CLM-0441 · 2026-10-03: 11 من 12 عمليّة مفاوضاتٍ ارتقتْ من `none` إلى `asserted` |
@@ -265,6 +265,7 @@
 | العملياتُ | البُعدُ | قوّةُ الربطِ | الدليلُ |
 | --- | --- | --- | --- |
 | `GET /orders/:orderId` · `GET /orders/:orderId/history` | `owner` | `caller-asserted` | `services/orders/src/http/app.ts` (`assertOwner`) |
+| `POST /orders/intake` | `owner` | `token-bound` | `services/orders/src/http/app.ts` (`ownerScoped` · CLM-0464) |
 | `GET /orders/lookup` | `owner` | `none` | `services/orders/src/http/app.ts` (خدمةٌ لخدمةٍ بالتصميمِ) |
 | 11 مساراً على `/stores/:storeSlug/…` | `tenant` | `none` | `services/marketplace/src/http/app.ts` (`pathParam`) |
 | `POST /products/:productId/publish` · `…/archive` | `owner` | `none` | `services/marketplace/src/http/app.ts` (`actorPublicId`) |
@@ -309,6 +310,10 @@
 **وما لا يُدَّعى:** `none` تصنيفٌ لا إصلاحٌ — لم تُغيَّرْ سطرَ شفرةٍ واحدٌ في هذهِ الخدماتِ، و`RISK-0042`
 يبقى `open`. والـ**47** الباقيةُ `UNKNOWN` — لم تُقرأْ في هذهِ الموجةِ، ولا تُسمّى «بلا ملكيّةٍ».
 
+### CLM-0464: رفعُ `POST /orders/intake` إلى `required` (2026-10-04)
+
+رُفِعَ مسارُ قبولِ الطلباتِ من `none` إلى `token-bound`: `beneficiary: "required"` على المسارِ، والمُعالِجُ يُقارِنُ `customer_public_id` من الجسمِ بـ`obo` المُوقَّعِ (`principal.onBehalfOfPublicId`). خدمةُ `customers` تُمرِّرُ `onBehalfOfPublicId` في الطلبِ المُوقَّعِ. عدمُ التطابقِ → 404. الـ43 المتبقيةُ من الموجةِ 3 صارت 42، والفجواتُ 17 → 16.
+
 ### CLM-0463: رفعُ مساراتِ الهويّةِ الثلاثةِ المتبقيةِ إلى `asserted` (2026-10-04)
 
 رُفِعَتْ ثلاثةُ مساراتٍ من `none` إلى `asserted`: `GET /identity/users/:waslaPublicId`، `POST /identity/users/:waslaPublicId/recovery`، `GET /identity/users/:waslaPublicId/history`. جميعُ مساراتِ `:waslaPublicId` في حدِّ الهويّةِ صارت `asserted` (الرابطُ CLM-0462، الثلاثةُ CLM-0463). الـ46 المتبقيةُ من الموجةِ 3 صارت 43.
@@ -325,7 +330,7 @@
 | --- | --- | --- | --- |
 | `identity` | 5 | **0**: جميعُ مساراتِ `:waslaPublicId` الأربعةُ رُفِعَتْ إلى `asserted` (الرابطُ CLM-0462، المستخدم/الاستعادة/السجلُّ CLM-0463). `resolve`: مصدرُ الهويّةِ نفسُهُ | `resolve`: هوَ مصدرُ الهويّةِ نفسُهُ |
 | `delivery` | 13 | **6**: إنشاءُ طلبِ المتجرِ (`customer_ref` من الجسمِ)، قراءتُهُ، إلغاؤهُ، تأكيدُهُ، انتقالُ تنفيذِهِ، قراءةُ مهمّتِهِ | 7: مرآةُ الدفعِ، والكنسُ، والتعارضاتُ، والمسمومُ (مساراتُ تشغيلٍ) |
-| `orders` | 5 | **4**: الاستلامُ (`customer_public_id` من الجسمِ)، والانتقالُ (`actor_*` شكلٌ بلا تحقُّقٍ)، والإسنادُ، وحسمُهُ | السعرُ المتّفقُ (يكتبُهُ حدُّ التفاوضِ) |
+| `orders` | 5 | **3**: الاستلامُ رُفِعَ (CLM-0464). الانتقالُ (`actor_*` شكلٌ بلا تحقُّقٍ)، والإسنادُ، وحسمُهُ | السعرُ المتّفقُ (يكتبُهُ حدُّ التفاوضِ) |
 | `support` | 7 | **4**: الإنشاءُ (`reporter_public_id` من الجسمِ)، والقائمةُ، والقراءةُ، والدليلُ | التصعيدُ والحسمُ والإغلاقُ (قرارُ فريقِ الدعمِ) |
 | `billing` | 7 (`tenant`) | **2 كامنتانِ**: قراءةُ الفواتيرِ بمتجرٍ أو بمُعرِّفٍ بلا مستأجرٍ. لا مُنادٍ من المتجرِ في المستودعِ اليومَ | 5: سلطةُ الفوترةِ والتسوياتُ |
 | `audit` | 2 | **1**: `actor_id`/`actor_role` من الجسمِ يُكتَبانِ بلا تحقُّقٍ | القراءةُ سلطةٌ إداريّةٌ |

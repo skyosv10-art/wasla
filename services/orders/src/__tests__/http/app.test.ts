@@ -72,12 +72,22 @@ function intakeBody(overrides: Record<string, unknown> = {}): Record<string, unk
   };
 }
 
-function post(app: Fixture["app"], url: string, body: unknown, key: string | null = KEY) {
+function post(
+  app: Fixture["app"],
+  url: string,
+  body: unknown,
+  key: string | null = KEY,
+  customerPublicId?: string,
+) {
+  const headers: Record<string, string> = key === null ? {} : { "idempotency-key": key };
+  if (customerPublicId !== undefined) {
+    headers["x-customer-public-id"] = customerPublicId;
+  }
   return app.inject({
     method: "POST",
     url,
     payload: body as never,
-    headers: key === null ? {} : { "idempotency-key": key },
+    headers,
   });
 }
 
@@ -306,7 +316,7 @@ describe("GET /orders/lookup", () => {
 describe("POST /orders/intake", () => {
   it("accepts a fresh order with 201 and returns only the public id", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody());
+    const response = await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
 
     expect(response.statusCode).toBe(201);
     const body = response.json();
@@ -322,8 +332,8 @@ describe("POST /orders/intake", () => {
 
   it("answers 200 with the SAME public id when the key is replayed", async () => {
     const { app } = fixture();
-    const first = await post(app, "/orders/intake", intakeBody());
-    const replay = await post(app, "/orders/intake", intakeBody());
+    const first = await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
+    const replay = await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
 
     expect(first.statusCode).toBe(201);
     expect(replay.statusCode).toBe(200);
@@ -332,11 +342,13 @@ describe("POST /orders/intake", () => {
 
   it("refuses the same key with a different body (409 reuse)", async () => {
     const { app } = fixture();
-    await post(app, "/orders/intake", intakeBody());
+    await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
     const response = await post(
       app,
       "/orders/intake",
       intakeBody({ order_request_id: "33333333-3333-4333-8333-333333333333" }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(409);
@@ -345,8 +357,8 @@ describe("POST /orders/intake", () => {
 
   it("refuses a request id already ingested under another key (409)", async () => {
     const { app } = fixture();
-    await post(app, "/orders/intake", intakeBody());
-    const response = await post(app, "/orders/intake", intakeBody(), "idem-key-0002");
+    await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
+    const response = await post(app, "/orders/intake", intakeBody(), "idem-key-0002", CUSTOMER);
 
     expect(response.statusCode).toBe(409);
     expect(response.json().code).toBe("ORDER_REQUEST_ALREADY_INGESTED");
@@ -354,7 +366,7 @@ describe("POST /orders/intake", () => {
 
   it("requires the Idempotency-Key header", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody(), null);
+    const response = await post(app, "/orders/intake", intakeBody(), null, CUSTOMER);
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ORDER_VALIDATION_FAILED");
@@ -362,7 +374,7 @@ describe("POST /orders/intake", () => {
 
   it("refuses a key shorter than the contract's minimum", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody(), "short");
+    const response = await post(app, "/orders/intake", intakeBody(), "short", CUSTOMER);
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ORDER_VALIDATION_FAILED");
@@ -374,10 +386,26 @@ describe("POST /orders/intake", () => {
       app,
       "/orders/intake",
       intakeBody({ idempotency_key: "a-different-key" }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ORDER_VALIDATION_FAILED");
+  });
+
+  it("CLM-0464: refuses intake when obo mismatches body customer_public_id (404)", async () => {
+    const { app } = fixture();
+    const response = await post(
+      app,
+      "/orders/intake",
+      intakeBody({ customer_public_id: CUSTOMER }),
+      KEY,
+      OTHER_CUSTOMER,
+    );
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().code).toBe("ORDER_NOT_FOUND");
   });
 
   it("maps malformed JSON to the validation code, not to a 500", async () => {
@@ -386,7 +414,7 @@ describe("POST /orders/intake", () => {
       method: "POST",
       url: "/orders/intake",
       payload: "{not json",
-      headers: { "idempotency-key": KEY, "content-type": "application/json" },
+      headers: { "idempotency-key": KEY, "content-type": "application/json", "x-customer-public-id": CUSTOMER },
     });
 
     expect(response.statusCode).toBe(400);
@@ -395,7 +423,7 @@ describe("POST /orders/intake", () => {
 
   it("refuses an unknown enum member at the edge (400, never carried inward)", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody({ vehicle_class: "boat" }));
+    const response = await post(app, "/orders/intake", intakeBody({ vehicle_class: "boat" }), KEY, CUSTOMER);
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ORDER_VALIDATION_FAILED");
@@ -412,6 +440,8 @@ describe("POST /orders/intake", () => {
       app,
       "/orders/intake",
       intakeBody({ price_mode: "negotiable" }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(422);
@@ -428,6 +458,8 @@ describe("POST /orders/intake", () => {
           { kind: "pickup", zone_id: "66666666-6666-4666-8666-666666666666", source: "map" },
         ],
       }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(422);
@@ -440,6 +472,8 @@ describe("POST /orders/intake", () => {
       app,
       "/orders/intake",
       intakeBody({ shipment: { shipment_type: "parcel", weight_kg: 3 } }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(422);
@@ -455,6 +489,8 @@ describe("POST /orders/intake", () => {
         order_type: "delivery",
         shipment: { shipment_type: "livestock" },
       }),
+      KEY,
+      CUSTOMER,
     );
 
     expect(response.statusCode).toBe(400);
@@ -464,7 +500,7 @@ describe("POST /orders/intake", () => {
 
   it("refuses notes longer than the column allows with 400, not a 503", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody({ notes: "ن".repeat(301) }));
+    const response = await post(app, "/orders/intake", intakeBody({ notes: "ن".repeat(301) }), KEY, CUSTOMER);
 
     // The DB CHECK on `notes` had no domain counterpart before this MR, so a
     // 301-character note was a constraint violation surfacing as 503 on Postgres
@@ -495,7 +531,7 @@ describe("GET /orders/{orderId}", () => {
 
   it("accepts the public id the intake response returned", async () => {
     const { app } = fixture();
-    const created = await post(app, "/orders/intake", intakeBody());
+    const created = await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER);
     const publicOrderId = created.json().order_public_id;
 
     const response = await app.inject({
@@ -932,12 +968,12 @@ describe("the envelope itself", () => {
 
   it("refuses an over-long request id instead of storing it", async () => {
     const { app } = fixture();
-    const response = await post(app, "/orders/intake", intakeBody(), KEY).then(() =>
+    const response = await post(app, "/orders/intake", intakeBody(), KEY, CUSTOMER).then(() =>
       app.inject({
         method: "POST",
         url: "/orders/intake",
         payload: intakeBody() as never,
-        headers: { "idempotency-key": "idem-key-0009", "x-request-id": "t".repeat(129) },
+        headers: { "idempotency-key": "idem-key-0009", "x-request-id": "t".repeat(129), "x-customer-public-id": CUSTOMER },
       }),
     );
 

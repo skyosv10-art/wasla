@@ -8566,3 +8566,24 @@ Changes:
 - `docs/12-testing/BASELINE.json`: test_files_tracked 557 → 558.
 
 All 88 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck green; governance green (25/25). RISK-0042 stays `open`.
+
+# 2026-10-04 — CLM-0464 — M0-49: RISK-0042 orders intake token-bound owner (`required`)
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**CLM-0464 (RISK-0042):** Elevated `POST /orders/intake` from `scoped()` to `ownerScoped()` (token-bound owner, `beneficiary: "required"`). The handler now compares the body's `customer_public_id` with the signed `obo` (`principal.onBehalfOfPublicId`). The `customers` service's `HttpOrderIntakePort` passes `onBehalfOfPublicId` in the signed request. Mismatch → 404 (ORDER_NOT_FOUND) per ADR-060 §2.6.
+
+This is the first orders route remediated under RISK-0042 and the first use of the `required` (token-bound) pattern for a route whose owner comes from the request body rather than a database record.
+
+Changes:
+- `services/orders/src/http/app.ts`: Changed intake route from `scoped()` to `ownerScoped()`; added `caller.onBehalfOfPublicId` vs `command.customerPublicId` comparison.
+- `services/customers/src/infrastructure/http-order-intake.ts`: Pass `request.customerPublicId` as `onBehalfOfPublicId` to `signRequest`.
+- `services/orders/src/__tests__/http/app.test.ts`: Updated all intake test calls to pass `CUSTOMER` as `X-Customer-Public-Id`; added mismatch test (obo ≠ body → 404).
+- `services/orders/src/__tests__/http/service-identity.test.ts`: Updated identity test to pass `onBehalfOfPublicId: CUSTOMER`.
+- `packages/authz-policy/src/bindings.ts`: Orders intake binding changed from `strength: "none"` to `strength: "required"` with updated evidence.
+- `packages/authz-policy/src/__tests__/policy.test.ts`: Wave 3 count 43 → 42, measured gaps 17 → 16.
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: Added CLM-0464 section, orders row shows 3 gaps (was 4).
+
+All 654 orders tests pass; all 16 order-e2e tests pass; all 11 customer-e2e tests pass; all 48 authz-policy tests pass; typecheck green. RISK-0042 stays `open`.

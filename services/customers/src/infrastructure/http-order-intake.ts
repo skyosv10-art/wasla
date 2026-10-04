@@ -141,7 +141,7 @@ export class HttpOrderIntakePort implements OrderIntakePort {
           "content-type": "application/json",
           "idempotency-key": request.idempotencyKey,
           // الرمز مربوط بهذه الطريقة وهذا المسار ويُحرق عند أول استعمال.
-          ...this.signRequest("POST", ORDER_INTAKE_PATH),
+          ...this.signRequest("POST", ORDER_INTAKE_PATH, request.customerPublicId),
           ...(context.traceId === undefined
             ? {}
             : { "x-request-id": context.traceId }),

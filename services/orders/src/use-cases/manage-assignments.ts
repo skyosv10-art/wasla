@@ -105,6 +105,23 @@ export async function resolveAssignment(
     );
   }
 
+  // CLM-0468 (RISK-0042): the verified driver from dispatch accept/reject (signed
+  // `obo`) must be the driver recorded on this assignment. The check is inside
+  // the same unit-of-work that resolves the assignment, so there is no TOCTOU
+  // window. A missing `expectedDriverPublicId` means the caller is the platform
+  // (tick, cancel-job) and carries no end-user assertion — the check is skipped.
+  // Mismatch → ORDER_NOT_FOUND (not 403) per ADR-060 §2.6.
+  if (
+    command.expectedDriverPublicId !== undefined &&
+    command.expectedDriverPublicId !== current.driverPublicId
+  ) {
+    throw new OrderError(
+      "ORDER_NOT_FOUND",
+      `الطلب ${orderId} غير موجود`,
+      { traceId },
+    );
+  }
+
   assertReasonCodeKnown(command.reasonCode, traceId);
 
   const resolvedAt = deps.clock.now();

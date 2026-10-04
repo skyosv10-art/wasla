@@ -89,6 +89,9 @@ export async function rejectOffer(
       reasonCode: ORDER_REASON_DRIVER_DECLINED,
       idempotencyKey: offerEngineKey(offer.id, "reject"),
       traceId,
+      // CLM-0468 (RISK-0042): pass the verified driver's public id as `obo` so
+      // orders can bind the assignment's driver to the signed token.
+      onBehalfOfPublicId: offer.driverPublicId,
     });
     // A refusal from the engine here means that assignment is already closed, which is
     // exactly the state we were asking for; only an unreachable engine is an error.

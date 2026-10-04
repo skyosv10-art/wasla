@@ -1,3 +1,52 @@
+# 2026-10-05 — CLM-0468 — M0-49: RISK-0042 orders assignment driver bound to `obo` from dispatch
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**Why this, now:** CLM-0466 fixed the root — dispatch accept/reject now verifies the driver via a signed user assertion. CLM-0465 deferred orders assignment binding because the root was at the dispatch boundary. With the root fixed, the verified driver can now flow from dispatch to orders.
+
+**What changed:**
+- `PATCH /orders/:orderId/assignments/:assignmentId` (resolve): the assignment's `driverPublicId` is compared against `expectedDriverPublicId` (from `serviceCaller.onBehalfOfPublicId`, i.e. the signed `obo`) inside the same write transaction — no TOCTOU window. Mismatch → 404 `ORDER_NOT_FOUND` (not 403) per ADR-060 §2.6.
+- `POST /orders/:orderId/assignments` (register): stays `none` — reclassified from measured gap to design decision. The tick creates the assignment before the driver accepts; no user assertion exists at register time. The driver is verified at accept/reject (CLM-0466) and bound to the assignment at resolution (this claim).
+- Dispatch `accept-offer.ts` and `reject-offer.ts` now pass `offer.driverPublicId` as `onBehalfOfPublicId` to `resolveAssignment`.
+- `HttpOrderEnginePort.request` accepts an optional `onBehalfOfPublicId` parameter, passed to `signRequest`.
+- Tick and cancel-job do not pass `onBehalfOfPublicId` (platform authority — check skipped).
+
+**Measured, not assumed:**
+- Binding strength stays `none` on both routes: both accept system callers (tick) without `obo`, so `beneficiary: "required"` cannot be set route-wide.
+- Measured gaps: 15 → 13 (PATCH closed in code; POST reclassified as design decision).
+- No production change: no `WASLA_USER_ASSERTION_*` env vars on `wasla-dispatch` or `wasla-orders` — mode `off`.
+- No production caller yet: driver-bot → dispatch needs an `init-data`-backed assertion boundary (ADR-060 §2.1).
+
+**Stale claim released:** CLM-0461 (branch `docs/clm-0461-risk-0042-wave3` was deleted on merge but claim remained Active) — released per §8.1, unblocking governance check 4 on main.
+
+**Changes:**
+- `services/orders/src/domain/model.ts`: Added `expectedDriverPublicId?: string` to `ResolveAssignmentCommand`.
+- `services/orders/src/use-cases/manage-assignments.ts`: Ownership check inside `resolveAssignment` (assignment driver vs `expectedDriverPublicId`).
+- `services/orders/src/http/app.ts`: PATCH route reads `serviceCaller.onBehalfOfPublicId`, passes as `expectedDriverPublicId`.
+- `services/orders/src/__tests__/http/app.test.ts`: 3 new tests (matching obo 200, mismatching obo 404, no obo system path 200).
+- `services/dispatch/src/ports.ts`: Added `onBehalfOfPublicId?` to `ResolveAssignmentInput`.
+- `services/dispatch/src/infrastructure/http-order-engine.ts`: `request` accepts `onBehalfOfPublicId`, passes to `signRequest`.
+- `services/dispatch/src/use-cases/accept-offer.ts`: Passes `offer.driverPublicId` as `onBehalfOfPublicId`.
+- `services/dispatch/src/use-cases/reject-offer.ts`: Same.
+- `services/dispatch/src/__tests__/http-order-engine.test.ts`: 2 new tests (obo passed to signer when present, not passed when absent).
+- `packages/authz-policy/src/bindings.ts`: PATCH assignment evidence updated; POST assignment note changed from gap to design decision.
+- `packages/authz-policy/src/__tests__/policy.test.ts`: Gap count 15 → 13; new assertions for PATCH/POST assignment bindings.
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: CLM-0468 section; orders row 2 → 0 gaps; total 21 → 19.
+- `docs/16-progress/WORK_CLAIMS.md`: CLM-0468 active; CLM-0461 released (stale).
+
+**Verification:**
+- Orders: 660/660 tests pass (was 657; +3 new).
+- Dispatch: 273/273 tests pass (was 271; +2 new).
+- Authz-policy: 49/49 tests pass.
+- Typecheck: green.
+- Governance: 25/25 checks pass (check 4 fixed by releasing CLM-0461; check 16 fixed by correcting evidence anchor).
+
+RISK-0042 stays `open`.
+
+---
+
 # 2026-10-03 — CLM-0451 · CLM-0452 — M6-18B run 2 PASS (full DR RTO 541.7 s) · RISK-0042 observe evidence
 
 - **Work Item(s):** M6-18B · M0-49

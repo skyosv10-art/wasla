@@ -1478,7 +1478,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.assignmentWrite) toAssignmentDriver(request.body,",
-    note: "`none`: **فجوةٌ مقيسةٌ:** إسنادُ سائقٍ من الجسمِ إلى أيِّ طلبٍ؛ لا مقارنةَ بفاعلٍ. المُنادي حدُّ التوزيعِ.",
+    note: "`none` (CLM-0468): قرارُ تصميمٍ: الإسنادُ (`POST`) عمليةٌ نظاميّةٌ — النبضةُ تنشئُ الإسنادَ قبلَ قبولِ السائقِ، فلا تأكيدَ مستخدمٍ عندَ الإنشاءِ. والسائقُ يُتحقَّقُ منهُ عندَ القبول/الرفضِ (CLM-0466) ويُربَطُ بالإسنادِ عندَ الحسمِ (PATCH، CLM-0468).",
   },
   {
     audience: "orders",
@@ -1486,8 +1486,8 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/orders/:orderId/assignments/:assignmentId",
     dimension: "owner",
     strength: "none",
-    evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.assignmentWrite) toAssignmentResolution(request.body,",
-    note: "`none`: **فجوةٌ مقيسةٌ:** حسمُ إسنادٍ (قبولٌ/رفضٌ) بلا سائقٍ مُقارَنٍ.",
+    evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.assignmentWrite) toAssignmentResolution(request.body, expectedDriverPublicId from assignmentCaller?.onBehalfOfPublicId",
+    note: "`none` (CLM-0468): حسمُ الإسنادِ صار مربوطاً بـ`obo` — السائقُ المسجَّلُ على الإسنادِ يُقارَنُ بـ`expectedDriverPublicId` من الرمزِ الموقَّعِ داخلَ معاملةِ الكتابةِ نفسِها. الخلافُ ⇒ 404. والمنادي الوحيدُ بـ`obo` هو قبولُ/رفضُ العرضِ في حدِّ التوزيعِ (CLM-0466). والمنادي النظاميُّ (النبضةُ، إلغاءُ المهمّةِ) لا يحملُ `obo` فيتخطَّى الفحصَ. والإسنادُ (`POST`) يبقى `none` بقرارٍ: عمليةٌ نظاميّةٌ (النبضةُ تنشئُ الإسنادَ قبلَ قبولِ السائقِ).",
   },
   {
     audience: "search",

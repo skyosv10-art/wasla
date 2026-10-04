@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createServiceRequestSigner, SERVICE_AUTH_HEADER, ServiceAuthKeyRegistry } from "@wasla/service-auth";
+import { createServiceRequestSigner, SERVICE_AUTH_HEADER, ServiceAuthKeyRegistry, type ServiceRequestSigner } from "@wasla/service-auth";
 
 import { DISPATCH_ORDERS_SCOPES, HttpOrderEnginePort } from "../infrastructure/http-order-engine.js";
 
@@ -127,6 +127,42 @@ describe("محول محرّك الطلبات لحسم الإسناد", () => {
   it("لا يعد JSON التالف من حسم الإسناد نجاحاً", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{", { status: 200 })));
     await expect(port().resolveAssignment(resolveInput)).resolves.toEqual({ outcome: "unavailable" });
+  });
+
+  it("يمرّر onBehalfOfPublicId إلى الموقّع عند وجوده (CLM-0468)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const signedSigner = vi.fn().mockReturnValue({ "x-test": "signed" });
+    const portWithSpy = new HttpOrderEnginePort({
+      baseUrl: "http://orders.test",
+      signRequest: signedSigner as unknown as ServiceRequestSigner,
+    });
+
+    await portWithSpy.resolveAssignment({ ...resolveInput, onBehalfOfPublicId: "WS-0000000001" });
+
+    expect(signedSigner).toHaveBeenCalledWith(
+      "PATCH",
+      `/orders/${orderId}/assignments/${assignmentId}`,
+      "WS-0000000001",
+    );
+  });
+
+  it("لا يمرّر onBehalfOfPublicId عند غيابه (عمليّة نظاميّة)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const signedSigner = vi.fn().mockReturnValue({ "x-test": "signed" });
+    const portWithSpy = new HttpOrderEnginePort({
+      baseUrl: "http://orders.test",
+      signRequest: signedSigner as unknown as ServiceRequestSigner,
+    });
+
+    await portWithSpy.resolveAssignment(resolveInput);
+
+    expect(signedSigner).toHaveBeenCalledWith(
+      "PATCH",
+      `/orders/${orderId}/assignments/${assignmentId}`,
+      undefined,
+    );
   });
 });
 

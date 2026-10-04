@@ -21,7 +21,6 @@ import {
   PG_GUARD_DEFAULTS,
   withPgPoolDefaults,
   pgSslFromEnv,
-  probeBoundMs,
   type HealthHookApp,
   type HealthHookReply,
 } from "../pg-guard.js";
@@ -244,23 +243,21 @@ describe("guardPgPool — connection delay", () => {
   });
 });
 
-describe("probe bound covers connection acquisition (RISK-0060, CLM-0456)", () => {
-  it("defaults to the pool's connect bound plus the query bound", () => {
-    expect(probeBoundMs({ options: { connectionTimeoutMillis: 5_000 } })).toBe(5_000 + PG_GUARD_DEFAULTS.probeTimeoutMs);
-    expect(probeBoundMs({ options: { connectionTimeoutMillis: 0 } })).toBe(PG_GUARD_DEFAULTS.probeTimeoutMs);
-    expect(probeBoundMs({})).toBe(PG_GUARD_DEFAULTS.probeTimeoutMs);
-  });
-
-  it("a probe that needs a slow-but-successful connect is 'up', not a false 'down'", async () => {
-    const pool = Object.assign(new FakePool(), { options: { connectionTimeoutMillis: 3_000 } });
-    const realQuery = pool.query.bind(pool);
-    // 2.2 s of "connect" before the round trip: longer than the 2 s query-only bound that
-    // reported Render's TLS cold connects as "down", shorter than connect + query bound.
-    pool.query = (...args: unknown[]) => new Promise((r) => setTimeout(r, 2_200)).then(() => realQuery(args[0] as string));
+describe("the default probe bound stays 2 s whatever the connect bound (ADR-059 E3, CLM-0458)", () => {
+  // CLM-0456 made the default `connectionTimeoutMillis + 2 s`; DR scenario 2 then measured
+  // health 503 in 5 007 ms under partition (E3 requires < 3 s, run 37168930267). The
+  // health verdict during a partition must not wait for the pool's connect bound.
+  it("a hanging database on a pool with a 5 s connect bound is 'down' in < 3 s", async () => {
+    const pool = Object.assign(new FakePool(), { options: { connectionTimeoutMillis: 5_000 } });
     guardPgPool(pool, { name: "t", probeCacheMs: 0, log: quiet().log });
+    pool.mode = "hang";
+    const t0 = Date.now();
     const health = await pgGuardOf(pool)!.probe();
-    expect(health.state).toBe("up");
-    expect(health.breaker).toBe("closed");
+    const elapsed = Date.now() - t0;
+    expect(health.state).toBe("down");
+    expect(health.reason).toBe("probe_timeout");
+    expect(elapsed).toBeGreaterThanOrEqual(PG_GUARD_DEFAULTS.probeTimeoutMs - 50);
+    expect(elapsed).toBeLessThan(3_000);
   }, 10_000);
 });
 

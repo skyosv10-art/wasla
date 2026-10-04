@@ -8447,3 +8447,29 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0456 released (PR #605 merged, main green).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0458 — ADR-059: a guard change merged without scenario 2; measured, corrected, and gated (2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0458
+
+### Measured
+- `dr-replacement-restore.yml` re-ran scenario 2 only on pushes to two named old claim branches. CLM-0456 changed `packages/resilience` (guard probe default 2 s → connect bound + 2 s) on another branch, and scenario 2 never ran.
+- With a `pull_request` trigger added, scenario 2 on the CLM-0456 guard (run 37168930267): **FAIL**, 18/19. `E3.health-503`: 503 in 5 007 ms (criterion < 3 s). Everything else passed.
+- CLM-0456 attempt 1 had already shown the 2 s guard probe passing under TLS (idle-spaced `/health` 9/9 200). Only delivery's 1.5 s readiness race failed.
+
+### What changed
+- `.github/workflows/dr-replacement-restore.yml`: `pull_request` to main on the guard, the harness and the workflow. `replacement` is skipped on PRs (secrets, DR writes).
+- `pg-guard.ts`: the default probe bound is back to 2 s; `probeBoundMs` removed. Delivery's readiness fix (connect + 1.5 s) is kept.
+- Test: hanging DB + 5 s connect bound → "down" in < 3 s. Mutation (+5 s) fails 2 tests. Resilience 68/68.
+- ADR-059 amendment 2 (supersedes amendment 1, by addition). RISK-0058 note. Evidence: `docs/12-testing/ci-evidence/2026-10-04T020000Z-clm-0458-risk-0058-scenario2-guard-regression/`.
+
+### Not claimed
+- The `scenario2` check is not a required status in branch protection (an owner setting). It is visible on every guard PR, and this agent does not merge red.
+- RISK-0058 stays `mitigating`; M6-18B stays Blocked.
+
+### Releases
+- CLM-0457 released (PR #606 merged).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

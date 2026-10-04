@@ -274,23 +274,6 @@ export function pgGuardOf(pool: object): PgGuard | undefined {
 }
 
 /**
- * RISK-0060 (CLM-0456): the default probe bound covers obtaining a connection, not only
- * the round trip. A probe that runs on an idle pool must open a connection first; with
- * TLS that is one SSLRequest and one TLS handshake more (measured from the operator
- * sandbox to a Supabase pooler: cold connect + `SELECT 1` median 954 ms in clear, 1293 ms
- * with verify-full). A 2 s bound shorter than the pool's own 5 s connect bound reported
- * a reachable database as "down" — 12/12 idle-spaced readiness calls on Render — and every
- * such false "down" counted against the breaker. So: connect bound + query bound, both
- * still finite, so a hanging database is still reported "down" in bounded time.
- * An explicit `probeTimeoutMs` is kept as given.
- */
-export function probeBoundMs(pool: object): number {
-  const connect = (pool as { options?: { connectionTimeoutMillis?: unknown } }).options?.connectionTimeoutMillis;
-  const connectMs = typeof connect === "number" && Number.isFinite(connect) && connect > 0 ? connect : 0;
-  return connectMs + PG_GUARD_DEFAULTS.probeTimeoutMs;
-}
-
-/**
  * Installs error listeners, a circuit breaker and a probe on `pool`, in place, and returns
  * the same pool — so every caller that already holds a `Pool` keeps its type and behaviour
  * when the database is healthy. Idempotent.
@@ -304,7 +287,7 @@ export function guardPgPool<P extends PgPoolLike>(pool: P, options: GuardPgPoolO
     cooldownMs: options.breaker?.cooldownMs ?? PG_GUARD_DEFAULTS.cooldownMs,
     clock,
   });
-  const probeTimeoutMs = options.probeTimeoutMs ?? probeBoundMs(pool);
+  const probeTimeoutMs = options.probeTimeoutMs ?? PG_GUARD_DEFAULTS.probeTimeoutMs;
   const probeCacheMs = options.probeCacheMs ?? PG_GUARD_DEFAULTS.probeCacheMs;
   const log = options.log ?? ((line: string) => console.warn(line));
   const stats = { poolErrors: 0, clientErrors: 0, rejectedOpen: 0, connectivityFailures: 0 };

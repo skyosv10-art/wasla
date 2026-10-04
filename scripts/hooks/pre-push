@@ -13,6 +13,10 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 DOC_CHECK="$REPO_ROOT/scripts/checks/require-doc-update.sh"
 SECRET_CHECK="$REPO_ROOT/scripts/checks/scan-secrets.sh"
 CLAIM_CHECK="$REPO_ROOT/scripts/checks/validate-work-claims.sh"
+# STATE-SYNC (M0-52 · docs/00-rules/STATE_SYNC_RULE.md): the change and the project state that
+# describes it leave together. Judged on the whole PR range (origin/main..local), not the
+# increment, because that range is what merges.
+STATE_CHECK="$REPO_ROOT/scripts/checks/validate-state-sync.sh"
 
 if [ -z "$REPO_ROOT" ]; then
   echo "تحذير: تعذّر تحديد جذر المستودع — تخطّي الفحص المحلي." >&2
@@ -54,6 +58,10 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
   fi
   [ -x "$CLAIM_CHECK" ] && { "$CLAIM_CHECK" "$BASE" "$LOCAL_SHA" || STATUS=1; }
   [ -x "$DOC_CHECK" ]   && { "$DOC_CHECK"   "$BASE" "$LOCAL_SHA" || STATUS=1; }
+  case "$REMOTE_REF" in refs/heads/main) ;; *)
+    if [ -x "$STATE_CHECK" ]; then "$STATE_CHECK" origin/main "$LOCAL_SHA" || STATUS=1
+    else echo "BLOCKED — project state synchronization required (validate-state-sync.sh missing)" >&2; STATUS=1; fi ;;
+  esac
 done
 
 if [ "$STATUS" -ne 0 ]; then

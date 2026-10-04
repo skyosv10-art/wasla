@@ -1,0 +1,65 @@
+# Merged-branch cleanup (CLM-0467 · M0-52 · ADR-061 · docs/00-rules/STATE_SYNC_RULE.md §7)
+#
+# Cycle: PR merged → verify merge → delete merged branch → verify deletion.
+# The repository setting `delete_branch_on_merge` deletes the head branch at merge. This
+# workflow is the second line: when a PR closes as merged it deletes the branch if it is still
+# there (unless BRANCH_EVIDENCE.md gives a written reason to keep it), checks the deletion
+# took effect, and then runs check 27 against the whole repository. A daily sweep runs the same
+# check, so a merged branch left behind turns into a red run instead of a silent leftover.
+#
+# No secrets. One write permission: `contents: write`, only to delete refs.
+# Never runs on pull_request_target; it does not check out or execute PR code.
+
+name: Merged branch cleanup
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Delete the merged head branch and verify the deletion
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR: ${{ github.event.pull_request.number }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+          echo "PR #$PR merged as $MERGE_SHA — head branch: $BRANCH"
+          state="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq '.merged')"
+          [[ "$state" == "true" ]] || { echo "::error::PR #$PR is not merged according to the API"; exit 1; }
+          if [[ "$BRANCH" == "main" ]]; then echo "::error::refusing to touch main"; exit 1; fi
+          if awk -F'|' '{b=$2; gsub(/^ +| +$/,"",b); print b}' docs/16-progress/BRANCH_EVIDENCE.md | grep -qxF "$BRANCH"; then
+            echo "kept: $BRANCH has a documented reason in BRANCH_EVIDENCE.md"
+            exit 0
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/branches/$BRANCH" >/dev/null 2>&1; then
+            echo "branch still present — deleting"
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH"
+          else
+            echo "already deleted (delete_branch_on_merge)"
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/branches/$BRANCH" >/dev/null 2>&1; then
+            echo "::error::merged branch $BRANCH still exists after deletion"
+            exit 1
+          fi
+          echo "verified: $BRANCH no longer exists"
+      - name: Check 27 — no merged branch left, no Active claim for merged work
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/checks/validate-merged-branches.sh

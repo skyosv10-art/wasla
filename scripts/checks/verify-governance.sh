@@ -3,7 +3,8 @@
 #
 # الفحوص: 0) وجود الوثائق · 1) اللوحة · 2) الحجوزات · 3) التوثيق مع الدفع ·
 #         4) بياتُ الحجوزات (M0-16) · 5) هدفُ طلبِ الدمج (M0-17) · 6) الأسرار ·
-#         7) عزلُ DDL في اختباراتِ التكامل (M0-03) · 8) CI مانعٌ لا مُجمِّل (M0-04).
+#         7) عزلُ DDL في اختباراتِ التكامل (M0-03) · 8) CI مانعٌ لا مُجمِّل (M0-04) · …
+#         26) STATE-SYNC (M0-52) · 27) الدمجُ يُغلِقُ الدورة (M0-52) — docs/00-rules/STATE_SYNC_RULE.md.
 #
 # وليست هذه البوّابةُ المدخلَ الأعلى بعدَ M0-04: `scripts/verify.sh` يُشغّلُها
 # ومعها بنيةُ المستودعِ والأنواعُ والاختباراتُ، ويكتبُ أرتفاكتاً (VERIFY_COMMAND.md).
@@ -506,6 +507,43 @@ if [[ -f scripts/checks/validate-runbook-reason-codes.sh ]]; then
     bash scripts/checks/validate-runbook-reason-codes.sh
 else
   SKIPPED+=("25) أسماءُ دليلِ التدويرِ تطابقُ الشفرة — السكربت غير موجود")
+fi
+
+# ── 26) STATE-SYNC: لا دفعَ ولا دمجَ بلا تزامُنِ حالةِ المشروع (M0-52 · ADR-061) ─────
+# IMPLEMENTATION + TESTS + EVIDENCE + PROJECT-STATE = ONE COMPLETE CHANGE.
+# الفحصُ 3 يسألُ «أُلمِسَ السجلّ؟»، وهذا يسألُ «أيَصفُ السجلُّ هذا التغييرَ وحالتَهُ بعدَ الدمج؟»:
+# حجزٌ مُقفَلٌ في الطلبِ نفسِه · إدخالٌ يُسمّي الحجزَ والعنصرَ والوحداتِ المُعدَّلةَ بلا حالةٍ بائتةٍ ·
+# صفُّ اللوحةِ · سطرُ الخارطةِ · اختباراتٌ · حالاتُ المخاطرِ مطابِقةٌ للسجلّ · أدلّةٌ موجودةٌ. ومسارٌ
+# لا يُعرَفُ ما يُؤثّرُ فيهِ مَنعٌ لا مرور. القاعدة: docs/00-rules/STATE_SYNC_RULE.md
+if (( IN_GIT )) && [[ "$LEDGER_ONLY" != "1" ]] && git rev-parse --verify "${OLD}^{commit}" >/dev/null 2>&1; then
+  run_check "26) STATE-SYNC — حالةُ المشروعِ متزامنةٌ مع التغيير (M0-52)" \
+    bash scripts/checks/validate-state-sync.sh "$OLD" "$NEW"
+elif [[ "${CI:-}" == "true" && "$LEDGER_ONLY" != "1" ]]; then
+  # في CI لا تخطّي: النطاقُ الذي لا يُحَلُّ لا يُقاسُ، والذي لا يُقاسُ لا يُدمَج.
+  hdr "26) STATE-SYNC"
+  printf '  %s✗%s BLOCKED — cannot resolve «%s» in CI (fail-closed)\n' "$RED" "$RST" "$OLD"
+  FAILED+=("26) STATE-SYNC — نطاقٌ غيرُ قابلٍ للحلّ في CI")
+else
+  hdr "26) STATE-SYNC"
+  printf '  %s⊘ تخطٍّ:%s لا سياق git أو مرجعٌ غيرُ قابلٍ للحلّ. نفّذ: git fetch origin main\n' "$YLW" "$RST"
+  SKIPPED+=("26) STATE-SYNC — لا نطاق git")
+fi
+
+# ── 27) الدمجُ يُغلِقُ الدورة: لا فرعَ مدموجاً باقٍ ولا حجزَ نشطاً لعملٍ مدموج (M0-52) ──
+# جزئيٌّ (بلا gh خارجَ CI) يُحتسَبُ تخطّياً لا نجاحاً، وفي CI تعذُّرُ القراءةِ إخفاق.
+if [[ -f scripts/checks/validate-merged-branches.sh ]]; then
+  hdr "27) الدمجُ يُغلِقُ الدورة — فرعٌ مدموجٌ باقٍ أو حجزٌ نشطٌ لعملٍ مدموج (M0-52)"
+  MBR_OUT="$(bash scripts/checks/validate-merged-branches.sh 2>&1)"; MBR_RC=$?
+  printf '%s\n' "$MBR_OUT"
+  if (( MBR_RC != 0 )); then
+    FAILED+=("27) الدمجُ يُغلِقُ الدورة (M0-52)")
+  elif [[ "$MBR_OUT" == *"PARTIAL"* ]]; then
+    SKIPPED+=("27) الدمجُ يُغلِقُ الدورة — جزئيٌّ: لم تُقرأ المنصّة")
+  else
+    PASSED+=("27) الدمجُ يُغلِقُ الدورة (M0-52)")
+  fi
+else
+  FAILED+=("27) الدمجُ يُغلِقُ الدورة — السكربت غير موجود (fail-closed)")
 fi
 
 # ── الخلاصة ──────────────────────────────────────────────────

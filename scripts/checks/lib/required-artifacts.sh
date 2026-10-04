@@ -51,6 +51,7 @@ REQUIRED_DIRS=(
 # الوثائقُ الحاكمةُ الإلزاميّة — قوانينُ وسجلاتٌ وقرارٌ مِعْماريٌّ أوّل.
 # كلُّ ما تُلزمه البوّابةُ محلّياً تُلزمه CI، والعكسُ — لأنّ القائمةَ واحدة.
 REQUIRED_DOCS=(
+  "docs/00-rules/STATE_SYNC_RULE.md"
   "docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md"
   "docs/00-rules/DEFINITION_OF_DONE.md"
   "docs/00-rules/GIT_RULES.md"

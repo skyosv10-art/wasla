@@ -55,6 +55,10 @@
 
 ## 4. دورة العمل الإلزامية (7 خطوات)
 
+> **منذ 2026-10-04 (`M0-52` · [ADR-061](../15-decisions/ADR-061-state-sync-invariant.md)) المرجعُ الإلزاميُّ للدورةِ هوَ [`STATE_SYNC_RULE.md`](../00-rules/STATE_SYNC_RULE.md):**
+> `BEFORE WORK → WORK → UPDATE PROJECT STATE → VERIFY → PUSH/PR → MERGE → DELETE MERGED BRANCH`.
+> ابدأ بـ`bash scripts/state/current-state.sh`. والخطوة 7 أدناه صارت **داخلَ الطلبِ نفسِه** (يُقفَلُ الحجزُ `Released` قبلَ الدفعِ)، ولا طلبَ تحريرٍ بعدَ الدمج. النصُّ أدناه محفوظٌ بالإضافة.
+
 ```text
 1) ابحث أولًا      bash scripts/checks/find-existing-work.sh "marketplace"
 2) اختر عنصرًا     من اللوحة فقط — لا عمل بلا Mx-yy
@@ -78,6 +82,8 @@
 | `scripts/checks/validate-launch-board.sh` | حالة غير معتمدة · ID مكرر · `Completed` بلا دليل |
 | `scripts/checks/require-doc-update.sh` | دفع كود بلا تحديث `TASK_LOG` واللوحة |
 | `scripts/checks/scan-secrets.sh` | دخول أسرار إلى الشجرة |
+| `scripts/checks/validate-state-sync.sh` | **كودٌ بلا حالةِ مشروعٍ متزامنةٍ في الطلبِ نفسِه** (الفحص 26 · `M0-52`) |
+| `scripts/checks/validate-merged-branches.sh` | فرعٌ مدموجٌ باقٍ · حجزٌ `Active` لعملٍ مدموج (الفحص 27 · `M0-52`) |
 | `scripts/checks/verify-governance.sh` | **المدخل الموحّد لكل ما سبق** |
 
 تُنفَّذ في ثلاث طبقات: `scripts/hooks/pre-push` محليًا، ووظيفة `governance-guard` في `.gitlab-ci.yml`، ومراجعة `CODEOWNERS`.

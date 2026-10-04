@@ -62,6 +62,7 @@ export function signFor(
     scopes?: readonly string[];
     serviceName?: string;
     now?: Date;
+    onBehalfOfPublicId?: string;
   } = {},
 ): Record<string, string> {
   return serviceAuthHeaders({
@@ -72,6 +73,7 @@ export function signFor(
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_IDENTITY_SCOPES,
+    ...(options.onBehalfOfPublicId === undefined ? {} : { onBehalfOfPublicId: options.onBehalfOfPublicId }),
   });
 }
 

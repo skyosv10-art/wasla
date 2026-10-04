@@ -8519,3 +8519,25 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - Releases: CLM-0460 (PR #609; live, 3/3 bots report `x-wasla-database: up`).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+# 2026-10-04 — CLM-0462 — M0-49: RISK-0042 identity link asserted ownership (P2)
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**CLM-0462 (ADR-060 P2):** Elevated `POST /identity/users/:waslaPublicId/links` from `scoped()` to `asserted()` — the highest-impact RISK-0042 gap named in CLM-0461 wave 3. The route now requires a valid user assertion; `:waslaPublicId` from the path is compared against `endUser.publicId` (from the assertion `sub`); mismatch → 404 (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
+
+Changes:
+- `services/identity/src/http/app.ts`: Added `asserted()`, `assertWaslaPublicId()`, `userAssertionVerify` option; changed links route from `scoped()` to `asserted()`.
+- `services/identity/src/http/service-identity.ts`: Added `userAssertion` field to `IdentityServiceIdentityOptions`, passed through to `registerServiceIdentityOnFastify`.
+- `services/identity/src/use-cases/issue-user-assertion.ts`: Expanded `ASSERTION_AUDIENCES_BY_ACTOR` with `"identity"` for all three actor types (customer, driver, store_staff) — Identity service is now both issuer and receiver of user assertions.
+- `services/identity/src/__tests__/http/support.ts`: Added `onBehalfOfPublicId` option to `signFor`.
+- `services/identity/src/__tests__/http/link-asserted-ownership.test.ts`: 5 new tests (off backward-compatible, enforce owner 200, enforce mismatch 404, enforce no-assertion 401, enforce tampered 401).
+- `packages/authz-policy/src/bindings.ts`: Changed identity links binding from `strength: "none"` to `strength: "asserted"` with updated evidence and note.
+- `packages/authz-policy/src/__tests__/policy.test.ts`: Updated wave 3 test (47 → 46 `none`, 21 → 20 measured gaps).
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: Added CLM-0462 section, updated identity row.
+
+All 79 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck and test suites green. RISK-0042 stays `open` — P2 remediation, not closure.

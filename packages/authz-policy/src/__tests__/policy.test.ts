@@ -460,17 +460,19 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     const wave3 = OPERATION_BINDINGS.filter(
       (b) =>
         // `POST /identity/assertions` صُنِّفَ قبلَ الموجةِ (ADR-060 · CLM-0440).
-        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions") ||
+        // `POST /identity/users/:waslaPublicId/links` رُفِعَ إلى `asserted` في CLM-0462.
+        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && b.path === "/identity/users/:waslaPublicId/links")) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(47);
+    expect(wave3).toHaveLength(46);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 21 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(21);
+    // 20 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ إلى `asserted`).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(20);
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 

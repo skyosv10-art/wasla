@@ -61,6 +61,7 @@ export {
   connectivityReason,
   withPgPoolDefaults,
   pgSslFromEnv,
+  probeBoundMs,
   guardPgPool,
   pgGuardOf,
   installedPgGuards,

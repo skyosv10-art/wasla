@@ -104,3 +104,11 @@ Results: [CLM-0438 evidence](../12-testing/ci-evidence/2026-10-02T180000Z-clm-04
 
 - RISK-0058 moves to `mitigating`. M6-18B stays `Blocked`: the RPO is only excepted (ADR-058), and the Render failover RTO is still unmeasured.
 - Partners cannot boot under enforced service identity, regardless of the database. This is recorded as RISK-0059, to be fixed in its own auth PR.
+
+## Amendment 2026-10-04 (CLM-0456 · RISK-0060): the probe bound covers connection acquisition
+
+Measured: with verify-full TLS on Render, 12/12 idle-spaced readiness calls answered `probe_timeout` while the database was reachable (evidence: `docs/12-testing/ci-evidence/2026-10-04T003917Z-clm-0456-risk-0060-render-tls-activation-1/`). An idle pool opens a connection inside the probe, and a 2 s probe bound shorter than the pool's own 5 s connect bound turns a slow-but-successful connect into a false "down" that also counts against the breaker.
+
+Decision: the default probe bound is now `connectionTimeoutMillis` of the pool + 2 s (7 s with the defaults). It is still finite, so a hanging database is still "down" in bounded time. An explicit `probeTimeoutMs` is kept as given. The 1 s cache, the reset-on-success and the stale-"up" invalidation are unchanged. The text above is left as it was; this section supersedes the "**2 s**" in the `probe()` bullet.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

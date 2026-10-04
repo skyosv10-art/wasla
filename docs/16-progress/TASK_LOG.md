@@ -8399,3 +8399,34 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0454 released (PR #603 merged, main green).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0456 — RISK-0060: activation attempt 1 rolled back; probe bounds cover connection acquisition (2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0456
+
+### Measured
+- Plan run 37165498573 PASS: 17/17 on `5d00b14`. Apply run 37165603988 PASS: 34 variables on 17 services, 17/17 `live`, healthy+ready 106.4 s, fingerprint 0 unexpected / 0 missing. Independent check: 17/17 hashes match, `/health` 17/17 200.
+- Idle-spaced probe: `/delivery/ready` 15 s apart → **12/12 503 `probe_timeout`**; 3 s apart → 20/20 200.
+- Rollback run 37166240967 PASS; 0 TLS keys on 24 services; the same idle-spaced probe in clear → **10/10 200**. The A/B difference is the TLS cold connect.
+- Sandbox (test pooler): cold connect + `SELECT 1`, median 954 ms in clear and 1293 ms with verify-full.
+
+### Root cause
+- Delivery's readiness race (1.5 s) and the shared guard probe (2 s, ADR-059) were shorter than the pool's own connect bound (5 s). On an idle pool the probe opens a connection, and a slow-but-successful TLS connect was reported "down". Guard-probe failures also count against the breaker (5 → open 30 s), so this could have refused real queries on quiet services.
+- The workflow's health gate ran on warm connections right after the deploys, so it could not see this.
+
+### What changed
+- `probeBoundMs(pool)` in `@wasla/resilience`: default probe bound = pool `connectionTimeoutMillis` + 2 s. An explicit `probeTimeoutMs` is unchanged.
+- Delivery `PostgresReadinessProbe`: the client race = `connectBoundMs(pool)` + `timeoutMs`; the server `statement_timeout` is still `timeoutMs`.
+- Tests: guard (2.2 s connect → "up", breaker closed; fails on the old code) and delivery `readiness-probe-bound.test.ts` (slow connect → ready; hang → `probe_timeout` within the bound; 2 of 3 fail on the old code). Resilience 69/69.
+- ADR-059 amended by addition. Evidence: `docs/12-testing/ci-evidence/2026-10-04T003917Z-clm-0456-risk-0060-render-tls-activation-1/`.
+- `BASELINE.json`: `test_files_tracked` 554 → 555 and its fingerprint (`scripts/baseline.sh`).
+
+### Not claimed
+- Production is in clear again until the re-activation after this merge. RISK-0060 is `mitigating`, and M6-18B is Blocked.
+
+### Releases
+- CLM-0455 released (PR #604 merged, main green).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

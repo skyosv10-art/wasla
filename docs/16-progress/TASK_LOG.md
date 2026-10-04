@@ -8430,3 +8430,20 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0455 released (PR #604 merged, main green).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0457 — RISK-0060: verified TLS live on Render (evidence only, 2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0457
+
+- CLM-0456 on main: PR #605 → `0eec83e`; main CI 37167287300 and Render deploy 37167287291 green.
+- Activation attempt 2, run 37167859053 (apply on `0eec83e`): PASS. 34 variables, 17/17 `live`, healthy+ready 108.2 s, fingerprint 0 unexpected / 0 missing.
+- Independent acceptance (the probe that caught attempt 1): `/delivery/ready` 15 s apart → 14/14 200, database ok, 2.76–2.94 s (clear: 2.28–2.46 s). `/health` on 17 services, 2 rounds 20 s apart → 34/34 200. 17/17 env hashes match, 0 non-DB services touched.
+- Not claimed: RISK-0060 is not closed, because the server still accepts plaintext (Enforce SSL is off). That step needs a production-scoped Supabase token or the owner's toggle. M6-18B stays Blocked.
+- Evidence: `docs/12-testing/ci-evidence/2026-10-04T012320Z-clm-0457-risk-0060-render-tls-activation-2/`.
+
+### Releases
+- CLM-0456 released (PR #605 merged, main green).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

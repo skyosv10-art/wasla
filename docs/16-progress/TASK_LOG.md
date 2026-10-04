@@ -8488,3 +8488,19 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - Releases: CLM-0458.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0460 — Bot `/health` reports the database; live acceptance at 2.5 s; RISK-0061 opened (2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0460
+
+- CLM-0459 merged (PR #608 → `f53e0a7`). Scenario 2 PASS 19/19 (run 37172097263, E3 2 503 ms). Main CI 37173621444 and deploy 37173621434 green.
+- Live acceptance on `f53e0a7`: guarded `/health` 98 idle-spaced calls → **1 false 503** (orders, `probe_timeout`, breaker closed, 2.80 s). Median 1.91 s, p95 2.19 s. `/delivery/ready` 7/7 200.
+- Root cause of the tail: 21 Render services run in `oregon` and the DB pooler in `ap-south-1`, so cold TLS connects cross the Pacific. Opened **RISK-0061** (`sev:medium`, open). Closing it is an owner-level region decision. The probe bound stays 2.5 s (E3 < 3 s binds).
+- Bots: `packages/bot-runtime` `/health` never reported the DB (ADR-059 gap). `attachBotDatabaseHealth` is now in `startBot` and `runBotApp`, plus the `@wasla/resilience` dependency (lockfile: one importer entry). The new test goes through `runBotApp`; mutation check fails without the attach. bot-runtime 208/208.
+- `BASELINE.json`: `test_files_tracked` +1 and fingerprint.
+- Evidence: `docs/12-testing/ci-evidence/2026-10-04T034500Z-clm-0460-bot-db-health-and-region/`. ADR-059 amendment 4.
+- Releases: CLM-0459.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

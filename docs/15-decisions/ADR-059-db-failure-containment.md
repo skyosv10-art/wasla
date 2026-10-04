@@ -128,3 +128,10 @@ Measured on `e75c08f` with verify-full on Render: 1 of 140 idle-spaced guarded `
 Recorded gap: the bots' `/health` (`packages/bot-runtime`) does not report the database. It goes to its own claim.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+## Amendment 4 2026-10-04 (CLM-0460): bots are covered; the probe tail is a region problem
+
+- The three bots' `/health` now answers the ADR-059 503 while their guarded pools are down (`attachBotDatabaseHealth` in `packages/bot-runtime` launchers). This closes the "every service health path" gap for the bots. Scenario 2 E4 still excludes them.
+- At 2.5 s the live false-503 tail remains (1/98, orders 2.80 s). The bound is **not** raised further: E3 (< 3 s) is the binding requirement. The tail comes from cold cross-region connects (Render `oregon`, DB `ap-south-1`), recorded as RISK-0061.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

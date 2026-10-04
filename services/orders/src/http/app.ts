@@ -492,6 +492,26 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
       { idempotencyKey, traceId },
     );
 
+    // CLM-0465 (RISK-0042): a non-system actor named in the body must be the
+    // beneficiary the caller's signed token carries (`obo`). Without this the
+    // holder of `orders:transition:write` could record a transition in the
+    // name of any customer, driver, partner or admin. `system` carries no
+    // actor reference by contract (validation rejects one), so it is the
+    // platform authority and is not bound to a user. A missing `actor_ref` is
+    // left to domain validation (422), exactly as before.
+    const transitionCaller = request.serviceCaller;
+    if (
+      command.actorType !== "system" &&
+      command.actorRef !== null &&
+      transitionCaller?.onBehalfOfPublicId !== command.actorRef
+    ) {
+      throw new OrderError(
+        "ORDER_NOT_FOUND",
+        `الطلب ${ref.value} غير موجود`,
+        { traceId },
+      );
+    }
+
     // The transition, its audit row, its event AND the read-back of the bound
     // assignment all happen in one unit: the response describes the state the
     // transaction committed, not a state re-read afterwards.

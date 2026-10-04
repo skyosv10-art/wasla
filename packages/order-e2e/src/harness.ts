@@ -690,6 +690,8 @@ export async function attemptTransition(
       ...(actorType === "system" ? {} : { actor_ref: order.customerPublicId }),
     },
     idempotencyKey: nextKey("gate-transition"),
+    // CLM-0465: a non-system actor must be the signed beneficiary (`obo`).
+    ...(actorType === "system" ? {} : { customerScope: order.customerPublicId }),
   });
 }
 

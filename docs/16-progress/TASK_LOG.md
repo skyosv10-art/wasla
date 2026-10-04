@@ -8587,3 +8587,26 @@ Changes:
 - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: Added CLM-0464 section, orders row shows 3 gaps (was 4).
 
 All 654 orders tests pass; all 16 order-e2e tests pass; all 11 customer-e2e tests pass; all 48 authz-policy tests pass; typecheck green. RISK-0042 stays `open`.
+
+# 2026-10-04 — CLM-0465 — M0-49: RISK-0042 orders transition actor bound to `obo`
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**CLM-0465 (RISK-0042):** `POST /orders/:orderId/transitions` no longer accepts a non-system actor on the caller's word. When `actor_type` is not `system`, `actor_ref` must equal the signed `obo` (`principal.onBehalfOfPublicId`); a missing `obo` or a mismatch → 404 `ORDER_NOT_FOUND` before any read or write. A missing `actor_ref` still reaches domain validation (422). `system` (no actor ref by contract) remains the platform authority; the only grant for `orders:transition:write` is `dispatch`, which always transitions as `system`, so production behaviour is unchanged.
+
+Binding stays `none` (not `token-bound`): `beneficiary` cannot be required route-wide without breaking the system path. The measured gap (actor impersonation) is closed in code; the note now records the residual system authority. Wave 3 measured gaps 16 → 15; `TOKEN_BOUND_OPERATION_COUNT` unchanged (45).
+
+Not done, with reason: `POST /orders/:orderId/assignments` and `PATCH .../assignments/:assignmentId`. Resolution is driven by `dispatch` accept/reject, which are themselves `none` with no driver in their inputs and no service grant for `dispatch:offer:accept`. Binding orders to a driver first would only forward an unverified ID; the root is at the dispatch boundary.
+
+Correction to the CLM-0464 entry above (kept as written): the intake binding strength is `token-bound` (the `required` in that entry is the route's `beneficiary`, not a binding strength), and the PR merged as #615 (`b5e9123`).
+
+Changes:
+- `services/orders/src/http/app.ts`: non-system actor vs `obo` check.
+- `services/orders/src/__tests__/http/app.test.ts`: 4 existing human-actor tests now sign for that actor; 3 new tests (mismatch → 404, no `obo` → 404, `system` unaffected).
+- `packages/order-e2e/src/harness.ts`, `packages/reputation-e2e/src/harness.ts`: non-system transitions pass `customerScope`.
+- `packages/authz-policy/src/bindings.ts` + `__tests__/policy.test.ts`: evidence/note updated; gaps 16 → 15.
+- `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: CLM-0465 section; orders row 3 → 2 gaps.
+
+Local: orders 657/657, order-e2e 16/16, reputation-e2e 12/12, negotiation-e2e 8/8, dispatch-e2e 13/13, authz-policy 48/48. RISK-0042 stays `open`.

@@ -706,7 +706,7 @@ describe("POST /orders/{orderId}/transitions", () => {
       to_status: "completed",
       actor_type: "driver",
       actor_ref: DRIVER,
-    });
+    }, KEY, DRIVER);
 
     expect(response.statusCode).toBe(409);
     expect(response.json().code).toBe("ORDER_ILLEGAL_TRANSITION");
@@ -733,7 +733,7 @@ describe("POST /orders/{orderId}/transitions", () => {
       to_status: "customer_cancelled",
       actor_type: "customer",
       actor_ref: CUSTOMER,
-    });
+    }, KEY, CUSTOMER);
 
     expect(response.statusCode).toBe(422);
     expect(response.json().code).toBe("ORDER_REASON_CODE_REQUIRED");
@@ -776,10 +776,57 @@ describe("POST /orders/{orderId}/transitions", () => {
       to_status: "accepted",
       actor_type: "driver",
       actor_ref: DRIVER,
-    });
+    }, KEY, DRIVER);
 
     expect(response.statusCode).toBe(422);
     expect(response.json().code).toBe("ORDER_ASSIGNMENT_REQUIRED");
+  });
+
+  it("CLM-0465: refuses a human actor the signed obo does not name (404)", async () => {
+    const { harness, app } = fixture();
+    const orderId = await createOrder(harness);
+
+    // The token speaks for DRIVER; the body claims the customer cancelled.
+    const response = await post(app, `/orders/${orderId}/transitions`, {
+      to_status: "customer_cancelled",
+      reason_code: "CUSTOMER_CHANGED_MIND",
+      actor_type: "customer",
+      actor_ref: CUSTOMER,
+    }, KEY, DRIVER);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().code).toBe("ORDER_NOT_FOUND");
+    // Nothing moved: the order is still where it was.
+    const detail = await app.inject({ method: "GET", url: `/orders/${orderId}` });
+    expect(detail.json().status).not.toBe("customer_cancelled");
+  });
+
+  it("CLM-0465: refuses a human actor when the token carries no obo at all (404)", async () => {
+    const { harness, app } = fixture();
+    const orderId = await createOrder(harness);
+
+    const response = await post(app, `/orders/${orderId}/transitions`, {
+      to_status: "customer_cancelled",
+      reason_code: "CUSTOMER_CHANGED_MIND",
+      actor_type: "customer",
+      actor_ref: CUSTOMER,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().code).toBe("ORDER_NOT_FOUND");
+  });
+
+  it("CLM-0465: the system actor needs no obo — dispatch's path is unchanged", async () => {
+    const { harness, app } = fixture();
+    const orderId = await createOrder(harness);
+
+    const response = await post(app, `/orders/${orderId}/transitions`, {
+      to_status: "searching",
+      actor_type: "system",
+    }, KEY, CUSTOMER);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ status: "searching" });
   });
 
   it("requires the Idempotency-Key header on a transition too", async () => {
@@ -876,7 +923,7 @@ describe("assignment endpoints", () => {
       to_status: "accepted",
       actor_type: "driver",
       actor_ref: DRIVER,
-    });
+    }, KEY, DRIVER);
     expect(moved.statusCode).toBe(200);
     expect(moved.json()).toMatchObject({
       status: "accepted",

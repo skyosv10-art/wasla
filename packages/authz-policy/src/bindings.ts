@@ -1468,8 +1468,8 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/orders/:orderId/transitions",
     dimension: "owner",
     strength: "none",
-    evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.transitionWrite) transitionOrder(deps,",
-    note: "`none`: **فجوةٌ مقيسةٌ:** `actor_type`/`actor_ref` من الجسمِ، يُفرَضُ شكلُهما ولا يُتحقَّقُ منهما (تعليقُ الملفِّ: «cannot verify»)؛ فحاملُ الصلاحيّةِ ينقلُ أيَّ طلبٍ باسمِ أيِّ فاعلٍ.",
+    evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.transitionWrite) transitionCaller?.onBehalfOfPublicId",
+    note: "`none`: قرارُ تصميمٍ بعدَ CLM-0465: الفاعلُ غيرُ `system` (`customer`/`driver`/`partner`/`admin`) يُقارَنُ `actor_ref` فيهِ بـ`obo` الموقَّعِ في الرمزِ، وغيابُهُ أو اختلافُهُ ⇒ 404؛ فلا ينقلُ حاملُ الصلاحيّةِ طلباً باسمِ إنسانٍ لا يحملُ رمزُهُ اسمَهُ. والباقي سلطةُ نظامٍ: `system` بلا مُعرِّفٍ بالعقدِ، والصلاحيّةُ ممنوحةٌ لحدِّ التوزيعِ وحدَهُ؛ فمَن حملَها ينقلُ أيَّ طلبٍ بصفةِ النظامِ ضمنَ جدولِ الانتقالاتِ — مقبولٌ مكتوباً لا مُغفَلٌ. ولا يُربَطُ `actor_ref` بمالكِ الطلبِ في هذهِ الدفعةِ.",
   },
   {
     audience: "orders",

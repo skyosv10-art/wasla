@@ -450,7 +450,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(UNCLASSIFIED_OPERATION_COUNT).toBe(0);
   });
 
-  it("RISK-0042 الموجةُ 3: الـ42 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0464)", () => {
+  it("RISK-0042 الموجةُ 3: الـ42 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0465)", () => {
     const wave3Audiences = new Set(["channel", "delivery", "identity", "search", "audit", "support", "billing"]);
     const wave3Orders = new Set([
       "POST /orders/agreed-prices",
@@ -475,8 +475,12 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     }
     // 16 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
     // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ)،
-    // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(16);
+    // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`)، و16 قبلَ CLM-0465
+    // (فاعلُ الانتقالِ غيرُ `system` صارَ يُقارَنُ بـ`obo` — الفجوةُ المكتوبةُ أُغلِقَتْ في الشفرةِ).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(15);
+    const transition = wave3.find((b) => b.audience === "orders" && b.path === "/orders/:orderId/transitions");
+    expect(transition?.note).toContain("CLM-0465");
+    expect(transition?.evidence).toContain("transitionCaller?.onBehalfOfPublicId");
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 

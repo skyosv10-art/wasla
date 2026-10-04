@@ -8504,3 +8504,18 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - Releases: CLM-0459.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0461 — RISK-0042 wave 3: the last 47 operations classified (2026-10-04)
+
+**Work Item(s):** M0-49 · CLM-0461
+
+- Read the handler and use-case input of each of the 47 remaining enforced operations: identity 5, delivery 13, orders 5, support 7, billing 7, audit 2, search 5, channel 3. None declares `beneficiary` and none passes a comparable caller identity, so all are `none`. Each row has `<file>:<anchor> <anchor>`, verified by door 7-ج.
+- `UNCLASSIFIED_OPERATION_COUNT` 47 → **0** (166 − 166). The matrix line had a stale "`158 − 111`"; it is corrected by addition.
+- **21 measured gaps** (2 latent): identity user read / **link write** / recovery / history; delivery store-order create, read, cancel, confirm, fulfillment and task read; orders intake, transitions, assignment and its resolution; support create, list, read and evidence; billing invoice reads (latent); audit event write (caller-written actor). **26 design decisions**: operational, catalog, administrative or service-only.
+- Tests: `policy.test.ts` count 47 → 0, plus a wave-3 test (47 rows `none`, evidence shape, 21 named gaps, billing `tenant`). authz-policy 48/48. `validate-authz-policy.sh` green.
+- Not claimed: no service code changed and nothing is enforced. RISK-0042 stays `open`, and M0-49 stays In Progress. Remediation goes through ADR-060 (`asserted`) boundary by boundary and needs owner approval.
+- Releases: CLM-0460 (PR #609; live, 3/3 bots report `x-wasla-database: up`).
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

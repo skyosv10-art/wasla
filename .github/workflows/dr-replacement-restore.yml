@@ -24,6 +24,18 @@ on:
         description: "db-backup.yml run id to restore (empty = latest successful run on main)"
         required: false
         default: ""
+  pull_request:
+    # CLM-0458 added by addition: the push trigger below re-ran scenario 2 only on two named
+    # claim branches, so CLM-0456 changed the guard's probe bound (packages/resilience) on
+    # another branch and merged without scenario 2 ever running — the E3 criterion
+    # (health 503 < 3 s under partition) was never measured against it. Every PR that
+    # touches the guard, the harness or this file now runs `scenario2`. `replacement`
+    # (secrets, writes the DR project) does not run on pull_request.
+    branches: [main]
+    paths:
+      - '.github/workflows/dr-replacement-restore.yml'
+      - 'scripts/ops/m6-18b-dr/**'
+      - 'packages/resilience/**'
   push:
     # CLM-0438 (RISK-0058 fix) added by addition: the re-run of scenario 2 is proven on its
     # own claim branch before merge, and a change to the guard re-runs it.
@@ -101,6 +113,8 @@ jobs:
 
   replacement:
     name: Restore the stored production artifact into the replacement project
+    # CLM-0458: never on pull_request — this job holds secrets and writes the DR project.
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:

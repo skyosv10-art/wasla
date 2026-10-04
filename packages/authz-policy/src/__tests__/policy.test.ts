@@ -448,10 +448,9 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(UNCLASSIFIED_OPERATION_COUNT).toBe(0);
   });
 
-  it("RISK-0042 الموجةُ 3: الـ47 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0461)", () => {
+  it("RISK-0042 الموجةُ 3: الـ42 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0464)", () => {
     const wave3Audiences = new Set(["channel", "delivery", "identity", "search", "audit", "support", "billing"]);
     const wave3Orders = new Set([
-      "POST /orders/intake",
       "POST /orders/agreed-prices",
       "POST /orders/:orderId/transitions",
       "POST /orders/:orderId/assignments",
@@ -462,18 +461,20 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
         // `POST /identity/assertions` صُنِّفَ قبلَ الموجةِ (ADR-060 · CLM-0440).
         // `POST /identity/users/:waslaPublicId/links` رُفِعَ إلى `asserted` في CLM-0462.
         // `GET /identity/users/:waslaPublicId`, `.../recovery`, `.../history` رُفِعَتْ في CLM-0463.
+        // `POST /orders/intake` رُفِعَ إلى `required` في CLM-0464.
         (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history"))) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(43);
+    expect(wave3).toHaveLength(42);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 17 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
-    // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(17);
+    // 16 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ)،
+    // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(16);
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 

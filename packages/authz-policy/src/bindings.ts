@@ -1449,9 +1449,9 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     method: "POST",
     path: "/orders/intake",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/orders/src/http/app.ts:scoped(ORDER_SCOPES.intakeWrite) ingestOrder(deps,",
-    note: "`none`: **فجوةٌ مقيسةٌ:** `customer_public_id` من الجسمِ (`requests.ts`) ولا يُقارَنُ بهويّةِ مُنادٍ؛ المُنادي خدمةُ التفاوضِ.",
+    strength: "token-bound",
+    evidence: "services/orders/src/http/app.ts:ownerScoped(ORDER_SCOPES.intakeWrite) caller.onBehalfOfPublicId command.customerPublicId",
+    note: "`token-bound` (CLM-0464): `beneficiary: required` on the route; handler compares body `customer_public_id` with signed `obo` (`principal.onBehalfOfPublicId`). The `customers` service passes `onBehalfOfPublicId` in the signed request. Mismatch → 404.",
   },
   {
     audience: "orders",

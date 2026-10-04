@@ -290,8 +290,13 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
   });
 
   // --- intake --------------------------------------------------------------
-
-  app.post("/orders/intake", { config: scoped(ORDER_SCOPES.intakeWrite) }, async (request, reply) => {
+  //
+  // CLM-0464 (RISK-0042): `ownerScoped` — `beneficiary: "required"` makes the
+  // middleware reject any service token without an `obo` claim before the
+  // handler runs. The handler then compares the body's `customer_public_id`
+  // with the signed `obo` (principal.onBehalfOfPublicId). Mismatch → 404
+  // (ORDER_NOT_FOUND) — not 403, per ADR-060 §2.6.
+  app.post("/orders/intake", { config: ownerScoped(ORDER_SCOPES.intakeWrite) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
@@ -300,6 +305,18 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
       idempotencyKey,
       traceId,
     });
+
+    // CLM-0464: the body's `customer_public_id` must match the signed `obo`.
+    // The middleware already required `obo` to be present (beneficiary:
+    // "required"); here we verify it names the same user the body claims.
+    const caller = request.serviceCaller;
+    if (caller?.onBehalfOfPublicId !== undefined && caller.onBehalfOfPublicId !== command.customerPublicId) {
+      throw new OrderError(
+        "ORDER_NOT_FOUND",
+        `الطلب ${command.customerPublicId} غير موجود`,
+        { traceId },
+      );
+    }
 
     const outcome = await runner.write((deps) => ingestOrder(deps, command));
 

@@ -33,6 +33,7 @@ import {
 
 const LOOKUP = "/orders/lookup";
 const INTAKE = "/orders/intake";
+const CUSTOMER = publicId(1);
 
 /** جسمُ قبولٍ صحيحٌ — كي يكونَ الرفضُ عن الهويّةِ لا عن التحقّقِ من الجسمِ. */
 function intakeBody(): Record<string, unknown> {
@@ -100,7 +101,7 @@ describe("حد الطلبات — المصفوفة الأربع", () => {
       method: "POST",
       url: INTAKE,
       headers: {
-        ...signFor("POST", INTAKE, { keys, serviceName: "customers", scopes: [ORDER_SCOPES.intakeWrite] }),
+        ...signFor("POST", INTAKE, { keys, serviceName: "customers", scopes: [ORDER_SCOPES.intakeWrite], onBehalfOfPublicId: CUSTOMER }),
         "idempotency-key": "orders-identity-key-3",
       },
       payload: intakeBody(),

@@ -180,6 +180,7 @@ dispatch / delivery / tick-scheduler ──(wsvc3 بلا obo، صلاحية نظ
 | `CLM-0442` | P2: matching (عمليات الترشّح والإتاحة، مع فصل dispatch) | دمج CLM-0441 |
 | `CLM-0443` | P2: marketplace (`POST /stores`، `GET /stores` حسب المالك، قراءة المخزون مع فصل delivery) | دمج CLM-0442 |
 | `CLM-0444` | RISK-0059: تصنيف مسارات partners بهوية الخدمة | مستقل |
+| `CLM-0466` | P2: dispatch (قبول العرض ورفضه بفاعل `driver`، بلا مُمرِّر؛ سائق العرض = `endUser.publicId`) | دمج CLM-0443 · 2026-10-04 |
 
 لا يُدمج أي حجز إلا بمراجعة مستقلة ونجاح CI.
 

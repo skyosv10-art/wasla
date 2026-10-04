@@ -1,4 +1,6 @@
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
 
 import { offerNotFound, validationFailed } from "../domain/errors.js";
 import { offerDetailToWire, toApiJob, toApiOffer, toApiOfferList, toApiTickResult } from "../mappers.js";
@@ -26,6 +28,46 @@ import {
   toRejectOfferRequest,
 } from "./requests.js";
 import { canonicalJson } from "./canonical-json.js";
+
+/**
+ * ADR-060 P2 (CLM-0466 · RISK-0042): accepting or rejecting an offer is a
+ * driver's act. `driver-bot` is the only caller that can obtain a `driver`
+ * assertion, and it would call dispatch directly, so there is no forwarder.
+ * In `off` mode (the production default until P3) nothing is verified and
+ * `request.endUser` stays undefined, so behaviour is unchanged.
+ */
+function assertedDriver(...scopes: readonly string[]): DispatchRouteConfig {
+  return {
+    serviceIdentity: {
+      scopes,
+      beneficiary: "asserted",
+      actors: ["driver"],
+    },
+  };
+}
+
+/**
+ * ADR-060 P2 (CLM-0466): the verified driver must be the driver the offer was
+ * made to. Mismatch → `OFFER_NOT_FOUND` (404), the same answer as an unknown
+ * offer, so a driver learns nothing about offers made to others. Without a
+ * verified end user (`off`) this is a no-op; `observe` logs and passes
+ * (CLM-0448). The offer's driver never changes after creation, so reading it
+ * before the write unit is not a race.
+ */
+async function assertOfferDriver(
+  request: FastifyRequest,
+  runner: DispatchRunner,
+  offerId: string,
+  traceId: string,
+): Promise<void> {
+  const endUser = request.endUser;
+  if (endUser === undefined) return;
+  const offer = await runner.read((deps) => readDispatchOffer(deps, { offerId, traceId }));
+  if (offer === null) throw offerNotFound(traceId);
+  if (endUserOwnershipDenied(request, offer.driverPublicId === endUser.publicId, "offer_driver")) {
+    throw offerNotFound(traceId);
+  }
+}
 
 export interface DispatchHealthDescriptor {
   persistence: "postgres" | "memory";
@@ -136,21 +178,23 @@ export function createDispatchApp(options: CreateDispatchAppOptions): FastifyIns
     return reply.status(200).send(toApiTickResult(outcome));
   });
 
-  app.post("/dispatch/offers/:offer_id/accept", { config: scoped(DISPATCH_SCOPES.offerAccept) }, async (request, reply) => {
+  app.post("/dispatch/offers/:offer_id/accept", { config: assertedDriver(DISPATCH_SCOPES.offerAccept) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
     const offerId = toPathId((request.params as { offer_id?: unknown }).offer_id, "offer_id", traceId);
+    await assertOfferDriver(request, options.runner, offerId, traceId);
     const result = await options.runner.write((deps) => acceptOffer(deps, { offerId, idempotencyKey, traceId }));
     return reply.status(200).send(toApiOffer(result.offer));
   });
 
-  app.post("/dispatch/offers/:offer_id/reject", { config: scoped(DISPATCH_SCOPES.offerReject) }, async (request, reply) => {
+  app.post("/dispatch/offers/:offer_id/reject", { config: assertedDriver(DISPATCH_SCOPES.offerReject) }, async (request, reply) => {
     const traceId = request.id;
     assertRequestIdLength(request.headers, traceId);
     const idempotencyKey = requireIdempotencyKey(request.headers, traceId);
     const offerId = toPathId((request.params as { offer_id?: unknown }).offer_id, "offer_id", traceId);
     const body = toRejectOfferRequest(request.body, traceId);
+    await assertOfferDriver(request, options.runner, offerId, traceId);
     const result = await options.runner.write((deps) => rejectOffer(deps, {
       offerId,
       reasonCode: body.reason_code,

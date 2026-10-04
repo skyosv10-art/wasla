@@ -484,15 +484,16 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 
-  it("RISK-0042 الموجةُ 1: 23 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ", () => {
+  it("RISK-0042 الموجةُ 1: 21 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ (CLM-0466)", () => {
     const wave1Audiences = new Set(["dispatch", "geography"]);
+    // CLM-0466 (ADR-060 P2): قبولُ العرضِ ورفضُهُ ارتقيا من `none` إلى `asserted` فخرجا (23 → 21).
     const wave1 = OPERATION_BINDINGS.filter(
       (b) =>
-        wave1Audiences.has(b.audience) ||
+        (wave1Audiences.has(b.audience) && b.strength !== "asserted") ||
         (b.audience === "drivers" && ((b.method === "GET" && b.path === "/drivers") || b.path === "/drivers/eligibility/tick")) ||
         (b.audience === "customers" && b.path.startsWith("/customers") && !b.path.includes(":waslaPublicId")),
     );
-    expect(wave1).toHaveLength(23);
+    expect(wave1).toHaveLength(21);
     for (const binding of wave1) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
@@ -551,6 +552,25 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(rulesets?.strength).toBe("none");
     const decisions = OPERATION_BINDINGS.find((b) => b.audience === "matching" && b.path === "/matching/decisions/:decisionId");
     expect(decisions?.strength).toBe("none");
+  });
+
+  it("CLM-0466 (ADR-060 P2): قبولُ العرضِ ورفضُهُ `asserted` بالسائقِ — وبقيّةُ حدِّ التوزيعِ نظاميّةٌ `none`", () => {
+    const asserted = OPERATION_BINDINGS.filter((b) =>
+      b.audience === "dispatch" && b.strength === "asserted",
+    );
+    expect(asserted.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "POST /dispatch/offers/:offer_id/accept",
+      "POST /dispatch/offers/:offer_id/reject",
+    ]);
+    for (const binding of asserted) {
+      expect(binding.evidence).toMatch(/^services\/dispatch\/src\/http\/app\.ts:assertedDriver\(DISPATCH_SCOPES\.offer(Accept|Reject)\) assertOfferDriver\(/);
+      expect(binding.note).toContain("CLM-0466");
+      expect(binding.note).not.toContain("فجوةٌ مقيسةٌ");
+    }
+    // المسارُ الوحيدُ لـ`asserted` في الإنتاجِ مُعطَّلٌ حتّى P3، ولا منحةَ خدمةٍ لصلاحيّتَيهِ.
+    expect(OPERATION_BINDINGS.filter((b) => b.audience === "dispatch" && b.strength === "none")).toHaveLength(6);
+    // المجموعُ المُشتَقُّ — يطابقُ `ASSERTED_OPERATION_COUNT` في المصفوفةِ.
+    expect(OPERATION_BINDINGS.filter((b) => b.strength === "asserted")).toHaveLength(23);
   });
 
   it("CLM-0443 (ADR-060 P2): 3 عمليّات سوقٍ `asserted` — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {

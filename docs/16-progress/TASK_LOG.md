@@ -8610,3 +8610,22 @@ Changes:
 - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`: CLM-0465 section; orders row 3 → 2 gaps.
 
 Local: orders 657/657, order-e2e 16/16, reputation-e2e 12/12, negotiation-e2e 8/8, dispatch-e2e 13/13, authz-policy 48/48. RISK-0042 stays `open`.
+
+# 2026-10-04 — CLM-0466 — M0-49: RISK-0042 · ADR-060 P2 dispatch offer accept/reject `asserted`
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**Why this, now:** CLM-0465 found that the remaining orders gaps (assignment + resolution) are fed by dispatch accept/reject, which carried no driver. Binding orders first would only forward an unverified ID, so the root is fixed first.
+
+**What changed:** `POST /dispatch/offers/:offer_id/accept` and `.../reject` moved from `scoped()` to `assertedDriver()` (`beneficiary: "asserted"`, actor `driver`, no forwarder — `driver-bot` is the boundary per ADR-060 §2.4). `assertOfferDriver` reads the offer and compares `driverPublicId` with `endUser.publicId`; mismatch → `404 DISPATCH_OFFER_NOT_FOUND` (same as an unknown offer). `off` ⇒ no-op; `observe` logs `would_reject` and passes (CLM-0448). Dispatch now wires `userAssertionConfigFromEnv` like matching/marketplace.
+
+**Measured, not assumed:**
+- Render (2026-10-04): `wasla-dispatch` has no `WASLA_USER_ASSERTION_*` env vars ⇒ production mode `off`, behaviour unchanged. Activation is P3 (owner decision).
+- `PRODUCTION_GRANTS` has no grant for `dispatch:offer:accept`/`reject`; the driver mini-app calls them with a session `Bearer`, not a service token, so they answer 401 in production today. The gap closed here is structural, not a live hole.
+- Correction by addition: the matrix stated `ASSERTED_OPERATION_COUNT = 11` since CLM-0441; the measured value before this claim was 21. Now 23, and a policy test pins the derived total.
+
+**Not done, named:** no production caller exists yet (no driver-bot accept flow; mini-app → dispatch needs an `init-data`-backed assertion boundary). Next: pass the verified driver from dispatch to orders on accept/reject.
+
+Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enforce ×5 incl. other-driver accept/reject → 404 with the offer still `offered`, no assertion → 401; observe ×1). authz-policy 49/49. dispatch-e2e 13/13, negotiation-e2e 8/8, driver-e2e 14/14, order-e2e 16/16, reputation-e2e 12/12. Typecheck green. RISK-0042 stays `open`.

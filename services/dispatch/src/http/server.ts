@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
   type ServiceRequestSigner,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
@@ -26,6 +27,11 @@ import { createDirectRunner, PostgresDispatchRunner, type DispatchRunner } from 
 import { createDispatchApp, type DispatchHealthDescriptor } from "./app.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 import { attachDatabaseHealth } from "@wasla/resilience";
+
+function dispatchUserAssertion(): { userAssertion?: NonNullable<ReturnType<typeof userAssertionConfigFromEnv>> } {
+  const userAssertion = userAssertionConfigFromEnv(process.env);
+  return userAssertion === undefined ? {} : { userAssertion };
+}
 
 class SystemClock implements Clock {
   now(): string {
@@ -151,6 +157,8 @@ async function main(): Promise<void> {
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
+      // ADR-060 P2 (CLM-0466): absent env ⇒ `off`, behaviour unchanged.
+      ...dispatchUserAssertion(),
     },
   });
 

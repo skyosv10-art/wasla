@@ -243,7 +243,7 @@ describe("guardPgPool — connection delay", () => {
   });
 });
 
-describe("the default probe bound stays 2 s whatever the connect bound (ADR-059 E3, CLM-0458)", () => {
+describe("the default probe bound stays under 3 s whatever the connect bound (ADR-059 E3, CLM-0458/0459)", () => {
   // CLM-0456 made the default `connectionTimeoutMillis + 2 s`; DR scenario 2 then measured
   // health 503 in 5 007 ms under partition (E3 requires < 3 s, run 37168930267). The
   // health verdict during a partition must not wait for the pool's connect bound.

@@ -33,8 +33,14 @@ export const PG_GUARD_DEFAULTS = {
   /** M6-18A defaults (docs/12-testing/M6-18B_DRILL.md §3, scenario 2). */
   failureThreshold: 5,
   cooldownMs: 30_000,
-  /** Health probe: `SELECT 1` must answer within this bound… */
-  probeTimeoutMs: 2_000,
+  /**
+   * Health probe: `SELECT 1` must answer within this bound…
+   * 2.5 s (CLM-0459, ADR-059 amendment 3). With verify-full TLS on Render, a cold connect
+   * exceeded 2 s on 1 of 140 idle-spaced probes. The upper limit is ADR-059 E3: health
+   * must answer 503 within 3 s under partition, so this bound must not include the 5 s
+   * connect bound (CLM-0458).
+   */
+  probeTimeoutMs: 2_500,
   /** …and one probe result is shared by every health call inside this window. */
   probeCacheMs: 1_000,
 } as const;

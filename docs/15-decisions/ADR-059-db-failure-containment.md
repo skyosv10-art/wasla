@@ -120,3 +120,11 @@ Measured: DR scenario 2 on the amendment-1 guard (run 37168930267) failed **E3.h
 Decision: the default probe bound is 2 s again, independent of the pool's connect bound. Amendment 1 stays in this file as the record. This section supersedes it. `dr-replacement-restore.yml` now runs scenario 2 on every PR that touches the guard, so a change to these bounds is measured before merge.
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+## Amendment 3 2026-10-04 (CLM-0459): probe default 2.5 s, from the live TLS measurement
+
+Measured on `e75c08f` with verify-full on Render: 1 of 140 idle-spaced guarded `/health` calls answered a false 503 (geography, 2.34 s end to end). The 2 s probe sometimes falls just short of a cold TLS connect. Decision: the default probe bound is **2.5 s**. The binding requirement stays E3 (health 503 within 3 s under partition), and scenario 2 runs on the PR. The bound still excludes the connect bound (amendment 2). Evidence: `docs/12-testing/ci-evidence/2026-10-04T024500Z-clm-0459-risk-0060-guard-probe-tls-margin/`.
+
+Recorded gap: the bots' `/health` (`packages/bot-runtime`) does not report the database. It goes to its own claim.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

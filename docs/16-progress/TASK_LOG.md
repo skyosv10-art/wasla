@@ -8473,3 +8473,18 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 - CLM-0457 released (PR #606 merged).
 
 تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".
+
+---
+
+## CLM-0459 — Guard probe margin under live TLS (2026-10-04)
+
+**Work Item(s):** M6-18B · CLM-0459
+
+- CLM-0458 merged (PR #607 → `e75c08f`). Scenario 2 PASS 19/19 on the PR (run 37169219108, E3 health 2 004 ms). Main CI 37171267625 and Render deploy 37171267553 green.
+- Live idle-spaced acceptance on `e75c08f` with verify-full: guarded `/health` **1/140 false 503** (geography, 2.34 s end to end); `/delivery/ready` 3/3 200. Env hashes 17/17.
+- Change: the guard probe default goes 2 s → 2.5 s (ADR-059 amendment 3). E3 (< 3 s) still binds and scenario 2 re-runs on the PR. Resilience 68/68; the billing containment test passes 2/2 (< 3 s asserts).
+- Discovery: `packages/bot-runtime` `/health` does not attach the DB health, so the bots answer `ok` without `x-wasla-database`. They are outside scenario 2 E4. Recorded for its own claim.
+- Evidence: `docs/12-testing/ci-evidence/2026-10-04T024500Z-clm-0459-risk-0060-guard-probe-tls-margin/`.
+- Releases: CLM-0458.
+
+تم اتخاذ القرار بموجب التفويض الكتابي بتاريخ 2026-09-30 — "MASTER REPAIR & MERGE".

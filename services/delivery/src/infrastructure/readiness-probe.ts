@@ -63,10 +63,16 @@ export class PostgresReadinessProbe implements ReadinessProbePort {
       const query = this.pool.query(
         `SET LOCAL statement_timeout = ${this.timeoutMs}; SELECT 1 FROM store_orders LIMIT 1`,
       );
+      // RISK-0060 (CLM-0456): the client-side race also covers obtaining a connection.
+      // On an idle pool the probe opens one first, and with TLS that costs one SSLRequest
+      // and one handshake more; a 1.5 s race shorter than the pool's own connect bound
+      // reported a reachable database as unavailable (12/12 idle-spaced calls on Render).
+      // `statement_timeout` above still bounds the query itself on the server.
+      const boundMs = connectBoundMs(this.pool) + this.timeoutMs;
       const timeout = new Promise<never>((_resolve, reject) => {
         timer = setTimeout(
-          () => reject(new Error(`readiness probe exceeded ${this.timeoutMs}ms`)),
-          this.timeoutMs,
+          () => reject(new Error(`readiness probe exceeded ${boundMs}ms`)),
+          boundMs,
         );
       });
       // The query promise is awaited by `race`, so a late rejection after a
@@ -82,6 +88,12 @@ export class PostgresReadinessProbe implements ReadinessProbePort {
       if (timer !== undefined) clearTimeout(timer);
     }
   }
+}
+
+/** The pool's own bound on obtaining a connection (`connectionTimeoutMillis`), 0 if unset. */
+export function connectBoundMs(pool: object): number {
+  const v = (pool as { options?: { connectionTimeoutMillis?: unknown } }).options?.connectionTimeoutMillis;
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 /**

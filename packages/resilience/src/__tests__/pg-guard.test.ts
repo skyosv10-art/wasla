@@ -21,6 +21,7 @@ import {
   PG_GUARD_DEFAULTS,
   withPgPoolDefaults,
   pgSslFromEnv,
+  probeBoundMs,
   type HealthHookApp,
   type HealthHookReply,
 } from "../pg-guard.js";
@@ -241,6 +242,26 @@ describe("guardPgPool — connection delay", () => {
     expect(health.reason).toBe("probe_timeout");
     expect(elapsed).toBeLessThan(1_000);
   });
+});
+
+describe("probe bound covers connection acquisition (RISK-0060, CLM-0456)", () => {
+  it("defaults to the pool's connect bound plus the query bound", () => {
+    expect(probeBoundMs({ options: { connectionTimeoutMillis: 5_000 } })).toBe(5_000 + PG_GUARD_DEFAULTS.probeTimeoutMs);
+    expect(probeBoundMs({ options: { connectionTimeoutMillis: 0 } })).toBe(PG_GUARD_DEFAULTS.probeTimeoutMs);
+    expect(probeBoundMs({})).toBe(PG_GUARD_DEFAULTS.probeTimeoutMs);
+  });
+
+  it("a probe that needs a slow-but-successful connect is 'up', not a false 'down'", async () => {
+    const pool = Object.assign(new FakePool(), { options: { connectionTimeoutMillis: 3_000 } });
+    const realQuery = pool.query.bind(pool);
+    // 2.2 s of "connect" before the round trip: longer than the 2 s query-only bound that
+    // reported Render's TLS cold connects as "down", shorter than connect + query bound.
+    pool.query = (...args: unknown[]) => new Promise((r) => setTimeout(r, 2_200)).then(() => realQuery(args[0] as string));
+    guardPgPool(pool, { name: "t", probeCacheMs: 0, log: quiet().log });
+    const health = await pgGuardOf(pool)!.probe();
+    expect(health.state).toBe("up");
+    expect(health.breaker).toBe("closed");
+  }, 10_000);
 });
 
 describe("guardPgPool — no stale 'up' after a failure", () => {

@@ -41,6 +41,8 @@ import {
 import type {
   ServiceAuthKeyRegistry,
   ServiceTokenReplayGuard,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 
 import type { IdentityErrorBody } from "./errors.js";
@@ -81,6 +83,12 @@ export interface IdentityServiceIdentityOptions {
   readonly now?: () => Date;
   readonly clockSkewSeconds?: number;
   readonly maxTtlSeconds?: number;
+  /** ADR-060 P2 (CLM-0462): user assertion config for `beneficiary: "asserted"` routes. */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /**
@@ -117,5 +125,8 @@ export function registerServiceIdentity(
     ...(options.maxTtlSeconds === undefined
       ? {}
       : { maxTtlSeconds: options.maxTtlSeconds }),
+    ...(options.userAssertion === undefined
+      ? {}
+      : { userAssertion: options.userAssertion }),
   });
 }

@@ -1422,9 +1422,9 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     method: "POST",
     path: "/identity/users/:waslaPublicId/links",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/identity/src/http/app.ts:scoped(IDENTITY_SCOPES.linkWrite) addIdentityLink(deps,",
-    note: "`none`: **فجوةٌ مقيسةٌ:** إضافةُ ربطِ هويّةٍ لأيِّ مستخدمٍ بمُعرِّفِهِ؛ حاملُ `identity:link:write` يربطُ حساباً خارجيّاً بمستخدمٍ آخرَ. أعلى فجواتِ الموجةِ أثراً (استيلاءٌ على حسابٍ إن اختُرِقَ مُنادٍ).",
+    strength: "asserted",
+    evidence: "services/identity/src/http/app.ts:asserted(IDENTITY_SCOPES.linkWrite) assertWaslaPublicId(request, waslaPublicId) addIdentityLink(deps,",
+    note: "`asserted` (CLM-0462): إضافةُ ربطِ هويّةٍ تطلُبُ تأكيدَ مستخدمٍ صالحاً، ويُقارَنُ `:waslaPublicId` من المسارِ بـ`sub` في التأكيد. عدمُ التطابقِ يُرفَضُ بـ404 (IDENTITY_NOT_FOUND) لا 403 (ADR-060 §2.6). كانَ `none` قبلَ CLM-0462 — أعلى فجواتِ الموجةِ أثراً (استيلاءٌ على حسابٍ إن اختُرِقَ مُنادٍ).",
   },
   {
     audience: "identity",

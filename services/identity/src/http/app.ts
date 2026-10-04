@@ -29,6 +29,7 @@ import {
   type IssueUserAssertionRequest,
 } from "../use-cases/issue-user-assertion.js";
 import type { UserAssertionSigningKey } from "@wasla/service-auth/user-assertion";
+import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
 
 import { sendIdentityError } from "./errors.js";
 import {
@@ -57,6 +58,17 @@ export interface CreateIdentityAppOptions {
     readonly now?: () => Date;
     readonly ttlSeconds?: number;
   };
+  /**
+   * ADR-060 P2 (CLM-0462): user assertion verification config for
+   * `beneficiary: "asserted"` routes. When present, the middleware verifies
+   * the end-user assertion and sets `request.endUser`. When absent, the
+   * `asserted` routes behave as `off` — no-ops, backward compatible.
+   */
+  userAssertionVerify?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /** مسار مفتوح بتصنيف صريح — لا استثناء صامت. */
@@ -65,6 +77,28 @@ const OPEN: IdentityRouteConfig = { serviceIdentity: "open" };
 /** مسار يطلب صلاحية واحدة بالاسم. */
 function scoped(...scopes: readonly string[]): IdentityRouteConfig {
   return { serviceIdentity: { scopes } };
+}
+
+/**
+ * ADR-060 P2 (CLM-0462): route with `beneficiary: "asserted"` — the end-user
+ * identity is verified by the middleware, and the handler compares the path's
+ * `:waslaPublicId` with `endUser.publicId`.
+ *
+ * The Identity service is the assertion issuer and also a receiver on its
+ * owner-scoped write routes. `POST /identity/users/:waslaPublicId/links` was
+ * `scoped(identity:link:write)` — any holder of that scope could link an
+ * external account to any user. RISK-0042 wave 3 named this the highest-impact
+ * gap. This elevates it to `asserted` so the caller's end-user assertion must
+ * name the same `wasla_public_id` as the path parameter.
+ */
+function asserted(...scopes: readonly string[]): IdentityRouteConfig {
+  return {
+    serviceIdentity: {
+      scopes,
+      beneficiary: "asserted",
+      actors: ["customer", "driver", "store_staff"],
+    },
+  };
 }
 
 /** Build the Identity Fastify app without starting to listen. */
@@ -80,7 +114,12 @@ export function createIdentityApp(
 
   // فرضُ هويّةِ الخدمةِ **قبلَ تسجيلِ المساراتِ**: حاجزُ التصنيفِ عندَ `onRoute`
   // لا يرى إلّا ما يُسجَّلُ بعدَه، فمسارٌ يُضافُ لاحقاً بلا تصنيفٍ يُسقِطُ الإقلاعَ.
-  registerServiceIdentity(app, options.serviceIdentity);
+  registerServiceIdentity(app, {
+    ...options.serviceIdentity,
+    ...(options.userAssertionVerify === undefined
+      ? {}
+      : { userAssertion: options.userAssertionVerify }),
+  });
 
   // GET /health — liveness probe (not part of the contract API surface).
   app.get("/health", { config: OPEN }, async (_request, reply) => {
@@ -102,8 +141,12 @@ export function createIdentityApp(
   });
 
   // POST /identity/users/:waslaPublicId/links — add an external identity link.
-  app.post("/identity/users/:waslaPublicId/links", { config: scoped(IDENTITY_SCOPES.linkWrite) }, async (request, reply) => {
+  // ADR-060 P2 (CLM-0462): `asserted` — the caller's end-user assertion must
+  // name the same `wasla_public_id` as the path. Mismatch → 404
+  // (IDENTITY_USER_NOT_FOUND) per ADR-060 §2.6.
+  app.post("/identity/users/:waslaPublicId/links", { config: asserted(IDENTITY_SCOPES.linkWrite) }, async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
+    assertWaslaPublicId(request, waslaPublicId);
     const body = request.body as AddIdentityLinkRequest;
     const link = await addIdentityLink(deps, {
       waslaPublicId,
@@ -184,4 +227,28 @@ export function createIdentityApp(
     app.log.info({ event: "user_assertion_signer", enabled: key !== null, kid: key?.kid ?? null }, "user assertion signer config");
   });
   return app;
+}
+
+// ── ADR-060 P2 (CLM-0462): owner-binding helpers ──────────────────────────────
+// These are no-ops when `endUser` is undefined (off mode, or observe without a
+// valid assertion). With a verified `endUser` the handler compares the path's
+// `wasla_public_id` with the asserted identity; `endUserOwnershipDenied`
+// rejects only in `enforce` and logs `would_reject` in `observe` (CLM-0448).
+// A mismatch returns 404 (not 403) per ADR-060 §2.6 — to avoid leaking existence.
+
+import type { FastifyRequest } from "fastify";
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
+import { IdentityError } from "../domain/errors.js";
+
+/**
+ * The path's `:waslaPublicId` must match `endUser.publicId`. A mismatch means
+ * the caller is trying to link an external identity to a user that is not
+ * their own — the highest-impact gap named in RISK-0042 wave 3.
+ */
+function assertWaslaPublicId(request: FastifyRequest, waslaPublicId: string): void {
+  const endUser = request.endUser;
+  if (endUser === undefined) return;
+  if (endUserOwnershipDenied(request, endUser.publicId === waslaPublicId, "wasla_public_id")) {
+    throw new IdentityError("IDENTITY_NOT_FOUND", "user not found");
+  }
 }

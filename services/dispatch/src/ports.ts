@@ -323,6 +323,12 @@ export interface ResolveAssignmentInput {
   readonly reasonCode: string | null;
   readonly idempotencyKey: string;
   readonly traceId?: string;
+  /**
+   * CLM-0468 (RISK-0042): the verified driver's public id from the offer. Passed
+   * as `obo` to the orders service so it can bind the assignment's driver to the
+   * signed token. Absent for platform callers (tick, cancel-job).
+   */
+  readonly onBehalfOfPublicId?: string;
 }
 
 /** Asking the engine to move the order's own status. */

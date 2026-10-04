@@ -473,14 +473,21 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 16 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // 13 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
     // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ)،
     // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`)، و16 قبلَ CLM-0465
-    // (فاعلُ الانتقالِ غيرُ `system` صارَ يُقارَنُ بـ`obo` — الفجوةُ المكتوبةُ أُغلِقَتْ في الشفرةِ).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(15);
+    // (فاعلُ الانتقالِ غيرُ `system` صارَ يُقارَنُ بـ`obo` — الفجوةُ المكتوبةُ أُغلِقَتْ في الشفرةِ)،
+    // و15 قبلَ CLM-0468 (حسمُ الإسنادِ رُبِطَ بـ`obo` من قبول/رفضِ التوزيعِ،
+    // والإسنادُ صارَ قرارَ تصميمٍ لا فجوة).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(13);
     const transition = wave3.find((b) => b.audience === "orders" && b.path === "/orders/:orderId/transitions");
     expect(transition?.note).toContain("CLM-0465");
     expect(transition?.evidence).toContain("transitionCaller?.onBehalfOfPublicId");
+    const patchAssignment = wave3.find((b) => b.audience === "orders" && b.method === "PATCH" && b.path === "/orders/:orderId/assignments/:assignmentId");
+    expect(patchAssignment?.note).toContain("CLM-0468");
+    expect(patchAssignment?.evidence).toContain("expectedDriverPublicId");
+    const postAssignment = wave3.find((b) => b.audience === "orders" && b.method === "POST" && b.path === "/orders/:orderId/assignments");
+    expect(postAssignment?.note).toContain("قرارُ تصميمٍ");
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 

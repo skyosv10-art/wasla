@@ -558,6 +558,13 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
     const assignmentId = toAssignmentId(params.assignmentId, traceId);
     const resolution = toAssignmentResolution(request.body, traceId);
 
+    // CLM-0468 (RISK-0042): the assignment's driver must be the verified driver
+    // from the signed `obo`. Dispatch passes it on accept/reject (CLM-0466);
+    // the tick and cancel-job do not (platform authority), so the check is
+    // skipped when `obo` is absent. Mismatch → 404 per ADR-060 §2.6.
+    const assignmentCaller = request.serviceCaller;
+    const expectedDriverPublicId = assignmentCaller?.onBehalfOfPublicId;
+
     const assignment = await runner.write(async (deps) => {
       const orderId = await resolveOrderId(deps, ref, traceId);
       return resolveAssignment(deps, orderId, {
@@ -565,6 +572,7 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
         state: resolution.state,
         reasonCode: resolution.reasonCode,
         traceId,
+        expectedDriverPublicId,
       });
     });
 

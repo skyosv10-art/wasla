@@ -66,6 +66,7 @@ export class HttpOrderEnginePort implements OrderEnginePort {
       input.idempotencyKey,
       input.traceId,
       "PATCH",
+      input.onBehalfOfPublicId,
     );
   }
 
@@ -90,6 +91,7 @@ export class HttpOrderEnginePort implements OrderEnginePort {
     idempotencyKey: string,
     traceId: string | undefined,
     method = "POST",
+    onBehalfOfPublicId?: string,
   ): Promise<OrderEngineResult> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -100,7 +102,7 @@ export class HttpOrderEnginePort implements OrderEnginePort {
           "content-type": "application/json",
           "idempotency-key": idempotencyKey,
           // الرمز مربوط بهذه الطريقة وهذا المسار ويُحرق عند أول استعمال.
-          ...this.signRequest(method, path),
+          ...this.signRequest(method, path, onBehalfOfPublicId),
           ...(traceId === undefined ? {} : { "x-request-id": traceId }),
         },
         body: JSON.stringify(body),

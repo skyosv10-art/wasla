@@ -34,6 +34,7 @@ import { createOrderHttpHarness, signFor } from "./support.js";
 const CUSTOMER = publicId(1);
 const OTHER_CUSTOMER = publicId(2);
 const DRIVER = publicId(500);
+const OTHER_DRIVER = publicId(501);
 const KEY = "idem-key-0001";
 
 interface Fixture {
@@ -997,6 +998,64 @@ describe("assignment endpoints", () => {
 
     expect(response.statusCode).toBe(422);
     expect(response.json().code).toBe("ORDER_REASON_CODE_UNKNOWN");
+  });
+
+  // CLM-0468 (RISK-0042): the assignment's driver must match the signed `obo`.
+  // These tests prove the binding at the HTTP layer; the use-case layer check
+  // is proven by the mutation guard in gov-cases-authz-policy.sh.
+  it("accepts a PATCH whose obo matches the assignment driver (CLM-0468)", async () => {
+    const { harness, app } = fixture();
+    const orderId = await orderInStatus(harness, "offered");
+    const created = await post(app, `/orders/${orderId}/assignments`, {
+      driver_public_id: DRIVER,
+    });
+
+    const accepted = await app.inject({
+      method: "PATCH",
+      url: `/orders/${orderId}/assignments/${created.json().id}`,
+      payload: { assignment_state: "accepted" },
+      headers: { "idempotency-key": KEY, "x-customer-public-id": DRIVER },
+    });
+
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json()).toMatchObject({ assignment_state: "accepted" });
+  });
+
+  it("refuses a PATCH whose obo is a different driver with 404 (CLM-0468)", async () => {
+    const { harness, app } = fixture();
+    const orderId = await orderInStatus(harness, "offered");
+    const created = await post(app, `/orders/${orderId}/assignments`, {
+      driver_public_id: DRIVER,
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/orders/${orderId}/assignments/${created.json().id}`,
+      payload: { assignment_state: "accepted" },
+      headers: { "idempotency-key": KEY, "x-customer-public-id": OTHER_DRIVER },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().code).toBe("ORDER_NOT_FOUND");
+  });
+
+  it("accepts a PATCH with no obo (system/tick path, CLM-0468)", async () => {
+    const { harness, app } = fixture();
+    const orderId = await orderInStatus(harness, "offered");
+    const created = await post(app, `/orders/${orderId}/assignments`, {
+      driver_public_id: DRIVER,
+    });
+
+    // No x-customer-public-id header ⇒ no obo ⇒ check skipped (platform authority).
+    const accepted = await app.inject({
+      method: "PATCH",
+      url: `/orders/${orderId}/assignments/${created.json().id}`,
+      payload: { assignment_state: "accepted" },
+      headers: { "idempotency-key": KEY },
+    });
+
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json()).toMatchObject({ assignment_state: "accepted" });
   });
 });
 

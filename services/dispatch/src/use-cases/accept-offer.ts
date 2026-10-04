@@ -133,6 +133,11 @@ export async function acceptOffer(
       reasonCode: null,
       idempotencyKey: offerEngineKey(offer.id, "accept"),
       traceId,
+      // CLM-0468 (RISK-0042): pass the verified driver's public id as `obo` so
+      // orders can bind the assignment's driver to the signed token. The driver
+      // was verified against `endUser.publicId` in the dispatch accept handler
+      // (CLM-0466); `offer.driverPublicId` is that same verified id.
+      onBehalfOfPublicId: offer.driverPublicId,
     });
     if (isRaceRejection(resolved)) {
       // Another driver already holds this order. Close this offer honestly and tell the

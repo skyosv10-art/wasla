@@ -190,6 +190,13 @@ export interface ResolveAssignmentCommand {
   readonly state: Exclude<OrderAssignmentState, "offered">;
   readonly reasonCode: OrderReasonCode | null;
   readonly traceId?: string;
+  /**
+   * CLM-0468 (RISK-0042): the verified driver's public id from the signed `obo`.
+   * When present, the assignment's `driverPublicId` must match it or the request
+   * fails with ORDER_NOT_FOUND — not 403, per ADR-060 §2.6. Absent when the caller
+   * is the platform (tick, cancel-job) and carries no end-user assertion.
+   */
+  readonly expectedDriverPublicId?: string;
 }
 
 /** A negotiation service records the price it agreed for an already-existing order. */

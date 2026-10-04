@@ -444,8 +444,34 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       ENFORCED_OPERATIONS.length,
     );
     // كانت 105؛ الموجةُ 1 من RISK-0042 (CLM-0435) صنَّفَتْ 23 عمليّةً `none` بدليلٍ مقروءٍ (→ 82)،
-    // والموجةُ 2 (CLM-0437) صنَّفَتْ 35 أخرى (→ 47).
-    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(47);
+    // والموجةُ 2 (CLM-0437) صنَّفَتْ 35 أخرى (→ 47)، والموجةُ 3 (CLM-0461) الـ47 الباقيةَ (→ 0).
+    expect(UNCLASSIFIED_OPERATION_COUNT).toBe(0);
+  });
+
+  it("RISK-0042 الموجةُ 3: الـ47 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0461)", () => {
+    const wave3Audiences = new Set(["channel", "delivery", "identity", "search", "audit", "support", "billing"]);
+    const wave3Orders = new Set([
+      "POST /orders/intake",
+      "POST /orders/agreed-prices",
+      "POST /orders/:orderId/transitions",
+      "POST /orders/:orderId/assignments",
+      "PATCH /orders/:orderId/assignments/:assignmentId",
+    ]);
+    const wave3 = OPERATION_BINDINGS.filter(
+      (b) =>
+        // `POST /identity/assertions` صُنِّفَ قبلَ الموجةِ (ADR-060 · CLM-0440).
+        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions") ||
+        (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
+    );
+    expect(wave3).toHaveLength(47);
+    for (const b of wave3) {
+      expect(b.strength).toBe("none");
+      expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
+      expect(b.note.length).toBeGreaterThan(20);
+    }
+    // 21 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(21);
+    expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 
   it("RISK-0042 الموجةُ 1: 23 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ", () => {

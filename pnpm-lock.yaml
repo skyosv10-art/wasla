@@ -323,6 +323,9 @@ importers:
       '@wasla/contracts-channel':
         specifier: workspace:*
         version: link:../contracts/channel
+      '@wasla/resilience':
+        specifier: workspace:*
+        version: link:../resilience
       '@wasla/service-auth':
         specifier: workspace:*
         version: link:../service-auth

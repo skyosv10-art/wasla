@@ -12,6 +12,7 @@
 import type { FastifyInstance } from "fastify";
 
 import type { BotKind } from "@wasla/contracts-channel";
+import { attachDatabaseHealth } from "@wasla/resilience";
 import {
   keyRegistryFromEnv,
 } from "@wasla/service-auth";
@@ -99,6 +100,18 @@ export function buildBotApp(bot: BotKind, options: StartBotOptions = {}): BotApp
 }
 
 /**
+ * RISK-0058 · ADR-059 (CLM-0460): a bot's `/health` reports the real database state,
+ * like the 17 services. A bot holds guarded pools (`channel-postgres`, and the customer
+ * bot also the customers pool), but its `/health` answered 200 `ok` while they were down.
+ * The registry form is used, so every guarded pool in the process is probed. In memory
+ * mode there is none and the answer is unchanged. Attached at the launcher (the process
+ * root), as the services attach it in their `server.ts`.
+ */
+export function attachBotDatabaseHealth(app: FastifyInstance, bot: BotKind): void {
+  attachDatabaseHealth(app, { paths: ["/health"], service: `${bot}-bot` });
+}
+
+/**
  * Build and start one bot.
  *
  * Configuration errors are thrown *before* `listen`, so a misconfigured bot
@@ -109,6 +122,7 @@ export async function startBot(
   options: StartBotOptions = {},
 ): Promise<FastifyInstance> {
   const { app, config } = buildBotApp(bot, options);
+  attachBotDatabaseHealth(app, bot);
   await app.listen({ port: config.port, host: "0.0.0.0" });
   return app;
 }
@@ -146,6 +160,7 @@ export async function runBot(bot: BotKind): Promise<void> {
 export async function runBotApp(bot: BotKind, build: () => BotApp): Promise<void> {
   try {
     const { app, config } = build();
+    attachBotDatabaseHealth(app, bot);
     await app.listen({ port: config.port, host: "0.0.0.0" });
   } catch (error) {
     console.error(`[${bot}-bot] failed to start:`, error instanceof Error ? error.message : error);

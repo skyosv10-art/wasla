@@ -306,10 +306,10 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
    * عملياتِ حدِّ العميلِ كلُّها مربوطةٌ بالمالكِ في الدفعةِ نفسِها التي فرضَتْ
    * هويّةَ الخدمةِ عليها — فلم يمرَّ هذا الحدُّ بحالِ «مفروضٌ بلا ربطٍ» أصلاً.
    */
-  it("العملياتُ المربوطةُ بالرمزِ أربعٌ وأربعونَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت أربعاً وثلاثينَ)", () => {
+  it("العملياتُ المربوطةُ بالرمزِ خمسٌ وأربعونَ ومُطابِقةٌ لصفوفِها — لا رقمٌ يُكتَبُ باليدِ (كانت أربعاً وأربعينَ)", () => {
     const tokenBound = OPERATION_BINDINGS.filter((b) => b.strength === "token-bound");
     expect(TOKEN_BOUND_OPERATION_COUNT).toBe(tokenBound.length);
-    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(44);
+    expect(TOKEN_BOUND_OPERATION_COUNT).toBe(45);
     expect(tokenBound.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
       "DELETE /customers/:waslaPublicId/places/:placeId",
       "DELETE /stores/:storeSlug/staff/:memberPublicId",
@@ -341,6 +341,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       "POST /drivers/:waslaPublicId/reinstate",
       "POST /drivers/:waslaPublicId/suspend",
       "POST /drivers/:waslaPublicId/vehicles",
+      "POST /orders/intake",
       "POST /products/:productId/archive",
       "POST /products/:productId/inventory",
       "POST /products/:productId/publish",
@@ -395,11 +396,12 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     // السائقينَ — كلُّها في بُعدِ الملكيّةِ ومربوطةٌ بالرمزِ.
     // (`M1-04` الموجةُ 13 · `CLM-0201`) صارَ **خمسةً وثلاثينَ** بسبعِ عملياتِ
     // حدِّ الاشتراكِ — كلُّها في بُعدِ الملكيّةِ ومربوطةٌ بالرمزِ.
+    // (`CLM-0464`) صارَ **ستةً وثلاثينَ** بـ`POST /orders/intake` (حدُّ الطلبات).
     expect(
       OPERATION_BINDINGS.filter(
         (b) => b.dimension === "owner" && b.strength === "token-bound",
       ),
-    ).toHaveLength(36);
+    ).toHaveLength(37);
   });
 
   /**

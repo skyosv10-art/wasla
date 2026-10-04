@@ -349,6 +349,9 @@ export async function intakeOrder(gate: GateContext, seed: number): Promise<Gate
       requested_at: ENGINE_START_AT,
     },
     idempotencyKey: nextKey("gate-intake"),
+    // CLM-0464: orders intake is now `beneficiary: "required"` — the signed
+    // `obo` must match the body's `customer_public_id`.
+    customerScope: customerPublicId,
   });
   if (response.status !== 201) {
     throw new Error(`intake failed: ${response.status} ${JSON.stringify(response.body)}`);

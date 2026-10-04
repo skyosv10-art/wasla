@@ -629,15 +629,42 @@ _az_restore
 # ── البابُ 7-ج (RISK-0042 · CLM-0435): دليلُ التصنيفِ مقروءٌ لا مُدَّعىً ──────
 # ثلاثُ طفراتٍ على صفٍّ `none` (لا `token-bound`: البابُ 7 يحرسُ ذاكَ أصلاً، والطفرةُ
 # على صفٍّ يحرسُهُ بابٌ آخرُ لا تُثبِتُ عضّةَ هذا البابِ).
-sed -i 's#evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.offerAccept) acceptOffer(deps,"#evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.offerAccept) acceptOfferNOPE(deps,"#' "$AZ_BI"
+# CLM-0466: كانت هذهِ الطفرةُ `sed` على صفِّ قبولِ العرضِ، فلمّا ارتقى إلى `asserted`
+# صارَ النمطُ غائباً و`sed` لا يُغيِّرُ شيئاً — فمرَّ الفحصُ و«نجحتِ» الحالةُ عمياءَ.
+# الآنَ على صفِّ إلغاءِ المهمّةِ (`none` نظاميٌّ)، وكلُّ طفرةٍ هنا **تُثبِتُ أنَّها طفرتْ**.
+python3 - "$AZ_BI" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = 'evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.jobCancel) cancelDispatchJob(deps,"'
+assert s.count(old) == 1, "لم تُطبَّقِ الطفرةُ — صفُّ إلغاءِ المهمّةِ تغيَّرَ"
+s = s.replace(old, 'evidence: "services/dispatch/src/http/app.ts:scoped(DISPATCH_SCOPES.jobCancel) cancelDispatchJobNOPE(deps,"', 1)
+open(p, "w", encoding="utf-8").write(s)
+MUT
 t "مِرساةُ دليلٍ غائبةٌ عن ملفِّها في صفٍّ \`none\` تُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
 _az_restore
 
-sed -i 's#evidence: "services/geography/src/http/app.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"#evidence: "services/geography/src/http/NOPE.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"#' "$AZ_BI"
+python3 - "$AZ_BI" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = 'evidence: "services/geography/src/http/app.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"'
+assert s.count(old) == 1, "لم تُطبَّقِ الطفرةُ — صفُّ قراءةِ المنطقةِ تغيَّرَ"
+s = s.replace(old, 'evidence: "services/geography/src/http/NOPE.ts:scoped(GEO_SCOPES.zoneRead) getZone(deps,"', 1)
+open(p, "w", encoding="utf-8").write(s)
+MUT
 t "دليلٌ يُسمّي ملفّاً غيرَ موجودٍ يُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
 _az_restore
 
-sed -i 's#evidence: "services/drivers/src/http/app.ts:adminScoped(DRIVER_SCOPES.adminRead) deps.profiles.list(limit,"#evidence: "services/drivers/src/http/app.ts"#' "$AZ_BI"
+python3 - "$AZ_BI" <<'MUT'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = 'evidence: "services/drivers/src/http/app.ts:adminScoped(DRIVER_SCOPES.adminRead) deps.profiles.list(limit,"'
+assert s.count(old) == 1, "لم تُطبَّقِ الطفرةُ — صفُّ قائمةِ السائقينَ تغيَّرَ"
+s = s.replace(old, 'evidence: "services/drivers/src/http/app.ts"', 1)
+open(p, "w", encoding="utf-8").write(s)
+MUT
 t "دليلٌ بلا مِرساةٍ (ملفٌّ وحدَهُ) يُسقِطُ الفحصَ (7-ج)" fail bash "$AZ"
 _az_restore
 

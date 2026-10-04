@@ -8628,4 +8628,6 @@ Local: orders 657/657, order-e2e 16/16, reputation-e2e 12/12, negotiation-e2e 8/
 
 **Not done, named:** no production caller exists yet (no driver-bot accept flow; mini-app → dispatch needs an `init-data`-backed assertion boundary). Next: pass the verified driver from dispatch to orders on accept/reject.
 
+**Blind mutation found by CI and fixed at the root:** the governance case «a missing evidence anchor in a `none` row fails 7-ج» used `sed` on the dispatch accept row. Once that row became `asserted`, the pattern no longer existed, `sed` changed nothing, the guard passed, and the case reported "expected fail, got pass" (CI run 37210553344). The case is retargeted to the `none` row `POST /dispatch/jobs/:job_id/cancel`, and all three 7-ج mutations now use Python with `assert s.count(old) == 1`, so a missing target fails loudly instead of measuring nothing. No gate was weakened.
+
 Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enforce ×5 incl. other-driver accept/reject → 404 with the offer still `offered`, no assertion → 401; observe ×1). authz-policy 49/49. dispatch-e2e 13/13, negotiation-e2e 8/8, driver-e2e 14/14, order-e2e 16/16, reputation-e2e 12/12. Typecheck green. RISK-0042 stays `open`.

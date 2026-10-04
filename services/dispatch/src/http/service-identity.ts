@@ -49,6 +49,8 @@ import {
 import type {
   ServiceAuthKeyRegistry,
   ServiceTokenReplayGuard,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 
 /** جمهور الرمز الذي يقبله حدّ التوزيع. يطابق `aud` عند المنادي. */
@@ -87,6 +89,16 @@ export interface DispatchServiceIdentityOptions {
   readonly now?: () => Date;
   readonly clockSkewSeconds?: number;
   readonly maxTtlSeconds?: number;
+  /**
+   * ADR-060 P2 (CLM-0466): user assertion verification on the driver-owned
+   * `beneficiary: "asserted"` routes (offer accept/reject). Absent or `off`
+   * (the production default until P3) ⇒ nothing is verified.
+   */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /**
@@ -124,5 +136,18 @@ export function registerServiceIdentity(
     ...(options.maxTtlSeconds === undefined
       ? {}
       : { maxTtlSeconds: options.maxTtlSeconds }),
+    ...(options.userAssertion === undefined
+      ? {}
+      : {
+          userAssertion: {
+            mode: options.userAssertion.mode,
+            publicKeys: options.userAssertion.publicKeys,
+            ...(options.userAssertion.skewSeconds === undefined
+              ? {}
+              : { skewSeconds: options.userAssertion.skewSeconds }),
+            denialBody: (denial: { readonly status: 401 | 403; readonly code: string; readonly message: string }, traceId: string) =>
+              denialBody({ outcome: "denied", code: denial.code, message: denial.message } as ServiceIdentityDenial, traceId),
+          },
+        }),
   });
 }

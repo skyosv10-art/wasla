@@ -1,3 +1,17 @@
+# 2026-10-05 — CLM-0469 — M0-49: structural barrier assessment (RISK-0042)
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress — PR pending
+
+**What changed:** Docs-only. Added structural barrier assessment to `AUTHORIZATION_POLICY_MATRIX.md`: the remaining 19 measured RISK-0042 gaps (2 latent) all have no production caller (bot or service) that forwards a signed `obo`.
+
+**Why this is a barrier:** The P2 remediation (ADR-060) closed all gaps that CAN be closed with current callers (identity, orders, dispatch, negotiations, matching, marketplace). The remaining gaps require building production callers — a larger architectural task beyond P2 scope.
+
+RISK-0042 stays `open` with review date 2026-10-30.
+
+---
+
 # 2026-10-05 — CLM-0468 — M0-49: RISK-0042 orders assignment driver bound to `obo` from dispatch
 
 - **Work Item(s):** M0-49

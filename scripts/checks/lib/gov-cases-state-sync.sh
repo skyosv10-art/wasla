@@ -88,8 +88,10 @@ _ss_expect() {
   if [[ "$want" == pass ]]; then
     (( rc == 0 )) && grep -qF "PASS — project state synchronized" <<<"$out" && good=1
   else
-    (( rc != 0 )) && grep -qF "BLOCKED — project state synchronization required" <<<"$out" \
-      && { [[ -z "$why" ]] || grep -qF -- "$why" <<<"$out"; } && good=1
+    if (( rc != 0 )) && grep -qF "BLOCKED — project state synchronization required" <<<"$out"; then
+      if [[ -z "$why" ]]; then good=1
+      elif grep -qF -- "$why" <<<"$out"; then good=1; fi
+    fi
   fi
   if (( good )); then
     printf '  \033[32m✓\033[0m %-66s (%s)\n' "$desc" "$want"; ((PASS++))

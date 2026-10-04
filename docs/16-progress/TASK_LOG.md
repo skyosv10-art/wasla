@@ -8717,6 +8717,8 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 
 **Debt corrected by addition (this PR, not a later one):** the 20 stale `**Status:**` lines keep their text and gain `→ corrected by addition (CLM-0467)` with the merging PR and commit measured on GitHub. `CLM-0461` is `Released` with the reason. Branch `docs/clm-0461-risk-0042-wave3` is deleted and the deletion verified.
 
+**Found by CI on the first push (579 pass · 1 fail):** the existing RISK-0037 pipe guard `validate-guard-pipelines.sh` read `|| grep -qF` in `gov-cases-state-sync.sh` as a pipe into `grep -q`. The case is rewritten as explicit `if`/`elif`; the guard is untouched.
+
 **Calibration on real history:** the guard blocks #619 and #617 as merged (claim `Active`, "PR pending", no `**Risk(s):**`, unit not named) and blocks the release PRs #620/#618 as catch-up. Those are the failures this rule exists for.
 
 **Not machine-enforceable (stated in the rule §12):** whether what an entry says is true; the reasons given in `Kind`/`No-Test-Reason`/`Risk(s): none` (judged by the code owner); merges outside a PR (prevented by branch protection, not this guard); an agent that stops after opening a PR leaves an open PR, which is visible to the next agent but still needs finishing.

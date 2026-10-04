@@ -2,7 +2,7 @@
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** Merged — PR [#622](https://github.com/skyosv10-art/wasla/pull/622) merged (squash `e32ac3d0`), CI 42/42 green on PR. Main CI run 37237767722 failed governance check 4 (stale claim — branch deleted on merge, claim remained Active); released by release PR. RISK-0042 stays `open`.
 
 **Why this, now:** CLM-0466 fixed the root — dispatch accept/reject now verifies the driver via a signed user assertion. CLM-0465 deferred orders assignment binding because the root was at the dispatch boundary. With the root fixed, the verified driver can now flow from dispatch to orders.
 

@@ -1,3 +1,15 @@
+# 2026-10-05 — CLM-0473 — M0-49: RISK-0042 PO decisions approved under executive delegation
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+
+**What changed:** Docs-only. Updated `docs/15-decisions/ADR-063-risk-0042-program-owner-decisions.md` — all 6 PO decisions (PO-001 to PO-006) approved under Program Owner executive delegation. Status changed from `Proposed` to `Accepted`. Execution plan recorded: 3 batches by priority (high → medium → low) for the 13 Class A gaps. Claims renumbered: CLM-0474 (Batch 1), CLM-0475 (Batch 2), CLM-0476 (Batch 3). Design decisions recorded for A1 (audit), D5 (fulfillment-transition), R1/R2 (reputation), B1/B2 (billing).
+
+**Unit touched:** `docs/15-decisions/ADR-063-risk-0042-program-owner-decisions.md`
+
+---
+
 # 2026-10-05 — CLM-0472 — M0-49: Model Council governance mechanism
 
 - **Work Item(s):** M0-49

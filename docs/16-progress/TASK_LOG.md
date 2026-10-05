@@ -1,3 +1,31 @@
+# 2026-10-05 — CLM-0470 — M0-49: RISK-0042 architectural execution plan for 19 remaining gaps
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged — PR [#626](https://github.com/skyosv10-art/wasla/pull/626) (squash `6c17b2b4`). CI 42/42 green on PR. ADR-062 architectural execution plan for 19 remaining RISK-0042 gaps. Classification: A=13 (closable with OBO), B=2 (need new production caller), C=0, D=4 (need different architectural decision). No implementation — plan only. RISK-0042 stays `open`.
+
+**What changed:** Created `docs/15-decisions/ADR-062-risk-0042-architectural-execution-plan.md` — a complete architectural execution map for the 19 remaining RISK-0042 gaps. Per-gap documentation: endpoint/operation, owning service, severity, user-bound vs system-bound, current production caller, required caller, identity source, OBO suitability, alternative, decision owner, acceptance criteria, data/users affected, API contract change, identity/authz/schema/event changes, dependencies, tests, migration strategy, rollback plan, proposed claim, proposed outcome.
+
+**Classification A/B/C/D:**
+- **A (closable with OBO):** 13 gaps — delivery (D1-D4, D6), geography (G1-G3), support (S1-S4), subscriptions (U1)
+- **B (need new production caller):** 2 gaps — billing (B1, B2), latent
+- **C (convert to system authority):** 0 gaps
+- **D (need different architectural decision):** 4 gaps — fulfillment-transition (D5), audit actor fields (A1), reputation reads (R1, R2)
+
+**Priority:** No critical gaps (all 19 have no production caller today, so no live attack path). High: D1, D3, G1, G2, G3 (write/read sensitive user data). Medium: D2, D4, D5, D6, S1-S4, A1, B1, B2. Low: R1, R2, U1.
+
+**No implementation in this PR.** No Production/Render/migrations/cutover changes. No observe/enforce activation. RISK-0042 stays `open`.
+
+**Program Owner decisions required:**
+1. Approve execution scope (batch P2: delivery → geography → support → subscriptions?)
+2. Audit actor fields (A1): remove from contract or keep as design decision?
+3. Reputation (R1, R2): accept user assertion or stay system-only?
+4. Billing (B1, B2): build partner-bot → billing flow now or defer?
+5. Fulfillment-transition (D5): split route or composite event?
+6. P3 activation: separate decision per service after P2
+
+---
+
 # 2026-10-05 — CLM-0469 — M0-49: structural barrier assessment (RISK-0042)
 
 - **Work Item(s):** M0-49

@@ -41,6 +41,7 @@ import { readLenientIntEnv, readPortEnv } from "@wasla/config";
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
@@ -233,11 +234,16 @@ async function main(): Promise<void> {
   // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
   const stopTracing = startTracing("delivery");
 
+  // ADR-060 P2 (CLM-0474): user assertion config for asserted routes (D1, D3).
+  // Production default is `off` — no assertion verification, behavior unchanged.
+  const userAssertion = userAssertionConfigFromEnv(process.env);
+
   const { fastify, close } = buildDeliveryHttpApp({
     serviceIdentity: {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
+    ...(userAssertion === undefined ? {} : { userAssertion }),
     readPort: store,
     writePort: store,
     reservationPort: reservation.reservationPort,

@@ -110,6 +110,8 @@ import {
   type InventoryConflictRow,
 } from "../domain/inventory-conflict.js";
 import { sendDeliveryError } from "./errors.js";
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
+import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
 import {
   DELIVERY_SCOPES,
   registerServiceIdentity,
@@ -231,6 +233,12 @@ export interface DeliveryHttpDeps {
    * الإنتاجِ وحدَهُ. والتفصيلُ في `http/service-identity.ts`.
    */
   readonly serviceIdentity: DeliveryServiceIdentityOptions;
+  /** ADR-060 P2 (CLM-0474): user assertion config for asserted routes (D1, D3). */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
   /** Injected for determinism in tests; defaults to the real clock/uuid. */
   readonly newUuid?: () => string;
   readonly now?: () => string;
@@ -594,8 +602,18 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     serviceIdentity: { scopes },
   });
 
+  /** ADR-060 P2 (CLM-0474): route with `beneficiary: "asserted"` — the end-user identity is verified by the middleware, and the handler compares resource ownership. */
+  const asserted = (...scopes: readonly string[]): DeliveryRouteConfig => ({
+    serviceIdentity: { scopes, beneficiary: "asserted", actors: ["customer"] },
+  });
+
   // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ لا ما قبلَهُ.
-  registerServiceIdentity(app, deps.serviceIdentity);
+  registerServiceIdentity(app, {
+    ...deps.serviceIdentity,
+    ...(deps.userAssertion === undefined
+      ? {}
+      : { userAssertion: deps.userAssertion }),
+  });
 
   /*
    * جسمٌ فارغٌ مع `content-type: application/json` = **«لا جسمَ»**، لا خطأٌ.
@@ -637,8 +655,19 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     },
   );
 
-  app.post("/store-orders", { config: scoped(DELIVERY_SCOPES.storeOrderWrite) }, async (request, reply) => {
+  app.post("/store-orders", { config: asserted(DELIVERY_SCOPES.storeOrderWrite) }, async (request, reply) => {
     const traceId = String(request.id);
+    // ADR-060 P2 (CLM-0474): D1 — `customer_ref` in body must match `endUser.publicId`.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      const input = parsePlaceStoreOrderBody(request.body);
+      if (endUserOwnershipDenied(request, input.customer_ref === endUser.publicId, "customer_ref")) {
+        throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المرجعِ", {
+          traceId,
+          details: { field: "customer_ref" },
+        });
+      }
+    }
     if (deps.catalogPort === undefined) {
       throw new DeliveryError(
         "DELIVERY_MARKETPLACE_UNAVAILABLE",
@@ -686,9 +715,26 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(200).send(toStoreOrderResponse(order));
   });
 
-  app.post("/store-orders/:orderPublicId/cancellation", { config: scoped(DELIVERY_SCOPES.storeOrderCancel) }, async (request, reply) => {
+  app.post("/store-orders/:orderPublicId/cancellation", { config: asserted(DELIVERY_SCOPES.storeOrderCancel) }, async (request, reply) => {
     const traceId = String(request.id);
     const publicId = parseOrderPublicIdParam(request.params);
+    // ADR-060 P2 (CLM-0474): D3 — only the order's customer may cancel.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      const order = await deps.readPort.getOrderByPublicId(publicId);
+      if (order === null) {
+        throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المرجعِ", {
+          traceId,
+          details: { field: "orderPublicId", actual: publicId },
+        });
+      }
+      if (endUserOwnershipDenied(request, order.customerRef === endUser.publicId, "customerRef")) {
+        throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المرجعِ", {
+          traceId,
+          details: { field: "orderPublicId", actual: publicId },
+        });
+      }
+    }
     const reasonCode = parseCancelBody(request.body);
     const route = "POST /store-orders/{orderPublicId}/cancellation" as const;
     const idempotency: IdempotencyIntent = {

@@ -1,3 +1,29 @@
+# 2026-10-05 — CLM-0474 — M0-49: RISK-0042 Batch 1 — 5 high-priority Class A gaps remediated
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+
+**What changed:** Code + tests + state-sync. 5 RISK-0042 Class A gaps remediated across geography and delivery services:
+
+- **G1** `GET /geo/users/:waslaPublicId/location` — `none` → `asserted` (end-user ownership: `:waslaPublicId` = `endUser.publicId`)
+- **G2** `PUT /geo/users/:waslaPublicId/location` — `none` → `asserted`
+- **G3** `GET /geo/users/:waslaPublicId/location/history` — `none` → `asserted`
+- **D1** `POST /store-orders` — `none` → `asserted` (`customer_ref` body field = `endUser.publicId`)
+- **D3** `POST /store-orders/:orderPublicId/cancellation` — `none` → `asserted` (`order.customerRef` = `endUser.publicId`)
+
+`asserted()` helper replaces `scoped()` on these routes. Mismatch → 404 (not 403). `endUserOwnershipDenied(request, matches, checkName)` from `@wasla/service-auth/fastify` — returns true only in `enforce` mode. `userAssertionConfigFromEnv(process.env)` wired in `server.ts` for both services, production default `off`. `ASSERTION_AUDIENCES_BY_ACTOR` in identity service updated with `delivery` and `geography` audiences for `customer` and `driver` actors.
+
+15 new tests (8 geography + 7 delivery): off mode compatibility, enforce mode match, enforce mode mismatch → 404, observe mode no-reject. All 50 authz-policy tests pass (updated wave1 count 21→18, wave3 count 42→40, gap count 13→11, ASSERTED_OPERATION_COUNT 23→28). Typecheck green across 71 packages.
+
+**Risk(s):** RISK-0042 → open (P2 remediation, not closure; 5 of 19 gaps remediated, 14 remain).
+
+RISK-0042 stays `open`. Production `WASLA_USER_ASSERTION_MODE` stays `off`. No Production/Render/migrations/cutover changes.
+
+**Units touched:** `services/geography/src/http/service-identity.ts`, `services/geography/src/http/app.ts`, `services/geography/src/http/server.ts`, `services/geography/src/__tests__/user-assertion-ownership.test.ts`, `services/delivery/src/http/service-identity.ts`, `services/delivery/src/http/app.ts`, `services/delivery/src/http/server.ts`, `services/delivery/src/__tests__/user-assertion-ownership.test.ts`, `packages/authz-policy/src/bindings.ts`, `packages/authz-policy/src/__tests__/policy.test.ts`, `services/identity/src/use-cases/issue-user-assertion.ts`, `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`, `docs/16-progress/WORK_CLAIMS.md`, `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`
+
+---
+
 # 2026-10-05 — CLM-0473 — M0-49: RISK-0042 PO decisions approved under executive delegation
 
 - **Work Item(s):** M0-49

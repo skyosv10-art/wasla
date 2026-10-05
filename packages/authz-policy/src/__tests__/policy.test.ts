@@ -450,7 +450,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(UNCLASSIFIED_OPERATION_COUNT).toBe(0);
   });
 
-  it("RISK-0042 الموجةُ 3: الـ42 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0465)", () => {
+  it("RISK-0042 الموجةُ 3: الـ40 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0474)", () => {
     const wave3Audiences = new Set(["channel", "delivery", "identity", "search", "audit", "support", "billing"]);
     const wave3Orders = new Set([
       "POST /orders/agreed-prices",
@@ -464,22 +464,24 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
         // `POST /identity/users/:waslaPublicId/links` رُفِعَ إلى `asserted` في CLM-0462.
         // `GET /identity/users/:waslaPublicId`, `.../recovery`, `.../history` رُفِعَتْ في CLM-0463.
         // `POST /orders/intake` رُفِعَ إلى `required` في CLM-0464.
-        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history"))) ||
+        // `POST /store-orders` و `POST /store-orders/:orderPublicId/cancellation` رُفِعَا إلى `asserted` في CLM-0474.
+        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history")) && !(b.audience === "delivery" && (b.path === "/store-orders" || b.path === "/store-orders/:orderPublicId/cancellation"))) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(42);
+    expect(wave3).toHaveLength(40);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 13 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // 11 فجوةً مقيسةً تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
     // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ)،
     // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`)، و16 قبلَ CLM-0465
     // (فاعلُ الانتقالِ غيرُ `system` صارَ يُقارَنُ بـ`obo` — الفجوةُ المكتوبةُ أُغلِقَتْ في الشفرةِ)،
     // و15 قبلَ CLM-0468 (حسمُ الإسنادِ رُبِطَ بـ`obo` من قبول/رفضِ التوزيعِ،
     // والإسنادُ صارَ قرارَ تصميمٍ لا فجوة).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(13);
+    // و13 قبلَ CLM-0474 (D1 و D3 ارتقيا من `none` إلى `asserted`).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(11);
     const transition = wave3.find((b) => b.audience === "orders" && b.path === "/orders/:orderId/transitions");
     expect(transition?.note).toContain("CLM-0465");
     expect(transition?.evidence).toContain("transitionCaller?.onBehalfOfPublicId");
@@ -491,16 +493,17 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 
-  it("RISK-0042 الموجةُ 1: 21 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ (CLM-0466)", () => {
+  it("RISK-0042 الموجةُ 1: 18 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ (CLM-0474)", () => {
     const wave1Audiences = new Set(["dispatch", "geography"]);
     // CLM-0466 (ADR-060 P2): قبولُ العرضِ ورفضُهُ ارتقيا من `none` إلى `asserted` فخرجا (23 → 21).
+    // CLM-0474 (ADR-060 P2): 3 عمليّات جغرافيا ارتقتْ من `none` إلى `asserted` فخرجن (21 → 18).
     const wave1 = OPERATION_BINDINGS.filter(
       (b) =>
         (wave1Audiences.has(b.audience) && b.strength !== "asserted") ||
         (b.audience === "drivers" && ((b.method === "GET" && b.path === "/drivers") || b.path === "/drivers/eligibility/tick")) ||
         (b.audience === "customers" && b.path.startsWith("/customers") && !b.path.includes(":waslaPublicId")),
     );
-    expect(wave1).toHaveLength(21);
+    expect(wave1).toHaveLength(18);
     for (const binding of wave1) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
@@ -577,7 +580,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     // المسارُ الوحيدُ لـ`asserted` في الإنتاجِ مُعطَّلٌ حتّى P3، ولا منحةَ خدمةٍ لصلاحيّتَيهِ.
     expect(OPERATION_BINDINGS.filter((b) => b.audience === "dispatch" && b.strength === "none")).toHaveLength(6);
     // المجموعُ المُشتَقُّ — يطابقُ `ASSERTED_OPERATION_COUNT` في المصفوفةِ.
-    expect(OPERATION_BINDINGS.filter((b) => b.strength === "asserted")).toHaveLength(23);
+    expect(OPERATION_BINDINGS.filter((b) => b.strength === "asserted")).toHaveLength(28);
   });
 
   it("CLM-0443 (ADR-060 P2): 3 عمليّات سوقٍ `asserted` — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
@@ -599,6 +602,27 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(productRead?.strength).toBe("none");
     const storeRead = OPERATION_BINDINGS.find((b) => b.audience === "marketplace" && b.method === "GET" && b.path === "/stores/:storeSlug");
     expect(storeRead?.strength).toBe("none");
+  });
+
+  it("CLM-0474 (ADR-060 P2): 5 عمليّاتٍ `asserted` جديدة — جغرافيا (3) + توصيل (2)", () => {
+    const asserted = OPERATION_BINDINGS.filter(
+      (b) =>
+        b.strength === "asserted" &&
+        b.note.includes("CLM-0474"),
+    );
+    expect(asserted.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "GET /geo/users/:waslaPublicId/location",
+      "GET /geo/users/:waslaPublicId/location/history",
+      "POST /store-orders",
+      "POST /store-orders/:orderPublicId/cancellation",
+      "PUT /geo/users/:waslaPublicId/location",
+    ]);
+    for (const binding of asserted) {
+      expect(binding.evidence).toContain("asserted(");
+      expect(binding.evidence).not.toContain("scoped(");
+      expect(binding.note).toContain("CLM-0474");
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
   });
 
   it("كلُّ تصنيفٍ يُشيرُ إلى عمليّةٍ موجودةٍ في الجردِ المفروضِ", () => {

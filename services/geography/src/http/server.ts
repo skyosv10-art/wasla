@@ -15,6 +15,7 @@
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
@@ -94,6 +95,10 @@ async function main(): Promise<void> {
     // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
   const stopTracing = startTracing("geography");
 
+  // ADR-060 P2 (CLM-0474): user assertion config for asserted routes (G1, G2, G3).
+  // Production default is `off` — no assertion verification, behavior unchanged.
+  const userAssertion = userAssertionConfigFromEnv(process.env);
+
   const app = createGeographyApp({
     deps,
     logger: true,
@@ -101,6 +106,7 @@ async function main(): Promise<void> {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
+    ...(userAssertion === undefined ? {} : { userAssertion }),
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

@@ -1,3 +1,22 @@
+# 2026-10-05 — CLM-0471 — M0-49: RISK-0042 Program Owner decision register
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged — PR [#627](https://github.com/skyosv10-art/wasla/pull/627) (squash). CI 42/42 green on PR. ADR-063 registers 6 Program Owner decisions (PO-001 to PO-006) for the 19 remaining RISK-0042 gaps, with options, consequences, risks, proposed outcomes. No implementation, no Claims. RISK-0042 stays `open`.
+
+**What changed:** Created `docs/15-decisions/ADR-063-risk-0042-program-owner-decisions.md` — decision register documenting 6 pending Program Owner decisions:
+
+- **PO-001:** Execution scope for 13 closable gaps (A) — proposed: batches by priority (high → medium → low)
+- **PO-002:** Audit actor fields (A1) — proposed: remove from contract, derive from token
+- **PO-003:** Reputation reads (R1, R2) — proposed: keep `none` as design decision (operational data)
+- **PO-004:** Billing latent gaps (B1, B2) — proposed: defer (no production caller today)
+- **PO-005:** Fulfillment-transition (D5) — proposed: split route into store + driver
+- **PO-006:** P3 activation — proposed: gradual observe then enforce per service
+
+Each decision has 2-3 options with trade-offs, consequences, risks, and a proposed outcome. No Claims opened. RISK-0042 stays `open`.
+
+---
+
 # 2026-10-05 — CLM-0470 — M0-49: RISK-0042 architectural execution plan for 19 remaining gaps
 
 - **Work Item(s):** M0-49

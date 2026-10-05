@@ -1,3 +1,20 @@
+# 2026-10-05 — CLM-0472 — M0-49: Model Council governance mechanism
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged — PR [#628](https://github.com/skyosv10-art/wasla/pull/628) (squash). CI 42/42 green on PR. ADR-064 registers Model Council as governance mechanism: 3 models from 3 families (GPT 6.1 Sol · Grok 4.7 · Gemini 3.7 Flash), each working on a separate copy of the project, blind to each other. 2-of-3 agreement = adopted unless 3rd is 100% right. Invoked on external review, conflict, or blocked phase. First session: the 6 pending PO decisions from ADR-063. Council output is advisory until Program Owner approves.
+
+**What changed:** Created `docs/15-decisions/ADR-064-model-council-governance.md` — registers the Model Council as a governance mechanism for the project:
+
+- **3 families:** OpenAI (GPT 6.1 Sol), xAI (Grok 4.7), Google (Gemini 3.7 Flash)
+- **Isolation:** Each member works on a separate copy, blind to others
+- **Voting:** 2-of-3 agreement = adopted unless 3rd is 100% right (proves a logical error or violates a binding architectural rule)
+- **Invocation:** External review, conflict, or blocked phase
+- **First session:** The 6 pending PO decisions from ADR-063
+- **Output:** Advisory until Program Owner approves
+
+---
+
 # 2026-10-05 — CLM-0471 — M0-49: RISK-0042 Program Owner decision register
 
 - **Work Item(s):** M0-49

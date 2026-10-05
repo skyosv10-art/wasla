@@ -10,7 +10,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
 import { SUPPORT_SERVICE_PORT } from "@wasla/contracts-support";
-import { registerServiceIdentityOnFastify } from "@wasla/service-auth/fastify";
+import { registerServiceIdentityOnFastify, endUserOwnershipDenied } from "@wasla/service-auth/fastify";
 import { supportErrors } from "../domain/errors.js";
 import type { SupportTicket } from "../domain/model.js";
 import type { SupportTicketStore, SupportEventPublisher, ReputationBridgePort } from "../ports.js";
@@ -20,6 +20,7 @@ import {
   SUPPORT_SCOPES,
   OPEN,
   internalScoped,
+  asserted,
   denialBody,
   type SupportServiceIdentityOptions,
 } from "./service-identity.js";
@@ -39,6 +40,9 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
       audience: SUPPORT_SERVICE_AUDIENCE,
       keys: deps.serviceIdentity.keys,
       replayGuard: deps.serviceIdentity.replayGuard,
+      ...(deps.serviceIdentity.userAssertion === undefined
+        ? {}
+        : { userAssertion: deps.serviceIdentity.userAssertion }),
       denialBody,
       boundaryLabel: "حد الدعم",
     });
@@ -54,7 +58,7 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
   }));
 
   // ── POST /support/tickets ──────────────────────────────────────────────
-  app.post("/support/tickets", { config: internalScoped(SUPPORT_SCOPES.ticketWrite) }, async (request, reply) => {
+  app.post("/support/tickets", { config: asserted(SUPPORT_SCOPES.ticketWrite) }, async (request, reply) => {
     const body = request.body as {
       ticket_type: string;
       reporter_public_id: string;
@@ -64,6 +68,14 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
 
     if (!body?.ticket_type || !body?.reporter_public_id) {
       return sendValidation(reply, "ticket_type and reporter_public_id are required");
+    }
+
+    // ADR-060 P2 (CLM-0475): S1 — `reporter_public_id` must match `endUser.publicId`.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      if (endUserOwnershipDenied(request, body.reporter_public_id === endUser.publicId, "reporter_public_id")) {
+        throw supportErrors.ticketNotFound(body.reporter_public_id);
+      }
     }
 
     const ticket = await deps.store.createTicket({
@@ -85,14 +97,17 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
   });
 
   // ── GET /support/tickets — list with optional state filter + cursor ──
-  app.get("/support/tickets", { config: internalScoped(SUPPORT_SCOPES.ticketRead) }, async (request, reply) => {
+  app.get("/support/tickets", { config: asserted(SUPPORT_SCOPES.ticketRead) }, async (request, reply) => {
     const query = request.query as {
       state?: SupportTicket["state"];
       limit?: string;
       cursor?: string;
     };
+    // ADR-060 P2 (CLM-0475): S2 — filter by reporter when endUser is present.
+    const endUser = request.endUser;
     const { tickets, nextCursor } = await deps.store.listTickets({
       state: query.state,
+      ...(endUser !== undefined ? { reporterPublicId: endUser.publicId } : {}),
       limit: query.limit ? Math.min(parseInt(query.limit, 10), 100) : undefined,
       cursor: query.cursor || null,
     });
@@ -100,12 +115,20 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
   });
 
   // ── GET /support/tickets/:ticketId ─────────────────────────────────────
-  app.get("/support/tickets/:ticketId", { config: internalScoped(SUPPORT_SCOPES.ticketRead) }, async (request, reply) => {
+  app.get("/support/tickets/:ticketId", { config: asserted(SUPPORT_SCOPES.ticketRead) }, async (request, reply) => {
     const { ticketId } = request.params as { ticketId: string };
     const ticket = await deps.store.getTicket(ticketId);
 
     if (!ticket) {
       throw supportErrors.ticketNotFound(ticketId);
+    }
+
+    // ADR-060 P2 (CLM-0475): S3 — `reporter_public_id` must match `endUser.publicId`.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      if (endUserOwnershipDenied(request, ticket.reporter_public_id === endUser.publicId, "reporter_public_id")) {
+        throw supportErrors.ticketNotFound(ticketId);
+      }
     }
 
     return reply.status(200).send(ticket);
@@ -114,7 +137,7 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
   // ── POST /support/tickets/:ticketId/evidence ────────────────────────────
   app.post(
     "/support/tickets/:ticketId/evidence",
-    { config: internalScoped(SUPPORT_SCOPES.evidenceWrite) },
+    { config: asserted(SUPPORT_SCOPES.evidenceWrite) },
     async (request, reply) => {
       const { ticketId } = request.params as { ticketId: string };
       const body = request.body as {
@@ -125,6 +148,18 @@ export function createSupportApp(deps: SupportHttpDeps): FastifyInstance {
 
       if (!body?.evidence_type || !body?.content_hash || !body?.storage_ref) {
         return sendValidation(reply, "evidence_type, content_hash, and storage_ref are required");
+      }
+
+      // ADR-060 P2 (CLM-0475): S4 — `reporter_public_id` must match `endUser.publicId`.
+      const endUser = request.endUser;
+      if (endUser !== undefined) {
+        const ticket = await deps.store.getTicket(ticketId);
+        if (ticket === null) {
+          throw supportErrors.ticketNotFound(ticketId);
+        }
+        if (endUserOwnershipDenied(request, ticket.reporter_public_id === endUser.publicId, "reporter_public_id")) {
+          throw supportErrors.ticketNotFound(ticketId);
+        }
       }
 
       const evidence = await deps.store.attachEvidence({

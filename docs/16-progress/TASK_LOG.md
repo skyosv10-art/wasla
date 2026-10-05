@@ -1,3 +1,33 @@
+# 2026-10-06 — CLM-0475 — M0-49: RISK-0042 Batch 2 — 6 medium-priority Class A gaps remediated
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0042 → open (P2 remediation, not closure; 11 of 19 gaps remediated or decided, 8 remain)
+- **Evidence:** local typecheck + unit tests (delivery batch2 + support ownership + authz-policy)
+- **Deployment:** none — production stays `off`, no Render/migrations/cutover changes
+
+**What changed:** Code + tests + state-sync. 6 of 7 RISK-0042 Class A medium-priority gaps remediated across delivery and support services:
+
+- **D2** `GET /store-orders/:orderPublicId` — `none` → `asserted` (order loaded, `order.customerRef` = `endUser.publicId`, mismatch → 404)
+- **D6** `GET /store-orders/:orderPublicId/delivery-task` — `none` → `asserted` (actor-aware: customer → `order.customerRef`, driver → `task.courierRef`, mismatch → 404)
+- **S1** `POST /support/tickets` — `none` → `asserted` (`reporter_public_id` body field = `endUser.publicId`, mismatch → 404)
+- **S2** `GET /support/tickets` — `none` → `asserted` (list filtered by `reporterPublicId` = `endUser.publicId` at store boundary)
+- **S3** `GET /support/tickets/:ticketId` — `none` → `asserted` (ticket loaded, `ticket.reporter_public_id` = `endUser.publicId`, mismatch → 404)
+- **S4** `POST /support/tickets/:ticketId/evidence` — `none` → `asserted` (ticket loaded, `ticket.reporter_public_id` = `endUser.publicId`, mismatch → 404)
+
+**D4 blocked:** `POST /store-orders/:orderPublicId/confirmation` remains `none`. ADR-060 §2.2 specifies `sub` in the assertion is the end user's `wasla_public_id` (a person, not a store). The order model has `storeSlug` (StoreSlug) and `storeId` (internal), but no `storePublicId` field that can be compared with `endUser.publicId`. Closing D4 requires either a partners service lookup (staff → store) or a new architectural decision. Documented as a new discovery.
+
+**Delivery changes:** `assertedActors(actors, ...scopes)` helper added for multi-actor routes (D6 uses `actors: ["customer", "driver"]`). D2 uses existing `asserted()` with `actors: ["customer"]`.
+
+**Support changes:** `asserted(...scopes)` helper added to `service-identity.ts` with `actors: ["customer", "driver"]` and `beneficiary: "asserted"`. `userAssertion` config added to `SupportServiceIdentityOptions`. `userAssertionConfigFromEnv` wired in `server.ts`. `listTickets` in `SupportTicketStore` interface, InMemory adapter, and Postgres adapter gained `reporterPublicId` filter parameter.
+
+21 new tests (13 delivery batch2 + 8 support ownership): off mode compatibility, enforce mode match/mismatch, observe mode no-reject, actor-aware ownership (D6 customer vs driver). Authz-policy tests updated: wave3 count 40→34, gap count 11→5, ASSERTED_OPERATION_COUNT 28→34.
+
+**Next:** Batch 3 (low priority: U1 — `GET /referrals` in subscriptions). Then A1 (audit actor fields removal), D5 (fulfillment-transition split), D4 (needs partners lookup).
+
+---
+
 # 2026-10-05 — CLM-0474 — M0-49: RISK-0042 Batch 1 — 5 high-priority Class A gaps remediated
 
 - **Work Item(s):** M0-49

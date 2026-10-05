@@ -83,6 +83,7 @@ export class InMemorySupportTicketStore implements SupportTicketStore {
 
   async listTickets(opts?: {
     readonly state?: SupportTicket["state"];
+    readonly reporterPublicId?: string;
     readonly limit?: number;
     readonly cursor?: string | null;
   }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }> {
@@ -90,6 +91,9 @@ export class InMemorySupportTicketStore implements SupportTicketStore {
     let items = Array.from(this.tickets.values()).reverse();
     if (opts?.state) {
       items = items.filter((t) => t.state === opts.state);
+    }
+    if (opts?.reporterPublicId) {
+      items = items.filter((t) => t.reporter_public_id === opts.reporterPublicId);
     }
     if (opts?.cursor) {
       const idx = items.findIndex((t) => t.ticket_id === opts.cursor);

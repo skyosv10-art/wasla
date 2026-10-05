@@ -12,6 +12,8 @@ import type {
 import type {
   ServiceAuthKeyRegistry,
   ServiceTokenReplayGuard,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 
 /** جمهورُ الرمزِ الذي يقبلُهُ حدُّ الدعم. */
@@ -29,6 +31,12 @@ export const SUPPORT_SCOPES = {
 export interface SupportServiceIdentityOptions {
   readonly keys: ServiceAuthKeyRegistry;
   readonly replayGuard: ServiceTokenReplayGuard;
+  /** ADR-060 P2 (CLM-0475): user assertion config for `beneficiary: "asserted"` routes. */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /** `/health` وحدَهُ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
@@ -37,6 +45,11 @@ export const OPEN: ServiceIdentityRouteConfig = { serviceIdentity: "open" };
 /** مسارُ عمليّاتٍ داخليٌّ لا مُنتَفِعَ إنسانٍ له: يفرضُ الصلاحيّةَ بلا مُنتَفِعٍ. */
 export function internalScoped(...scopes: readonly string[]): ServiceIdentityRouteConfig {
   return { serviceIdentity: { scopes } };
+}
+
+/** ADR-060 P2 (CLM-0475): asserted route — end-user identity verified by middleware, handler compares ownership. */
+export function asserted(...scopes: readonly string[]): ServiceIdentityRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "asserted", actors: ["customer", "driver"] } };
 }
 
 /** جسمُ الرفضِ كما يُسلِّمُهُ حدُّ الدعم. */

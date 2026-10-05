@@ -1342,7 +1342,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/store-orders/:orderPublicId/delivery-task",
     dimension: "owner",
     strength: "asserted",
-    evidence: "services/delivery/src/http/app.ts:assertedActors([\"customer\", \"driver\"], DELIVERY_SCOPES.deliveryTaskRead) deps.readPort.getTaskByOrderPublicId(",
+    evidence: "services/delivery/src/http/app.ts:assertedActors DELIVERY_SCOPES.deliveryTaskRead deps.readPort.getTaskByOrderPublicId(",
     note: "ADR-060 P2 (CLM-0475): D6 — actor-aware: customer → `order.customerRef`, driver → `task.courierRef`; mismatch → 404. Production default `off`.",
   },
   {

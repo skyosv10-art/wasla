@@ -16,6 +16,8 @@
 
 15 new tests (8 geography + 7 delivery): off mode compatibility, enforce mode match, enforce mode mismatch → 404, observe mode no-reject. All 50 authz-policy tests pass (updated wave1 count 21→18, wave3 count 42→40, gap count 13→11, ASSERTED_OPERATION_COUNT 23→28). Typecheck green across 71 packages.
 
+**Risk(s):** RISK-0042 → open (P2 remediation, not closure; 5 of 19 gaps remediated, 14 remain).
+
 RISK-0042 stays `open`. Production `WASLA_USER_ASSERTION_MODE` stays `off`. No Production/Render/migrations/cutover changes.
 
 **Units touched:** `services/geography/src/http/service-identity.ts`, `services/geography/src/http/app.ts`, `services/geography/src/http/server.ts`, `services/geography/src/__tests__/user-assertion-ownership.test.ts`, `services/delivery/src/http/service-identity.ts`, `services/delivery/src/http/app.ts`, `services/delivery/src/http/server.ts`, `services/delivery/src/__tests__/user-assertion-ownership.test.ts`, `packages/authz-policy/src/bindings.ts`, `packages/authz-policy/src/__tests__/policy.test.ts`, `services/identity/src/use-cases/issue-user-assertion.ts`, `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`, `docs/16-progress/WORK_CLAIMS.md`, `docs/16-progress/TASK_LOG.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `ROADMAP.md`

@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import { generateKeyPairSync } from "node:crypto";
-import type { InjectOptions, LightMyRequestResponse } from "fastify";
+import type { InjectOptions } from "fastify";
 
 import {
   InMemoryServiceTokenReplayGuard,
@@ -80,7 +80,7 @@ function buildDeps(): Omit<DeliveryHttpDeps, "serviceIdentity" | "userAssertion"
     catalogPort: new FakeCatalog(),
     reservationPort: new FakeReservationPort(),
     reservationStore: new FakeReservationStore(),
-    readinessProbe: new FakeReadinessProbe(),
+    readinessPort: new FakeReadinessProbe([]),
     newUuid: uuidSequence(),
     now: () => NOW,
   };

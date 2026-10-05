@@ -15,6 +15,7 @@
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
@@ -101,6 +102,9 @@ async function main(): Promise<void> {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
+    // ADR-060 P2 (CLM-0474): user assertion config for asserted routes (G1, G2, G3).
+    // Production default is `off` — no assertion verification, behavior unchanged.
+    ...(userAssertionConfigFromEnv(process.env) ?? {}),
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

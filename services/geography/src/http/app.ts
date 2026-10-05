@@ -33,6 +33,9 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import type { SetUserLocationRequest } from "@wasla/contracts-geography";
 
+import { endUserOwnershipDenied } from "@wasla/service-auth/fastify";
+import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
+
 import { GeographyError } from "../domain/errors.js";
 import type { UseCaseDeps, UseCaseLocale } from "../use-cases/deps.js";
 import {
@@ -78,6 +81,12 @@ export interface CreateGeographyAppOptions {
   serviceIdentity: GeographyServiceIdentityOptions;
   /** Enable Fastify's request logger (pino). Off by default for tests. */
   logger?: boolean;
+  /** ADR-060 P2 (CLM-0474): user assertion config for asserted routes. */
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 /** `/health` وحدَه مفتوحٌ: لا يقرأُ ولا يكتبُ بياناتٍ مجاليّةً. */
@@ -85,6 +94,19 @@ const OPEN: GeographyRouteConfig = { serviceIdentity: "open" };
 
 function scoped(...scopes: readonly string[]): GeographyRouteConfig {
   return { serviceIdentity: { scopes } };
+}
+
+/** ADR-060 P2 (CLM-0474): route with `beneficiary: "asserted"` — the end-user identity is verified by the middleware, and the handler compares resource ownership. */
+function asserted(
+  ...scopes: readonly string[]
+): GeographyRouteConfig {
+  return {
+    serviceIdentity: {
+      scopes,
+      beneficiary: "asserted",
+      actors: ["customer", "driver"],
+    },
+  };
 }
 
 /**
@@ -159,7 +181,12 @@ export function createGeographyApp(
   const withTrace = (traceId: string): UseCaseDeps => ({ ...deps, traceId });
 
   // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَه لا ما قبلَه.
-  registerServiceIdentity(app, options.serviceIdentity);
+  registerServiceIdentity(app, {
+    ...options.serviceIdentity,
+    ...(options.userAssertion === undefined
+      ? {}
+      : { userAssertion: options.userAssertion }),
+  });
 
   // GET /health — liveness probe (not part of the contract API surface).
   app.get("/health", { config: OPEN }, async (_request, reply) => {
@@ -228,12 +255,22 @@ export function createGeographyApp(
   });
 
   // --- user location -------------------------------------------------------
+  // ADR-060 P2 (CLM-0474): G1, G2, G3 — user location routes elevated from
+  // `scoped` to `asserted`. The `:waslaPublicId` param is compared against
+  // `endUser.publicId`; mismatch → 404 (not 403) to avoid leaking existence.
 
   app.get(
     "/geo/users/:waslaPublicId/location",
-    { config: scoped(GEO_SCOPES.locationRead) },
+    { config: asserted(GEO_SCOPES.locationRead) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
+      // ADR-060 P2 (CLM-0474): G1 — only the user themselves may read their location.
+      const endUser = request.endUser;
+      if (endUser !== undefined) {
+        if (endUserOwnershipDenied(request, waslaPublicId === endUser.publicId, "waslaPublicId")) {
+          throw new GeographyError("GEO_USER_LOCATION_NOT_FOUND", "المستخدم غير موجود", { traceId: request.id });
+        }
+      }
       const locale = parseLocale((request.query as { locale?: string }).locale);
       const location = await getUserLocation(deps, { waslaPublicId, locale });
       return reply.status(200).send(location);
@@ -244,9 +281,16 @@ export function createGeographyApp(
   // re-set of the same zone), per the OpenAPI contract.
   app.put(
     "/geo/users/:waslaPublicId/location",
-    { config: scoped(GEO_SCOPES.locationWrite) },
+    { config: asserted(GEO_SCOPES.locationWrite) },
     async (request, reply) => {
     const { waslaPublicId } = request.params as { waslaPublicId: string };
+    // ADR-060 P2 (CLM-0474): G2 — only the user themselves may write their location.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      if (endUserOwnershipDenied(request, waslaPublicId === endUser.publicId, "waslaPublicId")) {
+        throw new GeographyError("GEO_USER_LOCATION_NOT_FOUND", "المستخدم غير موجود", { traceId: request.id });
+      }
+    }
     const locale = parseLocale((request.query as { locale?: string }).locale);
     const body = parseSetLocationBody(request.body);
     const result = await setUserLocation(withTrace(request.id), {
@@ -260,9 +304,16 @@ export function createGeographyApp(
 
   app.get(
     "/geo/users/:waslaPublicId/location/history",
-    { config: scoped(GEO_SCOPES.locationRead) },
+    { config: asserted(GEO_SCOPES.locationRead) },
     async (request, reply) => {
       const { waslaPublicId } = request.params as { waslaPublicId: string };
+      // ADR-060 P2 (CLM-0474): G3 — only the user themselves may read their location history.
+      const endUser = request.endUser;
+      if (endUser !== undefined) {
+        if (endUserOwnershipDenied(request, waslaPublicId === endUser.publicId, "waslaPublicId")) {
+          throw new GeographyError("GEO_USER_LOCATION_NOT_FOUND", "المستخدم غير موجود", { traceId: request.id });
+        }
+      }
       const locale = parseLocale((request.query as { locale?: string }).locale);
       const history = await getUserLocationHistory(deps, {
         waslaPublicId,

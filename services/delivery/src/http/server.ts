@@ -41,6 +41,7 @@ import { readLenientIntEnv, readPortEnv } from "@wasla/config";
 import {
   createServiceRequestSigner,
   keyRegistryFromEnv,
+  userAssertionConfigFromEnv,
 } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
@@ -238,6 +239,9 @@ async function main(): Promise<void> {
       keys: keyRegistryFromEnv(process.env),
       replayGuard: createServiceTokenReplayGuardFromEnv(process.env),
     },
+    // ADR-060 P2 (CLM-0474): user assertion config for asserted routes (D1, D3).
+    // Production default is `off` — no assertion verification, behavior unchanged.
+    ...(userAssertionConfigFromEnv(process.env) ?? {}),
     readPort: store,
     writePort: store,
     reservationPort: reservation.reservationPort,

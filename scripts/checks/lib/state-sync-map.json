@@ -1,0 +1,124 @@
+{
+  "$comment": [
+    "STATE-SYNC map (CLM-0467 · M0-52 · ADR-061 · docs/00-rules/STATE_SYNC_RULE.md).",
+    "Every path changed in a PR must match at least one category. A path that matches none is",
+    "UNMAPPED, and the verdict is BLOCKED (REVIEW REQUIRED), never PASS.",
+    "A path can match several categories (packages/authz-policy/ is implementation AND security);",
+    "the requirements of all matched categories add up.",
+    "Regexes use Python `re.search` on the repository-relative path.",
+    "To add a category: add it here, add a mutation case in scripts/checks/lib/gov-cases-state-sync.sh,",
+    "and describe it in docs/00-rules/STATE_SYNC_RULE.md section 5. The guard reads only this file."
+  ],
+  "state_records": {
+    "task_log": "docs/16-progress/TASK_LOG.md",
+    "board": "docs/16-progress/LAUNCH_EXECUTION_BOARD.md",
+    "claims": "docs/16-progress/WORK_CLAIMS.md",
+    "roadmap": "ROADMAP.md",
+    "risk_register": "docs/07-security/RISK_REGISTER.md",
+    "baseline": "docs/12-testing/BASELINE.json"
+  },
+  "ledger_only": [
+    "^docs/16-progress/(TASK_LOG|LAUNCH_EXECUTION_BOARD|WORK_CLAIMS|WORK_INDEX|MASTER_PROGRESS|ROADMAP)\\.md$",
+    "^ROADMAP\\.md$"
+  ],
+  "test_file": "(/__tests__/|\\.test\\.[cm]?[jt]sx?$|\\.spec\\.[cm]?[jt]sx?$|/tests?/|-e2e/|^scripts/checks/lib/gov-cases-|^scripts/checks/test-governance\\.sh$)",
+  "categories": [
+    {
+      "id": "implementation",
+      "description": "Runtime code, contracts, schema and build configuration.",
+      "paths": [
+        "^(services|packages|apps|bots)/",
+        "^(package\\.json|pnpm-lock\\.yaml|pnpm-workspace\\.yaml|tsconfig\\.json|\\.env\\.example)$"
+      ],
+      "exclude": ["^(services|packages|apps|bots)/[^/]+/(README|CHANGELOG)\\.md$"],
+      "requires": ["claim_closed", "task_log_entry", "board_row", "roadmap_line", "units_named", "tests"]
+    },
+    {
+      "id": "security",
+      "description": "Authentication, authorization, secrets, security policy and the risk register.",
+      "paths": [
+        "^packages/(service-auth|authz-policy)/",
+        "^services/[^/]+/src/http/(service-identity|auth|user-assertion)[^/]*\\.ts$",
+        "^infra/secrets/",
+        "^docs/07-security/",
+        "^(SECURITY\\.md|CODEOWNERS)$",
+        "^scripts/checks/(scan-secrets|validate-secret-[a-z-]+|validate-authz-policy|validate-service-auth-coverage)\\.sh$"
+      ],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry", "board_row", "risk_sync"]
+    },
+    {
+      "id": "governance",
+      "description": "Guards, hooks, CI pipelines, rules and decisions.",
+      "paths": [
+        "^scripts/checks/",
+        "^scripts/hooks/",
+        "^scripts/(verify|baseline)\\.sh$",
+        "^\\.github/",
+        "^\\.gitlab-ci\\.yml$",
+        "^\\.gitlab/",
+        "^docs/00-rules/",
+        "^docs/15-decisions/",
+        "^CODEOWNERS$"
+      ],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry", "board_row", "roadmap_line", "units_named", "guard_documented"]
+    },
+    {
+      "id": "deployment",
+      "description": "Infrastructure, container, deploy and operational workflows.",
+      "paths": [
+        "^infra/",
+        "^(Dockerfile|\\.dockerignore|render\\.yaml)$",
+        "^scripts/(container|deploy|dr|ops|render)[^/]*/",
+        "^\\.github/workflows/(render-deploy|db-backup|dr-|risk-00|service-health)[^/]*\\.yml$"
+      ],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry", "board_row", "roadmap_line", "units_named", "evidence_field"]
+    },
+    {
+      "id": "scripts",
+      "description": "Other repository scripts (tooling, generators).",
+      "paths": ["^scripts/"],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry", "board_row", "roadmap_line", "units_named"]
+    },
+    {
+      "id": "documentation",
+      "description": "Documentation that describes the system (not the progress ledgers).",
+      "paths": ["^docs/", "^(README|CONTRIBUTING)\\.md$"],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry", "board_row"]
+    },
+    {
+      "id": "repo-meta",
+      "description": "Repository metadata with no runtime effect.",
+      "paths": ["^(\\.gitignore|\\.editorconfig|\\.nvmrc|\\.npmrc|\\.prettierrc[^/]*|LICENSE)$"],
+      "exclude": [],
+      "requires": ["claim_closed", "task_log_entry"]
+    },
+    {
+      "id": "ledger",
+      "description": "The progress ledgers themselves. A change made only of these is a state-only change.",
+      "paths": [
+        "^docs/16-progress/(TASK_LOG|LAUNCH_EXECUTION_BOARD|WORK_CLAIMS|WORK_INDEX|MASTER_PROGRESS|ROADMAP)\\.md$",
+        "^ROADMAP\\.md$"
+      ],
+      "exclude": [],
+      "requires": []
+    }
+  ],
+  "stale_status_patterns": [
+    "PR pending",
+    "pending merge",
+    "awaiting merge",
+    "awaiting review",
+    "in review",
+    "not yet merged",
+    "قيد المراجعة",
+    "بانتظار الدمج",
+    "لم يُدمج بعد"
+  ],
+  "state_only_kinds": ["state-correction", "owner-decision"],
+  "min_reason_chars": 20
+}

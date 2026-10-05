@@ -2916,6 +2916,11 @@ t "حارسُ الترحيلاتِ يقبلُ جذراً صحيحاً في 40 ت
 # طفرتانِ تُعادانِ بعدَ كلٍّ منهما: اسمٌ قديمٌ في الدليلِ يُسقِط، وحذفُ الاسمِ من الشفرةِ يُسقِط.
 . "$REPO_ROOT/scripts/checks/lib/gov-cases-runbook-reason-codes.sh"
 
+# ── 26/27) STATE-SYNC و«الدمجُ يُغلِقُ الدورة» (M0-52 · ADR-061) ─────────────────
+# كلُّ حالةٍ تبني مستودعَ git صناعيّاً في mktemp وتنسخُ إليهِ الحارسَ والخريطةَ الحقيقيَّين،
+# وتُطابِقُ سببَ المنعِ لا رمزَ الخروجِ وحدَه. حالاتُ المالكِ A–F وما بعدَها.
+. "$REPO_ROOT/scripts/checks/lib/gov-cases-state-sync.sh"
+
 printf '\n\033[1m[ز] حارسُ هيكلِ Terraform (M2-02B)\033[0m\n'
 # حارسُ validate-terraform-scaffold.sh يفحصُ البنيةَ ويمنعُ الأسرارَ.
 # حالاتُ الطفرةِ تُثبِتُ أنّه يرفضُ سرًّا في ملفِّ .tf — وهو عيبُ أسبقيةِ find
@@ -3027,7 +3032,8 @@ printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 git reset --hard "$PROOF_BASE_HEAD" >/dev/null 2>&1
 git clean -fd >/dev/null 2>&1
 cp /tmp/CL.fixture "$CL"
-printf '\n### [2026-01-01] حالة اختبار — المدخل الموحّد\n\n- **Work Item(s):** %s\n- **Why:** حالة موجبة كاملة\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
+# M0-52: هذا التغييرُ سجلّاتٌ وحدَها، فالفحصُ 26 يطلبُ تصريحاً بنوعِه وسببِه — وإلّا كانَ طلبَ «تداركِ توثيقٍ».
+printf '\n### [2026-01-01] حالة اختبار — المدخل الموحّد\n\n- **Work Item(s):** %s\n- **Kind:** state-correction — حالةٌ موجبةٌ كاملةٌ لبوّابةِ الحوكمةِ في مستودعِ الاختبار\n- **Why:** حالة موجبة كاملة\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md
 printf '\n<!-- حالة اختبار -->\n' >> "$BOARD"
 git add -A >/dev/null
 git -c user.email=t@t -c user.name=t commit -qm "valid full state"
@@ -3037,6 +3043,7 @@ git -c user.email=t@t -c user.name=t commit -qm "valid full state"
 # rejects it, so we create a real empty file.
 : > /tmp/wasla-empty-branches.txt
 WASLA_BRANCHES_FILE=/tmp/wasla-empty-branches.txt WASLA_PRS_FILE=/tmp/wasla-empty-branches.txt \
+WASLA_MERGED_STATE_FILE=/tmp/wasla-empty-branches.txt \
   t "verify-governance يعمل في سياق git" pass bash scripts/checks/verify-governance.sh origin/main HEAD
 
 printf '\n\033[1m═══ النتيجة: %d ناجح · %d فاشل ═══\033[0m\n\n' "$PASS" "$FAIL"

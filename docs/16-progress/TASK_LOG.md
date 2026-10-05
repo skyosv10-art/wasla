@@ -65,7 +65,7 @@ RISK-0042 stays `open`.
 
 - **Work Item(s):** M6-18B · M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0451 merged in PR #601 (`995c2b1`); CLM-0452 merged in PR #601 (`995c2b1`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **M6-18B (CLM-0451):** Render → DR run 2 (CI 37122144763, `main` `1831176`) PASS. Production backup → restore into `pvyuhjadrygqqdoczmnd` 445.4 s (120/120 tables, verified) → 18 variables switched in 1.3 s → 17/17 deploys live at +73.2 s → 17/17 `/health` 200 and delivery readiness database ok on DR at +92.9 s → committed read/write on DR at +96.3 s → rollback 90.6 s (17/17 healthy on production) → fingerprint identical (24 services). **Full DR RTO 541.7 s.** This is a DR measurement on a free-plan project, not the production RTO of record. ADR-052/058 are unchanged, and M6-18B stays `Blocked` (RPO unmet: RISK-0055; RISK-0058 mitigating; RISK-0060 open; external pentest M6-19A).
 
@@ -200,7 +200,7 @@ Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR 
 
 - **Work Item(s):** M0-45
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0423 merged in PR #564 (`557d896`) — measured on GitHub; the status above was written before merge and was never updated.
 
 RISK-0025 said a stacked PR (base ≠ main) produces zero checks because `ci.yml` filtered `pull_request: branches: [main]`. The filter is gone (removed in CLM-0414), and the risk is now closed by measurement, not by reading: PR #559 with base = `fix/clm-0419-risk-0042-staff-rank` produced **42/42 green contexts** and merged. Register index row and detail section updated by addition (the old text stays as history). Decision taken under the written authorisation of 2026-09-30 — "MASTER REPAIR & MERGE".
 
@@ -788,7 +788,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 6/N: Reputation Bridge (CLM-0361)
 
 - **Work Item(s):** M5-16 (review 6/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0361 merged in PR #485 (`4d1537a`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Reputation bridge (ADR-049 §7). Added `dispute_resolved` to REPUTATION_FACT_KINDS in @wasla/contracts-reputation (events.json FactKind enum, events-types.ts, index.ts, schema.sql CHECK constraints). ReputationBridgePort in support service ports. InMemoryReputationBridge implementation. Wired into HTTP resolve handler: when ticket is resolved with subject_public_id, records dispute_resolved fact (best-effort: if bridge throws, ticket is still resolved). 113 support tests (7 bridge new). 81 reputation contracts tests pass.
 
 ## 2026-09-26 — CLM-0360 Released (stale-claim freshness fix)
@@ -800,7 +800,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 5/N: Relay Consumer (CLM-0360)
 
 - **Work Item(s):** M5-16 (review 5/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0360 merged in PR #483 (`53836b9`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Relay consumer for order.status_changed events. Consumes order_outbox events, classifies them (suggest/ignored/ignored_foreign/poisoned), creates suggested support tickets (type: order_issue) on terminal order states (completed, customer_cancelled, driver_cancelled, partner_cancelled, failed, payment_disputed). Idempotent checkpoint (occurred_at, event_id). Dead-letter store for poisoned events. In-memory event source, checkpoint store, dead-letter store, consumer lock. 106 support tests (30 relay new). Postgres adapters deferred to integration review.
 
 ## 2026-09-26 — CLM-0359 Released (stale-claim freshness fix)
@@ -812,7 +812,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 4/N: HTTP Layer + Service Identity (CLM-0359)
 
 - **Work Item(s):** M5-16 (review 4/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0359 merged in PR #481 (`fa05ea3`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** HTTP layer + service identity enforcement created. Fastify app with 7 routes: POST /support/tickets (create), GET /support/tickets/:id (read), POST /support/tickets/:id/evidence (attach), POST /support/tickets/:id/escalate, POST /support/tickets/:id/resolve, POST /support/tickets/:id/close, GET /health. Service identity enforcement via @wasla/service-auth (3 scopes: support:ticket:write, support:ticket:read, support:evidence:write; /health OPEN). Authz-policy operations registered (6 ops in ENFORCED_OPERATIONS, 3 scopes). SERVICE_AUTH_ENFORCEMENT.md: support-scopes block + enforced:support. OpenAPI spec: ServiceAuth (x-wasla-service-auth apiKey header), per-operation security with scopes. Error mapping (SupportError → HTTP status, unknown → 503). Server setup (Postgres or in-memory fallback, key registry, replay guard). 76 support tests (16 HTTP new) + 42 authz-policy tests (updated counts: 149 ops, 122 scopes, 16 audiences). BASELINE: fingerprint 9749558d, tests 5585, governance 518. Relay consumer, admin screen, reputation bridge deferred.
 
 ## 2026-09-26 — CLM-0358 Released (stale-claim freshness fix)
@@ -824,7 +824,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 3/N: PostgreSQL Store Adapter (CLM-0358)
 
 - **Work Item(s):** M5-16 (review 3/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0358 merged in PR #479 (`f262ed5`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** PostgreSQL Store adapter + in-memory store + schema-drift test created. Drizzle schema (mirror of schema.sql, 3 tables: support_tickets, support_evidence, support_outbox with all constraints). db.ts (createSupportDb, DbOrTx). repository.ts (PostgresSupportTicketStore: createTicket, getTicket, updateState, attachEvidence, getEvidence, resolve; PostgresSupportEventPublisher: 3 event types). in-memory.ts (InMemorySupportTicketStore with evidence gate enforcement, InMemorySupportEventPublisher). constraints.ts (ENFORCED_CONSTRAINTS). migrate.ts + migrate-cli.ts (apply schema.sql verbatim). drizzle/ baseline migration. 60 tests total (24 domain + 7 boundary + 24 infrastructure + 5 schema-drift). BASELINE: test_files_tracked 497→499, tests 5540→5569. HTTP layer, relay consumer, admin screen, reputation bridge deferred.
 
 ## 2026-09-26 — CLM-0357 Released (stale-claim freshness fix)
@@ -836,7 +836,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 2/N: Support Service Scaffold (CLM-0357)
 
 - **Work Item(s):** M5-16 (review 2/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0357 merged in PR #477 (`d5deb71`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Support service scaffold + contracts package created. @wasla/contracts-support: frozen arrays (5 ticket states, 4 types, 4 resolution reasons, 3 evidence types, 3 escalation levels, 3 event types, 7 error codes, port 8095, httpStatusForSupportError). services/support: domain model (SUPPORT_TICKET_TRANSITIONS, canTransition, SupportTicket, SupportEvidence, drafts), errors (SupportError class, 7 factory functions, isSupportError), ports (SupportTicketStore, SupportEscalationPort, SupportEventPublisher, SupportTickPort). Contracts: api.openapi.yml (health + error catalog), events.json (3 events with envelope), errors.md (7 codes), schema.sql (support_tickets, support_evidence, support_outbox — evidence gate and resolution gate CHECK constraints). 44 tests (13 contracts + 24 domain + 7 boundary). BASELINE: test_files_tracked 494→497, tests 5496→5540. HTTP, PostgreSQL adapters, relay consumer, admin Support screen, reputation bridge (dispute_resolved fact kind) all deferred to later reviews.
 
 ## 2026-09-26 — CLM-0356 Released (stale-claim freshness fix)
@@ -848,7 +848,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-26 — M5-16 Review 1/N: ADR-049 Ticket Model (CLM-0356)
 
 - **Work Item(s):** M5-16 (review 1/N)
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0356 merged in PR #475 (`aa77798`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** ADR-049 created — Support & Escalation ticket model and service boundary. Defines `services/support` (port 8095), 5-state ticket lifecycle (open→investigating→escalated→resolved→closed), 4 ticket types (order_issue, behavior_complaint, payment_dispute, service_quality), dispute evidence gate (no resolution without evidence — the M5-16 exit gate), 3-tier escalation (agent→supervisor→admin), event catalog (ticket_opened/escalated/resolved), reputation bridge (dispute_resolved fact kind in @wasla/contracts-reputation), privacy rules (no PII in events). ADR-014 explicitly deferred free-text moderation to Phase 16 — this ADR is its owner. No code yet — ADR only. M5-16 remains In Progress.
 
 ## 2026-09-26 — CLM-0355 Released (stale-claim freshness fix)
@@ -890,7 +890,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-06 Controlled Pilot and Feedback Triage (CLM-0348)
 
 - **Work Item(s):** M4-06
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0348 merged in PR #460 (`2ef3991`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `packages/pilot-feedback/` with controlled pilot and feedback triage framework. 6 success metrics, 7 stop conditions, 8 feedback categories, beta decision gate (go/conditional_go/no_go). Participant management (customer/driver/partner). 16 tests.
 
 ## 2026-09-24 — M4-05 Released + Completed (CLM-0346)
@@ -902,7 +902,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-05 Privacy/Compliance Review (CLM-0346)
 
 - **Work Item(s):** M4-05
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0346 merged in PR #458 (`6953816`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `packages/compliance-review/` with PDPL (Saudi Arabia) compliance review. 10 data elements inventoried (4 sensitive, 5 personal, 1 non-personal). 12 PDPL requirements (2 compliant, 6 partial, 4 not implemented). 5 data subject rights mapped. Compliance score: 42%. 15 tests.
 
 ## 2026-09-24 — M4-04 Released + Completed (CLM-0344)
@@ -914,7 +914,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-04 Incident/On-Call/Rollback Ops (CLM-0344)
 
 - **Work Item(s):** M4-04
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0344 merged in PR #456 (`8fbb7ae`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `packages/incident-ops/` with incident severity levels, on-call roles, rollback runbooks, and tabletop exercise scenarios. 4 severity levels (SEV-1 to SEV-4), 3 on-call roles, 5 rollback runbooks, 4 tabletop scenarios. 15 tests (skip without GOLDEN_STAGING_BASE).
 
 ## 2026-09-24 — M4-03 Released + Completed (CLM-0342)
@@ -926,7 +926,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-03 Load/Capacity/Chaos Testing (CLM-0342)
 
 - **Work Item(s):** M4-03
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0342 merged in PR #454 (`08833ea`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `packages/load-testing/` with staging-targeted load, capacity, and chaos tests. 5 workloads (health burst, geography, search, orders, observability). 3 chaos scenarios (service isolation, observability failover, network degradation). 4 SLOs (availability >=99%, p95 <=500ms, error <=5%, uptime 100%). 20 tests (skip without GOLDEN_STAGING_BASE). SLO comparison framework.
 
 ## 2026-09-24 — M4-02 Released + Completed (CLM-0340)
@@ -938,7 +938,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-02 Golden Journeys (CLM-0340)
 
 - **Work Item(s):** M4-02
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0340 merged in PR #452 (`644a37c`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `packages/golden-e2e/` with staging-targeted E2E tests driving deployed Render URLs. Five golden journeys mapped to services/endpoints in `docs/12-testing/M4-02_GOLDEN_JOURNEYS.md`. Staging health checks runnable (14 services + observability). Full authenticated journeys blocked on service auth key.
 - **Verification:** Tests skip gracefully without GOLDEN_STAGING_BASE. Observability coverage verified (metrics, targets, alerts, OTLP).
 - **Security / Data / Deployment:** No secrets in repo. Staging-only.
@@ -957,7 +957,7 @@ Billing relay consumer (ADR-050 §3):
 ## 2026-09-24 — M4-01 Beta Charter (CLM-0339)
 
 - **Work Item(s):** M4-01
-- **Status:** Active (PR pending)
+- **Status:** Active (PR pending) → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0339 merged in PR #450 (`399dd6c`) — measured on GitHub; the status above was written before merge and was never updated.
 - **What / Why:** Created `docs/16-progress/BETA_CHARTER.md` defining pilot scope (40 participants: 25 customers + 10 drivers + 5 partners, Jeddah only), pilot constraints (14 days, staging, max 10 concurrent orders), success metrics (80% golden journeys, 99% availability, p95≤500ms, error≤5%, 70% bot completion, 100% audit), stop metrics (security incident, data corruption, unauthorized access, service-down>30min, p95>2000ms, error>20%, rollback failure), 5 golden journeys enumerated for M4-02.
 - **Verification:** Charter document exists with all required sections. Gate criteria checklist complete.
 - **Security / Data / Deployment:** No secrets in repo. Staging-only data environment.
@@ -7960,7 +7960,7 @@ This PR releases CLM-0427 and updates BASELINE repo.commit. Branch will NOT be d
 - **Work Item(s):** M0-50 · **Claim:** `CLM-0429` · **Branch:** `docs/clm-0429-risk-0056-production-migration` · **Status:** In Progress
 
 **Date:** 2026-10-01
-**Status:** In Progress — RISK-0056 closed, governance PR pending
+**Status:** In Progress — RISK-0056 closed, governance PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0429 merged in PR #574 (`25509ad`) — measured on GitHub; the status above was written before merge and was never updated.
 
 ### What was done
 
@@ -8589,7 +8589,7 @@ Generated the file with `openapi-typescript` 7.13.0. All 15 billing contract tes
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0462 merged in PR #611 (`e344cbe`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **CLM-0462 (ADR-060 P2):** Elevated `POST /identity/users/:waslaPublicId/links` from `scoped()` to `asserted()` — the highest-impact RISK-0042 gap named in CLM-0461 wave 3. The route now requires a valid user assertion; `:waslaPublicId` from the path is compared against `endUser.publicId` (from the assertion `sub`); mismatch → 404 (IDENTITY_NOT_FOUND) per ADR-060 §2.6.
 
@@ -8611,7 +8611,7 @@ All 79 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck a
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0463 merged in PR #613 (`76b79fc`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **CLM-0463 (ADR-060 P2):** Elevated three remaining identity `:waslaPublicId` routes from `scoped()` to `asserted()`:
 - `GET /identity/users/:waslaPublicId` (user read)
@@ -8634,7 +8634,7 @@ All 88 identity tests pass; all 48 authz-policy tests pass; monorepo typecheck g
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0464 merged in PR #615 (`b5e9123`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **CLM-0464 (RISK-0042):** Elevated `POST /orders/intake` from `scoped()` to `ownerScoped()` (token-bound owner, `beneficiary: "required"`). The handler now compares the body's `customer_public_id` with the signed `obo` (`principal.onBehalfOfPublicId`). The `customers` service's `HttpOrderIntakePort` passes `onBehalfOfPublicId` in the signed request. Mismatch → 404 (ORDER_NOT_FOUND) per ADR-060 §2.6.
 
@@ -8655,7 +8655,7 @@ All 654 orders tests pass; all 16 order-e2e tests pass; all 11 customer-e2e test
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0465 merged in PR #617 (`4a39211`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **CLM-0465 (RISK-0042):** `POST /orders/:orderId/transitions` no longer accepts a non-system actor on the caller's word. When `actor_type` is not `system`, `actor_ref` must equal the signed `obo` (`principal.onBehalfOfPublicId`); a missing `obo` or a mismatch → 404 `ORDER_NOT_FOUND` before any read or write. A missing `actor_ref` still reaches domain validation (422). `system` (no actor ref by contract) remains the platform authority; the only grant for `orders:transition:write` is `dispatch`, which always transitions as `system`, so production behaviour is unchanged.
 
@@ -8678,7 +8678,7 @@ Local: orders 657/657, order-e2e 16/16, reputation-e2e 12/12, negotiation-e2e 8/
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** In Progress — PR pending
+- **Status:** In Progress — PR pending → **corrected by addition (CLM-0467, 2026-10-04):** CLM-0466 merged in PR #619 (`2349a0c`) — measured on GitHub; the status above was written before merge and was never updated.
 
 **Why this, now:** CLM-0465 found that the remaining orders gaps (assignment + resolution) are fed by dispatch accept/reject, which carried no driver. Binding orders first would only forward an unverified ID, so the root is fixed first.
 
@@ -8694,3 +8694,33 @@ Local: orders 657/657, order-e2e 16/16, reputation-e2e 12/12, negotiation-e2e 8/
 **Blind mutation found by CI and fixed at the root:** the governance case «a missing evidence anchor in a `none` row fails 7-ج» used `sed` on the dispatch accept row. Once that row became `asserted`, the pattern no longer existed, `sed` changed nothing, the guard passed, and the case reported "expected fail, got pass" (CI run 37210553344). The case is retargeted to the `none` row `POST /dispatch/jobs/:job_id/cancel`, and all three 7-ج mutations now use Python with `assert s.count(old) == 1`, so a missing target fails loudly instead of measuring nothing. No gate was weakened.
 
 Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enforce ×5 incl. other-driver accept/reject → 404 with the offer still `offered`, no assertion → 401; observe ×1). authz-policy 49/49. dispatch-e2e 13/13, negotiation-e2e 8/8, driver-e2e 14/14, order-e2e 16/16, reputation-e2e 12/12. Typecheck green. RISK-0042 stays `open`.
+
+# 2026-10-04 — CLM-0467 — M0-52: STATE-SYNC — project state travels with the change; the merge is the release
+
+- **Work Item(s):** M0-52
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Ready for Gate — implementation, tests, evidence and state are complete in this PR; the gate is CI on the PR and on `main` after merge.
+- **Risk(s):** none — governance hardening only; no service code, auth, secret or risk-register entry changes in this PR.
+- **Evidence:** 36 mutation cases in `scripts/checks/lib/gov-cases-state-sync.sh` (run by `scripts/checks/test-governance.sh` in the required job `governance-guard`); live check 27 against GitHub found branch `docs/clm-0461-risk-0042-wave3` (PR #610 merged, head `614e8fe` unchanged) and `CLM-0461` still `Active`.
+- **Deployment:** none at runtime. Platform setting `delete_branch_on_merge` set to `true` on `skyosv10-art/wasla`, measured with a read after the write; new workflow `.github/workflows/merged-branch-cleanup.yml`.
+
+**Why (Program Owner decision, 2026-10-04):** agents work in sequence. One would push code, then stop before updating state, and the next would read `main` as "not done". Measured on `main` `4cafdc6`: 20 TASK_LOG entries said "PR pending" for merged work; `CLM-0461` was `Active` after PR #610 merged; its branch was never deleted; and every implementation PR needed a second "release" PR (#612 #614 #616 #618 #620), with `main` red in between. Root cause: state was written in the future tense and corrected in a second PR. The existing checks asked whether a ledger was touched, not whether it described the change.
+
+**What changed:**
+- `scripts/checks/validate-state-sync.sh` → `scripts/checks/lib/state_sync.py` with the map `scripts/checks/lib/state-sync-map.json`: check 26 in `scripts/checks/verify-governance.sh`, so it runs in the required `governance-guard` and `verify`; fail-closed in CI. It prints `PASS — project state synchronized` or `BLOCKED — project state synchronization required` with the changed implementation files, the exact records to update and `reason: project state is stale`. An unmapped path is `REVIEW REQUIRED`, never PASS. A ledger-only PR needs `**Kind:** state-correction|owner-decision` with a reason (no catch-up PRs).
+- `scripts/checks/validate-merged-branches.sh`: check 27, merged branch left behind or `Active` claim for merged work. Found and fixed during its own mutation cases: `read` with a tab IFS collapses empty fields, which hid case (b). Empty fields are now `-`.
+- `scripts/checks/validate-work-claims.sh`: accepts the branch's claim row closed (`Released`) within the same range (`CLOSED_IN_RANGE`), so the merge is the release.
+- `.github/workflows/merged-branch-cleanup.yml` (declared in `scripts/checks/validate-workflow-supply-chain.sh`): on a merged PR it verifies the merge, deletes the branch if still present unless BRANCH_EVIDENCE gives a reason, verifies the deletion and runs check 27; it also runs a daily sweep.
+- `scripts/hooks/pre-push` runs the guard on `origin/main..local`; `package.json` gains `state:verify` and `state:current`; `scripts/state/current-state.sh` derives where the project stands from `main` for the next agent.
+- `scripts/checks/test-governance.sh` sources the new cases; its final positive case is a ledger-only change and now declares `**Kind:**`. `scripts/checks/lib/required-artifacts.sh` requires the new rule. `docs/12-testing/BASELINE.json`: `governance_checks` 25 → 27 with its fingerprint recomputed by `baseline_canon.py` (check 11 blocked the stale count, so it travels in this PR).
+- Rule `docs/00-rules/STATE_SYNC_RULE.md` and `docs/15-decisions/ADR-061-state-sync-invariant.md`. Corrected by addition in `docs/00-rules/WORK_CLAIM_RULE.md` §5, `docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md` §6/§8.1/§9, `docs/16-progress/WORK_CLAIMS.md` §1, `docs/16-progress/README.md`, `docs/00-rules/DEFINITION_OF_DONE.md`, `docs/00-rules/PUSH_DOCUMENTATION_RULE.md` and `README.md`.
+
+**Debt corrected by addition (this PR, not a later one):** the 20 stale `**Status:**` lines keep their text and gain `→ corrected by addition (CLM-0467)` with the merging PR and commit measured on GitHub. `CLM-0461` is `Released` with the reason. Branch `docs/clm-0461-risk-0042-wave3` is deleted and the deletion verified.
+
+**Found by CI on the first push (579 pass · 1 fail):** the existing RISK-0037 pipe guard `validate-guard-pipelines.sh` read `|| grep -qF` in `gov-cases-state-sync.sh` as a pipe into `grep -q`. The case is rewritten as explicit `if`/`elif`; the guard is untouched.
+
+**Calibration on real history:** the guard blocks #619 and #617 as merged (claim `Active`, "PR pending", no `**Risk(s):**`, unit not named) and blocks the release PRs #620/#618 as catch-up. Those are the failures this rule exists for.
+
+**Not machine-enforceable (stated in the rule §12):** whether what an entry says is true; the reasons given in `Kind`/`No-Test-Reason`/`Risk(s): none` (judged by the code owner); merges outside a PR (prevented by branch protection, not this guard); an agent that stops after opening a PR leaves an open PR, which is visible to the next agent but still needs finishing.
+
+**Next:** after merge, confirm `main` CI is green and that the head branch is deleted (by the setting, with the workflow as backstop). Then resume M0-49 (RISK-0042) from its `**Next:**` under CLM-0466.

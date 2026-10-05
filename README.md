@@ -196,6 +196,8 @@ wasla/
 
 ## 8. أول يوم للمطور الجديد
 
+> **أيُّ وكيلٍ أو مساهمٍ يبدأ من هنا:** [`docs/00-rules/STATE_SYNC_RULE.md`](docs/00-rules/STATE_SYNC_RULE.md) ثمّ `bash scripts/state/current-state.sh` — حالةُ المشروعِ الحاليّةُ تُقرأ من `main` نفسِه، والعملُ لا يكتملُ حتى يحملَ الطلبُ الواحدُ الكودَ والاختباراتِ والأدلّةَ وحالةَ المشروع (`M0-52`).
+
 1. اقرأ [`CONTRIBUTING.md`](CONTRIBUTING.md) و[`SECURITY.md`](SECURITY.md).
 2. اقرأ القوانين في [`docs/00-rules/`](docs/00-rules/).
 3. حدد فريقك في [`CODEOWNERS`](CODEOWNERS).

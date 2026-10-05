@@ -76,6 +76,8 @@ Evidence
 
 ## 3. MR Definition of Done (Checklist)
 
+> **ثابتُ التسليم (`M0-52` · [`STATE_SYNC_RULE.md`](STATE_SYNC_RULE.md) §2 و§6):** لا يكتملُ العملُ عندَ انتهاءِ الكود؛ يكتملُ حينَ تكونُ `implementation + tests + evidence + project state` في الطلبِ نفسِه، ويمرُّ `bash scripts/checks/validate-state-sync.sh` بـ`PASS — project state synchronized`. قائمةُ ما قبلَ الدفعِ وما بعدَ الدمجِ هناك وهيَ مُلزِمة.
+
 عند فتح/دمج Merge Request يجب أن تكون كل الخانات محققة:
 
 ```text

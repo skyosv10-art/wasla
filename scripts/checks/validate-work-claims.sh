@@ -288,6 +288,31 @@ while IFS=$'\t' read -r cid _ _ branch scope _ _; do
   MY_SCOPES="${MY_SCOPES:+$MY_SCOPES,}$scope"
 done < "$ACTIVE_TSV"
 
+# ── الحجزُ المُقفَلُ في التغييرِ نفسِه (CLM-0467 · M0-52 · STATE_SYNC_RULE.md §4) ──
+# في النموذجِ التسلسليِّ يُقفَلُ الحجزُ (`Released`) **داخلَ طلبِ الدمجِ نفسِه**، لأنّ صفَّ
+# الحجزِ لا يبلغُ `main` إلّا بالدمجِ — فالدمجُ هوَ التحريرُ، ولا طلبَ إفراجٍ لاحقٌ.
+# ولا يُرخِّصُ هذا نطاقاً قديماً: يُحتسَبُ الصفُّ المُقفَلُ **إن كانَ سطرُهُ مُضافاً أو
+# مُعدَّلاً في هذا النطاقِ بعينِه** (OLD..NEW) ولفرعِ الدفعِ نفسِه. فصفٌّ `Released` قديمٌ
+# لفرعٍ أُعيدَ اسمُهُ لا يُغطّي شيئاً، ونطاقُ الصفِّ هوَ نفسُهُ ما يُقاسُ عليهِ الاحتواءُ أدناه.
+CLOSED_IN_RANGE="$(git -c color.ui=false diff --unified=0 "$OLD_REF" "$NEW_REF" -- "$CLAIMS" 2>/dev/null \
+  | python3 -c '
+import re, sys
+branch = sys.argv[1]
+for l in sys.stdin:
+    if not l.startswith("+") or l.startswith("+++"):
+        continue
+    cols = [c.strip() for c in l[1:].strip().strip("|").split("|")]
+    if len(cols) < 8 or not re.match(r"^CLM-\d+$", cols[0]):
+        continue
+    if cols[3] == branch and re.match(r"^(Released|Cancelled)\b", cols[7]):
+        print(cols[0] + "\t" + cols[4])
+' "$BRANCH")"
+while IFS=$'\t' read -r cid scope; do
+  [[ -n "${cid:-}" ]] || continue
+  MY_CID="${MY_CID:+$MY_CID + }$cid (مُقفَلٌ في هذا النطاق)"
+  MY_SCOPES="${MY_SCOPES:+$MY_SCOPES,}$scope"
+done <<< "$CLOSED_IN_RANGE"
+
 [[ -n "$MY_CID" ]] || fail "لا حجز نشط للفرع «$BRANCH».
      أضف سطراً في $CLAIMS قبل الدفع، وشغّل قبله:
        bash scripts/checks/find-existing-work.sh \"<المجال>\"

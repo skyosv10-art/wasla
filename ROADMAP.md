@@ -1705,3 +1705,4 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 - Read-only: approvals are **not** required on `main` (GraphQL `requiresApprovingReviews:false`; 0-review PR `CLEAN`); the
   REST sub-endpoint's `count=1` is not enforcement. ROOT CAUSE: CONFIGURATION DEFECT · API discrepancy: NOT VERIFIED.
 - GOV-002 ON HOLD; owner dependency A (independent reviewer/team valid as CODEOWNER) or B (CODEOWNERS redesign). NO-GO active.
+

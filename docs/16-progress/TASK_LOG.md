@@ -1,3 +1,19 @@
+# 2026-10-06 — CLM-0487 — M6-18B: Owner decisions executed — RISK-0055 closed, RISK-0061 closed
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0055 → closed (ADR-066 permanent RPO amendment) · RISK-0061 → closed (ADR-067 cross-region latency accepted) · RISK-0058 → mitigating (unchanged) · RISK-0060 → mitigating (unchanged)
+- **Evidence:**
+  - ADR-066: permanently amends ADR-052 §1 T1 RPO target from 5 min to 6 h; supersedes ADR-058
+  - ADR-067: formally accepts cross-region latency (Render Oregon ↔ Supabase Mumbai); 1/98 false 503 rate accepted
+  - RISK_REGISTER.md updated: RISK-0055 and RISK-0061 marked closed
+  - Render deploy root cause confirmed: deploy of last known working commit (93a4e336) also fails in <1s — issue is on Render's side (can't fetch from public GitHub repo), not code-related
+  - GitHub secrets set: RENDER_API_KEY, RENDER_OWNER_ID, CUSTOMER_BOT_TOKEN, DRIVER_BOT_TOKEN, PARTNER_BOT_TOKEN
+  - Render env vars set: CUSTOMER_BOT_TOKEN on wasla-customer-bot, DRIVER_BOT_TOKEN on wasla-driver-bot, PARTNER_BOT_TOKEN on wasla-partner-bot
+  - Supabase Enforce SSL API: no programmatic endpoint found; requires dashboard toggle or token with database_ssl_config_write on production project ppixaauyqoykrogwdxtv
+  - Remaining M6-18B blockers: RISK-0058 (production DB partition drill — needs production DB access), RISK-0060 (Supabase Enforce SSL — needs production dashboard toggle)
+
 # 2026-10-06 — CLM-0477 — M0-49: RISK-0042 A1 — audit actor fields derived from token
 
 - **Work Item(s):** M0-49

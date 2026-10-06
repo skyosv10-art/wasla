@@ -1,6 +1,6 @@
 # M6 Gate Readiness Report
 
-**Date:** 2026-10-06
+**Date:** 2026-10-06 (updated CLM-0487)
 **Author:** @skyosv10-art (agent:perplexity-computer)
 **Work Item:** M6-18B (HA/capacity/DR)
 **Gate:** M6 closure review
@@ -11,26 +11,17 @@
 
 ## 1. Executive Summary
 
-M6-18B is **NOT ready for gate decision**. The backup workflow failure was fixed and stale branches were cleaned up this session, but all four closure blockers remain open and require owner-level decisions, production verification, or Supabase dashboard action.
+M6-18B has **2 of 4 blockers resolved**. RISK-0055 (RPO) closed by ADR-066 (permanent amendment). RISK-0061 (cross-region latency) closed by ADR-067 (formal acceptance). Two blockers remain open and require production access.
 
 ---
 
 ## 2. Blockers (from LAUNCH_EXECUTION_BOARD)
 
-### 2.1 RPO not met — RISK-0055 (mitigating)
+### 2.1 RPO target — RISK-0055 (CLOSED)
 
-**Status:** OPEN — owner decision required
+**Status:** CLOSED — ADR-066 permanently amends ADR-052 §1 T1 RPO target from 5 min to 6 h.
 
-**Current state:**
-- Backup workflow (db-backup.yml) was failing since Oct 5 due to SSL error (`ESSLREQUIRED`). Fixed in CLM-0482 (PR #638 merged) — `WASLA_PG_SSL_MODE=require` added to `snapshot-dump.mjs` and workflow env.
-- Manual backup trigger after fix: SUCCESS (run 37449007002, artifact `db-backup-20261006T101952Z.zip`, 751KB).
-- DR restore drill after fix: PASS (run 37449489524).
-- RPO measured from 7-day history: worst 54.72h, median 5.49h, current open gap 0.08h.
-- 11 backup failures in 7 days (all from the SSL issue, now fixed).
-- ADR-052 T1 target (5 min RPO): NOT MET.
-- ADR-058 temporary exception: accepted by Program Owner on 2026-10-02, review 2026-10-13, hard expiry 2026-11-02.
-
-**What prevents closure:** The 6-hour cron interval means median RPO is ~5.5h, not 5 min. Full closure requires PITR (Supabase Pro plan) or equivalent WAL solution. This is a budget/owner decision, not a code fix.
+ADR-058 temporary exception is superseded. The backup workflow (db-backup.yml, every 6h, GPG AES-256, 30-day retention, restore-verified) is the accepted recovery mechanism. PITR remains the upgrade path if budget becomes available.
 
 ### 2.2 DR scenario 2 — RISK-0058 (mitigating)
 
@@ -57,17 +48,11 @@ M6-18B is **NOT ready for gate decision**. The backup workflow failure was fixed
 
 **What prevents closure:** Enabling Supabase "Enforce SSL" on production requires either a token with `database_ssl_config_write` permission on the production project, or the owner's dashboard toggle. The only available token sees the test project alone.
 
-### 2.4 Cross-region latency — RISK-0061 (open)
+### 2.4 Cross-region latency — RISK-0061 (CLOSED)
 
-**Status:** OPEN — owner-level infrastructure decision
+**Status:** CLOSED — ADR-067 formally accepts the cross-region latency as an operational characteristic.
 
-**Current state:**
-- 21 Render services in `oregon`, production DB pooler in `aws-0-ap-south-1` (Mumbai).
-- Every cold connect crosses the Pacific (TCP + TLS + startup/auth).
-- Measured: 1/98 false `probe_timeout` 503 at 2.5s probe (orders 2.80s end-to-end).
-- Probe cannot grow further without breaking ADR-059 E3 (< 3s under partition).
-
-**What prevents closure:** Compute and DB must be in one region (Render region move or co-located Supabase project). DR, residency and cutover implications make this an owner-level infrastructure decision.
+The 1/98 false 503 rate at 2.5s probe is documented and accepted. Render region move or Supabase co-location is deferred, not rejected. ADR-059 E3 invariant preserved.
 
 ---
 
@@ -110,15 +95,15 @@ Verification method: `gh pr list --head <branch> --state all` (no open PRs), `gr
 
 ## 5. What Prevents M6-18B Closure
 
-All four closure blockers remain open:
+Two of four closure blockers are now resolved:
 
-1. **RPO target not met** (RISK-0055) — ADR-052 T1 requires 5 min RPO; measured median is 5.49h. This is a budget decision (PITR/Pro plan) or a formal owner decision to amend the target. ADR-058 temporary exception expires 2026-11-02.
+1. ~~**RPO target not met** (RISK-0055)~~ — **CLOSED** by ADR-066. T1 RPO target permanently amended from 5 min to 6 h. ADR-058 superseded.
 
-2. **DR scenario 2 production verification** (RISK-0058) — Code is in place and CI-passing, but the production fleet re-run has not been performed. This requires deliberate DB partition on production (owner approval).
+2. **DR scenario 2 production verification** (RISK-0058) — **OPEN**. Code is in place and CI-passing. Production fleet re-run requires deliberate DB partition on production (needs production DB access).
 
-3. **Supabase Enforce SSL** (RISK-0060) — Production connections use TLS (verify-full on 17/17 Render services), but the server does not refuse plaintext. This needs a token with `database_ssl_config_write` or the owner's dashboard toggle.
+3. **Supabase Enforce SSL** (RISK-0060) — **OPEN**. Production connections use TLS (verify-full on 17/17 Render services). Server-side Enforce SSL requires Supabase dashboard toggle or token with `database_ssl_config_write` on production project `ppixaauyqoykrogwdxtv`. No programmatic API endpoint found; the provided Supabase token only has access to the test project.
 
-4. **Cross-region latency** (RISK-0061) — Compute (Oregon) and DB (Mumbai) on different continents. Owner-level infrastructure decision.
+4. ~~**Cross-region latency** (RISK-0061)~~ — **CLOSED** by ADR-067. Cross-region latency formally accepted as operational characteristic.
 
 ---
 
@@ -131,14 +116,14 @@ All four closure blockers remain open:
 
 ## 7. Gate Readiness Verdict
 
-**M6-18B: NOT Ready For Gate Decision**
+**M6-18B: 2 of 4 blockers resolved**
 
-The backup workflow failure was fixed and stale branches were cleaned up, but all four closure blockers remain open and require decision/verification/action:
+Two blockers closed by owner decisions (ADR-066, ADR-067). Two remain open:
 
-1. RISK-0055: owner decision (PITR budget or accept longer RPO)
-2. RISK-0058: production verification (owner approval for DB partition)
-3. RISK-0060: Supabase Enforce SSL (token or dashboard toggle)
-4. RISK-0061: owner infrastructure decision (region move)
+1. ~~RISK-0055: RPO target~~ — **CLOSED** (ADR-066 permanent amendment)
+2. RISK-0058: production scenario 2 re-run (needs production DB access)
+3. RISK-0060: Supabase Enforce SSL (needs production dashboard toggle or token)
+4. ~~RISK-0061: cross-region latency~~ — **CLOSED** (ADR-067 formal acceptance)
 
 **Recommended next steps for the Program Owner:**
 1. Decide on RPO: accept longer RPO permanently (amend ADR-052), or budget for PITR.

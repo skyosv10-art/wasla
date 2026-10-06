@@ -8958,9 +8958,9 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/OPERATIONAL_READINESS_REVIEW_2026-10-06.md` — brief operational readiness review (Production DB, migration state, Render connectivity, backup/restore baseline, M6 gates)
   - No code changes — docs-only
 
-# 2026-10-06 — CLM-0482 — M6-18B: RISK-0060 backup SSL fix
+# 2026-10-06 — CLM-0482 — M0-49, M6-18B: RISK-0060 backup SSL fix
 
-- **Work Item(s):** M6-18B
+- **Work Item(s):** M0-49, M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
 - **Risk(s):** RISK-0060 → mitigating; RISK-0055 → mitigating

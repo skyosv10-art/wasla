@@ -1227,3 +1227,4 @@ CI مقروءٍ برقمِ تشغيلٍ، لا بأخضرَ محلّيٍّ ول�
 **ما بقيَ — منقولٌ لا مطويٌّ:** الحداثةُ ليست جزءاً من الجاهزيّةِ (فهرسٌ متأخِّرٌ
 يُقرأُ جاهزاً) ⇒ `RISK-0032`.
 
+RISK-0062 | sev:medium | owner:@skyosv10-art (agent:perplexity-computer) | opened:2026-10-06 | review:2026-12-08 | status:mitigating | ref:docs/00-rules/SECURITY_RULES.md §11 | **Dev dependency vulnerabilities (source-map-js, tinypool):** three GHSA advisories in transitive dev dependencies of vitest — source-map-js GHSA-68fv-2mgg-jv7q (high), tinypool GHSA-5gmw-xhrv-c9v3 (critical), tinypool GHSA-85c8-ppgw-ccpr (critical). These are dev-only dependencies not shipped in production. The exploit paths require running untrusted code in vitest workers or browser mode, which the repository does not do. Accepted as exceptions in SECURITY_RULES.md §11 with expiry 2026-12-08, to be resolved with the vitest major version upgrade. |

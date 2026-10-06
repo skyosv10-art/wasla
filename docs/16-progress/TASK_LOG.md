@@ -1,3 +1,15 @@
+# 2026-10-06 — CLM-0491 — BOT_PRECHECK (read-only): BLOCKED_PRECHECK
+
+- **Work Item(s):** M6-18B (INC-0002 context)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** none new — INC-0002 → open (confirmed, not fixed); RISK-0063 → open (unchanged)
+- **Result:** TEST_STATUS = BLOCKED_PRECHECK. On all 3 bots, `/health` is 200, but the required `*_BOT_WEBHOOK_SECRET` and `*_BOT_MINI_APP_URL` are absent from the service configuration, and Telegram `getWebhookInfo` returns an empty `url` (no webhook registered). `/start`, the Mini App and the test order were not run.
+- **Not done:** no deploy, no restart, no Render/secret/token change, no restore, no `setWebhook`, no message sent. No value was printed or stored.
+- **Tests:** `validate-state-sync.sh`, `require-doc-update.sh`, `validate-work-claims.sh`, `validate-launch-board.sh` against `origin/main`.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-06T165424Z-clm-0491-bot-precheck/README.md`
+- **Next step:** owner authorization to restore the bot configuration (INC-0002) and register the webhooks, then re-run the precheck.
+
 # 2026-10-06 — CLM-0490 — RISK-0052: review extended by written owner decision
 
 - **Work Item(s):** M3-08 (where RISK-0052 was raised)

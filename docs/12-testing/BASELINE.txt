@@ -1,8 +1,8 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-06T13:48:04Z
-الالتزام: 3da6dcbe4e50a7a3612bfa1364eae240ff6296d1  الفرع: docs/clm-0487-m6-18b-owner-decisions-execution  شجرةٌ نظيفةٌ
-البيئة: node v20.20.2 · pnpm unknown · Linux/x86_64 · python 3.14.3
+التاريخ (UTC): 2026-10-06T13:59:33Z
+الالتزام: b39e7ecdac6dda0c31633f08cc48b40100a731f2  الفرع: docs/clm-0487-m6-18b-owner-decisions-execution  شجرةٌ نظيفةٌ
+البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 5062 سطراً · sha256 26958c6f816b0e1f…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
@@ -15,12 +15,12 @@
   governance_checks          27
   risks_not_closed           21
 
-العدَّاداتُ الحركيّةُ (غيرُ مقيسةٍ — لم يُمرَّر سجلُّ تحقّقٍ):
-  tests_passed               —
-  test_files_executed        —
-  governance_suite_cases     —
-  governance_suite_failed    —
-  verify_overall             —
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt):
+  tests_passed               5828
+  test_files_executed        407
+  governance_suite_cases     541
+  governance_suite_failed    0
+  verify_overall             passed
 
 البصمة: sha256:9d113b0ef4075ac3a21e1625bacc649e5cb4bc3df3c8e5a646269ec929c93f50
 المرجع: docs/12-testing/BASELINE_FORMAT.md

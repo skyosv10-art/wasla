@@ -3,6 +3,7 @@
 - **Work Item(s):** M7-01 (review), M6-18B (corrections)
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
+- **Risk(s):** RISK-0063 → open (new) · RISK-0060 → mitigating (unchanged; evidence added) · RISK-0055 → closed (unchanged; ratification note) · RISK-0061 → closed (unchanged; ratification note) · INC-0002 → open (new incident)
 - **Verdict:** READY_FOR_M7 = NO. M6 is not complete (M6-18B Blocked; M6-18C/19A/19B/19C Ready for Gate; M6-19A pentest not performed).
 - **Found live:**
   - `main` red after #643: WASLA CI run 37476654077 on `409c17f`, gate 11 door 4, BASELINE `repo.commit` `b39e7ec` gone after the squash merge. Fixed here (`repo.commit` → `409c17f`, branch `main`).

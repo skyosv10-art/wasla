@@ -3,12 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "c39785d558839218e45929e029f0fb83a0e32f27",
-    "branch": "fix/risk-0060-backup-ssl",
-    "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "BASELINE regenerated for CLM-0482",
-    "tracked_files": 3117
+    "commit": "6a16b816c206e80366667c8f377f0c74265fca25",
+    "branch": "fix/baseline-main-after-638",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": ""
   },
   "env": {
     "node": "v20.20.1",
@@ -42,5 +41,16 @@
     "verify_overall": "passed"
   },
   "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md"
+  "reference": "docs/12-testing/BASELINE_FORMAT.md",
+  "claim": {
+    "id": "CLM-0483",
+    "branch": "fix/baseline-main-after-638",
+    "scope": [
+      "docs/12-testing/BASELINE.json",
+      "docs/16-progress/WORK_CLAIMS.md",
+      "docs/16-progress/TASK_LOG.md",
+      "docs/16-progress/LAUNCH_EXECUTION_BOARD.md",
+      "ROADMAP.md"
+    ]
+  }
 }

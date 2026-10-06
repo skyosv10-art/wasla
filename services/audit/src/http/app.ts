@@ -70,24 +70,34 @@ export function createAuditApp(options: CreateAuditAppOptions): FastifyInstance 
     { config: adminScoped(AUDIT_SCOPES.write) },
     async (request, reply) => {
       const body = request.body as {
-        actor_id?: unknown;
-        actor_role?: unknown;
         action?: unknown;
         resource_type?: unknown;
         resource_id?: unknown;
         metadata?: unknown;
       };
 
-      const actorId = typeof body?.actor_id === "string" ? body.actor_id.trim() : "";
-      const actorRole = typeof body?.actor_role === "string" ? body.actor_role.trim() : "";
+      // ADR-063 PO-002 (CLM-0477): actor_id and actor_role are derived from the verified
+      // service token, not accepted from the request body.
+      const caller = request.serviceCaller;
+      const actorId = caller?.onBehalfOfPublicId ?? caller?.serviceName ?? "";
+      const actorRole = caller?.serviceName ?? "";
+
       const action = typeof body?.action === "string" ? body.action.trim() : "";
       const resourceType = typeof body?.resource_type === "string" ? body.resource_type.trim() : "";
       const resourceId = typeof body?.resource_id === "string" ? body.resource_id.trim() : "";
 
-      if (!actorId || !actorRole || !action || !resourceType || !resourceId) {
+      if (!action || !resourceType || !resourceId) {
         throw new AuditError(
           "AUDIT_INVALID_EVENT",
-          "جميع الحقول المطلوبة: actor_id, actor_role, action, resource_type, resource_id",
+          "الحقول المطلوبة: action, resource_type, resource_id",
+          { traceId: request.id },
+        );
+      }
+
+      if (!actorId || !actorRole) {
+        throw new AuditError(
+          "AUDIT_INVALID_EVENT",
+          "هوية الخدمة غير متوفرة: actor_id و actor_role يشتقان من الرمز",
           { traceId: request.id },
         );
       }

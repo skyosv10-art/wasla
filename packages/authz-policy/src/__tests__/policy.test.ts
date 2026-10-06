@@ -485,7 +485,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     // والإسنادُ صارَ قرارَ تصميمٍ لا فجوة).
     // و13 قبلَ CLM-0474 (D1 و D3 ارتقيا من `none` إلى `asserted`).
     // و11 قبلَ CLM-0475 (D2 و D6 و S1-S4 ارتقتْ من `none` إلى `asserted`).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(5);
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(4);
     const transition = wave3.find((b) => b.audience === "orders" && b.path === "/orders/:orderId/transitions");
     expect(transition?.note).toContain("CLM-0465");
     expect(transition?.evidence).toContain("transitionCaller?.onBehalfOfPublicId");

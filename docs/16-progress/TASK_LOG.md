@@ -1,3 +1,27 @@
+# 2026-10-06 — CLM-0477 — M0-49: RISK-0042 A1 — audit actor fields derived from token
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0042 → open (A1 gap closed; P2 remediation continues; D4 blocked, D5 pending, R1/R2/B1/B2 by decision, P3 deferred)
+- **Evidence:**
+  - CI on the CLM-0477 PR green (all checks)
+  - `@wasla/audit-service` 18/18, `@wasla/authz-policy` 52/52
+  - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md` — A1 gap note updated
+  - Wave 3 measured gaps: 5→4
+- **What changed:**
+  - A1: `POST /audit/events` — `actor_id`/`actor_role` removed from request body
+  - `actorId` derived from `request.serviceCaller?.onBehalfOfPublicId` (obo) or `request.serviceCaller?.serviceName`
+  - `actorRole` derived from `request.serviceCaller?.serviceName`
+  - OpenAPI `CreateAuditEvent` schema updated (required fields: `action`, `resource_type`, `resource_id`)
+  - Body-supplied `actor_id`/`actor_role` are silently ignored (not validated, not used)
+  - 1 new test: "ignores actor_id and actor_role in body (derived from token)"
+  - 18 existing tests updated to remove `actor_id`/`actor_role` from payload
+  - Wave 3 measured gaps: 5→4
+  - RISK-0042 stays `open`
+- **Governance checks:** validate-authz-policy PASS, validate-baseline PASS
+- **Merged:** squash merge to main, branch deleted
+
 # 2026-10-06 — CLM-0476 — M0-49: RISK-0042 Batch 3 — U1 low-priority Class A gap remediated
 
 - **Work Item(s):** M0-49

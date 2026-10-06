@@ -1540,8 +1540,8 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     path: "/audit/events",
     dimension: "owner",
     strength: "none",
-    evidence: "services/audit/src/http/app.ts:adminScoped(AUDIT_SCOPES.write) options.deps.repo.append({",
-    note: "`none`: **فجوةٌ مقيسةٌ:** `actor_id`/`actor_role` من الجسمِ ويُكتَبانِ في سجلِّ التدقيقِ بلا تحقُّقٍ؛ حاملُ `audit:write` يكتبُ حدثاً باسمِ أيِّ فاعلٍ. سلطةٌ إداريّةٌ لا مُنتَفِعَ لها.",
+    evidence: "services/audit/src/http/app.ts:adminScoped(AUDIT_SCOPES.write) request.serviceCaller options.deps.repo.append({",
+    note: "ADR-063 PO-002 (CLM-0477): `actor_id`/`actor_role` removed from request body and derived from the verified service token (`obo` → `actorId`, `serviceName` → `actorRole`). Gap closed: callers can no longer impersonate arbitrary actors. `adminScoped` stays — audit is an admin-only operation, not an end-user resource.",
   },
   {
     audience: "audit",

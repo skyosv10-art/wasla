@@ -36,8 +36,13 @@ export function signFor(
     scopes?: readonly string[];
     serviceName?: string;
     now?: Date;
+    onBehalfOfPublicId?: string | null;
   } = {},
 ): Record<string, string> {
+  const beneficiary =
+    options.onBehalfOfPublicId === undefined
+      ? undefined
+      : (options.onBehalfOfPublicId ?? undefined);
   return serviceAuthHeaders({
     serviceName: options.serviceName ?? "admin-portal",
     audience: AUDIT_SERVICE_AUDIENCE,
@@ -46,6 +51,7 @@ export function signFor(
     keys: options.keys ?? createTestKeyRegistry(),
     now: options.now ?? new Date(),
     scopes: options.scopes ?? ALL_AUDIT_SCOPES,
+    ...(beneficiary === undefined ? {} : { onBehalfOfPublicId: beneficiary }),
   });
 }
 

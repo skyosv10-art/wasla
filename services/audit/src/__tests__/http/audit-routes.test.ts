@@ -3,6 +3,9 @@
  *
  * Tests POST /audit/events (append), GET /audit/events (list with filters),
  * validation, immutability (no update/delete routes), and authz.
+ *
+ * ADR-063 PO-002 (CLM-0477): actor_id and actor_role are derived from the
+ * verified service token, not accepted from the request body.
  */
 
 import { describe, expect, it } from "vitest";
@@ -11,8 +14,6 @@ import { buildSignedAuditApp, signFor } from "../helpers.js";
 import { AUDIT_SCOPES } from "../../http/service-identity.js";
 
 const validEvent = {
-  actor_id: "WS-1000000001",
-  actor_role: "operator",
   action: "driver.suspend",
   resource_type: "driver",
   resource_id: "WS-2000000001",
@@ -31,8 +32,9 @@ describe("POST /audit/events", () => {
     expect(response.statusCode).toBe(201);
     const body = response.json();
     expect(body.id).toBe(1);
-    expect(body.actor_id).toBe("WS-1000000001");
-    expect(body.actor_role).toBe("operator");
+    // actor_id and actor_role are derived from the verified service token
+    expect(body.actor_id).toBe("admin-portal");
+    expect(body.actor_role).toBe("admin-portal");
     expect(body.action).toBe("driver.suspend");
     expect(body.resource_type).toBe("driver");
     expect(body.resource_id).toBe("WS-2000000001");
@@ -40,12 +42,27 @@ describe("POST /audit/events", () => {
     expect(body.created_at).toBeTruthy();
   });
 
+  it("derives actor_id from obo when present", async () => {
+    const { app, keys } = buildSignedAuditApp();
+    const response = await app.inject({
+      method: "POST",
+      url: "/audit/events",
+      payload: validEvent,
+      headers: signFor("POST", "/audit/events", { keys, onBehalfOfPublicId: "WS-1000000001" }),
+    });
+
+    expect(response.statusCode).toBe(201);
+    const body = response.json();
+    expect(body.actor_id).toBe("WS-1000000001");
+    expect(body.actor_role).toBe("admin-portal");
+  });
+
   it("rejects missing required fields with 400", async () => {
     const { app } = buildSignedAuditApp();
     const response = await app.inject({
       method: "POST",
       url: "/audit/events",
-      payload: { actor_id: "WS-1" },
+      payload: { action: "test" },
     });
 
     expect(response.statusCode).toBe(400);
@@ -58,8 +75,6 @@ describe("POST /audit/events", () => {
       method: "POST",
       url: "/audit/events",
       payload: {
-        actor_id: "WS-1",
-        actor_role: "admin",
         action: "test",
         resource_type: "test",
         resource_id: "WS-2",
@@ -76,9 +91,7 @@ describe("POST /audit/events", () => {
       method: "POST",
       url: "/audit/events",
       payload: {
-        actor_id: "  ",
-        actor_role: "operator",
-        action: "test",
+        action: "  ",
         resource_type: "test",
         resource_id: "test",
       },
@@ -86,6 +99,25 @@ describe("POST /audit/events", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("AUDIT_INVALID_EVENT");
+  });
+
+  it("ignores actor_id and actor_role in body (derived from token)", async () => {
+    const { app } = buildSignedAuditApp();
+    const response = await app.inject({
+      method: "POST",
+      url: "/audit/events",
+      payload: {
+        ...validEvent,
+        actor_id: "WS-ATTACKER",
+        actor_role: "superadmin",
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    const body = response.json();
+    // The body-supplied values are ignored; the token-derived values are used
+    expect(body.actor_id).toBe("admin-portal");
+    expect(body.actor_role).toBe("admin-portal");
   });
 });
 
@@ -129,9 +161,19 @@ describe("GET /audit/events", () => {
   });
 
   it("filters by actor_id", async () => {
-    const { app } = buildSignedAuditApp();
-    await app.inject({ method: "POST", url: "/audit/events", payload: { ...validEvent, actor_id: "WS-1" } });
-    await app.inject({ method: "POST", url: "/audit/events", payload: { ...validEvent, actor_id: "WS-2" } });
+    const { app, keys } = buildSignedAuditApp();
+    await app.inject({
+      method: "POST",
+      url: "/audit/events",
+      payload: { ...validEvent },
+      headers: signFor("POST", "/audit/events", { keys, onBehalfOfPublicId: "WS-1" }),
+    });
+    await app.inject({
+      method: "POST",
+      url: "/audit/events",
+      payload: { ...validEvent },
+      headers: signFor("POST", "/audit/events", { keys, onBehalfOfPublicId: "WS-2" }),
+    });
 
     const response = await app.inject({ method: "GET", url: "/audit/events?actor_id=WS-2" });
 

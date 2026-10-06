@@ -3,8 +3,8 @@
   "generated_at": "2026-10-03T05:04:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "2bc7d11c9beceeb32907fed8ed562bed6ea723b6",
-    "branch": "feat/clm-0476-risk-0042-batch3-low-priority",
+    "commit": "f080e067b4dc7e2048ff705c87df45affb2188dd",
+    "branch": "feat/clm-0477-risk-0042-a1-audit-actor-fields",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",

@@ -98,12 +98,8 @@ components:
   schemas:
     CreateAuditEvent:
       type: object
-      required: [actor_id, actor_role, action, resource_type, resource_id]
+      required: [action, resource_type, resource_id]
       properties:
-        actor_id:
-          type: string
-        actor_role:
-          type: string
         action:
           type: string
         resource_type:
@@ -113,6 +109,10 @@ components:
         metadata:
           type: object
           default: {}
+      description: |
+        ADR-063 PO-002 (CLM-0477): `actor_id` and `actor_role` are no longer accepted in the request body.
+        They are derived from the verified service token: `actor_id` from `obo` (on-behalf-of public id)
+        or the calling service name; `actor_role` from the calling service name.
     AuditEvent:
       type: object
       properties:

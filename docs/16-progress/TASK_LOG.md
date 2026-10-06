@@ -8983,13 +8983,13 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/12-testing/BASELINE.json` — repo.commit/branch/dirty updated to point to main HEAD after PR #638 merge (same pattern as CLM-0480).
 - **Code owner approval:** Required for `/docs/12-testing/` per CODEOWNERS.
 
-# 2026-10-06 — CLM-0484 — M0-08: BASELINE repo.commit points to main HEAD
+# 2026-10-06 — CLM-0485 — M6-18B: M6 Gate Readiness report
 
-- **Work Item(s):** M0-08
+- **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
-- **Risk(s):** RISK-0028 → mitigating (repo.commit resolves to existing commit on main)
-- **Evidence:** CI on fix/baseline-commit-main-head — door 4 will be verified on main after merge
-- **Deployment:** none — metadata-only fix
+- **Risk(s):** RISK-0055 → mitigating; RISK-0058 → mitigating; RISK-0060 → mitigating; RISK-0061 → open
+- **Evidence:** Backup run 37449007002 SUCCESS; DR restore drill 37449489524 PASS; 5 stale branches deleted
+- **Deployment:** none — report only
 - **What changed:**
-  - `docs/12-testing/BASELINE.json` — repo.commit changed from 6a16b816 (PR branch commit, deleted after squash merge) to main HEAD f5f085e2. Door 4 (RISK-0028) was failing on main.
+  - `docs/16-progress/M6_GATE_READINESS_2026-10-06.md` — M6 Gate Readiness report with 4 blockers assessed, updated risk statuses, stale branch deletion evidence, and recommended next steps for Program Owner.

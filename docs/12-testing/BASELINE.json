@@ -1,17 +1,18 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-06T01:46:02Z",
+  "generated_at": "2026-10-06T13:48:04Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f5f085e2e4360cfcb8b4d6046fc4e969d8a52765",
-    "branch": "main",
+    "commit": "3da6dcbe4e50a7a3612bfa1364eae240ff6296d1",
+    "branch": "docs/clm-0487-m6-18b-owner-decisions-execution",
     "dirty": false,
     "dirty_files": 0,
-    "dirty_reason": ""
+    "dirty_reason": "",
+    "tracked_files": 3125
   },
   "env": {
-    "node": "v20.20.1",
-    "pnpm": "9.15.9",
+    "node": "v20.20.2",
+    "pnpm": "unknown",
     "os": "Linux",
     "arch": "x86_64",
     "python": "3.14.3"
@@ -29,27 +30,33 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 27,
-    "risks_not_closed": 23
+    "risks_not_closed": 21
   },
   "dynamic": {
-    "measured": true,
-    "source": "docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt",
-    "tests_passed": 5828,
-    "test_files_executed": 407,
-    "governance_suite_cases": 541,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "measured": false,
+    "source": null,
+    "tests_passed": null,
+    "test_files_executed": null,
+    "governance_suite_cases": null,
+    "governance_suite_failed": null,
+    "verify_overall": null
   },
-  "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
+  "fingerprint": "sha256:9d113b0ef4075ac3a21e1625bacc649e5cb4bc3df3c8e5a646269ec929c93f50",
   "reference": "docs/12-testing/BASELINE_FORMAT.md",
   "claim": {
-    "id": "CLM-0484",
-    "branch": "fix/baseline-commit-main-head",
+    "id": "CLM-0487",
+    "branch": "docs/clm-0487-m6-18b-owner-decisions-execution",
     "scope": [
       "docs/12-testing/BASELINE.json",
+      "docs/12-testing/BASELINE.txt",
+      "docs/15-decisions/ADR-066-permanent-rpo-amendment.md",
+      "docs/15-decisions/ADR-067-accept-cross-region-latency.md",
+      "docs/07-security/RISK_REGISTER.md",
       "docs/16-progress/WORK_CLAIMS.md",
       "docs/16-progress/TASK_LOG.md",
       "docs/16-progress/LAUNCH_EXECUTION_BOARD.md",
+      "docs/16-progress/M6_GATE_READINESS_2026-10-06.md",
+      "docs/16-progress/RENDER_DEPLOY_INVESTIGATION_2026-10-06.md",
       "ROADMAP.md"
     ]
   }

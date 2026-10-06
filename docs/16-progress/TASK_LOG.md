@@ -8934,3 +8934,13 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **What changed:**
   - `docs/07-security/RISK_REGISTER.md` — RISK-0042 entry updated with CLM-0477/0478 status
   - No code changes — ledger-only
+
+# 2026-10-06 — CLM-0480 — M0-49: BASELINE repo metadata fix after #635 merge
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** none — ledger-only BASELINE metadata fix
+- **What changed:**
+  - `docs/12-testing/BASELINE.json` — repo.commit/branch/dirty reset to main, dirty=false
+  - No code changes — ledger-only

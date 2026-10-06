@@ -3,11 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ba7d412c446233e5880f2301e915ca453e051a35",
-    "branch": "docs/risk-0042-register-update",
-    "dirty": true,
+    "commit": "f1e1a8f8787d078d4f21e42bbd3a441203bcd1d1",
+    "branch": "main",
+    "dirty": false,
     "dirty_files": 0,
-    "dirty_reason": "CLM-0479: RISK-0042 register entry updated (ledger-only)",
+    "dirty_reason": "",
     "tracked_files": 3117
   },
   "env": {

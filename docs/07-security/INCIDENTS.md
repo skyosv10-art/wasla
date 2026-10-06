@@ -1,6 +1,6 @@
 # سجلُّ الحوادثِ — بيئةُ التنفيذِ والتشغيل
 
-**الحالة:** مُلزِم · **آخر تحديث:** `2026-09-01`
+**الحالة:** مُلزِم · **آخر تحديث:** `2026-10-06`
 **المرجع الحاكم:** [`RISK_REGISTER.md`](RISK_REGISTER.md) · [`docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md`](../00-rules/ENGINEERING_DOCUMENTATION_LAW.md)
 
 > **الفرقُ بين هذا السجلِّ وسجلِّ المخاطر:** سجلُّ المخاطرِ يُسجِّلُ ما **قد**
@@ -86,3 +86,43 @@ bash scripts/verify.sh: exit 0 · ستُّ فحوصٍ خضراء
 
 **ولزِمَ التسجيلُ لا الإصلاحُ فحسب:** لولا هذا السطرُ لَقرأَ مَن يأتي بعدُ أنّ
 `typecheck` أخفقَ مرّتَين على شجرةِ `main` — وهو غيرُ صحيحٍ تماماً.
+
+---
+
+## INC-0002 · محوُ إعداداتِ خدماتِ البوتاتِ الثلاثِ على Render بواجهةٍ تستبدلُ ولا تُضيف
+
+| | |
+|---|---|
+| **التاريخ** | 2026-10-06 (نحو 13:30Z · أثناء CLM-0487) · رُصِد 2026-10-06 ~15:00Z (CLM-0488) |
+| **الطبقة** | إعداداتُ الإنتاجِ على Render — `wasla-customer-bot` · `wasla-driver-bot` · `wasla-partner-bot` |
+| **الشدّة** | عالية — لا انقطاعَ بعدُ، والعطلُ كامنٌ يقعُ مع أوّلِ نشرٍ أو إعادةِ تشغيلٍ |
+| **الحالة** | `Open` — لم يُستعَد. الاستعادةُ تحتاجُ تفويضَ المالكِ وقيماً سرّيّةً ليست في المستودع |
+| **عنصرُ العمل** | M6-18B (سياقُ CLM-0487) · مرتبطٌ بـRISK-0063 |
+
+### المشكلة (كما ظهرت)
+
+أُرسِلَ `PUT /v1/services/{id}/env-vars` بجسمٍ فيه مفتاحٌ واحدٌ (رمزُ البوت) لكلِّ خدمةٍ، بقصدِ **إضافة** الرمز. وهذه الواجهةُ **تستبدلُ المجموعةَ كاملةً**. فسُجِّلَ النجاحُ في CLM-0487 بعبارةِ «Render env vars set»، والواقعُ أنّ كلَّ ما عدا الرمزِ مُحِي.
+
+### الأثرُ المقيس (أسماءُ المفاتيحِ فقط، لا القيم)
+
+| الخدمة | قبل (دليلُ CLM-0431، 2026-10-02) | الآن |
+|---|---|---|
+| wasla-customer-bot | 11 مفتاحاً: `CUSTOMER_BOT_MINI_APP_URL` `CUSTOMER_BOT_TOKEN` `CUSTOMER_BOT_WEBHOOK_SECRET` `CUSTOMER_DATABASE_URL` `DATABASE_URL` `IDENTITY_SERVICE_URL` `NODE_ENV` `OTEL_EXPORTER_OTLP_ENDPOINT` `WASLA_SERVICE` `WASLA_SERVICE_AUTH_ACTIVE_KID` `WASLA_SERVICE_AUTH_KEYS` | 1 (`CUSTOMER_BOT_TOKEN`) |
+| wasla-driver-bot | 10 مفاتيح: `DATABASE_URL` `DRIVER_BOT_MINI_APP_URL` `DRIVER_BOT_TOKEN` `DRIVER_BOT_WEBHOOK_SECRET` `IDENTITY_SERVICE_URL` `NODE_ENV` `OTEL_EXPORTER_OTLP_ENDPOINT` `WASLA_SERVICE` `WASLA_SERVICE_AUTH_ACTIVE_KID` `WASLA_SERVICE_AUTH_KEYS` | 1 (`DRIVER_BOT_TOKEN`) |
+| wasla-partner-bot | 10 مفاتيح: `DATABASE_URL` `IDENTITY_SERVICE_URL` `NODE_ENV` `OTEL_EXPORTER_OTLP_ENDPOINT` `PARTNER_BOT_MINI_APP_URL` `PARTNER_BOT_TOKEN` `PARTNER_BOT_WEBHOOK_SECRET` `WASLA_SERVICE` `WASLA_SERVICE_AUTH_ACTIVE_KID` `WASLA_SERVICE_AUTH_KEYS` | 1 (`PARTNER_BOT_TOKEN`) |
+
+وما أُضيفَ بعدَ 2026-10-02 (مثلُ `WASLA_PG_SSL_*`) لا يُعرَفُ من هذا الدليلِ، فيُستكمَلُ من خدمةٍ شقيقةٍ عندَ الاستعادة.
+
+### لماذا لم يقع انقطاعٌ بعد
+
+لم يُطلِق التغييرُ نشراً (لا حدثَ نشرٍ بعد 09:50Z على البوتات)، فالنسخُ الجاريةُ من `93a4e33` تحملُ إعداداتِها القديمةَ في الذاكرة. و`/health` في الثلاثِ `200` عندَ ~15:1xZ. ونفادُ دقائقِ البناءِ (RISK-0063) يمنعُ أيَّ نشرٍ الآن، فهو مصادفةً حاجزٌ مؤقّت.
+
+### الاستعادة (لم تُنفَّذ — تحتاجُ تفويضاً)
+
+1. جمعُ القيم: `WASLA_SERVICE_AUTH_*` و`DATABASE_URL` و`WASLA_PG_SSL_*` و`OTEL_*` من خدمةٍ شقيقةٍ، و`*_MINI_APP_URL` من روابطِ المواقعِ الثابتة، و`*_WEBHOOK_SECRET` من سجلّاتِ المالكِ أو بتوليدٍ جديدٍ مع إعادةِ تسجيلِ الـwebhook لدى Telegram.
+2. `PUT` **واحدٌ** يحملُ المجموعةَ **كاملةً** لكلِّ خدمة.
+3. التحقُّقُ قبلَ أيِّ نشر: أسماءُ المفاتيحِ تطابقُ دليلَ CLM-0431 مضافاً إليها مفاتيحُ TLS، وصفرُ نشرٍ مُطلَق، ثمّ `/health` بعدَ أوّلِ نشر.
+
+### الدرسُ المُستخلَص
+
+**«200 من PUT» ليس دليلاً على ما في الخدمة، كما أنّه لم يكن دليلاً على الحمايةِ في M0-22B.** فالكتابةُ تُتبَعُ بقياسٍ للحالةِ بعدَها، وواجهةٌ لا يُعرَفُ أتستبدلُ أم تُضيفُ تُقرأُ وثيقتُها قبلَ أوّلِ كتابةٍ في الإنتاج.

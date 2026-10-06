@@ -100,3 +100,13 @@ This investigation is read-only. No Render changes were made. To resolve:
 2. **Connect Render's GitHub integration** — this would replace the public URL with an authenticated connection, eliminating rate limiting.
 3. **Check Render build logs** — the Render API returns no build logs for `build_failed` deploys (the `logs` field is null). Dashboard access is needed to see the actual error.
 4. **Do not block M6 on this** — services are live and healthy. The deploy workflow is not a required CI check. Main CI (WASLA CI) is green.
+
+## 9. Correction (CLM-0488, 2026-10-06) — §7's conclusion is wrong
+
+§7 stays as written; this section corrects it by addition.
+
+- **The real cause is measured, not inferred.** Render's service events show a `pipeline_minutes_exhausted` event on every failed deploy: 54 failures across all 24 services since 2026-10-06T02:59:53Z, each ending in under 1 s with no `build_started`. The workspace build-minute quota is used up.
+- **"Render can't fetch from the public GitHub repo" was never measured.** It was a guess from the <1 s failure time. The repo URL test in §7.3 did not distinguish the two causes.
+- **"Env vars set" in §7.5 was not a success.** `PUT /services/{id}/env-vars` replaces the whole set, so the three bot services lost every other key. This is INC-0002 (`docs/07-security/INCIDENTS.md`).
+- **Classification:** Risk — RISK-0063 (`high`, `open`). Owner action: build minutes or a plan upgrade (budget), or accept the freeze until renewal. INC-0002 must be restored before the first successful deploy.
+- Full review: `docs/16-progress/M7_READINESS_REVIEW_2026-10-06.md` §8.

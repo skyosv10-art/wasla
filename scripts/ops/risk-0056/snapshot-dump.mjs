@@ -3,6 +3,12 @@
 //
 // Usage: node scripts/ops/risk-0056/snapshot-dump.mjs <dump_file> <counts.json>
 // Env:   BACKUP_SOURCE_DB_URL  source database — never printed
+//        WASLA_PG_SSL_MODE     off|require|verify-full (default: off)
+//        WASLA_PG_SSL_CA       PEM body (required for verify-full)
+//
+// RISK-0060 (CLM-0482): SSL support added for the backup workflow. When the
+// Supabase project enforces SSL, the Node.js client and pg_dump must both
+// use SSL. This reuses the same WASLA_PG_SSL_MODE pattern as pg-guard.ts.
 //
 // db-backup.yml (bc5de79) compares restored row counts with counts read from
 // the live database AFTER the dump; on a database taking writes those can
@@ -28,7 +34,36 @@ if (!url || !dumpFile || !countsFile) {
   process.exit(2);
 }
 
-const client = new pg.Client({ connectionString: url });
+// RISK-0060: build SSL config from WASLA_PG_SSL_MODE, same pattern as pg-guard.ts
+function buildSslConfig(env) {
+  const raw = env["WASLA_PG_SSL_MODE"];
+  if (!raw || raw === "off") return {};
+  if (raw !== "require" && raw !== "verify-full") {
+    console.error(`WASLA_PG_SSL_MODE must be one of "off", "require", "verify-full", got ${JSON.stringify(raw)}`);
+    process.exit(2);
+  }
+  if (raw === "require") return { ssl: { rejectUnauthorized: false } };
+  const ca = env["WASLA_PG_SSL_CA"];
+  if (!ca) {
+    console.error("WASLA_PG_SSL_MODE=verify-full requires WASLA_PG_SSL_CA to be set to the PEM certificate body");
+    process.exit(2);
+  }
+  return { ssl: { ca: ca.trim(), rejectUnauthorized: true } };
+}
+
+// Map WASLA_PG_SSL_MODE to PGSSLMODE for pg_dump (libpq)
+function pgSslMode(env) {
+  const raw = env["WASLA_PG_SSL_MODE"];
+  if (!raw || raw === "off") return undefined;
+  if (raw === "require") return "require";
+  if (raw === "verify-full") return "verify-full";
+  return undefined;
+}
+
+const sslConfig = buildSslConfig(process.env);
+const pgSslModeVal = pgSslMode(process.env);
+
+const client = new pg.Client({ connectionString: url, ...sslConfig });
 await client.connect();
 let failed = false;
 try {
@@ -49,10 +84,12 @@ try {
     )
   ).rows.map((r) => r.extname);
   const code = await new Promise((done) => {
+    const pgDumpEnv = { ...process.env };
+    if (pgSslModeVal) pgDumpEnv["PGSSLMODE"] = pgSslModeVal;
     const p = spawn(
       "pg_dump",
       ["--format=custom", "--no-owner", "--no-privileges", `--snapshot=${snapshot}`, `--file=${dumpFile}`, "--dbname", url],
-      { stdio: ["ignore", "ignore", "pipe"] },
+      { stdio: ["ignore", "ignore", "pipe"], env: pgDumpEnv },
     );
     let err = "";
     p.stderr.on("data", (d) => { err += d; });
@@ -63,7 +100,7 @@ try {
   });
   if (code !== 0) failed = true;
   writeFileSync(countsFile, `${JSON.stringify({ schema: "public", tables: counts, public_extensions: extensions }, null, 2)}\n`);
-  console.log(`stage 1 snapshot-dump: ${code === 0 ? "ok" : "FAILED"} · public tables=${tables.length} · public extensions=${extensions.length}`);
+  console.log(`stage 1 snapshot-dump: ${code === 0 ? "ok" : "FAILED"} · public tables=${tables.length} · public extensions=${extensions.length} · ssl=${pgSslModeVal || "off"}`);
 } finally {
   await client.query("COMMIT").catch(() => undefined);
   await client.end();

@@ -8957,3 +8957,15 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/07-security/RISK_REGISTER.md` — RISK-0042 entry updated with ADR-065 reference and D4 decision
   - `docs/16-progress/OPERATIONAL_READINESS_REVIEW_2026-10-06.md` — brief operational readiness review (Production DB, migration state, Render connectivity, backup/restore baseline, M6 gates)
   - No code changes — docs-only
+
+# 2026-10-06 — CLM-0482 — M6-18B: RISK-0060 backup SSL fix
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0060 → mitigating (backup workflow SSL fix); RISK-0055 → mitigating (backup restored)
+- **What changed:**
+  - `scripts/ops/risk-0056/snapshot-dump.mjs` — added `buildSslConfig()` and `pgSslMode()` functions that read `WASLA_PG_SSL_MODE` (off|require|verify-full) and configure `pg.Client` SSL + `PGSSLMODE` for the `pg_dump` subprocess. Same pattern as `pg-guard.ts`.
+  - `.github/workflows/db-backup.yml` — set `WASLA_PG_SSL_MODE: 'require'` in workflow env so the backup connects with SSL to the production Supabase project that enforces SSL.
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0060 entry updated with CLM-0482 backup SSL fix.
+  - Root cause fix: the backup script used a raw `pg.Client` without SSL and `pg_dump` without `PGSSLMODE`, while Supabase enforces SSL. Not an exception bypass.

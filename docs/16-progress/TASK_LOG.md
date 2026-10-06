@@ -8963,7 +8963,9 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
-- **Risk(s):** RISK-0060 → mitigating (backup workflow SSL fix); RISK-0055 → mitigating (backup restored)
+- **Risk(s):** RISK-0060 → mitigating; RISK-0055 → mitigating
+- **Evidence:** CI run on fix/risk-0060-backup-ssl (scheduled backup workflow will be triggered manually post-merge to verify SSL fix)
+- **Deployment:** none — code fix only; backup workflow runs on GitHub Actions, not Render; production Render services not changed
 - **What changed:**
   - `scripts/ops/risk-0056/snapshot-dump.mjs` — added `buildSslConfig()` and `pgSslMode()` functions that read `WASLA_PG_SSL_MODE` (off|require|verify-full) and configure `pg.Client` SSL + `PGSSLMODE` for the `pg_dump` subprocess. Same pattern as `pg-guard.ts`.
   - `.github/workflows/db-backup.yml` — set `WASLA_PG_SSL_MODE: 'require'` in workflow env so the backup connects with SSL to the production Supabase project that enforces SSL.

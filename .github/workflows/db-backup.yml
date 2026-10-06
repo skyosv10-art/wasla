@@ -85,6 +85,9 @@ env:
   PG_VERSION: '17'
   NODE_VERSION: '20.20.1'
   PNPM_VERSION: '9.15.9'
+  # RISK-0060 (CLM-0482): production Supabase enforces SSL; the backup
+  # script and pg_dump must connect with sslmode=require.
+  WASLA_PG_SSL_MODE: 'require'
 
 jobs:
   backup:

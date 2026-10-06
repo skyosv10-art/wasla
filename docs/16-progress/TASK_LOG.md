@@ -8983,6 +8983,18 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/12-testing/BASELINE.json` — repo.commit/branch/dirty updated to point to main HEAD after PR #638 merge (same pattern as CLM-0480).
 - **Code owner approval:** Required for `/docs/12-testing/` per CODEOWNERS.
 
+
+# 2026-10-06 — CLM-0484 — M0-08: BASELINE repo.commit points to main HEAD
+
+- **Work Item(s):** M0-08
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0028 → mitigating (repo.commit resolves to existing commit on main)
+- **Evidence:** CI on fix/baseline-commit-main-head — door 4 verified on main after merge
+- **Deployment:** none — metadata-only fix
+- **What changed:**
+  - `docs/12-testing/BASELINE.json` — repo.commit changed from 6a16b816 (PR branch commit, deleted after squash merge) to main HEAD f5f085e2. Door 4 (RISK-0028) was failing on main.
+
 # 2026-10-06 — CLM-0485 — M6-18B: M6 Gate Readiness report
 
 - **Work Item(s):** M6-18B

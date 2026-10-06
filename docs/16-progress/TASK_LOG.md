@@ -8993,3 +8993,4 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Deployment:** none — report only
 - **What changed:**
   - `docs/16-progress/M6_GATE_READINESS_2026-10-06.md` — M6 Gate Readiness report with 4 blockers assessed, updated risk statuses, stale branch deletion evidence, and recommended next steps for Program Owner.
+  - `docs/07-security/RISK_REGISTER.md` — Reviewed 2026-10-06 updates appended to RISK-0055, RISK-0058, RISK-0060, RISK-0061. Fixed RISK-0060 contradiction (CLM-0482 said "not switched to verify-full" but CLM-0457 set verify-full on 17/17 services).

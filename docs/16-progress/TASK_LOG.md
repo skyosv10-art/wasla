@@ -8972,3 +8972,13 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/07-security/RISK_REGISTER.md` — RISK-0060 entry updated with CLM-0482 backup SSL fix.
   - `docs/12-testing/BASELINE.json` — repo metadata updated for CLM-0482.
   - Root cause fix: the backup script used a raw `pg.Client` without SSL and `pg_dump` without `PGSSLMODE`, while Supabase enforces SSL. Not an exception bypass.
+
+# 2026-10-06 — CLM-0483 — M0-52: BASELINE repo metadata fix after #638 merge
+
+- **Work Item(s):** M0-52
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** none — metadata-only fix, no code change
+- **What changed:**
+  - `docs/12-testing/BASELINE.json` — repo.commit/branch/dirty updated to point to main HEAD after PR #638 merge (same pattern as CLM-0480).
+- **Code owner approval:** Required for `/docs/12-testing/` per CODEOWNERS.

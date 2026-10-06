@@ -23,6 +23,7 @@ bash scripts/checks/verify-governance.sh
 ### قواعد تعبئة الأعمدة
 
 | العمود | القاعدة |
+| CLM-0483 | M0-52 | @skyosv10-art (agent:perplexity-computer) | fix/baseline-main-after-638 | BASELINE repo metadata fix after #638 merge — main CI red (repo metadata on branch) | Released |
 |---|---|
 | `Claim ID` | `CLM-NNNN` تسلسلي، لا يُعاد استخدامه أبدًا |
 | `Work Item` | معرّف من [`LAUNCH_EXECUTION_BOARD.md`](LAUNCH_EXECUTION_BOARD.md) حصرًا بصيغة `Mx-yy` — لا عمل بلا عنصر |

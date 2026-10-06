@@ -1,3 +1,12 @@
+# 2026-10-06 — CLM-0489 — M7 readiness review: post-merge state correction
+
+- **Work Item(s):** M7-01 (review document only)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** none — text-only time correction; no risk, gate or ADR status changed
+- **Change:** `M7_READINESS_REVIEW_2026-10-06.md` now states current `main` = `fc655cc` (WASLA CI success, run 37490154580, 41/41). The `409c17f` failure (run 37476654077) is marked pre-merge/historical, and every "this PR" reference now points to #644.
+- **Not touched:** Production, Render, Supabase, secrets, ADR-052/066/067, RISK-0056, M7.
+
 # 2026-10-06 — CLM-0488 — M7 readiness review (review only, no execution)
 
 - **Work Item(s):** M7-01 (review), M6-18B (corrections)

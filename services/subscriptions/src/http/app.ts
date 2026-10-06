@@ -60,6 +60,7 @@ import {
   type HealthWire,
 } from "./mappers.js";
 import { ownerPublicIdOf } from "@wasla/auth-sdk";
+import { endUserOwnershipDenied, type UserAssertionMode, type UserAssertionPublicKeys, type VerifiedEndUser } from "@wasla/service-auth/fastify";
 import {
   assertEmptyPayload,
   assertRequestIdLength,
@@ -93,6 +94,11 @@ export interface CreateSubscriptionAppOptions {
   readonly mode?: PersistenceMode;
   readonly logger?: boolean;
   readonly serviceIdentity?: SubscriptionsServiceIdentityOptions;
+  readonly userAssertion?: {
+    readonly mode: UserAssertionMode;
+    readonly publicKeys: UserAssertionPublicKeys;
+    readonly skewSeconds?: number;
+  };
 }
 
 const UNAVAILABLE_REASON = "الاستمرارية غير مهيّأة";
@@ -109,6 +115,11 @@ const OPEN: SubscriptionsRouteConfig = { serviceIdentity: "open" };
  */
 function ownerScoped(...scopes: readonly string[]): SubscriptionsRouteConfig {
   return { serviceIdentity: { scopes, beneficiary: "required" } };
+}
+
+/** ADR-060 P2 (CLM-0476): route with `beneficiary: "asserted"` — end-user identity verified by middleware, handler compares ownership. */
+function asserted(...scopes: readonly string[]): SubscriptionsRouteConfig {
+  return { serviceIdentity: { scopes, beneficiary: "asserted", actors: ["customer"] } };
 }
 
 /**
@@ -249,7 +260,12 @@ export function createSubscriptionApp(
   // قبلَ تسجيلِ أيِّ مسارٍ بقصدٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ وحدَهُ،
   // فمسارٌ يُسجَّلُ قبلَ هذا السطرِ يمرُّ بلا فرضٍ ولا يُكشَفُ.
   if (options.serviceIdentity !== undefined) {
-    registerServiceIdentity(app, options.serviceIdentity);
+    registerServiceIdentity(app, {
+      ...options.serviceIdentity,
+      ...(options.userAssertion === undefined
+        ? {}
+        : { userAssertion: options.userAssertion }),
+    });
   }
 
   // 1 — GET /health
@@ -430,8 +446,9 @@ export function createSubscriptionApp(
   });
 
   // 11 — GET /referrals
-  app.get("/referrals", { config: internalScoped(SUBSCRIPTIONS_SCOPES.referralsRead) }, async (request, reply) => {
+  app.get("/referrals", { config: asserted(SUBSCRIPTIONS_SCOPES.referralsRead) }, async (request, reply) => {
     assertRequestIdLength(request.headers);
+    const endUser = (request as FastifyRequest & { endUser?: VerifiedEndUser }).endUser;
     const selected = toReferralListFilter(request.query);
     // نمطُ المُعرّفِ يفحصه المجالُ هنا أيضاً: مُرشِّحٌ بمُعرّفٍ مشوّهٍ يُعيد `[]` بصمتٍ
     // فيُقرأ «لا إحالات» وهو خطأُ إملاءٍ في نصِّ استعلام.
@@ -441,6 +458,15 @@ export function createSubscriptionApp(
         : selected.kind === "referee"
           ? { refereePublicId: assertWaslaPublicId(selected.value, "referee_public_id") }
           : { state: selected.value as ReferralFilter["state"] };
+    // ADR-060 P2 (CLM-0476): U1 — end user may only read referrals where they are the referrer or referee.
+    if (endUser !== undefined) {
+      const owned =
+        (filter as { referrerPublicId?: string }).referrerPublicId === endUser.publicId ||
+        (filter as { refereePublicId?: string }).refereePublicId === endUser.publicId;
+      if (endUserOwnershipDenied(request, owned, "referrer_or_referee_public_id")) {
+        return reply.status(404).send();
+      }
+    }
     const referrals = await deps().referrals.list(filter);
     return reply.status(200).send({ referrals: referrals.map(toReferralWire) });
   });

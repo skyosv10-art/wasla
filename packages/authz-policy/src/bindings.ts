@@ -1115,9 +1115,9 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     method: "GET",
     path: "/referrals",
     dimension: "owner",
-    strength: "none",
-    evidence: "services/subscriptions/src/http/app.ts:internalScoped(SUBSCRIPTIONS_SCOPES.referralsRead) referrals.list(filter)",
-    note: "`none`: قائمةُ الإحالاتِ بمُرشِّحِ `referrer_public_id` أو `referee_public_id` أو حالةٍ عبرَ `internalScoped` بلا مُنتَفِعٍ. داخليٌّ بالتصميمِ، ومُرشِّحُهُ يُسمّي شخصاً — فكلُّ حاملٍ يقرأُ إحالاتِ أيِّ شخصٍ.",
+    strength: "asserted",
+    evidence: "services/subscriptions/src/http/app.ts:asserted(SUBSCRIPTIONS_SCOPES.referralsRead) referrals.list(filter)",
+    note: "ADR-060 P2 (CLM-0476): U1 — filter referrerPublicId or refereePublicId must match endUser.publicId; mismatch → 404. Production default off.",
   },
   {
     audience: "marketplace",

@@ -1,3 +1,26 @@
+# 2026-10-06 — CLM-0476 — M0-49: RISK-0042 Batch 3 — U1 low-priority Class A gap remediated
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Evidence:**
+  - CI on the CLM-0476 PR green (all checks: test, verify, governance-guard, doc-coverage)
+  - `@wasla/authz-policy` 52/52, `@wasla/subscriptions-service` 236/236
+  - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md` ASSERTED_OPERATION_COUNT 34→35
+  - `docs/12-testing/BASELINE.json` test_files_tracked 563→564
+- **What changed:**
+  - U1: `GET /referrals` in subscriptions elevated from `none` to `asserted` (actor `customer`, caller `customer-bot`)
+  - Filter `referrerPublicId` or `refereePublicId` must match `endUser.publicId`; mismatch → 404
+  - `ASSERTION_AUDIENCES_BY_ACTOR` expanded with `subscriptions` for `customer` actor
+  - `userAssertion` config wired in `SubscriptionsServiceIdentityOptions` and `server.ts`
+  - `asserted()` helper added to subscriptions `app.ts` (actors: `["customer"]`)
+  - 7 new tests (off/enforce/observe + negative)
+  - Wave 2 `none` count: 32→31 (subscriptions: 4→3)
+  - `ASSERTED_OPERATION_COUNT` 34→35
+  - Production stays `off`. RISK-0042 stays `open`.
+- **Governance checks:** validate-authz-policy PASS, validate-baseline PASS, verify-governance PASS
+- **Merged:** squash merge to main, branch deleted
+
 # 2026-10-06 — CLM-0475 — M0-49: RISK-0042 Batch 2 — 6 medium-priority Class A gaps remediated
 
 - **Work Item(s):** M0-49

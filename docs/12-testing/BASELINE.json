@@ -3,11 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f1e1a8f8787d078d4f21e42bbd3a441203bcd1d1",
-    "branch": "main",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
+    "commit": "c39785d558839218e45929e029f0fb83a0e32f27",
+    "branch": "fix/risk-0060-backup-ssl",
+    "dirty": true,
+    "dirty_files": 1,
+    "dirty_reason": "BASELINE regenerated for CLM-0482",
     "tracked_files": 3117
   },
   "env": {

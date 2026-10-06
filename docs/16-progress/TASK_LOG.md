@@ -8924,3 +8924,13 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - pnpm overrides added in `package.json` for source-map-js@^1.2.2 and tinypool@^2.1.2 (root cause fix for CVE-2026-93749, CVE-2026-104848, CVE-2026-104849)
   - `pnpm-lock.yaml` regenerated with fixed versions
   - RISK-0042 stays `open`
+
+# 2026-10-06 — CLM-0479 — M0-49: RISK-0042 register status update
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0042 → open (all closable gaps remediated; D4 blocked; P3 pending owner decision)
+- **What changed:**
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0042 entry updated with CLM-0477/0478 status
+  - No code changes — ledger-only

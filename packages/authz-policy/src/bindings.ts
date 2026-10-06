@@ -1027,7 +1027,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/reputation/src/http/app.ts:internalScoped(REPUTATION_SCOPES.factRead) listFacts(deps,",
-    note: "`none`: قراءةُ الوقائعِ بمُرشِّحِ استفهامٍ عبرَ `internalScoped` بلا مُنتَفِعٍ. داخليٌّ بالتصميمِ، ومُرشِّحُهُ يُسمّي شخصاً — فكلُّ حاملٍ يقرأُ وقائعَ أيِّ شخصٍ.",
+    note: "`none`: **قرارُ تصميمٍ (PO-003):** قراءةُ الوقائعِ بمُرشِّحِ استفهامٍ عبرَ `internalScoped` بلا مُنتَفِعٍ. داخليٌّ بالتصميمِ، ومُرشِّحُهُ يُسمّي شخصاً — فكلُّ حاملٍ يقرأُ وقائعَ أيِّ شخصٍ. البياناتُ تشغيليّةٌ لا يملكُها صاحبُها، فالربطُ عكسُ غايتِها.",
   },
   {
     audience: "reputation",
@@ -1045,7 +1045,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/reputation/src/http/app.ts:internalScoped(REPUTATION_SCOPES.ratingRead) listRatings(deps,",
-    note: "`none`: قائمةُ التقييماتِ بمُرشِّحِ استفهامٍ عبرَ `internalScoped` بلا مُنتَفِعٍ، والكتابةُ الشقيقةُ وحدَها مربوطةٌ (`raterPublicId !== beneficiary`). داخليٌّ بالتصميمِ.",
+    note: "`none`: **قرارُ تصميمٍ (PO-003):** قائمةُ التقييماتِ بمُرشِّحِ استفهامٍ عبرَ `internalScoped` بلا مُنتَفِعٍ، والكتابةُ الشقيقةُ وحدَها مربوطةٌ (`raterPublicId !== beneficiary`). داخليٌّ بالتصميمِ. البياناتُ تشغيليّةٌ.",
   },
   {
     audience: "reputation",
@@ -1325,7 +1325,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/delivery/src/http/app.ts:scoped(DELIVERY_SCOPES.storeOrderConfirm) confirmStoreOrder(",
-    note: "`none`: **فجوةٌ مقيسةٌ:** تأكيدُ المتجرِ للطلبِ بمُعرِّفِهِ وحدَهُ؛ لا مقارنةَ بالمتجرِ صاحبِ الطلبِ.",
+    note: "`none`: **مؤجَّلةٌ بقرارٍ (PO-005):** تأكيدُ المتجرِ للطلبِ بمُعرِّفِهِ وحدَهُ؛ لا مقارنةَ بالمتجرِ صاحبِ الطلبِ. يُقسَمُ المسارُ إلى متجر مؤكد + سائق مؤكد منفصلان.",
   },
   {
     audience: "delivery",
@@ -1334,7 +1334,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "owner",
     strength: "none",
     evidence: "services/delivery/src/http/app.ts:scoped(DELIVERY_SCOPES.fulfillmentTransition) parseFulfillmentTransitionBody(request.body)",
-    note: "`none`: **فجوةٌ مقيسةٌ:** انتقالُ التنفيذِ بمُعرِّفِ الطلبِ وجسمٍ؛ لا مقارنةَ بالمتجرِ ولا بالسائقِ.",
+    note: "`none`: **مؤجَّلةٌ بقرارٍ (PO-005):** انتقالُ التنفيذِ بمُعرِّفِ الطلبِ وجسمٍ؛ لا مقارنةَ بالمتجرِ ولا بالسائقِ. يُقسَمُ المسارُ إلى متجر مؤكد + سائق مؤكد منفصلان.",
   },
   {
     audience: "delivery",
@@ -1631,7 +1631,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/billing/src/http/app.ts:internalScoped(BILLING_SCOPES.invoiceRead) deps.store.findByStore(",
-    note: "`none`: **فجوةٌ مقيسةٌ:** كامنةٌ: `store_public_id` من الاستعلامِ ولا يُقارَنُ بمستأجرٍ؛ لا مُنادٍ من المتجرِ اليومَ، فإن عُرِضَتْ للمتجرِ لزمَ الربطُ.",
+    note: "`none`: **مؤجَّلةٌ بقرارٍ (PO-004):** كامنةٌ: `store_public_id` من الاستعلامِ ولا يُقارَنُ بمستأجرٍ؛ لا مُنادٍ من المتجرِ اليومَ. يؤجَّلُ الربطُ حتى يُبنى مُنادٍ إنتاجيٌّ من المتجرِ.",
   },
   {
     audience: "billing",
@@ -1640,7 +1640,7 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     dimension: "tenant",
     strength: "none",
     evidence: "services/billing/src/http/app.ts:internalScoped(BILLING_SCOPES.invoiceRead) deps.store.findById(id)",
-    note: "`none`: **فجوةٌ مقيسةٌ:** كامنةٌ: قراءةُ فاتورةٍ بمُعرِّفِها بلا مستأجرٍ.",
+    note: "`none`: **مؤجَّلةٌ بقرارٍ (PO-004):** كامنةٌ: قراءةُ فاتورةٍ بمُعرِّفِها بلا مستأجرٍ. يؤجَّلُ الربطُ حتى يُبنى مُنادٍ إنتاجيٌّ من المتجرِ.",
   },
   {
     audience: "billing",

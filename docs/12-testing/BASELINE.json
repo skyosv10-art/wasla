@@ -3,11 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d6d0290820fff06b771830a9074b267885da8b97",
-    "branch": "feat/clm-0477-risk-0042-a1-audit-actor-fields",
+    "commit": "93a4e336a1d129e7a5abd2d213a2427903fb7a58",
+    "branch": "docs/clm-0478-risk-0042-po003-po004-register-updates",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "RISK-0062 added (source-map-js, tinypool dev dep vuln exceptions); SECURITY_RULES.md §11 exceptions declared",
+    "dirty_files": 6,
+    "dirty_reason": "CLM-0478: R1/R2/B1/B2/D5 PO-003/PO-004/PO-005 decisions applied to bindings and policy matrix",
     "tracked_files": 3117
   },
   "env": {

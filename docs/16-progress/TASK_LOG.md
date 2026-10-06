@@ -8945,7 +8945,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/12-testing/BASELINE.json` — repo.commit/branch/dirty reset to main, dirty=false
   - No code changes — ledger-only
 
-# 2026-10-06 — CLM-0481 — M0-49: D4 investigation + ADR-065 + RISK-0042 register update
+# 2026-10-06 — CLM-0481 — M0-49: D4 investigation + ADR-065 + D5 reassessment + RISK-0042 register update + operational readiness review
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
@@ -8953,6 +8953,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Risk(s):** RISK-0042 → open (D4 deferred as latent per PO decision)
 - **What changed:**
   - `docs/15-decisions/D4-INVESTIGATION.md` — architectural investigation (production caller, identity chain, OBO suitability, 4 delegation models, D5 dependency)
-  - `docs/15-decisions/ADR-065-d4-confirmation-deferred-as-latent.md` — ADR documenting D4=DEFERRED/ACCEPTED AS LATENT, reopen triggers, constraints
+  - `docs/15-decisions/ADR-065-d4-confirmation-deferred-as-latent.md` — ADR documenting D4=DEFERRED/ACCEPTED AS LATENT, D5 reassessment, P3 status, reopen triggers, constraints
   - `docs/07-security/RISK_REGISTER.md` — RISK-0042 entry updated with ADR-065 reference and D4 decision
+  - `docs/16-progress/OPERATIONAL_READINESS_REVIEW_2026-10-06.md` — brief operational readiness review (Production DB, migration state, Render connectivity, backup/restore baseline, M6 gates)
   - No code changes — docs-only

@@ -12,7 +12,7 @@
 
 ## Context
 
-`POST /store-orders/:orderPublicId/confirmation` (delivery service) transitions a store order's fulfillment state. The route currently has binding `none` — it checks only that the caller's token carries the `delivery:store-order:confirm` scope, without verifying that the caller (a store_staff member) belongs to the store that owns the order.
+`POST /store-orders/:orderPublicId/confirmation` (delivery service) confirms a store order — the fulfillment state transition `placed → confirmed` (per `decideConfirmation` in `services/delivery/src/domain/store-order-confirmation.ts`). This is a fulfillment-state transition only; it does not create or modify task eligibility (the `pending_eligibility → eligible` edge is a separate concern, per the code comment in `confirm-store-order.ts`). The route currently has binding `none` — it checks only that the caller's token carries the `delivery:store-order:confirm` scope, without verifying that the caller (a store_staff member) belongs to the store that owns the order.
 
 The D4 investigation (2026-10-06) found:
 
@@ -28,7 +28,7 @@ The D4 investigation (2026-10-06) found:
 
 **D4 = DEFERRED / ACCEPTED AS LATENT RISK.**
 
-No implementation, no executive claim, no production changes, no migrations, no authz grants, no Render changes.
+No implementation, no implementation/execution claim, no production changes, no migrations, no authz grants, no Render changes.
 
 ### Rationale
 
@@ -61,7 +61,23 @@ D4 must be reopened when **any** of the following occurs:
 - Do **not** add `delivery` scopes to `partner-bot` in `PRODUCTION_GRANTS`.
 - Do **not** enable observe or enforce for this route.
 - Do **not** implement Option A, B, or C code.
-- Do **not** open an executive work claim for D4 implementation.
+- Do **not** open an implementation/execution work claim for D4.
+
+---
+
+## D5 Reassessment
+
+**D5 remains DEFERRED.**
+
+D5 (`POST /store-orders/:orderPublicId/fulfillment-transition`) needs the same staff-membership verification as D4 for store-side transitions (picking, picked, ready_for_delivery). D5 also needs a separate driver-side binding (using the existing `assertedDriver` pattern from CLM-0475) for driver-side transitions (handed_to_courier, delivered).
+
+Since D4's mechanism is not chosen or built, D5 cannot proceed. D5 remains deferred until D4 is reopened and resolved. No execution plan or claim is opened for D5.
+
+---
+
+## P3 Status
+
+**P3 = NOT STARTED.** No observe or enforce. P3 waits until D4 and D5 are resolved. A per-service P3 plan (service, operations, owner, observe readiness, metrics, false-positive handling, acceptance criteria, rollback, prerequisite before enforce) will be created after D4/D5 resolution.
 
 ---
 

@@ -10,7 +10,7 @@
 
 ## 1. The Gap
 
-`POST /store-orders/:orderPublicId/confirmation` confirms a store order (state transition `pending_eligibility → eligible` or similar). The route is `scoped(DELIVERY_SCOPES.storeOrderConfirm)` — it checks only that the caller's token has the `delivery:store-order:confirm` scope. It does **not** verify that the caller's identity (the store_staff person) is a member of the store that owns the order.
+`POST /store-orders/:orderPublicId/confirmation` confirms a store order — the fulfillment state transition `placed → confirmed` (per `decideConfirmation` in `services/delivery/src/domain/store-order-confirmation.ts`). This is a fulfillment-state transition only; it does not create or modify task eligibility (the `pending_eligibility → eligible` edge is a separate concern). The route is `scoped(DELIVERY_SCOPES.storeOrderConfirm)` — it checks only that the caller's token has the `delivery:store-order:confirm` scope. It does **not** verify that the caller's identity (the store_staff person) is a member of the store that owns the order.
 
 **Binding:** `none` — the gap is documented in `bindings.ts` line 1324 as deferred per PO-005.
 

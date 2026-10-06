@@ -8921,4 +8921,6 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - PO-005 (D5): delivery `POST /store-orders/:orderPublicId/confirmation` and `POST /store-orders/:orderPublicId/fulfillment-transition` deferred — split path approved, needs D4 + dispatch binding
   - Bindings notes updated with PO decision references
   - AUTHORIZATION_POLICY_MATRIX gap/decision counts updated (delivery 6→4, billing 2→0, audit 1→0)
+  - pnpm overrides added in `package.json` for source-map-js@^1.2.2 and tinypool@^2.1.2 (root cause fix for CVE-2026-93749, CVE-2026-104848, CVE-2026-104849)
+  - `pnpm-lock.yaml` regenerated with fixed versions
   - RISK-0042 stays `open`

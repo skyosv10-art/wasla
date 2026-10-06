@@ -141,6 +141,8 @@ exception:override:brace-expansion@2 | risk:RISK-0004
 exception:GHSA-68fv-2mgg-jv7q | risk:RISK-0062
 exception:GHSA-5gmw-xhrv-c9v3 | risk:RISK-0062
 exception:GHSA-85c8-ppgw-ccpr | risk:RISK-0062
+exception:override:source-map-js | risk:RISK-0062
+exception:override:tinypool | risk:RISK-0062
 ```
 
 ---

@@ -5,6 +5,8 @@
 **Work Item:** M6-18B (HA/capacity/DR)
 **Gate:** M6 closure review
 
+> **Correction (2026-10-06, added by state-sync):** PR #640 and PR #641 are now MERGED. Main WASLA CI is green. The "Pending CODEOWNER review" status for PR #640 below is historical — it was accurate at the time of writing but is no longer current. The stale branch search now returns 0 RISK-0056 branches (all 5 were deleted with documented evidence in this report).
+
 ---
 
 ## 1. Executive Summary
@@ -75,10 +77,11 @@ M6-18B is **NOT ready for gate decision**. The backup workflow failure was fixed
 |---|---|---|---|
 | RISK-0060 backup SSL fix | CLM-0482 | #638 | Merged |
 | BASELINE repo metadata fix (after #638) | CLM-0483 | #639 | Merged |
-| BASELINE repo.commit fix (door 4) | CLM-0484 | #640 | Pending CODEOWNER review |
+| BASELINE repo.commit fix (door 4) | CLM-0484 | #640 | Merged |
+| M6 Gate Readiness report | CLM-0485 | #641 | Merged |
 | Backup workflow manual trigger | — | run 37449007002 | SUCCESS |
 | DR restore drill manual trigger | — | run 37449489524 | PASS |
-| Stale branch deletion (5 branches) | — | — | DELETED |
+| Stale branch deletion (5 branches) | — | — | DELETED (0 stale branches remain) |
 
 ### Deleted branches (documented evidence)
 
@@ -121,8 +124,8 @@ All four closure blockers remain open:
 
 ## 6. Pre-existing Issues (Not Caused by M6 Closure Work)
 
-- **Render deploy workflow failing on main** since CLM-0478 (all services `build_failed`). This is a pre-existing issue unrelated to M6 closure. The Render deploy workflow is not a required CI check. Last successful deploy: CLM-0477 (2026-10-06T01:57:47Z).
-- **Main WASLA CI** was red due to BASELINE door 4 (repo.commit pointing to deleted PR branch commit). Fix pending in PR #640 (CLM-0484).
+- **Render deploy workflow failing on main** since CLM-0478 (all services `build_failed`). Pre-existing, unrelated to M6 closure. Not a required CI check. Last successful deploy: CLM-0477 (commit `93a4e336`, 2026-10-06T01:57:47Z). See [Render Deploy Investigation](RENDER_DEPLOY_INVESTIGATION_2026-10-06.md) for full analysis.
+- **Main WASLA CI:** GREEN (main HEAD `3b675aa9`, CLM-0485). The BASELINE door 4 issue was fixed by PR #640 (CLM-0484, merged).
 
 ---
 

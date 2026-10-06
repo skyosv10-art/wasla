@@ -9006,3 +9006,16 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **What changed:**
   - `docs/16-progress/M6_GATE_READINESS_2026-10-06.md` — M6 Gate Readiness report with 4 blockers assessed, updated risk statuses, stale branch deletion evidence, and recommended next steps for Program Owner.
   - `docs/07-security/RISK_REGISTER.md` — Reviewed 2026-10-06 updates appended to RISK-0055, RISK-0058, RISK-0060, RISK-0061. Fixed RISK-0060 contradiction (CLM-0482 said "not switched to verify-full" but CLM-0457 set verify-full on 17/17 services).
+
+# 2026-10-06 — CLM-0486 — M6-18B: M6 Owner Decision Pack + corrected Gate Readiness + Render investigation
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0055 → mitigating; RISK-0058 → mitigating; RISK-0060 → mitigating; RISK-0061 → open
+- **Evidence:** Render API deploys checked (read-only); main SHA `3b675aa9`; main WASLA CI green
+- **Deployment:** none — docs only
+- **What changed:**
+  - `docs/16-progress/M6_GATE_READINESS_2026-10-06.md` — corrected: PR #640 status updated from "Pending" to "Merged", stale branch count updated to 0, pre-existing issues section updated with main CI green status and Render investigation link.
+  - `docs/16-progress/M6_OWNER_DECISION_PACK_2026-10-06.md` — new: 4 owner decisions covering RISK-0055 (PITR or amend RPO), RISK-0058 (approve DB-partition drill), RISK-0060 (Enforce SSL), RISK-0061 (accept or move region).
+  - `docs/16-progress/RENDER_DEPLOY_INVESTIGATION_2026-10-06.md` — new: read-only investigation. Last success CLM-0477 (`93a4e336`), first failure CLM-0478 (`60018e99`). All 22 services `build_failed` in ~0.47s. Root cause hypothesis: Render can't fetch commit from public GitHub repo (no connected Git provider).

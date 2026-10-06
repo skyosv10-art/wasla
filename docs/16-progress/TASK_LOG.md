@@ -1,3 +1,14 @@
+# 2026-10-06 — CLM-0490 — RISK-0052: review extended by written owner decision
+
+- **Work Item(s):** M3-08 (where RISK-0052 was raised)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer), executing a written Program Owner decision
+- **Status:** Merged
+- **Risk(s):** RISK-0052 → mitigating (unchanged), review 2026-10-07 → 2026-10-21
+- **Decision (verbatim, Program Owner, 2026-10-06T16:43Z):** «أوافق على تمديد موعد مراجعة RISK-0052 إلى 2026-10-21 مع إبقاء الحالة mitigating، وسجّل القرار كتابياً عبر PR مستقل وفق STATE-SYNC». And: «لا تبدأ Claim إصلاح CI الآن؛ اكتفِ بتسجيله كمسار إغلاق مقترح لاحقاً».
+- **Evidence (measured):** the closure condition is unmet — 9/13 CI jobs have no `timeout-minutes`, `cancel-in-progress: false`, and there is no guard against citing a non-existent `main` verdict. Recurrence on 2026-10-06 (run 37476654077).
+- **Tests:** `validate-risk-register.sh`, `require-doc-update.sh`, `validate-state-sync.sh`, `validate-work-claims.sh`, `validate-launch-board.sh` against `origin/main`.
+- **Next step:** closure path (CI job timeouts and/or a guard) when the owner authorizes a claim. BOT_PRECHECK (read-only).
+
 # 2026-10-06 — CLM-0489 — M7 readiness review: post-merge state correction
 
 - **Work Item(s):** M7-01 (review document only)

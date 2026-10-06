@@ -3,11 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "fa94d2fc9b1cdecf75d120cb140ddc847d7623bd",
-    "branch": "docs/clm-0478-risk-0042-po003-po004-register-updates",
+    "commit": "ba7d412c446233e5880f2301e915ca453e051a35",
+    "branch": "docs/risk-0042-register-update",
     "dirty": true,
-    "dirty_files": 4,
-    "dirty_reason": "CLM-0478: R1/R2/B1/B2/D5 PO decisions + pnpm overrides for source-map-js/tinypool vuln fix",
+    "dirty_files": 0,
+    "dirty_reason": "CLM-0479: RISK-0042 register entry updated (ledger-only)",
     "tracked_files": 3117
   },
   "env": {

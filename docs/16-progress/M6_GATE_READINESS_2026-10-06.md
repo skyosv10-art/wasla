@@ -1,5 +1,8 @@
 # M6 Gate Readiness Report
 
+> **Correction by addition (CLM-0488, 2026-10-06):** see `M7_READINESS_REVIEW_2026-10-06.md`. (1) Render deploys fail on `pipeline_minutes_exhausted` (RISK-0063), not on GitHub access. (2) The bot env-var write in CLM-0487 wiped the bot configuration (INC-0002). (3) RISK-0060: the server already refuses plaintext since 2026-10-04T11:35Z (`ESSLREQUIRED`); no dashboard toggle is needed, only a deliberate measurement. (4) ADR-066/067, which closed RISK-0055/0061, await explicit Program Owner ratification. (5) `main` was red after #643 (BASELINE `repo.commit`); fixed in CLM-0488.
+
+
 **Date:** 2026-10-06 (updated CLM-0487)
 **Author:** @skyosv10-art (agent:perplexity-computer)
 **Work Item:** M6-18B (HA/capacity/DR)

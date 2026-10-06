@@ -1,3 +1,19 @@
+# 2026-10-06 — CLM-0488 — M7 readiness review (review only, no execution)
+
+- **Work Item(s):** M7-01 (review), M6-18B (corrections)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open (new) · RISK-0060 → mitigating (unchanged; evidence added) · RISK-0055 → closed (unchanged; ratification note) · RISK-0061 → closed (unchanged; ratification note) · INC-0002 → open (new incident)
+- **Verdict:** READY_FOR_M7 = NO. M6 is not complete (M6-18B Blocked; M6-18C/19A/19B/19C Ready for Gate; M6-19A pentest not performed).
+- **Found live:**
+  - `main` red after #643: WASLA CI run 37476654077 on `409c17f`, gate 11 door 4, BASELINE `repo.commit` `b39e7ec` gone after the squash merge. Fixed here (`repo.commit` → `409c17f`, branch `main`).
+  - RISK-0063 (new, high, open): 54/54 Render deploy failures since 02:59:53Z are `pipeline_minutes_exhausted`. Corrects CLM-0487's "Render can't fetch from GitHub".
+  - INC-0002 (new, high, open): CLM-0487's `PUT /env-vars` replaced the bot services' whole env set; each bot now has 1 key (was 10–11). Not restored here (no Render changes).
+  - RISK-0060: plaintext already refused server-side since 2026-10-04T11:35Z (`ESSLREQUIRED`, db-backup run 37199256304). Remaining: a read-only measurement.
+  - ADR-066/067: authority rests on general delegation; no explicit owner decision recorded; ADR-066 says the 6 h target is met while recording a ~10 h worst case; ADR-067 names the wrong pooler region. Not modified (constraint); noted on RISK-0055/0061.
+- **Not touched:** Production, Render, Supabase, ADR-052/066/067, RISK-0056, any execution claim.
+- **Evidence:** `docs/16-progress/M7_READINESS_REVIEW_2026-10-06.md`
+
 # 2026-10-06 — CLM-0487 — M6-18B: Owner decisions executed — RISK-0055 closed, RISK-0061 closed
 
 - **Work Item(s):** M6-18B

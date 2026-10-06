@@ -8,7 +8,7 @@
  */
 
 import { readPortEnv } from "@wasla/config";
-import { keyRegistryFromEnv } from "@wasla/service-auth";
+import { keyRegistryFromEnv, userAssertionConfigFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 import type { Pool } from "pg";
 
@@ -32,6 +32,9 @@ export async function buildSupportServer(): Promise<{
   const connectionString = process.env.DATABASE_URL;
   const keys = keyRegistryFromEnv(process.env);
   const replayGuard = createServiceTokenReplayGuardFromEnv(process.env);
+  // ADR-060 P2 (CLM-0475): user assertion config for asserted routes (S1-S4).
+  // Production default is `off` — no assertion verification, behavior unchanged.
+  const userAssertion = userAssertionConfigFromEnv(process.env);
 
   let pool: Pool | null = null;
 
@@ -44,7 +47,7 @@ export async function buildSupportServer(): Promise<{
       store: adapters.store,
       publisher: adapters.publisher,
       reputationBridge: adapters.reputationBridge,
-      serviceIdentity: { keys, replayGuard },
+      serviceIdentity: { keys, replayGuard, ...(userAssertion === undefined ? {} : { userAssertion }) },
     });
     // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
     attachDatabaseHealth(app, { paths: ["/health"], service: "support" });
@@ -56,7 +59,7 @@ export async function buildSupportServer(): Promise<{
     store: new InMemorySupportTicketStore(),
     publisher: new InMemorySupportEventPublisher(),
     reputationBridge: new InMemoryReputationBridge(),
-    serviceIdentity: { keys, replayGuard },
+    serviceIdentity: { keys, replayGuard, ...(userAssertion === undefined ? {} : { userAssertion }) },
   });
   // RISK-0058 · ADR-059: health answers 503 with the real database state when a pool is down.
   attachDatabaseHealth(app, { paths: ["/health"], service: "support" });

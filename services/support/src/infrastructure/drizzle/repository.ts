@@ -144,12 +144,14 @@ export class PostgresSupportTicketStore implements SupportTicketStore {
 
   async listTickets(opts?: {
     readonly state?: SupportTicket["state"];
+    readonly reporterPublicId?: string;
     readonly limit?: number;
     readonly cursor?: string | null;
   }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }> {
     const limit = Math.min(opts?.limit ?? 20, 100);
     const conds = [];
     if (opts?.state) conds.push(eq(supportTickets.state, opts.state));
+    if (opts?.reporterPublicId) conds.push(eq(supportTickets.reporterPublicId, opts.reporterPublicId));
     if (opts?.cursor) conds.push(lt(supportTickets.ticketId, opts.cursor));
 
     const rows = await this.db

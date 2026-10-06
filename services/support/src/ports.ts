@@ -24,6 +24,7 @@ export interface SupportTicketStore {
   getTicket(ticketId: string): Promise<SupportTicket | null>;
   listTickets(opts?: {
     readonly state?: SupportTicket["state"];
+    readonly reporterPublicId?: string;
     readonly limit?: number;
     readonly cursor?: string | null;
   }): Promise<{ readonly tickets: readonly SupportTicket[]; readonly nextCursor: string | null }>;

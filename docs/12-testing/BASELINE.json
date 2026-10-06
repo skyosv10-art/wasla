@@ -3,8 +3,8 @@
   "generated_at": "2026-10-03T05:04:03Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "05b4d2de6b9ceda5b106da4743179e1dee9f88f9",
-    "branch": "main",
+    "commit": "d81a2af3c56401f72fb7946194c7904b652d7b23",
+    "branch": "feat/clm-0475-risk-0042-batch2-medium-priority",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
@@ -26,7 +26,7 @@
     "packages": 72,
     "packages_with_typecheck": 68,
     "packages_with_test": 72,
-    "test_files_tracked": 561,
+    "test_files_tracked": 563,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 27,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:1211f06472de6c8080ad08ed9964ae06dd024dae366ed569ce41fee50e4870ac",
+  "fingerprint": "sha256:fb1f69518fd52c9a59310330b9c15641e9b99699438d18874acdba763a8768e2",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

@@ -607,6 +607,11 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     serviceIdentity: { scopes, beneficiary: "asserted", actors: ["customer"] },
   });
 
+  /** ADR-060 P2 (CLM-0475): asserted route with custom actors (e.g. `store_staff`, `driver`). */
+  const assertedActors = (actors: readonly ("customer" | "driver" | "store_staff")[], ...scopes: readonly string[]): DeliveryRouteConfig => ({
+    serviceIdentity: { scopes, beneficiary: "asserted", actors },
+  });
+
   // قبلَ أوّلِ مسارٍ: حاجزُ التصنيفِ يرى ما يُسجَّلُ بعدَهُ لا ما قبلَهُ.
   registerServiceIdentity(app, {
     ...deps.serviceIdentity,
@@ -703,7 +708,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(201).send(toStoreOrderResponse(result.order));
   });
 
-  app.get("/store-orders/:orderPublicId", { config: scoped(DELIVERY_SCOPES.storeOrderRead) }, async (request, reply) => {
+  app.get("/store-orders/:orderPublicId", { config: asserted(DELIVERY_SCOPES.storeOrderRead) }, async (request, reply) => {
     const publicId = parseOrderPublicIdParam(request.params);
     const order = await deps.readPort.getOrderByPublicId(publicId);
     if (order === null) {
@@ -711,6 +716,16 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         traceId: String(request.id),
         details: { field: "orderPublicId", actual: publicId },
       });
+    }
+    // ADR-060 P2 (CLM-0475): D2 — only the order's customer may read.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      if (endUserOwnershipDenied(request, order.customerRef === endUser.publicId, "customerRef")) {
+        throw new DeliveryError("DELIVERY_ORDER_NOT_FOUND", "لا طلبَ بهذا المرجعِ", {
+          traceId: String(request.id),
+          details: { field: "orderPublicId", actual: publicId },
+        });
+      }
     }
     return reply.status(200).send(toStoreOrderResponse(order));
   });
@@ -883,7 +898,7 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
     return reply.status(200).send(toStoreOrderResponse(result.order));
   });
 
-  app.get("/store-orders/:orderPublicId/delivery-task", { config: scoped(DELIVERY_SCOPES.deliveryTaskRead) }, async (request, reply) => {
+  app.get("/store-orders/:orderPublicId/delivery-task", { config: assertedActors(["customer", "driver"], DELIVERY_SCOPES.deliveryTaskRead) }, async (request, reply) => {
     const publicId = parseOrderPublicIdParam(request.params);
     const task = await deps.readPort.getTaskByOrderPublicId(publicId);
     if (task === null) {
@@ -895,6 +910,19 @@ export function buildDeliveryHttpApp(deps: DeliveryHttpDeps): DeliveryHttpApp {
         order === null ? "لا طلبَ بهذا المرجعِ" : "لا مهمّةَ توصيلٍ لهذا الطلبِ",
         { traceId: String(request.id), details: { field: "orderPublicId", actual: publicId } },
       );
+    }
+    // ADR-060 P2 (CLM-0475): D6 — actor-aware ownership: customer → order.customerRef, driver → task.courierRef.
+    const endUser = request.endUser;
+    if (endUser !== undefined) {
+      const order = await deps.readPort.getOrderByPublicId(publicId);
+      const owned = endUser.actorType === "driver"
+        ? task.courierRef === endUser.publicId
+        : order !== null && order.customerRef === endUser.publicId;
+      if (endUserOwnershipDenied(request, owned, endUser.actorType === "driver" ? "courierRef" : "customerRef")) {
+        throw new DeliveryError("DELIVERY_TASK_NOT_FOUND", "لا مهمّةَ توصيلٍ لهذا الطلبِ", {
+          traceId: String(request.id), details: { field: "orderPublicId", actual: publicId },
+        });
+      }
     }
     return reply.status(200).send(toDeliveryTaskResponse(task));
   });

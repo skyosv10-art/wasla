@@ -8904,3 +8904,23 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 **Not machine-enforceable (stated in the rule §12):** whether what an entry says is true; the reasons given in `Kind`/`No-Test-Reason`/`Risk(s): none` (judged by the code owner); merges outside a PR (prevented by branch protection, not this guard); an agent that stops after opening a PR leaves an open PR, which is visible to the next agent but still needs finishing.
 
 **Next:** after merge, confirm `main` CI is green and that the head branch is deleted (by the setting, with the workflow as backstop). Then resume M0-49 (RISK-0042) from its `**Next:**` under CLM-0466.
+
+# 2026-10-06 — CLM-0478 — M0-49: RISK-0042 PO-003/PO-004/PO-005 register updates
+
+- **Work Item(s):** M0-49
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0042 → open (R1/R2/B1/B2/D5 resolved by PO decisions; P2 remediation continues; D4 blocked; P3 deferred)
+- **Evidence:**
+  - `@wasla/authz-policy` 52/52 (measured gaps 4→0)
+  - `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md` — gap/decision counts updated
+  - Wave 3 measured gaps: 4→0
+- **What changed:**
+  - PO-003 (R1/R2): reputation `GET /reputation/facts` and `GET /reputation/ratings` kept `none` by design — data is operational, not user-owned
+  - PO-004 (B1/B2): billing `GET /billing/invoices` and `GET /billing/invoices/:id` deferred — no production caller from store today
+  - PO-005 (D5): delivery `POST /store-orders/:orderPublicId/confirmation` and `POST /store-orders/:orderPublicId/fulfillment-transition` deferred — split path approved, needs D4 + dispatch binding
+  - Bindings notes updated with PO decision references
+  - AUTHORIZATION_POLICY_MATRIX gap/decision counts updated (delivery 6→4, billing 2→0, audit 1→0)
+  - pnpm overrides added in `package.json` for source-map-js@^1.2.2 and tinypool@^2.1.2 (root cause fix for CVE-2026-93749, CVE-2026-104848, CVE-2026-104849)
+  - `pnpm-lock.yaml` regenerated with fixed versions
+  - RISK-0042 stays `open`

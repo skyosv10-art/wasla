@@ -3,11 +3,11 @@
   "generated_at": "2026-10-06T01:46:02Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d6d0290820fff06b771830a9074b267885da8b97",
-    "branch": "feat/clm-0477-risk-0042-a1-audit-actor-fields",
+    "commit": "fa94d2fc9b1cdecf75d120cb140ddc847d7623bd",
+    "branch": "docs/clm-0478-risk-0042-po003-po004-register-updates",
     "dirty": true,
-    "dirty_files": 3,
-    "dirty_reason": "RISK-0062 added (source-map-js, tinypool dev dep vuln exceptions); SECURITY_RULES.md §11 exceptions declared",
+    "dirty_files": 4,
+    "dirty_reason": "CLM-0478: R1/R2/B1/B2/D5 PO decisions + pnpm overrides for source-map-js/tinypool vuln fix",
     "tracked_files": 3117
   },
   "env": {
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "beeaa1d9634bbfc75cfaa5f8962e16cf2ad6f61ed6339f62ab1a1262aaddb2dc",
-    "lines": 5060
+    "sha256": "26958c6f816b0e1f0721157dbee4d46690887fd9e947cfb49aac28c89380f858",
+    "lines": 5062
   },
   "static": {
     "packages": 72,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },
-  "fingerprint": "sha256:6eb9a27959d9b2c790313e1410c6d324d03ef128c37117c530f6a461f61f31d5",
+  "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

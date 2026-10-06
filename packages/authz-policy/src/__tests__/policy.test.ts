@@ -477,15 +477,15 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
       expect(b.note.length).toBeGreaterThan(20);
     }
-    // 5 فجواتٍ مقيسةٍ تُسمّى في `note` (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
+    // 0 فجواتٍ مقيسةٍ متبقّيةٍ (لا يُقرأُ `none` بلا مالكٍ «سليماً»).
     // كانت 21 قبلَ CLM-0462 (رابطُ الهويّةِ رُفِعَ)، و20 قبلَ CLM-0463 (المستخدم/الاستعادة/السجلُّ رُفِعَتْ)،
     // و17 قبلَ CLM-0464 (قبولُ الطلباتِ رُفِعَ إلى `required`)، و16 قبلَ CLM-0465
     // (فاعلُ الانتقالِ غيرُ `system` صارَ يُقارَنُ بـ`obo` — الفجوةُ المكتوبةُ أُغلِقَتْ في الشفرةِ)،
     // و15 قبلَ CLM-0468 (حسمُ الإسنادِ رُبِطَ بـ`obo` من قبول/رفضِ التوزيعِ،
     // والإسنادُ صارَ قرارَ تصميمٍ لا فجوة).
     // و13 قبلَ CLM-0474 (D1 و D3 ارتقيا من `none` إلى `asserted`).
-    // و11 قبلَ CLM-0475 (D2 و D6 و S1-S4 ارتقتْ من `none` إلى `asserted`).
-    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(4);
+    // و4 قبلَ CLM-0478 (R1/R2 بقرارِ تصميمٍ PO-003، B1/B2 بالتأجيلِ PO-004، D5 بالتأجيلِ PO-005).
+    expect(wave3.filter((b) => b.note.includes("فجوةٌ مقيسةٌ"))).toHaveLength(0);
     const transition = wave3.find((b) => b.audience === "orders" && b.path === "/orders/:orderId/transitions");
     expect(transition?.note).toContain("CLM-0465");
     expect(transition?.evidence).toContain("transitionCaller?.onBehalfOfPublicId");

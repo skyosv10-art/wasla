@@ -60,7 +60,8 @@ import {
   type HealthWire,
 } from "./mappers.js";
 import { ownerPublicIdOf } from "@wasla/auth-sdk";
-import { endUserOwnershipDenied, type UserAssertionMode, type UserAssertionPublicKeys, type VerifiedEndUser } from "@wasla/service-auth/fastify";
+import { endUserOwnershipDenied, type VerifiedEndUser } from "@wasla/service-auth/fastify";
+import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
 import {
   assertEmptyPayload,
   assertRequestIdLength,

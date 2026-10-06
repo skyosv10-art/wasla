@@ -39,12 +39,12 @@ import {
   type ServiceIdentityDenial,
   type ServiceIdentityRouteConfig,
   type ServiceIdentityRouteIdentity,
-  type UserAssertionMode,
-  type UserAssertionPublicKeys,
 } from "@wasla/service-auth/fastify";
 import type {
   ServiceAuthKeyRegistry,
   ServiceTokenReplayGuard,
+  UserAssertionMode,
+  UserAssertionPublicKeys,
 } from "@wasla/service-auth";
 
 import type { SubscriptionErrorEnvelope } from "./errors.js";

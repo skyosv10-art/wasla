@@ -28,7 +28,7 @@ import {
 } from "@wasla/service-auth/user-assertion";
 
 import { createSubscriptionApp, type SubscriptionAppServices } from "../http/app.js";
-import { SUBSCRIPTIONS_SCOPES, SUBSCRIPTIONS_SERVICE_AUDIENCE } from "../http/service-identity.js";
+import { SUBSCRIPTIONS_SERVICE_AUDIENCE } from "../http/service-identity.js";
 import type { ReferralFilter, ReferralRecord } from "../db/referrals.js";
 import {
   createTestKeyRegistry,

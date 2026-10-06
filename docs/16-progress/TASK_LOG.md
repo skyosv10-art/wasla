@@ -3,6 +3,7 @@
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
+- **Risk(s):** RISK-0042 → open (P2 remediation, not closure; 12 of 19 gaps remediated or decided, 7 remain)
 - **Evidence:**
   - CI on the CLM-0476 PR green (all checks: test, verify, governance-guard, doc-coverage)
   - `@wasla/authz-policy` 52/52, `@wasla/subscriptions-service` 236/236

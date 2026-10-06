@@ -450,7 +450,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(UNCLASSIFIED_OPERATION_COUNT).toBe(0);
   });
 
-  it("RISK-0042 الموجةُ 3: الـ34 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0475)", () => {
+  it("RISK-0042 الموجةُ 3: الـ34 الباقيةُ `none`، كلٌّ بدليلٍ وسببٍ، والفجواتُ مُسمّاةٌ (CLM-0476)", () => {
     const wave3Audiences = new Set(["channel", "delivery", "identity", "search", "audit", "support", "billing"]);
     const wave3Orders = new Set([
       "POST /orders/agreed-prices",
@@ -467,7 +467,8 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
         // `POST /store-orders` و `POST /store-orders/:orderPublicId/cancellation` رُفِعَا إلى `asserted` في CLM-0474.
         // `GET /store-orders/:orderPublicId` و `GET /store-orders/:orderPublicId/delivery-task` رُفِعَا في CLM-0475.
         // `POST /support/tickets`, `GET /support/tickets`, `GET /support/tickets/:ticketId`, `POST /support/tickets/:ticketId/evidence` رُفِعَتْ في CLM-0475.
-        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history")) && !(b.audience === "delivery" && (b.path === "/store-orders" || b.path === "/store-orders/:orderPublicId/cancellation" || b.path === "/store-orders/:orderPublicId" || b.path === "/store-orders/:orderPublicId/delivery-task")) && !(b.audience === "support" && (b.path === "/support/tickets" || b.path === "/support/tickets/:ticketId" || b.path === "/support/tickets/:ticketId/evidence"))) ||
+        // `GET /referrals` رُفِعَ إلى `asserted` في CLM-0476.
+        (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history")) && !(b.audience === "delivery" && (b.path === "/store-orders" || b.path === "/store-orders/:orderPublicId/cancellation" || b.path === "/store-orders/:orderPublicId" || b.path === "/store-orders/:orderPublicId/delivery-task")) && !(b.audience === "support" && (b.path === "/support/tickets" || b.path === "/support/tickets/:ticketId" || b.path === "/support/tickets/:ticketId/evidence")) && !(b.audience === "subscriptions" && b.path === "/referrals")) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
     expect(wave3).toHaveLength(34);
@@ -514,18 +515,19 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     }
   });
 
-  it("RISK-0042 الموجةُ 2: 32 صفّاً `none` على خمسةِ حدودٍ — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
+  it("RISK-0042 الموجةُ 2: 31 صفّاً `none` على خمسةِ حدودٍ — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
     // CLM-0441 (ADR-060 P2 · 2026-10-03): 11 من 12 عمليّة مفاوضاتٍ ارتقتْ من `none` إلى `asserted`.
     // CLM-0442 (ADR-060 P2 · 2026-10-03): 3 عمليّات مطابقةٍ ارتقتْ من `none` إلى `asserted`.
     // CLM-0443 (ADR-060 P2 · 2026-10-03): 3 عمليّات سوقٍ ارتقتْ من `none` إلى `asserted` (POST/GET /stores · GET inventory).
-    // تبقى 18 صفّاً `none` في الموجةِ 2: 1 negotiations/tick + 3 matching + 8 reputation + 4 subscriptions + 2 marketplace.
+    // CLM-0476 (ADR-060 P2 · 2026-10-06): GET /referrals ارتقى من `none` إلى `asserted` (subscriptions: 4 → 3).
+    // تبقى 31 صفّاً `none` في الموجةِ 2: 1 negotiations/tick + 3 matching + 8 reputation + 3 subscriptions + 2 marketplace.
     const wave2 = OPERATION_BINDINGS.filter((b) =>
       ["negotiations", "matching", "reputation", "subscriptions", "marketplace"].includes(b.audience)
       && b.note.startsWith("`none`:"),
     );
     const perAudience: Record<string, number> = {};
     for (const b of wave2) perAudience[b.audience] = (perAudience[b.audience] ?? 0) + 1;
-    expect(perAudience).toEqual({ negotiations: 1, matching: 3, reputation: 8, subscriptions: 4, marketplace: 2 });
+    expect(perAudience).toEqual({ negotiations: 1, matching: 3, reputation: 8, subscriptions: 3, marketplace: 2 });
     for (const binding of wave2) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);
@@ -583,7 +585,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     // المسارُ الوحيدُ لـ`asserted` في الإنتاجِ مُعطَّلٌ حتّى P3، ولا منحةَ خدمةٍ لصلاحيّتَيهِ.
     expect(OPERATION_BINDINGS.filter((b) => b.audience === "dispatch" && b.strength === "none")).toHaveLength(6);
     // المجموعُ المُشتَقُّ — يطابقُ `ASSERTED_OPERATION_COUNT` في المصفوفةِ.
-    expect(OPERATION_BINDINGS.filter((b) => b.strength === "asserted")).toHaveLength(34);
+    expect(OPERATION_BINDINGS.filter((b) => b.strength === "asserted")).toHaveLength(35);
   });
 
   it("CLM-0443 (ADR-060 P2): 3 عمليّات سوقٍ `asserted` — كلٌّ بدليلٍ ومِرساتَينِ وسببٍ", () => {
@@ -647,6 +649,23 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
       expect(binding.evidence).not.toContain("scoped(");
       expect(binding.evidence).not.toContain("internalScoped(");
       expect(binding.note).toContain("CLM-0475");
+      expect(binding.note.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("CLM-0476 (ADR-060 P2): 1 عمليّةٍ `asserted` جديدة — اشتراكات (1)", () => {
+    const asserted = OPERATION_BINDINGS.filter(
+      (b) =>
+        b.strength === "asserted" &&
+        b.note.includes("CLM-0476"),
+    );
+    expect(asserted.map((b) => `${b.method} ${b.path}`).sort()).toEqual([
+      "GET /referrals",
+    ]);
+    for (const binding of asserted) {
+      expect(binding.evidence).toContain("asserted");
+      expect(binding.evidence).not.toContain("internalScoped(");
+      expect(binding.note).toContain("CLM-0476");
       expect(binding.note.length).toBeGreaterThan(20);
     }
   });

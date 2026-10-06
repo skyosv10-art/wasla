@@ -18,7 +18,7 @@
  */
 
 import { SUBSCRIPTION_SERVICE_PORT } from "@wasla/contracts-subscription";
-import { keyRegistryFromEnv } from "@wasla/service-auth";
+import { keyRegistryFromEnv, userAssertionConfigFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 
 import { createSubscriptionDb } from "../db/client.js";
@@ -51,10 +51,12 @@ export async function startSubscriptionServer(): Promise<void> {
 
   if (databaseUrl === undefined || databaseUrl.trim() === "") {
     const keys = keyRegistryFromEnv(process.env);
+  const userAssertion = userAssertionConfigFromEnv(process.env);
   const app = createSubscriptionApp({
       mode: "memory",
       logger: true,
       ...(keys === undefined ? {} : { serviceIdentity: { keys, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
+      ...(userAssertion === undefined ? {} : { userAssertion }),
     });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint
@@ -90,6 +92,9 @@ export async function startSubscriptionServer(): Promise<void> {
     ...(keyRegistryFromEnv(process.env) === undefined
       ? {}
       : { serviceIdentity: { keys: keyRegistryFromEnv(process.env)!, replayGuard: createServiceTokenReplayGuardFromEnv(process.env) } }),
+    ...(userAssertionConfigFromEnv(process.env) === undefined
+      ? {}
+      : { userAssertion: userAssertionConfigFromEnv(process.env) }),
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

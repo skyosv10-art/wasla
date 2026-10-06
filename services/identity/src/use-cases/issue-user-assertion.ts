@@ -35,7 +35,7 @@ export const ASSERTION_ACTOR_BY_CALLER: Readonly<Record<string, UserAssertionAct
  * تُوسَّعُ بالإضافةِ مع قرارٍ، لا بطلبٍ من البوتِ.
  */
 export const ASSERTION_AUDIENCES_BY_ACTOR: Readonly<Record<UserAssertionActor, readonly string[]>> = {
-  customer: ["identity", "negotiations", "marketplace", "delivery", "geography"],
+  customer: ["identity", "negotiations", "marketplace", "delivery", "geography", "subscriptions"],
   driver: ["identity", "negotiations", "drivers", "matching", "geography"],
   store_staff: ["identity", "marketplace"],
 };

@@ -8909,7 +8909,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 
 - **Work Item(s):** M0-49
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
-- **Status:** Active
+- **Status:** Merged
 - **Risk(s):** RISK-0042 → open (R1/R2/B1/B2/D5 resolved by PO decisions; P2 remediation continues; D4 blocked; P3 deferred)
 - **Evidence:**
   - `@wasla/authz-policy` 52/52 (measured gaps 4→0)

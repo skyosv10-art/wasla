@@ -9118,3 +9118,18 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0493 (Released).
 - **Not changed:** CODEOWNERS, branch protection, enforce_admins, rulesets, collaborators.
 
+# 2026-10-08 — CLM-0494 — M6-19B: RISK-0064 owner decision recorded (Alternative A)
+
+- **Work Item(s):** M6-19B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0064 → accepted
+- **Evidence:** written Program Owner decision (2026-10-08): `@xuuux-voox` stays the only CODEOWNER reviewer. B/C/D are excluded, A is adopted, E is deferred. main `ec4bd02` CI green before this change.
+- **Deployment:** none — docs only
+- **What changed:**
+  - `docs/16-progress/SINGLE_REVIEWER_DEPENDENCY_REVIEW_2026-10-07.md` — §6 added: the owner decision, the review SLA (normal 24 h, urgent 4 h), a 4-stage non-bypass unavailability procedure, periodic measurements, and E recorded as deferred.
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0064 status open → accepted, review 2026-10-14 → 2026-11-08, decision appended.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-19B note.
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0494 (Released).
+- **Not changed:** CODEOWNERS, branch protection, enforce_admins, rulesets, collaborators. `risks_not_closed` is unchanged (accepted is not closed), so BASELINE is unchanged.
+

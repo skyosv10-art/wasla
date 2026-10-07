@@ -9092,7 +9092,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
-- **Risk(s):** INC-0002 → Closed; RISK-0063 remains open (pipeline_minutes_exhausted)
+- **Risk(s):** RISK-0063 → open (pipeline_minutes_exhausted); INC-0002 → Closed
 - **Evidence:** Bot env vars restored (13/12/12 keys), /health 200 on all 3 bots, Telegram webhooks registered and verified via getWebhookInfo
 - **Deployment:** none — Production config restoration only (no deploy/restart triggered)
 - **What changed:**

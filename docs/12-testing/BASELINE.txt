@@ -1,8 +1,8 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-06T15:00:03Z
-الالتزام: 409c17fd2b9d7af8c80b6628812a5e288638b376  الفرع: main  شجرةٌ نظيفةٌ
-البيئة: node v20.20.1 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
+التاريخ (UTC): 2026-10-07T12:17:55Z
+الالتزام: f9997e22902a7566a1e6ca503e2dd38d996e36ba  الفرع: HEAD  شجرةٌ مُعدَّلةٌ (1 ملفّاً)
+البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 5062 سطراً · sha256 26958c6f816b0e1f…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
@@ -13,14 +13,14 @@
   ci_jobs                    13
   ci_allow_failure           0
   governance_checks          27
-  risks_not_closed           22
+  risks_not_closed           23
 
 العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt):
   tests_passed               5828
   test_files_executed        407
   governance_suite_cases     541
-  governance_suite_failed    0
-  verify_overall             passed
+  governance_suite_failed    1
+  verify_overall             failed
 
-البصمة: sha256:eb275ed653db595d3a80b8c41433190bea33dd335f5d938032c5e57949221104
+البصمة: sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34
 المرجع: docs/12-testing/BASELINE_FORMAT.md

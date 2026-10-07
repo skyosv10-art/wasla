@@ -9113,6 +9113,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **What changed:**
   - `docs/16-progress/SINGLE_REVIEWER_DEPENDENCY_REVIEW_2026-10-07.md` — new: measurements, risks R1–R5, alternatives A–G with pros and cons (no recommendation executed).
   - `docs/07-security/RISK_REGISTER.md` — RISK-0064 opened (high, review 2026-10-14).
+  - `docs/12-testing/BASELINE.json` · `BASELINE.txt` — regenerated with `scripts/baseline.sh` (not hand-edited): `risks_not_closed` 22 → 23 for RISK-0064. `repo.commit` = main `f9997e2` (dirty=1 with a written reason), so it resolves after the squash merge (RISK-0028). Correction by addition: re-parsing the same cited source (`baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt`) gives `governance_suite_failed:1` · `verify_overall:failed`; the previous file said 0 / passed, which its source does not support. Dynamic values are not fingerprinted.
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-19B note.
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0493 (Released).
 - **Not changed:** CODEOWNERS, branch protection, enforce_admins, rulesets, collaborators.

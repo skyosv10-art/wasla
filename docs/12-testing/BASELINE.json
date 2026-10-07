@@ -1,16 +1,17 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-06T15:00:03Z",
+  "generated_at": "2026-10-07T12:17:55Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "409c17fd2b9d7af8c80b6628812a5e288638b376",
-    "branch": "main",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": ""
+    "commit": "f9997e22902a7566a1e6ca503e2dd38d996e36ba",
+    "branch": "HEAD",
+    "dirty": true,
+    "dirty_files": 1,
+    "dirty_reason": "CLM-0493: generated from main f9997e2 with only this PR's RISK_REGISTER.md change applied (RISK-0064 opened → risks_not_closed 22→23); repo.commit must resolve on main after squash merge (RISK-0028).",
+    "tracked_files": 3128
   },
   "env": {
-    "node": "v20.20.1",
+    "node": "v20.20.2",
     "pnpm": "9.15.9",
     "os": "Linux",
     "arch": "x86_64",
@@ -29,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 27,
-    "risks_not_closed": 22
+    "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
@@ -37,14 +38,14 @@
     "tests_passed": 5828,
     "test_files_executed": 407,
     "governance_suite_cases": 541,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:eb275ed653db595d3a80b8c41433190bea33dd335f5d938032c5e57949221104",
+  "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
   "reference": "docs/12-testing/BASELINE_FORMAT.md",
   "claim": {
-    "id": "CLM-0488",
-    "branch": "docs/clm-0488-m7-readiness-review",
+    "id": "CLM-0493",
+    "branch": "docs/clm-0493-single-reviewer-dependency",
     "scope": [
       "docs/12-testing/BASELINE.json",
       "docs/12-testing/BASELINE.txt"

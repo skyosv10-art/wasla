@@ -9086,3 +9086,18 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/M6_GATE_READINESS_2026-10-06.md` — corrected: PR #640 status updated from "Pending" to "Merged", stale branch count updated to 0, pre-existing issues section updated with main CI green status and Render investigation link.
   - `docs/16-progress/M6_OWNER_DECISION_PACK_2026-10-06.md` — new: 4 owner decisions covering RISK-0055 (PITR or amend RPO), RISK-0058 (approve DB-partition drill), RISK-0060 (Enforce SSL), RISK-0061 (accept or move region).
   - `docs/16-progress/RENDER_DEPLOY_INVESTIGATION_2026-10-06.md` — new: read-only investigation. Last success CLM-0477 (`93a4e336`), first failure CLM-0478 (`60018e99`). All 22 services `build_failed` in ~0.47s. Root cause hypothesis: Render can't fetch commit from public GitHub repo (no connected Git provider).
+
+# 2026-10-07 — CLM-0492 — M6-18B: INC-0002 Restoration (bot env vars on Render)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open (pipeline_minutes_exhausted); INC-0002 → Closed
+- **Evidence:** Bot env vars restored (13/12/12 keys), /health 200 on all 3 bots, Telegram webhooks registered and verified via getWebhookInfo
+- **Deployment:** none — Production config restoration only (no deploy/restart triggered)
+- **What changed:**
+  - `docs/07-security/INCIDENTS.md` — INC-0002 marked Closed; restoration details documented
+  - `docs/12-testing/ci-evidence/2026-10-07T104000Z-clm-0492-inc-0002-restoration/README.md` — new: evidence of env var restoration (key names only), health check results, webhook registration verification
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B updated with INC-0002 closure
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0492 claim (Released)
+- **Authorization:** Full executive delegation from Program Owner. Shared secrets copied from sibling service (wasla-customers). Bot tokens provided by owner. Webhook secrets generated new (old secrets not recoverable).

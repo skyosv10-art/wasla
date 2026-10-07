@@ -9101,3 +9101,19 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B updated with INC-0002 closure
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0492 claim (Released)
 - **Authorization:** Full executive delegation from Program Owner. Shared secrets copied from sibling service (wasla-customers). Bot tokens provided by owner. Webhook secrets generated new (old secrets not recoverable).
+
+# 2026-10-07 — CLM-0493 — M6-19B: Single-reviewer dependency governance review
+
+- **Work Item(s):** M6-19B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0064 → open
+- **Evidence:** read-only GitHub API: 2 collaborators; main protection (`enforce_admins:true`, `require_code_owner_reviews:true`, `dismiss_stale_reviews:false`); PRs #589–#648: 60/60 approved only by xuuux-voox, 15/60 stale-approval merges, 0 review comments; PR #648 blocked about 49 min green until review, `--admin` refused by GitHub. Post-merge state of #648: main `f9997e2` CI 41/41 (attempt 2 — attempt 1 failed on a transient API read in check 15), STATE-SYNC PASS, bots /health 200 ×3, webhooks registered ×3, Render env keys 13/12/12.
+- **Deployment:** none — report only
+- **What changed:**
+  - `docs/16-progress/SINGLE_REVIEWER_DEPENDENCY_REVIEW_2026-10-07.md` — new: measurements, risks R1–R5, alternatives A–G with pros and cons (no recommendation executed).
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0064 opened (high, review 2026-10-14).
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-19B note.
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0493 (Released).
+- **Not changed:** CODEOWNERS, branch protection, enforce_admins, rulesets, collaborators.
+

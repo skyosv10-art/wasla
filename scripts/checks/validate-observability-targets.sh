@@ -82,20 +82,39 @@ def edit(path, a, b):
         p = os.path.join(d, path); s = open(p).read(); assert a in s, (path, a); open(p, "w").write(s.replace(a, b, 1))
     return f
 
+# CLM-0504: self-test anchors must be state-independent. The paging owner
+# legitimately moves (blue/green flip: singapore none->AM host, oregon-legacy
+# AM host->none, service-health.yml env follows), so mutations anchored on the
+# CURRENT content derive their anchor from the live files instead of literals.
 SG = "infra/observability/targets/render-singapore.targets"
+WF = ".github/workflows/service-health.yml"
+sg_text = open(SG).read()
+sg_host = re.search(r"^service wasla-audit (\S+)$", sg_text, re.M).group(1)
+wf_text = open(WF).read()
+wf_env = re.search(r"WASLA_OBS_ENVIRONMENT: ([a-z0-9-]+)", wf_text).group(1)
+other = "render-singapore" if wf_env != "render-singapore" else "render-oregon-legacy"
+# the "second paging owner" mutation gives an AM host to a currently-AM-less
+# environment (whichever file declares `alertmanager none`), so it always
+# produces two owners and stays catchable in any paging-owner state.
+none_files = [os.path.join("infra/observability/targets", f) for f in os.listdir("infra/observability/targets")
+              if f.endswith(".targets") and re.search(r"^alertmanager none$", open(os.path.join("infra/observability/targets", f)).read(), re.M)]
+second_owner = (edit(none_files[0], "alertmanager none", "alertmanager wasla-alertmanager-x.onrender.com")
+                if none_files else None)
 cases = [
+    ("second paging owner", second_owner),
     ("hostname in template", edit("infra/observability/prometheus.yml", "__SERVICE_TARGETS__", '          - "wasla-orders.onrender.com"')),
     ("hostname in collector", edit("services/observability/src/config.ts", "const ENV_NAME", "const X = 'https://wasla-orders.onrender.com';\nconst ENV_NAME")),
-    ("second paging owner", edit(SG, "alertmanager none", "alertmanager wasla-alertmanager-x.onrender.com")),
-    ("new env scrapes a legacy host", edit(SG, "https://wasla-orders-9p85.onrender.com", "https://wasla-orders.onrender.com")),
+    ("new env scrapes a legacy host", edit(SG, sg_host, "https://wasla-orders.onrender.com")),
     ("service set differs", edit(SG, "service wasla-audit ", "service wasla-audit2 ")),
     ("targets not shipped", edit("infra/observability/Dockerfile.prometheus", "COPY targets/ /etc/prometheus/targets/", "")),
-    ("default environment", edit("infra/observability/prometheus-entrypoint.sh", ': "${WASLA_OBS_ENVIRONMENT:?', 'WASLA_OBS_ENVIRONMENT="${WASLA_OBS_ENVIRONMENT:-render-oregon-legacy}"; : "${WASLA_OBS_ENVIRONMENT:?')),
+    ("default environment", edit("infra/observability/prometheus-entrypoint.sh", ': "${WASLA_OBS_ENVIRONMENT:?', f'WASLA_OBS_ENVIRONMENT="${{WASLA_OBS_ENVIRONMENT:-{other}}}"; : "${{WASLA_OBS_ENVIRONMENT:?')),
     ("hostname in health probe", edit("scripts/ops/health/check-health.py", "ENVIRONMENT = ", "X = 'https://wasla-orders.onrender.com'\nENVIRONMENT = ")),
-    ("health workflow watches a non-owner", edit(".github/workflows/service-health.yml", "WASLA_OBS_ENVIRONMENT: render-oregon-legacy", "WASLA_OBS_ENVIRONMENT: render-singapore")),
+    ("health workflow watches a non-owner", edit(WF, f"WASLA_OBS_ENVIRONMENT: {wf_env}", f"WASLA_OBS_ENVIRONMENT: {other}")),
     ("declared environment mismatch", edit(SG, "environment render-singapore", "environment render-oregon-legacy")),
 ]
-ok = all([mutate(d, f) for d, f in cases])
+live_cases = [c for c in cases if c[1] is not None]
+if second_owner is None: print("  ⊘ second-paging-owner mutation N/A: every environment owns paging")
+ok = all([mutate(d, f) for d, f in live_cases])
 if not ok: sys.exit(1)
-print(f"  ✓ self-test: {len(cases)}/{len(cases)} mutations caught")
+print(f"  ✓ self-test: {len(live_cases)}/{len(cases)} mutations caught")
 PY

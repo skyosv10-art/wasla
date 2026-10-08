@@ -55,6 +55,10 @@ Rollback (recorded, per CLM-0502 §11): `setWebhook` back to the old hosts — c
 - P5-1 execution approval: **given (D-6)** · P5-2: PASS (main green, target frozen at PR time) · P5-3: stays DEFER (D-3) — recorded conflict with S0's ordering, resolved by D-6 · P5-4: measured at S1e after this merge · P5-5..P5-11: PASS per CLM-0502, unchanged.
 - Residual (observed, owner-level): the 22 new services are on Render's **free** plan (`plan: free` measured on `wasla-customer-bot`), which sleeps after inactivity; plan choice is an owner cost decision, recorded not changed.
 
-## 7. Not changed by this PR
+## 7. Guard root-cause fix on this branch (CI run 37800511103)
+
+The first CI run failed in the `verify` job: `validate-render-deploy-target.sh` self-test crashed with `AssertionError: ('infra/render/deploy-target.json', '"mode": "frozen",\n  "owner_id": null')`. Root cause: the guard's mutation anchors were hard-coded against the frozen-state literal, so the guard broke the moment the target file legitimately switched to `deploy` — the exact state STEP B creates. The fix (same rules, same 6 cases, nothing weakened): anchors derive from the CURRENT file content, and the frozen-network rule is tested on a copy forced into the frozen state. Measured after the fix: deploy state 6/6 mutations caught, frozen state 6/6 mutations caught.
+
+## 8. Not changed by this PR
 
 Both Render workspaces, Telegram, DNS, Supabase, bot env vars, `RENDER_API_KEY` value (already swapped in §4), observability targets, service-health workflow. No code, test or migration change.

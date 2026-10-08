@@ -38,24 +38,47 @@ if errs: sys.exit(1)
 mode = json.load(open("infra/render/deploy-target.json"))["mode"]
 print(f"  ✓ Render deploy target declared ({mode}); render-sync.py has no built-in workspace; frozen mode deploys nothing without network")
 
-def mutate(desc, path, a, b):
+def mutate(desc, edits):
+    """edits: list of (path, anchor, replacement) applied in order; all anchors must exist."""
     d = tempfile.mkdtemp()
     try:
         for p in ("infra/render/deploy-target.json", "scripts/deploy/render-sync.py", ".github/workflows/render-deploy.yml"):
             os.makedirs(os.path.dirname(os.path.join(d, p)), exist_ok=True); shutil.copy(p, os.path.join(d, p))
-        q = os.path.join(d, path); s = open(q).read(); assert a in s, (path, a); open(q, "w").write(s.replace(a, b, 1))
+        for path, a, b in edits:
+            q = os.path.join(d, path); s = open(q).read(); assert a in s, (path, a); open(q, "w").write(s.replace(a, b, 1))
         if not check(d): print(f"  ✗ self-test: mutation not caught — {desc}"); return False
         return True
     finally: shutil.rmtree(d)
 
+# CLM-0503: the self-test must be state-independent — the target file is legitimately
+# frozen OR deploy (STEP B flips it), so every deploy-target mutation is anchored on
+# the CURRENT file content, not on a hard-coded frozen-state literal. The caught rules
+# are the same in both states: frozen owner refused (deploy), frozen naming an owner
+# refused (frozen), unknown mode refused (both).
+cur = json.load(open("infra/render/deploy-target.json"))
+cur_mode, cur_owner = cur["mode"], cur.get("owner_id")
+frozen_legacy = (cur.get("frozen_owners") or ["tea-damm8atbedkc73ca3ahg"])[0]
+mode_anchor = f'"mode": "{cur_mode}"'
+owner_anchor = '"owner_id": ' + ("null" if cur_owner is None else json.dumps(cur_owner))
 T, R = "infra/render/deploy-target.json", "scripts/deploy/render-sync.py"
+if cur_mode == "frozen":
+    mut_owner = [(T, mode_anchor + ",\n  " + owner_anchor, f'"mode": "deploy",\n  "owner_id": {json.dumps(frozen_legacy)}')]
+    mut_freeze = [(T, owner_anchor, f'"owner_id": {json.dumps(cur.get("legacy_owner") or "tea-db0vtkpsrm7s739dm5c0")}')]
+else:
+    mut_owner = [(T, owner_anchor, f'"owner_id": {json.dumps(frozen_legacy)}')]
+    mut_freeze = [(T, mode_anchor, '"mode": "frozen"')]
+
+# rule 4 (frozen must not reach the network) is tested on a copy forced into the
+# frozen state, whatever the current file is — the forced edits are no-ops when
+# the file is already frozen.
+force_frozen = [(T, mode_anchor, '"mode": "frozen"'), (T, owner_anchor, '"owner_id": null')]
 cases = [
-    ("deploy to the frozen legacy owner", T, '"mode": "frozen",\n  "owner_id": null', '"mode": "deploy",\n  "owner_id": "tea-damm8atbedkc73ca3ahg"'),
-    ("frozen but naming an owner", T, '"owner_id": null', '"owner_id": "tea-db0vtkpsrm7s739dm5c0"'),
-    ("unknown mode", T, '"mode": "frozen"', '"mode": "auto"'),
-    ("built-in workspace default returns", R, 'OWNER = TARGET.get("owner_id")', 'OWNER = TARGET.get("owner_id") or "tea-damm8atbedkc73ca3ahg"'),
-    ("frozen check removed (would reach Render)", R, 'if TARGET["mode"] == "frozen":\n        report', 'if False:\n        report'),
-    ("workflow stops using render-sync.py", ".github/workflows/render-deploy.yml", "scripts/deploy/render-sync.py", "scripts/deploy/other.py"),
+    ("deploy to the frozen legacy owner", mut_owner),
+    ("frozen but naming an owner", mut_freeze),
+    ("unknown mode", [(T, mode_anchor, '"mode": "auto"')]),
+    ("built-in workspace default returns", [(R, 'OWNER = TARGET.get("owner_id")', 'OWNER = TARGET.get("owner_id") or "tea-damm8atbedkc73ca3ahg"')]),
+    ("frozen check removed (would reach Render)", force_frozen + [(R, 'if TARGET["mode"] == "frozen":\n        report', 'if False:\n        report')]),
+    ("workflow stops using render-sync.py", [(".github/workflows/render-deploy.yml", "scripts/deploy/render-sync.py", "scripts/deploy/other.py")]),
 ]
 ok = all([mutate(*c) for c in cases])
 if not ok: sys.exit(1)

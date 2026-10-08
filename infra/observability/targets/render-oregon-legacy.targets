@@ -2,11 +2,11 @@
 # The ONLY source of scrape/alert targets for this environment (CLM-0499 · ADR-068).
 # Read by infra/observability/prometheus-entrypoint.sh and services/observability/src/config.ts,
 # selected by WASLA_OBS_ENVIRONMENT (no default: a missing or unknown value fails closed).
-# Legacy Render workspace tea-damm8atbedkc73ca3ahg (oregon). Paging owner during blue/green until the ownership transfer gate (Phase 4 report §3).
+# Legacy Render workspace tea-damm8atbedkc73ca3ahg (oregon). Retired as paging owner by the CLM-0504 flip (its Alertmanager was suspended first); the hosts are historical after the S12 deletion.
 # Line grammar: `environment <name>` · `alertmanager <host|none>` · `service <name> <https base url>`.
 # Guard: scripts/checks/validate-observability-targets.sh (at most ONE environment may own paging).
 environment render-oregon-legacy
-alertmanager wasla-alertmanager.onrender.com
+alertmanager none
 service wasla-customers https://wasla-customers.onrender.com
 service wasla-delivery https://wasla-delivery.onrender.com
 service wasla-dispatch https://wasla-dispatch.onrender.com

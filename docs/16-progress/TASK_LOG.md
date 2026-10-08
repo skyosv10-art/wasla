@@ -1,3 +1,20 @@
+# 2026-10-08 — CLM-0504 — M6-18B: blue/green execution — STEP B result, S1e/S4 cutover, S6 paging flip
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer), continuing the owner's Phase 5 delegation (D-6/D-7, CLM-0503)
+- **Status:** In Progress
+- **Risk(s):** RISK-0063 → open (legacy; unchanged), RISK-0058 → mitigating (unchanged), INC-0003 → open on legacy only (new workspace measured uncrossed; the S4 cutover uses the uncrossed mapping)
+- **What / Why:** S6 paging flip per the CLM-0500 plan: the new Singapore workspace becomes the only paging owner. Also documents the live execution between PRs: STEP B deploy verdict, S1e, the S4 webhook cutover (first traffic change), the new Prometheus + Alertmanager (24/24 parity), and the legacy AM suspension.
+- **Changed (units):** `infra/observability/targets/render-singapore.targets` (alertmanager line), `infra/observability/targets/render-oregon-legacy.targets` (alertmanager line), `.github/workflows/service-health.yml` (probe environment), `scripts/checks/validate-observability-targets.sh` (state-independent self-test anchors).
+- **Measured (live, before this PR):** STEP B run 37805377068 verdict PASS (22/22 live=057ccb77); health 200 × 14; webhooks cut over × 3 (pending 0, no errors, wrong-secret 401 × 3); new Prometheus 15 targets all up (P5-4 PASS); new AM fail-closed 401; legacy AM suspended (read-back verified).
+- **Verification:** `validate-observability-targets.sh` 10/10 mutations pre-flip AND post-flip; `validate-state-sync.sh` + `verify-governance.sh` before push; CI on this PR is the merge authority. Merging redeploys all 24 new services — the Prometheus re-renders config from the flipped targets and alerts through the new AM.
+- **Security / Data / Deployment:** no secret in git (Render API env copies were made via the API, values never printed); the flip moves paging to the new stack only; legacy untouched by this merge (0 legacy deploys).
+- **Known Issue / Blocker:** free-plan sleep risk on Render (owner cost decision, recorded CLM-0503 §6); P5-3 probes still deferred (D-3).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T162500Z-clm-0504-paging-flip-s6/README.md`
+- **Deployment:** this merge redeploys the 24 new services (render-deploy verdict verified post-merge in the follow-up); test alert + S10 validation + S12 legacy deletion (D-7) follow.
+- **Next:** post-merge: verify render-deploy PASS (24/24), fire a test alert through the new AM, verify the Telegram page, run S10 validation, then S12 legacy deletion (D-7) — documented in the follow-up claim.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0503 — M6-18B: Render blue/green Phase 5 STEP B (deploy target → new Singapore workspace)
 
 - **Work Item(s):** M6-18B

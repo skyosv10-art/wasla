@@ -2,11 +2,11 @@
 # The ONLY source of scrape/alert targets for this environment (CLM-0499 · ADR-068).
 # Read by infra/observability/prometheus-entrypoint.sh and services/observability/src/config.ts,
 # selected by WASLA_OBS_ENVIRONMENT (no default: a missing or unknown value fails closed).
-# New Render workspace tea-db0vtkpsrm7s739dm5c0 (singapore). Shadow mode: no Alertmanager until the ownership transfer gate.
+# New Render workspace tea-db0vtkpsrm7s739dm5c0 (singapore). Paging owner since the CLM-0504 flip (legacy stack frozen then deleted; the legacy Alertmanager was suspended before this line changed).
 # Line grammar: `environment <name>` · `alertmanager <host|none>` · `service <name> <https base url>`.
 # Guard: scripts/checks/validate-observability-targets.sh (at most ONE environment may own paging).
 environment render-singapore
-alertmanager none
+alertmanager wasla-alertmanager-6hhq.onrender.com
 service wasla-customers https://wasla-customers-nzgs.onrender.com
 service wasla-delivery https://wasla-delivery-3rm5.onrender.com
 service wasla-dispatch https://wasla-dispatch-bsba.onrender.com

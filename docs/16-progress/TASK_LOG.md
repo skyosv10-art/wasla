@@ -9133,3 +9133,18 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0494 (Released).
 - **Not changed:** CODEOWNERS, branch protection, enforce_admins, rulesets, collaborators. `risks_not_closed` is unchanged (accepted is not closed), so BASELINE is unchanged.
 
+# 2026-10-08 — CLM-0495 — M6-18B: RISK-0060, RISK-0063 measurement + RISK-0034/0011/0041 review extension
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0060 → mitigating · RISK-0063 → open · RISK-0034 → open · RISK-0011 → mitigating · RISK-0041 → mitigating
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T013200Z-clm-0495-risk-0060-0063-r0034-measurement/README.md` — Render API (read-only): `WASLA_PG_SSL_MODE=verify-full`, `WASLA_PG_SSL_CA` present (1366 bytes), project ID = `ppixaauyqoykrogwdxtv`, host = `aws-0-ap-south-1.pooler.supabase.com`; deploy history: last successful `93a4e33` 2026-10-06T01:58Z, all subsequent `build_failed`; all 24 services on `starter` plan; INC-0002 still restored (13/12/12 env vars). Test DB `snlpxywskyqrjattbpgn` does NOT enforce SSL (`sslmode=disable` succeeded). CI evidence (run 37199256304) confirms production rejects plaintext with `ESSLREQUIRED`.
+- **Deployment:** none — read-only measurement and docs only
+- **What changed:**
+  - `docs/12-testing/ci-evidence/2026-10-08T013200Z-clm-0495-risk-0060-0063-r0034-measurement/README.md` — new: measurement evidence.
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0060 measurement appended; RISK-0063 deploy history appended + review 2026-10-13 → 2026-10-27; RISK-0034 review 2026-10-09 → 2026-10-23; RISK-0011 review 2026-10-12 → 2026-10-26; RISK-0041 review 2026-10-12 → 2026-10-26.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note.
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0495 (Released).
+- **Not changed:** any code, tests, Render env vars, production database, Supabase settings. No risk closed, mitigated further, or accepted. ADR-066 and ADR-067 not ratified or rejected.
+

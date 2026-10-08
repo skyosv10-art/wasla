@@ -1,7 +1,7 @@
 // Metrics scraper — fetches /metrics from all 14 WASLA services
-// Replaces Prometheus scrape_configs for Render staging
+// Targets: infra/observability/targets/<WASLA_OBS_ENVIRONMENT>.targets (CLM-0499)
 
-import { WASLA_SERVICES, SCRAPE_INTERVAL_MS, SCRAPE_TIMEOUT_MS } from './config.js';
+import { targets, SCRAPE_INTERVAL_MS, SCRAPE_TIMEOUT_MS } from './config.js';
 
 export interface ScrapeResult {
   service: string;
@@ -27,7 +27,7 @@ class MetricsScraper {
   private scrapeCount = 0;
 
   start(): void {
-    console.log('[scraper] Starting metrics scraper — %d services, %ds interval', WASLA_SERVICES.length, SCRAPE_INTERVAL_MS / 1000);
+    console.log('[scraper] Starting metrics scraper — %d services, %ds interval', targets().services.length, SCRAPE_INTERVAL_MS / 1000);
     this.scrapeAll();
     this.interval = setInterval(() => this.scrapeAll(), SCRAPE_INTERVAL_MS);
   }
@@ -39,7 +39,7 @@ class MetricsScraper {
 
   private async scrapeAll(): Promise<void> {
     this.scrapeCount++;
-    const promises = WASLA_SERVICES.map(svc => this.scrapeService(svc));
+    const promises = targets().services.map(svc => this.scrapeService(svc));
     await Promise.allSettled(promises);
   }
 

@@ -1,0 +1,23 @@
+# Observability targets — render-singapore
+# The ONLY source of scrape/alert targets for this environment (CLM-0499 · ADR-068).
+# Read by infra/observability/prometheus-entrypoint.sh and services/observability/src/config.ts,
+# selected by WASLA_OBS_ENVIRONMENT (no default: a missing or unknown value fails closed).
+# New Render workspace tea-db0vtkpsrm7s739dm5c0 (singapore). Shadow mode: no Alertmanager until the ownership transfer gate.
+# Line grammar: `environment <name>` · `alertmanager <host|none>` · `service <name> <https base url>`.
+# Guard: scripts/checks/validate-observability-targets.sh (at most ONE environment may own paging).
+environment render-singapore
+alertmanager none
+service wasla-customers https://wasla-customers-nzgs.onrender.com
+service wasla-delivery https://wasla-delivery-3rm5.onrender.com
+service wasla-dispatch https://wasla-dispatch-bsba.onrender.com
+service wasla-drivers https://wasla-drivers-1bwi.onrender.com
+service wasla-geography https://wasla-geography-ossq.onrender.com
+service wasla-identity https://wasla-identity-rl0b.onrender.com
+service wasla-matching https://wasla-matching-h26c.onrender.com
+service wasla-negotiations https://wasla-negotiations-i32q.onrender.com
+service wasla-orders https://wasla-orders-9p85.onrender.com
+service wasla-reputation https://wasla-reputation-a0ph.onrender.com
+service wasla-search https://wasla-search-wjcz.onrender.com
+service wasla-marketplace https://wasla-marketplace-qa01.onrender.com
+service wasla-subscriptions https://wasla-subscriptions-5t78.onrender.com
+service wasla-audit https://wasla-audit-pz7l.onrender.com

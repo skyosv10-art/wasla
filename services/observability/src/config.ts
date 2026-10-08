@@ -1,5 +1,8 @@
 // Configuration — service targets and alert thresholds from ADR-041 / SLI_BASELINE.md
 
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
 export interface ServiceTarget {
   name: string;
   url: string;
@@ -10,22 +13,63 @@ export const SCRAPE_TIMEOUT_MS = 10_000;
 export const ALERT_EVAL_INTERVAL_MS = 30_000;
 export const SERVICE_DOWN_THRESHOLD_MS = 120_000; // 2 min — no metrics = service down
 
-export const WASLA_SERVICES: ServiceTarget[] = [
-  { name: 'wasla-customers', url: 'https://wasla-customers.onrender.com' },
-  { name: 'wasla-delivery', url: 'https://wasla-delivery.onrender.com' },
-  { name: 'wasla-dispatch', url: 'https://wasla-dispatch.onrender.com' },
-  { name: 'wasla-drivers', url: 'https://wasla-drivers.onrender.com' },
-  { name: 'wasla-geography', url: 'https://wasla-geography.onrender.com' },
-  { name: 'wasla-identity', url: 'https://wasla-identity.onrender.com' },
-  { name: 'wasla-matching', url: 'https://wasla-matching.onrender.com' },
-  { name: 'wasla-negotiations', url: 'https://wasla-negotiations.onrender.com' },
-  { name: 'wasla-orders', url: 'https://wasla-orders.onrender.com' },
-  { name: 'wasla-reputation', url: 'https://wasla-reputation.onrender.com' },
-  { name: 'wasla-search', url: 'https://wasla-search.onrender.com' },
-  { name: 'wasla-marketplace', url: 'https://wasla-marketplace.onrender.com' },
-  { name: 'wasla-subscriptions', url: 'https://wasla-subscriptions.onrender.com' },
-  { name: 'wasla-audit', url: 'https://wasla-audit.onrender.com' },
-];
+// Targets come from ONE file per environment (CLM-0499 · ADR-068):
+//   infra/observability/targets/<WASLA_OBS_ENVIRONMENT>.targets
+// The same file renders Prometheus (infra/observability/prometheus-entrypoint.sh).
+// No default environment and no built-in host list: a missing or unknown value
+// fails closed at boot, so an old hostname set cannot come back by omission.
+export interface ObservabilityTargets {
+  environment: string;
+  /** Alertmanager host when this environment owns paging; null = shadow mode. */
+  alertmanager: string | null;
+  services: ServiceTarget[];
+}
+
+export const TARGETS_DIR = fileURLToPath(new URL('../../../infra/observability/targets/', import.meta.url));
+
+const ENV_NAME = /^[a-z0-9-]+$/;
+
+export function parseTargets(text: string, expectedEnvironment: string): ObservabilityTargets {
+  let environment: string | undefined;
+  let alertmanager: string | undefined;
+  const services: ServiceTarget[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line === '' || line.startsWith('#')) continue;
+    const [kind, a, b, ...rest] = line.split(/\s+/);
+    if (kind === 'environment' && a && !b) environment = a;
+    else if (kind === 'alertmanager' && a && !b) alertmanager = a;
+    else if (kind === 'service' && a && b && rest.length === 0) {
+      if (!/^https:\/\/[a-z0-9.-]+$/.test(b)) throw new Error(`targets: service ${a} url must be https://<host> (got ${b})`);
+      if (services.some(s => s.name === a)) throw new Error(`targets: duplicate service ${a}`);
+      services.push({ name: a, url: b });
+    } else throw new Error(`targets: unrecognised line «${line}»`);
+  }
+  if (environment !== expectedEnvironment) throw new Error(`targets: file declares environment ${environment}, expected ${expectedEnvironment}`);
+  if (!alertmanager) throw new Error('targets: missing alertmanager line (use «alertmanager none»)');
+  if (services.length === 0) throw new Error('targets: no services');
+  return { environment, alertmanager: alertmanager === 'none' ? null : alertmanager, services };
+}
+
+export function loadTargets(env: NodeJS.ProcessEnv = process.env, dir: string = TARGETS_DIR): ObservabilityTargets {
+  const name = env.WASLA_OBS_ENVIRONMENT;
+  if (!name) throw new Error('WASLA_OBS_ENVIRONMENT is not set — refusing to guess which environment to scrape');
+  if (!ENV_NAME.test(name)) throw new Error('WASLA_OBS_ENVIRONMENT must match [a-z0-9-]+');
+  let text: string;
+  try {
+    text = readFileSync(`${dir}/${name}.targets`, 'utf8');
+  } catch {
+    throw new Error(`no targets file for environment ${name}`);
+  }
+  return parseTargets(text, name);
+}
+
+let cached: ObservabilityTargets | undefined;
+/** Loaded once per process; throws (fail closed) on a missing/unknown environment. */
+export function targets(): ObservabilityTargets {
+  cached ??= loadTargets();
+  return cached;
+}
 
 // SLI thresholds from alert-rules.yml / SLI_BASELINE.md
 export const SLI_THRESHOLDS = {

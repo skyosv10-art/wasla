@@ -1,0 +1,23 @@
+# Observability targets — render-oregon-legacy
+# The ONLY source of scrape/alert targets for this environment (CLM-0499 · ADR-068).
+# Read by infra/observability/prometheus-entrypoint.sh and services/observability/src/config.ts,
+# selected by WASLA_OBS_ENVIRONMENT (no default: a missing or unknown value fails closed).
+# Legacy Render workspace tea-damm8atbedkc73ca3ahg (oregon). Paging owner during blue/green until the ownership transfer gate (Phase 4 report §3).
+# Line grammar: `environment <name>` · `alertmanager <host|none>` · `service <name> <https base url>`.
+# Guard: scripts/checks/validate-observability-targets.sh (at most ONE environment may own paging).
+environment render-oregon-legacy
+alertmanager wasla-alertmanager.onrender.com
+service wasla-customers https://wasla-customers.onrender.com
+service wasla-delivery https://wasla-delivery.onrender.com
+service wasla-dispatch https://wasla-dispatch.onrender.com
+service wasla-drivers https://wasla-drivers.onrender.com
+service wasla-geography https://wasla-geography.onrender.com
+service wasla-identity https://wasla-identity.onrender.com
+service wasla-matching https://wasla-matching.onrender.com
+service wasla-negotiations https://wasla-negotiations.onrender.com
+service wasla-orders https://wasla-orders.onrender.com
+service wasla-reputation https://wasla-reputation.onrender.com
+service wasla-search https://wasla-search.onrender.com
+service wasla-marketplace https://wasla-marketplace.onrender.com
+service wasla-subscriptions https://wasla-subscriptions.onrender.com
+service wasla-audit https://wasla-audit.onrender.com

@@ -1,3 +1,20 @@
+# 2026-10-08 — CLM-0505 — M6-18B: S12 legacy deletion (D-7) — blue/green migration COMPLETE
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer), executing the owner's deletion approval (D-7)
+- **Status:** In Progress
+- **Risk(s):** RISK-0063 → closed (the legacy workspace it names no longer exists; 0 services, 24 deleted with read-back), RISK-0058 → mitigating (unchanged), RISK-0060 → mitigating (unchanged)
+- **What / Why:** S12 — the irreversible closeout the owner approved: verify the old→new transfer, then delete all legacy services. Executed after the full verification chain (STEP B PASS, S4 cutover, S6 flip + test page delivered, S10 green).
+- **Measured (live):** CLM-0504 merge deploy: attempt 1 transient Render API timeout (7/24 already redeployed; fail-closed verdict worked), re-run verdict PASS 24/24 live=3d6478d4. Test alert through the new AM: Telegram notification 1, failures 0 (AM metrics). S10: health green (3 transient cold-start 503s re-probed 200). S12: 24 legacy services deleted in the roadmap order (bots→apps→services→observability→paging), each DELETE 204 + read-back 404. Final: old owner 0 services, new owner 24.
+- **Changed (units):** documentation only — evidence README, board, claims, roadmap, a retirement annotation in `infra/observability/targets/render-oregon-legacy.targets` (comment only), and `docs/12-testing/BASELINE.json`/`BASELINE.txt` regenerated per M0-08's written-decision rule (RISK-0063 closed → `risks_not_closed` 23→22; fingerprint eb275ed6; generated from main `3d6478d4` with only the register change applied, dirty_reason recorded in the file).
+- **No-Test-Reason:** no code or test surface changed; all verification is live-measured in the evidence README (deploy verdicts, AM metrics, health probes, deletion read-backs).
+- **Security / Data / Deployment:** no secret printed or stored; production DB (Supabase ppixaauyqoykrogwdxtv) untouched — data safety independent of Render; the 6-hourly encrypted backup continues.
+- **Known Issue / Blocker:** M6-18B stays Blocked on RISK-0058 (production partition drill) and RISK-0060 (enforce-SSL toggle) — separate from the completed migration. Render free-plan sleep risk recorded for the owner.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T171500Z-clm-0505-s12-deletion-closeout/README.md`
+- **Deployment:** none by this merge (docs + comment only); the live deletion already executed and is recorded here.
+- **Next:** the migration is complete; the remaining M6-18B blockers (RISK-0058/0060) and P5-3 probes are follow-ups when the owner enables them.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0504 — M6-18B: blue/green execution — STEP B result, S1e/S4 cutover, S6 paging flip
 
 - **Work Item(s):** M6-18B

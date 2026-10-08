@@ -17,7 +17,10 @@ import { scraper } from './scraper.js';
 import { alertEvaluator } from './alerts.js';
 import { otlpReceiver } from './otlp.js';
 import { renderDashboard } from './dashboard.js';
-import { WASLA_SERVICES } from './config.js';
+import { targets } from './config.js';
+
+// Fail closed at boot: no environment → no collector (CLM-0499 · ADR-068).
+const TARGETS = targets();
 
 const PORT = readPortEnv(process.env, 'PORT', 3000);
 
@@ -121,7 +124,7 @@ const server = http.createServer(async (req, res) => {
         labels: {
           job: 'wasla-services',
           instance: r.service,
-          environment: 'staging',
+          environment: TARGETS.environment,
           platform: 'render',
         },
         scrapedUrl: r.url,
@@ -190,7 +193,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log('===========================================================');
   console.log('  WASLA Observability Collector — M2-08 Stage B');
-  console.log('  ADR-041 · Node.js collector · %d services', WASLA_SERVICES.length);
+  console.log('  ADR-041 · Node.js collector · %d services', TARGETS.services.length);
   console.log('  Listening on :%d', PORT);
   console.log('===========================================================');
   console.log('');

@@ -68,6 +68,10 @@ run_step "كتالوجُ البيئاتِ (M2-02C)" \
 run_step "إعدادُ Render (M2-02D · ADR-039)" \
   bash scripts/checks/validate-render-config.sh
 
+# ── 1-د1) أهدافُ المراقبةِ لكلِّ بيئة (M6-18B · CLM-0499 · ADR-068) ─────────
+run_step "أهدافُ المراقبةِ لكلِّ بيئة (CLM-0499 · ADR-068)" \
+  bash scripts/checks/validate-observability-targets.sh
+
 # ── 1-د2) مُجدوِلُ النبضاتِ (G8 · CLM-0328) ──────────────────────────────
 run_step "مُجدوِلُ النبضاتِ (G8 · CLM-0328)" \
   bash scripts/checks/validate-tick-scheduler.sh

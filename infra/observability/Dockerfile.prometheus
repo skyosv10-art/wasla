@@ -6,6 +6,7 @@ FROM prom/prometheus:v2.54.1
 
 COPY prometheus.yml /etc/prometheus/prometheus.yml
 COPY alert-rules.yml /etc/prometheus/alert-rules.yml
+COPY targets/ /etc/prometheus/targets/
 COPY prometheus-entrypoint.sh /etc/prometheus/entrypoint.sh
 
 ENTRYPOINT ["/bin/sh", "/etc/prometheus/entrypoint.sh"]

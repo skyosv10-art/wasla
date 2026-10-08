@@ -1889,6 +1889,24 @@
       "note_ar": "تُمرَّرُ عبرَ سطرِ الأوامرِ في webServer في Playwright، ويُقرأُها main.tsx عبرَ import.meta.env. تُزالُ بالكاملِ من حزمةِ الإنتاجِ عندَ غيابِها."
     },
     {
+      "name": "WASLA_OBS_ENVIRONMENT",
+      "type": "string",
+      "required": "conditional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "اسمُ بيئةِ المراقبةِ الذي يختارُ ملفَّ الأهداف infra/observability/targets/<name>.targets لمُجمِّعِ المراقبةِ وPrometheus. إلزاميٌّ لهما ولا قيمةَ افتراضيّة: غيابُهُ أو بيئةٌ مجهولةٌ يُسقِطُ الإقلاعَ (ADR-068).",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "services/observability/src/config.ts",
+          "mode": "bag"
+        }
+      ]
+    },
+    {
       "name": "WASLA_PG_CONNECT_TIMEOUT_MS",
       "type": "positive_int",
       "required": "optional",
@@ -2282,5 +2300,5 @@
     }
   ],
   "numeric_parse_exceptions": [],
-  "total": 88
+  "total": 91
 }

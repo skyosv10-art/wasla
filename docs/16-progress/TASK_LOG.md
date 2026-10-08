@@ -9203,3 +9203,23 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note (stays Blocked).
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0498 (Released). `ROADMAP.md` — Last updated + In progress line.
 - **Not changed:** old Render workspace, Telegram webhooks, DNS, Supabase, secrets in git, code. BOT_E2E not started. Phase 4/5 not started.
+
+---
+
+# 2026-10-08 — CLM-0499 — M6-18B: observability targets per environment (blue/green monitoring fix)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T114500Z-clm-0499-observability-targets-per-environment` — live `/api/v1/targets` measurement of the new collector (legacy hosts); vitest 11/11; typecheck; guard + 8/8 mutations; entrypoint render per environment; fail-closed boot.
+- **Deployment:** none — repository only; not activated on Render (needs `WASLA_OBS_ENVIRONMENT` on the new collector first)
+- **What changed:**
+  - `infra/observability/targets/*.targets` — new registry (legacy = paging owner, singapore = shadow).
+  - `infra/observability/prometheus.yml` · `prometheus-entrypoint.sh` · `Dockerfile.prometheus` — template rendered per environment, no default.
+  - `services/observability/src/config.ts` · `scraper.ts` · `index.ts` · `__tests__/config.test.ts` — collector reads the same registry; fail closed.
+  - `scripts/checks/validate-observability-targets.sh` · `scripts/verify.sh` · `docs/00-rules/VERIFY_COMMAND.md` — mandatory guard.
+  - `docs/15-decisions/ADR-068-observability-targets-per-environment.md` — Proposed.
+  - `packages/config/env-registry.json` · `packages/config/src/registry.generated.ts` · `.env.example` — `WASLA_OBS_ENVIRONMENT` registered (conditional, non-secret, M6-18B); artifacts regenerated.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `ROADMAP.md` — CLM-0499.
+- **Not changed:** Render (both workspaces), Telegram, DNS, Supabase; terraform/scripts host conventions (Phase 4 report).

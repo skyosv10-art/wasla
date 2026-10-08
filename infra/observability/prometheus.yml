@@ -1,5 +1,14 @@
-# WASLA Observability — Prometheus scrape config (M2-08 Stage B)
-# ADR-041: Scrape /metrics from all 14 HTTP services on Render staging
+# WASLA Observability — Prometheus scrape config TEMPLATE (M2-08 Stage B · CLM-0499 · ADR-068)
+# Scrapes /metrics from the 14 HTTP services of ONE Render environment.
+#
+# This file holds NO hostnames. The entrypoint renders it from
+# infra/observability/targets/<WASLA_OBS_ENVIRONMENT>.targets:
+#   __ALERTING__        → the Alertmanager block, or `alertmanagers: []` when the
+#                         environment does not own paging (`alertmanager none`)
+#   __SERVICE_TARGETS__ → one `- "<host>"` line per `service` entry
+#   __ENVIRONMENT__     → the environment name (label)
+#   __PORT__            → the listen port
+# Guard: scripts/checks/validate-observability-targets.sh renders every environment.
 #
 # Services sleep after 15 min idle (Render Free/Starter). Scrape interval
 # is 30s to catch metrics during active periods. honor_labels: true so
@@ -14,16 +23,7 @@ rule_files:
   - "alert-rules.yml"
 
 alerting:
-  alertmanagers:
-    # Alertmanager is a separate Render service; "localhost:9093" never reached it.
-    - scheme: https
-      api_version: v2
-      basic_auth:
-        username: wasla-prometheus
-        password_file: /tmp/prometheus/am_password
-      static_configs:
-        - targets:
-            - "wasla-alertmanager.onrender.com"
+__ALERTING__
 
 scrape_configs:
   # ── WASLA HTTP Services (14) ──────────────────────────────────────────
@@ -35,27 +35,13 @@ scrape_configs:
     honor_labels: true
     static_configs:
       - targets:
-          - "wasla-customers.onrender.com"
-          - "wasla-delivery.onrender.com"
-          - "wasla-dispatch.onrender.com"
-          - "wasla-drivers.onrender.com"
-          - "wasla-geography.onrender.com"
-          - "wasla-identity.onrender.com"
-          - "wasla-matching.onrender.com"
-          - "wasla-negotiations.onrender.com"
-          - "wasla-orders.onrender.com"
-          - "wasla-reputation.onrender.com"
-          - "wasla-search.onrender.com"
-          - "wasla-marketplace.onrender.com"
-          - "wasla-subscriptions.onrender.com"
-          - "wasla-audit.onrender.com"
+__SERVICE_TARGETS__
         labels:
-          environment: staging
+          environment: __ENVIRONMENT__
           platform: render
 
-  # ── Prometheus self-monitoring ─────────────────────────────────────────
+  # ── Prometheus self-monitoring ────────────────────────────────────────
   - job_name: "prometheus"
     static_configs:
       - targets:
-          # Rendered by prometheus-entrypoint.sh to the port Render assigns.
           - "localhost:__PORT__"

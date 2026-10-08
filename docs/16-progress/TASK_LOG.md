@@ -9170,7 +9170,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 
 # 2026-10-08 — CLM-0497 — M6-18B/M6-18C/M6-19B/M6-19C: bot preflight, INC-0003, BOT_E2E blocked, RISK-0063 pack, RISK-0060 plan, owner decisions
 
-- **Work Item(s):** M6-18B, M6-18C, M6-19B, M6-19C
+- **Work Item(s):** M6-18B · M6-18C · M6-19B · M6-19C
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
 - **Risk(s):** RISK-0063 → open · RISK-0060 → mitigating · RISK-0055 → closed · RISK-0061 → closed

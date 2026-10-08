@@ -21,6 +21,15 @@ What it does:
   5. Writes a JSON evidence file; exits non-zero if any service is not live
      on the target commit. No partial success is reported as success.
 
+Deploy target (CLM-0501 · INC-0005):
+  The workspace is NOT a default in this file. It comes from
+  infra/render/deploy-target.json:
+    mode "frozen" → nothing is listed or deployed; a FROZEN report is written, exit 0
+    mode "deploy" → owner_id is required, must not be a frozen owner, and every
+                    service deployed must carry that ownerId.
+  The old built-in default (the legacy workspace) made the first code merge of
+  the blue/green window queue 24 deploys on the frozen legacy stack (INC-0005).
+
 Usage:
   RENDER_API_KEY=... python3 scripts/deploy/render-sync.py <sha> [--only a,b] \
       [--verify-only] [--out path.json]
@@ -37,7 +46,25 @@ import urllib.error
 import urllib.request
 
 API = "https://api.render.com/v1"
-OWNER = os.environ.get("RENDER_OWNER_ID", "tea-damm8atbedkc73ca3ahg")
+TARGET_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "infra", "render", "deploy-target.json")
+
+
+def load_target() -> dict:
+    with open(TARGET_FILE, encoding="utf-8") as f:
+        t = json.load(f)
+    mode = t.get("mode")
+    if mode == "frozen":
+        return t
+    if mode != "deploy":
+        sys.exit(f"deploy-target.json: mode must be 'frozen' or 'deploy' (got {mode!r})")
+    owner = t.get("owner_id") or ""
+    if not owner.startswith("tea-") or owner in (t.get("frozen_owners") or []):
+        sys.exit(f"deploy-target.json: owner_id {owner!r} is missing, malformed or frozen — refusing to deploy")
+    return t
+
+
+TARGET = load_target()
+OWNER = TARGET.get("owner_id")
 TERMINAL_OK = {"live"}
 TERMINAL_BAD = {"build_failed", "update_failed", "canceled", "deactivated", "pre_deploy_failed"}
 
@@ -88,7 +115,22 @@ def main() -> int:
     ap.add_argument("--timeout-min", type=int, default=45)
     a = ap.parse_args()
 
+    if TARGET["mode"] == "frozen":
+        report = {"target_commit": a.sha, "verdict": "FROZEN", "deployed": 0,
+                  "reason": TARGET.get("reason", ""), "since": TARGET.get("since"),
+                  "checked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+        if a.out:
+            with open(a.out, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2, ensure_ascii=False)
+        print(f"::notice::Render deploy target is FROZEN since {TARGET.get('since')} — nothing deployed. {TARGET.get('reason', '')}")
+        return 0
+
     svcs = services()
+    if not svcs:
+        sys.exit(f"no wasla- services visible for owner {OWNER} with this key — refusing to report a verdict")
+    foreign = [s["name"] for s in svcs if s.get("ownerId") != OWNER]
+    if foreign:
+        sys.exit(f"services outside the declared owner {OWNER}: {foreign} — refusing to deploy")
     if a.only:
         wanted = set(a.only.split(","))
         svcs = [s for s in svcs if s["name"] in wanted]

@@ -19,11 +19,17 @@ describe('observability targets', () => {
     expect(t.services.map(s => s.name)).toEqual(legacy.services.map(s => s.name));
   });
 
-  it('singapore never points at a legacy host, and does not own paging', () => {
+  // CLM-0504 paging flip: the invariant reversed — singapore is now the paging
+  // owner (its Alertmanager is a NEW-workspace host, never a legacy one) and the
+  // legacy environment owns no paging. The 'at most one environment owns paging'
+  // case below still guards the single-owner rule.
+  it('singapore never points at a legacy host, and owns paging; legacy owns none', () => {
     const legacyHosts = new Set(loadTargets({ WASLA_OBS_ENVIRONMENT: 'render-oregon-legacy' }).services.map(s => s.url));
     const sg = loadTargets({ WASLA_OBS_ENVIRONMENT: 'render-singapore' });
     for (const s of sg.services) expect(legacyHosts.has(s.url)).toBe(false);
-    expect(sg.alertmanager).toBeNull();
+    expect(sg.alertmanager).not.toBeNull();
+    expect(legacyHosts.has(`https://${sg.alertmanager}`)).toBe(false);
+    expect(loadTargets({ WASLA_OBS_ENVIRONMENT: 'render-oregon-legacy' }).alertmanager).toBeNull();
   });
 
   it('at most one environment owns paging', () => {

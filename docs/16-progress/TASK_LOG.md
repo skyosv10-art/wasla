@@ -9148,3 +9148,20 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0495 (Released).
 - **Not changed:** any code, tests, Render env vars, production database, Supabase settings. No risk closed, mitigated further, or accepted. ADR-066 and ADR-067 not ratified or rejected.
 
+
+---
+
+# 2026-10-08 — CLM-0496 — M6-18B: ADR-066 / ADR-067 corrections (RPO re-measured, pooler region, Render region)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0055 → closed (unchanged; closure basis restated as acceptance of the measured RPO, not 6 h met) · RISK-0061 → closed (unchanged)
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T021100Z-clm-0496-adr-066-067-corrections/README.md` — `db-backup.yml` history: 7 d 20 successes, median gap 5.50 h, worst 54.72 h, 9/19 gaps > 6 h; last 48 h worst 10.08 h. Render API: 21 web services `oregon` + 3 static sites; bot instance plan `free`. Production pooler `aws-0-ap-south-1` (CLM-0495).
+- **Deployment:** none — docs only
+- **What changed:**
+  - `docs/15-decisions/ADR-066-permanent-rpo-amendment.md` — status `Accepted` → `Proposed` pending explicit ratification; removed the unmeasured claim "RPO target is met at 6 h"; loss bound restated as measured worst gap; Corrections table quoting the original text.
+  - `docs/15-decisions/ADR-067-accept-cross-region-latency.md` — status `Accepted` → `Proposed`; pooler `aws-0-ap-northeast-2` → `aws-0-ap-south-1`; removed the nonexistent Render Mumbai region; unmeasured latency/RPS figures marked not measured; Corrections table.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note (stays Blocked).
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0496 (Released). `ROADMAP.md` — Last updated + In progress line.
+- **Not changed:** RISK_REGISTER statuses, ADR-052, ADR-058, Render, Supabase, any code. Ratification is a separate owner record.

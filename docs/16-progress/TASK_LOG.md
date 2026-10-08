@@ -9165,3 +9165,23 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note (stays Blocked).
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0496 (Released). `ROADMAP.md` — Last updated + In progress line.
 - **Not changed:** RISK_REGISTER statuses, ADR-052, ADR-058, Render, Supabase, any code. Ratification is a separate owner record.
+
+---
+
+# 2026-10-08 — CLM-0497 — M6-18B/M6-18C/M6-19B/M6-19C: bot preflight, INC-0003, BOT_E2E blocked, RISK-0063 pack, RISK-0060 plan, owner decisions
+
+- **Work Item(s):** M6-18B, M6-18C, M6-19B, M6-19C
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open · RISK-0060 → mitigating · RISK-0055 → closed · RISK-0061 → closed
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md` — Render API (GET only): bot deploy history (live `93a4e33`; `078ad9a` failed `pipeline_minutes_exhausted`, incl. a customer-bot api attempt 2026-10-08T01:11:21Z), instance plan `free`, token bot-ID prefixes; Telegram `getMe`/`getWebhookInfo` ×3; `/health` 200 ×3; git diff `93a4e33..078ad9a` and bot dependency closure; Render docs on restart and pipeline minutes.
+- **Deployment:** none — read-only measurement and docs only
+- **What changed:**
+  - `docs/12-testing/ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md` — new: preflight, INC-0003 measurement, BOT_E2E result, RISK-0063 decision pack, INC-0003 fix scope, RISK-0060 probe plan, owner decisions.
+  - `docs/07-security/INCIDENTS.md` — INC-0003 opened; INC-0002 follow-up (technically remediated, E2E evidence pending).
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0063, RISK-0060, RISK-0055, RISK-0061 notes by addition; statuses unchanged.
+  - `docs/15-decisions/ADR-066-permanent-rpo-amendment.md`, `docs/15-decisions/ADR-067-accept-cross-region-latency.md` — `Proposed` → `Accepted` (explicit owner ratification of the CLM-0496 text).
+  - `docs/12-testing/M6-18C_GATE.md`, `docs/12-testing/M6-19B_GATE.md`, `docs/12-testing/M6-19C_GATE.md` — owner gate decision sections.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note; M6-18C → Completed; M6-19B/C approval noted, stay Ready for Gate (dependency M6-19A).
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0497 (Released). `ROADMAP.md` — Last updated + In progress line.
+- **Not changed:** Render env vars, deploys, restarts, Telegram webhooks, Supabase, secrets, code. M6-19A stays Ready for Gate (pentest not performed). READY_FOR_M7 = NO.

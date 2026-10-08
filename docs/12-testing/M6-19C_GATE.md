@@ -43,3 +43,12 @@ available. The implementation needs:
 ## 3. Not claimed
 
 No SLSA level above Build L0 is claimed. No image signing, SBOM signing or binary authorization exists.
+
+
+---
+
+## Owner gate decision — 2026-10-08 (CLM-0497)
+
+**Owner gate decision (2026-10-08, CLM-0497):** the Program Owner approved the M6-19C gate («وافق على بوابات M6-18C وM6-19B وM6-19C»). Status stays `Ready for Gate`: the board dependency **M6-19A is not Completed** and the same owner message keeps M6-19A blocked. Promotion to `Completed` takes effect when M6-19A completes, without a new gate decision.
+
+Evidence: [`ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/`](ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md) §8.

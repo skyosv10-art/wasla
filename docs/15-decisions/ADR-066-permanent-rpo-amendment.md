@@ -1,6 +1,6 @@
 # ADR-066: Permanent RPO target amendment — T1 RPO 6 h, not 5 min
 
-**Status:** Proposed — corrected 2026-10-08 (CLM-0496); awaiting explicit Program Owner ratification of the corrected text. *(Recorded as `Accepted` on 2026-10-06 by agent under broad delegation, with no explicit owner ratification record — see [Corrections](#corrections-2026-10-08-clm-0496).)*
+**Status:** Accepted — ratified explicitly by the Program Owner on 2026-10-08 («أصادق ADR-066 وADR-067 صراحةً»), on the corrected text of CLM-0496 (`69c6627`); recorded in CLM-0497. *(Recorded as `Accepted` on 2026-10-06 by agent under broad delegation, with no explicit owner ratification record — see [Corrections](#corrections-2026-10-08-clm-0496).)*
 **Date:** 2026-10-06
 **Decider:** Program Owner (@skyosv10-art), executed by agent:perplexity-computer (CLM-0487)
 **Amends:** [ADR-052](ADR-052-ha-capacity-dr.md) §1 — T1 RPO target
@@ -83,3 +83,7 @@ Correction by addition and audit record; the original wording is quoted so nothi
 | C4 | "Up to ~10 h of committed data can be lost" | Understates the measured worst gap (54.72 h in 7 days) | Loss bound stated as the measured worst gap |
 
 Evidence: [`ci-evidence/2026-10-08T021100Z-clm-0496-adr-066-067-corrections/`](../12-testing/ci-evidence/2026-10-08T021100Z-clm-0496-adr-066-067-corrections/README.md).
+
+## Ratification (2026-10-08, CLM-0497)
+
+The Program Owner ratified this ADR explicitly on 2026-10-08: «أصادق ADR-066 وADR-067 صراحةً». The ratification applies to the corrected text merged in CLM-0496 (`69c6627`), including its Corrections table. Evidence: [`ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/`](../12-testing/ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md) §8.

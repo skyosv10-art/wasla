@@ -1,3 +1,23 @@
+# 2026-10-08 — CLM-0503 — M6-18B: Render blue/green Phase 5 STEP B (deploy target → new Singapore workspace)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer), executing the owner's written Phase 5 delegation of 2026-10-08
+- **Status:** In Progress
+- **Risk(s):** RISK-0063 → open (legacy workspace; unchanged), RISK-0058 → mitigating (unchanged), INC-0003 → open on legacy only (new workspace measured uncrossed)
+- **What / Why:** STEP B of the CLM-0500 cutover plan, owner-approved for execution (D-6). `infra/render/deploy-target.json`: `mode: frozen → deploy`, `owner_id: tea-db0vtkpsrm7s739dm5c0`. Merging this PR is the first action that auto-deploys to the 22 new services.
+- **Changed:** `infra/render/deploy-target.json` (unit: render deploy target); `scripts/checks/validate-render-deploy-target.sh` (unit: deploy-target guard self-test); evidence `docs/12-testing/ci-evidence/2026-10-08T153000Z-clm-0503-render-phase5-stepb/README.md`.
+- **Guard root-cause fix (CI run 37800511103, `verify` job):** the deploy-target guard's self-test anchored its mutations on a hard-coded frozen-state literal (`"mode": "frozen",\n  "owner_id": null`), so it crashed (AssertionError) the moment the file legitimately switched to `deploy` — the exact state STEP B creates. Fixed by deriving every mutation anchor from the CURRENT file content (state-independent), and by testing the frozen-network rule on a copy forced into the frozen state. Same 6 rules, same 6/6 mutations caught, verified in BOTH states (deploy: 6/6, frozen: 6/6). No check weakened, no case removed.
+- **Owner decisions recorded:** D-6 execution approval (supersedes P5-1 pending; P5-3 stays DEFER per D-3 — recorded conflict, resolved by the owner's later instruction); D-7 legacy deletion approval (supersedes D-5's ≥24 h / ≥14-day timing; the explicit approval D-5 reserved for S12).
+- **Measured before the PR (read-only, both keys):** 22 new / 24 legacy services; env key parity 22/22; S1a already set (`WASLA_OBS_ENVIRONMENT=render-singapore` on new observability); S1c already set (legacy `autoDeploy=no` ×24, was `yes` at CLM-0502); new bot tokens uncrossed; main CI green on `8ad804fd`; no open PRs/claims.
+- **STEP A executed (owner-secret, outside git):** repository secret `RENDER_API_KEY` = new Singapore key; frozen-mode dispatch verification run [37799850193](https://github.com/skyosv10-art/wasla/actions/runs/37799850193) logged FROZEN with 0 Render calls.
+- **Verification:** `validate-render-deploy-target.sh`, `validate-state-sync.sh`, `verify-governance.sh` local run before push (output pasted in the PR); CI verdict on this PR is the merge authority.
+- **Security / Data / Deployment:** deployment change only (one JSON file). Merging triggers `render-deploy.yml` → 22 new services redeployed on the merge commit; legacy untouched (0 deploys).
+- **Known Issue / Blocker:** P5-3 (D-3 DEFER) — authenticated probes not executed; post-cutover follow-up. New services on Render free plan (sleep risk, owner cost decision).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T153000Z-clm-0503-render-phase5-stepb/README.md`
+- **Deployment:** this merge = first auto-deploy to the new workspace (22 services, merge commit); result verified in the follow-up claim.
+- **Next:** verify render-deploy PASS on the merge commit (22/22 live), then S1e collector measurement, S4 webhook cutover (partner → driver → customer), S10 validation, S6 prometheus/alertmanager, S12 legacy deletion (D-7) — each documented in follow-up claims.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-06 — CLM-0491 — BOT_PRECHECK (read-only): BLOCKED_PRECHECK
 
 - **Work Item(s):** M6-18B (INC-0002 context)

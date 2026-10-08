@@ -1,8 +1,8 @@
 {
   "$comment": "Single source of the Render workspace that main deploys to (CLM-0501). Read by scripts/deploy/render-sync.py; enforced by scripts/checks/validate-render-deploy-target.sh. Changing it is a reviewed, owner-approved step of the blue/green cutover (CLM-0500 report §4).",
-  "mode": "frozen",
-  "owner_id": null,
-  "reason": "Render blue/green migration: the legacy workspace is frozen (no deploy, INC-0003/INC-0004/RISK-0063) and the new Singapore workspace is deployed only by owner-approved, per-step Phase 5 actions. A main merge deploys nothing.",
+  "mode": "deploy",
+  "owner_id": "tea-db0vtkpsrm7s739dm5c0",
+  "reason": "Render blue/green Phase 5 STEP B (CLM-0503): owner-approved execution per the S0–S12 plan of CLM-0500/CLM-0502. S1a verified done (WASLA_OBS_ENVIRONMENT=render-singapore on the new observability), STEP A done (RENDER_API_KEY = new Singapore key; frozen-mode dispatch run 37799850193 logged FROZEN, 0 Render calls), S1c verified done (legacy autoDeploy=no x24, measured 2026-10-08T15:12Z). Merging this PR is the first action that auto-deploys to the 22 new services.",
   "frozen_owners": [
     "tea-damm8atbedkc73ca3ahg"
   ],

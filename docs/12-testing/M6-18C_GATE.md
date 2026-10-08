@@ -95,3 +95,12 @@ The `@wasla/observability` package already provides:
 - `collectDefaultMetrics` (used for resource alerts)
 
 These metrics are the data source for all alert rules defined above.
+
+
+---
+
+## Owner gate decision — 2026-10-08 (CLM-0497)
+
+**Owner gate decision (2026-10-08, CLM-0497):** the Program Owner approved the M6-18C gate («وافق على بوابات M6-18C وM6-19B وM6-19C»). Board status `Ready for Gate` → `Completed`. Dependency M6-18A is Completed. Recorded limits stay open and are not erased: other alert classes not exercised; free-plan sleep means no alert evaluation while idle; resolve lag ≈6 min unexplained.
+
+Evidence: [`ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/`](ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md) §8.

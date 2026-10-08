@@ -49,3 +49,12 @@ declared policy completeness only.
 - The access baseline row "PR reviews required (count=1)" is a REST sub-endpoint reading; R54 measured that approvals are
   **not** required (RISK-0054, root cause CONFIGURATION DEFECT). That row is not evidence of review enforcement.
 - Verdict unchanged: **BLOCKED**.
+
+
+---
+
+## Owner gate decision — 2026-10-08 (CLM-0497)
+
+**Owner gate decision (2026-10-08, CLM-0497):** the Program Owner approved the M6-19B gate («وافق على بوابات M6-18C وM6-19B وM6-19C»). Status stays `Ready for Gate`: the board dependency **M6-19A is not Completed** (independent pentest not performed) and the same owner message keeps M6-19A blocked. Promotion to `Completed` takes effect when M6-19A completes, without a new gate decision (STATUS_MODEL §2.1 — no jump past a dependency).
+
+Evidence: [`ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/`](ci-evidence/2026-10-08T021500Z-clm-0497-bot-preflight-e2e-owner-decisions/README.md) §8.

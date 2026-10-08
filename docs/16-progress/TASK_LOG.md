@@ -9203,3 +9203,18 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note (stays Blocked).
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0498 (Released). `ROADMAP.md` — Last updated + In progress line.
 - **Not changed:** old Render workspace, Telegram webhooks, DNS, Supabase, secrets in git, code. BOT_E2E not started. Phase 4/5 not started.
+
+---
+
+# 2026-10-08 — CLM-0500 — M6-18B: Render blue/green Phase 4 report
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T121500Z-clm-0500-render-blue-green-phase4/README.md`. Sources: host identity from Render API (old + new key, 22/22 distinct); legacy re-check (24 services, counts 24/24, none suspended, no new deploy); `getWebhookInfo` ×3 unchanged; keyring key IDs/statuses; repository search for audit callers, the partner Mini App and background loops.
+- **Deployment:** none — no Render, Telegram, DNS or Supabase change in either workspace
+- **What changed:**
+  - `docs/12-testing/ci-evidence/2026-10-08T121500Z-clm-0500-render-blue-green-phase4/README.md` — new: hostname proof, monitoring remediation summary (PR #655), singleton decision, cutover S0–S12, rollback, dual-stack controls, authenticated probe plan, resolved config questions, Phase 4 gates, Phase 5 gates P5-1..P5-11, owner decisions D-1..D-5.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `ROADMAP.md` — CLM-0500.
+- **Not changed:** both Render workspaces; Telegram webhooks; DNS; Supabase; INC-0003/INC-0004 remain open in the old stack.

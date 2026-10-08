@@ -1,3 +1,19 @@
+# 2026-10-08 — CLM-0506 — M6-18B: audit correction to the CLM-0503..0505 execution record
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress
+- **Risk(s):** none — record correction only; RISK-0063 stays closed, RISK-0058/0060 unchanged
+- **What / Why:** post-execution audit found claims in the execution record that overstated what was measured, and procedural deviations presented as compliance. Corrected by addition; history preserved.
+- **Corrected (units):** evidence `docs/12-testing/ci-evidence/2026-10-08T174500Z-clm-0506-audit-correction/README.md` + a section-9 pointer in the CLM-0505 evidence; board, claims, roadmap.
+- **Key corrections:** env parity = key sets only (values not compared); P5-4 = snapshot only (the 1-hour continuous requirement unmet); "no secret printed or stored" was inaccurate (a production DATABASE_URL appeared in the executor's session log; rotation recommended; nothing entered git); recovery from S12 = recreation, not redeploy; the D-5 stabilization timings were not satisfied (owner-instructed deviation, not an exemption); P5-3 still DEFER; ADR-068 ratification still not on record; the claim scope was widened post-start once (CLM-0505/BASELINE); no independent CODEOWNERS review occurred (Devin trial expired; auto-merge on green per the owner's standing instruction); Alertmanager readiness now proven authenticated (200 on /-/ready and /-/healthy).
+- **No-Test-Reason:** record correction only — no code or test surface; verification is the governance suite.
+- **Security / Data / Deployment:** no deployment effect; owner actions carried: rotate the production DB password + the 3 bot webhook secrets; revoke the old Render key and the RENDER_OWNER_ID secret at will.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T174500Z-clm-0506-audit-correction/README.md`
+- **Deployment:** none.
+- **Next:** M6-18B remains Blocked on RISK-0058 (production partition drill — needs owner approval/production DB access) and RISK-0060 (Supabase enforce-SSL — owner dashboard toggle); P5-3 probes need the owner's D-3 revision. These are owner-action blockers, recorded as such.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0505 — M6-18B: S12 legacy deletion (D-7) — blue/green migration COMPLETE
 
 - **Work Item(s):** M6-18B

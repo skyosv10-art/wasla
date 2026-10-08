@@ -1,3 +1,22 @@
+# 2026-10-08 — CLM-0509 — M6-18B / INC-0006: secret rotation executed — DB password, Supavisor ceiling, 3 webhook secrets
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0065 → closed
+- **What / Why:** execution of the CLM-0507 plan after the owner reset the production DB password; owner approvals: password reset, Supavisor pool size 15→40 (session mode, port 5432 kept), webhook order partner → driver → customer.
+- **Database:** owner entered the value once (Render env group `wasla-prod-db` + GitHub `SUPABASE_DB_URL`); executor linked the group to 17 services and deleted the 18 service-level keys (204 each); deploy 37848153316 PASS. B3 attempt 1 BLOCKED 14/17 — root cause measured in Supavisor logs: `EMAXCONNSESSION … pool_size: 15`; after the owner's change (read-back `default_pool_size = 40`, no change sent by the executor) B3 = 17/17 × 3 (22:21–22:22Z) with 0 EMAXCONNSESSION among 191 Supavisor entries; B4 new OK / old auth failure; B5 db-backup 37853117838 success, restore_all_match true (isolated scratch restore); B6 no business writes.
+- **Headroom (read-only):** max_connections 60 · observed peak 25 · remaining 35. RISK-0067 opened (high): pg.Pool default max 10 × 17 services vs 40 slots — independent app-side pool-limit change required, not done here.
+- **Bots:** 3/3 PASS — new secret per bot (hashes 1edb9a5d / 4909fcbe / 359b242f), bot-only deploy live in 61 s, setWebhook(drop_pending_updates=false), URL match, no error since set, pending 0, wrong/no/old secret 401, health 200.
+- **Corrections by addition:** the S10 "3 transient cold-start 503" (CLM-0505) were most likely the same pool ceiling; the update mechanism deviated from plan §3 (env group instead of per-key PUT) because the executor cannot receive the password.
+- **Changed (units):** evidence README, `docs/07-security/INCIDENTS.md` (INC-0006 Resolved + follow-up), `docs/07-security/RISK_REGISTER.md` (RISK-0065 closed, RISK-0067 opened; risks_not_closed unchanged at 24, so BASELINE unchanged), board, claims, roadmap.
+- **No-Test-Reason:** operational execution + records — no code or test surface; verification is the measured gates in the evidence and the governance suite.
+- **Security / Data / Deployment:** no secret printed or stored; 1 dispatch deploy of main + 3 bot-only deploys of `28d20c91`; no DNS, no transaction mode, no max_connections change, no billing change, no business writes.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T223500Z-clm-0509-secret-rotation-executed/README.md`
+- **Deployment:** render-deploy 37848153316 (all services, PASS); bot deploys dep-db41hjqj9qps73fqa050, dep-db41i6142hec73fdstgg, dep-db41ioflot8c73ccntp0 (live).
+- **Next:** M6-18B stays Blocked on RISK-0058 / RISK-0060 / RISK-0066 / RISK-0067; RISK-0067 needs an independent app-side pool-limit claim; M7 not started.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0508 — M6-18B: record corrections (owner review) + free-plan decision pack
 
 - **Work Item(s):** M6-18B

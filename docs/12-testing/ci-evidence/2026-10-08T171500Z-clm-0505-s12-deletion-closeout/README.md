@@ -75,3 +75,7 @@ BLUE/GREEN MIGRATION = COMPLETE
   traffic: all 3 bots on the new hosts; no legacy traffic path remains
   M6-18B: stays Blocked on RISK-0058 / RISK-0060 (separate from the migration)
 ```
+
+## 9. Audit correction (CLM-0506)
+
+This record is corrected by addition in [CLM-0506](../2026-10-08T174500Z-clm-0506-audit-correction/README.md): key-set vs value parity, P5-4 snapshot only (the 1-hour continuous requirement unmet), the secret-handling claim (a production DATABASE_URL appeared in the executor's session log; rotation recommended; nothing entered git), recovery = recreation not redeploy, the unmet D-5 stabilization timings (owner-instructed deviation, not an exemption), and the procedural deviations (claim-scope widening, no independent review). The original text above is preserved as history.

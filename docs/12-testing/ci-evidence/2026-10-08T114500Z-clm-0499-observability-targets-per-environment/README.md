@@ -20,7 +20,8 @@
 | `infra/observability/Dockerfile.prometheus` | `COPY targets/` |
 | `services/observability/src/config.ts` · `scraper.ts` · `index.ts` | load the same file; fail closed at boot; `environment` label from the file |
 | `services/observability/src/__tests__/config.test.ts` | tests per environment, plus fail-closed and parser tests |
-| `scripts/checks/validate-observability-targets.sh` · `scripts/verify.sh` · `docs/00-rules/VERIFY_COMMAND.md` | new mandatory guard, with 8 mutation self-tests |
+| `scripts/ops/health/check-health.py` · `.github/workflows/service-health.yml` | the 6-hourly health probe, which also opens GitHub issues, reads the same registry; the workflow pins `WASLA_OBS_ENVIRONMENT` to the paging owner (guard-enforced) |
+| `scripts/checks/validate-observability-targets.sh` · `scripts/verify.sh` · `docs/00-rules/VERIFY_COMMAND.md` | new mandatory guard, with 10 mutation self-tests |
 
 ## Results (local; CI is the verdict)
 
@@ -29,12 +30,14 @@ services/observability vitest:  Test Files 1 passed (1)
  Tests 11 passed (11)
 typecheck: 0 errors
   ✓ targets per environment: template and collector host-free; every environment renders through the real entrypoint; no shared host; ≤1 paging owner; fail closed without environment
-  ✓ self-test: 8/8 mutations caught
+  ✓ self-test: 10/10 mutations caught
 collector, WASLA_OBS_ENVIRONMENT=render-singapore → "14 services", scraped wasla-delivery-3rm5 (152 lines)
 collector, no WASLA_OBS_ENVIRONMENT → exit 1 "WASLA_OBS_ENVIRONMENT is not set"
 prometheus entrypoint, render-singapore → alertmanagers: [] · 14 suffixed hosts · environment=render-singapore
 prometheus entrypoint, render-oregon-legacy → legacy Alertmanager · 14 legacy hosts
 prometheus entrypoint, no environment → exit 2
+check-health.py, WASLA_OBS_ENVIRONMENT=render-singapore → healthy 14/14 (new stack, GET /health only)
+check-health.py, no environment → exit 1
 ```
 
 ## Activation (not done here — Phase 4 report §2)

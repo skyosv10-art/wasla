@@ -41,7 +41,9 @@ legacy Prometheus's alerts.
    entrypoint. It fails on a hostname in the template or collector, a host shared
    by two environments, more than one paging owner, diverging service sets,
    `targets/` missing from the image, or a start without an environment. It
-   mutates a copy of the tree for each rule and requires a failure (8 mutations).
+   It also fails when the 6-hourly `service-health` probe (`scripts/ops/health/check-health.py`)
+   carries a hostname or watches an environment other than the paging owner. It
+   mutates a copy of the tree for each rule and requires a failure (10 mutations).
    Unit tests cover the collector parser (`services/observability`).
 
 ## Consequences

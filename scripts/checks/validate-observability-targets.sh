@@ -8,7 +8,9 @@
 #   3. two environments list the same host (a new environment silently scraping the old stack);
 #   4. more than one environment owns paging (duplicate Telegram alerts);
 #   5. environments disagree on the service set, or Dockerfile.prometheus does not ship targets/;
-#   6. the entrypoint starts without WASLA_OBS_ENVIRONMENT (must fail closed).
+#   6. the entrypoint starts without WASLA_OBS_ENVIRONMENT (must fail closed);
+#   7. scripts/ops/health/check-health.py carries a hostname, or service-health.yml probes
+#      another environment than the paging owner.
 # Then mutates a copy of the tree for each rule and requires a failure (self-test).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -45,6 +47,10 @@ def check(root):
         ams = c["alerting"]["alertmanagers"]
         if (am[0] == "none") != (ams == []): errs.append(f"{env}: alerting block does not match the alertmanager line")
     if len(owners) > 1: errs.append(f"more than one environment owns paging: {owners}")
+    hc = open(os.path.join(root, "scripts/ops/health/check-health.py")).read()
+    if "onrender.com" in hc: errs.append("scripts/ops/health/check-health.py contains a Render hostname")
+    wf = re.findall(r"WASLA_OBS_ENVIRONMENT:\s*([a-z0-9-]+)", open(os.path.join(root, ".github/workflows/service-health.yml")).read())
+    if wf != owners: errs.append(f"service-health.yml probes {wf}, paging owner is {owners}")
     for h, envs in hosts.items():
         if len(envs) > 1: errs.append(f"host {h} listed by several environments: {envs}")
     ref = next(iter(names.values()))
@@ -64,6 +70,8 @@ def mutate(desc, fn):
     d = tempfile.mkdtemp()
     try:
         for p in ("infra/observability", "services/observability/src"): shutil.copytree(p, os.path.join(d, p))
+        for p in ("scripts/ops/health/check-health.py", ".github/workflows/service-health.yml"):
+            os.makedirs(os.path.dirname(os.path.join(d, p)), exist_ok=True); shutil.copy(p, os.path.join(d, p))
         fn(d)
         if not check(d): print(f"  ✗ self-test: mutation not caught — {desc}"); return False
         return True
@@ -83,6 +91,8 @@ cases = [
     ("service set differs", edit(SG, "service wasla-audit ", "service wasla-audit2 ")),
     ("targets not shipped", edit("infra/observability/Dockerfile.prometheus", "COPY targets/ /etc/prometheus/targets/", "")),
     ("default environment", edit("infra/observability/prometheus-entrypoint.sh", ': "${WASLA_OBS_ENVIRONMENT:?', 'WASLA_OBS_ENVIRONMENT="${WASLA_OBS_ENVIRONMENT:-render-oregon-legacy}"; : "${WASLA_OBS_ENVIRONMENT:?')),
+    ("hostname in health probe", edit("scripts/ops/health/check-health.py", "ENVIRONMENT = ", "X = 'https://wasla-orders.onrender.com'\nENVIRONMENT = ")),
+    ("health workflow watches a non-owner", edit(".github/workflows/service-health.yml", "WASLA_OBS_ENVIRONMENT: render-oregon-legacy", "WASLA_OBS_ENVIRONMENT: render-singapore")),
     ("declared environment mismatch", edit(SG, "environment render-singapore", "environment render-oregon-legacy")),
 ]
 ok = all([mutate(d, f) for d, f in cases])

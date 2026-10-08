@@ -9212,14 +9212,27 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
 - **Status:** Merged
 - **Risk(s):** RISK-0063 → open
-- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T114500Z-clm-0499-observability-targets-per-environment` — live `/api/v1/targets` measurement of the new collector (legacy hosts); vitest 11/11; typecheck; guard + 8/8 mutations; entrypoint render per environment; fail-closed boot.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T114500Z-clm-0499-observability-targets-per-environment` — live `/api/v1/targets` measurement of the new collector (legacy hosts); vitest 11/11; typecheck; guard + 10/10 mutations; check-health on the new stack 14/14; entrypoint render per environment; fail-closed boot.
 - **Deployment:** none — repository only; not activated on Render (needs `WASLA_OBS_ENVIRONMENT` on the new collector first)
 - **What changed:**
   - `infra/observability/targets/*.targets` — new registry (legacy = paging owner, singapore = shadow).
   - `infra/observability/prometheus.yml` · `prometheus-entrypoint.sh` · `Dockerfile.prometheus` — template rendered per environment, no default.
   - `services/observability/src/config.ts` · `scraper.ts` · `index.ts` · `__tests__/config.test.ts` — collector reads the same registry; fail closed.
+  - `scripts/ops/health/check-health.py` · `.github/workflows/service-health.yml` — health probe reads the registry; pinned to the paging owner.
   - `scripts/checks/validate-observability-targets.sh` · `scripts/verify.sh` · `docs/00-rules/VERIFY_COMMAND.md` — mandatory guard.
   - `docs/15-decisions/ADR-068-observability-targets-per-environment.md` — Proposed.
   - `packages/config/env-registry.json` · `packages/config/src/registry.generated.ts` · `.env.example` — `WASLA_OBS_ENVIRONMENT` registered (conditional, non-secret, M6-18B); artifacts regenerated.
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `ROADMAP.md` — CLM-0499.
 - **Not changed:** Render (both workspaces), Telegram, DNS, Supabase; terraform/scripts host conventions (Phase 4 report).
+
+---
+
+# 2026-10-08 — CLM-0499 (addendum) — M6-18B: the 6-hourly health probe joins the per-environment registry
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T114500Z-clm-0499-observability-targets-per-environment/README.md` — `check-health.py` with `WASLA_OBS_ENVIRONMENT=render-singapore` → 14/14 healthy (GET only); without it → exit 1; guard 10/10 mutations.
+- **Deployment:** none — repository only
+- **What changed:** `scripts/ops/health/check-health.py` reads `infra/observability/targets/<env>.targets` (no default). `.github/workflows/service-health.yml` pins `WASLA_OBS_ENVIRONMENT: render-oregon-legacy`. The guard requires it to equal the paging owner, so GitHub-issue alerts and Telegram paging always follow the same environment. ADR-068, VERIFY_COMMAND, board, ROADMAP and claim scope updated.

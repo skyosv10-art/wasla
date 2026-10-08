@@ -9185,3 +9185,21 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note; M6-18C → Completed; M6-19B/C approval noted, stay Ready for Gate (dependency M6-19A).
   - `docs/16-progress/WORK_CLAIMS.md` — CLM-0497 (Released). `ROADMAP.md` — Last updated + In progress line.
 - **Not changed:** Render env vars, deploys, restarts, Telegram webhooks, Supabase, secrets, code. M6-19A stays Ready for Gate (pentest not performed). READY_FOR_M7 = NO.
+
+---
+
+# 2026-10-08 — CLM-0498 — M6-18B: Render blue/green migration Phase 0–3 (new Singapore workspace)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T110500Z-clm-0498-render-blue-green-phase0-3/README.md` — old workspace inventory via Render API (GET only); new workspace creation/deploy results; env name/count comparison 22/22; URL rewrite audit (0 old hosts); `getMe` identity ×3; `/health` per service; static-site routing probes; Telegram `getWebhookInfo` ×3 unchanged; old-workspace value-level env comparison (unchanged).
+- **Deployment:** new Render workspace `tea-db0vtkpsrm7s739dm5c0` — 22 services created and `live` on `f4b348b` (19 web `singapore` free + 3 static); no traffic cutover; old workspace not deployed, suspended or modified
+- **What changed:**
+  - `docs/12-testing/ci-evidence/2026-10-08T110500Z-clm-0498-render-blue-green-phase0-3/README.md` — new: Phase 0 inventory, Phase 1–3 results, new service IDs/URLs, Phase 6-style summary.
+  - `docs/07-security/INCIDENTS.md` — INC-0004 opened (old bots `WASLA_SERVICE` not a package name; fixed in the new workspace only).
+  - `docs/07-security/RISK_REGISTER.md` — RISK-0063 note by addition; status unchanged.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` — M6-18B note (stays Blocked).
+  - `docs/16-progress/WORK_CLAIMS.md` — CLM-0498 (Released). `ROADMAP.md` — Last updated + In progress line.
+- **Not changed:** old Render workspace, Telegram webhooks, DNS, Supabase, secrets in git, code. BOT_E2E not started. Phase 4/5 not started.

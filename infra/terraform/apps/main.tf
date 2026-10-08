@@ -1,3 +1,4 @@
+# LEGACY-ONLY (CLM-0502): derives https://wasla-<svc>.onrender.com by convention; never applied. DO NOT APPLY against render-singapore — hosts must come from a registry first
 # ── WASLA app static sites — جذرُ terraform مستقلٌّ (M3-09 · ADR-048) ──────
 #
 # ينشرُ المواقعَ الثابتةَ الثلاثةَ (customer-mini-app · driver-mini-app · admin-portal)

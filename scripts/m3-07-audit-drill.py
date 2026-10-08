@@ -7,6 +7,10 @@ wasla-audit Render service, mints a wsvc3 service-auth token locally,
 then POSTs an audit event and GETs it back. Secrets are never printed.
 """
 import urllib.request, urllib.error, json, hmac, hashlib, base64, time, os, sys
+# LEGACY-ONLY (CLM-0502): legacy M3-07 drill (POSTs audit events to the legacy audit host)
+sys.path.insert(0, next(str(_p / "scripts" / "ops") for _p in __import__("pathlib").Path(__file__).resolve().parents if (_p / "infra" / "render" / "deploy-target.json").is_file()))
+from render_target import legacy_only  # noqa: E402
+legacy_only("m3-07-audit-drill.py")
 
 RENDER_API_KEY = os.environ.get("RENDER_API_KEY", "")
 AUDIT_SERVICE_ID = "srv-daprrq0u01pc73do9npg"

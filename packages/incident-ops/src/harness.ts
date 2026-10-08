@@ -1,3 +1,4 @@
+// LEGACY-ONLY (CLM-0502): runbook URLs and defaults follow the legacy host convention
 /**
  * M4-04 Incident/On-Call/Rollback Operations harness.
  *

@@ -9270,3 +9270,29 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `ROADMAP.md` — CLM-0500.
 - **Correction by addition:** the report records INC-0005 (the #655 merge queued 24 legacy deploy attempts, all `build_failed`; live unchanged) and gate P4-9 (CLM-0501 merged `5f64b97`; merge run 37781376636 = FROZEN). First opened as PR #656, re-opened from a fresh branch as one commit.
 - **Not changed:** both Render workspaces; Telegram webhooks; DNS; Supabase; INC-0003/INC-0004 remain open in the old stack.
+
+---
+
+# 2026-10-08 — CLM-0502 — M6-18B: Render blue/green Phase 5 PREFLIGHT + P5-9 legacy Render tools guard
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T140000Z-clm-0502-render-phase5-preflight/README.md`
+- **Deployment:** none. Merging runs `render-deploy.yml` in FROZEN mode (nothing deployed)
+- **Owner decisions recorded:** D-1 KEEP SEPARATE (audit `stg-audit-k6` inherited from M3-07; key convergence after the migration); D-2 KEEP TEMPORARY TARGET (partner Mini App → admin app = staging placeholder, product decision before FIELD_TRIAL); D-3 DEFER (P5-3 BLOCKED); D-4 no custom domains (S7/S8 N/A); D-5 approved (≥24 h, ≥14 days, backup/RPO plus approval).
+- **Measured (read-only):**
+  - Target FROZEN; no workspace id in `render-sync.py`; guards green; legacy and new deploys since 12:30Z = 0.
+  - STEP B simulation (`--verify-only`): NEW/NEW → 22 services, all NEW owner; NEW/OLD key → refuse; OLD target → refuse.
+  - Build headroom ≥ 471 min (≈ 17 full redeploys).
+  - Menu buttons: `commands` ×3, no Web App, no Main Mini App.
+  - Webhooks recorded for rollback; no worker or cron service.
+  - Legacy Render `autoDeploy=yes` ×24 has never fired (0 of 1,588 deploys by `new_commit`). Latent, recorded.
+- **What changed (P5-9):**
+  - `scripts/ops/render_target.py` — new resolver: `legacy_only` exits 3 while frozen; `explicit_owner` requires `RENDER_OWNER_ID`.
+  - 8 Render tools no longer carry a default workspace; 6 write tools refuse while legacy is frozen.
+  - `LEGACY-ONLY (CLM-0502)` markers on terraform apps/cron/observability, `app-rewrites.json`, observability `render.yaml`, `m3-07-health-scan.py`, and harness defaults.
+  - `infra/render/host-sources.json` classification; `infra/render/deploy-target.json` gains `legacy_owner`.
+  - `scripts/checks/validate-render-host-sources.sh` (baseline + 7 mutations) in `scripts/verify.sh`, plus a `VERIFY_COMMAND.md` row.
+- **Not changed:** both Render workspaces, Telegram, DNS, Supabase, `deploy-target.json` mode, `RENDER_API_KEY`.

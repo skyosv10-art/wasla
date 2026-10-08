@@ -31,9 +31,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+# Workspace from RENDER_OWNER_ID only (CLM-0502): read-only report
+sys.path.insert(0, next(str(_p / "scripts" / "ops") for _p in __import__("pathlib").Path(__file__).resolve().parents if (_p / "infra" / "render" / "deploy-target.json").is_file()))
+from render_target import explicit_owner  # noqa: E402
 
 API = "https://api.render.com/v1"
-OWNER = os.environ.get("RENDER_OWNER_ID", "tea-damm8atbedkc73ca3ahg")
+OWNER = explicit_owner("observe-report.py")
 SERVICES = ("wasla-negotiations", "wasla-matching", "wasla-marketplace", "wasla-identity")
 NOISE = ("/health", "/ready", "/metrics", "/livez", "/readyz")
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# LEGACY-ONLY (CLM-0502): legacy hosts by name; read-only GET /health of the legacy stack — not valid for render-singapore (use scripts/ops/health/check-health.py)
 """M3-07 Runbook Drill — Health scan of all published Render services."""
 import urllib.request, json, time, concurrent.futures, sys
 

@@ -1,3 +1,4 @@
+// LEGACY-ONLY (CLM-0502): default base URLs follow the legacy host convention; set the env overrides for any other stack
 /**
  * M4-02 Golden Journey harness — staging URL builder and HTTP client.
  *

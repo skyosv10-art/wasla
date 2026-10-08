@@ -72,6 +72,10 @@ run_step "إعدادُ Render (M2-02D · ADR-039)" \
 run_step "أهدافُ المراقبةِ لكلِّ بيئة (CLM-0499 · ADR-068)" \
   bash scripts/checks/validate-observability-targets.sh
 
+# ── 1-د1ب) هدفُ النشرِ من main مُعلَنٌ لا افتراضيّ (CLM-0501 · INC-0005) ─────
+run_step "هدفُ نشرِ Render مُعلَنٌ (CLM-0501 · INC-0005)" \
+  bash scripts/checks/validate-render-deploy-target.sh
+
 # ── 1-د2) مُجدوِلُ النبضاتِ (G8 · CLM-0328) ──────────────────────────────
 run_step "مُجدوِلُ النبضاتِ (G8 · CLM-0328)" \
   bash scripts/checks/validate-tick-scheduler.sh

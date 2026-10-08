@@ -9236,3 +9236,21 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T114500Z-clm-0499-observability-targets-per-environment/README.md` — `check-health.py` with `WASLA_OBS_ENVIRONMENT=render-singapore` → 14/14 healthy (GET only); without it → exit 1; guard 10/10 mutations.
 - **Deployment:** none — repository only
 - **What changed:** `scripts/ops/health/check-health.py` reads `infra/observability/targets/<env>.targets` (no default). `.github/workflows/service-health.yml` pins `WASLA_OBS_ENVIRONMENT: render-oregon-legacy`. The guard requires it to equal the paging owner, so GitHub-issue alerts and Telegram paging always follow the same environment. ADR-068, VERIFY_COMMAND, board, ROADMAP and claim scope updated.
+
+---
+
+# 2026-10-08 — CLM-0501 — M6-18B: INC-0005 — deploy target declared `frozen` (no built-in Render workspace)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Merged
+- **Risk(s):** RISK-0063 → open
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T123500Z-clm-0501-render-deploy-target-frozen/README.md` — 24 legacy deploys `a02a5b8` 24/24 `build_failed`; run 37776416388 cancelled; legacy live 24/24 `93a4e33`; new workspace 0 deploys; guard 6/6 mutations; frozen run → FROZEN, rc 0.
+- **Deployment:** none. The merge of this PR runs `render-deploy.yml` in FROZEN mode (nothing deployed)
+- **What changed:**
+  - `infra/render/deploy-target.json` — new, `mode: frozen`.
+  - `scripts/deploy/render-sync.py` — reads the target; no default owner; frozen → no network; deploy → owner check per service.
+  - `scripts/checks/validate-render-deploy-target.sh` · `scripts/verify.sh` · `docs/00-rules/VERIFY_COMMAND.md` — mandatory guard.
+  - `docs/07-security/INCIDENTS.md` — INC-0005 (Mitigated). `docs/07-security/RISK_REGISTER.md` — RISK-0063 note, status unchanged.
+  - `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `WORK_CLAIMS.md` · `ROADMAP.md` — CLM-0501.
+- **Not changed:** both Render workspaces (beyond the INC-0005 attempts themselves, which changed no live state), Telegram, DNS, Supabase.

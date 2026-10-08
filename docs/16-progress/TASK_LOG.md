@@ -9291,7 +9291,8 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - Legacy Render `autoDeploy=yes` ×24 has never fired (0 of 1,588 deploys by `new_commit`). Latent, recorded.
 - **What changed (P5-9):**
   - `scripts/ops/render_target.py` — new resolver: `legacy_only` exits 3 while frozen; `explicit_owner` requires `RENDER_OWNER_ID`.
-  - 8 Render tools no longer carry a default workspace; 6 write tools refuse while legacy is frozen.
+  - Write tools `scripts/ops/m6-18b-dr/render-dr-cutover.py`, `scripts/ops/risk-0056/render-cutover.py`, `scripts/deploy/dr-drill.py`, `scripts/m3-07-audit-drill.py` and `scripts/m3-07-key-rotation-drill.py` (plus `risk-0060/render-tls-activate.py` through its import) now call `legacy_only` and refuse while legacy is frozen.
+  - Read tools `scripts/ops/risk-0042/observe-report.py` and `scripts/ops/render-env-fingerprint.py` call `explicit_owner` and have no default workspace.
   - `LEGACY-ONLY (CLM-0502)` markers on terraform apps/cron/observability, `app-rewrites.json`, observability `render.yaml`, `m3-07-health-scan.py`, and harness defaults.
   - `infra/render/host-sources.json` classification; `infra/render/deploy-target.json` gains `legacy_owner`.
   - `scripts/checks/validate-render-host-sources.sh` (baseline + 7 mutations) in `scripts/verify.sh`, plus a `VERIFY_COMMAND.md` row.

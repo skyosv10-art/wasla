@@ -1,3 +1,19 @@
+# 2026-10-08 — CLM-0507 — M6-18B / INC-0006: read-only credential inventory and secret-rotation plan
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0065 → open
+- **What / Why:** the owner classified the production DB password and the 3 bot webhook secrets as compromised (INC-0006: exposure in the executor's session log / a session temp file; nothing entered git) and ordered an independent rotation claim before any other migration work. This claim is read-only inventory + plan; nothing rotated.
+- **Inventory (measured 2026-10-08T18:20Z):** one production credential (`postgres` role, Supabase pooler) shared by 17 Render services / 18 keys (14 services + 3 bots, customer-bot also `CUSTOMER_DATABASE_URL`) and GitHub secret `SUPABASE_DB_URL` (db-backup.yml every 6 h, risk-0056-apply/cutover, dr-render-cutover); Terraform reads it from the environment only; 0 env groups; `DR_REPLACEMENT_DB_URL` is a separate role (out of scope); no local/generated copy in or out of the repo except the agent's session log. Discoveries: `secret-inventory.json` lists 13 DATABASE_URL consumers (audit + 3 bots missing; CUSTOMER_DATABASE_URL mislabelled ci) — separate claim; no reviewed repo tool rotates a key on the new workspace (all env-writing tools are LEGACY-ONLY, frozen).
+- **Changed (units):** `docs/07-security/INCIDENTS.md` (INC-0006), `docs/07-security/RISK_REGISTER.md` (RISK-0065 opened), evidence README, `docs/12-testing/BASELINE.json`/`BASELINE.txt` regenerated (risks_not_closed 22→23; generated from main `28d20c91` with only the register change, dirty_reason in the file), board, claims, roadmap.
+- **No-Test-Reason:** read-only inventory and plan — no code or test surface; verification is the governance suite.
+- **Security / Data / Deployment:** no secret printed (key names, roles and host suffixes only); no production write. Owner action required: reset the `postgres` password in the Supabase dashboard and hand the value over the secure credential form. Webhook rotation ready (partner → driver → customer).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T183000Z-clm-0507-secret-rotation-inventory/README.md`
+- **Deployment:** none.
+- **Next:** SECURITY_ROTATION_BLOCKED on the owner's Supabase password reset; then execute plan §3/§4 with gates §5 B1–B6 / C1–C5. Old Render key: revocation READY (no consumer); `RENDER_OWNER_ID` secret obsolete (no workflow reads it).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0506 — M6-18B: audit correction to the CLM-0503..0505 execution record
 
 - **Work Item(s):** M6-18B

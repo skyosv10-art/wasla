@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-08T17:14:56Z",
+  "generated_at": "2026-10-08T18:26:58Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3d6478d4902d82ffd056c803b54217159339258f",
+    "commit": "28d20c91611463af7d570a87927a64ee292dae78",
     "branch": "HEAD",
     "dirty": true,
     "dirty_files": 1,
-    "dirty_reason": "CLM-0505: generated from main 3d6478d4 with only this PR's RISK_REGISTER.md change applied (RISK-0063 closed -> risks_not_closed 23->22); repo.commit must resolve on main after squash merge (RISK-0028).",
-    "tracked_files": 3148
+    "dirty_reason": "CLM-0507: generated from main 28d20c91 with only this PR's RISK_REGISTER.md change applied (RISK-0065 opened -> risks_not_closed 22->23); repo.commit must resolve on main after squash merge (RISK-0028).",
+    "tracked_files": 3150
   },
   "env": {
     "node": "v20.20.2",
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 27,
-    "risks_not_closed": 22
+    "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
@@ -41,11 +41,11 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:eb275ed653db595d3a80b8c41433190bea33dd335f5d938032c5e57949221104",
+  "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
   "reference": "docs/12-testing/BASELINE_FORMAT.md",
   "claim": {
-    "id": "CLM-0505",
-    "branch": "feat/clm-0505-legacy-deletion-closeout",
+    "id": "CLM-0507",
+    "branch": "sec/clm-0507-secret-rotation-inventory",
     "scope": [
       "docs/12-testing/BASELINE.json",
       "docs/12-testing/BASELINE.txt"

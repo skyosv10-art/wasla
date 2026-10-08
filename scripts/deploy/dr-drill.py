@@ -21,6 +21,10 @@ import sys
 import time
 import urllib.error
 import urllib.request
+# LEGACY-ONLY (CLM-0502): legacy DR drill (Render writes; hosts by convention)
+sys.path.insert(0, next(str(_p / "scripts" / "ops") for _p in __import__("pathlib").Path(__file__).resolve().parents if (_p / "infra" / "render" / "deploy-target.json").is_file()))
+from render_target import legacy_only  # noqa: E402
+legacy_only("dr-drill.py")
 
 API = "https://api.render.com/v1"
 KEY = os.environ["RENDER_API_KEY"]

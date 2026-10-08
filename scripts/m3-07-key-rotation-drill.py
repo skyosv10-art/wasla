@@ -21,6 +21,10 @@ M3-07 — تمرينُ تدويرِ مفاتيحِ هويّةِ الخدمةِ �
 """
 import base64, hashlib, hmac, json, os, secrets, sys, time, urllib.error, urllib.request
 from datetime import datetime, timezone
+# LEGACY-ONLY (CLM-0502): legacy M3-07 key rotation (writes Render env of the legacy audit)
+sys.path.insert(0, next(str(_p / "scripts" / "ops") for _p in __import__("pathlib").Path(__file__).resolve().parents if (_p / "infra" / "render" / "deploy-target.json").is_file()))
+from render_target import legacy_only  # noqa: E402
+legacy_only("m3-07-key-rotation-drill.py")
 
 SERVICE_ID = "srv-daprrq0u01pc73do9npg"
 BASE = "https://wasla-audit.onrender.com"

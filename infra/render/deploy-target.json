@@ -3,6 +3,9 @@
   "mode": "frozen",
   "owner_id": null,
   "reason": "Render blue/green migration: the legacy workspace is frozen (no deploy, INC-0003/INC-0004/RISK-0063) and the new Singapore workspace is deployed only by owner-approved, per-step Phase 5 actions. A main merge deploys nothing.",
-  "frozen_owners": ["tea-damm8atbedkc73ca3ahg"],
+  "frozen_owners": [
+    "tea-damm8atbedkc73ca3ahg"
+  ],
+  "legacy_owner": "tea-damm8atbedkc73ca3ahg",
   "since": "2026-10-08"
 }

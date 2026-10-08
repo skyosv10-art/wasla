@@ -1,5 +1,6 @@
 {
   "$comment": [
+    "LEGACY-ONLY (CLM-0502): the host convention below (wasla-<service>.onrender.com) is the legacy oregon stack; terraform apps/ is never applied — re-point to a registry before any use with render-singapore.",
     "ADR-048 — جدول التوجيه الوحيد لمسار وصول التطبيقات إلى الخدمات (M3-09).",
     "يقرؤه جذر terraform المستقل infra/terraform/apps/ (عبر jsondecode) لتوليد قواعد إعادة الكتابة على المواقع الثابتة الثلاثة،",
     "ويقرؤه الفحص 24 (scripts/checks/lib/app_api_routes.py — الباب السادس) لإثبات أن كل بادئة يناديها تطبيق لها صف هنا",

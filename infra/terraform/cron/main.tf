@@ -1,3 +1,4 @@
+# LEGACY-ONLY (CLM-0502): WASLA_TICK_BASE_URL_* are legacy hosts; never applied. DO NOT APPLY during or after the blue/green migration without re-pointing to the registry
 # ── WASLA tick scheduler — Render Cron Jobs (G8 · CLM-0328) ─────────────
 #
 # ينشرُ خمسَ وظائفَ مجدوَلةٍ (Render Cron Jobs) تشغّلُ حزمةَ `@wasla/tick-scheduler`

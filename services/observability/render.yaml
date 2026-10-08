@@ -1,3 +1,4 @@
+# LEGACY-ONLY (CLM-0502): Blueprint never used for the live services; OTEL endpoint is the legacy host
 # Render deployment config for WASLA Observability Collector (M2-08 Stage B)
 # Replaces 3 Docker-based services with a single Node.js service.
 # Uses the root Dockerfile and existing build pipeline.

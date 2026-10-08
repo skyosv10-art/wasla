@@ -42,9 +42,12 @@ import time
 import urllib.error
 import urllib.request
 from urllib.parse import unquote, urlsplit
+# LEGACY-ONLY (CLM-0502): legacy DR cutover (writes Render env); also imported by risk-0060/render-tls-activate.py
+sys.path.insert(0, next(str(_p / "scripts" / "ops") for _p in __import__("pathlib").Path(__file__).resolve().parents if (_p / "infra" / "render" / "deploy-target.json").is_file()))
+from render_target import legacy_only  # noqa: E402
 
 API = "https://api.render.com/v1"
-OWNER = os.environ.get("RENDER_OWNER_ID", "tea-damm8atbedkc73ca3ahg")
+OWNER = legacy_only("render-dr-cutover.py")
 DB_KEYS = re.compile(r"(^|_)DATABASE_URL$")
 TERMINAL_OK = {"live"}
 TERMINAL_BAD = {"build_failed", "update_failed", "canceled", "deactivated", "pre_deploy_failed"}

@@ -1,3 +1,4 @@
+// LEGACY-ONLY (CLM-0502): default base URLs follow the legacy host convention
 /**
  * M4-02 Golden Journeys — staging-targeted E2E tests.
  *

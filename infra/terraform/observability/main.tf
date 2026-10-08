@@ -1,3 +1,4 @@
+# LEGACY-ONLY (CLM-0502): outputs are legacy hosts; never applied. The live source of observability targets is infra/observability/targets/ (ADR-068)
 # ── WASLA Observability — M2-08 Stage B (ADR-041) ──────────────────────────
 #
 # ينشرُ بنيةَ المراقبةِ القابلةِ للرصدِ على Render staging:

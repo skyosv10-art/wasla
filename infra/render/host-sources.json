@@ -1,0 +1,46 @@
+{
+  "$comment": [
+    "CLM-0502 · P5-9 — every tracked non-doc file that names a Render host, the host convention (wasla-<svc>.onrender.com) or a Render workspace id must be classified here.",
+    "Checked by scripts/checks/validate-render-host-sources.sh (mandatory in scripts/verify.sh). An unclassified file fails the gate.",
+    "registry: the per-environment sources of truth. guards: checks and the render_target resolver, which name hosts/workspaces to detect or refuse them.",
+    "legacy_write_tools: refuse to run while the legacy owner is frozen (render_target.legacy_only, exit 3).",
+    "legacy_read_tools: no default workspace (render_target.explicit_owner, exit 2).",
+    "legacy_marked: carry the LEGACY-ONLY (CLM-0502) marker; never applied / test harness defaults / Blueprint not in use."
+  ],
+  "registry": [
+    "infra/render/deploy-target.json",
+    "infra/observability/targets/render-oregon-legacy.targets",
+    "infra/observability/targets/render-singapore.targets"
+  ],
+  "guards": [
+    "scripts/checks/validate-observability-targets.sh",
+    "scripts/checks/validate-render-config.sh",
+    "scripts/checks/validate-render-deploy-target.sh",
+    "scripts/checks/validate-render-host-sources.sh",
+    "scripts/ops/render_target.py"
+  ],
+  "legacy_write_tools": [
+    "scripts/ops/m6-18b-dr/render-dr-cutover.py",
+    "scripts/ops/risk-0056/render-cutover.py",
+    "scripts/ops/risk-0060/render-tls-activate.py",
+    "scripts/deploy/dr-drill.py",
+    "scripts/m3-07-audit-drill.py",
+    "scripts/m3-07-key-rotation-drill.py"
+  ],
+  "legacy_read_tools": [
+    "scripts/ops/risk-0042/observe-report.py",
+    "scripts/ops/render-env-fingerprint.py"
+  ],
+  "legacy_marked": [
+    "scripts/m3-07-health-scan.py",
+    "infra/render/app-rewrites.json",
+    "infra/terraform/apps/main.tf",
+    "infra/terraform/cron/main.tf",
+    "infra/terraform/observability/main.tf",
+    "services/observability/render.yaml",
+    "packages/golden-e2e/src/harness.ts",
+    "packages/golden-e2e/vitest.config.ts",
+    "packages/incident-ops/src/harness.ts",
+    "packages/load-testing/src/harness.ts"
+  ]
+}

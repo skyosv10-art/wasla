@@ -76,6 +76,10 @@ run_step "أهدافُ المراقبةِ لكلِّ بيئة (CLM-0499 · ADR-0
 run_step "هدفُ نشرِ Render مُعلَنٌ (CLM-0501 · INC-0005)" \
   bash scripts/checks/validate-render-deploy-target.sh
 
+# ── 1-د1ج) مصادرُ مضيفاتِ Render مُصنَّفة، وأدواتُ القديمِ ترفض (CLM-0502 · P5-9) ──
+run_step "مصادرُ مضيفاتِ Render وأدواتُ القديم (CLM-0502 · P5-9)" \
+  bash scripts/checks/validate-render-host-sources.sh
+
 # ── 1-د2) مُجدوِلُ النبضاتِ (G8 · CLM-0328) ──────────────────────────────
 run_step "مُجدوِلُ النبضاتِ (G8 · CLM-0328)" \
   bash scripts/checks/validate-tick-scheduler.sh

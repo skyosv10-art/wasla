@@ -34,3 +34,7 @@
 ## 5. Verification
 
 `validate-state-sync.sh` + `verify-governance.sh` local run before push; CI on this PR is the merge authority. No deployment effect: docs only.
+
+## 6. Correction by addition (CLM-0508, owner review 2026-10-08)
+
+§3.2 "no independent CODEOWNERS review occurred" is **incorrect**: **all four PRs (#660, #661, #662, #663) received independent CODEOWNER approval from `xuuux-voox` before merge.** For #660 and #661 the approval was given on the commit before a final CI-fix commit (`dismiss_stale_reviews=false`; RISK-0064 pattern). Details: [CLM-0508 §1](../2026-10-08T190000Z-clm-0508-record-corrections-plan-decision/README.md). The text above is preserved as history.

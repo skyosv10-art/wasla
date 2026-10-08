@@ -1,3 +1,20 @@
+# 2026-10-08 — CLM-0508 — M6-18B: record corrections (owner review) + free-plan decision pack
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0066 → open
+- **What / Why:** the owner's review (verdict RENDER_MIGRATION = COMPLETE · PROGRAM_CLOSEOUT = NOT_COMPLETE · M7 = BLOCKED) ordered corrections by addition and a free-plan decision.
+- **Corrections:** CLM-0506 §3.2 was wrong — all four PRs #660–#663 received independent CODEOWNER approval from xuuux-voox before merge (#660/#661 approved one CI-fix commit before the merged head; RISK-0064 pattern); INC-0005 follow-up: S12 executed before the D-5 timings on the owner's explicit order — documented deviation, not an amendment; irreversible; no rollback/recreation; P5-3 stays DEFERRED (AUTHENTICATION/REQUEST-BINDING PROVEN · AUTHENTICATED_ROUTE_EXECUTION NOT PROVEN).
+- **Decision pack:** `docs/08-infrastructure/RENDER_PLAN_DECISION_PACK_2026-10-08.md` — owner decision: free plan NOT approved for field trial / real operation; recommended minimum paid footprint B = 20 × $7 = $140/month; no billing change before approval. RISK-0066 opened: ~17 always-awake free services exhaust the 750 free hours in ~44 h → every free service suspended to month end (estimate).
+- **Changed (units):** documentation only — evidence README, decision pack, INCIDENTS (INC-0005 follow-up), RISK_REGISTER (RISK-0066), CLM-0506 evidence (§6 addition), BASELINE.json/txt regenerated (risks_not_closed 23→24), board, claims, roadmap.
+- **No-Test-Reason:** record corrections and a decision pack — no code or test surface; verification is the governance suite.
+- **Security / Data / Deployment:** no production change; no billing change; no Secondary Owner added; CODEOWNERS / branch protection unchanged.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-08T190000Z-clm-0508-record-corrections-plan-decision/README.md`
+- **Deployment:** none.
+- **Next:** owner — approve a plan option (urgent: RISK-0066), reset the Supabase DB password (RISK-0065), revoke the old Render key. M6-18B stays Blocked (RISK-0058/0060/0065/0066); M7 not started.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0507 — M6-18B / INC-0006: read-only credential inventory and secret-rotation plan
 
 - **Work Item(s):** M6-18B

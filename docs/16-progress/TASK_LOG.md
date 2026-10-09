@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0518 — قرار معماري مقترح: مسار المصادقة البشرية من التطبيقات إلى الخدمات (ADR-069)
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0042 → open (لا تغيير) · RISK-0066 → open (لا تغيير) · RISK-0067 → mitigating (لا تغيير)
+- **What / Why:** إزالة العائق الجذري في صفوف المصفوفة P-03/P-04/A-01 تبدأ بقرار: قُرئت ADR-001/018/019/020/027/028/029/036/048/060 والكود القائم على main `a93fe5ec`، وميّز القرار الموجود (verifyTelegramInitData، session use cases، identity_sessions، wsvc3، wua1) عن غير الموصول (لا مسار جلسة، setSession خلف VITE_E2E فقط، Bearer مقابل x-wasla-service-auth، لا مصدر لأدوار الإدارة، جمهور wua1 ضيق). اختير البديل A (حدّ قناة داخل customer-bot/driver-bot + admin-edge مستقل)، ورُفض B (يكسر ADR-018 §2 وADR-019 §4، ويضاعف السطح ×17) وC (مفاتيح wsvc3 متماثلة للأسطول ⇒ اختراق كامل). يتضمن القرار: مخطط التدفق، وهوية كل مكوّن وصلاحياته وأسراره، و5 مراحل تنفيذ، و36 حالة اختبار، وخطة الرجوع، وما يلزم إثباته حيًا، وأثره على الصفوف الـ22.
+- **Changed (units):** `docs/15-decisions/ADR-069-human-authentication-edge-for-apps.md`, `docs/12-testing/ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr/README.md`, `docs/12-testing/ENGINEERING_COMPLETION_MATRIX.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: قرار تصميم فقط (Proposed) — لا كود ولا مسار ولا صلاحية تغيّرت؛ حالات القبول مكتوبة في ADR-069 §7 وتُنفَّذ مع كل مرحلة بعد الموافقة.
+- **Security / Data / Deployment:** لا تغيير.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr/README.md`
+- **Deployment:** none (docs-only).
+- **Next:** مراجعة xuuux-voox التقنية، ثم موافقة المالك المكتوبة قبل الدمج؛ بعدها المرحلة 1 (مسارات جلسة identity) بحجز مستقل.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0517 — ENGINEERING COMPLETION AUDIT: مصفوفة الاكتمال (جرد فقط)
 
 - **Work Item(s):** M3-09

@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0520 — أحكام ما بعد الدمج: CLM-0519 (PR #677)
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** توثيق أحكام CI الفعلية بعد دمج CLM-0519: WASLA CI على main نجح (37963835520، 7m54s) وRoadmap freshness نجح (37963835584) وRender deploy نجح (37963835582، دليلُ النشرِ render-sync-1db258a4.zip). Render deploy أُطلق آليًّا لا يدويًّا: سيرُ العملِ مُثبَّتٌ على كلِّ دفعٍ إلى main وpaths-ignore لا يستثني هذه الدفعةَ لأنها كودٌ لا وثائقٌ فقط — لا إعدادُ ولا سرٌّ ولا ترحيلٌ غُيّرَ بيدِ المطالبةِ. البرهانُ الحيُّ على المسارِ (تطبيقٌ حقيقيٌّ يُبدِّلُ جلسةً إلى `wua1`) يبقى مطلوباً قبلَ إعلانِ P-03 COMPLETE — لم يُدَّعَ.
+- **Changed (units):** `docs/12-testing/ci-evidence/2026-10-09T171500Z-clm-0519-post-merge-verdicts/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: سجل توثيقي — لا كود ولا سطح اختبار؛ التحقق هو قراءة الأحكام من الـ API الحي وحوكمة السجل.
+- **Security / Data / Deployment:** لا تغيير (docs-only).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T171500Z-clm-0519-post-merge-verdicts/README.md`
+- **Deployment:** none (توثيق فقط؛ نشرُ main حدث بسلوكِ المستودعِ القائمِ في CLM-0519 نفسها).
+- **Next:** المرحلة الثانية (قائمة السماح، حماية المسارات، توصيل التطبيقات) بقرار مالك مستقل.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0519 — ADR-069 المرحلة الأولى: مسارات جلسات الهوية (إصدار/استبدال/سحب)
 
 - **Work Item(s):** M3-09

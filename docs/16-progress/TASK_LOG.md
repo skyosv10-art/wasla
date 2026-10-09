@@ -1,4 +1,19 @@
-# 2026-10-09 — CLM-0511 — M6-18B: post-merge CI-verdict record for CLM-0510 (documentation only)
+# 2026-10-09 — CLM-0512 — M6-18B / RISK-0060: plaintext-rejection probe workflow (prepared; execution post-merge)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0060 → mitigating
+- **What / Why:** RISK-0060's closure condition needs plaintext-refusal measured deliberately; only incidental evidence exists (db-backup run 37199256304, ESSLREQUIRED). CLM-0497 §7 prepared this probe; this claim implements it: `.github/workflows/risk-0060-plaintext-probe.yml` (workflow_dispatch, main-only, typed-commit; target parsed from the existing `SUPABASE_DB_URL` secret — only ref+host printed, fail-closed unless ref = `ppixaauyqoykrogwdxtv`; Probe A `sslmode=disable` must fail with SSL-required; Probe B `sslmode=require` control must pass; JSON verdict artifact; `select 1` only, no write).
+- **Changed (units):** `.github/workflows/risk-0060-plaintext-probe.yml` (new), `scripts/checks/validate-workflow-supply-chain.sh` (the workflow added to its DECLARED inventory — the first CI run refused the undeclared workflow, root cause fixed by addition), `docs/12-testing/ci-evidence/2026-10-09T021500Z-clm-0512-risk-0060-plaintext-probe/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: dispatch-only operational workflow — its verification IS its post-merge execution verdict (read from the live API by the next claim); local checks: YAML parsed, both python heredocs `ast.parse` clean in the post-dedent form, target parsing + query-merge verified against both URL shapes, governance suite green.
+- **Security / Data / Deployment:** read-only (`select 1`); the connection string never printed, never in an artifact; the repository's own existing secret; no production change.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T021500Z-clm-0512-risk-0060-plaintext-probe/README.md`
+- **Deployment:** none — the probe executes post-merge via workflow_dispatch; its verdict is recorded by the next claim.
+- **Next:** dispatch the probe on the merged main SHA, read the verdict from the API, record it; if PASS → RISK-0060 closes (TLS-verified measured CLM-0495 + deliberate plaintext-refused); M6-18B then blocked on RISK-0058 / RISK-0066 / RISK-0067 only.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-09 — CLM-0511 — M6-18B: post-merge CI-verdict record for CLM-0510 (documentation only) for CLM-0510 (documentation only)
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-08T22:33:50Z",
+  "generated_at": "2026-10-09T03:27:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cb7ba371a224a58a180c27cf774f2d5cbf6c0985",
-    "branch": "HEAD",
+    "commit": "7be06f6b8aad83f90e8a530a830d912aac221a36",
+    "branch": "docs/clm-0514-risk-0060-closure",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "CLM-0508: generated from main cb7ba371 with only this PR's RISK_REGISTER.md change applied (RISK-0066 opened -> risks_not_closed 23->24); repo.commit must resolve on main after squash merge (RISK-0028).",
-    "tracked_files": 3151
+    "dirty_files": 6,
+    "dirty_reason": "CLM-0514: generated from main 7be06f6b with only this PR's RISK_REGISTER.md change applied (RISK-0060 closed -> risks_not_closed 24->23); repo.commit must resolve on main after squash merge (RISK-0028).",
+    "tracked_files": 3158
   },
   "env": {
     "node": "v20.20.2",
@@ -30,7 +30,7 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 27,
-    "risks_not_closed": 24
+    "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
@@ -41,14 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f5d0755dd0a28d8ee57949e061154d6e687e5d0940fa3a4ceca388bda80269dc",
-  "reference": "docs/12-testing/BASELINE_FORMAT.md",
-  "claim": {
-    "id": "CLM-0508",
-    "branch": "docs/clm-0508-record-corrections-plan-decision",
-    "scope": [
-      "docs/12-testing/BASELINE.json",
-      "docs/12-testing/BASELINE.txt"
-    ]
-  }
+  "fingerprint": "sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34",
+  "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

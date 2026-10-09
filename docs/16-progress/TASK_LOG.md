@@ -1,4 +1,19 @@
-# 2026-10-09 — CLM-0513 — M6-18B / RISK-0060: probe workflow fix — GITHUB_ENV same-step scope (run 37877806604)
+# 2026-10-09 — CLM-0514 — M6-18B / RISK-0060: closed — deliberate plaintext-rejection verdict measured
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0060 → closed
+- **What / Why:** the probe executed and PASSED — run [37879172647](https://github.com/skyosv10-art/wasla/actions/runs/37879172647) on main `7be06f6b`: target `ppixaauyqoykrogwdxtv` (fail-closed enforced; only ref+host printed), Probe A `sslmode=disable` refused with `ESSLREQUIRED` (exit 2), Probe B `sslmode=require` control `select 1` = 1, verdict `PLAINTEXT_REFUSED_DELIBERATE` (JSON artifact). Both closure halves are now measured: TLS-verified (CLM-0495) + plaintext-refused (deliberate). The failed first dispatch 37877806604 (CLM-0513's step-boundary defect) stays readable — no DB connection was attempted there, not a verdict.
+- **Changed (units):** `docs/07-security/RISK_REGISTER.md` (RISK-0060 → closed, update by addition), `docs/12-testing/BASELINE.json`, `docs/12-testing/BASELINE.txt` (regenerated per M0-08: risks_not_closed 24→23), `docs/12-testing/ci-evidence/2026-10-09T033000Z-clm-0514-risk-0060-closure/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: record + register closure — no code or test surface; verification is the probe verdict read from the live API and the governance suite.
+- **Security / Data / Deployment:** read-only probe (select 1 only, both probes); no secret printed; no Supabase/Render setting changed by this claim; no production change.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T033000Z-clm-0514-risk-0060-closure/README.md`
+- **Deployment:** none (the probe run 37879172647 is the recorded execution).
+- **Next:** M6-18B stays Blocked on RISK-0058 (production partition drill — owner access) / RISK-0066 (free-plan decision — owner) / RISK-0067 (load measurement — production load run); M7 not started; M6-19A = external pentest (owner procurement).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-09 — CLM-0513 — M6-18B / RISK-0060: probe workflow fix — GITHUB_ENV same-step scope (run 37877806604) — GITHUB_ENV same-step scope (run 37877806604)
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)

@@ -1,4 +1,19 @@
-# 2026-10-09 — CLM-0512 — M6-18B / RISK-0060: plaintext-rejection probe workflow (prepared; execution post-merge)
+# 2026-10-09 — CLM-0513 — M6-18B / RISK-0060: probe workflow fix — GITHUB_ENV same-step scope (run 37877806604)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0060 → mitigating
+- **What / Why:** the first probe dispatch (run 37877806604, 9 s) failed on `PROBE_TARGET_REF: unbound variable` — the workflow wrote GITHUB_ENV and read it in the SAME step; those values reach only the NEXT steps. Root cause fixed: the workflow split into a Parse step (writes env) and a Probe step (reads it). No database connection was attempted in the failed run — it is not a probe verdict; RISK-0060's measurement remains unexecuted.
+- **Changed (units):** `.github/workflows/risk-0060-plaintext-probe.yml` (step split; probe logic, fail-closed checks and security properties unchanged), `docs/12-testing/ci-evidence/2026-10-09T034500Z-clm-0513-probe-env-scope-fix/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: workflow step-boundary fix — verification is YAML+python-block parse (local, done) and the post-merge re-dispatch verdict read from the live API (next claim records it).
+- **Security / Data / Deployment:** unchanged from CLM-0512 — read-only, select 1 only, no secret printed, no production change.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T034500Z-clm-0513-probe-env-scope-fix/README.md`
+- **Deployment:** none — the probe re-dispatch happens post-merge.
+- **Next:** re-dispatch the probe on the merged main SHA, read the verdict, record it; on PASS → RISK-0060 closes.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-09 — CLM-0512 — M6-18B / RISK-0060: plaintext-rejection probe workflow (prepared; execution post-merge) (prepared; execution post-merge)
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)

@@ -52,16 +52,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Probe (sslmode=disable must be refused; sslmode=require control must pass)
+      - name: Parse the target (only ref + host are ever printed)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          command -v psql >/dev/null 2>&1 || sudo apt-get install -y -q postgresql-client
-
-          # ── Parse the target and build the two probe URLs; print ONLY ref + host.
-          #    The URLs are written to GITHUB_ENV (never echoed; the secret itself
-          #    is masked by GitHub in any log line it would appear in).
+          # GITHUB_ENV values are visible to the NEXT steps, not this one — the
+          # probes therefore run in their own step below (run 37877806604 failed
+          # on exactly this: PROBE_TARGET_REF unbound in the writing step).
           python3 - <<'PY'
           import os, re, sys, urllib.parse
           url = os.environ.get("SUPABASE_DB_URL", "")
@@ -91,6 +89,11 @@ jobs:
               env.write("PROBE_A_URL<<" + "EOF\n" + with_mode("disable") + "\nEOF\n")
               env.write("PROBE_B_URL<<" + "EOF\n" + with_mode("require") + "\nEOF\n")
           PY
+      - name: Probe (sslmode=disable must be refused; sslmode=require control must pass)
+        run: |
+          set -euo pipefail
+          command -v psql >/dev/null 2>&1 || sudo apt-get install -y -q postgresql-client
+
           [ "${PROBE_TARGET_REF}" = "ppixaauyqoykrogwdxtv" ] \
             || { echo "::error::ref ${PROBE_TARGET_REF} != ppixaauyqoykrogwdxtv (production)"; exit 1; }
           echo "target: ref=${PROBE_TARGET_REF} host=${PROBE_TARGET_HOST}"

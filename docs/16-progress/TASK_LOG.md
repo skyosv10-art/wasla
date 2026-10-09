@@ -1,3 +1,19 @@
+# 2026-10-09 — CLM-0511 — M6-18B: post-merge CI-verdict record for CLM-0510 (documentation only)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** none — record only; RISK-0067 stays `mitigating` (unchanged)
+- **What / Why:** the serial model requires the merge-time verdict to be read from the live API, not assumed; this claim records it. CLM-0510 merged as squash `59bea99b` (PR #668) at 2026-10-09T01:19:01Z under the owner's explicit admin-merge instruction (sole CODEOWNER = PR author; the standing pattern recorded in CLM-0506/0508).
+- **Measured verdicts:** PR head all green (WASLA CI 37867359929 success · Roadmap freshness 37867344357 success · DR scenario 2 37867359991 success); post-merge main all green (WASLA CI 37869185503 success · Roadmap freshness 37869185443 success · **Render deploy 37869185543 PASS — 24/24 services live=59bea99**, per-service live-commit verification). The bounded pool limit is therefore deployed to production; RISK-0067's closure condition (a load measurement with no `EMAXCONNSESSION`) is still not met — `mitigating`.
+- **Changed (units):** `docs/12-testing/ci-evidence/2026-10-09T010000Z-clm-0510-risk-0067-app-pool-limits/README.md` (§5/§6 filled), `docs/16-progress/TASK_LOG.md` (CLM-0510 Deployment line corrected by addition), `ROADMAP.md`, `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`, `docs/16-progress/WORK_CLAIMS.md`.
+- **No-Test-Reason:** record only — no code or test surface; verification is the governance suite.
+- **Security / Data / Deployment:** no production change (the deploy was CLM-0510's own merge pipeline, only recorded here); no secret touched.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T010000Z-clm-0510-risk-0067-app-pool-limits/README.md`
+- **Deployment:** none in this PR (record of CLM-0510's deploy 37869185543 above).
+- **Next:** RISK-0067 closes only on a production load measurement with no `EMAXCONNSESSION`; M6-18B stays Blocked (RISK-0058 / RISK-0060 / RISK-0066); M7 not started.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0510 — M6-18B / RISK-0067: application-side pool limits (bounded `max` on every guarded pool)
 
 - **Work Item(s):** M6-18B
@@ -9,7 +25,7 @@
 - **Tests:** 6 new cases in `pg-guard.test.ts` (default/caller-wins/env-override/refusal/fleet-arithmetic) — 33/33 pass locally; no `**No-Test-Reason:**` needed.
 - **Security / Data / Deployment:** no secret touched, no production write, no Render change in this PR; the merged commit deploys through the pinned `render-deploy` workflow (deploy target = Singapore workspace).
 - **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T010000Z-clm-0510-risk-0067-app-pool-limits/README.md`
-- **Deployment:** none in this PR (the merge's pinned render-deploy run is recorded in the evidence §6).
+- **Deployment:** render-deploy [37869185543](https://github.com/skyosv10-art/wasla/actions/runs/37869185543) on main `59bea99b` — verdict **PASS, 24/24 services live=59bea99** (Singapore workspace; recorded by CLM-0511).
 - **Next:** RISK-0067 closes only on a load measurement with no `EMAXCONNSESSION` (production load run — owner-level); M6-18B stays Blocked (RISK-0058 / RISK-0060 / RISK-0066); M7 not started.
 - **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
 

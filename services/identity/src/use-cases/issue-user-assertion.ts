@@ -33,10 +33,41 @@ export const ASSERTION_ACTOR_BY_CALLER: Readonly<Record<string, UserAssertionAct
 /**
  * الجماهيرُ المسموحةُ لكلِّ فاعلٍ (ADR-060 §3 — الخدماتُ الثلاثُ في P2 ومُمرِّرُها).
  * تُوسَّعُ بالإضافةِ مع قرارٍ، لا بطلبٍ من البوتِ.
+ *
+ * **توسيعٌ بالإضافةِ (ADR-069 §2.2 · CLM-0519):** جلسةُ المستخدمِ وحدَها تُقايِضُ
+ * بتأكيدٍ قصيرِ العمرِ (`≤60s`) لجمهورٍ أوسعَ — لأنّ التأكيدَ الآنَ يثبتُ جلسةً
+ * صادقةً من قناةِ ثقةٍ (init-data موقَّعةٌ)، لا مجرّدَ هويّةٍ قائمةٍ. فاستُكملت
+ * قائمةُ العميلِ بـ`customers · orders · dispatch · reputation · search`،
+ * وقائمةُ السائقِ بـ`customers · orders · dispatch`. **ولا تغييرَ في عتباتِ المنحِ**:
+ * التوسيعُ هنا يعرّفُ ما يجوزُ أن يُطلَبَ في استبدالٍ صالحٍ، والإنفاذُ على كلِّ
+ * حدٍّ مِن خاصيّتِهِ (المرحلةُ الثانيةُ واللاحقةُ).
  */
 export const ASSERTION_AUDIENCES_BY_ACTOR: Readonly<Record<UserAssertionActor, readonly string[]>> = {
-  customer: ["identity", "negotiations", "marketplace", "delivery", "geography", "subscriptions"],
-  driver: ["identity", "negotiations", "drivers", "matching", "geography"],
+  customer: [
+    "identity",
+    "negotiations",
+    "marketplace",
+    "delivery",
+    "geography",
+    "subscriptions",
+    // ADR-069 §2.2 · CLM-0519
+    "customers",
+    "orders",
+    "dispatch",
+    "reputation",
+    "search",
+  ],
+  driver: [
+    "identity",
+    "negotiations",
+    "drivers",
+    "matching",
+    "geography",
+    // ADR-069 §2.2 · CLM-0519
+    "customers",
+    "orders",
+    "dispatch",
+  ],
   store_staff: ["identity", "marketplace"],
 };
 

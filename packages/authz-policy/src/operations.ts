@@ -171,6 +171,12 @@ export const ENFORCED_OPERATIONS: readonly EnforcedOperation[] = [
   { audience: "identity", method: "GET", path: "/identity/users/:waslaPublicId/history", scopes: ["identity:history:read"] },
   // ADR-060 · CLM-0440: إصدارُ تأكيدِ المستخدمِ النهائيِّ wua1 — للبوتاتِ الثلاثةِ وحدَها.
   { audience: "identity", method: "POST", path: "/identity/assertions", scopes: ["identity:assertion:issue"] },
+  // ADR-069 · CLM-0519 (المرحلةُ الأولى): دورةُ حياةِ جلسةِ المستخدمِ — الإصدارُ
+  // والاستبدالُ والسحبُ. الفاعلُ يُشتقُّ من مسارِ الثقةِ (هويّةِ الخدمةِ المنادية)
+  // لا من جسمِ الطلبِ (I-03) — والمنادِي المُعلَنُ: customer-bot وdriver-bot وحدَهما.
+  { audience: "identity", method: "POST", path: "/identity/sessions", scopes: ["identity:session:issue"] },
+  { audience: "identity", method: "POST", path: "/identity/sessions/exchange", scopes: ["identity:session:exchange"] },
+  { audience: "identity", method: "POST", path: "/identity/sessions/revoke", scopes: ["identity:session:revoke"] },
   // ── marketplace ───────────────────────────────────────────────
   { audience: "marketplace", method: "GET", path: "/categories", scopes: ["marketplace:category:read"] },
   { audience: "marketplace", method: "POST", path: "/stores", scopes: ["marketplace:store:write"] },

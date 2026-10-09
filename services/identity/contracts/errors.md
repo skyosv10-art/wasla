@@ -32,7 +32,7 @@
 | `IDENTITY_LINK_INVALID_PROVIDER` | `unprocessable` | مزوّد رابط غير مدعوم | provider ليس ضمن القائمة المعتمدة |
 | `IDENTITY_USERNAME_NO_CHANGE` | `unprocessable` | Username الجديد مطابق للقديم | تسجيل تغيير username بنفس القيمة |
 | `IDENTITY_RECOVERY_METHOD_INVALID` | `unprocessable` | وسيلة تحقق غير مدعومة أو تعتمد على Telegram كمصدر وحيد | POST /recovery بـ verification_method غير صالح |
-| `IDENTITY_USER_SUSPENDED` | `conflict` | المستخدم موقوف والعملية غير مسموحة | محاولة إضافة رابط لمستخدم موقوف |
+| `IDENTITY_USER_SUSPENDED` | `forbidden` | المستخدم موقوف والعملية غير مسموحة (403، تُحدَّد في CLM-0519) | إضافة رابط لمستخدم موقوف، أو إصدار/استبدال جلسة لمستخدم موقوف |
 | `IDENTITY_SESSION_REPLAY` | `conflict` | رسالة init-data استُعمِلت من قبل لإصدار جلسة | إعادة إرسال نفس init-data (منع replay — M1-02) |
 | `IDENTITY_SESSION_NOT_FOUND` | `not_found` | لا جلسة بهذا المعرّف | سحب جلسة غير موجودة |
 | `IDENTITY_ASSERTION_INVALID_REQUEST` | `validation_error` | طلب إصدار تأكيد مشوَّه | POST /identity/assertions بلا `telegram_user_id` صحيح أو بفاعل/جمهور غير صالح شكلياً (ADR-060 · CLM-0440) |

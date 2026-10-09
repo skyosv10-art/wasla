@@ -32,6 +32,8 @@ tags:
     description: سجل تغييرات الهوية (Username/روابط)
   - name: Assertions
     description: تأكيد المستخدم النهائي wua1 (ADR-060 · CLM-0440)
+  - name: Sessions
+    description: دورة حياة جلسة المستخدم — إصدار واستبدال وسحب (ADR-069 · CLM-0519 · المرحلة الأولى)
 
 paths:
   /identity/resolve:
@@ -181,6 +183,113 @@ paths:
         '403':
           $ref: '#/components/responses/AuthForbidden'
 
+  /identity/sessions:
+    post:
+      tags: [Sessions]
+      summary: إصدار جلسة مستخدم من بصمة init-data متحقَّق منها
+      description: |
+        ADR-069 · CLM-0519 (المرحلة الأولى). يُصدِر جلسةً صادقةً (4 ساعات افتراضياً) من
+        بصمةِ `init-data` موقَّعةٍ من قناةِ ثقةٍ (Telegram Mini App). **الفاعلُ يُشتقُّ من
+        المنادي لا من جسمِ الطلبِ** (I-03): `customer-bot` يُصدِرُ جلسةَ `customer` و`driver-bot`
+        يُصدِرُ جلسةَ `driver` — أيُّ `actor_type` في الجسمِ يُهجَرُ ولا يُقرأُ. تكرارُ نفسِ
+        البصمةِ ⇒ 409 (`IDENTITY_SESSION_REPLAY`). الرمزُ الصريحُ يُعاد **مرّةً واحدةً
+        فقط** ولا يُسجَّلُ في أيِّ سجلٍّ (I-13).
+      operationId: issueUserSession
+      security:
+        - ServiceAuth:
+            - identity:session:issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueSessionRequest'
+      responses:
+        '201':
+          description: جلسة صادرة
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSessionResponse'
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+
+  /identity/sessions/exchange:
+    post:
+      tags: [Sessions]
+      summary: قايضة جلسة صالحة بتأكيد wua1 قصير العمر (≤60s)
+      description: |
+        ADR-069 · CLM-0519 (المرحلة الأولى). يُعيدُ تأكيداً `wua1` موقَّعاً بـ Ed25519
+        يشهدُ أنّ مالكَ هذه الجلسةِ الصالحةِ هو `wasla_public_id`. فاعلُ الجلسةِ يُقارَنُ
+        بفعلِ المنادي (I-10: `driver-bot` لا يستبدلُ جلسةَ `customer`). الرمزُ المنتهي ⇒ 401
+        `AUTHN_EXPIRED` (I-07)، المُلغى أو غيرُ المعروف ⇒ 401 `AUTHN_UNAUTHENTICATED`
+        بنفسِ النصِّ (I-08)، المستخدمُ الموقوفُ ⇒ 403 `IDENTITY_USER_SUSPENDED` (I-11)،
+        بلا مفتاحِ توقيعٍ ⇒ 503 `IDENTITY_ASSERTION_UNAVAILABLE` (I-12). التأكيدُ لا يُسجَّلُ
+        ولا يُرسَلُ في أيِّ سجلٍّ (I-13).
+      operationId: exchangeUserSession
+      security:
+        - ServiceAuth:
+            - identity:session:exchange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExchangeSessionRequest'
+      responses:
+        '200':
+          description: تأكيد صادر من جلسة صالحة
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeSessionResponse'
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+
+  /identity/sessions/revoke:
+    post:
+      tags: [Sessions]
+      summary: سحب جلسة مستخدم برموزها
+      description: |
+        ADR-069 · CLM-0519 (المرحلة الأولى). يُلغِي الجلسةَ المصادَقَ عليها برموزِها —
+        مُتماثلُ التكرارِ عندَ المستودعِ. سحبُ ما لا وجودَ لهُ ⇒ 404 `IDENTITY_SESSION_NOT_FOUND`
+        (لأنّ المُنادي يظنُّ حالةً غيرَ الواقعِ). السببُ يُسجَّلُ ولا يُفصَحُ عن رمزِ
+        الجلسةِ في أيِّ سجلٍّ (I-13).
+      operationId: revokeUserSession
+      security:
+        - ServiceAuth:
+            - identity:session:revoke
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeSessionRequest'
+      responses:
+        '200':
+          description: الجلسة سُحبت
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeSessionResponse'
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '404': {$ref: '#/components/responses/NotFound'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+
   /identity/assertions:
     post:
       tags: [Assertions]
@@ -306,6 +415,90 @@ components:
           minItems: 1
           maxItems: 4
           items: {type: string, pattern: '^[a-z][a-z0-9-]{1,39}$'}
+
+    IssueSessionRequest:
+      type: object
+      required: [telegram_user_id, init_data_fingerprint]
+      description: |
+        بصمةُ init-data نتيجةُ `fingerprintInitData` في `@wasla/telegram-adapter` —
+        ليست مفتاحَ منعِ إعادةٍ قابلٍ للصنعِ من أيِّ طلبٍ. `actor_type` إن وُجدَ يُهجَرُ
+        (I-03: المنبعُ مسارُ الثقةِ).
+      properties:
+        telegram_user_id: {type: integer, format: int64, minimum: 1}
+        init_data_fingerprint:
+          type: string
+          description: بصمة sha256 لرسالة init-data الموقَّعة
+        actor_type:
+          type: string
+          description: يُهجَرُ ولا يُقرأُ — الفاعلُ من مسارِ الثقةِ (ADR-069 §2.6)
+        telegram_username: {type: string}
+        telegram_first_name: {type: string}
+        telegram_language_code: {type: string}
+
+    IssueSessionResponse:
+      type: object
+      required: [token, wasla_public_id, actor_type, expires_at, session_id]
+      properties:
+        token:
+          type: string
+          description: الرمز المُعتِم — يُعاد مرّةً واحدةً ولا يُسجَّل
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
+        actor_type:
+          type: string
+          enum: [customer, driver]
+          description: مُشتقٌّ من مسارِ الثقةِ (هويّةِ الخدمةِ المنادية) لا من جسمِ الطلبِ
+        expires_at: {type: string, format: date-time}
+        session_id: {type: string, format: uuid}
+
+    ExchangeSessionRequest:
+      type: object
+      required: [session_token, audience]
+      properties:
+        session_token:
+          type: string
+          description: رمز الجلسة الصادرة من `POST /identity/sessions`
+        audience:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: {type: string, pattern: '^[a-z][a-z0-9-]{1,39}$'}
+
+    ExchangeSessionResponse:
+      type: object
+      required: [assertion, wasla_public_id, actor_type, audience, expires_at]
+      properties:
+        assertion:
+          type: string
+          description: "wua1.<payload>.<sig> — يُمرَّر كما هو ولا يُسجَّل"
+        wasla_public_id: {type: string, pattern: '^WS-[0-9]{10}$'}
+        actor_type:
+          type: string
+          enum: [customer, driver]
+        audience:
+          type: array
+          items: {type: string}
+        expires_at:
+          type: string
+          format: date-time
+          description: انتهاء التأكيد — لا يتجاوز 60 ثانية من الإصدار
+
+    RevokeSessionRequest:
+      type: object
+      required: [session_token]
+      properties:
+        session_token:
+          type: string
+        reason:
+          type: string
+          description: سبب السحب (يُسجَّل) — يُفترَض `user_requested` عندَ الفراغِ
+
+    RevokeSessionResponse:
+      type: object
+      required: [revoked, session_id]
+      properties:
+        revoked: {type: boolean}
+        session_id: {type: string, format: uuid}
+
     IssueUserAssertionResponse:
       type: object
       required: [assertion, wasla_public_id, actor_type, audience, expires_at]

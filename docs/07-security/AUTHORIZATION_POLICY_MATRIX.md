@@ -41,20 +41,20 @@
 | القياسُ | القيمةُ | مصدرُ القياسِ |
 | --- | --- | --- |
 | الحدودُ المفروضةُ | `16` | `services/*/src/http/service-identity.ts` · `packages/bot-runtime/src/http/service-identity.ts` (CLM-0444: +1 partners) |
-| المساراتُ المُسجَّلةُ | `145` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` (CLM-0444: +10 partners routes) |
-| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 166` | مساراتٌ تُعلِنُ `scoped(...)` (كانت 158؛ +8 في CLM-0444: حدُّ الشركاءِ يُفرَضُ بعدَ تصنيفِ مساراتِه) |
+| المساراتُ المُسجَّلةُ | `148` | `services/*/src/http/app.ts` · `packages/bot-runtime/src/http/app.ts` (CLM-0444: +10 partners routes؛ CLM-0519: +3 identity session routes) |
+| العملياتُ المفروضةُ | `ENFORCED_OPERATIONS = 169` | مساراتٌ تُعلِنُ `scoped(...)` (كانت 158؛ +8 في CLM-0444: حدُّ الشركاءِ يُفرَضُ بعدَ تصنيفِ مساراتِه؛ +3 في CLM-0519: `POST /identity/sessions` و`/exchange` و`/revoke` — ADR-069 المرحلةُ الأولى) |
 | المساراتُ المفتوحةُ | `OPEN_ROUTES = 23` | مساراتٌ تُعلِنُ `OPEN` (كانت 21؛ +2 في CLM-0444: `/partners/health` و`/partners/ready` بلا بياناتٍ مجاليّةٍ) |
 | المساراتُ بلا صلاحيّةٍ ولا `OPEN` | `0` | البابُ 2 من الفحصِ 16 |
-| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 133` | اتّحادُ صلاحيّاتِ العملياتِ (كانت 125؛ +8 في CLM-0444: `partners:*` scopes) |
+| الصلاحيّاتُ المفروضةُ | `ENFORCED_SCOPES = 136` | اتّحادُ صلاحيّاتِ العملياتِ (كانت 125؛ +8 في CLM-0444: `partners:*` scopes؛ +3 في CLM-0519: `identity:session:issue/exchange/revoke`) |
 | صلاحيّاتٌ مُعرَّفةٌ بلا مسارٍ يفرضُها | `0` | البابُ 2 |
 | أدوارُ الإنتاجِ المُعلَنةُ | `10` | `PRODUCTION_GRANTS` |
 | مواضعُ الإصدارِ الإنتاجيّةُ | `20` | `createServiceRequestSigner` في ملفٍّ غيرِ اختباريٍّ |
 | أدوارُ أسطولِ الاختبارِ | `8` | `TEST_FLEET_ROLES` |
 | العملياتُ المربوطةُ بالرمزِ | `TOKEN_BOUND_OPERATION_COUNT = 45` | `OPERATION_BINDINGS` · البابُ 7 |
 | منها في بُعدِ المُستأجِرِ | `TENANT_BOUND_OPERATION_COUNT = 8` | `OPERATION_BINDINGS` · حدُّ السوقِ |
-| العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `111` | `OPERATION_BINDINGS` (كانت 52؛ +23 `none` في RISK-0042 الموجةِ 1 · CLM-0435؛ +35 `none` في الموجةِ 2 · CLM-0437؛ +1 `none` عندَ الولادةِ في CLM-0440: `POST /identity/assertions`) |
+| العملياتُ المُصنَّفةُ (ملكيّةً أو مستأجراً) | `114` | `OPERATION_BINDINGS` (كانت 52؛ +23 `none` في RISK-0042 الموجةِ 1 · CLM-0435؛ +35 `none` في الموجةِ 2 · CLM-0437؛ +1 `none` عندَ الولادةِ في CLM-0440: `POST /identity/assertions`؛ +3 `none` في CLM-0519: مساراتُ الجلسةِ — الفاعلُ من مسارِ الثقةِ لا من جسمِ الطلبِ) |
 | منها `asserted` (ADR-060 P2) | `ASSERTED_OPERATION_COUNT = 35` | مُشتَقٌّ: `strength === "asserted"` في `OPERATION_BINDINGS` ويُثبِتُهُ اختبارُ CLM-0476 في `policy.test.ts`. **تصحيحٌ بالإضافةِ (CLM-0476 · 2026-10-06):** +1 عمليّةٍ (اشتراكات 1) ارتقتْ من `none` إلى `asserted` في الدفعةِ الثالثةِ منخفضةِ الأولويّةِ. **تصحيحٌ بالإضافةِ (CLM-0475 · 2026-10-05):** +6 عمليّاتٍ (توصيل 2 · دعم 4) ارتقتْ من `none` إلى `asserted` في الدفعةِ الثانيةِ متوسّطةِ الأولويّةِ. **تصحيحٌ بالإضافةِ (CLM-0474 · 2026-10-05):** +5 عمليّاتٍ (جغرافيا 3 · توصيل 2) ارتقتْ من `none` إلى `asserted` في الدفعةِ الأولى عاليةِ الأولويّةِ. **تصحيحٌ بالإضافةِ (CLM-0466 · 2026-10-04):** الرقمُ المكتوبُ هنا بقيَ `11` منذُ CLM-0441، والمقيسُ قبلَ CLM-0466 كانَ **21** (مفاوضاتٌ 11 · مطابقةٌ 3 · سوقٌ 3 · هويّةٌ 4)، ولم يكنْ يحرسُهُ بابٌ؛ +2 بقبولِ العرضِ ورفضِهِ في `dispatch` |
-| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 0` | `166 − 166` (كانت 105 ثمّ 82 ثمّ 47؛ CLM-0461 الموجةُ 3). تصحيحٌ بالإضافةِ: الطرحُ المكتوبُ سابقاً «`158 − 111`» كانَ قديماً، والصحيحُ قبلَ الموجةِ 3 كانَ `166 − 119` |
+| العملياتُ غيرُ المُصنَّفةِ | `UNCLASSIFIED_OPERATION_COUNT = 0` | `169 − 169` (كانت 105 ثمّ 82 ثمّ 47؛ CLM-0461 الموجةُ 3). تصحيحٌ بالإضافةِ: الطرحُ المكتوبُ سابقاً «`158 − 111`» كانَ قديماً، والصحيحُ قبلَ الموجةِ 3 كانَ `166 − 119` |
 | الجماهيرُ المُعلَنةُ | `AUDIENCES = 15` | `packages/authz-policy/src/operations.ts` |
 
 <!-- authz-matrix:end -->
@@ -221,10 +221,10 @@
 | `matching` | `geography` | `geography:zone:read` | `MATCHING_GEOGRAPHY_SCOPES` |
 | `negotiations` | `orders` | `orders:order:read`, `orders:agreed-price:write` | `NEGOTIATIONS_ORDER_LOOKUP_SCOPES`, `NEGOTIATIONS_ORDERS_SCOPES` |
 | `negotiations` | `dispatch` | `dispatch:offer:read` | `NEGOTIATIONS_DISPATCH_OFFER_SCOPES` |
-| `customer-bot` | `identity` | `identity:resolve:write`, `identity:user:read` | `CHANNEL_IDENTITY_SCOPES`, `CUSTOMERS_IDENTITY_SCOPES` |
+| `customer-bot` | `identity` | `identity:resolve:write`, `identity:user:read`, `identity:assertion:issue`, `identity:session:issue`, `identity:session:exchange`, `identity:session:revoke` | `CHANNEL_IDENTITY_SCOPES`, `CUSTOMERS_IDENTITY_SCOPES`, `CHANNEL_USER_ASSERTION_SCOPES`, `CHANNEL_SESSION_EDGE_SCOPES` |
 | `customer-bot` | `geography` | `geography:zone:read` | `CUSTOMERS_GEOGRAPHY_SCOPES` |
 | `customer-bot` | `negotiations` | `negotiations:thread:read`, `negotiations:round:read`, `negotiations:round:decide` | `CUSTOMER_BOT_NEGOTIATIONS_SCOPES` |
-| `driver-bot` | `identity` | `identity:resolve:write` | `CHANNEL_IDENTITY_SCOPES` |
+| `driver-bot` | `identity` | `identity:resolve:write`, `identity:assertion:issue`, `identity:session:issue`, `identity:session:exchange`, `identity:session:revoke` | `CHANNEL_IDENTITY_SCOPES`, `CHANNEL_USER_ASSERTION_SCOPES`, `CHANNEL_SESSION_EDGE_SCOPES` |
 | `driver-bot` | `negotiations` | `negotiations:thread:read`, `negotiations:round:read`, `negotiations:round:decide` | `DRIVER_BOT_NEGOTIATIONS_SCOPES` |
 | `partner-bot` | `identity` | `identity:resolve:write` | `CHANNEL_IDENTITY_SCOPES` |
 | `tick-scheduler` | `dispatch` | `dispatch:tick:write` | `TICK_SCHEDULER_DISPATCH_SCOPES` |

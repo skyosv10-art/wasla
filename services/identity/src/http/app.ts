@@ -16,6 +16,12 @@ import type {
   ResolveIdentityRequest,
   AddIdentityLinkRequest,
   StartRecoveryRequest,
+  IssueSessionRequest,
+  IssueSessionResponse,
+  ExchangeSessionRequest,
+  ExchangeSessionResponse,
+  RevokeSessionRequest,
+  RevokeSessionResponse,
 } from "@wasla/contracts-identity";
 
 import type { UseCaseDeps } from "../use-cases/resolve-telegram-identity.js";
@@ -28,8 +34,26 @@ import {
   issueUserAssertion,
   type IssueUserAssertionRequest,
 } from "../use-cases/issue-user-assertion.js";
-import type { UserAssertionSigningKey } from "@wasla/service-auth/user-assertion";
+import {
+  issueSessionFromTelegram,
+  revokeSession as revokeSessionUseCase,
+  type SessionUseCaseDeps,
+} from "../use-cases/session.js";
+import { ASSERTION_AUDIENCES_BY_ACTOR } from "../use-cases/issue-user-assertion.js";
+import {
+  DEFAULT_USER_ASSERTION_TTL_SECONDS,
+  mintUserAssertion,
+  type UserAssertionSigningKey,
+} from "@wasla/service-auth/user-assertion";
+import { AuthenticationError, AuthErrorCode } from "@wasla/auth-sdk";
 import type { UserAssertionMode, UserAssertionPublicKeys } from "@wasla/service-auth";
+
+import {
+  SessionInvalidity,
+  type SessionActorType,
+  hashSessionToken,
+  sessionInvalidity,
+} from "../domain/session.js";
 
 import { sendIdentityError } from "./errors.js";
 import {
@@ -58,6 +82,19 @@ export interface CreateIdentityAppOptions {
     readonly now?: () => Date;
     readonly ttlSeconds?: number;
   };
+  /**
+   * ADR-069 · CLM-0519: حالاتُ استخدامِ الجلسةِ تُمرَّرُ من الخارجِ لا تُشتَقُّ هنا —
+   * لأنّ `UseCaseDeps` (المستودعاتُ الأصلُ) لا يحملُ `sessions` ولا `clock` ولا
+   * `idGen`، وبناءُها داخلَ `createIdentityApp` كان سيَحرمُ الاختبارَ من حقنِ ساعةٍ
+   * جامدةٍ ومُولِّدِ معرّفاتٍ مُعزَّلٍ.
+   */
+  session?: SessionUseCaseDeps;
+  /**
+   * ADR-069 · CLM-0519: نافذةُ التحققِ من انتهاءِ الجلسةِ (بالثواني). القيمةُ
+   * الافتراضيّةُ (60) تُستخدمُ عندَ غيابِ الخيارِ — وهي تمنعُ «اختبارَ ساعةٍ ناجحٌ
+   * وبطاقةً منتهيةً» من المرورِ بلا انتباهٍ.
+   */
+  sessionGraceSeconds?: number;
   /**
    * ADR-060 P2 (CLM-0462): user assertion verification config for
    * `beneficiary: "asserted"` routes. When present, the middleware verifies
@@ -232,6 +269,279 @@ export function createIdentityApp(
       return reply.status(200).send(response);
     },
   );
+
+  // ── ADR-069 · CLM-0519 (المرحلةُ الأولى): دورةُ حياةِ جلسةِ المستخدمِ ─────────
+  // الفاعلُ يُشتقُّ من **مسارِ الثقةِ** (هويّةِ الخدمةِ المنادية) لا من جسمِ
+  // الطلبِ (I-03): `customer-bot` لا يُصدِرُ إلّا جلسةَ `customer`، و`driver-bot`
+  // لا يُصدِرُ إلّا جلسةَ `driver`. **حدُّ الثقةِ المُعلَنُ الآنَ:** مفاتيحُ
+  // `wsvc3` مُشتركةٌ بينَ الأسطولِ (`WEBAPP_SHARED_FLEET_KEY` في
+  // `services/identity/src/config.ts`) — فأيُّ حاملٍ للمفتاحِ يستطيعُ التوقيعَ
+  // باسمِ أيِّ بوتٍ، ويبقى الربطُ حقيقياً فقط إذا كانَت المفاتيحُ **متمايزةً**
+  // (قرارٌ مالكٍ مستقلٌّ لاحقٌ). المساراتُ لذا **مُغَلَّقةٌ مِن جانبِ الاستبدالِ**
+  // فقط: من يملكُ رمزَ جلسةٍ **صالحاً** يملكُ المسارَ — لا أكثرَ.
+  const sessionDeps = options.session;
+  const SESSION_ACTOR_BY_CALLER: Readonly<Record<string, Extract<SessionActorType, "customer" | "driver">>> = {
+    "customer-bot": "customer",
+    "driver-bot": "driver",
+  };
+
+  // POST /identity/sessions — إصدارُ جلسةٍ من init-data موقَّعةٍ (I-01..I-05).
+  if (sessionDeps !== undefined) {
+    app.post(
+      "/identity/sessions",
+      { config: scoped(IDENTITY_SCOPES.sessionIssue) },
+      async (request, reply) => {
+        const caller = request.serviceCaller?.serviceName ?? "";
+        const allowedActor = SESSION_ACTOR_BY_CALLER[caller];
+        if (allowedActor === undefined) {
+          // أيُّ منادٍ آخرَ (dispatch · partner · …) لا يملكُ الجلساتِ أصلاً —
+          // الرفضُ 403 لأنّ الهويّةَ صحيحةٌ والصلاحيّةَ ناقصةٌ (I-04).
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_FORBIDDEN",
+            "this caller may not issue or exchange user sessions",
+          );
+        }
+        const body = (request.body ?? {}) as IssueSessionRequest;
+        // I-03: `actor_type` في الجسمِ **يُهجَرُ ولا يُقرأُ** — المنبعُ مسارُ الثقةِ.
+        const fingerprint = typeof body.init_data_fingerprint === "string" ? body.init_data_fingerprint : "";
+        const telegramUserId = body.telegram_user_id;
+        if (
+          typeof telegramUserId !== "number" ||
+          !Number.isSafeInteger(telegramUserId) ||
+          telegramUserId <= 0
+        ) {
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_INVALID_REQUEST",
+            "telegram_user_id must be a positive integer",
+          );
+        }
+        const issued = await issueSessionFromTelegram(
+          sessionDeps,
+          {
+            initDataFingerprint: fingerprint,
+            telegramUserId,
+            actorType: allowedActor,
+          },
+          async () => {
+            // ADR-069 · CLM-0519: الإصدارُ من هويةٍ **قائمةٍ** لا يُنشئُ مستخدماً
+            // جديداً — فبصمةُ init-data الموقَّعةِ شهادةُ «هذا الشخصُ دخلَ»،
+            // وليست شهادةَ «هذا الشخصُ جديدٌ». والاستحداثُ في `resolve` وحدَهُ.
+            const user = await sessionDeps.repo.findUserByTelegramId(telegramUserId);
+            if (user === null || user.status === "deleted") {
+              throw new IdentityError(
+                "IDENTITY_NOT_FOUND",
+                "no linked identity for this channel user",
+              );
+            }
+            if (user.status !== "active") {
+              // I-11: مستخدمٌ موقوفٌ لا جلسةَ له.
+              throw new IdentityError(
+                "IDENTITY_USER_SUSPENDED",
+                "identity is not active",
+              );
+            }
+            return { internalUuid: user.internalUuid, waslaPublicId: user.waslaPublicId };
+          },
+        );
+        request.log.info(
+          {
+            event: "user_session_issued",
+            wasla_public_id: issued.waslaPublicId,
+            actor_type: issued.session.actorType,
+            channel: issued.session.channel,
+            session_id: issued.session.id,
+            expires_at: issued.session.expiresAt,
+            via: caller,
+          },
+          "user session issued",
+        );
+        return reply.status(201).send({
+          token: issued.token,
+          wasla_public_id: issued.waslaPublicId,
+          actor_type: allowedActor,
+          expires_at: issued.session.expiresAt,
+          session_id: issued.session.id,
+        } satisfies IssueSessionResponse);
+      },
+    );
+
+    // POST /identity/sessions/exchange — قايضةُ جلسةٍ بتأكيدٍ قصيرِ العمرِ (I-06..I-10).
+    app.post(
+      "/identity/sessions/exchange",
+      { config: scoped(IDENTITY_SCOPES.sessionExchange) },
+      async (request, reply) => {
+        const caller = request.serviceCaller?.serviceName ?? "";
+        const allowedActor = SESSION_ACTOR_BY_CALLER[caller];
+        if (allowedActor === undefined) {
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_FORBIDDEN",
+            "this caller may not issue or exchange user sessions",
+          );
+        }
+        const body = (request.body ?? {}) as ExchangeSessionRequest;
+        const token = typeof body.session_token === "string" ? body.session_token : "";
+        const audience = body.audience;
+        if (
+          !Array.isArray(audience) ||
+          audience.length === 0 ||
+          audience.length > 4 ||
+          !audience.every((a) => typeof a === "string")
+        ) {
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_INVALID_REQUEST",
+            "audience must be a non-empty list of service names",
+          );
+        }
+        const allowedAudiences = ASSERTION_AUDIENCES_BY_ACTOR[allowedActor];
+        if (!audience.every((a) => allowedAudiences.includes(a as string))) {
+          // I-09: جمهورٌ خارجَ قائمةِ الفاعلِ ⇒ 403 (لا 503 ولا 500).
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_FORBIDDEN",
+            "requested audience is not allowed for this actor type",
+          );
+        }
+        const signingKey = options.userAssertion?.signingKey ?? null;
+        if (signingKey === null) {
+          // I-12: لا مفتاحَ ⇒ 503 — لا تأكيدَ «غيرُ موقَّعٍ».
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_UNAVAILABLE",
+            "user assertions are not available",
+          );
+        }
+
+        const sessionUseCase = sessionDeps;
+        const now = new Date(sessionUseCase.clock.now());
+        const sessionRow = await sessionUseCase.sessions.findSessionByTokenHash(
+          hashSessionToken(token),
+        );
+        if (sessionRow === null) {
+          // I-08: رمزٌ مُلغىً أو غيرُ معروفٍ — نفسُ الكودِ والنصِّ للجمهورِ.
+          throw new AuthenticationError(
+            AuthErrorCode.UNAUTHENTICATED,
+            "رمزُ الجلسةِ غيرُ مقبول.",
+            { traceId: request.id },
+          );
+        }
+        const invalidity = sessionInvalidity(sessionRow, now);
+        if (invalidity === SessionInvalidity.Revoked) {
+          throw new AuthenticationError(
+            AuthErrorCode.UNAUTHENTICATED,
+            "رمزُ الجلسةِ غيرُ مقبول.",
+            { traceId: request.id },
+          );
+        }
+        if (invalidity === SessionInvalidity.Expired) {
+          // I-07: الانتهاءُ يُفصَحُ عنه بكودٍ مستقلٍّ (إرشادُ عملٍ: أعِد الدخولَ).
+          throw new AuthenticationError(
+            AuthErrorCode.EXPIRED,
+            "انتهت مدّةُ الجلسةِ — يلزم الدخولُ من جديد.",
+            { traceId: request.id },
+          );
+        }
+        // I-10: فاعلُ الجلسةِ من مسارِ الثقةِ لا من الجلسةِ وحدَها — البوتُ لا يُبدّلُ
+        // شخصاً. منادٍ `driver-bot` لا يستبدلُ جلسةَ `customer`.
+        if (sessionRow.actorType !== allowedActor) {
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_FORBIDDEN",
+            "this caller may not exchange a session of a different actor type",
+          );
+        }
+        const owner = await sessionUseCase.repo.findUserByInternalUuid(sessionRow.userInternalUuid);
+        if (owner === null || owner.status === "deleted") {
+          throw new AuthenticationError(
+            AuthErrorCode.UNAUTHENTICATED,
+            "رمزُ الجلسةِ غيرُ مقبول.",
+            { traceId: request.id },
+          );
+        }
+        if (owner.status !== "active") {
+          // I-11: مستخدمٌ موقوفٌ لا تأكيدَ له حتى لو كانت الجلسةُ حيّةً.
+          throw new IdentityError(
+            "IDENTITY_USER_SUSPENDED",
+            "identity is not active",
+          );
+        }
+        // آخرُ استعمالٍ يُسجَّل ولا يُنتظَر منه قرار: فشلُ الكتابةِ لا يمنعُ طلباً مصادَقاً عليه.
+        await sessionUseCase.sessions.touchSession(sessionRow.id, now.toISOString()).catch(() => undefined);
+
+        const ttlSeconds = options.userAssertion?.ttlSeconds ?? DEFAULT_USER_ASSERTION_TTL_SECONDS;
+        const { assertion, payload } = mintUserAssertion({
+          key: signingKey,
+          sub: owner.waslaPublicId,
+          act: allowedActor,
+          chn: "telegram",
+          via: caller,
+          aud: audience as string[],
+          now,
+          ttlSeconds,
+        });
+        request.log.info(
+          {
+            event: "user_session_exchanged",
+            wasla_public_id: payload.sub,
+            actor_type: payload.act,
+            via: caller,
+            aud: payload.aud,
+            kid: payload.kid,
+            jti: payload.jti,
+            exp: payload.exp,
+            session_id: sessionRow.id,
+          },
+          "user session exchanged",
+        );
+        return reply.status(200).send({
+          assertion,
+          wasla_public_id: payload.sub,
+          actor_type: allowedActor,
+          audience: [...payload.aud],
+          expires_at: new Date(payload.exp * 1000).toISOString(),
+        } satisfies ExchangeSessionResponse);
+      },
+    );
+
+    // POST /identity/sessions/revoke — سحبُ جلسةٍ برموزِها (I-13 يُغطّي السجلَّ).
+    app.post(
+      "/identity/sessions/revoke",
+      { config: scoped(IDENTITY_SCOPES.sessionRevoke) },
+      async (request, reply) => {
+        const caller = request.serviceCaller?.serviceName ?? "";
+        const allowedActor = SESSION_ACTOR_BY_CALLER[caller];
+        if (allowedActor === undefined) {
+          throw new IdentityError(
+            "IDENTITY_ASSERTION_FORBIDDEN",
+            "this caller may not revoke user sessions",
+          );
+        }
+        const body = (request.body ?? {}) as RevokeSessionRequest;
+        const token = typeof body.session_token === "string" ? body.session_token : "";
+        const reason = typeof body.reason === "string" && body.reason.trim().length > 0
+          ? body.reason.trim()
+          : "user_requested";
+        const sessionRow = await sessionDeps.sessions.findSessionByTokenHash(
+          hashSessionToken(token),
+        );
+        if (sessionRow === null) {
+          // سحبُ ما لا وجودَ له يُخفي عيباً في الطبقةِ الأعلى — يُفصَحُ عنه 404.
+          throw new IdentityError(
+            "IDENTITY_SESSION_NOT_FOUND",
+            "session not found",
+          );
+        }
+        await revokeSessionUseCase(sessionDeps, sessionRow.id, reason);
+        request.log.info(
+          {
+            event: "user_session_revoked",
+            session_id: sessionRow.id,
+            actor_type: sessionRow.actorType,
+            via: caller,
+            reason,
+          },
+          "user session revoked",
+        );
+        return reply.status(200).send({ revoked: true, session_id: sessionRow.id } satisfies RevokeSessionResponse);
+      },
+    );
+  }
 
   // CLM-0448: the issuer's boot line — whether a signing key is loaded, and its kid only.
   app.addHook("onReady", async () => {

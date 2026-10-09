@@ -886,6 +886,9 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `POST /identity/users/{waslaPublicId}/recovery` | `identity:recovery:write` | لا مُناديَ خدميٌّ اليومَ |
 | `GET /identity/users/{waslaPublicId}/history` | `identity:history:read` | لا مُناديَ خدميٌّ اليومَ |
 | `POST /identity/assertions` | `identity:assertion:issue` | بوتاتُ القنواتِ الثلاثةُ عبرَ `bot-runtime` بموقّعٍ مستقلٍّ (`CHANNEL_USER_ASSERTION_SCOPES`) · ADR-060 · CLM-0440 |
+| `POST /identity/sessions` | `identity:session:issue` | customer-bot و driver-bot فقط — حدّ قناة واعٍ بالمصادقة (ADR-069 المرحلة الأولى · CLM-0519)؛ الفاعل مشتق من `serviceIdentity.caller` لا من جسم الطلب |
+| `POST /identity/sessions/exchange` | `identity:session:exchange` | customer-bot و driver-bot فقط — يصدر `wua1` بعمر ≤ 60 ثانية لجمهور محدد (`ASSERTION_AUDIENCES_BY_ACTOR` — ADR-069 §2.2) |
+| `POST /identity/sessions/revoke` | `identity:session:revoke` | customer-bot و driver-bot فقط — سحب جلسة برمزها (404 `IDENTITY_SESSION_NOT_FOUND` إن لم توجد) |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — |
 
 <!-- identity-scopes:end -->

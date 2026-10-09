@@ -26,6 +26,7 @@ import {
   InMemoryIdentityRepository,
   InMemoryOutbox,
   InMemoryPublicIdSequence,
+  InMemorySessionRepository,
   SystemClock,
 } from "../../infrastructure/in-memory.js";
 import { createIdentityApp } from "../../http/app.js";
@@ -34,6 +35,7 @@ import {
   IDENTITY_SERVICE_AUDIENCE,
 } from "../../http/service-identity.js";
 import type { UseCaseDeps } from "../../use-cases/resolve-telegram-identity.js";
+import type { SessionUseCaseDeps } from "../../use-cases/session.js";
 
 /** سرٌّ اختباريٌّ بطولٍ مقبولٍ؛ لا صلةَ له بأيِّ سرٍّ تشغيليٍّ. */
 export const TEST_SERVICE_SECRET = "identity-test-secret-0123456789ab";
@@ -88,6 +90,21 @@ export function buildInMemoryDeps(): UseCaseDeps {
 }
 
 /**
+ * ADR-069 · CLM-0519: حالاتُ استخدامِ الجلسةِ على مستودعاتِ الذاكرةِ —
+ * مصدرٌ واحدٌ مع `buildInMemoryDeps` لا مُخزنٌ ثانٍ منفصلٌ عن العميلِ.
+ */
+export function buildInMemorySessionDeps(
+  deps: UseCaseDeps = buildInMemoryDeps(),
+): SessionUseCaseDeps {
+  return {
+    sessions: new InMemorySessionRepository(),
+    repo: deps.repo,
+    clock: deps.clock,
+    idGen: deps.idGen,
+  };
+}
+
+/**
  * يلفُّ `inject` لتطبيقٍ قائمٍ كي يوقِّعَ كلَّ نداءٍ، ويعيدُ `inject` الأصليَّ
  * **بلا توقيعٍ** لمن أراد إثباتَ الرفضِ. مُستخرَجٌ كي لا يُكرَّرَ اللَّفُّ في
  * بوّابةِ الخروجِ وفي السندِ معاً.
@@ -116,6 +133,7 @@ export function attachSigningInject(
 export interface IdentityHttpHarness {
   app: ReturnType<typeof createIdentityApp>;
   deps: UseCaseDeps;
+  sessionDeps: SessionUseCaseDeps;
   keys: ServiceAuthKeyRegistry;
   replayGuard: InMemoryServiceTokenReplayGuard;
   /** `inject` بلا توقيعٍ — لإثباتِ الرفضِ لا لتجاوزِه. */
@@ -128,13 +146,16 @@ export function createIdentityHttpHarness(
 ): IdentityHttpHarness {
   const keys = createTestKeyRegistry();
   const replayGuard = new InMemoryServiceTokenReplayGuard();
+  const sessionDeps = buildInMemorySessionDeps(deps);
   const app = createIdentityApp({
     deps,
     logger: false,
     serviceIdentity: { keys, replayGuard },
+    // ADR-069 · CLM-0519: مساراتُ الجلسةِ مربوطةٌ — فاختباراتُ العقدِ تُثبتُها.
+    session: sessionDeps,
   });
 
   const rawInject = attachSigningInject(app, keys);
 
-  return { app, deps, keys, replayGuard, rawInject };
+  return { app, deps, sessionDeps, keys, replayGuard, rawInject };
 }

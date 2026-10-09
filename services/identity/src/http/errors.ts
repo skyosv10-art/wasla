@@ -16,6 +16,7 @@
 import type { FastifyReply } from "fastify";
 
 import { IdentityError } from "../domain/errors.js";
+import { AuthenticationError, AuthErrorCode } from "@wasla/auth-sdk";
 
 export interface IdentityErrorBody {
   code: string;
@@ -31,6 +32,23 @@ export function sendIdentityError(
 ): void {
   if (error instanceof IdentityError) {
     reply.status(error.httpStatus).send({
+      code: error.code,
+      message: error.message,
+      trace_id: error.traceId ?? traceId,
+    } satisfies IdentityErrorBody);
+    return;
+  }
+
+  // ADR-069 · CLM-0519 (I-07/I-08): خطأُ المصادقةِ يُترجَمُ 401 لا 503. سابقاً
+  // كان يسقطُ إلى `IDENTITY_INTERNAL_ERROR` (503) لأنّ `IdentityError` وحدهُ
+  // مُصنَّفٌ — وكان ذلك يُبلغُ المُنادي «الخدمةُ معطّلة» لما هو «رمزُكَ مرفوضٌ»،
+  // فيحتمي فشلُ إثباتٍ منسوبٍ إلى الإدارةِ لا إلى الطبقةِ العليا.
+  if (error instanceof AuthenticationError) {
+    const httpStatus =
+      error.code === AuthErrorCode.UNAUTHENTICATED || error.code === AuthErrorCode.EXPIRED
+        ? 401
+        : 403;
+    reply.status(httpStatus).send({
       code: error.code,
       message: error.message,
       trace_id: error.traceId ?? traceId,

@@ -16,7 +16,7 @@ export function createPartnersPool(): Pool {
     throw new Error("PARTNERS_DATABASE_URL is required to start the partners service");
   }
   // RISK-0058 · ADR-059: bounded connect/query time, error listeners and a circuit breaker.
-  return guardPgPool(new Pool(withPgPoolDefaults({ connectionString, max: 10, idleTimeoutMillis: 30000 })), {
+  return guardPgPool(new Pool(withPgPoolDefaults({ connectionString, idleTimeoutMillis: 30000 })), {
     name: "partners",
   });
 }

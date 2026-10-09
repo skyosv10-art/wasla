@@ -78,6 +78,48 @@ describe("withPgPoolDefaults — bounded connect and query time", () => {
   });
 });
 
+describe("withPgPoolDefaults — bounded pool size (RISK-0067)", () => {
+  it("bounds an unbounded pool to the default 2, and a caller-set max wins", () => {
+    // The measured defect: pg's library default is max 10, so 17 services × 10 = 170
+    // possible demand against 40 Supavisor session slots (EMAXCONNSESSION, CLM-0509).
+    const bounded = withPgPoolDefaults({ connectionString: "postgres://x" }, {});
+    expect(bounded.max).toBe(2);
+    expect(bounded.max).toBe(PG_GUARD_DEFAULTS.poolMax);
+    // A caller-set max (e.g. max: 1 for the one-shot CLIs) is never overridden.
+    const own = withPgPoolDefaults({ connectionString: "postgres://x", max: 1 }, {});
+    expect(own.max).toBe(1);
+    // config.max left undefined by a db client (no ?? 10 fallback) still gets the bound.
+    // The client-side shape is `max?: number` (services/*/…/db.ts), not a literal
+    // `max: undefined` — typed so, because `Required<PgPoolTimeouts>` narrows the latter
+    // to `never` while the real callers never hit that.
+    const clientConfig: { connectionString: string; max?: number } = {
+      connectionString: "postgres://x",
+      max: undefined,
+    };
+    const inherited = withPgPoolDefaults(clientConfig, {});
+    expect(inherited.max).toBe(2);
+  });
+
+  it("reads WASLA_PG_POOL_MAX per process and refuses any value outside 1..10", () => {
+    expect(withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "4" }).max).toBe(4);
+    expect(withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "10" }).max).toBe(10);
+    // The ceiling is deliberate: a value that re-creates the 170-demand worst case
+    // is a configuration error, refused at startup — not silently blessed.
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "11" })).toThrow(/WASLA_PG_POOL_MAX.*between 1 and 10/);
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "0" })).toThrow(/WASLA_PG_POOL_MAX.*between 1 and 10/);
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "2.5" })).toThrow(/WASLA_PG_POOL_MAX.*between 1 and 10/);
+    expect(() => withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "soon" })).toThrow(/WASLA_PG_POOL_MAX.*between 1 and 10/);
+    // Blank is absent, not zero — the default applies.
+    expect(withPgPoolDefaults({}, { WASLA_PG_POOL_MAX: "" }).max).toBe(2);
+  });
+
+  it("the fleet worst case fits the pooler: 17 services × default 2 = 34 ≤ 40 slots", () => {
+    // The arithmetic this change exists for, stated where it cannot be missed.
+    expect(17 * PG_GUARD_DEFAULTS.poolMax).toBeLessThanOrEqual(40);
+    expect(PG_GUARD_DEFAULTS.poolMax).toBeLessThanOrEqual(10);
+  });
+});
+
 describe("withPgPoolDefaults — TLS / SSL (RISK-0060)", () => {
   it("leaves ssl unset when WASLA_PG_SSL_MODE is absent (local dev backward compatible)", () => {
     const c = withPgPoolDefaults({ connectionString: "postgres://x" }, {});

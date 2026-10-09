@@ -40,7 +40,7 @@ export type DbOrTx = Db;
 export interface DbConfig {
   /** Postgres connection string (e.g. postgres://user:pass@host:5432/db). */
   connectionString: string;
-  /** Max pool connections. */
+  /** Max pool clients — default bounded by `WASLA_PG_POOL_MAX` (RISK-0067), see `withPgPoolDefaults`. */
   max?: number;
 }
 
@@ -51,7 +51,7 @@ export function createDispatchDb(config: DbConfig): { pool: Pool; db: Db } {
     new pg.Pool(
       withPgPoolDefaults({
         connectionString: config.connectionString,
-        max: config.max ?? 10,
+        max: config.max,
       }),
     ),
     { name: "dispatch" },

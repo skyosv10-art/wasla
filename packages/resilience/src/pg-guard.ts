@@ -43,6 +43,17 @@ export const PG_GUARD_DEFAULTS = {
   probeTimeoutMs: 2_500,
   /** …and one probe result is shared by every health call inside this window. */
   probeCacheMs: 1_000,
+  /**
+   * RISK-0067 (CLM-0510): upper bound on pool clients per guarded pool. `pg`'s own
+   * default is `max: 10`, and 17 runtime services × 10 = 170 possible demand against
+   * the 40 Supavisor session slots (pool raised 15→40 in CLM-0509) and
+   * `max_connections = 60` — a ceiling the pooler refuses with `EMAXCONNSESSION`. The
+   * default 2 keeps the whole fleet's worst case at 17 × 2 = 34 ≤ 40 slots, and the
+   * 5 s connect bound (above) bounds the wait for a free client. Override per process
+   * with `WASLA_PG_POOL_MAX` (1..10); a caller-set `max` always wins, so one-shot CLIs
+   * that ask for `max: 1` keep it.
+   */
+  poolMax: 2,
 } as const;
 
 /** RISK-0060: TLS mode for database connections. */
@@ -198,6 +209,25 @@ export interface PgPoolTimeouts {
   connectionTimeoutMillis?: number;
   query_timeout?: number;
   keepAlive?: boolean;
+  /** Pool client ceiling — see `PG_GUARD_DEFAULTS.poolMax` (RISK-0067). */
+  max?: number;
+}
+
+/**
+ * RISK-0067 (CLM-0510): the per-pool client ceiling. `WASLA_PG_POOL_MAX` must be an
+ * integer in 1..10; anything else is refused at startup, not silently ignored — the
+ * same rule `envMs` applies to the timeouts. The ceiling is deliberately not higher
+ * than `pg`'s own default (10): a value that re-creates the 170-demand worst case is
+ * a configuration error this guard refuses to bless.
+ */
+function envPoolMax(env: Readonly<Record<string, string | undefined>>): number {
+  const raw = env["WASLA_PG_POOL_MAX"];
+  if (raw === undefined || raw.trim() === "") return PG_GUARD_DEFAULTS.poolMax;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > 10) {
+    throw new Error(`${"WASLA_PG_POOL_MAX"} must be an integer between 1 and 10, got ${JSON.stringify(raw)}`);
+  }
+  return value;
 }
 
 /**
@@ -205,6 +235,8 @@ export interface PgPoolTimeouts {
  *   WASLA_PG_CONNECT_TIMEOUT_MS · WASLA_PG_QUERY_TIMEOUT_MS override the defaults per process.
  *   WASLA_PG_SSL_MODE (off|require|verify-full) controls TLS; `verify-full` requires
  *   WASLA_PG_SSL_CA to be the PEM certificate body (RISK-0060).
+ *   WASLA_PG_POOL_MAX (1..10) bounds the pool client count — RISK-0067 — and a
+ *   caller-set `max` wins over it.
  */
 export function withPgPoolDefaults<T extends object>(
   config: T,
@@ -219,6 +251,7 @@ export function withPgPoolDefaults<T extends object>(
       c.connectionTimeoutMillis ?? envMs(env, "WASLA_PG_CONNECT_TIMEOUT_MS", PG_GUARD_DEFAULTS.connectionTimeoutMillis),
     query_timeout: c.query_timeout ?? envMs(env, "WASLA_PG_QUERY_TIMEOUT_MS", PG_GUARD_DEFAULTS.queryTimeoutMillis),
     keepAlive: c.keepAlive ?? true,
+    max: c.max ?? envPoolMax(env),
   };
 }
 

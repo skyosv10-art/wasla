@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0510 — M6-18B / RISK-0067: application-side pool limits (bounded `max` on every guarded pool)
+
+- **Work Item(s):** M6-18B
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Blocked
+- **Risk(s):** RISK-0067 → mitigating
+- **What / Why:** the register's mitigation for RISK-0067 (opened CLM-0509): pg's library default `max: 10` × 17 services = 170 possible demand against 40 Supavisor session slots → `EMAXCONNSESSION` under load. Independent change as the register requires: `withPgPoolDefaults` now sets a bounded `max` on every guarded pool — default 2, per-process `WASLA_PG_POOL_MAX` (integer 1..10, refused at startup otherwise), caller-set `max` (CLIs' `max: 1`) wins. Fleet worst case 17 × 2 = 34 ≤ 40.
+- **Changed (units):** `packages/resilience` (pg-guard.ts + pg-guard.test.ts), 14 db clients (`services/{orders,marketplace,subscriptions,billing,identity,customers,drivers,reputation,geography,dispatch,support,negotiations,matching}/src` + `packages/channel-postgres/src` — `max: config.max ?? 10` → `max: config.max`), `services/partners/src` (hard-coded 10 removed), `packages/config` (env-registry.json + regenerated artifacts), `.env.example`.
+- **Tests:** 6 new cases in `pg-guard.test.ts` (default/caller-wins/env-override/refusal/fleet-arithmetic) — 33/33 pass locally; no `**No-Test-Reason:**` needed.
+- **Security / Data / Deployment:** no secret touched, no production write, no Render change in this PR; the merged commit deploys through the pinned `render-deploy` workflow (deploy target = Singapore workspace).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T010000Z-clm-0510-risk-0067-app-pool-limits/README.md`
+- **Deployment:** none in this PR (the merge's pinned render-deploy run is recorded in the evidence §6).
+- **Next:** RISK-0067 closes only on a load measurement with no `EMAXCONNSESSION` (production load run — owner-level); M6-18B stays Blocked (RISK-0058 / RISK-0060 / RISK-0066); M7 not started.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-08 — CLM-0509 — M6-18B / INC-0006: secret rotation executed — DB password, Supavisor ceiling, 3 webhook secrets
 
 - **Work Item(s):** M6-18B

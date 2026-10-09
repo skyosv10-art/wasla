@@ -21,7 +21,7 @@ export function createNegotiationDb(config: DbConfig): { pool: Pool; db: Db } {
     new pg.Pool(
       withPgPoolDefaults({
         connectionString: config.connectionString,
-        max: config.max ?? 10,
+        max: config.max,
       }),
     ),
     { name: "negotiations" },

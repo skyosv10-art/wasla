@@ -1,0 +1,138 @@
+name: RISK-0060 — plaintext-rejection probe against the production database (M6-18B)
+
+# CLM-0512 · M6-18B — the deliberate read-only measurement RISK-0060 still lacks.
+#
+# RISK-0060 closure condition (register, verbatim): "production connections are
+# measured TLS-verified and plaintext is refused by the server." TLS-verified is
+# measured (CLM-0495: verify-full + pinned CA on Render, read back via the API).
+# Plaintext-refusal has only INCIDENTAL evidence (db-backup run 37199256304,
+# 2026-10-04: ESSLREQUIRED on a plaintext connection) — this probe makes it
+# deliberate, exactly as prepared in CLM-0497 §7:
+#
+#   1. Parse host and project ref from the existing Actions secret SUPABASE_DB_URL
+#      (the same secret db-backup.yml already uses; no URL requested from the
+#      owner); print ONLY ref and host; fail unless ref = ppixaauyqoykrogwdxtv.
+#   2. Probe A (must fail): psql "<url> sslmode=disable" -c 'select 1' → PASS only
+#      if non-zero exit AND the server message is SSL-required (ESSLREQUIRED /
+#      "SSL connection is required").
+#   3. Probe B (control, must succeed): sslmode=require → select 1 = 1.
+#   4. Upload a JSON verdict (ref, host, probe A message class, probe B result,
+#      timestamps). No query beyond `select 1`; no write; no secret printed.
+#
+# Read-only: `select 1` only, both probes. The connection string is never
+# printed and never written to an artifact; only the parsed ref and host are.
+# The probe URLs are built inside the same python step that parses the target,
+# so an existing query string on the secret is merged, not naively appended to.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha:
+        description: "Full 40-character SHA of the main commit (must equal the run's commit)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Plaintext-rejection probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Refuse anything but the typed commit on main
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::ref $GITHUB_REF is not refs/heads/main"; exit 1; }
+          [[ "$CONFIRM_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::confirm_sha must be a full 40-character lowercase SHA"; exit 1; }
+          [ "$CONFIRM_SHA" = "$GITHUB_SHA" ] || { echo "::error::confirm_sha $CONFIRM_SHA != run commit $GITHUB_SHA"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Probe (sslmode=disable must be refused; sslmode=require control must pass)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          command -v psql >/dev/null 2>&1 || sudo apt-get install -y -q postgresql-client
+
+          # ── Parse the target and build the two probe URLs; print ONLY ref + host.
+          #    The URLs are written to GITHUB_ENV (never echoed; the secret itself
+          #    is masked by GitHub in any log line it would appear in).
+          python3 - <<'PY'
+          import os, re, sys, urllib.parse
+          url = os.environ.get("SUPABASE_DB_URL", "")
+          if not url:
+              print("::error::SUPABASE_DB_URL is empty", file=sys.stderr); sys.exit(1)
+          parsed = urllib.parse.urlparse(url)
+          host = parsed.hostname or ""
+          user = urllib.parse.unquote(parsed.username or "")
+          m = re.search(r"postgres\.([a-z0-9]{20})", user)
+          ref = m.group(1) if m else ""
+          if not ref:
+              m2 = re.match(r"([a-z0-9]{20})\.supabase\.co$", host)
+              ref = m2.group(1) if m2 else ""
+          if not ref:
+              print("::error::could not parse the Supabase project ref from the secret", file=sys.stderr); sys.exit(1)
+          print(f"target: ref={ref} host={host}")
+          # Build the two probe URLs with proper query merging.
+          def with_mode(mode):
+              parts = urllib.parse.urlsplit(url)
+              query = dict(urllib.parse.parse_qsl(parts.query))
+              query["sslmode"] = mode
+              return urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path,
+                                               urllib.parse.urlencode(query), parts.fragment))
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"PROBE_TARGET_REF={ref}\n")
+              env.write(f"PROBE_TARGET_HOST={host}\n")
+              env.write("PROBE_A_URL<<" + "EOF\n" + with_mode("disable") + "\nEOF\n")
+              env.write("PROBE_B_URL<<" + "EOF\n" + with_mode("require") + "\nEOF\n")
+          PY
+          [ "${PROBE_TARGET_REF}" = "ppixaauyqoykrogwdxtv" ] \
+            || { echo "::error::ref ${PROBE_TARGET_REF} != ppixaauyqoykrogwdxtv (production)"; exit 1; }
+          echo "target: ref=${PROBE_TARGET_REF} host=${PROBE_TARGET_HOST}"
+
+          # ── Probe A (must FAIL with SSL-required): sslmode=disable.
+          PROBE_A_EXIT=0
+          PROBE_A_MSG="$(psql "${PROBE_A_URL}" -v ON_ERROR_STOP=1 -c 'select 1' 2>&1)" || PROBE_A_EXIT=$?
+          echo "probe A exit code: ${PROBE_A_EXIT}"
+          PROBE_A_CLASS="$(printf '%s' "$PROBE_A_MSG" | grep -oE 'ESSLREQUIRED|SSL connection is required' | head -1 || true)"
+          echo "probe A message class: ${PROBE_A_CLASS:-NO_MATCH}"
+          if [ "$PROBE_A_EXIT" -eq 0 ]; then
+            echo "::error::probe A: sslmode=disable CONNECTED — the server accepted plaintext"; exit 1
+          fi
+          if [ -z "$PROBE_A_CLASS" ]; then
+            echo "::error::probe A failed for a non-SSL reason (not a plaintext-rejection proof)"; exit 1
+          fi
+
+          # ── Probe B (control, must SUCCEED): sslmode=require.
+          PROBE_B="$(psql "${PROBE_B_URL}" -v ON_ERROR_STOP=1 -t -A -c 'select 1' 2>&1)" \
+            || { echo "::error::probe B (control) failed: $PROBE_B"; exit 1; }
+          [ "$PROBE_B" = "1" ] || { echo "::error::probe B: select 1 returned '$PROBE_B' not 1"; exit 1; }
+
+          # ── Verdict JSON (no secret, only ref/host/classes).
+          mkdir -p out
+          python3 - <<'PY'
+          import datetime, json, os
+          verdict = {
+              "risk": "RISK-0060",
+              "claim": "CLM-0512",
+              "target": {"ref": os.environ["PROBE_TARGET_REF"], "host": os.environ["PROBE_TARGET_HOST"]},
+              "probe_a": "REFUSED_SSL_REQUIRED",
+              "probe_b_control": "PASS_select_1",
+              "conclusion": "PLAINTEXT_REFUSED_DELIBERATE",
+              "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+          }
+          with open("out/risk-0060-plaintext-probe.json", "w") as f:
+              json.dump(verdict, f, indent=2)
+          print(json.dumps(verdict, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: risk-0060-plaintext-probe-${{ github.run_id }}
+          path: out/
+          retention-days: 90

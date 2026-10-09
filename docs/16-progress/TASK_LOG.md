@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0517 — ENGINEERING COMPLETION AUDIT: مصفوفة الاكتمال (جرد فقط)
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0067 → mitigating (لا تغيير) · RISK-0058 → mitigating (لا تغيير) · RISK-0066 → open (لا تغيير) · RISK-0050 → open (لا تغيير)
+- **What / Why:** جرد الاكتمال الهندسي على main `76d60fa8` قبل أي إصلاح، بأمر المالك: كل تطبيق/شاشة/مسار/جدول/تكامل مربوط في مصفوفة واحدة (الميزة → الواجهة → المستدعي → الخلفية → القاعدة → التكامل → الاختبارات → الدليل → الحالة). النتيجة 65 صفًّا: 13 COMPLETE (CI-PG) · 39 PARTIAL · 4 BLOCKED · 6 DEFERRED · 3 N/A؛ ENGINEERING_COMPLETE = NO. أهم الفجوات: (1) لا مسار مصادقة بشرية من التطبيقات إلى الخدمات، (2) لا مُنشئ لمهمة التوزيع بعد نشر طلب المشوار، (3) التطبيقات غير منشورة على الحزمة الحالية وحزم golden/load مثبّتة على مضيفات legacy، (4) الاشتراك التجريبي وتبديل التوفر، (5) التصعيد إلى المجتمع وناقل الأحداث. RISK-0067: خطة حمل معزولة L1 (CI) / L2 (مشروع Supabase منفصل) — لم تُنفَّذ.
+- **Changed (units):** `docs/12-testing/ENGINEERING_COMPLETION_MATRIX.md`, `docs/12-testing/ci-evidence/2026-10-09T120000Z-clm-0517-engineering-completion-audit/README.md`, `docs/12-testing/ci-evidence/2026-10-09T120000Z-clm-0517-engineering-completion-audit/inventory.json`, `scripts/audit/engineering_completion_inventory.py`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: جرد قراءة فقط — السكربت أداة تدقيق لا تدخل في أي مسار تشغيل أو CI، ويُعاد تشغيله بأمر واحد موثّق في الدليل؛ لا كود منتج تغيّر.
+- **Security / Data / Deployment:** لا تغيير؛ لا كتابة في أي قاعدة؛ لا أسرار في اللقطة.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T120000Z-clm-0517-engineering-completion-audit/README.md`
+- **Deployment:** none (docs/scripts-only).
+- **Next:** إصلاح الفجوات بالترتيب (§4 من المصفوفة)، كل فجوة بمطالبة مستقلة، بدءًا بمسار المصادقة البشرية (ADR).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0516 — أحكام ما بعد الدمج: CLM-0514 (#672) وCLM-0515 (#673)
 
 - **Work Item(s):** M6-18B · M2-01

@@ -43,14 +43,26 @@ default): a value that re-creates the 170-demand worst case is refused, not bles
 
 ## 5. CI verdict
 
-- PR: filled on push (see §6).
-- **CI verdict after merge is the authority; local green is not.**
+**PR head (branch `fix/clm-0510-risk-0067-app-pool-limits`)** — all green:
+- WASLA CI [37867359929](https://github.com/skyosv10-art/wasla/actions/runs/37867359929) — **success** (7m16s, 42 checks: typecheck, test, governance-guard, verify, doc-coverage, repo-structure, roadmap, 15 × db-integration, 14 × exit-gate-e2e, 3 × mini-app e2e, image-supply-chain).
+- Roadmap freshness [37867344357](https://github.com/skyosv10-art/wasla/actions/runs/37867344357) — **success**.
+- DR scenario 2 [37867359991](https://github.com/skyosv10-art/wasla/actions/runs/37867359991) — **success** (the guarded-pool failure containment re-proven on this head; the restore drill job skips on PRs as scheduled-only).
+- The only non-`pass` row is the scheduled restore drill `skipping` on PRs — expected, not a gate.
+
+**Merge:** squash `59bea99b5dff234b1b8a04bb2bfa8dc0472a4f12` at 2026-10-09T01:19:01Z (PR [#668](https://github.com/skyosv10-art/wasla/pull/668)). The base-branch policy requires a CODEOWNER review; the sole CODEOWNER is the PR author, so the owner exercised the admin merge under their explicit instruction (recorded 2026-10-09, "ادمج الآن" — merge now) — the same standing pattern recorded in CLM-0506/0508. All checks were green before the merge.
+
+**Post-merge `main` (`59bea99b`)** — all green:
+- WASLA CI [37869185503](https://github.com/skyosv10-art/wasla/actions/runs/37869185503) — **success** (7m24s).
+- Roadmap freshness [37869185443](https://github.com/skyosv10-art/wasla/actions/runs/37869185443) — **success**.
+- Render deploy [37869185543](https://github.com/skyosv10-art/wasla/actions/runs/37869185543) — **success, verdict PASS**: 24/24 services live on `59bea99` (per-service live-commit verification, deploy target = Singapore workspace per `deploy-target.json`).
 
 ## 6. Run links
 
-- WASLA CI (PR head):
-- Roadmap freshness (PR head):
-- Post-merge main runs: to be recorded after merge.
+- PR head: WASLA CI 37867359929 · Roadmap freshness 37867344357 · DR scenario 2 37867359991.
+- Merge: `59bea99b` (PR #668).
+- Post-merge main: WASLA CI 37869185503 · Roadmap freshness 37869185443 · Render deploy 37869185543 (PASS, 24/24 live=59bea99).
+
+*(Recorded by CLM-0511 — a documentation-only follow-up claim; local green was never treated as the CI verdict, and this section is the merge-time verdict read from the live API.)*
 
 ## 7. What this does NOT claim
 

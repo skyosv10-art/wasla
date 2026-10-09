@@ -1931,6 +1931,30 @@
       "note_ar": "يُقرأُ عبرَ `envMs(env, \"<الاسم>\", …)` في `withPgPoolDefaults` (ADR-059 · RISK-0058 · CLM-0438)، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ. الافتراضُ في `PG_GUARD_DEFAULTS`، وقيمةٌ غيرُ صالحةٍ تُرفَضُ."
     },
     {
+      "name": "WASLA_PG_POOL_MAX",
+      "type": "positive_int",
+      "required": "optional",
+      "default": "2",
+      "secret": false,
+      "scopes": [
+        "runtime",
+        "test"
+      ],
+      "description_ar": "سقفُ عملاءِ المسبحِ لكلِّ حوضٍ محروسٍ (1..10؛ الافتراضيُّ 2 — RISK-0067). يبقي أسوأَ حالةٍ للأسطولِ 17 × 2 = 34 ≤ 40 خانةَ Supavisor.",
+      "owner_item": "M6-18B",
+      "readers": [
+        {
+          "file": "packages/resilience/src/pg-guard.ts",
+          "mode": "indirect_literal"
+        },
+        {
+          "file": "packages/resilience/src/__tests__/pg-guard.test.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "يُقرأُ عبرَ `envPoolMax` في `withPgPoolDefaults` (RISK-0067 · CLM-0510)، فالبابُ 8 يربطُ حضورَ الاسمِ حرفاً في الملفِّ. الافتراضيُّ في `PG_GUARD_DEFAULTS.poolMax`، وقيمةٌ خارجَ 1..10 تُرفَضُ عندَ الإقلاعِ. `max` صريحٌ من المُنادي (مثل `max: 1` لأدواتِ CLI أحاديةِ اللمسةِ) يغلِبُها."
+    },
+    {
       "name": "WASLA_PG_QUERY_TIMEOUT_MS",
       "type": "positive_int",
       "required": "optional",

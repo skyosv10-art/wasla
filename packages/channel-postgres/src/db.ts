@@ -20,7 +20,7 @@ export type ChannelDb = NodePgDatabase<typeof schema>;
 export interface ChannelDbConfig {
   /** Postgres connection string (e.g. postgres://user:pass@host:5432/db). */
   readonly connectionString: string;
-  /** Max pool connections. */
+  /** Max pool clients — default bounded by `WASLA_PG_POOL_MAX` (RISK-0067), see `withPgPoolDefaults`. */
   readonly max?: number;
 }
 
@@ -31,7 +31,7 @@ export function createChannelDb(config: ChannelDbConfig): { pool: Pool; db: Chan
     new pg.Pool(
       withPgPoolDefaults({
         connectionString: config.connectionString,
-        max: config.max ?? 10,
+        max: config.max,
       }),
     ),
     { name: "channel-postgres" },

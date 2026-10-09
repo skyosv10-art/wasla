@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0516 — أحكام ما بعد الدمج: CLM-0514 (#672) وCLM-0515 (#673)
+
+- **Work Item(s):** M6-18B · M2-01
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0060 → closed (لا تغيير) · RISK-0050 → open (لا تغيير)
+- **What / Why:** توثيق أحكام CI الفعلية بعد الدفع: #672 (d8f3815e) — WASLA CI على main فشل في image-supply-chain (37913607058؛ CVEs نُشرت 2026-10-08 — فشل زمني عولج في CLM-0515) وRoadmap freshness نجح؛ #673 (34a71520) — WASLA CI نجح (37920057004؛ image-supply-chain عادت خضراء بالاستثناء المحروس) وRoadmap freshness نجح. Render deploy لم يُطلق عمدًا في الحجزين (paths-ignore). لا تغيير إنتاجي — الإنتاج ما زال على كود 59bea99b.
+- **Changed (units):** `docs/12-testing/ci-evidence/2026-10-09T110000Z-clm-0516-post-merge-verdicts/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: سجل توثيقي — لا كود ولا سطح اختبار؛ التحقق هو قراءة الأحكام من الـ API الحي وحوكمة السجل.
+- **Security / Data / Deployment:** لا تغيير (docs-only).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T110000Z-clm-0516-post-merge-verdicts/README.md`
+- **Deployment:** none (paths-ignore by design).
+- **Next:** المتابعة الحية RISK-0050: عند إصدار esbuild بـ Go ≥ 1.26.9 → ترقية + حذف استثناء الفئة (المهلة 2026-12-15). M6-18B محجوز على RISK-0058/0066/0067 (كلها owner-level أو تحتاج حملًا إنتاجيًا).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0515 — M2-01 / RISK-0050: CVEs جديدة في ثنائي esbuild — استثناء محروس (لا تعطيل للبوابة)
 
 - **Work Item(s):** M2-01

@@ -51,6 +51,36 @@ export type StartRecoveryRequest =
 export type IdentityHistoryEntry =
   components["schemas"]["IdentityHistoryEntry"];
 
+// --- Session lifecycle types (ADR-069 · CLM-0519 Phase 1) ---------------
+
+/**
+ * Request body for `POST /identity/sessions` — issuing a user session from a
+ * verified init-data fingerprint. `actor_type` in the body is ignored: the
+ * actor comes from the trusted caller path (I-03).
+ */
+export type IssueSessionRequest =
+  components["schemas"]["IssueSessionRequest"];
+
+/** Response of `POST /identity/sessions` — the opaque token is returned once. */
+export type IssueSessionResponse =
+  components["schemas"]["IssueSessionResponse"];
+
+/** Request body for `POST /identity/sessions/exchange`. */
+export type ExchangeSessionRequest =
+  components["schemas"]["ExchangeSessionRequest"];
+
+/** Response of `POST /identity/sessions/exchange` — a short-lived wua1. */
+export type ExchangeSessionResponse =
+  components["schemas"]["ExchangeSessionResponse"];
+
+/** Request body for `POST /identity/sessions/revoke`. */
+export type RevokeSessionRequest =
+  components["schemas"]["RevokeSessionRequest"];
+
+/** Response of `POST /identity/sessions/revoke`. */
+export type RevokeSessionResponse =
+  components["schemas"]["RevokeSessionResponse"];
+
 // --- Event contract types (from events.json) --------------------------
 import type {
   EventEnvelope,

@@ -266,6 +266,10 @@
           "mode": "direct"
         },
         {
+          "file": "packages/channel-e2e/src/__tests__/clm-0519-identity-sessions.e2e.test.ts",
+          "mode": "direct"
+        },
+        {
           "file": "packages/channel-e2e/src/__tests__/phase03-exit-gate.e2e.test.ts",
           "mode": "direct"
         },

@@ -80,8 +80,12 @@ function classOf(code: IdentityErrorCode): IdentityErrorClass {
       return "validation_error";
     case "IDENTITY_NOT_FOUND":
       return "not_found";
-    case "IDENTITY_LINK_ALREADY_LINKED":
     case "IDENTITY_USER_SUSPENDED":
+      // CLM-0519 (ADR-069 I-11): إيقافُ هويةٍ ليس تعارضاً منطقيّاً (409) بل
+      // رفضُ صلاحيةٍ (403) — `forbidden`. الحساباتُ المو-قوفةُ لا تُبنى جلساتٌ
+      // عليها ولا تُقايِضُ بتأكيدٍ.
+      return "forbidden";
+    case "IDENTITY_LINK_ALREADY_LINKED":
     // إعادةُ استعمالِ init-data ليست خطأً في المُدخَلِ بل تعارضٌ مع واقعٍ
     // مُسجَّلٍ: هذه الرسالةُ استُعمِلت مرّةً. و409 تقول ذلك بلا أن تُفصِح
     // للمهاجمِ عن سببٍ أدقّ.

@@ -1,3 +1,18 @@
+# 2026-10-09 — CLM-0519 — ADR-069 المرحلة الأولى: مسارات جلسات الهوية (إصدار/استبدال/سحب)
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0042 → open (لا تغيير — `packages/authz-policy` من فئة security: النطاقاتُ الجديدةُ لا تغيّرُ مُدَّعى الملكية؛ المسارُ الجديدُ يعتمدُ على `serviceIdentity.caller` لا على جسمِ الطلب)
+- **What / Why:** تنفيذُ المرحلة الأولى من ADR-069 (مُوافقٌ عليه ر2، تصميمٌ فقط → المرحلة الأولى الآن تنفيذُ): ثلاثة مساراتٍ في identity-service (`POST /identity/sessions`، `POST /identity/sessions/exchange`، `POST /identity/sessions/revoke`) بنطاقاتِ `identity:session:{issue,exchange,revoke}` في PRODUCTION_GRANTS لـ`customer-bot` و`driver-bot`. الفاعلُ يُشتقُّ من مسارِ الثقةِ (`serviceIdentity.caller`) لا من جسمِ الطلب (I-03). الإصدارُ من هويةٍ قائمةٍ فقط. الاستبدالُ يولّدُ `wua1` بعمرٍ ≤ 60 ثانية لجمهورٍ محدَّدٍ من `ASSERTION_AUDIENCES_BY_ACTOR` (ADR-069 §2.2). السحبُ يُخفي عيباً 404 إن لم توجد. `IDENTITY_USER_SUSPENDED` أعيدَ تصنيفُه من `conflict` (409) إلى `forbidden` (403) — I-11.
+- **Changed (units):** `services/identity`, `packages/authz-policy`, `packages/contracts/identity`, `packages/channel-e2e`, `docs/12-testing/ENGINEERING_COMPLETION_MATRIX.md`, `docs/16-progress/` ledgers, `docs/12-testing/ci-evidence/2026-10-09T160000Z-clm-0519-identity-session-routes/`, `ROADMAP.md`, `docs/07-security/AUTHORIZATION_POLICY_MATRIX.md`, `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md`, `docs/12-testing/APP_API_ROUTES.md`, `docs/12-testing/BASELINE.json`, `docs/12-testing/BASELINE.txt`, `packages/config/env-registry.json`, `packages/config/src/registry.generated.ts`, `.env.example`, `services/identity/contracts/errors.md`.
+- **Tests:** `identity-service`: 88/88 وحدات. `channel-e2e`: 52/52 (بوابةٌ جديدةٌ `clm-0519-identity-sessions.e2e.test.ts` — 27 اختباراً: I-01..I-13 على منفِّذَي الذاكرةِ وPostgresِ حقيقيِّ مع `DATABASE_URL`؛ `phase03-exit-gate` 8/8؛ `m1-02-session-gate` 17/17). `authz-policy`: 169 عمليةً مُصنَّفةً (`validate-authz-policy.sh` GREEN).
+- **Security / Data / Deployment:** لا تغييرِ إنتاجٍ ولا Render ولا `migration` (الجدولُ `identity_sessions` موجودٌ منذ M1-02). لا `secret` ولا `config`. **حدُّ الثقة للمفتاحِ المشتركِ (توثيقٌ مطلوبٌ من المالك):** `wsvc3` مفاتيحُ خدمةٍ مشتركةٌ عبرَ أسطولِ البوتاتِ (`WEBAPP_SHARED_FLEET_KEY`) — أيُّ حائزٍ على المفتاحِ يوقّعُ بِاسمِ أيِّ بوت. هذا نفسُ حدِّ الثقةِ المُوثَّقِ سابقاً لمساراتِ `resolve` و`assertions` (لا يُوسَّعُ ولا يُضيَّق)؛ الدفاعُ الوحيدُ هو تفتيشُ النطاقاتِ: `admin-bot` (وكلُّ خدمةٍ أخرى) **لا تحملُ** `identity:session:*`.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T160000Z-clm-0519-identity-session-routes/README.md`
+- **Deployment:** none (لا `deploy`، لا `migration`، لا `config`)
+- **Next:** حكمُ CI على `main` بعدَ الدمج (يُوثَّق في الدليل). **المرحلة الثانية** (قائمةُ السماحِ وحمايةُ المساراتِ وتوصيلُ التطبيقاتِ) **لم تُبدأ** — تبقى مطالبةً مستقلةً بقرارِ مالكٍ مستقلٍّ حسبَ تعليماتِ المالكِ في هذه المطالبة. البرهانُ الحيُّ (مسارٌ فعليّ من تطبيقٍ حقيقيٍّ عبرَ الجلسةِ إلى `wua1`) يبقى مطلوباً قبلَ إعلانِ P-03 COMPLETE.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0518 (r2) — ADR-069: بوابة إنفاذ لكل مسار قبل موافقة المالك
 
 - **Work Item(s):** M3-09

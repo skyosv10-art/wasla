@@ -23,17 +23,23 @@ import {
   InMemoryIdentityRepository,
   InMemoryOutbox,
   InMemoryPublicIdSequence,
+  InMemorySessionRepository,
   PostgresIdentityRepository,
   PostgresOutbox,
   PostgresPublicIdSequence,
+  PostgresSessionRepository,
   createDb,
   ensurePublicIdSequence,
 } from "../index.js";
+import type { SessionUseCaseDeps } from "../use-cases/session.js";
 import type { UseCaseDeps } from "../use-cases/resolve-telegram-identity.js";
 import { registerMetrics, instrumentApp, addMetricsEndpoint, startTracing } from "@wasla/observability";
 import { attachDatabaseHealth } from "@wasla/resilience";
 
-async function buildDeps(): Promise<UseCaseDeps> {
+async function buildDeps(): Promise<{
+  deps: UseCaseDeps;
+  sessionDeps: SessionUseCaseDeps;
+}> {
   const clock = new SystemClock();
   const idGen = new CryptoIdGenerator();
 
@@ -43,24 +49,47 @@ async function buildDeps(): Promise<UseCaseDeps> {
     });
     await ensurePublicIdSequence(db);
     return {
-      repo: new PostgresIdentityRepository(db),
-      outbox: new PostgresOutbox(db),
-      publicIdSeq: new PostgresPublicIdSequence(db),
-      clock,
-      idGen,
+      deps: {
+        repo: new PostgresIdentityRepository(db),
+        outbox: new PostgresOutbox(db),
+        publicIdSeq: new PostgresPublicIdSequence(db),
+        clock,
+        idGen,
+      },
+      sessionDeps: {
+        sessions: new PostgresSessionRepository(db),
+        repo: new PostgresIdentityRepository(db),
+        clock,
+        idGen,
+      },
     };
   }
 
   // In-memory dev mode.
   const repo = new InMemoryIdentityRepository();
   return {
-    repo,
-    outbox: new InMemoryOutbox(),
-    publicIdSeq: new InMemoryPublicIdSequence(),
-    clock,
-    idGen,
+    deps: {
+      repo,
+      outbox: new InMemoryOutbox(),
+      publicIdSeq: new InMemoryPublicIdSequence(),
+      clock,
+      idGen,
+    },
+    sessionDeps: {
+      sessions: new InMemorySessionRepository(),
+      repo,
+      clock,
+      idGen,
+    },
   };
 }
+
+/**
+ * ADR-069 · CLM-0519: حالاتُ استخدامِ الجلسةِ في الإقلاعِ تُبنى مع `deps` نفسِها —
+ * فمصدرُ الحقيقةِ واحدٌ (القاعدةُ نفسُها أو الذاكرةُ نفسُها) والاختبارُ يُمرِّرُ
+ * ساعتَهُ ومُولِّدَهُ بنفسِهِ. الفاعلُ يُشتقُّ من مسارِ الثقةِ عندَ المسارِ، لا من
+ * جسمِ الطلبِ (I-03). (انظر `buildDeps` أعلاه: مصدرٌ واحدٌ للمستودعاتِ لا مصدران.)
+ */
 
 /**
  * مفاتيح هوية الخدمة ومخزن آثار الإعادة لحد الهويّة.
@@ -86,7 +115,7 @@ function serviceIdentityWiring(): {
 }
 
 async function main(): Promise<void> {
-  const deps = await buildDeps();
+  const { deps, sessionDeps } = await buildDeps();
     // M2-08b: Start observability tracing (no-op without OTEL_EXPORTER_OTLP_ENDPOINT)
   const stopTracing = startTracing("identity");
 
@@ -96,6 +125,8 @@ async function main(): Promise<void> {
     serviceIdentity: serviceIdentityWiring(),
     // ADR-060 · CLM-0440: المفتاحُ الخاصُّ يُقرأُ من سرِّ البيئةِ ولا يُطبَعُ. غيابُهُ ⇒ لا إصدارَ (503).
     userAssertion: { signingKey: userAssertionSigningKeyFromEnv(process.env) },
+    // ADR-069 · CLM-0519: مساراتُ دورةِ حياةِ الجلسةِ — الإصدارُ والاستبدالُ والسحبُ.
+    session: sessionDeps,
   });
 
   // M2-08b: Wire observability — metrics middleware + /metrics endpoint

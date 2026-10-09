@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-09T03:27:37Z
-الالتزام: 7be06f6b8aad83f90e8a530a830d912aac221a36  الفرع: docs/clm-0514-risk-0060-closure  شجرةٌ مُعدَّلةٌ (6 ملفّاً)
+التاريخ (UTC): 2026-10-09T16:45:19Z
+الالتزام: e0ff777d6c1cab272b6d315087c07e784af06a2b  الفرع: feat/clm-0519-identity-session-routes  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 5062 سطراً · sha256 26958c6f816b0e1f…
 
@@ -9,18 +9,18 @@
   packages                   72
   packages_with_typecheck    68
   packages_with_test         72
-  test_files_tracked         564
+  test_files_tracked         565
   ci_jobs                    13
   ci_allow_failure           0
   governance_checks          27
   risks_not_closed           23
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/baseline-sources/2026-10-01T042634Z-verify-clm-0424.txt):
-  tests_passed               5828
-  test_files_executed        407
-  governance_suite_cases     541
+العدَّاداتُ الحركيّةُ (مقيسةٌ من /tmp/verify3.log):
+  tests_passed               5745
+  test_files_executed        405
+  governance_suite_cases     580
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:da4bdf6c1f6665aa534b92ea43f86fa2962cc1b0c3a4af9ec0daa02f29b81d34
+البصمة: sha256:2e8818c93c54056bd2380b46463b5ea181dc2d39b0d356fdb58b183d0ffab518
 المرجع: docs/12-testing/BASELINE_FORMAT.md

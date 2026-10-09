@@ -1174,6 +1174,40 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     evidence: "services/identity/src/use-cases/issue-user-assertion.ts:findUserByTelegramId ASSERTION_ACTOR_BY_CALLER",
     note: "`none`: حاملُ `identity:assertion:issue` (البوتاتُ الثلاثةُ وحدَها) يطلبُ تأكيداً لأيِّ `telegram_user_id` مربوطٍ — فلا ربطَ يُثبِتُهُ الرمزُ، والثقةُ في الحدِّ الذي تحقَّقَ من سرِّ webhook Telegram. ويُقيِّدُهُ مقروءاً: نوعُ الفاعلِ يُشتقُّ من المنادي (`ASSERTION_ACTOR_BY_CALLER`) والجمهورُ من قائمةٍ مغلقةٍ، والقراءةُ لا تُنشئُ مستخدماً. وهذا مصدرُ التأكيدِ لا مُستهلِكُهُ: المُستهلِكونَ يتحقّقونَ من توقيعِ Ed25519 في P2/P3 (ADR-060).",
   },
+  // ── ADR-069 · CLM-0519 (المرحلةُ الأولى): دورةُ حياةِ جلسةِ المستخدمِ ────
+  // ثلاثُ عمليّاتٍ تُصنَّفُ `none` بقراءةِ الكودِ من app.ts: الفاعلُ يُشتقُّ من
+  // مسارِ الثقةِ (هويّةِ الخدمةِ المنادية) لا من جسمِ الطلبِ (I-03) — والحصرُ
+  // مقروءٌ في `SESSION_ACTOR_BY_CALLER`. وحدُّ الثقةِ المُعلَنُ: مفاتيحُ `wsvc3`
+  // مُشتركةٌ بينَ الأسطولِ (`WEBAPP_SHARED_FLEET_KEY`) فأيُّ حاملٍ للمفتاحِ يستطيعُ
+  // التوقيعَ باسمِ أيِّ بوتٍ — وهوَ نفسُّ عتبةِ الثقةِ التي تحكمُ `resolve` و`assertions`.
+  // والإنفاذُ الحقيقيُّ في «الجلسةِ» نفسِها: من لا يملكُ رمزَ جلسةٍ صالحاً لا يستبدلُ.
+  {
+    audience: "identity",
+    method: "POST",
+    path: "/identity/sessions",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/identity/src/http/app.ts:SESSION_ACTOR_BY_CALLER issueSessionFromTelegram",
+    note: "`none`: حاملُ `identity:session:issue` (customer-bot · driver-bot وحدَهما) يُصدِرُ جلسةً لأيِّ `telegram_user_id` — فالثقةُ في سرِّ webhook Telegram عندَ البوتِ لا في الرمزِ. والفاعلُ يُشتقُّ من المنادي لا من جسمِ الطلبِ (I-03)، ومنعُ الإعادةِ من قيدِ `uq_identity_sessions_init_data` في القاعدةِ لا فحصاً في الشفرةِ.",
+  },
+  {
+    audience: "identity",
+    method: "POST",
+    path: "/identity/sessions/exchange",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/identity/src/http/app.ts:SESSION_ACTOR_BY_CALLER sessionInvalidity mintUserAssertion",
+    note: "`none`: الإثباتُ الوحيدُ للملكيّةِ هو رمزُ الجلسةِ نفسُهُ — حاملُ `identity:session:exchange` يُقايِضُ برمزِ جلسةٍ **صالحٍ** فأصلُ الملكيّةِ خارجَ الرمزِ ومسؤوليّةُ البوتِ الذي تحقَّقَ من init-data. وفاعلُ الجلسةِ يُقارَنُ بفعلِ المنادي (I-10)، والمستخدمُ الموقوفُ يُرفَضُ (I-11)، والانتهاءُ يُفصَحُ عنه بكودٍ مستقلٍّ (I-07).",
+  },
+  {
+    audience: "identity",
+    method: "POST",
+    path: "/identity/sessions/revoke",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/identity/src/http/app.ts:SESSION_ACTOR_BY_CALLER findSessionByTokenHash revokeSession",
+    note: "`none`: السحبُ برموزِ الجلسةِ نفسِها — من يملكُ الرمزَ يملكُ إبطالَهُ، وهذهِ ملكيّةٌ فطريّةٌ لا تحتاجُ إثباتَ مالكٍ. الرفضُ 404 لما لا وجودَ لهُ، والمُتماثلُ التكرارِ عندَ المستودعِ.",
+  },
   // ── partners (CLM-0444 · RISK-0059) ────────────────────────────
   // ثماني عمليّاتٍ مُصنَّفةٌ `none` بقراءةِ الكودِ من app.ts:
   // health/ready مفتوحانِ بلا صلاحيّةٍ؛ والبقيّةُ مُصنَّفةٌ بصلاحيّةٍ بلا مُنتَفِعٍ.

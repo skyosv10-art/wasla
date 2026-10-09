@@ -39,14 +39,16 @@ describe("جردُ العملياتِ المفروضةِ", () => {
   it("ستٌّ وستونَ ومئةُ عمليّةٍ على سبعةَ عشرَ حدّاً (M1-04 · الموجةُ 9·10·11·12)", () => {
     // ADR-060 · CLM-0440: +1 — `POST /identity/assertions` (was 157).
     // CLM-0444: +8 — partners boundary (was 158). Total: 166.
-    expect(ENFORCED_OPERATIONS).toHaveLength(166);
+    // CLM-0519: +3 — identity session routes (issue/exchange/revoke). Total: 169.
+    expect(ENFORCED_OPERATIONS).toHaveLength(169);
     expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(18);
   });
 
   it("مئةٌ وثلاثٌ وثلاثونَ صلاحيّةً مفروضةً، ولا عمليّةَ بلا صلاحيّةٍ (كانت ثمانياً وتسعينَ قبلَ صلاحيّتَي حدِّ البحث)", () => {
     // ADR-060 · CLM-0440: +1 — `identity:assertion:issue` (was 124).
     // CLM-0444: +8 — partners scopes (was 125). Total: 133.
-    expect(allEnforcedScopes()).toHaveLength(133);
+    // CLM-0519: +3 — identity session scopes (issue/exchange/revoke). Total: 136.
+    expect(allEnforcedScopes()).toHaveLength(136);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -471,7 +473,7 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
         (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history")) && !(b.audience === "delivery" && (b.path === "/store-orders" || b.path === "/store-orders/:orderPublicId/cancellation" || b.path === "/store-orders/:orderPublicId" || b.path === "/store-orders/:orderPublicId/delivery-task")) && !(b.audience === "support" && (b.path === "/support/tickets" || b.path === "/support/tickets/:ticketId" || b.path === "/support/tickets/:ticketId/evidence")) && !(b.audience === "subscriptions" && b.path === "/referrals")) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(34);
+    expect(wave3).toHaveLength(37);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
@@ -713,6 +715,10 @@ describe("قراءةُ أثرِ منحٍ قبلَ إعطائِه", () => {
       "identity:link:write",
       "identity:recovery:write",
       "identity:resolve:write",
+      // CLM-0519 (ADR-069 المرحلة الأولى): نطاقاتُ جلساتِ الهويةِ.
+      "identity:session:exchange",
+      "identity:session:issue",
+      "identity:session:revoke",
       "identity:user:read",
     ]);
   });

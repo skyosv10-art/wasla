@@ -72,6 +72,12 @@ export const IDENTITY_SCOPES = {
   historyRead: "identity:history:read",
   // ADR-060 · CLM-0440: إصدارُ تأكيدِ المستخدمِ النهائيِّ — للبوتاتِ الثلاثةِ وحدَها.
   assertionIssue: "identity:assertion:issue",
+  // ADR-069 · CLM-0519 (المرحلةُ الأولى): مساراتُ دورةِ حياةِ جلسةِ المستخدمِ —
+  // الإصدارُ والاستبدالُ والسحبُ على حدِّ الهويّةِ، والفاعلُ يُشتقُّ من مسارِ
+  // الثقةِ (هويّةِ الخدمةِ المنادية) لا من جسمِ الطلبِ (I-03).
+  sessionIssue: "identity:session:issue",
+  sessionExchange: "identity:session:exchange",
+  sessionRevoke: "identity:session:revoke",
 } as const;
 
 export type IdentityRouteConfig = ServiceIdentityRouteConfig;

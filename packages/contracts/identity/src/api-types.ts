@@ -98,6 +98,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/identity/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * إصدار جلسة مستخدم من بصمة init-data متحقَّق منها
+         * @description ADR-069 · CLM-0519 (المرحلة الأولى). يُصدِر جلسةً صادقةً (4 ساعات افتراضياً) من
+         *     بصمةِ `init-data` موقَّعةٍ من قناةِ ثقةٍ (Telegram Mini App). **الفاعلُ يُشتقُّ من
+         *     المنادي لا من جسمِ الطلبِ** (I-03): `customer-bot` يُصدِرُ جلسةَ `customer` و`driver-bot`
+         *     يُصدِرُ جلسةَ `driver` — أيُّ `actor_type` في الجسمِ يُهجَرُ ولا يُقرأُ. تكرارُ نفسِ
+         *     البصمةِ ⇒ 409 (`IDENTITY_SESSION_REPLAY`). الرمزُ الصريحُ يُعاد **مرّةً واحدةً
+         *     فقط** ولا يُسجَّلُ في أيِّ سجلٍّ (I-13).
+         */
+        post: operations["issueUserSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/sessions/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * قايضة جلسة صالحة بتأكيد wua1 قصير العمر (≤60s)
+         * @description ADR-069 · CLM-0519 (المرحلة الأولى). يُعيدُ تأكيداً `wua1` موقَّعاً بـ Ed25519
+         *     يشهدُ أنّ مالكَ هذه الجلسةِ الصالحةِ هو `wasla_public_id`. فاعلُ الجلسةِ يُقارَنُ
+         *     بفعلِ المنادي (I-10: `driver-bot` لا يستبدلُ جلسةَ `customer`). الرمزُ المنتهي ⇒ 401
+         *     `AUTHN_EXPIRED` (I-07)، المُلغى أو غيرُ المعروف ⇒ 401 `AUTHN_UNAUTHENTICATED`
+         *     بنفسِ النصِّ (I-08)، المستخدمُ الموقوفُ ⇒ 403 `IDENTITY_USER_SUSPENDED` (I-11)،
+         *     بلا مفتاحِ توقيعٍ ⇒ 503 `IDENTITY_ASSERTION_UNAVAILABLE` (I-12). التأكيدُ لا يُسجَّلُ
+         *     ولا يُرسَلُ في أيِّ سجلٍّ (I-13).
+         */
+        post: operations["exchangeUserSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/sessions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * سحب جلسة مستخدم برموزها
+         * @description ADR-069 · CLM-0519 (المرحلة الأولى). يُلغِي الجلسةَ المصادَقَ عليها برموزِها —
+         *     مُتماثلُ التكرارِ عندَ المستودعِ. سحبُ ما لا وجودَ لهُ ⇒ 404 `IDENTITY_SESSION_NOT_FOUND`
+         *     (لأنّ المُنادي يظنُّ حالةً غيرَ الواقعِ). السببُ يُسجَّلُ ولا يُفصَحُ عن رمزِ
+         *     الجلسةِ في أيِّ سجلٍّ (I-13).
+         */
+        post: operations["revokeUserSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/identity/assertions": {
         parameters: {
             query?: never;
@@ -148,6 +222,64 @@ export interface components {
             /** @enum {string} */
             actor_type: "customer" | "driver" | "store_staff";
             audience: string[];
+        };
+        /**
+         * @description بصمةُ init-data نتيجةُ `fingerprintInitData` في `@wasla/telegram-adapter` —
+         *     ليست مفتاحَ منعِ إعادةٍ قابلٍ للصنعِ من أيِّ طلبٍ. `actor_type` إن وُجدَ يُهجَرُ
+         *     (I-03: المنبعُ مسارُ الثقةِ).
+         */
+        IssueSessionRequest: {
+            /** Format: int64 */
+            telegram_user_id: number;
+            /** @description بصمة sha256 لرسالة init-data الموقَّعة */
+            init_data_fingerprint: string;
+            /** @description يُهجَرُ ولا يُقرأُ — الفاعلُ من مسارِ الثقةِ (ADR-069 §2.6) */
+            actor_type?: string;
+            telegram_username?: string;
+            telegram_first_name?: string;
+            telegram_language_code?: string;
+        };
+        IssueSessionResponse: {
+            /** @description الرمز المُعتِم — يُعاد مرّةً واحدةً ولا يُسجَّل */
+            token: string;
+            wasla_public_id: string;
+            /**
+             * @description مُشتقٌّ من مسارِ الثقةِ (هويّةِ الخدمةِ المنادية) لا من جسمِ الطلبِ
+             * @enum {string}
+             */
+            actor_type: "customer" | "driver";
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uuid */
+            session_id: string;
+        };
+        ExchangeSessionRequest: {
+            /** @description رمز الجلسة الصادرة من `POST /identity/sessions` */
+            session_token: string;
+            audience: string[];
+        };
+        ExchangeSessionResponse: {
+            /** @description wua1.<payload>.<sig> — يُمرَّر كما هو ولا يُسجَّل */
+            assertion: string;
+            wasla_public_id: string;
+            /** @enum {string} */
+            actor_type: "customer" | "driver";
+            audience: string[];
+            /**
+             * Format: date-time
+             * @description انتهاء التأكيد — لا يتجاوز 60 ثانية من الإصدار
+             */
+            expires_at: string;
+        };
+        RevokeSessionRequest: {
+            session_token: string;
+            /** @description سبب السحب (يُسجَّل) — يُفترَض `user_requested` عندَ الفراغِ */
+            reason?: string;
+        };
+        RevokeSessionResponse: {
+            revoked: boolean;
+            /** Format: uuid */
+            session_id: string;
         };
         IssueUserAssertionResponse: {
             /** @description wua1.<payload>.<sig> — يُمرَّر كما هو ولا يُسجَّل */
@@ -456,6 +588,93 @@ export interface operations {
             };
             401: components["responses"]["AuthUnauthorized"];
             403: components["responses"]["AuthForbidden"];
+        };
+    };
+    issueUserSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description جلسة صادرة */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueSessionResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    exchangeUserSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description تأكيد صادر من جلسة صالحة */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeSessionResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    revokeUserSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description الجلسة سُحبت */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokeSessionResponse"];
+                };
+            };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     issueUserAssertion: {

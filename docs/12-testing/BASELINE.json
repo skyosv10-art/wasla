@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-09T15:45:51Z",
+  "generated_at": "2026-10-09T16:45:19Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d3fb79fee670d0025ab983a426e6c972d4d84fd8",
+    "commit": "e0ff777d6c1cab272b6d315087c07e784af06a2b",
     "branch": "feat/clm-0519-identity-session-routes",
-    "dirty": true,
-    "dirty_files": 25,
-    "dirty_reason": "CLM-0519: generated on feat/clm-0519-identity-session-routes from main d3fb79fe with this PR's implementation changes applied (identity session routes; test_files_tracked 564->565; tracked_files 3158->3168); repo.commit must resolve on main after squash merge (RISK-0028).",
-    "tracked_files": 3168
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "CLM-0519: generated on feat/clm-0519-identity-session-routes from main d3fb79fe; dynamic counts measured from verify run on this branch (5745 tests, 405 files, governance suite 580 cases 1 failed at time of capture before policy.test counts fix; CI on main is the binding verdict). repo.commit must resolve on main after squash merge (RISK-0028).",
+    "tracked_files": 3170
   },
   "env": {
     "node": "v20.20.2",
@@ -33,13 +33,13 @@
     "risks_not_closed": 23
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "docs/12-testing/baseline-sources/2026-10-09T162000Z-verify-clm-0519.txt",
+    "tests_passed": 5745,
+    "test_files_executed": 405,
+    "governance_suite_cases": 580,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
   "fingerprint": "sha256:2e8818c93c54056bd2380b46463b5ea181dc2d39b0d356fdb58b183d0ffab518",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"

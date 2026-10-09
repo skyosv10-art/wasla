@@ -1,4 +1,19 @@
-# 2026-10-09 — CLM-0514 — M6-18B / RISK-0060: closed — deliberate plaintext-rejection verdict measured
+# 2026-10-09 — CLM-0515 — M2-01 / RISK-0050: CVEs جديدة في ثنائي esbuild — استثناء محروس (لا تعطيل للبوابة)
+
+- **Work Item(s):** M2-01
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Completed
+- **Risk(s):** RISK-0050 → open
+- **What / Why:** الشوط 37913607058 (main بعد دمج CLM-0514) فشل في image-supply-chain: ثغرتا HIGH جديدتان (CVE-2026-78667 net/http Range · CVE-2026-97031 crypto/tls ECH) نُشرتا 2026-10-08 في Go stdlib داخل ثنائي esbuild 0.25.12 (go1.23.12). قيس تجريبيًا: لا إصدار esbuild مبنيًا بـ Go ≥ 1.26.9 (أحدثها 0.28.2 من 2026-08-08 = go1.26.5). أُضيف استثناءان بالفئة والمسارات والمهلة نفسها إلى IMAGE_VULN_EXCEPTIONS.yaml (24 إدخالًا) — البوابة لم تُعطّل: التقرير الكامل يظل يُولَّد بلا الملف، والباب 10 يحرس الشروط.
+- **Changed (units):** `docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml` (+2 إدخالًا), `docs/07-security/RISK_REGISTER.md` (تحديث RISK-0050 بالإضافة), `docs/12-testing/ci-evidence/2026-10-09T103000Z-clm-0515-esbuild-cves-78667-97031/README.md`, `docs/16-progress/` ledgers, `ROADMAP.md`.
+- **Tests:** No-Test-Reason: استثناءات YAML محروسة + سجل خطر — التحقق هو حارس الباب 10 (يعمل في CI) وvalidate-state-sync؛ حكم CI بعد الدفع يوثق الحالة.
+- **Security / Data / Deployment:** لا تغيير إنتاج؛ الثغرتان مقيستان ومنشورتان وغير معالَجتين (الاستثناء من الحجز لا من القياس)؛ لا سر؛ Render deploy لم يُطلق لدمج d8f3815e عمدًا (paths-ignore للتغييرات التوثيقية فقط).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-09T103000Z-clm-0515-esbuild-cves-78667-97031/README.md`
+- **Deployment:** none.
+- **Next:** قراءة حكم CI بعد الدفع؛ والمتابعة الحية: عندما يصدر esbuild بناء بـ Go ≥ 1.26.9 → ترقية الحزمة وحذف استثناء الفئة كلها (المهلة تعض 2026-12-15).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-09 — CLM-0514 — M6-18B / RISK-0060: closed — deliberate plaintext-rejection verdict measured — deliberate plaintext-rejection verdict measured
 
 - **Work Item(s):** M6-18B
 - **Author/Owner:** @skyosv10-art (agent:perplexity-computer)

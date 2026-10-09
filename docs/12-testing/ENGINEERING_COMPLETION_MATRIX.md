@@ -146,6 +146,8 @@
 | K-02 | `services/{auth,rides,referrals,notifications,fraud}` فارغة | المنطق في identity+auth-sdk / orders / subscriptions / bots / reputation (`fraud-signals`) | **NOT APPLICABLE** |
 | K-03 | `services/{chat,translation,analytics,compliance}` فارغة | chat خارج النطاق بالمواصفة §7؛ الثلاثة الأخرى **بلا قرار مسجّل** (فجوة حوكمة) | **DEFERRED** |
 
+> **تحديث 2026-10-09 (`CLM-0518`):** قرار مقترح لإغلاق الفجوة 1 — [ADR-069](../15-decisions/ADR-069-human-authentication-edge-for-apps.md) (Proposed). حالات الصفوف بلا تغيير حتى يُنفَّذ ويُثبَت. **r2:** بوابة إنفاذ لكل مسار (ADR-069 §2.8): D-07 ومسار `GET /stores` في C-07 محجوبة حتى G-ENF، وD-08 و`GET /reputation/ratings` محجوبة حتى حارس ربط؛ التصنيف في `ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr/route-enforcement.json`.
+
 ## 4. أهم خمس فجوات (مرتبة بأثرها على اكتمال التدفقات)
 
 1. **لا مسار مصادقة بشرية من التطبيقات إلى الخدمات (P-03 + P-04 + A-01).** لا مسار `POST /identity/sessions/telegram`،

@@ -1,0 +1,610 @@
+{
+ "sha": "a93fe5ece4e0874f9b230c1962ce1048226dd1a2",
+ "source": "docs/12-testing/ci-evidence/2026-10-09T120000Z-clm-0517-engineering-completion-audit/inventory.json",
+ "rules": "§2.8 ADR-069 r2",
+ "routes": [
+  {
+   "app": "admin-portal",
+   "service": "audit",
+   "method": "GET",
+   "path": "/audit/events",
+   "guard": "adminScoped(AUDIT_SCOPES.read)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "GET",
+   "path": "/billing/invoices",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "GET",
+   "path": "/billing/invoices/:id",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "GET",
+   "path": "/billing/settlements",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "POST",
+   "path": "/billing/invoices/:id/issue",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "POST",
+   "path": "/billing/invoices/:id/payment",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "billing",
+   "method": "POST",
+   "path": "/billing/invoices/:id/void",
+   "guard": "internalScoped(BILLING_SCOPES.invoiceWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "customers",
+   "method": "GET",
+   "path": "/customers",
+   "guard": "adminScoped(CUSTOMER_SCOPES.adminRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "customers",
+   "method": "GET",
+   "path": "/customers/:id",
+   "guard": "adminScoped(CUSTOMER_SCOPES.adminRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "customers",
+   "method": "POST",
+   "path": "/customers/:id/reinstate",
+   "guard": "adminScoped(CUSTOMER_SCOPES.adminReinstate)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "customers",
+   "method": "POST",
+   "path": "/customers/:id/suspend",
+   "guard": "adminScoped(CUSTOMER_SCOPES.adminSuspend)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers",
+   "guard": "adminScoped(DRIVER_SCOPES.adminRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId",
+   "guard": "ownerScoped(DRIVER_SCOPES.profileRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId/documents",
+   "guard": "ownerScoped(DRIVER_SCOPES.documentRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "POST",
+   "path": "/drivers/:waslaPublicId/documents/:documentId/review",
+   "guard": "ownerScoped(DRIVER_SCOPES.documentReview)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "POST",
+   "path": "/drivers/:waslaPublicId/reinstate",
+   "guard": "ownerScoped(DRIVER_SCOPES.profileReinstate)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "drivers",
+   "method": "POST",
+   "path": "/drivers/:waslaPublicId/suspend",
+   "guard": "ownerScoped(DRIVER_SCOPES.profileSuspend)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "marketplace",
+   "method": "GET",
+   "path": "/stores/:storeSlug/reviews",
+   "guard": "scoped(MARKETPLACE_SCOPES.storeReviewRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "marketplace",
+   "method": "POST",
+   "path": "/products/:productId/archive",
+   "guard": "tenantScoped(MARKETPLACE_SCOPES.productLifecycle)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "marketplace",
+   "method": "POST",
+   "path": "/products/:productId/decisions",
+   "guard": "scoped(MARKETPLACE_SCOPES.productReviewDecide)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "marketplace",
+   "method": "POST",
+   "path": "/products/:productId/publish",
+   "guard": "tenantScoped(MARKETPLACE_SCOPES.productLifecycle)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "marketplace",
+   "method": "POST",
+   "path": "/stores/:storeSlug/decisions",
+   "guard": "scoped(MARKETPLACE_SCOPES.storeReviewDecide)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "orders",
+   "method": "GET",
+   "path": "/orders/:orderId",
+   "guard": "ownerScoped(ORDER_SCOPES.orderRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "orders",
+   "method": "GET",
+   "path": "/orders/:orderId/history",
+   "guard": "ownerScoped(ORDER_SCOPES.historyRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "orders",
+   "method": "GET",
+   "path": "/orders/lookup",
+   "guard": "scoped(ORDER_SCOPES.orderRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "DELETE",
+   "path": "/partners/credentials/:id",
+   "guard": "scoped(PARTNERS_SCOPES.credentialRevoke)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "GET",
+   "path": "/partners/audit",
+   "guard": "scoped(PARTNERS_SCOPES.auditRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "GET",
+   "path": "/partners/credentials",
+   "guard": "scoped(PARTNERS_SCOPES.credentialRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "GET",
+   "path": "/partners/lifecycle",
+   "guard": "scoped(PARTNERS_SCOPES.lifecycleRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "GET",
+   "path": "/partners/usage",
+   "guard": "scoped(PARTNERS_SCOPES.usageRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "POST",
+   "path": "/partners/credentials",
+   "guard": "scoped(PARTNERS_SCOPES.credentialIssue)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "POST",
+   "path": "/partners/lifecycle/reinstate",
+   "guard": "scoped(PARTNERS_SCOPES.lifecycleReinstate)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "partners",
+   "method": "POST",
+   "path": "/partners/lifecycle/suspend",
+   "guard": "scoped(PARTNERS_SCOPES.lifecycleSuspend)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "support",
+   "method": "GET",
+   "path": "/support/tickets",
+   "guard": "asserted(SUPPORT_SCOPES.ticketRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "support",
+   "method": "GET",
+   "path": "/support/tickets/:ticketId",
+   "guard": "asserted(SUPPORT_SCOPES.ticketRead)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "support",
+   "method": "POST",
+   "path": "/support/tickets/:ticketId/close",
+   "guard": "internalScoped(SUPPORT_SCOPES.ticketWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "support",
+   "method": "POST",
+   "path": "/support/tickets/:ticketId/escalate",
+   "guard": "internalScoped(SUPPORT_SCOPES.ticketWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "admin-portal",
+   "service": "support",
+   "method": "POST",
+   "path": "/support/tickets/:ticketId/resolve",
+   "guard": "internalScoped(SUPPORT_SCOPES.ticketWrite)",
+   "klass": "ADM",
+   "production_verdict": "blocked_until_phase_4"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "DELETE",
+   "path": "/customers/:waslaPublicId/places/:placeId",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.placeWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "GET",
+   "path": "/customers/:waslaPublicId/order-requests",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.orderRequestRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "GET",
+   "path": "/customers/:waslaPublicId/places",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.placeRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "GET",
+   "path": "/customers/:waslaPublicId/profile",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.profileRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "POST",
+   "path": "/customers/:waslaPublicId/order-requests",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.orderRequestWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "POST",
+   "path": "/customers/:waslaPublicId/order-requests/preview",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.orderRequestPreview)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "POST",
+   "path": "/customers/:waslaPublicId/places",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.placeWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "customers",
+   "method": "PUT",
+   "path": "/customers/:waslaPublicId/profile",
+   "guard": "ownerScoped(CUSTOMER_SCOPES.profileWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "marketplace",
+   "method": "GET",
+   "path": "/stores",
+   "guard": "assertedStaff(MARKETPLACE_SCOPES.storeRead)",
+   "klass": "W",
+   "production_verdict": "blocked_until_G-ENF"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "marketplace",
+   "method": "GET",
+   "path": "/stores/:storeSlug/products",
+   "guard": "scoped(MARKETPLACE_SCOPES.productRead)",
+   "klass": "P",
+   "production_verdict": "conditional"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "reputation",
+   "method": "GET",
+   "path": "/reputation/ratings",
+   "guard": "internalScoped(REPUTATION_SCOPES.ratingRead)",
+   "klass": "N",
+   "production_verdict": "blocked_until_owner_guard"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "reputation",
+   "method": "GET",
+   "path": "/reputation/scores/:subjectType/:subjectPublicId",
+   "guard": "ownerScoped(REPUTATION_SCOPES.scoreRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "customer-mini-app",
+   "service": "search",
+   "method": "GET",
+   "path": "/search/products",
+   "guard": "internalScoped(SEARCH_SCOPES.productsRead)",
+   "klass": "P",
+   "production_verdict": "conditional"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "dispatch",
+   "method": "GET",
+   "path": "/dispatch/jobs/:job_id",
+   "guard": "scoped(DISPATCH_SCOPES.jobRead)",
+   "klass": "N",
+   "production_verdict": "blocked_until_owner_guard"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "dispatch",
+   "method": "GET",
+   "path": "/dispatch/jobs/:job_id/offers",
+   "guard": "scoped(DISPATCH_SCOPES.offerRead)",
+   "klass": "N",
+   "production_verdict": "blocked_until_owner_guard"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "dispatch",
+   "method": "POST",
+   "path": "/dispatch/jobs/:job_id/cancel",
+   "guard": "scoped(DISPATCH_SCOPES.jobCancel)",
+   "klass": "N",
+   "production_verdict": "blocked_until_owner_guard"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "dispatch",
+   "method": "POST",
+   "path": "/dispatch/offers/:offer_id/accept",
+   "guard": "assertedDriver(DISPATCH_SCOPES.offerAccept)",
+   "klass": "W",
+   "production_verdict": "blocked_until_G-ENF"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "dispatch",
+   "method": "POST",
+   "path": "/dispatch/offers/:offer_id/reject",
+   "guard": "assertedDriver(DISPATCH_SCOPES.offerReject)",
+   "klass": "W",
+   "production_verdict": "blocked_until_G-ENF"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId",
+   "guard": "ownerScoped(DRIVER_SCOPES.profileRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId/documents",
+   "guard": "ownerScoped(DRIVER_SCOPES.documentRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId/vehicles",
+   "guard": "ownerScoped(DRIVER_SCOPES.vehicleRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "GET",
+   "path": "/drivers/:waslaPublicId/zones",
+   "guard": "ownerScoped(DRIVER_SCOPES.zoneRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "PATCH",
+   "path": "/drivers/:waslaPublicId",
+   "guard": "ownerScoped(DRIVER_SCOPES.profileWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "PATCH",
+   "path": "/drivers/:waslaPublicId/vehicles/:vehicleId",
+   "guard": "ownerScoped(DRIVER_SCOPES.vehicleWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "POST",
+   "path": "/drivers/:waslaPublicId/documents",
+   "guard": "ownerScoped(DRIVER_SCOPES.documentWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "POST",
+   "path": "/drivers/:waslaPublicId/vehicles",
+   "guard": "ownerScoped(DRIVER_SCOPES.vehicleWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "drivers",
+   "method": "PUT",
+   "path": "/drivers/:waslaPublicId/zones",
+   "guard": "ownerScoped(DRIVER_SCOPES.zoneWrite)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "orders",
+   "method": "GET",
+   "path": "/orders/drivers/:driverPublicId/jobs",
+   "guard": "ownerScoped(ORDER_SCOPES.driverJobsRead)",
+   "klass": "O",
+   "production_verdict": "open"
+  },
+  {
+   "app": "driver-mini-app",
+   "service": "orders",
+   "method": "POST",
+   "path": "/orders/:orderId/transitions",
+   "guard": "scoped(ORDER_SCOPES.transitionWrite)",
+   "klass": "N",
+   "production_verdict": "blocked_until_owner_guard"
+  }
+ ]
+}

@@ -8,6 +8,7 @@
 | **يعالج** | صفوف مصفوفة الاكتمال P-03 · P-04 · A-01 ([`ENGINEERING_COMPLETION_MATRIX.md`](../12-testing/ENGINEERING_COMPLETION_MATRIX.md)) |
 | **يبني على (لا يبطل)** | [ADR-001](ADR-001-identity-decoupled-from-telegram.md) · [ADR-018](ADR-018-unified-principal-model-and-user-service-boundary.md) · [ADR-019](ADR-019-human-session-lifecycle-and-init-data-verification.md) · [ADR-020](ADR-020-service-to-service-identity.md) · [ADR-027](ADR-027-authorization-policy-matrix.md) · [ADR-028](ADR-028-token-bound-owner-binding.md) · [ADR-029](ADR-029-tenant-membership-binding.md) · [ADR-036](ADR-036-request-binding-includes-query.md) · [ADR-060](ADR-060-end-user-assertion-propagation.md) |
 | **يعدّل بالإضافة** | [ADR-048](ADR-048-app-access-path-static-sites-rewrites.md): وجهة إعادة الكتابة تصير حدّ القناة بدل الخدمة مباشرة (§2.7). جدول البادئات يبقى المصدر الوحيد. |
+| **المراجعات** | r1 (2026-10-09): النص الأول، اعتمده xuuux-voox تقنيًا. **r2 (2026-10-09، `CLM-0518`):** إغلاق ملاحظة أمان قبل موافقة المالك — قائمة السماح لم تعد «مشتقة آليًا من الفحص 24»، بل جدول إنفاذ لكل مسار (§2.8)؛ ومسارات تعتمد على `wua1` أو بلا ربط ملكية تُستبعد من قائمة الإنتاج؛ وصُحّحت E-08؛ وأضيفت E-18…E-27 وبوابة G-ENF. |
 | **لا يغيّر** | الإنتاج · Render · قواعد البيانات · مسارات المصادقة الحالية · `WASLA_USER_ASSERTION_MODE` · صلاحيات الخدمات — كلها خارج هذه المرحلة |
 
 تم إعداد هذا القرار بموجب التفويض التنفيذي للمالك، ويبقى مقترحًا حتى موافقته الصريحة.
@@ -35,6 +36,7 @@
 4. **لا مصدر لدور الإدارة.** لا جدول ولا منح يقول إن مستخدمًا ما `admin` أو `support`؛ `PRODUCTION_GRANTS` مفاتيحها أسماء خدمات لا أدوار بشر.
 5. **جمهور `wua1` ضيق.** `ASSERTION_AUDIENCES_BY_ACTOR` يغطي 8 خدمات مميزة (identity · negotiations · marketplace · delivery · geography · subscriptions للعميل؛ drivers · matching للسائق) ولا يشمل customers · orders · dispatch · reputation · search التي تناديها التطبيقات.
 6. **`actorType` في `VerifiedTelegramSessionRequest` اختياري وافتراضه `customer`** — مصدره يُحسم في §2.6-4.
+7. **(r2) المسار `asserted` في الوضع `off` لا يتحقق من شيء.** في `packages/service-auth/src/fastify.ts` تعود `applyUserAssertion` فورًا عند `mode === "off"`، فلا يُضبط `request.endUser`. ولا يُطلب `obo` على هذه المسارات أصلًا (`requireBeneficiary` لا يصدق إلا على `beneficiary: "required"`). فحراس الملكية المبنية على `endUser`، مثل `assertOfferDriver` في dispatch و`assertOwnerFilter` في marketplace، **لا تعمل في الإنتاج اليوم**، لأن الإنتاج `off` (ADR-060 P3 لم يُفعَّل). **فوجود `X-Wasla-User-Assertion` في الطلب ليس دليلًا على التحقق منه.**
 
 ### 1.3 حقيقتان أمنيتان تحكمان البدائل
 
@@ -72,7 +74,7 @@ Telegram ──initData (HMAC بمفتاح customer-bot)──▶ المتصفح
 
 (2) نداء محمي
 المتصفح ──Authorization: Bearer <session>  GET /customers/CUS-…/profile──▶ customer-bot [Edge]
-  edge: يطابق (method, path) مع قائمة السماح للسطح (مشتقة من الفحص 24)؛ غير ذلك ⇒ 404
+  edge: يطابق (method, path) مع قائمة السماح للسطح (جدول الإنفاذ §2.8، لا الفحص 24 وحده)؛ غير ذلك ⇒ 404
   edge: يحذف من الطلب الوارد كل x-wasla-* و Authorization و X-Customer-Public-Id و X-Wasla-User-Assertion
   edge ──wsvc3(scope=identity:session:exchange)
         POST /identity/sessions/exchange {token, audience:["customers"]}──▶ identity
@@ -131,9 +133,57 @@ Telegram ──initData (HMAC بمفتاح customer-bot)──▶ المتصفح
 3. التحقق من `initData` يجري في الحد بمكتبة `telegram-adapter` وبسر الروبوت الصاحب للسطح. وidentity لا تستورد `telegram-adapter` ولا تملك سر روبوت.
 4. `actorType` يُشتق في identity من هوية الخدمة المنادية (`customer-bot→customer`، `driver-bot→driver`، `admin-edge→` الدور من المنح)، كما في `ASSERTION_ACTOR_BY_CALLER` القائم.
 5. لا يُصدَّر رمز الجلسة إلا مرة واحدة، ولا يُسجَّل رمز ولا `initData` ولا تأكيد ولا سر في أي log. يُسجَّل `describePrincipal` (بصمة 8 محارف) والمعرّف العام فقط.
-6. قائمة السماح لكل سطح مشتقة آليًا من نداءات التطبيق في الفحص 24 (`app_api_routes.py`). ومسار غير مدرج (`/dispatch/tick`، `/delivery/relay/*`، `/identity/assertions`…) يرد عليه الحد بـ`404` قبل أي نداء خلفي.
+6. **(r2، يحلّ محل النص الأول)** قائمة السماح لكل سطح **ملف صريح يُراجَع**، لا اشتقاق آلي. وكل مدخل يربط المسار بفئة إنفاذ وبالصلاحية المطلوبة عند المستقبل وبمسار الاختبار الدليل (§2.8). أما الفحص 24 (`app_api_routes.py`) فيبقى **حدًّا أعلى**: لا يُقبل في القائمة مسار لا يناديه التطبيق. لكنه لا يُدخل مسارًا لمجرد وجوده. ومسار غير مدرج (`/dispatch/tick`، `/delivery/relay/*`، `/identity/assertions`…) يرد عليه الحد بـ`404` قبل أي نداء خلفي.
+9. **(r2)** لا يُفتح للتطبيقات في الإنتاج مسار يعتمد تفويضه على `wua1` ما دامت الخدمة المستقبلة غير مُثبَتة في `enforce`. ولا مسار بلا ربط ملكية أو مستأجر بالهوية الموثّقة. وتفعيل `enforce` يبقى قرار ADR-060 P3 للمالك (بوابة **G-ENF**، §2.8). وهذا القرار لا يغيّر أي إعداد حي.
 7. الحد لا يقبل إلا منشأ موقعه الثابت (`WASLA_EDGE_ALLOWED_ORIGINS`)، ويرفض `Bearer` في query string، ولا يضع الرمز في cookie (ADR-044 §4).
 8. حد معدّل على `POST /edge/session` لكل `telegram_user_id` ولكل IP، وهو أيضًا يسدّ دين ADR-060 §2.5.
+
+### 2.8 (r2) بوابة الإنفاذ لكل مسار يكشفه الحد
+
+**القاعدة.** لا يدخل مسار قائمة السماح الإنتاجية إلا إذا انتمى إلى فئة مسموحة **وفي الوضع الحالي للمستقبل في الإنتاج**، لا في الوضع الذي تفرضه بيئة الاختبار.
+
+| الفئة | تعريفها (مقيس في الكود) | هل تعمل والإنتاج في `off`؟ | الحكم في الإنتاج |
+|---|---|---|---|
+| **O · ملكية بـ`obo`** | `beneficiary: "required"`، والمعالج يقارن `ownerPublicIdOf(caller)` بمعرّف المسار أو الجسم (ADR-028). الحد يضع `obo` من الجلسة الموثّقة وحدها | **نعم.** الوسيط يرفض رمزًا بلا `obo`، والمقارنة في المعالج لا تقرأ `endUser` | **يُفتح** بشرط اختبارات E-18 وE-19 على المسار نفسه |
+| **P · قراءة عامة** | لا تحمل هوية ولا ملكية، وتعيد بيانات الفهرس العام فقط | لا تعتمد على الهوية | **مشروط:** الحد يثبّت معاملات الاستعلام (E-20)، ويُثبت اختبار أن الجواب لا يحوي إلا المنشور. والدليل **لم يُكتب بعد**، فلا يُفتح قبله |
+| **W · تعتمد على `wua1`** | `beneficiary: "asserted"`، وحارس الملكية مبني على `request.endUser` | **لا.** الحارس لا يعمل (§1.2-7) | **محجوب** حتى G-ENF للخدمة المعنية |
+| **N · بلا ربط** | `scoped`/`internalScoped` بلا مقارنة بهوية المستخدم | لا ربط في أي وضع | **محجوب** حتى يُضاف حارس ملكية مختبر (حجز مستقل)، ثم يُعاد تصنيفه O |
+| **ADM · إدارة** | كل مسارات `admin-portal` | — | **محجوب** حتى المرحلة 4. ويلزم جدول دور→مسار يُراجَع مسارًا مسارًا |
+
+**G-ENF (بوابة مالك مستقلة لكل خدمة):** تُنقل مسارات W لخدمة ما إلى القائمة الإنتاجية بثلاثة شروط مجتمعة: (1) قرار مالك مكتوب بتفعيل ADR-060 P3 لتلك الخدمة، (2) دليل منشور أن المستقبل في `enforce` (§9-6)، (3) نجاح E-26 على تلك الخدمة. ولا يُنفَّذ أيٌّ من ذلك ضمن ADR-069.
+
+#### تصنيف المسارات الـ67 (تطبيق×مسار) على `a93fe5ec`
+
+**تطبيق العميل (13 مسارًا مميزًا):**
+
+| المسار | الحارس | الفئة | الحكم |
+|---|---|---|---|
+| `GET·PUT /customers/:waslaPublicId/profile` · `GET·POST /customers/:waslaPublicId/places` · `DELETE /customers/:waslaPublicId/places/:placeId` · `GET·POST /customers/:waslaPublicId/order-requests` · `POST …/order-requests/preview` (8) | `ownerScoped` | O | يُفتح؛ الدليل القائم: `services/customers/src/__tests__/service-identity.test.ts` («مُنتَفِعٌ يخالف :waslaPublicId → 404») و`saved-places.test.ts` («hides another customer's place behind a 404») |
+| `GET /reputation/scores/:subjectType/:subjectPublicId` | `ownerScoped` | O | يُفتح؛ `services/reputation/src/__tests__/service-identity.test.ts` («مُنتَفِعٌ يخالف :subjectPublicId → 404») |
+| `GET /search/products` | `internalScoped` | P | مشروط (E-20 + دليل «المنشور فقط») |
+| `GET /stores/:storeSlug/products` | `scoped` | P | مشروط: `parseProductQuery` يقبل `state` و`moderation_state` و`visible_only`. فالحد يرفض الأولين ويثبّت `visible_only=true` (E-20) |
+| `GET /stores` | `assertedStaff` | W | **محجوب:** `assertOwnerFilter` لا يعمل في `off`، و`?owner_public_id=<other>` يمر (`user-assertion-ownership.integration.test.ts`: «lists without an assertion») |
+| `GET /reputation/ratings` | `internalScoped` | N | **محجوب:** `subject_public_id` من الاستعلام بلا ربط، ولم تُراجع خصوصية ما يعيده |
+
+**تطبيق السائق (16):**
+
+| المسار | الحارس | الفئة | الحكم |
+|---|---|---|---|
+| `GET·PATCH /drivers/:waslaPublicId` · `GET·POST /drivers/:waslaPublicId/documents` · `GET·POST /drivers/:waslaPublicId/vehicles` · `PATCH …/vehicles/:vehicleId` · `GET·PUT /drivers/:waslaPublicId/zones` (9) | `ownerScoped` | O | يُفتح؛ `services/drivers/src/__tests__/service-identity.test.ts` («مُنتَفِعٌ يخالف :waslaPublicId → 404») و`repository.integration.test.ts` (المركبة بالمالك) |
+| `GET /orders/drivers/:driverPublicId/jobs` | `ownerScoped` | O | يُفتح؛ `services/orders/src/__tests__/http/driver-jobs.test.ts` («beneficiary is a different driver (404)») |
+| `POST /dispatch/offers/:offer_id/accept` · `…/reject` | `assertedDriver` | W | **محجوب حتى G-ENF(dispatch):** `assertOfferDriver` يعود بلا فحص حين `endUser` غائب، فسائق يقبل عرض غيره |
+| `GET /dispatch/jobs/:job_id` · `GET …/offers` · `POST …/cancel` | `scoped` | N | **محجوب:** لا ربط بالسائق؛ والإلغاء خصوصًا فعل كتابة على مهمة أي سائق |
+| `POST /orders/:orderId/transitions` | `scoped` | N | **محجوب:** لا ربط بالسائق المسند |
+
+**بوابة الإدارة (38):** كلها ADM ومحجوبة حتى المرحلة 4. وفيها 7 مسارات `ownerScoped` (5 لـdrivers و2 لـorders)، ومساران `tenantScoped`: هذه ترفض الموظف بطبيعتها (404/403) لأن `obo` الموظف لا يطابق المالك، فتحتاج مسارات إدارية مستقلة بصلاحية إدارة لا تجاوزًا للحارس. ومساران `asserted` (support) تحكمهما G-ENF(support). و27 مسارًا `scoped`/`internalScoped`/`adminScoped` لا تتحقق من دور بشري عند المستقبل، فيحرسها جدول دور→مسار في `admin-edge` مع اختبارات A-*.
+
+**الحصيلة للتطبيقين (29):** O = 19 تُفتح · P = 2 مشروطة بدليل لم يُكتب · W = 3 محجوبة حتى G-ENF · N = 5 محجوبة حتى حارس جديد. والإدارة 38 محجوبة.
+
+**صيغة المدخل (المرحلة 2):** `packages/channel-edge/allowlist/<surface>.json`، وكل مدخل `{method, path, service, class, required_scopes, evidence_tests[]}`. ويضاف فحص CI جديد (`edge-allowlist-guard`) **يفشل** إذا:
+(أ) كان المدخل W أو N أو ADM في القائمة الإنتاجية، إلا W مدرجة في `enforce-gates.json` بقرار مالك ودليل منشور؛
+(ب) خالفت الفئة المعلنة تصنيف المستقبل الفعلي المقروء من كود الخدمة. مثال: O والمسار ليس `beneficiary: "required"`، أو أزيلت مقارنة المالك من المعالج؛
+(ج) غاب `evidence_tests` أو أشار إلى ملف أو حالة غير موجودة؛
+(د) لم يناد التطبيق المسار في الفحص 24.
 
 ### 2.7 أثره على ADR-048
 
@@ -186,7 +236,8 @@ ADR-048 رفض البوابة **حلًّا للتوجيه**، لأن الحاج�
 | المرحلة | النطاق | الصف | معيار القبول |
 |---|---|---|---|
 | **1 · إصدار الجلسة (P-03)** | مسارات identity: `POST /identity/sessions` · `POST /identity/sessions/exchange` · `POST /identity/sessions/revoke`؛ صلاحيات `identity:session:{issue,exchange,revoke}` للروبوتين في `PRODUCTION_GRANTS`؛ `actorType` من المنادي؛ توسيع جمهور `wua1`؛ عقد OpenAPI؛ تصنيف المسارات في مصفوفة الربط | P-03 | اختبارات §7 (I-*) على Postgres حقيقي في `channel-e2e`؛ حارس الصلاحيات (الفحص 16) أخضر |
-| **2 · حدّ القناة (P-04)** | `packages/channel-edge` (Fastify plugin): `POST /edge/session` · `/edge/session/logout` · التوجيه بقائمة سماح مشتقة · حذف الترويسات · fail-closed؛ تركيبه في customer-bot وdriver-bot؛ التطبيقان: تهيئة الجلسة من `Telegram.WebApp.initData` في `main.tsx` بدل خطاف E2E وحده | P-04 | حزمة `app-edge-e2e` جديدة: مستمعون حقيقيون + Postgres + `signInitDataForTests` بسر روبوت اختباري ⇒ ملف العميل 200، وكل حالات §7 (E-*) |
+| **2 · حدّ القناة (P-04)** | `packages/channel-edge` (Fastify plugin): `POST /edge/session` · `/edge/session/logout` · التوجيه بقائمة سماح صريحة مصنّفة (§2.8) + فحص `edge-allowlist-guard` · حذف الترويسات · fail-closed؛ تركيبه في customer-bot وdriver-bot؛ التطبيقان: تهيئة الجلسة من `Telegram.WebApp.initData` في `main.tsx` بدل خطاف E2E وحده | P-04 | حزمة `app-edge-e2e` جديدة: مستمعون حقيقيون + Postgres + `signInitDataForTests` بسر روبوت اختباري ⇒ ملف العميل 200، وكل حالات §7 (E-*)؛ **والمستقبلون في الوضع `off` كالإنتاج** لحالات E-18/E-19/E-25، لا في `enforce` وحده؛ وقائمة الإنتاج تحوي O فقط (+P بعد دليلها) |
+| **G-ENF · لكل خدمة (بوابة مالك مستقلة)** | تفعيل ADR-060 P3 (`observe` ثم `enforce`) للخدمة، ثم نقل مساراتها W إلى القائمة الإنتاجية | D-07 وجزء من C-07 | **قرار مالك مكتوب لكل خدمة**؛ E-26 + §9-6. وليست جزءًا من تنفيذ ADR-069 |
 | **3 · التفعيل على Singapore (P-05)** | مواقع ثابتة على الحزمة الحالية، وإعادة الكتابة إلى الروبوتين، وضبط مفاتيح `wua1` | P-05 | **تغيير إنتاجي: قرار مالك مكتوب**؛ deploy smoke + فحص منشأ |
 | **4 · الإدارة (A-01)** | روبوت إدارة (المالك ينشئه)؛ ترحيل `identity_staff_grants`؛ CLI للمنح؛ `admin-edge`؛ جدول دور→مسار (admin/support) | A-01 | اختبارات §7 (A-*)؛ **ترحيل قاعدة + خدمة جديدة: قرار مالك** |
 | **5 · البرهان الحي** | رحلة واحدة: فتح التطبيق من تلغرام ⇒ جلسة ⇒ قراءة الملف ⇒ تعديله ⇒ خروج ⇒ رفض | O-08 جزئيًا | **قرار مالك:** بحساب المالك الحقيقي (بيانات حقيقية لا تركيبية) أو بحزمة staging معزولة؛ لا بيانات اختبار في قاعدة الإنتاج |
@@ -224,7 +275,7 @@ ADR-048 رفض البوابة **حلًّا للتوجيه**، لأن الحاج�
 | E-05 | إعادة `initData` نفسه | 409 |
 | E-06 | `GET /customers/{other}/profile` بجلسة صحيحة | 404 (ADR-028) |
 | E-07 | المتصفح يرسل `x-wasla-service-auth` أو `X-Wasla-User-Assertion` أو `X-Customer-Public-Id` مزوّرة | تُحذف؛ النتيجة كأنها غائبة |
-| E-08 | جسم يحمل `actor_type`/`owner_public_id`/`acting_party` مخالفًا | يُرفض عند المستقبل أو يُشتق من `endUser` (ADR-029 §2.4)؛ لا تصعيد |
+| E-08 | جسم يحمل `actor_type`/`owner_public_id`/`acting_party` مخالفًا | **(r2، مصحَّحة)** على مسار O: يُرفض بمقارنة `obo` (ADR-028)، **بلا اعتماد على `endUser`**. على مسار W: المسار غير مكشوف في الإنتاج (E-21). ولا تصعيد في أي حال |
 | E-09 | مسار غير مدرج (`POST /dispatch/tick`، `/identity/assertions`) | 404 من الحد، ولا نداء خلفي |
 | E-10 | بلا `Authorization` / رمز في query | 401 |
 | E-11 | identity متوقفة | 503 `EDGE_IDENTITY_UNAVAILABLE` + `Retry-After`؛ لا نداء خلفي |
@@ -234,6 +285,16 @@ ADR-048 رفض البوابة **حلًّا للتوجيه**، لأن الحاج�
 | E-15 | تجاوز حد المعدل على `/edge/session` | 429 |
 | E-16 | جلسة سائق على حد العميل | 401 |
 | E-17 | المستقبل في `enforce` مع تأكيد صحيح | 200؛ وبتأكيد منتهٍ 401 `AUTHN_USER_ASSERTION_EXPIRED` |
+| **E-18** | (r2) لكل مسار O في القائمة: جلسة A ومعرّف B في المسار، **والمستقبل في `off`** | 404؛ ويفشل الاختبار إن رجع 200. ويتكرر في `observe` و`enforce` بالنتيجة نفسها |
+| **E-19** | (r2) لكل مسار O يقبل جسمًا: حقل `owner_public_id`/`acting_party`/`customer_public_id`/`driver_public_id`/`wasla_public_id`/`rater_public_id` لهوية أخرى، والمستقبل في `off` | 400/404، أو قيمة مخزنة = `obo` الجلسة. ولا يُقبل أن تُخزَّن هوية الجسم |
+| **E-20** | (r2) مسارات P: `state=draft` أو `moderation_state=pending` أو `visible_only=false` أو `owner_public_id` | 400 من الحد؛ والجواب لا يحوي إلا المنشور المرئي |
+| **E-21** | (r2) مسار W في القائمة الإنتاجية بلا مدخل في `enforce-gates.json` | `edge-allowlist-guard` يفشل في CI |
+| **E-22** | (r2) مسار N أو ADM في قائمة سطح العميل أو السائق | الفحص يفشل |
+| **E-23** | (r2، طفرة) إزالة مقارنة المالك من معالج مسار O، أو تغيير `beneficiary` إلى غير `required` | الفحص يفشل، وE-18 تفشل |
+| **E-24** | (r2) مدخل بلا `evidence_tests` أو بإشارة إلى اختبار غير موجود | الفحص يفشل |
+| **E-25** | (r2) مسار ينادى في الفحص 24 لكنه غير مدرج في القائمة (مثل `/dispatch/jobs/:job_id/cancel`) | 404 من الحد، ولا نداء خلفي. لا إضافة آلية |
+| **E-26** | (r2، لبوابة G-ENF) سائق A يقبل عرضًا لسائق B عبر الحد، والمستقبل في `enforce` | 404 `OFFER_NOT_FOUND`. ويُسجَّل أن الحالة نفسها في `off` تعطي 200، وهذا سبب الاستبعاد |
+| **E-27** | (r2) طلب عبر الحد يحمل `X-Wasla-User-Assertion` صالحًا لكن المستقبل في `off` | لا يُحتسب تحققًا: الاختبار يتأكد أن `request.endUser` غير مضبوط، وأن أي مسار W غير مكشوف |
 
 ### 7.3 الإدارة (A-*)
 
@@ -259,6 +320,8 @@ ADR-048 رفض البوابة **حلًّا للتوجيه**، لأن الحاج�
 3. زمن `exchange` تحت الحمل ضمن ميزانية p95، وعدم استنزاف مسبح identity (يرتبط بـRISK-0067).
 4. السحب يُرى فورًا في الإنتاج.
 5. لا رمز في سجلات Render (فحص نصّي لسجلات النشر).
+6. **(r2، لبوابة G-ENF)** قبل نقل أي مسار W: دليل قراءة فقط أن `WASLA_USER_ASSERTION_MODE=enforce` مضبوط على الخدمة المستقبلة المنشورة، وأن طلبًا عبر الحد بتأكيد مفقود أو مخالف يُرفض فعلًا بـ401/403 في البيئة المنشورة. ولا يكفي اختبار CI يفرض `enforce`.
+7. **(r2)** القائمة المنشورة في الحد تطابق ملف `allowlist` المدموج (بصمة الملف في `/health` الحد أو في سجل الإقلاع)، فلا يُكشف مسار لم يمر بالفحص.
 
 ## 10. أثره على صفوف المصفوفة المحجوبة (22)
 
@@ -266,12 +329,17 @@ ADR-048 رفض البوابة **حلًّا للتوجيه**، لأن الحاج�
 |---|---|---|
 | P-03 | 1 | دليل حي (5) |
 | P-04 | 2 | P-05 (3) ودليل حي |
-| C-02 · C-03 · C-07 · C-08 · C-09 | 2 (+3 للحي) | — |
+| C-02 · C-03 | 2 (+3 للحي) | — |
+| C-07 | 2 للمنتجات (P، بعد دليلها) | `GET /stores` (W) حتى G-ENF(marketplace) |
+| C-08 | 2 (P، بعد دليلها) | — |
+| C-09 | 2 للنقاط (O) | `GET /reputation/ratings` (N) حتى حارس ربط |
 | C-04 · C-05 | 2 | **D-03** (لا مُنشئ لمهمة التوزيع) — مستقل عن هذا القرار |
 | C-06 | 2 | ربط تفاصيل الطلب في الواجهة |
-| D-07 · D-08 · R-05 · R-06 | 2 | — |
+| R-05 · R-06 | 2 | — |
+| D-07 | — | **G-ENF(dispatch)** (W) |
+| D-08 | — | حارس ربط السائق المسند على `POST /orders/:orderId/transitions` ومسارات dispatch الثلاثة (N)، بحجز مستقل |
 | R-02 (جزء التطبيق) | 2 | زر التوفر في الواجهة |
-| R-04 | 2 للسائق؛ 4 لمراجعة الإدارة | — |
+| R-04 | 2 للسائق؛ 4 لمراجعة الإدارة | مسارات مراجعة الإدارة `ownerScoped` ترفض الموظف، فتحتاج مسارًا إداريًا مستقلًا |
 | A-01 · A-02 · A-03 · S-03 · S-07 | 4 | A-03: اختبارات الشاشة؛ S-07: 3 مسارات بلا اختبار |
 | O-08 | 5 | D-03 للرحلة الكاملة |
 

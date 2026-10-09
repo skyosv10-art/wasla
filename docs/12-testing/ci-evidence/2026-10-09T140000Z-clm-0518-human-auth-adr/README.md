@@ -29,6 +29,23 @@ ADR-001, 018, 019, 020, 027, 028, 029, 036, 048, 060 · `services/identity/src/u
 | Routes each app calls | CLM-0517 `inventory.json` (app_callers) | customer 15 (4 services) · driver 16 (3) · admin 38 (8) |
 | Blocked matrix rows | rows marked محجوب + P-03/P-04/A-01 in the matrix, plus C-05 and R-02 (app half) | 22 |
 
+## r2 — enforcement gate per exposed route (security note before owner approval)
+
+| Fact | Where | Result |
+|---|---|---|
+| `asserted` routes verify nothing in `off` | `packages/service-auth/src/fastify.ts` `applyUserAssertion`: `if (config === undefined \|\| config.mode === "off") return;` | `request.endUser` stays unset |
+| `asserted` routes do not require `obo` | same file: `requireBeneficiary = identity.beneficiary === "required"` | no owner binding at the middleware |
+| Dispatch offer guard is a no-op in `off` | `services/dispatch/src/http/app.ts` `assertOfferDriver`: `if (endUser === undefined) return;` | any driver session could accept/reject another driver's offer |
+| Store owner filter is a no-op in `off` | `services/marketplace/src/http/app.ts` `assertOwnerFilter` | `?owner_public_id=<other>` passes (existing test "lists without an assertion") |
+| Product list accepts non-public filters | `services/marketplace/src/http/requests.ts` `parseProductQuery` | `state`, `moderation_state`, `visible_only` |
+| Every exposed `ownerScoped`/`tenantScoped` handler compares the owner | handler bodies scanned for `requireBeneficiary`/`ownerPublicIdOf`/`requireCustomerScope` | 28/28 |
+| Enabling `enforce` is a separate owner decision | ADR-060 line 209 (P3 "يحتاج قرارًا مكتوبًا من المالك") | G-ENF gate, outside ADR-069 |
+
+Classification of all 67 app×route pairs: [`route-enforcement.json`](route-enforcement.json).
+Customer + driver (29): **O 19 open · P 2 conditional (evidence not yet written) · W 3 blocked until G-ENF · N 5 blocked until an owner guard**. Admin portal 38: blocked until phase 4.
+
+Status of the note: closed **at the decision level** — the ADR no longer admits a route on check-24 presence, excludes W/N from the production allowlist, and specifies failing tests (E-18…E-27) and a CI guard. It is **not** closed by runtime evidence: the guard and tests are phase-2 work and do not exist yet.
+
 ## What this evidence does not claim
 
 - Authentication is **not** complete. Nothing was implemented; ADR-069 is `Proposed` and waits for the Program Owner's written approval.

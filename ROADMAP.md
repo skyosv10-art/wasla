@@ -104,6 +104,7 @@ Nothing else has been changed in this repository by the WASLA integration work.
 
 ## In progress
 
+- **CLM-0518 r2 (2026-10-09):** بوابة إنفاذ لكل مسار في ADR-069 §2.8 — O=19 تُفتح، وW=3 محجوبة حتى G-ENF، وN=5 محجوبة حتى حارس ربط، وP=2 مشروطة، والإدارة 38 حتى المرحلة 4.
 - **CLM-0518 (2026-10-09):** ADR-069 (Proposed) — حدّ قناة واعٍ بالمصادقة لإغلاق P-03/P-04/A-01؛ B وC مرفوضان؛ 5 مراحل (3–5 بقرار مالك)؛ لا تنفيذ قبل الموافقة. Evidence: `docs/12-testing/ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr`.
 - **CLM-0517 (2026-10-09):** جرد الاكتمال الهندسي (قراءة فقط) — 13 COMPLETE · 39 PARTIAL · 4 BLOCKED · 6 DEFERRED · 3 N/A؛ أكبر فجوة: لا مسار مصادقة بشرية من التطبيقات إلى الخدمات ولا مُنشئ لمهمة التوزيع. Evidence: `docs/12-testing/ci-evidence/2026-10-09T120000Z-clm-0517-engineering-completion-audit`.
 - **CLM-0516 (2026-10-09):** أحكام ما بعد الدمج موثقة — #672: main CI فشل زمنيًا (image-supply-chain، CVEs جديدة؛ عولج في CLM-0515)؛ #673: main CI + roadmap نجحا (image-supply-chain خضراء بالاستثناء المحروس)؛ لا تغيير إنتاجي. Evidence: `docs/12-testing/ci-evidence/2026-10-09T110000Z-clm-0516-post-merge-verdicts`.

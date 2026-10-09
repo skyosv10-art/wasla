@@ -120,3 +120,18 @@ vulnerabilities:
     paths: *esbuild_paths
     statement: *esbuild_statement
     expired_at: 2026-12-15
+
+  # CLM-0515 (2026-10-09): ثغرتان جديدتان منشورتان 2026-10-08 (CVE-2026-78667
+  # net/http Range headers · CVE-2026-97031 crypto/tls ECH) — الفئةُ نفسُها: Go
+  # stdlib داخلَ ثنائيِّ esbuild المُترجَمِ مسبقاً (0.25.12 = go1.23.12). Go أصدرتْ
+  # الإصلاحَ في 1.26.9/1.27.2 (2026-10-08) ولا إصدارَ esbuild مبنيّاً بها بعدُ
+  # (أحدثُها 0.28.2 من 2026-08-08 = go1.26.5 — قيسَ بـ npm pack + strings).
+  # الاستثناءُ من الحَجزِ لا من القياسِ؛ المهلةُ نفسُها تعضُّ.
+  - id: CVE-2026-78667
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15
+  - id: CVE-2026-97031
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15

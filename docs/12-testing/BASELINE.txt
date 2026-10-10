@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-10T04:50:08Z
-الالتزام: ea3d8b79353054a1bb4c59835a0daa839311d242  الفرع: feat/clm-0521-edge-allowlist-guard  شجرةٌ مُعدَّلةٌ (16 ملفّاً)
+التاريخ (UTC): 2026-10-10T07:30:09Z
+الالتزام: 4ad2444b114bb524c882db1c6c9b818146777996  الفرع: feat/clm-0521-edge-allowlist-guard  شجرةٌ مُعدَّلةٌ (5 ملفّاً)
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.3
 القفل: pnpm-lock.yaml · 5062 سطراً · sha256 26958c6f816b0e1f…
 

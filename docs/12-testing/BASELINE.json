@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-10T04:50:08Z",
+  "generated_at": "2026-10-10T07:30:09Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "ea3d8b79353054a1bb4c59835a0daa839311d242",
+    "commit": "4ad2444b114bb524c882db1c6c9b818146777996",
     "branch": "feat/clm-0521-edge-allowlist-guard",
     "dirty": true,
-    "dirty_files": 16,
-    "dirty_reason": "CLM-0521: الحارس 28 (edge-allowlist-guard) — عدّاد governance_checks 27→28 · CASES 580→586 بقرارٍ مكتوب (TASK_LOG · EDGE_ALLOWLIST.md)",
-    "tracked_files": 3179
+    "dirty_files": 5,
+    "dirty_reason": "CLM-0521 متابعة: تسكين فجوة E-23 — الدليلُ شرطُ حصرٍ على فئة O (لا شرطَ فتحٍ) + طفرة حالة الدليل + إثبات مستند",
+    "tracked_files": 3181
   },
   "env": {
     "node": "v20.20.2",

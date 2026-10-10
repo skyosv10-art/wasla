@@ -160,9 +160,13 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
         # (أ) فتح إنتاجي لفئة محجوبة
         if e.get("production_open") and e.get("class") not in PRODUCTION_OPEN_CLASSES:
             fail(f"{tag}: production_open=true لفئة {e['class']} — محجوبة حتى G-ENF/حارس مختبر")
-        # فتح O بلا دليل ملكية (E-18/E-19 على المسار نفسه)
-        if e.get("production_open") and e.get("class") in ("O", "P") and not e.get("evidence_tests"):
-            fail(f"{tag}: production_open=true بلا evidence_tests")
+        # الدليلُ شرطُ حصرٍ لا شرطَ فتحٍ: فئةُ O تُعلِنُ حصرَ القراءةِ إلى مالكِهِ
+        # (ownerScoped)، ولا يُقبلُ بديعٌ لمسارٍ مصنَّفٍ O بلا اختبارٍ يقيسُ
+        # هذا الحصرَ (فحصُ E-23). ``production_open=false`` يُعلِنُ انسدادَ الحدِّ
+        # الحاليَّ لا غيابَ الدليلِ — وإلّا فيستطيعُ مسرِّحٌ إخفاءَ فئةِ P خلفَ
+        # ``false`` بلا دليلٍ.
+        if e.get("class") == "O" and not e.get("evidence_tests"):
+            fail(f"{tag}: فئة O بلا evidence_tests — الدليلُ يقيسُ حصرَ القراءةِ (E-23)")
 
         # (ب) مواءمة الفئة مع الشفرة
         svc_routes = service_routes(e["service"])

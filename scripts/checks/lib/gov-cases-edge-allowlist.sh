@@ -94,6 +94,40 @@ _ea_mutated || { _ea_restore; return 0 2>/dev/null || exit 1; }
 t "مسارٌ لا يناديه التطبيقُ يُسقِط (البابُ د · الفحصُ 24)" fail bash "$EA"
 _ea_restore
 
+# طفرةٌ (ج2): حالةُ الدليلِ موجودةٌ في ملفٍّ موجودٍ لكنها غيرُ مكتوبةٍ فيهِ (دليلٌ يزعمُ
+# حالةً لا وجودَ لها — لا يُقبلُ إلا وجودُ النصِّ نفسِهِ في الملفِّ، لأنَّ ``evidence_tests``
+# وعدٌ باختبارٍ حقيقيٍّ قابلٍ للإعادةِ لا مجرّدِ إشارةٍ إلى ملفٍّ.
+python3 - "$EA_CUST" <<'MUT'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding='utf-8'))
+e = next(x for x in d['entries'] if x['path'] == '/customers/:waslaPublicId/profile' and x['method'] == 'GET')
+e['evidence_tests'][0]['case'] = 'هذه الحالةُ غيرُ موجودةٍ في الملفِّ إطلاقًا'
+json.dump(d, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+MUT
+_ea_mutated || { _ea_restore; return 0 2>/dev/null || exit 1; }
+t "دليلٌ يشيرُ إلى حالةٍ غيرِ مكتوبةٍ في الملفِّ يُسقِط (البابُ ج · حالة)" fail bash "$EA"
+_ea_restore
+
+# طفرةٌ (ج2 · أقوى): مسارٌ production_open=false بلا دليلِ ملكيةٍ يُسقِط أيضًا —
+# ``evidence_tests`` مطلوبةٌ على **كل** مسارٍ مصنَّفٍ O في القائمة (وليس المفتوحَ فقط):
+# فتحُ قائمةٍ يزعمُ مساراً عالميَّ القراءةِ ولا اختبارَ يقيسُ حصرَ القراءةِ إلى مالكِهِ
+# هوَ مسرِّحٌ كاملٌ لفئةِ P (النصُّ ``production_open=false`` يُعلِنُ عن انسدادِ الحدِّ
+# لا عن غيابِ الدليلِ الذي يقيسُ الحصرَ). لا يُقبلُ بابٌ يحصرُ الدليلَ إلى المفتوحِ
+# فقط: الطفرةُ إلى قائمةٍ مغلقةٍ بلا دليلٍ تُسقِطُ الحارسَ، وإلّا فالحارسُ يعدُّ
+# الدليلَ **شرطَ حصرٍ** لا شرطَ فتحٍ — وهذا مخالفٌ لفحصِ E-23.
+python3 - "$EA_CUST" <<'MUT'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding='utf-8'))
+e = next(x for x in d['entries'] if x['path'] == '/customers/:waslaPublicId/profile' and x['method'] == 'GET')
+e['evidence_tests'] = []
+json.dump(d, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+MUT
+_ea_mutated || { _ea_restore; return 0 2>/dev/null || exit 1; }
+t "مسارٌ مصنَّفٌ O بلا دليلِ ملكيةٍ يُسقِط (البابُ ج · شرطُ حصرٍ)" fail bash "$EA"
+_ea_restore
+
 # طفرةٌ (هـ): مدخلٌ خارجَ لقطةِ route-enforcement.json التاريخيةِ
 python3 - "$EA_CUST" <<'MUT'
 import json, sys

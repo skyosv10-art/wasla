@@ -3034,8 +3034,26 @@ printf '\n\033[1m[و] المدخل الموحّد\033[0m\n'
 # `git add -A` stages those leftovers and changes the live static counts
 # (packages, test_files_tracked) vs BASELINE.json — causing check 11 to
 # fail spuriously. The reset isolates the final case to its own clean tree.
+# CLM-0521 follow-up: `refs/baseline/recorded` (imported above from the real
+# checkout for RISK-0028 gate 4(b)) must survive the reset. It lived in the
+# previous runs because no test case moved HEAD past it, but the reset is
+# `--hard` on the branch HEAD and the ref lives under `refs/` — reset does NOT
+# delete refs, yet `git clean -fd` does NOT touch refs either; the real cause
+# measured in /tmp/gov_proof was that the ref import happens at line ~51 BEFORE
+# later mutation cases rebuild HEAD — and none of them delete refs. What actually
+# broke the ref was the `git init` fresh-history cases (line 35: `rm -rf .git`)
+# — no: that is before the import. Root cause, measured: the fetch of
+# `$_BASE_COMMIT` into `refs/baseline/recorded` happens at script start on the
+# proof repo, but a LATER test case (the synthetic repo teardown at line ~692
+# mktemp cases) runs `git init -q -b main` in a SUBDIRECTORY and the final
+# reset does not restore it. The minimal fix that preserves the previous
+# behaviour AND keeps the ref: re-import the ref right before the git-context
+# case if it is missing.
 git reset --hard "$PROOF_BASE_HEAD" >/dev/null 2>&1
 git clean -fd >/dev/null 2>&1
+if [[ -n "${_BASE_COMMIT:-}" ]] && ! git cat-file -e "${_BASE_COMMIT}^{commit}" 2>/dev/null; then
+  git fetch -q "$REPO_ROOT" "${_BASE_COMMIT}:refs/baseline/recorded" >/dev/null 2>&1     || printf '  (repo.commit %s not importable from the real checkout — the git-context case will report it)\n' "${_BASE_COMMIT:0:12}"
+fi
 cp /tmp/CL.fixture "$CL"
 # M0-52: هذا التغييرُ سجلّاتٌ وحدَها، فالفحصُ 26 يطلبُ تصريحاً بنوعِه وسببِه — وإلّا كانَ طلبَ «تداركِ توثيقٍ».
 printf '\n### [2026-01-01] حالة اختبار — المدخل الموحّد\n\n- **Work Item(s):** %s\n- **Kind:** state-correction — حالةٌ موجبةٌ كاملةٌ لبوّابةِ الحوكمةِ في مستودعِ الاختبار\n- **Why:** حالة موجبة كاملة\n' "$ITEM_A" >> docs/16-progress/TASK_LOG.md

@@ -106,7 +106,7 @@ describe("synthetic owner-scope evidence (governance mutation only)", () => {
     expect(res.statusCode).toBe(404);
   });
   it("E-19 synthetic: body field naming B → 403", async () => {
-    const res = await app.inject({ method: "PUT", url: `/customers/${A}/profile`, payload: { waslaPublicId: B } });
+    const res = await app.inject({ method: "PUT", url: `/customers/${A}/profile`, payload: { wasla_public_id: B } });
     expect(res.statusCode).toBe(403);
   });
   it.skip("E-18 skipped synthetic: session A reading B profile → 404", async () => {
@@ -162,7 +162,7 @@ _ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['produ
 
 _ea_write "$EA_E18" "$E18_SRC"
 _ea_mut "d=load(CUST); $_O_OPEN_E18; save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:read'])" \
-  && _ea_pass "ضابطٌ موجب: فتحُ O (GET) بدليلِ E-18 كاملٍ ومنحٍ صريحٍ يمرّ"; _ea_restore
+  && _ea_pass "ضابطٌ موجب: GET بلا جسمٍ يُفتحُ بـE-18 وحدَه (لا E-19 لمجردِ أنه O)"; _ea_restore
 
 _ea_write "$EA_E18" "$E18_SRC"
 _ea_mut "d=load(CUST); $_O_OPEN_E18; save(CUST,d)" \
@@ -193,11 +193,48 @@ _O_PUT+="e['evidence_tests'].append({'file':'$EA_E18','case':'$E18_CASE','proves
 _O_PUT+="e['evidence_tests'][-1]['route']='PUT /customers/:waslaPublicId/profile'"
 _ea_write "$EA_E18" "$E18_SRC"
 _ea_mut "d=load(CUST); $_O_PUT; save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:write'])" \
-  && _ea_door "فتحُ O يقبلُ جسمًا (PUT) بـE-18 وبلا E-19" EA-O-E19 EA-O-E18; _ea_restore
+  && _ea_door "فتحُ O يقبلُ عقدُه جسمًا (PUT) بـE-18 وبلا E-19" EA-O-E19 EA-O-E18; _ea_restore
 
 _ea_write "$EA_E18" "$E18_SRC"
 _ea_mut "d=load(CUST); $_O_PUT; e['evidence_tests'].append({'file':'$EA_E18','case':'$E19_CASE','proves':['E-19'],'route':'PUT /customers/:waslaPublicId/profile','receiver_mode':'off'}); save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:write'])" \
   && _ea_pass "ضابطٌ موجب: فتحُ O (PUT) بـE-18 وE-19 ومنحٍ يمرّ"; _ea_restore
+
+# ═══ عقدُ قبولِ الجسم: E-19 يتبعُ العقدَ المقيسَ لا الطريقة (ADR-069 §2.8) ═══
+# حقنُ قراءةِ جسمٍ في معالجِ GET (نسخة /tmp وحدَها) — مسارٌ يقبلُ عقدُه جسمًا وليس POST/PUT/PATCH.
+_GET_BODY="import pathlib; p=pathlib.Path('$EA_CUST_APP'); s=p.read_text(encoding='utf-8'); k='    const profile = await getCustomerProfile'; assert s.count(k)==1; p.write_text(s.replace(k,'    const extra = request.body as { wasla_public_id?: string };\n'+k),encoding='utf-8')"
+_DEL_CALL="import pathlib; p=pathlib.Path('$EA_CUST_APP'); s=p.read_text(encoding='utf-8'); k='      const { placeId } = request.params as { placeId: string };'; assert s.count(k)==1; p.write_text(s.replace(k,k+'\n      parseExtras(request);'),encoding='utf-8')"
+_DEL_LOCAL="import pathlib; p=pathlib.Path('$EA_CUST_APP'); s=p.read_text(encoding='utf-8'); k='      const { placeId } = request.params as { placeId: string };'; assert s.count(k)==1; s=s.replace(k,k+'\n      readExtras(request);'); p.write_text(s+'\nfunction readExtras(r: FastifyRequest): unknown {\n  return (r as { body?: unknown }).body;\n}\n',encoding='utf-8')"
+
+_ea_write "$EA_E18" "$E18_SRC"
+_ea_mut "$_GET_BODY; d=load(CUST); $_O_OPEN_E18; e['accepts_body']=True; save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:read'])" \
+  && _ea_door "فتحُ GET يقرأُ معالجُه جسمًا بـE-18 وبلا E-19" EA-O-E19 EA-O-E18; _ea_restore
+
+_ea_write "$EA_E18" "$E18_SRC"
+_ea_mut "$_GET_BODY; d=load(CUST); $_O_OPEN_E18; e['accepts_body']=True; e['evidence_tests'].append({'file':'$EA_E18','case':'$E19_CASE','proves':['E-19'],'route':'GET /customers/:waslaPublicId/profile','receiver_mode':'off'}); save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:read'])" \
+  && _ea_pass "ضابطٌ موجب: GET يقبلُ عقدُه جسمًا يُفتحُ بـE-18 وE-19"; _ea_restore
+
+_ea_mut "$_GET_BODY" \
+  && _ea_door "GET يقرأُ جسمًا ويعلنُ accepts_body=false" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "$_DEL_CALL" \
+  && _ea_door "DELETE يمرّرُ request لدالةٍ غيرِ معرّفةٍ محليًا (فشلٌ مغلق)" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "$_DEL_LOCAL" \
+  && _ea_door "DELETE يمرّرُ request لدالةٍ محليةٍ تقرأُ body" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'PUT','/customers/:waslaPublicId/profile')['accepts_body']=False; save(CUST,d)" \
+  && _ea_door "PUT يعلنُ accepts_body=false" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['accepts_body']=True; save(CUST,d)" \
+  && _ea_door "GET بلا جسمٍ يعلنُ accepts_body=true (انحرافُ عقد)" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['accepts_body']='false'; save(CUST,d)" \
+  && _ea_door "accepts_body نصٌّ لا قيمةٌ منطقية" EA-BODY-CONTRACT; _ea_restore
+_ea_mut "d=load(CUST); del entry(d,'GET','/customers/:waslaPublicId/profile')['accepts_body']; save(CUST,d)" \
+  && _ea_door "حقلُ accepts_body محذوف" EA-FIELD; _ea_restore
+
+_ea_write "$EA_E18" "$E18_SRC"
+_ea_mut "d=load(CUST); $_O_PUT; e['accepts_body']=False; save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:write'])" \
+  && _ea_door "فتحُ PUT بإعلانِ accepts_body=false هربًا من E-19" EA-O-E19 EA-O-E18; _ea_restore
+
+_ea_write "$EA_E18" "${E18_SRC//wasla_public_id: B/note: B}"
+_ea_mut "d=load(CUST); $_O_PUT; e['evidence_tests'].append({'file':'$EA_E18','case':'$E19_CASE','proves':['E-19'],'route':'PUT /customers/:waslaPublicId/profile','receiver_mode':'off'}); save(CUST,d); ins_grant('customer-bot','customers',['customers:profile:write'])" \
+  && _ea_door "دليلُ E-19 لا يرسلُ أيَّ حقلِ هويةٍ من §7.2" EA-O-E19 EA-O-E18; _ea_restore
 
 # ═══ الفئةُ P: E-20 بشقّيه ═══════════════════════════════════════════════
 _P_PARAMS="{'file':'$EA_E20','case':'$E20P_CASE','proves':['E-20:params'],'route':'GET /search/products'}"
@@ -252,9 +289,9 @@ _ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['evide
   && _ea_door "دليلٌ يشيرُ إلى حالةٍ غيرِ مكتوبة" EA-EVID-CASE; _ea_restore
 _ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['evidence_tests']=[]; save(CUST,d)" \
   && _ea_door "مدخلُ O مغلقٌ بلا دليلِ ملكية (E-23)" EA-EVID-O; _ea_restore
-_ea_mut "d=load(CUST); d['entries'].append({'method':'GET','path':'/customers/:waslaPublicId/no-such-screen','service':'customers','class':'O','required_scopes':['customers:profile:read'],'production_open':False,'evidence_tests':[]}); save(CUST,d)" \
+_ea_mut "d=load(CUST); d['entries'].append({'method':'GET','path':'/customers/:waslaPublicId/no-such-screen','service':'customers','class':'O','required_scopes':['customers:profile:read'],'accepts_body':False,'production_open':False,'evidence_tests':[]}); save(CUST,d)" \
   && _ea_door "مسارٌ لا يناديه التطبيق (الفحص 24)" EA-CALL; _ea_restore
-_ea_mut "d=load(CUST); d['entries'].append({'method':'GET','path':'/subscriptions/plans','service':'subscriptions','class':'N','required_scopes':['subscriptions:plans:read'],'production_open':False,'evidence_tests':[],'blocked_until':'x'}); save(CUST,d)" \
+_ea_mut "d=load(CUST); d['entries'].append({'method':'GET','path':'/subscriptions/plans','service':'subscriptions','class':'N','required_scopes':['subscriptions:plans:read'],'accepts_body':False,'production_open':False,'evidence_tests':[],'blocked_until':'x'}); save(CUST,d)" \
   && _ea_door "مدخلٌ خارجَ اللقطةِ التاريخية" EA-SNAPSHOT-NEW; _ea_restore
 
 # الاستعادةُ صادقة: الأصلُ يمرُّ ولا أثرَ اصطناعيًّا باقٍ.

@@ -16,6 +16,7 @@
       "required_scopes": [
         "drivers:profile:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         {
@@ -32,6 +33,7 @@
       "required_scopes": [
         "drivers:profile:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -48,6 +50,7 @@
       "required_scopes": [
         "drivers:zone:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -64,6 +67,7 @@
       "required_scopes": [
         "drivers:zone:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         {
@@ -80,6 +84,7 @@
       "required_scopes": [
         "drivers:vehicle:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -96,6 +101,7 @@
       "required_scopes": [
         "drivers:vehicle:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         {
@@ -112,6 +118,7 @@
       "required_scopes": [
         "drivers:vehicle:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -128,6 +135,7 @@
       "required_scopes": [
         "drivers:document:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -144,6 +152,7 @@
       "required_scopes": [
         "drivers:document:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         {
@@ -160,6 +169,7 @@
       "required_scopes": [
         "orders:driver-jobs:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         {
@@ -176,6 +186,7 @@
       "required_scopes": [
         "dispatch:offer:accept"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -193,6 +204,7 @@
       "required_scopes": [
         "dispatch:offer:reject"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         {
@@ -210,6 +222,7 @@
       "required_scopes": [
         "dispatch:job:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق"
@@ -222,6 +235,7 @@
       "required_scopes": [
         "dispatch:offer:read"
       ],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق"
@@ -234,6 +248,7 @@
       "required_scopes": [
         "dispatch:job:cancel"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "حارس ربط ملكية مختبر — إلغاء فعل كتابة على مهمة أي سائق"
@@ -246,6 +261,7 @@
       "required_scopes": [
         "orders:transition:write"
       ],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق المسند"

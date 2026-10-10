@@ -1,3 +1,15 @@
+# 2026-10-10 — CLM-0521 — قاعدة E-18/E-19 النهائية: E-19 يتبع عقد قبول الجسم لا الطريقة
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Done (بانتظار مراجعة CODEOWNERS جديدة ودمج PR #679)
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** قرار المالك قبل الدمج: E-18 لكل مسار O يُفتح. E-19 لكل مسار O يقبل عقده جسمًا يمكن أن يحمل هوية أو يؤثر في الملكية. لا E-19 لـ`GET`/`DELETE` لمجرد كونه O. ولا تعميم. كان الحارس يربط E-19 بالطريقة (`POST`/`PUT`/`PATCH`)، فيمرّ منه مسار `GET`/`DELETE` يقرأ جسمًا.
+- **Changed (units):** ADR-069 §2.8 (صياغة القاعدة)، `scripts/checks/lib/edge_allowlist_guard.py` (`measured_accepts_body` + الباب `EA-BODY-CONTRACT` + E-19 من العقد + حقل هوية §7.2 في دليل E-19)، `packages/channel-edge/allowlist/*.json` (حقل `accepts_body` المقيس فقط، 29 مدخلًا، كلها مغلقة)، `scripts/checks/lib/gov-cases-edge-allowlist.sh` (49 حالة)، `docs/12-testing/EDGE_ALLOWLIST.md`، README القوائم، دليل CLM-0521 §3.7.
+- **Not changed:** لا فتح ولا توسيع ولا Channel Edge ولا تطبيقات.
+- **Tests:** الحالات الـ49 محليًا 49/0، والإثبات العكسي في §3.7. الحزمة الكاملة وحكم CI في §4.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md` §3.7 · §4
+
 # 2026-10-10 — CLM-0521 (تشديد قبل الدمج) + CLM-0522 (مصدر الأساس) — الحارس 28: أبواب الفتح والصلاحيات ووجهة الخدمة
 
 - **Work Item(s):** M3-09

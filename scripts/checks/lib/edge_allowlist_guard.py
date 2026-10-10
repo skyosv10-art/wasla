@@ -5,7 +5,8 @@
 كل إخفاق يُطبع برمز ثابت `[EA-…]` تطابقه حالات الطفرة بعينه:
 
   حالة الفتح  EA-OPEN-CLASS · EA-OPEN-TYPE · EA-FIELD · EA-BLOCKED-REASON
-  الفئة O     EA-O-E18 · EA-O-E19 (المسار نفسه، المستقبل off) · EA-EVID-O (E-23)
+  الفئة O     EA-O-E18 (كل O يُفتح) · EA-O-E19 (كل O يقبل عقده جسمًا) · EA-EVID-O (E-23)
+  عقد الجسم   EA-BODY-CONTRACT (accepts_body المعلن = المقيس من الشفرة، فشل مغلق)
   الفئة P     EA-P-E20 (تقييد المعاملات + المنشور فقط)
   الفئة       EA-CLASS-CODE (مقيس من الشفرة) · EA-CLASS-SNAPSHOT · EA-ADM
   الصلاحيات   EA-SCOPE-EMPTY · EA-SCOPE-UNKNOWN (كتالوج الخدمة) · EA-SCOPE-CODE (تطابق تام
@@ -143,6 +144,9 @@ def _segment_match(app_path: str, entry_path: str) -> bool:
 SURFACE_ROLE = {"customer-mini-app": "customer-bot", "driver-mini-app": "driver-bot"}
 BODY_METHODS = {"POST", "PUT", "PATCH"}
 # ADR-069 §7.2 E-20: معاملات يجب أن يرفضها الحد على مسارات P.
+# ADR-069 §7.2 E-19: حقول هوية في الجسم يجب ألا تُخزَّن ولا تغيّر المالك.
+E19_IDENTITY_FIELDS = ("owner_public_id", "acting_party", "customer_public_id",
+                       "driver_public_id", "wasla_public_id", "rater_public_id")
 E20_FORBIDDEN_PARAMS = ("state", "moderation_state", "visible_only", "owner_public_id")
 
 
@@ -193,6 +197,79 @@ def guard_expression(service: str, method: str, path: str) -> str | None:
             q += 1
         return " ".join(src[j : q + 1].split())
     return None
+
+
+def _route_block(src: str, method: str, path: str) -> str | None:
+    """نص تسجيل المسار ومعالجه: من `app.<method>("path"` حتى تسجيل المسار التالي."""
+    rx = re.compile(r"app\." + method.lower() + r"\(\s*\"(/[^\"]*)\"")
+    nxt = re.compile(r"\n\s*app\.(?:get|post|put|patch|delete|head|options|route|register)\(")
+    for m in rx.finditer(src):
+        if norm(m.group(1)) == norm(path):
+            n = nxt.search(src, m.end())
+            return src[m.end() : n.start() if n else len(src)]
+    return None
+
+
+def _balanced(src: str, i: int, open_c: str, close_c: str) -> int:
+    depth = 0
+    for q in range(i, len(src)):
+        if src[q] == open_c:
+            depth += 1
+        elif src[q] == close_c:
+            depth -= 1
+            if depth == 0:
+                return q
+    return len(src) - 1
+
+
+def _local_function_body(src: str, name: str) -> str | None:
+    """جسم `function name(…) {…}` أو `const name = (…) => {…}` في الملف نفسه، وإلا None."""
+    m = re.search(r"(?:async\s+)?function\s+" + re.escape(name) + r"\s*\(", src) or \
+        re.search(r"const\s+" + re.escape(name) + r"\s*=\s*(?:async\s*)?\(", src)
+    if not m:
+        return None
+    sig_end = _balanced(src, m.end() - 1, "(", ")")
+    b = src.find("{", sig_end)
+    if b < 0:
+        return None
+    return src[b : _balanced(src, b, "{", "}") + 1]
+
+
+def measured_accepts_body(service: str, method: str, path: str) -> tuple[bool, str]:
+    """عقد قبول جسم الطلب، مقيسًا من الشفرة (ADR-069 §2.8 قاعدة E-18/E-19) — فشل مغلق.
+
+    POST/PUT/PATCH قابلة للجسم دائمًا. GET/DELETE وغيرها: قابلة إن قرأ المعالج `body`،
+    أو مرّر `request` إلى دالة محلية تقرؤه، أو إلى دالة لا يُعرف تعريفها في الملف.
+    """
+    if method in BODY_METHODS:
+        return True, f"{method} قابلة للجسم بدلالة HTTP"
+    f = ROOT / "services" / service / "src" / "http" / "app.ts"
+    src = f.read_text(encoding="utf-8") if f.exists() else ""
+    blk = _route_block(src, method, path)
+    if blk is None:
+        return True, "المسار غير موجود — فشل مغلق"
+    if re.search(r"\bbody\b", blk):
+        return True, "المعالج يقرأ body"
+    for m in re.finditer(r"\brequest\b(?!\s*\??\.)(?!\s*:)", blk):
+        # الدالة المحيطة: أقرب `(` غير مغلق قبل الموضع.
+        depth, q = 0, m.start() - 1
+        while q >= 0:
+            if blk[q] == ")":
+                depth += 1
+            elif blk[q] == "(":
+                if depth == 0:
+                    break
+                depth -= 1
+            q -= 1
+        name = re.search(r"([A-Za-z_$][\w$]*)\s*$", blk[:q]) if q >= 0 else None
+        if not name or name.group(1) in ("async", "function"):
+            continue  # قائمة معاملات المعالج `(request, reply) =>`
+        body_src = _local_function_body(src, name.group(1))
+        if body_src is None:
+            return True, f"يمرّر request إلى {name.group(1)} غير المعرّفة محليًا — فشل مغلق"
+        if re.search(r"\bbody\b", body_src):
+            return True, f"يمرّر request إلى {name.group(1)} التي تقرأ body"
+    return False, "لا قراءة جسم في المعالج ولا في ما يمرَّر إليه request"
 
 
 def resolve_scopes(expr: str, catalog: dict[str, str]) -> list[str] | None:
@@ -297,6 +374,8 @@ def evidence_for(e: dict, proof: str, tag: str, need_off: bool) -> list[str]:
                     why.append(f"receiver_mode={t.get('receiver_mode')!r} لا 'off'")
                 if "WASLA_USER_ASSERTION_MODE" not in src or not re.search(r"[\"'`]off[\"'`]", src):
                     why.append("الملف لا يضبط WASLA_USER_ASSERTION_MODE=off")
+            if proof == "E-19" and not any(re.search(r"\b" + k + r"\b", src) for k in E19_IDENTITY_FIELDS):
+                why.append(f"لا يرسل أي حقل هوية من §7.2 {list(E19_IDENTITY_FIELDS)}")
             if proof == "E-20:params":
                 missing = [p for p in E20_FORBIDDEN_PARAMS if p not in src]
                 if missing:
@@ -330,7 +409,7 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
     for e in entries:
         tag = f"{surface} {e.get('method')} {e.get('path')}"
         missing = [f for f in ("method", "path", "service", "class", "required_scopes",
-                               "evidence_tests", "production_open") if f not in e]
+                               "evidence_tests", "production_open", "accepts_body") if f not in e]
         if missing:
             fail(f"[EA-FIELD] {tag}: حقول غائبة {missing}")
             continue
@@ -348,13 +427,23 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
         if opened and e["class"] not in PRODUCTION_OPEN_CLASSES:
             fail(f"[EA-OPEN-CLASS] {tag}: production_open لفئة {e['class']} — محجوبة حتى G-ENF/حارس مختبر")
 
-        # O: E-18 لكل مسار، وE-19 لكل مسار يقبل جسمًا (ADR-069 §7.2)، والمستقبل في off.
+        # عقد قبول الجسم: المعلن يساوي المقيس من الشفرة (ADR-069 §2.8 قاعدة E-18/E-19).
+        body_measured, body_why = measured_accepts_body(e["service"], e["method"], e["path"])
+        declared = e["accepts_body"]
+        if not isinstance(declared, bool):
+            fail(f"[EA-BODY-CONTRACT] {tag}: accepts_body={declared!r} ليست true/false حرفيًا")
+        elif declared != body_measured:
+            fail(f"[EA-BODY-CONTRACT] {tag}: accepts_body={declared} يخالف المقيس "
+                 f"({body_measured}: {body_why}) — العقد يُقاس من الشفرة لا يُعلن")
+        accepts_body = body_measured or declared is not False  # فشل مغلق
+
+        # O: E-18 لكل مسار يُفتح؛ E-19 لكل مسار يقبل عقده جسمًا — لا بالطريقة.
         if opened and e["class"] == "O":
             for why in evidence_for(e, "E-18", tag, need_off=True):
                 fail(f"[EA-O-E18] {tag}: فتح O بلا دليل E-18 صريح — {why}")
-            if e["method"] in BODY_METHODS:
+            if accepts_body:
                 for why in evidence_for(e, "E-19", tag, need_off=True):
-                    fail(f"[EA-O-E19] {tag}: فتح O يقبل جسمًا بلا دليل E-19 صريح — {why}")
+                    fail(f"[EA-O-E19] {tag}: فتح O يقبل عقده جسمًا بلا دليل E-19 صريح — {why}")
         # P: E-20 بشقيه — معاملات مقيدة، وجواب لا يحوي إلا المنشور.
         e20_ok = False
         if e["class"] == "P":

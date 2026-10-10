@@ -14,6 +14,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:profile:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
@@ -25,6 +26,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:profile:write"],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
@@ -36,6 +38,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:place:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "hides another customer's place behind a 404" }
@@ -47,6 +50,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:place:write"],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "rejects a reused key that carries a different payload" }
@@ -58,6 +62,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:place:write"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "removes a place and announces it" }
@@ -69,6 +74,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:order-request:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
@@ -80,6 +86,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:order-request:write"],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
@@ -91,6 +98,7 @@
       "service": "customers",
       "class": "O",
       "required_scopes": ["customers:order-request:preview"],
+      "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
@@ -102,6 +110,7 @@
       "service": "reputation",
       "class": "O",
       "required_scopes": ["reputation:score:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/reputation/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :subjectPublicId → 404 لا 403 ولا 200 (ADR-009)" }
@@ -113,6 +122,7 @@
       "service": "search",
       "class": "P",
       "required_scopes": ["search:products:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "E-20 + دليل «المنشور فقط» لم يُكتب"
@@ -123,6 +133,7 @@
       "service": "marketplace",
       "class": "P",
       "required_scopes": ["marketplace:product:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "E-20 (الحد يثبّت visible_only=true ويرفض state/moderation_state)"
@@ -133,6 +144,7 @@
       "service": "marketplace",
       "class": "W",
       "required_scopes": ["marketplace:store:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
         { "file": "services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts", "case": "GET /stores?owner_public_id lists without an assertion" }
@@ -145,6 +157,7 @@
       "service": "reputation",
       "class": "N",
       "required_scopes": ["reputation:rating:read"],
+      "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
       "blocked_until": "حارس ربط ملكية مختبر — subject_public_id من الاستعلام بلا ربط"

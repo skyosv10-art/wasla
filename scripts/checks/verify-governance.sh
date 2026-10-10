@@ -4,7 +4,8 @@
 # الفحوص: 0) وجود الوثائق · 1) اللوحة · 2) الحجوزات · 3) التوثيق مع الدفع ·
 #         4) بياتُ الحجوزات (M0-16) · 5) هدفُ طلبِ الدمج (M0-17) · 6) الأسرار ·
 #         7) عزلُ DDL في اختباراتِ التكامل (M0-03) · 8) CI مانعٌ لا مُجمِّل (M0-04) · …
-#         26) STATE-SYNC (M0-52) · 27) الدمجُ يُغلِقُ الدورة (M0-52) — docs/00-rules/STATE_SYNC_RULE.md.
+#         26) STATE-SYNC (M0-52) · 27) الدمجُ يُغلِقُ الدورة (M0-52) — docs/00-rules/STATE_SYNC_RULE.md ·
+#         28) edge-allowlist-guard (ADR-069 §2.8 · CLM-0521) — docs/12-testing/EDGE_ALLOWLIST.md.
 #
 # وليست هذه البوّابةُ المدخلَ الأعلى بعدَ M0-04: `scripts/verify.sh` يُشغّلُها
 # ومعها بنيةُ المستودعِ والأنواعُ والاختباراتُ، ويكتبُ أرتفاكتاً (VERIFY_COMMAND.md).
@@ -544,6 +545,17 @@ if [[ -f scripts/checks/validate-merged-branches.sh ]]; then
   fi
 else
   FAILED+=("27) الدمجُ يُغلِقُ الدورة — السكربت غير موجود (fail-closed)")
+fi
+
+# ── 28) edge-allowlist-guard: قوائمُ سماحِ حدِّ القناةِ لا تنحرفُ عن الشفرةِ والقرار
+# (ADR-069 §2.8 · المرحلةُ 2 · CLM-0521) — يفشلُ إذا وُجدَ مدخلُ إنتاجٍ محجوبُ الفئةِ،
+# أو فئةٌ تخالفُ تصنيفَ المستقبلِ المقيسَ منَ الشفرةِ، أو دليلٌ غائبٌ، أو مسارٌ لا يناديه
+# التطبيقُ (الفحصُ 24)، أو مدخلٌ خارجَ لقطةِ التصنيفِ التاريخيةِ.
+if [[ -f scripts/checks/validate-edge-allowlist.sh ]]; then
+  run_check "28) edge-allowlist-guard — قوائمُ سماحِ الحدِّ مطابقةٌ للشفرةِ والقرار (ADR-069 · CLM-0521)" \
+    bash scripts/checks/validate-edge-allowlist.sh
+else
+  FAILED+=("28) edge-allowlist-guard — السكربت غير موجود (fail-closed)")
 fi
 
 # ── الخلاصة ──────────────────────────────────────────────────

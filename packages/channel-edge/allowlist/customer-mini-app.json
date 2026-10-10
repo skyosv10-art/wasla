@@ -1,0 +1,153 @@
+{
+  "$comment": [
+    "ADR-069 §2.8 · المرحلة 2 · CLM-0521 — قائمة سماح حدّ القناة لسطح تطبيق العميل.",
+    "production_open تعني أن الحد يفتح المسار في بيئة الإنتاج الحالية (المستقبل في off).",
+    "القاعدة: O فقط تُفتح، وP مشروطة بدليل E-20 لم يُكتب بعد، وW/N/ADM محجوبة حتى G-ENF/المرحلة 4.",
+    "الحالة الحالية للمدخلات O: production_open=false عمدًا — فتحها يتطلب حالات E-18/E-19 على المستقبل في off ضمن حزمة app-edge-e2e (الجزء الثاني من المرحلة 2).",
+    "evidence_tests تشير إلى ملفات موجودة فعلًا في المستودع؛ الحارس يتحقق من وجودها."
+  ],
+  "surface": "customer-mini-app",
+  "entries": [
+    {
+      "method": "GET",
+      "path": "/customers/:waslaPublicId/profile",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:profile:read"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/customers/:waslaPublicId/profile",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:profile:write"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/customers/:waslaPublicId/places",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:place:read"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "hides another customer's place behind a 404" }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/customers/:waslaPublicId/places",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:place:write"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "rejects a reused key that carries a different payload" }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/customers/:waslaPublicId/places/:placeId",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:place:write"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "removes a place and announces it" }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/customers/:waslaPublicId/order-requests",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:order-request:read"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/customers/:waslaPublicId/order-requests",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:order-request:write"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/customers/:waslaPublicId/order-requests/preview",
+      "service": "customers",
+      "class": "O",
+      "required_scopes": ["customers:order-request:preview"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/reputation/scores/:subjectType/:subjectPublicId",
+      "service": "reputation",
+      "class": "O",
+      "required_scopes": ["reputation:score:read"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/reputation/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :subjectPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/search/products",
+      "service": "search",
+      "class": "P",
+      "required_scopes": ["search:products:read"],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "E-20 + دليل «المنشور فقط» لم يُكتب"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/:storeSlug/products",
+      "service": "marketplace",
+      "class": "P",
+      "required_scopes": ["marketplace:product:read"],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "E-20 (الحد يثبّت visible_only=true ويرفض state/moderation_state)"
+    },
+    {
+      "method": "GET",
+      "path": "/stores",
+      "service": "marketplace",
+      "class": "W",
+      "required_scopes": ["marketplace:store:read"],
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts", "case": "GET /stores?owner_public_id lists without an assertion" }
+      ],
+      "blocked_until": "G-ENF(marketplace) — assertOwnerFilter لا يعمل في off"
+    },
+    {
+      "method": "GET",
+      "path": "/reputation/ratings",
+      "service": "reputation",
+      "class": "N",
+      "required_scopes": ["reputation:rating:read"],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "حارس ربط ملكية مختبر — subject_public_id من الاستعلام بلا ربط"
+    }
+  ]
+}

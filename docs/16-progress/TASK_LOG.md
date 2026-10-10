@@ -1,3 +1,19 @@
+# 2026-10-10 — CLM-0521 — ADR-069 المرحلة الثانية · الجزء الأول: حارس وصيغة قوائم سماح الحدّ
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** بدء المرحلة 2 من ADR-069 (§6-2): صيغة مدخلات قائمة سماح الحدّ `packages/channel-edge/allowlist/<surface>.json` + حارس `edge-allowlist-guard` + اختبارات طفرات. قائمة الإنتاج تفتح O فقط؛ P مفتوحة مشروطًا بدليل E-20 لم يُكتب بعد؛ W/N/ADM محجوبة حتى G-ENF/المرحلة 4. الحارس يقارن القوائم بمسارات المستقبلين الفعليين (قراءة الشفرة)، ونداءات التطبيقات (الفحص 24 · `app_api_routes.py`)، وباب انحراف العرض التاريخي (`route-enforcement.json` لقطة تاريخية لا مصدر حقيقة). لا مسارات حدّ ولا تركيب بوتات ولا توصيل تطبيقات في هذا الجزء.
+- **Owner decision record:** المالك (@skyosv10-art) منح تفويضًا تنفيذيًا مكتوبًا كاملًا في المحادثة بتاريخ 2026-10-10: «اعتبر هذا تفويضًا تنفيذيًا كاملًا لك في كل الأعمال الفنية والتنفيذية... لا تنتظر موافقتي على أي قرار فني أو تنفيذي عادي... تحرّك تلقائيًا عبر البنود بالترتيب الذي تفرضه الخارطة». سابقة المرحلة 1 (CLM-0519) نفّذت بنفس السلطة ووافق عليها المراجع التقني xuuux-voox (PR #677 APPROVED). المرحلة 2 تُنفَّذ بموجب هذا التفويض؛ مراحل 3 و4 و5 تبقى بقرار مالك مستقل حرفيًا.
+- **Changed (units):** `packages/channel-edge/allowlist/` (3 ملفات)، `scripts/checks/lib/edge_allowlist_guard.py`، `scripts/checks/validate-edge-allowlist.sh`، `scripts/checks/lib/gov-cases-edge-allowlist.sh`، `scripts/checks/test-governance.sh`، `scripts/checks/verify-governance.sh` (الفحص 28)، `docs/12-testing/EDGE_ALLOWLIST.md`، `docs/12-testing/BASELINE.json`/`.txt` + `baseline-sources/2026-10-10T045000Z-verify-clm-0521.txt`، `docs/15-decisions/ADR-069-*.md`، `docs/16-progress/` ledgers، `ROADMAP.md`.
+- **Tests:** الحارس 28: 29 مدخلًا مطابقًا؛ 6 حالات طفرة (PASS=6 FAIL=0)؛ `verify-governance.sh` كل الفحوص نجحت؛ typecheck وtests (6066 اختبارًا/429 ملفًا) نجحت محليًا بلا PostgreSQL؛ التكامل على PG يُقاس في CI فقط.
+- **Security / Data / Deployment:** لا تغيير إنتاج ولا Render ولا ترحيل. لا أسرار. التوكَنات ومفاتيح Render التي زوّد بها المالك المحادثة لم تُستخدم ولم تُخزَّن في المستودع.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md`
+- **Deployment:** none
+- **Next:** إتمام التنفيذ وقياس CI الفعلي؛ الجزء الثاني (حزمة channel-edge وتركيب البوتين وتهيئة main.tsx وapp-edge-e2e) مطالبة مستقلة.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0520 — أحكام ما بعد الدمج: CLM-0519 (PR #677)
 
 - **Work Item(s):** M3-09

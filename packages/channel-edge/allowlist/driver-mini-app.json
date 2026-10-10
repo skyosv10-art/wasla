@@ -1,0 +1,254 @@
+{
+  "$comment": [
+    "ADR-069 §2.8 · المرحلة 2 · CLM-0521 — قائمة سماح حدّ القناة لسطح تطبيق السائق.",
+    "production_open تعني أن الحد يفتح المسار في بيئة الإنتاج الحالية (المستقبل في off).",
+    "القاعدة: O فقط تُفتح، وW/N محجوبة حتى G-ENF/حارس ربط مختبر. الحالة الحالية: كل المدخلات production_open=false.",
+    "فتح مدخلات O يتطلب حالات E-18/E-19 على المستقبل في off ضمن حزمة app-edge-e2e (الجزء الثاني من المرحلة 2).",
+    "evidence_tests تشير إلى ملفات موجودة فعلًا في المستودع؛ الحارس يتحقق من وجودها."
+  ],
+  "surface": "driver-mini-app",
+  "entries": [
+    {
+      "method": "GET",
+      "path": "/drivers/:waslaPublicId",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:profile:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/drivers/:waslaPublicId",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:profile:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/drivers/:waslaPublicId/zones",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:zone:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-profile.test.ts",
+          "case": "يستبدل المناطق ويعيدها مغلَّفة بمفتاح zones"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/drivers/:waslaPublicId/zones",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:zone:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-profile.test.ts",
+          "case": "قوائم السائق المجهول 404 لا قائمة فارغة"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/drivers/:waslaPublicId/vehicles",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:vehicle:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-vehicles.test.ts",
+          "case": "مركبة لسائق مجهول 404 قبل أي كتابة"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/drivers/:waslaPublicId/vehicles",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:vehicle:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-vehicles.test.ts",
+          "case": "يرفض التسجيل بلا رأس منع تكرار وبصنف مجهول"
+        }
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/drivers/:waslaPublicId/vehicles/:vehicleId",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:vehicle:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-vehicles.test.ts",
+          "case": "يرفض التعديل الفارغ ومركبة مجهولة بـ404"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/drivers/:waslaPublicId/documents",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:document:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-documents.test.ts",
+          "case": "ترفض وثيقة مجهولة بـ404 ومعرّفاً غير UUID بـ400"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/drivers/:waslaPublicId/documents",
+      "service": "drivers",
+      "class": "O",
+      "required_scopes": [
+        "drivers:document:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/drivers/src/__tests__/http-documents.test.ts",
+          "case": "تعيد القائمة الوثائق كلها بما فيها المستبدلة"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/orders/drivers/:driverPublicId/jobs",
+      "service": "orders",
+      "class": "O",
+      "required_scopes": [
+        "orders:driver-jobs:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/orders/src/__tests__/http/driver-jobs.test.ts",
+          "case": "rejects a token whose beneficiary is a different driver (404, not 403)"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/dispatch/offers/:offer_id/accept",
+      "service": "dispatch",
+      "class": "W",
+      "required_scopes": [
+        "dispatch:offer:accept"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/dispatch/src/__tests__/user-assertion-ownership.test.ts",
+          "case": "a mismatched driver is logged and passes"
+        }
+      ],
+      "blocked_until": "G-ENF(dispatch) — assertOfferDriver لا يعمل في off"
+    },
+    {
+      "method": "POST",
+      "path": "/dispatch/offers/:offer_id/reject",
+      "service": "dispatch",
+      "class": "W",
+      "required_scopes": [
+        "dispatch:offer:reject"
+      ],
+      "production_open": false,
+      "evidence_tests": [
+        {
+          "file": "services/dispatch/src/__tests__/user-assertion-ownership.test.ts",
+          "case": "accept passes without an assertion, exactly as before"
+        }
+      ],
+      "blocked_until": "G-ENF(dispatch) — assertOfferDriver لا يعمل في off"
+    },
+    {
+      "method": "GET",
+      "path": "/dispatch/jobs/:job_id",
+      "service": "dispatch",
+      "class": "N",
+      "required_scopes": [
+        "dispatch:job:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق"
+    },
+    {
+      "method": "GET",
+      "path": "/dispatch/jobs/:job_id/offers",
+      "service": "dispatch",
+      "class": "N",
+      "required_scopes": [
+        "dispatch:job:read"
+      ],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق"
+    },
+    {
+      "method": "POST",
+      "path": "/dispatch/jobs/:job_id/cancel",
+      "service": "dispatch",
+      "class": "N",
+      "required_scopes": [
+        "dispatch:job:cancel"
+      ],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "حارس ربط ملكية مختبر — إلغاء فعل كتابة على مهمة أي سائق"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/:orderId/transitions",
+      "service": "orders",
+      "class": "N",
+      "required_scopes": [
+        "orders:transition:write"
+      ],
+      "production_open": false,
+      "evidence_tests": [],
+      "blocked_until": "حارس ربط ملكية مختبر — لا ربط بالسائق المسند"
+    }
+  ]
+}

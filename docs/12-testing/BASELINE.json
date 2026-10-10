@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-09T16:45:19Z",
+  "generated_at": "2026-10-10T04:50:08Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "e0ff777d6c1cab272b6d315087c07e784af06a2b",
-    "branch": "feat/clm-0519-identity-session-routes",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "CLM-0519: generated on feat/clm-0519-identity-session-routes from main d3fb79fe; dynamic counts measured from verify run on this branch (5745 tests, 405 files, governance suite 580 cases 1 failed at time of capture before policy.test counts fix; CI on main is the binding verdict). repo.commit must resolve on main after squash merge (RISK-0028).",
-    "tracked_files": 3170
+    "commit": "ea3d8b79353054a1bb4c59835a0daa839311d242",
+    "branch": "feat/clm-0521-edge-allowlist-guard",
+    "dirty": true,
+    "dirty_files": 16,
+    "dirty_reason": "CLM-0521: الحارس 28 (edge-allowlist-guard) — عدّاد governance_checks 27→28 · CASES 580→586 بقرارٍ مكتوب (TASK_LOG · EDGE_ALLOWLIST.md)",
+    "tracked_files": 3179
   },
   "env": {
     "node": "v20.20.2",
@@ -29,18 +29,18 @@
     "test_files_tracked": 565,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
-    "governance_checks": 27,
+    "governance_checks": 28,
     "risks_not_closed": 23
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/baseline-sources/2026-10-09T162000Z-verify-clm-0519.txt",
-    "tests_passed": 5745,
-    "test_files_executed": 405,
-    "governance_suite_cases": 580,
+    "source": "docs/12-testing/baseline-sources/2026-10-10T045000Z-verify-clm-0521.txt",
+    "tests_passed": 6066,
+    "test_files_executed": 429,
+    "governance_suite_cases": 586,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:2e8818c93c54056bd2380b46463b5ea181dc2d39b0d356fdb58b183d0ffab518",
+  "fingerprint": "sha256:3437214d50b4bd8917cbf91820bc19c4b1d0eeb59f355f7b50697ed57bb98df8",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

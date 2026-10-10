@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """edge_allowlist_guard — الحارس 28 · قوائم سماح حدّ القناة (ADR-069 §6-2 · المرحلة 2 · CLM-0521).
 
-يقرأ قوائم `packages/channel-edge/allowlist/<surface>.json` ويحرسها ضد الشفرة الفعلية:
+يقرأ قوائم `packages/channel-edge/allowlist/<surface>.json` ويحرسها ضد الشفرة والقرار.
+كل إخفاق يُطبع برمز ثابت `[EA-…]` تطابقه حالات الطفرة بعينه:
 
-  (أ) مسار إنتاجي (production_open) بفئة W/N/ADM ⇒ إخفاق (P مسموحة مشروطة بدليل E-20).
-  (ب) المدخل يدعي فئةً تخالف التصنيف المقيس من شفرة الخدمة (ownerScoped/assertedX/scoped...) ⇒ إخفاق.
-  (ج) evidence_tests غائبة أو تشير إلى ملف/حالة غير موجودة ⇒ إخفاق.
-  (د) المسار لا يناديه التطبيق في الفحص 24 (app_api_routes.py) ⇒ إخفاق.
-  (هـ) المدخل خارج لقطة route-enforcement.json التاريخية بلا تعليل ⇒ إخفاق (باب انحراف العرض).
+  حالة الفتح  EA-OPEN-CLASS · EA-OPEN-TYPE · EA-FIELD · EA-BLOCKED-REASON
+  الفئة O     EA-O-E18 · EA-O-E19 (المسار نفسه، المستقبل off) · EA-EVID-O (E-23)
+  الفئة P     EA-P-E20 (تقييد المعاملات + المنشور فقط)
+  الفئة       EA-CLASS-CODE (مقيس من الشفرة) · EA-CLASS-SNAPSHOT · EA-ADM
+  الصلاحيات   EA-SCOPE-EMPTY · EA-SCOPE-UNKNOWN (كتالوج الخدمة) · EA-SCOPE-CODE (تطابق تام
+              مع حارس المسار) · EA-SCOPE-SNAPSHOT · EA-SCOPE-GRANT (PRODUCTION_GRANTS عند الفتح)
+  الوجهة      EA-SVC-SNAPSHOT · EA-SVC-ROUTE
+  الأدلة      EA-EVID-FILE · EA-EVID-CASE (it()/test() حيّة)
+  النداء      EA-CALL (الفحص 24) · EA-SNAPSHOT-NEW
 
 لا شبكة ولا git: قراءة قرص محضة — مرور أو إخفاق.
 المرجع: docs/12-testing/EDGE_ALLOWLIST.md · ADR-069 §2.8.
@@ -133,112 +138,307 @@ def _segment_match(app_path: str, entry_path: str) -> bool:
     return True
 
 
+# ── مصادر الحقيقة للصلاحيات ووجهة الخدمة ─────────────────────────────────────
+
+SURFACE_ROLE = {"customer-mini-app": "customer-bot", "driver-mini-app": "driver-bot"}
+BODY_METHODS = {"POST", "PUT", "PATCH"}
+# ADR-069 §7.2 E-20: معاملات يجب أن يرفضها الحد على مسارات P.
+E20_FORBIDDEN_PARAMS = ("state", "moderation_state", "visible_only", "owner_public_id")
+
+
+def scope_catalog(service: str) -> dict[str, str]:
+    """`X_SCOPES.key` → القيمة، من `services/<svc>/src/http/service-identity.ts`.
+
+    الكتالوج المعتمد للخدمة = ثوابت `*_SCOPES` المعلنة فيها، مقصورةً على ما يبدأ
+    بـ`<service>:` (صلاحياتها هي لا صلاحيات ما تناديه).
+    """
+    f = ROOT / "services" / service / "src" / "http" / "service-identity.ts"
+    if not f.exists():
+        return {}
+    src = f.read_text(encoding="utf-8")
+    out: dict[str, str] = {}
+    for m in re.finditer(r"export const (\w+_SCOPES)\s*=\s*\{(.*?)\}", src, re.S):
+        const, body = m.group(1), m.group(2)
+        for k, v in re.findall(r"(\w+):\s*\"([^\"]+)\"", body):
+            if v.startswith(f"{service}:"):
+                out[f"{const}.{k}"] = v
+    return out
+
+
+def guard_expression(service: str, method: str, path: str) -> str | None:
+    """جملة `config: <guard>(…)` كاملةً (أقواس متوازنة) للمسار في شفرة الخدمة."""
+    f = ROOT / "services" / service / "src" / "http" / "app.ts"
+    if not f.exists():
+        return None
+    src = f.read_text(encoding="utf-8")
+    rx = re.compile(r"app\." + method.lower() + r"\(\s*\"(/[^\"]*)\"")
+    for m in rx.finditer(src):
+        if norm(m.group(1)) != norm(path):
+            continue
+        i = src.find("config:", m.end())
+        if i < 0 or i - m.end() > 200:
+            continue
+        j = i + len("config:")
+        while j < len(src) and src[j].isspace():
+            j += 1
+        k = src.find("(", j)
+        depth, q = 0, k
+        while q < len(src):
+            if src[q] == "(":
+                depth += 1
+            elif src[q] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            q += 1
+        return " ".join(src[j : q + 1].split())
+    return None
+
+
+def resolve_scopes(expr: str, catalog: dict[str, str]) -> list[str] | None:
+    """وسائط الحارس → قيم الصلاحيات. ثابت غير محلول ⇒ None (فشل مغلق)."""
+    m = re.match(r"\w+\((.*)\)$", expr)
+    if not m:
+        return None
+    out: list[str] = []
+    for arg in [a.strip() for a in m.group(1).split(",") if a.strip()]:
+        lit = re.fullmatch(r"[\"'`]([^\"'`]+)[\"'`]", arg)
+        if lit:
+            out.append(lit.group(1))
+        elif arg in catalog:
+            out.append(catalog[arg])
+        else:
+            return None
+    return out
+
+
+def bot_grants(role: str, audience: str) -> set[str]:
+    """صلاحيات `role` على `audience` في `PRODUCTION_GRANTS` (packages/authz-policy/src/grants.ts)."""
+    src = (ROOT / "packages" / "authz-policy" / "src" / "grants.ts").read_text(encoding="utf-8")
+    src = re.sub(r"//[^\n]*", "", src)
+    m = re.search(r"\"?" + re.escape(role) + r"\"?\s*:\s*\[", src)
+    if not m:
+        return set()
+    depth, q = 0, m.end() - 1
+    while q < len(src):
+        if src[q] == "[":
+            depth += 1
+        elif src[q] == "]":
+            depth -= 1
+            if depth == 0:
+                break
+        q += 1
+    block = src[m.end() : q]
+    found: set[str] = set()
+    for g in re.finditer(r"audience:\s*\"([^\"]+)\"\s*,\s*scopes:\s*\[(.*?)\]", block, re.S):
+        if g.group(1) == audience:
+            found |= set(re.findall(r"\"([^\"]+)\"", g.group(2)))
+    return found
+
+
+# ── الأدلة ──────────────────────────────────────────────────────────────────
+
+def path_regex(entry_path: str) -> re.Pattern[str]:
+    """مسار المدخل → نمط يطابق نداءه في ملف اختبار (`:x` ⇒ قطعة واحدة، `${A}` مقبول)."""
+    parts = []
+    for seg in entry_path.split("/"):
+        parts.append(r"[^/\s\"'`?]+" if seg.startswith(":") else re.escape(seg))
+    return re.compile("/".join(parts) + r"(?![\w-])")
+
+
+def in_ci_package(f: Path) -> bool:
+    """ملف `*.test.ts(x)` داخل حزمة مساحة عمل لها سكربت `test` — أي أن CI يشغّله."""
+    if not re.search(r"\.(test|spec)\.(ts|tsx)$", f.name):
+        return False
+    d = f.parent
+    while d != ROOT and d != d.parent:
+        pj = d / "package.json"
+        if pj.exists():
+            try:
+                return "test" in (json.loads(pj.read_text(encoding="utf-8")).get("scripts") or {})
+            except Exception:
+                return False
+        d = d.parent
+    return False
+
+
+def case_is_live_test(src: str, case: str) -> bool:
+    """العنوان حالة `it(`/`test(` فعلية — لا تعليق ولا `it.skip`/`it.todo`."""
+    q = r"[\"'`]" + re.escape(case) + r"[\"'`]"
+    live = re.search(r"(?<![\w.])(?:it|test)\(\s*" + q, src)
+    dead = re.search(r"(?:it|test)\.(?:skip|todo)\(\s*" + q, src)
+    return bool(live) and not dead
+
+
+def evidence_for(e: dict, proof: str, tag: str, need_off: bool) -> list[str]:
+    """أخطاء دليل `proof` للمسار نفسه؛ قائمة فارغة = دليل صريح مستوفٍ."""
+    route = f"{e['method']} {e['path']}"
+    cands = [t for t in e.get("evidence_tests", []) if proof in (t.get("proves") or [])]
+    if not cands:
+        return [f"لا دليل {proof} معلن (proves) على هذا المسار"]
+    problems: list[str] = []
+    for t in cands:
+        why: list[str] = []
+        if t.get("route") != route:
+            why.append(f"route={t.get('route')!r} لا يساوي {route!r}")
+        f = ROOT / str(t.get("file", ""))
+        if not f.is_file():
+            why.append(f"الملف غير موجود: {t.get('file')}")
+        else:
+            src = f.read_text(encoding="utf-8")
+            if not in_ci_package(f):
+                why.append("الملف ليس ملف اختبار في حزمة يشغّلها CI")
+            if not t.get("case") or not case_is_live_test(src, t["case"]):
+                why.append("الحالة ليست it()/test() حيّة في الملف")
+            if not path_regex(e["path"]).search(src):
+                why.append("الملف لا ينادي المسار نفسه")
+            if need_off:
+                if t.get("receiver_mode") != "off":
+                    why.append(f"receiver_mode={t.get('receiver_mode')!r} لا 'off'")
+                if "WASLA_USER_ASSERTION_MODE" not in src or not re.search(r"[\"'`]off[\"'`]", src):
+                    why.append("الملف لا يضبط WASLA_USER_ASSERTION_MODE=off")
+            if proof == "E-20:params":
+                missing = [p for p in E20_FORBIDDEN_PARAMS if p not in src]
+                if missing:
+                    why.append(f"لا يختبر رفض المعاملات {missing}")
+                if "400" not in src:
+                    why.append("لا يؤكد 400 من الحد")
+        if not why:
+            return []
+        problems.append(f"{t.get('file')}: " + "؛ ".join(why))
+    return problems
+
+
 def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
     path = ALLOWLIST_DIR / f"{surface}.json"
     if not path.exists():
-        fail(f"{surface}: الملف مفقود")
+        fail(f"[EA-FILE] {surface}: الملف مفقود")
         return
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("surface") != surface:
-        fail(f"{surface}: حقل surface لا يطابق اسم الملف")
+        fail(f"[EA-FILE] {surface}: حقل surface لا يطابق اسم الملف")
 
     entries = data.get("entries", [])
     if not entries:
-        fail(f"{surface}: قائمة فارغة — لا يوثّق الحارس شيئًا")
+        fail(f"[EA-FILE] {surface}: قائمة فارغة — لا يوثّق الحارس شيئًا")
+
+    snap = json.loads(HISTORICAL.read_text(encoding="utf-8")) if HISTORICAL.exists() else None
+    if snap is None:
+        fail("[EA-SNAPSHOT-MISSING] لقطة route-enforcement.json مفقودة — لا مصدر تاريخي للفئة والخدمة (فشل مغلق)")
+    role = SURFACE_ROLE[surface]
 
     for e in entries:
         tag = f"{surface} {e.get('method')} {e.get('path')}"
-        for field in ("method", "path", "service", "class", "required_scopes", "evidence_tests"):
-            if field not in e:
-                fail(f"{tag}: الحقل {field} غائب")
-        if e.get("class") not in ("O", "P", "W", "N", "ADM"):
-            fail(f"{tag}: فئة غير معروفة")
+        missing = [f for f in ("method", "path", "service", "class", "required_scopes",
+                               "evidence_tests", "production_open") if f not in e]
+        if missing:
+            fail(f"[EA-FIELD] {tag}: حقول غائبة {missing}")
             continue
-        if e.get("class") == "ADM":
-            fail(f"{tag}: ADM في قائمة تطبيق Mini App — إدارة تُدار في admin-edge (المرحلة 4)")
+        if e["class"] not in ("O", "P", "W", "N", "ADM"):
+            fail(f"[EA-CLASS-UNKNOWN] {tag}: فئة غير معروفة {e['class']!r}")
+            continue
+        if e["class"] == "ADM":
+            fail(f"[EA-ADM] {tag}: ADM في قائمة تطبيق Mini App — إدارة تُدار في admin-edge (المرحلة 4)")
 
-        # (أ) فتح إنتاجي لفئة محجوبة
-        if e.get("production_open") and e.get("class") not in PRODUCTION_OPEN_CLASSES:
-            fail(f"{tag}: production_open=true لفئة {e['class']} — محجوبة حتى G-ENF/حارس مختبر")
-        # الدليلُ شرطُ حصرٍ لا شرطَ فتحٍ: فئةُ O تُعلِنُ حصرَ القراءةِ إلى مالكِهِ
-        # (ownerScoped)، ولا يُقبلُ بديعٌ لمسارٍ مصنَّفٍ O بلا اختبارٍ يقيسُ
-        # هذا الحصرَ (فحصُ E-23). ``production_open=false`` يُعلِنُ انسدادَ الحدِّ
-        # الحاليَّ لا غيابَ الدليلِ — وإلّا فيستطيعُ مسرِّحٌ إخفاءَ فئةِ P خلفَ
-        # ``false`` بلا دليلٍ.
-        if e.get("class") == "O" and not e.get("evidence_tests"):
-            fail(f"{tag}: فئة O بلا evidence_tests — الدليلُ يقيسُ حصرَ القراءةِ (E-23)")
+        # ── حالة الفتح ───────────────────────────────────────────────────
+        opened = e["production_open"]
+        if not isinstance(opened, bool):
+            fail(f"[EA-OPEN-TYPE] {tag}: production_open={opened!r} ليست true/false حرفيًا")
+            opened = True  # فشل مغلق: قيمة ملتبسة تُعامل كفتح فتُفحص أبوابه كلها
+        if opened and e["class"] not in PRODUCTION_OPEN_CLASSES:
+            fail(f"[EA-OPEN-CLASS] {tag}: production_open لفئة {e['class']} — محجوبة حتى G-ENF/حارس مختبر")
 
-        # (ب) مواءمة الفئة مع الشفرة
-        svc_routes = service_routes(e["service"])
-        key = (e["method"], norm(e["path"]))
-        hit = svc_routes.get(key)
-        if hit is None:
-            # جرب المواءمة المرنة (بارامتر بأسماء مختلفة)
-            for (m, p), guard in svc_routes.items():
-                if m == e["method"] and norm(p) == norm(e["path"]):
-                    hit = guard
-                    break
-        if hit is None:
-            fail(f"{tag}: لا مسار مطابق في services/{e['service']}/src/http/app.ts")
-        else:
-            measured = measured_class(e, hit)
-            if measured != e["class"]:
-                fail(
-                    f"{tag}: الفئة المعلنة {e['class']} تخالف المقيس من الشفرة "
-                    f"({hit.strip()[:-1]} ⇒ {measured})"
-                )
+        # O: E-18 لكل مسار، وE-19 لكل مسار يقبل جسمًا (ADR-069 §7.2)، والمستقبل في off.
+        if opened and e["class"] == "O":
+            for why in evidence_for(e, "E-18", tag, need_off=True):
+                fail(f"[EA-O-E18] {tag}: فتح O بلا دليل E-18 صريح — {why}")
+            if e["method"] in BODY_METHODS:
+                for why in evidence_for(e, "E-19", tag, need_off=True):
+                    fail(f"[EA-O-E19] {tag}: فتح O يقبل جسمًا بلا دليل E-19 صريح — {why}")
+        # P: E-20 بشقيه — معاملات مقيدة، وجواب لا يحوي إلا المنشور.
+        e20_ok = False
+        if e["class"] == "P":
+            p1 = evidence_for(e, "E-20:params", tag, need_off=False)
+            p2 = evidence_for(e, "E-20:published-only", tag, need_off=False)
+            e20_ok = not p1 and not p2
+            if opened:
+                for why in p1:
+                    fail(f"[EA-P-E20] {tag}: فتح P بلا دليل تقييد المعاملات (E-20) — {why}")
+                for why in p2:
+                    fail(f"[EA-P-E20] {tag}: فتح P بلا دليل «المنشور فقط» (E-20) — {why}")
+        if not opened and e["class"] != "O" and not e.get("blocked_until"):
+            fail(f"[EA-BLOCKED-REASON] {tag}: مدخل مغلق غير O بلا blocked_until")
 
-        # (ج) evidence_tests موجودة فعلًا
-        for t in e.get("evidence_tests", []):
-            f = ROOT / t["file"]
-            if not f.exists():
-                fail(f"{tag}: ملف الدليل غير موجود: {t['file']}")
-            else:
-                src = f.read_text(encoding="utf-8")
-                if t.get("case") and t["case"] not in src:
-                    fail(f"{tag}: حالة الدليل غير موجودة في {t['file']}: {t['case'][:60]}…")
+        # الدليل شرط حصر: كل مدخل O يحمل اختبار ملكية ولو كان مغلقًا (E-23).
+        if e["class"] == "O" and not e["evidence_tests"]:
+            fail(f"[EA-EVID-O] {tag}: فئة O بلا evidence_tests — الدليل يقيس حصر الملكية (E-23)")
 
-        # (د) التطبيق ينادي المسار (الفحص 24)
-        called = any(
-            app == surface and method == e["method"] and norm(a_path) == norm(e["path"])
-            for app, method, a_path in app_calls
-        )
-        if not called:
-            # مسارات الفحص 24 تحذف أسماء البارامترات (`:` بلا اسم) — مواءمة القطع،
-            # وقطعةٌ حرفيّةٌ في مسار التطبيق تقبل بارامترًا مطابقًا في المدخل
-            # (`/reputation/scores/customer/:` يقابل `:subjectType/:subjectPublicId`).
-            called = any(
-                app == surface
-                and method == e["method"]
-                and _segment_match(a_path, e["path"])
-                for app, method, a_path in app_calls
-            )
-        if not called:
-            fail(f"{tag}: التطبيق لا ينادي هذا المسار (الفحص 24)")
-
-        # (هـ) باب انحراف العرض التاريخي
-        if HISTORICAL.exists():
-            snap = json.loads(HISTORICAL.read_text(encoding="utf-8"))
-            row = next(
-                (
-                    r
-                    for r in snap["routes"]
-                    if r["app"] == surface
-                    and r["method"] == e["method"]
-                    and norm(r["path"]) == norm(e["path"])
-                ),
-                None,
-            )
+        # ── وجهة الخدمة: التاريخي والمقيس ────────────────────────────────
+        row = None
+        if snap is not None:
+            row = next((r for r in snap["routes"] if r["app"] == surface and r["method"] == e["method"]
+                        and norm(r["path"]) == norm(e["path"])), None)
             if row is None:
-                fail(
-                    f"{tag}: مدخل جديد خارج لقطة route-enforcement.json — "
-                    "يتعين تعليله في $comment أو تحديث اللقطة بقرار"
-                )
-            elif row["klass"] != e["class"]:
-                fail(
-                    f"{tag}: الفئة {e['class']} تخالف اللقطة التاريخية {row['klass']} "
-                    "— التصنيف تغيّر ويحتاج قرارًا موثقًا"
-                )
+                fail(f"[EA-SNAPSHOT-NEW] {tag}: مدخل خارج لقطة route-enforcement.json — يحتاج قرارًا موثقًا")
+            else:
+                if row["service"] != e["service"]:
+                    fail(f"[EA-SVC-SNAPSHOT] {tag}: الخدمة {e['service']!r} تخالف وجهة اللقطة "
+                         f"{row['service']!r} — تغيير الوجهة قرار لا تعديل قائمة")
+                if row["klass"] != e["class"]:
+                    fail(f"[EA-CLASS-SNAPSHOT] {tag}: الفئة {e['class']} تخالف اللقطة {row['klass']}")
+        expr = guard_expression(e["service"], e["method"], e["path"])
+        if expr is None:
+            fail(f"[EA-SVC-ROUTE] {tag}: لا مسار مطابق في services/{e['service']}/src/http/app.ts")
+        else:
+            measured = classify_guard(expr)
+            if measured == "N" and e["class"] == "P" and (e.get("blocked_until") or e20_ok):
+                measured = "P"
+            if measured != e["class"]:
+                fail(f"[EA-CLASS-CODE] {tag}: الفئة المعلنة {e['class']} تخالف المقيس ({expr} ⇒ {measured})")
+
+        # ── الصلاحيات ────────────────────────────────────────────────────
+        scopes = e["required_scopes"]
+        catalog = scope_catalog(e["service"])
+        approved = set(catalog.values())
+        if not isinstance(scopes, list) or not scopes or not all(isinstance(x, str) and x for x in scopes):
+            fail(f"[EA-SCOPE-EMPTY] {tag}: required_scopes يجب أن تكون قائمة نصوص غير فارغة")
+            scopes = []
+        elif len(set(scopes)) != len(scopes):
+            fail(f"[EA-SCOPE-DUP] {tag}: صلاحيات مكررة {scopes}")
+        unknown = [x for x in scopes if x not in approved]
+        if unknown:
+            fail(f"[EA-SCOPE-UNKNOWN] {tag}: {unknown} ليست في كتالوج صلاحيات {e['service']} المعتمد")
+        if expr is not None:
+            code_scopes = resolve_scopes(expr, catalog)
+            if code_scopes is None:
+                fail(f"[EA-SCOPE-CODE] {tag}: تعذّر حل صلاحيات الحارس {expr} من الكتالوج (فشل مغلق)")
+            elif sorted(code_scopes) != sorted(scopes):
+                fail(f"[EA-SCOPE-CODE] {tag}: required_scopes {scopes} ≠ صلاحيات المسار في الشفرة {code_scopes}")
+        if row is not None:
+            snap_scopes = resolve_scopes(row["guard"], scope_catalog(row["service"]))
+            if snap_scopes is None or sorted(snap_scopes) != sorted(scopes):
+                fail(f"[EA-SCOPE-SNAPSHOT] {tag}: required_scopes {scopes} ≠ صلاحيات اللقطة "
+                     f"({row['guard']} ⇒ {snap_scopes}) — تغيير الإذن يحتاج قرارًا موثقًا")
+        if opened:
+            granted = bot_grants(role, e["service"])
+            lacking = [x for x in scopes if x not in granted]
+            if lacking:
+                fail(f"[EA-SCOPE-GRANT] {tag}: فتح بلا منح {lacking} للدور {role} على {e['service']} في PRODUCTION_GRANTS")
+
+        # ── الأدلة المعلنة موجودة فعلًا ──────────────────────────────────
+        for t in e["evidence_tests"]:
+            f = ROOT / str(t.get("file", ""))
+            if not f.is_file():
+                fail(f"[EA-EVID-FILE] {tag}: ملف الدليل غير موجود: {t.get('file')}")
+            elif t.get("case") and not case_is_live_test(f.read_text(encoding="utf-8"), t["case"]):
+                fail(f"[EA-EVID-CASE] {tag}: الحالة ليست it()/test() حيّة في {t['file']}: {t['case'][:60]}…")
+
+        # ── التطبيق ينادي المسار (الفحص 24) ─────────────────────────────
+        called = any(app == surface and method == e["method"]
+                     and (norm(a_path) == norm(e["path"]) or _segment_match(a_path, e["path"]))
+                     for app, method, a_path in app_calls)
+        if not called:
+            fail(f"[EA-CALL] {tag}: التطبيق لا ينادي هذا المسار (الفحص 24)")
 
 
 def main() -> int:

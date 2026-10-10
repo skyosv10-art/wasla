@@ -1,3 +1,17 @@
+# 2026-10-10 — CLM-0521 (تشديد قبل الدمج) + CLM-0522 (مصدر الأساس) — الحارس 28: أبواب الفتح والصلاحيات ووجهة الخدمة
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Done (بانتظار مراجعة CODEOWNERS ودمج PR #679)
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** طلب المالك قبل دمج PR #679 أن يثبت CI أن الحارس 28 يمنع أي تغيير في الفئة أو الإذن أو وجهة الخدمة أو حالة الفتح بلا دليل وقرار. الحارس السابق لم يقارن الصلاحيات ولا الوجهة، وكان يقبل فتح O بأي دليل، وطفراته تتحقق من رمز الخروج وحده.
+- **Changed (units):** `scripts/checks/lib/edge_allowlist_guard.py` (أبواب برموز `[EA-…]`: O ⇐ E-18 (+E-19 للمسارات ذات الجسم) للمسار نفسه والمستقبل `off`؛ P ⇐ شقّا E-20؛ الصلاحيات: كتالوج الخدمة + تطابق تام مع الشفرة واللقطة + منح `PRODUCTION_GRANTS` عند الفتح؛ الوجهة: اللقطة + `app.ts`؛ `production_open` حرفيًا منطقية؛ الحالات `it()` حيّة)، `scripts/checks/lib/gov-cases-edge-allowlist.sh` (38 حالة تطابق رمز الباب)، `packages/channel-edge/allowlist/driver-mini-app.json` (تصحيح `dispatch:job:read` → `dispatch:offer:read` على `GET /dispatch/jobs/:job_id/offers` — قيمة الشفرة واللقطة)، `packages/channel-edge/allowlist/README.md`، `docs/12-testing/EDGE_ALLOWLIST.md`، دليل CLM-0521 §3.6، `BASELINE.json/.txt` + مصدر قياس جديد (CLM-0522).
+- **Not changed:** لا مدخل فُتح (29 كلها `production_open: false`)، لا توسيع للقائمة، لا Channel Edge ولا بوتات ولا تطبيقات.
+- **Decision recorded:** E-19 مشروط بالمسارات التي تقبل جسمًا (`POST`/`PUT`/`PATCH`) كما يعرّفه ADR-069 §7.2 حرفيًا؛ مسارات O من نوع `GET`/`DELETE` تحتاج E-18 فقط.
+- **Tests:** الحالات الـ38 محليًا 38/0؛ إثبات عكسي: تعطيل كل باب جديد يُسقط حالاته (الجدول في §3.6). حزمة الحوكمة الكاملة وverify.sh وحكم CI في الدليل §4.
+- **Security / Data / Deployment:** لا تغيير إنتاج ولا أسرار.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md` §3.6 · §4
+
 # 2026-10-10 — CLM-0521 — ADR-069 المرحلة الثانية · الجزء الأول: حارس وصيغة قوائم سماح الحدّ
 
 - **Work Item(s):** M3-09

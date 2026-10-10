@@ -220,7 +220,7 @@
       "service": "dispatch",
       "class": "N",
       "required_scopes": [
-        "dispatch:job:read"
+        "dispatch:offer:read"
       ],
       "production_open": false,
       "evidence_tests": [],

@@ -135,3 +135,12 @@ vulnerabilities:
     paths: *esbuild_paths
     statement: *esbuild_statement
     expired_at: 2026-12-15
+  # CLM-0521 (2026-10-10): ثالثةُ الفئةِ نفسِها — CVE-2026-78669 (net/http: DoS عبرَ
+  # HTTP/2 SETTINGS؛ منشورةٌ 2026-10-08، إصلاحُها في Go 1.26.9/1.27.2 نفسِها) قاسَها
+  # الشوطُ 38027283059 على PR هذه. لا إصدارَ esbuild مبنيّاً بمكتبةٍ مصحّحةٍ بعدُ
+  # (0.28.2 = go1.26.5) — الاستثناءُ من الحَجزِ لا من القياسِ، والمهلةُ تعضُّ معَ
+  # بقيةِ الفئةِ.
+  - id: CVE-2026-78669
+    paths: *esbuild_paths
+    statement: *esbuild_statement
+    expired_at: 2026-12-15

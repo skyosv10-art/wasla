@@ -1,3 +1,45 @@
+# 2026-10-10 — CLM-0521 — قاعدة E-18/E-19 النهائية: E-19 يتبع عقد قبول الجسم لا الطريقة
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Done (بانتظار مراجعة CODEOWNERS جديدة ودمج PR #679)
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** قرار المالك قبل الدمج: E-18 لكل مسار O يُفتح. E-19 لكل مسار O يقبل عقده جسمًا يمكن أن يحمل هوية أو يؤثر في الملكية. لا E-19 لـ`GET`/`DELETE` لمجرد كونه O. ولا تعميم. كان الحارس يربط E-19 بالطريقة (`POST`/`PUT`/`PATCH`)، فيمرّ منه مسار `GET`/`DELETE` يقرأ جسمًا.
+- **Changed (units):** ADR-069 §2.8 (صياغة القاعدة)، `scripts/checks/lib/edge_allowlist_guard.py` (`measured_accepts_body` + الباب `EA-BODY-CONTRACT` + E-19 من العقد + حقل هوية §7.2 في دليل E-19)، `packages/channel-edge/allowlist/*.json` (حقل `accepts_body` المقيس فقط، 29 مدخلًا، كلها مغلقة)، `scripts/checks/lib/gov-cases-edge-allowlist.sh` (49 حالة)، `docs/12-testing/EDGE_ALLOWLIST.md`، README القوائم، دليل CLM-0521 §3.7.
+- **Not changed:** لا فتح ولا توسيع ولا Channel Edge ولا تطبيقات.
+- **Tests:** الحالات الـ49 محليًا 49/0، والإثبات العكسي في §3.7. الحزمة الكاملة وحكم CI في §4.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md` §3.7 · §4
+
+# 2026-10-10 — CLM-0521 (تشديد قبل الدمج) + CLM-0522 (مصدر الأساس) — الحارس 28: أبواب الفتح والصلاحيات ووجهة الخدمة
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Done (بانتظار مراجعة CODEOWNERS ودمج PR #679)
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** طلب المالك قبل دمج PR #679 أن يثبت CI أن الحارس 28 يمنع أي تغيير في الفئة أو الإذن أو وجهة الخدمة أو حالة الفتح بلا دليل وقرار. الحارس السابق لم يقارن الصلاحيات ولا الوجهة، وكان يقبل فتح O بأي دليل، وطفراته تتحقق من رمز الخروج وحده.
+- **Changed (units):** `scripts/checks/lib/edge_allowlist_guard.py` (أبواب برموز `[EA-…]`: O ⇐ E-18 (+E-19 للمسارات ذات الجسم) للمسار نفسه والمستقبل `off`؛ P ⇐ شقّا E-20؛ الصلاحيات: كتالوج الخدمة + تطابق تام مع الشفرة واللقطة + منح `PRODUCTION_GRANTS` عند الفتح؛ الوجهة: اللقطة + `app.ts`؛ `production_open` حرفيًا منطقية؛ الحالات `it()` حيّة)، `scripts/checks/lib/gov-cases-edge-allowlist.sh` (38 حالة تطابق رمز الباب)، `packages/channel-edge/allowlist/driver-mini-app.json` (تصحيح `dispatch:job:read` → `dispatch:offer:read` على `GET /dispatch/jobs/:job_id/offers` — قيمة الشفرة واللقطة)، `packages/channel-edge/allowlist/README.md`، `docs/12-testing/EDGE_ALLOWLIST.md`، دليل CLM-0521 §3.6، `BASELINE.json/.txt` + مصدر قياس جديد (CLM-0522).
+- **Not changed:** لا مدخل فُتح (29 كلها `production_open: false`)، لا توسيع للقائمة، لا Channel Edge ولا بوتات ولا تطبيقات.
+- **Decision recorded:** E-19 مشروط بالمسارات التي تقبل جسمًا (`POST`/`PUT`/`PATCH`) كما يعرّفه ADR-069 §7.2 حرفيًا؛ مسارات O من نوع `GET`/`DELETE` تحتاج E-18 فقط.
+- **Tests:** الحالات الـ38 محليًا 38/0؛ إثبات عكسي: تعطيل كل باب جديد يُسقط حالاته (الجدول في §3.6). حزمة الحوكمة الكاملة وverify.sh وحكم CI في الدليل §4.
+- **Security / Data / Deployment:** لا تغيير إنتاج ولا أسرار.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md` §3.6 · §4
+
+# 2026-10-10 — CLM-0521 — ADR-069 المرحلة الثانية · الجزء الأول: حارس وصيغة قوائم سماح الحدّ
+
+- **Work Item(s):** M3-09
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** In Progress
+- **Risk(s):** RISK-0042 → open (لا تغيير)
+- **What / Why:** بدء المرحلة 2 من ADR-069 (§6-2): صيغة مدخلات قائمة سماح الحدّ `packages/channel-edge/allowlist/<surface>.json` + حارس `edge-allowlist-guard` + اختبارات طفرات. قائمة الإنتاج تفتح O فقط؛ P مفتوحة مشروطًا بدليل E-20 لم يُكتب بعد؛ W/N/ADM محجوبة حتى G-ENF/المرحلة 4. الحارس يقارن القوائم بمسارات المستقبلين الفعليين (قراءة الشفرة)، ونداءات التطبيقات (الفحص 24 · `app_api_routes.py`)، وباب انحراف العرض التاريخي (`route-enforcement.json` لقطة تاريخية لا مصدر حقيقة). لا مسارات حدّ ولا تركيب بوتات ولا توصيل تطبيقات في هذا الجزء.
+- **Owner decision record:** المالك (@skyosv10-art) منح تفويضًا تنفيذيًا مكتوبًا كاملًا في المحادثة بتاريخ 2026-10-10: «اعتبر هذا تفويضًا تنفيذيًا كاملًا لك في كل الأعمال الفنية والتنفيذية... لا تنتظر موافقتي على أي قرار فني أو تنفيذي عادي... تحرّك تلقائيًا عبر البنود بالترتيب الذي تفرضه الخارطة». سابقة المرحلة 1 (CLM-0519) نفّذت بنفس السلطة ووافق عليها المراجع التقني xuuux-voox (PR #677 APPROVED). المرحلة 2 تُنفَّذ بموجب هذا التفويض؛ مراحل 3 و4 و5 تبقى بقرار مالك مستقل حرفيًا.
+- **Changed (units):** `packages/channel-edge/allowlist/` (3 ملفات)، `scripts/checks/lib/edge_allowlist_guard.py`، `scripts/checks/validate-edge-allowlist.sh`، `scripts/checks/lib/gov-cases-edge-allowlist.sh`، `scripts/checks/test-governance.sh`، `scripts/checks/verify-governance.sh` (الفحص 28)، `docs/12-testing/EDGE_ALLOWLIST.md`، `docs/12-testing/BASELINE.json`/`.txt` + `baseline-sources/2026-10-10T045000Z-verify-clm-0521.txt`، `docs/15-decisions/ADR-069-*.md`، `docs/16-progress/` ledgers، `ROADMAP.md`.
+- **Tests:** الحارس 28: 29 مدخلًا مطابقًا؛ 6 حالات طفرة (PASS=6 FAIL=0)؛ `verify-governance.sh` كل الفحوص نجحت؛ typecheck وtests (6066 اختبارًا/429 ملفًا) نجحت محليًا بلا PostgreSQL؛ التكامل على PG يُقاس في CI فقط.
+- **Security / Data / Deployment:** لا تغيير إنتاج ولا Render ولا ترحيل. لا أسرار. التوكَنات ومفاتيح Render التي زوّد بها المالك المحادثة لم تُستخدم ولم تُخزَّن في المستودع.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-10T000000Z-clm-0521-edge-allowlist-guard/README.md`
+- **Deployment:** none
+- **Next:** إتمام التنفيذ وقياس CI الفعلي؛ الجزء الثاني (حزمة channel-edge وتركيب البوتين وتهيئة main.tsx وapp-edge-e2e) مطالبة مستقلة.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-09 — CLM-0520 — أحكام ما بعد الدمج: CLM-0519 (PR #677)
 
 - **Work Item(s):** M3-09

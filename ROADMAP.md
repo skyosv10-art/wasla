@@ -1816,3 +1816,4 @@ Live measurement via 4 GitHub API endpoints at commit `814706a`:
 - GOV-002 ON HOLD; owner dependency A (independent reviewer/team valid as CODEOWNER) or B (CODEOWNERS redesign). NO-GO active.
 
 CLM-0598 (2026-10-18): إصلاحُ بنيةِ صفِّ M0-53 في اللوحةِ (استعادةُ 7 أعمدةٍ ونصِّ CLM-0595/0596 المفقودِ) · N2/G4 بلا «3/5» (عدّادانِ مستقلانِ) · تصحيحُ تشخيصِ فشلِ #748 (الالتزامُ سبقَ الحجزَ). راجع `docs/16-progress/TASK_LOG.md` (CLM-0598).
+CLM-0599 (2026-10-18): دقةُ فجواتِ G6/G7 (G6 جزئيًّا مسدودٌ — المتبقي بيئةٌ محليةٌ لا قرارٌ) + فحصُ CODEOWNERS: تصحيحُ G-S1/G-S3/G-S4 تطبيقُ ADR نافذٌ (نمطُ CLM-0590) ⇒ قابلٌ للتنفيذِ. راجع `docs/16-progress/TASK_LOG.md` (CLM-0599).

@@ -321,6 +321,38 @@ async function drain(deps: RelayDeps): Promise<void> {
     expect(p9).toMatchObject({ items: [], page: 9, total: 5 });
   });
 
+  // ── bounds of the approved decision (CLM-0652 · ADR-025 §6.8) ────────────
+
+  it("q bounds on PostgreSQL: one character finds by containment; a 200-character name is matched exactly", async () => {
+    const long = "ب".repeat(199) + "ن";
+    await approvedWithProduct(1, "baqala-noor", { ar: "بقالة النور" });
+    await approvedWithProduct(2, "long-name", { ar: long });
+    await approvedWithProduct(3, "maktaba", { ar: "مكتبة" });
+    await drain(deps);
+    expect(await slugs({ q: "ن" })).toEqual(["baqala-noor", "long-name"]);
+    expect(await slugs({ q: long })).toEqual(["long-name"]);
+    expect(() => parseStoreSearchRequest({ q: long + "ب" })).toThrow(/200/);
+  });
+
+  it("paging: default page_size 20, page_size 1 and 50, pages past the end and a page at 2^53-1 (bigint offset) keep the true total", async () => {
+    const N = 52;
+    for (let n = 1; n <= N; n += 1) await approvedWithProduct(n, `shop-${String(n).padStart(2, "0")}`, { ar: `محل رقم ${n}` });
+    await drain(deps);
+    const dflt = await search({ q: "محل" });
+    expect(dflt).toMatchObject({ page: 1, page_size: 20, total: N });
+    expect(dflt.items).toHaveLength(20);
+    const one = await search({ q: "محل", page_size: "1" });
+    expect(one.items.map((i) => i.store_slug)).toEqual(["shop-01"]);
+    const fifty = await search({ q: "محل", page_size: "50" });
+    expect(fifty.items).toHaveLength(50);
+    const fiftySecond = await search({ q: "محل", page_size: "50", page: "2" });
+    expect(fiftySecond.items.map((i) => i.store_slug)).toEqual(["shop-51", "shop-52"]);
+    // Pages beyond the old 50-page cap are valid now; past the last match → empty, true total.
+    expect(await search({ q: "محل", page: "51" })).toMatchObject({ items: [], page: 51, total: N });
+    const huge = await search({ q: "محل", page_size: "50", page: String(Number.MAX_SAFE_INTEGER) });
+    expect(huge).toMatchObject({ items: [], page: Number.MAX_SAFE_INTEGER, page_size: 50, total: N });
+  });
+
   // ── rebuild · duplicate delivery · stale event ───────────────────────────
 
   it("rebuildAll + replay refills the store-name model from events and the read port — no manual data", async () => {
@@ -438,6 +470,26 @@ async function drain(deps: RelayDeps): Promise<void> {
 
       const anonymous = await rawInject(fastify, { method: "GET", url: target });
       expect(anonymous.statusCode).toBe(401);
+
+      // Bounds through the route (CLM-0652): edges accepted, outside rejected, undeclared keys rejected.
+      for (const query of <Array<Record<string, string>>>[{ q: "ن" }, { q: "ب".repeat(200) }, { q: "نور", page: "1" }, { q: "نور", page: "1000" }, { q: "نور", page_size: "1" }, { q: "نور", page_size: "50" }]) {
+        const r = await inject(fastify, { method: "GET", url: "/search/stores", query });
+        expect(r.statusCode, JSON.stringify(query).slice(0, 60)).toBe(200);
+      }
+      const noSize = await inject(fastify, { method: "GET", url: "/search/stores", query: { q: "نور" } });
+      expect((noSize.json() as { page_size: number }).page_size).toBe(20);
+      for (const [query, code] of [
+        [{ q: "ب".repeat(201) }, "SEARCH_QUERY_TOO_LONG"],
+        [{ q: "نور", page: "0" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+        [{ q: "نور", page: "-1" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+        [{ q: "نور", page: "2.5" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+        [{ q: "نور", page_size: "51" }, "SEARCH_PAGE_SIZE_INVALID"],
+        [{ q: "نور", sort: "relevance" }, "SEARCH_UNKNOWN_PARAMETER"],
+      ] as const) {
+        const r = await inject(fastify, { method: "GET", url: "/search/stores", query });
+        expect(r.statusCode).toBe(400);
+        expect((r.json() as { code: string }).code).toBe(code);
+      }
     } finally {
       await closeApp();
     }

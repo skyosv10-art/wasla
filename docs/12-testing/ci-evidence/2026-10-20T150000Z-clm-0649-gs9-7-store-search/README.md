@@ -76,3 +76,8 @@ search وحدةٌ 174/174 · تكاملٌ 77/77 · contracts-search 22/22 · aut
 | Roadmap freshness [39409451631](https://github.com/skyosv10-art/wasla/actions/runs/39409451631) (main) | `1e50fce` | ناجحٌ | — |
 
 الخامُ: `raw/main-ci-1e50fce.json` · `raw/pr-795-ci.json`. **الحكمُ:** G-S9.7 **مدموجٌ بحكمِ CI على main**؛ التكاملُ عبرَ Channel Edge **غيرُ مُثبَتٍ** (T1)؛ **غيرُ منشورٍ**؛ مدخلُ P مغلقٌ؛ الإطلاقُ NO-GO.
+
+## 9. تصحيحٌ بالإضافةِ (2026-10-20 · CLM-0652)
+
+حدودُ العقدِ المذكورةُ في §2 (`q` 2..64 · `page` ≤ 50 · `page_size` ≤ 20 بافتراضِ 10) **لم تكن معتمَدةً** وخالفَتْ حدودَ `/search/products`؛ صحّحَها CLM-0652 بقرارِ المالكِ إلى `q` 1..200 · `page` ≥ 1 بلا حدٍّ أعلى · `page_size` 1..50 = 20 ([ADR-025 §6.8](../../../15-decisions/ADR-025-marketplace-search-read-model.md) · [دليلُ CLM-0652](../2026-10-20T200000Z-clm-0652-gs9-7-store-search-bounds/README.md)). ما سوى الحدودِ في هذا الدليلِ قائمٌ كما هو.
+

@@ -13,7 +13,13 @@ import { useSessionStore } from "../store/session";
 // Lesson of G-S9.18 (CLM-0643): a response only reaches the UI if it answers
 // the latest search — an older, slower response never replaces a newer one.
 
-export const STORE_SEARCH_MIN_LENGTH = 2;
+// Bounds of GET /search/stores (CLM-0652 · ADR-025 §6.8): q 1..200 code points
+// after trim; the app asks for the contract's default page size (20). These
+// mirror STORE_SEARCH_LIMITS in @wasla/contracts-search — no app depends on a
+// @wasla/* package today, so packages/contracts/search's contract test reads
+// these three lines and fails on any drift.
+export const STORE_SEARCH_MIN_LENGTH = 1;
+export const STORE_SEARCH_MAX_LENGTH = 200;
 export const STORE_SEARCH_PAGE_SIZE = 20;
 
 export interface StoreSearchResult {
@@ -34,7 +40,7 @@ interface StoreSearchProps {
   onSelect: (store: StoreSearchResult) => void;
 }
 
-type Status = "idle" | "too_short" | "loading" | "success" | "error";
+type Status = "idle" | "too_short" | "too_long" | "loading" | "success" | "error";
 
 export function StoreSearch({ testId, onSelect }: StoreSearchProps) {
   const { t, i18n } = useTranslation();
@@ -57,9 +63,12 @@ export function StoreSearch({ testId, onSelect }: StoreSearchProps) {
     const q = query.trim();
     seqRef.current += 1;
     const seq = seqRef.current;
-    if ([...q].length < STORE_SEARCH_MIN_LENGTH) {
+    const length = [...q].length;
+    if (length < STORE_SEARCH_MIN_LENGTH || length > STORE_SEARCH_MAX_LENGTH) {
+      // Never send a request the service must reject; the in-flight one (if
+      // any) is already stale because seq moved.
       setResults([]);
-      setStatus("too_short");
+      setStatus(length < STORE_SEARCH_MIN_LENGTH ? "too_short" : "too_long");
       return;
     }
     setStatus("loading");
@@ -104,6 +113,9 @@ export function StoreSearch({ testId, onSelect }: StoreSearchProps) {
               void runSearch();
             }
           }}
+          // HTML maxLength counts UTF-16 units, the service counts code points:
+          // for astral characters the input is stricter, never looser, than q ≤ 200.
+          maxLength={STORE_SEARCH_MAX_LENGTH}
           placeholder={t("marketplace.store_search_placeholder")}
           aria-label={t("marketplace.store_search_label")}
           data-testid={`${testId}-input`}
@@ -125,6 +137,11 @@ export function StoreSearch({ testId, onSelect }: StoreSearchProps) {
       {status === "too_short" && (
         <p className="store-search-status" role="alert" data-testid={`${testId}-too-short`}>
           {t("marketplace.store_search_too_short")}
+        </p>
+      )}
+      {status === "too_long" && (
+        <p className="store-search-status" role="alert" data-testid={`${testId}-too-long`}>
+          {t("marketplace.store_search_too_long")}
         </p>
       )}
       {status === "error" && (

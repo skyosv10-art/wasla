@@ -45,33 +45,63 @@ function codeOf(fn: () => unknown): string | undefined {
 }
 
 describe("parseStoreSearchRequest — bounds come from the shared contract", () => {
-  it("defaults: locale ar · page 1 · page_size 10", () => {
-    expect(parseStoreSearchRequest({ q: "  النور " })).toEqual({ q: "النور", locale: "ar", page: 1, pageSize: 10 });
+  // Bounds are the owner's decision (CLM-0652 · ADR-025 §6.8): q 1..200 · page ≥ 1
+  // (no upper bound) · page_size 1..50 = 20. Literals here on purpose: a test that
+  // only read STORE_SEARCH_LIMITS would follow a drifted constant.
+  it("defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20)", () => {
+    expect(parseStoreSearchRequest({ q: "  النور " })).toEqual({ q: "النور", locale: "ar", page: 1, pageSize: 20 });
   });
 
-  it("q: trimmed length 2..64, non-empty after normalization", () => {
+  it("q: one character after trim is valid if it stays non-empty after normalization", () => {
+    expect(parseStoreSearchRequest({ q: " ن " }).q).toBe("ن");
+    expect(parseStoreSearchRequest({ q: "a" }).q).toBe("a");
+    // A single tatweel / single diacritic normalizes to nothing → empty, as for /search/products.
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ـ" }))).toBe("SEARCH_QUERY_EMPTY");
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ً" }))).toBe("SEARCH_QUERY_EMPTY");
     expect(codeOf(() => parseStoreSearchRequest({}))).toBe("SEARCH_QUERY_EMPTY");
     expect(codeOf(() => parseStoreSearchRequest({ q: "   " }))).toBe("SEARCH_QUERY_EMPTY");
-    expect(codeOf(() => parseStoreSearchRequest({ q: " ن " }))).toBe("SEARCH_QUERY_TOO_SHORT");
-    expect(codeOf(() => parseStoreSearchRequest({ q: "نو" }))).toBeUndefined();
-    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(STORE_SEARCH_LIMITS.qMaxLength) }))).toBeUndefined();
-    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(STORE_SEARCH_LIMITS.qMaxLength + 1) }))).toBe("SEARCH_QUERY_TOO_LONG");
-    expect(codeOf(() => parseStoreSearchRequest({ q: "ًٌٍ" }))).toBe("SEARCH_QUERY_EMPTY");
+    expect(codeOf(() => parseStoreSearchRequest({ q: "" }))).toBe("SEARCH_QUERY_EMPTY");
     expect(codeOf(() => parseStoreSearchRequest({ q: ["ab", "cd"] }))).toBe("SEARCH_QUERY_EMPTY");
   });
 
-  it("counts characters, not UTF-16 units (64 emoji are 64, not 128)", () => {
-    expect(codeOf(() => parseStoreSearchRequest({ q: "🙂".repeat(64) }))).toBeUndefined();
+  it("q: 200 characters accepted, 201 rejected (after trim)", () => {
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(200) }))).toBeUndefined();
+    expect(codeOf(() => parseStoreSearchRequest({ q: `  ${"ب".repeat(200)}  ` }))).toBeUndefined();
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(201) }))).toBe("SEARCH_QUERY_TOO_LONG");
   });
 
-  it("page 1..50 and page_size 1..20 — integers only", () => {
-    for (const bad of ["0", "51", "-1", "1.5", "abc", ""]) {
+  it("counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long)", () => {
+    expect(codeOf(() => parseStoreSearchRequest({ q: "🙂".repeat(200) }))).toBeUndefined();
+    expect(codeOf(() => parseStoreSearchRequest({ q: "🙂".repeat(201) }))).toBe("SEARCH_QUERY_TOO_LONG");
+  });
+
+  it("page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected", () => {
+    expect(parseStoreSearchRequest({ q: "نور", page: "1" }).page).toBe(1);
+    expect(parseStoreSearchRequest({ q: "نور", page: "51" }).page).toBe(51);
+    expect(parseStoreSearchRequest({ q: "نور", page: "100000" }).page).toBe(100000);
+    expect(parseStoreSearchRequest({ q: "نور", page: String(Number.MAX_SAFE_INTEGER) }).page).toBe(Number.MAX_SAFE_INTEGER);
+    for (const bad of ["0", "-1", "-0", "1.5", "2.0", "1e3", "abc", "", " 1", "0x10", "9007199254740993"]) {
       expect(codeOf(() => parseStoreSearchRequest({ q: "نور", page: bad })), bad).toBe("SEARCH_PAGE_OUT_OF_RANGE");
     }
-    for (const bad of ["0", "21", "x"]) {
+    expect(codeOf(() => parseStoreSearchRequest({ q: "نور", page: ["1", "2"] }))).toBe("SEARCH_PAGE_OUT_OF_RANGE");
+  });
+
+  it("page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected", () => {
+    expect(parseStoreSearchRequest({ q: "نور", page_size: "1" }).pageSize).toBe(1);
+    expect(parseStoreSearchRequest({ q: "نور", page_size: "50" }).pageSize).toBe(50);
+    expect(parseStoreSearchRequest({ q: "نور", page_size: "20" }).pageSize).toBe(20);
+    for (const bad of ["0", "51", "-1", "1.5", "x", ""]) {
       expect(codeOf(() => parseStoreSearchRequest({ q: "نور", page_size: bad })), bad).toBe("SEARCH_PAGE_SIZE_INVALID");
     }
-    expect(parseStoreSearchRequest({ q: "نور", page: "50", page_size: "20" })).toMatchObject({ page: 50, pageSize: 20 });
+  });
+
+  it("the parser enforces exactly the shared constants (package ↔ service)", () => {
+    const L = STORE_SEARCH_LIMITS;
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(L.qMaxLength) }))).toBeUndefined();
+    expect(codeOf(() => parseStoreSearchRequest({ q: "ب".repeat(L.qMaxLength + 1) }))).toBe("SEARCH_QUERY_TOO_LONG");
+    expect(codeOf(() => parseStoreSearchRequest({ q: "نور", page_size: String(L.pageSizeMax) }))).toBeUndefined();
+    expect(codeOf(() => parseStoreSearchRequest({ q: "نور", page_size: String(L.pageSizeMax + 1) }))).toBe("SEARCH_PAGE_SIZE_INVALID");
+    expect(parseStoreSearchRequest({ q: "نور" }).pageSize).toBe(L.pageSizeDefault);
   });
 
   it("locale ar/en/ur only", () => {
@@ -352,9 +382,15 @@ describe("GET /search/stores — HTTP", () => {
   });
 
   it.each([
-    [{ q: "ن" }, "SEARCH_QUERY_TOO_SHORT"],
+    [{ q: "ـ" }, "SEARCH_QUERY_EMPTY"],
+    [{ q: "ب".repeat(201) }, "SEARCH_QUERY_TOO_LONG"],
     [{ q: "نور", owner_public_id: "WS-1" }, "SEARCH_UNKNOWN_PARAMETER"],
-    [{ q: "نور", page_size: "21" }, "SEARCH_PAGE_SIZE_INVALID"],
+    [{ q: "نور", state: "approved" }, "SEARCH_UNKNOWN_PARAMETER"],
+    [{ q: "نور", page: "0" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+    [{ q: "نور", page: "-3" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+    [{ q: "نور", page: "1.5" }, "SEARCH_PAGE_OUT_OF_RANGE"],
+    [{ q: "نور", page_size: "0" }, "SEARCH_PAGE_SIZE_INVALID"],
+    [{ q: "نور", page_size: "51" }, "SEARCH_PAGE_SIZE_INVALID"],
     [{ q: "نور", locale: "fr" }, "SEARCH_UNSUPPORTED_LOCALE"],
   ])("400 %j → %s", async (query, code) => {
     const { fastify, close } = buildEnforcedApp({ searchReadPort: fakeEmptyReadPort(), storeSearchReadPort: leakyPort });

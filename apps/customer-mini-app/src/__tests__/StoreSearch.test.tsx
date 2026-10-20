@@ -1,4 +1,4 @@
-// G-S9.7 (CLM-0649): store-name search — component behaviour and its wiring
+// G-S9.7 (CLM-0649 · bounds CLM-0652): store-name search — component behaviour and its wiring
 // into the Marketplace screen. apiClient is mocked: these tests prove the
 // client's contract use and its stale-response guard, NOT the integration path
 // (browser → Channel Edge → search), which is blocked by T1 (see evidence).
@@ -56,12 +56,40 @@ describe("StoreSearch component", () => {
     expect(url).not.toMatch(/state|owner|visible/);
   });
 
-  it("does not call the service for a query shorter than 2 characters", async () => {
+  // CLM-0652 · ADR-025 §6.8 — the client honours the contract's bounds: q 1..200
+  // code points after trim, page_size = the contract default (20).
+  it("a single character (after trim) is a valid query and reaches the service", async () => {
+    mockedGet.mockResolvedValue(page([NOOR]));
     render(<StoreSearch testId="ss" onSelect={() => undefined} />);
     type(" ن ");
     fireEvent.click(screen.getByTestId("ss-button"));
+    await screen.findByTestId("ss-results");
+    expect(mockedGet).toHaveBeenCalledWith(`/search/stores?q=${encodeURIComponent("ن")}&locale=ar&page=1&page_size=20`);
+  });
+
+  it("an empty (whitespace-only) query does not call the service", async () => {
+    render(<StoreSearch testId="ss" onSelect={() => undefined} />);
+    type("   ");
+    fireEvent.click(screen.getByTestId("ss-button"));
     expect(await screen.findByTestId("ss-too-short")).toBeInTheDocument();
     expect(mockedGet).not.toHaveBeenCalled();
+  });
+
+  it("200 code points are sent; 201 are refused client-side and the input is capped at 200", async () => {
+    mockedGet.mockResolvedValue(page([]));
+    render(<StoreSearch testId="ss" onSelect={() => undefined} />);
+    expect(screen.getByTestId("ss-input")).toHaveAttribute("maxLength", "200");
+    // Arabic letters are single UTF-16 units; an astral char proves we count code points.
+    const twoHundred = "𝐀" + "ب".repeat(199);
+    type(twoHundred);
+    fireEvent.click(screen.getByTestId("ss-button"));
+    await screen.findByTestId("ss-empty");
+    expect(mockedGet).toHaveBeenCalledTimes(1);
+    expect(mockedGet.mock.calls[0][0]).toBe(`/search/stores?q=${encodeURIComponent(twoHundred)}&locale=ar&page=1&page_size=20`);
+    type("ب".repeat(201));
+    fireEvent.click(screen.getByTestId("ss-button"));
+    expect(await screen.findByTestId("ss-too-long")).toBeInTheDocument();
+    expect(mockedGet).toHaveBeenCalledTimes(1);
   });
 
   it("shows the localized title the service returned", async () => {

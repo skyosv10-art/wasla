@@ -137,10 +137,62 @@ describe("search contracts — store-name search (G-S9.7 · ADR-025 §6)", () =>
     expect(block).not.toMatch(/owner_public_id|store_state|name: state/);
   });
 
-  it("q / page / page_size bounds match the shared constants", () => {
-    expect(block).toMatch(new RegExp(`minLength: ${STORE_SEARCH_LIMITS.qMinLength}\\n\\s+maxLength: ${STORE_SEARCH_LIMITS.qMaxLength}`));
-    expect(block).toMatch(new RegExp(`maximum: ${STORE_SEARCH_LIMITS.pageMax}\\n\\s+default: 1`));
-    expect(block).toMatch(new RegExp(`maximum: ${STORE_SEARCH_LIMITS.pageSizeMax}\\n\\s+default: ${STORE_SEARCH_LIMITS.pageSizeDefault}`));
+  /** One `- name: <key>` parameter block, up to the next parameter or `responses:`. */
+  const param = (key: string): string => {
+    const at = block.indexOf(`- name: ${key}\n`);
+    if (at < 0) return "";
+    const rest = block.slice(at + 1);
+    const end = rest.search(/\n {8}- name: |\n {6}responses:/);
+    return end < 0 ? rest : rest.slice(0, end);
+  };
+  const num = (b: string, field: string): number | undefined => {
+    const m = b.match(new RegExp(`\\n\\s+${field}: (\\d+)`));
+    return m ? Number(m[1]) : undefined;
+  };
+
+  it("the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20", () => {
+    // Literal on purpose: these numbers are the owner's decision, the one place a
+    // drifted constant that also drags OpenAPI along is still caught.
+    expect({ ...STORE_SEARCH_LIMITS }).toEqual({
+      qMinLength: 1,
+      qMaxLength: 200,
+      pageMin: 1,
+      pageSizeMin: 1,
+      pageSizeMax: 50,
+      pageSizeDefault: 20,
+    });
+  });
+
+  it("OpenAPI q / page / page_size bounds match the shared constants exactly", () => {
+    const q = param("q");
+    expect(num(q, "minLength")).toBe(STORE_SEARCH_LIMITS.qMinLength);
+    expect(num(q, "maxLength")).toBe(STORE_SEARCH_LIMITS.qMaxLength);
+    const page = param("page");
+    expect(num(page, "minimum")).toBe(STORE_SEARCH_LIMITS.pageMin);
+    expect(num(page, "default")).toBe(1);
+    // No upper bound by decision — a `maximum` here would be a new policy.
+    expect(num(page, "maximum")).toBeUndefined();
+    const size = param("page_size");
+    expect(num(size, "minimum")).toBe(STORE_SEARCH_LIMITS.pageSizeMin);
+    expect(num(size, "maximum")).toBe(STORE_SEARCH_LIMITS.pageSizeMax);
+    expect(num(size, "default")).toBe(STORE_SEARCH_LIMITS.pageSizeDefault);
+  });
+
+  it("the response page wrapper carries the same bounds (page unbounded, page_size ≤ 50)", () => {
+    const pg = schemaBlock("StoreSearchPage");
+    expect(pg).toMatch(/page: \{ type: integer, minimum: 1 \}/);
+    expect(pg).toMatch(new RegExp(`page_size: \\{ type: integer, minimum: ${STORE_SEARCH_LIMITS.pageSizeMin}, maximum: ${STORE_SEARCH_LIMITS.pageSizeMax} \\}`));
+  });
+
+  it("the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today)", () => {
+    const app = readFileSync(resolve(__dirname, "../../../../../apps/customer-mini-app/src/components/StoreSearch.tsx"), "utf8");
+    const constant = (name: string): number | undefined => {
+      const m = app.match(new RegExp(`export const ${name} = (\\d+);`));
+      return m ? Number(m[1]) : undefined;
+    };
+    expect(constant("STORE_SEARCH_MIN_LENGTH")).toBe(STORE_SEARCH_LIMITS.qMinLength);
+    expect(constant("STORE_SEARCH_MAX_LENGTH")).toBe(STORE_SEARCH_LIMITS.qMaxLength);
+    expect(constant("STORE_SEARCH_PAGE_SIZE")).toBe(STORE_SEARCH_LIMITS.pageSizeDefault);
   });
 
   it("locale enum is ar/en/ur, default ar", () => {

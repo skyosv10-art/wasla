@@ -1,0 +1,26 @@
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema declares the derived index table 1ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema declares an outbox for index lifecycle events 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema enables pg_trgm for Arabic/approximate matching 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema has NO is_visible column — visibility is derived, never stored (ADR-025 §2.2) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > index carries state columns so visibility is derived at read time (ADR-025 §2.2) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > index uses category_slug from the catalog port, not a fabricated category_id 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > index uses sku (catalog identity), not a fabricated product_slug 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema declares projection state tables owned by search (ADR-025 §2.3) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > relay state columns enforce a closed status set for idempotency and dead-letter 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > schema uses integer halalas for price, not floating point (ADR-016 decision 4) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > api declares the search endpoint and health check 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > api result exposes sku and category_slug (catalog port identity, not fabricated ids) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > api price is integer halalas (catalog datum, not a transaction) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > events contract is a valid JSON Schema with versioned envelopes 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — foundational invariants (ADR-025) > events producer is search-service (not marketplace — those are consumed, not produced) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > api declares GET /search/stores with operationId searchStores and its own scope 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > declares exactly the query keys the constants list — no state/owner filter 1ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 1ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > the response page wrapper carries the same bounds (page unbounded, page_size ≤ 50) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > locale enum is ar/en/ur, default ar 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > the public result is exactly store_slug/title/category_slug — closed to extra fields 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > the page wrapper is closed too 0ms
+ ✓ src/__tests__/contracts.test.ts > search contracts — store-name search (G-S9.7 · ADR-025 §6) > schema has the derived store-name table and still no visibility flag 0ms
+      Tests  25 passed (25)

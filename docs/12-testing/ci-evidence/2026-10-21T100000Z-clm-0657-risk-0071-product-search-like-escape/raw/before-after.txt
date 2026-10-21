@@ -1,0 +1,12 @@
+# CLM-0657 · local PostgreSQL 17.11 (not CI) · search-index-reader.integration.test.ts
+## before the fix (5 new cases on main code)
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+     → expected [ Array(1) ] to deeply equal [ Array(1) ]
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  5 failed | 12 passed (17)
+## after the fix
+      Tests  17 passed (17)
+## full suites after the fix: unit 14 files 176/176 · integration 11 files 82/82 in 11 of 12 runs; 1 run had 1 unidentified failure, not reproduced in 11 further runs (hypothesis: RISK-0070 relay race, still on main without #803 — not measured)

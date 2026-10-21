@@ -752,12 +752,22 @@ const ownerScoped = (...scopes: string[]) => ({
 | `packages/incident-ops/src/harness.ts` | مِعْوانُ عمليّاتِ الحوادثِ والاسترجاعِ: يتحقّقُ من صحّةِ الخدماتِ بعدَ الاسترجاع. (CLM-0344 · M4-04) |
 | `services/observability/src/scraper.ts` | مُجمِّعُ مراقبةٍ — يقرأُ /metrics من 14 خدمة (نقطةُ نهايةٍ عامّةٌ بلا مُصادقةٍ لـPrometheus). ليسَ نداءً بينَ الخدماتِ ولا يحملُ رمزَ خدمةٍ. (CLM-0335 · M2-08 Stage B) |
 | `packages/channel-edge/src/create-channel-edge.ts` | حدُّ القناةِ — يوجِّهُ الطلبَ إلى الخدمةِ الخلفيةِ بحمولةِ `X-Wasla-User-Assertion` القادمِ من `exchange` لا بموقِّعِ الخدمةِ المباشرِ؛ الحدُّ لا يُنادي خلفيًّا بلا تأكيدٍ موقَّعٍ من identity (ADR-069 · §2.1-2 · CLM-0524). |
-
+| `packages/channel-edge/src/create-channel-edge.ts` | حدُّ القناةِ — يوجِّهُ الطلبَ إلى الخدمةِ الخلفيةِ بحمولةِ `X-Wasla-User-Assertion` القادمِ من `exchange` لا بموقِّعِ الخدمةِ (المسارُ مُدرَجٌ في السجلِّ §2.5). |
+| `packages/bot-runtime/src/identity-bootstrap.ts` | منفذُ القنواتِ إلى identity: موقَّعٌ (`signRequest: ServiceRequestSigner` — identity-bootstrap.test.ts يقرأُ الترويسةَ)؛ خارجُ تسميةِ عملاءِ `*/src/infrastructure/http-*.ts` فلم يُحصَ في §2.5 — **G-S9.19 · CLM-0652** |
+| `packages/bot-runtime/src/user-assertion.ts` | نحو identity: موقَّعٌ (`verifyServiceToken` على خادمٍ حقيقيٍّ في user-assertion.test.ts؛ عمى البابِ 7 عن `this.fetchImpl(` هوَ أحدُ وجهَي RISK-0027) — **G-S9.19 · CLM-0652** |
+| `packages/telegram-adapter/src/bot-api-client.ts` | حدٌّ خارجيٌّ إلى Telegram Bot API بنموذجِ مصادقةِ توكنِ البوتِ (ADR-007 §3) — ليسَ حدًّا داخليًا بينَ الخدماتِ ولا يَنبغي أن يحملَ موقِّعَها — **G-S9.19 · CLM-0652** |
+| `packages/tick-scheduler/src/main.ts` | جذرُ تركيبٍ: يمرِّرُ `globalThis.fetch` إلى العميلِ الموقَّعِ http-tick.ts المُحصَى في §2.5 ولا يَندُبُ حدًّا بنفسِهِ — **G-S9.19 · CLM-0652** |
 <!-- fetch-exceptions:end -->
 
 ### 4.2 · أغلفةُ النداءِ المُعلَنةُ — قُفلٌ بالرفضِ افتراضاً (البابُ 8)
 
-البابُ 7 يقيسُ `fetch(` **وحدَهُ**، وهذا حدُّهُ المُعلَنُ. فلو دخلَ المستودعَ
+**تصحيحٌ مؤرَّخٌ (G-S9.19 · CLM-0652 · 2026-10-21):** كانَ النصُّ هنا يقولُ إنّ
+البابُ 7 يقيسُ `fetch(` **وحدَهُ** وأنّ هذا حدُّهُ المُعلَنُ — وكانَ صادقاً حتى هذا
+التاريخِ، وهذا عينُ العمى الذي سجّلَتهُ RISK-0027 (الجالبُ المحقونُ `fetchImpl(`
+وأخواتُهُ لم تُرَ). النمطُ الآنَ يُحصي الجالبَ المحقونَ والمُسمّى بغيرِ اسمِهِ
+(`fetchImpl` · `*Fetch` · `globalThis.fetch`) كما يُحصي `fetch(` الخامَ، فحدُّ
+البابِ المُعلَنُ اتسعَ معَهُ، وبقيَ مُعلَناً هنا. أما البابُ 8 فباقٍ على علّتِهِ
+الأصليّةِ: لو دخلَ المستودعَ
 `axios` أو `undici` أو غيرُهما لعمِيَ البابُ 7 **بصمتٍ وبقيَ أخضرَ** — وهوَ عمىً
 أسوأُ من عمى `RISK-0027` لأنّهُ يُولَدُ أخضرَ فلا يُنبِّهُ أحداً. فقُفِلَ البابُ
 هنا **بالرفضِ افتراضاً:** أيُّ مكتبةِ نداءٍ في أيِّ `package.json`

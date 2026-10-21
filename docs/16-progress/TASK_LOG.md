@@ -1,3 +1,16 @@
+# 2026-10-21 — CLM-0652 — G-S9.19 / RISK-0027: جردُ الجالبِ المحقونِ وتوسيعُ بصرِ البابِ 7
+
+- **Work Item(s):** M0-53 (G-S9.19 — العلاجُ البنيويُّ لحارسِ تغطيةِ هويّةِ الخدمة · RISK-0027).
+- **Kind:** security-governance — إصلاحُ عمى الحارسِ (البابُ 7 في `validate-service-auth-coverage.sh`) عن الجالبِ المحقونِ (`this.fetchImpl(` · `globalThis.fetch` · `*Fetch(`)، بجردٍ بنيويٍّ وتصنيفٍ وطفرةٍ حاكمةٍ، لا بشيفرةِ إنتاجٍ.
+- **Units:** `scripts/checks/validate-service-auth-coverage.sh` · `scripts/checks/test-governance.sh` (+4 حالاتِ طفرةٍ) · `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` (§4.1 صفوفُ الاستثناءاتِ الأربعةُ + تصحيحٌ مؤرَّخٌ في §4.2/§6) · `docs/07-security/RISK_REGISTER.md` (RISK-0027: إضافةٌ مؤرَّخةٌ لا إغلاقٌ) · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-21T000000Z-clm-0652-gs9-19-injected-fetcher-census/`.
+- **Status:** Released (الفرعُ `stage-zero/clm-0652-gs9-19-injected-fetcher-census` — الحكمُ بعدَ المراجعةِ المستقلةِ وCI على الرأسِ النهائيِّ).
+- **Change:** (1) نمطُ البابِ 7-ج اتسعَ من `\bfetch\(` إلى إحصاءِ أيِّ إشارةِ نداءٍ أو حقنٍ إلى fetch تحت أيِّ اسمٍ. (2) الجردُ المُقاسُ: 39 ملفًّا (19 عميلًا + 20 استثناءً)، منها أربعةٌ كانت عمياءً بالكاملِ (user-assertion.ts · identity-bootstrap.ts · bot-api-client.ts · tick-scheduler/src/main.ts) صُنِّفتْ وأُعلنتْ استثناءاتٍ موثّقةَ السببِ. (3) أربعُ حالاتِ طفرةٍ جديدةٍ تُثبِتُ أنّ الهروبَ التاريخيَّ يُسقِطُ وأنّ النمطَ القديمَ يُمرِّرُهُ (طفرةُ الحارسِ نفسِهِ). (4) تصحيحٌ مؤرَّخٌ بالإضافةِ للحدِّ المُعلَنِ في السجلِّ (§4.2/§6) وفي تعليقاتِ الحارسِ. (5) RISK-0027: إعادةُ قياسٍ مؤرَّخةٌ — **يبقى open؛ الإغلاقُ للمالكِ** (§9) بعدَ نجاحِ الحارسِ على main بأدلةٍ مرتبطةٍ بـSHA.
+- **Tests:** حزمةُ الحوكمةِ قيستْ على main والفرعِ في البيئةِ نفسِها: main 653 ناجح · 36 فاشل — الفرعُ 657 ناجح · 36 فاشل، ومجموعاتُ الفشلِ **متطابقةٌ** (بيئيةٌ مسبقةٌ: بلا DATABASE_URL/سياقِ git/شبكةِ npm)؛ الفارقُ الوحيدُ +4 حالاتٍ ناجحةٍ. الحارسُ أخضرُ على الفرعِ. لا PostgreSQL هنا: الحجزَ حوكميٌّ لا سلوكيٌّ، ولا يدّعي غيرَ ذلكَ.
+- **Risk(s):** RISK-0027 → open (يُغلقُهُ المالكُ بعدَ قياسِ ما بعدَ الدمجِ — شروطُهُ التقنيةَ استُوفتْ في هذا الحجزِ) · لا شيفرةَ إنتاجٍ مُغيَّرةٌ.
+- **Evidence:** [دليلُ CLM-0652](../12-testing/ci-evidence/2026-10-21T000000Z-clm-0652-gs9-19-injected-fetcher-census/README.md) · `raw/guard-output.txt` · `raw/census-all-fetch-references.txt` · `raw/mutation-gs9-19.txt` · `raw/governance-main-vs-branch.txt`.
+- **Deployment:** لا شيء (`frozen` — ADR-073 · `deploy-target.json` لم يُمَسَّ · لا مدخلَ مفتوحٌ · لا Telegram ولا T1 حيٌّ ولا Render · لا نشرَ).
+- **Next:** مراجعةٌ مستقلةٌ ودمجُ PR هذا · ثم قياسُ ما بعدَ الدمجِ (CI على main + Roadmap freshness) وتوثيقُهُ لإحالةِ إغلاقِ RISK-0027 إلى المالكِ · وحدةُ G-S9.20 (سباقُ المرحّلينِ المتزامنينِ على PostgreSQL حقيقيٍّ) التاليةَ.
+
 # 2026-10-20 — CLM-0651 — دليلُ ما بعدَ دمجِ CLM-0649: حكمُ CI الفعليُّ على main (G-S9.7)
 
 - **Work Item(s):** M0-53 (G-S9.7 — توثيقُ الحكمِ فقط).

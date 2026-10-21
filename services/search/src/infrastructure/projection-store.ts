@@ -5,7 +5,7 @@
  * so duplicate delivery and replay are safe (review 2/N req 3,4,10).
  */
 
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import type { CatalogStore, ProjectionStore } from "../ports.js";
 import { normalizeStoreName } from "../domain/store-search.js";
 import type {
@@ -16,8 +16,48 @@ import type {
 } from "../domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "../domain/projector.js";
 
+/**
+ * G-S9.20 · CLM-0655 — namespace of the search relay's consumer lock.
+ * Advisory locks are per database and the key is `(namespace, hashtext(consumerId))`
+ * (the same two-int scheme as delivery's relay, M5-13R). A namespace distinct
+ * from delivery's (42626) keeps the two services' locks apart even when they
+ * share one database. Arbitrary on purpose; must not be reused for another purpose.
+ */
+export const SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE = 42627;
+
 export class PostgresProjectionStore implements ProjectionStore {
   constructor(private readonly pool: Pool) {}
+
+  /**
+   * Session-level advisory lock held for the whole batch (checkpoint read →
+   * last checkpoint write). A transaction-level lock would release at the
+   * first COMMIT — mid-batch, exactly where the race lived (RISK-0070). The
+   * lock belongs to the leased session, so lock and unlock run on the same
+   * client; the batch's own queries go through the pool on other connections.
+   * Hence a pool of fewer than 2 connections would wait on itself forever:
+   * refused up front instead of hanging.
+   */
+  async withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T> {
+    const max = (this.pool as unknown as { options?: { max?: unknown } }).options?.max;
+    if (typeof max === "number" && max < 2) {
+      throw new Error(
+        `search relay consumer lock needs a pool of at least 2 connections (got max=${max}): ` +
+          "the lock holds one session for the whole batch while the batch queries through the pool",
+      );
+    }
+    const ns = SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE;
+    const client: PoolClient = await this.pool.connect();
+    try {
+      await client.query("SELECT pg_advisory_lock($1, hashtext($2))", [ns, consumerId]);
+      try {
+        return await fn();
+      } finally {
+        await client.query("SELECT pg_advisory_unlock($1, hashtext($2))", [ns, consumerId]);
+      }
+    } finally {
+      client.release();
+    }
+  }
 
   async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
     const r = await this.pool.query<{ last_commit_sequence: string; last_outbox_id: string; last_created_at: string }>(

@@ -1,0 +1,39 @@
+# CLM-0655 · mutations on local PostgreSQL 17.11 (not CI)
+### M1 lock wrapper removed
+1
+   ✓ two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state 170ms
+   ✓ crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent 52ms
+   ✓ dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row 38ms
+   × G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock 334ms
+     → B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   ✓ G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc  5445ms
+   ✓ G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself 20ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+    420|       expect(bReadCheckpoint, "B read the checkpoint while A held the …
+      Tests  1 failed | 5 passed (6)
+### M2 per-call lock key
+1
+   ✓ two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state 136ms
+   ✓ crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent 57ms
+   ✓ dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row 47ms
+   × G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock 10336ms
+     → B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   ✓ G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc  5706ms
+   ✓ G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself 23ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+    420|       expect(bReadCheckpoint, "B read the checkpoint while A held the …
+      Tests  1 failed | 5 passed (6)
+### M3 pool guard removed
+1
+   ✓ two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state 153ms
+   ✓ crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent 89ms
+   ✓ dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row 52ms
+   ✓ G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock  360ms
+   ✓ G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc  5833ms
+   × G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself 34ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    474|         ).rejects.toThrow(/at least 2 connections/);
+      Tests  1 failed | 5 passed (6)
+ 6 files changed, 212 insertions(+), 2 deletions(-)

@@ -1,3 +1,16 @@
+# 2026-10-21 — CLM-0655 — G-S9.20: قفلُ المستهلِكِ لناقلِ البحثِ — السباقُ منسوخٌ قبلُ ومُبرهَنٌ بعدُ على PostgreSQL 17
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released (الفرعُ `stage-zero/clm-0655-gs9-20-relay-consumer-lock`).
+- **Change:** `services/search/src/ports.ts` (`withConsumerLock` مطلوبٌ) · `infrastructure/projection-store.ts` (قفلٌ استشاريٌّ لجلسةٍ · مساحةُ 42627 · رفضُ مجمَّعٍ < 2) · `relay.ts` (الدفعةُ كلُّها داخلَ القفلِ) · اختباراتٌ: 3 حالاتِ تكاملٍ + 2 وحدةٍ؛ الحالةُ الأصليّةُ لم تُمَسَّ.
+- **Tests:** تكاملٌ 80/80 · وحدةٌ 177/177 (محلّيٌّ على PostgreSQL 17.11) · مضخَّمٌ قبلُ 2/300 خرقٌ ← بعدُ 0/300 · الأصليّةُ 50/50 · الطفراتُ M1/M2/M3 قُتِلت.
+- **Security / Data / Deployment:** لا مُنادٍ إنتاجيٌّ للناقلِ؛ لا نشرَ (`frozen`)؛ لا سرَّ؛ لا تخفيفَ لاختبارٍ ولا لمهلةٍ.
+- **Evidence:** [دليلُ CLM-0655](../12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/README.md)
+- **Deployment:** none.
+- **Next:** RISK-0070 مسجَّلٌ على فرعِ #800 فقط — بعدَ دمجِ #800 (و#802 لخضرةِ image-supply-chain) يُعادُ تأسيسُ هذا الفرعِ ويُحدَّثُ RISK-0070 بالإضافةِ (mitigating لا closed) ويُعادُ توليدُ BASELINE.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-21 — CLM-0655 — G-S9.20: إقصاءُ ناقلَي بحثٍ متزامنَينِ (حجزٌ قبلَ أيِّ تغييرٍ)
 
 - **Work Item(s):** M0-53 (G-S9.20 · اكتُشِفَ في CLM-0649).

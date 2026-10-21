@@ -29,6 +29,7 @@
 
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
+  DATABASE_URL,
   PG_ENABLED,
   setupPostgres,
   resetData,
@@ -37,7 +38,7 @@ import {
   type PgFixture,
 } from "./pg-harness.js";
 import { PostgresMarketplaceEventSource } from "../infrastructure/marketplace-event-source.js";
-import { PostgresProjectionStore } from "../infrastructure/projection-store.js";
+import { PostgresProjectionStore, SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE } from "../infrastructure/projection-store.js";
 import { runRelayBatch, DEFAULT_RELAY_CONFIG } from "../relay.js";
 import type { CatalogReadPort } from "../ports.js";
 import type { CatalogProduct } from "../domain/consumed-events.js";
@@ -178,6 +179,30 @@ async function seedHappyPath(pool: Pool): Promise<string[]> {
 
   return ids;
 }
+
+
+/**
+ * G-S9.20 · CLM-0655 — race amplifier: a small random delay before every store
+ * and event-source call widens the windows in which two unexcluded relay
+ * instances interleave. It changes no SQL, no assertion and no timeout; before
+ * the lock it reproduced both failure modes of RISK-0070 on PostgreSQL 17
+ * (lost update → 0 index docs; duplicate store doc → row left `pending`).
+ */
+function jitter<T extends object>(target: T): T {
+  return new Proxy(target, {
+    get(t, p, r) {
+      const v = Reflect.get(t, p, r);
+      if (typeof v !== "function") return v;
+      return async (...args: unknown[]) => {
+        await new Promise((res) => setTimeout(res, Math.floor(Math.random() * 4)));
+        return (v as (...a: unknown[]) => unknown).apply(t, args);
+      };
+    },
+  });
+}
+
+/** Number of amplified concurrent rounds — RISK-0070 closes on a recorded ≥ 50/50. */
+const AMPLIFIED_ROUNDS = 60;
 
 describe.skipIf(!PG_ENABLED)(
   "M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe",
@@ -355,6 +380,101 @@ describe.skipIf(!PG_ENABLED)(
           [firstOutboxId, STORE_ID],
         ),
       ).rejects.toThrow(); // PRIMARY KEY violation
+    });
+
+    it("G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock", async () => {
+      await seedHappyPath(pool);
+      let openGate!: () => void;
+      const gate = new Promise<void>((r) => (openGate = r));
+      let aHoldsLock!: () => void;
+      const aInside = new Promise<void>((r) => (aHoldsLock = r));
+
+      const storeA = new PostgresProjectionStore(pool);
+      const realGetCheckpointA = storeA.getCheckpoint.bind(storeA);
+      // A pauses at its first read — inside the lock — until the test opens the gate.
+      storeA.getCheckpoint = async (consumerId: string) => {
+        aHoldsLock();
+        await gate;
+        return realGetCheckpointA(consumerId);
+      };
+      const storeB = new PostgresProjectionStore(pool);
+      let bReadCheckpoint = 0;
+      const realGetCheckpointB = storeB.getCheckpoint.bind(storeB);
+      storeB.getCheckpoint = async (consumerId: string) => {
+        bReadCheckpoint += 1;
+        return realGetCheckpointB(consumerId);
+      };
+      const mk = (store: PostgresProjectionStore) => ({
+        events: new PostgresMarketplaceEventSource(pool),
+        catalog,
+        storeCatalog: acmeStoreCatalog(),
+        store,
+        config: DEFAULT_RELAY_CONFIG,
+      });
+
+      const runA = runRelayBatch(mk(storeA));
+      await aInside;
+      const runB = runRelayBatch(mk(storeB));
+      // B is given ample time to start; under the lock it must still be waiting.
+      await new Promise((r) => setTimeout(r, 300));
+      expect(bReadCheckpoint, "B read the checkpoint while A held the consumer lock").toBe(0);
+      const held = await pool.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM pg_locks
+          WHERE locktype = 'advisory' AND classid = $1::int::oid AND granted`,
+        [SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE],
+      );
+      expect(held.rows[0].n, "the consumer lock is held in PostgreSQL").toBe(1);
+
+      openGate();
+      const [outA, outB] = await Promise.all([runA, runB]);
+      expect(outA.applied, "A applied the whole batch").toBe(5);
+      expect(bReadCheckpoint, "B ran after A released the lock").toBe(1);
+      expect(outB.processed, "B found nothing left after A's checkpoint").toBe(0);
+      const released = await pool.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM pg_locks WHERE locktype = 'advisory' AND classid = $1::int::oid`,
+        [SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE],
+      );
+      expect(released.rows[0].n, "the consumer lock is released after both batches").toBe(0);
+      const docs = await new PostgresProjectionStore(pool).listVisibleIndexDocs();
+      expect(docs.length).toBe(1);
+    });
+
+    it(`G-S9.20: ${AMPLIFIED_ROUNDS} amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc`, async () => {
+      const failures: string[] = [];
+      for (let round = 0; round < AMPLIFIED_ROUNDS; round++) {
+        await resetData(pool);
+        const outboxIds = await seedHappyPath(pool);
+        const mk = () => ({
+          events: jitter(new PostgresMarketplaceEventSource(pool)),
+          catalog,
+          storeCatalog: acmeStoreCatalog(),
+          store: jitter(new PostgresProjectionStore(pool)),
+          config: DEFAULT_RELAY_CONFIG,
+        });
+        await Promise.all([runRelayBatch(mk()), runRelayBatch(mk())]);
+        const rows = await pool.query<{ status: string; last_error: string | null }>(
+          `SELECT status, last_error FROM search_relay_consumed_events ORDER BY outbox_id`,
+        );
+        const docs = await new PostgresProjectionStore(pool).listVisibleIndexDocs();
+        const ok =
+          rows.rows.length === outboxIds.length &&
+          rows.rows.every((r) => r.status !== "pending") &&
+          docs.length === 1;
+        if (!ok) failures.push(`round ${round}: rows=${JSON.stringify(rows.rows)} docs=${docs.length}`);
+      }
+      expect(failures, `${failures.length}/${AMPLIFIED_ROUNDS} rounds violated the invariant`).toEqual([]);
+    }, 120_000);
+
+    it("G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself", async () => {
+      const { default: pg } = await import("pg");
+      const single = new pg.Pool({ connectionString: DATABASE_URL!, max: 1 });
+      try {
+        await expect(
+          new PostgresProjectionStore(single).withConsumerLock("search-relay-v1", async () => "ran"),
+        ).rejects.toThrow(/at least 2 connections/);
+      } finally {
+        await single.end();
+      }
     });
   },
 );

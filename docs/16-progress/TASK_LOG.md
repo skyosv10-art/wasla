@@ -1,3 +1,41 @@
+# 2026-10-21 — CLM-0655 — إعادةُ التأسيسِ على main `16e7f44e` (بعدَ دمجِ #801) من استنساخٍ كاملٍ
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Kind:** rebase + governance — لا شيفرةَ جديدةً (فرقُ services/packages مطابقٌ بالبصمةِ لما قبلَ التأسيسِ).
+- **Change:** تعارضاتُ الحوكمةِ بالاتّحادِ (WORK_CLAIMS · TASK_LOG · ROADMAP · صفُّ M0-53 بإضافاتِ CLM-0652/0654/0655). رصدُ CI على main: الشوطُ 39640217300 أخفقَ في المحاولةِ 1 بسباقِ ناقلَينِ متزامنَينِ ونجحَ في المحاولةِ 2 — مسجَّلانِ معًا. BASELINE يُعادُ توليدُهُ من `scripts/verify.sh` على هذا الالتزامِ في استنساخٍ كاملٍ.
+- **Tests:** القياساتُ السابقةُ محلّيّةٌ على PostgreSQL 17؛ 0/300 لا يُثبتُ انعدامَ السباقِ.
+- **Risk(s):** RISK-0070 → mitigating (لا closed)
+
+# 2026-10-21 — CLM-0655 — إعادةُ التأسيسِ على main `1066cdfc` + RISK-0070 بالإضافةِ (بعدَ دمجِ #802 و#800)
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Kind:** rebase + governance — لا شيفرةَ جديدةً.
+- **Change:** تعارضاتُ الحوكمةِ حُلَّت بالاتّحادِ (WORK_CLAIMS · TASK_LOG · ROADMAP · صفُّ M0-53 يحملُ إضافتَي CLM-0652 وCLM-0655). أدلّةُ PostgreSQL الأصليّةُ محفوظةٌ دونَ مساسٍ. BASELINE يُعادُ توليدُهُ بـ`scripts/verify.sh` → `scripts/baseline.sh`.
+- **Tests:** 0/300 و50/50 قياسٌ محلّيٌّ على PostgreSQL 17 — ليسا دليلَ CI ولا إنتاجٍ.
+- **Risk(s):** RISK-0070 → mitigating (لا closed — الإغلاقُ بعدَ الدمجِ وCI على main وقرارِ المالكِ)
+
+# 2026-10-21 — CLM-0655 — G-S9.20: قفلُ المستهلِكِ لناقلِ البحثِ — السباقُ منسوخٌ قبلُ ومُبرهَنٌ بعدُ على PostgreSQL 17
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released (الفرعُ `stage-zero/clm-0655-gs9-20-relay-consumer-lock`).
+- **Change:** `services/search/src/ports.ts` (`withConsumerLock` مطلوبٌ) · `infrastructure/projection-store.ts` (قفلٌ استشاريٌّ لجلسةٍ · مساحةُ 42627 · رفضُ مجمَّعٍ < 2) · `relay.ts` (الدفعةُ كلُّها داخلَ القفلِ) · اختباراتٌ: 3 حالاتِ تكاملٍ + 2 وحدةٍ؛ الحالةُ الأصليّةُ لم تُمَسَّ.
+- **Tests:** تكاملٌ 80/80 · وحدةٌ 177/177 (محلّيٌّ على PostgreSQL 17.11) · مضخَّمٌ قبلُ 2/300 خرقٌ ← بعدُ 0/300 · الأصليّةُ 50/50 · الطفراتُ M1/M2/M3 قُتِلت.
+- **Security / Data / Deployment:** لا مُنادٍ إنتاجيٌّ للناقلِ؛ لا نشرَ (`frozen`)؛ لا سرَّ؛ لا تخفيفَ لاختبارٍ ولا لمهلةٍ.
+- **Evidence:** [دليلُ CLM-0655](../12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/README.md)
+- **Deployment:** none.
+- **Next:** RISK-0070 مسجَّلٌ على فرعِ #800 فقط — بعدَ دمجِ #800 (و#802 لخضرةِ image-supply-chain) يُعادُ تأسيسُ هذا الفرعِ ويُحدَّثُ RISK-0070 بالإضافةِ (mitigating لا closed) ويُعادُ توليدُ BASELINE.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-21 — CLM-0655 — G-S9.20: إقصاءُ ناقلَي بحثٍ متزامنَينِ (حجزٌ قبلَ أيِّ تغييرٍ)
+
+- **Work Item(s):** M0-53 (G-S9.20 · اكتُشِفَ في CLM-0649).
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0655-gs9-20-relay-consumer-lock`).
+- **Change:** لا شيفرةَ بعدُ — هذا السطرُ يسبقُ التغييرَ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه؛ الاختباراتُ في الإيداعِ التالي.
+- **Next:** قياسُ السباقِ قبلَ الإصلاحِ على PostgreSQL 17 → إصلاحٌ أدنى (قفلٌ استشاريٌّ لكلِّ مستهلِكٍ) → برهانٌ بتكرارٍ مسجَّلٍ ≥ 50 وطفرةِ إزالةِ القفلِ.
+
 # 2026-10-21 — CLM-0654 — إعادةُ التأسيسِ على main `1066cdfc` (بالإضافةِ)
 
 - **Work Item(s):** M0-53 (G-S9.19)

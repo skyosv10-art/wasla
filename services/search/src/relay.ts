@@ -98,6 +98,14 @@ function now(): string {
  */
 export async function runRelayBatch(deps: RelayDeps): Promise<BatchOutcome> {
   const cfg = { ...DEFAULT_RELAY_CONFIG, ...deps.config };
+  // G-S9.20 · CLM-0655 (RISK-0070): the whole batch — checkpoint read through
+  // the last checkpoint write — runs under the consumer's exclusive lock. Two
+  // relay instances never interleave, so neither writes a projection from a
+  // snapshot the other has already advanced.
+  return deps.store.withConsumerLock(cfg.consumerId, () => runRelayBatchLocked(deps, cfg));
+}
+
+async function runRelayBatchLocked(deps: RelayDeps, cfg: RelayConfig): Promise<BatchOutcome> {
   const log = deps.log ?? (() => {});
   const checkpoint = await deps.store.getCheckpoint(cfg.consumerId);
   const rows = await deps.events.readAfter(checkpoint, cfg.batchSize);

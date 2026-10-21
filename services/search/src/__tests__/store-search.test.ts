@@ -256,6 +256,22 @@ class MemEvents implements MarketplaceEventSource {
 }
 
 class MemStore implements ProjectionStore {
+  // G-S9.20 · CLM-0655: in-memory mutex per consumer — the fake models the exclusion, not a pass-through.
+  private lockTail = new Map<string, Promise<void>>();
+  lockAcquisitions = 0;
+  async withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T> {
+    const prev = this.lockTail.get(consumerId) ?? Promise.resolve();
+    let release!: () => void;
+    const mine = new Promise<void>((r) => (release = r));
+    this.lockTail.set(consumerId, prev.then(() => mine));
+    await prev;
+    this.lockAcquisitions += 1;
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }
   checkpoint: RelayCheckpoint | null = null;
   consumed = new Map<string, { status: ConsumedStatus; attempts: number; error?: string | null }>();
   stores = new Map<string, StoreProjection>();

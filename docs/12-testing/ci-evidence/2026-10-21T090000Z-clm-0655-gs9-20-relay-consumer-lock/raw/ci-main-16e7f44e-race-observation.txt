@@ -1,0 +1,9 @@
+# 2026-10-21 · CI observation on main 16e7f44e (after #801; search service code identical to 1066cdfc) — WASLA CI run 39640217300
+# attempt 1 · job 119361455817 · db-integration (search) FAILED:
+   × M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state 165ms
+     → exactly one index doc — no duplicates: expected +0 to be 1 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/__tests__/relay-concurrent-dedupe.integration.test.ts > M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > two concurrent relay instances leave one consumed-events row per outbox_id a
+      Tests  1 failed | 78 passed (79)
+# attempt 2 (same SHA, failed job re-run) · job 119371736640 · Tests 79 passed (79) · run 41/41
+# reading: the unlocked relay race (G-S9.20) observed on CI for the first time (mode: missing index doc). Matching symptom = inference, not a diagnosis. The re-run pass does not erase attempt 1.

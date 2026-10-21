@@ -50,6 +50,16 @@ export interface StoreCatalogReadPort {
 }
 
 export interface ProjectionStore {
+  /**
+   * G-S9.20 · CLM-0655 — consumer-level mutual exclusion. Runs `fn` while this
+   * caller holds the exclusive lock for `consumerId` and always releases it.
+   * A second relay instance on the same consumer waits until the first batch
+   * ends (bounded by `batchSize`), then reads the advanced checkpoint — the
+   * same design as delivery's relay (M5-13R · relay-advisory-lock.ts).
+   * Required on every store so `runRelayBatch` can never run unexcluded.
+   */
+  withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T>;
+
   getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null>;
   writeCheckpoint(consumerId: string, checkpoint: RelayCheckpoint): Promise<void>;
 

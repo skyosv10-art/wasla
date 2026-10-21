@@ -1,3 +1,18 @@
+# 2026-10-21 — CLM-0656 — M2-01 / RISK-0050: CVE-2026-111943 في ثنائيِّ esbuild — استثناءٌ محروسٌ (لا تعطيلَ للبوّابةِ)
+
+- **Work Item(s):** M2-01
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released (الفرعُ `stage-zero/clm-0656-esbuild-cve-2026-111943`).
+- **Risk(s):** RISK-0050 → open
+- **What / Why:** WASLA CI على main بعدَ دمجِ #799 (`6b620e41` · الشوطُ 39568230432) فشلَ في image-supply-chain وحدَهُ: ثغرةٌ HIGH جديدةٌ CVE-2026-111943 (Go crypto/x509 · إصلاحُها 1.26.10/1.27.3) في مكتبةِ Go القياسيّةِ داخلَ ثنائيِّ esbuild 0.25.12 (go1.23.12). القفلُ نفسُهُ كانَ أخضرَ على رأسِ PR قبلَ ساعةٍ (39563121894) — فشلٌ زمنيٌّ بتحديثِ قاعدةِ الثغراتِ. قيسَ: لا إصدارَ esbuild مبنيّاً بـGo مصحّحٍ (0.28.2 = go1.26.5).
+- **Change:** `docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml` (+1 إدخالٍ بالمسارِ والبيانِ والمهلةِ نفسِها · سابقتا CLM-0515/CLM-0521) · `docs/07-security/RISK_REGISTER.md` (تحديثُ RISK-0050 بالإضافةِ).
+- **No-Test-Reason:** استثناءٌ YAML محروسٌ + سجلُّ خطرٍ — التحقّقُ هوَ حارسُ البابِ 10 (الفحصُ 19 · يعملُ في CI) وimage-supply-chain نفسُهُ؛ لا شيفرةَ.
+- **Security / Data / Deployment:** لا تغييرَ إنتاجٍ؛ الثغرةُ مقيسةٌ ومنشورةٌ وغيرُ معالَجةٍ (الاستثناءُ من الحَجزِ لا من القياسِ)؛ لا سرَّ؛ لا نشرَ (`frozen`).
+- **Evidence:** [دليلُ CLM-0656](../12-testing/ci-evidence/2026-10-21T084500Z-clm-0656-esbuild-cve-2026-111943/README.md)
+- **Deployment:** none.
+- **Next:** حكمُ CI على هذا الفرعِ ثمّ على main؛ ومتابعةٌ حيّةٌ: إصدارُ esbuild بـGo ≥ 1.26.10 → ترقيةٌ وحذفُ استثناءِ الفئةِ كلِّها (المهلةُ تعضُّ 2026-12-15).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
 # 2026-10-21 — CLM-0653 — M0-06: ترقيعٌ أمنيٌّ vite 6.4.3 → 6.4.5 (CVE-2026-112942 HIGH)
 
 - **Work Item(s):** M0-06 (تحديثُ الاعتمادياتِ والثغراتِ) · فحصا CI: تدقيقُ الاعتمادياتِ (M0-06) وimage-supply-chain (M2-01).

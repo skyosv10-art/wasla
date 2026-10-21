@@ -1,3 +1,11 @@
+# 2026-10-21 — CLM-0657 — RISK-0071: محارفُ LIKE في بحثِ المنتجاتِ تُطابَقُ حرفيّاً
+
+- **Work Item(s):** M0-53 (RISK-0071 · G-S9.19 شقُّه الثاني)
+- **Kind:** fix — مستقلٌّ عن #800 (مدموجٌ) و#803.
+- **Change:** `services/search/src/infrastructure/search-index-reader.ts`: مسندا ILIKE يربطانِ `$2 = escapeLike(q)` مع `ESCAPE` صريحٍ؛ trigram والنصُّ الكاملُ على `$1` الخامِ؛ الفئةُ `$3`.
+- **Tests:** 5 حالاتِ تكاملِ PostgreSQL (`%` · `_` · `\` في sku؛ q=`%` وq=`_` في title_ar) حمراءُ قبلَ الإصلاحِ وخضراءُ بعدَهُ؛ حالةُ وحدةٍ تلتقطُ SQL والمعاملاتِ؛ طفراتٌ M1–M4 مقتولةٌ (M4 بالوحدةِ فقط — مكافئٌ في SQL). قياسٌ محلّيٌّ على PostgreSQL 17 لا يحلُّ محلَّ CI. [الدليل](../12-testing/ci-evidence/2026-10-21T100000Z-clm-0657-risk-0071-product-search-like-escape/README.md)
+- **Risk(s):** RISK-0071 → mitigating (لا closed)
+
 # 2026-10-21 — CLM-0657 — RISK-0071: هروبُ LIKE في بحثِ المنتجاتِ (حجزٌ قبلَ أيِّ تغييرٍ)
 
 - **Work Item(s):** M0-53 (RISK-0071)

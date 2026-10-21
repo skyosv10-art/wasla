@@ -1,0 +1,654 @@
+﻿2026-10-21T05:28:33.8927354Z Current runner version: '2.337.0'
+2026-10-21T05:28:33.8952666Z ##[group]Runner Image Provisioner
+2026-10-21T05:28:33.8953524Z Hosted Compute Agent
+2026-10-21T05:28:33.8954270Z Version: 20261012.601
+2026-10-21T05:28:33.8954925Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-21T05:28:33.8955756Z Build Date: 2026-10-12T17:48:21Z
+2026-10-21T05:28:33.8956981Z Worker ID: {19c7dadd-5e36-4b18-a432-754306c94206}
+2026-10-21T05:28:33.8957738Z Region: westus2
+2026-10-21T05:28:33.8958386Z Cloud: Azure
+2026-10-21T05:28:33.8958929Z ##[endgroup]
+2026-10-21T05:28:33.8960599Z ##[group]Operating System
+2026-10-21T05:28:33.8961257Z Ubuntu
+2026-10-21T05:28:33.8961781Z 24.04.5
+2026-10-21T05:28:33.8962378Z LTS
+2026-10-21T05:28:33.8962889Z ##[endgroup]
+2026-10-21T05:28:33.8963513Z ##[group]Runner Image
+2026-10-21T05:28:33.8964121Z Image: ubuntu-24.04
+2026-10-21T05:28:33.8964691Z Version: 20261012.334.1
+2026-10-21T05:28:33.8966036Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-21T05:28:33.8968035Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-21T05:28:33.8969038Z ##[endgroup]
+2026-10-21T05:28:33.8970316Z ##[group]GITHUB_TOKEN Permissions
+2026-10-21T05:28:33.8972220Z Contents: read
+2026-10-21T05:28:33.8972865Z Metadata: read
+2026-10-21T05:28:33.8973577Z PullRequests: read
+2026-10-21T05:28:33.8974139Z ##[endgroup]
+2026-10-21T05:28:33.8976209Z Secret source: Actions
+2026-10-21T05:28:33.8977539Z Cache mode: write
+2026-10-21T05:28:33.8978261Z Prepare workflow directory
+2026-10-21T05:28:33.9384981Z Prepare all required actions
+2026-10-21T05:28:33.9433588Z Getting action download info
+2026-10-21T05:28:34.2798612Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-21T05:28:34.4027061Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-21T05:28:34.5929231Z Complete job name: governance-guard
+2026-10-21T05:28:34.6840492Z ##[group]Run actions/checkout@v4
+2026-10-21T05:28:34.6841371Z with:
+2026-10-21T05:28:34.6841918Z   ref: stage-zero/clm-0652-gs9-19-injected-fetcher-census
+2026-10-21T05:28:34.6842568Z   fetch-depth: 0
+2026-10-21T05:28:34.6843035Z   repository: skyosv10-art/wasla
+2026-10-21T05:28:34.6846926Z   token: ***
+2026-10-21T05:28:34.6847358Z   ssh-strict: true
+2026-10-21T05:28:34.6847795Z   ssh-user: git
+2026-10-21T05:28:34.6848239Z   persist-credentials: true
+2026-10-21T05:28:34.6848717Z   clean: true
+2026-10-21T05:28:34.6849163Z   sparse-checkout-cone-mode: true
+2026-10-21T05:28:34.6849688Z   fetch-tags: false
+2026-10-21T05:28:34.6850136Z   show-progress: true
+2026-10-21T05:28:34.6850578Z   lfs: false
+2026-10-21T05:28:34.6850984Z   submodules: false
+2026-10-21T05:28:34.6851706Z   set-safe-directory: true
+2026-10-21T05:28:34.6852370Z   allow-unsafe-pr-checkout: false
+2026-10-21T05:28:34.6853308Z env:
+2026-10-21T05:28:34.6853726Z   NODE_VERSION: 20.20.1
+2026-10-21T05:28:34.6854231Z   PNPM_VERSION: 9.15.9
+2026-10-21T05:28:34.6854694Z ##[endgroup]
+2026-10-21T05:28:34.7910226Z Syncing repository: skyosv10-art/wasla
+2026-10-21T05:28:34.7912530Z ##[group]Getting Git version info
+2026-10-21T05:28:34.7913779Z Working directory is '/home/runner/work/wasla/wasla'
+2026-10-21T05:28:34.7915510Z [command]/usr/bin/git version
+2026-10-21T05:28:34.8002336Z git version 2.55.0
+2026-10-21T05:28:34.8028090Z ##[endgroup]
+2026-10-21T05:28:34.8044484Z Temporarily overriding HOME='/home/runner/work/_temp/486dd2e6-ee07-45bf-a76d-bceecdf266ff' before making global git config changes
+2026-10-21T05:28:34.8047281Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-21T05:28:34.8051267Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-10-21T05:28:34.8104949Z Deleting the contents of '/home/runner/work/wasla/wasla'
+2026-10-21T05:28:34.8109488Z ##[group]Initializing the repository
+2026-10-21T05:28:34.8114536Z [command]/usr/bin/git init /home/runner/work/wasla/wasla
+2026-10-21T05:28:34.8223763Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-21T05:28:34.8225410Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-21T05:28:34.8226718Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-21T05:28:34.8227545Z hint: call:
+2026-10-21T05:28:34.8227990Z hint:
+2026-10-21T05:28:34.8228545Z hint: 	git config --global init.defaultBranch <name>
+2026-10-21T05:28:34.8229198Z hint:
+2026-10-21T05:28:34.8229814Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-21T05:28:34.8230784Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-21T05:28:34.8231552Z hint:
+2026-10-21T05:28:34.8231988Z hint: 	git branch -m <name>
+2026-10-21T05:28:34.8232493Z hint:
+2026-10-21T05:28:34.8233142Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-21T05:28:34.8237610Z Initialized empty Git repository in /home/runner/work/wasla/wasla/.git/
+2026-10-21T05:28:34.8249705Z [command]/usr/bin/git remote add origin https://github.com/skyosv10-art/wasla
+2026-10-21T05:28:34.8302434Z ##[endgroup]
+2026-10-21T05:28:34.8303845Z ##[group]Disabling automatic garbage collection
+2026-10-21T05:28:34.8307596Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-21T05:28:34.8341279Z ##[endgroup]
+2026-10-21T05:28:34.8342797Z ##[group]Setting up auth
+2026-10-21T05:28:34.8349516Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-21T05:28:34.8391234Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-21T05:28:34.8760566Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-21T05:28:34.8803667Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-21T05:28:34.9030718Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-21T05:28:34.9066856Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-21T05:28:34.9292165Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-21T05:28:34.9333315Z ##[endgroup]
+2026-10-21T05:28:34.9334274Z ##[group]Fetching the repository
+2026-10-21T05:28:34.9345571Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-21T05:28:39.3828729Z From https://github.com/skyosv10-art/wasla
+2026-10-21T05:28:39.3831056Z  * [new branch]        fix/clm-0576-attestation-verify-gate -> origin/fix/clm-0576-attestation-verify-gate
+2026-10-21T05:28:39.3833108Z  * [new branch]        main       -> origin/main
+2026-10-21T05:28:39.3836070Z  * [new branch]        stage-zero/clm-0652-gs9-19-injected-fetcher-census -> origin/stage-zero/clm-0652-gs9-19-injected-fetcher-census
+2026-10-21T05:28:39.3839366Z  * [new branch]        stage-zero/clm-0652-gs9-7-store-search-bounds -> origin/stage-zero/clm-0652-gs9-7-store-search-bounds
+2026-10-21T05:28:39.3843064Z  * [new tag]           archive/chore-m0-gate-docs-batch2 -> archive/chore-m0-gate-docs-batch2
+2026-10-21T05:28:39.3845105Z  * [new tag]           archive/chore-m0-gate-docs-batch3 -> archive/chore-m0-gate-docs-batch3
+2026-10-21T05:28:39.3848074Z  * [new tag]           archive/chore-m0-gate-docs-batch4 -> archive/chore-m0-gate-docs-batch4
+2026-10-21T05:28:39.3850388Z  * [new tag]           archive/chore-m0-gate-docs-batch5 -> archive/chore-m0-gate-docs-batch5
+2026-10-21T05:28:39.3852464Z  * [new tag]           archive/docs-identity-stack-adr -> archive/docs-identity-stack-adr
+2026-10-21T05:28:39.3854901Z  * [new tag]           archive/docs-roadmap-post-merge -> archive/docs-roadmap-post-merge
+2026-10-21T05:28:39.3857096Z  * [new tag]           archive/docs/m6-18-live-evidence -> archive/docs/m6-18-live-evidence
+2026-10-21T05:28:39.3859867Z  * [new tag]           archive/feat-m0-23-subscriptions-reversible-migrations -> archive/feat-m0-23-subscriptions-reversible-migrations
+2026-10-21T05:28:39.3863676Z  * [new tag]           archive/fix-m0-02-drivers-conformance-zone-seed -> archive/fix-m0-02-drivers-conformance-zone-seed
+2026-10-21T05:28:39.3868155Z  * [new tag]           archive/fix-m0-09-drizzle-constraint-assertions -> archive/fix-m0-09-drizzle-constraint-assertions
+2026-10-21T05:28:39.3871994Z  * [new tag]           archive/fix-m0-10-eligibility-reasons-cardinality -> archive/fix-m0-10-eligibility-reasons-cardinality
+2026-10-21T05:28:39.3874711Z  * [new tag]           evidence/clm-0415-pre-rebase -> evidence/clm-0415-pre-rebase
+2026-10-21T05:28:39.3877324Z  * [new tag]           evidence/clm-0416-pre-rebase -> evidence/clm-0416-pre-rebase
+2026-10-21T05:28:39.3879411Z  * [new tag]           evidence/clm-0417-pre-rebase -> evidence/clm-0417-pre-rebase
+2026-10-21T05:28:39.3881837Z  * [new tag]           evidence/ops-risk-0056-pgtrgm-readonly -> evidence/ops-risk-0056-pgtrgm-readonly
+2026-10-21T05:28:39.3884549Z  * [new tag]           evidence/ops-risk-0056-prod-preflight -> evidence/ops-risk-0056-prod-preflight
+2026-10-21T05:28:39.3887602Z  * [new tag]           evidence/ops-risk-0056-readiness-report -> evidence/ops-risk-0056-readiness-report
+2026-10-21T05:28:39.3890140Z  * [new tag]           evidence/ops-risk-0056-test-db -> evidence/ops-risk-0056-test-db
+2026-10-21T05:28:39.3894353Z ##[endgroup]
+2026-10-21T05:28:39.3895963Z ##[group]Determining the checkout info
+2026-10-21T05:28:39.3898273Z [command]/usr/bin/git branch --list --remote origin/stage-zero/clm-0652-gs9-19-injected-fetcher-census
+2026-10-21T05:28:39.3909676Z   origin/stage-zero/clm-0652-gs9-19-injected-fetcher-census
+2026-10-21T05:28:39.3921286Z ##[endgroup]
+2026-10-21T05:28:39.3922737Z [command]/usr/bin/git sparse-checkout disable
+2026-10-21T05:28:39.4010161Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-21T05:28:39.4043178Z ##[group]Checking out the ref
+2026-10-21T05:28:39.4048495Z [command]/usr/bin/git checkout --progress --force -B stage-zero/clm-0652-gs9-19-injected-fetcher-census refs/remotes/origin/stage-zero/clm-0652-gs9-19-injected-fetcher-census
+2026-10-21T05:28:39.7305644Z Switched to a new branch 'stage-zero/clm-0652-gs9-19-injected-fetcher-census'
+2026-10-21T05:28:39.7309657Z branch 'stage-zero/clm-0652-gs9-19-injected-fetcher-census' set up to track 'origin/stage-zero/clm-0652-gs9-19-injected-fetcher-census'.
+2026-10-21T05:28:39.7336568Z ##[endgroup]
+2026-10-21T05:28:39.7384434Z [command]/usr/bin/git log -1 --format=%H
+2026-10-21T05:28:39.7413508Z 9977d7c6437b61d06dfb0b89a0922f067e13d804
+2026-10-21T05:28:39.7804109Z ##[group]Run actions/setup-node@v4
+2026-10-21T05:28:39.7805198Z with:
+2026-10-21T05:28:39.7806049Z   node-version: 20.20.1
+2026-10-21T05:28:39.7807243Z   always-auth: false
+2026-10-21T05:28:39.7808159Z   check-latest: false
+2026-10-21T05:28:39.7816709Z   token: ***
+2026-10-21T05:28:39.7817556Z env:
+2026-10-21T05:28:39.7818364Z   NODE_VERSION: 20.20.1
+2026-10-21T05:28:39.7819301Z   PNPM_VERSION: 9.15.9
+2026-10-21T05:28:39.7820212Z ##[endgroup]
+2026-10-21T05:28:39.9257690Z Attempting to download 20.20.1...
+2026-10-21T05:28:39.9393169Z (node:2534) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-21T05:28:39.9395610Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-21T05:28:40.5129918Z Acquiring 20.20.1 - x64 from https://github.com/actions/node-versions/releases/download/20.20.1-22746716736/node-20.20.1-linux-x64.tar.gz
+2026-10-21T05:28:41.0352595Z Extracting ...
+2026-10-21T05:28:41.0481778Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/86949138-38b9-41de-8757-ae315692a341 -f /home/runner/work/_temp/d076cbe3-4ec6-4387-801a-c48b53e5d3a7
+2026-10-21T05:28:42.0311495Z Adding to the cache ...
+2026-10-21T05:28:43.8589952Z ##[group]Environment details
+2026-10-21T05:28:44.0758953Z node: v20.20.1
+2026-10-21T05:28:44.0759426Z npm: 10.8.2
+2026-10-21T05:28:44.0759813Z yarn: 1.22.22
+2026-10-21T05:28:44.0760637Z ##[endgroup]
+2026-10-21T05:28:44.0952314Z ##[group]Run corepack enable
+2026-10-21T05:28:44.0952700Z corepack enable
+2026-10-21T05:28:44.0953061Z corepack prepare "pnpm@${PNPM_VERSION}" --activate
+2026-10-21T05:28:44.0953474Z echo "node   $(node --version)"
+2026-10-21T05:28:44.0953772Z echo "pnpm   $(pnpm --version)"
+2026-10-21T05:28:44.1204644Z shell: /usr/bin/bash -e {0}
+2026-10-21T05:28:44.1204958Z env:
+2026-10-21T05:28:44.1205194Z   NODE_VERSION: 20.20.1
+2026-10-21T05:28:44.1205471Z   PNPM_VERSION: 9.15.9
+2026-10-21T05:28:44.1205731Z ##[endgroup]
+2026-10-21T05:28:44.2521610Z Preparing pnpm@9.15.9 for immediate activation...
+2026-10-21T05:28:45.2007281Z node   v20.20.1
+2026-10-21T05:28:45.6267223Z pnpm   9.15.9
+2026-10-21T05:28:45.6309647Z ##[group]Run pnpm install --frozen-lockfile
+2026-10-21T05:28:45.6310025Z pnpm install --frozen-lockfile
+2026-10-21T05:28:45.6376622Z shell: /usr/bin/bash -e {0}
+2026-10-21T05:28:45.6376879Z env:
+2026-10-21T05:28:45.6377071Z   NODE_VERSION: 20.20.1
+2026-10-21T05:28:45.6377289Z   PNPM_VERSION: 9.15.9
+2026-10-21T05:28:45.6377504Z ##[endgroup]
+2026-10-21T05:28:46.0340285Z Scope: all 74 workspace projects
+2026-10-21T05:28:46.1191190Z Lockfile is up to date, resolution step is skipped
+2026-10-21T05:28:46.1598127Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-10-21T05:28:46.2437324Z Packages: +306
+2026-10-21T05:28:46.2438354Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-10-21T05:28:47.1654001Z Progress: resolved 306, reused 0, downloaded 93, added 86
+2026-10-21T05:28:48.1650590Z Progress: resolved 306, reused 0, downloaded 305, added 305
+2026-10-21T05:28:48.2372041Z Progress: resolved 306, reused 0, downloaded 306, added 306, done
+2026-10-21T05:28:48.4741998Z .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-10-21T05:28:48.5208750Z .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-10-21T05:28:49.0792606Z 
+2026-10-21T05:28:49.0793143Z devDependencies:
+2026-10-21T05:28:49.0793707Z + json-schema-to-typescript 15.0.4
+2026-10-21T05:28:49.0794232Z + openapi-typescript 7.13.0
+2026-10-21T05:28:49.0794678Z + typescript 5.9.3
+2026-10-21T05:28:49.0795024Z + vitest 3.2.7
+2026-10-21T05:28:49.0795236Z 
+2026-10-21T05:28:49.5854432Z Done in 3.8s using pnpm v9.15.9
+2026-10-21T05:28:49.6235743Z ##[group]Run # CLM-0539 (M0-08B): no `--depth` here. This job checks out with
+2026-10-21T05:28:49.6236640Z # CLM-0539 (M0-08B): no `--depth` here. This job checks out with
+2026-10-21T05:28:49.6237203Z # fetch-depth: 0, and `git fetch --depth=50` silently turned that full
+2026-10-21T05:28:49.6237768Z # clone shallow, so gate 4(b) of the baseline reported "shallow: not
+2026-10-21T05:28:49.6238290Z # measured" in every run (measured: run 38306302226) and the proof
+2026-10-21T05:28:49.6238847Z # suite could not import repo.commit. Updating the ref needs no depth.
+2026-10-21T05:28:49.6239303Z TARGET="${GITHUB_BASE_REF:-main}"
+2026-10-21T05:28:49.6239732Z git fetch origin "$TARGET:refs/remotes/origin/$TARGET" 2>/dev/null || true
+2026-10-21T05:28:49.6240198Z echo "==> بوابة الحوكمة: النطاق origin/$TARGET..HEAD"
+2026-10-21T05:28:49.6240676Z bash scripts/checks/verify-governance.sh "origin/$TARGET" HEAD
+2026-10-21T05:28:49.6305395Z shell: /usr/bin/bash -e {0}
+2026-10-21T05:28:49.6305644Z env:
+2026-10-21T05:28:49.6305833Z   NODE_VERSION: 20.20.1
+2026-10-21T05:28:49.6306053Z   PNPM_VERSION: 9.15.9
+2026-10-21T05:28:49.6308836Z   GH_TOKEN: ***
+2026-10-21T05:28:49.6309062Z ##[endgroup]
+2026-10-21T05:28:49.8560863Z ==> بوابة الحوكمة: النطاق origin/main..HEAD
+2026-10-21T05:28:49.8600804Z ╔══════════════════════════════════════════════════════════╗
+2026-10-21T05:28:49.8617564Z ║  فحص حوكمة WASLA — بوابة واحدة لكل الفحوص                ║
+2026-10-21T05:28:49.8618712Z ╚══════════════════════════════════════════════════════════╝
+2026-10-21T05:28:49.8619170Z 
+2026-10-21T05:28:49.8619619Z ──── 0) وجود الوثائق الحاكمة ────
+2026-10-21T05:28:49.8627843Z   ✓ docs/00-rules/STATE_SYNC_RULE.md
+2026-10-21T05:28:49.8628939Z   ✓ docs/00-rules/ENGINEERING_DOCUMENTATION_LAW.md
+2026-10-21T05:28:49.8630102Z   ✓ docs/00-rules/DEFINITION_OF_DONE.md
+2026-10-21T05:28:49.8631010Z   ✓ docs/00-rules/GIT_RULES.md
+2026-10-21T05:28:49.8631860Z   ✓ docs/00-rules/SECURITY_RULES.md
+2026-10-21T05:28:49.8632754Z   ✓ docs/00-rules/WORK_CLAIM_RULE.md
+2026-10-21T05:28:49.8633773Z   ✓ docs/00-rules/PUSH_DOCUMENTATION_RULE.md
+2026-10-21T05:28:49.8634837Z   ✓ docs/00-rules/TESTING_RULES.md
+2026-10-21T05:28:49.8635744Z   ✓ docs/00-rules/VERIFY_COMMAND.md
+2026-10-21T05:28:49.8636893Z   ✓ docs/07-security/RISK_REGISTER.md
+2026-10-21T05:28:49.8637916Z   ✓ docs/12-testing/BASELINE_FORMAT.md
+2026-10-21T05:28:49.8638804Z   ✓ docs/12-testing/BASELINE.json
+2026-10-21T05:28:49.8639996Z   ✓ docs/15-decisions/ADR-001-identity-decoupled-from-telegram.md
+2026-10-21T05:28:49.8641072Z   ✓ docs/16-progress/README.md
+2026-10-21T05:28:49.8641959Z   ✓ docs/16-progress/MASTER_PROGRESS.md
+2026-10-21T05:28:49.8642958Z   ✓ docs/16-progress/LAUNCH_TO_100_ROADMAP.md
+2026-10-21T05:28:49.8644018Z   ✓ docs/16-progress/LAUNCH_EXECUTION_BOARD.md
+2026-10-21T05:28:49.8645042Z   ✓ docs/16-progress/ROADMAP_OPERATING_PROTOCOL.md
+2026-10-21T05:28:49.8646106Z   ✓ docs/16-progress/WORK_CLAIMS.md
+2026-10-21T05:28:49.8647466Z   ✓ docs/16-progress/WORK_INDEX.md
+2026-10-21T05:28:49.8648470Z   ✓ docs/16-progress/TASK_LOG.md
+2026-10-21T05:28:49.8649130Z 
+2026-10-21T05:28:49.8649774Z ──── 1) بنية لوحة التنفيذ ────
+2026-10-21T05:28:50.0627878Z OK: لوحة التنفيذ سليمة (120 عنصر/عناصر).
+2026-10-21T05:28:50.2082016Z OK: Work Item references في /home/runner/work/wasla/wasla/docs/16-progress/TASK_LOG.md تطابق IDs اللوحة.
+2026-10-21T05:28:50.2120014Z 
+2026-10-21T05:28:50.2120804Z ──── 2) حجوزات العمل (سجل + ملفات مُعدّلة) ────
+2026-10-21T05:28:50.2154869Z 
+2026-10-21T05:28:50.2155318Z === فحص حجوزات العمل ===
+2026-10-21T05:28:50.2347054Z   حجوزات نشطة: 0
+2026-10-21T05:28:50.2352057Z ✓ بنية الحجوزات النشطة صالحة (عنصر عمل موجود · مالك · فرع · نطاق · مهلة ≤ 14د).
+2026-10-21T05:28:50.3062154Z ✓ لا تناقضَ في السجلِّ: لا حجزَ نشطاً ولهُ إفراجٌ مُوثَّقٌ.
+2026-10-21T05:28:50.3063501Z ✓ لا تقاطع في النطاقات بين مالكين مختلفين.
+2026-10-21T05:28:50.3444591Z   الحجز المطابق: CLM-0652 (مُقفَلٌ في هذا النطاق) (الفرع stage-zero/clm-0652-gs9-19-injected-fetcher-census)
+2026-10-21T05:28:50.4694047Z ✓ كل الملفات المُعدّلة داخل النطاق المحجوز.
+2026-10-21T05:28:50.4694865Z 
+2026-10-21T05:28:50.4695653Z ✓ فحص حجوزات العمل: نجح.
+2026-10-21T05:28:50.4723413Z 
+2026-10-21T05:28:50.4724113Z ──── 3) قاعدة التوثيق مع الدفع ────
+2026-10-21T05:28:50.9313965Z OK: لوحة التنفيذ سليمة (120 عنصر/عناصر).
+2026-10-21T05:28:51.0713052Z OK: Work Item references في /home/runner/work/wasla/wasla/docs/16-progress/TASK_LOG.md تطابق IDs اللوحة.
+2026-10-21T05:28:51.0750431Z 
+2026-10-21T05:28:51.0750904Z === فحص حجوزات العمل ===
+2026-10-21T05:28:51.0957238Z   حجوزات نشطة: 0
+2026-10-21T05:28:51.0961211Z ✓ بنية الحجوزات النشطة صالحة (عنصر عمل موجود · مالك · فرع · نطاق · مهلة ≤ 14د).
+2026-10-21T05:28:51.1546849Z ✓ لا تناقضَ في السجلِّ: لا حجزَ نشطاً ولهُ إفراجٌ مُوثَّقٌ.
+2026-10-21T05:28:51.1554646Z ✓ لا تقاطع في النطاقات بين مالكين مختلفين.
+2026-10-21T05:28:51.1909252Z   الحجز المطابق: CLM-0652 (مُقفَلٌ في هذا النطاق) (الفرع stage-zero/clm-0652-gs9-19-injected-fetcher-census)
+2026-10-21T05:28:51.3046180Z ✓ كل الملفات المُعدّلة داخل النطاق المحجوز.
+2026-10-21T05:28:51.3047024Z 
+2026-10-21T05:28:51.3047781Z ✓ فحص حجوزات العمل: نجح.
+2026-10-21T05:28:51.3062767Z OK: سجل العمل ولوحة الإطلاق وحجز النطاق محدَّثة مع التغيير ذي المعنى.
+2026-10-21T05:28:51.3073457Z 
+2026-10-21T05:28:51.3074285Z ──── 4) بياتُ الحجوزات (فرعٌ محذوفٌ وحجزٌ نشط) ────
+2026-10-21T05:28:51.3257212Z ✓ لا حجوزاتٍ نشطةً في السجل — لا شيءَ يُحرَس.
+2026-10-21T05:28:51.3261175Z 
+2026-10-21T05:28:51.3262097Z ──── 5) هدفُ طلبِ الدمج (فرعٌ مدموجٌ أو محذوفٌ يُعلِق العمل) ────
+2026-10-21T05:28:51.3314787Z   ○ لا ينطبق — ليس سياقَ طلبِ دمج (لا وسيطٌ ولا CI_MERGE_REQUEST_TARGET_BRANCH_NAME)
+2026-10-21T05:28:51.3317585Z 
+2026-10-21T05:28:51.3317895Z ──── 6) فحص الأسرار ────
+2026-10-21T05:28:52.5131662Z OK: لا أنماط أسرار واضحة في الملفات المتتبعة (باستثناء ملفات الكاشف).
+2026-10-21T05:28:52.5134443Z 
+2026-10-21T05:28:52.5135681Z ──── 7) عزلُ DDL في اختباراتِ التكامل ────
+2026-10-21T05:28:52.6460401Z   ✓ billing        3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6461181Z   ✓ customers      5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6462111Z   ✓ delivery       20 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6462965Z   ✓ dispatch       5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6463924Z   ✓ drivers        6 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6464858Z   ✓ geography      5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6466180Z   ✓ identity       5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6467750Z   ✓ marketplace    14 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6468432Z   ✓ matching       6 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6468965Z   ✓ negotiations   6 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6469503Z   ✓ orders         6 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6470003Z   ✓ partners       3 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6470511Z   ✓ reputation     5 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6471034Z   ✓ search         11 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6471557Z   ✓ subscriptions  7 ملفّاتٍ · متسلسلٌ (fileParallelism: false)
+2026-10-21T05:28:52.6471834Z 
+2026-10-21T05:28:52.6472062Z ✓ عزلُ DDL مضمونٌ: 15 خدمةً بالتسلسلِ.
+2026-10-21T05:28:52.6472283Z 
+2026-10-21T05:28:52.6472527Z ──── 8) CI مانعٌ لا مُجمِّل (M0-04) ────
+2026-10-21T05:28:53.0307477Z ✓ CI مانعٌ في إعدادِه: مصدرانِ مقيسانِ (.gitlab-ci.yml + .github/workflows/ci.yml بـ13 وظيفةٍ) · مدخلٌ موحَّدٌ مُستدعَى في كلَيهما · لا كتلةَ إلزامٍ مضمَّنةً · 1 استثناءَ إخفاقٍ مُعلَناً · 2 سكربتَ استكشافٍ مُعلَناً.
+2026-10-21T05:28:53.0310160Z   ولا يشمل هذا رفضَ الدمجِ عندَ إخفاقِ الخطّ (only_allow_merge_if_pipeline_succeeds) — docs/00-rules/VERIFY_COMMAND.md §7.
+2026-10-21T05:28:53.1223860Z   ✓ 41 سياقاً مطلوباً تُطابق وظائفَ الخطِّ حرفاً بحرفٍ
+2026-10-21T05:28:53.1224605Z   ✓ 2 محاولةَ دمجٍ رُدَّت فعلاً بـ405
+2026-10-21T05:28:53.1225197Z   ✓ أحدثُ قياسٍ حيٍّ مُسجَّلٍ (2026-10-14T05:05:53Z): الفرعُ محميٌّ
+2026-10-21T05:28:53.1226041Z ⊘ منعُ الدمجِ — جزئيٌّ مُعلَنٌ: الأبوابُ الأربعةُ نجحت على **لقطةٍ مؤرَّخةٍ** (2026-09-28T06:48:00Z)، ولم تُسأل الواجهةُ حيّاً.
+2026-10-21T05:28:53.1227213Z   والحيُّ يُسأل بتصدير WASLA_PROTECTION_JSON إلى ملفِّ ردِّ /branches/main/protection.
+2026-10-21T05:28:53.1251362Z 
+2026-10-21T05:28:53.1251989Z ──── 9) تدقيقُ الاعتماديات والثغرات (M0-06) ────
+2026-10-21T05:28:56.4044083Z   ✓ البابُ 1: شجرةُ الإنتاجِ نظيفةٌ (صفرُ ثغراتٍ).
+2026-10-21T05:28:56.4044846Z   ⊘ البابُ 2: GHSA-82fw-gwwq-j7x9 (moderate، «vitest») مقبولٌ حتى 2026-12-08 بمالكٍ @uxxxu.
+2026-10-21T05:28:56.4046678Z   ⊘ البابُ 2: GHSA-82fw-gwwq-j7x9 (moderate، «@vitest/mocker») مقبولٌ حتى 2026-12-08 بمالكٍ @uxxxu.
+2026-10-21T05:28:56.4047758Z ✗ تدقيقُ الاعتماديات — 3 مشكلةً:
+2026-10-21T05:28:56.4049092Z   ✗ البابُ 2: ثغرةٌ (moderate) في «vite» غيرُ مُعلَنةٍ في docs/00-rules/SECURITY_RULES.md §11: GHSA-698v-4r3x-3vcv (المُصلَح: >=6.4.4).
+2026-10-21T05:28:56.4050149Z   ✗ البابُ 2: ثغرةٌ (moderate) في «vite» غيرُ مُعلَنةٍ في docs/00-rules/SECURITY_RULES.md §11: GHSA-r825-w8mm-5pxw (المُصلَح: >=6.4.4).
+2026-10-21T05:28:56.4051391Z   ✗ البابُ 2: ثغرةٌ (high) في «vite» غيرُ مُعلَنةٍ في docs/00-rules/SECURITY_RULES.md §11: GHSA-587h-7wmj-h5pm (المُصلَح: >=6.4.4).
+2026-10-21T05:28:56.4052129Z   المرجع: docs/00-rules/SECURITY_RULES.md §11 (M0-06)
+2026-10-21T05:28:56.4052385Z 
+2026-10-21T05:28:56.4052649Z ──── 10) سجلُّ المخاطرِ والاستثناءات (M0-07) ────
+2026-10-21T05:28:58.8941598Z   ✓ البابُ 1: الصيغةُ صالحةٌ ومراجعُها موجودةٌ (69 خطراً · 13 مقابلةً).
+2026-10-21T05:28:58.8942289Z   ✓ البابُ 2: لا مهلةَ مراجعةٍ منقضيةً (اليومَ 2026-10-21).
+2026-10-21T05:28:58.8962028Z   ✓ البابُ 3: كلُّ استثناءٍ في §11 يقابله خطرٌ قائمٌ بمراجعةٍ سابقةٍ لانتهائه.
+2026-10-21T05:28:58.8963182Z   ✓ البابُ 4: السجلُّ مُحالٌ إليه من اللوحةِ ومن قواعدِ الأمان.
+2026-10-21T05:28:58.8964401Z ✓ سجلُّ المخاطر: 69 خطراً بمالكٍ ومهلةٍ ساريةٍ · 13 استثناءً مقابَلاً · لا سجلَّ يتيماً.
+2026-10-21T05:28:58.8964926Z 
+2026-10-21T05:28:58.8965490Z ──── 11) الأساسُ الآليُّ للبيئةِ والاختبارات (M0-08) ────
+2026-10-21T05:29:05.0828684Z   ✓ البابُ 1: الصيغةُ كاملةٌ والبصمةُ متّسقةٌ مع محتوياتِها.
+2026-10-21T05:29:05.0830066Z   ✓ البابُ 2: العدَّاداتُ الساكنةُ الحيّةُ تطابق الأساسَ المُلتزَمَ (لا انحدارَ ولا زحفَ صامتاً).
+2026-10-21T05:29:05.0831207Z   ✓ البابُ 3: البصمةُ ثابتةٌ على المتغيِّراتِ ومتغيِّرةٌ على الجوهرِ (8 عدَّاداتٍ + القفل).
+2026-10-21T05:29:05.0832592Z   ⊘ البابُ 4: `repo.commit` = cd88f6d1d803 غائبٌ محلّيّاً فاستُرجِعَ من `origin` بمعرّفِهِ — موجودٌ في المستودعِ المرجعيِّ (CLM-0538).
+2026-10-21T05:29:05.0834355Z   ✓ البابُ 4: الصيغةُ موثَّقةٌ · الأساسُ مُحالٌ إليه · أرقامُه الحركيّةُ مقيسةٌ · شجرتُه مُعلَنةٌ.
+2026-10-21T05:29:05.0835762Z ✓ الأساسُ الآليُّ: صيغةٌ متّسقةٌ · لا انحدارَ في العدَّاداتِ الساكنةِ · تكرارٌ مُبرهَنٌ · sha256:dd592c49a2b2fcbb…
+2026-10-21T05:29:05.0836637Z 
+2026-10-21T05:29:05.0837103Z ──── 12) تغطيةُ إنفاذِ هويّةِ الخدمة (M1-03) ────
+2026-10-21T05:29:06.8971367Z   ✓ السّجلُّ موجودٌ: docs/07-security/SERVICE_AUTH_ENFORCEMENT.md
+2026-10-21T05:29:06.8972720Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: bots/customer-bot/src/infrastructure/http-negotiations.ts
+2026-10-21T05:29:06.8974006Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: bots/driver-bot/src/infrastructure/http-negotiations.ts
+2026-10-21T05:29:06.8975231Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: packages/tick-scheduler/src/infrastructure/http-tick.ts
+2026-10-21T05:29:06.8976709Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-dispatch-job.ts
+2026-10-21T05:29:06.8977987Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-geography.ts
+2026-10-21T05:29:06.8979263Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-identity-lookup.ts
+2026-10-21T05:29:06.8980682Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-order-intake.ts
+2026-10-21T05:29:06.8982031Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-catalog.ts
+2026-10-21T05:29:06.8983737Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-probe.ts
+2026-10-21T05:29:06.8985127Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-reservation.ts
+2026-10-21T05:29:06.8987015Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-matching.ts
+2026-10-21T05:29:06.8988292Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-order-engine.ts
+2026-10-21T05:29:06.8989511Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-candidacy.ts
+2026-10-21T05:29:06.8990680Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-zone-catalog.ts
+2026-10-21T05:29:06.8991905Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/geography/src/infrastructure/http-identity-lookup.ts
+2026-10-21T05:29:06.8993117Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/matching/src/infrastructure/http-geography.ts
+2026-10-21T05:29:06.8994428Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-agreed-price.ts
+2026-10-21T05:29:06.8995733Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-dispatch-offer.ts
+2026-10-21T05:29:06.8997048Z   ✓ موقَّعٌ ومُثبَتٌ في الشفرة: services/search/src/infrastructure/http-marketplace-catalog.ts
+2026-10-21T05:29:06.8997883Z   ✓ الحدُّ مفروضٌ في الشفرة: services/audit/src/http/app.ts
+2026-10-21T05:29:06.8998360Z   ✓ الحدُّ مفروضٌ في الشفرة: services/billing/src/http/app.ts
+2026-10-21T05:29:06.8998840Z   ✓ الحدُّ مفروضٌ في الشفرة: services/customers/src/http/app.ts
+2026-10-21T05:29:06.8999324Z   ✓ الحدُّ مفروضٌ في الشفرة: services/delivery/src/http/app.ts
+2026-10-21T05:29:06.8999786Z   ✓ الحدُّ مفروضٌ في الشفرة: services/dispatch/src/http/app.ts
+2026-10-21T05:29:06.9000248Z   ✓ الحدُّ مفروضٌ في الشفرة: services/drivers/src/http/app.ts
+2026-10-21T05:29:06.9000724Z   ✓ الحدُّ مفروضٌ في الشفرة: services/geography/src/http/app.ts
+2026-10-21T05:29:06.9001203Z   ✓ الحدُّ مفروضٌ في الشفرة: services/identity/src/http/app.ts
+2026-10-21T05:29:06.9001682Z   ✓ الحدُّ مفروضٌ في الشفرة: services/marketplace/src/http/app.ts
+2026-10-21T05:29:06.9002169Z   ✓ الحدُّ مفروضٌ في الشفرة: services/matching/src/http/app.ts
+2026-10-21T05:29:06.9002661Z   ✓ الحدُّ مفروضٌ في الشفرة: services/negotiations/src/http/app.ts
+2026-10-21T05:29:06.9003145Z   ✓ الحدُّ مفروضٌ في الشفرة: services/orders/src/http/app.ts
+2026-10-21T05:29:06.9003625Z   ✓ الحدُّ مفروضٌ في الشفرة: services/reputation/src/http/app.ts
+2026-10-21T05:29:06.9004101Z   ✓ الحدُّ مفروضٌ في الشفرة: services/search/src/http/app.ts
+2026-10-21T05:29:06.9004582Z   ✓ الحدُّ مفروضٌ في الشفرة: services/subscriptions/src/http/app.ts
+2026-10-21T05:29:06.9005063Z   ✓ الحدُّ مفروضٌ في الشفرة: services/support/src/http/app.ts
+2026-10-21T05:29:06.9005547Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: audit (2 صلاحيّةً)
+2026-10-21T05:29:06.9006144Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: billing (4 صلاحيّةً)
+2026-10-21T05:29:06.9006995Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: customers (10 صلاحيّةً)
+2026-10-21T05:29:06.9007493Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: delivery (13 صلاحيّةً)
+2026-10-21T05:29:06.9007987Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: dispatch (7 صلاحيّةً)
+2026-10-21T05:29:06.9008453Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: drivers (15 صلاحيّةً)
+2026-10-21T05:29:06.9008923Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: geography (4 صلاحيّةً)
+2026-10-21T05:29:06.9009378Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: identity (9 صلاحيّةً)
+2026-10-21T05:29:06.9009853Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: marketplace (16 صلاحيّةً)
+2026-10-21T05:29:06.9010327Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: matching (5 صلاحيّةً)
+2026-10-21T05:29:06.9010808Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: negotiations (9 صلاحيّةً)
+2026-10-21T05:29:06.9011306Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: orders (7 صلاحيّةً)
+2026-10-21T05:29:06.9011778Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: partners (11 صلاحيّةً)
+2026-10-21T05:29:06.9012254Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: reputation (9 صلاحيّةً)
+2026-10-21T05:29:06.9012719Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: search (6 صلاحيّةً)
+2026-10-21T05:29:06.9013392Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: subscriptions (9 صلاحيّةً)
+2026-10-21T05:29:06.9013885Z   ✓ جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: support (3 صلاحيّةً)
+2026-10-21T05:29:06.9014557Z   ✓ قُفلُ أغلفةِ النداءِ: 0 مكتبةً موجودةً · 0 مُعلَنةً (المرجعُ: fetch الأصليُّ وحدَه حينَ يكونُ العددُ صفراً)
+2026-10-21T05:29:06.9015239Z   ✓ لا مُناديَ خامٍ ولا جالبَ محقونٍ خارجَ البصرِ: 39 ملفّاً (19 عميلاً + 20 استثناءً مُعلَناً)
+2026-10-21T05:29:06.9015756Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: audit
+2026-10-21T05:29:06.9016234Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: billing
+2026-10-21T05:29:06.9016965Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: customers
+2026-10-21T05:29:06.9017417Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: delivery
+2026-10-21T05:29:06.9017857Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: dispatch
+2026-10-21T05:29:06.9018311Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: drivers
+2026-10-21T05:29:06.9018758Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: geography
+2026-10-21T05:29:06.9019195Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: identity
+2026-10-21T05:29:06.9019645Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: marketplace
+2026-10-21T05:29:06.9020085Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: matching
+2026-10-21T05:29:06.9020556Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: negotiations
+2026-10-21T05:29:06.9021094Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: orders
+2026-10-21T05:29:06.9021689Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: reputation
+2026-10-21T05:29:06.9022143Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: search
+2026-10-21T05:29:06.9022602Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: subscriptions
+2026-10-21T05:29:06.9023053Z   ✓ العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: support
+2026-10-21T05:29:06.9023608Z   ✓ البابُ 10: 18 حدَّ دخولٍ مقيساً · 18 مفروضٌ · 0 غيرُ مفروضٍ (0 مساراً)
+2026-10-21T05:29:06.9024171Z   ✓ جردُ حدودِ الدخولِ مُغلَقٌ: 0 حدّاً · 0 مساراً · كلُّ صفٍّ بخطرٍ مفتوحٍ ومالكٍ
+2026-10-21T05:29:06.9024451Z 
+2026-10-21T05:29:06.9024820Z ✓ حارسُ تغطيةِ هويّةِ الخدمة: كلُّ عميلٍ مُعلَنٌ بصدقٍ، والحدُّ المُعلَنُ مفروضٌ.
+2026-10-21T05:29:06.9025343Z   والتغطيةُ الكاملةُ ليست مُدَّعاةً هنا: بوّابةُ M1-04 المستقلّة.
+2026-10-21T05:29:06.9025561Z 
+2026-10-21T05:29:06.9025834Z ──── 13) الترحيلاتُ المولَّدةُ العكوسةُ (M0-23) ────
+2026-10-21T05:29:07.8256217Z   ✓ الخدماتُ المُنتظِمةُ في الترحيلاتِ: audit billing customers delivery dispatch drivers geography identity marketplace matching negotiations orders reputation search subscriptions support
+2026-10-21T05:29:07.8257903Z   ✓ كلُّ الخدماتِ المُنتظِمةِ: journal سليمٌ ورفاقُ الترجعِ حاضرون (أو مُعلَنونَ غيرَ عكوسين).
+2026-10-21T05:29:07.8258977Z   ✓ services/billing: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8260114Z   ✓ services/customers: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (5).
+2026-10-21T05:29:07.8261133Z   ✓ services/delivery: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (6).
+2026-10-21T05:29:07.8261818Z   ✓ services/dispatch: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8262457Z   ✓ services/drivers: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (4).
+2026-10-21T05:29:07.8263126Z   ✓ services/geography: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8263758Z   ✓ services/identity: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8264411Z   ✓ services/marketplace: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8265070Z   ✓ services/matching: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (3).
+2026-10-21T05:29:07.8265732Z   ✓ services/negotiations: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (1).
+2026-10-21T05:29:07.8266826Z   ✓ services/orders: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (2).
+2026-10-21T05:29:07.8267582Z   ✓ services/reputation: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (2).
+2026-10-21T05:29:07.8268231Z   ✓ services/search: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (6).
+2026-10-21T05:29:07.8269106Z   ✓ services/subscriptions: برهانُ الترقيةِ حاضرٌ ويُعلِنُ تغطيةَ كلِّ ترحيلٍ غيرِ أساسٍ (1).
+2026-10-21T05:29:07.8270202Z   ⊘ partners: غيرُ منتظِمةٍ بإعفاءٍ مُعلَنٍ — M5-14 review 2/N — migration runner active (db/migrate.ts) but drizzle-generated reversible migrations deferred to ADR-024 wave
+2026-10-21T05:29:07.8271410Z   ⊘ غيرُ منتظِمةٍ بعدُ (موجاتُ ADR-024 §2.4): analytics auth chat compliance fraud notifications observability partners referrals rides translation
+2026-10-21T05:29:07.8272245Z   ✓ كلُّ تغييرِ مخطَّطٍ في الدفعةِ مُلازَمٌ بترحيلٍ (أو في خدمةٍ غيرِ منتظِمةٍ بعدُ).
+2026-10-21T05:29:07.8272525Z 
+2026-10-21T05:29:07.8272760Z ✓ حارسُ الترحيلاتِ: كلُّ الأبوابِ نافذة.
+2026-10-21T05:29:07.8272960Z 
+2026-10-21T05:29:07.8273245Z ──── 14) مصدرُ استدعاءِ الاختباراتِ الواحدُ (M0-35) ────
+2026-10-21T05:29:14.0998815Z ✓ استدعاءُ الاختباراتِ: مصدرٌ واحدٌ · 58 حزمةً متوازيةً · 15 حزمةَ بوّاباتٍ مُسلسَلةً · لا حزمةَ ساقطةً · مُرشِّحاتٌ مُطابِقةٌ.
+2026-10-21T05:29:14.0999317Z 
+2026-10-21T05:29:14.0999868Z ──── 15) تدقيقُ أحكامِ CI (M0-40) ────
+2026-10-21T05:29:51.6395737Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 24 (**حالة إنفاذ CI**) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6397041Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 65 (M0-23) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6398601Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 71 (M0-29) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6399536Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 76 (M0-34) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6400390Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 79 (M0-36) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6401180Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 82 (M0-40) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6401736Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 103 (M1-03) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6402277Z   ✓ دعوى «حكمُ CI مجهولٌ» في السطرِ 104 (M1-04) تُشيرُ إلى سجلِّ التدقيقِ
+2026-10-21T05:29:51.6402754Z   دعاوى «حكمُ CI مجهولٌ» على اللوحةِ: 8
+2026-10-21T05:29:51.6403080Z   صفوفُ سجلِّ التدقيقِ: 16
+2026-10-21T05:29:51.6403585Z   ✓ c2134ad: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (blackout)
+2026-10-21T05:29:51.6404104Z   ✓ 402140c: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (blackout)
+2026-10-21T05:29:51.6404610Z   ✓ 0dbd333: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (blackout)
+2026-10-21T05:29:51.6405145Z   ✓ 6b1faa6: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (blackout)
+2026-10-21T05:29:51.6405675Z   ✓ cd0d7409: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (no_verdict)
+2026-10-21T05:29:51.6406211Z   ✓ d2bf46f: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6407084Z   ✓ bee9ed7: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6407592Z   ✓ bea99c2b: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6408084Z   ✓ e31b2ca: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6409135Z   ✓ 3cb44c35: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6409763Z   ✓ 0d3c5cec: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6410268Z   ✓ 5dcfe39: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6411034Z   ✓ 1ef4a79: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6411953Z   ✓ 2865e29: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6412872Z   ✓ 29ce44e: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6413824Z   ✓ dae3b0c: التصنيفُ المُسجَّلُ يُطابِقُ القياسَ الحيَّ (real)
+2026-10-21T05:29:51.6414284Z 
+2026-10-21T05:29:51.6414951Z ✓ تدقيقُ أحكامِ CI: كلُّ دعوى جهلٍ مُدقَّقةٌ، وكلُّ تصنيفٍ مُطابِقٌ للقياسِ.
+2026-10-21T05:29:51.6415369Z 
+2026-10-21T05:29:51.6415633Z ──── 16) مصفوفةُ سياساتِ التفويضِ (M1-05) ────
+2026-10-21T05:29:51.6442085Z   ✓ موجودٌ: packages/authz-policy/src/operations.ts
+2026-10-21T05:29:51.6442916Z   ✓ موجودٌ: packages/authz-policy/src/grants.ts
+2026-10-21T05:29:51.6443674Z   ✓ موجودٌ: packages/authz-policy/src/bindings.ts
+2026-10-21T05:29:51.6444839Z   ✓ موجودٌ: packages/authz-policy/src/policy.ts
+2026-10-21T05:29:51.6445565Z   ✓ موجودٌ: packages/authz-policy/src/index.ts
+2026-10-21T05:29:51.6447003Z   ✓ موجودٌ: docs/07-security/AUTHORIZATION_POLICY_MATRIX.md
+2026-10-21T05:29:55.4067271Z   ✓ كلُّ عمليّةٍ مفروضةٍ مُعلَنةٌ — 171 عمليّةً على 18 حدودٍ (23 مساراً مفتوحاً لا يفرضُ صلاحيّةً)
+2026-10-21T05:29:55.4068489Z   ✓ لا انحرافَ في صلاحيّةِ أيِّ عمليّةٍ — مطابقةٌ حرفيّةٌ بينَ الشفرةِ والإعلانِ
+2026-10-21T05:29:55.4069440Z   ✓ لا إعلانَ زائداً — 171 عمليّةً مُعلَنةً تُقابِلُ الشفرةَ تماماً
+2026-10-21T05:29:55.4070402Z   ✓ كلُّ صلاحيّةٍ مُمنوحةٍ مفروضةٌ فعلاً على جمهورِها — لا منحَ لاسمٍ لا وجودَ لهُ
+2026-10-21T05:29:55.4071544Z   ✓ كلُّ ثلاثيّةِ إصدارٍ إنتاجيّةٍ داخلَ سقفِ منحِها وثابتُها مذكورٌ في دليلِه — 32 موضعَ إصدارٍ
+2026-10-21T05:29:55.4072624Z   ✓ كلُّ موضعِ إصدارٍ إنتاجيٍّ مقروءٌ ساكناً — لا دورَ ولا جمهورَ ولا ثابتَ مجهولاً
+2026-10-21T05:29:55.4073565Z   ✓ لا دورَ اختبارٍ في ملفٍّ إنتاجيٍّ — 13 دوراً مُعلَناً في الجردِ
+2026-10-21T05:29:55.4074415Z   ✓ كلُّ دورٍ مُعلَنٍ لهُ موضعُ إصدارٍ إنتاجيٌّ — 12 دوراً
+2026-10-21T05:29:55.4075349Z   ✓ حسابُ التصنيفِ يُغلِقُ الجردَ: 171 مُصنَّفةً + 0 غيرَ مُصنَّفةٍ = 171
+2026-10-21T05:29:55.4076490Z   ✓ كلُّ أرقامِ القياسِ (5) مُصرَّحٌ بها حرفيّاً في الوثيقةِ ومُطابِقةٌ للشفرةِ
+2026-10-21T05:29:55.4077512Z   ✓ كلُّ صفٍّ `token-bound` مُثبَتٌ في الشفرةِ وبالعكسِ — 45 عمليّةً على 6 حدٍّ
+2026-10-21T05:29:55.4078531Z   ✓ `TOKEN_BOUND_OPERATION_COUNT` مُشتَقٌّ من الصفوفِ لا مكتوبٌ باليدِ
+2026-10-21T05:29:55.4079758Z   ✓ `TENANT_BOUND_OPERATION_COUNT` مُشتَقٌّ من بُعدِ المُستأجِرِ — 8 عمليّةً كلُّها داخلَ جردِ البابِ 7
+2026-10-21T05:29:55.4081314Z   ✓ كلُّ دليلِ تصنيفٍ مقروءٌ — 171 صفّاً، ملفُّهُ موجودٌ ومِرساتُهُ فيهِ حرفاً
+2026-10-21T05:29:55.4082281Z   ✓ كلُّ خدمةٍ فيها مسارٌ مربوطٌ بالرمزِ تقرأُ المالكَ من الرمزِ — 6 خدمةً
+2026-10-21T05:29:55.4083303Z   ✓ جردُ الأسطولِ وسقفُهُ مُنسَدّانِ — 13 دوراً، كلٌّ بسببٍ مكتوبٍ ولا اسمَ في العالمَينِ
+2026-10-21T05:29:55.4084580Z   ✓ كلُّ موضعِ توقيعٍ اختباريٍّ بدورِ أسطولٍ داخلَ جمهورِهِ المُعلَنِ — 31 موضعاً
+2026-10-21T05:29:55.4085792Z   ✓ الإنفاذُ حيٌّ في `createServiceRequestSigner` — `assertSignerComposition` مُنادىً لا مُعلَّقاً
+2026-10-21T05:29:55.4087149Z   ✓ تبعيّةُ الإنفاذِ مُعلَنةٌ في `dependencies` لا في `devDependencies`
+2026-10-21T05:29:55.4088505Z   ✓ بدائيُّ الإصدارِ مُسَيَّجٌ — لا ذكرَ لـ`mintServiceToken` ولا `serviceAuthHeaders` في ملفٍّ إنتاجيٍّ خارجَ حزمةِ التوقيعِ
+2026-10-21T05:29:55.4089230Z 
+2026-10-21T05:29:55.4089689Z ✓ حارسُ مصفوفةِ التفويضِ (M1-05): كلُّ الأبوابِ نجحت.
+2026-10-21T05:29:55.4091625Z 
+2026-10-21T05:29:55.4092175Z ──── 17) تركيبُ المنافذِ في الجذرِ (M0-41) ────
+2026-10-21T05:29:55.7075497Z   ✓ البابُ 1: كلُّ مصنعِ تطبيقٍ مقروءٌ ولهُ جذرُ تركيبٍ (17 خدمةً)
+2026-10-21T05:29:55.7077598Z   ✓ البابُ 2: كلُّ منفذٍ اختياريٍّ مُمرَّرٌ في عقدِ نداءِ مصنعِهِ (17/17 · منها 2 شرطيٌّ مُعلَنٌ) أو مُستثنىً بسببٍ مكتوبٍ
+2026-10-21T05:29:55.7079178Z   ✓ البابُ 3: معوانُ كلِّ بوّابةِ خروجٍ يُطابِقُ جذرَهُ (15/15 منفذاً · 10 معواناً)
+2026-10-21T05:29:55.7080131Z   ✓ البابُ 4: لا استثناءَ ميتاً في السجلِّ (0 استثناءً حيّاً)
+2026-10-21T05:29:55.7081054Z   ✓ البابُ 5: كلُّ رقمٍ منشورٍ يُطابِقُ القياسَ (يُقاسُ ولا يُكتَبُ)
+2026-10-21T05:29:55.7082170Z   المرجع: docs/12-testing/APP_PORT_WIRING.md · RISK-0044 · M0-41
+2026-10-21T05:29:55.7082719Z 
+2026-10-21T05:29:55.7083196Z ✓ تركيبُ المنافذِ: كلُّ الأبوابِ نجحت.
+2026-10-21T05:29:55.7120703Z 
+2026-10-21T05:29:55.7121591Z ──── 18) مخطَّطُ الإعدادِ ومصدرُ حقيقتِهِ الواحدُ (M2-04) ────
+2026-10-21T05:29:58.3613825Z   ✓ البابُ 1: أكلُّ قراءةٍ مقيسةٍ في الشجرةِ مُعلَنةٌ في السجلِّ؟
+2026-10-21T05:29:58.3614618Z   ✓ البابُ 2: أكلُّ قارئٍ مُعلَنٍ حيٌّ في ملفِّهِ الآنَ؟
+2026-10-21T05:29:58.3615334Z   ✓ البابُ 3: أيطابقُ كلُّ أرتفاكتٍ مُشتَقٍّ إعادةَ توليدِهِ بايتاً بايتاً؟
+2026-10-21T05:29:58.3616060Z   ✓ البابُ 4: أسجلُّ المتغيّراتِ سليمٌ بنيويّاً بلا تكرارٍ ولا نقصٍ؟
+2026-10-21T05:29:58.3617192Z   ✓ البابُ 5: أيوافقُ نوعُ كلِّ متغيّرٍ ما يُعلِنُهُ اسمُهُ؟
+2026-10-21T05:29:58.3617881Z   ✓ البابُ 6: أزالَ التحليلُ الرقميُّ العاري من شيفرةِ الإنتاجِ؟
+2026-10-21T05:29:58.3618533Z   ✓ البابُ 7: أكلُّ سرٍّ في `.env.example` نائبٌ لا قيمةٌ؟
+2026-10-21T05:29:58.3619254Z   ✓ البابُ 8: أمُعلَنٌ كلُّ قارئٍ غيرِ مباشرٍ لا يراهُ الماسحُ، وحاضرٌ حرفاً؟
+2026-10-21T05:29:58.3619623Z 
+2026-10-21T05:29:58.3620002Z ✓ مخطَّطُ الإعدادِ: الأبوابُ الثمانيةُ كلُّها مرَّت.
+2026-10-21T05:29:58.3689222Z 
+2026-10-21T05:29:58.3690503Z ──── 19) صورةُ الحاويةِ وسلسلةُ توريدِها (M2-01) ────
+2026-10-21T05:29:58.4537694Z   • الأساسُ: node:20.20.1-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de04142dde7315e3bc0afa
+2026-10-21T05:29:58.4538522Z   • مستخدمُ التشغيلِ المُعلَنُ: node
+2026-10-21T05:29:58.4538997Z   • pnpm من `packageManager` وحدَه: 9.15.9
+2026-10-21T05:29:58.4539941Z   • «image-supply-chain» سياقٌ حاجزٌ ضمنَ 41 سياقاً
+2026-10-21T05:29:58.4540468Z   • عقدُ التشغيلِ: 18 حزمةً مُعلَنةً = المقيسُ
+2026-10-21T05:29:58.4541141Z   • استثناءاتٌ مُعلَنةٌ ومحروسةٌ: 25 معرّفاً · خطرٌ: RISK-0047, RISK-0050 · مهلةٌ: 2026-12-15
+2026-10-21T05:29:58.4541997Z ✓ صورةُ الحاويةِ: أساسٌ مُثبَّتٌ بالبصمةِ · غيرُ جِذرٍ · عقدُ تشغيلٍ مُطابقٌ للشجرةِ · أدواتٌ بنسخةٍ وبصمةٍ.
+2026-10-21T05:29:58.4610877Z 
+2026-10-21T05:29:58.4611699Z ──── 20) مخزنُ آثارِ رموزِ الخدمةِ (M1-03) ────
+2026-10-21T05:29:58.4680921Z 
+2026-10-21T05:29:58.4681592Z حارسُ مخزنِ آثارِ رموزِ الخدمةِ (M1-03 · RISK-0015)
+2026-10-21T05:29:58.4682305Z   جذورُ الإقلاعِ المقيسةُ: 18
+2026-10-21T05:29:58.4682548Z 
+2026-10-21T05:29:58.5441081Z 
+2026-10-21T05:29:58.5441974Z ✓ مخزنُ آثارِ الرموزِ: القرارُ في مِغلافٍ واحدٍ، ولا جذرَ يختارُ لنفسِهِ.
+2026-10-21T05:29:58.5443041Z   ولا يُدَّعى هنا أنَّ المخزنَ يعملُ: ذاكَ برهانُ db-integration · ساقِ service-auth.
+2026-10-21T05:29:58.5443581Z 
+2026-10-21T05:29:58.5446825Z 
+2026-10-21T05:29:58.5447292Z ──── 21) ربطُ الطلبِ بسلسلةِ الاستعلامِ (M1-03) ────
+2026-10-21T05:29:58.5474517Z 
+2026-10-21T05:29:58.5475161Z حارسُ ربطِ الطلبِ بسلسلةِ الاستعلامِ (M1-03 · RISK-0026)
+2026-10-21T05:29:58.5475441Z 
+2026-10-21T05:29:58.6109394Z 
+2026-10-21T05:29:58.6110764Z ✓ ربطُ الطلبِ: الاستعلامُ مضمومٌ مُرتَّباً، ولا حدَّ يقطعُ قبلَ المقارنةِ.
+2026-10-21T05:29:58.6111434Z   ولا يُدَّعى هنا أنَّ الربطَ يعملُ: ذاكَ برهانُ اختباراتِ service-auth ووظيفةِ verify.
+2026-10-21T05:29:58.6111731Z 
+2026-10-21T05:29:58.6113896Z 
+2026-10-21T05:29:58.6114539Z ──── 22) استيرادُ الإنتاجِ من devDependencies (M0-43) ────
+2026-10-21T05:29:58.7924689Z الحزمُ المُفحوصةُ: 58 (و15 حزمةَ ``*-e2e`` مستثناةٌ)
+2026-10-21T05:29:58.7925161Z المخالفاتُ: 0
+2026-10-21T05:29:58.7925628Z   ✓ لا استيرادَ إنتاجيًّا من devDependencies — الشجرةُ نظيفةٌ
+2026-10-21T05:29:58.7927525Z   ✓ قارئُ مساحةِ العملِ موجودٌ: scripts/checks/lib/workspace_packages.py
+2026-10-21T05:29:58.7927977Z 
+2026-10-21T05:29:58.7928372Z ✓ حارسُ استيرادِ الإنتاجِ: نجاحٌ.
+2026-10-21T05:29:58.7930657Z 
+2026-10-21T05:29:58.7931302Z ──── 23) نضارةُ الفروعِ على المنصّةِ (M0-44) ────
+2026-10-21T05:29:58.7961604Z   ✓ ملفُّ أدلّةِ الفروعِ موجودٌ: docs/16-progress/BRANCH_EVIDENCE.md
+2026-10-21T05:29:59.4575885Z 
+2026-10-21T05:29:59.4577044Z   الفروعُ المُعلَنةُ كأدلّةٍ: 25
+2026-10-21T05:29:59.4596632Z   الفروعُ ذاتُ الحجوزاتِ النشطةِ: 0
+2026-10-21T05:29:59.4597280Z   الفروعُ ذاتُ الحجوزاتِ النشطةِ: 0
+2026-10-21T05:29:59.4616957Z   طلباتُ الدمجِ المفتوحةُ: 2
+2026-10-21T05:29:59.4637928Z   الفروعُ على المنصّةِ: 4
+2026-10-21T05:29:59.4638552Z 
+2026-10-21T05:29:59.4707711Z   ✗ فرعٌ بائتٌ: stage-zero/clm-0652-gs9-7-store-search-bounds
+2026-10-21T05:29:59.4734313Z 
+2026-10-21T05:29:59.4734640Z   الفروعُ المُفحوصةُ: 3
+2026-10-21T05:29:59.4735252Z   البائتةُ: 1
+2026-10-21T05:29:59.4735462Z 
+2026-10-21T05:29:59.4735887Z   ✗ 1 فرعٌ بائتٌ — لا حجزَ ولا PR ولا إعلانُ دليلٍ.
+2026-10-21T05:29:59.4737908Z   اقرأ: docs/16-progress/BRANCH_EVIDENCE.md · docs/16-progress/WORK_CLAIMS.md
+2026-10-21T05:29:59.4738233Z 
+2026-10-21T05:29:59.4738657Z 
+2026-10-21T05:29:59.4739153Z ──── 24) عقدُ المسارِ بين التطبيقِ والخدمةِ (M3-08) ────
+2026-10-21T05:30:01.0268313Z   ✓ البابُ 1: كلُّ نداءٍ (82) مسارُه مقروءٌ
+2026-10-21T05:30:01.0269113Z   ✓ البابُ 2: 82 نداءً يطابق خدمةً · 0 فجوةً كلُّها مُسجَّلةٌ
+2026-10-21T05:30:01.0269804Z   ✓ البابُ 3: لا فجوةَ ميتةً (0 صفّاً حيّاً)
+2026-10-21T05:30:01.0270459Z   ✓ البابُ 4: كلُّ فجوةٍ مملوكةٌ لبندٍ قائمٍ غيرِ مكتملٍ
+2026-10-21T05:30:01.0271136Z   ✓ البابُ 5: كلُّ رقمٍ منشورٍ يطابق القياسَ
+2026-10-21T05:30:01.0271925Z   ✓ البابُ 6: كلُّ نداءٍ (72) له بادئةُ توجيهٍ تصلُ خدمتَه · 22 بادئةً كلُّها مملوكةً لخدمةٍ
+2026-10-21T05:30:01.0272758Z   تطبيقات 3 · مسارات خدمات 175 · نداءات 82 · مطابِقة 82 · فجوات مسجَّلة 0
+2026-10-21T05:30:01.0273751Z ✓ عقدُ المسارِ بين التطبيقِ والخدمةِ: كلُّ نداءٍ له مسارٌ أو فجوةٌ مملوكةٌ لبندٍ مفتوحٍ.
+2026-10-21T05:30:01.0316621Z 
+2026-10-21T05:30:01.0317954Z ──── 25) أسماءُ دليلِ التدويرِ تطابقُ الشفرة (M3-07) ────
+2026-10-21T05:30:01.0433460Z ✓ أسماءُ الدليلِ: 5 رمزًا كلُّها موجودةٌ في الشفرة.
+2026-10-21T05:30:01.0455466Z 
+2026-10-21T05:30:01.0456955Z ──── 26) STATE-SYNC — حالةُ المشروعِ متزامنةٌ مع التغيير (M0-52) ────
+2026-10-21T05:30:01.1694008Z PASS — project state synchronized
+2026-10-21T05:30:01.1694546Z   ledger: 4 file(s)
+2026-10-21T05:30:01.1694905Z   documentation: 11 file(s)
+2026-10-21T05:30:01.1695274Z   security: 3 file(s)
+2026-10-21T05:30:01.1695684Z   governance: 2 file(s)
+2026-10-21T05:30:01.1696040Z   scripts: 2 file(s)
+2026-10-21T05:30:01.1771630Z 
+2026-10-21T05:30:01.1773189Z ──── 27) الدمجُ يُغلِقُ الدورة — فرعٌ مدموجٌ باقٍ أو حجزٌ نشطٌ لعملٍ مدموج (M0-52) ────
+2026-10-21T05:30:02.4485708Z   ✓ no merged branch left behind without a documented reason.
+2026-10-21T05:30:02.4487365Z   ✓ no Active claim for already-merged work.
+2026-10-21T05:30:02.4488440Z ✓ merged-branch cleanup: PASS
+2026-10-21T05:30:02.4488832Z 
+2026-10-21T05:30:02.4489710Z ──── 28) edge-allowlist-guard — قوائمُ سماحِ الحدِّ مطابقةٌ للشفرةِ والقرار (ADR-069 · CLM-0521) ────
+2026-10-21T05:30:03.0371134Z 
+2026-10-21T05:30:03.0372481Z ✓ edge-allowlist-guard: مرور — 32 مدخلًا مطابقة للشفرة والقرار
+2026-10-21T05:30:03.0463548Z 
+2026-10-21T05:30:03.0464284Z ╔══════════════════════════════════════════════════════════╗
+2026-10-21T05:30:03.0465202Z ║  الخلاصة                                                  ║
+2026-10-21T05:30:03.0466684Z ╚══════════════════════════════════════════════════════════╝
+2026-10-21T05:30:03.0467432Z   ✓ نجح   وجود الوثائق الحاكمة
+2026-10-21T05:30:03.0467992Z   ✓ نجح   1) بنية لوحة التنفيذ
+2026-10-21T05:30:03.0468645Z   ✓ نجح   2) حجوزات العمل (سجل + ملفات مُعدّلة)
+2026-10-21T05:30:03.0469289Z   ✓ نجح   3) قاعدة التوثيق مع الدفع
+2026-10-21T05:30:03.0470228Z   ✓ نجح   4) بياتُ الحجوزات (فرعٌ محذوفٌ وحجزٌ نشط)
+2026-10-21T05:30:03.0471022Z   ✓ نجح   5) هدفُ طلبِ الدمج (لا ينطبق — ليس سياقَ طلبِ دمج)
+2026-10-21T05:30:03.0471668Z   ✓ نجح   6) فحص الأسرار
+2026-10-21T05:30:03.0472268Z   ✓ نجح   7) عزلُ DDL في اختباراتِ التكامل
+2026-10-21T05:30:03.0472916Z   ✓ نجح   10) سجلُّ المخاطرِ والاستثناءات
+2026-10-21T05:30:03.0473661Z   ✓ نجح   11) الأساسُ الآليُّ للبيئةِ والاختبارات
+2026-10-21T05:30:03.0474338Z   ✓ نجح   12) تغطيةُ إنفاذِ هويّةِ الخدمة
+2026-10-21T05:30:03.0475136Z   ✓ نجح   13) الترحيلاتُ المولَّدةُ العكوسةُ (سجل + دفعة)
+2026-10-21T05:30:03.0475881Z   ✓ نجح   14) مصدرُ استدعاءِ الاختباراتِ الواحدُ
+2026-10-21T05:30:03.0476776Z   ✓ نجح   15) تدقيقُ أحكامِ CI
+2026-10-21T05:30:03.0477433Z   ✓ نجح   16) مصفوفةُ سياساتِ التفويضِ (M1-05)
+2026-10-21T05:30:03.0478130Z   ✓ نجح   17) تركيبُ المنافذِ في الجذرِ (M0-41)
+2026-10-21T05:30:03.0478930Z   ✓ نجح   18) مخطَّطُ الإعدادِ ومصدرُ حقيقتِهِ الواحدُ (M2-04)
+2026-10-21T05:30:03.0479748Z   ✓ نجح   19) صورةُ الحاويةِ وسلسلةُ توريدِها (M2-01)
+2026-10-21T05:30:03.0480519Z   ✓ نجح   20) مخزنُ آثارِ رموزِ الخدمةِ (M1-03)
+2026-10-21T05:30:03.0481203Z   ✓ نجح   21) ربطُ الطلبِ بسلسلةِ الاستعلامِ (M1-03)
+2026-10-21T05:30:03.0481995Z   ✓ نجح   22) استيرادُ الإنتاجِ من devDependencies (M0-43)
+2026-10-21T05:30:03.0482732Z   ✓ نجح   24) عقدُ المسارِ بين التطبيقِ والخدمةِ (M3-08)
+2026-10-21T05:30:03.0483200Z   ✓ نجح   25) أسماءُ دليلِ التدويرِ تطابقُ الشفرة (M3-07)
+2026-10-21T05:30:03.0483719Z   ✓ نجح   26) STATE-SYNC — حالةُ المشروعِ متزامنةٌ مع التغيير (M0-52)
+2026-10-21T05:30:03.0484197Z   ✓ نجح   27) الدمجُ يُغلِقُ الدورة (M0-52)
+2026-10-21T05:30:03.0484823Z   ✓ نجح   28) edge-allowlist-guard — قوائمُ سماحِ الحدِّ مطابقةٌ للشفرةِ والقرار (ADR-069 · CLM-0521)
+2026-10-21T05:30:03.0485739Z   ⊘ تخطٍّ  8) CI مانعٌ — جزئيٌّ: جزئيٌّ مُعلَنٌ: الأبوابُ الأربعةُ نجحت على **لقطةٍ مؤرَّخةٍ** (2026-09-28T06:48:00Z)، ولم تُسأل الواجهةُ حيّاً.
+2026-10-21T05:30:03.0486590Z   ✗ فشل   9) تدقيقُ الاعتماديات والثغرات
+2026-10-21T05:30:03.0487030Z   ✗ فشل   23) نضارةُ الفروعِ على المنصّةِ (M0-44)
+2026-10-21T05:30:03.0487249Z 
+2026-10-21T05:30:03.0487462Z ✗ الحوكمة: 2 فحص فاشل. الدفع مرفوض.
+2026-10-21T05:30:03.0487940Z   اقرأ: docs/16-progress/README.md · docs/00-rules/WORK_CLAIM_RULE.md
+2026-10-21T05:30:03.0488212Z 
+2026-10-21T05:30:03.0498818Z ##[error]Process completed with exit code 1.
+2026-10-21T05:30:03.0652648Z Post job cleanup.
+2026-10-21T05:30:03.1528248Z [command]/usr/bin/git version
+2026-10-21T05:30:03.1574896Z git version 2.55.0
+2026-10-21T05:30:03.1620862Z Temporarily overriding HOME='/home/runner/work/_temp/7aa3ee82-9d47-4a65-8cdd-8d6b87f9712e' before making global git config changes
+2026-10-21T05:30:03.1621978Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-21T05:30:03.1627097Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wasla/wasla
+2026-10-21T05:30:03.1669643Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-21T05:30:03.1707181Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-21T05:30:03.1972432Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-21T05:30:03.1997153Z http.https://github.com/.extraheader
+2026-10-21T05:30:03.2009809Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-21T05:30:03.2048675Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-21T05:30:03.2333618Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-21T05:30:03.2377947Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-21T05:30:03.2832993Z Cleaning up orphan processes
+2026-10-21T05:30:03.3162389Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -37,3 +37,9 @@ AssertionError: B read the checkpoint while A held the consumer lock: expected 1
     474|         ).rejects.toThrow(/at least 2 connections/);
       Tests  1 failed | 5 passed (6)
  6 files changed, 212 insertions(+), 2 deletions(-)
+### 2026-10-21 addition — re-measured after rebase onto main 1066cdfc (local PostgreSQL 17.11, not CI)
+- M1 lock wrapper removed:  × M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > G-S9.20: a second relay inst  Tests 1 failed | 5 passed (6) 
+- M2 per-call lock key:  × M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > G-S9.20: a second relay inst  × M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > G-S9.20: 60 amplified concur  Tests 2 failed | 4 passed (6) 
+- M3 pool guard removed:  × M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > G-S9.20: the consumer lock r  Tests 1 failed | 5 passed (6) 
+- unmutated: unit 14 files 186/186 · integration 82/82 in 3 consecutive runs
+- M2 was also caught by the amplified case this run; the amplifier remains not a reliable killer — the deterministic case is

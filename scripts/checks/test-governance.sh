@@ -2443,6 +2443,48 @@ printf 'export class P { async go() { return fetch("http://x/negotiations"); } }
   > "$S_FE_BOT/bots/customer-bot/src/infrastructure/http-negotiations.ts"
 t "عميلُ bots/ غيرُ مذكورٍ في السّجلِّ يُسقِط (البصرُ الموسَّعُ)" fail _sac "$S_FE_BOT"
 
+# ── البابُ 7 (G-S9.19 · CLM-0654): الجالبُ المحقونُ صارَ مرئيّاً ─────────────
+# عمى البابِ 7 الأصليُّ لم يكن في `fetch(` الخامِ بل فيمن خزّنَهُ باسمٍ آخرَ: هذا
+# هوَ شكلُ الهروبِ التاريخيِّ (عميلُ catalog-read-port.ts القديمُ في search كانَ
+# يُنادي marketplace بلا هويّةٍ وبـ`this.fetchImpl(` فلم يُرَ — RISK-0027/G-S9.19).
+# الجذرُ الصناعيُّ هنا **بلا `fetch(` خامِ إطلاقاً**: إن مرَّ الحارسُ القديمُ فعيبُهُ.
+S_FE_INJ="$(_sac_root fe_inj)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: (input: RequestInfo) => Promise<Response>) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ/services/matching/src/infrastructure/catalog-read-port.ts"
+t "جالبٌ محقونٌ بلا raw fetch( ولا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19)" fail _sac "$S_FE_INJ"
+
+# وإعلانُهُ استثناءً بسببِهِ يُمرّرُهُ: الحارسُ يطلبُ إعلاناً صادقاً لا صمتاً
+S_FE_INJ_DECL="$(_sac_root fe_inj_decl)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: typeof globalThis.fetch) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ_DECL/services/matching/src/infrastructure/catalog-read-port.ts"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/catalog-read-port.ts` \| جالبٌ صناعيٌّ محقونٌ مُعلَنٌ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_FE_INJ_DECL/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "جالبٌ محقونٌ مُعلَنٌ استثناءً بسببِهِ يمرّ (G-S9.19)" pass _sac "$S_FE_INJ_DECL"
+
+# ومرجعُ globalThis.fetch المخزّنُ باسمٍ آخرَ مرئيٌّ هوَ الآخرُ: جذرُ تركيبٍ
+# يمرّرُ الجالبَ إلى عميلٍ موقّعٍ لا يُحصى بنفسِهِ إن لم يُعلَن
+S_FE_GTF="$(_sac_root fe_gtf)"
+mkdir -p "$S_FE_GTF/packages/tick-scheduler/src"
+printf 'const transport = globalThis.fetch;\nexport const call = () => transport("http://x/ticks");\n' \
+  > "$S_FE_GTF/packages/tick-scheduler/src/main.ts"
+t "مرجعُ globalThis.fetch مخزَّنٌ باسمٍ آخرَ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19)" fail _sac "$S_FE_GTF"
+
+# والتخزينُ باسمٍ آخرَ عبر الإسنادِ (`= fetch`) مرئيٌّ هوَ الآخرُ: هذا الشكلُ أفلتَ
+# منَ النمطِ الأصليِّ تماماً (لا `fetch(` ولا `globalThis`) — قُيِّسَ بعدَ مراجعةٍ
+# مستقّلةٍ لأولِ مرةٍ (CLM-0654): الإشارةُ في موضعِ القيمةِ تُحصى كالنداءِ.
+S_FE_ALIAS="$(_sac_root fe_alias)"
+printf 'const send = fetch;\nexport const call = () => send("http://x/marketplace/products");\n' \
+  > "$S_FE_ALIAS/services/matching/src/infrastructure/catalog-read-port.ts"
+t "تخزينُ fetch باسمٍ آخرَ (= fetch) بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · بعدَ المراجعةِ)" fail _sac "$S_FE_ALIAS"
+
+# الطفرةُ الحاكمةُ: إعادةُ الحارسِ إلى نمطِهِ القديمِ (raw fetch( وحدَهُ) تُعيد
+# العَمى فتُمرّرُ الهروبَ التاريخيَّ نفسَهُ — برهانٌ بأنّ إسقاطَ الحالةِ أعلاهُ
+# سببُهُ النمطُ الموسّعُ لا شيءٌ آخرَ، وأنّ بلا بصرٍ جديدٍ لا إخفاقَ (تحكيمٌ سلبيٌّ).
+S_FE_INJ_BLIND="$(_sac_root fe_inj_blind)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: typeof globalThis.fetch) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ_BLIND/services/matching/src/infrastructure/catalog-read-port.ts"
+python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("RAW_PATTERN="); j=s.index(chr(10),i); p.write_text(s[:i]+"RAW_PATTERN=\x27\\bfetch\\(\x27"+s[j:])' "$S_FE_INJ_BLIND"
+t "النمطُ القديمُ (raw fetch( وحدَهُ) يُمرّرُ الهروبَ المحقونَ نفسَهُ — العَمى المُعادُ يُقاسُ" pass _sac "$S_FE_INJ_BLIND"
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،

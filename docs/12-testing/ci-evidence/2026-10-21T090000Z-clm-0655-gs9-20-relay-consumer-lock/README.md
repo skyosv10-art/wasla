@@ -54,3 +54,11 @@
 - أدلّةُ PostgreSQL الأصليّةُ أعلاهُ محفوظةٌ دونَ تعديلٍ. أُعيدَ القياسُ على الشجرةِ المؤسَّسةِ: M1/M2/M3 مقتولةٌ بالحالةِ الحتميّةِ ([raw/mutations-integration.txt](raw/mutations-integration.txt)) · وحدةٌ 186/186 · تكاملٌ 82/82 ثلاثَ مرّاتٍ متتاليةٍ.
 - **0/300 و50/50 قياسانِ محلّيّانِ على PostgreSQL 17** — ليسا دليلَ CI ولا إنتاجٍ.
 - RISK-0070 → mitigating بالإضافةِ (لا closed). BASELINE أُعيدَ توليدُهُ بـ`scripts/verify.sh` → `scripts/baseline.sh` من [raw/verify.log](raw/verify.log) (verify_overall=passed · الحوكمةُ 689/0)؛ مجموعاتُ تكاملِ PostgreSQL متخطّاةٌ داخلَ verify.sh بالتصميمِ (مصفوفةُ CI) ولا تُعَدُّ نجاحاً هناك.
+
+## إضافةٌ مؤرَّخةٌ (2026-10-21، ~18:00 UTC) — التأسيسُ على `16e7f44e` وBASELINE من استنساخٍ كاملٍ
+
+- **الاستنساخُ:** `git clone https://github.com/skyosv10-art/wasla.git` بلا مرشِّحٍ (`partialclonefilter` فارغٌ · صفرُ كائنٍ ناقصٍ). فرقُ services/packages مطابقٌ بالبصمةِ لما قبلَ التأسيسِ.
+- **التحقّقُ:** `bash scripts/verify.sh` على الالتزامِ `74915e3b5a87` → rc=0 ([raw/verify-74915e3b.log](raw/verify-74915e3b.log) · [ترويسةُ البيئةِ](raw/verify-74915e3b.header.txt)): حزمةُ الحوكمةِ 695/0 · الفحصُ 11 (الأساسُ) نجحَ · **تخطٍّ مُعلَنٌ واحدٌ** (مجموعاتُ تكاملِ PostgreSQL — مصفوفةُ CI)، فالنجاحُ جزئيٌّ لا كاملٌ.
+- **BASELINE:** `BASELINE_DIRTY_REASON=… bash scripts/baseline.sh --log raw/verify-74915e3b.log --stdout` ثمّ `bash scripts/checks/validate-baseline.sh` → rc=0 ([raw/validate-baseline-74915e3b.txt](raw/validate-baseline-74915e3b.txt)). `risks_not_closed=28` = السجلُّ الحيُّ (28 غيرُ مغلقٍ من 71). `verify_overall=passed` مأخوذٌ من السجلِّ لا مكتوبٌ يدويًّا.
+- **السجلُّ السابقُ** [raw/verify.log](raw/verify.log) (استنساخٌ جزئيٌّ، `cb0d6c82`) محفوظٌ تاريخًا.
+- **رصدُ CI على main:** [raw/ci-main-16e7f44e-race-observation.txt](raw/ci-main-16e7f44e-race-observation.txt) — المحاولةُ 1 أخفقت بالسباقِ، والثانيةُ نجحت؛ لا تمحو الثانيةُ الأولى.

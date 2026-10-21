@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-21T12:18:53Z",
+  "generated_at": "2026-10-21T17:58:13Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "cb0d6c828356c8f2b7a0ddafc04e389fdbc0c0e8",
+    "commit": "74915e3b5a8798d9163d63dbcba6ceef61b32769",
     "branch": "stage-zero/clm-0655-gs9-20-relay-consumer-lock",
     "dirty": true,
-    "dirty_files": 1,
-    "dirty_reason": "CLM-0655 rebase onto 1066cdfc: verify.log staged in-tree before baseline regeneration",
-    "tracked_files": 3589
+    "dirty_files": 2,
+    "dirty_reason": "CLM-0655 rebase onto 16e7f44e (full clone): verify-74915e3b.log + header staged in-tree before baseline regeneration",
+    "tracked_files": 3602
   },
   "env": {
     "node": "v20.20.2",
@@ -34,10 +34,10 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/raw/verify.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/raw/verify-74915e3b.log",
     "tests_passed": 6272,
     "test_files_executed": 441,
-    "governance_suite_cases": 689,
+    "governance_suite_cases": 695,
     "governance_suite_failed": 0,
     "verify_overall": "passed"
   },

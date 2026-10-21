@@ -1,0 +1,1 @@
+# typecheck: pnpm -r typecheck — exit 0 (الكل Done)

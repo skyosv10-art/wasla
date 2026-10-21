@@ -2485,6 +2485,15 @@ printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl
   > "$S_FE_INJ_BLIND/services/matching/src/infrastructure/catalog-read-port.ts"
 python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("RAW_PATTERN="); j=s.index(chr(10),i); p.write_text(s[:i]+"RAW_PATTERN=\x27\\bfetch\\(\x27"+s[j:])' "$S_FE_INJ_BLIND"
 t "النمطُ القديمُ (raw fetch( وحدَهُ) يُمرّرُ الهروبَ المحقونَ نفسَهُ — العَمى المُعادُ يُقاسُ" pass _sac "$S_FE_INJ_BLIND"
+
+# حدٌّ مُعلَنٌ مُقاسٌ لا مخفيٌّ (CLM-0654 · 2026-10-21): الحارسُ grep لا AST، فلا
+# يستثني التعليقات. ملفٌّ لا يذكرُ fetch إلا في تعليقٍ — بلا أيِّ نداءٍ حقيقيٍّ —
+# **يُحصى** ويُسقِطُ ما لم يُعلَن (إيجابيّةٌ كاذبةٌ مقصودةٌ: الخطأُ نحوَ البصرِ لا
+# العمى). هذهِ الحالةُ تُثبّتُ السلوكَ الفعليَّ كي لا يَدّعيَ وصفٌ عكسَهُ.
+S_FE_CMT="$(_sac_root fe_comment_only)"
+printf '// TODO: replace with fetch("http://x/marketplace/products") once signed\nexport const noop = () => undefined;\n' \
+  > "$S_FE_CMT/services/matching/src/infrastructure/catalog-read-port.ts"
+t "ذكرُ fetch( في تعليقٍ وحدَهُ يُحصى ويُسقِط بلا استثناءٍ (حدٌّ مُعلَن: لا AST)" fail _sac "$S_FE_CMT"
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،

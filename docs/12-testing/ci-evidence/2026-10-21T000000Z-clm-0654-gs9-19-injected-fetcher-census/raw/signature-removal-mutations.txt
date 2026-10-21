@@ -1,0 +1,10 @@
+# CLM-0654 · 2026-10-21 · signature-removal mutation on internal exception paths (local vitest, not CI)
+# mutation: remove the signRequest/signTickRequest header spread in the source file, run its unit tests, restore
+user-assertion baseline: Tests 5 passed (5)
+user-assertion signature-removed (mutated lines=1): Tests 1 failed | 4 passed (5)
+identity-bootstrap baseline: Tests 8 passed (8)
+identity-bootstrap signature-removed (mutated lines=1): Tests 1 failed | 7 passed (8)
+tick baseline: Tests 15 passed (15)
+tick signature-removed (mutated=1): Tests 1 failed | 14 passed (15)
+# all three killed: the exception is documentation; signing is proven by these tests, not by the exception row
+# not covered: packages/telegram-adapter/src/bot-api-client.ts (external Telegram, bot-token auth, no service signature by design); e2e harnesses (test-only)

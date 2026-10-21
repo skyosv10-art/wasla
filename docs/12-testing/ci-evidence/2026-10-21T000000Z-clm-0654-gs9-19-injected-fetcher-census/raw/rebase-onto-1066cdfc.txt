@@ -1,0 +1,13 @@
+# CLM-0654 · 2026-10-21 · rebase onto main 1066cdfc (after #802 = 50545970 and #800 = 1066cdfc) — local, not CI
+## conflicts (5 files, one more on ROADMAP in the 3rd commit) and how each was resolved
+- ROADMAP.md · TASK_LOG.md · WORK_CLAIMS.md: union of both sides, no line dropped (claims ordered 0656, 0654, 0653, 0652)
+- LAUNCH_EXECUTION_BOARD.md M0-53: main row (with CLM-0652 addition) + CLM-0654 addition appended — both preserved
+- REQUIREMENTS_REGISTRY.md G-S9.20: main side (this branch did not change it)
+- REQUIREMENTS_REGISTRY.md G-S9.19: the original branch commit REPLACED 256 characters of the base row ("مفتوحٌ بلا حجزٍ — RISK-0027 أُعيد فتحُه …"). Resolution restores the base text verbatim, keeps main's CLM-0652 addition, and appends CLM-0654 as a dated addition; "عولجَ الجذرُ البنيويُّ" reworded to "بصرُ البابِ 7 وُسِّعَ" and the LIKE item named RISK-0071 (now on main)
+## re-measured on the rebased tree
+- validate-service-auth-coverage.sh: rc=0
+- test-governance.sh: 695 passed · 0 failed (incl. 'ذكرُ fetch( في تعليقٍ وحدَهُ يُحصى ويُسقِط' = expected fail)
+  first local run 694/1: case 11 in git context — BASELINE repo.commit db283ba3 was not importable because this sandbox clone is partial (blob:none); after fetching that commit without the filter: 695/0. Environment, not code; CI on main 39590761437 was green.
+- signature-removal user-assertion baseline: Tests 5 passed (5) | signature-removed: Tests 1 failed | 4 passed (5)
+- signature-removal identity-bootstrap baseline: Tests 8 passed (8) | signature-removed: Tests 1 failed | 7 passed (8)
+- signature-removal http-tick baseline: Tests 15 passed (15) | signature-removed: Tests 1 failed | 14 passed (15)

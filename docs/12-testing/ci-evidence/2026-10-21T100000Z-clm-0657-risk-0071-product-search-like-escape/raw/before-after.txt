@@ -10,3 +10,5 @@
 ## after the fix
       Tests  17 passed (17)
 ## full suites after the fix: unit 14 files 176/176 · integration 11 files 82/82 in 11 of 12 runs; 1 run had 1 unidentified failure, not reproduced in 11 further runs (hypothesis: RISK-0070 relay race, still on main without #803 — not measured)
+
+## 2026-10-21 addition: the 1-in-12 failure stays UNEXPLAINED — the RISK-0070 hypothesis above is withdrawn (no test name, no diagnosis)

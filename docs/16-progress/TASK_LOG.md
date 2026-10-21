@@ -1,3 +1,11 @@
+# 2026-10-21 — CLM-0655 — إعادةُ التأسيسِ على main `1066cdfc` + RISK-0070 بالإضافةِ (بعدَ دمجِ #802 و#800)
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Kind:** rebase + governance — لا شيفرةَ جديدةً.
+- **Change:** تعارضاتُ الحوكمةِ حُلَّت بالاتّحادِ (WORK_CLAIMS · TASK_LOG · ROADMAP · صفُّ M0-53 يحملُ إضافتَي CLM-0652 وCLM-0655). أدلّةُ PostgreSQL الأصليّةُ محفوظةٌ دونَ مساسٍ. BASELINE يُعادُ توليدُهُ بـ`scripts/verify.sh` → `scripts/baseline.sh`.
+- **Tests:** 0/300 و50/50 قياسٌ محلّيٌّ على PostgreSQL 17 — ليسا دليلَ CI ولا إنتاجٍ.
+- **Risk(s):** RISK-0070 → mitigating (لا closed — الإغلاقُ بعدَ الدمجِ وCI على main وقرارِ المالكِ)
+
 # 2026-10-21 — CLM-0655 — G-S9.20: قفلُ المستهلِكِ لناقلِ البحثِ — السباقُ منسوخٌ قبلُ ومُبرهَنٌ بعدُ على PostgreSQL 17
 
 - **Work Item(s):** M0-53 (G-S9.20)

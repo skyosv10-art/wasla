@@ -52,7 +52,7 @@ export function buildStoreSearchSql(eligibility: string = STORE_ELIGIBILITY_SQL)
       WHERE ${eligibility}
         AND (${any("LIKE", "$1")})
       ORDER BY tier ASC, si.store_slug ASC
-      LIMIT $4 OFFSET $5`;
+      LIMIT $4 OFFSET ($5::bigint - 1) * $4::bigint`;
 }
 
 /** Count over the same predicate — used only when the page lies past the last match. */
@@ -98,7 +98,10 @@ export class StoreSearchReader implements SearchStoresReadPort {
       `${esc}%`,
       query.q,
       query.pageSize,
-      (query.page - 1) * query.pageSize,
+      // The page, not a JS-computed offset: `page` has no upper bound (CLM-0652),
+      // and (page - 1) * page_size past 2^53 is not exact in a JS number. The
+      // offset is computed in bigint by PostgreSQL (≤ 2^53 · 50 < 2^63).
+      query.page,
     ]);
     let total = r.rows.length > 0 ? Number(r.rows[0]!.total) : 0;
     if (r.rows.length === 0 && query.page > 1) {

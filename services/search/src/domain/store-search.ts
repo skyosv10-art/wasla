@@ -82,12 +82,28 @@ function single(value: unknown, code: string, name: string): string | undefined 
   return value;
 }
 
-function boundedInt(value: unknown, code: string, name: string, min: number, max: number, dflt: number): number {
+/**
+ * A decimal integer `min..max`. `max` defaults to `Number.MAX_SAFE_INTEGER`:
+ * that is "the value is an exact integer", not a policy bound (CLM-0652 —
+ * `page` has no upper bound by decision; `"1e3"`, `"2.0"`, `"-1"` and digits
+ * past 2^53 are not exact integers and are rejected, never rounded).
+ */
+function boundedInt(
+  value: unknown,
+  code: string,
+  name: string,
+  min: number,
+  dflt: number,
+  max: number = Number.MAX_SAFE_INTEGER,
+): number {
   const raw = single(value, code, name);
   if (raw === undefined) return dflt;
-  if (!/^\d+$/.test(raw)) throw new StoreSearchValidationError(code, `${name} يجب أن يكون عددًا صحيحًا بين ${min} و${max}`);
+  if (!/^\d+$/.test(raw)) throw new StoreSearchValidationError(code, `${name} يجب أن يكون عددًا صحيحًا ≥ ${min}`);
   const n = Number(raw);
-  if (n < min || n > max) throw new StoreSearchValidationError(code, `${name} خارج النطاق ${min}..${max}`);
+  if (!Number.isSafeInteger(n)) throw new StoreSearchValidationError(code, `${name} ليسَ عددًا صحيحًا دقيقًا`);
+  if (n < min || n > max) {
+    throw new StoreSearchValidationError(code, max === Number.MAX_SAFE_INTEGER ? `${name} أقلُّ من ${min}` : `${name} خارج النطاق ${min}..${max}`);
+  }
   return n;
 }
 
@@ -108,9 +124,11 @@ export function parseStoreSearchRequest(query: Record<string, unknown>): ParsedS
   const qRaw = single(query.q, "SEARCH_QUERY_EMPTY", "q");
   const trimmed = (qRaw ?? "").trim();
   if (trimmed.length === 0) throw new StoreSearchValidationError("SEARCH_QUERY_EMPTY", "نصُّ البحثِ مفقودٌ أو فارغٌ");
+  // `q` 1..200 code points after trim (CLM-0652). The lower bound is the
+  // non-empty check above — `SEARCH_QUERY_EMPTY`, as for `/search/products`.
   const len = [...trimmed].length;
   if (len < STORE_SEARCH_LIMITS.qMinLength) {
-    throw new StoreSearchValidationError("SEARCH_QUERY_TOO_SHORT", `نصُّ البحثِ أقصرُ من ${STORE_SEARCH_LIMITS.qMinLength} محرفين`);
+    throw new StoreSearchValidationError("SEARCH_QUERY_EMPTY", `نصُّ البحثِ أقصرُ من ${STORE_SEARCH_LIMITS.qMinLength}`);
   }
   if (len > STORE_SEARCH_LIMITS.qMaxLength) {
     throw new StoreSearchValidationError("SEARCH_QUERY_TOO_LONG", `نصُّ البحثِ يتجاوزُ ${STORE_SEARCH_LIMITS.qMaxLength} محرفًا`);
@@ -121,14 +139,14 @@ export function parseStoreSearchRequest(query: Record<string, unknown>): ParsedS
   const localeRaw = single(query.locale, "SEARCH_UNSUPPORTED_LOCALE", "locale") ?? "ar";
   if (!LOCALES.has(localeRaw)) throw new StoreSearchValidationError("SEARCH_UNSUPPORTED_LOCALE", `locale غيرُ مدعومٍ: ${localeRaw}`);
 
-  const page = boundedInt(query.page, "SEARCH_PAGE_OUT_OF_RANGE", "page", 1, STORE_SEARCH_LIMITS.pageMax, 1);
+  const page = boundedInt(query.page, "SEARCH_PAGE_OUT_OF_RANGE", "page", STORE_SEARCH_LIMITS.pageMin, 1);
   const pageSize = boundedInt(
     query.page_size,
     "SEARCH_PAGE_SIZE_INVALID",
     "page_size",
-    1,
-    STORE_SEARCH_LIMITS.pageSizeMax,
+    STORE_SEARCH_LIMITS.pageSizeMin,
     STORE_SEARCH_LIMITS.pageSizeDefault,
+    STORE_SEARCH_LIMITS.pageSizeMax,
   );
   return { q, locale: localeRaw as StoreSearchLocale, page, pageSize };
 }

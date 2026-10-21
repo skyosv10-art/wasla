@@ -155,12 +155,12 @@ export interface operations {
   searchStores: {
     parameters: {
       query: {
-        /** 2..64 محرفًا بعدَ القصِّ. */
+        /** 1..200 محرفٍ بعدَ القصِّ، وغيرُ فارغٍ بعدَ التطبيعِ (CLM-0652). */
         q: string;
         locale?: components["schemas"]["StoreSearchLocale"];
-        /** 1..50 · الافتراضيُّ 1. */
+        /** عددٌ صحيحٌ ≥ 1 بلا حدٍّ أعلى · الافتراضيُّ 1 (CLM-0652). */
         page?: number;
-        /** 1..20 · الافتراضيُّ 10. */
+        /** 1..50 · الافتراضيُّ 20 (CLM-0652). */
         page_size?: number;
       };
     };

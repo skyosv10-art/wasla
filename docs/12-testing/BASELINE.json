@@ -1,21 +1,21 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-21T06:15:22Z",
+  "generated_at": "2026-10-21T07:10:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "4b61b31523198b7806187fe946ab483ab5a767e3",
+    "commit": "1caab8093a08f4372bc434145cb13c3a4512f643",
     "branch": "stage-zero/clm-0653-vite-644-security-patch",
-    "dirty": false,
+    "dirty": true,
     "dirty_files": 1,
-    "dirty_reason": "",
-    "tracked_files": 3566
+    "dirty_reason": "توليدُ الأساسِ نفسِهِ: BASELINE.json يُكتَبُ أثناءَ التوليدِ (قرارُ إعادةِ التوليدِ موثَّقٌ في TASK_LOG)",
+    "tracked_files": 3567
   },
   "env": {
     "node": "v20.20.2",
     "pnpm": "9.15.9",
     "os": "Linux",
     "arch": "x86_64",
-    "python": "3.14.3"
+    "python": "3.14.8"
   },
   "lock": {
     "path": "pnpm-lock.yaml",
@@ -33,14 +33,14 @@
     "risks_not_closed": 26
   },
   "dynamic": {
-    "measured": false,
-    "source": null,
-    "tests_passed": null,
-    "test_files_executed": null,
-    "governance_suite_cases": null,
-    "governance_suite_failed": null,
-    "verify_overall": null
+    "measured": true,
+    "source": "docs/12-testing/ci-evidence/2026-10-21T054500Z-clm-0653-vite-644-security-patch/raw/verify.log",
+    "tests_passed": 6256,
+    "test_files_executed": 441,
+    "governance_suite_cases": 688,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:dd592c49a2b2fcbb3257059f4ba860732c8f8bc56c6294e1d40dea2b07ca56b4",
+  "fingerprint": "sha256:cb89236386c30f05eb639b5be1f73019502952bde39af202cc716e16dd0c4170",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

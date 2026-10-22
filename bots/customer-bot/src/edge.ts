@@ -13,9 +13,14 @@
 import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 import { createChannelEdge } from "@wasla/channel-edge";
 import { CHANNEL_SESSION_EDGE_SCOPES } from "@wasla/bot-runtime";
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+  type ServiceRequestSigner,
+} from "@wasla/service-auth";
 
 import { BOT } from "./server.js";
+import { CUSTOMERS_GEOGRAPHY_SCOPES } from "@wasla/customers-service";
 
 /** إضافاتُ التركيبِ لحزمةِ الحدِّ — تُمرَّرُ إلى `buildBotApp` لا إلى الشفرةِ. */
 export interface CustomerBotEdgeOverrides extends BotRuntimeOverrides {
@@ -49,23 +54,33 @@ function customerServiceUrlFor(service: string): string {
   return byService[service] ?? "";
 }
 
-/**
- * مصنعُ موقِّعٍ لكلِّ (خدمةٍ · صلاحياتِ مسارٍ) (D5 · ADR-069 §2.1): التوقيعُ
- * بجمهورِ الخدمةِ الوجهةِ — وتركيبُهُ يفشلُ مغلقًا إن لم يمنحْ مصفوفةُ M1-05
- * الدورَ الجمهورَ والصلاحياتِ، فلا مسارَ مفتوحًا نصفَ مُركَّبٍ.
- */
-function customerRequestSignerFor(service: string, scopes: readonly string[]) {
+/** سجلُّ مفاتيحِ توقيعِ الخدمةِ من ترتيبِ التركيبِ — لا من الطلبِ. */
+function customerEdgeKeys() {
   const env = process.env as Record<string, string | undefined>;
-  const keys = keyRegistryFromEnv({
+  return keyRegistryFromEnv({
     WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
     WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
   });
-  return createServiceRequestSigner({
-    serviceName: "customer-bot",
-    audience: service,
-    keys,
-    scopes,
-  });
+}
+
+/**
+ * مصنعُ موقِّعٍ لكلِّ خدمةٍ (D5 · ADR-069 §2.1): التوقيعُ بجمهورٍ حرفيٍّ
+ * وصلاحياتِ ثابتٍ مسمّىً موثقٍ في دليلِ منحِ M1-05 — والجمهورُ الحرفيُّ هو
+ * ما يُقيسُهُ حارسُ المصفوفةِ ساكنًا (فشلٌ مغلقٌ للمجهولِ). ما ليسَ لهُ
+ * مصنعٌ هنا لا يُوقِّعُهُ أحدٌ: تركيبُ مسارٍ مفتوحٍ لهُ يفشلُ قبلَ الاستماعِ.
+ */
+function customerRequestSignerFor(service: string): ServiceRequestSigner {
+  if (service === "geography") {
+    return createServiceRequestSigner({
+      serviceName: "customer-bot",
+      audience: "geography",
+      keys: customerEdgeKeys(),
+      scopes: CUSTOMERS_GEOGRAPHY_SCOPES,
+    });
+  }
+  throw new Error(
+    `EDGE_SIGNER_UNGRANTED: لا موقِّعَ معروفًا للخدمةِ ${service} — منحُ M1-05 ناقصةٌ أو قرارُها لم يصدرْ بعدُ`,
+  );
 }
 
 export function buildAppWithEdge(overrides?: CustomerBotEdgeOverrides): BotApp {

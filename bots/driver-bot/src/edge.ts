@@ -13,7 +13,11 @@
 import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 import { createChannelEdge } from "@wasla/channel-edge";
 import { CHANNEL_SESSION_EDGE_SCOPES } from "@wasla/bot-runtime";
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+  type ServiceRequestSigner,
+} from "@wasla/service-auth";
 
 import { BOT } from "./server.js";
 
@@ -47,21 +51,15 @@ function driverServiceUrlFor(service: string): string {
 }
 
 /**
- * مصنعُ موقِّعٍ لكلِّ (خدمةٍ · صلاحياتِ مسارٍ) (D5 · ADR-069 §2.1): التوقيعُ
- * بجمهورِ الخدمةِ الوجهةِ — وتركيبُهُ يفشلُ مغلقًا إن لم تمنحْ مصفوفةُ M1-05.
+ * مصنعُ موقِّعٍ لكلِّ خدمةٍ (D5 · ADR-069 §2.1): لا تمنحُ مصفوفةُ M1-05
+ * دورَ السائقِ اليومَ أيَّ جمهورٍ من خدماتِ التوجيهِ (drivers · orders ·
+ * dispatch) — فلا مصنعَ حرفيًّا هنا، وكلُّ مسارٍ يُفتحُ منها يفشلُ تركيبُهُ
+ * قبلَ الاستماعِ (فشلٌ مغلقٌ) حتى يصدرَ قرارُ المنحِ.
  */
-function driverRequestSignerFor(service: string, scopes: readonly string[]) {
-  const env = process.env as Record<string, string | undefined>;
-  const keys = keyRegistryFromEnv({
-    WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
-    WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
-  });
-  return createServiceRequestSigner({
-    serviceName: "driver-bot",
-    audience: service,
-    keys,
-    scopes,
-  });
+function driverRequestSignerFor(service: string): ServiceRequestSigner {
+  throw new Error(
+    `EDGE_SIGNER_UNGRANTED: لا منحَ في M1-05 لـdriver-bot على ${service} — قرارُ المنحِ للمالكِ`,
+  );
 }
 
 export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {

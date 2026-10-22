@@ -41,13 +41,11 @@ export interface ChannelEdgeOptions {
    */
   readonly serviceUrlFor: (service: string) => string;
   /**
-   * مصنعُ موقِّعِ نداءاتٍ لكلِّ (خدمةٍ · صلاحياتِ مسارِها) — التوقيعُ بجمهورِ
-   * الخدمةِ الوجهةِ لا بجمهورِ `identity` أبدًا (D5 · ADR-069 §2.1).
+   * مصنعُ موقِّعِ نداءاتٍ لكلِّ خدمةٍ — التوقيعُ بجمهورِ الخدمةِ الوجهةِ لا
+   * بجمهورِ `identity` أبدًا (D5 · ADR-069 §2.1). صلاحياتُ كلِّ موقِّعٍ يملكُها
+   * التركيبُ ثوابتَ مسمّاةً موثقةً في دليلِ منحِ M1-05 — لا تُمرَّر من القائمةِ.
    */
-  readonly requestSignerFor: (
-    service: string,
-    scopes: readonly string[],
-  ) => ServiceRequestSigner;
+  readonly requestSignerFor: (service: string) => ServiceRequestSigner;
   /** أصلُ المسارِ المسموحُ لقائمةِ السماحِ — يُقرأُ من ملفِ الحدِّ. */
   readonly allowlistUrl: string;
   /** مفتاحُ التفعيلِ — لا يُقرأُ من جسمِ الطلبِ ولا الترويساتِ. */
@@ -261,7 +259,7 @@ function applyProxyRoutes(
         `EDGE_SERVICE_UNCONFIGURED: مسارٌ مفتوحٌ (${entry.method} ${entry.path}) بلا عنوانِ وجهةٍ للخدمةِ ${entry.service}`,
       );
     }
-    const signer = options.requestSignerFor(entry.service, entry.required_scopes);
+    const signer = options.requestSignerFor(entry.service);
     app.route({
       method: entry.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
       url: entry.path,

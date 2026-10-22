@@ -11315,3 +11315,10 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - No-Test-Reason: إضافة حزمة أنواع TypeScript للجذر — لا تغيير سلوكي؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) لكل المشاريع محليًا
 - Risk(s): none — إصلاح تبعية أنواع لا يمس سطح هجوم (توثيق القرار في هذا السطر)
 - Verified: pnpm typecheck exit 0 · validate-state-sync OK
+## [2026-10-22] CLM-0660 — تابع: إدراج سجلا الشواهد الناقصين
+- Work Item(s): CLM-0660
+- Kind: correction — دليل القياس (README §3) يحيل إلى سجل الاختبارات وسجل التحقق النوعي في raw/ ولم يُلتزما (حجب *.log)؛ أُدرجا الآن مجردين من رموز ANSI: run-tests-vitest-4112.log (مجموع Tests passed = 6273 · Test Files = 441 · صفر FAIL) وtypecheck-vitest-4112.txt (أخضر بعد إصلاح globalThis).
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/run-tests-vitest-4112.log, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/typecheck-vitest-4112.txt
+- No-Test-Reason: إدراج ملفات شواهد قياس موجودة مسبقًا — لا تغيير في الشفرة أو الاختبارات
+- Risk(s): none — شواهد قياس لا تمس سطح الهجوم
+- Verified: مجموع «Tests N passed» في السجل المدرج = 6273 يطابق dynamic.tests_passed في BASELINE.json

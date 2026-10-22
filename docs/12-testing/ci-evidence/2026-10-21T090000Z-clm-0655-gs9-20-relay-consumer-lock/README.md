@@ -44,6 +44,7 @@
 ## ما لم يُثبَتْ
 
 - حكمُ CI (`postgres:17`) — يُسجَّلُ بالإضافةِ.
+- **بالإضافةِ · 2026-10-22 · CLM-0658 (حكمٌ مقيسٌ):** دُمجَ #803 بضغطٍ إلى main بالبصمةِ `2a1f7348` (19:19:20Z) — وهو رأسُ main النهائيُّ بعدَ السلسلةِ. على الرأسِ النهائيِّ `2f58e320`: WASLA CI [39649278571](https://github.com/skyosv10-art/wasla/actions/runs/39649278571) ⇒ success وRoadmap freshness [39649277754](https://github.com/skyosv10-art/wasla/actions/runs/39649277754) ⇒ success. وعلى main بعدَ الدمجِ: WASLA CI [39660605222](https://github.com/skyosv10-art/wasla/actions/runs/39660605222) ⇒ success وRoadmap freshness [39660605145](https://github.com/skyosv10-art/wasla/actions/runs/39660605145) ⇒ success (image-supply-chain success). RISK-0070 يبقى **mitigating** لا closed: 2/300 قبلَ و0/300 بعدَ قياسٌ محلّيٌّ على PostgreSQL 17، والمضخِّمُ ليسَ قاتلَ طفراتٍ حتميًّا، وغيابُ السباقِ ليسَ ضمانًا مطلقًا؛ والإغلاقُ قرارُ مالكٍ. [دليلُ CLM-0658](../12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md)
 - لا عاملَ ناقلٍ منشورٌ أصلاً (`runRelayBatch` بلا مُنادٍ إنتاجيٍّ) — الإصلاحُ في المكتبةِ قبلَ أن يُنشَرَ عاملٌ.
 - تعافي النمطِ 2 في الدفعةِ التاليةِ دونَ قفلٍ: استدلالٌ.
 - انتظارُ B محدودٌ بطولِ دفعةِ A (`batchSize`) بلا مهلةٍ صريحةٍ — كما في delivery.

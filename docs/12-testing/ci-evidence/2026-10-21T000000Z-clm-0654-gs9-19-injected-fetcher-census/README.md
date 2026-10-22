@@ -60,6 +60,7 @@
 ## 6. ما لم يُثبَتْ بعدُ
 
 - **الدمجُ وCI على الرأسِ النهائيِّ** — الحكمُ الحاكمُ؛ يُوثَّقُ هنا بالإضافةِ بعدَ التشغيلِ.
+  - **بالإضافةِ · 2026-10-22 · CLM-0658 (حكمٌ مقيسٌ):** دُمجَ #801 بضغطٍ إلى main بالبصمةِ `16e7f44e` (17:02:34Z). على الرأسِ النهائيِّ `24939cc4`: WASLA CI [39627732650](https://github.com/skyosv10-art/wasla/actions/runs/39627732650) ⇒ success وRoadmap freshness [39627732039](https://github.com/skyosv10-art/wasla/actions/runs/39627732039) ⇒ success. وعلى main بعدَ الدمجِ: WASLA CI [39640217300](https://github.com/skyosv10-art/wasla/actions/runs/39640217300) ⇒ success وRoadmap freshness [39640216758](https://github.com/skyosv10-art/wasla/actions/runs/39640216758) ⇒ success (image-supply-chain success). **وحدثٌ غيرُ مفسرٍ مسجَّلٌ كما هو:** المحاولةُ 1 من الشوطِ 39640217300 أخفقت في فحصٍ واحدٍ — `db-integration (search)` — ونجحَت المحاولةُ 2؛ وُصفَ في السجلِّ «متّسقٌ بالاستدلالِ» معَ RISK-0070 **استدلالًا لا إثباتَ سببٍ**، والقياسُ المنفصلُ لم يُجرَ. RISK-0027 يبقى open — لا يُغلقُ إلا بقرارِ المالكِ. [دليلُ CLM-0658](../12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md)
 - **إغلاقُ RISK-0027** — قرارُ المالكِ (§9) بعدَ قياسِ ما بعدَ الدمجِ.
 - بوّابةُ M1-04 المستقلةُ ليستْ هذا الحجزَ ولا يَدَّعيها.
 

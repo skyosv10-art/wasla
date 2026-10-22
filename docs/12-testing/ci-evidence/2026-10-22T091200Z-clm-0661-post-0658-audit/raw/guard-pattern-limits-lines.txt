@@ -1,0 +1,18 @@
+# RAW_PATTERN from scripts/checks/validate-service-auth-coverage.sh @ ac3af2a5, applied with grep -E per line (SEEN/MISSED). Local measurement of the pattern only — not a run of the full guard.
+SEEN    C01 direct call                          await fetch(url)
+SEEN    C02 injected member                      await this.fetchImpl(url, init)
+SEEN    C03 alias same line                      const a = fetch;
+MISSED  C04 second hop only (line without fetch) const b = a; await b(url)
+MISSED  C05 third hop only                       const c = b; await c(url)
+MISSED  C06 destructure rename                   const { fetch: f } = globalThis; await f(url)
+MISSED  C07 bracket string                       await globalThis["fetch"](url)
+MISSED  C08 Reflect.get                          const f = Reflect.get(globalThis, "fetch")
+MISSED  C09 concat key                           const f = globalThis["fe" + "tch"]
+MISSED  C10 re-export rename                     export { fetch as transport } from "./x"
+MISSED  C11 cross-file consumer                  await deps.transport(url)
+MISSED  C12 node http builtin                    http.request({ host, path })
+SEEN    C13 window member                        const f = window.fetch
+SEEN    C14 typed param                          function mk(t: typeof fetch) {}
+MISSED  C15 spread into object                   const deps = { fetch }
+MISSED  C16 object shorthand call                await deps.send(url)
+SEEN    C17 comment only                         // uses fetch( here

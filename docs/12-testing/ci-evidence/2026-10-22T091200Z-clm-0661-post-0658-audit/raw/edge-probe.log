@@ -1,0 +1,53 @@
+# local probe @ ac3af2a5 · vitest 4.1.12 · packages/channel-edge · stubs only (fetch stubbed, no network, no secrets) · 2026-10-22T09:23:34Z
+# P1-P3 run the real create-channel-edge.ts; P4 runs a PROBE-ONLY copy with the authorization header read moved before the strip loop (patch: edge-probe-counterfactual-patch.diff). P3's assertion failure is the measurement (0 upstream calls).
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-edge
+
+stdout | src/__tests__/zz-probe-clm0661.test.ts > CLM-0661 probe > P1 real allowlist: proxy routes registered
+P1 real allowlist  GET /search/stores → 404 | routes:
+└── /edge/session (POST)
+    └── /logout (POST)
+
+
+stdout | src/__tests__/zz-probe-clm0661.test.ts > CLM-0661 probe > P2 every entry production_open=true (entries still lack .surface)
+P2 all production_open=true  GET /search/stores → 404
+
+stdout | src/__tests__/zz-probe-clm0661.test.ts > CLM-0661 probe > P3 entries given .surface + /search/stores open: where does it forward?
+P3 GET /search/stores?q=abc&page=2 → 401 {"code":"EDGE_UNAUTHENTICATED","message":"رمز الجلسة مطلوب"} | upstream fetch: [] | signer calls: []
+
+stdout | src/__tests__/zz-probe-clm0661.test.ts > CLM-0661 counterfactual (patched copy: header read before strip) > P4 where does GET /search/stores?q=abc&page=2 go, signed how?
+P4 → 200 | upstream fetch: ["http://identity.probe/search/stores"] | signer(method,path,obo): [["GET","/search/stores","CUS-PROBE"]]
+
+ ❯ src/__tests__/zz-probe-clm0661.test.ts (4 tests | 1 failed) 96ms
+     ✓ P1 real allowlist: proxy routes registered 58ms
+     ✓ P2 every entry production_open=true (entries still lack .surface) 4ms
+     × P3 entries given .surface + /search/stores open: where does it forward? 11ms
+     ✓ P4 where does GET /search/stores?q=abc&page=2 go, signed how? 22ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/zz-probe-clm0661.test.ts > CLM-0661 probe > P3 entries given .surface + /search/stores open: where does it forward?
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/__tests__/zz-probe-clm0661.test.ts:49:26
+     47|     const r = await app.inject({ method: "GET", url: "/search/stores?q…
+     48|     console.log("P3 GET /search/stores?q=abc&page=2 →", r.statusCode, …
+     49|     expect(calls.length).toBe(1);
+       |                          ^
+     50|   });
+     51| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  09:23:25
+   Duration  568ms (transform 211ms, setup 0ms, import 310ms, tests 96ms, environment 0ms)
+

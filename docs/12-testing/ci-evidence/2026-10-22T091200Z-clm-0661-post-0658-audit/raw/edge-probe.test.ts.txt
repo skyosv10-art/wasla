@@ -1,0 +1,62 @@
+// CLM-0661 local probe (NOT committed as a test): measures what the edge actually
+// registers and where it forwards. Stubs only; no network, no secrets.
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import Fastify from "fastify";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createChannelEdge } from "../create-channel-edge.js";
+import { createChannelEdge as patchedEdge } from "../zz-probe-patched-copy.js";
+
+const REAL = "../../packages/channel-edge/allowlist/customer-mini-app.json";
+const real = JSON.parse(readFileSync(new URL("../../allowlist/customer-mini-app.json", import.meta.url), "utf-8"));
+const dir = mkdtempSync(join(tmpdir(), "edge-probe-"));
+function write(name: string, obj: unknown) { const p = join(dir, name); writeFileSync(p, JSON.stringify(obj)); return p; }
+const signerCalls: unknown[][] = [];
+const signer = ((m: string, p: string, o?: string) => { signerCalls.push([m, p, o]); return { "X-Probe-Signed": "1" }; }) as never;
+const surface = { actorType: "customer" as const, botToken: "0:x", requestSigner: signer, waslaPublicIdOf: async () => "CUS-PROBE" };
+function build(allowlistUrl: string, impl = createChannelEdge) {
+  const app = Fastify();
+  impl({
+    surface, identityUrl: "http://identity.probe", requestSigner: signer, allowlistUrl, enabled: true, allowedOrigins: [],
+    issueSession: async () => { throw new Error("n/a"); },
+    exchangeSession: async () => ({ actor_type: "customer", wasla_public_id: "CUS-PROBE", assertion: "a" }) as never,
+    revokeSession: async () => { throw new Error("n/a"); },
+  } as never).apply(app as never);
+  return app;
+}
+afterEach(() => vi.unstubAllGlobals());
+
+describe("CLM-0661 probe", () => {
+  it("P1 real allowlist: proxy routes registered", async () => {
+    const app = build(new URL("../../allowlist/customer-mini-app.json", import.meta.url).pathname); await app.ready();
+    const r = await app.inject({ method: "GET", url: "/search/stores?q=abc" });
+    console.log("P1 real allowlist  GET /search/stores →", r.statusCode, "| routes:\n" + app.printRoutes({ commonPrefix: false }));
+  });
+  it("P2 every entry production_open=true (entries still lack .surface)", async () => {
+    const p = write("all-open.json", { ...real, entries: real.entries.map((e: object) => ({ ...e, production_open: true })) });
+    const app = build(p); await app.ready();
+    const r = await app.inject({ method: "GET", url: "/search/stores?q=abc", headers: { authorization: "Bearer t" } });
+    console.log("P2 all production_open=true  GET /search/stores →", r.statusCode);
+  });
+  it("P3 entries given .surface + /search/stores open: where does it forward?", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (u: string) => { calls.push(String(u)); return new Response("{}", { status: 200 }); });
+    const p = write("surface.json", { ...real, entries: real.entries.map((e: { path: string }) => ({ ...e, surface: "customer-mini-app", production_open: e.path === "/search/stores" })) });
+    const app = build(p); await app.ready();
+    const r = await app.inject({ method: "GET", url: "/search/stores?q=abc&page=2", headers: { authorization: "Bearer t" } });
+    console.log("P3 GET /search/stores?q=abc&page=2 →", r.statusCode, r.body, "| upstream fetch:", JSON.stringify(calls), "| signer calls:", JSON.stringify(signerCalls));
+    expect(calls.length).toBe(1);
+  });
+});
+
+describe("CLM-0661 counterfactual (patched copy: header read before strip)", () => {
+  it("P4 where does GET /search/stores?q=abc&page=2 go, signed how?", async () => {
+    const calls: string[] = []; signerCalls.length = 0;
+    vi.stubGlobal("fetch", async (u: string) => { calls.push(String(u)); return new Response("{}", { status: 200 }); });
+    const p = write("surface2.json", { ...real, entries: real.entries.map((e: { path: string }) => ({ ...e, surface: "customer-mini-app", production_open: e.path === "/search/stores" })) });
+    const app = build(p, patchedEdge); await app.ready();
+    const r = await app.inject({ method: "GET", url: "/search/stores?q=abc&page=2", headers: { authorization: "Bearer t" } });
+    console.log("P4 →", r.statusCode, "| upstream fetch:", JSON.stringify(calls), "| signer(method,path,obo):", JSON.stringify(signerCalls));
+  });
+});

@@ -1,0 +1,1026 @@
+# run_id	job	created_at	started_at	completed_at  — GET actions/runs/{id}/jobs for the last 25 ci.yml runs (read 2026-10-22T09:2xZ)
+39751349909	repo-structure	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:05Z
+39751349909	customer-mini-app-e2e	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:56:00Z
+39751349909	verify	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T09:03:35Z
+39751349909	driver-mini-app-e2e	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:57Z
+39751349909	governance-guard	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T09:06:10Z
+39751349909	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:39Z
+39751349909	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:37Z
+39751349909	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:37Z
+39751349909	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:36Z
+39751349909	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:38Z
+39751349909	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:31Z
+39751349909	typecheck	2026-10-22T08:54:57Z	2026-10-22T08:56:15Z	2026-10-22T08:58:05Z
+39751349909	test	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:57:44Z
+39751349909	admin-portal-e2e	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:56:14Z
+39751349909	doc-coverage	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:10Z
+39751349909	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:35Z
+39751349909	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:37Z
+39751349909	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T08:54:57Z	2026-10-22T08:54:59Z	2026-10-22T08:55:58Z
+39751349909	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:07Z	2026-10-22T08:55:45Z
+39751349909	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:41Z	2026-10-22T08:56:29Z
+39751349909	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T08:54:57Z	2026-10-22T08:55:00Z	2026-10-22T08:55:39Z
+39751349909	db-integration-shared	2026-10-22T08:54:57Z	2026-10-22T08:55:32Z	2026-10-22T08:57:54Z
+39751349909	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:00Z	2026-10-22T08:55:36Z
+39751349909	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T08:54:58Z	2026-10-22T08:55:38Z	2026-10-22T08:56:11Z
+39751349909	image-supply-chain	2026-10-22T08:54:58Z	2026-10-22T08:55:00Z	2026-10-22T08:56:29Z
+39751349909	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T08:54:58Z	2026-10-22T08:56:01Z	2026-10-22T08:56:42Z
+39751349909	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T08:54:58Z	2026-10-22T08:55:59Z	2026-10-22T08:56:34Z
+39751349909	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:37Z	2026-10-22T08:56:14Z
+39751349909	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:56:12Z	2026-10-22T08:56:51Z
+39751349909	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T08:54:58Z	2026-10-22T08:55:47Z	2026-10-22T08:56:22Z
+39751349909	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:38Z	2026-10-22T08:56:17Z
+39751349909	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T08:54:58Z	2026-10-22T08:56:00Z	2026-10-22T08:56:42Z
+39751349909	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:39Z	2026-10-22T08:56:13Z
+39751349909	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:39Z	2026-10-22T08:56:19Z
+39751349909	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:38Z	2026-10-22T08:56:10Z
+39751349909	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:36Z	2026-10-22T08:56:11Z
+39751349909	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:56:11Z	2026-10-22T08:56:44Z
+39751349909	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:57Z	2026-10-22T08:56:28Z
+39751349909	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T08:54:58Z	2026-10-22T08:55:41Z	2026-10-22T08:56:18Z
+39751349909	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T08:54:58Z	2026-10-22T08:56:14Z	2026-10-22T08:56:49Z
+39751349909	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T08:54:58Z	2026-10-22T08:56:13Z	2026-10-22T08:56:51Z
+39748623396	repo-structure	2026-10-22T08:33:27Z	2026-10-22T08:33:29Z	2026-10-22T08:33:36Z
+39748623396	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:03Z
+39748623396	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:07Z
+39748623396	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:05Z
+39748623396	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:06Z
+39748623396	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:05Z
+39748623396	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:01Z
+39748623396	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:07Z
+39748623396	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:06Z
+39748623396	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:19Z
+39748623396	test	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:35:20Z
+39748623396	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:30Z	2026-10-22T08:34:12Z
+39748623396	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:08Z
+39748623396	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:34:03Z	2026-10-22T08:34:45Z
+39748623396	typecheck	2026-10-22T08:33:28Z	2026-10-22T08:33:30Z	2026-10-22T08:35:34Z
+39748623396	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:39Z	2026-10-22T08:34:16Z
+39748623396	doc-coverage	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:33:37Z
+39748623396	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:38Z	2026-10-22T08:34:17Z
+39748623396	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:34:08Z	2026-10-22T08:34:48Z
+39748623396	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:33:43Z	2026-10-22T08:34:29Z
+39748623396	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:29Z	2026-10-22T08:34:02Z
+39748623396	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:34:03Z	2026-10-22T08:34:40Z
+39748623396	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:06Z	2026-10-22T08:34:42Z
+39748623396	admin-portal-e2e	2026-10-22T08:33:28Z	2026-10-22T08:33:30Z	2026-10-22T08:34:32Z
+39748623396	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:30Z	2026-10-22T08:34:08Z
+39748623396	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T08:33:28Z	2026-10-22T08:33:30Z	2026-10-22T08:34:02Z
+39748623396	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:34:08Z	2026-10-22T08:34:53Z
+39748623396	verify	2026-10-22T08:33:28Z	2026-10-22T08:34:17Z	2026-10-22T08:46:38Z
+39748623396	db-integration-shared	2026-10-22T08:33:28Z	2026-10-22T08:34:04Z	2026-10-22T08:36:21Z
+39748623396	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T08:33:28Z	2026-10-22T08:34:20Z	2026-10-22T08:34:57Z
+39748623396	image-supply-chain	2026-10-22T08:33:28Z	2026-10-22T08:34:07Z	2026-10-22T08:35:30Z
+39748623396	governance-guard	2026-10-22T08:33:28Z	2026-10-22T08:34:09Z	2026-10-22T08:45:20Z
+39748623396	customer-mini-app-e2e	2026-10-22T08:33:28Z	2026-10-22T08:34:19Z	2026-10-22T08:35:17Z
+39748623396	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:10Z	2026-10-22T08:34:49Z
+39748623396	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:05Z	2026-10-22T08:34:44Z
+39748623396	driver-mini-app-e2e	2026-10-22T08:33:28Z	2026-10-22T08:34:42Z	2026-10-22T08:35:41Z
+39748623396	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:33Z	2026-10-22T08:35:06Z
+39748623396	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:31Z	2026-10-22T08:35:24Z
+39748623396	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:09Z	2026-10-22T08:34:45Z
+39748623396	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:09Z	2026-10-22T08:34:55Z
+39748623396	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T08:33:28Z	2026-10-22T08:34:13Z	2026-10-22T08:34:46Z
+39744863985	repo-structure	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:12Z
+39744863985	customer-mini-app-e2e	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:06:12Z
+39744863985	driver-mini-app-e2e	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:05:53Z
+39744863985	doc-coverage	2026-10-22T08:03:02Z	2026-10-22T08:03:05Z	2026-10-22T08:03:15Z
+39744863985	image-supply-chain	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:04:28Z
+39744863985	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:36Z
+39744863985	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:42Z
+39744863985	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:41Z
+39744863985	test	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:04:55Z
+39744863985	governance-guard	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:10:58Z
+39744863985	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:42Z
+39744863985	verify	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:15:50Z
+39744863985	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:42Z
+39744863985	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:48Z
+39744863985	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:03:55Z	2026-10-22T08:04:25Z
+39744863985	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:41Z	2026-10-22T08:04:34Z
+39744863985	typecheck	2026-10-22T08:03:02Z	2026-10-22T08:03:38Z	2026-10-22T08:05:25Z
+39744863985	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:27Z	2026-10-22T08:05:02Z
+39744863985	db-integration-shared	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:05:31Z
+39744863985	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:39Z
+39744863985	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:41Z
+39744863985	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:41Z
+39744863985	admin-portal-e2e	2026-10-22T08:03:02Z	2026-10-22T08:04:21Z	2026-10-22T08:05:31Z
+39744863985	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:43Z	2026-10-22T08:04:38Z
+39744863985	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:44Z	2026-10-22T08:04:15Z
+39744863985	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:03:20Z	2026-10-22T08:04:06Z
+39744863985	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:43Z	2026-10-22T08:04:19Z
+39744863985	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:00Z	2026-10-22T08:04:36Z
+39744863985	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:43Z	2026-10-22T08:04:18Z
+39744863985	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:04Z	2026-10-22T08:03:38Z
+39744863985	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:03:16Z	2026-10-22T08:03:54Z
+39744863985	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:18Z	2026-10-22T08:04:57Z
+39744863985	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:43Z	2026-10-22T08:04:37Z
+39744863985	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:03:23Z	2026-10-22T08:03:59Z
+39744863985	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:44Z	2026-10-22T08:04:19Z
+39744863985	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:20Z	2026-10-22T08:04:53Z
+39744863985	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:17Z	2026-10-22T08:04:51Z
+39744863985	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:08Z	2026-10-22T08:04:49Z
+39744863985	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:04:20Z	2026-10-22T08:04:57Z
+39744863985	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T08:03:02Z	2026-10-22T08:03:39Z	2026-10-22T08:04:16Z
+39744863985	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T08:03:02Z	2026-10-22T08:03:49Z	2026-10-22T08:04:29Z
+39740985794	customer-mini-app-e2e	2026-10-22T07:30:40Z	2026-10-22T07:30:49Z	2026-10-22T07:31:47Z
+39740985794	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:32Z
+39740985794	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:54Z	2026-10-22T07:31:26Z
+39740985794	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:24Z
+39740985794	doc-coverage	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:00Z
+39740985794	admin-portal-e2e	2026-10-22T07:30:40Z	2026-10-22T07:30:49Z	2026-10-22T07:31:43Z
+39740985794	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:28Z
+39740985794	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:36Z
+39740985794	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:30:51Z	2026-10-22T07:31:30Z
+39740985794	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:23Z	2026-10-22T07:32:00Z
+39740985794	governance-guard	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:42:00Z
+39740985794	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:26Z	2026-10-22T07:32:04Z
+39740985794	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:21Z
+39740985794	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:02Z	2026-10-22T07:31:36Z
+39740985794	typecheck	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:32:54Z
+39740985794	driver-mini-app-e2e	2026-10-22T07:30:40Z	2026-10-22T07:30:49Z	2026-10-22T07:32:44Z
+39740985794	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:34Z
+39740985794	verify	2026-10-22T07:30:40Z	2026-10-22T07:30:49Z	2026-10-22T07:47:29Z
+39740985794	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:26Z	2026-10-22T07:32:15Z
+39740985794	repo-structure	2026-10-22T07:30:40Z	2026-10-22T07:31:27Z	2026-10-22T07:31:36Z
+39740985794	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:25Z
+39740985794	test	2026-10-22T07:30:40Z	2026-10-22T07:30:49Z	2026-10-22T07:33:24Z
+39740985794	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:26Z
+39740985794	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:49Z	2026-10-22T07:32:41Z
+39740985794	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:30:50Z	2026-10-22T07:31:25Z
+39740985794	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:35Z	2026-10-22T07:32:31Z
+39740985794	db-integration-shared	2026-10-22T07:30:40Z	2026-10-22T07:31:32Z	2026-10-22T07:33:54Z
+39740985794	image-supply-chain	2026-10-22T07:30:40Z	2026-10-22T07:31:30Z	2026-10-22T07:33:03Z
+39740985794	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:31:28Z	2026-10-22T07:32:10Z
+39740985794	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:31:44Z	2026-10-22T07:32:14Z
+39740985794	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:31:28Z	2026-10-22T07:32:03Z
+39740985794	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:31:37Z	2026-10-22T07:32:17Z
+39740985794	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T07:30:40Z	2026-10-22T07:32:06Z	2026-10-22T07:32:40Z
+39740985794	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:32:02Z	2026-10-22T07:32:32Z
+39740985794	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:37Z	2026-10-22T07:32:12Z
+39740985794	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:31:57Z	2026-10-22T07:32:41Z
+39740985794	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:37Z	2026-10-22T07:32:11Z
+39740985794	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T07:30:40Z	2026-10-22T07:31:34Z	2026-10-22T07:32:11Z
+39740985794	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T07:30:40Z	2026-10-22T07:32:04Z	2026-10-22T07:32:46Z
+39740985794	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T07:30:40Z	2026-10-22T07:32:13Z	2026-10-22T07:32:49Z
+39740985794	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T07:30:40Z	2026-10-22T07:32:12Z	2026-10-22T07:32:52Z
+39739563350	repo-structure	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:27Z
+39739563350	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:58Z
+39739563350	governance-guard	2026-10-22T07:18:18Z	2026-10-22T07:18:32Z	2026-10-22T07:22:27Z
+39739563350	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:56Z
+39739563350	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:56Z
+39739563350	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:54Z
+39739563350	customer-mini-app-e2e	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:19:39Z
+39739563350	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:19:08Z
+39739563350	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:19:10Z	2026-10-22T07:19:51Z
+39739563350	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:28Z	2026-10-22T07:19:08Z
+39739563350	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:18:54Z
+39739563350	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:47Z	2026-10-22T07:19:32Z
+39739563350	image-supply-chain	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:19:36Z
+39739563350	admin-portal-e2e	2026-10-22T07:18:18Z	2026-10-22T07:18:56Z	2026-10-22T07:19:58Z
+39739563350	verify	2026-10-22T07:18:18Z	2026-10-22T07:19:37Z	2026-10-22T07:21:53Z
+39739563350	typecheck	2026-10-22T07:18:18Z	2026-10-22T07:18:57Z	2026-10-22T07:20:49Z
+39739563350	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:30Z	2026-10-22T07:19:12Z
+39739563350	test	2026-10-22T07:18:18Z	2026-10-22T07:18:35Z	2026-10-22T07:21:19Z
+39739563350	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:18:56Z	2026-10-22T07:19:26Z
+39739563350	db-integration-shared	2026-10-22T07:18:18Z	2026-10-22T07:19:09Z	2026-10-22T07:21:04Z
+39739563350	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:20Z	2026-10-22T07:19:05Z
+39739563350	doc-coverage	2026-10-22T07:18:18Z	2026-10-22T07:19:07Z	2026-10-22T07:19:15Z
+39739563350	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:02Z	2026-10-22T07:19:49Z
+39739563350	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:19:33Z	2026-10-22T07:20:06Z
+39739563350	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:47Z	2026-10-22T07:20:41Z
+39739563350	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:06Z	2026-10-22T07:19:42Z
+39739563350	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:57Z	2026-10-22T07:19:35Z
+39739563350	driver-mini-app-e2e	2026-10-22T07:18:18Z	2026-10-22T07:19:28Z	2026-10-22T07:20:18Z
+39739563350	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T07:18:18Z	2026-10-22T07:18:29Z	2026-10-22T07:19:01Z
+39739563350	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:00Z	2026-10-22T07:19:36Z
+39739563350	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:19:13Z	2026-10-22T07:19:45Z
+39739563350	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:19:17Z	2026-10-22T07:19:51Z
+39739563350	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:43Z	2026-10-22T07:20:22Z
+39739563350	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:46Z	2026-10-22T07:20:20Z
+39739563350	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:38Z	2026-10-22T07:20:12Z
+39739563350	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:37Z	2026-10-22T07:20:12Z
+39739563350	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T07:18:18Z	2026-10-22T07:19:55Z	2026-10-22T07:20:35Z
+39739563350	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:52Z	2026-10-22T07:20:24Z
+39739563350	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:52Z	2026-10-22T07:20:29Z
+39739563350	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:40Z	2026-10-22T07:20:17Z
+39739563350	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T07:18:18Z	2026-10-22T07:19:50Z	2026-10-22T07:20:28Z
+39739354566	governance-guard	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:26:00Z
+39739354566	typecheck	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:19:05Z
+39739354566	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:28Z	2026-10-22T07:17:04Z
+39739354566	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:15Z
+39739354566	doc-coverage	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:16:37Z
+39739354566	db-integration-shared	2026-10-22T07:16:27Z	2026-10-22T07:16:28Z	2026-10-22T07:18:46Z
+39739354566	repo-structure	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:16:37Z
+39739354566	driver-mini-app-e2e	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:18:29Z
+39739354566	verify	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:31:56Z
+39739354566	customer-mini-app-e2e	2026-10-22T07:16:27Z	2026-10-22T07:16:28Z	2026-10-22T07:17:22Z
+39739354566	image-supply-chain	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:57Z
+39739354566	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:23Z	2026-10-22T07:17:59Z
+39739354566	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:01Z
+39739354566	admin-portal-e2e	2026-10-22T07:16:27Z	2026-10-22T07:17:10Z	2026-10-22T07:19:54Z
+39739354566	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:14Z
+39739354566	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:28Z	2026-10-22T07:17:01Z
+39739354566	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:06Z
+39739354566	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:39Z	2026-10-22T07:17:20Z
+39739354566	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:03Z
+39739354566	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:21Z	2026-10-22T07:18:11Z
+39739354566	test	2026-10-22T07:16:27Z	2026-10-22T07:17:39Z	2026-10-22T07:19:46Z
+39739354566	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:05Z
+39739354566	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:01Z
+39739354566	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:14Z	2026-10-22T07:17:49Z
+39739354566	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:03Z	2026-10-22T07:17:46Z
+39739354566	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:43Z	2026-10-22T07:17:16Z
+39739354566	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:16:38Z	2026-10-22T07:17:18Z
+39739354566	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:05Z	2026-10-22T07:17:37Z
+39739354566	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:04Z	2026-10-22T07:17:37Z
+39739354566	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T07:16:27Z	2026-10-22T07:16:29Z	2026-10-22T07:17:09Z
+39739354566	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:17:47Z	2026-10-22T07:18:16Z
+39739354566	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:08Z	2026-10-22T07:17:47Z
+39739354566	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:17:39Z	2026-10-22T07:18:15Z
+39739354566	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:07Z	2026-10-22T07:17:47Z
+39739354566	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:17:48Z	2026-10-22T07:18:30Z
+39739354566	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:19Z	2026-10-22T07:17:59Z
+39739354566	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T07:16:27Z	2026-10-22T07:17:03Z	2026-10-22T07:17:46Z
+39739354566	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:18Z	2026-10-22T07:17:50Z
+39739354566	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:15Z	2026-10-22T07:17:57Z
+39739354566	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:17Z	2026-10-22T07:18:15Z
+39739354566	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T07:16:27Z	2026-10-22T07:17:49Z	2026-10-22T07:18:27Z
+39728298179	governance-guard	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:50:55Z
+39728298179	test	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:44:19Z
+39728298179	customer-mini-app-e2e	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:44Z
+39728298179	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:12Z
+39728298179	driver-mini-app-e2e	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:45Z
+39728298179	typecheck	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:43:55Z
+39728298179	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:20Z
+39728298179	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:16Z
+39728298179	verify	2026-10-22T05:41:40Z	2026-10-22T05:42:27Z	2026-10-22T05:54:32Z
+39728298179	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:25Z
+39728298179	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:23Z	2026-10-22T05:43:00Z
+39728298179	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:15Z
+39728298179	repo-structure	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:41:50Z
+39728298179	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:17Z
+39728298179	admin-portal-e2e	2026-10-22T05:41:40Z	2026-10-22T05:42:46Z	2026-10-22T05:43:41Z
+39728298179	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:21Z
+39728298179	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:28Z
+39728298179	image-supply-chain	2026-10-22T05:41:40Z	2026-10-22T05:42:53Z	2026-10-22T05:44:06Z
+39728298179	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:26Z	2026-10-22T05:43:09Z
+39728298179	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:37Z
+39728298179	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:13Z	2026-10-22T05:42:51Z
+39728298179	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:28Z
+39728298179	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:17Z
+39728298179	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:39Z	2026-10-22T05:43:25Z
+39728298179	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:51Z	2026-10-22T05:42:31Z
+39728298179	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:17Z	2026-10-22T05:42:55Z
+39728298179	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:14Z
+39728298179	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:32Z	2026-10-22T05:43:10Z
+39728298179	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:17Z	2026-10-22T05:43:04Z
+39728298179	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:42Z	2026-10-22T05:42:20Z
+39728298179	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:21Z	2026-10-22T05:42:59Z
+39728298179	db-integration-shared	2026-10-22T05:41:40Z	2026-10-22T05:42:29Z	2026-10-22T05:45:05Z
+39728298179	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:14Z	2026-10-22T05:42:57Z
+39728298179	doc-coverage	2026-10-22T05:41:40Z	2026-10-22T05:42:15Z	2026-10-22T05:42:26Z
+39728298179	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:41:41Z	2026-10-22T05:42:11Z
+39728298179	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:45Z	2026-10-22T05:43:22Z
+39728298179	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:18Z	2026-10-22T05:42:56Z
+39728298179	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:19Z	2026-10-22T05:42:51Z
+39728298179	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T05:41:40Z	2026-10-22T05:42:30Z	2026-10-22T05:43:01Z
+39728298179	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:21Z	2026-10-22T05:42:56Z
+39728298179	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T05:41:40Z	2026-10-22T05:42:53Z	2026-10-22T05:43:30Z
+39728264488	verify	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:41:39Z
+39728264488	image-supply-chain	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:30:27Z
+39728264488	typecheck	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:31:02Z
+39728264488	repo-structure	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:29:07Z
+39728264488	admin-portal-e2e	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:52Z
+39728264488	driver-mini-app-e2e	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:30:15Z
+39728264488	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:30Z
+39728264488	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:32Z
+39728264488	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:35Z
+39728264488	db-integration-shared	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:31:30Z
+39728264488	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:31Z
+39728264488	test	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:31:27Z
+39728264488	doc-coverage	2026-10-22T05:28:56Z	2026-10-22T05:29:34Z	2026-10-22T05:29:46Z
+39728264488	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:12Z	2026-10-22T05:29:46Z
+39728264488	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:29:51Z
+39728264488	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:29:38Z
+39728264488	customer-mini-app-e2e	2026-10-22T05:28:56Z	2026-10-22T05:29:36Z	2026-10-22T05:30:35Z
+39728264488	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:31Z
+39728264488	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:29:32Z	2026-10-22T05:30:01Z
+39728264488	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:08Z	2026-10-22T05:29:43Z
+39728264488	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T05:28:56Z	2026-10-22T05:28:57Z	2026-10-22T05:29:36Z
+39728264488	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:31Z	2026-10-22T05:30:08Z
+39728264488	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:29:32Z	2026-10-22T05:30:04Z
+39728264488	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:42Z	2026-10-22T05:30:13Z
+39728264488	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:44Z	2026-10-22T05:30:22Z
+39728264488	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:29:40Z
+39728264488	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:52Z	2026-10-22T05:30:24Z
+39728264488	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:47Z	2026-10-22T05:30:19Z
+39728264488	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T05:28:56Z	2026-10-22T05:28:58Z	2026-10-22T05:29:30Z
+39728264488	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:39Z	2026-10-22T05:30:16Z
+39728264488	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T05:28:56Z	2026-10-22T05:30:03Z	2026-10-22T05:30:39Z
+39728264488	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:38Z	2026-10-22T05:30:14Z
+39728264488	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:50Z	2026-10-22T05:30:41Z
+39728264488	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:30:06Z	2026-10-22T05:30:44Z
+39728264488	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:48Z	2026-10-22T05:30:21Z
+39728264488	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:30:09Z	2026-10-22T05:30:46Z
+39728264488	governance-guard	2026-10-22T05:28:56Z	2026-10-22T05:30:17Z	2026-10-22T05:37:50Z
+39728264488	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T05:28:56Z	2026-10-22T05:29:53Z	2026-10-22T05:30:41Z
+39728264488	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T05:28:56Z	2026-10-22T05:30:15Z	2026-10-22T05:31:04Z
+39728264488	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T05:28:56Z	2026-10-22T05:30:14Z	2026-10-22T05:30:51Z
+39728264488	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T05:28:56Z	2026-10-22T05:30:17Z	2026-10-22T05:30:52Z
+39722678543	governance-guard	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:52:43Z
+39722678543	typecheck	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:43:43Z
+39722678543	verify	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:51:51Z
+39722678543	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:16Z
+39722678543	test	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:43:40Z
+39722678543	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:10Z
+39722678543	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:17Z
+39722678543	customer-mini-app-e2e	2026-10-22T04:41:36Z	2026-10-22T04:42:12Z	2026-10-22T04:43:07Z
+39722678543	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:07Z
+39722678543	driver-mini-app-e2e	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:27Z
+39722678543	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:10Z	2026-10-22T04:42:47Z
+39722678543	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:09Z
+39722678543	image-supply-chain	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:56Z
+39722678543	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:11Z
+39722678543	db-integration-shared	2026-10-22T04:41:36Z	2026-10-22T04:42:14Z	2026-10-22T04:44:35Z
+39722678543	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:11Z	2026-10-22T04:42:47Z
+39722678543	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:29Z
+39722678543	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:10Z	2026-10-22T04:42:49Z
+39722678543	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:09Z
+39722678543	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:12Z	2026-10-22T04:42:51Z
+39722678543	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:10Z	2026-10-22T04:42:52Z
+39722678543	doc-coverage	2026-10-22T04:41:36Z	2026-10-22T04:42:17Z	2026-10-22T04:42:26Z
+39722678543	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:18Z	2026-10-22T04:42:52Z
+39722678543	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:31Z	2026-10-22T04:43:06Z
+39722678543	admin-portal-e2e	2026-10-22T04:41:36Z	2026-10-22T04:42:50Z	2026-10-22T04:43:43Z
+39722678543	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:08Z
+39722678543	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:08Z
+39722678543	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:17Z
+39722678543	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:08Z
+39722678543	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:12Z	2026-10-22T04:42:50Z
+39722678543	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:13Z
+39722678543	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T04:41:36Z	2026-10-22T04:42:11Z	2026-10-22T04:42:58Z
+39722678543	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:09Z	2026-10-22T04:42:48Z
+39722678543	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:29Z	2026-10-22T04:43:07Z
+39722678543	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:28Z	2026-10-22T04:43:16Z
+39722678543	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T04:41:36Z	2026-10-22T04:41:38Z	2026-10-22T04:42:10Z
+39722678543	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:18Z	2026-10-22T04:42:56Z
+39722678543	repo-structure	2026-10-22T04:41:36Z	2026-10-22T04:42:48Z	2026-10-22T04:42:56Z
+39722678543	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:51Z	2026-10-22T04:43:24Z
+39722678543	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:48Z	2026-10-22T04:43:41Z
+39722678543	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T04:41:36Z	2026-10-22T04:42:50Z	2026-10-22T04:43:25Z
+39722652583	governance-guard	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:31:10Z
+39722652583	verify	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:41:35Z
+39722652583	doc-coverage	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:29:34Z
+39722652583	db-integration-shared	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:31:17Z
+39722652583	driver-mini-app-e2e	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:21Z
+39722652583	repo-structure	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:29:36Z
+39722652583	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:29:57Z
+39722652583	typecheck	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:32:09Z
+39722652583	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:23Z	2026-10-22T04:31:01Z
+39722652583	image-supply-chain	2026-10-22T04:29:24Z	2026-10-22T04:29:27Z	2026-10-22T04:31:01Z
+39722652583	test	2026-10-22T04:29:24Z	2026-10-22T04:29:38Z	2026-10-22T04:31:48Z
+39722652583	customer-mini-app-e2e	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:24Z
+39722652583	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:29:37Z	2026-10-22T04:30:11Z
+39722652583	admin-portal-e2e	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:21Z
+39722652583	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:01Z
+39722652583	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:01Z
+39722652583	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:15Z
+39722652583	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:34Z	2026-10-22T04:31:08Z
+39722652583	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:14Z
+39722652583	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T04:29:24Z	2026-10-22T04:29:27Z	2026-10-22T04:30:05Z
+39722652583	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:05Z	2026-10-22T04:30:45Z
+39722652583	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:30:03Z
+39722652583	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:23Z	2026-10-22T04:31:01Z
+39722652583	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:29:27Z	2026-10-22T04:30:05Z
+39722652583	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:03Z	2026-10-22T04:30:36Z
+39722652583	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:06Z	2026-10-22T04:30:37Z
+39722652583	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:15Z	2026-10-22T04:30:52Z
+39722652583	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:12Z	2026-10-22T04:31:04Z
+39722652583	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:26Z	2026-10-22T04:31:01Z
+39722652583	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T04:29:24Z	2026-10-22T04:29:26Z	2026-10-22T04:29:59Z
+39722652583	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:03Z	2026-10-22T04:30:40Z
+39722652583	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:17Z	2026-10-22T04:30:57Z
+39722652583	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:06Z	2026-10-22T04:30:46Z
+39722652583	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:12Z	2026-10-22T04:30:56Z
+39722652583	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:48Z	2026-10-22T04:31:24Z
+39722652583	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:00Z	2026-10-22T04:30:32Z
+39722652583	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:39Z	2026-10-22T04:31:19Z
+39722652583	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:46Z	2026-10-22T04:31:30Z
+39722652583	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:37Z	2026-10-22T04:31:13Z
+39722652583	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T04:29:24Z	2026-10-22T04:30:53Z	2026-10-22T04:31:31Z
+39722652583	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T04:29:24Z	2026-10-22T04:30:42Z	2026-10-22T04:31:13Z
+39719618092	repo-structure	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:08:51Z
+39719618092	doc-coverage	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:08:55Z
+39719618092	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:26Z
+39719618092	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:19Z
+39719618092	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:20Z
+39719618092	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:24Z
+39719618092	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:22Z
+39719618092	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:31Z
+39719618092	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:17Z
+39719618092	governance-guard	2026-10-22T04:08:43Z	2026-10-22T04:09:21Z	2026-10-22T04:20:31Z
+39719618092	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:09:15Z	2026-10-22T04:09:52Z
+39719618092	driver-mini-app-e2e	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:51Z
+39719618092	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:57Z	2026-10-22T04:09:37Z
+39719618092	db-integration-shared	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:11:10Z
+39719618092	verify	2026-10-22T04:08:43Z	2026-10-22T04:09:21Z	2026-10-22T04:19:50Z
+39719618092	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:09:52Z	2026-10-22T04:10:28Z
+39719618092	test	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:11:15Z
+39719618092	admin-portal-e2e	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:37Z
+39719618092	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:09:20Z	2026-10-22T04:09:50Z
+39719618092	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:14Z
+39719618092	customer-mini-app-e2e	2026-10-22T04:08:43Z	2026-10-22T04:09:18Z	2026-10-22T04:10:12Z
+39719618092	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:18Z
+39719618092	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:19Z
+39719618092	image-supply-chain	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:10:13Z
+39719618092	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:32Z	2026-10-22T04:10:03Z
+39719618092	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T04:08:43Z	2026-10-22T04:09:20Z	2026-10-22T04:09:51Z
+39719618092	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:52Z	2026-10-22T04:09:24Z
+39719618092	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:19Z
+39719618092	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:26Z	2026-10-22T04:10:00Z
+39719618092	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:25Z	2026-10-22T04:10:01Z
+39719618092	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:48Z
+39719618092	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:27Z	2026-10-22T04:10:13Z
+39719618092	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:22Z	2026-10-22T04:09:57Z
+39719618092	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:25Z	2026-10-22T04:10:04Z
+39719618092	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T04:08:43Z	2026-10-22T04:08:45Z	2026-10-22T04:09:24Z
+39719618092	typecheck	2026-10-22T04:08:43Z	2026-10-22T04:09:50Z	2026-10-22T04:10:31Z
+39719618092	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:23Z	2026-10-22T04:10:00Z
+39719618092	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:38Z	2026-10-22T04:10:14Z
+39719618092	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:38Z	2026-10-22T04:10:17Z
+39719618092	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:53Z	2026-10-22T04:10:31Z
+39719618092	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T04:08:43Z	2026-10-22T04:09:52Z	2026-10-22T04:10:28Z
+39719584984	verify	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T04:08:43Z
+39719584984	db-integration-shared	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:59:03Z
+39719584984	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:04Z
+39719584984	test	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:58:30Z
+39719584984	typecheck	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:11Z
+39719584984	admin-portal-e2e	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:09Z
+39719584984	customer-mini-app-e2e	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:30Z
+39719584984	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:00Z
+39719584984	doc-coverage	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:56:38Z
+39719584984	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:01Z
+39719584984	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:02Z	2026-10-22T03:57:37Z
+39719584984	governance-guard	2026-10-22T03:56:26Z	2026-10-22T03:57:06Z	2026-10-22T04:08:10Z
+39719584984	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:03Z	2026-10-22T03:57:36Z
+39719584984	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:04Z	2026-10-22T03:57:38Z
+39719584984	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:00Z
+39719584984	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:09Z
+39719584984	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:05Z
+39719584984	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:03Z	2026-10-22T03:57:39Z
+39719584984	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:03Z
+39719584984	repo-structure	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:56:35Z
+39719584984	image-supply-chain	2026-10-22T03:56:26Z	2026-10-22T03:56:39Z	2026-10-22T03:58:16Z
+39719584984	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:56:57Z
+39719584984	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:02Z	2026-10-22T03:57:54Z
+39719584984	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:17Z	2026-10-22T03:58:02Z
+39719584984	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:37Z	2026-10-22T03:58:08Z
+39719584984	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T03:56:26Z	2026-10-22T03:56:40Z	2026-10-22T03:57:19Z
+39719584984	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:21Z	2026-10-22T03:58:03Z
+39719584984	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:06Z	2026-10-22T03:57:57Z
+39719584984	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T03:56:26Z	2026-10-22T03:57:31Z	2026-10-22T03:58:09Z
+39719584984	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:56:28Z	2026-10-22T03:57:04Z
+39719584984	driver-mini-app-e2e	2026-10-22T03:56:26Z	2026-10-22T03:57:39Z	2026-10-22T03:58:35Z
+39719584984	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:10Z	2026-10-22T03:57:53Z
+39719584984	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:56:29Z	2026-10-22T03:57:02Z
+39719584984	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:10Z	2026-10-22T03:57:42Z
+39719584984	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:07Z	2026-10-22T03:57:47Z
+39719584984	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:56:36Z	2026-10-22T03:57:16Z
+39719584984	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:13Z	2026-10-22T03:57:41Z
+39719584984	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:12Z	2026-10-22T03:57:55Z
+39719584984	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:43Z	2026-10-22T03:58:20Z
+39719584984	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:41Z	2026-10-22T03:58:16Z
+39719584984	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T03:56:26Z	2026-10-22T03:57:39Z	2026-10-22T03:58:14Z
+39717287736	typecheck	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:46Z
+39717287736	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:02Z
+39717287736	test	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:33:53Z
+39717287736	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:51Z
+39717287736	driver-mini-app-e2e	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:22Z
+39717287736	governance-guard	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:57Z
+39717287736	verify	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:44:49Z
+39717287736	admin-portal-e2e	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:05Z
+39717287736	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:28Z	2026-10-22T03:32:11Z
+39717287736	repo-structure	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:27Z
+39717287736	doc-coverage	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:30Z
+39717287736	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:55Z
+39717287736	db-integration-shared	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:33:21Z
+39717287736	image-supply-chain	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:53Z
+39717287736	customer-mini-app-e2e	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:17Z
+39717287736	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:03Z	2026-10-22T03:32:36Z
+39717287736	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:56Z
+39717287736	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:55Z	2026-10-22T03:32:40Z
+39717287736	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:47Z
+39717287736	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:07Z	2026-10-22T03:32:37Z
+39717287736	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:58Z	2026-10-22T03:32:32Z
+39717287736	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:32:00Z
+39717287736	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:12Z	2026-10-22T03:33:01Z
+39717287736	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:20Z	2026-10-22T03:31:54Z
+39717287736	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:56Z	2026-10-22T03:32:36Z
+39717287736	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:35Z	2026-10-22T03:33:06Z
+39717287736	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:18Z	2026-10-22T03:31:56Z
+39717287736	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:49Z	2026-10-22T03:32:24Z
+39717287736	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:09Z	2026-10-22T03:32:56Z
+39717287736	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:31:57Z	2026-10-22T03:32:34Z
+39717287736	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:30Z	2026-10-22T03:33:15Z
+39717287736	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:47Z	2026-10-22T03:32:20Z
+39717287736	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:02Z	2026-10-22T03:32:46Z
+39717287736	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:31Z	2026-10-22T03:32:08Z
+39717287736	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T03:31:16Z	2026-10-22T03:31:53Z	2026-10-22T03:32:28Z
+39717287736	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:37Z	2026-10-22T03:33:12Z
+39717287736	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:24Z	2026-10-22T03:33:02Z
+39717287736	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:22Z	2026-10-22T03:33:02Z
+39717287736	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:19Z	2026-10-22T03:32:58Z
+39717287736	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T03:31:16Z	2026-10-22T03:32:26Z	2026-10-22T03:33:00Z
+39717287736	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T03:31:16Z	2026-10-22T03:32:34Z	2026-10-22T03:33:10Z
+39708730080	repo-structure	2026-10-22T02:07:35Z	2026-10-22T02:07:36Z	2026-10-22T02:07:43Z
+39708730080	admin-portal-e2e	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:32Z
+39708730080	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:08Z
+39708730080	customer-mini-app-e2e	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:41Z
+39708730080	image-supply-chain	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:09:02Z
+39708730080	verify	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:17:50Z
+39708730080	typecheck	2026-10-22T02:07:35Z	2026-10-22T02:08:10Z	2026-10-22T02:10:57Z
+39708730080	governance-guard	2026-10-22T02:07:35Z	2026-10-22T02:08:09Z	2026-10-22T02:09:50Z
+39708730080	doc-coverage	2026-10-22T02:07:35Z	2026-10-22T02:08:50Z	2026-10-22T02:09:00Z
+39708730080	db-integration-shared	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:10:07Z
+39708730080	driver-mini-app-e2e	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:42Z
+39708730080	test	2026-10-22T02:07:35Z	2026-10-22T02:07:45Z	2026-10-22T02:09:59Z
+39708730080	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:14Z
+39708730080	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:22Z
+39708730080	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:15Z
+39708730080	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:07Z
+39708730080	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:21Z	2026-10-22T02:08:51Z
+39708730080	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:33Z
+39708730080	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:23Z	2026-10-22T02:09:00Z
+39708730080	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:13Z
+39708730080	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:20Z
+39708730080	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:34Z	2026-10-22T02:09:06Z
+39708730080	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:15Z	2026-10-22T02:08:59Z
+39708730080	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:11Z
+39708730080	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:10Z
+39708730080	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:11Z
+39708730080	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:14Z	2026-10-22T02:08:53Z
+39708730080	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:12Z	2026-10-22T02:09:04Z
+39708730080	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:13Z
+39708730080	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T02:07:35Z	2026-10-22T02:07:37Z	2026-10-22T02:08:13Z
+39708730080	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:12Z	2026-10-22T02:08:41Z
+39708730080	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:12Z	2026-10-22T02:08:44Z
+39708730080	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:16Z	2026-10-22T02:08:49Z
+39708730080	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:43Z	2026-10-22T02:09:15Z
+39708730080	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:44Z	2026-10-22T02:09:22Z
+39708730080	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:52Z	2026-10-22T02:09:25Z
+39708730080	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:14Z	2026-10-22T02:08:50Z
+39708730080	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T02:07:35Z	2026-10-22T02:08:16Z	2026-10-22T02:08:55Z
+39708730080	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:34Z	2026-10-22T02:09:10Z
+39708730080	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:45Z	2026-10-22T02:09:18Z
+39708730080	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T02:07:35Z	2026-10-22T02:08:43Z	2026-10-22T02:09:30Z
+39708433507	typecheck	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:57:56Z
+39708433507	driver-mini-app-e2e	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:58Z
+39708433507	test	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:57:06Z
+39708433507	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:48Z
+39708433507	doc-coverage	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:20Z
+39708433507	verify	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T02:07:34Z
+39708433507	repo-structure	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:55:18Z
+39708433507	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:56:01Z
+39708433507	image-supply-chain	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:56:42Z
+39708433507	governance-guard	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:56:42Z
+39708433507	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:49Z	2026-10-22T01:56:25Z
+39708433507	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:52Z	2026-10-22T01:56:27Z
+39708433507	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:45Z
+39708433507	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:53Z
+39708433507	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:47Z
+39708433507	db-integration-shared	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:57:31Z
+39708433507	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:20Z	2026-10-22T01:55:55Z
+39708433507	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:55:45Z
+39708433507	admin-portal-e2e	2026-10-22T01:55:09Z	2026-10-22T01:56:00Z	2026-10-22T01:56:57Z
+39708433507	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:44Z
+39708433507	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:10Z	2026-10-22T01:55:55Z
+39708433507	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:55:46Z
+39708433507	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:11Z	2026-10-22T01:55:50Z
+39708433507	customer-mini-app-e2e	2026-10-22T01:55:09Z	2026-10-22T01:55:49Z	2026-10-22T01:57:34Z
+39708433507	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:56Z	2026-10-22T01:56:39Z
+39708433507	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:54Z	2026-10-22T01:56:27Z
+39708433507	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:21Z	2026-10-22T01:55:55Z
+39708433507	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:45Z	2026-10-22T01:56:24Z
+39708433507	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:21Z	2026-10-22T01:56:19Z
+39708433507	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:47Z	2026-10-22T01:56:23Z
+39708433507	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:56Z	2026-10-22T01:56:26Z
+39708433507	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:47Z	2026-10-22T01:56:22Z
+39708433507	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T01:55:09Z	2026-10-22T01:55:48Z	2026-10-22T01:56:24Z
+39708433507	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:55:56Z	2026-10-22T01:56:32Z
+39708433507	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:25Z	2026-10-22T01:57:04Z
+39708433507	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:25Z	2026-10-22T01:57:03Z
+39708433507	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:24Z	2026-10-22T01:57:06Z
+39708433507	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:02Z	2026-10-22T01:56:37Z
+39708433507	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:21Z	2026-10-22T01:56:55Z
+39708433507	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T01:55:09Z	2026-10-22T01:56:25Z	2026-10-22T01:56:59Z
+39708433507	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T01:55:09Z	2026-10-22T01:56:27Z	2026-10-22T01:57:15Z
+39704732009	verify	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:24:34Z
+39704732009	test	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:18:28Z
+39704732009	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:13Z
+39704732009	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:15Z
+39704732009	db-integration-shared	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:18:56Z
+39704732009	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:27Z
+39704732009	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:10Z
+39704732009	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:45Z	2026-10-22T01:17:27Z
+39704732009	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:08Z
+39704732009	repo-structure	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:16:43Z
+39704732009	typecheck	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:18:44Z
+39704732009	driver-mini-app-e2e	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:35Z
+39704732009	image-supply-chain	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:18:03Z
+39704732009	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:12Z
+39704732009	customer-mini-app-e2e	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:25Z
+39704732009	admin-portal-e2e	2026-10-22T01:16:33Z	2026-10-22T01:16:36Z	2026-10-22T01:17:29Z
+39704732009	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:20Z
+39704732009	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:14Z
+39704732009	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:35Z	2026-10-22T01:17:06Z
+39704732009	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:14Z	2026-10-22T01:17:44Z
+39704732009	doc-coverage	2026-10-22T01:16:33Z	2026-10-22T01:16:51Z	2026-10-22T01:17:01Z
+39704732009	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:12Z	2026-10-22T01:17:41Z
+39704732009	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:15Z	2026-10-22T01:17:48Z
+39704732009	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:03Z	2026-10-22T01:17:40Z
+39704732009	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:09Z	2026-10-22T01:17:58Z
+39704732009	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:08Z	2026-10-22T01:17:50Z
+39704732009	governance-guard	2026-10-22T01:16:33Z	2026-10-22T01:17:29Z	2026-10-22T01:19:00Z
+39704732009	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:15Z	2026-10-22T01:17:56Z
+39704732009	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-22T01:16:33Z	2026-10-22T01:16:44Z	2026-10-22T01:17:28Z
+39704732009	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:30Z	2026-10-22T01:18:02Z
+39704732009	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:17Z	2026-10-22T01:17:48Z
+39704732009	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:21Z	2026-10-22T01:17:53Z
+39704732009	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-22T01:16:33Z	2026-10-22T01:17:30Z	2026-10-22T01:18:17Z
+39704732009	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:27Z	2026-10-22T01:18:09Z
+39704732009	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:28Z	2026-10-22T01:17:58Z
+39704732009	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:42Z	2026-10-22T01:18:20Z
+39704732009	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:50Z	2026-10-22T01:18:20Z
+39704732009	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:50Z	2026-10-22T01:18:28Z
+39704732009	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:45Z	2026-10-22T01:18:24Z
+39704732009	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-22T01:16:33Z	2026-10-22T01:17:43Z	2026-10-22T01:18:19Z
+39704732009	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-22T01:16:34Z	2026-10-22T01:17:36Z	2026-10-22T01:18:19Z
+39667006880	doc-coverage	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:03:49Z
+39667006880	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:13Z
+39667006880	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:20Z
+39667006880	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:20Z
+39667006880	verify	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:15:55Z
+39667006880	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:19Z
+39667006880	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:14Z
+39667006880	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:51Z
+39667006880	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:16Z
+39667006880	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:15Z	2026-10-21T20:04:51Z
+39667006880	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:32Z
+39667006880	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:29Z
+39667006880	customer-mini-app-e2e	2026-10-21T20:03:39Z	2026-10-21T20:04:20Z	2026-10-21T20:05:21Z
+39667006880	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:34Z
+39667006880	repo-structure	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:03:50Z
+39667006880	test	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:06:38Z
+39667006880	image-supply-chain	2026-10-21T20:03:39Z	2026-10-21T20:03:42Z	2026-10-21T20:05:15Z
+39667006880	admin-portal-e2e	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:34Z
+39667006880	governance-guard	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:12:28Z
+39667006880	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:47Z
+39667006880	db-integration-shared	2026-10-21T20:03:39Z	2026-10-21T20:04:23Z	2026-10-21T20:06:56Z
+39667006880	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:53Z	2026-10-21T20:05:29Z
+39667006880	typecheck	2026-10-21T20:03:39Z	2026-10-21T20:04:36Z	2026-10-21T20:07:06Z
+39667006880	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:53Z	2026-10-21T20:05:31Z
+39667006880	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T20:03:39Z	2026-10-21T20:03:41Z	2026-10-21T20:04:21Z
+39667006880	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:31Z	2026-10-21T20:05:07Z
+39667006880	driver-mini-app-e2e	2026-10-21T20:03:39Z	2026-10-21T20:04:39Z	2026-10-21T20:05:38Z
+39667006880	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:36Z	2026-10-21T20:05:09Z
+39667006880	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:33Z	2026-10-21T20:06:14Z
+39667006880	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:23Z	2026-10-21T20:05:19Z
+39667006880	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:03:52Z	2026-10-21T20:04:31Z
+39667006880	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:16Z	2026-10-21T20:04:48Z
+39667006880	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:03:52Z	2026-10-21T20:04:35Z
+39667006880	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:03:52Z	2026-10-21T20:04:37Z
+39667006880	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:36Z	2026-10-21T20:05:17Z
+39667006880	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:19Z	2026-10-21T20:04:54Z
+39667006880	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:48Z	2026-10-21T20:05:22Z
+39667006880	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:53Z	2026-10-21T20:05:25Z
+39667006880	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T20:03:39Z	2026-10-21T20:04:33Z	2026-10-21T20:05:13Z
+39667006880	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:22Z	2026-10-21T20:04:52Z
+39667006880	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T20:03:39Z	2026-10-21T20:04:50Z	2026-10-21T20:05:25Z
+39660605222	test	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:22:20Z
+39660605222	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:25Z	2026-10-21T19:20:10Z
+39660605222	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:20:06Z
+39660605222	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:20:09Z
+39660605222	governance-guard	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:31:21Z
+39660605222	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:25Z	2026-10-21T19:19:59Z
+39660605222	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:19:56Z
+39660605222	verify	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:27:37Z
+39660605222	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:20:05Z
+39660605222	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:20:19Z
+39660605222	admin-portal-e2e	2026-10-21T19:19:24Z	2026-10-21T19:19:25Z	2026-10-21T19:20:20Z
+39660605222	typecheck	2026-10-21T19:19:23Z	2026-10-21T19:19:26Z	2026-10-21T19:22:17Z
+39660605222	db-integration-shared	2026-10-21T19:19:24Z	2026-10-21T19:19:26Z	2026-10-21T19:21:42Z
+39660605222	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T19:19:24Z	2026-10-21T19:19:25Z	2026-10-21T19:20:02Z
+39660605222	driver-mini-app-e2e	2026-10-21T19:19:23Z	2026-10-21T19:19:57Z	2026-10-21T19:20:53Z
+39660605222	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T19:19:24Z	2026-10-21T19:19:58Z	2026-10-21T19:20:38Z
+39660605222	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:26Z	2026-10-21T19:19:59Z
+39660605222	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T19:19:24Z	2026-10-21T19:20:01Z	2026-10-21T19:20:40Z
+39660605222	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T19:19:24Z	2026-10-21T19:20:01Z	2026-10-21T19:20:38Z
+39660605222	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:50Z	2026-10-21T19:20:33Z
+39660605222	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:07Z	2026-10-21T19:20:46Z
+39660605222	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:26Z	2026-10-21T19:20:04Z
+39660605222	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:26Z	2026-10-21T19:20:03Z
+39660605222	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:26Z	2026-10-21T19:20:26Z
+39660605222	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:07Z	2026-10-21T19:20:44Z
+39660605222	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:21Z	2026-10-21T19:21:03Z
+39660605222	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:41Z	2026-10-21T19:21:11Z
+39660605222	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:15Z	2026-10-21T19:20:53Z
+39660605222	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:11Z	2026-10-21T19:20:46Z
+39660605222	repo-structure	2026-10-21T19:19:24Z	2026-10-21T19:20:04Z	2026-10-21T19:20:13Z
+39660605222	doc-coverage	2026-10-21T19:19:24Z	2026-10-21T19:20:21Z	2026-10-21T19:20:31Z
+39660605222	image-supply-chain	2026-10-21T19:19:24Z	2026-10-21T19:20:39Z	2026-10-21T19:21:58Z
+39660605222	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:32Z	2026-10-21T19:21:12Z
+39660605222	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T19:19:24Z	2026-10-21T19:20:04Z	2026-10-21T19:20:44Z
+39660605222	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T19:19:24Z	2026-10-21T19:19:25Z	2026-10-21T19:19:55Z
+39660605222	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:12Z	2026-10-21T19:21:07Z
+39660605222	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:05Z	2026-10-21T19:21:04Z
+39660605222	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:29Z	2026-10-21T19:21:19Z
+39660605222	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:46Z	2026-10-21T19:21:25Z
+39660605222	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T19:19:24Z	2026-10-21T19:20:35Z	2026-10-21T19:21:12Z
+39660605222	customer-mini-app-e2e	2026-10-21T19:19:24Z	2026-10-21T19:20:39Z	2026-10-21T19:21:34Z
+39649067141	test	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:04:59Z
+39649067141	verify	2026-10-21T18:02:04Z	2026-10-21T18:02:07Z	2026-10-21T18:12:34Z
+39649067141	doc-coverage	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:15Z
+39649067141	typecheck	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:04:13Z
+39649067141	repo-structure	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:15Z
+39649067141	admin-portal-e2e	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:03:00Z
+39649067141	image-supply-chain	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:03:32Z
+39649067141	db-integration-shared	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:04:35Z
+39649067141	customer-mini-app-e2e	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:03:09Z
+39649067141	governance-guard	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:13:00Z
+39649067141	driver-mini-app-e2e	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:03:12Z
+39649067141	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:49Z
+39649067141	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:39Z
+39649067141	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:48Z
+39649067141	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:39Z
+39649067141	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:38Z
+39649067141	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:50Z	2026-10-21T18:03:23Z
+39649067141	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:16Z	2026-10-21T18:02:49Z
+39649067141	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:36Z
+39649067141	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:14Z	2026-10-21T18:02:47Z
+39649067141	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:10Z	2026-10-21T18:03:44Z
+39649067141	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:06Z	2026-10-21T18:02:43Z
+39649067141	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:02Z	2026-10-21T18:03:47Z
+39649067141	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:44Z	2026-10-21T18:03:17Z
+39649067141	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:02:49Z	2026-10-21T18:03:25Z
+39649067141	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:07Z	2026-10-21T18:02:48Z
+39649067141	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:26Z	2026-10-21T18:04:04Z
+39649067141	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:19Z	2026-10-21T18:04:00Z
+39649067141	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:23Z	2026-10-21T18:04:13Z
+39649067141	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:40Z	2026-10-21T18:03:21Z
+39649067141	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:49Z	2026-10-21T18:03:32Z
+39649067141	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:37Z	2026-10-21T18:03:16Z
+39649067141	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:40Z	2026-10-21T18:03:11Z
+39649067141	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:17Z	2026-10-21T18:02:52Z
+39649067141	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:41Z	2026-10-21T18:03:28Z
+39649067141	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:50Z	2026-10-21T18:03:29Z
+39649067141	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:54Z	2026-10-21T18:03:31Z
+39649067141	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T18:02:04Z	2026-10-21T18:02:51Z	2026-10-21T18:03:28Z
+39649067141	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:03:18Z	2026-10-21T18:03:58Z
+39649067141	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T18:02:04Z	2026-10-21T18:03:13Z	2026-10-21T18:03:49Z
+39649067141	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T18:02:04Z	2026-10-21T18:03:14Z	2026-10-21T18:03:50Z
+39640217300	governance-guard	2026-10-21T17:22:09Z	2026-10-21T17:03:42Z	2026-10-21T17:11:39Z
+39640217300	doc-coverage	2026-10-21T17:22:09Z	2026-10-21T17:02:40Z	2026-10-21T17:02:52Z
+39640217300	db-integration-shared	2026-10-21T17:22:09Z	2026-10-21T17:02:44Z	2026-10-21T17:05:03Z
+39640217300	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:46Z	2026-10-21T17:04:18Z
+39640217300	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:40Z	2026-10-21T17:03:30Z
+39640217300	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:28Z	2026-10-21T17:04:01Z
+39640217300	verify	2026-10-21T17:22:09Z	2026-10-21T17:02:51Z	2026-10-21T17:15:04Z
+39640217300	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:48Z	2026-10-21T17:04:26Z
+39640217300	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:03:11Z	2026-10-21T17:03:43Z
+39640217300	admin-portal-e2e	2026-10-21T17:22:09Z	2026-10-21T17:02:41Z	2026-10-21T17:03:40Z
+39640217300	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:32Z	2026-10-21T17:04:05Z
+39640217300	image-supply-chain	2026-10-21T17:22:09Z	2026-10-21T17:04:03Z	2026-10-21T17:05:35Z
+39640217300	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:03:19Z	2026-10-21T17:04:09Z
+39640217300	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:03:44Z	2026-10-21T17:04:19Z
+39640217300	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T17:22:09Z	2026-10-21T17:02:54Z	2026-10-21T17:03:26Z
+39640217300	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:28Z	2026-10-21T17:04:06Z
+39640217300	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T17:22:09Z	2026-10-21T17:22:11Z	2026-10-21T17:22:52Z
+39640217300	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:32Z	2026-10-21T17:04:10Z
+39640217300	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:22Z	2026-10-21T17:04:00Z
+39640217300	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:58Z	2026-10-21T17:03:41Z
+39640217300	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:40Z	2026-10-21T17:03:17Z
+39640217300	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:45Z	2026-10-21T17:04:25Z
+39640217300	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T17:22:09Z	2026-10-21T17:02:41Z	2026-10-21T17:03:27Z
+39640217300	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T17:22:09Z	2026-10-21T17:04:00Z	2026-10-21T17:04:43Z
+39640217300	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T17:22:09Z	2026-10-21T17:04:02Z	2026-10-21T17:04:47Z
+39640217300	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:41Z	2026-10-21T17:03:18Z
+39640217300	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T17:22:09Z	2026-10-21T17:02:40Z	2026-10-21T17:03:34Z
+39640217300	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:45Z	2026-10-21T17:03:20Z
+39640217300	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:29Z	2026-10-21T17:04:00Z
+39640217300	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:36Z	2026-10-21T17:04:16Z
+39640217300	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T17:22:09Z	2026-10-21T17:03:28Z	2026-10-21T17:04:06Z
+39640217300	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:02:57Z	2026-10-21T17:03:31Z
+39640217300	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T17:22:09Z	2026-10-21T17:03:18Z	2026-10-21T17:03:58Z
+39640217300	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T17:22:09Z	2026-10-21T17:02:41Z	2026-10-21T17:03:27Z
+39640217300	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T17:22:14Z	2026-10-21T17:02:41Z	2026-10-21T17:03:44Z
+39640217300	typecheck	2026-10-21T17:22:15Z	2026-10-21T17:02:43Z	2026-10-21T17:05:30Z
+39640217300	driver-mini-app-e2e	2026-10-21T17:22:16Z	2026-10-21T17:02:40Z	2026-10-21T17:03:46Z
+39640217300	test	2026-10-21T17:22:17Z	2026-10-21T17:02:43Z	2026-10-21T17:04:33Z
+39640217300	repo-structure	2026-10-21T17:22:18Z	2026-10-21T17:03:00Z	2026-10-21T17:03:10Z
+39640217300	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T17:22:19Z	2026-10-21T17:03:42Z	2026-10-21T17:04:26Z
+39640217300	customer-mini-app-e2e	2026-10-21T17:22:19Z	2026-10-21T17:02:50Z	2026-10-21T17:03:43Z
+39599084134	repo-structure	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:22:42Z
+39599084134	doc-coverage	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:22:43Z
+39599084134	verify	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:32:53Z
+39599084134	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:07Z
+39599084134	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:12Z
+39599084134	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:05Z
+39599084134	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:04Z
+39599084134	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:17Z
+39599084134	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:13Z
+39599084134	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:18Z
+39599084134	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:17Z
+39599084134	image-supply-chain	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:24:04Z
+39599084134	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:19Z	2026-10-21T12:23:55Z
+39599084134	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:14Z
+39599084134	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:10Z
+39599084134	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:44Z	2026-10-21T12:23:17Z
+39599084134	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:23:25Z
+39599084134	db-integration-shared	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:25:08Z
+39599084134	test	2026-10-21T12:22:32Z	2026-10-21T12:22:34Z	2026-10-21T12:25:20Z
+39599084134	admin-portal-e2e	2026-10-21T12:22:32Z	2026-10-21T12:22:44Z	2026-10-21T12:23:41Z
+39599084134	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:06Z	2026-10-21T12:23:40Z
+39599084134	customer-mini-app-e2e	2026-10-21T12:22:32Z	2026-10-21T12:23:06Z	2026-10-21T12:24:05Z
+39599084134	governance-guard	2026-10-21T12:22:32Z	2026-10-21T12:23:18Z	2026-10-21T12:34:19Z
+39599084134	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:12Z	2026-10-21T12:24:07Z
+39599084134	driver-mini-app-e2e	2026-10-21T12:22:32Z	2026-10-21T12:22:49Z	2026-10-21T12:23:51Z
+39599084134	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:18Z	2026-10-21T12:23:58Z
+39599084134	typecheck	2026-10-21T12:22:32Z	2026-10-21T12:23:18Z	2026-10-21T12:26:06Z
+39599084134	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:09Z	2026-10-21T12:24:00Z
+39599084134	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:20Z	2026-10-21T12:24:01Z
+39599084134	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:22:36Z	2026-10-21T12:23:15Z
+39599084134	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:22:35Z	2026-10-21T12:23:11Z
+39599084134	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:14Z	2026-10-21T12:23:54Z
+39599084134	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:17Z	2026-10-21T12:23:48Z
+39599084134	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:18Z	2026-10-21T12:23:57Z
+39599084134	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:16Z	2026-10-21T12:23:51Z
+39599084134	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:43Z	2026-10-21T12:24:25Z
+39599084134	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T12:22:32Z	2026-10-21T12:23:26Z	2026-10-21T12:24:00Z
+39599084134	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:50Z	2026-10-21T12:24:51Z
+39599084134	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:41Z	2026-10-21T12:24:18Z
+39599084134	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:52Z	2026-10-21T12:24:38Z
+39599084134	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T12:22:32Z	2026-10-21T12:23:53Z	2026-10-21T12:24:29Z
+39596326635	repo-structure	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:01:59Z
+39596326635	governance-guard	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:11:10Z
+39596326635	customer-mini-app-e2e	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:02:52Z
+39596326635	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:30Z
+39596326635	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:29Z
+39596326635	verify	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:10:01Z
+39596326635	doc-coverage	2026-10-21T12:01:50Z	2026-10-21T12:02:28Z	2026-10-21T12:02:36Z
+39596326635	admin-portal-e2e	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:48Z
+39596326635	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:02:38Z	2026-10-21T12:03:21Z
+39596326635	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:02:27Z
+39596326635	typecheck	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:04:43Z
+39596326635	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:27Z
+39596326635	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:02:26Z	2026-10-21T12:03:03Z
+39596326635	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:24Z
+39596326635	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:28Z	2026-10-21T12:03:00Z
+39596326635	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:02:01Z	2026-10-21T12:02:36Z
+39596326635	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:28Z
+39596326635	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:35Z
+39596326635	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:23Z
+39596326635	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:02:28Z
+39596326635	test	2026-10-21T12:01:50Z	2026-10-21T12:02:31Z	2026-10-21T12:04:37Z
+39596326635	image-supply-chain	2026-10-21T12:01:50Z	2026-10-21T12:02:34Z	2026-10-21T12:04:05Z
+39596326635	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:28Z
+39596326635	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:02:25Z	2026-10-21T12:02:54Z
+39596326635	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:33Z
+39596326635	driver-mini-app-e2e	2026-10-21T12:01:50Z	2026-10-21T12:02:37Z	2026-10-21T12:03:28Z
+39596326635	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:31Z	2026-10-21T12:03:13Z
+39596326635	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:27Z
+39596326635	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T12:01:50Z	2026-10-21T12:02:42Z	2026-10-21T12:03:26Z
+39596326635	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:53Z	2026-10-21T12:03:23Z
+39596326635	db-integration-shared	2026-10-21T12:01:50Z	2026-10-21T12:01:53Z	2026-10-21T12:04:13Z
+39596326635	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:29Z	2026-10-21T12:03:08Z
+39596326635	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T12:01:50Z	2026-10-21T12:01:52Z	2026-10-21T12:02:41Z
+39596326635	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:29Z	2026-10-21T12:03:06Z
+39596326635	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:29Z	2026-10-21T12:03:16Z
+39596326635	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T12:01:50Z	2026-10-21T12:03:05Z	2026-10-21T12:03:49Z
+39596326635	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:56Z	2026-10-21T12:03:29Z
+39596326635	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:29Z	2026-10-21T12:03:06Z
+39596326635	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:38Z	2026-10-21T12:03:10Z
+39596326635	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T12:01:50Z	2026-10-21T12:03:02Z	2026-10-21T12:03:46Z
+39596326635	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T12:01:50Z	2026-10-21T12:02:50Z	2026-10-21T12:03:29Z
+39594845810	doc-coverage	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:49:54Z
+39594845810	db-integration-shared	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:51:52Z
+39594845810	test	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:51:36Z
+39594845810	governance-guard	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:51:21Z
+39594845810	verify	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T12:01:50Z
+39594845810	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:19Z
+39594845810	repo-structure	2026-10-21T11:49:43Z	2026-10-21T11:49:55Z	2026-10-21T11:50:02Z
+39594845810	image-supply-chain	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:51:09Z
+39594845810	typecheck	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:52:29Z
+39594845810	admin-portal-e2e	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:43Z
+39594845810	customer-mini-app-e2e	2026-10-21T11:49:43Z	2026-10-21T11:51:01Z	2026-10-21T11:52:02Z
+39594845810	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:19Z
+39594845810	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:24Z
+39594845810	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:18Z
+39594845810	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:18Z
+39594845810	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:33Z
+39594845810	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:22Z
+39594845810	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:23Z
+39594845810	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:50:20Z	2026-10-21T11:51:02Z
+39594845810	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:15Z
+39594845810	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:21Z	2026-10-21T11:50:58Z
+39594845810	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:54Z	2026-10-21T11:51:32Z
+39594845810	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:19Z
+39594845810	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:50:04Z	2026-10-21T11:50:35Z
+39594845810	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:34Z	2026-10-21T11:51:16Z
+39594845810	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:45Z	2026-10-21T11:50:21Z
+39594845810	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:30Z	2026-10-21T11:51:12Z
+39594845810	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:25Z	2026-10-21T11:51:04Z
+39594845810	driver-mini-app-e2e	2026-10-21T11:49:43Z	2026-10-21T11:50:45Z	2026-10-21T11:51:45Z
+39594845810	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:37Z	2026-10-21T11:51:14Z
+39594845810	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:24Z	2026-10-21T11:51:04Z
+39594845810	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:20Z	2026-10-21T11:50:53Z
+39594845810	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:50:18Z	2026-10-21T11:50:59Z
+39594845810	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:22Z	2026-10-21T11:51:05Z
+39594845810	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:49:56Z	2026-10-21T11:50:28Z
+39594845810	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T11:49:43Z	2026-10-21T11:50:57Z	2026-10-21T11:51:33Z
+39594845810	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:25Z	2026-10-21T11:51:25Z
+39594845810	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:21Z	2026-10-21T11:50:55Z
+39594845810	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T11:49:43Z	2026-10-21T11:51:00Z	2026-10-21T11:51:36Z
+39594845810	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T11:49:43Z	2026-10-21T11:50:21Z	2026-10-21T11:51:00Z
+39594845810	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T11:49:43Z	2026-10-21T11:51:00Z	2026-10-21T11:51:48Z
+39590761437	repo-structure	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:16:54Z
+39590761437	verify	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:25:13Z
+39590761437	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:28Z
+39590761437	test	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:18:43Z
+39590761437	image-supply-chain	2026-10-21T11:16:45Z	2026-10-21T11:16:48Z	2026-10-21T11:18:26Z
+39590761437	governance-guard	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:27:46Z
+39590761437	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:23Z
+39590761437	doc-coverage	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:16:58Z
+39590761437	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:23Z
+39590761437	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:24Z
+39590761437	customer-mini-app-e2e	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:44Z
+39590761437	db-integration-shared	2026-10-21T11:16:45Z	2026-10-21T11:17:28Z	2026-10-21T11:19:27Z
+39590761437	typecheck	2026-10-21T11:16:45Z	2026-10-21T11:18:00Z	2026-10-21T11:20:50Z
+39590761437	driver-mini-app-e2e	2026-10-21T11:16:45Z	2026-10-21T11:17:26Z	2026-10-21T11:18:15Z
+39590761437	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:26Z
+39590761437	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T11:16:45Z	2026-10-21T11:16:59Z	2026-10-21T11:17:42Z
+39590761437	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:55Z	2026-10-21T11:17:36Z
+39590761437	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:30Z
+39590761437	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:23Z
+39590761437	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:27Z
+39590761437	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:25Z	2026-10-21T11:18:00Z
+39590761437	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:25Z	2026-10-21T11:18:01Z
+39590761437	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:59Z	2026-10-21T11:17:31Z
+39590761437	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:19Z
+39590761437	admin-portal-e2e	2026-10-21T11:16:45Z	2026-10-21T11:17:30Z	2026-10-21T11:18:15Z
+39590761437	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:23Z
+39590761437	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:17:29Z	2026-10-21T11:18:09Z
+39590761437	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:21Z	2026-10-21T11:17:59Z
+39590761437	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:24Z	2026-10-21T11:18:02Z
+39590761437	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T11:16:45Z	2026-10-21T11:16:47Z	2026-10-21T11:17:30Z
+39590761437	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:16:59Z	2026-10-21T11:17:30Z
+39590761437	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:24Z	2026-10-21T11:17:57Z
+39590761437	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:31Z	2026-10-21T11:18:09Z
+39590761437	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:32Z	2026-10-21T11:18:09Z
+39590761437	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:31Z	2026-10-21T11:18:05Z
+39590761437	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:43Z	2026-10-21T11:18:29Z
+39590761437	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:33Z	2026-10-21T11:18:14Z
+39590761437	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:37Z	2026-10-21T11:18:14Z
+39590761437	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:46Z	2026-10-21T11:18:21Z
+39590761437	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T11:16:45Z	2026-10-21T11:17:58Z	2026-10-21T11:18:33Z
+39590761437	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T11:16:45Z	2026-10-21T11:18:02Z	2026-10-21T11:18:33Z
+39588291925	doc-coverage	2026-10-21T10:56:50Z	2026-10-21T10:57:09Z	2026-10-21T10:57:17Z
+39588291925	verify	2026-10-21T10:56:50Z	2026-10-21T10:56:54Z	2026-10-21T11:07:06Z
+39588291925	repo-structure	2026-10-21T10:56:50Z	2026-10-21T10:56:54Z	2026-10-21T10:57:01Z
+39588291925	typecheck	2026-10-21T10:56:50Z	2026-10-21T10:57:11Z	2026-10-21T10:59:55Z
+39588291925	admin-portal-e2e	2026-10-21T10:56:50Z	2026-10-21T10:57:02Z	2026-10-21T10:58:00Z
+39588291925	image-supply-chain	2026-10-21T10:56:50Z	2026-10-21T10:57:41Z	2026-10-21T10:59:03Z
+39588291925	test	2026-10-21T10:56:50Z	2026-10-21T10:57:40Z	2026-10-21T10:59:42Z
+39588291925	db-integration-shared	2026-10-21T10:56:50Z	2026-10-21T10:57:46Z	2026-10-21T10:59:21Z
+39588291925	customer-mini-app-e2e	2026-10-21T10:56:50Z	2026-10-21T10:57:47Z	2026-10-21T10:58:51Z
+39588291925	db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:07Z	2026-10-21T10:59:43Z
+39588291925	db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	2026-10-21T10:56:50Z	2026-10-21T10:57:12Z	2026-10-21T10:57:44Z
+39588291925	driver-mini-app-e2e	2026-10-21T10:56:50Z	2026-10-21T10:59:05Z	2026-10-21T11:00:06Z
+39588291925	exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:04Z	2026-10-21T10:59:44Z
+39588291925	db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	2026-10-21T10:56:50Z	2026-10-21T10:57:45Z	2026-10-21T10:58:23Z
+39588291925	exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:58:15Z	2026-10-21T10:58:55Z
+39588291925	db-integration (search, @wasla/search-service, wasla_search_test)	2026-10-21T10:56:50Z	2026-10-21T10:58:39Z	2026-10-21T10:59:19Z
+39588291925	exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:57:40Z	2026-10-21T10:58:13Z
+39588291925	db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:03Z	2026-10-21T10:59:50Z
+39588291925	db-integration (identity, @wasla/identity-service, wasla_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:39Z	2026-10-21T11:00:16Z
+39588291925	db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	2026-10-21T10:56:50Z	2026-10-21T10:58:53Z	2026-10-21T10:59:25Z
+39588291925	db-integration (billing, @wasla/billing-service, wasla_billing_test)	2026-10-21T10:56:50Z	2026-10-21T10:58:57Z	2026-10-21T10:59:28Z
+39588291925	db-integration (geography, @wasla/geography-service, wasla_geo_test)	2026-10-21T10:56:50Z	2026-10-21T10:58:58Z	2026-10-21T10:59:34Z
+39588291925	db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:20Z	2026-10-21T11:00:10Z
+39588291925	exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:58:00Z	2026-10-21T10:58:34Z
+39588291925	db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:10Z	2026-10-21T11:00:02Z
+39588291925	exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:44Z	2026-10-21T11:00:21Z
+39588291925	governance-guard	2026-10-21T10:56:50Z	2026-10-21T10:59:46Z	2026-10-21T11:10:59Z
+39588291925	db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:35Z	2026-10-21T11:00:09Z
+39588291925	db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:00Z	2026-10-21T10:59:34Z
+39588291925	exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:58:19Z	2026-10-21T10:59:01Z
+39588291925	exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:36Z	2026-10-21T11:00:11Z
+39588291925	db-integration (partners, @wasla/partners-service, wasla_partners_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:05Z	2026-10-21T10:59:37Z
+39588291925	exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:58:37Z	2026-10-21T10:59:08Z
+39588291925	db-integration (customer, @wasla/customers-service, wasla_customer_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:27Z	2026-10-21T11:00:04Z
+39588291925	exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:58:35Z	2026-10-21T10:59:05Z
+39588291925	db-integration (matching, @wasla/matching-service, wasla_matching_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:29Z	2026-10-21T11:00:07Z
+39588291925	db-integration (order, @wasla/orders-service, wasla_orders_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:23Z	2026-10-21T11:00:00Z
+39588291925	db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	2026-10-21T10:56:50Z	2026-10-21T10:59:06Z	2026-10-21T10:59:45Z
+39588291925	exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:46Z	2026-10-21T11:00:19Z
+39588291925	exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:44Z	2026-10-21T11:00:14Z
+39588291925	exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	2026-10-21T10:56:50Z	2026-10-21T10:59:48Z	2026-10-21T11:00:26Z

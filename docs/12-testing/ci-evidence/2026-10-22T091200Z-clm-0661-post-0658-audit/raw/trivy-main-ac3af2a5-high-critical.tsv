@@ -1,0 +1,28 @@
+# run 39751349909 (WASLA CI, push, head ac3af2a5) artifact image-supply-chain-evidence → security/trivy-image.json — HIGH/CRITICAL only
+CRITICAL	CVE-2025-68121	stdlib	v1.23.12	1.24.13, 1.25.7, 1.26.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2025-61726	stdlib	v1.23.12	1.24.12, 1.25.6	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2025-61729	stdlib	v1.23.12	1.24.11, 1.25.5	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-111943	stdlib	v1.23.12	1.26.10, 1.27.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-25679	stdlib	v1.23.12	1.25.8, 1.26.1	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-27145	stdlib	v1.23.12	1.25.11, 1.26.4	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-32280	stdlib	v1.23.12	1.25.9, 1.26.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-32281	stdlib	v1.23.12	1.25.9, 1.26.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-32283	stdlib	v1.23.12	1.25.9, 1.26.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-33811	stdlib	v1.23.12	1.25.10, 1.26.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-33814	stdlib	v1.23.12	1.25.10, 1.26.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-33818	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-39820	stdlib	v1.23.12	1.25.10, 1.26.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-39821	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-39822	stdlib	v1.23.12	1.25.12, 1.26.5, 1.27.0-rc.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-39836	stdlib	v1.23.12	1.25.10, 1.26.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-42499	stdlib	v1.23.12	1.25.10, 1.26.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-42504	stdlib	v1.23.12	1.25.11, 1.26.4	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-56853	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-56858	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-56859	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-56860	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-56862	stdlib	v1.23.12	1.25.13, 1.26.6, 1.27.0-rc.3	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-78667	stdlib	v1.23.12	1.26.9, 1.27.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-78669	stdlib	v1.23.12	1.26.9, 1.27.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+HIGH	CVE-2026-97031	stdlib	v1.23.12	1.26.9, 1.27.2	app/node_modules/.pnpm/@esbuild+linux-x64@0.25.12/node_modules/@esbuild/linux-x64/bin/esbuild
+# total HIGH/CRITICAL: 26 · excepted IDs in IMAGE_VULN_EXCEPTIONS.yaml: 26 · report-not-excepted: 0 · excepted-not-in-report: 0

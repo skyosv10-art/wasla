@@ -1,0 +1,9 @@
+# per merged head: check-runs (unique name) and how many of the 41 required contexts concluded success. Extra non-required runs: roadmap (push) and cleanup (merged-branch-cleanup, pull_request closed — appears after merge); 9495d88b also has the 2 DR jobs (dr-replacement-restore.yml pull_request paths packages/resilience/**: scenario2 local success, replacement skipped by `if: github.event_name != pull_request`).
+f7ef6122 total_check_runs=43 required_success=41/41
+80d27676 total_check_runs=43 required_success=41/41
+24939cc4 total_check_runs=43 required_success=41/41
+2f58e320 total_check_runs=43 required_success=41/41
+5acfaa22 total_check_runs=43 required_success=41/41
+9495d88b total_check_runs=45 required_success=41/41
+0aea61cc total_check_runs=43 required_success=41/41
+537b3cc3 total_check_runs=43 required_success=41/41

@@ -34,10 +34,20 @@ export interface ChannelEdgeOptions {
   readonly exchangeSession: ExchangeSessionPort;
   /** سحبُ الجلسةِ (POST /identity/sessions/revoke). */
   readonly revokeSession: RevokeSessionPort;
-  /** عنوانُ استماعِ identity — لا يُقرأُ من جسمِ الطلبِ. */
-  readonly identityUrl: string;
-  /** مُوقِّعُ النداءاتِ الخلفيةِ — نفسُ مُوقِّعِ الروبوتِ القائمِ. */
-  readonly requestSigner: ServiceRequestSigner;
+  /**
+   * عنوانُ وجهةِ كلِّ خدمةٍ تُوجَّهُ إليها قائمةُ السماحِ — من ترتيبِ التركيبِ
+   * لا من الطلبِ. فشلٌ مغلقٌ: مسارٌ مفتوحٌ (`production_open`) بلا وجهةٍ
+   * يمنعُ اكتمالَ التركيبِ قبلَ بدءِ الاستماعِ (D2).
+   */
+  readonly serviceUrlFor: (service: string) => string;
+  /**
+   * مصنعُ موقِّعِ نداءاتٍ لكلِّ (خدمةٍ · صلاحياتِ مسارِها) — التوقيعُ بجمهورِ
+   * الخدمةِ الوجهةِ لا بجمهورِ `identity` أبدًا (D5 · ADR-069 §2.1).
+   */
+  readonly requestSignerFor: (
+    service: string,
+    scopes: readonly string[],
+  ) => ServiceRequestSigner;
   /** أصلُ المسارِ المسموحُ لقائمةِ السماحِ — يُقرأُ من ملفِ الحدِّ. */
   readonly allowlistUrl: string;
   /** مفتاحُ التفعيلِ — لا يُقرأُ من جسمِ الطلبِ ولا الترويساتِ. */
@@ -243,11 +253,20 @@ function applyProxyRoutes(
   }
   for (const entry of allowlist) {
     if (!entry.production_open) continue; // مسارٌ مسجَّلٌ للقياسِ لا للفتحِ.
+    // فشلٌ مغلقٌ عندَ الفتحِ: وجهةُ الخدمةِ وموقِّعُها يُحلَّانِ في زمنِ التركيبِ —
+    // لا مسارَ نصفَ مُركَّبٍ ينتظرُ طلبًا ليكتشفَ غيابَهما (D2 · D5).
+    const baseUrl = options.serviceUrlFor(entry.service);
+    if (!baseUrl) {
+      throw new Error(
+        `EDGE_SERVICE_UNCONFIGURED: مسارٌ مفتوحٌ (${entry.method} ${entry.path}) بلا عنوانِ وجهةٍ للخدمةِ ${entry.service}`,
+      );
+    }
+    const signer = options.requestSignerFor(entry.service, entry.required_scopes);
     app.route({
       method: entry.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
       url: entry.path,
       handler: async (request, reply) => {
-        return proxyRequest(options, surface, entry, request, reply);
+        return proxyRequest(options, surface, entry, request, reply, baseUrl, signer);
       },
     });
   }
@@ -261,7 +280,18 @@ interface AllowlistEntry {
   readonly class: "O" | "P" | "W" | "N" | "ADM";
   readonly required_scopes: readonly string[];
   readonly production_open: boolean;
+  /** عقدُ استعلامِ المسارِ — غيابُهُ يعني لا معاملَ يُمرَّرُ إطلاقًا (D3 · E-20). */
+  readonly query?: {
+    readonly allowed?: readonly string[];
+    readonly pinned?: Readonly<Record<string, string>>;
+  };
 }
+
+/** ملفُّ قائمةِ السماحِ المتوقَّعُ لكلِّ فاعلِ سطحٍ (ADR-069 §2.8). */
+const ALLOWLIST_FILE_BY_ACTOR: Readonly<Record<EdgeActorType, string>> = {
+  customer: "customer-mini-app",
+  driver: "driver-mini-app",
+};
 
 /** قراءةُ قائمةِ السماحِ من ملفِّ الحدِّ — مصدرُ الحقيقةِ لا الشفرةُ. */
 function loadAllowlist(allowlistUrl: string, surface: EdgeSurface): readonly AllowlistEntry[] {
@@ -269,12 +299,65 @@ function loadAllowlist(allowlistUrl: string, surface: EdgeSurface): readonly All
   // يمكنُ لطلبٍ أن يغيِّرَ ما يُفتحُ. والحارسُ 28 يُسقِطُ أيَّ انحرافٍ في CI.
   const raw = readFileSync(allowlistUrl, "utf-8");
   const parsed = JSON.parse(raw) as Record<string, unknown>;
-  const entries = Array.isArray(parsed.entries) ? parsed.entries : [];
-  const actorBySurface: Readonly<Record<EdgeActorType, readonly AllowlistEntry[]>> = {
-    customer: entries.filter((e) => e.surface === "customer-mini-app"),
-    driver: entries.filter((e) => e.surface === "driver-mini-app"),
-  };
-  return actorBySurface[surface.actorType] ?? [];
+  // D1: حقلُ `surface` في جذرِ الملفِّ هو ما يربطُ الملفَ بالسطحِ — لا تصفيةُ
+  // المداخلِ بمفتاحٍ لا يحملُهُ أيُّ مدخلٍ. عدمُ التطابقِ يمنعُ اكتمالَ التركيبِ.
+  const expectedFile = ALLOWLIST_FILE_BY_ACTOR[surface.actorType];
+  if (parsed.surface !== expectedFile) {
+    throw new Error(
+      `EDGE_ALLOWLIST_SURFACE_MISMATCH: ملفُّ القائمةِ surface=${JSON.stringify(parsed.surface)} لا يطابقُ السطحَ المتوقَّعَ ${expectedFile}`,
+    );
+  }
+  return Array.isArray(parsed.entries) ? (parsed.entries as AllowlistEntry[]) : [];
+}
+
+/** خطأُ عقدِ الاستعلامِ — يُترجَمُ إلى 400 لا إلى 500 (D3 · E-20). */
+class EdgeQueryError extends Error {}
+
+/** المسارُ الفعليُّ بمعاملاتِهِ: تُستبدَلُ مقاطعُ `:param` بقيمِها (D4). */
+function actualPathOf(template: string, params: unknown): string {
+  const values = (params ?? {}) as Record<string, unknown>;
+  return template
+    .split("/")
+    .map((segment) => {
+      if (!segment.startsWith(":")) return segment;
+      const raw = values[segment.slice(1)];
+      if (typeof raw !== "string" && typeof raw !== "number") {
+        throw new EdgeQueryError(
+          `معاملُ المسارِ ${segment.slice(1)} مفقودٌ أو غيرَ نصٍّ`,
+        );
+      }
+      return encodeURIComponent(String(raw));
+    })
+    .join("/");
+}
+
+/**
+ * استعلامُ التوجيهِ وفقَ عقدِ المدخلِ (D3 · E-20): لا يُمرَّرُ إلا ما أذِنَتْ بهِ
+ * القائمةُ، وتُثبَّتُ قيمٌ يملكُها الحدُّ وحدَهُ، وكلُّ معاملٍ آخرَ — بما فيهِ
+ * معاملاتُ E-20 المحظورةُ — يُرَدُّ بـ400 لا يُسقَطُ صامتًا ولا يُوسَّعُ العقدُ.
+ */
+function forwardedQueryOf(entry: AllowlistEntry, rawQuery: unknown): string {
+  const allowed = new Set(entry.query?.allowed ?? []);
+  const pinned = entry.query?.pinned ?? {};
+  const raw = (rawQuery ?? {}) as Record<string, unknown>;
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(raw)) {
+    if (key in pinned) {
+      // معاملٌ يملكُهُ الحدُّ: لا يملكُهُ العميلُ ولا بقيمةٍ منهُ أصلًا.
+      throw new EdgeQueryError(`معاملُ الاستعلامِ ${key} يملكُهُ الحدُّ وحدَهُ`);
+    }
+    if (!allowed.has(key)) {
+      throw new EdgeQueryError(`معاملُ استعلامٍ غيرُ مصرَّحٍ بهِ: ${key}`);
+    }
+    if (typeof value !== "string" || value.length === 0) {
+      throw new EdgeQueryError(`قيمةُ معاملِ الاستعلامِ ${key} غيرُ صالحةٍ`);
+    }
+    parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+  }
+  for (const [key, value] of Object.entries(pinned)) {
+    parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+  }
+  return parts.join("&");
 }
 
 /** توجيهُ الطلبِ إلى الخدمةِ الخلفيةِ بعدَ حذفِ الترويساتِ وصنعِ رمزِ الخدمةِ. */
@@ -284,13 +367,17 @@ async function proxyRequest(
   entry: AllowlistEntry,
   request: FastifyRequest,
   reply: FastifyReply,
+  baseUrl: string,
+  signer: ServiceRequestSigner,
 ): Promise<void> {
   assertAllowedOrigin(request, options.allowedOrigins);
-  // ADR-069 §2.6-2: يُحذفُ من الطلبِ الواردِ كلُّ ترويسةٍ داخليةٍ قبلَ التوجيهِ.
+  // ADR-069 §2.6-2: تُقرأُ ترويسةُ المصادقةِ قبلَ حذفِ الترويساتِ الداخليةِ —
+  // الحذفُ يسبقُ التوجيهَ لا القراءةَ (D8): قراءتُها بعدَ الحذفِ كانت تُسقِطُ
+  // كلَّ نداءٍ محميٍّ بـ401 قبلَ أيِّ نداءٍ خلفيٍّ.
+  const authorization = request.headers.authorization;
   for (const name of STRIPPED_INBOUND_HEADERS) {
     delete request.headers[name];
   }
-  const authorization = request.headers.authorization;
   if (!authorization?.startsWith("Bearer ")) {
     return deny(reply, 401, "EDGE_UNAUTHENTICATED", "رمز الجلسة مطلوب");
   }
@@ -304,14 +391,27 @@ async function proxyRequest(
     return deny(reply, 401, "EDGE_ACTOR_MISMATCH", "الفاعل لا يطابق السطح");
   }
   // ADR-069 §2.6-1: مصدرُ `obo` الوحيدُ هو `wasla_public_id` العائدُ من `exchange`.
-  const headers = options.requestSigner(
+  // D3/D4: التوقيعُ والهدفُ على المسارِ الفعليِّ بمعاملاتِهِ واستعلامِهِ — لا على
+  // قالبِ القائمةِ (ADR-036: ربطُ الطلبِ يشملُ الاستعلامَ المرتَّبَ).
+  const path = actualPathOf(entry.path, request.params);
+  let forwardedQuery: string;
+  try {
+    forwardedQuery = forwardedQueryOf(entry, request.query);
+  } catch (error) {
+    if (error instanceof EdgeQueryError) {
+      return deny(reply, 400, "EDGE_INVALID_QUERY", error.message);
+    }
+    throw error;
+  }
+  const pathWithQuery = forwardedQuery ? `${path}?${forwardedQuery}` : path;
+  const headers = signer(
     entry.method,
-    entry.path,
+    pathWithQuery,
     exchanged.wasla_public_id,
   );
   headers["X-Wasla-User-Assertion"] = exchanged.assertion;
   headers["Content-Type"] = request.headers["content-type"] ?? "application/json";
-  const target = `${options.identityUrl.replace(/\/$/, "")}/${entry.path.replace(/^\//, "")}`;
+  const target = `${baseUrl.replace(/\/$/, "")}/${pathWithQuery.replace(/^\//, "")}`;
   const response = await fetch(target, {
     method: entry.method,
     headers,

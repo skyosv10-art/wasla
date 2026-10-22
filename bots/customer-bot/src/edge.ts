@@ -32,6 +32,42 @@ export interface CustomerBotEdgeOverrides extends BotRuntimeOverrides {
  * الإنتاجِ، وقائمةُ السماحِ الحاليةُ كلُّها `production_open=false` عمدًا
  * (CLM-0521). فالتركيبُ هنا يُسجِّلُ العقدَ لا الفتحَ.
  */
+/**
+ * خريطةُ عناوينِ وجهاتِ التوجيهِ (D2 · ADR-069 §2.1): عنوانُ كلِّ خدمةٍ من
+ * ترتيبِ التركيبِ لا من الطلبِ — وكلُّ المساراتِ الحاليةِ مغلقةٌ فلا يُستعملُ
+ * في الإنتاجِ حتى الفتحِ.
+ */
+function customerServiceUrlFor(service: string): string {
+  const env = process.env as Record<string, string | undefined>;
+  const byService: Record<string, string> = {
+    customers: env.CUSTOMERS_SERVICE_URL ?? "",
+    search: env.SEARCH_SERVICE_URL ?? "",
+    marketplace: env.MARKETPLACE_SERVICE_URL ?? "",
+    reputation: env.REPUTATION_SERVICE_URL ?? "",
+    geography: env.GEOGRAPHY_SERVICE_URL ?? "",
+  };
+  return byService[service] ?? "";
+}
+
+/**
+ * مصنعُ موقِّعٍ لكلِّ (خدمةٍ · صلاحياتِ مسارٍ) (D5 · ADR-069 §2.1): التوقيعُ
+ * بجمهورِ الخدمةِ الوجهةِ — وتركيبُهُ يفشلُ مغلقًا إن لم يمنحْ مصفوفةُ M1-05
+ * الدورَ الجمهورَ والصلاحياتِ، فلا مسارَ مفتوحًا نصفَ مُركَّبٍ.
+ */
+function customerRequestSignerFor(service: string, scopes: readonly string[]) {
+  const env = process.env as Record<string, string | undefined>;
+  const keys = keyRegistryFromEnv({
+    WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+    WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+  });
+  return createServiceRequestSigner({
+    serviceName: "customer-bot",
+    audience: service,
+    keys,
+    scopes,
+  });
+}
+
 export function buildAppWithEdge(overrides?: CustomerBotEdgeOverrides): BotApp {
   const app = buildBotApp(BOT, overrides);
   const env = (overrides?.env ?? process.env) as Record<string, string | undefined>;
@@ -67,13 +103,8 @@ export function buildAppWithEdge(overrides?: CustomerBotEdgeOverrides): BotApp {
     revokeSession: async () => {
       throw new Error("لا يُستدعى في هذا التركيبِ");
     },
-    identityUrl,
-    requestSigner: createServiceRequestSigner({
-      serviceName: "customer-bot",
-      audience: "identity",
-      keys,
-      scopes: CHANNEL_SESSION_EDGE_SCOPES,
-    }),
+    serviceUrlFor: customerServiceUrlFor,
+    requestSignerFor: customerRequestSignerFor,
     allowlistUrl: "packages/channel-edge/allowlist/customer-mini-app.json",
     enabled: true,
     allowedOrigins: [],

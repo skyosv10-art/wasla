@@ -1,0 +1,12 @@
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-edge
+
+ ✓ src/__tests__/proxy-routing.test.ts (16 tests) 1071ms
+     ✓ D1: قائمةُ السماحِ بجذرِ surface صحيحٍ تُسجِّلُ المساراتِ المفتوحةَ فعلًا  510ms
+ ✓ src/__tests__/create-channel-edge.test.ts (5 tests) 45ms
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  11:11:43
+   Duration  5.36s (transform 1.80s, setup 0ms, import 2.45s, tests 1.12s, environment 0ms)
+

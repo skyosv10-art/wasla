@@ -32,6 +32,38 @@ export interface DriverBotEdgeOverrides extends BotRuntimeOverrides {
  * الإنتاجِ، وقائمةُ السماحِ الحاليةُ كلُّها `production_open=false` عمدًا
  * (CLM-0521). فالتركيبُ هنا يُسجِّلُ العقدَ لا الفتحَ.
  */
+/**
+ * خريطةُ عناوينِ وجهاتِ التوجيهِ (D2 · ADR-069 §2.1): عنوانُ كلِّ خدمةٍ من
+ * ترتيبِ التركيبِ لا من الطلبِ — وكلُّ المساراتِ الحاليةِ مغلقةٌ.
+ */
+function driverServiceUrlFor(service: string): string {
+  const env = process.env as Record<string, string | undefined>;
+  const byService: Record<string, string> = {
+    drivers: env.DRIVERS_SERVICE_URL ?? "",
+    orders: env.ORDERS_SERVICE_URL ?? "",
+    dispatch: env.DISPATCH_SERVICE_URL ?? "",
+  };
+  return byService[service] ?? "";
+}
+
+/**
+ * مصنعُ موقِّعٍ لكلِّ (خدمةٍ · صلاحياتِ مسارٍ) (D5 · ADR-069 §2.1): التوقيعُ
+ * بجمهورِ الخدمةِ الوجهةِ — وتركيبُهُ يفشلُ مغلقًا إن لم تمنحْ مصفوفةُ M1-05.
+ */
+function driverRequestSignerFor(service: string, scopes: readonly string[]) {
+  const env = process.env as Record<string, string | undefined>;
+  const keys = keyRegistryFromEnv({
+    WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
+    WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
+  });
+  return createServiceRequestSigner({
+    serviceName: "driver-bot",
+    audience: service,
+    keys,
+    scopes,
+  });
+}
+
 export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {
   const app = buildBotApp(BOT, overrides);
   const env = (overrides?.env ?? process.env) as Record<string, string | undefined>;
@@ -66,13 +98,8 @@ export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {
     revokeSession: async () => {
       throw new Error("لا يُستدعى في هذا التركيبِ");
     },
-    identityUrl,
-    requestSigner: createServiceRequestSigner({
-      serviceName: "driver-bot",
-      audience: "identity",
-      keys,
-      scopes: CHANNEL_SESSION_EDGE_SCOPES,
-    }),
+    serviceUrlFor: driverServiceUrlFor,
+    requestSignerFor: driverRequestSignerFor,
     allowlistUrl: "packages/channel-edge/allowlist/driver-mini-app.json",
     enabled: true,
     allowedOrigins: [],

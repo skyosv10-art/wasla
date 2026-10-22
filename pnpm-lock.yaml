@@ -699,6 +699,9 @@ importers:
 
   packages/contracts/support:
     devDependencies:
+      '@types/node':
+        specifier: ^20.19.0
+        version: 20.19.43
       openapi-typescript:
         specifier: ^7.4.4
         version: 7.13.0(typescript@5.9.3)

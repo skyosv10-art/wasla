@@ -11301,3 +11301,10 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - Regenerated BASELINE.json from the in-tree transition verify log (stripped of ANSI): static risks_not_closed 26 (RISK-0031/RISK-0062 closed on this branch), lockfile fingerprint updated (vitest ^4.1.12), dynamic measured from the recorded log: tests 6273, files 441, governance suite 694/1, verify verdict recorded (RISK-0028 door 4: the verdict is recorded, not required to be green — CI verify on the PR will produce the clean log for a follow-up regen, the CLM-0652 pattern).
 - Risk(s): RISK-0028 → mitigating (baseline regeneration chain restored)
 - Verified: validate-baseline green (all doors, fingerprint sha256:6d505828…)
+## [2026-10-22] CLM-0660 — تابع: إصلاحان بعد أول تشغيل CI على PR #806
+- Work Item(s): CLM-0660
+- Kind: correction — ملف سجل التحقق الذي يحيل إليه BASELINE.json كان محجوبًا بقاعدة `*.log` في .gitignore فلم يُدرج في الالتزام، فرفض البابُ 4 مصدرَ الأرقام الحركية في CI (RISK-0028)؛ وترقية vitest 4 أسقطت `@types/node` كتبعية نظيرة كان يحصل عليها packages/contracts/support عبر vitest 3.2.7، فأُضيفت صراحةً إلى devDependencies وحُدّث pnpm-lock.yaml.
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log, packages/contracts/support/package.json, pnpm-lock.yaml
+- No-Test-Reason: تصحيح إدراج ملف شاهدة وحزمة أنواع TypeScript — لا تغيير سلوكي ولا منطق قابلاً للاختبار؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) محليًا
+- Risk(s): RISK-0028 → mitigating
+- Verified: pnpm typecheck exit 0 (all projects) · validate-state-sync OK · validate-baseline OK (بصمة اللاكف محدثة بعد إضافة @types/node) · البابُ 4 يجد المصدر داخل الشجرة الآن

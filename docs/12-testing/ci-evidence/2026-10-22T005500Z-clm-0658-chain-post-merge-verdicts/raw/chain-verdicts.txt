@@ -26,6 +26,26 @@ CLM-0658 — raw verdict data (measured from GitHub API 2026-10-22, docs only)
   review 5604988565 xuuux-voox APPROVED 2026-10-21T19:18:46Z commit_id=2f58e320 (head existed since 17:58:41Z)
   43/43 check-runs success on head; image-supply-chain success on head and on merge commit
 
+
+#804  head 5acfaa228f6ea9c1a7e84d64e5e313af680b54c6  squash-merge c8fd6a6e0b5c67732609c9f0e8c9dc4747235cf1 @2026-10-22T01:16:30Z
+  PR-head: WASLA CI 39667006880 success | Roadmap freshness 39666998809 success
+  main:    WASLA CI 39704732009 FAILURE (governance-guard+verify: check 9 — new CVE GHSA-qxg6-89mg-rqv8 in @vitest/mocker, present on main itself, NOT introduced by #804; root-fixed later by #806/CLM-0660) | Roadmap freshness 39704731882 success
+  review 5607947083 xuuux-voox APPROVED 2026-10-22T00:44:01Z commit_id=5acfaa22 (head at merge == reviewed head)
+  44/44 check-runs success on head
+
+#806  head 9495d88bec79afaf011fb4b06709ac8e82118c73  squash-merge 76a223a2064ebc7f0b0d121912fb1f7d014804ad @2026-10-22T07:16:24Z
+  PR-head: WASLA CI 39728298179 success (44/44) | Roadmap freshness 39728291898 success
+  main:    WASLA CI 39739354566 success | Roadmap freshness 39739354537 success
+  review 5610465955 xuuux-voox APPROVED 2026-10-22T07:10:41Z commit_id=9495d88b (head at merge == reviewed head)
+  prior approval 5608955351 on stale head afd5cd1b was NOT used for merge; fresh review requested and received on final head
+
+
+#805  head 0aea61cc2a6758d5eb95155668acb14785257a26  squash-merge affdda63c57b7c541a12eda7b0a45a044ce64fb3 @2026-10-22T08:02:59Z
+  PR-head: WASLA CI 39740985794 success | Roadmap freshness 39740977125 success
+  main:    WASLA CI 39744863985 success | Roadmap freshness 39744863951 success
+  review 5610942615 xuuux-voox APPROVED 2026-10-22T07:57:23Z commit_id=0aea61cc (head at merge == reviewed head)
+  prior approvals 5608951633 / 5610468503 on pre-rebase head dd63ba26 were NOT used for merge
+
 main HEAD after chain: 2a1f73484c1b9af0c98b065e4e562b1c5b0a7e20
 branch protection main: 44 required contexts, strict, enforce_admins=true, required_approving_review_count=0 (review convention enforced by governance-guard state-sync)
 no CHANGES_REQUESTED reviews on any of the four PRs

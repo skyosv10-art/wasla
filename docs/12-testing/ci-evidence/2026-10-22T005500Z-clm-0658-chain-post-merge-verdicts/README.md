@@ -16,7 +16,7 @@
 | [#801](https://github.com/skyosv10-art/wasla/pull/801) | CLM-0654 | `24939cc4` | `16e7f44e` (2026-10-21T17:02:34Z) | [39627732650](https://github.com/skyosv10-art/wasla/actions/runs/39627732650) success | [39627732039](https://github.com/skyosv10-art/wasla/actions/runs/39627732039) success | [39640217300](https://github.com/skyosv10-art/wasla/actions/runs/39640217300) success | [39640216758](https://github.com/skyosv10-art/wasla/actions/runs/39640216758) success | [5603297394](https://github.com/skyosv10-art/wasla/pull/801#pullrequestreview-5603297394) — xuuux-voox على `24939cc4` نفسِهِ (17:01:47Z) |
 | [#803](https://github.com/skyosv10-art/wasla/pull/803) | CLM-0655 | `2f58e320` | `2a1f7348` (2026-10-21T19:19:20Z) | [39649278571](https://github.com/skyosv10-art/wasla/actions/runs/39649278571) success | [39649277754](https://github.com/skyosv10-art/wasla/actions/runs/39649277754) success | [39660605222](https://github.com/skyosv10-art/wasla/actions/runs/39660605222) success | [39660605145](https://github.com/skyosv10-art/wasla/actions/runs/39660605145) success | [5604988565](https://github.com/skyosv10-art/wasla/pull/803#pullrequestreview-5604988565) — xuuux-voox على `2f58e320` نفسِهِ (19:18:46Z) |
 
-- رأسُ `main` النهائيُّ بعدَ السلسلةِ: `2a1f73484c1b9af0c98b065e4e562b1c5b0a7e20` (التزامُ دمجِ #803).
+- رأسُ `main` بعدَ السلسلةِ الأولى: `2a1f73484c1b9af0c98b065e4e562b1c5b0a7e20` (التزامُ دمجِ #803) · بعدَ #804: `c8fd6a6e` · بعدَ #806: `76a223a2` · بعدَ #805: `affdda63c57b7c541a12eda7b0a45a044ce64fb3`.
 - `image-supply-chain` ناجحٌ على رؤوسِ الفروعِ الأربعةِ وعلى التزاماتِ الدمجِ الأربعةِ (قيسَ من check-runs لكلِّ بصمةٍ؛ 43 فحصاً على كلِّ رأسٍ كلُّها success).
 - لا مراجعاتٍ مانعةً (CHANGES_REQUESTED) على أيٍّ من الأربعةِ؛ وكلُّ التزامِ دمجٍ squash-merge بخالدٍ واحدٍ (تاريخٌ خطيٌّ: `6b620e4` ← `50545970` ← `1066cdfc` ← `16e7f44e` ← `2a1f7348`).
 
@@ -47,6 +47,9 @@
 
 ## 5. حالةُ المخاطرِ على main `2a1f7348` (كما هي — لا تغييرَ)
 
+| [#804](https://github.com/skyosv10-art/wasla/pull/804) | CLM-0657 | `5acfaa22` | `c8fd6a6e` (2026-10-22T01:16:30Z) | [39667006880](https://github.com/skyosv10-art/wasla/actions/runs/39667006880) success | [39666998809](https://github.com/skyosv10-art/wasla/actions/runs/39666998809) success | [39704732009](https://github.com/skyosv10-art/wasla/actions/runs/39704732009) **failure** (§6-مكرر-1) | [39704731882](https://github.com/skyosv10-art/wasla/actions/runs/39704731882) success | [5607947083](https://github.com/skyosv10-art/wasla/pull/804#pullrequestreview-5607947083) — xuuux-voox على `5acfaa22` نفسِهِ (00:44:01Z) |
+| [#806](https://github.com/skyosv10-art/wasla/pull/806) | CLM-0660 | `9495d88b` | `76a223a2` (2026-10-22T07:16:24Z) | [39728298179](https://github.com/skyosv10-art/wasla/actions/runs/39728298179) success | [39728291898](https://github.com/skyosv10-art/wasla/actions/runs/39728291898) success | [39739354566](https://github.com/skyosv10-art/wasla/actions/runs/39739354566) success | [39739354537](https://github.com/skyosv10-art/wasla/actions/runs/39739354537) success | [5610465955](https://github.com/skyosv10-art/wasla/pull/806#pullrequestreview-5610465955) — xuuux-voox على `9495d88b` نفسِهِ (07:10:41Z) |
+| [#805](https://github.com/skyosv10-art/wasla/pull/805) | CLM-0659 | `0aea61cc` | `affdda63` (2026-10-22T08:02:59Z) | [39740985794](https://github.com/skyosv10-art/wasla/actions/runs/39740985794) success | [39740977125](https://github.com/skyosv10-art/wasla/actions/runs/39740977125) success | [39744863985](https://github.com/skyosv10-art/wasla/actions/runs/39744863985) success | [39744863951](https://github.com/skyosv10-art/wasla/actions/runs/39744863951) success | [5610942615](https://github.com/skyosv10-art/wasla/pull/805#pullrequestreview-5610942615) — xuuux-voox على `0aea61cc` نفسِهِ (07:57:23Z) |
 | الخطر | الحالة | ملاحظة |
 |---|---|---|
 | RISK-0050 (esbuild CVE) | **open** | استثناءٌ محدودُ النطاقِ · مهلةٌ 2026-12-15 · التقريرُ الكاملُ يكشفُ الثغرةَ |
@@ -57,14 +60,21 @@
 
 ## 6. المساراتُ المفتوحةُ (لا تُقرَّرُ من هنا)
 
-- **#804 (CLM-0657 / RISK-0071):** مفتوحٌ غيرُ مسودةٍ؛ رأسُهُ `5acfaa22` على قاعدةٍ منشورةٍ تحتوي RISK-0071؛ 43/43 فحصاً success ([WASLA CI 39667006880](https://github.com/skyosv10-art/wasla/actions/runs/39667006880) · [Roadmap freshness 39666998809](https://github.com/skyosv10-art/wasla/actions/runs/39666998809))؛ وموافقةٌ بشريةٌ مستقلةٌ `5607947083` (xuuux-voox · 2026-10-22T00:44:01Z) على `5acfaa22` نفسِهِ وبعدَ اكتمالِ CI. **لم يُدمجْ — قرارُ دمجِهِ للمالكِ**، وإثباتاتُ PostgreSQL 17 المحليةُ (حالاتُ البحثِ الخمسُ · الطفراتُ M1–M4 معَ التصريحِ بأنَّ M4 لا تقتلها اختباراتُ التكاملِ وحدَها) مفصولةٌ عن أحكامِ CI ولا تُوصَفُ كبواباتٍ ناجحةٍ.
+- **#804 (CLM-0657 / RISK-0071):** دُمجَ بقرارِ المالكِ («نعم، ادمجه الآن») على الرأسِ المُراجَعِ `5acfaa22` نفسِهِ. حكمُ WASLA CI على main بعدَهُ **failure** ([39704732009](https://github.com/skyosv10-art/wasla/actions/runs/39704732009)) في الفحصِ 9 بسببِ الاستشارةِ الجديدةِ GHSA-qxg6-89mg-rqv8 في `@vitest/mocker` — قائمةٌ على main ولم يُدخلها #804؛ عولجت جذريًّا بـ#806. **RISK-0071 يبقى open** حتى قرارِ إغلاقٍ موثَّقٍ من المالكِ.
 - **#736** مفتوحٌ (تعافٍ مرصودٌ سببُهُ غيرُ محسومٍ؛ تحسينُ التسجيلِ مطالبةٌ مستقلةٌ) · **#570** مفتوحٌ · **#730** غيرُ مدموجٍ ولم تُدَرْ مفاتيحُ INC-0007.
 - **الإطلاقُ يبقى NO-GO** — بواباتُ الإطلاقِ (إثباتُ استرجاعِ auth/storage/vault · PITR · RTO إنتاجيٌّ · قرارُ المالكِ) لم تُثبَتْ، ولا نشرَ ولا كتابةً في قاعدةِ الإنتاجِ ولا اتصالَ Telegram ولا T1/T2 نُفِّذَ في هذهِ السلسلةِ (دمجٌ squash لا يطلقُ Render: تشغيلاتُ `render-deploy.yml` على التزاماتِ الدمجِ = لا شيء).
 
 ## 6-مكرر. عائقٌ مكتشفٌ أثناءَ هذا التوثيقِ (قائمٌ على main لا من هذهِ السلسلةِ)
 
 - **RISK-0052 (لا حكمَ CI على main لساعاتٍ)**: انقضى تاريخُ مراجعتِهِ المسجَّلُ (2026-10-21) يومَ 2026-10-22، وحالُهُ `mitigating`. قيسَ هذا مباشرةً: حارسُ الحوكمةِ (الفحصُ 10 من `verify-governance.sh`) **يفشلُ على شجرةِ `main` النقيةِ نفسِها** منذُ 2026-10-22 (قيسَ في worktree على `2a1f7348`) — أيُّ تشغيلِ CI جديدٍ على أيِّ فرعٍ سيسقطُ في `governance-guard` بسببِهِ حتى يُراجَعَ الخطرُ أو تُمدَّ مهلتُهُ **بقرارِ مالكٍ مكتوبٍ** (التمديدُ السابقُ سُجِّلَ بقرارِ المالكِ حرفيًّا في 2026-10-06). هذا ليسَ ناتجَ هذهِ السلسلةِ ولا دليلِ الإغلاقِ هذا، وقرارُهُ للمالكِ وحدَهُ.
+- **ما جرى بعدَ ذلك (2026-10-22):** بقرارِ المالكِ («راجعه الآن فعليًّا») عولجَ RISK-0052 بـ#805/CLM-0659 (`timeout-minutes` صريحٌ لكلِّ وظائفِ CI + البابُ 5 في `validate-ci-mandatory.sh`) ومُدَّت مراجعتُهُ إلى 2026-11-05؛ **يبقى `mitigating`** — المهلةُ تحصرُ زمنَ التنفيذِ لا انتظارَ الطابورِ، وواقعةُ 2026-09-23 كانت وظيفةً في الطابورِ. والاستشارةُ GHSA-qxg6-89mg-rqv8 عولجت بقرارِ المالكِ («ترقية 4.1.12») في #806/CLM-0660؛ وأُغلقَ RISK-0031 وRISK-0062 بقرارِه الموثَّقِ.
 - فحوصُ 14 و28 فشلت محليًّا في بيئةِ التوثيقِ لغيابِ `typescript`/`node_modules` — **فشلُ بيئةٍ لا فشلَ شجرةٍ**، وستُقرأُ في CI كما هيَ خضراءَ.
+
+## 6-ثالثًا. ملاحظةُ إسنادِ تأليفٍ في #806 و#805 (قيسَ ولم يُفسَّر بالكاملِ)
+
+- التزاما الدمجِ `76a223a2` (#806) و`affdda63` (#805) يحملانِ مقطورةَ `Co-authored-by: syyad <syyad@users.noreply.github.com>`. المصدرُ المقيسُ: ستةُ التزاماتٍ على فرعَي CLM-0660 وCLM-0659 (`2ffb583` · `ce58228` · `9bca94d` · `7ffd738` · وإعادةُ تأسيسِ `1e03585`/`4c4e81a`) سُجِّلَ مؤلِّفُها في بياناتِ git باسمِ `syyad` — أنشأها الوكيلُ المنفِّذُ بين 01:23 و03:31 UTC ضمنَ العملِ المكلَّفِ به، ثمَّ صارت الهويةُ المحليةُ `skyosv10-art`. مقطوراتُ الدمجِ الحشويِّ يولِّدها GitHub من مؤلِّفي التزاماتِ الفرعِ.
+- **المقيسُ:** `syyad` ليس متعاونًا في المستودعِ (المتعاونانِ: skyosv10-art بـadmin وxuuux-voox بـwrite)؛ ولا يظهرُ فاعلًا في أحداثِ الدفعِ والدمجِ المفحوصةِ — إنشاءُ PR ودفعُ الفروعِ ودمجُها كلُّها مُسندةٌ إلى `skyosv10-art`. فرقُ #806 لا يمسُّ سيرَ العملِ ولا الأسرارَ ولا البنيةَ ولا CODEOWNERS، ومصادرُ القفلِ كلُّها من registry.npmjs.org.
+- **غيرُ المحسومِ:** مصدرُ ضبطِ تلك الهويةِ في بيئةِ الوكيلِ، وسجلُّ الوصولِ التاريخيُّ الكاملُ (لا سجلَّ تدقيقٍ عبرَ الواجهةِ لمستودعٍ شخصيٍّ). عُرضَ التحقيقُ على المالكِ قراءةً فقط وأمرَ بمتابعةِ العملِ («لا مشكله ، تابع عملك» · 2026-10-22). لم يُعَد كتابةُ أيِّ تأريخٍ. وصارت الهويةُ تُتحقَّقُ قبلَ كلِّ التزامٍ.
 
 ## 7. حدودُ هذا الدليل
 

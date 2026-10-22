@@ -1,3 +1,14 @@
+# 2026-10-22 — CLM-0658 — تابع: أحكامُ ما بعدَ دمجِ #804 و#806 و#805 + ملاحظةُ إسنادِ التأليفِ
+
+- **Work Item(s):** M0-53
+- **Kind:** state-correction — توثيقُ أحكامِ CI بعدَ الدمجِ؛ لا شيفرةَ.
+- **Status:** Released (CLM-0658 — يُحرَّرُ بالدمجِ).
+- **Changed units:** docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md, docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/raw/chain-verdicts.txt
+- **Change:** صفوفُ #804 (`c8fd6a6e` · main WASLA CI 39704732009 failure بسببِ GHSA-qxg6-89mg-rqv8 القائمةِ على main · Roadmap 39704731882 success) و#806 (`76a223a2` · 39739354566/39739354537 success · مراجعة 5610465955 على 9495d88b) و#805 (`affdda63` · 39744863985/39744863951 success · مراجعة 5610942615 على 0aea61cc)؛ تحديثُ §6 و§6-مكرر؛ و§6-ثالثًا: مقطورةُ `Co-authored-by: syyad` في `76a223a2` و`affdda63` مصدرُها بياناتُ تأليفِ ستةِ التزاماتٍ أنشأها الوكيلُ — مقيسٌ أنَّ syyad ليس متعاونًا ولا فاعلًا في الأحداثِ المفحوصةِ؛ ومصدرُ الهويةِ وسجلُّ الوصولِ التاريخيُّ غيرُ محسومَين.
+- **No-Test-Reason:** توثيقُ أحكامٍ مقروءةٍ من GitHub — لا سلوكَ قابلًا للاختبار.
+- **Risk(s):** RISK-0052 → mitigating · RISK-0071 → open · RISK-0050 → open
+- **Verified:** الأحكامُ مقروءةٌ مباشرةً من واجهةِ GitHub في 2026-10-22؛ الدليلُ لا يرقّي عنصرًا ولا يغلقُ خطرًا.
+
 # 2026-10-22 — CLM-0660 — ترقيةُ vitest إلى ^4.1.12: إغلاقُ استشاراتِ @vitest/mocker وtinypool وsource-map-js
 
 - **Work Item(s):** M0-53 (RISK-0031 · RISK-0062)

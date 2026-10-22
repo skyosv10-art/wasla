@@ -1,9 +1,9 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-22T03:56:34Z",
+  "generated_at": "2026-10-22T04:29:30Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "374720fd65496ea52cd043dea76a2866deaa22b2",
+    "commit": "3c538d86045d486b962a50bb11c78ba450c171fc",
     "branch": "stage-zero/clm-0660-vitest-4-1-12-mocker-cves",
     "dirty": false,
     "dirty_files": 0,
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "f3d7e19c87ac7162eccff0d636948d3896b59e897a896be0a1f9a2711524d0c2",
-    "lines": 5053
+    "sha256": "8520e11bfba01458619ce291f865b055e02ad56b301238e5c95e611c8d43ada9",
+    "lines": 5056
   },
   "static": {
     "packages": 74,
@@ -41,6 +41,6 @@
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:80e65cb3743de3c06abf1a754cbe7b8b383c239d1b71e38ebf888120d26ccea6",
+  "fingerprint": "sha256:766c74949093f30d5919eacd1374a3dd2be9924c6559aafa7377569ae0a103dd",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

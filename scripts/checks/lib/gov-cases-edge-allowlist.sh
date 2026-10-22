@@ -387,11 +387,17 @@ _ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':'q'};
 _ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']={'allowed':['cursor'],'pinned':{'cursor':'x'}}; save(CUST,d)" \
   && _ea_door "معاملٌ مثبَّتٌ ومسموحٌ معًا" EA-QUERY-PIN-OVERLAP; _ea_restore
 _ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':['q'],'pinned':{'sort':'relevance'}}; save(CUST,d)" \
-  && _ea_door "تثبيتُ معاملٍ خارجَ نطاقِ E-20" EA-QUERY-PIN-SCOPE; _ea_restore
+  && _ea_door "تثبيتُ معاملٍ خارجَ سياسةِ E-20 (sort)" EA-QUERY-PIN-VALUE; _ea_restore
 _ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/order-requests')['query']={'allowed':['limit'],'pinned':{'visible_only':'true'}}; save(CUST,d)" \
   && _ea_door "تثبيتٌ على فئةِ O لا P" EA-QUERY-PIN-CLASS; _ea_restore
 _ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':['q'],'deny':['state']}; save(CUST,d)" \
   && _ea_door "مفتاحٌ غيرُ معروفٍ في query" EA-QUERY-FIELD; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'POST','/customers/:waslaPublicId/order-requests')['query']={'allowed':['limit']}; save(CUST,d)" \
+  && _ea_door "عقدُ query لغيرِ GET (توسيعٌ غيرُ مقيسٍ)" EA-QUERY-METHOD; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']['pinned']={'visible_only':'false'}; save(CUST,d)" \
+  && _ea_door "قيمةُ تثبيتٍ تنحرفُ عن سياسةِ E-20 (false)" EA-QUERY-PIN-VALUE; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']['pinned']={'state':'submitted'}; save(CUST,d)" \
+  && _ea_door "تثبيتُ معاملٍ محظورٍ (state) بدلَ رفضِهِ" EA-QUERY-PIN-VALUE; _ea_restore
 
 # ═══ الفئةُ O: E-18 / E-19 / المستقبلُ off / المنح ════════════════════════
 _O_OPEN_E18="e=entry(d,'GET','/customers/:waslaPublicId/profile'); e['production_open']=True; "

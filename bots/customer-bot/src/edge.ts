@@ -19,6 +19,8 @@ import {
   type ServiceRequestSigner,
 } from "@wasla/service-auth";
 
+import { fileURLToPath } from "node:url";
+
 import { BOT } from "./server.js";
 import { CUSTOMERS_GEOGRAPHY_SCOPES } from "@wasla/customers-service";
 
@@ -42,8 +44,10 @@ export interface CustomerBotEdgeOverrides extends BotRuntimeOverrides {
  * ترتيبِ التركيبِ لا من الطلبِ — وكلُّ المساراتِ الحاليةِ مغلقةٌ فلا يُستعملُ
  * في الإنتاجِ حتى الفتحِ.
  */
-function customerServiceUrlFor(service: string): string {
-  const env = process.env as Record<string, string | undefined>;
+function customerServiceUrlFor(
+  service: string,
+  env: Record<string, string | undefined>,
+): string {
   const byService: Record<string, string> = {
     customers: env.CUSTOMERS_SERVICE_URL ?? "",
     search: env.SEARCH_SERVICE_URL ?? "",
@@ -55,8 +59,7 @@ function customerServiceUrlFor(service: string): string {
 }
 
 /** سجلُّ مفاتيحِ توقيعِ الخدمةِ من ترتيبِ التركيبِ — لا من الطلبِ. */
-function customerEdgeKeys() {
-  const env = process.env as Record<string, string | undefined>;
+function customerEdgeKeys(env: Record<string, string | undefined>) {
   return keyRegistryFromEnv({
     WASLA_SERVICE_AUTH_KEYS: env.WASLA_SERVICE_AUTH_KEYS,
     WASLA_SERVICE_AUTH_ACTIVE_KID: env.WASLA_SERVICE_AUTH_ACTIVE_KID,
@@ -69,12 +72,15 @@ function customerEdgeKeys() {
  * ما يُقيسُهُ حارسُ المصفوفةِ ساكنًا (فشلٌ مغلقٌ للمجهولِ). ما ليسَ لهُ
  * مصنعٌ هنا لا يُوقِّعُهُ أحدٌ: تركيبُ مسارٍ مفتوحٍ لهُ يفشلُ قبلَ الاستماعِ.
  */
-function customerRequestSignerFor(service: string): ServiceRequestSigner {
+function customerRequestSignerFor(
+  service: string,
+  env: Record<string, string | undefined>,
+): ServiceRequestSigner {
   if (service === "geography") {
     return createServiceRequestSigner({
       serviceName: "customer-bot",
       audience: "geography",
-      keys: customerEdgeKeys(),
+      keys: customerEdgeKeys(env),
       scopes: CUSTOMERS_GEOGRAPHY_SCOPES,
     });
   }
@@ -118,9 +124,16 @@ export function buildAppWithEdge(overrides?: CustomerBotEdgeOverrides): BotApp {
     revokeSession: async () => {
       throw new Error("لا يُستدعى في هذا التركيبِ");
     },
-    serviceUrlFor: customerServiceUrlFor,
-    requestSignerFor: customerRequestSignerFor,
-    allowlistUrl: "packages/channel-edge/allowlist/customer-mini-app.json",
+    // D2/D5: خريطةُ الوجهاتِ والموقِّعاتِ تُغلقُ على `env` التركيبِ (تجاوزاتِ
+    // الاختبارِ أو ترتيبَ الإقلاعِ) لا على `process.env` مباشرةً — مصدرٌ واحدٌ
+    // للحقيقةِ داخلَ الجذرِ الواحدِ، والاختبارُ يميّزُ المسارَ المغلقَ هذا.
+    serviceUrlFor: (service: string) => customerServiceUrlFor(service, env),
+    requestSignerFor: (service: string) => customerRequestSignerFor(service, env),
+    // مسارُ القائمةِ يُحَلُّ من موقعِ الوحدةِ لا من `cwd` — فلا يصيرُ التركيبُ
+    // رهينَ دليلِ التشغيلِ (قياسٌ حيٌّ في اختبارِ التركيبِ لا افتراضَ نشرٍ).
+    allowlistUrl: fileURLToPath(
+      new URL("../../../packages/channel-edge/allowlist/customer-mini-app.json", import.meta.url),
+    ),
     enabled: true,
     allowedOrigins: [],
   });

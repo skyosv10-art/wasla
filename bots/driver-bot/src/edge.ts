@@ -19,6 +19,8 @@ import {
   type ServiceRequestSigner,
 } from "@wasla/service-auth";
 
+import { fileURLToPath } from "node:url";
+
 import { BOT } from "./server.js";
 
 /** إضافاتُ التركيبِ لحزمةِ الحدِّ — تُمرَّرُ إلى `buildBotApp` لا إلى الشفرةِ. */
@@ -40,8 +42,10 @@ export interface DriverBotEdgeOverrides extends BotRuntimeOverrides {
  * خريطةُ عناوينِ وجهاتِ التوجيهِ (D2 · ADR-069 §2.1): عنوانُ كلِّ خدمةٍ من
  * ترتيبِ التركيبِ لا من الطلبِ — وكلُّ المساراتِ الحاليةِ مغلقةٌ.
  */
-function driverServiceUrlFor(service: string): string {
-  const env = process.env as Record<string, string | undefined>;
+function driverServiceUrlFor(
+  service: string,
+  env: Record<string, string | undefined>,
+): string {
   const byService: Record<string, string> = {
     drivers: env.DRIVERS_SERVICE_URL ?? "",
     orders: env.ORDERS_SERVICE_URL ?? "",
@@ -56,7 +60,10 @@ function driverServiceUrlFor(service: string): string {
  * dispatch) — فلا مصنعَ حرفيًّا هنا، وكلُّ مسارٍ يُفتحُ منها يفشلُ تركيبُهُ
  * قبلَ الاستماعِ (فشلٌ مغلقٌ) حتى يصدرَ قرارُ المنحِ.
  */
-function driverRequestSignerFor(service: string): ServiceRequestSigner {
+function driverRequestSignerFor(
+  service: string,
+  _env: Record<string, string | undefined>,
+): ServiceRequestSigner {
   throw new Error(
     `EDGE_SIGNER_UNGRANTED: لا منحَ في M1-05 لـdriver-bot على ${service} — قرارُ المنحِ للمالكِ`,
   );
@@ -96,9 +103,13 @@ export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {
     revokeSession: async () => {
       throw new Error("لا يُستدعى في هذا التركيبِ");
     },
-    serviceUrlFor: driverServiceUrlFor,
-    requestSignerFor: driverRequestSignerFor,
-    allowlistUrl: "packages/channel-edge/allowlist/driver-mini-app.json",
+    // D2: خريطةُ الوجهاتِ تُغلقُ على `env` التركيبِ لا على `process.env`.
+    serviceUrlFor: (service: string) => driverServiceUrlFor(service, env),
+    requestSignerFor: (service: string) => driverRequestSignerFor(service, env),
+    // مسارُ القائمةِ يُحَلُّ من موقعِ الوحدةِ لا من `cwd` — كتركيبِ بوتِ العميلِ.
+    allowlistUrl: fileURLToPath(
+      new URL("../../../packages/channel-edge/allowlist/driver-mini-app.json", import.meta.url),
+    ),
     enabled: true,
     allowedOrigins: [],
   });

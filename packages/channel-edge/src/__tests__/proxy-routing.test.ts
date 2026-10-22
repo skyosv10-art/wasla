@@ -24,14 +24,27 @@ import {
 } from "@wasla/service-auth";
 
 /** مفتاحُ أسطولِ اختباريٌّ — HS256 لا يُعرفُ لأيِّ بيئةٍ حقيقيةٍ. */
-/** حكمُ تحققٍ موحَّدٌ: التحققُّ يرمي عندَ الفشلِ ويعيد الـPrincipal عندَ النجاحِ. */
-function tokenVerdict(token: string, options: Parameters<typeof verifyServiceToken>[1]): boolean {
+/** حكمُ تحققٍ موحَّدٌ — يُسلّم السببَ لا نجاحًا أعمى: رفضٌ بلا سببٍ لا يُقرأ نجاحًا. */
+function upstreamVerdict(
+  token: string,
+  options: Parameters<typeof verifyServiceToken>[1],
+):
+  | { ok: true; principal: ReturnType<typeof verifyServiceToken> }
+  | { ok: false; reason: string } {
   try {
-    verifyServiceToken(token, options);
-    return true;
-  } catch {
-    return false;
+    const principal = verifyServiceToken(token, options);
+    return { ok: true, principal };
+  } catch (error) {
+    const reason =
+      error instanceof Error && "reason" in error
+        ? String((error as { reason?: unknown }).reason)
+        : `خطأٌ غيرُ متوقعٍ: ${error instanceof Error ? error.message : String(error)}`;
+    return { ok: false, reason };
   }
+}
+
+function tokenVerdict(token: string, options: Parameters<typeof verifyServiceToken>[1]): boolean {
+  return upstreamVerdict(token, options).ok;
 }
 
 
@@ -49,11 +62,12 @@ interface CapturedRequest {
 }
 
 /**
- * بناءُ منبعِ HTTP اختباريٍّ: يتحققُّ من رمزِ الخدمةِ الحقيقيِّ (جمهورُ الوجهةِ)
- * ويلتقطُ الطلبَ ويَرُدُّ جوابًا ثابتًا.
+ * بناءُ منبعِ HTTP اختباريٍّ: يتحققُّ من رمزِ الخدمةِ الحقيقيِّ (جمهورُ الوجهةِ
+ * وصلاحياتُ المسارِ وربطُ الطلبِ) ويلتقطُ الطلبَ ويَرُدُّ جوابًا ثابتًا.
  */
 function startUpstream(
   expectedAudience: string,
+  requiredScopes: readonly string[],
 ): { server: Server; captured: () => CapturedRequest | undefined } {
   let last: CapturedRequest | undefined;
   const server = createServer((req: IncomingMessage, res) => {
@@ -69,18 +83,26 @@ function startUpstream(
         body,
       };
       const token = (req.headers["x-wasla-service-auth"] as string | undefined) ?? "";
-      // تحققٌ حقيقيٌّ بربطِ الطلبِ (method+path+query) وبجمهورِ الوجهةِ:
-      // يرمي عندَ الفشلِ فلا يصلَ الطلبُ إلى معالجِ الجوابِ إلّا بهويةٍ صحيحةٍ.
-      const valid = tokenVerdict(token, {
+      // تحققٌ حقيقيٌّ بربطِ الطلبِ (method+path+query) وبجمهورِ الوجهةِ وصلاحياتِها:
+      // يرمي عندَ الفشلِ فلا يصلَ الطلبُ إلى معالجِ الجوابِ إلّا بهويةٍ كاملةٍ.
+      const verdict = upstreamVerdict(token, {
         audience: expectedAudience,
         keys: KEYS,
         now: new Date(),
         method: (req.method ?? "GET").toUpperCase(),
         path: req.url ?? "/",
       });
-      if (!valid) {
+      if (!verdict.ok) {
         res.statusCode = 401;
-        res.end(JSON.stringify({ code: "UPSTREAM_AUTH_FAILED", verdict }));
+        res.end(JSON.stringify({ code: "UPSTREAM_AUTH_FAILED", reason: verdict.reason }));
+        return;
+      }
+      // صلاحياتُ المسارِ تُطالَبُ عندَ المستقبلِ لا عندَ المرسلِ وحدَه:
+      // رمزٌ بجمهورٍ صحيحٍ بلا صلاحيةِ المسارِ لا يفتحُ شيئًا (403 لا 200).
+      const missing = requiredScopes.filter((sc) => !verdict.principal.scopes.includes(sc));
+      if (missing.length > 0) {
+        res.statusCode = 403;
+        res.end(JSON.stringify({ code: "UPSTREAM_SCOPE_MISSING", missing }));
         return;
       }
       res.statusCode = 200;
@@ -131,7 +153,13 @@ const exchangeOk = async () => ({
   expires_at: new Date().toISOString(),
 });
 
-/** موقِّعٌ حقيقيٌّ بجمهورِ الخدمةِ الوجهةِ (D5) — مفتاحُ اختبارٍ لا أكثر. */
+/** صلاحياتُ كلِّ خدمةٍ وجهةٍ — من أدوارِ الأسطولِ الاختباريِّ لا منحَ إنتاجٍ. */
+const FLEET_SCOPES: Readonly<Record<string, readonly string[]>> = {
+  search: ["search:stores:read"],
+  geography: ["geography:zone:read"],
+};
+
+/** موقِّعٌ حقيقيٌّ بجمهورِ الخدمةِ الوجهةِ وصلاحياتِها (D5) — مفتاحُ اختبارٍ لا أكثر. */
 function signerFor(service: string) {
   // أدوارُ أسطولِ اختباريٍّ تحملُ جمهورَ الخدمةِ الوجهةِ: search وgeography.
   const fleetRole = service === "search" ? "search-exit-gate" : "phase02-exit-gate";
@@ -139,7 +167,7 @@ function signerFor(service: string) {
     serviceName: fleetRole,
     audience: service,
     keys: KEYS,
-    scopes: ["search:stores:read"],
+    scopes: FLEET_SCOPES[service] ?? [],
   });
 }
 
@@ -152,9 +180,9 @@ describe("توجيهُ الحدِّ — العقدُ الكاملُ (D1–D5 · 
   let cleanup: string[] = [];
 
   beforeAll(async () => {
-    searchUpstream = startUpstream("search");
+    searchUpstream = startUpstream("search", ["search:stores:read"]);
     searchPort = await listen(searchUpstream.server);
-    geoUpstream = startUpstream("geography");
+    geoUpstream = startUpstream("geography", ["geography:zone:read"]);
     geoPort = await listen(geoUpstream.server);
     allowlistPath = writeTestAllowlist([
       {
@@ -399,11 +427,40 @@ describe("توجيهُ الحدِّ — العقدُ الكاملُ (D1–D5 · 
       method: "GET",
       path: "/search/stores?q=x",
     });
-    expect(tokenVerdict(identityToken, {
+    const verdict = upstreamVerdict(identityToken, {
       audience: "search",
       keys: KEYS,
       now: new Date(),
-    })).toBe(false);
+      method: "GET",
+      path: "/search/stores?q=x",
+    });
+    expect(verdict.ok).toBe(false);
+    if (!verdict.ok) {
+      // الرفضُ بسببِ الجمهورِ نفسِهِ (audience_mismatch) لا لخطأِ برمجةٍ متوارٍ:
+      // خياراتُ التحققِ كاملةٌ (ربطُ الطلبِ) فيُقرأُ السببُ فلا ينجحُ الفحصُ لغيرِهِ.
+      expect(verdict.reason).toBe("audience_mismatch");
+    }
+  });
+
+  it("D5: صلاحياتُ المسارِ تُطالَبُ عندَ المستقبلِ — رمزٌ بجمهورٍ صحيحٍ بلا صلاحيةٍ يُردُّ بـ403", async () => {
+    // موقِّعٌ بجمهورِ search لكنَّهُ بلا صلاحيةِ search:stores:read: المنبعُ
+    // يتحققُ منها بعدَ الجمهورِ فلا يفتحُ المسارَ لموقِّعٍ ناقصِ الصلاحيةِ.
+    const app = buildApp({
+      requestSignerFor: (service: string) =>
+        createServiceRequestSigner({
+          serviceName: service === "search" ? "search-exit-gate" : "phase02-exit-gate",
+          audience: service,
+          keys: KEYS,
+          scopes: [],
+        }),
+    });
+    const res = await app.inject({
+      method: "GET",
+      url: "/search/stores?q=x",
+      headers: { authorization: "Bearer session-token" },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.payload).code).toBe("UPSTREAM_SCOPE_MISSING");
   });
 
   it("رفضٌ مغلقٌ: مسارٌ مفتوحٌ بلا وجهةٍ يمنعُ اكتمالَ التركيبِ (D2)", () => {

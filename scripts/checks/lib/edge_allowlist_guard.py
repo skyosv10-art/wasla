@@ -674,6 +674,10 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
         # وحدَها (E-20)، ولا معاملَ محظورًا في المسموحِ، ولا تداخلًا بينَهما.
         q = e.get("query")
         if q is not None:
+            if e["method"] != "GET":
+                # عقدُ الاستعلامِ لقراءةِ القوائمِ (GET) وحدَها: فتحُهُ على كتابةٍ
+                # (POST/PUT/…) توسيعٌ غيرُ مقيسٍ للعقدِ — يُرفضُ مغلقًا.
+                fail(f"[EA-QUERY-METHOD] {tag}: عقدُ query لغيرِ GET — التوسيعُ يحتاجُ قياسًا لا افتراضًا ({e['method']})")
             if not isinstance(q, dict):
                 fail(f"[EA-QUERY-TYPE] {tag}: query={q!r} ليس كائنًا")
             else:
@@ -697,8 +701,14 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
                         fail(f"[EA-QUERY-PIN-OVERLAP] {tag}: معاملٌ مثبَّتٌ ومسموحٌ معًا: {sorted(set(pn) & set(al))}")
                     elif pn and e["class"] != "P":
                         fail(f"[EA-QUERY-PIN-CLASS] {tag}: التثبيتُ لفئةِ P فقط (E-20) — {e['class']}")
-                    elif set(pn) - set(E20_FORBIDDEN_PARAMS):
-                        fail(f"[EA-QUERY-PIN-SCOPE] {tag}: تثبيتُ معاملٍ خارجَ نطاقِ E-20: {sorted(set(pn) - set(E20_FORBIDDEN_PARAMS))}")
+                    elif set(pn) - {"visible_only"}:
+                        # سياسةُ E-20 المعتمدةُ (ADR-069 §2.8): المعاملاتُ المحظورةُ
+                        # (state · moderation_state · owner_public_id) تُرفَضُ ولا
+                        # تُثبَّتْ — والتثبيتُ المعلومُ الوحيدُ هوَ `visible_only=true`.
+                        # فتثبيتُ غيرِهِ — أو تثبيتُهُ بقيمةٍ أخرى — انحرافٌ عن السياسةِ.
+                        fail(f"[EA-QUERY-PIN-VALUE] {tag}: التثبيتُ المسموحُ هوَ visible_only=true وحدَهُ (سياسةُ E-20): {pn!r}")
+                    elif pn.get("visible_only") != "true":
+                        fail(f"[EA-QUERY-PIN-VALUE] {tag}: قيمةُ التثبيتِ يجبُ أن تكونَ \"true\" حرفيًّا — {pn!r}")
 
         # ── حالة الفتح ───────────────────────────────────────────────────
         opened = e["production_open"]

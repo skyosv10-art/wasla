@@ -168,7 +168,12 @@ function applySessionRoutes(
   now: () => Date,
 ): void {
   // POST /edge/session — إصدارُ جلسةٍ من `initData` موقَّعٍ (ADR-069 §2.1).
-  app.post("/edge/session", async (request, reply) => {
+  app.post(
+    "/edge/session",
+    // تصنيفُ هويةِ الخدمةِ (M1-04): مصادقةُ هذا المسارِ داخليةٌ (initData
+    // موقَّعٌ بسرِّ الروبوتِ) لا برمزِ خدمةٍ — فهو «open» لحاجزِ الإضافةِ لا للعالمِ.
+    { config: { serviceIdentity: "open" } },
+    async (request, reply) => {
     assertAllowedOrigin(request, options.allowedOrigins);
     const body = request.body as { init_data?: unknown };
     const raw = typeof body?.init_data === "string" ? body.init_data : "";
@@ -218,7 +223,10 @@ function applySessionRoutes(
   });
 
   // POST /edge/session/logout — سحبُ الجلسةِ (ADR-069 §2.5).
-  app.post("/edge/session/logout", async (request, reply) => {
+  app.post(
+    "/edge/session/logout",
+    { config: { serviceIdentity: "open" } },
+    async (request, reply) => {
     assertAllowedOrigin(request, options.allowedOrigins);
     const authorization = request.headers.authorization;
     if (!authorization?.startsWith("Bearer ")) {
@@ -263,6 +271,9 @@ function applyProxyRoutes(
     app.route({
       method: entry.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
       url: entry.path,
+      // تصنيفُ هويةِ الخدمةِ (M1-04): مصادقةُ التوجيهِ داخليةٌ (جلسةُ الحدِّ)
+      // لا برمزِ خدمةٍ داخلٍ — فالحدُّ يوقِّعُ نحوَ المنبعِ بنفسِهِ (D5).
+      config: { serviceIdentity: "open" },
       handler: async (request, reply) => {
         return proxyRequest(options, surface, entry, request, reply, baseUrl, signer);
       },

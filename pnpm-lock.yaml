@@ -17,6 +17,9 @@ importers:
 
   .:
     devDependencies:
+      '@types/node':
+        specifier: ^20.19.0
+        version: 20.19.43
       json-schema-to-typescript:
         specifier: ^15.0.4
         version: 15.0.4

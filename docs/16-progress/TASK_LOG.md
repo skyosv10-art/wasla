@@ -11308,3 +11308,10 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 - No-Test-Reason: تصحيح إدراج ملف شاهدة وحزمة أنواع TypeScript — لا تغيير سلوكي ولا منطق قابلاً للاختبار؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) محليًا
 - Risk(s): RISK-0028 → mitigating
 - Verified: pnpm typecheck exit 0 (all projects) · validate-state-sync OK · validate-baseline OK (بصمة اللاكف محدثة بعد إضافة @types/node) · البابُ 4 يجد المصدر داخل الشجرة الآن
+## [2026-10-22] CLM-0660 — تابع: @types/node في جذر المستودع
+- Work Item(s): CLM-0660
+- Kind: correction — بعد إصلاح contracts/support ظهر الفشل نفسه في packages/resilience في CI؛ السبب الجذري: vitest 3 كان يجلب @types/node كتبعية نظيرة (auto-install-peers) فيجعلها مرئية لكل الحزم، وvitest 4 أسقطها. أُضيفت @types/node إلى package.json الجذري (مرئية لكل الحزم عبر تسلسل typeRoots) بدل مطاردة كل حزمة على حدة.
+- Changed units: package.json, pnpm-lock.yaml
+- No-Test-Reason: إضافة حزمة أنواع TypeScript للجذر — لا تغيير سلوكي؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) لكل المشاريع محليًا
+- Risk(s): none — إصلاح تبعية أنواع لا يمس سطح هجوم (توثيق القرار في هذا السطر)
+- Verified: pnpm typecheck exit 0 · validate-state-sync OK

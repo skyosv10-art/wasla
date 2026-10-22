@@ -23,6 +23,7 @@
     "board:validate": "bash scripts/checks/validate-launch-board.sh"
   },
   "devDependencies": {
+    "@types/node": "^20.19.0",
     "json-schema-to-typescript": "^15.0.4",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5.6.0",

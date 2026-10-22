@@ -1283,6 +1283,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: verify.sh
@@ -1293,6 +1294,7 @@ jobs:
 
   markdown-lint:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     continue-on-error: true
     steps:
       - run: echo lint
@@ -1323,13 +1325,15 @@ open(p, "w", encoding="utf-8").write(t)
 PYX
       ;;
     gh_inline_list) # البابُ 2 على المصدرِ الحيِّ: قائمةُ إلزامٍ مضمَّنةٌ في YAML
-      printf '\n  repo-structure:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
+      printf '\n  repo-structure:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    steps:\n      - run: for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
         >> "$R/.github/workflows/ci.yml" ;;
     gh_undeclared_af) # البابُ 3 على المصدرِ الحيِّ: تقنيعٌ غيرُ مُعلَنٍ في §4
-      printf '\n  flaky-job:\n    runs-on: ubuntu-24.04\n    continue-on-error: true\n    steps:\n      - run: echo maybe\n' \
+      printf '\n  flaky-job:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    continue-on-error: true\n    steps:\n      - run: echo maybe\n' \
         >> "$R/.github/workflows/ci.yml" ;;
+    gh_no_timeout)  # البابُ 5: وظيفةٌ حيّةٌ بلا timeout-minutes صريحٍ
+      sed -i '/timeout-minutes: 15/d' "$R/.github/workflows/ci.yml" ;;
     gh_undeclared_step_af) # البابُ 3: التقنيعُ في **خطوةٍ** لا في الوظيفة
-      printf '\n  sneaky-job:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo a\n        continue-on-error: true\n' \
+      printf '\n  sneaky-job:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    steps:\n      - run: echo a\n        continue-on-error: true\n' \
         >> "$R/.github/workflows/ci.yml" ;;
     gh_no_jobs)     # ملفٌّ حيٌّ بلا وظائفَ → سقوطٌ صريحٌ لا مرورٌ بقائمةٍ فارغة
       printf 'name: ci\non:\n  push:\n    branches: [main]\n' > "$R/.github/workflows/ci.yml" ;;
@@ -1447,6 +1451,11 @@ t "يرفض تقنيعَ خطوةٍ داخلَ وظيفةِ GitHub غيرِ مُ
 cim_gh_no_jobs() { _cim "$(_ci_stage gh_no_jobs gh_no_jobs)"; }
 t "يسقط صراحةً إذا خلا ملفُّ GitHub من وظائفَ" fail cim_gh_no_jobs
 
+# (16) البابُ 5 على المصدرِ الحيِّ (RISK-0052): وظيفةٌ بلا مهلةٍ صريحةٍ تُرفَض
+#      وتُسمّى بالاسمِ — فالمهلةُ الافتراضيّةُ (360 د) ليست حدًّا معلَناً.
+cim_gh_no_timeout() { _cim "$(_ci_stage gh_no_timeout gh_no_timeout)"; }
+t "يرفض وظيفةَ GitHub بلا timeout-minutes صريح" fail cim_gh_no_timeout
+
 # (8) وثيقةٌ بلا كتلةِ §4 → سقوطٌ صريحٌ. ولولا هذه الحالةُ لأمكن للحارسِ أن يمرَّ
 # بقائمةِ استثناءاتٍ فارغةٍ لأنّه لم يجد الكتلةَ — أخطرُ من رفضٍ خاطئٍ.
 cim_no_anchor() { _cim "$(_ci_stage no_anchor no_anchor)"; }
@@ -1534,6 +1543,12 @@ cim_mut_door4() {
   _cim "$(_ci_stage orphan_guard orphan_guard)" "$m" >/dev/null 2>&1 && return 0 || return 1
 }
 t "البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً" pass cim_mut_door4
+
+cim_mut_door5() {
+  local m; m="$(_cim_mutant door5 'PROBLEMS+=("البابُ 5 ($GH_FILE): الوظيفةُ' ': #')" || return 1
+  _cim "$(_ci_stage gh_no_timeout gh_no_timeout)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 5 (مهلةٌ صريحةٌ) يكشف فعلاً (طفرة)" pass cim_mut_door5
 
 printf '\n\033[1m[ط2] سلسلةُ توريدِ سيرِ العملِ — كلُّ سيرٍ مُعلَنٌ ومُثبَّتٌ (M0-31)\033[0m\n'
 # العطبُ الذي أوجبَ هذه الحالاتِ مقيسٌ: حرّاسُ CI يقرؤون `ci.yml` و`.gitlab-ci.yml`

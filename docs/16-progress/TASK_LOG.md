@@ -11411,7 +11411,7 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
 
 - **Work Item(s):** M0-53 (G-S9.7) · M1-05 (حارسُ مصفوفةِ التفويضِ) · M2-04 (مخطَّطُ الإعدادِ) · M0-08 (تجديدُ الأساسِ)
 - **Kind:** fix + tests — شيفرةُ إنتاجٍ في الحزمةِ والتركيبِ، لا فتحَ مساراتٍ ولا منحَ إنتاجٍ ولا نشرَ ولا T1/T2.
-- **Status:** Active (CLM-0662 — يُحرَّرُ بالدمجِ).
+- **Status:** Released (CLM-0662 — الدمجُ هو التحريرُ: الوحداتُ المُعدَّلةُ `.env.example` · `packages/channel-edge` · `bots/customer-bot` · `bots/driver-bot` · `packages/app-edge-e2e` · `packages/config/env-registry.json` · `scripts/checks/lib/edge_allowlist_guard.py` · `scripts/checks/lib/gov-cases-edge-allowlist.sh` · `docs/12-testing/BASELINE.*`).
 - **الفرع:** `fix/clm-0662-channel-edge-proxy-routing` · **الأساس:** main `1d1d99f2` (ما بعدَ دمجِ #808) · **الـPR:** #809.
 
 - **D8:** `authorization` تُقرأُ **قبلَ** حذفِ الترويساتِ الداخليةِ — كانَ الحذفُ يسبقُ القراءةَ فيُردُّ كلُّ نداءٍ محميٍّ بـ401 قبلَ أيِّ منبعٍ.

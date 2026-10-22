@@ -1,0 +1,6 @@
+# CLM-0657 · mutations (local; unit = store-search.test.ts, integration = search-index-reader.integration.test.ts on PG17)
+M1 escaping removed ($2 = raw q) | unit: Tests 1 failed | 36 passed (37) | integration(PG17): Tests 5 failed | 12 passed (17)
+M2 escape char changed to ! | unit: Tests 1 failed | 36 passed (37) | integration(PG17): Tests 2 failed | 15 passed (17)
+M3 wrong order (% and _ before backslash) | unit: Tests 1 failed | 36 passed (37) | integration(PG17): Tests 4 failed | 13 passed (17)
+M4 ESCAPE clause removed | unit: Tests 1 failed | 36 passed (37) | integration(PG17): Tests 17 passed (17)
+# M4 survives integration by design: an explicit ESCAPE '\' is semantically PostgreSQL's default — the unit case pins the explicit clause so its removal is caught

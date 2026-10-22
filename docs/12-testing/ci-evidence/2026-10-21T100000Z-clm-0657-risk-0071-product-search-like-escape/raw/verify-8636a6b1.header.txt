@@ -1,0 +1,3 @@
+# cmd: bash scripts/verify.sh · commit: 8636a6b10b8061af4e26a0c62d01649625ed3990 · base main 2a1f7348 · clone: full (partialclonefilter=[]) · node v20.20.2 · pnpm 9.15.9 · DATABASE_URL=unset · started 2026-10-21T19:38:54Z
+# finished rc=0 ·  النتيجة: 695 ناجح · 0 فاشل  · gate 11 passed · 1 declared skip (PostgreSQL integration suites — CI matrix) → partial, not complete
+# baseline: BASELINE_DIRTY_REASON="..." bash scripts/baseline.sh --log docs/12-testing/ci-evidence/2026-10-21T100000Z-clm-0657-risk-0071-product-search-like-escape/raw/verify-8636a6b1.log --stdout > BASELINE.json ; then bash scripts/checks/validate-baseline.sh

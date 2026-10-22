@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-21T17:58:13Z",
+  "generated_at": "2026-10-21T20:01:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "74915e3b5a8798d9163d63dbcba6ceef61b32769",
-    "branch": "stage-zero/clm-0655-gs9-20-relay-consumer-lock",
+    "commit": "8636a6b10b8061af4e26a0c62d01649625ed3990",
+    "branch": "stage-zero/clm-0657-risk-0071-product-search-like-escape",
     "dirty": true,
     "dirty_files": 2,
-    "dirty_reason": "CLM-0655 rebase onto 16e7f44e (full clone): verify-74915e3b.log + header staged in-tree before baseline regeneration",
-    "tracked_files": 3602
+    "dirty_reason": "CLM-0657 rebase onto 2a1f7348 (full clone): verify-8636a6b1.log + header staged in-tree before baseline regeneration",
+    "tracked_files": 3609
   },
   "env": {
     "node": "v20.20.2",
@@ -34,8 +34,8 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/raw/verify-74915e3b.log",
-    "tests_passed": 6272,
+    "source": "docs/12-testing/ci-evidence/2026-10-21T100000Z-clm-0657-risk-0071-product-search-like-escape/raw/verify-8636a6b1.log",
+    "tests_passed": 6273,
     "test_files_executed": 441,
     "governance_suite_cases": 695,
     "governance_suite_failed": 0,

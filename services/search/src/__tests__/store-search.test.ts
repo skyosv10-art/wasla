@@ -24,6 +24,8 @@ import {
   SEARCH_MARKETPLACE_SCOPES,
 } from "../infrastructure/http-marketplace-catalog.js";
 import { DEFAULT_RELAY_CONFIG, runRelayBatch, type RelayDeps } from "../relay.js";
+import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
+import type { Pool } from "pg";
 import type {
   CatalogStore,
   MarketplaceEventSource,
@@ -123,6 +125,24 @@ describe("normalizeStoreName — declared folding (ADR-025 §6.4)", () => {
     ["  مَكْتَبَةُ   النُّور ", "مكتبه النور"], ["ـمتـجـر", "متجر"], ["ACME Store", "acme store"],
   ])("%s → %s", (input, expected) => {
     expect(normalizeStoreName(input)).toBe(expected);
+  });
+});
+
+describe("RISK-0071 · CLM-0657 — product search binds an escaped LIKE pattern with an explicit ESCAPE", () => {
+  it("both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\\'; trigram/full-text keep the raw $1", async () => {
+    const seen: { sql: string; params: unknown[] }[] = [];
+    const pool = { query: async (sql: string, params: unknown[]) => { seen.push({ sql, params }); return { rows: [] }; } } as unknown as Pool;
+    const q = "50%_a\\b";
+    await new SearchIndexReader(pool).search({ q, locale: "ar", categorySlug: "c1", page: 1, pageSize: 20, sort: "relevance" });
+    expect(seen).toHaveLength(1);
+    const { sql, params } = seen[0];
+    expect(params).toEqual([q, escapeLike(q), "c1"]);
+    expect(sql).toContain("title_ar ILIKE '%' || $2 || '%' ESCAPE '\\'");
+    expect(sql).toContain("sku ILIKE '%' || $2 || '%' ESCAPE '\\'");
+    expect(sql).toContain("title_ar % $1");
+    expect(sql).toContain("plainto_tsquery('english', $1)");
+    expect(sql).toContain("category_slug = $3");
+    expect(sql).not.toMatch(/ILIKE '%' \|\| \$1/);
   });
 });
 

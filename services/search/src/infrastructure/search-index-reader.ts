@@ -60,6 +60,7 @@ import type { SearchPage, SearchResult, IndexedProduct } from "../domain/model.j
 import { normalizeQuery } from "../domain/query.js";
 import { rankProduct } from "../domain/ranking.js";
 import { SearchUnavailableError, SearchValidationError } from "../http/errors.js";
+import { escapeLike } from "../domain/store-search.js";
 
 /**
  * Default ranking window — the maximum number of matching rows that are pulled
@@ -83,11 +84,16 @@ const VISIBILITY_WHERE = [
   "archived_at IS NULL",
 ].join(" AND ");
 
+// RISK-0071 · CLM-0657: the ILIKE predicates take `$2` = q with LIKE
+// metacharacters escaped (`\\` first, then `%`, then `_` — `escapeLike`) and an
+// explicit `ESCAPE '\\'`, so a `%`, `_` or `\\` typed by the customer matches
+// literally. Trigram and full-text keep `$1` = the raw q: they have no
+// metacharacters, and escaping would change what they compare.
 const MATCH_SQL = [
-  "title_ar ILIKE '%' || $1 || '%'",
+  "title_ar ILIKE '%' || $2 || '%' ESCAPE '\\'",
   "title_ar % $1",
   "to_tsvector('english', coalesce(title_en, title_ar)) @@ plainto_tsquery('english', $1)",
-  "sku ILIKE '%' || $1 || '%'",
+  "sku ILIKE '%' || $2 || '%' ESCAPE '\\'",
 ].join(" OR ");
 
 const SELECT_COLUMNS = [
@@ -138,7 +144,7 @@ export class SearchIndexReader implements SearchProductsReadPort {
     }
 
     const categoryFilter =
-      query.categorySlug !== null ? " AND category_slug = $2" : "";
+      query.categorySlug !== null ? " AND category_slug = $3" : "";
 
     // `count(*) OVER ()` is evaluated over the whole match set BEFORE LIMIT —
     // this is what makes `total` exact rather than capped.
@@ -151,8 +157,8 @@ export class SearchIndexReader implements SearchProductsReadPort {
       LIMIT ${this.rankingWindow}
     `;
 
-    // $1 = q (always bound). $2 = category_slug, bound only when present.
-    const params: string[] = [query.q];
+    // $1 = q raw · $2 = q LIKE-escaped (both always bound) · $3 = category_slug, only when present.
+    const params: string[] = [query.q, escapeLike(query.q)];
     if (query.categorySlug !== null) params.push(query.categorySlug);
 
     let rows: QueryResultRow[];

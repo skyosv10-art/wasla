@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-21T20:01:37Z",
+  "generated_at": "2026-10-22T03:18:37Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "8636a6b10b8061af4e26a0c62d01649625ed3990",
-    "branch": "stage-zero/clm-0657-risk-0071-product-search-like-escape",
-    "dirty": true,
-    "dirty_files": 2,
-    "dirty_reason": "CLM-0657 rebase onto 2a1f7348 (full clone): verify-8636a6b1.log + header staged in-tree before baseline regeneration",
-    "tracked_files": 3609
+    "commit": "7ffd7384e0ae9899e3efb5b546705a69899cd17e",
+    "branch": "stage-zero/clm-0660-vitest-4-1-12-mocker-cves",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 3614
   },
   "env": {
     "node": "v20.20.2",
@@ -19,8 +19,8 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "2cc13f48430499deadf102c08de3d857fc96745a3ec7f5b7a8c14b3ba7f26b58",
-    "lines": 5126
+    "sha256": "3f58dce5bc2daa08664df68dd89be4f4090cc1cc936a26cfc45c8a9428331175",
+    "lines": 5050
   },
   "static": {
     "packages": 74,
@@ -30,17 +30,17 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 28,
-    "risks_not_closed": 28
+    "risks_not_closed": 26
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-21T100000Z-clm-0657-risk-0071-product-search-like-escape/raw/verify-8636a6b1.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log",
     "tests_passed": 6273,
     "test_files_executed": 441,
-    "governance_suite_cases": 695,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "governance_suite_cases": 694,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f95ce7c6470a285323b6e2ef2f56cfd725008eaa003bb0dec6e9da177be4240d",
+  "fingerprint": "sha256:6d505828ecf8a7f5a885bfb959c7d50f0a86fef4158092326e50e3db70dd69e7",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

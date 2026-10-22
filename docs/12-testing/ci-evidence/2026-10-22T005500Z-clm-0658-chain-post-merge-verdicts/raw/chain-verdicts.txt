@@ -1,0 +1,31 @@
+CLM-0658 — raw verdict data (measured from GitHub API 2026-10-22, docs only)
+
+#802  head f7ef6122979cf0949f3e669c8d5661a5bdc637db  squash-merge 50545970eebd3cdf05baea0f44f334661b113b85 @2026-10-21T10:56:12Z
+  PR-head: WASLA CI 39581059711 success | Roadmap freshness 39581053911 success
+  main:    WASLA CI 39588221242 success | Roadmap freshness 39588221194 success
+  review 5598600927 xuuux-voox APPROVED 2026-10-21T10:55:20Z commit_id=f7ef6122 (head at merge == reviewed head)
+  43/43 check-runs success on head; image-supply-chain success on head and on merge commit
+
+#800  head 80d27676f01f9f0561518cfe04e7322c468429fa  squash-merge 1066cdfc05c851ab5dce4a8470aac04356d2ffea @2026-10-21T11:16:42Z
+  PR-head (post-rebase): WASLA CI 39588291925 success | Roadmap freshness 39588284018 success
+  pre-rebase head 8ab18b9d670606683c95f399ffd248c06f1efa13: WASLA CI 39573425797 FAILURE (image-supply-chain) concluded 09:12:21Z
+  review 5597954276 xuuux-voox APPROVED 2026-10-21T09:56:22Z — submitted against pre-rebase head 8ab18b9d (API commit_id now displays 80d27676 after force-push 10:56:46Z)
+  main: WASLA CI 39590761437 success | Roadmap freshness 39590761223 success
+  43/43 check-runs success on post-rebase head; image-supply-chain success on head and on merge commit
+  tree diff 8ab18b9d -> 80d27676: 12 files, +108/-2, all are #802 changes; zero code files (services/packages/apps/scripts)
+
+#801  head 24939cc424b8ae1ebbe2c3d8dfd0db1194514fc7  squash-merge 16e7f44e9ef6720c2b074bf4b606883df0719545 @2026-10-21T17:02:34Z
+  PR-head: WASLA CI 39627732650 success | Roadmap freshness 39627732039 success
+  main: WASLA CI 39640217300 success (attempt 1 failed: db-integration (search) — recorded as unexplained event, inference not proof; attempt 2 passed) | Roadmap freshness 39640216758 success
+  review 5603297394 xuuux-voox APPROVED 2026-10-21T17:01:47Z commit_id=24939cc4 (head existed since 11:59:35Z)
+  43/43 check-runs success on head; image-supply-chain success on head and on merge commit
+
+#803  head 2f58e320b036d5048bdbbf092086dd8a9ba51f6c  squash-merge 2a1f73484c1b9af0c98b065e4e562b1c5b0a7e20 @2026-10-21T19:19:20Z
+  PR-head: WASLA CI 39649278571 success | Roadmap freshness 39649277754 success
+  main: WASLA CI 39660605222 success | Roadmap freshness 39660605145 success
+  review 5604988565 xuuux-voox APPROVED 2026-10-21T19:18:46Z commit_id=2f58e320 (head existed since 17:58:41Z)
+  43/43 check-runs success on head; image-supply-chain success on head and on merge commit
+
+main HEAD after chain: 2a1f73484c1b9af0c98b065e4e562b1c5b0a7e20
+branch protection main: 44 required contexts, strict, enforce_admins=true, required_approving_review_count=0 (review convention enforced by governance-guard state-sync)
+no CHANGES_REQUESTED reviews on any of the four PRs

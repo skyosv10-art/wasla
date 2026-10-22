@@ -93,7 +93,7 @@ describe("orders store", () => {
   });
 
   it("searchByPublicId sets loading then stores result", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockOrderSummary,
@@ -110,7 +110,7 @@ describe("orders store", () => {
   });
 
   it("searchByPublicId sets error on failure", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
       status: 404,
       json: async () => ({ code: "ORDER_NOT_FOUND" }),
@@ -125,7 +125,7 @@ describe("orders store", () => {
   });
 
   it("fetchDetail stores order detail", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockOrderDetail,
@@ -141,7 +141,7 @@ describe("orders store", () => {
   });
 
   it("fetchDetail sets error on failure", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
       status: 403,
       json: async () => ({ code: "FORBIDDEN" }),
@@ -155,7 +155,7 @@ describe("orders store", () => {
   });
 
   it("fetchHistory stores status history entries", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockHistory,
@@ -171,7 +171,7 @@ describe("orders store", () => {
   });
 
   it("fetchHistory sets error on failure", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
       status: 500,
       json: async () => ({ code: "INTERNAL" }),

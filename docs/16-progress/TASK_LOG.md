@@ -1,3 +1,20 @@
+# 2026-10-22 — CLM-0660 — ترقيةُ vitest إلى ^4.1.12: إغلاقُ استشاراتِ @vitest/mocker وtinypool وsource-map-js
+
+- **Work Item(s):** M0-53 (RISK-0031 · RISK-0062)
+- **Kind:** fix — ترقيةُ اعتماديّاتِ تطويرٍ.
+- **Change:** 72 ملفَّ package.json: كلُّ تصريحاتِ `vitest` (^2.1.0/^2.1.8/^3.0.0/^3.1.1/^3.2.7) → `^4.1.12` + تثبيتُ الجذرِ القسريُّ `3.2.7` → `4.1.12` + `pnpm install` (`pnpm-lock.yaml` مجدَّدٌ: `vitest@4.1.12` · `@vitest/mocker@4.1.12` · `source-map-js@1.2.2` · بلا tinypool أصلًا)؛ أُزيل تثبيتانِ قسريّانِ منجزانِ (tinypool · source-map-js) من الجذرِ ومن §11؛ `apps/admin-portal/src/__tests__/{orders,audit}.test.ts`: `vi.spyOn(global, "fetch")` → `globalThis` (9 مواضعَ — أنواعُ vitest 4 لم تعد تجلبُ أنواعَ Node)؛ `docs/00-rules/SECURITY_RULES.md` §11: أُزيلت 4 صفوفِ استشاراتٍ منجزةٍ + إضافةٌ مؤرَّخةٌ لصفِّ تثبيتِ vitest؛ `docs/07-security/RISK_REGISTER.md`: RISK-0031 وRISK-0062 → closed بقرارِ المالكِ الحرفيِّ «ترقية 4.1.12»، وإزالةُ أسطرِ الربطِ الستّةِ، وإضافةٌ مؤرَّخةٌ إلى RISK-0010، وتمديدُ مراجعةِ RISK-0052 إلى 2026-11-05 (سطرٌ داخلَ النطاقِ — حوكمةُ الفرعِ تقيسُ سجلَّ main المنقضيَ، والجوابُ الكاملُ في CLM-0659 المفتوحةِ).
+- **Tests:** وحدةٌ كاملةٌ على 4.1.12: 441 ملفًا / 6273 اختبارًا ناجحًا (الأساسُ 6272 — +1 اختلافُ عدٍّ لا فشل)؛ تحققٌ نوعيٌّ كاملٌ أخضرُ؛ تدقيقُ الاعتماديّاتِ: البابُ 1 (شجرةُ الإنتاجِ) صفرُ ثغراتٍ والبابُ 2 (الشجرةُ الكاملةُ) بلا ثغرةٍ معروفةٍ — «لا حاجةَ لاستثناءٍ أصلاً». قياساتٌ محلّيّةٌ لا تحلُّ محلَّ CI. [الدليل](../12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/README.md)
+- **Risk(s):** RISK-0031 → closed (قرارُ المالكِ «ترقية 4.1.12» + قياسُ التدقيقِ) · RISK-0062 → closed (الترقيةُ نفسُها) · RISK-0010 → mitigating (إضافةٌ مؤرَّخةٌ) · RISK-0052 → mitigating (تمديدُ مراجعةٍ فقط؛ الجوابُ في CLM-0659).
+
+# 2026-10-22 — CLM-0660 — ترقيةُ vitest إلى ^4.1.12 (قرارُ المالكِ: «ترقية 4.1.12») — حجزٌ قبلَ التغييرِ
+
+- **Work Item(s):** M0-53 (RISK-0031 · RISK-0062 · GHSA-qxg6-89mg-rqv8)
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0660-vitest-4-1-12-mocker-cves` مستقلٌّ على main `c8fd6a6e`).
+- **Change:** لا شيفرةَ بعدُ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه.
+- **Next:** رفعُ تصريحاتِ vitest إلى ^4.1.12 ← قفلٌ مجدَّدٌ ← اختباراتٌ وتحققٌ نوعيٌّ ← تحديثُ §11 والسجلِّ ← تمديدُ مراجعةِ RISK-0052 (سطرٌ داخلَ النطاقِ — حوكمةُ الفرعِ تقيسُ سجلَّ main المنقضيَ، والجوابُ الكاملُ في CLM-0659) ← تجديدُ BASELINE.
+
 # 2026-10-21 — CLM-0657 — التأسيسُ على main `2a1f7348` من استنساخٍ كاملٍ (بالإضافةِ)
 
 - **Work Item(s):** M0-53 (RISK-0071)
@@ -11279,3 +11296,29 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `infra/render/host-sources.json` classification; `infra/render/deploy-target.json` gains `legacy_owner`.
   - `scripts/checks/validate-render-host-sources.sh` (baseline + 7 mutations) in `scripts/verify.sh`, plus a `VERIFY_COMMAND.md` row.
 - **Not changed:** both Render workspaces, Telegram, DNS, Supabase, `deploy-target.json` mode, `RENDER_API_KEY`.
+## [2026-10-22] CLM-0660 — تابع: توليدُ الأساسِ الآليِّ
+- Changed units: docs/12-testing/BASELINE.json, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/README.md, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log
+- Regenerated BASELINE.json from the in-tree transition verify log (stripped of ANSI): static risks_not_closed 26 (RISK-0031/RISK-0062 closed on this branch), lockfile fingerprint updated (vitest ^4.1.12), dynamic measured from the recorded log: tests 6273, files 441, governance suite 694/1, verify verdict recorded (RISK-0028 door 4: the verdict is recorded, not required to be green — CI verify on the PR will produce the clean log for a follow-up regen, the CLM-0652 pattern).
+- Risk(s): RISK-0028 → mitigating (baseline regeneration chain restored)
+- Verified: validate-baseline green (all doors, fingerprint sha256:6d505828…)
+## [2026-10-22] CLM-0660 — تابع: إصلاحان بعد أول تشغيل CI على PR #806
+- Work Item(s): CLM-0660
+- Kind: correction — ملف سجل التحقق الذي يحيل إليه BASELINE.json كان محجوبًا بقاعدة `*.log` في .gitignore فلم يُدرج في الالتزام، فرفض البابُ 4 مصدرَ الأرقام الحركية في CI (RISK-0028)؛ وترقية vitest 4 أسقطت `@types/node` كتبعية نظيرة كان يحصل عليها packages/contracts/support عبر vitest 3.2.7، فأُضيفت صراحةً إلى devDependencies وحُدّث pnpm-lock.yaml.
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log, packages/contracts/support/package.json, pnpm-lock.yaml
+- No-Test-Reason: تصحيح إدراج ملف شاهدة وحزمة أنواع TypeScript — لا تغيير سلوكي ولا منطق قابلاً للاختبار؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) محليًا
+- Risk(s): RISK-0028 → mitigating
+- Verified: pnpm typecheck exit 0 (all projects) · validate-state-sync OK · validate-baseline OK (بصمة اللاكف محدثة بعد إضافة @types/node) · البابُ 4 يجد المصدر داخل الشجرة الآن
+## [2026-10-22] CLM-0660 — تابع: @types/node في جذر المستودع
+- Work Item(s): CLM-0660
+- Kind: correction — بعد إصلاح contracts/support ظهر الفشل نفسه في packages/resilience في CI؛ السبب الجذري: vitest 3 كان يجلب @types/node كتبعية نظيرة (auto-install-peers) فيجعلها مرئية لكل الحزم، وvitest 4 أسقطها. أُضيفت @types/node إلى package.json الجذري (مرئية لكل الحزم عبر تسلسل typeRoots) بدل مطاردة كل حزمة على حدة.
+- Changed units: package.json, pnpm-lock.yaml
+- No-Test-Reason: إضافة حزمة أنواع TypeScript للجذر — لا تغيير سلوكي؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) لكل المشاريع محليًا
+- Risk(s): none — إصلاح تبعية أنواع لا يمس سطح هجوم (توثيق القرار في هذا السطر)
+- Verified: pnpm typecheck exit 0 · validate-state-sync OK
+## [2026-10-22] CLM-0660 — تابع: إدراج سجلا الشواهد الناقصين
+- Work Item(s): CLM-0660
+- Kind: correction — دليل القياس (README §3) يحيل إلى سجل الاختبارات وسجل التحقق النوعي في raw/ ولم يُلتزما (حجب *.log)؛ أُدرجا الآن مجردين من رموز ANSI: run-tests-vitest-4112.log (مجموع Tests passed = 6273 · Test Files = 441 · صفر FAIL) وtypecheck-vitest-4112.txt (أخضر بعد إصلاح globalThis).
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/run-tests-vitest-4112.log, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/typecheck-vitest-4112.txt
+- No-Test-Reason: إدراج ملفات شواهد قياس موجودة مسبقًا — لا تغيير في الشفرة أو الاختبارات
+- Risk(s): none — شواهد قياس لا تمس سطح الهجوم
+- Verified: مجموع «Tests N passed» في السجل المدرج = 6273 يطابق dynamic.tests_passed في BASELINE.json

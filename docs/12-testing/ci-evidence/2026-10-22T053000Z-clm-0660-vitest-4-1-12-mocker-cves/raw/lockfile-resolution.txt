@@ -1,0 +1,6 @@
+  '@vitest/mocker@4.1.12':
+  source-map-js@1.2.2:
+  vitest@4.1.12:
+  '@vitest/mocker@4.1.12(vite@6.4.5(@types/node@20.19.43)(tsx@4.23.12))':
+  source-map-js@1.2.2: {}
+tinypool occurrences in lockfile: 0

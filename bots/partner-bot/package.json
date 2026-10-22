@@ -26,6 +26,6 @@
     "@wasla/channel-core": "workspace:*",
     "@wasla/service-auth": "workspace:*",
     "tsx": "^4.23.12",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.12"
   }
 }

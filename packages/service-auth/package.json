@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "vitest": "^2.1.0",
+    "vitest": "^4.1.12",
     "fastify": "^5.12.5",
     "pg": "^8.23.0",
     "@types/pg": "^8.23.1"

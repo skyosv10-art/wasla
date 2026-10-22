@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-22T03:56:14Z",
+  "generated_at": "2026-10-22T03:56:34Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "afd5cd1b55090900c377d8dff52646e7d7e7ce04",
+    "commit": "374720fd65496ea52cd043dea76a2866deaa22b2",
     "branch": "stage-zero/clm-0660-vitest-4-1-12-mocker-cves",
-    "dirty": true,
-    "dirty_files": 4,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
     "tracked_files": 3615
   },

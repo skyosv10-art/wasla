@@ -1,0 +1,7 @@
+# same pattern applied per file with grep -lE (the guard uses grep -rlE): 6 synthetic .ts files under /tmp — f1 multi-hop alias in one file, f2 bracket-string export, f3 cross-file consumer of f2, f4 destructuring rename, f5 node:https, f6 object shorthand + deps.fetch(
+SEEN   f1-multihop-same-file.ts
+MISSED f2-deps-bracket.ts
+MISSED f3-consumer.ts
+MISSED f4-destructure.ts
+MISSED f5-node-https.ts
+SEEN   f6-shorthand.ts

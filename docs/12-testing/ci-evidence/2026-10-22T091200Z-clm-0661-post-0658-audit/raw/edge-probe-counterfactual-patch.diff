@@ -1,0 +1,14 @@
+--- packages/channel-edge/src/create-channel-edge.ts	2026-10-22 00:45:15.657445187 +0000
++++ packages/channel-edge/src/zz-probe-patched-copy.ts	2026-10-22 09:23:25.236731956 +0000
+@@ -287,10 +287,10 @@
+ ): Promise<void> {
+   assertAllowedOrigin(request, options.allowedOrigins);
+   // ADR-069 §2.6-2: يُحذفُ من الطلبِ الواردِ كلُّ ترويسةٍ داخليةٍ قبلَ التوجيهِ.
++  const authorization = request.headers.authorization; // PROBE-ONLY reorder
+   for (const name of STRIPPED_INBOUND_HEADERS) {
+     delete request.headers[name];
+   }
+-  const authorization = request.headers.authorization;
+   if (!authorization?.startsWith("Bearer ")) {
+     return deny(reply, 401, "EDGE_UNAUTHENTICATED", "رمز الجلسة مطلوب");
+   }

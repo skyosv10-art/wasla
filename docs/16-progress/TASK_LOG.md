@@ -1,3 +1,15 @@
+# 2026-10-22 — CLM-0661 — تدقيقُ ما بعدَ CLM-0658: خطُّ الأساسِ، المخاطرُ، #730، ومسارُ Channel Edge إلى search
+
+- **Work Item(s):** M0-53 (G-S9.7) · M6-18B (RISK-0066 · RISK-0067 · INC-0007)
+- **Kind:** docs-only + قياسٌ محلّيٌّ — لا شيفرةَ إنتاجيّةَ ولا نشرَ ولا كتابةَ إنتاجٍ ولا Telegram ولا T1/T2.
+- **Status:** Released (CLM-0661 — يُحرَّرُ بالدمجِ).
+- **Changed units:** docs/12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/README.md, docs/12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/raw/, docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
+- **Change:** خطُّ أساسٍ على main `ac3af2a5` (CI 39751349909 · Roadmap 39751350080 · حمايةٌ 41 سياقًا بلا Rulesets — «44» في CLM-0658 خطأُ نسخٍ)؛ بيانُ انحرافِ مسارِ الدمجِ (#804–#807 بـ`gh pr merge` المباشرِ لا `merge-on-approved-head.sh` — ADR-071)؛ مصفوفةُ المخاطرِ بالدليلِ؛ #730 HOLD (dirty · متأخّرٌ 102 · لا دليلَ تدويرٍ لـINC-0007)؛ عيوبُ مسارِ الحدِّ D1–D8 (لا يُسجَّلُ أيُّ مسارِ توجيهٍ · حذفُ `authorization` قبلَ قراءتِه · الهدفُ identity لكلِّ خدمةٍ · إسقاطُ الاستعلام · T1 بلا search)؛ إعادةُ عنوانِ `### M1` الملتصقِ بصفِّ M0-53 منذ #807.
+- **No-Test-Reason:** توثيقٌ وقياسٌ — المسبارُ المحلّيُّ محفوظٌ نصًّا في الدليلِ ولم يُضَفْ إلى الشجرة؛ لا سلوكَ مُغيَّر.
+- **Risk(s):** RISK-0027 → open · RISK-0070 → mitigating · RISK-0071 → open · RISK-0050 → open · RISK-0052 → mitigating · RISK-0058 → mitigating · RISK-0066 → open · RISK-0067 → mitigating
+- **Next:** قرارُ المالكِ في مراجعةِ RISK-0058/0066/0067 (تنقضي 2026-10-22 ← البابُ 2 يُسقطُ كلَّ PR من 2026-10-23)؛ حجزٌ مستقلٌّ لإصلاحِ D1–D8 بقرارِ تصميم؛ تأكيدُ تدويرِ INC-0007 قبلَ #730.
+- **Evidence:** [دليلُ CLM-0661](../12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/README.md)
+
 # 2026-10-22 — CLM-0658 — تابع: أحكامُ ما بعدَ دمجِ #804 و#806 و#805 + ملاحظةُ إسنادِ التأليفِ
 
 - **Work Item(s):** M0-53

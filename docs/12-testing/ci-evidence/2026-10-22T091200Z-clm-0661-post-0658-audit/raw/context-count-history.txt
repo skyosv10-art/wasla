@@ -1,0 +1,26 @@
+# required-context count by committed raw protection snapshot (jq .required_status_checks.contexts|length)
+6  docs/12-testing/ci-evidence/2026-09-04T120000Z-m0-22a-enforcement/04-post-get-protection.json
+  docs/12-testing/ci-evidence/2026-09-05T020000Z-m0-22e-required-checks/api-responses/31-protection-verify.raw.json
+27  docs/12-testing/ci-evidence/2026-09-06T000000Z-m0-26-baseline-counter-source-audit/api-responses/required-status-checks.raw.json
+29  docs/12-testing/ci-evidence/2026-09-08T205000Z-m5-12-required-checks/protection.json
+30  docs/12-testing/ci-evidence/2026-09-09T195400Z-m5-13-required-checks/protection.json
+31  docs/12-testing/ci-evidence/2026-09-10T172610Z-m5-13-exit-gate-required-check/protection.json
+  docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored/api-responses/03-protection-put.raw.json
+  docs/12-testing/ci-evidence/2026-09-14T215000Z-m0-22b-protection-restored/api-responses/04-protection-after.raw.json
+32  docs/12-testing/ci-evidence/2026-09-16T193237Z-m2-01-image-supply-chain-context/api-responses/01-protection-after.raw.json
+33  docs/12-testing/ci-evidence/2026-09-17T144500Z-risk-0015-replay-store-context/api-responses/01-protection-after.raw.json
+40  docs/12-testing/ci-evidence/2026-09-28T054535Z-gov-002-owner-dependency/raw-branch-protection.json
+40  docs/12-testing/ci-evidence/2026-09-28T061207Z-gov-002-post-codeowners-change/raw-branch-protection.json
+40  docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement/raw-protection-luke-cage.json
+40  docs/12-testing/ci-evidence/2026-09-28T063026Z-risk-0054-r54-review-enforcement/raw-required-status-checks.json
+40  docs/12-testing/ci-evidence/2026-09-28T064800Z-gov-002-live-protection-measurement/raw-branch-protection.json
+40  docs/12-testing/ci-evidence/2026-09-28T080000Z-m6-19b-access-review-baseline/raw-branch-protection.json
+41  docs/12-testing/ci-evidence/2026-10-14T050500Z-clm-0552-bot-runtime-db-integration/raw-branch-protection.json
+0  docs/12-testing/ci-evidence/2026-10-14T144500Z-clm-0558-clm-0555-post-merge-verification/raw-branch-protection.json
+41  docs/12-testing/ci-evidence/2026-10-17T064500Z-clm-0586-gate-status-and-protection-evidence/protection-after.json
+41  docs/12-testing/ci-evidence/2026-10-17T064500Z-clm-0586-gate-status-and-protection-evidence/protection-before.json
+41  docs/12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/raw/branch-protection-main.json
+41  live API 2026-10-22T00:48:58Z (session read)  — identical sorted list
+41  live API 2026-10-22T01:21:42Z (session read)  — identical sorted list
+41  live API 2026-10-22T09:13Z (this audit)
+# '44' appears only as prose in CLM-0658 raw/chain-verdicts.txt (written by the agent). No raw API read in the session or the repo returns 44. Verdict: transcription error, not a protection change.

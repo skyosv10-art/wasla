@@ -1,0 +1,41 @@
+test	success	2min54s
+exit-gate-e2e (order, @wasla/order-e2e, wasla_order_e2e, ORDER_DATABASE_URL)	success	0min45s
+exit-gate-e2e (billing, @wasla/billing-e2e, wasla_billing_e2e, DATABASE_URL)	success	0min40s
+exit-gate-e2e (channel, @wasla/channel-e2e, wasla_channel_e2e, DATABASE_URL)	success	0min43s
+governance-guard	success	11min55s
+exit-gate-e2e (marketplace, @wasla/marketplace-e2e, wasla_marketplace_e2e, DATABASE_URL)	success	0min34s
+exit-gate-e2e (subscription, @wasla/subscription-e2e, wasla_subscription_e2e, DATABASE_URL)	success	0min30s
+verify	success	8min11s
+exit-gate-e2e (partners, @wasla/partners-e2e, wasla_partners_e2e, DATABASE_URL)	success	0min39s
+exit-gate-e2e (driver, @wasla/driver-e2e, wasla_driver_e2e, DRIVER_DATABASE_URL)	success	0min53s
+admin-portal-e2e	success	0min55s
+typecheck	success	2min51s
+db-integration-shared	success	2min16s
+exit-gate-e2e (negotiation, @wasla/negotiation-e2e, wasla_negotiation_e2e, NEGOTIATION_DATABASE_URL)	success	0min37s
+driver-mini-app-e2e	success	0min56s
+exit-gate-e2e (delivery, @wasla/delivery-e2e, wasla_delivery_e2e, DATABASE_URL)	success	0min40s
+db-integration (reputation, @wasla/reputation-service, wasla_reputation_test)	success	0min33s
+exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)	success	0min39s
+exit-gate-e2e (customer, @wasla/customer-e2e, wasla_customer_e2e, CUSTOMER_DATABASE_URL)	success	0min37s
+db-integration (geography, @wasla/geography-service, wasla_geo_test)	success	0min43s
+db-integration (channel, @wasla/channel-postgres, wasla_channel_test)	success	0min39s
+db-integration (subscriptions, @wasla/subscriptions-service, wasla_subscriptions_test)	success	0min38s
+db-integration (customer, @wasla/customers-service, wasla_customer_test)	success	0min37s
+db-integration (delivery, @wasla/delivery-service, wasla_delivery_test)	success	1min0s
+db-integration (matching, @wasla/matching-service, wasla_matching_test)	success	0min37s
+db-integration (drivers, @wasla/drivers-service, wasla_drivers_test)	success	0min42s
+db-integration (service-auth, @wasla/service-auth, wasla_replay_test)	success	0min30s
+db-integration (dispatch, @wasla/dispatch-service, wasla_dispatch_test)	success	0min38s
+db-integration (bot-runtime, @wasla/bot-runtime, wasla_bot_runtime_test)	success	0min35s
+repo-structure	success	0min9s
+doc-coverage	success	0min10s
+image-supply-chain	success	1min19s
+db-integration (partners, @wasla/partners-service, wasla_partners_test)	success	0min40s
+exit-gate-e2e (dispatch, @wasla/dispatch-e2e, wasla_dispatch_e2e, DISPATCH_DATABASE_URL)	success	0min40s
+db-integration (billing, @wasla/billing-service, wasla_billing_test)	success	0min30s
+db-integration (negotiations, @wasla/negotiations-service, wasla_negotiations_test)	success	0min55s
+db-integration (search, @wasla/search-service, wasla_search_test)	success	0min59s
+db-integration (marketplace, @wasla/marketplace-service, wasla_marketplace_test)	success	0min50s
+db-integration (order, @wasla/orders-service, wasla_orders_test)	success	0min39s
+db-integration (identity, @wasla/identity-service, wasla_test)	success	0min37s
+customer-mini-app-e2e	success	0min55s

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# validate-ci-mandatory.sh — «CI مانعٌ لا مُجمِّل»: أربعةُ أبوابٍ. (M0-04)
+# validate-ci-mandatory.sh — «CI مانعٌ لا مُجمِّل»: خمسةُ أبوابٍ. (M0-04)
 #
 # ── ما يحرس ولماذا كلُّ بابٍ بابٌ ──────────────────────────────────────
 # 1) **مدخلٌ واحدٌ مستدعىً:** `.gitlab-ci.yml` يستدعي `scripts/verify.sh` في وظيفةٍ
@@ -15,6 +15,11 @@
 #    من `scripts/verify.sh` مباشرةً أو عبرَ سلسلةِ استدعاءٍ، إلّا ما يُعلَن في
 #    كتلةِ §5 من الوثيقة. العيبُ المقيسُ: `find-existing-work.sh` لم تستدعِه
 #    وظيفةُ CI واحدةٌ.
+# 5) **مهلةٌ صريحةٌ لكلِّ وظيفةٍ حيّة:** كلُّ وظيفةٍ في `ci.yml` يجب أن تحملَ
+#    `timeout-minutes` صريحاً موجباً. الواقعةُ المقيسةُ (2026-09-23 · RISK-0052):
+#    تشغيلٌ على main احتُجزت مجموعةُ التزامنِ الخاصةُ به لأنّ وظيفةً علِقت ولا
+#    مهلةَ صريحةً تحدُّ احتجازها — فبقيت على مهلةِ GitHub الافتراضيّةِ (360
+#    دقيقةً). والبابُ يُقيسُ الحدَّ قبلَ أن يُفتقرَ إليه.
 #
 # ── ولمَ صارَ يقرأ مصدرَين (M0-22C) ──────────────────────────────────────
 # كانَ يقرأ `.gitlab-ci.yml` **وحدَه**، و`.gitlab-ci.yml` لا يجري منذ 2026-08-25.
@@ -121,11 +126,13 @@ for name, job in jobs.items():
         masks.append("continue-on-error-fi-khutwa")
     if job.get("if") is not None:
         masks.append("if-shartiyy")
-    print("%s|%s|%s|%s" % (
+    tm = job.get("timeout-minutes")
+    print("%s|%s|%s|%s|%s" % (
         name,
         "true" if runs_verify else "false",
         "true" if masks else "false",
         ",".join(masks),
+        "none" if tm is None else str(tm),
     ))
 PY
 )" || { printf '%s✗ لم أقرأ وظائفَ %s — الملفُ الحيُّ لا يُقاس%s\n' "$RED" "$GH_FILE" "$RST"; exit 1; }
@@ -154,7 +161,7 @@ else
 fi
 
 GH_VERIFY_OK=false
-while IFS='|' read -r gname gver gmask greason; do
+while IFS='|' read -r gname gver gmask greason gtm; do
   [[ -z "$gname" ]] && continue
   [[ "$gver" == "true" ]] || continue
   if [[ "$gmask" == "true" ]]; then
@@ -201,7 +208,7 @@ while IFS= read -r j; do
   fi
 done <<< "$AF_JOBS"
 
-while IFS='|' read -r gname gver gmask greason; do
+while IFS='|' read -r gname gver gmask greason gtm; do
   [[ -z "$gname" ]] && continue
   [[ "$gmask" == "true" ]] || continue
   if ! grep -Fxq "$gname" <<< "$ALLOWED_FAILING"; then
@@ -234,6 +241,19 @@ for g in scripts/checks/*.sh; do
   PROBLEMS+=("البابُ 4: الحارسُ «$g» لا يُوصَل إليه من $VERIFY ولا هو مُعلَنٌ في $DOC §5.")
 done
 
+# ── البابُ 5: مهلةٌ صريحةٌ لكلِّ وظيفةٍ في الملفِّ الحيِّ (RISK-0052) ────────
+# يُلزِمُ كلَّ وظيفةٍ في `ci.yml` بـ`timeout-minutes` صريحٍ موجبٍ، ويُسمّي من تخلفُ
+# عنه. لا يُقاسُ على `.gitlab-ci.yml` (متوقِّفٌ منذ 2026-08-25) ولا يُدّعى أنّه
+# يحصرَ انتظارَ الطابورِ — فالمهلةُ تقيسُ التنفيذَ بعدَ الالتقاطِ لا الانتظارَ قبله.
+while IFS='|' read -r gname gver gmask greason gtm; do
+  [[ -z "$gname" ]] && continue
+  if [[ "$gtm" == "none" ]]; then
+    PROBLEMS+=("البابُ 5 ($GH_FILE): الوظيفةُ «$gname» بلا timeout-minutes صريحٍ — تعملُ على مهلةِ 360 دقيقةً الافتراضيّةِ، ووظيفةٌ عالقةٌ تحتجزُ مجموعةَ التزامنِ (RISK-0052).")
+  elif ! [[ "$gtm" =~ ^[1-9][0-9]*$ ]]; then
+    PROBLEMS+=("البابُ 5 ($GH_FILE): الوظيفةُ «$gname» مهلّتُها «$gtm» ليست حدًّا صحيحاً.")
+  fi
+done <<< "$GH_JOBS"
+
 # ── الحصاد ──────────────────────────────────────────────────────────────
 if ((${#PROBLEMS[@]})); then
   printf '%s✗ CI ليس مانعاً — %d مشكلةً:%s\n' "$RED" "${#PROBLEMS[@]}" "$RST"
@@ -245,7 +265,7 @@ fi
 N_AF="$(grep -c . <<< "$ALLOWED_FAILING" || true)"
 N_NG="$(grep -c . <<< "$NON_GATES" || true)"
 N_GH="$(grep -c . <<< "$GH_JOBS" || true)"
-printf '%s✓ CI مانعٌ في إعدادِه:%s مصدرانِ مقيسانِ (%s + %s بـ%s وظيفةٍ) · مدخلٌ موحَّدٌ مُستدعَى في كلَيهما · لا كتلةَ إلزامٍ مضمَّنةً · %s استثناءَ إخفاقٍ مُعلَناً · %s سكربتَ استكشافٍ مُعلَناً.\n' \
+printf '%s✓ CI مانعٌ في إعدادِه:%s مصدرانِ مقيسانِ (%s + %s بـ%s وظيفةٍ) · مدخلٌ موحَّدٌ مُستدعَى في كلَيهما · لا كتلةَ إلزامٍ مضمَّنةً · %s استثناءَ إخفاقٍ مُعلَناً · %s سكربتَ استكشافٍ مُعلَناً · مهلةٌ صريحةٌ لكلِّ وظيفةٍ حيّةٍ (البابُ 5 · RISK-0052).\n' \
   "$GRN" "$RST" "$CI_FILE" "$GH_FILE" "$N_GH" "$N_AF" "$N_NG"
 printf '%s  ولا يشمل هذا رفضَ الدمجِ عندَ إخفاقِ الخطّ (only_allow_merge_if_pipeline_succeeds) — %s §7.%s\n' \
   "$DIM" "$DOC" "$RST"

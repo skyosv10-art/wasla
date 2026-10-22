@@ -1,0 +1,76 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 39a272f..4fc8218 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -64,6 +64,7 @@ jobs:
+   repo-structure:
+     name: repo-structure
+     runs-on: ubuntu-24.04
++    timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@v4
+         with:
+@@ -88,6 +89,7 @@ jobs:
+   doc-coverage:
+     name: doc-coverage
+     runs-on: ubuntu-24.04
++    timeout-minutes: 15
+     steps:
+       - uses: actions/checkout@v4
+         with:
+@@ -113,6 +115,7 @@ jobs:
+   governance-guard:
+     name: governance-guard
+     runs-on: ubuntu-24.04
++    timeout-minutes: 30
+     # (CLM-0392) الفحصُ 23 يقرأُ فروعَ المنصّةِ وطلباتِ الدمجِ المفتوحةَ. وبلا رمزٍ
+     # كانَ يتخطّى في كلِّ تشغيلٍ — فصارَ تعذُّرُ القراءةِ في CI إخفاقاً، ويُعطى هنا
+     # **أقلَّ صلاحيّةِ قراءةٍ** تلزمُهُ لا أكثر: إعطاءُ الفحصِ بيئتَهُ لا تعطيلُهُ.
+@@ -195,6 +198,7 @@ jobs:
+   verify:
+     name: verify
+     runs-on: ubuntu-24.04
++    timeout-minutes: 30
+     permissions:
+       contents: read
+       pull-requests: read
+@@ -265,6 +269,7 @@ jobs:
+   typecheck:
+     name: typecheck
+     runs-on: ubuntu-24.04
++    timeout-minutes: 20
+     steps:
+       - uses: actions/checkout@v4
+         with:
+@@ -306,6 +311,7 @@ jobs:
+   test:
+     name: test
+     runs-on: ubuntu-24.04
++    timeout-minutes: 20
+     steps:
+       - uses: actions/checkout@v4
+         with:
+@@ -369,6 +375,7 @@ jobs:
+   db-integration:
+     name: db-integration
+     runs-on: ubuntu-24.04
++    timeout-minutes: 20
+     container: node:20-alpine
+     strategy:
+       fail-fast: false
+@@ -534,6 +541,7 @@ jobs:
+   db-integration-shared:
+     name: db-integration-shared
+     runs-on: ubuntu-24.04
++    timeout-minutes: 20
+     container: node:20-alpine
+     services:
+       postgres:
+@@ -592,6 +600,7 @@ jobs:
+   exit-gate-e2e:
+     name: exit-gate-e2e
+     runs-on: ubuntu-24.04
++    timeout-minutes: 20
+     container: node:20-alpine
+     strategy:
+       fail-fast: false

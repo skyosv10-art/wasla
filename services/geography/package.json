@@ -40,6 +40,6 @@
     "@wasla/identity-service": "workspace:*",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.12"
   }
 }

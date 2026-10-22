@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "vitest": "^2.1.0",
+    "vitest": "^4.1.12",
     "@types/pg": "^8.23.1",
     "tsx": "^4.23.12",
     "drizzle-kit": "^0.31.10"

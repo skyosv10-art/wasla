@@ -20,6 +20,6 @@
     "@wasla/matching-service": "workspace:*",
     "@wasla/orders-service": "workspace:*",
     "pg": "^8.23.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.12"
   }
 }

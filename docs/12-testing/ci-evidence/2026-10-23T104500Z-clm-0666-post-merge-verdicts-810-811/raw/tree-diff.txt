@@ -1,0 +1,11 @@
+# فرقُ الشجرةِ بينَ رأسِ كلِّ PR والتزامِ دمجِهِ (squash ⇒ يجبُ أن يكونَ فارغًا) · 2026-10-23
+
+== git diff --stat 1611cb5c35d1477dda4e2a631ad60793ecdac6b0 ea98c4c86b264fde04ba84879cfa350dbef37c9d ==
+(فارغٌ — لا فرقَ)
+
+== git diff --stat 40e6b973d3ad9cc48ea685af5a26fdc027194c42 57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b ==
+(فارغٌ — لا فرقَ)
+
+== سيرُ WASLA CI وRoadmap freshness على رأسَي الفروعِ (مقيسٌ عبر واجهةِ التشغيلاتِ) ==
+1611cb5c: WASLA CI 39900519162 success · Roadmap freshness 39900515391 success
+40e6b973: WASLA CI 39888882573 success · Roadmap freshness 39888878206 success

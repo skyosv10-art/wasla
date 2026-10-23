@@ -1,0 +1,34 @@
+# أحكامُ ما بعدَ الدمج — مقروءةٌ من واجهةِ GitHub · 2026-10-23
+
+== PR 811 (مدموج) — head/base/merge ==
+{"base":"1d1d99f293190ae6a5b94bf50926a71a383e93fb","head":"40e6b973d3ad9cc48ea685af5a26fdc027194c42","merge_commit_sha":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","merged":true,"merged_at":"2026-10-23T03:50:32Z","state":"closed"}
+
+== PR 810 (مدموج) — head/base/merge ==
+{"base":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","head":"1611cb5c35d1477dda4e2a631ad60793ecdac6b0","merge_commit_sha":"ea98c4c86b264fde04ba84879cfa350dbef37c9d","merged":true,"merged_at":"2026-10-23T10:28:42Z","state":"closed"}
+
+== مراجعات #810 ==
+[5622590579,"xuuux-voox","APPROVED","2026-10-23T00:36:19Z","0623669288efe38d21ee54ec9077448c42b88a30"]
+[5626881905,"xuuux-voox","APPROVED","2026-10-23T10:16:19Z","1611cb5c35d1477dda4e2a631ad60793ecdac6b0"]
+
+== مراجعات #811 ==
+[5623576680,"xuuux-voox","APPROVED","2026-10-23T03:33:19Z","40e6b973d3ad9cc48ea685af5a26fdc027194c42"]
+
+== runs على main (آخر 6) ==
+[{"conclusion":"success","createdAt":"2026-10-23T10:28:45Z","databaseId":39939381402,"event":"push","headSha":"ea98c4c86b264fde04ba84879cfa350dbef37c9d","status":"completed","workflowName":"Roadmap freshness"},{"conclusion":"","createdAt":"2026-10-23T10:28:45Z","databaseId":39939382125,"event":"push","headSha":"ea98c4c86b264fde04ba84879cfa350dbef37c9d","status":"in_progress","workflowName":"WASLA CI"},{"conclusion":"success","createdAt":"2026-10-23T08:28:23Z","databaseId":39924872888,"event":"schedule","headSha":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","status":"completed","workflowName":"Merged branch cleanup"},{"conclusion":"success","createdAt":"2026-10-23T04:57:56Z","databaseId":39903140062,"event":"schedule","headSha":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","status":"completed","workflowName":"Service health (14 services, read-only)"},{"conclusion":"success","createdAt":"2026-10-23T03:50:34Z","databaseId":39897148299,"event":"push","headSha":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","status":"completed","workflowName":"WASLA CI"},{"conclusion":"success","createdAt":"2026-10-23T03:50:34Z","databaseId":39897148346,"event":"push","headSha":"57b8bd04742dca0ad8e54b1f2578f0f3cdf7424b","status":"completed","workflowName":"Roadmap freshness"}]
+
+== رأس main ==
+ea98c4c86b264fde04ba84879cfa350dbef37c9d
+
+== سيرُ WASLA CI وRoadmap freshness على رأسَي الفروعِ (مقيسٌ 2026-10-23 عبر واجهةِ التشغيلاتِ) ==
+1611cb5c35d1477dda4e2a631ad60793ecdac6b0: WASLA CI 39900519162 success (2026-10-23T04:28:37Z) · Roadmap freshness 39900515391 success (2026-10-23T04:28:34Z)
+40e6b973d3ad9cc48ea685af5a26fdc027194c42: WASLA CI 39888882573 success (2026-10-23T02:18:50Z) · Roadmap freshness 39888878206 success (2026-10-23T02:18:46Z)
+
+== خرجُ سكربتِ الدمجِ المعتمدِ لـ#810 (2026-10-23T10:28Z) ==
+OK pr=810 head=1611cb5c35d1477dda4e2a631ad60793ecdac6b0 policy=ADR-071-approval-not-required changes_requested_on_head=no checks: success=42 skipped_or_neutral=0 failed=0 pending=0
+(ثمّ: gh pr merge 810 --squash --match-head-commit 1611cb5c35d1477dda4e2a631ad60793ecdac6b0 — بلا --admin)
+
+== عددُ check-runs على رأسَي الفروعِ (مقيسٌ) ==
+1611cb5c: 43 · 40e6b973: 43
+
+== الحكمُ النهائيُ على main بعدَ دمجِ #810 (مقيسٌ 2026-10-23T10:46Z) ==
+WASLA CI 39939382125: success · Roadmap freshness 39939381402: success · الرأس ea98c4c86b264fde04ba84879cfa350dbef37c9d

@@ -757,6 +757,8 @@ const ownerScoped = (...scopes: string[]) => ({
 | `packages/telegram-adapter/src/bot-api-client.ts` | حدٌّ خارجيٌّ إلى Telegram Bot API بنموذجِ مصادقةِ توكنِ البوتِ (ADR-007 §3) — ليسَ حدًّا داخليًا بينَ الخدماتِ ولا يَنبغي أن يحملَ موقِّعَها — **G-S9.19 · CLM-0654** |
 | `packages/tick-scheduler/src/main.ts` | جذرُ تركيبٍ: يمرِّرُ `globalThis.fetch` إلى العميلِ الموقَّعِ http-tick.ts المُحصَى في §2.5 ولا يَندُبُ حدًّا بنفسِهِ — **G-S9.19 · CLM-0654** |
 | `packages/tick-scheduler/src/scheduler.ts` | إعلانُ منفذِ حقنِ fetch (`readonly fetch: typeof fetch`) وتمريرُه موقَّعاً إلى العميلِ المُحصَى http-tick.ts عبر postTick — لا يَندُبُ حدّاً بنفسِهِ — **G-S9.19 · CLM-0654** |
+| `packages/customer-e2e/src/stub-order-engine.ts` | خادمٌ واردٌ بديلٌ لمحرّكِ الطلباتِ داخلَ بوّابةِ خروجِ العميلِ (`createServer` من `node:http` · لا نداءَ صادرٍ: لا `request(` ولا `get(` — مقيسٌ 2026-10-23) — يُحصى منذُ CLM-0667 لأنّ النمطَ يرى استيرادَ `node:http` لا اتجاهَه. |
+| `services/observability/src/index.ts` | خادمُ جامعِ المراقبةِ الواردُ (`http.createServer` · لا نداءَ صادرٍ — مقيسٌ 2026-10-23)؛ الكشطُ الصادرُ نفسُهُ في `services/observability/src/scraper.ts` مُعلَنٌ أعلاهُ بسببِهِ — يُحصى منذُ CLM-0667. |
 
 <!-- fetch-exceptions:end -->
 

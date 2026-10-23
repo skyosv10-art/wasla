@@ -1,0 +1,26 @@
+# CLM-0667 — قياسُ أشكالِ الهروبِ الثمانيةِ مقابلَ نمطِ البابِ 7 (2026-10-23 · main 2bd8cdbf)
+# OLD = نمطُ CLM-0654 على main · NEW = نمطُ هذا الفرعِ. e/f مكتباتُ طرفٍ ثالثٍ يقفلُها البابُ 6 عبرَ package.json (لا يُدَّعى للبابِ 7).
+--- a.ts · OLD=ESCAPES · NEW=SEEN
+const { fetch: f } = globalThis;
+await f(url);
+--- b.ts · OLD=ESCAPES · NEW=SEEN
+const g = globalThis["fetch"];
+await g(url);
+--- c.ts · OLD=ESCAPES · NEW=SEEN
+import { request } from "node:http";
+request("http://wasla-search:3000/x");
+--- d.ts · OLD=ESCAPES · NEW=SEEN
+import https from "node:https";
+https.get(url);
+--- e.ts · OLD=ESCAPES · NEW=ESCAPES
+import { request } from "undici";
+await request(url);
+--- f.ts · OLD=ESCAPES · NEW=ESCAPES
+import axios from "axios";
+await axios.get(url);
+--- g.ts · OLD=SEEN · NEW=SEEN
+const { fetch } = globalThis;
+await fetch(url);
+--- h.ts · OLD=ESCAPES · NEW=SEEN
+const h = Reflect.get(globalThis, "fetch");
+await h(url);

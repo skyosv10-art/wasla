@@ -2509,6 +2509,66 @@ S_FE_CMT="$(_sac_root fe_comment_only)"
 printf '// TODO: replace with fetch("http://x/marketplace/products") once signed\nexport const noop = () => undefined;\n' \
   > "$S_FE_CMT/services/matching/src/infrastructure/catalog-read-port.ts"
 t "ذكرُ fetch( في تعليقٍ وحدَهُ يُحصى ويُسقِط بلا استثناءٍ (حدٌّ مُعلَن: لا AST)" fail _sac "$S_FE_CMT"
+# ── البابُ 7 (G-S9.19 · CLM-0667): عملاءُ HTTP غيرُ المباشرينَ ──────────────────
+# قيسَ 2026-10-23 على نمطِ CLM-0654: خمسةُ أشكالٍ تُنادي حدّاً داخليّاً ولا يراها
+# البابُ 7 — وحداتُ Node المدمجةُ (لا تمرُّ بـpackage.json فلا يقفلُها البابُ 8)،
+# والتفكيكُ بإعادةِ التسميةِ، والوصولُ بالأقواسِ، وReflect.get. كلُّ جذرٍ هنا بلا
+# `fetch(` ولا `= fetch` ولا `globalThis.fetch`: إن مرَّ الحارسُ فعيبُهُ.
+_sac_g7() { # _sac_g7 <tag> <content> → جذرٌ فيهِ catalog-read-port.ts بالمحتوى
+  local R; R="$(_sac_root "$1")"
+  printf '%b' "$2" > "$R/services/matching/src/infrastructure/catalog-read-port.ts"
+  printf '%s' "$R"
+}
+S_G7_HTTP="$(_sac_g7 g7_node_http 'import { request } from "node:http";\nexport const call = () => request("http://wasla-marketplace:3000/products");\n')"
+t "وحدةُ node:http المدمجةُ بلا ذكرٍ ولا استثناءٍ تُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_HTTP"
+S_G7_HTTPS="$(_sac_g7 g7_https_require 'const https = require("https");\nexport const call = () => https.get("https://x/marketplace/products");\n')"
+t "require(\"https\") بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_HTTPS"
+S_G7_H2="$(_sac_g7 g7_http2_dynamic 'export const call = async () => (await import("node:http2")).connect("http://x");\n')"
+t "استيرادُ node:http2 الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_H2"
+S_G7_DESTR="$(_sac_g7 g7_destructure 'const { fetch: send } = globalThis;\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "التفكيكُ بإعادةِ التسميةِ ({ fetch: send } = globalThis) يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_DESTR"
+S_G7_BRACKET="$(_sac_g7 g7_bracket 'const send = globalThis["fetch"];\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "الوصولُ بالأقواسِ (globalThis[\"fetch\"]) يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_BRACKET"
+S_G7_REFLECT="$(_sac_g7 g7_reflect 'const send = Reflect.get(globalThis, "fetch");\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "Reflect.get(globalThis, \"fetch\") يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_REFLECT"
+
+# سالبةٌ: الخادمُ الواردُ (createServer) يُحصى لأنّ النمطَ يرى الاستيرادَ لا الاتجاهَ،
+# فيمرُّ بإعلانٍ صادقٍ بسببِهِ — الحارسُ يطلبُ إعلاناً لا صمتاً.
+S_G7_SRV="$(_sac_g7 g7_server_declared 'import { createServer } from "node:http";\nexport const srv = createServer((_q, r) => r.end("ok"));\n')"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/catalog-read-port.ts` \| خادمٌ واردٌ صناعيٌّ (createServer) بلا نداءٍ صادرٍ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_G7_SRV/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+# الإعلانُ كُتِبَ فعلاً — وإلا مرَّت السالبةُ فارغةً (كما مرَّت في المرحلةِ الحمراءِ
+# لأنّ النمطَ القديمَ لم يرَ الملفَّ أصلاً): لا سالبةَ تمرُّ لسببٍ غيرِ سببِها.
+t "إعلانُ الخادمِ الواردِ مكتوبٌ في كتلةِ الاستثناءاتِ (حارسُ الحالةِ السالبةِ · CLM-0667)" pass \
+  grep -qF '| `services/matching/src/infrastructure/catalog-read-port.ts` | خادمٌ واردٌ صناعيٌّ' "$S_G7_SRV/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+# والخادمُ نفسُهُ بلا إعلانٍ يُسقِطُ: الاستثناءُ هوَ سببُ المرورِ لا شيءٌ آخرُ
+S_G7_SRV_UNDECL="$(_sac_g7 g7_server_undeclared 'import { createServer } from "node:http";\nexport const srv = createServer((_q, r) => r.end("ok"));\n')"
+t "خادمُ node:http الواردُ بلا إعلانٍ يُسقِط — الإعلانُ هوَ سببُ المرورِ (CLM-0667)" fail _sac "$S_G7_SRV_UNDECL"
+t "خادمُ node:http الواردُ المُعلَنُ استثناءً بسببِهِ يمرّ (G-S9.19 · CLM-0667)" pass _sac "$S_G7_SRV"
+# سالبةٌ: كلمةُ fetch في نصٍّ أو اسمٍ لا يُنادي (مثلُ `prefetch:` أو `"fetched"`)
+# لا تُحصى — الأشكالُ الجديدةُ مُقيَّدةٌ بموضعِ القيمةِ لا بأيِّ ذكرٍ.
+S_G7_WORDS="$(_sac_g7 g7_words 'export const opts = { prefetch: true, label: "fetched" };\nexport const f = (o: { fetchedAt: string }) => o.fetchedAt;\n')"
+t "كلماتٌ تحوي fetch بلا إشارةِ قيمةٍ (prefetch: · \"fetched\") لا تُحصى فتمرّ (G-S9.19 · CLM-0667)" pass _sac "$S_G7_WORDS"
+
+# الطفرةُ الحاكمةُ: إعادةُ النمطِ إلى صيغةِ CLM-0654 تُعيدُ العمى فتمرُّ الأشكالُ
+# الخمسةُ — برهانٌ بأنّ إسقاطَها أعلاهُ سببُهُ التوسعةُ وحدَها (تحكيمٌ سلبيٌّ).
+_sac_g7_revert() { # يُعيدُ RAW_PATTERN إلى صيغةِ CLM-0654 حرفيّاً
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("RAW_PATTERN="); j=s.index(chr(10),i); old=sys.argv[2]; p.write_text(s[:i]+"RAW_PATTERN="+chr(39)+old+chr(39)+s[j:])' "$1" '\bfetch\s*\(|\bfetch[A-Z][A-Za-z0-9_]*\s*\(|\b[a-z]+Fetch[A-Za-z0-9_]*\s*\(|\bglobalThis\.fetch\b|=\s*fetch\b|\btypeof\s+fetch\b|\(\s*fetch\s*[,)]|,\s*fetch\s*[,)]|\.fetch\b'
+}
+for tag in node_http https_require http2_dynamic destructure bracket reflect; do
+  case $tag in
+    node_http) c='import { request } from "node:http";\nexport const call = () => request("http://x/products");\n' ;;
+    https_require) c='const https = require("https");\nexport const call = () => https.get("https://x/products");\n' ;;
+    http2_dynamic) c='export const call = async () => (await import("node:http2")).connect("http://x");\n' ;;
+    destructure) c='const { fetch: send } = globalThis;\nexport const call = () => send("http://x/products");\n' ;;
+    bracket) c='const send = globalThis["fetch"];\nexport const call = () => send("http://x/products");\n' ;;
+    reflect) c='const send = Reflect.get(globalThis, "fetch");\nexport const call = () => send("http://x/products");\n' ;;
+  esac
+  S_G7_BLIND="$(_sac_g7 "g7_blind_$tag" "$c")"
+  _sac_g7_revert "$S_G7_BLIND"
+  t "نمطُ CLM-0654 يُمرّرُ الشكلَ $tag — العمى المُعادُ يُقاسُ (CLM-0667)" pass _sac "$S_G7_BLIND"
+done
+
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،

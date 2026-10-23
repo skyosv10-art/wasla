@@ -1,0 +1,41 @@
+# I-13 يسقطُ مع fastify 5.12.7 — من التحقّقِ الانتقاليِّ على 4bcf68c1 (2026-10-23T01:46Z) ثمّ إعادةُ إنتاجٍ معزولة
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/clm-0519-identity-sessions.e2e.test.ts > بوابةُ CLM-0519 · مُنفِّذُ ذاكرةٍ (الطريقُ والحكمُ الزمنيُّ) > I-13 السجلُّ نظيفٌ من الأسرارِ
+TypeError: Converting circular structure to JSON
+    --> starting at object with constructor 'Response'
+    |     property 'socket' -> object with constructor 'Writable'
+    --- property '_httpMessage' closes the circle
+ ❯ src/__tests__/clm-0519-identity-sessions.e2e.test.ts:707:30
+    705|         expect(revoked.statusCode).toBe(200);
+    706|
+    707|         const logText = JSON.stringify(logs);
+       |                              ^
+    708|         // لا رمزَ جلسةٍ صريحاً في السجلِّ.
+    709|         expect(logText).not.toContain(issuedBody.token);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 26 passed | 25 skipped (52)
+
+# السبب: diff lib/route.js بينَ fastify 5.12.5 و5.12.7 (npm pack)
+--- /tmp/fdiff/5.12.5/package/lib/route.js	1985-10-26 08:15:00.000000000 +0000
++++ /tmp/fdiff/5.12.7/package/lib/route.js	1985-10-26 08:15:00.000000000 +0000
+@@ -467,8 +467,12 @@
+       // the child logger creation altogether
+       childLogger = logger
+     } else {
+-      const loggerOpts = {
+-        level: context.logLevel
++      const loggerOpts = {}
++
++      // An empty level means "inherit". Passing it would make pino treat it
++      // as a level change and rebuild every log method of each request child.
++      if (context.logLevel) {
++        loggerOpts.level = context.logLevel
+       }
+ 
+       if (context.logSerializers) {

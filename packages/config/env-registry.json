@@ -101,6 +101,25 @@
       ]
     },
     {
+      "name": "CUSTOMERS_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ العملاء كما يناديها حدُّ قناةِ العميلِ في التوجيهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/edge.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "وجهةُ توجيهِ حدِّ القناةِ — لا يُستعملُ حتى فتحِ مسارٍ من قائمةِ السماحِ."
+    },
+    {
       "name": "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",
       "type": "string",
       "required": "optional",
@@ -778,6 +797,10 @@
         {
           "file": "services/customers/src/http/server.ts",
           "mode": "direct"
+        },
+        {
+          "file": "bots/driver-bot/src/edge.ts",
+          "mode": "bag"
         }
       ]
     },
@@ -799,6 +822,25 @@
         }
       ],
       "note_ar": "قيمةٌ غيرُ رقميّةٍ كانت تُنتِجُ `NaN` صامتاً قبلَ M2-04 (`RISK-0046`) — الآنَ تُسقِطُ الإقلاعَ باسمِ المتغيّرِ."
+    },
+    {
+      "name": "DRIVERS_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ السائقين كما يناديها حدُّ قناةِ السائقِ في التوجيهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/driver-bot/src/edge.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "وجهةُ توجيهِ حدِّ القناةِ — لا يُستعملُ حتى فتحِ مسارٍ من قائمةِ السماحِ."
     },
     {
       "name": "DRIVER_BOT_DEEP_LINK_TEMPLATE",
@@ -1047,6 +1089,10 @@
         },
         {
           "file": "services/drivers/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "bots/customer-bot/src/edge.ts",
           "mode": "bag"
         }
       ],
@@ -1321,6 +1367,10 @@
         {
           "file": "services/delivery/src/http/server.ts",
           "mode": "direct"
+        },
+        {
+          "file": "bots/customer-bot/src/edge.ts",
+          "mode": "bag"
         }
       ]
     },
@@ -1470,6 +1520,10 @@
       "readers": [
         {
           "file": "services/negotiations/src/infrastructure/outbound-wiring.ts",
+          "mode": "bag"
+        },
+        {
+          "file": "bots/driver-bot/src/edge.ts",
           "mode": "bag"
         }
       ]
@@ -1817,6 +1871,44 @@
       "note_ar": "لا افتراضيَّ واحدٌ لهُ: كلُّ خدمةٍ تسقطُ إلى منفذِ عقدِها (`*_SERVICE_PORT`) عندَ غيابِهِ."
     },
     {
+      "name": "REPUTATION_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ السمعة كما يناديها حدُّ قناةِ العميلِ في التوجيهِ.",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/edge.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "وجهةُ توجيهِ حدِّ القناةِ — لا يُستعملُ حتى فتحِ مسارٍ من قائمةِ السماحِ."
+    },
+    {
+      "name": "SEARCH_SERVICE_URL",
+      "type": "http_url",
+      "required": "optional",
+      "default": null,
+      "secret": false,
+      "scopes": [
+        "runtime"
+      ],
+      "description_ar": "عنوانُ خدمةِ البحث كما يناديها حدُّ قناةِ العميلِ في التوجيهِ (G-S9.7).",
+      "owner_item": "M2-04",
+      "readers": [
+        {
+          "file": "bots/customer-bot/src/edge.ts",
+          "mode": "bag"
+        }
+      ],
+      "note_ar": "وجهةُ توجيهِ حدِّ القناةِ — لا يُستعملُ حتى فتحِ مسارٍ من قائمةِ السماحِ وقرارِ المنحِ."
+    },
+    {
       "name": "SUBSCRIPTION_SERVICE_HOST",
       "type": "string",
       "required": "optional",
@@ -1965,6 +2057,10 @@
         },
         {
           "file": "bots/driver-bot/src/edge.ts",
+          "mode": "direct"
+        },
+        {
+          "file": "bots/customer-bot/src/__tests__/edge-composition.test.ts",
           "mode": "direct"
         }
       ],

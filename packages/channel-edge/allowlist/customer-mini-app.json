@@ -13,11 +13,16 @@
       "path": "/customers/:waslaPublicId/profile",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:profile:read"],
+      "required_scopes": [
+        "customers:profile:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+        {
+          "file": "services/customers/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
       ]
     },
     {
@@ -25,11 +30,16 @@
       "path": "/customers/:waslaPublicId/profile",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:profile:write"],
+      "required_scopes": [
+        "customers:profile:write"
+      ],
       "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+        {
+          "file": "services/customers/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
       ]
     },
     {
@@ -37,11 +47,16 @@
       "path": "/customers/:waslaPublicId/places",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:place:read"],
+      "required_scopes": [
+        "customers:place:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "hides another customer's place behind a 404" }
+        {
+          "file": "services/customers/src/__tests__/saved-places.test.ts",
+          "case": "hides another customer's place behind a 404"
+        }
       ]
     },
     {
@@ -49,11 +64,16 @@
       "path": "/customers/:waslaPublicId/places",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:place:write"],
+      "required_scopes": [
+        "customers:place:write"
+      ],
       "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "rejects a reused key that carries a different payload" }
+        {
+          "file": "services/customers/src/__tests__/saved-places.test.ts",
+          "case": "rejects a reused key that carries a different payload"
+        }
       ]
     },
     {
@@ -61,11 +81,16 @@
       "path": "/customers/:waslaPublicId/places/:placeId",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:place:write"],
+      "required_scopes": [
+        "customers:place:write"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/saved-places.test.ts", "case": "removes a place and announces it" }
+        {
+          "file": "services/customers/src/__tests__/saved-places.test.ts",
+          "case": "removes a place and announces it"
+        }
       ]
     },
     {
@@ -73,23 +98,40 @@
       "path": "/customers/:waslaPublicId/order-requests",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:order-request:read"],
+      "required_scopes": [
+        "customers:order-request:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
-      ]
+        {
+          "file": "services/customers/src/__tests__/service-identity.test.ts",
+          "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)"
+        }
+      ],
+      "query": {
+        "allowed": [
+          "limit",
+          "status"
+        ],
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20 · ADR-069 §2.8): لا يُمرَّرُ إلا ما أذِنَتْ بهِ القائمةُ، وكلُّ معاملٍ آخرَ يُرَدُّ بـ400. التطبيقُ يرسلُ limit (فحصُ 24) وstatus مُقيَّسًا (فلترُ حالةِ الطلبِ في MyOrders — لا علاقةَ لهُ بحالةِ الإشرافِ E-20) والخدمةُ تقبلُ limit 1..50 وتتجاهلُ ما عدا ذلك."
+      }
     },
     {
       "method": "POST",
       "path": "/customers/:waslaPublicId/order-requests",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:order-request:write"],
+      "required_scopes": [
+        "customers:order-request:write"
+      ],
       "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+        {
+          "file": "services/customers/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
       ]
     },
     {
@@ -97,11 +139,16 @@
       "path": "/customers/:waslaPublicId/order-requests/preview",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:order-request:preview"],
+      "required_scopes": [
+        "customers:order-request:preview"
+      ],
       "accepts_body": true,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/service-identity.test.ts", "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)" }
+        {
+          "file": "services/customers/src/__tests__/service-identity.test.ts",
+          "case": "هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)"
+        }
       ]
     },
     {
@@ -109,11 +156,16 @@
       "path": "/reputation/scores/:subjectType/:subjectPublicId",
       "service": "reputation",
       "class": "O",
-      "required_scopes": ["reputation:score:read"],
+      "required_scopes": [
+        "reputation:score:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/reputation/src/__tests__/service-identity.test.ts", "case": "مُنتَفِعٌ يخالف :subjectPublicId → 404 لا 403 ولا 200 (ADR-009)" }
+        {
+          "file": "services/reputation/src/__tests__/service-identity.test.ts",
+          "case": "مُنتَفِعٌ يخالف :subjectPublicId → 404 لا 403 ولا 200 (ADR-009)"
+        }
       ]
     },
     {
@@ -121,33 +173,63 @@
       "path": "/search/products",
       "service": "search",
       "class": "P",
-      "required_scopes": ["search:products:read"],
+      "required_scopes": [
+        "search:products:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
-      "blocked_until": "E-20 + دليل «المنشور فقط» لم يُكتب"
+      "blocked_until": "E-20 + دليل «المنشور فقط» لم يُكتب",
+      "query": {
+        "allowed": [
+          "q",
+          "locale",
+          "category_slug",
+          "page",
+          "page_size",
+          "sort"
+        ],
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20 · ADR-069 §2.8): لا يُمرَّرُ إلا ما أذِنَتْ بهِ القائمةُ، وكلُّ معاملٍ آخرَ يُرَدُّ بـ400. عقدُ parseSearchRequest كاملًا (ADR-025 §6.6)."
+      }
     },
     {
       "method": "GET",
       "path": "/stores/:storeSlug/products",
       "service": "marketplace",
       "class": "P",
-      "required_scopes": ["marketplace:product:read"],
+      "required_scopes": [
+        "marketplace:product:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
-      "blocked_until": "E-20 (الحد يثبّت visible_only=true ويرفض state/moderation_state)"
+      "blocked_until": "E-20 (الحد يثبّت visible_only=true ويرفض state/moderation_state)",
+      "query": {
+        "allowed": [
+          "cursor",
+          "limit"
+        ],
+        "pinned": {
+          "visible_only": "true"
+        },
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20 · ADR-069 §2.8): لا يُمرَّرُ إلا ما أذِنَتْ بهِ القائمةُ، وكلُّ معاملٍ آخرَ يُرَدُّ بـ400. E-20: يرفضُ الحدُّ state/moderation_state ويثبّتُ visible_only=true (ADR-069 §2.8)."
+      }
     },
     {
       "method": "GET",
       "path": "/stores",
       "service": "marketplace",
       "class": "W",
-      "required_scopes": ["marketplace:store:read"],
+      "required_scopes": [
+        "marketplace:store:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts", "case": "GET /stores?owner_public_id lists without an assertion" }
+        {
+          "file": "services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts",
+          "case": "GET /stores?owner_public_id lists without an assertion"
+        }
       ],
       "blocked_until": "G-ENF(marketplace) — assertOwnerFilter لا يعمل في off"
     },
@@ -156,7 +238,9 @@
       "path": "/reputation/ratings",
       "service": "reputation",
       "class": "N",
-      "required_scopes": ["reputation:rating:read"],
+      "required_scopes": [
+        "reputation:rating:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [],
@@ -167,11 +251,16 @@
       "path": "/customers/:waslaPublicId/order-requests/:orderRequestId",
       "service": "customers",
       "class": "O",
-      "required_scopes": ["customers:order-request:read"],
+      "required_scopes": [
+        "customers:order-request:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/customers/src/__tests__/http/app.test.ts", "case": "returns one request and scopes it to its owner" }
+        {
+          "file": "services/customers/src/__tests__/http/app.test.ts",
+          "case": "returns one request and scopes it to its owner"
+        }
       ]
     },
     {
@@ -179,26 +268,53 @@
       "path": "/geo/zones/search",
       "service": "geography",
       "class": "P",
-      "required_scopes": ["geography:zone:read"],
+      "required_scopes": [
+        "geography:zone:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/geography/src/__tests__/zone-search.test.ts", "case": "returns only active zones — the validity rule customers applies to an order's zone_id" }
+        {
+          "file": "services/geography/src/__tests__/zone-search.test.ts",
+          "case": "returns only active zones — the validity rule customers applies to an order's zone_id"
+        }
       ],
-      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-075 D3)؛ الجوابُ مقصورٌ على النشطِ في الخدمةِ ولا معاملَ يوسّعُه"
+      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-075 D3)؛ الجوابُ مقصورٌ على النشطِ في الخدمةِ ولا معاملَ يوسّعُه",
+      "query": {
+        "allowed": [
+          "q",
+          "limit",
+          "locale"
+        ],
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20 · ADR-069 §2.8): لا يُمرَّرُ إلا ما أذِنَتْ بهِ القائمةُ، وكلُّ معاملٍ آخرَ يُرَدُّ بـ400. عقدُ بحثِ المناطقِ الجغرافيّةِ."
+      }
     },
     {
       "method": "GET",
       "path": "/search/stores",
       "service": "search",
       "class": "P",
-      "required_scopes": ["search:stores:read"],
+      "required_scopes": [
+        "search:stores:read"
+      ],
       "accepts_body": false,
       "production_open": false,
       "evidence_tests": [
-        { "file": "services/search/src/__tests__/store-search.test.ts", "case": "undeclared keys are rejected by name, never ignored" }
+        {
+          "file": "services/search/src/__tests__/store-search.test.ts",
+          "case": "undeclared keys are rejected by name, never ignored"
+        }
       ],
-      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-025 §6.7 D3)؛ ويشترطُ قبلَه برهانَ E-20 الخاصَّ بالمتاجرِ (ADR-025 §6.5 · ADR-025 §6.7 D4): الحارسُ الحاليُّ لا يعبّرُ عن «متجرٌ معتمَدٌ له منتجٌ ظاهرٌ» دونَ كشفِ حقولِ الحالةِ، ولا يُوسَّعُ صامتًا"
+      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-025 §6.7 D3)؛ ويشترطُ قبلَه برهانَ E-20 الخاصَّ بالمتاجرِ (ADR-025 §6.5 · ADR-025 §6.7 D4): الحارسُ الحاليُّ لا يعبّرُ عن «متجرٌ معتمَدٌ له منتجٌ ظاهرٌ» دونَ كشفِ حقولِ الحالةِ، ولا يُوسَّعُ صامتًا",
+      "query": {
+        "allowed": [
+          "q",
+          "locale",
+          "page",
+          "page_size"
+        ],
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20 · ADR-069 §2.8): لا يُمرَّرُ إلا ما أذِنَتْ بهِ القائمةُ، وكلُّ معاملٍ آخرَ يُرَدُّ بـ400. حدودُ q/page/page_size وفقَ عقدِ search (ADR-025 §6.5)."
+      }
     }
   ]
 }

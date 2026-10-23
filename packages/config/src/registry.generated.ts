@@ -32,7 +32,7 @@ export interface EnvVarSpec {
   readonly ownerItem: string;
 }
 
-/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 94 متغيّراً. */
+/** كلُّ متغيّرٍ مقروءٍ في الشجرةِ: 98 متغيّراً. */
 export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "BILLING_DATABASE_URL",
@@ -67,6 +67,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
   {
     name: "COMMUNITY_GROUP_CHAT_IDS",
     type: "csv",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-04",
+  },
+  {
+    name: "CUSTOMERS_SERVICE_URL",
+    type: "http_url",
     required: "optional",
     secret: false,
     default: null,
@@ -211,7 +221,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 2,
+    readerCount: 3,
     ownerItem: "M2-04",
   },
   {
@@ -220,6 +230,16 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     required: "optional",
     secret: false,
     default: "2",
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-04",
+  },
+  {
+    name: "DRIVERS_SERVICE_URL",
+    type: "http_url",
+    required: "optional",
+    secret: false,
+    default: null,
     scopes: ["runtime"],
     readerCount: 1,
     ownerItem: "M2-04",
@@ -341,7 +361,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 3,
+    readerCount: 4,
     ownerItem: "M2-04",
   },
   {
@@ -471,7 +491,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 1,
+    readerCount: 2,
     ownerItem: "M2-04",
   },
   {
@@ -551,7 +571,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 1,
+    readerCount: 2,
     ownerItem: "M2-04",
   },
   {
@@ -695,6 +715,26 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     ownerItem: "M2-04",
   },
   {
+    name: "REPUTATION_SERVICE_URL",
+    type: "http_url",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-04",
+  },
+  {
+    name: "SEARCH_SERVICE_URL",
+    type: "http_url",
+    required: "optional",
+    secret: false,
+    default: null,
+    scopes: ["runtime"],
+    readerCount: 1,
+    ownerItem: "M2-04",
+  },
+  {
     name: "SUBSCRIPTION_SERVICE_HOST",
     type: "string",
     required: "optional",
@@ -761,7 +801,7 @@ export const ENV_REGISTRY: readonly EnvVarSpec[] = [
     secret: false,
     default: null,
     scopes: ["runtime"],
-    readerCount: 2,
+    readerCount: 3,
     ownerItem: "M3-09",
   },
   {
@@ -982,6 +1022,7 @@ export const ENV_VAR_NAMES = [
   "BILLING_DELIVERY_EVENTS_DATABASE_URL",
   "CI",
   "COMMUNITY_GROUP_CHAT_IDS",
+  "CUSTOMERS_SERVICE_URL",
   "CUSTOMER_BOT_DEEP_LINK_TEMPLATE",
   "CUSTOMER_BOT_MINI_APP_LABEL",
   "CUSTOMER_BOT_MINI_APP_URL",
@@ -997,6 +1038,7 @@ export const ENV_VAR_NAMES = [
   "DISPATCH_SERVICE_TIMEOUT_MS",
   "DISPATCH_SERVICE_URL",
   "DISPATCH_WAVE_SIZE",
+  "DRIVERS_SERVICE_URL",
   "DRIVER_BOT_DEEP_LINK_TEMPLATE",
   "DRIVER_BOT_MINI_APP_LABEL",
   "DRIVER_BOT_MINI_APP_URL",
@@ -1044,6 +1086,8 @@ export const ENV_VAR_NAMES = [
   "PARTNER_BOT_TOKEN",
   "PARTNER_BOT_WEBHOOK_SECRET",
   "PORT",
+  "REPUTATION_SERVICE_URL",
+  "SEARCH_SERVICE_URL",
   "SUBSCRIPTION_SERVICE_HOST",
   "SUBSCRIPTION_SERVICE_PORT",
   "SUPPORT_GROUP_CHAT_IDS",

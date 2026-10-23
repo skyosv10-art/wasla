@@ -379,6 +379,26 @@ _ea_mut "d=load(CUST); e=entry(d,'GET','/customers/:waslaPublicId/profile'); e['
 _ea_mut "d=load(CUST); entry(d,'GET','/stores')['class']='ADM'; save(CUST,d)" \
   && _ea_door "فئةُ ADM في قائمةِ Mini App" EA-ADM; _ea_restore
 
+# ═══ عقدُ الاستعلامِ (D3 · E-20 · CLM-0662) ═════════════════════════════
+_ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':['q','state']}; save(CUST,d)" \
+  && _ea_door "معاملُ E-20 (state) داخلَ المسموحِ" EA-QUERY-E20; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':'q'}; save(CUST,d)" \
+  && _ea_door "allowed نصٌّ لا قائمةٌ" EA-QUERY-ALLOW; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']={'allowed':['cursor'],'pinned':{'cursor':'x'}}; save(CUST,d)" \
+  && _ea_door "معاملٌ مثبَّتٌ ومسموحٌ معًا" EA-QUERY-PIN-OVERLAP; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':['q'],'pinned':{'sort':'relevance'}}; save(CUST,d)" \
+  && _ea_door "تثبيتُ معاملٍ خارجَ سياسةِ E-20 (sort)" EA-QUERY-PIN-VALUE; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/order-requests')['query']={'allowed':['limit'],'pinned':{'visible_only':'true'}}; save(CUST,d)" \
+  && _ea_door "تثبيتٌ على فئةِ O لا P" EA-QUERY-PIN-CLASS; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/search/stores')['query']={'allowed':['q'],'deny':['state']}; save(CUST,d)" \
+  && _ea_door "مفتاحٌ غيرُ معروفٍ في query" EA-QUERY-FIELD; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'POST','/customers/:waslaPublicId/order-requests')['query']={'allowed':['limit']}; save(CUST,d)" \
+  && _ea_door "عقدُ query لغيرِ GET (توسيعٌ غيرُ مقيسٍ)" EA-QUERY-METHOD; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']['pinned']={'visible_only':'false'}; save(CUST,d)" \
+  && _ea_door "قيمةُ تثبيتٍ تنحرفُ عن سياسةِ E-20 (false)" EA-QUERY-PIN-VALUE; _ea_restore
+_ea_mut "d=load(CUST); entry(d,'GET','/stores/:storeSlug/products')['query']['pinned']={'state':'submitted'}; save(CUST,d)" \
+  && _ea_door "تثبيتُ معاملٍ محظورٍ (state) بدلَ رفضِهِ" EA-QUERY-PIN-VALUE; _ea_restore
+
 # ═══ الفئةُ O: E-18 / E-19 / المستقبلُ off / المنح ════════════════════════
 _O_OPEN_E18="e=entry(d,'GET','/customers/:waslaPublicId/profile'); e['production_open']=True; "
 _O_OPEN_E18+="e['evidence_tests'].append({'file':'$EA_E18','case':'$E18_CASE','proves':['E-18'],'route':'GET /customers/:waslaPublicId/profile','receiver_mode':'off'})"

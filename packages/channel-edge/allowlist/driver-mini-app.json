@@ -176,7 +176,13 @@
           "file": "services/orders/src/__tests__/http/driver-jobs.test.ts",
           "case": "rejects a token whose beneficiary is a different driver (404, not 403)"
         }
-      ]
+      ],
+      "query": {
+        "allowed": [
+          "period"
+        ],
+        "note": "عقدُ استعلامِ المسارِ (D3 · E-20): التطبيقُ يرسلُ period وحدَهُ (فحصُ 24) وكلُّ معاملٍ آخرَ يُرَدُّ بـ400."
+      }
     },
     {
       "method": "POST",

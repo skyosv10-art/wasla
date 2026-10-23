@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-23T04:27:54Z",
+  "generated_at": "2026-10-23T12:26:28Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "65cda4fef4e3907a63516461acb5f295e1ba89a7",
-    "branch": "fix/clm-0663-audit-ci-verdicts-empty-runs",
-    "dirty": false,
-    "dirty_files": 0,
-    "dirty_reason": "",
-    "tracked_files": 3671
+    "commit": "f43ef67c53ce3798f43aa138bd47723d544d920f",
+    "branch": "fix/clm-0662-channel-edge-proxy-routing",
+    "dirty": true,
+    "dirty_files": 2,
+    "dirty_reason": "تجديدُ الأساسِ بعدَ إعادةِ التأسيسِ على main ea98c4c8 (قرارٌ مكتوب M0-08): الملفاتُ غيرُ الملتزَمةِ عندَ التوليدِ هي BASELINE.json/txt وسجلُّ التحققِ نفسُه",
+    "tracked_files": 3679
   },
   "env": {
     "node": "v20.20.2",
@@ -26,7 +26,7 @@
     "packages": 74,
     "packages_with_typecheck": 70,
     "packages_with_test": 74,
-    "test_files_tracked": 583,
+    "test_files_tracked": 585,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 28,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-23T000000Z-clm-0663-audit-ci-verdicts-empty-runs/raw/rebase-57b8bd04/verify-93f57c84.log",
-    "tests_passed": 6273,
-    "test_files_executed": 441,
-    "governance_suite_cases": 730,
-    "governance_suite_failed": 0,
-    "verify_overall": "passed"
+    "source": "docs/12-testing/ci-evidence/2026-10-22T111200Z-clm-0662-channel-edge-proxy-routing/raw/verify-f43ef67c.log",
+    "tests_passed": 6292,
+    "test_files_executed": 443,
+    "governance_suite_cases": 738,
+    "governance_suite_failed": 1,
+    "verify_overall": "failed"
   },
-  "fingerprint": "sha256:92e0362122a3b8ba3f3998eaefa61ecb8835293c774f176725bca172a388b7d3",
+  "fingerprint": "sha256:20ad9ad53ec4f3f2c42665329db8ba2f7ea23f459b8dc411add8c717c8b151ba",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

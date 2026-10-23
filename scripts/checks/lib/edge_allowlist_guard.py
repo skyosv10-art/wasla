@@ -668,6 +668,48 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
         if e["class"] == "ADM":
             fail(f"[EA-ADM] {tag}: ADM في قائمة تطبيق Mini App — إدارة تُدار في admin-edge (المرحلة 4)")
 
+        # ── عقد الاستعلام (D3 · E-20 · CLM-0662) ───────────────────────────
+        # الحقلُ اختياريٌّ: غيابُهُ يعني لا معاملَ يُمرَّرُ إطلاقًا. وحضورُهُ يجبُ
+        # أن يكونَ عقدًا سليمًا: مسموحٌ فريدٌ نصيٌّ، وتثبيتٌ نصيٌّ لمعاملاتِ الحدِّ
+        # وحدَها (E-20)، ولا معاملَ محظورًا في المسموحِ، ولا تداخلًا بينَهما.
+        q = e.get("query")
+        if q is not None:
+            if e["method"] != "GET":
+                # عقدُ الاستعلامِ لقراءةِ القوائمِ (GET) وحدَها: فتحُهُ على كتابةٍ
+                # (POST/PUT/…) توسيعٌ غيرُ مقيسٍ للعقدِ — يُرفضُ مغلقًا.
+                fail(f"[EA-QUERY-METHOD] {tag}: عقدُ query لغيرِ GET — التوسيعُ يحتاجُ قياسًا لا افتراضًا ({e['method']})")
+            if not isinstance(q, dict):
+                fail(f"[EA-QUERY-TYPE] {tag}: query={q!r} ليس كائنًا")
+            else:
+                unknown_keys = set(q) - {"allowed", "pinned", "note"}
+                if unknown_keys:
+                    fail(f"[EA-QUERY-FIELD] {tag}: مفاتيح غير معروفة في query: {sorted(unknown_keys)}")
+                al = q.get("allowed")
+                if al is not None and (
+                    not isinstance(al, list)
+                    or not all(isinstance(x, str) and x for x in al)
+                    or len(set(al)) != len(al)
+                ):
+                    fail(f"[EA-QUERY-ALLOW] {tag}: allowed={al!r} ليس قائمة معرفات نصية فريدة")
+                elif isinstance(al, list) and e["class"] == "P" and set(al) & set(E20_FORBIDDEN_PARAMS):
+                    fail(f"[EA-QUERY-E20] {tag}: معاملات E-20 محظورةٌ داخل allowed: {sorted(set(al) & set(E20_FORBIDDEN_PARAMS))}")
+                pn = q.get("pinned")
+                if pn is not None:
+                    if not isinstance(pn, dict) or not all(isinstance(v, str) for v in pn.values()):
+                        fail(f"[EA-QUERY-PIN] {tag}: pinned={pn!r} ليس كائن قيمٍ نصيةٍ")
+                    elif isinstance(al, list) and set(pn) & set(al):
+                        fail(f"[EA-QUERY-PIN-OVERLAP] {tag}: معاملٌ مثبَّتٌ ومسموحٌ معًا: {sorted(set(pn) & set(al))}")
+                    elif pn and e["class"] != "P":
+                        fail(f"[EA-QUERY-PIN-CLASS] {tag}: التثبيتُ لفئةِ P فقط (E-20) — {e['class']}")
+                    elif set(pn) - {"visible_only"}:
+                        # سياسةُ E-20 المعتمدةُ (ADR-069 §2.8): المعاملاتُ المحظورةُ
+                        # (state · moderation_state · owner_public_id) تُرفَضُ ولا
+                        # تُثبَّتْ — والتثبيتُ المعلومُ الوحيدُ هوَ `visible_only=true`.
+                        # فتثبيتُ غيرِهِ — أو تثبيتُهُ بقيمةٍ أخرى — انحرافٌ عن السياسةِ.
+                        fail(f"[EA-QUERY-PIN-VALUE] {tag}: التثبيتُ المسموحُ هوَ visible_only=true وحدَهُ (سياسةُ E-20): {pn!r}")
+                    elif pn.get("visible_only") != "true":
+                        fail(f"[EA-QUERY-PIN-VALUE] {tag}: قيمةُ التثبيتِ يجبُ أن تكونَ \"true\" حرفيًّا — {pn!r}")
+
         # ── حالة الفتح ───────────────────────────────────────────────────
         opened = e["production_open"]
         if not isinstance(opened, bool):

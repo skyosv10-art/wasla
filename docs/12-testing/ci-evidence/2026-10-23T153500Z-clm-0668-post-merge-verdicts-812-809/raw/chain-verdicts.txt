@@ -1,0 +1,52 @@
+# أحكامُ ما بعدَ الدمجِ لسلسلةِ #812 → #809 — مقروءةٌ من واجهةِ GitHub · 2026-10-23T15:32:10Z
+
+== PR 812 — head/base/merge ==
+{"state":"closed","merged":true,"merged_at":"2026-10-23T14:02:53Z","merge_commit_sha":"2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177","head":"b3c59c19b6c034b5290a2713c4a38ac995974d67","base":"ea98c4c86b264fde04ba84879cfa350dbef37c9d"}
+== مراجعاتُ #812 [id, user, state, submitted_at, commit_id] ==
+[5629308832,"xuuux-voox","APPROVED","2026-10-23T14:01:18Z","b3c59c19b6c034b5290a2713c4a38ac995974d67"]
+
+== PR 809 — head/base/merge ==
+{"state":"closed","merged":true,"merged_at":"2026-10-23T15:17:47Z","merge_commit_sha":"771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4","head":"15a01e88c252a9deb03459d03973453e5bb17841","base":"2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177"}
+== مراجعاتُ #809 [id, user, state, submitted_at, commit_id] ==
+[5622593119,"xuuux-voox","APPROVED","2026-10-23T00:36:47Z","5a659680c3d0327022108bd7b10e2d03a8ac8e1e"]
+[5629314162,"xuuux-voox","APPROVED","2026-10-23T14:01:44Z","752da3ac2967c3d6ba95624fefebe751b2cc045b"]
+[5630404689,"xuuux-voox","APPROVED","2026-10-23T15:17:17Z","15a01e88c252a9deb03459d03973453e5bb17841"]
+
+== حمايةُ main ==
+{"strict":true,"enforce_admins":true,"required_contexts":41,"required_approving_review_count":0}
+
+== (أ) قياساتُ رؤوسِ PR — WASLA CI · Roadmap freshness ==
+#812 head b3c59c19b6c034b5290a2713c4a38ac995974d67 39945474385 WASLA CI pull_request attempt 1 success 2026-10-23T11:21:14Z
+#812 head b3c59c19b6c034b5290a2713c4a38ac995974d67 39945468190 Roadmap freshness push attempt 1 success 2026-10-23T11:21:11Z
+#809 head 15a01e88c252a9deb03459d03973453e5bb17841 39966772214 WASLA CI pull_request attempt 1 success 2026-10-23T14:06:10Z
+#809 head 15a01e88c252a9deb03459d03973453e5bb17841 39966760328 Roadmap freshness push attempt 1 success 2026-10-23T14:06:05Z
+
+== (ب) قياساتُ main بعدَ الدمجِ — على SHA الدمجِ نفسِهِ، كلُّ محاولةٍ ==
+#812 merge 2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177 39966310495 Roadmap freshness push latest_attempt 1 success 2026-10-23T14:02:57Z
+   attempt 1: jobs {'success': 1}
+#812 merge 2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177 39966310455 WASLA CI push latest_attempt 2 success 2026-10-23T14:02:57Z
+   attempt 1: jobs {'success': 40, 'cancelled': 1}
+      non-success job 120456977869 customer-mini-app-e2e cancelled 2026-10-23T14:03:00Z→2026-10-23T14:13:17Z · Install Playwright browsers 2026-10-23T14:03:14Z→2026-10-23T14:13:13Z cancelled
+   attempt 2: jobs {'success': 41}
+#809 merge 771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4 39977044737 Roadmap freshness push latest_attempt 1 success 2026-10-23T15:17:50Z
+   attempt 1: jobs {'success': 1}
+#809 merge 771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4 39977044634 WASLA CI push latest_attempt 2 success 2026-10-23T15:17:50Z
+   attempt 1: jobs {'success': 39, 'cancelled': 2}
+      non-success job 120494253136 driver-mini-app-e2e cancelled 2026-10-23T15:17:52Z→2026-10-23T15:28:06Z · Install Playwright browsers 2026-10-23T15:18:06Z→2026-10-23T15:28:02Z cancelled
+      non-success job 120494253456 admin-portal-e2e cancelled 2026-10-23T15:17:53Z→2026-10-23T15:27:57Z · Install Playwright browsers 2026-10-23T15:18:09Z→2026-10-23T15:27:36Z success
+   attempt 2: jobs {'success': 41}
+
+== (ج) check-runs (آخرُ تشغيلٍ لكلِّ اسمٍ) ==
+b3c59c19b6c034b5290a2713c4a38ac995974d67 total 43 unique 43 {'success': 43} post-merge-only: []
+15a01e88c252a9deb03459d03973453e5bb17841 total 43 unique 43 {'success': 43} post-merge-only: []
+2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177 total 42 unique 42 {'success': 42} post-merge-only: []
+771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4 total 42 unique 42 {'success': 42} post-merge-only: []
+
+== رأسُ main ==
+771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4
+
+== ملاحظةٌ على (ج): مصدرُ الـcheck-run الثالثِ والأربعينَ على رأسَي PR ==
+الاسمُ الوحيدُ الزائدُ على رأسِ كلِّ PR مقابلَ التزامِ دمجِهِ هوَ `cleanup` (github-actions · سيرُ «Merged branch cleanup»):
+  b3c59c19: بدأ 2026-10-23T14:02:59Z (بعدَ دمجِ #812 في 14:02:53Z) · check_suite 108326846453
+  15a01e88: بدأ 2026-10-23T15:18:30Z (بعدَ دمجِ #809 في 15:17:47Z) · check_suite 108357589869
+فعددُ check-runs على الرأسِ **لحظةَ الدمجِ** 42/42 success (مقيسٌ قبلَ الدمجِ: 14:02:20Z و15:17:30Z)، والـ43 لاحقٌ للدمجِ لا شرطٌ له.

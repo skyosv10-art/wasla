@@ -207,6 +207,8 @@ t "إخفاقٌ دائمٌ في قراءةِ التشغيلات ⇒ إخفاقٌ
 #        noruns  200 · JSON بلا مفتاحِ `workflow_runs`
 #        blank   200 · stdout فارغٌ (ليسَ مجموعةً فارغة)
 #        err     ≠0 · `HTTP 502` (خطأُ واجهة)
+#        nullrun 200 · `{"workflow_runs":[null]}` — عنصرٌ غيرُ قاموسيٍّ وحدَه (CLM-0663، تصحيح)
+#        mixnull 200 · `[null, سيرُ WASLA CI صحيح]` — عنصرٌ غيرُ صالحٍ مع عنصرٍ صحيح
 AV_GH2="$AV_S/ghseq"; mkdir -p "$AV_GH2"
 cat > "$AV_GH2/gh" <<'STUB'
 #!/usr/bin/env bash
@@ -225,6 +227,8 @@ case "$url" in
       wrongsha) echo '{"total_count":1,"workflow_runs":[{"name":"WASLA CI","id":9,"head_sha":"ffffffffffffffffffffffffffffffffffffffff"}]}' ;;
       badjson)  echo '<html>upstream</html>' ;;
       noruns)   echo '{"message":"ok"}' ;;
+      nullrun)  echo '{"total_count":1,"workflow_runs":[null]}' ;;
+      mixnull)  printf '{"total_count":2,"workflow_runs":[null,{"name":"WASLA CI","id":9,"head_sha":"%s"}]}\n' "$sha" ;;
       blank)    : ;;
       err)      echo 'HTTP 502: Bad Gateway (runs)' >&2; exit 1 ;;
     esac ;;
@@ -304,3 +308,14 @@ t "CLM-0663: القارئُ — نصٌّ فارغٌ ليسَ مجموعةً فا
 t "CLM-0663: القارئُ — مجموعةٌ فارغةٌ صالحةٌ (empty)" pass _av_lookup_is empty '{"workflow_runs":[]}'
 t "CLM-0663: القارئُ — معرِّفُ سيرٍ غيرُ عدديٍّ (invalid)" pass _av_lookup_is invalid "{\"workflow_runs\":[{\"name\":\"WASLA CI\",\"id\":true,\"head_sha\":\"$AV_SHA\"}]}"
 t "CLM-0663: القارئُ يرفضُ بصمةً مختصرةً وسيطًا" fail _av_lookup_is empty '{"workflow_runs":[]}' 3cb44c35
+# تصحيحُ المراجعة (2026-10-23): عنصرٌ غيرُ قاموسيٍّ في `workflow_runs` جوابٌ مشوَّهٌ لا «لا سير»؛
+# كانَ يُسقَطُ بصمتٍ فيصيرُ `[null]` مجموعةً فارغةً صالحةً تُحتسَبُ في اتّفاقِ no_verdict.
+t "CLM-0663: القارئُ — {\"workflow_runs\":[null]} جوابٌ غيرُ صالحٍ لا مجموعةٌ فارغة (invalid)" pass _av_lookup_is invalid '{"workflow_runs":[null]}'
+t "CLM-0663: القارئُ — عنصرٌ غيرُ صالحٍ مع سيرٍ صحيحٍ يُرفَضُ الجوابُ كلُّه (invalid)" pass _av_lookup_is invalid "{\"workflow_runs\":[null,{\"name\":\"WASLA CI\",\"id\":9,\"head_sha\":\"$AV_SHA\"}]}"
+t "CLM-0663: القارئُ — عنصرٌ نصّيٌّ أو عدديٌّ ليسَ سيرًا (invalid)" pass _av_lookup_is invalid '{"workflow_runs":["WASLA CI",7]}'
+t "CLM-0663: الحارسُ — [null] في كلِّ المحاولات ⇒ غيرُ محسومٍ لا no_verdict" pass \
+  _av_seq_msg fail "غيرُ محسوم" nullrun no_verdict 3
+t "CLM-0663: الحارسُ — فارغٌ ثمّ [null] ثمّ فارغ ⇒ اتّفاقُ الفارغِ لا يكفي" fail _av_seq empty,nullrun,empty no_verdict 3
+t "CLM-0663: الحارسُ — [null, سيرٌ صحيح] ثمّ السير ⇒ الجوابُ المشوَّهُ لا يُعتمَد، والسيرُ يُكتشَفُ في الصالح" pass _av_seq mixnull,found blackout 3
+t "CLM-0663: الحارسُ — [null, سيرٌ صحيح] دائمًا ⇒ غيرُ محسوم (لا يُستخرَجُ سيرٌ من جوابٍ مشوَّه)" pass \
+  _av_seq_msg fail "غيرُ محسوم" mixnull blackout 3

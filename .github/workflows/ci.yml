@@ -833,10 +833,9 @@ jobs:
           path: apps/customer-mini-app/playwright-report/
           retention-days: 30
           if-no-files-found: warn
-      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه؛ السكربتُ يخرجُ 0 دائمًا وميزانيّتُه دونَ حدِّ المهمّة — بلا continue-on-error.
       - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
         if: always()
-        continue-on-error: true
         timeout-minutes: 3
         run: bash scripts/ci/apt-mirror-probe.sh
 
@@ -885,10 +884,9 @@ jobs:
           path: apps/driver-mini-app/playwright-report/
           retention-days: 30
           if-no-files-found: warn
-      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه؛ السكربتُ يخرجُ 0 دائمًا وميزانيّتُه دونَ حدِّ المهمّة — بلا continue-on-error.
       - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
         if: always()
-        continue-on-error: true
         timeout-minutes: 3
         run: bash scripts/ci/apt-mirror-probe.sh
 
@@ -937,10 +935,9 @@ jobs:
           path: apps/admin-portal/playwright-report/
           retention-days: 30
           if-no-files-found: warn
-      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه؛ السكربتُ يخرجُ 0 دائمًا وميزانيّتُه دونَ حدِّ المهمّة — بلا continue-on-error.
       - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
         if: always()
-        continue-on-error: true
         timeout-minutes: 3
         run: bash scripts/ci/apt-mirror-probe.sh
 

@@ -815,6 +815,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (قياسٌ بقرارِ المالك): apt من archive.ubuntu.com لا azure؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/customer-mini-app
@@ -828,6 +833,12 @@ jobs:
           path: apps/customer-mini-app/playwright-report/
           retention-days: 30
           if-no-files-found: warn
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/ci/apt-mirror-probe.sh
 
   # ───────────────────────────────────────────────────────────────────
   # M3-02 — driver-mini-app-e2e: Playwright E2E + accessibility gate.
@@ -856,6 +867,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (قياسٌ بقرارِ المالك): apt من archive.ubuntu.com لا azure؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/driver-mini-app
@@ -869,6 +885,12 @@ jobs:
           path: apps/driver-mini-app/playwright-report/
           retention-days: 30
           if-no-files-found: warn
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/ci/apt-mirror-probe.sh
 
   # ───────────────────────────────────────────────────────────────────
   # M3-04 — admin-portal-e2e: Playwright E2E + accessibility gate.
@@ -897,6 +919,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (قياسٌ بقرارِ المالك): apt من archive.ubuntu.com لا azure؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/admin-portal
@@ -910,6 +937,12 @@ jobs:
           path: apps/admin-portal/playwright-report/
           retention-days: 30
           if-no-files-found: warn
+      # CLM-0671 — قياسٌ مقارِنٌ فقط (يُحذَفُ قبلَ أيِّ اقتراحِ دمج): نفسُ الحزمِ من azure على المشغّلِ نفسِه.
+      - name: Probe azure.archive.ubuntu.com (CLM-0671, measurement-only)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/ci/apt-mirror-probe.sh
 
   # ───────────────────────────────────────────────────────────────────
   # M2-01 — image-supply-chain: بناءُ الصورةِ وعقدُها وقائمةُ موادِها وثغراتُها.

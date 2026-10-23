@@ -1,3 +1,15 @@
+# 2026-10-24 — CLM-0671 — M0-53: قياسُ الخيارِ B (مرآةُ apt) لمهامِّ e2e — بقرارِ المالك
+
+- **Work Item(s):** M0-53 (CLM-0671)
+- **Status:** In Progress (فرعُ قياسٍ في PR مسودّة؛ لا دمجَ بهذا الشكل)
+- **Kind:** ci-measurement — بقرارِ المالكِ 2026-10-24؛ **`timeout-minutes: 10` بلا تغيير**.
+- **Changed units:** `.github/workflows/ci.yml` (3 مهامِّ e2e: خطوةُ اختبارٍ + خطوةُ تحويلِ مرآةٍ قبلَ التثبيت + خطوةُ قياسٍ مقارِنٍ بعدَ الاختبار) · `scripts/ci/apt-mirror-archive-ubuntu.sh` · `scripts/ci/apt-mirror-probe.sh` (قياسٌ فقط) · `scripts/ci/test-apt-mirror-archive-ubuntu.sh` · `docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/*`.
+- **Measured (locally):** الاختباراتُ 10/10 · الطفراتُ 9/9 مقتولة.
+- **Risk(s):** لا تغيير.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/README.md
+- **Deployment:** none.
+- **Not changed:** `timeout-minutes` · خطوةُ `playwright install --with-deps` نفسُها · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-24 — CLM-0673 — M0-07: مراجعةُ RISK-0034 الفعليّة (جسرُ ORD-/WS-)
 
 - **Work Item(s):** M0-07 (CLM-0673 · RISK-0034)

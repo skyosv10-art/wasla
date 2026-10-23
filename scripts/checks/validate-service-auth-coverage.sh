@@ -333,7 +333,17 @@ else
   # وسيطًا). **حدٌّ معلنٌ:** النمطُ يقيسُ الإشارةَ المباشرةَ للاسمِ؛ إعادةُ تسميةٍ عبر أكثرَ
   # من قفزةٍ واحدةٍ (`const a = fetch; const b = a;`) تحتاجُ تحليلَ تدفقِ بياناتٍ (AST)
   # ولا يُدَّعى بعدُ، والنمطُ لا يستبعدُ التعليقاتِ (أنماطُ القيمةِ مضبوطةٌ على الشجرةِ لا جدلًا).
-  RAW_PATTERN='\bfetch\s*\(|\bfetch[A-Z][A-Za-z0-9_]*\s*\(|\b[a-z]+Fetch[A-Za-z0-9_]*\s*\(|\bglobalThis\.fetch\b|=\s*fetch\b|\btypeof\s+fetch\b|\(\s*fetch\s*[,)]|,\s*fetch\s*[,)]|\.fetch\b'
+  # CLM-0667 (G-S9.19 · 2026-10-23): خمسةُ أشكالٍ قيسَ أنّها تُفلِتُ من نمطِ CLM-0654
+  # فأُضيفت — التفكيكُ بإعادةِ التسميةِ (`{ fetch: f } = globalThis` وبدايةُ سطرٍ
+  # في تفكيكٍ متعدّدِ الأسطرِ) · الوصولُ بالأقواسِ (`globalThis["fetch"]`) ·
+  # `Reflect.get/apply(…fetch…)` · ووحداتُ Node المدمجةُ `http`/`https`/`http2`
+  # (استيرادٌ ثابتٌ أو `require(` أو `import(` ديناميكيٌّ). هذهِ الأخيرةُ لا تمرُّ
+  # بـpackage.json فلا يقفلُها البابُ 6، فكانت عمىً مولوداً أخضرَ. النمطُ يرى
+  # الاستيرادَ لا الاتجاهَ، فالخادمُ الواردُ (`createServer`) يُحصى ويُعلَنُ استثناءً
+  # بسببِهِ. وما زالَ حدّاً مُعلَناً: grep لا AST — فالقفزةُ عبرَ الملفّاتِ (ملفٌّ
+  # يستوردُ مرجعاً صدّرَهُ ملفٌّ آخرُ) والمقابسُ الخامُّ (`node:net` · `node:tls`)
+  # والبناءُ الديناميكيُّ للاسمِ (`globalThis["fe"+"tch"]`) خارجَ البصرِ ولا تُدَّعى.
+  RAW_PATTERN='\bfetch\s*\(|\bfetch[A-Z][A-Za-z0-9_]*\s*\(|\b[a-z]+Fetch[A-Za-z0-9_]*\s*\(|\bglobalThis\.fetch\b|=\s*fetch\b|\btypeof\s+fetch\b|\(\s*fetch\s*[,)]|,\s*fetch\s*[,)]|\.fetch\b|(^|[{,])\s*fetch\s*:|\[\s*["'"'"'`]fetch["'"'"'`]\s*\]|\bReflect\.(get|apply)\s*\([^)]*\bfetch\b|\bfrom\s+["'"'"'](node:)?(https?|http2)["'"'"']|\b(require|import)\s*\(\s*["'"'"'](node:)?(https?|http2)["'"'"']\s*\)'
   for w in "${DECLARED_WRAPPERS[@]:-}"; do
     [[ -n "$w" ]] || continue
     RAW_PATTERN="$RAW_PATTERN|from '$w'|from \"$w\"|require\('$w'\)"

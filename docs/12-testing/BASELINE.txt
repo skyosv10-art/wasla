@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-23T02:18:00Z
-الالتزام: 4735ab082183b46fdc54893e805879f7e6b2cb69  الفرع: fix/clm-0664-0665-gate-recovery  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-23T04:27:54Z
+الالتزام: 65cda4fef4e3907a63516461acb5f295e1ba89a7  الفرع: fix/clm-0663-audit-ci-verdicts-empty-runs  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5056 سطراً · sha256 207c4c16224977dd…
 
@@ -15,12 +15,12 @@
   governance_checks          28
   risks_not_closed           26
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-23T011500Z-clm-0664-0665-gate-recovery/raw/verify-b36cdbe7.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-23T000000Z-clm-0663-audit-ci-verdicts-empty-runs/raw/rebase-57b8bd04/verify-93f57c84.log):
   tests_passed               6273
   test_files_executed        441
-  governance_suite_cases     696
-  governance_suite_failed    1
-  verify_overall             failed
+  governance_suite_cases     730
+  governance_suite_failed    0
+  verify_overall             passed
 
 البصمة: sha256:92e0362122a3b8ba3f3998eaefa61ecb8835293c774f176725bca172a388b7d3
 المرجع: docs/12-testing/BASELINE_FORMAT.md

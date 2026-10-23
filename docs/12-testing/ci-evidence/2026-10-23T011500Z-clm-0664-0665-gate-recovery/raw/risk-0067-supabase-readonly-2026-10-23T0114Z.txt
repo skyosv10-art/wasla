@@ -1,0 +1,12 @@
+# RISK-0067 — قياسٌ قراءةً فقط على مشروعِ الإنتاج ppixaauyqoykrogwdxtv (موصِّلُ Supabase · SELECT وقراءةُ سجلّاتٍ فقط · لا تغيير)
+## 1) execute_sql — 2026-10-23 01:14:45.647242+00
+select now(), current_setting('max_connections'), count(*) من pg_stat_activity، والعميلُ مجمَّعًا بـapplication_name/usename (بلا نصِّ استعلامٍ ولا بياناتِ مستخدمين)
+max_connections = 60 · total = 15 · client_backends = 7
+  (none)/pgbouncer 1 · (none)/supabase_admin 1 · mgmt-api/postgres 1 · postgres_exporter/supabase_admin 1 · PostgREST 14.18/authenticator 1 · Supavisor/postgres 1 · Supavisor (auth_query)/pgbouncer 1
+  ⇒ لا اتصالَ من أسطولِ Render في لحظةِ القياس.
+## 2) query_logs — النافذة 2026-10-22T01:15:00Z → 2026-10-23T01:15:00Z (24 ساعة)
+select source, count(*), countIf(EMAXCONNSESSION), countIf('too many'), min/max(timestamp) from logs group by source
+pgbouncer_logs  n=11590  EMAXCONNSESSION=0  too_many=0  (01:15:03 → 01:14:33)
+supavisor_logs  n=496    EMAXCONNSESSION=0  too_many=0  (01:19:39 → 01:09:40)
+postgres_logs   n=17     EMAXCONNSESSION=0  too_many=0  (04:56:26 → 01:09:20)
+## حدود: قياسُ خمولٍ لا حمل. صفرُ EMAXCONNSESSION بلا حملٍ لا يُثبتُ كفايةَ السعة؛ default_pool_size لم يُقرأ (يلزمُه Management API).

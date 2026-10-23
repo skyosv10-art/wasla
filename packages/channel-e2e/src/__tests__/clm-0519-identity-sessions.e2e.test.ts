@@ -326,20 +326,25 @@ function sessionRoutesSuite(
     let w: Wiring;
     let app: ReturnType<typeof createIdentityApp>;
     let signingKey: ReturnType<typeof buildUserAssertionSigningKey>;
-    let logs: Array<Record<string, unknown>>;
+    // ما كتبَه pino فعلًا (I-13). كانَ يُلتقَطُ بترقيعِ `app.log.info`، وذلك اعتمدَ على أنَّ
+    // fastify ≤ 5.12.5 يبني لكلِّ طلبٍ مُسجِّلًا فرعيًّا بمستوىً صريحٍ يُعيدُ بناءَ دوالِّه فلا
+    // يرثُ الترقيع؛ ومن 5.12.6 يرثُها فصارَ يلتقطُ `res` الخامَ الدائريَّ. السطرُ المكتوبُ هو
+    // ما يتسرّبُ أو لا يتسرّب، فهو المقيس (CLM-0665).
+    let written: string[];
     let seq = 0;
 
     beforeEach(async () => {
       w = await build();
       seq += 1;
       signingKey = buildUserAssertionSigningKey();
-      logs = [];
+      written = [];
       app = createIdentityApp({
         deps: w.identityDeps,
         logger: {
           level: "info",
           base: undefined,
           timestamp: () => `,"time":"${new Date().toISOString()}"`,
+          stream: { write: (line: string) => void written.push(line) },
         } as never,
         serviceIdentity: {
           keys: createTestKeyRegistry(),
@@ -356,14 +361,6 @@ function sessionRoutesSuite(
         },
         session: w.sessionDeps,
       });
-      // نلتقطُ ما يُكتَبُ في السجلِّ (I-13): لا رمزَ ولا بصمةً ولا مُعرِّفًا داخليًّا.
-      const originalInfo = app.log.info.bind(app.log);
-      (app.log as { info: unknown }).info = function (this: unknown, ...args: unknown[]) {
-        const obj = typeof args[0] === "object" && args[0] !== null ? (args[0] as Record<string, unknown>) : {};
-        const msg = typeof args[1] === "string" ? args[1] : (typeof args[0] === "string" ? args[0] : "");
-        logs.push({ ...obj, message: msg });
-        return originalInfo(...(args as [Record<string, unknown>, string]));
-      };
     });
 
     it(
@@ -704,7 +701,9 @@ function sessionRoutesSuite(
         const revoked = await revokeViaHttp(app, issuedBody.token, T0, { serviceName: "customer-bot" });
         expect(revoked.statusCode).toBe(200);
 
-        const logText = JSON.stringify(logs);
+        const logText = written.join("");
+        // السجلُّ ليسَ خاويًا: وإلّا نجحَ «لا يحتوي» على لا شيء.
+        expect(written.length).toBeGreaterThan(0);
         // لا رمزَ جلسةٍ صريحاً في السجلِّ.
         expect(logText).not.toContain(issuedBody.token);
         // لا بصمةَ init-data كاملةً (تُخزَّنُ مُعمّاةً في القاعدةِ لا نصًّا في السجلِّ).

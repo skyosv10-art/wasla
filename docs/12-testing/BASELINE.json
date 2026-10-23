@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-22T04:29:30Z",
+  "generated_at": "2026-10-23T02:18:00Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "3c538d86045d486b962a50bb11c78ba450c171fc",
-    "branch": "stage-zero/clm-0660-vitest-4-1-12-mocker-cves",
+    "commit": "4735ab082183b46fdc54893e805879f7e6b2cb69",
+    "branch": "fix/clm-0664-0665-gate-recovery",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 3615
+    "tracked_files": 3656
   },
   "env": {
     "node": "v20.20.2",
@@ -19,7 +19,7 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "8520e11bfba01458619ce291f865b055e02ad56b301238e5c95e611c8d43ada9",
+    "sha256": "207c4c16224977ddc9a0def699bb83d2aae3974f0b735282b3a6a7f04c455f4f",
     "lines": 5056
   },
   "static": {
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-23T011500Z-clm-0664-0665-gate-recovery/raw/verify-b36cdbe7.log",
     "tests_passed": 6273,
     "test_files_executed": 441,
-    "governance_suite_cases": 694,
+    "governance_suite_cases": 696,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:766c74949093f30d5919eacd1374a3dd2be9924c6559aafa7377569ae0a103dd",
+  "fingerprint": "sha256:92e0362122a3b8ba3f3998eaefa61ecb8835293c774f176725bca172a388b7d3",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

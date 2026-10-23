@@ -1,0 +1,5 @@
+# I-13 — طفراتٌ على مصدرِ الخدمة (fastify 5.12.7، الشجرة 4bcf68c1 + إصلاحُ الالتقاط) · 2026-10-23T01:50:55Z
+MA الرمزُ في سطرِ «user session issued» (info):       Tests  1 failed | 26 skipped (27)
+MB الرمزُ في سطرِ warn لمُسجِّلِ الطلب (لم يكن الترقيعُ القديمُ يراه):       Tests  1 failed | 26 skipped (27)
+restore: cmp identical
+after restore:       Tests  1 passed | 26 skipped (27)

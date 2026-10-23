@@ -1,0 +1,180 @@
+relay-fixed-1	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-1	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-1	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-1	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-1	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-1	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-2	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-2	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-2	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-2	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-2	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-2	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-3	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-3	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-3	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-3	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-3	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-3	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-4	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-4	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-4	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-4	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-4	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-4	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-5	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-5	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-5	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-5	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-5	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-5	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-6	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-6	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-6	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-6	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-6	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-6	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-7	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-7	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-7	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-7	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-7	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-7	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-8	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-8	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-8	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-8	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-8	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-8	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-9	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-9	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-9	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-9	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-9	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-9	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-10	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-10	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-10	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-10	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-10	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-10	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-11	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-11	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-11	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-11	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-11	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-11	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-12	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-12	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-12	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-12	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-12	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-12	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-13	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-13	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-13	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-13	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-13	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-13	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-14	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-14	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-14	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-14	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-14	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-14	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-15	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-15	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-15	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-15	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-15	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-15	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-16	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-16	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-16	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-16	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-16	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-16	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-17	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-17	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-17	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-17	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-17	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-17	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-18	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-18	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-18	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-18	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-18	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-18	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-19	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-19	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-19	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-19	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-19	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-19	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-fixed-20	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-fixed-20	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-fixed-20	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-fixed-20	passed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	
+relay-fixed-20	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-fixed-20	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-1	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-1	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-1	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-1	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-1	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 23: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""}] docs=1 · round 36: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1
+relay-mutL-1	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-2	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-2	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-2	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-2	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-2	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 13: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-2	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-3	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-3	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-3	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-3	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-3	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 24: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 55: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-3	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-4	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-4	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-4	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-4	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-4	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 11: rows=[{"status":"skipped_stale","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 23: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-4	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-5	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-5	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-5	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-5	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-5	passed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	
+relay-mutL-5	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-6	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-6	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-6	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-6	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-6	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 15: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-6	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-7	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-7	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-7	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-7	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-7	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 3/60 rounds violated the invariant: expected [ …(3) ] to deeply equal [] · round 10: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=0 · round 21: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 41: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-7	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-8	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-8	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-8	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-8	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-8	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 50: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1 · round 55: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""}] docs=1
+relay-mutL-8	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-9	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-9	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-9	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-9	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-9	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 9: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1
+relay-mutL-9	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	
+relay-mutL-10	passed	two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state	
+relay-mutL-10	passed	crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent	
+relay-mutL-10	passed	dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row	
+relay-mutL-10	failed	G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock	AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+relay-mutL-10	failed	G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc	AssertionError: 4/60 rounds violated the invariant: expected [ …(4) ] to deeply equal [] · round 12: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 37: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 3: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1 · round 53: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+relay-mutL-10	passed	G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself	

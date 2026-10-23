@@ -1,0 +1,252 @@
+baseline-int	passed	returns a visible product matching the query	
+baseline-int	passed	hides a product that is out of stock (visibility WHERE)	
+baseline-int	passed	hides a product with unapproved moderation state	
+baseline-int	passed	filters by category_slug when provided	
+baseline-int	passed	paginates results	
+baseline-int	passed	sorts by price ascending	
+baseline-int	passed	reports an EXACT total for matches beyond the ranking window	
+baseline-int	passed	refuses a page that ends beyond the ranking window instead of truncating	
+baseline-int	passed	serves the last page that fits exactly inside the window	
+baseline-int	passed	relevance order is stable across two identical requests	
+baseline-int	passed	RISK-0071: `%` in q is a literal percent, not a wildcard (sku)	
+baseline-int	passed	RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku)	
+baseline-int	passed	RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku)	
+baseline-int	passed	RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar)	
+baseline-int	passed	RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)	
+baseline-int	passed	readiness probe reports the index reachable with a document count	
+baseline-int	passed	readiness probe reports UNREACHABLE when the read model is missing	
+baseline-unit	passed	defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20)	
+baseline-unit	passed	q: one character after trim is valid if it stays non-empty after normalization	
+baseline-unit	passed	q: 200 characters accepted, 201 rejected (after trim)	
+baseline-unit	passed	counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long)	
+baseline-unit	passed	page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected	
+baseline-unit	passed	page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected	
+baseline-unit	passed	the parser enforces exactly the shared constants (package ↔ service)	
+baseline-unit	passed	locale ar/en/ur only	
+baseline-unit	passed	undeclared keys are rejected by name, never ignored	
+baseline-unit	passed	أحمد → احمد	
+baseline-unit	passed	إسلام → اسلام	
+baseline-unit	passed	آمنة → امنه	
+baseline-unit	passed	ٱلنور → النور	
+baseline-unit	passed	مستشفى → مستشفي	
+baseline-unit	passed	کریانہ → كريانه	
+baseline-unit	passed	مؤسسة → موسسه	
+baseline-unit	passed	مسائل → مسايل	
+baseline-unit	passed	  مَكْتَبَةُ   النُّور  → مكتبه النور	
+baseline-unit	passed	ـمتـجـر → متجر	
+baseline-unit	passed	ACME Store → acme store	
+baseline-unit	passed	both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1	
+baseline-unit	passed	escapes %, _ and \ (and nothing else)	
+baseline-unit	passed	returns the requested locale or falls back to Arabic (null or blank)	
+baseline-unit	passed	scopes are exactly product:read + store:read	
+baseline-unit	passed	GET /stores/{slug} carries a service token and returns only the names	
+baseline-unit	passed	GET /products/{id} is signed too (G-S9.19 — the old port sent no identity)	
+baseline-unit	passed	404 → null; 401/403 → denied; 500 → error status; bad shape → drift — all but 404 throw	
+baseline-unit	passed	production composition signs as `search` → audience `marketplace` with exactly the granted scopes	
+baseline-unit	passed	network failure → unreachable (throws, so the relay keeps the event pending)	
+baseline-unit	passed	registered → no fetch; approved → one fetch and a doc	
+baseline-unit	passed	a failed fetch leaves the event pending and the store state unchanged	
+baseline-unit	passed	404 from marketplace is not a silent empty name — the event does not apply	
+baseline-unit	passed	contract drift (resource slug ≠ event slug) is refused	
+baseline-unit	passed	a doc already present is not refetched (re-approval after suspension)	
+baseline-unit	passed	emits exactly the public projection even if the port over-returns	
+baseline-unit	passed	400 {"q":"ـ"} → SEARCH_QUERY_EMPTY	
+baseline-unit	passed	400 {"q":"ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"} → SEARCH_QUERY_TOO_LONG	
+baseline-unit	passed	400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER	
+baseline-unit	passed	400 {"q":"نور","state":"approved"} → SEARCH_UNKNOWN_PARAMETER	
+baseline-unit	passed	400 {"q":"نور","page":"0"} → SEARCH_PAGE_OUT_OF_RANGE	
+baseline-unit	passed	400 {"q":"نور","page":"-3"} → SEARCH_PAGE_OUT_OF_RANGE	
+baseline-unit	passed	400 {"q":"نور","page":"1.5"} → SEARCH_PAGE_OUT_OF_RANGE	
+baseline-unit	passed	400 {"q":"نور","page_size":"0"} → SEARCH_PAGE_SIZE_INVALID	
+baseline-unit	passed	400 {"q":"نور","page_size":"51"} → SEARCH_PAGE_SIZE_INVALID	
+baseline-unit	passed	400 {"q":"نور","locale":"fr"} → SEARCH_UNSUPPORTED_LOCALE	
+baseline-unit	passed	503 — not an empty page — when no store search port is composed	
+mutA-int	passed	returns a visible product matching the query	
+mutA-int	passed	hides a product that is out of stock (visibility WHERE)	
+mutA-int	passed	hides a product with unapproved moderation state	
+mutA-int	passed	filters by category_slug when provided	
+mutA-int	passed	paginates results	
+mutA-int	passed	sorts by price ascending	
+mutA-int	passed	reports an EXACT total for matches beyond the ranking window	
+mutA-int	passed	refuses a page that ends beyond the ranking window instead of truncating	
+mutA-int	passed	serves the last page that fits exactly inside the window	
+mutA-int	passed	relevance order is stable across two identical requests	
+mutA-int	failed	RISK-0071: `%` in q is a literal percent, not a wildcard (sku)	AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+mutA-int	failed	RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku)	AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+mutA-int	failed	RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku)	AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]
+mutA-int	failed	RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar)	AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+mutA-int	failed	RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)	AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+mutA-int	passed	readiness probe reports the index reachable with a document count	
+mutA-int	passed	readiness probe reports UNREACHABLE when the read model is missing	
+mutA-unit	passed	defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20)	
+mutA-unit	passed	q: one character after trim is valid if it stays non-empty after normalization	
+mutA-unit	passed	q: 200 characters accepted, 201 rejected (after trim)	
+mutA-unit	passed	counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long)	
+mutA-unit	passed	page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected	
+mutA-unit	passed	page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected	
+mutA-unit	passed	the parser enforces exactly the shared constants (package ↔ service)	
+mutA-unit	passed	locale ar/en/ur only	
+mutA-unit	passed	undeclared keys are rejected by name, never ignored	
+mutA-unit	passed	أحمد → احمد	
+mutA-unit	passed	إسلام → اسلام	
+mutA-unit	passed	آمنة → امنه	
+mutA-unit	passed	ٱلنور → النور	
+mutA-unit	passed	مستشفى → مستشفي	
+mutA-unit	passed	کریانہ → كريانه	
+mutA-unit	passed	مؤسسة → موسسه	
+mutA-unit	passed	مسائل → مسايل	
+mutA-unit	passed	  مَكْتَبَةُ   النُّور  → مكتبه النور	
+mutA-unit	passed	ـمتـجـر → متجر	
+mutA-unit	passed	ACME Store → acme store	
+mutA-unit	failed	both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1	AssertionError: expected [ '50%_a\b', '50%_a\b', 'c1' ] to deeply equal [ '50%_a\b', '50\%\_a\\b', 'c1' ]
+mutA-unit	passed	escapes %, _ and \ (and nothing else)	
+mutA-unit	passed	returns the requested locale or falls back to Arabic (null or blank)	
+mutA-unit	passed	scopes are exactly product:read + store:read	
+mutA-unit	passed	GET /stores/{slug} carries a service token and returns only the names	
+mutA-unit	passed	GET /products/{id} is signed too (G-S9.19 — the old port sent no identity)	
+mutA-unit	passed	404 → null; 401/403 → denied; 500 → error status; bad shape → drift — all but 404 throw	
+mutA-unit	passed	production composition signs as `search` → audience `marketplace` with exactly the granted scopes	
+mutA-unit	passed	network failure → unreachable (throws, so the relay keeps the event pending)	
+mutA-unit	passed	registered → no fetch; approved → one fetch and a doc	
+mutA-unit	passed	a failed fetch leaves the event pending and the store state unchanged	
+mutA-unit	passed	404 from marketplace is not a silent empty name — the event does not apply	
+mutA-unit	passed	contract drift (resource slug ≠ event slug) is refused	
+mutA-unit	passed	a doc already present is not refetched (re-approval after suspension)	
+mutA-unit	passed	emits exactly the public projection even if the port over-returns	
+mutA-unit	passed	400 {"q":"ـ"} → SEARCH_QUERY_EMPTY	
+mutA-unit	passed	400 {"q":"ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"} → SEARCH_QUERY_TOO_LONG	
+mutA-unit	passed	400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER	
+mutA-unit	passed	400 {"q":"نور","state":"approved"} → SEARCH_UNKNOWN_PARAMETER	
+mutA-unit	passed	400 {"q":"نور","page":"0"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutA-unit	passed	400 {"q":"نور","page":"-3"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutA-unit	passed	400 {"q":"نور","page":"1.5"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutA-unit	passed	400 {"q":"نور","page_size":"0"} → SEARCH_PAGE_SIZE_INVALID	
+mutA-unit	passed	400 {"q":"نور","page_size":"51"} → SEARCH_PAGE_SIZE_INVALID	
+mutA-unit	passed	400 {"q":"نور","locale":"fr"} → SEARCH_UNSUPPORTED_LOCALE	
+mutA-unit	passed	503 — not an empty page — when no store search port is composed	
+mutB-int	passed	returns a visible product matching the query	
+mutB-int	passed	hides a product that is out of stock (visibility WHERE)	
+mutB-int	passed	hides a product with unapproved moderation state	
+mutB-int	passed	filters by category_slug when provided	
+mutB-int	passed	paginates results	
+mutB-int	passed	sorts by price ascending	
+mutB-int	passed	reports an EXACT total for matches beyond the ranking window	
+mutB-int	passed	refuses a page that ends beyond the ranking window instead of truncating	
+mutB-int	passed	serves the last page that fits exactly inside the window	
+mutB-int	passed	relevance order is stable across two identical requests	
+mutB-int	passed	RISK-0071: `%` in q is a literal percent, not a wildcard (sku)	
+mutB-int	passed	RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku)	
+mutB-int	passed	RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku)	
+mutB-int	passed	RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar)	
+mutB-int	passed	RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)	
+mutB-int	passed	readiness probe reports the index reachable with a document count	
+mutB-int	passed	readiness probe reports UNREACHABLE when the read model is missing	
+mutB-unit	passed	defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20)	
+mutB-unit	passed	q: one character after trim is valid if it stays non-empty after normalization	
+mutB-unit	passed	q: 200 characters accepted, 201 rejected (after trim)	
+mutB-unit	passed	counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long)	
+mutB-unit	passed	page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected	
+mutB-unit	passed	page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected	
+mutB-unit	passed	the parser enforces exactly the shared constants (package ↔ service)	
+mutB-unit	passed	locale ar/en/ur only	
+mutB-unit	passed	undeclared keys are rejected by name, never ignored	
+mutB-unit	passed	أحمد → احمد	
+mutB-unit	passed	إسلام → اسلام	
+mutB-unit	passed	آمنة → امنه	
+mutB-unit	passed	ٱلنور → النور	
+mutB-unit	passed	مستشفى → مستشفي	
+mutB-unit	passed	کریانہ → كريانه	
+mutB-unit	passed	مؤسسة → موسسه	
+mutB-unit	passed	مسائل → مسايل	
+mutB-unit	passed	  مَكْتَبَةُ   النُّور  → مكتبه النور	
+mutB-unit	passed	ـمتـجـر → متجر	
+mutB-unit	passed	ACME Store → acme store	
+mutB-unit	failed	both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1	AssertionError: expected '\n      SELECT product_id, store_id, …' to contain 'title_ar ILIKE \'%\' || $2 || \'%\' E…'
+mutB-unit	passed	escapes %, _ and \ (and nothing else)	
+mutB-unit	passed	returns the requested locale or falls back to Arabic (null or blank)	
+mutB-unit	passed	scopes are exactly product:read + store:read	
+mutB-unit	passed	GET /stores/{slug} carries a service token and returns only the names	
+mutB-unit	passed	GET /products/{id} is signed too (G-S9.19 — the old port sent no identity)	
+mutB-unit	passed	404 → null; 401/403 → denied; 500 → error status; bad shape → drift — all but 404 throw	
+mutB-unit	passed	production composition signs as `search` → audience `marketplace` with exactly the granted scopes	
+mutB-unit	passed	network failure → unreachable (throws, so the relay keeps the event pending)	
+mutB-unit	passed	registered → no fetch; approved → one fetch and a doc	
+mutB-unit	passed	a failed fetch leaves the event pending and the store state unchanged	
+mutB-unit	passed	404 from marketplace is not a silent empty name — the event does not apply	
+mutB-unit	passed	contract drift (resource slug ≠ event slug) is refused	
+mutB-unit	passed	a doc already present is not refetched (re-approval after suspension)	
+mutB-unit	passed	emits exactly the public projection even if the port over-returns	
+mutB-unit	passed	400 {"q":"ـ"} → SEARCH_QUERY_EMPTY	
+mutB-unit	passed	400 {"q":"ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"} → SEARCH_QUERY_TOO_LONG	
+mutB-unit	passed	400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER	
+mutB-unit	passed	400 {"q":"نور","state":"approved"} → SEARCH_UNKNOWN_PARAMETER	
+mutB-unit	passed	400 {"q":"نور","page":"0"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutB-unit	passed	400 {"q":"نور","page":"-3"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutB-unit	passed	400 {"q":"نور","page":"1.5"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutB-unit	passed	400 {"q":"نور","page_size":"0"} → SEARCH_PAGE_SIZE_INVALID	
+mutB-unit	passed	400 {"q":"نور","page_size":"51"} → SEARCH_PAGE_SIZE_INVALID	
+mutB-unit	passed	400 {"q":"نور","locale":"fr"} → SEARCH_UNSUPPORTED_LOCALE	
+mutB-unit	passed	503 — not an empty page — when no store search port is composed	
+mutC-int	passed	returns a visible product matching the query	
+mutC-int	passed	hides a product that is out of stock (visibility WHERE)	
+mutC-int	passed	hides a product with unapproved moderation state	
+mutC-int	passed	filters by category_slug when provided	
+mutC-int	passed	paginates results	
+mutC-int	passed	sorts by price ascending	
+mutC-int	passed	reports an EXACT total for matches beyond the ranking window	
+mutC-int	passed	refuses a page that ends beyond the ranking window instead of truncating	
+mutC-int	passed	serves the last page that fits exactly inside the window	
+mutC-int	passed	relevance order is stable across two identical requests	
+mutC-int	passed	RISK-0071: `%` in q is a literal percent, not a wildcard (sku)	
+mutC-int	passed	RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku)	
+mutC-int	failed	RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku)	AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]
+mutC-int	passed	RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar)	
+mutC-int	passed	RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)	
+mutC-int	passed	readiness probe reports the index reachable with a document count	
+mutC-int	passed	readiness probe reports UNREACHABLE when the read model is missing	
+mutC-unit	passed	defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20)	
+mutC-unit	passed	q: one character after trim is valid if it stays non-empty after normalization	
+mutC-unit	passed	q: 200 characters accepted, 201 rejected (after trim)	
+mutC-unit	passed	counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long)	
+mutC-unit	passed	page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected	
+mutC-unit	passed	page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected	
+mutC-unit	passed	the parser enforces exactly the shared constants (package ↔ service)	
+mutC-unit	passed	locale ar/en/ur only	
+mutC-unit	passed	undeclared keys are rejected by name, never ignored	
+mutC-unit	passed	أحمد → احمد	
+mutC-unit	passed	إسلام → اسلام	
+mutC-unit	passed	آمنة → امنه	
+mutC-unit	passed	ٱلنور → النور	
+mutC-unit	passed	مستشفى → مستشفي	
+mutC-unit	passed	کریانہ → كريانه	
+mutC-unit	passed	مؤسسة → موسسه	
+mutC-unit	passed	مسائل → مسايل	
+mutC-unit	passed	  مَكْتَبَةُ   النُّور  → مكتبه النور	
+mutC-unit	passed	ـمتـجـر → متجر	
+mutC-unit	passed	ACME Store → acme store	
+mutC-unit	passed	both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1	
+mutC-unit	failed	escapes %, _ and \ (and nothing else)	AssertionError: expected '50\%\_a\b' to be '50\%\_a\\b' // Object.is equality
+mutC-unit	passed	returns the requested locale or falls back to Arabic (null or blank)	
+mutC-unit	passed	scopes are exactly product:read + store:read	
+mutC-unit	passed	GET /stores/{slug} carries a service token and returns only the names	
+mutC-unit	passed	GET /products/{id} is signed too (G-S9.19 — the old port sent no identity)	
+mutC-unit	passed	404 → null; 401/403 → denied; 500 → error status; bad shape → drift — all but 404 throw	
+mutC-unit	passed	production composition signs as `search` → audience `marketplace` with exactly the granted scopes	
+mutC-unit	passed	network failure → unreachable (throws, so the relay keeps the event pending)	
+mutC-unit	passed	registered → no fetch; approved → one fetch and a doc	
+mutC-unit	passed	a failed fetch leaves the event pending and the store state unchanged	
+mutC-unit	passed	404 from marketplace is not a silent empty name — the event does not apply	
+mutC-unit	passed	contract drift (resource slug ≠ event slug) is refused	
+mutC-unit	passed	a doc already present is not refetched (re-approval after suspension)	
+mutC-unit	passed	emits exactly the public projection even if the port over-returns	
+mutC-unit	passed	400 {"q":"ـ"} → SEARCH_QUERY_EMPTY	
+mutC-unit	passed	400 {"q":"ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"} → SEARCH_QUERY_TOO_LONG	
+mutC-unit	passed	400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER	
+mutC-unit	passed	400 {"q":"نور","state":"approved"} → SEARCH_UNKNOWN_PARAMETER	
+mutC-unit	passed	400 {"q":"نور","page":"0"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutC-unit	passed	400 {"q":"نور","page":"-3"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutC-unit	passed	400 {"q":"نور","page":"1.5"} → SEARCH_PAGE_OUT_OF_RANGE	
+mutC-unit	passed	400 {"q":"نور","page_size":"0"} → SEARCH_PAGE_SIZE_INVALID	
+mutC-unit	passed	400 {"q":"نور","page_size":"51"} → SEARCH_PAGE_SIZE_INVALID	
+mutC-unit	passed	400 {"q":"نور","locale":"fr"} → SEARCH_UNSUPPORTED_LOCALE	
+mutC-unit	passed	503 — not an empty page — when no store search port is composed	

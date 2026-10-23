@@ -1,3 +1,16 @@
+# 2026-10-23 — CLM-0669 — M0-53: G-S9.20 وRISK-0071 على PostgreSQL 18.6 — دليلٌ قابلٌ لإعادةِ التشغيل
+
+- **Work Item(s):** M0-53 (CLM-0669 · RISK-0070 · RISK-0071)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** docs-only — لا تغييرَ شيفرةٍ (القياسُ لم يكشفْ انحرافًا).
+- **Changed units:** `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/repro.sh` (سكربتُ إعادةِ إنتاجٍ محلّيٌّ) · `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/README.md` · `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `5944152e` · services/search `a3f2448f` · PostgreSQL 18.6 UTF8):** شوطُ البحثِ 87/87؛ G-S9.20 بالقفلِ 20/20 (1200 جولةً · 0 خرق)، والطفرةُ L بلا قفلٍ: البوابةُ 0/10 والجولاتُ المضخَّمةُ 1/10 (18/600 جولةً خارقةً: 17 صفٌّ `pending` بـ `ux_search_store_index_slug` + 1 `docs=0`)؛ RISK-0071 تكامل 17/17 ووحدة 46/46، A وC مقتولتانِ، B تنجو سلوكيًّا وتُقتَلُ نصّيًّا ومكافئةٌ دلاليًّا (24180 زوجًا · 0 فرق · ضابطُ `ESCAPE ''` 684 فرقًا).
+- **Correction:** ملخّصُ قياسِ `2bd8cdbf` المنشورُ في #797 قالَ إنّ الحالتَينِ فشلتا في كلِّ تشغيلٍ؛ خامُهُ يقولُ البوابة 10/10 والجولات 7/10 — مُصحَّحٌ في `raw/prior-2bd8cdbf-measurement-and-correction.txt` دونَ تعديلِ القياسِ.
+- **Risk(s):** RISK-0070 `mitigating` · RISK-0071 `open` — بلا تغيير؛ الإغلاقُ قرارُ المالك.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/README.md
+- **Deployment:** none.
+- **Not changed:** الشيفرة · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-23 — CLM-0667 — G-S9.19 / RISK-0027: عملاءُ HTTP غيرُ المباشرينَ في البابِ 7
 
 - **Work Item(s):** M0-53 (G-S9.19 · CLM-0667)

@@ -1,0 +1,69 @@
+# SUMMARY
+# البيئة · 2026-10-23T18:10:21Z
+git HEAD: 2d0c33df0e147a4edfe1c65b146993bc8383f339
+services/search tree: a3f2448f3a8682f7670f28610945c3d407ce8e61
+server_version: 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
+server_encoding: UTF8
+lc_collate: C.UTF-8 · lc_ctype: C.UTF-8
+standard_conforming_strings: on
+max_connections: 300
+node: v20.20.2 · pnpm: 9.15.9 · vitest: vitest/4.1.12 linux-x64 node-v20.20.2
+N_FIXED=20 · N_MUT=10
+
+## G-S9.20 — per variant, per test: runs passed / runs
+relay-fixed: runs=20 · runs fully green=20
+   20/20  two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state
+   20/20  crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent
+   20/20  dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row
+   20/20  G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock
+   20/20  G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc
+   20/20  G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself
+relay-mutL: runs=10 · runs fully green=0
+   10/10  two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state
+   10/10  crash mid-batch: consumed-events reset to pending and checkpoint reset — relay recovers and projections are idempotent
+   10/10  dedupe: outbox_id PRIMARY KEY rejects a duplicate consumed-events row
+   0/10  G-S9.20: a second relay instance does not start its batch while the first holds the consumer lock
+   1/10  G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all terminal, exactly one index doc
+   10/10  G-S9.20: the consumer lock refuses a pool of one connection instead of waiting on itself
+
+## G-S9.20 — every violation message under mutant L (verbatim, first line + round detail)
+   relay-mutL-1 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-1 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 23: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""}] docs=1 · round 36: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-2 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-2 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 13: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-3 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-3 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 24: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 55: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-4 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-4 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 11: rows=[{"status":"skipped_stale","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 23: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-5 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-6 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-6 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 15: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-7 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-7 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 3/60 rounds violated the invariant: expected [ …(3) ] to deeply equal [] · round 10: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=0 · round 21: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 41: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-8 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-8 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 2/60 rounds violated the invariant: expected [ …(2) ] to deeply equal [] · round 50: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1 · round 55: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""}] docs=1
+   relay-mutL-9 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-9 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 1/60 rounds violated the invariant: expected [ Array(1) ] to deeply equal [] · round 9: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1
+   relay-mutL-10 · G-S9.20: a second relay instance does not start its batch while the fi · AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 // Object.is equality
+   relay-mutL-10 · G-S9.20: 60 amplified concurrent rounds — one row per outbox_id, all t · AssertionError: 4/60 rounds violated the invariant: expected [ …(4) ] to deeply equal [] · round 12: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 37: rows=[{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1 · round 3: rows=[{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null}] docs=1 · round 53: rows=[{"status":"pending","last_error":"duplicate key value violates unique constraint \\"ux_search_store_index_slug\\""},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null},{"status":"applied","last_error":null}] docs=1
+
+## G-S9.20 — violating rounds under mutant L, classified (invariant: rows == 5 · none pending · docs == 1)
+   violating rounds: 18 across 9 runs
+   17× rows=5 · pending=1 · docs=1 · constraint=ux_search_store_index_slug
+   1× rows=5 · pending=0 · docs=0 · constraint=-
+
+## RISK-0071 — passed/total per label
+baseline-int: 17/17 passed
+baseline-unit: 46/46 passed
+mutA-int: 12/17 passed · failed: RISK-0071: `%` in q is a literal percent, not a wildcard (sku) | RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku) | RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku) | RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar) | RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)
+mutA-unit: 45/46 passed · failed: both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1
+mutB-int: 17/17 passed
+mutB-unit: 45/46 passed · failed: both ILIKE predicates use $2 = escapeLike(q) with ESCAPE '\'; trigram/full-text keep the raw $1
+mutC-int: 16/17 passed · failed: RISK-0071: `\` in q is a literal backslash, not an escape of the next char (sku)
+mutC-unit: 45/46 passed · failed: escapes %, _ and \ (and nothing else)
+
+## SQL equivalence
+== 4. تكافؤُ الطفرةِ B في SQL ==
+standard_conforming_strings=on
+pairs=24180 · mismatch(no_clause vs ESCAPE '\')=0 · mismatch(with_clause vs literal containment)=0 · control mismatch(ESCAPE '' vs literal containment)=684
+spot: s='a\xb' · q='a%b' · e='a\%b' → no_clause=false · with_clause=false · escape_disabled(control)=true

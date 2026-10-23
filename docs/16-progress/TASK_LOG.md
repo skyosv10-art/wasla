@@ -12,6 +12,17 @@
 - **Deployment:** none — لا نشرَ ولا T1/T2 ولا Render ولا كتابةَ على قاعدة؛ قراءاتُ الإنتاجِ SELECT وسجلّاتٌ فقط.
 - **Not changed:** #809 · #810 · `SECURITY_RULES.md` §11 · `deploy-target.json`. NO-GO · M6-18B `Blocked` · #730/INC-0007 HOLD · `production_open=false` · رحلةُ customer-bot → search محجوبة.
 
+# 2026-10-23 — CLM-0663 — M0-40: الفحصُ 15 — الجوابُ الفارغُ لقائمةِ التشغيلاتِ لقطةٌ لا حكم
+
+- **Work Item(s):** M0-40 (CLM-0663)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Incident:** على #809 (`5a659680`) سقطَ التحققُ الموحَّدُ مرّتينِ (2026-10-22T14:59Z و15:29Z) وWASLA CI [39805730912](https://github.com/skyosv10-art/wasla/actions/runs/39805730912) بالفحصِ 15: صفوفٌ `real`/`blackout` قُرِئت «no_verdict»، والمجموعةُ تتغيّرُ من تشغيلٍ لآخرَ والمحتوى ثابت.
+- **Root cause (مقيس):** `actions/runs?head_sha=<FULL>` يُجيبُ 200 وJSON صالحًا بلا سيرِ WASLA CI عابرًا (4/50 في 2026-10-22T15:51Z؛ 0/50 في 2026-10-23T00:05Z)، والحارسُ قرأَ أوّلَ جوابٍ كذلك حكمًا قاطعًا؛ و`_gh_read` (CLM-0560) لا يُعيدُه لأنّه ناجح.
+- **Fix:** `_runs_lookup` في `scripts/checks/audit-ci-verdicts.sh` + وضعُ `run-lookup <FULL_SHA>` في `scripts/checks/lib/audit_runs.py` (بدلَ `run-id`): found/empty/invalid لا تختلط؛ `AUDIT_EMPTY_ATTEMPTS` (4) و`AUDIT_EMPTY_WAIT` (2 ث مضاعَفًا = 14 ث)؛ دليلُ السيرِ لا يُمحى؛ `no_verdict` باتّفاقِ كلِّ المحاولاتِ الصالحةِ فقط؛ التعذُّرُ إخفاقٌ «غيرُ محسوم»؛ البصمةُ 40 خانةً وإلّا إخفاق؛ سيرُ بصمةٍ أخرى مرفوض؛ سطرُ تشخيصٍ لكلِّ صفّ.
+- **Tests:** +22 حالةً في `scripts/checks/lib/gov-cases-ci-verdict-audit.sh` (§١٤) بـ`gh` بديلٍ متسلسلٍ بلا شبكة + 4 للقارئِ مباشرةً. **قبلُ** على `fffacfb1`: 28 ناجح · 14 فاشل (exit=1). **بعدُ** على `b6c86dd0`: 46/0. **طفرات:** 7 كلُّها مقتولة (M1 السلوكُ القديمُ يُسقطُ 8)، والاستعادةُ بـ`cmp` ثمّ 46/0.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T000000Z-clm-0663-audit-ci-verdicts-empty-runs/README.md
+- **Deployment:** none — نصُّ حوكمةٍ واختباراتُه فقط؛ لا خدمةَ ولا Render ولا قاعدة.
+- **Not changed:** معيارُ `real`/`blackout`، وصفوفُ `CI_VERDICT_AUDIT.md`، و#809 (لم يُعدَّل). NO-GO · M6-18B `Blocked` · #730/INC-0007 HOLD · `production_open=false` كما هي.
 # 2026-10-22 — CLM-0661 — تدقيقُ ما بعدَ CLM-0658: خطُّ الأساسِ، المخاطرُ، #730، ومسارُ Channel Edge إلى search
 
 - **Work Item(s):** M0-53 (G-S9.7) · M6-18B (RISK-0066 · RISK-0067 · INC-0007)

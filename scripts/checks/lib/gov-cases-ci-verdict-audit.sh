@@ -116,8 +116,8 @@ t "جوابٌ بعاملٍ حقيقيٍّ بلا خطواتٍ مذكورةٍ ي�
 # (١٠) وانتقاءُ السيرِ يقتصرُ على `WASLA CI`: فـ`Roadmap freshness` سيرٌ آخرُ،
 #      ولو قُبِلَ لَأثبتَ «حكماً» بوّابةً أخرى غيرَ البوّابةِ المقصودةِ.
 t "انتقاءُ السيرِ يقتصرُ على WASLA CI ولا يقبلُ سيراً آخرَ" pass \
-  bash -c 'out="$(python3 "$1/scripts/checks/lib/audit_runs.py" run-id <<< "$2")" && [[ -z "$out" ]]' \
-  _ "$REPO_ROOT" '{"workflow_runs":[{"name":"Roadmap freshness","id":1}]}'
+  bash -c 'out="$(python3 "$1/scripts/checks/lib/audit_runs.py" run-lookup "$3" <<< "$2")" && [[ "$out" == empty ]]' \
+  _ "$REPO_ROOT" '{"workflow_runs":[{"name":"Roadmap freshness","id":1,"head_sha":"3cb44c35a7c1e6b8f0d2a4c6e8f0a1b2c3d4e5f6"}]}' 3cb44c35a7c1e6b8f0d2a4c6e8f0a1b2c3d4e5f6
 
 # (١١) والبصمةُ المُسجَّلةُ يجبُ أن تكونَ التزاماً حقيقيّاً — وعلى اللوحةِ الحقيقيّةِ
 #      رموزٌ عشريّةٌ من إحدَ عشرَ خانةً (`34065473979`) هيَ **معرِّفاتُ سيرٍ** لا
@@ -160,7 +160,8 @@ case "$url" in
   repos/o/r/commits/*) echo "${url##*/}" ;;
   repos/o/r/actions/runs\?head_sha=*)
     if [[ "${AV_RUNS_FAIL:-0}" == 1 ]]; then echo 'HTTP 502: Bad Gateway (runs)' >&2; exit 1; fi
-    echo '{"workflow_runs":[{"name":"WASLA CI","id":9}]}' ;;
+    # CLM-0663: الواجهةُ الحقيقيّةُ تحملُ `head_sha` في كلِّ سيرٍ، والحارسُ صارَ يشترطُ مطابقتَها.
+    printf '{"workflow_runs":[{"name":"WASLA CI","id":9,"head_sha":"%s"}]}\n' "${url#*head_sha=}" | sed 's/&per_page=100//' ;;
   repos/o/r/actions/runs/9/jobs*)
     n=$(cat "$AV_COUNT" 2>/dev/null || echo 0); n=$((n+1)); echo "$n" > "$AV_COUNT"
     if (( n <= ${AV_JOBS_FAILS:-0} )); then echo 'HTTP 403: API rate limit exceeded (jobs)' >&2; exit 1; fi
@@ -259,7 +260,7 @@ t "CLM-0663: فارغٌ صالحٌ في كلِّ المحاولاتِ ⇒ no_ver
 t "CLM-0663: no_verdict يُعلِنُ عددَ المحاولاتِ وأنّها كلَّها فارغةٌ صالحة" pass \
   _av_seq_msg pass "no_verdict بعدَ 3 محاولاتٍ كلُّها فارغةٌ صالحة" empty no_verdict 3
 t "CLM-0663: فارغٌ صالحٌ دائمٌ وصفٌّ blackout ⇒ يسقطُ برسالةٍ تشخيصيّة" pass \
-  _av_seq_msg fail "بعدَ 3 محاولاتٍ: فارغٌ صالحٌ=3" empty blackout 3
+  _av_seq_msg fail "«no_verdict» — دعوى لم تُراجَعْ بعدَ أن صارَ العلمُ متاحاً · no_verdict بعدَ 3 محاولاتٍ كلُّها فارغةٌ صالحة (فارغٌ صالحٌ=3)" empty blackout 3
 t "CLM-0663: خطأُ واجهةٍ ثمّ السيرُ ⇒ الدليلُ الإيجابيُّ لا يسقط" pass _av_seq err,found blackout
 t "CLM-0663: السيرُ ثمّ فارغٌ ⇒ الفارغُ اللاحقُ لا يمحو الدليل" pass _av_seq found,empty blackout
 t "CLM-0663: خطأُ واجهةٍ دائمٌ ⇒ غيرُ محسومٍ (إخفاقٌ) لا no_verdict" pass \
@@ -292,4 +293,14 @@ t "CLM-0663: الاستعلامُ يحملُ البصمةَ الكاملةَ (40
 t "CLM-0663: بصمةٌ مختصرةٌ من الواجهةِ لا تُمرَّرُ إلى قائمةِ التشغيلات" pass \
   _av_no_runs_query found blackout 3 blackout abc1234 abc1234
 t "CLM-0663: حدُّ محاولاتٍ غيرُ صالحٍ يعودُ إلى الافتراضيِّ (4) لا إلى صفر" pass \
-  _av_seq_msg fail "بعدَ 4 محاولاتٍ: فارغٌ صالحٌ=4" empty blackout abc
+  _av_seq_msg fail "no_verdict بعدَ 4 محاولاتٍ كلُّها فارغةٌ صالحة (فارغٌ صالحٌ=4)" empty blackout abc
+# والقارئُ نفسُه يُقاسُ مباشرةً، لا عبرَ الحارسِ وحدَه: `_gh_read` يحجبُ عنهُ النصَّ الفارغَ
+# اليومَ، فلو اعتُمِدَ على ذلكَ لعاشت طفرةُ «النصُّ الفارغُ مجموعةٌ فارغة» (M7) بلا كاشف.
+_av_lookup_is() { # _av_lookup_is <المتوقَّعُ: empty|found|invalid> <json> [sha]
+  local out; out="$(printf '%s' "$2" | python3 "$REPO_ROOT/scripts/checks/lib/audit_runs.py" run-lookup "${3:-$AV_SHA}")" || return 1
+  [[ "${out%%$'\t'*}" == "$1" ]]
+}
+t "CLM-0663: القارئُ — نصٌّ فارغٌ ليسَ مجموعةً فارغة (invalid)" pass _av_lookup_is invalid ''
+t "CLM-0663: القارئُ — مجموعةٌ فارغةٌ صالحةٌ (empty)" pass _av_lookup_is empty '{"workflow_runs":[]}'
+t "CLM-0663: القارئُ — معرِّفُ سيرٍ غيرُ عدديٍّ (invalid)" pass _av_lookup_is invalid "{\"workflow_runs\":[{\"name\":\"WASLA CI\",\"id\":true,\"head_sha\":\"$AV_SHA\"}]}"
+t "CLM-0663: القارئُ يرفضُ بصمةً مختصرةً وسيطًا" fail _av_lookup_is empty '{"workflow_runs":[]}' 3cb44c35

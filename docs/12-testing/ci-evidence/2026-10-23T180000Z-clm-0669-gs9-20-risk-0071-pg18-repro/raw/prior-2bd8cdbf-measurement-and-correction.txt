@@ -1,0 +1,30 @@
+# قياسٌ سابقٌ على main 2bd8cdbf (2026-10-23T~13Z) — يُحفَظُ كما قيسَ، مع تصحيحِ قراءتِهِ
+
+SUMMARY.txt الأصليُّ (حرفيًّا):
+    PostgreSQL 18.6 local (UTF8, C.UTF-8) · main 2bd8cdbf · services/search relay-concurrent-dedupe.integration.test.ts (AMPLIFIED_ROUNDS=60)
+    fixed (pg_advisory_lock present): 20/20 file runs pass (= 1200 amplified rounds, 0 violations)
+    mutant (lock/unlock replaced by SELECT $1::int, hashtext($2)): 0/10 pass — failing cases each run: 'a second relay instance does not start its batch while the first holds the consumer lock' + '60 amplified concurrent rounds'
+    sample: AssertionError: B read the checkpoint while A held the consumer lock: expected 1 to be +0 · AssertionError: 1/60 rounds violated the invariant
+
+تصحيحٌ من السجلّاتِ الخامِ نفسِها (rc-mut-1..10.log): السطرُ «failing cases each run: … + '60 amplified concurrent rounds'» غيرُ دقيقٍ.
+    rc-mut-1.log: gate-case failed=yes · amplified=1/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-2.log: gate-case failed=yes · amplified=1/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-3.log: gate-case failed=yes · amplified=2/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-4.log: gate-case failed=yes · amplified=1/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-5.log: gate-case failed=yes · amplified= · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ Tests 1 failed | 5 passed (6)
+    rc-mut-6.log: gate-case failed=yes · amplified=5/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-7.log: gate-case failed=yes · amplified=1/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-8.log: gate-case failed=yes · amplified=3/60 rounds violated · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯ Tests 2 failed | 4 passed (6)
+    rc-mut-9.log: gate-case failed=yes · amplified= · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ Tests 1 failed | 5 passed (6)
+    rc-mut-10.log: gate-case failed=yes · amplified= · ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ Tests 1 failed | 5 passed (6)
+    ⇒ حالةُ البوابةِ فشلت 10/10؛ الجولاتُ المضخَّمةُ فشلت 7/10 (rc-mut-5 و9 و10 خضراءُ فيها رغمَ غيابِ القفلِ).
+
+RISK-0071 SUMMARY.txt الأصليُّ (حرفيًّا):
+    PostgreSQL 18.6 local · main 2bd8cdbf · search-index-reader.integration.test.ts
+    baseline: 17/17 pass (5 RISK-0071 cases)
+    mutant A (params [q, q] — no escapeLike): 5 RISK-0071 cases fail → killed
+    mutant B (drop explicit ESCAPE '\\'): 17/17 pass → EQUIVALENT in PostgreSQL: default LIKE escape is backslash; direct check: 'axb' ILIKE '%'||'a\%b'||'%' = f with and without ESCAPE clause; standard_conforming_strings=on
+    mutant C (escapeLike escapes only % and _, not \\): 1 integration case (literal backslash) + 1 unit case fail → killed
+    verdict: no deviation; no code change
+
+تصحيحٌ: «mutant B: 17/17 pass» يخصُّ ملفَّ التكاملِ؛ والسجلُّ السابقُ لا يذكرُ نتيجةَ اختبارِ الوحدةِ على B، فلا يُستنتَجُ منهُ شيءٌ عنها. القياسُ الحاليُّ (SUMMARY.txt) يُشغِّلُهُ صراحةً: B تنجو سلوكيًّا (تكامل 17/17) وتُقتَلُ نصّيًّا (وحدة 45/46).

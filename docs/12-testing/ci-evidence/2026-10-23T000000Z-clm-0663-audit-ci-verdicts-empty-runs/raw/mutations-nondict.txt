@@ -1,0 +1,11 @@
+# طفراتُ الفحص 15 على f80d76b0fcfde2897b56ce63b416f2126c79e6bc + الإصلاحُ غيرُ الملتزَم (audit_runs.py) · 2026-10-23T01:22:03Z
+M1-old-behaviour-first-empty-is-no_verdict rc=1 9 فاشل CAUGHT
+M2-no_verdict-despite-invalid-attempt rc=1 7 فاشل CAUGHT
+M3-run-of-another-sha-accepted rc=1 1 فاشل CAUGHT
+M4-short-sha-passed-to-runs-query rc=1 1 فاشل CAUGHT
+M5-api-error-read-as-no_verdict rc=1 2 فاشل CAUGHT
+M6-missing-workflow_runs-read-as-empty rc=1 1 فاشل CAUGHT
+M7-blank-text-read-as-empty-set rc=1 1 فاشل CAUGHT
+M8-non-dict-element-dropped-silently rc=1 6 فاشل CAUGHT
+restore: cmp identical
+after restore: rc=0 ═══ حالاتُ الفحصِ 15: 53 ناجح · 0 فاشل ═══

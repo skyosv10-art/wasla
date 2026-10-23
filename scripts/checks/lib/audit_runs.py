@@ -17,7 +17,7 @@ def run_lookup(full: str, raw: str) -> str:
 
     `found\t<id>`  سيرُ `WASLA CI` للبصمةِ الكاملةِ نفسِها (لا لبصمةٍ أخرى).
     `empty`        JSON صالحٌ بقائمةِ `workflow_runs` لا سيرَ فيها لـ`WASLA CI` — لقطةٌ لا حكم.
-    `invalid\t<…>` ليسَ JSON، أو بلا قائمةِ `workflow_runs`، أو فيهِ سيرٌ لبصمةٍ أخرى
+    `invalid\t<…>` ليسَ JSON، أو بلا قائمةِ `workflow_runs`، أو فيها عنصرٌ ليسَ قاموسًا، أو فيهِ سيرٌ لبصمةٍ أخرى
                    (جوابٌ عن سؤالٍ آخر) — تعذُّرُ قياسٍ لا «لا حكم».
     ونصٌّ فارغٌ ليسَ مجموعةً فارغة: يُصنَّفُ `invalid`.
     """
@@ -29,7 +29,11 @@ def run_lookup(full: str, raw: str) -> str:
         return "invalid\tليسَ JSON"
     if not isinstance(data, dict) or not isinstance(data.get("workflow_runs"), list):
         return "invalid\tلا قائمةَ workflow_runs"
-    runs = [r for r in data["workflow_runs"] if isinstance(r, dict)]
+    runs = data["workflow_runs"]
+    # عنصرٌ غيرُ قاموسيٍّ (null · نصّ · رقم) جوابٌ مشوَّهٌ لا «لا سير»: إسقاطُه بصمتٍ كانَ
+    # يُحوِّلُ `[null]` إلى مجموعةٍ فارغةٍ صالحةٍ تُحتسَبُ في اتّفاقِ no_verdict (CLM-0663).
+    if any(not isinstance(r, dict) for r in runs):
+        return "invalid\tعنصرٌ في workflow_runs ليسَ سيرًا"
     if any(r.get("head_sha") != full for r in runs):
         return "invalid\tسيرٌ لبصمةٍ غيرِ المسؤولة"
     ci = [r for r in runs if r.get("name") == "WASLA CI"]

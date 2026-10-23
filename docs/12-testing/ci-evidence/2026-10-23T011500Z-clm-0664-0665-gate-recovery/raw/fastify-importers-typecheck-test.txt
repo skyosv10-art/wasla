@@ -1,0 +1,616 @@
+# typecheck+test لمستورِدي fastify الـ22 · 02965381 + الترقيةُ غيرُ الملتزَمة · بدء 2026-10-23T01:13:46Z
+Scope: 22 of 74 workspace projects
+packages/observability typecheck$ tsc --noEmit
+packages/service-auth typecheck$ tsc -p tsconfig.json --noEmit
+packages/observability typecheck: Done
+packages/service-auth typecheck: Done
+packages/bot-runtime typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-edge typecheck$ tsc -p tsconfig.json --noEmit
+services/audit typecheck$ tsc -p tsconfig.json --noEmit
+services/billing typecheck$ tsc -p tsconfig.json --noEmit
+packages/channel-edge typecheck: Done
+services/customers typecheck$ tsc -p tsconfig.json --noEmit
+packages/bot-runtime typecheck: Done
+services/delivery typecheck$ tsc -p tsconfig.json --noEmit
+services/audit typecheck: Done
+services/drivers typecheck$ tsc -p tsconfig.json --noEmit
+services/billing typecheck: Done
+services/identity typecheck$ tsc -p tsconfig.json --noEmit
+services/customers typecheck: Done
+services/marketplace typecheck$ tsc -p tsconfig.json --noEmit
+services/identity typecheck: Done
+services/matching typecheck$ tsc -p tsconfig.json --noEmit
+services/drivers typecheck: Done
+services/negotiations typecheck$ tsc -p tsconfig.json --noEmit
+services/delivery typecheck: Done
+services/orders typecheck$ tsc -p tsconfig.json --noEmit
+services/matching typecheck: Done
+services/partners typecheck$ tsc --noEmit
+services/marketplace typecheck: Done
+services/reputation typecheck$ tsc -p tsconfig.json --noEmit
+services/negotiations typecheck: Done
+services/search typecheck$ tsc -p tsconfig.json --noEmit
+services/orders typecheck: Done
+services/subscriptions typecheck$ tsc -p tsconfig.json --noEmit
+services/partners typecheck: Done
+services/support typecheck$ tsc -p tsconfig.json --noEmit
+services/reputation typecheck: Done
+services/support typecheck: Done
+services/search typecheck: Done
+services/subscriptions typecheck: Done
+packages/partners-e2e typecheck$ tsc -p tsconfig.json --noEmit
+services/dispatch typecheck$ tsc -p tsconfig.json --noEmit
+services/geography typecheck$ tsc -p tsconfig.json --noEmit
+packages/partners-e2e typecheck: Done
+services/geography typecheck: Done
+services/dispatch typecheck: Done
+## typecheck exit=0
+Scope: 22 of 74 workspace projects
+
+> @wasla/observability@0.1.0 test /home/user/workspace/wasla/packages/observability
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/observability
+
+ ✓ src/__tests__/metrics.test.ts (6 tests) 190ms
+ ✓ src/__tests__/synthetic-trace.test.ts (4 tests) 87ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  01:15:08
+   Duration  933ms (transform 98ms, setup 0ms, import 336ms, tests 277ms, environment 0ms)
+
+
+> @wasla/service-auth@0.1.0 test /home/user/workspace/wasla/packages/service-auth
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/service-auth
+
+ ✓ src/__tests__/user-assertion.test.ts (27 tests) 291ms
+ ✓ src/__tests__/fastify.test.ts (14 tests) 109ms
+ ✓ src/__tests__/replay-store.test.ts (12 tests) 72ms
+ ✓ src/__tests__/http-server.e2e.test.ts (11 tests) 56ms
+ ✓ src/__tests__/token.test.ts (51 tests) 32ms
+ ✓ src/__tests__/enforce.test.ts (18 tests) 15ms
+ ✓ src/__tests__/http.test.ts (14 tests) 11ms
+ ✓ src/__tests__/keys.test.ts (27 tests) 13ms
+ ✓ src/__tests__/replay-postgres.test.ts (10 tests) 8ms
+ ✓ src/__tests__/edge-controls.test.ts (15 tests) 9ms
+ ✓ src/__tests__/outbound.test.ts (9 tests) 9ms
+ ✓ src/__tests__/replay.test.ts (11 tests) 7ms
+
+ Test Files  12 passed (12)
+      Tests  219 passed (219)
+   Start at  01:15:10
+   Duration  3.36s (transform 442ms, setup 0ms, import 793ms, tests 633ms, environment 1ms)
+
+
+> @wasla/bot-runtime@0.1.0 test /home/user/workspace/wasla/packages/bot-runtime
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/bot-runtime
+
+ ✓ src/__tests__/bot-role-abuse.test.ts (53 tests) 289ms
+ ✓ src/__tests__/bot-role-journey.test.ts (18 tests) 173ms
+ ✓ src/__tests__/service-identity.test.ts (10 tests) 108ms
+ ✓ src/__tests__/webhook.test.ts (14 tests) 122ms
+ ✓ src/__tests__/launch-surfaces.test.ts (8 tests) 92ms
+ ✓ src/__tests__/groups.test.ts (14 tests) 94ms
+ ✓ src/__tests__/conversation.test.ts (13 tests) 203ms
+ ✓ src/__tests__/messages.test.ts (8 tests) 103ms
+ ✓ src/__tests__/runtime.test.ts (6 tests) 89ms
+ ✓ src/__tests__/user-assertion.test.ts (5 tests) 87ms
+ ✓ src/__tests__/bot-database-health.test.ts (1 test) 60ms
+ ✓ src/__tests__/bot-role-runtime.test.ts (26 tests) 13ms
+ ✓ src/__tests__/config.test.ts (24 tests) 11ms
+ ✓ src/__tests__/identity-bootstrap.test.ts (8 tests) 9ms
+
+ Test Files  14 passed (14)
+      Tests  208 passed (208)
+   Start at  01:15:13
+   Duration  6.67s (transform 725ms, setup 0ms, import 2.73s, tests 1.45s, environment 1ms)
+
+
+> @wasla/channel-edge@0.1.0 test /home/user/workspace/wasla/packages/channel-edge
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-edge
+
+ ✓ src/__tests__/create-channel-edge.test.ts (5 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  01:15:20
+   Duration  488ms (transform 229ms, setup 0ms, import 280ms, tests 6ms, environment 0ms)
+
+
+> @wasla/audit-service@0.1.0 test /home/user/workspace/wasla/services/audit
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/audit
+
+ ✓ src/__tests__/http/audit-routes.test.ts (26 tests) 246ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  01:15:21
+   Duration  942ms (transform 389ms, setup 0ms, import 524ms, tests 246ms, environment 0ms)
+
+
+> @wasla/billing-service@0.1.0 test /home/user/workspace/wasla/services/billing
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/billing
+
+stderr | src/__tests__/db-failure-containment.test.ts > billing — database refused (down) > fails 5 times, then the breaker rejects fast without touching the database; health is 503
+{"level":"warn","event":"db_breaker_transition","pool":"billing","from":"closed","to":"open","failures":5}
+
+ ✓ src/__tests__/db-failure-containment.test.ts (2 tests) 898ms
+     ✓ a call is bounded by the connect timeout instead of hanging, and health answers 503 within its probe bound  808ms
+ ✓ src/__tests__/http.test.ts (16 tests) 141ms
+ ✓ src/__tests__/domain.test.ts (47 tests) 13ms
+ ✓ src/__tests__/relay-loop.test.ts (3 tests) 88ms
+ ✓ src/__tests__/relay.test.ts (19 tests) 17ms
+ ✓ src/__tests__/delivery-contract.test.ts (7 tests) 6ms
+ ✓ src/__tests__/infrastructure.test.ts (11 tests) 7ms
+ ✓ src/__tests__/schema-drift.test.ts (8 tests) 7ms
+ ✓ src/__tests__/boundary.test.ts (5 tests) 4ms
+
+ Test Files  9 passed (9)
+      Tests  118 passed (118)
+   Start at  01:15:23
+   Duration  2.96s (transform 318ms, setup 0ms, import 733ms, tests 1.18s, environment 1ms)
+
+
+> @wasla/customers-service@0.1.0 test /home/user/workspace/wasla/services/customers
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/customers
+
+ ✓ src/__tests__/http/app.test.ts (35 tests) 315ms
+ ✓ src/__tests__/http/admin-routes.test.ts (13 tests) 141ms
+ ✓ src/__tests__/service-identity.test.ts (13 tests) 131ms
+ ✓ src/__tests__/http-order-intake.test.ts (17 tests) 167ms
+ ✓ src/__tests__/observability-wiring.test.ts (3 tests) 80ms
+ ✓ src/__tests__/order-request-preview.test.ts (13 tests) 12ms
+ ✓ src/__tests__/mappers.test.ts (4 tests) 8ms
+ ✓ src/__tests__/order-request-submit.test.ts (11 tests) 13ms
+ ✓ src/__tests__/events-privacy.test.ts (3 tests) 7ms
+ ✓ src/__tests__/schema-drift.test.ts (17 tests) 9ms
+ ✓ src/__tests__/dispatch-job-wiring.test.ts (5 tests) 10ms
+ ✓ src/__tests__/saved-places.test.ts (10 tests) 10ms
+ ✓ src/__tests__/customer-profile.test.ts (8 tests) 9ms
+
+ Test Files  13 passed (13)
+      Tests  152 passed (152)
+   Start at  01:15:26
+   Duration  4.45s (transform 552ms, setup 0ms, import 1.34s, tests 913ms, environment 1ms)
+
+
+> @wasla/delivery-service@0.1.0 test /home/user/workspace/wasla/services/delivery
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/delivery
+
+ ✓ src/__tests__/http-marketplace-catalog.test.ts (18 tests) 661ms
+     ✓ places an order for a slug — the answer that was 503 for seven reviews  573ms
+ ✓ src/__tests__/store-order-http.test.ts (31 tests) 267ms
+ ✓ src/__tests__/readiness-probe-bound.test.ts (3 tests) 557ms
+     ✓ a slow-but-successful cold connect is ready, not a false probe_timeout  304ms
+ ✓ src/__tests__/service-identity.test.ts (25 tests) 217ms
+ ✓ src/__tests__/relay-dead-letter-acknowledgement-http.test.ts (18 tests) 179ms
+ ✓ src/__tests__/payment-mirror.test.ts (25 tests) 177ms
+ ✓ src/__tests__/relay-requeue-http.test.ts (12 tests) 137ms
+ ✓ src/__tests__/fulfillment-transition.http.test.ts (8 tests) 129ms
+ ✓ src/__tests__/inventory-conflict-http.test.ts (10 tests) 131ms
+ ✓ src/__tests__/relay-dead-letter-http.test.ts (10 tests) 144ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (7 tests) 135ms
+ ✓ src/__tests__/user-assertion-ownership-batch2.test.ts (10 tests) 133ms
+ ✓ src/__tests__/inventory-conflict-acknowledgement-http.test.ts (10 tests) 128ms
+ ✓ src/__tests__/idempotency-retention.test.ts (17 tests) 106ms
+ ✓ src/__tests__/readiness-observation.test.ts (12 tests) 99ms
+ ✓ src/__tests__/retry-after.test.ts (10 tests) 94ms
+ ✓ src/__tests__/schema-drift.test.ts (34 tests) 35ms
+ ✓ src/__tests__/marketplace-health-probe.test.ts (21 tests) 21ms
+ ✓ src/__tests__/marketplace-reservation-contract-drift.test.ts (3 tests) 23ms
+ ✓ src/__tests__/state-machine.test.ts (10 tests) 17ms
+ ✓ src/__tests__/relay.test.ts (21 tests) 17ms
+ ✓ src/__tests__/idempotency.test.ts (23 tests) 12ms
+ ✓ src/__tests__/dispatch-mirror.test.ts (23 tests) 12ms
+ ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 9ms
+ ✓ src/__tests__/idempotency-sweep-runner.test.ts (21 tests) 12ms
+ ✓ src/__tests__/delegation.test.ts (11 tests) 11ms
+ ✓ src/__tests__/store-order-domain.test.ts (14 tests) 11ms
+ ✓ src/__tests__/validation.test.ts (15 tests) 10ms
+ ✓ src/__tests__/dependency-probe.test.ts (20 tests) 10ms
+ ✓ src/__tests__/relay-dead-letters.unit.test.ts (21 tests) 9ms
+ ✓ src/__tests__/marketplace-inventory.test.ts (29 tests) 10ms
+ ✓ src/__tests__/ops-runner-purity.test.ts (11 tests) 10ms
+ ✓ src/__tests__/inventory-conflict.unit.test.ts (18 tests) 8ms
+ ✓ src/__tests__/inventory-reservation.unit.test.ts (18 tests) 8ms
+ ✓ src/__tests__/reservation-store-fake.test.ts (6 tests) 8ms
+ ✓ src/__tests__/relay-acknowledgement.unit.test.ts (13 tests) 7ms
+ ✓ src/__tests__/conflict-acknowledger.unit.test.ts (7 tests) 6ms
+ ✓ src/__tests__/marketplace-actor-contract-drift.test.ts (4 tests) 5ms
+ ✓ src/__tests__/fulfillment-transition.unit.test.ts (9 tests) 5ms
+ ✓ src/__tests__/relay-reprocess.test.ts (9 tests) 5ms
+ ✓ src/__tests__/event-coverage.test.ts (4 tests) 5ms
+ ✓ src/__tests__/store-order-confirmation-inventory.unit.test.ts (4 tests) 4ms
+
+ Test Files  42 passed (42)
+      Tests  602 passed (602)
+   Start at  01:15:31
+   Duration  13.75s (transform 1.02s, setup 0ms, import 2.98s, tests 3.58s, environment 4ms)
+
+
+> @wasla/drivers-service@0.1.0 test /home/user/workspace/wasla/services/drivers
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/drivers
+
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts (7 tests) 209ms
+ ✓ src/__tests__/service-identity.test.ts (13 tests) 191ms
+ ✓ src/__tests__/http-documents.test.ts (7 tests) 135ms
+ ✓ src/__tests__/http-profile.test.ts (17 tests) 201ms
+ ✓ src/__tests__/http-errors.test.ts (9 tests) 128ms
+ ✓ src/__tests__/http-admin-list.test.ts (3 tests) 86ms
+ ✓ src/__tests__/user-assertion-forwarding.test.ts (5 tests) 111ms
+ ✓ src/__tests__/http-vehicles.test.ts (7 tests) 130ms
+ ✓ src/__tests__/http-eligibility.test.ts (7 tests) 125ms
+ ✓ src/__tests__/http-drift.test.ts (12 tests) 73ms
+ ✓ src/__tests__/contract-drift.test.ts (23 tests) 27ms
+ ✓ src/__tests__/eligibility.test.ts (16 tests) 22ms
+ ✓ src/__tests__/outbound-ports.test.ts (30 tests) 33ms
+ ✓ src/__tests__/privacy.test.ts (4 tests) 28ms
+ ✓ src/__tests__/state-machines.test.ts (20 tests) 25ms
+ ✓ src/__tests__/publication.test.ts (16 tests) 25ms
+ ✓ src/__tests__/schema-drift.test.ts (28 tests) 10ms
+
+ Test Files  17 passed (17)
+      Tests  224 passed (224)
+   Start at  01:15:45
+   Duration  7.06s (transform 667ms, setup 0ms, import 2.67s, tests 1.56s, environment 2ms)
+
+
+> @wasla/identity-service@0.1.0 test /home/user/workspace/wasla/services/identity
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/identity
+
+ ✓ src/__tests__/http/app.test.ts (9 tests) 123ms
+ ✓ src/__tests__/http/user-assertion.test.ts (8 tests) 129ms
+ ✓ src/__tests__/http/service-identity.test.ts (14 tests) 128ms
+ ✓ src/__tests__/http/user-asserted-ownership.test.ts (9 tests) 133ms
+ ✓ src/__tests__/http/link-asserted-ownership.test.ts (5 tests) 95ms
+ ✓ src/__tests__/session.test.ts (28 tests) 21ms
+ ✓ src/__tests__/operations.test.ts (6 tests) 10ms
+ ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 15ms
+ ✓ src/__tests__/public-id.test.ts (4 tests) 4ms
+
+ Test Files  9 passed (9)
+      Tests  88 passed (88)
+   Start at  01:15:52
+   Duration  3.94s (transform 482ms, setup 0ms, import 1.82s, tests 658ms, environment 1ms)
+
+
+> @wasla/marketplace-service@0.1.0 test /home/user/workspace/wasla/services/marketplace
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/marketplace
+
+ ✓ src/__tests__/service-identity.test.ts (54 tests) 423ms
+ ✓ src/__tests__/http-degraded.test.ts (30 tests) 270ms
+ ✓ src/__tests__/purity.test.ts (21 tests) 119ms
+ ✓ src/__tests__/http-drift.test.ts (32 tests) 78ms
+ ✓ src/__tests__/canonical-json.test.ts (3 tests) 69ms
+ ✓ src/__tests__/events.test.ts (57 tests) 21ms
+ ✓ src/__tests__/schema-drift.test.ts (33 tests) 25ms
+ ✓ src/__tests__/composition.test.ts (19 tests) 22ms
+ ✓ src/__tests__/reservation.test.ts (9 tests) 7ms
+ ✓ src/__tests__/errors.test.ts (16 tests) 15ms
+ ✓ src/__tests__/inventory-sync.test.ts (13 tests) 7ms
+ ✓ src/__tests__/staff.test.ts (20 tests) 13ms
+ ✓ src/__tests__/transitions.test.ts (16 tests) 11ms
+ ✓ src/__tests__/category-seed.test.ts (13 tests) 10ms
+ ✓ src/__tests__/inventory.test.ts (11 tests) 8ms
+ ✓ src/__tests__/catalog.test.ts (15 tests) 11ms
+ ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 9ms
+ ✓ src/__tests__/identifiers.test.ts (12 tests) 11ms
+ ✓ src/__tests__/visibility.test.ts (7 tests) 8ms
+ ✓ src/__tests__/state.test.ts (14 tests) 8ms
+ ✓ src/__tests__/staff-rank.test.ts (4 tests) 4ms
+
+ Test Files  21 passed (21)
+      Tests  406 passed (406)
+   Start at  01:15:57
+   Duration  6.32s (transform 667ms, setup 0ms, import 1.68s, tests 1.15s, environment 2ms)
+
+
+> @wasla/matching-service@0.1.0 test /home/user/workspace/wasla/services/matching
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/matching
+
+ ✓ src/__tests__/user-assertion-ownership.test.ts (14 tests) 149ms
+ ✓ src/__tests__/http-service-identity.test.ts (13 tests) 120ms
+ ✓ src/__tests__/http-candidacy.test.ts (5 tests) 95ms
+ ✓ src/__tests__/http-errors.test.ts (9 tests) 103ms
+ ✓ src/__tests__/http-health.test.ts (2 tests) 69ms
+ ✓ src/__tests__/http-candidates.test.ts (4 tests) 88ms
+ ✓ src/__tests__/scoring.test.ts (29 tests) 111ms
+ ✓ src/__tests__/http-geography.test.ts (4 tests) 29ms
+ ✓ src/__tests__/filters.test.ts (22 tests) 10ms
+ ✓ src/__tests__/mappers.test.ts (9 tests) 9ms
+ ✓ src/__tests__/schema-drift.test.ts (19 tests) 9ms
+ ✓ src/__tests__/manage-candidacy.test.ts (23 tests) 16ms
+ ✓ src/__tests__/evaluate-candidates.test.ts (26 tests) 20ms
+ ✓ src/__tests__/ruleset-drift.test.ts (8 tests) 7ms
+
+ Test Files  14 passed (14)
+      Tests  187 passed (187)
+   Start at  01:16:03
+   Duration  4.57s (transform 560ms, setup 0ms, import 1.48s, tests 834ms, environment 1ms)
+
+
+> @wasla/negotiations-service@0.1.0 test /home/user/workspace/wasla/services/negotiations
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/negotiations
+
+ ✓ src/__tests__/http.test.ts (36 tests) 292ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (16 tests) 173ms
+ ✓ src/__tests__/service-identity.test.ts (14 tests) 126ms
+ ✓ src/__tests__/http-drift.test.ts (14 tests) 69ms
+ ✓ src/__tests__/outbound-ports.test.ts (22 tests) 49ms
+ ✓ src/__tests__/constraints.test.ts (25 tests) 21ms
+ ✓ src/__tests__/rounds.test.ts (16 tests) 18ms
+ ✓ src/__tests__/agreement.test.ts (14 tests) 18ms
+ ✓ src/__tests__/tick.test.ts (13 tests) 18ms
+ ✓ src/__tests__/messages.test.ts (10 tests) 16ms
+ ✓ src/__tests__/privacy.test.ts (7 tests) 25ms
+ ✓ src/__tests__/open-thread.test.ts (15 tests) 13ms
+ ✓ src/__tests__/schema-drift.test.ts (27 tests) 22ms
+ ✓ src/__tests__/read.test.ts (12 tests) 16ms
+ ✓ src/__tests__/domain.test.ts (19 tests) 11ms
+
+ Test Files  15 passed (15)
+      Tests  260 passed (260)
+   Start at  01:16:08
+   Duration  5.11s (transform 718ms, setup 0ms, import 1.82s, tests 884ms, environment 1ms)
+
+
+> @wasla/orders-service@0.1.0 test /home/user/workspace/wasla/services/orders
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/orders
+
+ ✓ src/__tests__/http/app.test.ts (65 tests) 372ms
+ ✓ src/__tests__/http/driver-jobs.test.ts (9 tests) 122ms
+ ✓ src/__tests__/transition-order.test.ts (459 tests) 176ms
+ ✓ src/__tests__/http/service-identity.test.ts (11 tests) 114ms
+ ✓ src/__tests__/schema-drift.test.ts (19 tests) 10ms
+ ✓ src/__tests__/read-order.test.ts (11 tests) 15ms
+ ✓ src/__tests__/ingest-order.test.ts (27 tests) 18ms
+ ✓ src/__tests__/assignments.test.ts (21 tests) 22ms
+ ✓ src/__tests__/state-machine.test.ts (28 tests) 20ms
+ ✓ src/__tests__/mappers.test.ts (14 tests) 12ms
+
+ Test Files  10 passed (10)
+      Tests  664 passed (664)
+   Start at  01:16:14
+   Duration  3.69s (transform 579ms, setup 0ms, import 1.20s, tests 881ms, environment 1ms)
+
+
+> @wasla/partners-service@0.0.0 test /home/user/workspace/wasla/services/partners
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/partners
+
+ ✓ src/__tests__/lifecycle.unit.test.ts (13 tests) 6ms
+ ✓ src/__tests__/webhook-delivery.unit.test.ts (12 tests) 13ms
+ ✓ src/__tests__/credentials.unit.test.ts (9 tests) 9ms
+ ✓ src/__tests__/usage-enforcement.unit.test.ts (9 tests) 6ms
+ ✓ src/__tests__/tenant-guard.unit.test.ts (6 tests) 6ms
+ ✓ src/__tests__/issue-credential.unit.test.ts (4 tests) 9ms
+
+ Test Files  6 passed (6)
+      Tests  53 passed (53)
+   Start at  01:16:18
+   Duration  883ms (transform 97ms, setup 0ms, import 175ms, tests 48ms, environment 1ms)
+
+
+> @wasla/reputation-service@0.1.0 test /home/user/workspace/wasla/services/reputation
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/reputation
+
+ ✓ src/__tests__/http.test.ts (44 tests) 329ms
+ ✓ src/__tests__/service-identity.test.ts (15 tests) 143ms
+ ✓ src/__tests__/purity.test.ts (15 tests) 67ms
+ ✓ src/__tests__/http-drift.test.ts (13 tests) 70ms
+ ✓ src/__tests__/schema-drift.test.ts (30 tests) 23ms
+ ✓ src/__tests__/submit-rating.test.ts (17 tests) 21ms
+ ✓ src/__tests__/run-tick.test.ts (12 tests) 19ms
+ ✓ src/__tests__/record-fact.test.ts (15 tests) 17ms
+ ✓ src/__tests__/reads.test.ts (18 tests) 20ms
+ ✓ src/__tests__/consume-source-event.test.ts (10 tests) 16ms
+ ✓ src/__tests__/drain-outbox.test.ts (14 tests) 12ms
+ ✓ src/__tests__/inbound-translate.test.ts (22 tests) 16ms
+ ✓ src/__tests__/fraud.test.ts (23 tests) 10ms
+ ✓ src/__tests__/constraints.test.ts (18 tests) 11ms
+ ✓ src/__tests__/source-events-drift.test.ts (11 tests) 9ms
+ ✓ src/__tests__/score.test.ts (20 tests) 11ms
+
+ Test Files  16 passed (16)
+      Tests  297 passed (297)
+   Start at  01:16:19
+   Duration  4.95s (transform 649ms, setup 0ms, import 1.54s, tests 794ms, environment 1ms)
+
+
+> @wasla/search-service@0.1.0 test /home/user/workspace/wasla/services/search
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/search
+
+ ✓ src/__tests__/service-identity.test.ts (12 tests) 129ms
+ ✓ src/__tests__/store-search.test.ts (46 tests) 148ms
+ ✓ src/__tests__/http-app.test.ts (12 tests) 116ms
+ ✓ src/__tests__/relay-acknowledgement.test.ts (14 tests) 108ms
+ ✓ src/__tests__/relay-requeue.test.ts (10 tests) 92ms
+ ✓ src/__tests__/relay-dead-letters.test.ts (13 tests) 97ms
+ ✓ src/__tests__/schema-drift.test.ts (21 tests) 28ms
+ ✓ src/__tests__/relay.test.ts (11 tests) 21ms
+ ✓ src/__tests__/ranking.test.ts (9 tests) 6ms
+ ✓ src/__tests__/http-requests.test.ts (12 tests) 7ms
+ ✓ src/__tests__/projector.test.ts (9 tests) 6ms
+ ✓ src/__tests__/query.test.ts (9 tests) 5ms
+ ✓ src/__tests__/event-coverage.test.ts (3 tests) 5ms
+ ✓ src/__tests__/visibility.test.ts (6 tests) 4ms
+
+ Test Files  14 passed (14)
+      Tests  187 passed (187)
+   Start at  01:16:24
+   Duration  4.52s (transform 605ms, setup 0ms, import 1.42s, tests 771ms, environment 1ms)
+
+
+> @wasla/subscriptions-service@0.1.0 test /home/user/workspace/wasla/services/subscriptions
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/subscriptions
+
+ ✓ src/__tests__/http-degraded.test.ts (18 tests) 143ms
+ ✓ src/__tests__/service-identity.test.ts (14 tests) 132ms
+ ✓ src/__tests__/purity.test.ts (24 tests) 103ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (7 tests) 100ms
+ ✓ src/__tests__/http-drift.test.ts (23 tests) 73ms
+ ✓ src/__tests__/schema-drift.test.ts (23 tests) 24ms
+ ✓ src/__tests__/composition.test.ts (10 tests) 15ms
+ ✓ src/__tests__/events.test.ts (21 tests) 14ms
+ ✓ src/__tests__/transitions.test.ts (18 tests) 15ms
+ ✓ src/__tests__/state.test.ts (24 tests) 12ms
+ ✓ src/__tests__/periods.test.ts (15 tests) 10ms
+ ✓ src/__tests__/referral.test.ts (18 tests) 9ms
+ ✓ src/__tests__/plans.test.ts (13 tests) 9ms
+ ✓ src/__tests__/referral-code.test.ts (8 tests) 7ms
+
+ Test Files  14 passed (14)
+      Tests  236 passed (236)
+   Start at  01:16:29
+   Duration  4.48s (transform 582ms, setup 0ms, import 1.52s, tests 667ms, environment 1ms)
+
+
+> @wasla/support-service@0.1.0 test /home/user/workspace/wasla/services/support
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/support
+
+ ✓ src/__tests__/user-assertion-ownership.test.ts (16 tests) 148ms
+ ✓ src/__tests__/http.test.ts (16 tests) 177ms
+ ✓ src/__tests__/reputation-bridge.test.ts (7 tests) 78ms
+ ✓ src/__tests__/infrastructure.test.ts (24 tests) 19ms
+ ✓ src/__tests__/relay.test.ts (30 tests) 16ms
+ ✓ src/__tests__/domain.test.ts (24 tests) 9ms
+ ✓ src/__tests__/boundary.test.ts (7 tests) 7ms
+ ✓ src/__tests__/schema-drift.test.ts (5 tests) 6ms
+
+ Test Files  8 passed (8)
+      Tests  129 passed (129)
+   Start at  01:16:34
+   Duration  2.68s (transform 442ms, setup 0ms, import 934ms, tests 460ms, environment 1ms)
+
+
+> @wasla/partners-e2e@0.1.0 test /home/user/workspace/wasla/packages/partners-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/partners-e2e
+
+ ↓ src/__tests__/phase14-exit-gate.e2e.test.ts (8 tests | 8 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  8 skipped (8)
+   Start at  01:16:37
+   Duration  498ms (transform 226ms, setup 0ms, import 334ms, tests 0ms, environment 0ms)
+
+
+> @wasla/dispatch-service@0.1.0 test /home/user/workspace/wasla/services/dispatch
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/dispatch
+
+ ✓ src/__tests__/config-boot-fail.test.ts (4 tests) 2115ms
+     ✓ DISPATCH_WAVE_SIZE=٣ (Arabic-Indic) → ConfigError with variable name, not silent 200  551ms
+     ✓ DISPATCH_WAVE_SIZE=abc (non-numeric) → ConfigError  519ms
+     ✓ DISPATCH_WAVE_SIZE=0 (below min 1) → ConfigError  524ms
+     ✓ DISPATCH_MAX_WAVES=لا رقمَ → ConfigError with its own name  519ms
+ ✓ src/__tests__/service-identity.test.ts (15 tests) 137ms
+ ✓ src/__tests__/http-offers.test.ts (6 tests) 117ms
+ ✓ src/__tests__/http-offer-detail.test.ts (9 tests) 116ms
+ ✓ src/__tests__/http-jobs.test.ts (11 tests) 150ms
+ ✓ src/__tests__/http-errors.test.ts (5 tests) 96ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (8 tests) 105ms
+ ✓ src/__tests__/http-tick.test.ts (4 tests) 82ms
+ ✓ src/__tests__/http-health.test.ts (2 tests) 69ms
+ ✓ src/__tests__/events-contract.test.ts (8 tests) 37ms
+ ✓ src/__tests__/contract-drift.test.ts (15 tests) 57ms
+ ✓ src/__tests__/http-order-engine.test.ts (25 tests) 43ms
+ ✓ src/__tests__/tick.test.ts (26 tests) 32ms
+ ✓ src/__tests__/http-matching.test.ts (7 tests) 27ms
+ ✓ src/__tests__/accept-offer.test.ts (17 tests) 26ms
+ ✓ src/__tests__/reject-offer.test.ts (12 tests) 24ms
+ ✓ src/__tests__/cancel-job.test.ts (14 tests) 24ms
+ ✓ src/__tests__/run-tick.test.ts (8 tests) 21ms
+ ✓ src/__tests__/mappers.test.ts (10 tests) 20ms
+ ✓ src/__tests__/create-job.test.ts (13 tests) 12ms
+ ✓ src/__tests__/state-machine.test.ts (19 tests) 11ms
+ ✓ src/__tests__/schema-drift.test.ts (18 tests) 9ms
+ ✓ src/__tests__/runtime-config.test.ts (7 tests) 6ms
+ ✓ src/__tests__/deadlines.test.ts (10 tests) 5ms
+
+ Test Files  24 passed (24)
+      Tests  273 passed (273)
+   Start at  01:16:38
+   Duration  11.97s (transform 903ms, setup 0ms, import 4.75s, tests 3.34s, environment 2ms)
+
+
+> @wasla/geography-service@0.1.0 test /home/user/workspace/wasla/services/geography
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/services/geography
+
+ ✓ src/__tests__/zone-search.test.ts (23 tests) 231ms
+ ✓ src/__tests__/service-identity.test.ts (13 tests) 122ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (8 tests) 128ms
+ ✓ src/__tests__/http/app.test.ts (16 tests) 151ms
+ ✓ src/__tests__/user-location.test.ts (11 tests) 11ms
+ ✓ src/__tests__/hierarchy.test.ts (10 tests) 9ms
+ ✓ src/__tests__/locale.test.ts (4 tests) 7ms
+
+ Test Files  7 passed (7)
+      Tests  85 passed (85)
+   Start at  01:16:50
+   Duration  2.72s (transform 381ms, setup 0ms, import 875ms, tests 659ms, environment 1ms)
+
+## test exit=0
+# انتهاء 2026-10-23T01:16:53Z

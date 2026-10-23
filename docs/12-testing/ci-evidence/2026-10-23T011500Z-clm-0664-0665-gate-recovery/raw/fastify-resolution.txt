@@ -1,0 +1,30 @@
+# fastify المحلولةُ فعلًا في كلِّ مستورِد (node_modules/fastify/package.json بعدَ pnpm install) · 2026-10-23T01:13:27Z
+packages/bot-runtime	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+packages/channel-edge	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+packages/observability	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+packages/partners-e2e	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+packages/service-auth	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/audit	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/billing	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/customers	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/delivery	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/dispatch	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/drivers	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/geography	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/identity	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/marketplace	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/matching	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/negotiations	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/orders	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/partners	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/reputation	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/search	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/subscriptions	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+services/support	5.12.7	node_modules/.pnpm/fastify@5.12.7/node_modules/fastify
+
+# سلامةُ الحزمة: القفلُ مقابلَ السجلّ
+lock: sha512-v4pEPsTRPuqlDIYiQFB+BHjVN4SdHX9u0ABk0ZDUKbbdY1vsNryUd1j4Z+jQEZajvYIVk047Kimva9/AJ79GYw==
+npm : sha512-v4pEPsTRPuqlDIYiQFB+BHjVN4SdHX9u0ABk0ZDUKbbdY1vsNryUd1j4Z+jQEZajvYIVk047Kimva9/AJ79GYw==
+
+# كلُّ إصداراتِ fastify في القفل:
+      2   fastify@5.12.7

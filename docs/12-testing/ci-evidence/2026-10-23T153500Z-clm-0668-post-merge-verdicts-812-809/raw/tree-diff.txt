@@ -1,0 +1,11 @@
+# فرقُ الشجرةِ بينَ رأسِ كلِّ PR والتزامِ دمجِهِ (squash على قاعدةٍ محدَّثةٍ ⇒ يجبُ أن يكونَ فارغًا) · 2026-10-23T15:32:57Z
+
+== git diff --stat b3c59c19b6c034b5290a2713c4a38ac995974d67 2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177 ==
+(فارغٌ — لا فرقَ)
+tree(b3c59c19b6c034b5290a2713c4a38ac995974d67)=b15f747daabb86fb09d0e114ef81bc2f0d97ef12 · tree(2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177)=b15f747daabb86fb09d0e114ef81bc2f0d97ef12
+parent(2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177)=ea98c4c86b264fde04ba84879cfa350dbef37c9d
+
+== git diff --stat 15a01e88c252a9deb03459d03973453e5bb17841 771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4 ==
+(فارغٌ — لا فرقَ)
+tree(15a01e88c252a9deb03459d03973453e5bb17841)=20560094aa0c616eef26ee2518c12c7650e5a9a6 · tree(771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4)=20560094aa0c616eef26ee2518c12c7650e5a9a6
+parent(771beb7fc9fed84b5e3c7a7ff11d605718f4a2d4)=2bd8cdbfa19c43c7d34bbddb81a9bfe3be195177

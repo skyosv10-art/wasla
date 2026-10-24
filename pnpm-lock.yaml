@@ -1924,6 +1924,9 @@ importers:
       '@types/pg':
         specifier: ^8.11.0
         version: 8.23.1
+      '@wasla/channel-edge':
+        specifier: workspace:*
+        version: link:../../packages/channel-edge
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

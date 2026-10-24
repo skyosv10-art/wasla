@@ -1,0 +1,15 @@
+rev=7b7afa45348d654595145fc5c9b62e2f351c4af4
+== C1 deploy target (read only)
+  mode frozen · owner_id None · environment test · isolation_evidence None · production_database_refs ['ppixaauyqoykrogwdxtv']
+  commits touching infra/render/deploy-target.json after 2026-10-19T12:00Z: 0
+== C2 isolation evidence E1–E4 in the tree (ADR-073 addendum)
+  files mentioning 'isolation_evidence' outside guards/target/history: ROADMAP.md docs/00-rules/VERIFY_COMMAND.md docs/08-infrastructure/RENDER_TEST_ENVIRONMENT_PLAN.md docs/15-decisions/ADR-073-render-test-environment-only.md
+  evidence dirs after 2026-10-19 naming E2/pg_roles (restricted role): 
+== C3 guards (offline self-tests)
+  validate-render-deploy-target rc=0 · ✓ self-test: 38/38 mutations caught
+== C4 negative controls on the target (fresh tree each)
+  N1 unfreeze (mode=deploy + owner) without isolation_evidence: rc=1 REJECTED ✗ deploy mode needs isolation_evidence naming an existing evidence file (ADR-073 D4)
+  N2 unfreeze with isolation_evidence naming a missing file: rc=1 REJECTED ✗ deploy mode needs isolation_evidence naming an existing evidence file (ADR-073 D4)
+  N3 production_database_refs emptied: rc=1 REJECTED ✗ deploy-target.json must list production_database_refs (isolation rule)
+  N4 (limit) unfreeze with isolation_evidence naming an existing but unrelated file (README.md): rc=0 ACCEPTED 
+== C5 not measurable here: E1 separate test project · E2 role privileges · E3 env-group links · E4 key reuse (need Render/Supabase API; not used in this session)

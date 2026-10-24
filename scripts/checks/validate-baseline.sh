@@ -306,6 +306,45 @@ elif status in ("missing", "invalid"):
     problems.append("البابُ 4: `repo.commit` = %s لا يُحَلُّ في المستودعِ ولا في `origin` — أساسٌ لا يُرجَعُ إلى التزامٍ قائمٍ (RISK-0028) · %s." % (commit[:12], detail))
 if repo.get("dirty") and not str(repo.get("dirty_reason", "")).strip():
     problems.append("البابُ 4: الأساسُ وُلِّد من شجرةٍ مُعدَّلةٍ بلا `repo.dirty_reason` — شجرةٌ مُعدَّلةٌ بلا سببٍ مكتوبٍ تجعل الأساسَ غيرَ قابلٍ للإرجاع.")
+# (د) CLM-0680 (RISK-0011 — الأجزاءُ غيرَ القراريّةِ): «متى وُلِّدَ الأساسُ؟» لم يكن
+#     مقيساً أصلاً — `generated_at` لم يُفحَص لا صيغةً ولا عقلًا. هذا ليسَ سياسةَ
+#     قِدَمٍ (حدُّ الأقدميّةِ قرارُ المالكِ — M0-08) بل سلامةٌ واتّساقٌ فقط:
+#     طابعٌ زمنيٌّ مفهومٌ · ليسَ في المستقبلِ (هامشُ سماحةٍ 5 دقائق) · لا يسبقُ
+#     زمنَ الالتزامِ الذي زعمَ أنّه قاسَهُ (أساسٌ من شجرةٍ لا يُولَّدُ قبلَها).
+#     واتّصالُ الالتزامِ بـmain يُقاسُ ويُعلَنُ **إشعاراً** لا يُحكَمُ به هنا —
+#     البوّابةُ (انجرافٌ أم حدُّ قِدَمٍ) قرارُ المالكِ المعروضُ في M0-08.
+import subprocess as _sp
+from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+gen = str(doc.get("generated_at", "")).strip()
+gen_dt = None
+try:
+    gen_dt = _dt.fromisoformat(gen.replace("Z", "+00:00"))
+    if gen_dt.tzinfo is None:
+        gen_dt = gen_dt.replace(tzinfo=_tz.utc)
+except (ValueError, AttributeError):
+    problems.append("البابُ 4: `generated_at` = %r ليس طابعاً زمنيّاً مفهوماً (RFC 3339) — أساسٌ بلا زمنِ ولادةٍ صالحٍ لا يُعرفُ قِدَمُه (RISK-0011 · CLM-0680)." % gen)
+if gen_dt is not None:
+    if gen_dt > _dt.now(_tz.utc) + _td(minutes=5):
+        problems.append("البابُ 4: `generated_at` = %s في المستقبلِ — طابعٌ لم يحنَ وقتُهُ لا يُقاسُ منه قِدَمٌ صادقٌ (RISK-0011 · CLM-0680)." % gen)
+    if commit and status in ("local", "fetched"):
+        _r = _sp.run(["git", "-C", root, "show", "-s", "--format=%cI", commit], capture_output=True, text=True)
+        _cdate = (_r.stdout or "").strip()
+        if _cdate:
+            try:
+                _cdt = _dt.fromisoformat(_cdate.replace("Z", "+00:00"))
+                if _cdt.tzinfo is None:
+                    _cdt = _cdt.replace(tzinfo=_tz.utc)
+                if gen_dt < _cdt:
+                    problems.append("البابُ 4: `generated_at` = %s يسبقُ زمنَ التزامِ الشجرةِ %s — أساسٌ وُلِّدَ قبلَ الشجرةِ التي زعمَ قياسَها (RISK-0011 · CLM-0680)." % (gen, _cdate))
+            except ValueError:
+                pass
+        # الاتّصالُ بـorigin/main: قياسٌ يُعلَنُ لا حكمٌ يُنفَّذُ — القرارُ للمالكِ (M0-08)
+        if _sp.run(["git", "-C", root, "rev-parse", "--verify", "-q", "origin/main"], capture_output=True).returncode == 0:
+            _anc = _sp.run(["git", "-C", root, "merge-base", "--is-ancestor", commit, "origin/main"], capture_output=True)
+            if _anc.returncode == 0:
+                print("N|البابُ 4: `repo.commit` متّصلٌ بـorigin/main (سلفٌ له) — الاتّصالُ مقيسٌ.")
+            else:
+                print("N|البابُ 4: `repo.commit` طافٍ: مُحَلٌّ لكنّه ليسَ سلفاً لـorigin/main (قياسُ فرعٍ/refs/pull)؛ بوّابةُ الانجرافِ (البابُ 2) هي الحكمَ، وحدُّ القِدَمِ قرارُ المالكِ (M0-08).")
 for p in problems:
     print("P|" + p)
 PY

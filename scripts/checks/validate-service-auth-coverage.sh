@@ -355,7 +355,7 @@ else
       --exclude='*.test.ts' 2>/dev/null | sort -u
   )
   # ── 7-د) المقابسُ الخامّ (CLM-0681 · G-S9.19 · 2026-10-24) ── begin-raw-sockets ──
-  # آخرُ فجوةٍ مُعلَنةٍ في بصرِ البابِ 7: المقابسُ الخامّ — `node:net`/`node:tls`/
+  # فجوةُ المقابسِ الخامّ المُعلَنةُ في بصرِ البابِ 7: المقابسُ الخامّ — `node:net`/`node:tls`/
   # `node:dgram` (وبلا بادئةٍ). لا تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا
   # يشبهُ نداؤها fetch فيعمى عنها البابُ 7 — والخطرُ أنّ من يملكُ مقبساً خاماً
   # يخاطبُ الحدودَ بلا هويّةِ خدمةٍ أصلاً. **القياسُ قبلَ الشيفرةِ:** كلُّ مراجعِها
@@ -368,7 +368,11 @@ else
   # حدٌّ معلنٌ باقٍ: grep لا AST — البناءُ الديناميكيُّ لاسمِ الوحدةِ خارجَ البصرِ.
   SOCKET_PATTERN='\bfrom\s+["'"'"'](node:)?(net|tls|dgram)["'"'"']|\brequire\s*\(\s*["'"'"'](node:)?(net|tls|dgram)["'"'"']\s*\)|\bimport\s*\(\s*["'"'"'](node:)?(net|tls|dgram)["'"'"']\s*\)'
   # بلا أنبوبٍ يُغذّي grep -q (RISK-0037): أسطرُ المراجعِ تُكتَبُ في ملفٍّ مؤقّتٍ
-  # ثمّ يُسألُ عنها سؤالاً مباشراً — الاستيرادُ النوعيُّ لا يُحصى والتشغيليُّ يُسقِط.
+  # ثمّ يُسألُ عنها سؤالاً مباشراً. الاستثناءُ النوعيُّ **تعليمةً لا سطراً**
+  # (CLM-0682): يُقصُّ من رأسِ السطرِ تعليمةُ استيرادٍ نوعيٍّ كاملةً (`import
+  # type …;` — أو ذيلُ استيرادٍ نوعيٍّ متعدّدِ الأسطرِ `} from "net";`) ثمّ يُفحَصُ
+  # **الباقي**: سطرٌ تشغيليٌّ يحملُ `// import type` تعليقاً أو `require` بعدَ
+  # استيرادٍ نوعيٍّ في السطرِ نفسِهِ لا يُستثنى — الفحصُ للتعليمةِ لا لورودِ العبارةِ.
   _SOCKETS_TMP="$(mktemp)"
   mapfile -t SOCKET_USERS < <(
     grep -rlE "$SOCKET_PATTERN" services bots packages \
@@ -376,7 +380,10 @@ else
       --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
       --exclude='*.test.ts' 2>/dev/null | while IFS= read -r f; do
         grep -E "$SOCKET_PATTERN" "$f" > "$_SOCKETS_TMP" 2>/dev/null || true
-        if grep -qv 'import type' "$_SOCKETS_TMP"; then printf '%s\n' "$f"; fi
+        while IFS= read -r _sock_line; do
+          _sock_rest="$(printf '%s' "$_sock_line" | sed -E 's/^[[:space:]]*(import[[:space:]]+type\b[^;]*;?|}[[:space:]]*from[[:space:]]*["'"'"'][^"'"'"']+["'"'"'];?)[[:space:]]*//')"
+          if grep -qE "$SOCKET_PATTERN" <<< "$_sock_rest"; then printf '%s\n' "$f"; break; fi
+        done < "$_SOCKETS_TMP"
       done
   )
   rm -f "$_SOCKETS_TMP"

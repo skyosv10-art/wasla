@@ -1,3 +1,17 @@
+# 2026-10-24 — CLM-0673 — M0-07: مراجعةُ RISK-0034 الفعليّة (جسرُ ORD-/WS-)
+
+- **Work Item(s):** M0-07 (CLM-0673 · RISK-0034)
+- **Status:** Released (يُدمجُ معَ CLM-0672 في PR واحدٍ بقرارِ المالكِ — كلٌّ منهما يحجبُ الآخرَ في `verify`؛ التزاماتٌ وسجلّاتٌ منفصلة)
+- **Kind:** risk review — بقرارِ المالكِ 2026-10-24 «راجع الخطر الآن» بعدَ انقضاءِ موعدِ 2026-10-23.
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0034: `review:2026-11-07` + نتيجةُ المراجعةِ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `61314116`):** dispatch يشترطُ `^ORD-[0-9]10$` في النموذجِ والتحقّقِ وقيدِ القاعدة؛ `DispatchJobRequester` بلا تنفيذٍ غيرِ `FakeDispatchJobRequester`؛ `delegateToDispatch` بلا مستدعٍ خارجَ الاختبارات (ضابطٌ موجبٌ: 16 فيها)؛ لا عميلَ HTTP إلى `POST /dispatch/jobs` في delivery (يوجدُ في customers لمسارِ `ORD-`)؛ قرارُ الجسرِ مؤجّلٌ في ADR-026 §4.7 (آخرُ تغييرٍ 2026-09-27)؛ `production_open` true=0 · false=32.
+- **Result:** الحالةُ `open` والخطورةُ `medium` بلا تغيير — فجوةٌ وظيفيّةٌ معماريّةٌ بلا تعرّضٍ حيّ، وشرطٌ قبلَ فتحِ توصيلِ المتاجرِ؛ المراجعةُ التاليةُ 2026-11-07 أو فورَ قرارِ المالكِ في الجسر.
+- **Owner decision required:** بنيةُ الحجزِ بينَ orders وdelivery (ADR-026 §4.7 · §5) — لم تُتَّخذ.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليل.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ شيفرة · ADR-026 · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-24 — CLM-0672 — M0-06: إغلاقُ أربعِ ثغراتِ fast-uri (2026-10-23) في شجرةِ الإنتاج
 
 - **Work Item(s):** M0-06 (CLM-0672 · RISK-0004)

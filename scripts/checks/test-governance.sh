@@ -2065,8 +2065,11 @@ _base_root() { # _base_root <tag> [orphan:yes|no]
   mkdir -p "$R/docs/12-testing/baseline-sources"
   printf 'Test Files  7 passed (7)\nTests  99 passed (99)\nالنتيجة: 12 ناجح · 0 فاشل\n' > "$R/docs/12-testing/baseline-sources/verify.log"
   printf 'التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' >> "$R/docs/12-testing/baseline-sources/verify.log"
+  # CLM-0680: يُؤرَّخُ الالتزامُ الصناعيُّ قبلَ ختمِ الأساسِ (BASELINE_STAMP) —
+  # فالبابُ 4(د) يقيسُ أنّ الولادةَ لا تسبقُ الشجرةَ التي زعمَ الأساسُ قياسَها.
   ( cd "$R" && git init -q . && git add -A >/dev/null 2>&1 \
-    && git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
+    && GIT_AUTHOR_DATE="2026-08-27T00:00:00Z" GIT_COMMITTER_DATE="2026-08-27T00:00:00Z" \
+       git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
   # السجلُّ **خارجَ** الجذرِ: ملفٌّ غيرُ مُتتبَّعٍ داخلَه يجعل الشجرةَ «مُعدَّلةً»
   # فيُسقِطها البابُ الرابعُ بلا سببٍ مكتوبٍ — وهو عيبٌ وقعَ في أوّلِ تشغيلٍ.
   local LOGF="docs/12-testing/baseline-sources/verify.log"
@@ -2140,6 +2143,44 @@ B_NOCOMMIT_O="$(_base_root nocommito)"; _base_mut "$B_NOCOMMIT_O" 'd["repo"]["co
 git clone -q --bare --no-local "$B_NOCOMMIT_O" "${B_NOCOMMIT_O}.origin.git" >/dev/null 2>&1; git -C "$B_NOCOMMIT_O" remote add origin "file://${B_NOCOMMIT_O}.origin.git"
 t "التزامٌ لا وجودَ له يُسقِطُ ولو وُجدَ origin (CLM-0538)" fail bash "$BASE_SRC" "$B_NOCOMMIT_O"
 
+# CLM-0680 (RISK-0011 — الأجزاءُ غيرَ القراريّةِ): سلامةُ `generated_at` واتّساقُه
+# معَ الشجرةِ التي زعمَ الأساسُ قياسَها. ليسَ سياسةَ قِدَمٍ (قرارُ المالكِ — M0-08)
+# بل فهمُ الطابعِ وعدمُ استقبالِه وعدمُ سبقِهِ لالتزامِهِ — وكلُّ فرعٍ يُحيَّدُ يُثبَتُ
+# ضروريَّهُ بطفرةٍ تُمرِّرُ العيبَ تحتَ الحارسِ المُطفَّرِ.
+B_GENBAD="$(_base_root genbad)"; _base_mut "$B_GENBAD" 'd["generated_at"]="ليس طابعاً زمنياً"'
+t "طابعُ ولادةٍ غيرُ مفهومٍ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENBAD"
+B_GENFUT="$(_base_root genfut)"; _base_mut "$B_GENFUT" 'd["generated_at"]="2030-01-01T00:00:00Z"'
+t "طابعُ ولادةٍ في المستقبلِ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENFUT"
+B_GENEARLY="$(_base_root genearly)"; _base_mut "$B_GENEARLY" 'd["generated_at"]="2026-08-26T00:00:00Z"'
+t "أساسٌ يسبقُ زمنَ التزامِهِ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENEARLY"
+
+_base_src_mut() { # _base_src_mut <tag> <جذر> — حارسٌ مُطفَّرٌ داخلَ الجذرِ الصناعيِّ
+  # (حتى يجدَ مكتباتِهِ هناكَ) — وكلُّ طفرةٍ تُحيِّدُ فحصاً فتُمرِّرُ العيبَ.
+  local R="$2" M="$2/scripts/checks/validate-baseline.sh"
+  # الحارسُ يحلُّ المولِّدَ ومكتباتِهِ من موضعِهِ هو — فتُنسَخُ إليهِ في الجذرِ الصناعيِّ
+  cp "$REPO_ROOT/scripts/checks/lib/baseline_commit.py" "$R/scripts/checks/lib/" 2>/dev/null || true
+  cp "$REPO_ROOT/scripts/baseline.sh" "$R/scripts/baseline.sh" 2>/dev/null || true
+  chmod +x "$R/scripts/baseline.sh" 2>/dev/null || true
+  python3 - "$BASE_SRC" "$M" "$1" <<'PYM'
+import sys
+src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+MUT = {
+  "parse":   ('gen_dt = _dt.fromisoformat(gen.replace("Z", "+00:00"))', 'gen_dt = _dt.now(_tz.utc) if gen else None'),
+  "future":  ('if gen_dt > _dt.now(_tz.utc) + _td(minutes=5):', 'if False:'),
+  "consist": ('if gen_dt < _cdt:', 'if False:'),
+}
+old, new = MUT[tag]
+s = open(src, encoding="utf-8").read()
+assert old in s, "anchor missing: " + old
+open(dst, "w", encoding="utf-8").write(s.replace(old, new, 1))
+PYM
+  bash "$M" "$R"
+}
+t "طفرة (تحييدُ فحصِ فهمِ الطابعِ): حارسٌ بلا فحصِ الصيغةِ يمرُّ بالعيبِ (RISK-0011)" pass _base_src_mut parse "$B_GENBAD"
+t "طفرة (تحييدُ فحصِ المستقبلِ): حارسٌ يقبلُ طابعاً مستقبليّاً (RISK-0011)" pass _base_src_mut future "$B_GENFUT"
+t "طفرة (تحييدُ فحصِ الاتّساقِ): حارسٌ لا يقارنُ بالتزامِ الشجرةِ (RISK-0011)" pass _base_src_mut consist "$B_GENEARLY"
+
+
 # ── البابُ 1: الصيغةُ والاتّساقُ الذاتيُّ ──────────────────────────────────
 B_NOFILE="$(_base_root nofile)"; rm -f "$B_NOFILE/docs/12-testing/BASELINE.json"
 t "غيابُ الأساسِ المُلتزَمِ يُسقِط" fail bash "$BASE_SRC" "$B_NOFILE"
@@ -2178,7 +2219,7 @@ t "تغيُّرُ بصمةِ ملفِّ القفلِ يُسقِط" fail bash "$B
 
 # ── البابُ 3: التكرارُ يُثبَت لا يُدَّعى ────────────────────────────────────
 B_VOL="$(_base_root volatile)"
-_base_mut "$B_VOL" 'd["generated_at"]="1999-01-01T00:00:00Z"; d["env"]["python"]="0.0.0"'
+_base_mut "$B_VOL" 'd["generated_at"]="2026-08-28T01:00:00Z"; d["env"]["python"]="0.0.0"'
 t "تغيُّرُ الوقتِ والبيئةِ وحدَهما لا يُسقِط (وإلّا استحالَ التكرارُ)" pass bash "$BASE_SRC" "$B_VOL"
 
 # ── البابُ 4: لا أساسَ يتيماً ولا مُجمِّلاً ─────────────────────────────────

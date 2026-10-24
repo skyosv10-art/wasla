@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0678 — M0-53: حارسُ محتوى دليلِ العزلِ E1–E4 (RISK-0069)
+
+- **Work Item(s):** M0-53 (CLM-0678 · RISK-0069 — إصلاحُ جذرِ بقيّةِ مراجعةِ #822: القبولُ بوجودِ الملفِّ وحده).
+- **Status:** Released (تُدمَجُ بعدَ 43/43 على الرأسِ النهائيّ).
+- **Kind:** guard hardening — لا سلوكَ نشرٍ مُغيَّر ولا إذنَ فحصٍ حيّ.
+- **Changed units:** `scripts/deploy/render-sync.py` (`isolation_evidence_errors()` — E1–E4 وفقَ ADR-073 D4 + استدعاؤه في `load_target()`) · `scripts/checks/validate-render-deploy-target.sh` (عينُ VALID_EVIDENCE + 12 حالةً سالبةً + عينٌ موجبٌ P3 + 4 طفراتٍ) · سجلُّ RISK-0069 (إضافةٌ) · دليلُ `ci-evidence/2026-10-24T130000Z-clm-0678-…` · سجلّاتُ التقدّم.
+- **Measured (branch):** 12/12 حالةً سالبةً مرفوضةً · العينُ الموجبُ مقبولٌ · 42/42 طفرةً مُكتشفةً (الحارسُ المحليُّ في `raw/guard-local-main.txt`).
+- **Risk(s):** RISK-0069 → open/high بلا تغيير — القفلُ وإزالةُ التجميدِ قرارُ المالكِ.
+- **No-Test-Reason:** حارسٌ فقط — لا تغييرَ في سلوكِ النشرِ؛ القياسُ: الحالاتُ والطفراتُ داخلَ الحارسِ نفسِهِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T130000Z-clm-0678-risk-0069-evidence-content-guard/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · production_open · Render مجمّدٌ · T1/T2 · #730/INC-0007 HOLD · NO-GO.
+
 # 2026-10-24 — CLM-0677 — M6-18B: مراجعةُ RISK-0069 الفعليّة (عزلُ بيئةِ Render الاختباريّة)
 
 - **Work Item(s):** M6-18B (CLM-0677 · RISK-0069) — يبقى Blocked.

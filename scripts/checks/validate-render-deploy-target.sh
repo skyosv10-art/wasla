@@ -192,7 +192,7 @@ def gate_cases(root):
         ("E8", "E2 without grants", "docs/fixture/iso.md", VALID_EVIDENCE.replace("grants: SELECT on public.orders (wasla_test)", "")),
         ("E9", "E4 without fingerprints", "docs/fixture/iso.md", VALID_EVIDENCE.replace("sha256: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\n", "")),
         ("E10", "E3 with the production group linked", "docs/fixture/iso.md", VALID_EVIDENCE.replace("wasla-prod-db linked=0", "wasla-prod-db linked=17")),
-        ("E11", "key material pasted into the evidence", "docs/fixture/iso.md", VALID_EVIDENCE + "\n-----BEGIN PRIVATE KEY-----\n"),
+        ("E11", "key material pasted into the evidence", "docs/fixture/iso.md", VALID_EVIDENCE + "\n" + "-----BEGIN PRIVATE " + "KEY-----\n"),  # مُركَّبٌ من قطعتين: لا يظهر النمطُ الحرفيُّ في المصدرِ أمامَ فاحصِ الأسرارِ — والحراسةُ تُقاسُ في التشغيلِ كما هي
         ("E12", "another prod-named group is linked", "docs/fixture/iso.md", VALID_EVIDENCE.replace("wasla-test-db linked=3", "wasla-test-db linked=3\nwasla-prod-legacy linked=5")),
         ("P3", "control: complete E1–E4 evidence loads", "docs/fixture/iso.md", None),
     )

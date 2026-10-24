@@ -354,6 +354,39 @@ else
       --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
       --exclude='*.test.ts' 2>/dev/null | sort -u
   )
+  # ── 7-د) المقابسُ الخامّ (CLM-0681 · G-S9.19 · 2026-10-24) ── begin-raw-sockets ──
+  # آخرُ فجوةٍ مُعلَنةٍ في بصرِ البابِ 7: المقابسُ الخامّ — `node:net`/`node:tls`/
+  # `node:dgram` (وبلا بادئةٍ). لا تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا
+  # يشبهُ نداؤها fetch فيعمى عنها البابُ 7 — والخطرُ أنّ من يملكُ مقبساً خاماً
+  # يخاطبُ الحدودَ بلا هويّةِ خدمةٍ أصلاً. **القياسُ قبلَ الشيفرةِ:** كلُّ مراجعِها
+  # في الشجرةِ الحيّةِ (عشرُ ملفّاتِ `packages/*-e2e`) من نوعِ `import type {
+  # AddressInfo }` وحدَه — استيرادٌ نوعيٌّ يُمحى عندَ الترجمةِ فلا مقبسَ تشغيليّاً،
+  # فلا يُحصى ولا يحتاجُ استثناءً (لو حُصيَ لصارَ الاستثناءُ قاعدةً تُخفي الفرقَ
+  # بينَ النوعيِّ والتشغيليِّ). الحكمُ على الملفِّ: يُحصى إن كانَ فيهِ مرجعُ مقبسٍ
+  # **ليسَ** استيراداً نوعيًّا — `import { connect } from "node:net"` أو
+  # `require("tls")` أو `import("node:dgram")` الديناميكيُّ كلُّها تشغيليّةٌ وتُسقِط.
+  # حدٌّ معلنٌ باقٍ: grep لا AST — البناءُ الديناميكيُّ لاسمِ الوحدةِ خارجَ البصرِ.
+  SOCKET_PATTERN='\bfrom\s+["'"'"'](node:)?(net|tls|dgram)["'"'"']|\brequire\s*\(\s*["'"'"'](node:)?(net|tls|dgram)["'"'"']\s*\)|\bimport\s*\(\s*["'"'"'](node:)?(net|tls|dgram)["'"'"']\s*\)'
+  # بلا أنبوبٍ يُغذّي grep -q (RISK-0037): أسطرُ المراجعِ تُكتَبُ في ملفٍّ مؤقّتٍ
+  # ثمّ يُسألُ عنها سؤالاً مباشراً — الاستيرادُ النوعيُّ لا يُحصى والتشغيليُّ يُسقِط.
+  _SOCKETS_TMP="$(mktemp)"
+  mapfile -t SOCKET_USERS < <(
+    grep -rlE "$SOCKET_PATTERN" services bots packages \
+      --include='*.ts' \
+      --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
+      --exclude='*.test.ts' 2>/dev/null | while IFS= read -r f; do
+        grep -E "$SOCKET_PATTERN" "$f" > "$_SOCKETS_TMP" 2>/dev/null || true
+        if grep -qv 'import type' "$_SOCKETS_TMP"; then printf '%s\n' "$f"; fi
+      done
+  )
+  rm -f "$_SOCKETS_TMP"
+  for su in "${SOCKET_USERS[@]:-}"; do
+    [[ -n "$su" ]] || continue
+    seen_socket=0
+    for rc in "${RAW_CALLERS[@]}"; do [[ "$rc" == "$su" ]] && seen_socket=1 && break; done
+    (( seen_socket )) || RAW_CALLERS+=("$su")
+  done
+  # ── end-raw-sockets ──
   if (( ${#RAW_CALLERS[@]} == 0 )); then
     bad "لا مُناديَ خامٍ ولا جالبَ محقونٍ في المستودعِ كلِّه — تغيَّرَ التّرتيبُ والحارسُ يعدُّ موضعاً لا وجودَ له"
   fi
@@ -365,7 +398,7 @@ else
     printf '      إمّا أن يُسمّى عميلاً في %s، أو يُعلَنَ استثناءً بسببِه بينَ العلامتَينِ.\n' "$LEDGER"
     unseen=1
   done
-  (( unseen )) || ok "لا مُناديَ خامٍ ولا جالبَ محقونٍ خارجَ البصرِ: ${#RAW_CALLERS[@]} ملفّاً (${#CLIENTS[@]} عميلاً + ${#FE_PATHS[@]} استثناءً مُعلَناً)"
+  (( unseen )) || ok "لا مُناديَ خامٍ ولا جالبَ محقونٍ ولا مقبساً خامّاً خارجَ البصرِ: ${#RAW_CALLERS[@]} ملفّاً (${#CLIENTS[@]} عميلاً + ${#FE_PATHS[@]} استثناءً مُعلَناً · مقابسٌ تشغيليّةٌ: ${#SOCKET_USERS[@]})"
 fi
 
 # ── 9) العقدُ المنشورُ لا يكذبُ على مُصادقةٍ مفروضةٍ ────────────────────

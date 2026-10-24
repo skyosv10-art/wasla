@@ -2610,6 +2610,40 @@ for tag in node_http https_require http2_dynamic destructure bracket reflect; do
   t "نمطُ CLM-0654 يُمرّرُ الشكلَ $tag — العمى المُعادُ يُقاسُ (CLM-0667)" pass _sac "$S_G7_BLIND"
 done
 
+# ── البابُ 7-د (G-S9.19 · CLM-0681): المقابسُ الخامّ ────────────────────────
+# آخرُ فجوةٍ مُعلَنةٍ في بصرِ البابِ 7: `node:net`/`node:tls`/`node:dgram` — لا
+# تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا تشبهُ fetch فيعمى عنها البابُ 7.
+# القياسُ على الشجرةِ الحيّةِ: كلُّ مراجعِها استيرادٌ نوعيٌّ (`import type {
+# AddressInfo }` في عشرِ ملفّاتِ e2e) لا استخدامٌ تشغيليٌّ — فالحارسُ الجديدُ لا
+# يُحصي النوعيَّ (يُمحى ترجمةً) ويُسقِطُ التشغيليَّ. الحالاتُ الثلاثُ السالبةُ
+# الأولى تشغيليّةٌ صريحةٌ في ملفِّ عميلٍ بلا ذكرٍ ولا استثناءٍ: إن مرَّت فوُجدَ العمى.
+S_G7SOCKET_NET="$(_sac_g7 g7s_net_runtime 'import { connect } from "node:net";\nexport const dial = () => connect(3000, "wasla-marketplace");\n')"
+t "استيرادُ node:net التشغيليُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_NET"
+S_G7SOCKET_TLS="$(_sac_g7 g7s_tls_require 'const tls = require("tls");\nexport const dial = () => tls.connect(443, "wasla-marketplace");\n')"
+t "require(\"tls\") بلا بادئةٍ وبلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_TLS"
+S_G7SOCKET_DGRAM="$(_sac_g7 g7s_dgram_dynamic 'export const dial = async () => (await import("node:dgram")).createSocket("udp4");\n')"
+t "استيرادُ node:dgram الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_DGRAM"
+# سالبةٌ موجبةُ التحكّمِ: الاستيرادُ النوعيُّ المُمحى ترجمةً لا يُحصى — وهي حالةُ
+# الشجرةِ الحيّةِ نفسُها (عشرُ ملفّاتِ e2e تستوردُ AddressInfo نوعيًّا وحدَها)، فلو
+# حُصيَ لصارَ الاستثناءُ قاعدةً تُخفي الفرقَ بينَ النوعيِّ والتشغيليِّ.
+S_G7SOCKET_TYPEONLY="$(_sac_g7 g7s_net_typeonly 'import type { AddressInfo } from "node:net";\nexport const port = (a: AddressInfo) => a.port;\n')"
+t "الاستيرادُ النوعيُّ (`import type { AddressInfo }`) لا يُحصى فيمرّ (G-S9.19 · CLM-0681)" pass _sac "$S_G7SOCKET_TYPEONLY"
+# الطفرةُ الحاكمةُ: حذفُ بابِ 7-د من نسخةِ الحارسِ داخلَ الجذرِ يُعيدُ العمى
+# فتمرُّ الأشكالُ الثلاثةُ — برهانٌ بأنّ إسقاطَها سببُهُ البابُ وحدَهُ (تحكيمٌ سلبيٌّ).
+_sac_g7_sockets_revert() { # يحذفُ بابَ 7-د (بينَ العلامتَينِ) من نسخةِ الحارسِ داخلَ الجذرِ
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("begin-raw-sockets"); j=s.index("end-raw-sockets"); k=s.index(chr(10), j); p.write_text(s[:i]+"# raw-sockets-section-removed"+s[k:])' "$1"
+}
+for tag in net_runtime tls_require dgram_dynamic; do
+  case $tag in
+    net_runtime) c='import { connect } from "node:net";\nexport const dial = () => connect(3000, "wasla-marketplace");\n' ;;
+    tls_require) c='const tls = require("tls");\nexport const dial = () => tls.connect(443, "wasla-marketplace");\n' ;;
+    dgram_dynamic) c='export const dial = async () => (await import("node:dgram")).createSocket("udp4");\n' ;;
+  esac
+  S_G7SOCKET_BLIND="$(_sac_g7 "g7s_blind_$tag" "$c")"
+  _sac_g7_sockets_revert "$S_G7SOCKET_BLIND"
+  t "حذفُ بابِ 7-د يُمرّرُ المقبسَ $tag — العمى المُعادُ يُقاسُ (CLM-0681)" pass _sac "$S_G7SOCKET_BLIND"
+done
+
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،

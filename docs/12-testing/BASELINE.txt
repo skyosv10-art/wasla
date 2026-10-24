@@ -1,9 +1,9 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-23T12:26:28Z
-الالتزام: f43ef67c53ce3798f43aa138bd47723d544d920f  الفرع: fix/clm-0662-channel-edge-proxy-routing  شجرةٌ مُعدَّلةٌ (2 ملفّاً)
+التاريخ (UTC): 2026-10-24T07:03:54Z
+الالتزام: d1fffa6bc63417cf0d5e3e492f93685e55c8f426  الفرع: security/clm-0672-fast-uri-ghsa-2026-10-23  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
-القفل: pnpm-lock.yaml · 5056 سطراً · sha256 207c4c16224977dd…
+القفل: pnpm-lock.yaml · 5056 سطراً · sha256 7c4ff354d009c584…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
   packages                   74
@@ -15,12 +15,12 @@
   governance_checks          28
   risks_not_closed           26
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-22T111200Z-clm-0662-channel-edge-proxy-routing/raw/verify-f43ef67c.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/raw/verify-50add3be.log):
   tests_passed               6292
   test_files_executed        443
-  governance_suite_cases     738
+  governance_suite_cases     754
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:20ad9ad53ec4f3f2c42665329db8ba2f7ea23f459b8dc411add8c717c8b151ba
+البصمة: sha256:f087816f59b21c7016fe2e3fbf10b8dc2012c89c694927ee74a5b53e9d234d6f
 المرجع: docs/12-testing/BASELINE_FORMAT.md

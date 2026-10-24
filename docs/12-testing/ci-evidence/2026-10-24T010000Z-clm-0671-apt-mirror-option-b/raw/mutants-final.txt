@@ -1,0 +1,10 @@
+M1-no-sed: KILLED by ✗ P1 ✗ P2 ✗ P4 
+M2-no-residual-check: KILLED by ✗ N3 
+M3-no-archive-check: KILLED by ✗ N2 ✗ N4 
+M4-loose-archive-regex: KILLED by ✗ N4 
+M5-http-target: KILLED by ✗ P1 ✗ P2 ✗ P4 
+M6-no-empty-files-check: KILLED by ✗ N1 
+M7-http-only-scheme: KILLED by ✗ P2 
+M8-drop-deb822-glob: KILLED by ✗ P1 ✗ P4 
+M9-residual-exit-0: KILLED by ✗ N3 
+mutants: 9 · survived: 0

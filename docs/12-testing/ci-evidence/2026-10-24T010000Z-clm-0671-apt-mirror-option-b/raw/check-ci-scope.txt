@@ -1,0 +1,28 @@
+  ✓ mirror steps only in the 3 e2e jobs: ['admin-portal-e2e', 'customer-mini-app-e2e', 'driver-mini-app-e2e']
+  ✓ same job set as base
+  ✓ all 10 non-target jobs identical to base
+  ✓ admin-portal-e2e: timeout-minutes 10 on base and head
+  ✓ admin-portal-e2e: job-level keys unchanged
+  ✓ admin-portal-e2e: only added steps are Test + Switch
+  ✓ admin-portal-e2e: all base steps kept, unchanged, same order
+  ✓ admin-portal-e2e: Test < Switch < Install Playwright
+  ✓ admin-portal-e2e: added steps have no if/continue-on-error/timeout/env
+  ✓ admin-portal-e2e: no continue-on-error in any step
+  ✓ admin-portal-e2e: no probe step
+  ✓ customer-mini-app-e2e: timeout-minutes 10 on base and head
+  ✓ customer-mini-app-e2e: job-level keys unchanged
+  ✓ customer-mini-app-e2e: only added steps are Test + Switch
+  ✓ customer-mini-app-e2e: all base steps kept, unchanged, same order
+  ✓ customer-mini-app-e2e: Test < Switch < Install Playwright
+  ✓ customer-mini-app-e2e: added steps have no if/continue-on-error/timeout/env
+  ✓ customer-mini-app-e2e: no continue-on-error in any step
+  ✓ customer-mini-app-e2e: no probe step
+  ✓ driver-mini-app-e2e: timeout-minutes 10 on base and head
+  ✓ driver-mini-app-e2e: job-level keys unchanged
+  ✓ driver-mini-app-e2e: only added steps are Test + Switch
+  ✓ driver-mini-app-e2e: all base steps kept, unchanged, same order
+  ✓ driver-mini-app-e2e: Test < Switch < Install Playwright
+  ✓ driver-mini-app-e2e: added steps have no if/continue-on-error/timeout/env
+  ✓ driver-mini-app-e2e: no continue-on-error in any step
+  ✓ driver-mini-app-e2e: no probe step
+VIOLATIONS: 0

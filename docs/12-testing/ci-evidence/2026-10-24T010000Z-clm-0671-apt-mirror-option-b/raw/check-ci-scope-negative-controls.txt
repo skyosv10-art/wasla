@@ -1,0 +1,4 @@
+C1 timeout 10→15 (customer): rc=1 REJECTED · first: ['✗ customer-mini-app-e2e: timeout-minutes 10 on base and head']
+C2 continue-on-error on Switch: rc=1 REJECTED · first: ['✗ customer-mini-app-e2e: added steps have no if/continue-on-error/timeout/env']
+C3 Switch step added to another job (repo-structure): rc=1 REJECTED · first: ["✗ mirror steps only in the 3 e2e jobs: ['admin-portal-e2e', 'customer-mini-app-e2e', 'driver-mini-app-e2e', 'repo-structure']"]
+controls rejected: 3 / 3

@@ -815,6 +815,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/customer-mini-app
@@ -856,6 +861,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/driver-mini-app
@@ -897,6 +907,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/admin-portal

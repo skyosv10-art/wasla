@@ -1,26 +1,26 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-24T07:03:54Z
-الالتزام: d1fffa6bc63417cf0d5e3e492f93685e55c8f426  الفرع: security/clm-0672-fast-uri-ghsa-2026-10-23  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-24T20:38:15Z
+الالتزام: 54673f646561e34ad59fec758175583ffbb7fdb2  الفرع: fix/clm-0684-gs9-7-store-search-journey  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
-القفل: pnpm-lock.yaml · 5056 سطراً · sha256 7c4ff354d009c584…
+القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 
 العدَّاداتُ الساكنةُ (مُبصَّمةٌ):
   packages                   74
   packages_with_typecheck    70
   packages_with_test         74
-  test_files_tracked         585
+  test_files_tracked         586
   ci_jobs                    13
   ci_allow_failure           0
   governance_checks          28
   risks_not_closed           26
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/raw/verify-50add3be.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-24T193000Z-clm-0684-gs9-7-store-search-journey/raw/verify-468c72f6.log):
   tests_passed               6292
   test_files_executed        443
-  governance_suite_cases     754
+  governance_suite_cases     789
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:f087816f59b21c7016fe2e3fbf10b8dc2012c89c694927ee74a5b53e9d234d6f
+البصمة: sha256:3850067365ce9a7d4da5f1d308c7de3bf31929f7321a1e74dafc198ae360b2b9
 المرجع: docs/12-testing/BASELINE_FORMAT.md

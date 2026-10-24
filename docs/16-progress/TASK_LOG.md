@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0677 — M6-18B: مراجعةُ RISK-0069 الفعليّة (عزلُ بيئةِ Render الاختباريّة)
+
+- **Work Item(s):** M6-18B (CLM-0677 · RISK-0069) — يبقى Blocked.
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24؛ قراءةٌ فقط (بلا نشرٍ ولا Render/Supabase API ولا استعلامٍ على قاعدةِ بيانات).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0069: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/measure.sh` · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** الهدفُ `frozen` و`isolation_evidence: null` و0 التزامٍ عليه منذ 2026-10-19 · لا دليلَ E1–E4 · الحارسُ 38/38 · N1–N3 مرفوضة · **N4 (ملفٌّ قائمٌ لا صلةَ له دليلًا) مقبول** · E1–E4 الحيّةُ **غيرُ مُعادةِ القياس**.
+- **Risk(s):** RISK-0069 → open (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) مسارُ الإغلاق (D4 حيًّا بإذنٍ صريح، أو إعادةُ تعيينٍ مسجَّلة)، وتشديدُ الحارسِ ليفحصَ مضمونَ الدليل (CLM مستقلّ).
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضوابطَ سالبةٍ (N1–N4).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · أيُّ شيفرةٍ أو فحص · #730/INC-0007 HOLD · production_open · NO-GO · M6-18B Blocked.
 # 2026-10-24 — CLM-0676 — M6-18B: مراجعةُ RISK-0068 الفعليّة (دقائقُ بناءِ Render)
 
 - **Work Item(s):** M6-18B (CLM-0676 · RISK-0068) — يبقى Blocked.

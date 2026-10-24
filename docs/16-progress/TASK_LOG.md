@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0675 — M0-36: مراجعةُ RISK-0041 الفعليّة (العقودُ المنشورةُ تجاهَ المُصادقةِ المفروضة)
+
+- **Work Item(s):** M0-36 (CLM-0675 · RISK-0041)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24.
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0041: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** 16 حدًّا مفروضًا · البابُ 9 أخضرُ و16/16 عقدًا تُعلِنُ المُصادقة · جردا §5.9 والبابِ 10 صفر · K1/K4 مرفوضة · K2/K3 مقبولةٌ من البابِ 9، ومكتشفةٌ باختبارِ الانحرافِ في 12/16 عقدًا لا في audit/billing/delivery/search (delivery: 29/29 و602/602 تنجحُ على الطفرة) · `401`/`403` غائبةٌ في billing (0/6) وsupport (0/7) وناقصةٌ في audit.
+- **Risk(s):** RISK-0041 → mitigating (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) القفلُ: (أ) إغلاقٌ معَ خطرٍ جديدٍ أدنى للبقيّتَين، أو (ب) إبقاءٌ حتى CLM يُكمِلُ الإفصاحَ ويمدُّ البابَ 9 لكلِّ عمليّة.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضوابطَ موجبةٍ (T0 · D0) وسالبةٍ (K1–K4 · T1–T2 · D1).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ عقدٍ أو شيفرةٍ أو فحص · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
 # 2026-10-24 — CLM-0674 — M0-08: مراجعةُ RISK-0011 الفعليّة (الأساسُ يبيتُ بيدٍ)
 
 - **Work Item(s):** M0-08 (CLM-0674 · RISK-0011)

@@ -1,14 +1,16 @@
-# 2026-10-24 — CLM-0671 — M0-53: قياسُ الخيارِ B (مرآةُ apt) لمهامِّ e2e — بقرارِ المالك
+# 2026-10-24 — CLM-0671 — M0-53: الخيارُ B (مرآةُ apt لمهامِّ e2e) — معتمَدٌ بقرارِ المالك: معالجةٌ مدعومةٌ بقياسٍ محدود
 
 - **Work Item(s):** M0-53 (CLM-0671)
-- **Status:** In Progress (فرعُ قياسٍ في PR مسودّة؛ لا دمجَ بهذا الشكل)
-- **Kind:** ci-measurement — بقرارِ المالكِ 2026-10-24؛ **`timeout-minutes: 10` بلا تغيير**.
-- **Changed units:** `.github/workflows/ci.yml` (3 مهامِّ e2e: خطوةُ اختبارٍ + خطوةُ تحويلِ مرآةٍ قبلَ التثبيت + خطوةُ قياسٍ مقارِنٍ بعدَ الاختبار) · `scripts/ci/apt-mirror-archive-ubuntu.sh` · `scripts/ci/apt-mirror-probe.sh` (قياسٌ فقط) · `scripts/ci/test-apt-mirror-archive-ubuntu.sh` · `docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/*`.
-- **Measured (locally):** الاختباراتُ 10/10 · الطفراتُ 9/9 مقتولة.
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** ci-fix — قرارا المالكِ 2026-10-24: «ابدأ CLM-0671 لقياس الخيار B مع إبقاء المهلة 10 دقائق» ثمّ اعتمادُ B «معالجةً مدعومةً بقياسٍ محدود». **`timeout-minutes: 10` بلا تغيير.**
+- **Changed units:** `.github/workflows/ci.yml` (المهامُّ الثلاثُ customer/driver/admin-e2e وحدَها: خطوةُ اختبارٍ + خطوةُ تحويلِ مرآةٍ قبلَ التثبيت) · `scripts/ci/apt-mirror-archive-ubuntu.sh` · `scripts/ci/test-apt-mirror-archive-ubuntu.sh` · `docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/*` · سجلّاتُ التقدّم. **حُذف قبلَ الدمج:** خطوةُ `Probe` و`scripts/ci/apt-mirror-probe.sh` وتصديرُ `CLM0671_JOB_T0`.
+- **Measured (CI، رأسُ القياس `58658d6f`، WASLA CI 40039556210):** 30 محاولةً فريدة (10 لكلِّ مهمّة) · 30/30 success · 0 إلغاءٍ بالمهلة · B ≥ 3756 kB/s (وسيطٌ 5518) · azure بطيئةٌ في محاولتَين (109 و141 kB/s، `complete=no`) نجحَ B فيهما بـ 4703 و4830 kB/s ⇒ «فعّال» بالمعيارِ المعلَنِ مسبقًا.
+- **Measured (محلّيًّا، النسخةُ المعتمَدة):** الاختباراتُ 8/8 (P1–P4 · N1–N4) · الطفراتُ 9/9 مقتولة (`mutants-final.sh`) · `check-ci-scope.py` 0 مخالفات + 3/3 ضوابطَ سالبةٍ مرفوضة.
+- **Not proven:** (1) حدثا بطءِ azure في المهمّةِ نفسِها خلالَ 15 دقيقة؛ (2) انقطاعُ `archive.ubuntu.com` لم يُختبَرْ فعليًّا (الفشلُ المغلقُ مُختبَرٌ على جذرٍ وهميٍّ فقط)؛ (3) فرقُ مدّةِ التثبيتِ (28 مقابلَ 23 ث) غيرُ معزول. لا يُدَّعى انتهاءُ إلغاءاتِ المهلة.
 - **Risk(s):** لا تغيير.
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/README.md
 - **Deployment:** none.
-- **Not changed:** `timeout-minutes` · خطوةُ `playwright install --with-deps` نفسُها · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+- **Not changed:** `timeout-minutes` · خطوةُ `playwright install --with-deps` نفسُها · بقيّةُ المهامّ · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
 
 # 2026-10-24 — CLM-0673 — M0-07: مراجعةُ RISK-0034 الفعليّة (جسرُ ORD-/WS-)
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# CLM-0671 — الخيارُ B من CLM-0670: مصادرُ apt تُحوَّلُ من azure.archive.ubuntu.com
+# CLM-0671 — الخيارُ B من CLM-0670 (اعتمادٌ بقرارِ المالكِ 2026-10-24 — معالجةٌ بقياسٍ محدود،
+# راجع docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/README.md):
+# مصادرُ apt تُحوَّلُ من azure.archive.ubuntu.com
 # إلى https://archive.ubuntu.com قبلَ `playwright install --with-deps`.
 #
 # لماذا: CLM-0670 قاسَ أنّ إلغاءاتِ e2e بمهلةِ العشرِ دقائقَ سببُها جلبُ حزمِ .deb
@@ -62,5 +64,3 @@ fi
 echo "== apt sources after (CLM-0671) =="
 for f in "${FILES[@]}"; do echo "--- $f"; cat "$f"; done
 echo "CLM0671-MIRROR switched=$switched files=${#FILES[@]}"
-# زمنُ بدءِ التثبيتِ تقريبًا — يقرؤهُ apt-mirror-probe.sh كي لا يدفعَ المهمّةَ إلى حدِّ العشرِ دقائق.
-if [[ -n "${GITHUB_ENV:-}" ]]; then echo "CLM0671_JOB_T0=$(date +%s)" >> "$GITHUB_ENV"; fi

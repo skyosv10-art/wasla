@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-24T21:12:20Z
-الالتزام: 85aa7dbc14393cdbe321dedac79c2609ac740e9e  الفرع: fix/clm-0684-gs9-7-store-search-journey  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-24T22:17:44Z
+الالتزام: 5b64ff353a09d5cd2f8a4351306c019f00f781eb  الفرع: fix/clm-0685-partners-http-route-tests  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 
@@ -9,18 +9,18 @@
   packages                   74
   packages_with_typecheck    70
   packages_with_test         74
-  test_files_tracked         586
+  test_files_tracked         587
   ci_jobs                    13
   ci_allow_failure           0
   governance_checks          28
   risks_not_closed           26
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-24T193000Z-clm-0684-gs9-7-store-search-journey/raw/verify-468c72f6.log):
-  tests_passed               6292
-  test_files_executed        443
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-24T215000Z-clm-0685-partners-http-routes/raw/verify-fc7efc79.log):
+  tests_passed               6307
+  test_files_executed        444
   governance_suite_cases     789
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:3850067365ce9a7d4da5f1d308c7de3bf31929f7321a1e74dafc198ae360b2b9
+البصمة: sha256:f846fa0118cc18684ac358fa9d8a80e96e24c98ef6ad6109338d15aae52a0eb2
 المرجع: docs/12-testing/BASELINE_FORMAT.md

@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-24T07:03:54Z",
+  "generated_at": "2026-10-24T21:12:20Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "d1fffa6bc63417cf0d5e3e492f93685e55c8f426",
-    "branch": "security/clm-0672-fast-uri-ghsa-2026-10-23",
+    "commit": "85aa7dbc14393cdbe321dedac79c2609ac740e9e",
+    "branch": "fix/clm-0684-gs9-7-store-search-journey",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 3715
+    "tracked_files": 3756
   },
   "env": {
     "node": "v20.20.2",
@@ -19,14 +19,14 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "7c4ff354d009c584e11c8aa777aa5f1f3dcad3fad71850bc98636e3ed58815a0",
-    "lines": 5056
+    "sha256": "2f016f46938f20e49de6c99105fbd6c9f9a89a90633f2ab3297c4792a659abd2",
+    "lines": 5059
   },
   "static": {
     "packages": 74,
     "packages_with_typecheck": 70,
     "packages_with_test": 74,
-    "test_files_tracked": 585,
+    "test_files_tracked": 586,
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 28,
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/raw/verify-50add3be.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-24T193000Z-clm-0684-gs9-7-store-search-journey/raw/verify-468c72f6.log",
     "tests_passed": 6292,
     "test_files_executed": 443,
-    "governance_suite_cases": 754,
+    "governance_suite_cases": 789,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f087816f59b21c7016fe2e3fbf10b8dc2012c89c694927ee74a5b53e9d234d6f",
+  "fingerprint": "sha256:3850067365ce9a7d4da5f1d308c7de3bf31929f7321a1e74dafc198ae360b2b9",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

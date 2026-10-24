@@ -1,0 +1,27 @@
+# upstream security tests (from the fixed release) run against old and new tarballs · tape@5 · node v20.20.2 · 2026-10-24T05:48:08Z
+host-delimiter-security.test.js on 3.1.8: # tests 463 # pass  230 # fail  233 
+host-delimiter-security.test.js on 3.1.9: # tests 463 # pass  463 
+relative-normalization-security.test.js on 3.1.8: # tests 4113 # pass  35 # fail  4078 
+relative-normalization-security.test.js on 3.1.9: # tests 98 # pass  98 
+security-normalization.test.js on 3.1.8: # tests 44 # pass  44 
+security-normalization.test.js on 3.1.9: # tests 44 # pass  44 
+security.test.js on 3.1.8: # tests 98 # pass  98 
+security.test.js on 3.1.9: # tests 98 # pass  98 
+c0-reference-security.test.js on 4.1.5: # tests 541 # pass  208 # fail  333 
+c0-reference-security.test.js on 4.2.3: # tests 541 # pass  541 
+host-delimiter-security.test.js on 4.1.5: # tests 463 # pass  230 # fail  233 
+host-delimiter-security.test.js on 4.2.3: # tests 463 # pass  463 
+host-encoding.test.js on 4.1.5: # tests 105 # pass  3 # fail  102 
+host-encoding.test.js on 4.2.3: # tests 105 # pass  105 
+mailto-authority-security.test.js on 4.1.5: # tests 44 # pass  9 # fail  35 
+mailto-authority-security.test.js on 4.2.3: # tests 44 # pass  44 
+mailto-field-name-security.test.js on 4.1.5: # tests 151 # pass  151 
+mailto-field-name-security.test.js on 4.2.3: # tests 151 # pass  151 
+relative-normalization-security.test.js on 4.1.5: # tests 4131 # pass  35 # fail  4096 
+relative-normalization-security.test.js on 4.2.3: # tests 98 # pass  98 
+security-normalization.test.js on 4.1.5: # tests 44 # pass  44 
+security-normalization.test.js on 4.2.3: # tests 44 # pass  44 
+security-utf8-encoding.test.js on 4.1.5: # tests 63 # pass  63 
+security-utf8-encoding.test.js on 4.2.3: # tests 63 # pass  63 
+security.test.js on 4.1.5: # tests 98 # pass  97 # fail  1 
+security.test.js on 4.2.3: # tests 98 # pass  98 

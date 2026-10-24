@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0672 — M0-06: إغلاقُ أربعِ ثغراتِ fast-uri (2026-10-23) في شجرةِ الإنتاج
+
+- **Work Item(s):** M0-06 (CLM-0672 · RISK-0004)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** security dependency override — بقرارِ المالكِ 2026-10-24 (يشملُ القفزةَ الثانويّةَ 4.1.5→4.2.3).
+- **Changed units:** `package.json` (`pnpm.overrides`: `fast-uri@3` ^3.1.9 · `fast-uri@4` ~4.2.3) · `pnpm-lock.yaml` (أسطرُ fast-uri وحدَها) · `docs/00-rules/SECURITY_RULES.md` §11 (سطرا fast-uri) · `docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/*` · سجلّاتُ التقدّم.
+- **Measured:** قبلُ على main `61314116`: التدقيقُ exit 1 (البابُ 1: 8 ثغراتٍ في شجرةِ الإنتاج)؛ بعدُ: exit 0 و`pnpm audit --prod` صفرٌ في كلِّ الدرجات؛ `pnpm test` 58 حزمةً · 5968 ناجحًا · 59 متخطًّى · 0 فاشل على الجانبَين بملخّصاتٍ متطابقةٍ سطرًا بسطر؛ اختباراتُ الأمانِ من المشرفين تفشلُ على 3.1.8/4.1.5 (مثلًا host-delimiter 233/463 فشلًا · c0-reference 333/541) وتنجحُ كاملةً على 3.1.9/4.2.3؛ الواجهةُ المُصدَّرةُ متطابقة.
+- **Not proven:** قابليّةُ استغلالِ الثغراتِ في Wasla نفسِها (الإغلاقُ بالترقيةِ لا بالتحليل).
+- **Risk(s):** RISK-0004 `mitigating` — بلا تغيير.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/README.md
+- **Deployment:** none.
+- **Not changed:** شيفرةُ الخدمات · `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-23 — CLM-0669 — M0-53: G-S9.20 وRISK-0071 على PostgreSQL 18.6 — دليلٌ قابلٌ لإعادةِ التشغيل
 
 - **Work Item(s):** M0-53 (CLM-0669 · RISK-0070 · RISK-0071)

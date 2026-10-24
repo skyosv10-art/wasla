@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-24T20:38:15Z
-الالتزام: 54673f646561e34ad59fec758175583ffbb7fdb2  الفرع: fix/clm-0684-gs9-7-store-search-journey  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-24T21:12:20Z
+الالتزام: 85aa7dbc14393cdbe321dedac79c2609ac740e9e  الفرع: fix/clm-0684-gs9-7-store-search-journey  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 

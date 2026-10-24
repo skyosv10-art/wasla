@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0679 — M0-36: إتمامُ توثيقِ 401/403 في العقودِ وبابُ 9-هـ لكلِّ عمليّةٍ (RISK-0041)
+
+- **Work Item(s):** M0-36 (CLM-0679 · RISK-0041 — تنفيذُ الخيارِ (b) من مراجعةِ CLM-0675).
+- **Status:** Active (يُدمجُ بعدَ نجاحِ 43/43 فحصاً على الرأسِ النهائيِّ ومراجعةٍ مستقلّةٍ).
+- **Kind:** guard + contract documentation — إصلاحُ جذرِ بقيّتَي المراجعةِ، لا سلوكَ خدمةٍ مُغيَّر.
+- **Changed units:** عقودُ الحدودِ الستةَ عشرَ (`services/*/contracts/api.openapi.yml`: `security: []` للصحةِ/الجهوزيةِ المفتوحةِ + `401`/`403` ومكوّناتُ `AuthUnauthorized`/`AuthForbidden` لكلِّ عمليةٍ مؤمَّنةٍ ناقصةٍ في audit/support/billing) · `scripts/checks/validate-service-auth-coverage.sh` (البابُ 9-هـ) · `scripts/checks/test-governance.sh` (5 حالاتٍ + 5 طفراتٍ) · `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0041 بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T131500Z-clm-0679-risk-0041-contract-security-coverage/` · سجلّاتُ التقدّم.
+- **Measured (branch):** 0 مشكلةٍ متبقيةٍ عبرَ العقودِ الستةَ عشرَ (البابُ 9-هـ) · الحارسُ أخضرُ على شجرةِ الفرعِ (`raw/guard-local-branch.txt`) · حالاتُ 9-هـ العشرُ خضراءٌ في test-governance وكلُّ فرعٍ من الحارسِ مثبَتٌ ضروريّاً بطفرةٍ.
+- **Risk(s):** RISK-0041 → mitigating (بلا تغيير؛ القفلُ النهائيُّ قرارُ المالكِ).
+- **Owner decision required:** (@uxxxu) القفلُ النهائيُّ وتغييرُ الشدةِ — الخيارُ (b) نُفِّذَ؛ البابُ المفتوحُ: إغلاقٌ معَ تقييمٍ لبقيةِ الفجواتِ أو إبقاءٌ.
+- **No-Test-Reason:** لا سلوكَ مُغيَّر — عقودٌ وحارسٌ فقط؛ القياسُ: الحارسُ + 5 حالاتٍ سالبة/موجبةٍ + 5 طفراتٍ لكلِّ فرعٍ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T131500Z-clm-0679-risk-0041-contract-security-coverage/README.md
+- **Deployment:** none.
+- **Not changed:** `registerServiceIdentity` · بوّاباتُ M1-04 · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
 # 2026-10-24 — CLM-0678 — M0-53: حارسُ محتوى دليلِ العزلِ E1–E4 (RISK-0069)
 
 - **Work Item(s):** M0-53 (CLM-0678 · RISK-0069 — إصلاحُ جذرِ بقيّةِ مراجعةِ #822: القبولُ بوجودِ الملفِّ وحده).

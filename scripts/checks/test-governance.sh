@@ -2672,6 +2672,39 @@ for tag in runtime_comment type_then_require; do
   t "منطقُ CLM-0681 يُمرّرُ $tag — الثغرةُ المُعادةُ تُقاسُ (CLM-0682)" pass _sac "$S_G7SOCKET2_BLIND"
 done
 
+# ── البابُ 7-د (G-S9.19 · CLM-0683): العملياتُ الخامّ ──────────────────────
+# المرحلةُ الثانيةُ من التكليف: قياسُ أنماطِ الهروبِ من الحارسِ النصّيِّ أثبتَ أنّ
+# `node:child_process` (قناةُ اتصالٍ كاملةٌ عبرَ exec/spawn) و`node:dns` يمرّانِ
+# بلا أيِّ بصرٍ — لا عبرَ package.json (فالبابُ 8 لا يراهما) ولا عبرَ نمطِ fetch.
+# أُدمِجَا في نمطِ المقابسِ الخامّ بآليّةِ CLM-0682 نفسِها (الاستثناءُ النوعيُّ
+# تعليمةً لا سطراً). القياسُ على الشجرةِ الحيّةِ: صفرُ مراجعَ تشغيليّةٍ — فلا
+# استثناءَ جديداً ولا جرداً يتغيّرُ؛ والحالاتُ السالبةُ تُثبِتُ أنّ الإسقاطَ
+# سببُهُ التوسعةُ وحدَها.
+S_G7PROC_EXEC="$(_sac_g7 g7p_exec_runtime 'import { exec } from "node:child_process";\nexport const call = (u: string) => exec("curl -s " + u);\n')"
+t "استيرادُ node:child_process التشغيليُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_EXEC"
+S_G7PROC_DNS="$(_sac_g7 g7p_dns_require 'const dns = require("dns");\nexport const lookup = (h: string) => dns.lookup(h);\n')"
+t "require(\"dns\") بلا بادئةٍ وبلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_DNS"
+S_G7PROC_DYN="$(_sac_g7 g7p_cp_dynamic 'export const call = async (u: string) => (await import("node:child_process")).exec("curl -s " + u);\n')"
+t "استيرادُ node:child_process الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_DYN"
+S_G7PROC_CMT="$(_sac_g7 g7p_cp_comment 'import { exec } from "node:child_process"; // import type\nexport const call = (u: string) => exec("curl -s " + u);\n')"
+t "تعليقُ // import type على استيرادِ child_process تشغيليٍّ لا يُستثنى (CLM-0683)" fail _sac "$S_G7PROC_CMT"
+# تحكّمٌ موجبٌ: الاستيرادُ النوعيُّ المُمحى ترجمةً لا يُحصى — بآليّةِ CLM-0682
+# نفسِها على الوحداتِ الجديدةِ.
+S_G7PROC_TYPEONLY="$(_sac_g7 g7p_cp_typeonly 'import type { ExecOptions } from "node:child_process";\nexport const opts = (o: ExecOptions) => o;\n')"
+t "الاستيرادُ النوعيُّ لـchild_process لا يُحصى فيمرّ (G-S9.19 · CLM-0683)" pass _sac "$S_G7PROC_TYPEONLY"
+# الطفرةُ الحاكمةُ: حذفُ بابِ 7-د (بينَ العلامتَينِ) يُعيدُ العمى فتمرُّ القناةُ
+# عبرَ child_process — برهانٌ بأنّ إسقاطَها سببُهُ البابُ وحدَهُ (تحكيمٌ سلبيٌّ).
+# (نفسُ حارسِ حذفِ البابِ من حالاتِ CLM-0681: _sac_g7_sockets_revert)
+for tag in exec_runtime cp_dynamic; do
+  case $tag in
+    exec_runtime) c='import { exec } from "node:child_process";\nexport const call = (u: string) => exec("curl -s " + u);\n' ;;
+    cp_dynamic) c='export const call = async (u: string) => (await import("node:child_process")).exec("curl -s " + u);\n' ;;
+  esac
+  S_G7PROC_BLIND="$(_sac_g7 "g7p_blind_$tag" "$c")"
+  _sac_g7_sockets_revert "$S_G7PROC_BLIND"
+  t "حذفُ بابِ 7-د يُمرّرُ العمليّةَ الخامَّ $tag — العمى المُعادُ يُقاسُ (CLM-0683)" pass _sac "$S_G7PROC_BLIND"
+done
+
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،

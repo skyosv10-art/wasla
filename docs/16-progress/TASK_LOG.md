@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0676 — M6-18B: مراجعةُ RISK-0068 الفعليّة (دقائقُ بناءِ Render)
+
+- **Work Item(s):** M6-18B (CLM-0676 · RISK-0068) — يبقى Blocked.
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24؛ قراءةٌ فقط (بلا نشرٍ ولا dispatch ولا Render API).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0068: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/measure.sh` · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** المحفّزُ `workflow_dispatch` فقط · الهدفُ `frozen` و`isolation_evidence: null` · 0 تشغيلٍ منذ التجميد · الحرّاسُ 38/38 و36/36 و7/7 · محفّزُ `push` مُعادٌ مرفوضٌ من حارسَين · رصيدُ الدقائق **غيرُ مقيس**.
+- **Risk(s):** RISK-0068 → open (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) إبقاءٌ حتى نشرٍ اختباريٍّ معزولٍ ناجح، أو إعادةُ تقديرٍ/إغلاقٌ بقرارٍ مسجَّلٍ مربوطٍ بقرارِ «الاختباراتِ فقط» وبـ RISK-0069.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضابطٍ سالبٍ (B5).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · render-deploy.yml · أيُّ شيفرة · #730/INC-0007 HOLD · production_open · NO-GO · M6-18B Blocked.
 # 2026-10-24 — CLM-0675 — M0-36: مراجعةُ RISK-0041 الفعليّة (العقودُ المنشورةُ تجاهَ المُصادقةِ المفروضة)
 
 - **Work Item(s):** M0-36 (CLM-0675 · RISK-0041)

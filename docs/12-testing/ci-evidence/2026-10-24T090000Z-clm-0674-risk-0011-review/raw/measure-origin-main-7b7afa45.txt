@@ -1,0 +1,25 @@
+rev=7b7afa45348d654595145fc5c9b62e2f351c4af4
+== G0 baseline as committed
+  generated_at 2026-10-24T07:03:54Z · repo.commit d1fffa6bc634 · tests_passed 6292 · test_files 443 · gov_cases 754 · source docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/raw/verify-50add3be.log
+  validate-baseline rc=0
+== G1 tamper control (RISK-0028): hand-edited tests_passed must be rejected
+  rc=1 ·   - البابُ 4: `dynamic.source` لا يُثبِتُ `tests_passed`=7292 — مجموعُ «Tests N passed» فيه 6292 (RISK-0028).
+== G2 staleness control: a baseline claiming to be a month old (real old commit + old date)
+  old baseline commit: 2ef3991cb9c7 (2026-09-25)
+  rc=0 · ✓ الأساسُ الآليُّ: صيغةٌ متّسقةٌ · لا انحدارَ في العدَّاداتِ السا
+  generated_at=1999 → rc=0
+== G3 automation: workflows that run baseline.sh / a schedule that regenerates it
+  workflows invoking baseline.sh: 0
+  cron: .github/workflows/db-backup.yml:45:    - cron: '0 0/6 * * *'
+  cron: .github/workflows/dr-restore-drill.yml:16:    - cron: '30 4 * * 1'
+  cron: .github/workflows/merged-branch-cleanup.yml:19:    - cron: "17 3 * * *"
+  cron: .github/workflows/service-health.yml:9:    - cron: '23 */6 * * *'
+  age rule in validate-baseline.sh (compares generated_at/commit date with now): 0
+== G4 history (last 30 days before REV): regenerations, gaps, dynamic jumps
+  regenerations: 116 · gap hours median 0.5 · max 72.8 (85b7b155→54909efc)
+  consecutive pairs with tests_passed unchanged: 86/115
+  largest jump +321: 797789e1 (5745) → eecb3f56 (6066)
+  largest jump +182: 96ee24e9 (5622) → 1f6e54c9 (5804)
+  largest jump -83: d8f3815e (5828) → 797789e1 (5745)
+== G5 current drift: BASELINE vs WASLA CI job 120815148135 (same regexes as baseline.sh)
+  CI: tests_passed=6292 test_files=443 · BASELINE: 6292 / 443 · drift +0 / +0

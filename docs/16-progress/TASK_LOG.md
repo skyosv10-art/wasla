@@ -1,3 +1,16 @@
+# 2026-10-24 — CLM-0674 — M0-08: مراجعةُ RISK-0011 الفعليّة (الأساسُ يبيتُ بيدٍ)
+
+- **Work Item(s):** M0-08 (CLM-0674 · RISK-0011)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24 (مراجعةٌ منفصلةٌ لكلِّ خطرٍ مستحقٍّ في 2026-10-26).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0011: `review:2026-11-09` + النتيجةُ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** رقمٌ حركيٌّ مُحرَّرٌ يُرفَض (rc=1)؛ أساسٌ بالتزامٍ وتاريخٍ من 2026-09-25 يمرّ (rc=0)؛ 0 سيرِ عملٍ يستدعي `baseline.sh`؛ RISK-0001 مغلقٌ منذ 2026-09-01؛ 116 إعادةَ توليدٍ في 30 يومًا (وسيطُ الفاصلِ 0.5 س · أقصاه 72.8 س)؛ أكبرُ قفزةٍ +321؛ الانحرافُ مقابلَ مهمّةِ `test` على `7b7afa45`: 0.
+- **Risk(s):** RISK-0011 → mitigating (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) سدُّ الفجوة — بابُ انحرافٍ مقابلَ CI أو مهلةُ قِدَم — في CLM مستقلّ.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليلِ بضابطٍ موجبٍ (G1) وسالبٍ (G2).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ شيفرةٍ أو فحص · `BASELINE.json` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
 # 2026-10-24 — CLM-0671 — M0-53: الخيارُ B (مرآةُ apt لمهامِّ e2e) — معتمَدٌ بقرارِ المالك: معالجةٌ مدعومةٌ بقياسٍ محدود
 
 - **Work Item(s):** M0-53 (CLM-0671)

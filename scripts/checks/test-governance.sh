@@ -2611,7 +2611,7 @@ for tag in node_http https_require http2_dynamic destructure bracket reflect; do
 done
 
 # ── البابُ 7-د (G-S9.19 · CLM-0681): المقابسُ الخامّ ────────────────────────
-# آخرُ فجوةٍ مُعلَنةٍ في بصرِ البابِ 7: `node:net`/`node:tls`/`node:dgram` — لا
+# فجوةُ المقابسِ الخامّ المُعلَنةُ في بصرِ البابِ 7: `node:net`/`node:tls`/`node:dgram` — لا
 # تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا تشبهُ fetch فيعمى عنها البابُ 7.
 # القياسُ على الشجرةِ الحيّةِ: كلُّ مراجعِها استيرادٌ نوعيٌّ (`import type {
 # AddressInfo }` في عشرِ ملفّاتِ e2e) لا استخدامٌ تشغيليٌّ — فالحارسُ الجديدُ لا
@@ -2642,6 +2642,34 @@ for tag in net_runtime tls_require dgram_dynamic; do
   S_G7SOCKET_BLIND="$(_sac_g7 "g7s_blind_$tag" "$c")"
   _sac_g7_sockets_revert "$S_G7SOCKET_BLIND"
   t "حذفُ بابِ 7-د يُمرّرُ المقبسَ $tag — العمى المُعادُ يُقاسُ (CLM-0681)" pass _sac "$S_G7SOCKET_BLIND"
+done
+
+# ── البابُ 7-د (G-S9.19 · CLM-0682): الاستثناءُ النوعيُّ تعليمةً لا سطراً ──────
+# مراجعةٌ مستقلةٌ كشفت عيبَ CLM-0681: استثناءُ `import type` كانَ يُطبَّقُ على
+# السطرِ كلماتٍ (ورودِ العبارةِ) لا على التعليمةِ — فسطرٌ تشغيليٌّ يحملُ التعليقَ
+# `// import type` أو `require` في السطرِ نفسِهِ بعدَ استيرادٍ نوعيٍّ كانَ يُستثنى خطأً.
+# الإصلاحُ: قصُّ تعليمةِ الاستيرادِ النوعيِّ من رأسِ السطرِ ثمّ فحصُ الباقي.
+S_G7SOCKET2_CMT="$(_sac_g7 g7s2_runtime_comment 'import { connect } from "node:net"; // import type\nexport const dial = () => connect(3000, "wasla-marketplace");\n')"
+t "تعليقُ `// import type` على سطرٍ تشغيليٍّ لا يُستثنى — الثغرةُ مُقفَلةٌ (CLM-0682)" fail _sac "$S_G7SOCKET2_CMT"
+S_G7SOCKET2_SAMEROW="$(_sac_g7 g7s2_type_then_require 'import type { AddressInfo } from "node:net"; const tls = require("tls");\nexport const dial = (a: AddressInfo) => tls.connect(a.port, "wasla-marketplace");\n')"
+t "require(\"tls\") في السطرِ نفسِهِ بعدَ استيرادٍ نوعيٍّ لا يُستثنى (CLM-0682)" fail _sac "$S_G7SOCKET2_SAMEROW"
+# تحكّمٌ موجبٌ: الاستيرادُ النوعيُّ متعدّدُ الأسطرِ (ذيلُ `} from "net";` في سطرٍ
+# بلا تعليمةٍ) لا يُحصى — القصُّ يعرفُ ذيلَ الاستيرادِ النوعيِّ لا يقطعُ غيرَهُ.
+S_G7SOCKET2_MULTILINE="$(_sac_g7 g7s2_typeonly_multiline 'import type {\n  AddressInfo,\n} from "node:net";\nexport const port = (a: AddressInfo) => a.port;\n')"
+t "الاستيرادُ النوعيُّ متعدّدُ الأسطرِ لا يُحصى فيمرّ (CLM-0682)" pass _sac "$S_G7SOCKET2_MULTILINE"
+# الطفرةُ الحاكمةُ: إعادةُ الاستثناءِ إلى منطقِ CLM-0681 (ورودِ العبارةِ في السطرِ)
+# تُعيدُ الثغرةَ فتمرُّ الحالتانِ — برهانٌ بأنّ إسقاطَهُما سببُهُ الإصلاحُ وحدَهُ.
+_sac_g7_sockets2_revert() { # يُعيدُ منطقَ CLM-0681 (ورودِ العبارةِ) في نسخةِ الحارسِ داخلَ الجذرِ
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("s/^[[:space:]]*(import"); j=s.index("//''", i); p.write_text(s[:i]+"s/.*import type.*//"+s[j+2:])' "$1"
+}
+for tag in runtime_comment type_then_require; do
+  case $tag in
+    runtime_comment) c='import { connect } from "node:net"; // import type\nexport const dial = () => connect(3000, "wasla-marketplace");\n' ;;
+    type_then_require) c='import type { AddressInfo } from "node:net"; const tls = require("tls");\nexport const dial = (a: AddressInfo) => tls.connect(a.port, "wasla-marketplace");\n' ;;
+  esac
+  S_G7SOCKET2_BLIND="$(_sac_g7 "g7s2_blind_$tag" "$c")"
+  _sac_g7_sockets2_revert "$S_G7SOCKET2_BLIND"
+  t "منطقُ CLM-0681 يُمرّرُ $tag — الثغرةُ المُعادةُ تُقاسُ (CLM-0682)" pass _sac "$S_G7SOCKET2_BLIND"
 done
 
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────

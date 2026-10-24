@@ -1,0 +1,21 @@
+rev=7b7afa45348d654595145fc5c9b62e2f351c4af4
+== B1 triggers of render-deploy.yml at REV
+  on: ['workflow_dispatch'] · push trigger: False · schedule: False
+== B2 deploy target at REV (infra/render/deploy-target.json — read only)
+  mode frozen · environment test · since 2026-10-19 · isolation_evidence None
+  test_plan_items approved: {'T1': False, 'T2': False} · fleet_deploy approved: False
+  last commit touching deploy-target.json: 5ef51643 2026-10-19T09:56:42Z
+== B3 render-deploy.yml runs (GitHub, read only)
+  total runs: 98 · latest: 2026-10-19T07:25:02Z push failure 39215840449
+  runs created after 2026-10-19T07:30Z (CLM-0632 freeze): 0
+  by event: 96 push 2 workflow_dispatch
+== B4 local guards at REV (self-tests; offline)
+  validate-render-deploy-target.sh rc=0 · ✓ self-test: 38/38 mutations caught
+  validate-render-deploy-plan.sh rc=0 · ✓ self-test: 36/36 mutations caught
+  validate-render-config.sh rc=0 · ✓ Render config guard passed.
+  validate-render-host-sources.sh rc=0 · ✓ self-test: 7/7 mutations caught
+== B5 negative control: a push trigger added to render-deploy.yml must be rejected by some guard
+  push-trigger mutant · validate-render-deploy-target.sh rc=1 REJECTED   ✗ render-deploy.yml must trigger on workflow_dispatch only (got ['push', 'workflow_dispatch'])
+  push-trigger mutant · validate-render-deploy-plan.sh rc=1 REJECTED   ✗ render-deploy.yml must not deploy on push/schedule/PR/workflow_run (Render is test-only — CLM-0632)
+  push-trigger mutant · validate-workflow-supply-chain.sh rc=0 ACCEPTED 
+== B6 not measurable here: Render pipeline-minutes balance / billing cycle (needs Render API credentials; not used)

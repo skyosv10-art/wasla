@@ -104,6 +104,7 @@
 - **Inferred:** يطابقُ actions/runner-images#14823 (نقلٌ متقطّرٌ لا يُطلقُ `Acquire::http::Timeout`) — مفتوحةٌ ومُقَرٌّ بها.
 - **Owner decision required:** خياراتُ العلاجِ A–G بكلفتِها ومخاطرِها في §5؛ لا يُنفَّذُ شيءٌ قبلَ القرار.
 - **Risk(s):** لا تغييرَ في أيِّ حالة.
+- **Sample scope (2026-10-24, rebase on `7b7afa45`):** الأرقامُ عيّنةٌ تاريخيّةٌ (2026-10-20T02:08Z → 2026-10-23T21:37Z، حتى `61314116`) لا قياسٌ جديدٌ على main الحالي، وتسبقُ تبديلَ المرآة (CLM-0671).
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/README.md
 - **Deployment:** none.
 - **Not changed:** `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.

@@ -412,6 +412,7 @@ paths:
       tags: [ops]
       summary: فحص الجاهزية
       operationId: health
+      security: []
       responses:
         '200':
           description: الخدمة تعمل

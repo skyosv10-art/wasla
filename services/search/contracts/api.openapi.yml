@@ -128,6 +128,7 @@ paths:
         نموذجَ قراءتِها تبقى `ok` هنا ولا تُعادُ تشغيلاً — التوجيهُ يُقرَّرُ من
         `/search/ready`.
       operationId: health
+      security: []
       responses:
         '200':
           description: العمليّةُ حيّةٌ

@@ -204,6 +204,34 @@ export interface components {
         };
     };
     responses: {
+        /** @description ترويسة هويّة الخدمة غائبة أو غير صالحة (401) */
+        AuthUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    error: {
+                        code: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+        /** @description الرمز صحيح لكنه يفتقد الصلاحية المطلوبة (403) */
+        AuthForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    error: {
+                        code: string;
+                        message: string;
+                    };
+                };
+            };
+        };
         /** @description Error response */
         ErrorResponse: {
             headers: {
@@ -270,6 +298,8 @@ export interface operations {
                     "application/json": components["schemas"]["TicketListResponse"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
         };
     };
     createTicket: {
@@ -295,6 +325,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
         };
     };
     getTicket: {
@@ -317,6 +349,8 @@ export interface operations {
                     "application/json": components["schemas"]["Ticket"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["ErrorResponse"];
         };
     };
@@ -344,6 +378,8 @@ export interface operations {
                     "application/json": components["schemas"]["Evidence"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["ErrorResponse"];
         };
     };
@@ -371,6 +407,8 @@ export interface operations {
                     "application/json": components["schemas"]["Ticket"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["ErrorResponse"];
         };
     };
@@ -398,6 +436,8 @@ export interface operations {
                     "application/json": components["schemas"]["Ticket"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["ErrorResponse"];
         };
     };
@@ -421,6 +461,8 @@ export interface operations {
                     "application/json": components["schemas"]["Ticket"];
                 };
             };
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             404: components["responses"]["ErrorResponse"];
         };
     };

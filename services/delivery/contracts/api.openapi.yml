@@ -359,6 +359,7 @@ paths:
       tags: [health]
       operationId: getDeliveryHealth
       summary: نبضةُ حياةِ الخدمة
+      security: []
       responses:
         "200":
           description: الخدمةُ حيّةٌ
@@ -370,6 +371,7 @@ paths:
     get:
       tags: [health]
       operationId: getDeliveryReadiness
+      security: []
       summary: جاهزيّةُ الخدمةِ (سبرٌ حقيقيٌّ للتبعيّاتِ)
       description: |
         ليس نبضةً: يسألُ القاعدةَ بـ`SELECT` على جدولٍ حقيقيٍّ بمهلةٍ

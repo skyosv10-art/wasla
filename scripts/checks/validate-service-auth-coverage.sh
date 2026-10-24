@@ -477,6 +477,68 @@ for contract in "${ALL_CONTRACTS[@]:-}"; do
   fi
 done
 
+# 9-هـ) العملياتُ لا العقدُ وحده (CLM-0679 · RISK-0041 · مراجعةُ #820 — K2/K3)
+# البابُ 9-ب يقيسُ العقدَ على مستوى الملفِّ؛ ومراجعةُ RISK-0041 قاست أنّ هذا يتركُ
+# عمليّةً تُفتَحُ بصمتٍ (`security: []` على عمليةٍ مؤمَّنةٍ — K2) أو تُسقَطُ 401/403 من
+# توثيقِها فلا يُدافعُ أحدٌ عن العمليّةِ نفسِها (K3). هذا البابُ يقيسُ **كلَّ عمليّةٍ**:
+# ما عُلِّمَ عامًّا في العقدِ يجبُ أن يكونَ `config: OPEN` في شفرةِ الحدِّ نفسِهِ (لا وعدَ
+# أمنٍ كاذبَ في الاتّجاهينِ)، وما هوَ مؤمَّنٌ يُلزَمُ بتوثيقِ 401، وإن كانَ بصلاحيةٍ فبـ403
+# أيضًا — كما تقيسُها `@wasla/service-auth/fastify` فعلًا (401 هويةٌ غائبةٌ/فاسدةٌ · 403
+# صلاحيّةٌ ناقصةٌ). ولا يُطبَّقُ إلّا على عقدٍ يُعلِنُ أمنًا أصلًا (البابُ 9-ب يحرسُ
+# الاتّجاهَ الآخرَ)، ولا يُخترَعُ ردٌّ لا تقيسُهُ الشفرةُ: الحكمُ على ما في العقدِ لا على
+# ما ليسَ فيه.
+GATE9E="$(python3 - "${ENFORCED[@]:-}" <<'PY'
+import re, sys, yaml
+
+problems = []
+for svc in [a for a in sys.argv[1:] if a]:
+    app = f"services/{svc}/src/http/app.ts"
+    contract = f"services/{svc}/contracts/api.openapi.yml"
+    try:
+        code = open(app, encoding="utf-8").read()
+        spec = yaml.safe_load(open(contract, encoding="utf-8"))
+    except OSError:
+        continue  # البابُ 9-ب يحرسُ غيابَ العقدِ أو الشفرةِ؛ لا يُكرَّرُ هنا
+    if not isinstance(spec, dict):
+        continue
+    comps = spec.get("components") or {}
+    if not (spec.get("securitySchemes") or comps.get("securitySchemes") or spec.get("security")):
+        continue  # عقدٌ لا يُعلِنُ أمنًا: اتجاهُ البابِ 9-ب لا هذا
+    if not isinstance(spec.get("paths"), dict):
+        continue
+    code_open = set()
+    for m, p in re.findall(r"app\.(get|post|put|patch|delete)\(\s*\"([^\"]+)\"\s*,\s*\{ config: OPEN", code):
+        code_open.add((m.upper(), p))
+    gsec = spec.get("security") or []
+    for path, ops in spec["paths"].items():
+        if not isinstance(ops, dict):
+            continue
+        for method, op in ops.items():
+            if method not in ("get", "post", "put", "patch", "delete") or not isinstance(op, dict):
+                continue
+            sec = op.get("security")
+            tag = f"{svc} {method.upper()} {path}"
+            if sec == []:
+                if (method.upper(), path) not in code_open:
+                    problems.append(f"P|عمليّةٌ عُلِّمَتْ عامّةً في العقدِ وليست `config: OPEN` في شفرةِ الحدِّ (K2 — فتحٌ بصمتٌ لوعدِ أمنٍ): {tag}")
+            elif (method.upper(), path) in code_open:
+                problems.append(f"P|الشفرةُ تُعلِنُ المسارَ OPEN والعقدُ يُؤمّنُهُ (وعدُ أمنٍ كاذبٌ): {tag}")
+            else:
+                eff = sec if sec is not None else gsec
+                resp = op.get("responses") or {}
+                if "401" not in resp:
+                    problems.append(f"P|عمليّةٌ مؤمَّنةٌ بلا 401 موثَّقةٍ في عقدِها (K3 — الرفضُ مقيسٌ في @wasla/service-auth/fastify): {tag}")
+                scoped = any(any(v for v in req.values()) for req in eff if isinstance(req, dict))
+                if scoped and "403" not in resp:
+                    problems.append(f"P|عمليّةٌ مؤمَّنةٌ بصلاحيةٍ بلا 403 موثَّقةٍ (الرفضُ مقيسٌ في @wasla/service-auth/fastify): {tag}")
+for p in problems:
+    print(p)
+PY
+)"
+while IFS= read -r line; do
+  [[ -n "$line" ]] && bad "${line#P|}"
+done <<< "$GATE9E"
+
 # ── 10) إقفالُ جردِ حدودِ الدخولِ ─────────────────────────────────────────
 # التعليلُ الكاملُ والاتّجاهاتُ الأربعةُ في مِلفِّ البابِ نفسِه — مصدرُ حقيقةٍ
 # واحدٌ لمنطقِ البابِ لا نسختانِ. وغيابُ المِلفِّ إخفاقٌ لا تخطٍّ: حارسٌ يفقدُ

@@ -2677,6 +2677,129 @@ S_D_NOHDR="$(_sac_root d_noheader)"
 rm -f "$S_D_NOHDR/packages/service-auth/src/http.ts"
 t "البابُ 9: غيابُ مصدرِ اسمِ الترويسةِ يُسقِط (لا قياسَ على موضعٍ مهجورٍ)" fail _sac "$S_D_NOHDR"
 
+# 11-15) البابُ 9-هـ (CLM-0679 · RISK-0041 · مراجعةُ #820): العملياتُ لا العقدُ وحده
+# K2 وK3 اللتانِ قاستهُما المراجعةُ: فتحُ عمليةٍ مؤمَّنةٍ بصمتٍ، وإسقاطُ 401/403 من
+# توثيقِها — والاتّجاهُ الثالثُ: وعدُ أمنٍ كاذبٌ (الشفرةُ OPEN والعقدُ يُؤمّنُ).
+_sac_9e() { # _sac_9e <tag> <candidates-yaml>
+  local R="$(_sac_root "$1")"
+  # عقدُ الحالةِ يُعلِنُ المُصادقةَ صريحاً — فلا يصحُّ بقاءُ الحدِّ في جردِ الدَّينِ
+  python3 - "$R" <<'PY'
+import sys, pathlib
+f = pathlib.Path(sys.argv[1]) / "docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t = f.read_text()
+f.write_text(t.replace("| `matching` | 2 | `M1-06` |", "| — | 0 | — |"))
+PY
+  cat > "$R/services/matching/src/http/app.ts" <<'TS'
+registerServiceIdentity(app, wiring);
+app.get("/health", { config: OPEN }, async () => ({ status: "ok" }));
+TS
+  cat > "$R/services/matching/contracts/api.openapi.yml" <<YML
+openapi: 3.1.0
+components:
+  securitySchemes:
+    ServiceIdentity:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        '200': { description: ok }
+  /matching/candidates:
+    post:
+$2
+YML
+  printf '%s\n' "$R"
+}
+
+S_9E_OK="$(_sac_9e 9e_ok "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ موثَّقةُ 401/403 ومسارٌ عامٌّ يُطابِقُ OPEN في الشفرةِ يمرّ" pass _sac "$S_9E_OK"
+
+S_9E_K2="$(_sac_9e 9e_k2 "      security: []
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ تُفتَحُ بصمتٍ (security: []) تُسقَط (K2)" fail _sac "$S_9E_K2"
+
+S_9E_K3="$(_sac_9e 9e_k3 "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ بلا 401 موثَّقةٍ تُسقَط (K3)" fail _sac "$S_9E_K3"
+
+S_9E_403="$(_sac_9e 9e_403 "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }")"
+t "البابُ 9-هـ: عمليّةٌ بصلاحيةٍ بلا 403 موثَّقةٍ تُسقَط" fail _sac "$S_9E_403"
+
+S_9E_FP="$(_sac_9e 9e_fp "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+python3 - "$S_9E_FP" <<'PY'
+import sys, yaml, pathlib
+f = pathlib.Path(sys.argv[1]) / "services/matching/contracts/api.openapi.yml"
+spec = yaml.safe_load(f.read_text())
+del spec["paths"]["/health"]["get"]["security"]
+f.write_text(yaml.safe_dump(spec, allow_unicode=True))
+PY
+t "البابُ 9-هـ: الشفرةُ تُعلِنُ OPEN والعقدُ يُؤمّنُ المسارَ (وعدُ أمنٍ كاذبٌ) يُسقَط" fail _sac "$S_9E_FP"
+
+# اختباراتُ طفرةٍ للبابِ 9-هـ: كلُّ فرعٍ من الحارسِ ضروريٌّ لصيدِ حالتِهِ —
+# تُحيَّدُ الفروعُ واحدةً فواحدةً في نسخةِ الحارسِ داخلَ الجذرِ الصناعيِّ، فيجبُ
+# أن يمرَّ العيبُ تحتَ الحارسِ المُطفَّرِ (لو رُفضَ فالطفرةُ لم تُحيِّد شيئاً).
+_sac_9e_mut() { # _sac_9e_mut <tag> <old> <new> <candidates-yaml>
+  local R
+  R="$(_sac_9e "$1" "$4")"
+  python3 - "$R" "$2" "$3" <<'PY'
+import sys, pathlib
+q = pathlib.Path(sys.argv[1]) / "scripts/checks/validate-service-auth-coverage.sh"
+s = q.read_text(encoding="utf-8")
+old, new = sys.argv[2], sys.argv[3]
+assert old in s, "mutation anchor not found: " + old
+q.write_text(s.replace(old, new, 1), encoding="utf-8")
+PY
+  bash "$R/scripts/checks/validate-service-auth-coverage.sh"
+}
+
+_9E_SEC="      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ K2): حارسٌ بلا فحصِ الفتحِ الصامتِ يمرُّ بالعيبِ — فالفرعُ ضروريٌّ" pass _sac_9e_mut 9e_mut_k2 'if (method.upper(), path) not in code_open:' 'if False:' "      security: []
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ K3/401): حارسٌ بلا فحصِ 401 يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_k3 'if "401" not in resp:' 'if False:' "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ 403): حارسٌ بلا فحصِ 403 يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_403 'if scoped and "403" not in resp:' 'if False:' "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }"
+t "طفرةُ 9-هـ (فرعُ الوعدِ الكاذبِ): حارسٌ لا يُقابِلُ OPEN في الشفرةِ يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_fp 'elif (method.upper(), path) in code_open:' 'elif False:' "$_9E_SEC"
+t "طفرةُ 9-هـ (رؤيةُ components.securitySchemes): حارسٌ لا يرى الأمنَ تحتَ components يتخطّى العقودَ المؤمَّنةَ كلَّها" pass _sac_9e_mut 9e_mut_comps 'comps.get("securitySchemes") or spec.get("security")' 'spec.get("security")' "$_9E_SEC"
+
+
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'
 # الحارسُ يقيسُ على **المنتظِمين** (مَن له journal) وحدَهم — فالتطبيقُ تدريجيٌّ

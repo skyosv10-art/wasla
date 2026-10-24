@@ -6,6 +6,7 @@
 - **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0034: `review:2026-11-07` + نتيجةُ المراجعةِ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/raw/*` · سجلّاتُ التقدّم.
 - **Measured (main `61314116`):** dispatch يشترطُ `^ORD-[0-9]10$` في النموذجِ والتحقّقِ وقيدِ القاعدة؛ `DispatchJobRequester` بلا تنفيذٍ غيرِ `FakeDispatchJobRequester`؛ `delegateToDispatch` بلا مستدعٍ خارجَ الاختبارات (ضابطٌ موجبٌ: 16 فيها)؛ لا عميلَ HTTP إلى `POST /dispatch/jobs` في delivery (يوجدُ في customers لمسارِ `ORD-`)؛ قرارُ الجسرِ مؤجّلٌ في ADR-026 §4.7 (آخرُ تغييرٍ 2026-09-27)؛ `production_open` true=0 · false=32.
 - **Result:** الحالةُ `open` والخطورةُ `medium` بلا تغيير — فجوةٌ وظيفيّةٌ معماريّةٌ بلا تعرّضٍ حيّ، وشرطٌ قبلَ فتحِ توصيلِ المتاجرِ؛ المراجعةُ التاليةُ 2026-11-07 أو فورَ قرارِ المالكِ في الجسر.
+- **Risk(s):** RISK-0034 → open (بلا تغيير؛ `review:2026-11-07` بعدَ مراجعةٍ فعليّة).
 - **Owner decision required:** بنيةُ الحجزِ بينَ orders وdelivery (ADR-026 §4.7 · §5) — لم تُتَّخذ.
 - **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليل.
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md
@@ -22,7 +23,7 @@
 - **Not proven:** قابليّةُ استغلالِ الثغراتِ في Wasla نفسِها (الإغلاقُ بالترقيةِ لا بالتحليل).
 - **No-Test-Reason:** ترقيةُ اعتماديّةٍ غيرِ مباشرةٍ بلا تغييرٍ في شيفرةِ Wasla — الدليلُ السلوكيُّ اختباراتُ المستودعِ كاملةً (5968 ناجحًا قبلُ وبعدُ بملخّصاتٍ متطابقة) واختباراتُ المشرفين الأمنيّةُ قديمٌ/جديد (`upstream-security-tests.sh`)؛ اختبارٌ جديدٌ في الشجرةِ لسلوكِ مكتبةٍ خارجيّةٍ لا يحرسُ شيفرتَنا.
 - **Baseline:** يُعادُ توليدُ `BASELINE` لأنّ بصمةَ `pnpm-lock.yaml` تغيّرت (BASELINE_FORMAT §5) — مع التغييرِ نفسِه.
-- **Risk(s):** RISK-0004 `mitigating` — بلا تغيير.
+- **Risk(s):** RISK-0004 → mitigating (بلا تغيير؛ التثبيتاتُ القسريّةُ ما زالت 7).
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/README.md
 - **Deployment:** none.
 - **Not changed:** شيفرةُ الخدمات · `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.

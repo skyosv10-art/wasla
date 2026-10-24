@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-23T12:26:28Z",
+  "generated_at": "2026-10-24T07:03:54Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "f43ef67c53ce3798f43aa138bd47723d544d920f",
-    "branch": "fix/clm-0662-channel-edge-proxy-routing",
-    "dirty": true,
-    "dirty_files": 2,
-    "dirty_reason": "تجديدُ الأساسِ بعدَ إعادةِ التأسيسِ على main ea98c4c8 (قرارٌ مكتوب M0-08): الملفاتُ غيرُ الملتزَمةِ عندَ التوليدِ هي BASELINE.json/txt وسجلُّ التحققِ نفسُه",
-    "tracked_files": 3679
+    "commit": "d1fffa6bc63417cf0d5e3e492f93685e55c8f426",
+    "branch": "security/clm-0672-fast-uri-ghsa-2026-10-23",
+    "dirty": false,
+    "dirty_files": 0,
+    "dirty_reason": "",
+    "tracked_files": 3715
   },
   "env": {
     "node": "v20.20.2",
@@ -19,7 +19,7 @@
   },
   "lock": {
     "path": "pnpm-lock.yaml",
-    "sha256": "207c4c16224977ddc9a0def699bb83d2aae3974f0b735282b3a6a7f04c455f4f",
+    "sha256": "7c4ff354d009c584e11c8aa777aa5f1f3dcad3fad71850bc98636e3ed58815a0",
     "lines": 5056
   },
   "static": {
@@ -34,13 +34,13 @@
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-22T111200Z-clm-0662-channel-edge-proxy-routing/raw/verify-f43ef67c.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/raw/verify-50add3be.log",
     "tests_passed": 6292,
     "test_files_executed": 443,
-    "governance_suite_cases": 738,
+    "governance_suite_cases": 754,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:20ad9ad53ec4f3f2c42665329db8ba2f7ea23f459b8dc411add8c717c8b151ba",
+  "fingerprint": "sha256:f087816f59b21c7016fe2e3fbf10b8dc2012c89c694927ee74a5b53e9d234d6f",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

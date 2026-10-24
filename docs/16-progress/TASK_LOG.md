@@ -1,3 +1,33 @@
+# 2026-10-24 — CLM-0673 — M0-07: مراجعةُ RISK-0034 الفعليّة (جسرُ ORD-/WS-)
+
+- **Work Item(s):** M0-07 (CLM-0673 · RISK-0034)
+- **Status:** Released (يُدمجُ معَ CLM-0672 في PR واحدٍ بقرارِ المالكِ — كلٌّ منهما يحجبُ الآخرَ في `verify`؛ التزاماتٌ وسجلّاتٌ منفصلة)
+- **Kind:** risk review — بقرارِ المالكِ 2026-10-24 «راجع الخطر الآن» بعدَ انقضاءِ موعدِ 2026-10-23.
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0034: `review:2026-11-07` + نتيجةُ المراجعةِ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `61314116`):** dispatch يشترطُ `^ORD-[0-9]10$` في النموذجِ والتحقّقِ وقيدِ القاعدة؛ `DispatchJobRequester` بلا تنفيذٍ غيرِ `FakeDispatchJobRequester`؛ `delegateToDispatch` بلا مستدعٍ خارجَ الاختبارات (ضابطٌ موجبٌ: 16 فيها)؛ لا عميلَ HTTP إلى `POST /dispatch/jobs` في delivery (يوجدُ في customers لمسارِ `ORD-`)؛ قرارُ الجسرِ مؤجّلٌ في ADR-026 §4.7 (آخرُ تغييرٍ 2026-09-27)؛ `production_open` true=0 · false=32.
+- **Result:** الحالةُ `open` والخطورةُ `medium` بلا تغيير — فجوةٌ وظيفيّةٌ معماريّةٌ بلا تعرّضٍ حيّ، وشرطٌ قبلَ فتحِ توصيلِ المتاجرِ؛ المراجعةُ التاليةُ 2026-11-07 أو فورَ قرارِ المالكِ في الجسر.
+- **Risk(s):** RISK-0034 → open (بلا تغيير؛ `review:2026-11-07` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** بنيةُ الحجزِ بينَ orders وdelivery (ADR-026 §4.7 · §5) — لم تُتَّخذ.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليل.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ شيفرة · ADR-026 · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-24 — CLM-0672 — M0-06: إغلاقُ أربعِ ثغراتِ fast-uri (2026-10-23) في شجرةِ الإنتاج
+
+- **Work Item(s):** M0-06 (CLM-0672 · RISK-0004)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** security dependency override — بقرارِ المالكِ 2026-10-24 (يشملُ القفزةَ الثانويّةَ 4.1.5→4.2.3).
+- **Changed units:** `package.json` (`pnpm.overrides`: `fast-uri@3` ^3.1.9 · `fast-uri@4` ~4.2.3) · `pnpm-lock.yaml` (أسطرُ fast-uri وحدَها) · `docs/00-rules/SECURITY_RULES.md` §11 (سطرا fast-uri) · `docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/*` · سجلّاتُ التقدّم.
+- **Measured:** قبلُ على main `61314116`: التدقيقُ exit 1 (البابُ 1: 8 ثغراتٍ في شجرةِ الإنتاج)؛ بعدُ: exit 0 و`pnpm audit --prod` صفرٌ في كلِّ الدرجات؛ `pnpm test` 58 حزمةً · 5968 ناجحًا · 59 متخطًّى · 0 فاشل على الجانبَين بملخّصاتٍ متطابقةٍ سطرًا بسطر؛ اختباراتُ الأمانِ من المشرفين تفشلُ على 3.1.8/4.1.5 (مثلًا host-delimiter 233/463 فشلًا · c0-reference 333/541) وتنجحُ كاملةً على 3.1.9/4.2.3؛ الواجهةُ المُصدَّرةُ متطابقة.
+- **Not proven:** قابليّةُ استغلالِ الثغراتِ في Wasla نفسِها (الإغلاقُ بالترقيةِ لا بالتحليل).
+- **No-Test-Reason:** ترقيةُ اعتماديّةٍ غيرِ مباشرةٍ بلا تغييرٍ في شيفرةِ Wasla — الدليلُ السلوكيُّ اختباراتُ المستودعِ كاملةً (5968 ناجحًا قبلُ وبعدُ بملخّصاتٍ متطابقة) واختباراتُ المشرفين الأمنيّةُ قديمٌ/جديد (`upstream-security-tests.sh`)؛ اختبارٌ جديدٌ في الشجرةِ لسلوكِ مكتبةٍ خارجيّةٍ لا يحرسُ شيفرتَنا.
+- **Baseline:** يُعادُ توليدُ `BASELINE` لأنّ بصمةَ `pnpm-lock.yaml` تغيّرت (BASELINE_FORMAT §5) — مع التغييرِ نفسِه.
+- **Risk(s):** RISK-0004 → mitigating (بلا تغيير؛ التثبيتاتُ القسريّةُ ما زالت 7).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/README.md
+- **Deployment:** none.
+- **Not changed:** شيفرةُ الخدمات · `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-23 — CLM-0669 — M0-53: G-S9.20 وRISK-0071 على PostgreSQL 18.6 — دليلٌ قابلٌ لإعادةِ التشغيل
 
 - **Work Item(s):** M0-53 (CLM-0669 · RISK-0070 · RISK-0071)

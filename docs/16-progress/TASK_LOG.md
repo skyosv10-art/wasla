@@ -94,6 +94,21 @@
 - **Deployment:** none.
 - **Not changed:** شيفرةُ الخدمات · `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
 
+# 2026-10-24 — CLM-0670 — M0-53: إلغاءاتُ e2e بمهلةِ تثبيتِ Playwright — قياسٌ وتحليلٌ
+
+- **Work Item(s):** M0-53 (CLM-0670)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** docs-only — **لا تغييرَ في CI ولا في `timeout-minutes`.**
+- **Changed units:** `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/collect.py` (جمعٌ قابلٌ لإعادةِ التشغيلِ، قراءةٌ فقط من واجهةِ GitHub) · `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/README.md` · `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/raw/*` · سجلّاتُ التقدّم.
+- **Measured:** 310 محاولاتِ مهامِّ e2e في 99 تشغيلًا (10-20 → 10-23): وسيطُ التثبيتِ 23 s؛ البطيءُ (≥300 s) 0 قبلَ 10-22T11:21Z ثمّ 17؛ الفارقُ محصورٌ في جلبِ حزمِ `.deb` لـ `--with-deps` من `azure.archive.ubuntu.com` (43.9–64.4 kB/s مقابلَ وسيطِ 18.3 MB/s) بينما الفهارسُ وCDN والاختبارُ متماثلة؛ 10 إلغاءاتٍ كلُّها بهذا السببِ وإعاداتُها دونَ تغييرٍ 10/10 ناجحة؛ فشلٌ واحدٌ مختلفُ السببِ (10-20، 403 من packages.microsoft.com). خطوةُ الاختبارِ لم تفشلْ قطُّ ⇒ عطلُ بيئةٍ لا عيبُ اختبار.
+- **Inferred:** يطابقُ actions/runner-images#14823 (نقلٌ متقطّرٌ لا يُطلقُ `Acquire::http::Timeout`) — مفتوحةٌ ومُقَرٌّ بها.
+- **Owner decision required:** خياراتُ العلاجِ A–G بكلفتِها ومخاطرِها في §5؛ لا يُنفَّذُ شيءٌ قبلَ القرار.
+- **Risk(s):** لا تغييرَ في أيِّ حالة.
+- **Sample scope (2026-10-24, rebase on `7b7afa45`):** الأرقامُ عيّنةٌ تاريخيّةٌ (2026-10-20T02:08Z → 2026-10-23T21:37Z، حتى `61314116`) لا قياسٌ جديدٌ على main الحالي، وتسبقُ تبديلَ المرآة (CLM-0671).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/README.md
+- **Deployment:** none.
+- **Not changed:** `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
 # 2026-10-23 — CLM-0669 — M0-53: G-S9.20 وRISK-0071 على PostgreSQL 18.6 — دليلٌ قابلٌ لإعادةِ التشغيل
 
 - **Work Item(s):** M0-53 (CLM-0669 · RISK-0070 · RISK-0071)

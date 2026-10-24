@@ -6,6 +6,8 @@
 - **Changed units:** `package.json` (`pnpm.overrides`: `fast-uri@3` ^3.1.9 · `fast-uri@4` ~4.2.3) · `pnpm-lock.yaml` (أسطرُ fast-uri وحدَها) · `docs/00-rules/SECURITY_RULES.md` §11 (سطرا fast-uri) · `docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/*` · سجلّاتُ التقدّم.
 - **Measured:** قبلُ على main `61314116`: التدقيقُ exit 1 (البابُ 1: 8 ثغراتٍ في شجرةِ الإنتاج)؛ بعدُ: exit 0 و`pnpm audit --prod` صفرٌ في كلِّ الدرجات؛ `pnpm test` 58 حزمةً · 5968 ناجحًا · 59 متخطًّى · 0 فاشل على الجانبَين بملخّصاتٍ متطابقةٍ سطرًا بسطر؛ اختباراتُ الأمانِ من المشرفين تفشلُ على 3.1.8/4.1.5 (مثلًا host-delimiter 233/463 فشلًا · c0-reference 333/541) وتنجحُ كاملةً على 3.1.9/4.2.3؛ الواجهةُ المُصدَّرةُ متطابقة.
 - **Not proven:** قابليّةُ استغلالِ الثغراتِ في Wasla نفسِها (الإغلاقُ بالترقيةِ لا بالتحليل).
+- **No-Test-Reason:** ترقيةُ اعتماديّةٍ غيرِ مباشرةٍ بلا تغييرٍ في شيفرةِ Wasla — الدليلُ السلوكيُّ اختباراتُ المستودعِ كاملةً (5968 ناجحًا قبلُ وبعدُ بملخّصاتٍ متطابقة) واختباراتُ المشرفين الأمنيّةُ قديمٌ/جديد (`upstream-security-tests.sh`)؛ اختبارٌ جديدٌ في الشجرةِ لسلوكِ مكتبةٍ خارجيّةٍ لا يحرسُ شيفرتَنا.
+- **Baseline:** يُعادُ توليدُ `BASELINE` لأنّ بصمةَ `pnpm-lock.yaml` تغيّرت (BASELINE_FORMAT §5) — مع التغييرِ نفسِه.
 - **Risk(s):** RISK-0004 `mitigating` — بلا تغيير.
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/README.md
 - **Deployment:** none.

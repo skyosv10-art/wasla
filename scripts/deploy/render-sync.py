@@ -90,7 +90,117 @@ def load_target() -> dict:
     root = os.path.normpath(os.path.join(os.path.dirname(TARGET_FILE), "..", ".."))
     if not isinstance(ev, str) or not ev.strip() or ev.startswith("/") or ".." in ev.split("/") or not os.path.isfile(os.path.join(root, ev)):
         sys.exit("deploy-target.json: isolation_evidence must name an existing evidence file in the repository (ADR-073 D4) — refusing to deploy")
+    # CLM-0678 (RISK-0069, review #822): existence alone proved nothing — the guard
+    # accepted any existing file (measured: README.md) as isolation evidence. The
+    # evidence must now carry the measured E1–E4 content of ADR-073 D4, not a name.
+    errs = isolation_evidence_errors(os.path.join(root, ev), refs) if isinstance(ev, str) and ev else []
+    if errs:
+        sys.exit("isolation_evidence " + ev + ": " + " · ".join(errs) + " — (ADR-073 D4 · E1–E4) refusing to deploy")
     return t
+
+
+def isolation_evidence_errors(path: str, prod_refs: list[str]) -> list[str]:
+    """E1–E4 content of an isolation-evidence file (ADR-073 D4 · CLM-0678).
+
+    The evidence is reviewed in the unfreeze PR; this gate only refuses a file
+    that does not even carry the measured shape: the four sections, each with
+    its required measured values, and no production ref and no secret material.
+    A file that passes here is NOT thereby approved — only deployable to review.
+    """
+    errs: list[str] = []
+    try:
+        text = open(path, encoding="utf-8").read()
+    except OSError as exc:
+        return [f"unreadable: {exc}"]
+    if not text.strip():
+        return ["empty file — an evidence file with no content proves nothing"]
+    if "-----BEGIN" in text:
+        errs.append("key material must never be pasted into the evidence")
+    lines = [ln.strip() for ln in text.splitlines()]
+
+    def section(marker: str) -> list[str] | None:
+        for i, ln in enumerate(lines):
+            if re.match(rf"^#+\s*{marker}\b", ln) or re.match(rf"^{marker}\s*[:：-]", ln):
+                return lines[i + 1 :]
+        return None
+
+    def field(sec: list[str] | None, key: str) -> str | None:
+        if sec is None:
+            return None
+        for ln in sec:
+            m = re.match(rf"^{key}\s*[:=]\s*(.*)$", ln)
+            if m:
+                return m.group(1).strip()
+        return None
+
+    # E1 — a separate test database project: ref (not a production ref), name, date.
+    e1 = section("E1")
+    if e1 is None:
+        errs.append("E1 section missing — the separate test database project is not evidenced")
+    else:
+        ref = field(e1, "ref")
+        if not ref or not re.fullmatch(r"[a-z0-9]{20}", ref):
+            errs.append("E1 needs `ref:` — the 20-char ref of the test database project")
+        elif ref in prod_refs or ref in ("ppixaauyqoykrogwdxtv", "pvyuhjadrygqqdoczmnd"):
+            errs.append(f"E1 `ref:` {ref} is a production/deleted project — isolation is not evidenced")
+        if not (field(e1, "name") or "").strip():
+            errs.append("E1 needs `name:` — the project name as measured")
+        created = field(e1, "created") or ""
+        if not re.match(r"^\d{4}-\d{2}-\d{2}", created):
+            errs.append("E1 needs `created:` — the project creation date (YYYY-MM-DD)")
+
+    # E2 — a limited role: the pg_roles row with every privilege false, plus grants.
+    e2 = section("E2")
+    if e2 is None:
+        errs.append("E2 section missing — the limited role is not evidenced")
+    else:
+        joined = " ".join(e2).lower().replace(" ", "")
+        privs = ("rolsuper", "rolcreaterole", "rolcreatedb", "rolbypassrls", "rolreplication")
+        row_ok = all(f"{p}=false" in joined or f"{p}=f" in joined for p in privs)
+        if not row_ok:
+            # the pg_roles query also pastes as a table: header names + a row of false.
+            tbl = False
+            for i, ln in enumerate(e2[:-1]):
+                if all(p in ln.lower() for p in privs):
+                    vals = [v.strip().lower() for v in e2[i + 1].strip("| ").split("|")]
+                    if len(vals) >= len(privs) and all(v in ("false", "f") for v in vals[-len(privs):]):
+                        tbl = True
+            row_ok = tbl
+        if not row_ok:
+            errs.append("E2 needs the pg_roles row with rolsuper/rolcreaterole/rolcreatedb/rolbypassrls/rolreplication all false")
+        grants = field(e2, "grants")
+        if grants is None or not grants.strip():
+            errs.append("E2 needs `grants:` — the role's grant list as measured (write `none` if empty)")
+
+    # E3 — env-group separation: wasla-prod-db unlinked, no prod-named group linked.
+    e3 = section("E3")
+    if e3 is None:
+        errs.append("E3 section missing — env-group separation is not evidenced")
+    else:
+        if not re.search(r"wasla-prod-db[^\n]*linked\s*=\s*0", " ".join(e3), re.I):
+            errs.append("E3 must state `wasla-prod-db ... linked=0` — the production group unlinked")
+        for ln in e3:
+            m = re.match(r"^(\S*prod\S*)[^=]*linked\s*=\s*(\d+)", ln, re.I)
+            if m and int(m.group(2)) > 0:
+                errs.append(f"E3: group {m.group(1)} is prod-named and linked — separation is not evidenced")
+
+    # E4 — recently generated test keys: kids, sha256 fingerprints, date, method.
+    e4 = section("E4")
+    if e4 is None:
+        errs.append("E4 section missing — the regenerated test keys are not evidenced")
+    else:
+        kids = [ln for ln in e4 if re.match(r"^kid\s*[:=]", ln)]
+        if not kids:
+            errs.append("E4 needs `kid:` entries — the key ids as measured")
+        fps = [ln for ln in e4 if re.search(r"sha256\s*[:=]\s*[0-9a-f]{64}", ln, re.I)]
+        if not fps:
+            errs.append("E4 needs `sha256:` fingerprints — the key fingerprints as measured")
+        generated = field(e4, "generated") or ""
+        if not re.match(r"^\d{4}-\d{2}-\d{2}", generated):
+            errs.append("E4 needs `generated:` — the key generation date (YYYY-MM-DD)")
+        if not (field(e4, "method") or "").strip():
+            errs.append("E4 needs `method:` — how the keys were generated")
+    return errs
 
 
 TARGET = load_target()

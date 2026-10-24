@@ -28,7 +28,7 @@ def wf_triggers(wf):
     if not m: return None
     return [k for k in re.findall(r"^  ([a-z_]+):", m.group(1), re.M)]
 
-def load_sync(root, target_override=None, env=None):
+def load_sync(root, target_override=None, env=None, ev_content=None):
     """Import a copy of render-sync.py with an optional target file; returns (module|None, exit text)."""
     d = tempfile.mkdtemp()
     try:
@@ -38,7 +38,7 @@ def load_sync(root, target_override=None, env=None):
         if target_override: t.update(target_override)
         ev = t.get("isolation_evidence")
         if isinstance(ev, str) and ev and not ev.startswith("missing/"):
-            os.makedirs(os.path.dirname(os.path.join(d, ev)) or d, exist_ok=True); open(os.path.join(d, ev), "w").write("fixture\n")
+            os.makedirs(os.path.dirname(os.path.join(d, ev)) or d, exist_ok=True); open(os.path.join(d, ev), "w").write(ev_content if ev_content is not None else VALID_EVIDENCE)
         json.dump(t, open(os.path.join(d, "infra/render/deploy-target.json"), "w"))
         spec = importlib.util.spec_from_file_location("rs_under_test", os.path.join(d, "scripts/deploy/render-sync.py"))
         mod = importlib.util.module_from_spec(spec)
@@ -89,6 +89,31 @@ STUB_PLAN.inputs_for = lambda repo, target, s, ws, pkgs, reg: ([], "stub")
 STUB_PLAN.decide = lambda repo, live, target, inputs, force=False, why=None: {"decision": "deploy", "reason": "stub"}
 
 SVC = [("srv-a", "wasla-customer-bot"), ("srv-b", "wasla-identity"), ("srv-c", "wasla-orders")]
+
+# CLM-0678 (RISK-0069): the isolation evidence is content, not a filename. The
+# fixture below carries the full E1–E4 shape of ADR-073 D4; the E-cases below
+# feed wrong content and require a refusal.
+VALID_EVIDENCE = """# Isolation evidence — E1–E4 (ADR-073 D4)
+
+## E1 — separate test database project
+ref: zyxwvutsrqponmlkjihg
+name: wasla-test-db
+created: 2026-10-19
+
+## E2 — limited role
+pg_roles: wasla_test | rolsuper=false | rolcreaterole=false | rolcreatedb=false | rolbypassrls=false | rolreplication=false
+grants: SELECT on public.orders (wasla_test)
+
+## E3 — env-group separation
+wasla-prod-db linked=0
+wasla-test-db linked=3
+
+## E4 — recently generated test keys
+kid: svc-test-key-01
+sha256: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2
+generated: 2026-10-19
+method: service-auth rotate --test-only
+"""
 
 def fake_api(isolated=True):
     def api(method, path):
@@ -154,12 +179,33 @@ def gate_cases(root):
         if not ok: errs.append(f"{cid} {desc}: expected {'refusal «' + refusal + '» with 0 POST' if refusal else 'POST ' + str(posted)}, got {got}")
         if SECRET in out + msg or PROD in out + msg: errs.append(f"{cid}: a database value was printed")
         if any(re.search(r"/services/[^/]+/env-vars(\?|$)", p) for _, p in calls): errs.append(f"{cid}: the isolation preflight read the env-var list instead of keys")
-    # E — deploy mode needs an isolation-evidence file
-    for cid, desc, ev in (("E1", "deploy mode without isolation_evidence", None), ("E2", "isolation_evidence names a missing file", "missing/iso.md"), ("E3", "isolation_evidence escapes the repo", "../outside.md")):
-        mod, msg = load_sync(root, {**approved(), "isolation_evidence": ev})
-        ok = mod is None and "isolation_evidence" in msg
-        VERBOSE.append(f"    {'✓' if ok else '✗'} {cid} {desc}: {'load refused' if mod is None else 'LOADED'}")
-        if not ok: errs.append(f"{cid} {desc}: deploy target loaded")
+    # E — deploy mode needs an isolation-evidence file (CLM-0635) whose CONTENT
+    # carries E1–E4 (CLM-0678 · RISK-0069 — review #822: existence alone accepted README.md).
+    ev_neg = (
+        ("E1", "deploy mode without isolation_evidence", None, None),
+        ("E2", "isolation_evidence names a missing file", "missing/iso.md", None),
+        ("E3", "isolation_evidence escapes the repo", "../outside.md", None),
+        ("E4", "an unrelated existing file (README.md) as evidence", "docs/fixture/iso.md", "# Wasla\n\nA customer app.\n"),
+        ("E5", "an empty evidence file", "docs/fixture/iso.md", ""),
+        ("E6", "E3 section missing", "docs/fixture/iso.md", VALID_EVIDENCE.replace("## E3 — env-group separation\nwasla-prod-db linked=0\nwasla-test-db linked=3\n", "")),
+        ("E7", "E1 names the production ref", "docs/fixture/iso.md", VALID_EVIDENCE.replace("zyxwvutsrqponmlkjihg", PROD)),
+        ("E8", "E2 without grants", "docs/fixture/iso.md", VALID_EVIDENCE.replace("grants: SELECT on public.orders (wasla_test)", "")),
+        ("E9", "E4 without fingerprints", "docs/fixture/iso.md", VALID_EVIDENCE.replace("sha256: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\n", "")),
+        ("E10", "E3 with the production group linked", "docs/fixture/iso.md", VALID_EVIDENCE.replace("wasla-prod-db linked=0", "wasla-prod-db linked=17")),
+        ("E11", "key material pasted into the evidence", "docs/fixture/iso.md", VALID_EVIDENCE + "\n-----BEGIN PRIVATE KEY-----\n"),
+        ("E12", "another prod-named group is linked", "docs/fixture/iso.md", VALID_EVIDENCE.replace("wasla-test-db linked=3", "wasla-test-db linked=3\nwasla-prod-legacy linked=5")),
+        ("P3", "control: complete E1–E4 evidence loads", "docs/fixture/iso.md", None),
+    )
+    for cid, desc, ev, content in ev_neg:
+        mod, msg = load_sync(root, {**approved(), "isolation_evidence": ev}, ev_content=content)
+        if cid == "P3":
+            ok = mod is not None
+            VERBOSE.append(f"    {'✓' if ok else '✗'} {cid} {desc}: {'loaded' if ok else 'refused: ' + msg[:110]}")
+            if not ok: errs.append(f"{cid} {desc}: a complete E1–E4 evidence was refused: {msg[:160]}")
+        else:
+            ok = mod is None and "isolation_evidence" in msg
+            VERBOSE.append(f"    {'✓' if ok else '✗'} {cid} {desc}: {'refused' if ok else 'LOADED'}")
+            if not ok: errs.append(f"{cid} {desc}: deploy target loaded")
     return errs
 
 def test_only_rules(root, t):
@@ -324,6 +370,11 @@ cases = [
     ("item scope not applied to the services", [(R, '        svcs = [x for x in svcs if x["name"] in scope]', "        pass")]),
     ("--only may leave the item", [(R, '        if a.only and not set(a.only.split(",")) <= set(scope):', "        if False:")]),
     ("deploy target without isolation evidence loads", [(R, '    if not isinstance(ev, str) or not ev.strip() or ev.startswith("/") or ".." in ev.split("/") or not os.path.isfile(os.path.join(root, ev)):', "    if False:")]),
+    # CLM-0678 — the evidence is content, not a filename (RISK-0069)
+    ("evidence content check removed", [(R, '    errs = isolation_evidence_errors(os.path.join(root, ev), refs) if isinstance(ev, str) and ev else []', '    errs = []')]),
+    ("evidence check accepts the production ref in E1", [(R, 'elif ref in prod_refs or ref in ("ppixaauyqoykrogwdxtv", "pvyuhjadrygqqdoczmnd"):', 'elif False:')]),
+    ("evidence check accepts pasted key material", [(R, '    if "-----BEGIN" in text:\n        errs.append("key material must never be pasted into the evidence")', '    if False:\n        pass')]),
+    ("evidence check accepts a linked production group", [(R, '            if m and int(m.group(2)) > 0:\n                errs.append(f"E3: group {m.group(1)} is prod-named and linked — separation is not evidenced")', '            if False:\n                pass')]),
     ("workflow purpose is free text", [(W, "        type: choice\n        options:\n          - T1\n          - T2\n          - FLEET\n", "")]),
     ("workflow accepts full=true outside FLEET", [(W, '[ "${FULL_DEPLOY}" = "true" ] && [ "${RENDER_DEPLOY_PURPOSE}" != "FLEET" ]', '[ "${FULL_DEPLOY}" = "never" ]')]),
     ("workflow accepts unknown purposes", [(W, 'case "${RENDER_DEPLOY_PURPOSE}" in', 'case "skip" in')]),

@@ -1,0 +1,45 @@
+{
+  "$comment": "Single source of the Render workspace that main deploys to (CLM-0501). Read by scripts/deploy/render-sync.py; enforced by scripts/checks/validate-render-deploy-target.sh. Changing it is a reviewed, owner-approved step of the blue/green cutover (CLM-0500 report §4). CLM-0632: Render is a TEST environment only (owner decision 2026-10-19) — no production deploy, no spend; deploy mode additionally needs environment=test, production_database_refs and an empty isolation preflight. CLM-0635: a deploy names one approved test_plan_items entry and touches only its services; the whole fleet is the separate purpose FLEET (fleet_deploy); deploy mode also needs isolation_evidence (ADR-073 D4, E1–E4).",
+  "mode": "frozen",
+  "owner_id": null,
+  "environment": "test",
+  "reason": "CLM-0632 — owner decision 2026-10-19: Render is for tests only; no spend, no production deploy. Frozen because isolation is NOT proven: measured 2026-10-19 the env group `wasla-prod-db` links 17 wasla- services of workspace tea-db0vtkpsrm7s739dm5c0 to Supabase project `wasla` (production per docs/08-infrastructure/HA_CAPACITY_DR.md) as role postgres. Unfreezing is a reviewed PR that sets mode=deploy + owner_id after the isolation preflight is empty and a test-plan item names the purpose (docs/08-infrastructure/RENDER_TEST_ENVIRONMENT_PLAN.md).",
+  "production_database_refs": [
+    "ppixaauyqoykrogwdxtv"
+  ],
+  "isolation_evidence": null,
+  "test_plan_items": {
+    "T1": {
+      "services": [
+        "wasla-customer-app",
+        "wasla-customer-bot",
+        "wasla-customers",
+        "wasla-geography",
+        "wasla-identity"
+      ],
+      "approved": false,
+      "approval": null,
+      "note": "Deferred: channel-edge is not wired in bots/customer-bot/src/main.ts and allowlistUrl resolves to a missing file (CLM-0630); approval waits for that fix and its tests."
+    },
+    "T2": {
+      "services": [
+        "wasla-customer-bot",
+        "wasla-identity"
+      ],
+      "approved": false,
+      "approval": null,
+      "note": "Prepared to run locally without Render (docs/12-testing/T2_LOCAL_WEBHOOK_PROCEDURE.md); a Render T2 needs owner approval and isolation evidence."
+    }
+  },
+  "fleet_deploy": {
+    "approved": false,
+    "approval": null,
+    "note": "The whole fleet is never implied by full=true on an item; it needs this separate owner approval."
+  },
+  "frozen_owners": [
+    "tea-damm8atbedkc73ca3ahg"
+  ],
+  "legacy_owner": "tea-damm8atbedkc73ca3ahg",
+  "test_workspace": "tea-db0vtkpsrm7s739dm5c0",
+  "since": "2026-10-19"
+}

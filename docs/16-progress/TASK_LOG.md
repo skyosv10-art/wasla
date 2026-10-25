@@ -1,3 +1,14 @@
+# 2026-10-25 — CLM-0686 — M0-08: إنذارُ قِدَمِ الأساسِ (96 ساعةً) بقرارِ المالك
+
+- **Work Item(s):** M0-08 (حدُّ قِدَمِ الأساسِ — القرارُ الذي عرضَهُ CLM-0680 وتركَهُ للمالك).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner decision:** 2026-10-25 06:37 (+03) «اعتمادُ إنذارِ 96 ساعةً» — مسجَّلٌ في #797 (issuecomment-6393032052).
+- **Kind:** governance guard — إنذارٌ فقط؛ لا يتغيّرُ رمزُ خروجِ `validate-baseline.sh`.
+- **Changed units:** `scripts/checks/validate-baseline.sh` (البابُ 4(هـ)) · `scripts/checks/test-governance.sh` (7 حالاتٍ) · `docs/12-testing/BASELINE_FORMAT.md` · `docs/12-testing/ci-evidence/2026-10-25T040000Z-clm-0686-m0-08-baseline-staleness-warn/README.md` · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md`.
+- **Measured (local):** `test-governance.sh` 797/0 (790 + 7) · على الشجرةِ الحقيقيّةِ عمرُ الأساسِ 0.7 س، rc=0 · بزمنٍ مفروضٍ 2026-11-01 إنذارٌ عندَ 169.7 س، rc=0.
+- **Defect found in draft and fixed before commit:** أنبوبٌ يُغذّي `grep -q` (RISK-0037) كشفَهُ حارسُ الأنابيبِ — استُبدِلَ بـhere-string.
+- **Not changed:** لا بوّابةَ فشلٍ (قرارٌ مستقلٌّ للمالكِ) · لا نشرَ · Render مجمَّدٌ · `production_open=false` · NO-GO · M0-53 In Progress · M6-18B Blocked.
+
 # 2026-10-24 — CLM-0685 — M0-53: اختباراتُ مستوىِ HTTP لمساراتِ الشركاءِ الثلاثةِ غيرِ المُختبَرةِ (المرحلةُ 8)
 
 - **Work Item(s):** M0-53 (المرحلةُ الثامنةُ — فجوةُ قياسٍ مُعلَنةٌ في `PRODUCT_STATUS_2026-10-19.md` §3.4).

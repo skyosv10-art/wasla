@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-25T10:24:25Z
-الالتزام: 84ca3980b2ba3c3f45a149460c7eac9714784e00  الفرع: fix/clm-0691-channel-edge-main-wiring  شجرةٌ مُعدَّلةٌ (16 ملفّاً)
+التاريخ (UTC): 2026-10-25T10:25:59Z
+الالتزام: 734e5c6fb6028dfcb8d42a7a1c222bec2e3c9761  الفرع: fix/clm-0691-channel-edge-main-wiring  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 

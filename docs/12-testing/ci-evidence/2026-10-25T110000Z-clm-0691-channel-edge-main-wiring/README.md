@@ -23,8 +23,9 @@
 | `tsc --noEmit` (customer-bot) | rc=0 | `raw/tsc-customer-bot.log` |
 | الحارسُ 29 على الشجرةِ النظيفةِ | ✓ | `raw/edge-wiring-guard.txt` |
 | طفراتُ M1–M4 + الضابطُ الموجبُ (مصدرٌ مستقلٌّ) | 6/6 | `raw/gov-cases-edge-wiring-local.log` |
-| `test-governance.sh` كاملًا | يُحدَّثُ بعدَ التشغيلِ المحليِّ الكاملِ | `raw/test-governance-local.log` |
-| `verify-governance.sh` | يُحدَّثُ بعدَ إعادةِ توليدِ الأساسِ | `raw/verify-governance-local.log` |
+| `test-governance.sh` كاملًا | 824 ناجح · 0 فاشل (818 + 6 حالاتِ الحارسِ 29) | `raw/test-governance-local.log` |
+| `verify-governance.sh` | ✓ كلُّ الفحوصِ المنفَّذةِ نجحت (فحصٌ واحدٌ تُخطّي محليًا: «CI مانع» — القياسُ الحيُّ للواجهةِ في CI) | `raw/verify-governance-local.log` |
+| `scripts/verify.sh` كاملًا (قبلَ إعادةِ توليدِ الأساسِ) | 2 فشلَ كلُّهما جذرُه انحرافُ الأساسِ 28→29 — أُصلِحَ بإعادةِ التوليدِ | `raw/verify-local.log` |
 | `validate-render-deploy-target.sh` | 42/42 · `approved=false` + `approval=null` بلا تغييرٍ | `raw/render-deploy-target-guard.log` |
 
 ## ما لا يُثبِتُه هذا الدليل (حدودٌ مُعلَنة)

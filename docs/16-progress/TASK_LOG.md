@@ -1,3 +1,15 @@
+# 2026-10-25 — CLM-0692 — حكمُ ما بعدَ الدمجِ لـ#837 (وحدةُ D6 · CLM-0691)
+
+- **Work Item(s):** M0-53 (G-S9.7 · وحدةُ D6).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** docs — سابقةُ CLM-0666/0668؛ توثيقٌ فقط.
+- **Risk(s):** none — لا يُغيَّرُ خطرٌ ولا حالةٌ.
+- **Merge:** #837 ← `9ef059d8` عبرَ `merge-on-approved-head.sh` (ADR-071 · 42 فحصًا ناجحًا · لا --admin) في 2026-10-25T11:19:47Z؛ حذفُ الفرعِ مُتحقَّقٌ (404).
+- **CI على main (`9ef059d8`):** WASLA CI 40188403736 **success** (شاملاً governance-guard بفحصِهِ الـ29) · Roadmap freshness 40188403702 **success**.
+- **Not changed:** لا حالةَ ولا خطرَ ولا قرارَ إطلاقٍ — `approved=false` + `approval=null` · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T113000Z-clm-0692-post-merge-verdict-837/README.md
+- **Deployment:** none — توثيقٌ فقط بلا أي أثرٍ حيٍّ.
+
 # 2026-10-25 — CLM-0691 — G-S9.7 · D6: وصلُ `buildAppWithEdge` في مدخلِ بوتِ العميلِ + الحارسُ 29
 
 - **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).

@@ -2181,6 +2181,49 @@ t "طفرة (تحييدُ فحصِ المستقبلِ): حارسٌ يقبلُ ط
 t "طفرة (تحييدُ فحصِ الاتّساقِ): حارسٌ لا يقارنُ بالتزامِ الشجرةِ (RISK-0011)" pass _base_src_mut consist "$B_GENEARLY"
 
 
+# M0-08 · CLM-0686 — «إنذارُ القِدَمِ فقط» (قرارُ المالكِ 2026-10-25 · 96 ساعةً): الإنذارُ
+# يظهرُ فوقَ العتبةِ ويغيبُ تحتَها، ولا يُسقِطُ أبداً. الزمنُ المرجعيُّ مُثبَّتٌ
+# بـBASELINE_VALIDATE_NOW فلا تصيرُ الحالةُ كاذبةً بمرورِ الأيّام.
+_base_warn() { # _base_warn <yes|no> <جذر> <now> [عتبة] [حارس] — نجاحٌ = rc 0 ووجودُ الإنذارِ كما يُتوقَّع
+  local want="$1" R="$2" now="$3" th="${4:-}" g="${5:-$BASE_SRC}" out rc
+  if [[ -n "$th" ]]; then
+    out="$(BASELINE_VALIDATE_NOW="$now" BASELINE_STALENESS_WARN_HOURS="$th" bash "$g" "$R" 2>&1)"; rc=$?
+  else
+    out="$(BASELINE_VALIDATE_NOW="$now" bash "$g" "$R" 2>&1)"; rc=$?
+  fi
+  (( rc == 0 )) || { printf '%s\n' "$out"; return 1; }
+  if grep -q 'إنذارُ قِدَمٍ' <<< "$out"; then [[ "$want" == yes ]]; else [[ "$want" == no ]]; fi
+}
+B_AGE="$(_base_root agewarn)"
+t "أساسٌ عمرُه 4 س: لا إنذارَ ولا إسقاطَ (M0-08)" pass _base_warn no "$B_AGE" "2026-08-28T04:00:00Z"
+t "أساسٌ عمرُه 120 س: إنذارٌ يظهرُ ولا يُسقِط (M0-08)" pass _base_warn yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "عتبةٌ مخصَّصةٌ 2 س تُنذِرُ عندَ 4 س (M0-08)" pass _base_warn yes "$B_AGE" "2026-08-28T04:00:00Z" 2
+t "عتبةٌ غيرُ صالحةٍ تعودُ إلى 96 س ولا تُسقِط (M0-08)" pass _base_warn no "$B_AGE" "2026-08-28T04:00:00Z" "-5"
+_base_warn_mut() { # _base_warn_mut <tag> <yes|no> <جذر> <now>
+  local R="$3" M="$3/scripts/checks/validate-baseline.sh"
+  cp "$REPO_ROOT/scripts/checks/lib/baseline_commit.py" "$R/scripts/checks/lib/" 2>/dev/null || true
+  cp "$REPO_ROOT/scripts/baseline.sh" "$R/scripts/baseline.sh" 2>/dev/null || true
+  chmod +x "$R/scripts/baseline.sh" 2>/dev/null || true
+  python3 - "$BASE_SRC" "$M" "$1" <<'PYM'
+import sys
+src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+MUT = {
+  "silent": ('if _age_h > _warn_h:', 'if False:'),
+  "gate":   ('print("N|⚠ إنذارُ قِدَمٍ (لا يُسقِط)', 'problems.append("⚠ إنذارُ قِدَمٍ (لا يُسقِط)'),
+  "fixed":  ('_fixed = _os.environ.get("BASELINE_VALIDATE_NOW", "").strip()', '_fixed = ""'),
+}
+old, new = MUT[tag]
+s = open(src, encoding="utf-8").read()
+assert old in s, "anchor missing: " + old
+open(dst, "w", encoding="utf-8").write(s.replace(old, new, 1))
+PYM
+  _base_warn "$2" "$R" "$4" "" "$M"
+}
+t "طفرة (إسكاتُ الإنذارِ): أساسٌ قديمٌ يمرُّ بلا إنذارٍ فتُكشَف (M0-08)" fail _base_warn_mut silent yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "طفرة (تحويلُ الإنذارِ إلى بوّابةٍ بلا اعتمادٍ) تُكشَف (M0-08)" fail _base_warn_mut gate yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "طفرة (تجاهلُ الزمنِ المثبَّتِ) تُكشَف: الحالةُ تتغيّرُ بمرورِ الأيّام (M0-08)" fail _base_warn_mut fixed no "$B_AGE" "2026-08-28T04:00:00Z"
+
+
 # ── البابُ 1: الصيغةُ والاتّساقُ الذاتيُّ ──────────────────────────────────
 B_NOFILE="$(_base_root nofile)"; rm -f "$B_NOFILE/docs/12-testing/BASELINE.json"
 t "غيابُ الأساسِ المُلتزَمِ يُسقِط" fail bash "$BASE_SRC" "$B_NOFILE"
